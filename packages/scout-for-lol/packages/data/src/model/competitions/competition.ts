@@ -88,6 +88,8 @@ export const ParticipantIdSchema = z
   .positive()
   .brand("ParticipantId");
 
+// The generated Prisma client brands these columns with the types below
+// (backend scripts/brand-prisma-types.ts).
 export type SnapshotId = z.infer<typeof SnapshotIdSchema>;
 export const SnapshotIdSchema = z.number().int().positive().brand("SnapshotId");
 

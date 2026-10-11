@@ -2,58 +2,17 @@ export * from "./model/index.ts";
 export * from "./customs/customs.schema.ts";
 export * from "./scout-client/protocol.schema.ts";
 export * from "./scout-client/lcu-clash.schema.ts";
-export {
-  friendGroupHistory,
-  getPerson,
-  getStyleCard,
-  getStylePromptContext,
-  listStyleCardNames,
-  relationshipContextText,
-  styleCardToPromptContext,
-} from "@shepherdjerred/glitter-context";
-export type {
-  StyleCard,
-  StylePromptContext,
-} from "@shepherdjerred/glitter-context/schema";
+export { getStyleCard } from "@shepherdjerred/glitter-context";
 export { serializeStyleCardForScoutPrompt } from "./review/art/style-card-prompt.ts";
 export * from "./seasons.ts";
 export * from "./review/art/art-styles.ts";
-export { ART_STYLES } from "./review/art/art-styles-list.ts";
-export type { ArtStyle } from "./review/art/art-categories.ts";
 export * from "./review/models.ts";
 export * from "./review/prompts.ts";
 export * from "./review/exceptional-performance.ts";
-export {
-  type ReviewTextMetadata,
-  type ReviewImageMetadata,
-  type ChatCompletionCreateParams,
-} from "./review/generator.ts";
-export {
-  extractMatchData,
-  getOrdinalSuffix,
-} from "./review/generator-helpers.ts";
+export { getOrdinalSuffix } from "./review/generator-helpers.ts";
 export { requirePlayerAtIndex } from "./review/player-index.ts";
-export {
-  buildTimelineEnrichment,
-  enrichTimelineData,
-  type ParticipantLookup,
-  type TimelineEnrichment,
-  type EnrichedTimelineData,
-} from "./review/timeline/timeline-enricher.ts";
-
 // Pipeline exports
 export { generateFullMatchReview } from "./review/pipeline/pipeline.ts";
-export {
-  generateTimelineSummary,
-  generateTimelineChunkSummary,
-  aggregateTimelineChunks,
-} from "./review/timeline/timeline-stages.ts";
-export {
-  generateMatchSummary,
-  generateReviewTextStage,
-  generateImageDescription,
-  generateImage,
-} from "./review/pipeline/pipeline-stages.ts";
 export {
   getDefaultStageConfigs,
   DEFAULT_TIMELINE_SUMMARY_MODEL,
@@ -73,46 +32,23 @@ export {
   REVIEW_TEXT_USER_PROMPT,
   IMAGE_DESCRIPTION_USER_PROMPT,
   IMAGE_GENERATION_USER_PROMPT,
-  createStageConfigs,
 } from "./review/pipeline/pipeline-defaults.ts";
 export type {
-  ModelConfig,
-  StageConfig,
-  ReviewTextStageConfig,
-  ImageGenerationStageConfig,
   PipelineStagesConfig,
   TextGenerationClient,
   ImageGenerationClient,
-  PipelineMatchInput,
-  PipelinePlayerInput,
-  PipelinePromptsInput,
-  PipelineClientsInput,
-  ReviewPipelineInput,
   StageTrace,
   ImageGenerationTrace,
-  TimelineChunkTrace,
-  PipelineTraces,
-  PipelineIntermediateResults,
   PipelineContext,
-  PipelineReviewOutput,
   ReviewPipelineOutput,
-  PipelineStageName,
-  PipelineProgress,
-  PipelineProgressCallback,
 } from "./review/pipeline/pipeline-types.ts";
 
 // Prompt variable metadata (single source of truth for frontend/backend)
 export {
   STAGE_PROMPT_VARIABLES,
   PROMPT_STAGE_NAMES,
-  getStageVariables,
 } from "./review/prompt-variables.ts";
-export type {
-  PromptVariable,
-  StagePromptVariables,
-  PromptStageName,
-  StagePromptVariablesMap,
-} from "./review/prompt-variables.ts";
+export type { PromptStageName } from "./review/prompt-variables.ts";
 
 export * from "./league/data-source.ts";
 export * from "./league/raw-match.schema.ts";
@@ -142,56 +78,26 @@ export {
   getChampionInfo,
   getChampionList,
   getChampionTags,
-  type ChampionInfo,
-  type ChampionSpell,
   type ChampionTag,
 } from "./data-dragon/champion.ts";
 export {
-  AbilityFactsSchema,
-  AbilitySlotSchema,
-  ChampionAbilityFactsSchema,
   getAbilityFacts,
   suggestChampionNames,
   type AbilityFacts,
-  type AbilityFactsLookup,
   type AbilitySlot,
-  type ChampionAbilityFacts,
 } from "./data-dragon/ability-facts.ts";
 export {
   getPatchChangeset,
   getPatchChangesets,
   selectRelevantPatchChanges,
   formatPatchNotes,
-  formatGenericPatchNotes,
-  PatchChangesetSchema,
-  PatchChangesetHistorySchema,
-  PatchDirectionSchema,
-  PatchMagnitudeSchema,
-  PatchChampionChangeSchema,
-  PatchItemChangeSchema,
-  PatchSystemChangeSchema,
-  type PatchChangeset,
-  type PatchChampionChange,
-  type PatchItemChange,
-  type PatchSystemChange,
-  type PatchDirection,
-  type PatchMagnitude,
-  type RelevantPatchChanges,
 } from "./data-dragon/patch-notes.ts";
-export {
-  arenaAugmentCache,
-  getCachedArenaAugmentById,
-} from "./data-dragon/arena-augments.ts";
 export { getCachedAugmentNameById } from "./data-dragon/augment-names.ts";
 
 // Sound pack exports
 export {
   // URL getters (synchronous, for browser/frontend use)
   getChampionImageUrl,
-  getItemImageUrl,
-  getSpellImageUrl,
-  getRuneIconUrl,
-  getAugmentIconUrl,
   // Base64 getters (async, for Satori/server-side rendering)
   getChampionImageBase64,
   getItemImageBase64,
@@ -200,17 +106,10 @@ export {
   getAugmentIconBase64,
   getLaneIconBase64,
   getChampionLoadingImageBase64,
-  getChampionLoadingImageUrl,
   getChampionSplashImageBase64,
-  getChampionSplashImageUrl,
   getClassicBackgroundBase64,
   // Validation functions (async)
   validateChampionImage,
-  validateItemImage,
-  validateSpellImage,
-  validateRuneIcon,
-  validateAugmentIcon,
-  validateLaneIcon,
   validateChampionLoadingImage,
   validateChampionSplashImage,
   getChampionKeyById,

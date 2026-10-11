@@ -113,12 +113,6 @@ export async function validateAugmentIcon(
   await validateImageExists(absolutePath, `Augment image ${filename}`);
 }
 
-export async function validateLaneIcon(lane: Lane): Promise<void> {
-  const relativePath = `./assets/img/lane/${lane}.png`;
-  const absolutePath = await getAbsolutePath(relativePath);
-  await validateImageExists(absolutePath, `Lane icon for ${lane}`);
-}
-
 // URL getters (synchronous, for use in components)
 export function getChampionImageUrl(championName: string): string {
   const normalized = normalizeChampionName(championName);
@@ -127,18 +121,6 @@ export function getChampionImageUrl(championName: string): string {
 
 export function getItemImageUrl(itemId: number): string {
   return `https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/item/${itemId.toString()}.png`;
-}
-
-export function getSpellImageUrl(spellImageName: string): string {
-  return `https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/spell/${spellImageName}`;
-}
-
-export function getRuneIconUrl(runeIconPath: string): string {
-  return `https://ddragon.leagueoflegends.com/cdn/img/${runeIconPath}`;
-}
-
-export function getAugmentIconUrl(augmentIconPath: string): string {
-  return `https://raw.communitydragon.org/latest/game/${augmentIconPath}`;
 }
 
 // Base64 getters (async, for Satori/server-side rendering with local cached assets)
@@ -245,14 +227,6 @@ export async function validateChampionSplashImage(
     absolutePath,
     `Champion splash image for ${normalized}`,
   );
-}
-
-export function getChampionSplashImageUrl(
-  championName: string,
-  skinNum = 0,
-): string {
-  const normalized = normalizeChampionName(championName);
-  return `https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${normalized}_${skinNum.toString()}.jpg`;
 }
 
 export async function getChampionSplashImageBase64(

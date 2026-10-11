@@ -5,10 +5,6 @@ import { LeaguePuuidSchema } from "#src/model/riot/league-account.ts";
 export const EXPLORE_LOADOUT_BUILD_PATH_MAX_EVENTS = 100;
 
 export const ExploreLoadoutCardSizeSchema = z.enum(["S", "L"]);
-export type ExploreLoadoutCardSize = z.infer<
-  typeof ExploreLoadoutCardSizeSchema
->;
-
 export const ExploreLoadoutCardRequestSchema = z
   .object({
     matchId: RiotMatchIdSchema,

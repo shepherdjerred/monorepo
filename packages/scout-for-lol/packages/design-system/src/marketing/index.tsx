@@ -88,8 +88,7 @@ export function FeatureCard(props: {
     </Card>
   );
 }
-export const BenefitCard = FeatureCard;
-export const StatCard = FeatureCard;
+
 export function FeatureGrid(props: { children: ReactNode }) {
   return <Grid>{props.children}</Grid>;
 }

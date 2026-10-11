@@ -20,5 +20,3 @@ export const RawMissionsSchema = z
     playerScore11: z.number(),
   })
   .strict();
-
-export type RawMissions = z.infer<typeof RawMissionsSchema>;

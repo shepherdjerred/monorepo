@@ -167,10 +167,6 @@ export const ScoutClientMatchDispatchInputSchema = z
       path: ["lateArrivals"],
     });
   });
-export type ScoutClientMatchDispatchInput = z.infer<
-  typeof ScoutClientMatchDispatchInputSchema
->;
-
 /** Completion acknowledgement sent to the exact discovery run that waited. */
 export const ScoutClientMatchDispatchResultSchema = z.strictObject({
   riotMatchId: RiotMatchIdSchema,
@@ -192,10 +188,6 @@ export const ScoutPrematchGameInputSchema = z.strictObject({
   stage: ScoutStageSchema,
   gameRef: ScoutPrematchGameRefSchema,
 });
-export type ScoutPrematchGameInput = z.infer<
-  typeof ScoutPrematchGameInputSchema
->;
-
 export const ScoutNotificationInputSchema = z.strictObject({
   stage: ScoutStageSchema,
   intentKey: ScoutNotificationIntentKeySchema,
@@ -223,10 +215,6 @@ export const ScoutRecoveryBatchInputSchema = z.strictObject({
   stage: ScoutStageSchema,
   recoveryBatchId: ScoutRecoveryBatchIdSchema,
 });
-export type ScoutRecoveryBatchInput = z.infer<
-  typeof ScoutRecoveryBatchInputSchema
->;
-
 /**
  * Reconciliation likewise carries no cursor. Its scan is idempotent and
  * resumes from the durable watermark each run, so a Continue-As-New repeats
@@ -332,10 +320,6 @@ export const ScoutPostMatchDiscoveryResultSchema = z.strictObject({
   /** False when discovery could not see the whole tail of completed matches. */
   complete: z.boolean(),
 });
-export type ScoutPostMatchDiscoveryResult = z.infer<
-  typeof ScoutPostMatchDiscoveryResultSchema
->;
-
 export const ScoutMatchProcessingResultSchema = z.strictObject({
   status: ScoutWorkflowStatusSchema,
   riotMatchId: RiotMatchIdSchema,
@@ -357,20 +341,12 @@ export const ScoutMatchProcessingResultSchema = z.strictObject({
     lakeProjections: z.int().nonnegative(),
   }),
 });
-export type ScoutMatchProcessingResult = z.infer<
-  typeof ScoutMatchProcessingResultSchema
->;
-
 export const ScoutPrematchDiscoveryResultSchema = z.strictObject({
   status: ScoutWorkflowStatusSchema,
   discovered: z.int().nonnegative(),
   childrenStarted: z.int().nonnegative(),
   complete: z.boolean(),
 });
-export type ScoutPrematchDiscoveryResult = z.infer<
-  typeof ScoutPrematchDiscoveryResultSchema
->;
-
 export const ScoutPrematchGameResultSchema = z.strictObject({
   status: ScoutWorkflowStatusSchema,
   /** The match id the snapshot belongs to, composed from the game reference. */
@@ -380,10 +356,6 @@ export const ScoutPrematchGameResultSchema = z.strictObject({
     notifications: z.int().nonnegative(),
   }),
 });
-export type ScoutPrematchGameResult = z.infer<
-  typeof ScoutPrematchGameResultSchema
->;
-
 /**
  * What a notification run did with the intent it was given.
  *
@@ -401,10 +373,6 @@ export const ScoutNotificationDispositionSchema = z.discriminatedUnion("kind", [
     target: NotificationTargetKindSchema,
   }),
 ]);
-export type ScoutNotificationDisposition = z.infer<
-  typeof ScoutNotificationDispositionSchema
->;
-
 /**
  * The intent's state when the Workflow stopped driving it. `unknown-delivery`
  * is a legitimate stopping point and NOT a failure: the machine leaves it only
@@ -421,10 +389,6 @@ export const ScoutNotificationResultSchema = z.strictObject({
   attemptCount: z.int().nonnegative(),
   disposition: ScoutNotificationDispositionSchema,
 });
-export type ScoutNotificationResult = z.infer<
-  typeof ScoutNotificationResultSchema
->;
-
 export const SCOUT_NOTIFICATION_RESULT_VERSION = 2;
 
 export const ScoutLakeProjectionResultSchema = z.strictObject({
@@ -433,10 +397,6 @@ export const ScoutLakeProjectionResultSchema = z.strictObject({
   receiptKinds: z.array(ReceiptKindSchema).readonly(),
   stagedFileCount: z.int().nonnegative(),
 });
-export type ScoutLakeProjectionResult = z.infer<
-  typeof ScoutLakeProjectionResultSchema
->;
-
 /**
  * What THIS run can say about a recovery batch's tally.
  *
@@ -475,10 +435,6 @@ export const ScoutRecoveryBatchResultSchema = z.strictObject({
   state: RecoveryBatchStateSchema,
   counts: ScoutRecoveryCountsReportSchema,
 });
-export type ScoutRecoveryBatchResult = z.infer<
-  typeof ScoutRecoveryBatchResultSchema
->;
-
 export const ScoutPipelineReconciliationResultSchema = z.strictObject({
   status: ScoutWorkflowStatusSchema,
   trigger: ScoutTriggerSchema,
@@ -490,10 +446,6 @@ export const ScoutPipelineReconciliationResultSchema = z.strictObject({
     recoveryBatches: z.int().nonnegative(),
   }),
 });
-export type ScoutPipelineReconciliationResult = z.infer<
-  typeof ScoutPipelineReconciliationResultSchema
->;
-
 export const scoutPostMatchDiscoveryResultCodec = defineVersionedCodec({
   kind: "scout-post-match-discovery-v2-result",
   version: SCOUT_CONTRACT_VERSION,

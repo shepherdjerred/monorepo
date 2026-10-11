@@ -3,7 +3,6 @@ import { type RawMatch } from "@scout-for-lol/data/index.ts";
 import {
   createRawMatchS3Source,
   RawMatchS3ConfigSchema,
-  rawMatchS3Region,
   type RawMatchS3Config,
 } from "../s3/raw-match-s3.ts";
 
@@ -12,10 +11,6 @@ export const LanePriorS3ConfigSchema = RawMatchS3ConfigSchema.extend({
 });
 
 export type LanePriorS3Config = z.infer<typeof LanePriorS3ConfigSchema>;
-
-export function lanePriorS3Region(): string {
-  return rawMatchS3Region();
-}
 
 function sourceConfig(config: LanePriorS3Config): RawMatchS3Config {
   return RawMatchS3ConfigSchema.parse({
@@ -60,25 +55,6 @@ export async function fetchLanePriorMatches(
   }
 
   return matches;
-}
-
-export function deterministicSampleKeys(input: {
-  keys: readonly string[];
-  sampleSize: number;
-  seed: string;
-}): string[] {
-  if (input.sampleSize <= 0) {
-    throw new Error("sampleSize must be positive");
-  }
-  return input.keys
-    .map((key) => {
-      const hasher = new Bun.CryptoHasher("sha256");
-      hasher.update(`${input.seed}:${key}`);
-      return { key, hash: hasher.digest("hex") };
-    })
-    .toSorted((left, right) => left.hash.localeCompare(right.hash))
-    .slice(0, input.sampleSize)
-    .map((entry) => entry.key);
 }
 
 export function deterministicSampleMatches(input: {

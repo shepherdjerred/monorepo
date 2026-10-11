@@ -18,10 +18,7 @@ import {
   type DiscordGuildId,
 } from "@scout-for-lol/data";
 import { recordCoreOutputDelivered } from "#src/analytics/guild-lifecycle.ts";
-import type {
-  runDueReports,
-  ScheduledReportDispatch,
-} from "#src/reports/schedule/scheduler.ts";
+import type { ScheduledReportDispatch } from "#src/reports/schedule/scheduler.ts";
 import {
   claimScoutEffect,
   completeScoutEffect,
@@ -36,8 +33,6 @@ import {
 } from "#src/reports/delivery-receipts.ts";
 
 const logger = createLogger("report-discord-dispatcher");
-
-const POST_DELAY_MS = 1000;
 
 async function deliverChunksAndAnalytics(
   dispatch: ScheduledReportDispatch,
@@ -98,102 +93,6 @@ async function deliverChunksAndAnalytics(
     );
     await completeScoutEffect(analyticsEffectKey, database);
   }
-}
-
-export async function deliverScheduledReportDispatches(
-  dispatches: Awaited<ReturnType<typeof runDueReports>>,
-): Promise<void> {
-  if (dispatches.length === 0) {
-    return;
-  }
-
-  logger.info(
-    `[ReportDispatch] Posting ${dispatches.length.toString()} scheduled report(s)`,
-  );
-
-  for (const dispatch of dispatches) {
-    const delivered = await deliverReportDispatch(dispatch, "report_scheduled");
-    if (delivered) {
-      await prisma.reportRun.updateMany({
-        where: {
-          id: ReportRunIdSchema.parse(dispatch.result.runId),
-          deliveryState: "PENDING",
-        },
-        data: {
-          deliveryState: "DELIVERED",
-          deliveryError: null,
-          deliveredAt: new Date(),
-        },
-      });
-    }
-    await new Promise((resolve) => setTimeout(resolve, POST_DELAY_MS));
-  }
-}
-
-/**
- * Resume a scheduled delivery after report execution completed but Discord
- * delivery was interrupted. The ReportRun archive is the durable dispatch
- * record; effect claims make replaying a completed chunk a no-op.
- */
-export async function deliverStoredScheduledReport(
-  reportId: number,
-  runId?: number,
-): Promise<boolean> {
-  const parsedReportId = ReportIdSchema.parse(reportId);
-  const parsedRunId =
-    runId === undefined ? undefined : ReportRunIdSchema.parse(runId);
-  const report = await prisma.report.findUnique({
-    where: { id: parsedReportId },
-  });
-  if (report === null) return false;
-  const run = await prisma.reportRun.findFirst({
-    where: {
-      ...(parsedRunId === undefined ? {} : { id: parsedRunId }),
-      reportId: parsedReportId,
-      trigger: "SCHEDULED",
-      status: "SUCCESS",
-      renderedContent: { not: null },
-    },
-    orderBy: [{ startedAt: "desc" }, { id: "desc" }],
-  });
-  if (run?.renderedContent === undefined || run.renderedContent === null) {
-    return false;
-  }
-  const deliveryReport = {
-    ...report,
-    channelId:
-      run.deliveryChannelId === null
-        ? report.channelId
-        : DiscordChannelIdSchema.parse(run.deliveryChannelId),
-    serverId:
-      run.deliveryServerId === null
-        ? report.serverId
-        : DiscordGuildIdSchema.parse(run.deliveryServerId),
-  };
-  const imageBytes =
-    run.imageS3Key === null
-      ? null
-      : await loadReportRunImage(report.id, run.id);
-  await deliverReportDispatch(
-    {
-      report: deliveryReport,
-      result: {
-        runId: run.id,
-        rowsReturned: run.rowsReturned,
-        rowsScanned: run.rowsScanned,
-        output: {
-          content: run.renderedContent,
-          image:
-            imageBytes === null
-              ? null
-              : { filename: "report.png", data: imageBytes },
-        },
-      },
-    },
-    "report_scheduled",
-    "propagate",
-  );
-  return true;
 }
 
 /**

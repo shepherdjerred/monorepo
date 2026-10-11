@@ -28,8 +28,6 @@ export const VISUALIZATION_DISPLAY_FONT = [
   ),
 ].join(", ");
 export const VISUALIZATION_BODY_FONT = typography.body;
-export const VISUALIZATION_MONO_FONT = typography.mono;
-
 export type VisualizationRenderMode = "interactive" | "static";
 
 export function visualizationSnapshotFont(

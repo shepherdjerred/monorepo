@@ -4,13 +4,7 @@ import {
   type BucksPoolParticipant,
   type RiotTeamId,
 } from "@scout-for-lol/data";
-import {
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-  type APIActionRowComponent,
-  type APIComponentInMessageActionRow,
-} from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
 import { BLUE_TEAM_ID, BUTTON_STAKES } from "#src/betting/constants.ts";
 import { formatBucksCustomId } from "#src/betting/custom-id.ts";
 import {
@@ -149,24 +143,4 @@ export function buildBettingRows(input: {
       disabled: input.disabled ?? false,
     }),
   ];
-}
-
-/**
- * The same rows, greyed out.
- *
- * Used when a window closes. Purely cosmetic — a click on a live-looking button
- * is still refused by `placeBet`, which re-checks `closesAt` inside its
- * transaction.
- */
-export function disableRows(
-  rows: readonly APIActionRowComponent<APIComponentInMessageActionRow>[],
-): APIActionRowComponent<APIComponentInMessageActionRow>[] {
-  return rows.map((row) => ({
-    ...row,
-    components: row.components.map((component) =>
-      "custom_id" in component
-        ? { ...component, disabled: true }
-        : { ...component },
-    ),
-  }));
 }

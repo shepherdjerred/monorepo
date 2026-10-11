@@ -166,16 +166,6 @@ export function containsErrorNode(expr: ScoutQlExprAst): boolean {
   return found;
 }
 
-export function collectAstColumnNames(expr: ScoutQlExprAst): Set<string> {
-  const names = new Set<string>();
-  forEachExprNode(expr, (node) => {
-    if (node.kind === "column") {
-      names.add(node.name);
-    }
-  });
-  return names;
-}
-
 // ── Small normalizers ────────────────────────────────────────────────────────
 
 export function normalizeIntervalUnit(

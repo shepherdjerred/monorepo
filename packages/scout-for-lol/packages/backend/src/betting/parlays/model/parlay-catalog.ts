@@ -110,9 +110,6 @@ export const LegacyParticipantNumericFieldSchema = z.enum([
   "pushPings",
   "visionClearedPings",
 ]);
-export type LegacyParticipantNumericField = z.infer<
-  typeof LegacyParticipantNumericFieldSchema
->;
 export const SettlementParticipantNumericFieldSchema = z.union([
   ParticipantNumericFieldSchema,
   LegacyParticipantNumericFieldSchema,

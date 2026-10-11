@@ -18,8 +18,6 @@ import {
 } from "#src/model/core/discord.ts";
 
 export const HallBaselineStatusSchema = z.enum(["building", "ready", "failed"]);
-export type HallBaselineStatus = z.infer<typeof HallBaselineStatusSchema>;
-
 export const HallRecordHolderSchema = ProgressionAccountSchema.extend({});
 export type HallRecordHolder = z.infer<typeof HallRecordHolderSchema>;
 

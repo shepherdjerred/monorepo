@@ -11,8 +11,6 @@ import { mvpQueryDisplayName } from "#src/mvp-votes/query/names.ts";
 import { MatchMvpRosterSchema } from "#src/mvp-votes/roster.ts";
 
 export const MvpVoteQueueTypeSchema = z.enum(["flex"]);
-export type MvpVoteQueueType = z.infer<typeof MvpVoteQueueTypeSchema>;
-
 export const MvpVoteLeaderboardQuerySchema = z.strictObject({
   serverId: DiscordGuildIdSchema,
   from: z.iso.datetime(),

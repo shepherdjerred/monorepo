@@ -53,10 +53,6 @@ export const StandardSummonerLeagueSchema = z.strictObject({
   hotStreak: z.boolean().optional(),
   miniSeries: StandardMiniSeriesSchema.optional(),
 });
-export type StandardSummonerLeague = z.infer<
-  typeof StandardSummonerLeagueSchema
->;
-
 /**
  * Raw League-V4 entry. Queue names are intentionally open because Riot can
  * add unrelated queues without changing Scout's Solo/Flex rank contract.

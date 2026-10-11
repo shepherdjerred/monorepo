@@ -37,10 +37,6 @@ const StoredArtifactReferenceSchema = z.strictObject({
   key: S3ObjectKeySchema,
   digest: Sha256DigestSchema,
 });
-export type StoredArtifactReference = z.infer<
-  typeof StoredArtifactReferenceSchema
->;
-
 export type MatchObservationRecord = z.infer<
   typeof MatchObservationRecordSchema
 >;

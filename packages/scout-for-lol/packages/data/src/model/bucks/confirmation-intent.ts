@@ -136,6 +136,3 @@ export const ConfirmationIntentKindSchema = z.enum([
   ...CreationIntentKindSchema.options,
   ...OperationsIntentKindSchema.options,
 ]);
-export type ConfirmationIntentKind = z.infer<
-  typeof ConfirmationIntentKindSchema
->;

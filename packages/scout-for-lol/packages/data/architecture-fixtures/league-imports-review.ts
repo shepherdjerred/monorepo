@@ -1,4 +1,4 @@
 // Deliberate violation of league-does-not-depend-on-review.
-import "#src/review/generator.ts";
+import "#src/review/models.ts";
 
 export const illegalLeagueDependency = true;

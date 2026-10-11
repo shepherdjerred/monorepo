@@ -2,7 +2,6 @@ import { z } from "zod";
 import summonerData from "./assets/summoner.json" with { type: "json" };
 
 // schema created by https://transform.tools/json-to-zod
-export type Summoner = z.infer<typeof SummonerSchema>;
 export const SummonerSchema = z.object({
   type: z.string(),
   version: z.string(),

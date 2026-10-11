@@ -12,8 +12,6 @@ import { DateOnlySchema } from "#src/model/core/calendar-date.ts";
  */
 
 export const QueueWindowSourceSchema = z.enum(["manual", "observed"]);
-export type QueueWindowSource = z.infer<typeof QueueWindowSourceSchema>;
-
 export const QueueWindowSchema = z.strictObject({
   start: DateOnlySchema,
   /** null = open-ended: the mode is live with no announced end. */
@@ -63,8 +61,6 @@ export const QueueWindowsArraySchema = z
       }
     }
   });
-export type QueueWindowsArray = z.infer<typeof QueueWindowsArraySchema>;
-
 export const QueueWindowsFileSchema = z.strictObject({
   queues: z.record(z.string(), QueueWindowsArraySchema),
 });

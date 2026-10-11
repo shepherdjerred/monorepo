@@ -113,17 +113,6 @@ export function logNotification(
   })();
 }
 
-/**
- * Log when a cron job fires
- */
-export function logCronTrigger(jobName: string, details?: string): void {
-  logNotification(
-    "CRON_TRIGGER",
-    `cron:${jobName}`,
-    details !== undefined && details.length > 0 ? { message: details } : {},
-  );
-}
-
 logger.info(
   `📝 Notification logger initialized | Instance ID: ${INSTANCE_ID} | Log file: ${LOG_FILE}`,
 );

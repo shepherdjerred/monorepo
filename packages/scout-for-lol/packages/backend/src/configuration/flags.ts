@@ -678,20 +678,6 @@ function listWholeGuildOverrides(
 }
 
 /**
- * Add a limit override at runtime
- *
- * Useful for dynamic overrides
- */
-export function addLimitOverride(
-  name: LimitName,
-  value: number | "unlimited",
-  attributes: FlagAttributes,
-): void {
-  const config = LIMIT_REGISTRY[name];
-  config.overrides.push({ value, attributes });
-}
-
-/**
  * Add a flag override at runtime
  *
  * Useful for dynamic overrides like enabling features for specific servers
@@ -703,14 +689,6 @@ export function addFlagOverride(
 ): void {
   const config = FLAG_REGISTRY[name];
   config.overrides.push({ value, attributes });
-}
-
-/**
- * Clear all overrides for a limit (useful for testing)
- */
-export function clearLimitOverrides(name: LimitName): void {
-  const config = LIMIT_REGISTRY[name];
-  config.overrides.length = 0;
 }
 
 /**

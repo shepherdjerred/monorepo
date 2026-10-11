@@ -78,12 +78,6 @@ export function initialMetricKey(
     : plottableCols[0]?.key;
 }
 
-export type ExploreVisualResultProps = {
-  readonly preview: ReportAiPreviewSummary | null;
-  readonly visualization: VisualizationSnapshot | null;
-  readonly onFollowUp?: ((text: string) => void) | undefined;
-};
-
 type SelectedDataPoint = {
   label: string;
   value: number | null;

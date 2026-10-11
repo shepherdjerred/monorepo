@@ -2,8 +2,6 @@ import { z } from "zod";
 import { QueueTypeSchema } from "@scout-for-lol/data";
 
 export const ShowcaseStateSchema = z.enum(["prematch", "postmatch"]);
-export type ShowcaseState = z.infer<typeof ShowcaseStateSchema>;
-
 const BaseEntrySchema = z.strictObject({
   id: z
     .string()

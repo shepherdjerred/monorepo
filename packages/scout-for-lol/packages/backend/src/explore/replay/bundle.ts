@@ -245,9 +245,6 @@ export const ReplayCaseCandidateSchema = z
     visualizationKind: z.string().nullable(),
   })
   .loose();
-
-export type ReplayCaseCandidate = z.infer<typeof ReplayCaseCandidateSchema>;
-
 export const ReplayCaseIndexEntrySchema = z
   .object({
     caseId: z.string().min(1),

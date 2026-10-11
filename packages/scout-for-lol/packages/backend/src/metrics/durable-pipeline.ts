@@ -94,8 +94,6 @@ export const DURABLE_BACKLOG_FAMILIES = [
   "unaccepted-workflow-starts",
   "ready-notification-intents",
 ] as const;
-export type DurableBacklogFamily = (typeof DURABLE_BACKLOG_FAMILIES)[number];
-
 export const scoutDurableNotificationIntents = new Gauge({
   name: "scout_durable_notification_intents",
   help: "Match notification intents held in each state of the domain's intent machine.",

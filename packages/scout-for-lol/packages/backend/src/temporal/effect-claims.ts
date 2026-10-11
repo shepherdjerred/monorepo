@@ -45,8 +45,6 @@ export const ScoutEffectClaimStateSchema = z.enum([
   "COMPLETED",
   "AMBIGUOUS_OR_FAILED",
 ]);
-export type ScoutEffectClaimState = z.infer<typeof ScoutEffectClaimStateSchema>;
-
 export type ScoutEffectClaimRecord = z.infer<
   typeof ScoutEffectClaimRecordSchema
 >;
@@ -250,48 +248,6 @@ export async function requireCompletedScoutEffectResult(
     throw new Error(`Completed effect ${key} has no durable result ID`);
   }
   return CompletedScoutEffectSchema.parse(claim);
-}
-
-/**
- * Completed effects of one kind, claimed within a window, under one key prefix.
- *
- * The query is shaped for `ScoutEffectClaim`'s `[kind, state, claimedAt]`
- * index, which carries all three of those as an index condition and leaves the
- * key prefix as a cheap residual filter. The obvious formulation — a prefix
- * match on the primary key alone — is NOT usable here: Postgres can only serve
- * `LIKE 'prefix%'` from a btree under the C collation or a `text_pattern_ops`
- * index, and these databases are initdb'd `en_US.utf8`, so it would degrade to
- * a sequential scan on every call. The window is what keeps this bounded; the
- * caller derives it and owns its correctness.
- *
- * Rows are parsed, not filtered. A COMPLETED claim of a kind whose completions
- * all carry a result is expected to carry one, so a row that does not is a
- * broken contract and says so here, exactly as the single-key read above does.
- */
-export async function listCompletedScoutEffects(
-  args: {
-    kind: string;
-    keyPrefix: string;
-    claimedFrom: Date;
-    claimedUntil: Date;
-  },
-  database: ExtendedPrismaClient = prisma,
-): Promise<CompletedScoutEffect[]> {
-  const rows = await database.scoutEffectClaim.findMany({
-    where: {
-      kind: args.kind,
-      state: "COMPLETED",
-      claimedAt: { gte: args.claimedFrom, lte: args.claimedUntil },
-      key: { startsWith: args.keyPrefix },
-    },
-    select: {
-      key: true,
-      resultId: true,
-      claimedAt: true,
-      completedAt: true,
-    },
-  });
-  return rows.map((row) => CompletedScoutEffectSchema.parse(row));
 }
 
 export async function recordScoutEffectFailure(

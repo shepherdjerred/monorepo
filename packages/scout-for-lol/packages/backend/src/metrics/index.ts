@@ -165,38 +165,6 @@ export const discordSubscriptionsCleanedTotal = new Counter({
 // =======================
 // Cron Job Metrics
 // =======================
-
-/**
- * Total number of cron job executions
- */
-export const cronJobExecutionsTotal = new Counter({
-  name: "cron_job_executions_total",
-  help: "Total number of cron job executions",
-  labelNames: ["job_name", "status"] as const,
-  registers: [registry],
-});
-
-/**
- * Duration of cron job execution in seconds
- */
-export const cronJobDuration = new Histogram({
-  name: "cron_job_duration_seconds",
-  help: "Duration of cron job execution in seconds",
-  labelNames: ["job_name"] as const,
-  buckets: [1, 5, 10, 30, 60, 300, 600],
-  registers: [registry],
-});
-
-/**
- * Timestamp of last successful cron job execution (Unix timestamp)
- */
-export const cronJobLastSuccess = new Gauge({
-  name: "cron_job_last_success_timestamp",
-  help: "Timestamp of last successful cron job execution (Unix timestamp)",
-  labelNames: ["job_name"] as const,
-  registers: [registry],
-});
-
 /**
  * Total number of match history polling runs skipped due to mutex
  */
@@ -245,17 +213,6 @@ export const prematchRosterCompletionsTotal = new Counter({
   labelNames: ["reason"] as const,
   registers: [registry],
 });
-
-/**
- * Total loading screen images generated (or failed)
- */
-export const prematchLoadingScreenGeneratedTotal = new Counter({
-  name: "prematch_loading_screen_generated_total",
-  help: "Total loading screen images generated for pre-match notifications",
-  labelNames: ["queue_type", "status"] as const,
-  registers: [registry],
-});
-
 /**
  * Classic champion asset resolution failures. Labels are intentionally
  * bounded; the offending Riot IDs are recorded in the structured log entry.
@@ -266,17 +223,6 @@ export const classicAssetResolutionFailuresTotal = new Counter({
   labelNames: ["phase", "reason"] as const,
   registers: [registry],
 });
-
-/**
- * Loading screen generation duration in seconds
- */
-export const prematchLoadingScreenDurationSeconds = new Histogram({
-  name: "prematch_loading_screen_duration_seconds",
-  help: "Time to generate loading screen image in seconds",
-  buckets: [0.5, 1, 2, 5, 10, 20, 30],
-  registers: [registry],
-});
-
 /**
  * Total attempts to persist raw prematch spectator payloads to S3.
  */
@@ -286,20 +232,6 @@ export const prematchSpectatorPayloadSavesTotal = new Counter({
   labelNames: ["status"] as const,
   registers: [registry],
 });
-
-/**
- * Counts pre-match notifications that intentionally skipped the loading-screen
- * render before attempting `buildLoadingScreenData`. The most common reason is
- * `arena_no_subteam` — Spectator V5 doesn't expose Arena (CHERRY) subteam
- * assignments pre-game, so we fall back to the embed-only notification path.
- */
-export const prematchSkippedTotal = new Counter({
-  name: "prematch_skipped_total",
-  help: "Pre-match notifications that skipped the loading-screen render before build, by reason",
-  labelNames: ["reason"] as const,
-  registers: [registry],
-});
-
 /**
  * Duration of raw prematch spectator payload uploads to S3 in seconds.
  * Only records attempted uploads (saved or error), not skip cases.

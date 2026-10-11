@@ -34,20 +34,6 @@ export function resolveReportChampion(
   return championByName.get(normalizeName(name));
 }
 
-export function requireReportChampion(name: string): ReportChampion {
-  const champion = resolveReportChampion(name);
-  if (champion !== undefined) {
-    return champion;
-  }
-
-  const suggestion = closestChampionName(name);
-  throw new Error(
-    suggestion === undefined
-      ? `Unknown champion "${name}".`
-      : `Unknown champion "${name}". Did you mean "${suggestion}"?`,
-  );
-}
-
 export function closestChampionName(name: string): string | undefined {
   const normalized = normalizeName(name);
   const ranked = champions

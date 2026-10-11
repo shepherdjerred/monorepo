@@ -1,10 +1,7 @@
 import { z } from "zod";
 import { DivisionSchema, divisionToString } from "#src/model/riot/division.ts";
 import { TierSchema, type Tier } from "#src/model/riot/tier.ts";
-import {
-  rankToLeaguePoints,
-  tierToOrdinal,
-} from "#src/model/riot/league-points.ts";
+import { tierToOrdinal } from "#src/model/riot/league-points.ts";
 import { startCase } from "#src/util.ts";
 
 export type Rank = z.infer<typeof RankSchema>;
@@ -89,10 +86,6 @@ export function wasPromoted(
   return false;
 }
 
-export function getLeaguePointsDelta(oldRank: Rank, newRank: Rank): number {
-  return rankToLeaguePoints(newRank) - rankToLeaguePoints(oldRank);
-}
-
 /**
  * Approximate rank distribution percentiles for League of Legends.
  * These represent the "top X%" of players at each tier.
@@ -110,15 +103,6 @@ const TIER_PERCENTILES: Record<Tier, number> = {
   grandmaster: 0.04,
   challenger: 0.01,
 };
-
-/**
- * Get the approximate percentile for a tier (top X% of players).
- * @param tier - The tier to get percentile for
- * @returns The approximate top percentile (e.g., 32 means "top 32%")
- */
-export function tierToPercentile(tier: Tier): number {
-  return TIER_PERCENTILES[tier];
-}
 
 /**
  * Format the percentile as a human-readable string.

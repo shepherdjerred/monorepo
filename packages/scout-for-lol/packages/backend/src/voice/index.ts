@@ -16,5 +16,4 @@
  * Get an audio stream from a sound source
  */
 
-export { VoiceManager, voiceManager } from "#src/voice/voice-manager.ts";
-export { getAudioStream } from "#src/voice/audio-player.ts";
+export { voiceManager } from "#src/voice/voice-manager.ts";

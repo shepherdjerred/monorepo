@@ -75,8 +75,6 @@ export const BucksLedgerKindSchema = z.enum([
   "dare_fee",
   "adjustment",
 ]);
-
-export type BucksBetOutcome = z.infer<typeof BucksBetOutcomeSchema>;
 export const BucksBetOutcomeSchema = z.enum([
   "pending",
   "won",
@@ -176,10 +174,6 @@ const MatchingAmountFields = {
   matchedStake: BucksAmountSchema,
   unmatchedStake: BucksAmountSchema,
 };
-
-export type BucksMatchingAllocation = z.infer<
-  typeof BucksMatchingAllocationSchema
->;
 export const BucksMatchingAllocationSchema = z.strictObject({
   betId: z.number().int().positive(),
   bucksAccountId: z.number().int().positive(),
@@ -234,10 +228,6 @@ const MvpContextSchema = z.strictObject({
  * variant — see {@link StoredSettlementContextSchema}.
  */
 export type BucksLedgerContext = z.infer<typeof BucksLedgerContextSchema>;
-/** One persisted row's context, in the domain it was written in. */
-export type StoredBucksLedgerContext = z.infer<
-  typeof StoredBucksLedgerContextSchema
->;
 /** Everything a settlement row records that both domains agree on. */
 const SettlementContextCommonFields = {
   type: z.literal("settlement"),
@@ -494,16 +484,6 @@ export const BucksMessageRefSchema = z.strictObject({
 
 export type BucksMessageRefs = z.infer<typeof BucksMessageRefsSchema>;
 export const BucksMessageRefsSchema = z.array(BucksMessageRefSchema);
-
-/**
- * One row of the persisted weekly leaderboard snapshot — the standings exactly
- * as the Friday 5 PM PT Discord post disclosed them. The web leaderboard reads
- * only this stored JSON, never live balances, so the deliberate
- * no-on-demand-leaderboard rule survives a second surface.
- */
-export type BucksWeeklyLeaderboardEntry = z.infer<
-  typeof BucksWeeklyLeaderboardEntrySchema
->;
 export const BucksWeeklyLeaderboardEntrySchema = z.strictObject({
   rank: z.number().int().positive(),
   discordId: DiscordAccountIdSchema,

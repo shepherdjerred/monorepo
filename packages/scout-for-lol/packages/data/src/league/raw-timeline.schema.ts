@@ -230,11 +230,8 @@ export const RawTimelineSchema = preserveRawJson(
 
 // Export types
 export type RawTimeline = z.infer<typeof RawTimelineSchema>;
-export type RawTimelineInfo = z.infer<typeof RawTimelineInfoSchema>;
-export type RawTimelineMetadata = z.infer<typeof RawTimelineMetadataSchema>;
 export type RawTimelineFrame = z.infer<typeof RawTimelineFrameSchema>;
 export type RawTimelineEvent = z.infer<typeof RawTimelineEventSchema>;
 export type RawTimelineParticipantFrame = z.infer<
   typeof RawTimelineParticipantFrameSchema
 >;
-export type RawTimelinePosition = z.infer<typeof RawTimelinePositionSchema>;

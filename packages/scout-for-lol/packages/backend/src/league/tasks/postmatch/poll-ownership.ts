@@ -21,9 +21,6 @@ const logger = createLogger("postmatch-poll-ownership");
 let isPollingInProgress = false;
 let pollingStartTime: number | undefined;
 
-export const isMatchHistoryPollingInProgress = (): boolean =>
-  isPollingInProgress;
-
 export function resetPollingState(): void {
   isPollingInProgress = false;
   pollingStartTime = undefined;

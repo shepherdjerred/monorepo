@@ -21,9 +21,6 @@ export const DARE_TEAM_POSITIONS = [
   "BOTTOM",
   "UTILITY",
 ] as const;
-export const DareTeamPositionSchema = z.enum(DARE_TEAM_POSITIONS);
-export type DareTeamPosition = z.infer<typeof DareTeamPositionSchema>;
-
 /**
  * Riot timeline event types a Dare contract may count.
  *
@@ -64,9 +61,6 @@ export const DARE_TIMELINE_EVENT_TYPES = [
   "WARD_KILL",
   "WARD_PLACED",
 ] as const;
-export const DareTimelineEventTypeSchema = z.enum(DARE_TIMELINE_EVENT_TYPES);
-export type DareTimelineEventType = z.infer<typeof DareTimelineEventTypeSchema>;
-
 /**
  * Elite monsters, as `monster_type` records them.
  *
@@ -81,15 +75,11 @@ export const DARE_MONSTER_TYPES = [
   "HORDE",
   "RIFTHERALD",
 ] as const;
-export const DareMonsterTypeSchema = z.enum(DARE_MONSTER_TYPES);
-
 /** Structures, as `building_type` records them. */
 export const DARE_BUILDING_TYPES = [
   "INHIBITOR_BUILDING",
   "TOWER_BUILDING",
 ] as const;
-export const DareBuildingTypeSchema = z.enum(DARE_BUILDING_TYPES);
-
 /**
  * Lake columns whose values are drawn from a closed set.
  *

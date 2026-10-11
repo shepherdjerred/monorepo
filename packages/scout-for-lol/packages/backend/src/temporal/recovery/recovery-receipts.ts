@@ -43,10 +43,6 @@ import { RECEIPT_VERSION } from "#src/report-lake/durable-receipts.ts";
  */
 export const SCOUT_RECOVERY_CONFLICT_RECEIPT_KIND: ReceiptKind =
   ReceiptKindSchema.parse("v2-recovery-conflict");
-
-export type ScoutRecoveryConflictEvidence = z.infer<
-  typeof ScoutRecoveryConflictEvidenceSchema
->;
 export const ScoutRecoveryConflictEvidenceSchema = z.strictObject({
   riotMatchId: RiotMatchIdSchema,
 });

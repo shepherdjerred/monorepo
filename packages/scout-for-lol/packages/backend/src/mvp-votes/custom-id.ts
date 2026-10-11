@@ -23,22 +23,16 @@ export type MatchMvpCategory = z.infer<typeof MatchMvpCategorySchema>;
 export const MatchMvpCategorySchema = z.enum(["ally", "enemy"]);
 
 const CategoryWireSchema = z.enum(["a", "e"]);
-
-export type VoteButtonCustomId = z.infer<typeof VoteButtonCustomIdSchema>;
 export const VoteButtonCustomIdSchema = z.strictObject({
   kind: z.literal("button"),
   category: MatchMvpCategorySchema,
   matchId: RiotMatchIdSchema,
 });
-
-export type VoteSelectCustomId = z.infer<typeof VoteSelectCustomIdSchema>;
 export const VoteSelectCustomIdSchema = z.strictObject({
   kind: z.literal("select"),
   category: MatchMvpCategorySchema,
   matchId: RiotMatchIdSchema,
 });
-
-export type VoteModalCustomId = z.infer<typeof VoteModalCustomIdSchema>;
 export const VoteModalCustomIdSchema = z.strictObject({
   kind: z.literal("modal"),
   category: MatchMvpCategorySchema,

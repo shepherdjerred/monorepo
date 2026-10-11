@@ -8,4 +8,3 @@ export const ProgressionAccountSchema = z.strictObject({
   accountAlias: z.string().min(1),
   puuid: LeaguePuuidSchema,
 });
-export type ProgressionAccount = z.infer<typeof ProgressionAccountSchema>;

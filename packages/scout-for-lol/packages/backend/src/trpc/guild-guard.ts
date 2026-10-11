@@ -12,46 +12,9 @@
 
 import type { DiscordChannelId } from "@scout-for-lol/domain/identity/discord.ts";
 import { TRPCError } from "@trpc/server";
-import type { User } from "#generated/prisma/client/index.js";
 import type { DiscordGuildId } from "@scout-for-lol/data";
-import { hasAdministrator } from "#src/lib/discord-rest.ts";
-import { isScoutInstalledInGuild } from "#src/lib/discord/installed-guilds.ts";
 import { readGuildChannelPostability } from "#src/lib/discord/postable-channels.ts";
-import {
-  callDiscordForRequest,
-  fetchUserGuildsForRequest,
-} from "#src/trpc/discord-upstream.ts";
-
-export async function assertGuildAdmin(params: {
-  user: User;
-  guildId: DiscordGuildId;
-}): Promise<void> {
-  // Throws UNAUTHORIZED / SERVICE_UNAVAILABLE if Discord can't be reached, so
-  // the FORBIDDEN below only ever means a real membership answer.
-  const guilds = await fetchUserGuildsForRequest(params.user);
-  const match = guilds.find((g) => g.id === params.guildId);
-  if (match === undefined) {
-    throw new TRPCError({
-      code: "FORBIDDEN",
-      message: "You are not a member of that guild",
-    });
-  }
-  if (!match.owner && !hasAdministrator(match.permissions)) {
-    throw new TRPCError({
-      code: "FORBIDDEN",
-      message: "Administrator permission required",
-    });
-  }
-  const installed = await callDiscordForRequest(() =>
-    isScoutInstalledInGuild(params.guildId),
-  );
-  if (!installed) {
-    throw new TRPCError({
-      code: "NOT_FOUND",
-      message: "Scout is not installed in that guild",
-    });
-  }
-}
+import { callDiscordForRequest } from "#src/trpc/discord-upstream.ts";
 
 /**
  * Verifies that `channelId` is a channel inside `guildId` that Scout can

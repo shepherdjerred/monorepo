@@ -604,5 +604,3 @@ export const ExploreJudgeReportSchema = z
     passed: z.boolean(),
   })
   .strict();
-
-export type ExploreJudgeReport = z.infer<typeof ExploreJudgeReportSchema>;

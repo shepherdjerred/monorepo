@@ -10,14 +10,6 @@ export async function getLastSuccessfulPollAt(): Promise<Date | undefined> {
   return row?.lastSuccessfulPollAt ?? undefined;
 }
 
-export async function setLastSuccessfulPollAt(date: Date): Promise<void> {
-  await prisma.botState.upsert({
-    where: { id: BOT_STATE_ID },
-    update: { lastSuccessfulPollAt: date },
-    create: { id: BOT_STATE_ID, lastSuccessfulPollAt: date },
-  });
-}
-
 export async function getReconciliationCompletedAt(): Promise<
   Date | undefined
 > {

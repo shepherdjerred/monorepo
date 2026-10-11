@@ -27,7 +27,6 @@ import { createLogger } from "#src/logger.ts";
 import type {
   ActiveRun,
   ExploreAgentRunner,
-  RunTermination,
   StartedTurn,
   TerminalRun,
 } from "#src/explore/runs/run-manager-types.ts";
@@ -49,17 +48,6 @@ export function createRecoveredExploreTicket(
       // The persisted run already owns its reservation.
     },
   };
-}
-
-export function abortActiveExploreRun(
-  run: ActiveRun,
-  reason: Exclude<RunTermination, null>,
-  message: string,
-): void {
-  if (run.termination !== null) return;
-  run.termination = reason;
-  run.activity = reason === "stop" ? "Stopping…" : run.activity;
-  run.abortController.abort(message);
 }
 
 export function recordTerminalExploreOutcome(

@@ -126,8 +126,6 @@ export const CDragonSpellDataValueSchema = z.looseObject({
   name: z.string(),
   values: z.array(z.number()).optional(),
 });
-export type CDragonSpellDataValue = z.infer<typeof CDragonSpellDataValueSchema>;
-
 /**
  * A tooltip calculation. `GameCalculation` carries `mFormulaParts`;
  * `GameCalculationModified` scales another calculation by `mMultiplier`.
@@ -157,8 +155,6 @@ export const CDragonSpellObjectSchema = z.looseObject({
   __type: z.literal("SpellObject"),
   mSpell: CDragonSpellRecordSchema.optional(),
 });
-export type CDragonSpellObject = z.infer<typeof CDragonSpellObjectSchema>;
-
 export const CDragonCharacterRecordSchema = z.looseObject({
   __type: z.literal("CharacterRecord"),
   /** Slot-ordered Q/W/E/R spell names, relative to `Characters/{alias}/Spells/`. */
@@ -166,14 +162,8 @@ export const CDragonCharacterRecordSchema = z.looseObject({
   /** Full bin key of the passive's SpellObject. */
   mCharacterPassiveSpell: z.string().optional(),
 });
-export type CDragonCharacterRecord = z.infer<
-  typeof CDragonCharacterRecordSchema
->;
-
 /** The bin's top level: an object map keyed by bin entry path. */
 export const CDragonChampionBinSchema = z.record(z.string(), z.unknown());
-export type CDragonChampionBin = z.infer<typeof CDragonChampionBinSchema>;
-
 // Calculation formula parts. Each schema is anchored on its `__type` literal;
 // the resolver tries them in turn and refuses the whole calculation when a
 // part matches none (that keeps "never guess" mechanical).

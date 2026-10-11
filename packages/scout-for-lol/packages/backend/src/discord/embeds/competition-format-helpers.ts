@@ -1,13 +1,11 @@
 import type {
   CompetitionCriteria,
-  CompetitionQueueType,
   CompetitionWithCriteria,
   Rank,
   getCompetitionStatus,
 } from "@scout-for-lol/data";
 import {
   competitionQueuesToString,
-  competitionQueueTypeToString,
   queueTypeToDisplayString,
   QueueTypeSchema,
   rankToString,
@@ -242,11 +240,4 @@ export function getStatusText(
  */
 export function getMedalEmoji(rank: number): string {
   return MEDAL_EMOJIS[rank] ?? "  ";
-}
-
-/**
- * Format queue type to human-readable string
- */
-export function formatQueue(queue: CompetitionQueueType): string {
-  return competitionQueueTypeToString(queue);
 }

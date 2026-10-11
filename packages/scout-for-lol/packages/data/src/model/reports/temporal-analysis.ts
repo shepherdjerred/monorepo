@@ -151,8 +151,6 @@ export const ConfidenceIntervalSchema = z
     upper: z.number().min(0).max(1),
   })
   .strict();
-export type ConfidenceInterval = z.infer<typeof ConfidenceIntervalSchema>;
-
 export const TemporalMetricEvidenceSchema = z
   .object({
     // Optional only for compatibility with snapshots created before game

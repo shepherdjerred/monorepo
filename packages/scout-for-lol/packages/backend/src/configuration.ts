@@ -112,10 +112,6 @@ const TemporalScheduleReconciliationSchema = z.enum([
   "disabled",
   "auto",
 ]);
-export type TemporalScheduleReconciliation = z.infer<
-  typeof TemporalScheduleReconciliationSchema
->;
-
 const ProductAnalyticsConfigurationSchema = z.object({
   projectToken: z.string().min(1),
   apiHost: z.url(),

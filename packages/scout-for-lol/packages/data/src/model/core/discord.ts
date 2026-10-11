@@ -14,7 +14,6 @@ export {
   DiscordMessageIdSchema,
 } from "@scout-for-lol/domain/identity/brands.ts";
 
-export type Discord = z.infer<typeof DiscordSchema>;
 export const DiscordSchema = z.strictObject({
   id: DiscordAccountIdSchema.optional(),
 });

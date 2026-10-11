@@ -63,11 +63,7 @@ export const EXPLORE_INTERRUPTED_CAVEAT =
   "This answer was interrupted by an error before it finished.";
 
 export const ExploreConversationIdSchema = z.uuid();
-export type ExploreConversationId = z.infer<typeof ExploreConversationIdSchema>;
-
 export const ExploreRunIdSchema = z.uuid();
-export type ExploreRunId = z.infer<typeof ExploreRunIdSchema>;
-
 /**
  * Share tokens are opaque and unguessable: the share link is the only
  * credential, so the token must not be derived from the conversation id.
@@ -75,8 +71,6 @@ export type ExploreRunId = z.infer<typeof ExploreRunIdSchema>;
 export const ExploreShareTokenSchema = z
   .string()
   .regex(/^[0-9a-f]{32}$/, "Share tokens are 32 lowercase hex characters.");
-export type ExploreShareToken = z.infer<typeof ExploreShareTokenSchema>;
-
 export const ExploreQuestionSchema = z
   .string()
   .trim()
@@ -274,8 +268,6 @@ export const ExploreTraceEntrySchema = z
 export type ExploreTraceEntry = z.infer<typeof ExploreTraceEntrySchema>;
 
 export const ExploreMessageRoleSchema = z.enum(["user", "assistant"]);
-export type ExploreMessageRole = z.infer<typeof ExploreMessageRoleSchema>;
-
 /**
  * One persisted turn. Assistant messages keep the rendered result inline, so
  * a frozen share needs no re-execution and never drifts from what the asker
@@ -355,8 +347,6 @@ export const ExploreStreamMessageSchema = ExploreMessageSchema.omit({
   loadoutCards: true,
   guildIds: true,
 }).strict();
-export type ExploreStreamMessage = z.infer<typeof ExploreStreamMessageSchema>;
-
 export const ExploreConversationSchema = z
   .object({
     id: ExploreConversationIdSchema,
@@ -441,10 +431,6 @@ export type ExploreRunObserveRequest = z.infer<
 export const ExploreRunOutcomeResultSchema = z
   .object({ outcome: ExploreRunOutcomeSchema.nullable() })
   .strict();
-export type ExploreRunOutcomeResult = z.infer<
-  typeof ExploreRunOutcomeResultSchema
->;
-
 /**
  * Complete replaceable state sent whenever an observer attaches.
  *
@@ -705,5 +691,3 @@ export const ExploreHttpErrorSchema = z
     quota: z.array(ExploreQuotaSnapshotSchema).nullable().default(null),
   })
   .strict();
-
-export type ExploreHttpError = z.infer<typeof ExploreHttpErrorSchema>;

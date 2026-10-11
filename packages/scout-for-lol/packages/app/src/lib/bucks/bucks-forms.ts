@@ -35,8 +35,6 @@ export function bucksStakeFormSchema(balance: number) {
   });
 }
 
-export type BucksStakeFormValues = { side: string; stake: string };
-
 export const BucksContributionFormSchema = z.object({
   contributionAmount: z
     .string()

@@ -17,8 +17,6 @@ export const REPORT_VISUALIZATION_PREVIEW_MAX_ROWS = 12;
 export const EXPLORE_MODEL_PREVIEW_MAX_ROWS = 50;
 export const REPORT_AI_TIMEOUT_MS = 180_000;
 export const REPORT_AI_MAX_OUTPUT_TOKENS = 4000;
-export const REPORT_AI_DEFAULT_WEEKLY_LIMIT = 30;
-
 export const ReportAiCurrentQueryTextSchema = z
   .string()
   .trim()
@@ -251,5 +249,3 @@ export const ReportAiHttpErrorSchema = z
     quota: z.array(ReportAiQuotaSnapshotSchema).nullable().default(null),
   })
   .strict();
-
-export type ReportAiHttpError = z.infer<typeof ReportAiHttpErrorSchema>;
