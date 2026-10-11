@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["repository", "branch", "commit", "submodules", "romSha1"],
+  "properties": {
+    "repository": { "type": "string", "format": "uri" },
+    "branch": { "type": "string", "minLength": 1 },
+    "commit": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
+    "submodules": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "minItems": 1
+    },
+    "romSha1": { "type": "string", "pattern": "^[a-f0-9]{40}$" }
+  }
+}

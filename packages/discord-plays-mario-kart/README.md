@@ -83,6 +83,29 @@ the core into `packages/backend/assets/n64wasm/` using the pinned
 > `ENVIRONMENT_IS_NODE` only; if it also detects a web environment its FS path
 > null-traps `fseek`. See `packages/backend/src/emulator/wasm-host.ts`.
 
+## Native engine (SpaghettiKart, evaluation)
+
+[SpaghettiKart](https://github.com/HarbourMasters/SpaghettiKart) is a native PC
+port of the Mario Kart 64 decompilation. We are evaluating it as a replacement for
+the wasm core. Production still runs N64Wasm; nothing in `src/` uses the port yet.
+
+Only the upstream pin ([`spaghetti-src/upstream.json`](./spaghetti-src/upstream.json))
+and our patch series ([`spaghetti-src/patches/`](./spaghetti-src/patches)) are
+committed. The patches add a host bridge: the backend owns all four controller
+ports over a Unix socket and receives every drawn frame (BGRA, 640×480 square
+pixels), the mixed audio (s16 stereo, 26 800 Hz), and a per-frame game-state
+record that replaces the RDRAM reads. [`spaghetti-src/PATCHES.md`](./spaghetti-src/PATCHES.md)
+documents the protocol and how to regenerate the patches.
+
+```bash
+bun run build:spaghetti        # clone the pin, patch, build, extract mk64.o2r from the ROM
+```
+
+`mk64.o2r` is the port's asset archive, extracted from the ROM. Treat it exactly
+like the ROM: it stays in the gitignored `.cache/spaghetti/`, and is never
+committed, logged, or copied into an image. On macOS, dependencies come from
+vcpkg as in upstream CI. On Linux, they come from system packages.
+
 ## Testing
 
 The input path — **browser keypress → Socket.IO → backend → emulator → game** —
@@ -130,6 +153,8 @@ bun run e2e:scenario 1p --names Me,Bot     # override the burned-in names
 
 # Game-side input latency, in VIs, from replays of one heap snapshot.
 bun run e2e:game-latency --seats 4         # also: swap phase, game fps, emulate time
+# The same question for the native port (needs `bun run build:spaghetti`):
+bun run e2e:native-latency --seats 4 --fps 30   # lockstep game response + paced wall clock
 
 # Lower-level scripts:
 bun run e2e:input:check ~/syncthing/Sync/roms/mariokart64.z64
@@ -181,6 +206,12 @@ MK64 takes to show an input. It snapshots the whole wasm heap once in a race and
 replays it per trial, so every trial starts from an identical state. The core's
 VI filter adds low-amplitude noise to most pixels on every VI, so the harness
 counts a new picture only when many pixels move well beyond that noise.
+
+`e2e:native-latency` answers the same question for the native port. The port has
+no save states, so it runs two lockstep instances with identical input, checks
+that their pictures stay byte-identical, then steers one. The first draw whose
+picture differs is the game's response. A second, paced instance measures wall
+time from sending an input to the first frame that latched it.
 
 ## Deployment
 

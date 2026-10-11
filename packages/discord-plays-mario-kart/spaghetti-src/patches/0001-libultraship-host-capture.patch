@@ -1,0 +1,197 @@
+diff --git a/libultraship/include/fast/backends/gfx_opengl.h b/libultraship/include/fast/backends/gfx_opengl.h
+index af24c70..183d28c 100644
+--- a/libultraship/include/fast/backends/gfx_opengl.h
++++ b/libultraship/include/fast/backends/gfx_opengl.h
+@@ -94,6 +94,7 @@ class GfxRenderingAPIOGL final : public GfxRenderingAPI {
+     void ClearFramebuffer(bool color, bool depth) override;
+     void ClearDepthRegion(int x, int y, int w, int h) override;
+     void ReadFramebufferToCPU(int fbId, uint32_t width, uint32_t height, uint16_t* rgba16Buf) override;
++    bool ReadFramebufferBGRA8(int fbId, uint32_t width, uint32_t height, uint8_t* bgraOut) override;
+     void ResolveMSAAColorBuffer(int fbIdTarger, int fbIdSrc) override;
+     std::unordered_map<std::pair<float, float>, uint16_t, hash_pair_ff>
+     GetPixelDepth(int fb_id, const std::set<std::pair<float, float>>& coordinates) override;
+diff --git a/libultraship/include/fast/backends/gfx_rendering_api.h b/libultraship/include/fast/backends/gfx_rendering_api.h
+index 3eb0996..b9fc785 100644
+--- a/libultraship/include/fast/backends/gfx_rendering_api.h
++++ b/libultraship/include/fast/backends/gfx_rendering_api.h
+@@ -68,6 +68,11 @@ class GfxRenderingAPI {
+         ClearFramebuffer(false, true);
+     }
+     virtual void ReadFramebufferToCPU(int fbId, uint32_t width, uint32_t height, uint16_t* rgba16Buf) = 0;
++    // Reads a framebuffer as 8-bit BGRA, top row first. Returns false when the
++    // backend cannot read back (host capture is then unavailable).
++    virtual bool ReadFramebufferBGRA8(int fbId, uint32_t width, uint32_t height, uint8_t* bgraOut) {
++        return false;
++    }
+     virtual void ResolveMSAAColorBuffer(int fbIdTarger, int fbIdSrc) = 0;
+     virtual std::unordered_map<std::pair<float, float>, uint16_t, hash_pair_ff>
+     GetPixelDepth(int fb_id, const std::set<std::pair<float, float>>& coordinates) = 0;
+diff --git a/libultraship/include/fast/interpreter.h b/libultraship/include/fast/interpreter.h
+index 5d87f4e..4d79082 100644
+--- a/libultraship/include/fast/interpreter.h
++++ b/libultraship/include/fast/interpreter.h
+@@ -370,8 +370,15 @@ struct MaskedTextureEntry {
+     uint8_t* replacementData;
+ };
+ 
++// Receives each drawn game frame as BGRA, top row first, before the GUI is
++// composited over it. Installed by an embedding host; null by default.
++typedef void (*FrameCaptureFn)(const uint8_t* bgra, uint32_t width, uint32_t height, void* user);
++
+ class Interpreter {
+   public:
++    // forceOffscreen renders the game into its own framebuffer even when it
++    // matches the window, so capture never depends on a visible window.
++    void SetFrameCapture(FrameCaptureFn fn, void* user, bool forceOffscreen);
+     Interpreter();
+     ~Interpreter();
+ 
+@@ -386,6 +393,7 @@ class Interpreter {
+     void RunGuiOnly();
+     void Run(Gfx* commands, const std::unordered_map<Mtx*, MtxF>& mtx_replacements);
+     void EndFrame();
++    void CaptureFrame();
+     void HandleWindowEvents();
+     bool IsFrameReady();
+     bool ViewportMatchesRendererResolution();
+@@ -529,6 +537,10 @@ class Interpreter {
+ 
+     bool mFbActive{};
+     bool mRendersToFb{}; // game_renders_to_framebuffer;
++    FrameCaptureFn mFrameCaptureFn{};
++    void* mFrameCaptureUser{};
++    bool mForceRenderToFb{};
++    std::vector<uint8_t> mFrameCaptureBuf;
+     std::map<int, FBInfo>::iterator mActiveFrameBuffer;
+     std::map<int, FBInfo> mFrameBuffers;
+ 
+diff --git a/libultraship/src/fast/backends/gfx_opengl.cpp b/libultraship/src/fast/backends/gfx_opengl.cpp
+index ad9b1dd..8754020 100644
+--- a/libultraship/src/fast/backends/gfx_opengl.cpp
++++ b/libultraship/src/fast/backends/gfx_opengl.cpp
+@@ -1020,6 +1020,40 @@ void GfxRenderingAPIOGL::ReadFramebufferToCPU(int fb_id, uint32_t width, uint32_
+     glBindFramebuffer(GL_FRAMEBUFFER, mFrameBuffers[mCurrentFrameBuffer].fbo);
+ }
+ 
++bool GfxRenderingAPIOGL::ReadFramebufferBGRA8(int fbId, uint32_t width, uint32_t height, uint8_t* bgraOut) {
++    if (fbId >= (int)mFrameBuffers.size()) {
++        return false;
++    }
++
++    const size_t stride = (size_t)width * 4;
++    glBindFramebuffer(GL_READ_FRAMEBUFFER, mFrameBuffers[fbId].fbo);
++    glPixelStorei(GL_PACK_ALIGNMENT, 4);
++#ifdef USE_OPENGLES
++    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, bgraOut);
++    for (size_t i = 0; i < stride * height; i += 4) {
++        std::swap(bgraOut[i], bgraOut[i + 2]);
++    }
++#else
++    glReadPixels(0, 0, width, height, GL_BGRA, GL_UNSIGNED_BYTE, bgraOut);
++#endif
++    glBindFramebuffer(GL_FRAMEBUFFER, mFrameBuffers[mCurrentFrameBuffer].fbo);
++
++    // GL rows start at the bottom unless the framebuffer was rendered
++    // Y-inverted (the game framebuffer is); hosts expect the top row first.
++    if (mFrameBuffers[fbId].invertY) {
++        return true;
++    }
++    std::vector<uint8_t> row(stride);
++    for (uint32_t y = 0; y < height / 2; y++) {
++        uint8_t* top = bgraOut + (size_t)y * stride;
++        uint8_t* bottom = bgraOut + (size_t)(height - 1 - y) * stride;
++        memcpy(row.data(), top, stride);
++        memcpy(top, bottom, stride);
++        memcpy(bottom, row.data(), stride);
++    }
++    return true;
++}
++
+ std::unordered_map<std::pair<float, float>, uint16_t, hash_pair_ff>
+ GfxRenderingAPIOGL::GetPixelDepth(int fb_id, const std::set<std::pair<float, float>>& coordinates) {
+     std::unordered_map<std::pair<float, float>, uint16_t, hash_pair_ff> res;
+diff --git a/libultraship/src/fast/backends/gfx_sdl2.cpp b/libultraship/src/fast/backends/gfx_sdl2.cpp
+index 15c5415..60bbb72 100644
+--- a/libultraship/src/fast/backends/gfx_sdl2.cpp
++++ b/libultraship/src/fast/backends/gfx_sdl2.cpp
+@@ -378,6 +378,9 @@ void GfxWindowBackendSDL2::Init(const char* gameName, const char* gfxApiName, bo
+ #else
+     Uint32 flags = SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
+ #endif
++    if (Ship::Context::GetRawInstance()->GetConsoleVariables()->GetInteger("gHostBridge.HiddenWindow", 0)) {
++        flags = (flags & ~SDL_WINDOW_SHOWN) | SDL_WINDOW_HIDDEN;
++    }
+ 
+     if (use_opengl) {
+         flags = flags | SDL_WINDOW_OPENGL;
+@@ -734,6 +737,12 @@ void GfxWindowBackendSDL2::SyncFramerateWithTime() const {
+         // don't let that slow down the framerate.
+         t = next;
+     }
++    // An embedding host needs the frame rate exact: keep a fixed schedule and
++    // absorb any oversleep shorter than a frame instead of accumulating it.
++    if (Ship::Context::GetRawInstance()->GetConsoleVariables()->GetInteger("gHostBridge.FixedSchedule", 0) &&
++        (int64_t)t - next < 10 * FRAME_INTERVAL_US_NUMERATOR / FRAME_INTERVAL_US_DENOMINATOR) {
++        t = next;
++    }
+     previous_time = t;
+ }
+ 
+@@ -746,7 +755,10 @@ void GfxWindowBackendSDL2::SwapBuffersBegin() {
+         SDL_RenderSetVSync(mRenderer, mVsyncEnabled ? 1 : 0);
+     }
+ 
+-    SyncFramerateWithTime();
++    // An embedding host that steps frames itself turns wall-clock pacing off.
++    if (!Ship::Context::GetRawInstance()->GetConsoleVariables()->GetInteger("gHostBridge.Unpaced", 0)) {
++        SyncFramerateWithTime();
++    }
+     SDL_GL_SwapWindow(mWnd);
+ }
+ 
+diff --git a/libultraship/src/fast/interpreter.cpp b/libultraship/src/fast/interpreter.cpp
+index 04dff04..0ec3dc4 100644
+--- a/libultraship/src/fast/interpreter.cpp
++++ b/libultraship/src/fast/interpreter.cpp
+@@ -5031,7 +5031,7 @@ void Interpreter::StartFrame() {
+ 
+     mPrvDimensions = mCurDimensions;
+     mPrevNativeDimensions = mNativeDimensions;
+-    if (!ViewportMatchesRendererResolution() || mMsaaLevel > 1) {
++    if (mForceRenderToFb || !ViewportMatchesRendererResolution() || mMsaaLevel > 1) {
+         mRendersToFb = true;
+         if (!ViewportMatchesRendererResolution()) {
+             mRapi->UpdateFramebufferParameters(mGameFb, mCurDimensions.width, mCurDimensions.height, mMsaaLevel, true,
+@@ -5135,6 +5135,7 @@ void Interpreter::Run(Gfx* commands, const std::unordered_map<Mtx*, MtxF>& mtx_r
+     }
+ 
+     Flush();
++    CaptureFrame();
+     mGfxFrameBuffer = 0;
+     currentDir = std::stack<std::string>();
+ 
+@@ -5160,6 +5161,24 @@ void Interpreter::Run(Gfx* commands, const std::unordered_map<Mtx*, MtxF>& mtx_r
+     }
+ }
+ 
++void Interpreter::SetFrameCapture(FrameCaptureFn fn, void* user, bool forceOffscreen) {
++    mFrameCaptureFn = fn;
++    mFrameCaptureUser = user;
++    mForceRenderToFb = forceOffscreen;
++}
++
++void Interpreter::CaptureFrame() {
++    if (mFrameCaptureFn == nullptr) {
++        return;
++    }
++    const uint32_t width = mCurDimensions.width;
++    const uint32_t height = mCurDimensions.height;
++    mFrameCaptureBuf.resize((size_t)width * height * 4);
++    if (mRapi->ReadFramebufferBGRA8(mRendersToFb ? mGameFb : 0, width, height, mFrameCaptureBuf.data())) {
++        mFrameCaptureFn(mFrameCaptureBuf.data(), width, height, mFrameCaptureUser);
++    }
++}
++
+ void Interpreter::EndFrame() {
+     mRapi->EndFrame();
+     mWapi->SwapBuffersBegin();
