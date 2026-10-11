@@ -216,10 +216,6 @@
       "clones": 1,
       "tokens": 96
     },
-    "packages/discord-plays-mario-kart/packages/backend/src/webserver/socket.ts|packages/discord-plays-pokemon/packages/backend/src/webserver/socket.ts": {
-      "clones": 1,
-      "tokens": 95
-    },
     "packages/discord-plays-mario-kart/packages/common/src/model/login.ts|packages/discord-plays-pokemon/packages/common/src/model/login.ts": {
       "clones": 1,
       "tokens": 102
