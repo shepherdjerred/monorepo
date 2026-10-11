@@ -53,7 +53,7 @@ The harness needs secrets for the model, and must be aimed at the pin:
 LAKE="$HOME/.local/share/scout-for-lol/stage-dataset/beta/report-lake"
 cd packages/scout-for-lol
 ../../scripts/onepassword/with-service-account.sh \
-  op run --env-file=./dev-web.env.tpl -- env \
+  op run --env-file=./dev-web.env.tpl -- env -u OP_SERVICE_ACCOUNT_TOKEN \
   DATABASE_URL="postgres://scout@127.0.0.1:5471/scout_beta_snapshot" \
   REPORT_LAKE_DIR="$LAKE" \
   FEATURE_FLAGS_MODE=disabled \

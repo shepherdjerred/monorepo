@@ -42,13 +42,14 @@ Before you start, you need:
    ```bash
    toolkit mc daemon stop
    scripts/onepassword/with-service-account.sh sh -c \
-     'MC_BRIDGE_TOKEN="$(op read "op://v64ocnykdqju4ui6j6pua56xw4/mpv7cti3fpwrfobgr6ydnemydy/MC_BRIDGE_TOKEN")" exec toolkit mc daemon start'
+     'MC_BRIDGE_TOKEN="$(op read "op://v64ocnykdqju4ui6j6pua56xw4/mpv7cti3fpwrfobgr6ydnemydy/MC_BRIDGE_TOKEN")" && export MC_BRIDGE_TOKEN && unset OP_SERVICE_ACCOUNT_TOKEN && exec toolkit mc daemon start'
    ```
 
    The [service-account wrapper](https://github.com/shepherdjerred/monorepo/blob/main/scripts/onepassword/with-service-account.sh)
    reads the Keychain-enrolled 1Password service account, so no desktop
-   approval is needed. The reference uses the vault and item ids because
-   `op://` rejects the parentheses in the vault name.
+   approval is needed. The command unsets that token before the daemon starts,
+   so the daemon holds only the bridge token. The reference uses the vault and
+   item ids because `op://` rejects the parentheses in the vault name.
 
 3. Check the server:
 

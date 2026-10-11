@@ -81,6 +81,29 @@ describe("resolveOperatorTemporalApiKey", () => {
     expect(resolve).toHaveBeenCalledExactlyOnceWith(["TEMPORAL_API_KEY"]);
   });
 
+  test("drops the brokered service account token before children run", async () => {
+    Bun.env["TEMPORAL_ADDRESS"] = EXTERNAL;
+    Bun.env["TEMPORAL_TLS"] = "true";
+    await resolveOperatorTemporalApiKey(() => {
+      Bun.env["OP_SERVICE_ACCOUNT_TOKEN"] = "brokered";
+      Bun.env["TEMPORAL_API_KEY"] = "resolved";
+      return Promise.resolve();
+    });
+    expect(Bun.env["OP_SERVICE_ACCOUNT_TOKEN"]).toBeUndefined();
+    expect(Bun.env["TEMPORAL_API_KEY"]).toBe("resolved");
+  });
+
+  test("keeps a service account token the operator supplied", async () => {
+    Bun.env["TEMPORAL_ADDRESS"] = EXTERNAL;
+    Bun.env["TEMPORAL_TLS"] = "true";
+    Bun.env["OP_SERVICE_ACCOUNT_TOKEN"] = "operator";
+    await resolveOperatorTemporalApiKey(() => {
+      Bun.env["TEMPORAL_API_KEY"] = "resolved";
+      return Promise.resolve();
+    });
+    expect(Bun.env["OP_SERVICE_ACCOUNT_TOKEN"]).toBe("operator");
+  });
+
   test("does not broker when the environment already supplies the key", async () => {
     Bun.env["TEMPORAL_ADDRESS"] = EXTERNAL;
     Bun.env["TEMPORAL_TLS"] = "true";
@@ -113,5 +136,6 @@ describe("resolveOperatorTemporalApiKey", () => {
     expect(message).toContain("TEMPORAL_API_KEY");
     expect(message).not.toContain(fakeToken);
     expect(Bun.env["TEMPORAL_API_KEY"]).toBeUndefined();
+    expect(Bun.env["OP_SERVICE_ACCOUNT_TOKEN"]).toBeUndefined();
   });
 });

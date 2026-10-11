@@ -8,9 +8,9 @@
  *
  * Usage (local dev — temporal server start-dev):
  *   temporal server start-dev --namespace dev --ui-port 8233 &
- *   ../../scripts/onepassword/with-service-account.sh op run --env-file=.env.audit -- TEMPORAL_ADDRESS=localhost:7233 TEMPORAL_NAMESPACE=dev \
+ *   ../../scripts/onepassword/with-service-account.sh op run --env-file=.env.audit -- env -u OP_SERVICE_ACCOUNT_TOKEN TEMPORAL_ADDRESS=localhost:7233 TEMPORAL_NAMESPACE=dev \
  *     TEMPORAL_WORKER_ROLE=all bun run start &
- *   ../../scripts/onepassword/with-service-account.sh op run --env-file=.env.audit -- TEMPORAL_ADDRESS=localhost:7233 TEMPORAL_NAMESPACE=dev \
+ *   ../../scripts/onepassword/with-service-account.sh op run --env-file=.env.audit -- env -u OP_SERVICE_ACCOUNT_TOKEN TEMPORAL_ADDRESS=localhost:7233 TEMPORAL_NAMESPACE=dev \
  *     bun run scripts/homelab/trigger-homelab-audit.ts
  *
  * Usage (production — kubectl port-forward):

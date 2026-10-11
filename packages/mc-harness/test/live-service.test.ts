@@ -396,6 +396,7 @@ describe("live target reads", () => {
       "scripts/onepassword/with-service-account.sh",
     );
     expect(String(json["error"])).toContain('op read "op://');
+    expect(String(json["error"])).toContain("unset OP_SERVICE_ACCOUNT_TOKEN");
   });
 
   it("rechecks restoration leases before file reads despite cached ready status", async () => {

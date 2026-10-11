@@ -30,11 +30,23 @@ export function temporalApiKeyNeedsResolution(
  * broker, which reads the Keychain-enrolled 1Password service account instead
  * of waiting for 1Password desktop approval. Replay and canary subprocesses
  * inherit `Bun.env`, so they receive the key without resolving it again.
+ *
+ * The broker exports the service account token for its own `op read`. Remove
+ * it again unless the operator supplied it, so candidate code and other
+ * children receive only the Temporal key, never vault access.
  */
 export async function resolveOperatorTemporalApiKey(
   resolve: ResolveCredentials = resolveCredentials,
 ): Promise<void> {
-  if (temporalApiKeyNeedsResolution(Bun.env)) {
+  if (!temporalApiKeyNeedsResolution(Bun.env)) {
+    return;
+  }
+  const ambientServiceAccount = Bun.env["OP_SERVICE_ACCOUNT_TOKEN"];
+  try {
     await resolve(["TEMPORAL_API_KEY"]);
+  } finally {
+    if (ambientServiceAccount === undefined) {
+      Reflect.deleteProperty(Bun.env, "OP_SERVICE_ACCOUNT_TOKEN");
+    }
   }
 }

@@ -8,14 +8,14 @@
  * Usage (from packages/temporal; the wrapper reads the Keychain service
  * account, so homelab-vault references need no 1Password desktop approval):
  *   # Pure dry-run against a fresh clone (slow: shallow clone + Codex SDK):
- *   ../../scripts/onepassword/with-service-account.sh op run --env-file=.env.season-refresh -- DRY_RUN=1 bun run scripts/scout/run-scout-season-refresh-local.ts
+ *   ../../scripts/onepassword/with-service-account.sh op run --env-file=.env.season-refresh -- env -u OP_SERVICE_ACCOUNT_TOKEN DRY_RUN=1 bun run scripts/scout/run-scout-season-refresh-local.ts
  *
  *   # Faster iteration: point at an existing checkout (skips clone):
- *   ../../scripts/onepassword/with-service-account.sh op run --env-file=.env.season-refresh -- DRY_RUN=1 \
+ *   ../../scripts/onepassword/with-service-account.sh op run --env-file=.env.season-refresh -- env -u OP_SERVICE_ACCOUNT_TOKEN DRY_RUN=1 \
  *     bun run scripts/scout/run-scout-season-refresh-local.ts --repo=/tmp/some-monorepo-checkout
  *
  *   # Real PR run (use a throwaway branch — workflow opens PR and exits):
- *   ../../scripts/onepassword/with-service-account.sh op run --env-file=.env.season-refresh -- bun run scripts/scout/run-scout-season-refresh-local.ts
+ *   ../../scripts/onepassword/with-service-account.sh op run --env-file=.env.season-refresh -- env -u OP_SERVICE_ACCOUNT_TOKEN bun run scripts/scout/run-scout-season-refresh-local.ts
  *
  * Notes:
  *   - This bypasses Temporal entirely. No worker bundle, no schedule. The
