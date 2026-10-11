@@ -331,8 +331,11 @@ older stable workers cannot receive its new Workflow type. Disable
 dispatch first when stopping new work; disable the extension flag to restore
 the combined main graph. Already generated pipelines retain their own graph.
 
-Generated release and image promotion PRs start as drafts. Marking a draft
-ready requests full CI and freezes maintenance updates until merge or close.
+Generated release PRs start as drafts. Marking a draft ready requests full CI
+and freezes maintenance updates until merge or close. CI image promotion PRs
+open ready with squash auto-merge, because every CI step reinstalls a stale
+image's missing tools at runtime until the promotion lands; a ready promotion
+freezes later candidates the same way.
 Publishers re-read draft status and use exact Git head leases before pushing.
 The dispatcher retains later candidates and selects the newest verified main
 revision after the ready PR closes. Automated review remains required; bot
