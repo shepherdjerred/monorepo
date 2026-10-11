@@ -8,6 +8,9 @@ reference.
 - The copyrighted ROM is never committed, encrypted into Git, logged, or copied
   into an image. Local harnesses resolve only the explicit path/environment and
   documented Syncthing locations. Production uses the existing private PVC.
+- SpaghettiKart's `mk64.o2r` is extracted from the ROM and follows the ROM's
+  rules. Only the upstream pin and patch series under `spaghetti-src/` are
+  committed, never the upstream source or build output.
 - Go-Live and driver-feed video are independent. Drivers watch the in-browser
   driver feed, which production enables (the code default is off); Go-Live is
   the spectator view. Do not couple a driver-feed failure to spectator playback.

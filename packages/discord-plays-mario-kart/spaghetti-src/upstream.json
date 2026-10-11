@@ -1,0 +1,8 @@
+{
+  "$schema": "./upstream.schema.json",
+  "repository": "https://github.com/HarbourMasters/SpaghettiKart.git",
+  "branch": "main",
+  "commit": "2b3ddb4a579887d7ab41c56445691b9411996399",
+  "submodules": ["libultraship", "torch"],
+  "romSha1": "579c48e211ae952530ffc8738709f078d5dd215e"
+}
