@@ -11,6 +11,8 @@ import {
   CI_POD_PARENT_CGROUP_PATTERN,
   CI_POD_PARENT_FS_WRITES_BYTES_BY_JOB_METRIC,
   CI_WORKSPACE_LEAK_AGE_SECONDS,
+  CI_WORKSPACE_REAP_ACTIVITY,
+  CI_WORKSPACE_REAPER_GRACE_SECONDS,
   getWoodpeckerRuleGroups,
 } from "./woodpecker.ts";
 
@@ -219,9 +221,23 @@ describe("Woodpecker CI I/O informational alerts", () => {
       'kube_persistentvolumeclaim_created{namespace="woodpecker-ci"}',
     );
     expect(expression).toContain('storageclass="ci-workspace"');
-    expect(expression).toContain(`> ${String(CI_WORKSPACE_LEAK_AGE_SECONDS)}`);
+    expect(expression).toContain(
+      `> ${String(CI_WORKSPACE_LEAK_AGE_SECONDS + CI_WORKSPACE_REAPER_GRACE_SECONDS)}`,
+    );
     // Past the 270-minute workflow timeout, with margin.
     expect(CI_WORKSPACE_LEAK_AGE_SECONDS).toBeGreaterThan(270 * 60);
+    // Past one 15-minute reaper interval plus a 45-minute infra queue hold.
+    expect(CI_WORKSPACE_REAPER_GRACE_SECONDS).toBeGreaterThan(60 * 60);
+    expect(rule.labels?.["severity"]).toBe("warning");
+  });
+
+  it("flags a reaper that stopped succeeding", () => {
+    const rule = alertRule("WoodpeckerWorkspaceReaperStale");
+    const expression = ruleExpression(rule);
+    expect(expression).toContain(
+      `kubernetes_maintenance_last_success_timestamp_seconds{maintenance_job="${CI_WORKSPACE_REAP_ACTIVITY}"}`,
+    );
+    expect(CI_WORKSPACE_REAP_ACTIVITY).toBe("ci-workspace-reap");
     expect(rule.labels?.["severity"]).toBe("warning");
   });
 

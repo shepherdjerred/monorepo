@@ -42,10 +42,9 @@ metrics and alerts.
 The `DRAWER_ALMOST_FULL` advisory does not set the robot-fault metric; explicit
 hardware-fault fields and unknown status codes remain actionable.
 
-`/api/pets` is controlled by the managed `pet-dashboard-enabled` flag and is
-absent (404) by default. The internal metrics endpoint remains available to the
-restricted Prometheus ServiceMonitor so alerts can be verified before the TRMNL
-screen is enabled.
+`/api/pets` requires the TRMNL API key like the other payload routes. The
+internal metrics endpoint is served to the restricted Prometheus
+ServiceMonitor.
 
 ## Configuration
 

@@ -27,7 +27,6 @@ import {
   generateImageTool,
   GenerateImageInputSchema,
 } from "@shepherdjerred/birmel/agent-tools/tools/images/generate-image.ts";
-import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 
 const trustedUserId = "186665676134547461";
 
@@ -41,27 +40,9 @@ const dummyContext: RequestContext = {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  getConfig().imageGeneration.enabled = true;
 });
 
 describe("generateImageTool - text-to-image and gating", () => {
-  test("rejects execution when image generation is disabled in configuration", async () => {
-    getConfig().imageGeneration.enabled = false;
-    const context: RequestContext = { ...dummyContext };
-    const result = await runWithRequestContext(context, async () => {
-      return await generateImageTool.execute(
-        {
-          prompt: "a cozy mountain cabin in winter",
-        },
-        { signal: new AbortController().signal },
-      );
-    });
-
-    expect(result.success).toBe(false);
-    expect(result.message).toContain("disabled in configuration");
-    expect(mockGenerateImage).not.toHaveBeenCalled();
-  });
-
   test("generates an image from text prompt and stages attachment in RequestContext", async () => {
     const fakeImageBytes = Buffer.from("generated-png-data");
     mockGenerateImage.mockResolvedValueOnce({

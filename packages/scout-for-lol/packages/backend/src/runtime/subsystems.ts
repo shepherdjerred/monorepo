@@ -136,6 +136,13 @@ export function scoutRuntimeSubsystems(
           stage: configuration.environment,
           activities: createScoutTemporalActivityGroups(),
           callGraphTracing: temporalCallGraphTracing(),
+          metrics:
+            configuration.temporalMetricsAddress === undefined
+              ? undefined
+              : {
+                  bindAddress: configuration.temporalMetricsAddress,
+                  role: configuration.runtimeRole,
+                },
           workers: capabilities.temporalWorkers,
           deferredWorkers: capabilities.deferredTemporalWorkers,
         });

@@ -1,0 +1,10 @@
+font-family = Berkeley Mono
+font-size   = 12
+
+# Ligatures are on by default (calt). Use `font-feature = -calt` to turn them off.
+
+# Follows the Windows light/dark app setting
+theme = light:Catppuccin Latte,dark:Catppuccin Mocha
+
+# MSYS2 fish; see packages/dotfiles-windows/install.ps1
+command = C:\msys64\usr\bin\fish.exe -l

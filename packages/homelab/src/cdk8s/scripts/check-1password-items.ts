@@ -19,6 +19,7 @@
  */
 
 import { App } from "cdk8s";
+import { fileURLToPath } from "node:url";
 import { z } from "zod";
 import { setupCharts } from "@shepherdjerred/homelab/cdk8s/src/setup-charts.ts";
 import {
@@ -310,8 +311,9 @@ export async function collectDesiredStateTargets(): Promise<
 > {
   const targets: DesiredStateTarget[] = [];
   for (const platform of PLATFORM_STACKS) {
-    const stackDir = new URL(`../../tofu/${platform}/`, import.meta.url)
-      .pathname;
+    const stackDir = fileURLToPath(
+      new URL(`../../tofu/${platform}/`, import.meta.url),
+    );
     const desiredState = await loadPlatformDesiredState(stackDir, platform);
     for (const target of collectOnePasswordTargets(desiredState)) {
       targets.push({ platform, target });

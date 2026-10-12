@@ -55,9 +55,16 @@ describe("Temporal workflow outcome rules", () => {
     expect(expressions.get("TemporalScheduleActionDelayed")).toContain(
       "schedule_action_delay_bucket",
     );
-    expect(expressions.get("TemporalWorkflowTaskFailing")).toContain(
-      "temporal_worker_workflow_task_execution_failed",
-    );
+    // Every worker exports counters with `countersTotalSuffix`, so the rule
+    // must match the `_total` spelling or it can never fire.
+    for (const alert of [
+      "TemporalWorkflowTaskFailing",
+      "TemporalWorkflowNondeterministic",
+    ]) {
+      expect(expressions.get(alert), alert).toContain(
+        '__name__=~"temporal_worker_workflow_task_execution_failed(_total)?"',
+      );
+    }
     expect(expressions.get("TemporalWorkflowNondeterministic")).toContain(
       'failure_reason="NonDeterminismError"',
     );

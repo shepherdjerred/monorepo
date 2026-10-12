@@ -3,6 +3,7 @@ import wire from "#learning-setup-wire";
 import duel from "#learning-wire";
 import type { DuelState } from "#learning/duels.ts";
 import { MapScenario, scenarioFor } from "#learning/maps/scenario.ts";
+import { trainingScenarioFor } from "#learning/maps/training-scenarios.ts";
 
 const vector = z.tuple([z.number(), z.number(), z.number()]);
 const Fighter = z.strictObject({
@@ -54,10 +55,15 @@ if (
 
 export function validateSetup(raw: unknown, state: DuelState): DuelSetup {
   const setup = DuelSetup.parse(raw);
-  const scenario = scenarioFor(setup.map);
-  if (JSON.stringify(setup.scenario) !== JSON.stringify(scenario))
+  const scenario = [
+    scenarioFor(setup.map),
+    trainingScenarioFor(setup.map),
+  ].find(
+    (candidate) => JSON.stringify(setup.scenario) === JSON.stringify(candidate),
+  );
+  if (scenario === undefined)
     throw new Error(
-      "Native setup differs from its validated original map scenario",
+      "Native setup differs from its validated neutral or training scenario",
     );
   if (
     setup.match !== state.match ||

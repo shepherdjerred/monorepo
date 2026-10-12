@@ -69,11 +69,6 @@
       "count": 1
     }
   },
-  "review/review-analytics.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 3
-    }
-  },
   "tools/jscpd-check.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1

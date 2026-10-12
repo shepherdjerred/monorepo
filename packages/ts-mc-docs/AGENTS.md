@@ -5,9 +5,9 @@ triage record and analytics wiring.
 
 - Player-facing pages only. Do not reintroduce internal infrastructure
   documentation; homelab docs live in `packages/docs/wiki`.
-- World border figures must match the live ChunkyBorder
-  `borders.json` (`packages/homelab/src/cdk8s/config/minecraft-tsmc/`);
-  recheck them when the docs change.
+- World border figures must match the native borders in
+  `packages/the-storm/server/owned/plugins/TheStorm/world.yml` (sizes are
+  diameters); recheck them when the docs change.
 - Live map links go to `bluemap.ts-mc.net`; there is no
   `livemap.ts-mc.net` hostname.
 - Keep the `world_downloads.md` filename: it preserves the old MkDocs URL.

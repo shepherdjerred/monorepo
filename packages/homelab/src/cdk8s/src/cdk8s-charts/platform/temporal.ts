@@ -9,6 +9,7 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { createTemporalPostgreSQLDatabase } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/temporal-db.ts";
 import { createTemporalPostgreSQLCertificate } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/temporal-db-tls.ts";
+import { postgresClusterPodLabels } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/cluster-label.ts";
 import { createTemporalDynamicConfig } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/dynamic-config.ts";
 import { createTemporalServerDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/server.ts";
 import { createTemporalUiDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/ui.ts";
@@ -337,7 +338,7 @@ export function createTemporalChart(app: App) {
           to: [
             {
               podSelector: {
-                matchLabels: { cluster_name: "temporal-postgresql" },
+                matchLabels: postgresClusterPodLabels("temporal-postgresql"),
               },
             },
           ],
@@ -427,7 +428,7 @@ export function createTemporalChart(app: App) {
     },
     spec: {
       podSelector: {
-        matchLabels: { cluster_name: "temporal-postgresql" },
+        matchLabels: postgresClusterPodLabels("temporal-postgresql"),
       },
       policyTypes: ["Ingress"],
       ingress: [
@@ -468,7 +469,7 @@ export function createTemporalChart(app: App) {
           to: [
             {
               podSelector: {
-                matchLabels: { cluster_name: "temporal-postgresql" },
+                matchLabels: postgresClusterPodLabels("temporal-postgresql"),
               },
             },
           ],

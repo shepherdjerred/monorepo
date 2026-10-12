@@ -121,24 +121,9 @@ describe("createHandler", () => {
     expect(await response.json()).toEqual(homelabPayload);
   });
 
-  it("hides the pets route while the feature flag is off", async () => {
+  it("serves the authenticated pets payload", async () => {
     const handler = createHandler(config, {
       collectPets: async () => petPayload,
-      petDashboardEnabled: async () => false,
-    });
-    const response = await handler(
-      new Request("http://localhost/api/pets", {
-        headers: { "x-api-key": "secret" },
-      }),
-    );
-
-    expect(response.status).toBe(404);
-  });
-
-  it("serves the authenticated pets payload while the feature flag is on", async () => {
-    const handler = createHandler(config, {
-      collectPets: async () => petPayload,
-      petDashboardEnabled: async () => true,
     });
     const response = await handler(
       new Request("http://localhost/api/pets", {
@@ -150,20 +135,19 @@ describe("createHandler", () => {
     expect(await response.json()).toEqual(petPayload);
   });
 
-  it("authenticates the pets route before evaluating its feature flag", async () => {
-    let evaluated = false;
+  it("authenticates the pets route before collecting pet data", async () => {
+    let collected = false;
     const handler = createHandler(config, {
-      collectPets: async () => petPayload,
-      petDashboardEnabled: async () => {
-        evaluated = true;
-        return true;
+      collectPets: async () => {
+        collected = true;
+        return petPayload;
       },
     });
 
     const response = await handler(new Request("http://localhost/api/pets"));
 
     expect(response.status).toBe(401);
-    expect(evaluated).toBe(false);
+    expect(collected).toBe(false);
   });
 
   it("serves authenticated diagnostics", async () => {

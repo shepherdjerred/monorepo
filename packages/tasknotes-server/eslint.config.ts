@@ -30,7 +30,7 @@ const config = [
     },
   },
   {
-    files: ["src/vault/watcher.ts", "src/engine/watcher.ts"],
+    files: ["src/engine/watcher.ts"],
     rules: {
       "no-restricted-imports": "off",
     },

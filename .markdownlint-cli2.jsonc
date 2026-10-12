@@ -40,7 +40,6 @@
     "**/playwright-report/**",
     "**/ai_dev_log/**",
     "**/CHANGELOG.md",
-    "packages/discord-plays-pokemon/packages/frontend/public/emulatorjs/**",
     "**/wasm-src/**",
     "sandbox/practice/**",
     "**/.terraform/**",

@@ -78,8 +78,23 @@ and total helper time; object bytes exclude network protocol overhead.
 Shared download caches are paired with explicit tool paths: Bun uses
 `/woodpecker/bun-cache/data`, and uv uses `/woodpecker/uv-cache`. The emitter
 only supplies a shared path when its declared volume is mounted. Bun's download
-cache and its maintenance-lock volume must be mounted together. Installed
-dependencies remain private to each workflow workspace.
+cache and its maintenance-lock volume must be mounted together. The trusted
+graph mounts that pair on every in-cluster container that runs
+`ci/scripts/bun-install.sh`, so no lane downloads its dependency closure into
+`~/.bun` on the CI node's OS disk; the credentialless hosted-automation graph
+mounts no shared cache. Installed dependencies remain private to each workflow
+workspace. Verify and Playwright use `TURBO_CACHE=remote:rw`: each is one Turbo
+run in a fresh workspace, so a local cache there would be written and never
+read.
+
+Nothing a step writes should land on the container's writable layer, which is
+the CI node's OS disk. Shared Bun installs extract into `bun-cache/tmp`, beside
+the data directory, so extraction is a rename on the cache volume rather than a
+copy from `~/.bun`; the cache collector clears it under its exclusive lock.
+`ci/scripts/toolchain.sh` points `TMPDIR` at `/woodpecker/tmp` and
+`GRADLE_USER_HOME` at `/woodpecker/gradle` on the workflow volume. The root
+`turbo.json` passes these and `UV_CACHE_DIR` through strict env mode so tasks
+inherit them.
 
 Nothing a step writes should land on the container's writable layer, which is
 the CI node's OS disk. Shared Bun installs extract into `bun-cache/tmp`, beside
@@ -340,8 +355,11 @@ older stable workers cannot receive its new Workflow type. Disable
 dispatch first when stopping new work; disable the extension flag to restore
 the combined main graph. Already generated pipelines retain their own graph.
 
-Generated release and image promotion PRs start as drafts. Marking a draft
-ready requests full CI and freezes maintenance updates until merge or close.
+Generated release PRs start as drafts. Marking a draft ready requests full CI
+and freezes maintenance updates until merge or close. CI image promotion PRs
+open ready with squash auto-merge, because every CI step reinstalls a stale
+image's missing tools at runtime until the promotion lands; a ready promotion
+freezes later candidates the same way.
 Publishers re-read draft status and use exact Git head leases before pushing.
 The dispatcher retains later candidates and selects the newest verified main
 revision after the ready PR closes. Automated review remains required; bot

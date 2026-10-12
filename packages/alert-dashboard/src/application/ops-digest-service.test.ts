@@ -13,7 +13,7 @@ import { createOpsFixture } from "#test-fixtures/ops-services";
 // Monday 2026-09-28 07:30 in Los Angeles.
 const NOW = "2026-09-28T14:30:00Z";
 
-async function fixture(options: { digestEnabled?: boolean; mailer?: boolean }) {
+async function fixture(options: { mailer?: boolean } = {}) {
   const created = createOpsFixture(fixedClock(NOW), options);
   await created.ops.ingest(
     JSON.stringify(
@@ -26,30 +26,8 @@ async function fixture(options: { digestEnabled?: boolean; mailer?: boolean }) {
 }
 
 describe("digest runs", () => {
-  it("records a skipped run and sends nothing while the flag is off", async () => {
-    const ops = await fixture({ digestEnabled: false });
-    expect(await ops.digests.run("daily")).toEqual({
-      kind: "daily",
-      periodKey: "2026-09-28",
-      status: "skipped",
-      duplicate: false,
-    });
-    expect(await ops.digests.run("daily")).toMatchObject({
-      status: "skipped",
-      duplicate: true,
-    });
-    expect(ops.postal.sent).toHaveLength(0);
-    // Enabling the flag later does not resend a period already skipped.
-    ops.gate.enabled = true;
-    expect(await ops.digests.run("daily")).toMatchObject({
-      status: "skipped",
-      duplicate: true,
-    });
-    expect(ops.postal.sent).toHaveLength(0);
-  });
-
   it("sends each period exactly once and advances the digest cursor", async () => {
-    const ops = await fixture({ digestEnabled: true });
+    const ops = await fixture();
     expect(await ops.digests.run("daily")).toMatchObject({
       status: "sent",
       duplicate: false,
@@ -75,7 +53,7 @@ describe("digest runs", () => {
   });
 
   it("marks a failed send and lets a retry send it", async () => {
-    const ops = await fixture({ digestEnabled: true });
+    const ops = await fixture();
     ops.postal.failWith = new Error("Postal returned 500");
     await expect(ops.digests.run("weekly")).rejects.toBeInstanceOf(
       DigestSendError,
@@ -92,7 +70,7 @@ describe("digest runs", () => {
   });
 
   it("refuses a concurrent send of the same period", async () => {
-    const ops = await fixture({ digestEnabled: true });
+    const ops = await fixture();
     await ops.repository.claimDigestRun(
       {
         kind: "daily",
@@ -108,7 +86,7 @@ describe("digest runs", () => {
   });
 
   it("fails loudly when enabled without a mailer", async () => {
-    const ops = await fixture({ digestEnabled: true, mailer: false });
+    const ops = await fixture({ mailer: false });
     await expect(ops.digests.run("daily")).rejects.toBeInstanceOf(
       DigestMailerUnconfiguredError,
     );

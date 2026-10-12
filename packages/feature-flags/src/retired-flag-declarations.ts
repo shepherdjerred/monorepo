@@ -101,4 +101,9 @@ export const retiredFlagDeclarations = [
     namespace: "scout",
     key: "scoutql_relational_enabled",
   },
+  // Bryan Bucks ask no longer selects its own model (reader removed in
+  // 1ddf8812fb). It was a base inventory flag, so it exists in both
+  // environments.
+  { environment: "beta", namespace: "scout", key: "scout-bucks-ask-model" },
+  { environment: "prod", namespace: "scout", key: "scout-bucks-ask-model" },
 ] as const;

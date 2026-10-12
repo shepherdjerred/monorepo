@@ -108,6 +108,17 @@ export function createMinecraftTsmcApp(chart: Chart) {
     disableProbe: true,
   });
 
+  createCloudflareTunnelBinding(chart, "minecraft-tsmc-livemap-cf-tunnel", {
+    serviceName: "minecraft-tsmc-bluemap",
+    fqdn: "livemap.ts-mc.net",
+    namespace: "minecraft-tsmc",
+    disableDnsUpdates: true,
+    port: 8100,
+    // Hibernates at 0 replicas (see above); the public probe additionally made
+    // cloudflared log an unreachable-origin error every minute.
+    disableProbe: true,
+  });
+
   const minecraftValues: HelmValuesForChart<"minecraft"> = {
     replicaCount: 0,
     // Deploy as StatefulSet for mc-router auto-scaling support
@@ -157,7 +168,7 @@ export function createMinecraftTsmcApp(chart: Chart) {
       // admin regions, and vanilla protection would stop non-ops using the
       // windmill Storm Shards altar.
       spawnProtection: 0,
-      ops: "XiguaJerred",
+      ops: "",
       // TYPE and VERSION repeat the image's own env: the chart always renders
       // TYPE (default VANILLA), and VERSION selects the baked Paper defaults.
       version: THE_STORM_PAPER_VERSION,
@@ -210,6 +221,10 @@ export function createMinecraftTsmcApp(chart: Chart) {
     },
 
     extraEnv: {
+      // Ensure the empty list reaches itzg's OPS_FILE synchronization logic.
+      OPS: "",
+      // Empty OPS must clear persisted ops.json entries, not merge with them.
+      EXISTING_OPS_FILE: "SYNCHRONIZE",
       FLIPT_URL: "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
       FLIPT_ENVIRONMENT: "prod",
       POSTHOG_API_HOST: analytics.apiHost,

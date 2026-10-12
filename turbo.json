@@ -589,6 +589,15 @@
         "!**/node_modules/**"
       ]
     },
+    "//#mise-lock-sync": {
+      "inputs": [
+        "scripts/checks/deps/check-mise-lock-sync.ts",
+        ".mise.toml",
+        "mise.lock",
+        "ci/ci-image/Dockerfile",
+        "ci/scripts/toolchain.sh"
+      ]
+    },
     "//#toolchain-version-sync": {
       "inputs": [
         "scripts/checks/deps/check-toolchain-version-sync.ts",

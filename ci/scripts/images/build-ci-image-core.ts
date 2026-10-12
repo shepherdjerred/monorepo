@@ -58,7 +58,7 @@ export function ciImageDefinition(name: string): CiImageDefinition {
         digestFile: "ci/ci-image/DIGEST",
         stateFile: "ci/ci-image/STATE.json",
         branch: "chore/ci-base-pin-pending",
-        sourceFiles: ["ci/ci-image/Dockerfile", ".mise.toml"],
+        sourceFiles: ["ci/ci-image/Dockerfile", ".mise.toml", "mise.lock"],
       };
     case "ci-playwright":
       return {

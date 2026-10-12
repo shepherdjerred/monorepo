@@ -5,6 +5,7 @@ import {
   scoutDurableBacklogOldestAge,
   scoutDurableNotificationIntents,
   scoutDurableObservationLag,
+  scoutDurablePostmatchPollAge,
   scoutDurableRecoveryBatches,
 } from "#src/metrics/durable-pipeline.ts";
 import { gaugeValue } from "#src/testing/gauge-values.ts";
@@ -104,7 +105,9 @@ beforeEach(async () => {
   await prisma.matchRecoveryBatch.deleteMany();
   await prisma.scoutWorkflowStart.deleteMany();
   await prisma.matchObservation.deleteMany();
+  await prisma.botState.deleteMany();
   scoutDurableNotificationIntents.reset();
+  scoutDurablePostmatchPollAge.reset();
   scoutDurableObservationLag.reset();
   scoutDurableRecoveryBatches.reset();
   scoutDurableBacklogOldestAge.reset();
@@ -268,6 +271,26 @@ describe("durable pipeline sweep against Postgres", () => {
     }
   });
 
+  test("ages the last complete post-match poll, zero before any poll has completed", async () => {
+    await collectDurablePipelineMetrics(prisma);
+    expect(await gaugeValue(scoutDurablePostmatchPollAge, {})).toBe(0);
+
+    // A poll that opened and never closed leaves the last COMPLETE poll where
+    // it was: this is the wedged-run shape, and it must keep aging.
+    await prisma.botState.create({
+      data: {
+        id: 1,
+        lastSuccessfulPollAt: new Date(NOW - 3 * HOUR_MS),
+        pollStatus: "running",
+        pollStartedAt: new Date(NOW - 2 * HOUR_MS),
+      },
+    });
+    await collectDurablePipelineMetrics(prisma);
+    const age = await gaugeValue(scoutDurablePostmatchPollAge, {});
+    expect(age).toBeGreaterThan(2.9 * 3600);
+    expect(age).toBeLessThan(3.1 * 3600);
+  });
+
   test("a failing read writes the sentinel shape instead of failing the scrape", async () => {
     // A disconnected client stands in for any read that throws. The contract
     // under test is the degraded shape the alerts are written against: ages go
@@ -312,6 +335,7 @@ describe("durable pipeline sweep against Postgres", () => {
     expect(
       await gaugeValue(scoutDurableObservationLag, { statistic: "p90" }),
     ).toBe(-1);
+    expect(await gaugeValue(scoutDurablePostmatchPollAge, {})).toBe(-1);
     expect(
       await gaugeValue(scoutDurableNotificationIntents, { state: "pending" }),
     ).toBeUndefined();

@@ -990,11 +990,6 @@ tbody tr:hover {
   color: var(--accent);
   font-weight: 650;
 }
-.link-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
 .block-heading {
   margin: 30px 0 12px;
   font-size: 1.05rem;

@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.e2e;
 
 import com.shepherdjerred.thestorm.rwfbots.app.CombatHarness;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -111,7 +112,31 @@ record DuelMapScenario(
         || scenarios.isEmpty()
         || scenarios.stream().map(DuelMapScenario::map).distinct().count() != scenarios.size())
       throw new IllegalStateException("Invalid native map scenario registry");
-    return scenarios;
+    var override = System.getenv("RWF_FIXTURE_TRAINING_SCENARIO");
+    if (override == null || override.isBlank()) return scenarios;
+    final DuelMapScenario training;
+    try {
+      training = mapper().readValue(override, DuelMapScenario.class);
+    } catch (RuntimeException failure) {
+      throw new IllegalStateException("Unreadable fixture training scenario", failure);
+    }
+    var source =
+        scenarios.stream()
+            .filter(scenario -> scenario.map().equals(training.map()))
+            .findFirst()
+            .orElseThrow(
+                () -> new IllegalStateException("Training scenario map is not registered"));
+    if (!training.id().equals(training.map() + "-close-trooper-duel-v1")
+        || !training.spawnPolicy().equals("authored")
+        || !training.mapSha256().equals(source.mapSha256())
+        || !training.world().equals(source.world())
+        || !training.region().equals(source.region())
+        || !training.sourceTeams().equals(source.sourceTeams()))
+      throw new IllegalStateException("Fixture training scenario changed its neutral map identity");
+    var combined = new ArrayList<DuelMapScenario>(scenarios.size());
+    for (var scenario : scenarios)
+      combined.add(scenario.map().equals(training.map()) ? training : scenario);
+    return List.copyOf(combined);
   }
 
   private static List<String> names(Class<?> type) {
@@ -121,17 +146,19 @@ record DuelMapScenario(
   }
 
   private static <T> T read(String resource, Class<T> type) {
-    var json =
-        JsonMapper.builder()
-            .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-            .enable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
-            .enable(DeserializationFeature.FAIL_ON_MISSING_CREATOR_PROPERTIES)
-            .build();
     try (var source = CombatHarness.class.getResourceAsStream(resource)) {
       if (source == null) throw new IllegalStateException("Missing " + resource);
-      return json.readValue(source, type);
+      return mapper().readValue(source, type);
     } catch (IOException failure) {
       throw new IllegalStateException("Unreadable " + resource, failure);
     }
+  }
+
+  private static JsonMapper mapper() {
+    return JsonMapper.builder()
+        .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+        .enable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
+        .enable(DeserializationFeature.FAIL_ON_MISSING_CREATOR_PROPERTIES)
+        .build();
   }
 }

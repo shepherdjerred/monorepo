@@ -15,7 +15,7 @@ import tools.jackson.databind.json.JsonMapper;
 
 final class CloseStartsTest {
   @Test
-  void shippedTerrainSuppliesDeterministicReachableGroundedStartsWithoutMutation() {
+  void shippedTerrainSuppliesDeterministicConnectedGroundedStartsWithoutMutation() {
     var map = MapFolder.load(ShippedMapsTest.MAPS.resolve("training-yard"));
     var before = map.schematic().sha256();
     var baked = Baker.bake(map);
@@ -28,12 +28,13 @@ final class CloseStartsTest {
     assertThat(terrain.patch(BlockPos.of(pair.second()), 1)).isTrue();
     assertThat(terrain.corridor(pair.first(), pair.second())).isTrue();
     var graph = baked.artifact().graph();
-    for (var spawn : baked.artifact().sites().spawns()) {
-      var source = graph.nearestNode(spawn.cell().feet()).orElseThrow();
-      for (var target : List.of(pair.first(), pair.second())) {
-        assertThat(graph.path(source, graph.nearestNode(target).orElseThrow())).isPresent();
-      }
-    }
+    var first = graph.nearestNode(pair.first()).orElseThrow();
+    var second = graph.nearestNode(pair.second()).orElseThrow();
+    var limit = pair.first().horizontalDistance(pair.second()) * 1.5;
+    assertThat(graph.path(first, second))
+        .hasValueSatisfying(path -> assertThat(path.cost()).isLessThanOrEqualTo(limit));
+    assertThat(graph.path(second, first))
+        .hasValueSatisfying(path -> assertThat(path.cost()).isLessThanOrEqualTo(limit));
     var report = JsonMapper.builder().build().readTree(CloseStartReport.of(map, pair).json());
     assertThat(report.path("kind").asString()).isEqualTo("rwf-close-starts");
     assertThat(report.path("blocksSha256").asString()).isEqualTo(before);

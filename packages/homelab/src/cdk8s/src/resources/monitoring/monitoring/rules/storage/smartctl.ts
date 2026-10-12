@@ -300,12 +300,6 @@ export function getSmartctlRuleGroups(): PrometheusRuleSpecGroups[] {
           ),
         },
         {
-          record: "smartmon:power_on_hours",
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "smartmon_power_on_hours_values",
-          ),
-        },
-        {
           record: "smartmon:reallocated_sectors_total",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             "smartmon_reallocated_sector_ct_raw_value",

@@ -217,34 +217,6 @@ Credit: Madnes64; additional settlements by TheCreeperWorld, Flashy, Seppel1097,
 
 </details>
 
-### New World — revival seed test
-
-A brief single-player test used to choose the revival seed; not a server snapshot.
-
-**Snapshot:** 2022-11-20 · **Minecraft:** 1.19.2 · **Download:** 29.0 MiB
-
-[Download ZIP](https://docs.ts-mc.net/world-archive/2026-10-04-v1/downloads/new-world-test-2022-11-20.zip) · [Explore map](https://docs.ts-mc.net/world-archive/2026-10-04-v1/overviews/bluemap-5.28-v7/new-world-test-2022-11-20/index.html)
-
-Credit: The Storm.
-
-<div class="archive-previews">
-<figure><a href="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/new-world-test-2022-11-20/overview.png"><img src="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/new-world-test-2022-11-20/overview.png" width="1088" height="1088" loading="lazy" decoding="async" alt="New World — revival seed test: around spawn from above" /></a>
-<figcaption>Around spawn · 2,048-block selection · north is up</figcaption></figure>
-
-<figure><a href="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/new-world-test-2022-11-20/closeup.png"><img src="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/new-world-test-2022-11-20/closeup.png" width="1024" height="1024" loading="lazy" decoding="async" alt="New World — revival seed test: close-up from above" /></a>
-<figcaption>Close-up · 512-block selection · north is up</figcaption></figure>
-
-</div>
-
-<details>
-<summary>SHA-256 checksum</summary>
-
-```text
-c67540e757870f7d777f1be7b2ffb74aab603138571d436183b36ec36e7d6201
-```
-
-</details>
-
 ## Recovered plot schematics
 
 These builds are by WinterSolstice8 / BlueAsterismSolstice. Import them with WorldEdit; they are schematic files, not single-player save folders. Blue Valkyrie and Spider Queen are explicitly documented as Storm builds; the other six are attributed by their plot format and publication dates.

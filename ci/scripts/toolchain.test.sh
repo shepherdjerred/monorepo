@@ -94,7 +94,7 @@ fi
 # A recursive chmod copies every image-layer file it visits into the
 # container's writable layer, even when the mode already matches.
 if rg -q 'chmod -R' "$TOOLCHAIN" ||
-  ! rg -Fq 'expose_tree "${MISE_DATA_DIR}/installs/ubi-theseus-rs-postgresql-binaries"' "$TOOLCHAIN"; then
+  ! rg -Fq 'expose_tree "${MISE_DATA_DIR}/installs/github-theseus-rs-postgresql-binaries"' "$TOOLCHAIN"; then
   echo "toolchain.sh must expose Postgres tools without a recursive chmod" >&2
   exit 1
 fi
@@ -129,6 +129,11 @@ if ! rg -Fq 'WOODPECKER_BACKEND=local' "$MAC_CI_BOOTSTRAP" ||
   ! rg -Fq 'WOODPECKER_AGENT_LABELS=platform=darwin/' "$MAC_CI_BOOTSTRAP" ||
   ! rg -Fq 'PLUGIN_GIT_BIN="$HOME/.local/bin/plugin-git"' "$MAC_CI_BOOTSTRAP"; then
   echo "macOS agent must run the local backend and carry the label the native lanes select on" >&2
+  exit 1
+fi
+if ! rg -Fq 'mise_current ||' "$TOOLCHAIN" ||
+  ! rg -Fq 'sort -V' "$TOOLCHAIN"; then
+  echo "toolchain must replace a mise older than MISE_BOOTSTRAP_VERSION" >&2
   exit 1
 fi
 if ! rg -Fq 'AGENT_BUILD_PATH="$HOME/.woodpecker/builds"' "$MAC_CI_BOOTSTRAP" ||
@@ -166,6 +171,7 @@ mkdir -p "$TEST_ROOT/profiles"
 cat >"$TEST_ROOT/profiles/mise" <<'EOF'
 #!/usr/bin/env bash
 printf '%s\n' "$*" >>"$CI_PROFILE_COMMAND_LOG"
+printf 'locked=%s\n' "${MISE_LOCKED:-}" >>"$CI_PROFILE_COMMAND_LOG"
 if [ "$1" = which ]; then printf '/test/tools/gh\n'; fi
 EOF
 cat >"$TEST_ROOT/profiles/id" <<'EOF'
@@ -194,6 +200,10 @@ for profile in automation deployment tofu; do
     exit 1
   fi
   rg -Fxq reshim "$profile_log"
+  if rg -q '^locked=$' "$profile_log"; then
+    echo "$profile ran mise without locked mode" >&2
+    exit 1
+  fi
 done
 rg -Fxq 'ln -sf /test/tools/gh /usr/local/bin/gh' "$TEST_ROOT/automation.log"
 

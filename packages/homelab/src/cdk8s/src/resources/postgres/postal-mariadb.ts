@@ -56,6 +56,12 @@ export class PostalMariaDB extends Construct {
   public readonly serviceName: string;
 
   /**
+   * Labels the Bitnami chart puts on the MariaDB pod, for NetworkPolicy
+   * selectors. The chart sets no `app` label.
+   */
+  public readonly podLabels: Readonly<Record<string, string>>;
+
+  /**
    * The ArgoCD Application resource.
    */
   public readonly application: Application;
@@ -83,6 +89,10 @@ export class PostalMariaDB extends Construct {
 
     // Bitnami MariaDB service name is just the release name
     this.serviceName = releaseName;
+    this.podLabels = {
+      "app.kubernetes.io/instance": releaseName,
+      "app.kubernetes.io/name": "mariadb",
+    };
 
     // 1Password item for MariaDB credentials
     // Expected fields: mariadb-root-password, mariadb-password, mariadb-metrics-password

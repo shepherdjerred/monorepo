@@ -255,34 +255,8 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
           for: "15m",
           labels: { severity: "warning" },
         },
-        {
-          alert: "DiskReadErrors",
-          annotations: {
-            description: escapePrometheusTemplate(
-              "Device {{ $labels.device }} on {{ $labels.instance }} is experiencing read errors: {{ $value }} errors",
-            ),
-            summary: "Disk read errors detected",
-          },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "increase(node_disk_read_errors_total[1h]) > 0",
-          ),
-          for: "5m",
-          labels: { severity: "critical" },
-        },
-        {
-          alert: "DiskWriteErrors",
-          annotations: {
-            description: escapePrometheusTemplate(
-              "Device {{ $labels.device }} on {{ $labels.instance }} is experiencing write errors: {{ $value }} errors",
-            ),
-            summary: "Disk write errors detected",
-          },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "increase(node_disk_write_errors_total[1h]) > 0",
-          ),
-          for: "5m",
-          labels: { severity: "critical" },
-        },
+        // Device read/write errors are not node-exporter metrics. Media errors
+        // alert from the NVMe and SMART rule groups instead.
       ],
     },
 
