@@ -1,9 +1,12 @@
 package com.shepherdjerred.thestorm.chat.app;
 
-/** A registered {@link GlobalChat} listener. */
+/**
+ * A registration that can be undone: a {@link GlobalChat} listener, or a membership, router or tap
+ * registered through {@link ChannelRegistry}.
+ */
 @FunctionalInterface
 public interface Subscription {
 
-  /** Stops delivering lines to the listener. */
+  /** Undoes the registration. Cancelling twice is harmless. */
   void cancel();
 }

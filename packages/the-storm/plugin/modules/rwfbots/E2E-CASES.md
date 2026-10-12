@@ -138,9 +138,12 @@ asserted there; the load cases belong to the manual load profile
 ## Chat
 
 14. With `the-storm-rwfbots-chat-enabled` on, bots talk during a live match:
-    a watcher's and a member's client in the rwf world receive
-    `[Name ✦]: line` messages from the match's personalities, a player in
-    the main world receives none, and nothing reaches the Discord relay.
+    a watcher's and a member's client in the rwf world receive Global
+    `[G][● Name ✦]: line` messages from the match's personalities (no `●`
+    in the lobby), a bot's plant, defuse and last-alive calls reach only its
+    team in Team chat (`[Tm][● Name ✦]: line`), a player who ignores a bot
+    hears none of its lines, a player in the main world receives none, and
+    nothing reaches the Discord relay.
     **Proven** in part by the showcase case: the watcher hears at least one
     `✦` line from a shipped personality and a player in the main world hears
     none. Discord, a member's client, the name's team colour and the pacing

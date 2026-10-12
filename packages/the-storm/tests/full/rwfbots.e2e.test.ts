@@ -739,9 +739,10 @@ async function watchShowcase(match: Match, outsider: Bot): Promise<void> {
   await showcaseSettles(server, live.matchId, size, statsBefore);
 
   // Bot chat (the-storm-rwfbots-chat-enabled is on in the fake Flipt):
-  // the watcher in the rwf world hears ✦-marked lines from the showcase's
-  // bots; the player in the main world hears none of them.
-  const botLines = match.log.all(/^\[(?<name>\w+) ✦\]: .+$/u);
+  // the watcher in the rwf world hears ✦-marked Global lines from the
+  // showcase's bots, with a team mark once teams exist; team calls stay with
+  // the bots' teams; the player in the main world hears none of them.
+  const botLines = match.log.all(/^\[G\]\[(?:● )?(?<name>\w+) ✦\]: .+$/u);
   expect(botLines.length).toBeGreaterThan(0);
   expect(
     botLines.every((line) => match.catalog.has(line.groups?.["name"] ?? "")),

@@ -70,13 +70,18 @@ public final class ChatCommands {
     return labels(channel).getFirst();
   }
 
-  /** Every command that switches to {@code channel}; {@code /w} is whisper, so War is /war. */
+  /**
+   * Every command that switches to {@code channel}, or for a channel that cannot be focused sends
+   * one message there; {@code /w} is whisper, so War is /war.
+   */
   static List<String> labels(ChannelKey channel) {
     return switch (channel) {
       case GLOBAL -> List.of("g");
       case WAR -> List.of("war", "wc");
       case STAFF -> List.of("sc");
       case TOWN -> List.of("tc");
+      case TEAM -> List.of("t");
+      case DEAD -> List.of("dead");
     };
   }
 
@@ -110,7 +115,11 @@ public final class ChatCommands {
                 service.ready()
                     && source.getSender() instanceof Player player
                     && (channel != ChannelKey.STAFF || Speakers.isStaff(player)))
-        .executes(context -> focus(player(context), channel))
+        .executes(
+            context ->
+                channel.focusable()
+                    ? focus(player(context), channel)
+                    : usage(player(context), label, channel))
         .then(
             Commands.argument(MESSAGE, StringArgumentType.greedyString())
                 .executes(
@@ -174,11 +183,21 @@ public final class ChatCommands {
     return Command.SINGLE_SUCCESS;
   }
 
+  /** A channel that cannot be focused is only reached one message at a time. */
+  private static int usage(Player player, String label, ChannelKey channel) {
+    player.sendMessage(
+        Feedback.info(
+            "Send a message to " + channel.displayName() + " chat with /" + label + " <message>."));
+    return Command.SINGLE_SUCCESS;
+  }
+
   private int say(Player player, ChannelKey channel, String message) {
-    switch (service.prepare(Speakers.of(player), channel, message)) {
+    var routed = service.route(player.getUniqueId(), channel, message, true);
+    switch (service.prepare(Speakers.of(player), routed.channel().key(), routed.text())) {
       case Result.Ok<OutgoingLine, List<ChatDenial>>(var line) -> {
         output.deliver(line);
         hub.published(line);
+        service.delivered(line);
         Feedback.noticeCalmed(player, line.message(), service.capsNotice());
       }
       case Result.Err<OutgoingLine, List<ChatDenial>>(var denials) ->

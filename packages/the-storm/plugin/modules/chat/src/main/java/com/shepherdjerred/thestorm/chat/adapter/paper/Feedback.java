@@ -62,8 +62,18 @@ final class Feedback {
     return switch (access) {
       case GRANTED -> "You can talk in " + channel.displayName() + " chat.";
       case NO_PERMISSION -> "You cannot use " + channel.displayName() + " chat.";
-      case UNAVAILABLE -> "Towns are not available yet, so there is no town chat.";
-      case NOT_A_MEMBER -> "You are not in a town.";
+      case UNAVAILABLE ->
+          switch (channel) {
+            case TEAM, DEAD -> channel.displayName() + " chat is only available in a match.";
+            case GLOBAL, WAR, STAFF, TOWN ->
+                "Towns are not available yet, so there is no town chat.";
+          };
+      case NOT_A_MEMBER ->
+          switch (channel) {
+            case TEAM -> "You are not on a match team.";
+            case DEAD -> "Only the dead and spectators of a match talk in dead chat.";
+            case GLOBAL, WAR, STAFF, TOWN -> "You are not in a town.";
+          };
     };
   }
 

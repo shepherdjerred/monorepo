@@ -1,5 +1,7 @@
 package com.shepherdjerred.thestorm.rwfbots.adapter.paper;
 
+import com.shepherdjerred.thestorm.chat.app.ChatChannel;
+import com.shepherdjerred.thestorm.chat.app.NpcChat;
 import com.shepherdjerred.thestorm.core.schedule.Cancellable;
 import com.shepherdjerred.thestorm.core.schedule.Scheduler;
 import com.shepherdjerred.thestorm.rwf.app.MatchEvents;
@@ -19,13 +21,13 @@ import java.time.Instant;
 import java.time.InstantSource;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.SplittableRandom;
 import java.util.UUID;
 import java.util.function.Consumer;
-import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.bukkit.World;
@@ -34,18 +36,24 @@ import org.jspecify.annotations.Nullable;
 /**
  * Lets the bots talk. Listens to rwf's match transitions, reads them as chat moments, asks one
  * {@link ChatDirector} per match (seeded from the match, alive from its lobby to its end) who says
- * what, and shows each line when it is due to the human players in the match world: members and
- * watchers, never Global, Discord or anyone elsewhere. A line reads like player chat with rwf's dim
- * {@code ✦} bot marker after the name, the name in the bot's team colour (white in the lobby,
- * before teams exist). In the lobby bots greet as they walk in, answer a human who chats there,
- * make small talk and remark on the countdown's last seconds. Every second it offers the director
- * an idle moment and, every {@code flagRefresh}, evaluates the managed Flipt flag off the main
- * thread; the cached answer gates every line, so the flag off, an evaluation failure or no answer
- * yet keeps bots silent. Main thread only.
+ * what, and says each line when it is due through chat's {@link NpcChat}: team calls (a plant, a
+ * defuse, the last of a team) in Team chat, everything else in Global, either way heard only by the
+ * human players in the match world (members and watchers), never Discord or anyone elsewhere, and
+ * subject to chat's filters, hidden channels and ignores. A line reads like player chat in its
+ * channel's format, with the {@code ✦} bot marker after the name and, once teams exist, a mark in
+ * the bot's team colour before it. In the lobby bots greet as they walk in, answer a human who
+ * chats there, make small talk and remark on the countdown's last seconds. Every second it offers
+ * the director an idle moment and, every {@code flagRefresh}, evaluates the managed Flipt flag off
+ * the main thread; the cached answer gates every line, so the flag off, an evaluation failure or no
+ * answer yet keeps bots silent. Main thread only.
  */
 public final class BotChat implements Consumer<MatchNotification> {
 
   static final String MARKER = " ✦";
+
+  /** Shown before a bot's name, in its team's colour, once the match is live. */
+  static final String TEAM_MARK = "●";
+
   private static final Duration IDLE_EVERY = Duration.ofSeconds(1);
   private static final long CHAT_SALT = 0x63686174L;
 
@@ -74,6 +82,7 @@ public final class BotChat implements Consumer<MatchNotification> {
    * @param gate the managed rollout flag
    * @param roster the bots, for their personalities and to keep their bodies out of the audience
    * @param world the match world, whose human players hear the bots
+   * @param npc chat, which checks, routes and delivers each line
    * @param scheduler the main thread
    * @param time the clock
    * @param logger the module logger
@@ -84,6 +93,7 @@ public final class BotChat implements Consumer<MatchNotification> {
       ChatGate gate,
       Roster roster,
       World world,
+      NpcChat npc,
       Scheduler scheduler,
       InstantSource time,
       ComponentLogger logger) {}
@@ -254,25 +264,47 @@ public final class BotChat implements Consumer<MatchNotification> {
     pending.add(holder[0]);
   }
 
+  /**
+   * Says {@code line} through chat: a team call in Team chat, everything else in Global, heard only
+   * by the humans in the match world. Chat applies its filters, hidden channels and ignores; a line
+   * it refuses is dropped.
+   */
   private void show(Utterance line) {
     if (closed || !enabled) {
       return;
     }
-    var message = render(line, line.team().map(this::color).orElse(NamedTextColor.WHITE));
+    var audience = new HashSet<UUID>();
     for (var player : parts.world().getPlayers()) {
       if (!parts.roster().isBot(player.getUniqueId())) {
-        player.sendMessage(message);
+        audience.add(player.getUniqueId());
       }
     }
+    var channel = line.teamOnly() ? ChatChannel.TEAM : ChatChannel.GLOBAL;
+    var refused =
+        parts
+            .npc()
+            .say(
+                new NpcChat.Line(
+                    line.speaker(),
+                    line.name() + MARKER,
+                    channel,
+                    line.text(),
+                    prefix(line),
+                    audience::contains));
+    refused.ifPresent(
+        why ->
+            parts
+                .logger()
+                .debug("rwfbots: chat refused {}'s line in {}: {}", line.name(), channel, why));
   }
 
-  /** {@code [Name ✦]: line}, framed like player chat, the name in its team's colour. */
-  static Component render(Utterance line, NamedTextColor team) {
-    return Component.text("[", NamedTextColor.DARK_GRAY)
-        .append(Component.text(line.name(), team))
-        .append(Component.text(MARKER, NamedTextColor.DARK_GRAY))
-        .append(Component.text("]: ", NamedTextColor.DARK_GRAY))
-        .append(Component.text(line.text(), NamedTextColor.GRAY));
+  /** A mark in the speaker's team colour before the name, once teams exist; none in the lobby. */
+  private String prefix(Utterance line) {
+    return line.team()
+        .map(this::color)
+        .map(color -> NamedTextColor.NAMES.keyOrThrow(color))
+        .map(name -> "<" + name + ">" + TEAM_MARK + "</" + name + ">")
+        .orElse("");
   }
 
   private NamedTextColor color(String teamName) {

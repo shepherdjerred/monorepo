@@ -8,7 +8,11 @@ public enum ChannelKey {
   GLOBAL("global", "Global", "G"),
   WAR("war", "War", "W"),
   STAFF("staff", "Staff", "S"),
-  TOWN("town", "Town", "T");
+  TOWN("town", "Town", "T"),
+  /** A match team: only the speaker's teammates hear it. */
+  TEAM("team", "Team", "Tm"),
+  /** The dead and spectators of a match: the living never hear it. */
+  DEAD("dead", "Dead", "D");
 
   private final String id;
   private final String displayName;
@@ -40,8 +44,16 @@ public enum ChannelKey {
     return switch (this) {
       case GLOBAL, WAR -> Reach.EVERYONE;
       case STAFF -> Reach.STAFF;
-      case TOWN -> Reach.TOWN;
+      case TOWN, TEAM, DEAD -> Reach.MEMBERS;
     };
+  }
+
+  /**
+   * Whether plain chat can be pointed at this channel for good. Team and dead chat belong to a
+   * match, so they are reached one message at a time or through a registered router.
+   */
+  public boolean focusable() {
+    return this != TEAM && this != DEAD;
   }
 
   /** The channel with {@code id}, if there is one. */
@@ -55,7 +67,7 @@ public enum ChannelKey {
     EVERYONE,
     /** Players with the staff permission. */
     STAFF,
-    /** The speaker's town, as the towns module resolves it. */
-    TOWN
+    /** The speaker's group (town, match team, the dead), as a registered membership resolves it. */
+    MEMBERS
   }
 }

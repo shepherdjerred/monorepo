@@ -28,6 +28,11 @@ channels:
   war: "<dark_gray>[<dark_red>W</dark_red>][<prefix><white><player></white>]: </dark_gray><gray><message>"
   staff: "<dark_gray>[<gold>S</gold>][<prefix><white><player></white>]: </dark_gray><yellow><message>"
   town: "<dark_gray>[<green>T</green>][<prefix><white><player></white>]: </dark_gray><green><message>"
+  # A Search and Destroy team (/t <message>, or @message while in a match):
+  # only the speaker's teammates hear it.
+  team: "<dark_gray>[<aqua>Team</aqua>][<prefix><white><player></white>]: </dark_gray><aqua><message>"
+  # A match's dead and spectators; the living never hear it.
+  dead: "<dark_gray>[<gray>Dead</gray>][<prefix><white><player></white>]: </dark_gray><dark_gray><message>"
 
 # /me actions, sent to the player's focused channel. Uses <channel> (the
 # channel's letter), <prefix>, <player> and <message>.

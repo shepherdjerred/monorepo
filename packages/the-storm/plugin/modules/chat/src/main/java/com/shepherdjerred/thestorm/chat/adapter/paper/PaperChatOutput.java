@@ -4,6 +4,8 @@ import com.shepherdjerred.thestorm.chat.app.ChatOutput;
 import com.shepherdjerred.thestorm.chat.app.ChatService;
 import com.shepherdjerred.thestorm.chat.app.OutgoingLine;
 import com.shepherdjerred.thestorm.chat.app.PrivateLine;
+import java.util.UUID;
+import java.util.function.Predicate;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Server;
@@ -44,10 +46,19 @@ public final class PaperChatOutput implements ChatOutput {
 
   /** Sends a player's line to everyone who receives it, and to the console. */
   void deliver(OutgoingLine line) {
+    deliver(line, player -> true);
+  }
+
+  /**
+   * Sends a line to everyone in {@code audience} who receives it, and to the console. An NPC's line
+   * is narrowed to its audience on top of the channel's reach.
+   */
+  void deliver(OutgoingLine line, Predicate<UUID> audience) {
     requireMainThread();
     Component component = MiniMessage.miniMessage().deserialize(service.render(line));
     for (var player : server.getOnlinePlayers()) {
-      if (service.receives(line, player.getUniqueId(), Speakers.isStaff(player))) {
+      if (audience.test(player.getUniqueId())
+          && service.receives(line, player.getUniqueId(), Speakers.isStaff(player))) {
         player.sendMessage(component);
       }
     }

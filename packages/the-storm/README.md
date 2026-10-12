@@ -102,6 +102,17 @@ sender's permitted commands, and `/help <command>` shows usage.
 | Staff, bounded world effects   | `tree`, `bigtree`, `break`, `burn`, `ext`, `ice`, `lightning`, `fireball`, `firework`, `antioch`, `nuke`, `beezooka`, `kittycannon`                                                           |
 | Staff, diagnostics             | `gc`, `ping`, `list`, `playtime`, `getpos`, `compass`, `depth`, `essentials status`                                                                                                           |
 
+Chat channels are Global (`/g`), War (`/war`, `/wc`), Staff (`/sc`) and Town
+(`/tc`), which a player can focus with the bare command, plus two that belong
+to a match and are reached one message at a time: Team (`/t <message>`) and
+Dead (`/dead <message>`). Town, Team and Dead are membership channels: the
+module that owns the group registers who is in it through the chat module's
+`ChannelRegistry` and cancels the returned `Subscription` when it disables.
+The same registry takes routers, which may redirect a player's line before it
+is checked (a leading `@` to the team, a dead player's Global to Dead), and
+taps, which hear every delivered channel line. NPCs talk through `NpcChat`,
+under the same rules as players and never relayed to Discord.
+
 There is no registered `/kit` command. First join silently delivers the
 once-only starter supplies and welcome book, retaining durable delivery
 receipts and recovery. Players can visit named warps; creating and deleting
@@ -2435,8 +2446,8 @@ end with its winner; bomb names as players read them, such as `Blue Team's
 bomb` or `the nuke`) and hands them to one pure, seeded
 `domain.chat.ChatDirector` per match, from its lobby to its end, which picks
 who says which line and when. In the lobby a bot may greet as it walks in;
-`LobbyChatListener` hands a human's chat there to the director on the main
-thread and one bot may answer (a greet for a greeting such as hi, hey or o/,
+`HeardLines`, a chat tap, hands a human's Global or Team line there to the
+director on the main thread and one bot may answer (a greet for a greeting such as hi, hey or o/,
 a `lobby` line otherwise); idle time brings `lobby` small talk or a taunt at
 a rival who is there too; and once, in the countdown's last 10 seconds, a bot
 may remark on it. Lobby lines name no team (there are none yet), so lines
@@ -2459,12 +2470,16 @@ at most `maxLinesPerWindow` per `windowSeconds`, each line
 `reactionMinMillis`..`reactionMaxMillis` after its moment, and a line the
 limit would push past `maxDelayMillis` is dropped. Placeholders are filled
 with names as players see them (`{victim}`, `{killer}`, `{team}` as `Red
-Team`, `{bomb}`). A due line goes, as `[Name ✦]: line` (name in its team
-colour, rwf's dim `✦` marker), to the human players in the rwf world only:
-members and watchers, never Global, Discord or anyone elsewhere, and never
-the bot bodies; in the lobby the name is white. Lines are not recorded. A new
-context is a new `ChatMoment` with its own line pool; the director shares
-every rule.
+Team`, `{bomb}`). A due line goes through the chat module's `NpcChat`, so it
+passes the same mutes, filters and repeat limits as a player's and respects
+hidden channels and ignores: team calls (a plant, a defuse, the last of a
+team) in Team chat, which only the bot's team hears, everything else in
+Global, in the channel's format with the `✦` marker after the name and, once
+teams exist, a `●` in the team colour before it. Either way only the human
+players in the rwf world hear it (members and watchers, never the bot bodies
+or anyone elsewhere), and no NPC line is relayed to Discord. A line chat
+refuses is dropped. A new context is a new `ChatMoment` with its own line
+pool; the director shares every rule.
 
 Chat is gated twice: `chat.enabled` in `rwfbots.yml` (false skips it
 entirely) and the managed Flipt flag `the-storm-rwfbots-chat-enabled`

@@ -46,7 +46,7 @@ public final class RwfBotsPaper {
   private final RwfBotsCommand command;
   private final Optional<GzipTraceFiles> traces;
   private final Optional<BotChat> chat;
-  private final Optional<LobbyChatListener> heard;
+  private final Optional<com.shepherdjerred.thestorm.chat.app.Subscription> heard;
   private final com.shepherdjerred.thestorm.rwfbots.app.learning.MatchLearning learning;
 
   private RwfBotsPaper(Parts parts) {
@@ -75,7 +75,7 @@ public final class RwfBotsPaper {
       RwfBotsCommand command,
       Optional<GzipTraceFiles> traces,
       Optional<BotChat> chat,
-      Optional<LobbyChatListener> heard,
+      Optional<com.shepherdjerred.thestorm.chat.app.Subscription> heard,
       com.shepherdjerred.thestorm.rwfbots.app.learning.MatchLearning learning) {}
 
   /**
@@ -226,19 +226,18 @@ public final class RwfBotsPaper {
                         app.chatGate(),
                         roster,
                         app.world(),
+                        services.require(com.shepherdjerred.thestorm.chat.app.NpcChat.class),
                         module.scheduler(),
                         module.time(),
                         module.logger())))
             : Optional.<BotChat>empty();
     chat.ifPresent(talk -> talk.start(events));
-    var heard = chat.map(talk -> new LobbyChatListener(talk, module.scheduler()));
-    heard.ifPresent(
-        listener ->
-            module
-                .plugin()
-                .getServer()
-                .getPluginManager()
-                .registerEvents(listener, module.plugin()));
+    var heard =
+        chat.map(
+            talk ->
+                services
+                    .require(com.shepherdjerred.thestorm.chat.app.ChannelRegistry.class)
+                    .registerTap(new HeardLines(talk, module.scheduler())));
     services.provide(BotRoster.class, BotRoster.of(roster));
     services.provide(com.shepherdjerred.thestorm.rwfbots.app.CombatHarness.class, roster.harness());
     services.provide(com.shepherdjerred.thestorm.rwf.app.ObservationSource.class, observations);
@@ -284,7 +283,7 @@ public final class RwfBotsPaper {
     clock.cancel();
     learning.close();
     bridge.close();
-    heard.ifPresent(HandlerList::unregisterAll);
+    heard.ifPresent(com.shepherdjerred.thestorm.chat.app.Subscription::cancel);
     chat.ifPresent(BotChat::close);
     HandlerList.unregisterAll(stimuli);
     doors.close();

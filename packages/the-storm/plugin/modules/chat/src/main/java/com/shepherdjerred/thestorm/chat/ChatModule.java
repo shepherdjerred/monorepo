@@ -19,9 +19,10 @@ import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import org.bukkit.entity.Player;
 
 /**
- * Chat channels (Global, War, Staff, Town), private messages, emotes, ignores and staff mutes;
- * replaces VentureChat. Publishes {@link GlobalChat} for bridges, and {@link ChannelRegistry} and
- * {@link PrefixRegistry} for the towns and tracks modules.
+ * Chat channels (Global, War, Staff, Town, and a match's Team and Dead), private messages, emotes,
+ * ignores and staff mutes; replaces VentureChat. Publishes {@link GlobalChat} for bridges, {@link
+ * ChannelRegistry} (memberships, routers, taps) and {@link PrefixRegistry} for the towns, tracks
+ * and match modules, and {@link com.shepherdjerred.thestorm.chat.app.NpcChat} for bots.
  */
 public final class ChatModule implements StormModule {
   private com.shepherdjerred.thestorm.core.schedule.@org.jspecify.annotations.Nullable Cancellable
@@ -82,6 +83,11 @@ public final class ChatModule implements StormModule {
     context.services().provide(GlobalChat.class, hub);
     context.services().provide(ChannelRegistry.class, extensions);
     context.services().provide(PrefixRegistry.class, extensions);
+    context
+        .services()
+        .provide(
+            com.shepherdjerred.thestorm.chat.app.NpcChat.class,
+            new com.shepherdjerred.thestorm.chat.adapter.paper.PaperNpcChat(service, output));
 
     server.getPluginManager().registerEvents(new ChatListener(service, hub), context.plugin());
     server.getPluginManager().registerEvents(identityCommands, context.plugin());

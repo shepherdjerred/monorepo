@@ -188,8 +188,14 @@ public final class ChatService {
         .toList();
   }
 
-  /** Makes {@code channel} where {@code speaker}'s plain chat goes. */
+  /**
+   * Makes {@code channel} where {@code speaker}'s plain chat goes. Team and dead chat cannot be
+   * focused (see {@link ChannelKey#focusable}); asking is a wiring bug.
+   */
   public Result<ChatProfile, ChatDenial> focus(Speaker speaker, ChannelKey channel) {
+    if (!channel.focusable()) {
+      throw new IllegalArgumentException(channel + " chat cannot be focused");
+    }
     var access = access(speaker, channel);
     if (access != ChannelAccess.GRANTED) {
       return Result.err(new ChatDenial.NoAccess(channel, access));
@@ -251,7 +257,21 @@ public final class ChatService {
    */
   public Result<OutgoingLine, List<ChatDenial>> prepare(
       Speaker speaker, ChannelKey channel, String rawText) {
-    return prepareLine(speaker, channel, rawText, false);
+    return prepareLine(speaker, channel, rawText, Style.PLAIN);
+  }
+
+  /**
+   * Where a player's line goes once the registered routers have had their say: the channel and text
+   * of the first router that redirects it, or {@code chosen} and {@code rawText} unchanged.
+   *
+   * @param command whether a one-shot command named {@code chosen}; plain chat when false
+   */
+  public ChannelRouter.Routed route(
+      UUID speaker, ChannelKey chosen, String rawText, boolean command) {
+    var channel = ChatChannel.of(chosen);
+    return extensions
+        .route(new ChannelRouter.Request(speaker, channel, rawText, command))
+        .orElseGet(() -> new ChannelRouter.Routed(channel, rawText));
   }
 
   /** NPC replies share mutes, filters and repeat limits with ordinary Global messages. */
@@ -260,9 +280,39 @@ public final class ChatService {
         instanceof Result.Ok<OutgoingLine, List<ChatDenial>>;
   }
 
+  /**
+   * Checks an NPC's line against the rules a player's line passes: mutes, filters, repeat limits
+   * and channel access, a membership channel through its registered membership. NPCs are never
+   * staff and never bypass the filters. Its audience is the deliverer's concern.
+   */
+  public Result<OutgoingLine, List<ChatDenial>> prepareNpc(NpcChat.Line line) {
+    return prepareLine(
+        new Speaker(line.id(), line.name(), false, false),
+        line.channel().key(),
+        line.text(),
+        new Style(false, Optional.of(line.prefix())));
+  }
+
   /** Checks a {@code /me} action, which goes to the speaker's focused channel. */
   public Result<OutgoingLine, List<ChatDenial>> prepareEmote(Speaker speaker, String rawAction) {
-    return prepareLine(speaker, profile(speaker.id()).focus(), rawAction, true);
+    return prepareLine(speaker, profile(speaker.id()).focus(), rawAction, Style.EMOTE);
+  }
+
+  /**
+   * {@code line} was delivered: every registered tap hears it. Emotes are actions, not lines, and
+   * are not tapped.
+   */
+  public void delivered(OutgoingLine line) {
+    if (line.emote()) {
+      return;
+    }
+    extensions.heard(
+        new ChatTap.Heard(
+            line.speaker().id(),
+            line.byNpc(),
+            ChatChannel.of(line.channel()),
+            line.text(),
+            line.at()));
   }
 
   /**
@@ -317,8 +367,20 @@ public final class ChatService {
     return config.capsNotice();
   }
 
+  /**
+   * How a line is shown.
+   *
+   * @param emote whether it is a {@code /me} action
+   * @param npc an NPC's own trusted prefix; empty for a player
+   */
+  private record Style(boolean emote, Optional<String> npc) {
+
+    static final Style PLAIN = new Style(false, Optional.empty());
+    static final Style EMOTE = new Style(true, Optional.empty());
+  }
+
   private Result<OutgoingLine, List<ChatDenial>> prepareLine(
-      Speaker speaker, ChannelKey channel, String rawText, boolean emote) {
+      Speaker speaker, ChannelKey channel, String rawText, Style style) {
     var resolution = resolve(speaker, channel);
     if (resolution.access() != ChannelAccess.GRANTED) {
       return Result.err(List.of(new ChatDenial.NoAccess(channel, resolution.access())));
@@ -339,7 +401,13 @@ public final class ChatService {
             case Result.Ok<AcceptedMessage, List<ChatDenial>>(var message) -> {
               outcome.set(
                   Result.ok(
-                      new OutgoingLine(channel, speaker, message, resolution.members(), emote)));
+                      new OutgoingLine(
+                          channel,
+                          speaker,
+                          message,
+                          resolution.members(),
+                          style.emote(),
+                          style.npc())));
               yield RecentMessage.of(message.text(), now);
             }
           };
@@ -363,7 +431,7 @@ public final class ChatService {
 
   /** {@code line} as MiniMessage in its channel's format, or the emote format for {@code /me}. */
   public String render(OutgoingLine line) {
-    var prefix = extensions.prefix(line.speaker().id());
+    var prefix = line.npc().orElseGet(() -> extensions.prefix(line.speaker().id()));
     var name =
         identities.apply(line.speaker().id()).nickname().orElseGet(() -> line.speaker().name());
     if (line.emote()) {
@@ -407,13 +475,13 @@ public final class ChatService {
           speaker.staff()
               ? Resolution.granted(Set.of())
               : new Resolution(ChannelAccess.NO_PERMISSION, Set.of());
-      case TOWN -> resolveTown(speaker);
+      case MEMBERS -> resolveMembers(speaker, channel);
     };
   }
 
-  private Resolution resolveTown(Speaker speaker) {
+  private Resolution resolveMembers(Speaker speaker, ChannelKey channel) {
     return extensions
-        .townMembership()
+        .membership(channel)
         .map(
             membership ->
                 membership

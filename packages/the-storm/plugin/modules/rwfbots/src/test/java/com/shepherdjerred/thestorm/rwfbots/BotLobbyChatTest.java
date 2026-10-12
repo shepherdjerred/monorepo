@@ -109,7 +109,7 @@ final class BotLobbyChatTest {
             .map(body -> body.name())
             .toList();
     for (var reply : replies) {
-      var speaker = reply.substring(1, reply.indexOf(" ✦]"));
+      var speaker = reply.substring("[G][".length(), reply.indexOf(" ✦]"));
       assertThat(names).contains(speaker);
       var body =
           harness.paper().roster().live().stream()

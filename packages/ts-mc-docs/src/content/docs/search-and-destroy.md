@@ -109,8 +109,10 @@ about a kill, complain about a death, cheer a bomb it armed or say gg at the
 end. In the lobby they say hi as they walk in, chat a little while they wait
 and comment on the countdown; say hi in the lobby and one of them may say hi
 back. Their lines appear in chat with the same ✦ after the name, for example
-`[Gravel_Fox ✦]: nice try, Alice`, so you can always tell a bot from a
-person. Bot chat stays in the Search and Destroy world: only players in the
+`[G][● Gravel_Fox ✦]: nice try, Alice`, so you can always tell a bot from a
+person. A bot calls its own team's moments (a bomb it armed or defused,
+being the last one left) in team chat, so only its teammates hear them, and
+`/ignore` works on bots as it does on players. Bot chat stays in the Search and Destroy world: only players in the
 round and people watching it see it, never survival chat or Discord. Bots
 only answer a greeting or a remark in the lobby; they do not read your
 messages during the round, and each bot waits a while between lines so chat
