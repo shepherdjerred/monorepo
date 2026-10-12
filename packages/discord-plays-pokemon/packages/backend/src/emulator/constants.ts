@@ -4,8 +4,6 @@
 
 export const WIDTH = 240;
 export const HEIGHT = 160;
-export const FRAME_BYTES = WIDTH * HEIGHT * 4;
-
 // The GBA screen is 240x160 = 3:2 (square pixels). We letterbox this onto a 16:9
 // canvas for Discord, so the stream uses the display aspect, pillarboxed on black.
 export const DISPLAY_ASPECT = 3 / 2;
@@ -43,5 +41,3 @@ export const BUTTON = {
   r: 1 << 8,
   l: 1 << 9,
 } as const;
-
-export type ButtonName = keyof typeof BUTTON;

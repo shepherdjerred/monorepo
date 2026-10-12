@@ -422,5 +422,3 @@ function recordImageFailure(input: {
     error: input.error,
   });
 }
-
-export type RuntimeMetricsHandle = RuntimeMetrics;

@@ -74,19 +74,4 @@ export const ConfigExtensionRequestSchema = z.looseObject({
   repo: RepoSchema,
   pipeline: PipelineSchema,
 });
-
-export type ConfigExtensionRequest = z.infer<
-  typeof ConfigExtensionRequestSchema
->;
 export type Pipeline = z.infer<typeof PipelineSchema>;
-
-export type GeneratedConfig = {
-  /** Filename Woodpecker shows for the workflow. */
-  readonly name: string;
-  /** Workflow YAML. */
-  readonly data: string;
-};
-
-export type ConfigExtensionResponse = {
-  readonly configs: readonly GeneratedConfig[];
-};

@@ -403,18 +403,3 @@ export function InputPill({ label }: { label: string }) {
     </span>
   );
 }
-
-export function MappingTerm({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
-  return (
-    <>
-      <dt className="font-semibold text-zinc-500">{label}</dt>
-      <dd className="font-semibold text-zinc-200">{value}</dd>
-    </>
-  );
-}

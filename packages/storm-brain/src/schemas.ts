@@ -50,9 +50,6 @@ export const ClassifyVerdictSchema = z.strictObject({
   label: z.string().min(1).max(200),
   reasoning: z.string().min(1).max(2000),
 });
-
-export type ClassifyVerdict = z.infer<typeof ClassifyVerdictSchema>;
-
 export const ClassifyResponseSchema = ClassifyVerdictSchema.extend({
   model: z.string().min(1).max(200),
   costMicros: z.number().int().nonnegative(),
@@ -128,9 +125,6 @@ export const TriageDraftSchema = z.strictObject({
   resolve: z.boolean(),
   resolutionNote: z.string().max(2000),
 });
-
-export type TriageDraft = z.infer<typeof TriageDraftSchema>;
-
 export const TriageResponseSchema = TriageDraftSchema.extend({
   model: z.string().min(1).max(200),
   costMicros: z.number().int().nonnegative(),

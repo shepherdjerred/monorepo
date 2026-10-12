@@ -356,10 +356,6 @@
       "clones": 1,
       "tokens": 115
     },
-    "packages/home-assistant/src/codegen/introspect.ts|packages/home-assistant/src/codegen/introspect.ts": {
-      "clones": 1,
-      "tokens": 118
-    },
     "packages/homelab/src/cdk8s/grafana/gitckup-dashboard.ts|packages/homelab/src/cdk8s/grafana/gitckup-dashboard.ts": {
       "clones": 3,
       "tokens": 281
@@ -865,8 +861,8 @@
       "tokens": 112
     },
     "packages/scout-for-lol/packages/backend/src/observability/tracing.ts|packages/temporal/src/observability/tracing.ts": {
-      "clones": 3,
-      "tokens": 309
+      "clones": 2,
+      "tokens": 202
     },
     "packages/scout-for-lol/packages/backend/src/report-lake/report-lake.integration.test.ts|packages/scout-for-lol/packages/backend/src/report-lake/report-lake.integration.test.ts": {
       "clones": 2,

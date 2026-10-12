@@ -53,7 +53,6 @@ export const AlertEventRecordSchema = z.object({
 });
 
 export type AlertOccurrenceRecord = z.infer<typeof AlertOccurrenceRecordSchema>;
-export type AlertEventRecord = z.infer<typeof AlertEventRecordSchema>;
 
 function digest(value: string): string {
   const hasher = new Bun.CryptoHasher("sha256");

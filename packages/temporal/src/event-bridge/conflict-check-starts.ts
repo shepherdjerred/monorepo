@@ -13,10 +13,6 @@ import { jsonLog } from "./webhook-log.ts";
 
 const COMPONENT = "pr-webhook";
 
-export type ConflictCheckStartFn = (
-  input: CheckPrMergeConflictsInput,
-) => Promise<void>;
-
 function workflowIdFor(input: CheckPrMergeConflictsInput): string {
   if (input.kind === "all-prs") {
     // Singleton — a newer push to main supersedes any in-flight run.

@@ -228,7 +228,6 @@ export type AlertmanagerSnapshotAlert = z.infer<
 export type AlertView = z.infer<typeof AlertViewSchema>;
 export type AlertDetail = z.infer<typeof AlertDetailSchema>;
 export type AlertDetailInput = z.infer<typeof AlertDetailInputSchema>;
-export type AlertEventView = z.infer<typeof AlertEventViewSchema>;
 export type AlertListInput = z.infer<typeof AlertListInputSchema>;
 export type EventListInput = z.infer<typeof EventListInputSchema>;
 export type AlertListResponse = z.infer<typeof AlertListResponseSchema>;

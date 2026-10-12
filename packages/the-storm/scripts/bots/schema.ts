@@ -61,8 +61,6 @@ export type Archetype = (typeof ARCHETYPES)[number];
 
 /** `Voice.Verbosity` in Java, lower-case. */
 export const VERBOSITIES = ["quiet", "normal", "chatty"] as const;
-export type Verbosity = (typeof VERBOSITIES)[number];
-
 /** `Quirk` in Java, lower-case. */
 export const QUIRKS = [
   "always_gg",
@@ -84,8 +82,6 @@ export const QUIRKS = [
   "stares_down",
   "spins",
 ] as const;
-export type Quirk = (typeof QUIRKS)[number];
-
 /** `Lines.Placeholder` in Java. */
 export const PLACEHOLDERS = ["victim", "killer", "team", "bomb"] as const;
 export type Placeholder = (typeof PLACEHOLDERS)[number];

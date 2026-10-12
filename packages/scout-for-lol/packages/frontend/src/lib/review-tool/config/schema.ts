@@ -159,9 +159,6 @@ const RandomBehaviorSchema = z.object({
   prompt: z.string(),
   weight: z.number().min(0).max(100), // Percentage chance (0-100)
 });
-
-export type RandomBehavior = z.infer<typeof RandomBehaviorSchema>;
-
 /**
  * Personality metadata schema
  */
@@ -341,9 +338,6 @@ const PipelineContextSchema = z.object({
     name: z.string(),
   }),
 });
-
-export type PipelineContext = z.infer<typeof PipelineContextSchema>;
-
 /**
  * Generation result metadata (updated for unified pipeline)
  */
