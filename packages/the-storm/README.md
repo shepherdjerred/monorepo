@@ -2268,6 +2268,18 @@ merge resolves competing cover claims before publishing decisions. Search scratc
 arrays are reused exclusively by each batch and released when the match retires.
 Each immutable snapshot indexes combatants by ID while preserving roster order,
 so repeated enemy lookups do not scan the entire lobby.
+Role assignment prepares all teams before flattening their distinct source-node
+distance rows into one parallel batch. Scoring follows the original bot and slot
+order after the distance barrier, preserving assignments and random draw order.
+Role distances stop at the scoring cap of 128; directed reachability distinguishes
+long reachable paths from unreachable targets, which retain their existing
+horizontal-distance scoring. Other path queries keep their full search.
+Each navigation graph owns a derived strongly connected component index. Its
+reachability bitsets use at most 8MiB of payload per graph; larger component sets
+use exact traversal of the condensed directed graph with exclusive search scratch.
+The index is built during graph preparation, including asynchronous runtime map
+loading, and retires with the graph. It does not change the navigation artifact
+format or retain a separate cache of inactive maps.
 The cycle runs perception (10 Hz), the team step
 (about 1 Hz) and tactics (4 Hz) for the bots whose slot is due
 (`(tick + slot) % period == 0`), under a line-of-sight ray budget, with a
@@ -2302,11 +2314,11 @@ staleness, is about `tacticsEveryTicks` (5) by design; it is reported, not
 judged. `plugin/modules/rwfbots/LOAD.md` holds the historical serial-engine
 measurements. The parallel engine requires its own capacity evidence.
 
-`test:capacity` is separate extended local acceptance for 100, 128, 192 and
+`test:capacity` is separate extended local acceptance for 64, 100, 128, 192 and
 256 total combatants (one human plus bots), on either `apex-expanse` or
 `warlords-castles` selected with `STORM_CAPACITY_MAP`. It caps Docker at 3
 CPUs by default with an 8G heap and 10GiB memory, matching the production CPU request
-conservatively. `STORM_CAPACITY_CPUS=4` or `6` compares larger CPU budgets;
+conservatively. `STORM_CAPACITY_CPUS=4`, `6`, `8` or `12` compares larger CPU budgets;
 the evidence verifies the exact enforced limit. Production has no CPU limit.
 It uses a 90-second baseline, 20-second settling period and
 150 seconds of live measurement per size, rearming ordinary matches when
@@ -2332,8 +2344,10 @@ phase without returning the previous interval.
 
 `STORM_CAPACITY_RAY_BUDGET` changes only the disposable fixture's LOS budget
 for calibration. `STORM_CAPACITY_PROBE_TOTAL` selects one size for a quick
-probe; an incomplete matrix always fails the release verdict. Full acceptance
-uses the shipped budget and all four sizes. These suites remain outside CI.
+probe; reports include separate verdicts for each tier, and an incomplete matrix
+always fails the full 256-player release verdict. A tier verdict covers one run;
+qualification still requires both maps, repetitions and native gameplay checks.
+Full acceptance uses the shipped budget and all five sizes. These suites remain outside CI.
 For an incomplete calibration probe only, `STORM_CAPACITY_PROFILE=cpu|alloc|jfr`
 captures another 90 seconds after the measuring window and saves
 the profile locally under `.cache/e2e/capacity/profiles/`. CPU/allocation modes
@@ -2352,8 +2366,9 @@ acceptance. Compare clean measuring windows and keep the separate profiler
 overhead out of capacity claims.
 
 `test:capacity-native` boots the same disposable capacity profile with an
-ordinary rendered Minecraft client. It joins a 256-combatant draft, moves
-through normal input, waits for normal combat and match completion, and requires
+ordinary rendered Minecraft client. It joins a 256-combatant draft by default;
+`STORM_CAPACITY_NATIVE_TOTAL` selects 64, 100, 128 or 192 for tier acceptance.
+It moves through normal input, waits for normal combat and match completion, and requires
 the original recording to attribute the human's combat death to a bot, corroborated
 by health loss observed in the native client. It also checks bot movement.
 Screenshots, client commands, observations and the original recording remain

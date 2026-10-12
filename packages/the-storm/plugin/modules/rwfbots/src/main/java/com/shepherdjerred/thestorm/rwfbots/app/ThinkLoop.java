@@ -418,7 +418,8 @@ public final class ThinkLoop {
           .map(flight(cycle, "perception"), sensing, mind -> observe(cycle, mind))
           .thenCompose(
               observations -> {
-                if (!current(cycle)) return CompletableFuture.completedFuture(List.<TeamStep>of());
+                if (!current(cycle))
+                  return CompletableFuture.completedFuture(List.<PendingTeam>of());
                 var observationCommit =
                     ThinkFlight.section(flight(cycle, "observation-commit"), observations.size());
                 try {
@@ -432,8 +433,9 @@ public final class ThinkLoop {
                         .map(Map.Entry::getValue)
                         .toList();
                 return batches.map(
-                    flight(cycle, "team"), orderedTeams, team -> teamStep(cycle, team));
+                    flight(cycle, "team-prepare"), orderedTeams, team -> prepareTeam(cycle, team));
               })
+          .thenCompose(pending -> dealTeams(cycle, pending))
           .thenCompose(
               plans -> {
                 if (!current(cycle)) return CompletableFuture.completedFuture(List.<Proposal>of());
@@ -683,7 +685,7 @@ public final class ThinkLoop {
               randomFor(current, mind.profile.id(), snapshot.tick() + 1));
     }
 
-    private TeamStep teamStep(Cycle cycle, Team team) {
+    private PendingTeam prepareTeam(Cycle cycle, Team team) {
       var snapshot = cycle.snapshot();
       var period = rates.teamEveryTicks() * cycle.multiplier();
       var members = new HashMap<CombatantId, SlotFit.Member>();
@@ -703,18 +705,67 @@ public final class ThinkLoop {
       }
       // A bot that joined since the last deal must get a slot before it thinks.
       var unassigned = !team.board.plan().assignment().keySet().containsAll(members.keySet());
+      var unchanged = new TeamStep(team, team.board, team.lastTick);
       if (views.isEmpty() || (!unassigned && !due(team.lastTick, snapshot.tick(), period))) {
-        return new TeamStep(team, team.board, team.lastTick);
+        return new PendingTeam(unchanged, Optional.empty());
       }
       var current = cycle.current();
+      return new PendingTeam(
+          unchanged,
+          Optional.of(
+              TeamBrain.prepare(
+                  team.board,
+                  new TeamBrain.TeamSituation(current.nav(), snapshot, views, members))));
+    }
+
+    private CompletableFuture<List<TeamStep>> dealTeams(Cycle cycle, List<PendingTeam> pending) {
+      if (!current(cycle)) return CompletableFuture.completedFuture(List.of());
+      var queries = new ArrayList<RoleRow>();
+      for (var team : pending) {
+        team.prepared()
+            .ifPresent(
+                prepared -> {
+                  for (var row = 0; row < prepared.distanceRows(); row++)
+                    queries.add(new RoleRow(prepared, row));
+                });
+      }
+      return batches
+          .indexed(
+              flight(cycle, "team-distance"),
+              queries,
+              (batch, query) -> query.prepared().distances(query.row(), workspaces.get(batch)))
+          .thenCompose(distances -> completeTeams(cycle, pending, distances));
+    }
+
+    private CompletableFuture<List<TeamStep>> completeTeams(
+        Cycle cycle, List<PendingTeam> pending, List<float[]> distances) {
+      if (!current(cycle)) return CompletableFuture.completedFuture(List.of());
+      var completions = new ArrayList<TeamCompletion>();
+      var cursor = 0;
+      for (var team : pending) {
+        var count = team.prepared().map(TeamBrain.Prepared::distanceRows).orElse(0);
+        completions.add(
+            new TeamCompletion(team, List.copyOf(distances.subList(cursor, cursor + count))));
+        cursor += count;
+      }
+      return batches.map(
+          flight(cycle, "team-score"), completions, completion -> finishTeam(cycle, completion));
+    }
+
+    private TeamStep finishTeam(Cycle cycle, TeamCompletion completion) {
+      var pending = completion.pending();
+      if (pending.prepared().isEmpty()) return pending.unchanged();
+      var team = pending.unchanged().team();
+      var random =
+          new SplittableRandom(
+              seed(
+                  cycle.current().seed(),
+                  pending.unchanged().board().team().value().hashCode(),
+                  cycle.tick()));
       return new TeamStep(
           team,
-          TeamBrain.tick(
-              team.board,
-              new TeamBrain.TeamSituation(current.nav(), snapshot, views, members),
-              new SplittableRandom(
-                  seed(current.seed(), team.board.team().value().hashCode(), snapshot.tick()))),
-          snapshot.tick());
+          pending.prepared().orElseThrow().finish(completion.distances(), random),
+          cycle.tick());
     }
 
     private List<TacticsWork> selectTactics(Cycle cycle, List<Mind> active) {
@@ -789,6 +840,12 @@ public final class ThinkLoop {
   private record Prepared(Cycle cycle, List<Mind> active, List<Mind> sensing) {}
 
   private record TeamStep(Team team, Blackboard board, long tick) {}
+
+  private record PendingTeam(TeamStep unchanged, Optional<TeamBrain.Prepared> prepared) {}
+
+  private record RoleRow(TeamBrain.Prepared prepared, int row) {}
+
+  private record TeamCompletion(PendingTeam pending, List<float[]> distances) {}
 
   private record TacticsWork(Mind mind, Blackboard board) {}
 

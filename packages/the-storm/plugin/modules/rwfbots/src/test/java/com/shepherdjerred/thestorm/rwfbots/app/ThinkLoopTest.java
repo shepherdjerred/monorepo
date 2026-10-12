@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.rwfbots.app;
 
 import static com.shepherdjerred.thestorm.rwfbots.domain.Fixtures.BLUE;
 import static com.shepherdjerred.thestorm.rwfbots.domain.Fixtures.RED;
+import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -26,6 +27,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.Decision;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Kit;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.MatchPhase;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.PoisonView;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.TeamId;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.WorldSnapshot;
 import java.time.Duration;
 import java.util.ArrayDeque;
@@ -132,11 +134,15 @@ final class ThinkLoopTest {
   }
 
   private static BotProfile profile(CombatantId id, int slot) {
+    return profile(id, slot, RED);
+  }
+
+  private static BotProfile profile(CombatantId id, int slot, TeamId team) {
     return new BotProfile(
         id,
         slot,
         "bot-" + id.value(),
-        RED,
+        team,
         Kit.TROOPER,
         Fixtures.levers(0.7),
         new Style(0.5, 0.5, 0.6, 0.5),
@@ -351,17 +357,37 @@ final class ThinkLoopTest {
     var serial = loop(new DirectComputePool(), governor(), TraceSink.none());
     var pool = new ManualPool(4);
     var parallel = loop(pool, governor(), TraceSink.none());
-    register(serial);
-    register(parallel);
-    for (var tick = 1; tick <= 30; tick++) {
-      serial.publish(snapshot(tick));
-      parallel.publish(snapshot(tick));
+    serial.beginMatch(42, NAV);
+    parallel.beginMatch(42, NAV);
+    var roster = new ArrayList<CombatantView>();
+    for (var bot = 0; bot < 12; bot++) {
+      var team = bot % 2 == 0 ? RED : BLUE;
+      var view = Fixtures.combatant(bot + 1, team, NAV.graph().feet(bot * 3));
+      roster.add(view);
+      serial.register(profile(view.id(), bot, team));
+      parallel.register(profile(view.id(), bot, team));
+    }
+    for (var tick = 1; tick <= 80; tick++) {
+      var original = snapshot(tick);
+      var snapshot =
+          new WorldSnapshot(
+              tick,
+              MatchPhase.LIVE,
+              roster,
+              original.bombs(),
+              PoisonView.NONE,
+              NAV.mapId(),
+              List.of());
+      serial.publish(snapshot);
+      parallel.publish(snapshot);
       while (!pool.queued.isEmpty()) pool.queued.removeLast().run();
       assertThat(parallel.board().thoughts()).isEqualTo(serial.board().thoughts());
       assertThat(parallel.board().plans()).isEqualTo(serial.board().plans());
       assertThat(parallel.board().perceptions()).isEqualTo(serial.board().perceptions());
     }
-    assertThat(pool.submitted).isGreaterThan(30);
+    assertThat(pool.submitted).isGreaterThan(80);
+    serial.close();
+    parallel.close();
   }
 
   @Test
@@ -392,7 +418,7 @@ final class ThinkLoopTest {
     loop.bumpEpoch(RED_1);
     pool.runAll();
     assertThat(loop.board().thoughts()).doesNotContainKey(RED_1);
-    var previous = java.util.Objects.requireNonNull(loop.board().perceptions().get(RED_1));
+    var previous = requireNonNull(loop.board().perceptions().get(RED_1));
     assertThat(previous).isEqualTo(new PerceptionAge(1, false));
     assertThat(previous.at(3)).isEqualTo(2);
     loop.publish(snapshot(4));
@@ -416,6 +442,53 @@ final class ThinkLoopTest {
     loop.publish(snapshot(2));
     pool.runAll();
     assertThat(loop.board().tick()).isEqualTo(2);
+  }
+
+  @Test
+  void endingAndRestartingDuringRoleDistancesNeverPublishesTheRetiredAssignment() {
+    var pool = new ManualPool(4);
+    var loop = loop(pool, governor(), TraceSink.none());
+    register(loop);
+    loop.publish(snapshot(1));
+    advanceToRoleDistances(pool);
+    loop.endMatch();
+    register(loop);
+    pool.runAll();
+    assertThat(loop.board()).isEqualTo(DecisionBoard.EMPTY);
+    loop.publish(snapshot(2));
+    pool.runAll();
+    assertThat(loop.board().tick()).isEqualTo(2);
+    assertThat(requireNonNull(loop.board().plans().get(RED)).assignment())
+        .containsOnlyKeys(RED_1, RED_2);
+    loop.close();
+  }
+
+  @Test
+  void navigationChangingDuringRoleDistancesDiscardsThePreparedAssignment() {
+    var pool = new ManualPool(4);
+    var loop = loop(pool, governor(), TraceSink.none());
+    register(loop);
+    loop.publish(snapshot(1));
+    advanceToRoleDistances(pool);
+    pool.queued.removeLast().run();
+    loop.observedNavigation(NAV);
+    pool.runAll();
+    assertThat(loop.board()).isEqualTo(DecisionBoard.EMPTY);
+    loop.publish(snapshot(2));
+    pool.runAll();
+    assertThat(loop.board().tick()).isEqualTo(2);
+    assertThat(loop.board().perceived()).isEqualTo(2);
+    loop.close();
+  }
+
+  private static void advanceToRoleDistances(ManualPool pool) {
+    pool.queued.removeFirst().run(); // Cycle preparation queues two perception batches.
+    assertThat(pool.queued).hasSize(2);
+    pool.queued.removeFirst().run();
+    pool.queued.removeFirst().run(); // Observation merge queues one team preparation batch.
+    assertThat(pool.queued).hasSize(1);
+    pool.queued.removeFirst().run(); // Team preparation queues the two distinct source rows.
+    assertThat(pool.queued).hasSize(2);
   }
 
   @Test

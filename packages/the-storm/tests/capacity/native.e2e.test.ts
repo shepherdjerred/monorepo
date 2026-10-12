@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { expect } from "vitest";
 import { test } from "#e2e/fixtures.ts";
-import { capacityMap } from "#e2e/gameplay-fixtures.ts";
+import { capacityMap, capacityNativeTotal } from "#e2e/gameplay-fixtures.ts";
 import { packageRoot } from "#e2e/harness/paths.ts";
 import { eventually, settledMatch, status } from "#e2e/harness/rwf-match.ts";
 import { gzipLines, readRecording } from "#e2e/harness/rwfbots.ts";
@@ -25,9 +25,10 @@ async function isLive(rcon: RconClient) {
 }
 
 test(
-  "a native participant moves, takes bot damage and completes a 256-combatant match",
+  "a native participant moves, takes bot damage and completes the selected capacity tier",
   { timeout: 50 * 60_000 },
   async ({ rcon, server }) => {
+    const total = capacityNativeTotal();
     const inputs = await evidence(server);
     expect(inputs.personalityCount).toBe(512);
     await eventually(
@@ -60,8 +61,8 @@ test(
     try {
       const teams = capacityMap() === "apex-expanse" ? 2 : 4;
       expect(
-        await rcon.command(`rwf admin size team ${(256 / teams).toString()}`),
-      ).toContain("256 total");
+        await rcon.command(`rwf admin size team ${(total / teams).toString()}`),
+      ).toContain(`${total.toString()} total`);
       await request(session, "command", { text: "rwf join" });
       await eventually(
         "the ordinary draft to go live",
@@ -69,8 +70,10 @@ test(
         120_000,
       );
       const live = await status(rcon);
-      expect([live.humans, live.bots]).toEqual([1, 255]);
-      await request(session, "capture", { name: "256-combatants-live" });
+      expect([live.humans, live.bots]).toEqual([1, total - 1]);
+      await request(session, "capture", {
+        name: `${total.toString()}-combatants-live`,
+      });
       const before = await state(session);
       await request(session, "input", { buttons: ["forward"], ticks: 20 });
       const after = await state(session);
@@ -111,7 +114,10 @@ test(
       }
       expect(await isLive(rcon)).toBe(false);
       const settled = await settledMatch(server, live.matchId);
-      expect([settled.match.humans, settled.match.bots]).toEqual([1, 255]);
+      expect([settled.match.humans, settled.match.bots]).toEqual([
+        1,
+        total - 1,
+      ]);
       expect(settled.match.dropped_frames).toBe(0);
       const lines = await gzipLines(
         server,
@@ -120,7 +126,7 @@ test(
       );
       const recording = readRecording(lines);
       const trails = readTrails(lines);
-      expect(recording.roster.size).toBe(256);
+      expect(recording.roster.size).toBe(total);
       const human = [...recording.roster].find(
         ([, member]) => !member.bot,
       )?.[0];
@@ -167,7 +173,7 @@ test(
       expect(
         moved.length,
         "bots move beyond their reused spawn points",
-      ).toBeGreaterThan(200);
+      ).toBeGreaterThan(Math.ceil((200 * (total - 1)) / 255));
       expect(lines.find((line) => line.startsWith("X\t"))).toMatch(
         /\t(?:LAST_TEAM_STANDING|DRAW)$/u,
       );
@@ -177,6 +183,7 @@ test(
         JSON.stringify(
           {
             inputs,
+            total,
             match: settled.match,
             movement: distance,
             botMovements: moved.length,

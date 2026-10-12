@@ -28,11 +28,27 @@ export function capacityResources(): ServerResources & { cpus: number } {
   return {
     cpus: z.coerce
       .number()
-      .pipe(z.union([z.literal(3), z.literal(4), z.literal(6)]))
+      .pipe(
+        z.union([
+          z.literal(3),
+          z.literal(4),
+          z.literal(6),
+          z.literal(8),
+          z.literal(12),
+        ]),
+      )
       .parse(Bun.env["STORM_CAPACITY_CPUS"] ?? 3),
     heap: "8G",
     memoryLimit: "10g",
   };
+}
+
+/** Native gameplay acceptance for a specific tier; the original 256-player run stays the default. */
+export function capacityNativeTotal(): number {
+  return z
+    .enum(["64", "100", "128", "192", "256"])
+    .transform(Number)
+    .parse(Bun.env["STORM_CAPACITY_NATIVE_TOTAL"] ?? "256");
 }
 
 /** The profile from STORM_E2E_PROFILE, or STORM_E2E_FULL=1 as the CI lanes set it. */
