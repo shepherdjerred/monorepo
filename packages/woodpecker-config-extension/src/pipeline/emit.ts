@@ -1,5 +1,5 @@
 import { stringify } from "yaml";
-import { bunInstallEnvironment } from "#src/pipeline/cache.ts";
+import { sharedCacheEnvironment } from "#src/pipeline/cache.ts";
 import {
   SOURCE_CACHE_PATH,
   SOURCE_CACHE_CONTROL,
@@ -239,7 +239,7 @@ function emitCommand(
     commands: wrapCommands(step),
     environment: {
       ...step.environment,
-      ...bunInstallEnvironment(step.volumes),
+      ...sharedCacheEnvironment(step.volumes),
     },
     ...(step.volumes === undefined || step.volumes.length === 0
       ? {}

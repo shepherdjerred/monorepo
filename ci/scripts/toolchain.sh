@@ -23,9 +23,25 @@ case "${CI_WORKSPACE:-}" in
     export TMPDIR=/woodpecker/tmp
     mkdir -p "$TMPDIR"
     chmod 1777 "$TMPDIR"
-    export GRADLE_USER_HOME=/woodpecker/gradle
+    # The emitter mounts a shared Gradle home on full-toolchain containers;
+    # anything else keeps Gradle's downloads on the workflow volume.
+    export GRADLE_USER_HOME="${GRADLE_USER_HOME:-/woodpecker/gradle}"
     ;;
 esac
+
+# Cargo keeps its registry and Git checkouts under CARGO_HOME next to the
+# rustup-managed toolchain, with no variable for the caches alone. Moving
+# CARGO_HOME would move the toolchain too (and mise would reinstall it), so
+# link just the two cache directories to the shared cache claim the emitter
+# mounted. On an image layer the removal is a whiteout, not a copy-up.
+if [ -n "${CI_CARGO_CACHE_DIR:-}" ]; then
+  cargo_home="${CARGO_HOME:-$HOME/.cargo}"
+  mkdir -p "$CI_CARGO_CACHE_DIR/registry" "$CI_CARGO_CACHE_DIR/git" "$cargo_home"
+  for cargo_cache in registry git; do
+    rm -rf "${cargo_home:?}/${cargo_cache}"
+    ln -s "$CI_CARGO_CACHE_DIR/$cargo_cache" "$cargo_home/$cargo_cache"
+  done
+fi
 
 # Stale images without mise (the Playwright image) bootstrap the same release
 # ci-base pins, so both read mise.lock's format identically.

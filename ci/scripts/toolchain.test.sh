@@ -86,8 +86,13 @@ fi
 
 if ! rg -Fq 'export TMPDIR=/woodpecker/tmp' "$TOOLCHAIN" ||
   ! rg -Fq 'chmod 1777 "$TMPDIR"' "$TOOLCHAIN" ||
-  ! rg -Fq 'export GRADLE_USER_HOME=/woodpecker/gradle' "$TOOLCHAIN"; then
-  echo "Woodpecker steps must keep temporary files and tool homes on the workflow volume" >&2
+  ! rg -Fq 'export GRADLE_USER_HOME="${GRADLE_USER_HOME:-/woodpecker/gradle}"' "$TOOLCHAIN"; then
+  echo "Woodpecker steps must keep temporary files and tool homes off the OS disk" >&2
+  exit 1
+fi
+if ! rg -Fq 'ln -s "$CI_CARGO_CACHE_DIR/$cargo_cache" "$cargo_home/$cargo_cache"' "$TOOLCHAIN" ||
+  rg -Fq 'export CARGO_HOME=' "$TOOLCHAIN"; then
+  echo "toolchain must link Cargo's caches to the shared claim without moving CARGO_HOME" >&2
   exit 1
 fi
 

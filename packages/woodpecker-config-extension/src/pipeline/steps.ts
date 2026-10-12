@@ -5,6 +5,7 @@ import {
   BUN_CACHE_CONTROL,
   UV_CACHE,
   withSharedBunCache,
+  withSharedToolCaches,
 } from "#src/pipeline/cache.ts";
 import { TURBO_VERIFY_TIER } from "#src/pipeline/tiers.ts";
 import { diagnosticCommands } from "#src/pipeline/diagnostics.ts";
@@ -193,13 +194,15 @@ export function buildPipelineSteps({
   // selector; otherwise they fail open and publish, deploy, or rebuild on
   // every main push. Verify may override it with its newer successful base.
   return steps.map((step) =>
-    withSharedBunCache({
-      ...step,
-      environment: {
-        CI_CHANGED_BASE: changedBase,
-        ...step.environment,
-      },
-    }),
+    withSharedToolCaches(
+      withSharedBunCache({
+        ...step,
+        environment: {
+          CI_CHANGED_BASE: changedBase,
+          ...step.environment,
+        },
+      }),
+    ),
   );
 }
 

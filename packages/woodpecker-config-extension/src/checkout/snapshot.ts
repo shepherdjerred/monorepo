@@ -30,6 +30,28 @@ async function objectBytes(directory: string): Promise<number> {
   return bytes;
 }
 
+/**
+ * Copy a directory tree with the filesystem's clone facility when it has one.
+ * The source cache and the workspace are separate datasets on the CI node's
+ * ZFS pool, where `copy_file_range` turns the object store into a block clone
+ * instead of a second written copy. GNU cp asks for that with --reflink=auto;
+ * BSD cp (developer machines) uses -c for the same thing on APFS.
+ */
+async function cloneTree(source: string, destination: string): Promise<void> {
+  await mkdir(destination, { recursive: true });
+  const cloneFlag = process.platform === "darwin" ? "-c" : "--reflink=auto";
+  const copy = Bun.spawn(["cp", "-a", cloneFlag, `${source}/.`, destination], {
+    stdout: "ignore",
+    stderr: "pipe",
+  });
+  const code = await copy.exited;
+  if (code !== 0) {
+    throw new Error(
+      `cp exited ${String(code)}: ${await new Response(copy.stderr).text()}`,
+    );
+  }
+}
+
 async function optionalDirectory(path: string): Promise<boolean> {
   try {
     const info = await lstat(path);
@@ -78,10 +100,9 @@ export async function checkoutSource(input: CheckoutInput) {
     const bytes = await objectBytes(join(snapshot, "objects"));
     if (bytes !== manifest.objectBytes)
       throw new Error("Source cache size mismatch");
-    await cp(
+    await cloneTree(
       join(snapshot, "objects"),
       join(input.workspace, ".git", "objects"),
-      { recursive: true },
     );
     await cp(
       join(snapshot, "shallow"),
@@ -105,10 +126,9 @@ export async function checkoutSource(input: CheckoutInput) {
     fetchedBytes = await objectBytes(join(input.workspace, ".git", "objects"));
     const temporary = join(parent, `${commit}.tmp-${crypto.randomUUID()}`);
     await mkdir(temporary);
-    await cp(
+    await cloneTree(
       join(input.workspace, ".git", "objects"),
       join(temporary, "objects"),
-      { recursive: true },
     );
     // A root commit has no shallow file; write the known depth-one boundary.
     await Bun.write(join(temporary, "shallow"), `${commit}\n`);
