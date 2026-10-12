@@ -82,15 +82,29 @@ fn wait_for_game(
 
 /// Update only the selected game's path, preserving every unrelated field.
 /// Never derive Debug, log, or return the contents of Plutonium's config.
+fn ensure_plutonium_closed() -> Result<()> {
+    if process_running(PLUTONIUM_PROCESSES) {
+        return Err(Error::ActionRequired {
+            title: "Close Plutonium to finish setup",
+            next_step: "Close Plutonium and its games, then choose Try again. Your game folder only needs to be set up once.",
+        });
+    }
+    Ok(())
+}
+
 pub fn configure_plutonium(game: Game, game_path: &Path) -> Result<()> {
+    ensure_plutonium_closed()?;
+    write_plutonium_game_path(&plutonium_directory()?, game, game_path)
+}
+
+fn write_plutonium_game_path(root: &Path, game: Game, game_path: &Path) -> Result<()> {
     let key = match game {
         Game::T5 => "t5Path",
         Game::T6 => "t6Path",
         _ => return Err(Error::Invalid("Not a Plutonium game".into())),
     };
-    let root = plutonium_directory()?;
-    std::fs::create_dir_all(&root)?;
     let config_path = root.join("config.json");
+    std::fs::create_dir_all(root)?;
     let mut config: serde_json::Map<String, serde_json::Value> = match std::fs::read(&config_path) {
         Ok(bytes) => serde_json::from_slice(&bytes).map_err(|_| {
             Error::Invalid(
@@ -106,12 +120,6 @@ pub fn configure_plutonium(game: Game, game_path: &Path) -> Result<()> {
         .ok_or_else(|| Error::Invalid("Game folder name is not valid Unicode".into()))?;
     if config.get(key).and_then(serde_json::Value::as_str) == Some(path) {
         return Ok(());
-    }
-    if process_running(PLUTONIUM_PROCESSES) {
-        return Err(Error::ActionRequired {
-            title: "Close Plutonium to finish setup",
-            next_step: "Close Plutonium and its games, then choose Try again. Your game folder only needs to be set up once.",
-        });
     }
     config.insert(key.to_owned(), serde_json::Value::String(path.to_owned()));
     crate::state::write_json(&config_path, &config)
@@ -170,10 +178,13 @@ pub fn play(
     crate::install::finish_prerequisites(game, &directory)?;
     let mut child = match game {
         Game::T5 | Game::T6 => {
-            configure_plutonium(game, &directory)?;
+            ensure_plutonium_closed()?;
             let updater = clients.join("plutonium.exe");
             let mut child = command(&updater, clients).arg("-update-only").spawn()?;
             wait_success(&mut child, cancel, "Plutonium update")?;
+            // The first-run updater can initialize or rewrite config.json. Set the
+            // extracted game path after it exits so Plutonium sees it on first open.
+            configure_plutonium(game, &directory)?;
             let root = plutonium_directory()?;
             command(&root.join("bin/plutonium-launcher-win32.exe"), &root)
                 .arg(plutonium_link(game, mode)?)
@@ -266,6 +277,24 @@ mod tests {
         );
         assert!(plutonium_link(Game::Iw4x, Mode::Multiplayer).is_err());
         assert!(plutonium_link(Game::T7, Mode::Zombies).is_err());
+        Ok(())
+    }
+
+    #[test]
+    fn plutonium_game_path_is_set_without_replacing_other_settings() -> Result<()> {
+        let root = tempfile::tempdir()?;
+        std::fs::write(
+            root.path().join("config.json"),
+            br#"{"username":"player","t5Path":"old-t5","t6Path":"old-t6"}"#,
+        )?;
+
+        write_plutonium_game_path(root.path(), Game::T6, Path::new("C:/Games/t6"))?;
+
+        let config: serde_json::Value =
+            serde_json::from_slice(&std::fs::read(root.path().join("config.json"))?)?;
+        assert_eq!(config["username"], "player");
+        assert_eq!(config["t5Path"], "old-t5");
+        assert_eq!(config["t6Path"], "C:/Games/t6");
         Ok(())
     }
 }
