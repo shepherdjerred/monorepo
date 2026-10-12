@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
 
 /**
  * Pays match rewards, and takes the AFK penalty, in Red Warfare credits through the economy's keyed
@@ -48,11 +49,14 @@ public final class PayoutService {
   private final Wallets wallets;
   private final MatchStore store;
   private final InstantSource time;
+  private final LegacyPayouts legacy;
+  private CompletableFuture<Void> pending = CompletableFuture.completedFuture(null);
 
   public PayoutService(Wallets wallets, MatchStore store, InstantSource time) {
     this.wallets = wallets;
     this.store = store;
     this.time = time;
+    legacy = new LegacyPayouts(wallets, store);
   }
 
   /** The idempotency key for {@code player}'s payout from {@code matchId}. */
@@ -69,12 +73,20 @@ public final class PayoutService {
   /** Writes the match and its players, then pays everyone owed. */
   public CompletableFuture<List<Paid>> settle(
       MatchStore.MatchRow match, List<MatchStore.PlayerRow> players) {
-    return store.record(match, players).thenCompose(ignored -> payAll(players));
+    return enqueue(() -> store.record(match, players).thenCompose(ignored -> payAll(players)));
   }
 
   /** Pays every row a crash left pending or paying. */
   public CompletableFuture<List<Paid>> replay() {
-    return store.unpaid().thenCompose(this::payAll);
+    return enqueue(() -> store.unpaid().thenCompose(this::payAll));
+  }
+
+  /** One owner settles the outbox: a legacy reconciliation never races a ledger transfer. */
+  private synchronized <T> CompletableFuture<T> enqueue(Supplier<CompletableFuture<T>> work) {
+    var next = pending.thenCompose(ignored -> work.get());
+    // A failed request remains failed for its caller, but does not strand later retries.
+    pending = next.handle((ignored, failure) -> null);
+    return next;
   }
 
   private CompletableFuture<List<Paid>> payAll(List<MatchStore.PlayerRow> rows) {
@@ -98,13 +110,25 @@ public final class PayoutService {
   }
 
   private CompletableFuture<Paid> pay(MatchStore.PlayerRow row) {
-    return store
-        .beginPayout(row.matchId(), row.player(), LocalDate.ofInstant(time.instant(), LEGACY_ZONE))
+    var prepare =
+        row.currency() == CurrencyId.CRYSTALS
+            ? legacy.reconcile(row.player())
+            : CompletableFuture.<Void>completedFuture(null);
+    return prepare
+        .thenCompose(
+            ignored ->
+                store.beginPayout(
+                    row.matchId(), row.player(), LocalDate.ofInstant(time.instant(), LEGACY_ZONE)))
         .thenCompose(amount -> amount < 0 ? charge(row, -amount) : transfer(row, amount))
         .thenCompose(
             moved ->
                 store
                     .finishPayout(row.matchId(), row.player(), moved)
+                    .thenCompose(
+                        ignored ->
+                            row.currency() == CurrencyId.CRYSTALS
+                                ? legacy.reconcile(row.player())
+                                : CompletableFuture.<Void>completedFuture(null))
                     .thenApply(
                         ignored ->
                             new Paid(row.matchId(), row.player(), row.creditsOwed(), moved)));

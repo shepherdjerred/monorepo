@@ -19,8 +19,8 @@ public interface MatchStore {
 
   /**
    * The daily cap rwf.yml set while matches paid crystals. Rows written before Red Warfare had its
-   * own currency still settle under it, against {@code rwf_daily_earnings}, so a payout a crash
-   * left pending across the upgrade pays exactly what it would have; credit rows have no cap.
+   * own currency settle under it, against {@code rwf_daily_earnings}, reconciled from committed
+   * receipts. Uncommitted payouts use the current day's remaining budget; credit rows have no cap.
    */
   long LEGACY_CRYSTAL_DAILY_CAP = 30;
 
@@ -198,6 +198,32 @@ public interface MatchStore {
 
   /** Every row still {@link PayoutStatus#PENDING} or {@link PayoutStatus#PAYING}, oldest first. */
   CompletableFuture<List<PlayerRow>> unpaid();
+
+  /** Every legacy crystal row for a player, including completed payouts whose receipts count. */
+  CompletableFuture<List<PlayerRow>> legacyPayouts(UUID player);
+
+  /**
+   * A committed legacy payout, dated in the legacy accounting zone.
+   *
+   * @param matchId its match
+   * @param day the receipt's day
+   * @param credits what the ledger actually paid
+   */
+  record LegacyPayment(UUID matchId, LocalDate day, long credits) {
+
+    public LegacyPayment {
+      if (credits <= 0) {
+        throw new IllegalArgumentException("a committed legacy payout must be positive");
+      }
+    }
+  }
+
+  /**
+   * Rebuilds the player's daily accounting from validated receipts and resets uncommitted legacy
+   * reservations for settlement against today's budget. The payout service serializes this with all
+   * transfers; it must never run while a transfer is in flight.
+   */
+  CompletableFuture<Void> reconcileLegacy(UUID player, List<LegacyPayment> payments);
 
   /**
    * Moves a pending row to paying and returns the amount to move: a payout's {@code creditsOwed},

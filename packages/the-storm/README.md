@@ -2189,9 +2189,14 @@ economy's keyed transfers (`rwf:<matchId>:<uuid>`), so a crash between the
 match ending and the transfer moves money exactly once on the next enable; a
 charge is found by its key before anything more is taken. Each row names the
 currency it settles in, so rows written before Red Warfare had its own
-currency still settle in crystals, still under the old 30-crystal daily cap
-kept in `rwf_daily_earnings` (credit rows never touch it). Bots are never
-paid.
+currency still settle in crystals under the old 30-crystal daily cap. The
+published V2 migration dropped `rwf_daily_earnings`; V2.1 restores the table
+without changing V2's checksum. Before settling a legacy row, the payout
+service rebuilds that player's totals from dated economy receipts. A committed
+receipt replays its exact amount; an uncommitted reservation uses the current
+Los Angeles day's remaining budget. Payout batches run serially so recovery
+cannot release an in-flight transfer's reservation. A paid row missing its
+receipt fails loudly. Credit rows never touch the cap, and bots are never paid.
 
 Bots are optional: the module declares the `BotRoster` port and looks it up
 when a countdown starts; the `rwfbots` module provides it. Bots act only

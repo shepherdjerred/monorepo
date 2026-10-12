@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.rwf.app;
 
 import static com.shepherdjerred.thestorm.rwf.testing.Samples.T0;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.groups.Tuple.tuple;
 
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
@@ -20,10 +21,14 @@ import com.shepherdjerred.thestorm.rwf.testing.FakeClock;
 import com.shepherdjerred.thestorm.rwf.testing.FakeWallets;
 import com.shepherdjerred.thestorm.rwf.testing.Samples;
 import java.nio.file.Path;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -45,14 +50,16 @@ final class PayoutServiceTest {
   private MatchStore store;
   private FakeWallets wallets;
   private PayoutService payouts;
+  private FakeClock clock;
 
   @BeforeEach
   void open() {
     database = StormDatabase.open(directory.resolve("t.db"));
     database.migrate("rwf", getClass().getClassLoader());
     store = new JooqMatchStore(database);
-    wallets = new FakeWallets();
-    payouts = new PayoutService(wallets, store, new FakeClock(T0));
+    clock = new FakeClock(T0);
+    wallets = new FakeWallets(clock);
+    payouts = new PayoutService(wallets, store, clock);
   }
 
   @AfterEach
@@ -225,5 +232,143 @@ final class PayoutServiceTest {
     assertThat(wallets.receiptFor(key).join()).isPresent();
     assertThat(PayoutService.key(id, ALICE)).isEqualTo(key);
     assertThat(PayoutService.key(id, BOB)).isNotEqualTo(key);
+  }
+
+  private static PlayerRow legacy(UUID id, long owed) {
+    return new PlayerRow(
+        id,
+        ALICE,
+        TeamColor.RED,
+        "trooper",
+        0,
+        0,
+        Outcome.WIN,
+        CurrencyId.CRYSTALS,
+        owed,
+        PayoutStatus.PENDING,
+        0);
+  }
+
+  /** A receipt survived the upgrade, but V2 deleted the cap table. */
+  private void committedLegacy(UUID id, long amount, boolean finish) {
+    store.record(match(id), List.of(legacy(id, amount))).join();
+    store
+        .beginPayout(id, ALICE, LocalDate.ofInstant(clock.instant(), PayoutService.LEGACY_ZONE))
+        .join();
+    wallets
+        .transferOnce(
+            new KeyedTransfer(
+                PayoutService.key(id, ALICE),
+                new AccountId.Server(),
+                ALICE_ACCOUNT,
+                Money.crystals(amount),
+                PayoutService.reason(id, Outcome.WIN)))
+        .join();
+    if (finish) {
+      store.finishPayout(id, ALICE, amount).join();
+    }
+  }
+
+  private void discardLegacyTotals() {
+    database.write(dsl -> dsl.execute("DELETE FROM rwf_daily_earnings")).join();
+  }
+
+  @Test
+  void receiptsRecoverTheCapAndAnUncommittedReservationUsesTodaysRemainingBudget() {
+    for (var i = 0; i < 9; i++) {
+      committedLegacy(UUID.randomUUID(), 3, true);
+    }
+    var abandoned = UUID.randomUUID();
+    store.record(match(abandoned), List.of(legacy(abandoned, 3))).join();
+    assertThat(store.beginPayout(abandoned, ALICE, TODAY).join()).isEqualTo(3);
+    discardLegacyTotals();
+    var last = UUID.randomUUID();
+    store.record(match(last), List.of(legacy(last, 3))).join();
+
+    assertThat(payouts.replay().join())
+        .extracting(PayoutService.Paid::paid)
+        .containsExactly(3L, 0L);
+    assertThat(wallets.held(ALICE_ACCOUNT, CurrencyId.CRYSTALS)).isEqualTo(Money.crystals(30));
+    assertThat(payouts.replay().join()).isEmpty();
+  }
+
+  @Test
+  void aCommittedReceiptWinsOverAFullCapAndReplaysWithoutAnotherTransfer() {
+    for (var i = 0; i < 9; i++) {
+      committedLegacy(UUID.randomUUID(), 3, true);
+    }
+    var committed = UUID.randomUUID();
+    committedLegacy(committed, 3, false);
+    discardLegacyTotals();
+    var extra = UUID.randomUUID();
+    store.record(match(extra), List.of(legacy(extra, 3))).join();
+
+    assertThat(payouts.replay().join())
+        .extracting(PayoutService.Paid::paid)
+        .containsExactly(3L, 0L);
+    assertThat(wallets.receipts()).hasSize(10);
+    assertThat(store.players(committed).join())
+        .singleElement()
+        .satisfies(row -> assertThat(row.creditsPaid()).isEqualTo(3));
+  }
+
+  @Test
+  void receiptDatesAndUncommittedReservationsFollowLosAngelesMidnightAcrossDst() {
+    // The autumn DST transition makes this day 25 hours long.
+    clock.set(Instant.parse("2026-11-01T07:30:00Z"));
+    for (var i = 0; i < 10; i++) {
+      committedLegacy(UUID.randomUUID(), 3, true);
+    }
+    var abandoned = UUID.randomUUID();
+    store.record(match(abandoned), List.of(legacy(abandoned, 3))).join();
+    store.beginPayout(abandoned, ALICE, LocalDate.of(2026, 11, 1)).join();
+    discardLegacyTotals();
+    clock.advance(Duration.ofHours(24));
+    var sameDay = UUID.randomUUID();
+    assertThat(payouts.settle(match(sameDay), List.of(legacy(sameDay, 3))).join())
+        .singleElement()
+        .satisfies(p -> assertThat(p.paid()).isZero());
+    clock.advance(Duration.ofHours(1));
+
+    assertThat(payouts.replay().join())
+        .singleElement()
+        .satisfies(p -> assertThat(p.paid()).isEqualTo(3));
+    assertThat(wallets.held(ALICE_ACCOUNT, CurrencyId.CRYSTALS)).isEqualTo(Money.crystals(33));
+  }
+
+  @Test
+  void concurrentBatchesCannotReleaseAnInFlightReservationOrExceedTheCap() {
+    var batches = new ArrayList<CompletableFuture<List<PayoutService.Paid>>>();
+    for (var i = 0; i < 20; i++) {
+      var id = UUID.randomUUID();
+      batches.add(payouts.settle(match(id), List.of(legacy(id, 3))));
+    }
+    CompletableFuture.allOf(batches.toArray(CompletableFuture[]::new)).join();
+
+    assertThat(
+            batches.stream()
+                .flatMap(batch -> batch.join().stream())
+                .mapToLong(PayoutService.Paid::paid)
+                .sum())
+        .isEqualTo(30);
+    assertThat(wallets.receipts()).hasSize(10);
+    assertThat(store.unpaid().join()).isEmpty();
+  }
+
+  @Test
+  void aMissingPaidReceiptFailsLoudlyWithoutStrandingLaterBatches() {
+    var corrupt = UUID.randomUUID();
+    store.record(match(corrupt), List.of(legacy(corrupt, 3))).join();
+    store.beginPayout(corrupt, ALICE, TODAY).join();
+    store.finishPayout(corrupt, ALICE, 3).join();
+    var legacy = UUID.randomUUID();
+    store.record(match(legacy), List.of(legacy(legacy, 3))).join();
+
+    assertThatThrownBy(() -> payouts.replay().join())
+        .hasRootCauseMessage("paid legacy payout has no receipt: %s", corrupt);
+    var modern = UUID.randomUUID();
+    assertThat(payouts.settle(match(modern), List.of(owed(modern, ALICE, Outcome.WIN, 3))).join())
+        .singleElement()
+        .satisfies(p -> assertThat(p.paid()).isEqualTo(3));
   }
 }

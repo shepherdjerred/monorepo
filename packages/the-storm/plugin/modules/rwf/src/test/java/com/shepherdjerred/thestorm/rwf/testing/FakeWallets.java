@@ -12,6 +12,7 @@ import com.shepherdjerred.thestorm.economy.app.MoneyFormatter;
 import com.shepherdjerred.thestorm.economy.app.Receipt;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import java.time.Instant;
+import java.time.InstantSource;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -27,10 +28,19 @@ import java.util.concurrent.CompletableFuture;
  */
 public final class FakeWallets implements Wallets, MoneyFormatter {
 
+  private final InstantSource time;
   private final List<Receipt> receipts = new ArrayList<>();
   private final Map<Map.Entry<AccountId, CurrencyId>, Long> balances = new HashMap<>();
   private final Map<UUID, KeyedTransfer> keyed = new HashMap<>();
   private final Map<UUID, Receipt> keyedReceipts = new HashMap<>();
+
+  public FakeWallets() {
+    this(InstantSource.fixed(Instant.EPOCH));
+  }
+
+  public FakeWallets(InstantSource time) {
+    this.time = time;
+  }
 
   public synchronized List<Receipt> receipts() {
     return List.copyOf(receipts);
@@ -69,7 +79,7 @@ public final class FakeWallets implements Wallets, MoneyFormatter {
     if (!(to instanceof AccountId.Server)) {
       hold(to, held(to, amount.currency()).plus(amount));
     }
-    var receipt = new Receipt(receipts.size() + 1L, from, to, amount, reason, Instant.EPOCH);
+    var receipt = new Receipt(receipts.size() + 1L, from, to, amount, reason, time.instant());
     receipts.add(receipt);
     return completedFuture(Result.ok(receipt));
   }

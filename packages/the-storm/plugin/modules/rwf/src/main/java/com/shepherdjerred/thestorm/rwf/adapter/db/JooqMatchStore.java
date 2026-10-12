@@ -101,6 +101,31 @@ public final class JooqMatchStore implements MatchStore {
   }
 
   @Override
+  public CompletableFuture<List<PlayerRow>> legacyPayouts(UUID player) {
+    return database.read(
+        dsl ->
+            dsl
+                .selectFrom(RWF_MATCH_PLAYER)
+                .where(RWF_MATCH_PLAYER.PLAYER.eq(player.toString()))
+                .and(RWF_MATCH_PLAYER.CURRENCY.eq(CurrencyId.CRYSTALS.key()))
+                .orderBy(RWF_MATCH_PLAYER.MATCH_ID)
+                .fetch()
+                .stream()
+                .map(JooqMatchStore::toRow)
+                .toList());
+  }
+
+  @Override
+  public CompletableFuture<Void> reconcileLegacy(UUID player, List<LegacyPayment> payments) {
+    return Writes.done(
+        database.write(
+            dsl -> {
+              LegacyEarnings.reconcile(dsl, player, payments);
+              return true;
+            }));
+  }
+
+  @Override
   public CompletableFuture<Long> beginPayout(UUID matchId, UUID player, LocalDate today) {
     return database.write(
         dsl -> {

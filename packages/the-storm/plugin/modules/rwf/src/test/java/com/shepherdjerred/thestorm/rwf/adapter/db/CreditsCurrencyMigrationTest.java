@@ -25,7 +25,7 @@ import org.junit.jupiter.api.io.TempDir;
 /**
  * V2 gives every payout row a currency. Rows written before it were paid in crystals, so they keep
  * every column and become {@code crystals}; a row a crash left paying still settles in crystals.
- * The daily-earnings table stays, for those legacy rows' cap.
+ * V2.1 recreates the cap table V2 dropped; the payout service rebuilds it from ledger receipts.
  */
 final class CreditsCurrencyMigrationTest {
 
@@ -114,8 +114,8 @@ final class CreditsCurrencyMigrationTest {
     assertThat(rows("SELECT DISTINCT currency FROM rwf_match_player"))
         .containsExactly(List.of(CurrencyId.CRYSTALS.key()));
     assertThat(rows("SELECT player, day, credits FROM rwf_daily_earnings"))
-        .as("legacy crystal rows still settle under the old cap")
-        .containsExactly(List.of("x", "2026-10-01", 4L));
+        .as("V2.1 restores the table; dated economy receipts recover the deleted totals")
+        .isEmpty();
     var store = new JooqMatchStore(database);
     assertThat(await(store.unpaid()))
         .hasSize(2)
@@ -123,5 +123,30 @@ final class CreditsCurrencyMigrationTest {
     assertThat(await(store.beginPayout(MATCH, new UUID(6, 2), LocalDate.of(2026, 10, 1))))
         .as("a row a crash left paying keeps what it reserved")
         .isZero();
+  }
+
+  @Test
+  void anAlreadyAppliedVersionTwoUpgradesWithoutChangingItsChecksum() throws Exception {
+    var migrations = directory.resolve("v1/db/migration/rwf");
+    try (var in =
+        Objects.requireNonNull(
+            getClass().getResourceAsStream("/legacy/V2__credits_currency.sql"))) {
+      Files.copy(in, migrations.resolve("V2__credits_currency.sql"));
+    }
+    try (var v2 =
+        new URLClassLoader(
+            new URL[] {directory.resolve("v1").toUri().toURL()},
+            ClassLoader.getPlatformClassLoader())) {
+      database.migrate("rwf", v2);
+    }
+    var before = rows("SELECT version, checksum FROM flyway_rwf_history WHERE version = '2'");
+
+    database.migrate("rwf", getClass().getClassLoader());
+
+    assertThat(rows("SELECT version, checksum FROM flyway_rwf_history WHERE version = '2'"))
+        .isEqualTo(before);
+    assertThat(rows("SELECT version FROM flyway_rwf_history WHERE version = '2.1'"))
+        .containsExactly(List.of("2.1"));
+    assertThat(rows("SELECT player, day, credits FROM rwf_daily_earnings")).isEmpty();
   }
 }
