@@ -23,11 +23,11 @@ import { stageCompanionsE2e } from "./companions-e2e.ts";
 import {
   overlayAgentTopLevel,
   overlayBrainUrl,
-  overlayRwf,
   overlaySweep,
   type RwfOverlay,
 } from "./config-overlays.ts";
 import { thirdPartyPlugins } from "./pins.ts";
+import { stageRwf } from "./rwf-staging.ts";
 import { RconClient } from "#e2e/harness/rcon.ts";
 import { stageWorld } from "./world-copy.ts";
 
@@ -277,13 +277,7 @@ export async function stagePlugins(
     options.stormConfig,
   );
   if (options.rwf !== undefined) {
-    await overlayRwf(path.join(pluginsDir, "TheStorm", "rwf.yml"), options.rwf);
-    if (options.rwf.maps !== undefined) {
-      await keepRwfMaps(
-        path.join(pluginsDir, "TheStorm", "rwf", "maps"),
-        options.rwf.maps,
-      );
-    }
+    await stageRwf(path.join(pluginsDir, "TheStorm"), options.rwf);
   }
   if (options.rwfbotsConfig !== undefined) {
     await Bun.write(
@@ -392,18 +386,6 @@ async function bootContainer(
     rconPort: rcon.port,
     rconPassword,
   };
-}
-
-/** Removes every staged rwf map folder not in `keep`; each kept map must exist. */
-async function keepRwfMaps(mapsDir: string, keep: string[]): Promise<void> {
-  const staged = await readdir(mapsDir);
-  const missing = keep.filter((id) => !staged.includes(id));
-  if (missing.length > 0) {
-    throw new Error(`rwf maps not shipped: ${missing.join(", ")}`);
-  }
-  for (const id of staged.filter((entry) => !keep.includes(entry))) {
-    await rm(path.join(mapsDir, id), { recursive: true });
-  }
 }
 
 export async function startServer(
