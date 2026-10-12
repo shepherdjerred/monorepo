@@ -16,11 +16,16 @@ import {
 import { applyStreamOverlays } from "#src/overlay/composite.ts";
 import type { StreamOverlayContextProvider } from "#src/overlay/composite.ts";
 import type {
+  DiscordUser,
+  PlayBlocker,
   PlayerInputState,
+  PlayerStatsResponse,
+  RecentRacesResponse,
   Request,
-  LoginResponse,
+  Status,
   StatusResponse,
   ScreenshotResponse,
+  SeatDeniedResponse,
   SeatResponse,
   SeatsResponse,
   LeaderboardResponse,
@@ -34,46 +39,89 @@ export type EmulatorControls = {
   renderFrame: () => Promise<{ rgba: Buffer; width: number; height: number }>;
 };
 
-/** Optional leaderboard wiring; absent when the feature is disabled. */
-export type LeaderboardDeps = {
-  store: LeaderboardStore;
-  /** Push the seat's name into the stream overlay (or clear with null). */
-  setOverlayName?: (seat: number, name: string | null) => void;
+/**
+ * Who may play. Production derives it from the Discord sign-in on the socket
+ * and the bot's view of the session's voice channel; the local harnesses
+ * inject a fixed signed-in, in-voice user.
+ */
+export type PlayAccess = {
+  /** The Discord user signed in on this connection, if any. */
+  identityOf: (socket: Socket) => DiscordUser | undefined;
+  /** Why this user cannot take a seat now, or null when they can. */
+  blockerFor: (user: DiscordUser | undefined) => PlayBlocker | null;
+  /** The running session's voice channel, or null with no game running. */
+  voiceChannel: () => Status["voiceChannel"];
+  /** The user as their seat should show them (e.g. with their server nickname). */
+  seatUserFor: (user: DiscordUser) => DiscordUser;
+  /** Called after a user takes a seat, to remember their current name and avatar. */
+  onSeated?: (user: DiscordUser) => void;
 };
+
+/** The guild's race history; resolves undefined when there is none to show. */
+export type StatsSource = () => Promise<LeaderboardStore | undefined>;
 
 export type DispatchDeps = {
   seatManager: SeatManager;
   emulator: EmulatorControls | undefined;
   driverFeedEnabled: boolean;
-  leaderboard?: LeaderboardDeps;
+  access: PlayAccess;
+  stats: StatsSource;
+  /** Push the seat's name into the stream overlay (or clear with null). */
+  setOverlayName?: (seat: number, name: string | null) => void;
   /** Per-screenshot overlay state. Absent → screenshots stay clean (kept for
    *  test ergonomics and for builds with the stream/overlay disabled). */
   overlayContext?: StreamOverlayContextProvider;
 };
 
-export function broadcastSeats(sock: Socket, seatManager: SeatManager): void {
-  const response: SeatsResponse = {
-    kind: "seats",
-    value: { occupied: seatManager.occupied(), names: seatManager.names() },
-  };
-  sock.nsp.emit("response", response);
+export function seatsResponse(seatManager: SeatManager): SeatsResponse {
+  return { kind: "seats", value: { seats: seatManager.users() } };
 }
 
-/** Fetch + emit the leaderboard to a single socket (fire-and-forget). */
-async function emitLeaderboard(
+export function broadcastSeats(sock: Socket, seatManager: SeatManager): void {
+  sock.nsp.emit("response", seatsResponse(seatManager));
+}
+
+export function statusFor(
   sock: Socket,
-  store: LeaderboardStore,
+  access: PlayAccess,
+  driverFeedEnabled: boolean,
+): StatusResponse {
+  return {
+    kind: "status",
+    value: {
+      driverFeedEnabled,
+      voiceChannel: access.voiceChannel(),
+      playBlocker: access.blockerFor(access.identityOf(sock)),
+    },
+  };
+}
+
+/** Run one stats query and emit its response to a single socket (fire-and-forget). */
+async function emitStats(
+  sock: Socket,
+  stats: StatsSource,
+  query: (
+    store: LeaderboardStore,
+  ) => Promise<LeaderboardResponse | PlayerStatsResponse | RecentRacesResponse>,
 ): Promise<void> {
   try {
-    const entries = await store.leaderboard();
-    const response: LeaderboardResponse = {
-      kind: "leaderboard",
-      value: { entries },
-    };
-    sock.emit("response", response);
+    const store = await stats();
+    if (store === undefined) return;
+    sock.emit("response", await query(store));
   } catch (error) {
-    logger.warn("leaderboard fetch failed", error);
+    logger.warn("stats query failed", error);
   }
+}
+
+function deny(
+  sock: Socket,
+  reason: SeatDeniedResponse["value"]["reason"],
+): void {
+  const response: SeatDeniedResponse = {
+    kind: "seat-denied",
+    value: { reason },
+  };
+  sock.emit("response", response);
 }
 
 // At most one screenshot render in flight per socket. `screenshot` is a public,
@@ -122,33 +170,57 @@ export function handleRequest(
     seatManager,
     emulator,
     driverFeedEnabled,
-    leaderboard,
+    access,
+    stats,
+    setOverlayName,
     overlayContext,
   } = deps;
   match(event)
     .with({ request: { kind: "seat-claim" } }, (e) => {
-      const seat = seatManager.claim(sock.id, e.request.seat);
-      const response: SeatResponse = { kind: "seat", value: { seat } };
-      sock.emit("response", response);
-      if (seat !== null) {
-        // Free the seat (and clear held input + overlay name) when this socket
-        // leaves.
-        sock.once("disconnect", () => {
-          const freed = seatManager.release(sock.id);
-          if (freed !== null) {
-            emulator?.clearPlayerInput(freed);
-            leaderboard?.setOverlayName?.(freed, null);
-            broadcastSeats(sock, seatManager);
-          }
-        });
-        broadcastSeats(sock, seatManager);
+      const user = access.identityOf(sock);
+      const blocker = access.blockerFor(user);
+      if (user === undefined || blocker !== null) {
+        deny(sock, blocker ?? "signed-out");
+        return;
       }
+      const seatUser = access.seatUserFor(user);
+      const claim = seatManager.claim(sock.id, seatUser, e.request.seat);
+      if (claim.kind === "taken") {
+        deny(sock, "taken");
+        return;
+      }
+      // The same account's other tab loses the seat to this one.
+      if (claim.displacedSocketId !== undefined) {
+        const moved: SeatResponse = { kind: "seat", value: { seat: null } };
+        sock.nsp.sockets.get(claim.displacedSocketId)?.emit("response", moved);
+        emulator?.clearPlayerInput(claim.vacatedSeat ?? claim.seat);
+        if (claim.vacatedSeat !== undefined)
+          setOverlayName?.(claim.vacatedSeat, null);
+      }
+      setOverlayName?.(claim.seat, seatUser.name);
+      access.onSeated?.(seatUser);
+      const response: SeatResponse = {
+        kind: "seat",
+        value: { seat: claim.seat },
+      };
+      sock.emit("response", response);
+      // Free the seat (and clear held input + overlay name) when this socket
+      // leaves, unless it has already lost it.
+      sock.once("disconnect", () => {
+        const freed = seatManager.release(sock.id);
+        if (freed !== null) {
+          emulator?.clearPlayerInput(freed);
+          setOverlayName?.(freed, null);
+          broadcastSeats(sock, seatManager);
+        }
+      });
+      broadcastSeats(sock, seatManager);
     })
     .with({ request: { kind: "seat-release" } }, () => {
       const freed = seatManager.release(sock.id);
       if (freed !== null) {
         emulator?.clearPlayerInput(freed);
-        leaderboard?.setOverlayName?.(freed, null);
+        setOverlayName?.(freed, null);
       }
       const response: SeatResponse = { kind: "seat", value: { seat: null } };
       sock.emit("response", response);
@@ -168,35 +240,32 @@ export function handleRequest(
         driverFeedClientDecoderResetsTotal.inc(e.request.decoderResets);
       }
     })
-    .with({ request: { kind: "login" } }, (e) => {
-      // Identity is cosmetic; seats gate control. Real auth is tracked in Linear.
-      const player = { discordId: "id", discordUsername: "username" };
-      const response: LoginResponse = { kind: "login", value: player };
-      e.socket.emit("response", response);
-    })
-    .with({ request: { kind: "name-set" } }, (e) => {
-      // Identity is the socket connection: only the seat this socket owns can
-      // be (re)named. Unseated callers are ignored.
-      const seat = seatManager.setName(sock.id, e.request.name);
-      if (seat === null) return;
-      leaderboard?.setOverlayName?.(seat, e.request.name);
-      broadcastSeats(sock, seatManager);
-    })
     .with({ request: { kind: "leaderboard" } }, () => {
-      if (leaderboard === undefined) return;
-      void emitLeaderboard(sock, leaderboard.store);
+      void emitStats(sock, stats, async (store) => ({
+        kind: "leaderboard",
+        value: { entries: await store.leaderboard() },
+      }));
+    })
+    .with({ request: { kind: "player-stats" } }, (e) => {
+      const { discordId } = e.request;
+      void emitStats(sock, stats, async (store) => ({
+        kind: "player-stats",
+        value: { discordId, stats: await store.playerStats(discordId) },
+      }));
+    })
+    .with({ request: { kind: "recent-races" } }, () => {
+      void emitStats(sock, stats, async (store) => ({
+        kind: "recent-races",
+        value: { races: await store.recentRaces() },
+      }));
     })
     .with({ request: { kind: "screenshot" } }, (e) => {
       if (emulator === undefined) return;
       void emitScreenshot(e.socket, emulator, overlayContext);
     })
     .with({ request: { kind: "status" } }, (e) => {
-      const response: StatusResponse = {
-        kind: "status",
-        value: { playerList: [], driverFeedEnabled },
-      };
-      e.socket.emit("response", response);
-      broadcastSeats(e.socket, seatManager);
+      e.socket.emit("response", statusFor(e.socket, access, driverFeedEnabled));
+      e.socket.emit("response", seatsResponse(seatManager));
     })
     .exhaustive();
 }

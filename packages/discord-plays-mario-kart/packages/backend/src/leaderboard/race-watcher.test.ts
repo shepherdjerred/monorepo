@@ -5,7 +5,7 @@ import type {
   RaceState,
 } from "#src/emulator/mk64-state.ts";
 import { RaceWatcher } from "./race-watcher.ts";
-import type { RaceCompleted } from "./race-watcher.ts";
+import type { RaceCompleted, SeatPlayer } from "./race-watcher.ts";
 
 type PlayerOverride = Partial<Mk64PlayerSnapshot>;
 
@@ -58,13 +58,16 @@ const twoHumans: PlayerOverride[] = [
   { rank: 3 },
 ];
 
-function makeWatcher(names: (string | null)[] = ["Jerred", "Alice"]) {
-  let current = names;
-  const watcher = new RaceWatcher({ seatNames: () => current });
+const JERRED: SeatPlayer = { discordId: "1001", name: "Jerred" };
+const ALICE: SeatPlayer = { discordId: "1002", name: "Alice" };
+
+function makeWatcher(players: (SeatPlayer | null)[] = [JERRED, ALICE]) {
+  let current = players;
+  const watcher = new RaceWatcher({ seatPlayers: () => current });
   return {
     watcher,
-    setNames: (n: (string | null)[]) => {
-      current = n;
+    setPlayers: (next: (SeatPlayer | null)[]) => {
+      current = next;
     },
   };
 }
@@ -122,7 +125,7 @@ describe("RaceWatcher — race recording", () => {
     expect(race?.results).toEqual([
       {
         seat: 0,
-        name: "Jerred",
+        player: JERRED,
         characterId: 2,
         placement: 1,
         raceTimeMs: 92_340,
@@ -130,7 +133,7 @@ describe("RaceWatcher — race recording", () => {
       },
       {
         seat: 1,
-        name: "Alice",
+        player: ALICE,
         characterId: 7,
         placement: 4,
         raceTimeMs: 101_200,
@@ -139,10 +142,11 @@ describe("RaceWatcher — race recording", () => {
     ]);
   });
 
-  test("roster names are frozen at race start", () => {
-    const { watcher, setNames } = makeWatcher(["Jerred", "Alice"]);
+  test("the roster is frozen at race start", () => {
+    const { watcher, setPlayers } = makeWatcher([JERRED, ALICE]);
     feed(watcher, snap("racing", twoHumans));
-    setNames(["Impostor", null]); // rename / seat re-claim mid-race
+    // A seat re-claimed by someone else mid-race, another freed.
+    setPlayers([{ discordId: "1003", name: "Impostor" }, null]);
 
     const done: PlayerOverride[] = [
       {
@@ -162,7 +166,7 @@ describe("RaceWatcher — race recording", () => {
     ];
     const emitted = feed(watcher, snap("finished", done), 6);
     expect(emitted).toHaveLength(1);
-    expect(emitted[0]?.results.map((r) => r.name)).toEqual(["Jerred", "Alice"]);
+    expect(emitted[0]?.results.map((r) => r.player)).toEqual([JERRED, ALICE]);
   });
 
   test("quit to menu mid-race discards without emitting; next race still records", () => {
@@ -252,7 +256,7 @@ describe("RaceWatcher — isRecordable filtering", () => {
   });
 
   test("time-trials are never recorded (excluded by isRecordable)", () => {
-    const { watcher } = makeWatcher(["Jerred"]);
+    const { watcher } = makeWatcher([JERRED]);
     const tt: PlayerOverride[] = [
       { human: true, rank: 1, characterId: 0 },
       { human: false, rank: 2 }, // ghost
@@ -281,7 +285,7 @@ describe("RaceWatcher — isRecordable filtering", () => {
   });
 
   test("non-human ghost karts in slots 1+ are excluded from the versus roster", () => {
-    const { watcher } = makeWatcher(["Jerred"]);
+    const { watcher } = makeWatcher([JERRED]);
     const withGhost: PlayerOverride[] = [
       { human: true, rank: 1, characterId: 0 },
       { human: false, rank: 2 }, // CPU / ghost

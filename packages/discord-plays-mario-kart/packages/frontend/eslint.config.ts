@@ -5,13 +5,7 @@ const config = [
     react: true,
     accessibility: true,
     projectService: {
-      allowDefaultProject: [
-        "eslint.config.ts",
-        "src/feed-audio.test.ts",
-        "src/feed-telemetry.test.ts",
-        "src/input-map.test.ts",
-        "src/video.test.ts",
-      ],
+      allowDefaultProject: ["eslint.config.ts"],
     },
     ignores: ["vite.config.ts", "dist/**/*", "public/**/*"],
   }),

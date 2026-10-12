@@ -18,10 +18,9 @@ import { GameStreamer } from "#src/stream/game-streamer.ts";
 import { applyStreamOverlays } from "#src/overlay/composite.ts";
 import type { StreamOverlayContextProvider } from "#src/overlay/composite.ts";
 import { SeatManager } from "#src/input/seat-manager.ts";
-import { createPrisma, databaseUrl } from "#src/database/index.ts";
-import {
-  createPrismaLeaderboardStore,
-  type LeaderboardStore,
+import type {
+  LeaderboardStore,
+  LeaderboardStoreFactory,
 } from "#src/leaderboard/store.ts";
 import { RaceTracker } from "#src/leaderboard/race-tracker.ts";
 import { NameOverlay } from "#src/overlay/name-overlay.ts";
@@ -29,7 +28,6 @@ import { createLabelRenderer } from "#src/overlay/label-renderer.ts";
 import type { DriverFeedService } from "#src/driver-feed/index.ts";
 import type { Config } from "#src/config/schema.ts";
 import { logger } from "#src/logger.ts";
-import type { LeaderboardResponse } from "@discord-plays-mario-kart/common";
 
 export type ActiveSessionRuntime = {
   readonly session: Session<SelfbotPooledUserbot>;
@@ -91,6 +89,7 @@ export class MarioKartGameDriver implements GameDriver<SelfbotPooledUserbot> {
   private readonly build: SpaghettiBuild | undefined;
   /** Undefined when [driver_feed] is disabled; every call site is optional-chained. */
   private readonly driverFeed: DriverFeedService | undefined;
+  private readonly stats: LeaderboardStoreFactory;
   private botClient: BotClient | null = null;
   private active: ActiveSessionRuntime | null = null;
 
@@ -98,10 +97,13 @@ export class MarioKartGameDriver implements GameDriver<SelfbotPooledUserbot> {
     config: Config;
     build: SpaghettiBuild | undefined;
     driverFeed?: DriverFeedService | undefined;
+    /** Race history, shared with the web page's stats. */
+    stats: LeaderboardStoreFactory;
   }) {
     this.config = params.config;
     this.build = params.build;
     this.driverFeed = params.driverFeed;
+    this.stats = params.stats;
   }
 
   /** Wire the bot client after createGameBot constructs it. Must be called before /play. */
@@ -149,10 +151,7 @@ export class MarioKartGameDriver implements GameDriver<SelfbotPooledUserbot> {
     await emulator.init();
 
     // Leaderboard store: per-guild via the factory.forGuild(guildId) helper.
-    const prisma = createPrisma(databaseUrl(config.leaderboard.db_path));
-    const leaderboardStore = createPrismaLeaderboardStore(prisma).forGuild(
-      session.guildId,
-    );
+    const leaderboardStore = this.stats.forGuild(session.guildId);
 
     const { format } = emulator;
     const nameOverlay = config.leaderboard.overlay_enabled
@@ -198,7 +197,14 @@ export class MarioKartGameDriver implements GameDriver<SelfbotPooledUserbot> {
     // closure so the RaceTracker can pick up the real broadcast once it's set.
     let broadcast: () => Promise<void> = () => Promise.resolve();
     const raceTracker = new RaceTracker({
-      seatNames: () => seatManager.names(),
+      seatPlayers: () =>
+        seatManager
+          .users()
+          .map((user) =>
+            user === null
+              ? null
+              : { discordId: user.discordId, name: user.name },
+          ),
       store: leaderboardStore,
       onRaceRecorded: () => {
         void broadcast();
@@ -311,12 +317,5 @@ export class MarioKartGameDriver implements GameDriver<SelfbotPooledUserbot> {
 
   welcomeMessage(session: Session<SelfbotPooledUserbot>): string {
     return `Starting Mario Kart 64 in <#${session.voiceChannelId}>. Open https://mariokart.sjer.red to claim a seat.`;
-  }
-
-  /** Helper used by the web dispatcher to build a `LeaderboardResponse`. */
-  buildLeaderboardResponse(
-    entries: LeaderboardResponse["value"]["entries"],
-  ): LeaderboardResponse {
-    return { kind: "leaderboard", value: { entries } };
   }
 }

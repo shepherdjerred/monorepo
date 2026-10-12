@@ -138,6 +138,14 @@ export function createMarioKartDeployment(chart: Chart) {
         TELEMETRY_ENABLED: EnvValue.fromValue("true"),
         TELEMETRY_SERVICE_NAME: EnvValue.fromValue("discord-plays-mario-kart"),
         OTLP_ENDPOINT: EnvValue.fromValue(OTLP_GATEWAY_BASE_URL),
+        // "Sign in with Discord" on the controller page, for the bot's own
+        // Discord application. A credential, so it is an env var from the
+        // item's DISCORD_CLIENT_SECRET field rather than part of config.toml;
+        // the public origin it redirects to is `[web.auth]` in config.toml.
+        DISCORD_CLIENT_SECRET: EnvValue.fromSecretValue({
+          secret,
+          key: "DISCORD_CLIENT_SECRET",
+        }),
         // Leaderboard SQLite DB on the persistent data volume (overrides the
         // config's relative db_path). The image entrypoint runs `prisma db
         // push` against this before start.

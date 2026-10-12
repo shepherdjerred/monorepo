@@ -27,10 +27,6 @@ This document tracks the planned work for this repository.
 
 ### UI
 
-- Auth
-  - Could use a JWT. Send via Discord, save to browser. Requires a server-side secret
-  - Does Discord do SSO?
-- Player must be in channel to send commands
 - Player must be watching stream
 
 ## In Progress

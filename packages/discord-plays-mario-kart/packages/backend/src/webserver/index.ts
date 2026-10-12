@@ -2,18 +2,20 @@ import { createWebServer as coreCreateWebServer } from "@shepherdjerred/discord-
 import { registry } from "@shepherdjerred/discord-plays-core/observability/metrics.ts";
 import { assertPathExists } from "#src/util.ts";
 import { logger } from "#src/logger.ts";
-import { createSocket } from "./socket.ts";
+import { createSocket, type IdentifySocket } from "./socket.ts";
 
 export function createWebServer({
   port,
   isCorsEnabled,
   isApiEnabled,
   webAssetsPath,
+  identify,
 }: {
   port: number;
   isCorsEnabled: boolean;
   isApiEnabled: boolean;
   webAssetsPath: string;
+  identify: IdentifySocket;
 }) {
   return coreCreateWebServer({
     port,
@@ -23,6 +25,6 @@ export function createWebServer({
     registry,
     logger,
     assertPathExists,
-    createSocket,
+    createSocket: (args) => createSocket({ ...args, identify }),
   });
 }

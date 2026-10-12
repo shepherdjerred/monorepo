@@ -7,25 +7,29 @@ import { COURSE_AWARD_CEREMONY } from "#src/emulator/mk64-state.ts";
 
 /**
  * Pure race-completion detector. Fed Mk64Snapshots (from the game's state record) plus
- * the current seat->name mapping; emits exactly one RaceCompleted per
+ * the current seat->player mapping; emits exactly one RaceCompleted per
  * racing -> finished cycle. No I/O, no emulator imports — unit-testable with
  * synthetic snapshots.
  *
  * Robustness model:
  * - A raceState transition is only trusted after `confirmPolls` consecutive
  *   identical observations (debounces garbage reads during scene loads).
- * - The roster (which seats are human, under which display name) is frozen at
- *   the racing transition, so disconnects or seat re-claims mid-race cannot
- *   reassign credit for a race driven under the original name.
+ * - The roster (which seats are human, and which Discord user drives each) is
+ *   frozen at the racing transition, so disconnects or seat re-claims mid-race
+ *   cannot reassign credit for a race driven by the original player.
  * - Per-player rank/time are captured at each player's own finish edge
  *   (hud raceCompleteBool 0->1): after finishing, the game flips the kart to
  *   CPU control and its live rank can drift.
  * - Battle mode and the Award Ceremony "course" are never recorded.
  */
 
+/** Who drove a seat: the Discord user and the name shown at the time. */
+export type SeatPlayer = { discordId: string; name: string };
+
 export type RaceResultEntry = {
   seat: number;
-  name: string | null;
+  /** Null when the seat was a human slot nobody had claimed. */
+  player: SeatPlayer | null;
   characterId: number;
   /** 1..8; for humans still mid-race when the outcome was decided, their live rank. */
   placement: number;
@@ -43,7 +47,7 @@ export type RaceCompleted = {
 };
 
 type SeatCapture = {
-  name: string | null;
+  player: SeatPlayer | null;
   characterId: number;
   finish: { placement: number; raceTimeMs: number } | undefined;
 };
@@ -63,8 +67,8 @@ type TrackedRace = {
 };
 
 export type RaceWatcherOptions = {
-  /** Current display name per seat (index = seat), sampled at race start. */
-  seatNames: () => (string | null)[];
+  /** Current player per seat (index = seat), sampled at race start. */
+  seatPlayers: () => (SeatPlayer | null)[];
   /** Consecutive identical raceState polls required to trust a transition. */
   confirmPolls?: number;
 };
@@ -72,7 +76,7 @@ export type RaceWatcherOptions = {
 const DEFAULT_CONFIRM_POLLS = 3;
 
 export class RaceWatcher {
-  private readonly seatNames: () => (string | null)[];
+  private readonly seatPlayers: () => (SeatPlayer | null)[];
   private readonly confirmPolls: number;
   private phase: Phase = { kind: "idle" };
   private pendingState: Mk64Snapshot["raceState"] | undefined;
@@ -80,7 +84,7 @@ export class RaceWatcher {
   private confirmedState: Mk64Snapshot["raceState"] = "menu";
 
   constructor(opts: RaceWatcherOptions) {
-    this.seatNames = opts.seatNames;
+    this.seatPlayers = opts.seatPlayers;
     this.confirmPolls = opts.confirmPolls ?? DEFAULT_CONFIRM_POLLS;
   }
 
@@ -148,12 +152,12 @@ export class RaceWatcher {
   }
 
   private startRace(snap: Mk64Snapshot): TrackedRace {
-    const names = this.seatNames();
+    const players = this.seatPlayers();
     const seats = new Map<number, SeatCapture>();
     snap.players.forEach((p, seat) => {
       if (p.present && p.human) {
         seats.set(seat, {
-          name: names[seat] ?? null,
+          player: players[seat] ?? null,
           characterId: p.characterId,
           finish: undefined,
         });
@@ -185,7 +189,7 @@ export class RaceWatcher {
       if (capture.finish !== undefined) {
         results.push({
           seat,
-          name: capture.name,
+          player: capture.player,
           characterId: capture.characterId,
           placement: capture.finish.placement,
           raceTimeMs: capture.finish.raceTimeMs,
@@ -198,7 +202,7 @@ export class RaceWatcher {
       const p = seat < snap.players.length ? snap.players[seat] : undefined;
       results.push({
         seat,
-        name: capture.name,
+        player: capture.player,
         characterId: capture.characterId,
         placement: p !== undefined && p.rank > 0 ? p.rank : 8,
         raceTimeMs: p?.raceTimeMs ?? 0,

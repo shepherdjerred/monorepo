@@ -32,9 +32,21 @@ Fully headless — no browser, no game UI, no desktop:
   GitOps-managed environment; the code default is off, so enable `[driver_feed]`
   in `config.toml` for other deployments.
 - **Input** — the web UI exposes up to **four virtual controllers** (seats
-  P1–P4). Players claim a seat and drive with WASD/arrows in real time; inputs
-  are sent over Socket.IO and applied per-player each frame. Players navigate the
-  in-game menus themselves (character/track/mode select, including 4-player VS).
+  P1–P4). Players drive with the keyboard, a USB or Bluetooth gamepad, or the
+  on-screen touch controller on a phone; inputs are sent over Socket.IO and
+  applied per-player each frame. Players navigate the in-game menus themselves
+  (character/track/mode select, including 4-player VS).
+- **Who can play** — anyone can open the page and browse the stats. Taking a
+  seat needs **Sign in with Discord** and being in the voice channel the game
+  was started in (`/play`). The seat shows the player's server nickname, which
+  is also burned into the stream above their kart. Leaving the voice channel
+  frees the seat; one Discord account holds at most one seat, so reopening the
+  page moves your seat to the new tab.
+- **Stats** — every finished Grand Prix and VS race is recorded per Discord
+  account: placement, finish time, character and course. The page shows a
+  leaderboard (wins, losses, podiums, average place), each player's placement
+  history and best time per course, and the latest races. Races from before
+  Discord sign-in were keyed by typed names and are kept but not shown.
 
 The tracing/metrics wiring, loopback audio transport, Go-Live streamer base
 class, web server, and bot entrypoint are shared with discord-plays-pokemon via
@@ -45,19 +57,24 @@ ffmpeg/send-path metrics, and the socket dispatch.
 
 See [AGENTS.md](AGENTS.md) for contributor/agent workflow notes.
 
-> **Stay in the voice channel while you play.** The session ends 30 seconds after
-> the last human leaves voice — the bot counts voice membership, not stream
-> viewers, so watching the driver feed instead of the Discord stream is fine but
-> disconnecting from voice is not.
+> **Stay in the voice channel while you play.** Leaving it frees your seat, and
+> the session ends 30 seconds after the last human leaves voice — the bot counts
+> voice membership, not stream viewers, so watching the driver feed instead of
+> the Discord stream is fine but disconnecting from voice is not.
 
 ### Controls
 
-Claim a seat in the web UI, then:
+Sign in, claim a seat in the web UI, then use the keyboard:
 
 - **Steer** — `A` / `D` (or ←/→), analog
 - **Accelerate** — `W` (A button) · **Brake/Reverse** — `S` (B button)
 - **Hop/Drift** — `Shift` (R) · **Item** — `E` (Z) · **Start** — `Enter`
 - **Camera** — `I` / `J` / `K` / `L` (C-buttons)
+
+A standard-layout gamepad maps its left stick to the analog stick (true
+analog), A/B to A/B, the left trigger to Z, the bumpers to L/R, Start to Start,
+and the right stick to the C-buttons. On a phone, turn it sideways while seated
+for the full-screen touch controller.
 
 ## The game: SpaghettiKart
 
@@ -231,12 +248,22 @@ rendering uses the same render node through Mesa.
 
 ### One-time provisioning
 
-Two things are provisioned out-of-band (by design):
+Three things are provisioned out-of-band (by design):
 
 1. **Config secret** — create a 1Password item (vault
    `v64ocnykdqju4ui6j6pua56xw4`) with a `config.toml` field, then replace the
-   placeholder item id in `resources/mario-kart.ts`.
-2. **ROM** — the canonical copy lives in Syncthing at
+   placeholder item id in `resources/mario-kart.ts`. With the web API enabled,
+   `config.toml` needs `[web.auth] public_origin` (the origin players open,
+   e.g. `https://mariokart.sjer.red`) and the item needs a
+   `DISCORD_CLIENT_SECRET` field; the backend refuses to start without either.
+1. **Discord sign-in** — on the bot's application in the Discord developer
+   portal (OAuth2), register the redirect
+   `<public_origin>/api/auth/discord/callback` and copy the client secret into
+   the item's `DISCORD_CLIENT_SECRET` field. Sign-in only works on that origin,
+   not over the Tailscale hostname. For local runs, also register
+   `http://localhost:8081/api/auth/discord/callback` and set
+   `public_origin = "http://localhost:8081"`.
+1. **ROM** — the canonical copy lives in Syncthing at
    `~/syncthing/Sync/roms/mariokart64.z64` (replicated across your machines; the
    manual harness reads it from there by default). Copy it into the ROM PVC once:
 

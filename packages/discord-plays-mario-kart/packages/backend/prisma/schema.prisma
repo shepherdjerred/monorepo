@@ -34,11 +34,12 @@ model RaceResult {
   race       Race    @relation(fields: [raceId], references: [id], onDelete: Cascade)
   // Seat / player slot (0..3).
   seat       Int
-  // Display name as typed (trimmed); null = the seat had no name set.
+  // Name shown on the seat when the race started.
   playerName String?
-  // Lowercased identity key; aggregation groups on this. Null = unnamed.
+  // Lowercased typed name: only on rows from before Discord sign-in, which
+  // the stats ignore.
   playerKey  String?
-  // Future: real identity once web auth lands (todo:mario-kart-web-auth).
+  // The signed-in Discord user who drove this seat; null on legacy rows.
   discordId  String?
   // MK64 character id (0..7); names live in mk64-memory.ts.
   character  Int
@@ -51,4 +52,25 @@ model RaceResult {
   @@index([playerKey])
   @@index([raceId])
   @@index([playerKey, placement])
+  @@index([discordId])
+}
+
+// The latest known face of each Discord user who has signed in or played, so
+// stats can show current names and avatars rather than the ones at race time.
+model Player {
+  discordId String   @id
+  username  String
+  // Folded to what the stream overlay can draw (PlayerNameSchema).
+  name      String
+  avatarUrl String?
+  updatedAt DateTime @updatedAt
+}
+
+// A browser signed in with Discord. Only a hash of the cookie token is kept.
+model WebSession {
+  tokenHash String   @id
+  discordId String
+  expiresAt DateTime
+
+  @@index([expiresAt])
 }

@@ -1,31 +1,80 @@
 @import "tailwindcss";
 
-/* Design tokens for the MK64 controller UI. The palette draws from the iconic
- * N64 button colors (sky A, emerald B, yellow C-buttons, red Start) on a
- * near-black charcoal page so the buttons pop. Spacing/shadows are extracted
- * here so individual components stop inlining one-off gradient strings.
+/* Design tokens for the MK64 controller page. A near-black page with layered
+ * charcoal surfaces; Mario red is the brand accent, and the controls keep the
+ * N64's own button colours (blue A, green B, yellow C, red Start, grey Z) so
+ * the on-screen pad reads like the real one.
  */
 @theme {
-  --color-surface-page: #070709;
-  --color-surface-card: #0f0f12;
-  --color-surface-raised: #181820;
-  --color-border-subtle: #27272a;
-  --color-border-strong: #3f3f46;
+  --font-sans:
+    "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono:
+    ui-monospace, "SFMono-Regular", "JetBrains Mono", Menlo, monospace;
 
-  --color-accent-a: #38bdf8;
-  --color-accent-b: #34d399;
+  --color-surface-page: #07080b;
+  --color-surface-card: #0e1016;
+  --color-surface-raised: #161922;
+  --color-surface-sunken: #0a0b10;
+  --color-border-subtle: #1f232e;
+  --color-border-strong: #2e3442;
+  --color-ink: #eef0f5;
+  --color-ink-muted: #9aa1b2;
+  --color-ink-faint: #5f6678;
+
+  --color-brand: #e5322d;
+  --color-brand-strong: #ff4d3d;
+  --color-brand-soft: #e5322d1f;
+  --color-discord: #5865f2;
+  --color-discord-strong: #6d78f7;
+
+  --color-accent-a: #3b82f6;
+  --color-accent-b: #22c55e;
   --color-accent-c: #facc15;
   --color-accent-start: #ef4444;
-  --color-accent-z: #a1a1aa;
+  --color-accent-z: #8b93a7;
 
-  --shadow-card: 0 12px 28px rgba(0, 0, 0, 0.45);
-  --shadow-button-rest: 0 4px 0 rgb(24 24 27), 0 8px 12px rgba(0, 0, 0, 0.28);
-  --shadow-button-press: 0 1px 0 rgb(24 24 27), 0 3px 6px rgba(0, 0, 0, 0.28);
+  --color-gold: #f5c542;
+  --color-silver: #c6ccd8;
+  --color-bronze: #d08a4f;
+
+  --shadow-card:
+    0 1px 0 rgb(255 255 255 / 0.04) inset, 0 18px 40px -18px rgb(0 0 0 / 0.7);
+  --shadow-button-rest:
+    0 3px 0 rgb(0 0 0 / 0.55), 0 8px 16px -6px rgb(0 0 0 / 0.6);
+  --shadow-button-press: 0 1px 0 rgb(0 0 0 / 0.55), 0 2px 4px rgb(0 0 0 / 0.4);
+
+  --animate-fade-in: fade-in 160ms ease-out;
+  --animate-pulse-dot: pulse-dot 1.6s ease-in-out infinite;
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes pulse-dot {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.35;
+    }
+  }
 }
 
 :root {
   color-scheme: dark;
   background: var(--color-surface-page);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-feature-settings: "cv11", "ss01";
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
 }
 
 html,
@@ -34,6 +83,29 @@ body,
   min-height: 100%;
   margin: 0;
   background: var(--color-surface-page);
+}
+
+body {
+  background-image:
+    radial-gradient(
+      1200px 600px at 10% -10%,
+      rgb(229 50 45 / 0.1),
+      transparent 60%
+    ),
+    radial-gradient(
+      900px 500px at 110% 0%,
+      rgb(88 101 242 / 0.08),
+      transparent 60%
+    );
+  background-attachment: fixed;
+}
+
+/* Controls must never select text or trigger the long-press menu mid-race. */
+.no-touch-callout {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
