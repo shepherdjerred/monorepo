@@ -317,23 +317,16 @@ publish raw documents together with the existing projections. Version 2 staging
 receipts attest this larger projection; existing version 1 receipts keep their
 original meaning.
 
-The temporary schema bridge recognizes the exact current layout, Beta's legacy
-`identity_map_json` layout, and Prod's older layout that also predates
-`matches.data_source`. Ordinary folds and default-off rebuilds preserve the
-published layout. `scout-report-lake-schema-upgrade-enabled` permits an online
-rebuild into the current layout only after all stage readers and writers support
-it. Publication validates the candidate and committed staging before atomically
-switching `CURRENT`; writes committed during the rebuild remain in the staging
-read view until a later fold. A failed candidate leaves the published build and
-staging untouched. After publication, rollback uses the bridge image with the
-new lake, not a pre-bridge image or a stale lake copy.
+Readers, staging writers, folds, and rebuilds use one current physical schema.
+Raw documents contain canonical identities directly, without migration maps or
+wire-only compatibility fields. Folds and rebuilds reject an incompatible
+published fingerprint before creating a candidate build; schema changes require
+an explicit migration rather than mixing old and new Parquet columns.
 
-An unknown existing layout fails before fold or rebuild work; establish its
-physical schema rather than bypassing the upgrade gate. While the published
-layout is legacy, staging and new legacy Parquet rows carry an empty wire-only
-`identity_map_json` so pre-bridge readers survive mixed deployment waves. After
-the atomic handoff, staging writers stop emitting that field. Drain the older
-staging tail with a normal fold before removing the temporary parser bridge.
+Publication atomically switches `CURRENT`. Writes committed during a rebuild
+remain in the staging read view until a later fold; a failed candidate leaves
+the published build and staging untouched. Rollback images must support the
+published current schema, not an older physical layout.
 
 ### Model choice and spending
 

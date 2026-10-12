@@ -100,8 +100,8 @@ export function duckDbEmptySelect(
  * `Binder Error: Referenced column "x" not found` and takes down every report,
  * Explore answer, and ScoutQL query with it. The fold tier hardlinks the
  * previous build's parquet and appends only new fold files, so adding a column
- * publishes exactly that mixed build. Comparing fingerprints lets the fold fall
- * back to a full rebuild from S3, which rewrites every file at the new schema.
+ * publishes exactly that mixed build. Comparing fingerprints rejects an
+ * incompatible published build before a fold can mix physical schemas.
  *
  * `union_by_name=true` is deliberately NOT the fix: it fills missing columns
  * with NULL, so every aggregate over pre-rebuild rows would be silently wrong
@@ -111,16 +111,10 @@ export function duckDbEmptySelect(
  * union by name, so a cosmetic reorder is read-compatible and should not cost a
  * full rebuild; a rename, addition, removal, or type change is not, and does.
  */
-export function lakeSchemaFingerprint(
-  rawDocumentColumns: Record<
-    string,
-    DuckDbColumnType
-  > = RAW_DOCUMENT_LAKE_COLUMNS,
-  matchColumns: Record<string, DuckDbColumnType> = MATCH_LAKE_COLUMNS,
-): string {
+export function lakeSchemaFingerprint(): string {
   const tables: Record<string, Record<string, DuckDbColumnType>> = {
-    raw_documents: rawDocumentColumns,
-    matches: matchColumns,
+    raw_documents: RAW_DOCUMENT_LAKE_COLUMNS,
+    matches: MATCH_LAKE_COLUMNS,
     match_teams: MATCH_TEAM_LAKE_COLUMNS,
     match_team_bans: MATCH_TEAM_BAN_LAKE_COLUMNS,
     prematch: PREMATCH_LAKE_COLUMNS,

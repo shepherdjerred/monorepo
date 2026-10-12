@@ -8,7 +8,6 @@ import {
 } from "#src/report-lake/staging/files.ts";
 import path from "node:path";
 import { rawDocumentRow } from "#src/report-lake/staging/raw-documents.ts";
-import { bridgeRawDocumentStagingRow } from "#src/report-lake/schema-upgrade/layout.ts";
 import type {
   CachedLeaderboard,
   RawCurrentGameInfo,
@@ -152,16 +151,13 @@ export async function stageMatchGeneration(
         {
           table: "raw_documents",
           content: toNdjson([
-            await bridgeRawDocumentStagingRow(
-              lakeDir,
-              rawDocumentRow({
-                kind: "match",
-                matchId,
-                document: match,
-                capturedAt: new Date(),
-                ...options,
-              }),
-            ),
+            rawDocumentRow({
+              kind: "match",
+              matchId,
+              document: match,
+              capturedAt: new Date(),
+              ...options,
+            }),
           ]),
         },
         { table: "matches", content: toNdjson(rows) },
@@ -228,16 +224,13 @@ export async function stagePrematchGeneration(
         {
           table: "raw_documents",
           content: toNdjson([
-            await bridgeRawDocumentStagingRow(
-              lakeDir,
-              rawDocumentRow({
-                kind: "prematch",
-                matchId: spectatorGameMatchId(gameInfo),
-                document: gameInfo,
-                capturedAt: observedAt,
-                ...options,
-              }),
-            ),
+            rawDocumentRow({
+              kind: "prematch",
+              matchId: spectatorGameMatchId(gameInfo),
+              document: gameInfo,
+              capturedAt: observedAt,
+              ...options,
+            }),
           ]),
         },
       ],
@@ -290,16 +283,13 @@ export async function stageTimelineGeneration(
       {
         table: "raw_documents" as const,
         rows: [
-          await bridgeRawDocumentStagingRow(
-            lakeDir,
-            rawDocumentRow({
-              kind: "timeline",
-              matchId: timeline.metadata.matchId,
-              document: timeline,
-              capturedAt: observedAt,
-              ...options,
-            }),
-          ),
+          rawDocumentRow({
+            kind: "timeline",
+            matchId: timeline.metadata.matchId,
+            document: timeline,
+            capturedAt: observedAt,
+            ...options,
+          }),
         ],
       },
     ];

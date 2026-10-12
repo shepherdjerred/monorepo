@@ -1,5 +1,5 @@
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
-import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
+import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -32,10 +32,6 @@ import {
   flattenPrematch,
 } from "#src/report-lake/flatten.ts";
 import { lakeSchemaFingerprint } from "#src/report-lake/schema.ts";
-import { layoutFingerprint } from "#src/report-lake/schema-upgrade/layout.ts";
-import { writeFoldParquet } from "#src/report-lake/fold-parquet.ts";
-import { rawDocumentRow } from "#src/report-lake/staging/raw-documents.ts";
-import * as schemaUpgrade from "#src/config/report-lake-schema-upgrade.ts";
 import { readRawDocuments } from "#src/explore/analysis/raw-lake-read.ts";
 import { readCurrentBuildDir } from "#src/report-lake/paths.ts";
 import { matchObjectKey } from "#src/report-store/s3-raw-source.ts";
@@ -125,25 +121,6 @@ async function expectCurrentSchemaFingerprint(lakeDir: string): Promise<void> {
   expect(manifest.schemaFingerprint).toBe(lakeSchemaFingerprint());
 }
 
-async function expectMatchDataSourceColumn(
-  buildDir: string,
-  expected: boolean,
-) {
-  const rows = await withDuckDBConnection(
-    async (session) =>
-      await session.run("DESCRIBE SELECT * FROM read_parquet(?)", [
-        path.join(buildDir, "matches/**/*.parquet"),
-      ]),
-  );
-  expect(
-    rows.some(
-      (row) =>
-        z.object({ column_name: z.string() }).parse(row).column_name ===
-        "data_source",
-    ),
-  ).toBe(expected);
-}
-
 async function loadMatchFixture(): Promise<RawMatch> {
   const fixtureUrl = new URL(
     "../league/model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json",
@@ -227,20 +204,6 @@ async function countParquetRows(glob: string): Promise<number> {
   });
 }
 
-async function expectEmptyLegacyMaps(glob: string): Promise<void> {
-  const rows = await withDuckDBConnection(async (session) => {
-    return await session.run("SELECT identity_map_json FROM read_parquet(?)", [
-      glob,
-    ]);
-  });
-  expect(rows.length).toBeGreaterThan(0);
-  for (const row of rows) {
-    expect(z.object({ identity_map_json: z.string() }).parse(row)).toEqual({
-      identity_map_json: "{}",
-    });
-  }
-}
-
 async function countSourceRows(source: SqlFragment): Promise<number> {
   return await withDuckDBConnection(async (session) => {
     const rows = await session.run(
@@ -253,13 +216,9 @@ async function countSourceRows(source: SqlFragment): Promise<number> {
   });
 }
 
-/** Real old-layout Parquet, not only an old manifest over new files. */
-async function seedLegacyLake(
+async function seedCurrentLake(
   lakeDir: string,
   match: RawMatch,
-  layout:
-    | "legacy-identity-map"
-    | "legacy-identity-map-pre-data-source" = "legacy-identity-map",
 ): Promise<string> {
   const key = matchObjectKey(
     match.metadata.matchId,
@@ -269,232 +228,15 @@ async function seedLegacyLake(
   await runReportLakeRebuild({ prisma, lakeDir });
   const buildDir = await readCurrentBuildDir(lakeDir);
   if (buildDir === undefined) throw new Error("missing seeded build");
-  await rm(path.join(buildDir, "raw_documents"), { recursive: true });
-  const row = rawDocumentRow({
-    kind: "match",
-    matchId: match.metadata.matchId,
-    document: match,
-    capturedAt: new Date(match.info.gameCreation),
-  });
-  await writeFoldParquet({
-    buildDir,
-    buildId: path.basename(buildDir),
-    table: "raw_documents",
-    layout,
-    staged: {
-      rowsByMonth: new Map([
-        [row.month, [{ ...row, identity_map_json: '{"retired":"ignored"}' }]],
-      ]),
-      foldedIds: new Set([row.document_id]),
-      rows: 1,
-      skipped: 0,
-    },
-  });
-  if (layout === "legacy-identity-map-pre-data-source") {
-    await rm(path.join(buildDir, "matches"), { recursive: true });
-    const rowsByMonth = new Map<string, object[]>();
-    for (const matchRow of flattenMatch(match)) {
-      const rows = rowsByMonth.get(matchRow.month) ?? [];
-      rows.push(matchRow);
-      rowsByMonth.set(matchRow.month, rows);
-    }
-    await writeFoldParquet({
-      buildDir,
-      buildId: path.basename(buildDir),
-      table: "matches",
-      layout,
-      staged: {
-        rowsByMonth,
-        foldedIds: new Set([match.metadata.matchId]),
-        rows: [...rowsByMonth.values()].reduce(
-          (sum, rows) => sum + rows.length,
-          0,
-        ),
-        skipped: 0,
-      },
-    });
-  }
-  await rewritePublishedFingerprint(lakeDir, layoutFingerprint(layout));
   return buildDir;
 }
 
-describe("online raw-document schema handoff", () => {
-  test.each([
-    ["legacy-identity-map", true],
-    ["legacy-identity-map-pre-data-source", false],
-  ] as const)(
-    "fold reads $0 Parquet without consulting migration maps or rebuilding S3",
-    async (layout, matchHasDataSource) => {
-      const lakeDir = await makeLakeDir();
-      try {
-        const match = await loadMatchFixture();
-        await seedLegacyLake(lakeDir, match, layout);
-        const map = vi
-          .spyOn(prisma.puuidKeyMap, "findMany")
-          .mockRejectedValue(new Error("retired map read"));
-        s3Mock.resetHistory();
-        expect(await writeMatchStagingFile(lakeDir, match)).toBe(true);
-        for (const file of await listStagingFiles(lakeDir, "raw_documents")) {
-          const text = await Bun.file(file).text();
-          const wire = z
-            .object({
-              identity_map_json: z.string(),
-              document_json: z.string(),
-            })
-            .parse(JSON.parse(text.trim()));
-          expect(JSON.parse(wire.identity_map_json)).toEqual({});
-          expect(JSON.parse(wire.document_json)).toEqual(match);
-        }
-        const summary = await runReportLakeFold({ prisma, lakeDir });
-        expect(summary?.tier).toBe("fold");
-        expect(s3Mock.calls()).toHaveLength(0);
-        expect(map).not.toHaveBeenCalled();
-        const current = await readCurrentBuildDir(lakeDir);
-        if (current === undefined) throw new Error("missing folded build");
-        await expectEmptyLegacyMaps(
-          path.join(current, "raw_documents/**/fold-*.parquet"),
-        );
-        expect(
-          ManifestFingerprintSchema.parse(
-            await Bun.file(path.join(current, "manifest.json")).json(),
-          ).schemaFingerprint,
-        ).toBe(layoutFingerprint(layout));
-        await expectMatchDataSourceColumn(current, matchHasDataSource);
-        const result = await readRawDocuments({
-          lakeDir,
-          matchIds: [match.metadata.matchId],
-          kinds: ["match"],
-          signal: new AbortController().signal,
-        });
-        expect(result.documents).toHaveLength(1);
-        expect(result.documents[0]?.document).toEqual(match);
-        expect(result.documents[0]).not.toHaveProperty("identity_map_json");
-      } finally {
-        vi.restoreAllMocks();
-        await rm(lakeDir, { recursive: true, force: true });
-      }
-    },
-  );
-
-  test("a default-off rebuild retains the legacy physical schema", async () => {
-    const lakeDir = await makeLakeDir();
-    try {
-      await seedLegacyLake(lakeDir, await loadMatchFixture());
-      vi.spyOn(
-        schemaUpgrade,
-        "reportLakeSchemaUpgradeEnabled",
-      ).mockResolvedValue(false);
-      await runReportLakeRebuild({ prisma, lakeDir });
-      const current = await readCurrentBuildDir(lakeDir);
-      if (current === undefined) throw new Error("missing rebuilt build");
-      await expectEmptyLegacyMaps(
-        path.join(current, "raw_documents/**/*.parquet"),
-      );
-      expect(
-        ManifestFingerprintSchema.parse(
-          await Bun.file(path.join(current, "manifest.json")).json(),
-        ).schemaFingerprint,
-      ).toBe(layoutFingerprint("legacy-identity-map"));
-      const rows = await withDuckDBConnection(
-        async (session) =>
-          await session.run("DESCRIBE SELECT * FROM read_parquet(?)", [
-            path.join(current, "raw_documents/**/*.parquet"),
-          ]),
-      );
-      expect(
-        rows.some(
-          (row) =>
-            z.object({ column_name: z.string() }).parse(row).column_name ===
-            "identity_map_json",
-        ),
-      ).toBe(true);
-    } finally {
-      vi.restoreAllMocks();
-      await rm(lakeDir, { recursive: true, force: true });
-    }
-  });
-});
-
-describe("Prod pre-data-source schema handoff", () => {
-  test("a default-off rebuild preserves Prod's pre-data-source layout", async () => {
-    const lakeDir = await makeLakeDir();
-    try {
-      await seedLegacyLake(
-        lakeDir,
-        await loadMatchFixture(),
-        "legacy-identity-map-pre-data-source",
-      );
-      vi.spyOn(
-        schemaUpgrade,
-        "reportLakeSchemaUpgradeEnabled",
-      ).mockResolvedValue(false);
-      await runReportLakeRebuild({ prisma, lakeDir });
-      const current = await readCurrentBuildDir(lakeDir);
-      if (current === undefined) throw new Error("missing rebuilt build");
-      expect(
-        ManifestFingerprintSchema.parse(
-          await Bun.file(path.join(current, "manifest.json")).json(),
-        ).schemaFingerprint,
-      ).toBe(layoutFingerprint("legacy-identity-map-pre-data-source"));
-      await expectMatchDataSourceColumn(current, false);
-      const matches = buildMatchesSource(await resolveLakeFiles(lakeDir), {
-        sql: "",
-        params: [],
-      });
-      if (matches === undefined) throw new Error("missing matches source");
-      const rows = await withDuckDBConnection(
-        async (session) =>
-          await session.run(
-            `SELECT data_source FROM (${matches.sql})`,
-            matches.params.map((param) =>
-              param.kind === "list" ? session.list(param.values) : param.value,
-            ),
-          ),
-      );
-      expect(rows.length).toBeGreaterThan(0);
-      for (const row of rows) {
-        expect(
-          z.object({ data_source: z.string().nullable() }).parse(row),
-        ).toEqual({ data_source: null });
-      }
-    } finally {
-      vi.restoreAllMocks();
-      await rm(lakeDir, { recursive: true, force: true });
-    }
-  });
-
-  test("the enabled upgrade rebuilds Prod's layout into the current schema", async () => {
-    const lakeDir = await makeLakeDir();
-    try {
-      await seedLegacyLake(
-        lakeDir,
-        await loadMatchFixture(),
-        "legacy-identity-map-pre-data-source",
-      );
-      vi.spyOn(
-        schemaUpgrade,
-        "reportLakeSchemaUpgradeEnabled",
-      ).mockResolvedValue(true);
-      await runReportLakeRebuild({ prisma, lakeDir });
-      await expectCurrentSchemaFingerprint(lakeDir);
-      const current = await readCurrentBuildDir(lakeDir);
-      if (current === undefined) throw new Error("missing upgraded build");
-      await expectMatchDataSourceColumn(current, true);
-    } finally {
-      vi.restoreAllMocks();
-      await rm(lakeDir, { recursive: true, force: true });
-    }
-  });
-
-  test("publishes column-free files while retaining a concurrently committed tail", async () => {
+describe("current-schema rebuild", () => {
+  test("rebuild retains a concurrently committed tail and folds it exactly once", async () => {
     const lakeDir = await makeLakeDir();
     try {
       const match = await loadMatchFixture();
-      const old = await seedLegacyLake(lakeDir, match);
-      vi.spyOn(
-        schemaUpgrade,
-        "reportLakeSchemaUpgradeEnabled",
-      ).mockResolvedValue(true);
+      const old = await seedCurrentLake(lakeDir, match);
       const late = RawMatchSchema.parse({
         ...match,
         metadata: { ...match.metadata, matchId: "NA1_9999999999" },
@@ -530,8 +272,7 @@ describe("Prod pre-data-source schema handoff", () => {
       expect(await countSourceRows(source)).toBe(
         match.info.participants.length * 2,
       );
-      // Post-handoff writers omit the bridge field; the final release can
-      // require the canonical staging contract once the older tail drains.
+      // Every staging writer emits only the canonical raw-document columns.
       expect(await writeMatchStagingFile(lakeDir, late)).toBe(true);
       for (const file of await listStagingFiles(lakeDir, "raw_documents")) {
         const text = await Bun.file(file).text();
@@ -539,11 +280,6 @@ describe("Prod pre-data-source schema handoff", () => {
       }
       await runReportLakeFold({ prisma, lakeDir });
       expect(await listStagingFiles(lakeDir, "raw_documents")).toHaveLength(0);
-      // A bridge rollback after publication no longer depends on the flag.
-      const retiredFlag = vi
-        .spyOn(schemaUpgrade, "reportLakeSchemaUpgradeEnabled")
-        .mockRejectedValue(new Error("retired flag"));
-      retiredFlag.mockClear();
       seedS3Matches([
         { key, body: JSON.stringify(match) },
         {
@@ -555,98 +291,10 @@ describe("Prod pre-data-source schema handoff", () => {
         },
       ]);
       await runReportLakeRebuild({ prisma, lakeDir });
-      expect(retiredFlag).not.toHaveBeenCalled();
     } finally {
-      vi.restoreAllMocks();
       await rm(lakeDir, { recursive: true, force: true });
     }
   });
-});
-
-describe("online raw-document schema handoff failures", () => {
-  test("refuses lost projection keys and leaves CURRENT and staging untouched", async () => {
-    const lakeDir = await makeLakeDir();
-    try {
-      const match = await loadMatchFixture();
-      const old = await seedLegacyLake(lakeDir, match);
-      vi.spyOn(
-        schemaUpgrade,
-        "reportLakeSchemaUpgradeEnabled",
-      ).mockResolvedValue(true);
-      seedS3Matches([]);
-      await expect(runReportLakeRebuild({ prisma, lakeDir })).rejects.toThrow(
-        "would lose every",
-      );
-      expect(await readCurrentBuildDir(lakeDir)).toBe(old);
-      expect(await readdir(path.join(lakeDir, "builds"))).toEqual([
-        path.basename(old),
-      ]);
-    } finally {
-      vi.restoreAllMocks();
-      await rm(lakeDir, { recursive: true, force: true });
-    }
-  });
-
-  test.each(["canonical", "staging", "cancel"] as const)(
-    "a %s failure leaves the old lake and committed tail intact",
-    async (failure) => {
-      const lakeDir = await makeLakeDir();
-      const controller = new AbortController();
-      try {
-        const match = await loadMatchFixture();
-        const old = await seedLegacyLake(lakeDir, match);
-        vi.spyOn(
-          schemaUpgrade,
-          "reportLakeSchemaUpgradeEnabled",
-        ).mockResolvedValue(true);
-        expect(await writeMatchStagingFile(lakeDir, match)).toBe(true);
-        const tail = await listStagingFiles(lakeDir, "matches");
-        expect(tail).toHaveLength(1);
-        if (failure === "staging") {
-          const file = tail[0];
-          if (file === undefined) throw new Error("missing committed staging");
-          await Bun.write(file, "invalid JSON\n");
-        }
-        if (failure === "canonical") {
-          const key = matchObjectKey(
-            match.metadata.matchId,
-            new Date(match.info.gameCreation),
-          );
-          s3Mock
-            .on(GetObjectCommand, { Key: key })
-            .callsFake(() => mockGetObjectResponse("{}"));
-        }
-        await expect(
-          runReportLakeRebuild({
-            prisma,
-            lakeDir,
-            abortSignal: controller.signal,
-            onProgress: (progress) => {
-              if (
-                failure === "cancel" &&
-                progress.phase === "validating-prepared-build"
-              )
-                controller.abort(new Error("upgrade canceled"));
-            },
-          }),
-        ).rejects.toThrow(
-          failure === "canonical"
-            ? "skipped canonical"
-            : failure === "staging"
-              ? "invalid committed staging"
-              : "upgrade canceled",
-        );
-        expect(await readCurrentBuildDir(lakeDir)).toBe(old);
-        expect(await listStagingFiles(lakeDir, "matches")).toEqual(tail);
-        expect(await readdir(path.join(lakeDir, "builds"))).toEqual([
-          path.basename(old),
-        ]);
-      } finally {
-        vi.restoreAllMocks();
-        await rm(lakeDir, { recursive: true, force: true });
-      }
-    },
-  );
 });
 
 beforeEach(async () => {
@@ -1202,40 +850,45 @@ describe("compactor idempotency and schema transitions", () => {
     }
   });
 
-  test("an unrecognized schema cannot bypass the bridge gate through fold or rebuild", async () => {
-    const match = await loadMatchFixture();
-    const lakeDir = await makeLakeDir();
-    try {
-      const seeded = await runReportLakeRebuild({ prisma, lakeDir });
-      expect(seeded?.tier).toBe("rebuild");
-      expect(await writeMatchStagingFile(lakeDir, match)).toBe(true);
-      await rewritePublishedFingerprint(lakeDir, "stale-fingerprint");
-      const old = await readCurrentBuildDir(lakeDir);
-      const buildsBefore = await readdir(path.join(lakeDir, "builds"));
-      s3Mock.resetHistory();
+  test.each(["stale-fingerprint", "c0d6dcb0944686f1", "1a45b23ce7f086cb"])(
+    "an incompatible schema %s is rejected before fold or rebuild",
+    async (fingerprint) => {
+      const match = await loadMatchFixture();
+      const lakeDir = await makeLakeDir();
+      try {
+        const seeded = await runReportLakeRebuild({ prisma, lakeDir });
+        expect(seeded?.tier).toBe("rebuild");
+        expect(await writeMatchStagingFile(lakeDir, match)).toBe(true);
+        await rewritePublishedFingerprint(lakeDir, fingerprint);
+        const old = await readCurrentBuildDir(lakeDir);
+        const buildsBefore = await readdir(path.join(lakeDir, "builds"));
+        s3Mock.resetHistory();
 
-      await expect(runReportLakeFold({ prisma, lakeDir })).rejects.toThrow(
-        "unknown schema",
-      );
-      await expect(runReportLakeRebuild({ prisma, lakeDir })).rejects.toThrow(
-        "unknown schema",
-      );
-      expect(await readCurrentBuildDir(lakeDir)).toBe(old);
-      expect(await readdir(path.join(lakeDir, "builds"))).toEqual(buildsBefore);
-      expect(await listStagingFiles(lakeDir, "matches")).toHaveLength(1);
-      expect(s3Mock.calls()).toHaveLength(0);
-    } finally {
-      await rm(lakeDir, { recursive: true, force: true });
-    }
-  });
+        await expect(runReportLakeFold({ prisma, lakeDir })).rejects.toThrow(
+          "unknown schema",
+        );
+        await expect(runReportLakeRebuild({ prisma, lakeDir })).rejects.toThrow(
+          "unknown schema",
+        );
+        expect(await readCurrentBuildDir(lakeDir)).toBe(old);
+        expect(await readdir(path.join(lakeDir, "builds"))).toEqual(
+          buildsBefore,
+        );
+        expect(await listStagingFiles(lakeDir, "matches")).toHaveLength(1);
+        expect(s3Mock.calls()).toHaveLength(0);
+      } finally {
+        await rm(lakeDir, { recursive: true, force: true });
+      }
+    },
+  );
 
   test.each(["missing", "malformed", "without-fingerprint"])(
-    "a %s legacy manifest leaves CURRENT and staging untouched",
+    "a %s manifest leaves CURRENT and staging untouched",
     async (manifestState) => {
       const lakeDir = await makeLakeDir();
       try {
         const match = await loadMatchFixture();
-        const buildDir = await seedLegacyLake(lakeDir, match);
+        const buildDir = await seedCurrentLake(lakeDir, match);
         expect(await writeMatchStagingFile(lakeDir, match)).toBe(true);
         const manifestPath = path.join(buildDir, "manifest.json");
         if (manifestState === "missing") {
@@ -1248,9 +901,6 @@ describe("compactor idempotency and schema transitions", () => {
         }
         const buildsBefore = await readdir(path.join(lakeDir, "builds"));
         s3Mock.resetHistory();
-        const upgrade = vi
-          .spyOn(schemaUpgrade, "reportLakeSchemaUpgradeEnabled")
-          .mockResolvedValue(false);
         await expect(runReportLakeFold({ prisma, lakeDir })).rejects.toThrow(
           "unknown schema",
         );
@@ -1262,7 +912,6 @@ describe("compactor idempotency and schema transitions", () => {
           buildsBefore,
         );
         expect(await listStagingFiles(lakeDir, "matches")).toHaveLength(1);
-        expect(upgrade).not.toHaveBeenCalled();
         expect(s3Mock.calls()).toHaveLength(0);
       } finally {
         await rm(lakeDir, { recursive: true, force: true });

@@ -106,4 +106,17 @@ export const retiredFlagDeclarations = [
   // environments.
   { environment: "beta", namespace: "scout", key: "scout-bucks-ask-model" },
   { environment: "prod", namespace: "scout", key: "scout-bucks-ask-model" },
+  // Both published report lakes use the current physical schema. The final
+  // schema-bridge cleanup removes the rollout reader; bridge images also stop
+  // consulting this control once CURRENT points to the current layout.
+  {
+    environment: "beta",
+    namespace: "scout",
+    key: "scout-report-lake-schema-upgrade-enabled",
+  },
+  {
+    environment: "prod",
+    namespace: "scout",
+    key: "scout-report-lake-schema-upgrade-enabled",
+  },
 ] as const;

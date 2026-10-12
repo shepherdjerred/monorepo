@@ -180,6 +180,8 @@ test("only audited Scout and BlueBubbles keys are retired, preserving managed ta
     "prod/scout/scoutql_relational_enabled",
     "beta/scout/scout-bucks-ask-model",
     "prod/scout/scout-bucks-ask-model",
+    "beta/scout/scout-report-lake-schema-upgrade-enabled",
+    "prod/scout/scout-report-lake-schema-upgrade-enabled",
   ]);
   const server = fakeServer();
   const managedBefore = structuredClone(

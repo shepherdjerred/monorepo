@@ -1,15 +1,12 @@
 import { mkdir, rm } from "node:fs/promises";
 import path from "node:path";
 import type { DuckDbColumnType } from "@scout-for-lol/data";
-import {
-  matchColumns,
-  rawDocumentColumns,
-  type ReportLakeLayout,
-} from "#src/report-lake/schema-upgrade/layout.ts";
+import { RAW_DOCUMENT_LAKE_COLUMNS } from "@scout-for-lol/data/model/reports/raw-document-lake-columns.ts";
 import { NdjsonFileWriter } from "#src/report-lake/ndjson-writer.ts";
 import { copyNdjsonToParquet } from "#src/report-lake/parquet/copy-ndjson.ts";
 import {
   COMPETITION_RANK_HISTORY_LAKE_COLUMNS,
+  MATCH_LAKE_COLUMNS,
   MATCH_TEAM_BAN_LAKE_COLUMNS,
   MATCH_TEAM_LAKE_COLUMNS,
   PREMATCH_LAKE_COLUMNS,
@@ -32,13 +29,12 @@ export type StagingParseResult = {
 
 export function columnsForTable(
   table: ReportLakeStagingTable,
-  layout: ReportLakeLayout,
 ): Record<string, DuckDbColumnType> {
   switch (table) {
     case "raw_documents":
-      return rawDocumentColumns(layout);
+      return RAW_DOCUMENT_LAKE_COLUMNS;
     case "matches":
-      return matchColumns(layout);
+      return MATCH_LAKE_COLUMNS;
     case "match_teams":
       return MATCH_TEAM_LAKE_COLUMNS;
     case "match_team_bans":
@@ -64,29 +60,22 @@ export async function writeFoldParquet({
   table,
   staged,
   abortSignal,
-  layout = "current",
 }: {
   buildDir: string;
   buildId: string;
   table: ReportLakeStagingTable;
   staged: StagingParseResult;
   abortSignal?: AbortSignal | undefined;
-  layout?: ReportLakeLayout;
 }): Promise<void> {
   abortSignal?.throwIfAborted();
-  const columns = columnsForTable(table, layout);
+  const columns = columnsForTable(table);
   for (const [month, rows] of staged.rowsByMonth) {
     const monthDir = path.join(buildDir, table, `month=${month}`);
     await mkdir(monthDir, { recursive: true });
     const tmpPath = path.join(buildDir, `${table}-${month}-fold.ndjson.tmp`);
     const writer = new NdjsonFileWriter(tmpPath, undefined, abortSignal);
     try {
-      for (const row of rows)
-        await writer.write(
-          table === "raw_documents" && layout !== "current"
-            ? { ...row, identity_map_json: "{}" }
-            : row,
-        );
+      for (const row of rows) await writer.write(row);
       await writer.close();
       await withDuckDBConnection(
         async (session) => {
