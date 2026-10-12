@@ -17,14 +17,14 @@
       "buildNumber": 1007972
     },
     "shepherdjerred/discord-plays-mario-kart": {
-      "buildNumber": 1008905,
       "version": "2.0.0-1008905",
-      "digest": "sha256:044aaa1c66bdb263d8f687c2fdefd6843b09e3c65d703b14f2dcf97ab49ebce8"
+      "digest": "sha256:044aaa1c66bdb263d8f687c2fdefd6843b09e3c65d703b14f2dcf97ab49ebce8",
+      "buildNumber": 1008905
     },
     "shepherdjerred/discord-plays-pokemon": {
-      "buildNumber": 1008905,
       "version": "2.0.0-1008905",
-      "digest": "sha256:c0bdd0b2626457b0edba22260889f087fff1acbe5dff0bad2c820abf546aa701"
+      "digest": "sha256:c0bdd0b2626457b0edba22260889f087fff1acbe5dff0bad2c820abf546aa701",
+      "buildNumber": 1008905
     },
     "shepherdjerred/obsidian-headless": {
       "version": "2.0.0-1006677",
@@ -64,14 +64,14 @@
       "buildNumber": 1008394
     },
     "shepherdjerred/storm-forum": {
-      "buildNumber": 1008905,
-      "version": "2.0.0-1008905",
-      "digest": "sha256:c511684047cd3550e7dbba817e284d51bf0e5320b90d944fb6aeff069e9e529a"
+      "buildNumber": 1008996,
+      "version": "2.0.0-1008996",
+      "digest": "sha256:448d98c3ff7d7682a49c7af783c0830f2e633b92e0bdde36414dd31b9acd3805"
     },
     "shepherdjerred/streambot": {
-      "buildNumber": 1008905,
       "version": "2.0.0-1008905",
-      "digest": "sha256:4cc5bd798b3a743f4d2441fbe79a98a69ebc2f0078adbb13a9b2696657aed0ed"
+      "digest": "sha256:4cc5bd798b3a743f4d2441fbe79a98a69ebc2f0078adbb13a9b2696657aed0ed",
+      "buildNumber": 1008905
     },
     "shepherdjerred/tasknotes-server": {
       "version": "2.0.0-1008270",
@@ -79,9 +79,9 @@
       "buildNumber": 1008270
     },
     "shepherdjerred/temporal-worker": {
-      "buildNumber": 1008905,
-      "version": "2.0.0-1008905",
-      "digest": "sha256:72df2cfa8aba10fe5122cdd64d08539455d8826e91449b7b34dbc9648a9d9eaa"
+      "version": "2.0.0-1008945",
+      "digest": "sha256:cfd55c523ee4996d647a4f63a41a87ba5e63fb0f69b61ce9e0859df79c88086f",
+      "buildNumber": 1008945
     },
     "shepherdjerred/temporal-worker/workflows/candidate": {
       "version": "2.0.0-1007695",
@@ -96,9 +96,9 @@
       "buildNumber": 1005566
     },
     "shepherdjerred/the-storm-server": {
-      "buildNumber": 1008905,
       "version": "2.0.0-1008905",
-      "digest": "sha256:a6b7a403012a2ba68c6f0c7ac08f050cac8f7e19e4fe816c265f6a97d64f8e43"
+      "digest": "sha256:a6b7a403012a2ba68c6f0c7ac08f050cac8f7e19e4fe816c265f6a97d64f8e43",
+      "buildNumber": 1008905
     },
     "shepherdjerred/trmnl-dashboard": {
       "version": "2.0.0-1008394",
@@ -111,9 +111,9 @@
       "buildNumber": 1007972
     },
     "shepherdjerred/woodpecker-config-extension": {
-      "buildNumber": 1008905,
       "version": "2.0.0-1008905",
-      "digest": "sha256:0e285b3c748b57d3f76329ab1e7beb62586e64ca0e1babefea5800275ff77923"
+      "digest": "sha256:0e285b3c748b57d3f76329ab1e7beb62586e64ca0e1babefea5800275ff77923",
+      "buildNumber": 1008905
     }
   },
   "withdrawnCandidates": {
