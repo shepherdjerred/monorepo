@@ -3,7 +3,12 @@ import { githubToken } from "#lib/ci/process.ts";
 import { loadWoodpeckerConfig } from "#lib/woodpecker/ci.ts";
 import { CiObserver } from "#lib/ci/observer.ts";
 import { evaluateReadiness, EXIT_CODES } from "#lib/ci/readiness.ts";
-import { waitForCi, type WaitResult } from "#lib/ci/wait.ts";
+import {
+  sleepUntilRateLimitReset,
+  waitForCi,
+  type WaitResult,
+} from "#lib/ci/wait.ts";
+import { GitHubRateLimitError } from "@shepherdjerred/code-review/github-request";
 import { watchEvents } from "#lib/ci/events.ts";
 import { ciLoad, formatLoad } from "#lib/ci/load.ts";
 import { pipelineDiagnostics } from "#lib/ci/diagnostics.ts";
@@ -45,6 +50,33 @@ async function reportResult(
   process.exitCode = EXIT_CODES[result.verdict.outcome];
 }
 
+function reportRateLimit(error: GitHubRateLimitError, resumeAt: number): void {
+  console.error(
+    `GitHub rate limit reached; resuming at ${new Date(resumeAt).toISOString()}. This does not mean CI failed. ${error.message}`,
+  );
+}
+
+/**
+ * The PR's current head, waiting out a quota refusal like every later poll.
+ * A reset beyond the requested deadline reports the refusal instead.
+ */
+async function initialPr(
+  observer: CiObserver,
+  number: number,
+  signal: AbortSignal,
+  deadline: number | null,
+): ReturnType<GitHubClient["pr"]> {
+  for (;;) {
+    try {
+      return await observer.github.pr(number, signal);
+    } catch (error) {
+      if (!(error instanceof GitHubRateLimitError)) throw error;
+      if (deadline !== null && error.resumeAt > deadline) throw error;
+      await sleepUntilRateLimitReset(error, signal, reportRateLimit);
+    }
+  }
+}
+
 async function runWait(
   number: number,
   observer: CiObserver,
@@ -63,7 +95,12 @@ async function runWait(
   process.once("SIGINT", interrupt);
   process.once("SIGTERM", terminate);
   try {
-    const initial = await observer.github.pr(number, controller.signal);
+    const initial = await initialPr(
+      observer,
+      number,
+      controller.signal,
+      options.timeoutMs === undefined ? null : Date.now() + options.timeoutMs,
+    );
     const head = options.head ?? initial.head.sha;
     console.error(
       `Waiting for PR #${String(number)} @ ${head.slice(0, 12)}. Long queues and builds are expected; keep this process running. Use toolkit ci load for capacity information.`,
@@ -87,6 +124,7 @@ async function runWait(
             fatal,
             prNumber: number,
           }),
+        rateLimited: reportRateLimit,
         heartbeat: (snapshot) => {
           console.error(
             `Still waiting for PR #${String(number)}; pipeline ${snapshot?.pipeline?.status ?? "not created"}. Long waits are expected.`,

@@ -1,4 +1,5 @@
-import { describe, expect, test, vi } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
+import { GitHubRateLimitError } from "@shepherdjerred/code-review/github-request";
 import { waitForCi, type WaitDependencies } from "#lib/ci/wait.ts";
 import { ciFixture, pendingCi, CI_HEAD } from "./fixtures.ts";
 
@@ -157,5 +158,62 @@ describe("foreground CI wait", () => {
     await expect(
       waitForCi({ head: CI_HEAD, until: "first-failure" }, deps),
     ).rejects.toThrow("invalid event");
+  });
+});
+
+function exhausted(resumeAt: number): GitHubRateLimitError {
+  return new GitHubRateLimitError("/repos/o/r/pulls/1", {
+    status: 403,
+    resource: "core",
+    limit: 5000,
+    used: 5000,
+    remaining: 0,
+    resetAt: new Date(resumeAt),
+    retryAfterSeconds: null,
+  });
+}
+
+describe("GitHub rate limits during a wait", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  test("waits for the reset and keeps polling instead of failing", async () => {
+    vi.spyOn(Math, "random").mockReturnValue(0);
+    let calls = 0;
+    const deps = dependencies(async () => {
+      calls++;
+      if (calls === 1) throw exhausted(Date.now());
+      return ciFixture();
+    });
+    const rateLimited = vi.fn();
+    deps.rateLimited = rateLimited;
+    const result = await waitForCi(
+      { head: CI_HEAD, until: "first-failure" },
+      deps,
+    );
+    expect(result.verdict.outcome).toBe("ready");
+    expect(rateLimited).toHaveBeenCalledTimes(1);
+    expect(rateLimited.mock.calls[0]?.[0]).toBeInstanceOf(GitHubRateLimitError);
+  });
+
+  test("a reset beyond the requested deadline reports timeout", async () => {
+    const deps = dependencies(async () => {
+      throw exhausted(Date.now() + 3_600_000);
+    });
+    const result = await waitForCi(
+      { head: CI_HEAD, until: "first-failure", timeoutMs: 20 },
+      deps,
+    );
+    expect(result.verdict.outcome).toBe("timeout");
+  });
+
+  test("other GitHub failures still end the wait", async () => {
+    const deps = dependencies(async () => {
+      throw new Error("GitHub request failed (404): /repos/o/r/pulls/1");
+    });
+    await expect(
+      waitForCi({ head: CI_HEAD, until: "first-failure" }, deps),
+    ).rejects.toThrow("404");
   });
 });
