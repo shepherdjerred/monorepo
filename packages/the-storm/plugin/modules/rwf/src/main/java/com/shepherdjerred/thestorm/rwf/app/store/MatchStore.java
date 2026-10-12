@@ -53,7 +53,21 @@ public interface MatchStore {
     LEFT,
     STOPPED,
     /** AFK for the whole match: charged the AFK penalty instead of any pay. */
-    AFK,
+    AFK;
+
+    /**
+     * How a human's match went: left while alive, charged as AFK ({@code credits} negative), or won
+     * or lost.
+     */
+    public static Outcome of(boolean leftAlive, boolean won, long credits) {
+      if (leftAlive) {
+        return LEFT;
+      }
+      if (credits < 0) {
+        return AFK;
+      }
+      return won ? WIN : LOSE;
+    }
   }
 
   /** Where a player's credits are. */
@@ -65,7 +79,12 @@ public interface MatchStore {
     /** The ledger transfer is in flight or uncertain. */
     PAYING,
     /** The ledger confirmed the transfer. */
-    PAID,
+    PAID;
+
+    /** A new row's status: pending while it owes or is charged anything, otherwise none. */
+    public static PayoutStatus owing(long credits) {
+      return credits == 0 ? NONE : PENDING;
+    }
   }
 
   /**

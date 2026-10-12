@@ -567,12 +567,7 @@ final class MatchRunner implements MatchView, MatchEvents {
 
   private MatchStore.PlayerRow playerRow(Combatant member, boolean won, long credits) {
     var tally = tallies.getOrDefault(member.id(), new Tally());
-    var outcome =
-        member.leftAt().isPresent() && member.diedAt().isEmpty()
-            ? MatchStore.Outcome.LEFT
-            : credits < 0
-                ? MatchStore.Outcome.AFK
-                : won ? MatchStore.Outcome.WIN : MatchStore.Outcome.LOSE;
+    var leftAlive = member.leftAt().isPresent() && member.diedAt().isEmpty();
     return new MatchStore.PlayerRow(
         match.matchId(),
         member.id().uuid(),
@@ -580,10 +575,10 @@ final class MatchRunner implements MatchView, MatchEvents {
         member.kit().orElseThrow(),
         tally.kills,
         tally.deaths,
-        outcome,
+        MatchStore.Outcome.of(leftAlive, won, credits),
         PayoutService.CURRENCY,
         credits,
-        credits != 0 ? MatchStore.PayoutStatus.PENDING : MatchStore.PayoutStatus.NONE,
+        MatchStore.PayoutStatus.owing(credits),
         0);
   }
 
