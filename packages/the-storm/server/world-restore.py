@@ -1512,7 +1512,9 @@ def digest(path: Path) -> str:
 
 def save_json(path: Path, value: object) -> None:
     """A durable receipt is atomically replaced only after its contents reach storage."""
-    temporary = path.with_name(path.name + ".tmp")
+    # A crash before replacement can leave a temporary receipt behind. Give
+    # each attempt its own exclusive file so the durable receipt stays usable.
+    temporary = path.with_name(path.name + "." + str(uuid.uuid4()) + ".tmp")
     with temporary.open("x", encoding="utf-8") as output:
         json.dump(value, output, indent=2, sort_keys=True)
         output.write("\n")
