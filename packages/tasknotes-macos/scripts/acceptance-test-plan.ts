@@ -164,21 +164,23 @@ export function verifyStandaloneNotes(
     titles.length,
     "Only one capture per selected workflow may exist",
   );
+  const tasks = notes.map((note) => {
+    const frontmatter = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/u.exec(
+      note,
+    )?.[1];
+    assert.ok(frontmatter !== undefined, "Task must have YAML frontmatter");
+    const task: unknown = Bun.YAML.parse(frontmatter);
+    assert.ok(isRecord(task), "Task frontmatter must be a mapping");
+    assert.equal(typeof task["title"], "string", "Task title must be a string");
+    assert.equal(task["status"], "open", "Task must finish reopened");
+    return task;
+  });
   for (const title of titles) {
-    const matches = notes.filter((note) => {
-      const lines = note.split("\n");
-      return (
-        lines.includes(`title: ${title}`) || lines.includes(`title: "${title}"`)
-      );
-    });
+    const matches = tasks.filter((task) => task["title"] === title);
     assert.equal(
       matches.length,
       1,
       `Expected exactly one persisted task: ${title}`,
-    );
-    assert.ok(
-      matches[0]?.split("\n").includes("status: open"),
-      "Task must finish reopened",
     );
   }
 }

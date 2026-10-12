@@ -251,7 +251,6 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: red.sjer.tasknotes.mac.acceptance.uitests
-        INFOPLIST_KEY_NSScreenCaptureUsageDescription: "Capture only the synthetic acceptance app's selected workspace windows and sheets for test evidence."
         CODE_SIGN_ENTITLEMENTS: ""
         CODE_SIGN_STYLE: Manual
         CODE_SIGN_IDENTITY: "$(TASKNOTES_UITEST_IDENTITY:default=-)"

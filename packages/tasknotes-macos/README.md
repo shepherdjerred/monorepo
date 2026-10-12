@@ -267,6 +267,12 @@ a narrowed run is recorded as such and does not establish the full suite.
 `TASKNOTES_UITEST_IDENTITY=<Apple Development SHA-1>` also signs this acceptance
 test runner without overriding app or package signing. Its separate runner
 identity may require an existing Accessibility grant; no gate assumes it.
+After building with a stable Apple Development runner identity, open System Settings →
+Privacy & Security → Screen & System Audio Recording. Click **+**, add
+`.build/acceptance-xcode/Build/Products/Debug/TaskNotesAcceptanceUITests-Runner.app`
+(relative to this package), and enable it. Keep the same signing identity for
+subsequent runs. Grant access through Settings; the tests only check existing
+consent and never request it or modify the privacy database.
 The isolated acceptance app disables the global hotkey, so this suite proves
 the ordinary Quick Add command and panel; production global-hotkey behavior
 still needs its own signed, trusted native checkpoint. Both
