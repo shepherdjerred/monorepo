@@ -15,7 +15,14 @@ public final class FacetMacEnvironment {
 
     public convenience init() {
         let applicationStore = FacetStore()
-        self.init(store: applicationStore, startup: { await applicationStore.start() })
+        self.init(
+            store: applicationStore,
+            startup: {
+                await applicationStore.start()
+                #if DEBUG
+                    await Self.prepareAcceptanceVault(store: applicationStore)
+                #endif
+            })
         if !store.isIsolatedLaunch {
             KeyboardShortcuts.onKeyDown(for: .quickAdd) { [weak self] in
                 MainActor.assumeIsolated { self?.toggleQuickAdd() }
@@ -29,6 +36,29 @@ public final class FacetMacEnvironment {
         self.store = store
         bootstrap = _Concurrency.Task { await startup() }
     }
+
+    #if DEBUG
+        internal static func prepareAcceptanceVault(
+            store: FacetStore, arguments: [String] = CommandLine.arguments
+        ) async {
+            guard arguments.contains("--facet-native-acceptance") else { return }
+            do {
+                guard let root = store.acceptanceDirectory else {
+                    throw FacetAcceptanceError.invalidDescriptor
+                }
+                let directory = try await _Concurrency.Task.detached {
+                    let directory = root.appendingPathComponent("Native acceptance")
+                    try FileManager.default.createDirectory(
+                        at: directory, withIntermediateDirectories: true)
+                    return directory
+                }.value
+                try await store.prepareAcceptanceVault(directory)
+            } catch {
+                store.reportNativeFailure(error)
+                assertionFailure("Native acceptance vault could not be prepared.")
+            }
+        }
+    #endif
 
     public func toggleQuickAdd() {
         if let panel, panel.isVisible {
@@ -63,33 +93,8 @@ public struct FacetMacRootView: View {
     private let environment: FacetMacEnvironment
     public init(environment: FacetMacEnvironment) { self.environment = environment }
     public var body: some View {
-        #if DEBUG
-            FacetRootView(
-                store: environment.store,
-                afterStart: {
-                    if CommandLine.arguments.contains("--facet-native-acceptance") {
-                        do {
-                            guard let root = environment.store.acceptanceDirectory else {
-                                throw FacetAcceptanceError.invalidDescriptor
-                            }
-                            let directory = try await _Concurrency.Task.detached {
-                                let directory = root.appendingPathComponent("Native acceptance")
-                                try FileManager.default.createDirectory(
-                                    at: directory, withIntermediateDirectories: true)
-                                return directory
-                            }.value
-                            await environment.store.prepareAcceptanceVault(directory)
-                        } catch {
-                            assertionFailure("Native acceptance vault could not be prepared.")
-                        }
-                    }
-                }
-            ).frame(minWidth: 760, minHeight: 520)
-                .background(FacetWorkspaceWindowIdentity().frame(width: 0, height: 0))
-        #else
-            FacetRootView(store: environment.store).frame(minWidth: 760, minHeight: 520)
-                .background(FacetWorkspaceWindowIdentity().frame(width: 0, height: 0))
-        #endif
+        FacetRootView(store: environment.store).frame(minWidth: 760, minHeight: 520)
+            .background(FacetWorkspaceWindowIdentity().frame(width: 0, height: 0))
     }
 }
 
