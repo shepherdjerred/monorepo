@@ -27,6 +27,12 @@ import java.util.List;
  *     {winners}}, {@code {duration}}
  * @param rwfDraw a Search and Destroy match ended in a draw: {@code {map}}, {@code {players}},
  *     {@code {duration}}
+ * @param arenaLobbyOpened an arena lobby opened: {@code {arena}}, {@code {player}}
+ * @param arenaBossWave a rewarding arena boss wave began: {@code {arena}}, {@code {wave}}, {@code
+ *     {boss}}
+ * @param arenaRunEnded an arena run ended: {@code {arena}}, {@code {tier}}, {@code {wave}}, {@code
+ *     {players}}
+ * @param arenaRecord an arena run beat the arena's best wave: the same placeholders
  */
 public record DiscordMessages(
     String chat,
@@ -46,7 +52,11 @@ public record DiscordMessages(
     String ticketTriaged,
     String rwfLobbyOpened,
     String rwfWon,
-    String rwfDraw) {
+    String rwfDraw,
+    String arenaLobbyOpened,
+    String arenaBossWave,
+    String arenaRunEnded,
+    String arenaRecord) {
 
   public DiscordMessages {
     chatTemplate(chat);
@@ -67,6 +77,10 @@ public record DiscordMessages(
     playerTemplate(rwfLobbyOpened);
     rwfWonTemplate(rwfWon);
     rwfDrawTemplate(rwfDraw);
+    arenaLobbyTemplate(arenaLobbyOpened);
+    arenaBossWaveTemplate(arenaBossWave);
+    arenaRunTemplate(arenaRunEnded);
+    arenaRunTemplate(arenaRecord);
   }
 
   MessageTemplate chatTemplate() {
@@ -133,6 +147,22 @@ public record DiscordMessages(
     return rwfDrawTemplate(rwfDraw);
   }
 
+  MessageTemplate arenaLobbyOpenedTemplate() {
+    return arenaLobbyTemplate(arenaLobbyOpened);
+  }
+
+  MessageTemplate arenaBossWaveTemplate() {
+    return arenaBossWaveTemplate(arenaBossWave);
+  }
+
+  MessageTemplate arenaRunEndedTemplate() {
+    return arenaRunTemplate(arenaRunEnded);
+  }
+
+  MessageTemplate arenaRecordTemplate() {
+    return arenaRunTemplate(arenaRecord);
+  }
+
   private static MessageTemplate chatTemplate(String source) {
     return new MessageTemplate(source, List.of("player", "message"));
   }
@@ -180,6 +210,18 @@ public record DiscordMessages(
 
   private static MessageTemplate rwfDrawTemplate(String source) {
     return new MessageTemplate(source, List.of("map", "players", "duration"));
+  }
+
+  private static MessageTemplate arenaLobbyTemplate(String source) {
+    return new MessageTemplate(source, List.of("arena", "player"));
+  }
+
+  private static MessageTemplate arenaBossWaveTemplate(String source) {
+    return new MessageTemplate(source, List.of("arena", "wave", "boss"));
+  }
+
+  private static MessageTemplate arenaRunTemplate(String source) {
+    return new MessageTemplate(source, List.of("arena", "tier", "wave", "players"));
   }
 
   private static MessageTemplate fixed(String source) {

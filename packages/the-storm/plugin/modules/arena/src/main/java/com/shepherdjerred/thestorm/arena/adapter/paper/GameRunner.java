@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.arena.adapter.paper;
 
+import com.shepherdjerred.thestorm.arena.app.ArenaNotification;
 import com.shepherdjerred.thestorm.arena.app.RewardPayer;
 import com.shepherdjerred.thestorm.arena.app.store.LeaderboardStore;
 import com.shepherdjerred.thestorm.arena.app.store.RewardStore;
@@ -70,6 +71,7 @@ final class GameRunner implements ArenaRunner {
    * @param leaderboard best waves
    * @param rewards vault claims
    * @param vault the vault milestones
+   * @param events where accepted transitions are published
    */
   record Services(
       PaperContext context,
@@ -81,7 +83,8 @@ final class GameRunner implements ArenaRunner {
       CrystalFormatter formatter,
       LeaderboardStore leaderboard,
       RewardStore rewards,
-      VaultSettings vault) {}
+      VaultSettings vault,
+      ArenaEventHub events) {}
 
   GameRunner(ArenaWorld world, Services services, ArenaGame game) {
     this.world = world;
@@ -148,6 +151,7 @@ final class GameRunner implements ArenaRunner {
             } finally {
               applying = false;
             }
+            services.events().publish(new ArenaNotification(event, step.effects(), previous, game));
             if (game.phase() instanceof Phase.Countdown) {
               world.preload();
             } else if (game.phase() instanceof Phase.Lobby

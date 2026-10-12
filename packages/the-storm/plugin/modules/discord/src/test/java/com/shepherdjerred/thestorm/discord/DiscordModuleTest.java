@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.shepherdjerred.thestorm.discord.app.DiscordConfig;
 import com.shepherdjerred.thestorm.discord.app.DiscordMessages;
+import com.shepherdjerred.thestorm.discord.app.LobbyPing;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -37,7 +39,12 @@ final class DiscordModuleTest {
               "Ticket #{id} [{server}] triaged [{priority}]: {evidence}",
               "**{player}** opened a Search and Destroy lobby",
               "{map}: **{team}** won in {duration}. GG {winners}",
-              "{map}: draw after {duration}: {players}"));
+              "{map}: draw after {duration}: {players}",
+              "**{player}** opened {arena}",
+              "{arena} boss wave {wave}: {boss}",
+              "{arena} ({tier}) over at {wave}: {players}",
+              "{arena} ({tier}) record {wave}: {players}"),
+          new LobbyPing(List.of(), 30));
 
   @Test
   void refusesToStartWithoutSecrets() {

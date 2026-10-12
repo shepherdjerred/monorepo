@@ -18,9 +18,17 @@ source: D
 # Longest Discord message relayed into the game; longer ones are cut.
 maxInboundLength: 200
 
+# Minigame lobby posts may ping these Discord role ids (create the role by
+# hand in the server and paste its id). One game pings at most once per
+# cooldown; its other lobby posts stay silent. An empty list pings nobody.
+lobbyPing:
+  roles: []
+  cooldownMinutes: 30
+
 # What the bot posts, in Discord markdown. {placeholders} are filled with
-# escaped text; mentions and push/desktop notifications are always disabled.
-# Discord still shows unread activity; mute the linked channel to hide that too.
+# escaped text; mentions and push/desktop notifications are disabled except
+# for lobbyPing. Discord still shows unread activity; mute the linked channel
+# to hide that too.
 messages:
   chat: "**{player}**: {message}"
   join: "**{player}** joined the server"
@@ -40,3 +48,7 @@ messages:
   rwfLobbyOpened: "**{player}** opened a Search and Destroy lobby. Join with `/rwf join` on ts-mc.net"
   rwfWon: "Search and Destroy on **{map}**: **{team}** won in {duration}. GG {winners}"
   rwfDraw: "Search and Destroy on **{map}** ended in a draw after {duration}: {players}"
+  arenaLobbyOpened: "**{player}** opened the **{arena}** Mob Arena. Join with `/arena join` on ts-mc.net"
+  arenaBossWave: "**{arena}** reached boss wave {wave}: {boss}"
+  arenaRunEnded: "**{arena}** ({tier}) run over at wave {wave}: {players}"
+  arenaRecord: "New **{arena}** ({tier}) record: wave {wave}! {players}"

@@ -12,8 +12,11 @@ import com.shepherdjerred.thestorm.discord.domain.InboundMessage;
 import com.shepherdjerred.thestorm.discord.domain.MatchLength;
 import com.shepherdjerred.thestorm.discord.domain.MessageTemplate;
 import com.shepherdjerred.thestorm.discord.domain.PlayerList;
+import java.time.Instant;
+import java.time.InstantSource;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 /**
@@ -26,6 +29,7 @@ public final class DiscordRelay {
   private final DiscordConfig config;
   private final DiscordGateway gateway;
   private final Game game;
+  private final Map<String, Instant> lastPing = new ConcurrentHashMap<>();
   private volatile boolean stopping;
 
   public DiscordRelay(DiscordConfig config, DiscordGateway gateway, Game game) {
@@ -198,13 +202,87 @@ public final class DiscordRelay {
                     "evidence", DiscordText.forDiscord(ticket.evidence()))));
   }
 
-  /** Posts that {@code player} opened an empty Search and Destroy lobby. */
+  /** Posts that {@code player} opened an empty Search and Destroy lobby. Main thread. */
   public void onRwfLobbyOpened(String player) {
-    post(
+    announceLobby(
+        "rwf",
         config
             .messages()
             .rwfLobbyOpenedTemplate()
             .render(Map.of("player", DiscordText.forDiscord(player))));
+  }
+
+  /** Posts that {@code player} opened an empty lobby in {@code arena}. Main thread. */
+  public void onArenaLobbyOpened(String arena, String player) {
+    announceLobby(
+        "arena:" + arena,
+        config
+            .messages()
+            .arenaLobbyOpenedTemplate()
+            .render(
+                Map.of(
+                    "arena",
+                    DiscordText.forDiscord(arena),
+                    "player",
+                    DiscordText.forDiscord(player))));
+  }
+
+  /** Posts that a rewarding boss wave began in {@code arena}. */
+  public void onArenaBossWave(String arena, int wave, String boss) {
+    post(
+        config
+            .messages()
+            .arenaBossWaveTemplate()
+            .render(
+                Map.of(
+                    "arena", DiscordText.forDiscord(arena),
+                    "wave", Integer.toString(wave),
+                    "boss", DiscordText.forDiscord(boss))));
+  }
+
+  /** Posts a finished arena run, as a record when it beat the arena's best. */
+  public void onArenaRunEnded(ArenaRunResult run) {
+    var template =
+        run.arenaRecord()
+            ? config.messages().arenaRecordTemplate()
+            : config.messages().arenaRunEndedTemplate();
+    var players =
+        run.players().stream()
+            .sorted(
+                java.util.Comparator.comparingInt(ArenaRunResult.Player::wave)
+                    .reversed()
+                    .thenComparing(ArenaRunResult.Player::name, String.CASE_INSENSITIVE_ORDER))
+            .map(player -> DiscordText.forDiscord(player.name()) + " (" + player.wave() + ")")
+            .toList();
+    post(
+        template.render(
+            Map.of(
+                "arena", DiscordText.forDiscord(run.arena()),
+                "tier", DiscordText.forDiscord(run.tier()),
+                "wave", Integer.toString(run.furthest()),
+                "players", String.join(", ", players))));
+  }
+
+  /**
+   * Posts a lobby announcement, pinging the configured roles unless {@code game} pinged within the
+   * cooldown.
+   */
+  private void announceLobby(String game, String text) {
+    var ping = config.lobbyPing();
+    if (ping.roles().isEmpty()) {
+      post(text);
+      return;
+    }
+    var now = this.game.time().instant();
+    var last = lastPing.get(game);
+    if (last != null && now.isBefore(last.plus(ping.cooldown()))) {
+      post(text);
+      return;
+    }
+    lastPing.put(game, now);
+    var mentions = String.join(" ", ping.roles().stream().map(role -> "<@&" + role + ">").toList());
+    gateway.ping(
+        DiscordText.truncate(mentions + " " + text, DiscordText.DISCORD_LIMIT), ping.roles());
   }
 
   /** Posts a Search and Destroy result. */
@@ -303,6 +381,8 @@ public final class DiscordRelay {
    * @param chat Global chat
    * @param scheduler the main-thread scheduler
    * @param players who is online
+   * @param time the clock lobby pings cool down by
    */
-  public record Game(GlobalChat chat, Scheduler scheduler, OnlinePlayers players) {}
+  public record Game(
+      GlobalChat chat, Scheduler scheduler, OnlinePlayers players, InstantSource time) {}
 }

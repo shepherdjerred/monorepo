@@ -20,6 +20,23 @@ final class JdaBridgeTest {
   }
 
   @Test
+  void lobbyPingNotifiesOnlyTheListedRoles() {
+    var payload =
+        JdaBridge.rolePing(
+                new MessageCreateBuilder().setContent("<@&123456789012345678> lobby open"),
+                java.util.List.of("123456789012345678"))
+            .build()
+            .toData();
+
+    assertThat(payload.getInt("flags") & Message.MessageFlag.NOTIFICATIONS_SUPPRESSED.getValue())
+        .isZero();
+    var mentions = payload.getObject("allowed_mentions");
+    assertThat(mentions.getArray("parse").length()).isZero();
+    assertThat(mentions.getArray("roles").getString(0)).isEqualTo("123456789012345678");
+    assertThat(mentions.hasKey("users") ? mentions.getArray("users").length() : 0).isZero();
+  }
+
+  @Test
   void townPageRegistrationBoundsTheListenersIntegerConversion() {
     var option = JdaBridge.townPageOption().toData();
     assertThat(option.getLong("min_value")).isEqualTo(1);
