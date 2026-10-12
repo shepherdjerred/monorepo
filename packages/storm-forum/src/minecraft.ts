@@ -28,12 +28,27 @@ const EditionSchema = z
   .strict();
 export const MinecraftStatusSchema = z
   .object({
-    schemaVersion: z.literal(2),
+    schemaVersion: z.literal(3),
     state: StateSchema,
     checkedAt: z.number().int().nonnegative(),
     java: EditionSchema,
     bedrock: EditionSchema,
     players: PublicPlayersSchema.optional(),
+    games: z
+      .array(
+        z
+          .object({
+            id: z.string().min(1).max(64),
+            kind: z.enum(["ARENA", "RWF"]),
+            name: z.string().min(1).max(64),
+            phase: z.enum(["WAITING", "STARTING", "RUNNING"]),
+            progress: z.string().max(32).optional(),
+            players: z.number().int().positive(),
+          })
+          .strict(),
+      )
+      .max(1000)
+      .optional(),
   })
   .strict()
   .superRefine((value, context) => {
@@ -52,13 +67,17 @@ export const MinecraftStatusSchema = z
     }
     if (
       (value.java.state === "online") !== (value.players !== undefined) ||
+      (value.java.state === "online") !== (value.games !== undefined) ||
       (value.players !== undefined &&
         (new Set(value.players.names).size !== value.players.names.length ||
-          value.players.names.length > value.players.maximum))
+          value.players.names.length > value.players.maximum)) ||
+      value.games?.some(
+        (game) => game.players > (value.players?.identities.length ?? 0),
+      ) === true
     ) {
       context.addIssue({
         code: "custom",
-        message: "Minecraft cache roster does not match Java health",
+        message: "Minecraft cache roster and games do not match Java health",
       });
     }
     for (const edition of [value.java, value.bedrock]) {
@@ -222,7 +241,7 @@ export async function refreshMinecraftStatus(
       : { version: prior.version, verifiedAt: prior.verifiedAt }),
   });
   const result: MinecraftStatus = {
-    schemaVersion: 2,
+    schemaVersion: 3,
     state: "unavailable",
     checkedAt,
     java: edition("unavailable", previous?.java),
@@ -247,7 +266,12 @@ export async function refreshMinecraftStatus(
       version: java.value.version,
       verifiedAt: checkedAt,
     };
-    result.players = { maximum: java.value.maximum, names: java.value.names };
+    result.players = {
+      maximum: java.value.maximum,
+      names: java.value.names,
+      identities: java.value.identities,
+    };
+    result.games = java.value.games;
     result.state = "online";
   } else run.report("java-query", java.reason);
   if (bedrock.status === "fulfilled") {

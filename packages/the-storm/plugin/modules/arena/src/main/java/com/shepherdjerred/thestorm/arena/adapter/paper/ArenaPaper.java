@@ -16,6 +16,7 @@ import com.shepherdjerred.thestorm.arena.domain.survival.SurvivalContent;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.schedule.Cancellable;
 import com.shepherdjerred.thestorm.core.snapshot.SnapshotStore;
+import com.shepherdjerred.thestorm.core.status.PublicGameDirectory;
 import com.shepherdjerred.thestorm.economy.app.CrystalFormatter;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import java.time.Duration;
@@ -190,7 +191,8 @@ public final class ArenaPaper {
     if (!problems.isEmpty()) {
       throw new IllegalStateException("Invalid arenas: " + String.join("; ", problems));
     }
-    var arenas = new Arenas(runners, snapshots);
+    var arenas =
+        new Arenas(runners, snapshots, module.services().require(PublicGameDirectory.class));
     var provisioners =
         data.survivalMaps().stream()
             .map(

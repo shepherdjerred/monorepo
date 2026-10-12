@@ -2,6 +2,16 @@
 require_once '/opt/storm-forum/addon/Storm/Forum/Service/MinecraftStatus.php';
 use Storm\Forum\Service\MinecraftStatus;
 $check = static function (bool $condition, string $message): void { if (!$condition) { throw new RuntimeException($message); } };
+$setNames = static function (array &$value, array $names): void {
+    $value['players']['names'] = $names;
+    $value['games'] = [];
+    $existing = $value['players']['identities'];
+    $value['players']['identities'] = [];
+    foreach ($names as $index => $name) {
+        $uuid = $existing[$index]['uuid'] ?? sprintf('00000000-0000-0000-0000-%012d', $index + 10);
+        $value['players']['identities'][] = ['name'=>$name, 'uuid'=>$uuid];
+    }
+};
 $path = tempnam('/tmp', 'storm-status-');
 $source = json_decode(file_get_contents('/opt/storm-forum/test/fixtures/minecraft-status.json'), true, 512, JSON_THROW_ON_ERROR);
 try {
@@ -21,7 +31,7 @@ try {
     $failed = false;
     try { MinecraftStatus::read($path, 1005); } catch (RuntimeException $error) { $failed = true; }
     $check($failed, 'Corrupt names did not fail validation');
-    $offline = $source; $offline['state'] = 'unavailable'; $offline['java']['state'] = 'unavailable'; $offline['bedrock']['state'] = 'unavailable'; unset($offline['players']);
+    $offline = $source; $offline['state'] = 'unavailable'; $offline['java']['state'] = 'unavailable'; $offline['bedrock']['state'] = 'unavailable'; unset($offline['players'], $offline['games']);
     file_put_contents($path, json_encode($offline));
     $check(MinecraftStatus::read($path, 1005)['players'] === null, 'Absent offline roster was rejected');
     $offline['players'] = null;
@@ -57,24 +67,24 @@ try {
         try { MinecraftStatus::read($path, 1005); } catch (RuntimeException $error) { $failed = true; }
         $check($failed, 'Online edition without metadata did not fail validation');
     }
-    $numericNames = $source; $numericNames['players']['names'] = ['123', '0123', '1e3', '1000'];
+    $numericNames = $source; $setNames($numericNames, ['123', '0123', '1e3', '1000']);
     file_put_contents($path, json_encode($numericNames));
     $check(MinecraftStatus::read($path, 1005)['players']['names'] === $numericNames['players']['names'], 'Distinct numeric player names were collapsed');
     foreach (['😀', 'é'] as $character) {
         $name = str_repeat($character, 64);
-        $unicode = $source; $unicode['players']['names'] = [$name]; $unicode['java']['version'] = str_repeat($character, 100);
+        $unicode = $source; $setNames($unicode, [$name]); $unicode['java']['version'] = str_repeat($character, 100);
         file_put_contents($path, json_encode($unicode));
         $check(MinecraftStatus::read($path, 1005)['players']['names'] === [$name], 'Valid Unicode code-point length boundary was rejected');
     }
     foreach (['name', 'version'] as $field) {
         $unicode = $source;
-        if ($field === 'name') { $unicode['players']['names'] = [str_repeat('😀', 65)]; } else { $unicode['java']['version'] = str_repeat('😀', 101); }
+        if ($field === 'name') { $setNames($unicode, [str_repeat('😀', 65)]); } else { $unicode['java']['version'] = str_repeat('😀', 101); }
         file_put_contents($path, json_encode($unicode));
         $failed = false;
         try { MinecraftStatus::read($path, 1005); } catch (RuntimeException $error) { $failed = true; }
         $check($failed, 'Unicode code-point length overflow was accepted for ' . $field);
     }
-    $empty = $source; $empty['players']['names'] = [];
+    $empty = $source; $setNames($empty, []);
     file_put_contents($path, json_encode($empty));
     $check(MinecraftStatus::read($path, 1005)['players']['names'] === [], 'Empty JSON names array was rejected');
     foreach ([(object)[], (object)['0'=>'Jerred']] as $names) {
@@ -84,7 +94,7 @@ try {
         try { MinecraftStatus::read($path, 1005); } catch (RuntimeException $error) { $failed = true; }
         $check($failed, 'Object-shaped JSON names were accepted as an array');
     }
-    $integral = $source; $integral['schemaVersion'] = 2.0; $integral['checkedAt'] = 1000.0;
+    $integral = $source; $integral['schemaVersion'] = 3.0; $integral['checkedAt'] = 1000.0;
     $integral['java']['verifiedAt'] = 1000.0; $integral['bedrock']['verifiedAt'] = 1000.0; $integral['players']['maximum'] = 20.0;
     file_put_contents($path, json_encode($integral, JSON_PRESERVE_ZERO_FRACTION));
     $check(MinecraftStatus::read($path, 1005)['players'] === $source['players'], 'Integral JSON numbers were rejected or not normalized');
@@ -108,7 +118,7 @@ try {
     $states = ['sleeping', 'starting', 'online', 'unavailable'];
     foreach ($states as $aggregate) { foreach ($states as $java) { foreach ($states as $bedrock) {
         $value = $source; $value['state'] = $aggregate; $value['java']['state'] = $java; $value['bedrock']['state'] = $bedrock;
-        if ($java !== 'online') { unset($value['players']); }
+        if ($java !== 'online') { unset($value['players'], $value['games']); }
         $expected = match ($aggregate) {
             'sleeping', 'starting' => $java === $aggregate && $bedrock === $aggregate,
             'unavailable' => $java === 'unavailable' && $bedrock === 'unavailable',

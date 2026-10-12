@@ -14,6 +14,7 @@ import com.shepherdjerred.thestorm.arena.domain.survival.Survivor;
 import com.shepherdjerred.thestorm.arena.domain.wave.WaveTable;
 import com.shepherdjerred.thestorm.core.schedule.Cancellable;
 import com.shepherdjerred.thestorm.core.snapshot.PlayerStates;
+import com.shepherdjerred.thestorm.core.status.PublicGameDirectory;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -237,6 +238,34 @@ final class SurvivalRunner implements ArenaRunner {
   @Override
   public Collection<Member> members() {
     return game.players().stream().map(this::view).toList();
+  }
+
+  @Override
+  public Optional<PublicGameDirectory.Game> publicGame() {
+    var players =
+        game.players().stream()
+            .filter(
+                player ->
+                    player.status() != Survivor.Status.JOINING
+                        && player.status() != Survivor.Status.SPECTATOR)
+            .map(Survivor::id)
+            .toList();
+    if (players.isEmpty()) return Optional.empty();
+    var publicPhase =
+        switch (game.phase()) {
+          case LOBBY -> PublicGameDirectory.Phase.WAITING;
+          case COUNTDOWN -> PublicGameDirectory.Phase.STARTING;
+          case INTERMISSION, FIGHTING -> PublicGameDirectory.Phase.RUNNING;
+        };
+    var progress = game.round() > 0 ? "Round " + game.round() : "";
+    return Optional.of(
+        new PublicGameDirectory.Game(
+            id(),
+            PublicGameDirectory.Kind.ARENA,
+            world.definition().name(),
+            publicPhase,
+            progress,
+            players));
   }
 
   @Override

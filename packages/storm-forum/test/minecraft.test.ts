@@ -17,10 +17,25 @@ const session = Buffer.from([1, 2, 3, 4]);
 function queryPacket(
   names: string[],
   overrides: Record<string, string> = {},
+  games: {
+    id: string;
+    kind: "ARENA" | "RWF";
+    name: string;
+    phase: "WAITING" | "STARTING" | "RUNNING";
+    progress: string;
+    players: string[];
+  }[] = [],
 ): Buffer {
+  const players = names.map((name, index) => ({
+    name,
+    uuid: `00000000-0000-0000-0000-${String(index + 1).padStart(12, "0")}`,
+  }));
+  const metadata = Buffer.from(
+    JSON.stringify({ schemaVersion: 2, players, games }),
+  ).toString("base64url");
   const stats = {
     version: "26.2",
-    plugins: publicQueryContract.queryIdentity,
+    plugins: `Paper 26.2: ${publicQueryContract.queryIdentity}|${metadata}`,
     numplayers: String(names.length),
     maxplayers: "20",
     ...overrides,
@@ -50,9 +65,22 @@ const java = async () => ({
   version: "26.2",
   maximum: 20,
   names: ["Jerred", ".Bedrock Player"],
+  identities: [
+    { name: "Jerred", uuid: "00000000-0000-0000-0000-000000000002" },
+    { name: ".Bedrock Player", uuid: "00000000-0000-0000-0009-000000000001" },
+  ],
+  games: [],
 });
 const bedrock = async () => ({ version: "26.51" });
 const replicas = async () => ({ desired: 1, ready: 1 });
+const playerRoster = (names: string[]) => ({
+  maximum: 20,
+  names,
+  identities: names.map((name, index) => ({
+    name,
+    uuid: `00000000-0000-0000-0000-${String(index + 1).padStart(12, "0")}`,
+  })),
+});
 
 describe("Minecraft public status", () => {
   it("shares a valid cache fixture with the native PHP reader", () => {
@@ -64,7 +92,9 @@ describe("Minecraft public status", () => {
       expect(
         MinecraftStatusSchema.safeParse({
           ...fixture,
-          players: { maximum: 20, names },
+          players: Array.isArray(names)
+            ? playerRoster(names)
+            : { ...playerRoster([]), names },
         }).success,
       ).toBe(false);
     },
@@ -73,7 +103,8 @@ describe("Minecraft public status", () => {
     expect(
       MinecraftStatusSchema.parse({
         ...fixture,
-        players: { maximum: 20, names: [] },
+        players: playerRoster([]),
+        games: [],
       }).players?.names,
     ).toEqual([]);
   });
@@ -96,7 +127,7 @@ describe("Minecraft public status", () => {
   });
   it("accepts integral decimal and exponent JSON numbers", () => {
     const encoded = JSON.stringify(fixture)
-      .replace('"schemaVersion":2', '"schemaVersion":2.0')
+      .replace('"schemaVersion":3', '"schemaVersion":3.0')
       .replaceAll(":1000", ":1e3")
       .replace('"maximum":20', '"maximum":20.0');
     expect(MinecraftStatusSchema.parse(JSON.parse(encoded))).toEqual(fixture);
@@ -114,7 +145,8 @@ describe("Minecraft public status", () => {
       expect(
         MinecraftStatusSchema.safeParse({
           ...fixture,
-          players: { maximum: 20, names: [character.repeat(count)] },
+          players: playerRoster([character.repeat(count)]),
+          games: [],
         }).success,
       ).toBe(valid);
     },
@@ -151,6 +183,9 @@ describe("Minecraft public status", () => {
     expect(javaCheck).not.toHaveBeenCalled();
     expect(bedrockCheck).not.toHaveBeenCalled();
   });
+});
+
+describe("Minecraft public status refresh", () => {
   it("captures actual edition versions and the entire public roster", async () => {
     const status = await refreshMinecraftStatus({ replicas, java, bedrock });
     expect(status).toMatchObject({
@@ -225,17 +260,24 @@ describe("Minecraft public status", () => {
   it("rejects cached rosters without healthy Java and incomplete edition metadata", () => {
     expect(() =>
       MinecraftStatusSchema.parse({
-        schemaVersion: 2,
+        schemaVersion: 3,
         checkedAt: 1,
         state: "online",
         java: { state: "unavailable" },
         bedrock: { state: "unavailable" },
-        players: { maximum: 20, names: ["Someone"] },
+        players: {
+          maximum: 20,
+          names: ["Someone"],
+          identities: [
+            { name: "Someone", uuid: "00000000-0000-0000-0000-000000000001" },
+          ],
+        },
+        games: [],
       }),
     ).toThrow();
     expect(() =>
       MinecraftStatusSchema.parse({
-        schemaVersion: 2,
+        schemaVersion: 3,
         checkedAt: 1,
         state: "online",
         java: { state: "online" },
@@ -264,8 +306,49 @@ describe("bounded UDP protocols", () => {
       version: "26.2",
       maximum: 20,
       names: [".Bedrock Player", "Jerred"],
+      identities: [
+        {
+          name: ".Bedrock Player",
+          uuid: "00000000-0000-0000-0000-000000000002",
+        },
+        { name: "Jerred", uuid: "00000000-0000-0000-0000-000000000001" },
+      ],
+      games: [],
     });
     expect(parseQueryReply(queryPacket([]), session).names).toEqual([]);
+  });
+  it("shows only active games with participants from the public roster", () => {
+    const game = {
+      id: "arena-1",
+      kind: "ARENA" as const,
+      name: "Colosseum",
+      phase: "RUNNING" as const,
+      progress: "Wave 3",
+      players: [
+        "00000000-0000-0000-0000-000000000001",
+        "00000000-0000-0000-0000-000000000099",
+      ],
+    };
+    expect(
+      parseQueryReply(queryPacket(["Jerred"], {}, [game]), session).games,
+    ).toEqual([
+      {
+        id: "arena-1",
+        kind: "ARENA",
+        name: "Colosseum",
+        phase: "RUNNING",
+        progress: "Wave 3",
+        players: 1,
+      },
+    ]);
+    expect(
+      parseQueryReply(
+        queryPacket(["Jerred"], {}, [
+          { ...game, players: ["00000000-0000-0000-0000-000000000099"] },
+        ]),
+        session,
+      ).games,
+    ).toEqual([]);
   });
   it("refuses unfiltered, mismatched, duplicate and incomplete Query responses", () => {
     expect(() =>

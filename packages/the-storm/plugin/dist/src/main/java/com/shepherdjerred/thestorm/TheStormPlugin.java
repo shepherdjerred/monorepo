@@ -14,6 +14,7 @@ import com.shepherdjerred.thestorm.core.players.PlayerDirectory;
 import com.shepherdjerred.thestorm.core.players.SqlPlayerDirectory;
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.core.schedule.PaperScheduler;
+import com.shepherdjerred.thestorm.core.status.PublicGameDirectory;
 import com.shepherdjerred.thestorm.core.world.BlockChanges;
 import com.shepherdjerred.thestorm.core.world.ChunkTickets;
 import com.shepherdjerred.thestorm.core.world.SealedWorlds;
@@ -81,6 +82,7 @@ public final class TheStormPlugin extends JavaPlugin {
     services.provide(PlayerDirectory.class, players);
     services.provide(ChunkTickets.class, new ChunkTickets(this));
     services.provide(SealedWorlds.class, new SealedWorlds());
+    services.provide(PublicGameDirectory.class, new PublicGameDirectory());
     services.provide(BlockChanges.class, CoreProtectBlocks.create(this));
     getServer()
         .getPluginManager()

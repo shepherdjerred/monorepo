@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.arena.adapter.paper;
 import com.shepherdjerred.thestorm.arena.domain.game.GameError;
 import com.shepherdjerred.thestorm.arena.domain.game.GameEvent;
 import com.shepherdjerred.thestorm.arena.domain.game.Member;
+import com.shepherdjerred.thestorm.core.status.PublicGameDirectory;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
@@ -17,6 +18,8 @@ interface ArenaRunner {
   ArenaWorld world();
 
   Collection<Member> members();
+
+  Optional<PublicGameDirectory.Game> publicGame();
 
   boolean running();
 

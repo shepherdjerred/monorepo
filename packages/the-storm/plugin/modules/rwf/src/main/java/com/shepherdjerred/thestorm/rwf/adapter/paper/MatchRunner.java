@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.rwf.adapter.paper;
 
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.core.snapshot.PlayerStates;
+import com.shepherdjerred.thestorm.core.status.PublicGameDirectory;
 import com.shepherdjerred.thestorm.rwf.adapter.content.RwfConfig;
 import com.shepherdjerred.thestorm.rwf.app.LobbySizes;
 import com.shepherdjerred.thestorm.rwf.app.MatchEvents;
@@ -283,6 +284,35 @@ final class MatchRunner implements MatchView, MatchEvents {
       cachedFor = match;
     }
     return Optional.of(snapshot);
+  }
+
+  Optional<PublicGameDirectory.Game> publicGame() {
+    return current()
+        .flatMap(
+            snapshot -> {
+              var players =
+                  snapshot.combatants().stream()
+                      .filter(combatant -> !combatant.id().isBot())
+                      .map(combatant -> combatant.id().uuid())
+                      .toList();
+              if (players.isEmpty()) return Optional.empty();
+              var phase =
+                  switch (snapshot.phase()) {
+                    case LOBBY -> PublicGameDirectory.Phase.WAITING;
+                    case COUNTDOWN -> PublicGameDirectory.Phase.STARTING;
+                    case LIVE -> PublicGameDirectory.Phase.RUNNING;
+                    case ENDED, RESETTING -> null;
+                  };
+              if (phase == null) return Optional.empty();
+              return Optional.of(
+                  new PublicGameDirectory.Game(
+                      snapshot.matchId().toString(),
+                      PublicGameDirectory.Kind.RWF,
+                      snapshot.mapId().orElse("Red Warfare"),
+                      phase,
+                      "",
+                      players));
+            });
   }
 
   @Override

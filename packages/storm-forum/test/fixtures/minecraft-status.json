@@ -1,8 +1,36 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "state": "online",
   "checkedAt": 1000,
   "java": { "state": "online", "version": "26.2", "verifiedAt": 1000 },
   "bedrock": { "state": "online", "version": "26.51", "verifiedAt": 1000 },
-  "players": { "maximum": 20, "names": [".Bedrock Player", "Jerred"] }
+  "players": {
+    "maximum": 20,
+    "names": [".Bedrock Player", "Jerred"],
+    "identities": [
+      {
+        "name": ".Bedrock Player",
+        "uuid": "00000000-0000-0000-0009-000000000001"
+      },
+      { "name": "Jerred", "uuid": "00000000-0000-0000-0000-000000000002" }
+    ]
+  },
+  "games": [
+    {
+      "id": "arena-1",
+      "kind": "ARENA",
+      "name": "Colosseum",
+      "phase": "RUNNING",
+      "progress": "Wave 3",
+      "players": 2
+    },
+    {
+      "id": "rwf-1",
+      "kind": "RWF",
+      "name": "Red Warfare",
+      "phase": "STARTING",
+      "progress": "",
+      "players": 1
+    }
+  ]
 }

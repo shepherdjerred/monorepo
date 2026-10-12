@@ -19,12 +19,18 @@ public final class PublicRoster {
     humans.remove(id);
   }
 
-  public List<String> names(boolean restored, Predicate<UUID> hidden) {
+  public List<Player> players(boolean restored, Predicate<UUID> hidden) {
     if (!restored) return List.of();
     return humans.entrySet().stream()
         .filter(entry -> !hidden.test(entry.getKey()))
-        .map(java.util.Map.Entry::getValue)
-        .sorted(String.CASE_INSENSITIVE_ORDER)
+        .map(entry -> new Player(entry.getValue(), entry.getKey()))
+        .sorted(java.util.Comparator.comparing(Player::name, String.CASE_INSENSITIVE_ORDER))
         .toList();
   }
+
+  public List<String> names(boolean restored, Predicate<UUID> hidden) {
+    return players(restored, hidden).stream().map(Player::name).toList();
+  }
+
+  public record Player(String name, UUID uuid) {}
 }

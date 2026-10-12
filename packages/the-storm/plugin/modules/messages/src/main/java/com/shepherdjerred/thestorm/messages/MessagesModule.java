@@ -50,7 +50,10 @@ public final class MessagesModule implements StormModule {
         context,
         new PublicQueryListener(
             PublicQueryContract.load().queryIdentity(),
-            context.plugin().getServer().getOnlinePlayers()),
+            context.plugin().getServer().getOnlinePlayers(),
+            context
+                .services()
+                .require(com.shepherdjerred.thestorm.core.status.PublicGameDirectory.class)),
         new DeathMessageListener(
             deaths.catalog(),
             Component.text(deaths.unarmed()),
