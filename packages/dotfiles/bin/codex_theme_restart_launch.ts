@@ -72,11 +72,9 @@ function nativeOption(
       consumed: inline ? 1 : 2,
     };
   }
-  if (!inline && booleanFlags.has(flag))
+  if (!inline && (booleanFlags.has(flag) || bypassFlags.has(flag)))
     return { retained: [flag], consumed: 1 };
-  // Wrappers reapply bypass flags. Passing an already-injected flag back through
-  // a wrapper makes Clap reject it as duplicated. Verify the actual new argv below.
-  if (!inline && (discardedFlags.has(flag) || bypassFlags.has(flag)))
+  if (!inline && discardedFlags.has(flag))
     return { retained: [], consumed: 1 };
   throw new Error("Unsupported Codex launch option; pane left running");
 }

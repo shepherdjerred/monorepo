@@ -77,7 +77,7 @@ test("lists running local sessions without starting stopped ones", () => {
   ).toThrow("Invalid");
 });
 
-test("lets the wrapper reapply bypass flags and retains other launch policy and argument boundaries", () => {
+test("retains observed bypass flags, other launch policy and argument boundaries", () => {
   const args = resumeArguments(
     [
       "/opt/homebrew/bin/codex",
@@ -107,6 +107,8 @@ test("lets the wrapper reapply bypass flags and retains other launch policy and 
     "resume",
     thread,
     "--no-daemon",
+    "--dangerously-bypass-approvals-and-sandbox",
+    "--dangerously-bypass-hook-trust",
     "--profile",
     "with spaces",
     "--model",
@@ -177,6 +179,7 @@ function fixture(scenario: Scenario = {}) {
   let time = 0;
   let keys = 0;
   let started = false;
+  let launchedArguments: readonly string[] = [];
   let reported = false;
   let afterDiscovery = false;
   const handlers: Record<string, () => unknown> = {
@@ -194,7 +197,15 @@ function fixture(scenario: Scenario = {}) {
           "resume",
           scenario.wrongResumedThread ? otherThread : thread,
         );
-      if (scenario.bypass && !(started && scenario.lostBypass)) {
+      if (started) {
+        info.foreground_processes[0]?.argv.push(
+          ...launchedArguments.filter(
+            (argument) =>
+              argument.startsWith("--dangerously-bypass-") &&
+              !scenario.lostBypass,
+          ),
+        );
+      } else if (scenario.bypass) {
         info.foreground_processes[0]?.argv.push(
           "--dangerously-bypass-approvals-and-sandbox",
         );
@@ -245,6 +256,7 @@ function fixture(scenario: Scenario = {}) {
     },
     async call(session, args) {
       calls.push([session, ...args]);
+      if (args[0] === "agent" && args[1] === "start") launchedArguments = args;
       const handler = handlers[`${args[0] ?? ""} ${args[1] ?? ""}`];
       if (handler === undefined) throw new Error("Unexpected test command");
       return handler();
@@ -396,15 +408,15 @@ test("does not retry a continuation after uncertain delivery", async () => {
   expect(calls.filter((call) => call[2] === "prompt")).toHaveLength(1);
 });
 
-test("verifies bypass on the actual process without passing a duplicate flag to the wrapper", async () => {
+test("passes observed bypass to the wrapper and verifies the replacement process", async () => {
   const { calls, execute } = fixture({ status: "working", bypass: true });
   expect(await execute()).toMatchObject({ status: "restarted" });
   const start = calls.find((call) => call[2] === "start");
-  expect(start).not.toContain("--dangerously-bypass-approvals-and-sandbox");
+  expect(start).toContain("--dangerously-bypass-approvals-and-sandbox");
   expect(calls.filter((call) => call[2] === "prompt")).toHaveLength(1);
 });
 
-test("does not continue if the wrapper fails to reapply the observed bypass flag", async () => {
+test("does not continue if the replacement loses the observed bypass flag", async () => {
   const { calls, execute } = fixture({
     status: "working",
     bypass: true,
