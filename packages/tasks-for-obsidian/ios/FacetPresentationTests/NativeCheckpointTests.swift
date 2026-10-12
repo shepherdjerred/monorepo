@@ -80,7 +80,9 @@ final class NativeCheckpointTests: XCTestCase {
       let window = FacetWindowState(store: store)
       window.vocabulary = FacetWindowState.vocabulary(try XCTUnwrap(store.snapshot).tasks)
       try await render(
-        FacetNativeWorkspace(store: store, importsFolder: .constant(false), window: window),
+        FacetNativeWorkspace(
+          store: store, importsFolder: .constant(false), capturePresented: .constant(false),
+          sheets: FacetSheetPresentation(), window: window),
         named: "ios-native-list-checkpoint", appearance: appearance)
     }
   }

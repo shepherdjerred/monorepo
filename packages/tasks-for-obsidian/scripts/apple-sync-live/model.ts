@@ -64,8 +64,7 @@ export const ClientSchema = z.strictObject({
   stateDirectory: z.string(),
 });
 
-export const ManifestSchema = z.strictObject({
-  schemaVersion: z.literal(1),
+const manifestFields = {
   runID: uuid,
   createdAt: z.iso.datetime(),
   round: z.number().int().min(1).max(3),
@@ -80,7 +79,6 @@ export const ManifestSchema = z.strictObject({
     z.strictObject({ round: z.number().int(), evidenceSHA256: sha256 }),
   ),
   operations: z.record(z.string(), z.enum(["pass", "failed"])),
-  simulator: z.strictObject({ id: uuid, name: z.string() }).nullable(),
   stage: z.enum([
     "preparing",
     "owner-setup",
@@ -92,13 +90,43 @@ export const ManifestSchema = z.strictObject({
   allowedRemoteVaultID: z.string().min(1).max(256).nullable(),
   reference: z.record(z.string(), FileSchema),
   pluginFixtureSHA256: sha256,
-  clients: z
-    .strictObject({ ios: ClientSchema, macos: ClientSchema })
-    .nullable(),
   cases: z.record(z.enum(requiredCases), z.enum(["pending", "pass", "failed"])),
-});
+};
+
+export const ManifestSchema = z.discriminatedUnion("schemaVersion", [
+  z.strictObject({
+    ...manifestFields,
+    schemaVersion: z.literal(1),
+    simulator: z.strictObject({ id: uuid, name: z.string() }).nullable(),
+    clients: z
+      .strictObject({ ios: ClientSchema, macos: ClientSchema })
+      .nullable(),
+  }),
+  z.strictObject({
+    ...manifestFields,
+    schemaVersion: z.literal(2),
+    scope: z.literal("macos"),
+    simulator: z.null(),
+    clients: z.strictObject({ macos: ClientSchema }).nullable(),
+  }),
+]);
 
 export type Manifest = z.infer<typeof ManifestSchema>;
+export type ClientState = z.infer<typeof ClientSchema>;
+
+export function activeClients(manifest: Manifest): Client[] {
+  return manifest.schemaVersion === 2 ? ["macos"] : ["ios", "macos"];
+}
+
+export function clientState(manifest: Manifest, client: Client): ClientState {
+  clients.parse(client);
+  if (client !== "macos" && manifest.schemaVersion === 2)
+    throw new Error("Client is not selected for this acceptance scope");
+  if (manifest.clients === null) throw new Error("Apps are not prepared");
+  return manifest.schemaVersion === 1
+    ? manifest.clients[client]
+    : manifest.clients.macos;
+}
 
 export const StatusSchema = z.object({
   schemaVersion: z.literal(1),

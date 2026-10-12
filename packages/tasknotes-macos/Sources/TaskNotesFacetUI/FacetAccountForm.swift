@@ -3,6 +3,9 @@ import TaskNotesKit
 
 struct FacetAccountForm: View {
     @Bindable var store: FacetStore
+    var ownsPresentation: @MainActor () -> Bool = { true }
+    var didAppear: (@MainActor () -> Void)?
+    var didDisappear: (@MainActor () -> Void)?
     @State private var email = ""
     @State private var password = ""
     @State private var code = ""
@@ -130,30 +133,37 @@ struct FacetAccountForm: View {
                     cancel()
                     dismiss()
                 }
+                .accessibilityIdentifier("facet.account.done")
             }
             .onChange(of: email) {
+                guard ownsPresentation() else { return }
                 store.accountCredentialsChanged()
                 code = ""
             }
             .onChange(of: password) {
+                guard ownsPresentation() else { return }
                 store.accountCredentialsChanged()
                 code = ""
             }
             .onChange(of: scenePhase) {
                 if scenePhase == .background { cancel() }
             }
+            .onAppear { didAppear?() }
             .onDisappear {
                 cancel()
                 password = ""
                 vaultPassword = ""
                 code = ""
-                if store.accountPresentation.stage != .vaults { store.resetAccountChallenge() }
+                if ownsPresentation(), store.accountPresentation.stage != .vaults {
+                    store.resetAccountChallenge()
+                }
+                didDisappear?()
             }
         }.frame(minWidth: 320, minHeight: 360)
     }
 
     private func begin(_ operation: @escaping @MainActor (UUID) async -> Void) {
-        guard !busy else { return }
+        guard ownsPresentation(), !busy else { return }
         let admittedRequest = UUID()
         requestID = admittedRequest
         submitting = true

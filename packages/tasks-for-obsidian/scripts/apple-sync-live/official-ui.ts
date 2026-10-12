@@ -1,7 +1,13 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
-import { atomicJSON, digest, runDirectory, type Manifest } from "./model";
+import {
+  activeClients,
+  atomicJSON,
+  digest,
+  runDirectory,
+  type Manifest,
+} from "./model";
 import { save } from "./platform";
 import { waitForConvergence } from "./native";
 import { readOfficialArtifact } from "./official-artifact";
@@ -125,6 +131,6 @@ export async function officialUI(manifest: Manifest, step: Step) {
   if (step === "uncomplete") manifest.cases["official-ui"] = "pass";
   await save(manifest);
   console.log(
-    `Owner-attested TaskNotes ${step}: exact state and three replicas verified; screenshot retained for visual inspection.`,
+    `Owner-attested TaskNotes ${step}: exact state and ${String(activeClients(manifest).length + 1)} replicas verified; screenshot retained for visual inspection.`,
   );
 }

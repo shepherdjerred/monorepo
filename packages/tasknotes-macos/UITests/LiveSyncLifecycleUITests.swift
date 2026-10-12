@@ -8,16 +8,20 @@ final class LiveSyncLifecycleUITests: XCTestCase {
     private struct Descriptor: Decodable {
         let schemaVersion: UInt32
         let runID: UUID
+        let stateDirectory: String
         let allowedRemoteVaultID: String?
     }
     private enum OwnershipError: Error { case descriptor, application, simulator }
 
-    func testSignOutPreservesPendingTaskAndColdReplica() throws {
-        let (app, title) = try launch()
-        waitForPhase("offline", app: app)
-        XCTAssertTrue(tasks(title, app: app).firstMatch.waitForExistence(timeout: 20))
-        activate(app.descendants(matching: .any)["facet.settings.open"].firstMatch)
-        let signOut = app.descendants(matching: .any)["facet.account.signout"].firstMatch
+    func testSignOutPreservesPendingTaskAndColdReplica() async throws {
+        let journey = try launch()
+        let app = journey.app
+        let initialSurface = journey.surface
+        let title = journey.title
+        waitForPhase("offline", surface: initialSurface)
+        XCTAssertTrue(task(title, surface: initialSurface).waitForExistence(timeout: 20))
+        activate(control("facet.settings.open", surface: initialSurface))
+        let signOut = control("facet.account.signout", surface: initialSurface)
         XCTAssertTrue(signOut.waitForExistence(timeout: 5))
         activate(signOut)
         #if os(iOS)
@@ -25,34 +29,42 @@ final class LiveSyncLifecycleUITests: XCTestCase {
             XCTAssertTrue(done.waitForExistence(timeout: 5))
             activate(done)
         #endif
-        waitForPhase("reconnectRequired", app: app)
-        XCTAssertTrue(tasks(title, app: app).firstMatch.exists)
-        attach(app, "Signed out with pending task retained locally")
+        waitForPhase("reconnectRequired", surface: initialSurface)
+        XCTAssertTrue(task(title, surface: initialSurface).exists)
+        try await attach(
+            app, surface: initialSurface, "Signed out with pending task retained locally")
         app.terminate()
         app.launch()
-        XCTAssertTrue(tasks(title, app: app).firstMatch.waitForExistence(timeout: 30))
-        XCTAssertEqual(tasks(title, app: app).count, 1)
-        waitForPhase("reconnectRequired", app: app)
-        attach(app, "Signed-out replica survives cold relaunch")
+        let surface = try workspace(app)
+        XCTAssertTrue(task(title, surface: surface).waitForExistence(timeout: 30))
+        XCTAssertEqual(tasks(title, surface: surface).count, 1)
+        waitForPhase("reconnectRequired", surface: surface)
+        try await attach(app, surface: surface, "Signed-out replica survives cold relaunch")
         app.terminate()
     }
 
-    func testReauthorizedReplicaRetainsTaskAndColdRelaunch() throws {
-        let (app, title) = try launch()
-        waitForPhase("synced", app: app)
-        XCTAssertTrue(tasks(title, app: app).firstMatch.waitForExistence(timeout: 30))
-        XCTAssertEqual(tasks(title, app: app).count, 1)
-        attach(app, "Reauthorized original replica has one retained task")
+    func testReauthorizedReplicaRetainsTaskAndColdRelaunch() async throws {
+        let journey = try launch()
+        let app = journey.app
+        let initialSurface = journey.surface
+        let title = journey.title
+        waitForPhase("synced", surface: initialSurface)
+        XCTAssertTrue(task(title, surface: initialSurface).waitForExistence(timeout: 30))
+        XCTAssertEqual(tasks(title, surface: initialSurface).count, 1)
+        try await attach(
+            app, surface: initialSurface, "Reauthorized original replica has one retained task")
         app.terminate()
         app.launch()
-        waitForPhase("synced", app: app)
-        XCTAssertTrue(tasks(title, app: app).firstMatch.waitForExistence(timeout: 30))
-        XCTAssertEqual(tasks(title, app: app).count, 1)
-        attach(app, "Reauthorized replica converges after cold relaunch")
+        let surface = try workspace(app)
+        waitForPhase("synced", surface: surface)
+        XCTAssertTrue(task(title, surface: surface).waitForExistence(timeout: 30))
+        XCTAssertEqual(tasks(title, surface: surface).count, 1)
+        try await attach(
+            app, surface: surface, "Reauthorized replica converges after cold relaunch")
         app.terminate()
     }
 
-    private func launch() throws -> (XCUIApplication, String) {
+    private func launch() throws -> LiveLifecycleJourney {
         continueAfterFailure = false
         let environment = ProcessInfo.processInfo.environment
         let path = try XCTUnwrap(environment["FACET_E2E_DESCRIPTOR"])
@@ -67,6 +79,10 @@ final class LiveSyncLifecycleUITests: XCTestCase {
             let bytes = try Data(contentsOf: URL(fileURLWithPath: path))
         #endif
         let descriptor = try JSONDecoder().decode(Descriptor.self, from: bytes)
+        #if os(macOS)
+            _ = try MacAcceptanceOwnership.validate(
+                descriptor: path, stateDirectory: descriptor.stateDirectory, runID: runID)
+        #endif
         guard descriptor.schemaVersion == 1, descriptor.runID == runID,
             descriptor.allowedRemoteVaultID == vaultID, !vaultID.isEmpty,
             title.contains(runID.uuidString.lowercased())
@@ -84,22 +100,52 @@ final class LiveSyncLifecycleUITests: XCTestCase {
         #endif
         app.launch()
         addTeardownBlock { @MainActor in app.terminate() }
-        return (app, title)
+        return LiveLifecycleJourney(app: app, surface: try workspace(app), title: title)
     }
 
-    private func waitForPhase(_ phase: String, app: XCUIApplication) {
-        let status = app.descendants(matching: .any)["facet.sync.status"].firstMatch
+    private func workspace(_ app: XCUIApplication) throws -> XCUIElement {
+        #if os(macOS)
+            try MacAcceptanceWorkspace.create(app: app)
+        #else
+            app
+        #endif
+    }
+
+    private func waitForPhase(_ phase: String, surface: XCUIElement) {
+        #if os(macOS)
+            let status = surface.descendants(matching: .any).matching(
+                identifier: "facet.sync.status"
+            ).element
+        #else
+            let status = surface.descendants(matching: .any)["facet.sync.status"].firstMatch
+        #endif
         XCTAssertTrue(status.waitForExistence(timeout: 30))
         let expectation = XCTNSPredicateExpectation(
             predicate: NSPredicate(format: "value == %@", phase), object: status)
         XCTAssertEqual(XCTWaiter.wait(for: [expectation], timeout: 120), .completed)
     }
 
-    private func tasks(_ title: String, app: XCUIApplication) -> XCUIElementQuery {
+    private func tasks(_ title: String, surface: XCUIElement) -> XCUIElementQuery {
         #if os(macOS)
-            app.staticTexts.matching(NSPredicate(format: "label == %@", title))
+            surface.staticTexts.matching(NSPredicate(format: "value == %@", title))
         #else
-            app.buttons.matching(NSPredicate(format: "label == %@", title))
+            surface.buttons.matching(NSPredicate(format: "label == %@", title))
+        #endif
+    }
+
+    private func task(_ title: String, surface: XCUIElement) -> XCUIElement {
+        #if os(macOS)
+            tasks(title, surface: surface).element
+        #else
+            tasks(title, surface: surface).firstMatch
+        #endif
+    }
+
+    private func control(_ identifier: String, surface: XCUIElement) -> XCUIElement {
+        #if os(macOS)
+            surface.descendants(matching: .any).matching(identifier: identifier).element
+        #else
+            surface.descendants(matching: .any)[identifier].firstMatch
         #endif
     }
 
@@ -111,10 +157,21 @@ final class LiveSyncLifecycleUITests: XCTestCase {
         #endif
     }
 
-    private func attach(_ app: XCUIApplication, _ name: String) {
-        let attachment = XCTAttachment(screenshot: app.screenshot())
-        attachment.name = name
-        attachment.lifetime = .keepAlways
-        add(attachment)
+    private func attach(_ app: XCUIApplication, surface: XCUIElement, _ name: String) async throws {
+        #if os(macOS)
+            try await MacAcceptanceCapture.attach(
+                app: app, name: name, test: self, windows: [surface])
+        #else
+            let attachment = XCTAttachment(screenshot: app.screenshot())
+            attachment.name = name
+            attachment.lifetime = .keepAlways
+            add(attachment)
+        #endif
     }
+}
+
+private struct LiveLifecycleJourney {
+    let app: XCUIApplication
+    let surface: XCUIElement
+    let title: String
 }

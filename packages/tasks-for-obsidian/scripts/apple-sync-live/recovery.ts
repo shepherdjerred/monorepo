@@ -11,6 +11,8 @@ import {
   verifyReplica,
   runDirectory,
   atomicJSON,
+  activeClients,
+  clientState,
 } from "./model";
 import { save, launch } from "./platform";
 import {
@@ -23,6 +25,7 @@ import {
 } from "./native";
 import { augmentFromOfficial } from "./journeys";
 import { outboxSnapshot } from "./outbox";
+import { waitForOfficialPublication } from "./official-artifact";
 
 export function taskTitle(bytes: Uint8Array) {
   const source = new TextDecoder().decode(bytes);
@@ -65,8 +68,11 @@ async function waitForPeer(
 }
 
 async function conflictOnClient(manifest: Manifest, client: Client) {
+  clientState(manifest, client);
   await waitForConvergence(manifest, manifest.reference);
-  const peer = client === "ios" ? "macos" : "ios";
+  const peer = activeClients(manifest).find(
+    (candidate) => candidate !== client,
+  );
   const profile = await ownedProfile(manifest, client);
   const caseID = crypto.randomUUID().toLowerCase();
   const sourcePath = "Tasks/Existing.md";
@@ -112,7 +118,9 @@ async function conflictOnClient(manifest: Manifest, client: Client) {
   };
   // The other online Facet replica is the evidence that official Obsidian
   // published the divergent version before the disconnected client resumes.
-  await waitForPeer(manifest, peer, expected);
+  if (peer === undefined)
+    await waitForOfficialPublication(manifest, sourcePath, remote, caseID);
+  else await waitForPeer(manifest, peer, expected);
   await control(manifest, client, "resume", profile.profileID);
   const conflicted = await waitForProfile(manifest, client, "conflict");
   if ((conflicted.durable?.conflictCount ?? 0) < 1)
@@ -146,13 +154,14 @@ async function conflictOnClient(manifest: Manifest, client: Client) {
 export async function conflicts(manifest: Manifest) {
   if (manifest.cases["initial-download"] !== "pass")
     throw new Error("Verify the initial download first");
-  for (const client of ["ios", "macos"] as const)
+  for (const client of activeClients(manifest))
     await conflictOnClient(manifest, client);
   manifest.cases["concurrent-edits"] = "pass";
   await save(manifest);
 }
 
 export async function lifecycleBegin(manifest: Manifest, client: Client) {
+  clientState(manifest, client);
   await waitForConvergence(manifest, manifest.reference);
   const profile = await ownedProfile(manifest, client);
   await control(manifest, client, "interrupt", profile.profileID);
@@ -242,27 +251,28 @@ export async function lifecycleBegin(manifest: Manifest, client: Client) {
   );
 }
 
+export const LifecycleCheckpointSchema = z.strictObject({
+  schemaVersion: z.literal(1),
+  runID: uuid,
+  round: z.number().int(),
+  profileID: uuid,
+  pendingCount: z.number().int().positive(),
+  outbox: z.object({
+    count: z.number().int().positive(),
+    sha256: z.string().regex(/^[a-f0-9]{64}$/u),
+  }),
+  title: z.string(),
+  expected: z.record(z.string(), FileSchema),
+});
+
 export async function lifecycleFinish(manifest: Manifest, client: Client) {
+  clientState(manifest, client);
   const directory = runDirectory(manifest.runID);
-  const checkpoint = z
-    .strictObject({
-      schemaVersion: z.literal(1),
-      runID: uuid,
-      round: z.number().int(),
-      profileID: uuid,
-      pendingCount: z.number().int().positive(),
-      outbox: z.object({
-        count: z.number().int().positive(),
-        sha256: z.string().regex(/^[a-f0-9]{64}$/u),
-      }),
-      title: z.string(),
-      expected: z.record(z.string(), FileSchema),
-    })
-    .parse(
-      await Bun.file(
-        path.join(directory, `lifecycle-${client}-checkpoint.json`),
-      ).json(),
-    );
+  const checkpoint = LifecycleCheckpointSchema.parse(
+    await Bun.file(
+      path.join(directory, `lifecycle-${client}-checkpoint.json`),
+    ).json(),
+  );
   if (
     checkpoint.runID !== manifest.runID ||
     checkpoint.round !== manifest.round
@@ -322,14 +332,17 @@ export async function lifecycleFinish(manifest: Manifest, client: Client) {
     profileID: checkpoint.profileID,
     clients: evidence,
   });
-  if (
-    (await Bun.file(
-      path.join(directory, "lifecycle-ios-pass.json"),
-    ).exists()) &&
-    (await Bun.file(path.join(directory, "lifecycle-macos-pass.json")).exists())
-  ) {
+  const selected = activeClients(manifest);
+  const retainedPasses = await Promise.all(
+    selected.map((platform) =>
+      Bun.file(
+        path.join(directory, `lifecycle-${platform}-pass.json`),
+      ).exists(),
+    ),
+  );
+  if (retainedPasses.every(Boolean)) {
     const passes = await Promise.all(
-      (["ios", "macos"] as const).map(async (platform) =>
+      selected.map(async (platform) =>
         z
           .object({ runID: uuid, round: z.number().int() })
           .parse(

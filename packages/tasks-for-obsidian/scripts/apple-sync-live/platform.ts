@@ -15,6 +15,8 @@ import {
   assertOwnedSimulator,
   runDirectory,
   atomicJSON,
+  activeClients,
+  clientState,
 } from "./model";
 
 export async function command(
@@ -97,6 +99,7 @@ async function captureCommandOutput(
 }
 
 async function rebaseOwnedIOS(manifest: Manifest, ios: string) {
+  if (manifest.schemaVersion !== 1) throw new Error("iOS is not selected");
   if (manifest.clients === null || ios === manifest.clients.ios.container)
     return;
   // Xcode may relocate an existing data container. Its copied descriptor must
@@ -139,11 +142,7 @@ export async function readManifest(
   );
   if (manifest.runID !== runID.toLowerCase())
     throw new Error("Manifest run identity mismatch");
-  if (
-    manifest.clients !== null &&
-    manifest.simulator !== null &&
-    manifest.stage !== "cleaned"
-  ) {
+  if (manifest.clients !== null && manifest.stage !== "cleaned") {
     const deadline = Date.now() + timeoutMS;
     const mac = path.join(
       os.homedir(),
@@ -151,57 +150,67 @@ export async function readManifest(
       macBundle,
       "Data",
     );
-    assertOwnedSimulator(
-      manifest.runID,
-      manifest.simulator,
-      JSON.parse(
-        await command(
-          ["xcrun", "simctl", "list", "devices", "--json"],
-          packageRoot,
-          {},
-          { timeoutMS: Math.max(1, deadline - Date.now()) },
+    let ios: string | undefined;
+    if (manifest.schemaVersion === 1) {
+      if (manifest.simulator === null)
+        throw new Error("Missing owned simulator");
+      assertOwnedSimulator(
+        manifest.runID,
+        manifest.simulator,
+        JSON.parse(
+          await command(
+            ["xcrun", "simctl", "list", "devices", "--json"],
+            packageRoot,
+            {},
+            { timeoutMS: Math.max(1, deadline - Date.now()) },
+          ),
         ),
-      ),
-    );
-    const ios = await command(
-      [
-        "xcrun",
-        "simctl",
-        "get_app_container",
-        manifest.simulator.id,
-        iosBundle,
-        "data",
-      ],
-      packageRoot,
-      {},
-      { timeoutMS: Math.max(1, deadline - Date.now()) },
-    );
-    await rebaseOwnedIOS(manifest, ios);
-    for (const client of ["ios", "macos"] as const) {
-      const expected = client === "ios" ? ios : mac;
-      const actual = manifest.clients[client];
-      if (
-        actual.container !== expected ||
-        actual.descriptor !==
-          (client === "ios"
-            ? path.join(expected, "Documents/acceptance.json")
-            : path.join(
-                expected,
-                "Library/Application Support/FacetAcceptance",
-                manifest.runID,
-                "acceptance.json",
-              )) ||
-        actual.stateDirectory !==
-          path.join(
-            expected,
-            "Library/Application Support/FacetAcceptance",
-            manifest.runID,
-          )
-      )
-        throw new Error("Manifest escapes its application container");
+      );
+      ios = await command(
+        [
+          "xcrun",
+          "simctl",
+          "get_app_container",
+          manifest.simulator.id,
+          iosBundle,
+          "data",
+        ],
+        packageRoot,
+        {},
+        { timeoutMS: Math.max(1, deadline - Date.now()) },
+      );
+      await rebaseOwnedIOS(manifest, ios);
     }
+    assertClientContainers(manifest, mac, ios);
   }
   return manifest;
+}
+
+function assertClientContainers(manifest: Manifest, mac: string, ios?: string) {
+  for (const client of activeClients(manifest)) {
+    const expected = client === "ios" ? ios : mac;
+    if (expected === undefined) throw new Error("Missing selected container");
+    const actual = clientState(manifest, client);
+    if (
+      actual.container !== expected ||
+      actual.descriptor !==
+        (client === "ios"
+          ? path.join(expected, "Documents/acceptance.json")
+          : path.join(
+              expected,
+              "Library/Application Support/FacetAcceptance",
+              manifest.runID,
+              "acceptance.json",
+            )) ||
+      actual.stateDirectory !==
+        path.join(
+          expected,
+          "Library/Application Support/FacetAcceptance",
+          manifest.runID,
+        )
+    )
+      throw new Error("Manifest escapes its application container");
+  }
 }
 
 export async function save(manifest: Manifest) {
@@ -216,14 +225,14 @@ export function descriptor(
   client: Client,
   vaultID: string | null,
 ) {
-  if (manifest.clients === null) throw new Error("Apps are not prepared");
+  const state = clientState(manifest, client);
   return {
     schemaVersion: 1,
     runID: manifest.runID,
     stateDirectory:
       client === "ios"
         ? `/Library/Application Support/FacetAcceptance/${manifest.runID}`
-        : manifest.clients[client].stateDirectory,
+        : state.stateDirectory,
     allowedRemoteVaultID: vaultID,
   };
 }
@@ -233,10 +242,10 @@ export async function writeDescriptors(
   vaultID: string | null,
 ) {
   if (manifest.clients === null) throw new Error("Apps are not prepared");
-  for (const client of ["ios", "macos"] as const) {
+  for (const client of activeClients(manifest)) {
     const value = descriptor(manifest, client, vaultID);
     validate("descriptor", value);
-    await atomicJSON(manifest.clients[client].descriptor, value);
+    await atomicJSON(clientState(manifest, client).descriptor, value);
   }
 }
 
@@ -273,18 +282,21 @@ export async function launch(
   ) => command(argv, packageRoot, environment, { timeoutMS: remainingMS() });
   if (
     manifest.clients === null ||
-    manifest.simulator === null ||
     (!discovery && manifest.allowedRemoteVaultID === null)
   )
     throw new Error("Bind the remote test vault first");
-  assertOwnedSimulator(
-    manifest.runID,
-    manifest.simulator,
-    JSON.parse(
-      await runCommand(["xcrun", "simctl", "list", "devices", "--json"]),
-    ),
-  );
-  if (onlyClient !== "macos")
+  if (onlyClient !== undefined) clientState(manifest, onlyClient);
+  const selected =
+    onlyClient === undefined ? activeClients(manifest) : [onlyClient];
+  if (selected.includes("ios")) {
+    if (manifest.simulator === null) throw new Error("Missing owned simulator");
+    assertOwnedSimulator(
+      manifest.runID,
+      manifest.simulator,
+      JSON.parse(
+        await runCommand(["xcrun", "simctl", "list", "devices", "--json"]),
+      ),
+    );
     await runCommand(
       [
         "xcrun",
@@ -298,11 +310,12 @@ export async function launch(
       ],
       { SIMCTL_CHILD_FACET_E2E_SIMULATOR: manifest.simulator.id },
     );
+  }
   const app = path.join(
     runDirectory(manifest.runID),
     "macos/Build/Products/Debug/FacetAcceptance.app",
   );
-  if (onlyClient !== "ios") {
+  if (selected.includes("macos")) {
     const executable = path.join(app, "Contents/MacOS/FacetAcceptance");
     const owned = await ownedMacProcesses(executable);
     for (const pid of owned) {
@@ -323,7 +336,7 @@ export async function launch(
       app,
       "--args",
       "--facet-acceptance-descriptor",
-      manifest.clients.macos.descriptor,
+      clientState(manifest, "macos").descriptor,
     ]);
   }
 }
@@ -358,15 +371,17 @@ async function ownedMacProcesses(executable: string): Promise<string[]> {
 
 export async function statuses(manifest: Manifest) {
   if (manifest.clients === null) throw new Error("Apps are not prepared");
-  const roots = manifest.clients;
   return Promise.all(
-    (["ios", "macos"] as const).map(async (client) => ({
+    activeClients(manifest).map(async (client) => ({
       client,
       value: z
         .unknown()
         .parse(
           await Bun.file(
-            path.join(roots[client].stateDirectory, "control/status.json"),
+            path.join(
+              clientState(manifest, client).stateDirectory,
+              "control/status.json",
+            ),
           ).json(),
         ),
     })),
@@ -376,18 +391,24 @@ export async function statuses(manifest: Manifest) {
 export async function resume(manifest: Manifest) {
   await launch(manifest);
   console.log(
-    "Owner checkpoint: enter credentials/MFA and choose only the bound test vault in BOTH apps. Authentication is not recorded. Run verify after both are connected.",
+    `Owner checkpoint: enter credentials/MFA and choose only the bound test vault in ${activeClients(manifest).join(" and ")}. Authentication is not recorded. Run verify after every selected client is connected.`,
   );
 }
 
 export async function cleanup(manifest: Manifest) {
-  if (
-    manifest.simulator === null ||
-    requiredCases.some((entry) => manifest.cases[entry] !== "pass")
-  )
+  if (requiredCases.some((entry) => manifest.cases[entry] !== "pass"))
     throw new Error(
       "Acceptance is incomplete; retain the failed/pending run for diagnosis",
     );
+  if (manifest.schemaVersion === 2) {
+    manifest.stage = "cleaned";
+    await save(manifest);
+    console.log(
+      "Mac-only acceptance completed. App data, remote vault and private evidence retained; no simulator exists to delete.",
+    );
+    return;
+  }
+  if (manifest.simulator === null) throw new Error("Missing owned simulator");
   const available: unknown = JSON.parse(
     await command(["xcrun", "simctl", "list", "devices", "--json"]),
   );

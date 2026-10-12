@@ -18,6 +18,7 @@ import {
   verifyReplica,
   runDirectory,
   atomicJSON,
+  activeClients,
 } from "./model";
 import { command, save, writeDescriptors } from "./platform";
 import { inspectOfficialPlugin } from "./official-plugin";
@@ -74,6 +75,8 @@ export async function seed(directory: string) {
       customStatuses: officialStatuses.statuses,
       storeTitleInFilename: false,
       taskCreationDefaults: { useBodyTemplate: false },
+      starterNoteCreated: true,
+      autoCreateDefaultBasesFiles: false,
     },
   );
   await Bun.write(
@@ -131,13 +134,26 @@ async function sourceFingerprints() {
   return files;
 }
 
-export async function prepare() {
+export type PreparationScope = "apple" | "macos";
+
+export function parsePreparationArguments(args: string[]): PreparationScope {
+  if (args.length === 0) return "apple";
+  z.tuple([z.literal("--clients"), z.literal("macos")]).parse(args);
+  return "macos";
+}
+
+export async function prepare(scope: PreparationScope = "apple") {
+  const runnerIdentity = z
+    .string()
+    .regex(/^[a-f0-9]{40}$/iu)
+    .optional()
+    .parse(Bun.env["TASKNOTES_UITEST_IDENTITY"]);
   const runID = crypto.randomUUID().toLowerCase();
   const directory = runDirectory(runID);
   await mkdir(directory, { recursive: false, mode: 0o700 });
   const seeded = await seed(path.join(directory, "reference-vault"));
-  const manifest: Manifest = {
-    schemaVersion: 1,
+  const manifest = ManifestSchema.parse({
+    ...(scope === "macos" ? { schemaVersion: 2, scope } : { schemaVersion: 1 }),
     runID,
     createdAt: new Date().toISOString(),
     round: 1,
@@ -149,113 +165,18 @@ export async function prepare() {
     allowedRemoteVaultID: null,
     clients: null,
     ...seeded,
-    cases: ManifestSchema.shape.cases.parse(
-      Object.fromEntries(requiredCases.map((entry) => [entry, "pending"])),
-    ),
-  };
+    cases: Object.fromEntries(requiredCases.map((entry) => [entry, "pending"])),
+  });
   await save(manifest);
   console.log(`Preparing owned live run ${runID}`);
   try {
     const sourceFiles = await sourceFingerprints();
-    await command(
-      ["cargo", "xtask", "check-xcframework"],
-      path.resolve(packageRoot, "../tasknotes-core"),
-      {},
-      { timeoutMS: 900_000 },
+    const { iosApp, macApp } = await prepareNativeClients(
+      manifest,
+      command,
+      save,
+      runnerIdentity,
     );
-    await command(["bun", "run", "ios:native:generate"]);
-    await command(
-      ["xcodegen", "generate"],
-      path.resolve(packageRoot, "../tasknotes-macos"),
-    );
-    const name = `Facet Live Sync ${runID}`;
-    manifest.simulator = {
-      name,
-      id: uuid.parse(
-        await command(["xcrun", "simctl", "create", name, deviceType]),
-      ),
-    };
-    await save(manifest);
-    const device = manifest.simulator.id;
-    await command(["xcrun", "simctl", "boot", device]);
-    await command(["xcrun", "simctl", "bootstatus", device, "-b"]);
-    for (const client of ["ios", "macos"] as const) {
-      const mac = client === "macos";
-      await command(
-        [
-          "xcodebuild",
-          "build-for-testing",
-          "-project",
-          mac
-            ? "../tasknotes-macos/TaskNotes.xcodeproj"
-            : "ios/TasksForObsidian.xcodeproj",
-          "-scheme",
-          mac ? "TaskNotesAcceptance" : "TasksForObsidian",
-          "-configuration",
-          "Debug",
-          "-derivedDataPath",
-          path.join(directory, client),
-          "-destination",
-          mac ? "platform=macOS" : `platform=iOS Simulator,id=${device}`,
-          "CODE_SIGNING_ALLOWED=YES",
-          "CODE_SIGN_IDENTITY=-",
-        ],
-        packageRoot,
-        {},
-        {
-          logFile: path.join(directory, `${client}-build.log`),
-          timeoutMS: 900_000,
-        },
-      );
-    }
-    const iosApp = path.join(
-      directory,
-      "ios/Build/Products/Debug-iphonesimulator/TasksForObsidian.app",
-    );
-    const macApp = path.join(
-      directory,
-      "macos/Build/Products/Debug/FacetAcceptance.app",
-    );
-    await command(["xcrun", "simctl", "install", device, iosApp]);
-    const iosContainer = await command([
-      "xcrun",
-      "simctl",
-      "get_app_container",
-      device,
-      iosBundle,
-      "data",
-    ]);
-    const macContainer = path.join(
-      os.homedir(),
-      "Library/Containers",
-      macBundle,
-      "Data",
-    );
-    manifest.clients = {
-      ios: {
-        container: iosContainer,
-        descriptor: path.join(iosContainer, "Documents/acceptance.json"),
-        stateDirectory: path.join(
-          iosContainer,
-          "Library/Application Support/FacetAcceptance",
-          runID,
-        ),
-      },
-      macos: {
-        container: macContainer,
-        descriptor: path.join(
-          macContainer,
-          "Library/Application Support/FacetAcceptance",
-          runID,
-          "acceptance.json",
-        ),
-        stateDirectory: path.join(
-          macContainer,
-          "Library/Application Support/FacetAcceptance",
-          runID,
-        ),
-      },
-    };
     await writeDescriptors(manifest, null);
     if (
       JSON.stringify(await sourceFingerprints()) !== JSON.stringify(sourceFiles)
@@ -263,12 +184,21 @@ export async function prepare() {
       throw new Error(
         "Source changed during native preparation; retain this failed run and rebuild from one source state",
       );
+    let scopeProvenance;
+    if (manifest.schemaVersion === 2) {
+      scopeProvenance = { schemaVersion: 2, scope: manifest.scope };
+    } else {
+      if (iosApp === undefined) throw new Error("Missing built iOS artifact");
+      scopeProvenance = {
+        schemaVersion: 1,
+        iosApp: await fingerprintApp(iosApp),
+      };
+    }
     await atomicJSON(path.join(directory, "provenance.json"), {
-      schemaVersion: 1,
+      ...scopeProvenance,
       runID,
       sourceHead: await command(["git", "rev-parse", "HEAD"], root),
       sourceFiles,
-      iosApp: await fingerprintApp(iosApp),
       macApp: await fingerprintApp(macApp),
       pluginSettingsFixture: {
         id: "config.0659",
@@ -280,13 +210,168 @@ export async function prepare() {
     manifest.stage = "owner-setup";
     await save(manifest);
     console.log(
-      `Reference vault: ${path.join(directory, "reference-vault")}\nOpen that folder in official Obsidian, install/enable TaskNotes 4.13.8, create a NEW encrypted remote vault named Facet Sync Acceptance ${runID}. Enable Sync all other types and vault configuration, including Installed community plugins (which includes plugin settings), restart and let Sync finish. Store its separate vault password in 1Password. No recordings during credential entry.\nThen run in order:\nbun run apple:sync:live seal-reference ${runID}\nbun run apple:sync:live discover ${runID}\nSign in manually with recording off and identify only the exact synthetic vault.\nbun run apple:sync:live bind-vault ${runID} <nonsecret-remote-vault-id>\nbun run apple:sync:live resume ${runID}`,
+      `Reference vault: ${path.join(directory, "reference-vault")}\nOpen that folder in official Obsidian, install/enable TaskNotes 4.13.8, and connect only the designated synthetic encrypted remote vault. Enable Sync all other types and vault configuration, including Installed community plugins (which includes plugin settings), restart and let Sync finish. Store its separate vault password in 1Password. No recordings during credential entry.\nSelected clients: ${activeClients(manifest).join(", ")} (${String(activeClients(manifest).length + 1)} replicas including official Obsidian).\nThen run in order:\nbun run apple:sync:live seal-reference ${runID}\nbun run apple:sync:live discover ${runID}\nSign in manually with recording off and identify only the exact synthetic vault.\nbun run apple:sync:live bind-vault ${runID} <nonsecret-remote-vault-id>\nbun run apple:sync:live resume ${runID}`,
     );
   } catch (error) {
     manifest.stage = "failed";
     await save(manifest);
     throw error;
   }
+}
+
+export async function prepareNativeClients(
+  manifest: Manifest,
+  runCommand: typeof command = command,
+  saveManifest: typeof save = save,
+  runnerIdentity?: string,
+) {
+  if (runnerIdentity !== undefined)
+    z.string()
+      .regex(/^[a-f0-9]{40}$/iu)
+      .parse(runnerIdentity);
+  const runID = manifest.runID;
+  await runCommand(
+    ["cargo", "xtask", "check-xcframework"],
+    path.resolve(packageRoot, "../tasknotes-core"),
+    {},
+    { timeoutMS: 900_000 },
+  );
+  if (manifest.schemaVersion === 1)
+    await runCommand(["bun", "run", "ios:native:generate"]);
+  await runCommand(
+    ["xcodegen", "generate"],
+    path.resolve(packageRoot, "../tasknotes-macos"),
+  );
+  if (manifest.schemaVersion === 1) {
+    const name = `Facet Live Sync ${runID}`;
+    manifest.simulator = {
+      name,
+      id: uuid.parse(
+        await runCommand(["xcrun", "simctl", "create", name, deviceType]),
+      ),
+    };
+    await saveManifest(manifest);
+    const device = manifest.simulator.id;
+    await runCommand(["xcrun", "simctl", "boot", device]);
+    await runCommand(["xcrun", "simctl", "bootstatus", device, "-b"]);
+  }
+  await buildNativeClients(manifest, runCommand, runnerIdentity);
+  return assignPreparedClients(manifest, runCommand);
+}
+
+async function buildNativeClients(
+  manifest: Manifest,
+  runCommand: typeof command,
+  runnerIdentity?: string,
+) {
+  const directory = runDirectory(manifest.runID);
+  for (const client of activeClients(manifest)) {
+    const mac = client === "macos";
+    let destination = "platform=macOS";
+    if (!mac) {
+      if (manifest.simulator === null)
+        throw new Error("Missing owned simulator");
+      destination = `platform=iOS Simulator,id=${manifest.simulator.id}`;
+    }
+    await runCommand(
+      [
+        "xcodebuild",
+        "build-for-testing",
+        "-project",
+        mac
+          ? "../tasknotes-macos/TaskNotes.xcodeproj"
+          : "ios/TasksForObsidian.xcodeproj",
+        "-scheme",
+        mac ? "TaskNotesAcceptance" : "TasksForObsidian",
+        "-configuration",
+        "Debug",
+        "-derivedDataPath",
+        path.join(directory, client),
+        "-destination",
+        destination,
+        "CODE_SIGNING_ALLOWED=YES",
+        ...(mac
+          ? runnerIdentity === undefined
+            ? []
+            : [`TASKNOTES_UITEST_IDENTITY=${runnerIdentity}`]
+          : ["CODE_SIGN_IDENTITY=-"]),
+      ],
+      packageRoot,
+      {},
+      {
+        logFile: path.join(directory, `${client}-build.log`),
+        timeoutMS: 900_000,
+      },
+    );
+  }
+}
+
+async function assignPreparedClients(
+  manifest: Manifest,
+  runCommand: typeof command,
+) {
+  const runID = manifest.runID;
+  const directory = runDirectory(runID);
+  const iosApp = path.join(
+    directory,
+    "ios/Build/Products/Debug-iphonesimulator/TasksForObsidian.app",
+  );
+  const macApp = path.join(
+    directory,
+    "macos/Build/Products/Debug/FacetAcceptance.app",
+  );
+  let iosContainer: string | undefined;
+  if (manifest.schemaVersion === 1) {
+    if (manifest.simulator === null) throw new Error("Missing owned simulator");
+    const device = manifest.simulator.id;
+    await runCommand(["xcrun", "simctl", "install", device, iosApp]);
+    iosContainer = await runCommand([
+      "xcrun",
+      "simctl",
+      "get_app_container",
+      device,
+      iosBundle,
+      "data",
+    ]);
+  }
+  const macContainer = path.join(
+    os.homedir(),
+    "Library/Containers",
+    macBundle,
+    "Data",
+  );
+  const macos = {
+    container: macContainer,
+    descriptor: path.join(
+      macContainer,
+      "Library/Application Support/FacetAcceptance",
+      runID,
+      "acceptance.json",
+    ),
+    stateDirectory: path.join(
+      macContainer,
+      "Library/Application Support/FacetAcceptance",
+      runID,
+    ),
+  };
+  if (manifest.schemaVersion === 2) {
+    manifest.clients = { macos };
+  } else {
+    if (iosContainer === undefined) throw new Error("Missing iOS container");
+    manifest.clients = {
+      macos,
+      ios: {
+        container: iosContainer,
+        descriptor: path.join(iosContainer, "Documents/acceptance.json"),
+        stateDirectory: path.join(
+          iosContainer,
+          "Library/Application Support/FacetAcceptance",
+          runID,
+        ),
+      },
+    };
+  }
+  return { iosApp: manifest.schemaVersion === 1 ? iosApp : undefined, macApp };
 }
 
 export async function sealReference(manifest: Manifest) {

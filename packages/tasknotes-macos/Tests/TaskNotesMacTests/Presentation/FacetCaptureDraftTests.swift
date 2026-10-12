@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 import Testing
 
 @testable import TaskNotesFacetUI
@@ -138,6 +139,41 @@ struct FacetCaptureDraftTests {
         #expect(await draft.discard(store: context.store))
         #expect(!draft.hasRetainedSubmission && draft.admittedMutationID == nil)
         #expect(draft.input.isEmpty)
+        try await context.close()
+    }
+
+    @Test func windowCaptureRoutingAndDismissalPreserveOtherDraftAndCommand() async throws {
+        let context = try await StoreContext.open()
+        let profile = try await registerVault(context)
+        let first = FacetCapturePresentation()
+        let second = FacetCapturePresentation()
+        first.binding(store: context.store).wrappedValue = true
+        #expect(first.isPresented && !second.isPresented)
+        #expect(context.store.captureProfileID == profile.id)
+        let firstDraft = FacetCaptureDraft()
+        firstDraft.input = "First window capture"
+        #expect(firstDraft.begin(store: context.store, profileID: profile.id))
+        let url = try #require(
+            URL(string: "facet://quick-add?initialText=Second%20window%20capture"))
+        second.handleURL(url, store: context.store)
+        #expect(first.isPresented && second.isPresented)
+        #expect(context.store.captureTitle == "Second window capture")
+        let secondDraft = FacetCaptureDraft()
+        secondDraft.input = context.store.captureTitle
+        #expect(await firstDraft.submit(store: context.store))
+        first.binding(store: context.store).wrappedValue = false
+        #expect(!first.isPresented && second.isPresented)
+        #expect(secondDraft.input == "Second window capture" && secondDraft.canSubmit)
+        #expect(context.store.captureTitle == "Second window capture")
+        #expect(secondDraft.begin(store: context.store, profileID: profile.id))
+        #expect(await secondDraft.submit(store: context.store))
+        second.binding(store: context.store).wrappedValue = false
+        let tasks = try await snapshot(context.first, profileID: profile.id).tasks
+        #expect(Set(tasks.map(\.title)) == ["First window capture", "Second window capture"])
+        #expect(tasks.count == 2)
+        let unrelated = try #require(URL(string: "facet://unrecognized"))
+        first.handleURL(unrelated, store: context.store)
+        #expect(!first.isPresented && !second.isPresented)
         try await context.close()
     }
 

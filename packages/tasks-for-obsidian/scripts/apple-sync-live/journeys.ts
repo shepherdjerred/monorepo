@@ -8,6 +8,7 @@ import {
   runDirectory,
   atomicJSON,
   verifyReplica,
+  activeClients,
 } from "./model";
 import { save, launch, statuses } from "./platform";
 import {
@@ -109,7 +110,7 @@ export async function journeys(manifest: Manifest) {
   );
   await waitForConvergence(manifest, manifest.reference);
   const round = manifest.round;
-  for (const client of ["ios", "macos"] as const) {
+  for (const client of activeClients(manifest)) {
     const label = `capture-${client}-${String(round)}`;
     console.log(`Starting ${label}; authentication must already be complete.`);
     await runNativeTest(
@@ -136,7 +137,7 @@ export async function journeys(manifest: Manifest) {
   manifest.cases.configuration = "pass";
   await save(manifest);
   console.log(
-    `Native task journeys passed on both clients for round ${String(round)}. Complete acceptance still requires every other case in this round.`,
+    `Native task journeys passed on selected clients (${activeClients(manifest).join(", ")}) for round ${String(round)}. Complete acceptance still requires every other case in this round.`,
   );
 }
 
@@ -272,7 +273,7 @@ export async function referenceChanges(manifest: Manifest) {
 export async function offline(manifest: Manifest) {
   if (manifest.cases["initial-download"] !== "pass")
     throw new Error("Verify the initial download first");
-  for (const client of ["ios", "macos"] as const) {
+  for (const client of activeClients(manifest)) {
     const current = await statuses(manifest);
     const entry = current.find((item) => item.client === client);
     if (entry === undefined || manifest.allowedRemoteVaultID === null)

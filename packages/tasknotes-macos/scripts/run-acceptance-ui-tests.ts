@@ -2,6 +2,16 @@ import assert from "node:assert/strict";
 import { cp, mkdir, readFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import path from "node:path";
+import {
+  acceptanceSigningArguments,
+  assertExactStandaloneResults,
+  expectedStandaloneTitles,
+  selectStandaloneTests,
+  standaloneSelector,
+  standaloneTests,
+  verifyStandaloneNotes,
+  type StandaloneTest,
+} from "./acceptance-test-plan.ts";
 
 const packageRoot = path.resolve(import.meta.dir, "..");
 const fixture = path.resolve(
@@ -25,11 +35,23 @@ async function command(argv: string[], capture = false): Promise<string> {
 }
 
 /** Real native suite, with a sandbox and Keychain namespace separate from users. */
-export async function runAcceptanceUiTests(): Promise<void> {
+export async function runAcceptanceUiTests(
+  tests: readonly StandaloneTest[] = standaloneTests,
+): Promise<void> {
   if (process.platform !== "darwin") {
     throw new Error("Native acceptance requires macOS and Xcode.");
   }
   const runID = crypto.randomUUID();
+  const signing = acceptanceSigningArguments(
+    Bun.env["TASKNOTES_UITEST_IDENTITY"],
+  );
+  assert.ok(tests.length > 0, "At least one standalone test must be selected");
+  assert.equal(
+    new Set(tests).size,
+    tests.length,
+    "Duplicate standalone test selection",
+  );
+  const selectedTests = tests.map(standaloneSelector);
   const derived = path.join(packageRoot, ".build/acceptance-xcode");
   const evidence = path.join(packageRoot, ".build/native-acceptance", runID);
   const container = path.join(
@@ -44,6 +66,19 @@ export async function runAcceptanceUiTests(): Promise<void> {
   const descriptor = path.join(directory, "acceptance.json");
   const vault = path.join(directory, "Native acceptance");
   await mkdir(evidence, { recursive: true });
+  const receipt = {
+    schemaVersion: 1,
+    runID,
+    kind: "native-local-macos",
+    selectedTests,
+    resultBundle: "Smoke.xcresult",
+    accountEntryCaptured: false,
+    remoteVaultAuthorized: false,
+  };
+  await Bun.write(
+    path.join(evidence, "run.json"),
+    JSON.stringify({ ...receipt, status: "building" }, null, 2),
+  );
   await command(["bun", "run", "mac:preflight"]);
   await command(["xcodegen", "generate"]);
   await command([
@@ -61,6 +96,7 @@ export async function runAcceptanceUiTests(): Promise<void> {
     "platform=macOS",
     "-parallel-testing-enabled",
     "NO",
+    ...signing,
   ]);
   await mkdir(directory, { recursive: true });
   await Bun.write(
@@ -102,14 +138,18 @@ export async function runAcceptanceUiTests(): Promise<void> {
       testRun,
     ]);
   }
-  await command([
-    "plutil",
-    "-replace",
-    "TaskNotesAcceptanceUITests.SystemAttachmentLifetime",
-    "-string",
-    "keepAlways",
-    testRun,
-  ]);
+  for (const [kind, lifetime] of [
+    ["SystemAttachmentLifetime", "keepNever"],
+    ["UserAttachmentLifetime", "keepAlways"],
+  ] as const)
+    await command([
+      "plutil",
+      "-replace",
+      `TaskNotesAcceptanceUITests.${kind}`,
+      "-string",
+      lifetime,
+      testRun,
+    ]);
   const result = path.join(evidence, "Smoke.xcresult");
   const failures: unknown[] = [];
   try {
@@ -126,8 +166,37 @@ export async function runAcceptanceUiTests(): Promise<void> {
       result,
       "-collect-test-diagnostics",
       "never",
-      "-only-testing:TaskNotesAcceptanceUITests/StandaloneVaultUITests",
+      ...selectedTests.map((test) => `-only-testing:${test}`),
     ]);
+    const reports = await Promise.all(
+      ["summary", "tests"].map((kind) =>
+        command(
+          [
+            "xcrun",
+            "xcresulttool",
+            "get",
+            "test-results",
+            kind,
+            "--compact",
+            "--path",
+            result,
+          ],
+          true,
+        ),
+      ),
+    );
+    const [summaryJSON, testsJSON] = reports;
+    assert.ok(
+      summaryJSON && testsJSON,
+      "Native result summary and test tree are required",
+    );
+    await Promise.all([
+      Bun.write(path.join(evidence, "test-summary.json"), summaryJSON),
+      Bun.write(path.join(evidence, "test-tree.json"), testsJSON),
+    ]);
+    const summary: unknown = JSON.parse(summaryJSON);
+    const testTree: unknown = JSON.parse(testsJSON);
+    assertExactStandaloneResults(summary, testTree, tests);
     for (const relative of [
       "Tasks/Existing.md",
       "Reference.md",
@@ -141,21 +210,15 @@ export async function runAcceptanceUiTests(): Promise<void> {
     const notes = await Array.fromAsync(
       new Bun.Glob("**/*.md").scan({ cwd: vault }),
     );
-    assert.equal(
-      notes.length,
-      3,
-      "Only the original notes and one capture may exist",
-    );
-    const created = notes.find(
+    const created = notes.filter(
       (note) => !["Tasks/Existing.md", "Reference.md"].includes(note),
     );
-    assert.ok(created);
-    const bytes = await readFile(path.join(vault, created), "utf8");
-    assert.match(
-      bytes,
-      new RegExp(`^title: ["']?Native Mac ${runID} edited["']?$`, "mu"),
+    verifyStandaloneNotes(
+      await Promise.all(
+        created.map((note) => readFile(path.join(vault, note), "utf8")),
+      ),
+      expectedStandaloneTitles(tests, runID),
     );
-    console.log(`Native local acceptance passed: ${evidence}`);
   } catch (error) {
     failures.push(error);
   }
@@ -181,14 +244,26 @@ export async function runAcceptanceUiTests(): Promise<void> {
   }
   // Keep the private run until its proof is reviewed. Never remove a container,
   // Keychain service or data belonging to another acceptance run.
+  await Bun.write(
+    path.join(evidence, "run.json"),
+    JSON.stringify(
+      {
+        ...receipt,
+        status: failures.length > 0 ? "failed" : "passed",
+      },
+      null,
+      2,
+    ),
+  );
   if (failures.length > 0) {
     throw new AggregateError(
       failures,
       `Native acceptance failed; retained ${evidence}`,
     );
   }
+  console.log(`Native local acceptance passed: ${evidence}`);
 }
 
 if (import.meta.main) {
-  await runAcceptanceUiTests();
+  await runAcceptanceUiTests(selectStandaloneTests(Bun.argv.slice(2)));
 }

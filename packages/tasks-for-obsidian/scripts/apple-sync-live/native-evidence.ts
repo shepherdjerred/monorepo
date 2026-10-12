@@ -1,9 +1,31 @@
 import { z } from "zod";
+import { activeClients, type Manifest } from "./model";
 
 export const initialConfigurationJourneys = [
   { client: "ios", label: "initial-configuration-ios" },
   { client: "macos", label: "initial-configuration-macos" },
 ] as const;
+
+export function selectedInitialConfigurationJourneys(manifest: Manifest) {
+  const selected = activeClients(manifest);
+  return initialConfigurationJourneys.filter(({ client }) =>
+    selected.includes(client),
+  );
+}
+
+export function assertSelectedNativeClients(
+  manifest: Manifest,
+  entries: readonly { client: string }[],
+) {
+  const actual = entries.map(({ client }) => client).sort();
+  if (
+    JSON.stringify(actual) !==
+    JSON.stringify(activeClients(manifest).toSorted())
+  )
+    throw new Error(
+      "Acceptance evidence does not contain exactly the selected clients",
+    );
+}
 
 export function assertDistinctNativeEvidenceLabels(
   journeys: readonly { label: string }[],

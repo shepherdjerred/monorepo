@@ -5,6 +5,7 @@ import {
   clients,
   validate,
   type Manifest,
+  activeClients,
 } from "./apple-sync-live/model";
 import {
   readManifest,
@@ -14,7 +15,11 @@ import {
   cleanup,
   statuses,
 } from "./apple-sync-live/platform";
-import { prepare, sealReference } from "./apple-sync-live/prepare";
+import {
+  prepare,
+  sealReference,
+  parsePreparationArguments,
+} from "./apple-sync-live/prepare";
 import { control, verify } from "./apple-sync-live/native";
 import {
   journeys,
@@ -59,6 +64,8 @@ async function reportStatus(manifest: Manifest) {
     JSON.stringify(
       {
         runID: manifest.runID,
+        selectedClients: activeClients(manifest),
+        replicaCount: activeClients(manifest).length + 1,
         round: manifest.round,
         stage: manifest.stage,
         cases: manifest.cases,
@@ -133,9 +140,10 @@ async function main() {
   const [operation, runID, ...arguments_] = Bun.argv.slice(2);
   if (operation === undefined)
     throw new Error("Specify a live acceptance stage");
-  if (operation === "prepare" && runID === undefined) {
+  if (operation === "prepare") {
+    const scope = parsePreparationArguments(Bun.argv.slice(3));
     await mkdir(runs, { recursive: true, mode: 0o700 });
-    await prepare();
+    await prepare(scope);
     return;
   }
   if (runID === undefined)

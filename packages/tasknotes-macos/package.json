@@ -19,6 +19,7 @@
     "mac:smoke": "bun run mac:app:release && bun run scripts/verify-launch.ts",
     "mac:e2e": "bun run mac:generate && bun run scripts/run-ui-tests.ts",
     "mac:acceptance:e2e": "bun run scripts/run-acceptance-ui-tests.ts",
+    "mac:account": "bun run scripts/mac-account.ts",
     "mac:e2e:ci": "bun run mac:generate && bun scripts/run-ui-tests-ci.ts",
     "mac:run": "bun run mac:app && open .build/xcode/Build/Products/Debug/TaskNotes.app",
     "mac:release": "bun run scripts/release.ts",

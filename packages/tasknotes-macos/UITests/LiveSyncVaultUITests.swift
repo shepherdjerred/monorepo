@@ -15,72 +15,79 @@ final class LiveSyncVaultUITests: XCTestCase {
         }
     }
 
-    func testInitialDownloadUsesTaskNotesConfiguration() throws {
+    func testInitialDownloadUsesTaskNotesConfiguration() async throws {
         let title = try XCTUnwrap(
             ProcessInfo.processInfo.environment["FACET_E2E_INITIAL_TASK_TITLE"])
         guard !title.isEmpty, title.utf8.count <= 512,
             !title.unicodeScalars.contains(where: CharacterSet.controlCharacters.contains)
         else { throw LiveLaunchError.invalidOwnership }
-        let (app, _) = try launchJourney(prefix: "Initial")
-        waitUntilSynced(app)
+        let journey = try launchJourney(prefix: "Initial")
+        let app = journey.app
+        let surface = journey.surface
+        waitUntilSynced(surface)
         #if os(iOS)
             activate(app.tabBars.buttons["Inbox"])
         #else
-            activate(app.buttons["Inbox"])
+            activate(surface.buttons["Inbox"])
         #endif
-        XCTAssertTrue(task(title, app).waitForExistence(timeout: 30))
+        XCTAssertTrue(task(title, surface).waitForExistence(timeout: 30))
         #if os(macOS)
-            let tasks = app.staticTexts.matching(NSPredicate(format: "label == %@", title))
+            let tasks = surface.staticTexts.matching(NSPredicate(format: "value == %@", title))
         #else
             let tasks = app.buttons.matching(NSPredicate(format: "label == %@", title))
         #endif
         XCTAssertEqual(tasks.count, 1, "The configured initial task must appear exactly once.")
-        let capture = app.buttons["facet.capture.open"]
+        let capture = surface.buttons["facet.capture.open"]
         XCTAssertTrue(capture.waitForExistence(timeout: 10))
         XCTAssertTrue(capture.isEnabled, "The configured vault must make native capture available.")
-        XCTAssertFalse(app.buttons["Use standard configuration"].exists)
-        let setupWarnings = app.staticTexts.matching(
-            NSPredicate(
-                format: "label CONTAINS[c] %@ OR label CONTAINS[c] %@ OR label BEGINSWITH %@",
-                "TaskNotes settings", ".obsidian/plugins/tasknotes/data.json:", "tasknotes.yaml:"))
-        XCTAssertEqual(
-            setupWarnings.count, 0,
-            "Initial Sync must produce usable TaskNotes configuration without warnings or defaults consent."
-        )
-        attach(app, "Initial download displays the configured existing task")
+        XCTAssertFalse(surface.buttons["Use standard configuration"].exists)
+        assertNoSetupWarnings(surface)
+        try await attach(
+            app, surface: surface, "Initial download displays the configured existing task")
     }
 
-    func testCaptureEditCompleteUncompleteAndColdRelaunch() throws {
-        let (app, title) = try launchJourney(prefix: "Live")
-        waitUntilSynced(app)
-        attach(app, "01 Authenticated and synced")
-        let edited = captureAndEdit(title: title, app: app)
+    func testCaptureEditCompleteUncompleteAndColdRelaunch() async throws {
+        let journey = try launchJourney(prefix: "Live")
+        let app = journey.app
+        let initialSurface = journey.surface
+        let title = journey.title
+        waitUntilSynced(initialSurface)
+        try await attach(app, surface: initialSurface, "01 Authenticated and synced")
+        let edited = try await captureAndEdit(title: title, app: app, surface: initialSurface)
         app.terminate()
         app.launch()
-        XCTAssertTrue(task(edited, app).waitForExistence(timeout: 30))
-        waitUntilSynced(app)
-        attach(app, "03 Edit survives cold relaunch")
-        completeAndReopen(edited: edited, app: app)
+        let surface = try workspace(app)
+        XCTAssertTrue(task(edited, surface).waitForExistence(timeout: 30))
+        waitUntilSynced(surface)
+        try await attach(app, surface: surface, "03 Edit survives cold relaunch")
+        try await completeAndReopen(edited: edited, app: app, surface: surface)
     }
 
-    func testOfflineCaptureEditAndColdRelaunchRetainPendingChanges() throws {
+    func testOfflineCaptureEditAndColdRelaunchRetainPendingChanges() async throws {
         let prefix = ProcessInfo.processInfo.environment["FACET_E2E_CAPTURE_PREFIX"] ?? "Offline"
         guard ["Offline", "Lifecycle"].contains(prefix) else {
             throw LiveLaunchError.invalidOwnership
         }
-        let (app, title) = try launchJourney(prefix: prefix)
-        waitUntilPhase("offline", app)
-        let edited = captureAndEdit(title: title, app: app, offline: true)
-        waitUntilPhase("offline", app)
-        attach(app, "01 Offline capture and edit retained")
+        let journey = try launchJourney(prefix: prefix)
+        let app = journey.app
+        let initialSurface = journey.surface
+        let title = journey.title
+        waitUntilPhase("offline", initialSurface)
+        let edited = try await captureAndEdit(
+            title: title, app: app, surface: initialSurface, offline: true)
+        waitUntilPhase("offline", initialSurface)
+        try await attach(app, surface: initialSurface, "01 Offline capture and edit retained")
         app.terminate()
         app.launch()
-        XCTAssertTrue(task(edited, app).waitForExistence(timeout: 30))
-        waitUntilPhase("offline", app)
-        attach(app, "02 Pending changes survive cold relaunch offline")
+        let surface = try workspace(app)
+        XCTAssertTrue(task(edited, surface).waitForExistence(timeout: 30))
+        waitUntilPhase("offline", surface)
+        try await attach(app, surface: surface, "02 Pending changes survive cold relaunch offline")
     }
+}
 
-    private func launchJourney(prefix: String) throws -> (XCUIApplication, String) {
+extension LiveSyncVaultUITests {
+    private func launchJourney(prefix: String) throws -> LiveVaultJourney {
         continueAfterFailure = false
         let environment = ProcessInfo.processInfo.environment
         let descriptor = try XCTUnwrap(environment["FACET_E2E_DESCRIPTOR"])
@@ -117,7 +124,17 @@ final class LiveSyncVaultUITests: XCTestCase {
         #endif
         app.launch()
         addTeardownBlock { @MainActor in app.terminate() }
-        return (app, "\(prefix) \(platform) \(runID.uuidString.lowercased())-\(round)")
+        return LiveVaultJourney(
+            app: app, surface: try workspace(app),
+            title: "\(prefix) \(platform) \(runID.uuidString.lowercased())-\(round)")
+    }
+
+    private func workspace(_ app: XCUIApplication) throws -> XCUIElement {
+        #if os(macOS)
+            try MacAcceptanceWorkspace.create(app: app)
+        #else
+            app
+        #endif
     }
 
     private func validateDescriptor(
@@ -130,32 +147,36 @@ final class LiveSyncVaultUITests: XCTestCase {
             let bytes = try Data(contentsOf: URL(fileURLWithPath: path))
         #endif
         let configuration = try JSONDecoder().decode(LiveDescriptor.self, from: bytes)
+        #if os(macOS)
+            _ = try MacAcceptanceOwnership.validate(
+                descriptor: path, stateDirectory: configuration.stateDirectory, runID: runID)
+        #endif
         guard configuration.schemaVersion == 1, configuration.runID == runID,
             configuration.allowedRemoteVaultID == vaultID
         else { throw LiveLaunchError.invalidOwnership }
     }
 
-    private func captureAndEdit(title: String, app: XCUIApplication, offline: Bool = false)
-        -> String
-    {
-        activate(app.buttons["facet.capture.open"])
-        let capture = app.textFields["facet.capture.title"]
+    private func captureAndEdit(
+        title: String, app: XCUIApplication, surface: XCUIElement, offline: Bool = false
+    ) async throws -> String {
+        activate(surface.buttons["facet.capture.open"])
+        let capture = surface.textFields["facet.capture.title"]
         XCTAssertTrue(capture.waitForExistence(timeout: 10))
         activate(capture)
         capture.typeText(title)
-        activate(app.buttons["facet.capture.submit"])
-        let created = task(title, app)
+        activate(surface.buttons["facet.capture.submit"])
+        let created = task(title, surface)
         XCTAssertTrue(created.waitForExistence(timeout: 20))
         if offline {
-            waitUntilPhase("offline", app)
-            attach(app, "Captured locally while offline")
+            waitUntilPhase("offline", surface)
+            try await attach(app, surface: surface, "Captured locally while offline")
         } else {
-            waitUntilSynced(app)
-            attach(app, "02 Captured and uploaded")
+            waitUntilSynced(surface)
+            try await attach(app, surface: surface, "02 Captured and uploaded")
         }
         activate(created)
         #if os(macOS)
-            let editor = app.textFields["facet.inspector.title"]
+            let editor = surface.textFields["facet.inspector.title"]
         #else
             let editor = app.textFields["facet.editor.title"]
         #endif
@@ -179,41 +200,49 @@ final class LiveSyncVaultUITests: XCTestCase {
         #else
             activate(app.buttons["facet.editor.save"])
         #endif
-        XCTAssertTrue(task(edited, app).waitForExistence(timeout: 20))
+        XCTAssertTrue(task(edited, surface).waitForExistence(timeout: 20))
         return edited
     }
 
-    private func completeAndReopen(edited: String, app: XCUIApplication) {
-        activate(app.buttons["Complete \(edited)"])
-        XCTAssertTrue(task(edited, app).waitForNonExistence(timeout: 20))
+    private func completeAndReopen(edited: String, app: XCUIApplication, surface: XCUIElement)
+        async throws
+    {
+        activate(surface.buttons["Complete \(edited)"])
+        XCTAssertTrue(task(edited, surface).waitForNonExistence(timeout: 20))
         #if os(iOS)
             app.tabBars.buttons["Browse"].tap()
         #endif
-        activate(app.buttons["Completed"])
-        XCTAssertTrue(task(edited, app).waitForExistence(timeout: 20))
-        waitUntilSynced(app)
-        attach(app, "04 Completed and uploaded")
-        activate(app.buttons["Uncomplete \(edited)"])
-        XCTAssertTrue(task(edited, app).waitForNonExistence(timeout: 20))
+        activate(surface.buttons["Completed"])
+        XCTAssertTrue(task(edited, surface).waitForExistence(timeout: 20))
+        waitUntilSynced(surface)
+        try await attach(app, surface: surface, "04 Completed and uploaded")
+        activate(surface.buttons["Uncomplete \(edited)"])
+        XCTAssertTrue(task(edited, surface).waitForNonExistence(timeout: 20))
         #if os(iOS)
             app.tabBars.buttons["Inbox"].tap()
         #else
-            activate(app.buttons["Inbox"])
+            activate(surface.buttons["Inbox"])
         #endif
-        XCTAssertTrue(task(edited, app).waitForExistence(timeout: 20))
+        XCTAssertTrue(task(edited, surface).waitForExistence(timeout: 20))
         app.terminate()
         app.launch()
-        XCTAssertTrue(task(edited, app).waitForExistence(timeout: 30))
-        waitUntilSynced(app)
-        attach(app, "05 Reopened and synced after cold relaunch")
+        let relaunched = try workspace(app)
+        XCTAssertTrue(task(edited, relaunched).waitForExistence(timeout: 30))
+        waitUntilSynced(relaunched)
+        try await attach(app, surface: relaunched, "05 Reopened and synced after cold relaunch")
     }
 
-    private func waitUntilSynced(_ app: XCUIApplication) {
+    private func waitUntilSynced(_ app: XCUIElement) {
         waitUntilPhase("synced", app)
     }
 
-    private func waitUntilPhase(_ phase: String, _ app: XCUIApplication) {
-        let status = app.descendants(matching: .any)["facet.sync.status"].firstMatch
+    private func waitUntilPhase(_ phase: String, _ app: XCUIElement) {
+        #if os(macOS)
+            let status = app.descendants(matching: .any).matching(identifier: "facet.sync.status")
+                .element
+        #else
+            let status = app.descendants(matching: .any)["facet.sync.status"].firstMatch
+        #endif
         let settled = NSPredicate(format: "exists == true AND value == %@", phase)
         XCTAssertEqual(
             XCTWaiter.wait(
@@ -221,9 +250,9 @@ final class LiveSyncVaultUITests: XCTestCase {
             .completed, "The real transport did not reach the required phase: \(phase).")
     }
 
-    private func task(_ title: String, _ app: XCUIApplication) -> XCUIElement {
+    private func task(_ title: String, _ app: XCUIElement) -> XCUIElement {
         #if os(macOS)
-            app.staticTexts.matching(NSPredicate(format: "label == %@", title)).firstMatch
+            app.staticTexts.matching(NSPredicate(format: "value == %@", title)).element
         #else
             app.buttons.matching(NSPredicate(format: "label == %@", title)).firstMatch
         #endif
@@ -238,28 +267,65 @@ final class LiveSyncVaultUITests: XCTestCase {
         #endif
     }
 
-    private func attach(_ app: XCUIApplication, _ name: String) {
+    private func attach(_ app: XCUIApplication, surface: XCUIElement, _ name: String) async throws {
         let forbidden = [
             "facet.account.email", "facet.account.password", "facet.account.code",
             "facet.account.vault-password", "facet.account.signin", "facet.account.error",
         ]
-        guard app.buttons["facet.capture.open"].exists, app.alerts.count == 0,
+        guard surface.buttons["facet.capture.open"].exists, app.alerts.count == 0,
             !forbidden.contains(where: { app.descendants(matching: .any)[$0].firstMatch.exists })
         else {
             XCTFail("Screenshot requires the synthetic workspace without account entry or errors.")
             return
         }
-        let attachment = XCTAttachment(screenshot: app.screenshot())
-        attachment.name = name
-        attachment.lifetime = .keepAlways
-        add(attachment)
+        #if os(macOS)
+            try await MacAcceptanceCapture.attach(
+                app: app, name: name, test: self, windows: [surface])
+        #else
+            let attachment = XCTAttachment(screenshot: app.screenshot())
+            attachment.name = name
+            attachment.lifetime = .keepAlways
+            add(attachment)
+        #endif
+    }
+}
+
+extension LiveSyncVaultUITests {
+    private func assertNoSetupWarnings(_ app: XCUIElement) {
+        let setupWarnings = app.staticTexts.matching(
+            NSPredicate(
+                format: "label CONTAINS[c] %@ OR label CONTAINS[c] %@ OR label BEGINSWITH %@",
+                "TaskNotes settings", ".obsidian/plugins/tasknotes/data.json:", "tasknotes.yaml:"))
+        XCTAssertEqual(
+            setupWarnings.count, 0,
+            "Initial Sync must produce usable TaskNotes configuration without warnings or defaults consent."
+        )
+        #if os(macOS)
+            let setupWarningValues = app.staticTexts.matching(
+                NSPredicate(
+                    format: "value CONTAINS[c] %@ OR value CONTAINS[c] %@ OR value BEGINSWITH %@",
+                    "TaskNotes settings", ".obsidian/plugins/tasknotes/data.json:",
+                    "tasknotes.yaml:"
+                ))
+            XCTAssertEqual(
+                setupWarningValues.count, 0,
+                "Initial Sync must expose no TaskNotes configuration warnings as native text values."
+            )
+        #endif
     }
 }
 
 private struct LiveDescriptor: Decodable {
     let schemaVersion: Int
     let runID: UUID
+    let stateDirectory: String
     let allowedRemoteVaultID: String?
+}
+
+private struct LiveVaultJourney {
+    let app: XCUIApplication
+    let surface: XCUIElement
+    let title: String
 }
 
 private enum LiveLaunchError: Error { case invalidOwnership }

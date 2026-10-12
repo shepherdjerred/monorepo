@@ -4,6 +4,7 @@ internal struct FacetVaultOnboarding: View {
     @Bindable var store: FacetStore
     @Binding var importsFolder: Bool
     let folderAction: String
+    let sheets: FacetSheetPresentation
 
     var body: some View {
         #if os(iOS)
@@ -40,12 +41,14 @@ internal struct FacetVaultOnboarding: View {
             .buttonStyle(.borderedProminent)
             .accessibilityIdentifier("facet.onboarding.local")
             Button {
-                store.showsAccount = true
+                sheets.account(store: store).wrappedValue = true
             } label: {
                 Text("Connect Obsidian Sync…").multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
             }
             .accessibilityIdentifier("facet.onboarding.sync")
+            .disabled(store.accountWindowOwnerID != nil)
+            .help("Sync is open in another window while this control is unavailable.")
             if store.isLoading { ProgressView() }
         }
     }

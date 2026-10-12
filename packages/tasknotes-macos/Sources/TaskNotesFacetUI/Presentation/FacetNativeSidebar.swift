@@ -197,6 +197,7 @@ internal struct FacetNativeSidebar: View {
 
 internal struct FacetNativeNotices: View {
     let store: FacetStore
+    let sheets: FacetSheetPresentation
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             if let profileID = store.selectedProfileID {
@@ -220,8 +221,10 @@ internal struct FacetNativeNotices: View {
                     "\(snapshot.conflictCount) conflicts need your attention",
                     systemImage: "exclamationmark.arrow.triangle.2.circlepath"
                 ) {
-                    _Concurrency.Task { await store.loadConflicts() }
+                    _Concurrency.Task { await sheets.openConflicts(store: store) }
                 }.accessibilityIdentifier("facet.conflicts.open")
+                    .disabled(store.conflictWindowOwnerID != nil)
+                    .help("Conflicts are open in another window while this control is unavailable.")
             }
             ForEach(store.pendingActions) { action in
                 if action.canResume {
