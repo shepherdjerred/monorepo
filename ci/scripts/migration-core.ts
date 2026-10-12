@@ -172,6 +172,7 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
     ".mise.toml",
     "mise.lock",
     "scripts/ci/ci-reporting.ts",
+    "scripts/ci/test-manifest-schema.ts",
     "scripts/ci-test-manifest.json",
     "scripts/ci/namespace-playwright-reports.ts",
     "scripts/ci/write-ci-report-index.ts",

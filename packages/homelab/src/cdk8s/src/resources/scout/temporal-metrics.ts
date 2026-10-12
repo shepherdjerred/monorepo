@@ -12,7 +12,7 @@ import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/pro
  * The port matches the versioned workflow-worker pods' exporter.
  */
 export const SCOUT_TEMPORAL_METRICS_PORT = 9464;
-const PORT_NAME = "temporal-metrics";
+const PORT_NAME = "temporal-sdk";
 
 export const scoutTemporalMetricsEnv: Record<string, EnvValue> = {
   TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue(

@@ -14,11 +14,8 @@
 import path from "node:path";
 import { mkdir } from "node:fs/promises";
 import { Glob } from "bun";
-import {
-  namespaceJUnit,
-  sanitizeWorkspace,
-  TestManifestSchema,
-} from "./ci-reporting.ts";
+import { namespaceJUnit, sanitizeWorkspace } from "./ci-reporting.ts";
+import { TestManifestSchema } from "./test-manifest-schema.ts";
 
 const reportsRoot =
   process.argv[2] ?? path.join(process.cwd(), ".ci-reports", "junit");

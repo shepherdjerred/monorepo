@@ -4,7 +4,7 @@ import {
   packageScriptViolations,
   sourceViolation,
 } from "./check-test-standardization.ts";
-import type { TestStep } from "../ci/ci-reporting.ts";
+import type { TestStep } from "../ci/test-manifest-schema.ts";
 
 describe("test standardization guard", () => {
   test("rejects Bun and Node test imports", () => {

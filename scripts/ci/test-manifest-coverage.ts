@@ -7,7 +7,7 @@
  * Vitest step or named in the workspace's `excludedSuites` with the reason it
  * runs elsewhere. A CLI `--exclude` alone is not evidence that a test runs.
  */
-import type { TestManifest, TestStep } from "./ci-reporting.ts";
+import type { TestManifest, TestStep } from "./test-manifest-schema.ts";
 import { minimatch } from "minimatch";
 
 type Workspace = TestManifest["workspaces"][number];

@@ -9,6 +9,7 @@ import {
   invokesAmbiguousTypeScriptCompiler,
 } from "./compliance-check.ts";
 import { isNoopScript } from "../misc/migration-core.ts";
+import type { TestManifest } from "../ci/test-manifest-schema.ts";
 
 const TurboConfigSchema = z
   .object({
@@ -42,6 +43,7 @@ function collectTaskInputs(root: string, patterns: string[]): string[] {
 async function writeRootManifest(
   root: string,
   workspaces: string[],
+  separateTests: TestManifest["separateTests"] = [],
 ): Promise<void> {
   await mkdir(`${root}/scripts`, { recursive: true });
   await Bun.write(
@@ -49,6 +51,16 @@ async function writeRootManifest(
     JSON.stringify({ workspaces: [...workspaces, "scripts"] }),
   );
   await Bun.write(`${root}/scripts/package.json`, "{}");
+  await Bun.write(
+    `${root}/scripts/ci-test-manifest.json`,
+    JSON.stringify({
+      $schema: "./ci-test-manifest.schema.json",
+      version: 2,
+      workspaces: [],
+      testlessWorkspaces: [],
+      separateTests,
+    }),
+  );
 }
 
 async function writeWorkspacePackage(
@@ -69,6 +81,105 @@ const compliantScripts = {
   lint: "eslint .",
   typecheck: "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
 };
+
+const localVerification = {
+  package: "local-native",
+  directory: "packages/local-native",
+  reason: "Owner-requested local native verification.",
+  localScripts: { build: "build:local", test: "test:local" },
+} satisfies TestManifest["separateTests"][number];
+
+const localNativeScripts = {
+  "build:local": "cargo build --workspace --locked",
+  "test:local": "cargo test --workspace --locked",
+  lint: "cargo clippy --workspace --locked",
+  typecheck: "cargo check --workspace --locked",
+};
+
+test("requires explicit manifest policy for local verification names", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "compliance-local-"));
+  try {
+    await writeRootManifest(root, [localVerification.directory]);
+    await writeWorkspacePackage(root, localVerification.directory, {
+      name: localVerification.package,
+      scripts: localNativeScripts,
+    });
+    expect(await findComplianceErrors(root)).toEqual([
+      "packages/local-native missing build script",
+      "packages/local-native missing test script",
+    ]);
+    await writeRootManifest(
+      root,
+      [localVerification.directory],
+      [localVerification],
+    );
+    expect(await findComplianceErrors(root)).toEqual([]);
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
+});
+
+test.each([
+  ["build:local", undefined],
+  ["build:local", "echo not implemented"],
+  ["test:local", undefined],
+  ["test:local", "true"],
+])(
+  "rejects missing or stubbed local %s commands (%s)",
+  async (name, command) => {
+    const root = await mkdtemp(path.join(tmpdir(), "compliance-local-"));
+    try {
+      await writeRootManifest(
+        root,
+        [localVerification.directory],
+        [localVerification],
+      );
+      const scripts: Record<string, string> = Object.fromEntries(
+        Object.entries(localNativeScripts).filter(([key]) => key !== name),
+      );
+      if (command !== undefined) scripts[name] = command;
+      await writeWorkspacePackage(root, localVerification.directory, {
+        name: localVerification.package,
+        scripts,
+      });
+      expect(await findComplianceErrors(root)).toEqual([
+        command === undefined
+          ? `packages/local-native missing ${name} script`
+          : `packages/local-native has no-op stub ${name} script: ${command}`,
+      ]);
+    } finally {
+      await rm(root, { force: true, recursive: true });
+    }
+  },
+);
+
+test("rejects stale local verification workspace identities", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "compliance-local-"));
+  try {
+    await writeRootManifest(
+      root,
+      [localVerification.directory],
+      [localVerification],
+    );
+    await writeWorkspacePackage(root, localVerification.directory, {
+      name: "wrong-package",
+      scripts: localNativeScripts,
+    });
+    expect(await findComplianceErrors(root)).toEqual([
+      "local verification package name does not match packages/local-native",
+    ]);
+    await writeRootManifest(
+      root,
+      [localVerification.directory],
+      [{ ...localVerification, directory: "packages/missing" }],
+    );
+    expect(await findComplianceErrors(root)).toContain(
+      "local verification workspace is not declared: packages/missing",
+    );
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
+});
 
 test("Turbo compliance inputs cover deeply nested workspace manifests", async () => {
   const root = await mkdtemp(path.join(tmpdir(), "compliance-inputs-"));
@@ -101,6 +212,7 @@ test("Turbo compliance inputs cover deeply nested workspace manifests", async ()
       "packages/homelab/src/cdk8s/package.json",
       "packages/homelab/src/helm-types/package.json",
       "scripts/checks/compliance-check.ts",
+      "scripts/ci-test-manifest.json",
       "scripts/package.json",
     ]);
   } finally {

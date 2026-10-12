@@ -2,7 +2,10 @@
 
 import path from "node:path";
 import { z } from "zod";
-import { TestManifestSchema, type TestStep } from "../ci/ci-reporting.ts";
+import {
+  TestManifestSchema,
+  type TestStep,
+} from "../ci/test-manifest-schema.ts";
 import { unrunTestFiles } from "../ci/test-manifest-coverage.ts";
 
 const repositoryRoot = path.resolve(import.meta.dir, "..", "..");

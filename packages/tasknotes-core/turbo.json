@@ -32,6 +32,7 @@
     "test:ci": {
       "inputs": [
         "$TURBO_ROOT$/scripts/ci/ci-reporting.ts",
+        "$TURBO_ROOT$/scripts/ci/test-manifest-schema.ts",
         "$TURBO_ROOT$/scripts/ci/mstest-configuration.ts",
         "$TURBO_ROOT$/scripts/ci/gradle-junit.ts",
         "$TURBO_ROOT$/scripts/ci-test-manifest.json",

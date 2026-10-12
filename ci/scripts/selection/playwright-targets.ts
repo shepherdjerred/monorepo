@@ -54,6 +54,7 @@ const ALL_TARGET_INPUTS = [
   "scripts/ci-test-manifest.json",
   "patches/",
   "scripts/ci/ci-reporting.ts",
+  "scripts/ci/test-manifest-schema.ts",
   "scripts/ci/namespace-playwright-reports.ts",
   "scripts/ci/write-ci-report-index.ts",
   "scripts/lib/json.ts",

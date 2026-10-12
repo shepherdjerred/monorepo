@@ -1141,11 +1141,13 @@
     {
       "package": "@shepherdjerred/glitter-boys",
       "directory": "packages/glitter-boys",
+      "localScripts": { "test": "test:local" },
       "reason": "Owner-requested local-only verification and manual deployment. Run test:local before release; shared CI does not build, test, or publish this site."
     },
     {
       "package": "@shepherdjerred/glitter-boys-launcher",
       "directory": "packages/glitter-boys-launcher",
+      "localScripts": { "build": "build:local", "test": "test:local" },
       "reason": "Owner-requested local-only verification and manual releases for the launcher and telemetry image. Run test:local before release; shared CI does not build, test, sign, or publish these artifacts."
     },
     {

@@ -353,6 +353,14 @@ namespace TaskNotes.Windows.Tests
             using TemporaryDirectory directory = new();
             await using TaskNotesStore store = new(directory.Path);
             await store.InitializeAsync(null, null, TestContext.CancellationToken);
+            List<TaskNotesState> snapshots = [];
+            store.StateChanged += (_, _) =>
+            {
+                lock (snapshots)
+                {
+                    snapshots.Add(store.State);
+                }
+            };
             Task[] additions =
             [
                 .. Enumerable
@@ -364,6 +372,16 @@ namespace TaskNotes.Windows.Tests
 
             await Task.WhenAll(additions);
 
+            lock (snapshots)
+            {
+                Assert.IsNotEmpty(snapshots);
+                Assert.AreSequenceEqual(
+                    snapshots.Select(snapshot => snapshot.AllTasks.Count).Order(),
+                    snapshots.Select(snapshot => snapshot.AllTasks.Count)
+                );
+                Assert.AreEqual(1, snapshots[0].AllTasks.Count);
+                Assert.AreEqual(24, snapshots[^1].AllTasks.Count);
+            }
             Assert.HasCount(24, store.State.AllTasks);
             Assert.AreEqual(
                 24,

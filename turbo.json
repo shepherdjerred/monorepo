@@ -72,6 +72,7 @@
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/scripts/ci/ci-reporting.ts",
+        "$TURBO_ROOT$/scripts/ci/test-manifest-schema.ts",
         "$TURBO_ROOT$/scripts/ci/mstest-configuration.ts",
         "$TURBO_ROOT$/scripts/ci/gradle-junit.ts",
         "$TURBO_ROOT$/scripts/ci-test-manifest.json",
@@ -458,6 +459,10 @@
       "inputs": [
         "package.json",
         "scripts/checks/compliance-check.ts",
+        "scripts/lib/local-verification.ts",
+        "scripts/ci/test-manifest-schema.ts",
+        "scripts/ci/ci-reporting.ts",
+        "scripts/ci-test-manifest.json",
         "scripts/package.json",
         "packages/**/package.json",
         "!packages/**/node_modules/**",

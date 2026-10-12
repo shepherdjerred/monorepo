@@ -135,7 +135,9 @@ keeps generated XAML and UI-thread concerns out of the portable test surface.
 `TaskNotesStore` exposes the complete task snapshot, fixed and dynamic query
 projections, vocabulary, saved-view metadata, completion undo, live timing and
 Pomodoro state, pending IDs, sync state, errors, and parked changes. A
-single-reader channel executes every FFI call away from the UI thread. Its
+single-reader channel executes every FFI call and publishes its immutable
+snapshot before completing the queued operation, so concurrent callers cannot
+replace newer state with an older snapshot. It runs away from the UI thread. Its
 bounded coalescing pump owns background drains and is awaited during disposal.
 Host
 callbacks supply atomic app-local files, bearer-authenticated `HttpClient`,

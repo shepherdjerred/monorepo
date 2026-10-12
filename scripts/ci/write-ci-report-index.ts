@@ -1,8 +1,6 @@
 import path from "node:path";
-import {
-  reportedWorkspacesForReports,
-  TestManifestSchema,
-} from "./ci-reporting.ts";
+import { reportedWorkspacesForReports } from "./ci-reporting.ts";
+import { TestManifestSchema } from "./test-manifest-schema.ts";
 
 const repositoryRoot = path.resolve(import.meta.dir, "..", "..");
 const manifest = TestManifestSchema.parse(

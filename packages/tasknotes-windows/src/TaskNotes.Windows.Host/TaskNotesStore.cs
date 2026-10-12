@@ -57,18 +57,18 @@ namespace TaskNotes.Windows.Host
         )
         {
             ThrowIfDisposed();
-            await PublishAsync(
-                    State with
-                    {
-                        SyncState = TaskNotesSyncState.Loading,
-                        UserFacingError = null,
-                    }
+            await RunAndPublishAsync(
+                    () =>
+                        State with
+                        {
+                            SyncState = TaskNotesSyncState.Loading,
+                            UserFacingError = null,
+                        },
+                    cancellationToken
                 )
                 .ConfigureAwait(false);
-            TaskNotesState cached = await _runner
-                .RunAsync(() => ConfigureAndRestore(serverUrl, token), cancellationToken)
+            await RunAndPublishAsync(() => ConfigureAndRestore(serverUrl, token), cancellationToken)
                 .ConfigureAwait(false);
-            await PublishAsync(cached).ConfigureAwait(false);
             if (_configured)
             {
                 await RefreshAsync(cancellationToken).ConfigureAwait(false);
@@ -89,10 +89,7 @@ namespace TaskNotes.Windows.Host
         public async Task RefreshAsync(CancellationToken cancellationToken = default)
         {
             ThrowIfDisposed();
-            TaskNotesState state = await _runner
-                .RunAsync(SyncAndObserve, cancellationToken)
-                .ConfigureAwait(false);
-            await PublishAsync(state).ConfigureAwait(false);
+            await RunAndPublishAsync(SyncAndObserve, cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>Selects a fixed, dynamic, saved-view, or board task projection.</summary>
@@ -103,8 +100,7 @@ namespace TaskNotes.Windows.Host
         {
             ThrowIfDisposed();
             ArgumentNullException.ThrowIfNull(query);
-            TaskNotesState state = await _runner
-                .RunAsync(
+            await RunAndPublishAsync(
                     () =>
                     {
                         TaskListQuery previous = _query;
@@ -122,7 +118,6 @@ namespace TaskNotes.Windows.Host
                     cancellationToken
                 )
                 .ConfigureAwait(false);
-            await PublishAsync(state).ConfigureAwait(false);
         }
 
         /// <summary>Parses Quick Add input through the Rust core without mutating state.</summary>
@@ -152,10 +147,8 @@ namespace TaskNotes.Windows.Host
             ThrowIfDisposed();
             ArgumentException.ThrowIfNullOrWhiteSpace(input);
             ArgumentNullException.ThrowIfNull(context);
-            TaskNotesState state = await _runner
-                .RunAsync(() => AddAndObserve(input, context), cancellationToken)
+            await RunAndPublishAsync(() => AddAndObserve(input, context), cancellationToken)
                 .ConfigureAwait(false);
-            await PublishAsync(state).ConfigureAwait(false);
             _drainPump.Request();
         }
 
@@ -167,10 +160,8 @@ namespace TaskNotes.Windows.Host
         {
             ThrowIfDisposed();
             ArgumentNullException.ThrowIfNull(input);
-            TaskNotesState state = await _runner
-                .RunAsync(() => UpdateTaskAndObserve(input), cancellationToken)
+            await RunAndPublishAsync(() => UpdateTaskAndObserve(input), cancellationToken)
                 .ConfigureAwait(false);
-            await PublishAsync(state).ConfigureAwait(false);
             _drainPump.Request();
         }
 
@@ -182,8 +173,7 @@ namespace TaskNotes.Windows.Host
         {
             ThrowIfDisposed();
             ArgumentException.ThrowIfNullOrWhiteSpace(taskId);
-            TaskNotesState state = await _runner
-                .RunAsync(
+            await RunAndPublishAsync(
                     () =>
                     {
                         _ = RequireEngine().Dispatch(new Core.CommandInput.Delete(taskId));
@@ -192,7 +182,6 @@ namespace TaskNotes.Windows.Host
                     cancellationToken
                 )
                 .ConfigureAwait(false);
-            await PublishAsync(state).ConfigureAwait(false);
             _drainPump.Request();
         }
 
@@ -206,8 +195,7 @@ namespace TaskNotes.Windows.Host
             ThrowIfDisposed();
             ArgumentException.ThrowIfNullOrWhiteSpace(taskId);
             ArgumentException.ThrowIfNullOrWhiteSpace(status);
-            TaskNotesState state = await _runner
-                .RunAsync(
+            await RunAndPublishAsync(
                     () =>
                     {
                         Core.TaskStatus parsed = Core.TaskNotesCoreMethods.TaskStatusParse(status);
@@ -218,7 +206,6 @@ namespace TaskNotes.Windows.Host
                     cancellationToken
                 )
                 .ConfigureAwait(false);
-            await PublishAsync(state).ConfigureAwait(false);
             _drainPump.Request();
         }
 
@@ -231,8 +218,7 @@ namespace TaskNotes.Windows.Host
         {
             ThrowIfDisposed();
             ArgumentException.ThrowIfNullOrWhiteSpace(taskId);
-            TaskNotesState state = await _runner
-                .RunAsync(
+            await RunAndPublishAsync(
                     () =>
                     {
                         CompletionRestore? restore = DispatchCompletion(
@@ -249,7 +235,6 @@ namespace TaskNotes.Windows.Host
                     cancellationToken
                 )
                 .ConfigureAwait(false);
-            await PublishAsync(state).ConfigureAwait(false);
             _drainPump.Request();
         }
 
@@ -261,8 +246,7 @@ namespace TaskNotes.Windows.Host
         {
             ThrowIfDisposed();
             ArgumentNullException.ThrowIfNull(taskIds);
-            TaskNotesState state = await _runner
-                .RunAsync(
+            await RunAndPublishAsync(
                     () =>
                     {
                         List<CompletionRestore> restores = [];
@@ -287,7 +271,6 @@ namespace TaskNotes.Windows.Host
                     cancellationToken
                 )
                 .ConfigureAwait(false);
-            await PublishAsync(state).ConfigureAwait(false);
             _drainPump.Request();
         }
 
@@ -295,8 +278,7 @@ namespace TaskNotes.Windows.Host
         public async Task UndoCompletionAsync(CancellationToken cancellationToken = default)
         {
             ThrowIfDisposed();
-            TaskNotesState state = await _runner
-                .RunAsync(
+            await RunAndPublishAsync(
                     () =>
                     {
                         _completionUndo.Undo(command =>
@@ -308,7 +290,6 @@ namespace TaskNotes.Windows.Host
                     cancellationToken
                 )
                 .ConfigureAwait(false);
-            await PublishAsync(state).ConfigureAwait(false);
             _drainPump.Request();
         }
 
@@ -356,8 +337,7 @@ namespace TaskNotes.Windows.Host
         {
             ThrowIfDisposed();
             ArgumentNullException.ThrowIfNull(taskIds);
-            TaskNotesState state = await _runner
-                .RunAsync(
+            await RunAndPublishAsync(
                     () =>
                     {
                         foreach (string taskId in DistinctIds(taskIds))
@@ -369,7 +349,6 @@ namespace TaskNotes.Windows.Host
                     cancellationToken
                 )
                 .ConfigureAwait(false);
-            await PublishAsync(state).ConfigureAwait(false);
             _drainPump.Request();
         }
 
@@ -619,8 +598,7 @@ namespace TaskNotes.Windows.Host
         {
             ThrowIfDisposed();
             ArgumentException.ThrowIfNullOrWhiteSpace(mutationId);
-            TaskNotesState state = await _runner
-                .RunAsync(
+            await RunAndPublishAsync(
                     () =>
                     {
                         RequireEngine().RetryDeadLetter(mutationId);
@@ -629,7 +607,6 @@ namespace TaskNotes.Windows.Host
                     cancellationToken
                 )
                 .ConfigureAwait(false);
-            await PublishAsync(state).ConfigureAwait(false);
             _drainPump.Request();
         }
 
@@ -641,8 +618,7 @@ namespace TaskNotes.Windows.Host
         {
             ThrowIfDisposed();
             ArgumentException.ThrowIfNullOrWhiteSpace(mutationId);
-            TaskNotesState state = await _runner
-                .RunAsync(
+            await RunAndPublishAsync(
                     () =>
                     {
                         RequireEngine().DiscardDeadLetter(mutationId);
@@ -651,7 +627,6 @@ namespace TaskNotes.Windows.Host
                     cancellationToken
                 )
                 .ConfigureAwait(false);
-            await PublishAsync(state).ConfigureAwait(false);
         }
 
         /// <summary>Cancels transport work and retires the native engine.</summary>
@@ -877,8 +852,7 @@ namespace TaskNotes.Windows.Host
         {
             ThrowIfDisposed();
             ArgumentNullException.ThrowIfNull(taskIds);
-            TaskNotesState state = await _runner
-                .RunAsync(
+            await RunAndPublishAsync(
                     () =>
                     {
                         foreach (string taskId in DistinctIds(taskIds))
@@ -893,7 +867,6 @@ namespace TaskNotes.Windows.Host
                     cancellationToken
                 )
                 .ConfigureAwait(false);
-            await PublishAsync(state).ConfigureAwait(false);
             _drainPump.Request();
         }
 
@@ -943,25 +916,28 @@ namespace TaskNotes.Windows.Host
         )
         {
             ThrowIfDisposed();
-            try
-            {
-                TaskNotesState state = await _runner
-                    .RunAsync(operation, cancellationToken)
-                    .ConfigureAwait(false);
-                await PublishAsync(state with { UserFacingError = null }).ConfigureAwait(false);
-            }
-            catch (Core.CoreException exception)
-            {
-                await PublishAsync(
-                        State with
+            await RunAndPublishAsync(
+                    () =>
+                    {
+                        try
                         {
-                            SyncState = LiveFailureState(exception),
-                            UserFacingError = ErrorMessage(exception),
+                            return operation() with { UserFacingError = null };
                         }
-                    )
-                    .ConfigureAwait(false);
-                throw;
-            }
+                        catch (Core.CoreException exception)
+                        {
+                            ApplyState(
+                                State with
+                                {
+                                    SyncState = LiveFailureState(exception),
+                                    UserFacingError = ErrorMessage(exception),
+                                }
+                            );
+                            throw;
+                        }
+                    },
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
         }
 
         private TaskNotesState Observe()
@@ -1244,10 +1220,7 @@ namespace TaskNotes.Windows.Host
 
         private async Task PublishObservedAsync(CancellationToken cancellationToken)
         {
-            TaskNotesState state = await _runner
-                .RunAsync(Observe, cancellationToken)
-                .ConfigureAwait(false);
-            await PublishAsync(state).ConfigureAwait(false);
+            await RunAndPublishAsync(Observe, cancellationToken).ConfigureAwait(false);
         }
 
         private async ValueTask OnRetryTimerAsync()
@@ -1256,8 +1229,7 @@ namespace TaskNotes.Windows.Host
             {
                 return;
             }
-            TaskNotesState state = await _runner
-                .RunAsync(() =>
+            await RunAndPublishAsync(() =>
                 {
                     Core.FfiSyncEngine engine = RequireEngine();
                     engine.RequestSync();
@@ -1272,15 +1244,13 @@ namespace TaskNotes.Windows.Host
                     return Observe();
                 })
                 .ConfigureAwait(false);
-            await PublishAsync(state).ConfigureAwait(false);
         }
 
         private async Task DrainAndPublishAsync()
         {
             try
             {
-                TaskNotesState state = await _runner
-                    .RunAsync(() =>
+                await RunAndPublishAsync(() =>
                     {
                         try
                         {
@@ -1293,7 +1263,6 @@ namespace TaskNotes.Windows.Host
                         return Observe();
                     })
                     .ConfigureAwait(false);
-                await PublishAsync(state).ConfigureAwait(false);
             }
             catch (ObjectDisposedException)
             {
@@ -1301,10 +1270,21 @@ namespace TaskNotes.Windows.Host
             }
         }
 
-        private Task PublishAsync(TaskNotesState state)
+        private Task<bool> RunAndPublishAsync(
+            Func<TaskNotesState> operation,
+            CancellationToken cancellationToken = default
+        )
         {
-            ApplyState(state);
-            return Task.CompletedTask;
+            return _runner.RunAsync(
+                () =>
+                {
+                    // Publish before completing the queued operation. Caller continuations
+                    // can resume out of order and must never publish an older snapshot.
+                    ApplyState(operation());
+                    return true;
+                },
+                cancellationToken
+            );
         }
 
         [LoggerMessage(

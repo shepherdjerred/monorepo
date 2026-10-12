@@ -14,10 +14,11 @@ bun run --cwd packages/glitter-boys-launcher dev
 bunx turbo run build:local typecheck test:local lint --filter=@shepherdjerred/glitter-boys-launcher
 ```
 
-The local build and test commands delegate to the standard `build` and `test`
-scripts. Tests run the Rust workspace and the shared Vitest runner for release
-scripts. Filesystem fixtures use the canonical temporary directory so they
-exercise the link-free game-library contract on macOS as well as Windows.
+The CI test manifest declares the local build and test script names for
+compliance checks. The native application stays outside shared CI dependency
+builds. Local tests run the Rust workspace and the shared Vitest runner for
+release scripts. Filesystem fixtures use the canonical temporary directory so
+they exercise the link-free game-library contract on macOS as well as Windows.
 
 `crates/launcher-app` owns the native UI. The core scheduler owns the install queue. `crates/launcher-core`
 owns the reviewed catalog, downloads, archive reader, installation receipts, and

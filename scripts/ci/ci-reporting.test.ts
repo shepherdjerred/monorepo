@@ -11,8 +11,8 @@ import {
   reportedWorkspacesForReports,
   sanitizeWorkspace,
   syntheticJUnit,
-  TestManifestSchema,
 } from "./ci-reporting.ts";
+import { TestManifestSchema } from "./test-manifest-schema.ts";
 
 const repositoryRoot = path.resolve(import.meta.dir, "..", "..");
 const RootPackageSchema = z.object({ workspaces: z.array(z.string()) });
@@ -457,18 +457,7 @@ describe("CI reporting manifest", () => {
       );
       const scripts = packageJson.scripts ?? {};
       if (typeof scripts["test"] === "string") {
-        expect(
-          declaredDirectories.has(directory) ||
-            separateTestDirectories.has(directory),
-        ).toBe(true);
-      }
-      if (separateTestDirectories.has(directory)) {
-        expect(scripts["test:ci"]).toBeUndefined();
-        if (typeof scripts["test:local"] === "string") {
-          // Local aliases must still execute the package's real test suite.
-          expect(typeof scripts["test"]).toBe("string");
-          expect(scripts["test:local"]).toBe("bun run test");
-        }
+        expect(declaredDirectories.has(directory)).toBe(true);
       }
       if (declaredDirectories.has(directory)) {
         const manifestEntry = manifest.workspaces.find(
@@ -537,6 +526,7 @@ describe("test:ci runner inputs", () => {
     ).text();
     const runnerInputs = [
       "$TURBO_ROOT$/scripts/ci/ci-reporting.ts",
+      "$TURBO_ROOT$/scripts/ci/test-manifest-schema.ts",
       "$TURBO_ROOT$/scripts/ci-test-manifest.json",
       "$TURBO_ROOT$/scripts/ci/run-ci-test.ts",
       "$TURBO_ROOT$/scripts/ci/gradle-junit.ts",

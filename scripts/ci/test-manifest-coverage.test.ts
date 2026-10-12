@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import type { TestManifest } from "./ci-reporting.ts";
+import type { TestManifest } from "./test-manifest-schema.ts";
 import {
   isAccountedFor,
   unrunTestFiles,

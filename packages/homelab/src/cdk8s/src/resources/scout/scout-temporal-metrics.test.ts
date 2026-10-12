@@ -102,7 +102,7 @@ describe.each(["beta", "prod"] as const)(
         findResource(scoutResources(stage), "ServiceMonitor", name).spec,
       );
       expect(spec.endpoints.map((endpoint) => endpoint.port)).toEqual([
-        "temporal-metrics",
+        "temporal-sdk",
       ]);
       expect(spec.selector.matchLabels).toEqual({ app, stage });
     });

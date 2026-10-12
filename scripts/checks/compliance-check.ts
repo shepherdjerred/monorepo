@@ -1,9 +1,11 @@
 import { Glob } from "bun";
 import { z } from "zod";
 import { isNoopScript } from "../misc/migration-core.ts";
+import { loadLocalVerification } from "../lib/local-verification.ts";
 
 const PackageJsonSchema = z
   .object({
+    name: z.string().optional(),
     dependencies: z.record(z.string(), z.string()).optional(),
     devDependencies: z.record(z.string(), z.string()).optional(),
     peerDependencies: z.record(z.string(), z.string()).optional(),
@@ -454,21 +456,31 @@ export async function findComplianceErrors(root: string): Promise<string[]> {
     );
   }
 
+  const localVerification = await loadLocalVerification(root, packages);
+  errors.push(...localVerification.errors);
+
   const usedExemptions = new Set<string>();
   for (const [directory, packageJson] of packages) {
     errors.push(...collectTypeScriptToolchainErrors(directory, packageJson));
     if (directory === "scripts") continue;
     for (const script of requiredScripts) {
       const key = `${directory}:${script}`;
-      const command = packageJson.scripts?.[script];
+      const localNames = localVerification.scriptNames.get(directory);
+      const scriptName =
+        script === "build" || script === "test"
+          ? (localNames?.[script] ?? script)
+          : script;
+      const command = packageJson.scripts?.[scriptName];
       const missingOrNoop = command === undefined || isNoopScript(command);
       if (!missingOrNoop) continue;
       if (exemptions.has(key)) {
         usedExemptions.add(key);
       } else if (command === undefined) {
-        errors.push(`${directory} missing ${script} script`);
+        errors.push(`${directory} missing ${scriptName} script`);
       } else {
-        errors.push(`${directory} has no-op stub ${script} script: ${command}`);
+        errors.push(
+          `${directory} has no-op stub ${scriptName} script: ${command}`,
+        );
       }
     }
   }

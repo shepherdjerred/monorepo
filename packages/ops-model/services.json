@@ -194,6 +194,22 @@
       "argoApps": ["storm-forum"]
     },
     {
+      "id": "glitter-boys-launcher",
+      "title": "Glitter Boys launcher",
+      "kind": "product",
+      "package": "glitter-boys-launcher",
+      "namespaces": ["glitter-boys-launcher"],
+      "argoApps": ["glitter-boys-launcher"],
+      "grafanaDashboards": ["glitter-boys-launcher"],
+      "deploy": [
+        {
+          "name": "default",
+          "versionKey": "shepherdjerred/glitter-boys-launcher",
+          "argoApp": "glitter-boys-launcher"
+        }
+      ]
+    },
+    {
       "id": "temporal",
       "title": "Temporal",
       "kind": "workload",

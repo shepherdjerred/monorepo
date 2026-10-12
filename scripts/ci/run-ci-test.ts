@@ -9,9 +9,8 @@ import {
   removeExistingReport,
   sanitizeWorkspace,
   testStepReportName,
-  TestManifestSchema,
-  type TestStep,
 } from "./ci-reporting.ts";
+import { TestManifestSchema, type TestStep } from "./test-manifest-schema.ts";
 import {
   gradleJUnitReportPaths,
   writeGradleJUnitReport,

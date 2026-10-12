@@ -1,10 +1,7 @@
 import { describe, expect, test } from "vitest";
 import path from "node:path";
-import {
-  namespaceJUnit,
-  syntheticJUnit,
-  TestManifestSchema,
-} from "./ci-reporting.ts";
+import { namespaceJUnit, syntheticJUnit } from "./ci-reporting.ts";
+import { TestManifestSchema } from "./test-manifest-schema.ts";
 import {
   gradleJUnitReportPaths,
   mergeJUnitReports,

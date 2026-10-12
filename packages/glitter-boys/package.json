@@ -10,8 +10,7 @@
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "lint": "astro check",
     "deploy": "bun ../../scripts/release/deploy-site.ts glitter-boys",
-    "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run test",
-    "test:local": "bun run test"
+    "test:local": "bun --no-install --bun vitest --config ../../vitest.config.ts run test"
   },
   "dependencies": {
     "@shepherdjerred/glitter-boys-launcher": "workspace:*",

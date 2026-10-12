@@ -292,23 +292,7 @@ async function recordSyntheticWorkerRun(recorder: RunRecorder): Promise<void> {
   const modelCorrelation = { ...correlation, modelTurnId };
   const toolCorrelation = { ...modelCorrelation, toolCallId };
   const commandCorrelation = { ...toolCorrelation, commandId };
-  recorder.record("run.started", { scenario: "correlation" });
-  recorder.record("tick.started", { trigger: "startup" }, { tickId });
-  recorder.record("fleet.snapshot", { snapshot }, { tickId });
-  recorder.record("worker.started", { runtimeAgent: "pr-42-g3" }, correlation);
-  recorder.record("fleet.change", { change: "started pr-42-g3" }, { tickId });
-  recorder.record(
-    "tick.completed",
-    {
-      report: {
-        trigger: "startup",
-        snapshot,
-        changes: ["started pr-42-g3"],
-        nextHeartbeatSeconds: 300,
-      },
-    },
-    { tickId },
-  );
+  recordWorkerStartup(recorder, "correlation", correlation);
   recorder.record(
     "worker.attempt.started",
     { attempt: 1, prompt: "fix" },

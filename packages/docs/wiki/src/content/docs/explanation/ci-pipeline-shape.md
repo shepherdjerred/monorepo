@@ -49,6 +49,14 @@ with the PR target branch. Within that workflow, Turbo runs at most three tasks
 at once and each Vitest process uses at most four workers, matching the pod's
 12-CPU limit.
 
+Owner-requested local verification declares its build and test command names
+in `localScripts` on the existing `separateTests` entry in
+`scripts/ci-test-manifest.json`. Compliance checks require those commands to
+exist and do real work, along with the package's lint and typecheck commands.
+The launcher's `build:local` keeps native compilation out of the inherited
+`^build` graph when homelab imports its publication contract. Run the declared
+local checks before a manual release.
+
 The extension passes the last green main base to every workflow. Selectors
 inside the site, package publishing, CI image refresh, and Scout workflows use
 it to skip unchanged targets. They

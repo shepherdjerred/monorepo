@@ -8,11 +8,9 @@
   },
   "scripts": {
     "dev": "mise exec rust -- cargo run --locked --package glitter-boys-app",
-    "build": "mise exec rust -- cargo build --workspace --all-targets --locked",
-    "build:local": "bun run build",
+    "build:local": "mise exec rust -- cargo build --workspace --all-targets --locked",
     "typecheck": "mise exec rust -- cargo check --workspace --all-targets --locked",
-    "test": "mise exec rust -- cargo test --workspace --locked && bun --no-install --bun vitest --config ../../vitest.config.ts run scripts",
-    "test:local": "bun run test",
+    "test:local": "mise exec rust -- cargo test --workspace --locked && bun --no-install --bun vitest --config ../../vitest.config.ts run scripts",
     "lint": "mise exec rust -- cargo fmt --all -- --check && mise exec rust -- cargo clippy --workspace --all-targets --locked -- -D warnings",
     "package": "mise exec rust cargo:cargo-packager -- cargo packager --release --packages glitter-boys-app",
     "release": "mise exec rust cargo:cargo-packager bun -- bun scripts/with-publication-credentials.ts release.ts",

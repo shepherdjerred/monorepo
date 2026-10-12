@@ -6,7 +6,7 @@ import {
   mstestConfiguration,
   prepareMstestConfiguration,
 } from "./mstest-configuration.ts";
-import { TestManifestSchema } from "./ci-reporting.ts";
+import { TestManifestSchema } from "./test-manifest-schema.ts";
 
 describe("shared MSTest configuration", () => {
   test("preserves randomization, enforced timeouts, and strict failures", () => {

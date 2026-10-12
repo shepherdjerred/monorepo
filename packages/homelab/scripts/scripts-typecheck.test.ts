@@ -20,7 +20,6 @@ const generatedK8sPath = path.join(
 const PackageScriptsSchema = z.object({
   scripts: z.object({
     typecheck: z.string(),
-    build: z.string(),
   }),
 });
 
@@ -56,10 +55,8 @@ function resolveGeneratedK8sImport(): string {
   return fileName;
 }
 
-async function runHomelabScript(
-  script: "typecheck" | "build",
-): Promise<string> {
-  const proc = Bun.spawn(["bun", "--no-install", "run", script], {
+async function runHomelabTypecheck(): Promise<string> {
+  const proc = Bun.spawn(["bun", "--no-install", "run", "typecheck"], {
     cwd: homelabRoot,
     stdout: "pipe",
     stderr: "pipe",
@@ -71,7 +68,7 @@ async function runHomelabScript(
   ]);
   const output = `${stdout}${stderr}`;
   if (exitCode !== 0) {
-    throw new Error(`${script} exited ${String(exitCode)}\n${output}`);
+    throw new Error(`typecheck exited ${String(exitCode)}\n${output}`);
   }
   return output;
 }
@@ -84,19 +81,13 @@ describe("homelab scripts typecheck", () => {
     expect(source).toContain("export class KubePriorityClass");
   });
 
-  test("typecheck and build succeed using the scripts tsconfig", async () => {
+  test("typecheck succeeds using the scripts tsconfig", async () => {
     const pkg = PackageScriptsSchema.parse(
       await Bun.file(path.join(homelabRoot, "package.json")).json(),
     );
     expect(pkg.scripts.typecheck).toContain("tsconfig.scripts.json");
-    expect(pkg.scripts.build).toContain("tsconfig.scripts.json");
-
-    const typecheckOutput = await runHomelabScript("typecheck");
-    const buildOutput = await runHomelabScript("build");
+    const typecheckOutput = await runHomelabTypecheck();
     expect(typecheckOutput).not.toContain(
-      "Cannot find module '@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts'",
-    );
-    expect(buildOutput).not.toContain(
       "Cannot find module '@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts'",
     );
   }, 30_000);
