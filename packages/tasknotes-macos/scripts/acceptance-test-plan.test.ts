@@ -3,6 +3,7 @@ import {
   acceptanceSigningArguments,
   assertExactStandaloneResults,
   expectedStandaloneTitles,
+  isFullStandaloneSelection,
   selectStandaloneTests,
   standaloneSelector,
   standaloneTests,
@@ -22,6 +23,11 @@ describe("standalone native test selection", () => {
     expect(expectedStandaloneTitles(selected, "run")).toEqual([
       "Quick Mac run retained",
     ]);
+    expect(isFullStandaloneSelection(selected)).toBe(false);
+    expect(isFullStandaloneSelection([])).toBe(false);
+    expect(isFullStandaloneSelection([...standaloneTests].reverse())).toBe(
+      true,
+    );
   });
 
   test("rejects unknown, legacy, live, and repeated selectors before launching", () => {
@@ -95,6 +101,10 @@ describe("persisted native workflow proof", () => {
       ),
     ).toThrow();
     expect(() => verifyStandaloneNotes([note], ["Wrong title"])).toThrow();
+  });
+  test("zero-task smoke accepts only the untouched seed note set", () => {
+    expect(() => verifyStandaloneNotes([], [])).not.toThrow();
+    expect(() => verifyStandaloneNotes([note], [])).toThrow();
   });
 });
 
