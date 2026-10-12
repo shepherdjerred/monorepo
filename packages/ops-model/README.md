@@ -21,6 +21,10 @@ and `CatalogSchema`. A name may belong to only one service. The homelab
 drift test requires every ArgoCD Application to belong to exactly one service,
 and this package's test requires the same of every analytics site.
 
+Prepared services still own their declared inventory. The launcher has no
+`deploy` variant while its chart renders no workload and its image pin is an
+unpublished bootstrap marker. Register its deploy variant during activation.
+
 `temporal` is a separate source feeding Maintenance. Schedule health uses
 scheduled occurrence order and described Workflow outcomes: a running successor
 does not clear a terminal failure, while a later completed occurrence does.

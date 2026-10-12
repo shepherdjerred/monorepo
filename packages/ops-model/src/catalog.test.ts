@@ -111,6 +111,13 @@ describe("ServiceIndex", () => {
     expect(index.byId("Scout")?.id).toBe("scout-for-lol");
   });
 
+  test("owns the prepared launcher inventory without a deployable image", () => {
+    const launcher = index.requireById("glitter-boys-launcher");
+    expect(index.byNamespace("glitter-boys-launcher")).toBe(launcher);
+    expect(index.byArgoApp("glitter-boys-launcher")).toBe(launcher);
+    expect(launcher.deploy).toEqual([]);
+  });
+
   test("unknown names resolve to undefined, and require throws", () => {
     expect(index.byNamespace("nope")).toBeUndefined();
     expect(() => index.requireById("nope")).toThrow(/Unknown service/);
