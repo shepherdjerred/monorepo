@@ -27,6 +27,8 @@ import {
 import type { GatePollState } from "../lib/review/review-gate-observe.ts";
 import {
   failAtDeadline,
+  logRestUsage,
+  nextPollDelayMs,
   pollOnce,
   type PollLoopState,
   ReviewGateFailure,
@@ -272,21 +274,28 @@ async function pollReviewGate(config: GateConfig): Promise<void> {
   };
   const state: PollLoopState = { passStreak: 0, lastPollError: null };
 
-  while (Date.now() <= deadline) {
-    if (await pollOnce(config, poll, startedAt, state)) return;
-    await Bun.sleep(intervalSeconds * 1000);
+  try {
+    while (Date.now() <= deadline) {
+      if (await pollOnce(config, poll, startedAt, state)) return;
+      await Bun.sleep(nextPollDelayMs(state, intervalSeconds, deadline));
+    }
+
+    // A pass observed on the final tick still deserves its confirmation
+    // attempt: without it, a review completing inside the last interval would
+    // time out instead of confirming. One immediate extra tick, no sleep — a
+    // fresh failure there still fails with findings rather than a timeout.
+    if (
+      state.passStreak > 0 &&
+      (await pollOnce(config, poll, startedAt, state))
+    )
+      return;
+
+    // Deadline reached. Per-provider terminal signal events plus the deadline
+    // error live in failAtDeadline; this function never returns.
+    failAtDeadline(config, poll, startedAt, state.lastPollError);
+  } finally {
+    logRestUsage();
   }
-
-  // A pass observed on the final tick still deserves its confirmation
-  // attempt: without it, a review completing inside the last interval would
-  // time out instead of confirming. One immediate extra tick, no sleep — a
-  // fresh failure there still fails with findings rather than a timeout.
-  if (state.passStreak > 0 && (await pollOnce(config, poll, startedAt, state)))
-    return;
-
-  // Deadline reached. Per-provider terminal signal events plus the deadline
-  // error live in failAtDeadline; this function never returns.
-  failAtDeadline(config, poll, startedAt, state.lastPollError);
 }
 
 if (import.meta.main) {
