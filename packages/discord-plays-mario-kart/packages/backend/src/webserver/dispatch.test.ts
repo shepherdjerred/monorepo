@@ -34,6 +34,15 @@ import {
   type PlayerRecord,
   type Response,
 } from "@discord-plays-mario-kart/common";
+import {
+  decodePng,
+  rgbaFromRgb,
+} from "@shepherdjerred/discord-plays-core/image/png-decode.ts";
+
+function pngSize(png: Buffer): { width: number; height: number } {
+  const { width, height } = decodePng(png);
+  return { width, height };
+}
 
 const recorded: { seat: number; state: PlayerInputState }[] = [];
 const cleared: number[] = [];
@@ -194,33 +203,6 @@ function pressState(
   analogX = 0,
 ): PlayerInputState {
   return { buttons: { ...EMPTY_BUTTONS, ...overrides }, analogX, analogY: 0 };
-}
-
-function rgbaFrom(pixels: [number, number, number][]): Buffer {
-  const buf = Buffer.alloc(pixels.length * 4);
-  pixels.forEach(([r, g, b], i) => {
-    buf[i * 4] = r;
-    buf[i * 4 + 1] = g;
-    buf[i * 4 + 2] = b;
-  });
-  return buf;
-}
-
-function pngDimensions(png: Buffer): { width: number; height: number } {
-  const signature = Buffer.from([
-    0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
-  ]);
-  if (!png.subarray(0, 8).equals(signature)) {
-    throw new Error("bad PNG signature");
-  }
-  const ihdrType = png.toString("ascii", 12, 16);
-  if (ihdrType !== "IHDR") {
-    throw new Error("expected IHDR first");
-  }
-  return {
-    width: png.readUInt32BE(16),
-    height: png.readUInt32BE(20),
-  };
 }
 
 // Observation count of the controller_rtt_ms histogram. The registry is shared
@@ -457,7 +439,7 @@ describe("web controller dispatch (socket -> handleRequest -> emulator)", () => 
 
   it("returns screenshots as 4:3 PNG images", async () => {
     fakeFrame = {
-      rgba: rgbaFrom([
+      rgba: rgbaFromRgb([
         [255, 0, 0],
         [0, 0, 255],
       ]),
@@ -471,7 +453,7 @@ describe("web controller dispatch (socket -> handleRequest -> emulator)", () => 
     if (screenshot.kind !== "screenshot") {
       throw new Error(`expected screenshot, got ${screenshot.kind}`);
     }
-    const dimensions = pngDimensions(Buffer.from(screenshot.value, "base64"));
+    const dimensions = pngSize(Buffer.from(screenshot.value, "base64"));
     expect(dimensions).toEqual({
       width: SCREENSHOT_WIDTH,
       height: SCREENSHOT_HEIGHT,
@@ -578,7 +560,7 @@ describe("screenshot overlays", () => {
     const overlayed = await captureScreenshot();
 
     expect(overlayed).not.toEqual(clean);
-    expect(pngDimensions(Buffer.from(overlayed, "base64"))).toEqual({
+    expect(pngSize(Buffer.from(overlayed, "base64"))).toEqual({
       width: SCREENSHOT_WIDTH,
       height: SCREENSHOT_HEIGHT,
     });

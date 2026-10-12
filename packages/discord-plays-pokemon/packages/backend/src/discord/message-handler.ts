@@ -78,7 +78,8 @@ async function handleMessage(
   const memberCount = voiceChannel.members.filter(
     (member) => !member.user.bot,
   ).size;
-  const minInChannel = getConfig().stream.minimum_in_channel;
+  const config = await getConfig();
+  const minInChannel = config.stream.minimum_in_channel;
   if (memberCount < minInChannel) {
     await event.reply(
       `You can't play unless there are at least ${String(minInChannel)} ${
@@ -103,7 +104,7 @@ async function handleMessage(
     return;
   }
 
-  const commands = getConfig().game.commands;
+  const commands = config.game.commands;
   const chatLimits = {
     maxCommands: commands.chord.max_commands,
     maxTotal: commands.chord.max_total,

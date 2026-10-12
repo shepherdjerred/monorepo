@@ -20,7 +20,6 @@
     "test:ci": "bun ../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
-    "@shepherdjerred/sentry-config": "workspace:*",
     "@opentelemetry/api": "^1.9.1",
     "@opentelemetry/context-async-hooks": "^2.12.0",
     "@opentelemetry/exporter-trace-otlp-http": "^0.223.0",
@@ -31,12 +30,19 @@
     "@sentry/bun": "^11.6.0",
     "@shepherdjerred/discord-stream-lifecycle": "workspace:*",
     "@shepherdjerred/discord-video-stream": "workspace:*",
+    "@shepherdjerred/sentry-config": "workspace:*",
     "cors": "^2.8.5",
     "discord.js": "^14.26.4",
     "discord.js-selfbot-v13": "^3.6.1",
     "express": "^5.0.0",
     "prom-client": "^15.1.3",
-    "xstate": "^5.32.4"
+    "rxjs": "^7.8.2",
+    "smol-toml": "1.9.1",
+    "socket.io": "^4.8.1",
+    "winston": "^3.17.0",
+    "ws": "^8.18.3",
+    "xstate": "^5.32.4",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@shepherdjerred/eslint-config": "workspace:*",
@@ -47,11 +53,11 @@
     "@typescript-eslint/utils": "^8.71.1",
     "eslint": "^10.7.0",
     "jiti": "^2.7.0",
-    "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
     "typescript": "^6.0.3",
     "@typescript/native": "npm:typescript@7.0.2",
     "vitest": "5.0.3",
-    "@vitest/coverage-istanbul": "5.0.3"
+    "@vitest/coverage-istanbul": "5.0.3",
+    "@types/ws": "^8.18.1"
   }
 }

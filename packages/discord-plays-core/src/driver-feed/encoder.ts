@@ -1,12 +1,12 @@
-// The driver feed's own ffmpeg process: raw BGRA frames in, H.264 in FLV out.
+// The driver feed's own ffmpeg process: raw BGRA/RGBA frames in, H.264 in FLV out.
 //
 // This deliberately does NOT go through discord-video-stream's `prepareStream`.
 // That is the library's only spawn entry point and it muxes to NUT for Discord's
 // demuxer, pillarboxes onto a 16:9 canvas, and attaches an audio input — none of
 // which a browser decoder wants. The encoder *settings* are still shared: the
 // VAAPI flag arrays below are lifted from `Encoders.vaapi()` and the rawvideo
-// input description mirrors `GameStreamer.buildEncoder`, so both paths describe
-// the emulator's output identically.
+// input description mirrors each game's `GameStreamer.buildEncoder`, so both
+// paths describe the emulator's output identically.
 //
 // A second encode is affordable: h264_vaapi benchmarks at ~16.7x realtime in-pod
 // and ffmpeg runs out-of-process, so it does not contend with the Bun main thread
@@ -14,8 +14,7 @@
 
 import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
 import * as Sentry from "@sentry/bun";
-import { DISPLAY_ASPECT } from "#src/emulator/constants.ts";
-import { frameBytes, type FrameFormat } from "#src/engine/format.ts";
+import type { Logger } from "#src/logger.ts";
 import { LatestFrameSink } from "#src/stream/latest-frame-sink.ts";
 import {
   driverFeedAccessUnitBytes,
@@ -25,8 +24,7 @@ import {
   driverFeedInputToUnitMs,
   driverFeedLatencyCorrelationFailuresTotal,
   driverFeedSinkFrames,
-} from "#src/observability/metrics.ts";
-import { logger } from "#src/logger.ts";
+} from "./metrics.ts";
 import type { AccessUnit } from "./annex-b.ts";
 import { FlvAccessUnitReader } from "./flv.ts";
 import {
@@ -54,11 +52,28 @@ const H264_PROFILE = "main";
 const H264_LEVEL = "40";
 export const H264_CODEC_STRING = "avc1.4D4028";
 
+/** Raw frames as the game hands them over. Every frame is encoded. */
+export type DriverFeedSourceFormat = {
+  readonly width: number;
+  readonly height: number;
+  readonly fps: number;
+  /** Byte order of each 4-byte pixel in the framebuffer the game reads back. */
+  readonly pixelFormat: "bgra" | "rgba";
+};
+
+export function driverFeedFrameBytes(source: DriverFeedSourceFormat): number {
+  return source.width * source.height * 4;
+}
+
 export type DriverFeedEncoderOptions = {
-  /** What the engine delivers: frame size and rate. Every frame is encoded. */
-  readonly source: FrameFormat;
-  /** Square-pixel output height; width is derived from the 4:3 display aspect. */
-  readonly outputHeight: number;
+  readonly source: DriverFeedSourceFormat;
+  /** Square-pixel output size; see `driverFeedOutputSize`. */
+  readonly output: DriverFeedOutputSize;
+  /**
+   * ffmpeg `scale` filter `flags`, e.g. `neighbor` to keep pixel art crisp when
+   * upscaling. Omitted means ffmpeg's default (bicubic).
+   */
+  readonly scaleFlags?: string;
   readonly bitrateKbps: number;
   readonly bitrateMaxKbps: number;
   readonly keyframeIntervalFrames: number;
@@ -73,14 +88,17 @@ export type DriverFeedOutputSize = {
 };
 
 /**
- * Size the 4:3 picture in square pixels at `height`, rounding width to an even
- * number (H.264 4:2:0 requires it).
+ * Size the picture in square pixels at `height` for the game's display aspect
+ * (width / height), rounding both sides to even numbers (H.264 4:2:0 requires it).
  *
  * Unlike the Go-Live path there is no pillarbox: the browser lays the canvas out
  * with CSS, so sending black bars would just waste bitrate.
  */
-export function driverFeedOutputSize(height: number): DriverFeedOutputSize {
-  const width = Math.round((height * DISPLAY_ASPECT) / 2) * 2;
+export function driverFeedOutputSize(
+  height: number,
+  displayAspect: number,
+): DriverFeedOutputSize {
+  const width = Math.round((height * displayAspect) / 2) * 2;
   return { width, height: Math.round(height / 2) * 2 };
 }
 
@@ -91,8 +109,10 @@ export function driverFeedOutputSize(height: number): DriverFeedOutputSize {
 export function buildDriverFeedArgs(
   options: DriverFeedEncoderOptions,
 ): string[] {
-  const out = driverFeedOutputSize(options.outputHeight);
-  const scaleFilter = `scale=${String(out.width)}:${String(out.height)}`;
+  const out = options.output;
+  const scaleFilter =
+    `scale=${String(out.width)}:${String(out.height)}` +
+    (options.scaleFlags === undefined ? "" : `:flags=${options.scaleFlags}`);
   // One frame of slack. A small bufsize keeps the VBR rate controller from
   // smoothing bitrate across many frames, which would show up as latency.
   const frameRate = options.source.fps;
@@ -141,7 +161,7 @@ export function buildDriverFeedArgs(
     "-loglevel",
     "error",
     ...globalOptions,
-    // Input: raw frames on stdin, BGRA, as the game reads its framebuffer back.
+    // Input: raw frames on stdin, in the byte order the game reads them back.
     "-fflags",
     "nobuffer",
     "-analyzeduration",
@@ -149,12 +169,12 @@ export function buildDriverFeedArgs(
     "-f",
     "rawvideo",
     "-pix_fmt",
-    "bgra",
+    options.source.pixelFormat,
     "-video_size",
     `${String(options.source.width)}x${String(options.source.height)}`,
     "-framerate",
     String(frameRate),
-    // Raw BGRA is fully described above; the minimum legal probe size stops
+    // Raw video is fully described above; the minimum legal probe size stops
     // ffmpeg waiting on a live pipe before it starts encoding.
     "-probesize",
     "32",
@@ -223,6 +243,7 @@ const spawnDriverFeedProcess: DriverFeedProcessFactory = (executable, args) =>
  */
 export class DriverFeedEncoder {
   private readonly options: DriverFeedEncoderOptions;
+  private readonly logger: Logger;
   private readonly callbacks: DriverFeedEncoderCallbacks;
   private readonly processFactory: DriverFeedProcessFactory;
   private readonly reader = new FlvAccessUnitReader();
@@ -247,13 +268,15 @@ export class DriverFeedEncoder {
 
   constructor(
     options: DriverFeedEncoderOptions,
+    logger: Logger,
     callbacks: DriverFeedEncoderCallbacks,
     processFactory: DriverFeedProcessFactory = spawnDriverFeedProcess,
   ) {
     this.options = options;
+    this.logger = logger;
     this.callbacks = callbacks;
     this.processFactory = processFactory;
-    this.frameBytes = frameBytes(options.source);
+    this.frameBytes = driverFeedFrameBytes(options.source);
   }
 
   get running(): boolean {
@@ -261,7 +284,7 @@ export class DriverFeedEncoder {
   }
 
   get outputSize(): DriverFeedOutputSize {
-    return driverFeedOutputSize(this.options.outputHeight);
+    return this.options.output;
   }
 
   start(): void {
@@ -274,7 +297,7 @@ export class DriverFeedEncoder {
     this.stopping = false;
     const args = buildDriverFeedArgs(this.options);
     const executable = Bun.env["FFMPEG_PATH"] ?? "ffmpeg";
-    logger.info("driver feed encoder starting", {
+    this.logger.info("driver feed encoder starting", {
       output: this.outputSize,
       hardwareAcceleration: this.options.hardwareAcceleration,
     });
@@ -311,7 +334,7 @@ export class DriverFeedEncoder {
       } catch (error) {
         // FLV has no resync point, so a framing error ends this encoder. The
         // Go-Live stream is unaffected; the feed is down until the next session.
-        logger.error("driver feed output is not valid FLV", error);
+        this.logger.error("driver feed output is not valid FLV", error);
         Sentry.captureException(error);
         this.stop();
         return;
@@ -326,22 +349,24 @@ export class DriverFeedEncoder {
       if (!Buffer.isBuffer(chunk)) {
         throw new TypeError("ffmpeg stderr emitted a non-Buffer chunk");
       }
-      logger.error("driver feed ffmpeg", { stderr: chunk.toString().trim() });
+      this.logger.error("driver feed ffmpeg", {
+        stderr: chunk.toString().trim(),
+      });
     });
     child.stdin.on("error", (error) => {
       // EPIPE once ffmpeg exits is expected during teardown; anything else is not.
       if (this.stopping) return;
-      logger.error("driver feed ffmpeg stdin failed", error);
+      this.logger.error("driver feed ffmpeg stdin failed", error);
     });
     child.on("error", (error) => {
-      logger.error("driver feed ffmpeg failed to spawn", error);
+      this.logger.error("driver feed ffmpeg failed to spawn", error);
       Sentry.captureException(error);
       this.markStopped(child);
     });
     child.on("exit", (code, signal) => {
       if (!this.stopping) {
         // Unexpected: log loudly but keep the Go-Live stream alive.
-        logger.error("driver feed ffmpeg exited unexpectedly", {
+        this.logger.error("driver feed ffmpeg exited unexpectedly", {
           code,
           signal,
         });
@@ -356,7 +381,7 @@ export class DriverFeedEncoder {
   }
 
   /**
-   * Feed one overlay-composited BGRA frame. No-op when the encoder is down.
+   * Feed one composited frame in the source pixel format. No-op when the encoder is down.
    * `inputReceivedAtMs` is the receipt time of the earliest input this frame is
    * the first to reflect, on the InputLatencyTracker clock.
    */
@@ -371,7 +396,7 @@ export class DriverFeedEncoder {
       // has broken.
       if (!this.warnedSizeMismatch) {
         this.warnedSizeMismatch = true;
-        logger.warn("driver feed dropping frames of unexpected size", {
+        this.logger.warn("driver feed dropping frames of unexpected size", {
           expected: this.frameBytes,
           received: frame.length,
         });
@@ -393,7 +418,7 @@ export class DriverFeedEncoder {
     try {
       this.sink?.end();
     } catch (error) {
-      logger.warn("driver feed sink end failed", error);
+      this.logger.warn("driver feed sink end failed", error);
     }
     child.kill("SIGTERM");
     this.markStopped(child);

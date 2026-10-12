@@ -11,7 +11,8 @@ import {
   framesFromMs,
   type CommandTiming,
 } from "#src/emulator/command-sink.ts";
-import { encodePng } from "#src/emulator/png.ts";
+import { encodePng } from "@shepherdjerred/discord-plays-core/image/png.ts";
+import { HEIGHT, WIDTH } from "#src/emulator/constants.ts";
 import {
   GameStreamer,
   type GameStreamerOptions,
@@ -248,7 +249,8 @@ export class PokemonGameDriver implements GameDriver<SelfbotPooledUserbot> {
             toggles,
             mode: eventsConfig.mode,
             attachScreenshot: eventsConfig.attach_screenshot,
-            renderScreenshot: () => encodePng(emulator.renderFrame(), 3),
+            renderScreenshot: () =>
+              encodePng(emulator.renderFrame(), WIDTH, HEIGHT, 3),
           });
           const interval = eventsConfig.poll_interval_frames;
           emulator.addFrameHook((frame) => {

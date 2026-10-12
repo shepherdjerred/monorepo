@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   DriverFeedLatencyTracker,
   MAX_PENDING_FRAMES,
-} from "./latency-tracker.ts";
+} from "#src/driver-feed/latency-tracker.ts";
 
 function harness() {
   let t = 1000;

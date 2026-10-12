@@ -1,4 +1,4 @@
-import { encodePngToSize } from "./png.ts";
+import { encodePngToSize } from "@shepherdjerred/discord-plays-core/image/png.ts";
 
 export const SCREENSHOT_WIDTH = 640;
 export const SCREENSHOT_HEIGHT = 480;

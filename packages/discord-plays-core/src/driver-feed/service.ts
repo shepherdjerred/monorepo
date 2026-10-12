@@ -1,4 +1,4 @@
-// Driver-feed service: owns the /video WebSocket route for the process lifetime
+// Driver-feed service: owns the feed's WebSocket route for the process lifetime
 // and the ffmpeg encoder for the lifetime of one game session.
 //
 // Split that way because the two have genuinely different lifetimes. Clients may
@@ -10,50 +10,92 @@
 // the noServer upgrade path that lets both protocols safely coexist.
 import type { Server as HttpServer, IncomingMessage } from "node:http";
 import { WebSocketServer, WebSocket, type RawData } from "ws";
-import {
-  DRIVER_FEED_PATH,
-  type DriverFeedInit,
-  DriverFeedReadySchema,
-} from "@discord-plays-mario-kart/common";
-import type { Config } from "#src/config/schema.ts";
-import { AUDIO_CHANNELS } from "#src/emulator/constants.ts";
-import type { FrameFormat } from "#src/engine/format.ts";
-import { logger } from "#src/logger.ts";
+import type { Logger } from "#src/logger.ts";
+import type { DriverFeedConfig } from "./config.ts";
 import {
   driverFeedClientBufferBytes,
   driverFeedClients,
   driverFeedEncoderRunning,
-} from "#src/observability/metrics.ts";
+} from "./metrics.ts";
+import {
+  DRIVER_FEED_PATH,
+  type DriverFeedInit,
+  DriverFeedReadySchema,
+} from "./protocol.ts";
 import {
   DriverFeedEncoder,
   H264_CODEC_STRING,
   driverFeedOutputSize,
+  type DriverFeedOutputSize,
+  type DriverFeedSourceFormat,
 } from "./encoder.ts";
 import { DriverFeedHub, type FeedClient } from "./hub.ts";
 
-type DriverFeedConfig = Config["driver_feed"];
-type StreamVideoConfig = Config["stream"]["video"];
+/** Encoder settings shared with the Go-Live path: same GPU, same latency knob. */
+export type DriverFeedVideoSettings = {
+  readonly hardware_acceleration: boolean;
+  readonly vaapi_device: string;
+  readonly encoder_async_depth: number;
+};
+
+/**
+ * The game's verdict on one connecting browser. An admitted client is asked
+ * again through `isStillAdmitted` before every access unit, so losing the
+ * right to watch (a released seat, leaving the voice channel) ends the feed.
+ */
+export type DriverFeedAdmission =
+  | { readonly admitted: true; readonly isStillAdmitted: () => boolean }
+  | { readonly admitted: false; readonly reason: string };
+
+export type DriverFeedAudioFormat = {
+  readonly sampleRate: number;
+  readonly channels: number;
+};
+
+/** Decides who may watch. Games own the policy; core only enforces it. */
+export type DriverFeedAdmit = (
+  request: IncomingMessage,
+) => DriverFeedAdmission | Promise<DriverFeedAdmission>;
 
 export type DriverFeedServiceOptions = {
   readonly config: DriverFeedConfig;
-  /** Encoder settings shared with the Go-Live path: same GPU, same latency knob. */
-  readonly video: Pick<
-    StreamVideoConfig,
-    "hardware_acceleration" | "vaapi_device" | "encoder_async_depth"
-  >;
-  /** The configured engine's frames; the feed encodes every one of them. */
-  readonly format: FrameFormat;
+  readonly video: DriverFeedVideoSettings;
+  /** The game's frames; the feed encodes every one of them. */
+  readonly source: DriverFeedSourceFormat;
+  /** The game's audio, sent to pages as interleaved s16le PCM via `pushAudio`. */
+  readonly audio: DriverFeedAudioFormat;
+  /** Width / height of the picture as players should see it, e.g. 4/3 or 3/2. */
+  readonly displayAspect: number;
+  /** ffmpeg `scale` flags, e.g. `neighbor` for crisp pixel art. */
+  readonly scaleFlags?: string;
+  readonly logger: Logger;
+  /** WebSocket path; defaults to `DRIVER_FEED_PATH`. */
+  readonly path?: string;
 };
+
+const REJECT_ALL: DriverFeedAdmit = () => ({
+  admitted: false,
+  reason: "the driver feed is not accepting viewers",
+});
 
 export class DriverFeedService {
   private readonly options: DriverFeedServiceOptions;
+  private readonly logger: Logger;
+  private readonly path: string;
+  private readonly output: DriverFeedOutputSize;
   private readonly hub: DriverFeedHub;
-  private readonly activeClients = new Map<FeedClient, string>();
+  private readonly activeClients = new Map<FeedClient, () => boolean>();
   private encoder: DriverFeedEncoder | undefined;
-  private isActiveDriver: (socketId: string) => boolean = () => false;
+  private admit: DriverFeedAdmit = REJECT_ALL;
 
   constructor(options: DriverFeedServiceOptions) {
     this.options = options;
+    this.logger = options.logger;
+    this.path = options.path ?? DRIVER_FEED_PATH;
+    this.output = driverFeedOutputSize(
+      options.config.height,
+      options.displayAspect,
+    );
     this.hub = new DriverFeedHub({
       maxClients: options.config.max_clients,
       maxClientBufferBytes: options.config.max_client_buffer_bytes,
@@ -61,11 +103,13 @@ export class DriverFeedService {
   }
 
   /**
-   * The controller's Socket.IO seat is the authority for the capped feed. This
-   * is wired after the game driver exists because its SeatManager is per-session.
+   * Install the game's admission policy. Until this is called every client is
+   * rejected. It is a setter rather than a constructor option because the
+   * policy usually depends on per-session state (Mario Kart's SeatManager)
+   * that exists only after the game driver is built.
    */
-  setDriverAdmission(isActiveDriver: (socketId: string) => boolean): void {
-    this.isActiveDriver = isActiveDriver;
+  setAdmission(admit: DriverFeedAdmit): void {
+    this.admit = admit;
   }
 
   /**
@@ -77,43 +121,48 @@ export class DriverFeedService {
    *
    * Engine.io is not quite as polite in the other direction: by default it
    * ends any upgrade outside `/socket.io/` 1 s later unless the socket reports
-   * bytes written, which Bun's upgraded sockets never do. `createSocket`
+   * bytes written, which Bun's upgraded sockets never do. `createGameSocket`
    * (webserver/socket.ts) turns that off and ends unserved upgrades itself.
    * `attach.test.ts` pins both behaviours.
    */
   attach(server: HttpServer): void {
     const wss = new WebSocketServer({ noServer: true });
     server.on("upgrade", (request, socket, head) => {
-      if (requestPath(request) !== DRIVER_FEED_PATH) return;
+      if (requestPath(request) !== this.path) return;
       wss.handleUpgrade(request, socket, head, (ws) => {
         wss.emit("connection", ws, request);
       });
     });
     wss.on("connection", (ws: WebSocket, request: IncomingMessage) => {
-      this.onConnection(ws, request);
+      void this.onConnection(ws, request);
     });
-    logger.info("driver feed websocket attached", { path: DRIVER_FEED_PATH });
+    this.logger.info("driver feed websocket attached", { path: this.path });
   }
 
   /**
    * Start encoding for a new session.
    *
-   * Restarts rather than throws when an encoder is already up: the caller is the
-   * streamer's `onEncoderStarted` hook, and a stream that self-heals fires it
-   * again. Re-encoding from the new stream is the correct response, and the
+   * Restarts rather than throws when an encoder is already up: a caller such as
+   * a streamer's `onEncoderStarted` hook fires again when the stream
+   * self-heals. Re-encoding from the new stream is the correct response, and the
    * clients resync at the first keyframe of the new process.
    */
   startSession(): void {
     if (this.encoder !== undefined) {
-      logger.info("driver feed restarting encoder for a new stream session");
+      this.logger.info(
+        "driver feed restarting encoder for a new stream session",
+      );
       this.encoder.stop();
       this.encoder = undefined;
       this.hub.resetAllToKeyframe();
     }
     const encoder = new DriverFeedEncoder(
       {
-        source: this.options.format,
-        outputHeight: this.options.config.height,
+        source: this.options.source,
+        output: this.output,
+        ...(this.options.scaleFlags === undefined
+          ? {}
+          : { scaleFlags: this.options.scaleFlags }),
         bitrateKbps: this.options.config.bitrate_kbps,
         bitrateMaxKbps: this.options.config.bitrate_max_kbps,
         keyframeIntervalFrames: this.options.config.keyframe_interval_frames,
@@ -121,6 +170,7 @@ export class DriverFeedService {
         vaapiDevice: this.options.video.vaapi_device,
         encoderAsyncDepth: this.options.video.encoder_async_depth,
       },
+      this.logger,
       {
         onAccessUnit: (unit) => {
           this.removeInactiveClients();
@@ -138,7 +188,7 @@ export class DriverFeedService {
     this.hub.broadcastAudio(pcm);
   }
 
-  /** Feed one overlay-composited BGRA frame from the emulator tee. */
+  /** Feed one composited frame, in the source pixel format, from the game's frame tee. */
   pushFrame(frame: Buffer, inputReceivedAtMs?: number): void {
     this.encoder?.pushFrame(frame, inputReceivedAtMs);
   }
@@ -155,33 +205,40 @@ export class DriverFeedService {
     resetDriverFeedGauges();
   }
 
-  private onConnection(ws: WebSocket, request: IncomingMessage): void {
+  private async onConnection(
+    ws: WebSocket,
+    request: IncomingMessage,
+  ): Promise<void> {
     this.removeInactiveClients();
     if (!requestHasSameOrigin(request)) {
-      logger.warn("driver feed rejected a cross-origin client");
+      this.logger.warn("driver feed rejected a cross-origin client");
       ws.close(1008, "same-origin access is required");
       return;
     }
-    const socketId = requestUrl(request)?.searchParams.get("driverSocketId");
-    if (socketId === null || socketId === undefined) {
-      logger.warn("driver feed rejected a client without an active seat");
-      ws.close(1008, "an active driver seat is required");
+    let admission: DriverFeedAdmission;
+    try {
+      admission = await this.admit(request);
+    } catch (error) {
+      this.logger.error("driver feed admission check failed", error);
+      ws.close(1011, "admission check failed");
       return;
     }
-    if (!this.isActiveDriver(socketId)) {
-      logger.warn("driver feed rejected a client without an active seat");
-      ws.close(1008, "an active driver seat is required");
+    if (!admission.admitted) {
+      this.logger.warn("driver feed rejected a client", {
+        reason: admission.reason,
+      });
+      ws.close(1008, admission.reason.slice(0, 123));
       return;
     }
-    const out = driverFeedOutputSize(this.options.config.height);
+    const { isStillAdmitted } = admission;
     const init: DriverFeedInit = {
       kind: "init",
       codec: H264_CODEC_STRING,
-      width: out.width,
-      height: out.height,
-      frameRate: this.options.format.fps,
-      audioSampleRate: this.options.format.audioSampleRate,
-      audioChannels: AUDIO_CHANNELS,
+      width: this.output.width,
+      height: this.output.height,
+      frameRate: this.options.source.fps,
+      audioSampleRate: this.options.audio.sampleRate,
+      audioChannels: this.options.audio.channels,
     };
     ws.send(JSON.stringify(init));
 
@@ -203,7 +260,7 @@ export class DriverFeedService {
       this.removeClient(client);
     });
     ws.on("error", (error) => {
-      logger.warn("driver feed client socket error", error);
+      this.logger.warn("driver feed client socket error", error);
       this.removeClient(client);
     });
     ws.once("message", (data, isBinary) => {
@@ -227,18 +284,18 @@ export class DriverFeedService {
         ws.close(1008, "unrecognised driver feed readiness acknowledgement");
         return;
       }
-      if (!this.isActiveDriver(socketId)) {
-        ws.close(1008, "driver seat released");
+      if (!isStillAdmitted()) {
+        ws.close(1008, "no longer admitted to the driver feed");
         return;
       }
       if (!this.hub.add(client)) {
-        logger.warn("driver feed rejected a client at capacity", {
+        this.logger.warn("driver feed rejected a client at capacity", {
           maxClients: this.options.config.max_clients,
         });
         ws.close(1013, "driver feed is full");
         return;
       }
-      this.activeClients.set(client, socketId);
+      this.activeClients.set(client, isStillAdmitted);
     });
   }
 
@@ -248,9 +305,9 @@ export class DriverFeedService {
   }
 
   private removeInactiveClients(): void {
-    for (const [client, socketId] of this.activeClients) {
-      if (this.isActiveDriver(socketId)) continue;
-      client.close("driver seat released");
+    for (const [client, isStillAdmitted] of this.activeClients) {
+      if (isStillAdmitted()) continue;
+      client.close("no longer admitted to the driver feed");
       this.removeClient(client);
     }
   }

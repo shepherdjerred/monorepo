@@ -30,7 +30,11 @@ Fully headless — no browser, no game UI, no desktop:
   start it on the first click or key press. The Go-Live stream is for
   spectators and does not depend on the feed. Production enables the feed in its
   GitOps-managed environment; the code default is off, so enable `[driver_feed]`
-  in `config.toml` for other deployments.
+  in `config.toml` for other deployments. The encoder, fan-out hub, and
+  WebSocket route are shared with Pokémon in
+  [`discord-plays-core`](../discord-plays-core/README.md); this package supplies
+  the 640×480 BGRA frame format and the seat-based admission policy
+  (`backend/src/webserver/driver-feed-admission.ts`).
 - **Input** — the web UI exposes up to **four virtual controllers** (seats
   P1–P4). Players drive with the keyboard, a USB or Bluetooth gamepad, or the
   on-screen touch controller on a phone; inputs are sent over Socket.IO and

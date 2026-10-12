@@ -1,93 +1,24 @@
 import { z } from "zod";
+import { DriverFeedConfigSchema } from "@shepherdjerred/discord-plays-core/driver-feed/config.ts";
+import {
+  botConfigFields,
+  gameConfigRootFields,
+  notificationsConfigFields,
+  streamConfigFields,
+  streamVideoConfigFields,
+} from "@shepherdjerred/discord-plays-core/config/game-config.ts";
 
 export type Config = z.infer<typeof ConfigSchema>;
 export const ConfigSchema = z.strictObject({
-  /**
-   * Legacy single-tenant guild id. MK64 is multi-tenant now — the active session's
-   * guildId comes from the `/play` interaction, not config. Field stays optional so
-   * existing config.toml files validate; the runtime ignores it.
-   */
-  server_id: z
-    .string()
-    .regex(/\d*/, "IDs must only have numeric characters")
-    .min(1)
-    .optional(),
-  /** Root directory under which per-guild session dirs are created. Defaults to "saves". */
-  state_root_dir: z.string().min(1).default("saves"),
+  ...gameConfigRootFields,
   bot: z.strictObject({
-    enabled: z.boolean(),
-    discord_token: z.string().min(1),
-    application_id: z
-      .string()
-      .regex(/\d*/, "IDs must only have numeric characters")
-      .min(1),
-    commands: z.strictObject({
-      enabled: z.boolean(),
-      update: z.boolean(),
-      screenshot: z.strictObject({
-        enabled: z.boolean(),
-      }),
-    }),
-    notifications: z.strictObject({
-      /**
-       * Legacy notifications channel id. Notifications now target the session's bound
-       * text channel (the channel `/play` was invoked in). Optional + ignored.
-       */
-      channel_id: z
-        .string()
-        .regex(/\d*/, "IDs must only have numeric characters")
-        .min(1)
-        .optional(),
-      enabled: z.boolean(),
-    }),
+    ...botConfigFields,
+    notifications: z.strictObject(notificationsConfigFields),
   }),
   stream: z.strictObject({
-    enabled: z.boolean(),
-    /**
-     * Legacy voice channel id. The voice channel comes from the caller's voice state
-     * on `/play`. Optional + ignored.
-     */
-    channel_id: z
-      .string()
-      .regex(/\d*/, "IDs must only have numeric characters")
-      .min(1)
-      .optional(),
-    dynamic_streaming: z.boolean(),
-    minimum_in_channel: z.number().nonnegative(),
-    require_watching: z.boolean(),
-    /**
-     * The selfbot account that joins voice channels and streams the game. ONE
-     * userbot per deployment — the emulator is a single-slot resource (at most
-     * one active game at a time per pod), so there's nothing to gain from a
-     * pool of N userbots here. The account just needs to be a member of every
-     * Discord server you want this deployment to serve.
-     */
-    userbot: z.strictObject({
-      id: z
-        .string()
-        .regex(/\d*/, "IDs must only have numeric characters")
-        .min(1),
-      token: z.string().min(1),
-    }),
+    ...streamConfigFields,
     video: z.strictObject({
-      // @deprecated Superseded by the 16:9 letterbox (canvas_height + display
-      // aspect). Retained, optional, so existing config.toml files still validate;
-      // no longer read. Remove once all configs drop it.
-      scale: z.number().int().min(1).max(6).optional(),
-      frame_rate: z.number().positive(),
-      bitrate_kbps: z.number().positive(),
-      bitrate_max_kbps: z.number().positive(),
-      // Height of the 16:9 output canvas sent to Discord (width derived as 16:9).
-      // The 4:3 game is scaled to fit and pillarboxed onto black.
-      canvas_height: z.number().int().positive().default(720),
-      // VAAPI hardware H.264 encoding on an Intel iGPU. Off by default (software
-      // libx264 fallback); also enableable via the STREAM_HARDWARE_ACCELERATION env.
-      hardware_acceleration: z.boolean().default(false),
-      vaapi_device: z.string().min(1).default("/dev/dri/renderD128"),
-      // VAAPI `-async_depth`: encode-pipeline depth in frames. 1 (our default)
-      // trades pipelining for ~one frame-interval less latency; set 2 to A/B
-      // against ffmpeg's own default. VAAPI path only.
-      encoder_async_depth: z.number().int().min(1).max(64).default(1),
+      ...streamVideoConfigFields,
       // Realtime latency opt-ins in the discord-video-stream fork: per-packet
       // muxer flush and low-delay Opus (10 ms frames). On by default for this
       // realtime consumer; disable individually when A/B-isolating a change.
@@ -180,35 +111,5 @@ export const ConfigSchema = z.strictObject({
   // Same `.prefault({})` treatment as [leaderboard], and for the same reason: the
   // live config.toml is a 1Password secret, so a required section would crash-loop
   // the pod until someone edits the vault.
-  driver_feed: z
-    .strictObject({
-      // Off by default — turning it on starts a second ffmpeg process. Opt in per
-      // deployment once the uplink has been measured against `bitrate_kbps`.
-      enabled: z.boolean().default(false),
-      // Height of the square-pixel image sent to the browser; the anamorphic
-      // 640x240 framebuffer is scaled to 4:3 at this height (480 -> 640x480), so
-      // the client can paint it without correcting the aspect itself.
-      height: z.number().int().min(120).max(1080).default(480),
-      bitrate_kbps: z.number().int().positive().default(2500),
-      bitrate_max_kbps: z.number().int().positive().default(4000),
-      // Keyframe cadence in frames. Every IDR costs a bitrate spike on a TCP
-      // socket, but it is also the only resync point for a client the hub had to
-      // drop delta units from. 30 frames = ~1 s at the default output rate.
-      keyframe_interval_frames: z.number().int().min(1).max(600).default(30),
-      // Per-client socket backlog ceiling. Past this the hub drops delta units and
-      // resyncs that client at the next keyframe instead of queueing without
-      // bound — the failure mode that reached 3.47 GB against a 4 GiB pod limit on
-      // the Go-Live path (archive/completed/2026-06-19_mk64-stream-backpressure.md).
-      // Every queued byte is also latency on a driver's screen: 128 KiB is ~0.4 s
-      // at 2500 kbps and still fits a keyframe, where 2 MiB allowed ~6.7 s.
-      max_client_buffer_bytes: z
-        .number()
-        .int()
-        .min(64 * 1024)
-        .default(128 * 1024),
-      // Concurrent viewers. Each one costs a full copy of the stream on the
-      // uplink, so this is a bandwidth guard, not a memory one.
-      max_clients: z.number().int().min(1).max(32).default(8),
-    })
-    .prefault({}),
+  driver_feed: DriverFeedConfigSchema,
 });

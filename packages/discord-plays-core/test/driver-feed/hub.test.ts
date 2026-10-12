@@ -3,14 +3,14 @@ import {
   DRIVER_FEED_AUDIO_FLAG,
   DRIVER_FEED_HEADER_BYTES,
   DRIVER_FEED_KEYFRAME_FLAG,
-} from "@discord-plays-mario-kart/common";
+} from "#src/driver-feed/protocol.ts";
 import {
   DriverFeedHub,
   frameDriverFeedAudioMessage,
   frameDriverFeedMessage,
   type FeedClient,
-} from "./hub.ts";
-import type { AccessUnit } from "./annex-b.ts";
+} from "#src/driver-feed/hub.ts";
+import type { AccessUnit } from "#src/driver-feed/annex-b.ts";
 
 function unit(kind: "entry" | "keyframe-only" | "delta"): AccessUnit {
   return {

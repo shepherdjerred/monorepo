@@ -28,9 +28,14 @@ import {
 import {
   DriverFeedEncoder,
   driverFeedOutputSize,
-} from "#src/driver-feed/encoder.ts";
-import { DriverFeedHub, type FeedClient } from "#src/driver-feed/hub.ts";
-import type { AccessUnit } from "#src/driver-feed/annex-b.ts";
+} from "@shepherdjerred/discord-plays-core/driver-feed/encoder.ts";
+import { DISPLAY_ASPECT } from "#src/emulator/constants.ts";
+import { logger } from "#src/logger.ts";
+import {
+  DriverFeedHub,
+  type FeedClient,
+} from "@shepherdjerred/discord-plays-core/driver-feed/hub.ts";
+import type { AccessUnit } from "@shepherdjerred/discord-plays-core/driver-feed/annex-b.ts";
 import { applyStreamOverlays } from "#src/overlay/composite.ts";
 import { createHarnessEngine, parseOutputFps } from "./lib/engines.ts";
 
@@ -127,8 +132,11 @@ hub.add(client);
 
 const encoder = new DriverFeedEncoder(
   {
-    source: format,
-    outputHeight: values["golive-profile"] ? 720 : 480,
+    source: { ...format, pixelFormat: "bgra" },
+    output: driverFeedOutputSize(
+      values["golive-profile"] ? 720 : 480,
+      DISPLAY_ASPECT,
+    ),
     bitrateKbps: values["golive-profile"] ? 5000 : 2500,
     bitrateMaxKbps: values["golive-profile"] ? 8000 : 4000,
     keyframeIntervalFrames: KEYFRAME_INTERVAL,
@@ -136,6 +144,7 @@ const encoder = new DriverFeedEncoder(
     vaapiDevice: "/dev/dri/renderD128",
     encoderAsyncDepth: 1,
   },
+  logger,
   {
     onAccessUnit: (unit) => {
       // Same process clock as stampOverlay, so subtracting the two is exact —
@@ -239,7 +248,7 @@ async function decodeFrameCount(
   label: string,
   bitstream: Buffer,
 ): Promise<number> {
-  const size = driverFeedOutputSize(outputHeightPx);
+  const size = driverFeedOutputSize(outputHeightPx, DISPLAY_ASPECT);
   const proc = Bun.spawn(
     [
       "ffmpeg",
@@ -311,7 +320,7 @@ if (secondEntryAt === -1) {
  * actually been through the scaler and a lossy encoder, not a simulated rescale.
  */
 async function decodeLumaFrames(bitstream: Buffer): Promise<Buffer[]> {
-  const out = driverFeedOutputSize(outputHeightPx);
+  const out = driverFeedOutputSize(outputHeightPx, DISPLAY_ASPECT);
   const proc = Bun.spawn(
     [
       "ffmpeg",
@@ -345,7 +354,7 @@ async function decodeLumaFrames(bitstream: Buffer): Promise<Buffer[]> {
 }
 
 const lumaFrames = await decodeLumaFrames(wholeStream);
-const outputSize = driverFeedOutputSize(outputHeightPx);
+const outputSize = driverFeedOutputSize(outputHeightPx, DISPLAY_ASPECT);
 let clocksRead = 0;
 const mismatched: number[] = [];
 /** capture (overlay stamp) -> encoded access unit ready, per frame, in ms. */

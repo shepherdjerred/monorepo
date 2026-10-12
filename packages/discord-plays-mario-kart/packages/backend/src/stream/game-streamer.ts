@@ -11,7 +11,7 @@ import { GameStreamerBase } from "@shepherdjerred/discord-plays-core/stream/game
 import { DISPLAY_ASPECT } from "#src/emulator/constants.ts";
 import { frameBytes, type FrameFormat } from "#src/engine/format.ts";
 import { createAudioTransport } from "#src/stream/audio-transport.ts";
-import { LatestFrameSink } from "#src/stream/latest-frame-sink.ts";
+import { LatestFrameSink } from "@shepherdjerred/discord-plays-core/stream/latest-frame-sink.ts";
 import { sinkBufferBytes } from "@shepherdjerred/discord-plays-core/observability/metrics.ts";
 import {
   streamFfmpegBitrateKbps,

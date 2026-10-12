@@ -7,6 +7,9 @@ import { streamActive } from "#src/observability/metrics.ts";
 import type { AudioTransport } from "#src/stream/audio-transport.ts";
 
 const silentLogger = {
+  debug: () => {
+    /* silent */
+  },
   info: () => {
     /* silent */
   },

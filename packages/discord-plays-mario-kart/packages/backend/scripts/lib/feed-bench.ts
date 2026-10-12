@@ -11,7 +11,10 @@ import type { DiscordUser } from "@discord-plays-mario-kart/common";
 import type { GameEngine } from "#src/engine/game-engine.ts";
 import { SeatManager } from "#src/input/seat-manager.ts";
 import { applyStreamOverlays } from "#src/overlay/composite.ts";
-import { DriverFeedService } from "#src/driver-feed/index.ts";
+import { DriverFeedService } from "@shepherdjerred/discord-plays-core/driver-feed/service.ts";
+import { AUDIO_CHANNELS, DISPLAY_ASPECT } from "#src/emulator/constants.ts";
+import { logger } from "#src/logger.ts";
+import { seatAdmission } from "#src/webserver/driver-feed-admission.ts";
 import { handleRequest } from "#src/webserver/dispatch.ts";
 import { createWebServer } from "#src/webserver/index.ts";
 import { createHarnessEngine } from "./engines.ts";
@@ -69,7 +72,10 @@ export async function startFeedBench(opts: {
       vaapi_device: "/dev/dri/renderD128",
       encoder_async_depth: 1,
     },
-    format,
+    source: { ...format, pixelFormat: "bgra" },
+    audio: { sampleRate: format.audioSampleRate, channels: AUDIO_CHANNELS },
+    displayAspect: DISPLAY_ASPECT,
+    logger,
   });
   // Bind the port before booting the engine, so a busy port fails fast.
   const { server, socket } = createWebServer({
@@ -97,8 +103,8 @@ export async function startFeedBench(opts: {
       stats: () => Promise.resolve(undefined),
     });
   });
-  driverFeed.setDriverAdmission(
-    (socketId) => seatManager.seatOf(socketId) !== null,
+  driverFeed.setAdmission(
+    seatAdmission((socketId) => seatManager.seatOf(socketId) !== null),
   );
   driverFeed.attach(server);
   await engine.init();

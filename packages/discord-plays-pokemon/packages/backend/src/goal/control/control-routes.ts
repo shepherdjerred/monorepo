@@ -2,7 +2,8 @@ import path from "node:path";
 import { z } from "zod";
 import type { Config } from "#src/config/schema.ts";
 import { enqueueCommand, framesFromMs } from "#src/emulator/command-sink.ts";
-import { encodePng } from "#src/emulator/png.ts";
+import { encodePng } from "@shepherdjerred/discord-plays-core/image/png.ts";
+import { HEIGHT, WIDTH } from "#src/emulator/constants.ts";
 import { parseCommandInput } from "#src/game/command/command-input.ts";
 import { parseChord } from "#src/game/command/chord.ts";
 import {
@@ -222,7 +223,7 @@ async function screenshotResponse(
 async function captureScreenshot(
   context: GoalControlContext,
 ): Promise<{ path: string; frame: number }> {
-  const png = encodePng(context.emulator.renderFrame(), 3);
+  const png = encodePng(context.emulator.renderFrame(), WIDTH, HEIGHT, 3);
   const filePath = path.join(
     screenshotDirectory(context.config.game.goal),
     `pokemon-${String(context.emulator.frame)}-${String(Date.now())}.png`,

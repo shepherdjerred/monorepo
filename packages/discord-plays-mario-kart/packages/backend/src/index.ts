@@ -3,11 +3,17 @@ import { buildMarioKartExtraCommands } from "./discord/slashCommands/index.ts";
 import { MarioKartGameDriver } from "./lifecycle/mario-kart-driver.ts";
 import { SeatManager } from "./input/seat-manager.ts";
 import { createWebServer } from "./webserver/index.ts";
-import { DriverFeedService } from "./driver-feed/index.ts";
+import { DriverFeedService } from "@shepherdjerred/discord-plays-core/driver-feed/service.ts";
+import {
+  resolveDriverFeedConfig,
+  resolveDriverFeedVideo,
+} from "@shepherdjerred/discord-plays-core/driver-feed/config.ts";
 import { engineFormat } from "./engine/format.ts";
+import { AUDIO_CHANNELS, DISPLAY_ASPECT } from "./emulator/constants.ts";
+import { seatAdmission } from "./webserver/driver-feed-admission.ts";
 import { MK64_SAVE_HISTORY_ENTRIES, prepareEngine } from "./engine/index.ts";
-import { resolveDriverFeedConfig } from "./driver-feed/config.ts";
 import { Events } from "discord.js";
+import type { IdentifySocket } from "@shepherdjerred/discord-plays-core/webserver/socket.ts";
 import {
   handleRequest,
   seatsResponse,
@@ -15,7 +21,6 @@ import {
   type PlayAccess,
   type StatsSource,
 } from "./webserver/dispatch.ts";
-import type { IdentifySocket } from "./webserver/socket.ts";
 import { logger } from "./logger.ts";
 import { getConfig } from "./config/index.ts";
 import {
@@ -48,7 +53,7 @@ startEventLoopLagSampler((lagMs) => {
   eventLoopLagMs.observe({ thread: "main" }, lagMs);
 });
 
-const config = getConfig();
+const config = await getConfig();
 
 // Engine preparation runs before anything connects: it extracts the
 // ROM-derived game archive (cached on the saves volume), and a missing install
@@ -69,15 +74,14 @@ const driverFeedConfig = resolveDriverFeedConfig(config.driver_feed, Bun.env);
 const driverFeed = driverFeedConfig.enabled
   ? new DriverFeedService({
       config: driverFeedConfig,
-      video: {
-        hardware_acceleration:
-          Bun.env["STREAM_HARDWARE_ACCELERATION"] === "true" ||
-          config.stream.video.hardware_acceleration,
-        vaapi_device:
-          Bun.env["VAAPI_DEVICE"] ?? config.stream.video.vaapi_device,
-        encoder_async_depth: config.stream.video.encoder_async_depth,
+      video: resolveDriverFeedVideo(config.stream.video, Bun.env),
+      source: { ...engineFormat(config), pixelFormat: "bgra" },
+      audio: {
+        sampleRate: engineFormat(config).audioSampleRate,
+        channels: AUDIO_CHANNELS,
       },
-      format: engineFormat(config),
+      displayAspect: DISPLAY_ASPECT,
+      logger,
     })
   : undefined;
 
@@ -91,10 +95,12 @@ const stats = createPrismaLeaderboardStore(prisma, players);
 // general-purpose (Streambot uses it for many concurrent streams); for this single-slot
 // game-bot we just feed it the single configured userbot token.
 const driver = new MarioKartGameDriver({ config, build, driverFeed, stats });
-driverFeed?.setDriverAdmission((socketId) => {
-  const active = driver.getActiveRuntime();
-  return active !== null && active.seatManager.seatOf(socketId) !== null;
-});
+driverFeed?.setAdmission(
+  seatAdmission((socketId) => {
+    const active = driver.getActiveRuntime();
+    return active !== null && active.seatManager.seatOf(socketId) !== null;
+  }),
+);
 
 const runtime = bootGameBot({
   serviceName: "discord-plays-mario-kart",
@@ -143,7 +149,7 @@ if (config.web.enabled) {
     });
   }
   const signedIn = auth;
-  const identify: IdentifySocket = (cookieHeader) =>
+  const identify: IdentifySocket<DiscordUser> = (cookieHeader) =>
     signedIn === undefined
       ? Promise.resolve(undefined)
       : signedIn.identify(cookieHeader);

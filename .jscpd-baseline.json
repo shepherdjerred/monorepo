@@ -152,13 +152,9 @@
       "clones": 2,
       "tokens": 401
     },
-    "packages/discord-plays-mario-kart/packages/backend/src/config/index.ts|packages/discord-plays-pokemon/packages/backend/src/config/index.ts": {
-      "clones": 1,
-      "tokens": 238
-    },
     "packages/discord-plays-mario-kart/packages/backend/src/config/schema.ts|packages/discord-plays-pokemon/packages/backend/src/config/schema.ts": {
-      "clones": 3,
-      "tokens": 503
+      "clones": 1,
+      "tokens": 81
     },
     "packages/discord-plays-mario-kart/packages/backend/src/discord/slashCommands/commands/screenshot.ts|packages/discord-plays-pokemon/packages/backend/src/discord/slashCommands/commands/screenshot.ts": {
       "clones": 2,
@@ -168,14 +164,6 @@
       "clones": 1,
       "tokens": 123
     },
-    "packages/discord-plays-mario-kart/packages/backend/src/emulator/png.test.ts|packages/discord-plays-mario-kart/packages/backend/src/webserver/dispatch.test.ts": {
-      "clones": 1,
-      "tokens": 83
-    },
-    "packages/discord-plays-mario-kart/packages/backend/src/emulator/png.ts|packages/discord-plays-pokemon/packages/backend/src/emulator/png.ts": {
-      "clones": 2,
-      "tokens": 274
-    },
     "packages/discord-plays-mario-kart/packages/backend/src/leaderboard/race-watcher.test.ts|packages/discord-plays-mario-kart/packages/backend/src/leaderboard/race-watcher.test.ts": {
       "clones": 3,
       "tokens": 215
@@ -183,10 +171,6 @@
     "packages/discord-plays-mario-kart/packages/backend/src/lifecycle/mario-kart-driver.ts|packages/discord-plays-pokemon/packages/backend/src/lifecycle/pokemon-driver.ts": {
       "clones": 1,
       "tokens": 77
-    },
-    "packages/discord-plays-mario-kart/packages/backend/src/logger.ts|packages/discord-plays-pokemon/packages/backend/src/logger.ts": {
-      "clones": 1,
-      "tokens": 88
     },
     "packages/discord-plays-mario-kart/packages/common/src/model/screenshot.ts|packages/discord-plays-pokemon/packages/common/src/model/screenshot.ts": {
       "clones": 1,

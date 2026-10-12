@@ -8,7 +8,8 @@ import {
   time,
   userMention,
 } from "discord.js";
-import { encodePng } from "#src/emulator/png.ts";
+import { encodePng } from "@shepherdjerred/discord-plays-core/image/png.ts";
+import { HEIGHT, WIDTH } from "#src/emulator/constants.ts";
 import type { PokemonGameDriver } from "#src/lifecycle/pokemon-driver.ts";
 
 export const screenshotCommand = new SlashCommandBuilder()
@@ -37,7 +38,12 @@ export function makeScreenshot(driver: PokemonGameDriver, botClient: Client) {
       });
       return;
     }
-    const buffer = encodePng(runtime.emulator.renderFrame(), SCREENSHOT_SCALE);
+    const buffer = encodePng(
+      runtime.emulator.renderFrame(),
+      WIDTH,
+      HEIGHT,
+      SCREENSHOT_SCALE,
+    );
     const date = new Date();
     const attachment = new AttachmentBuilder(buffer, {
       name: "screenshot.png",

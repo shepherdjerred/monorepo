@@ -1,4 +1,11 @@
 import { z } from "zod";
+import {
+  botConfigFields,
+  gameConfigRootFields,
+  notificationsConfigFields,
+  streamConfigFields,
+  streamVideoConfigFields,
+} from "@shepherdjerred/discord-plays-core/config/game-config.ts";
 
 export type Config = z.infer<typeof ConfigSchema>;
 
@@ -71,44 +78,11 @@ const GoalConfigSchema = z
   });
 
 export const ConfigSchema = z.strictObject({
-  /**
-   * @deprecated Pokemon is multi-tenant now — the active session's guildId comes from the
-   * `/play` interaction, not config. Field stays optional so existing config.toml files
-   * validate without churn; the runtime ignores it.
-   */
-  server_id: z
-    .string()
-    .regex(/\d*/, "IDs must only have numeric characters")
-    .min(1)
-    .optional(),
-  /** Root directory under which per-guild session dirs are created. Defaults to "saves". */
-  state_root_dir: z.string().min(1).default("saves"),
+  ...gameConfigRootFields,
   bot: z.strictObject({
-    enabled: z.boolean(),
-    discord_token: z.string().min(1),
-    application_id: z
-      .string()
-      .regex(/\d*/, "IDs must only have numeric characters")
-      .min(1),
-    commands: z.strictObject({
-      enabled: z.boolean(),
-      update: z.boolean(),
-      screenshot: z.strictObject({
-        enabled: z.boolean(),
-      }),
-    }),
+    ...botConfigFields,
     notifications: z.strictObject({
-      /**
-       * @deprecated Notifications now target the session's bound text channel (the channel
-       * `/play` was invoked in). Field stays optional so existing config.toml files validate;
-       * the runtime ignores it.
-       */
-      channel_id: z
-        .string()
-        .regex(/\d*/, "IDs must only have numeric characters")
-        .min(1)
-        .optional(),
-      enabled: z.boolean(),
+      ...notificationsConfigFields,
       // Notifications for in-game events detected by polling emulator memory
       // (faints, badges, evolutions, catches, ...). All defaulted so existing
       // config.toml files validate unchanged.
@@ -136,49 +110,8 @@ export const ConfigSchema = z.strictObject({
     }),
   }),
   stream: z.strictObject({
-    enabled: z.boolean(),
-    /**
-     * @deprecated The voice channel comes from the caller's voice state on `/play`.
-     * Optional so existing config.toml files validate.
-     */
-    channel_id: z
-      .string()
-      .regex(/\d*/, "IDs must only have numeric characters")
-      .min(1)
-      .optional(),
-    dynamic_streaming: z.boolean(),
-    minimum_in_channel: z.number().nonnegative(),
-    require_watching: z.boolean(),
-    /**
-     * The selfbot account that joins voice channels and streams the game. ONE
-     * userbot per deployment — the emulator is a single-slot resource (at most
-     * one active game at a time per pod), so there's nothing to gain from a
-     * pool of N userbots here. The account just needs to be a member of every
-     * Discord server you want this deployment to serve.
-     */
-    userbot: z.strictObject({
-      id: z
-        .string()
-        .regex(/\d*/, "IDs must only have numeric characters")
-        .min(1),
-      token: z.string().min(1),
-    }),
-    video: z.strictObject({
-      // @deprecated Superseded by the 16:9 letterbox (canvas_height + display
-      // aspect). Retained, optional, so existing config.toml files still validate;
-      // no longer read. Remove once all configs drop it.
-      scale: z.number().int().min(1).max(6).optional(),
-      frame_rate: z.number().positive(),
-      bitrate_kbps: z.number().positive(),
-      bitrate_max_kbps: z.number().positive(),
-      // Height of the 16:9 output canvas sent to Discord (width derived as 16:9).
-      // The 3:2 game is scaled to fit and pillarboxed onto black.
-      canvas_height: z.number().int().positive().default(720),
-      // VAAPI hardware H.264 encoding on an Intel iGPU. Off by default (software
-      // libx264 fallback); also enableable via the STREAM_HARDWARE_ACCELERATION env.
-      hardware_acceleration: z.boolean().default(false),
-      vaapi_device: z.string().min(1).default("/dev/dri/renderD128"),
-    }),
+    ...streamConfigFields,
+    video: z.strictObject(streamVideoConfigFields),
   }),
   game: z.strictObject({
     enabled: z.boolean(),
