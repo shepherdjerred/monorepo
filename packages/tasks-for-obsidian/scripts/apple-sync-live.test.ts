@@ -5,6 +5,7 @@ import { afterEach, describe, expect, test } from "vitest";
 import {
   assertOwnedSimulator,
   settledProfile,
+  validate,
   verifyReplica,
 } from "./apple-sync-live/model";
 
@@ -130,6 +131,47 @@ describe("live synchronization completion", () => {
       "contract",
     );
   });
+});
+
+describe("content-free account operation diagnostics", () => {
+  test.each([
+    "sign_in",
+    "list_vaults",
+    "sign_out",
+    "vault_access",
+    "user_info",
+  ])(
+    "requires the closed %s operation without private fields",
+    (requestKind) => {
+      const diagnostic = {
+        requestKind,
+        stage: "post",
+        statusCode: 200,
+        failureClassification: "account_rejected",
+        boundaryCode: "account_rejected",
+        requestID: crypto.randomUUID(),
+        capturedAt: new Date(now).toISOString(),
+      };
+      expect(() => validate("accountExchange", diagnostic)).not.toThrow();
+      expect(() =>
+        validate("accountExchange", {
+          ...diagnostic,
+          requestKind: "unknown_private_operation",
+        }),
+      ).toThrow("contract");
+      const { requestKind: omitted, ...missingKind } = diagnostic;
+      expect(omitted).toBe(requestKind);
+      expect(() => validate("accountExchange", missingKind)).toThrow(
+        "contract",
+      );
+      expect(() =>
+        validate("accountExchange", {
+          ...diagnostic,
+          responseBody: "forbidden",
+        }),
+      ).toThrow("contract");
+    },
+  );
 });
 
 async function replica() {

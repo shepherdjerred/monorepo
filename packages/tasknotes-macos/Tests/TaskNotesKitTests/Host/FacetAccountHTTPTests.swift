@@ -10,7 +10,7 @@ struct FacetAccountHTTPTests {
         var methods: [String] = []
         await #expect(throws: FacetSyncError.self) {
             try await FacetAccountHTTP.perform(
-                request(), ownsAttempt: { false },
+                request(), requestKind: .signIn, ownsAttempt: { false },
                 send: {
                     methods.append($0.httpMethod ?? "")
                     return (200, Data())
@@ -25,7 +25,7 @@ struct FacetAccountHTTPTests {
         var methods: [String] = []
         let exchange = _Concurrency.Task {
             try await FacetAccountHTTP.perform(
-                request(), ownsAttempt: { owns },
+                request(), requestKind: .signIn, ownsAttempt: { owns },
                 send: {
                     methods.append($0.httpMethod ?? "")
                     await pause.stop()
@@ -44,7 +44,7 @@ struct FacetAccountHTTPTests {
         var methods: [String] = []
         let exchange = _Concurrency.Task {
             try await FacetAccountHTTP.perform(
-                request(), ownsAttempt: { true },
+                request(), requestKind: .signIn, ownsAttempt: { true },
                 send: {
                     methods.append($0.httpMethod ?? "")
                     await pause.stop()
@@ -64,7 +64,7 @@ struct FacetAccountHTTPTests {
         let exchange = _Concurrency.Task {
             await pause.stop()
             return try await FacetAccountHTTP.perform(
-                request(), ownsAttempt: { true },
+                request(), requestKind: .signIn, ownsAttempt: { true },
                 send: { _ in
                     calls += 1
                     return (200, Data())
@@ -83,7 +83,7 @@ struct FacetAccountHTTPTests {
         var observed: [FacetAccountExchangeDiagnostic] = []
         await #expect(throws: FacetSyncError.self) {
             try await FacetAccountHTTP.perform(
-                request(), ownsAttempt: { owns },
+                request(), requestKind: .signIn, ownsAttempt: { owns },
                 send: {
                     methods.append($0.httpMethod ?? "")
                     if $0.httpMethod == "POST" { owns = false }
@@ -93,13 +93,14 @@ struct FacetAccountHTTPTests {
         #expect(methods == ["OPTIONS", "POST"])
         #expect(observed.map(\.statusCode) == [nil, 200, nil])
         #expect(observed.last?.stage == .post)
+        #expect(observed.allSatisfy { $0.requestKind == .signIn })
     }
 
     @Test func normalExchangePreservesCoreBodyHeadersAndResponse() async throws {
         let coreRequest = request()
         var calls: [URLRequest] = []
         let (status, bytes) = try await FacetAccountHTTP.perform(
-            coreRequest, ownsAttempt: { true },
+            coreRequest, requestKind: .signIn, ownsAttempt: { true },
             send: {
                 calls.append($0)
                 return (200, Data("synthetic result".utf8))
@@ -120,7 +121,7 @@ struct FacetAccountHTTPTests {
         var latest: FacetAccountExchangeDiagnostic?
         let old = _Concurrency.Task {
             try await FacetAccountHTTP.perform(
-                request(), ownsAttempt: { ownsOld },
+                request(), requestKind: .signIn, ownsAttempt: { ownsOld },
                 send: { request in
                     if request.httpMethod == "POST" { await pause.stop() }
                     return (401, Data("private old response".utf8))
@@ -129,19 +130,21 @@ struct FacetAccountHTTPTests {
         await pause.waitForEntry()
         ownsOld = false
         _ = try await FacetAccountHTTP.perform(
-            request(), ownsAttempt: { true }, send: { _ in (200, Data()) },
+            request(), requestKind: .listVaults, ownsAttempt: { true },
+            send: { _ in (200, Data()) },
             diagnostic: { latest = $0 })
         let current = try #require(latest)
         await pause.resume()
         await #expect(throws: FacetSyncError.self) { try await old.value }
         #expect(latest == current)
         #expect(latest?.stage == .post && latest?.statusCode == 200)
+        #expect(latest?.requestKind == .listVaults)
     }
 
     @Test func diagnosticsDistinguishPreflightAndPostRejectionWithoutContents() async throws {
         var observed: [FacetAccountExchangeDiagnostic] = []
         let response = try await FacetAccountHTTP.perform(
-            request(), ownsAttempt: { true },
+            request(), requestKind: .signIn, ownsAttempt: { true },
             send: { request in
                 (request.httpMethod == "OPTIONS" ? 403 : 401, Data("private body".utf8))
             },
@@ -149,6 +152,8 @@ struct FacetAccountHTTPTests {
         #expect(response.0 == 401)
         #expect(observed.map(\.stage) == [.preflight, .preflight, .post, .post])
         #expect(observed.map(\.statusCode) == [nil, 403, nil, 401])
+        #expect(observed.allSatisfy { $0.requestKind == .signIn })
+        #expect(Set(observed.map(\.requestID)).count == 1)
         let encoded = try JSONEncoder().encode(observed)
         let json = try #require(String(data: encoded, encoding: .utf8))
         #expect(!json.contains("private"))
@@ -161,7 +166,7 @@ struct FacetAccountHTTPTests {
         var methods: [String] = []
         await #expect(throws: URLError.self) {
             try await FacetAccountHTTP.perform(
-                request(), ownsAttempt: { true },
+                request(), requestKind: .signIn, ownsAttempt: { true },
                 send: {
                     methods.append($0.httpMethod ?? "")
                     throw URLError(.timedOut)
@@ -171,6 +176,8 @@ struct FacetAccountHTTPTests {
         #expect(observed.last?.stage == .preflight)
         #expect(observed.last?.failureClassification == "network")
         #expect(observed.last?.statusCode == nil)
+        #expect(observed.allSatisfy { $0.requestKind == .signIn })
+        #expect(Set(observed.map(\.requestID)).count == 1)
     }
 
     private func request() -> ObsidianHttpRequest {

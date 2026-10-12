@@ -196,6 +196,7 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
+        "requestKind",
         "stage",
         "statusCode",
         "failureClassification",
@@ -204,6 +205,15 @@
         "capturedAt"
       ],
       "properties": {
+        "requestKind": {
+          "enum": [
+            "sign_in",
+            "list_vaults",
+            "sign_out",
+            "vault_access",
+            "user_info"
+          ]
+        },
         "requestID": { "$ref": "#/$defs/uuid" },
         "capturedAt": { "type": "string", "format": "date-time" },
         "boundaryCode": {
