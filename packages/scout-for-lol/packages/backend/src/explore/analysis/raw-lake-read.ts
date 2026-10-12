@@ -4,7 +4,7 @@ import {
 } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import { RAW_DOCUMENT_LAKE_COLUMNS } from "@scout-for-lol/data/model/reports/raw-document-lake-columns.ts";
-import { reportLakeLayout } from "#src/report-lake/schema-upgrade/layout.ts";
+import { lakeSchemaFingerprint } from "#src/report-lake/schema.ts";
 import { readBuildFingerprint } from "#src/report-lake/build-manifest.ts";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
 import { listStagingFiles } from "#src/report-lake/staging.ts";
@@ -61,7 +61,7 @@ async function readCapturedDocuments(
   const { buildDir, staging } = captured;
   if (
     buildDir === undefined ||
-    reportLakeLayout(await readBuildFingerprint(buildDir)) === undefined
+    (await readBuildFingerprint(buildDir)) !== lakeSchemaFingerprint()
   ) {
     throw new Error(
       "Raw-document analysis requires the report lake to be rebuilt at the current schema.",

@@ -281,11 +281,11 @@ describe("receipted match staging", () => {
 });
 
 describe("receipted timeline staging", () => {
-  test("reports a lake-layout read failure without recording a staging receipt", async () => {
+  test("reports a staging storage failure without recording a staging receipt", async () => {
     const timeline = rawTimelineFixture(
       RiotMatchIdSchema.parse("NA1_5370969615"),
     );
-    await Bun.write(path.join(lakeDir, "CURRENT"), "missing-build");
+    await blockStagingScaffold();
     await expect(
       stageTimelineReceipted(
         lakeDir,

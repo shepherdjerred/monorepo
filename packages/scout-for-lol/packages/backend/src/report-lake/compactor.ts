@@ -9,7 +9,7 @@ import {
   type CompactionSummary as PublishedCompactionSummary,
 } from "#src/report-lake/compaction-publish.ts";
 type CompactionSummary = PublishedCompactionSummary;
-import { reportLakeLayout } from "#src/report-lake/schema-upgrade/layout.ts";
+import { lakeSchemaFingerprint } from "#src/report-lake/schema.ts";
 import {
   buildDirPath,
   ensureLakeScaffold,
@@ -83,11 +83,10 @@ export async function runReportLakeFold(
     }
 
     // A fold hardlinks the published build's parquet and appends fold files
-    // written at the same physical column set. The bridge recognizes only
-    // exact published layouts; unknown schemas cannot bypass the upgrade gate.
+    // written at the same physical column set. Reject incompatible builds
+    // before creating mixed-schema Parquet.
     const publishedFingerprint = await readBuildFingerprint(currentDir);
-    const layout = reportLakeLayout(publishedFingerprint);
-    if (layout === undefined) {
+    if (publishedFingerprint !== lakeSchemaFingerprint()) {
       throw new Error(
         `Published report lake has an unknown schema (${publishedFingerprint ?? "unrecorded"}); refusing to fold before its physical layout is established`,
       );
@@ -126,7 +125,6 @@ export async function runReportLakeFold(
           buildId,
           table: "raw_documents",
           staged: stagedRawDocuments,
-          layout,
           abortSignal: options.abortSignal,
         });
         const stagedPrematches = await read("prematch");
@@ -146,7 +144,6 @@ export async function runReportLakeFold(
           buildId,
           table: "matches",
           staged: stagedMatches,
-          layout,
           abortSignal: options.abortSignal,
         });
         await writeFoldParquet({
@@ -235,7 +232,7 @@ export async function runReportLakeFold(
             stagedTimelineParticipantFrames.skipped +
             stagedTimelineCoverage.skipped,
         };
-        await writeCompactionManifest(buildDir, summary, layout);
+        await writeCompactionManifest(buildDir, summary);
         await publishBuild(lakeDir, buildId, options.abortSignal);
         markPublished();
         publishCompactionMetrics(summary);

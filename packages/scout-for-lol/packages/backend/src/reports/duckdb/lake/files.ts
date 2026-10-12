@@ -2,8 +2,6 @@
 export type LakeFiles = {
   matchesParquet: string[];
   matchesStaging: string[];
-  /** False only for the exact published Prod layout predating data_source. */
-  matchesHasDataSource?: boolean;
   matchTeamsParquet: string[];
   matchTeamsStaging: string[];
   matchTeamBansParquet: string[];

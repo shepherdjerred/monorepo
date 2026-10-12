@@ -12,14 +12,8 @@ type CompactionSummary = PublishedCompactionSummary;
 import { NdjsonFileWriter } from "#src/report-lake/ndjson-writer.ts";
 import { copyNdjsonToParquet } from "#src/report-lake/parquet/copy-ndjson.ts";
 import { createS3Client } from "#src/storage/s3-client.ts";
-import { reportLakeSchemaUpgradeEnabled } from "#src/config/report-lake-schema-upgrade.ts";
 import { readBuildFingerprint } from "#src/report-lake/build-manifest.ts";
-import {
-  rawDocumentColumns,
-  matchColumns,
-  reportLakeLayout,
-  type ReportLakeLayout,
-} from "#src/report-lake/schema-upgrade/layout.ts";
+import { lakeSchemaFingerprint } from "#src/report-lake/schema.ts";
 import {
   populateMatchesFromS3,
   populatePrematchFromS3,
@@ -34,9 +28,11 @@ import {
 } from "#src/report-lake/paths.ts";
 import {
   MATCH_TEAM_BAN_LAKE_COLUMNS,
+  MATCH_LAKE_COLUMNS,
   MATCH_TEAM_LAKE_COLUMNS,
   PREMATCH_LAKE_COLUMNS,
 } from "@scout-for-lol/data";
+import { RAW_DOCUMENT_LAKE_COLUMNS } from "@scout-for-lol/data/model/reports/raw-document-lake-columns.ts";
 import { removeFoldedStagingFiles } from "#src/report-lake/staging.ts";
 import {
   reclaimAbandonedPendingGenerations,
@@ -47,35 +43,10 @@ import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
 import { writeAccountsParquet } from "#src/report-lake/compact-accounts.ts";
 import { rebuildTimelineParquet } from "#src/report-lake/timeline-compaction.ts";
 import type { CompactionOptions } from "#src/report-lake/compaction-types.ts";
-import { validateStagingSnapshot } from "#src/report-lake/read-staging-rows.ts";
-import { validatePreparedBuild } from "#src/report-lake/schema-upgrade/validate-build.ts";
 
 const logger = createLogger("report-lake-rebuild");
 const GC_KEEP_BUILDS = 2;
 const COMPACTION_TIMEOUT_MS = 30 * 60 * 1000;
-
-async function rebuildLayout(currentDir: string | undefined): Promise<{
-  previousLayout: ReportLakeLayout | undefined;
-  layout: ReportLakeLayout;
-}> {
-  const previousLayout =
-    currentDir === undefined
-      ? undefined
-      : reportLakeLayout(await readBuildFingerprint(currentDir));
-  if (currentDir !== undefined && previousLayout === undefined) {
-    throw new Error(
-      "Published report lake has an unknown schema; refusing to rebuild before its physical layout is established",
-    );
-  }
-  // Do not cold-upgrade during bridge deployment. Once published, the current
-  // layout never depends on the temporary rollout control again.
-  const retainPreviousLayout =
-    previousLayout !== undefined &&
-    previousLayout !== "current" &&
-    !(await reportLakeSchemaUpgradeEnabled());
-  const layout = retainPreviousLayout ? previousLayout : "current";
-  return { previousLayout, layout };
-}
 
 export async function rebuildReportLake(
   prisma: ExtendedPrismaClient,
@@ -85,7 +56,14 @@ export async function rebuildReportLake(
 ): Promise<CompactionSummary> {
   const { onProgress, abortSignal } = options;
   const currentDir = await readCurrentBuildDir(lakeDir);
-  const { previousLayout, layout } = await rebuildLayout(currentDir);
+  if (
+    currentDir !== undefined &&
+    (await readBuildFingerprint(currentDir)) !== lakeSchemaFingerprint()
+  ) {
+    throw new Error(
+      "Published report lake has an unknown schema; refusing to rebuild before its physical layout is established",
+    );
+  }
   const deadlineAt = Date.now() + COMPACTION_TIMEOUT_MS;
   const deadline = AbortSignal.any([
     AbortSignal.timeout(COMPACTION_TIMEOUT_MS),
@@ -194,7 +172,7 @@ export async function rebuildReportLake(
             await copyNdjsonToParquet(session, {
               sourcePath: rawTmp,
               outputDirectory: path.join(buildDir, "raw_documents"),
-              columns: rawDocumentColumns(layout),
+              columns: RAW_DOCUMENT_LAKE_COLUMNS,
               partitionByMonth: true,
             });
           }
@@ -202,7 +180,7 @@ export async function rebuildReportLake(
             await copyNdjsonToParquet(session, {
               sourcePath: matchesTmp,
               outputDirectory: path.join(buildDir, "matches"),
-              columns: matchColumns(layout),
+              columns: MATCH_LAKE_COLUMNS,
               partitionByMonth: true,
             });
           }
@@ -242,7 +220,7 @@ export async function rebuildReportLake(
     }
 
     deadline.throwIfAborted();
-    let accountRows = await writeAccountsParquet(prisma, buildDir, deadline);
+    const accountRows = await writeAccountsParquet(prisma, buildDir, deadline);
     onProgress?.({ phase: "writing-accounts", rows: accountRows });
     deadline.throwIfAborted();
     const rankHistory = await writeCompetitionRankHistoryParquet({
@@ -260,43 +238,6 @@ export async function rebuildReportLake(
       skipped: rankHistory.skipped,
     });
     deadline.throwIfAborted();
-
-    if (
-      previousLayout !== undefined &&
-      previousLayout !== "current" &&
-      layout === "current"
-    ) {
-      onProgress?.({ phase: "validating-prepared-build" });
-      if (
-        skippedMatches +
-          skippedPrematches +
-          rankHistory.skipped +
-          timelines.skipped >
-        0
-      )
-        throw new Error(
-          "Schema upgrade refuses a rebuild with skipped canonical sources",
-        );
-      const tail = await validateStagingSnapshot(
-        await snapshotStagingGenerations(lakeDir),
-      );
-      if (tail.skippedByTable.size > 0)
-        throw new Error(
-          "Schema upgrade refuses invalid committed staging projections",
-        );
-      if (currentDir === undefined)
-        throw new Error("Schema upgrade lost its published baseline");
-      accountRows = await writeAccountsParquet(prisma, buildDir, deadline);
-      await validatePreparedBuild({
-        lakeDir,
-        previousDir: currentDir,
-        buildDir,
-        layout,
-        staging: tail.snapshot,
-        abortSignal: deadline,
-        timeoutMs: remainingTimeoutMs(),
-      });
-    }
 
     const summary = {
       rawDocumentRows: rawWriter.rows,
@@ -317,7 +258,7 @@ export async function rebuildReportLake(
       skippedCompetitionRankHistory: rankHistory.skipped,
       skippedTimelines: timelines.skipped,
     };
-    await writeCompactionManifest(buildDir, summary, layout);
+    await writeCompactionManifest(buildDir, summary);
     await publishBuild(lakeDir, buildId, deadline);
     published = true;
     publishCompactionMetrics(summary);

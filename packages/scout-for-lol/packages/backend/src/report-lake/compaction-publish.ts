@@ -3,10 +3,7 @@ import {
   reportLakeCompactionRowsTotal,
   reportLakeLastPublishTimestamp,
 } from "#src/metrics/reports/report-lake.ts";
-import {
-  layoutFingerprint,
-  type ReportLakeLayout,
-} from "#src/report-lake/schema-upgrade/layout.ts";
+import { lakeSchemaFingerprint } from "#src/report-lake/schema.ts";
 
 export type CompactionSummary = {
   buildId: string;
@@ -32,14 +29,13 @@ export type CompactionSummary = {
 export async function writeCompactionManifest(
   buildDir: string,
   summary: Omit<CompactionSummary, "durationMs">,
-  layout: ReportLakeLayout = "current",
 ): Promise<void> {
   await Bun.write(
     path.join(buildDir, "manifest.json"),
     JSON.stringify(
       {
         ...summary,
-        schemaFingerprint: layoutFingerprint(layout),
+        schemaFingerprint: lakeSchemaFingerprint(),
         builtAt: new Date().toISOString(),
       },
       null,
