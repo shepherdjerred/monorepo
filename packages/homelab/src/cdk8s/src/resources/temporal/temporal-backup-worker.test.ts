@@ -36,15 +36,18 @@ describe("Temporal internal service boundary", () => {
     });
   });
 
-  test("permits cluster S3 only for its four additional consuming roles", () => {
+  test("permits cluster S3 only for its five additional consuming roles", () => {
     const synthesized = resources();
     const components = [
       "reports-worker",
       "repo-worker",
       "scout-worker",
       "glitter-corpus-worker",
+      "infra-worker",
     ];
-    for (const component of components) {
+    // The infra worker mounts its service-account token, so it is read
+    // directly rather than through the token-less worker helper.
+    for (const component of components.filter((c) => c !== "infra-worker")) {
       const { container } = findTemporalWorkerContainer(
         synthesized,
         `temporal-temporal-${component}`,
@@ -57,6 +60,38 @@ describe("Temporal internal service boundary", () => {
         container.env.find((variable) => variable.name === endpointKey)?.value,
       ).toMatch(/:8333$/u);
     }
+    const infra = z
+      .object({
+        template: z.object({
+          spec: z.object({
+            containers: z.array(
+              z.object({
+                env: z.array(
+                  z
+                    .object({ name: z.string(), value: z.string().optional() })
+                    .loose(),
+                ),
+              }),
+            ),
+          }),
+        }),
+      })
+      .parse(
+        findTemporalResource(
+          synthesized,
+          "Deployment",
+          "temporal-temporal-infra-worker",
+        ).spec,
+      );
+    const infraEnv = infra.template.spec.containers[0]?.env ?? [];
+    expect(
+      infraEnv.find((variable) => variable.name === "RWF_ARCHIVE_S3_ENDPOINT")
+        ?.value,
+    ).toMatch(/:8333$/u);
+    expect(
+      infraEnv.find((variable) => variable.name === "RWF_ARCHIVE_S3_BUCKET")
+        ?.value,
+    ).toBe("the-storm-rwf-recordings");
     const policy = findTemporalResource(
       synthesized,
       "NetworkPolicy",

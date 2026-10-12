@@ -65,4 +65,16 @@ export const MINECRAFT_SCHEDULES = schedulesInNamespace("prod", [
     initialPauseNote:
       "Awaiting restored-backup rehearsal, reset Job dry run, and live server/world rollout acceptance",
   },
+  {
+    id: "the-storm-rwf-recording-archive",
+    workflowType: "runRwfRecordingArchiveWorkflow",
+    args: [],
+    timing: { kind: "interval", every: "1 hour" },
+    taskQueue: TASK_QUEUES.WORKFLOWS,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    catchupWindow: "5 minutes",
+    workflowExecutionTimeout: "2 hours",
+    // Runs unpaused; the-storm-rwf-recording-archive-enabled gates each run.
+    memo: "Archive finished Red Warfare recordings to object storage and mark them so the plugin may prune them; skip hibernated servers without waking them",
+  },
 ]);
