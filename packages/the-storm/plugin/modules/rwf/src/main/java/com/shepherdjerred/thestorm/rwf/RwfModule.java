@@ -3,11 +3,14 @@ package com.shepherdjerred.thestorm.rwf;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.StormModule;
 import com.shepherdjerred.thestorm.core.world.ChunkTickets;
+import com.shepherdjerred.thestorm.discord.app.DiscordRelay;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import com.shepherdjerred.thestorm.rwf.adapter.content.ContentFiles;
+import com.shepherdjerred.thestorm.rwf.adapter.content.MapSource;
 import com.shepherdjerred.thestorm.rwf.adapter.content.RwfConfig;
 import com.shepherdjerred.thestorm.rwf.adapter.db.JooqMatchStore;
 import com.shepherdjerred.thestorm.rwf.adapter.db.JooqSnapshotStore;
+import com.shepherdjerred.thestorm.rwf.adapter.discord.RwfDiscordPosts;
 import com.shepherdjerred.thestorm.rwf.adapter.paper.RwfPaper;
 import com.shepherdjerred.thestorm.rwf.adapter.paper.ServerHooks;
 import com.shepherdjerred.thestorm.rwf.adapter.record.GzipRecorder;
@@ -22,6 +25,7 @@ import com.shepherdjerred.thestorm.rwf.app.PayoutService;
 import com.shepherdjerred.thestorm.rwf.app.Pseudonyms;
 import com.shepherdjerred.thestorm.rwf.app.Recorder;
 import com.shepherdjerred.thestorm.rwf.app.RecordingSummary;
+import com.shepherdjerred.thestorm.rwf.domain.map.MapDefinition;
 import com.shepherdjerred.thestorm.rwf.domain.record.Frame;
 import com.shepherdjerred.thestorm.rwf.domain.record.InputFrame;
 import com.shepherdjerred.thestorm.rwf.domain.record.Intent;
@@ -35,6 +39,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.bukkit.Bukkit;
 import org.jspecify.annotations.Nullable;
 
@@ -42,8 +47,9 @@ import org.jspecify.annotations.Nullable;
  * Red Warfare Search and Destroy. Loads {@code rwf.yml}, the kits and the maps, migrates its
  * tables, replays payouts a crash left in the outbox, prunes old recordings, then wires the Paper
  * side over the sealed world and publishes {@link MatchView}, {@link MatchEvents} and {@link
- * CombatantActions} for the bots module. The economy module must be enabled first; the configured
- * world must be loaded already.
+ * CombatantActions} for the bots module. When the discord module is on, lobbies and results are
+ * announced there. The economy module must be enabled first; the configured world must be loaded
+ * already.
  */
 public final class RwfModule implements StormModule {
 
@@ -73,6 +79,7 @@ public final class RwfModule implements StormModule {
   private @Nullable RwfPaper paper;
   private @Nullable Recorder recorder;
   private @Nullable FliptRwfGate flipt;
+  private MatchEvents.@Nullable Subscription discordPosts;
 
   public RwfModule() {
     this(Hooks.production());
@@ -131,6 +138,22 @@ public final class RwfModule implements StormModule {
         .provide(com.shepherdjerred.thestorm.rwf.app.map.MapLoading.class, started.loading());
     context.services().provide(MatchView.class, started.view());
     context.services().provide(MatchEvents.class, started.events());
+    discordPosts =
+        context
+            .services()
+            .find(DiscordRelay.class)
+            .map(
+                relay ->
+                    new RwfDiscordPosts(
+                        relay,
+                        content.maps().stream()
+                            .map(MapSource::definition)
+                            .collect(
+                                Collectors.toUnmodifiableMap(
+                                    MapDefinition::id, MapDefinition::name)),
+                        context.logger()))
+            .map(posts -> started.events().subscribe(posts::accept))
+            .orElse(null);
     context.services().provide(CombatantActions.class, started.actions());
     context
         .services()
@@ -228,6 +251,10 @@ public final class RwfModule implements StormModule {
 
   @Override
   public void disable() {
+    if (discordPosts != null) {
+      discordPosts.close();
+      discordPosts = null;
+    }
     if (paper != null) {
       paper.stop();
       paper = null;
