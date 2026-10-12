@@ -5,6 +5,7 @@ import {
   parseBedrockPong,
   parseQueryReply,
   publicQueryContract,
+  QueryResultSchema,
   queryFullRequest,
   queryHandshake,
 } from "#src/minecraft-query.ts";
@@ -86,6 +87,28 @@ describe("Minecraft public status", () => {
   it("shares a valid cache fixture with the native PHP reader", () => {
     expect(MinecraftStatusSchema.parse(fixture)).toEqual(fixture);
   });
+  it.each([
+    { id: "" },
+    { name: "x".repeat(65) },
+    { progress: "x".repeat(33) },
+    { players: 0 },
+    { unknown: true },
+  ])(
+    "rejects the same invalid game fields in Query results and cached status: %j",
+    (patch) => {
+      const games = [{ ...fixture.games[0], ...patch }];
+      expect(
+        QueryResultSchema.safeParse({
+          ...fixture.players,
+          version: fixture.java.version,
+          games,
+        }).success,
+      ).toBe(false);
+      expect(
+        MinecraftStatusSchema.safeParse({ ...fixture, games }).success,
+      ).toBe(false);
+    },
+  );
   it.each([{}, { "0": "Jerred" }])(
     "rejects object-shaped JSON names: %j",
     (names) => {

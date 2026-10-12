@@ -279,6 +279,30 @@ describe("collectErrors", () => {
     expect(errors).toEqual([]);
   });
 
+  test("only the PR Scout rehearsal is exempt from publication credentials", () => {
+    const scoutStep = {
+      scripts: ["scripts/release/scout-site-release.ts"],
+      providedNames: new Set<string>(),
+    };
+    const handoffRequirements = required({
+      SEAWEEDFS_HANDOFF_ACCESS_KEY_ID: "scripts/lib/ci/ci-handoff.ts:61",
+      SEAWEEDFS_HANDOFF_SECRET_ACCESS_KEY: "scripts/lib/ci/ci-handoff.ts:62",
+    });
+    const requiredFor = () => handoffRequirements;
+    expect(
+      collectErrors({
+        steps: [{ ...scoutStep, key: "pr-dryrun" }],
+        requiredFor,
+      }),
+    ).toEqual([]);
+    expect(
+      collectErrors({
+        steps: [{ ...scoutStep, key: "scout-beta-release" }],
+        requiredFor,
+      }),
+    ).toHaveLength(2);
+  });
+
   test("reports a requireEnv whose argument is not a literal", () => {
     const errors = collectErrors({
       steps: [step],

@@ -193,19 +193,53 @@ test("backend CLI resolves a retained publication instead of the checkout pin", 
   }
 });
 
-test("older CI commands require the retained catalog without a new option", async () => {
-  const source = versionCatalogSource(
-    "shepherdjerred/scout-for-lol/beta",
-    `2.0.0-8864@${DIGEST}`,
-  );
+test.each(["push", "manual", null])(
+  "older live CI commands require the retained catalog (%s)",
+  async (event) => {
+    const source = versionCatalogSource(
+      "shepherdjerred/scout-for-lol/beta",
+      `2.0.0-8864@${DIGEST}`,
+    );
+    expect(
+      await readBackendCatalogSource(
+        [],
+        "8872",
+        () => Promise.resolve(source),
+        event,
+      ),
+    ).toBe(source);
+    await expect(
+      readBackendCatalogSource(
+        [],
+        "8872",
+        () => Promise.reject(new Error("required handoff absent")),
+        event,
+      ),
+    ).rejects.toThrow("required handoff absent");
+  },
+);
+
+test("older PR commands resolve the checkout catalog without a publication handoff", async () => {
+  const checkout = await Bun.file(
+    new URL("../../packages/version-catalog/src/catalog.json", import.meta.url),
+  ).text();
   expect(
-    await readBackendCatalogSource([], "8872", () => Promise.resolve(source)),
-  ).toBe(source);
-  await expect(
-    readBackendCatalogSource([], "8872", () =>
-      Promise.reject(new Error("required handoff absent")),
+    await readBackendCatalogSource(
+      [],
+      "8872",
+      () => {
+        throw new Error("PR rehearsal must not access publication storage");
+      },
+      "pull_request",
     ),
-  ).rejects.toThrow("required handoff absent");
+  ).toBe(checkout);
+  const dryrun = findGeneratedStep(
+    await readGeneratedSteps(new URL("../..", import.meta.url).pathname),
+    "pr-dryrun",
+  );
+  expect(dryrun?.commands.join("\n")).toContain(
+    "resolve-backend-digest --version-catalog-file packages/version-catalog/src/catalog.json",
+  );
 });
 
 test("production pin resolution returns only the exact canonical pin", () => {

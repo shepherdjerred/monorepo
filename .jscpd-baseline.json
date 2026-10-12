@@ -504,10 +504,6 @@
       "clones": 1,
       "tokens": 73
     },
-    "packages/homelab/src/cdk8s/src/resources/mario-kart.ts|packages/homelab/src/cdk8s/src/resources/pokemon.ts": {
-      "clones": 1,
-      "tokens": 87
-    },
     "packages/homelab/src/cdk8s/src/resources/monitoring/monitoring/rules/platform/resource-monitoring.test.ts|packages/homelab/src/cdk8s/src/resources/monitoring/monitoring/rules/platform/resource-monitoring.test.ts": {
       "clones": 1,
       "tokens": 80

@@ -171,11 +171,19 @@ const STEP_REQUIREMENT_EXCEPTIONS: readonly {
   {
     step: "pr-dryrun",
     script: "scripts/release/scout-site-release.ts",
-    names: ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"],
+    names: [
+      "AWS_ACCESS_KEY_ID",
+      "AWS_SECRET_ACCESS_KEY",
+      "SEAWEEDFS_HANDOFF_ACCESS_KEY_ID",
+      "SEAWEEDFS_HANDOFF_SECRET_ACCESS_KEY",
+    ],
     reason:
       "Same shape via scripts/lib/scout/scout-site-storage.ts's requireCreds(dryRun): " +
-      "every subcommand this step runs passes --dry-run. The live " +
-      "scout-beta-release step exports both names and is checked normally.",
+      "every storage-writing subcommand this step runs passes --dry-run. The live " +
+      "scout-beta-release step exports both names and is checked normally. " +
+      "Backend resolution explicitly reads the checkout catalog, and the PR " +
+      "event guard also keeps older generated commands out of handoff storage. " +
+      "Live release steps still require their handoff credentials.",
   },
   {
     step: "pr-dryrun",

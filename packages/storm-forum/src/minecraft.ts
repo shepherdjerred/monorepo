@@ -11,6 +11,7 @@ import {
   queryFullRequest,
   queryHandshake,
   PublicPlayersSchema,
+  PublicGameStatusSchema,
   type QueryResult,
 } from "./minecraft-query.ts";
 
@@ -34,21 +35,7 @@ export const MinecraftStatusSchema = z
     java: EditionSchema,
     bedrock: EditionSchema,
     players: PublicPlayersSchema.optional(),
-    games: z
-      .array(
-        z
-          .object({
-            id: z.string().min(1).max(64),
-            kind: z.enum(["ARENA", "RWF"]),
-            name: z.string().min(1).max(64),
-            phase: z.enum(["WAITING", "STARTING", "RUNNING"]),
-            progress: z.string().max(32).optional(),
-            players: z.number().int().positive(),
-          })
-          .strict(),
-      )
-      .max(1000)
-      .optional(),
+    games: z.array(PublicGameStatusSchema).max(1000).optional(),
   })
   .strict()
   .superRefine((value, context) => {

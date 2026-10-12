@@ -439,11 +439,14 @@ export async function readBackendCatalogSource(
   pipelineNumber: string | null = optionalEnv("CI_PIPELINE_NUMBER"),
   readPublished: () => Promise<string> = () =>
     readRequiredHandoff("version-catalog"),
+  pipelineEvent: string | null = optionalEnv("CI_PIPELINE_EVENT"),
 ): Promise<string> {
   if (args.includes("--version-catalog-file")) {
     return Bun.file(requiredArg(args, "--version-catalog-file")).text();
   }
-  return pipelineNumber === null
+  // PR rehearsals publish no images or catalog handoff. This also supports
+  // commands emitted by the currently deployed generator before this change.
+  return pipelineNumber === null || pipelineEvent === "pull_request"
     ? Bun.file(`${repoRoot()}/packages/version-catalog/src/catalog.json`).text()
     : readPublished();
 }

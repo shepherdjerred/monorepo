@@ -68,7 +68,7 @@ export function prGateSteps(
         `for site in ${DRY_RUN_SITES.join(" ")}; do`,
         '  bun --no-install scripts/release/deploy-site.ts "$site" --dry-run',
         "done",
-        'scout_backend="$(bun --no-install scripts/release/scout-site-release.ts resolve-backend-digest)"',
+        'scout_backend="$(bun --no-install scripts/release/scout-site-release.ts resolve-backend-digest --version-catalog-file packages/version-catalog/src/catalog.json)"',
         'bun --no-install scripts/release/scout-site-release.ts prepare-state --build-number "$CI_RELEASE_NUMBER" --backend-digest "$scout_backend" --output /tmp/scout-release-state.json --dry-run',
         'scout_state="$(cat /tmp/scout-release-state.json)"',
         'bun --no-install scripts/release/scout-site-release.ts archive --state "$scout_state" --dry-run',

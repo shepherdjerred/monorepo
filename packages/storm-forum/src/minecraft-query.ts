@@ -45,23 +45,26 @@ export const PublicPlayersSchema = z
       });
     }
   });
-export const PublicGameDirectorySchema = z
+export const PublicGameStatusSchema = z
   .object({
     id: z.string().min(1).max(64),
     kind: z.enum(["ARENA", "RWF"]),
     name: z.string().min(1).max(64),
     phase: z.enum(["WAITING", "STARTING", "RUNNING"]),
-    progress: z.string().max(32),
-    players: z.array(MinecraftUuid).min(1).max(100_000),
+    progress: z.string().max(32).optional(),
+    players: z.number().int().positive(),
   })
-  .strict()
-  .superRefine((game, context) => {
-    if (new Set(game.players).size !== game.players.length)
-      context.addIssue({
-        code: "custom",
-        message: "Duplicate Minecraft game participant",
-      });
-  });
+  .strict();
+export const PublicGameDirectorySchema = PublicGameStatusSchema.extend({
+  progress: z.string().max(32),
+  players: z.array(MinecraftUuid).min(1).max(100_000),
+}).superRefine((game, context) => {
+  if (new Set(game.players).size !== game.players.length)
+    context.addIssue({
+      code: "custom",
+      message: "Duplicate Minecraft game participant",
+    });
+});
 const QueryMetadataSchema = z
   .object({
     schemaVersion: z.literal(2),
@@ -73,18 +76,7 @@ const QueryMetadataSchema = z
   .strict();
 export const QueryResultSchema = PublicPlayersSchema.extend({
   version: z.string().min(1).max(100),
-  games: z
-    .array(
-      z.object({
-        id: z.string(),
-        kind: z.enum(["ARENA", "RWF"]),
-        name: z.string(),
-        phase: z.enum(["WAITING", "STARTING", "RUNNING"]),
-        progress: z.string().optional(),
-        players: z.number().int().positive(),
-      }),
-    )
-    .max(1000),
+  games: z.array(PublicGameStatusSchema).max(1000),
 }).superRefine((value, context) => {
   if (
     new Set(value.names).size !== value.names.length ||
