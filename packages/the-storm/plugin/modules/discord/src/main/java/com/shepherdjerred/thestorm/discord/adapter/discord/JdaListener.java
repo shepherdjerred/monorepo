@@ -96,7 +96,8 @@ final class JdaListener extends ListenerAdapter {
   private void module(SlashCommandInteractionEvent event, DiscordCommand command) {
     var options = new HashMap<String, String>();
     event.getOptions().forEach(option -> options.put(option.getName(), option.getAsString()));
-    inChannel(event, reply -> command.handler().answer(Map.copyOf(options), reply));
+    var user = event.getUser().getIdLong();
+    inChannel(event, reply -> relay.answer(command, Map.copyOf(options), user, reply));
   }
 
   /** Answers privately, in the linked channel only, with the sleep message once stopping. */

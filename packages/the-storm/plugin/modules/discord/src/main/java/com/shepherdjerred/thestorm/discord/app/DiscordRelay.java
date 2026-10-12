@@ -36,11 +36,12 @@ public final class DiscordRelay {
   private final DiscordConfig config;
   private final DiscordGateway gateway;
   private final Game game;
-  private final Recipients recipients;
+  private final LinkedAccounts accounts;
   private final Map<String, Instant> lastPing = new ConcurrentHashMap<>();
   private final Set<String> postedTownMilestones = ConcurrentHashMap.newKeySet();
   private final List<Supplier<List<SeasonalEvent>>> seasonalEvents = new CopyOnWriteArrayList<>();
   private final Map<String, DiscordCommand> commands = new ConcurrentHashMap<>();
+  private final Map<String, Instant> lastUse = new ConcurrentHashMap<>();
   private final Map<String, String> activities = new java.util.HashMap<>();
   private volatile Runnable commandsChanged = () -> {};
   private boolean presencePending;
@@ -49,11 +50,11 @@ public final class DiscordRelay {
   private volatile boolean stopping;
 
   public DiscordRelay(
-      DiscordConfig config, DiscordGateway gateway, Game game, Recipients recipients) {
+      DiscordConfig config, DiscordGateway gateway, Game game, LinkedAccounts accounts) {
     this.config = config;
     this.gateway = gateway;
     this.game = game;
-    this.recipients = recipients;
+    this.accounts = accounts;
   }
 
   /** Posts a Global line to Discord, unless it came from outside the game (such as Discord). */
@@ -429,7 +430,7 @@ public final class DiscordRelay {
   private void directMessage(List<UUID> players, String text) {
     var truncated = DiscordText.truncate(text, DiscordText.DISCORD_LIMIT);
     for (var player : players) {
-      recipients.dmTarget(player).ifPresent(user -> gateway.dm(user, truncated));
+      accounts.dmTarget(player).ifPresent(user -> gateway.dm(user, truncated));
     }
   }
 
@@ -485,6 +486,37 @@ public final class DiscordRelay {
   /** The module command named {@code name}, if any. */
   public java.util.Optional<DiscordCommand> command(String name) {
     return java.util.Optional.ofNullable(commands.get(name));
+  }
+
+  /**
+   * Answers a module command for {@code discordUser}, unless they used it within its cooldown.
+   * Called on a JDA thread.
+   */
+  public void answer(
+      DiscordCommand command,
+      Map<String, String> options,
+      long discordUser,
+      Consumer<String> reply) {
+    if (!command.cooldown().isZero()) {
+      var now = game.time().instant();
+      var key = command.name() + ":" + discordUser;
+      var last = lastUse.get(key);
+      if (last != null && now.isBefore(last.plus(command.cooldown()))) {
+        reply.accept(
+            "Wait "
+                + MatchLength.format(Duration.between(now, last.plus(command.cooldown())))
+                + " before using /"
+                + command.name()
+                + " again.");
+        return;
+      }
+      lastUse.put(key, now);
+    }
+    command
+        .handler()
+        .answer(
+            new DiscordCommand.Request(options, discordUser, accounts.playerOf(discordUser)),
+            reply);
   }
 
   /** Called by the bridge once connected, to register commands added later. */

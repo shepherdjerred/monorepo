@@ -1,13 +1,18 @@
 package com.shepherdjerred.thestorm.discord;
 
 import com.shepherdjerred.thestorm.chat.app.GlobalChat;
+import com.shepherdjerred.thestorm.chat.app.MessagingPolicy;
 import com.shepherdjerred.thestorm.chat.app.Subscription;
+import com.shepherdjerred.thestorm.core.expansion.ExpansionSettings;
+import com.shepherdjerred.thestorm.core.expansion.ManagedGameplay;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.StormModule;
+import com.shepherdjerred.thestorm.core.players.PlayerDirectory;
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.discord.adapter.db.JooqLinkStore;
 import com.shepherdjerred.thestorm.discord.adapter.discord.JdaBridge;
+import com.shepherdjerred.thestorm.discord.adapter.paper.DiscordMail;
 import com.shepherdjerred.thestorm.discord.adapter.paper.LinkCommands;
 import com.shepherdjerred.thestorm.discord.adapter.paper.PaperOnlinePlayers;
 import com.shepherdjerred.thestorm.discord.adapter.paper.SealedPlayers;
@@ -22,6 +27,7 @@ import com.shepherdjerred.thestorm.discord.domain.DiscordCredentials;
 import com.shepherdjerred.thestorm.discord.domain.PendingLinks;
 import com.shepherdjerred.thestorm.economy.app.CrystalFormatter;
 import com.shepherdjerred.thestorm.economy.app.PlayerLeaderboard;
+import com.shepherdjerred.thestorm.mail.app.Letters;
 import com.shepherdjerred.thestorm.towns.app.TownMilestones;
 import com.shepherdjerred.thestorm.towns.app.TownRead;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
@@ -34,10 +40,11 @@ import org.jspecify.annotations.Nullable;
 /**
  * The Discord bridge (replaces DiscordSRV): Global chat both ways, join, leave, death and
  * advancement posts, wake and sleep posts, a live status line, the {@code /list}, {@code /status},
- * {@code /baltop}, and {@code /towns} commands plus any a module adds, and town foundings and claim
- * milestones. Needs the chat, economy, and towns modules. Other modules post through the {@link
- * DiscordRelay} service: tickets, quest and skill milestones, and Search and Destroy and Mob Arena
- * lobbies and results (lobby posts may ping the roles in {@code lobbyPing}).
+ * {@code /baltop}, {@code /towns} and {@code /mail} commands plus any a module adds, and town
+ * foundings and claim milestones. Needs the chat, economy, mail and towns modules. Other modules
+ * post through the {@link DiscordRelay} service: tickets, quest and skill milestones, and Search
+ * and Destroy and Mob Arena lobbies and results (lobby posts may ping the roles in {@code
+ * lobbyPing}).
  *
  * <p>Players link their Discord account with {@code /link} in Discord and {@code /discord link
  * <code>} in game, and may then ask for their own minigame results by direct message.
@@ -98,7 +105,7 @@ public final class DiscordModule implements StormModule {
             bridge,
             new DiscordRelay.Game(
                 chat, context.scheduler(), new PaperOnlinePlayers(server), context.time()),
-            links::dmTarget);
+            links);
     context.services().provide(DiscordRelay.class, relay);
     var sealed = context.services().require(SealedWorlds.class);
     // Chat lines arrive on the async chat thread; the filter answers from its own main-thread map.
@@ -128,6 +135,25 @@ public final class DiscordModule implements StormModule {
         .lifecycle()
         .registerEventHandler(
             LifecycleEvents.COMMANDS, event -> linkCommands.register(event.registrar()));
+    var settings = context.services().require(ExpansionSettings.class);
+    relay.addCommand(
+        new DiscordMail(
+                new DiscordMail.Ports(
+                    context.services().require(Letters.class),
+                    new Letters.Limits(
+                        settings.letterLength(),
+                        settings.letterIntervalSeconds(),
+                        settings.inboxLimit()),
+                    context.services().require(ManagedGameplay.class),
+                    context.services().require(MessagingPolicy.class),
+                    context.services().require(PlayerDirectory.class)),
+                new DiscordMail.Side(
+                    server,
+                    context.scheduler().mainThread(),
+                    context.time(),
+                    context.random(),
+                    context.logger()))
+            .command());
     bridge.start(credentials, relay, commands, links);
     running = new Running(bridge, relay, subscription, towns);
   }

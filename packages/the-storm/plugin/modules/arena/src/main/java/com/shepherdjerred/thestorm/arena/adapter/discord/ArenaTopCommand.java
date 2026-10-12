@@ -4,10 +4,10 @@ import com.shepherdjerred.thestorm.arena.app.store.LeaderboardStore;
 import com.shepherdjerred.thestorm.arena.domain.arena.ArenaDefinition;
 import com.shepherdjerred.thestorm.discord.app.DiscordCommand;
 import com.shepherdjerred.thestorm.discord.app.DiscordRelay;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import net.kyori.adventure.text.Component;
@@ -37,11 +37,12 @@ public final class ArenaTopCommand {
         "arena-top",
         "Best Mob Arena waves",
         List.of(new DiscordCommand.Option("arena", "Arena name; every arena when left out", false)),
+        Duration.ZERO,
         this::answer);
   }
 
-  private void answer(Map<String, String> options, Consumer<String> reply) {
-    var requested = options.get("arena");
+  private void answer(DiscordCommand.Request request, Consumer<String> reply) {
+    var requested = request.options().get("arena");
     if (requested == null) {
       everyArena(reply);
       return;

@@ -4,9 +4,9 @@ import com.shepherdjerred.thestorm.core.players.PlayerDirectory;
 import com.shepherdjerred.thestorm.discord.app.DiscordCommand;
 import com.shepherdjerred.thestorm.discord.app.DiscordRelay;
 import com.shepherdjerred.thestorm.rwf.app.store.MatchStore;
+import java.time.Duration;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.function.Consumer;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
@@ -29,11 +29,12 @@ public final class RwfStatsCommand {
         "rwf-stats",
         "A player's Search and Destroy record",
         List.of(new DiscordCommand.Option("player", "Minecraft name", true)),
+        Duration.ZERO,
         this::answer);
   }
 
-  private void answer(Map<String, String> options, Consumer<String> reply) {
-    var name = options.get("player");
+  private void answer(DiscordCommand.Request request, Consumer<String> reply) {
+    var name = request.options().get("player");
     if (name == null || name.isBlank()) {
       reply.accept("Name a player.");
       return;

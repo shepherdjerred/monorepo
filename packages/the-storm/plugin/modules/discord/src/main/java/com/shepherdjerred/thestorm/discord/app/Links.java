@@ -14,7 +14,7 @@ import java.util.random.RandomGenerator;
  * it in game; the link is saved, then kept in memory so posts never wait on the database.
  * Thread-safe.
  */
-public final class Links {
+public final class Links implements LinkedAccounts {
 
   /**
    * One link.
@@ -113,7 +113,16 @@ public final class Links {
     return Optional.ofNullable(byPlayer.get(player));
   }
 
+  @Override
+  public Optional<UUID> playerOf(long discordUser) {
+    return byPlayer.values().stream()
+        .filter(link -> link.discordUser() == discordUser)
+        .map(Link::player)
+        .findFirst();
+  }
+
   /** Where to DM {@code player}'s results: their Discord user, if linked with DMs on. */
+  @Override
   public Optional<Long> dmTarget(UUID player) {
     return of(player).filter(Link::dms).map(Link::discordUser);
   }

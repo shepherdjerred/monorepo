@@ -79,7 +79,17 @@ final class ServerEventsListenerTest {
               }
             },
             new DiscordRelay.Game(new SilentChat(), new Inline(), List::of, () -> Instant.EPOCH),
-            player -> java.util.Optional.empty());
+            new com.shepherdjerred.thestorm.discord.app.LinkedAccounts() {
+              @Override
+              public java.util.Optional<Long> dmTarget(java.util.UUID player) {
+                return java.util.Optional.empty();
+              }
+
+              @Override
+              public java.util.Optional<java.util.UUID> playerOf(long discordUser) {
+                return java.util.Optional.empty();
+              }
+            });
     listener = new ServerEventsListener(relay, new VanillaPlainText(new EmptyLanguage()), sealed);
   }
 
