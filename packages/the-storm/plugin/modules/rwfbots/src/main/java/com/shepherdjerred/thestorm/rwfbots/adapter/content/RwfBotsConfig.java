@@ -8,9 +8,9 @@ import com.shepherdjerred.thestorm.rwfbots.domain.personality.Lines;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.Voice;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Kit;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -149,14 +149,20 @@ public record RwfBotsConfig(
         if (!KIT.matcher(kit).matches()) {
           throw new IllegalArgumentException("kit ids are lower-case: " + kit);
         }
-        Kit.valueOf(kit.toUpperCase(Locale.ROOT));
+        if (Kit.known(kit).isEmpty()) {
+          throw new IllegalArgumentException(
+              "draft.kits names "
+                  + kit
+                  + ", which bots cannot play; known kits: "
+                  + Arrays.stream(Kit.values()).map(Kit::id).toList());
+        }
       }
     }
 
     public Set<Kit> availableKits() {
       var set = EnumSet.noneOf(Kit.class);
       for (var kit : kits) {
-        set.add(Kit.valueOf(kit.toUpperCase(Locale.ROOT)));
+        set.add(Kit.known(kit).orElseThrow());
       }
       return set;
     }
@@ -298,6 +304,6 @@ public record RwfBotsConfig(
 
   /** The kit id rwf knows {@code kit} by. */
   public static String kitId(Kit kit) {
-    return kit.name().toLowerCase(Locale.ROOT);
+    return kit.id();
   }
 }

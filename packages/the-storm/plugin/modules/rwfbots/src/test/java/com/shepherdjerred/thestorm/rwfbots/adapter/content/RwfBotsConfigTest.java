@@ -60,7 +60,7 @@ final class RwfBotsConfigTest {
 
     assertThatThrownBy(() -> ConfigFiles.load(file, RwfBotsConfig.class))
         .isInstanceOf(IllegalStateException.class)
-        .hasMessageContaining("PALADIN");
+        .hasMessageContaining("draft.kits names paladin, which bots cannot play");
   }
 
   @Test

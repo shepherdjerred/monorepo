@@ -21,7 +21,6 @@ import java.time.InstantSource;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -307,7 +306,9 @@ public final class MatchBridge implements Consumer<MatchNotification> {
 
   private static BotProfile profile(BotBody bot, MatchState.Fighter fighter, IdMap ids, int slot) {
     var kitId = fighter.kit().orElseThrow(() -> new IllegalStateException("live without a kit"));
-    var kit = Kit.valueOf(kitId.toUpperCase(Locale.ROOT));
+    // A drafted bot plays a kit from the draft, which names known kits only; an operator may still
+    // put a bot on a kit bots do not know, so it reads as the closest one instead of failing.
+    var kit = Kit.closest(kitId, Kit.Traits.NONE);
     return new BotProfile(
         ids.combatant(bot.uuid()),
         slot,

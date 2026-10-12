@@ -18,6 +18,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.WorldCreator;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -213,5 +214,46 @@ final class SnapshotCaptureTest {
         .isInstanceOf(IllegalStateException.class)
         .hasMessageContaining("Alice has no kit");
     assertThat(Map.of()).isEmpty();
+  }
+
+  @Test
+  void aHumanOnAKitBotsDoNotKnowReadsAsTheClosestKnownKit() {
+    alice.getInventory().addItem(new ItemStack(Material.CROSSBOW));
+    bob.setInvisible(true);
+
+    var snapshot = capture.capture(1, unknownKits("crossbowman", "shade"));
+
+    assertThat(snapshot.require(ids.combatant(alice.getUniqueId())).kit()).isEqualTo(Kit.LONGBOW);
+    assertThat(snapshot.require(ids.combatant(bob.getUniqueId())).kit()).isEqualTo(Kit.GHOST);
+    bob.setInvisible(false);
+    var plain = capture.capture(2, unknownKits("paladin", "paladin"));
+    assertThat(plain.require(ids.combatant(bob.getUniqueId())).kit()).isEqualTo(Kit.TROOPER);
+  }
+
+  private MatchState unknownKits(String aliceKit, String bobKit) {
+    return new MatchState(
+        MATCH,
+        MatchState.Phase.LIVE,
+        Optional.of("synthetic"),
+        List.of("red", "blue"),
+        List.of(
+            new MatchState.Fighter(
+                alice.getUniqueId(),
+                "Alice",
+                Optional.empty(),
+                Optional.of("red"),
+                Optional.of(aliceKit),
+                true),
+            new MatchState.Fighter(
+                bob.getUniqueId(),
+                "Bob",
+                Optional.empty(),
+                Optional.of("blue"),
+                Optional.of(bobKit),
+                true)),
+        List.of(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty());
   }
 }
