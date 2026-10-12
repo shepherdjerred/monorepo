@@ -299,6 +299,15 @@ describe("minecraft-tsmc image configuration", () => {
     expect(server["spawnProtection"]).toBe(0);
   });
 
+  test("synchronizes the operator list with the empty OPS setting", () => {
+    const extraEnv = z
+      .record(z.string(), z.unknown())
+      .parse(tsmcValues()["extraEnv"]);
+    expect(extraEnv["OPS"]).toBe("");
+    expect(extraEnv["EXISTING_OPS_FILE"]).toBe("SYNCHRONIZE");
+    expect(tsmcValues()["minecraftServer"]).toMatchObject({ ops: "" });
+  });
+
   test("retires PVC-only jars alongside the enabled towns protection", async () => {
     const text = await dockerfile();
     expect(text).toMatch(/^\s*REMOVE_OLD_MODS_EXCLUDE=$/mu);
