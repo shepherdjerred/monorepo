@@ -11,6 +11,7 @@ import {
   type InputRequest,
   type PlayerInputState,
 } from "@discord-plays-mario-kart/common";
+import { useKeyboardControls } from "@shepherdjerred/discord-plays-web/input/use-controls.ts";
 import { socket } from "#src/socket.ts";
 import { KEYMAP, computeState, resolveKeyboardCode } from "#src/input-map.ts";
 import { CENTERED, mergeInput, sameInput, type StickVector } from "./analog.ts";
@@ -27,19 +28,6 @@ export type Controller = {
   /** The connected gamepad's id, if any. */
   readonly gamepad: string | undefined;
 };
-
-// True when the keyboard event is targeted at a form control or a
-// contentEditable region, where a mapped key must still type.
-function isEditableTarget(target: EventTarget | null): boolean {
-  if (!(target instanceof HTMLElement)) {
-    return false;
-  }
-  if (target.isContentEditable) {
-    return true;
-  }
-  const tag = target.tagName;
-  return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
-}
 
 export function useController(seat: number | null): Controller {
   const pressed = useRef(new Set<string>());
@@ -117,45 +105,18 @@ export function useController(seat: number | null): Controller {
     ),
   );
 
-  // Keyboard listeners live on window so automation dispatching KeyboardEvents
-  // at globalThis (the press-to-paint harness) drives the same path as a person.
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (isEditableTarget(event.target)) {
-        return;
-      }
-      const code = resolveKeyboardCode(event);
-      if (code === undefined || KEYMAP[code] === undefined) {
-        return;
-      }
-      event.preventDefault();
-      press(code);
-    };
-    const onKeyUp = (event: KeyboardEvent) => {
-      // Always release, even in a text field, so a key held across a focus
-      // change cannot stick.
-      const code = resolveKeyboardCode(event);
-      if (code === undefined || KEYMAP[code] === undefined) {
-        return;
-      }
-      release(code);
-    };
-    const onBlur = () => {
-      if (pressed.current.size === 0) {
-        return;
-      }
-      pressed.current.clear();
-      update();
-    };
-    globalThis.addEventListener("keydown", onKeyDown);
-    globalThis.addEventListener("keyup", onKeyUp);
-    globalThis.addEventListener("blur", onBlur);
-    return () => {
-      globalThis.removeEventListener("keydown", onKeyDown);
-      globalThis.removeEventListener("keyup", onKeyUp);
-      globalThis.removeEventListener("blur", onBlur);
-    };
-  }, [press, release, update]);
+  const releaseAll = useCallback(() => {
+    if (pressed.current.size === 0) {
+      return;
+    }
+    pressed.current.clear();
+    update();
+  }, [update]);
+
+  useKeyboardControls({ press, release, releaseAll }, (event) => {
+    const code = resolveKeyboardCode(event);
+    return code === undefined || KEYMAP[code] === undefined ? undefined : code;
+  });
 
   return { state, pressedCodes, press, release, setStick, gamepad };
 }

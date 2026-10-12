@@ -18,16 +18,12 @@
     "test:ci": "bun ../../../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
-    "@shepherdjerred/sentry-config": "workspace:*",
-    "@sentry/react": "^11.5.0",
     "@discord-plays-mario-kart/common": "workspace:*",
-    "@tailwindcss/vite": "^4.0.17",
     "@tanstack/react-query": "^5.70.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "socket.io-client": "^4.8.1",
     "zod": "^4.4.3",
-    "@shepherdjerred/discord-plays-core": "workspace:*"
+    "@shepherdjerred/discord-plays-web": "workspace:*"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -45,7 +41,6 @@
     "@typescript-eslint/eslint-plugin": "^8.71.1",
     "@typescript-eslint/parser": "^8.71.1",
     "@typescript/native": "npm:typescript@7.0.2",
-    "@vitejs/plugin-react": "^6.0.1",
     "@vitejs/plugin-react-swc": "^4.0.0",
     "eslint": "^10.7.0",
     "eslint-plugin-react-hooks": "^7.0.0",

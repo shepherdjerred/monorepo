@@ -28,6 +28,7 @@ hold only scoped invariants that agents must keep in context.
 | [discord-plays-core](discord-plays-core/)             | Shared engine for the Discord Plays projects (streaming, web server, bot entry) |
 | [discord-plays-mario-kart](discord-plays-mario-kart/) | Cooperative Mario Kart 64 played from Discord via a headless N64 emulator       |
 | [discord-plays-pokemon](discord-plays-pokemon/)       | Discord Plays Pokémon — headless emulator + Go-Live stream                      |
+| [discord-plays-web](discord-plays-web/)               | Shared browser code for the Discord Plays web UIs (live feed, input, bootstrap) |
 | [discord-stream-lifecycle](discord-stream-lifecycle/) | XState v5 machines managing Go-Live sessions, userbot pools, and playback       |
 | [discord-video-stream](discord-video-stream/)         | Maintained fork of `@dank074/discord-video-stream` powering the Go-Live stack   |
 | [streambot](streambot/)                               | Discord video streaming orchestrator with per-guild sessions and token leases   |

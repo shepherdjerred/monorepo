@@ -107,6 +107,7 @@
     "packages/discord-plays-pokemon/packages/backend",
     "packages/discord-plays-pokemon/packages/common",
     "packages/discord-plays-pokemon/packages/frontend",
+    "packages/discord-plays-web",
     "packages/discord-stream-lifecycle",
     "packages/discord-video-stream",
     "packages/docs/wiki",
