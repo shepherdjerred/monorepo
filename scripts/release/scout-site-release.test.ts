@@ -158,6 +158,40 @@ test("production promotion state must match both tagged version and digest", () 
   );
 });
 
+test("backend CLI resolves a retained publication instead of the checkout pin", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "scout-retained-backend-"));
+  try {
+    const catalogFile = path.join(dir, "version-catalog.json");
+    await Bun.write(
+      catalogFile,
+      versionCatalogSource(
+        "shepherdjerred/scout-for-lol/beta",
+        `2.0.0-8864@${DIGEST}`,
+      ),
+    );
+    const child = Bun.spawn(
+      [
+        "bun",
+        new URL("scout-site-release.ts", import.meta.url).pathname,
+        "resolve-backend-digest",
+        "--version-catalog-file",
+        catalogFile,
+      ],
+      { stdout: "pipe", stderr: "pipe" },
+    );
+    const [stdout, stderr, exitCode] = await Promise.all([
+      new Response(child.stdout).text(),
+      new Response(child.stderr).text(),
+      child.exited,
+    ]);
+    expect(stderr).toBe("");
+    expect(exitCode).toBe(0);
+    expect(stdout.trim()).toBe(DIGEST);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test("production pin resolution returns only the exact canonical pin", () => {
   const source = versionCatalogSource(
     "shepherdjerred/scout-for-lol/prod",
@@ -294,6 +328,12 @@ test("the Scout release lane selects on a source change or an exact beta candida
   const commands = (beta?.commands ?? []).join("\n");
   expect(commands).toContain('."shepherdjerred/scout-for-lol/beta" // empty');
   expect(commands).toContain("ci-changed.ts site-scout");
+  expect(commands).toContain(
+    "read-ci-handoff.ts version-catalog > .scout-release/version-catalog.json",
+  );
+  expect(commands).toContain(
+    "resolve-backend-digest --version-catalog-file .scout-release/version-catalog.json",
+  );
   // Nothing to release: no pushed backend image and no site source change.
   expect(commands).toContain(
     'if [ -z "$scout_candidate" ] && [ "$scout_source_changed" != "true" ]; then exit 0; fi',
