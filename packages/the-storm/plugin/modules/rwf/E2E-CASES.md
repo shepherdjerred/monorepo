@@ -166,13 +166,13 @@ is intact.` with no paste logged, and after the edits above it pastes once
     for a win, 0 for a loss, the bots never paid); the crash replay is not.
 17. There is no daily cap, and a player AFK for the whole match is charged
     instead of paid. **Proven**: the nuke's three players play a second match
-    past `minMatchLength` the same day (joining again on the same connection)
-    and everyone off the armer's team is killed; every player who turned their
-    head is paid in full again (`WIN` 3 or `LOSE` 1, `PAID` the same), while
-    the first match's loser never turns theirs: their row is `AFK`, owes -2 and
-    is `PAID` -1 (all they held), they are told `2 credits were taken for being
-AFK.` and earn nothing; every player's credits end at the sum of both
-    matches and their crystals at the starting balance.
+    past `minMatchLength` the same day (joining again on the same connection) and everyone off the armer's team is killed; every player who
+    turned their head is paid in full again (`WIN` 3 or `LOSE` 1, `PAID` the
+    same), while the first match's loser never turns theirs: their row is
+    `AFK`, owes -2 and is `PAID` -1 (all they held), once settled they are told
+    `You were AFK all match: you earned nothing and 1 credits were taken.`
+    (what was actually taken) and earn nothing; every player's credits end at
+    the sum of both matches and their crystals at the starting balance.
 18. `plugins/TheStorm/rwf-recordings/yyyy/MM/dd/<matchId>.rwfrec.gz` decodes
     with `RecordCodec`, names nobody, and holds human frames and input rows
     at 20 Hz and bot frames at 10 Hz; `kill -9` during a match leaves a

@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.rwf.adapter.db;
 
+import static com.shepherdjerred.thestorm.rwf.adapter.db.generated.Tables.RWF_DAILY_EARNINGS;
 import static com.shepherdjerred.thestorm.rwf.adapter.db.generated.Tables.RWF_MATCH;
 import static com.shepherdjerred.thestorm.rwf.adapter.db.generated.Tables.RWF_MATCH_PLAYER;
 
@@ -9,12 +10,16 @@ import com.shepherdjerred.thestorm.rwf.adapter.db.generated.tables.records.RwfMa
 import com.shepherdjerred.thestorm.rwf.app.RecordingSummary;
 import com.shepherdjerred.thestorm.rwf.app.store.MatchStore;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import org.jooq.DSLContext;
 
-/** {@link MatchStore} over {@code rwf_match} and {@code rwf_match_player}. */
+/**
+ * {@link MatchStore} over {@code rwf_match}, {@code rwf_match_player} and, for legacy crystal rows
+ * only, {@code rwf_daily_earnings}.
+ */
 public final class JooqMatchStore implements MatchStore {
 
   private final StormDatabase database;
@@ -96,7 +101,7 @@ public final class JooqMatchStore implements MatchStore {
   }
 
   @Override
-  public CompletableFuture<Long> beginPayout(UUID matchId, UUID player) {
+  public CompletableFuture<Long> beginPayout(UUID matchId, UUID player, LocalDate today) {
     return database.write(
         dsl -> {
           var row = fetch(dsl, matchId, player);
@@ -105,16 +110,39 @@ public final class JooqMatchStore implements MatchStore {
             case NONE, PAID -> 0L;
             case PAYING -> owed < 0 ? owed : row.getCreditsPaid();
             case PENDING -> {
+              var legacy = CurrencyId.fromKey(row.getCurrency()) == CurrencyId.CRYSTALS;
+              var amount = legacy ? reserveLegacy(dsl, player, today, owed) : owed;
               dsl.update(RWF_MATCH_PLAYER)
                   .set(RWF_MATCH_PLAYER.PAYOUT_STATUS, PayoutStatus.PAYING.name())
-                  .set(RWF_MATCH_PLAYER.CREDITS_PAID, owed < 0 ? 0L : owed)
+                  .set(RWF_MATCH_PLAYER.CREDITS_PAID, amount < 0 ? 0L : amount)
                   .where(RWF_MATCH_PLAYER.MATCH_ID.eq(matchId.toString()))
                   .and(RWF_MATCH_PLAYER.PLAYER.eq(player.toString()))
                   .execute();
-              yield owed;
+              yield amount;
             }
           };
         });
+  }
+
+  /** Cuts a legacy crystal payout to what is left of {@code today}'s cap and reserves it. */
+  private static long reserveLegacy(DSLContext dsl, UUID player, LocalDate today, long owed) {
+    var earned =
+        dsl.select(RWF_DAILY_EARNINGS.CREDITS)
+            .from(RWF_DAILY_EARNINGS)
+            .where(RWF_DAILY_EARNINGS.PLAYER.eq(player.toString()))
+            .and(RWF_DAILY_EARNINGS.DAY.eq(today.toString()))
+            .fetchOptional(RWF_DAILY_EARNINGS.CREDITS)
+            .orElse(0L);
+    var amount = Math.max(0, Math.min(owed, LEGACY_CRYSTAL_DAILY_CAP - earned));
+    dsl.insertInto(RWF_DAILY_EARNINGS)
+        .set(RWF_DAILY_EARNINGS.PLAYER, player.toString())
+        .set(RWF_DAILY_EARNINGS.DAY, today.toString())
+        .set(RWF_DAILY_EARNINGS.CREDITS, earned + amount)
+        .onConflict(RWF_DAILY_EARNINGS.PLAYER, RWF_DAILY_EARNINGS.DAY)
+        .doUpdate()
+        .set(RWF_DAILY_EARNINGS.CREDITS, earned + amount)
+        .execute();
+    return amount;
   }
 
   @Override

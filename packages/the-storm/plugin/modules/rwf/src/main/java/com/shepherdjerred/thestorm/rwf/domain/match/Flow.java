@@ -236,9 +236,8 @@ final class Flow {
             roster, outcome.winner(), span, draft.settings.minimumRewardLength())) {
       var id = award.to().id();
       draft.effect(new MatchEffect.Pay(id, award.credits(), award.reason().name()));
-      if (award.reason() == RewardEligibility.Reason.AFK) {
-        draft.tell(id, Notice.of(NoticeKind.AFK_PENALTY, "credits", -award.credits()));
-      } else {
+      // An AFK charge is told once settled, with what was actually taken (never more than held).
+      if (award.reason() != RewardEligibility.Reason.AFK) {
         draft.tell(id, Notice.of(NoticeKind.CREDITS_GIVEN, "credits", award.credits()));
       }
     }

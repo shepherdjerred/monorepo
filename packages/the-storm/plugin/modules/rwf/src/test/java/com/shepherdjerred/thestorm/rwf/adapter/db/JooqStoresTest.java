@@ -20,6 +20,7 @@ import com.shepherdjerred.thestorm.rwf.app.store.MatchStore.PlayerRow;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
 import com.shepherdjerred.thestorm.rwf.testing.Samples;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -34,6 +35,7 @@ final class JooqStoresTest {
 
   private static final UUID ALICE = Samples.ALICE.uuid();
   private static final UUID BOB = Samples.BOB.uuid();
+  private static final LocalDate DAY = LocalDate.of(2026, 10, 3);
 
   @TempDir Path directory;
   private StormDatabase database;
@@ -149,14 +151,14 @@ final class JooqStoresTest {
     store.record(match(first), List.of(row(first, ALICE, Outcome.WIN, 3))).join();
     store.record(match(second), List.of(row(second, ALICE, Outcome.WIN, 3))).join();
 
-    assertThat(store.beginPayout(first, ALICE).join()).isEqualTo(3);
-    assertThat(store.beginPayout(first, ALICE).join()).as("repeat").isEqualTo(3);
-    assertThat(store.beginPayout(second, ALICE).join()).as("no daily cap").isEqualTo(3);
+    assertThat(store.beginPayout(first, ALICE, DAY).join()).isEqualTo(3);
+    assertThat(store.beginPayout(first, ALICE, DAY).join()).as("repeat").isEqualTo(3);
+    assertThat(store.beginPayout(second, ALICE, DAY).join()).as("no daily cap").isEqualTo(3);
     store.finishPayout(first, ALICE, 3).join();
     store.finishPayout(second, ALICE, 3).join();
 
     assertThat(store.unpaid().join()).isEmpty();
-    assertThat(store.beginPayout(first, ALICE).join()).as("paid rows pay nothing").isZero();
+    assertThat(store.beginPayout(first, ALICE, DAY).join()).as("paid rows pay nothing").isZero();
     assertThat(store.players(second).join())
         .singleElement()
         .satisfies(
@@ -169,13 +171,57 @@ final class JooqStoresTest {
   }
 
   @Test
+  void outcomesNameEveryWayAHumansMatchEnds() {
+    assertThat(Outcome.of(true, true, false, 0)).as("any live departure").isEqualTo(Outcome.LEFT);
+    assertThat(Outcome.of(false, true, true, 0)).as("suicide").isEqualTo(Outcome.FORFEITED);
+    assertThat(Outcome.of(false, false, true, -2)).isEqualTo(Outcome.AFK);
+    assertThat(Outcome.of(false, false, true, 3)).isEqualTo(Outcome.WIN);
+    assertThat(Outcome.of(false, false, false, 1)).isEqualTo(Outcome.LOSE);
+    assertThat(PayoutStatus.owing(0)).isEqualTo(PayoutStatus.NONE);
+    assertThat(PayoutStatus.owing(-2)).isEqualTo(PayoutStatus.PENDING);
+  }
+
+  @Test
+  void aLegacyCrystalRowStillSettlesUnderTheOldDailyCap() {
+    var store = new JooqMatchStore(database);
+    var first = UUID.randomUUID();
+    var second = UUID.randomUUID();
+    var third = UUID.randomUUID();
+    store.record(match(first), List.of(crystals(first, 20))).join();
+    store.record(match(second), List.of(crystals(second, 20))).join();
+    store.record(match(third), List.of(row(third, ALICE, Outcome.WIN, 3))).join();
+
+    assertThat(store.beginPayout(first, ALICE, DAY).join()).isEqualTo(20);
+    assertThat(store.beginPayout(second, ALICE, DAY).join())
+        .as("cut to what is left of the 30-crystal cap")
+        .isEqualTo(MatchStore.LEGACY_CRYSTAL_DAILY_CAP - 20);
+    assertThat(store.beginPayout(second, ALICE, DAY).join()).as("repeat").isEqualTo(10);
+    assertThat(store.beginPayout(third, ALICE, DAY).join()).as("credits have no cap").isEqualTo(3);
+  }
+
+  private static PlayerRow crystals(UUID match, long owed) {
+    return new PlayerRow(
+        match,
+        ALICE,
+        TeamColor.RED,
+        "trooper",
+        1,
+        0,
+        Outcome.WIN,
+        CurrencyId.CRYSTALS,
+        owed,
+        PayoutStatus.PENDING,
+        0);
+  }
+
+  @Test
   void aChargeBeginsWithTheMostItMayTakeAndRecordsWhatWasTaken() {
     var store = new JooqMatchStore(database);
     var id = UUID.randomUUID();
     store.record(match(id), List.of(row(id, ALICE, Outcome.AFK, -2))).join();
 
-    assertThat(store.beginPayout(id, ALICE).join()).isEqualTo(-2);
-    assertThat(store.beginPayout(id, ALICE).join()).as("repeat").isEqualTo(-2);
+    assertThat(store.beginPayout(id, ALICE, DAY).join()).isEqualTo(-2);
+    assertThat(store.beginPayout(id, ALICE, DAY).join()).as("repeat").isEqualTo(-2);
     store.finishPayout(id, ALICE, -1).join();
 
     assertThat(store.players(id).join())
@@ -196,8 +242,8 @@ final class JooqStoresTest {
     store
         .record(match(id), List.of(row(id, ALICE, Outcome.WIN, 3), row(id, BOB, Outcome.AFK, -2)))
         .join();
-    store.beginPayout(id, ALICE).join();
-    store.beginPayout(id, BOB).join();
+    store.beginPayout(id, ALICE, DAY).join();
+    store.beginPayout(id, BOB, DAY).join();
 
     assertThatThrownBy(() -> store.finishPayout(id, ALICE, 4).join())
         .hasCauseInstanceOf(IllegalArgumentException.class);

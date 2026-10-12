@@ -16,9 +16,11 @@ import com.shepherdjerred.thestorm.rwf.app.store.MatchStore.Outcome;
 import com.shepherdjerred.thestorm.rwf.app.store.MatchStore.PayoutStatus;
 import com.shepherdjerred.thestorm.rwf.app.store.MatchStore.PlayerRow;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
+import com.shepherdjerred.thestorm.rwf.testing.FakeClock;
 import com.shepherdjerred.thestorm.rwf.testing.FakeWallets;
 import com.shepherdjerred.thestorm.rwf.testing.Samples;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -36,6 +38,7 @@ final class PayoutServiceTest {
   private static final UUID ALICE = Samples.ALICE.uuid();
   private static final UUID BOB = Samples.BOB.uuid();
   private static final AccountId.Player ALICE_ACCOUNT = new AccountId.Player(ALICE);
+  private static final LocalDate TODAY = LocalDate.ofInstant(T0, PayoutService.LEGACY_ZONE);
 
   @TempDir Path directory;
   private StormDatabase database;
@@ -49,7 +52,7 @@ final class PayoutServiceTest {
     database.migrate("rwf", getClass().getClassLoader());
     store = new JooqMatchStore(database);
     wallets = new FakeWallets();
-    payouts = new PayoutService(wallets, store);
+    payouts = new PayoutService(wallets, store, new FakeClock(T0));
   }
 
   @AfterEach
@@ -152,7 +155,7 @@ final class PayoutServiceTest {
     wallets.hold(ALICE_ACCOUNT, Money.rwfCredits(5));
     var id = UUID.randomUUID();
     store.record(match(id), List.of(owed(id, ALICE, Outcome.AFK, -2))).join();
-    store.beginPayout(id, ALICE).join();
+    store.beginPayout(id, ALICE, TODAY).join();
     // The charge reached the ledger, then the server crashed before the outbox was marked paid.
     wallets
         .transferOnce(
@@ -176,7 +179,7 @@ final class PayoutServiceTest {
   void replayPaysWhatACrashLeftPendingExactlyOnce() {
     var id = UUID.randomUUID();
     store.record(match(id), List.of(owed(id, ALICE, Outcome.WIN, 3))).join();
-    store.beginPayout(id, ALICE).join();
+    store.beginPayout(id, ALICE, TODAY).join();
 
     var replayed = payouts.replay().join();
     var again = payouts.replay().join();

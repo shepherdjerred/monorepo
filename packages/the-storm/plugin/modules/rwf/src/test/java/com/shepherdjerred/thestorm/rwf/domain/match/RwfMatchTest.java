@@ -398,9 +398,13 @@ final class RwfMatchTest {
               new Pay(blues.get(1).id(), -2, "AFK"),
               new Pay(reds.get(0).id(), 1, "LOSE"),
               new Pay(reds.get(1).id(), -2, "AFK"));
-      assertThat(only(effects, MatchEffect.Tell.class))
-          .extracting(tell -> tell.notice().kind())
-          .contains(NoticeKind.AFK_PENALTY, NoticeKind.CREDITS_GIVEN);
+      var tells = only(effects, MatchEffect.Tell.class);
+      assertThat(tells).extracting(tell -> tell.notice().kind()).contains(NoticeKind.CREDITS_GIVEN);
+      var afk = List.of(blues.get(1).id(), reds.get(1).id());
+      assertThat(tells)
+          .as("the AFK charge is told once settled, with what was actually taken")
+          .noneMatch(tell -> tell.notice().kind() == NoticeKind.AFK_PENALTY)
+          .noneMatch(tell -> tell.to().stream().anyMatch(afk::contains));
     }
 
     @Test

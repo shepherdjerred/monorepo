@@ -34,5 +34,6 @@ ALTER TABLE rwf_match_player_v2 RENAME TO rwf_match_player;
 
 CREATE INDEX rwf_match_player_status ON rwf_match_player (payout_status);
 
--- The daily cap protected the crystal economy; Red Warfare credits have none.
-DROP TABLE rwf_daily_earnings;
+-- rwf_daily_earnings stays: the old crystal rows still settle under the daily
+-- cap they were written with, so a payout a crash left pending across this
+-- upgrade pays exactly what it would have. Credit rows never touch it.
