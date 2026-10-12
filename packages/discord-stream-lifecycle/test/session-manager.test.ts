@@ -1,5 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { mkdtemp, rm, stat } from "node:fs/promises";
+import {
+  mkdir,
+  mkdtemp,
+  readdir,
+  readFile,
+  rm,
+  stat,
+  writeFile,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import type { GameDriver } from "@shepherdjerred/discord-stream-lifecycle/lifecycle/game-driver";
@@ -307,8 +315,162 @@ describe("SingleSlotSessionManager — stop", () => {
       startedByUserId: "u1",
     });
 
-    await manager.stop("userStop");
+    const result = await manager.stop("userStop");
     expect(pool.busyCount()).toBe(0);
     expect(manager.getActiveSession()).toBeNull();
+    expect(result.kind).toBe("stopped");
+    if (result.kind === "stopped") {
+      expect(result.error?.message).toBe("save flush failed");
+    }
+  });
+
+  it("does not stop a session that replaced the expected one", async () => {
+    const pool = newPool(["t1"], { t1: [GUILD_A, GUILD_B] });
+    await pool.start();
+    const { driver, calls } = makeRecorderDriver("test");
+    const manager = new SingleSlotSessionManager({
+      pool,
+      driver,
+      stateRootDir,
+    });
+    const first = await manager.start({
+      guildId: GUILD_A,
+      voiceChannelId: "v1",
+      textChannelId: "t1",
+      startedByUserId: "u1",
+    });
+    if (first.kind !== "started") {
+      throw new Error(`expected started, got ${first.kind}`);
+    }
+    await manager.stop("userStop");
+    await manager.start({
+      guildId: GUILD_B,
+      voiceChannelId: "v2",
+      textChannelId: "t2",
+      startedByUserId: "u2",
+    });
+
+    // A late /stop (or alone-in-voice timer) decided against guild A's session.
+    const result = await manager.stop("userStop", { expected: first.session });
+
+    expect(result).toEqual({ kind: "notActive" });
+    expect(manager.getActiveSessionForGuild(GUILD_B)).not.toBeNull();
+    expect(calls.filter((c) => c.kind === "stop")).toHaveLength(1);
+  });
+
+  it("stops the expected session", async () => {
+    const pool = newDefaultPool();
+    await pool.start();
+    const { driver } = makeRecorderDriver("test");
+    const manager = new SingleSlotSessionManager({
+      pool,
+      driver,
+      stateRootDir,
+    });
+    const started = await manager.start({
+      guildId: GUILD_A,
+      voiceChannelId: "v1",
+      textChannelId: "t1",
+      startedByUserId: "u1",
+    });
+    if (started.kind !== "started") {
+      throw new Error(`expected started, got ${started.kind}`);
+    }
+
+    const result = await manager.stop("userStop", {
+      expected: started.session,
+    });
+
+    expect(result).toEqual({ kind: "stopped" });
+    expect(manager.getActiveSession()).toBeNull();
+  });
+});
+
+describe("SingleSlotSessionManager — save history", () => {
+  let stateRootDir: string;
+  beforeEach(async () => {
+    stateRootDir = await mkdtemp(path.join(tmpdir(), "dsl-test-"));
+  });
+  afterEach(async () => {
+    await rm(stateRootDir, { recursive: true, force: true });
+  });
+
+  it("snapshots only the starting guild's saves before the driver boots", async () => {
+    const pool = newPool(["t1"], { t1: [GUILD_A, GUILD_B] });
+    await pool.start();
+    await mkdir(path.join(stateRootDir, GUILD_A), { recursive: true });
+    await mkdir(path.join(stateRootDir, GUILD_B), { recursive: true });
+    await writeFile(path.join(stateRootDir, GUILD_A, "game.sav"), "guild-a");
+    await writeFile(path.join(stateRootDir, GUILD_B, "game.sav"), "guild-b");
+    let snapshotsSeenByDriver: string[] = [];
+    const driver: GameDriver<PooledUserbot> = {
+      name: "test",
+      onSessionStart: async (session) => {
+        snapshotsSeenByDriver = await readdir(
+          path.join(session.sessionDir, "history"),
+        );
+        // The session mutates the save after the snapshot was taken.
+        await writeFile(path.join(session.sessionDir, "game.sav"), "changed");
+      },
+      onSessionStop: async () => {
+        await Promise.resolve();
+      },
+    };
+    const manager = new SingleSlotSessionManager({
+      pool,
+      driver,
+      stateRootDir,
+      saveHistory: { entries: ["game.sav"], keep: 3 },
+    });
+
+    const result = await manager.start({
+      guildId: GUILD_A,
+      voiceChannelId: "v1",
+      textChannelId: "t1",
+      startedByUserId: "u1",
+    });
+
+    expect(result.kind).toBe("started");
+    expect(snapshotsSeenByDriver).toHaveLength(1);
+    const snapshot = snapshotsSeenByDriver.at(0);
+    if (snapshot === undefined) {
+      throw new Error("expected a snapshot");
+    }
+    expect(
+      await readFile(
+        path.join(stateRootDir, GUILD_A, "history", snapshot, "game.sav"),
+        "utf8",
+      ),
+    ).toBe("guild-a");
+    expect(await isDirectory(path.join(stateRootDir, GUILD_B, "history"))).toBe(
+      false,
+    );
+  });
+
+  it("refuses to start when the snapshot cannot be taken", async () => {
+    const pool = newDefaultPool();
+    await pool.start();
+    await mkdir(path.join(stateRootDir, GUILD_A), { recursive: true });
+    await writeFile(path.join(stateRootDir, GUILD_A, "game.sav"), "guild-a");
+    // A file where the history directory belongs makes the snapshot fail.
+    await writeFile(path.join(stateRootDir, GUILD_A, "history"), "not a dir");
+    const { driver, calls } = makeRecorderDriver("test");
+    const manager = new SingleSlotSessionManager({
+      pool,
+      driver,
+      stateRootDir,
+      saveHistory: { entries: ["game.sav"], keep: 3 },
+    });
+
+    const result = await manager.start({
+      guildId: GUILD_A,
+      voiceChannelId: "v1",
+      textChannelId: "t1",
+      startedByUserId: "u1",
+    });
+
+    expect(result.kind).toBe("driverError");
+    expect(calls).toHaveLength(0);
+    expect(pool.busyCount()).toBe(0);
   });
 });
