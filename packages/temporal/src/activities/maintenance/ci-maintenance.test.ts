@@ -104,6 +104,7 @@ test("deferral and a superseded source preserve the queued candidate", () => {
 test("image fingerprint ignores application edits and changes with either Dockerfile or tool pins", () => {
   const tree = [
     ".mise.toml",
+    "mise.lock",
     "ci/ci-image/Dockerfile",
     "ci/ci-playwright/Dockerfile",
   ].map((path) => ({ path, sha: "a" }));

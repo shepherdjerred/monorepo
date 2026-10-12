@@ -103,6 +103,24 @@
   },
   {
     "namespace": "woodpecker-ci",
+    "name": "woodpecker-workspace-seeds",
+    "backup": "disabled",
+    "reason": "Immutable CI source and dependency seeds - rebuildable from verified main"
+  },
+  {
+    "namespace": "woodpecker-ci",
+    "name": "woodpecker-format-main",
+    "backup": "disabled",
+    "reason": "Disposable content-validated formatter results for main"
+  },
+  {
+    "namespace": "woodpecker-ci",
+    "name": "woodpecker-format-pr",
+    "backup": "disabled",
+    "reason": "Disposable content-validated formatter results for approved PRs"
+  },
+  {
+    "namespace": "woodpecker-ci",
     "name": "woodpecker-bun-cache-control",
     "backup": "disabled",
     "reason": "Lock file only - coordination state for the bun cache collector"

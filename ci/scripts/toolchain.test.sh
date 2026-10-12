@@ -66,13 +66,21 @@ if ! rg -wq 'libxml2' "$CI_IMAGE" ||
   exit 1
 fi
 
-if rg -q 'apt-get|playwright install|bun x' "$CI_PLAYWRIGHT_IMAGE" ||
+if rg -q 'playwright install|bun x' "$CI_PLAYWRIGHT_IMAGE" ||
   ! rg -Fq 'Bun.file("/ms-playwright/.docker-info").json()' "$CI_PLAYWRIGHT_IMAGE" ||
   ! rg -Fq 'typeof info.driverVersion !== "string"' "$CI_PLAYWRIGHT_IMAGE" ||
   ! rg -Fq 'chromium-*/chrome-linux*/chrome' "$CI_PLAYWRIGHT_IMAGE" ||
   ! rg -Fq 'firefox-*/firefox/firefox' "$CI_PLAYWRIGHT_IMAGE" ||
   ! rg -Fq 'webkit-*/minibrowser-gtk/MiniBrowser' "$CI_PLAYWRIGHT_IMAGE"; then
   echo "Playwright CI image must use the pinned browser inventory without runtime installation" >&2
+  exit 1
+fi
+
+if ! rg -Fq "mise install --locked bun node 'github:theseus-rs/postgresql-binaries' 'aqua:temporalio/cli'" "$CI_PLAYWRIGHT_IMAGE" ||
+  ! rg -Fq 'COPY .mise.toml mise.lock /workspace/' "$CI_PLAYWRIGHT_IMAGE" ||
+  ! rg -Fq 'minisign -V -P "${MISE_MINISIGN_PUBLIC_KEY}"' "$CI_PLAYWRIGHT_IMAGE" ||
+  ! rg -Fq 'id=github-download-token,env=GH_TOKEN,required=true' "$CI_PLAYWRIGHT_IMAGE"; then
+  echo "Playwright CI must bake the locked signed toolchain with a build-only download credential" >&2
   exit 1
 fi
 
@@ -320,6 +328,21 @@ if [[ $(<"$TEST_ROOT/bun.log") != "install --frozen-lockfile --filter native-exa
 fi
 if [[ -n $(<"$TEST_ROOT/bun.log.tmpdir") ]]; then
   echo "local Bun installs must keep Bun's default temporary directory" >&2
+  exit 1
+fi
+
+: >"$TEST_ROOT/bun.log"
+CI_BUN_INSTALL_BACKEND=copyfile BUN_INSTALL_LOCK_MODE=local \
+  BUN_GC_TEST_LOG="$TEST_ROOT/bun.log" PATH="$TEST_ROOT/bin:$PATH" \
+  "$BUN_INSTALL_WRAPPER" --frozen-lockfile
+if [[ $(<"$TEST_ROOT/bun.log") != "install --frozen-lockfile --backend=copyfile" ]]; then
+  echo "copyfile experiment must preserve install flags and select the requested backend" >&2
+  exit 1
+fi
+if CI_BUN_INSTALL_BACKEND=unknown BUN_INSTALL_LOCK_MODE=local \
+  BUN_GC_TEST_LOG="$TEST_ROOT/bun.log" PATH="$TEST_ROOT/bin:$PATH" \
+  "$BUN_INSTALL_WRAPPER" --frozen-lockfile; then
+  echo "unknown experimental Bun backends must fail" >&2
   exit 1
 fi
 

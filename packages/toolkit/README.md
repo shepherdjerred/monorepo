@@ -136,7 +136,7 @@ cohort reports successful latency sample counts and nearest-rank p50/p95 values;
 failed or canceled runs do not become successful latency samples. Individual
 step distributions expose checkout, review, verification, publication, and
 deployment costs. They overlap and are not additive. Structured checkout and
-toolchain measurements are reported separately from native step durations;
+toolchain and dependency-install measurements are reported separately from native step durations;
 toolchain bootstrap excludes workspace dependency installation. Checkout byte
 counts measure stored Git objects, not network traffic.
 

@@ -306,6 +306,8 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
   ],
   "ci-playwright": [
     "ci/ci-playwright/Dockerfile",
+    ".mise.toml",
+    "mise.lock",
     "ci/scripts/images/application-image-runtime.ts",
     "ci/scripts/images/bake-retry.ts",
     "ci/scripts/images/build-ci-image-core.ts",

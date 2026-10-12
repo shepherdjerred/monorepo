@@ -6,8 +6,16 @@ import { ciImageSteps } from "#src/pipeline/lanes/ci-images.ts";
 import { scoutSteps, githubReleaseStep } from "#src/pipeline/lanes/scout.ts";
 import { BUN_CACHE, BUN_CACHE_CONTROL } from "#src/pipeline/cache.ts";
 import { noWorkStep } from "#src/pipeline/completion.ts";
+import { WORKSPACE_SEEDS, SEED_CONTROL } from "#src/pipeline/performance.ts";
+import { GITHUB_DOWNLOAD } from "#src/pipeline/lanes/tofu.ts";
+import { MEDIUM_TIER } from "#src/pipeline/tiers.ts";
+import { shellQuote } from "#src/pipeline/emit.ts";
 
-export const MaintenanceKindSchema = z.enum(["release-notes", "ci-images"]);
+export const MaintenanceKindSchema = z.enum([
+  "release-notes",
+  "ci-images",
+  "workspace-seeds",
+]);
 export type MaintenanceKind = z.infer<typeof MaintenanceKindSchema>;
 
 /** Only a signed default-branch manual request can request these credentials. */
@@ -66,10 +74,32 @@ export function requestedMaintenanceSteps(
     : maintenanceSteps(images, kind);
 }
 
+/** A manual seed request cannot promote an unverified main revision. */
+export async function eligibleMaintenanceSteps(
+  images: CiImages,
+  kind: MaintenanceKind,
+  pipeline: Pipeline,
+  verifiedSource: () => Promise<string | undefined>,
+) {
+  if (
+    kind === "workspace-seeds" &&
+    (await verifiedSource()) !== pipeline.commit
+  )
+    return [
+      {
+        ...noWorkStep(images.base),
+        key: "maintenance-unverified",
+        label: "workspace seed source is not verified",
+      },
+    ];
+  return requestedMaintenanceSteps(images, kind, pipeline);
+}
+
 export function maintenanceSteps(
   images: CiImages,
   kind: MaintenanceKind,
 ): CiStep[] {
+  if (kind === "workspace-seeds") return workspaceSeedSteps(images);
   const release = scoutSteps(images).find(
     (step) => step.key === "release-please",
   );
@@ -101,6 +131,64 @@ export function maintenanceSteps(
       timeoutMinutes: kind === "release-notes" ? 60 : 150,
       concurrency: { limit: 1, group: "ci-maintenance" },
       volumes: [BUN_CACHE, BUN_CACHE_CONTROL],
+    },
+  ];
+}
+
+function workspaceSeedSteps(images: CiImages): CiStep[] {
+  const commands = (profile: "verify" | "browser", image: string) => [
+    `${profile === "browser" ? "MISE_TOOLCHAIN_SCOPE=postgres " : ""}. ci/scripts/toolchain.sh`,
+    // The installer is dependency-free until it loads the publisher after install.
+    "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@shepherdjerred/woodpecker-config-extension'",
+    `bun --no-install ci/scripts/publish-workspace-seed.ts install ${profile} ${shellQuote(image)}`,
+    ...(profile === "verify"
+      ? [
+          "mise exec -- gradle -p packages/the-storm/plugin assemble compileTestJava --no-daemon --console=plain",
+          "mise exec -- gradle -p packages/the-storm/client assemble compileTestJava --no-daemon --console=plain",
+        ]
+      : []),
+    "mkdir -p /woodpecker/source-control",
+    // Readers run as UID 1000; the seed writer's lock must remain accessible.
+    "touch /woodpecker/source-control/seeds.lock && chmod 666 /woodpecker/source-control/seeds.lock",
+    `flock -x /woodpecker/source-control/seeds.lock bun --no-install ci/scripts/publish-workspace-seed.ts publish ${profile} ${shellQuote(image)}`,
+  ];
+  const volumes = [BUN_CACHE, BUN_CACHE_CONTROL, WORKSPACE_SEEDS, SEED_CONTROL];
+  return [
+    {
+      key: "maintenance-workspace-seeds",
+      label: "refresh immutable workspace seeds",
+      image: images.base,
+      commands: commands("verify", images.base),
+      timeoutMinutes: 30,
+      resources: MEDIUM_TIER,
+      secrets: [GITHUB_DOWNLOAD],
+      volumes,
+      concurrency: { limit: 1, group: "ci-maintenance" },
+      orderedSteps: [
+        {
+          key: "workspace-seed-browser",
+          image: images.playwright,
+          commands: [
+            "git clone --no-hardlinks . /woodpecker/browser-seed",
+            "cd /woodpecker/browser-seed",
+            ...commands("browser", images.playwright),
+          ],
+          timeoutMinutes: 30,
+          resources: MEDIUM_TIER,
+          secrets: [GITHUB_DOWNLOAD],
+          volumes,
+        },
+        {
+          key: "workspace-seeds-result",
+          image: images.base,
+          commands: [
+            `MISE_TOOLCHAIN_SCOPE=runtime . ci/scripts/toolchain.sh`,
+            `bun --no-install ci/scripts/publish-workspace-seed.ts result verify ${shellQuote(images.base)}`,
+          ],
+          timeoutMinutes: 2,
+          resources: MEDIUM_TIER,
+        },
+      ],
     },
   ];
 }

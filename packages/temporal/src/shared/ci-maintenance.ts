@@ -1,7 +1,11 @@
 import { z } from "zod";
 
 export const CI_MAINTENANCE_ID = "ci-maintenance-coordinator";
-export const CI_MAINTENANCE_KINDS = ["release-notes", "ci-images"] as const;
+export const CI_MAINTENANCE_KINDS = [
+  "release-notes",
+  "ci-images",
+  "workspace-seeds",
+] as const;
 export const CiMaintenanceKindSchema = z.enum(CI_MAINTENANCE_KINDS);
 export type CiMaintenanceKind = z.infer<typeof CiMaintenanceKindSchema>;
 export type MaintenanceCandidate = {

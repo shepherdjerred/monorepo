@@ -33,7 +33,16 @@ submission at a time, coalesces repeated ticks, and retains fingerprints
 across worker replacement and continue-as-new. The memo is refreshed after
 each tick; Workflow history records in-flight writes before that snapshot.
 CI image fingerprints cover
-the tool manifest and Dockerfiles. Ready generated PRs freeze their stream.
+the tool manifest, lockfile, and Dockerfiles. Ready generated PRs freeze their stream.
+
+The optional `workspace-seeds` stream uses the verified main SHA as its
+fingerprint and is gated separately by `ci-workspace-seed-refresh-enabled`
+(production default off). It uses the existing coordinator and schedule,
+publishing verify and browser profiles in ordered containers. Its final
+`workspace-seeds-result` command emits the unique maintenance receipt only
+after both profiles finish. Capacity deferral leaves the fingerprint pending
+for a later tick. The extension's workspace-cache reference documents the
+immutable generation and reader-lock contract.
 
 Writes have one activity attempt. After a lost response, subsequent ticks
 search for the recorded request ID; they never repeat the POST blindly.

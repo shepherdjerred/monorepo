@@ -45,6 +45,7 @@ function allContainersBounded(field: "containers" | "initContainers"): string {
  * checks CREATE only: Kueue's own update to ungate a pod only adds to it.
  */
 export function createWoodpeckerCiPodGuard(chart: Chart): void {
+  createWorkspaceSeedPolicy(chart);
   new ApiObject(chart, "woodpecker-ci-pod-guard-policy", {
     apiVersion: "admissionregistration.k8s.io/v1",
     kind: "ValidatingAdmissionPolicy",
@@ -72,6 +73,13 @@ export function createWoodpeckerCiPodGuard(chart: Chart): void {
         ],
       },
       validations: [
+        {
+          expression:
+            "!has(object.spec.volumes) || !object.spec.volumes.exists(v, has(v.persistentVolumeClaim) && v.persistentVolumeClaim.claimName == 'woodpecker-format-main') || (has(object.metadata.labels) && 'ci.sjer.red/step-key' in object.metadata.labels && object.metadata.labels['ci.sjer.red/step-key'] == 'verify' && has(object.metadata.annotations) && 'ci.sjer.red/branch' in object.metadata.annotations && object.metadata.annotations['ci.sjer.red/branch'] == 'main' && 'ci.sjer.red/event' in object.metadata.annotations && object.metadata.annotations['ci.sjer.red/event'] in ['push', 'manual'])",
+          message:
+            "Main formatter results may only be mounted by owner main verification",
+          reason: "Forbidden",
+        },
         {
           expression: `has(object.spec.nodeSelector) && 'kubernetes.io/hostname' in object.spec.nodeSelector && object.spec.nodeSelector['kubernetes.io/hostname'] == '${CI_NODE_HOSTNAME}'`,
           message: `CI pods must select the CI node (kubernetes.io/hostname: ${CI_NODE_HOSTNAME})`,
@@ -113,5 +121,74 @@ export function createWoodpeckerCiPodGuard(chart: Chart): void {
       policyName: CI_POD_GUARD_POLICY,
       validationActions: ["Deny"],
     },
+  });
+}
+
+/** Keep the CSI mount RW for ZFS; only container bind mounts become RO. */
+const readerMounts = (field: "containers" | "initContainers") =>
+  `object.spec.${field}.filter(c, has(c.volumeMounts)).map(c, Object.spec.${field}{name: c.name, volumeMounts: c.volumeMounts.filter(m, m.name in variables.seedVolumes).map(m, Object.spec.${field}.volumeMounts{name: m.name, mountPath: m.mountPath, readOnly: true})})`;
+function createWorkspaceSeedPolicy(chart: Chart): void {
+  const name = "woodpecker-workspace-seeds.sjer.red";
+  new ApiObject(chart, "woodpecker-workspace-seeds-policy", {
+    apiVersion: "admissionregistration.k8s.io/v1",
+    kind: "MutatingAdmissionPolicy",
+    metadata: {
+      name,
+      annotations: {
+        [ARGOCD_SYNC_WAVE_ANNOTATION]: APPLICATION_SYNC_WAVES.admissionPolicy,
+      },
+    },
+    spec: {
+      failurePolicy: "Fail",
+      reinvocationPolicy: "IfNeeded",
+      matchConstraints: {
+        namespaceSelector: {
+          matchLabels: {
+            "kubernetes.io/metadata.name": WOODPECKER_CI_NAMESPACE,
+          },
+        },
+        resourceRules: [
+          {
+            apiGroups: [""],
+            apiVersions: ["v1"],
+            operations: ["CREATE"],
+            resources: ["pods"],
+          },
+        ],
+      },
+      matchConditions: [
+        {
+          name: "seed-reader",
+          expression:
+            "has(object.spec.volumes) && object.spec.volumes.exists(v, has(v.persistentVolumeClaim) && v.persistentVolumeClaim.claimName == 'woodpecker-workspace-seeds') && !(has(object.metadata.labels) && 'ci.sjer.red/step-key' in object.metadata.labels && object.metadata.labels['ci.sjer.red/step-key'] in ['maintenance-workspace-seeds', 'workspace-seed-browser'] && has(object.metadata.annotations) && 'ci.sjer.red/branch' in object.metadata.annotations && object.metadata.annotations['ci.sjer.red/branch'] == 'main' && 'ci.sjer.red/event' in object.metadata.annotations && object.metadata.annotations['ci.sjer.red/event'] == 'manual')",
+        },
+      ],
+      variables: [
+        {
+          name: "seedVolumes",
+          expression:
+            "object.spec.volumes.filter(v, has(v.persistentVolumeClaim) && v.persistentVolumeClaim.claimName == 'woodpecker-workspace-seeds').map(v, v.name)",
+        },
+      ],
+      mutations: [
+        {
+          patchType: "ApplyConfiguration",
+          applyConfiguration: {
+            expression: `Object{spec: Object.spec{containers: ${readerMounts("containers")}, initContainers: has(object.spec.initContainers) ? ${readerMounts("initContainers")} : []}}`,
+          },
+        },
+      ],
+    },
+  });
+  new ApiObject(chart, "woodpecker-workspace-seeds-binding", {
+    apiVersion: "admissionregistration.k8s.io/v1",
+    kind: "MutatingAdmissionPolicyBinding",
+    metadata: {
+      name,
+      annotations: {
+        [ARGOCD_SYNC_WAVE_ANNOTATION]: APPLICATION_SYNC_WAVES.admissionBinding,
+      },
+    },
+    spec: { policyName: name },
   });
 }

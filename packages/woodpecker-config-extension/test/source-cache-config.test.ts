@@ -12,9 +12,36 @@ vi.mock("@shepherdjerred/feature-flags/config-source.ts", () => ({
 }));
 import { sourceCacheConfig } from "#src/checkout/config.ts";
 import { maintenanceConfig } from "#src/maintenance-config.ts";
+import {
+  performanceConfig,
+  DISABLED_PERFORMANCE,
+} from "#src/performance-config.ts";
 beforeEach(() => {
   vi.clearAllMocks();
   flag.mockReset();
+});
+test("performance flags preserve explicit false, reject invalid values and default off on absence or outage", async () => {
+  flag.mockResolvedValue(undefined);
+  expect(await performanceConfig("main")).toEqual(DISABLED_PERFORMANCE);
+  flag.mockResolvedValue({ value: false });
+  expect(await performanceConfig("ci-canary/performance")).toEqual(
+    DISABLED_PERFORMANCE,
+  );
+  expect(factory).toHaveBeenLastCalledWith(
+    expect.objectContaining({
+      targetingKey: "ci-canary/performance",
+      attributes: { stage: "beta" },
+      requireFreshSnapshot: true,
+    }),
+  );
+  flag.mockResolvedValue({ value: true });
+  expect(
+    Object.values(await performanceConfig("ci-canary/performance")),
+  ).toEqual([true, true, true, true, true, true]);
+  flag.mockResolvedValue({ value: "true" });
+  await expect(performanceConfig("main")).rejects.toThrow();
+  flag.mockRejectedValue(new Error("unavailable"));
+  expect(await performanceConfig("main")).toEqual(DISABLED_PERFORMANCE);
 });
 
 test.each(["main", "feature/example", "ci-canary/cache"])(

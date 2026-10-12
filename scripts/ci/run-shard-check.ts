@@ -14,6 +14,7 @@
 
 import path from "node:path";
 import { run } from "../lib/run.ts";
+import { preparePrettierCache } from "./prettier-cache.ts";
 import {
   matchShard,
   parseShardName,
@@ -92,6 +93,7 @@ const CHECK_GLOBAL_INPUTS: Record<CheckName, readonly string[]> = {
     "scripts/lib/run.ts",
     "scripts/ci/repo-shards.ts",
     "scripts/ci/run-shard-check.ts",
+    "scripts/ci/prettier-cache.ts",
   ],
   "line-endings": [
     ".gitattributes",
@@ -194,18 +196,29 @@ export async function runShardCheck(
       console.log(`prettier[${shard}]: no tracked files to check`);
       return;
     }
-    for (const files_ of chunk(files, PRETTIER_CHUNK_SIZE)) {
-      await runner(
-        [
-          "bunx",
-          "--no-install",
-          "prettier",
-          "--check",
-          "--ignore-unknown",
-          ...files_,
-        ],
-        { cwd: REPO_ROOT },
-      );
+    const cacheRoot = Bun.env["CI_FORMAT_CACHE_ROOT"];
+    const cache =
+      cacheRoot === undefined
+        ? undefined
+        : await preparePrettierCache(REPO_ROOT, cacheRoot, shard);
+    try {
+      for (const files_ of chunk(files, PRETTIER_CHUNK_SIZE)) {
+        await runner(
+          [
+            "bunx",
+            "--no-install",
+            "prettier",
+            "--check",
+            "--ignore-unknown",
+            ...(cache?.args ?? []),
+            ...files_,
+          ],
+          { cwd: REPO_ROOT },
+        );
+      }
+      await cache?.publish();
+    } finally {
+      await cache?.cleanup();
     }
     return;
   }

@@ -68,7 +68,7 @@ export function ciImageDefinition(name: string): CiImageDefinition {
         digestFile: "ci/ci-playwright/DIGEST",
         stateFile: "ci/ci-playwright/STATE.json",
         branch: "chore/ci-playwright-pin-pending",
-        sourceFiles: ["ci/ci-playwright/Dockerfile"],
+        sourceFiles: ["ci/ci-playwright/Dockerfile", ".mise.toml", "mise.lock"],
       };
     case "windows-cross-compiler":
     case "windows-cross-compiler-winui":
@@ -164,7 +164,7 @@ export function ciImageBuildCommand(
     dockerfile,
     ...(target === undefined ? [] : ["--target", target]),
     ...(platform === undefined ? [] : ["--platform", platform]),
-    ...(definition.name === "ci-base"
+    ...(["ci-base", "ci-playwright"].includes(definition.name)
       ? [
           "--secret",
           ["id=github-download-token", "env=GITHUB_DOWNLOAD_TOKEN"].join(","),

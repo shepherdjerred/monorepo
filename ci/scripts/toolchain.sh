@@ -27,6 +27,9 @@ case "${CI_WORKSPACE:-}" in
     # not work across step pods. Keep the home on this workflow's volume,
     # overriding shared paths emitted by older configuration extensions too.
     export GRADLE_USER_HOME=/woodpecker/gradle
+    if [ -d "$PWD/.git/ci-gradle-seed/modules-2" ]; then
+      export GRADLE_RO_DEP_CACHE="$PWD/.git/ci-gradle-seed"
+    fi
     ;;
 esac
 

@@ -13,6 +13,7 @@ import type {
   CiStep,
   ResourceTier,
 } from "#src/pipeline/model.ts";
+import { WORKSPACE_SEEDS } from "#src/pipeline/performance.ts";
 
 /**
  * Node the CI step pods run on, and the taint they must tolerate to get there.
@@ -82,6 +83,33 @@ const POD_STEP_KEY_LABEL = "ci.sjer.red/step-key";
 const POD_COMMIT_LABEL = "ci.sjer.red/commit";
 const POD_BRANCH_ANNOTATION = "ci.sjer.red/branch";
 const POD_PIPELINE_URL_ANNOTATION = "ci.sjer.red/pipeline-url";
+
+type SourceCache = NonNullable<CiStep["sourceCache"]>;
+function cloneEnvironment(cache: SourceCache) {
+  return {
+    CI_SOURCE_CACHE_COLD: String(cache.cold === true),
+    CI_SOURCE_INCREMENTAL: String(cache.incremental === true),
+    ...(cache.gradle === undefined
+      ? {}
+      : { CI_GRADLE_SEED_IMAGE: cache.gradle.image }),
+    ...(cache.prepared === undefined
+      ? {}
+      : {
+          CI_PREPARED_PROFILE: cache.prepared.profile,
+          CI_PREPARED_IMAGE: cache.prepared.image,
+        }),
+  };
+}
+function seedLock(cache: SourceCache) {
+  return cache.prepared === undefined && cache.gradle === undefined
+    ? ""
+    : `flock -s ${SOURCE_CACHE_CONTROL_PATH}/seeds.lock `;
+}
+function seedVolumes(cache: SourceCache) {
+  return cache.prepared === undefined && cache.gradle === undefined
+    ? []
+    : [`${WORKSPACE_SEEDS.claim}:${WORKSPACE_SEEDS.path}`];
+}
 
 /** Identity of the pipeline being generated, stamped onto every step pod. */
 export type PipelineIdentity = {
@@ -199,6 +227,10 @@ function podOptions(
     },
     annotations: {
       [POD_BRANCH_ANNOTATION]: identity.branch,
+      "ci.sjer.red/event":
+        identity.event === "pull_request_metadata"
+          ? "pull_request"
+          : identity.event,
       [POD_PIPELINE_URL_ANNOTATION]: identity.linkUrl,
     },
   };
@@ -237,6 +269,9 @@ function emitCommand(
     name: step.key,
     image: step.image,
     commands: wrapCommands(step),
+    ...(step.runAfterFailure === true
+      ? { when: [{ status: ["success", "failure"] }] }
+      : {}),
     environment: {
       ...step.environment,
       ...sharedCacheEnvironment(step.volumes),
@@ -368,13 +403,15 @@ export function emitWorkflow(step: CiStep, identity: PipelineIdentity): string {
             {
               name: "clone",
               image: step.sourceCache.image,
+              environment: cloneEnvironment(step.sourceCache),
               commands: [
                 `mkdir -p ${SOURCE_CACHE_CONTROL_PATH}`,
-                `flock -s ${SOURCE_CACHE_CONTROL_PATH}/gc.lock bash /app/packages/woodpecker-config-extension/src/checkout/checkout.sh ${SOURCE_CACHE_PATH} ${SOURCE_CACHE_CONTROL_PATH} ${identity.commit}`,
+                `flock -s ${SOURCE_CACHE_CONTROL_PATH}/gc.lock ${seedLock(step.sourceCache)}bash /app/packages/woodpecker-config-extension/src/checkout/checkout.sh ${SOURCE_CACHE_PATH} ${SOURCE_CACHE_CONTROL_PATH} ${identity.commit}`,
               ],
               volumes: [
                 `${step.sourceCache.claim}:${SOURCE_CACHE_PATH}`,
                 `${SOURCE_CACHE_CONTROL}:${SOURCE_CACHE_CONTROL_PATH}`,
+                ...seedVolumes(step.sourceCache),
               ],
               backend_options: {
                 kubernetes: {

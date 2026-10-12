@@ -3,13 +3,21 @@ import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-sou
 import { z } from "zod";
 
 export async function ciMaintenanceEnabled() {
+  return maintenanceFlag("ci-maintenance-dispatch-enabled");
+}
+
+export async function ciWorkspaceSeedRefreshEnabled() {
+  return maintenanceFlag("ci-workspace-seed-refresh-enabled");
+}
+
+async function maintenanceFlag(flag: string) {
   const resolver = defineConfig({
     definition: {
       enabled: {
         schema: z.boolean(),
         sources: ["flag", "default"],
         default: false,
-        names: { flag: "ci-maintenance-dispatch-enabled" },
+        names: { flag },
       },
     } as const,
     sources: {

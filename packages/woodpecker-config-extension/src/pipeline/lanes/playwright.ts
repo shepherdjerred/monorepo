@@ -20,7 +20,11 @@ import {
  * pipeline-level guard decides whether the LANE runs at all, and the in-step
  * selector decides which of the seven Playwright projects inside it do.
  */
-export function playwrightSteps(images: CiImages, changedBase = ""): CiStep[] {
+export function playwrightSteps(
+  images: CiImages,
+  changedBase = "",
+  publishArtifacts = true,
+): CiStep[] {
   return [
     {
       key: "playwright-e2e",
@@ -55,8 +59,12 @@ export function playwrightSteps(images: CiImages, changedBase = ""): CiStep[] {
         "bun --no-install ci/scripts/selection/run-playwright.ts",
         // The suites build these bundles to test them; the deploy lane then
         // ships exactly what was tested instead of rebuilding.
-        "if [ -d packages/sjer.red/dist ]; then bun --no-install scripts/ci/ci-artifact.ts put sjer-red-dist; fi",
-        "if [ -d packages/docs/wiki/dist ]; then bun --no-install scripts/ci/ci-artifact.ts put wiki-dist; fi",
+        ...(publishArtifacts
+          ? [
+              "if [ -d packages/sjer.red/dist ]; then bun --no-install scripts/ci/ci-artifact.ts put sjer-red-dist; fi",
+              "if [ -d packages/docs/wiki/dist ]; then bun --no-install scripts/ci/ci-artifact.ts put wiki-dist; fi",
+            ]
+          : []),
       ]),
       // This workflow builds its own Turbo prerequisites in its own workspace.
       // Completion and deployment still wait for both verification and E2E.

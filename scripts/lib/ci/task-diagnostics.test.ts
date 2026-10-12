@@ -5,6 +5,7 @@ import { afterEach, expect, test, vi } from "vitest";
 import {
   collectTaskDiagnostics,
   TurboDiagnosticSchema,
+  sanitizeTurboInputs,
 } from "./task-diagnostics.ts";
 import {
   prepareDiagnostics,
@@ -12,6 +13,36 @@ import {
 } from "../../ci/run-with-diagnostics.ts";
 
 const directories: string[] = [];
+test("input auditing keeps file hashes and variable names while removing secret-bearing fields", () => {
+  const raw = summary();
+  const task = raw.tasks[0];
+  if (task === undefined) throw new Error("Missing fixture task");
+  const safe = TurboDiagnosticSchema.parse(
+    sanitizeTurboInputs({
+      ...raw,
+      tasks: [
+        {
+          ...task,
+          inputs: {
+            "source with spaces.ts": "abc123",
+            ".env.prod": "abc123",
+            "secrets/token": "def456",
+          },
+          resolvedTaskDefinition: {
+            env: ["NODE_ENV", "TOKEN=sentinel-value"],
+            passThroughEnv: ["PATH"],
+          },
+          environmentVariables: { TOKEN: "sentinel-value" },
+        },
+      ],
+    }),
+  );
+  expect(safe.tasks[0]?.inputHashes).toEqual({
+    "source with spaces.ts": "abc123",
+  });
+  expect(safe.tasks[0]?.environmentVariableNames).toEqual(["NODE_ENV", "PATH"]);
+  expect(JSON.stringify(safe)).not.toContain("sentinel");
+});
 afterEach(async () => {
   vi.restoreAllMocks();
   await Promise.all(

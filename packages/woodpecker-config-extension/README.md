@@ -86,6 +86,96 @@ workspace. Verify and Playwright use `TURBO_CACHE=remote:rw`: each is one Turbo
 run in a fresh workspace, so a local cache there would be written and never
 read.
 
+### Experimental workspace reuse
+
+The `woodpecker-performance` flag declarations default off in production and
+target `ci-canary/` branches as beta. Each optimization resolves separately:
+incremental source fetch, prepared workspaces, formatter results, Gradle
+dependency seeds, small-check grouping, and Bun's explicit copyfile backend.
+Credentialless automation receives none of these caches.
+
+Incremental source misses copy and verify recent immutable objects before
+advertising a temporary negotiation ref. Fetch still requests the exact SHA;
+the helper validates its commit and tree and removes the temporary ref.
+Diagnostics distinguish the seed SHA from the requested source SHA. A seed
+over 2 GiB starts a fresh fetch instead, bounding accumulated objects across
+successive incremental generations within the existing source-cache GC budget.
+
+Prepared workspaces use immutable generations on `woodpecker-workspace-seeds`
+(60 GiB), copied with the filesystem clone facility into each private workflow
+volume. A fingerprint covers the image digest, platform, dependency manifests,
+lockfile, patches, linker configuration, tool pins, and seed implementation.
+The source SHA is separate, allowing an unchanged dependency closure to serve
+a newer source tree. Git's index and hard reset apply source additions,
+renames, and deletions after restoration. The frozen Bun installer remains
+authoritative. Only tracked source and installed dependency directories enter
+a seed; Git configuration, credentials, hooks, and untracked build outputs do not.
+Relative dependency links must remain inside the workspace.
+
+Only default-branch manual maintenance publishers can write the seed claim;
+the source must equal the latest fully successful main push, including for
+direct manual requests. Superseded or unverified requests publish no seed.
+Native Kubernetes admission makes every other container mount read-only while
+leaving CSI mounts read-write, as required by shared ZFS volumes. Readers hold
+the shared seed lock through copying; publication and collection take it
+exclusively. Collection retains two generations per profile and publication
+defers above 70% filesystem use. Missing compatible seeds are ordinary cold
+starts; invalid published identities fail visibly.
+
+Gradle retains a private writable home. Seed publication copies only its
+`modules-2` dependency cache, excluding lock files and `gc.properties`.
+Consumers clone that immutable cache into private Git metadata before releasing
+the reader lock and set `GRADLE_RO_DEP_CACHE` there. Daemons, journals, mutable
+homes, and build outputs are never shared. Gradle itself comes from the pinned
+mise image; this repository does not use a Gradle wrapper distribution cache.
+
+Prettier uses content validation with a private cache file per shard/job and
+atomic publication only after every chunk succeeds. Plugin lock, runtime,
+configuration, ignore, and package-manifest changes invalidate results. Main
+and PR results occupy separate 128 MiB claims; admission forbids PR access to
+the main claim. Four recent configuration keys are retained per shard.
+Typed ESLint remains unchanged. Turbo diagnostics retain sanitized file hashes
+and declared variable names for input auditing, never environment values.
+
+The grouped `small-pr-checks` prototype is selected only for trusted PRs where
+both release rehearsal and SQLite checks were selected. It shares checkout and
+installation while preserving per-container credentials, resources, timeouts,
+and failure status. Both checks run after an independent check fails; a failed
+shared setup prevents either check from claiming success.
+
+### Benchmark request contract
+
+A signed owner manual request on main or `ci-canary/` may supply all five
+variables below. The route is exclusive: it emits one verify/browser workflow
+and diagnostic handoffs, with no application artifact publication or releases.
+Other work continues to use normal selection.
+
+| Variable               | Values                                                        |
+| ---------------------- | ------------------------------------------------------------- |
+| `CI_BENCHMARK_PROFILE` | `verify`, `browser`                                           |
+| `CI_BENCHMARK_SOURCE`  | Exact 40-character pipeline commit SHA                        |
+| `CI_BENCHMARK_VARIANT` | `baseline`, `candidate`                                       |
+| `CI_BENCHMARK_CACHE`   | `cold`, `warm`                                                |
+| `CI_BENCHMARK_FEATURE` | `incremental`, `prepared`, `formatting`, `gradle`, `copyfile` |
+
+Candidate requests enable only the named optimization and require its beta
+flag to resolve true. Cold runs use a private source-cache destination and
+disable Turbo result reuse; incremental candidates may negotiate from a
+different verified shared SHA. Download caches remain warm, so this is a cold
+source/result comparison rather than a purge of production package caches.
+Warm runs use ordinary exact-SHA source and signed Turbo result caches. A moved
+source, conflicting maintenance/platform/corpus parameters, or disabled
+candidate is rejected. A fixed canary branch allows repeated pairs while main
+continues advancing. `CI_IO_FIXED_CORPUS` is not used by this route.
+
+`CI_CHECKOUT_DIAGNOSTIC`, `CI_BOOTSTRAP_DIAGNOSTIC`, and
+`CI_INSTALL_DIAGNOSTIC` separate source, toolchain, and install time. Retained
+Turbo summaries provide task/cache evidence; `toolkit ci timings --json` also
+keeps native queue/startup phases distinct from process timings. Device-write
+and memory measurements must come from node telemetry, including a settling
+window after completion and the amortized image/seed refresh cost. A task's
+logical object-byte count is not a physical NVMe-write measurement.
+
 Nothing a step writes should land on the container's writable layer, which is
 the CI node's OS disk. Shared Bun installs extract into `bun-cache/tmp`, beside
 the data directory, so extraction is a rename on the cache volume rather than a
@@ -196,7 +286,8 @@ aws --profile seaweedfs s3 cp s3://ci-handoff/6920/diagnostics-playwright-e2e.js
 Replace the pipeline number with the run under investigation. Records include
 the commit, workflow, invocation timestamps, original exit code, selected browser
 packages, and fresh Turbo task hashes, cache results, dependencies and timings.
-They exclude raw summaries, commands, logs, inputs and environment values.
+They exclude raw summaries, commands, logs, input contents and environment values.
+Sanitized relative input paths and their hashes are retained for cache audits.
 Retries replace that workflow's record; check its timestamp before interpreting
 it as evidence for a running retry. Queue and pod startup times remain available
 from `toolkit ci explain`; the retained interval begins after toolchain bootstrap
@@ -354,11 +445,12 @@ move to explicit manual workflows. Their failures cannot satisfy or replace
 main's verification verdict.
 
 The signed manual request must target the default branch and set
-`CI_MAINTENANCE_KIND` to `release-notes` or `ci-images`. A Temporal dispatcher
+`CI_MAINTENANCE_KIND` to `release-notes`, `ci-images`, or `workspace-seeds`.
+The workspace stream has its own default-off Temporal flag. A Temporal dispatcher
 also supplies `CI_MAINTENANCE_SOURCE` and a fingerprint. If Woodpecker resolves
 a different commit during submission, the extension emits a no-work receipt.
 Maintenance runs in the PR pool at draft priority, sharing one concurrency
-group across both kinds. It leaves the main and ready-PR reservations intact.
+group across all kinds. It leaves the main and ready-PR reservations intact.
 
 The production inventory also enables the separate
 `ci-maintenance-dispatch-enabled` Temporal flag. Both runtime fallbacks remain

@@ -152,7 +152,19 @@ export type CiStep = {
   /** The workflow needs no source checkout. */
   readonly skipClone?: boolean;
   /** Trusted clone helper only; never mounted in repository command containers. */
-  readonly sourceCache?: { readonly image: string; readonly claim: string };
+  readonly sourceCache?: {
+    readonly image: string;
+    readonly claim: string;
+    readonly incremental?: boolean;
+    readonly cold?: boolean;
+    readonly gradle?: { readonly image: string };
+    readonly prepared?: {
+      readonly profile: "verify" | "browser";
+      readonly image: string;
+    };
+  };
+  /** A grouped check still runs if an earlier independent check failed. */
+  readonly runAfterFailure?: boolean;
   /** Run after failed dependencies so a final verdict can be reported. */
   readonly runOnFailure?: boolean;
 };
@@ -171,4 +183,5 @@ export type CiCommandStep = Pick<
   | "secrets"
   | "volumes"
   | "allowFailure"
+  | "runAfterFailure"
 >;
