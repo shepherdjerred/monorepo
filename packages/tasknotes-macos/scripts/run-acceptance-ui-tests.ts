@@ -3,9 +3,14 @@ import { cp, mkdir, readFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import path from "node:path";
 import {
+  acceptanceStages,
+  executeAcceptanceStages,
+} from "./acceptance-execution.ts";
+import {
   acceptanceSigningArguments,
   assertExactStandaloneResults,
   expectedStandaloneTitles,
+  isFullStandaloneSelection,
   selectStandaloneTests,
   standaloneSelector,
   standaloneTests,
@@ -37,6 +42,7 @@ async function command(argv: string[], capture = false): Promise<string> {
 /** Real native suite, with a sandbox and Keychain namespace separate from users. */
 export async function runAcceptanceUiTests(
   tests: readonly StandaloneTest[] = standaloneTests,
+  options: { launchSmokeOnly?: boolean } = {},
 ): Promise<void> {
   if (process.platform !== "darwin") {
     throw new Error("Native acceptance requires macOS and Xcode.");
@@ -51,7 +57,8 @@ export async function runAcceptanceUiTests(
     tests.length,
     "Duplicate standalone test selection",
   );
-  const selectedTests = tests.map(standaloneSelector);
+  const smokeOnly = options.launchSmokeOnly === true;
+  const selectedTests = smokeOnly ? [] : tests.map(standaloneSelector);
   const derived = path.join(packageRoot, ".build/acceptance-xcode");
   const evidence = path.join(packageRoot, ".build/native-acceptance", runID);
   const container = path.join(
@@ -66,12 +73,23 @@ export async function runAcceptanceUiTests(
   const descriptor = path.join(directory, "acceptance.json");
   const vault = path.join(directory, "Native acceptance");
   await mkdir(evidence, { recursive: true });
+  const stages = acceptanceStages(tests, evidence, smokeOnly);
+  const result = path.join(
+    evidence,
+    smokeOnly ? "LaunchSmoke.xcresult" : "Smoke.xcresult",
+  );
   const receipt = {
     schemaVersion: 1,
     runID,
-    kind: "native-local-macos",
+    kind: smokeOnly ? "native-launch-smoke-macos" : "native-local-macos",
     selectedTests,
-    resultBundle: "Smoke.xcresult",
+    launchSmoke: stages[0]?.selector,
+    stages: stages.map((stage) => ({
+      selector: stage.selector,
+      resultBundle: path.basename(stage.resultBundle),
+    })),
+    resultBundle: path.basename(result),
+    fullAcceptance: !smokeOnly && isFullStandaloneSelection(tests),
     accountEntryCaptured: false,
     remoteVaultAuthorized: false,
   };
@@ -150,24 +168,30 @@ export async function runAcceptanceUiTests(
       lifetime,
       testRun,
     ]);
-  const result = path.join(evidence, "Smoke.xcresult");
   const failures: unknown[] = [];
   try {
-    await command([
-      "xcodebuild",
-      "test-without-building",
-      "-xctestrun",
-      testRun,
-      "-destination",
-      "platform=macOS",
-      "-parallel-testing-enabled",
-      "NO",
-      "-resultBundlePath",
-      result,
-      "-collect-test-diagnostics",
-      "never",
-      ...selectedTests.map((test) => `-only-testing:${test}`),
-    ]);
+    await executeAcceptanceStages(stages, testRun, command);
+    if (!smokeOnly) {
+      const workflows = stages.filter((stage) => stage.kind === "workflow");
+      if (workflows.length === 1) {
+        const workflow = workflows[0];
+        assert.ok(workflow);
+        await cp(workflow.resultBundle, result, {
+          recursive: true,
+          errorOnExist: true,
+          force: false,
+        });
+      } else {
+        await command([
+          "xcrun",
+          "xcresulttool",
+          "merge",
+          "--output-path",
+          result,
+          ...workflows.map((stage) => stage.resultBundle),
+        ]);
+      }
+    }
     const reports = await Promise.all(
       ["summary", "tests"].map((kind) =>
         command(
@@ -196,7 +220,7 @@ export async function runAcceptanceUiTests(
     ]);
     const summary: unknown = JSON.parse(summaryJSON);
     const testTree: unknown = JSON.parse(testsJSON);
-    assertExactStandaloneResults(summary, testTree, tests);
+    if (!smokeOnly) assertExactStandaloneResults(summary, testTree, tests);
     for (const relative of [
       "Tasks/Existing.md",
       "Reference.md",
@@ -217,24 +241,45 @@ export async function runAcceptanceUiTests(
       await Promise.all(
         created.map((note) => readFile(path.join(vault, note), "utf8")),
       ),
-      expectedStandaloneTitles(tests, runID),
+      smokeOnly ? [] : expectedStandaloneTitles(tests, runID),
     );
   } catch (error) {
     failures.push(error);
   }
+  const retainedResults = (await Bun.file(
+    path.join(result, "Info.plist"),
+  ).exists())
+    ? [result]
+    : (
+        await Promise.all(
+          stages.map(async (stage) =>
+            (await Bun.file(stage.receipt).exists())
+              ? stage.resultBundle
+              : undefined,
+          ),
+        )
+      ).filter((bundle): bundle is string => bundle !== undefined);
   for (const retain of [
     () => cp(directory, path.join(evidence, "state"), { recursive: true }),
-    () =>
-      command([
-        "xcrun",
-        "xcresulttool",
-        "export",
-        "attachments",
-        "--path",
-        result,
-        "--output-path",
-        path.join(evidence, "screenshots"),
-      ]),
+    ...retainedResults.map(
+      (bundle) => () =>
+        command([
+          "xcrun",
+          "xcresulttool",
+          "export",
+          "attachments",
+          "--path",
+          bundle,
+          "--output-path",
+          bundle === result
+            ? path.join(evidence, "screenshots")
+            : path.join(
+                evidence,
+                "screenshots",
+                path.basename(bundle, ".xcresult"),
+              ),
+        ]),
+    ),
   ]) {
     try {
       await retain();
@@ -261,9 +306,16 @@ export async function runAcceptanceUiTests(
       `Native acceptance failed; retained ${evidence}`,
     );
   }
-  console.log(`Native local acceptance passed: ${evidence}`);
+  console.log(
+    `${smokeOnly ? "Native launch smoke" : "Native local acceptance"} passed: ${evidence}`,
+  );
 }
 
 if (import.meta.main) {
-  await runAcceptanceUiTests(selectStandaloneTests(Bun.argv.slice(2)));
+  const args = Bun.argv.slice(2);
+  if (args.length === 1 && args[0] === "--launch-smoke-only") {
+    await runAcceptanceUiTests(standaloneTests, { launchSmokeOnly: true });
+  } else {
+    await runAcceptanceUiTests(selectStandaloneTests(args));
+  }
 }

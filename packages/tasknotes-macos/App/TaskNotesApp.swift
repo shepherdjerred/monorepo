@@ -13,6 +13,14 @@ import TaskNotesMac
 /// invisible to `swift build`, and therefore to every check that runs without
 /// Xcode.
 @main
+@MainActor
+enum TaskNotesLauncher {
+    static func main() {
+        FacetMacApplicationBootstrap.prepare()
+        TaskNotesApp.main()
+    }
+}
+
 struct TaskNotesApp: App {
     /// AppKit's termination handshake, implemented in the library target so it
     /// is compiled and tested by both build systems.
