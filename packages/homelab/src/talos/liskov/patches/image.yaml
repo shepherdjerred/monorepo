@@ -27,29 +27,31 @@ machine:
     module.zfs.parameters.zfs_arc_min: "8589934592"
     # Compressed ARC: effectively more cache per reserved byte.
     module.zfs.parameters.zfs_compressed_arc_enabled: "1"
+    # Write-back tuning for the disposable CI pool (sync=disabled, every
+    # dataset rebuilt by the next workflow). The pool takes ~5 TB/day of
+    # writes while workspace peaks sum to ~3 TB/day: the rest is scratch
+    # that is written, then deleted seconds later. The defaults (4 GiB dirty
+    # budget, 20% sync trigger, 5 s txg timeout) flush it anyway. An 8 GiB
+    # budget and a 30 s timeout let that scratch die in RAM; a crash loses
+    # only the last seconds of disposable CI writes, which sync=disabled
+    # already accepts. Dirty data is counted inside the ARC, so this stays
+    # under the 16 GiB zfs_arc_max above and adds nothing to the kubelet's
+    # 24Gi systemReserved budget; the trade is less cached data (ARC hit
+    # ratio was 98.8% before the change, and ZfsArcHitRateLow is the
+    # canary). Per-workflow dataset create/destroy still forces early txg
+    # commits, so the timeout is a ceiling, not a guarantee.
+    #
+    # sysfs, not kernel.modules[].parameters: the zfs system extension loads
+    # the module before machined applies module parameters, so a reboot with
+    # the parameter form left both values at their defaults (verified
+    # 2026-10-12). zfs_dirty_data_max_max (the load-time ceiling, 4 GiB) is
+    # therefore not raised; zfs_dirty_data_max is a plain runtime tunable
+    # that is not clamped to it after load.
+    module.zfs.parameters.zfs_dirty_data_max: "8589934592"
+    module.zfs.parameters.zfs_txg_timeout: "30"
   kernel:
     modules:
       - name: zfs
-        # Module-load parameters: zfs_dirty_data_max_max is read only when the
-        # module loads, so it cannot be set through sysfs like the ARC caps.
-        #
-        # The CI pool (sync=disabled, every dataset disposable) takes ~5 TB/day
-        # of writes while workspace peaks sum to ~3 TB/day: the rest is
-        # scratch that is written, then deleted seconds later. The defaults
-        # (4 GiB dirty budget, 20% sync trigger, 5 s txg timeout) flush it
-        # anyway. An 8 GiB budget and a 30 s timeout let that scratch die in
-        # RAM; a crash loses only the last seconds of disposable CI writes,
-        # which sync=disabled already accepts. Dirty data is counted inside
-        # the ARC, so this stays under the 16 GiB zfs_arc_max below and adds
-        # nothing to the kubelet's 24Gi systemReserved budget; the trade is
-        # less cached data (ARC hit ratio was 98.8% before the change, and
-        # ZfsArcHitRateLow is the canary). Per-workflow dataset create/destroy
-        # still forces early txg commits, so the timeout is a ceiling, not a
-        # guarantee. Changing these needs a node reboot (CI-only outage).
-        parameters:
-          - zfs_dirty_data_max_max=8589934592 # 8 GiB; enforced only at load
-          - zfs_dirty_data_max=8589934592 # 8 GiB (default: RAM/10 capped at 4 GiB)
-          - zfs_txg_timeout=30 # seconds (default 5)
 
 ---
 apiVersion: v1alpha1
