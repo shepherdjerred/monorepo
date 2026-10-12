@@ -139,14 +139,9 @@ export function createStarlightKarmaBotDeployment(chart: Chart, stage: Stage) {
           "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
         ),
         DATA_DIR: EnvValue.fromValue("/data"),
-        // Prisma-native database, backfilled on first boot from the legacy
-        // TypeORM `glitter.sqlite`.
+        // Prisma-native database, backfilled once from the legacy TypeORM
+        // `glitter.sqlite`, which stays on the volume untouched.
         DATABASE_PATH: EnvValue.fromValue("/data/karma.db"),
-        // Drives the automatic one-shot import at startup. The import is
-        // idempotent — once `karma.db` has rows it is skipped — so this stays
-        // set permanently rather than needing a follow-up deploy to remove.
-        // The legacy file is only ever read, and remains the rollback artifact.
-        LEGACY_DATABASE_PATH: EnvValue.fromValue("/data/glitter.sqlite"),
         ENVIRONMENT: EnvValue.fromValue(stage),
         PORT: EnvValue.fromValue("8000"),
         SENTRY_DSN: EnvValue.fromSecretValue({

@@ -17,9 +17,9 @@ export const REQUIRED_MIGRATIONS = [
  * runs before the schema is known to exist, and loading the client first would
  * mask a migration failure as a confusing query error instead.
  *
- * Unlike birmel, there is no baseline-resolve step. The karma database is
- * created fresh by `scripts/import-legacy.ts`, so its migration history starts
- * at the init migration and `migrate deploy` is always sufficient.
+ * Unlike birmel, there is no baseline-resolve step. The karma database's
+ * migration history starts at the init migration, so `migrate deploy` is
+ * always sufficient.
  */
 export async function deployDatabaseMigrations(): Promise<void> {
   const child = Bun.spawn(["bunx", "--trust", "prisma", "migrate", "deploy"], {

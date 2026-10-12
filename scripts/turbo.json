@@ -13,7 +13,7 @@
     },
     "test:ci": {
       "inputs": [
-        "$TURBO_DEFAULT$",
+        "$TURBO_EXTENDS$",
         "$TURBO_ROOT$/ci/**",
         "$TURBO_ROOT$/packages/**/package.json",
         "$TURBO_ROOT$/packages/**/turbo.json",
@@ -41,7 +41,7 @@
         "$TURBO_ROOT$/packages/feature-flags/src/managed-flag-drift.ts",
         "$TURBO_ROOT$/packages/feature-flags/src/flipt-resource-payloads.ts",
         "$TURBO_ROOT$/packages/feature-flags/src/flipt-boolean-rollouts.ts",
-        "$TURBO_ROOT$/packages/feature-flags/managed-flag-inventory.json"
+        "$TURBO_ROOT$/packages/feature-flags/src/managed-flag-inventory.json"
       ]
     }
   }

@@ -7,11 +7,12 @@
 # Secrets come from the BETA 1Password item (vault v64ocnykdqju4ui6j6pua56xw4,
 # item rtu44pohnp5ixdp2njuv5f6t2e). Non-secret config is inline.
 #
-# ⚠️  The default gateway-owner copy intentionally disconnects the deployed beta
-# bot from Discord for the duration — only one gateway owner per token. This is
-# authorized for local development/testing. Stop the local backend (Ctrl+C) and
-# beta reconnects within seconds. Secondary copies should pass
-# --no-discord-gateway and use different ports.
+# ⚠️  The default boot leaves the BETA Discord gateway alone. Passing
+# --discord-gateway makes this copy the gateway owner, which intentionally
+# disconnects the deployed beta bot from Discord for the duration — only one
+# gateway owner per token. That is authorized for local development/testing;
+# stop the local backend (Ctrl+C) and beta reconnects within seconds. Secondary
+# copies need different ports.
 
 # ── Build / process identity ──────────────────────────────────────────
 VERSION=local-dev

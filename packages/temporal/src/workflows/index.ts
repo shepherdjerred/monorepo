@@ -80,7 +80,8 @@ import type {
   ScoutSeasonRefreshResult,
 } from "#activities/scout/scout-season-refresh.ts";
 import { runHomelabAuditWorkflow as _runHomelabAuditWorkflow } from "./homelab/homelab-audit.ts";
-import { runCiIoTelemetry as _runCiIoTelemetry } from "./ci/ci-io-telemetry.ts";
+import * as ciIoTelemetry from "./ci/ci-io-telemetry.ts";
+import * as ciWorkspaceReaper from "./ci/ci-workspace-reaper.ts";
 import { runTasknotesCanary as _runTasknotesCanary } from "./tasknotes-canary.ts";
 import { monitorReportFreshness as _monitorReportFreshness } from "./scout/report-freshness.ts";
 import { deliverReportWorkflow as _deliverReportWorkflow } from "./scout/report-delivery.ts";
@@ -123,7 +124,7 @@ import type {
   GlitterContextAuditResult,
 } from "#activities/glitter/context/audit/glitter-context-audit-schema.ts";
 import { runMainVulnScanWorkflow as runMainVulnScanWorkflowImplementation } from "./ci/main-vuln-scan.ts";
-import { runLinkRotScanWorkflow as runLinkRotScanWorkflowImplementation } from "./link-rot-scan.ts";
+import * as linkRotScan from "./link-rot-scan.ts";
 import { runScheduleRehearsalWorkflow as runScheduleRehearsalWorkflowImplementation } from "./schedule-rehearsal.ts";
 import type { ScheduleRehearsalResult } from "#activities/scout/schedule-rehearsal.ts";
 import {
@@ -207,12 +208,10 @@ export async function runKometaWorkflow(): Promise<void> {
 }
 export const runMainVulnScanWorkflow = () =>
   runMainVulnScanWorkflowImplementation();
-export async function runCiIoTelemetry(): Promise<void> {
-  return _runCiIoTelemetry();
-}
-export async function runLinkRotScanWorkflow(): Promise<void> {
-  return runLinkRotScanWorkflowImplementation();
-}
+export const runCiIoTelemetry = ciIoTelemetry.runCiIoTelemetry;
+export const runCiWorkspaceReaperWorkflow =
+  ciWorkspaceReaper.runCiWorkspaceReaperWorkflow;
+export const runLinkRotScanWorkflow = linkRotScan.runLinkRotScanWorkflow;
 export async function runScheduleRehearsalWorkflow(): Promise<ScheduleRehearsalResult> {
   return runScheduleRehearsalWorkflowImplementation();
 }

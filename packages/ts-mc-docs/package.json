@@ -13,8 +13,7 @@
     "archive": "uv run scripts/world_archive.py",
     "overviews": "uv run scripts/world_overviews.py",
     "test": "python3 -m unittest discover -s scripts -p 'test_*.py' && python3 -m unittest discover -s tests -p 'test_*.py'",
-    "test:ci": "bun run test:report",
-    "test:report": "bun ../../scripts/ci/run-ci-test.ts"
+    "test:ci": "bun ../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
     "@shepherdjerred/storm-theme": "workspace:*",

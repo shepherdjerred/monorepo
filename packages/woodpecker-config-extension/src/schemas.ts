@@ -56,9 +56,8 @@ export const PipelineSchema = z.looseObject({
    */
   forge_url: z.string(),
   /**
-   * Files touched by this push or pull request. This is what replaces
-   * Buildkite's `if_changed` inputs: lane selection reads it directly instead
-   * of shelling out to git in a bootstrap pod.
+   * Files touched by this push or pull request. Lane selection reads it
+   * directly instead of shelling out to git in a bootstrap pod.
    */
   changed_files: z.array(z.string()).default([]),
   /** Operator parameters from a manual trigger, signed with this request. */

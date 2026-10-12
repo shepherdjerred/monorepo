@@ -10,7 +10,6 @@ import { runMain } from "../../../scripts/lib/transient.ts";
 import {
   readMaintenancePr,
   assertDraftUnchanged,
-  deferReadyMaintenancePr,
 } from "../../../scripts/lib/maintenance-pr.ts";
 import {
   ciImageDefinition,
@@ -42,6 +41,7 @@ import {
   MONOREPO_REPO,
   openOrUpdatePullRequest,
   retireStalePromotion,
+  deferReadyPromotion,
 } from "./update-ci-image-pin-github.ts";
 
 const MONOREPO_WRITE_URL = `https://github.com/${MONOREPO_REPO}.git`;
@@ -293,7 +293,7 @@ async function promote(candidatePath: string, dryRun: boolean): Promise<void> {
   const cloneDir = `${tmpBase()}/monorepo-${definition.name}-pin-${Date.now().toString()}`;
   try {
     const openPr = await readMaintenancePr(definition.branch, auth.env);
-    if (deferReadyMaintenancePr(openPr)) return;
+    if (await deferReadyPromotion(openPr, auth.env)) return;
     assertDraftUnchanged(openPr);
     await run(["git", "clone", MONOREPO_WRITE_URL, cloneDir], {
       env: auth.env,

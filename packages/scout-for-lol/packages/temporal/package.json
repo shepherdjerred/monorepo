@@ -23,7 +23,6 @@
     "./workflows": "./src/workflows/index.ts"
   },
   "scripts": {
-    "build": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "lint": "bun x eslint src --max-warnings=0 && check-architecture",
     "format": "bun x prettier --check src package.json tsconfig.json",
@@ -35,8 +34,7 @@
     "replay:histories": "bun scripts/replay-histories.ts",
     "replay:histories:node": "node --experimental-strip-types scripts/replay-histories-node.ts",
     "canary": "bun scripts/run-canary.ts",
-    "test:ci": "bun ../../../../scripts/ci/run-ci-test.ts",
-    "test:report": "CI_TEST_COVERAGE=1 bun ../../../../scripts/ci/run-ci-test.ts"
+    "test:ci": "bun ../../../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
     "@scout-for-lol/domain": "workspace:*",

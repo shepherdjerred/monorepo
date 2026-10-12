@@ -5,9 +5,59 @@ import {
   readMaintenancePr,
   assertDraftUnchanged,
   deferReadyMaintenancePr,
+  type MaintenancePr,
 } from "../../../scripts/lib/maintenance-pr.ts";
 
 export const MONOREPO_REPO = "shepherdjerred/monorepo";
+
+async function enableAutoMerge(
+  prNumber: string,
+  env: Record<string, string>,
+): Promise<void> {
+  await run(
+    [
+      "gh",
+      "pr",
+      "merge",
+      "--repo",
+      MONOREPO_REPO,
+      prNumber,
+      "--auto",
+      "--squash",
+    ],
+    { env },
+  );
+}
+
+/**
+ * Defer to a ready promotion PR, first making sure it can land on its own. A
+ * run that stopped between `gh pr create` and enabling auto-merge leaves a
+ * ready PR that would otherwise freeze every later candidate indefinitely.
+ */
+export async function deferReadyPromotion(
+  pr: MaintenancePr | undefined,
+  env: Record<string, string>,
+): Promise<boolean> {
+  if (pr?.isDraft !== false) return false;
+  const prNumber = pr.number.toString();
+  const viewed = await run(
+    [
+      "gh",
+      "pr",
+      "view",
+      "--repo",
+      MONOREPO_REPO,
+      prNumber,
+      "--json",
+      "autoMergeRequest",
+      "-q",
+      ".autoMergeRequest != null",
+    ],
+    { env, capture: true },
+  );
+  if (viewed.stdout.trim() !== "true") await enableAutoMerge(prNumber, env);
+  return deferReadyMaintenancePr(pr);
+}
 
 export async function openOrUpdatePullRequest(options: {
   readonly cloneDir: string;
@@ -18,7 +68,7 @@ export async function openOrUpdatePullRequest(options: {
 }): Promise<void> {
   const { cloneDir, definition, state, env, expectedRemoteSha = "" } = options;
   const currentPr = await readMaintenancePr(definition.branch, env);
-  if (deferReadyMaintenancePr(currentPr)) return;
+  if (await deferReadyPromotion(currentPr, env)) return;
   assertDraftUnchanged(currentPr, expectedRemoteSha || undefined);
   await run(
     [
@@ -58,7 +108,6 @@ export async function openOrUpdatePullRequest(options: {
         "gh",
         "pr",
         "create",
-        "--draft",
         "--repo",
         MONOREPO_REPO,
         "--base",
@@ -71,7 +120,7 @@ export async function openOrUpdatePullRequest(options: {
         [
           `Promotes ${definition.name} build ${state.buildNumber.toString()} by immutable digest.`,
           "",
-          "Mark this draft ready to run full CI and review the candidate digest. Maintenance preserves a ready PR head until it is merged or closed.",
+          "Full PR CI exercises this candidate digest before auto-merge. Maintenance defers newer candidates until this PR merges or closes.",
         ].join("\n"),
       ],
       { env },
@@ -96,6 +145,11 @@ export async function openOrUpdatePullRequest(options: {
   if (!/^\d+$/.test(prNumber)) {
     throw new Error("CI image pin PR number is invalid");
   }
+  // A stale toolchain image makes every CI step install the missing tools at
+  // runtime, onto the CI node's OS disk, until the promotion lands. Required
+  // checks still gate the merge; a red promotion stays open and defers later
+  // candidates until it is fixed or closed.
+  await enableAutoMerge(prNumber, env);
 }
 
 /**
@@ -114,7 +168,7 @@ export async function retireStalePromotion(options: {
 }): Promise<void> {
   const { cloneDir, definition, env } = options;
   const currentPr = await readMaintenancePr(definition.branch, env);
-  if (deferReadyMaintenancePr(currentPr)) return;
+  if (await deferReadyPromotion(currentPr, env)) return;
   assertDraftUnchanged(currentPr);
   const listed = await run(
     [

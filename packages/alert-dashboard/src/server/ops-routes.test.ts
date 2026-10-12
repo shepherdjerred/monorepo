@@ -22,10 +22,10 @@ import { createOpsFixture } from "#test-fixtures/ops-services";
 const NOW = "2026-09-24T15:00:00Z";
 const TOKEN = "ops-ingest-token-with-at-least-32-chars";
 
-function setup(options: { digestEnabled?: boolean } = {}) {
+function setup() {
   const clock = fixedClock(NOW);
   const ledger = readinessOnlyLedger();
-  const fixture = createOpsFixture(clock, options);
+  const fixture = createOpsFixture(clock);
   const metrics = new Metrics();
   const app = createApp({
     service: new AlertService({
@@ -196,26 +196,13 @@ describe("ops read routes", () => {
 });
 
 describe("digest route", () => {
-  it("requires the bearer token and skips while the flag is off", async () => {
-    const { app, metrics } = setup();
+  it("requires the bearer token and a known kind", async () => {
+    const { app, fixture } = setup();
     const unauthorized = await app.request("/internal/v1/digests/daily", {
       method: "POST",
     });
     expect(unauthorized.status).toBe(401);
-    const response = await app.request("/internal/v1/digests/daily", {
-      method: "POST",
-      headers: { authorization: `Bearer ${TOKEN}` },
-    });
-    expect(response.status).toBe(200);
-    expect(DigestRunResponseSchema.parse(await response.json())).toEqual({
-      kind: "daily",
-      periodKey: "2026-09-24",
-      status: "skipped",
-      duplicate: false,
-    });
-    expect(metrics.render()).toContain(
-      'alert_dashboard_ops_digest_total{kind="daily",result="skipped"} 1',
-    );
+    expect(fixture.postal.sent).toHaveLength(0);
     const unknownKind = await app.request("/internal/v1/digests/monthly", {
       method: "POST",
       headers: { authorization: `Bearer ${TOKEN}` },
@@ -223,16 +210,24 @@ describe("digest route", () => {
     expect(unknownKind.status).toBe(400);
   });
 
-  it("sends once when enabled", async () => {
-    const { app, fixture, ingest } = setup({ digestEnabled: true });
+  it("sends once per period", async () => {
+    const { app, fixture, ingest, metrics } = setup();
     await ingest(body);
     const send = () =>
       app.request("/internal/v1/digests/weekly", {
         method: "POST",
         headers: { authorization: `Bearer ${TOKEN}` },
       });
-    expect(await readJson(send())).toMatchObject({ status: "sent" });
+    expect(DigestRunResponseSchema.parse(await readJson(send()))).toEqual({
+      kind: "weekly",
+      periodKey: expect.any(String),
+      status: "sent",
+      duplicate: false,
+    });
     expect(await readJson(send())).toMatchObject({ duplicate: true });
     expect(fixture.postal.sent).toHaveLength(1);
+    expect(metrics.render()).toContain(
+      'alert_dashboard_ops_digest_total{kind="weekly",result="sent"} 1',
+    );
   });
 });

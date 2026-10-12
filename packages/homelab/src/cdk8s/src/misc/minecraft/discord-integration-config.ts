@@ -2,7 +2,7 @@ import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 export const DISCORD_INTEGRATION_MOD_URL = versions["mc2discord-forge-1.12.2"];
 
-const configPath = new URL("mc2discord-config.toml", import.meta.url).pathname;
+const configPath = new URL("mc2discord-config.toml", import.meta.url);
 const configTemplate = await Bun.file(configPath).text();
 
 export function getDiscordIntegrationConfigMapManifest(name: string): object {

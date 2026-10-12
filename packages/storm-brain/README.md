@@ -66,11 +66,10 @@ even on 502s.
 | `STORM_BRAIN_LLM_TIMEOUT_MS` | no       | 60000       | Per-call LLM timeout                                |
 | `PORT` / `METRICS_PORT`      | no       | 3000 / 9090 | Must differ                                         |
 
-Flow enablement is not configuration: `POST /v1/classify` checks the
-`storm-brain-classify-enabled` flag and `/v1/triage` checks
-`storm-brain-triage-enabled`, both default off. See
-[`managed-flag-inventory.json`](../feature-flags/src/managed-flag-inventory.json).
-The `storm-brain-model` variant selects the model at service startup; changing
+`POST /v1/classify` and `/v1/triage` always answer an authenticated, valid
+request. See
+[`managed-flag-inventory.json`](../feature-flags/src/managed-flag-inventory.json)
+for the remaining flags. The `storm-brain-model` variant selects the model at service startup; changing
 it takes effect after the service restarts. It defaults to `gpt-5.6-luna`; the
 selected model must exist in `@shepherdjerred/llm-models` with a native route.
 
@@ -107,11 +106,12 @@ bun --filter @shepherdjerred/storm-brain test
 PORT=3000 METRICS_PORT=9090 STORM_COMPANION_BUDGET_DB=/tmp/storm-companion-budget.db STORM_BRAIN_BEARER_TOKEN=... OPENAI_API_KEY=... bun src/index.ts
 ```
 
-To exercise the live brain against OpenAI, run with static overrides:
+To exercise the live brain against OpenAI, including conversation, run with
+static overrides:
 
 ```bash
 FEATURE_FLAGS_MODE=static \
-FEATURE_FLAGS_STATIC_OVERRIDES='{"storm-brain-classify-enabled":true,"storm-brain-triage-enabled":true}' \
+FEATURE_FLAGS_STATIC_OVERRIDES='{"storm-brain-conversation-enabled":true}' \
   bun src/index.ts
 ```
 

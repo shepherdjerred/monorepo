@@ -22,17 +22,6 @@
       "description": "The original first survival main-world snapshot."
     },
     {
-      "id": "main-map1-upgraded-2023-06-18",
-      "listed": false,
-      "file": "TheStorm_survival-main_map1_1.14.4-upgrade_snapshot-2023-06-18.zip",
-      "root": "world",
-      "title": "Main Map 1 — upgraded copy",
-      "date": "2023-06-18",
-      "minecraft": "1.14.4",
-      "credit": "The Storm community",
-      "description": "A later copy of Main Map 1 saved in Minecraft 1.14.4; not the 2022–23 revival world."
-    },
-    {
       "id": "skylands-map2-2016-01-10",
       "file": "TheStorm_survival-skylands_map2_snapshot-2016-01-10.zip",
       "root": "home/files/servers/survival/world_skylands",
@@ -81,16 +70,6 @@
       "minecraft": "2012 Anvil format (use 1.3.2)",
       "credit": "Madnes64; additional settlements by TheCreeperWorld, Flashy, Seppel1097, Killxzone, Tijn1117 and Mattykingsam",
       "description": "The original city used for The Storm's 2014 harbour spawn, without The Storm's later modifications."
-    },
-    {
-      "id": "new-world-test-2022-11-20",
-      "file": "New World (2022-11-20 test world).zip",
-      "root": "New World",
-      "title": "New World — revival seed test",
-      "date": "2022-11-20",
-      "minecraft": "1.19.2",
-      "credit": "The Storm",
-      "description": "A brief single-player test used to choose the revival seed; not a server snapshot."
     }
   ],
   "schematics": [

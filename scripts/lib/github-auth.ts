@@ -2,9 +2,7 @@
  * Mint a GitHub App installation token and set up git HTTPS auth for the
  * commit-back / release scripts.
  *
- * Ported from the old CI's `mintGithubAppTokenAndSetupGitAuth` +
- * `withGithubAppCredentials` (.dagger/src/release.ts). The token is minted by
- * the existing temporal script (`packages/temporal/src/lib/github-app-token.ts`,
+ * The token is minted by the temporal script (`packages/temporal/src/lib/github-app-token.ts`,
  * run via `bun`), which reads GITHUB_APP_ID / GITHUB_APP_INSTALLATION_ID /
  * GITHUB_APP_PRIVATE_KEY from the environment and prints the token to stdout.
  *
@@ -20,14 +18,10 @@ const GITHUB_APP_TOKEN_SCRIPT_REL =
 /**
  * There is no runtime log redactor under Woodpecker.
  *
- * Buildkite's agent could be told about a secret minted mid-build
- * (`buildkite-agent redactor add`), which made an accidental `echo $TOKEN` a
- * no-op in the log. Woodpecker masks only the secrets IT issued, and this
- * repository deliberately keeps credentials in Kubernetes Secrets rather than
- * Woodpecker's store, so nothing here is masked.
- *
- * That control is therefore gone rather than ported, and the mitigation is
- * upstream of the log: the token is captured with `secret: true` so `run`
+ * Woodpecker masks only the secrets IT issued, and this repository
+ * deliberately keeps credentials in Kubernetes Secrets rather than
+ * Woodpecker's store, so a token minted mid-build is not masked. The
+ * mitigation is upstream of the log: the token is captured with `secret: true` so `run`
  * never echoes it, it is passed through a git-askpass helper rather than a URL
  * or a token file, and it is never exported into the step environment.
  *
@@ -72,8 +66,8 @@ export async function setupGitAuth(repoRoot: string): Promise<GitAuth> {
     throw new Error("GH_TOKEN is empty after mint");
   }
 
-  // NOTE: no runtime redaction backstop exists here -- see the comment above
-  // the removed registerBuildkiteRedaction. The token must not be echoed.
+  // NOTE: no runtime redaction backstop exists here -- see the redaction note
+  // above. The token must not be echoed.
 
   // Write an askpass helper to a temp file. Assembling the username as
   // "x-access" + "-token" mirrors the old helper (avoids the literal

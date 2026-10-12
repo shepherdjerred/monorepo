@@ -1,6 +1,11 @@
 import { expect, test } from "vitest";
 import { parse } from "yaml";
 import { z } from "zod";
+import {
+  BUN_CACHE,
+  BUN_CACHE_CONTROL,
+  bunInstallEnvironment,
+} from "#src/pipeline/cache.ts";
 import { groupTofuSteps } from "#src/pipeline/group-tofu.ts";
 import { emitWorkflow, wrapCommands } from "#src/pipeline/emit.ts";
 import { GITHUB_DOWNLOAD } from "#src/pipeline/lanes/tofu.ts";
@@ -68,8 +73,25 @@ test("groups exactly the selected PR checks with one install", () => {
     expect(step.secrets).toEqual(original.secrets);
     expect(step.resources).toEqual(original.resources);
     expect(step.timeoutMinutes).toBe(original.timeoutMinutes);
-    expect(step.volumes).toEqual(original.volumes);
+    // Only the setup container installs, so only it mounts the Bun cache.
+    const bunClaims = new Set<string>([
+      BUN_CACHE.claim,
+      BUN_CACHE_CONTROL.claim,
+    ]);
+    expect(original.volumes?.map((volume) => volume.claim)).toEqual(
+      expect.arrayContaining([...bunClaims]),
+    );
+    const kept = original.volumes?.filter(
+      (volume) => !bunClaims.has(volume.claim),
+    );
+    expect(step.volumes).toEqual(
+      kept === undefined || kept.length === 0 ? undefined : kept,
+    );
+    expect(bunInstallEnvironment(step.volumes)["BUN_INSTALL_LOCK_MODE"]).toBe(
+      "local",
+    );
   }
+  expect(workflow.volumes).toEqual([BUN_CACHE, BUN_CACHE_CONTROL]);
 });
 
 test("does not widen a narrow selection or regroup main applies", () => {

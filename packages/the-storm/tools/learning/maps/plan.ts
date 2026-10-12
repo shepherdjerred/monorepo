@@ -8,6 +8,7 @@ import {
   mapScenarios,
   validateScenario,
 } from "./scenario.ts";
+import { trainingScenarioFor } from "./training-scenarios.ts";
 import contract from "./protocol.json";
 
 const digest = z.string().regex(/^[a-f0-9]{64}$/u);
@@ -85,13 +86,15 @@ export async function trainingMaps(
       await Bun.file(path.join(directory, "scenario.json")).json(),
     );
     const admitted = mapScenarios.find((entry) => entry.map === id);
+    const trainingScenario = trainingScenarioFor(id);
     validateScenario(scenario, map);
+    validateScenario(trainingScenario, map);
     if (map.id !== id || !isDeepStrictEqual(scenario, admitted))
       throw new Error(`Training map ${id} differs from its admitted identity`);
     maps.push({
       map: id,
       blocksSha256: map.blocksSha256,
-      scenarioSha256: scenarioHash(scenario),
+      scenarioSha256: scenarioHash(trainingScenario),
     });
   }
   const selected = diagnostic

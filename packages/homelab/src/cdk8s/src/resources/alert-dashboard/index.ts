@@ -29,6 +29,9 @@ const IMAGE = `ghcr.io/shepherdjerred/alert-dashboard:${versions["shepherdjerred
 export function createAlertDashboardDeployment(chart: Chart) {
   const deployment = new Deployment(chart, "alert-dashboard", {
     metadata: { labels: { app: "alert-dashboard" } },
+    // The namespace's NetworkPolicy selects pods by this label; Deployment
+    // metadata labels do not reach the pod template.
+    podMetadata: { labels: { app: "alert-dashboard" } },
     replicas: 1,
     strategy: DeploymentStrategy.recreate(),
     securityContext: { fsGroup: 1000 },

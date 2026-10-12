@@ -6,9 +6,8 @@ import {
 /**
  * Read the generated CI graph from outside the generator.
  *
- * Tests that used to assert against `.buildkite/pipeline.yml` use this
- * instead: the graph is generated now, so the only way to check a lane's
- * shape from another package is to ask the generator for it.
+ * The graph is generated rather than committed, so the only way to check a
+ * lane's shape from another package is to ask the generator for it.
  */
 export async function readGeneratedSteps(
   repositoryRoot: string,

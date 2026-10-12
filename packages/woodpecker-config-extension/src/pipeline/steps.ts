@@ -1,6 +1,11 @@
 import type { CiImages } from "#src/images.ts";
 import type { CiStep } from "#src/pipeline/model.ts";
-import { BUN_CACHE, BUN_CACHE_CONTROL, UV_CACHE } from "#src/pipeline/cache.ts";
+import {
+  BUN_CACHE,
+  BUN_CACHE_CONTROL,
+  UV_CACHE,
+  withSharedBunCache,
+} from "#src/pipeline/cache.ts";
 import { TURBO_VERIFY_TIER } from "#src/pipeline/tiers.ts";
 import { diagnosticCommands } from "#src/pipeline/diagnostics.ts";
 import { scannerSteps } from "#src/pipeline/lanes/scanners.ts";
@@ -29,9 +34,9 @@ import {
 /**
  * The CI graph, as data.
  *
- * Ported from the Buildkite pipeline one lane at a time. Each step keeps its
- * original key so the generated workflow names, the `ci.sjer.red/step-key`
- * pod label, and any existing triage muscle memory all still line up.
+ * Step keys are stable: the generated workflow names, the
+ * `ci.sjer.red/step-key` pod label, required checks and triage all key off
+ * them, so renaming one is a deliberate migration.
  *
  * The macOS and Windows compiler image builds remain paused. Their sources
  * stay in the repository so a separate reliability decision can restore them.
@@ -76,11 +81,15 @@ function verifyCommands(options: {
     '  export TASKNOTES_COVERAGE_BASE="$(git rev-parse --verify HEAD^)"',
     "fi",
     // CI is the cross-machine cache producer and consumer; developer shells
-    // stay local-only to avoid large transfers over weak links.
+    // stay local-only to avoid large transfers over weak links. The local
+    // cache would live in this workflow's fresh workspace and nothing reads it
+    // back -- verify is one Turbo run -- so writing it only costs disk writes.
+    // The credentialless form has no remote; its read-only local source is
+    // always empty, so it runs every task without archiving any output.
     options.remoteCache
-      ? 'export TURBO_CACHE="local:rw,remote:rw"'
-      : 'export TURBO_CACHE="local:rw"',
-    "bun --no-install run verify -- --filter='!sjer.red' --filter='!@shepherdjerred/resume' --output-logs=errors-only --summarize",
+      ? 'export TURBO_CACHE="remote:rw"'
+      : 'export TURBO_CACHE="local:r"',
+    "bun --no-install run verify -- --filter='!sjer.red' --filter='!@shepherdjerred/resume' --filter='!@shepherdjerred/glitter-boys' --filter='!@shepherdjerred/glitter-boys-launcher' --output-logs=errors-only --summarize",
     "bun --no-install packages/homelab/src/cdk8s/scripts/generate-caddyfile.ts caddyfile.generated",
     // The image lane smoke-tests Caddy against this. It travels as a JSON
     // string because each Woodpecker workflow gets its own workspace.
@@ -183,13 +192,15 @@ export function buildPipelineSteps({
   // ci-changed selectors must receive the same last-green base as the graph
   // selector; otherwise they fail open and publish, deploy, or rebuild on
   // every main push. Verify may override it with its newer successful base.
-  return steps.map((step) => ({
-    ...step,
-    environment: {
-      CI_CHANGED_BASE: changedBase,
-      ...step.environment,
-    },
-  }));
+  return steps.map((step) =>
+    withSharedBunCache({
+      ...step,
+      environment: {
+        CI_CHANGED_BASE: changedBase,
+        ...step.environment,
+      },
+    }),
+  );
 }
 
 /**

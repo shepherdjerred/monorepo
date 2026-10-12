@@ -2,7 +2,7 @@
   "$schema": "https://turborepo.dev/schema.json",
   "extends": ["//"],
   "tasks": {
-    // Gradle keeps its own build cache in plugin/**/build and ~/.gradle. Turbo
+    // Gradle keeps its own build cache in plugin/**/build and GRADLE_USER_HOME. Turbo
     // restores the assembled jar on build cache hits. MISE_DATA_DIR and JAVA_HOME
     // must pass through or strict env mode hides the mise-managed JDK/Gradle.
     //
@@ -78,9 +78,13 @@
     "test:ci": {
       "dependsOn": ["lint"],
       "inputs": [
+        "$TURBO_ROOT$/scripts/ci/ci-reporting.ts",
+        "$TURBO_ROOT$/scripts/ci/mstest-configuration.ts",
+        "$TURBO_ROOT$/scripts/ci/gradle-junit.ts",
+        "$TURBO_ROOT$/scripts/ci-test-manifest.json",
+        "$TURBO_ROOT$/scripts/ci/run-ci-test.ts",
         "server/**",
         "package.json",
-        "$TURBO_ROOT$/scripts/ci-test-manifest.json",
         "client/**",
         "scripts/**",
         "tools/**",

@@ -18,6 +18,10 @@
       "types": "./src/github-review-snapshot.ts",
       "default": "./src/github-review-snapshot.ts"
     },
+    "./github-request": {
+      "types": "./src/github-request.ts",
+      "default": "./src/github-request.ts"
+    },
     "./head-pushed-at": {
       "types": "./src/head-pushed-at.ts",
       "default": "./src/head-pushed-at.ts"
@@ -35,8 +39,7 @@
     "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "lint": "bunx eslint . --max-warnings=0",
-    "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
-    "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/ci/run-ci-test.ts"
+    "test:ci": "bun ../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
     "zod": "^4.4.3"

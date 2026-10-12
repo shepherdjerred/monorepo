@@ -123,7 +123,8 @@ decisions as part of routine setup.
   rather than a shadowing Homebrew copy.
 - `gcx config check` exits zero and reports the `homelab` context online against
   the self-hosted Grafana.
-- `bk build list --org sjerred --limit 3`, `logcli labels`, and
+- `toolkit woodpecker pipeline ls shepherdjerred/monorepo --limit 3`,
+  `logcli labels`, and
   `promtool query instant "$PROMETHEUS_URL" 'count(up)'` all return live data.
 - `temporal --profile homelab operator cluster health` reports `SERVING`, and
   `temporal config get --profile default` still points at `localhost:7233`.

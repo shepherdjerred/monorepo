@@ -583,12 +583,6 @@ describe("selected lane contracts", () => {
     ).not.toContain("tofu-plan-seaweedfs");
   });
 
-  /** The Buildkite stack manages the thing being removed; it has no successor. */
-  test("no tofu lane exists for the buildkite stack", () => {
-    const steps = buildPipelineSteps({ images: IMAGES, changedBase: "x" });
-    expect(steps.map((s) => s.key)).not.toContain("tofu-plan-buildkite");
-  });
-
   /** Each stack gets only its own provider credentials. */
   test("tofu lanes receive only their own provider grants", () => {
     const steps = buildPipelineSteps({ images: IMAGES, changedBase: "x" });

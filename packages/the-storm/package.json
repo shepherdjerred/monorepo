@@ -16,6 +16,7 @@
     "#learning-wire": "./plugin/modules/rwfbots/src/main/resources/rwf-duel.json",
     "#learning-map-wire": "./plugin/modules/rwfbots/src/main/resources/rwf-map-scenario.json",
     "#learning-map-scenarios": "./plugin/modules/rwfbots/src/main/resources/rwf-map-scenarios.json",
+    "#learning-training-map-scenarios": "./tools/learning/maps/training-scenarios.json",
     "#learning-close-starts-wire": "./plugin/modules/rwfbots/src/main/resources/rwf-close-starts.json",
     "#learning-setup-wire": "./plugin/modules/rwfbots/src/main/resources/rwf-duel-setup.json",
     "#learning-load-wire": "./plugin/modules/rwfbots/src/main/resources/rwf-inference-load.json",
@@ -81,8 +82,7 @@
     "typecheck": "mise exec -- gradle -p plugin compileJava compileTestJava --console=plain && mise exec -- gradle -p client compileJava compileTestJava --console=plain && PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit && bun run typecheck:learning",
     "check": "mise exec -- gradle -p plugin check --console=plain && bun run check:client",
     "format": "mise exec -- gradle -p plugin spotlessApply --console=plain",
-    "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
-    "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/ci/run-ci-test.ts"
+    "test:ci": "bun ../../scripts/ci/run-ci-test.ts"
   },
   "devDependencies": {
     "@resvg/resvg-js": "^2.6.2",

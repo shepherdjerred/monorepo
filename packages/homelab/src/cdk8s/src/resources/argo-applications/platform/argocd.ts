@@ -237,6 +237,9 @@ export function createArgoCdApp(chart: Chart) {
         enabled: true,
         serviceMonitor: {
           enabled: true,
+          additionalLabels: {
+            release: "prometheus",
+          },
         },
       },
       resources: {

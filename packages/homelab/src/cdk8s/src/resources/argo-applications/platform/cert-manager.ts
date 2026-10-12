@@ -118,6 +118,8 @@ export function createCertManagerApp(chart: Chart) {
       enabled: true,
       servicemonitor: {
         enabled: true,
+        // Prometheus selects ServiceMonitors by this label.
+        labels: { release: "prometheus" },
       },
     },
     // Baseline requests (no limits) so cert renewal isn't BestEffort.
@@ -144,23 +146,6 @@ export function createCertManagerApp(chart: Chart) {
         },
       },
     },
-    // TODO: these were causing issues
-    // webhook: {
-    //   prometheus: {
-    //     enabled: true,
-    //     servicemonitor: {
-    //       enabled: true,
-    //     },
-    //   },
-    // },
-    // cainjector: {
-    //   prometheus: {
-    //     enabled: true,
-    //     servicemonitor: {
-    //       enabled: true,
-    //     },
-    //   },
-    // },
   };
 
   return new Application(chart, "cert-manager-app", {

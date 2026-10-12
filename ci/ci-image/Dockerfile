@@ -41,7 +41,7 @@ RUN curl -fsSL "https://github.com/realm/SwiftLint/releases/download/${SWIFTLINT
 # repo's .mise.toml. Verify the release's signed checksum manifest so Renovate
 # only needs to update the version and cannot leave architecture checksums stale.
 # renovate: datasource=github-releases depName=jdx/mise
-ARG MISE_VERSION=v2026.7.13
+ARG MISE_VERSION=v2026.10.6
 ARG MISE_MINISIGN_PUBLIC_KEY=RWTC3g8W3z4RZK3V3qv7fa1QY4JEWyBtqIHW+85QlJpZc5yG+uNYNBSZ
 ARG TARGETARCH
 ENV MISE_DATA_DIR=/opt/mise \
@@ -63,12 +63,13 @@ RUN case "${TARGETARCH}" in \
     && rm "${mise_asset}" SHASUMS256.txt SHASUMS256.txt.minisig \
     && mise --version
 
-COPY .mise.toml /workspace/.mise.toml
+COPY .mise.toml mise.lock /workspace/
 WORKDIR /workspace
-# mise resolves signed GitHub releases during install. The download credential
+# mise installs the URLs and checksums mise.lock records; --locked fails rather
+# than resolving a tool the lockfile does not cover. The download credential
 # is available only to this build step and is never stored in an image layer.
 RUN --mount=type=secret,id=github-download-token,env=GITHUB_TOKEN,required=true \
-    mise trust .mise.toml && mise install && mise reshim \
+    mise trust .mise.toml && mise install --locked && mise reshim \
     && ln -sf "$(mise which gh)" /usr/local/bin/gh \
     && gh --version
 

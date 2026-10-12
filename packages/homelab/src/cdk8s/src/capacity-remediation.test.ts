@@ -41,7 +41,7 @@ function assertTempoAndLoki(documents: readonly unknown[]): void {
       tempo: z.object({
         resources: z.object({
           requests: z.object({
-            cpu: z.literal("1"),
+            cpu: z.literal("250m"),
             memory: z.literal("1Gi"),
           }),
           limits: z.object({ memory: z.literal("4Gi") }),
@@ -50,7 +50,7 @@ function assertTempoAndLoki(documents: readonly unknown[]): void {
     })
     .parse(applicationValues(documents, "tempo"));
   expect(tempo.tempo.resources).toEqual({
-    requests: { cpu: "1", memory: "1Gi" },
+    requests: { cpu: "250m", memory: "1Gi" },
     limits: { memory: "4Gi" },
   });
 

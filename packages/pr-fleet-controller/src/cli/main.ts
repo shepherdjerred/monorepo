@@ -87,13 +87,13 @@ class TerminalObserver implements FleetObserver {
 
 function requireTools(): void {
   for (const executable of [
-    "bk",
     "bun",
     "gh",
     "git",
     "git-spice",
     "mise",
     "rg",
+    "woodpecker-cli",
   ]) {
     if (Bun.which(executable) === null) {
       throw new Error(`Required executable is missing: ${executable}`);

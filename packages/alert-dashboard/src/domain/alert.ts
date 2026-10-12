@@ -5,6 +5,7 @@ import {
   AlertEventIdSchema,
   AlertFingerprintSchema,
   AlertOccurrenceIdSchema,
+  AlertmanagerGeneratorUrlSchema,
   LabelMapSchema,
   LifecycleStateSchema,
   ResolutionSourceSchema,
@@ -103,9 +104,9 @@ export function summaryFromMetadata(
 export function normalizeGeneratorUrl(
   value: string | undefined,
 ): string | null {
-  return value === undefined || value.length === 0
-    ? null
-    : z.url().parse(value);
+  if (value === undefined || value.length === 0) return null;
+  AlertmanagerGeneratorUrlSchema.parse(value);
+  return value.startsWith("/") ? null : z.url().parse(value);
 }
 
 export function openingEmail(

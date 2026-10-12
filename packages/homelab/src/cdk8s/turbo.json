@@ -36,6 +36,9 @@
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/config/analytics-sites.json",
+        "$TURBO_ROOT$/packages/glitter-boys-launcher/published-release.json",
+        "$TURBO_ROOT$/packages/glitter-boys-launcher/scripts/public-release.ts",
+        "$TURBO_ROOT$/packages/glitter-boys-launcher/scripts/release-manifest.ts",
         "src/**",
         "scripts/**",
         "config/**",
@@ -57,7 +60,13 @@
       "outputs": ["src/version-map.generated.ts"]
     },
     "typecheck": {
-      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/config/analytics-sites.json"]
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/config/analytics-sites.json",
+        "$TURBO_ROOT$/packages/glitter-boys-launcher/published-release.json",
+        "$TURBO_ROOT$/packages/glitter-boys-launcher/scripts/public-release.ts",
+        "$TURBO_ROOT$/packages/glitter-boys-launcher/scripts/release-manifest.ts"
+      ]
     },
     // `build` replaces dist/ while ESLint walks the package root. Serialize
     // them so a combined `turbo run build lint` cannot remove the directory
@@ -72,10 +81,6 @@
       "env": ["NODE_ENV"]
     },
     "test:ci": {
-      "dependsOn": ["build", "^build", "generate"],
-      "env": ["NODE_ENV"]
-    },
-    "test:report": {
       "dependsOn": ["build", "^build", "generate"],
       "env": ["NODE_ENV"]
     }

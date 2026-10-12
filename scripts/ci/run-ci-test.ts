@@ -59,8 +59,7 @@ await Bun.$`mkdir -p ${outputDirectory}`;
 
 const environment = { ...Bun.env };
 applyDefaultEnvironment(environment, workspace.defaultEnv ?? {});
-const coverageEnabled =
-  workspace.coverageAlways === true || environment["CI_TEST_COVERAGE"] === "1";
+const coverageEnabled = workspace.coverageAlways === true;
 let cachedDotnetExecutable: string | undefined;
 let cachedNodeExecutable: string | undefined;
 
@@ -252,7 +251,7 @@ async function commandForStep(
     case "gradle":
       if (coverageEnabled) {
         throw new Error(
-          "Gradle steps do not collect coverage: the coverage summary has no JaCoCo parser. Run this workspace's test:report without CI_TEST_COVERAGE=1.",
+          "Gradle steps do not collect coverage; remove coverageAlways from this workspace's manifest entry.",
         );
       }
       return ["mise", "exec", "--", "gradle", ...step.args, "--continue"];

@@ -5,12 +5,10 @@ import { z } from "zod";
  * Minimal Woodpecker API client, used for one question: what is the newest
  * commit on the default branch whose pipeline succeeded?
  *
- * That commit is the base for change detection and for `TURBO_SCM_BASE`. The
- * Buildkite pipeline answered it by calling the Buildkite REST API from a
- * bootstrap step and handing the result to every other step through build
- * metadata. Resolving it here instead removes both the API dependency and the
- * handoff: the value is known before any step is generated, so it can be
- * written straight into each step's environment.
+ * That commit is the base for change detection and for `TURBO_SCM_BASE`.
+ * Resolving it here, rather than in a bootstrap step, means the value is known
+ * before any step is generated, so it is written straight into each step's
+ * environment with no handoff between steps.
  */
 
 const PipelineSummarySchema = z.looseObject({

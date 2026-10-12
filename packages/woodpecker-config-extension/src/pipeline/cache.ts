@@ -1,4 +1,4 @@
-import type { StepVolume } from "#src/pipeline/model.ts";
+import type { CiCommandStep, CiStep, StepVolume } from "#src/pipeline/model.ts";
 
 /** Shared Bun cache claims created by the homelab manifests. */
 export const BUN_CACHE = {
@@ -59,4 +59,43 @@ export function bunInstallEnvironment(
     BUN_INSTALL_LOCK_MODE: "shared",
     BUN_CACHE_LOCK_FILE: `${BUN_CACHE_CONTROL.path}/.gc.lock`,
   };
+}
+
+const BUN_INSTALL_WRAPPER = "ci/scripts/bun-install.sh";
+
+function withBunCacheVolumes<T extends CiCommandStep>(command: T): T {
+  if (
+    !command.commands.some((line) => line.includes(BUN_INSTALL_WRAPPER)) ||
+    command.volumes?.some((volume) => volume.claim === BUN_CACHE.claim) === true
+  ) {
+    return command;
+  }
+  return {
+    ...command,
+    volumes: [...(command.volumes ?? []), BUN_CACHE, BUN_CACHE_CONTROL],
+  };
+}
+
+/**
+ * Point every in-cluster Bun install of the trusted graph at the shared cache.
+ *
+ * Without the mounted pair, `bun-install.sh` falls back to local mode and
+ * downloads the whole dependency closure into `~/.bun` on the container's
+ * writable layer -- the CI node's OS disk -- on every run. Pull-request
+ * verification already shares this cache with main-branch maintenance, so
+ * extending it to the remaining lanes crosses no new trust boundary. The
+ * credentialless hosted-automation graph is built separately and never passes
+ * through here. Host-agent steps have no pod to mount a claim into.
+ */
+export function withSharedBunCache(step: CiStep): CiStep {
+  if (step.backend === "local") return step;
+  const withCache = withBunCacheVolumes(step);
+  return step.orderedSteps === undefined
+    ? withCache
+    : {
+        ...withCache,
+        orderedSteps: step.orderedSteps.map((command) =>
+          withBunCacheVolumes(command),
+        ),
+      };
 }

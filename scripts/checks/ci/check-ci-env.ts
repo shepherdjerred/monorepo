@@ -30,10 +30,10 @@
 import { createHash } from "node:crypto";
 import path from "node:path";
 import { Project, SyntaxKind, type SourceFile } from "ts-morph";
-import type { PipelineStep } from "../../lib/ci/ci-env-pipeline.ts";
 import {
   generatedPipelineSteps,
   GeneratedStepsSchema,
+  type PipelineStep,
 } from "../../lib/ci/ci-env-generated.ts";
 import {
   declaredSecretItems,
@@ -73,10 +73,6 @@ const REQUIRE_ENV_MODULE = path.join(
  * Names the CI agent injects into every step. They are never carried by a
  * secret and never assigned in a command, so without this they would all read
  * as missing.
- *
- * `BUILDKITE_` is deliberately not here any more: nothing injects it, so a
- * script still reading one should be reported as reading an unprovided
- * variable rather than excused.
  */
 const AGENT_PROVIDED_PREFIXES = ["CI_"] as const;
 const AGENT_PROVIDED_NAMES = new Set([

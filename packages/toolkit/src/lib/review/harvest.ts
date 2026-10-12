@@ -8,6 +8,7 @@
  * it was applied before this existed.
  */
 
+import { githubGet } from "@shepherdjerred/code-review/github-request";
 import { z } from "zod";
 
 const GITHUB_API = "https://api.github.com";
@@ -89,13 +90,7 @@ export async function gateStatusFor(input: {
   let url: string | null =
     `${GITHUB_API}/repos/${input.repo}/commits/${input.ref}/status?per_page=100`;
   while (url !== null) {
-    const response = await fetch(url, {
-      headers: {
-        Accept: "application/vnd.github+json",
-        Authorization: `Bearer ${input.token}`,
-        "X-GitHub-Api-Version": "2022-11-28",
-      },
-    });
+    const response = await githubGet(url, { token: input.token });
     if (!response.ok) {
       throw new Error(
         `Could not read status for ${input.repo}@${input.ref}: ` +

@@ -13,8 +13,7 @@ import {
 /**
  * Browser end-to-end suites.
  *
- * Buildkite ran this as `playwright-e2e-pr` and `playwright-e2e-main` with the
- * same command; the pair collapses for the same reason the resume lane's did.
+ * One step covers pull requests and the default branch.
  *
  * The step runs a selector of its own (`run-playwright.ts`) that decides which
  * suites to execute from the changed set. That is deliberate and stays: the
@@ -48,7 +47,8 @@ export function playwrightSteps(images: CiImages, changedBase = ""): CiStep[] {
         "  export CI_CHANGED_BASE",
         "fi",
         'if [ -n "$CI_CHANGED_BASE" ]; then export TURBO_SCM_BASE="$CI_CHANGED_BASE"; fi',
-        'export TURBO_CACHE="local:rw,remote:rw"',
+        // One Turbo run in a fresh workspace never reads a local cache back.
+        'export TURBO_CACHE="remote:rw"',
         // Playwright configs use CI=true to enable JUnit reporters and bounded
         // workers; Woodpecker supplies CI=woodpecker by default.
         "export CI=true",
