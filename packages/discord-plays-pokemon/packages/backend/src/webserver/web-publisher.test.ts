@@ -30,6 +30,14 @@ test("a session boundary clears and broadcasts history before a new viewer's sna
     io,
     botClient: bot,
     driverFeedEnabled: false,
+    identify: () => Promise.resolve(undefined),
+    policy: {
+      players: () => [],
+      voiceChannelName: () => null,
+      blockerFor: () => "no-session",
+      canWatch: () => false,
+      minimumInChannel: 2,
+    },
     driver: {
       getActiveRuntime: () => null,
       inputLog,
@@ -58,12 +66,15 @@ test("a session boundary clears and broadcasts history before a new viewer's sna
       command: "up",
     });
     const before: Response[] = [];
-    publisher.sendSnapshot({
-      emit: (_name: string, response: Response) => {
-        before.push(response);
-        return true;
+    publisher.sendSnapshot(
+      {
+        emit: (_name: string, response: Response) => {
+          before.push(response);
+          return true;
+        },
       },
-    });
+      undefined,
+    );
     expect(before).toContainEqual(
       expect.objectContaining({
         kind: "events",
@@ -76,12 +87,15 @@ test("a session boundary clears and broadcasts history before a new viewer's sna
     expect(broadcasts).toContainEqual({ kind: "events", value: [] });
     expect(broadcasts).toContainEqual({ kind: "inputs", value: [] });
     const after: Response[] = [];
-    publisher.sendSnapshot({
-      emit: (_name: string, response: Response) => {
-        after.push(response);
-        return true;
+    publisher.sendSnapshot(
+      {
+        emit: (_name: string, response: Response) => {
+          after.push(response);
+          return true;
+        },
       },
-    });
+      undefined,
+    );
     expect(after).toContainEqual({ kind: "events", value: [] });
     expect(after).toContainEqual({ kind: "inputs", value: [] });
     expect(inputLog.recent()).toEqual([]);

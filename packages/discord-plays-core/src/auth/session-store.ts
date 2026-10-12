@@ -27,7 +27,10 @@ export type WebSessionStore = {
  * own. The user's profile is stored with the session as signed in; it is
  * refreshed at the next sign-in.
  */
-export function createSqliteSessionStore(path: string): WebSessionStore {
+export function createSqliteSessionStore(path: string): WebSessionStore & {
+  /** Synchronous admission check for each live-feed access unit. */
+  readSync: (token: string, nowMs?: number) => DiscordUser | undefined;
+} {
   const db = new Database(path, { create: true, strict: true });
   db.run("PRAGMA journal_mode = WAL");
   db.run(`CREATE TABLE IF NOT EXISTS web_sessions (
@@ -47,6 +50,17 @@ export function createSqliteSessionStore(path: string): WebSessionStore {
   >("SELECT user_json, expires_at FROM web_sessions WHERE token_hash = $hash");
   const remove = db.query("DELETE FROM web_sessions WHERE token_hash = $hash");
 
+  function readSync(
+    token: string,
+    nowMs = Date.now(),
+  ): DiscordUser | undefined {
+    const row = select.get({ hash: digest(token) });
+    const live = row !== null && row.expires_at > nowMs;
+    return live
+      ? DiscordUserSchema.parse(JSON.parse(row.user_json))
+      : undefined;
+  }
+
   return {
     create(user, nowMs = Date.now()) {
       const token = nonce();
@@ -59,12 +73,9 @@ export function createSqliteSessionStore(path: string): WebSessionStore {
       return Promise.resolve(token);
     },
     read(token, nowMs = Date.now()) {
-      const row = select.get({ hash: digest(token) });
-      const live = row !== null && row.expires_at > nowMs;
-      return Promise.resolve(
-        live ? DiscordUserSchema.parse(JSON.parse(row.user_json)) : undefined,
-      );
+      return Promise.resolve(readSync(token, nowMs));
     },
+    readSync,
     delete(token) {
       remove.run({ hash: digest(token) });
       return Promise.resolve();

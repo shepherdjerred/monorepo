@@ -57,14 +57,39 @@ export function createPlayPolicy({
 export function playersInVoice(
   bot: Client,
   channel: VoiceChannelRef | undefined,
+  excludedUserIds: ReadonlySet<string>,
 ): DiscordUser[] {
   if (channel === undefined) return [];
   const guild = bot.guilds.cache.get(channel.guildId);
-  if (guild === undefined) return [];
-  return [...guild.voiceStates.cache.values()]
+  return guild === undefined
+    ? []
+    : humanPlayersInVoice(
+        guild.voiceStates.cache.values(),
+        channel.voiceChannelId,
+        excludedUserIds,
+      );
+}
+
+type VoicePlayer = {
+  id: string;
+  channelId: string | null;
+  member?: {
+    user: { bot: boolean; username: string; avatar: string | null };
+    displayName: string;
+  } | null;
+};
+
+/** Streaming userbots are ordinary Discord users, so exclude their IDs explicitly. */
+export function humanPlayersInVoice(
+  states: Iterable<VoicePlayer>,
+  channelId: string,
+  excludedUserIds: ReadonlySet<string>,
+): DiscordUser[] {
+  return [...states]
     .filter(
       (state) =>
-        state.channelId === channel.voiceChannelId &&
+        state.channelId === channelId &&
+        !excludedUserIds.has(state.id) &&
         state.member?.user.bot !== true,
     )
     .map((state) => ({

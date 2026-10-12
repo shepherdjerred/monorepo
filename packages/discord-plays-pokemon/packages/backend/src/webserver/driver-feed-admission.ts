@@ -7,23 +7,30 @@ export function voiceAdmission({
   policy,
   publicOrigin,
 }: {
-  identify: (
-    cookieHeader: string | undefined,
-  ) => Promise<DiscordUser | undefined>;
+  identify: (cookieHeader: string | undefined) => DiscordUser | undefined;
   policy: Pick<PlayPolicy, "canWatch">;
   publicOrigin: string;
 }): DriverFeedAdmit {
-  return async (request) => {
+  return (request) => {
     if (request.headers.origin !== publicOrigin) {
       return { admitted: false, reason: "same-origin access is required" };
     }
-    const user = await identify(request.headers.cookie);
+    const cookie = request.headers.cookie;
+    const user = identify(cookie);
     if (!policy.canWatch(user)) {
       return {
         admitted: false,
         reason: "sign in and join the game's voice channel",
       };
     }
-    return { admitted: true, isStillAdmitted: () => policy.canWatch(user) };
+    return {
+      admitted: true,
+      isStillAdmitted: () => {
+        const current = identify(cookie);
+        return (
+          current?.discordId === user?.discordId && policy.canWatch(current)
+        );
+      },
+    };
   };
 }

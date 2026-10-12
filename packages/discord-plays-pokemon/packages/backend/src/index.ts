@@ -1,5 +1,8 @@
 import { buildArchiveSpanProcessor } from "@shepherdjerred/llm-observability";
-import { bootGameBot } from "@shepherdjerred/discord-plays-core/entry.ts";
+import {
+  bootGameBot,
+  readPeerUserbotIds,
+} from "@shepherdjerred/discord-plays-core/entry.ts";
 import { handleMessages } from "./discord/message-handler.ts";
 import { buildPokemonExtraCommands } from "./discord/slashCommands/index.ts";
 import {
@@ -31,6 +34,7 @@ import path from "node:path";
 import { authBootstrapFromEnv } from "@shepherdjerred/discord-plays-core/auth/bootstrap.ts";
 import {
   DiscordAuth,
+  cookieValue,
   mountAuthRoutes,
 } from "@shepherdjerred/discord-plays-core/auth/discord-oauth.ts";
 import { createSqliteSessionStore } from "@shepherdjerred/discord-plays-core/auth/session-store.ts";
@@ -126,17 +130,19 @@ await runtime.start();
 if (config.web.enabled) {
   const bootstrap = webAuthBootstrap;
   let auth: DiscordAuth | undefined;
+  let sessionStore: ReturnType<typeof createSqliteSessionStore> | undefined;
   if (bootstrap !== undefined) {
     await mkdir(config.state_root_dir, { recursive: true });
+    sessionStore = createSqliteSessionStore(
+      path.join(config.state_root_dir, "web-sessions.sqlite"),
+    );
     auth = new DiscordAuth({
       config: {
         ...bootstrap,
         clientId: config.bot.application_id,
         cookiePrefix: "pokemon",
       },
-      sessions: createSqliteSessionStore(
-        path.join(config.state_root_dir, "web-sessions.sqlite"),
-      ),
+      sessions: sessionStore,
       logger,
     });
   }
@@ -146,10 +152,14 @@ if (config.web.enabled) {
       ? Promise.resolve(undefined)
       : signedIn.identify(cookieHeader);
   const channel = () => driver.getActiveRuntime()?.session;
+  const streamingUserIds = new Set([
+    config.stream.userbot.id,
+    ...readPeerUserbotIds(),
+  ]);
   const policy = createPlayPolicy({
     channel,
     voice: botVoicePresence(runtime.bot),
-    players: () => playersInVoice(runtime.bot, channel()),
+    players: () => playersInVoice(runtime.bot, channel(), streamingUserIds),
     minimumInChannel: config.stream.minimum_in_channel,
   });
   const { server, socket, app } = createWebServer({
@@ -164,7 +174,12 @@ if (config.web.enabled) {
   if (bootstrap !== undefined) {
     driverFeed?.setAdmission(
       voiceAdmission({
-        identify,
+        identify: (cookie) => {
+          const token = cookieValue(cookie, "pokemon_session");
+          return token === undefined
+            ? undefined
+            : sessionStore?.readSync(token);
+        },
         policy,
         publicOrigin: bootstrap.publicOrigin,
       }),
