@@ -126,6 +126,14 @@ record DuelMapScenario(
             .findFirst()
             .orElseThrow(
                 () -> new IllegalStateException("Training scenario map is not registered"));
+    validateTrainingIdentity(training, source);
+    var combined = new ArrayList<DuelMapScenario>(scenarios.size());
+    for (var scenario : scenarios)
+      combined.add(scenario.map().equals(training.map()) ? training : scenario);
+    return List.copyOf(combined);
+  }
+
+  private static void validateTrainingIdentity(DuelMapScenario training, DuelMapScenario source) {
     if (!training.id().equals(training.map() + "-close-trooper-duel-v1")
         || !training.spawnPolicy().equals("authored")
         || !training.mapSha256().equals(source.mapSha256())
@@ -133,10 +141,6 @@ record DuelMapScenario(
         || !training.region().equals(source.region())
         || !training.sourceTeams().equals(source.sourceTeams()))
       throw new IllegalStateException("Fixture training scenario changed its neutral map identity");
-    var combined = new ArrayList<DuelMapScenario>(scenarios.size());
-    for (var scenario : scenarios)
-      combined.add(scenario.map().equals(training.map()) ? training : scenario);
-    return List.copyOf(combined);
   }
 
   private static List<String> names(Class<?> type) {

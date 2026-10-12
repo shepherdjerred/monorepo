@@ -57,9 +57,11 @@ new_volume() {
   docker volume create "$volume" >/dev/null
   # What the kubelet does for fsGroup 2000: the volume root belongs to the
   # group and is setgid, so uid 1000 with supplementary group 2000 can write.
-  docker run --rm --user 0:0 --mount "type=volume,src=$volume,dst=/data" \
+  # Disable Docker copy-up on both mounts: remounting an empty volume would
+  # otherwise replace its group with the image's /data group before chmod.
+  docker run --rm --user 0:0 --mount "type=volume,src=$volume,dst=/data,volume-nocopy" \
     --entrypoint chown "$image" 1000:2000 /data
-  docker run --rm --user 0:0 --mount "type=volume,src=$volume,dst=/data" \
+  docker run --rm --user 0:0 --mount "type=volume,src=$volume,dst=/data,volume-nocopy" \
     --entrypoint chmod "$image" 2775 /data
 }
 
@@ -87,7 +89,8 @@ boot() { # label [docker run args...]
     "$image" >/dev/null
   local started=$SECONDS
   for _ in $(seq 1 600); do
-    docker logs "$name" 2>&1 | grep -qE 'Done \([0-9.]+s\)!' && break
+    # Consume the log stream: grep -q can SIGPIPE docker logs under pipefail.
+    docker logs "$name" 2>&1 | grep -E 'Done \([0-9.]+s\)!' >/dev/null && break
     [[ $(docker inspect -f '{{.State.Running}}' "$name") == true ]] || break
     sleep 1
   done

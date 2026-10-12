@@ -16,6 +16,8 @@ import org.bukkit.inventory.ItemStack;
 
 /** Test-only pre-enable database fixture: prove the same imported records load on real Paper. */
 final class HistoricalLockFixtures {
+  private static final int BARREL_COUNT = 70;
+
   private HistoricalLockFixtures() {}
 
   static void seed(World world, java.nio.file.Path content) {
@@ -28,34 +30,44 @@ final class HistoricalLockFixtures {
             request, "parcel:fixture-joint", Map.of(alpha, "historyalpha", beta, "historybeta"));
     var single =
         new Lock.Restoration(request, "heritage:fixture-town", Map.of(alpha, "historyalpha"));
-    for (var x = 337; x <= 367; x++) {
-      for (var z = 31; z <= 45; z++) {
-        world.getBlockAt(x, 200, z).setType(Material.STONE, false);
-      }
-    }
-    world
-        .getBlockAt(340, 201, 35)
-        .setBlockData(Bukkit.createBlockData("minecraft:chest[facing=north,type=left]"), false);
-    world
-        .getBlockAt(341, 201, 35)
-        .setBlockData(Bukkit.createBlockData("minecraft:chest[facing=north,type=right]"), false);
-    var chest = (org.bukkit.block.Chest) world.getBlockAt(340, 201, 35).getState();
-    chest.getBlockInventory().addItem(new ItemStack(Material.DIAMOND, 7));
-    world
-        .getBlockAt(340, 200, 35)
-        .setBlockData(Bukkit.createBlockData("minecraft:hopper[enabled=false]"), false);
-    world.getBlockAt(340, 199, 35).setType(Material.HOPPER, false);
-    world.getBlockAt(344, 201, 35).setType(Material.CHEST, false);
-    // Fixture enable precedes TheStorm enable. Only this disposable startup synchronously
-    // seeds the database; all player-triggered persistence still uses the production async path.
+    // Repeated boots preserve the seeded locks and inventory rather than inserting duplicates.
+    // Fixture enable precedes TheStorm enable, so this disposable startup may wait for storage.
     try (var database = StormDatabase.open(content.resolve("the-storm.db"))) {
       database.migrate("towns", Lock.class.getClassLoader());
       var store = new JooqLocksStore(database);
+      var seeded =
+          store.loadAll().get(30, TimeUnit.SECONDS).stream()
+              .filter(lock -> lock.restoration().requestId().equals(request))
+              .toList();
+      if (!seeded.isEmpty()) {
+        if (seeded.size() != BARREL_COUNT + 2) {
+          throw new IllegalStateException("Historical lock fixture is incomplete");
+        }
+        return;
+      }
+      for (var x = 337; x <= 367; x++) {
+        for (var z = 31; z <= 45; z++) {
+          world.getBlockAt(x, 200, z).setType(Material.STONE, false);
+        }
+      }
+      world
+          .getBlockAt(340, 201, 35)
+          .setBlockData(Bukkit.createBlockData("minecraft:chest[facing=north,type=left]"), false);
+      world
+          .getBlockAt(341, 201, 35)
+          .setBlockData(Bukkit.createBlockData("minecraft:chest[facing=north,type=right]"), false);
+      var chest = (org.bukkit.block.Chest) world.getBlockAt(340, 201, 35).getState();
+      chest.getBlockInventory().addItem(new ItemStack(Material.DIAMOND, 7));
+      world
+          .getBlockAt(340, 200, 35)
+          .setBlockData(Bukkit.createBlockData("minecraft:hopper[enabled=false]"), false);
+      world.getBlockAt(340, 199, 35).setType(Material.HOPPER, false);
+      world.getBlockAt(344, 201, 35).setType(Material.CHEST, false);
       store
           .save(lock(alpha, Set.of(pos(340, 201, 35), pos(341, 201, 35)), joint))
           .get(30, TimeUnit.SECONDS);
       store.save(lock(alpha, Set.of(pos(340, 200, 35)), joint)).get(30, TimeUnit.SECONDS);
-      for (var index = 0; index < 70; index++) {
+      for (var index = 0; index < BARREL_COUNT; index++) {
         var position = pos(350 + index % 10, 201, 36 + index / 10);
         world.getBlockAt(position.x(), position.y(), position.z()).setType(Material.BARREL, false);
         store.save(lock(alpha, Set.of(position), single)).get(30, TimeUnit.SECONDS);
