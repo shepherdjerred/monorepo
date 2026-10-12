@@ -88,7 +88,7 @@ final class SnapshotKeeperTest {
     var alice = alice();
     keeper.capture(alice, "match-1", ignored -> {});
     main.settle();
-    saved.save(alice);
+    var _ = saved.save(alice);
     saved.saves = 0;
     return alice;
   }
@@ -169,7 +169,7 @@ final class SnapshotKeeperTest {
 
     // Paper saves on quit; the next login carries the marker and proves the restore.
     saved.dropWrites = false;
-    saved.save(alice);
+    var _ = saved.save(alice);
     saved.load(alice);
     assertThat(keeper.recover(alice, true)).isEqualTo(SnapshotKeeper.Outcome.PROOF_PENDING);
     main.settle();
@@ -236,31 +236,6 @@ final class SnapshotKeeperTest {
     assertThat(saved.saves).isEqualTo(1);
     assertThat(store.rows).doesNotContainKey(alice.getUniqueId());
     assertThat(keeper.refusal(alice.getUniqueId())).isEmpty();
-  }
-
-  @Test
-  void manyRestoresInOneTickSaveOnePlayerATick() {
-    var players = new ArrayList<PlayerMock>();
-    for (var name : List.of("Alice", "Bob", "Carol")) {
-      var player = server.addPlayer(name);
-      player.getInventory().setItem(0, new ItemStack(Material.DIAMOND_SWORD));
-      keeper.capture(player, "match-1", ignored -> {});
-      players.add(player);
-    }
-    main.settle();
-    saved.saves = 0;
-
-    players.forEach(keeper::restore);
-
-    assertThat(saved.saves).isEqualTo(1);
-    main.runFor(SnapshotKeeper.SAVE_SPACING);
-    assertThat(saved.saves).isEqualTo(2);
-    main.runFor(SnapshotKeeper.SAVE_SPACING);
-    assertThat(saved.saves).isEqualTo(3);
-    main.runFor(Duration.ofSeconds(1));
-    assertThat(saved.saves).isEqualTo(3);
-    assertThat(store.unrestored()).isEmpty();
-    players.forEach(player -> assertThat(keeper.refusal(player.getUniqueId())).isEmpty());
   }
 
   @Test
@@ -401,7 +376,7 @@ final class SnapshotKeeperTest {
     assertThat(restarted.refusal(alice.getUniqueId())).isEmpty();
 
     // And her next login (or the next restart) applies nothing again.
-    saved.save(alice);
+    var _ = saved.save(alice);
     saved.load(alice);
     var again = new ManualScheduler();
     var third = keeper(again, saved);

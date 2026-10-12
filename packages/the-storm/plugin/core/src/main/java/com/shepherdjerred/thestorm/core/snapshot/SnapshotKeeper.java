@@ -3,7 +3,6 @@ package com.shepherdjerred.thestorm.core.snapshot;
 import com.shepherdjerred.thestorm.core.schedule.Scheduler;
 import java.time.Duration;
 import java.time.InstantSource;
-import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -23,24 +22,21 @@ import org.jspecify.annotations.Nullable;
  *
  * <p>Joining takes the snapshot and empties the player in the same tick, keeping the snapshot in
  * the book, then stores it; if storing fails the player is put back from memory. Restoring puts the
- * snapshot back with a matching player-data {@link RestoreMarker} and saves the player's data (at
- * once, or a tick per player already waiting to be saved), then reads the saved file back off the
- * main thread. Only once a fully read file on disk holds the snapshot's marker is the database row
- * marked restored and deleted; the marker and the belongings reach disk in the same atomic file
- * replace, so the row is never retired while the belongings could still be lost. If the file cannot
- * be confirmed after a few retries the player is {@link SnapshotBook.Refusal#CLEANUP_STALLED
- * stalled} and a later login proves the restore instead, as it does when the server's player data
- * cannot be read back at all. A game module owns one keeper over its own {@link SnapshotStore} and
- * marker key, and layers whatever else it hands out on top of the {@link Outcome} each call
- * reports.
+ * snapshot back with a matching player-data {@link RestoreMarker} and saves the player's data
+ * through the shared {@link SavedPlayerData} (at most one player file a tick, server-wide), then
+ * reads the saved file back off the main thread. Only once a fully read file on disk holds the
+ * snapshot's marker is the database row marked restored and deleted; the marker and the belongings
+ * reach disk in the same atomic file replace, so the row is never retired while the belongings
+ * could still be lost. If the file cannot be confirmed after a few retries the player is {@link
+ * SnapshotBook.Refusal#CLEANUP_STALLED stalled} and a later login proves the restore instead, as it
+ * does when the server's player data cannot be read back at all. A game module owns one keeper over
+ * its own {@link SnapshotStore} and marker key, and layers whatever else it hands out on top of the
+ * {@link Outcome} each call reports.
  */
 public final class SnapshotKeeper {
 
   /** How many times marking a restored snapshot is tried. */
   private static final int MARK_ATTEMPTS = 6;
-
-  /** The space between two queued player-data saves: one server tick. */
-  static final Duration SAVE_SPACING = Duration.ofMillis(50);
 
   /** The waits before reading back again, after the first check failed. */
   static final List<Duration> CONFIRM_RETRIES =
@@ -100,8 +96,6 @@ public final class SnapshotKeeper {
   private final Set<UUID> marking = new HashSet<>();
   private final Map<UUID, Snapshot> awaitingProof = new HashMap<>();
   private final Map<UUID, Runnable> waiting = new HashMap<>();
-  private final ArrayDeque<Runnable> saves = new ArrayDeque<>();
-  private boolean saving;
   private SnapshotBook book = SnapshotBook.UNLOADED;
 
   public SnapshotKeeper(Parts parts) {
@@ -277,11 +271,12 @@ public final class SnapshotKeeper {
   }
 
   /**
-   * Confirms a restore from saved player data. The first attempt saves the player, through {@link
-   * #queueSave} so that at most one player file is written a tick, then reads the file back off the
-   * main thread. The snapshot is marked restored once the file holds its marker; otherwise only the
-   * read is tried again after each of {@link #CONFIRM_RETRIES} (a later save by Paper, such as its
-   * autosave or the save on quit, may still land the marker) before the player is stalled.
+   * Confirms a restore from saved player data. The first attempt saves the player through the
+   * shared {@link SavedPlayerData}, which writes at most one player file a tick server-wide, then
+   * reads the file back off the main thread. The snapshot is marked restored once the file holds
+   * its marker; otherwise only the read is tried again after each of {@link #CONFIRM_RETRIES} (a
+   * later save by Paper, such as its autosave or the save on quit, may still land the marker)
+   * before the player is stalled.
    */
   private void confirm(Player player, Snapshot snapshot, int attempt) {
     var id = player.getUniqueId();
@@ -297,50 +292,28 @@ public final class SnapshotKeeper {
       readBack(player, new Attempt(snapshot, attempt));
       return;
     }
-    queueSave(() -> saveAndRead(player, snapshot));
-  }
-
-  /** The queued save of a restored player: written now, if they are still waiting for it. */
-  private void saveAndRead(Player player, Snapshot snapshot) {
-    var id = player.getUniqueId();
-    if (!snapshot.equals(awaitingProof.get(id))) {
-      return;
-    }
-    if (!player.isOnline()) {
-      // Paper saves them as they leave; reading the file back still proves the restore.
-      readBack(player, new Attempt(snapshot, 0));
-      return;
-    }
-    if (!marker.matches(player, snapshot)) {
+    if (player.isOnline() && !marker.matches(player, snapshot)) {
       logger().error("{} lost the restore marker of a snapshot awaiting proof", player.getName());
       stall(id, player.getName(), "their restore marker is gone");
       return;
     }
-    saved.save(player);
-    readBack(player, new Attempt(snapshot, 0));
-  }
-
-  /**
-   * Runs {@code save} now if no save is waiting, else after the saves queued before it, one a tick:
-   * a match ending for many players writes their files over as many ticks, not all at once.
-   */
-  private void queueSave(Runnable save) {
-    saves.add(save);
-    if (!saving) {
-      saving = true;
-      drainSave();
-    }
-  }
-
-  private void drainSave() {
-    var next = saves.poll();
-    if (next == null) {
-      saving = false;
-      return;
-    }
-    guarded("saving restored player data", next);
-    // This tick's save is spent: the next one, queued now or later this tick, waits a tick.
-    var _ = scheduler.runOnMainThreadLater(SAVE_SPACING, this::drainSave);
+    var _ =
+        saved
+            .save(player)
+            .whenCompleteAsync(
+                (written, failure) ->
+                    guarded(
+                        "confirming the restore of " + player.getName(),
+                        () -> {
+                          if (failure != null) {
+                            logger()
+                                .error("Could not save the data of {}", player.getName(), failure);
+                          }
+                          if (snapshot.equals(awaitingProof.get(id))) {
+                            readBack(player, new Attempt(snapshot, 0));
+                          }
+                        }),
+                scheduler.mainThread());
   }
 
   /** Reads the player's saved file back off the main thread and checks it on the main thread. */

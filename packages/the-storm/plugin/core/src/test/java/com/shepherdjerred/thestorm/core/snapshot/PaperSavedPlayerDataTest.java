@@ -141,7 +141,9 @@ final class PaperSavedPlayerDataTest {
     Files.writeString(level.resolve("level.dat"), "");
     write(playerFile(string("abc123")));
     var files = PlayerDataFiles.locate(level).orElseThrow();
-    var data = new PaperSavedPlayerData(files, new DirectComputePool());
+    var data =
+        new PaperSavedPlayerData(
+            files, new DirectComputePool(), new SavePacer(new ManualScheduler()));
 
     assertThat(data.marker(ALICE, KEY).join()).isEqualTo(Optional.of("abc123"));
     assertThatThrownBy(() -> data.marker(UUID.randomUUID(), KEY).join())

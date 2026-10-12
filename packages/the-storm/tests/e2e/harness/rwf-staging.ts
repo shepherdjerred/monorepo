@@ -19,7 +19,10 @@ export async function stageRwf(
 
 /** Removes every staged rwf map folder not in `keep`; each kept map must exist. */
 async function keepRwfMaps(mapsDir: string, keep: string[]): Promise<void> {
-  const staged = await readdir(mapsDir);
+  const entries = await readdir(mapsDir, { withFileTypes: true });
+  const staged = entries
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name);
   const missing = keep.filter((id) => !staged.includes(id));
   if (missing.length > 0) {
     throw new Error(`rwf maps not shipped: ${missing.join(", ")}`);

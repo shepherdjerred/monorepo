@@ -45,10 +45,10 @@ final class MemorySavedData implements SavedPlayerData {
   }
 
   @Override
-  public void save(Player player) {
+  public CompletableFuture<Void> save(Player player) {
     saves++;
     if (dropWrites) {
-      return;
+      return CompletableFuture.completedFuture(null);
     }
     var container = player.getPersistentDataContainer();
     var values = new HashMap<NamespacedKey, String>();
@@ -65,6 +65,7 @@ final class MemorySavedData implements SavedPlayerData {
                     .map(item -> item == null ? ItemStack.empty() : item)
                     .toList()));
     files.put(player.getUniqueId(), new File(items, player.getLevel(), Map.copyOf(values)));
+    return CompletableFuture.completedFuture(null);
   }
 
   @Override

@@ -26,8 +26,9 @@ public interface SavedPlayerData {
         }
 
         @Override
-        public void save(Player player) {
-          throw new IllegalStateException("player data cannot be saved and read back here");
+        public CompletableFuture<Void> save(Player player) {
+          return CompletableFuture.failedFuture(
+              new IllegalStateException("player data cannot be saved and read back here"));
         }
 
         @Override
@@ -41,10 +42,12 @@ public interface SavedPlayerData {
   boolean available();
 
   /**
-   * Writes {@code player}'s data to disk now, in this tick, as Paper's autosave does. Main thread
-   * only; callers keep it to one player a tick.
+   * Writes {@code player}'s data to disk on the main thread, as Paper's autosave does, at most one
+   * player a tick across every caller: now if nothing was written this tick, else in its turn. A
+   * player who has left by then is not written (Paper saved them as they left). Main thread only;
+   * the future completes on the main thread.
    */
-  void save(Player player);
+  CompletableFuture<Void> save(Player player);
 
   /**
    * Reads {@code player}'s saved file off the main thread and returns the string stored under

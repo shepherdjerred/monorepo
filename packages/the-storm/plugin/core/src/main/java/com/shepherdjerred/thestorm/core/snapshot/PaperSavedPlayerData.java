@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.core.snapshot;
 
 import com.shepherdjerred.thestorm.core.compute.ComputePool;
 import com.shepherdjerred.thestorm.core.nbt.NbtReader;
+import com.shepherdjerred.thestorm.core.schedule.Scheduler;
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -21,25 +22,29 @@ import org.bukkit.entity.Player;
 /**
  * Paper's player data: {@link Player#saveData()} writes the file in the calling tick (to a
  * temporary file, then replacing the old one), as Paper's own autosave and save on quit do; the
- * plugin may not reach the server internals that would let it write off the main thread. The keeper
- * saves at most one player a tick. The file is read back on the compute pool as gzipped NBT;
- * persistent data lives in the root compound's {@code BukkitValues}, keyed by the namespaced key.
+ * plugin may not reach the server internals that would let it write off the main thread. A {@link
+ * SavePacer} writes at most one player a tick, server-wide. The file is read back on the compute
+ * pool as gzipped NBT; persistent data lives in the root compound's {@code BukkitValues}, keyed by
+ * the namespaced key.
  */
 public final class PaperSavedPlayerData implements SavedPlayerData {
 
   private final PlayerDataFiles files;
   private final ComputePool pool;
+  private final SavePacer pacer;
 
-  PaperSavedPlayerData(PlayerDataFiles files, ComputePool pool) {
+  PaperSavedPlayerData(PlayerDataFiles files, ComputePool pool, SavePacer pacer) {
     this.files = files;
     this.pool = pool;
+    this.pacer = pacer;
   }
 
   /**
    * The server's player data, or {@link SavedPlayerData#UNAVAILABLE} if its files cannot be found
    * under the level directory.
    */
-  public static SavedPlayerData locate(Server server, ComputePool pool, ComponentLogger logger) {
+  public static SavedPlayerData locate(
+      Server server, ComputePool pool, Scheduler scheduler, ComponentLogger logger) {
     var level = server.getLevelDirectory();
     var found = PlayerDataFiles.locate(level);
     if (found.isEmpty()) {
@@ -48,7 +53,7 @@ public final class PaperSavedPlayerData implements SavedPlayerData {
           level);
       return UNAVAILABLE;
     }
-    return new PaperSavedPlayerData(found.orElseThrow(), pool);
+    return new PaperSavedPlayerData(found.orElseThrow(), pool, new SavePacer(scheduler));
   }
 
   @Override
@@ -57,8 +62,20 @@ public final class PaperSavedPlayerData implements SavedPlayerData {
   }
 
   @Override
-  public void save(Player player) {
-    player.saveData();
+  public CompletableFuture<Void> save(Player player) {
+    var written = new CompletableFuture<Void>();
+    pacer.submit(
+        () -> {
+          try {
+            if (player.isOnline()) {
+              player.saveData();
+            }
+            written.complete(null);
+          } catch (RuntimeException failure) {
+            written.completeExceptionally(failure);
+          }
+        });
+    return written;
   }
 
   @Override

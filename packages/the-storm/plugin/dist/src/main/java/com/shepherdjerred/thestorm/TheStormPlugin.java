@@ -87,7 +87,8 @@ public final class TheStormPlugin extends JavaPlugin {
     services.provide(PublicGameDirectory.class, new PublicGameDirectory());
     services.provide(
         SavedPlayerData.class,
-        PaperSavedPlayerData.locate(getServer(), pool, getComponentLogger()));
+        PaperSavedPlayerData.locate(
+            getServer(), pool, new PaperScheduler(this), getComponentLogger()));
     services.provide(BlockChanges.class, CoreProtectBlocks.create(this));
     getServer()
         .getPluginManager()

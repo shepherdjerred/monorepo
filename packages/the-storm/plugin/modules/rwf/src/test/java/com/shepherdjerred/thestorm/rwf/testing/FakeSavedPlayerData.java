@@ -27,10 +27,10 @@ public final class FakeSavedPlayerData implements SavedPlayerData {
   }
 
   @Override
-  public void save(Player player) {
+  public CompletableFuture<Void> save(Player player) {
     saves++;
     if (dropWrites) {
-      return;
+      return CompletableFuture.completedFuture(null);
     }
     var container = player.getPersistentDataContainer();
     var values = new HashMap<NamespacedKey, String>();
@@ -40,6 +40,7 @@ public final class FakeSavedPlayerData implements SavedPlayerData {
       }
     }
     files.put(player.getUniqueId(), values);
+    return CompletableFuture.completedFuture(null);
   }
 
   @Override

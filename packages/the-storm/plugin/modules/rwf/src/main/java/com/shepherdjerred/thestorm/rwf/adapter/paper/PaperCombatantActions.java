@@ -43,6 +43,9 @@ final class PaperCombatantActions implements CombatantActions {
   /** Vanilla's arrow speed at full draw. */
   static final double ARROW_SPEED = 3.0;
 
+  /** The most landing nudges one rewind makes. */
+  static final int MAX_NUDGES = 1_000;
+
   private final MatchRunner runner;
   private final CombatTracker tracker;
   private final Recordings recordings;
@@ -174,11 +177,16 @@ final class PaperCombatantActions implements CombatantActions {
 
   /**
    * The original's landing nudge: while an entity near the player stands within 0.1 of {@code
-   * target}, move it by up to 0.01 sideways and up to 0.01 up.
+   * target}, move it by up to 0.01 sideways and up to 0.01 up. The upward step makes it clear in
+   * about twenty steps; {@link #MAX_NUDGES} only keeps the tick safe from an entity that keeps
+   * pace, which the original left unbounded.
    */
   private void clearOfEntities(Location target, List<Entity> nearby) {
     var random = runner.random();
-    while (nearby.stream().anyMatch(entity -> entity.getLocation().distance(target) <= 0.1)) {
+    for (var step = 0;
+        step < MAX_NUDGES
+            && nearby.stream().anyMatch(entity -> entity.getLocation().distance(target) <= 0.1);
+        step++) {
       target.add(
           random.nextDouble(-0.01, 0.01),
           random.nextDouble(0, 0.01),
