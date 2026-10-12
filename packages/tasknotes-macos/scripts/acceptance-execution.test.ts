@@ -6,6 +6,7 @@ import { afterEach, describe, expect, test } from "vitest";
 import {
   acceptanceStages,
   executeAcceptanceStages,
+  readAcceptanceResultReports,
   type AcceptanceCommand,
   type AcceptanceStage,
 } from "./acceptance-execution.ts";
@@ -86,6 +87,80 @@ function fakeCommand(
 }
 
 describe("fail-fast native process orchestration", () => {
+  test("same-bundle report reads never overlap across smoke and all workflows", async () => {
+    const stages = await plan();
+    const launches: string[] = [];
+    const delegate = fakeCommand(stages, launches);
+    const activeBundles = new Set<string>();
+    const reads: string[] = [];
+    const command: AcceptanceCommand = async (argv, capture) => {
+      if (argv[0] === "xcodebuild") return delegate(argv, capture);
+      const bundle = argv.at(-1);
+      assert.ok(bundle);
+      if (activeBundles.has(bundle))
+        throw new Error("Concurrent same-bundle database materialization");
+      activeBundles.add(bundle);
+      try {
+        await Promise.resolve();
+        reads.push(`${path.basename(bundle)}:${argv[4]}`);
+        return await delegate(argv, capture);
+      } finally {
+        activeBundles.delete(bundle);
+      }
+    };
+    await executeAcceptanceStages(stages, "owned.xctestrun", command);
+    expect(reads).toEqual(
+      stages.flatMap((stage) =>
+        ["summary", "tests"].map(
+          (kind) => `${path.basename(stage.resultBundle)}:${kind}`,
+        ),
+      ),
+    );
+    expect(launches).toEqual(stages.map((stage) => stage.selector));
+    for (const stage of stages)
+      expect(await receipt(stage)).toMatchObject({ status: "passed" });
+  });
+
+  test.each(["summary", "tests"] as const)(
+    "failed %s read retains the other report without retrying either command",
+    async (failedKind) => {
+      const stages = await plan(true);
+      const stage = stages[0];
+      assert.ok(stage);
+      const destinations = {
+        summary: `${stage.receipt}.summary.json`,
+        tests: `${stage.receipt}.tests.json`,
+      };
+      const reads: string[] = [];
+      let active = false;
+      const command: AcceptanceCommand = async (argv, capture) => {
+        expect(capture).toBe(true);
+        expect(argv.at(-1)).toBe(stage.resultBundle);
+        const kind = argv[4];
+        assert.ok(kind === "summary" || kind === "tests");
+        if (active) throw new Error("Overlapping same-bundle report command");
+        active = true;
+        try {
+          await Promise.resolve();
+          reads.push(kind);
+          if (kind === failedKind) throw new Error("Report unavailable");
+          return JSON.stringify({ retained: kind });
+        } finally {
+          active = false;
+        }
+      };
+      await expect(
+        readAcceptanceResultReports(stage.resultBundle, destinations, command),
+      ).rejects.toThrow("Native result reports could not be read");
+      expect(reads).toEqual(["summary", "tests"]);
+      const retainedKind = failedKind === "summary" ? "tests" : "summary";
+      expect(await Bun.file(destinations[retainedKind]).json()).toEqual({
+        retained: retainedKind,
+      });
+      expect(await Bun.file(destinations[failedKind]).exists()).toBe(false);
+    },
+  );
+
   test("smoke-only cannot invoke workflows and records a distinct passing smoke", async () => {
     const stages = await plan(true);
     const launches: string[] = [];

@@ -53,7 +53,10 @@ bootstrap, with concurrent restored windows sharing one registration and result.
 Before constructing SwiftUI's App, the DEBUG acceptance launcher validates its
 isolated descriptor and installs a dedicated `NSApplication` subclass. Its
 AppKit restoration hook declines archived windows without decoding their state;
-the acceptance scene also disables restoration. A separate launch check requires
+the acceptance scene also disables restoration. Once launch and restoration
+finish, the isolated application requests one fresh workspace through AppKit's
+untitled-window delegate route only when no windows exist. An unsupported or
+failed request stops startup. A separate launch check requires
 one workspace on initial and cold launch and retains scalar installation/veto
 receipts. Cold relaunch workflows prove persisted vault data; production
 window-layout restoration remains automatic and requires separate runtime

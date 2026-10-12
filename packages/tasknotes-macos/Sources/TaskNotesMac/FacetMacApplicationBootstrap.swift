@@ -42,6 +42,7 @@ public enum FacetMacApplicationBootstrap {
     @MainActor
     internal final class FacetAcceptanceApplication: NSApplication {
         private var evidence: FacetAcceptanceRestorationEvidence?
+        private let initialWorkspace = FacetAcceptanceInitialWorkspace()
 
         func installEvidence(_ configuration: FacetAcceptanceConfiguration) throws {
             guard evidence == nil else { throw FacetAcceptanceError.wrongApplication }
@@ -61,6 +62,32 @@ public enum FacetMacApplicationBootstrap {
             }
             try installedEvidence.recordInstallation()
             evidence = installedEvidence
+            NotificationCenter.default.addObserver(
+                self, selector: #selector(restorationDidFinish),
+                name: NSApplication.didFinishRestoringWindowsNotification, object: self)
+        }
+
+        override func finishLaunching() {
+            super.finishLaunching()
+            receiveInitialWorkspaceEvent(.launchFinished)
+        }
+
+        @objc private func restorationDidFinish(_ notification: Notification) {
+            guard let application = notification.object as? FacetAcceptanceApplication,
+                application === self
+            else { return }
+            receiveInitialWorkspaceEvent(.restorationFinished)
+        }
+
+        private func receiveInitialWorkspaceEvent(_ event: FacetAcceptanceInitialWorkspace.Event) {
+            do {
+                guard evidence != nil else { throw FacetAcceptanceError.wrongApplication }
+                try initialWorkspace.receive(
+                    event, hasWindows: { !windows.isEmpty },
+                    requestWindow: { delegate?.applicationOpenUntitledFile?(self) == true })
+            } catch {
+                preconditionFailure("Acceptance initial workspace could not be presented.")
+            }
         }
 
         override func restoreWindow(
