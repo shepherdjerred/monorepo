@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { avatarUrl, foldPlayerName, toPlayerName } from "./names.ts";
+import { foldPlayerName, toPlayerName } from "./names.ts";
 
 describe("foldPlayerName", () => {
   test("keeps plain names", () => {
@@ -31,18 +31,5 @@ describe("toPlayerName", () => {
 
   test("falls back to the username", () => {
     expect(toPlayerName([null, "日本語"], "jerred_")).toBe("jerred_");
-  });
-});
-
-describe("avatarUrl", () => {
-  test("is null for the default avatar", () => {
-    expect(avatarUrl("1", null)).toBeNull();
-  });
-
-  test("uses gif for animated avatars", () => {
-    expect(avatarUrl("1", "a_abc")).toBe(
-      "https://cdn.discordapp.com/avatars/1/a_abc.gif?size=128",
-    );
-    expect(avatarUrl("1", "abc")).toContain("abc.png");
   });
 });

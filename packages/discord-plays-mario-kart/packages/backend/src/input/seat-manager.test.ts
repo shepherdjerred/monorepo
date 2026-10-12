@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import type { DiscordUser } from "@discord-plays-mario-kart/common";
+import type { DiscordUser } from "@shepherdjerred/discord-plays-core/auth/protocol.ts";
 import { SeatManager } from "./seat-manager.ts";
 
 function user(discordId: string): DiscordUser {

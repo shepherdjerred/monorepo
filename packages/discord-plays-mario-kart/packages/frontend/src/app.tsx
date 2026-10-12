@@ -8,7 +8,11 @@ import { SeatStrip } from "./layout/seat-strip.tsx";
 import { StatusBanner } from "./layout/status-banner.tsx";
 import { Toast } from "./layout/toast.tsx";
 import { TopBar } from "./layout/top-bar.tsx";
-import { signIn, useMe, useSignOut } from "./session/me.ts";
+import {
+  signIn,
+  useMe,
+  useSignOut,
+} from "@shepherdjerred/discord-plays-web/session/me.ts";
 import {
   describePlayStatus,
   describeSeatDenied,
@@ -37,7 +41,7 @@ function stageMessage(
 export function App() {
   const game = useGame();
   const { me, loading: meLoading } = useMe();
-  const signOut = useSignOut();
+  const signOut = useSignOut(socket);
   const controller = useController(game.seat);
   const touchLandscape = useMediaQuery(TOUCH_LANDSCAPE);
   const phonePortrait = useMediaQuery(PHONE_PORTRAIT);

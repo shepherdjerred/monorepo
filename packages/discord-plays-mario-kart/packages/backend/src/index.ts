@@ -31,18 +31,21 @@ import {
 import { createPrismaLeaderboardStore } from "./leaderboard/store.ts";
 import { createPlayerDirectory } from "./auth/player-directory.ts";
 import { createWebSessionStore } from "./auth/session-store.ts";
-import { DiscordAuth, mountAuthRoutes } from "./auth/discord-oauth.ts";
-import { authBootstrapFromEnv } from "./auth/bootstrap.ts";
-import { botVoicePresence } from "./auth/voice-presence.ts";
+import {
+  DiscordAuth,
+  mountAuthRoutes,
+} from "@shepherdjerred/discord-plays-core/auth/discord-oauth.ts";
+import { authBootstrapFromEnv } from "@shepherdjerred/discord-plays-core/auth/bootstrap.ts";
+import { botVoicePresence } from "@shepherdjerred/discord-plays-core/auth/voice-presence.ts";
 import { toPlayerName } from "./auth/names.ts";
 import { startEventLoopLagSampler } from "./observability/event-loop-lag.ts";
 import { eventLoopLagMs } from "./observability/metrics.ts";
 import type {
-  DiscordUser,
   LeaderboardResponse,
   RecentRacesResponse,
   SeatResponse,
 } from "@discord-plays-mario-kart/common";
+import type { DiscordUser } from "@shepherdjerred/discord-plays-core/auth/protocol.ts";
 
 /** When no session is active, expose a zero-seat manager so claims are rejected. */
 const NULL_SEAT_MANAGER = new SeatManager(0);
@@ -144,8 +147,12 @@ if (config.web.enabled) {
         publicOrigin: bootstrap.publicOrigin,
         clientId: config.bot.application_id,
         clientSecret: bootstrap.clientSecret,
+        cookiePrefix: "mk64",
       },
       sessions: createWebSessionStore(prisma, players),
+      logger,
+      // The seat name is burned into the stream with an ASCII overlay font.
+      displayName: (user) => toPlayerName([user.global_name], user.username),
     });
   }
   const signedIn = auth;
@@ -161,7 +168,7 @@ if (config.web.enabled) {
     isCorsEnabled: config.web.cors,
     identify,
   });
-  if (signedIn !== undefined) mountAuthRoutes(app, signedIn);
+  if (signedIn !== undefined) mountAuthRoutes(app, signedIn, logger);
   // Shares the HTTP server with Socket.IO but takes its own upgrade path, so
   // video bytes never queue behind a controller input on one TCP connection.
   driverFeed?.attach(server);

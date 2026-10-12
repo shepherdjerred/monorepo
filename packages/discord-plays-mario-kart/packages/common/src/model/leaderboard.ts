@@ -1,5 +1,8 @@
 import { z } from "zod";
-import { DiscordIdSchema, DiscordUserSchema } from "./identity.ts";
+import {
+  DiscordIdSchema,
+  DiscordUserSchema,
+} from "@shepherdjerred/discord-plays-core/auth/protocol.ts";
 
 export const PLAYER_NAME_MAX = 20;
 

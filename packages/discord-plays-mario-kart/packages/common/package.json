@@ -19,7 +19,8 @@
   "dependencies": {
     "lodash": "4.18.1",
     "ts-pattern": "^5.7.0",
-    "zod": "^4.4.3"
+    "zod": "^4.4.3",
+    "@shepherdjerred/discord-plays-core": "workspace:*"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

@@ -5,7 +5,7 @@
 // A Discord account holds at most one seat. Claiming from a second tab moves
 // the seat to that tab, so a player who reopens the page is not locked out by
 // their own stale connection.
-import type { DiscordUser } from "@discord-plays-mario-kart/common";
+import type { DiscordUser } from "@shepherdjerred/discord-plays-core/auth/protocol.ts";
 
 type Seat = { socketId: string; user: DiscordUser };
 

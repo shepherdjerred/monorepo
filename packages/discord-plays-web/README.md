@@ -28,6 +28,8 @@ parts that behave the same in both:
 - `src/socket/game-socket-client.ts` — the same-origin, WebSocket-only
   Socket.IO client; `socket-request.ts` sends one request and awaits its
   schema-validated reply with a timeout.
+- `src/session/me.ts` — `useMe()`, `signIn()`, and `useSignOut()` against the
+  sign-in routes core serves.
 - `src/bootstrap/mount-game-app.tsx` — `mountGameApp()`: Sentry (DSN per
   game, release and mode from the build), react-query, and the React root.
 - `src/vite/game-vite-config.ts` — `defineGameViteConfig()`: shared plugins

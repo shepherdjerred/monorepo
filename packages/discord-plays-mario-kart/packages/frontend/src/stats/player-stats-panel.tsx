@@ -3,9 +3,9 @@ import IconDiscord from "~icons/ph/discord-logo-fill";
 import {
   characterName,
   courseName,
-  type DiscordUser,
   type PlayerStats,
 } from "@discord-plays-mario-kart/common";
+import { type DiscordUser } from "@shepherdjerred/discord-plays-core/auth/protocol.ts";
 import { Avatar } from "#src/ui/avatar.tsx";
 import { Button } from "#src/ui/button.tsx";
 import { cx } from "#src/ui/cx.ts";

@@ -1,12 +1,13 @@
+// Who this browser is signed in as, against the sign-in routes core serves.
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import type { Socket } from "socket.io-client";
 import {
   AUTH_LOGOUT_PATH,
   AUTH_START_PATH,
   ME_PATH,
   MeSchema,
   type Me,
-} from "@discord-plays-mario-kart/common";
-import { socket } from "#src/socket.ts";
+} from "@shepherdjerred/discord-plays-core/auth/protocol.ts";
 
 export const ME_QUERY_KEY = ["me"] as const;
 
@@ -25,7 +26,7 @@ async function fetchMe(): Promise<Me> {
 /**
  * Who this browser is signed in as. A failed lookup reads as signed out: the
  * page stays usable for watching, and the server, not this value, decides who
- * may take a seat.
+ * may play.
  */
 export function useMe(): { me: Me; loading: boolean } {
   const query = useQuery({
@@ -37,6 +38,7 @@ export function useMe(): { me: Me; loading: boolean } {
   return { me: query.data ?? SIGNED_OUT, loading: query.isPending };
 }
 
+/** Start Discord sign-in, coming back to this page afterwards. */
 export function signIn(): void {
   const returnTo = globalThis.location.pathname;
   globalThis.location.assign(
@@ -45,7 +47,7 @@ export function signIn(): void {
 }
 
 /** Sign out, then reconnect the socket so the server drops this identity. */
-export function useSignOut(): () => Promise<void> {
+export function useSignOut(socket: Socket): () => Promise<void> {
   const queryClient = useQueryClient();
   return async () => {
     await fetch(AUTH_LOGOUT_PATH, {

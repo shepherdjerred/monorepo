@@ -2,7 +2,6 @@
 // seat, this browser's own seat, and controller round-trip time.
 import { useCallback, useEffect, useState } from "react";
 import type {
-  DiscordUser,
   LatencyReportRequest,
   Response,
   SeatClaimRequest,
@@ -10,6 +9,7 @@ import type {
   SeatReleaseRequest,
   Status,
 } from "@discord-plays-mario-kart/common";
+import type { DiscordUser } from "@shepherdjerred/discord-plays-core/auth/protocol.ts";
 import { socket } from "#src/socket.ts";
 import { feedTelemetry } from "#src/feed-telemetry.ts";
 

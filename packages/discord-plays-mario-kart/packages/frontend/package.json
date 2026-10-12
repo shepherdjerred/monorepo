@@ -23,7 +23,8 @@
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "zod": "^4.4.3",
-    "@shepherdjerred/discord-plays-web": "workspace:*"
+    "@shepherdjerred/discord-plays-web": "workspace:*",
+    "@shepherdjerred/discord-plays-core": "workspace:*"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

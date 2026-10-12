@@ -22,7 +22,7 @@ export function authBootstrapFromEnv(
   const clientSecret = env["DISCORD_CLIENT_SECRET"];
   if (origin === undefined || origin.length === 0) {
     throw new Error(
-      "WEB_PUBLIC_ORIGIN is required when the web API is enabled: seats need Discord sign-in",
+      "WEB_PUBLIC_ORIGIN is required when the web API is enabled: playing needs Discord sign-in",
     );
   }
   const parsed = OriginSchema.safeParse(origin);
@@ -33,7 +33,7 @@ export function authBootstrapFromEnv(
   }
   if (clientSecret === undefined || clientSecret.length === 0) {
     throw new Error(
-      "DISCORD_CLIENT_SECRET is required when the web API is enabled: seats need Discord sign-in",
+      "DISCORD_CLIENT_SECRET is required when the web API is enabled: playing needs Discord sign-in",
     );
   }
   return { publicOrigin: parsed.data, clientSecret };

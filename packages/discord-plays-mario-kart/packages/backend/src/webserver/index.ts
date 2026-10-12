@@ -3,7 +3,7 @@ import { registry } from "@shepherdjerred/discord-plays-core/observability/metri
 import { assertPathExists } from "#src/util.ts";
 import { logger } from "#src/logger.ts";
 import type { IdentifySocket } from "@shepherdjerred/discord-plays-core/webserver/socket.ts";
-import type { DiscordUser } from "@discord-plays-mario-kart/common";
+import type { DiscordUser } from "@shepherdjerred/discord-plays-core/auth/protocol.ts";
 import { createSocket } from "./socket.ts";
 
 export function createWebServer({
