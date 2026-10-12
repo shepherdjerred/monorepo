@@ -55,6 +55,7 @@ export type WorkerDeploymentRolloutOptions = {
   replayCommands: readonly (readonly string[])[];
   canaryCommand: readonly string[];
   acceptancePrerequisite?: {
+    namespace: string;
     deploymentName: string;
     taskQueue: string;
   };
@@ -241,6 +242,7 @@ function validateOptions(
       : {
           acceptancePrerequisite: z
             .object({
+              namespace: z.string().min(1),
               deploymentName: DeploymentNameSchema,
               taskQueue: z.string().min(1),
             })

@@ -77,6 +77,7 @@ export function resolveWorkerDeploymentRolloutTarget(
     ...(stage === "prod"
       ? {
           acceptancePrerequisite: {
+            namespace: "beta",
             deploymentName: "scout-beta-workflows",
             taskQueue: "scout-beta",
           },
