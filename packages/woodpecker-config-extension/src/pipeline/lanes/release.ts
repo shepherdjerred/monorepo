@@ -19,9 +19,8 @@ import {
  * None of them carries a changed-path guard, and that is deliberate. Whether a
  * release is needed depends on something selection cannot know: whether the
  * image lane actually pushed anything this build. So the lanes always run on
- * the default branch and decide internally, exactly as they did under
- * Buildkite -- a guard here would skip a release that pushed images without
- * touching any helm or argocd path.
+ * the default branch and decide internally -- a guard here would skip a
+ * release that pushed images without touching any helm or argocd path.
  */
 
 /** Serializes the whole release so two builds cannot interleave a rollout. */

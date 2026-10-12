@@ -1,0 +1,19 @@
+$ErrorActionPreference = 'Stop'
+
+# `winget list` misses some installed packages, so let `winget install
+# --no-upgrade` decide; it exits with this code when the package is present.
+$alreadyInstalled = -1978335135 # 0x8A150061
+
+function Install-Package([string]$Id, [string]$Source) {
+    winget install --id $Id --exact --source $Source --no-upgrade --accept-package-agreements --accept-source-agreements
+    if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne $alreadyInstalled) {
+        throw "winget install $Id failed with exit code $LASTEXITCODE"
+    }
+}
+
+{{ range .packages.winget -}}
+Install-Package '{{ . }}' 'winget'
+{{ end -}}
+{{ range .packages.msstore -}}
+Install-Package '{{ .id }}' 'msstore'
+{{ end -}}

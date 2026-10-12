@@ -112,12 +112,6 @@ export type Tier2ClassifierResult = {
 export type Tier2Classifier = (
   prompt: string,
 ) => Promise<Tier2ClassifierResult>;
-
-export type Tier2Options = {
-  checkpointFile?: string | undefined;
-  classifier?: Tier2Classifier | undefined;
-};
-
 export type ClassifyTier2Params = {
   definitions: CategoryDefinition[];
   transactions: EnrichedTransaction[];

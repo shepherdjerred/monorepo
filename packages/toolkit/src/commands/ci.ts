@@ -3,7 +3,13 @@ import { githubToken } from "#lib/ci/process.ts";
 import { loadWoodpeckerConfig } from "#lib/woodpecker/ci.ts";
 import { CiObserver } from "#lib/ci/observer.ts";
 import { evaluateReadiness, EXIT_CODES } from "#lib/ci/readiness.ts";
-import { waitForCi, type WaitResult } from "#lib/ci/wait.ts";
+import {
+  sleepUntilRateLimitReset,
+  timeoutResult,
+  waitForCi,
+  type WaitResult,
+} from "#lib/ci/wait.ts";
+import { GitHubRateLimitError } from "@shepherdjerred/code-review/github-request";
 import { watchEvents } from "#lib/ci/events.ts";
 import { ciLoad, formatLoad } from "#lib/ci/load.ts";
 import { pipelineDiagnostics } from "#lib/ci/diagnostics.ts";
@@ -45,6 +51,35 @@ async function reportResult(
   process.exitCode = EXIT_CODES[result.verdict.outcome];
 }
 
+function reportRateLimit(error: GitHubRateLimitError, resumeAt: number): void {
+  console.error(
+    `GitHub rate limit reached; resuming at ${new Date(resumeAt).toISOString()}. This does not mean CI failed. ${error.message}`,
+  );
+}
+
+/**
+ * The PR's current head, waiting out a quota refusal like every later poll.
+ * Returns null when the requested deadline arrives first, so the caller can
+ * report a timeout instead of a failure.
+ */
+async function initialPr(
+  observer: CiObserver,
+  number: number,
+  signal: AbortSignal,
+  deadline: number | null,
+): Promise<Awaited<ReturnType<GitHubClient["pr"]>> | null> {
+  for (;;) {
+    try {
+      return await observer.github.pr(number, signal);
+    } catch (error) {
+      if (!(error instanceof GitHubRateLimitError)) throw error;
+      if (deadline !== null && error.resumeAt > deadline) return null;
+      await sleepUntilRateLimitReset(error, signal, reportRateLimit);
+      if (deadline !== null && Date.now() >= deadline) return null;
+    }
+  }
+}
+
 async function runWait(
   number: number,
   observer: CiObserver,
@@ -63,7 +98,24 @@ async function runWait(
   process.once("SIGINT", interrupt);
   process.once("SIGTERM", terminate);
   try {
-    const initial = await observer.github.pr(number, controller.signal);
+    const started = Date.now();
+    const deadline =
+      options.timeoutMs === undefined ? null : started + options.timeoutMs;
+    const initial = await initialPr(
+      observer,
+      number,
+      controller.signal,
+      deadline,
+    );
+    if (initial === null) {
+      await reportResult(
+        timeoutResult(null, started),
+        observer,
+        options.json,
+        controller.signal,
+      );
+      return;
+    }
     const head = options.head ?? initial.head.sha;
     console.error(
       `Waiting for PR #${String(number)} @ ${head.slice(0, 12)}. Long queues and builds are expected; keep this process running. Use toolkit ci load for capacity information.`,
@@ -72,9 +124,9 @@ async function runWait(
       {
         head,
         until: options.until,
-        ...(options.timeoutMs === undefined
+        ...(deadline === null
           ? {}
-          : { timeoutMs: options.timeoutMs }),
+          : { timeoutMs: Math.max(0, deadline - Date.now()) }),
         signal: controller.signal,
       },
       {
@@ -87,6 +139,7 @@ async function runWait(
             fatal,
             prNumber: number,
           }),
+        rateLimited: reportRateLimit,
         heartbeat: (snapshot) => {
           console.error(
             `Still waiting for PR #${String(number)}; pipeline ${snapshot?.pipeline?.status ?? "not created"}. Long waits are expected.`,

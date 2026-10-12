@@ -1,0 +1,105 @@
+# Installed software on the Windows PC, the counterpart of the macOS Brewfile.
+# `winget` and `msstore` entries are installed by run_onchange_install-packages;
+# `manual` entries have no package and are kept as a record. Games (restored
+# by their launchers) and runtimes (pulled in as dependencies) are omitted.
+packages:
+  winget:
+    # Shell and system
+    - Git.Git
+    - Microsoft.PowerShell
+    - twpayne.chezmoi
+    - MSYS2.MSYS2
+    - AmanThanvi.winghostty
+    - Microsoft.WindowsTerminal
+    - Microsoft.WSL
+    - Canonical.Ubuntu.2404
+    - 7zip.7zip
+    # Development
+    - AgileBits.1Password
+    - AgileBits.1Password.CLI
+    - GitHub.cli
+    - jdx.mise
+    - BurntSushi.ripgrep.MSVC
+    - ImageMagick.ImageMagick
+    - Docker.DockerDesktop
+    - Kubernetes.kubectl
+    - Microsoft.AzureCLI
+    - SumbitLabs.Aptakube
+    - Microsoft.VisualStudio.Community
+    - Microsoft.VisualStudioCode
+    - Anysphere.Cursor
+    - SublimeHQ.SublimeText.4
+    # AI
+    - Anthropic.Claude
+    # Apps
+    - Google.Chrome
+    - Discord.Discord
+    - Mozilla.Thunderbird
+    - Obsidian.Obsidian
+    - SumatraPDF.SumatraPDF
+    - VideoLAN.VLC
+    - Tailscale.Tailscale
+    - BillStewart.SyncthingWindowsSetup
+    - Canva.Affinity
+    - ArminOsaj.AutoDarkMode
+    - Microsoft.Office
+    - FlipperDevicesInc.qFlipper
+    - SideQuestVR.SideQuest
+    - brianlima.uwphook
+    - Blitz.Blitz
+    # Game launchers
+    - Valve.Steam
+    - Blizzard.BattleNet
+    - ElectronicArts.EADesktop
+    - Ubisoft.Connect
+    - ParadoxInteractive.ParadoxLauncher
+    - PrismLauncher.PrismLauncher
+    - FAForever.FAFClient
+    - Beyond-All-Reason.Beyond-All-Reason
+    - RiotGames.LeagueOfLegends.NA
+    # Hardware
+    - Logitech.GHUB
+    - CPUID.CPU-Z
+    - CPUID.HWMonitor
+    - Guru3D.RTSS
+  msstore:
+    - id: XP8CLZL93F5Z4P
+      name: NVIDIA App
+    - id: 9N7R5S6B0ZZH
+      name: MyASUS
+    - id: 9MV0B5HZVK9Z
+      name: Xbox
+    - id: 9PFHDD62MXS1
+      name: Apple Music
+    - id: 9PKTQ5699M62
+      name: iCloud
+  manual:
+    - name: Claude Code CLI
+      note: "Self-updating native installer: irm https://claude.ai/install.ps1 | iex"
+    - name: Codex desktop
+      note: OpenAI Codex app (provides the codex CLI)
+    - name: Bun
+      note: "Self-updating native installer: irm bun.sh/install.ps1 | iex (winget only has a portable zip)"
+    - name: Grok CLI
+      note: "Self-updating native installer: irm https://x.ai/cli/install.ps1 | iex (winget xAI.GrokBuild is a portable copy)"
+    - name: herdr
+      note: Standalone release under ~/.herdr/packages
+    - name: .NET SDK and Windows SDK
+      note: Installed as Visual Studio workloads
+    - name: NVIDIA graphics driver and NVIDIA Broadcast
+      note: Installed through the NVIDIA App
+    - name: AMD chipset drivers and AMD Software
+    - name: Realtek audio and Ethernet drivers
+    - name: Dell Display Manager and Dell Core Services
+    - name: Alienware Command Center
+    - name: Armoury Crate
+    - name: Thunderbolt Control Center
+    - name: Silicon Labs CP210x serial driver
+    - name: Samsung Magician
+      note: Installed from samsung.com; the Store build (msstore XPDDT99J9GKB5C) would install a second copy
+    - name: Minecraft Launcher
+      note: Microsoft Store via the Xbox app; winget only has the legacy Win32 launcher
+    - name: Riot Vanguard
+      note: Installed by the Riot Client
+    - name: Scout Client, Glitter Boys, TaskNotes
+      note: First-party builds from this monorepo

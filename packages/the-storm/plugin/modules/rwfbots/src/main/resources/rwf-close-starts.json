@@ -3,7 +3,7 @@
   "kind": "rwf-close-starts",
   "fields": ["schema", "kind", "map", "blocksSha256", "starts"],
   "startFields": ["position", "yaw", "pitch"],
-  "minSeparation": 8,
+  "minSeparation": 4,
   "targetSeparation": 12,
   "maxSeparation": 16,
   "clearanceRadius": 1

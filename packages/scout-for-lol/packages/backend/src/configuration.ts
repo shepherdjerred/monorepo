@@ -250,6 +250,9 @@ function computeConfiguration() {
     runtimeCapabilities: scoutRuntimeCapabilities(runtimeRole, environment),
     skipReportLakeFold,
     temporalAddress: getOptionalEnvVar("TEMPORAL_ADDRESS"),
+    // Bind address for the embedded Workers' SDK Prometheus exporter. Unset
+    // runs no exporter, which is what local processes want.
+    temporalMetricsAddress: getOptionalEnvVar("TEMPORAL_METRICS_ADDRESS"),
     temporalNamespace,
     temporalScheduleReconciliation,
     discordToken: getRequiredEnvVar("DISCORD_TOKEN"),
@@ -413,6 +416,9 @@ const configuration: Configuration = {
   },
   get temporalAddress() {
     return getConfiguration().temporalAddress;
+  },
+  get temporalMetricsAddress() {
+    return getConfiguration().temporalMetricsAddress;
   },
   get temporalNamespace() {
     const current = getConfiguration();

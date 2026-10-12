@@ -6,7 +6,7 @@ import {
   getRegisteredToolMetadata,
   getToolMetadata,
 } from "@shepherdjerred/birmel/agent-runtime/tools/tool-metadata.ts";
-import { getConfig, resetConfig } from "@shepherdjerred/birmel/config/index.ts";
+import { resetConfig } from "@shepherdjerred/birmel/config/index.ts";
 import {
   runWithRequestContext,
   type RequestContext,
@@ -449,23 +449,10 @@ describe("tool metadata contracts", () => {
     );
   });
 
-  test("gates generate-image advertising in the capability catalog based on configuration", () => {
-    getConfig().imageGeneration.enabled = false;
-    expect(getCapabilityCatalog().map(({ id }) => id)).not.toContain(
-      "generate-image",
-    );
-
-    getConfig().imageGeneration.enabled = true;
+  test("advertises and exposes generate-image", () => {
     expect(getCapabilityCatalog().map(({ id }) => id)).toContain(
       "generate-image",
     );
-  });
-
-  test("omits generate-image from the live tool set when image generation is disabled", () => {
-    getConfig().imageGeneration.enabled = false;
-    expect(Object.keys(toolsForTurn())).not.toContain("generate-image");
-
-    getConfig().imageGeneration.enabled = true;
     expect(Object.keys(toolsForTurn())).toContain("generate-image");
   });
 });

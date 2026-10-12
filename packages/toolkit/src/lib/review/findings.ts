@@ -20,6 +20,11 @@ import {
   resolveReviewState,
   type ReviewStateResult,
 } from "@shepherdjerred/code-review/github";
+import {
+  githubGet,
+  graphqlRateLimitError,
+  throwIfRateLimited,
+} from "@shepherdjerred/code-review/github-request";
 import { fetchHeadPushedAt } from "@shepherdjerred/code-review/head-pushed-at";
 import { markQodoFindingResolved } from "@shepherdjerred/code-review/qodo";
 import { z } from "zod";
@@ -325,7 +330,7 @@ function headers(token: string): Record<string, string> {
 }
 
 async function getJson(url: string, token: string): Promise<unknown> {
-  const response = await fetch(url, { headers: headers(token) });
+  const response = await githubGet(url, { token });
   if (!response.ok) {
     throw new Error(
       `GET ${url} failed: ${String(response.status)} ${response.statusText}`,
@@ -346,11 +351,25 @@ async function sendJson(
     body: JSON.stringify(body),
   });
   if (!response.ok) {
+    throwIfRateLimited(response, await response.text(), new URL(url).pathname);
     throw new Error(
       `${method} ${url} failed: ${String(response.status)} ${response.statusText}`,
     );
   }
-  return response.json();
+  const payload: unknown = await response.json();
+  const pathname = new URL(url).pathname;
+  const errors = pathname.endsWith("/graphql")
+    ? GraphQlSchema.safeParse(payload)
+    : null;
+  if (errors?.success === true && errors.data.errors !== undefined) {
+    const limited = graphqlRateLimitError(
+      response,
+      errors.data.errors,
+      pathname,
+    );
+    if (limited !== null) throw limited;
+  }
+  return payload;
 }
 
 const GraphQlSchema = z.object({ errors: z.array(z.unknown()).optional() });

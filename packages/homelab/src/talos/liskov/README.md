@@ -88,11 +88,12 @@ committed).
 
    # Create the pool: single vdev, same layout as torvalds (ashift=12, autotrim
    # on, atime off; no root-level compression — openebs sets per-dataset
-   # compression via the zfs-ssd-lz4 class). The by-id path pins the command to
-   # the exact 2TB drive by model+serial, so it cannot hit the 1TB OS disk.
+   # compression via the zfs-ssd-lz4 class), except sync=disabled (below). The
+   # by-id path pins the command to the exact 2TB drive by model+serial, so it
+   # cannot hit the 1TB OS disk.
    kubectl -n openebs exec "$NODE_POD" -c openebs-zfs-plugin -- \
      chroot /host /usr/local/sbin/zpool create -f -o ashift=12 -o autotrim=on \
-       -O atime=off -O compression=off -O mountpoint=none \
+       -O atime=off -O compression=off -O mountpoint=none -O sync=disabled \
        zfspv-pool-nvme /dev/disk/by-id/nvme-Samsung_SSD_990_PRO_2TB_<serial>
    ```
 
@@ -100,6 +101,24 @@ committed).
    work unchanged (WaitForFirstConsumer + the taint decide placement). If the
    node pod isn't up yet, wait for the openebs `zfsNode` DaemonSet pod to appear
    on liskov first.
+
+   `sync=disabled` is liskov-only. Every dataset on this pool is a CI
+   workspace or cache that CI rebuilds, so a crash may lose only the last few
+   seconds of disposable writes, and the pool itself stays consistent. Without
+   it, the ZFS intent log writes each fsync (test databases, package managers)
+   to the SSD a second time, about 1.5 TiB a week. Never copy it to torvalds.
+   The one exception is `woodpecker-codex-auth`, whose rotating refresh token
+   must not roll back. After step 7 binds that claim, and whenever it is
+   recreated, pin its dataset back to `standard`:
+
+   ```bash
+   CODEX_PV=$(kubectl -n woodpecker-ci get pvc woodpecker-codex-auth \
+     -o jsonpath='{.spec.volumeName}')
+   kubectl -n openebs exec "$NODE_POD" -c openebs-zfs-plugin -- \
+     chroot /host /usr/local/sbin/zfs set sync=standard "zfspv-pool-nvme/$CODEX_PV"
+   kubectl -n openebs exec "$NODE_POD" -c openebs-zfs-plugin -- \
+     chroot /host /usr/local/sbin/zfs get -r -o name,value,source sync zfspv-pool-nvme
+   ```
 
 6. **Watchdog**: run the verification in `patches/watchdog.yaml`, then apply it.
 7. **Reconcile CI placement** through the repository release workflow. The

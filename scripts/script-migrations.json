@@ -129,8 +129,8 @@
     },
     {
       "source": "ci/scripts/ci-image-refs.sh",
-      "disposition": "retain",
-      "reason": "Sourced CI bootstrap validates and exports image refs before Bun is guaranteed"
+      "disposition": "delete",
+      "reason": "Retired with the Buildkite bootstrap: the Woodpecker extension resolves image refs in packages/woodpecker-config-extension/src/images.ts"
     },
     {
       "source": "ci/scripts/docker-env.sh",

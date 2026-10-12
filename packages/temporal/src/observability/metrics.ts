@@ -147,6 +147,13 @@ export const maintenanceRunsTotal = new Counter({
   registers: [register],
 });
 
+export const ciWorkspaceReaperDeletionsTotal = new Counter({
+  name: "ci_workspace_reaper_deletions_total",
+  help: "Leaked Woodpecker CI pods and workspace claims deleted by the CI workspace reaper, by resource",
+  labelNames: ["resource"] as const,
+  registers: [register],
+});
+
 export const turboCacheCleanupEntriesTotal = new Counter({
   name: "turbo_cache_cleanup_entries_total",
   help: "Turbo cache entries scanned or deleted by successful cleanup runs",

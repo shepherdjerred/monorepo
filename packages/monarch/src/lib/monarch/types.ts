@@ -18,14 +18,6 @@ export const MonarchMerchantSchema = z.object({
   name: z.string(),
   transactionsCount: z.number(),
 });
-
-export type MonarchMerchant = z.infer<typeof MonarchMerchantSchema>;
-
-export type MonarchAccount = {
-  id: string;
-  displayName: string;
-};
-
 export const MonarchTransactionSchema = z.object({
   id: z.string(),
   amount: z.number(),

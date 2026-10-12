@@ -51,8 +51,20 @@ function commandStep(step: CiStep): CiCommandStep {
       : { allowFailure: step.allowFailure }),
     resources: step.resources,
     ...(step.secrets === undefined ? {} : { secrets: step.secrets }),
-    ...(step.volumes === undefined ? {} : { volumes: step.volumes }),
+    ...withoutBunCache(step.volumes),
   };
+}
+
+/** The shared setup container owns the install, so plans need no Bun cache. */
+function withoutBunCache(
+  volumes: CiStep["volumes"],
+): Pick<CiCommandStep, "volumes"> {
+  const kept = volumes?.filter(
+    (volume) =>
+      volume.claim !== BUN_CACHE.claim &&
+      volume.claim !== BUN_CACHE_CONTROL.claim,
+  );
+  return kept === undefined || kept.length === 0 ? {} : { volumes: kept };
 }
 
 /** Group after selection, retaining exactly the selected plans and grants. */

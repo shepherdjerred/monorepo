@@ -1,0 +1,6 @@
+apiVersion: v2
+name: glitter-boys-launcher
+description: Glitter Boys desktop operational telemetry
+type: application
+version: "$version"
+appVersion: "$appVersion"

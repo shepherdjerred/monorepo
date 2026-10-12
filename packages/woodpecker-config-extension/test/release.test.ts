@@ -1,5 +1,9 @@
 import { describe, expect, test } from "vitest";
-import { buildPipelineSteps } from "#src/pipeline/steps.ts";
+import { z } from "zod";
+import {
+  buildPipelineSteps,
+  credentiallessHostedAutomationSteps,
+} from "#src/pipeline/steps.ts";
 import { selectSteps } from "#src/pipeline/select.ts";
 
 const IMAGES = {
@@ -349,72 +353,60 @@ describe("handoff producers and consumers line up", () => {
 });
 
 /**
- * Every Buildkite step is accounted for.
+ * Every lane the generator emits is named here.
  *
- * Kept as an explicit list rather than a count so that dropping a lane during
- * a later refactor names the lane, and so the two steps with NO successor have
- * to be justified in writing rather than silently missing.
+ * Kept as an explicit list rather than a count so that dropping or adding a
+ * lane names it, and paused lanes have to be justified in writing rather than
+ * silently missing.
  */
-describe("coverage of the Buildkite pipeline", () => {
-  /** Buildkite key -> the ported lane that covers it. */
-  const COVERAGE: Readonly<Record<string, string>> = {
-    verify: "verify",
-    "alert-dashboard-sqlite": "alert-dashboard-sqlite",
-    trivy: "trivy",
-    semgrep: "semgrep",
-    "resume-build-pr": "resume-build",
-    "resume-build-main": "resume-build",
-    "trmnl-validate-pr": "trmnl-validate",
-    "trmnl-publish": "trmnl-publish",
-    "playwright-e2e-pr": "playwright-e2e",
-    "playwright-e2e-main": "playwright-e2e",
-    "docker-e2e-pr": "docker-e2e",
-    "docker-e2e-main": "docker-e2e",
-    "paper-e2e-pr": "paper-smoke-pr",
-    "pr-dryrun": "pr-dryrun",
-    "codex-review-gate": "codex-review-gate",
-    "tofu-plan-seaweedfs": "tofu-plan-seaweedfs",
-    "tofu-plan-tailscale": "tofu-plan-tailscale",
-    "tofu-plan-arr": "tofu-plan-arr",
-    "tofu-plan-github": "tofu-plan-github",
-    "tofu-plan-cloudflare": "tofu-plan-cloudflare",
-    "tofu-platforms-validate": "tofu-platforms-validate",
-    "tofu-posthog-plan": "tofu-posthog-plan",
-    "homelab-release-admission": "homelab-release-admission",
-    images: "images",
-    "images-pr": "pr-dryrun",
-    "helm-push": "helm-push",
-    "argocd-sync": "argocd-sync",
-    "tofu-apply-seaweedfs": "tofu-apply-seaweedfs",
-    "tofu-apply-tailscale": "tofu-apply-tailscale",
-    "tofu-apply-arr": "tofu-apply-arr",
-    "tofu-apply-github": "tofu-apply-github",
-    "tofu-apply-cloudflare": "tofu-apply-cloudflare",
-    "tofu-posthog": "tofu-posthog",
-    "tofu-platform-openai": "tofu-platform-openai",
-    "tofu-platform-anthropic": "tofu-platform-anthropic",
-    "tofu-platform-discord": "tofu-platform-discord",
-    "tofu-platform-cloudflare-tokens": "tofu-platform-cloudflare-tokens",
-    sites: "sites",
-    publish: "publish",
-    "release-please": "release-please",
-    "version-commit-back": "version-commit-back",
-    "ci-base-refresh": "ci-base-refresh",
-    "ci-playwright-refresh": "ci-playwright-refresh",
-    "scout-beta-release": "scout-beta-release",
-    "scout-tag-release": "scout-tag-release",
-    "scout-prod-reconcile": "scout-prod-reconcile",
-  };
+describe("lane inventory", () => {
+  const EXPECTED_LANES: ReadonlySet<string> = new Set([
+    "alert-dashboard-sqlite",
+    "argocd-sync",
+    "ci-base-refresh",
+    "ci-playwright-refresh",
+    "codex-review-gate",
+    "docker-e2e",
+    "helm-push",
+    "homelab-release-admission",
+    "images",
+    "paper-smoke-pr",
+    "playwright-e2e",
+    "pr-dryrun",
+    "publish",
+    "release-please",
+    "resume-build",
+    "scout-beta-release",
+    "scout-prod-reconcile",
+    "scout-tag-release",
+    "semgrep",
+    "sites",
+    "tofu-apply-arr",
+    "tofu-apply-cloudflare",
+    "tofu-apply-github",
+    "tofu-apply-seaweedfs",
+    "tofu-apply-tailscale",
+    "tofu-plan-arr",
+    "tofu-plan-cloudflare",
+    "tofu-plan-github",
+    "tofu-plan-seaweedfs",
+    "tofu-plan-tailscale",
+    "tofu-platform-anthropic",
+    "tofu-platform-cloudflare-tokens",
+    "tofu-platform-discord",
+    "tofu-platform-openai",
+    "tofu-platforms-validate",
+    "tofu-posthog",
+    "tofu-posthog-plan",
+    "trivy",
+    "trmnl-publish",
+    "trmnl-validate",
+    "verify",
+    "version-commit-back",
+  ]);
 
-  /** Buildkite steps absent from the current graph, and why. */
-  const RETIRED: Readonly<Record<string, string>> = {
-    "build-summary": "produced only the build annotation this migration drops",
-    "macos-native-dispatch":
-      "watchdog polling Buildkite job state; Woodpecker queues the workflow itself",
-    "tofu-plan-buildkite":
-      "plans the Buildkite cluster stack, which is deleted rather than ported",
-    "tofu-apply-buildkite":
-      "applies the Buildkite cluster stack, which is deleted rather than ported",
+  /** Lanes that exist in source but are deliberately not emitted, and why. */
+  const PAUSED: Readonly<Record<string, string>> = {
     "windows-cross-compiler-refresh": "paused by #3211",
     "windows-cross-compiler-pr": "paused by #3211",
     "macos-cross-compiler-pr": "paused by #3211",
@@ -431,29 +423,17 @@ describe("coverage of the Buildkite pipeline", () => {
       "temporarily paused until the Mac agent joins the GUI audit session",
     "tasknotes-native-main":
       "temporarily paused until the Mac agent joins the GUI audit session",
-    "tofu-platform-openrouter": "retired with the OpenRouter platform stack",
   };
 
-  test("accounts for all 61 Buildkite steps", () => {
-    expect(Object.keys(COVERAGE).length + Object.keys(RETIRED).length).toBe(61);
-  });
-
-  test("every claimed successor actually exists", () => {
+  test("emits exactly the expected lanes", () => {
     const emitted = new Set(allSteps().map((s) => s.key));
-    for (const [buildkiteKey, lane] of Object.entries(COVERAGE)) {
-      expect(emitted.has(lane), `${buildkiteKey} -> missing lane ${lane}`).toBe(
-        true,
-      );
-    }
+    expect([...emitted].toSorted()).toEqual([...EXPECTED_LANES].toSorted());
   });
 
-  test("every emitted lane is claimed by something", () => {
-    const claimed = new Set(Object.values(COVERAGE));
-    for (const emitted of allSteps()) {
-      expect(
-        claimed.has(emitted.key),
-        `${emitted.key} is emitted but unclaimed`,
-      ).toBe(true);
+  test("emits no paused lane", () => {
+    const emitted = new Set(allSteps().map((s) => s.key));
+    for (const [lane, reason] of Object.entries(PAUSED)) {
+      expect(emitted.has(lane), `${lane} is paused: ${reason}`).toBe(false);
     }
   });
 });
@@ -513,6 +493,39 @@ test("the sites lane deploys active sites when their paths change", () => {
     dryRun.commands.join("\n"),
   )?.[1];
   expect(loop?.split(" ")).not.toContain("ts-mc");
+});
+
+test("Glitter Boys artifacts are excluded from shared CI", async () => {
+  const steps = allSteps();
+  for (const key of ["sites", "pr-dryrun"]) {
+    const commands = steps
+      .find((entry) => entry.key === key)
+      ?.commands.join("\n");
+    expect(commands).toBeDefined();
+    expect(commands).not.toContain("glitter-boys");
+  }
+  for (const pipeline of [steps, credentiallessHostedAutomationSteps(IMAGES)]) {
+    const verify = pipeline
+      .find((entry) => entry.key === "verify")
+      ?.commands.join("\n")
+      .replaceAll(String.raw`'\''`, "'");
+    expect(verify).toContain("--filter='!@shepherdjerred/glitter-boys'");
+    expect(verify).toContain(
+      "--filter='!@shepherdjerred/glitter-boys-launcher'",
+    );
+  }
+  // Homelab imports the publication contract through a workspace dependency.
+  // Its inherited ^build must not compile the native application in CI.
+  const launcher = z
+    .object({ scripts: z.record(z.string(), z.string()) })
+    .parse(
+      await Bun.file(
+        new URL("../../glitter-boys-launcher/package.json", import.meta.url),
+      ).json(),
+    );
+  expect(launcher.scripts["build"]).toBeUndefined();
+  expect(launcher.scripts["build:local"]).toContain("cargo build");
+  expect(launcher.scripts["test:ci"]).toBeUndefined();
 });
 
 test("the sites lane selects every declared per-site change filter", async () => {

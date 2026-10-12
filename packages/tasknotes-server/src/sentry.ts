@@ -1,10 +1,12 @@
 import * as SentryLib from "@sentry/bun";
+import { sentryDataCollection } from "@shepherdjerred/sentry-config";
 
 const dsn = Bun.env["SENTRY_DSN"];
 const enabled = Bun.env["SENTRY_ENABLED"] === "true";
 
 if (enabled && dsn !== undefined && dsn !== "") {
   SentryLib.init({
+    dataCollection: sentryDataCollection(),
     dsn,
     environment: Bun.env["SENTRY_ENVIRONMENT"] ?? "development",
     release: Bun.env["SENTRY_RELEASE"],
@@ -28,4 +30,3 @@ if (enabled && dsn !== undefined && dsn !== "") {
 
 // Re-export Sentry as an initialized module.
 // Consumers import from here to guarantee Sentry.init() has executed.
-export const Sentry = Object.assign({}, SentryLib);

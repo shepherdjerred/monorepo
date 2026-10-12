@@ -7,11 +7,6 @@ import { GITHUB_DOWNLOAD } from "#src/pipeline/lanes/tofu.ts";
 /**
  * llm-observability end-to-end suite, against real Tempo and MinIO.
  *
- * Buildkite ran these as extra containers in the step's pod, with Tempo's
- * config coming from a GitOps-reconciled ConfigMap that an init container
- * rewrote with yq at start-up. That rewrite existed only because the live
- * ConfigMap lagged any PR that changed the Tempo version.
- *
  * Woodpecker services are separate pods that mount the step's workspace, so
  * the config is simply a file in the repository next to the suite that uses
  * it, and the suite reaches each service by its name as a hostname. The ConfigMap, the

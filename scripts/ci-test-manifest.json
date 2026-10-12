@@ -1009,7 +1009,6 @@
     {
       "package": "@shepherdjerred/root-scripts",
       "directory": "scripts",
-      "coverageSourceDirectories": ["scripts", "ci/scripts"],
       "steps": [
         {
           "runner": "vitest",
@@ -1143,6 +1142,16 @@
     }
   ],
   "separateTests": [
+    {
+      "package": "@shepherdjerred/glitter-boys",
+      "directory": "packages/glitter-boys",
+      "reason": "Owner-requested local-only verification and manual deployment. Run test:local before release; shared CI does not build, test, or publish this site."
+    },
+    {
+      "package": "@shepherdjerred/glitter-boys-launcher",
+      "directory": "packages/glitter-boys-launcher",
+      "reason": "Owner-requested local-only verification and manual releases for the launcher and telemetry image. Run test:local before release; shared CI does not build, test, sign, or publish these artifacts."
+    },
     {
       "package": "@shepherdjerred/macos-cross-compiler",
       "directory": "packages/macos-cross-compiler",

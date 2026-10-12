@@ -13,20 +13,6 @@ import {
   syntheticJUnit,
   TestManifestSchema,
 } from "./ci-reporting.ts";
-import { sumCoverageMetrics } from "./coverage-metrics.ts";
-import {
-  coveragePercentage,
-  parseGoCover,
-  parseLcov,
-  summarizeCoverageReports,
-} from "./coverage-reporting.ts";
-import {
-  coverableWorkspaceSources,
-  initialSourceCoverage,
-  resolveCoverageSource,
-  sourceCoverageSupplement,
-  uncoveredWorkspaceSources,
-} from "./coverage-source-inventory.ts";
 
 const repositoryRoot = path.resolve(import.meta.dir, "..", "..");
 const RootPackageSchema = z.object({ workspaces: z.array(z.string()) });
@@ -353,348 +339,6 @@ describe("CI test reporting", () => {
   });
 });
 
-describe("Coverage report aggregation", () => {
-  test("seeds every Bun metric for one-line reportless source", () => {
-    const untouched = initialSourceCoverage(
-      "export function untouched(value: boolean): number { return value ? 1 : 2; }",
-      "src/untouched.ts",
-    );
-
-    expect(summarizeCoverageReports([untouched]).lines).toEqual({
-      covered: 0,
-      total: 1,
-    });
-    expect(summarizeCoverageReports([untouched]).functions).toEqual({
-      covered: 0,
-      total: 1,
-    });
-    expect(summarizeCoverageReports([untouched]).branches).toEqual({
-      covered: 0,
-      total: 2,
-    });
-  });
-
-  test("counts executable source files that the test process never loads", () => {
-    const covered = parseLcov(
-      ["SF:src/covered.ts", "DA:1,1", "end_of_record"].join("\n"),
-    );
-    const untouched = initialSourceCoverage(
-      "export function untouched(value: boolean): number { return value ? 1 : 2; }",
-      "src/untouched.ts",
-    );
-    const summary = summarizeCoverageReports([covered, untouched]);
-
-    expect(summary.lines?.covered).toBe(1);
-    expect(summary.lines?.total).toBe(2);
-    expect(summary.functions).toEqual({ covered: 0, total: 1 });
-    expect(summary.branches).toEqual({ covered: 0, total: 2 });
-  });
-
-  test("seeds Bun-compatible executable lines for untouched functions", () => {
-    const untouched = initialSourceCoverage(
-      [
-        "export function untouched(value: boolean): number {",
-        "  return value ? 1 : 2;",
-        "}",
-      ].join("\n"),
-      "src/untouched.ts",
-    );
-
-    expect(summarizeCoverageReports([untouched]).lines).toEqual({
-      covered: 0,
-      total: 2,
-    });
-  });
-
-  test("marks producer-unsupported source metrics unavailable", () => {
-    const initial = initialSourceCoverage(
-      "export function choose(value: boolean): number { return value ? 1 : 2; }",
-      "src/reported.ts",
-    );
-    const supplement = sourceCoverageSupplement(
-      initial,
-      new Set(["lines", "functions"]),
-    );
-
-    expect(supplement.points).toEqual([]);
-    expect(supplement.unavailableMetrics).toEqual(["statements", "branches"]);
-    expect(sourceCoverageSupplement(initial, undefined)).toBe(initial);
-  });
-
-  test("inventories workspace source without tests or nested workspaces", () => {
-    const testRepositoryRoot = path.resolve(
-      path.parse(process.cwd()).root,
-      "repo",
-    );
-    expect(
-      coverableWorkspaceSources(
-        ["packages/parent", "ci/scripts"],
-        ["packages/parent", "packages/parent/packages/child"],
-        [
-          "packages/parent/src/index.ts",
-          "packages/parent/src/index.test.ts",
-          "packages/parent/src/generated/client.ts",
-          "packages/parent/packages/child/src/index.ts",
-          "packages/parent/eslint.config.ts",
-          "ci/scripts/upload-pipeline.ts",
-          "ci/scripts/upload-pipeline.test.ts",
-          "packages/other/src/index.ts",
-        ],
-      ),
-    ).toEqual([
-      "ci/scripts/upload-pipeline.ts",
-      "packages/parent/src/index.ts",
-    ]);
-    expect(
-      resolveCoverageSource(
-        testRepositoryRoot,
-        "packages/parent",
-        "packages/parent/src/index.ts",
-      ),
-    ).toBe(path.join(testRepositoryRoot, "packages/parent/src/index.ts"));
-    expect(
-      resolveCoverageSource(
-        testRepositoryRoot,
-        "packages/parent",
-        "src/index.ts",
-      ),
-    ).toBe(path.join(testRepositoryRoot, "packages/parent/src/index.ts"));
-  });
-
-  test("inventories production languages without coverage collection", () => {
-    expect(
-      uncoveredWorkspaceSources(
-        ["packages/parent"],
-        ["packages/parent", "packages/parent/packages/child"],
-        [
-          "packages/parent/src/page.astro",
-          "packages/parent/src/main.rs",
-          "packages/parent/src/tool.py",
-          "packages/parent/src/native.swift",
-          "packages/parent/src/query.ts",
-          "packages/parent/src/main_test.py",
-          "packages/parent/src/tests.rs",
-          "packages/parent/tests/integration.rs",
-          "packages/parent/generated/client.py",
-          "packages/parent/packages/child/src/main.rs",
-        ],
-      ),
-    ).toEqual([
-      "packages/parent/src/main.rs",
-      "packages/parent/src/native.swift",
-      "packages/parent/src/page.astro",
-      "packages/parent/src/tool.py",
-    ]);
-  });
-
-  test("deduplicates LCOV locations without fabricating statements", () => {
-    const first = parseLcov(
-      [
-        "TN:",
-        "SF:first.ts",
-        "FN:1,work",
-        "FNDA:1,work",
-        "DA:1,1",
-        "DA:2,0",
-        "BRDA:1,0,0,1",
-        "BRDA:1,0,1,-",
-        "end_of_record",
-      ].join("\n"),
-    );
-    const second = parseLcov(
-      [
-        "TN:",
-        "SF:first.ts",
-        "FN:1,work",
-        "FNDA:0,work",
-        "DA:1,0",
-        "DA:2,3",
-        "BRDA:1,0,0,0",
-        "BRDA:1,0,1,2",
-        "end_of_record",
-        "SF:second.ts",
-        "DA:1,1",
-        "end_of_record",
-      ].join("\n"),
-    );
-    const merged = summarizeCoverageReports([first, second]);
-    expect(merged.lines).toEqual({ covered: 3, total: 3 });
-    expect(merged.functions).toEqual({ covered: 1, total: 1 });
-    expect(merged.branches).toEqual({ covered: 2, total: 2 });
-    expect(merged.statements).toBeUndefined();
-    expect(coveragePercentage({ covered: 3, total: 4 })).toBe(75);
-  });
-
-  test("matches duplicate LCOV function names to definitions by occurrence", () => {
-    const summary = summarizeCoverageReports([
-      parseLcov(
-        [
-          "TN:",
-          "SF:duplicate.ts",
-          "FN:1,work",
-          "FN:10,work",
-          "FNDA:1,work",
-          "FNDA:0,work",
-          "DA:1,1",
-          "DA:10,1",
-          "end_of_record",
-        ].join("\n"),
-      ),
-    ]);
-
-    expect(summary.functions).toEqual({ covered: 1, total: 2 });
-  });
-
-  test("counts both duplicate LCOV function names when both are covered", () => {
-    const summary = summarizeCoverageReports([
-      parseLcov(
-        [
-          "TN:",
-          "SF:duplicate.ts",
-          "FN:1,work",
-          "FN:10,work",
-          "FNDA:1,work",
-          "FNDA:2,work",
-          "DA:1,1",
-          "DA:10,1",
-          "end_of_record",
-        ].join("\n"),
-      ),
-    ]);
-
-    expect(summary.functions).toEqual({ covered: 2, total: 2 });
-  });
-});
-
-describe("Coverage producer totals", () => {
-  test("preserves LCOV line totals beyond emitted DA records", () => {
-    const summary = summarizeCoverageReports([
-      parseLcov(
-        [
-          "SF:partial.ts",
-          "DA:1,1",
-          "DA:2,1",
-          "DA:3,1",
-          "DA:4,0",
-          "LF:8",
-          "LH:3",
-          "end_of_record",
-        ].join("\n"),
-      ),
-    ]);
-
-    expect(summary.lines).toEqual({ covered: 3, total: 8 });
-  });
-
-  test("uses aggregate LCOV function and branch totals when details are absent", () => {
-    const summary = summarizeCoverageReports([
-      parseLcov(
-        [
-          "SF:aggregate.ts",
-          "DA:1,1",
-          "LF:1",
-          "LH:1",
-          "FNF:4",
-          "FNH:2",
-          "BRF:3",
-          "BRH:1",
-          "end_of_record",
-        ].join("\n"),
-      ),
-    ]);
-
-    expect(summary.functions).toEqual({ covered: 2, total: 4 });
-    expect(summary.branches).toEqual({ covered: 1, total: 3 });
-  });
-
-  test("does not invent a union for overlapping anonymous LCOV totals", () => {
-    const summaryOnlyLcov = [
-      "SF:summary-only.ts",
-      "DA:1,1",
-      "FNF:4",
-      "FNH:2",
-      "BRF:4",
-      "BRH:2",
-      "end_of_record",
-    ].join("\n");
-    const summary = summarizeCoverageReports([
-      parseLcov(summaryOnlyLcov),
-      parseLcov(summaryOnlyLcov),
-    ]);
-
-    expect(summary.lines).toEqual({ covered: 1, total: 1 });
-    expect(summary.functions).toBeUndefined();
-    expect(summary.branches).toBeUndefined();
-    expect(summary.unavailableMetrics).toEqual([
-      "statements",
-      "functions",
-      "branches",
-    ]);
-    expect(
-      sumCoverageMetrics([{ functions: { covered: 1, total: 1 } }, summary]),
-    ).toEqual({
-      lines: { covered: 1, total: 1 },
-      unavailableMetrics: ["statements", "functions", "branches"],
-    });
-  });
-
-  test("rejects LCOV summaries that conflict with detailed records", () => {
-    expect(() =>
-      parseLcov(
-        [
-          "SF:conflict.ts",
-          "DA:1,1",
-          "DA:2,1",
-          "LF:1",
-          "LH:1",
-          "end_of_record",
-        ].join("\n"),
-      ),
-    ).toThrow("summary conflicts with identified records");
-  });
-
-  test("parses and deduplicates Go statement coverage", () => {
-    const goSummary = summarizeCoverageReports([
-      parseGoCover(
-        ["mode: set", "example.go:1.1,2.2 3 1", "example.go:4.1,5.2 2 0"].join(
-          "\n",
-        ),
-      ),
-      parseGoCover(["mode: set", "example.go:1.1,2.2 3 0"].join("\n")),
-    ]);
-    expect(goSummary).toEqual({
-      statements: { covered: 3, total: 5 },
-      unavailableMetrics: ["lines", "functions", "branches"],
-    });
-
-    const lcovSummary = summarizeCoverageReports([
-      parseLcov(["SF:example.ts", "DA:1,1", "end_of_record"].join("\n")),
-    ]);
-    expect(sumCoverageMetrics([lcovSummary, goSummary])).toEqual({
-      unavailableMetrics: ["lines", "statements", "functions", "branches"],
-    });
-  });
-
-  test("keeps identical source locations distinct across workspaces", () => {
-    const firstWorkspace = summarizeCoverageReports([
-      parseLcov(["SF:src/index.ts", "DA:1,0", "end_of_record"].join("\n")),
-    ]);
-    const secondWorkspace = summarizeCoverageReports([
-      parseLcov(["SF:src/index.ts", "DA:1,1", "end_of_record"].join("\n")),
-    ]);
-
-    expect(sumCoverageMetrics([firstWorkspace, secondWorkspace])).toEqual({
-      lines: { covered: 1, total: 2 },
-      unavailableMetrics: ["statements"],
-    });
-  });
-
-  test("rejects malformed Go coverage", () => {
-    expect(() =>
-      parseGoCover(["mode: set", "example.go malformed"].join("\n")),
-    ).toThrow("Malformed Go coverage profile line");
-  });
-});
 describe("CI reporting manifest", () => {
   test("covers every declared test script without placeholder passes", async () => {
     const manifestJson = await Bun.file(
@@ -826,22 +470,8 @@ describe("CI reporting manifest", () => {
           .relative(directory, "scripts/ci/run-ci-test.ts")
           .split(path.sep)
           .join("/");
-        const usesCoverage = manifestEntry.steps.some(
-          (step) =>
-            step.runner !== "cargo" &&
-            step.runner !== "gradle" &&
-            step.runner !== "command" &&
-            (step.runner !== "dotnet" || step.coverageConfig !== undefined),
-        );
-        const expectedReportScript = usesCoverage
-          ? `CI_TEST_COVERAGE=1 bun ${relativeRunner}`
-          : `bun ${relativeRunner}`;
-        expect(scripts["test:report"]).toBe(expectedReportScript);
-        expect(scripts["test:ci"]).toBe(
-          scripts["test:report"] === `bun ${relativeRunner}`
-            ? "bun run test:report"
-            : `bun ${relativeRunner}`,
-        );
+        expect(scripts["test:ci"]).toBe(`bun ${relativeRunner}`);
+        expect(scripts["test:report"]).toBeUndefined();
       }
       if (noTestDirectories.has(directory)) {
         expect(
@@ -853,18 +483,10 @@ describe("CI reporting manifest", () => {
     }
   });
 
-  test("hashes shared runner inputs and serializes CDK8s test reports after build", async () => {
+  test("keeps script coverage cached and serializes CDK8s test reports after build", async () => {
     const rootTurbo = await Bun.file(
       path.join(repositoryRoot, "turbo.json"),
     ).text();
-    for (const reportingInput of [
-      "scripts/ci/ci-reporting.ts",
-      "scripts/ci-test-manifest.json",
-      "scripts/ci/run-ci-test.ts",
-      "scripts/ci/gradle-junit.ts",
-    ]) {
-      expect(rootTurbo).toContain(`"${reportingInput}"`);
-    }
     expect(rootTurbo).toContain(
       '"//#script-coverage": {\n      "dependsOn": ["//#check-script-migrations"],\n      "inputs": [',
     );
@@ -878,16 +500,13 @@ describe("CI reporting manifest", () => {
     expect(cdk8sTurbo).toContain(
       '"test:ci": {\n      "dependsOn": ["build", "^build", "generate"],\n      "env": ["NODE_ENV"]\n    }',
     );
-    expect(cdk8sTurbo).toContain(
-      '"test:report": {\n      "dependsOn": ["build", "^build", "generate"],\n      "env": ["NODE_ENV"]\n    }',
-    );
   });
 
   test("test:ci preserves package-specific test hashing inputs", async () => {
     for (const [turboPath, expectedTask] of [
       [
         "packages/birmel/turbo.json",
-        '"test:ci": {\n      "env": ["NODE_ENV"],\n      "inputs": ["$TURBO_DEFAULT$", ".env.test"]\n    }',
+        '"test:ci": {\n      "env": ["NODE_ENV"],\n      "inputs": ["$TURBO_EXTENDS$", ".env.test"]\n    }',
       ],
       [
         "packages/scout-for-lol/packages/backend/turbo.json",
@@ -896,6 +515,63 @@ describe("CI reporting manifest", () => {
     ] satisfies readonly (readonly [string, string])[]) {
       const turbo = await Bun.file(path.join(repositoryRoot, turboPath)).text();
       expect(turbo).toContain(expectedTask);
+    }
+  });
+});
+
+describe("test:ci runner inputs", () => {
+  test("hashes the shared runner into test:ci rather than every task", async () => {
+    const rootTurbo = await Bun.file(
+      path.join(repositoryRoot, "turbo.json"),
+    ).text();
+    const runnerInputs = [
+      "$TURBO_ROOT$/scripts/ci/ci-reporting.ts",
+      "$TURBO_ROOT$/scripts/ci-test-manifest.json",
+      "$TURBO_ROOT$/scripts/ci/run-ci-test.ts",
+      "$TURBO_ROOT$/scripts/ci/gradle-junit.ts",
+      "$TURBO_ROOT$/scripts/ci/mstest-configuration.ts",
+    ];
+    const RootTurboSchema = z.object({
+      globalDependencies: z.array(z.string()),
+      tasks: z.record(
+        z.string(),
+        z.object({ inputs: z.array(z.string()).optional() }).loose(),
+      ),
+    });
+    const root = RootTurboSchema.parse(Bun.JSONC.parse(rootTurbo));
+    expect(root.tasks["test:ci"]?.inputs).toEqual(
+      expect.arrayContaining(["$TURBO_DEFAULT$", ...runnerInputs]),
+    );
+    for (const input of runnerInputs) {
+      expect(root.globalDependencies).not.toContain(
+        input.replace("$TURBO_ROOT$/", ""),
+      );
+    }
+    // A package override replaces the root inputs unless it extends them.
+    const PackageTurboSchema = z.object({
+      tasks: z
+        .record(
+          z.string(),
+          z.object({ inputs: z.array(z.string()).optional() }).loose(),
+        )
+        .optional(),
+    });
+    const manifest = TestManifestSchema.parse(
+      await Bun.file(
+        path.join(repositoryRoot, "scripts/ci-test-manifest.json"),
+      ).json(),
+    );
+    for (const { directory } of manifest.workspaces) {
+      const turboFile = Bun.file(
+        path.join(repositoryRoot, directory, "turbo.json"),
+      );
+      if (!(await turboFile.exists())) continue;
+      const config = PackageTurboSchema.parse(
+        Bun.JSONC.parse(await turboFile.text()),
+      );
+      const inputs = config.tasks?.["test:ci"]?.inputs;
+      if (inputs === undefined || inputs[0] === "$TURBO_EXTENDS$") continue;
+      expect(inputs, directory).toEqual(expect.arrayContaining(runnerInputs));
     }
   });
 });

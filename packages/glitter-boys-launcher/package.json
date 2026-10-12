@@ -1,0 +1,23 @@
+{
+  "name": "@shepherdjerred/glitter-boys-launcher",
+  "private": true,
+  "description": "Native Rust and egui Windows game installer and launcher",
+  "exports": {
+    "./publication": "./scripts/public-release.ts",
+    "./published-release.json": "./published-release.json"
+  },
+  "scripts": {
+    "dev": "mise exec rust -- cargo run --locked --package glitter-boys-app",
+    "build:local": "mise exec rust -- cargo build --workspace --all-targets --locked",
+    "typecheck": "mise exec rust -- cargo check --workspace --all-targets --locked",
+    "test:local": "mise exec rust -- cargo test --workspace --locked && bun test scripts",
+    "lint": "mise exec rust -- cargo fmt --all -- --check && mise exec rust -- cargo clippy --workspace --all-targets --locked -- -D warnings",
+    "package": "mise exec rust cargo:cargo-packager -- cargo packager --release --packages glitter-boys-app",
+    "release": "mise exec rust cargo:cargo-packager bun -- bun scripts/with-publication-credentials.ts release.ts",
+    "release:prepare": "mise exec rust cargo:cargo-packager bun -- bun scripts/with-publication-credentials.ts release.ts --prepare-only",
+    "release:preflight": "mise exec rust cargo:cargo-packager bun -- bun scripts/release-preflight.ts",
+    "release:refresh-manifest": "bun scripts/with-publication-credentials.ts refresh-manifest.ts",
+    "release:publish": "bun scripts/with-publication-credentials.ts ../../../scripts/release/publish-launcher.ts",
+    "release:provision-key": "bun scripts/provision-update-key.ts"
+  }
+}

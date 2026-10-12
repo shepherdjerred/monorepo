@@ -210,11 +210,6 @@ export type OpsRepository = {
   }) => Promise<IncidentWindowStats>;
   getCursor: (consumer: CursorConsumer) => Promise<ViewerCursorRecord | null>;
   putCursor: (record: ViewerCursorRecord) => Promise<void>;
-  /** Record a skipped run unless the period already has one. */
-  recordDigestSkip: (
-    key: DigestRunKey,
-    nowNs: bigint,
-  ) => Promise<{ created: boolean; status: "sent" | "skipped" | "pending" }>;
   claimDigestRun: (
     key: DigestRunKey,
     nowNs: bigint,
@@ -242,8 +237,4 @@ export type SeriesPort = {
     }[]
   >;
   scalar: (promql: string) => Promise<number | null>;
-};
-
-export type DigestGatePort = {
-  digestEmailEnabled: () => Promise<boolean>;
 };

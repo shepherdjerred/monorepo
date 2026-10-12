@@ -19,8 +19,6 @@ export const CursorInputSchema = z.strictObject({
   consumer: z.literal("web"),
   seenSignalIds: z.array(z.string().min(1).max(512)).max(5000),
 });
-export type CursorInput = z.infer<typeof CursorInputSchema>;
-
 export const CursorResponseSchema = z.object({
   consumer: CursorConsumerSchema,
   lastSeenAt: InstantTextSchema,
@@ -49,8 +47,6 @@ export type ChangeListInput = z.infer<typeof ChangeListInputSchema>;
 export const ChangeListResponseSchema = z.object({
   items: z.array(ChangeViewSchema),
 });
-export type ChangeListResponse = z.infer<typeof ChangeListResponseSchema>;
-
 export const ServiceDetailSchema = z.object({
   service: ServiceSchema,
   /** `null` until the first snapshot has been ingested. */

@@ -2,7 +2,6 @@ import type { ToolSet } from "ai";
 import { z } from "zod";
 import { BirmelToolMetadataSchema } from "@shepherdjerred/birmel/agent-runtime/contracts.ts";
 import { getRegisteredToolMetadata } from "@shepherdjerred/birmel/agent-runtime/tools/tool-metadata.ts";
-import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 
 /**
  * Every registered tool, flat.
@@ -111,32 +110,14 @@ export function getCapabilityCatalog(): CapabilityCatalogEntry[] {
       "Birmel tool metadata and executable capability inventory differ",
     );
   }
-  const config = getConfig();
-  const advertisedEntries = entries.filter((entry) => {
-    if (entry.id === "generate-image" && !config.imageGeneration.enabled) {
-      return false;
-    }
-    return true;
-  });
   return CapabilityCatalogSchema.parse(
-    advertisedEntries.toSorted((left, right) =>
-      left.id.localeCompare(right.id),
-    ),
+    entries.toSorted((left, right) => left.id.localeCompare(right.id)),
   );
 }
 
-/**
- * Tools the live agent may call this turn. generate-image stays registered
- * for metadata/startup inventory, but a disabled flag must not advertise it
- * to the model: the tool returns immediately, and the grounded-answer gate
- * then fails the whole turn.
- */
+/** Tools the live agent may call this turn. */
 export function toolsForTurn(): ToolSet {
-  const config = getConfig();
-  const tools = config.imageGeneration.enabled
-    ? registeredTools
-    : registeredTools.filter((tool) => tool.id !== "generate-image");
-  return toolsToRecord(tools);
+  return toolsToRecord(registeredTools);
 }
 
 /**

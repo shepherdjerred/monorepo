@@ -14,6 +14,29 @@ function withNvmeIdentity(expr: string): string {
   return `(${expr}) * on(device, instance) group_left(serial, model) nvme_device_info`;
 }
 
+// Rate and trend rules look back days, across reboots that can swap device
+// names. Aggregating the identity-joined series by serial before the range
+// subquery keeps one continuous series per physical drive; a device-keyed range
+// would splice two drives together after a swap.
+function bySerial(metric: string): string {
+  return `max by (instance, serial, model) (${withNvmeIdentity(metric)})`;
+}
+
+// nvme_data_units_written_total counts units of 1000 512-byte sectors.
+const NVME_DATA_UNIT_BYTES = 512_000;
+
+// Consumer TLC drives in this cluster (Samsung 990 PRO) are rated for 600 TBW
+// per TB over a 5-year warranty, about 0.33 drive writes per day. Alert at 1.5x
+// that so normal production churn stays quiet.
+const DRIVE_WRITES_PER_DAY_LIMIT = 0.5;
+
+const driveWritesPerDay7d = `increase(${bySerial("nvme_data_units_written_total")}[7d:1h]) * ${String(NVME_DATA_UNIT_BYTES)} / 7 / ${bySerial("nvme_physical_size_bytes")}`;
+
+// Days until SMART percentage_used reaches 1.0 at the last 14 days' wear rate.
+// percentage_used moves in whole-percent steps, so a shorter window is too
+// coarse. A drive with no recent wear divides by zero and yields +Inf.
+const projectedWearOutDays = `(1 - ${bySerial("nvme_percentage_used_ratio")}) / (delta(${bySerial("nvme_percentage_used_ratio")}[14d:1h]) / 14)`;
+
 export function getNvmeRuleGroups(): PrometheusRuleSpecGroups[] {
   return [
     {
@@ -59,6 +82,67 @@ export function getNvmeRuleGroups(): PrometheusRuleSpecGroups[] {
             ),
             description: escapePrometheusTemplate(
               "NVMe {{ $labels.model }} (serial {{ $labels.serial }}, dev {{ $labels.device }}) reports SMART percentage_used at {{ $value | humanizePercentage }}. Replace before reaching 1.0 (end-of-life prediction).",
+            ),
+          },
+        },
+
+        // Wear velocity. The absolute thresholds above fire only once half the
+        // drive's rated life is gone; these fire on the trend, while there is
+        // still time to cut writes or schedule a replacement.
+        {
+          alert: "NvmeWriteRateAboveEndurance",
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            `(${driveWritesPerDay7d}) > ${String(DRIVE_WRITES_PER_DAY_LIMIT)}`,
+          ),
+          for: "6h",
+          labels: {
+            severity: "warning",
+            category: "hardware",
+          },
+          annotations: {
+            summary: escapePrometheusTemplate(
+              "NVMe writes exceed rated endurance on {{ $labels.model }} (serial {{ $labels.serial }})",
+            ),
+            description: escapePrometheusTemplate(
+              "NVMe {{ $labels.model }} (serial {{ $labels.serial }}) averaged {{ $value | humanize }} drive writes per day over 7 days. Its rated endurance is about 0.33 per day; find and cut the write source.",
+            ),
+          },
+        },
+        {
+          alert: "NvmeWearOutProjectedWithinYear",
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            `(${projectedWearOutDays}) < 365`,
+          ),
+          for: "6h",
+          labels: {
+            severity: "warning",
+            category: "hardware",
+          },
+          annotations: {
+            summary: escapePrometheusTemplate(
+              "NVMe projected to reach rated wear within a year on {{ $labels.model }} (serial {{ $labels.serial }})",
+            ),
+            description: escapePrometheusTemplate(
+              "NVMe {{ $labels.model }} (serial {{ $labels.serial }}) reaches SMART percentage_used 100% in about {{ $value | humanize }} days at its 14-day wear rate. Cut writes or plan a replacement.",
+            ),
+          },
+        },
+        {
+          alert: "NvmeWearOutProjectedWithinSixMonths",
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            `(${projectedWearOutDays}) < 180`,
+          ),
+          for: "6h",
+          labels: {
+            severity: "critical",
+            category: "hardware",
+          },
+          annotations: {
+            summary: escapePrometheusTemplate(
+              "NVMe projected to reach rated wear within six months on {{ $labels.model }} (serial {{ $labels.serial }})",
+            ),
+            description: escapePrometheusTemplate(
+              "NVMe {{ $labels.model }} (serial {{ $labels.serial }}) reaches SMART percentage_used 100% in about {{ $value | humanize }} days at its 14-day wear rate. Have a replacement on hand and cut writes now.",
             ),
           },
         },
@@ -153,13 +237,11 @@ export function getNvmeRuleGroups(): PrometheusRuleSpecGroups[] {
           },
         },
 
-        // Note on write-rate regression: deliberately not added here. The
-        // existing prometheus-resource-monitoring-rules already cover this:
-        //  - HighDiskWriteActivity (SSD, > 50 MB/s for 30m)
-        //  - SustainedDiskWriteActivity (SSD, > 1 TB/24h for 1h)
-        //  - NodeDiskIOSaturation (queue depth > 10 for 30m)
-        // Those use node_disk_info{rotational="0"} which already excludes HDDs.
-        // Adding another threshold here would just create alert noise.
+        // Raw-throughput alerts live in prometheus-resource-monitoring-rules
+        // (HighDiskWriteActivity, SustainedDiskWriteActivity,
+        // NodeDiskIOSaturation) and exclude the CI node, whose bursts are
+        // expected. The endurance-normalized rules above cover every node,
+        // including the CI node, because wear is what ends a drive.
       ],
     },
   ];

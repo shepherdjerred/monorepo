@@ -43,6 +43,10 @@ const logger = createLogger("metrics-durable-pipeline");
  *   backlog family.
  * - *Are matches being found on time?* —
  *   `scout_durable_observation_lag_seconds`.
+ * - *Are matches being looked for at all?* —
+ *   `scout_durable_postmatch_poll_age_seconds`. The lag above reads zero
+ *   when nothing was observed, so a discovery that stopped outright looked
+ *   healthy to it for the whole of a 24-hour prod stall.
  *
  * ## Why every label here is bounded
  *
@@ -138,6 +142,21 @@ export const scoutDurableObservationLag = new Gauge({
   name: "scout_durable_observation_lag_seconds",
   help: "How long after game START live FULL matches observed in the last two hours were observed, by statistic (includes the game's own length), or zero when none were.",
   labelNames: ["statistic"] as const,
+  registers: [registry],
+});
+
+/**
+ * How long post-match discovery has gone without completing a poll.
+ *
+ * The observation lag cannot see discovery that has stopped: with nothing
+ * observed in its window it reads zero, which is also what a healthy quiet
+ * hour reads. This is read from the poll's own completion instant instead, so
+ * it grows for as long as no poll finishes, whatever the cause. Zero before any
+ * poll has completed; -1 when the read failed.
+ */
+export const scoutDurablePostmatchPollAge = new Gauge({
+  name: "scout_durable_postmatch_poll_age_seconds",
+  help: "Seconds since post-match discovery last completed a poll with complete evidence, zero before any poll has completed, or -1 when the read failed.",
   registers: [registry],
 });
 
@@ -288,8 +307,11 @@ export async function collectDurablePipelineMetrics(db: Db): Promise<void> {
       oldestStalledMatchProcessingAt,
       oldestUnacceptedWorkflowStartAt,
     } = await import("#src/database/durable/pipeline-backlog.ts");
-    const { observationLag, oldestReadyNotificationIntentAt } =
-      await import("#src/database/durable/pipeline-gaps.ts");
+    const {
+      lastCompletePostMatchPollAt,
+      observationLag,
+      oldestReadyNotificationIntentAt,
+    } = await import("#src/database/durable/pipeline-gaps.ts");
 
     const now = Date.now();
     const [
@@ -300,6 +322,7 @@ export async function collectDurablePipelineMetrics(db: Db): Promise<void> {
       workflowStartAt,
       readyAt,
       lag,
+      lastPollAt,
     ] = await Promise.all([
       countNotificationIntentsByState(db),
       countRecoveryBatchesByState(db),
@@ -314,6 +337,7 @@ export async function collectDurablePipelineMetrics(db: Db): Promise<void> {
       observationLag(db, {
         observedSince: new Date(now - OBSERVATION_LAG_WINDOW_MS),
       }),
+      lastCompletePostMatchPollAt(db),
     ]);
 
     for (const state of NOTIFICATION_INTENT_STATE_KINDS) {
@@ -340,6 +364,7 @@ export async function collectDurablePipelineMetrics(db: Db): Promise<void> {
     );
     scoutDurableObservationLag.set({ statistic: "p90" }, lag.p90Seconds);
     scoutDurableObservationLag.set({ statistic: "max" }, lag.maxSeconds);
+    scoutDurablePostmatchPollAge.set(ageSeconds(lastPollAt, now));
   } catch (error) {
     for (const family of DURABLE_BACKLOG_FAMILIES) {
       scoutDurableBacklogOldestAge.set({ family }, -1);
@@ -347,6 +372,7 @@ export async function collectDurablePipelineMetrics(db: Db): Promise<void> {
     for (const statistic of OBSERVATION_LAG_STATISTICS) {
       scoutDurableObservationLag.set({ statistic }, -1);
     }
+    scoutDurablePostmatchPollAge.set(-1);
     scoutDurableNotificationIntents.reset();
     scoutDurableRecoveryBatches.reset();
     logger.error("Failed to update durable pipeline metrics", { error });

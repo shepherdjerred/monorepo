@@ -19,8 +19,7 @@ set -euo pipefail
 # rebasing 22 commits of unrelated history would have.
 #
 # This closes the accidental version of that problem, where a branch is simply
-# old. It also holds against a deliberate one, which the Buildkite arrangement
-# did not: the configuration extension serves the step model baked into its
+# old. It also holds against a deliberate one: the configuration extension serves the step model baked into its
 # deployed image rather than the one on the branch under test, so a branch
 # cannot rewrite this step, its command, or the secrets it is granted. The
 # extension additionally refuses to generate a pipeline for anyone but the

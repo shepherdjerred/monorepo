@@ -22,6 +22,7 @@ import {
   setRevisionHistoryLimit,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { postgresClusterPodLabels } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/cluster-label.ts";
 
 // Build the postgres URL from parts. Composed at runtime from string
 // concatenation (not a literal) to avoid false-positive "Password in URL"
@@ -401,9 +402,7 @@ export function createBugsinkDeployment(chart: Chart) {
           to: [
             {
               podSelector: {
-                matchLabels: {
-                  cluster_name: "bugsink-postgresql",
-                },
+                matchLabels: postgresClusterPodLabels("bugsink-postgresql"),
               },
             },
           ],

@@ -29,11 +29,6 @@
       "count": 2
     }
   },
-  "src/lib/costco/receipt-parser.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
   "src/lib/display.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1

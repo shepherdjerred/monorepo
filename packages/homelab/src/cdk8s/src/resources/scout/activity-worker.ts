@@ -25,6 +25,12 @@ import {
   SCOUT_RUNTIME_ROLE_LABEL,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/gateway.ts";
 import { scoutAdminRoleContainerBase } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/probes.ts";
+import {
+  createScoutTemporalMetricsServiceMonitor,
+  scoutTemporalMetricsContainerPort,
+  scoutTemporalMetricsEnv,
+  scoutTemporalMetricsServicePort,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/scout/temporal-metrics.ts";
 
 export const SCOUT_ACTIVITY_WORKER_APP_LABEL = "scout-activity-worker";
 
@@ -76,9 +82,14 @@ export function createScoutActivityWorkerDeployment(
   // scheduling constraint rather than an accident of current node placement.
   deployment.scheduling.colocate(options.colocateWith);
 
+  const containerBase = scoutAdminRoleContainerBase(
+    options.imageVersion,
+    "activity-worker",
+  );
   deployment.addContainer(
     withCommonProps({
-      ...scoutAdminRoleContainerBase(options.imageVersion, "activity-worker"),
+      ...containerBase,
+      ports: [...containerBase.ports, scoutTemporalMetricsContainerPort],
       volumeMounts: [
         {
           path: "/data",
@@ -100,6 +111,7 @@ export function createScoutActivityWorkerDeployment(
       ],
       envVariables: {
         ...options.envVariables,
+        ...scoutTemporalMetricsEnv,
         SCOUT_RUNTIME_ROLE: EnvValue.fromValue("activity-worker"),
         TELEMETRY_SERVICE_NAME: EnvValue.fromValue("scout-activity-worker"),
       },
@@ -117,12 +129,17 @@ export function createScoutActivityWorkerDeployment(
       labels: { app: SCOUT_ACTIVITY_WORKER_APP_LABEL, stage },
     },
     selector: deployment,
-    ports: [{ name: "metrics", port: 3000 }],
+    ports: [{ name: "metrics", port: 3000 }, scoutTemporalMetricsServicePort],
   });
   createServiceMonitor(chart, {
     name: `scout-activity-worker-${stage}`,
     matchLabels: { app: SCOUT_ACTIVITY_WORKER_APP_LABEL, stage },
   });
+  createScoutTemporalMetricsServiceMonitor(
+    chart,
+    `scout-activity-worker-temporal-${stage}`,
+    { app: SCOUT_ACTIVITY_WORKER_APP_LABEL, stage },
+  );
 
   return deployment;
 }

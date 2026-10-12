@@ -106,10 +106,6 @@ export async function getEntityStateUnchecked(
   return activities.getEntityState(entityId);
 }
 
-export async function getStates(): Promise<EntityState[]> {
-  return activities.getStates();
-}
-
 export async function callService<
   D extends Domain<HaSchema>,
   V extends Service<HaSchema, D>,

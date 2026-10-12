@@ -1,5 +1,8 @@
 import type { Chart } from "cdk8s";
-import { ServiceMonitor } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com.ts";
+import {
+  ServiceMonitor,
+  type ServiceMonitorSpecEndpointsMetricRelabelings,
+} from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com.ts";
 
 export type CreateServiceMonitorOptions = {
   /** The app name - used for construct ID, metadata name, and default matchLabels */
@@ -16,6 +19,8 @@ export type CreateServiceMonitorOptions = {
   matchLabels?: Record<string, string>;
   /** Namespace override for cross-namespace monitoring */
   namespace?: string;
+  /** Relabelings applied after the scrape, e.g. to drop unused series */
+  metricRelabelings?: ServiceMonitorSpecEndpointsMetricRelabelings[];
 };
 
 /**
@@ -34,6 +39,7 @@ export function createServiceMonitor(
     port = "metrics",
     matchLabels = { app: name },
     namespace,
+    metricRelabelings,
   } = opts;
 
   const constructId = `${name}-service-monitor`;
@@ -52,6 +58,7 @@ export function createServiceMonitor(
           port,
           interval,
           path,
+          metricRelabelings,
         },
       ],
       selector: {

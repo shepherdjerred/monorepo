@@ -69,6 +69,10 @@ test("the SDK filters automatic request identity while retaining error context",
           "x-real-ip": "192.0.2.1",
           "remote-user": "private",
           cookie: "session=private",
+          // Bearer-authenticated services (tasknotes-server) rely on the
+          // SDK's built-in sensitive-key scrubbing, not the deny list above.
+          authorization: "Bearer private",
+          "x-api-key": "private",
           "x-request-id": "request-1",
         },
         cookies: { session: "private" },

@@ -105,37 +105,6 @@ export function decodeWav(file: Buffer): WavReadResult {
   return { ...fmt, pcm };
 }
 
-/** Convert interleaved s8 stereo PCM to a flat mono Float64Array (averaged). */
-export function s8StereoToMonoF64(pcm: Buffer | Uint8Array): Float64Array {
-  const stereo = Buffer.isBuffer(pcm) ? pcm : Buffer.from(pcm);
-  const frames = stereo.length / 2;
-  const out = new Float64Array(frames);
-  for (let i = 0; i < frames; i++) {
-    const lByte = stereo[i * 2];
-    const rByte = stereo[i * 2 + 1];
-    if (lByte === undefined || rByte === undefined) {
-      throw new Error(`Stereo PCM index out of range at frame ${String(i)}`);
-    }
-    const l = (lByte << 24) >> 24;
-    const r = (rByte << 24) >> 24;
-    out[i] = (l + r) / 2 / 128;
-  }
-  return out;
-}
-
-/** Convert interleaved s16le stereo to mono Float64Array (averaged, scaled to
- * [-1, 1]). */
-export function s16StereoToMonoF64(pcm: Buffer): Float64Array {
-  const frames = pcm.length / 4;
-  const out = new Float64Array(frames);
-  for (let i = 0; i < frames; i++) {
-    const l = pcm.readInt16LE(i * 4);
-    const r = pcm.readInt16LE(i * 4 + 2);
-    out[i] = (l + r) / 2 / 32_768;
-  }
-  return out;
-}
-
 /** Convert interleaved Float32 stereo PCM (LRLR…) to a flat mono Float64Array
  * (averaged). The m4a engine's `gWasmPcmL`/`gWasmPcmR` buffers, after
  * interleaving, arrive in this format. */

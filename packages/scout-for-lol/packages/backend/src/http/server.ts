@@ -104,8 +104,8 @@ function corsHeadersFor(request: Request): Record<string, string> {
  * Record a served request. Route labels are normalized to a bounded set (see
  * `classifyRoute`) so scanner traffic can't mint unbounded series.
  *
- * `/metrics` is deliberately not timed: `getMetrics()` sweeps the DB on every
- * scrape, so its latency describes our own scrape cost, not user-facing
+ * `/metrics` is deliberately not timed: `getMetrics()` can sweep the DB during
+ * a scrape, so its latency describes our own scrape cost, not user-facing
  * latency. It is still counted, which is what makes scrape failures visible.
  */
 async function withHttpMetrics(

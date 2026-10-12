@@ -1,0 +1,5 @@
+[credential]
+	helper = manager
+[user]
+	name = Jerred Shepherd
+	email = github@sjer.red

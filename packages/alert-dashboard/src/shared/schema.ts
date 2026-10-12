@@ -34,6 +34,15 @@ export const SeveritySchema = z.enum([
   "unknown",
 ]);
 export const ResolutionSourceSchema = z.enum(["webhook", "reconciled"]);
+export const AlertmanagerGeneratorUrlSchema = z.union([
+  z.literal(""),
+  z.url(),
+  z.string().refine((value) => {
+    if (!value.startsWith("/")) return false;
+    const base = new URL("https://alertmanager.invalid");
+    return new URL(value, base).origin === base.origin;
+  }, "Expected an absolute URL or a root-relative URL"),
+]);
 export const AlertEventTypeSchema = z.enum([
   "opened",
   "resolved",
@@ -47,7 +56,7 @@ export const AlertmanagerWebhookAlertSchema = z.object({
   annotations: LabelMapSchema,
   startsAt: InstantTextSchema,
   endsAt: InstantTextSchema,
-  generatorURL: z.url().or(z.literal("")),
+  generatorURL: AlertmanagerGeneratorUrlSchema,
   fingerprint: AlertFingerprintSchema,
 });
 
@@ -71,7 +80,7 @@ export const AlertmanagerSnapshotAlertSchema = z.object({
   fingerprint: AlertFingerprintSchema,
   startsAt: InstantTextSchema,
   updatedAt: InstantTextSchema.optional(),
-  generatorURL: z.url().or(z.literal("")).optional(),
+  generatorURL: AlertmanagerGeneratorUrlSchema.optional(),
   labels: LabelMapSchema,
   status: z.object({
     inhibitedBy: z.array(z.string()),
@@ -219,7 +228,6 @@ export type AlertmanagerSnapshotAlert = z.infer<
 export type AlertView = z.infer<typeof AlertViewSchema>;
 export type AlertDetail = z.infer<typeof AlertDetailSchema>;
 export type AlertDetailInput = z.infer<typeof AlertDetailInputSchema>;
-export type AlertEventView = z.infer<typeof AlertEventViewSchema>;
 export type AlertListInput = z.infer<typeof AlertListInputSchema>;
 export type EventListInput = z.infer<typeof EventListInputSchema>;
 export type AlertListResponse = z.infer<typeof AlertListResponseSchema>;

@@ -406,7 +406,7 @@ describe("Temporal domain worker isolation", () => {
     });
     expect(context.spec.template.spec.containers[0]?.resources).toEqual({
       limits: { cpu: "2", memory: "6144Mi" },
-      requests: { cpu: "750m", memory: "512Mi" },
+      requests: { cpu: "250m", memory: "512Mi" },
     });
 
     const corpusEnv = envNames(corpus);

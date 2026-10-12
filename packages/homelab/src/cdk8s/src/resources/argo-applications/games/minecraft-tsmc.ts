@@ -168,7 +168,7 @@ export function createMinecraftTsmcApp(chart: Chart) {
       // admin regions, and vanilla protection would stop non-ops using the
       // windmill Storm Shards altar.
       spawnProtection: 0,
-      ops: "XiguaJerred",
+      ops: "",
       // TYPE and VERSION repeat the image's own env: the chart always renders
       // TYPE (default VANILLA), and VERSION selects the baked Paper defaults.
       version: THE_STORM_PAPER_VERSION,
@@ -221,6 +221,10 @@ export function createMinecraftTsmcApp(chart: Chart) {
     },
 
     extraEnv: {
+      // Ensure the empty list reaches itzg's OPS_FILE synchronization logic.
+      OPS: "",
+      // Empty OPS must clear persisted ops.json entries, not merge with them.
+      EXISTING_OPS_FILE: "SYNCHRONIZE",
       FLIPT_URL: "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
       FLIPT_ENVIRONMENT: "prod",
       POSTHOG_API_HOST: analytics.apiHost,

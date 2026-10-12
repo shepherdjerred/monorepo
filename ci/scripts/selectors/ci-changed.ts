@@ -7,11 +7,8 @@ import { requestedPlatformTofuApply } from "./tofu-lane-paths.ts";
 import { ensureAncestor } from "./ensure-ancestor.ts";
 
 /**
- * Lane decisions are no longer recorded anywhere.
- *
- * They existed only to feed the Buildkite build-summary annotation, which has
- * no successor. The decision is still printed, which is what a reader of a
- * step log actually needs.
+ * Lane decisions are printed rather than recorded, which is what a reader of
+ * a step log actually needs.
  */
 
 async function execute(

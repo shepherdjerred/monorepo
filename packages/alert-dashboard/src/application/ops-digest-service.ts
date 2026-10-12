@@ -15,7 +15,6 @@ import {
 } from "@shepherdjerred/ops-model/digest.ts";
 
 import type {
-  DigestGatePort,
   DigestRunKey,
   OpsRepository,
   PostalPort,
@@ -52,7 +51,6 @@ export type DigestServiceOptions = {
   repository: OpsRepository;
   ops: OpsService;
   series: SeriesPort;
-  gate: DigestGatePort;
   /** `null` when Postal is not configured for this process. */
   mailer: PostalPort | null;
   clock: Clock;
@@ -94,7 +92,6 @@ export class DigestService {
   readonly #repository: OpsRepository;
   readonly #ops: OpsService;
   readonly #series: SeriesPort;
-  readonly #gate: DigestGatePort;
   readonly #mailer: PostalPort | null;
   readonly #clock: Clock;
 
@@ -102,7 +99,6 @@ export class DigestService {
     this.#repository = options.repository;
     this.#ops = options.ops;
     this.#series = options.series;
-    this.#gate = options.gate;
     this.#mailer = options.mailer;
     this.#clock = options.clock;
   }
@@ -113,8 +109,8 @@ export class DigestService {
   }
 
   /**
-   * Send the digest for the current period at most once. A disabled flag
-   * records a skipped run so the schedule's retries stay idempotent too.
+   * Send the digest for the current period at most once. Periods recorded as
+   * skipped while sending was gated stay skipped.
    */
   async run(kind: DigestKind): Promise<DigestRunResponse> {
     const now = this.#clock.now();
@@ -132,16 +128,6 @@ export class DigestService {
         duplicate,
       });
 
-    if (!(await this.#gate.digestEmailEnabled())) {
-      const skip = await this.#repository.recordDigestSkip(
-        key,
-        now.epochNanoseconds,
-      );
-      return response(
-        skip.status === "sent" ? "sent" : "skipped",
-        !skip.created,
-      );
-    }
     const mailer = this.#mailer;
     if (mailer === null) throw new DigestMailerUnconfiguredError();
 

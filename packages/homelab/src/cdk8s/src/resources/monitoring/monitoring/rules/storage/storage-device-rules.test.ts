@@ -26,6 +26,33 @@ describe("stable storage-device identity joins", () => {
     }
   });
 
+  it("keys NVMe wear-velocity ranges by serial, not device", () => {
+    const rules = getNvmeRuleGroups().flatMap((group) => group.rules ?? []);
+    const velocityAlerts = [
+      "NvmeWriteRateAboveEndurance",
+      "NvmeWearOutProjectedWithinYear",
+      "NvmeWearOutProjectedWithinSixMonths",
+    ];
+    for (const alert of velocityAlerts) {
+      const rule = rules.find((candidate) => candidate.alert === alert);
+      expect(rule, alert).toBeDefined();
+      const expression = String(rule?.expr.value);
+      expect(expression).toContain("max by (instance, serial, model)");
+      expect(expression).toMatch(/\)\[\d+d:1h\]/);
+    }
+  });
+
+  it("normalizes NVMe write rate by drive capacity", () => {
+    const rule = getNvmeRuleGroups()
+      .flatMap((group) => group.rules ?? [])
+      .find((candidate) => candidate.alert === "NvmeWriteRateAboveEndurance");
+    const expression = String(rule?.expr.value);
+    expect(expression).toContain("nvme_data_units_written_total");
+    expect(expression).toContain("* 512000 / 7 /");
+    expect(expression).toContain("nvme_physical_size_bytes");
+    expect(expression).toMatch(/> 0\.5$/);
+  });
+
   it("keys SMART identity by disk and scrape instance", () => {
     const rules = alertExpressions(getSmartctlRuleGroups());
     expect(rules.length).toBeGreaterThan(0);

@@ -283,40 +283,6 @@ export class PrismaOpsRepository implements OpsRepository {
     );
   }
 
-  async recordDigestSkip(
-    key: DigestRunKey,
-    nowNs: bigint,
-  ): Promise<{ created: boolean; status: "sent" | "skipped" | "pending" }> {
-    return this.#writeMutex.runExclusive(() =>
-      this.#prisma.$transaction(async (transaction) => {
-        const existing = await transaction.digestRun.findUnique({
-          where: {
-            kind_periodKey: { kind: key.kind, periodKey: key.periodKey },
-          },
-        });
-        if (existing === null) {
-          await transaction.digestRun.create({
-            data: {
-              id: crypto.randomUUID(),
-              kind: key.kind,
-              periodKey: key.periodKey,
-              messageId: key.messageId,
-              status: "skipped",
-              createdAtNs: nowNs,
-            },
-          });
-          return { created: true, status: "skipped" as const };
-        }
-        const status = DigestStatusSchema.parse(existing.status);
-        return {
-          created: false,
-          status:
-            status === "sent" || status === "skipped" ? status : "pending",
-        };
-      }),
-    );
-  }
-
   async claimDigestRun(
     key: DigestRunKey,
     nowNs: bigint,

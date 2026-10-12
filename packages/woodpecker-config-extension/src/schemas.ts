@@ -56,9 +56,8 @@ export const PipelineSchema = z.looseObject({
    */
   forge_url: z.string(),
   /**
-   * Files touched by this push or pull request. This is what replaces
-   * Buildkite's `if_changed` inputs: lane selection reads it directly instead
-   * of shelling out to git in a bootstrap pod.
+   * Files touched by this push or pull request. Lane selection reads it
+   * directly instead of shelling out to git in a bootstrap pod.
    */
   changed_files: z.array(z.string()).default([]),
   /** Operator parameters from a manual trigger, signed with this request. */
@@ -75,19 +74,4 @@ export const ConfigExtensionRequestSchema = z.looseObject({
   repo: RepoSchema,
   pipeline: PipelineSchema,
 });
-
-export type ConfigExtensionRequest = z.infer<
-  typeof ConfigExtensionRequestSchema
->;
 export type Pipeline = z.infer<typeof PipelineSchema>;
-
-export type GeneratedConfig = {
-  /** Filename Woodpecker shows for the workflow. */
-  readonly name: string;
-  /** Workflow YAML. */
-  readonly data: string;
-};
-
-export type ConfigExtensionResponse = {
-  readonly configs: readonly GeneratedConfig[];
-};

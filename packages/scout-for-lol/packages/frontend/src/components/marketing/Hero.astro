@@ -26,6 +26,8 @@ interface Props {
   size?: "home" | "page";
   ctaButtons?: HeroCtaButton[];
   imageSrc?: string;
+  /** Responsive renditions of `imageSrc`; see `scout-showcase-variants.ts`. */
+  imageSrcSet?: string;
 }
 
 const {
@@ -35,6 +37,7 @@ const {
   size = "page",
   ctaButtons = [],
   imageSrc,
+  imageSrcSet,
 } = Astro.props;
 ---
 
@@ -123,6 +126,12 @@ const {
     {imageSrc !== undefined && (
       <img
         src={imageSrc}
+        srcset={imageSrcSet}
+        sizes={
+          imageSrcSet === undefined
+            ? undefined
+            : "(min-width: 1024px) 50vw, 100vw"
+        }
         alt="Scout match recap with player builds, ranks, and team stats"
         width="1200"
         height="800"

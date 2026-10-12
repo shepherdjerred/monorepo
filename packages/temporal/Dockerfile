@@ -144,7 +144,7 @@ ARG LYCHEE_VERSION=lychee-v0.24.2
 # renovate: datasource=github-releases depName=Kometa-Team/Kometa
 ARG KOMETA_VERSION=2.5.1
 # Shared local/CI Postgres pin — keep in lockstep with .mise.toml's
-# "ubi:theseus-rs/postgresql-binaries" entry: the bot-clone backend tests must
+# "github:theseus-rs/postgresql-binaries" entry: the bot-clone backend tests must
 # run against the same server binaries here as on dev/CI machines.
 # renovate: datasource=github-releases depName=theseus-rs/postgresql-binaries
 ARG POSTGRESQL_BINARIES_VERSION=18.6.0
@@ -498,7 +498,7 @@ ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}
 USER 1000:1000
 ENV HOME=/tmp
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-RUN bun -e 'const pin = Bun.TOML.parse(await Bun.file("/tmp/temporal-smoke.mise.toml").text()).tools["ubi:theseus-rs/postgresql-binaries"].version; const result = Bun.spawnSync(["postgres", "--version"]); if (result.exitCode !== 0 || !result.stdout.toString().startsWith("postgres (PostgreSQL) " + pin.split(".")[0] + ".")) throw new Error("Temporal PostgreSQL binaries must match the repository major");' \
+RUN bun -e 'const pin = Bun.TOML.parse(await Bun.file("/tmp/temporal-smoke.mise.toml").text()).tools["github:theseus-rs/postgresql-binaries"].version; const result = Bun.spawnSync(["postgres", "--version"]); if (result.exitCode !== 0 || !result.stdout.toString().startsWith("postgres (PostgreSQL) " + pin.split(".")[0] + ".")) throw new Error("Temporal PostgreSQL binaries must match the repository major");' \
     && initdb -D /tmp/temporal-pg-smoke -U smoke --auth=trust --encoding=UTF8 --no-locale --data-checksums \
     && pg_ctl -D /tmp/temporal-pg-smoke -w -t 30 -l /tmp/temporal-pg-smoke.log -o "-c listen_addresses='' -k /tmp -p 5489" start \
     && trap 'pg_ctl -D /tmp/temporal-pg-smoke -m fast -w stop' EXIT \

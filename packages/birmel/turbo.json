@@ -11,7 +11,7 @@
     },
     "test:ci": {
       "env": ["NODE_ENV"],
-      "inputs": ["$TURBO_DEFAULT$", ".env.test"]
+      "inputs": ["$TURBO_EXTENDS$", ".env.test"]
     },
     // generate-prisma.ts evaluates the database config module.
     "generate": {

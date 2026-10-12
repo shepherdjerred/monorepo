@@ -1197,6 +1197,9 @@ model BotState {
   id                        Int       @id @default(1)
   lastSuccessfulPollAt      DateTime?
   reconciliationCompletedAt DateTime?
+  // End of the last window ingestion reconciliation backfilled to S3; the next
+  // backfill starts at the later of this and lastSuccessfulPollAt.
+  backfilledThroughAt       DateTime?
   pollStartedAt             DateTime?
   // Last renewal by the holder of a durable poll claim. A claim goes stale
   // only when both its start and its last renewal are past the bound.

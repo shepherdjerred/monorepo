@@ -109,6 +109,9 @@ capped at 2,048 pixels per side. These are selected areas, not full-world maps.
 Rerun with the same scratch directory to skip certified worlds and downloads;
 the publisher checks their S3 sizes and hash metadata before trusting a
 checkpoint. Missing or changed objects stop the run for storage inspection.
+For release `2026-10-04-v1`, both publishers migrate existing scratch certificates
+by dropping only `new-world-test-2022-11-20` and `main-map1-upgraded-2023-06-18`.
+This preserves retained checkpoints and never deletes remote objects or source ZIPs.
 `--only <id>` publishes one world's previews. Download checkpoints are saved
 before rendering, so a failed preview never requires reuploading a certified
 ZIP. An unfinished world requires inspecting its logs and removing that exact
@@ -174,10 +177,9 @@ bun run build
 ```
 
 The catalogue's original archive hashes must match the certified downloads.
-Extraction copies only terrain and required metadata. The seven listed older worlds
+Extraction copies only terrain and required metadata. The seven archived worlds
 are converted to vanilla 1.17.1 in a disposable, network-isolated Java 17
-container using the catalogue's pinned image. The 1.19.2 save renders directly
-from a copy. Conversion checks
+container using the catalogue's pinned image. Conversion checks
 every original chunk and exits before server startup, so spawn loading cannot
 regenerate saved terrain whose old generation flags are incomplete.
 Original ZIPs, downloads and preview
@@ -236,8 +238,6 @@ exclude the entire `world-archive/` prefix.
 The catalogue's optional `listed` field defaults to `true`. A `false` value
 omits a world from the downloads page and overview rendering without removing
 its original archive, stored downloads, previews or publication certificates.
-The 2023 upgraded copy of Main Map 1 is unlisted because the original snapshot
-is already available.
 
 `document` requires certified overviews for every listed catalogue world, records
 `archive/overviews.json`, and regenerates the downloads page with Explore map

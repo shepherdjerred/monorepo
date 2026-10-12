@@ -10,6 +10,21 @@ export async function getLastSuccessfulPollAt(): Promise<Date | undefined> {
   return row?.lastSuccessfulPollAt ?? undefined;
 }
 
+export async function getBackfilledThroughAt(): Promise<Date | undefined> {
+  const row = await prisma.botState.findUnique({
+    where: { id: BOT_STATE_ID },
+  });
+  return row?.backfilledThroughAt ?? undefined;
+}
+
+export async function setBackfilledThroughAt(date: Date): Promise<void> {
+  await prisma.botState.upsert({
+    where: { id: BOT_STATE_ID },
+    update: { backfilledThroughAt: date },
+    create: { id: BOT_STATE_ID, backfilledThroughAt: date },
+  });
+}
+
 export async function getReconciliationCompletedAt(): Promise<
   Date | undefined
 > {

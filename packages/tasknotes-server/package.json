@@ -14,11 +14,11 @@
     "lint": "bunx eslint . --max-warnings=0 && check-architecture",
     "docker:build": "docker buildx build --cache-from type=registry,ref=ghcr.io/shepherdjerred/tasknotes-server:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t tasknotes-server:dev -f Dockerfile ../..",
     "smoke": "bun scripts/smoke.ts",
-    "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
-    "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/ci/run-ci-test.ts"
+    "test:ci": "bun ../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
-    "@sentry/bun": "^10.75.3",
+    "@sentry/bun": "^11.6.0",
+    "@shepherdjerred/sentry-config": "workspace:*",
     "hono": "^4.12.18",
     "prom-client": "^15.1.3",
     "tasknotes-types": "workspace:*",

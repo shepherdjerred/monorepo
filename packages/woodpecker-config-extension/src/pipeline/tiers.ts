@@ -8,9 +8,9 @@ import type { ResourceTier } from "#src/pipeline/model.ts";
 /**
  * Heavy steps: the full turbo graph on a cold cache.
  *
- * The workspace moved from a Buildkite memory volume to the CI node's NVMe,
- * but Woodpecker verify pods have still reached over 13 GiB of memory. Keep
- * memory headroom for heavy builds and releases.
+ * The workspace lives on the CI node's NVMe, but verify pods have still
+ * reached over 13 GiB of memory. Keep memory headroom for heavy builds and
+ * releases.
  */
 export const VERIFY_TIER: ResourceTier = {
   cpuRequest: "1",

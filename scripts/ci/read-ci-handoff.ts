@@ -3,10 +3,8 @@
 /**
  * Print one build-scoped handoff value to stdout.
  *
- * Replaces `ci/scripts/reporting/read-buildkite-handoff.ts`. Pipeline
- * steps use it the same way — `export FOO="$(bun scripts/ci/read-ci-handoff.ts
- * some-key)"` — but there is no pointer to resolve, so the whole artifact
- * download path is gone.
+ * Pipeline steps use it as `export FOO="$(bun scripts/ci/read-ci-handoff.ts
+ * some-key)"`.
  */
 
 import { readRequiredHandoff } from "../lib/ci/ci-handoff.ts";
