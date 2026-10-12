@@ -7,7 +7,7 @@ import java.nio.charset.StandardCharsets;
 /** Language-neutral contract shared with the forum's Query reader. */
 public record PublicQueryContract(int schemaVersion, String queryIdentity) {
   public PublicQueryContract {
-    if (schemaVersion != 1 || queryIdentity == null || queryIdentity.isBlank()) {
+    if (schemaVersion != 2 || queryIdentity == null || queryIdentity.isBlank()) {
       throw new IllegalArgumentException("Invalid public Query contract");
     }
   }

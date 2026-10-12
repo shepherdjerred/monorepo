@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.rwf.adapter.paper;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.schedule.Cancellable;
 import com.shepherdjerred.thestorm.core.snapshot.SnapshotStore;
+import com.shepherdjerred.thestorm.core.status.PublicGameDirectory;
 import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.rwf.adapter.content.RwfCatalog;
 import com.shepherdjerred.thestorm.rwf.app.CombatantActions;
@@ -67,6 +68,7 @@ public final class RwfPaper {
   private final Cancellable clock;
   private final RwfPermissions permissions;
   private final SealedWorlds sealed;
+  private final PublicGameDirectory publicGames;
 
   private RwfPaper(Parts parts) {
     this.context = parts.context();
@@ -78,6 +80,7 @@ public final class RwfPaper {
     this.displays = parts.displays();
     this.listeners = parts.listeners();
     this.clock = parts.clock();
+    this.publicGames = parts.publicGames();
     this.permissions = parts.permissions();
     this.sealed = parts.sealed();
   }
@@ -93,7 +96,8 @@ public final class RwfPaper {
       List<Listener> listeners,
       Cancellable clock,
       RwfPermissions permissions,
-      SealedWorlds sealed) {}
+      SealedWorlds sealed,
+      PublicGameDirectory publicGames) {}
 
   /**
    * The ports the adapters use.
@@ -223,7 +227,18 @@ public final class RwfPaper {
             LifecycleEvents.COMMANDS, event -> commands.register(event.registrar()));
     var permissions = new RwfPermissions(context.server().getPluginManager());
     permissions.register();
-    var clock = module.scheduler().repeatOnMainThread(TICK, TICK, runner::tick);
+    var publicGames = module.services().require(PublicGameDirectory.class);
+    var clock =
+        module
+            .scheduler()
+            .repeatOnMainThread(
+                TICK,
+                TICK,
+                () -> {
+                  runner.tick();
+                  publicGames.replace(
+                      PublicGameDirectory.Kind.RWF, runner.publicGame().stream().toList());
+                });
     bombs.cleanUp();
     var started =
         new RwfPaper(
@@ -238,7 +253,8 @@ public final class RwfPaper {
                 listeners,
                 clock,
                 permissions,
-                sealed));
+                sealed,
+                publicGames));
     snapshots.load(player -> runner.memberOf(player).isPresent(), () -> {});
     started.prepareMaps();
     return started;
@@ -326,5 +342,6 @@ public final class RwfPaper {
     displays.clear();
     lobby.release();
     sealed.unseal(context.world().getName());
+    publicGames.replace(PublicGameDirectory.Kind.RWF, List.of());
   }
 }

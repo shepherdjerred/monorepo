@@ -18,6 +18,7 @@ import com.shepherdjerred.thestorm.arena.domain.reward.VaultSettings;
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.core.snapshot.ItemData;
 import com.shepherdjerred.thestorm.core.snapshot.PlayerStates;
+import com.shepherdjerred.thestorm.core.status.PublicGameDirectory;
 import com.shepherdjerred.thestorm.economy.app.CrystalFormatter;
 import com.shepherdjerred.thestorm.economy.app.Crystals;
 import java.util.ArrayDeque;
@@ -106,6 +107,36 @@ final class GameRunner implements ArenaRunner {
   @Override
   public java.util.Collection<Member> members() {
     return game.members();
+  }
+
+  @Override
+  public Optional<PublicGameDirectory.Game> publicGame() {
+    var players =
+        game.members().stream()
+            .filter(member -> member instanceof Member.InLobby || member instanceof Member.Fighter)
+            .map(Member::id)
+            .toList();
+    if (players.isEmpty()) return Optional.empty();
+    var publicPhase =
+        switch (game.phase()) {
+          case Phase.Lobby _ -> PublicGameDirectory.Phase.WAITING;
+          case Phase.Countdown _ -> PublicGameDirectory.Phase.STARTING;
+          case Phase.Intermission _, Phase.Fighting _ -> PublicGameDirectory.Phase.RUNNING;
+        };
+    var progress =
+        switch (game.phase()) {
+          case Phase.Intermission intermission -> "Wave " + (intermission.nextWave() - 1);
+          case Phase.Fighting fighting -> "Wave " + fighting.wave();
+          default -> "";
+        };
+    return Optional.of(
+        new PublicGameDirectory.Game(
+            game.setup().arenaId(),
+            PublicGameDirectory.Kind.ARENA,
+            game.setup().arenaName(),
+            publicPhase,
+            progress,
+            players));
   }
 
   @Override

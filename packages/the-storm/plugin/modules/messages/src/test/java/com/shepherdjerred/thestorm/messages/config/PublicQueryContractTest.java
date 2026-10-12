@@ -9,9 +9,9 @@ final class PublicQueryContractTest {
   @Test
   void loadsPackagedLanguageNeutralContract() {
     var contract = PublicQueryContract.load();
-    assertThat(contract.schemaVersion()).isEqualTo(1);
-    assertThat(contract.queryIdentity()).startsWith("The Storm public query/");
-    assertThatThrownBy(() -> new PublicQueryContract(2, "wrong"))
+    assertThat(contract.schemaVersion()).isEqualTo(2);
+    assertThat(contract.queryIdentity()).isEqualTo("The Storm public query/2");
+    assertThatThrownBy(() -> new PublicQueryContract(3, "wrong"))
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(() -> new PublicQueryContract(1, ""))
         .isInstanceOf(IllegalArgumentException.class);

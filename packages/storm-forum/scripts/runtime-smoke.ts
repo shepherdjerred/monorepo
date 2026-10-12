@@ -3,7 +3,7 @@ import { NativeConnection } from "@temporalio/worker";
 import { createForumConfig } from "#src/config.ts";
 import { MinecraftStatusSchema } from "#src/minecraft.ts";
 import { publicQueryContract } from "#src/minecraft-query.ts";
-assert.equal(publicQueryContract.schemaVersion, 1);
+assert.equal(publicQueryContract.schemaVersion, 2);
 MinecraftStatusSchema.parse(
   await Bun.file("/opt/storm-forum/test/fixtures/minecraft-status.json").json(),
 );

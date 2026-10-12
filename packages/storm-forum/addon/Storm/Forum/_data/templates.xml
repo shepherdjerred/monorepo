@@ -51,7 +51,7 @@
   </div></div></div>
 </xf:if>
   ]]></template>
-  <template type="public" title="storm_portal" version_id="4010370" version_string="4.1.3"><![CDATA[
+  <template type="public" title="storm_portal" version_id="4010470" version_string="4.1.4"><![CDATA[
 <xf:title>The Storm</xf:title>
 <xf:h1 hidden="true" />
 <xf:css src="storm_forum.less" />
@@ -75,15 +75,7 @@
 </xf:foreach>
 <xf:pagenav page="$page" perpage="$perPage" total="$total" link="storm-home" />
 <xf:sidebar>
-  <div class="block stormJoin" data-storm-minecraft="{{ link('storm-status') }}" data-checked-at="{$status.checkedAt}" data-stale-after="{$status.staleAfterSeconds}"><div class="block-container"><h3 class="block-header">Minecraft Java + Bedrock</h3><div class="block-body block-row">
-    <h4 class="stormJoinEdition">Java Edition</h4>
-    <div class="stormJoinAddress"><strong>{$status.connections.java.address}</strong><button type="button" class="button" data-storm-copy="{$status.connections.java.address}" data-storm-copy-label="Java address" aria-label="Copy Java server address">Copy IP</button></div>
-    <small class="u-muted">No port needed: Java finds it automatically.</small>
-    <details class="stormJoinManual"><summary>Manual address and port</summary><div class="stormJoinAddress"><code>{$status.connections.java.host}:{$status.connections.java.port}</code><button type="button" class="button" data-storm-copy="{$status.connections.java.host}:{$status.connections.java.port}" data-storm-copy-label="Java manual address" aria-label="Copy Java manual address and port">Copy</button></div></details>
-    <h4 class="stormJoinEdition">Bedrock Edition</h4>
-    <div class="stormJoinAddress"><strong>{$status.connections.bedrock.host}</strong><button type="button" class="button" data-storm-copy="{$status.connections.bedrock.host}" data-storm-copy-label="Bedrock address" aria-label="Copy Bedrock server address">Copy IP</button></div>
-    <div class="stormJoinAddress stormJoinPort"><span>Port: <strong>{$status.connections.bedrock.port}</strong></span><button type="button" class="button" data-storm-copy="{$status.connections.bedrock.port}" data-storm-copy-label="Bedrock port" aria-label="Copy Bedrock port">Copy port</button></div>
-    <small class="u-muted">Enter the address and port separately.</small>
+  <div class="block stormJoin" data-storm-minecraft="{{ link('storm-status') }}" data-checked-at="{$status.checkedAt}" data-stale-after="{$status.staleAfterSeconds}"><div class="block-container"><h3 class="block-header">Minecraft</h3><div class="block-body block-row">
     <div class="stormJoinLive" data-storm-minecraft-live aria-live="polite"><xf:include template="storm_minecraft_status" /></div>
     <span data-storm-copy-status role="status"></span>
   </div></div></div>
@@ -91,21 +83,16 @@
   <xf:widget key="storm_recent_threads" />
 </xf:sidebar>
   ]]></template>
-  <template type="public" title="storm_minecraft_status" version_id="4010270" version_string="4.1.2"><![CDATA[
-<xf:macro name="edition" arg-label="!" arg-info="!">
-  <div class="stormJoinVersion"><strong>{$label}</strong><span data-edition-state><xf:if is="$info.state == 'online'">Online<xf:elseif is="$info.state == 'sleeping'" />Sleeping<xf:elseif is="$info.state == 'starting'" />Starting<xf:else />Status unavailable</xf:if></span>
-    <xf:if is="$info.version"><small><span data-version-label><xf:if is="$info.state == 'online'">Server version<xf:else />Last verified version</xf:if></span>: {$info.version}</small></xf:if>
-  </div>
-</xf:macro>
-<span class="stormJoinBadge{{ $status.state == 'online' ? ' stormJoinBadge--online' : '' }}" data-minecraft-state><xf:if is="$status.state == 'online'">Online<xf:if is="$status.players !== null"> · {{ count($status.players.names) }} / {$status.players.maximum} players</xf:if><xf:elseif is="$status.state == 'sleeping'" />Sleeping<xf:elseif is="$status.state == 'starting'" />Starting<xf:else />Status unavailable</xf:if></span>
-<p data-minecraft-instruction><xf:if is="$status.state == 'sleeping'">Join through Java to wake the server. Bedrock can join once it is online.<xf:elseif is="$status.state == 'starting'" />The server is starting. Check again shortly.<xf:elseif is="$status.state == 'unavailable'" />The status check is unavailable. You can still try joining.<xf:elseif is="$status.bedrock.state == 'online'" />Bedrock joins work while the server is awake.<xf:else />Java is online. Bedrock status is unavailable.</xf:if></p>
-<div class="stormJoinVersions"><xf:macro name="edition" arg-label="Java" arg-info="{$status.java}" /><xf:macro name="edition" arg-label="Bedrock" arg-info="{$status.bedrock}" /></div>
-<section class="stormJoinPlayers" data-minecraft-players aria-label="Online players"><h4>Who's online</h4>
-  <xf:if is="$status.players !== null"><xf:if is="count($status.players.names)"><ul><xf:foreach loop="$status.players.names" value="$name"><li>{$name}</li></xf:foreach></ul><xf:else /><p>No players online.</p></xf:if><xf:else /><p>Player list unavailable.</p></xf:if>
-</section>
-<xf:if is="$status.checkedAt"><small class="u-muted">Checked <xf:date time="$status.checkedAt" /></small></xf:if>
+  <template type="public" title="storm_minecraft_status" version_id="4010470" version_string="4.1.4"><![CDATA[
+<div class="stormJoinServers">
+  <div class="stormJoinServer"><strong>Java</strong><span data-minecraft-java-version><xf:if is="$status.java.version">{$status.java.version}<xf:else />—</xf:if></span><button type="button" data-storm-copy="{$status.connections.java.address}" data-storm-copy-label="Java address" aria-label="Copy Java address">{$status.connections.java.address}</button></div>
+  <div class="stormJoinServer"><strong>Bedrock</strong><span data-minecraft-bedrock-version><xf:if is="$status.bedrock.version">{$status.bedrock.version}<xf:else />—</xf:if></span><button type="button" data-storm-copy="{$status.connections.bedrock.host}" data-storm-copy-label="Bedrock address" aria-label="Copy Bedrock address">{$status.connections.bedrock.host}</button><span>:</span><button type="button" data-storm-copy="{$status.connections.bedrock.port}" data-storm-copy-label="Bedrock port" aria-label="Copy Bedrock port">{$status.connections.bedrock.port}</button></div>
+</div>
+<span class="stormJoinBadge{{ $status.state == 'online' ? ' stormJoinBadge--online' : '' }}" data-minecraft-state><xf:if is="$status.state == 'online'">Online<xf:if is="$status.players !== null"> · {{ count($status.players.identities) }}/{$status.players.maximum}</xf:if><xf:elseif is="$status.state == 'sleeping'" />Sleeping<xf:elseif is="$status.state == 'starting'" />Starting<xf:else />Unavailable</xf:if></span>
+<div class="stormJoinPlayers" data-minecraft-players aria-label="Online players"><xf:if is="$status.players !== null"><xf:foreach loop="$status.players.identities" value="$player"><span class="stormJoinPlayer" title="{$player.name}"><img src="https://mc-heads.net/avatar/{$player.uuid}/24" alt="{$player.name}" width="24" height="24" loading="lazy" /><span class="stormJoinPlayerName">{$player.name}</span></span></xf:foreach></xf:if></div>
+<div class="stormJoinGames" data-minecraft-games><xf:if is="$status.games !== null"><xf:foreach loop="$status.games" value="$game"><div class="stormJoinGame"><strong><xf:if is="$game.kind == 'ARENA'">Arena<xf:else />RWF</xf:if></strong><span>{$game.name}</span><span><xf:if is="$game.phase == 'WAITING'">Waiting<xf:elseif is="$game.phase == 'STARTING'" />Starting<xf:else />Live</xf:if></span><xf:if is="$game.progress"><span>{$game.progress}</span></xf:if><span>{$game.players} playing</span></div></xf:foreach></xf:if></div>
   ]]></template>
-  <template type="public" title="storm_forum.less" version_id="4010370" version_string="4.1.3"><![CDATA[
+  <template type="public" title="storm_forum.less" version_id="4010470" version_string="4.1.4"><![CDATA[
 .stormWelcome {display:flex;gap:2rem;align-items:center;padding:2rem;margin-bottom:2rem;border-radius:12px;background:fade(@xf-paletteColor2, 14%);}
 .stormWelcome h1 {margin:0 0 .5rem;font-size:2rem;}
 .stormWelcome .button {margin:.5rem .5rem 0 0;}
@@ -122,29 +109,25 @@
 .stormArticleBody .avatar {flex-shrink:0;border:4px solid @xf-contentAltBg;box-shadow:0 0 0 1px @xf-borderColor;border-radius:50%;}
 .stormArticleContinue {display:block;text-align:right;font-size:12px;font-weight:bold;}
 .stormHistoricalPoll .block-row {display:flex;justify-content:space-between;gap:12px;}
-.stormJoinAddress {display:flex;align-items:center;justify-content:space-between;gap:6px;}
-.stormJoinAddress strong {font-size:16px;overflow-wrap:anywhere;}
-.stormJoinAddress code {font-size:11px;overflow-wrap:anywhere;}
-.stormJoinAddress .button {flex-shrink:0;}
-.stormJoinEdition {font-size:13px;margin:14px 0 6px;}
-.stormJoinEdition:first-child {margin-top:0;}
-.stormJoinManual {margin-top:8px;font-size:11px;}
-.stormJoinManual summary {cursor:pointer;}
-.stormJoinManual .stormJoinAddress {margin-top:8px;}
-.stormJoinPort {margin-top:8px;}
-.stormJoinLive {margin-top:16px;padding-top:14px;border-top:1px solid @xf-borderColor;}
-.stormJoinVersions {display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0;}
-.stormJoinVersion > strong,.stormJoinVersion > span {display:block;font-size:12px;}
-.stormJoinVersion > span {margin-top:3px;}
-.stormJoinPlayers {border-top:1px solid @xf-borderColor;padding-top:12px;}
-.stormJoinPlayers h4 {margin:0 0 8px;font-size:13px;}
-.stormJoinPlayers ul {display:flex;flex-wrap:wrap;gap:6px;list-style:none;padding:0;margin:0;}
-.stormJoinPlayers li {padding:4px 7px;border:1px solid @xf-borderColor;border-radius:4px;background:@xf-contentAltBg;font-size:12px;overflow-wrap:anywhere;max-width:100%;}
-.stormJoin .button {font-size:11px;padding:5px 8px;}
-.stormJoin p {margin:10px 0;font-size:12px;line-height:1.6;}
-.stormJoinBadge {display:inline-block;padding:3px 7px;border-radius:20px;background:@xf-contentHighlightBg;color:@xf-textColor;font-size:11px;font-weight:bold;border:1px solid @xf-borderColor;}
+.stormJoin .block-header {display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.stormJoin .block-body {padding:10px 12px;}
+.stormJoinLive {display:grid;gap:8px;}
+.stormJoinServers {display:grid;gap:5px;}
+.stormJoinServer {display:flex;align-items:center;gap:6px;font-size:12px;min-width:0;}
+.stormJoinServer strong {width:48px;flex-shrink:0;}
+.stormJoinServer > span {color:@xf-textColorDimmed;}
+.stormJoinServer button {border:0;background:none;color:@xf-linkColor;padding:0;font:inherit;cursor:pointer;overflow-wrap:anywhere;}
+.stormJoinPlayers {display:flex;flex-wrap:wrap;gap:4px;min-height:0;}
+.stormJoinPlayer {display:inline-flex;align-items:center;}
+.stormJoinPlayer img {display:block;width:24px;height:24px;image-rendering:pixelated;}
+.stormJoinPlayerName {display:none;}
+.stormJoinPlayer--error img {display:none;}
+.stormJoinPlayer--error .stormJoinPlayerName {display:inline;font-size:11px;}
+.stormJoinGames {display:grid;gap:4px;}
+.stormJoinGame {display:flex;flex-wrap:wrap;gap:4px;font-size:11px;}
+.stormJoinGame > span:not(:last-child)::after {content:"·";margin-left:4px;color:@xf-textColorDimmed;}
+.stormJoinBadge {display:inline-block;padding:2px 6px;border-radius:20px;background:@xf-contentHighlightBg;color:@xf-textColor;font-size:10px;font-weight:bold;border:1px solid @xf-borderColor;white-space:nowrap;}
 .stormJoinBadge--online {border-color:@xf-linkColor;}
-.stormJoin small {display:block;margin-top:6px;font-size:11px;}
 .message .reactionsBar {border-radius:3px;font-size:12px;}
 .message .reactionSummary {gap:4px;}
 .reaction--small img {width:16px;height:16px;}

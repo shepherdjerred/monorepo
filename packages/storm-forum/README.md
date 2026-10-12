@@ -143,11 +143,13 @@ manifest owns native XenForo settings and the direct Minecraft service address.
 The status activity reads only the exact Minecraft StatefulSet, then uses private
 UDP Query and Geyser probes while the server is ready. It never contacts the
 wake-on-join router. The Minecraft plugin filters vanished staff and NPCs before
-returning a complete public roster; a shared response identifier prevents the
-forum from accepting an unfiltered server during rollout. Java and Bedrock have
-independent health and reported versions. `/storm-status/` serves only the public
-cache and rendered card, with no game probes. The browser refreshes once a minute
-while visible and hides live counts and names after the configured stale interval.
+returning public player identities and occupied arena/RWF games. The forum uses
+those identities to render skin heads and count only visible humans in each game.
+A shared response identifier prevents the forum from accepting an unfiltered
+server during rollout. Java and Bedrock have independent health and reported
+versions. `/storm-status/` serves only the public cache and rendered card, with
+no game probes. The browser refreshes once a minute while visible and hides live
+status, heads, and game summaries after the configured stale interval.
 Both cache readers validate aggregate and edition health against the six allowed
 combinations in `config/minecraft-status-states.json`.
 

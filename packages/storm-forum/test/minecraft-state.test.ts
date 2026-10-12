@@ -20,13 +20,13 @@ const stateCases = states.flatMap((state) =>
 it.each(stateCases)(
   "validates $state/$javaState/$bedrockState aggregate health",
   ({ state, javaState, bedrockState }) => {
-    const { players, ...base } = fixture;
+    const { players, games, ...base } = fixture;
     const value = {
       ...base,
       state,
       java: { ...fixture.java, state: javaState },
       bedrock: { ...fixture.bedrock, state: bedrockState },
-      ...(javaState === "online" ? { players } : {}),
+      ...(javaState === "online" ? { players, games } : {}),
     };
     expect(MinecraftStatusSchema.safeParse(value).success).toBe(
       validStateTriples.has([state, javaState, bedrockState].join("/")),

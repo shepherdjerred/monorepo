@@ -13,12 +13,12 @@ try {
     file_put_contents($cachePath, json_encode($fixture, JSON_THROW_ON_ERROR));
     $controller = $app->controller(Storm\Forum\Pub\Controller\Status::class, $app->request());
     $reply = $controller->actionIndex(); $public = $reply->getParam('data');
-    $check($reply->getResponseType() === 'json' && $public['status']['players']['names'] === $fixture['players']['names']);
-    $check(str_contains($public['html'], '.Bedrock Player') && str_contains($public['html'], '26.51') && !str_contains(json_encode($public), 'svc.cluster.local'));
+    $check($reply->getResponseType() === 'json' && $public['status']['players']['names'] === $fixture['players']['names'] && $public['status']['games'] === $fixture['games']);
+    $check(str_contains($public['html'], '.Bedrock Player') && str_contains($public['html'], '26.51') && str_contains($public['html'], 'Colosseum') && !str_contains(json_encode($public), 'svc.cluster.local'));
     $fixture['checkedAt'] -= 181;
     file_put_contents($cachePath, json_encode($fixture, JSON_THROW_ON_ERROR));
     $public = $controller->actionIndex()->getParam('data');
-    $check($public['status']['players'] === null && !str_contains($public['html'], '.Bedrock Player') && str_contains($public['html'], 'Last verified version'));
+    $check($public['status']['players'] === null && $public['status']['games'] === null && !str_contains($public['html'], '.Bedrock Player') && !str_contains($public['html'], 'Colosseum') && str_contains($public['html'], '26.2'));
 } finally {
     if ($oldCache === null) { unlink($cachePath); } else { file_put_contents($cachePath, $oldCache); }
 }

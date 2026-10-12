@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.arena.adapter.paper;
 import com.shepherdjerred.thestorm.arena.app.ArenaPresence;
 import com.shepherdjerred.thestorm.arena.domain.game.GameEvent;
 import com.shepherdjerred.thestorm.arena.domain.game.Member;
+import com.shepherdjerred.thestorm.core.status.PublicGameDirectory;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -17,14 +18,20 @@ public final class Arenas implements ArenaPresence {
 
   private final Map<String, ArenaRunner> runners;
   private final Snapshots snapshots;
+  private final PublicGameDirectory publicGames;
   private boolean ready;
   private boolean startupFailed;
 
   Arenas(List<ArenaRunner> runners, Snapshots snapshots) {
+    this(runners, snapshots, new PublicGameDirectory());
+  }
+
+  Arenas(List<ArenaRunner> runners, Snapshots snapshots, PublicGameDirectory publicGames) {
     var byId = new TreeMap<String, ArenaRunner>();
     runners.forEach(runner -> byId.put(runner.id(), runner));
     this.runners = byId;
     this.snapshots = snapshots;
+    this.publicGames = publicGames;
   }
 
   @Override
@@ -97,12 +104,21 @@ public final class Arenas implements ArenaPresence {
   void tick() {
     if (ready) {
       runners.values().forEach(ArenaRunner::tick);
+      publicGames.replace(
+          PublicGameDirectory.Kind.ARENA,
+          runners.values().stream()
+              .map(ArenaRunner::publicGame)
+              .flatMap(Optional::stream)
+              .toList());
+    } else {
+      publicGames.replace(PublicGameDirectory.Kind.ARENA, List.of());
     }
   }
 
   /** Stops every game and restores everyone: the plugin is shutting down. */
   void stopAll() {
     runners.values().forEach(runner -> runner.handle(new GameEvent.Stop()));
+    publicGames.replace(PublicGameDirectory.Kind.ARENA, List.of());
   }
 
   /** {@code player} asks to play in {@code runner}'s arena. */

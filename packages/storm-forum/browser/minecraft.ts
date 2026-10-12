@@ -20,26 +20,26 @@ if (card) {
     if (checkedAt > 0 && Date.now() < (checkedAt + staleAfter) * 1000) return;
     const badge = live?.querySelector<HTMLElement>("[data-minecraft-state]");
     if (badge) {
-      badge.textContent = "Status unavailable";
+      badge.textContent = "Unavailable";
       badge.classList.remove("stormJoinBadge--online");
     }
-    for (const state of live?.querySelectorAll<HTMLElement>(
-      "[data-edition-state]",
+    for (const value of live?.querySelectorAll<HTMLElement>(
+      "[data-minecraft-java-version], [data-minecraft-bedrock-version]",
     ) ?? [])
-      state.textContent = "Status unavailable";
-    for (const label of live?.querySelectorAll<HTMLElement>(
-      "[data-version-label]",
+      value.textContent = "—";
+    for (const value of live?.querySelectorAll<HTMLElement>(
+      "[data-minecraft-players], [data-minecraft-games]",
     ) ?? [])
-      label.textContent = "Last verified version";
-    const roster = live?.querySelector<HTMLElement>("[data-minecraft-players]");
-    if (roster) roster.textContent = "Player list unavailable.";
-    const instruction = live?.querySelector<HTMLElement>(
-      "[data-minecraft-instruction]",
-    );
-    if (instruction)
-      instruction.textContent =
-        "The status check is unavailable. You can still try joining.";
+      value.replaceChildren();
   }
+  live.addEventListener(
+    "error",
+    (event) => {
+      if (event.target instanceof HTMLImageElement)
+        event.target.parentElement?.classList.add("stormJoinPlayer--error");
+    },
+    true,
+  );
   function scheduleExpiration() {
     clearTimeout(expirationTimer);
     const remaining = (checkedAt + staleAfter) * 1000 - Date.now();
