@@ -10,7 +10,6 @@ import com.shepherdjerred.thestorm.economy.app.AccountId;
 import com.shepherdjerred.thestorm.economy.app.CurrencyId;
 import com.shepherdjerred.thestorm.economy.app.Money;
 import com.shepherdjerred.thestorm.rwf.adapter.db.JooqMatchStore;
-import com.shepherdjerred.thestorm.rwf.adapter.db.JooqSnapshotStore;
 import com.shepherdjerred.thestorm.rwf.adapter.record.Retention;
 import com.shepherdjerred.thestorm.rwf.app.ActionRefusal;
 import com.shepherdjerred.thestorm.rwf.app.PayoutService;
@@ -472,11 +471,11 @@ final class RwfMatchFlowTest {
     harness.tick(Duration.ofSeconds(16));
     harness.until(() -> harness.snapshot().phase() == MatchSnapshot.PhaseKind.LOBBY);
     harness.until(() -> !harness.inMatch(alice));
-    // A restored player must log in again before another match, so the saved data is proven.
-    harness.rejoinAfterSave(alice);
-    harness.until(() -> new JooqSnapshotStore(harness.database).loadAll().join().isEmpty());
-
-    harness.enter(alice);
+    // The restore is proven from saved player data; a join asked for meanwhile goes ahead once it
+    // is, with no new login.
+    alice.performCommand("rwf join");
+    harness.until(() -> harness.inMatch(alice));
+    harness.until(() -> alice.getWorld().equals(harness.rwf));
     harness.until(() -> harness.snapshot().phase() == MatchSnapshot.PhaseKind.COUNTDOWN);
 
     assertThat(harness.snapshot().combatants()).hasSize(1);

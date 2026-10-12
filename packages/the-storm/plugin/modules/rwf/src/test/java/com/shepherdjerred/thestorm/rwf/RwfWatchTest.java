@@ -146,11 +146,12 @@ final class RwfWatchTest {
     bob.performCommand("rwf leave");
 
     assertRestored(bob);
-    // The row stays until a login proves the restored belongings and their marker were saved.
+    // The row stays until saved player data proves the restored belongings and their marker; a
+    // watch asked for meanwhile waits for that proof and then goes ahead, with no new login.
     assertThat(stored()).hasSize(1);
-    harness.rejoinAfterSave(bob);
-    harness.until(() -> stored().isEmpty());
-    watch(bob);
+    bob.performCommand("rwf spectate");
+    harness.until(() -> bob.getGameMode() == GameMode.SPECTATOR);
+    harness.until(() -> stored().stream().anyMatch(s -> s.player().equals(bob.getUniqueId())));
     assertWatching(bob);
   }
 
@@ -207,9 +208,6 @@ final class RwfWatchTest {
     assertThat(bob.getGameMode()).isEqualTo(GameMode.SURVIVAL);
     assertThat(bob.getWorld()).isEqualTo(harness.overworld);
     assertThat(bob.getLocation().getX()).isEqualTo(5.5);
-    assertThat(answer(bob, "rwf spectate", "Reconnect")).isNotEmpty();
-    assertThat(bob.getGameMode()).isEqualTo(GameMode.SURVIVAL);
-    harness.rejoinAfterSave(bob);
     harness.until(() -> stored().isEmpty());
   }
 

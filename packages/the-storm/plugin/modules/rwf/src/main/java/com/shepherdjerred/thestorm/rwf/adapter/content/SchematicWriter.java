@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.rwf.adapter.content;
 
+import com.shepherdjerred.thestorm.core.nbt.NbtReader;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -21,7 +22,7 @@ public final class SchematicWriter {
   public static byte[] write(Schematic schematic) {
     var bytes = new ByteArrayOutputStream();
     try (var out = new DataOutputStream(new GZIPOutputStream(bytes))) {
-      out.writeByte(Nbt.COMPOUND);
+      out.writeByte(NbtReader.COMPOUND);
       out.writeUTF("");
       compound(out, "Schematic");
       integer(out, "Version", SchematicReader.VERSION);
@@ -29,7 +30,7 @@ public final class SchematicWriter {
       shortTag(out, "Width", schematic.width());
       shortTag(out, "Height", schematic.height());
       shortTag(out, "Length", schematic.length());
-      out.writeByte(Nbt.INT_ARRAY);
+      out.writeByte(NbtReader.INT_ARRAY);
       out.writeUTF("Offset");
       out.writeInt(3);
       out.writeInt(0);
@@ -41,19 +42,19 @@ public final class SchematicWriter {
       for (var i = 0; i < palette.size(); i++) {
         integer(out, palette.get(i), i);
       }
-      out.writeByte(Nbt.END);
-      out.writeByte(Nbt.BYTE_ARRAY);
+      out.writeByte(NbtReader.END);
+      out.writeByte(NbtReader.BYTE_ARRAY);
       out.writeUTF("Data");
       var data = varints(schematic);
       out.writeInt(data.length);
       out.write(data);
-      out.writeByte(Nbt.LIST);
+      out.writeByte(NbtReader.LIST);
       out.writeUTF("BlockEntities");
-      out.writeByte(Nbt.END);
+      out.writeByte(NbtReader.END);
       out.writeInt(0);
-      out.writeByte(Nbt.END); // Blocks
-      out.writeByte(Nbt.END); // Schematic
-      out.writeByte(Nbt.END); // root
+      out.writeByte(NbtReader.END); // Blocks
+      out.writeByte(NbtReader.END); // Schematic
+      out.writeByte(NbtReader.END); // root
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
@@ -74,18 +75,18 @@ public final class SchematicWriter {
   }
 
   private static void compound(DataOutputStream out, String name) throws IOException {
-    out.writeByte(Nbt.COMPOUND);
+    out.writeByte(NbtReader.COMPOUND);
     out.writeUTF(name);
   }
 
   private static void integer(DataOutputStream out, String name, int value) throws IOException {
-    out.writeByte(Nbt.INT);
+    out.writeByte(NbtReader.INT);
     out.writeUTF(name);
     out.writeInt(value);
   }
 
   private static void shortTag(DataOutputStream out, String name, int value) throws IOException {
-    out.writeByte(Nbt.SHORT);
+    out.writeByte(NbtReader.SHORT);
     out.writeUTF(name);
     out.writeShort(value);
   }

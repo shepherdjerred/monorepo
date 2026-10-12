@@ -922,7 +922,13 @@ final class MatchRunner implements MatchView, MatchEvents {
 
   /** A player asks to join: admission checks, then the match decides. */
   Optional<String> admit(Player player) {
-    var refusal = admission(player).or(() -> snapshotRefusal(player));
+    var refusal =
+        admission(player)
+            .or(
+                () ->
+                    snapshotRefusal(
+                        player,
+                        () -> admit(player).ifPresent(error -> Texts.error(player, error))));
     if (refusal.isPresent()) {
       return refusal;
     }
@@ -964,8 +970,11 @@ final class MatchRunner implements MatchView, MatchEvents {
     return Optional.empty();
   }
 
-  /** Why {@code player} may not have a snapshot taken now, as they should read it. */
-  Optional<String> snapshotRefusal(Player player) {
+  /**
+   * Why {@code player} may not have a snapshot taken now, as they should read it. While their last
+   * restore is still being confirmed in saved player data, {@code retry} runs again once it is.
+   */
+  Optional<String> snapshotRefusal(Player player, Runnable retry) {
     return parts
         .snapshots()
         .refusal(player.getUniqueId())
@@ -973,8 +982,21 @@ final class MatchRunner implements MatchView, MatchEvents {
             refusal ->
                 switch (refusal) {
                   case NOT_LOADED -> "The match is still starting up; try again in a moment.";
-                  case CLEANUP_PENDING ->
-                      "Your restored belongings must be saved before another match. Reconnect to"
+                  case CLEANUP_PENDING -> {
+                    parts
+                        .snapshots()
+                        .whenClean(
+                            player.getUniqueId(),
+                            () -> {
+                              if (player.isOnline()) {
+                                retry.run();
+                              }
+                            });
+                    yield "Your belongings from your last match are still being saved; trying"
+                        + " again in a moment.";
+                  }
+                  case CLEANUP_STALLED ->
+                      "Your restored belongings could not be confirmed as saved. Reconnect to"
                           + " finish recovery.";
                   case RESTORE_PENDING -> {
                     parts.snapshots().recoverWhileOnline(player);

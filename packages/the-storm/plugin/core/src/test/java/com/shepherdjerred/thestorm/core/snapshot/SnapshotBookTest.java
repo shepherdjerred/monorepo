@@ -96,6 +96,23 @@ final class SnapshotBookTest {
   }
 
   @Test
+  void aRestoreThatCannotBeConfirmedOnlineStallsUntilConfirmedAgainOrCleaned() {
+    var restored = loaded().withHeld(snapshot(ALICE, "colosseum")).take(ALICE).book();
+
+    var stalled = restored.stalled(ALICE);
+
+    assertThat(stalled.refusal(ALICE)).contains(SnapshotBook.Refusal.CLEANUP_STALLED);
+    assertThat(stalled.stalled(ALICE)).isSameAs(stalled);
+    assertThat(stalled.confirming(ALICE).refusal(ALICE))
+        .contains(SnapshotBook.Refusal.CLEANUP_PENDING);
+    assertThat(stalled.cleaned(ALICE).refusal(ALICE)).isEmpty();
+    assertThat(stalled.cleaned(ALICE).stalled()).isEmpty();
+    assertThat(loaded().stalled(BOB)).isEqualTo(loaded());
+    assertThatThrownBy(() -> new SnapshotBook(Map.of(), Set.of(), Set.of(ALICE), true))
+        .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
   void aStoredSnapshotOfAPlayerStillCleaningUpIsNotLoadedAgain() {
     var cleaning = new SnapshotBook(Map.of(), Set.of(ALICE), false);
 

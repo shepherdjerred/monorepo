@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.rwf.adapter.paper;
 
 import com.shepherdjerred.thestorm.core.snapshot.RestoreMarker;
+import com.shepherdjerred.thestorm.core.snapshot.SavedPlayerData;
 import com.shepherdjerred.thestorm.core.snapshot.SnapshotBook;
 import com.shepherdjerred.thestorm.core.snapshot.SnapshotKeeper;
 import com.shepherdjerred.thestorm.core.snapshot.SnapshotStore;
@@ -28,7 +29,7 @@ final class Snapshots {
   private final PaperContext runtime;
   private final SnapshotKeeper keeper;
 
-  Snapshots(PaperContext runtime, SnapshotStore store) {
+  Snapshots(PaperContext runtime, SnapshotStore store, SavedPlayerData saved) {
     this.runtime = runtime;
     this.keeper =
         new SnapshotKeeper(
@@ -37,7 +38,8 @@ final class Snapshots {
                 runtime.scheduler(),
                 runtime.time(),
                 store,
-                new RestoreMarker(runtime.plugin(), "rwf_restored_snapshot")));
+                new RestoreMarker(runtime.plugin(), "rwf_restored_snapshot"),
+                saved));
   }
 
   /**
@@ -58,6 +60,14 @@ final class Snapshots {
 
   Optional<SnapshotBook.Refusal> refusal(UUID player) {
     return keeper.refusal(player);
+  }
+
+  /**
+   * Runs {@code then} once {@code player}'s last restore is confirmed or stalls; it rechecks the
+   * refusal itself.
+   */
+  void whenClean(UUID player, Runnable then) {
+    keeper.whenClean(player, then);
   }
 
   /**

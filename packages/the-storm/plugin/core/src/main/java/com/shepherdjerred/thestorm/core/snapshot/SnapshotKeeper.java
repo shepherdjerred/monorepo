@@ -5,6 +5,7 @@ import java.time.Duration;
 import java.time.InstantSource;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -21,16 +22,28 @@ import org.jspecify.annotations.Nullable;
  *
  * <p>Joining takes the snapshot and empties the player in the same tick, keeping the snapshot in
  * the book, then stores it; if storing fails the player is put back from memory. Restoring puts the
- * snapshot back with a matching player-data {@link RestoreMarker}. The database copy stays
- * unrestored until a later login proves that Paper persisted the marker and belongings together;
- * only then is the row marked restored and deleted. A game module owns one keeper over its own
- * {@link SnapshotStore} and marker key, and layers whatever else it hands out on top of the {@link
- * Outcome} each call reports.
+ * snapshot back with a matching player-data {@link RestoreMarker} and saves the player's data in
+ * that same tick, then reads the saved file back off the main thread. Only once a fully read file
+ * on disk holds the snapshot's marker is the database row marked restored and deleted; the marker
+ * and the belongings reach disk in the same atomic file replace, so the row is never retired while
+ * the belongings could still be lost. If the file cannot be confirmed after a few retries the
+ * player is {@link SnapshotBook.Refusal#CLEANUP_STALLED stalled} and a later login proves the
+ * restore instead, as it does when the server's player data cannot be read back at all. A game
+ * module owns one keeper over its own {@link SnapshotStore} and marker key, and layers whatever
+ * else it hands out on top of the {@link Outcome} each call reports.
  */
 public final class SnapshotKeeper {
 
   /** How many times marking a restored snapshot is tried. */
   private static final int MARK_ATTEMPTS = 6;
+
+  /** The waits before saving and reading back again, after the first check failed. */
+  static final List<Duration> CONFIRM_RETRIES =
+      List.of(
+          Duration.ofSeconds(1),
+          Duration.ofSeconds(2),
+          Duration.ofSeconds(4),
+          Duration.ofSeconds(8));
 
   /**
    * What a restore or a recovery did for the player.
@@ -39,8 +52,8 @@ public final class SnapshotKeeper {
    *   <li>{@link #RESTORED}: the player stands outside the game with their belongings back (or a
    *       saved marker proved they already did).
    *   <li>{@link #AWAITING_RESPAWN}: the player is dead; they are restored once they respawn.
-   *   <li>{@link #PROOF_PENDING}: an earlier restore still waits for a login to prove it reached
-   *       player data; nothing new was applied, except replaying it when the proof was missing.
+   *   <li>{@link #PROOF_PENDING}: an earlier restore still waits to be confirmed in saved player
+   *       data; nothing new was applied, except replaying it when the proof was missing.
    *   <li>{@link #NOTHING}: the player had no snapshot.
    * </ul>
    */
@@ -59,25 +72,29 @@ public final class SnapshotKeeper {
    * @param time the clock snapshots are stamped with
    * @param store the module's stored snapshots
    * @param marker the module's player-data marker
+   * @param saved the server's saved player data, to confirm a restore without a new login
    */
   public record Parts(
       Plugin plugin,
       Scheduler scheduler,
       InstantSource time,
       SnapshotStore store,
-      RestoreMarker marker) {}
+      RestoreMarker marker,
+      SavedPlayerData saved) {}
 
   private final Plugin plugin;
   private final Scheduler scheduler;
   private final InstantSource time;
   private final SnapshotStore store;
   private final RestoreMarker marker;
+  private final SavedPlayerData saved;
   private final Set<UUID> restoreOnRespawn = new HashSet<>();
   private final Set<UUID> restoring = new HashSet<>();
   private final Set<UUID> joinedFromDisk = new HashSet<>();
   private final Set<UUID> loadedFromStore = new HashSet<>();
   private final Set<UUID> marking = new HashSet<>();
   private final Map<UUID, Snapshot> awaitingProof = new HashMap<>();
+  private final Map<UUID, Runnable> waiting = new HashMap<>();
   private SnapshotBook book = SnapshotBook.UNLOADED;
 
   public SnapshotKeeper(Parts parts) {
@@ -86,6 +103,7 @@ public final class SnapshotKeeper {
     this.time = parts.time();
     this.store = parts.store();
     this.marker = parts.marker();
+    this.saved = parts.saved();
   }
 
   /**
@@ -117,6 +135,20 @@ public final class SnapshotKeeper {
   }
 
   /**
+   * Runs {@code then} on the main thread once {@code player}'s restore stops being confirmed: it
+   * was either confirmed, so {@link #refusal} is empty, or it {@linkplain
+   * SnapshotBook.Refusal#CLEANUP_STALLED stalled}. Callers recheck the refusal. A later call for
+   * the same player replaces an earlier one; a player who is not being confirmed runs it next tick.
+   */
+  public void whenClean(UUID player, Runnable then) {
+    if (book.refusal(player).equals(Optional.of(SnapshotBook.Refusal.CLEANUP_PENDING))) {
+      waiting.put(player, then);
+      return;
+    }
+    scheduler.runOnMainThread(() -> guarded("rechecking the restore of " + player, then));
+  }
+
+  /**
    * Takes a snapshot for {@code scope} and empties the player in this same tick, then stores the
    * snapshot. {@code done} runs on the main thread with whether it was stored; if not, the player
    * has already been put back from memory.
@@ -134,7 +166,7 @@ public final class SnapshotKeeper {
         store
             .save(snapshot)
             .whenCompleteAsync(
-                (saved, failure) ->
+                (stored, failure) ->
                     guarded(
                         "finishing the join of " + player.getName(),
                         () -> stored(player, failure, done)),
@@ -155,8 +187,8 @@ public final class SnapshotKeeper {
   }
 
   /**
-   * A snapshot finished storing after its player left the game. It remains in the database until a
-   * later login proves that the restored player data reached disk.
+   * A snapshot finished storing after its player left the game. It remains in the database until
+   * saved player data confirms the restore.
    */
   public void forget(UUID player) {
     logger().debug("Keeping snapshot of {} until player data confirms restore", player);
@@ -166,9 +198,10 @@ public final class SnapshotKeeper {
    * Restores {@code player}'s snapshot if they have one. A dead player is restored once they
    * respawn.
    *
-   * <p>The marker is written after all belongings have been applied. Paper saves them in the same
-   * player data record. If a crash happens first, the next login replays this snapshot; if the
-   * marker survived, the database row can be retired without applying it again.
+   * <p>The marker is written after all belongings have been applied and the player's data is saved
+   * in the same tick, so the file holds both or neither. If a crash happens first, the next login
+   * replays this snapshot; if the marker survived, the database row can be retired without applying
+   * it again.
    */
   public Outcome restore(Player player) {
     return restore(player, false);
@@ -191,6 +224,8 @@ public final class SnapshotKeeper {
       awaitProof(snapshot);
       if (loadedFromDisk) {
         mark(player, 1);
+      } else {
+        confirm(player, snapshot, 0);
       }
       return Outcome.RESTORED;
     }
@@ -219,7 +254,8 @@ public final class SnapshotKeeper {
   }
 
   /**
-   * Applies {@code snapshot} and records its marker, flagging the player as restoring meanwhile.
+   * Applies {@code snapshot} and records its marker, flagging the player as restoring meanwhile,
+   * then saves and confirms the player's data.
    */
   private void applyMarked(Player player, Snapshot snapshot) {
     var id = player.getUniqueId();
@@ -230,6 +266,108 @@ public final class SnapshotKeeper {
     } finally {
       restoring.remove(id);
     }
+    confirm(player, snapshot, 0);
+  }
+
+  /**
+   * Saves {@code player}'s data in this tick, then reads the file back off the main thread. The
+   * snapshot is marked restored once the file holds its marker; otherwise this is tried again after
+   * each of {@link #CONFIRM_RETRIES} before the player is stalled.
+   */
+  private void confirm(Player player, Snapshot snapshot, int attempt) {
+    var id = player.getUniqueId();
+    if (!snapshot.equals(awaitingProof.get(id))) {
+      return;
+    }
+    if (!saved.available()) {
+      stall(id, player.getName(), "the server's player data cannot be read back");
+      return;
+    }
+    if (!player.isOnline()) {
+      stall(id, player.getName(), "they left before it was confirmed");
+      return;
+    }
+    if (!marker.matches(player, snapshot)) {
+      logger().error("{} lost the restore marker of a snapshot awaiting proof", player.getName());
+      stall(id, player.getName(), "their restore marker is gone");
+      return;
+    }
+    book = book.confirming(id);
+    saved.save(player);
+    var _ =
+        saved
+            .marker(id, marker.key())
+            .whenCompleteAsync(
+                (found, failure) ->
+                    guarded(
+                        "confirming the restore of " + player.getName(),
+                        () ->
+                            checked(
+                                player,
+                                new Attempt(snapshot, attempt),
+                                failure == null ? found : Optional.empty(),
+                                failure)),
+                scheduler.mainThread());
+  }
+
+  /**
+   * One read-back of a restore.
+   *
+   * @param snapshot the snapshot being confirmed
+   * @param number 0 for the first read-back, then one more for each retry
+   */
+  private record Attempt(Snapshot snapshot, int number) {}
+
+  private void checked(
+      Player player, Attempt read, Optional<String> found, @Nullable Throwable failure) {
+    var snapshot = read.snapshot();
+    var attempt = read.number();
+    var id = player.getUniqueId();
+    if (!snapshot.equals(awaitingProof.get(id))) {
+      return;
+    }
+    var expected = RestoreMarker.fingerprint(snapshot);
+    if (failure == null && found.equals(Optional.of(expected))) {
+      mark(player, 1);
+      return;
+    }
+    if (attempt >= CONFIRM_RETRIES.size()) {
+      stall(id, player.getName(), "their saved data never showed the restore");
+      return;
+    }
+    var wait = CONFIRM_RETRIES.get(attempt);
+    if (failure != null) {
+      logger()
+          .warn(
+              "Could not read back the saved data of {} (attempt {}); retrying in {}",
+              player.getName(),
+              attempt + 1,
+              wait,
+              failure);
+    } else {
+      logger()
+          .warn(
+              "The saved data of {} does not yet hold their restore (attempt {}); retrying in {}",
+              player.getName(),
+              attempt + 1,
+              wait);
+    }
+    var _ = scheduler.runOnMainThreadLater(wait, () -> confirm(player, snapshot, attempt + 1));
+  }
+
+  /** The restore of {@code id} waits for a later login to be confirmed. */
+  private void stall(UUID id, String name, String why) {
+    book = book.stalled(id);
+    logger().warn("The restore of {} waits for their next login: {}", name, why);
+    settled(id);
+  }
+
+  /** Runs whatever waited for {@code id}'s restore to stop being confirmed. */
+  private void settled(UUID id) {
+    var then = waiting.remove(id);
+    if (then != null) {
+      guarded("rechecking the restore of " + id, then);
+    }
   }
 
   /** Whether {@code player} is being put back right now: their restore teleport is allowed. */
@@ -237,7 +375,7 @@ public final class SnapshotKeeper {
     return restoring.contains(player);
   }
 
-  /** Retires a snapshot after a fresh login proved its marker reached player data. */
+  /** Retires a snapshot after saved player data proved its marker reached disk. */
   private void mark(Player player, int attempt) {
     var id = player.getUniqueId();
     if (attempt == 1 && !marking.add(id)) {
@@ -261,6 +399,7 @@ public final class SnapshotKeeper {
       awaitingProof.remove(id);
       book = book.cleaned(id);
       logFailure(store.deleteRestored(id), "delete the restored snapshot of " + player.getName());
+      settled(id);
       return;
     }
     if (attempt >= MARK_ATTEMPTS) {
@@ -272,6 +411,7 @@ public final class SnapshotKeeper {
               player.getName(),
               attempt,
               failure);
+      stall(id, player.getName(), "the database would not mark it restored");
       return;
     }
     var backoff = Duration.ofSeconds(1L << attempt);
@@ -287,8 +427,9 @@ public final class SnapshotKeeper {
 
   /**
    * On join ({@code loadedFromDisk}) or for a player already online: restores a snapshot left by a
-   * crash (after respawning, if dead), or proves and retires an earlier restore. Only a fresh login
-   * counts as proof that the marker reached player data.
+   * crash (after respawning, if dead), or proves and retires an earlier restore. A fresh login
+   * whose loaded data holds the marker proves the restore at once; one without it replays the
+   * snapshot.
    */
   public Outcome recover(Player player, boolean loadedFromDisk) {
     var id = player.getUniqueId();

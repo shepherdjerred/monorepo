@@ -15,6 +15,7 @@ import com.shepherdjerred.thestorm.arena.domain.reward.LootEntry;
 import com.shepherdjerred.thestorm.arena.domain.survival.SurvivalContent;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.schedule.Cancellable;
+import com.shepherdjerred.thestorm.core.snapshot.SavedPlayerData;
 import com.shepherdjerred.thestorm.core.snapshot.SnapshotStore;
 import com.shepherdjerred.thestorm.core.status.PublicGameDirectory;
 import com.shepherdjerred.thestorm.economy.app.MoneyFormatter;
@@ -112,7 +113,13 @@ public final class ArenaPaper {
     }
     var mobs = MobFactory.create(keys, content.waves());
     var snapshots =
-        new Snapshots(context, new Snapshots.Parts(app.snapshots(), app.rewards(), texts));
+        new Snapshots(
+            context,
+            new Snapshots.Parts(
+                app.snapshots(),
+                app.rewards(),
+                texts,
+                module.services().require(SavedPlayerData.class)));
     var services =
         new GameRunner.Services(
             context,

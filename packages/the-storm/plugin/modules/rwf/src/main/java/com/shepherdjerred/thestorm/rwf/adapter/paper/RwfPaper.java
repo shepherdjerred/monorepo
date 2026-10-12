@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.rwf.adapter.paper;
 
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.schedule.Cancellable;
+import com.shepherdjerred.thestorm.core.snapshot.SavedPlayerData;
 import com.shepherdjerred.thestorm.core.snapshot.SnapshotStore;
 import com.shepherdjerred.thestorm.core.status.PublicGameDirectory;
 import com.shepherdjerred.thestorm.core.world.SealedWorlds;
@@ -148,7 +149,8 @@ public final class RwfPaper {
                 module.analytics()));
     var keys = new Keys(module.plugin());
     var kits = KitFactory.build(keys, content.kits());
-    var snapshots = new Snapshots(context, app.snapshots());
+    var snapshots =
+        new Snapshots(context, app.snapshots(), module.services().require(SavedPlayerData.class));
     var boards = new Scoreboards(context.server());
     var bombs = new BombMarkers(context, keys, app.hooks().displayStyle());
     var maps = new ArrayList<MapWorld>();

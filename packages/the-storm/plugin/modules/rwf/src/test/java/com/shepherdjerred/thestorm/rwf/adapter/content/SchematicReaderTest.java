@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.rwf.adapter.content;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.shepherdjerred.thestorm.core.nbt.NbtReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
@@ -101,45 +102,45 @@ final class SchematicReaderTest {
   private static byte[] withBlockEntity() {
     return nbt(
         out -> {
-          out.writeByte(Nbt.COMPOUND);
+          out.writeByte(NbtReader.COMPOUND);
           out.writeUTF("");
-          out.writeByte(Nbt.COMPOUND);
+          out.writeByte(NbtReader.COMPOUND);
           out.writeUTF("Schematic");
           integer(out, "Version", 3);
           shortTag(out, "Width", 1);
           shortTag(out, "Height", 1);
           shortTag(out, "Length", 1);
-          out.writeByte(Nbt.COMPOUND);
+          out.writeByte(NbtReader.COMPOUND);
           out.writeUTF("Blocks");
-          out.writeByte(Nbt.COMPOUND);
+          out.writeByte(NbtReader.COMPOUND);
           out.writeUTF("Palette");
           integer(out, "minecraft:chest", 0);
-          out.writeByte(Nbt.END);
-          out.writeByte(Nbt.BYTE_ARRAY);
+          out.writeByte(NbtReader.END);
+          out.writeByte(NbtReader.BYTE_ARRAY);
           out.writeUTF("Data");
           out.writeInt(1);
           out.write(0);
-          out.writeByte(Nbt.LIST);
+          out.writeByte(NbtReader.LIST);
           out.writeUTF("BlockEntities");
-          out.writeByte(Nbt.COMPOUND);
+          out.writeByte(NbtReader.COMPOUND);
           out.writeInt(1);
-          out.writeByte(Nbt.END);
-          out.writeByte(Nbt.END);
-          out.writeByte(Nbt.END);
-          out.writeByte(Nbt.END);
+          out.writeByte(NbtReader.END);
+          out.writeByte(NbtReader.END);
+          out.writeByte(NbtReader.END);
+          out.writeByte(NbtReader.END);
         });
   }
 
   private static byte[] version(int version) {
     return nbt(
         out -> {
-          out.writeByte(Nbt.COMPOUND);
+          out.writeByte(NbtReader.COMPOUND);
           out.writeUTF("");
-          out.writeByte(Nbt.COMPOUND);
+          out.writeByte(NbtReader.COMPOUND);
           out.writeUTF("Schematic");
           integer(out, "Version", version);
-          out.writeByte(Nbt.END);
-          out.writeByte(Nbt.END);
+          out.writeByte(NbtReader.END);
+          out.writeByte(NbtReader.END);
         });
   }
 
@@ -158,13 +159,13 @@ final class SchematicReaderTest {
   }
 
   private static void integer(DataOutputStream out, String name, int value) throws IOException {
-    out.writeByte(Nbt.INT);
+    out.writeByte(NbtReader.INT);
     out.writeUTF(name);
     out.writeInt(value);
   }
 
   private static void shortTag(DataOutputStream out, String name, int value) throws IOException {
-    out.writeByte(Nbt.SHORT);
+    out.writeByte(NbtReader.SHORT);
     out.writeUTF(name);
     out.writeShort(value);
   }

@@ -5,6 +5,7 @@ import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.Services;
 import com.shepherdjerred.thestorm.core.schedule.PaperScheduler;
+import com.shepherdjerred.thestorm.core.snapshot.SavedPlayerData;
 import com.shepherdjerred.thestorm.core.status.PublicGameDirectory;
 import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.economy.app.MoneyFormatter;
@@ -20,6 +21,7 @@ import com.shepherdjerred.thestorm.rwf.domain.combatant.CombatantId;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchSnapshot;
 import com.shepherdjerred.thestorm.rwf.testing.FakeBotRoster;
 import com.shepherdjerred.thestorm.rwf.testing.FakeClock;
+import com.shepherdjerred.thestorm.rwf.testing.FakeSavedPlayerData;
 import com.shepherdjerred.thestorm.rwf.testing.FakeWallets;
 import com.shepherdjerred.thestorm.rwf.testing.Samples;
 import java.io.IOException;
@@ -128,6 +130,7 @@ public final class RwfHarness implements AutoCloseable {
   public final Services services = new Services();
   public final FakeBotRoster bots;
   public final SealedWorlds sealed = new SealedWorlds();
+  public final FakeSavedPlayerData saved = new FakeSavedPlayerData();
   private RwfModule module = new RwfModule();
 
   private RwfHarness(ServerMock server, World overworld, World rwf, StormDatabase database) {
@@ -177,6 +180,7 @@ public final class RwfHarness implements AutoCloseable {
     services.provide(MoneyFormatter.class, wallets);
     services.provide(SealedWorlds.class, sealed);
     services.provide(PublicGameDirectory.class, new PublicGameDirectory());
+    services.provide(SavedPlayerData.class, saved);
     if (withBots) {
       services.provide(BotRoster.class, bots);
     }

@@ -4,6 +4,7 @@ import com.shepherdjerred.thestorm.arena.adapter.paper.ChunkKeeper;
 import com.shepherdjerred.thestorm.arena.adapter.paper.ServerHooks;
 import com.shepherdjerred.thestorm.arena.domain.geometry.ChunkPos;
 import com.shepherdjerred.thestorm.arena.testing.FakeClock;
+import com.shepherdjerred.thestorm.arena.testing.FakeSavedPlayerData;
 import com.shepherdjerred.thestorm.arena.testing.FakeWallets;
 import com.shepherdjerred.thestorm.arena.testing.Samples;
 import com.shepherdjerred.thestorm.core.compute.DirectComputePool;
@@ -11,6 +12,7 @@ import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.Services;
 import com.shepherdjerred.thestorm.core.schedule.PaperScheduler;
+import com.shepherdjerred.thestorm.core.snapshot.SavedPlayerData;
 import com.shepherdjerred.thestorm.core.status.PublicGameDirectory;
 import com.shepherdjerred.thestorm.economy.app.MoneyFormatter;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
@@ -105,6 +107,7 @@ public final class ArenaHarness implements AutoCloseable {
   final FakeWallets wallets = new FakeWallets();
   final CountingChunks chunks = new CountingChunks();
   final Services services = new Services();
+  final FakeSavedPlayerData saved = new FakeSavedPlayerData();
 
   private ArenaHarness(ServerMock server, World world, StormDatabase database) {
     this.server = server;
@@ -136,6 +139,7 @@ public final class ArenaHarness implements AutoCloseable {
     services.provide(Wallets.class, wallets);
     services.provide(MoneyFormatter.class, wallets);
     services.provide(PublicGameDirectory.class, new PublicGameDirectory());
+    services.provide(SavedPlayerData.class, saved);
     enabling =
         plugin ->
             new ArenaModule(context -> new ServerHooks(chunks))
