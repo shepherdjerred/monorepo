@@ -8,16 +8,26 @@ import TaskNotesKit
 
 @Observable
 public final class FacetMacEnvironment {
-    public let store = FacetStore()
+    public let store: FacetStore
+    @ObservationIgnored internal let bootstrap: _Concurrency.Task<Void, Never>
     @ObservationIgnored private var panel: QuickAddPanel?
     fileprivate var focusRequest = 0
 
-    public init() {
+    public convenience init() {
+        let applicationStore = FacetStore()
+        self.init(store: applicationStore, startup: { await applicationStore.start() })
         if !store.isIsolatedLaunch {
             KeyboardShortcuts.onKeyDown(for: .quickAdd) { [weak self] in
                 MainActor.assumeIsolated { self?.toggleQuickAdd() }
             }
         }
+    }
+
+    /// Bootstrap belongs to the application even when a hidden launch creates
+    /// no visible workspace. Views still await the store's shared startup task.
+    internal init(store: FacetStore, startup: @escaping @MainActor () async -> Void) {
+        self.store = store
+        bootstrap = _Concurrency.Task { await startup() }
     }
 
     public func toggleQuickAdd() {
@@ -75,18 +85,22 @@ public struct FacetMacRootView: View {
                     }
                 }
             ).frame(minWidth: 760, minHeight: 520)
+                .background(FacetWorkspaceWindowIdentity().frame(width: 0, height: 0))
         #else
             FacetRootView(store: environment.store).frame(minWidth: 760, minHeight: 520)
+                .background(FacetWorkspaceWindowIdentity().frame(width: 0, height: 0))
         #endif
     }
 }
 
 public struct FacetMacCommands: Commands {
+    @Environment(\.openWindow) private var openWindow
     @FocusedValue(\.facetWindowCommands) private var window: FacetWindowCommandActions?
     private let environment: FacetMacEnvironment
     public init(environment: FacetMacEnvironment) { self.environment = environment }
     public var body: some Commands {
         CommandGroup(replacing: .newItem) {
+            Button("New Window") { openWindow(id: "facet.workspace") }
             Button("New Task") { window?.newTask() }.keyboardShortcut("n")
                 .disabled(window == nil)
             Button("Quick Add…") { environment.toggleQuickAdd() }
@@ -132,6 +146,24 @@ public struct FacetMacCommands: Commands {
     }
 }
 
+/// Name the actual AppKit window; a SwiftUI content identifier cannot address
+/// two workspace windows independently through native accessibility.
+private struct FacetWorkspaceWindowIdentity: NSViewRepresentable {
+    func makeNSView(context: Context) -> WindowIdentityView { WindowIdentityView() }
+    func updateNSView(_ view: WindowIdentityView, context: Context) {}
+
+    final class WindowIdentityView: NSView {
+        private let accessibilityID = "facet.workspace." + UUID().uuidString.lowercased()
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            // AppKit's window property is unowned(unsafe); read it only from
+            // its MainActor attachment callback and retain it for this call.
+            let attachedWindow = unsafe window
+            attachedWindow?.setAccessibilityIdentifier(accessibilityID)
+        }
+    }
+}
+
 public struct FacetMacSettingsView: View {
     private let environment: FacetMacEnvironment
     public init(environment: FacetMacEnvironment) { self.environment = environment }
@@ -148,7 +180,7 @@ internal struct FacetMacSettingsContent: View {
         VStack {
             QuickAddSettingsView()
             GroupBox("Feedback") { FacetFeedbackSettings(store: store).padding(8) }
-            Button("Connect Obsidian Sync…") { store.showsAccount = true }
+            FacetAccountConnectionButton(store: store)
             Button("Sign out of Obsidian") {
                 _Concurrency.Task { await store.signOut() }
             }

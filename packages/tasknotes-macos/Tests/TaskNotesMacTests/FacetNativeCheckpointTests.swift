@@ -76,7 +76,9 @@ struct FacetNativeCheckpointTests {
     func desktopList(appearance: SnapshotAppearance) throws {
         let store = try FacetSurfaceFixtures.store(.populated)
         let result = try OffscreenSnapshot.write(
-            FacetNativeWorkspace(store: store, importsFolder: .constant(false)),
+            FacetNativeWorkspace(
+                store: store, importsFolder: .constant(false), capturePresented: .constant(false),
+                sheets: FacetSheetPresentation()),
             named: "facet-native-desktop-checkpoint", size: CGSize(width: 1200, height: 700),
             appearance: appearance)
         #expect(result.distinctColors > 8)

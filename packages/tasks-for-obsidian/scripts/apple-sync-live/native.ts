@@ -14,6 +14,8 @@ import {
   assertOwnedSimulator,
   runDirectory,
   atomicJSON,
+  activeClients,
+  clientState,
 } from "./model";
 import {
   command,
@@ -26,8 +28,32 @@ import {
 import {
   assertExactNativeJourney,
   assertDistinctNativeEvidenceLabels,
-  initialConfigurationJourneys,
+  selectedInitialConfigurationJourneys,
+  assertSelectedNativeClients,
 } from "./native-evidence";
+
+export function nativeClientConfiguration(manifest: Manifest, client: Client) {
+  const state = clientState(manifest, client);
+  if (manifest.allowedRemoteVaultID === null)
+    throw new Error("Native live journeys require a bound, authenticated run");
+  if (client === "ios" && manifest.simulator === null)
+    throw new Error("The iOS acceptance simulator is missing");
+  return {
+    state,
+    target:
+      client === "ios"
+        ? "TasksForObsidianUITests"
+        : "TaskNotesAcceptanceUITests",
+    destination:
+      client === "ios" && manifest.simulator !== null
+        ? `platform=iOS Simulator,id=${manifest.simulator.id}`
+        : "platform=macOS",
+    simulatorEnvironment:
+      client === "ios" && manifest.simulator !== null
+        ? { FACET_E2E_SIMULATOR: manifest.simulator.id }
+        : {},
+  };
+}
 
 export async function runNativeTest(
   manifest: Manifest,
@@ -39,6 +65,7 @@ export async function runNativeTest(
     timeoutMS?: number;
   },
 ) {
+  const selected = nativeClientConfiguration(manifest, client);
   const { label, extra = {}, timeoutMS = 600_000 } = options;
   z.number().int().positive().max(600_000).parse(timeoutMS);
   const deadline = Date.now() + timeoutMS;
@@ -52,19 +79,14 @@ export async function runNativeTest(
         timeoutMS: Math.max(1, deadline - Date.now()),
       },
     );
-  if (
-    manifest.clients === null ||
-    manifest.simulator === null ||
-    manifest.allowedRemoteVaultID === null
-  )
-    throw new Error("Native live journeys require a bound, authenticated run");
-  assertOwnedSimulator(
-    manifest.runID,
-    manifest.simulator,
-    JSON.parse(
-      await runCommand(["xcrun", "simctl", "list", "devices", "--json"]),
-    ),
-  );
+  if (client === "ios" && manifest.simulator !== null)
+    assertOwnedSimulator(
+      manifest.runID,
+      manifest.simulator,
+      JSON.parse(
+        await runCommand(["xcrun", "simctl", "list", "devices", "--json"]),
+      ),
+    );
   const directory = runDirectory(manifest.runID);
   const products = path.join(directory, client, "Build/Products");
   const testRun = path.join(
@@ -83,22 +105,23 @@ export async function runNativeTest(
   z.object({ FormatVersion: z.literal(1) }).parse(
     configuration["__xctestrun_metadata__"],
   );
-  const target =
-    client === "ios" ? "TasksForObsidianUITests" : "TaskNotesAcceptanceUITests";
+  const { target } = selected;
   const existing = z
     .object({ EnvironmentVariables: z.record(z.string(), z.string()) })
     .parse(configuration[target]);
+  const existingEnvironment = { ...existing.EnvironmentVariables };
+  if (client === "macos") delete existingEnvironment["FACET_E2E_SIMULATOR"];
   const environment = {
-    ...existing.EnvironmentVariables,
+    ...existingEnvironment,
     FACET_E2E_RUN_ID: manifest.runID,
     FACET_E2E_DESCRIPTOR:
       client === "ios"
         ? "@documents/acceptance.json"
-        : manifest.clients.macos.descriptor,
+        : selected.state.descriptor,
     FACET_E2E_DESCRIPTOR_JSON: JSON.stringify(
       descriptor(manifest, client, manifest.allowedRemoteVaultID),
     ),
-    FACET_E2E_SIMULATOR: manifest.simulator.id,
+    ...selected.simulatorEnvironment,
     FACET_E2E_VAULT_ID: manifest.allowedRemoteVaultID,
     FACET_E2E_REMOTE_VAULT_ID: manifest.allowedRemoteVaultID,
     FACET_E2E_APP_BUNDLE_ID: macBundle,
@@ -117,7 +140,7 @@ export async function runNativeTest(
     "-replace",
     `${target}.SystemAttachmentLifetime`,
     "-string",
-    "keepAlways",
+    client === "macos" ? "keepNever" : "keepAlways",
     testRun,
   ]);
   await runCommand([
@@ -145,9 +168,7 @@ export async function runNativeTest(
         "-xctestrun",
         testRun,
         "-destination",
-        client === "ios"
-          ? `platform=iOS Simulator,id=${manifest.simulator.id}`
-          : "platform=macOS",
+        selected.destination,
         "-parallel-testing-enabled",
         "NO",
         "-resultBundlePath",
@@ -236,6 +257,7 @@ export async function waitForConvergence(
       );
       if (manifest.clients === null) throw new Error("Apps are not prepared");
       const current = await statuses(manifest);
+      assertSelectedNativeClients(manifest, current);
       for (const { client, value } of current) {
         const profile = settledProfile(
           value,
@@ -245,7 +267,7 @@ export async function waitForConvergence(
         );
         await verifyReplica(
           path.join(
-            manifest.clients[client].stateDirectory,
+            clientState(manifest, client).stateDirectory,
             "replicas",
             profile.profileID,
           ),
@@ -274,8 +296,10 @@ export async function ownedProfile(
   allowSignedOut = false,
   timeoutMS = 120_000,
 ) {
+  clientState(manifest, client);
   Object.assign(manifest, await readManifest(manifest.runID, timeoutMS));
   const current = await statuses(manifest);
+  assertSelectedNativeClients(manifest, current);
   const entry = current.find((item) => item.client === client);
   if (entry === undefined) throw new Error("Missing acceptance client status");
   validate("status", entry.value);
@@ -338,13 +362,9 @@ export function replicaDirectory(
   client: Client,
   profileID: string,
 ) {
-  if (manifest.clients === null) throw new Error("Apps are not prepared");
+  const state = clientState(manifest, client);
   uuid.parse(profileID);
-  return path.join(
-    manifest.clients[client].stateDirectory,
-    "replicas",
-    profileID,
-  );
+  return path.join(state.stateDirectory, "replicas", profileID);
 }
 
 export async function control(
@@ -353,12 +373,10 @@ export async function control(
   kind: "refresh" | "interrupt" | "resume",
   profileID?: string,
 ) {
+  const state = clientState(manifest, client);
   if (manifest.clients === null || manifest.allowedRemoteVaultID === null)
     throw new Error("Run is not bound");
-  const directory = path.join(
-    manifest.clients[client].stateDirectory,
-    "control",
-  );
+  const directory = path.join(state.stateDirectory, "control");
   const commandID = crypto.randomUUID();
   const message = {
     schemaVersion: 1,
@@ -433,8 +451,9 @@ export async function verify(manifest: Manifest) {
       "LiveSyncVaultUITests/testInitialDownloadUsesTaskNotesConfiguration";
     // Byte convergence alone does not prove that the app can load its provider.
     // Each selected native test must execute once and prove visible usable tasks.
-    assertDistinctNativeEvidenceLabels(initialConfigurationJourneys);
-    for (const { client, label } of initialConfigurationJourneys) {
+    const journeys = selectedInitialConfigurationJourneys(manifest);
+    assertDistinctNativeEvidenceLabels(journeys);
+    for (const { client, label } of journeys) {
       await runNativeTest(manifest, client, selector, {
         label,
         timeoutMS: remainingMS(),
@@ -458,13 +477,13 @@ export async function verify(manifest: Manifest) {
       round: manifest.round,
       capturedAt: new Date().toISOString(),
       clients: current,
-      usability: { selector, clients: ["ios", "macos"] },
+      usability: { selector, clients: activeClients(manifest) },
     });
     manifest.cases["initial-download"] = "pass";
     manifest.stage = "initial-verified";
     await save(manifest);
     console.log(
-      "Initial acceptance passed: both native apps load the TaskNotes configuration and show the expected task; both replicas and the official reference match exact file hashes. Other cases remain pending.",
+      `Initial acceptance passed: selected clients (${activeClients(manifest).join(", ")}) load the TaskNotes configuration and show the expected task; their replicas and the official reference match exact file hashes. Other cases remain pending.`,
     );
   } catch (error) {
     manifest.cases["initial-download"] = "failed";

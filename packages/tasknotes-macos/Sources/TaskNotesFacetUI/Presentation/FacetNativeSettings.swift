@@ -4,6 +4,7 @@ import TaskNotesKit
 internal struct FacetNativeSettings: View {
     let store: FacetStore
     @Binding var importsFolder: Bool
+    let sheets: FacetSheetPresentation
     var body: some View {
         List {
             Section("Vaults") {
@@ -21,7 +22,10 @@ internal struct FacetNativeSettings: View {
                     }
                 }
                 Button("Import vault copy…") { importsFolder = true }
-                Button("Connect Obsidian Sync…") { store.showsAccount = true }
+                Button("Connect Obsidian Sync…") {
+                    sheets.account(store: store).wrappedValue = true
+                }.disabled(store.accountWindowOwnerID != nil)
+                    .help("Sync is open in another window while this control is unavailable.")
             }
             Section("Reminders") {
                 Toggle(
@@ -47,7 +51,14 @@ internal struct FacetNativeSettings: View {
                 }
                 Button(
                     "Resolve conflicts", systemImage: "exclamationmark.arrow.triangle.2.circlepath"
-                ) { store.showsConflicts = true }
+                ) {
+                    #if os(macOS)
+                        _Concurrency.Task { await sheets.openConflicts(store: store) }
+                    #else
+                        store.showsConflicts = true
+                    #endif
+                }.disabled(store.conflictWindowOwnerID != nil)
+                    .help("Conflicts are open in another window while this control is unavailable.")
                 ForEach(store.pendingActions) { action in
                     VStack(alignment: .leading, spacing: 8) {
                         Text(action.id).font(.caption).textSelection(.enabled)

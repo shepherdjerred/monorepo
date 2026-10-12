@@ -8,6 +8,7 @@ final class LiveSyncConflictUITests: XCTestCase {
     private struct Descriptor: Decodable {
         let schemaVersion: UInt32
         let runID: UUID
+        let stateDirectory: String
         let allowedRemoteVaultID: String?
     }
     private struct Scenario {
@@ -22,18 +23,24 @@ final class LiveSyncConflictUITests: XCTestCase {
 
     override func setUp() { continueAfterFailure = false }
 
-    func testEditOwnedTaskWhileOffline() throws {
+    func testEditOwnedTaskWhileOffline() async throws {
         let scenario = try scenario()
-        let app = launch(scenario)
-        let status = app.descendants(matching: .any)["facet.sync.status"].firstMatch
+        let (app, surface) = try launch(scenario)
+        #if os(macOS)
+            let status = surface.descendants(matching: .any).matching(
+                identifier: "facet.sync.status"
+            ).element
+        #else
+            let status = app.descendants(matching: .any)["facet.sync.status"].firstMatch
+        #endif
         XCTAssertTrue(status.waitForExistence(timeout: 20))
         XCTAssertEqual(
             status.value as? String, "offline", "Interrupt the owned session before this journey.")
-        let existingTask = task(scenario.originalTitle, app: app)
+        let existingTask = task(scenario.originalTitle, surface: surface)
         XCTAssertTrue(existingTask.waitForExistence(timeout: 20))
         activate(existingTask)
         #if os(macOS)
-            let title = app.textFields["facet.inspector.title"]
+            let title = surface.textFields["facet.inspector.title"]
             XCTAssertTrue(title.waitForExistence(timeout: 5))
             title.click()
             title.typeKey("a", modifierFlags: .command)
@@ -54,43 +61,59 @@ final class LiveSyncConflictUITests: XCTestCase {
             XCTAssertEqual(title.value as? String, scenario.localTitle)
             app.buttons["facet.editor.save"].tap()
         #endif
-        XCTAssertTrue(task(scenario.localTitle, app: app).waitForExistence(timeout: 15))
-        attach(app, name: "Live owned vault local conflict edit while offline")
+        XCTAssertTrue(task(scenario.localTitle, surface: surface).waitForExistence(timeout: 15))
+        try await attach(
+            app, surface: surface, name: "Live owned vault local conflict edit while offline")
         app.terminate()
     }
 
-    func testPreviewAndKeepBothVersions() throws {
+    func testPreviewAndKeepBothVersions() async throws {
         let scenario = try scenario()
-        let app = launch(scenario)
-        let open = app.buttons["facet.conflicts.open"]
+        let (app, surface) = try launch(scenario)
+        let open = surface.buttons["facet.conflicts.open"]
         XCTAssertTrue(
             open.waitForExistence(timeout: 30),
             "Resume the session and wait for its durable conflict first.")
         activate(open)
-        let local = app.buttons.matching(identifier: "facet.conflict.preview.local")
-        let remote = app.buttons.matching(identifier: "facet.conflict.preview.remote")
+        #if os(macOS)
+            assertConflictSheetOwnership(app: app, surface: surface)
+        #endif
+        let local = surface.buttons.matching(identifier: "facet.conflict.preview.local")
+        let remote = surface.buttons.matching(identifier: "facet.conflict.preview.remote")
         XCTAssertTrue(local.firstMatch.waitForExistence(timeout: 5))
         XCTAssertEqual(local.count, 1)
         XCTAssertEqual(remote.count, 1)
-        assertPreview(
-            scenario.localTitle, excludes: scenario.remoteTitle, button: local.firstMatch, app: app)
-        assertPreview(
-            scenario.remoteTitle, excludes: scenario.localTitle, button: remote.firstMatch, app: app
+        try await assertPreview(
+            scenario.localTitle, excludes: scenario.remoteTitle, button: local.firstMatch, app: app,
+            surface: surface)
+        try await assertPreview(
+            scenario.remoteTitle, excludes: scenario.localTitle, button: remote.firstMatch,
+            app: app,
+            surface: surface
         )
-        let keep = app.buttons.matching(identifier: "facet.conflict.keepBoth")
+        let keep = surface.buttons.matching(identifier: "facet.conflict.keepBoth")
         XCTAssertEqual(keep.count, 1)
         activate(keep.firstMatch)
-        let destination = app.textFields["facet.conflict.destination"]
+        let destination = surface.textFields["facet.conflict.destination"]
         XCTAssertTrue(destination.waitForExistence(timeout: 5))
         XCTAssertEqual(destination.value as? String, "")
         activate(destination)
         destination.typeText(scenario.destination)
         XCTAssertEqual(destination.value as? String, scenario.destination)
-        attach(app, name: "Live owned vault keep both original conflict versions")
-        activate(app.buttons["facet.conflict.save"])
+        try await attach(
+            app, surface: surface, name: "Live owned vault keep both original conflict versions")
+        activate(surface.buttons["facet.conflict.save"])
         XCTAssertTrue(destination.waitForNonExistence(timeout: 15))
-        XCTAssertTrue(app.staticTexts["All conflicts are resolved."].waitForExistence(timeout: 15))
-        attach(app, name: "Live owned vault conflict resolution applied")
+        #if os(macOS)
+            let resolved = surface.staticTexts.matching(
+                NSPredicate(format: "value == %@", "All conflicts are resolved.")
+            ).element
+        #else
+            let resolved = app.staticTexts["All conflicts are resolved."]
+        #endif
+        XCTAssertTrue(resolved.waitForExistence(timeout: 15))
+        try await attach(
+            app, surface: surface, name: "Live owned vault conflict resolution applied")
         app.terminate()
     }
 
@@ -115,6 +138,10 @@ final class LiveSyncConflictUITests: XCTestCase {
         #endif
         let contract = try JSONDecoder().decode(
             Descriptor.self, from: descriptorBytes)
+        #if os(macOS)
+            _ = try MacAcceptanceOwnership.validate(
+                descriptor: descriptor, stateDirectory: contract.stateDirectory, runID: runID)
+        #endif
         guard contract.schemaVersion == 1, contract.runID == runID,
             contract.allowedRemoteVaultID == vaultID, !vaultID.isEmpty
         else { throw OwnershipError.descriptor }
@@ -129,7 +156,7 @@ final class LiveSyncConflictUITests: XCTestCase {
         return Scenario(descriptor: descriptor, caseID: caseID, originalTitle: originalTitle)
     }
 
-    private func launch(_ scenario: Scenario) -> XCUIApplication {
+    private func launch(_ scenario: Scenario) throws -> (XCUIApplication, XCUIElement) {
         let app = XCUIApplication()
         app.launchArguments = ["--facet-acceptance-descriptor", scenario.descriptor]
         #if !os(macOS)
@@ -138,29 +165,39 @@ final class LiveSyncConflictUITests: XCTestCase {
         #endif
         app.launch()
         addTeardownBlock { @MainActor in app.terminate() }
-        return app
+        #if os(macOS)
+            return (app, try MacAcceptanceWorkspace.create(app: app))
+        #else
+            return (app, app)
+        #endif
     }
 
-    private func task(_ title: String, app: XCUIApplication) -> XCUIElement {
+    private func task(_ title: String, surface: XCUIElement) -> XCUIElement {
         #if os(macOS)
-            app.staticTexts.matching(NSPredicate(format: "label == %@", title)).firstMatch
+            surface.staticTexts.matching(NSPredicate(format: "value == %@", title)).element
         #else
-            app.buttons.matching(NSPredicate(format: "label == %@", title)).firstMatch
+            surface.buttons.matching(NSPredicate(format: "label == %@", title)).firstMatch
         #endif
     }
 
     private func assertPreview(
-        _ expected: String, excludes: String, button: XCUIElement, app: XCUIApplication
-    ) {
+        _ expected: String, excludes: String, button: XCUIElement, app: XCUIApplication,
+        surface: XCUIElement
+    ) async throws {
         activate(button)
-        let preview = app.staticTexts["facet.conflict.preview.text"]
+        let preview = surface.staticTexts["facet.conflict.preview.text"]
         XCTAssertTrue(preview.waitForExistence(timeout: 5))
-        let contents = preview.label
+        #if os(macOS)
+            let contents = try XCTUnwrap(preview.value as? String)
+        #else
+            let contents = preview.label
+        #endif
         XCTAssertTrue(contents.contains(expected))
         XCTAssertFalse(contents.contains(excludes))
         XCTAssertTrue(contents.contains("Live Sync preservation sentinel."))
-        attach(app, name: "Live owned vault retained version \(expected)")
-        activate(app.buttons["facet.conflict.preview.done"])
+        try await attach(
+            app, surface: surface, name: "Live owned vault retained version \(expected)")
+        activate(surface.buttons["facet.conflict.preview.done"])
         XCTAssertTrue(preview.waitForNonExistence(timeout: 5))
     }
 
@@ -172,10 +209,31 @@ final class LiveSyncConflictUITests: XCTestCase {
         #endif
     }
 
-    private func attach(_ app: XCUIApplication, name: String) {
-        let evidence = XCTAttachment(screenshot: app.screenshot())
-        evidence.name = name
-        evidence.lifetime = .keepAlways
-        add(evidence)
+    private func attach(_ app: XCUIApplication, surface: XCUIElement, name: String) async throws {
+        #if os(macOS)
+            try await MacAcceptanceCapture.attach(
+                app: app, name: name, test: self, windows: [surface])
+        #else
+            let evidence = XCTAttachment(screenshot: app.screenshot())
+            evidence.name = name
+            evidence.lifetime = .keepAlways
+            add(evidence)
+        #endif
     }
 }
+
+#if os(macOS)
+    extension LiveSyncConflictUITests {
+        private func assertConflictSheetOwnership(app: XCUIApplication, surface: XCUIElement) {
+            XCTAssertTrue(surface.sheets.element.waitForExistence(timeout: 10))
+            XCTAssertEqual(surface.sheets.count, 1)
+            for other in app.windows.matching(
+                NSPredicate(format: "identifier BEGINSWITH %@", "facet.workspace.")
+            ).allElementsBoundByIndex where other.identifier != surface.identifier {
+                XCTAssertEqual(
+                    other.sheets.count, 0, "Conflict inbox must belong to the requesting workspace."
+                )
+            }
+        }
+    }
+#endif

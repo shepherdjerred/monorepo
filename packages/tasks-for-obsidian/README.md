@@ -92,12 +92,30 @@ It uses complete status definitions pinned to official TaskNotes 4.13.8; partial
 status entries from the immutable mapping corpus are not valid plugin settings.
 Existing app identities, vaults and simulators are outside this runner's ownership.
 
+For Mac acceptance without an iOS simulator, use
+`bun run apple:sync:live prepare --clients macos`. This builds only the Mac
+acceptance app, performs no iOS generation or simulator operations, and records a
+schema-version-2 manifest/provenance with `scope: "macos"`. Only the Mac artifact
+is fingerprinted. The default command retains schema-version-1 dual-client
+behavior, and existing runs keep their original requirements. Mac-only results
+prove two replicas (official Obsidian and Facet Mac); they do not establish iOS or
+three-client acceptance. Every case and all three consecutive rounds are still
+required for the selected scope. Commands naming an unselected client fail.
+For native UI execution, set `TASKNOTES_UITEST_IDENTITY` to the SHA-1 identity
+from the existing login Keychain when preparing. It signs only the Mac UI-test
+runner; the app and dependencies retain their project signing settings. The
+value must be 40 hexadecimal characters. Omitting it preserves ad-hoc signing.
+
 Open the printed reference folder in official Obsidian, install and enable
-TaskNotes **4.13.8**, and create a new encrypted remote vault with the printed
-unique name. Enable all other attachment types and vault configuration/plugin
+TaskNotes **4.13.8**, and connect only the designated synthetic encrypted remote
+vault. Preserve existing remote vaults; provision a new one only when explicitly
+authorized. Enable all other attachment types and vault configuration/plugin
 data in Sync, including **Installed community plugins** (which also synchronizes
 plugin settings), restart Obsidian, and wait for synchronization. Store the separate
 vault password in 1Password. Account entry and MFA are manual, with recording off.
+Mac-only runs may use the reviewed [`mac:account` driver](../tasknotes-macos/README.md#isolated-native-acceptance)
+for normal account controls and existing-profile lifecycle reauthorization through
+1Password. Recording stays off; driver receipts do not establish live acceptance.
 
 ```bash
 bun run apple:sync:live seal-reference <runID>
@@ -115,6 +133,7 @@ bun run apple:sync:live lifecycle-begin <runID> ios
 # Manually sign in and reconnect the existing profile, with recording off.
 bun run apple:sync:live lifecycle-finish <runID> ios
 # Repeat lifecycle-begin / lifecycle-finish for macos.
+# In a Mac-only run, run lifecycle-begin / lifecycle-finish only for macos.
 bun run apple:sync:live authentication-fixtures <runID>
 bun run apple:sync:live official-ui-instructions <runID>
 # Follow the four owner UI actions and run official-ui <runID> <step> after each.
@@ -124,9 +143,9 @@ bun run apple:sync:live status <runID>
 
 Sealing checks the installed plugin version, enabled state, normalized supported
 settings and unchanged seed notes/attachments. Initial verification requires
-fresh status from both real clients, matching remote vault identity, drained
+fresh status from every selected real client, matching remote vault identity, drained
 durable queues, no conflicts or pending host work, and identical synthetic file
-paths and hashes in all three folders. Both native apps must also execute the
+paths and hashes in every selected replica plus official Obsidian. Each selected native app must execute the
 initial configuration UI test, display the current reference task exactly once,
 and enable capture without configuration warnings or a defaults prompt. The
 runner rechecks convergence after those cold launches before recording a pass.
@@ -155,7 +174,7 @@ create, edit, complete and uncomplete action, save a real PNG screenshot beneath
 synthetic vault and task. Create this private directory before saving the first
 image. Missing images leave that checkpoint pending; account entry, credentials,
 and unrelated vaults must stay outside captures. The runner validates bounded PNG
-integrity, records the exact image hash, and verifies task state and three-replica
+integrity, records the exact image hash, and verifies task state and declared-replica
 file convergence. A reviewer must inspect every retained image before claiming
 visual acceptance; image hashes alone do not establish what was shown.
 
@@ -168,10 +187,15 @@ is never replaced by a passing retry. Manual reauthentication checkpoints remain
 pending until their measured follow-up succeeds.
 
 Post-authentication XCTest evidence is retained under each run's `journeys` folder.
+Mac journeys retain custom captures of explicitly owned workspace windows and
+discard automatic system desktop attachments. Inspect those app-only images
+before using them as visual proof or publishing them.
 Raw result bundles and account diagnostics stay private; publish only selected
 synthetic screenshots/recordings and bounded provenance. `cleanup <runID>` removes
 only the exactly owned simulator after every required case passes. It never deletes
 the remote vault, macOS state or failed-run evidence.
+Mac-only cleanup marks the completed run cleaned and retains all app data and
+evidence; there is no simulator to delete.
 
 ```bash
 bun run check:ios-native-deps       # shared bootstrap and product contract

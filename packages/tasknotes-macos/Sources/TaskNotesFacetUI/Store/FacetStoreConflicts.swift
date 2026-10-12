@@ -85,16 +85,30 @@ extension FacetStore {
     }
 
     public func loadConflicts() async {
-        guard let engine, let profileID = selectedProfileID else { return }
+        await loadConflicts { self.showsConflicts = true }
+    }
+
+    internal func loadConflicts(
+        ownsPresentation: @escaping () -> Bool = { true }, present: () -> Void
+    ) async {
+        guard !_Concurrency.Task.isCancelled, ownsPresentation(),
+            let engine, let profileID = selectedProfileID
+        else {
+            return
+        }
         let current = conflictPresentationFence(profileID: profileID) { self.engine === engine }
         do {
             let page = try await engine.conflictPage(profileID: profileID, afterID: nil)
-            guard current() else { return }
+            guard !_Concurrency.Task.isCancelled, ownsPresentation(), current() else { return }
             conflicts = page.conflicts
             conflictCursor = page.nextCursor
-            showsConflicts = true
+            present()
         } catch {
-            if current() { reportNativeFailure(error) }
+            if !_Concurrency.Task.isCancelled, !(error is CancellationError),
+                ownsPresentation(), current()
+            {
+                reportNativeFailure(error)
+            }
         }
     }
 

@@ -116,7 +116,8 @@ struct FacetGallerySnapshotTests {
         switch surface.family {
         case .workspace:
             FacetWorkspaceView(
-                store: store, importsFolder: .constant(false), board: .constant(surface == .board))
+                store: store, importsFolder: .constant(false), board: .constant(surface == .board),
+                capturePresented: .constant(false), sheets: FacetSheetPresentation())
         case .account:
             FacetAccountForm(store: store)
         case .editor:

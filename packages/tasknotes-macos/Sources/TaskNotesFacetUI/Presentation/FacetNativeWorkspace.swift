@@ -4,6 +4,8 @@ import TaskNotesKit
 internal struct FacetNativeWorkspace: View {
     @Bindable var store: FacetStore
     @Binding var importsFolder: Bool
+    @Binding var capturePresented: Bool
+    let sheets: FacetSheetPresentation
     @State private var window: FacetWindowState
     @State private var draft: FacetInspectorDraft?
     @State private var detail: FacetTask?
@@ -17,11 +19,14 @@ internal struct FacetNativeWorkspace: View {
     @Environment(\.facetFeedbackOrigin) private var feedbackOrigin
 
     init(
-        store: FacetStore, importsFolder: Binding<Bool>, window: FacetWindowState? = nil,
+        store: FacetStore, importsFolder: Binding<Bool>, capturePresented: Binding<Bool>,
+        sheets: FacetSheetPresentation, window: FacetWindowState? = nil,
         draft: FacetInspectorDraft? = nil
     ) {
         self.store = store
         _importsFolder = importsFolder
+        _capturePresented = capturePresented
+        self.sheets = sheets
         let state = window ?? FacetWindowState(store: store)
         _window = State(initialValue: state)
         _route = State(
@@ -78,7 +83,7 @@ internal struct FacetNativeWorkspace: View {
             }
             .sheet(isPresented: $settings) {
                 NavigationStack {
-                    FacetNativeSettings(store: store, importsFolder: $importsFolder)
+                    FacetNativeSettings(store: store, importsFolder: $importsFolder, sheets: sheets)
                         .toolbar {
                             ToolbarItem(placement: .confirmationAction) {
                                 Button("Done") { settings = false }
@@ -143,7 +148,7 @@ internal struct FacetNativeWorkspace: View {
                         .toolbar { workspaceToolbar }
                         .overlay(alignment: .bottomTrailing) {
                             Button {
-                                store.showsCapture = true
+                                capturePresented = true
                             } label: {
                                 Image(systemName: "plus").font(.title2.weight(.semibold))
                                     .frame(width: 56, height: 56)
@@ -163,7 +168,7 @@ internal struct FacetNativeWorkspace: View {
 
     private var content: some View {
         VStack(spacing: 0) {
-            FacetNativeNotices(store: store)
+            FacetNativeNotices(store: store, sheets: sheets)
             if let error = window.error {
                 Label(error, systemImage: "exclamationmark.triangle").padding()
             }
@@ -197,7 +202,11 @@ internal struct FacetNativeWorkspace: View {
                     }
                     Divider()
                     Button(folderAction) { importsFolder = true }
-                    Button("Connect Obsidian Sync…") { store.showsAccount = true }
+                    Button("Connect Obsidian Sync…") {
+                        sheets.account(store: store).wrappedValue = true
+                    }.disabled(store.accountWindowOwnerID != nil)
+                        .help("Sync is open in another window while this control is unavailable.")
+                        .accessibilityIdentifier("facet.account.open")
                     Button(store.remindersEnabled ? "Turn off reminders" : "Enable reminders…") {
                         _Concurrency.Task {
                             if store.remindersEnabled {
@@ -220,7 +229,7 @@ internal struct FacetNativeWorkspace: View {
                         systemImage: window.board ? "list.bullet" : "rectangle.split.3x1")
                 }
                 Button {
-                    store.showsCapture = true
+                    capturePresented = true
                 } label: {
                     Label("Add task", systemImage: "plus")
                 }
@@ -304,7 +313,7 @@ extension FacetNativeWorkspace {
             return FacetWindowCommandActions(
                 hasSelection: !window.selectedTaskIDs.isEmpty,
                 inspectorPresented: window.inspectorPresented,
-                newTask: { store.showsCapture = true }, find: { searching = true },
+                newTask: { capturePresented = true }, find: { searching = true },
                 navigate: navigate,
                 complete: { mutateSelection(deleting: false) },
                 delete: { deletingSelection = true },

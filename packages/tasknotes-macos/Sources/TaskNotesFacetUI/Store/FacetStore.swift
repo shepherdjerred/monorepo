@@ -58,6 +58,8 @@ public final class FacetStore {
     }
     public var showsConflicts = false
     public var showsAccount = false
+    internal var accountWindowOwnerID: UUID?
+    internal var conflictWindowOwnerID: UUID?
     public internal(set) var accountNeedsCode = false
     internal var accountPresentation = FacetAccountPresentation()
     public internal(set) var remoteVaults: [FacetRemoteVault] = []

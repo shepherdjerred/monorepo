@@ -34,7 +34,7 @@ struct TaskNotesApp: App {
     @State private var environment = FacetMacEnvironment()
 
     var body: some Scene {
-        WindowGroup {
+        WindowGroup(id: "facet.workspace") {
             FacetMacRootView(environment: environment)
                 // AppKit invokes the adapted delegate indirectly. This explicit
                 // read keeps that application-lifetime ownership visible to
