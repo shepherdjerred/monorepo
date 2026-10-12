@@ -146,6 +146,7 @@ export async function runReportLakeFold(
           buildId,
           table: "matches",
           staged: stagedMatches,
+          layout,
           abortSignal: options.abortSignal,
         });
         await writeFoldParquet({
