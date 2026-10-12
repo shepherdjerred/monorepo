@@ -79,8 +79,13 @@ describe("runIngestionReconciliation", () => {
       storedBackfilledThroughAt = date;
       return Promise.resolve(undefined);
     });
-    mocks.backfillMatchesToS3.mockImplementation(() =>
-      Promise.resolve({ totalMatchesSaved: 0 }),
+    // Like the real scan, a clean run is complete through 30 minutes
+    // before its end.
+    mocks.backfillMatchesToS3.mockImplementation((_start: Date, end: Date) =>
+      Promise.resolve({
+        totalMatchesSaved: 0,
+        completeThrough: new Date(end.getTime() - 30 * 60 * 1000),
+      }),
     );
     mocks.getReconciliationCompletedAt.mockImplementation(() =>
       Promise.resolve(storedCompletedAt),
@@ -106,17 +111,35 @@ describe("runIngestionReconciliation", () => {
       expect.any(Date),
     );
     const firstEnd: unknown = mocks.backfillMatchesToS3.mock.calls[0]?.[1];
-    expect(storedBackfilledThroughAt).toEqual(firstEnd);
+    expect(firstEnd).toBeInstanceOf(Date);
+    const firstCutoff = storedBackfilledThroughAt;
+    // Only the scanned range is recorded, not the 30-minute tail it skips.
+    expect(firstCutoff?.getTime()).toBe(
+      firstEnd instanceof Date ? firstEnd.getTime() - 30 * 60 * 1000 : NaN,
+    );
 
     // The poll is still stalled, so downtime is still measured from the same
-    // instant, but the next backfill starts where the last one ended.
+    // instant, but the next backfill starts where the last scan stopped.
     storedCompletedAt = new Date(Date.now() - 31_000);
     await runIngestionReconciliation();
     expect(mocks.backfillMatchesToS3).toHaveBeenNthCalledWith(
       2,
-      firstEnd,
+      firstCutoff,
       expect.any(Date),
     );
+  });
+
+  test("a partial backfill leaves its window to be backfilled again", async () => {
+    mocks.getLastSuccessfulPollAt.mockImplementation(() =>
+      Promise.resolve(new Date(Date.now() - 3 * 60 * 60 * 1000)),
+    );
+    mocks.backfillMatchesToS3.mockResolvedValueOnce({
+      totalMatchesSaved: 3,
+      completeThrough: undefined,
+    });
+
+    await runIngestionReconciliation();
+    expect(mocks.setBackfilledThroughAt).not.toHaveBeenCalled();
   });
 
   test("a failed backfill leaves its window to be backfilled again", async () => {

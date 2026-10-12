@@ -169,7 +169,11 @@ async function reconcileIngestion(): Promise<void> {
     );
     try {
       const result = await backfillMatchesToS3(backfillStart, startupAt);
-      await setBackfilledThroughAt(startupAt);
+      // Record only what was fully archived. The scan stops 30 minutes short
+      // of startupAt, and a partial Riot failure must be retried next run.
+      if (result.completeThrough !== undefined) {
+        await setBackfilledThroughAt(result.completeThrough);
+      }
       logger.info(
         `Backfill completed: ${result.totalMatchesSaved.toString()} matches saved to S3`,
       );
