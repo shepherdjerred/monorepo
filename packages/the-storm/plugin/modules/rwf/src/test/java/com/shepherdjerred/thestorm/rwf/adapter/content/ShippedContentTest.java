@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
 import com.shepherdjerred.thestorm.rwf.domain.kit.KitBook;
 import com.shepherdjerred.thestorm.rwf.domain.lobby.LobbyBuild;
+import com.shepherdjerred.thestorm.rwf.domain.lobby.LobbySizing;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -48,7 +49,50 @@ final class ShippedContentTest {
     assertThat(content.config().match().minHumans()).isEqualTo(1);
     assertThat(content.config().match().countdown()).isEqualTo(Duration.ofSeconds(90));
     assertThat(content.config().match().maxCombatants()).isEqualTo(100);
+    assertThat(content.config().match().automaticSizing()).isTrue();
     assertThat(content.config().matchSettings().maxPlayers()).isEqualTo(100);
+  }
+
+  @Test
+  void everyMapHasBalancedOrderedRecommendationsWithinItsSpawnAndServerCaps() {
+    for (var source : content.maps()) {
+      var map = source.definition();
+      var sizes = LobbySizing.recommend(map, 100);
+      var teams = map.teams().size();
+      var capacity =
+          map.teams().stream().mapToInt(team -> team.spawns().size()).min().orElseThrow() * teams;
+      assertThat(sizes.small()).as(map.id()).isBetween(teams, sizes.medium());
+      assertThat(sizes.medium()).as(map.id()).isLessThanOrEqualTo(sizes.large());
+      assertThat(sizes.large()).as(map.id()).isLessThanOrEqualTo(Math.min(100, capacity));
+      assertThat(sizes.small() % teams).isZero();
+      assertThat(sizes.medium() % teams).isZero();
+      assertThat(sizes.large() % teams).isZero();
+      assertThat(new LobbySizing.Selection(LobbySizing.Mode.AUTO, 0).target(map, 100))
+          .isEqualTo(sizes.large());
+    }
+  }
+
+  @Test
+  void footprintAndSpawnCapacityGiveUsefulTargetsForRealMaps() {
+    var expected =
+        java.util.Map.of(
+            "training-yard",
+            16,
+            "the-red-sand-seas",
+            24,
+            "apex-expanse",
+            72,
+            "the-lost-kingdom",
+            48,
+            "mountains",
+            8);
+    for (var source : content.maps()) {
+      if (expected.containsKey(source.id())) {
+        assertThat(LobbySizing.recommend(source.definition(), 100).large())
+            .as(source.id())
+            .isEqualTo(expected.get(source.id()));
+      }
+    }
   }
 
   @Test

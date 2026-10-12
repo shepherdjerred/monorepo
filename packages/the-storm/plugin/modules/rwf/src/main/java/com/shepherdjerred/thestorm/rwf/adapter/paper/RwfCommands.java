@@ -9,6 +9,7 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.shepherdjerred.thestorm.rwf.adapter.content.RwfConfig;
 import com.shepherdjerred.thestorm.rwf.app.JoinGate;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
+import com.shepherdjerred.thestorm.rwf.domain.lobby.LobbySizing;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchSnapshot;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
@@ -111,8 +112,13 @@ final class RwfCommands {
                 .requires(permission(RwfPermissions.PLAY))
                 .executes(ctx -> who(ctx.getSource().getSender())))
         .then(
+            Commands.literal("size")
+                .requires(permission(RwfPermissions.PLAY))
+                .executes(ctx -> size(ctx.getSource().getSender())))
+        .then(
             Commands.literal("admin")
                 .requires(permission(RwfPermissions.ADMIN))
+                .then(sizeCommand())
                 .then(
                     Commands.literal("status").executes(ctx -> status(ctx.getSource().getSender())))
                 .then(
@@ -147,8 +153,121 @@ final class RwfCommands {
   private static int usage(CommandSender sender) {
     Texts.info(
         sender,
-        "/rwf join, /rwf leave, /rwf kit <kit>, /rwf who, /rwf spectate, /rwf spectate next");
+        "/rwf join, /rwf leave, /rwf kit <kit>, /rwf who, /rwf size, /rwf spectate, /rwf spectate next");
     return OK;
+  }
+
+  private LiteralCommandNode<CommandSourceStack> sizeCommand() {
+    var command = Commands.literal("size").executes(ctx -> size(ctx.getSource().getSender()));
+    for (var mode :
+        java.util.List.of(
+            LobbySizing.Mode.AUTO,
+            LobbySizing.Mode.SMALL,
+            LobbySizing.Mode.MEDIUM,
+            LobbySizing.Mode.LARGE)) {
+      command.then(
+          Commands.literal(mode.name().toLowerCase(Locale.ROOT))
+              .executes(
+                  ctx -> setSize(ctx.getSource().getSender(), new LobbySizing.Selection(mode, 0))));
+    }
+    command.then(
+        Commands.literal("team")
+            .then(
+                Commands.argument(
+                        "players",
+                        IntegerArgumentType.integer(1, config.match().maxCombatants() / 2))
+                    .executes(
+                        ctx ->
+                            setSize(
+                                ctx.getSource().getSender(),
+                                new LobbySizing.Selection(
+                                    LobbySizing.Mode.TEAM,
+                                    IntegerArgumentType.getInteger(ctx, "players"))))));
+    return command.build();
+  }
+
+  private int setSize(CommandSender sender, LobbySizing.Selection selection) {
+    if (!runner.ready()) {
+      Texts.error(sender, "The match is still being prepared.");
+      return 0;
+    }
+    if (selection.mode() == LobbySizing.Mode.TEAM
+        && (long) selection.count() * runner.currentMap().definition().teams().size()
+            > config.match().maxCombatants()) {
+      Texts.error(sender, "That team size exceeds the combatant cap for this map.");
+      return 0;
+    }
+    runner.lobbySizes().select(selection);
+    Texts.info(
+        sender,
+        "Lobby preference saved until restart; applies when the next countdown drafts bots.");
+    return size(sender);
+  }
+
+  private int size(CommandSender sender) {
+    if (!runner.ready()) {
+      Texts.info(sender, "The match is still being prepared.");
+      return OK;
+    }
+    var map = runner.currentMap().definition();
+    var sizes = LobbySizing.recommend(map, config.match().maxCombatants());
+    var teams = map.teams().size();
+    Texts.info(
+        sender,
+        map.name()
+            + ": "
+            + teams
+            + " teams, "
+            + sizes.footprint()
+            + " blocks of horizontal footprint.");
+    Texts.info(
+        sender,
+        "Presets: small "
+            + presetDescription(sizes.small(), teams)
+            + ", medium "
+            + presetDescription(sizes.medium(), teams)
+            + ", large "
+            + presetDescription(sizes.large(), teams)
+            + ". Auto uses large.");
+    var preference = runner.lobbySizes().selection();
+    var target = runner.lobbySizes().target(map);
+    Texts.info(
+        sender,
+        "Next draft: "
+            + preference.mode().name().toLowerCase(Locale.ROOT)
+            + (preference.mode() == LobbySizing.Mode.TEAM ? " " + preference.count() : "")
+            + ", "
+            + sizeDescription(target, teams)
+            + ", up to "
+            + Math.max(0, target - runner.humans())
+            + " bots with "
+            + runner.humans()
+            + " humans. Server cap "
+            + config.match().maxCombatants()
+            + ".");
+    if (runner.lobbySizes().drafted() > 0) {
+      Texts.info(
+          sender,
+          "This countdown's target is already "
+              + runner.lobbySizes().drafted()
+              + "; changes affect the next draft.");
+    }
+    return OK;
+  }
+
+  private static String sizeDescription(int total, int teams) {
+    return total
+        + " total ("
+        + total / teams
+        + (total % teams == 0 ? "" : "-" + (total / teams + 1))
+        + "/team)";
+  }
+
+  private String presetDescription(int total, int teams) {
+    return sizeDescription(total, teams)
+        + ", up to "
+        + Math.max(0, total - runner.humans())
+        + " bots";
   }
 
   /** The managed flag decides, off the main thread; the match decides after. */

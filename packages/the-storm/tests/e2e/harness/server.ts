@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { cp, mkdir, rm } from "node:fs/promises";
+import { cp, mkdir, readdir, rm } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 import { docker } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
@@ -82,6 +82,8 @@ export type StartServerOptions = {
   companionsE2eJar?: string;
   /** Overrides for the staged rwf.yml when the suite plays Search and Destroy. */
   rwf?: RwfOverlay;
+  /** Keep only this authored map in the disposable gameplay fixture's rotation. */
+  rwfMap?: string;
   /** Disposable rwfbots.yml contents; production-owned configuration stays untouched. */
   rwfbotsConfig?: string;
   /** Preserve recordings after a graceful Paper shutdown, before removing its container. */
@@ -169,10 +171,28 @@ async function stageMapSources(
   );
 }
 
-/**
- * Builds this run's /plugins mount: the pinned third-party jars, the plugin
- * under test and its repository-owned config directory.
- */
+/** Select one map only in the private fixture copy, before Paper loads its catalog. */
+async function selectRwfMap(
+  pluginsDir: string,
+  mapId: string | undefined,
+): Promise<void> {
+  if (mapId === undefined) return;
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(mapId)) {
+    throw new Error("Invalid RWF fixture map id");
+  }
+  const maps = path.join(pluginsDir, "TheStorm", "rwf", "maps");
+  const entries = await readdir(maps, { withFileTypes: true });
+  if (!entries.some((entry) => entry.isDirectory() && entry.name === mapId)) {
+    throw new Error(`Missing RWF fixture map ${mapId}`);
+  }
+  for (const entry of entries) {
+    if (entry.isDirectory() && entry.name !== mapId) {
+      await rm(path.join(maps, entry.name), { recursive: true });
+    }
+  }
+}
+
+/** Builds a private plugin mount, leaving the owned source content untouched. */
 export async function stagePlugins(
   cacheDir: string,
   stagingDir: string,
@@ -187,6 +207,7 @@ export async function stagePlugins(
     | "learningModelDir"
     | "companionsE2eJar"
     | "rwf"
+    | "rwfMap"
     | "rwfbotsConfig"
     | "survivalConfig"
     | "worldDir"
@@ -236,6 +257,7 @@ export async function stagePlugins(
     await Bun.write(parcels, (await Bun.file(parcels).text()) + entries);
   }
   await stageMapSources(pluginsDir, options);
+  await selectRwfMap(pluginsDir, options.rwfMap);
   await stageLearningModel(
     pluginsDir,
     options.learningModelDir,

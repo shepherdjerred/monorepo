@@ -144,6 +144,15 @@ public final class RwfHarness implements AutoCloseable {
     server.addWorld(overworld);
     server.addWorld(rwf);
     copyShipped(directory);
+    // Existing gameplay cases exercise an explicit eight-combatant profile.
+    try {
+      var config = directory.resolve("rwf.yml");
+      Files.writeString(
+          config,
+          Files.readString(config).replace("automaticSizing: true", "automaticSizing: false"));
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
     var database = StormDatabase.open(directory.resolve("t.db"));
     database.migrate("rwf", RwfHarness.class.getClassLoader());
     return new RwfHarness(server, overworld, rwf, database);
