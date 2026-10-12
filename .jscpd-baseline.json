@@ -144,10 +144,6 @@
       "clones": 2,
       "tokens": 185
     },
-    "packages/discord-plays-mario-kart/packages/backend/scripts/e2e-audio.ts|packages/discord-plays-mario-kart/packages/backend/scripts/e2e-stream-latency.ts": {
-      "clones": 1,
-      "tokens": 111
-    },
     "packages/discord-plays-mario-kart/packages/backend/scripts/e2e-audio.ts|packages/discord-plays-pokemon/packages/backend/src/stream/audio-transport.test.ts": {
       "clones": 1,
       "tokens": 107
@@ -162,7 +158,7 @@
     },
     "packages/discord-plays-mario-kart/packages/backend/src/config/schema.ts|packages/discord-plays-pokemon/packages/backend/src/config/schema.ts": {
       "clones": 3,
-      "tokens": 505
+      "tokens": 503
     },
     "packages/discord-plays-mario-kart/packages/backend/src/discord/slashCommands/commands/screenshot.ts|packages/discord-plays-pokemon/packages/backend/src/discord/slashCommands/commands/screenshot.ts": {
       "clones": 2,
@@ -186,7 +182,7 @@
     },
     "packages/discord-plays-mario-kart/packages/backend/src/lifecycle/mario-kart-driver.ts|packages/discord-plays-pokemon/packages/backend/src/lifecycle/pokemon-driver.ts": {
       "clones": 1,
-      "tokens": 106
+      "tokens": 77
     },
     "packages/discord-plays-mario-kart/packages/backend/src/logger.ts|packages/discord-plays-pokemon/packages/backend/src/logger.ts": {
       "clones": 1,

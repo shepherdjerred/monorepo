@@ -501,7 +501,6 @@
     "helm",
     "kubeconform",
     "kubectl",
-    "mktemp",
     "mise",
     "pinchtab",
     "swift",

@@ -29,7 +29,7 @@
 import { spawnSync } from "node:child_process";
 import { once } from "node:events";
 import { PassThrough } from "node:stream";
-import { prepareStream, Encoders } from "@shepherdjerred/discord-video-stream";
+import { prepareTestBroadcast } from "./lib/test-broadcast.ts";
 import { createAudioTransport } from "#src/stream/audio-transport.ts";
 import {
   WIDTH,
@@ -102,33 +102,7 @@ async function renderBroadcast(pcm: Buffer): Promise<string> {
   const transport = await createAudioTransport(AUDIO_SAMPLE_RATE);
   const video = new PassThrough();
 
-  const { output, promise } = prepareStream(video, {
-    width: WIDTH,
-    height: HEIGHT,
-    frameRate: GAME_FPS,
-    videoCodec: "H264",
-    bitrateVideo: 1000,
-    bitrateVideoMax: 1500,
-    includeAudio: true,
-    audioInput: {
-      source: transport.source,
-      inputOptions: transport.inputOptions,
-    },
-    minimizeLatency: true,
-    customInputOptions: [
-      "-f",
-      "rawvideo",
-      "-pix_fmt",
-      "bgra",
-      "-video_size",
-      `${String(WIDTH)}x${String(HEIGHT)}`,
-      "-framerate",
-      String(GAME_FPS),
-    ],
-    encoder: Encoders.software({
-      x264: { preset: "ultrafast", tune: "zerolatency" },
-    }),
-  });
+  const { output, promise } = prepareTestBroadcast(video, transport);
 
   // FileSink overwrites from offset zero but does not remove stale trailing
   // bytes from a longer prior run. Truncate first so ffprobe only sees this

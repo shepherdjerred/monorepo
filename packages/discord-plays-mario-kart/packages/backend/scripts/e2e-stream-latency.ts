@@ -2,7 +2,7 @@
 import { spawnSync } from "node:child_process";
 import { once } from "node:events";
 import { PassThrough } from "node:stream";
-import { prepareStream, Encoders } from "@shepherdjerred/discord-video-stream";
+import { prepareTestBroadcast } from "./lib/test-broadcast.ts";
 import { createAudioTransport } from "#src/stream/audio-transport.ts";
 import {
   AUDIO_SAMPLE_RATE,
@@ -120,35 +120,10 @@ export async function waitForCalibrationVideoDrain(
 async function renderCalibration(opts: Options): Promise<void> {
   const transport = await createAudioTransport(AUDIO_SAMPLE_RATE);
   const video = new PassThrough();
-  const { output, promise } = prepareStream(video, {
-    width: WIDTH,
-    height: HEIGHT,
-    frameRate: GAME_FPS,
-    videoCodec: "H264",
-    bitrateVideo: 1000,
-    bitrateVideoMax: 1500,
-    includeAudio: true,
-    audioInput: {
-      source: transport.source,
-      inputOptions: transport.inputOptions,
-    },
-    minimizeLatency: true,
-    customInputOptions: [
-      "-f",
-      "rawvideo",
-      "-pix_fmt",
-      "bgra",
-      "-video_size",
-      `${String(WIDTH)}x${String(HEIGHT)}`,
-      "-framerate",
-      String(GAME_FPS),
-      "-probesize",
-      "32",
-    ],
-    encoder: Encoders.software({
-      x264: { preset: "ultrafast", tune: "zerolatency" },
-    }),
-  });
+  const { output, promise } = prepareTestBroadcast(video, transport, [
+    "-probesize",
+    "32",
+  ]);
 
   await Bun.write(opts.nutPath, "");
   const writer = Bun.file(opts.nutPath).writer();
