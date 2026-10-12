@@ -1,0 +1,87 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "dev": {
+      "cache": false,
+      "persistent": true,
+      "passThroughEnv": ["MISE_DATA_DIR"]
+    },
+    "build:local": {
+      "inputs": [
+        "**/*.rs",
+        "**/Cargo.toml",
+        "Cargo.lock",
+        "catalog.json",
+        "assets/**",
+        "package.json",
+        "!target/**",
+        "prerequisites.json",
+        "release-profile.json",
+        "scripts/**",
+        "$TURBO_ROOT$/scripts/release/publish-launcher.ts",
+        "$TURBO_ROOT$/scripts/lib/seaweedfs.ts",
+        "$TURBO_ROOT$/packages/s3-signed-request/src/**"
+      ],
+      "outputs": [],
+      "passThroughEnv": ["MISE_DATA_DIR"]
+    },
+    "typecheck": {
+      "inputs": [
+        "**/*.rs",
+        "**/Cargo.toml",
+        "Cargo.lock",
+        "catalog.json",
+        "assets/**",
+        "package.json",
+        "!target/**",
+        "prerequisites.json",
+        "release-profile.json",
+        "scripts/**",
+        "$TURBO_ROOT$/scripts/release/publish-launcher.ts",
+        "$TURBO_ROOT$/scripts/lib/seaweedfs.ts",
+        "$TURBO_ROOT$/packages/s3-signed-request/src/**"
+      ],
+      "outputs": [],
+      "passThroughEnv": ["MISE_DATA_DIR"]
+    },
+    "test:local": {
+      "inputs": [
+        "**/*.rs",
+        "**/Cargo.toml",
+        "Cargo.lock",
+        "catalog.json",
+        "assets/**",
+        "package.json",
+        "!target/**",
+        "prerequisites.json",
+        "release-profile.json",
+        "scripts/**",
+        "$TURBO_ROOT$/scripts/release/publish-launcher.ts",
+        "$TURBO_ROOT$/scripts/lib/seaweedfs.ts",
+        "$TURBO_ROOT$/packages/s3-signed-request/src/**"
+      ],
+      "outputs": [],
+      "passThroughEnv": ["MISE_DATA_DIR"]
+    },
+    "lint": {
+      "inputs": [
+        "**/*.rs",
+        "**/Cargo.toml",
+        "Cargo.lock",
+        "catalog.json",
+        "assets/**",
+        "package.json",
+        "!target/**",
+        "prerequisites.json",
+        "release-profile.json",
+        "scripts/**",
+        "$TURBO_ROOT$/scripts/release/publish-launcher.ts",
+        "$TURBO_ROOT$/scripts/lib/seaweedfs.ts",
+        "$TURBO_ROOT$/packages/s3-signed-request/src/**"
+      ],
+      "outputs": [],
+      "passThroughEnv": ["MISE_DATA_DIR"]
+    }
+  }
+}

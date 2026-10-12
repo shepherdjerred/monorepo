@@ -1,3 +1,4 @@
+import { createGlitterBoysLauncherChart } from "./cdk8s-charts/glitter-boys-launcher.ts";
 import type { App } from "cdk8s";
 import { createAppsChart } from "./cdk8s-charts/apps.ts";
 import { createScoutChart } from "./cdk8s-charts/scout.ts";
@@ -58,6 +59,7 @@ export async function setupCharts(app: App): Promise<void> {
 
   // S3-backed static sites
   createS3StaticSitesChart(app);
+  createGlitterBoysLauncherChart(app);
 
   // New namespace charts
   createBirmelChart(app);

@@ -13,6 +13,7 @@
 
 import { Glob } from "bun";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { type Construct } from "constructs";
 import { KubeConfigMap } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
@@ -28,10 +29,9 @@ async function loadServerConfigs(
     return cached;
   }
 
-  const configDir = new URL(
-    `../../../config/minecraft-${serverName}`,
-    import.meta.url,
-  ).pathname;
+  const configDir = fileURLToPath(
+    new URL(`../../../config/minecraft-${serverName}`, import.meta.url),
+  );
   const configs: Record<string, string> = {};
 
   try {

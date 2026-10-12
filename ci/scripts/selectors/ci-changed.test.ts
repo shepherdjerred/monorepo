@@ -287,3 +287,7 @@ test("release lanes include their complete imported helper closure", () => {
     );
   }
 });
+
+test("Glitter Boys has no automatic site release selector", () => {
+  expect(selectorPathsForLane("site-glitter-boys")).toBeUndefined();
+});

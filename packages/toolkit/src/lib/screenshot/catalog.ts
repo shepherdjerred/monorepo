@@ -12,6 +12,13 @@ import type { PackageEntry } from "./types.ts";
 
 export const PACKAGES: PackageEntry[] = [
   {
+    alias: "glitter-boys",
+    cwd: "packages/glitter-boys",
+    devCommand: ["bun", "run", "dev"],
+    expectedPort: 4321,
+    defaultRoute: "/",
+  },
+  {
     alias: "sjer-red",
     cwd: "packages/sjer.red",
     devCommand: ["bun", "run", "dev"],
