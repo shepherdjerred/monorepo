@@ -22,6 +22,7 @@
 import { run, requireEnv, optionalEnv } from "../lib/run.ts";
 import { s3SyncStaticSite } from "../lib/s3-static-site.ts";
 import { SEAWEEDFS_AWS_ENV, SEAWEEDFS_ENDPOINT } from "../lib/seaweedfs.ts";
+import { fileURLToPath } from "node:url";
 
 // ---------------------------------------------------------------------------
 // Static site deploy catalog (translated verbatim from DEPLOY_SITES)
@@ -254,7 +255,7 @@ const DEPLOY_SITES: readonly DeploySite[] = [
 
 /** Repo root = two levels up from this file (scripts/release/deploy-site.ts). */
 function repoRoot(): string {
-  return new URL("../..", import.meta.url).pathname.replace(/\/$/, "");
+  return fileURLToPath(new URL("../..", import.meta.url));
 }
 
 // ---------------------------------------------------------------------------
