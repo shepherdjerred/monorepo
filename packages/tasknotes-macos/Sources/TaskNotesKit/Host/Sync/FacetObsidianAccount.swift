@@ -3,28 +3,6 @@ public import Foundation
 import Synchronization
 import TaskNotesUniFFI
 
-public struct FacetRemoteVault: Codable, Identifiable, Sendable {
-    public let id: String
-    public let name: String
-    public let host: String
-    public let region: String
-    public let salt: String
-    public let encryptionVersion: UInt8
-    public let managed: Bool
-    public let shared: Bool
-
-    fileprivate init(_ vault: ObsidianRemoteVault) {
-        id = vault.id
-        name = vault.name
-        host = vault.host
-        region = vault.region
-        salt = vault.salt
-        encryptionVersion = vault.encryptionVersion
-        managed = vault.managed
-        shared = vault.shared
-    }
-}
-
 public enum FacetAccountSignIn: Sendable {
     case needsCode, rejectedCode
     case vaults([FacetRemoteVault])
@@ -140,7 +118,8 @@ public actor FacetObsidianAccount {
         let attempt = advanceGeneration()
         choices = []
         let response = try await perform(
-            account.signIn(email: email, password: password, mfa: code), generation: attempt)
+            account.signIn(email: email, password: password, mfa: code), requestKind: .signIn,
+            generation: attempt)
         try _Concurrency.Task.checkCancellation()
         guard attempt == generation else { throw FacetSyncError.cancelled }
         switch response {
@@ -155,7 +134,8 @@ public actor FacetObsidianAccount {
             try secrets.write("account.\(owner).token", bytes: Data(token.utf8))
             activeOwner = owner
             try persist()
-            let listed = try await perform(account.listVaults(token: token), generation: attempt)
+            let listed = try await perform(
+                account.listVaults(token: token), requestKind: .listVaults, generation: attempt)
             try _Concurrency.Task.checkCancellation()
             guard attempt == generation else { throw FacetSyncError.cancelled }
             guard case .vaults(let vaults) = listed else {
@@ -271,7 +251,8 @@ public actor FacetObsidianAccount {
         activeOwner = nil
         try persist()
         if let token {
-            _ = try await perform(account.signOut(token: token), generation: generation)
+            _ = try await perform(
+                account.signOut(token: token), requestKind: .signOut, generation: generation)
         }
     }
 
@@ -292,13 +273,17 @@ public actor FacetObsidianAccount {
 }
 
 extension FacetObsidianAccount {
-    private func perform(_ request: ObsidianHttpRequest, generation attempt: UInt64) async throws
+    private func perform(
+        _ request: ObsidianHttpRequest, requestKind: FacetAccountExchangeDiagnostic.RequestKind,
+        generation attempt: UInt64
+    ) async throws
         -> ObsidianAccountResponse
     {
         do {
             var exchange: FacetAccountExchangeDiagnostic?
             let (status, bytes) = try await FacetAccountHTTP.perform(
-                request, ownsAttempt: { self.accessEpoch.withLock { $0 == attempt } },
+                request, requestKind: requestKind,
+                ownsAttempt: { self.accessEpoch.withLock { $0 == attempt } },
                 send: { try await self.response($0) },
                 diagnostic: {
                     exchange = $0
@@ -429,7 +414,7 @@ extension FacetObsidianAccount {
         guard
             case .accessGranted = try await perform(
                 account.vaultAccess(token: token, vaultId: vaultID, keyBytes: prepared.keyBytes),
-                generation: attempt)
+                requestKind: .vaultAccess, generation: attempt)
         else { throw FacetContractError.unsupportedResponse }
         return AuthorizedVault(owner: owner, prepared: prepared, attempt: attempt)
     }
