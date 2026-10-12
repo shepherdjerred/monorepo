@@ -23,11 +23,11 @@ import { stageCompanionsE2e } from "./companions-e2e.ts";
 import {
   overlayAgentTopLevel,
   overlayBrainUrl,
-  overlayRwf,
   overlaySweep,
   type RwfOverlay,
 } from "./config-overlays.ts";
 import { thirdPartyPlugins } from "./pins.ts";
+import { stageRwf } from "./rwf-staging.ts";
 import { RconClient } from "#e2e/harness/rcon.ts";
 import { stageWorld } from "./world-copy.ts";
 
@@ -277,7 +277,7 @@ export async function stagePlugins(
     options.stormConfig,
   );
   if (options.rwf !== undefined) {
-    await overlayRwf(path.join(pluginsDir, "TheStorm", "rwf.yml"), options.rwf);
+    await stageRwf(path.join(pluginsDir, "TheStorm"), options.rwf);
   }
   if (options.rwfbotsConfig !== undefined) {
     await Bun.write(

@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.rwf.adapter.content;
 
+import com.shepherdjerred.thestorm.core.nbt.NbtReader;
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -26,7 +27,7 @@ public final class SchematicReader {
   /** Reads {@code gzipped}, or throws describing the first problem. */
   public static Schematic read(InputStream gzipped) {
     try (var in = new DataInputStream(new BufferedInputStream(new GZIPInputStream(gzipped)))) {
-      return interpret(Nbt.readRoot(in));
+      return interpret(NbtReader.readRoot(in));
     } catch (IOException e) {
       throw new UncheckedIOException("blocks.schem is not a readable gzipped NBT file", e);
     }

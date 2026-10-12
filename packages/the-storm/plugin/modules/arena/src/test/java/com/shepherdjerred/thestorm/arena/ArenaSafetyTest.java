@@ -317,7 +317,7 @@ final class ArenaSafetyTest {
   // P1: a restore stays recoverable until player data proves persistence.
 
   @Test
-  void aRestoreKeepsTheSnapshotUntilPlayerDataHasBeenSaved() {
+  void aRestoreIsProvenFromSavedPlayerDataAndARefusedJoinGoesAheadWithoutALogin() {
     var harness = start();
     var alice = player("Alice");
     lobby(alice);
@@ -327,13 +327,37 @@ final class ArenaSafetyTest {
     assertThat(new JooqSnapshotStore(harness.database).loadAll().join())
         .extracting(Snapshot::player)
         .contains(alice.getUniqueId());
+    assertThat(harness.saved.saves).isPositive();
+    alice.performCommand("arena join colosseum");
+    assertThat(ArenaHarness.messages(alice))
+        .anyMatch(message -> message.contains("still being saved"))
+        .noneMatch(message -> message.contains("Reconnect"));
+    harness.until(() -> inLobby(alice));
+    alice.performCommand("arena leave");
+    harness.until(() -> new JooqSnapshotStore(harness.database).loadAll().join().isEmpty());
+    assertThat(diamonds(alice)).isEqualTo(5);
+  }
+
+  @Test
+  void aRestoreThatSavedDataNeverShowsAsksForAReconnect() {
+    var harness = start();
+    var alice = player("Alice");
+    lobby(alice);
+    harness.saved.dropWrites = true;
+
+    alice.performCommand("arena leave");
+    // Past every read-back retry (1, 2, 4 and 8 seconds).
+    harness.server.getScheduler().performTicks(20 * 16);
+
     alice.performCommand("arena join colosseum");
     assertThat(ArenaHarness.messages(alice))
         .anyMatch(message -> message.contains("Reconnect to finish recovery"));
+    assertThat(presence().arenaOf(alice.getUniqueId())).isEmpty();
     alice.setLevel(42);
     harness.rejoinAfterSave(alice);
     harness.until(() -> new JooqSnapshotStore(harness.database).loadAll().join().isEmpty());
     assertThat(alice.getLevel()).isEqualTo(42);
+    assertThat(diamonds(alice)).isEqualTo(5);
   }
 
   @Test

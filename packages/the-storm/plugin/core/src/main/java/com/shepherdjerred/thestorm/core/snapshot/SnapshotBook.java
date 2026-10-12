@@ -13,29 +13,41 @@ import java.util.UUID;
  *
  * <p>A snapshot enters the book the moment it is taken (the player is emptied in the same tick) and
  * leaves it exactly once, when it is taken for restoring, so a player is never restored twice in a
- * run. Restoring leaves the database copy intact until a later login confirms that the restored
- * inventory and its marker reached player data together. Until the mark lands the player is {@link
- * #cleaning}: a new snapshot may not be taken meanwhile.
+ * run. Restoring leaves the database copy intact until saved player data confirms that the restored
+ * inventory and its marker reached disk together. Until the mark lands the player is {@link
+ * #cleaning}: a new snapshot may not be taken meanwhile. A cleaning player whose saved data could
+ * not be confirmed automatically is also {@link #stalled}: only a later login can confirm it.
  *
  * <p>After a crash the book starts empty and not {@link #loaded}; nobody may join a game until the
  * stored snapshots are read back, so a stale kit can never overwrite a real snapshot.
  *
  * @param held player to the snapshot waiting to be restored
  * @param cleaning players restored whose stored snapshot is not yet marked restored
+ * @param stalled cleaning players whose restore waits for a later login to be confirmed
  * @param loaded whether the snapshots left by the last run have been read back
  */
-public record SnapshotBook(Map<UUID, Snapshot> held, Set<UUID> cleaning, boolean loaded) {
+public record SnapshotBook(
+    Map<UUID, Snapshot> held, Set<UUID> cleaning, Set<UUID> stalled, boolean loaded) {
 
   public static final SnapshotBook UNLOADED = new SnapshotBook(Map.of(), Set.of(), false);
 
   public SnapshotBook {
     held = Map.copyOf(held);
     cleaning = Set.copyOf(cleaning);
+    stalled = Set.copyOf(stalled);
     for (var player : cleaning) {
       if (held.containsKey(player)) {
         throw new IllegalArgumentException(player + " cannot be held and cleaning at once");
       }
     }
+    if (!cleaning.containsAll(stalled)) {
+      throw new IllegalArgumentException("only a cleaning player can be stalled");
+    }
+  }
+
+  /** A book with nobody stalled. */
+  public SnapshotBook(Map<UUID, Snapshot> held, Set<UUID> cleaning, boolean loaded) {
+    this(held, cleaning, Set.of(), loaded);
   }
 
   /** Why a player may not have a new snapshot taken yet. */
@@ -44,8 +56,10 @@ public record SnapshotBook(Map<UUID, Snapshot> held, Set<UUID> cleaning, boolean
     NOT_LOADED,
     /** The player still has a snapshot waiting to be restored. */
     RESTORE_PENDING,
-    /** The player's last restore has not yet been confirmed in saved player data. */
+    /** The player's last restore is still being confirmed in saved player data. */
     CLEANUP_PENDING,
+    /** The player's last restore could not be confirmed while online; a later login confirms it. */
+    CLEANUP_STALLED,
   }
 
   /** Whether a new snapshot of {@code player} may be taken, or why not. */
@@ -55,6 +69,9 @@ public record SnapshotBook(Map<UUID, Snapshot> held, Set<UUID> cleaning, boolean
     }
     if (held.containsKey(player)) {
       return Optional.of(Refusal.RESTORE_PENDING);
+    }
+    if (stalled.contains(player)) {
+      return Optional.of(Refusal.CLEANUP_STALLED);
     }
     return cleaning.contains(player) ? Optional.of(Refusal.CLEANUP_PENDING) : Optional.empty();
   }
@@ -72,7 +89,7 @@ public record SnapshotBook(Map<UUID, Snapshot> held, Set<UUID> cleaning, boolean
     }
     var next = new HashMap<>(held);
     next.put(snapshot.player(), snapshot);
-    return new SnapshotBook(next, cleaning, loaded);
+    return new SnapshotBook(next, cleaning, stalled, loaded);
   }
 
   /**
@@ -86,7 +103,7 @@ public record SnapshotBook(Map<UUID, Snapshot> held, Set<UUID> cleaning, boolean
         next.putIfAbsent(snapshot.player(), snapshot);
       }
     }
-    return new SnapshotBook(next, cleaning, true);
+    return new SnapshotBook(next, cleaning, stalled, true);
   }
 
   /**
@@ -102,7 +119,30 @@ public record SnapshotBook(Map<UUID, Snapshot> held, Set<UUID> cleaning, boolean
     next.remove(player);
     var nowCleaning = new HashSet<>(cleaning);
     nowCleaning.add(player);
-    return new Taken(Optional.of(snapshot), new SnapshotBook(next, nowCleaning, loaded));
+    return new Taken(Optional.of(snapshot), new SnapshotBook(next, nowCleaning, stalled, loaded));
+  }
+
+  /**
+   * A cleaning player's restore could not be confirmed while they are online: it waits for a later
+   * login. A player who is not cleaning is left as they are.
+   */
+  public SnapshotBook stalled(UUID player) {
+    if (!cleaning.contains(player) || stalled.contains(player)) {
+      return this;
+    }
+    var next = new HashSet<>(stalled);
+    next.add(player);
+    return new SnapshotBook(held, cleaning, next, loaded);
+  }
+
+  /** A stalled player's restore is being confirmed again. */
+  public SnapshotBook confirming(UUID player) {
+    if (!stalled.contains(player)) {
+      return this;
+    }
+    var next = new HashSet<>(stalled);
+    next.remove(player);
+    return new SnapshotBook(held, cleaning, next, loaded);
   }
 
   /** The stored snapshot of a restored player is marked restored: they may join again. */
@@ -110,9 +150,11 @@ public record SnapshotBook(Map<UUID, Snapshot> held, Set<UUID> cleaning, boolean
     if (!cleaning.contains(player)) {
       return this;
     }
-    var next = new HashSet<>(cleaning);
-    next.remove(player);
-    return new SnapshotBook(held, next, loaded);
+    var nextCleaning = new HashSet<>(cleaning);
+    nextCleaning.remove(player);
+    var nextStalled = new HashSet<>(stalled);
+    nextStalled.remove(player);
+    return new SnapshotBook(held, nextCleaning, nextStalled, loaded);
   }
 
   /**

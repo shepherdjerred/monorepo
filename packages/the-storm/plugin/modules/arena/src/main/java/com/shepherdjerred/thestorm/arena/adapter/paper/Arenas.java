@@ -123,7 +123,7 @@ public final class Arenas implements ArenaPresence {
 
   /** {@code player} asks to play in {@code runner}'s arena. */
   void join(Player player, ArenaRunner runner) {
-    if (admit(player)) {
+    if (admit(player, () -> join(player, runner))) {
       runner
           .handle(new GameEvent.Join(player.getUniqueId(), player.getName()))
           .ifPresent(error -> Texts.error(player, error));
@@ -131,7 +131,7 @@ public final class Arenas implements ArenaPresence {
   }
 
   void joinDebug(Player player, ArenaRunner runner, int round) {
-    if (!admit(player)) return;
+    if (!admit(player, () -> joinDebug(player, runner, round))) return;
     if (!(runner instanceof SurvivalRunner survival) || !survival.game().debugStart(round)) {
       Texts.error(player, "Debug joins require a survival arena and an empty or matching lobby.");
       return;
@@ -143,15 +143,18 @@ public final class Arenas implements ArenaPresence {
 
   /** {@code player} asks to watch {@code runner}'s arena. */
   void spectate(Player player, ArenaRunner runner) {
-    if (admit(player)) {
+    if (admit(player, () -> spectate(player, runner))) {
       runner
           .handle(new GameEvent.Spectate(player.getUniqueId(), player.getName()))
           .ifPresent(error -> Texts.error(player, error));
     }
   }
 
-  /** Whether {@code player} may join or watch an arena now. */
-  private boolean admit(Player player) {
+  /**
+   * Whether {@code player} may join or watch an arena now. While their last restore is still being
+   * confirmed in saved player data, {@code retry} runs again once it is.
+   */
+  private boolean admit(Player player, Runnable retry) {
     if (!ready) {
       Texts.error(
           player,
@@ -173,11 +176,23 @@ public final class Arenas implements ArenaPresence {
     switch (refusal.orElseThrow()) {
       case NOT_LOADED ->
           Texts.error(player, "The arena is still starting up; try again in a moment.");
-      case CLEANUP_PENDING ->
+      case CLEANUP_PENDING -> {
+        snapshots.whenClean(
+            player.getUniqueId(),
+            () -> {
+              if (player.isOnline()) {
+                retry.run();
+              }
+            });
+        Texts.info(
+            player,
+            "Your belongings from your last game are still being saved; trying again in a moment.");
+      }
+      case CLEANUP_STALLED ->
           Texts.error(
               player,
-              "Your restored belongings must be saved before another arena game. Reconnect to"
-                  + " finish recovery.");
+              "Your restored belongings could not be confirmed as saved. Reconnect to finish"
+                  + " recovery.");
       case RESTORE_PENDING -> {
         snapshots.recoverWhileOnline(player);
         Texts.error(player, "Your belongings from your last game were restored first; join again.");

@@ -14,12 +14,12 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.WorldSnapshot;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 
@@ -98,7 +98,7 @@ public final class SnapshotCapture {
       hurtTick = tick;
     }
     last.put(fighter.uuid(), new Last(pos, health + absorption, hurtTick));
-    var kit = kit(fighter);
+    var kit = kitOf(fighter, Optional.of(entity));
     return new CombatantView(
         ids.combatant(fighter.uuid()),
         IdMap.team(
@@ -123,10 +123,23 @@ public final class SnapshotCapture {
         hurtTick);
   }
 
-  private static Kit kit(MatchState.Fighter fighter) {
+  /**
+   * The fighter's kit as bots know it. A kit bots have never heard of (a human on a newly added
+   * kit, or a bot an operator put on one) reads as the known kit closest to what its entity shows,
+   * so it never stops the capture or a bot's profile; with no entity nothing is shown.
+   */
+  static Kit kitOf(MatchState.Fighter fighter, Optional<Player> entity) {
     var id =
         fighter.kit().orElseThrow(() -> new IllegalStateException(fighter.name() + " has no kit"));
-    return Kit.valueOf(id.toUpperCase(Locale.ROOT));
+    return Kit.closest(id, entity.map(SnapshotCapture::traits).orElse(Kit.Traits.NONE));
+  }
+
+  /** What can be seen of a fighter's kit: a bow or crossbow carried, and invisibility. */
+  private static Kit.Traits traits(Player entity) {
+    var inventory = entity.getInventory();
+    return new Kit.Traits(
+        inventory.contains(Material.BOW) || inventory.contains(Material.CROSSBOW),
+        entity.isInvisible());
   }
 
   /**

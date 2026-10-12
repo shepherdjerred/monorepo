@@ -1,4 +1,4 @@
-package com.shepherdjerred.thestorm.rwf.adapter.content;
+package com.shepherdjerred.thestorm.core.nbt;
 
 import java.io.DataInput;
 import java.io.IOException;
@@ -8,37 +8,37 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A minimal reader for the named binary tag format, enough for a Sponge schematic: every tag type
- * is decoded into plain Java values (compounds become maps, lists become lists), with a size cap so
- * a corrupt file cannot allocate without bound.
+ * A minimal reader for the named binary tag format, enough for a Sponge schematic or a saved player
+ * file: every tag type is decoded into plain Java values (compounds become maps, lists become
+ * lists), with a size cap so a corrupt file cannot allocate without bound.
  */
-final class Nbt {
+public final class NbtReader {
 
-  /** No single array or string in a schematic is larger than this. */
-  static final int MAX_LENGTH = 64 << 20;
+  /** No single array or string is larger than this. */
+  public static final int MAX_LENGTH = 64 << 20;
 
-  static final byte END = 0;
-  static final byte BYTE = 1;
-  static final byte SHORT = 2;
-  static final byte INT = 3;
-  static final byte LONG = 4;
-  static final byte FLOAT = 5;
-  static final byte DOUBLE = 6;
-  static final byte BYTE_ARRAY = 7;
-  static final byte STRING = 8;
-  static final byte LIST = 9;
-  static final byte COMPOUND = 10;
-  static final byte INT_ARRAY = 11;
-  static final byte LONG_ARRAY = 12;
+  public static final byte END = 0;
+  public static final byte BYTE = 1;
+  public static final byte SHORT = 2;
+  public static final byte INT = 3;
+  public static final byte LONG = 4;
+  public static final byte FLOAT = 5;
+  public static final byte DOUBLE = 6;
+  public static final byte BYTE_ARRAY = 7;
+  public static final byte STRING = 8;
+  public static final byte LIST = 9;
+  public static final byte COMPOUND = 10;
+  public static final byte INT_ARRAY = 11;
+  public static final byte LONG_ARRAY = 12;
 
-  private Nbt() {}
+  private NbtReader() {}
 
   /**
    * Reads the root compound; its name is ignored.
    *
    * @throws IOException on a truncated or malformed stream
    */
-  static Map<String, Object> readRoot(DataInput in) throws IOException {
+  public static Map<String, Object> readRoot(DataInput in) throws IOException {
     var type = in.readByte();
     if (type != COMPOUND) {
       throw new IOException("root tag is not a compound: type " + type);

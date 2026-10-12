@@ -52,6 +52,43 @@ async function withKnightWave(
   }
 }
 
+function diamonds(bot: Bot): number {
+  return bot.inventory
+    .items()
+    .filter((stack) => stack.name === "diamond")
+    .reduce((total, stack) => total + stack.count, 0);
+}
+
+describe("Colosseum belongings on real Paper", () => {
+  test("a player who leaves joins again at once, without reconnecting", async ({
+    bot,
+    rcon,
+  }) => {
+    await rcon.command(`clear ${bot.username} minecraft:diamond`);
+    await rcon.command(`give ${bot.username} minecraft:diamond 3`);
+    await waitUntil("diamonds", () => diamonds(bot) === 3);
+    const reconnects: string[] = [];
+    bot.on("messagestr", (message: string) => {
+      if (message.includes("Reconnect to finish recovery"))
+        reconnects.push(message);
+    });
+    for (const round of [1, 2]) {
+      const entered = waitForMessage(bot, /entered The Colosseum/u, 20_000);
+      bot.chat("/arena join colosseum");
+      await entered;
+      const left = waitForMessage(bot, /left the arena/u);
+      bot.chat("/arena leave");
+      await left;
+      await waitUntil(
+        `belongings back after round ${round.toString()}`,
+        () => diamonds(bot) === 3,
+      );
+    }
+    expect(reconnects).toEqual([]);
+    expect(await itemCount(rcon, bot.username, "diamond")).toBe(3);
+  });
+});
+
 describe("Colosseum chest access on real Paper", () => {
   test("fighters can open and withdraw from every authored arena chest", async ({
     bot,

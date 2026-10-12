@@ -86,9 +86,15 @@ crafting grids) on its own. These cases need the real server in
 22. `kill -9` the server right after `/arena leave`: if Paper had not saved the
     player data, the next join replays the database snapshot; if it had saved
     the restored inventory and marker, the next join keeps that inventory and
-    retires the snapshot. Before that confirmed join, a new arena entry asks
-    the player to reconnect. With the database made read-only before the
-    confirmed join, cleanup logs and retries without deleting the snapshot.
+    retires the snapshot. Without a crash, `/arena leave` saves the player at
+    once and the read-back of the saved file retires the snapshot, so the same
+    connection's next `/arena join` is admitted (after a "still being saved"
+    notice when it comes first) and never asks for a reconnect; only a save
+    that never lands stalls the restore and asks for one. **Proven** without
+    the crash in `tests/full/colosseum.e2e.test.ts`: join, leave, join and
+    leave again on one connection, with the diamonds back each time and no
+    reconnect message. With the database made read-only before the confirmed
+    join, cleanup logs and retries without deleting the snapshot.
 23. Items in the 2x2 crafting grid and on the cursor when joining come back
     on leaving; an arena item on the cursor when leaving is gone.
 24. Ender pearls, chorus fruit, `/home`, `/spawn`, `/back` and `/tpa` cannot

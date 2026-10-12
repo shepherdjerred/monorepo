@@ -42,6 +42,14 @@ public record AttackType(String name, String deathMessage, Set<Flag> flags) {
     PROJECTILE,
   }
 
+  /** Red Warfare: standing outside the map's square border, two damage a second. */
+  public static final AttackType BORDER =
+      of(
+          "Border",
+          "%Killed% was caught exploring the border",
+          Flag.IGNORE_ARMOR,
+          Flag.NO_KNOCKBACK);
+
   public static final AttackType CACTUS =
       of("Cactus", "%Killed% licked a cactus", Flag.NO_KNOCKBACK);
   public static final AttackType DAMAGE_POTION =
@@ -164,6 +172,7 @@ public record AttackType(String name, String deathMessage, Set<Flag> flags) {
   /** Every attack type, for lookups by name. */
   public static final List<AttackType> ALL =
       List.of(
+          BORDER,
           CACTUS,
           DAMAGE_POTION,
           DRAGON_BREATH,

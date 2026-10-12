@@ -48,6 +48,12 @@ export type RwfOverlay = {
   maxCombatants?: number;
   /** Whether `/rwf admin loadtest <n>` is allowed; the owned value (off) when absent. */
   loadtest?: boolean;
+  /**
+   * The only map folders staged under rwf/maps; every shipped map when absent.
+   * The rotation opens on the first map in id order, so a suite written for
+   * the training yard stages it alone.
+   */
+  maps?: string[];
 };
 
 export async function overlayRwf(

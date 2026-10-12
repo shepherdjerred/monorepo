@@ -4,6 +4,7 @@ import com.shepherdjerred.thestorm.arena.app.store.RewardStore;
 import com.shepherdjerred.thestorm.arena.domain.game.Notice;
 import com.shepherdjerred.thestorm.arena.domain.game.NoticeKind;
 import com.shepherdjerred.thestorm.core.snapshot.RestoreMarker;
+import com.shepherdjerred.thestorm.core.snapshot.SavedPlayerData;
 import com.shepherdjerred.thestorm.core.snapshot.SnapshotBook;
 import com.shepherdjerred.thestorm.core.snapshot.SnapshotKeeper;
 import com.shepherdjerred.thestorm.core.snapshot.SnapshotStore;
@@ -41,8 +42,9 @@ final class Snapshots {
    * @param store stored snapshots
    * @param rewards waiting vault loot
    * @param texts messages
+   * @param saved the server's saved player data, to confirm restores without a new login
    */
-  record Parts(SnapshotStore store, RewardStore rewards, Texts texts) {}
+  record Parts(SnapshotStore store, RewardStore rewards, Texts texts, SavedPlayerData saved) {}
 
   Snapshots(PaperContext runtime, Parts parts) {
     this.runtime = runtime;
@@ -53,7 +55,8 @@ final class Snapshots {
                 runtime.scheduler(),
                 runtime.time(),
                 parts.store(),
-                new RestoreMarker(runtime.plugin(), "arena_restored_snapshot")));
+                new RestoreMarker(runtime.plugin(), "arena_restored_snapshot"),
+                parts.saved()));
     this.rewards = parts.rewards();
     this.texts = parts.texts();
     this.vaultReceipt = new VaultReceipt(runtime.plugin());
@@ -77,6 +80,14 @@ final class Snapshots {
   /** Why a new snapshot of {@code player} cannot be taken yet, if it cannot. */
   Optional<SnapshotBook.Refusal> refusal(UUID player) {
     return keeper.refusal(player);
+  }
+
+  /**
+   * Runs {@code then} once {@code player}'s last restore is confirmed or stalls; it rechecks the
+   * refusal itself.
+   */
+  void whenClean(UUID player, Runnable then) {
+    keeper.whenClean(player, then);
   }
 
   /**

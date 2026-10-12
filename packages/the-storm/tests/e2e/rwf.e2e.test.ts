@@ -257,31 +257,12 @@ async function join({ bot, log }: Human): Promise<void> {
   await log.until(new RegExp(`${bot.username} joined the match`, "u"));
 }
 
-/**
- * Joins once the player's last restore is confirmed: a fresh login retires it
- * a moment after joining the server, and until then `/rwf join` is refused.
- */
+/** Joins again on the same connection; a pending restore delays, never refuses, it. */
 async function joinRecovered({ bot, log }: Human): Promise<void> {
   const joined = new RegExp(`${bot.username} joined the match`, "u");
-  const pending =
-    /Your restored belongings must be saved before another match/u;
-  const deadline = Date.now() + 15_000;
-  for (;;) {
-    const refusals = log.all(pending).length;
-    bot.chat("/rwf join");
-    await eventually(
-      `${bot.username}'s join to be answered`,
-      async () => log.has(joined) || log.all(pending).length > refusals,
-      10_000,
-    );
-    if (log.has(joined)) {
-      return;
-    }
-    if (Date.now() > deadline) {
-      throw new Error(`${bot.username}'s restore never finished`);
-    }
-    await Bun.sleep(500);
-  }
+  bot.chat("/rwf join");
+  await log.until(joined, 20_000);
+  expect(log.has(/Reconnect to finish recovery/u)).toBe(false);
 }
 
 /** Both join and the match goes live; returns their teams, which differ. */
@@ -1058,17 +1039,12 @@ describe("Search and Destroy without enough humans", () => {
         ).toEqual([["WIN", 0, "NONE"]]);
         await waitForLobby(rcon);
 
-        // Reconnecting proves the restored belongings reached player data, and
-        // only then may the player join again.
-        await disconnectBot(online);
-        online = undefined;
-        online = await connect(server, username);
-        const second = human(online);
-        await waitUntil(
-          "belongings persisted",
-          () => count(second.bot, "diamond") === 3,
-        );
-        await join(second);
+        // The restore is confirmed from the saved player file: the same
+        // connection joins again at once, with no reconnect.
+        const second = first;
+        second.log.lines.length = 0;
+        expect(count(second.bot, "diamond")).toBe(3);
+        await joinRecovered(second);
         await second.log.until(/The game will begin in \d+ seconds\./u);
         const counting = await status(rcon);
         expect(counting.phase).toBe("Countdown");
@@ -1093,6 +1069,31 @@ describe("Search and Destroy without enough humans", () => {
           await disconnectBot(online);
         }
       }
+    },
+  );
+});
+
+describe("Falling off the Search and Destroy map", () => {
+  test(
+    "a player knocked below the yard dies in the void and the knocker gets the kill",
+    { timeout: 120_000 },
+    async ({ bot, secondBot, rcon, server }) => {
+      await waitForLobby(rcon);
+      const b = human(secondBot);
+      const [teamA, teamB] = await startMatch(rcon, human(bot), b);
+      const live = await status(rcon);
+      // B hits A, then A drops past the void line 8 blocks under the floor.
+      await duel(rcon, secondBot, bot);
+      const below = new Vec3(yard.duel[1].x, 50, yard.duel[1].z);
+      await inRwf(rcon, `minecraft:tp ${bot.username} ${coords(below)}`);
+      await b.log.until(new RegExp(`${teamB} Team wins!`, "u"));
+      const settled = await settledMatch(server, live.matchId);
+      const rows = settled.players.map((r) =>
+        [r.team, r.kills, r.deaths].join(","),
+      );
+      const [loser, winner] = [teamA.toUpperCase(), teamB.toUpperCase()];
+      expect(rows.sort()).toEqual([`${loser},0,1`, `${winner},1,0`].sort());
+      await waitForLobby(rcon);
     },
   );
 });

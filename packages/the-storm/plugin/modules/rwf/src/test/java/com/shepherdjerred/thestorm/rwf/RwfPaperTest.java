@@ -152,8 +152,9 @@ final class RwfPaperTest {
     assertThat(inMatch(alice)).isFalse();
     assertThat(alice.getScoreboard())
         .isEqualTo(harness.server.getScoreboardManager().getMainScoreboard());
+    // Saved in the same tick and read back: the row is retired without a new login.
     assertThat(stored()).hasSize(1);
-    harness.rejoinAfterSave(alice);
+    assertThat(harness.saved.saves).isPositive();
     harness.until(() -> stored().isEmpty());
   }
 
@@ -194,8 +195,6 @@ final class RwfPaperTest {
     assertThat(alice.getInventory().contains(Material.DIAMOND_SWORD)).isFalse();
     assertThat(alice.getLevel()).isEqualTo(3);
     assertThat(alice.getLocation().getX()).isEqualTo(5.5);
-    assertThat(stored()).hasSize(1);
-    harness.rejoinAfterSave(alice);
     harness.until(() -> stored().isEmpty());
   }
 

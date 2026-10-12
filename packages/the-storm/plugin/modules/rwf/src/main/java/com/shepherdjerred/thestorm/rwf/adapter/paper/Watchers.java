@@ -58,7 +58,9 @@ final class Watchers {
       Texts.info(player, "Back at the spectator point.");
       return Optional.empty();
     }
-    var refusal = runner.snapshotRefusal(player);
+    var refusal =
+        runner.snapshotRefusal(
+            player, () -> watch(player).ifPresent(error -> Texts.error(player, error)));
     if (refusal.isPresent()) {
       return refusal;
     }

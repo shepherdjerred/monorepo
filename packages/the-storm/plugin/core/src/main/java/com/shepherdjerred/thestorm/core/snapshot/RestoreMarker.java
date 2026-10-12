@@ -25,6 +25,11 @@ public final class RestoreMarker {
     key = new NamespacedKey(plugin, keyName);
   }
 
+  /** The player-data key this marker is saved under. */
+  public NamespacedKey key() {
+    return key;
+  }
+
   public void record(Player player, Snapshot snapshot) {
     player.getPersistentDataContainer().set(key, PersistentDataType.STRING, fingerprint(snapshot));
   }
@@ -34,7 +39,11 @@ public final class RestoreMarker {
         .equals(player.getPersistentDataContainer().get(key, PersistentDataType.STRING));
   }
 
-  private static String fingerprint(Snapshot snapshot) {
+  /**
+   * The value saved for {@code snapshot}: a digest of everything it restores, so a saved player
+   * file holding it proves that this snapshot, not an earlier one, was applied before the save.
+   */
+  public static String fingerprint(Snapshot snapshot) {
     try {
       var digest = MessageDigest.getInstance("SHA-256");
       digest.update(snapshot.player().toString().getBytes(StandardCharsets.UTF_8));

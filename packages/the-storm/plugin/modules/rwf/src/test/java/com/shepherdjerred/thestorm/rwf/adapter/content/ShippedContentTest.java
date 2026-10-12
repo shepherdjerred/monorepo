@@ -103,6 +103,20 @@ final class ShippedContentTest {
   }
 
   @Test
+  void saigonAndWonderlandShipButStayOutOfTheRotation() {
+    var ids = content.maps().stream().map(MapSource::id).toList();
+    assertThat(ids).containsAll(content.config().quarantine().keySet());
+    assertThat(content.config().quarantine()).containsOnlyKeys("saigon", "wonderland");
+    assertThat(content.config().quarantine().values())
+        .allMatch(r -> r.startsWith("BOMB_UNREACHABLE"));
+    assertThat(content.rotation())
+        .hasSize(32)
+        .extracting(MapSource::id)
+        .doesNotContain("saigon", "wonderland")
+        .contains("training-yard");
+  }
+
+  @Test
   void theKitsFileMirrorsTheKitBook() {
     assertThat(content.kits()).isEqualTo(KitBook.MILESTONE_ONE);
   }
