@@ -35,8 +35,8 @@
   "name": "@scout-for-lol/frontend",
   "scripts": {
     "astro": "astro",
-    "build": "astro build && bun run scripts/emit-shared-assets.ts",
-    "dev": "astro dev",
+    "build": "bun run scripts/optimize-showcase-images.ts && astro build && bun run scripts/emit-shared-assets.ts",
+    "dev": "bun run scripts/optimize-showcase-images.ts && astro dev",
     "format": "prettier --check .",
     "lint": "astro check && eslint src --max-warnings=0 && check-architecture",
     "preview": "astro preview",
@@ -56,6 +56,7 @@
     "@types/react-dom": "^19.3.0",
     "bun-types": "1.4.2",
     "eslint": "^10.7.0",
+    "sharp": "^0.35.5",
     "typescript": "^6.0.3",
     "@typescript/native": "npm:typescript@7.0.2",
     "vitest": "5.0.3",
