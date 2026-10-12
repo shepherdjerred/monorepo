@@ -2292,9 +2292,19 @@ phase without returning the previous interval.
 for calibration. `STORM_CAPACITY_PROBE_TOTAL` selects one size for a quick
 probe; an incomplete matrix always fails the release verdict. Full acceptance
 uses the shipped budget and all four sizes. These suites remain outside CI.
-For an incomplete calibration probe only, `STORM_CAPACITY_PROFILE=cpu|alloc`
-captures another 90 seconds after the measuring window with Spark and saves
-the profile locally under `.cache/e2e/capacity/profiles/`. The evidence labels
+For an incomplete calibration probe only, `STORM_CAPACITY_PROFILE=cpu|alloc|jfr`
+captures another 90 seconds after the measuring window and saves
+the profile locally under `.cache/e2e/capacity/profiles/`. CPU/allocation modes
+use Spark. JFR mode uses Minecraft's native `jfr start/stop` commands and the
+host JDK's `jfr` tool; the server image needs no JDK diagnostic executables.
+The `storm.BotThink` events identify match generation, snapshot tick, cycle,
+preparation, each parallel stage and ordered commit. Batch spans separate queue,
+worker wall and thread CPU times; cycle CPU is unavailable because a cycle
+crosses threads. Built-in GC and execution samples share the same timeline.
+The diagnostic also saves container CPU counters before and after profiling.
+Disabled recordings allocate no stage markers or read the timing clock.
+Raw JFR files can include JVM environment metadata and stay private; upload only
+a sanitized analysis. The evidence labels
 this diagnostic mode explicitly; profiled probes cannot establish release
 acceptance. Compare clean measuring windows and keep the separate profiler
 overhead out of capacity claims.

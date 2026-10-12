@@ -17,6 +17,7 @@ import {
   type Telemetry,
   type Lifecycle,
 } from "./capacity-bars.ts";
+import { recordFlight } from "#e2e/harness/flight.ts";
 
 /** Optional post-measurement diagnostics, always separate from release acceptance. */
 export async function profileAfterMeasurement(
@@ -25,12 +26,16 @@ export async function profileAfterMeasurement(
 ) {
   const raw = Bun.env["STORM_CAPACITY_PROFILE"];
   if (raw === undefined) return;
-  const mode = z.enum(["cpu", "alloc"]).parse(raw);
+  const mode = z.enum(["cpu", "alloc", "jfr"]).parse(raw);
   if (Bun.env["STORM_CAPACITY_PROBE_TOTAL"] === undefined)
     throw new Error(
       "Profiling is only allowed in an incomplete calibration probe",
     );
   if (server.kind !== "container") throw new Error("Profiling requires Docker");
+  if (mode === "jfr") {
+    await recordFlight(server, matchId);
+    return;
+  }
   const command = (text: string) =>
     docker([
       "exec",
