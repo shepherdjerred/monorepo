@@ -68,6 +68,7 @@ final class DiscordRelayTest {
   private final List<Duration> later = new ArrayList<>();
   private final List<String> presences = new ArrayList<>();
   private final java.util.Map<UUID, Long> dmTargets = new java.util.HashMap<>();
+  private final java.util.Map<Long, UUID> linked = new java.util.HashMap<>();
 
   private final GlobalChat chat =
       new GlobalChat() {
@@ -139,7 +140,17 @@ final class DiscordRelayTest {
           CONFIG,
           gateway,
           new DiscordRelay.Game(chat, scheduler, () -> List.copyOf(online), () -> now),
-          player -> Optional.ofNullable(dmTargets.get(player)));
+          new LinkedAccounts() {
+            @Override
+            public Optional<Long> dmTarget(UUID player) {
+              return Optional.ofNullable(dmTargets.get(player));
+            }
+
+            @Override
+            public Optional<UUID> playerOf(long discordUser) {
+              return Optional.ofNullable(linked.get(discordUser));
+            }
+          });
 
   private void runMainThread() {
     var tasks = List.copyOf(mainThread);
@@ -395,7 +406,8 @@ final class DiscordRelayTest {
             "arena-top",
             "Best waves",
             List.of(new DiscordCommand.Option("arena", "Which arena", false)),
-            (options, reply) -> reply.accept("top " + options));
+            Duration.ZERO,
+            (request, reply) -> reply.accept("top " + request.options()));
 
     relay.addCommand(top);
 
@@ -405,7 +417,9 @@ final class DiscordRelayTest {
     org.assertj.core.api.Assertions.assertThatThrownBy(() -> relay.addCommand(top))
         .isInstanceOf(IllegalArgumentException.class);
     org.assertj.core.api.Assertions.assertThatThrownBy(
-            () -> relay.addCommand(new DiscordCommand("list", "x", List.of(), (o, r) -> {})))
+            () ->
+                relay.addCommand(
+                    new DiscordCommand("list", "x", List.of(), Duration.ZERO, (o, r) -> {})))
         .isInstanceOf(IllegalArgumentException.class);
   }
 
@@ -452,5 +466,37 @@ final class DiscordRelayTest {
             "DM42 Docks: draw after 42s: Alice, Bob",
             "Rustworks (Ominous I) over at 4: Alice (4), Bob (3)",
             "DM42 Rustworks (Ominous I) over at 4: Alice (4), Bob (3)");
+  }
+
+  @Test
+  void writeCommandsKnowTheLinkedPlayerAndCoolDownPerUser() {
+    var alice = UUID.randomUUID();
+    linked.put(42L, alice);
+    var replies = new ArrayList<String>();
+    var mail =
+        new DiscordCommand(
+            "mail",
+            "Send a letter",
+            List.of(),
+            Duration.ofSeconds(30),
+            (request, reply) ->
+                reply.accept(
+                    request.discordUser()
+                        + " as "
+                        + request.player().map(UUID::toString).orElse("nobody")));
+
+    relay.answer(mail, java.util.Map.of(), 42L, replies::add);
+    relay.answer(mail, java.util.Map.of(), 7L, replies::add);
+    now = now.plusSeconds(10);
+    relay.answer(mail, java.util.Map.of(), 42L, replies::add);
+    now = now.plusSeconds(20);
+    relay.answer(mail, java.util.Map.of(), 42L, replies::add);
+
+    assertThat(replies)
+        .containsExactly(
+            "42 as " + alice,
+            "7 as nobody",
+            "Wait 20s before using /mail again.",
+            "42 as " + alice);
   }
 }

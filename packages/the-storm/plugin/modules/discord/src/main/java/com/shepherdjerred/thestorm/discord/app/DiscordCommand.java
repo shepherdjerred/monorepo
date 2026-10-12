@@ -1,7 +1,10 @@
 package com.shepherdjerred.thestorm.discord.app;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
@@ -12,15 +15,19 @@ import java.util.regex.Pattern;
  * @param name the command, such as {@code arena-top}
  * @param description what Discord shows under it
  * @param options its string options
+ * @param cooldown how long one Discord user waits between uses; zero for read-only commands
  * @param handler answers it
  */
 public record DiscordCommand(
-    String name, String description, List<Option> options, Handler handler) {
+    String name, String description, List<Option> options, Duration cooldown, Handler handler) {
 
   private static final Pattern NAME = Pattern.compile("[a-z][a-z0-9-]{0,31}");
 
   public DiscordCommand {
     options = List.copyOf(options);
+    if (cooldown.isNegative()) {
+      throw new IllegalArgumentException("a cooldown cannot be negative: " + cooldown);
+    }
     requireName(name);
     requireDescription(description);
   }
@@ -52,6 +59,20 @@ public record DiscordCommand(
     }
   }
 
+  /**
+   * One use of a command.
+   *
+   * @param options the options given, by name
+   * @param discordUser who used it
+   * @param player the Minecraft player their Discord account is linked to, if any
+   */
+  public record Request(Map<String, String> options, long discordUser, Optional<UUID> player) {
+
+    public Request {
+      options = Map.copyOf(options);
+    }
+  }
+
   /** Answers a command. */
   @FunctionalInterface
   public interface Handler {
@@ -59,10 +80,10 @@ public record DiscordCommand(
     /**
      * Called on a JDA thread: hop to the main thread before touching the game, and never block.
      *
-     * @param options the options given, by name
+     * @param request what was asked, and by whom
      * @param reply takes the answer (Discord markdown; escape player text with {@link
      *     DiscordRelay#escape}); safe to call from any thread, once
      */
-    void answer(Map<String, String> options, Consumer<String> reply);
+    void answer(Request request, Consumer<String> reply);
   }
 }

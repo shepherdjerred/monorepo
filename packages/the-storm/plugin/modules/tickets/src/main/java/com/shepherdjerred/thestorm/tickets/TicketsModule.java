@@ -5,6 +5,7 @@ import com.shepherdjerred.thestorm.core.module.StormModule;
 import com.shepherdjerred.thestorm.core.players.PlayerDirectory;
 import com.shepherdjerred.thestorm.discord.app.DiscordRelay;
 import com.shepherdjerred.thestorm.tickets.adapter.db.JooqTicketStore;
+import com.shepherdjerred.thestorm.tickets.adapter.discord.TicketDiscordCommand;
 import com.shepherdjerred.thestorm.tickets.adapter.discord.TicketDiscordPosts;
 import com.shepherdjerred.thestorm.tickets.adapter.paper.TicketCommands;
 import com.shepherdjerred.thestorm.tickets.adapter.paper.TicketRuntime;
@@ -41,6 +42,12 @@ public final class TicketsModule implements StormModule {
         new TicketRuntime(context.plugin().getServer(), context.scheduler(), context.logger());
     var commands = new TicketCommands(service, players, config, runtime);
     context.services().provide(TicketService.class, service);
+    context
+        .services()
+        .find(DiscordRelay.class)
+        .ifPresent(
+            relay ->
+                relay.addCommand(new TicketDiscordCommand(service, context.logger()).command()));
 
     context
         .lifecycle()
