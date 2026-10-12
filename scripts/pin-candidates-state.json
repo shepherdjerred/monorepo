@@ -64,9 +64,9 @@
       "buildNumber": 1009046
     },
     "shepherdjerred/storm-forum": {
-      "buildNumber": 1009051,
-      "version": "2.0.0-1009051",
-      "digest": "sha256:a3abf940ea83aaccf31921deb2a56fb0d5e18951af22684c768247c1b6759621"
+      "buildNumber": 1009086,
+      "version": "2.0.0-1009086",
+      "digest": "sha256:c0ffb0de1589ea1118b9e4ac4aea03542df6acfef60472fcc3a4c33d272c4b1f"
     },
     "shepherdjerred/streambot": {
       "version": "2.0.0-1009046",
@@ -79,9 +79,9 @@
       "buildNumber": 1008270
     },
     "shepherdjerred/temporal-worker": {
-      "version": "2.0.0-1009046",
-      "digest": "sha256:40ae4b9afc6c971791549786995ea77c21596d15636b5b63de2de30b04071a01",
-      "buildNumber": 1009046
+      "buildNumber": 1009086,
+      "version": "2.0.0-1009086",
+      "digest": "sha256:39a16660455b39c09c02002537d1d180d763ba527cd99f53f9ea25b0342e0626"
     },
     "shepherdjerred/temporal-worker/workflows/candidate": {
       "version": "2.0.0-1007695",
@@ -96,9 +96,9 @@
       "buildNumber": 1005566
     },
     "shepherdjerred/the-storm-server": {
-      "version": "2.0.0-1009046",
-      "digest": "sha256:f2a64f99d07abef8eb52de687e6afb44f5f83344c294edc3f08c8b8b5534d11c",
-      "buildNumber": 1009046
+      "buildNumber": 1009086,
+      "version": "2.0.0-1009086",
+      "digest": "sha256:cd27b2ab639ef237a40dac9c4b1d8c8b7df90113ad518f5a59f98ccc90f552a0"
     },
     "shepherdjerred/trmnl-dashboard": {
       "version": "2.0.0-1009046",
@@ -111,9 +111,9 @@
       "buildNumber": 1007972
     },
     "shepherdjerred/woodpecker-config-extension": {
-      "version": "2.0.0-1009046",
-      "digest": "sha256:3b9ac3c7c175f89cb61e1fae2cd8a98c482350220855086f712d2554320897c9",
-      "buildNumber": 1009046
+      "buildNumber": 1009086,
+      "version": "2.0.0-1009086",
+      "digest": "sha256:4e2f8380f891fe021fb146b6bcf682293b3c7cfe1e23997ec69f191e2d8909f0"
     }
   },
   "withdrawnCandidates": {

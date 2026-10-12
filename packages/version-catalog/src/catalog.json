@@ -750,7 +750,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1009051@sha256:a3abf940ea83aaccf31921deb2a56fb0d5e18951af22684c768247c1b6759621",
+      "value": "2.0.0-1009086@sha256:c0ffb0de1589ea1118b9e4ac4aea03542df6acfef60472fcc3a4c33d272c4b1f",
       "notes": [
         "CI-published Storm forum image; publication alone does not activate public production."
       ]
@@ -879,7 +879,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1009046@sha256:3b9ac3c7c175f89cb61e1fae2cd8a98c482350220855086f712d2554320897c9",
+      "value": "2.0.0-1009086@sha256:4e2f8380f891fe021fb146b6bcf682293b3c7cfe1e23997ec69f191e2d8909f0",
       "notes": [
         "not managed by renovate — bootstrap build, pushed by hand: Woodpecker",
         "needs this service to generate the pipeline that would otherwise build",
@@ -1645,7 +1645,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1009046@sha256:f2a64f99d07abef8eb52de687e6afb44f5f83344c294edc3f08c8b8b5534d11c",
+      "value": "2.0.0-1009086@sha256:cd27b2ab639ef237a40dac9c4b1d8c8b7df90113ad518f5a59f98ccc90f552a0",
       "notes": [
         "The Storm's Minecraft server image (minecraft-tsmc), built from packages/the-storm/server",
         "by the infra bake group. Not managed by renovate; CI version commit-back updates the pin."
@@ -1733,7 +1733,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1009046@sha256:40ae4b9afc6c971791549786995ea77c21596d15636b5b63de2de30b04071a01",
+      "value": "2.0.0-1009086@sha256:39a16660455b39c09c02002537d1d180d763ba527cd99f53f9ea25b0342e0626",
       "notes": [
         "Custom temporal-worker image - updated by CI pipeline",
         "not managed by renovate"
