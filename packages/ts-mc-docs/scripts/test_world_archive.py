@@ -4,17 +4,86 @@ import json
 import tempfile
 import unittest
 import zipfile
+from argparse import Namespace
 from pathlib import Path
 from unittest.mock import patch
 
-from world_archive import CATALOG, listed_worlds, load_catalog, prepare, retained_path
+from world_archive import (
+    CATALOG,
+    PACKAGE,
+    listed_worlds,
+    load_catalog,
+    prepare,
+    retained_path,
+    retire_world_checkpoints,
+    run,
+)
 
 
 class ArchiveTests(unittest.TestCase):
+    def test_retirement_is_release_specific_and_preserves_unknown_checkpoints(self):
+        worlds = {"new-world-test-2022-11-20": {}, "unrelated": {"preserve": True}}
+        self.assertFalse(retire_world_checkpoints("another-release", worlds))
+        self.assertIn("new-world-test-2022-11-20", worlds)
+        self.assertTrue(retire_world_checkpoints("2026-10-04-v1", worlds))
+        self.assertEqual(worlds, {"unrelated": {"preserve": True}})
+        self.assertFalse(retire_world_checkpoints("2026-10-04-v1", worlds))
+
+    def test_resume_migrates_retired_downloads_and_worlds_before_publishing_checksums(self):
+        catalog = load_catalog()
+        expected = json.loads((PACKAGE / "archive/published.json").read_text())
+        state = json.loads(json.dumps(expected))
+        state["downloads"] = {
+            key: {k: v for k, v in world.items() if k != "previews"} for key, world in state["worlds"].items()
+        }
+        for identifier in ("new-world-test-2022-11-20", "main-map1-upgraded-2023-06-18"):
+            state["worlds"][identifier] = {"retired": True}
+            state["downloads"][identifier] = {"retired": True}
+        hashes = {world["file"]: expected["worlds"][world["id"]]["sourceSha256"] for world in catalog["worlds"]}
+        hashes.update({name: entry["sha256"] for name, entry in expected["schematics"].items()})
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source, scratch = root / "source", root / "scratch"
+            source.mkdir()
+            scratch.mkdir()
+            for name in hashes:
+                (source / name).write_bytes(b"fixture")
+            (scratch / "published.json").write_text(json.dumps(state))
+            args = Namespace(source=source, scratch=scratch, dry_run=False, only=None, profile="test", workers=1)
+            with (
+                patch("world_archive.require_space"),
+                patch("world_archive.renderer"),
+                patch("world_archive.aws"),
+                patch("world_archive.verify_checkpoint"),
+                patch("world_archive.verify_url"),
+                patch("world_archive.sha256", side_effect=lambda path: hashes[path.name]),
+            ):
+                run(args)
+            self.assertEqual(json.loads((scratch / "checksums.json").read_text()), expected)
+            migrated = json.loads((scratch / "published.json").read_text())
+            self.assertEqual(migrated["worlds"], expected["worlds"])
+            self.assertEqual(set(migrated["downloads"]), set(expected["worlds"]))
+
+    def test_catalog_preserves_the_seven_historical_worlds(self):
+        catalog = load_catalog()
+        expected = {
+            "main-map2-2016-01-10",
+            "main-map1-2015-07-09",
+            "skylands-map2-2016-01-10",
+            "skylands-map1-2015-07-09",
+            "creative-2016-01-10",
+            "asterism-2016-02",
+            "kargeth-2012-09-11",
+        }
+        self.assertEqual({world["id"] for world in catalog["worlds"]}, expected)
+        self.assertEqual({world["id"] for world in listed_worlds(catalog)}, expected)
+
     def test_listing_defaults_to_visible_and_rejects_non_boolean_metadata(self):
         catalog = json.loads(CATALOG.read_text())
-        self.assertEqual(len(listed_worlds(catalog)), 8)
-        self.assertEqual(len(catalog["worlds"]), 9)
+        catalog["worlds"] = catalog["worlds"][:3]
+        catalog["worlds"][1]["listed"] = False
+        catalog["worlds"][2]["listed"] = True
+        self.assertEqual(listed_worlds(catalog), [catalog["worlds"][0], catalog["worlds"][2]])
         with tempfile.TemporaryDirectory() as temporary:
             path = Path(temporary) / "catalog.json"
             for value in ("false", 0, None):

@@ -28,33 +28,6 @@
         }
       ]
     },
-    "new-world-test-2022-11-20": {
-      "sourceSha256": "916fbcf4c5dccebd84f1212cf4ee5e3c347a0f80fa1323e60b38380770c97dac",
-      "sha256": "c67540e757870f7d777f1be7b2ffb74aab603138571d436183b36ec36e7d6201",
-      "bytes": 30409027,
-      "files": 34,
-      "download": "https://docs.ts-mc.net/world-archive/2026-10-04-v1/downloads/new-world-test-2022-11-20.zip",
-      "previews": [
-        {
-          "kind": "overview",
-          "url": "https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/new-world-test-2022-11-20/overview.png",
-          "sha256": "9040e300beaa896c2a19c4e5d2e51533b690d317d6158b02c3bfab062a7bf2db",
-          "bytes": 1973018,
-          "width": 1088,
-          "height": 1088,
-          "bounds": [-1024, -1024, 2048, 2048]
-        },
-        {
-          "kind": "closeup",
-          "url": "https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/new-world-test-2022-11-20/closeup.png",
-          "sha256": "d88d9c9805a676d3def1394bd8de2b190fba6d3177d5ab460600fe4618efa98d",
-          "bytes": 706926,
-          "width": 1024,
-          "height": 1024,
-          "bounds": [-256, -256, 512, 512]
-        }
-      ]
-    },
     "creative-2016-01-10": {
       "sourceSha256": "646c31b56fef4fc478e04ec50ece6f3d9926ad51267069779587aead894e8387",
       "sha256": "f73a784405c6c233558a876f56cb6345bce90967780fa8d997fff29705a05b1e",
@@ -184,33 +157,6 @@
           "url": "https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/main-map1-2015-07-09/closeup.png",
           "sha256": "2805f80e6581ec052ff068e95792c757df9d3fabfbac1bf2cb246f5a4e4157a8",
           "bytes": 767529,
-          "width": 1024,
-          "height": 1024,
-          "bounds": [-256, -241, 512, 512]
-        }
-      ]
-    },
-    "main-map1-upgraded-2023-06-18": {
-      "sourceSha256": "61975677882b79349ed95eb2d104e0b34243b3ff45dc6e7e28c583d72cdc2201",
-      "sha256": "072872775ab4296ba08f707f59659a5793974b275cfa7070152b3dbb3ce1d41e",
-      "bytes": 1803913412,
-      "files": 10469,
-      "download": "https://docs.ts-mc.net/world-archive/2026-10-04-v1/downloads/main-map1-upgraded-2023-06-18.zip",
-      "previews": [
-        {
-          "kind": "overview",
-          "url": "https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/main-map1-upgraded-2023-06-18/overview.png",
-          "sha256": "fd319ccc2632e71c602b26d36a8d0576e7b488f06d600d4eca3b032f2d41e9a4",
-          "bytes": 6621726,
-          "width": 2048,
-          "height": 2048,
-          "bounds": [-1024, -1009, 2048, 2048]
-        },
-        {
-          "kind": "closeup",
-          "url": "https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/main-map1-upgraded-2023-06-18/closeup.png",
-          "sha256": "673e1c8a2198b8bb898b46ac4be078b009a25b1dc32e9fbe75ce72f05bc3f222",
-          "bytes": 766259,
           "width": 1024,
           "height": 1024,
           "bounds": [-256, -241, 512, 512]
