@@ -15,7 +15,6 @@ import com.shepherdjerred.thestorm.rwfbots.app.StatsCache;
 import com.shepherdjerred.thestorm.rwfbots.app.ThinkLoop;
 import com.shepherdjerred.thestorm.rwfbots.domain.director.Rating;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Facing;
-import com.shepherdjerred.thestorm.rwfbots.domain.world.Kit;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.TeamId;
 import java.time.InstantSource;
 import java.util.ArrayList;
@@ -304,11 +303,12 @@ public final class MatchBridge implements Consumer<MatchNotification> {
     parts.logger().info("rwfbots: {} bots thinking in match {}", ours.size(), after.matchId());
   }
 
-  private static BotProfile profile(BotBody bot, MatchState.Fighter fighter, IdMap ids, int slot) {
-    var kitId = fighter.kit().orElseThrow(() -> new IllegalStateException("live without a kit"));
-    // A drafted bot plays a kit from the draft, which names known kits only; an operator may still
-    // put a bot on a kit bots do not know, so it reads as the closest one instead of failing.
-    var kit = Kit.closest(kitId, Kit.Traits.NONE);
+  /**
+   * A drafted bot plays a kit from the draft, which names known kits only; an operator may still
+   * put a bot on a kit bots do not know, which {@code kit} reads from what its body shows.
+   */
+  private BotProfile profile(BotBody bot, MatchState.Fighter fighter, IdMap ids, int slot) {
+    var kit = SnapshotCapture.kitOf(fighter, parts.roster().bodies().entity(bot.uuid()));
     return new BotProfile(
         ids.combatant(bot.uuid()),
         slot,

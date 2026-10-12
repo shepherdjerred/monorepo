@@ -230,6 +230,25 @@ final class SnapshotCaptureTest {
     assertThat(plain.require(ids.combatant(bob.getUniqueId())).kit()).isEqualTo(Kit.TROOPER);
   }
 
+  @Test
+  void aBotsProfileReadsAnUnknownKitFromItsBodyAsTheCaptureDoes() {
+    var fighter =
+        new MatchState.Fighter(
+            alice.getUniqueId(),
+            "Alice",
+            Optional.empty(),
+            Optional.of("red"),
+            Optional.of("crossbowman"),
+            true);
+    alice.getInventory().addItem(new ItemStack(Material.CROSSBOW));
+
+    assertThat(SnapshotCapture.kitOf(fighter, Optional.of(alice))).isEqualTo(Kit.LONGBOW);
+    alice.getInventory().clear();
+    alice.setInvisible(true);
+    assertThat(SnapshotCapture.kitOf(fighter, Optional.of(alice))).isEqualTo(Kit.GHOST);
+    assertThat(SnapshotCapture.kitOf(fighter, Optional.empty())).isEqualTo(Kit.TROOPER);
+  }
+
   private MatchState unknownKits(String aliceKit, String bobKit) {
     return new MatchState(
         MATCH,
