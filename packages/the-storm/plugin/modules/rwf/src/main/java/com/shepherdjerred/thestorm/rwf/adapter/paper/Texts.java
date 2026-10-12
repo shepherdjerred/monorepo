@@ -20,9 +20,9 @@ import java.util.Optional;
 import java.util.Set;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
-import org.bukkit.Server;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
+import org.bukkit.Server;
 import org.jspecify.annotations.Nullable;
 
 /** Renders the match's messages in the house style, with Red Warfare's wording. */
@@ -83,7 +83,9 @@ final class Texts {
           entry(NoticeKind.DRAW, "No one won!"),
           entry(NoticeKind.STOPPED, "The match was stopped."),
           entry(NoticeKind.CREDITS_GIVEN, "Given {credits} {creditWord}"),
-          entry(NoticeKind.AFK_PENALTY, "You were AFK all match: you earned nothing and {credits} credits were taken."),
+          entry(
+              NoticeKind.AFK_PENALTY,
+              "You were AFK all match: you earned nothing and {credits} credits were taken."),
           entry(NoticeKind.DEATH, "{template}"),
           entry(NoticeKind.KILL_ASSIST, "Scored a kill assist worth {share}!"),
           entry(NoticeKind.STOLEN_KILL, "Stolen a kill!"),

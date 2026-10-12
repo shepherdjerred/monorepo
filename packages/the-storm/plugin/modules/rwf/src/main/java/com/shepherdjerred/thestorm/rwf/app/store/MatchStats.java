@@ -78,6 +78,7 @@ public record MatchStats(Details details, List<PlayerLine> players, List<EventRo
    * @param timeAlive time alive in the live match
    * @param distance blocks moved while alive in the live match
    * @param kitSwitches kit changes before the teams were dealt
+   * @param afk whether they were AFK for the whole live match
    */
   public record PlayerLine(
       UUID player,
@@ -100,7 +101,8 @@ public record MatchStats(Details details, List<PlayerLine> players, List<EventRo
       int steaks,
       Duration timeAlive,
       double distance,
-      int kitSwitches) {
+      int kitSwitches,
+      boolean afk) {
 
     public PlayerLine {
       if (kills < 0

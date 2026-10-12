@@ -304,6 +304,10 @@ final class RwfExperienceTest {
     toFreeze(harness, alice);
     tickUntil(harness, PhaseKind.LIVE, 6);
     UUID first = harness.snapshot().matchId();
+    var from = alice.getLocation();
+    var looked = from.clone();
+    looked.setYaw(from.getYaw() + 10);
+    harness.server.getPluginManager().callEvent(new PlayerMoveEvent(alice, from, looked));
     var enemy = teamOf(harness, alice) == TeamColor.RED ? TeamColor.BLUE : TeamColor.RED;
     harness.tick(Duration.ofSeconds(61));
     for (var bot : harness.bots.spawned()) {

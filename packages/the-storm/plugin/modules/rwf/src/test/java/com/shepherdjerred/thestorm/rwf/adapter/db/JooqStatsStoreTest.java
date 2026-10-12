@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.rwf.adapter.db;
 
+import static com.shepherdjerred.thestorm.rwf.adapter.db.generated.Tables.RWF_MATCH_PLAYER;
 import static com.shepherdjerred.thestorm.rwf.testing.Samples.T0;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -73,12 +74,23 @@ final class JooqStatsStoreTest {
         1,
         Duration.ofSeconds(90),
         150,
-        0);
+        0,
+        player.equals(BOB));
   }
 
   private static PlayerRow row(UUID match, UUID player, Outcome outcome, int kills) {
     return new PlayerRow(
-        match, player, TeamColor.RED, "trooper", kills, 1, outcome, 0, PayoutStatus.NONE, 0);
+        match,
+        player,
+        TeamColor.RED,
+        "trooper",
+        kills,
+        1,
+        outcome,
+        com.shepherdjerred.thestorm.rwf.app.PayoutService.CURRENCY,
+        0,
+        PayoutStatus.NONE,
+        0);
   }
 
   /** Records a match Alice won or lost against Bob, with stats. */
@@ -142,6 +154,24 @@ final class JooqStatsStoreTest {
     assertThat(alice.bestStreak()).isEqualTo(3);
     assertThat(alice.time()).isEqualTo(Duration.ofSeconds(270));
     assertThat(stats.totals(UUID.randomUUID()).join()).isEmpty();
+  }
+
+  @Test
+  void theMatchStoresBothAfkAndActiveMarks() {
+    var id = play(MatchStats.Result.WIN, 3, "trooper");
+
+    var marks =
+        database
+            .read(
+                dsl ->
+                    dsl.select(RWF_MATCH_PLAYER.AFK)
+                        .from(RWF_MATCH_PLAYER)
+                        .where(RWF_MATCH_PLAYER.MATCH_ID.eq(id.toString()))
+                        .orderBy(RWF_MATCH_PLAYER.PLAYER)
+                        .fetch(RWF_MATCH_PLAYER.AFK))
+            .join();
+
+    assertThat(marks).containsExactly(false, true);
   }
 
   @Test

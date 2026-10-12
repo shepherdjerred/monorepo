@@ -312,6 +312,8 @@ final class MatchExperienceTest {
       play.ok(new MatchEvent.PickKit(BOB, "trooper"));
       play.join(BOT_1);
       play.start(HARBOUR);
+      play.ok(new MatchEvent.LookedAround(ALICE));
+      play.ok(new MatchEvent.LookedAround(BOB));
       // One team falls: the match ends.
       var loser = play.teamOf(ALICE) == TeamColor.RED ? TeamColor.RED : TeamColor.BLUE;
       for (var member : play.on(loser)) {
@@ -346,6 +348,8 @@ final class MatchExperienceTest {
       play.join(ALICE);
       play.join(BOB);
       play.start(HARBOUR);
+      play.ok(new MatchEvent.LookedAround(ALICE));
+      play.ok(new MatchEvent.LookedAround(BOB));
       play.died(ALICE, Optional.of(BOB));
       tickFor(play, 16);
       var left = play.ok(new MatchEvent.Leave(ALICE, play.now));
@@ -368,6 +372,22 @@ final class MatchExperienceTest {
       assertThat(only(stopped, MatchEffect.ReturnToLobby.class)).isEmpty();
       assertThat(only(stopped, MatchEffect.Restore.class)).hasSize(2);
       assertThat(play.match.members()).isEmpty();
+    }
+
+    @Test
+    void aHumanAfkAllMatchIsRestoredWhileAnActiveHumanCarriesOver() {
+      var play = new Play(Play.FLOW, Samples.T0);
+      play.startIdle(HARBOUR, ALICE, BOB);
+      play.ok(new MatchEvent.LookedAround(BOB));
+      play.died(ALICE, Optional.of(BOB));
+
+      var reset = tickFor(play, 16);
+
+      assertThat(only(reset, MatchEffect.Restore.class))
+          .containsExactly(new MatchEffect.Restore(ALICE));
+      assertThat(only(reset, MatchEffect.ReturnToLobby.class))
+          .containsExactly(new MatchEffect.ReturnToLobby(BOB, "trooper"));
+      assertThat(play.match.members()).extracting(Combatant::id).containsExactly(BOB);
     }
 
     @Test

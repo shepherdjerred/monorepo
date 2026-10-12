@@ -440,7 +440,15 @@ final class Flow {
       draft.effect(new MatchEffect.Pay(id, award.credits(), award.reason().name()));
       // An AFK charge is told once settled, with what was actually taken (never more than held).
       if (award.reason() != RewardEligibility.Reason.AFK) {
-        draft.tell(id, Notice.of(NoticeKind.CREDITS_GIVEN, "credits", award.credits()));
+        draft.tell(
+            id,
+            Notice.of(
+                NoticeKind.CREDITS_GIVEN,
+                Map.of(
+                    "credits",
+                    Long.toString(award.credits()),
+                    "creditWord",
+                    award.credits() == 1 ? "credit" : "credits")));
       }
     }
   }

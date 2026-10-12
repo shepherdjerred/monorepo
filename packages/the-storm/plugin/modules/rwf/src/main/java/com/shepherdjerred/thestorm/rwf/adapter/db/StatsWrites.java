@@ -50,6 +50,7 @@ final class StatsWrites {
           .set(RWF_MATCH_PLAYER.TIME_ALIVE_MS, line.timeAlive().toMillis())
           .set(RWF_MATCH_PLAYER.DISTANCE, line.distance())
           .set(RWF_MATCH_PLAYER.KIT_SWITCHES, line.kitSwitches())
+          .set(RWF_MATCH_PLAYER.AFK, line.afk())
           .where(RWF_MATCH_PLAYER.MATCH_ID.eq(id))
           .and(RWF_MATCH_PLAYER.PLAYER.eq(line.player().toString()))
           .execute();

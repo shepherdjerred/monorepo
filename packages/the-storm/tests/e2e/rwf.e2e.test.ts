@@ -6,7 +6,6 @@ import { z } from "zod";
 import { test } from "./fixtures.ts";
 import { disconnectBot, waitUntil } from "./harness/bot.ts";
 import { setRwfDenied } from "./harness/fake-brain.ts";
-import { rwfTestSettings } from "./harness/rwf-settings.ts";
 import {
   expectSampleCadence,
   expectCredits,
@@ -1253,6 +1252,29 @@ async function nukeMatch(
   return { armer: armer.bot.username, earned };
 }
 
+function secondReward(
+  won: boolean,
+  afk: boolean,
+  before: number,
+): {
+  result: string;
+  owed: number;
+  paid: number;
+  told: string;
+} {
+  const pay = won ? 3 : 1;
+  const outcome = won ? "WIN" : "LOSE";
+  const paid = afk ? -Math.min(afkPenalty, before) : pay;
+  return {
+    result: afk ? "AFK" : outcome,
+    owed: afk ? -afkPenalty : pay,
+    paid,
+    told: afk
+      ? `you earned nothing and ${(-paid).toString()} credits were taken`
+      : `Given ${pay.toString()} ${pay === 1 ? "credit" : "credits"}`,
+  };
+}
+
 /**
  * A second paid match the same day, no daily cap: past the minimum length
  * the armer's foes die to void damage (`/kill` is a suicide, which forfeits
@@ -1286,22 +1308,18 @@ async function secondPaidMatch(
   const settled = await settledMatch(server, live.matchId);
   for (const [index, one] of humans.entries()) {
     const before = first.earned.get(one.bot.username) ?? 0;
-    const won = teams[index] === winners;
-    const afk = one === first.idle;
-    const pay = won ? 3 : 1;
-    const outcome = won ? "WIN" : "LOSE";
     // AFK: no pay, and never more taken than the player holds.
-    const [result, owed] = afk ? ["AFK", -afkPenalty] : [outcome, pay];
-    const paid = afk ? -Math.min(afkPenalty, before) : pay;
+    const { result, owed, paid, told } = secondReward(
+      teams[index] === winners,
+      one === first.idle,
+      before,
+    );
     const row = rowOf(settled, one.bot);
     expect(
       [row?.result, row?.credits_owed, row?.payout_status, row?.credits_paid],
       one.bot.username,
     ).toEqual([result, owed, "PAID", paid]);
-    const told = afk
-      ? `you earned nothing and ${(-paid).toString()} credits were taken`
-      : `You earned ${pay.toString()} credits`;
-    await one.log.until(new RegExp(String.raw`${told}\.`, "u"), 20_000);
+    await one.log.until(new RegExp(told, "u"), 20_000);
     first.earned.set(one.bot.username, before + paid);
   }
   await waitForLobby(rcon);

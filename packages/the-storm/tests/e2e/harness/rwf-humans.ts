@@ -166,7 +166,10 @@ export async function joinRecovered({ bot, log }: Human): Promise<void> {
  * live; returns their teams in order. Transcripts start afresh, so a second
  * match reads only its own lines.
  */
-export async function playTogether(humans: Human[], idle: Human[] = []): Promise<Team[]> {
+export async function playTogether(
+  humans: Human[],
+  idle: Human[] = [],
+): Promise<Team[]> {
   for (const { log } of humans) {
     log.lines.length = 0;
   }

@@ -280,7 +280,8 @@ final class MatchLedger {
               line.steaks,
               alive,
               line.distance,
-              line.kitSwitches));
+              line.kitSwitches,
+              member.afk()));
     }
     return out;
   }

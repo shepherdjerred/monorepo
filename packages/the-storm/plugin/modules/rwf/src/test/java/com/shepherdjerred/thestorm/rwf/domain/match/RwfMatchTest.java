@@ -424,8 +424,9 @@ final class RwfMatchTest {
       }
       play.ok(new LookedAround(ALICE));
       assertThat(play.member(ALICE).afk()).as("lobby").isFalse();
-      play.ok(new MapChosen(Samples.twoTeams()));
+      play.ballot(Samples.twoTeams());
       play.ok(new ForceStart(play.now));
+      play.ready(Samples.twoTeams());
       assertThat(play.member(ALICE).afk()).as("everyone starts the live match AFK").isTrue();
 
       play.died(ALICE, Optional.empty());
