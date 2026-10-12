@@ -28,6 +28,24 @@ export type WaitResult = {
   elapsedMs: number;
 };
 
+/** The requested deadline elapsed; that says nothing about CI itself. */
+export function timeoutResult(
+  snapshot: Snapshot | null,
+  started: number,
+): WaitResult {
+  return {
+    snapshot,
+    verdict: {
+      outcome: "timeout",
+      reasons: [
+        "The requested wait deadline elapsed. This does not mean CI failed.",
+      ],
+      commands: ["toolkit ci load"],
+    },
+    elapsedMs: Date.now() - started,
+  };
+}
+
 /** Spread concurrent waiters so they do not all retry at the same reset. */
 const RATE_LIMIT_JITTER_MS = 5000;
 
@@ -235,17 +253,7 @@ export async function waitForCi(
   } catch (error) {
     if (options.signal?.aborted === true) throw error;
     if (!controller.signal.aborted) throw error;
-    return {
-      snapshot: context.snapshot,
-      verdict: {
-        outcome: "timeout",
-        reasons: [
-          "The requested wait deadline elapsed. This does not mean CI failed.",
-        ],
-        commands: ["toolkit ci load"],
-      },
-      elapsedMs: Date.now() - context.started,
-    };
+    return timeoutResult(context.snapshot, context.started);
   } finally {
     if (deadline !== null) clearTimeout(deadline);
     clearTimeout(connectTimer);

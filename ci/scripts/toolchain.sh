@@ -16,7 +16,17 @@ CI_TOOLCHAIN_STARTED=$(date +%s)
 # ci-base pins, so both read mise.lock's format identically.
 # renovate: datasource=github-releases depName=jdx/mise
 MISE_BOOTSTRAP_VERSION="v2026.10.6"
-command -v mise >/dev/null ||
+# An image baked before the pin carries an older mise that rejects the
+# lockfile's format, so replace any mise older than the pin, not only a missing
+# one. The installer targets ~/.local/bin, which the PATH below puts first.
+mise_current() {
+  command -v mise >/dev/null || return 1
+  installed=$(mise --version | awk 'NR == 1 {print $1}')
+  [ -n "$installed" ] || return 1
+  oldest=$(printf '%s\n%s\n' "${MISE_BOOTSTRAP_VERSION#v}" "$installed" | sort -V | head -n 1)
+  [ "$oldest" = "${MISE_BOOTSTRAP_VERSION#v}" ]
+}
+mise_current ||
   curl -fsSL https://mise.run | MISE_VERSION="$MISE_BOOTSTRAP_VERSION" sh
 if [ "$(id -u)" -eq 0 ]; then
   # Root-hosted tests drop Postgres server processes to nobody. Keep the
