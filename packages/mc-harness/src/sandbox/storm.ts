@@ -132,6 +132,12 @@ const STORM_IMAGE_CONFIGS: Readonly<
     moduleKeys: STORM_IMAGE_MODULE_KEYS,
     enabledModules: STORM_IMAGE_ENABLED_MODULES,
   },
+  // Pipeline 8905's published /plugins/TheStorm/config.yml was read from the
+  // digest-verified OCI layer; file SHA-256 dc297511fb5e007b520f63f9cda7b819248ac50ffbb9df6dff66a6693df642ea.
+  a6b7a403012a2ba68c6f0c7ac08f050cac8f7e19e4fe816c265f6a97d64f8e43: {
+    moduleKeys: STORM_IMAGE_MODULE_KEYS,
+    enabledModules: STORM_IMAGE_ENABLED_MODULES,
+  },
 };
 
 export function stormImageConfig(image: string): {
