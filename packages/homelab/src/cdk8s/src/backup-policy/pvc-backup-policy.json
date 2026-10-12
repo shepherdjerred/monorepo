@@ -115,6 +115,36 @@
   },
   {
     "namespace": "woodpecker-ci",
+    "name": "woodpecker-cargo-cache",
+    "backup": "disabled",
+    "reason": "Disposable Cargo registry and Git checkout cache - re-downloadable, verified by Cargo.lock"
+  },
+  {
+    "namespace": "woodpecker-ci",
+    "name": "woodpecker-sccache",
+    "backup": "disabled",
+    "reason": "Disposable Rust compiler object cache - rebuilt by compiling"
+  },
+  {
+    "namespace": "woodpecker-ci",
+    "name": "woodpecker-go-cache",
+    "backup": "disabled",
+    "reason": "Disposable Go module and build caches - re-downloadable, verified by go.sum"
+  },
+  {
+    "namespace": "woodpecker-ci",
+    "name": "woodpecker-tool-cache",
+    "backup": "disabled",
+    "reason": "Disposable XDG, NuGet and bunx download caches - re-downloadable"
+  },
+  {
+    "namespace": "woodpecker-ci",
+    "name": "woodpecker-gradle-home",
+    "backup": "disabled",
+    "reason": "Disposable Gradle distributions and dependency cache - re-downloadable"
+  },
+  {
+    "namespace": "woodpecker-ci",
     "name": "woodpecker-tofu-plugin-cache",
     "backup": "disabled",
     "reason": "Disposable OpenTofu provider archives - re-downloadable, holds no state"

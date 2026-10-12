@@ -4,7 +4,7 @@ import { z } from "zod";
 import {
   BUN_CACHE,
   BUN_CACHE_CONTROL,
-  bunInstallEnvironment,
+  sharedCacheEnvironment,
 } from "#src/pipeline/cache.ts";
 import { groupTofuSteps } from "#src/pipeline/group-tofu.ts";
 import { emitWorkflow, wrapCommands } from "#src/pipeline/emit.ts";
@@ -87,7 +87,7 @@ test("groups exactly the selected PR checks with one install", () => {
     expect(step.volumes).toEqual(
       kept === undefined || kept.length === 0 ? undefined : kept,
     );
-    expect(bunInstallEnvironment(step.volumes)["BUN_INSTALL_LOCK_MODE"]).toBe(
+    expect(sharedCacheEnvironment(step.volumes)["BUN_INSTALL_LOCK_MODE"]).toBe(
       "local",
     );
   }

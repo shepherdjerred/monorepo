@@ -13,11 +13,33 @@
     "tsconfig.base.json",
     "vitest.config.ts"
   ],
-  // Where scratch and download caches live, not what a task produces, so
-  // they pass through without entering task hashes. Strict env mode would
-  // otherwise strip them, and CI tasks fell back to /tmp and ~/.cache/uv on
-  // the container's writable layer, the CI node's OS disk.
-  "globalPassThroughEnv": ["GRADLE_USER_HOME", "TMPDIR", "UV_CACHE_DIR"],
+  // Where scratch, toolchains and download caches live, not what a task
+  // produces, so they pass through without entering task hashes. Strict env
+  // mode would otherwise strip them, and CI tasks fell back to /tmp, ~/.cache,
+  // ~/.cargo, ~/go, ~/.bun and ~/.local/share on the container's writable
+  // layer, the CI node's OS disk. The CI pipeline sets each one to a mounted
+  // shared cache (packages/woodpecker-config-extension/src/pipeline/cache.ts).
+  // BUN_INSTALL_CACHE_DIR is deliberately absent: it names the collected
+  // shared Bun cache, whose readers hold the collector's lock, and tasks'
+  // `bunx` calls use BUN_INSTALL instead.
+  "globalPassThroughEnv": [
+    "BUN_INSTALL",
+    "CARGO_INCREMENTAL",
+    "GOCACHE",
+    "GOLANGCI_LINT_CACHE",
+    "GOMODCACHE",
+    "GRADLE_USER_HOME",
+    "MISE_DATA_DIR",
+    "MISE_LOCKED",
+    "NUGET_PACKAGES",
+    "RUSTC_WRAPPER",
+    "SCCACHE_CACHE_SIZE",
+    "SCCACHE_DIR",
+    "TMPDIR",
+    "UV_CACHE_DIR",
+    "UV_PYTHON_INSTALL_DIR",
+    "XDG_CACHE_HOME"
+  ],
   // The toolkit / tasknotes-server `bun --compile` binaries are ~180 MB
   // (64 MB zstd) — over the default upload timeout, so those tasks
   // remote-MISSED every build ("cache artifact ... too large to upload

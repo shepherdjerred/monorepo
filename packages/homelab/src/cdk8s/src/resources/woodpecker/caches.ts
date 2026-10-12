@@ -42,6 +42,16 @@ export const WOODPECKER_TRIVY_DB_CLAIM = "woodpecker-trivy-db";
 export const WOODPECKER_TRIVY_DB_PATH = "/woodpecker/trivy-db";
 export const WOODPECKER_CODEX_AUTH_CLAIM = "woodpecker-codex-auth";
 export const WOODPECKER_CODEX_AUTH_PATH = "/woodpecker/codex-auth";
+/**
+ * Toolchain caches that otherwise land in the step container's home directory
+ * on the CI node's OS disk. Mount paths and the environment that directs each
+ * tool at them live in packages/woodpecker-config-extension/src/pipeline/cache.ts.
+ */
+export const WOODPECKER_CARGO_CACHE_CLAIM = "woodpecker-cargo-cache";
+export const WOODPECKER_SCCACHE_CLAIM = "woodpecker-sccache";
+export const WOODPECKER_GO_CACHE_CLAIM = "woodpecker-go-cache";
+export const WOODPECKER_TOOL_CACHE_CLAIM = "woodpecker-tool-cache";
+export const WOODPECKER_GRADLE_HOME_CLAIM = "woodpecker-gradle-home";
 
 const DISPOSABLE_CACHE_LABELS = {
   "velero.io/backup": "disabled",
@@ -170,5 +180,50 @@ export function createWoodpeckerCaches(chart: Chart): void {
     "woodpecker-codex-auth-pvc",
     WOODPECKER_CODEX_AUTH_CLAIM,
     "1Gi",
+  );
+
+  // Toolchain caches. A verify pod measured on 2026-10-12 still wrote about
+  // 1.7 GB per run into its writable layer after TMPDIR moved: Cargo's
+  // registry, Go's module and build caches, Bun's install root for bunx, mise
+  // and uv tool installs, NuGet packages and XDG-cached engine downloads. Each
+  // family gets its own dataset so a quota hit stays local to that tool, and
+  // none has a collector: Cargo, Go, Gradle and sccache expire or bound their
+  // own caches, and ZfsPVCStorageHigh covers the rest. Same trust class as the
+  // Bun cache: the trusted graph shares them across PR and main runs; the
+  // credentialless graph mounts none.
+  createCacheClaim(
+    chart,
+    "woodpecker-cargo-cache-pvc",
+    WOODPECKER_CARGO_CACHE_CLAIM,
+    "30Gi",
+  );
+  // sccache keeps itself under SCCACHE_CACHE_SIZE (30G); the quota is headroom.
+  createCacheClaim(
+    chart,
+    "woodpecker-sccache-pvc",
+    WOODPECKER_SCCACHE_CLAIM,
+    "40Gi",
+  );
+  createCacheClaim(
+    chart,
+    "woodpecker-go-cache-pvc",
+    WOODPECKER_GO_CACHE_CLAIM,
+    "30Gi",
+  );
+  createCacheClaim(
+    chart,
+    "woodpecker-tool-cache-pvc",
+    WOODPECKER_TOOL_CACHE_CLAIM,
+    "10Gi",
+  );
+  // Gradle's user home is designed for concurrent builds (file-locked
+  // dependency cache, per-process daemon registry) and expires unused entries
+  // after 30 days. Replaces the per-workflow /woodpecker/gradle directory,
+  // which re-downloaded ~1.4 GB of distributions and dependencies per run.
+  createCacheClaim(
+    chart,
+    "woodpecker-gradle-home-pvc",
+    WOODPECKER_GRADLE_HOME_CLAIM,
+    "20Gi",
   );
 }
