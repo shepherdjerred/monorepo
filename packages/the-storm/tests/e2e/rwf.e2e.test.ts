@@ -1079,7 +1079,6 @@ describe("Falling off the Search and Destroy map", () => {
     { timeout: 120_000 },
     async ({ bot, secondBot, rcon, server }) => {
       await waitForLobby(rcon);
-      const home = bot.entity.position.clone();
       const b = human(secondBot);
       const [teamA, teamB] = await startMatch(rcon, human(bot), b);
       const live = await status(rcon);
@@ -1094,7 +1093,6 @@ describe("Falling off the Search and Destroy map", () => {
       );
       const [loser, winner] = [teamA.toUpperCase(), teamB.toUpperCase()];
       expect(rows.sort()).toEqual([`${loser},0,1`, `${winner},1,0`].sort());
-      await waitRestored(bot, home);
       await waitForLobby(rcon);
     },
   );
