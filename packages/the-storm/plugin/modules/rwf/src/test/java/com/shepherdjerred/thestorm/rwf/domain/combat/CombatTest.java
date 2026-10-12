@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.rwf.domain.combat;
 
+import static com.shepherdjerred.thestorm.rwf.testing.Samples.T0;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 
@@ -260,12 +261,42 @@ final class CombatTest {
     }
 
     @Test
-    void aFallIntoTheVoidIsCreditedToTheLastHit() {
-      assertThat(AttackType.intoVoid(java.util.Optional.empty())).isEqualTo(AttackType.VOID);
-      assertThat(AttackType.intoVoid(java.util.Optional.of(AttackType.MELEE)))
-          .isEqualTo(AttackType.VOID_PUSHED);
-      assertThat(AttackType.intoVoid(java.util.Optional.of(AttackType.PROJECTILE)))
-          .isEqualTo(AttackType.VOID_SHOT);
+    void aKnockedFighterFallsOrDropsAsPushedOrShot() {
+      var pushed = new Knocked(AttackType.MELEE, T0);
+      var shot = new Knocked(AttackType.PROJECTILE, T0);
+      assertThat(pushed.intoVoid()).isEqualTo(AttackType.VOID_PUSHED);
+      assertThat(shot.intoVoid()).isEqualTo(AttackType.VOID_SHOT);
+      assertThat(pushed.fall()).isEqualTo(AttackType.FALL_PUSHED);
+      assertThat(shot.fall()).isEqualTo(AttackType.FALL_SHOT);
+    }
+
+    @Test
+    void theKnockLastsTenSecondsOrUntilTheFighterSettles() {
+      var knocked = new Knocked(AttackType.MELEE, T0);
+      // Airborne or still falling: kept for the full ten seconds.
+      assertThat(knocked.expired(T0.plusSeconds(9), false, 0, 0)).isFalse();
+      assertThat(knocked.expired(T0.plusSeconds(9), true, 1.5, 0)).isFalse();
+      assertThat(knocked.expired(T0.plusMillis(10_001), false, 3, 1)).isTrue();
+      // Grounded and still: settled after half a second.
+      assertThat(knocked.expired(T0.plusMillis(500), true, 0, 0.01)).isFalse();
+      assertThat(knocked.expired(T0.plusMillis(501), true, 0, 0.01)).isTrue();
+      // Grounded but moving: settled after five seconds.
+      assertThat(knocked.expired(T0.plusSeconds(5), true, 0, 0.2)).isFalse();
+      assertThat(knocked.expired(T0.plusMillis(5_001), true, 0, 0.2)).isTrue();
+    }
+
+    @Test
+    void aHealedHitLeavesTheCombatLogForGood() {
+      var credit = KillCredit.hit(T0);
+      // Still missing health it caused, or too recent, or airborne: kept.
+      assertThat(credit.pruned(T0.plusSeconds(30), 4, true)).isFalse();
+      assertThat(credit.pruned(T0.plusSeconds(10), 0, true)).isFalse();
+      assertThat(credit.pruned(T0.plusSeconds(30), 0, false)).isFalse();
+      // Healed back to full and older than ten seconds on the ground: dropped.
+      assertThat(credit.pruned(T0.plusMillis(10_001), 0, true)).isTrue();
+      // Missing health the world caused since does not keep it.
+      assertThat(credit.hurt(2).pruned(T0.plusSeconds(30), 2, true)).isTrue();
+      assertThat(credit.hurt(2).pruned(T0.plusSeconds(30), 3, true)).isFalse();
     }
   }
 }

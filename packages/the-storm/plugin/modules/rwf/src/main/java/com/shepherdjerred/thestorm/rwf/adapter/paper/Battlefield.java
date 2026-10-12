@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Predicate;
 import org.bukkit.Sound;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
 /**
@@ -66,9 +67,26 @@ final class Battlefield {
       borderWarned.put(id, now);
       Texts.error(player, "You cannot explore the border!");
     }
-    combat.hurt(player.getUniqueId(), AttackType.BORDER);
+    combat.hurt(player, AttackType.BORDER, BORDER_DAMAGE);
     player.getWorld().playSound(Places.at(player), Sound.ENTITY_PLAYER_HURT, 1, 1);
     player.setHealth(Math.max(0, player.getHealth() - BORDER_DAMAGE));
+  }
+
+  /** Every tick for a living fighter: whether their knock (the original's "Fall") has ended. */
+  void settle(Player player) {
+    combat.tick(player, grounded(player));
+  }
+
+  /**
+   * Whether {@code entity} stands on something: the block just under its feet is solid. The
+   * server's own on-ground flag is client-reported for players and deprecated, so it is not read.
+   */
+  static boolean grounded(Entity entity) {
+    var below = Places.at(entity).clone().subtract(0, 0.05, 0);
+    var world = entity.getWorld();
+    return below.getY() >= world.getMinHeight()
+        && below.getY() < world.getMaxHeight()
+        && below.getBlock().getType().isSolid();
   }
 
   /**

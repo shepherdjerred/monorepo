@@ -1247,12 +1247,23 @@ match; see the arena section for how the restore is confirmed.
 On a live map the border is Red Warfare's square: it bounds the columns (X and
 Z) only. A fighter outside it takes 2 damage a second through armor and is told
 `You cannot explore the border!`; climbing above the map is allowed. A fighter
-more than 8 blocks below the map's lowest block dies in the void. The kill goes
-to whoever last hit them on the way down (`VOID_PUSHED` or `VOID_SHOT`), or to
-nobody. A bomb's victims have no attacker. Their kill goes to the last member
-who hurt them, while that hit still counts: until the victim is back to full
-health and 10 seconds have passed, as the original's combat log did. The
-Rewind kit's Time Machine samples and trims its trail every tick and records
+more than 8 blocks below the map's lowest block dies in the void.
+
+Deaths are credited as the original's "Fall" condition and combat log did:
+
+- A member's hit marks the victim as knocked. A fall (`FALL_PUSHED` or
+  `FALL_SHOT`) or a drop into the void (`VOID_PUSHED` or `VOID_SHOT`) while
+  knocked goes to that member, even after fire or border damage in between.
+- The knock ends after 10 seconds. It ends sooner once the victim is back on
+  the ground and not falling: half a second after the hit if they stand still,
+  5 seconds if they are moving. The Time Machine also ends it.
+- A bomb's victims have no attacker. Their kill goes to the newest member hit
+  still in their combat log.
+- A hit leaves the log for good when new damage is logged, if the victim is on
+  the ground, has healed the health it took, and the hit is over 10 seconds
+  old.
+
+The Rewind kit's Time Machine samples and trims its trail every tick and records
 only spots the original's safe-teleport check accepts. It lands the player
 facing the way they faced there, and its recharge shows on the experience bar.
 

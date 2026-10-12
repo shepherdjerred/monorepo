@@ -8,24 +8,35 @@ import java.time.Duration;
 import java.time.Instant;
 
 /**
- * Who is credited when the rules kill a player, as a bomb does. The bomb itself has no attacker, so
- * Red Warfare credited the kill to the last player who hurt the victim while that hit was still in
- * the victim's combat log: a hit stayed there until the victim had healed back to full health and
- * {@link #MEMORY} had passed.
+ * The newest member hit in a victim's combat log, which earns the kill when the rules kill them (a
+ * bomb has no attacker). Red Warfare pruned the log each time new damage was logged, while the
+ * victim stood on the ground: walking from the newest entry back, the health still missing after
+ * the newer entries' damage is accounted for; an entry older than {@link #MEMORY} is dropped once
+ * none is left missing, so a hit the victim has since healed from stops counting, for good.
+ *
+ * @param at when the member hit
+ * @param damageSince the damage logged after it, from the world (newer member hits replace it)
  */
-public final class KillCredit {
+public record KillCredit(Instant at, double damageSince) {
 
-  /** How long a hit is remembered once the victim is back to full health. */
+  /** How old a healed hit must be before it is dropped. */
   public static final Duration MEMORY = Duration.ofSeconds(10);
 
-  private KillCredit() {}
+  /** A member hit landing at {@code at}. */
+  public static KillCredit hit(Instant at) {
+    return new KillCredit(at, 0);
+  }
+
+  /** {@code damage} from the world was logged after the hit. */
+  public KillCredit hurt(double damage) {
+    return new KillCredit(at, damageSince + damage);
+  }
 
   /**
-   * Whether a hit landed at {@code hitAt} still earns the kill at {@code now}, for a victim at
-   * {@code health} of {@code maxHealth}.
+   * Whether the log drops this hit when new damage is logged at {@code now} for a victim missing
+   * {@code missingHealth} who is {@code grounded}.
    */
-  public static boolean counts(Instant hitAt, Instant now, double health, double maxHealth) {
-    var healed = maxHealth - health <= 0.01;
-    return !healed || !now.isAfter(hitAt.plus(MEMORY));
+  public boolean pruned(Instant now, double missingHealth, boolean grounded) {
+    return grounded && missingHealth - damageSince <= 0.01 && now.isAfter(at.plus(MEMORY));
   }
 }

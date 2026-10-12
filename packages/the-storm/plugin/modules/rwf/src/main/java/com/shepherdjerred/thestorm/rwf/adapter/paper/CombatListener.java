@@ -74,7 +74,7 @@ final class CombatListener implements Listener {
     var victimMember = runner.memberOf(victim.getUniqueId()).isPresent();
     if (attacker.isEmpty()) {
       if (victimMember) {
-        tracker.hurt(victim.getUniqueId(), cause(event));
+        tracker.hurt(victim, cause(event), event.getFinalDamage());
       }
       return;
     }
@@ -207,7 +207,7 @@ final class CombatListener implements Listener {
         || runner.memberOf(victim.getUniqueId()).isEmpty()) {
       return;
     }
-    tracker.hurt(victim.getUniqueId(), cause(event));
+    tracker.hurt(victim, cause(event), event.getFinalDamage());
   }
 
   /** Nothing hurts a member before the match starts: the lobby has no damage. */

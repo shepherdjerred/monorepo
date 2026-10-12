@@ -14,7 +14,6 @@ import com.shepherdjerred.thestorm.rwf.app.map.MapRotation;
 import com.shepherdjerred.thestorm.rwf.app.store.MatchStore;
 import com.shepherdjerred.thestorm.rwf.domain.combat.AttackType;
 import com.shepherdjerred.thestorm.rwf.domain.combat.CombatRules;
-import com.shepherdjerred.thestorm.rwf.domain.combat.KillCredit;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.CombatantId;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
 import com.shepherdjerred.thestorm.rwf.domain.geometry.Spawn;
@@ -880,6 +879,7 @@ final class MatchRunner implements MatchView, MatchEvents {
       }
       var player = entity.orElseThrow();
       parts.recordings().sample(now, ticks, member, player);
+      field.settle(player);
       if (field.fellIntoVoid(member.id(), player, border)) {
         continue;
       }
@@ -1375,7 +1375,7 @@ final class MatchRunner implements MatchView, MatchEvents {
             victim,
             player -> {
               if (!player.isDead()) {
-                parts.combat().hurt(player.getUniqueId(), kill.cause());
+                parts.combat().hurt(player, kill.cause(), player.getHealth());
                 player.setHealth(0);
               }
             });
@@ -1383,16 +1383,13 @@ final class MatchRunner implements MatchView, MatchEvents {
     }
 
     /**
-     * Who earns a kill the rules dealt (a bomb has no attacker): the last member to hurt the
-     * victim, while that hit still counts, as Red Warfare's combat log credited it.
+     * Who earns a kill the rules dealt (a bomb has no attacker): the newest member hit still in the
+     * victim's combat log, as Red Warfare credited it.
      */
     private Optional<CombatantId> creditedKiller(CombatantId victim, Player player) {
       return parts
           .combat()
-          .credit(player.getUniqueId())
-          .filter(
-              credit ->
-                  KillCredit.counts(credit.at(), now(), player.getHealth(), maxHealth(player)))
+          .credit(player)
           .flatMap(credit -> memberOf(credit.attacker()))
           .map(Combatant::id)
           .filter(killer -> !killer.equals(victim));
@@ -1406,7 +1403,7 @@ final class MatchRunner implements MatchView, MatchEvents {
               return;
             }
             poisoned.add(player.getUniqueId());
-            parts.combat().hurt(player.getUniqueId(), AttackType.END_OF_GAME);
+            parts.combat().hurt(player, AttackType.END_OF_GAME, poison.amount());
             player.setHealth(Math.max(0, player.getHealth() - poison.amount()));
           });
     }
