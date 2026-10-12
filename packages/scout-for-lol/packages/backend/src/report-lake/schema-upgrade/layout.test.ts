@@ -3,6 +3,7 @@ import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   BridgeRawDocumentLakeRowSchema,
   layoutFingerprint,
+  matchColumns,
   reportLakeLayout,
   rawDocumentColumns,
   bridgeRawDocumentRow,
@@ -24,11 +25,27 @@ test("emits an empty legacy wire map without changing canonical JSON", () => {
   expect(BridgeRawDocumentLakeRowSchema.parse(wire)).toEqual(row);
 });
 
-test("recognizes only the two exact physical contracts", () => {
+test("recognizes only the exact published physical contracts", () => {
   expect(layoutFingerprint("current")).toBe(lakeSchemaFingerprint());
   expect(reportLakeLayout(layoutFingerprint("current"))).toBe("current");
   expect(reportLakeLayout(layoutFingerprint("legacy-identity-map"))).toBe(
     "legacy-identity-map",
+  );
+  // Prod's last pre-bridge build predates matches.data_source but still has
+  // raw_documents.identity_map_json. This literal is read from its published
+  // manifest; the exact layout is independently reconstructed above.
+  expect(layoutFingerprint("legacy-identity-map-pre-data-source")).toBe(
+    "1a45b23ce7f086cb",
+  );
+  expect(reportLakeLayout("1a45b23ce7f086cb")).toBe(
+    "legacy-identity-map-pre-data-source",
+  );
+  expect(
+    matchColumns("legacy-identity-map-pre-data-source"),
+  ).not.toHaveProperty("data_source");
+  expect(matchColumns("legacy-identity-map")).toHaveProperty(
+    "data_source",
+    "VARCHAR",
   );
   expect(reportLakeLayout(undefined)).toBeUndefined();
   expect(reportLakeLayout("unexpected-schema")).toBeUndefined();

@@ -83,8 +83,8 @@ export async function runReportLakeFold(
     }
 
     // A fold hardlinks the published build's parquet and appends fold files
-    // written at the same physical column set. The bridge recognizes exactly
-    // two layouts; an unknown existing schema must not bypass the upgrade gate.
+    // written at the same physical column set. The bridge recognizes only
+    // exact published layouts; unknown schemas cannot bypass the upgrade gate.
     const publishedFingerprint = await readBuildFingerprint(currentDir);
     const layout = reportLakeLayout(publishedFingerprint);
     if (layout === undefined) {

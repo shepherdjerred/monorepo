@@ -238,6 +238,9 @@ async function countSourceRows(source: SqlFragment): Promise<number> {
 async function seedLegacyLake(
   lakeDir: string,
   match: RawMatch,
+  layout:
+    | "legacy-identity-map"
+    | "legacy-identity-map-pre-data-source" = "legacy-identity-map",
 ): Promise<string> {
   const key = matchObjectKey(
     match.metadata.matchId,
@@ -258,7 +261,7 @@ async function seedLegacyLake(
     buildDir,
     buildId: path.basename(buildDir),
     table: "raw_documents",
-    layout: "legacy-identity-map",
+    layout,
     staged: {
       rowsByMonth: new Map([
         [row.month, [{ ...row, identity_map_json: '{"retired":"ignored"}' }]],
@@ -268,10 +271,31 @@ async function seedLegacyLake(
       skipped: 0,
     },
   });
-  await rewritePublishedFingerprint(
-    lakeDir,
-    layoutFingerprint("legacy-identity-map"),
-  );
+  if (layout === "legacy-identity-map-pre-data-source") {
+    await rm(path.join(buildDir, "matches"), { recursive: true });
+    const rowsByMonth = new Map<string, object[]>();
+    for (const matchRow of flattenMatch(match)) {
+      const rows = rowsByMonth.get(matchRow.month) ?? [];
+      rows.push(matchRow);
+      rowsByMonth.set(matchRow.month, rows);
+    }
+    await writeFoldParquet({
+      buildDir,
+      buildId: path.basename(buildDir),
+      table: "matches",
+      layout,
+      staged: {
+        rowsByMonth,
+        foldedIds: new Set([match.metadata.matchId]),
+        rows: [...rowsByMonth.values()].reduce(
+          (sum, rows) => sum + rows.length,
+          0,
+        ),
+        skipped: 0,
+      },
+    });
+  }
+  await rewritePublishedFingerprint(lakeDir, layoutFingerprint(layout));
   return buildDir;
 }
 
@@ -353,6 +377,82 @@ describe("online raw-document schema handoff", () => {
           (row) =>
             z.object({ column_name: z.string() }).parse(row).column_name ===
             "identity_map_json",
+        ),
+      ).toBe(true);
+    } finally {
+      vi.restoreAllMocks();
+      await rm(lakeDir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("Prod pre-data-source schema handoff", () => {
+  test("a default-off rebuild preserves Prod's pre-data-source layout", async () => {
+    const lakeDir = await makeLakeDir();
+    try {
+      await seedLegacyLake(
+        lakeDir,
+        await loadMatchFixture(),
+        "legacy-identity-map-pre-data-source",
+      );
+      vi.spyOn(
+        schemaUpgrade,
+        "reportLakeSchemaUpgradeEnabled",
+      ).mockResolvedValue(false);
+      await runReportLakeRebuild({ prisma, lakeDir });
+      const current = await readCurrentBuildDir(lakeDir);
+      if (current === undefined) throw new Error("missing rebuilt build");
+      expect(
+        ManifestFingerprintSchema.parse(
+          await Bun.file(path.join(current, "manifest.json")).json(),
+        ).schemaFingerprint,
+      ).toBe(layoutFingerprint("legacy-identity-map-pre-data-source"));
+      const rows = await withDuckDBConnection(
+        async (session) =>
+          await session.run("DESCRIBE SELECT * FROM read_parquet(?)", [
+            path.join(current, "matches/**/*.parquet"),
+          ]),
+      );
+      expect(
+        rows.some(
+          (row) =>
+            z.object({ column_name: z.string() }).parse(row).column_name ===
+            "data_source",
+        ),
+      ).toBe(false);
+    } finally {
+      vi.restoreAllMocks();
+      await rm(lakeDir, { recursive: true, force: true });
+    }
+  });
+
+  test("the enabled upgrade rebuilds Prod's layout into the current schema", async () => {
+    const lakeDir = await makeLakeDir();
+    try {
+      await seedLegacyLake(
+        lakeDir,
+        await loadMatchFixture(),
+        "legacy-identity-map-pre-data-source",
+      );
+      vi.spyOn(
+        schemaUpgrade,
+        "reportLakeSchemaUpgradeEnabled",
+      ).mockResolvedValue(true);
+      await runReportLakeRebuild({ prisma, lakeDir });
+      await expectCurrentSchemaFingerprint(lakeDir);
+      const current = await readCurrentBuildDir(lakeDir);
+      if (current === undefined) throw new Error("missing upgraded build");
+      const rows = await withDuckDBConnection(
+        async (session) =>
+          await session.run("DESCRIBE SELECT * FROM read_parquet(?)", [
+            path.join(current, "matches/**/*.parquet"),
+          ]),
+      );
+      expect(
+        rows.some(
+          (row) =>
+            z.object({ column_name: z.string() }).parse(row).column_name ===
+            "data_source",
         ),
       ).toBe(true);
     } finally {

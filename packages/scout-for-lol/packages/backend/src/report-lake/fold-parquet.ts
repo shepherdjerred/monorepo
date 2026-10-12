@@ -2,6 +2,7 @@ import { mkdir, rm } from "node:fs/promises";
 import path from "node:path";
 import type { DuckDbColumnType } from "@scout-for-lol/data";
 import {
+  matchColumns,
   rawDocumentColumns,
   type ReportLakeLayout,
 } from "#src/report-lake/schema-upgrade/layout.ts";
@@ -9,7 +10,6 @@ import { NdjsonFileWriter } from "#src/report-lake/ndjson-writer.ts";
 import { copyNdjsonToParquet } from "#src/report-lake/parquet/copy-ndjson.ts";
 import {
   COMPETITION_RANK_HISTORY_LAKE_COLUMNS,
-  MATCH_LAKE_COLUMNS,
   MATCH_TEAM_BAN_LAKE_COLUMNS,
   MATCH_TEAM_LAKE_COLUMNS,
   PREMATCH_LAKE_COLUMNS,
@@ -38,7 +38,7 @@ export function columnsForTable(
     case "raw_documents":
       return rawDocumentColumns(layout);
     case "matches":
-      return MATCH_LAKE_COLUMNS;
+      return matchColumns(layout);
     case "match_teams":
       return MATCH_TEAM_LAKE_COLUMNS;
     case "match_team_bans":
@@ -83,7 +83,7 @@ export async function writeFoldParquet({
     try {
       for (const row of rows)
         await writer.write(
-          table === "raw_documents" && layout === "legacy-identity-map"
+          table === "raw_documents" && layout !== "current"
             ? { ...row, identity_map_json: "{}" }
             : row,
         );

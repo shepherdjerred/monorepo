@@ -75,6 +75,35 @@ test("validates the physical schema and projection keys of every lake relation",
   }
 });
 
+test("validates the Prod pre-data-source layout before publishing current schema", async () => {
+  const lakeDir = await mkdtemp(
+    path.join(tmpdir(), "prepared-lake-prod-legacy-schema-"),
+  );
+  try {
+    const previousDir = path.join(lakeDir, "builds", "old");
+    const buildDir = path.join(lakeDir, "builds", "candidate");
+    for (const table of STAGING_TABLES) {
+      await writeTable(
+        previousDir,
+        table,
+        "legacy-identity-map-pre-data-source",
+      );
+      await writeTable(buildDir, table, "current");
+    }
+    await validatePreparedBuild({
+      lakeDir,
+      previousDir,
+      buildDir,
+      layout: "current",
+      staging: await snapshotStagingGenerations(lakeDir),
+      abortSignal: new AbortController().signal,
+      timeoutMs: 10_000,
+    });
+  } finally {
+    await rm(lakeDir, { recursive: true, force: true });
+  }
+});
+
 test("rejects a candidate retaining the retired column despite a current-layout claim", async () => {
   const lakeDir = await mkdtemp(
     path.join(tmpdir(), "prepared-lake-wrong-schema-"),

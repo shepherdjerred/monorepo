@@ -104,12 +104,14 @@ cutover is not automatically safe to restore into this runtime: it must first
 be reconciled to the canonical storage contract.
 
 Ordinary physical schema fingerprints still bind readers and replay datasets to
-their lake layout. The temporary two-layout bridge permits an online rebuild
-without forcing every application deployment to cold-rebuild the lake. A
-candidate must preserve published projection keys through its files or the
-retained committed staging view before `CURRENT` changes. Writes arriving during
-the rebuild stay queryable in staging and are consumed by a later fold; cleanup
-only removes captured generations covered by the exact rebuilt source.
+their lake layout. The temporary bridge recognizes the current layout, Beta's
+legacy `identity_map_json` layout, and Prod's older variant that also predates
+`matches.data_source`. This permits an online rebuild without forcing every
+application deployment to cold-rebuild the lake. A candidate must preserve
+published projection keys through its files or the retained committed staging
+view before `CURRENT` changes. Writes arriving during the rebuild stay
+queryable in staging and are consumed by a later fold; cleanup only removes
+captured generations covered by the exact rebuilt source.
 
 ## Writes: live ingest can recover staging; initial import cannot
 
@@ -127,8 +129,8 @@ S3 put and immediate staging write both succeed. A failed staging write retries
 the same idempotent S3 key. This lets Explore and global ScoutQL read partial
 history immediately without making guild reports claim readiness too early.
 After match and current-rank enrichment, one coalesced fold refreshes
-`accounts.parquet` and publishes all staged matches before the PUUID-level job
-is complete. Guild-scoped lookbacks therefore see the new identity mapping and
+`accounts.parquet` and publishes all staged matches before the first-run import
+completes. Guild-scoped lookbacks therefore see the account identities and
 facts together.
 
 The import never enters the normal post-match processor. Historical matches do
