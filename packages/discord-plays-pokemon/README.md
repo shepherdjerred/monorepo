@@ -26,6 +26,9 @@ Fully headless — no browser, no emulator UI, no GPU, no desktop:
   compatibility escape hatches. CLI observations are compact by default;
   `observe --full` includes detailed readiness, collision, nearby-object,
   battler, party, inventory, and progression state for diagnostics.
+  The agent runs with full filesystem access in the pod, so goal mode is
+  limited to the trusted guilds in `GOAL_ALLOWED_GUILD_IDS`; other guilds play
+  without it.
 - **Notifications** — the bot polls the emulator's memory (~2×/sec) and posts
   Discord embeds for in-game events: faints, gym badges, evolutions, catches,
   level-ups, whiteouts, and new Pokédex entries. Configure under
@@ -98,6 +101,15 @@ the image on every affected PR and pushes it on merge to `main` (the
 [`ci/scripts/images/image-targets.ts`](../../ci/scripts/images/image-targets.ts),
 driven by Woodpecker). Configuration is a mounted `config.toml`
 — see `config.example.toml`.
+
+Each guild's progress lives under `saves/<guildId>/` on the PVC. Saves are
+written with a temp file, fsync, and rename, and the session's final flush
+completes before `/stop` replies. Before every session the bot copies the
+guild's flash save, goal state, and goal memory into
+`saves/<guildId>/history/<timestamp>/`, keeping the newest 50. A wrong-size
+flash save refuses `/play` and is left untouched. To restore, stop the
+session and copy a snapshot's files back into the guild directory. The PVC is
+also covered by the cluster's Velero schedules.
 
 ## Disclaimer
 

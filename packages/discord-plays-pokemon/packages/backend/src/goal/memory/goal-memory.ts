@@ -14,7 +14,8 @@
 // are resolved INSIDE the root (resolveScoped) — no traversal, no absolute paths.
 
 import path from "node:path";
-import { readdir, rm, stat } from "node:fs/promises";
+import { mkdir, readdir, rm, stat } from "node:fs/promises";
+import { writeFileAtomic } from "@shepherdjerred/discord-stream-lifecycle/persistence/atomic-write";
 import type { GoalState } from "#src/goal/goal-types.ts";
 
 type StatResult = Awaited<ReturnType<typeof stat>>;
@@ -163,7 +164,8 @@ export class GoalMemory {
       archivedPath = await this.archiveMemory(current);
     }
     const target = this.memoryPath();
-    await Bun.write(target, `${trimmed}\n`, { createPath: true });
+    await mkdir(path.dirname(target), { recursive: true });
+    await writeFileAtomic(target, `${trimmed}\n`);
     return {
       path: this.toRel(target),
       chars: trimmed.length,

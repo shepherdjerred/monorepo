@@ -8,7 +8,7 @@ import {
   Volume,
 } from "cdk8s-plus-31";
 import type { Chart } from "cdk8s";
-import { ApiObject, JsonPatch, Size } from "cdk8s";
+import { ApiObject, Duration, JsonPatch, Size } from "cdk8s";
 import {
   setRevisionHistoryLimit,
   createBurstDeployment,
@@ -41,6 +41,10 @@ export function createPokemonDeployment(chart: Chart) {
   const deployment = createBurstDeployment(chart, "pokemon", {
     replicas: 1,
     strategy: DeploymentStrategy.recreate(),
+    // SIGTERM stops the active session: the goal agent gets a bounded 2×15s
+    // to exit, then the checkpoint (3 tries) and the durable flash flush run.
+    // The 30s default could SIGKILL mid-teardown and lose live progress.
+    terminationGracePeriod: Duration.seconds(120),
     securityContext: {
       fsGroup: GID,
     },
@@ -54,7 +58,9 @@ export function createPokemonDeployment(chart: Chart) {
     },
   });
 
-  // Persists the flash save (save_path = "saves/pokeemerald.flash").
+  // Persists each guild's progress under saves/<guildId>/ (pokeemerald.flash,
+  // goal state and memory) plus per-guild history/ snapshots taken before every
+  // session.
   const saveVolume = new ZfsNvmeVolume(chart, "pokemon-volume", {
     storage: Size.gibibytes(8),
   });
@@ -117,6 +123,13 @@ export function createPokemonDeployment(chart: Chart) {
         // excludes them from the "real viewers" count and leaves an otherwise-empty VC.
         // Sourced from the canonical map in resources/userbot-ids.ts.
         PEER_USERBOT_IDS: EnvValue.fromValue(peerUserbotIds("pokemon")),
+        // Guilds where `/goal` may run. The goal agent has full filesystem
+        // access in the pod (it can read config.toml and every guild's saves),
+        // so it is a capability grant reviewed here rather than a runtime flag.
+        // Every other guild plays without goal mode. Glitter Boys + test guild.
+        GOAL_ALLOWED_GUILD_IDS: EnvValue.fromValue(
+          "208425771172102144,1337623164146155593",
+        ),
         // VAAPI hardware H.264 encoding on the Intel iGPU (requested below). The
         // app reads STREAM_HARDWARE_ACCELERATION/VAAPI_DEVICE; ffmpeg reads
         // LIBVA_DRIVER_NAME. Falls back to software libx264 if the device is absent.

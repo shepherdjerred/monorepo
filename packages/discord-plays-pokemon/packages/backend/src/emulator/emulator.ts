@@ -15,11 +15,7 @@ import {
   ticksTotal,
   loopResyncTotal,
 } from "@shepherdjerred/discord-plays-core/observability/metrics.ts";
-import {
-  copyMs,
-  frameHookErrorsTotal,
-  flashSaveLoadInvalidTotal,
-} from "#src/observability/metrics.ts";
+import { copyMs, frameHookErrorsTotal } from "#src/observability/metrics.ts";
 import { logger } from "#src/logger.ts";
 import { createMemoryReader, type MemoryReader } from "./memory.ts";
 import { createGameSymbols, type GameSymbols } from "./symbols.ts";
@@ -44,7 +40,10 @@ import {
   type EngineMapTopologyExports,
   type EngineMapTopologyV1,
 } from "./engine-map-topology.ts";
-import { AtomicFlashPersistence } from "./flash-persistence.ts";
+import {
+  AtomicFlashPersistence,
+  requireFlashImage,
+} from "./flash-persistence.ts";
 
 // Minimal view of the wasm exports we depend on, validated at runtime so we
 // never assert types we haven't checked.
@@ -149,6 +148,8 @@ export class Emulator {
   private loopTimer: ReturnType<typeof setTimeout> | undefined;
   private nextTickAt = 0;
   private lastSavedHash = 0;
+  /** Flash is persisted only after loadSave succeeded; until then it is blank. */
+  private saveLoaded = false;
   private readonly flashPersistence = new AtomicFlashPersistence();
 
   constructor(options: EmulatorOptions) {
@@ -505,19 +506,12 @@ export class Emulator {
     if (path !== undefined) {
       const file = Bun.file(path);
       if (await file.exists()) {
-        const saved = await file.bytes();
-        if (saved.length === FLASH_SIZE) {
-          flash.set(saved);
-          logger.info(`loaded flash save from ${path}`);
-        } else {
-          flashSaveLoadInvalidTotal.inc();
-          logger.warn(
-            `ignoring flash save at ${path}: wrong size ${String(saved.length)}`,
-          );
-        }
+        flash.set(requireFlashImage(await file.bytes(), path, FLASH_SIZE));
+        logger.info(`loaded flash save from ${path}`);
       }
     }
     this.lastSavedHash = this.hash(flash);
+    this.saveLoaded = true;
   }
 
   private haltLoop(): void {
@@ -530,7 +524,7 @@ export class Emulator {
   private async saveIfChanged(force: boolean): Promise<void> {
     const path = this.options.savePath;
     const memory = this.exports?.memory;
-    if (path === undefined || memory === undefined) return;
+    if (path === undefined || memory === undefined || !this.saveLoaded) return;
     const flash = this.flashBytes(memory);
     const hash = this.hash(flash);
     if (!force && hash === this.lastSavedHash) return;

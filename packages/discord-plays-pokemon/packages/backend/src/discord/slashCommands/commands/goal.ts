@@ -44,7 +44,7 @@ export function makeGoal(driver: PokemonGameDriver) {
     }
     if (runtime.goalManager === undefined) {
       await interaction.reply({
-        content: "Goal mode is not enabled for this Pokemon instance.",
+        content: "Goal mode is not enabled in this server.",
         flags: MessageFlags.Ephemeral,
       });
       return;

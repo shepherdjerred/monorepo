@@ -99,6 +99,22 @@ describe("emulator game symbols (real wasm)", () => {
     );
   }, 30_000);
 
+  test("refuses to boot over a wrong-size save and never overwrites it", async () => {
+    const savePath = `${Bun.env.TMPDIR ?? "/tmp"}/pokemon-truncated-${crypto.randomUUID()}.sav`;
+    const truncated = new Uint8Array(FLASH_SAVE_BYTES / 2).fill(0x5a);
+    await Bun.write(savePath, truncated);
+    try {
+      const emulator = new Emulator({ wasmPath: WASM_PATH, savePath });
+      await expect(emulator.init()).rejects.toThrow(/wrong size/);
+      // The driver's failed-start teardown still flushes; it must not replace
+      // the on-disk save with the blank flash image.
+      await emulator.stopAndFlush();
+      expect(await Bun.file(savePath).bytes()).toEqual(truncated);
+    } finally {
+      await Bun.file(savePath).delete();
+    }
+  });
+
   test("checkpoints deterministic state that survives an independent reboot", async () => {
     const sourceSave =
       CHECKPOINT_SOURCE_SAVE_PATH === undefined
