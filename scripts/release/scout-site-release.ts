@@ -393,9 +393,10 @@ async function main(): Promise<void> {
     case "resolve-backend-digest": {
       const index = args.indexOf("--candidate-digest");
       const candidate = index === -1 ? null : (args[index + 1] ?? "");
-      const source = await Bun.file(
-        `${repoRoot()}/packages/version-catalog/src/catalog.json`,
-      ).text();
+      const catalogPath = args.includes("--version-catalog-file")
+        ? requiredArg(args, "--version-catalog-file")
+        : `${repoRoot()}/packages/version-catalog/src/catalog.json`;
+      const source = await Bun.file(catalogPath).text();
       process.stdout.write(`${resolveBackendDigest(candidate, source)}\n`);
       break;
     }
