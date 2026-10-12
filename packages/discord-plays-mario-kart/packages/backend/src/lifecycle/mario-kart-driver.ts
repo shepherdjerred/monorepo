@@ -6,8 +6,9 @@ import type {
   SessionStopReason,
 } from "@shepherdjerred/discord-stream-lifecycle/session/session.ts";
 import type { SelfbotPooledUserbot } from "@shepherdjerred/discord-stream-lifecycle/pool/selfbot-client.ts";
-import type { ScreenMode } from "#src/emulator/mk64-memory.ts";
-import { createGameEngine, type PreparedEngine } from "#src/engine/index.ts";
+import type { ScreenMode } from "#src/emulator/mk64-state.ts";
+import { createGameEngine } from "#src/engine/index.ts";
+import type { SpaghettiBuild } from "#src/engine/spaghetti/install.ts";
 import type { GameEngine } from "#src/engine/game-engine.ts";
 import { GameStreamer } from "#src/stream/game-streamer.ts";
 import { applyStreamOverlays } from "#src/overlay/composite.ts";
@@ -82,7 +83,8 @@ async function startOrStopEngine(
 export class MarioKartGameDriver implements GameDriver<SelfbotPooledUserbot> {
   readonly name = "Mario Kart 64";
   private readonly config: Config;
-  private readonly engine: PreparedEngine;
+  /** Undefined when [emulator] enabled = false: sessions are refused. */
+  private readonly build: SpaghettiBuild | undefined;
   /** Undefined when [driver_feed] is disabled; every call site is optional-chained. */
   private readonly driverFeed: DriverFeedService | undefined;
   private botClient: BotClient | null = null;
@@ -90,11 +92,11 @@ export class MarioKartGameDriver implements GameDriver<SelfbotPooledUserbot> {
 
   constructor(params: {
     config: Config;
-    engine: PreparedEngine;
+    build: SpaghettiBuild | undefined;
     driverFeed?: DriverFeedService | undefined;
   }) {
     this.config = params.config;
-    this.engine = params.engine;
+    this.build = params.build;
     this.driverFeed = params.driverFeed;
   }
 
@@ -117,14 +119,20 @@ export class MarioKartGameDriver implements GameDriver<SelfbotPooledUserbot> {
         "MarioKartGameDriver.onSessionStart called before setBotClient",
       );
     }
+    const build = this.build;
+    if (build === undefined) {
+      throw new Error(
+        "MarioKartGameDriver.onSessionStart: the emulator is disabled ([emulator] enabled = false)",
+      );
+    }
     const config = this.config;
     const seats = config.emulator.seats;
     const seatManager = new SeatManager(seats);
 
-    // Per-guild save isolation: each engine keeps its saves under
-    // saves/<guildId>/, so server A's progress never leaks into server B's.
-    // See engine/index.ts for what each engine stores there.
-    const emulator = createGameEngine(config, this.engine, {
+    // Per-guild save isolation: the game keeps its saves under
+    // saves/<guildId>/spaghettikart, so server A's progress never leaks into
+    // server B's.
+    const emulator = createGameEngine(config, build, {
       sessionDir: session.sessionDir,
       seats,
     });
@@ -138,9 +146,7 @@ export class MarioKartGameDriver implements GameDriver<SelfbotPooledUserbot> {
 
     const { format } = emulator;
     const nameOverlay = config.leaderboard.overlay_enabled
-      ? new NameOverlay(
-          createLabelRenderer(config.emulator.wasm_dir, format.rowScale),
-        )
+      ? new NameOverlay(createLabelRenderer(build.labelFont, format.rowScale))
       : undefined;
 
     const streamer = new GameStreamer({
@@ -188,17 +194,15 @@ export class MarioKartGameDriver implements GameDriver<SelfbotPooledUserbot> {
         void broadcast();
       },
     });
-    // Each engine decodes race snapshots where the game state lives (the wasm
-    // Worker's RDRAM, or the native bridge's state record) and delivers one
-    // every snapshotEveryNFrames frames; feed each to the tracker.
+    // The engine decodes race snapshots from the bridge's state record and
+    // delivers one every snapshotEveryNFrames frames; feed each to the tracker.
     emulator.onSnapshot((snap) => {
       raceTracker.updateFromSnapshot(snap);
     });
 
     const overlayContext: StreamOverlayContextProvider = () => ({
       epochMs: Date.now(),
-      // Seat activity + height come from the most recent frame message (the
-      // Worker no longer exposes live getters).
+      // Seat activity comes from the most recent frame.
       seatActivity: emulator.latestSeatActivity,
       mode: raceTracker.latestScreenMode() ?? fallbackScreenMode(seats),
       seats,
@@ -206,19 +210,17 @@ export class MarioKartGameDriver implements GameDriver<SelfbotPooledUserbot> {
       nameOverlay,
     });
 
-    // Per-frame pipeline: overlay → stream → driver feed. Race decoding happens
-    // in the Worker.
+    // Per-frame pipeline: overlay → stream → driver feed.
     //
     // The tee sits after the overlay so drivers see byte-identical pixels to the
     // Go-Live stream — including the burned-in HUD clock, which lets the browser
     // measure its own glass-to-glass latency off its own canvas.
     //
-    // The frame is a dedicated Buffer (transferred zero-copy out of the wasm
-    // Worker, or the native bridge message's own buffer) and nothing mutates it
+    // The frame is the bridge message's own buffer and nothing mutates it
     // after applyStreamOverlays returns, so both sinks can hold the same
-    // reference. Go-Live is pushed first: it is the path
-    // spectators depend on, and it stays ahead of any fault in the newer one
-    // (the shared onFrame callback is wrapped in the Worker facade's safeInvoke).
+    // reference. Go-Live is pushed first: it is the path spectators depend on,
+    // and it stays ahead of any fault in the newer one (the engine wraps the
+    // onFrame callback so a throw cannot end the game).
     emulator.onFrame((frame) => {
       applyStreamOverlays(
         frame.rgba,
@@ -288,15 +290,7 @@ export class MarioKartGameDriver implements GameDriver<SelfbotPooledUserbot> {
     } catch (error) {
       logger.error("streamer destroy failed", error);
     }
-    // Flush saves BEFORE stopping the engine: once stop() tears the wasm down
-    // its MEMFS is unreachable. (The native port writes its own as it goes.) A failure here is logged but
-    // shouldn't block the userbot release; the leaderboard (in Prisma) is
-    // already durable.
-    try {
-      await runtime.emulator.persistSaves();
-    } catch (error) {
-      logger.error("emulator persistSaves failed", error);
-    }
+    // No save flush: the game writes default.sav into its home as it saves.
     try {
       await runtime.emulator.stop();
     } catch (error) {

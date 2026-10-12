@@ -12,8 +12,8 @@
 import { $ } from "bun";
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
-import { applyPatch } from "./build-wasm.ts";
 import {
+  applyPatch,
   cmakeConfigureArgs,
   devInstallManifest,
   parseSpaghettiUpstream,
@@ -67,7 +67,12 @@ const manifest = devInstallManifest(
   buildDir,
   process.platform,
 );
-for (const file of [manifest.binary, manifest.engineArchive, manifest.torch]) {
+for (const file of [
+  manifest.binary,
+  manifest.engineArchive,
+  manifest.torch,
+  manifest.labelFont,
+]) {
   if (!(await Bun.file(file).exists()))
     throw new Error(`build output missing: ${file}`);
 }

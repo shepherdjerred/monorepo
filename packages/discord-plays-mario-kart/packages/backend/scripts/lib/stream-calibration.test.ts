@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { AUDIO_SAMPLE_RATE } from "#src/emulator/constants.ts";
 import {
   buildCalibrationReport,
   detectAudioPulseTimes,
@@ -44,7 +45,7 @@ describe("stream calibration marker detection", () => {
     }
     const detected = detectAudioPulseTimes({
       monoS16le: mono,
-      sampleRate: 44_100,
+      sampleRate: AUDIO_SAMPLE_RATE,
       rmsThreshold: 2000,
     });
     expect(detected).toHaveLength(2);

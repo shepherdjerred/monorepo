@@ -37,7 +37,7 @@ export function makeScreenshot(driver: MarioKartGameDriver, botClient: Client) {
       });
       return;
     }
-    // renderFrame() is a Worker round-trip that now rejects on a worker crash
+    // renderFrame() waits for the next frame and rejects if the game is gone
     // or render failure. handleInteraction runs this handler with `void`, so an
     // uncaught rejection here becomes an unhandled promise rejection and the
     // user sees a timed-out command — catch it and reply ephemerally instead.

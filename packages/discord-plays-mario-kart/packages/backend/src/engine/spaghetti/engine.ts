@@ -5,8 +5,7 @@
 // the encoders, audio as s16le stereo, and race state once per game frame.
 //
 // Lifecycle: init() boots the game in lockstep, so it waits at its first input
-// latch exactly as the wasm core waits for its first tick; start() switches it
-// to wall-clock pacing for good.
+// latch until start() switches it to wall-clock pacing for good.
 import * as Sentry from "@sentry/bun";
 import {
   EMPTY_INPUT,
@@ -16,7 +15,7 @@ import { MAX_SEATS } from "#src/emulator/constants.ts";
 import {
   snapshotFromRawState,
   type Mk64Snapshot,
-} from "#src/emulator/mk64-memory.ts";
+} from "#src/emulator/mk64-state.ts";
 import {
   createPromMetricSink,
   type MetricSink,
@@ -287,11 +286,6 @@ export class SpaghettiEngine implements GameEngine {
     });
   }
 
-  /** The game writes default.sav into its home directory as it saves. */
-  persistSaves(): Promise<void> {
-    return Promise.resolve();
-  }
-
   onFrame(cb: (frame: EngineFrame) => void): void {
     this.onFrameCb = cb;
   }
@@ -432,8 +426,7 @@ export class SpaghettiEngine implements GameEngine {
   /**
    * The game died mid-session. Detach and close its host so input, restarts
    * and screenshots fail fast instead of queueing for a process that is gone;
-   * the stream freezes until the session is stopped, as it does when the wasm
-   * engine's Worker crashes.
+   * the stream freezes until the session is stopped.
    */
   private handleExit(error: Error): void {
     logger.error("SpaghettiKart exited unexpectedly", {
@@ -457,7 +450,7 @@ export class SpaghettiEngine implements GameEngine {
   /**
    * Run a consumer callback without letting a throw escape the socket handler
    * and end the game: a transient stream-path failure must not take the whole
-   * session down (the wasm engine's Worker facade contains it the same way).
+   * session down.
    */
   private safeInvoke(what: string, fn: () => void): void {
     try {

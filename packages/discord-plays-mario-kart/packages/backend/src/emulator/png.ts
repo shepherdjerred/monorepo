@@ -23,10 +23,8 @@ function chunk(type: string, data: Uint8Array): Buffer {
 
 // Encode a width x height RGBA frame to PNG as RGB (no alpha), optionally
 // nearest-neighbour upscaled by an integer factor for legibility on Discord.
-// The screenshot frame's colours are already correct (R,G,B in bytes 0-2); its
-// 4th byte is undefined XRGB8888 padding, not a real alpha (see
-// wasm-src/PATCHES.md). Emitting an RGB (colour type 2) PNG drops that dead byte
-// — otherwise it leaks through as transparency. Source is read 4 bytes/pixel;
+// The 4th byte of each pixel is not meaningful alpha, so emitting an RGB
+// (colour type 2) PNG drops it rather than leaking it through as transparency. Source is read 4 bytes/pixel;
 // output is 3 bytes/pixel. Dependency-free.
 export function encodePng(
   rgba: Buffer,

@@ -3,7 +3,7 @@
 // the format reference: little-endian, each message `u32 type, u32 length,
 // payload`, with the packed structs below as payloads.
 import type { PlayerInputState } from "@discord-plays-mario-kart/common";
-import type { Mk64RawState } from "#src/emulator/mk64-memory.ts";
+import type { Mk64RawState } from "#src/emulator/mk64-state.ts";
 
 export const BRIDGE_PROTOCOL_VERSION = 1;
 
@@ -38,7 +38,7 @@ export const N64_BUTTON = {
 } as const;
 
 /**
- * Full N64 stick deflection, matching the wasm core's 32000-of-32767 scale.
+ * Full N64 stick deflection (a real controller reads about ±80).
  * Up is positive on the N64 stick, as it is in PlayerInputState.
  */
 const STICK_RANGE = 80;

@@ -7,7 +7,7 @@ import {
   DRIVER_FEED_PATH,
   DriverFeedInitSchema,
 } from "@discord-plays-mario-kart/common";
-import { N64WASM_FORMAT } from "#src/engine/format.ts";
+import { spaghettiFormat } from "#src/engine/format.ts";
 import { createSocket } from "#src/webserver/socket.ts";
 import { DriverFeedService } from "./index.ts";
 
@@ -44,7 +44,7 @@ async function startHarness(): Promise<Harness> {
       vaapi_device: "/dev/dri/renderD128",
       encoder_async_depth: 1,
     },
-    format: N64WASM_FORMAT,
+    format: spaghettiFormat(30),
   });
   service.setDriverAdmission((socketId) => socketId === "active-driver");
   service.attach(server);

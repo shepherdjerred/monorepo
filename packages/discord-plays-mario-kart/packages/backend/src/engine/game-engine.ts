@@ -1,14 +1,11 @@
-// What a session needs from the game runtime, whichever engine runs it: the
-// wasm emulator on a Worker thread (WorkerEmulator) or the native SpaghettiKart
-// port in a child process (SpaghettiEngine).
+// What a session needs from the game runtime: the native SpaghettiKart port in
+// a child process (SpaghettiEngine). Tests and the web dispatch use the
+// interface rather than the class.
 import type { PlayerInputState } from "@discord-plays-mario-kart/common";
-import type { Mk64Snapshot } from "#src/emulator/mk64-memory.ts";
+import type { Mk64Snapshot } from "#src/emulator/mk64-state.ts";
 import type { FrameFormat } from "./format.ts";
 
-/**
- * Why a session asked for a restart (a metric label). The wasm Worker's
- * message schema mirrors it (emulator/worker/protocol.ts).
- */
+/** Why a session asked for a restart (a metric label). */
 export type EngineRestartReason = "stream_session_ended";
 
 export type EngineFrame = {
@@ -46,8 +43,6 @@ export type GameEngine = {
   clearPlayerInput: (seat: number) => void;
   /** A clean (overlay-free) copy of the current picture. */
   renderFrame: () => Promise<EngineScreenshot>;
-  /** Flush in-game saves to the session's save directory. */
-  persistSaves: () => Promise<void>;
   onFrame: (cb: (frame: EngineFrame) => void) => void;
   onAudio: (cb: (pcm: Buffer, contentEndMs: number) => void) => void;
   /** Decoded race state, every snapshotEveryNFrames game frames. */

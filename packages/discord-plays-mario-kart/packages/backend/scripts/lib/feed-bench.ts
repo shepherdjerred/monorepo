@@ -1,4 +1,4 @@
-// A local driver-feed bench for browser harnesses: either engine, the driver
+// A local driver-feed bench for browser harnesses: the engine, the driver
 // feed, and the web server with the real controller dispatch, wired exactly as
 // a session wires them, plus the PinchTab helpers that drive a tab against it.
 //
@@ -7,7 +7,6 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { z } from "zod";
-import type { EngineName } from "#src/engine/format.ts";
 import type { GameEngine } from "#src/engine/game-engine.ts";
 import { SeatManager } from "#src/input/seat-manager.ts";
 import { applyStreamOverlays } from "#src/overlay/composite.ts";
@@ -30,7 +29,6 @@ export type FeedBench = {
  * `port`. The engine is running when this resolves.
  */
 export async function startFeedBench(opts: {
-  engine: EngineName;
   rom: string | undefined;
   fps: 30 | 60;
   port: number;
@@ -39,7 +37,6 @@ export async function startFeedBench(opts: {
 }): Promise<FeedBench> {
   const sessionDir = await mkdtemp(path.join(tmpdir(), "mk64-bench-"));
   const engine = await createHarnessEngine({
-    engine: opts.engine,
     rom: opts.rom,
     sessionDir,
     fps: opts.fps,

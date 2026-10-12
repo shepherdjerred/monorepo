@@ -69,10 +69,7 @@ bitrate_max_kbps = 4000
 
 [emulator]
 enabled = false
-wasm_dir = "packages/backend/assets/n64wasm"
 rom_path = "roms/mariokart64.z64"
-fps = 30
-software_render = true
 seats = 4
 
 [web]
@@ -104,7 +101,7 @@ async function removeContainer(): Promise<void> {
 async function main(configPath: string): Promise<void> {
   await removeContainer();
 
-  const wasmSmoke = await sh([
+  const installSmoke = await sh([
     "docker",
     "run",
     "--rm",
@@ -117,16 +114,17 @@ async function main(configPath: string): Promise<void> {
     IMAGE,
     "bun",
     "run",
-    "smoke:wasm-host",
+    "smoke:spaghetti-install",
   ]);
-  if (wasmSmoke.code !== 0) {
+  if (installSmoke.code !== 0) {
     throw new Error(
-      `WASM host smoke failed:\n${wasmSmoke.stdout}\n${wasmSmoke.stderr}`,
+      `SpaghettiKart install smoke failed:\n${installSmoke.stdout}\n${installSmoke.stderr}`,
     );
   }
-  const wasmSmokeOutput = `${wasmSmoke.stdout}\n${wasmSmoke.stderr}`.trim();
-  if (wasmSmokeOutput.length > 0) {
-    console.error(wasmSmokeOutput);
+  const installSmokeOutput =
+    `${installSmoke.stdout}\n${installSmoke.stderr}`.trim();
+  if (installSmokeOutput.length > 0) {
+    console.error(installSmokeOutput);
   }
 
   // docker cp streams the config through the daemon API instead of a host

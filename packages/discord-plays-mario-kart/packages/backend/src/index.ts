@@ -18,19 +18,23 @@ import type { LeaderboardResponse } from "@discord-plays-mario-kart/common";
 /** When no session is active, expose a zero-seat manager so claims are rejected. */
 const NULL_SEAT_MANAGER = new SeatManager(0);
 
-// Main-thread stall visibility (overlay/stream/ffmpeg I/O all live here); the
-// emulator Worker samples its own loop through the metric bridge.
+// Main-thread stall visibility: bridge parsing, overlays, and stream/ffmpeg I/O
+// all live here.
 startEventLoopLagSampler((lagMs) => {
   eventLoopLagMs.observe({ thread: "main" }, lagMs);
 });
 
 const config = getConfig();
 
-// Engine preparation runs before anything connects: for the native port it
-// extracts the ROM-derived game archive (cached on the saves volume), and a
-// missing install or an unsupported ROM fails startup instead of `/play`.
-const engine = await prepareEngine(config);
-logger.info("game engine prepared", { engine: engine.name });
+// Engine preparation runs before anything connects: it extracts the
+// ROM-derived game archive (cached on the saves volume), and a missing install
+// or an unsupported ROM fails startup instead of `/play`. With the emulator
+// disabled (the ROM-free image smoke), nothing is prepared and `/play` refuses.
+const build = config.emulator.enabled ? await prepareEngine(config) : undefined;
+logger.info("game engine", {
+  prepared: build !== undefined,
+  ...(build === undefined ? {} : { binary: build.binary }),
+});
 
 // Low-latency in-browser video for seated players, alongside (never instead of)
 // the Go-Live stream spectators watch. Constructed before the driver so sessions
@@ -56,7 +60,7 @@ const driverFeed = driverFeedConfig.enabled
 // One userbot, one emulator, one game at a time. The "pool" in the shared lib is
 // general-purpose (Streambot uses it for many concurrent streams); for this single-slot
 // game-bot we just feed it the single configured userbot token.
-const driver = new MarioKartGameDriver({ config, engine, driverFeed });
+const driver = new MarioKartGameDriver({ config, build, driverFeed });
 driverFeed?.setDriverAdmission((socketId) => {
   const active = driver.getActiveRuntime();
   return active !== null && active.seatManager.seatOf(socketId) !== null;

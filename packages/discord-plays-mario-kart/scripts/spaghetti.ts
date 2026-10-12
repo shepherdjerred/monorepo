@@ -1,5 +1,5 @@
-// Pure helpers for the SpaghettiKart (native MK64 port) build: upstream
-// manifest parsing, platform paths, and the install manifest.
+// Helpers for the SpaghettiKart (native MK64 port) build: upstream manifest
+// parsing, platform paths, patch application, and the install manifest.
 import path from "node:path";
 import { z } from "zod";
 
@@ -44,6 +44,9 @@ export function cmakeConfigureArgs(
   ];
 }
 
+/** The OFL font the port ships, drawn into the stream's name labels. */
+export const LABEL_FONT = "assets/fonts/Montserrat-Regular.ttf";
+
 /**
  * The install.json the backend loads (engine/spaghetti/install.ts), pointing
  * into a local build. Torch's inputs are files of the source checkout itself.
@@ -54,6 +57,7 @@ export type DevInstallManifest = {
   engineArchive: string;
   torch: string;
   torchInputs: string;
+  labelFont: string;
   commit: string;
   romSha1: string;
 };
@@ -69,7 +73,22 @@ export function devInstallManifest(
     engineArchive: path.join(buildDir, "spaghetti.o2r"),
     torch: path.join(buildDir, "TorchExternal/src/TorchExternal-build/torch"),
     torchInputs: sourceDir,
+    labelFont: path.join(sourceDir, LABEL_FONT),
     commit: upstream.commit,
     romSha1: upstream.romSha1,
   };
+}
+
+/** Apply one patch from the series with patch(1), in the checkout `cwd`. */
+export async function applyPatch(patch: string, cwd: string): Promise<void> {
+  const child = Bun.spawn(
+    ["patch", "-p1", "--forward", "--no-backup-if-mismatch"],
+    {
+      cwd,
+      stdin: Bun.file(patch),
+      stdout: "inherit",
+      stderr: "inherit",
+    },
+  );
+  if ((await child.exited) !== 0) throw new Error(`Patch failed: ${patch}`);
 }

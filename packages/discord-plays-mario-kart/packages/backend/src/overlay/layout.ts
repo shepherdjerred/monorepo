@@ -1,11 +1,11 @@
-import type { ScreenMode } from "#src/emulator/mk64-memory.ts";
+import type { ScreenMode } from "#src/emulator/mk64-state.ts";
 import { WIDTH, HEIGHT } from "#src/emulator/constants.ts";
 
 /** A rectangle in framebuffer pixel space (640 x height). */
 export type Rect = { x: number; y: number; w: number; h: number };
 
 /**
- * Per-seat viewport rectangles for an MK64 screen mode, in 640x240 framebuffer
+ * Per-seat viewport rectangles for an MK64 screen mode, in framebuffer
  * space. Index = seat (0..3); the returned array length is the number of
  * on-screen viewports for that mode.
  *

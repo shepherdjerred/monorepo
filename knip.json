@@ -212,8 +212,8 @@
       "project": ["scripts/**/*.ts"]
     },
     "packages/discord-plays-mario-kart": {
-      "entry": ["scripts/**/*.ts", "wasm-src/**/*.mjs"],
-      "project": ["scripts/**/*.ts", "wasm-src/**/*.mjs"]
+      "entry": ["scripts/**/*.ts"],
+      "project": ["scripts/**/*.ts"]
     },
     "packages/discord-plays-mario-kart/packages/backend": {
       "entry": ["src/**/*.test.ts", "scripts/**/*.ts"],
@@ -493,6 +493,7 @@
   ],
   "ignoreBinaries": [
     "argocd",
+    "cmake",
     "ffmpeg",
     "ffprobe",
     "go",

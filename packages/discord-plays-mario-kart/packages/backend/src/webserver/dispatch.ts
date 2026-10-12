@@ -26,8 +26,8 @@ import type {
   LeaderboardResponse,
 } from "@discord-plays-mario-kart/common";
 
-/** The subset of the emulator the request dispatch needs (lets tests inject a
- *  fake without booting wasm). */
+/** The subset of the engine the request dispatch needs (lets tests inject a
+ *  fake without booting the game). */
 export type EmulatorControls = {
   setPlayerInput: (seat: number, state: PlayerInputState) => void;
   clearPlayerInput: (seat: number) => void;
@@ -77,14 +77,14 @@ async function emitLeaderboard(
 }
 
 // At most one screenshot render in flight per socket. `screenshot` is a public,
-// unauthenticated Socket.IO request that starts a Worker round-trip (a 640×240
-// RGBA response + synchronous PNG encode) and returns immediately, so without a
-// bound a client can enqueue unbounded renderFrame requests — exhausting memory
-// and queuing ahead of controller input on the shared worker port. Duplicates
-// while a render is pending for the same socket are dropped (coalesced).
+// unauthenticated Socket.IO request that waits for the next frame (a 640×480
+// RGBA copy + synchronous PNG encode) and returns immediately, so without a
+// bound a client can enqueue unbounded renderFrame requests and exhaust
+// memory. Duplicates while a render is pending for the same socket are dropped
+// (coalesced).
 const screenshotInFlight = new Set<string>();
 
-/** Render the current frame (now a Worker round-trip), overlay it, and emit the
+/** Capture the next frame, overlay it, and emit the
  *  PNG to a single socket (fire-and-forget). */
 async function emitScreenshot(
   sock: Socket,

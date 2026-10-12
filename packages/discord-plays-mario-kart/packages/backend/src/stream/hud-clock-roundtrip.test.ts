@@ -1,14 +1,18 @@
 import { describe, expect, it } from "vitest";
 import {
+  HUD_SOURCE_HEIGHT,
+  HUD_SOURCE_WIDTH,
   decodeHudClock,
   latencyMsFromClock,
   formatUtcTimestamp,
   type HudSampler,
 } from "@discord-plays-mario-kart/common";
-import { WIDTH, HEIGHT } from "#src/emulator/constants.ts";
 import { drawHudOverlay } from "./overlay.ts";
 
-const WASM_TARGET = { width: WIDTH, rowScale: 1 };
+// The HUD's layout space: drawn 1:1 here, the decoder's source coordinates.
+const WIDTH = HUD_SOURCE_WIDTH;
+const HEIGHT = HUD_SOURCE_HEIGHT;
+const LAYOUT_TARGET = { width: WIDTH, rowScale: 1 };
 
 // The driver feed measures its own glass-to-glass latency by reading the HUD
 // clock back off the canvas. That only works if the decoder and the renderer
@@ -23,7 +27,7 @@ function renderHud(
   held: readonly boolean[] = [false, false, false, false],
 ): Buffer {
   const frame = Buffer.alloc(WIDTH * HEIGHT * BYTES_PER_PIXEL);
-  drawHudOverlay(frame, WASM_TARGET, epochMs, held);
+  drawHudOverlay(frame, LAYOUT_TARGET, epochMs, held);
   return frame;
 }
 
@@ -118,9 +122,9 @@ describe("HUD clock round-trip", () => {
   });
 });
 
-describe("HUD clock round-trip on the native 640x480 frame", () => {
-  // The browser decodes in the wasm core's 640x240 source space and maps it
-  // onto its canvas. A square-pixel 640x480 frame drawn with rowScale 2 must
+describe("HUD clock round-trip on the game's 640x480 frame", () => {
+  // The browser decodes in the HUD's 640x240 layout space and maps it onto
+  // its canvas. A square-pixel 640x480 frame drawn with rowScale 2 must
   // land the badge exactly where that mapping looks.
   const NATIVE_HEIGHT = HEIGHT * 2;
 

@@ -1,16 +1,14 @@
-import path from "node:path";
 import sharp from "sharp";
 import type { Label } from "./blit.ts";
 
-// Glyphs are rasterized from the arial.ttf already bundled for the emulator's
-// MEMFS, so the overlay needs no system fonts / fontconfig config in the
-// container (sharp's `fontfile` bypasses fontconfig lookup).
-const FONT_NAME = "Arial";
+// Glyphs are rasterized from the font the SpaghettiKart install ships
+// (Montserrat, OFL), so the overlay needs no system fonts or fontconfig setup
+// in the container (sharp's `fontfile` bypasses fontconfig lookup).
+const FONT_NAME = "Montserrat";
 const FONT_POINTS = 12;
-// Labels are laid out in the wasm core's 640x240 space, a horizontally doubled
-// 320x240, so a label is drawn twice as wide as tall to read square once
-// displayed at 4:3 (matches the HUD's GLYPH_SCALE_X = 2 * SCALE_Y). A taller
-// framebuffer repeats each row `rowScale` times (see engine/format.ts).
+// Labels are laid out in a 640x240 space, as the HUD is, so a label is drawn
+// twice as wide as tall (matching the HUD's GLYPH_SCALE_X = 2 * SCALE_Y) and
+// each row is repeated `rowScale` times: square on the 640x480 frame.
 const HSCALE = 2;
 const PAD_X = 3;
 const PAD_Y = 1;
@@ -20,10 +18,6 @@ export type LabelRenderer = (
   name: string,
   maxFrameWidth: number,
 ) => Promise<Label>;
-
-function fontFile(wasmDir: string): string {
-  return path.join(wasmDir, "res", "arial.ttf");
-}
 
 /** Rasterize text to a tight RGBA bitmap (alpha = glyph coverage). */
 async function rasterizeText(
@@ -53,11 +47,9 @@ async function rasterizeText(
  * NameOverlay, so cost here is irrelevant to frame pacing.
  */
 export function createLabelRenderer(
-  wasmDir: string,
+  fontfile: string,
   rowScale: number,
 ): LabelRenderer {
-  const fontfile = fontFile(wasmDir);
-
   return async function renderLabel(
     name: string,
     maxFrameWidth: number,

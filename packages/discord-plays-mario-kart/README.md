@@ -7,14 +7,14 @@ into a Discord voice channel.
 
 ## How it works
 
-Fully headless — no browser, no emulator UI, no GPU, no desktop:
+Fully headless — no browser, no game UI, no desktop:
 
-- **Game** — a patched [N64Wasm](https://github.com/nbarkhina/N64Wasm) core
-  (parallel-n64 + the **angrylion** software RDP) is compiled to WebAssembly and
-  run in Bun. The ROM is injected straight into wasm linear memory, the core is
-  stepped one frame at a time, and the software-rendered RGBA framebuffer is read
-  back out of memory — no GPU and no canvas. N64 has no simple PPU like the GBA,
-  so a software RDP is the only GPU-free render path.
+- **Game** — [SpaghettiKart](https://github.com/HarbourMasters/SpaghettiKart),
+  the native PC port of the Mario Kart 64 decompilation, runs as a child process
+  with a hidden window and our host-bridge patches. It renders with OpenGL
+  through Mesa (the iGPU when present, llvmpipe otherwise) and hands every frame,
+  its audio, and its race state to the backend over a Unix socket. A steer shows
+  in the very frame that read it.
 - **Streaming** — frames are encoded with ffmpeg and pushed to a Discord voice
   channel (Go-Live) via `@shepherdjerred/discord-video-stream` (our in-repo fork
   of
@@ -36,8 +36,8 @@ Fully headless — no browser, no emulator UI, no GPU, no desktop:
 The tracing/metrics wiring, loopback audio transport, Go-Live streamer base
 class, web server, and bot entrypoint are shared with discord-plays-pokemon via
 [`@shepherdjerred/discord-plays-core`](../discord-plays-core) (source-only,
-subpath imports). This backend supplies the MK64-specific pieces: the N64
-emulator, the game driver, seats/leaderboard/name overlay, the richer
+subpath imports). This backend supplies the MK64-specific pieces: the game
+engine, the game driver, seats/leaderboard/name overlay, the richer
 ffmpeg/send-path metrics, and the socket dispatch.
 
 See [AGENTS.md](AGENTS.md) for contributor/agent workflow notes.
@@ -56,57 +56,29 @@ Claim a seat in the web UI, then:
 - **Hop/Drift** — `Shift` (R) · **Item** — `E` (Z) · **Start** — `Enter`
 - **Camera** — `I` / `J` / `K` / `L` (C-buttons)
 
-## The N64Wasm core
-
-The core is built **from source** in CI — no binaries are committed. The source is
-vendored **byte-pristine** under [`wasm-src/code`](./wasm-src) at a pinned upstream
-commit; our changes live as a patch series in [`wasm-src/patches/`](./wasm-src/patches)
-and are applied **at build time**. [`wasm-src/PATCHES.md`](./wasm-src/PATCHES.md)
-records the pinned baseline, the patches, and the update procedure. Our changes:
-
-- `neilSetRom` + a ROM-inject branch (with `volatile` globals so LTO can't fold
-  it away) — bypasses the Node `fseek` null-trap by loading the ROM from memory.
-- `neilGetVideoBuffer` / `neilGetVideoHeight` — expose the software framebuffer.
-- `neil_send_mobile_controls_player(player, controls, axis0, axis1)` + a per-frame
-  `applyHostControls()` — per-player input (bounds-checked against
-  `NEILNUMCONTROLLERS` = 4). The host call only **latches** input; the core's
-  `mainLoopInner()` zeroes `neilbuttons[*]` every frame, so `applyHostControls()`
-  re-applies the latch after that reset, right before `retro_run()` polls it.
-  Without this, all input is silently dropped (frames still render). See
-  [`PATCHES.md`](./wasm-src/PATCHES.md).
-
-[`scripts/build-wasm.ts`](./scripts/build-wasm.ts) compiles
-the core into `packages/backend/assets/n64wasm/` using the pinned
-`emscripten/emsdk:6.0.12` image.
-
-> **Do not define `window`.** The emscripten glue must detect
-> `ENVIRONMENT_IS_NODE` only; if it also detects a web environment its FS path
-> null-traps `fseek`. See `packages/backend/src/emulator/wasm-host.ts`.
-
-## Native engine (SpaghettiKart, opt-in)
+## The game: SpaghettiKart
 
 [SpaghettiKart](https://github.com/HarbourMasters/SpaghettiKart) is a native PC
-port of the Mario Kart 64 decompilation. It is the alternative to the wasm core,
-selected per deployment with `[emulator] engine = "spaghettikart"`. The default
-stays `"n64wasm"`. Measured locally, the port shows a steer in the frame that
-latched it, where the wasm core takes 5–14 VIs.
+port of the Mario Kart 64 decompilation. It replaced a WebAssembly N64 emulator
+(N64Wasm) in October 2026. Measured from a key press to the painted frame in the
+driver feed, press-to-paint dropped from about 128 ms to about 40 ms.
 
 Only the upstream pin ([`spaghetti-src/upstream.json`](./spaghetti-src/upstream.json))
 and our patch series ([`spaghetti-src/patches/`](./spaghetti-src/patches)) are
 committed. The patches add a host bridge: the backend owns all four controller
 ports over a Unix socket and receives every drawn frame (BGRA, 640×480 square
 pixels), the mixed audio (s16 stereo, 26 800 Hz), and a per-frame game-state
-record that replaces the RDRAM reads. [`spaghetti-src/PATCHES.md`](./spaghetti-src/PATCHES.md)
+record for the leaderboard. [`spaghetti-src/PATCHES.md`](./spaghetti-src/PATCHES.md)
 documents the protocol and how to regenerate the patches.
 
 ### How a session runs it
 
-`packages/backend/src/engine/` holds the `GameEngine` interface both engines
-implement. Each engine declares its `FrameFormat` (frame size, frame rate, audio
-rate); the Go-Live stream, the driver feed, and the overlays size themselves
-from it. The HUD clock and name labels keep one layout across engines: the
-native frame draws them with every row doubled, so the browser's HUD decoder
-reads both the same way.
+`packages/backend/src/engine/` holds the `GameEngine` interface and its
+`SpaghettiEngine`. The engine declares a `FrameFormat` (frame size, frame rate,
+audio rate); the Go-Live stream, the driver feed, and the overlays size
+themselves from it. The HUD clock and name labels are laid out in a 640×240
+space, which the browser's HUD decoder reads, and are drawn with every row
+doubled on the 640×480 frame.
 
 - **Process.** `SpaghettiEngine` spawns the game per session with a hidden
   window. On Linux it uses SDL's `offscreen` driver: an EGL context with no
@@ -115,7 +87,7 @@ reads both the same way.
   game logic stay in the game's process.
 - **Saves.** The game's home (`SHIP_HOME`) is `saves/<guildId>/spaghettikart/`.
   It writes its EEPROM save (`default.sav`), config, and logs there itself, so
-  saves stay per guild like the wasm core's.
+  saves stay per guild.
 - **Assets.** `mk64.o2r` is the port's asset archive, extracted from the ROM.
   It follows the ROM's rules: never committed, logged, or baked into an image.
   At startup the backend checks the ROM's SHA-1 against the pin, then extracts
@@ -123,14 +95,12 @@ reads both the same way.
   stamp keyed on the ROM and the pin means later boots reuse it. An unsupported
   ROM or a missing install fails startup, not `/play`.
 - **Install.** `[spaghettikart] install_dir` points at the build output, which
-  `install.json` describes. The image ships it at the default
-  `packages/backend/assets/spaghettikart`, built by the Dockerfile's
-  `spaghetti-builder` stage from the same pin and patches.
+  `install.json` describes: the game, its engine archive, Torch and its inputs,
+  and the name-label font (Montserrat, SIL OFL, from the port's assets). The
+  image ships it at the default `packages/backend/assets/spaghettikart`, built
+  by the Dockerfile's `spaghetti-builder` stage from the same pin and patches.
 
 ```toml
-[emulator]
-engine = "spaghettikart"
-
 [spaghettikart]
 install_dir = "packages/backend/assets/spaghettikart" # image default
 output_fps = 30                                       # 30 or 60 (interpolated)
@@ -149,15 +119,15 @@ upstream CI. On Linux, they come from system packages.
 
 ## Testing
 
-The input path — **browser keypress → Socket.IO → backend → emulator → game** —
+The input path — **browser keypress → Socket.IO → backend → engine → game** —
 is covered at three levels:
 
 | Level            | What it proves                                                                                                                                                                             | Where                                                                                         | CI?       |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- | --------- |
 | Frontend mapping | `KeyboardEvent.code` → the `PlayerInputState` the browser ships (KEYMAP / `computeState`, schema-valid)                                                                                    | [`frontend/src/input-map.test.ts`](./packages/frontend/src/input-map.test.ts)                 | ✅        |
 | Server plumbing  | a real Socket.IO client → `createSocket` (schema parse) → `handleRequest` → `emulator.setPlayerInput` with the right state; seat gating, schema rejection, release/disconnect clears input | [`backend/src/webserver/dispatch.test.ts`](./packages/backend/src/webserver/dispatch.test.ts) | ✅        |
-| WASM host        | the production Emscripten glue initializes inside a Bun Worker, exposes the required runtime API, and needs no ROM                                                                         | [`backend/scripts/smoke-wasm-host.ts`](./packages/backend/scripts/smoke-wasm-host.ts)         | ✅        |
-| Game effect      | input actually advances the running game (boots the real emulator + ROM; holding START moves the title screen → GAME SELECT menu)                                                          | [`backend/scripts/e2e-input.ts`](./packages/backend/scripts/e2e-input.ts)                     | ⛔ manual |
+| Engine           | the bridge protocol, the engine's pacing, input-to-frame attribution, snapshots and screenshots against a fake game; process paths and dead-game handling against a fake binary            | [`backend/src/engine/spaghetti/`](./packages/backend/src/engine/spaghetti/)                   | ✅        |
+| Game effect      | input actually moves the running game (boots the real port + ROM; a steer shows in the latching frame, a hop shows on the browser canvas)                                                  | `e2e:native-latency`, `e2e:press-to-paint`                                                    | ⛔ manual |
 
 Run the automated tests from the repo root:
 
@@ -169,61 +139,41 @@ bunx turbo run test --filter='@discord-plays-mario-kart/*'
 is itself the `discord-plays-mario-kart-scripts` workspace, so `'*'` pulls in
 that and other monorepo workspaces, not just backend/common/frontend.)
 
-### Manual harness (needs a ROM + a built core)
+### Manual harness (needs a ROM + a local build)
 
-These boot the real emulator and need local assets (the ROM is copyright and
-not committed; build the core with `scripts/build-wasm.ts`). The **ROM is
-resolved** from, in order: an explicit `--rom`/positional arg → `MK64_ROM` env →
-`~/syncthing/Sync/roms/mariokart64.z64` → `~/Sync/Sync/roms/mariokart64.z64`
-(both Syncthing spellings are checked because the root differs by machine; the
-canonical copy lives in Syncthing — see
+These run the real game and need local assets: the ROM is copyrighted and not
+committed, and the port is built with `bun run --cwd ../.. build:spaghetti`.
+The **ROM is resolved** from, in order: an explicit `--rom`/positional arg →
+`MK64_ROM` env → `~/syncthing/Sync/roms/mariokart64.z64` →
+`~/Sync/Sync/roms/mariokart64.z64` (both Syncthing spellings are checked because
+the root differs by machine; the canonical copy lives in Syncthing — see
 [Deployment](#one-time-provisioning)). All four failing prints where to put it.
 
 ```bash
 cd packages/backend
-bun run build:wasm            # compile the core into assets/n64wasm (once)
-bun run smoke:wasm-host       # ROM-free Worker + generated-runtime smoke
-bun run e2e:worker            # full production Worker path: frames, audio, input, metrics
+bun run smoke:spaghetti-install ../../.cache/spaghetti/dist  # ROM-free install check
 bun run e2e:stream-latency    # synthetic flash/chirp through H.264 + Opus + NUT
 
-# Scenario harness — drive the game to a known state and screenshot it.
-bun run e2e:scenario                       # list scenarios (menu, 1p, 2p, 3p, 4p)
-bun run e2e:scenario 4p --shot /tmp/4p.png # 4-player race; names burned into each quadrant
-bun run e2e:scenario 2p --watch            # log state transitions (menu → staging → racing)
-bun run e2e:scenario 1p --names Me,Bot     # override the burned-in names
+# The game's own response to input: lockstep differential + paced wall clock.
+bun run e2e:native-latency --seats 4 --fps 30
+# Driver feed: real encode + HUD decode, or a real browser tab.
+bun run e2e:driver-feed --live --fps 60
+bun run e2e:driver-feed:glass
+# Key press to painted frame in a real browser (hop on a parked kart).
+bun run e2e:press-to-paint --fps 30
 
-# Game-side input latency, in VIs, from replays of one heap snapshot.
-bun run e2e:game-latency --seats 4         # also: swap phase, game fps, emulate time
-# The same question for the native port (needs `bun run build:spaghetti`):
-bun run e2e:native-latency --seats 4 --fps 30   # lockstep game response + paced wall clock
-# Driver feed on the native engine: real encode + HUD decode, or a real browser.
-bun run e2e:driver-feed --engine spaghettikart --live --fps 60
-bun run e2e:driver-feed:glass --engine spaghettikart
-# Key press to painted frame in a real browser, per engine (hop on a parked kart).
-bun run e2e:press-to-paint --engine n64wasm
-bun run e2e:press-to-paint --engine spaghettikart --fps 60
-
-# Lower-level scripts:
-bun run e2e:input:check ~/syncthing/Sync/roms/mariokart64.z64
-                               # baseline vs START, asserts the frame changes
-bun run e2e:race "" 6000 start-mash  # stream raw RDRAM globals (validate the address map)
-
-# Performance / media / deployment harnesses:
-bun run e2e:perf              # 1p/4p × idle/spam server-loop scenarios, hard metric thresholds
-bun run e2e:perf:browser      # 4 PinchTab Chromium tabs through the full input pipeline
+# Media / deployment harnesses:
 bun run e2e:audio             # Go-Live audio: synthetic sine by default; --rom for real end-to-end
-bun run e2e:driver-feed       # driver-feed chain vs real ffmpeg (synthetic frames; --rom for real)
-bun run e2e:driver-feed:glass # + built frontend in a real Chrome tab; reports glass latency
+bun run e2e:driver-feed       # driver-feed chain vs real ffmpeg (synthetic frames; --live for real)
 bun run e2e:viewer-stats      # receive-side WebRTC stats from a PinchTab Discord viewer tab
 bun run smoke                 # run the real container entrypoint (CI image smoke)
 ```
 
-The reusable primitives live in [`backend/scripts/lib/`](./packages/backend/scripts/lib/)
-(`resolveRom`, `bootEmulator`, `driveUntil`, `captureScreenshot`); scenarios are
-data in [`scenarios.ts`](./packages/backend/scripts/lib/scenarios.ts). Add a
-scenario by adding an entry there. **Menu-nav gotcha:** multiplayer character
-select blocks until _every_ seat presses A, so the schedules mirror A onto all
-N controllers.
+The shared harness pieces live in [`backend/scripts/lib/`](./packages/backend/scripts/lib/):
+ROM resolution, the local build, the lockstep driver and its state-keyed menu
+policy, and the browser bench. **Menu-nav gotcha:** multiplayer character
+select blocks until _every_ seat presses A, so the policies press A on all N
+controllers.
 
 `e2e:stream-latency` isolates the media pipeline owned by this service; it does
 not include Discord ingest or playback. It writes a NUT recording and JSON
@@ -248,14 +198,9 @@ capture-to-paint reading, corrected by a clock offset estimated from the
 controller's ping. `driver_feed_client_decoder_resets_total` counts browser
 decoder resets, each of which blanks the picture until the next keyframe.
 
-`e2e:game-latency` measures the part no transport change can touch: how many VIs
-MK64 takes to show an input. It snapshots the whole wasm heap once in a race and
-replays it per trial, so every trial starts from an identical state. The core's
-VI filter adds low-amplitude noise to most pixels on every VI, so the harness
-counts a new picture only when many pixels move well beyond that noise.
-
-`e2e:native-latency` answers the same question for the native port. The port has
-no save states, so it runs two lockstep instances with identical input, checks
+`e2e:native-latency` measures the part no transport change can touch: how many
+frames MK64 takes to show an input. The port has no save states, so it runs two
+lockstep instances with identical input, checks
 that their pictures stay byte-identical, then steers one. The first draw whose
 picture differs is the game's response. A second, paced instance measures wall
 time from sending an input to the first frame that latched it.
@@ -270,9 +215,8 @@ is a mounted `config.toml` — see
 `mariokart.sjer.red` (and via Tailscale as `mariokart`); the Go-Live stream is
 outbound-only.
 
-The pod requests the node's Intel iGPU for VAAPI encoding, which the native
-engine's OpenGL rendering can also use. The wasm core renders in software, which
-is CPU-heavy, so the pod has a high CPU limit.
+The pod requests the node's Intel iGPU for VAAPI encoding; the game's OpenGL
+rendering uses the same render node through Mesa.
 
 ### One-time provisioning
 

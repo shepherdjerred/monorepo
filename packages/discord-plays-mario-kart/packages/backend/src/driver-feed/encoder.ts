@@ -74,8 +74,7 @@ export type DriverFeedOutputSize = {
 
 /**
  * Size the 4:3 picture in square pixels at `height`, rounding width to an even
- * number (H.264 4:2:0 requires it). This aspect-corrects the wasm core's
- * anamorphic 640x240 frame; the native 640x480 frame is already square.
+ * number (H.264 4:2:0 requires it).
  *
  * Unlike the Go-Live path there is no pillarbox: the browser lays the canvas out
  * with CSS, so sending black bars would just waste bitrate.
@@ -142,9 +141,7 @@ export function buildDriverFeedArgs(
     "-loglevel",
     "error",
     ...globalOptions,
-    // Input: raw frames on stdin. BGRA, not RGBA: the wasm core's
-    // get_video_buffer nets BGRA on the tick path (wasm-src/PATCHES.md), and
-    // the native port reads its framebuffer back as BGRA.
+    // Input: raw frames on stdin, BGRA, as the game reads its framebuffer back.
     "-fflags",
     "nobuffer",
     "-analyzeduration",

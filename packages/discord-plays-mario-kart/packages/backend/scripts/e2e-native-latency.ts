@@ -1,5 +1,5 @@
-// Local e2e: measure input-to-picture latency of the native SpaghettiKart port,
-// for comparison with the wasm emulator's `e2e:game-latency`.
+// Local e2e: measure the game's own input-to-picture latency. The retired wasm
+// emulator took 5–6 VIs (1P) to 3–14 VIs (4P) by the same differential method.
 //
 // Phase 1 (lockstep, game latency): two instances are driven identically from
 // boot into a race and held on the throttle. Their pictures must stay

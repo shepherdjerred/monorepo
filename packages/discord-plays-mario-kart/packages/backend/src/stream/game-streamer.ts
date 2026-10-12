@@ -219,9 +219,7 @@ export class GameStreamer extends GameStreamerBase {
       customInputOptions: [
         "-f",
         "rawvideo",
-        // Frames pushed to the stream arrive BGRA from both engines (see
-        // wasm-src/PATCHES.md — get_video_buffer's non-idempotent b<->r swap
-        // nets BGRA on the tick path; the native port reads back BGRA).
+        // Frames arrive BGRA, as the game reads its framebuffer back.
         // Declaring rgba here swaps red/blue in the broadcast; ffmpeg drops
         // the X byte converting to yuv420p.
         "-pix_fmt",

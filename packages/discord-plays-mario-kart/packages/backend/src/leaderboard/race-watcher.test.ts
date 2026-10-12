@@ -3,7 +3,7 @@ import type {
   Mk64PlayerSnapshot,
   Mk64Snapshot,
   RaceState,
-} from "#src/emulator/mk64-memory.ts";
+} from "#src/emulator/mk64-state.ts";
 import { RaceWatcher } from "./race-watcher.ts";
 import type { RaceCompleted } from "./race-watcher.ts";
 

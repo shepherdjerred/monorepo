@@ -12,7 +12,6 @@
     "sandbox",
     "**/node_modules",
     ".claude",
-    "packages/discord-plays-mario-kart/wasm-src",
     "packages/homelab/src/cdk8s/config/bazarr",
     ".venv"
   ],

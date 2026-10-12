@@ -7,7 +7,7 @@ import { createAudioTransport } from "#src/stream/audio-transport.ts";
 import {
   AUDIO_SAMPLE_RATE,
   HEIGHT,
-  N64_FPS,
+  GAME_FPS,
   WIDTH,
 } from "#src/emulator/constants.ts";
 import {
@@ -123,7 +123,7 @@ async function renderCalibration(opts: Options): Promise<void> {
   const { output, promise } = prepareStream(video, {
     width: WIDTH,
     height: HEIGHT,
-    frameRate: N64_FPS,
+    frameRate: GAME_FPS,
     videoCodec: "H264",
     bitrateVideo: 1000,
     bitrateVideoMax: 1500,
@@ -141,7 +141,7 @@ async function renderCalibration(opts: Options): Promise<void> {
       "-video_size",
       `${String(WIDTH)}x${String(HEIGHT)}`,
       "-framerate",
-      String(N64_FPS),
+      String(GAME_FPS),
       "-probesize",
       "32",
     ],
@@ -164,13 +164,13 @@ async function renderCalibration(opts: Options): Promise<void> {
   transport.sink.write(pcm);
   transport.sink.end();
 
-  const frames = Math.ceil((DURATION_MS / 1000) * N64_FPS);
+  const frames = Math.ceil((DURATION_MS / 1000) * GAME_FPS);
   const background = Buffer.alloc(WIDTH * HEIGHT * 4, 0x20);
   const pulse = Buffer.alloc(WIDTH * HEIGHT * 4, 0xff);
   for (let frameIndex = 0; frameIndex < frames; frameIndex++) {
     const selected = isCalibrationVideoPulse({
       frameIndex,
-      frameRate: N64_FPS,
+      frameRate: GAME_FPS,
       pulseTimesMs: PULSE_TIMES_MS,
       videoDelayFrames: opts.videoDelayFrames,
     })
@@ -197,7 +197,7 @@ async function main(): Promise<void> {
   const report = analyzeCalibrationNut({
     path: opts.nutPath,
     sourceTimesMs: PULSE_TIMES_MS,
-    frameRate: N64_FPS,
+    frameRate: GAME_FPS,
   });
   await Bun.write(opts.reportPath, `${JSON.stringify(report, null, 2)}\n`);
 

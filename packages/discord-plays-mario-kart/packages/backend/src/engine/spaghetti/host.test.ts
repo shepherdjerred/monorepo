@@ -28,6 +28,7 @@ function hostOptions() {
       binary: rel("install/game"),
       engineArchive: rel("install/spaghetti.o2r"),
       gameArchive: rel("saves/spaghettikart-assets/mk64.o2r"),
+      labelFont: rel("install/label.ttf"),
     },
     homeDir: rel("saves/123/spaghettikart"),
     lockstep: true,

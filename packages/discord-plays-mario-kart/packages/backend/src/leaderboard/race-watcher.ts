@@ -2,11 +2,11 @@ import type {
   GameMode,
   Mk64Snapshot,
   ScreenMode,
-} from "#src/emulator/mk64-memory.ts";
-import { COURSE_AWARD_CEREMONY } from "#src/emulator/mk64-memory.ts";
+} from "#src/emulator/mk64-state.ts";
+import { COURSE_AWARD_CEREMONY } from "#src/emulator/mk64-state.ts";
 
 /**
- * Pure race-completion detector. Fed Mk64Snapshots (polled from RDRAM) plus
+ * Pure race-completion detector. Fed Mk64Snapshots (from the game's state record) plus
  * the current seat->name mapping; emits exactly one RaceCompleted per
  * racing -> finished cycle. No I/O, no emulator imports — unit-testable with
  * synthetic snapshots.

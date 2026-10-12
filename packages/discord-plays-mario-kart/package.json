@@ -3,12 +3,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run scripts/build-wasm.test.ts scripts/vendor-n64wasm.test.ts scripts/migration-smoke.test.ts scripts/spaghetti.test.ts",
-    "test:coverage": "bun --no-install --bun vitest --config ../../vitest.config.ts run --coverage.reporter=text --coverage.reporter=lcovonly --coverage.reportsDirectory=coverage --coverage scripts/build-wasm.test.ts scripts/vendor-n64wasm.test.ts scripts/spaghetti.test.ts --coverage.thresholds.lines=90 --coverage.thresholds.functions=90 --coverage.thresholds.statements=90",
+    "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run scripts/spaghetti.test.ts",
+    "test:coverage": "bun --no-install --bun vitest --config ../../vitest.config.ts run --coverage.reporter=text --coverage.reporter=lcovonly --coverage.reportsDirectory=coverage --coverage scripts/spaghetti.test.ts --coverage.thresholds.lines=90 --coverage.thresholds.functions=90 --coverage.thresholds.statements=90",
     "lint": "eslint --config eslint.config.ts scripts",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
-    "build:wasm": "bun scripts/build-wasm.ts",
-    "vendor:wasm": "bun scripts/vendor-n64wasm.ts",
     "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
     "build:spaghetti": "bun scripts/build-spaghetti.ts"
   },

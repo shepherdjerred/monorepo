@@ -8,8 +8,9 @@
 //   engine input latch -> game response -> overlay -> H.264 encode ->
 //   WebSocket -> WebCodecs decode -> canvas paint
 //
-// It runs the same way against either engine, through the production session
-// path for each (the wasm core's Worker, the native port's child process).
+// The engine runs through the production session path (the native port as a
+// child process). The retired wasm engine measured p50 126–130 ms here, against
+// 36–40 ms for the native port (see the PR that introduced this harness).
 //
 // The ruler is a hop (R, ShiftLeft on the page) with the kart parked on the
 // grid: a parked kart does not react visibly to steering, and a moving scene
@@ -21,8 +22,7 @@
 //
 // Loopback, same machine: add network RTT for a remote player.
 //
-//   bun run e2e:press-to-paint [--engine n64wasm|spaghettikart] [--fps 30|60]
-//     [--presses 20] [--rom <path>] [--port 8098] [--pinchtab <server url>]
+//   bun run e2e:press-to-paint [--fps 30|60] [--presses 20] [--rom <path>] [--port 8098] [--pinchtab <server url>]
 //     [--json <path>]   (every trial's per-paint change series)
 import os from "node:os";
 import { parseArgs } from "node:util";
@@ -32,9 +32,9 @@ import {
   EMPTY_INPUT,
   type ButtonState,
 } from "@discord-plays-mario-kart/common";
-import type { RaceState } from "#src/emulator/mk64-memory.ts";
+import type { RaceState } from "#src/emulator/mk64-state.ts";
 import type { GameEngine } from "#src/engine/game-engine.ts";
-import { parseEngineName, parseOutputFps } from "./lib/engines.ts";
+import { parseOutputFps } from "./lib/engines.ts";
 import {
   evalInTab,
   openDriverTab,
@@ -45,7 +45,6 @@ import {
 const { values } = parseArgs({
   args: Bun.argv.slice(2),
   options: {
-    engine: { type: "string", default: "n64wasm" },
     fps: { type: "string", default: "30" },
     presses: { type: "string", default: "20" },
     rom: { type: "string" },
@@ -54,7 +53,6 @@ const { values } = parseArgs({
     json: { type: "string" },
   },
 });
-const engineName = parseEngineName(values.engine);
 const presses = Number(values.presses);
 const port = Number(values.port);
 if (!Number.isInteger(presses) || presses <= 0) {
@@ -84,8 +82,8 @@ async function tap(
 /**
  * Walk the menus into a 1P Grand Prix by alternating START and A once a second
  * until the race is staging, then wait for "GO". Wall-clock rather than
- * frame-keyed, so it works for both engines' different boot paths; START
- * stops before the race so it can never pause it.
+ * frame-keyed, so it does not depend on the boot path's timing; START stops
+ * before the race so it can never pause it.
  */
 async function driveToRace(engine: GameEngine): Promise<void> {
   const latest: { raceState: RaceState } = { raceState: "menu" };
@@ -242,14 +240,13 @@ async function evalWithRetry(tab: string, script: string): Promise<unknown> {
 }
 
 const bench = await startFeedBench({
-  engine: engineName,
   rom: values.rom,
   fps: parseOutputFps(values.fps),
   port,
 });
 const { format } = bench.engine;
 process.stdout.write(
-  `${engineName}: ${String(format.width)}x${String(format.height)} at ${String(format.fps)} fps on http://localhost:${String(port)}; driving to a race\n`,
+  `${String(format.width)}x${String(format.height)} at ${String(format.fps)} fps on http://localhost:${String(port)}; driving to a race\n`,
 );
 
 let tabId: string | undefined;
@@ -306,7 +303,7 @@ try {
   process.stdout.write(
     [
       "",
-      `engine:          ${engineName} (${String(format.fps)} fps)`,
+      `output:          ${String(format.fps)} fps`,
       `presses:         ${String(latencies.length)} seen, ${String(missed)} missed`,
       `press -> paint:  p50 ${fmt(percentile(latencies, 0.5))} ms  p95 ${fmt(percentile(latencies, 0.95))} ms  min ${fmt(percentile(latencies, 0))} ms  max ${fmt(percentile(latencies, 1))} ms`,
       `detection:       control p90 ${String(noiseP90)} changed blocks, threshold ${String(threshold)}, signal at detection p50 ${String(percentile(signals, 0.5))}`,

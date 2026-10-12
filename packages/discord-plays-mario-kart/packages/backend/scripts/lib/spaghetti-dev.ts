@@ -6,7 +6,7 @@ import {
   prepareSpaghettiBuild,
   type SpaghettiBuild,
 } from "#src/engine/spaghetti/install.ts";
-import { resolveRom } from "./harness.ts";
+import { resolveRom } from "./rom.ts";
 
 const PACKAGE_ROOT = path.resolve(import.meta.dirname, "../../../..");
 export const SPAGHETTI_DEV_CACHE = path.join(PACKAGE_ROOT, ".cache/spaghetti");

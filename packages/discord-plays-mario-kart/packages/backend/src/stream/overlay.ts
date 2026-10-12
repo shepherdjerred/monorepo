@@ -6,11 +6,10 @@
 // the BGRA frame copy (overlays write greyscale — channel order is irrelevant,
 // so this is safe on the screenshot's RGBX buffer too).
 //
-// The geometry is laid out in the wasm core's 640x240 space, a horizontally
-// doubled 320x240, so glyphs are drawn twice as wide as tall (GLYPH_SCALE_X =
-// 2 * GLYPH_SCALE_Y) to come out square once displayed at 4:3. A taller
-// framebuffer (the native engine's 640x480) multiplies every vertical measure
-// by its `rowScale`, which lands the badge on the same displayed pixels.
+// The geometry is laid out in a 640x240 space (the browser's HUD decoder reads
+// it there), so glyphs are drawn twice as wide as tall (GLYPH_SCALE_X =
+// 2 * GLYPH_SCALE_Y) and every vertical measure is multiplied by the frame's
+// `rowScale` (2 for the 640x480 frame), which makes them square.
 //
 // The font and geometry live in `@discord-plays-mario-kart/common` because the
 // driver-feed client reads this HUD back off its own canvas to measure

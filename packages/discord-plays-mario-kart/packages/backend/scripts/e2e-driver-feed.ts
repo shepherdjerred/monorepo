@@ -1,17 +1,15 @@
 // End-to-end check of the driver-feed pipeline: frames -> ffmpeg -> Annex-B
 // splitter -> hub fan-out -> re-decode.
 //
-// Two modes. By default it feeds a generated gradient at the real cadence, so it
-// needs no ROM and no GPU and can run anywhere ffmpeg is on PATH. With `--live`
-// (or `--rom`) it drives the real engine through the same overlay pipeline the
-// Go-Live stream uses, which additionally proves the HUD clock the driver feed's
-// latency readout depends on survives a real encode and decode.
-//
-// `--engine spaghettikart` uses the native port's 640x480 frame format (and,
-// live, the locally built port); `--fps` sets its rate.
+// Two modes. By default it feeds a generated gradient at the real cadence and
+// frame size, so it needs no ROM and no GPU and can run anywhere ffmpeg is on
+// PATH. With `--live` (or `--rom`) it drives the locally built game through the
+// same overlay pipeline the Go-Live stream uses, which additionally proves the
+// HUD clock the driver feed's latency readout depends on survives a real
+// encode and decode. `--fps` sets the output rate.
 //
 //   bun run e2e:driver-feed [--seconds 3] [--hardware] [--live] [--rom <path>]
-//     [--engine n64wasm|spaghettikart] [--fps 30|60]
+//     [--fps 30|60]
 
 import { parseArgs } from "node:util";
 import { mkdtemp, rm } from "node:fs/promises";
@@ -24,7 +22,6 @@ import {
   type HudSampler,
 } from "@discord-plays-mario-kart/common";
 import {
-  N64WASM_FORMAT,
   frameBytes as frameBytesOf,
   spaghettiFormat,
 } from "#src/engine/format.ts";
@@ -35,11 +32,7 @@ import {
 import { DriverFeedHub, type FeedClient } from "#src/driver-feed/hub.ts";
 import type { AccessUnit } from "#src/driver-feed/annex-b.ts";
 import { applyStreamOverlays } from "#src/overlay/composite.ts";
-import {
-  createHarnessEngine,
-  parseEngineName,
-  parseOutputFps,
-} from "./lib/engines.ts";
+import { createHarnessEngine, parseOutputFps } from "./lib/engines.ts";
 
 const { values } = parseArgs({
   args: Bun.argv.slice(2),
@@ -48,7 +41,6 @@ const { values } = parseArgs({
     hardware: { type: "boolean", default: false },
     rom: { type: "string" },
     live: { type: "boolean", default: false },
-    engine: { type: "string", default: "n64wasm" },
     fps: { type: "string", default: "30" },
     "dump-frame": { type: "string" },
     // Encode at the Go-Live path's output size/bitrate instead, to isolate how
@@ -62,10 +54,8 @@ if (!Number.isFinite(seconds) || seconds <= 0) {
   throw new Error(`--seconds must be a positive number, got ${values.seconds}`);
 }
 
-const engineName = parseEngineName(values.engine);
 const outputFps = parseOutputFps(values.fps);
-const format =
-  engineName === "spaghettikart" ? spaghettiFormat(outputFps) : N64WASM_FORMAT;
+const format = spaghettiFormat(outputFps);
 const { width: WIDTH, height: HEIGHT } = format;
 const live = values.live || values.rom !== undefined;
 
@@ -162,10 +152,9 @@ const encoderLabel = values.hardware ? "vaapi" : "libx264";
 if (live) {
   const savesDir = await mkdtemp(path.join(tmpdir(), "mk64-driver-feed-"));
   process.stdout.write(
-    `running ${engineName} for ${String(seconds)}s (${encoderLabel})\n`,
+    `running the game for ${String(seconds)}s (${encoderLabel})\n`,
   );
   const emulator = await createHarnessEngine({
-    engine: engineName,
     rom: values.rom,
     sessionDir: savesDir,
     fps: outputFps,

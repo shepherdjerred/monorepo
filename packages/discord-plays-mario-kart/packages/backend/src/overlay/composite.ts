@@ -1,4 +1,4 @@
-import type { ScreenMode } from "#src/emulator/mk64-memory.ts";
+import type { ScreenMode } from "#src/emulator/mk64-state.ts";
 import { drawHudOverlay } from "#src/stream/overlay.ts";
 import type { NameOverlay } from "./name-overlay.ts";
 

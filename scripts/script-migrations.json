@@ -194,33 +194,13 @@
     },
     {
       "source": "packages/discord-plays-mario-kart/scripts/build-wasm.sh",
-      "disposition": "port",
-      "reason": "Complex reproducible WASM build already requires Bun tooling",
-      "replacement": "packages/discord-plays-mario-kart/scripts/build-wasm.ts",
-      "owner": {
-        "packageJson": "packages/discord-plays-mario-kart/package.json",
-        "tsconfig": "packages/discord-plays-mario-kart/tsconfig.json",
-        "eslintConfig": "packages/discord-plays-mario-kart/eslint.config.ts"
-      },
-      "tests": [
-        "packages/discord-plays-mario-kart/scripts/build-wasm.test.ts",
-        "packages/discord-plays-mario-kart/scripts/migration-smoke.test.ts"
-      ]
+      "disposition": "delete",
+      "reason": "The N64Wasm emulator was retired for the native SpaghettiKart port (2026-10); its build script went with it"
     },
     {
       "source": "packages/discord-plays-mario-kart/scripts/vendor-n64wasm.sh",
-      "disposition": "port",
-      "reason": "Vendoring requires structured validation and deterministic pruning",
-      "replacement": "packages/discord-plays-mario-kart/scripts/vendor-n64wasm.ts",
-      "owner": {
-        "packageJson": "packages/discord-plays-mario-kart/package.json",
-        "tsconfig": "packages/discord-plays-mario-kart/tsconfig.json",
-        "eslintConfig": "packages/discord-plays-mario-kart/eslint.config.ts"
-      },
-      "tests": [
-        "packages/discord-plays-mario-kart/scripts/vendor-n64wasm.test.ts",
-        "packages/discord-plays-mario-kart/scripts/migration-smoke.test.ts"
-      ]
+      "disposition": "delete",
+      "reason": "The N64Wasm emulator was retired for the native SpaghettiKart port (2026-10); there is no vendored source to refresh"
     },
     {
       "source": "packages/discord-plays-pokemon/scripts/build-wasm.sh",

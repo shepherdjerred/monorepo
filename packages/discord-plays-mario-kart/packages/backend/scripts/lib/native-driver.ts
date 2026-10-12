@@ -1,10 +1,10 @@
 // Lockstep driving for one or more SpaghettiKart instances: every step latches
 // the same per-instance input, advances exactly one 30 Hz game frame, and waits
-// for that frame's draws and state record. Two instances driven identically are
-// the native harness's replacement for the wasm heap-snapshot replay.
+// for that frame's draws and state record. Two instances driven identically
+// give a deterministic baseline to diff a single changed input against.
 import { mkdir, rm } from "node:fs/promises";
 import path from "node:path";
-import type { Mk64RawState } from "#src/emulator/mk64-memory.ts";
+import type { Mk64RawState } from "#src/emulator/mk64-state.ts";
 import { SpaghettiHost } from "#src/engine/spaghetti/host.ts";
 import type { SpaghettiBuild } from "#src/engine/spaghetti/install.ts";
 import {

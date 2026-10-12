@@ -8,11 +8,6 @@ config*.toml
 error.png
 .tmp-earthly-out
 *.gba
-# The N64Wasm core is built from wasm-src/ by `scripts/build-wasm.ts` and
-# staged into the backend assets dir — never commit the binaries or generated
-# glue/assets.
-*.wasm
-packages/backend/assets/n64wasm/
 # The image stages the SpaghettiKart build here; locally it lives in .cache/.
 packages/backend/assets/spaghettikart/
 logs
@@ -22,4 +17,3 @@ data
 **/generated/
 .DS_Store
 .claude/settings.local.json
-wasm-src/dist/

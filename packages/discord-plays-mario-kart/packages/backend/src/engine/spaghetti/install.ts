@@ -2,8 +2,8 @@
 //
 // An install directory holds what `bun run build:spaghetti` or the image's
 // spaghetti-builder stage produced, described by install.json: the game
-// binary, spaghetti.o2r (built from source), Torch, and the inputs Torch reads
-// to extract mk64.o2r from the ROM.
+// binary, spaghetti.o2r (built from source), Torch, the inputs Torch reads to
+// extract mk64.o2r from the ROM, and the font the name labels are drawn in.
 //
 // mk64.o2r is extracted from the ROM, so it follows the ROM's rules: it is
 // generated at runtime into a private cache, never committed, logged, or baked
@@ -29,6 +29,8 @@ const InstallManifestSchema = z.strictObject({
   torch: z.string().min(1),
   /** Holds config.yml, yamls/, include/defines.h and meta/mods.toml. */
   torchInputs: z.string().min(1),
+  /** A TrueType font the port ships (OFL), for the stream's name labels. */
+  labelFont: z.string().min(1),
   /** The upstream commit the install was built from. */
   commit: z.string().regex(/^[a-f0-9]{40}$/),
   /** The only ROM the pinned extractor supports (US, .z64 byte order). */
@@ -43,15 +45,17 @@ export type SpaghettiInstall = {
   readonly engineArchive: string;
   readonly torch: string;
   readonly torchInputs: string;
+  readonly labelFont: string;
   readonly commit: string;
   readonly romSha1: string;
 };
 
-/** What a game process needs to boot. */
+/** What a session needs: the game process's files, plus the label font. */
 export type SpaghettiBuild = {
   readonly binary: string;
   readonly engineArchive: string;
   readonly gameArchive: string;
+  readonly labelFont: string;
 };
 
 const TORCH_INPUTS = [
@@ -94,12 +98,14 @@ export async function loadSpaghettiInstall(
     engineArchive: resolve(manifest.engineArchive),
     torch: resolve(manifest.torch),
     torchInputs: resolve(manifest.torchInputs),
+    labelFont: resolve(manifest.labelFont),
     commit: manifest.commit,
     romSha1: manifest.romSha1,
   };
   await requireExists(install.binary, "game binary");
   await requireExists(install.engineArchive, "engine archive");
   await requireExists(install.torch, "Torch extractor");
+  await requireExists(install.labelFont, "label font");
   for (const input of TORCH_INPUTS) {
     await requireExists(
       path.join(install.torchInputs, input),
@@ -217,5 +223,6 @@ export async function prepareSpaghettiBuild(params: {
     binary: install.binary,
     engineArchive: install.engineArchive,
     gameArchive,
+    labelFont: install.labelFont,
   };
 }

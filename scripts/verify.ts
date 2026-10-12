@@ -75,7 +75,6 @@ export const ROOT_SCRIPTS_EXTERNAL_INPUTS = [
   "packages/homelab/src/talos/liskov/patches/image.yaml",
   "packages/homelab/src/talos/torvalds/patches/image.yaml",
   "packages/discord-plays-pokemon/wasm-src/upstream.json",
-  "packages/discord-plays-mario-kart/wasm-src/upstream.json",
   "packages/discord-plays-mario-kart/Dockerfile",
   "packages/homelab/images/redlib/Dockerfile",
   "ci/ci-playwright/Dockerfile",

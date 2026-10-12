@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { EMPTY_INPUT } from "@discord-plays-mario-kart/common";
 import type { MetricSink } from "#src/emulator/metric-sink.ts";
-import type { Mk64RawState, Mk64Snapshot } from "#src/emulator/mk64-memory.ts";
+import type { Mk64RawState, Mk64Snapshot } from "#src/emulator/mk64-state.ts";
 import type { EngineFrame } from "#src/engine/game-engine.ts";
 import {
   SpaghettiEngine,
@@ -102,19 +102,15 @@ class FakeHost implements BridgeHost {
 type Observed = { inputDelays: number[]; ticks: number; restarts: string[] };
 
 function ignore(): void {
-  // A metric this suite does not assert on.
+  // A hook this suite does not observe.
 }
 
 function metricSink(observed: Observed): MetricSink {
   return {
-    observeEmulateMs: ignore,
-    observeLateMs: ignore,
-    observeCopyMs: ignore,
     observeInputApplyDelayMs: (ms) => observed.inputDelays.push(ms),
     incTicks: (count) => {
       observed.ticks += count;
     },
-    incLoopResync: ignore,
     incRestarts: (reason) => observed.restarts.push(reason),
   };
 }
@@ -131,7 +127,7 @@ async function bootEngine(
   let host: FakeHost | undefined;
   const observed: Observed = { inputDelays: [], ticks: 0, restarts: [] };
   const engine = new SpaghettiEngine({
-    build: { binary: "", engineArchive: "", gameArchive: "" },
+    build: { binary: "", engineArchive: "", gameArchive: "", labelFont: "" },
     homeDir: "",
     seats: 2,
     outputFps,

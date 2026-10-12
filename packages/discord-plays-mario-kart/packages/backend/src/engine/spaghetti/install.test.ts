@@ -59,6 +59,7 @@ async function writeInstall(): Promise<void> {
   await Bun.write(path.join(inputs, "meta/mods.toml"), "x");
   await Bun.write(path.join(install, "Spaghettify"), "x");
   await Bun.write(path.join(install, "spaghetti.o2r"), "x");
+  await Bun.write(path.join(install, "fonts/label.ttf"), "x");
   await Bun.write(
     path.join(install, INSTALL_MANIFEST),
     JSON.stringify({
@@ -66,6 +67,7 @@ async function writeInstall(): Promise<void> {
       engineArchive: "spaghetti.o2r",
       torch: "torch",
       torchInputs: "torch-inputs",
+      labelFont: "fonts/label.ttf",
       commit: COMMIT,
       romSha1: sha1Hex(ROM_BYTES),
     }),
@@ -101,6 +103,7 @@ describe("install manifest", () => {
       engineArchive: "e",
       torch: "t",
       torchInputs: "i",
+      labelFont: "f",
       commit: COMMIT,
       romSha1: COMMIT,
     };

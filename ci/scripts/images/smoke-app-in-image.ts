@@ -408,7 +408,6 @@ const commands: Record<
     command: [
       "set -eu",
       "cd /app/packages/discord-plays-mario-kart/packages/backend",
-      "bun run smoke:wasm-host",
       "bun run smoke:spaghetti-install",
       "cd /app/packages/discord-plays-mario-kart",
       "set +e",

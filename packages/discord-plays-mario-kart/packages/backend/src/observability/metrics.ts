@@ -2,20 +2,13 @@
 // surfaced in Grafana. The shared registry + the emu/stream instruments both
 // discord-plays backends define identically live in discord-plays-core; this file
 // re-exports them and registers the Mario Kart-specific instruments (input/controller
-// latency, emulator restarts, the richer frame→encoder→send-path metrics) plus
-// copyMs (whose help text differs from pokemon's) against the shared registry.
+// latency, engine restarts, the richer frame→encoder→send-path metrics) against
+// the shared registry.
 import { Histogram, Counter, Gauge } from "prom-client";
 import {
   registry,
   FRAME_MS_BUCKETS,
 } from "@shepherdjerred/discord-plays-core/observability/metrics.ts";
-
-export const copyMs = new Histogram({
-  name: "emulator_frame_copy_ms",
-  help: "Time to copy the frame out of wasm memory and hand it to the stream, in ms",
-  buckets: FRAME_MS_BUCKETS,
-  registers: [registry],
-});
 
 export const emulatorRestartsTotal = new Counter({
   name: "emulator_restarts_total",

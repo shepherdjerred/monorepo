@@ -1,6 +1,6 @@
 import { logger } from "#src/logger.ts";
 import { MAX_SEATS, WIDTH } from "#src/emulator/constants.ts";
-import type { ScreenMode } from "#src/emulator/mk64-memory.ts";
+import type { ScreenMode } from "#src/emulator/mk64-state.ts";
 import type { FrameSize } from "./composite.ts";
 import { blitBgra } from "./blit.ts";
 import type { Label } from "./blit.ts";

@@ -13,14 +13,13 @@
 // player on the internet sees. Add real network RTT for that.
 //
 //   bun run e2e:driver-feed:glass [--seconds 30] [--rom <path>] [--port 8099]
-//     [--engine n64wasm|spaghettikart] [--fps 30|60] [--pinchtab <server url>]
+//     [--fps 30|60] [--pinchtab <server url>]
 //
-// --engine spaghettikart needs `bun run --cwd ../.. build:spaghetti` first;
-// --fps sets its output rate (the wasm engine always delivers 30).
+// Needs `bun run --cwd ../.. build:spaghetti` first.
 
 import { parseArgs } from "node:util";
 import { z } from "zod";
-import { parseEngineName, parseOutputFps } from "./lib/engines.ts";
+import { parseOutputFps } from "./lib/engines.ts";
 import {
   evalInTab as evalInServerTab,
   openDriverTab,
@@ -36,11 +35,9 @@ const { values } = parseArgs({
     port: { type: "string", default: "8099" },
     pinchtab: { type: "string", default: "http://localhost:9867" },
     screenshot: { type: "string" },
-    engine: { type: "string", default: "n64wasm" },
     fps: { type: "string", default: "30" },
   },
 });
-const engineName = parseEngineName(values.engine);
 
 const seconds = Number(values.seconds);
 const port = Number(values.port);
@@ -54,14 +51,13 @@ const evalInTab = (tabId: string, script: string): Promise<unknown> =>
 // ---- boot the server + feed ----
 
 const bench = await startFeedBench({
-  engine: engineName,
   rom: values.rom,
   fps: parseOutputFps(values.fps),
   port,
 });
 const { format } = bench.engine;
 process.stdout.write(
-  `serving the ${engineName} driver feed (${String(format.width)}x${String(format.height)} at ${String(format.fps)} fps) on http://localhost:${String(port)}\n`,
+  `serving the driver feed (${String(format.width)}x${String(format.height)} at ${String(format.fps)} fps) on http://localhost:${String(port)}\n`,
 );
 // Let MK64 get past its boot logos so the canvas has real content.
 await Bun.sleep(20_000);

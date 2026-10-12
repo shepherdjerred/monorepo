@@ -107,30 +107,26 @@ export const ConfigSchema = z.strictObject({
         .default(100),
     }),
   }),
-  // The game runtime. Each session boots one engine.
+  // The game: the native SpaghettiKart port (see [spaghettikart]).
   emulator: z.strictObject({
+    // false: nothing is prepared at startup and `/play` is refused (the
+    // ROM-free image smoke runs this way).
     enabled: z.boolean(),
-    // n64wasm: the headless N64Wasm emulator (parallel-n64 + angrylion software
-    // RDP) on a Worker thread. spaghettikart: the native PC port, driven as a
-    // child process over spaghetti-src's host bridge (see [spaghettikart]).
-    // The two produce different frame and audio formats; see engine/format.ts.
-    engine: z.enum(["n64wasm", "spaghettikart"]).default("n64wasm"),
-    // Directory containing the built n64wasm.js/.wasm + staged FS assets
-    // (shaders/fonts). Defaults to the bundled assets/n64wasm in the image.
-    wasm_dir: z.string().min(1).default("packages/backend/assets/n64wasm"),
-    // Path to the Mario Kart 64 ROM (.z64/.v64). Provided at runtime via a
-    // volume — never baked into the image. Copyrighted; you supply your own.
+    // Path to the Mario Kart 64 ROM (.z64), the US cart. Provided at runtime
+    // via a volume — never baked into the image. Copyrighted; you supply your
+    // own. The game's asset archive is extracted from it at startup.
     rom_path: z.string().min(1),
-    // Output frame cadence. Each output frame advances two 60 Hz N64 vertical
-    // interrupts so game time and 44.1 kHz audio remain realtime.
-    fps: z.number().positive().default(30),
-    // angrylion software renderer (no GPU). Always true for headless.
-    software_render: z.boolean().default(true),
+    // @deprecated Settings of the retired wasm emulator. Accepted, unread, so
+    // the live config.toml (a 1Password item) keeps validating until it drops
+    // them.
+    wasm_dir: z.string().min(1).optional(),
+    fps: z.number().positive().optional(),
+    software_render: z.boolean().optional(),
     // Number of web-controller seats to expose (MK64 supports up to 4).
     seats: z.number().int().min(1).max(4).default(4),
   }),
-  // The native SpaghettiKart engine. Read only when emulator.engine is
-  // "spaghettikart"; defaulted so existing config.toml files keep validating.
+  // The native SpaghettiKart build. Defaulted so existing config.toml files
+  // keep validating.
   spaghettikart: z
     .strictObject({
       // Build output: the game binary, spaghetti.o2r, Torch, and Torch's
@@ -169,7 +165,7 @@ export const ConfigSchema = z.strictObject({
       db_path: z.string().min(1).default("data/leaderboard.db"),
       // Burn player names into the stream at each viewport corner.
       overlay_enabled: z.boolean().default(true),
-      // RDRAM race-state poll cadence in frames (~3 Hz at 30fps).
+      // Race-state snapshot cadence in game frames (~3 Hz at 30 fps).
       poll_every_n_frames: z.number().int().min(1).max(60).default(10),
     })
     // prefault (not default): run `{}` through the schema so the inner field
