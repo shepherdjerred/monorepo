@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import { signedInstallerSource } from "./package-signed.ts";
 const template = `!define OUTFILE "old.exe"\n!define UNINSTALLERSIGNCOMMAND ""\n!if "\${UNINSTALLERSIGNCOMMAND}" != ""\n  !uninstfinalize '\${UNINSTALLERSIGNCOMMAND}'\n!endif`;
 test("NSIS signing is quoted correctly and fails closed", () => {

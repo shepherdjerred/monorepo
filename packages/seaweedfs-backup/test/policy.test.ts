@@ -39,6 +39,24 @@ describe("SeaweedFS backup policy", () => {
     expect(validate.errors).toBeNull();
   });
 
+  test("protects immutable signed launcher releases and manifests daily", () => {
+    const launcher = SEAWEEDFS_BACKUP_POLICY.buckets.find(
+      (bucket) => bucket.name === "glitter-boys",
+    );
+    if (launcher === undefined)
+      throw new Error("Missing launcher backup policy");
+    expect(launcher.mode).toBe("protected");
+    expect(launcher.cadences).toContain("daily");
+    expect(launcher.excludeSuffixes).toEqual([]);
+    for (const key of [
+      "launcher/releases/0.1.7/glitter-boys_0.1.7_x64-setup.exe",
+      "launcher/releases/0.1.7/launcher.zip",
+      "launcher/preview.json",
+    ]) {
+      expect(objectIsProtected(key, launcher)).toBe(true);
+    }
+  });
+
   test("classifies every bucket declared by the SeaweedFS Tofu stack", async () => {
     const bucketsFile = await Bun.file(
       new URL("../../homelab/src/tofu/seaweedfs/buckets.tf", import.meta.url),

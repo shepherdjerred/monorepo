@@ -14,9 +14,18 @@ bun run --cwd packages/glitter-boys-launcher dev
 bunx turbo run build:local typecheck test:local lint --filter=@shepherdjerred/glitter-boys-launcher
 ```
 
+The local build and test commands delegate to the standard `build` and `test`
+scripts. Tests run the Rust workspace and the shared Vitest runner for release
+scripts. Filesystem fixtures use the canonical temporary directory so they
+exercise the link-free game-library contract on macOS as well as Windows.
+
 `crates/launcher-app` owns the native UI. The core scheduler owns the install queue. `crates/launcher-core`
 owns the reviewed catalog, downloads, archive reader, installation receipts, and
 client adapters. Game files are not included in the executable or repository.
+
+Regenerate the committed packaging icon with
+`bun packages/glitter-boys-launcher/scripts/build-icon.ts` from the repository
+root. The same command writes a preview to `target/icon-preview.png`.
 
 The default game library is `%LOCALAPPDATA%\GlitterBoys\Games`. A selected alternate
 parent gets a `GlitterBoys` child directory. Launcher preferences, its process

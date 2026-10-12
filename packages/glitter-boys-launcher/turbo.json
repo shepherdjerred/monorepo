@@ -7,7 +7,7 @@
       "persistent": true,
       "passThroughEnv": ["MISE_DATA_DIR"]
     },
-    "build:local": {
+    "build": {
       "inputs": [
         "**/*.rs",
         "**/Cargo.toml",
@@ -45,7 +45,7 @@
       "outputs": [],
       "passThroughEnv": ["MISE_DATA_DIR"]
     },
-    "test:local": {
+    "test": {
       "inputs": [
         "**/*.rs",
         "**/Cargo.toml",
@@ -61,6 +61,14 @@
         "$TURBO_ROOT$/scripts/lib/seaweedfs.ts",
         "$TURBO_ROOT$/packages/s3-signed-request/src/**"
       ],
+      "outputs": [],
+      "passThroughEnv": ["MISE_DATA_DIR"]
+    },
+    "build:local": {
+      "outputs": [],
+      "passThroughEnv": ["MISE_DATA_DIR"]
+    },
+    "test:local": {
       "outputs": [],
       "passThroughEnv": ["MISE_DATA_DIR"]
     },

@@ -35,7 +35,16 @@ await run([
   "-D",
   "warnings",
 ]);
-await run([process.execPath, "test", "scripts"]);
+await run([
+  process.execPath,
+  "--no-install",
+  "--bun",
+  "vitest",
+  "--config",
+  "../../vitest.config.ts",
+  "run",
+  "scripts",
+]);
 const installer = await packageSigned(root, version);
 const binary = path.join(
   root,

@@ -14,7 +14,7 @@ fn pause_interrupts_stalled_headers_and_bodies_without_losing_partial_bytes() ->
     for body in [false, true] {
         let listener = TcpListener::bind("127.0.0.1:0")?;
         let mut artifact = fixture(format!("http://{}/archive.zip", listener.local_addr()?));
-        let cache = tempfile::tempdir()?;
+        let cache = crate::test_tempdir()?;
         let partial = seed(cache.path(), &artifact, b"abc")?;
         artifact.url = format!("http://{}/archive.zip", listener.local_addr()?);
         let cancel = Cancellation::default();
@@ -125,7 +125,7 @@ fn join(thread: JoinHandle<std::io::Result<String>>) -> std::io::Result<String> 
 
 #[test]
 fn resumes_a_truncated_response_without_repeating_saved_bytes() -> TestResult {
-    let cache = tempfile::tempdir()?;
+    let cache = crate::test_tempdir()?;
     let (url, first) =
         serve(b"HTTP/1.1 200 OK\r\nContent-Length: 6\r\nConnection: close\r\n\r\nabc")?;
     let mut artifact = fixture(url);
@@ -160,7 +160,7 @@ fn resumes_a_truncated_response_without_repeating_saved_bytes() -> TestResult {
 
 #[test]
 fn ignored_range_replaces_instead_of_appending() -> TestResult {
-    let cache = tempfile::tempdir()?;
+    let cache = crate::test_tempdir()?;
     let (url, server) =
         serve(b"HTTP/1.1 200 OK\r\nContent-Length: 6\r\nConnection: close\r\n\r\nabcdef")?;
     let artifact = fixture(url);
@@ -178,7 +178,7 @@ fn ignored_range_replaces_instead_of_appending() -> TestResult {
 
 #[test]
 fn incorrect_range_keeps_saved_progress_intact() -> TestResult {
-    let cache = tempfile::tempdir()?;
+    let cache = crate::test_tempdir()?;
     let (url, server) = serve(b"HTTP/1.1 206 Partial Content\r\nContent-Length: 3\r\nContent-Range: bytes 2-4/6\r\nConnection: close\r\n\r\ncde")?;
     let artifact = fixture(url);
     let partial = seed(cache.path(), &artifact, b"abc")?;
@@ -198,7 +198,7 @@ fn incorrect_range_keeps_saved_progress_intact() -> TestResult {
 
 #[test]
 fn changed_content_never_becomes_a_ready_archive() -> TestResult {
-    let cache = tempfile::tempdir()?;
+    let cache = crate::test_tempdir()?;
     let (url, server) =
         serve(b"HTTP/1.1 200 OK\r\nContent-Length: 6\r\nConnection: close\r\n\r\nxxxxxx")?;
     let artifact = fixture(url);
@@ -231,7 +231,7 @@ fn changed_content_never_becomes_a_ready_archive() -> TestResult {
 
 #[test]
 fn paused_download_can_finish_after_a_restart() -> TestResult {
-    let cache = tempfile::tempdir()?;
+    let cache = crate::test_tempdir()?;
     let (url, server) =
         serve(b"HTTP/1.1 200 OK\r\nContent-Length: 6\r\nConnection: close\r\n\r\nabcdef")?;
     let artifact = fixture(url);
@@ -255,7 +255,7 @@ fn paused_download_can_finish_after_a_restart() -> TestResult {
 
 #[test]
 fn production_entry_point_rejects_plain_http() -> TestResult {
-    let cache = tempfile::tempdir()?;
+    let cache = crate::test_tempdir()?;
     let artifact = fixture("http://127.0.0.1:9/not-used".into());
     assert!(
         fetch(

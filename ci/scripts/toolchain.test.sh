@@ -167,9 +167,15 @@ mkdir -p "$TEST_ROOT/bin" "$TEST_ROOT/cache/data" "$TEST_ROOT/control"
 
 # Execute each narrow profile with recorded external commands. This catches
 # accidental fallthrough to the full toolchain without downloading anything.
-mkdir -p "$TEST_ROOT/profiles"
+mkdir -p "$TEST_ROOT/profiles" "$TEST_ROOT/profile-home/.local/bin"
 cat >"$TEST_ROOT/profiles/mise" <<'EOF'
 #!/usr/bin/env bash
+# The fixture is always newer than the bootstrap minimum, so this unit test
+# cannot fall through to downloading a real mise release.
+if [ "$1" = --version ]; then
+  printf '9999.0.0 toolchain-test-fixture\n'
+  exit 0
+fi
 printf '%s\n' "$*" >>"$CI_PROFILE_COMMAND_LOG"
 printf 'locked=%s\n' "${MISE_LOCKED:-}" >>"$CI_PROFILE_COMMAND_LOG"
 if [ "$1" = which ]; then printf '/test/tools/gh\n'; fi
@@ -182,10 +188,19 @@ cat >"$TEST_ROOT/profiles/ln" <<'EOF'
 #!/usr/bin/env bash
 printf 'ln %s\n' "$*" >>"$CI_PROFILE_COMMAND_LOG"
 EOF
+cat >"$TEST_ROOT/profiles/curl" <<'EOF'
+#!/usr/bin/env bash
+echo "toolchain profile tests must not download tools" >&2
+exit 1
+EOF
 chmod +x "$TEST_ROOT/profiles/"*
+# toolchain.sh puts HOME/.local/bin ahead of the inherited PATH. Keep that
+# location inside the fixture too, rather than selecting the host's real mise.
+ln -s "$TEST_ROOT/profiles/mise" "$TEST_ROOT/profile-home/.local/bin/mise"
 for profile in automation deployment tofu; do
   profile_log="$TEST_ROOT/$profile.log"
-  PATH="$TEST_ROOT/profiles:$PATH" CI_PROFILE_COMMAND_LOG="$profile_log" \
+  HOME="$TEST_ROOT/profile-home" PATH="$TEST_ROOT/profiles:$PATH" \
+    CI_WORKSPACE="$TEST_ROOT" CI_PROFILE_COMMAND_LOG="$profile_log" \
     CI_COMMIT_SHA=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa \
     MISE_TOOLCHAIN_SCOPE="$profile" bash -c '. "$1"' _ "$TOOLCHAIN" >"$profile_log.stdout"
   rg -q '^CI_BOOTSTRAP_DIAGNOSTIC \{"schemaVersion":1,"sourceSha":"a{40}","scope":"'"$profile"'","elapsedSeconds":[0-9]+\}$' "$profile_log.stdout"

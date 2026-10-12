@@ -17,7 +17,7 @@ fn fixture(files: &[(&str, &[u8])]) -> Result<Vec<u8>> {
 #[test]
 fn extracts_a_zip_split_in_the_middle_of_file_data() -> Result<()> {
     let archive = fixture(&[("t6/file.txt", b"content")])?;
-    let temp = tempfile::tempdir()?;
+    let temp = crate::test_tempdir()?;
     let parts = [temp.path().join("a.001"), temp.path().join("a.002")];
     let split = archive
         .windows(7)
@@ -26,7 +26,7 @@ fn extracts_a_zip_split_in_the_middle_of_file_data() -> Result<()> {
         + 3;
     std::fs::write(&parts[0], &archive[..split])?;
     std::fs::write(&parts[1], &archive[split..])?;
-    let destination = tempfile::tempdir()?;
+    let destination = crate::test_tempdir()?;
     extract(
         &parts,
         destination.path(),
@@ -45,10 +45,10 @@ fn extracts_a_zip_split_in_the_middle_of_file_data() -> Result<()> {
 #[test]
 fn refuses_duplicate_windows_names_before_writing_files() -> Result<()> {
     let archive = fixture(&[("t6/FILE.txt", b"a"), ("t6/file.txt", b"b")])?;
-    let temp = tempfile::tempdir()?;
+    let temp = crate::test_tempdir()?;
     let path = temp.path().join("archive.zip");
     std::fs::write(&path, archive)?;
-    let destination = tempfile::tempdir()?;
+    let destination = crate::test_tempdir()?;
     assert!(
         extract(
             &[path],
@@ -68,7 +68,7 @@ fn refuses_duplicate_windows_names_before_writing_files() -> Result<()> {
 fn refuses_symlinks_and_wrong_expanded_size() -> Result<()> {
     let mut zip = zip::ZipWriter::new(Cursor::new(Vec::new()));
     zip.add_symlink("t6/link", "outside", SimpleFileOptions::default())?;
-    let temp = tempfile::tempdir()?;
+    let temp = crate::test_tempdir()?;
     let path = temp.path().join("archive.zip");
     std::fs::write(&path, zip.finish()?.into_inner())?;
     assert!(inspect(std::slice::from_ref(&path), 7, Some("t6")).is_err());
@@ -85,10 +85,10 @@ fn crc_failure_does_not_produce_a_successful_extraction() -> Result<()> {
         .position(|bytes| bytes == b"content")
         .ok_or_else(|| Error::Invalid("Fixture data missing".into()))?;
     archive[offset] = b'x';
-    let temp = tempfile::tempdir()?;
+    let temp = crate::test_tempdir()?;
     let path = temp.path().join("archive.zip");
     std::fs::write(&path, archive)?;
-    let destination = tempfile::tempdir()?;
+    let destination = crate::test_tempdir()?;
     assert!(
         extract(
             &[path],
@@ -106,10 +106,10 @@ fn crc_failure_does_not_produce_a_successful_extraction() -> Result<()> {
 #[test]
 fn preserves_existing_destination_contents() -> Result<()> {
     let archive = fixture(&[("t6/file.txt", b"content")])?;
-    let temp = tempfile::tempdir()?;
+    let temp = crate::test_tempdir()?;
     let path = temp.path().join("archive.zip");
     std::fs::write(&path, archive)?;
-    let destination = tempfile::tempdir()?;
+    let destination = crate::test_tempdir()?;
     std::fs::write(destination.path().join("save.dat"), b"preserve")?;
     assert!(
         extract(
@@ -131,7 +131,7 @@ fn preserves_existing_destination_contents() -> Result<()> {
 
 #[test]
 fn parallel_extraction_matches_serial_bytes_and_reports_monotonic_progress() -> Result<()> {
-    let temp = tempfile::tempdir()?;
+    let temp = crate::test_tempdir()?;
     let path = temp.path().join("archive.zip");
     let mut zip = zip::ZipWriter::new(Cursor::new(Vec::new()));
     let payload = (0..1024 * 1024)
@@ -147,7 +147,7 @@ fn parallel_extraction_matches_serial_bytes_and_reports_monotonic_progress() -> 
     std::fs::write(&path, zip.finish()?.into_inner())?;
     let total = payload.len() as u64 * 12;
     for workers in [1, 4] {
-        let output = tempfile::tempdir()?;
+        let output = crate::test_tempdir()?;
         let mut observations = Vec::new();
         extract_with_workers(
             std::slice::from_ref(&path),
@@ -173,7 +173,7 @@ fn parallel_extraction_matches_serial_bytes_and_reports_monotonic_progress() -> 
 
 #[test]
 fn pausing_parallel_extraction_waits_for_all_workers() -> Result<()> {
-    let temp = tempfile::tempdir()?;
+    let temp = crate::test_tempdir()?;
     let path = temp.path().join("archive.zip");
     let payload = vec![b'x'; 4 * 1024 * 1024];
     let files = (0..8)
@@ -184,7 +184,7 @@ fn pausing_parallel_extraction_waits_for_all_workers() -> Result<()> {
         .map(|(name, bytes)| (name.as_str(), *bytes))
         .collect::<Vec<_>>();
     std::fs::write(&path, fixture(&borrowed)?)?;
-    let output = tempfile::tempdir()?;
+    let output = crate::test_tempdir()?;
     let cancel = Cancellation::default();
     let result = extract_with_workers(
         &[path],
@@ -215,10 +215,10 @@ fn one_corrupt_entry_fails_the_parallel_job_and_releases_all_files() -> Result<(
         .position(|bytes| bytes == &payload[..32])
         .ok_or_else(|| Error::Invalid("Fixture data missing".into()))?;
     archive[offset] = b'y';
-    let temp = tempfile::tempdir()?;
+    let temp = crate::test_tempdir()?;
     let path = temp.path().join("archive.zip");
     std::fs::write(&path, archive)?;
-    let output = tempfile::tempdir()?;
+    let output = crate::test_tempdir()?;
     assert!(
         extract_with_workers(
             &[path],

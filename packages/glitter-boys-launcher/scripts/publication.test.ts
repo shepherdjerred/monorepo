@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import { generateKeyPairSync, sign } from "node:crypto";
 import { verifyPublication } from "./release-manifest.ts";
 test("publication authenticates version and destination before any upload", () => {

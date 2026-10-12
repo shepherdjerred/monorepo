@@ -179,14 +179,14 @@ mod tests {
     use super::*;
     #[test]
     fn invalid_saved_settings_are_not_silently_replaced() -> Result<()> {
-        let temp = tempfile::tempdir()?;
+        let temp = crate::test_tempdir()?;
         std::fs::write(temp.path().join("settings.json"), b"{broken")?;
         assert!(Settings::load(temp.path()).is_err());
         Ok(())
     }
     #[test]
     fn settings_round_trip_and_lock_prevents_second_writer() -> Result<()> {
-        let temp = tempfile::tempdir()?;
+        let temp = crate::test_tempdir()?;
         let mut settings = Settings::load(temp.path())?;
         settings.queue = vec![Game::T5, Game::T6];
         settings.save(temp.path())?;
@@ -201,7 +201,7 @@ mod tests {
 
     #[test]
     fn restart_drops_completed_jobs_but_keeps_unfinished_games() -> Result<()> {
-        let temp = tempfile::tempdir()?;
+        let temp = crate::test_tempdir()?;
         let catalog = Catalog::bundled()?;
         let mut settings = Settings::load(temp.path())?;
         settings.queue = vec![Game::T5, Game::T6, Game::T6];
@@ -238,7 +238,7 @@ mod tests {
 
     #[test]
     fn restart_finishes_save_cleanup_before_dropping_a_promoted_install() -> Result<()> {
-        let data = tempfile::tempdir()?;
+        let data = crate::test_tempdir()?;
         let catalog = Catalog::bundled()?;
         let game = Game::T7;
         let mut settings = Settings::load(data.path())?;

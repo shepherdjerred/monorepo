@@ -587,7 +587,7 @@ mod tests {
     use super::*;
     #[test]
     fn storage_totals_include_partial_downloads_staging_and_shared_files_once() -> Result<()> {
-        let root = tempfile::tempdir()?;
+        let root = crate::test_tempdir()?;
         let data = root.path().join("data");
         let library = data.join("Games");
         let app = root.path().join("app");
@@ -646,7 +646,7 @@ mod tests {
 
     #[test]
     fn read_only_scan_tolerates_files_removed_after_directory_listing() -> Result<()> {
-        let root = tempfile::tempdir()?;
+        let root = crate::test_tempdir()?;
         fs::write(root.path().join("one"), b"abc")?;
         fs::write(root.path().join("two"), b"abcd")?;
         let mut counted = 0;
@@ -661,7 +661,7 @@ mod tests {
     }
     #[test]
     fn cancel_removes_only_selected_unshared_downloads() -> Result<()> {
-        let root = tempfile::tempdir()?;
+        let root = crate::test_tempdir()?;
         let catalog = Catalog::bundled()?;
         let paths = [
             &catalog.package(Game::T5)?.archives[0],
@@ -694,8 +694,8 @@ mod tests {
     #[cfg(windows)]
     #[test]
     fn cleanup_rejects_junctions_without_touching_the_target() -> Result<()> {
-        let root = tempfile::tempdir()?;
-        let outside = tempfile::tempdir()?;
+        let root = crate::test_tempdir()?;
+        let outside = crate::test_tempdir()?;
         fs::write(outside.path().join("keep.txt"), b"safe")?;
         let cache = root.path().join(".downloads");
         fs::create_dir_all(&cache)?;
@@ -716,7 +716,7 @@ mod tests {
     }
     #[test]
     fn interrupted_removal_keeps_saves_and_can_be_completed() -> Result<()> {
-        let root = tempfile::tempdir()?;
+        let root = crate::test_tempdir()?;
         let tomb = root.path().join(".gb-remove-t7-test");
         fs::create_dir_all(tomb.join("boiii_players"))?;
         fs::write(tomb.join("boiii_players/config.cfg"), b"settings")?;
@@ -744,7 +744,7 @@ mod tests {
     }
     #[test]
     fn interrupted_save_moves_resume_without_replacing_saved_data() -> Result<()> {
-        let root = tempfile::tempdir()?;
+        let root = crate::test_tempdir()?;
         let tomb = root.path().join(".gb-remove-t7-partial");
         let saves = root.path().join(".saves/t7");
         fs::create_dir_all(tomb.join("boiii_players"))?;
@@ -773,7 +773,7 @@ mod tests {
     }
     #[test]
     fn cleanup_protects_queued_artifacts_and_personal_files() -> Result<()> {
-        let root = tempfile::tempdir()?;
+        let root = crate::test_tempdir()?;
         let catalog = Catalog::bundled()?;
         for game in [Game::T5, Game::T7] {
             let dir = root
@@ -797,7 +797,7 @@ mod tests {
     }
     #[test]
     fn uninstall_preserves_and_restores_personal_files() -> Result<()> {
-        let root = tempfile::tempdir()?;
+        let root = crate::test_tempdir()?;
         let catalog = Catalog::bundled()?;
         let game = Game::T7;
         let directory = root.path().join(game.id());
@@ -839,7 +839,7 @@ mod tests {
     }
     #[test]
     fn unowned_directories_are_preserved() -> Result<()> {
-        let root = tempfile::tempdir()?;
+        let root = crate::test_tempdir()?;
         let catalog = Catalog::bundled()?;
         fs::create_dir_all(root.path().join("t7"))?;
         fs::write(root.path().join("t7/personal.txt"), b"safe")?;

@@ -5,6 +5,10 @@ points from SeaweedFS in a dedicated Cloudflare R2 bucket. The language-neutral
 policy in `policy.json` classifies every source bucket; `policy.schema.json`
 describes its format.
 
+Daily protection includes the `glitter-boys` bucket's immutable launcher
+installers, updater archives, and signed manifests. Restore these exact published
+bytes; rebuilding produces different timestamped signatures.
+
 Changed objects stream between S3-compatible endpoints and are verified by
 SHA-256 read-back. Unchanged objects are reused by source bucket, key, size,
 ETag, and modification time. A snapshot becomes visible only when every

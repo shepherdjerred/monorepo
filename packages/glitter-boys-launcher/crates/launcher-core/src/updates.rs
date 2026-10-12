@@ -717,7 +717,7 @@ mod tests {
     fn interrupted_staging_is_reusable_but_changed_executables_are_rejected() -> Result<()> {
         let (envelope, profile) = fixture();
         let mut release = verify(&envelope, &profile, "1.0.0", 1000)?;
-        let folder = tempfile::tempdir()?;
+        let folder = crate::test_tempdir()?;
         let executable = folder.path().join("glitter-boys.exe");
         std::fs::write(&executable, b"fixture executable")?;
         release.executable_sha256 =
@@ -732,7 +732,7 @@ mod tests {
     }
     #[test]
     fn slow_startup_keeps_activation_locked_until_health_is_committed() -> Result<()> {
-        let root = tempfile::tempdir()?;
+        let root = crate::test_tempdir()?;
         let lock_path = root.path().join("activation.lock");
         let mut active = Active {
             schema: 1,
@@ -771,7 +771,7 @@ mod tests {
     }
     #[test]
     fn exited_startup_child_releases_activation_for_recovery() -> Result<()> {
-        let root = tempfile::tempdir()?;
+        let root = crate::test_tempdir()?;
         let lock_path = root.path().join("activation.lock");
         state::write_json(
             &root.path().join("current.json"),
@@ -818,7 +818,7 @@ mod tests {
     }
     #[test]
     fn rollback_persists_rejection_until_the_signed_channel_advances() -> Result<()> {
-        let root = tempfile::tempdir()?;
+        let root = crate::test_tempdir()?;
         let (envelope, profile) = fixture();
         let failed_release = verify(&envelope, &profile, "1.0.0", 1000)?;
         let failed_directory = root.path().join("versions").join(&failed_release.version);
@@ -864,7 +864,7 @@ mod tests {
     }
     #[test]
     fn retention_preserves_current_rollback_newer_and_unrecognized_folders() -> Result<()> {
-        let root = tempfile::tempdir()?;
+        let root = crate::test_tempdir()?;
         let (mut envelope, profile) = fixture();
         for name in ["1.2.3", "1.3.0", "1.4.0", "1.5.0", "0.9.0"] {
             std::fs::create_dir_all(root.path().join("versions").join(name))?;
@@ -899,7 +899,7 @@ mod tests {
     }
     #[test]
     fn interrupted_extraction_cleanup_preserves_versions_and_downloads() -> Result<()> {
-        let root = tempfile::tempdir()?;
+        let root = crate::test_tempdir()?;
         for name in [".update-fixture", "versions", "update-cache"] {
             std::fs::create_dir(root.path().join(name))?;
         }
@@ -913,7 +913,7 @@ mod tests {
     }
     #[test]
     fn retention_survives_retired_keys_without_trusting_tampered_history() -> Result<()> {
-        let root = tempfile::tempdir()?;
+        let root = crate::test_tempdir()?;
         let old = root.path().join("versions/1.2.3");
         std::fs::create_dir_all(&old)?;
         let executable = old.join("glitter-boys.exe");
@@ -960,7 +960,7 @@ mod tests {
     #[test]
     fn completed_update_cache_cleanup_removes_only_verified_archives() -> Result<()> {
         use sha2::{Digest, Sha256};
-        let root = tempfile::tempdir()?;
+        let root = crate::test_tempdir()?;
         let (envelope, profile) = fixture();
         let mut artifact = verify(&envelope, &profile, "0.0.0", 0)?.artifact;
         let contents = b"completed update archive";
@@ -993,8 +993,8 @@ mod tests {
     #[cfg(windows)]
     #[test]
     fn update_cache_cleanup_rejects_junctions_without_touching_the_target() -> Result<()> {
-        let root = tempfile::tempdir()?;
-        let outside = tempfile::tempdir()?;
+        let root = crate::test_tempdir()?;
+        let outside = crate::test_tempdir()?;
         let (envelope, profile) = fixture();
         let artifact = verify(&envelope, &profile, "0.0.0", 0)?.artifact;
         let cache = root.path().join("update-cache");

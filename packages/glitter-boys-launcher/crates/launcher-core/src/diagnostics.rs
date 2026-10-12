@@ -413,7 +413,7 @@ mod tests {
     }
     #[test]
     fn log_rotation_and_disabled_uploads_are_bounded() -> Result<()> {
-        let temp = tempfile::tempdir()?;
+        let temp = crate::test_tempdir()?;
         fs::create_dir(temp.path().join("logs"))?;
         fs::create_dir(temp.path().join("pending"))?;
         let reporter = Reporter {

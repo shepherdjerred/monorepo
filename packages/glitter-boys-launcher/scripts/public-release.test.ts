@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import { parsePublicationRecord } from "./public-release.ts";
 
 test("unpublished installers have no download; published metadata is version-specific", () => {

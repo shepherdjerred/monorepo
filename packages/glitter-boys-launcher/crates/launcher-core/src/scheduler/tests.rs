@@ -422,7 +422,7 @@ fn stage_transition_clears_progress_and_waiting_does_not_keep_an_eta() -> Result
     Ok(())
 }
 fn fixture() -> Result<(tempfile::TempDir, Engine)> {
-    let temp = tempfile::tempdir()?;
+    let temp = crate::test_tempdir()?;
     let data = temp.path().join("data");
     let library = temp.path().join("games");
     std::fs::create_dir_all(&data)?;

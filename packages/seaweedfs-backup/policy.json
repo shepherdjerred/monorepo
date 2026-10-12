@@ -159,6 +159,13 @@
       "reason": "Rebuildable static site"
     },
     {
+      "name": "glitter-boys",
+      "mode": "protected",
+      "cadences": ["daily"],
+      "excludeSuffixes": [],
+      "reason": "Immutable launcher releases and signed manifests; rebuilding changes timestamped signature bytes"
+    },
+    {
       "name": "glitter-boys-ppl",
       "mode": "excluded",
       "cadences": [],

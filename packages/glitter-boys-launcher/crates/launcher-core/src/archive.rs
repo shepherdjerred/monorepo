@@ -374,7 +374,7 @@ mod tests {
     }
     #[test]
     fn reads_and_seeks_across_part_boundaries() -> Result<()> {
-        let temp = tempfile::tempdir()?;
+        let temp = crate::test_tempdir()?;
         let paths = [temp.path().join("a"), temp.path().join("b")];
         std::fs::write(&paths[0], b"abc")?;
         std::fs::write(&paths[1], b"defg")?;

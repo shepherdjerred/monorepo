@@ -457,7 +457,18 @@ describe("CI reporting manifest", () => {
       );
       const scripts = packageJson.scripts ?? {};
       if (typeof scripts["test"] === "string") {
-        expect(declaredDirectories.has(directory)).toBe(true);
+        expect(
+          declaredDirectories.has(directory) ||
+            separateTestDirectories.has(directory),
+        ).toBe(true);
+      }
+      if (separateTestDirectories.has(directory)) {
+        expect(scripts["test:ci"]).toBeUndefined();
+        if (typeof scripts["test:local"] === "string") {
+          // Local aliases must still execute the package's real test suite.
+          expect(typeof scripts["test"]).toBe("string");
+          expect(scripts["test:local"]).toBe("bun run test");
+        }
       }
       if (declaredDirectories.has(directory)) {
         const manifestEntry = manifest.workspaces.find(

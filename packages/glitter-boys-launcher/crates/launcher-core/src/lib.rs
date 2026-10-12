@@ -69,3 +69,10 @@ pub struct Progress {
     pub completed: u64,
     pub total: u64,
 }
+
+#[cfg(test)]
+fn test_tempdir() -> std::io::Result<tempfile::TempDir> {
+    // macOS's default temporary path includes /var, a symlink to /private/var.
+    // Fixtures must satisfy the same link-free library contract as real installs.
+    tempfile::tempdir_in(std::env::temp_dir().canonicalize()?)
+}

@@ -120,6 +120,20 @@
     "packages/glitter": {
       "entry": ["public/posthog.js"]
     },
+    "packages/glitter-boys-launcher": {
+      "entry": [
+        // Invoked by the credential wrapper using command-line filenames.
+        "scripts/release.ts",
+        "scripts/refresh-manifest.ts",
+        // The mise-wrapped package command is not inferred by Knip.
+        "scripts/release-preflight.ts",
+        // cargo-packager invokes this through Cargo.toml metadata.
+        "scripts/prepare-package.ts",
+        // Manual source generator for the committed packaging icon.
+        "scripts/build-icon.ts"
+      ],
+      "project": ["scripts/**/*.ts"]
+    },
     "packages/webring": {
       "project": ["src/**/*.ts"]
     },

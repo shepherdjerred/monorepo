@@ -52,7 +52,7 @@ mod directory_tests {
 
     #[test]
     fn canonical_local_directories_are_accepted() -> Result<()> {
-        let root = tempfile::tempdir()?;
+        let root = crate::test_tempdir()?;
         ensure_plain_directory(root.path())?;
         let canonical = root.path().canonicalize()?;
         assert!(
