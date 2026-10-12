@@ -120,7 +120,7 @@ describe("selectImageTargets", () => {
       ]),
     ).toEqual(["discord-plays-pokemon"]);
     expect(
-      await select(["packages/discord-plays-mario-kart/wasm-src/src/main.cpp"]),
+      await select(["packages/discord-plays-mario-kart/spaghetti-src/a.patch"]),
     ).toEqual(["discord-plays-mario-kart"]);
   });
 

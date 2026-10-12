@@ -108,10 +108,7 @@ bitrate_max_kbps = 4000
 
 [emulator]
 enabled = false
-wasm_dir = "packages/backend/assets/n64wasm"
 rom_path = "roms/mariokart64.z64"
-fps = 30
-software_render = true
 seats = 4
 
 [web]

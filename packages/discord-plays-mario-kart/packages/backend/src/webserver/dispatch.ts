@@ -8,7 +8,11 @@ import { encodeScreenshotPng } from "#src/emulator/screenshot.ts";
 import type { SeatManager } from "#src/input/seat-manager.ts";
 import type { LeaderboardStore } from "#src/leaderboard/store.ts";
 import { logger } from "#src/logger.ts";
-import { controllerRttMs } from "#src/observability/metrics.ts";
+import {
+  controllerRttMs,
+  driverFeedClientDecoderResetsTotal,
+  driverFeedGlassMs,
+} from "#src/observability/metrics.ts";
 import { applyStreamOverlays } from "#src/overlay/composite.ts";
 import type { StreamOverlayContextProvider } from "#src/overlay/composite.ts";
 import type {
@@ -22,8 +26,8 @@ import type {
   LeaderboardResponse,
 } from "@discord-plays-mario-kart/common";
 
-/** The subset of the emulator the request dispatch needs (lets tests inject a
- *  fake without booting wasm). */
+/** The subset of the engine the request dispatch needs (lets tests inject a
+ *  fake without booting the game). */
 export type EmulatorControls = {
   setPlayerInput: (seat: number, state: PlayerInputState) => void;
   clearPlayerInput: (seat: number) => void;
@@ -73,14 +77,14 @@ async function emitLeaderboard(
 }
 
 // At most one screenshot render in flight per socket. `screenshot` is a public,
-// unauthenticated Socket.IO request that starts a Worker round-trip (a 640×240
-// RGBA response + synchronous PNG encode) and returns immediately, so without a
-// bound a client can enqueue unbounded renderFrame requests — exhausting memory
-// and queuing ahead of controller input on the shared worker port. Duplicates
-// while a render is pending for the same socket are dropped (coalesced).
+// unauthenticated Socket.IO request that waits for the next frame (a 640×480
+// RGBA copy + synchronous PNG encode) and returns immediately, so without a
+// bound a client can enqueue unbounded renderFrame requests and exhaust
+// memory. Duplicates while a render is pending for the same socket are dropped
+// (coalesced).
 const screenshotInFlight = new Set<string>();
 
-/** Render the current frame (now a Worker round-trip), overlay it, and emit the
+/** Capture the next frame, overlay it, and emit the
  *  PNG to a single socket (fire-and-forget). */
 async function emitScreenshot(
   sock: Socket,
@@ -94,7 +98,7 @@ async function emitScreenshot(
     if (frame.height === 0) return;
     const ctx = overlayContext?.();
     if (ctx !== undefined) {
-      applyStreamOverlays(frame.rgba, frame.height, ctx);
+      applyStreamOverlays(frame.rgba, frame, ctx);
     }
     const png = encodeScreenshotPng(frame);
     const response: ScreenshotResponse = {
@@ -157,6 +161,12 @@ export function handleRequest(
     })
     .with({ request: { kind: "latency-report" } }, (e) => {
       controllerRttMs.observe(e.request.rttMs);
+      for (const glassMs of e.request.glassMs ?? []) {
+        driverFeedGlassMs.observe(glassMs);
+      }
+      if (e.request.decoderResets !== undefined) {
+        driverFeedClientDecoderResetsTotal.inc(e.request.decoderResets);
+      }
     })
     .with({ request: { kind: "login" } }, (e) => {
       // Identity is cosmetic; seats gate control. Real auth is tracked in Linear.

@@ -6,24 +6,23 @@
 //     generated sine tone through the real createAudioTransport + real prepareStream
 //     + real ffmpeg and asserts the muxed NUT has a non-empty opus track that
 //     round-trips back to non-silent PCM. Proves the muxing works; says nothing
-//     about whether the real emulator can drive it. Needs only ffmpeg/ffprobe.
+//     about whether the real game can drive it. Needs only ffmpeg/ffprobe.
 //
-//   - --rom [path]: the REAL end-to-end test. Boots the headless MK64 emulator,
-//     drains real game audio via onAudio for ~20 s of game time, runs it through
-//     the same production pipeline, and writes three artifacts a human can
-//     actually LISTEN to in order to confirm MK64 sounds like MK64:
+//   - --rom [path]: the REAL end-to-end test. Boots the game headless, drains
+//     real game audio via onAudio for ~20 s, runs it through the same production
+//     pipeline, and writes three artifacts a human can actually LISTEN to in
+//     order to confirm MK64 sounds like MK64:
 //
-//       /tmp/mk64-audio-raw.wav      — raw PCM drained from the emulator
+//       /tmp/mk64-audio-raw.wav      — raw PCM drained from the game
 //       /tmp/mk64-audio.nut          — the muxed broadcast container (play with mpv/VLC)
 //       /tmp/mk64-audio-decoded.wav  — the opus output round-tripped to WAV
 //
-//     Requires the built wasm core (bun run --cwd packages/backend build:wasm) and
-//     the MK64 ROM. Never runs in CI (ROM is copyrighted, same convention as
-//     e2e:scenario and e2e:race).
+//     Requires the locally built port (bun run --cwd ../.. build:spaghetti) and
+//     the MK64 ROM. Never runs in CI (the ROM is copyrighted).
 //
 // Usage:
 //   bun run e2e:audio                 # synthetic only (integration)
-//   bun run e2e:audio --rom           # synthetic + real emulator (full e2e)
+//   bun run e2e:audio --rom           # synthetic + real game (full e2e)
 //   bun run e2e:audio --rom /path.z64
 //
 // Exits non-zero on any failed assertion.
@@ -35,11 +34,14 @@ import { createAudioTransport } from "#src/stream/audio-transport.ts";
 import {
   WIDTH,
   HEIGHT,
-  N64_FPS,
+  GAME_FPS,
   AUDIO_SAMPLE_RATE,
   AUDIO_CHANNELS,
 } from "#src/emulator/constants.ts";
-import { bootEmulator, resolveRom } from "./lib/harness.ts";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import nodePath from "node:path";
+import { createHarnessEngine } from "./lib/engines.ts";
 
 const TMP_NUT = "/tmp/mk64-audio.nut";
 const TMP_RAW_WAV = "/tmp/mk64-audio-raw.wav";
@@ -97,13 +99,13 @@ function rms(pcm: Buffer): number {
  * return the muxed NUT path. Mirrors GameStreamer.buildEncoder's options.
  */
 async function renderBroadcast(pcm: Buffer): Promise<string> {
-  const transport = await createAudioTransport();
+  const transport = await createAudioTransport(AUDIO_SAMPLE_RATE);
   const video = new PassThrough();
 
   const { output, promise } = prepareStream(video, {
     width: WIDTH,
     height: HEIGHT,
-    frameRate: N64_FPS,
+    frameRate: GAME_FPS,
     videoCodec: "H264",
     bitrateVideo: 1000,
     bitrateVideoMax: 1500,
@@ -121,7 +123,7 @@ async function renderBroadcast(pcm: Buffer): Promise<string> {
       "-video_size",
       `${String(WIDTH)}x${String(HEIGHT)}`,
       "-framerate",
-      String(N64_FPS),
+      String(GAME_FPS),
     ],
     encoder: Encoders.software({
       x264: { preset: "ultrafast", tune: "zerolatency" },
@@ -141,7 +143,7 @@ async function renderBroadcast(pcm: Buffer): Promise<string> {
   transport.sink.write(pcm);
   transport.sink.end();
   const seconds = pcm.byteLength / (AUDIO_SAMPLE_RATE * AUDIO_CHANNELS * 2);
-  const frames = Math.max(1, Math.ceil(seconds * N64_FPS));
+  const frames = Math.max(1, Math.ceil(seconds * GAME_FPS));
   const frame = Buffer.alloc(WIDTH * HEIGHT * 4, 0x80);
   for (let i = 0; i < frames; i++) {
     if (!video.write(frame)) {
@@ -297,50 +299,48 @@ async function runSynthetic(): Promise<void> {
 }
 
 async function runRom(romArg: string | undefined): Promise<void> {
-  out("\n== rom mode (real emulator audio through the pipeline) ==");
-  const rom = await resolveRom(romArg);
-  const wasm = `${Bun.env["WASM_DIR"] ?? "assets/n64wasm"}/n64wasm.wasm`;
-  if (!(await Bun.file(wasm).exists())) {
-    throw new Error(
-      `rom mode needs the built wasm core at ${wasm} (run: bun run --cwd packages/backend build:wasm)`,
-    );
-  }
-
-  const emu = await bootEmulator({ rom, seats: 1 });
+  out("\n== rom mode (real game audio through the pipeline) ==");
+  const sessionDir = await mkdtemp(nodePath.join(tmpdir(), "mk64-audio-"));
+  const engine = await createHarnessEngine({
+    rom: romArg,
+    sessionDir,
+    fps: 30,
+  });
+  await engine.init();
   const chunks: Buffer[] = [];
-  emu.onAudio((pcm) => {
+  engine.onAudio((pcm) => {
     chunks.push(pcm);
   });
 
-  // 1200 output frames at 30 fps = ~40 s of game time, enough to cover the
-  // Nintendo/N64 splash logos and the title-screen jingle. Each output frame
-  // advances two 60 Hz N64 VI ticks. The harness boots the emulator in sprint
-  // mode (fps:1000) so this completes in a few seconds of wall clock.
-  const TARGET_FRAMES = 1200;
-  await new Promise<void>((resolve) => {
-    let frame = 0;
-    emu.onFrame(() => {
-      frame++;
-      if (frame >= TARGET_FRAMES) {
-        emu.stop();
-        resolve();
-      }
+  // 600 frames at 30 fps = 20 s of game time, paced in real time: the title
+  // screen and its jingle. The game sizes its audio to game time.
+  const TARGET_FRAMES = 600;
+  try {
+    await new Promise<void>((resolve) => {
+      let frame = 0;
+      engine.onFrame(() => {
+        frame++;
+        if (frame >= TARGET_FRAMES) resolve();
+      });
+      engine.start();
     });
-    emu.start();
-  });
+  } finally {
+    await engine.stop();
+    await rm(sessionDir, { recursive: true, force: true });
+  }
 
   const realPcm = Buffer.concat(chunks);
   out(
     `drained ${String(chunks.length)} chunks, ${String(realPcm.byteLength)} bytes`,
   );
-  assert(realPcm.byteLength > 0, "emulator produced audio samples via onAudio");
-  const expectedAudioSeconds = TARGET_FRAMES / N64_FPS;
+  assert(realPcm.byteLength > 0, "the game produced audio samples via onAudio");
+  const expectedAudioSeconds = TARGET_FRAMES / GAME_FPS;
   const actualAudioSeconds =
     realPcm.byteLength / (AUDIO_SAMPLE_RATE * AUDIO_CHANNELS * 2);
   const durationRatio = actualAudioSeconds / expectedAudioSeconds;
   assert(
     durationRatio >= 0.95 && durationRatio <= 1.05,
-    `emulator PCM duration tracks game time (${actualAudioSeconds.toFixed(2)}s / ${expectedAudioSeconds.toFixed(2)}s = ${durationRatio.toFixed(3)}x)`,
+    `game PCM duration tracks game time (${actualAudioSeconds.toFixed(2)}s / ${expectedAudioSeconds.toFixed(2)}s = ${durationRatio.toFixed(3)}x)`,
   );
   const realRms = rms(realPcm);
   assert(
@@ -393,7 +393,7 @@ async function main(): Promise<void> {
 
   out(
     wantRom
-      ? "\nPASS: audio e2e (synthetic integration + real-emulator end-to-end)"
+      ? "\nPASS: audio e2e (synthetic integration + real-game end-to-end)"
       : "\nPASS: audio integration (synthetic only — re-run with --rom for the real e2e)",
   );
   process.exit(0);

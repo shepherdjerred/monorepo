@@ -1,6 +1,6 @@
 import { logger } from "#src/logger.ts";
-import type { Mk64Snapshot } from "#src/emulator/mk64-memory.ts";
-import type { ScreenMode } from "#src/emulator/mk64-memory.ts";
+import type { Mk64Snapshot } from "#src/emulator/mk64-state.ts";
+import type { ScreenMode } from "#src/emulator/mk64-state.ts";
 import { RaceWatcher } from "./race-watcher.ts";
 import type { RaceCompleted } from "./race-watcher.ts";
 import type { LeaderboardStore } from "./store.ts";
@@ -14,9 +14,8 @@ export type RaceTrackerDeps = {
 };
 
 /**
- * Impure glue between the emulator's race snapshots and the pure RaceWatcher.
- * Snapshots are decoded in the emulator's Worker thread (RDRAM lives there)
- * and arrive here via WorkerEmulator.onSnapshot; this feeds them to the
+ * Impure glue between the engine's race snapshots and the pure RaceWatcher.
+ * Snapshots arrive here via GameEngine.onSnapshot; this feeds them to the
  * watcher and persists a completed race fire-and-forget (never awaited on the
  * frame path). Also caches the live screen mode for the name overlay's layout.
  */

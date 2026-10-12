@@ -2,7 +2,7 @@ import type {
   PacketReadyStats,
   SendStats,
 } from "@shepherdjerred/discord-video-stream";
-import { AUDIO_CHANNELS, AUDIO_SAMPLE_RATE } from "#src/emulator/constants.ts";
+import { AUDIO_CHANNELS } from "#src/emulator/constants.ts";
 
 export type VideoSourceTiming = {
   contentTimeMs: number;
@@ -73,6 +73,7 @@ const DURATION_EPSILON_MS = 0.001;
  */
 export class StreamLatencyTracker {
   private readonly observations: StreamLatencyObservations;
+  private readonly audioSampleRate: number;
   private readonly now: () => number;
   private readonly videoSources: VideoSourceTiming[] = [];
   private readonly audioSources: AudioSpan[] = [];
@@ -86,9 +87,11 @@ export class StreamLatencyTracker {
 
   constructor(
     observations: StreamLatencyObservations,
+    audioSampleRate: number,
     now: () => number = () => performance.timeOrigin + performance.now(),
   ) {
     this.observations = observations;
+    this.audioSampleRate = audioSampleRate;
     this.now = now;
   }
 
@@ -115,7 +118,7 @@ export class StreamLatencyTracker {
   recordAudioSource(timing: AudioSourceTiming): void {
     const durationMs =
       (timing.pcmBytes /
-        (AUDIO_CHANNELS * BYTES_PER_AUDIO_SAMPLE * AUDIO_SAMPLE_RATE)) *
+        (AUDIO_CHANNELS * BYTES_PER_AUDIO_SAMPLE * this.audioSampleRate)) *
       1000;
     if (durationMs <= 0) return;
     this.audioSources.push({

@@ -6,26 +6,26 @@
 //
 // This measures the half of the pipeline we control: emulator capture through
 // encode, WebSocket, WebCodecs decode, and paint. It does NOT measure a Discord
-// leg — there is none on this path, which is the entire point.
+// leg — there is none on this path, which is the entire point. It also excludes
+// the game's own response to input; e2e:press-to-paint measures that end to end.
 //
 // The number is a same-machine, loopback figure: it is the floor, not what a
 // player on the internet sees. Add real network RTT for that.
 //
 //   bun run e2e:driver-feed:glass [--seconds 30] [--rom <path>] [--port 8099]
+//     [--fps 30|60] [--pinchtab <server url>]
+//
+// Needs `bun run --cwd ../.. build:spaghetti` first.
 
 import { parseArgs } from "node:util";
-import { mkdtemp, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import path from "node:path";
 import { z } from "zod";
-import { N64_FPS } from "#src/emulator/constants.ts";
-import { WorkerEmulator } from "#src/emulator/worker/worker-emulator.ts";
-import { SeatManager } from "#src/input/seat-manager.ts";
-import { applyStreamOverlays } from "#src/overlay/composite.ts";
-import { DriverFeedService } from "#src/driver-feed/index.ts";
-import { handleRequest } from "#src/webserver/dispatch.ts";
-import { createWebServer } from "#src/webserver/index.ts";
-import { resolveRom } from "./lib/harness.ts";
+import { parseOutputFps } from "./lib/engines.ts";
+import {
+  evalInTab as evalInServerTab,
+  openDriverTab,
+  pinchtabCli,
+  startFeedBench,
+} from "./lib/feed-bench.ts";
 
 const { values } = parseArgs({
   args: Bun.argv.slice(2),
@@ -35,6 +35,7 @@ const { values } = parseArgs({
     port: { type: "string", default: "8099" },
     pinchtab: { type: "string", default: "http://localhost:9867" },
     screenshot: { type: "string" },
+    fps: { type: "string", default: "30" },
   },
 });
 
@@ -43,142 +44,28 @@ const port = Number(values.port);
 if (!Number.isFinite(seconds) || seconds <= 0) {
   throw new Error(`--seconds must be positive, got ${values.seconds}`);
 }
-
-const PACKAGE_ROOT = path.join(import.meta.dir, "..", "..", "..");
-const WASM_DIR = path.join(import.meta.dir, "..", "assets", "n64wasm");
-const WEB_ASSETS = path.join(PACKAGE_ROOT, "packages", "frontend", "dist");
-
-/**
- * Drive the browser through the `pinchtab` CLI rather than the REST action
- * endpoint: the CLI is the supported surface and already resolves auth, config,
- * and tab routing.
- */
-async function pinchtabCli(args: readonly string[]): Promise<string> {
-  const proc = Bun.spawn(["pinchtab", ...args], {
-    stdout: "pipe",
-    stderr: "pipe",
-  });
-  const [stdout, stderr, code] = await Promise.all([
-    new Response(proc.stdout).text(),
-    new Response(proc.stderr).text(),
-    proc.exited,
-  ]);
-  if (code !== 0) {
-    throw new Error(`pinchtab ${args.join(" ")} failed: ${stderr || stdout}`);
-  }
-  return stdout;
-}
-
-const EvalSchema = z.object({ result: z.unknown() });
-
-async function evalInTab(tabId: string, script: string): Promise<unknown> {
-  const raw = await pinchtabCli(["eval", script, "--tab", tabId, "--json"]);
-  return EvalSchema.parse(JSON.parse(raw)).result;
-}
+const pinchtab = values.pinchtab;
+const evalInTab = (tabId: string, script: string): Promise<unknown> =>
+  evalInServerTab(pinchtab, tabId, script);
 
 // ---- boot the server + feed ----
 
-const romPath = await resolveRom(values.rom);
-const savesDir = await mkdtemp(path.join(tmpdir(), "mk64-glass-"));
-
-const driverFeed = new DriverFeedService({
-  config: {
-    enabled: true,
-    height: 480,
-    bitrate_kbps: 2500,
-    bitrate_max_kbps: 4000,
-    keyframe_interval_frames: 30,
-    max_client_buffer_bytes: 2 * 1024 * 1024,
-    max_clients: 4,
-  },
-  video: {
-    hardware_acceleration: false,
-    vaapi_device: "/dev/dri/renderD128",
-    encoder_async_depth: 1,
-  },
-  frameRate: N64_FPS,
-});
-
-const emulator = new WorkerEmulator({
-  wasmDir: WASM_DIR,
-  romPath,
-  fps: N64_FPS,
-  software: true,
-  seats: 4,
-  savesDir,
-  snapshotEveryNFrames: 10,
-});
-await emulator.init();
-
-const { server, socket } = createWebServer({
+const bench = await startFeedBench({
+  rom: values.rom,
+  fps: parseOutputFps(values.fps),
   port,
-  webAssetsPath: WEB_ASSETS,
-  isApiEnabled: true,
-  isCorsEnabled: true,
 });
-if (socket === undefined) {
-  throw new Error("glass harness requires the Socket.IO controller channel");
-}
-const seatManager = new SeatManager(4);
-const requestSubscription = socket.events.subscribe((event) => {
-  handleRequest(event, {
-    seatManager,
-    emulator,
-    driverFeedEnabled: true,
-  });
-});
-driverFeed.setDriverAdmission(
-  (socketId) => seatManager.seatOf(socketId) !== null,
-);
-driverFeed.attach(server);
-
-emulator.onFrame((frame) => {
-  applyStreamOverlays(frame.rgba, frame.height, {
-    epochMs: Date.now(),
-    seatActivity: frame.seatActivity,
-    mode: "1p",
-    seats: 4,
-    nameOverlay: undefined,
-  });
-  driverFeed.pushFrame(frame.rgba);
-});
-driverFeed.startSession();
-emulator.start();
-
+const { format } = bench.engine;
 process.stdout.write(
-  `serving the driver feed on http://localhost:${String(port)} (rom: ${romPath})\n`,
+  `serving the driver feed (${String(format.width)}x${String(format.height)} at ${String(format.fps)} fps) on http://localhost:${String(port)}\n`,
 );
 // Let MK64 get past its boot logos so the canvas has real content.
 await Bun.sleep(20_000);
 
 // ---- drive a real browser ----
 
-// A dedicated tab, so an unrelated tab in the shared browser is never touched.
-const navOutput = await pinchtabCli([
-  "nav",
-  `http://localhost:${String(port)}/`,
-  "--new-tab",
-  "--print-tab-id",
-]);
-const tabId = navOutput.trim();
-if (tabId.length === 0) throw new Error("pinchtab did not return a tab id");
+const tabId = await openDriverTab(pinchtab, port);
 process.stdout.write(`browser tab ${tabId} navigated; sampling its readout\n`);
-await Bun.sleep(5000);
-
-const claimedSeat = await evalInTab(
-  tabId,
-  `(() => {
-    const button = [...document.querySelectorAll("button")].find(
-      (candidate) => candidate.textContent?.trim() === "P1",
-    );
-    if (!(button instanceof HTMLButtonElement)) return false;
-    button.click();
-    return true;
-  })()`,
-);
-if (claimedSeat !== true) {
-  throw new Error("glass harness could not claim controller seat P1");
-}
 
 // The shipped GameView renders "<n>ms to glass"; sample what it reports.
 await evalInTab(
@@ -197,7 +84,13 @@ await Bun.sleep(seconds * 1000);
 
 const shotTarget = values.screenshot;
 if (shotTarget !== undefined) {
-  await pinchtabCli(["screenshot", "--tab", tabId, "--output", shotTarget]);
+  await pinchtabCli(pinchtab, [
+    "screenshot",
+    "--tab",
+    tabId,
+    "--output",
+    shotTarget,
+  ]);
   process.stdout.write(`screenshot written to ${shotTarget}\n`);
 }
 
@@ -218,15 +111,8 @@ const raw = await evalInTab(
 
 // ---- teardown before reporting, so a throw below cannot leak the emulator ----
 
-emulator.onFrame(() => {
-  // Detach: stopping the feed first would otherwise race an in-flight frame.
-});
-driverFeed.stopSession();
-await emulator.stop();
-requestSubscription.unsubscribe();
-await rm(savesDir, { recursive: true, force: true });
-server.close();
-await pinchtabCli(["tab", "close", "--tab", tabId]);
+await bench.stop();
+await pinchtabCli(pinchtab, ["tab", "close", tabId]);
 
 const payload = z
   .object({

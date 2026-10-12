@@ -270,7 +270,6 @@
         "packages/version-catalog/src/catalog.json",
         "packages/discord-plays-mario-kart/scripts/**/*.ts",
         "packages/discord-plays-mario-kart/Dockerfile",
-        "packages/discord-plays-mario-kart/wasm-src/upstream.json",
         "packages/discord-plays-pokemon/scripts/**/*.ts",
         "packages/discord-plays-pokemon/wasm-src/patches/**",
         "packages/dotfiles/bin/executable_git_cleanup.ts",

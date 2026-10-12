@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { engineFormat } from "#src/engine/format.ts";
 import { ConfigSchema } from "./schema.ts";
 
 /** The smallest config that satisfies every required field. */
@@ -73,6 +74,59 @@ describe("driver_feed config", () => {
   it("rejects an output height outside the encodable range", () => {
     expect(() =>
       ConfigSchema.parse({ ...minimalConfig(), driver_feed: { height: 4320 } }),
+    ).toThrow();
+  });
+});
+
+describe("engine config", () => {
+  it("defaults the native build when [spaghettikart] is absent", () => {
+    // Same reason as [driver_feed]: the live config.toml lives in 1Password.
+    const parsed = ConfigSchema.parse(minimalConfig());
+
+    expect(parsed.spaghettikart).toEqual({
+      install_dir: "packages/backend/assets/spaghettikart",
+      output_fps: 30,
+    });
+    expect(engineFormat(parsed)).toEqual({
+      width: 640,
+      height: 480,
+      rowScale: 2,
+      fps: 30,
+      audioSampleRate: 26_800,
+    });
+  });
+
+  it("delivers frames at the configured output rate", () => {
+    const parsed = ConfigSchema.parse({
+      ...minimalConfig(),
+      spaghettikart: { output_fps: 60 },
+    });
+
+    expect(engineFormat(parsed).fps).toBe(60);
+  });
+
+  it("still accepts the retired wasm emulator's settings", () => {
+    // The live config.toml carries them; rejecting them would crash-loop the pod.
+    const parsed = ConfigSchema.parse({
+      ...minimalConfig(),
+      emulator: {
+        enabled: true,
+        rom_path: "rom.z64",
+        wasm_dir: "packages/backend/assets/n64wasm",
+        fps: 30,
+        software_render: true,
+      },
+    });
+
+    expect(parsed.emulator.rom_path).toBe("rom.z64");
+  });
+
+  it("rejects an output rate the bridge does not support", () => {
+    expect(() =>
+      ConfigSchema.parse({
+        ...minimalConfig(),
+        spaghettikart: { output_fps: 45 },
+      }),
     ).toThrow();
   });
 });

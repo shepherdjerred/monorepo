@@ -9,8 +9,6 @@ exclude = [
   "node_modules",
   ".venv",
   ".claude",
-  # Vendored mupen64plus / libretro sources (python2-era upstream tooling).
-  "packages/discord-plays-mario-kart/wasm-src",
 ]
 
 [lint]

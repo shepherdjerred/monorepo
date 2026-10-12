@@ -47,15 +47,18 @@ low_latency_mux = true    # -flush_packets 1 on the container output
 low_delay_audio = true    # Opus lowdelay + 10ms frames
 
 [emulator]
-enabled = true
-# Built N64Wasm assets (bundled in the image). Override for local dev.
-wasm_dir = "packages/backend/assets/n64wasm"
-# Your Mario Kart 64 ROM (.z64/.v64). Provided at runtime via a volume — never
-# baked into the image. You must supply your own copy.
+enabled = true   # false: nothing is prepared at startup and /play is refused
+# Your Mario Kart 64 ROM (US, .z64). Provided at runtime via a volume — never
+# baked into the image. You must supply your own copy. The game's asset archive
+# is extracted from it at startup into <state_root_dir>/spaghettikart-assets.
 rom_path = "roms/mariokart64.z64"
-fps = 30
-software_render = true
 seats = 4
+
+[spaghettikart]
+# The SpaghettiKart build. The image ships it at this path; for a local build
+# (`bun run build:spaghetti`) use ".cache/spaghetti/dist".
+install_dir = "packages/backend/assets/spaghettikart"
+output_fps = 30   # 30, or 60 with the port's interpolated frames
 
 [web]
 enabled = true
@@ -70,7 +73,7 @@ enabled = true
 enabled = true                      # race-result recording + the leaderboard API
 db_path = "data/leaderboard.db"     # overridden by DATABASE_PATH / DATABASE_URL env
 overlay_enabled = true              # burn player names into the stream per viewport
-poll_every_n_frames = 10            # RDRAM race-state poll cadence (~3 Hz at 30fps)
+poll_every_n_frames = 10            # race-state snapshot cadence in game frames (~3 Hz)
 
 [driver_feed]
 # Low-latency in-browser video for seated players, served as H.264 access units
@@ -85,5 +88,5 @@ height = 480                        # square-pixel output height (4:3 -> 640x480
 bitrate_kbps = 2500
 bitrate_max_kbps = 4000
 keyframe_interval_frames = 30       # ~1s at 30fps; also the client resync cadence
-max_client_buffer_bytes = 2097152   # per-client socket backlog before deltas are dropped
+max_client_buffer_bytes = 131072    # per-client socket backlog before deltas are dropped (~0.4 s at 2500 kbps)
 max_clients = 8

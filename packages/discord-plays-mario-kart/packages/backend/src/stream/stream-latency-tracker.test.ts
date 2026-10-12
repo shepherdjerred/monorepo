@@ -59,7 +59,7 @@ function makeHarness(startMs = 1000): {
     },
   };
   return {
-    tracker: new StreamLatencyTracker(observations, () => nowMs),
+    tracker: new StreamLatencyTracker(observations, 44_100, () => nowMs),
     recorded,
     advance: (ms) => {
       nowMs += ms;

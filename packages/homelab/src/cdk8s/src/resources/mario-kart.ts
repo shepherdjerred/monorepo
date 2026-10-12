@@ -23,13 +23,12 @@ import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { peerUserbotIds } from "@shepherdjerred/homelab/cdk8s/src/resources/userbot-ids.ts";
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
 
-// Headless Discord Plays Mario Kart 64: a patched N64Wasm core (parallel-n64 +
-// angrylion software RDP) runs in Bun, renders frames in software, and streams
-// to a Discord voice channel (Go-Live) via a selfbot. Up to four players drive
-// karts through a thin web UI (virtual controllers). No GPU, desktop, or
-// browser. The app runs from the inner-monorepo root
+// Headless Discord Plays Mario Kart 64: the native SpaghettiKart port runs as a
+// child process rendering through Mesa. Frames stream to a Discord voice channel
+// (Go-Live) via a selfbot. Up to four players drive karts through a thin web UI
+// (virtual controllers). No desktop or browser. The app runs from the inner-monorepo root
 // (/app/packages/discord-plays-mario-kart — the image WORKDIR since the #1517
-// Dockerfile rewrite), so config.toml / the n64wasm assets / saves / roms
+// Dockerfile rewrite), so config.toml / the SpaghettiKart install / saves / roms
 // resolve relative to that CWD. APP_ROOT must match the Dockerfile's final
 // WORKDIR (enforced by app-root-matches-dockerfile.test.ts).
 export const APP_ROOT = "/app/packages/discord-plays-mario-kart";
@@ -54,7 +53,8 @@ export function createMarioKartDeployment(chart: Chart) {
     },
   });
 
-  // Persists in-game saves (mempak/eeprom/flash written under saves/).
+  // Persists in-game saves (saves/<guildId>/spaghettikart/default.sav) and the
+  // game's ROM-derived asset archive (saves/spaghettikart-assets/).
   const saveVolume = new ZfsNvmeVolume(chart, "mario-kart-volume", {
     storage: Size.gibibytes(8),
   });
@@ -66,7 +66,7 @@ export function createMarioKartDeployment(chart: Chart) {
   });
 
   // Leaderboard SQLite DB. Separate from `saves` on purpose: wiping the
-  // emulator's mempak/eeprom saves to reset game state must not destroy the
+  // game's saves to reset game state must not destroy the
   // recorded race history. Velero backs it up automatically (<200 GiB).
   const dataVolume = new ZfsNvmeVolume(chart, "mario-kart-data-volume", {
     storage: Size.gibibytes(1),
@@ -129,8 +129,8 @@ export function createMarioKartDeployment(chart: Chart) {
         //
         // Capped at the four seats deliberately: the feed exists for the people
         // driving, and each viewer costs a full copy of the stream on an uplink
-        // whose capacity is undocumented (see the plan's Risks table). 4 x 2500
-        // kbps ~= 10 Mbps worst case. Measure before raising either.
+        // whose capacity is undocumented. 4 x 2500 kbps ~= 10 Mbps worst case.
+        // Measure before raising either.
         DRIVER_FEED_ENABLED: EnvValue.fromValue("true"),
         DRIVER_FEED_BITRATE_KBPS: EnvValue.fromValue("2500"),
         DRIVER_FEED_MAX_CLIENTS: EnvValue.fromValue("4"),
@@ -151,8 +151,8 @@ export function createMarioKartDeployment(chart: Chart) {
         privileged: false,
         allowPrivilegeEscalation: false,
       },
-      // Software RDP is CPU-heavy and there's no GPU on the node — give it burst room
-      // via the limit. The 30d working-set peak is ~1.36GiB, so a 1.75GiB
+      // Burst room via the limit: the game renders on llvmpipe whenever the
+      // iGPU is unavailable. The 30d working-set peak is ~1.36GiB, so a 1.75GiB
       // request keeps 25% memory headroom without reserving the full 2GiB.
       resources: {
         cpu: {
@@ -227,9 +227,9 @@ export function createMarioKartDeployment(chart: Chart) {
 
   setRevisionHistoryLimit(deployment);
 
-  // Request the Intel iGPU so ffmpeg can VAAPI hardware-encode (frees CPU the
-  // angrylion software RDP needs). The intel-device-plugin mounts /dev/dri into
-  // the pod; non-root UID 1000 works. cdk8s has no GPU field, so patch it in.
+  // Request the Intel iGPU so ffmpeg can VAAPI hardware-encode; the game's
+  // OpenGL renders on the same render node. The intel-device-plugin mounts /dev/dri into the pod;
+  // non-root UID 1000 works. cdk8s has no GPU field, so patch it in.
   ApiObject.of(deployment).addJsonPatch(
     JsonPatch.add(
       "/spec/template/spec/containers/0/resources/limits/gpu.intel.com~1i915",

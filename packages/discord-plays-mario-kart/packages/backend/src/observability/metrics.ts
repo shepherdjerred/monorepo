@@ -2,20 +2,13 @@
 // surfaced in Grafana. The shared registry + the emu/stream instruments both
 // discord-plays backends define identically live in discord-plays-core; this file
 // re-exports them and registers the Mario Kart-specific instruments (input/controller
-// latency, emulator restarts, the richer frame→encoder→send-path metrics) plus
-// copyMs (whose help text differs from pokemon's) against the shared registry.
+// latency, engine restarts, the richer frame→encoder→send-path metrics) against
+// the shared registry.
 import { Histogram, Counter, Gauge } from "prom-client";
 import {
   registry,
   FRAME_MS_BUCKETS,
 } from "@shepherdjerred/discord-plays-core/observability/metrics.ts";
-
-export const copyMs = new Histogram({
-  name: "emulator_frame_copy_ms",
-  help: "Time to copy the frame out of wasm memory and hand it to the stream, in ms",
-  buckets: FRAME_MS_BUCKETS,
-  registers: [registry],
-});
 
 export const emulatorRestartsTotal = new Counter({
   name: "emulator_restarts_total",
@@ -210,6 +203,49 @@ export const driverFeedUnitsDroppedTotal = new Counter({
   name: "driver_feed_units_dropped_total",
   help: "Access units withheld from a client. reason=backpressure means its socket backlog exceeded the ceiling; reason=awaiting_keyframe means it is mid-resync and cannot use deltas yet. Both are per-client and self-healing at the next keyframe",
   labelNames: ["reason"],
+  registers: [registry],
+});
+
+const DRIVER_FEED_LATENCY_BUCKETS = [
+  1, 2, 4, 8, 16, 25, 33, 50, 66, 100, 150, 250, 500, 1000,
+];
+
+export const driverFeedFrameToUnitMs = new Histogram({
+  name: "driver_feed_frame_to_unit_ms",
+  help: "Time from a composited frame being handed to the driver feed to its encoded access unit being ready for the hub, in ms. Covers the sink queue, the stdin pipe, ffmpeg, and stdout framing",
+  buckets: DRIVER_FEED_LATENCY_BUCKETS,
+  registers: [registry],
+});
+
+export const driverFeedInputToUnitMs = new Histogram({
+  name: "driver_feed_input_to_unit_ms",
+  help: "Time from a controller input arriving at the backend to the first driver-feed access unit reflecting it being ready for the hub, in ms. The driver-feed counterpart of stream_input_to_packet_ready_ms",
+  buckets: DRIVER_FEED_LATENCY_BUCKETS,
+  registers: [registry],
+});
+
+export const driverFeedSinkFrames = new Gauge({
+  name: "driver_feed_sink_frames",
+  help: "Raw frames queued in the driver-feed sink ahead of ffmpeg, sampled on every push. A standing value above 1 is latency added before encoding",
+  registers: [registry],
+});
+
+export const driverFeedLatencyCorrelationFailuresTotal = new Counter({
+  name: "driver_feed_latency_correlation_failures_total",
+  help: "Times the frame-to-access-unit pairing queue outgrew any honest encoder backlog and was reset. Non-zero means driver_feed_*_to_unit_ms samples around it are unreliable",
+  registers: [registry],
+});
+
+export const driverFeedGlassMs = new Histogram({
+  name: "driver_feed_glass_ms",
+  help: "Browser-measured time from the HUD clock burned into a frame to that frame being painted on the driver's canvas, clock-offset corrected against the server, in ms. Excludes the player's display",
+  buckets: DRIVER_FEED_LATENCY_BUCKETS,
+  registers: [registry],
+});
+
+export const driverFeedClientDecoderResetsTotal = new Counter({
+  name: "driver_feed_client_decoder_resets_total",
+  help: "Browser decoder resets reported by driver-feed clients. Each one blanks the picture until the next keyframe",
   registers: [registry],
 });
 

@@ -2,9 +2,13 @@ import type { Socket } from "socket.io";
 import { Server } from "socket.io";
 import { logger } from "#src/logger.ts";
 import type http from "node:http";
+import type { Duplex } from "node:stream";
 import { Observable } from "rxjs";
 import type { Request } from "@discord-plays-mario-kart/common";
-import { RequestSchema } from "@discord-plays-mario-kart/common";
+import {
+  DRIVER_FEED_PATH,
+  RequestSchema,
+} from "@discord-plays-mario-kart/common";
 import lodash from "lodash";
 
 export type SocketChannel = {
@@ -12,6 +16,9 @@ export type SocketChannel = {
   /** The Socket.IO server, for broadcasting responses to all clients. */
   io: Server;
 };
+
+/** Socket.IO's default request path. */
+const SOCKET_IO_PATH = "/socket.io/";
 
 export function createSocket({
   server,
@@ -27,6 +34,11 @@ export function createSocket({
   }
 
   const io = new Server(server, {
+    // engine.io ends every upgrade outside its own path after 1 s unless the
+    // socket reports bytes written. Bun's upgraded sockets report none, so it
+    // was cutting the driver feed's WebSocket every second. Upgrades are
+    // policed below instead.
+    destroyUpgrade: false,
     ...(isCorsEnabled
       ? {
           cors: {
@@ -39,14 +51,24 @@ export function createSocket({
       : {}),
   });
 
+  // With engine.io's timer off, end any upgrade nobody serves at once, rather
+  // than leave it open. Socket.IO owns its path; the driver feed owns its own.
+  server.on("upgrade", (request: http.IncomingMessage, socket: Duplex) => {
+    const path = new URL(request.url ?? "/", "http://localhost").pathname;
+    if (path === DRIVER_FEED_PATH || path.startsWith(SOCKET_IO_PATH)) return;
+    socket.destroy();
+  });
+
   const events = new Observable<{ request: Request; socket: Socket }>(
     (subscriber) => {
       io.on("connection", (socket: Socket) => {
         const identifier = lodash.uniqueId();
         logger.info("a new socket has connected", identifier);
 
-        socket.on("ping", (callback: () => void) => {
-          callback();
+        // The ack carries the server's wall clock so the page can estimate its
+        // clock offset and correct the HUD-clock glass measurement.
+        socket.on("ping", (callback: (serverNowMs: number) => void) => {
+          callback(Date.now());
         });
 
         socket.on("disconnect", () => {

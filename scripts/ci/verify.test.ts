@@ -97,7 +97,6 @@ describe("affected verification filters", () => {
   test.each([
     "packages/discord-plays-pokemon/Dockerfile",
     "packages/streambot/Dockerfile",
-    "packages/discord-plays-mario-kart/wasm-src/upstream.json",
     "packages/homelab/images/redlib/Dockerfile",
     "docker-bake.hcl",
     "ci/application-image-smoke.Dockerfile",

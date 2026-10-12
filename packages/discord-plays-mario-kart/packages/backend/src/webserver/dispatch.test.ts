@@ -5,7 +5,7 @@
 // request actually lands as emulator.setPlayerInput with the right state — and
 // that seat gating / schema validation block the things they should.
 //
-// No ROM or wasm needed; this runs in CI. The "input actually moves the game"
+// No ROM or game build needed; this runs in CI. The "input actually moves the game"
 // half is covered by the manual scripts/e2e-input.ts (needs a ROM).
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createServer, type Server as HttpServer } from "node:http";
@@ -460,6 +460,7 @@ describe("screenshot overlays", () => {
       seatActivity: [false, false, false, false],
       mode: "1p",
       seats: 1,
+      rowScale: 1,
       nameOverlay: undefined,
     };
     const overlayed = await captureScreenshot();

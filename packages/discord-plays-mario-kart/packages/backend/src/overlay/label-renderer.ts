@@ -1,15 +1,14 @@
-import path from "node:path";
 import sharp from "sharp";
 import type { Label } from "./blit.ts";
 
-// Glyphs are rasterized from the arial.ttf already bundled for the emulator's
-// MEMFS, so the overlay needs no system fonts / fontconfig config in the
-// container (sharp's `fontfile` bypasses fontconfig lookup).
-const FONT_NAME = "Arial";
+// Glyphs are rasterized from the font the SpaghettiKart install ships
+// (Montserrat, OFL), so the overlay needs no system fonts or fontconfig setup
+// in the container (sharp's `fontfile` bypasses fontconfig lookup).
+const FONT_NAME = "Montserrat";
 const FONT_POINTS = 12;
-// The framebuffer is a horizontally-doubled 320x240 (see constants.ts), so a
-// label must be drawn twice as wide as tall to read square once the 640x240
-// frame is displayed at 4:3 (matches the HUD's GLYPH_SCALE_X = 2 * SCALE_Y).
+// Labels are laid out in a 640x240 space, as the HUD is, so a label is drawn
+// twice as wide as tall (matching the HUD's GLYPH_SCALE_X = 2 * SCALE_Y) and
+// each row is repeated `rowScale` times: square on the 640x480 frame.
 const HSCALE = 2;
 const PAD_X = 3;
 const PAD_Y = 1;
@@ -19,10 +18,6 @@ export type LabelRenderer = (
   name: string,
   maxFrameWidth: number,
 ) => Promise<Label>;
-
-function fontFile(wasmDir: string): string {
-  return path.join(wasmDir, "res", "arial.ttf");
-}
 
 /** Rasterize text to a tight RGBA bitmap (alpha = glyph coverage). */
 async function rasterizeText(
@@ -44,15 +39,17 @@ async function rasterizeText(
 
 /**
  * Render a name into a premultiplied BGRA pill label, pre-stretched 2x
- * horizontally for the anamorphic framebuffer. Truncates with an ellipsis if
- * the (stretched) label would exceed `maxFrameWidth` framebuffer pixels.
+ * horizontally and `rowScale`x vertically for the engine's framebuffer.
+ * Truncates with an ellipsis if the (stretched) label would exceed
+ * `maxFrameWidth` framebuffer pixels.
  *
  * Called once per name change (off the frame loop); the result is cached by
  * NameOverlay, so cost here is irrelevant to frame pacing.
  */
-export function createLabelRenderer(wasmDir: string): LabelRenderer {
-  const fontfile = fontFile(wasmDir);
-
+export function createLabelRenderer(
+  fontfile: string,
+  rowScale: number,
+): LabelRenderer {
   return async function renderLabel(
     name: string,
     maxFrameWidth: number,
@@ -76,7 +73,7 @@ export function createLabelRenderer(wasmDir: string): LabelRenderer {
     const pillW = tw + PAD_X * 2;
     const pillH = th + PAD_Y * 2;
     const outW = pillW * HSCALE;
-    const outH = pillH;
+    const outH = pillH * rowScale;
     const out = Buffer.alloc(outW * outH * 4);
 
     for (let oy = 0; oy < outH; oy++) {
@@ -84,7 +81,7 @@ export function createLabelRenderer(wasmDir: string): LabelRenderer {
         const px = ox >> 1; // 2x horizontal: sample one pill column per pair
         // Text coverage at this pill pixel (0 outside the text box).
         const tx = px - PAD_X;
-        const ty = oy - PAD_Y;
+        const ty = Math.floor(oy / rowScale) - PAD_Y;
         const cover =
           tx >= 0 && tx < tw && ty >= 0 && ty < th
             ? (raster.data[(ty * tw + tx) * 4 + 3] ?? 0)

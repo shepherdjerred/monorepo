@@ -16,6 +16,7 @@ import {
   DriverFeedReadySchema,
 } from "@discord-plays-mario-kart/common";
 import type { Config } from "#src/config/schema.ts";
+import type { FrameFormat } from "#src/engine/format.ts";
 import { logger } from "#src/logger.ts";
 import {
   driverFeedClientBufferBytes,
@@ -39,7 +40,8 @@ export type DriverFeedServiceOptions = {
     StreamVideoConfig,
     "hardware_acceleration" | "vaapi_device" | "encoder_async_depth"
   >;
-  readonly frameRate: number;
+  /** The configured engine's frames; the feed encodes every one of them. */
+  readonly format: FrameFormat;
 };
 
 export class DriverFeedService {
@@ -72,14 +74,11 @@ export class DriverFeedService {
    * mode (`new WebSocketServer({ server })`) the library destroys sockets whose
    * path does not match, which would kill Socket.IO's own upgrades.
    *
-   * Engine.io is not quite as polite in the other direction. For an upgrade
-   * outside `/socket.io/` it schedules a destroy 1 s later, and only spares the
-   * socket if something has written to it by then (`socket.bytesWritten <= 0`
-   * in engine.io's `server.js`). `handleUpgrade` writes the 101 response
-   * synchronously while the same `upgrade` event is still dispatching, so the
-   * feed is always past that check long before the timer fires — but anything
-   * added here that defers the handshake would be silently killed after a
-   * second. `attach.test.ts` pins this behaviour.
+   * Engine.io is not quite as polite in the other direction: by default it
+   * ends any upgrade outside `/socket.io/` 1 s later unless the socket reports
+   * bytes written, which Bun's upgraded sockets never do. `createSocket`
+   * (webserver/socket.ts) turns that off and ends unserved upgrades itself.
+   * `attach.test.ts` pins both behaviours.
    */
   attach(server: HttpServer): void {
     const wss = new WebSocketServer({ noServer: true });
@@ -112,8 +111,8 @@ export class DriverFeedService {
     }
     const encoder = new DriverFeedEncoder(
       {
+        source: this.options.format,
         outputHeight: this.options.config.height,
-        frameRate: this.options.frameRate,
         bitrateKbps: this.options.config.bitrate_kbps,
         bitrateMaxKbps: this.options.config.bitrate_max_kbps,
         keyframeIntervalFrames: this.options.config.keyframe_interval_frames,
@@ -133,8 +132,8 @@ export class DriverFeedService {
   }
 
   /** Feed one overlay-composited BGRA frame from the emulator tee. */
-  pushFrame(frame: Buffer): void {
-    this.encoder?.pushFrame(frame);
+  pushFrame(frame: Buffer, inputReceivedAtMs?: number): void {
+    this.encoder?.pushFrame(frame, inputReceivedAtMs);
   }
 
   /**
@@ -173,7 +172,7 @@ export class DriverFeedService {
       codec: H264_CODEC_STRING,
       width: out.width,
       height: out.height,
-      frameRate: this.options.frameRate,
+      frameRate: this.options.format.fps,
     };
     ws.send(JSON.stringify(init));
 

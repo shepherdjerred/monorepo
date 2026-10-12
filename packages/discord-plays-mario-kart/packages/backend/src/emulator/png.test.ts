@@ -59,8 +59,8 @@ function decodePng(png: Buffer): {
 }
 
 // Build an RGBA pixel buffer (R,G,B,X per pixel) from RGB triples — the order
-// the screenshot path delivers. The X/alpha byte is deliberately 0, matching
-// angrylion's uninitialised XRGB padding, so the test proves it is dropped.
+// the screenshot path delivers. The X/alpha byte is deliberately 0, so the
+// test proves it is dropped.
 function rgbaFrom(pixels: [number, number, number][]): Buffer {
   const buf = Buffer.alloc(pixels.length * 4);
   pixels.forEach(([r, g, b], i) => {

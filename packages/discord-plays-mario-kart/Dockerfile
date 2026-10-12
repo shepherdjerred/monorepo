@@ -4,9 +4,9 @@
 # `bun run docker:build` in packages/discord-plays-mario-kart/packages/backend
 # (which passes `-f ../../Dockerfile ../../../..`).
 #
-# Runs the N64Wasm core (parallel-n64 + angrylion software RDP) entirely in Bun,
-# renders frames in software, and streams to Discord over the voice UDP path.
-# No X server, no browser, no GPU.
+# Runs the native SpaghettiKart port of MK64 as a child process, rendering with
+# OpenGL through Mesa (the iGPU when present, llvmpipe otherwise), and streams
+# its frames to Discord over the voice UDP path. No X server, no browser.
 #
 # Multi-stage on the Bun side too: deps does a full (dev-inclusive) install to
 # feed the dist/Prisma/frontend builds; prod-deps installs the production-only
@@ -17,29 +17,75 @@
 # not on every repo commit.
 
 # ---------------------------------------------------------------------------
-# Stage 1 — compile the N64Wasm core from the vendored source.
-# The committed `wasm-src/code` tree is BYTE-PRISTINE upstream; our changes
-# (neilSetRom, neilGetVideoBuffer/Height, the per-player input export, the
-# Makefile exports) live in `wasm-src/patches/` and are applied here at build
-# time. No binaries are committed — the build is reproducible from source.
-# Pinned Emscripten 6 toolchain for the legacy SDL2/GLES2 core.
+# Stage 1 — compile the game: the native SpaghettiKart port.
+# The pinned upstream commit (spaghetti-src/upstream.json) is cloned and our
+# host-bridge patches are applied, exactly the inputs and steps of
+# scripts/build-spaghetti.ts, which builds the same thing locally. The upstream
+# source is never committed. Built on the runtime's base image so the binary
+# links against the libraries the runtime installs below.
+#
+# Not Renovate-managed on purpose: a new pin needs the patch series regenerated
+# against it (spaghetti-src/PATCHES.md), so bumps are deliberate edits.
+#
+# Only build output leaves this stage. The ROM-derived mk64.o2r is NOT built
+# here: the backend extracts it from the ROM volume at startup, into the saves
+# volume, with the Torch binary and inputs staged below.
 # ---------------------------------------------------------------------------
-FROM emscripten/emsdk:6.0.12@sha256:77638e6c215a65f25a704c0c831d5c2463a8c0468a58c6cb82489dbe621dfa05 AS wasm-builder
+FROM oven/bun:1.4.2@sha256:9114c058aeae42162ee16dd5084b95fe9473970bb6bcb5b232ab1630f0546895 AS spaghetti-builder
 
+# Toolchain plus the libraries upstream's Linux build takes from the system.
+# Unpinned on purpose: Debian/Ubuntu drop superseded point releases from the
+# archive, so an exact `pkg=version` pin turns every upstream security respin
+# into a build failure here. Acknowledged per-site so a NEW unpinned install
+# still fails.
+# hadolint ignore=DL3008
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends \
+    ca-certificates git patch jq g++ cmake ninja-build pkg-config python3 \
+    libsdl2-dev libsdl2-net-dev libpng-dev libzip-dev zipcmp zipmerge ziptool \
+    nlohmann-json3-dev libtinyxml2-dev libspdlog-dev libfmt-dev libboost-dev \
+    libopengl-dev libgl-dev libegl-dev libglew-dev libogg-dev libvorbis-dev \
+    libbz2-dev zlib1g-dev \
+  && rm -rf /var/lib/apt/lists/*
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+COPY packages/discord-plays-mario-kart/spaghetti-src /spaghetti-src
 WORKDIR /src
-# Copy only the vendored wasm source tree (patches + the pristine `code/` tree).
-COPY packages/discord-plays-mario-kart/wasm-src /src
-
-# Apply our patch series (patch(1) ships in the emscripten image; /src is not a
-# git work tree, so use patch, not git apply).
-RUN set -e; for p in patches/*.patch; do \
+RUN repo="$(jq -r .repository /spaghetti-src/upstream.json)" \
+  && commit="$(jq -r .commit /spaghetti-src/upstream.json)" \
+  && git init -q . \
+  && git remote add origin "$repo" \
+  && git fetch -q --depth=1 origin "$commit" \
+  && git checkout -q --detach FETCH_HEAD \
+  && jq -r '.submodules[]' /spaghetti-src/upstream.json \
+    | xargs git submodule update --init --depth 50 \
+  && for p in /spaghetti-src/patches/*.patch; do \
     echo "applying $p"; patch -p1 --no-backup-if-mismatch < "$p"; \
   done
 
-# `make clean` drops any object files so the patched sources are rebuilt from
-# scratch; `make` emits n64wasm.js + n64wasm.wasm in this dir.
-WORKDIR /src/code
-RUN make clean && make
+# GenerateO2R builds spaghetti.o2r (the port's own assets, from source); on
+# Linux it is not a dependency of the default target.
+RUN cmake -H. -Bbuild -GNinja -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DENABLE_VCPKG=OFF \
+  && cmake --build build \
+  && cmake --build build --target GenerateO2R
+
+# The install the backend loads (engine/spaghetti/install.ts): the game, its
+# engine archive, Torch, Torch's extraction inputs, the name-label font
+# (Montserrat, SIL OFL, from the port's own assets), and install.json.
+RUN mkdir -p /out/torch-inputs/include /out/torch-inputs/meta /out/fonts \
+  && cp build/Spaghettify build/spaghetti.o2r /out/ \
+  && cp build/TorchExternal/src/TorchExternal-build/torch /out/torch \
+  && strip --strip-unneeded /out/Spaghettify /out/torch \
+  && cp -r config.yml yamls /out/torch-inputs/ \
+  && cp include/defines.h /out/torch-inputs/include/ \
+  && cp meta/mods.toml /out/torch-inputs/meta/ \
+  && cp assets/fonts/Montserrat-Regular.ttf /out/fonts/ \
+  && jq -n \
+    --arg commit "$(git rev-parse HEAD)" \
+    --arg romSha1 "$(jq -r .romSha1 /spaghetti-src/upstream.json)" \
+    '{binary: "Spaghettify", engineArchive: "spaghetti.o2r", torch: "torch", torchInputs: "torch-inputs", labelFont: "fonts/Montserrat-Regular.ttf", commit: $commit, romSha1: $romSha1}' \
+    > /out/install.json
 
 # ---------------------------------------------------------------------------
 # Bun stages.
@@ -125,6 +171,18 @@ RUN set -e; \
   && if [ "$(dpkg --print-architecture)" = "amd64" ]; then apt-get install -y --no-install-recommends intel-media-va-driver-non-free; fi \
   && rm -rf /var/lib/apt/lists/*
 
+# SpaghettiKart's runtime libraries: what the spaghetti-builder stage links
+# against, plus Mesa's EGL and DRI drivers so the
+# game renders offscreen with no window system (iris on the iGPU render node,
+# llvmpipe without one). Its own layer, so the ffmpeg/VAAPI layer above is
+# unaffected. smoke:spaghetti-install checks that every library resolves.
+# hadolint ignore=DL3008
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends \
+    libsdl2-2.0-0 libopengl0 libzip5 libtinyxml2-11 libspdlog1.15 libfmt10 \
+    libgl1 libegl1 libegl-mesa0 libgl1-mesa-dri libgbm1 \
+  && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 # Production node_modules + workspace manifests. The isolated-linker tree uses
@@ -133,8 +191,8 @@ WORKDIR /app
 # source edit doesn't re-push this layer.
 COPY --from=prod-deps /app/ /app/
 
-# Scoped source closure. wasm-src and the frontend source are build inputs
-# only — the compiled core and the built web UI are COPY'd from their stages
+# Scoped source closure. spaghetti-src and the frontend source are build inputs
+# only — the compiled game and the built web UI are COPY'd from their stages
 # below.
 COPY --parents \
   tsconfig.base.json \
@@ -163,15 +221,10 @@ COPY --from=build /app/packages/discord-plays-mario-kart/packages/common/dist pa
 COPY --from=build /app/packages/discord-plays-mario-kart/packages/backend/generated packages/discord-plays-mario-kart/packages/backend/generated
 COPY --from=build /app/packages/discord-plays-mario-kart/packages/frontend/dist packages/discord-plays-mario-kart/packages/frontend/dist
 
-# Copy the compiled core + the files the emulator host stages into MEMFS at
-# runtime (loadFile reads these), relative to the inner-monorepo root.
-ARG ASSETS=/app/packages/discord-plays-mario-kart/packages/backend/assets/n64wasm
-COPY --from=wasm-builder /src/code/n64wasm.js        ${ASSETS}/n64wasm.js
-COPY --from=wasm-builder /src/code/n64wasm.wasm      ${ASSETS}/n64wasm.wasm
-COPY --from=wasm-builder /src/code/shader_vert.hlsl  ${ASSETS}/shader_vert.hlsl
-COPY --from=wasm-builder /src/code/shader_frag.hlsl  ${ASSETS}/shader_frag.hlsl
-COPY --from=wasm-builder /src/code/overlay.png       ${ASSETS}/overlay.png
-COPY --from=wasm-builder /src/code/res/arial.ttf     ${ASSETS}/res/arial.ttf
+# The SpaghettiKart install (game, spaghetti.o2r, Torch and its inputs,
+# install.json) at [spaghettikart] install_dir's default. Build output only:
+# the ROM-derived mk64.o2r is extracted at startup into the saves volume.
+COPY --from=spaghetti-builder /out packages/discord-plays-mario-kart/packages/backend/assets/spaghettikart
 
 # Version/revision metadata as build args so CI can bake the real build number +
 # commit SHA (`--build-arg VERSION=… --build-arg GIT_SHA=…`); the `dev`/`unknown`
@@ -183,8 +236,8 @@ ARG GIT_SHA=unknown
 ENV VERSION=${VERSION}
 ENV GIT_SHA=${GIT_SHA}
 
-# Run from the inner-monorepo root so getConfig()/emulator resolve config.toml,
-# the n64wasm assets, and saves/ relative to CWD. Apply the leaderboard schema
+# Run from the inner-monorepo root so getConfig() and the engine resolve
+# config.toml, the SpaghettiKart install, and saves/ relative to CWD. Apply the leaderboard schema
 # to the (persistent-volume) SQLite DB before start — idempotent, birmel-style;
 # harmless when leaderboards are disabled. Prisma 7's `db push` no longer accepts
 # `--skip-generate`, so it is omitted (generate ran at build time above).

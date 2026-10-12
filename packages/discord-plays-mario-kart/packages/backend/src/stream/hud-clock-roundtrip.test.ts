@@ -1,12 +1,18 @@
 import { describe, expect, it } from "vitest";
 import {
+  HUD_SOURCE_HEIGHT,
+  HUD_SOURCE_WIDTH,
   decodeHudClock,
   latencyMsFromClock,
   formatUtcTimestamp,
   type HudSampler,
 } from "@discord-plays-mario-kart/common";
-import { WIDTH, HEIGHT } from "#src/emulator/constants.ts";
 import { drawHudOverlay } from "./overlay.ts";
+
+// The HUD's layout space: drawn 1:1 here, the decoder's source coordinates.
+const WIDTH = HUD_SOURCE_WIDTH;
+const HEIGHT = HUD_SOURCE_HEIGHT;
+const LAYOUT_TARGET = { width: WIDTH, rowScale: 1 };
 
 // The driver feed measures its own glass-to-glass latency by reading the HUD
 // clock back off the canvas. That only works if the decoder and the renderer
@@ -21,7 +27,7 @@ function renderHud(
   held: readonly boolean[] = [false, false, false, false],
 ): Buffer {
   const frame = Buffer.alloc(WIDTH * HEIGHT * BYTES_PER_PIXEL);
-  drawHudOverlay(frame, WIDTH, epochMs, held);
+  drawHudOverlay(frame, LAYOUT_TARGET, epochMs, held);
   return frame;
 }
 
@@ -113,6 +119,43 @@ describe("HUD clock round-trip", () => {
   it("returns undefined rather than a wrong time on an unrendered frame", () => {
     const blank = Buffer.alloc(WIDTH * HEIGHT * BYTES_PER_PIXEL);
     expect(decodeHudClock(sourceSampler(blank))).toBeUndefined();
+  });
+});
+
+describe("HUD clock round-trip on the game's 640x480 frame", () => {
+  // The browser decodes in the HUD's 640x240 layout space and maps it onto
+  // its canvas. A square-pixel 640x480 frame drawn with rowScale 2 must
+  // land the badge exactly where that mapping looks.
+  const NATIVE_HEIGHT = HEIGHT * 2;
+
+  function renderNativeHud(epochMs: number): Buffer {
+    const frame = Buffer.alloc(WIDTH * NATIVE_HEIGHT * BYTES_PER_PIXEL);
+    drawHudOverlay(frame, { width: WIDTH, rowScale: 2 }, epochMs, [
+      true,
+      false,
+      false,
+      false,
+    ]);
+    return frame;
+  }
+
+  /** The driver feed sends a 640x480 frame unscaled; map source y onto it. */
+  function nativeSampler(frame: Buffer): HudSampler {
+    return {
+      lumaAt: (x, y) => {
+        const px = Math.floor(x);
+        const py = Math.floor(y * 2);
+        return px < 0 || py < 0 || px >= WIDTH || py >= NATIVE_HEIGHT
+          ? 0
+          : (frame[(py * WIDTH + px) * BYTES_PER_PIXEL] ?? 0);
+      },
+    };
+  }
+
+  it("decodes back to the millisecond", () => {
+    expect(
+      decodeHudClock(nativeSampler(renderNativeHud(SAMPLE_EPOCH_MS))),
+    ).toBe(SAMPLE_MS_OF_DAY);
   });
 });
 

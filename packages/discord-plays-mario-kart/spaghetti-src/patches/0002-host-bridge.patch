@@ -1,0 +1,593 @@
+diff --git a/src/main.c b/src/main.c
+index 1bdbee6..d7df786 100644
+--- a/src/main.c
++++ b/src/main.c
+@@ -1,3 +1,4 @@
++#include "port/HostBridge.h"
+ #include <libultraship.h>
+ #include <libultra/vi.h>
+ #include <libultra/os.h>
+@@ -336,6 +337,7 @@ void init_controllers(void) {
+     osCreateMesgQueue(&gSIEventMesgQueue, &gSIEventMesgBuf[0], ARRAY_COUNT(gSIEventMesgBuf));
+     osSetEventMesg(OS_EVENT_SI, &gSIEventMesgQueue, OS_MESG_32(0x33333333));
+     osContInit(&gSIEventMesgQueue, &gControllerBits, gControllerStatuses);
++    HostBridge_ClaimControllerPorts(&gControllerBits);
+     if ((gControllerBits & 1) == 0) {
+         sIsController1Unplugged = true;
+     } else {
+@@ -395,6 +397,7 @@ void read_controllers(void) {
+     osContStartReadData(&gSIEventMesgQueue);
+     // osRecvMesg(&gSIEventMesgQueue, &msg, OS_MESG_BLOCK);
+     osContGetReadData(gControllerPads);
++    HostBridge_LatchInput(gControllerPads);
+     update_controller(0);
+     update_controller(1);
+     update_controller(2);
+@@ -1183,6 +1186,7 @@ void thread5_iteration(void) {
+ 
+     end_master_display_list();
+     display_and_vsync();
++    HostBridge_EndGameFrame();
+ }
+ 
+ /**
+diff --git a/src/port/Engine.cpp b/src/port/Engine.cpp
+index 23036ad..16da5c9 100644
+--- a/src/port/Engine.cpp
++++ b/src/port/Engine.cpp
+@@ -1,3 +1,4 @@
++#include "port/HostBridge.h"
+ #include "Engine.h"
+ 
+ #include <cstdlib>
+@@ -96,6 +97,7 @@ GameEngine::GameEngine() {
+     this->context->InitConfiguration();    // without this line InitConsoleVariables fails at Config::Reload()
+     this->context->InitConsoleVariables(); // without this line the controldeck constructor failes in
+                                            // ShipDeviceIndexMappingManager::UpdateControllerNamesFromConfig()
++    HostBridge_ConfigureEngine();
+ 
+     auto defaultMappings = std::make_shared<Ship::ControllerDefaultMappings>(
+         // KeyboardKeyToButtonMappings
+@@ -494,7 +496,9 @@ void GameEngine::HandleAudioThread() {
+         std::unique_lock<std::mutex> Lock(audio.mutex);
+ 
+         int samples_left = AudioPlayerBuffered();
+-        u32 num_audio_samples = samples_left < AudioPlayerGetDesiredBuffered() ? SAMPLES_HIGH : SAMPLES_LOW;
++        u32 num_audio_samples = HostBridge_IsEnabled()
++                                    ? HostBridge_AudioSamplesPerSubframe(SAMPLES_LOW, SAMPLES_HIGH)
++                                    : (samples_left < AudioPlayerGetDesiredBuffered() ? SAMPLES_HIGH : SAMPLES_LOW);
+ 
+         s16 nas_buffer[SAMPLES_PER_FRAME] = { 0 };
+         f32 hmas_buffer[SAMPLES_PER_FRAME] = { 0 };
+@@ -513,6 +517,7 @@ void GameEngine::HandleAudioThread() {
+         }
+ 
+         AudioPlayerPlayFrame((u8*) mix_buffer, 2 * num_audio_samples * 4);
++        HostBridge_SubmitAudio(mix_buffer, 2 * num_audio_samples);
+ 
+         audio.processing = false;
+         audio.cv_from_thread.notify_one();
+diff --git a/src/port/Game.cpp b/src/port/Game.cpp
+index 19a41f6..e6e7e39 100644
+--- a/src/port/Game.cpp
++++ b/src/port/Game.cpp
+@@ -2,6 +2,7 @@
+ #include <typeinfo>
+ 
+ #include "Game.h"
++#include "port/HostBridge.h"
+ #include "port/Engine.h"
+ 
+ #include <fast/Fast3dWindow.h>
+@@ -1050,7 +1051,9 @@ extern "C"
+     setenv("SHIP_HOME", "~/Library/Application Support/SpaghettiKart", 0);
+ #endif
+     // load_wasm();
++    HostBridge_ParseArgs(argc, argv);
+     GameEngine::Create();
++    HostBridge_Connect();
+     audio_init();
+     sound_init();
+ 
+diff --git a/src/port/HostBridge.cpp b/src/port/HostBridge.cpp
+new file mode 100644
+index 0000000..b1d52e5
+--- /dev/null
++++ b/src/port/HostBridge.cpp
+@@ -0,0 +1,360 @@
++#include "HostBridge.h"
++
++#include <libultraship.h>
++#include <SDL2/SDL.h>
++#include <fast/Fast3dWindow.h>
++#include <fast/interpreter.h>
++
++#include <atomic>
++#include <chrono>
++#include <condition_variable>
++#include <cstdio>
++#include <cstdlib>
++#include <cstring>
++#include <mutex>
++#include <string>
++#include <thread>
++
++#include <sys/socket.h>
++#include <sys/un.h>
++#include <unistd.h>
++
++#include "Game.h"
++
++extern "C" {
++#include "main.h"
++#include "menus.h"
++#include "code_800029B0.h"
++#include "code_80057C60.h"
++}
++
++namespace {
++
++struct BridgeState {
++    bool enabled = false;
++    bool lockstep = false;
++    bool hiddenWindow = false;
++    uint32_t outputFps = 30;
++    std::string socketPath;
++
++    int fd = -1;
++    std::mutex writeMutex;
++    std::thread reader;
++
++    std::mutex inputMutex;
++    HostInput input{};
++
++    std::mutex stepMutex;
++    std::condition_variable stepCv;
++    uint64_t stepCredits = 0;
++    bool quitting = false;
++    std::atomic<bool> pacedRequested{ false };
++
++    uint32_t gameFrame = 0;
++    uint32_t latchedInputSeq = 0;
++    std::chrono::steady_clock::time_point latchedAt;
++    std::atomic<uint32_t> drawSeq{ 0 };
++
++    uint64_t audioSamplesWritten = 0;
++    uint32_t audioGameFrames = 0;
++};
++
++BridgeState gBridge;
++
++void Fail(const char* what) {
++    std::fprintf(stderr, "[host-bridge] %s: %s\n", what, std::strerror(errno));
++    std::_Exit(70);
++}
++
++bool ReadExact(int fd, void* buf, size_t len) {
++    auto* out = static_cast<uint8_t*>(buf);
++    while (len > 0) {
++        ssize_t n = read(fd, out, len);
++        if (n <= 0) {
++            if (n < 0 && errno == EINTR) {
++                continue;
++            }
++            return false;
++        }
++        out += n;
++        len -= (size_t)n;
++    }
++    return true;
++}
++
++void WriteExact(int fd, const void* buf, size_t len) {
++    const auto* in = static_cast<const uint8_t*>(buf);
++    while (len > 0) {
++        ssize_t n = write(fd, in, len);
++        if (n < 0) {
++            if (errno == EINTR) {
++                continue;
++            }
++            // The host went away; nothing useful remains for this process.
++            std::_Exit(0);
++        }
++        in += n;
++        len -= (size_t)n;
++    }
++}
++
++void Send(uint32_t type, const void* header, size_t headerLen, const void* body, size_t bodyLen) {
++    uint32_t prefix[2] = { type, (uint32_t)(headerLen + bodyLen) };
++    std::lock_guard<std::mutex> lock(gBridge.writeMutex);
++    WriteExact(gBridge.fd, prefix, sizeof(prefix));
++    WriteExact(gBridge.fd, header, headerLen);
++    if (bodyLen > 0) {
++        WriteExact(gBridge.fd, body, bodyLen);
++    }
++}
++
++void Quit() {
++    {
++        std::lock_guard<std::mutex> lock(gBridge.stepMutex);
++        gBridge.quitting = true;
++    }
++    gBridge.stepCv.notify_all();
++    std::_Exit(0);
++}
++
++void ReaderLoop() {
++    std::vector<uint8_t> payload;
++    for (;;) {
++        uint32_t prefix[2];
++        if (!ReadExact(gBridge.fd, prefix, sizeof(prefix))) {
++            Quit();
++        }
++        payload.resize(prefix[1]);
++        if (prefix[1] > 0 && !ReadExact(gBridge.fd, payload.data(), prefix[1])) {
++            Quit();
++        }
++        switch (prefix[0]) {
++            case HOST_MSG_INPUT: {
++                if (payload.size() != sizeof(HostInput)) {
++                    std::fprintf(stderr, "[host-bridge] bad input message size %zu\n", payload.size());
++                    std::_Exit(65);
++                }
++                std::lock_guard<std::mutex> lock(gBridge.inputMutex);
++                std::memcpy(&gBridge.input, payload.data(), sizeof(HostInput));
++                break;
++            }
++            case HOST_MSG_STEP: {
++                if (payload.size() != sizeof(HostStep)) {
++                    std::fprintf(stderr, "[host-bridge] bad step message size %zu\n", payload.size());
++                    std::_Exit(65);
++                }
++                HostStep step;
++                std::memcpy(&step, payload.data(), sizeof(step));
++                {
++                    std::lock_guard<std::mutex> lock(gBridge.stepMutex);
++                    gBridge.stepCredits += step.frames;
++                }
++                gBridge.stepCv.notify_all();
++                break;
++            }
++            case HOST_MSG_RESET:
++                CM_RequestReset();
++                break;
++            case HOST_MSG_QUIT:
++                Quit();
++                break;
++            case HOST_MSG_RUN_PACED:
++                gBridge.pacedRequested.store(true);
++                gBridge.stepCv.notify_all();
++                break;
++            default:
++                std::fprintf(stderr, "[host-bridge] unknown message type %u\n", prefix[0]);
++                std::_Exit(65);
++        }
++    }
++}
++
++void OnFrameCaptured(const uint8_t* bgra, uint32_t width, uint32_t height, void*) {
++    HostFrameHeader header{};
++    header.drawSeq = gBridge.drawSeq.fetch_add(1);
++    header.gameFrame = gBridge.gameFrame;
++    header.latchedInputSeq = gBridge.latchedInputSeq;
++    header.latchToCaptureUs = (uint32_t)std::chrono::duration_cast<std::chrono::microseconds>(
++                                  std::chrono::steady_clock::now() - gBridge.latchedAt)
++                                  .count();
++    header.width = width;
++    header.height = height;
++    Send(HOST_MSG_FRAME, &header, sizeof(header), bgra, (size_t)width * height * 4);
++}
++
++} // namespace
++
++extern "C" {
++
++void HostBridge_ParseArgs(int argc, char** argv) {
++    for (int i = 1; i < argc; i++) {
++        std::string arg = argv[i];
++        if (arg == "--host-socket" && i + 1 < argc) {
++            gBridge.enabled = true;
++            gBridge.socketPath = argv[++i];
++        } else if (arg == "--lockstep") {
++            gBridge.lockstep = true;
++        } else if (arg == "--hidden") {
++            gBridge.hiddenWindow = true;
++        } else if (arg == "--output-fps" && i + 1 < argc) {
++            gBridge.outputFps = (uint32_t)std::strtoul(argv[++i], nullptr, 10);
++        }
++    }
++    if (gBridge.outputFps != 30 && gBridge.outputFps != 60) {
++        std::fprintf(stderr, "[host-bridge] --output-fps must be 30 or 60\n");
++        std::_Exit(64);
++    }
++}
++
++bool HostBridge_IsEnabled(void) {
++    return gBridge.enabled;
++}
++
++void HostBridge_ConfigureEngine(void) {
++    if (!gBridge.enabled) {
++        return;
++    }
++    // Captured frames must be exactly the configured size, not a HiDPI multiple.
++    SDL_SetHint(SDL_HINT_VIDEO_HIGHDPI_DISABLED, "1");
++    auto config = Ship::Context::GetRawInstance()->GetConfig();
++    config->SetInt("Window.Backend.Id", Fast::WindowBackend::FAST3D_SDL_OPENGL);
++    config->SetBool("Window.Fullscreen.Enabled", false);
++    config->SetInt("Window.Width", 640);
++    config->SetInt("Window.Height", 480);
++    config->SetString("Window.AudioBackend", "null");
++
++    CVarSetInteger("gHostBridge.Unpaced", gBridge.lockstep ? 1 : 0);
++    CVarSetInteger("gHostBridge.FixedSchedule", 1);
++    CVarSetInteger("gHostBridge.HiddenWindow", gBridge.hiddenWindow ? 1 : 0);
++    CVarSetInteger("gVsyncEnabled", 0);
++    CVarSetInteger("gMatchRefreshRate", 0);
++    CVarSetInteger("gModifyInterpolationTargetFPS", 0);
++    CVarSetInteger("gInterpolationFPS", (int32_t)gBridge.outputFps);
++    CVarSetInteger("gSkipIntro", 2);
++    CVarSetInteger("gEnableDebugMode", 0);
++    CVarSetInteger("gFreecam", 0);
++    CVarSetInteger("gInternalResolution", 1);
++    CVarSetInteger("gMSAAValue", 1);
++}
++
++void HostBridge_Connect(void) {
++    if (!gBridge.enabled) {
++        return;
++    }
++    gBridge.fd = socket(AF_UNIX, SOCK_STREAM, 0);
++    if (gBridge.fd < 0) {
++        Fail("socket");
++    }
++    int sendBuffer = 8 * 1024 * 1024;
++    setsockopt(gBridge.fd, SOL_SOCKET, SO_SNDBUF, &sendBuffer, sizeof(sendBuffer));
++
++    sockaddr_un addr{};
++    addr.sun_family = AF_UNIX;
++    if (gBridge.socketPath.size() >= sizeof(addr.sun_path)) {
++        std::fprintf(stderr, "[host-bridge] socket path too long\n");
++        std::_Exit(64);
++    }
++    std::strncpy(addr.sun_path, gBridge.socketPath.c_str(), sizeof(addr.sun_path) - 1);
++    if (connect(gBridge.fd, reinterpret_cast<sockaddr*>(&addr), sizeof(addr)) != 0) {
++        Fail("connect");
++    }
++
++    auto wnd = std::dynamic_pointer_cast<Fast::Fast3dWindow>(Ship::Context::GetRawInstance()->GetWindow());
++    wnd->GetInterpreterWeak().lock()->SetFrameCapture(OnFrameCaptured, nullptr, true);
++
++    HostHello hello{ HOST_BRIDGE_PROTOCOL_VERSION, HOST_BRIDGE_AUDIO_RATE, gBridge.outputFps,
++                     gBridge.lockstep ? 1u : 0u };
++    Send(HOST_MSG_HELLO, &hello, sizeof(hello), nullptr, 0);
++
++    gBridge.latchedAt = std::chrono::steady_clock::now();
++    gBridge.reader = std::thread(ReaderLoop);
++    gBridge.reader.detach();
++}
++
++void HostBridge_ClaimControllerPorts(uint8_t* controllerBits) {
++    if (gBridge.enabled) {
++        *controllerBits = 0x0F;
++    }
++}
++
++void HostBridge_LatchInput(void* osContPads) {
++    if (!gBridge.enabled) {
++        return;
++    }
++    if (gBridge.lockstep && gBridge.pacedRequested.load()) {
++        gBridge.lockstep = false;
++        CVarSetInteger("gHostBridge.Unpaced", 0);
++    }
++    if (gBridge.lockstep) {
++        std::unique_lock<std::mutex> lock(gBridge.stepMutex);
++        gBridge.stepCv.wait(lock, [] {
++            return gBridge.stepCredits > 0 || gBridge.quitting || gBridge.pacedRequested.load();
++        });
++        if (gBridge.quitting) {
++            return;
++        }
++        if (gBridge.stepCredits > 0) {
++            gBridge.stepCredits--;
++        }
++    }
++
++    HostInput input;
++    {
++        std::lock_guard<std::mutex> lock(gBridge.inputMutex);
++        input = gBridge.input;
++    }
++    auto* pads = static_cast<OSContPad*>(osContPads);
++    for (int i = 0; i < 4; i++) {
++        pads[i].button = input.pads[i].button;
++        pads[i].stick_x = input.pads[i].stickX;
++        pads[i].stick_y = input.pads[i].stickY;
++        pads[i].right_stick_x = 0;
++        pads[i].right_stick_y = 0;
++        pads[i].err_no = 0;
++    }
++    gBridge.gameFrame++;
++    gBridge.latchedInputSeq = input.seq;
++    gBridge.latchedAt = std::chrono::steady_clock::now();
++}
++
++void HostBridge_EndGameFrame(void) {
++    if (!gBridge.enabled) {
++        return;
++    }
++    HostState state{};
++    state.gameFrame = gBridge.gameFrame;
++    state.gamestate = gGamestate;
++    state.raceState = gRaceState;
++    state.menuSelection = gMenuSelection;
++    state.activeScreenMode = gActiveScreenMode;
++    state.playerCountSelection = gPlayerCountSelection1;
++    state.modeSelection = gModeSelection;
++    state.courseId = gCurrentCourseId;
++    for (int i = 0; i < 4; i++) {
++        state.players[i].type = gPlayers[i].type;
++        state.players[i].currentRank = gPlayers[i].currentRank;
++        state.players[i].characterId = gPlayers[i].characterId;
++        state.hud[i].timer = playerHUD[i].someTimer;
++        state.hud[i].raceComplete = playerHUD[i].raceCompleteBool;
++    }
++    Send(HOST_MSG_STATE, &state, sizeof(state), nullptr, 0);
++}
++
++uint32_t HostBridge_AudioSamplesPerSubframe(uint32_t low, uint32_t high) {
++    // Two subframes per game frame. Keep the produced count on the nominal
++    // rate per game frame instead of following a playback device's buffer.
++    gBridge.audioGameFrames++;
++    const uint64_t target = (uint64_t)gBridge.audioGameFrames * HOST_BRIDGE_AUDIO_RATE / 30;
++    return gBridge.audioSamplesWritten + 2ull * high <= target ? high : low;
++}
++
++void HostBridge_SubmitAudio(const int16_t* stereo, uint32_t sampleFrames) {
++    if (!gBridge.enabled || gBridge.fd < 0) {
++        return;
++    }
++    gBridge.audioSamplesWritten += sampleFrames;
++    HostAudioHeader header{ gBridge.gameFrame, sampleFrames };
++    Send(HOST_MSG_AUDIO, &header, sizeof(header), stereo, (size_t)sampleFrames * 4);
++}
++
++} // extern "C"
+diff --git a/src/port/HostBridge.h b/src/port/HostBridge.h
+new file mode 100644
+index 0000000..6a45d90
+--- /dev/null
++++ b/src/port/HostBridge.h
+@@ -0,0 +1,130 @@
++#ifndef SPAGHETTI_HOST_BRIDGE_H
++#define SPAGHETTI_HOST_BRIDGE_H
++
++// Host bridge: lets an embedding process drive the game over a Unix socket.
++//
++// Enabled by `--host-socket <path>`. Without it every entry point is a no-op
++// and the game behaves exactly like upstream. With it, the host owns the four
++// controller ports, receives every drawn frame (BGRA), the mixed audio, and a
++// per-game-frame state record, and can request resets.
++//
++// Wire format: little-endian, each message is `u32 type, u32 length, payload`.
++// The payload layouts are the structs below; frame and audio payloads are
++// followed by their sample data. See PATCHES.md in the embedding repository.
++
++#include <stdbool.h>
++#include <stdint.h>
++
++#ifdef __cplusplus
++extern "C" {
++#endif
++
++#define HOST_BRIDGE_PROTOCOL_VERSION 1
++#define HOST_BRIDGE_AUDIO_RATE 26800
++
++enum HostBridgeMessageType {
++    // Game -> host
++    HOST_MSG_HELLO = 1,
++    HOST_MSG_FRAME = 2,
++    HOST_MSG_AUDIO = 3,
++    HOST_MSG_STATE = 4,
++    // Host -> game
++    HOST_MSG_INPUT = 16,
++    HOST_MSG_STEP = 17,
++    HOST_MSG_RESET = 18,
++    HOST_MSG_QUIT = 19,
++    // Leaves lockstep for wall-clock pacing; takes effect at the next game frame.
++    HOST_MSG_RUN_PACED = 20,
++};
++
++#pragma pack(push, 1)
++typedef struct {
++    uint32_t protocolVersion;
++    uint32_t audioRate;
++    uint32_t outputFps;
++    uint32_t lockstep;
++} HostHello;
++
++typedef struct {
++    uint32_t drawSeq;         // increments per drawn frame (interpolated frames included)
++    uint32_t gameFrame;       // game logic frame this draw belongs to
++    uint32_t latchedInputSeq; // newest host input applied by that game frame
++    uint32_t latchToCaptureUs;
++    uint32_t width;
++    uint32_t height;
++    // followed by width * height * 4 bytes of BGRA, top row first
++} HostFrameHeader;
++
++typedef struct {
++    uint32_t gameFrame;
++    uint32_t sampleFrames;
++    // followed by sampleFrames * 2 interleaved s16 stereo samples
++} HostAudioHeader;
++
++typedef struct {
++    uint16_t type;
++    int16_t currentRank;
++    uint16_t characterId;
++    uint16_t reserved;
++} HostPlayerState;
++
++typedef struct {
++    uint32_t timer;
++    int8_t raceComplete;
++    uint8_t reserved[3];
++} HostHudState;
++
++typedef struct {
++    uint32_t gameFrame;
++    int32_t gamestate;
++    int32_t raceState;
++    int32_t menuSelection;
++    int32_t activeScreenMode;
++    int32_t playerCountSelection;
++    int32_t modeSelection;
++    int16_t courseId;
++    int16_t reserved;
++    HostPlayerState players[4];
++    HostHudState hud[4];
++} HostState;
++
++typedef struct {
++    uint16_t button;
++    int8_t stickX;
++    int8_t stickY;
++} HostPad;
++
++typedef struct {
++    uint32_t seq;
++    HostPad pads[4];
++} HostInput;
++
++typedef struct {
++    uint32_t frames;
++} HostStep;
++#pragma pack(pop)
++
++// Parses bridge flags before the engine starts. Leaves unrelated args alone.
++void HostBridge_ParseArgs(int argc, char** argv);
++bool HostBridge_IsEnabled(void);
++// Writes the engine settings the bridge needs (OpenGL, null audio, pacing).
++// Runs after console variables load and before the window exists.
++void HostBridge_ConfigureEngine(void);
++// Connects to the host and installs frame capture. Runs after the window exists.
++void HostBridge_Connect(void);
++// Start of a game frame: waits for a step in lockstep mode, then overwrites
++// the controller pads with the host's newest input.
++void HostBridge_LatchInput(void* osContPads);
++// Forces all four controller ports to report as connected.
++void HostBridge_ClaimControllerPorts(uint8_t* controllerBits);
++// End of a game frame: publishes the state record.
++void HostBridge_EndGameFrame(void);
++// Chooses the per-subframe audio sample count so output tracks the nominal rate.
++uint32_t HostBridge_AudioSamplesPerSubframe(uint32_t low, uint32_t high);
++void HostBridge_SubmitAudio(const int16_t* stereo, uint32_t sampleFrames);
++
++#ifdef __cplusplus
++}
++#endif
++
++#endif

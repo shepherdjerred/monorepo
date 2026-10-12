@@ -1,4 +1,4 @@
-// The driver feed's own ffmpeg process: raw BGRA frames in, Annex-B H.264 out.
+// The driver feed's own ffmpeg process: raw BGRA frames in, H.264 in FLV out.
 //
 // This deliberately does NOT go through discord-video-stream's `prepareStream`.
 // That is the library's only spawn entry point and it muxes to NUT for Discord's
@@ -14,19 +14,33 @@
 
 import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
 import * as Sentry from "@sentry/bun";
-import { WIDTH, HEIGHT, DISPLAY_ASPECT } from "#src/emulator/constants.ts";
+import { DISPLAY_ASPECT } from "#src/emulator/constants.ts";
+import { frameBytes, type FrameFormat } from "#src/engine/format.ts";
 import { LatestFrameSink } from "#src/stream/latest-frame-sink.ts";
 import {
   driverFeedAccessUnitBytes,
   driverFeedEncoderRunning,
+  driverFeedFrameToUnitMs,
   driverFeedFramesEvictedTotal,
+  driverFeedInputToUnitMs,
+  driverFeedLatencyCorrelationFailuresTotal,
+  driverFeedSinkFrames,
 } from "#src/observability/metrics.ts";
 import { logger } from "#src/logger.ts";
-import { AnnexBSplitter, type AccessUnit } from "./annex-b.ts";
+import type { AccessUnit } from "./annex-b.ts";
+import { FlvAccessUnitReader } from "./flv.ts";
+import {
+  DriverFeedLatencyTracker,
+  type DriverFeedFrameTiming,
+} from "./latency-tracker.ts";
 
-const FRAME_BYTES = WIDTH * HEIGHT * 4;
-/** Same bound as the Go-Live sink: evict the oldest rather than stall the emulator. */
-const MAX_BUFFERED_FRAMES = 3;
+/**
+ * The sink's minimum: one frame in the pipe's read buffer and one queued. Any
+ * deeper and a briefly slow ffmpeg leaves a standing queue of stale frames
+ * (33 ms each) in front of every new one; drivers want the newest frame, so
+ * the oldest is evicted instead.
+ */
+const MAX_BUFFERED_FRAMES = 2;
 
 // Profile and level are forced so the codec string handed to the browser's
 // VideoDecoder is exact rather than inferred. main (profile_idc 77 = 0x4D), no
@@ -41,9 +55,10 @@ const H264_LEVEL = "40";
 export const H264_CODEC_STRING = "avc1.4D4028";
 
 export type DriverFeedEncoderOptions = {
+  /** What the engine delivers: frame size and rate. Every frame is encoded. */
+  readonly source: FrameFormat;
   /** Square-pixel output height; width is derived from the 4:3 display aspect. */
   readonly outputHeight: number;
-  readonly frameRate: number;
   readonly bitrateKbps: number;
   readonly bitrateMaxKbps: number;
   readonly keyframeIntervalFrames: number;
@@ -58,8 +73,8 @@ export type DriverFeedOutputSize = {
 };
 
 /**
- * Aspect-correct the anamorphic 640x240 framebuffer to square pixels at
- * `height`, rounding width to an even number (H.264 4:2:0 requires it).
+ * Size the 4:3 picture in square pixels at `height`, rounding width to an even
+ * number (H.264 4:2:0 requires it).
  *
  * Unlike the Go-Live path there is no pillarbox: the browser lays the canvas out
  * with CSS, so sending black bars would just waste bitrate.
@@ -80,8 +95,9 @@ export function buildDriverFeedArgs(
   const scaleFilter = `scale=${String(out.width)}:${String(out.height)}`;
   // One frame of slack. A small bufsize keeps the VBR rate controller from
   // smoothing bitrate across many frames, which would show up as latency.
+  const frameRate = options.source.fps;
   const bufsizeKbits = Math.max(
-    Math.round(options.bitrateKbps / options.frameRate) * 2,
+    Math.round(options.bitrateKbps / frameRate) * 2,
     32,
   );
 
@@ -125,8 +141,7 @@ export function buildDriverFeedArgs(
     "-loglevel",
     "error",
     ...globalOptions,
-    // Input: raw frames on stdin. BGRA, not RGBA — get_video_buffer's
-    // non-idempotent b<->r swap nets BGRA on the tick path (wasm-src/PATCHES.md).
+    // Input: raw frames on stdin, BGRA, as the game reads its framebuffer back.
     "-fflags",
     "nobuffer",
     "-analyzeduration",
@@ -136,9 +151,9 @@ export function buildDriverFeedArgs(
     "-pix_fmt",
     "bgra",
     "-video_size",
-    `${String(WIDTH)}x${String(HEIGHT)}`,
+    `${String(options.source.width)}x${String(options.source.height)}`,
     "-framerate",
-    String(options.frameRate),
+    String(frameRate),
     // Raw BGRA is fully described above; the minimum legal probe size stops
     // ffmpeg waiting on a live pipe before it starts encoding.
     "-probesize",
@@ -149,7 +164,7 @@ export function buildDriverFeedArgs(
     "-vf",
     videoFilters.join(","),
     "-r",
-    String(options.frameRate),
+    String(frameRate),
     ...codecOptions,
     "-profile:v",
     H264_PROFILE,
@@ -169,14 +184,17 @@ export function buildDriverFeedArgs(
     String(options.keyframeIntervalFrames),
     "-keyint_min",
     String(options.keyframeIntervalFrames),
-    // Guarantees every access unit opens with an AUD, which is the boundary the
-    // splitter keys on. Without it a raw H.264 pipe is undelimited.
-    "-bsf:v",
-    "h264_metadata=aud=insert",
     "-flush_packets",
     "1",
+    // FLV, not raw H.264: each tag states its size, so the reader can hand a
+    // frame on the moment its last byte arrives. A raw elementary stream has no
+    // boundaries, and closing an access unit there means waiting for the next
+    // one — a full frame interval. The flags stop the muxer seeking back to
+    // patch duration/size into a pipe and skip the metadata tag nobody reads.
     "-f",
-    "h264",
+    "flv",
+    "-flvflags",
+    "no_duration_filesize+no_metadata",
     "pipe:1",
   ];
 }
@@ -207,13 +225,25 @@ export class DriverFeedEncoder {
   private readonly options: DriverFeedEncoderOptions;
   private readonly callbacks: DriverFeedEncoderCallbacks;
   private readonly processFactory: DriverFeedProcessFactory;
-  private readonly splitter = new AnnexBSplitter();
-  private sink: LatestFrameSink | undefined;
+  private readonly reader = new FlvAccessUnitReader();
+  private readonly latency = new DriverFeedLatencyTracker({
+    frameToUnit: (ms) => {
+      driverFeedFrameToUnitMs.observe(ms);
+    },
+    inputToUnit: (ms) => {
+      driverFeedInputToUnitMs.observe(ms);
+    },
+    correlationFailure: () => {
+      driverFeedLatencyCorrelationFailuresTotal.inc();
+    },
+  });
+  private sink: LatestFrameSink<DriverFeedFrameTiming> | undefined;
   private child: ChildProcessWithoutNullStreams | undefined;
   private stopping = false;
-  /** Single-use: the splitter carries stream state that must not span processes. */
+  /** Single-use: the reader carries stream state that must not span processes. */
   private started = false;
   private warnedSizeMismatch = false;
+  private readonly frameBytes: number;
 
   constructor(
     options: DriverFeedEncoderOptions,
@@ -223,6 +253,7 @@ export class DriverFeedEncoder {
     this.options = options;
     this.callbacks = callbacks;
     this.processFactory = processFactory;
+    this.frameBytes = frameBytes(options.source);
   }
 
   get running(): boolean {
@@ -252,15 +283,16 @@ export class DriverFeedEncoder {
     this.child = child;
     driverFeedEncoderRunning.set(1);
 
-    const sink = new LatestFrameSink({
-      frameBytes: FRAME_BYTES,
+    const sink = new LatestFrameSink<DriverFeedFrameTiming>({
+      frameBytes: this.frameBytes,
       maxBufferedFrames: MAX_BUFFERED_FRAMES,
       onFrameEvicted: () => {
         driverFeedFramesEvictedTotal.inc();
       },
-      onFrameDelivered: () => {
-        // Delivery is the uninteresting case; the eviction counter carries the
-        // health signal and a per-frame no-op keeps this off the hot path.
+      onFrameDelivered: (timing) => {
+        // Only frames that reach ffmpeg can become access units, so this is
+        // where the frame-to-unit pairing starts.
+        if (timing !== undefined) this.latency.frameDelivered(timing);
       },
     });
     this.sink = sink;
@@ -273,7 +305,19 @@ export class DriverFeedEncoder {
       if (!Buffer.isBuffer(chunk)) {
         throw new TypeError("ffmpeg stdout emitted a non-Buffer chunk");
       }
-      for (const unit of this.splitter.push(chunk)) {
+      let units: AccessUnit[];
+      try {
+        units = this.reader.push(chunk);
+      } catch (error) {
+        // FLV has no resync point, so a framing error ends this encoder. The
+        // Go-Live stream is unaffected; the feed is down until the next session.
+        logger.error("driver feed output is not valid FLV", error);
+        Sentry.captureException(error);
+        this.stop();
+        return;
+      }
+      for (const unit of units) {
+        this.latency.unitReady();
         driverFeedAccessUnitBytes.observe(unit.bytes.length);
         this.callbacks.onAccessUnit(unit);
       }
@@ -311,26 +355,35 @@ export class DriverFeedEncoder {
     });
   }
 
-  /** Feed one overlay-composited BGRA frame. No-op when the encoder is down. */
-  pushFrame(frame: Buffer): void {
+  /**
+   * Feed one overlay-composited BGRA frame. No-op when the encoder is down.
+   * `inputReceivedAtMs` is the receipt time of the earliest input this frame is
+   * the first to reflect, on the InputLatencyTracker clock.
+   */
+  pushFrame(frame: Buffer, inputReceivedAtMs?: number): void {
     const sink = this.sink;
     if (sink === undefined || !this.running) return;
-    if (frame.length !== FRAME_BYTES) {
+    if (frame.length !== this.frameBytes) {
       // ffmpeg was told a fixed -video_size, so a VI mode change would desync
       // the whole raw stream rather than produce one bad frame. Drop it. The
-      // Go-Live path is sized the same way and MK64 never leaves 640x240, so
-      // this firing at all means an assumption both encoders share has broken.
+      // Go-Live path is sized the same way and each engine keeps one frame
+      // size, so this firing at all means an assumption both encoders share
+      // has broken.
       if (!this.warnedSizeMismatch) {
         this.warnedSizeMismatch = true;
         logger.warn("driver feed dropping frames of unexpected size", {
-          expected: FRAME_BYTES,
+          expected: this.frameBytes,
           received: frame.length,
         });
       }
       driverFeedFramesEvictedTotal.inc();
       return;
     }
-    sink.writeFrame(frame);
+    sink.writeFrame(frame, {
+      pushedAtMs: performance.timeOrigin + performance.now(),
+      ...(inputReceivedAtMs === undefined ? {} : { inputReceivedAtMs }),
+    });
+    driverFeedSinkFrames.set(sink.bufferedBytes / this.frameBytes);
   }
 
   stop(): void {

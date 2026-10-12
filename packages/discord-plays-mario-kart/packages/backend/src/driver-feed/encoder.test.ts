@@ -9,10 +9,11 @@ import {
   type DriverFeedEncoderOptions,
   type DriverFeedProcessFactory,
 } from "./encoder.ts";
+import { spaghettiFormat } from "#src/engine/format.ts";
 
 const BASE: DriverFeedEncoderOptions = {
+  source: spaghettiFormat(30),
   outputHeight: 480,
-  frameRate: 30,
   bitrateKbps: 2500,
   bitrateMaxKbps: 4000,
   keyframeIntervalFrames: 30,
@@ -28,7 +29,7 @@ function valueOf(args: readonly string[], flag: string): string | undefined {
 }
 
 describe("driverFeedOutputSize", () => {
-  it("aspect-corrects the anamorphic framebuffer to square pixels", () => {
+  it("sizes the 4:3 picture in square pixels", () => {
     expect(driverFeedOutputSize(480)).toEqual({ width: 640, height: 480 });
     expect(driverFeedOutputSize(720)).toEqual({ width: 960, height: 720 });
   });
@@ -43,21 +44,36 @@ describe("driverFeedOutputSize", () => {
 });
 
 describe("buildDriverFeedArgs", () => {
-  it("describes the emulator's raw BGRA output on stdin", () => {
+  it("describes the game's raw BGRA output on stdin", () => {
     const args = buildDriverFeedArgs(BASE);
     expect(valueOf(args, "-f")).toBe("rawvideo");
     expect(valueOf(args, "-pix_fmt")).toBe("bgra");
-    expect(valueOf(args, "-video_size")).toBe("640x240");
+    expect(valueOf(args, "-video_size")).toBe("640x480");
+    expect(valueOf(args, "-framerate")).toBe("30");
     expect(valueOf(args, "-i")).toBe("pipe:0");
   });
 
-  it("emits an Annex-B elementary stream with AUD framing on stdout", () => {
+  it("encodes every frame at 60 fps output", () => {
+    const args = buildDriverFeedArgs({ ...BASE, source: spaghettiFormat(60) });
+    expect(valueOf(args, "-video_size")).toBe("640x480");
+    expect(valueOf(args, "-framerate")).toBe("60");
+    // Every frame is encoded: the output rate matches the input.
+    expect(valueOf(args, "-r")).toBe("60");
+    expect(valueOf(args, "-vf")).toBe("scale=640:480,format=yuv420p");
+  });
+
+  it("emits size-framed FLV on stdout so frames ship without waiting", () => {
     const args = buildDriverFeedArgs(BASE);
-    // The splitter keys entirely on AUDs, so losing this filter silently breaks
-    // access-unit boundaries rather than failing loudly.
-    expect(valueOf(args, "-bsf:v")).toBe("h264_metadata=aud=insert");
     // Output muxer is the last `-f`; the leading one selects the rawvideo input.
-    expect(args.slice(-3)).toEqual(["-f", "h264", "pipe:1"]);
+    // A raw H.264 stream here would hold every frame until the next arrived.
+    expect(args.slice(-5)).toEqual([
+      "-f",
+      "flv",
+      "-flvflags",
+      "no_duration_filesize+no_metadata",
+      "pipe:1",
+    ]);
+    expect(args).not.toContain("-bsf:v");
   });
 
   it("pins the profile and level that H264_CODEC_STRING advertises", () => {

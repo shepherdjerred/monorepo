@@ -26,7 +26,6 @@
         "$TURBO_ROOT$/packages/homelab/src/talos/liskov/patches/image.yaml",
         "$TURBO_ROOT$/packages/homelab/src/talos/torvalds/patches/image.yaml",
         "$TURBO_ROOT$/packages/discord-plays-pokemon/wasm-src/upstream.json",
-        "$TURBO_ROOT$/packages/discord-plays-mario-kart/wasm-src/upstream.json",
         "$TURBO_ROOT$/packages/discord-plays-mario-kart/Dockerfile",
         "$TURBO_ROOT$/packages/homelab/images/redlib/Dockerfile",
         "$TURBO_ROOT$/ci/ci-playwright/Dockerfile",

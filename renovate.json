@@ -104,33 +104,6 @@
     },
     {
       "customType": "regex",
-      "description": "n64wasm-source pin — track nbarkhina/N64Wasm master HEAD from its language-neutral upstream manifest",
-      "managerFilePatterns": [
-        "packages/discord-plays-mario-kart/wasm-src/upstream.json"
-      ],
-      "matchStrings": [
-        "\"branch\":\\s*\"(?<currentValue>[^\"]+)\"[\\s\\S]*?\"commit\":\\s*\"(?<currentDigest>[a-f0-9]{40})\""
-      ],
-      "datasourceTemplate": "git-refs",
-      "depNameTemplate": "n64wasm",
-      "packageNameTemplate": "https://github.com/nbarkhina/N64Wasm"
-    },
-    {
-      "customType": "regex",
-      "description": "Emscripten image used by the reproducible N64Wasm build, kept in sync across metadata and Dockerfile",
-      "managerFilePatterns": [
-        "packages/discord-plays-mario-kart/wasm-src/upstream.json",
-        "packages/discord-plays-mario-kart/Dockerfile"
-      ],
-      "matchStrings": [
-        "\"emsdkImage\":\\s*\"emscripten/emsdk:(?<currentValue>[^@\"]+)@(?<currentDigest>sha256:[a-f0-9]{64})\"",
-        "FROM\\s+emscripten/emsdk:(?<currentValue>[^@\\s]+)@(?<currentDigest>sha256:[a-f0-9]{64})\\s+AS\\s+wasm-builder"
-      ],
-      "datasourceTemplate": "docker",
-      "depNameTemplate": "emscripten/emsdk"
-    },
-    {
-      "customType": "regex",
       "description": "redlib source pin \u2014 track upstream main HEAD for the image build (ARG REDLIB_SOURCE_REF)",
       "managerFilePatterns": ["packages/homelab/images/redlib/Dockerfile"],
       "matchStrings": [
