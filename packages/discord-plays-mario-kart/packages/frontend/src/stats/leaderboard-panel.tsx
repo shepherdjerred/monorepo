@@ -1,15 +1,17 @@
-import IconTrophy from "~icons/ph/trophy-fill";
 import type { DiscordUser } from "@discord-plays-mario-kart/common";
 import { Avatar } from "#src/ui/avatar.tsx";
 import { cx } from "#src/ui/cx.ts";
+import { Placement } from "#src/ui/mk.tsx";
 import { PanelError, PanelLoading, PanelMessage } from "./bits.tsx";
 import { averagePlace, percent } from "./format.ts";
 import { useLeaderboard } from "./queries.ts";
 
-const RANK_STYLES: Record<number, string> = {
-  1: "text-gold",
-  2: "text-silver",
-  3: "text-bronze",
+// The podium rows carry their medal colour as a wash from the left, like the
+// game's results board.
+const PODIUM_ROWS: Record<number, string> = {
+  1: "bg-[linear-gradient(90deg,rgb(255_210_63/0.28),rgb(255_210_63/0)_75%)]",
+  2: "bg-[linear-gradient(90deg,rgb(217_225_239/0.18),rgb(217_225_239/0)_75%)]",
+  3: "bg-[linear-gradient(90deg,rgb(227_150_90/0.24),rgb(227_150_90/0)_75%)]",
 };
 
 export function LeaderboardPanel({
@@ -35,7 +37,7 @@ export function LeaderboardPanel({
   }
   if (query.data.length === 0) {
     return (
-      <PanelMessage icon={<IconTrophy />} title="No ranked races yet">
+      <PanelMessage title="No ranked races yet">
         Finish a Grand Prix or VS race while signed in and the standings start
         here.
       </PanelMessage>
@@ -43,7 +45,7 @@ export function LeaderboardPanel({
   }
   return (
     <div>
-      <div className="grid grid-cols-[1.5rem_minmax(0,1fr)_2.5rem_3rem_2.5rem] items-center gap-2 px-3 pb-1.5 text-[10px] font-semibold tracking-wider text-ink-faint uppercase">
+      <div className="grid grid-cols-[2.75rem_minmax(0,1fr)_2.5rem_3rem_2.5rem] items-center gap-2 px-3 pb-1.5 text-[10px] font-semibold tracking-wider text-ink-muted uppercase">
         <span className="text-center">#</span>
         <span>Driver</span>
         <span className="text-right" title="Podium finishes (1st to 3rd)">
@@ -66,17 +68,15 @@ export function LeaderboardPanel({
                   onSelect(entry.player);
                 }}
                 className={cx(
-                  "grid w-full grid-cols-[1.5rem_minmax(0,1fr)_2.5rem_3rem_2.5rem] items-center gap-2 rounded-xl px-3 py-2 text-left transition-colors hover:bg-white/[0.04]",
-                  isMe && "bg-brand-soft ring-1 ring-brand/20",
+                  "grid w-full grid-cols-[2.75rem_minmax(0,1fr)_2.5rem_3rem_2.5rem] items-center gap-2 rounded-xl px-3 py-2 text-left transition-colors hover:bg-white/[0.06]",
+                  PODIUM_ROWS[rank],
                 )}
               >
-                <span
-                  className={cx(
-                    "text-center text-sm font-bold tabular-nums",
-                    RANK_STYLES[rank] ?? "text-ink-faint",
-                  )}
-                >
-                  {rank}
+                <span className="flex justify-center">
+                  <Placement
+                    place={rank}
+                    className={rank <= 3 ? "text-[22px]" : "text-base"}
+                  />
                 </span>
                 <span className="flex min-w-0 items-center gap-2.5">
                   <Avatar
@@ -88,8 +88,13 @@ export function LeaderboardPanel({
                   <span className="min-w-0">
                     <span className="block truncate text-sm font-semibold text-ink">
                       {entry.player.name}
+                      {isMe ? (
+                        <span className="ml-1.5 rounded bg-mk-red px-1 py-px text-[9px] font-bold tracking-wider text-white uppercase">
+                          You
+                        </span>
+                      ) : null}
                     </span>
-                    <span className="block text-[11px] text-ink-faint tabular-nums">
+                    <span className="block text-[11px] text-ink-muted tabular-nums">
                       {entry.wins}W · {entry.losses}L
                     </span>
                   </span>
@@ -97,7 +102,7 @@ export function LeaderboardPanel({
                 <span className="text-right text-sm text-ink-muted tabular-nums">
                   {entry.podiums}
                 </span>
-                <span className="text-right text-sm font-semibold text-ink tabular-nums">
+                <span className="text-right font-display text-base text-white italic tabular-nums">
                   {percent(entry.winRate)}
                 </span>
                 <span className="text-right text-sm text-ink-muted tabular-nums">

@@ -1,4 +1,3 @@
-import IconChart from "~icons/ph/chart-bar-fill";
 import IconArrowLeft from "~icons/ph/arrow-left-bold";
 import IconDiscord from "~icons/ph/discord-logo-fill";
 import {
@@ -10,40 +9,47 @@ import {
 import { Avatar } from "#src/ui/avatar.tsx";
 import { Button } from "#src/ui/button.tsx";
 import { cx } from "#src/ui/cx.ts";
-import { PanelError, PanelLoading, PanelMessage, StatTile } from "./bits.tsx";
-import { averagePlace, formatRaceTime, ordinal, percent } from "./format.ts";
+import {
+  LapTime,
+  PanelError,
+  PanelLoading,
+  PanelMessage,
+  StatTile,
+} from "./bits.tsx";
+import { averagePlace, ordinal, percent } from "./format.ts";
 import { usePlayerStats } from "./queries.ts";
 import { RaceList } from "./race-list.tsx";
 
 const BAR_STYLES: Record<number, string> = {
-  0: "bg-gold",
-  1: "bg-silver",
-  2: "bg-bronze",
+  0: "bg-[linear-gradient(180deg,#fff3b0,#ffd23f_40%,#d79a00)]",
+  1: "bg-[linear-gradient(180deg,#ffffff,#d9e1ef_40%,#8f9bb3)]",
+  2: "bg-[linear-gradient(180deg,#ffd9b8,#e3965a_40%,#9c531d)]",
 };
 
 function PlacementChart({ placements }: { placements: readonly number[] }) {
   const max = Math.max(1, ...placements);
   return (
     <div>
-      <h3 className="mb-2 text-xs font-semibold text-ink-muted">Finishes</h3>
+      <h3 className="mk-title mb-2 text-base text-white">Finishes</h3>
       <div className="flex h-28 items-end gap-1.5 rounded-xl border border-border-subtle bg-surface-sunken px-3 pt-3 pb-2">
         {placements.map((count, index) => (
           <div
             key={ordinal(index + 1)}
             className="flex h-full flex-1 flex-col items-center justify-end gap-1"
           >
-            <span className="text-[10px] text-ink-faint tabular-nums">
+            <span className="text-[10px] font-semibold text-ink-muted tabular-nums">
               {count > 0 ? count : ""}
             </span>
             <div
               className={cx(
                 "w-full rounded-t-md",
-                BAR_STYLES[index] ?? "bg-ink-faint/50",
+                BAR_STYLES[index] ??
+                  "bg-[linear-gradient(180deg,#4d5ea8,#2b3770)]",
               )}
               style={{ height: `${String(Math.max(3, (count / max) * 100))}%` }}
               title={`${ordinal(index + 1)}: ${String(count)}`}
             />
-            <span className="text-[10px] font-medium text-ink-faint">
+            <span className="font-display text-[11px] text-ink-muted italic">
               {ordinal(index + 1)}
             </span>
           </div>
@@ -57,7 +63,7 @@ function StatsBody({ stats }: { stats: PlayerStats }) {
   const { record } = stats;
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2">
         <StatTile label="Races" value={record.races} />
         <StatTile
           label="Wins"
@@ -82,9 +88,7 @@ function StatsBody({ stats }: { stats: PlayerStats }) {
       <PlacementChart placements={stats.placements} />
       {stats.bestTimes.length > 0 ? (
         <div>
-          <h3 className="mb-2 text-xs font-semibold text-ink-muted">
-            Best times
-          </h3>
+          <h3 className="mk-title mb-2 text-base text-white">Best times</h3>
           <ul className="divide-y divide-border-subtle overflow-hidden rounded-xl border border-border-subtle bg-surface-sunken">
             {stats.bestTimes.map((best) => (
               <li
@@ -98,9 +102,7 @@ function StatsBody({ stats }: { stats: PlayerStats }) {
                   <span className="text-ink-faint">
                     {characterName(best.characterId)}
                   </span>
-                  <span className="font-mono font-semibold text-ink tabular-nums">
-                    {formatRaceTime(best.raceTimeMs)}
-                  </span>
+                  <LapTime ms={best.raceTimeMs} className="text-sm" />
                 </span>
               </li>
             ))}
@@ -109,9 +111,7 @@ function StatsBody({ stats }: { stats: PlayerStats }) {
       ) : null}
       {stats.recent.length > 0 ? (
         <div>
-          <h3 className="mb-2 text-xs font-semibold text-ink-muted">
-            Recent races
-          </h3>
+          <h3 className="mk-title mb-2 text-base text-white">Recent races</h3>
           <RaceList
             races={stats.recent}
             nowMs={Date.now()}
@@ -144,7 +144,7 @@ export function PlayerStatsPanel({
 
   if (subject === undefined) {
     return (
-      <PanelMessage icon={<IconChart />} title="Your stats live here">
+      <PanelMessage title="Your stats live here">
         <p>Sign in with Discord to track your wins, podiums, and best times.</p>
         <Button
           variant="discord"
@@ -178,7 +178,7 @@ export function PlayerStatsPanel({
         size="lg"
       />
       <div className="min-w-0">
-        <div className="truncate text-base font-bold text-ink">
+        <div className="mk-title truncate text-2xl leading-tight text-white">
           {subject.name}
         </div>
         <div className="truncate text-xs text-ink-faint">
@@ -213,7 +213,7 @@ export function PlayerStatsPanel({
     <>
       {header}
       {query.data === null ? (
-        <PanelMessage icon={<IconChart />} title="No ranked races yet">
+        <PanelMessage title="No ranked races yet">
           Grand Prix and VS races count. Time trials and battles don&apos;t.
         </PanelMessage>
       ) : (

@@ -1,17 +1,11 @@
 import type { ReactNode } from "react";
-import IconSpinner from "~icons/ph/circle-notch-bold";
 import IconWarning from "~icons/ph/warning-circle-fill";
 import { Button } from "#src/ui/button.tsx";
 import { cx } from "#src/ui/cx.ts";
-import { ordinal } from "./format.ts";
+import { ItemBox, Placement } from "#src/ui/mk.tsx";
+import { formatLapTimer, formatRaceTime } from "./format.ts";
 
-const PLACE_STYLES: Record<number, string> = {
-  1: "bg-gold/15 text-gold ring-gold/30",
-  2: "bg-silver/10 text-silver ring-silver/25",
-  3: "bg-bronze/15 text-bronze ring-bronze/30",
-};
-
-/** A placement chip: gold, silver and bronze for the podium. */
+/** A placement in the game's results lettering: gold, silver, bronze, then plain. */
 export function PlaceBadge({
   place,
   size = "md",
@@ -22,14 +16,32 @@ export function PlaceBadge({
   return (
     <span
       className={cx(
-        "inline-flex shrink-0 items-center justify-center rounded-md font-bold tabular-nums ring-1",
-        size === "sm"
-          ? "h-5 min-w-8 px-1 text-[10px]"
-          : "h-6 min-w-10 px-1.5 text-xs",
-        PLACE_STYLES[place] ?? "bg-white/5 text-ink-muted ring-white/10",
+        "inline-flex shrink-0 justify-center",
+        size === "sm" ? "w-9 text-[15px]" : "w-11 text-lg",
       )}
     >
-      {ordinal(place)}
+      <Placement place={place} />
+    </span>
+  );
+}
+
+/** A race time in the in-game timer's style: 1'23"45 in yellow HUD digits. */
+export function LapTime({
+  ms,
+  finished = true,
+  className,
+}: {
+  ms: number;
+  finished?: boolean;
+  className?: string;
+}) {
+  return finished ? (
+    <span className={cx("mk-hud", className)} aria-label={formatRaceTime(ms)}>
+      {formatLapTimer(ms)}
+    </span>
+  ) : (
+    <span className={cx("font-display text-ink-faint italic", className)}>
+      DNF
     </span>
   );
 }
@@ -44,13 +56,15 @@ export function StatTile({
   sub?: ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-border-subtle bg-surface-sunken px-3 py-2.5">
-      <div className="text-[11px] font-medium text-ink-faint">{label}</div>
-      <div className="mt-0.5 text-xl font-bold text-ink tabular-nums">
+    <div className="relative overflow-hidden rounded-xl border border-border-subtle bg-surface-sunken px-3 py-2.5">
+      <div className="text-[11px] font-semibold tracking-wide text-ink-muted uppercase">
+        {label}
+      </div>
+      <div className="mk-title mt-0.5 text-[28px] leading-none text-white">
         {value}
       </div>
       {sub === undefined ? null : (
-        <div className="text-[11px] text-ink-faint">{sub}</div>
+        <div className="mt-1 text-[11px] text-ink-muted">{sub}</div>
       )}
     </div>
   );
@@ -66,13 +80,17 @@ export function PanelMessage({
   children?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center gap-2 px-6 py-10 text-center">
-      {icon === undefined ? null : (
-        <div className="text-2xl text-ink-faint">{icon}</div>
+    <div className="flex flex-col items-center gap-2.5 px-6 py-10 text-center">
+      {icon === undefined ? (
+        <ItemBox size={48} bobbing={false} />
+      ) : (
+        <div className="text-3xl">{icon}</div>
       )}
-      <p className="text-sm font-semibold text-ink-muted">{title}</p>
+      <p className="mk-title text-xl text-white">{title}</p>
       {children === undefined ? null : (
-        <div className="max-w-xs text-xs text-ink-faint">{children}</div>
+        <div className="max-w-xs text-xs leading-relaxed text-ink-muted">
+          {children}
+        </div>
       )}
     </div>
   );
@@ -80,8 +98,9 @@ export function PanelMessage({
 
 export function PanelLoading() {
   return (
-    <div className="flex justify-center py-12 text-ink-faint">
-      <IconSpinner className="size-5 animate-spin" />
+    <div className="flex flex-col items-center gap-3 py-12" role="status">
+      <ItemBox size={44} />
+      <span className="text-xs font-medium text-ink-muted">Loading…</span>
     </div>
   );
 }

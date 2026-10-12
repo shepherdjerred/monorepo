@@ -23,7 +23,7 @@ export function Tabs<T extends string>({
     <div
       role="tablist"
       aria-label={label}
-      className="grid auto-cols-fr grid-flow-col gap-1 rounded-xl border border-border-subtle bg-surface-sunken p-1"
+      className="grid auto-cols-fr grid-flow-col gap-1 rounded-xl border border-border-subtle bg-surface-sunken p-1 shadow-[inset_0_2px_6px_rgb(0_0_0/0.4)]"
     >
       {items.map((item) => {
         const selected = item.id === value;
@@ -37,10 +37,12 @@ export function Tabs<T extends string>({
               onChange(item.id);
             }}
             className={cx(
-              "inline-flex h-8 items-center justify-center gap-1.5 rounded-lg px-2 text-xs font-semibold transition-colors",
+              "inline-flex h-9 items-center justify-center gap-1.5 rounded-lg px-2 font-display text-[15px] tracking-wide italic transition-colors",
+              // The selected tab is a menu button from the game: red, with
+              // yellow lettering.
               selected
-                ? "bg-surface-raised text-ink shadow-[0_1px_0_rgb(255_255_255/0.06)_inset]"
-                : "text-ink-faint hover:text-ink-muted",
+                ? "bg-[linear-gradient(180deg,#ff3448,#c40f24)] text-mk-yellow shadow-[0_2px_0_#7a0915,inset_0_1px_0_rgb(255_255_255/0.3)] [text-shadow:0_1px_0_rgb(80_0_10/0.8)]"
+                : "text-ink-muted hover:bg-white/5 hover:text-ink",
             )}
           >
             {item.icon}

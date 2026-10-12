@@ -1,11 +1,13 @@
 import IconDiscord from "~icons/ph/discord-logo-fill";
 import IconSignOut from "~icons/ph/sign-out-bold";
+import IconFlag from "~icons/ph/flag-checkered-fill";
 import IconWifi from "~icons/ph/wifi-high-bold";
 import IconWifiOff from "~icons/ph/wifi-slash-bold";
 import type { DiscordUser } from "@discord-plays-mario-kart/common";
 import { Avatar } from "#src/ui/avatar.tsx";
 import { Button } from "#src/ui/button.tsx";
 import { cx } from "#src/ui/cx.ts";
+import { CheckerStrip } from "#src/ui/mk.tsx";
 
 function rttTone(rttMs: number): string {
   if (rttMs < 60) {
@@ -30,18 +32,18 @@ export function TopBar({
   onSignOut: () => void;
 }) {
   return (
-    <header className="sticky top-0 z-30 border-b border-white/5 bg-surface-page/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-30 bg-[#0d1540]/90 backdrop-blur-xl">
       <div className="mx-auto flex h-14 max-w-[1440px] items-center justify-between gap-3 px-4 sm:px-6">
-        <div className="flex min-w-0 items-center gap-2.5">
-          <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-brand-strong to-[#b3201c] text-[11px] font-black tracking-tight text-white shadow-[0_6px_18px_-6px_var(--color-brand)]">
-            64
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex size-9 shrink-0 -skew-x-6 items-center justify-center rounded-lg bg-[linear-gradient(180deg,#ff3448,#b80d21)] text-xl text-mk-yellow shadow-[0_3px_0_#6e0712,0_8px_18px_-6px_var(--color-mk-red)] ring-1 ring-white/20">
+            <IconFlag />
           </div>
-          <div className="min-w-0 leading-tight">
-            <div className="truncate text-[15px] font-bold text-ink">
-              Mario Kart 64
-            </div>
-            <div className="hidden truncate text-[11px] text-ink-faint sm:block">
+          <div className="min-w-0 leading-none">
+            <div className="truncate text-[11px] font-semibold tracking-[0.2em] text-mk-sky uppercase">
               Discord Plays
+            </div>
+            <div className="mk-title mt-0.5 truncate text-[22px] text-white">
+              Mario Kart <span className="text-mk-yellow">64</span>
             </div>
           </div>
         </div>
@@ -105,6 +107,7 @@ export function TopBar({
           )}
         </div>
       </div>
+      <CheckerStrip rolling className="h-1.5" />
     </header>
   );
 }

@@ -1,10 +1,29 @@
+function raceClock(ms: number): {
+  minutes: string;
+  seconds: string;
+  hundredths: string;
+} {
+  const totalHundredths = Math.round(ms / 10);
+  return {
+    minutes: String(Math.floor(totalHundredths / 6000)),
+    seconds: String(Math.floor((totalHundredths % 6000) / 100)).padStart(
+      2,
+      "0",
+    ),
+    hundredths: String(totalHundredths % 100).padStart(2, "0"),
+  };
+}
+
 /** "1:23.45" — MK64 race clocks run in hundredths. */
 export function formatRaceTime(ms: number): string {
-  const totalHundredths = Math.round(ms / 10);
-  const minutes = Math.floor(totalHundredths / 6000);
-  const seconds = Math.floor((totalHundredths % 6000) / 100);
-  const hundredths = totalHundredths % 100;
-  return `${String(minutes)}:${String(seconds).padStart(2, "0")}.${String(hundredths).padStart(2, "0")}`;
+  const { minutes, seconds, hundredths } = raceClock(ms);
+  return `${minutes}:${seconds}.${hundredths}`;
+}
+
+/** 1'23"45 — the in-game timer's own notation. */
+export function formatLapTimer(ms: number): string {
+  const { minutes, seconds, hundredths } = raceClock(ms);
+  return `${minutes}'${seconds}"${hundredths}`;
 }
 
 /** "1st", "2nd", "3rd", "4th" … "8th". */

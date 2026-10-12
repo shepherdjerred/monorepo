@@ -33,6 +33,11 @@ export default defineConfig({
           {
             name: "Inter",
           },
+          // Chunky display face for headings, placements and seat labels,
+          // in the spirit of MK64's title and results lettering.
+          {
+            name: "Lilita One",
+          },
         ],
       },
     }),

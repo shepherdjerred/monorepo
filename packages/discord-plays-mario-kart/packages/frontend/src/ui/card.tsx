@@ -1,5 +1,6 @@
 import type { HTMLAttributes, ReactNode } from "react";
 import { cx } from "./cx.ts";
+import { Kerb } from "./mk.tsx";
 
 export function Card({
   className,
@@ -9,7 +10,7 @@ export function Card({
   return (
     <div
       className={cx(
-        "rounded-2xl border border-border-subtle bg-surface-card shadow-card",
+        "rounded-2xl border border-border-subtle bg-[linear-gradient(180deg,#141c45,#0f1636)] shadow-card",
         className,
       )}
       {...rest}
@@ -37,11 +38,12 @@ export function CardHeader({
         className,
       )}
     >
-      <h2 className="flex items-center gap-2 text-sm font-semibold text-ink">
+      <h2 className="flex items-center gap-2.5 text-ink">
+        <Kerb className="h-4 w-1.5" />
         {icon === undefined ? null : (
-          <span className="text-ink-faint">{icon}</span>
+          <span className="text-mk-yellow">{icon}</span>
         )}
-        {title}
+        <span className="mk-title text-lg tracking-wide">{title}</span>
       </h2>
       {action}
     </div>

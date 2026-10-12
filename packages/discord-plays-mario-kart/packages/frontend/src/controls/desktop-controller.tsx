@@ -73,12 +73,12 @@ export function DesktopController({
       />
       <div className="px-4 pb-4 sm:px-5">
         {seated ? null : (
-          <p className="mb-3 rounded-lg border border-border-subtle bg-surface-sunken px-3 py-2 text-xs text-ink-faint">
+          <p className="mb-3 rounded-lg border border-mk-yellow/25 bg-mk-yellow/[0.07] px-3 py-2 text-xs text-ink-muted">
             Preview only — controls light up, but nothing reaches the game until
             you take a seat.
           </p>
         )}
-        <div className="relative mx-auto max-w-3xl overflow-hidden rounded-[28px] border border-white/5 bg-[linear-gradient(180deg,#1a1d26,#11131a)] px-6 pt-5 pb-6 shadow-[inset_0_1px_0_rgb(255_255_255/0.05)]">
+        <div className="relative mx-auto max-w-3xl overflow-hidden rounded-[40px] border border-black/40 bg-[radial-gradient(120%_90%_at_50%_0%,#a7adb8,#80868f_55%,#646a74)] px-6 pt-5 pb-6 shadow-[inset_0_2px_0_rgb(255_255_255/0.35),inset_0_-6px_14px_rgb(0_0_0/0.25),0_16px_30px_-12px_rgb(0_0_0/0.8)]">
           <div className="mb-4 flex items-center justify-between">
             <ControlButton
               {...button("KeyQ")}
@@ -164,8 +164,8 @@ export function DesktopController({
           {LEGEND.map(([action, n64, keys]) => (
             <Fragment key={action}>
               <div className="flex items-center justify-between gap-2">
-                <dt className="text-ink-muted">
-                  {action} <span className="text-ink-faint">· {n64}</span>
+                <dt className="text-ink">
+                  {action} <span className="text-ink-muted">· {n64}</span>
                 </dt>
                 <dd className="flex gap-1">
                   {keys.map((key) => (

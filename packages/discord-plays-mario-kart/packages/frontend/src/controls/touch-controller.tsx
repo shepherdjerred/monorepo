@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import IconArrowsIn from "~icons/ph/arrows-in-bold";
 import IconArrowsOut from "~icons/ph/arrows-out-bold";
 import type { Controller } from "#src/input/use-controller.ts";
+import { CheckerStrip } from "#src/ui/mk.tsx";
 import { ControlButton } from "./control-button.tsx";
 import { DirectionPad } from "./direction-pad.tsx";
 import { isCodeActive } from "./pressed.ts";
@@ -85,7 +86,8 @@ export function TouchController({
   });
 
   return (
-    <div className="no-touch-callout fixed inset-0 z-40 flex bg-[#050608] text-ink pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)]">
+    <div className="no-touch-callout fixed inset-0 z-40 flex bg-[radial-gradient(90%_120%_at_50%_0%,#16205a,#070b1f_70%)] text-ink pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)]">
+      <CheckerStrip rolling className="absolute inset-x-0 top-0 h-1" />
       {/* Left thumb */}
       <div className="flex w-[clamp(168px,24vw,260px)] shrink-0 flex-col items-center justify-between py-3">
         <div className="flex w-full items-center gap-2 px-3">
@@ -123,7 +125,7 @@ export function TouchController({
       {/* Feed */}
       <div className="flex min-w-0 flex-1 flex-col items-center justify-center gap-2 py-2">
         <div className="flex w-full items-center justify-between px-1 text-[11px] text-ink-faint">
-          <span className="rounded-full bg-brand-soft px-2 py-0.5 font-semibold text-red-200">
+          <span className="mk-title rounded-md bg-mk-red px-2 py-0.5 text-sm text-white shadow-[0_2px_0_#7a0915]">
             P{seat + 1}
           </span>
           <ControlButton

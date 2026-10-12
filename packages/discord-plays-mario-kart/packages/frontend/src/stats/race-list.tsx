@@ -5,8 +5,9 @@ import {
 } from "@discord-plays-mario-kart/common";
 import { Avatar } from "#src/ui/avatar.tsx";
 import { Badge } from "#src/ui/badge.tsx";
-import { PlaceBadge } from "./bits.tsx";
-import { GAME_MODE_LABELS, formatRaceTime, relativeTime } from "./format.ts";
+import { CheckerStrip } from "#src/ui/mk.tsx";
+import { LapTime, PlaceBadge } from "./bits.tsx";
+import { GAME_MODE_LABELS, relativeTime } from "./format.ts";
 
 /** Races, newest first, each with its human racers by placement. */
 export function RaceList({
@@ -24,15 +25,16 @@ export function RaceList({
       {races.map((race) => (
         <li
           key={race.id}
-          className="rounded-xl border border-border-subtle bg-surface-sunken px-3 py-2.5"
+          className="relative overflow-hidden rounded-xl border border-border-subtle bg-surface-sunken px-3 pt-3.5 pb-2.5"
         >
+          <CheckerStrip className="absolute inset-x-0 top-0 h-1.5 opacity-70" />
           <div className="mb-2 flex items-center justify-between gap-2">
-            <span className="truncate text-sm font-semibold text-ink">
+            <span className="mk-title truncate text-base text-white">
               {courseName(race.courseId)}
             </span>
             <span className="flex shrink-0 items-center gap-2">
               <Badge>{GAME_MODE_LABELS[race.gameMode]}</Badge>
-              <span className="text-[11px] text-ink-faint">
+              <span className="text-[11px] text-ink-muted">
                 {relativeTime(race.finishedAtMs, nowMs)}
               </span>
             </span>
@@ -65,14 +67,14 @@ export function RaceList({
                   >
                     {name}
                   </span>
-                  <span className="hidden text-ink-faint sm:inline">
+                  <span className="hidden text-ink-muted sm:inline">
                     {characterName(result.characterId)}
                   </span>
-                  <span className="w-14 text-right font-mono text-ink-muted tabular-nums">
-                    {result.finished
-                      ? formatRaceTime(result.raceTimeMs)
-                      : "DNF"}
-                  </span>
+                  <LapTime
+                    ms={result.raceTimeMs}
+                    finished={result.finished}
+                    className="w-16 text-right text-xs"
+                  />
                 </li>
               );
             })}

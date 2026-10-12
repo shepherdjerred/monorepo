@@ -83,7 +83,7 @@ export function ControlButton({
       aria-label={`${typeof label === "string" ? label : code} (${hint})`}
       aria-pressed={active}
       className={cx(
-        "no-touch-callout relative inline-flex items-center justify-center font-bold ring-1 ring-black/40 transition-[transform,box-shadow,filter] duration-75 select-none",
+        "no-touch-callout relative inline-flex items-center justify-center font-display italic ring-1 ring-black/40 transition-[transform,box-shadow,filter] duration-75 select-none",
         SHAPES[shape],
         active
           ? cx(colours.lit, "translate-y-px shadow-button-press brightness-110")

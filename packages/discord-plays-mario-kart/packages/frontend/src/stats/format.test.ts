@@ -1,11 +1,24 @@
 import { describe, expect, it } from "vitest";
-import { formatRaceTime, ordinal, percent, relativeTime } from "./format.ts";
+import {
+  formatLapTimer,
+  formatRaceTime,
+  ordinal,
+  percent,
+  relativeTime,
+} from "./format.ts";
 
 describe("formatRaceTime", () => {
   it("formats minutes, seconds and hundredths", () => {
     expect(formatRaceTime(83_450)).toBe("1:23.45");
     expect(formatRaceTime(5070)).toBe("0:05.07");
     expect(formatRaceTime(0)).toBe("0:00.00");
+  });
+});
+
+describe("formatLapTimer", () => {
+  it("uses the in-game timer's notation", () => {
+    expect(formatLapTimer(83_450)).toBe("1'23\"45");
+    expect(formatLapTimer(5070)).toBe("0'05\"07");
   });
 });
 

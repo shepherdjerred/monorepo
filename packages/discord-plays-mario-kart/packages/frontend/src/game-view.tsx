@@ -245,25 +245,29 @@ export function GameView({
   return (
     <Card className="overflow-hidden">
       <div className="flex items-center justify-between gap-3 px-4 pt-3 pb-2.5 sm:px-5">
-        <span className="flex items-center gap-2 text-sm font-semibold">
+        <span className="mk-title flex items-center gap-2 text-lg text-white">
           <span className="relative flex size-2">
             <span
               className={cx(
                 "absolute inline-flex size-full rounded-full",
                 status.kind === "playing"
-                  ? "animate-pulse-dot bg-brand"
+                  ? "animate-pulse-dot bg-mk-red"
                   : "bg-ink-faint",
               )}
             />
           </span>
-          Live feed
+          Live
         </span>
         <div className="flex items-center gap-3">
           {glass}
           {soundButton}
         </div>
       </div>
-      <div className="px-2 pb-2 sm:px-3 sm:pb-3">{screen}</div>
+      <div className="px-2 pb-2 sm:px-3 sm:pb-3">
+        <div className="mx-auto max-w-[calc((100dvh-16rem)*4/3+0.5rem)] rounded-[14px] bg-[linear-gradient(180deg,#2a3570,#141b45)] p-1 shadow-[inset_0_1px_0_rgb(255_255_255/0.12)]">
+          {screen}
+        </div>
+      </div>
     </Card>
   );
 }
