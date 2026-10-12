@@ -30,8 +30,19 @@ public final class NativeArenaColumns {
   private static final Set<String> ARENAS = Set.of("settlement", "rustworks");
   private NativeArenaColumns() {}
   record Column(int x, int z) {}
+  record BiomeBoundary(int x, int y, int z, int coveredColumns, String historical, String modern) {}
 
   public static void main(String[] args) throws IOException {
+    var errors = System.err;
+    try {
+      execute(args);
+    } catch (IOException | RuntimeException failure) {
+      failure.printStackTrace(errors);
+      throw failure;
+    }
+  }
+
+  private static void execute(String[] args) throws IOException {
     SharedConstants.tryDetectVersion();
     if (!SharedConstants.getCurrentVersion().name().equals("26.2")) {
       throw new IllegalStateException("Arena transplant requires pinned Paper 26.2");
@@ -60,13 +71,14 @@ public final class NativeArenaColumns {
         .distinct().sorted(java.util.Comparator.comparingInt(ChunkPos::x).thenComparingInt(ChunkPos::z)).toList();
     var info = new RegionStorageInfo("storm-restoration", Level.OVERWORLD, "chunk");
     var prepared = new LinkedHashMap<ChunkPos, CompoundTag>();
+    var biomeBoundaries = new ArrayList<BiomeBoundary>();
     try (var input = new RegionFileStorage(info, source.resolve("region"), true);
         var output = new RegionFileStorage(info, target.resolve("region"), true)) {
       // The complete plan and all auxiliary records must validate before any target write.
       for (var position : positions) {
         var before = required(output.read(position), position);
         var current = required(input.read(position), position);
-        prepared.put(position, merge(before, current, position, columns));
+        prepared.put(position, merge(before, current, position, columns, biomeBoundaries));
       }
       var auxiliary = NativeArenaStorage.prepare(source, target, positions, columns);
       for (var entry : prepared.entrySet()) {
@@ -80,7 +92,8 @@ public final class NativeArenaColumns {
       Files.writeString(receipt, new Gson().toJson(Map.of(
           "schemaVersion", 1, "dataVersion", 4903, "arenas", ARENAS, "columns", columns.size(),
           "chunks", positions.size(), "terrainGeneration", false, "worldTicks", 0,
-          "auxiliary", auxiliary.counts(), "mapMerge", "NO_REFERENCED_MAPS")) + "\n",
+          "auxiliary", auxiliary.counts(), "mapMerge", "NO_REFERENCED_MAPS",
+          "biomeBoundary", Map.of("policy", "KEEP_HISTORICAL_PARTIAL_CELLS", "cells", biomeBoundaries))) + "\n",
           StandardCharsets.UTF_8, StandardOpenOption.CREATE_NEW);
     }
   }
@@ -120,6 +133,11 @@ public final class NativeArenaColumns {
   }
 
   static CompoundTag merge(CompoundTag before, CompoundTag current, ChunkPos position, Set<Column> columns) {
+    return merge(before, current, position, columns, new ArrayList<>());
+  }
+
+  private static CompoundTag merge(CompoundTag before, CompoundTag current, ChunkPos position,
+      Set<Column> columns, List<BiomeBoundary> biomeBoundaries) {
     var result = before.copy();
     var sections = sections(before);
     var source = sections(current);
@@ -132,7 +150,7 @@ public final class NativeArenaColumns {
       section.put("block_states", mergePalette(destination.getCompound("block_states").orElseThrow(),
           input.getCompound("block_states").orElseThrow(), position, columns, false));
       section.put("biomes", mergePalette(destination.getCompound("biomes").orElseThrow(),
-          input.getCompound("biomes").orElseThrow(), position, columns, true));
+          input.getCompound("biomes").orElseThrow(), position, columns, true, y, biomeBoundaries));
       section.remove("BlockLight");
       section.remove("SkyLight");
       replaced.add(section);
@@ -151,8 +169,8 @@ public final class NativeArenaColumns {
       result.put(key, spatial(before.getListOrEmpty(key), current.getListOrEmpty(key), columns, false));
     }
     result.put("entities", spatial(before.getListOrEmpty("entities"), current.getListOrEmpty("entities"), columns, true));
-    // Quart biomes cannot split a 4x4 cell. A partial exit-support cell keeps the historical biome;
-    // refuse a differing source biome there instead of changing surrounding historical columns.
+    // Quart biomes cannot split a 4x4 cell. Partial cells keep the historical biome, with each
+    // differing cell reported; block, entity and POI selection still uses exact arena columns.
     mergePostProcessing(before, current, result, position, columns);
     var full = true;
     for (var x = 0; x < 16; x++) for (var z = 0; z < 16; z++) {
@@ -182,6 +200,11 @@ public final class NativeArenaColumns {
 
   private static CompoundTag mergePalette(CompoundTag before, CompoundTag current,
       ChunkPos chunk, Set<Column> columns, boolean biome) {
+    return mergePalette(before, current, chunk, columns, biome, 0, new ArrayList<>());
+  }
+
+  private static CompoundTag mergePalette(CompoundTag before, CompoundTag current,
+      ChunkPos chunk, Set<Column> columns, boolean biome, int sectionY, List<BiomeBoundary> boundaries) {
     var count = biome ? 64 : 4096;
     var bits = biome ? 1 : 4;
     var values = NativePalettes.decode(before, count, bits);
@@ -196,7 +219,8 @@ public final class NativeArenaColumns {
       }
       if (covered == size * size) values.set(index, source.get(index));
       else if (covered > 0 && !values.get(index).equals(source.get(index))) {
-        throw new IllegalStateException("Arena biome cell crosses the reviewed preservation boundary");
+        boundaries.add(new BiomeBoundary(chunk.x() * 16 + x, sectionY * 16 + ((index >> 4) & 3) * 4,
+            chunk.z() * 16 + z, covered, values.get(index).asString().orElseThrow(), source.get(index).asString().orElseThrow()));
       }
     }
     return NativePalettes.encode(values, bits);
@@ -266,6 +290,27 @@ public final class NativeArenaColumns {
     for (var index = 0; index < 4096; index++) {
       var expected = (index & 255) == 255 ? replacement : original;
       if (!merged.get(index).equals(expected)) throw new IllegalStateException("Column boundary self-test failed");
+    }
+    var originalBiomes = new ArrayList<Tag>(java.util.Collections.nCopies(64,
+        net.minecraft.nbt.StringTag.valueOf("minecraft:plains")));
+    var modernBiomes = new ArrayList<Tag>(java.util.Collections.nCopies(64,
+        net.minecraft.nbt.StringTag.valueOf("minecraft:desert")));
+    var biomeColumns = new HashSet<>(columns);
+    for (var x = -16; x < -12; x++) for (var z = -16; z < -12; z++) {
+      biomeColumns.add(new Column(x, z));
+    }
+    var boundaries = new ArrayList<BiomeBoundary>();
+    var biomes = NativePalettes.decode(mergePalette(NativePalettes.encode(originalBiomes, 1),
+        NativePalettes.encode(modernBiomes, 1), new ChunkPos(-1, -1), biomeColumns, true, -4, boundaries), 64, 1);
+    for (var index = 0; index < 64; index++) {
+      var expected = (index & 15) == 0 ? modernBiomes.get(index) : originalBiomes.get(index);
+      if (!biomes.get(index).equals(expected)) throw new IllegalStateException("Biome boundary preservation failed");
+    }
+    if (boundaries.size() != 4 || boundaries.stream().anyMatch(cell -> cell.x() != -4 || cell.z() != -4
+        || cell.coveredColumns() != 1 || cell.y() < -64 || cell.y() > -52
+        || !cell.historical().equals("minecraft:plains")
+        || !cell.modern().equals("minecraft:desert"))) {
+      throw new IllegalStateException("Biome boundary receipt failed");
     }
     for (var count : List.of(1, 2, 17, 33, 257, 513, 4096)) {
       var values = new ArrayList<Tag>();
