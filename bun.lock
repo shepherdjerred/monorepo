@@ -101,7 +101,7 @@
     },
     "packages/astro-opengraph-images": {
       "name": "astro-opengraph-images",
-      "version": "1.20.3",
+      "version": "1.20.4",
       "dependencies": {
         "@resvg/resvg-js": "^2.6.2",
         "jsdom": "^30.0.0",
@@ -449,17 +449,12 @@
       "dependencies": {
         "@discord-plays-mario-kart/common": "workspace:*",
         "@sentry/react": "^11.5.0",
-        "@shepherdjerred/loaded": "workspace:*",
         "@shepherdjerred/sentry-config": "workspace:*",
         "@tailwindcss/vite": "^4.0.17",
         "@tanstack/react-query": "^5.70.0",
-        "keyboardjs": "^2.7.0",
-        "lodash": "4.18.1",
         "react": "19.3.0",
         "react-dom": "19.3.0",
-        "react-use": "^17.6.0",
         "socket.io-client": "^4.8.1",
-        "ts-pattern": "^5.7.0",
         "zod": "^4.4.3",
       },
       "devDependencies": {
@@ -473,7 +468,6 @@
         "@tailwindcss/forms": "^0.5.10",
         "@tanstack/eslint-plugin-query": "^5.68.0",
         "@types/dom-webcodecs": "^0.1.18",
-        "@types/lodash": "^4.17.16",
         "@types/react": "^19.3.0",
         "@types/react-dom": "^19.3.0",
         "@typescript-eslint/eslint-plugin": "^8.71.1",
@@ -843,7 +837,7 @@
     },
     "packages/home-assistant": {
       "name": "@shepherdjerred/home-assistant",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "bin": {
         "ha-codegen": "./dist/codegen/cli.js",
       },
@@ -2454,7 +2448,7 @@
     },
     "packages/webring": {
       "name": "webring",
-      "version": "1.11.0",
+      "version": "1.12.0",
       "dependencies": {
         "htmlparser2": "^12.0.0",
         "remeda": "^2.33.7",

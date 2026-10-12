@@ -15,7 +15,7 @@ import { createSocket } from "./socket.ts";
 import {
   handleRequest,
   type EmulatorControls,
-  type LeaderboardDeps,
+  type PlayAccess,
 } from "./dispatch.ts";
 import type { StreamOverlayContext } from "#src/overlay/composite.ts";
 import type { LeaderboardStore } from "#src/leaderboard/store.ts";
@@ -28,8 +28,10 @@ import {
 import {
   EMPTY_BUTTONS,
   ResponseSchema,
-  type LeaderboardEntry,
+  type DiscordUser,
+  type PlayBlocker,
   type PlayerInputState,
+  type PlayerRecord,
   type Response,
 } from "@discord-plays-mario-kart/common";
 
@@ -47,16 +49,43 @@ const fakeEmu: EmulatorControls = {
 };
 
 const overlayNames: { seat: number; name: string | null }[] = [];
-const fakeEntries: LeaderboardEntry[] = [
-  { name: "Jerred", wins: 3, races: 5, winRate: 0.6 },
+function discordUser(
+  discordId: string,
+  name = `Player${discordId}`,
+): DiscordUser {
+  return { discordId, username: name.toLowerCase(), name, avatarUrl: null };
+}
+const fakeEntries: PlayerRecord[] = [
+  {
+    player: discordUser("7", "Jerred"),
+    races: 5,
+    wins: 3,
+    podiums: 4,
+    losses: 2,
+    averagePlacement: 1.8,
+    winRate: 0.6,
+  },
 ];
 const fakeStore: LeaderboardStore = {
   recordRace: () => Promise.resolve(),
   leaderboard: () => Promise.resolve(fakeEntries),
+  playerStats: () => Promise.resolve(null),
+  recentRaces: () => Promise.resolve([]),
 };
-const fakeLeaderboard: LeaderboardDeps = {
-  store: fakeStore,
-  setOverlayName: (seat, name) => overlayNames.push({ seat, name }),
+
+// The test "session store": the cookie value is the Discord id, and every id
+// is a known user. Tests sign a client in by passing an id to `connect`.
+const users = new Map<string, DiscordUser>();
+let nextUserId = 1000;
+// What the voice-channel/session check answers for signed-in users.
+let testBlocker: Exclude<PlayBlocker, "signed-out"> | null = null;
+let channel: { identityOf: PlayAccess["identityOf"] } | undefined;
+const testAccess: PlayAccess = {
+  identityOf: (socket) => channel?.identityOf(socket),
+  blockerFor: (user) => (user === undefined ? "signed-out" : testBlocker),
+  voiceChannel: () =>
+    testBlocker === "no-session" ? null : { id: "55", name: "Racing" },
+  seatUserFor: (user) => ({ ...user, name: `${user.name}!` }),
 };
 
 let http: HttpServer;
@@ -71,14 +100,24 @@ let testOverlayCtx: StreamOverlayContext | undefined;
 beforeAll(async () => {
   http = createServer();
   seatManager = new SeatManager(4);
-  const obs = createSocket({ server: http, isCorsEnabled: false });
+  const obs = createSocket({
+    server: http,
+    isCorsEnabled: false,
+    identify: (cookieHeader = "") => {
+      const id = /mk64_session=(\d+)/u.exec(cookieHeader)?.[1];
+      return Promise.resolve(id === undefined ? undefined : users.get(id));
+    },
+  });
+  channel = obs;
   sub = obs.events.subscribe((event) => {
     const captured = testOverlayCtx;
     handleRequest(event, {
       seatManager,
       emulator: fakeEmu,
       driverFeedEnabled: testDriverFeedEnabled,
-      leaderboard: fakeLeaderboard,
+      access: testAccess,
+      stats: () => Promise.resolve(fakeStore),
+      setOverlayName: (seat, name) => overlayNames.push({ seat, name }),
       overlayContext: captured === undefined ? undefined : () => captured,
     });
   });
@@ -97,6 +136,7 @@ beforeEach(() => {
   fakeFrame = { rgba: Buffer.alloc(0), width: 640, height: 0 };
   testDriverFeedEnabled = false;
   testOverlayCtx = undefined;
+  testBlocker = null;
 });
 
 afterAll(() => {
@@ -104,10 +144,20 @@ afterAll(() => {
   http.close();
 });
 
-async function connect(): Promise<ClientSocket> {
+/**
+ * Connect a client signed in as `as` (a fresh user by default), or signed out
+ * with `null`.
+ */
+async function connect(
+  user: DiscordUser | null = discordUser(String(nextUserId++)),
+): Promise<ClientSocket> {
+  if (user !== null) users.set(user.discordId, user);
   const client = ioClient(`http://localhost:${String(port)}`, {
     transports: ["websocket"],
     forceNew: true,
+    ...(user === null
+      ? {}
+      : { extraHeaders: { cookie: `mk64_session=${user.discordId}` } }),
   });
   await new Promise<void>((resolve) => client.on("connect", () => resolve()));
   return client;
@@ -192,7 +242,11 @@ describe("web controller status", () => {
     disabledClient.emit("request", { kind: "status" });
     expect(await disabledResponse).toEqual({
       kind: "status",
-      value: { playerList: [], driverFeedEnabled: false },
+      value: {
+        driverFeedEnabled: false,
+        voiceChannel: { id: "55", name: "Racing" },
+        playBlocker: null,
+      },
     });
     disabledClient.close();
 
@@ -200,11 +254,106 @@ describe("web controller status", () => {
     const enabledClient = await connect();
     const enabledResponse = nextResponse(enabledClient, "status");
     enabledClient.emit("request", { kind: "status" });
-    expect(await enabledResponse).toEqual({
+    expect(await enabledResponse).toMatchObject({
       kind: "status",
-      value: { playerList: [], driverFeedEnabled: true },
+      value: { driverFeedEnabled: true },
     });
     enabledClient.close();
+  });
+
+  it("tells a signed-out visitor why they cannot play", async () => {
+    const client = await connect(null);
+    const response = nextResponse(client, "status");
+    client.emit("request", { kind: "status" });
+    expect(await response).toMatchObject({
+      value: { playBlocker: "signed-out" },
+    });
+    client.close();
+  });
+});
+
+/** The server's answer to one seat claim. */
+async function claimOutcome(
+  client: ClientSocket,
+  seat: number,
+): Promise<Response> {
+  const outcome = new Promise<Response>((resolve) => {
+    const handler = (raw: unknown) => {
+      const resp = ResponseSchema.parse(raw);
+      if (resp.kind === "seat" || resp.kind === "seat-denied") {
+        client.off("response", handler);
+        resolve(resp);
+      }
+    };
+    client.on("response", handler);
+  });
+  client.emit("request", { kind: "seat-claim", seat });
+  return outcome;
+}
+
+describe("seat access", () => {
+  it("refuses a seat to a signed-out visitor", async () => {
+    const client = await connect(null);
+    expect(await claimOutcome(client, 0)).toEqual({
+      kind: "seat-denied",
+      value: { reason: "signed-out" },
+    });
+    expect(seatManager.users()[0]).toBeNull();
+    client.close();
+  });
+
+  it("refuses a seat to a player outside the voice channel", async () => {
+    testBlocker = "not-in-voice";
+    const client = await connect();
+    expect(await claimOutcome(client, 0)).toEqual({
+      kind: "seat-denied",
+      value: { reason: "not-in-voice" },
+    });
+    client.close();
+  });
+
+  it("refuses a seat someone else holds", async () => {
+    const holder = await connect();
+    await claimOutcome(holder, 1);
+    const other = await connect();
+    expect(await claimOutcome(other, 1)).toEqual({
+      kind: "seat-denied",
+      value: { reason: "taken" },
+    });
+    holder.close();
+    other.close();
+  });
+
+  it("seats a player under their seat name and broadcasts who sits where", async () => {
+    overlayNames.length = 0;
+    const speedy = discordUser("42", "Speedy");
+    const client = await connect(speedy);
+    const seats = nextResponse(client, "seats");
+    expect(await claimOutcome(client, 1)).toEqual({
+      kind: "seat",
+      value: { seat: 1 },
+    });
+    const broadcast = await seats;
+    if (broadcast.kind !== "seats") throw new Error("expected seats");
+    expect(broadcast.value.seats[1]).toEqual({ ...speedy, name: "Speedy!" });
+    expect(overlayNames.at(-1)).toEqual({ seat: 1, name: "Speedy!" });
+    client.close();
+  });
+
+  it("moves an account's seat to its newest tab", async () => {
+    const speedy = discordUser("43", "Speedy");
+    const first = await connect(speedy);
+    await claimOutcome(first, 2);
+    const lost = nextResponse(first, "seat");
+    const second = await connect(speedy);
+    expect(await claimOutcome(second, 2)).toEqual({
+      kind: "seat",
+      value: { seat: 2 },
+    });
+    expect(await lost).toEqual({ kind: "seat", value: { seat: null } });
+    expect(seatManager.seatOfUser("43")).toBe(2);
+    first.close();
+    second.close();
   });
 });
 
@@ -352,66 +501,12 @@ describe("web controller dispatch (socket -> handleRequest -> emulator)", () => 
     const claimResp = nextResponse(client, "seat");
     client.emit("request", { kind: "seat-claim", seat: 0 });
     await claimResp;
-    expect(seatManager.occupied()[0]).toBe(true);
+    expect(seatManager.users()[0]).not.toBeNull();
 
     client.close();
-    await waitUntil(() => !seatManager.occupied()[0] && cleared.includes(0));
-  });
-
-  it("sets a name on the owned seat and broadcasts it in `seats`", async () => {
-    overlayNames.length = 0;
-    const client = await connect();
-    const claimResp = nextResponse(client, "seat");
-    client.emit("request", { kind: "seat-claim", seat: 1 });
-    await claimResp;
-
-    // Collect seats broadcasts: the claim emits one (names all null) before the
-    // name-set one, so wait for the broadcast that actually carries the name.
-    let namedSeats: (string | null)[] | undefined;
-    client.on("response", (raw: unknown) => {
-      const resp = ResponseSchema.parse(raw);
-      if (resp.kind === "seats" && resp.value.names[1] === "Speedy") {
-        namedSeats = resp.value.names;
-      }
-    });
-    client.emit("request", { kind: "name-set", name: "Speedy" });
-    await waitUntil(() => namedSeats !== undefined);
-    expect(namedSeats?.[1]).toBe("Speedy");
-    expect(overlayNames.at(-1)).toEqual({ seat: 1, name: "Speedy" });
-    client.close();
-  });
-
-  it("ignores name-set from a socket that holds no seat", async () => {
-    overlayNames.length = 0;
-    const client = await connect();
-    client.emit("request", { kind: "name-set", name: "Ghost" });
-    // No seat -> the name never reaches the overlay. (Assert intent, not array
-    // emptiness: a prior test's async disconnect may push a null-name cleanup.)
-    await new Promise((r) => setTimeout(r, 150));
-    expect(overlayNames.some((o) => o.name === "Ghost")).toBe(false);
-    const statusResp = nextResponse(client, "status");
-    client.emit("request", { kind: "status" });
-    const status = await statusResp;
-    expect(status.kind).toBe("status");
-    client.close();
-  });
-
-  it("rejects a name that fails the shared schema (too long / non-ASCII)", async () => {
-    overlayNames.length = 0;
-    const client = await connect();
-    const claimResp = nextResponse(client, "seat");
-    client.emit("request", { kind: "seat-claim", seat: 2 });
-    await claimResp;
-
-    const tooLong = "x".repeat(50);
-    client.emit("request", { kind: "name-set", name: tooLong });
-    client.emit("request", { kind: "name-set", name: "🚗💨" });
-    await new Promise((r) => setTimeout(r, 150));
-    // Both dropped at the schema boundary (never reach the overlay).
-    expect(
-      overlayNames.some((o) => o.name === tooLong || o.name === "🚗💨"),
-    ).toBe(false);
-    client.close();
+    await waitUntil(
+      () => seatManager.users()[0] === null && cleared.includes(0),
+    );
   });
 
   it("returns the leaderboard on request", async () => {
@@ -421,6 +516,23 @@ describe("web controller dispatch (socket -> handleRequest -> emulator)", () => 
     const lb = await lbResp;
     if (lb.kind !== "leaderboard") throw new Error("expected leaderboard");
     expect(lb.value.entries).toEqual(fakeEntries);
+    client.close();
+  });
+
+  it("answers player-stats and recent-races to anyone, signed in or not", async () => {
+    const client = await connect(null);
+    const stats = nextResponse(client, "player-stats");
+    const recent = nextResponse(client, "recent-races");
+    client.emit("request", { kind: "player-stats", discordId: "7" });
+    client.emit("request", { kind: "recent-races" });
+    expect(await stats).toEqual({
+      kind: "player-stats",
+      value: { discordId: "7", stats: null },
+    });
+    expect(await recent).toEqual({
+      kind: "recent-races",
+      value: { races: [] },
+    });
     client.close();
   });
 });

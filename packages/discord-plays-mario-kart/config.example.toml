@@ -69,6 +69,12 @@ assets = "packages/frontend/dist"
 [web.api]
 enabled = true
 
+# Discord sign-in for seats is required while [web.api] is enabled. Set, in the
+# environment: WEB_PUBLIC_ORIGIN (the origin players open, e.g.
+# http://localhost:8081) and DISCORD_CLIENT_SECRET (the bot application's OAuth2
+# secret), and register <WEB_PUBLIC_ORIGIN>/api/auth/discord/callback as a
+# redirect on that application.
+
 [leaderboard]
 enabled = true                      # race-result recording + the leaderboard API
 db_path = "data/leaderboard.db"     # overridden by DATABASE_PATH / DATABASE_URL env

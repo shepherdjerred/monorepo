@@ -2,12 +2,12 @@ import { logger } from "#src/logger.ts";
 import type { Mk64Snapshot } from "#src/emulator/mk64-state.ts";
 import type { ScreenMode } from "#src/emulator/mk64-state.ts";
 import { RaceWatcher } from "./race-watcher.ts";
-import type { RaceCompleted } from "./race-watcher.ts";
+import type { RaceCompleted, SeatPlayer } from "./race-watcher.ts";
 import type { LeaderboardStore } from "./store.ts";
 
 export type RaceTrackerDeps = {
-  /** Current display name per seat (index = seat). */
-  seatNames: () => (string | null)[];
+  /** Current player per seat (index = seat). */
+  seatPlayers: () => (SeatPlayer | null)[];
   store: LeaderboardStore;
   /** Called after a race is recorded, so clients can be pushed a fresh board. */
   onRaceRecorded?: () => void;
@@ -26,7 +26,7 @@ export class RaceTracker {
 
   constructor(deps: RaceTrackerDeps) {
     this.deps = deps;
-    this.watcher = new RaceWatcher({ seatNames: deps.seatNames });
+    this.watcher = new RaceWatcher({ seatPlayers: deps.seatPlayers });
   }
 
   /** The most recently observed MK64 screen mode (undefined until first read). */

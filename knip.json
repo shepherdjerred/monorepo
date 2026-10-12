@@ -224,7 +224,7 @@
       "project": ["src/**/*.ts"]
     },
     "packages/discord-plays-mario-kart/packages/frontend": {
-      "entry": ["src/**/*.test.ts", "src/stories/**/*.tsx"],
+      "entry": ["src/**/*.test.ts"],
       "project": ["src/**/*.{ts,tsx,css}", "*.ts"]
     },
     "packages/scout-for-lol/packages/backend": {

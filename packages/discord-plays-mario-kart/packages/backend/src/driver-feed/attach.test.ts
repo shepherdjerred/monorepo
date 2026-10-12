@@ -28,7 +28,11 @@ const started: Harness[] = [];
 async function startHarness(): Promise<Harness> {
   const server = createServer();
   // The production Socket.IO setup, so its upgrade policy is what is tested.
-  const { io } = createSocket({ server, isCorsEnabled: false });
+  const { io } = createSocket({
+    server,
+    isCorsEnabled: false,
+    identify: () => Promise.resolve(undefined),
+  });
   const service = new DriverFeedService({
     config: {
       enabled: true,

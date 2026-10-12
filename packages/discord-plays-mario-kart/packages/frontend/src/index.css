@@ -1,31 +1,201 @@
 @import "tailwindcss";
 
-/* Design tokens for the MK64 controller UI. The palette draws from the iconic
- * N64 button colors (sky A, emerald B, yellow C-buttons, red Start) on a
- * near-black charcoal page so the buttons pop. Spacing/shadows are extracted
- * here so individual components stop inlining one-off gradient strings.
+/* Mario Kart 64 theme for the controller page.
+ *
+ * A night-sky navy page with layered panels, the game's bold red / yellow /
+ * blue / green as accents, chrome and gold for highlights, and racing motifs
+ * (checkered flags, red-and-white kerbs, item-box rainbows, speed lines) drawn
+ * entirely in CSS. Headings use a chunky italic display face; body text stays
+ * Inter for readability. The N64 controls keep the pad's own colours: blue A,
+ * green B, yellow C, red Start, grey Z and shoulders.
  */
 @theme {
-  --color-surface-page: #070709;
-  --color-surface-card: #0f0f12;
-  --color-surface-raised: #181820;
-  --color-border-subtle: #27272a;
-  --color-border-strong: #3f3f46;
+  --font-sans:
+    "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Lilita One", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono:
+    ui-monospace, "SFMono-Regular", "JetBrains Mono", Menlo, monospace;
 
-  --color-accent-a: #38bdf8;
-  --color-accent-b: #34d399;
-  --color-accent-c: #facc15;
-  --color-accent-start: #ef4444;
-  --color-accent-z: #a1a1aa;
+  --color-surface-page: #080c1f;
+  --color-surface-card: #10173a;
+  --color-surface-raised: #1a2350;
+  --color-surface-sunken: #0b1130;
+  --color-border-subtle: #233066;
+  --color-border-strong: #33438a;
+  --color-ink: #f4f6ff;
+  --color-ink-muted: #b4bddf;
+  --color-ink-faint: #7884b5;
 
-  --shadow-card: 0 12px 28px rgba(0, 0, 0, 0.45);
-  --shadow-button-rest: 0 4px 0 rgb(24 24 27), 0 8px 12px rgba(0, 0, 0, 0.28);
-  --shadow-button-press: 0 1px 0 rgb(24 24 27), 0 3px 6px rgba(0, 0, 0, 0.28);
+  --color-mk-red: #e4142c;
+  --color-mk-red-deep: #a50d1f;
+  --color-mk-yellow: #ffd21f;
+  --color-mk-yellow-deep: #e0a800;
+  --color-mk-blue: #1f6fe0;
+  --color-mk-sky: #59b8ff;
+  --color-mk-green: #1fb054;
+  --color-mk-grass: #3e9c3a;
+  --color-mk-asphalt: #3b3f4c;
+
+  --color-brand: var(--color-mk-red);
+  --color-brand-strong: #ff3448;
+  --color-brand-soft: #e4142c26;
+  --color-discord: #5865f2;
+  --color-discord-strong: #6d78f7;
+
+  --color-accent-a: #2f6fe8;
+  --color-accent-b: #1fa84f;
+  --color-accent-c: #ffcf1a;
+  --color-accent-start: #e4142c;
+  --color-accent-z: #8b93a7;
+
+  --color-gold: #ffd23f;
+  --color-silver: #d9e1ef;
+  --color-bronze: #e3965a;
+  --color-hud: #ffe066;
+
+  --shadow-card:
+    0 1px 0 rgb(255 255 255 / 0.06) inset, 0 18px 40px -18px rgb(0 0 0 / 0.75);
+  --shadow-button-rest:
+    0 3px 0 rgb(0 0 0 / 0.55), 0 8px 16px -6px rgb(0 0 0 / 0.6);
+  --shadow-button-press: 0 1px 0 rgb(0 0 0 / 0.55), 0 2px 4px rgb(0 0 0 / 0.4);
+
+  --animate-fade-in: fade-in 160ms ease-out;
+  --animate-pulse-dot: pulse-dot 1.6s ease-in-out infinite;
+  --animate-item-box: item-box 2.4s linear infinite;
+  --animate-item-bob: item-bob 1.6s ease-in-out infinite;
+  --animate-speed-lines: speed-lines 1.4s linear infinite;
+  --animate-checker-roll: checker-roll 6s linear infinite;
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes pulse-dot {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.35;
+    }
+  }
+  @keyframes item-box {
+    to {
+      background-position: 200% 0;
+    }
+  }
+  @keyframes item-bob {
+    0%,
+    100% {
+      transform: translateY(0) rotate(-4deg);
+    }
+    50% {
+      transform: translateY(-3px) rotate(4deg);
+    }
+  }
+  @keyframes speed-lines {
+    from {
+      background-position-x: 0;
+    }
+    to {
+      background-position-x: -240px;
+    }
+  }
+  @keyframes checker-roll {
+    to {
+      background-position-x: 48px;
+    }
+  }
+}
+
+/* Big italic display lettering with a dark outline and drop shadow, like the
+ * game's results and HUD text. */
+@utility mk-title {
+  font-family: var(--font-display);
+  font-style: italic;
+  letter-spacing: 0.01em;
+  -webkit-text-stroke: 0.06em rgb(10 12 30 / 0.9);
+  paint-order: stroke fill;
+  text-shadow: 0 0.08em 0 rgb(10 12 30 / 0.85);
+}
+
+/* A black-and-white checkered flag. */
+@utility mk-checker {
+  background-color: #f4f6ff;
+  background-image: conic-gradient(
+    #0b0f22 25%,
+    transparent 0 50%,
+    #0b0f22 0 75%,
+    transparent 0
+  );
+  background-size: 12px 12px;
+}
+
+/* Red-and-white track kerb. */
+@utility mk-kerb {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    var(--color-mk-red) 0 7px,
+    #f4f6ff 7px 14px
+  );
+}
+
+/* Item-box rainbow, animated by sliding the gradient. */
+@utility mk-rainbow {
+  background-image: linear-gradient(
+    100deg,
+    #ff3b5c,
+    #ffb21f,
+    #ffe94d,
+    #3fdc6c,
+    #42b8ff,
+    #a35cff,
+    #ff3b5c,
+    #ffb21f
+  );
+  background-size: 200% 100%;
+}
+
+/* Faint horizontal streaks, for a sense of speed behind banners. */
+@utility mk-speed-lines {
+  background-image:
+    linear-gradient(90deg, transparent 0 60%, rgb(255 255 255 / 0.06) 60% 100%),
+    linear-gradient(90deg, transparent 0 75%, rgb(255 255 255 / 0.05) 75% 100%);
+  background-size:
+    240px 2px,
+    160px 2px;
+  background-position:
+    0 30%,
+    80px 70%;
+  background-repeat: repeat-x;
+}
+
+/* HUD-style lap-timer digits. */
+@utility mk-hud {
+  font-family: var(--font-mono);
+  font-style: italic;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--color-hud);
+  text-shadow:
+    0 1px 0 rgb(0 0 0 / 0.8),
+    0 0 10px rgb(255 210 63 / 0.25);
 }
 
 :root {
   color-scheme: dark;
   background: var(--color-surface-page);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-feature-settings: "cv11", "ss01";
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
 }
 
 html,
@@ -36,11 +206,47 @@ body,
   background: var(--color-surface-page);
 }
 
+/* Dusk over the track: a blue sky glow from the top, a hint of the logo's
+ * red and green at the edges. */
+body {
+  background-image:
+    radial-gradient(
+      1200px 520px at 50% -12%,
+      rgb(89 184 255 / 0.2),
+      transparent 65%
+    ),
+    radial-gradient(
+      700px 500px at -10% 30%,
+      rgb(228 20 44 / 0.1),
+      transparent 60%
+    ),
+    radial-gradient(
+      700px 500px at 110% 40%,
+      rgb(31 176 84 / 0.08),
+      transparent 60%
+    );
+  background-attachment: fixed;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-mk-yellow);
+  outline-offset: 2px;
+}
+
+/* Controls must never select text or trigger the long-press menu mid-race. */
+.no-touch-callout {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }

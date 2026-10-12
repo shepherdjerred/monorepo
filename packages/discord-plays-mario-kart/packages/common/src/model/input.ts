@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { DiscordUserSchema } from "./identity.ts";
+import { PlayBlockerSchema } from "./status.ts";
 
 // Real-time per-player controller state (hold-based, applied every frame).
 export type ButtonState = z.infer<typeof ButtonStateSchema>;
@@ -90,12 +92,20 @@ export const SeatResponseSchema = z.strictObject({
   value: z.strictObject({ seat: z.number().int().min(0).max(3).nullable() }),
 });
 
+/** A claim the server refused; the seat stays as it was. */
+export type SeatDeniedResponse = z.infer<typeof SeatDeniedResponseSchema>;
+export const SeatDeniedResponseSchema = z.strictObject({
+  kind: z.literal("seat-denied"),
+  value: z.strictObject({
+    reason: z.union([PlayBlockerSchema, z.literal("taken")]),
+  }),
+});
+
+/** Who holds each seat (index = seat); null = free. */
 export type SeatsResponse = z.infer<typeof SeatsResponseSchema>;
 export const SeatsResponseSchema = z.strictObject({
   kind: z.literal("seats"),
   value: z.strictObject({
-    occupied: z.array(z.boolean()),
-    // Display name per seat (index-aligned with `occupied`); null = unnamed.
-    names: z.array(z.string().nullable()),
+    seats: z.array(DiscordUserSchema.nullable()),
   }),
 });

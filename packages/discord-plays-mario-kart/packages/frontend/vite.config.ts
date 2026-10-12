@@ -16,6 +16,11 @@ export default defineConfig({
       // bundle), but under `vite dev` the page is on 5173 and the backend on
       // 8081, so the upgrade has to be forwarded explicitly.
       "/video": { target: "ws://localhost:8081", ws: true },
+      // Same for the controller socket and the sign-in routes. Sign-in cookies
+      // are set by the backend's origin, so a real Discord login under
+      // `vite dev` still needs the localhost redirect registered there.
+      "/socket.io": { target: "ws://localhost:8081", ws: true },
+      "/api": { target: "http://localhost:8081" },
     },
   },
   plugins: [
@@ -27,6 +32,11 @@ export default defineConfig({
         families: [
           {
             name: "Inter",
+          },
+          // Chunky display face for headings, placements and seat labels,
+          // in the spirit of MK64's title and results lettering.
+          {
+            name: "Lilita One",
           },
         ],
       },

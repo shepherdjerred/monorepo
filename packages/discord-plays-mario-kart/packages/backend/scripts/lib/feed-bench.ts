@@ -7,6 +7,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { z } from "zod";
+import type { DiscordUser } from "@discord-plays-mario-kart/common";
 import type { GameEngine } from "#src/engine/game-engine.ts";
 import { SeatManager } from "#src/input/seat-manager.ts";
 import { applyStreamOverlays } from "#src/overlay/composite.ts";
@@ -17,6 +18,17 @@ import { createHarnessEngine } from "./engines.ts";
 
 const PACKAGE_ROOT = path.join(import.meta.dirname, "..", "..", "..", "..");
 const WEB_ASSETS = path.join(PACKAGE_ROOT, "packages", "frontend", "dist");
+
+/**
+ * Every bench connection is this player, signed in and in voice. The bench has
+ * no Discord bot or OAuth app; production derives both from Discord.
+ */
+const BENCH_PLAYER: DiscordUser = {
+  discordId: "100000000000000001",
+  username: "bench",
+  name: "Bench",
+  avatarUrl: null,
+};
 
 export type FeedBench = {
   readonly engine: GameEngine;
@@ -65,6 +77,7 @@ export async function startFeedBench(opts: {
     webAssetsPath: WEB_ASSETS,
     isApiEnabled: true,
     isCorsEnabled: true,
+    identify: () => Promise.resolve(BENCH_PLAYER),
   });
   if (socket === undefined) {
     throw new Error("the bench requires the Socket.IO controller channel");
@@ -75,6 +88,13 @@ export async function startFeedBench(opts: {
       seatManager,
       emulator: engine,
       driverFeedEnabled: true,
+      access: {
+        identityOf: socket.identityOf,
+        blockerFor: (user) => (user === undefined ? "signed-out" : null),
+        voiceChannel: () => ({ id: "bench", name: "bench" }),
+        seatUserFor: (user) => user,
+      },
+      stats: () => Promise.resolve(undefined),
     });
   });
   driverFeed.setDriverAdmission(
@@ -195,9 +215,7 @@ export async function openDriverTab(
     server,
     tabId,
     `(() => {
-      const button = [...document.querySelectorAll("button")].find(
-        (candidate) => candidate.textContent?.trim() === "P1",
-      );
+      const button = document.querySelector('button[data-seat="0"]');
       if (!(button instanceof HTMLButtonElement)) return false;
       button.click();
       return true;

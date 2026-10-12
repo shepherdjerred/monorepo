@@ -4,7 +4,7 @@ import { logger } from "#src/logger.ts";
 import type http from "node:http";
 import type { Duplex } from "node:stream";
 import { Observable } from "rxjs";
-import type { Request } from "@discord-plays-mario-kart/common";
+import type { DiscordUser, Request } from "@discord-plays-mario-kart/common";
 import {
   DRIVER_FEED_PATH,
   RequestSchema,
@@ -15,7 +15,18 @@ export type SocketChannel = {
   events: Observable<{ request: Request; socket: Socket }>;
   /** The Socket.IO server, for broadcasting responses to all clients. */
   io: Server;
+  /** The Discord user signed in on a connection, if any. */
+  identityOf: (socket: Socket) => DiscordUser | undefined;
 };
+
+/**
+ * Resolve the signed-in user from a connection's Cookie header. The page and
+ * this socket share an origin, so the browser sends the session cookie on the
+ * WebSocket upgrade; a sign-in or sign-out reconnects the socket to re-read it.
+ */
+export type IdentifySocket = (
+  cookieHeader: string | undefined,
+) => Promise<DiscordUser | undefined>;
 
 /** Socket.IO's default request path. */
 const SOCKET_IO_PATH = "/socket.io/";
@@ -23,9 +34,11 @@ const SOCKET_IO_PATH = "/socket.io/";
 export function createSocket({
   server,
   isCorsEnabled,
+  identify,
 }: {
   server: http.Server;
   isCorsEnabled: boolean;
+  identify: IdentifySocket;
 }): SocketChannel {
   logger.info("starting web socket listener");
 
@@ -49,6 +62,22 @@ export function createSocket({
           },
         }
       : {}),
+  });
+
+  const identities = new WeakMap<Socket, DiscordUser>();
+  const resolveIdentity = async (socket: Socket, next: () => void) => {
+    try {
+      const user = await identify(socket.handshake.headers.cookie);
+      if (user !== undefined) identities.set(socket, user);
+    } catch (error) {
+      // A session-store failure must not lock spectators out of the page;
+      // the connection simply plays as signed out.
+      logger.error("socket identity lookup failed", error);
+    }
+    next();
+  };
+  io.use((socket, next) => {
+    void resolveIdentity(socket, next);
   });
 
   // With engine.io's timer off, end any upgrade nobody serves at once, rather
@@ -97,5 +126,9 @@ export function createSocket({
     },
   );
 
-  return { events, io };
+  return {
+    events,
+    io,
+    identityOf: (socket) => identities.get(socket),
+  };
 }
