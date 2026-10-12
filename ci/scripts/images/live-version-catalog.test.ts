@@ -141,8 +141,41 @@ test("retains a new image's first publication before commit-back", () => {
   );
   expect(entries(published)[0]?.value).toBe(pin(200, "b"));
   expect(entries(retained)[0]?.value).toBe(pin(200, "b"));
+  expect(
+    entries(retainPublishedImagePins(bootstrap, bootstrap, candidates(200))),
+  ).toEqual(entries(bootstrap));
+});
+
+test("retains prepared image markers without regressing published pins", () => {
+  const prepared = "shepherdjerred/prepared-service";
+  const marker = `0.0.0@${UNPUBLISHED_IMAGE_DIGEST}`;
+  const previous = catalog([
+    ["worker", pin(100)],
+    [prepared, marker],
+  ]);
+  const partial = retainPublishedImagePins(
+    previous,
+    previous,
+    candidates(200, ["worker"]),
+  );
+  expect(entries(partial).map((entry) => entry.value)).toEqual([
+    pin(200, "b"),
+    marker,
+    "1.0",
+  ]);
+  const current = catalog([
+    ["worker", pin(200, "b")],
+    [prepared, pin(300)],
+  ]);
+  expect(
+    entries(retainPublishedImagePins(current, partial, candidates(301))),
+  ).toEqual(entries(current));
+  const invalid = catalog([[prepared, `0.1.0-0@${UNPUBLISHED_IMAGE_DIGEST}`]]);
   expect(() =>
-    retainPublishedImagePins(bootstrap, bootstrap, candidates(200)),
+    retainPublishedImagePins(invalid, previous, candidates(302)),
+  ).toThrow("Invalid internal image release pin");
+  expect(() =>
+    retainPublishedImagePins(previous, invalid, candidates(302)),
   ).toThrow("Invalid internal image release pin");
 });
 
