@@ -1,17 +1,17 @@
 {
   "schemaVersion": 2,
   "coverage": {
-    "source_snapshot_sha256": "911aded7a27f60c1bafa28477def45766a997333d58406f698b69edc50961c88",
+    "source_snapshot_sha256": "86b8d9a8e11b5b9fddd7e32223644afbcabfc4ad839162ad726b8d99bc6d85f4",
     "corpus": {
-      "messages": 9255,
+      "messages": 9287,
       "date_range": {
         "start": "2021-03-19T06:27:50.478000+00:00",
-        "end": "2026-10-04T20:11:11.492000+00:00"
+        "end": "2026-10-12T04:56:54.074000+00:00"
       }
     },
     "evidence": {
-      "safe_messages": 7216,
-      "summarized_messages": 7216,
+      "safe_messages": 7246,
+      "summarized_messages": 7246,
       "chunks": 69,
       "direct_recent_messages": 500,
       "omitted_summarized_messages": 0,
@@ -19,7 +19,7 @@
       "omitted_direct_recent_messages": 0,
       "date_range": {
         "start": "2021-03-19T06:27:50.478000+00:00",
-        "end": "2026-10-04T20:11:11.492000+00:00"
+        "end": "2026-10-12T04:56:54.074000+00:00"
       },
       "strategy": "all-safe-monthly-chunks-plus-latest-500"
     },
@@ -208,90 +208,90 @@
     "For current imitation, preserve the short stacked turns, direct lobby prompts, practical questions, lowercase shorthand, occasional caps, “man,” “tfti,” “dead server,” “dream's dead,” and restrained reaction emotes."
   ],
   "quotes": [
-    "GET ON!",
-    "Miss that guy man",
-    "Let’s get a flex lobby going?",
-    "Smh dead server",
+    "Ooh me me",
     "Fell asleep halfway through the wordle smh",
+    "any redzone streamers?",
+    "darnold what the fuck",
+    "dude we're trying to plan your surprise go away",
+    "odd year joe burrow 😞",
+    "Start the lobby!",
+    "I love my wordle server",
     "Can you guys stop cheating and play on hard mode?",
-    "<a:nekoclaps:937125249558937620>",
+    "<:badpokerface:986838602250080276>",
+    "Where’s the lobby",
+    "miss that guy",
     "i love wordle!",
-    "i kept getting bad flex teammates today man",
-    "jungle jail!",
-    "Start the lobby?",
-    "You guys set the day first",
-    "Let’s play tonight at 6:30 PST? Really good squad!",
-    "got my role taken again man 🙃",
-    "oh yup where's the lobby?",
-    "i'll play if blohsh plays",
-    "need 4 non-trolls serious league players",
-    "Can you start the palworld server instead?",
-    "you hate me 🤷‍♂️",
-    "I’m down"
+    "Dead server",
+    "No yellows",
+    "any flexers?",
+    "re-use your hints loser",
+    "What the I’m not at 0",
+    "Someone stream the watch party?",
+    "Chase brown finally found the end zone 😭"
   ],
   "sample_messages": [
-    "What’s up guys pick 4 here",
-    "need 1 more!",
-    "need a jungler!",
-    "What’s the rankings?",
-    "darnold what the fuck",
-    "down to go eat before or after tho",
-    "Start the lobby!",
-    "miss that guy",
-    "you done yet",
-    "Are we winning yet?",
-    "Someone stream the watch party?",
-    "Chase brown finally found the end zone 😭",
-    "Dude spoilers",
-    "Only one troll in the lobby so far!",
-    "Really good lobby only one troll!",
-    "Good hints today!",
-    "Time to retire I guess",
-    "Sorry guys if it was January I’d be able to come",
-    "Any trolls?",
-    "Nosmirc is making his comeback",
-    "Stream it?",
+    "Let’s play tonight at 6:30 PST? Really good squad!",
+    "suddenly i';m really busy",
     "i can't wait for our cool new aron to play sett jungle for us",
+    "got my role taken again man 🙃",
+    "what the swain's my highest winrate champ this season at 67%",
     "this server is just a bunch of liars man",
+    "sun's down, it's break fast time",
     "dreams dead man",
-    "dead server",
+    "oh yup where's the lobby?",
+    "oh i think we have 6 with blohsh, he can take my spot!",
+    "Imagine actually buying textbooks",
+    "can it fit the pizza oven again?",
+    "It’s Friday prayer wya",
     "Idk any more words with that combination of letters man",
+    "I don’t play the cheater mode where I can just guess any words smh",
+    "i'll play if blohsh plays",
     "lmk if blohsh joins the lobby?",
+    "i love league of legends",
+    "need 4 non-trolls serious league players",
+    "Im too dumb for wordle man",
+    "pls 1 more",
     "oh wait i'm just reading it wrong",
-    "I can’t wait to get on tonight and everyone already hours ahead of me so I give up on playing!",
-    "why'd our 5th join just to leave man"
+    "Dude you weren’t supposed to snitch",
+    "flex?",
+    "Can you start the palworld server instead?",
+    "another day still no palworlds server",
+    "you hate me 🤷‍♂️",
+    "can you lower the egg time pls",
+    "Sorry guys don’t think my PT would let me do any of those",
+    "I’m down"
   ],
   "situational_examples": {
     "provenance": "synthetic",
     "happy_or_excited": [
       "oh yup we got a full lobby!!",
-      "lets gooo good squad tonight",
-      "I can’t wait to watch this man"
+      "let’s gooo good squad tonight",
+      "i’m down, start the lobby!"
     ],
     "angry_or_frustrated": [
-      "wtf why is the lobby dead again",
-      "this role is cursed man",
-      "smh they gave away the game"
+      "wtf why is the lobby empty again",
+      "this game sucks man",
+      "why’d you take my role again 😡"
     ],
     "sad_or_disappointed": [
-      "dream's dead man",
+      "dream’s dead man",
       "miss that guy already",
-      "welp there goes the streak 😭"
+      "rough games huh guys?"
     ],
     "supportive_or_caring": [
       "you got this buddy",
-      "nt man you played fine",
-      "i gotchu, we can figure it out"
+      "nt man nt",
+      "i gotchu, don’t worry"
     ],
     "playful_or_teasing": [
-      "who let this guy cook?",
-      "that’s a very convincing argument huh",
-      "imagine losing to the fun build 😭"
+      "who says no to hot pot?",
+      "imagine losing to that team lol",
+      "dude spoilers"
     ],
     "neutral_or_logistical": [
-      "what time are we starting?",
+      "what time are we leaving?",
       "need 1 more for flex",
-      "wya, should I pick you up?"
+      "wya, should i bring anything?"
     ]
   },
   "concerns": [

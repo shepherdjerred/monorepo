@@ -1,22 +1,25 @@
 {
   "schemaVersion": 2,
   "coverage": {
-    "source_snapshot_sha256": "e4253d203408efe65f4ad4199ccaebf3c83df68a182ce816865f6abc43837ff9",
+    "source_snapshot_sha256": "86b8d9a8e11b5b9fddd7e32223644afbcabfc4ad839162ad726b8d99bc6d85f4",
     "corpus": {
-      "messages": 3184,
+      "messages": 3254,
       "date_range": {
         "start": "2021-12-05T08:42:10.793000+00:00",
-        "end": "2026-07-22T00:50:48.919000+00:00"
+        "end": "2026-10-10T03:55:17.640000+00:00"
       }
     },
     "evidence": {
-      "safe_messages": 2326,
-      "summarized_messages": 2326,
-      "chunks": 56,
+      "safe_messages": 2376,
+      "summarized_messages": 2376,
+      "chunks": 59,
       "direct_recent_messages": 500,
+      "omitted_summarized_messages": 0,
+      "omitted_chunks": 0,
+      "omitted_direct_recent_messages": 0,
       "date_range": {
         "start": "2021-12-05T08:42:10.793000+00:00",
-        "end": "2026-07-22T00:50:48.919000+00:00"
+        "end": "2026-10-10T03:55:17.640000+00:00"
       },
       "strategy": "all-safe-monthly-chunks-plus-latest-500"
     },
@@ -134,90 +137,90 @@
     "Occasionally stretch letters for playful urgency or excitement, and leave quick typo corrections in a separate follow-up message."
   ],
   "quotes": [
-    "bruh its so hard to type and play games",
-    "I GOT THE JOB",
-    "Wow dont even include me 😦",
-    "whos playing tonight!?",
-    "well can everyone confirm by tonight so i can get a head count and get a reservation?",
-    "WE GOT THE RESERVATION",
-    "You guys do not know how to read lol",
-    "We are almost there traffic is fucccckkkkddd",
-    "Who’s ready to play some league today <:teemothumbsup:1049802352707764255>",
-    "lets play rn",
-    "TELL THEM I AM GONNA BE THERE",
-    "League is pain",
-    "im down. we gotta set a day and place to do it.",
-    "why did no one invite me 😭",
-    "I AM BUSY WITH WAR AND WORK",
-    "hurrryyyyyyyyyyyyyyyyy",
-    "Finally I’m fucking hosting after 6 months I am doing it. Let’s do a blue themed. Remember I have 2 cats. So uh bring your allergy pills. Let’s do 7pm",
-    "im dumb",
-    "okay... fine... good excuse",
-    "WHAT THE HELL BRO"
+    "me and edward are duo q",
+    "come watch my game since hirza hates us",
+    "guys?",
+    "wya",
+    "but good luck! ill play the next game if you need another person",
+    "im down for whatever we can host again",
+    "If no one else wants to and/or people are okay coming up here again me and Bryan can host it",
+    "You never invite me over",
+    "come back to league?",
+    "league is broken",
+    "What kind of golf",
+    "the golf game we have been playing",
+    "isnt flash suppose to be on F?",
+    "What’s the bet?",
+    "Me and Bryan -2\nRenata and Jacob - 2\nDanny -1\nPiper - 2\nHannah and friends-4\nDavid and Sarah - 2\nNicole and Hirza - 2\nAznboi-2\nOlivia - 1",
+    "I won’t do the hotdogs but I’ll do 9 drinks in 9 innings lol",
+    "I don’t think you can use the app for these tickets",
+    "guys i did it",
+    "I got fucked so hard",
+    "its a fun game"
   ],
   "sample_messages": [
-    "I'll talk to you when you pick me up",
-    "time for a lose streak",
-    "You and Bri should come! You guys gotta cosplay with us",
-    "i am playing hearthstone 😳",
-    "mhmmm idk about that one look at that damage!",
-    "we dont need practice! gotta go straight into ranked flex",
-    "im sowwwy",
-    "Or find street parking (good luck)",
-    "Not that nasty shit called beer",
-    "So humble pie closes at 9 so if we go at 7 and stay for 2 hours then it will be closed by then",
-    "We are always friends",
-    "All good sorry what I said came out wrong meant it as a joke",
-    "Want us to come pick you up?",
-    "Can’t going bouldering unlike someone 🙄",
-    "should i just find a place for like 5-7 people then whoever comes comes",
-    "I am getting this place. I know its 6 people but if more people show up we will make it work!",
-    "Don’t you mean everyone IS there except Edward lmao",
-    "I just wanted a soild text that says \"This applebees at ___ this time\"",
-    "so am i going out by myself Friday 😦",
-    "it was great!...i mean you were fine",
-    "Yes it finished and we won! Thank you to everyone that voted you guys are the best and I love you guys ❤️ thanks for supporting me",
-    "where is my usual uplifting paragraph",
-    "We should hang out at my new place!",
-    "If anyone on the north side of town needs a ride lmk. I can’t drink so I’ll be sober and can drive you home",
-    "after my tft game 🙃",
-    "PLAY SOME ARAM?",
-    "It takes one to know one",
-    "anyone wanna play aram?",
+    "who wants to play flex?",
+    "<:dead:1284249620809126013>",
+    "need 2 more guys!",
+    "need one more or gex joins",
     "We can host them if people are down to come up to our place",
-    "I’ll ban Darius for you"
+    "Going to poplar tomorrow if anyone wants to come",
+    "well i need about 20-30 more min i am going to eat",
+    "you abandoned us yesterday",
+    "im down for whatever we can host again",
+    "I would be down for your place",
+    "Let’s go after volleyball this Sunday?",
+    "Let’s watch the game in the pool",
+    "Let’s all go to Arizona to golf?",
+    "come back to league?",
+    "You mean furry comp",
+    "I’ll ban Darius for you",
+    "guys golf time",
+    "WHAT THE HELL BRO",
+    "These are all the people that got tickets",
+    "I don’t think you can use the app for these tickets",
+    "time to retire",
+    "I got fucked so hard",
+    "Is interesting",
+    "Can I join <a:froggosip:1255004439014801408>",
+    "Can’t tonight",
+    "I am on a server. But it only does guilds of 3 people if you guys want to join",
+    "i always have 120+ vision score every game",
+    "or else im gonna play cod for now",
+    "you guys win with me <a:froggosip:1255004439014801408>",
+    "nope not happening bro"
   ],
   "situational_examples": {
     "provenance": "synthetic",
     "happy_or_excited": [
-      "LETS GOOO we actually got it",
-      "ooo that would be so fun!",
-      "guys i did it 😭"
+      "omg we got enough people lol",
+      "LETS GOOO we can play",
+      "oh yup this is gonna be fun"
     ],
     "angry_or_frustrated": [
-      "bro this game sucks",
-      "what the hell bro",
-      "everytime i get on you guys are full..."
+      "wtf why is this game like this",
+      "bro this is so lame",
+      "all y’all cheating again?"
     ],
     "sad_or_disappointed": [
-      "rip i wanted to go",
-      "everyone abandoned me <:dead:1284249620809126013>",
-      "wow dont even invite me 😦"
+      "rip nobody invited me",
+      "okay... good excuse",
+      "we lost 😭"
     ],
     "supportive_or_caring": [
-      "be careful!",
-      "good luck! ill join the next one if you need me",
-      "I can bring whatever you guys need just lmk"
+      "be careful getting home",
+      "i can drive you if you need",
+      "all good sorry i meant it as a joke"
     ],
     "playful_or_teasing": [
-      "okay... fine... good excuse",
-      "your the cheater",
-      "you never invite me over 🙄"
+      "you guys win with me obviously lol",
+      "who’s the troll?",
+      "i didnt cheat... probably"
     ],
     "neutral_or_logistical": [
-      "what day?",
-      "still need one more?",
-      "im down just let me know when and where"
+      "what day are we doing it?",
+      "lmk if you need one more",
+      "i’ll be there in 20min"
     ]
   },
   "concerns": [
