@@ -122,8 +122,9 @@ export class GoalManager {
   /**
    * Seed in-memory history from the persisted state file so goal history
    * survives server restarts. Call once after constructing GoalManager,
-   * before the first startGoal(). No-ops silently if the file is absent or
-   * has an unexpected shape — the in-memory list simply starts empty.
+   * before the first startGoal(). An absent file starts an empty history; an
+   * invalid one is moved aside and fails initialization so it is never
+   * silently replaced.
    */
   async initialize(): Promise<void> {
     const statePath = this.resolveRuntimePath(this.config.state_path);

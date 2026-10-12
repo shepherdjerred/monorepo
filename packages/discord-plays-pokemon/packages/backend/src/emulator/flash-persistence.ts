@@ -1,4 +1,24 @@
-import { rename } from "node:fs/promises";
+import { writeFileAtomic } from "@shepherdjerred/discord-stream-lifecycle/persistence/atomic-write";
+import { flashSaveLoadInvalidTotal } from "#src/observability/metrics.ts";
+
+/**
+ * Validate a flash save read from disk. A wrong-size image refuses the boot
+ * rather than starting a blank game, because the stop-time flush would then
+ * overwrite the existing (possibly recoverable) save with it.
+ */
+export function requireFlashImage(
+  saved: Uint8Array,
+  path: string,
+  expectedBytes: number,
+): Uint8Array {
+  if (saved.length !== expectedBytes) {
+    flashSaveLoadInvalidTotal.inc();
+    throw new Error(
+      `flash save at ${path} has the wrong size (${String(saved.length)} bytes, expected ${String(expectedBytes)}); refusing to overwrite it`,
+    );
+  }
+  return saved;
+}
 
 type PersistenceRequest = {
   path: string;
@@ -49,8 +69,8 @@ export class AtomicFlashPersistence {
   }
 
   private async persist(path: string, data: Uint8Array): Promise<void> {
-    const temporaryPath = `${path}.tmp`;
-    await Bun.write(temporaryPath, data);
-    await rename(temporaryPath, path);
+    // Unique temp file + fsync + rename + directory fsync: a crash or power loss
+    // leaves the previous complete save, never a torn one.
+    await writeFileAtomic(path, data);
   }
 }

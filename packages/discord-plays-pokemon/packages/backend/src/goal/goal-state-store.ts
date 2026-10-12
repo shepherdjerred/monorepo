@@ -1,4 +1,7 @@
+import { mkdir, rename } from "node:fs/promises";
+import path from "node:path";
 import { z } from "zod";
+import { writeFileAtomic } from "@shepherdjerred/discord-stream-lifecycle/persistence/atomic-write";
 import { logger } from "#src/logger.ts";
 import {
   HISTORY_LIMIT,
@@ -29,6 +32,12 @@ const StateEnvelopeSchema = z.object({
   history: z.array(CompletedGoalSchema).optional(),
 });
 
+/**
+ * Load the guild's completed-goal history. A state file that is unreadable or has
+ * the wrong shape is moved aside to `<statePath>.corrupt-<timestamp>` and loading
+ * fails, rather than silently starting from an empty history that the next
+ * write would make permanent.
+ */
 export async function loadGoalHistory(
   statePath: string,
 ): Promise<CompletedGoal[]> {
@@ -38,19 +47,29 @@ export async function loadGoalHistory(
   try {
     raw = await file.json();
   } catch (error) {
-    logger.warn(`goal-manager: could not parse state file: ${String(error)}`);
-    return [];
+    throw await quarantine(statePath, `could not parse: ${String(error)}`);
   }
   const result = StateEnvelopeSchema.safeParse(raw);
   if (!result.success) {
-    logger.warn(
-      "goal-manager: state file has unexpected shape, starting with empty history",
-    );
-    return [];
+    throw await quarantine(statePath, result.error.message);
   }
   return (result.data.history ?? [])
     .slice(0, HISTORY_LIMIT)
     .map((entry) => normalizeCompletedGoal(entry));
+}
+
+async function quarantine(statePath: string, reason: string): Promise<Error> {
+  const stamp = new Date().toISOString().replaceAll(/[-:.]/g, "");
+  const aside = `${statePath}.corrupt-${stamp}`;
+  await rename(statePath, aside);
+  logger.error("goal-manager: goal state file is invalid; moved it aside", {
+    statePath,
+    aside,
+    reason,
+  });
+  return new Error(
+    `goal state file ${statePath} is invalid (${reason}); moved it to ${aside}`,
+  );
 }
 
 export async function persistGoalState(input: {
@@ -59,9 +78,9 @@ export async function persistGoalState(input: {
   history: CompletedGoal[];
 }): Promise<void> {
   const envelope = { current: input.state, history: input.history };
-  await Bun.write(
+  await mkdir(path.dirname(input.statePath), { recursive: true });
+  await writeFileAtomic(
     input.statePath,
     `${JSON.stringify(envelope, undefined, 2)}\n`,
-    { createPath: true },
   );
 }

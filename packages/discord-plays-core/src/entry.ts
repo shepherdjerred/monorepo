@@ -33,6 +33,7 @@ type GameBotWiring = Pick<
   | "userbotTokens"
   | "driver"
   | "stateRootDir"
+  | "saveHistory"
   | "extraCommands"
   | "stoppedMessage"
 >;
