@@ -13,6 +13,18 @@ export const standaloneTests: readonly StandaloneTest[] = [
   "testQuickAddRetainsHiddenDraftAndAddsAnother",
 ];
 
+export const launchSmokeTest = "testAcceptanceFirstLaunchHasOneWorkspace";
+export const launchSmokeSelector = `TaskNotesAcceptanceUITests/StandaloneVaultUITests/${launchSmokeTest}`;
+
+export function isFullStandaloneSelection(
+  tests: readonly StandaloneTest[],
+): boolean {
+  return (
+    tests.length === standaloneTests.length &&
+    standaloneTests.every((test) => tests.includes(test))
+  );
+}
+
 const titleParts: Record<StandaloneTest, readonly [string, string]> = {
   testNativeVaultCaptureEditAndRelaunch: ["Native Mac", " edited"],
   testDirtyInspectorNavigationAndWindowClosePreserveChanges: [
@@ -97,6 +109,21 @@ export function assertExactStandaloneResults(
   report: unknown,
   selected: readonly StandaloneTest[],
 ): void {
+  assertExactNativeResults(summary, report, selected);
+}
+
+export function assertExactLaunchSmokeResults(
+  summary: unknown,
+  report: unknown,
+): void {
+  assertExactNativeResults(summary, report, [launchSmokeTest]);
+}
+
+function assertExactNativeResults(
+  summary: unknown,
+  report: unknown,
+  selected: readonly string[],
+): void {
   assert.ok(selected.length > 0, "At least one native case must execute");
   assert.equal(
     new Set(selected).size,
@@ -148,7 +175,10 @@ export function assertExactStandaloneResults(
     );
     const url = entry["nodeIdentifierURL"];
     assert.ok(
-      typeof url === "string" && url.endsWith(`/${standaloneSelector(test)}`),
+      typeof url === "string" &&
+        url.endsWith(
+          `/TaskNotesAcceptanceUITests/StandaloneVaultUITests/${test}`,
+        ),
       "Native result must belong to the exact acceptance target and selected method",
     );
   }

@@ -31,9 +31,18 @@ extension Scene {
             bundleID: String?,
             acceptance: () throws -> FacetAcceptanceConfiguration?
         ) throws -> Self {
-            guard bundleID == "red.sjer.tasknotes.mac.acceptance" else { return .production }
-            guard try acceptance() != nil else { throw FacetAcceptanceError.invalidDescriptor }
-            return .isolatedAcceptance
+            try configuration(bundleID: bundleID, acceptance: acceptance) == nil
+                ? .production : .isolatedAcceptance
+        }
+
+        static func configuration(
+            bundleID: String?, acceptance: () throws -> FacetAcceptanceConfiguration?
+        ) throws -> FacetAcceptanceConfiguration? {
+            guard bundleID == "red.sjer.tasknotes.mac.acceptance" else { return nil }
+            guard let configuration = try acceptance() else {
+                throw FacetAcceptanceError.invalidDescriptor
+            }
+            return configuration
         }
     }
 #endif

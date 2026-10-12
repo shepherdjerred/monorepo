@@ -50,10 +50,14 @@ application starts them even with no visible workspace; view tasks await that
 shared startup.
 DEBUG native acceptance also prepares its synthetic fixture in the application
 bootstrap, with concurrent restored windows sharing one registration and result.
-The DEBUG acceptance app validates its isolated launch descriptor and disables
-automatic window restoration, so each launch starts with one workspace. Its cold
-relaunch checks prove persisted vault data; production window-layout restoration
-remains automatic and requires separate runtime verification.
+Before constructing SwiftUI's App, the DEBUG acceptance launcher validates its
+isolated descriptor and installs a dedicated `NSApplication` subclass. Its
+AppKit restoration hook declines archived windows without decoding their state;
+the acceptance scene also disables restoration. A separate launch check requires
+one workspace on initial and cold launch and retains scalar installation/veto
+receipts. Cold relaunch workflows prove persisted vault data; production
+window-layout restoration remains automatic and requires separate runtime
+verification.
 Startup publishes the engine, importer and account together after their initial
 reads succeed. A failed preparation closes its unpublished engine and permits a
 fresh startup attempt. Account requests check cancellation and their original
@@ -246,7 +250,8 @@ checkpoint, original profile, unchanged replica and immutable pending outbox;
 interruption. Then run `lifecycle-finish <runID> macos` through the live harness.
 These account commands do not establish Sync or native-workflow acceptance.
 
-`bun run mac:acceptance:e2e` runs four bounded local standalone workflows with
+`bun run mac:acceptance:e2e` builds once, checks initial and cold-launch window
+isolation, then runs four local standalone workflows sequentially with
 a new descriptor, synthetic Markdown, and no live account: capture/edit/cold
 relaunch plus complete/reopen/delete/exact-byte Undo; dirty inspector navigation
 and normal window-close retention; independent search and selection in two
@@ -255,8 +260,16 @@ New Window opens a separate workspace; New Task keeps Command-N and Quick Add
 keeps Shift-Command-N. Each workspace has its own stable accessibility identity
 for the lifetime of that window.
 
+Each workflow runs in its own XCTest invocation. The runner requires that exact
+case to pass before starting the next, stops on the first failure, and merges
+the four actual workflow results for the unchanged complete-suite gate.
+`bun run mac:acceptance:e2e --launch-smoke-only` checks just initial and cold
+launch, creates no task notes, and explicitly records that full acceptance was
+not run. It still initializes the synthetic vault and profile.
+
 The runner retains `run.json` with the exact selected test methods and outcome,
-the `.xcresult`, safe synthetic workspace screenshots and the run's private
+each invocation's `.xcresult` and result receipt, safe synthetic workspace
+screenshots and the run's private
 state under `.build/native-acceptance/<UUID>`. Mac screenshots come only from
 ScreenCaptureKit filters for explicitly owned workspace windows and separate
 captures of their exact owned sheets; foreign windows are excluded by the capture

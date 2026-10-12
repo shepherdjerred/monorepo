@@ -35,6 +35,10 @@
             let stateDirectory: String
         }
 
+        static func ownedProcessID(app: XCUIApplication) throws -> pid_t {
+            try process(app, foreground: false, phase: .beforeActivation).pid
+        }
+
         static func attach(
             app: XCUIApplication, name: String, test: XCTestCase, windows: [XCUIElement]
         ) async throws {

@@ -4,6 +4,18 @@ import XCTest
 
 @MainActor
 final class StandaloneVaultUITests: XCTestCase {
+    func testAcceptanceFirstLaunchHasOneWorkspace() throws {
+        let context = try launch("Launch smoke")
+        let app = context.app
+        _ = try workspace(app)
+        let first = try restorationProof(context, name: "First launch isolation")
+        app.terminate()
+        app.launch()
+        _ = try workspace(app)
+        let second = try restorationProof(context, name: "Cold relaunch isolation")
+        XCTAssertNotEqual(first.installationID, second.installationID)
+    }
+
     func testNativeVaultCaptureEditAndRelaunch() async throws {
         let context = try launch("Native Mac")
         let app = context.app
@@ -160,6 +172,45 @@ final class StandaloneVaultUITests: XCTestCase {
 }
 
 extension StandaloneVaultUITests {
+    private struct RestorationProof: Codable {
+        let schemaVersion: UInt32
+        let runID: UUID
+        let processIdentifier: Int32
+        let installationID: UUID
+        let subclassInstalled: Bool
+        let restoreVetoCount: UInt
+    }
+
+    private func restorationProof(_ context: LocalJourney, name: String) throws -> RestorationProof
+    {
+        let runID = try XCTUnwrap(
+            ProcessInfo.processInfo.environment["FACET_E2E_RUN_ID"].flatMap(UUID.init(uuidString:)))
+        let file = context.vault.deletingLastPathComponent()
+            .appendingPathComponent("workspace-restoration.json")
+        let attributes = try file.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey])
+        guard attributes.isRegularFile == true, attributes.isSymbolicLink == false else {
+            throw LocalAcceptanceLaunchError.invalidOwnership
+        }
+        let bytes = try Data(contentsOf: file)
+        guard let text = String(data: bytes, encoding: .utf8),
+            let fields = try FacetFeatureProjection.parseJSON(text).object?.fields,
+            Set(fields.keys) == [
+                "schemaVersion", "runID", "processIdentifier", "installationID",
+                "subclassInstalled", "restoreVetoCount",
+            ]
+        else { throw LocalAcceptanceLaunchError.invalidOwnership }
+        let proof = try JSONDecoder().decode(RestorationProof.self, from: bytes)
+        guard proof.schemaVersion == 1, proof.runID == runID, proof.subclassInstalled,
+            proof.processIdentifier == (try MacAcceptanceCapture.ownedProcessID(app: context.app))
+        else { throw LocalAcceptanceLaunchError.invalidOwnership }
+        let receipt = XCTAttachment(
+            data: try JSONEncoder().encode(proof), uniformTypeIdentifier: "public.json")
+        receipt.name = name
+        receipt.lifetime = .keepAlways
+        add(receipt)
+        return proof
+    }
+
     private func launch(_ prefix: String) throws -> LocalJourney {
         continueAfterFailure = false
         let environment = ProcessInfo.processInfo.environment
