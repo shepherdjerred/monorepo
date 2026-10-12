@@ -5,6 +5,7 @@ import {
   findTemporalWorkerContainer,
   synthesizeTemporalResources,
 } from "@shepherdjerred/homelab/cdk8s/src/temporal-test-resources.ts";
+import { ContainerEnvSchema } from "@shepherdjerred/homelab/cdk8s/src/testing/container-env-schema.ts";
 
 function resources() {
   return synthesizeTemporalResources(".test-synth-temporal-backup-worker");
@@ -66,11 +67,7 @@ describe("Temporal internal service boundary", () => {
           spec: z.object({
             containers: z.array(
               z.object({
-                env: z.array(
-                  z
-                    .object({ name: z.string(), value: z.string().optional() })
-                    .loose(),
-                ),
+                env: ContainerEnvSchema,
               }),
             ),
           }),

@@ -25,6 +25,7 @@ final class RwfAnalytics {
   private final ProductAnalytics analytics;
   private PhaseKind phase = PhaseKind.LOBBY;
   private Optional<Instant> liveAt = Optional.empty();
+  private Optional<MatchSnapshot> lastLive = Optional.empty();
 
   RwfAnalytics(ProductAnalytics analytics) {
     this.analytics = analytics;
@@ -50,13 +51,21 @@ final class RwfAnalytics {
                   after.ballot().map(ballot -> ballot.candidates().size()).orElse(0)));
       default -> {}
     }
+    observePhase(after);
+  }
+
+  private void observePhase(MatchSnapshot after) {
     if (phase != PhaseKind.LIVE && after.phase() == PhaseKind.LIVE) {
       liveAt = Optional.of(after.now());
     }
     if (phase == PhaseKind.LIVE && after.phase() == PhaseKind.ENDED) {
-      completed(after);
+      completed(after, after.now(), after.outcome().orElseThrow());
+    }
+    if (phase == PhaseKind.LIVE && after.phase() == PhaseKind.RESETTING) {
+      completed(lastLive.orElseThrow(), after.now(), new Outcome.Stopped());
     }
     phase = after.phase();
+    lastLive = after.phase() == PhaseKind.LIVE ? Optional.of(after) : Optional.empty();
   }
 
   /** A human used a killstreak reward; the killstreaks call this. */
@@ -74,10 +83,9 @@ final class RwfAnalytics {
     }
   }
 
-  private void completed(MatchSnapshot after) {
-    var outcome = after.outcome().orElseGet(Outcome.Stopped::new);
+  private void completed(MatchSnapshot after, Instant finishedAt, Outcome outcome) {
     var humans = after.combatants().stream().filter(c -> !c.id().isBot()).count();
-    var seconds = liveAt.map(start -> Duration.between(start, after.now()).toSeconds()).orElse(0L);
+    var seconds = Duration.between(liveAt.orElseThrow(), finishedAt).toSeconds();
     for (var combatant : after.combatants()) {
       if (!(combatant.id() instanceof CombatantId.Human human)) {
         continue;

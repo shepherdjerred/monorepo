@@ -5,10 +5,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.shepherdjerred.thestorm.core.analytics.GameActivity;
 import com.shepherdjerred.thestorm.core.analytics.ProductAnalytics;
 import com.shepherdjerred.thestorm.rwf.app.MatchNotification;
+import com.shepherdjerred.thestorm.rwf.domain.combat.AttackType;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.CombatantId;
+import com.shepherdjerred.thestorm.rwf.domain.match.Ballot;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchEffect;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent;
+import com.shepherdjerred.thestorm.rwf.domain.match.MatchSettings;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchSnapshot;
+import com.shepherdjerred.thestorm.rwf.domain.match.RwfMatch;
+import com.shepherdjerred.thestorm.rwf.testing.Samples;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -88,31 +93,14 @@ final class MatchAnalyticsTest {
   void humansKitsVotesAndFinishedMatchesAreNamedEventsAndBotsSendNone() {
     var recording = new Recording();
     var events = new RwfAnalytics(recording);
-    events.accept(
-        new MatchNotification(
-            new MatchEvent.PickKit(HUMAN, "longbow"),
-            List.of(),
-            snapshot(MatchSnapshot.PhaseKind.COUNTDOWN, List.of(HUMAN, BOT))));
-    events.accept(
-        new MatchNotification(
-            new MatchEvent.PickKit(BOT, "trooper"),
-            List.of(),
-            snapshot(MatchSnapshot.PhaseKind.COUNTDOWN, List.of(HUMAN, BOT))));
-    events.accept(
-        new MatchNotification(
-            new MatchEvent.Vote(HUMAN, "harbour"),
-            List.of(),
-            snapshot(MatchSnapshot.PhaseKind.COUNTDOWN, List.of(HUMAN, BOT))));
-    events.accept(
-        new MatchNotification(
-            new MatchEvent.ForceStart(Instant.EPOCH),
-            List.of(),
-            snapshot(MatchSnapshot.PhaseKind.LIVE, List.of(HUMAN, BOT))));
-    events.accept(
-        new MatchNotification(
-            new MatchEvent.Stop(),
-            List.of(),
-            snapshot(MatchSnapshot.PhaseKind.ENDED, List.of(HUMAN, BOT))));
+    var match = start(events);
+    var stoppedAt = Samples.T0.plusSeconds(75);
+    match = accept(events, match, new MatchEvent.Stop(), stoppedAt);
+    var stopped = MatchSnapshot.of(match, stoppedAt);
+    assertThat(stopped.phase()).isEqualTo(MatchSnapshot.PhaseKind.RESETTING);
+    assertThat(stopped.combatants()).isEmpty();
+    match = accept(events, match, new MatchEvent.ResetDone(), stoppedAt);
+    accept(events, match, new MatchEvent.Stop(), stoppedAt);
     events.killstreakUsed(HUMAN, "compass", 2);
     events.killstreakUsed(BOT, "compass", 2);
     events.kitPurchased(HUMAN, "medic", 300);
@@ -131,7 +119,74 @@ final class MatchAnalyticsTest {
         .containsEntry("result", "stopped")
         .containsEntry("humans", 1L)
         .containsEntry("bots", 1L)
+        .containsEntry("duration_s", 75L)
+        .containsEntry("map", "harbour")
+        .containsEntry("kit", "longbow")
+        .containsEntry("survived", true)
         .containsKeys("kills", "assists", "duration_s", "map", "kit");
+  }
+
+  @Test
+  void aNaturalEndEmitsItsResultOnceAndStoppingTheEndScreenDoesNotRepeatIt() {
+    var recording = new Recording();
+    var events = new RwfAnalytics(recording);
+    var match = start(events);
+    var endedAt = Samples.T0.plusSeconds(75);
+    match =
+        accept(
+            events,
+            match,
+            new MatchEvent.Died(BOT, Optional.of(HUMAN), AttackType.MELEE, endedAt),
+            endedAt);
+    assertThat(MatchSnapshot.of(match, endedAt).phase()).isEqualTo(MatchSnapshot.PhaseKind.ENDED);
+    accept(events, match, new MatchEvent.Stop(), endedAt);
+
+    assertThat(recording.games)
+        .filteredOn(entry -> entry.getKey() == ProductAnalytics.GameEvent.RWF_MATCH_COMPLETED)
+        .singleElement()
+        .satisfies(
+            entry ->
+                assertThat(entry.getValue())
+                    .containsEntry("result", "win")
+                    .containsEntry("duration_s", 75L)
+                    .containsEntry("kills", 1));
+  }
+
+  private static RwfMatch start(RwfAnalytics events) {
+    var match = RwfMatch.open(MatchSettings.RED_WARFARE, Samples.MATCH, Samples.SEED);
+    var map = Samples.twoTeams();
+    for (var event :
+        List.of(
+            new MatchEvent.Join(HUMAN, "Player", Samples.T0),
+            new MatchEvent.Join(BOT, "Bot", Samples.T0),
+            new MatchEvent.BallotOpened(
+                List.of(
+                    new Ballot.Candidate(map.id(), map.name(), map.author()),
+                    new Ballot.Candidate("yard", "Yard", map.author()))),
+            new MatchEvent.PickKit(HUMAN, "longbow"),
+            new MatchEvent.PickKit(BOT, "trooper"),
+            new MatchEvent.Vote(HUMAN, map.id()),
+            new MatchEvent.ForceStart(Samples.T0),
+            new MatchEvent.MapReady(map, Samples.T0))) {
+      match = accept(events, match, event, Samples.T0);
+    }
+    assertThat(MatchSnapshot.of(match, Samples.T0).phase()).isEqualTo(MatchSnapshot.PhaseKind.LIVE);
+    return match;
+  }
+
+  private static RwfMatch accept(
+      RwfAnalytics events, RwfMatch match, MatchEvent event, Instant now) {
+    var step =
+        match
+            .on(event)
+            .fold(
+                accepted -> accepted,
+                error -> {
+                  throw new AssertionError(event + " was refused: " + error);
+                });
+    events.accept(
+        new MatchNotification(event, step.effects(), MatchSnapshot.of(step.match(), now)));
+    return step.match();
   }
 
   private static MatchSnapshot snapshot(MatchSnapshot.PhaseKind phase, List<CombatantId> roster) {
