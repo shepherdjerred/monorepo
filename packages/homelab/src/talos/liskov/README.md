@@ -152,12 +152,12 @@ keep that scratch in RAM:
   `zfs_dirty_data_max_max` stays at its 4 GiB load-time default; it only
   clamps the initial value and does not limit a later sysfs write.
 
-Any `apply-config` on liskov is a short CI outage, not only a reboot: on
-2026-10-12 a `--mode=no-reboot` apply that changed `kernel.modules`
-restarted containerd, cri and the kubelet, every CI pod in flight was killed
-and their pipelines ended `killed`. Check `toolkit ci load`, apply between
-pipelines, and restart the killed pipelines with
-`toolkit woodpecker pipeline start <repo> <number>` afterwards.
+Treat any `apply-config` on liskov as a possible CI disruption, not only a
+reboot: on 2026-10-12 a `--mode=no-reboot` apply that changed
+`kernel.modules` restarted containerd, cri and the kubelet (Talos service
+last-change times matched the apply). Check `toolkit ci load`, apply between
+pipelines, and restart any pipeline that ends `killed` with
+`toolkit woodpecker pipeline start <repo> <number>`.
 
 Coupling: dirty data is counted inside the ARC, so the 8 GiB budget lives
 under the 16 GiB `zfs_arc_max` and adds nothing to the kubelet's 24Gi
