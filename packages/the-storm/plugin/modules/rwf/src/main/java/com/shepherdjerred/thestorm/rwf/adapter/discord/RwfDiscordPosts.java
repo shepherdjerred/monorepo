@@ -45,7 +45,8 @@ public final class RwfDiscordPosts {
                   finished.winner().map(TeamColor::displayName),
                   finished.winners(),
                   finished.players(),
-                  finished.length()));
+                  finished.length(),
+                  finished.humans()));
     }
   }
 

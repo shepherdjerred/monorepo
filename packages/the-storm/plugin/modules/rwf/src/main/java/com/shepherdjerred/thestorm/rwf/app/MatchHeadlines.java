@@ -8,6 +8,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Picks the transitions worth announcing outside the game from the {@link MatchEvents} stream: a
@@ -67,7 +68,8 @@ public final class MatchHeadlines {
             winner,
             winners,
             present.stream().map(MatchSnapshot.CombatantView::name).toList(),
-            Duration.between(started.orElseThrow(), after.now())));
+            Duration.between(started.orElseThrow(), after.now()),
+            present.stream().map(view -> view.id().uuid()).toList()));
   }
 
   /** What the match is doing, for a status line; empty when no human is in it. */
@@ -111,18 +113,21 @@ public final class MatchHeadlines {
      * @param winners the humans on the winning team
      * @param players every human in the match at the end
      * @param length how long it was live
+     * @param humans every human in the match at the end
      */
     record Finished(
         String mapId,
         Optional<TeamColor> winner,
         List<String> winners,
         List<String> players,
-        Duration length)
+        Duration length,
+        List<UUID> humans)
         implements Headline {
 
       public Finished {
         winners = List.copyOf(winners);
         players = List.copyOf(players);
+        humans = List.copyOf(humans);
       }
     }
   }

@@ -72,8 +72,14 @@ final class ServerEventsListenerTest {
               public void presence(String text) {
                 // The bot status is not under test here.
               }
+
+              @Override
+              public void dm(long discordUser, String text) {
+                posts.add(text);
+              }
             },
-            new DiscordRelay.Game(new SilentChat(), new Inline(), List::of, () -> Instant.EPOCH));
+            new DiscordRelay.Game(new SilentChat(), new Inline(), List::of, () -> Instant.EPOCH),
+            player -> java.util.Optional.empty());
     listener = new ServerEventsListener(relay, new VanillaPlainText(new EmptyLanguage()), sealed);
   }
 

@@ -74,6 +74,7 @@ export default defineConfig({
           ],
         },
         { label: "Search and Destroy", link: "/search-and-destroy/" },
+        { label: "Discord", link: "/discord/" },
       ],
       social: [
         {

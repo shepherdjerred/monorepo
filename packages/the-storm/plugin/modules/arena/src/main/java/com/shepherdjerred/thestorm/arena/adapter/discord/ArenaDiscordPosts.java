@@ -81,8 +81,10 @@ public final class ArenaDiscordPosts {
             new ArenaRunResult(
                 run.arena(),
                 run.tier(),
-                run.reached().entrySet().stream()
-                    .map(entry -> new ArenaRunResult.Player(entry.getKey(), entry.getValue()))
+                run.fighters().stream()
+                    .map(
+                        fighter ->
+                            new ArenaRunResult.Player(fighter.id(), fighter.name(), fighter.wave()))
                     .toList(),
                 record));
       }

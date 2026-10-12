@@ -67,6 +67,7 @@ final class DiscordRelayTest {
   private final List<String> online = new ArrayList<>();
   private final List<Duration> later = new ArrayList<>();
   private final List<String> presences = new ArrayList<>();
+  private final java.util.Map<UUID, Long> dmTargets = new java.util.HashMap<>();
 
   private final GlobalChat chat =
       new GlobalChat() {
@@ -126,13 +127,19 @@ final class DiscordRelayTest {
         public void presence(String text) {
           presences.add(text);
         }
+
+        @Override
+        public void dm(long discordUser, String text) {
+          posts.add("DM" + discordUser + " " + text);
+        }
       };
 
   private final DiscordRelay relay =
       new DiscordRelay(
           CONFIG,
           gateway,
-          new DiscordRelay.Game(chat, scheduler, () -> List.copyOf(online), () -> now));
+          new DiscordRelay.Game(chat, scheduler, () -> List.copyOf(online), () -> now),
+          player -> Optional.ofNullable(dmTargets.get(player)));
 
   private void runMainThread() {
     var tasks = List.copyOf(mainThread);
@@ -269,14 +276,16 @@ final class DiscordRelayTest {
             Optional.of("Red Team"),
             List.of("bob", "Alice"),
             List.of("bob", "Alice", "Carol"),
-            Duration.ofSeconds(725)));
+            Duration.ofSeconds(725),
+            List.of()));
     relay.onRwfMatchEnded(
         new RwfMatchResult(
             "Docks",
             Optional.empty(),
             List.of(),
             List.of("Carol", "alice"),
-            Duration.ofSeconds(42)));
+            Duration.ofSeconds(42),
+            List.of()));
 
     assertThat(posts)
         .containsExactly(
@@ -312,11 +321,16 @@ final class DiscordRelayTest {
         new ArenaRunResult(
             "Rustworks",
             "Ominous II",
-            List.of(new ArenaRunResult.Player("bob", 31), new ArenaRunResult.Player("Alice", 34)),
+            List.of(
+                new ArenaRunResult.Player(UUID.randomUUID(), "bob", 31),
+                new ArenaRunResult.Player(UUID.randomUUID(), "Alice", 34)),
             false));
     relay.onArenaRunEnded(
         new ArenaRunResult(
-            "Rustworks", "Ominous II", List.of(new ArenaRunResult.Player("Carol", 50)), true));
+            "Rustworks",
+            "Ominous II",
+            List.of(new ArenaRunResult.Player(UUID.randomUUID(), "Carol", 50)),
+            true));
 
     assertThat(posts)
         .containsExactly(
@@ -407,5 +421,36 @@ final class DiscordRelayTest {
     runMainThread();
 
     assertThat(replies).containsExactly("Online (1): Alice\n• S&D: 2 playing");
+  }
+
+  @Test
+  void resultsAreSentToPlayersWhoAskedForThem() {
+    var alice = UUID.randomUUID();
+    var bob = UUID.randomUUID();
+    dmTargets.put(alice, 42L);
+
+    relay.onRwfMatchEnded(
+        new RwfMatchResult(
+            "Docks",
+            Optional.empty(),
+            List.of(),
+            List.of("Alice", "Bob"),
+            Duration.ofSeconds(42),
+            List.of(alice, bob)));
+    relay.onArenaRunEnded(
+        new ArenaRunResult(
+            "Rustworks",
+            "Ominous I",
+            List.of(
+                new ArenaRunResult.Player(bob, "Bob", 3),
+                new ArenaRunResult.Player(alice, "Alice", 4)),
+            false));
+
+    assertThat(posts)
+        .containsExactly(
+            "Docks: draw after 42s: Alice, Bob",
+            "DM42 Docks: draw after 42s: Alice, Bob",
+            "Rustworks (Ominous I) over at 4: Alice (4), Bob (3)",
+            "DM42 Rustworks (Ominous I) over at 4: Alice (4), Bob (3)");
   }
 }
