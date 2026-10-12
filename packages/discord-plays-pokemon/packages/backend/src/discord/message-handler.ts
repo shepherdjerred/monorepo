@@ -9,7 +9,7 @@ import { isValid } from "#src/game/command/chord-validator.ts";
 import type { CommandInput } from "#src/game/command/command-input.ts";
 import type { PokemonGameDriver } from "#src/lifecycle/pokemon-driver.ts";
 import { logger } from "#src/logger.ts";
-import { getConfig } from "#src/config/index.ts";
+import type { Config } from "#src/config/schema.ts";
 import { InputLeaseConflictError } from "#src/emulator/emulator.ts";
 
 export async function executeInteractiveChord(
@@ -29,13 +29,14 @@ export async function executeInteractiveChord(
 export function handleMessages(
   client: Client,
   driver: PokemonGameDriver,
+  config: Config,
   fn: (commandInput: CommandInput) => Promise<void>,
 ): void {
   logger.info("ready to handle commands");
   client.on(Events.MessageCreate, (messageEvent) => {
     void (async () => {
       try {
-        await handleMessage(messageEvent, driver, fn);
+        await handleMessage(messageEvent, driver, config, fn);
         return;
       } catch (error) {
         logger.warn(
@@ -49,6 +50,7 @@ export function handleMessages(
 async function handleMessage(
   event: Message,
   driver: PokemonGameDriver,
+  config: Config,
   fn: (commandInput: CommandInput) => Promise<void>,
 ): Promise<void> {
   if (event.author.bot) {
@@ -78,7 +80,6 @@ async function handleMessage(
   const memberCount = voiceChannel.members.filter(
     (member) => !member.user.bot,
   ).size;
-  const config = await getConfig();
   const minInChannel = config.stream.minimum_in_channel;
   if (memberCount < minInChannel) {
     await event.reply(
