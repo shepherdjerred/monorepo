@@ -18,6 +18,18 @@ try {
     file_put_contents($path, json_encode($source, JSON_THROW_ON_ERROR));
     $status = MinecraftStatus::read($path, 1005);
     $check($status['players'] === $source['players'] && $status['java']['state'] === 'online', 'Fresh public roster differs');
+    $check($status['games'] === $source['games'], 'Fresh game summaries differ');
+    $withoutProgress = $source; unset($withoutProgress['games'][0]['progress']);
+    file_put_contents($path, json_encode($withoutProgress, JSON_THROW_ON_ERROR));
+    $check(MinecraftStatus::read($path, 1005)['games'] === $withoutProgress['games'], 'Absent game progress was rejected or changed');
+    foreach ([null, 1, str_repeat('x', 33)] as $progress) {
+        $invalid = $source; $invalid['games'][0]['progress'] = $progress;
+        file_put_contents($path, json_encode($invalid, JSON_THROW_ON_ERROR));
+        $failed = false;
+        try { MinecraftStatus::read($path, 1005); } catch (RuntimeException $error) { $failed = true; }
+        $check($failed, 'Invalid game progress was accepted');
+    }
+    file_put_contents($path, json_encode($source, JSON_THROW_ON_ERROR));
     $check($status['connections']['java']['address'] === 'ts-mc.net' && $status['connections']['bedrock'] === ['host'=>'mc.ts-mc.net', 'port'=>30004], 'Connection metadata differs');
     $check(!str_contains(json_encode($status), 'svc.cluster.local'), 'Public response exposed internal metadata');
     $stale = MinecraftStatus::read($path, 1181);
@@ -116,8 +128,10 @@ try {
         $check($failed, 'Non-integer timestamp was accepted');
     }
     $states = ['sleeping', 'starting', 'online', 'unavailable'];
-    foreach ($states as $aggregate) { foreach ($states as $java) { foreach ($states as $bedrock) {
+    foreach ([2, 3] as $cacheVersion) { foreach ($states as $aggregate) { foreach ($states as $java) { foreach ($states as $bedrock) {
         $value = $source; $value['state'] = $aggregate; $value['java']['state'] = $java; $value['bedrock']['state'] = $bedrock;
+        $value['schemaVersion'] = $cacheVersion;
+        if ($cacheVersion === 2) { unset($value['games'], $value['players']['identities']); }
         if ($java !== 'online') { unset($value['players'], $value['games']); }
         $expected = match ($aggregate) {
             'sleeping', 'starting' => $java === $aggregate && $bedrock === $aggregate,
@@ -128,7 +142,24 @@ try {
         $accepted = true;
         try { MinecraftStatus::read($path, 1005); } catch (RuntimeException $error) { $accepted = false; }
         $check($accepted === $expected, 'Invalid aggregate/Java/Bedrock state validation: ' . implode('/', [$aggregate, $java, $bedrock]));
-    } } }
+        if ($accepted && $cacheVersion === 2) {
+            $migrated = MinecraftStatus::read($path, 1005);
+            $check($migrated['players'] === null && $migrated['games'] === null, 'Legacy cache exposed unverified identities or games');
+            $check($migrated['java']['state'] === ($java === 'online' ? 'unavailable' : $java), 'Legacy Java health was not migrated');
+            $check($migrated['state'] === ($aggregate === 'online' && $bedrock !== 'online' ? 'unavailable' : $aggregate), 'Legacy aggregate health was not migrated');
+        }
+    } } } }
+    $legacy = json_decode(file_get_contents('/opt/storm-forum/test/fixtures/minecraft-status-v2.json'), true, 512, JSON_THROW_ON_ERROR);
+    file_put_contents($path, json_encode($legacy, JSON_THROW_ON_ERROR));
+    $migrated = MinecraftStatus::read($path, 1005);
+    $check($migrated['state'] === 'online' && $migrated['java'] === $legacy['java'] && $migrated['bedrock'] === $legacy['bedrock'], 'Production v2 partial outage was rejected');
+    foreach ([null, ['maximum'=>20, 'names'=>[]]] as $players) {
+        $invalid = $legacy; $invalid['players'] = $players;
+        file_put_contents($path, json_encode($invalid, JSON_THROW_ON_ERROR));
+        $failed = false;
+        try { MinecraftStatus::read($path, 1005); } catch (RuntimeException $error) { $failed = true; }
+        $check($failed, 'Invalid v2 outage roster was accepted');
+    }
     unlink($path);
     $check(MinecraftStatus::read($path)['state'] === 'unavailable', 'Missing initial cache was not unavailable');
 } finally { if (is_file($path)) { unlink($path); } }

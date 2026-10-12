@@ -3,84 +3,20 @@ import { randomBytes } from "node:crypto";
 import { rename } from "node:fs/promises";
 import { z } from "zod";
 import { forumManifest } from "./config.ts";
-import stateCombinations from "#config/minecraft-status-states.json";
+import {
+  MinecraftStatusSchema,
+  parseMinecraftStatusCache,
+  type MinecraftStatus,
+} from "./minecraft-cache.ts";
 import {
   bedrockPing,
   parseBedrockPong,
   parseQueryReply,
   queryFullRequest,
   queryHandshake,
-  PublicPlayersSchema,
-  PublicGameStatusSchema,
   type QueryResult,
 } from "./minecraft-query.ts";
 
-const StateSchema = z.enum(["sleeping", "starting", "online", "unavailable"]);
-const CacheStateCombinations = z
-  .array(z.tuple([StateSchema, StateSchema, StateSchema]))
-  .min(1)
-  .parse(stateCombinations);
-const EditionSchema = z
-  .object({
-    state: StateSchema,
-    version: z.string().min(1).max(100).optional(),
-    verifiedAt: z.number().int().nonnegative().optional(),
-  })
-  .strict();
-export const MinecraftStatusSchema = z
-  .object({
-    schemaVersion: z.literal(3),
-    state: StateSchema,
-    checkedAt: z.number().int().nonnegative(),
-    java: EditionSchema,
-    bedrock: EditionSchema,
-    players: PublicPlayersSchema.optional(),
-    games: z.array(PublicGameStatusSchema).max(1000).optional(),
-  })
-  .strict()
-  .superRefine((value, context) => {
-    if (
-      !CacheStateCombinations.some(
-        ([state, java, bedrock]) =>
-          state === value.state &&
-          java === value.java.state &&
-          bedrock === value.bedrock.state,
-      )
-    ) {
-      context.addIssue({
-        code: "custom",
-        message: "Minecraft aggregate state does not match edition health",
-      });
-    }
-    if (
-      (value.java.state === "online") !== (value.players !== undefined) ||
-      (value.java.state === "online") !== (value.games !== undefined) ||
-      (value.players !== undefined &&
-        (new Set(value.players.names).size !== value.players.names.length ||
-          value.players.names.length > value.players.maximum)) ||
-      value.games?.some(
-        (game) => game.players > (value.players?.identities.length ?? 0),
-      ) === true
-    ) {
-      context.addIssue({
-        code: "custom",
-        message: "Minecraft cache roster and games do not match Java health",
-      });
-    }
-    for (const edition of [value.java, value.bedrock]) {
-      if (
-        (edition.version === undefined) !==
-          (edition.verifiedAt === undefined) ||
-        (edition.state === "online" && edition.version === undefined)
-      ) {
-        context.addIssue({
-          code: "custom",
-          message: "Minecraft edition is missing its verified version",
-        });
-      }
-    }
-  });
-export type MinecraftStatus = z.infer<typeof MinecraftStatusSchema>;
 const STATUS_PATH = "/var/lib/storm-forum/status.json";
 const ReplicaSchema = z.object({
   spec: z.object({ replicas: z.number().int().nonnegative() }),
@@ -272,22 +208,12 @@ export async function refreshMinecraftStatus(
   return MinecraftStatusSchema.parse(result);
 }
 
-export async function readMinecraftStatus(): Promise<
-  MinecraftStatus | undefined
-> {
-  if (!(await Bun.file(STATUS_PATH).exists())) return undefined;
-  const data: unknown = await Bun.file(STATUS_PATH).json();
-  // Explicit migration of the previous count-only cache; a refresh replaces it.
-  const legacy = z
-    .object({
-      state: z.enum(["sleeping", "starting", "online", "unavailable"]),
-      checkedAt: z.number().int().nonnegative(),
-      online: z.number().int().nonnegative().optional(),
-      maximum: z.number().int().nonnegative().optional(),
-    })
-    .strict()
-    .safeParse(data);
-  return legacy.success ? undefined : MinecraftStatusSchema.parse(data);
+export async function readMinecraftStatus(
+  path = STATUS_PATH,
+): Promise<MinecraftStatus | undefined> {
+  if (!(await Bun.file(path).exists())) return undefined;
+  const data: unknown = await Bun.file(path).json();
+  return parseMinecraftStatusCache(data);
 }
 
 export async function updateMinecraftStatus(): Promise<void> {

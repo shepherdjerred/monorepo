@@ -9,10 +9,8 @@ import {
   queryFullRequest,
   queryHandshake,
 } from "#src/minecraft-query.ts";
-import {
-  MinecraftStatusSchema,
-  refreshMinecraftStatus,
-} from "#src/minecraft.ts";
+import { refreshMinecraftStatus } from "#src/minecraft.ts";
+import { MinecraftStatusSchema } from "#src/minecraft-cache.ts";
 
 const session = Buffer.from([1, 2, 3, 4]);
 function queryPacket(

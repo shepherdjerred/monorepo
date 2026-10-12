@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 2,
+  "state": "online",
+  "checkedAt": 1000,
+  "java": { "state": "unavailable", "version": "26.2", "verifiedAt": 900 },
+  "bedrock": { "state": "online", "version": "26.51", "verifiedAt": 1000 }
+}
