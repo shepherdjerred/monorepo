@@ -1,6 +1,6 @@
 {
   "name": "@shepherdjerred/home-assistant",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Type-safe Home Assistant REST and WebSocket client for Node.js and Bun",
   "author": "Jerred Shepherd",
   "license": "GPL-3.0-only",
