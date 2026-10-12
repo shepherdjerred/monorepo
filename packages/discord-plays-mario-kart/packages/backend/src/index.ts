@@ -27,6 +27,7 @@ import { createPrismaLeaderboardStore } from "./leaderboard/store.ts";
 import { createPlayerDirectory } from "./auth/player-directory.ts";
 import { createWebSessionStore } from "./auth/session-store.ts";
 import { DiscordAuth, mountAuthRoutes } from "./auth/discord-oauth.ts";
+import { authBootstrapFromEnv } from "./auth/bootstrap.ts";
 import { botVoicePresence } from "./auth/voice-presence.ts";
 import { toPlayerName } from "./auth/names.ts";
 import { startEventLoopLagSampler } from "./observability/event-loop-lag.ts";
@@ -128,25 +129,15 @@ await runtime.start();
 
 // ---- web server: the up-to-4 virtual controllers + leaderboard broadcasts ----
 if (config.web.enabled) {
-  // Discord sign-in gates the seats. The schema requires [web.auth] whenever
-  // the API is on; the client secret is a credential and arrives by env.
+  // Discord sign-in gates the seats, so the API refuses to start without it.
   let auth: DiscordAuth | undefined;
   if (config.web.api.enabled) {
-    const authConfig = config.web.auth;
-    const clientSecret = Bun.env["DISCORD_CLIENT_SECRET"];
-    if (authConfig === undefined) {
-      throw new Error("[web.auth] is required when the web API is enabled");
-    }
-    if (clientSecret === undefined || clientSecret.length === 0) {
-      throw new Error(
-        "DISCORD_CLIENT_SECRET is required when the web API is enabled",
-      );
-    }
+    const bootstrap = authBootstrapFromEnv(Bun.env);
     auth = new DiscordAuth({
       config: {
-        publicOrigin: authConfig.public_origin,
+        publicOrigin: bootstrap.publicOrigin,
         clientId: config.bot.application_id,
-        clientSecret,
+        clientSecret: bootstrap.clientSecret,
       },
       sessions: createWebSessionStore(prisma, players),
     });

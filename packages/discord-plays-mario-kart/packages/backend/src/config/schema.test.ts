@@ -36,7 +36,6 @@ function minimalConfig(): Record<string, unknown> {
       port: 8081,
       assets: "packages/frontend/dist",
       api: { enabled: true },
-      auth: { public_origin: "https://mariokart.example.com" },
     },
   };
 }
@@ -129,45 +128,5 @@ describe("engine config", () => {
         spaghettikart: { output_fps: 45 },
       }),
     ).toThrow();
-  });
-});
-
-function web(overrides: Record<string, unknown>): Record<string, unknown> {
-  return {
-    ...minimalConfig(),
-    web: {
-      enabled: true,
-      cors: true,
-      port: 8081,
-      assets: "packages/frontend/dist",
-      api: { enabled: true },
-      auth: { public_origin: "https://mariokart.example.com" },
-      ...overrides,
-    },
-  };
-}
-
-describe("web.auth config", () => {
-  it("is required while the page's API is served", () => {
-    expect(() => ConfigSchema.parse(web({ auth: undefined }))).toThrow(
-      /web\.auth/u,
-    );
-  });
-
-  it("is not needed with the API off", () => {
-    expect(() =>
-      ConfigSchema.parse(web({ auth: undefined, api: { enabled: false } })),
-    ).not.toThrow();
-  });
-
-  it("takes a bare origin only", () => {
-    expect(() =>
-      ConfigSchema.parse(
-        web({ auth: { public_origin: "https://mariokart.example.com/" } }),
-      ),
-    ).toThrow();
-    expect(ConfigSchema.parse(web({})).web.auth?.public_origin).toBe(
-      "https://mariokart.example.com",
-    );
   });
 });

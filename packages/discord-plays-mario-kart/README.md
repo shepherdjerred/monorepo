@@ -253,16 +253,16 @@ Three things are provisioned out-of-band (by design):
 1. **Config secret** — create a 1Password item (vault
    `v64ocnykdqju4ui6j6pua56xw4`) with a `config.toml` field, then replace the
    placeholder item id in `resources/mario-kart.ts`. With the web API enabled,
-   `config.toml` needs `[web.auth] public_origin` (the origin players open,
-   e.g. `https://mariokart.sjer.red`) and the item needs a
-   `DISCORD_CLIENT_SECRET` field; the backend refuses to start without either.
+   the item also needs a `DISCORD_CLIENT_SECRET` field; the Deployment passes it
+   to the pod with `WEB_PUBLIC_ORIGIN` (`https://mariokart.sjer.red`), and the
+   backend refuses to start without either.
 1. **Discord sign-in** — on the bot's application in the Discord developer
    portal (OAuth2), register the redirect
-   `<public_origin>/api/auth/discord/callback` and copy the client secret into
+   `<WEB_PUBLIC_ORIGIN>/api/auth/discord/callback` and copy the client secret into
    the item's `DISCORD_CLIENT_SECRET` field. Sign-in only works on that origin,
    not over the Tailscale hostname. For local runs, also register
    `http://localhost:8081/api/auth/discord/callback` and set
-   `public_origin = "http://localhost:8081"`.
+   `WEB_PUBLIC_ORIGIN=http://localhost:8081`.
 1. **ROM** — the canonical copy lives in Syncthing at
    `~/syncthing/Sync/roms/mariokart64.z64` (replicated across your machines; the
    manual harness reads it from there by default). Copy it into the ROM PVC once:
