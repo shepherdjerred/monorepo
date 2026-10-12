@@ -19,7 +19,10 @@ import {
   readAndVerifyEvents,
   RunRecorder,
 } from "@shepherdjerred/pr-fleet-controller/src/bundle/run-recorder.ts";
-import type { RecordedRunEvent } from "@shepherdjerred/pr-fleet-controller/src/domain/run-events.ts";
+import type {
+  RecordedRunEvent,
+  RunEventCorrelation,
+} from "@shepherdjerred/pr-fleet-controller/src/domain/run-events.ts";
 import { writeFileSinkSynchronously } from "@shepherdjerred/pr-fleet-controller/src/runtime/synchronous-file-sink.ts";
 import {
   createRunRecorder,
@@ -44,22 +47,15 @@ async function mode(file: string): Promise<number> {
   return stats.mode & 0o777;
 }
 
-async function runCliWithImplicitCheckout(): Promise<{
-  bundle: Awaited<ReturnType<typeof loadRunBundle>>;
-  exitCode: number;
-  stderr: string;
-}> {
-  const parent = await temporaryDirectories.create("pr-fleet-cli-");
+async function createCliFixture(prefix: string, gitScript: string) {
+  const parent = await temporaryDirectories.create(prefix);
   const stateDirectory = path.join(parent, "state");
   const binDirectory = path.join(parent, "bin");
   await mkdir(binDirectory);
   const packageDirectory = path.join(import.meta.dir, "..");
   const checkout = path.join(parent, "checkout");
   const gitPath = path.join(binDirectory, "git");
-  await writeFile(
-    gitPath,
-    `#!/bin/sh\nif [ "$1" = "rev-parse" ] && [ "$2" = "--show-toplevel" ]; then\n  printf '%s\\n' "$PR_FLEET_TEST_CHECKOUT"\n  exit 0\nfi\nexit 9\n`,
-  );
+  await writeFile(gitPath, gitScript);
   await chmod(gitPath, 0o700);
   for (const executable of [
     "bun",
@@ -73,6 +69,37 @@ async function runCliWithImplicitCheckout(): Promise<{
     await writeFile(executablePath, "#!/bin/sh\nexit 0\n");
     await chmod(executablePath, 0o700);
   }
+  return { parent, stateDirectory, binDirectory, packageDirectory, checkout };
+}
+
+async function readCliResult(
+  exitCodePromise: Promise<number>,
+  stderrStream: ReadableStream<Uint8Array>,
+  stateDirectory: string,
+) {
+  const [exitCode, stderr] = await Promise.all([
+    exitCodePromise,
+    new Response(stderrStream).text(),
+  ]);
+  const runs = await readdir(stateDirectory);
+  expect(runs).toHaveLength(1);
+  return {
+    bundle: await loadRunBundle(path.join(stateDirectory, runs[0] ?? "")),
+    exitCode,
+    stderr,
+  };
+}
+
+async function runCliWithImplicitCheckout(): Promise<{
+  bundle: Awaited<ReturnType<typeof loadRunBundle>>;
+  exitCode: number;
+  stderr: string;
+}> {
+  const { stateDirectory, binDirectory, packageDirectory, checkout } =
+    await createCliFixture(
+      "pr-fleet-cli-",
+      `#!/bin/sh\nif [ "$1" = "rev-parse" ] && [ "$2" = "--show-toplevel" ]; then\n  printf '%s\\n' "$PR_FLEET_TEST_CHECKOUT"\n  exit 0\nfi\nexit 9\n`,
+    );
   const subprocess = Bun.spawn(
     [
       process.execPath,
@@ -95,17 +122,7 @@ async function runCliWithImplicitCheckout(): Promise<{
       stderr: "pipe",
     },
   );
-  const [exitCode, stderr] = await Promise.all([
-    subprocess.exited,
-    new Response(subprocess.stderr).text(),
-  ]);
-  const runs = await readdir(stateDirectory);
-  expect(runs).toHaveLength(1);
-  return {
-    bundle: await loadRunBundle(path.join(stateDirectory, runs[0] ?? "")),
-    exitCode,
-    stderr,
-  };
+  return readCliResult(subprocess.exited, subprocess.stderr, stateDirectory);
 }
 
 async function runCliInterruptedDuringCheckout(): Promise<{
@@ -113,37 +130,18 @@ async function runCliInterruptedDuringCheckout(): Promise<{
   exitCode: number;
   stderr: string;
 }> {
-  const parent = await temporaryDirectories.create("pr-fleet-sigint-");
-  const stateDirectory = path.join(parent, "state");
-  const binDirectory = path.join(parent, "bin");
+  const { parent, stateDirectory, binDirectory, packageDirectory, checkout } =
+    await createCliFixture(
+      "pr-fleet-sigint-",
+      `#!/bin/sh\nif [ "$1" = "rev-parse" ] && [ "$2" = "--show-toplevel" ]; then\n  printf 'ready\\n' > "$PR_FLEET_READY_FIFO"\n  IFS= read -r release < "$PR_FLEET_RELEASE_FIFO"\n  printf '%s\\n' "$PR_FLEET_TEST_CHECKOUT"\n  exit 0\nfi\nexit 9\n`,
+    );
   const readyFifo = path.join(parent, "ready.fifo");
   const releaseFifo = path.join(parent, "release.fifo");
-  await mkdir(binDirectory);
   const fifoResult = Bun.spawnSync(["mkfifo", readyFifo, releaseFifo]);
   if (fifoResult.exitCode !== 0) {
     throw new Error(
       `mkfifo failed: ${new TextDecoder().decode(fifoResult.stderr)}`,
     );
-  }
-  const packageDirectory = path.join(import.meta.dir, "..");
-  const checkout = path.join(parent, "checkout");
-  const gitPath = path.join(binDirectory, "git");
-  await writeFile(
-    gitPath,
-    `#!/bin/sh\nif [ "$1" = "rev-parse" ] && [ "$2" = "--show-toplevel" ]; then\n  printf 'ready\\n' > "$PR_FLEET_READY_FIFO"\n  IFS= read -r release < "$PR_FLEET_RELEASE_FIFO"\n  printf '%s\\n' "$PR_FLEET_TEST_CHECKOUT"\n  exit 0\nfi\nexit 9\n`,
-  );
-  await chmod(gitPath, 0o700);
-  for (const executable of [
-    "bun",
-    "gh",
-    "git-spice",
-    "mise",
-    "rg",
-    "woodpecker-cli",
-  ]) {
-    const executablePath = path.join(binDirectory, executable);
-    await writeFile(executablePath, "#!/bin/sh\nexit 0\n");
-    await chmod(executablePath, 0o700);
   }
   const subprocess = Bun.spawn(
     [
@@ -172,17 +170,7 @@ async function runCliInterruptedDuringCheckout(): Promise<{
   expect(await readFile(readyFifo, "utf8")).toBe("ready\n");
   subprocess.kill("SIGINT");
   await writeFile(releaseFifo, "release\n");
-  const [exitCode, stderr] = await Promise.all([
-    subprocess.exited,
-    new Response(subprocess.stderr).text(),
-  ]);
-  const runs = await readdir(stateDirectory);
-  expect(runs).toHaveLength(1);
-  return {
-    bundle: await loadRunBundle(path.join(stateDirectory, runs[0] ?? "")),
-    exitCode,
-    stderr,
-  };
+  return readCliResult(subprocess.exited, subprocess.stderr, stateDirectory);
 }
 
 async function recordSuccessfulEmptyRun(recorder: RunRecorder): Promise<void> {
@@ -211,6 +199,31 @@ async function finalizeCompletedRun(recorder: RunRecorder): Promise<void> {
   recorder.record("shutdown.started", { activeWorkers: 0 });
   recorder.record("shutdown.completed", { snapshot });
   await recorder.finalize("completed", snapshot);
+}
+
+function recordWorkerStartup(
+  recorder: RunRecorder,
+  scenario: string,
+  correlation: RunEventCorrelation & { tickId: string },
+): void {
+  const { tickId } = correlation;
+  recorder.record("run.started", { scenario });
+  recorder.record("tick.started", { trigger: "startup" }, { tickId });
+  recorder.record("fleet.snapshot", { snapshot }, { tickId });
+  recorder.record("worker.started", { runtimeAgent: "pr-42-g3" }, correlation);
+  recorder.record("fleet.change", { change: "started pr-42-g3" }, { tickId });
+  recorder.record(
+    "tick.completed",
+    {
+      report: {
+        trigger: "startup",
+        snapshot,
+        changes: ["started pr-42-g3"],
+        nextHeartbeatSeconds: 300,
+      },
+    },
+    { tickId },
+  );
 }
 
 function expectFreeFormBodiesHidden(firstEvent: RecordedRunEvent): void {
@@ -726,27 +739,7 @@ describe("run bundle replay", () => {
     const secondTurn = recorder.newId("worker-turn");
     const commandId = recorder.newId("command");
     const toolCallId = recorder.newId("tool");
-    recorder.record("run.started", { scenario: "synthetic-retry" });
-    recorder.record("tick.started", { trigger: "startup" }, { tickId });
-    recorder.record("fleet.snapshot", { snapshot }, { tickId });
-    recorder.record(
-      "worker.started",
-      { runtimeAgent: "pr-42-g3" },
-      correlation,
-    );
-    recorder.record("fleet.change", { change: "started pr-42-g3" }, { tickId });
-    recorder.record(
-      "tick.completed",
-      {
-        report: {
-          trigger: "startup",
-          snapshot,
-          changes: ["started pr-42-g3"],
-          nextHeartbeatSeconds: 300,
-        },
-      },
-      { tickId },
-    );
+    recordWorkerStartup(recorder, "synthetic-retry", correlation);
     recorder.record(
       "worker.attempt.started",
       { attempt: 1, prompt: "first" },
@@ -1289,27 +1282,7 @@ describe("shutdown boundary replay", () => {
       headSha: "b".repeat(40),
       generation: 3,
     };
-    recorder.record("run.started", { scenario: "worker-cancelled" });
-    recorder.record("tick.started", { trigger: "startup" }, { tickId });
-    recorder.record("fleet.snapshot", { snapshot }, { tickId });
-    recorder.record(
-      "worker.started",
-      { runtimeAgent: "pr-42-g3" },
-      correlation,
-    );
-    recorder.record("fleet.change", { change: "started pr-42-g3" }, { tickId });
-    recorder.record(
-      "tick.completed",
-      {
-        report: {
-          trigger: "startup",
-          snapshot,
-          changes: ["started pr-42-g3"],
-          nextHeartbeatSeconds: 300,
-        },
-      },
-      { tickId },
-    );
+    recordWorkerStartup(recorder, "worker-cancelled", correlation);
     recorder.record(
       "worker.cancelled",
       { reason: "head advanced" },
