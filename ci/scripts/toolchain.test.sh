@@ -84,6 +84,13 @@ if ! rg -Fq 'ARG MISE_MINISIGN_PUBLIC_KEY=' "$CI_IMAGE" ||
   exit 1
 fi
 
+if ! rg -Fq 'export TMPDIR=/woodpecker/tmp' "$TOOLCHAIN" ||
+  ! rg -Fq 'chmod 1777 "$TMPDIR"' "$TOOLCHAIN" ||
+  ! rg -Fq 'export GRADLE_USER_HOME=/woodpecker/gradle' "$TOOLCHAIN"; then
+  echo "Woodpecker steps must keep temporary files and tool homes on the workflow volume" >&2
+  exit 1
+fi
+
 if ! rg -Fq 'flock --shared 9' "$BUN_INSTALL_WRAPPER" ||
   ! rg -Fq 'bun install "$@"' "$BUN_INSTALL_WRAPPER" ||
   ! rg -Fq ') 9>"$CACHE_LOCK_FILE"' "$BUN_INSTALL_WRAPPER"; then
@@ -200,6 +207,7 @@ EOF
 cat >"$TEST_ROOT/bin/bun" <<'EOF'
 #!/usr/bin/env bash
 printf '%s\n' "$*" >>"$BUN_GC_TEST_LOG"
+printf '%s\n' "${BUN_TMPDIR:-}" >"$BUN_GC_TEST_LOG.tmpdir"
 EOF
 cat >"$TEST_ROOT/bin/flock" <<'EOF'
 #!/usr/bin/env bash
@@ -208,6 +216,8 @@ EOF
 chmod +x "$TEST_ROOT/bin/df" "$TEST_ROOT/bin/bun" "$TEST_ROOT/bin/flock"
 
 touch "$TEST_ROOT/cache/data/below-threshold-marker"
+mkdir -p "$TEST_ROOT/cache/tmp/interrupted"
+touch "$TEST_ROOT/cache/tmp/interrupted/partial-extraction"
 BUN_INSTALL_CACHE_DIR="$TEST_ROOT/cache/data" \
   BUN_CACHE_LOCK_FILE="$TEST_ROOT/control/.gc.lock" \
   BUN_CACHE_GC_THRESHOLD_PERCENT=60 \
@@ -217,6 +227,10 @@ BUN_INSTALL_CACHE_DIR="$TEST_ROOT/cache/data" \
   "$BUN_CACHE_GC"
 if [[ ! -e "$TEST_ROOT/cache/data/below-threshold-marker" ]]; then
   echo "bun cache collector must preserve a cache below its threshold" >&2
+  exit 1
+fi
+if [[ -n $(find "$TEST_ROOT/cache/tmp" -mindepth 1 -print -quit) ]]; then
+  echo "bun cache collector must clear interrupted extractions at every run" >&2
   exit 1
 fi
 
@@ -240,12 +254,17 @@ fi
 
 : >"$TEST_ROOT/bun.log"
 BUN_CACHE_LOCK_FILE="$TEST_ROOT/control/.gc.lock" \
+  BUN_INSTALL_CACHE_DIR="$TEST_ROOT/cache/data" \
   BUN_INSTALL_LOCK_MODE=shared \
   BUN_GC_TEST_LOG="$TEST_ROOT/bun.log" \
   PATH="$TEST_ROOT/bin:$PATH" \
   "$BUN_INSTALL_WRAPPER" --frozen-lockfile --filter example
 if [[ $(<"$TEST_ROOT/bun.log") != "install --frozen-lockfile --filter example" ]]; then
   echo "bun install wrapper must preserve every install argument" >&2
+  exit 1
+fi
+if [[ $(<"$TEST_ROOT/bun.log.tmpdir") != "$TEST_ROOT/cache/tmp" || ! -d "$TEST_ROOT/cache/tmp" ]]; then
+  echo "shared Bun installs must extract on the cache volume, beside the data directory" >&2
   exit 1
 fi
 
@@ -256,6 +275,10 @@ BUN_INSTALL_LOCK_MODE=local \
   "$BUN_INSTALL_WRAPPER" --frozen-lockfile --filter native-example
 if [[ $(<"$TEST_ROOT/bun.log") != "install --frozen-lockfile --filter native-example" ]]; then
   echo "local Bun install mode must preserve every install argument" >&2
+  exit 1
+fi
+if [[ -n $(<"$TEST_ROOT/bun.log.tmpdir") ]]; then
+  echo "local Bun installs must keep Bun's default temporary directory" >&2
   exit 1
 fi
 

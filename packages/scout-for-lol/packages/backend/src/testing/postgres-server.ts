@@ -11,6 +11,7 @@
  * This module is dev/test-only: it must never be imported by src/index.ts
  * or anything reachable from the production image entrypoint.
  */
+import { tmpdir } from "node:os";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("postgres-server");
@@ -41,7 +42,10 @@ export function devDatabaseUrl(dbName: string): string {
 /** Version-suffixed so a future major bump gets a fresh initdb. */
 export function devPostgresDataRoot(): string {
   if (runsAsRoot()) {
-    return `/tmp/scout-for-lol/postgres/${POSTGRES_MAJOR.toString()}`;
+    // Root-hosted CI. The OS temporary directory follows TMPDIR, which CI
+    // points at the workflow's ZFS volume rather than the container's
+    // writable layer on the CI node's OS disk.
+    return `${tmpdir()}/scout-for-lol/postgres/${POSTGRES_MAJOR.toString()}`;
   }
   const xdg = Bun.env["XDG_DATA_HOME"];
   const home = Bun.env["HOME"];
