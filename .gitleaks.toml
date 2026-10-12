@@ -60,7 +60,6 @@ paths = [
   # generic API key.
   '''storybook-static/''',
   '''\.venv/''',
-  '''\.moon/''',
   # Built static-site bundles (gitignored) — the design-system Storybook build
   # writes storybook-static/ while the parallel full-tree scan runs, and the
   # bundled vendor JS trips generic-api-key. Same race as the logs/ entry below.

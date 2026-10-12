@@ -3,8 +3,7 @@
 /**
  * Print a handoff value if it exists, and nothing if it does not.
  *
- * Successor to `buildkite-agent meta-data get <key> --default ""`. Reserved
- * for the handful of values whose absence is a real outcome -- scout's release
+ * Reserved for the handful of values whose absence is a real outcome -- scout's release
  * state, for instance, is only published when a release actually happened.
  * Every other consumer uses read-ci-handoff.ts, which fails loudly.
  */

@@ -48,7 +48,6 @@
     "tofu:stack": "bun scripts/tofu/tofu-stack.ts",
     "argocd": "bun scripts/argocd/argocd.ts",
     "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
-    "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/ci/run-ci-test.ts",
     "secrets:handoff": "bun scripts/tofu/credential-handoff.ts",
     "test:secrets:tofu": "bun --no-install --bun vitest --config ../../vitest.config.ts run scripts/tofu/application-secrets.integration.test.ts"
   }

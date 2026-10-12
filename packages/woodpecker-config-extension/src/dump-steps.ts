@@ -3,10 +3,9 @@
 /**
  * Print the complete pipeline step model as JSON.
  *
- * The credential contract checker used to read `.buildkite/pipeline.yml` and
- * `secret-grants.json`, which no longer exist: the graph is generated rather
- * than committed. This is how an outside checker still sees every step,
- * command and grant without standing up the service.
+ * The graph is generated rather than committed, so this is how an outside
+ * checker such as the credential contract check sees every step, command and
+ * grant without standing up the service.
  *
  * Images are placeholders. Nothing downstream inspects them, and resolving the
  * real ones would need network access and a commit to resolve them at.

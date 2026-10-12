@@ -5,9 +5,8 @@ Generates this repository's CI pipeline for each Woodpecker build.
 Woodpecker calls a [configuration extension](https://woodpecker-ci.org/docs/usage/extensions/configuration-extension)
 instead of reading committed workflow YAML. It posts the repository, the
 pipeline, and the list of changed files; this service replies with the
-workflows that build should run. That is what replaces Buildkite's
-`pipeline upload` — lane selection happens here rather than in a bootstrap pod,
-so no step has to start before the graph is known.
+workflows that build should run. Lane selection happens here rather than in
+a bootstrap pod, so no step has to start before the graph is known.
 
 ## Why the pipeline is data, not YAML
 

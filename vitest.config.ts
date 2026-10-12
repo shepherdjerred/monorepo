@@ -24,19 +24,17 @@ const setupFiles =
             : [];
 
 const coverageThresholds =
-  process.env["CI_TEST_COVERAGE"] === "1"
-    ? { lines: 0, functions: 0, statements: 0 }
-    : workspace === "packages/birmel"
-      ? {
-          // Bun's 50% threshold counted the test implementation in coverage.
-          // Vitest always excludes discovered test files, so 40% retains a
-          // stricter production-code-only floor than the previous Bun result.
-          lines: 40,
-        }
-      : workspace === "packages/scout-for-lol" ||
-          workspace === "packages/scout-for-lol/packages/backend"
-        ? { lines: 70, functions: 70 }
-        : undefined;
+  workspace === "packages/birmel"
+    ? {
+        // Bun's 50% threshold counted the test implementation in coverage.
+        // Vitest always excludes discovered test files, so 40% retains a
+        // stricter production-code-only floor than the previous Bun result.
+        lines: 40,
+      }
+    : workspace === "packages/scout-for-lol" ||
+        workspace === "packages/scout-for-lol/packages/backend"
+      ? { lines: 70, functions: 70 }
+      : undefined;
 
 const coverageExclusions =
   workspace === "packages/scout-for-lol"

@@ -10,21 +10,17 @@ import { GLOBAL_SELECTOR_INPUTS } from "#src/pipeline/inputs.ts";
  * Woodpecker's local backend, which executes commands directly on the host as
  * the logged-in user -- no container, no isolation.
  *
- * That trust boundary is the same one the Buildkite mac agent had, and the
- * same mitigations apply:
+ * The mitigations for that trust boundary:
  *
  * - They never run for fork pull requests. Woodpecker enforces this at the
  *   repository level ("Approvals for forked repositories", plus `ignore_forks`
- *   on this repo), which replaces the `!build.pull_request.repository.fork`
- *   guard each Buildkite step carried individually.
+ *   on this repo), rather than a guard on each step.
  * - They hold no credentials. There is no pod, so there are no Kubernetes
  *   secret grants, and nothing here needs one.
  * - They are globally serialized: one Mac, one job at a time.
  *
- * `macos-native-dispatch` is NOT ported. It was a Kubernetes watchdog that
- * bounded how long a native job could sit unclaimed by polling Buildkite's job
- * state, and it has no meaning here -- Woodpecker queues the workflow itself,
- * and the pipeline timeout bounds the wait.
+ * Woodpecker queues the workflow itself, and the pipeline timeout bounds how
+ * long a native job can sit unclaimed.
  */
 
 /** Selects the Mac agent; the Linux agents do not carry this label. */
@@ -53,8 +49,8 @@ const NATIVE_INFRASTRUCTURE = [
 /**
  * Where a failed UI run's result bundles are kept, on the Mac itself.
  *
- * Buildkite uploaded them as build artifacts. This lane holds no credentials
- * -- there is no pod to carry a grant -- and the local backend deletes its
+ * This lane holds no credentials -- there is no pod to carry a grant, so no
+ * artifact upload -- and the local backend deletes its
  * workspace when the workflow ends, so the bundles are copied out to a fixed
  * host directory instead and pruned after two weeks.
  */

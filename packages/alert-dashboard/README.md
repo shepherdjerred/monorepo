@@ -23,7 +23,7 @@ It has two halves in one process:
   appear on the ops change timeline, derived from the ledger at read time.
 
 It is deployed: CI builds and pushes the image (the `alert-dashboard` target in
-[`.buildkite/scripts/images/image-targets.ts`](../../.buildkite/scripts/images/image-targets.ts)),
+[`ci/scripts/images/image-targets.ts`](../../ci/scripts/images/image-targets.ts)),
 the digest is pinned in
 [`packages/homelab/src/cdk8s/src/versions.ts`](../homelab/src/cdk8s/src/versions.ts),
 and an ArgoCD `Application`

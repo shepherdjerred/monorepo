@@ -55,8 +55,8 @@ file before retrying. If publication reports a Prettier path, use format_paths o
 only those files and retry publication in the same cycle. If git-spice reports a
 stale stack, use the restack tools before retrying publication. Never merge,
 close, approve, suppress a gate, use blanket staging, or bypass hooks. Commit
-scopes are package directory names or root, practice, archive, dagger, deps, ci,
-or cooklang; never invent a tool or provider name as a scope. Return the required
+scopes are package directory names or root, practice, archive, deps, ci, or
+cooklang; never invent a tool or provider name as a scope. Return the required
 structured result after one cycle; do not poll or sleep.`;
 
 // Turn the tool-free finalizer result into a validated WorkerResult. Keep the
