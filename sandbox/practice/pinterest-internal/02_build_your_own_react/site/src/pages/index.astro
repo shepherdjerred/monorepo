@@ -1,0 +1,216 @@
+---
+import MarkdownIt from "markdown-it";
+import article, { manifest } from "../../generated/article.ts";
+import "../styles/reader.css";
+
+const base = import.meta.env.BASE_URL;
+const fonts = [
+  ["Merriweather", "merriweather-latin-400", 400, "normal"],
+  ["Merriweather", "merriweather-latin-700", 700, "normal"],
+  ["Merriweather", "merriweather-latin-400-italic", 400, "italic"],
+  ["Montserrat", "montserrat-latin-900", 900, "normal"],
+] as const;
+const markdown = new MarkdownIt({ linkify: true });
+markdown.renderer.rules.heading_open = (tokens, index) => {
+  const title = tokens[index + 1]?.content ?? "";
+  const id = title
+    .replace(/`/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/-$/, "");
+  return `<${tokens[index]?.tag} id="${id}" tabindex="-1"><a class="heading-anchor" href="#${id}" aria-label="Link to ${markdown.utils.escapeHtml(title)}">#</a>`;
+};
+const chapters = [
+  ["step-zero-review", "React & JSX review"],
+  ["step-i-the-createelement-function", "Creating elements"],
+  ["step-ii-the-render-function", "Rendering to the DOM"],
+  ["step-iii-concurrent-mode", "Concurrent rendering"],
+  ["step-iv-fibers", "Fiber trees"],
+  ["step-v-render-and-commit-phases", "Render & commit"],
+  ["step-vi-reconciliation", "Reconciliation"],
+  ["step-vii-function-components", "Function components"],
+  ["step-viii-hooks", "State hooks"],
+  ["epilogue", "Epilogue"],
+];
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Jerred Shepherd’s independent, modified TypeScript copy of Rodrigo Pombo’s Build your own React tutorial. Original tutorial, Didact implementation, and illustrations by Rodrigo Pombo."
+    />
+    <title>{article.title} — in TypeScript</title>
+    <style
+      is:inline
+      set:html={
+        `@font-face{font-family:"Berkeley Mono";src:url("${base}fonts/BerkeleyMono-Regular.woff2") format("woff2");font-weight:400;font-style:normal;font-display:swap}` +
+        fonts
+          .map(
+            ([family, file, weight, style]) =>
+              `@font-face{font-family:"${family}";src:url("${base}typography/${file}.woff2") format("woff2");font-weight:${weight};font-style:${style};font-display:swap}`,
+          )
+          .join("")
+      }
+    ></style>
+    <link
+      rel="preload"
+      href={`${base}fonts/BerkeleyMono-Regular.woff2`}
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    {fonts
+      .filter(
+        ([, , weight, style]) =>
+          (weight === 400 && style === "normal") || weight === 900,
+      )
+      .map(([, file]) => (
+        <link
+          rel="preload"
+          href={`${base}typography/${file}.woff2`}
+          as="font"
+          type="font/woff2"
+          crossorigin
+        />
+      ))}
+  </head>
+  <body>
+    <div class="page-background" aria-hidden="true"></div>
+    <a class="skip-link" href="#article">
+      Skip to the article
+    </a>
+    <main id="article">
+      <header class="introduction prose">
+        <h1>{article.title}</h1>
+        <aside
+          class="byline"
+          aria-label="Original work and responsibility for this copy"
+        >
+          <p>
+            <strong>Original work by Rodrigo Pombo</strong>
+            All credit for the original tutorial, Didact implementation, and
+            illustrations belongs to him.{" "}
+            <a href="https://pomb.us/build-your-own-react/">
+              Read his original article
+            </a>
+            <time datetime="2019-11-13">Published November 13, 2019</time>
+          </p>
+          <p>
+            <strong>Independent, modified copy by Jerred Shepherd</strong>
+            This is my personal copy, with TypeScript and reader changes. It is
+            an unofficial adaptation. I maintain this version and take
+            responsibility for its changes and issues.{" "}
+            <a href="mailto:contact@sjer.red">Contact me about this copy</a>
+          </p>
+        </aside>
+        <nav aria-label="Chapters">
+          {chapters.map(([chapter, label]) => (
+            <a href={`#${chapter}`}>{label}</a>
+          ))}
+        </nav>
+      </header>
+      {article.blocks.map((block) =>
+        block.kind === "prose" ? (
+          <div
+            class="standalone prose"
+            set:html={markdown.render(block.markdown)}
+          />
+        ) : (
+          <div
+            class="wave"
+            id={block.id}
+            data-wave
+            data-source={`${base}data/${manifest[block.id]}`}
+          >
+            <aside
+              class:list={[
+                "sticker",
+                { "image-sticker": block.steps[0]?.kind === "image" },
+              ]}
+              aria-label={
+                block.steps[0]?.kind === "image"
+                  ? "Fiber tree illustration"
+                  : "Code accompanying the explanation"
+              }
+            >
+              <div
+                class="viewport"
+                tabindex={block.steps[0]?.kind === "code" ? 0 : undefined}
+                role="region"
+                aria-label={
+                  block.steps[0]?.kind === "code"
+                    ? "Scrollable code example"
+                    : "Fiber tree"
+                }
+              >
+                <div class="scene">
+                  {block.steps[0]?.kind === "image" ? (
+                    <img
+                      src={`${base}${block.steps[0].src}`}
+                      alt={block.steps[0].alt}
+                    />
+                  ) : (
+                    <pre>{block.steps[0]?.kind === "code" ? block.steps[0].visible : ""}</pre>
+                  )}
+                </div>
+              </div>
+              <div class="step-label" aria-live="off">
+                {block.steps[0]?.kind === "image" ? "Fiber tree" : "TypeScript"}{" "}
+                <span data-counter>1 / {block.steps.length}</span>
+              </div>
+            </aside>
+            <div class="story prose">
+              <div class="progress-track" aria-hidden="true">
+                <div class="progress-marker"></div>
+              </div>
+              {block.steps.map((step, index) => (
+                <section class="step" id={step.id} data-state={index}>
+                  <div class="step-content">
+                    <div set:html={markdown.render(step.markdown)} />
+                    {step.kind === "image" && (
+                      <figure class="fallback">
+                        <img src={`${base}${step.src}`} alt={step.alt} />
+                      </figure>
+                    )}
+                    {step.kind === "code" &&
+                      !block.steps
+                        .slice(0, index)
+                        .some(
+                          (previous) =>
+                            previous.kind === "code" &&
+                            previous.source === step.source,
+                        ) && (
+                        <details class="fallback">
+                          <summary>Read this code</summary>
+                          <pre><code>{step.visible}</code></pre>
+                        </details>
+                      )}
+                  </div>
+                </section>
+              ))}
+            </div>
+          </div>
+        ),
+      )}
+      <footer class="prose standalone">
+        <p>
+          The original tutorial, Didact implementation, and illustrations are{" "}
+          <a href="https://pomb.us/build-your-own-react/">
+            Rodrigo Pombo’s work
+          </a>
+          . This is Jerred Shepherd’s independent, modified copy. Questions and
+          issues with this version are my responsibility:{" "}
+          <a href="mailto:contact@sjer.red">contact Jerred</a>.
+        </p>
+      </footer>
+    </main>
+    <div id="type-popup" role="tooltip" hidden>
+      <pre></pre>
+    </div>
+    <script src="../scripts/reader.ts"></script>
+  </body>
+</html>

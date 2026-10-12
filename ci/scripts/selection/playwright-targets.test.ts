@@ -8,6 +8,13 @@ import {
 } from "./playwright-targets.ts";
 
 const workspaces = new Map<string, WorkspacePackage>([
+  [
+    "didact-reader",
+    {
+      dir: "sandbox/practice/pinterest-internal/02_build_your_own_react/site/",
+      workspaceDependencies: [],
+    },
+  ],
   ["sjer.red", { dir: "packages/sjer.red/", workspaceDependencies: [] }],
   [
     "@shepherdjerred/docs-wiki",
@@ -80,6 +87,21 @@ function packages(
 }
 
 describe("Playwright target selection", () => {
+  test("selects the typed reader for parent lesson and font changes", async () => {
+    for (const input of [
+      "sandbox/practice/pinterest-internal/02_build_your_own_react/50.tsx",
+      "packages/scout-for-lol/packages/design-system/assets/fonts/BerkeleyMono/BerkeleyMono-Regular.woff2",
+    ]) {
+      const selection = await selectPlaywrightTargets([input], ".", workspaces);
+      expect(packages(selection)).toContain("didact-reader");
+    }
+    const unrelated = await selectPlaywrightTargets(
+      ["sandbox/practice/pinterest-internal/01_first_principles/main.ts"],
+      ".",
+      workspaces,
+    );
+    expect(packages(unrelated)).not.toContain("didact-reader");
+  });
   test("selects only reverse-dependent browser targets", async () => {
     expect(
       packages(

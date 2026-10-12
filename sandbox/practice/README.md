@@ -1,6 +1,6 @@
 # Practice
 
-Learning projects: books, courses, and coding challenges. These are finished or dormant study artifacts — kept for reference, excluded from repo-wide lint/CI.
+Learning projects: books, courses, and coding challenges. Most are finished or dormant study artifacts, excluded from repo-wide lint/CI. The typed React reader below is an explicit Bun workspace with focused checks and browser CI.
 
 - [a2ui-poc](a2ui-poc/) — AI agent that streams A2UI protocol messages to drive interactive UI (TypeScript, Anthropic SDK)
 - [advent-of-code](advent-of-code/) — Advent of Code solutions, 2020–2023
@@ -22,6 +22,7 @@ Learning projects: books, courses, and coding challenges. These are finished or 
 - [mini-jam-98](mini-jam-98/) — Mini Jam 98 game-jam entry in Bevy
 - [ostep-homework](ostep-homework/) — homework simulators for _Operating Systems: Three Easy Pieces_
 - [posit-academy](posit-academy/) — R Community Survey analysis milestones (R Markdown, tidyverse)
+- [Typed React reader](pinterest-internal/02_build_your_own_react/) — Rodrigo Pombo’s React tutorial with TypeScript, animated code, and type inspection
 - [programming-with-categories](programming-with-categories/) — exercises from the Programming with Categories course (Haskell)
 - [rust-grep](rust-grep/) — the minigrep CLI from _The Rust Book_
 - [rust-guessing-game](rust-guessing-game/) — the guessing game from _The Rust Book_
