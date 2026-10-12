@@ -1,0 +1,283 @@
+diff --git a/src/port/pak.cpp b/src/port/pak.cpp
+index 4adedd6..7ab8ed8 100644
+--- a/src/port/pak.cpp
++++ b/src/port/pak.cpp
+@@ -11,12 +11,116 @@
+ #include <libultraship.h>
+ #include <libultraship/libultra.h>
+ #include <save.h>
++#include <cerrno>
+ #include <cstdio>
++#include <cstring>
++#include <system_error>
++#include <vector>
++
++#ifndef _WIN32
++#include <fcntl.h>
++#include <unistd.h>
++#endif
+ 
+ #define MAX_FILES 16
+ #define EXT_NAME_SIZE 4
+ #define GAME_NAME_SIZE 16
+ 
++namespace {
++
++// Replace `path` with `size` bytes so that a crash at any point leaves either
++// the previous complete file or the new one: write a sibling temp file, flush
++// it to disk, rename it over the target, then flush the directory entry.
++bool WriteFileAtomically(const std::string& path, const void* data, size_t size) {
++    const std::string temp = path + ".tmp";
++#ifndef _WIN32
++    int fd = open(temp.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
++    if (fd < 0) {
++        return false;
++    }
++    const auto* bytes = static_cast<const uint8_t*>(data);
++    size_t written = 0;
++    while (written < size) {
++        ssize_t n = write(fd, bytes + written, size - written);
++        if (n < 0 && errno == EINTR) {
++            continue;
++        }
++        if (n <= 0) {
++            close(fd);
++            unlink(temp.c_str());
++            return false;
++        }
++        written += static_cast<size_t>(n);
++    }
++    if (fsync(fd) != 0 || close(fd) != 0) {
++        unlink(temp.c_str());
++        return false;
++    }
++    if (rename(temp.c_str(), path.c_str()) != 0) {
++        unlink(temp.c_str());
++        return false;
++    }
++    const size_t slash = path.find_last_of('/');
++    const std::string dir = slash == std::string::npos ? "." : path.substr(0, slash);
++    int dirfd = open(dir.c_str(), O_RDONLY);
++    if (dirfd >= 0) {
++        fsync(dirfd);
++        close(dirfd);
++    }
++    return true;
++#else
++    FILE* fp = fopen(temp.c_str(), "wb");
++    if (fp == NULL) {
++        return false;
++    }
++    const bool ok = fwrite(data, 1, size, fp) == size && fflush(fp) == 0;
++    fclose(fp);
++    std::error_code error;
++    if (ok) {
++        std::filesystem::rename(temp, path, error);
++    }
++    if (!ok || error) {
++        remove(temp.c_str());
++        return false;
++    }
++    return true;
++#endif
++}
++
++// Read a whole pak file. A missing file is an empty image; any other failure
++// is an error, so callers never rewrite a pak they could not read.
++bool ReadWholeFile(const std::string& path, std::vector<u8>& out) {
++    out.clear();
++    FILE* fp = fopen(path.c_str(), "rb");
++    if (fp == NULL) {
++        return errno == ENOENT;
++    }
++    bool ok = fseek(fp, 0, SEEK_END) == 0;
++    const long size = ok ? ftell(fp) : -1;
++    ok = ok && size >= 0 && fseek(fp, 0, SEEK_SET) == 0;
++    if (ok) {
++        out.resize(static_cast<size_t>(size));
++        ok = fread(out.data(), 1, out.size(), fp) == out.size();
++    }
++    fclose(fp);
++    return ok;
++}
++
++// Write `size` bytes at `offset`, keeping the rest of the file, atomically.
++bool WriteRegion(const std::string& path, size_t offset, const void* data, size_t size) {
++    std::vector<u8> content;
++    if (!ReadWholeFile(path, content)) {
++        return false;
++    }
++    if (content.size() < offset + size) {
++        content.resize(offset + size, 0);
++    }
++    memcpy(content.data() + offset, data, size);
++    return WriteFileAtomically(path, content.data(), content.size());
++}
++
++} // namespace
++
+ typedef struct ControllerPak {
+     FILE* header;
+     FILE* file;
+@@ -31,36 +135,25 @@ std::string Pfs_PakHeader_GetPath() {
+ }
+ 
+ bool Pfs_PakHeader_Write(u32* file_size, u32* game_code, u16* company_code, u8* ext_name, u8* game_name, u8 fileIndex) {
+-    ControllerPak pak;
+-
++    // Update only this file's entry; the other entries in the shared header
++    // must survive (upstream reopened the header with "w+b", truncating them).
+     std::string filename = Pfs_PakHeader_GetPath();
+-    pak.header = fopen(filename.c_str(), "w+b");
+-
+-    if (!pak.header) {
++    std::vector<u8> header;
++    if (!ReadWholeFile(filename, header)) {
+         return false;
+     }
+ 
+-    /* Set file parameters to header */
+     u32 seek = fileIndex * sizeof(OSPfsState);
++    if (header.size() < seek + sizeof(OSPfsState)) {
++        header.resize(seek + sizeof(OSPfsState), 0);
++    }
++    memcpy(header.data() + seek + 0x00, file_size, 4);
++    memcpy(header.data() + seek + 0x04, game_code, 4);
++    memcpy(header.data() + seek + 0x08, company_code, 2);
++    memcpy(header.data() + seek + 0x0C, ext_name, EXT_NAME_SIZE);
++    memcpy(header.data() + seek + 0x10, game_name, GAME_NAME_SIZE);
+ 
+-    // file_size
+-    fseek(pak.header, seek + 0x00, SEEK_SET);
+-    fwrite(file_size, 1, 4, pak.header);
+-    // game_code
+-    fseek(pak.header, seek + 0x04, SEEK_SET);
+-    fwrite(game_code, 1, 4, pak.header);
+-    // company_code
+-    fseek(pak.header, seek + 0x08, SEEK_SET);
+-    fwrite(company_code, 1, 2, pak.header);
+-    // ext_name
+-    fseek(pak.header, seek + 0x0C, SEEK_SET);
+-    fwrite(ext_name, 1, EXT_NAME_SIZE, pak.header);
+-    // game_name
+-    fseek(pak.header, seek + 0x10, SEEK_SET);
+-    fwrite(game_name, 1, GAME_NAME_SIZE, pak.header);
+-    fclose(pak.header);
+-
+-    return true;
++    return WriteFileAtomically(filename, header.data(), header.size());
+ }
+ 
+ bool Pfs_PakHeader_Read(u32* file_size, u32* game_code, u16* company_code, char* ext_name, char* game_name,
+@@ -167,8 +260,6 @@ extern "C" s32 osPfsAllocateFile(OSPfs* pfs, u16 company_code, u32 game_code, u8
+         return PFS_ERR_INVALID;
+     }
+ 
+-    ControllerPak pak;
+-
+     /* Search for a free slot */
+     u8 freeFileIndex = 0;
+     for (size_t i = 0; i < MAX_FILES; i++) {
+@@ -198,24 +289,12 @@ extern "C" s32 osPfsAllocateFile(OSPfs* pfs, u16 company_code, u32 game_code, u8
+ 
+     /* Create empty file */
+     std::string filename = Pfs_PakFile_GetPath(freeFileIndex);
+-    pak.file = fopen(filename.c_str(), "w+b");
+-
+-    if (!pak.file) {
++    file_size_in_bytes = (file_size_in_bytes + 31) & ~31;
++    std::vector<u8> zero_block(file_size_in_bytes, 0);
++    if (!WriteFileAtomically(filename, zero_block.data(), zero_block.size())) {
+         return PFS_ERR_INVALID;
+     }
+ 
+-    file_size_in_bytes = (file_size_in_bytes + 31) & ~31;
+-
+-    char* zero_block = (char*) malloc(file_size_in_bytes);
+-    for (size_t i = 0; i < file_size_in_bytes; i++) {
+-        zero_block[i] = 0;
+-    }
+-
+-    fseek(pak.file, 0, SEEK_SET);
+-    fwrite(zero_block, 1, file_size_in_bytes, pak.file);
+-    free(zero_block);
+-    fclose(pak.file);
+-
+     *file_no = freeFileIndex;
+ 
+     return PFS_NO_ERROR;
+@@ -294,20 +373,24 @@ extern "C" s32 osPfsReadWriteFile(OSPfs* pfs, s32 file_no, u8 flag, int offset,
+     ControllerPak pak;
+     std::string filename = Pfs_PakFile_GetPath(file_no);
+ 
+-    pak.file = fopen(filename.c_str(), flag == 0 ? "r+b" : "w+b");
++    if (offset < 0 || size_in_bytes < 0) {
++        return PFS_ERR_INVALID;
++    }
++
++    if (flag != 0) {
++        // Write in place within the existing file (upstream reopened it with
++        // "w+b", zeroing everything outside the written range).
++        return WriteRegion(filename, offset, data_buffer, size_in_bytes) ? PFS_NO_ERROR : PFS_ERR_INVALID;
++    }
++
++    pak.file = fopen(filename.c_str(), "rb");
+ 
+     if (!pak.file) {
+         return PFS_ERR_INVALID;
+     }
+ 
+-    if (flag == 0) {
+-        fseek(pak.file, offset, SEEK_SET);
+-        fread(data_buffer, 1, size_in_bytes, pak.file);
+-    } else {
+-        fseek(pak.file, offset, SEEK_SET);
+-        fwrite(data_buffer, 1, size_in_bytes, pak.file);
+-    }
+-
++    fseek(pak.file, offset, SEEK_SET);
++    fread(data_buffer, 1, size_in_bytes, pak.file);
+     fclose(pak.file);
+ 
+     return PFS_NO_ERROR;
+@@ -342,8 +425,6 @@ extern "C" s32 osPfsDeleteFile(OSPfs* pfs, u16 company_code, u32 game_code, u8*
+         return PFS_ERR_INVALID;
+     }
+ 
+-    ControllerPak pak;
+-
+     for (int i = 0; i < MAX_FILES; i++) {
+         u32 file_size_ = 0;
+         u32 game_code_ = 0;
+@@ -362,27 +443,14 @@ extern "C" s32 osPfsDeleteFile(OSPfs* pfs, u16 company_code, u32 game_code, u8*
+                 strcmp((const char*) ext_name, (const char*) ext_name_) == 0) {
+                 // File found
+                 std::string header_file = Pfs_PakHeader_GetPath();
+-                pak.header = fopen(header_file.c_str(), "w+b");
+-
+-                if(!pak.header) {
+-                    return PFS_ERR_INVALID;
+-                }
+-
+                 u32 seek = i * sizeof(OSPfsState);
+ 
+-                // Zero out the header for this file.
+-                u8* zero_block = (u8*) malloc(sizeof(OSPfsState));
+-                for (size_t i = 0; i < sizeof(OSPfsState); i++) {
+-                    zero_block[i] = 0;
++                // Zero out the header entry for this file only.
++                u8 zero_block[sizeof(OSPfsState)] = { 0 };
++                if (!WriteRegion(header_file, seek, zero_block, sizeof(OSPfsState))) {
++                    return PFS_ERR_INVALID;
+                 }
+ 
+-                fseek(pak.header, seek + 0x0, SEEK_SET);
+-                fwrite(zero_block, 1, sizeof(OSPfsState), pak.header);
+-
+-                free(zero_block);
+-
+-                fclose(pak.header);
+-
+                 std::string filename = Pfs_PakFile_GetPath(i);
+                 remove(filename.c_str());
+ 

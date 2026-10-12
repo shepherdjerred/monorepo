@@ -5,7 +5,7 @@ import { SeatManager } from "./input/seat-manager.ts";
 import { createWebServer } from "./webserver/index.ts";
 import { DriverFeedService } from "./driver-feed/index.ts";
 import { engineFormat } from "./engine/format.ts";
-import { prepareEngine } from "./engine/index.ts";
+import { MK64_SAVE_HISTORY_ENTRIES, prepareEngine } from "./engine/index.ts";
 import { resolveDriverFeedConfig } from "./driver-feed/config.ts";
 import { handleRequest, type LeaderboardDeps } from "./webserver/dispatch.ts";
 import { logger } from "./logger.ts";
@@ -76,6 +76,7 @@ const runtime = bootGameBot({
     userbotTokens: [config.stream.userbot.token],
     driver,
     stateRootDir: config.state_root_dir,
+    saveHistory: { entries: MK64_SAVE_HISTORY_ENTRIES, keep: 50 },
     extraCommands: (botClient) =>
       buildMarioKartExtraCommands({
         driver,
