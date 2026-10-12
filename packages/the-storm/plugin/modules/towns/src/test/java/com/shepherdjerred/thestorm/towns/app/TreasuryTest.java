@@ -11,7 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.economy.app.AccountId;
-import com.shepherdjerred.thestorm.economy.app.Crystals;
+import com.shepherdjerred.thestorm.economy.app.Money;
 import com.shepherdjerred.thestorm.towns.domain.Fixtures;
 import com.shepherdjerred.thestorm.towns.domain.claiming.ClaimAllowance;
 import com.shepherdjerred.thestorm.towns.domain.claiming.ClaimLimits;
@@ -100,22 +100,22 @@ final class TreasuryTest {
 
   @Test
   void membersPayInAndSeeTheBalance() {
-    var receipt = done(treasury.deposit(MEMBER, Crystals.of(200)));
+    var receipt = done(treasury.deposit(MEMBER, Money.crystals(200)));
 
-    assertThat(receipt.amount()).isEqualTo(Crystals.of(200));
+    assertThat(receipt.amount()).isEqualTo(Money.crystals(200));
     assertThat(wallets.balanceOf(TREASURY)).isEqualTo(200);
     assertThat(wallets.balanceOf(new AccountId.Player(MEMBER))).isEqualTo(300);
-    assertThat(done(treasury.balance(MEMBER))).isEqualTo(Crystals.of(200));
+    assertThat(done(treasury.balance(MEMBER))).isEqualTo(Money.crystals(200));
   }
 
   @Test
   void onlyOwnersAndAssistantsWithdraw() {
     wallets.give(TREASURY, 1_000);
 
-    assertThat(refused(treasury.withdraw(MEMBER, Crystals.of(10))))
+    assertThat(refused(treasury.withdraw(MEMBER, Money.crystals(10))))
         .isEqualTo(new TreasuryProblem.CannotWithdraw(TownRole.MEMBER));
-    done(treasury.withdraw(ASSISTANT, Crystals.of(300)));
-    done(treasury.withdraw(OWNER, Crystals.of(200)));
+    done(treasury.withdraw(ASSISTANT, Money.crystals(300)));
+    done(treasury.withdraw(OWNER, Money.crystals(200)));
 
     assertThat(wallets.balanceOf(TREASURY)).isEqualTo(500);
     assertThat(wallets.balanceOf(new AccountId.Player(ASSISTANT))).isEqualTo(300);
@@ -123,15 +123,15 @@ final class TreasuryTest {
 
   @Test
   void nobodySpendsMoneyTheyDoNotHave() {
-    assertThat(refused(treasury.deposit(OWNER, Crystals.of(101))))
+    assertThat(refused(treasury.deposit(OWNER, Money.crystals(101))))
         .isEqualTo(new TreasuryProblem.Insufficient(100));
-    assertThat(refused(treasury.withdraw(OWNER, Crystals.of(1))))
+    assertThat(refused(treasury.withdraw(OWNER, Money.crystals(1))))
         .isEqualTo(new TreasuryProblem.Insufficient(0));
   }
 
   @Test
   void playersOutsideATownHaveNoTreasury() {
-    assertThat(refused(treasury.deposit(NOMAD, Crystals.of(1))))
+    assertThat(refused(treasury.deposit(NOMAD, Money.crystals(1))))
         .isEqualTo(new TreasuryProblem.NotInTown());
     assertThat(refused(treasury.balance(NOMAD))).isEqualTo(new TreasuryProblem.NotInTown());
   }
@@ -140,7 +140,7 @@ final class TreasuryTest {
   void aTownBeingChangedWaitsForItsTreasury() {
     var _ = towns.claim(OWNER, chunk(1, 0));
 
-    assertThat(refused(treasury.deposit(MEMBER, Crystals.of(1))))
+    assertThat(refused(treasury.deposit(MEMBER, Money.crystals(1))))
         .isEqualTo(new TreasuryProblem.Busy());
   }
 

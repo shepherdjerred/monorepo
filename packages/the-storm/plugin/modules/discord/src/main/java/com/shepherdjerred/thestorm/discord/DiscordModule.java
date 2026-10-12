@@ -25,7 +25,7 @@ import com.shepherdjerred.thestorm.discord.app.DiscordRelay;
 import com.shepherdjerred.thestorm.discord.app.Links;
 import com.shepherdjerred.thestorm.discord.domain.DiscordCredentials;
 import com.shepherdjerred.thestorm.discord.domain.PendingLinks;
-import com.shepherdjerred.thestorm.economy.app.CrystalFormatter;
+import com.shepherdjerred.thestorm.economy.app.MoneyFormatter;
 import com.shepherdjerred.thestorm.economy.app.PlayerLeaderboard;
 import com.shepherdjerred.thestorm.mail.app.Letters;
 import com.shepherdjerred.thestorm.towns.app.TownMilestones;
@@ -117,7 +117,7 @@ public final class DiscordModule implements StormModule {
         new DiscordReadCommands(
             new DiscordReadCommands.Ports(
                 context.services().require(PlayerLeaderboard.class),
-                context.services().require(CrystalFormatter.class),
+                context.services().require(MoneyFormatter.class),
                 context.services().require(TownRead.class),
                 context.scheduler()),
             relay,

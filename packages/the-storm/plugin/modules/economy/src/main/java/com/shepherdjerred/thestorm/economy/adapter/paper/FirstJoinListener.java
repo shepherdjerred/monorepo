@@ -2,7 +2,7 @@ package com.shepherdjerred.thestorm.economy.adapter.paper;
 
 import com.shepherdjerred.thestorm.economy.app.LedgerWallets;
 import com.shepherdjerred.thestorm.economy.app.SeenPlayer;
-import com.shepherdjerred.thestorm.economy.domain.CrystalFormat;
+import com.shepherdjerred.thestorm.economy.domain.MoneyFormat;
 import org.bukkit.Server;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -17,11 +17,11 @@ import org.bukkit.event.player.PlayerJoinEvent;
 public final class FirstJoinListener implements Listener {
 
   private final LedgerWallets wallets;
-  private final CrystalFormat format;
+  private final MoneyFormat format;
   private final Server server;
   private final Replies replies;
 
-  FirstJoinListener(LedgerWallets wallets, CrystalFormat format, Server server, Replies replies) {
+  FirstJoinListener(LedgerWallets wallets, MoneyFormat format, Server server, Replies replies) {
     this.wallets = wallets;
     this.format = format;
     this.server = server;

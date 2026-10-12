@@ -2,13 +2,14 @@ package com.shepherdjerred.thestorm.economy.app;
 
 import com.shepherdjerred.thestorm.core.result.Result;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 /**
  * The economy's use cases over the ledger: the {@link Wallets} port other modules call, plus the
- * starting balance, player lookup, leaderboard and administrator corrections the economy's own
+ * starting balance, player lookup, leaderboards and administrator corrections the economy's own
  * commands need.
  */
 public final class LedgerWallets implements Wallets {
@@ -17,21 +18,26 @@ public final class LedgerWallets implements Wallets {
   public static final String STARTING_BALANCE_REASON = "starting-balance";
 
   private final LedgerStore store;
-  private final Crystals startingBalance;
+  private final Money startingBalance;
 
-  public LedgerWallets(LedgerStore store, Crystals startingBalance) {
+  public LedgerWallets(LedgerStore store, Money startingBalance) {
     this.store = store;
     this.startingBalance = startingBalance;
   }
 
   @Override
-  public CompletableFuture<Crystals> balance(AccountId account) {
-    return store.balance(account);
+  public CompletableFuture<Money> balance(AccountId account, CurrencyId currency) {
+    return store.balance(account, currency);
+  }
+
+  /** Every currency's balance of {@code account}, in {@link CurrencyId} order. */
+  public CompletableFuture<Map<CurrencyId, Money>> balances(AccountId account) {
+    return store.balances(account);
   }
 
   @Override
   public CompletableFuture<Result<Receipt, EconomyError>> transfer(
-      AccountId from, AccountId to, Crystals amount, String reason) {
+      AccountId from, AccountId to, Money amount, String reason) {
     return store.transfer(from, to, amount, requireReason(reason));
   }
 
@@ -52,17 +58,17 @@ public final class LedgerWallets implements Wallets {
   }
 
   @Override
-  public CompletableFuture<List<Standing>> top(int limit) {
-    return leaderboard(limit)
+  public CompletableFuture<List<Standing>> top(CurrencyId currency, int limit) {
+    return leaderboard(currency, limit)
         .thenApply(ranked -> ranked.stream().map(RankedPlayer::standing).toList());
   }
 
-  /** The richest players with the names they last joined under. */
-  public CompletableFuture<List<RankedPlayer>> leaderboard(int limit) {
+  /** The players holding the most {@code currency}, with the names they last joined under. */
+  public CompletableFuture<List<RankedPlayer>> leaderboard(CurrencyId currency, int limit) {
     if (limit < 1) {
       throw new IllegalArgumentException("limit must be positive: " + limit);
     }
-    return store.top(limit);
+    return store.top(currency, limit);
   }
 
   /** The player who most recently joined as {@code name}, ignoring case. */
@@ -82,12 +88,14 @@ public final class LedgerWallets implements Wallets {
   /** Records a join; only a genuinely new player can receive the starting grant. */
   public CompletableFuture<Optional<Receipt>> welcome(SeenPlayer player, boolean firstServerJoin) {
     return store.welcome(
-        player, firstServerJoin ? startingBalance : Crystals.ZERO, STARTING_BALANCE_REASON);
+        player,
+        firstServerJoin ? startingBalance : Money.zero(startingBalance.currency()),
+        STARTING_BALANCE_REASON);
   }
 
   /** Sets {@code account}'s balance through a ledgered transfer to or from the server. */
   public CompletableFuture<Optional<Receipt>> setBalance(
-      AccountId account, Crystals target, String reason) {
+      AccountId account, Money target, String reason) {
     return store.setBalance(account, target, requireReason(reason));
   }
 

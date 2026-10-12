@@ -2,9 +2,10 @@ package com.shepherdjerred.thestorm.towns.app;
 
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.economy.app.AccountId;
-import com.shepherdjerred.thestorm.economy.app.Crystals;
+import com.shepherdjerred.thestorm.economy.app.CurrencyId;
 import com.shepherdjerred.thestorm.economy.app.EconomyError;
 import com.shepherdjerred.thestorm.economy.app.KeyedTransfer;
+import com.shepherdjerred.thestorm.economy.app.Money;
 import com.shepherdjerred.thestorm.economy.app.Receipt;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import com.shepherdjerred.thestorm.towns.domain.town.Town;
@@ -36,19 +37,19 @@ public final class Treasury {
   }
 
   /** What {@code player}'s town holds. */
-  public CompletableFuture<Result<Crystals, TreasuryProblem>> balance(UUID player) {
+  public CompletableFuture<Result<Money, TreasuryProblem>> balance(UUID player) {
     return switch (TreasuryRules.member(player, towns.settling().state())) {
       case Result.Ok<Town, TreasuryProblem>(var town) ->
           wallets
-              .balance(new AccountId.Town(town.id()))
-              .thenApplyAsync(Result::<Crystals, TreasuryProblem>ok, mainThread());
+              .balance(new AccountId.Town(town.id()), CurrencyId.CRYSTALS)
+              .thenApplyAsync(Result::<Money, TreasuryProblem>ok, mainThread());
       case Result.Err<Town, TreasuryProblem>(var problem) ->
           CompletableFuture.completedFuture(Result.err(problem));
     };
   }
 
   /** Pays {@code amount} from {@code player} into their town's treasury. */
-  public CompletableFuture<Result<Receipt, TreasuryProblem>> deposit(UUID player, Crystals amount) {
+  public CompletableFuture<Result<Receipt, TreasuryProblem>> deposit(UUID player, Money amount) {
     return move(
         TreasuryRules.member(player, towns.settling().state()),
         town ->
@@ -60,8 +61,7 @@ public final class Treasury {
   }
 
   /** Pays {@code amount} out of {@code player}'s town's treasury to them. Owners and assistants. */
-  public CompletableFuture<Result<Receipt, TreasuryProblem>> withdraw(
-      UUID player, Crystals amount) {
+  public CompletableFuture<Result<Receipt, TreasuryProblem>> withdraw(UUID player, Money amount) {
     return move(
         TreasuryRules.withdrawer(player, towns.settling().state()),
         town ->
@@ -173,7 +173,7 @@ public final class Treasury {
                 return towns.settling().store().clearPayout(payout);
               }
               return wallets
-                  .balance(treasury)
+                  .balance(treasury, CurrencyId.CRYSTALS)
                   .thenCompose(
                       balance -> {
                         if (balance.amount() == 0) {

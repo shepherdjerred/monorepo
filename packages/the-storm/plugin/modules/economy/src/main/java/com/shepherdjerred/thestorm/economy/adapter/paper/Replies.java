@@ -14,7 +14,7 @@ import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
  */
 final class Replies {
 
-  static final String LABEL = "Crystals";
+  static final String LABEL = "Wallet";
 
   private final Scheduler scheduler;
   private final ComponentLogger logger;

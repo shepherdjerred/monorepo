@@ -1,7 +1,6 @@
 package com.shepherdjerred.thestorm.economy.domain;
 
 import com.shepherdjerred.thestorm.core.result.Result;
-import com.shepherdjerred.thestorm.economy.app.Crystals;
 import com.shepherdjerred.thestorm.economy.app.EconomyError;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,9 +43,7 @@ public final class TransferRules {
     var amount = transfer.amount();
     var updates = new ArrayList<BalanceUpdate>(2);
     if (Accounts.hasBalance(transfer.from())) {
-      updates.add(
-          new BalanceUpdate(
-              transfer.from(), new Crystals(pending.payerBalance().amount() - amount.amount())));
+      updates.add(new BalanceUpdate(transfer.from(), pending.payerBalance().minus(amount)));
     }
     if (Accounts.hasBalance(transfer.to())) {
       updates.add(new BalanceUpdate(transfer.to(), pending.payeeBalance().plus(amount)));

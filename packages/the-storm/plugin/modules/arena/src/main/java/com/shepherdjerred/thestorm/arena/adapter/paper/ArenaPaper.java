@@ -17,7 +17,7 @@ import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.schedule.Cancellable;
 import com.shepherdjerred.thestorm.core.snapshot.SnapshotStore;
 import com.shepherdjerred.thestorm.core.status.PublicGameDirectory;
-import com.shepherdjerred.thestorm.economy.app.CrystalFormatter;
+import com.shepherdjerred.thestorm.economy.app.MoneyFormatter;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -73,7 +73,7 @@ public final class ArenaPaper {
       RewardStore rewards,
       LeaderboardStore leaderboard,
       RewardPayer payer,
-      CrystalFormatter formatter,
+      MoneyFormatter formatter,
       SurvivalProgress survivalProgress,
       com.shepherdjerred.thestorm.arena.app.SurvivalGate survivalGate,
       com.shepherdjerred.thestorm.arena.app.store.SettlementStore settlementStore) {}

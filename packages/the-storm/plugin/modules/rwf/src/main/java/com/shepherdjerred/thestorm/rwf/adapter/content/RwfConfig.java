@@ -6,8 +6,6 @@ import com.shepherdjerred.thestorm.rwf.domain.match.MatchSettings;
 import com.shepherdjerred.thestorm.rwf.domain.poison.PoisonClock;
 import com.shepherdjerred.thestorm.rwf.domain.reward.Payout;
 import java.time.Duration;
-import java.time.ZoneId;
-import java.time.zone.ZoneRulesException;
 import java.util.regex.Pattern;
 
 /**
@@ -118,41 +116,26 @@ public record RwfConfig(
   }
 
   /**
-   * Credit payouts.
+   * Red Warfare credit payouts, paid in the economy's {@code rwf_credits}.
    *
    * @param win {@link Payout#WIN}, pinned
    * @param lose {@link Payout#LOSE}, pinned
+   * @param afkPenalty {@link Payout#AFK_PENALTY}, pinned: taken from a player AFK for the whole
+   *     match instead of any pay
    * @param botFloor {@link Payout#FLOOR}, pinned: the share paid when every other combatant is a
    *     bot
-   * @param dailyCap the most credits one player earns from matches in a day
-   * @param minMatchLength matches shorter than this pay nobody
-   * @param timeZone the zone whose midnight starts a new day
+   * @param minMatchLength matches shorter than this pay, and charge, nobody
    */
   public record Rewards(
-      int win, int lose, double botFloor, long dailyCap, Duration minMatchLength, String timeZone) {
+      int win, int lose, int afkPenalty, double botFloor, Duration minMatchLength) {
 
     public Rewards {
       pin("win", win == Payout.WIN, Payout.WIN);
       pin("lose", lose == Payout.LOSE, Payout.LOSE);
+      pin("afkPenalty", afkPenalty == Payout.AFK_PENALTY, Payout.AFK_PENALTY);
       pin("botFloor", botFloor == Payout.FLOOR, Payout.FLOOR);
-      if (dailyCap < 1) {
-        throw new IllegalArgumentException("dailyCap must be positive: " + dailyCap);
-      }
       if (minMatchLength.isNegative()) {
         throw new IllegalArgumentException("minMatchLength must not be negative");
-      }
-      zone(timeZone);
-    }
-
-    public ZoneId zone() {
-      return zone(timeZone);
-    }
-
-    private static ZoneId zone(String id) {
-      try {
-        return ZoneId.of(id);
-      } catch (ZoneRulesException e) {
-        throw new IllegalArgumentException("unknown time zone: " + id, e);
       }
     }
   }

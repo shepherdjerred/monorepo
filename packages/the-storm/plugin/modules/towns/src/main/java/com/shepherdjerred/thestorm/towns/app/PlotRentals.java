@@ -2,8 +2,8 @@ package com.shepherdjerred.thestorm.towns.app;
 
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.economy.app.AccountId;
-import com.shepherdjerred.thestorm.economy.app.Crystals;
 import com.shepherdjerred.thestorm.economy.app.KeyedTransfer;
+import com.shepherdjerred.thestorm.economy.app.Money;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import com.shepherdjerred.thestorm.towns.domain.parcel.Lease;
 import com.shepherdjerred.thestorm.towns.domain.parcel.LeasePayment;
@@ -152,7 +152,7 @@ public final class PlotRentals {
                 payment.operation(),
                 new AccountId.Player(payment.owner()),
                 new AccountId.Server(),
-                Crystals.of(payment.amount()),
+                Money.crystals(payment.amount()),
                 "plot:" + payment.parcelId() + ":week"))
         .thenComposeAsync(
             result -> {

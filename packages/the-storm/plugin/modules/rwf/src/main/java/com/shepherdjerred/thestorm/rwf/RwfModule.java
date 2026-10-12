@@ -106,12 +106,7 @@ public final class RwfModule implements StormModule {
     var config = content.config();
     context.database().migrate(id(), getClass().getClassLoader());
     var matches = new JooqMatchStore(context.database());
-    var payouts =
-        new PayoutService(
-            context.services().require(Wallets.class),
-            matches,
-            new PayoutService.Settings(config.rewards().dailyCap(), config.rewards().zone()),
-            context.time());
+    var payouts = new PayoutService(context.services().require(Wallets.class), matches);
     replayPayouts(context, payouts);
     var pseudonyms = pseudonyms(config);
     var recording = recorder(context, config, pseudonyms.isPresent());

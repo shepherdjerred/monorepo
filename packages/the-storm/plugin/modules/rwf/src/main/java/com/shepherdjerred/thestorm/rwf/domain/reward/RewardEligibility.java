@@ -1,6 +1,6 @@
 // Ported from libraryaddict's Red Warfare
 // (redwarfare-arcade/src/me/libraryaddict/arcade/managers/WinManager.java, setWin,
-// and redwarfare-arcade/src/me/libraryaddict/arcade/game/Game.java, onDeath); see
+// and redwarfare-arcade/src/me/libraryaddict/arcade/game/Game.java, onDeath and deathAfk); see
 // packages/the-storm/NOTICE.
 package com.shepherdjerred.thestorm.rwf.domain.reward;
 
@@ -12,15 +12,14 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Who is paid after a match. A combatant is paid when they are human, were there when the match
- * went live, stayed until they died or it ended, did not forfeit, and the match lasted at least
- * {@code minimumLength}. Winners get {@link Payout#WIN}, everyone else eligible {@link
- * Payout#LOSE}, each scaled by the roster's human share.
+ * Who is paid, or charged, after a match. A combatant counts when they are human, were there when
+ * the match went live, stayed until they died or it ended, did not forfeit (a suicide or a quit
+ * while it was live), and the match lasted at least {@code minimumLength}. Of those, anyone AFK for
+ * the whole match loses {@link Payout#AFK_PENALTY} credits and earns nothing, as in Red Warfare;
+ * winners get {@link Payout#WIN} and everyone else {@link Payout#LOSE}, each scaled by the roster's
+ * human share.
  */
 public final class RewardEligibility {
-
-  /** Red Warfare's grace period: a suicide inside it forfeits rewards. */
-  public static final Duration FORFEIT_GRACE = Duration.ofMinutes(1);
 
   private RewardEligibility() {}
 
@@ -44,6 +43,10 @@ public final class RewardEligibility {
       if (!eligible(participant, match, minimumLength)) {
         continue;
       }
+      if (participant.afk()) {
+        awards.add(new Award(participant, Reason.AFK, -Payout.AFK_PENALTY));
+        continue;
+      }
       var won = winner.filter(team -> team == participant.team()).isPresent();
       var base = won ? Payout.WIN : Payout.LOSE;
       var credits = Payout.scale(base, share);
@@ -54,20 +57,30 @@ public final class RewardEligibility {
     return List.copyOf(awards);
   }
 
-  /** Why credits were paid. */
+  /** Why credits were paid or taken. */
   public enum Reason {
     WIN,
     LOSE,
+    /** Taken, not paid: the player never looked around while alive in the live match. */
+    AFK,
   }
 
   /**
-   * Credits owed to one combatant.
+   * Credits owed to, or taken from, one combatant.
    *
    * @param to who
    * @param reason why
-   * @param credits how many
+   * @param credits how many; negative for {@link Reason#AFK}, positive otherwise
    */
-  public record Award(Participation to, Reason reason, long credits) {}
+  public record Award(Participation to, Reason reason, long credits) {
+
+    public Award {
+      if ((reason == Reason.AFK) != (credits < 0) || credits == 0) {
+        throw new IllegalArgumentException(
+            "an award pays a positive amount, or takes one for AFK: " + reason + " " + credits);
+      }
+    }
+  }
 
   /**
    * When a match ran.

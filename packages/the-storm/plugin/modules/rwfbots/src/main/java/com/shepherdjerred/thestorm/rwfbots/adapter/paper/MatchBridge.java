@@ -124,7 +124,8 @@ public final class MatchBridge implements Consumer<MatchNotification> {
           Transition.Change.Ticked _,
           Transition.Change.ForceStarted _,
           Transition.Change.Stopped _,
-          Transition.Change.Reset _ -> {}
+          Transition.Change.Reset _,
+          Transition.Change.LookedAround _ -> {}
     }
   }
 

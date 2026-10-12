@@ -7,6 +7,7 @@ import static com.mojang.brigadier.arguments.StringArgumentType.word;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
+import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
@@ -14,29 +15,38 @@ import com.shepherdjerred.thestorm.core.analytics.ProductAnalytics;
 import com.shepherdjerred.thestorm.core.players.PlayerDirectory;
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.economy.app.AccountId;
-import com.shepherdjerred.thestorm.economy.app.Crystals;
+import com.shepherdjerred.thestorm.economy.app.CurrencyId;
 import com.shepherdjerred.thestorm.economy.app.EconomyError;
 import com.shepherdjerred.thestorm.economy.app.LedgerWallets;
+import com.shepherdjerred.thestorm.economy.app.Money;
 import com.shepherdjerred.thestorm.economy.app.RankedPlayer;
 import com.shepherdjerred.thestorm.economy.app.Receipt;
 import com.shepherdjerred.thestorm.economy.app.SeenPlayer;
-import com.shepherdjerred.thestorm.economy.domain.CrystalFormat;
 import com.shepherdjerred.thestorm.economy.domain.Explanations;
+import com.shepherdjerred.thestorm.economy.domain.MoneyFormat;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
+import java.util.function.ToIntFunction;
+import java.util.stream.Collectors;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 /**
- * {@code /balance} ({@code /bal}), {@code /pay}, {@code /baltop} and the administrators' {@code
- * /eco give|take|set}. Every change is a ledgered transfer; {@code /eco} moves crystals to or from
- * the server and records the administrator's name in the reason.
+ * {@code /balance} ({@code /bal}), {@code /pay}, {@code /baltop [currency]} and the administrators'
+ * {@code /eco give|take|set <player> <amount> [currency]}. Every change is a ledgered transfer;
+ * {@code /eco} moves money to or from the server and records the administrator's name in the
+ * reason. {@code /balance} lists every currency; {@code /pay} moves crystals only, and {@code
+ * /baltop} and {@code /eco} use crystals unless a currency is named.
  *
  * <p>A named player is found among online players first, then in the shared player directory (read
  * off the main thread). Players who have never joined cannot be paid or looked up.
@@ -50,9 +60,10 @@ final class EconomyCommands {
 
   private static final String PLAYER = "player";
   private static final String AMOUNT = "amount";
+  private static final String CURRENCY = "currency";
 
   private final LedgerWallets wallets;
-  private final CrystalFormat format;
+  private final MoneyFormat format;
   private final int baltopSize;
   private final Paper paper;
 
@@ -65,7 +76,7 @@ final class EconomyCommands {
   record Paper(
       Server server, Replies replies, PlayerDirectory players, ProductAnalytics analytics) {}
 
-  EconomyCommands(LedgerWallets wallets, CrystalFormat format, int baltopSize, Paper paper) {
+  EconomyCommands(LedgerWallets wallets, MoneyFormat format, int baltopSize, Paper paper) {
     this.wallets = wallets;
     this.format = format;
     this.baltopSize = baltopSize;
@@ -73,10 +84,10 @@ final class EconomyCommands {
   }
 
   void register(Commands commands) {
-    commands.register(balance(), "Shows a crystal balance", List.of("bal"));
+    commands.register(balance(), "Shows every balance", List.of("bal"));
     commands.register(pay(), "Pays crystals to another player");
-    commands.register(baltop(), "Lists the richest players");
-    commands.register(eco(), "Gives, takes or sets a player's crystals");
+    commands.register(baltop(), "Lists the richest players in a currency");
+    commands.register(eco(), "Gives, takes or sets a player's money");
   }
 
   private LiteralCommandNode<CommandSourceStack> balance() {
@@ -101,13 +112,20 @@ final class EconomyCommands {
                                 pay(
                                     context.getSource().getSender(),
                                     getString(context, PLAYER),
-                                    new Crystals(getLong(context, AMOUNT))))))
+                                    Money.crystals(getLong(context, AMOUNT))))))
         .build();
   }
 
   private LiteralCommandNode<CommandSourceStack> baltop() {
     return Commands.literal("baltop")
-        .executes(context -> baltop(context.getSource().getSender()))
+        .executes(context -> baltop(context.getSource().getSender(), CurrencyId.CRYSTALS))
+        .then(
+            currencyArgument()
+                .executes(
+                    context ->
+                        withCurrency(
+                            context,
+                            currency -> baltop(context.getSource().getSender(), currency))))
         .build();
   }
 
@@ -124,21 +142,58 @@ final class EconomyCommands {
     return Commands.argument(PLAYER, word()).suggests((context, builder) -> suggest(builder));
   }
 
+  private RequiredArgumentBuilder<CommandSourceStack, String> currencyArgument() {
+    return Commands.argument(CURRENCY, word())
+        .suggests((context, builder) -> suggestCurrencies(builder));
+  }
+
   private RequiredArgumentBuilder<CommandSourceStack, String> adminAction(
       long minimum, AdminAction action) {
-    return playerArgument()
-        .then(
-            Commands.argument(AMOUNT, longArg(minimum, MAX_AMOUNT))
-                .executes(
-                    context -> {
-                      var sender = context.getSource().getSender();
-                      var amount = new Crystals(getLong(context, AMOUNT));
-                      withPlayer(
-                          sender,
-                          getString(context, PLAYER),
-                          target -> action.run(sender, target, amount));
-                      return Command.SINGLE_SUCCESS;
-                    }));
+    RequiredArgumentBuilder<CommandSourceStack, Long> amount =
+        Commands.argument(AMOUNT, longArg(minimum, MAX_AMOUNT))
+            .executes(context -> runAdmin(context, CurrencyId.CRYSTALS, action))
+            .then(
+                currencyArgument()
+                    .executes(
+                        context ->
+                            withCurrency(
+                                context, currency -> runAdmin(context, currency, action))));
+    return playerArgument().then(amount);
+  }
+
+  private int runAdmin(
+      CommandContext<CommandSourceStack> context, CurrencyId currency, AdminAction action) {
+    var sender = context.getSource().getSender();
+    var amount = Money.of(currency, getLong(context, AMOUNT));
+    withPlayer(sender, getString(context, PLAYER), target -> action.run(sender, target, amount));
+    return Command.SINGLE_SUCCESS;
+  }
+
+  /** Runs {@code action} with the typed currency, or tells the sender which currencies exist. */
+  private int withCurrency(
+      CommandContext<CommandSourceStack> context, ToIntFunction<CurrencyId> action) {
+    var typed = getString(context, CURRENCY);
+    Optional<CurrencyId> currency = CurrencyId.parse(typed);
+    if (currency.isEmpty()) {
+      context
+          .getSource()
+          .getSender()
+          .sendMessage(
+              Replies.error(
+                  "There is no currency called "
+                      + typed
+                      + ". Use one of: "
+                      + currencyKeys()
+                      + "."));
+      return Command.SINGLE_SUCCESS;
+    }
+    return action.applyAsInt(currency.orElseThrow());
+  }
+
+  private static String currencyKeys() {
+    return Arrays.stream(CurrencyId.values())
+        .map(CurrencyId::key)
+        .collect(Collectors.joining(", "));
   }
 
   /** Suggests online player names starting with what has been typed, ignoring case. */
@@ -152,6 +207,16 @@ final class EconomyCommands {
     return builder.buildFuture();
   }
 
+  private static CompletableFuture<Suggestions> suggestCurrencies(SuggestionsBuilder builder) {
+    var prefix = builder.getRemainingLowerCase();
+    for (var currency : CurrencyId.values()) {
+      if (currency.key().startsWith(prefix)) {
+        builder.suggest(currency.key());
+      }
+    }
+    return builder.buildFuture();
+  }
+
   private int ownBalance(CommandSender sender) {
     if (!(sender instanceof Player player)) {
       sender.sendMessage(Replies.error("Name a player: /balance <player>"));
@@ -160,10 +225,10 @@ final class EconomyCommands {
     paper
         .replies()
         .whenDone(
-            wallets.balance(new AccountId.Player(player.getUniqueId())),
+            wallets.balances(new AccountId.Player(player.getUniqueId())),
             sender,
-            balance -> {
-              sender.sendMessage(Replies.info("Balance: " + format.words(balance)));
+            balances -> {
+              sender.sendMessage(Replies.info("Balance: " + listed(balances)));
               paper
                   .analytics()
                   .interaction(player.getUniqueId(), ProductAnalytics.Action.BALANCE_VIEWED);
@@ -179,11 +244,11 @@ final class EconomyCommands {
             paper
                 .replies()
                 .whenDone(
-                    wallets.balance(target.account()),
+                    wallets.balances(target.account()),
                     sender,
-                    balance -> {
+                    balances -> {
                       sender.sendMessage(
-                          Replies.info(target.name() + " has " + format.words(balance) + "."));
+                          Replies.info(target.name() + " has " + listed(balances) + "."));
                       if (sender instanceof Player player)
                         paper
                             .analytics()
@@ -193,7 +258,14 @@ final class EconomyCommands {
     return Command.SINGLE_SUCCESS;
   }
 
-  private int pay(CommandSender sender, String name, Crystals amount) {
+  /** Every currency in {@link CurrencyId} order: "500 crystals, 3 Credits". */
+  private String listed(Map<CurrencyId, Money> balances) {
+    return Arrays.stream(CurrencyId.values())
+        .map(currency -> format.words(Objects.requireNonNull(balances.get(currency))))
+        .collect(Collectors.joining(", "));
+  }
+
+  private int pay(CommandSender sender, String name, Money amount) {
     if (!(sender instanceof Player payer)) {
       sender.sendMessage(Replies.error("Only players can pay; use /eco give instead."));
       return Command.SINGLE_SUCCESS;
@@ -219,18 +291,19 @@ final class EconomyCommands {
     return Command.SINGLE_SUCCESS;
   }
 
-  private int baltop(CommandSender sender) {
+  private int baltop(CommandSender sender, CurrencyId currency) {
+    var names = format.currency(currency);
     paper
         .replies()
         .whenDone(
-            wallets.leaderboard(baltopSize),
+            wallets.leaderboard(currency, baltopSize),
             sender,
             ranked -> {
               if (ranked.isEmpty()) {
-                sender.sendMessage(Replies.info("Nobody holds any crystals yet."));
+                sender.sendMessage(Replies.info("Nobody holds any " + names.plural() + " yet."));
                 return;
               }
-              sender.sendMessage(Replies.info("Richest players:"));
+              sender.sendMessage(Replies.info("Most " + names.plural() + ":"));
               for (var index = 0; index < ranked.size(); index++) {
                 sender.sendMessage(Replies.info(standingLine(index + 1, ranked.get(index))));
               }
@@ -243,7 +316,7 @@ final class EconomyCommands {
     return "#" + rank + " " + name + " " + format.symbol(player.balance());
   }
 
-  private void give(CommandSender admin, SeenPlayer target, Crystals amount) {
+  private void give(CommandSender admin, SeenPlayer target, Money amount) {
     whenTransferred(
         admin,
         wallets.transfer(
@@ -255,7 +328,7 @@ final class EconomyCommands {
         });
   }
 
-  private void take(CommandSender admin, SeenPlayer target, Crystals amount) {
+  private void take(CommandSender admin, SeenPlayer target, Money amount) {
     whenTransferred(
         admin,
         wallets.transfer(
@@ -267,7 +340,8 @@ final class EconomyCommands {
         });
   }
 
-  private void set(CommandSender admin, SeenPlayer target, Crystals amount) {
+  private void set(CommandSender admin, SeenPlayer target, Money amount) {
+    var plural = format.currency(amount.currency()).plural();
     paper
         .replies()
         .whenDone(
@@ -280,7 +354,9 @@ final class EconomyCommands {
                 return;
               }
               admin.sendMessage(Replies.success("Set " + target.name() + " to " + words + "."));
-              tell(target, Replies.info("An admin set your balance to " + words + "."));
+              tell(
+                  target,
+                  Replies.info("An admin set your " + plural + " balance to " + words + "."));
             });
   }
 
@@ -337,6 +413,6 @@ final class EconomyCommands {
   /** One {@code /eco} subcommand, run once the target player is known. */
   @FunctionalInterface
   private interface AdminAction {
-    void run(CommandSender admin, SeenPlayer target, Crystals amount);
+    void run(CommandSender admin, SeenPlayer target, Money amount);
   }
 }

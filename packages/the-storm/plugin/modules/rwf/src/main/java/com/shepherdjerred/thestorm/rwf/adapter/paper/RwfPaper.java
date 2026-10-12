@@ -215,6 +215,7 @@ public final class RwfPaper {
             new KitMenuListener(runner, context),
             new CombatListener(runner, tracker, context, app.hooks()),
             new WorldListener(runner, context, bombs),
+            new AfkWatch(runner),
             inputs);
     listeners.forEach(
         listener -> context.server().getPluginManager().registerEvents(listener, module.plugin()));

@@ -2,7 +2,7 @@ package com.shepherdjerred.thestorm.shops.adapter.paper;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.shepherdjerred.thestorm.economy.app.CrystalFormatter;
+import com.shepherdjerred.thestorm.economy.app.MoneyFormatter;
 import com.shepherdjerred.thestorm.shops.app.ShopStore;
 import com.shepherdjerred.thestorm.shops.app.ShopTexts;
 import com.shepherdjerred.thestorm.shops.domain.trade.Direction;
@@ -44,7 +44,7 @@ final class OwnerNoticesListenerTest extends ShopsFixture {
             server,
             Runnable::run,
             plugin.getComponentLogger(),
-            new ShopTexts(plugin.services.require(CrystalFormatter.class)));
+            new ShopTexts(plugin.services.require(MoneyFormatter.class)));
     var listener = new OwnerNoticesListener(server, store, replies, 3);
     listener.onJoin(new PlayerJoinEvent(owner, Component.empty()));
     owner.disconnect();

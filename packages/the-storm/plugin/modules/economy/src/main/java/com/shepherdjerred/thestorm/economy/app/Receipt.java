@@ -13,4 +13,4 @@ import java.time.Instant;
  * @param at when
  */
 public record Receipt(
-    long transactionId, AccountId from, AccountId to, Crystals amount, String reason, Instant at) {}
+    long transactionId, AccountId from, AccountId to, Money amount, String reason, Instant at) {}

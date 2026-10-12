@@ -74,7 +74,7 @@ public final class TradeEngine {
     if (payer instanceof AccountId.Server) {
       return completedFuture(Optional.empty());
     }
-    return ledger(() -> wallets.balance(payer))
+    return ledger(() -> wallets.balance(payer, deal.price().currency()))
         .thenApply(
             balance ->
                 balance.isAtLeast(deal.price())
@@ -275,7 +275,7 @@ public final class TradeEngine {
               ? new TradeProblem.CustomerCannotPay(balance.amount(), required.amount())
               : new TradeProblem.OwnerCannotPay();
       case EconomyError.SameAccount(_) -> new TradeProblem.OwnShop();
-      case EconomyError.ZeroAmount() ->
+      case EconomyError.ZeroAmount(_) ->
           throw new IllegalStateException("a deal always costs at least one crystal");
     };
   }

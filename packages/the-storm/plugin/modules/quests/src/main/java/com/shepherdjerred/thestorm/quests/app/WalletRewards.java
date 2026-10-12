@@ -2,10 +2,10 @@ package com.shepherdjerred.thestorm.quests.app;
 
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.economy.app.AccountId;
-import com.shepherdjerred.thestorm.economy.app.CrystalFormatter;
-import com.shepherdjerred.thestorm.economy.app.Crystals;
 import com.shepherdjerred.thestorm.economy.app.EconomyError;
 import com.shepherdjerred.thestorm.economy.app.KeyedTransfer;
+import com.shepherdjerred.thestorm.economy.app.Money;
+import com.shepherdjerred.thestorm.economy.app.MoneyFormatter;
 import com.shepherdjerred.thestorm.economy.app.Receipt;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import java.util.UUID;
@@ -15,10 +15,10 @@ import java.util.concurrent.CompletableFuture;
 public final class WalletRewards implements Rewards {
 
   private final Wallets wallets;
-  private final CrystalFormatter formatter;
+  private final MoneyFormatter formatter;
   private final PermissionGrants grants;
 
-  public WalletRewards(Wallets wallets, CrystalFormatter formatter, PermissionGrants grants) {
+  public WalletRewards(Wallets wallets, MoneyFormatter formatter, PermissionGrants grants) {
     this.wallets = wallets;
     this.formatter = formatter;
     this.grants = grants;
@@ -27,7 +27,7 @@ public final class WalletRewards implements Rewards {
   @Override
   public CompletableFuture<Result<String, String>> pay(
       UUID effect, UUID player, long crystals, String reason) {
-    var amount = Crystals.of(crystals);
+    var amount = Money.crystals(crystals);
     return wallets
         .transferOnce(
             new KeyedTransfer(

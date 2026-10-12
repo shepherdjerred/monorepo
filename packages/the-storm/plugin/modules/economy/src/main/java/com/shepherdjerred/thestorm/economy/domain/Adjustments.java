@@ -1,7 +1,7 @@
 package com.shepherdjerred.thestorm.economy.domain;
 
 import com.shepherdjerred.thestorm.economy.app.AccountId;
-import com.shepherdjerred.thestorm.economy.app.Crystals;
+import com.shepherdjerred.thestorm.economy.app.Money;
 import java.util.Optional;
 
 /**
@@ -13,17 +13,17 @@ public final class Adjustments {
   private Adjustments() {}
 
   /**
-   * The transfer that brings {@code account} from {@code current} to {@code target}: from the
-   * server when it must grow, to the server when it must shrink, and none when it is already there.
+   * The transfer that brings {@code account} from {@code current} to {@code target} (both in the
+   * same currency): from the server when it must grow, to the server when it must shrink, and none
+   * when it is already there.
    */
-  public static Optional<Transfer> toReach(AccountId account, Crystals current, Crystals target) {
-    var difference = target.amount() - current.amount();
-    if (difference > 0) {
-      return Optional.of(new Transfer(new AccountId.Server(), account, new Crystals(difference)));
+  public static Optional<Transfer> toReach(AccountId account, Money current, Money target) {
+    if (target.isAtLeast(current)) {
+      var difference = target.minus(current);
+      return difference.isZero()
+          ? Optional.empty()
+          : Optional.of(new Transfer(new AccountId.Server(), account, difference));
     }
-    if (difference < 0) {
-      return Optional.of(new Transfer(account, new AccountId.Server(), new Crystals(-difference)));
-    }
-    return Optional.empty();
+    return Optional.of(new Transfer(account, new AccountId.Server(), current.minus(target)));
   }
 }

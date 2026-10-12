@@ -1,20 +1,25 @@
 // Ported from libraryaddict's Red Warfare
 // (redwarfare-arcade/src/me/libraryaddict/arcade/game/searchanddestroy/SearchAndDestroy.java,
-// getCreditsWin/Lose/Kill, and
+// getCreditsWin/Lose/Kill,
+// redwarfare-arcade/src/me/libraryaddict/arcade/game/Game.java, deathAfk, and
 // redwarfare-arcade/src/me/libraryaddict/arcade/managers/WinManager.java); see
 // packages/the-storm/NOTICE.
 package com.shepherdjerred.thestorm.rwf.domain.reward;
 
 /**
- * Credits for a match. Red Warfare paid 3 for a win, 1 for a loss and nothing per kill. Here the
- * base is scaled by how many of the combatants were human: a match with no humans but you pays a
- * quarter, a full human match pays in full.
+ * Red Warfare credits for a match. Red Warfare paid 3 for a win, 1 for a loss and nothing per kill,
+ * and took 2 from anyone AFK. Here the win and loss base is scaled by how many of the combatants
+ * were human: a match with no humans but you pays a quarter, a full human match pays in full. The
+ * AFK penalty is never scaled.
  */
 public final class Payout {
 
   public static final int WIN = 3;
   public static final int LOSE = 1;
   public static final int KILL = 0;
+
+  /** Credits taken from a player who was AFK for the whole match, instead of any pay. */
+  public static final int AFK_PENALTY = 2;
 
   /** The share of the base paid when no other combatant is human. */
   public static final double FLOOR = 0.25;

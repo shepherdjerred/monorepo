@@ -4,7 +4,7 @@ import static java.util.concurrent.CompletableFuture.completedFuture;
 
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.economy.app.AccountId;
-import com.shepherdjerred.thestorm.economy.app.Crystals;
+import com.shepherdjerred.thestorm.economy.app.Money;
 import com.shepherdjerred.thestorm.shops.domain.shop.BlockPos;
 import com.shepherdjerred.thestorm.shops.domain.shop.CreationAttempt;
 import com.shepherdjerred.thestorm.shops.domain.shop.CreationProblem;
@@ -282,7 +282,7 @@ public final class ChestShops {
         new Deal(
             direction,
             shop.quantity(),
-            Crystals.of(price.crystals()),
+            Money.crystals(price.crystals()),
             new Deal.Party(customer.account(), visit.customerItems()),
             new Deal.Party(accountOf(shop.owner()), visit.shopItems()),
             "shop:" + shop.id() + ":" + direction.id(),

@@ -2,8 +2,8 @@ package com.shepherdjerred.thestorm.tracks.adapter.paper;
 
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.players.PlayerDirectory;
-import com.shepherdjerred.thestorm.economy.app.CrystalFormatter;
-import com.shepherdjerred.thestorm.economy.app.Crystals;
+import com.shepherdjerred.thestorm.economy.app.Money;
+import com.shepherdjerred.thestorm.economy.app.MoneyFormatter;
 import com.shepherdjerred.thestorm.tracks.domain.Explanations;
 import com.shepherdjerred.thestorm.tracks.domain.TracksConfig;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
@@ -13,7 +13,7 @@ import org.bukkit.Server;
 
 /**
  * Hooks the tracks into Paper: the join and quit listener and {@code /perks}. Requires the
- * economy's {@link CrystalFormatter} and core's {@link PlayerDirectory} from the services.
+ * economy's {@link MoneyFormatter} and core's {@link PlayerDirectory} from the services.
  */
 public final class TracksPaper {
 
@@ -38,9 +38,9 @@ public final class TracksPaper {
     var server = context.plugin().getServer();
     var permissions = new TracksPermissions(server.getPluginManager());
     permissions.register();
-    var formatter = context.services().require(CrystalFormatter.class);
+    var formatter = context.services().require(MoneyFormatter.class);
     var replies = new Replies(context.scheduler().mainThread(), context.logger());
-    var explanations = new Explanations(config, amount -> formatter.words(Crystals.of(amount)));
+    var explanations = new Explanations(config, amount -> formatter.words(Money.crystals(amount)));
     var presenter = new Presenter(config, explanations);
     var paper =
         new Paper(

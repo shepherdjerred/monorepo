@@ -1,7 +1,7 @@
 package com.shepherdjerred.thestorm.discord.app;
 
 import com.shepherdjerred.thestorm.discord.domain.DiscordText;
-import com.shepherdjerred.thestorm.economy.app.CrystalFormatter;
+import com.shepherdjerred.thestorm.economy.app.MoneyFormatter;
 import com.shepherdjerred.thestorm.economy.app.RankedPlayer;
 import com.shepherdjerred.thestorm.towns.app.TownRead;
 import java.util.List;
@@ -12,7 +12,7 @@ final class DiscordCommandReplies {
 
   private DiscordCommandReplies() {}
 
-  static String baltop(List<RankedPlayer> ranked, CrystalFormatter formatter) {
+  static String baltop(List<RankedPlayer> ranked, MoneyFormatter formatter) {
     if (ranked.isEmpty()) {
       return "Nobody holds any crystals yet.";
     }

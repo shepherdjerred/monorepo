@@ -567,10 +567,7 @@ final class MatchRunner implements MatchView, MatchEvents {
 
   private MatchStore.PlayerRow playerRow(Combatant member, boolean won, long credits) {
     var tally = tallies.getOrDefault(member.id(), new Tally());
-    var outcome =
-        member.leftAt().isPresent() && member.diedAt().isEmpty()
-            ? MatchStore.Outcome.LEFT
-            : won ? MatchStore.Outcome.WIN : MatchStore.Outcome.LOSE;
+    var leftAlive = member.leftAt().isPresent() && member.diedAt().isEmpty();
     return new MatchStore.PlayerRow(
         match.matchId(),
         member.id().uuid(),
@@ -578,9 +575,10 @@ final class MatchRunner implements MatchView, MatchEvents {
         member.kit().orElseThrow(),
         tally.kills,
         tally.deaths,
-        outcome,
+        MatchStore.Outcome.of(leftAlive, won, credits),
+        PayoutService.CURRENCY,
         credits,
-        credits > 0 ? MatchStore.PayoutStatus.PENDING : MatchStore.PayoutStatus.NONE,
+        MatchStore.PayoutStatus.owing(credits),
         0);
   }
 
@@ -617,20 +615,11 @@ final class MatchRunner implements MatchView, MatchEvents {
         .context()
         .onMain(
             parts.payouts().settle(row, rows),
-            paid -> {
-              for (var payment : paid) {
-                var player = parts.context().server().getPlayer(payment.player());
-                if (player != null && payment.paid() < payment.owed()) {
-                  Texts.info(
-                      player,
-                      "You reached today's match earnings cap; "
-                          + payment.paid()
-                          + " of "
-                          + payment.owed()
-                          + " credits were paid.");
-                }
-              }
-            },
+            paid ->
+                parts
+                    .context()
+                    .logger()
+                    .info("rwf match {} settled {} payouts", row.matchId(), paid.size()),
             "settle rwf match " + row.matchId());
   }
 

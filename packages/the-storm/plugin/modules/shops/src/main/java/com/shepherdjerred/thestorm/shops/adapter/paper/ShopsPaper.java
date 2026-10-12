@@ -2,7 +2,7 @@ package com.shepherdjerred.thestorm.shops.adapter.paper;
 
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.protection.Protection;
-import com.shepherdjerred.thestorm.economy.app.CrystalFormatter;
+import com.shepherdjerred.thestorm.economy.app.MoneyFormatter;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import com.shepherdjerred.thestorm.shops.app.Background;
 import com.shepherdjerred.thestorm.shops.app.CatalogTrades;
@@ -80,7 +80,7 @@ public final class ShopsPaper {
     var plugin = context.plugin();
     var server = plugin.getServer();
     var logger = context.logger();
-    var texts = new ShopTexts(services.require(CrystalFormatter.class));
+    var texts = new ShopTexts(services.require(MoneyFormatter.class));
     var replies = new Replies(server, context.scheduler().mainThread(), logger, texts);
     // Trades settle through the pump, so the shutdown drain can finish them on the main thread
     // once the scheduler stops taking tasks.

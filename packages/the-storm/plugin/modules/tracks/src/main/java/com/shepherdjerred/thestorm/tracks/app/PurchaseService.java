@@ -4,8 +4,9 @@ import static java.util.concurrent.CompletableFuture.completedFuture;
 
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.economy.app.AccountId;
-import com.shepherdjerred.thestorm.economy.app.Crystals;
+import com.shepherdjerred.thestorm.economy.app.CurrencyId;
 import com.shepherdjerred.thestorm.economy.app.EconomyError;
+import com.shepherdjerred.thestorm.economy.app.Money;
 import com.shepherdjerred.thestorm.economy.app.Receipt;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import com.shepherdjerred.thestorm.tracks.domain.TrackProgress;
@@ -134,7 +135,7 @@ public final class PurchaseService implements TrackPurchases {
           completedFuture(Result.err(problem));
       case Result.Ok<TrackProgress, PurchaseProblem>(var progress) ->
           wallets
-              .balance(account(player))
+              .balance(account(player), CurrencyId.CRYSTALS)
               .thenApplyAsync(
                   balance ->
                       Result.ok(
@@ -153,7 +154,7 @@ public final class PurchaseService implements TrackPurchases {
           completedFuture(Result.err(List.of(problem)));
       case Result.Ok<TrackProgress, PurchaseProblem>(var progress) ->
           wallets
-              .balance(account(player))
+              .balance(account(player), CurrencyId.CRYSTALS)
               .thenApplyAsync(
                   balance ->
                       rules.validate(
@@ -184,7 +185,7 @@ public final class PurchaseService implements TrackPurchases {
               .thenCompose(
                   progress ->
                       wallets
-                          .balance(account(player))
+                          .balance(account(player), CurrencyId.CRYSTALS)
                           .thenCompose(balance -> charge(player, quote, progress, balance)));
     } catch (RuntimeException e) {
       finished(player, done);
@@ -202,7 +203,7 @@ public final class PurchaseService implements TrackPurchases {
 
   /** Checks the offer against the stored progress and, if it still stands, takes payment. */
   private CompletableFuture<Result<Recorded, List<PurchaseProblem>>> charge(
-      UUID player, Quote offered, TrackProgress progress, Crystals balance) {
+      UUID player, Quote offered, TrackProgress progress, Money balance) {
     var attempt =
         new PurchaseAttempt(
             progress, offered.track(), offered.level(), runtime.time().instant(), balance.amount());
@@ -213,7 +214,7 @@ public final class PurchaseService implements TrackPurchases {
           completedFuture(Result.err(List.of(new PurchaseProblem.QuoteChanged(offered, current))));
       case Result.Ok<Quote, List<PurchaseProblem>>(var current) ->
           wallets
-              .transfer(account(player), SERVER, Crystals.of(current.cost()), reason(current))
+              .transfer(account(player), SERVER, Money.crystals(current.cost()), reason(current))
               .thenCompose(paid -> afterPayment(player, progress, current, paid));
     };
   }
@@ -293,7 +294,7 @@ public final class PurchaseService implements TrackPurchases {
   private CompletableFuture<Result<Recorded, List<PurchaseProblem>>> refund(
       UUID player, Quote quote, Receipt charge) {
     return wallets
-        .transfer(SERVER, account(player), Crystals.of(quote.cost()), refundReason(quote))
+        .transfer(SERVER, account(player), Money.crystals(quote.cost()), refundReason(quote))
         .handle(
             (refunded, failure) -> {
               if (failure != null) {

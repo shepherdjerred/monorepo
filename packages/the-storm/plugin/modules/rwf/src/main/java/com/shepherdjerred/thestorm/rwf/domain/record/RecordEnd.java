@@ -11,7 +11,7 @@ import java.util.TreeMap;
  * @param tick ticks since the match went live
  * @param winner the winning team, or empty for a draw or a stop
  * @param reason why it ended
- * @param payouts credits paid, by pseudonym
+ * @param payouts credits paid (negative when the AFK penalty was taken), by pseudonym
  */
 public record RecordEnd(
     long tick, Optional<TeamColor> winner, Reason reason, Map<String, Long> payouts) {

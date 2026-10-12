@@ -216,10 +216,10 @@ class DatabaseRestoreTest(unittest.TestCase):
             )
             connection.execute("INSERT INTO core_analytics_outbox VALUES ('event', 'prod', 123, '{}')")
             connection.execute("INSERT INTO economy_player_seen VALUES (?, 100, 'Alice', 123)", (player,))
-            connection.execute("INSERT INTO economy_account VALUES ('player', ?, 500)", (player,))
+            connection.execute("INSERT INTO economy_account VALUES ('player', ?, 'crystals', 500)", (player,))
             connection.execute(
-                "INSERT INTO economy_ledger(from_kind,from_id,to_kind,to_id,amount,reason,at) "
-                "VALUES ('server','server','player',?,500,'starting-balance',100)",
+                "INSERT INTO economy_ledger(from_kind,from_id,to_kind,to_id,currency,amount,reason,at) "
+                "VALUES ('server','server','player',?,'crystals',500,'starting-balance',100)",
                 (player,),
             )
             connection.commit()

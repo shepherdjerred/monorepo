@@ -7,6 +7,6 @@ import java.util.concurrent.CompletableFuture;
 @FunctionalInterface
 public interface PlayerLeaderboard {
 
-  /** The richest players with their last recorded names, highest first. */
-  CompletableFuture<List<RankedPlayer>> leaderboard(int limit);
+  /** The players holding the most {@code currency}, with their last recorded names. */
+  CompletableFuture<List<RankedPlayer>> leaderboard(CurrencyId currency, int limit);
 }

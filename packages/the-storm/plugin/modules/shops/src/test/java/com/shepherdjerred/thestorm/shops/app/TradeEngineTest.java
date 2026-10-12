@@ -4,8 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.shepherdjerred.thestorm.economy.app.AccountId;
-import com.shepherdjerred.thestorm.economy.app.Crystals;
+import com.shepherdjerred.thestorm.economy.app.CurrencyId;
 import com.shepherdjerred.thestorm.economy.app.EconomyError;
+import com.shepherdjerred.thestorm.economy.app.Money;
 import com.shepherdjerred.thestorm.shops.domain.trade.Direction;
 import com.shepherdjerred.thestorm.shops.domain.trade.TradeProblem;
 import java.time.Instant;
@@ -37,7 +38,7 @@ final class TradeEngineTest {
     return new Deal(
         direction,
         16,
-        Crystals.of(50),
+        Money.crystals(50),
         new Deal.Party(ALICE, customer),
         new Deal.Party(counterparty, shopItems),
         "shop:1:" + direction.id(),
@@ -138,7 +139,7 @@ final class TradeEngineTest {
             failure -> {
               assertThat(failure.payer()).isEqualTo(OWNER);
               assertThat(failure.payee()).isEqualTo(ALICE);
-              assertThat(failure.amount()).isEqualTo(Crystals.of(50));
+              assertThat(failure.amount()).isEqualTo(Money.crystals(50));
               assertThat(failure.reason()).isEqualTo("refund:shop:1:buy");
             });
   }
@@ -282,7 +283,7 @@ final class TradeEngineTest {
         .singleElement()
         .satisfies(
             failure -> {
-              assertThat(failure.amount()).isEqualTo(Crystals.ZERO);
+              assertThat(failure.amount()).isEqualTo(Money.crystals(0));
               assertThat(failure.held()).contains(new HeldItems("coal", 16));
             });
   }
@@ -436,15 +437,18 @@ final class TradeEngineTest {
 
     assertThat(
             TradeEngine.paymentProblem(
-                buy, new EconomyError.InsufficientFunds(ALICE, Crystals.of(1), Crystals.of(50))))
+                buy,
+                new EconomyError.InsufficientFunds(ALICE, Money.crystals(1), Money.crystals(50))))
         .isEqualTo(new TradeProblem.CustomerCannotPay(1, 50));
     assertThat(
             TradeEngine.paymentProblem(
-                buy, new EconomyError.InsufficientFunds(OWNER, Crystals.of(1), Crystals.of(50))))
+                buy,
+                new EconomyError.InsufficientFunds(OWNER, Money.crystals(1), Money.crystals(50))))
         .isEqualTo(new TradeProblem.OwnerCannotPay());
     assertThat(TradeEngine.paymentProblem(buy, new EconomyError.SameAccount(ALICE)))
         .isEqualTo(new TradeProblem.OwnShop());
-    assertThatThrownBy(() -> TradeEngine.paymentProblem(buy, new EconomyError.ZeroAmount()))
+    assertThatThrownBy(
+            () -> TradeEngine.paymentProblem(buy, new EconomyError.ZeroAmount(CurrencyId.CRYSTALS)))
         .isInstanceOf(IllegalStateException.class);
   }
 
@@ -466,7 +470,7 @@ final class TradeEngineTest {
                 new Deal(
                     Direction.BUY,
                     0,
-                    Crystals.of(1),
+                    Money.crystals(1),
                     new Deal.Party(ALICE, customer),
                     new Deal.Party(OWNER, shop),
                     "x",
@@ -477,7 +481,7 @@ final class TradeEngineTest {
                 new Deal(
                     Direction.BUY,
                     1,
-                    Crystals.ZERO,
+                    Money.crystals(0),
                     new Deal.Party(ALICE, customer),
                     new Deal.Party(OWNER, shop),
                     "x",

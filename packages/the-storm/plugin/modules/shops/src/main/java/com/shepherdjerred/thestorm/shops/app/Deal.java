@@ -1,7 +1,7 @@
 package com.shepherdjerred.thestorm.shops.app;
 
 import com.shepherdjerred.thestorm.economy.app.AccountId;
-import com.shepherdjerred.thestorm.economy.app.Crystals;
+import com.shepherdjerred.thestorm.economy.app.Money;
 import com.shepherdjerred.thestorm.shops.domain.trade.Direction;
 
 /**
@@ -19,7 +19,7 @@ import com.shepherdjerred.thestorm.shops.domain.trade.Direction;
 public record Deal(
     Direction direction,
     int quantity,
-    Crystals price,
+    Money price,
     Party customer,
     Party shop,
     String reason,

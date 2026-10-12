@@ -1,8 +1,17 @@
 # Owned by the repository; the plugin never saves it. Every key is required.
-currency:
-  singular: crystal
-  plural: crystals
-  symbol: CR
+# How each currency reads in chat, keyed by its ledger id. Every currency the
+# plugin knows must be listed exactly once.
+currencies:
+  # The Storm's survival currency.
+  crystals:
+    singular: crystal
+    plural: crystals
+    symbol: CR
+  # Red Warfare's own currency, earned and spent only in Search and Destroy.
+  rwf_credits:
+    singular: Credit
+    plural: Credits
+    symbol: RC
 # Crystals paid once, from the server, the first time a player ever joins.
 startingBalance: 500
 # Players listed by /baltop (1-20).

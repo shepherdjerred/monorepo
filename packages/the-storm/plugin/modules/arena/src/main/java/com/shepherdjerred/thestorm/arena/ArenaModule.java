@@ -23,7 +23,7 @@ import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.StormModule;
 import com.shepherdjerred.thestorm.core.world.ChunkTickets;
 import com.shepherdjerred.thestorm.discord.app.DiscordRelay;
-import com.shepherdjerred.thestorm.economy.app.CrystalFormatter;
+import com.shepherdjerred.thestorm.economy.app.MoneyFormatter;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import java.util.function.Function;
 import org.jspecify.annotations.Nullable;
@@ -93,7 +93,7 @@ public final class ArenaModule implements StormModule {
             new JooqRewardStore(database),
             leaderboard,
             new RewardPayer(context.services().require(Wallets.class)),
-            context.services().require(CrystalFormatter.class),
+            context.services().require(MoneyFormatter.class),
             new JooqSurvivalProgress(database),
             rollout,
             new com.shepherdjerred.thestorm.arena.adapter.db.JooqSettlementStore(database));

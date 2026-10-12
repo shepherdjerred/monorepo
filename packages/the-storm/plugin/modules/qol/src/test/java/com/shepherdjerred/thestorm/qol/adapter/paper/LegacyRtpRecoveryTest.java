@@ -6,9 +6,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.economy.adapter.db.JooqLedgerStore;
 import com.shepherdjerred.thestorm.economy.app.AccountId;
-import com.shepherdjerred.thestorm.economy.app.Crystals;
+import com.shepherdjerred.thestorm.economy.app.CurrencyId;
 import com.shepherdjerred.thestorm.economy.app.KeyedTransfer;
 import com.shepherdjerred.thestorm.economy.app.LedgerWallets;
+import com.shepherdjerred.thestorm.economy.app.Money;
 import com.shepherdjerred.thestorm.economy.domain.TransferRules;
 import com.shepherdjerred.thestorm.qol.adapter.db.JooqQolStore;
 import com.shepherdjerred.thestorm.qol.app.RtpAttempt;
@@ -38,9 +39,9 @@ final class LegacyRtpRecoveryTest {
     wallets =
         new LedgerWallets(
             new JooqLedgerStore(database, InstantSource.fixed(now), TransferRules.standard()),
-            Crystals.of(500));
+            Money.crystals(500));
     wallets
-        .transfer(new AccountId.Server(), new AccountId.Player(player), Crystals.of(500), "seed")
+        .transfer(new AccountId.Server(), new AccountId.Player(player), Money.crystals(500), "seed")
         .join();
   }
 
@@ -58,7 +59,7 @@ final class LegacyRtpRecoveryTest {
                 attempt.id(),
                 new AccountId.Player(player),
                 new AccountId.Server(),
-                Crystals.of(25),
+                Money.crystals(25),
                 "random teleport"))
         .join();
     return attempt;
@@ -73,7 +74,7 @@ final class LegacyRtpRecoveryTest {
                 attempt.refundKey(),
                 new AccountId.Server(),
                 new AccountId.Player(player),
-                Crystals.of(25),
+                Money.crystals(25),
                 "rtp refund"))
         .join();
     var uncharged = new RtpAttempt(UUID.randomUUID(), player, 25);
@@ -85,7 +86,8 @@ final class LegacyRtpRecoveryTest {
     LegacyRtpRecovery.start(store, wallets).join();
     LegacyRtpRecovery.start(store, wallets).join();
     assertThat(store.pendingRtpAttempts().join()).isEmpty();
-    assertThat(wallets.balance(new AccountId.Player(player)).join().amount()).isEqualTo(500);
+    assertThat(wallets.balance(new AccountId.Player(player), CurrencyId.CRYSTALS).join().amount())
+        .isEqualTo(500);
     assertThat(wallets.receiptFor(attempt.refundKey()).join()).isPresent();
     var profile = store.ensure(player, now.plusSeconds(1)).join().profile();
     assertThat(profile.firstSeen()).isEqualTo(seen);
@@ -101,7 +103,7 @@ final class LegacyRtpRecoveryTest {
                 attempt.refundKey(),
                 new AccountId.Server(),
                 new AccountId.Player(player),
-                Crystals.of(1),
+                Money.crystals(1),
                 "conflicting transfer"))
         .join();
     assertThatThrownBy(() -> LegacyRtpRecovery.start(store, wallets).join())
@@ -112,10 +114,12 @@ final class LegacyRtpRecoveryTest {
   @Test
   void chargedAttemptGetsCompensatedExactlyOnce() {
     var attempt = pendingCharge();
-    assertThat(wallets.balance(new AccountId.Player(player)).join().amount()).isEqualTo(475);
+    assertThat(wallets.balance(new AccountId.Player(player), CurrencyId.CRYSTALS).join().amount())
+        .isEqualTo(475);
     LegacyRtpRecovery.start(store, wallets).join();
     LegacyRtpRecovery.start(store, wallets).join();
-    assertThat(wallets.balance(new AccountId.Player(player)).join().amount()).isEqualTo(500);
+    assertThat(wallets.balance(new AccountId.Player(player), CurrencyId.CRYSTALS).join().amount())
+        .isEqualTo(500);
     assertThat(wallets.receiptFor(attempt.refundKey()).join()).isPresent();
     assertThat(store.pendingRtpAttempts().join()).isEmpty();
   }

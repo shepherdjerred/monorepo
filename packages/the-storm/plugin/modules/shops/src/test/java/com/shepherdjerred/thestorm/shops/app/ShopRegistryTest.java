@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.shepherdjerred.thestorm.economy.app.AccountId;
-import com.shepherdjerred.thestorm.economy.app.Crystals;
+import com.shepherdjerred.thestorm.economy.app.Money;
 import com.shepherdjerred.thestorm.shops.domain.price.ShopPrices;
 import com.shepherdjerred.thestorm.shops.domain.shop.BlockPos;
 import com.shepherdjerred.thestorm.shops.domain.shop.ItemFingerprint;
@@ -107,7 +107,7 @@ final class ShopRegistryTest {
     return new Deal(
         Direction.BUY,
         1,
-        Crystals.of(1),
+        Money.crystals(1),
         new Deal.Party(new AccountId.Player(ALICE), new FakeHoldings(0, 1)),
         new Deal.Party(new AccountId.Server(), Holdings.UNLIMITED),
         "test",

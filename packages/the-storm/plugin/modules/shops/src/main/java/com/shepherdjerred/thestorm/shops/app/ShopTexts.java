@@ -1,7 +1,7 @@
 package com.shepherdjerred.thestorm.shops.app;
 
-import com.shepherdjerred.thestorm.economy.app.CrystalFormatter;
-import com.shepherdjerred.thestorm.economy.app.Crystals;
+import com.shepherdjerred.thestorm.economy.app.Money;
+import com.shepherdjerred.thestorm.economy.app.MoneyFormatter;
 import com.shepherdjerred.thestorm.shops.domain.catalog.CatalogEntry;
 import com.shepherdjerred.thestorm.shops.domain.sign.ItemNames;
 import com.shepherdjerred.thestorm.shops.domain.trade.Direction;
@@ -14,9 +14,9 @@ import java.util.List;
 /** The words shops say, with prices written the economy's way. */
 public final class ShopTexts {
 
-  private final CrystalFormatter crystals;
+  private final MoneyFormatter crystals;
 
-  public ShopTexts(CrystalFormatter crystals) {
+  public ShopTexts(MoneyFormatter crystals) {
     this.crystals = crystals;
   }
 
@@ -26,11 +26,11 @@ public final class ShopTexts {
   }
 
   public String words(long amount) {
-    return crystals.words(Crystals.of(amount));
+    return crystals.words(Money.crystals(amount));
   }
 
   public String symbol(long amount) {
-    return crystals.symbol(Crystals.of(amount));
+    return crystals.symbol(Money.crystals(amount));
   }
 
   /** To the customer after a completed trade. */

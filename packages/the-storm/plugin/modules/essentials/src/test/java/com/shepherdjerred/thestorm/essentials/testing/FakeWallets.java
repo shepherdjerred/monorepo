@@ -1,13 +1,14 @@
 package com.shepherdjerred.thestorm.essentials.testing;
 
-import static java.util.Comparator.comparing;
+import static java.util.Comparator.comparingLong;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.economy.app.AccountId;
-import com.shepherdjerred.thestorm.economy.app.Crystals;
+import com.shepherdjerred.thestorm.economy.app.CurrencyId;
 import com.shepherdjerred.thestorm.economy.app.EconomyError;
 import com.shepherdjerred.thestorm.economy.app.KeyedTransfer;
+import com.shepherdjerred.thestorm.economy.app.Money;
 import com.shepherdjerred.thestorm.economy.app.Receipt;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import java.time.Instant;
@@ -21,6 +22,7 @@ import java.util.concurrent.CompletableFuture;
 
 /**
  * An in-memory {@link Wallets} following the port's contract: the server account never runs out.
+ * Essentials only ever moves crystals, so any other currency is a broken contract and throws.
  */
 public class FakeWallets implements Wallets {
 
@@ -42,15 +44,23 @@ public class FakeWallets implements Wallets {
   }
 
   @Override
-  public CompletableFuture<Crystals> balance(AccountId account) {
-    return completedFuture(Crystals.of(balanceOf(account)));
+  public CompletableFuture<Money> balance(AccountId account, CurrencyId currency) {
+    return completedFuture(Money.of(crystalsOnly(currency), balanceOf(account)));
+  }
+
+  private static CurrencyId crystalsOnly(CurrencyId currency) {
+    if (currency != CurrencyId.CRYSTALS) {
+      throw new IllegalArgumentException("essentials only moves crystals, not " + currency.key());
+    }
+    return currency;
   }
 
   @Override
   public CompletableFuture<Result<Receipt, EconomyError>> transfer(
-      AccountId from, AccountId to, Crystals amount, String reason) {
-    if (amount.amount() == 0) {
-      return completedFuture(Result.err(new EconomyError.ZeroAmount()));
+      AccountId from, AccountId to, Money amount, String reason) {
+    crystalsOnly(amount.currency());
+    if (amount.isZero()) {
+      return completedFuture(Result.err(new EconomyError.ZeroAmount(amount.currency())));
     }
     if (from.equals(to)) {
       return completedFuture(Result.err(new EconomyError.SameAccount(from)));
@@ -59,7 +69,7 @@ public class FakeWallets implements Wallets {
     var balance = balanceOf(from);
     if (!isServer && balance < amount.amount()) {
       return completedFuture(
-          Result.err(new EconomyError.InsufficientFunds(from, Crystals.of(balance), amount)));
+          Result.err(new EconomyError.InsufficientFunds(from, Money.crystals(balance), amount)));
     }
     if (!isServer) {
       balances.put(from, balance - amount.amount());
@@ -96,14 +106,16 @@ public class FakeWallets implements Wallets {
   }
 
   @Override
-  public CompletableFuture<List<Standing>> top(int limit) {
+  public CompletableFuture<List<Standing>> top(CurrencyId currency, int limit) {
+    crystalsOnly(currency);
     return completedFuture(
         balances.entrySet().stream()
             .filter(entry -> entry.getKey() instanceof AccountId.Player)
             .map(
                 entry ->
-                    new Standing((AccountId.Player) entry.getKey(), Crystals.of(entry.getValue())))
-            .sorted(comparing(Standing::balance).reversed())
+                    new Standing(
+                        (AccountId.Player) entry.getKey(), Money.crystals(entry.getValue())))
+            .sorted(comparingLong((Standing standing) -> standing.balance().amount()).reversed())
             .limit(limit)
             .toList());
   }

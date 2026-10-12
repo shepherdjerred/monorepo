@@ -2,65 +2,49 @@ package com.shepherdjerred.thestorm.rwf.app;
 
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.economy.app.AccountId;
-import com.shepherdjerred.thestorm.economy.app.Crystals;
+import com.shepherdjerred.thestorm.economy.app.CurrencyId;
 import com.shepherdjerred.thestorm.economy.app.EconomyError;
 import com.shepherdjerred.thestorm.economy.app.KeyedTransfer;
+import com.shepherdjerred.thestorm.economy.app.Money;
 import com.shepherdjerred.thestorm.economy.app.Receipt;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import com.shepherdjerred.thestorm.rwf.app.store.MatchStore;
 import java.nio.charset.StandardCharsets;
-import java.time.InstantSource;
-import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * Pays match rewards through the economy's keyed transfers. Every payout is first a row in the
- * {@link MatchStore} outbox; it is paid with the idempotency key {@code rwf:<matchId>:<player>}, so
- * a replay after a crash returns the original receipt instead of paying twice. Credits above the
- * day's cap are forfeited, which the store records as the difference between what was owed and what
- * was paid. Bots never reach this class: the rules award them nothing.
+ * Pays match rewards, and takes the AFK penalty, in Red Warfare credits through the economy's keyed
+ * transfers. Every payout is first a row in the {@link MatchStore} outbox; it moves with the
+ * idempotency key {@code rwf:<matchId>:<player>}, so a replay after a crash returns the original
+ * receipt instead of paying or charging twice. A row pays in the currency it was written with, so
+ * rows written before Red Warfare had its own currency still settle in crystals. A charge takes no
+ * more than the player holds: balances never go negative. Bots never reach this class: the rules
+ * award them nothing.
  */
 public final class PayoutService {
 
-  /**
-   * The payout settings.
-   *
-   * @param dailyCap the most credits one player earns from matches in one day
-   * @param zone the time zone whose midnight starts a new day
-   */
-  public record Settings(long dailyCap, ZoneId zone) {
-
-    public Settings {
-      if (dailyCap < 1) {
-        throw new IllegalArgumentException("dailyCap must be positive: " + dailyCap);
-      }
-    }
-  }
+  /** The currency Red Warfare pays and charges in. */
+  public static final CurrencyId CURRENCY = CurrencyId.RWF_CREDITS;
 
   /**
-   * One payout that went through the ledger.
+   * One payout or charge that went through the ledger.
    *
    * @param matchId the match
    * @param player who
-   * @param owed what the rules awarded
-   * @param paid what reached their wallet after the daily cap
+   * @param owed what the rules awarded (negative for a charge)
+   * @param paid what actually moved (negative for a charge)
    */
   public record Paid(UUID matchId, UUID player, long owed, long paid) {}
 
   private final Wallets wallets;
   private final MatchStore store;
-  private final Settings settings;
-  private final InstantSource time;
 
-  public PayoutService(Wallets wallets, MatchStore store, Settings settings, InstantSource time) {
+  public PayoutService(Wallets wallets, MatchStore store) {
     this.wallets = wallets;
     this.store = store;
-    this.settings = settings;
-    this.time = time;
   }
 
   /** The idempotency key for {@code player}'s payout from {@code matchId}. */
@@ -106,17 +90,16 @@ public final class PayoutService {
   }
 
   private CompletableFuture<Paid> pay(MatchStore.PlayerRow row) {
-    var day = LocalDate.ofInstant(time.instant(), settings.zone());
     return store
-        .beginPayout(row.matchId(), row.player(), day, settings.dailyCap())
-        .thenCompose(amount -> transfer(row, amount))
+        .beginPayout(row.matchId(), row.player())
+        .thenCompose(amount -> amount < 0 ? charge(row, -amount) : transfer(row, amount))
         .thenCompose(
-            amount ->
+            moved ->
                 store
-                    .finishPayout(row.matchId(), row.player())
+                    .finishPayout(row.matchId(), row.player(), moved)
                     .thenApply(
                         ignored ->
-                            new Paid(row.matchId(), row.player(), row.creditsOwed(), amount)));
+                            new Paid(row.matchId(), row.player(), row.creditsOwed(), moved)));
   }
 
   private CompletableFuture<Long> transfer(MatchStore.PlayerRow row, long amount) {
@@ -128,7 +111,7 @@ public final class PayoutService {
             key(row.matchId(), row.player()),
             new AccountId.Server(),
             new AccountId.Player(row.player()),
-            Crystals.of(amount),
+            Money.of(row.currency(), amount),
             reason(row.matchId(), row.outcome()));
     return wallets
         .transferOnce(request)
@@ -139,6 +122,55 @@ public final class PayoutService {
                   case Result.Err<Receipt, EconomyError>(var error) ->
                       throw new IllegalStateException(
                           "the server account refused a match payout: " + error);
+                });
+  }
+
+  /**
+   * Takes up to {@code most} from the player, once: a committed charge is found by its key, and
+   * otherwise what they hold now (at most {@code most}) is taken. Returns the negative amount
+   * taken.
+   */
+  private CompletableFuture<Long> charge(MatchStore.PlayerRow row, long most) {
+    var key = key(row.matchId(), row.player());
+    var account = new AccountId.Player(row.player());
+    return wallets
+        .receiptFor(key)
+        .thenCompose(
+            committed -> {
+              if (committed.isPresent()) {
+                return CompletableFuture.completedFuture(-committed.get().amount().amount());
+              }
+              return wallets
+                  .balance(account, row.currency())
+                  .thenCompose(held -> take(row, key, account, Math.min(most, held.amount())));
+            });
+  }
+
+  private CompletableFuture<Long> take(
+      MatchStore.PlayerRow row, UUID key, AccountId.Player account, long amount) {
+    if (amount == 0) {
+      return CompletableFuture.completedFuture(0L);
+    }
+    var request =
+        new KeyedTransfer(
+            key,
+            account,
+            new AccountId.Server(),
+            Money.of(row.currency(), amount),
+            reason(row.matchId(), row.outcome()));
+    return wallets
+        .transferOnce(request)
+        .thenCompose(
+            result ->
+                switch (result) {
+                  case Result.Ok<Receipt, EconomyError>(var receipt) ->
+                      CompletableFuture.completedFuture(-receipt.amount().amount());
+                  // They spent some between the read and the charge: take what is left.
+                  case Result.Err<Receipt, EconomyError>(
+                          EconomyError.InsufficientFunds(var _, var balance, var _)) ->
+                      take(row, key, account, Math.min(amount, balance.amount()));
+                  case Result.Err<Receipt, EconomyError>(var error) ->
+                      throw new IllegalStateException("an AFK charge was refused: " + error);
                 });
   }
 }

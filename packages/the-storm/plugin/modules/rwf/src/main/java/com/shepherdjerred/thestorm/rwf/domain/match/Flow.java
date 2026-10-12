@@ -236,7 +236,11 @@ final class Flow {
             roster, outcome.winner(), span, draft.settings.minimumRewardLength())) {
       var id = award.to().id();
       draft.effect(new MatchEffect.Pay(id, award.credits(), award.reason().name()));
-      draft.tell(id, Notice.of(NoticeKind.CREDITS_GIVEN, "credits", award.credits()));
+      if (award.reason() == RewardEligibility.Reason.AFK) {
+        draft.tell(id, Notice.of(NoticeKind.AFK_PENALTY, "credits", -award.credits()));
+      } else {
+        draft.tell(id, Notice.of(NoticeKind.CREDITS_GIVEN, "credits", award.credits()));
+      }
     }
   }
 
@@ -246,7 +250,13 @@ final class Flow {
         .map(
             team ->
                 new Participation(
-                    member.id(), team, true, member.diedAt(), member.leftAt(), member.forfeited()));
+                    member.id(),
+                    team,
+                    true,
+                    member.diedAt(),
+                    member.leftAt(),
+                    member.forfeited(),
+                    member.afk()));
   }
 
   static Optional<MatchError> stop(Draft draft) {

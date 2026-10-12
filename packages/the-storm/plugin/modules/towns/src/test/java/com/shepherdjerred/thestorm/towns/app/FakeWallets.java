@@ -4,9 +4,10 @@ import static java.util.Objects.requireNonNull;
 
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.economy.app.AccountId;
-import com.shepherdjerred.thestorm.economy.app.Crystals;
+import com.shepherdjerred.thestorm.economy.app.CurrencyId;
 import com.shepherdjerred.thestorm.economy.app.EconomyError;
 import com.shepherdjerred.thestorm.economy.app.KeyedTransfer;
+import com.shepherdjerred.thestorm.economy.app.Money;
 import com.shepherdjerred.thestorm.economy.app.Receipt;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import java.time.Instant;
@@ -48,19 +49,23 @@ public final class FakeWallets implements Wallets {
   }
 
   @Override
-  public CompletableFuture<Crystals> balance(AccountId account) {
-    return CompletableFuture.completedFuture(Crystals.of(balanceOf(account)));
+  public CompletableFuture<Money> balance(AccountId account, CurrencyId currency) {
+    if (currency != CurrencyId.CRYSTALS) {
+      throw new IllegalArgumentException("this fake holds crystals only: " + currency);
+    }
+    return CompletableFuture.completedFuture(Money.crystals(balanceOf(account)));
   }
 
   @Override
   public CompletableFuture<Result<Receipt, EconomyError>> transfer(
-      AccountId from, AccountId to, Crystals amount, String reason) {
+      AccountId from, AccountId to, Money amount, String reason) {
     if (failing > 0) {
       failing--;
       return CompletableFuture.failedFuture(new IllegalStateException("ledger unavailable"));
     }
     if (amount.amount() == 0) {
-      return CompletableFuture.completedFuture(Result.err(new EconomyError.ZeroAmount()));
+      return CompletableFuture.completedFuture(
+          Result.err(new EconomyError.ZeroAmount(amount.currency())));
     }
     if (from.equals(to)) {
       return CompletableFuture.completedFuture(Result.err(new EconomyError.SameAccount(from)));
@@ -68,7 +73,7 @@ public final class FakeWallets implements Wallets {
     var available = balanceOf(from);
     if (!(from instanceof AccountId.Server) && available < amount.amount()) {
       return CompletableFuture.completedFuture(
-          Result.err(new EconomyError.InsufficientFunds(from, Crystals.of(available), amount)));
+          Result.err(new EconomyError.InsufficientFunds(from, Money.crystals(available), amount)));
     }
     balances.merge(from, -amount.amount(), Long::sum);
     balances.merge(to, amount.amount(), Long::sum);
@@ -104,7 +109,10 @@ public final class FakeWallets implements Wallets {
   }
 
   @Override
-  public CompletableFuture<List<Standing>> top(int limit) {
+  public CompletableFuture<List<Standing>> top(CurrencyId currency, int limit) {
+    if (currency != CurrencyId.CRYSTALS) {
+      throw new IllegalArgumentException("this fake holds crystals only: " + currency);
+    }
     return CompletableFuture.completedFuture(List.of());
   }
 }

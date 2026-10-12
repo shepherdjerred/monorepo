@@ -10,8 +10,8 @@ import com.shepherdjerred.thestorm.core.players.KnownPlayer;
 import com.shepherdjerred.thestorm.core.players.PlayerDirectory;
 import com.shepherdjerred.thestorm.core.schedule.PaperScheduler;
 import com.shepherdjerred.thestorm.core.world.SealedWorlds;
-import com.shepherdjerred.thestorm.economy.app.CrystalFormatter;
-import com.shepherdjerred.thestorm.economy.app.Crystals;
+import com.shepherdjerred.thestorm.economy.app.Money;
+import com.shepherdjerred.thestorm.economy.app.MoneyFormatter;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import com.shepherdjerred.thestorm.towns.TownsModule;
 import com.shepherdjerred.thestorm.towns.app.FakeWallets;
@@ -95,7 +95,7 @@ public class TownsTestPlugin extends JavaPlugin {
     var database = StormDatabase.open(directory.resolve("t.db"));
     this.database = database;
     services.provide(Wallets.class, wallets);
-    services.provide(CrystalFormatter.class, new Formatter());
+    services.provide(MoneyFormatter.class, new Formatter());
     services.provide(
         TrackLevels.class,
         new TrackLevels() {
@@ -139,15 +139,15 @@ public class TownsTestPlugin extends JavaPlugin {
     }
   }
 
-  private static final class Formatter implements CrystalFormatter {
+  private static final class Formatter implements MoneyFormatter {
 
     @Override
-    public String words(Crystals amount) {
+    public String words(Money amount) {
       return amount.amount() + (amount.amount() == 1 ? " crystal" : " crystals");
     }
 
     @Override
-    public String symbol(Crystals amount) {
+    public String symbol(Money amount) {
       return amount.amount() + " CR";
     }
   }

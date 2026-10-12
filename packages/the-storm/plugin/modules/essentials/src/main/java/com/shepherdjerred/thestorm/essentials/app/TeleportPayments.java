@@ -4,9 +4,9 @@ import static java.util.concurrent.CompletableFuture.completedFuture;
 
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.economy.app.AccountId;
-import com.shepherdjerred.thestorm.economy.app.Crystals;
 import com.shepherdjerred.thestorm.economy.app.EconomyError;
 import com.shepherdjerred.thestorm.economy.app.KeyedTransfer;
+import com.shepherdjerred.thestorm.economy.app.Money;
 import com.shepherdjerred.thestorm.economy.app.Receipt;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import com.shepherdjerred.thestorm.essentials.app.store.TeleportAttemptStore;
@@ -145,7 +145,7 @@ public final class TeleportPayments {
                             attempt.id(),
                             new AccountId.Player(payer),
                             new AccountId.Server(),
-                            Crystals.of(quote.cost()),
+                            Money.crystals(quote.cost()),
                             "teleport:" + quote.kind().id()))
                     .thenCompose(
                         transfer ->
@@ -184,7 +184,7 @@ public final class TeleportPayments {
                 attempt.refundKey(),
                 new AccountId.Server(),
                 new AccountId.Player(attempt.payer()),
-                Crystals.of(attempt.cost()),
+                Money.crystals(attempt.cost()),
                 "teleport:refund:" + attempt.kind().id()))
         .thenCompose(
             result -> {

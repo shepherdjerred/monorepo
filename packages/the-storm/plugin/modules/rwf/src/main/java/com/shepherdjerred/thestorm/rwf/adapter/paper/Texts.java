@@ -44,7 +44,8 @@ final class Texts {
           NoticeKind.TEAM_DEFEATED,
           NoticeKind.POISON_WARNING,
           NoticeKind.POISON_BEGUN,
-          NoticeKind.STOPPED);
+          NoticeKind.STOPPED,
+          NoticeKind.AFK_PENALTY);
 
   private static final Map<NoticeKind, String> TEMPLATES =
       Map.ofEntries(
@@ -72,7 +73,8 @@ final class Texts {
           entry(NoticeKind.TEAM_WINS, "{team} wins!"),
           entry(NoticeKind.DRAW, "No one won!"),
           entry(NoticeKind.STOPPED, "The match was stopped."),
-          entry(NoticeKind.CREDITS_GIVEN, "You earned {credits} credits."));
+          entry(NoticeKind.CREDITS_GIVEN, "You earned {credits} credits."),
+          entry(NoticeKind.AFK_PENALTY, "{credits} credits were taken for being AFK."));
 
   private static final Map<MatchError, String> ERRORS =
       Map.ofEntries(

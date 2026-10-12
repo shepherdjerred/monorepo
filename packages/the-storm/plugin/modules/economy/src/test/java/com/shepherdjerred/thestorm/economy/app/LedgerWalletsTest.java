@@ -32,7 +32,7 @@ final class LedgerWalletsTest {
     database.migrate("economy", LedgerWalletsTest.class.getClassLoader());
     var store =
         new JooqLedgerStore(database, InstantSource.fixed(Instant.EPOCH), TransferRules.standard());
-    wallets = new LedgerWallets(store, Crystals.of(500));
+    wallets = new LedgerWallets(store, Money.crystals(500));
   }
 
   @AfterEach
@@ -46,34 +46,53 @@ final class LedgerWalletsTest {
     var again = wallets.welcome(new SeenPlayer(ALICE.uuid(), "Alice")).get(10, TimeUnit.SECONDS);
 
     assertThat(first.orElseThrow().reason()).isEqualTo(LedgerWallets.STARTING_BALANCE_REASON);
-    assertThat(first.orElseThrow().amount()).isEqualTo(Crystals.of(500));
+    assertThat(first.orElseThrow().amount()).isEqualTo(Money.crystals(500));
     assertThat(again).isEmpty();
-    assertThat(wallets.balance(ALICE).get(10, TimeUnit.SECONDS)).isEqualTo(Crystals.of(500));
+    assertThat(wallets.balance(ALICE, CurrencyId.CRYSTALS).get(10, TimeUnit.SECONDS))
+        .isEqualTo(Money.crystals(500));
   }
 
   @Test
   void startingBalancesAreSpendable() throws Exception {
     wallets.welcome(new SeenPlayer(ALICE.uuid(), "Alice")).get(10, TimeUnit.SECONDS);
 
-    var paid = wallets.transfer(ALICE, BOB, Crystals.of(125), "pay").get(10, TimeUnit.SECONDS);
+    var paid = wallets.transfer(ALICE, BOB, Money.crystals(125), "pay").get(10, TimeUnit.SECONDS);
 
     assertThat(paid.isOk()).isTrue();
-    assertThat(wallets.top(10).get(10, TimeUnit.SECONDS))
+    assertThat(wallets.top(CurrencyId.CRYSTALS, 10).get(10, TimeUnit.SECONDS))
         .containsExactly(
-            new Wallets.Standing(ALICE, Crystals.of(375)),
-            new Wallets.Standing(BOB, Crystals.of(125)));
+            new Wallets.Standing(ALICE, Money.crystals(375)),
+            new Wallets.Standing(BOB, Money.crystals(125)));
+  }
+
+  @Test
+  void balancesListEveryCurrencyInOrder() throws Exception {
+    wallets.welcome(new SeenPlayer(ALICE.uuid(), "Alice")).get(10, TimeUnit.SECONDS);
+    wallets
+        .transfer(new AccountId.Server(), ALICE, Money.rwfCredits(3), "rwf")
+        .get(10, TimeUnit.SECONDS);
+
+    var balances = wallets.balances(ALICE).get(10, TimeUnit.SECONDS);
+    assertThat(balances.keySet()).containsExactly(CurrencyId.values());
+    assertThat(balances)
+        .containsEntry(CurrencyId.CRYSTALS, Money.crystals(500))
+        .containsEntry(CurrencyId.RWF_CREDITS, Money.rwfCredits(3));
+    assertThat(wallets.balances(BOB).get(10, TimeUnit.SECONDS))
+        .containsEntry(CurrencyId.CRYSTALS, Money.crystals(0))
+        .containsEntry(CurrencyId.RWF_CREDITS, Money.rwfCredits(0));
   }
 
   @Test
   void everyTransferNeedsAReason() {
-    assertThatThrownBy(() -> wallets.transfer(ALICE, BOB, Crystals.of(1), " "))
+    assertThatThrownBy(() -> wallets.transfer(ALICE, BOB, Money.crystals(1), " "))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(() -> wallets.setBalance(ALICE, Crystals.of(1), ""))
+    assertThatThrownBy(() -> wallets.setBalance(ALICE, Money.crystals(1), ""))
         .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
   void topNeedsAPositiveLimit() {
-    assertThatThrownBy(() -> wallets.top(0)).isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> wallets.top(CurrencyId.CRYSTALS, 0))
+        .isInstanceOf(IllegalArgumentException.class);
   }
 }
