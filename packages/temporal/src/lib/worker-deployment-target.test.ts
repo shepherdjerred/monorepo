@@ -33,6 +33,7 @@ describe("resolveWorkerDeploymentRolloutTarget", () => {
       resolveWorkerDeploymentRolloutTarget("scout-prod", "temporal:7233"),
     ).toMatchObject({
       acceptancePrerequisite: {
+        namespace: "beta",
         deploymentName: "scout-beta-workflows",
         taskQueue: "scout-beta",
       },

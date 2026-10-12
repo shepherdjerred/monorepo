@@ -221,6 +221,7 @@ export async function requireAcceptancePrerequisite(
     tls?: boolean;
     buildId: string;
     acceptancePrerequisite?: {
+      namespace: string;
       deploymentName: string;
       taskQueue: string;
     };
@@ -228,10 +229,11 @@ export async function requireAcceptancePrerequisite(
   run: RolloutCommandRunner,
 ): Promise<void> {
   if (options.acceptancePrerequisite === undefined) return;
+  // The prerequisite deployment lives in its own stage namespace (Scout beta
+  // acceptance gates the prod rollout), not the namespace being rolled out.
   await requireAcceptedWorkerDeployment(
     {
       address: options.address,
-      namespace: options.namespace,
       ...(options.tls === undefined ? {} : { tls: options.tls }),
       buildId: options.buildId,
       ...options.acceptancePrerequisite,

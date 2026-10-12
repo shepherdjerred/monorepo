@@ -510,6 +510,7 @@ describe("Worker Deployment rollout", () => {
     rolloutOptions.deploymentName = "scout-prod-workflows";
     rolloutOptions.taskQueue = "scout-prod";
     rolloutOptions.acceptancePrerequisite = {
+      namespace: "beta",
       deploymentName: "scout-beta-workflows",
       taskQueue: "scout-beta",
     };
@@ -541,8 +542,8 @@ describe("Worker Deployment rollout", () => {
     expect(
       commands.some(
         (command) =>
-          command.includes("describe") &&
-          command.includes("scout-beta-workflows"),
+          command.includes("scout-beta-workflows") &&
+          command.join(" ").includes("--namespace beta"),
       ),
     ).toBe(true);
   });
