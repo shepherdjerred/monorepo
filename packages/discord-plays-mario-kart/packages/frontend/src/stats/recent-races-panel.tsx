@@ -1,4 +1,4 @@
-import { PanelError, PanelLoading, PanelMessage } from "./bits.tsx";
+import { PanelQueryError, PanelLoading, PanelMessage } from "./bits.tsx";
 import { useRecentRaces } from "./queries.ts";
 import { RaceList } from "./race-list.tsx";
 
@@ -8,14 +8,7 @@ export function RecentRacesPanel() {
     return <PanelLoading />;
   }
   if (query.isError) {
-    return (
-      <PanelError
-        error={query.error}
-        onRetry={() => {
-          void query.refetch();
-        }}
-      />
-    );
+    return <PanelQueryError error={query.error} refetch={query.refetch} />;
   }
   if (query.data.length === 0) {
     return (

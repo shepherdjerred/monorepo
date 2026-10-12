@@ -33,6 +33,14 @@ const DPAD_HINTS = {
   right: "D-pad right",
 };
 
+function toggleFullscreen() {
+  if (document.fullscreenElement === null) {
+    void document.documentElement.requestFullscreen({ navigationUI: "hide" });
+  } else {
+    void document.exitFullscreen();
+  }
+}
+
 function useFullscreen(): {
   active: boolean;
   supported: boolean;
@@ -50,14 +58,7 @@ function useFullscreen(): {
   }, []);
   const supported =
     typeof document.documentElement.requestFullscreen === "function";
-  const toggle = () => {
-    if (document.fullscreenElement === null) {
-      void document.documentElement.requestFullscreen({ navigationUI: "hide" });
-    } else {
-      void document.exitFullscreen();
-    }
-  };
-  return { active, supported, toggle };
+  return { active, supported, toggle: toggleFullscreen };
 }
 
 /**

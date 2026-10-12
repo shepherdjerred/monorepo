@@ -188,14 +188,6 @@
       "clones": 1,
       "tokens": 88
     },
-    "packages/discord-plays-mario-kart/packages/backend/src/webserver/index.ts|packages/discord-plays-pokemon/packages/backend/src/webserver/index.ts": {
-      "clones": 1,
-      "tokens": 96
-    },
-    "packages/discord-plays-mario-kart/packages/common/src/model/login.ts|packages/discord-plays-pokemon/packages/common/src/model/login.ts": {
-      "clones": 1,
-      "tokens": 102
-    },
     "packages/discord-plays-mario-kart/packages/common/src/model/screenshot.ts|packages/discord-plays-pokemon/packages/common/src/model/screenshot.ts": {
       "clones": 1,
       "tokens": 81
@@ -203,10 +195,6 @@
     "packages/discord-plays-mario-kart/packages/common/src/model/status.ts|packages/discord-plays-pokemon/packages/common/src/model/status.ts": {
       "clones": 1,
       "tokens": 75
-    },
-    "packages/discord-plays-mario-kart/packages/frontend/src/analog-stick.tsx|packages/discord-plays-mario-kart/packages/frontend/src/controller-ui.tsx": {
-      "clones": 1,
-      "tokens": 105
     },
     "packages/discord-plays-mario-kart/packages/frontend/src/main.tsx|packages/discord-plays-pokemon/packages/frontend/src/main.tsx": {
       "clones": 2,

@@ -2,7 +2,7 @@ import type { DiscordUser } from "@discord-plays-mario-kart/common";
 import { Avatar } from "#src/ui/avatar.tsx";
 import { cx } from "#src/ui/cx.ts";
 import { Placement } from "#src/ui/mk.tsx";
-import { PanelError, PanelLoading, PanelMessage } from "./bits.tsx";
+import { PanelQueryError, PanelLoading, PanelMessage } from "./bits.tsx";
 import { averagePlace, percent } from "./format.ts";
 import { useLeaderboard } from "./queries.ts";
 
@@ -26,14 +26,7 @@ export function LeaderboardPanel({
     return <PanelLoading />;
   }
   if (query.isError) {
-    return (
-      <PanelError
-        error={query.error}
-        onRetry={() => {
-          void query.refetch();
-        }}
-      />
-    );
+    return <PanelQueryError error={query.error} refetch={query.refetch} />;
   }
   if (query.data.length === 0) {
     return (

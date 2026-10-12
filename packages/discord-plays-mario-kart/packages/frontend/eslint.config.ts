@@ -9,23 +9,5 @@ const config = [
     },
     ignores: ["vite.config.ts", "dist/**/*", "public/**/*"],
   }),
-  {
-    rules: {
-      // Legacy project has unresolved types
-      "@typescript-eslint/no-unsafe-call": "off",
-      "@typescript-eslint/no-unsafe-member-access": "off",
-      "@typescript-eslint/no-unsafe-assignment": "off",
-      "@typescript-eslint/no-unsafe-argument": "off",
-      "@typescript-eslint/no-unsafe-return": "off",
-      // Legacy codebase shadows variables
-      "@typescript-eslint/no-shadow": "off",
-      // ES2020 target - replaceAll not available
-      "unicorn/prefer-string-replace-all": "off",
-      // React components define handler functions that reference outer scope
-      "unicorn/consistent-function-scoping": "off",
-      // Legacy debug logging
-      "no-console": "off",
-    },
-  },
 ];
 export default config;

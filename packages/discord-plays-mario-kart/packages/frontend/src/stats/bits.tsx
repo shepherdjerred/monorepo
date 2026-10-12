@@ -124,3 +124,20 @@ export function PanelError({
     </PanelMessage>
   );
 }
+
+export function PanelQueryError({
+  error,
+  refetch,
+}: {
+  error: Error;
+  refetch: () => Promise<unknown>;
+}) {
+  return (
+    <PanelError
+      error={error}
+      onRetry={() => {
+        void refetch();
+      }}
+    />
+  );
+}
