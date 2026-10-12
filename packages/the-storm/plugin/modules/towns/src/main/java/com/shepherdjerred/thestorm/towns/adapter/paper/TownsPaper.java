@@ -15,6 +15,7 @@ import com.shepherdjerred.thestorm.towns.app.PlotRentals;
 import com.shepherdjerred.thestorm.towns.app.PvpService;
 import com.shepherdjerred.thestorm.towns.app.RecoveryStore;
 import com.shepherdjerred.thestorm.towns.app.Settling;
+import com.shepherdjerred.thestorm.towns.app.TownMilestones;
 import com.shepherdjerred.thestorm.towns.app.TownService;
 import com.shepherdjerred.thestorm.towns.app.Treasury;
 import com.shepherdjerred.thestorm.towns.domain.TownsConfig;
@@ -55,7 +56,7 @@ public final class TownsPaper {
   public record Loaded(Settling settling, LockService locks, PvpService pvp) {}
 
   /** The protection and settled-land ports published for other modules. */
-  public record Installed(Protection protection, SettledLand settled) {}
+  public record Installed(Protection protection, SettledLand settled, TownMilestones milestones) {}
 
   public record Plots(
       ParcelBook book,
@@ -256,7 +257,8 @@ public final class TownsPaper {
             });
     return new Installed(
         new PaperProtection(server, guard, locks, new PaperProtection.Rendering(kinds, notices)),
-        new PaperSettledLand(state));
+        new PaperSettledLand(state),
+        towns.milestones());
   }
 
   /**

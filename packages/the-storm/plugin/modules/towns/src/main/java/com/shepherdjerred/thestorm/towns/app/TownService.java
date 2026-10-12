@@ -33,6 +33,7 @@ public final class TownService {
   private final Settling settling;
   private final Claiming claiming;
   private final OwnerLevels levels;
+  private final TownMilestoneHub milestones = new TownMilestoneHub();
 
   public TownService(Settling settling, Claiming claiming, OwnerLevels levels) {
     this.settling = settling;
@@ -42,6 +43,11 @@ public final class TownService {
 
   public Settling settling() {
     return settling;
+  }
+
+  /** Saved foundings and growth, for relays such as Discord. */
+  public TownMilestones milestones() {
+    return milestones;
   }
 
   /** Founds a town owned by {@code founder}, whose Governor level is {@code governorLevel}. */
@@ -66,7 +72,12 @@ public final class TownService {
             town -> {
               state().addTown(town);
               return settling.persist(
-                  town, settling.store().createTown(town), Settling.Busy.of(town, Set.of()));
+                  town,
+                  settling.store().createTown(town),
+                  Settling.Busy.of(town, Set.of()),
+                  () ->
+                      milestones.publish(
+                          new TownMilestones.Milestone.Founded(town.name(), founder)));
             });
   }
 
@@ -120,7 +131,19 @@ public final class TownService {
       state().replaceTown(town);
     }
     return settling.persist(
-        claim, write, Settling.Busy.of(claim), () -> settling.events().landChanged(claim.townId()));
+        claim,
+        write,
+        Settling.Busy.of(claim),
+        () -> {
+          settling.events().landChanged(claim.townId());
+          state()
+              .town(claim.townId())
+              .ifPresent(
+                  grown ->
+                      milestones.publish(
+                          new TownMilestones.Milestone.Grew(
+                              grown.id(), grown.name(), state().claimsOf(grown.id()).size())));
+        });
   }
 
   public Result<Change<Claim>, List<ClaimProblem>> unclaim(UUID player, ChunkPos chunk) {

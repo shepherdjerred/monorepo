@@ -99,6 +99,20 @@ final class JooqStoresTest {
   }
 
   @Test
+  void aCareerTotalsEveryMatchAPlayerFoughtIn() {
+    var store = new JooqMatchStore(database);
+    var first = UUID.randomUUID();
+    var second = UUID.randomUUID();
+    var third = UUID.randomUUID();
+    store.record(match(first), List.of(row(first, ALICE, Outcome.WIN, 3))).join();
+    store.record(match(second), List.of(row(second, ALICE, Outcome.LOSE, 0))).join();
+    store.record(match(third), List.of(row(third, ALICE, Outcome.LEFT, 0))).join();
+
+    assertThat(store.career(ALICE).join()).isEqualTo(new MatchStore.Career(3, 1, 1, 3, 0));
+    assertThat(store.career(BOB).join()).isEqualTo(new MatchStore.Career(0, 0, 0, 0, 0));
+  }
+
+  @Test
   void aMatchAndItsPlayersAreWrittenTogetherAndTheOutboxListsTheUnpaid() {
     var store = new JooqMatchStore(database);
     var id = UUID.randomUUID();

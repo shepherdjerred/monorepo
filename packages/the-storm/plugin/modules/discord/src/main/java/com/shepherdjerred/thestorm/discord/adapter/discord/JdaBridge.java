@@ -1,8 +1,10 @@
 package com.shepherdjerred.thestorm.discord.adapter.discord;
 
+import com.shepherdjerred.thestorm.discord.app.DiscordCommand;
 import com.shepherdjerred.thestorm.discord.app.DiscordGateway;
 import com.shepherdjerred.thestorm.discord.app.DiscordReadCommands;
 import com.shepherdjerred.thestorm.discord.app.DiscordRelay;
+import com.shepherdjerred.thestorm.discord.app.Links;
 import com.shepherdjerred.thestorm.discord.domain.DiscordCredentials;
 import java.time.Duration;
 import java.util.EnumSet;
@@ -19,6 +21,7 @@ import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.messages.MessageCreateRequest;
 import org.jspecify.annotations.Nullable;
@@ -48,7 +51,10 @@ public final class JdaBridge implements DiscordGateway {
 
   /** Logs in on a virtual thread so the server never waits on Discord. */
   public void start(
-      DiscordCredentials credentials, DiscordRelay relay, DiscordReadCommands commands) {
+      DiscordCredentials credentials,
+      DiscordRelay relay,
+      DiscordReadCommands commands,
+      Links links) {
     Thread.ofVirtual()
         .name("storm-discord-login")
         .start(
@@ -61,7 +67,11 @@ public final class JdaBridge implements DiscordGateway {
                             GatewayIntent.MESSAGE_CONTENT)
                         .setActivity(Activity.customStatus(relay.status()))
                         .addEventListeners(
-                            new JdaListener(this, relay, commands, credentials.channelId()))
+                            new JdaListener(
+                                this,
+                                relay,
+                                new JdaListener.Handlers(commands, links),
+                                credentials.channelId()))
                         .build();
                 jda.set(client);
                 if (stopped) {
@@ -92,19 +102,41 @@ public final class JdaBridge implements DiscordGateway {
       channel = found;
       relay.onServerStarted();
     }
+    relay.onCommandsChanged(() -> registerCommands(found, relay));
+    registerCommands(found, relay);
+  }
+
+  /** Replaces the guild's commands with the built-in ones and every module's. */
+  private void registerCommands(TextChannel found, DiscordRelay relay) {
+    var commands = new java.util.ArrayList<SlashCommandData>();
+    commands.add(Commands.slash("list", "Who is online on The Storm"));
+    commands.add(Commands.slash("status", "Who is online and which games are running"));
+    commands.add(Commands.slash("baltop", "Show the richest players in The Storm"));
+    commands.add(Commands.slash("link", "Link your Discord account to your Minecraft player"));
+    commands.add(Commands.slash("unlink", "Unlink your Discord account from The Storm"));
+    commands.add(
+        Commands.slash("towns", "Show towns, spawn and historic sites in The Storm")
+            .addOptions(
+                townPageOption(),
+                new OptionData(OptionType.STRING, "name", "Town or historic site to inspect")));
+    for (var command : relay.commands()) {
+      commands.add(slash(command));
+    }
     found
         .getGuild()
         .updateCommands()
-        .addCommands(
-            Commands.slash("list", "Who is online on The Storm"),
-            Commands.slash("baltop", "Show the richest players in The Storm"),
-            Commands.slash("towns", "Show towns, spawn and historic sites in The Storm")
-                .addOptions(
-                    townPageOption(),
-                    new OptionData(OptionType.STRING, "name", "Town or historic site to inspect")))
+        .addCommands(commands)
         .queue(
-            commands -> logger.info("Discord bridge connected to #{}", found.getName()),
+            registered -> logger.info("Discord bridge connected to #{}", found.getName()),
             error -> logger.warn("Registering Discord slash commands failed", error));
+  }
+
+  static SlashCommandData slash(DiscordCommand command) {
+    var data = Commands.slash(command.name(), command.description());
+    for (var option : command.options()) {
+      data.addOption(OptionType.STRING, option.name(), option.description(), option.required());
+    }
+    return data;
   }
 
   /** Discord's integer range must fit the page type consumed by the listener. */
@@ -122,6 +154,46 @@ public final class JdaBridge implements DiscordGateway {
     }
     quietMessage(target.sendMessage(text))
         .queue(sent -> {}, error -> logger.warn("Posting to Discord failed", error));
+  }
+
+  @Override
+  public void ping(String text, java.util.List<String> roles) {
+    var target = channel;
+    if (target == null) {
+      logger.debug("Discord is not connected; dropped a ping");
+      return;
+    }
+    rolePing(target.sendMessage(text), roles)
+        .queue(sent -> {}, error -> logger.warn("Posting to Discord failed", error));
+  }
+
+  /** Lets a lobby post notify exactly {@code roles}; users, everyone and here stay off. */
+  static <R extends MessageCreateRequest<R>> R rolePing(R request, java.util.List<String> roles) {
+    return request
+        .setAllowedMentions(EnumSet.noneOf(Message.MentionType.class))
+        .mentionRoles(roles)
+        .setSuppressedNotifications(false);
+  }
+
+  @Override
+  public void dm(long discordUser, String text) {
+    var client = jda.get();
+    if (client == null || channel == null) {
+      logger.debug("Discord is not connected; dropped a direct message");
+      return;
+    }
+    client
+        .openPrivateChannelById(discordUser)
+        .flatMap(dms -> quietMessage(dms.sendMessage(text)))
+        .queue(sent -> {}, error -> logger.debug("A Discord direct message was refused", error));
+  }
+
+  @Override
+  public void presence(String text) {
+    var client = jda.get();
+    if (client != null) {
+      client.getPresence().setActivity(Activity.customStatus(text));
+    }
   }
 
   /** Queues {@code goodbye} and disconnects off the Paper thread. */

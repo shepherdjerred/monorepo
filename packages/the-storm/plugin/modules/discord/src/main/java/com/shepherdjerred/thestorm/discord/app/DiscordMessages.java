@@ -22,6 +22,24 @@ import java.util.List;
  * @param ticketEscalated a ticket needing human review
  * @param ticketReopened a reopened ticket
  * @param ticketTriaged a ticket triage result
+ * @param rwfLobbyOpened a Search and Destroy lobby opened: {@code {player}}
+ * @param rwfWon a Search and Destroy match was won: {@code {map}}, {@code {team}}, {@code
+ *     {winners}}, {@code {duration}}
+ * @param rwfDraw a Search and Destroy match ended in a draw: {@code {map}}, {@code {players}},
+ *     {@code {duration}}
+ * @param arenaLobbyOpened an arena lobby opened: {@code {arena}}, {@code {player}}
+ * @param arenaBossWave a rewarding arena boss wave began: {@code {arena}}, {@code {wave}}, {@code
+ *     {boss}}
+ * @param arenaRunEnded an arena run ended: {@code {arena}}, {@code {tier}}, {@code {wave}}, {@code
+ *     {players}}
+ * @param arenaRecord an arena run beat the arena's best wave: the same placeholders
+ * @param townFounded a town was founded: {@code {town}}, {@code {player}}
+ * @param townGrew a town reached a claim milestone: {@code {town}}, {@code {claims}}
+ * @param questMilestone a story or questline quest was completed: {@code {player}}, {@code {quest}}
+ * @param skillMilestone a skill reached a milestone level: {@code {player}}, {@code {skill}},
+ *     {@code {level}}
+ * @param seasonalActive a seasonal event is running as the server wakes: {@code {event}}, {@code
+ *     {until}}
  */
 public record DiscordMessages(
     String chat,
@@ -38,7 +56,19 @@ public record DiscordMessages(
     String ticketResolved,
     String ticketEscalated,
     String ticketReopened,
-    String ticketTriaged) {
+    String ticketTriaged,
+    String rwfLobbyOpened,
+    String rwfWon,
+    String rwfDraw,
+    String arenaLobbyOpened,
+    String arenaBossWave,
+    String arenaRunEnded,
+    String arenaRecord,
+    String townFounded,
+    String townGrew,
+    String questMilestone,
+    String skillMilestone,
+    String seasonalActive) {
 
   public DiscordMessages {
     chatTemplate(chat);
@@ -56,6 +86,18 @@ public record DiscordMessages(
     ticketEscalatedTemplate(ticketEscalated);
     ticketIdTemplate(ticketReopened);
     ticketTriagedTemplate(ticketTriaged);
+    playerTemplate(rwfLobbyOpened);
+    rwfWonTemplate(rwfWon);
+    rwfDrawTemplate(rwfDraw);
+    arenaLobbyTemplate(arenaLobbyOpened);
+    arenaBossWaveTemplate(arenaBossWave);
+    arenaRunTemplate(arenaRunEnded);
+    arenaRunTemplate(arenaRecord);
+    townFoundedTemplate(townFounded);
+    townGrewTemplate(townGrew);
+    questMilestoneTemplate(questMilestone);
+    skillMilestoneTemplate(skillMilestone);
+    seasonalTemplate(seasonalActive);
   }
 
   MessageTemplate chatTemplate() {
@@ -110,6 +152,54 @@ public record DiscordMessages(
     return ticketTriagedTemplate(ticketTriaged);
   }
 
+  MessageTemplate rwfLobbyOpenedTemplate() {
+    return playerTemplate(rwfLobbyOpened);
+  }
+
+  MessageTemplate rwfWonTemplate() {
+    return rwfWonTemplate(rwfWon);
+  }
+
+  MessageTemplate rwfDrawTemplate() {
+    return rwfDrawTemplate(rwfDraw);
+  }
+
+  MessageTemplate arenaLobbyOpenedTemplate() {
+    return arenaLobbyTemplate(arenaLobbyOpened);
+  }
+
+  MessageTemplate arenaBossWaveTemplate() {
+    return arenaBossWaveTemplate(arenaBossWave);
+  }
+
+  MessageTemplate arenaRunEndedTemplate() {
+    return arenaRunTemplate(arenaRunEnded);
+  }
+
+  MessageTemplate arenaRecordTemplate() {
+    return arenaRunTemplate(arenaRecord);
+  }
+
+  MessageTemplate townFoundedTemplate() {
+    return townFoundedTemplate(townFounded);
+  }
+
+  MessageTemplate townGrewTemplate() {
+    return townGrewTemplate(townGrew);
+  }
+
+  MessageTemplate questMilestoneTemplate() {
+    return questMilestoneTemplate(questMilestone);
+  }
+
+  MessageTemplate skillMilestoneTemplate() {
+    return skillMilestoneTemplate(skillMilestone);
+  }
+
+  MessageTemplate seasonalActiveTemplate() {
+    return seasonalTemplate(seasonalActive);
+  }
+
   private static MessageTemplate chatTemplate(String source) {
     return new MessageTemplate(source, List.of("player", "message"));
   }
@@ -149,6 +239,46 @@ public record DiscordMessages(
 
   private static MessageTemplate ticketTriagedTemplate(String source) {
     return new MessageTemplate(source, List.of("id", "server", "priority", "evidence"));
+  }
+
+  private static MessageTemplate rwfWonTemplate(String source) {
+    return new MessageTemplate(source, List.of("map", "team", "winners", "duration"));
+  }
+
+  private static MessageTemplate rwfDrawTemplate(String source) {
+    return new MessageTemplate(source, List.of("map", "players", "duration"));
+  }
+
+  private static MessageTemplate arenaLobbyTemplate(String source) {
+    return new MessageTemplate(source, List.of("arena", "player"));
+  }
+
+  private static MessageTemplate arenaBossWaveTemplate(String source) {
+    return new MessageTemplate(source, List.of("arena", "wave", "boss"));
+  }
+
+  private static MessageTemplate arenaRunTemplate(String source) {
+    return new MessageTemplate(source, List.of("arena", "tier", "wave", "players"));
+  }
+
+  private static MessageTemplate townFoundedTemplate(String source) {
+    return new MessageTemplate(source, List.of("town", "player"));
+  }
+
+  private static MessageTemplate townGrewTemplate(String source) {
+    return new MessageTemplate(source, List.of("town", "claims"));
+  }
+
+  private static MessageTemplate questMilestoneTemplate(String source) {
+    return new MessageTemplate(source, List.of("player", "quest"));
+  }
+
+  private static MessageTemplate skillMilestoneTemplate(String source) {
+    return new MessageTemplate(source, List.of("player", "skill", "level"));
+  }
+
+  private static MessageTemplate seasonalTemplate(String source) {
+    return new MessageTemplate(source, List.of("event", "until"));
   }
 
   private static MessageTemplate fixed(String source) {

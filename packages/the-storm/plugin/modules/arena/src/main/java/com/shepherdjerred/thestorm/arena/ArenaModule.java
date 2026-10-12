@@ -5,19 +5,24 @@ import com.shepherdjerred.thestorm.arena.adapter.db.JooqLeaderboardStore;
 import com.shepherdjerred.thestorm.arena.adapter.db.JooqRewardStore;
 import com.shepherdjerred.thestorm.arena.adapter.db.JooqSnapshotStore;
 import com.shepherdjerred.thestorm.arena.adapter.db.JooqSurvivalProgress;
+import com.shepherdjerred.thestorm.arena.adapter.discord.ArenaDiscordPosts;
+import com.shepherdjerred.thestorm.arena.adapter.discord.ArenaTopCommand;
 import com.shepherdjerred.thestorm.arena.adapter.paper.ArenaPaper;
 import com.shepherdjerred.thestorm.arena.adapter.paper.ChunkKeeper;
 import com.shepherdjerred.thestorm.arena.adapter.paper.ServerHooks;
 import com.shepherdjerred.thestorm.arena.adapter.remote.FliptSurvivalGate;
+import com.shepherdjerred.thestorm.arena.app.ArenaEvents;
 import com.shepherdjerred.thestorm.arena.app.ArenaPresence;
 import com.shepherdjerred.thestorm.arena.app.ArenaRecords;
 import com.shepherdjerred.thestorm.arena.app.RewardPayer;
+import com.shepherdjerred.thestorm.arena.domain.arena.ArenaDefinition;
 import com.shepherdjerred.thestorm.arena.domain.survival.SurvivalContent;
 import com.shepherdjerred.thestorm.arena.domain.survival.SurvivalMapContent;
 import com.shepherdjerred.thestorm.core.config.ConfigFiles;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.StormModule;
 import com.shepherdjerred.thestorm.core.world.ChunkTickets;
+import com.shepherdjerred.thestorm.discord.app.DiscordRelay;
 import com.shepherdjerred.thestorm.economy.app.CrystalFormatter;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import java.util.function.Function;
@@ -29,13 +34,16 @@ import org.jspecify.annotations.Nullable;
  * content under {@code plugins/TheStorm/arena}. Rewards are paid through the economy module, which
  * must be enabled first.
  *
- * <p>Publishes {@link ArenaPresence} (who is in an arena) and {@link ArenaRecords} (best waves).
+ * <p>Publishes {@link ArenaPresence} (who is in an arena), {@link ArenaRecords} (best waves) and
+ * {@link ArenaEvents} (game transitions). When the discord module is on, lobbies, rewarding boss
+ * waves and finished runs are announced there.
  */
 public final class ArenaModule implements StormModule {
 
   private final Function<ModuleContext, ServerHooks> hooks;
   private @Nullable ArenaPaper paper;
   private @Nullable FliptSurvivalGate gate;
+  private ArenaEvents.@Nullable Subscription discordPosts;
 
   /** Arena chunks are held through core's shared {@link ChunkTickets}. */
   public ArenaModule() {
@@ -98,10 +106,36 @@ public final class ArenaModule implements StormModule {
     paper = started;
     context.services().provide(ArenaPresence.class, started.presence());
     context.services().provide(ArenaRecords.class, leaderboard);
+    context.services().provide(ArenaEvents.class, started.events());
+    discordPosts =
+        context
+            .services()
+            .find(DiscordRelay.class)
+            .map(
+                relay ->
+                    ArenaDiscordPosts.start(
+                        relay,
+                        leaderboard,
+                        content.arenas().stream().map(ArenaDefinition::id).toList(),
+                        context.logger()))
+            .map(posts -> started.events().subscribe(posts::accept))
+            .orElse(null);
+    context
+        .services()
+        .find(DiscordRelay.class)
+        .ifPresent(
+            relay ->
+                relay.addCommand(
+                    new ArenaTopCommand(leaderboard, content.arenas(), context.logger())
+                        .command()));
   }
 
   @Override
   public void disable() {
+    if (discordPosts != null) {
+      discordPosts.close();
+      discordPosts = null;
+    }
     if (paper != null) {
       paper.stop();
       paper = null;

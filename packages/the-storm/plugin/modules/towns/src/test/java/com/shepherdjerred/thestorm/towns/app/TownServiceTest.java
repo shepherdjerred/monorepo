@@ -175,6 +175,26 @@ final class TownServiceTest {
   }
 
   @Test
+  void savedFoundingsAndClaimsAreMilestonesButUndoneOnesAreNot() {
+    var milestones = new ArrayList<TownMilestones.Milestone>();
+    var _ = service.milestones().subscribe(milestones::add);
+
+    var town = ok(service.found(NOMAD, "Carthage", 1));
+    assertThat(milestones).as("nothing before the save").isEmpty();
+    store.succeed();
+    ok(service.claim(OWNER, chunk(1, 0)));
+    store.succeed();
+    ok(service.claim(OWNER, chunk(2, 0)));
+    store.fail();
+
+    assertThat(milestones)
+        .containsExactly(
+            new TownMilestones.Milestone.Founded("Carthage", NOMAD),
+            new TownMilestones.Milestone.Grew(TOWN_A, Fixtures.townA().name(), 2));
+    assertThat(town.name()).isEqualTo("Carthage");
+  }
+
+  @Test
   void foundingAndDeletingATown() {
     var town = ok(service.found(NOMAD, "Carthage", 1));
     store.succeed();

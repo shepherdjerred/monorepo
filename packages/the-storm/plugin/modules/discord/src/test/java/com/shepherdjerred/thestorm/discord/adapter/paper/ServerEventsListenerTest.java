@@ -12,12 +12,14 @@ import com.shepherdjerred.thestorm.core.schedule.Cancellable;
 import com.shepherdjerred.thestorm.core.schedule.Scheduler;
 import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.discord.app.DiscordConfig;
+import com.shepherdjerred.thestorm.discord.app.DiscordGateway;
 import com.shepherdjerred.thestorm.discord.app.DiscordRelay;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executor;
@@ -54,7 +56,40 @@ final class ServerEventsListenerTest {
     var config = ConfigFiles.load(SHIPPED, DiscordConfig.class);
     var relay =
         new DiscordRelay(
-            config, posts::add, new DiscordRelay.Game(new SilentChat(), new Inline(), List::of));
+            config,
+            new DiscordGateway() {
+              @Override
+              public void post(String text) {
+                posts.add(text);
+              }
+
+              @Override
+              public void ping(String text, List<String> roles) {
+                posts.add(text);
+              }
+
+              @Override
+              public void presence(String text) {
+                // The bot status is not under test here.
+              }
+
+              @Override
+              public void dm(long discordUser, String text) {
+                posts.add(text);
+              }
+            },
+            new DiscordRelay.Game(new SilentChat(), new Inline(), List::of, () -> Instant.EPOCH),
+            new com.shepherdjerred.thestorm.discord.app.LinkedAccounts() {
+              @Override
+              public java.util.Optional<Long> dmTarget(java.util.UUID player) {
+                return java.util.Optional.empty();
+              }
+
+              @Override
+              public java.util.Optional<java.util.UUID> playerOf(long discordUser) {
+                return java.util.Optional.empty();
+              }
+            });
     listener = new ServerEventsListener(relay, new VanillaPlainText(new EmptyLanguage()), sealed);
   }
 
@@ -158,9 +193,10 @@ final class ServerEventsListenerTest {
       task.run();
     }
 
+    /** Presence refreshes are dropped; these tests only read posts. */
     @Override
     public Cancellable runOnMainThreadLater(Duration delay, Runnable task) {
-      throw new UnsupportedOperationException();
+      return () -> {};
     }
 
     @Override

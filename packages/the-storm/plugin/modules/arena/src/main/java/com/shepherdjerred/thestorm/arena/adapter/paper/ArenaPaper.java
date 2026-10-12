@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.arena.adapter.paper;
 
+import com.shepherdjerred.thestorm.arena.app.ArenaEvents;
 import com.shepherdjerred.thestorm.arena.app.ArenaPresence;
 import com.shepherdjerred.thestorm.arena.app.RewardPayer;
 import com.shepherdjerred.thestorm.arena.app.store.LeaderboardStore;
@@ -37,6 +38,7 @@ public final class ArenaPaper {
   private final ArenaPermissions permissions;
   private final List<ArenaRunner> runners;
   private final List<SettlementProvisioner> provisioners;
+  private final ArenaEventHub events;
   private boolean stopped;
 
   private ArenaPaper(
@@ -45,13 +47,15 @@ public final class ArenaPaper {
       List<Listener> listeners,
       Cancellable clock,
       ArenaPermissions permissions,
-      List<SettlementProvisioner> provisioners) {
+      List<SettlementProvisioner> provisioners,
+      ArenaEventHub events) {
     this.arenas = arenas;
     this.runners = List.copyOf(runners);
     this.listeners = List.copyOf(listeners);
     this.clock = clock;
     this.permissions = permissions;
     this.provisioners = List.copyOf(provisioners);
+    this.events = events;
   }
 
   /**
@@ -92,6 +96,7 @@ public final class ArenaPaper {
   public static ArenaPaper start(ModuleContext module, Content data, App app, ServerHooks hooks) {
     var content = data.colosseum();
     var context = new PaperContext(module);
+    var events = new ArenaEventHub(context);
     var keys = new Keys(module.plugin());
     var settings = content.settings();
     var texts = new Texts(settings.messages());
@@ -118,7 +123,8 @@ public final class ArenaPaper {
             app.formatter(),
             app.leaderboard(),
             app.rewards(),
-            settings.rewards().vault());
+            settings.rewards().vault(),
+            events);
     var problems = new ArrayList<String>();
     var runners = new ArrayList<ArenaRunner>();
     for (var definition : content.arenas()) {
@@ -231,7 +237,8 @@ public final class ArenaPaper {
         listener -> context.server().getPluginManager().registerEvents(listener, module.plugin()));
     var clock = module.scheduler().repeatOnMainThread(TICK, TICK, arenas::tick);
     snapshots.load(player -> arenas.arenaOf(player).isPresent());
-    var started = new ArenaPaper(arenas, runners, listeners, clock, permissions, provisioners);
+    var started =
+        new ArenaPaper(arenas, runners, listeners, clock, permissions, provisioners, events);
     started.prepare(context);
     return started;
   }
@@ -321,6 +328,11 @@ public final class ArenaPaper {
   /** Who is in which arena, for other modules. */
   public ArenaPresence presence() {
     return arenas;
+  }
+
+  /** Accepted transitions of the classic arenas, for other modules. */
+  public ArenaEvents events() {
+    return events;
   }
 
   /** Stops every game (restoring everyone inside), the clock, listeners and permissions. */

@@ -142,4 +142,29 @@ public interface MatchStore {
 
   /** The player's rows for one match, for diagnostics. */
   CompletableFuture<List<PlayerRow>> players(UUID matchId);
+
+  /** {@code player}'s totals over every recorded match. */
+  CompletableFuture<Career> career(UUID player);
+
+  /**
+   * A player's record across matches. Matches they left or that were stopped count only towards
+   * {@code matches}.
+   *
+   * @param matches matches recorded with them in
+   * @param wins matches their team won
+   * @param losses matches their team lost
+   * @param kills kills credited
+   * @param deaths deaths
+   */
+  record Career(int matches, int wins, int losses, int kills, int deaths) {
+
+    public Career {
+      if (matches < 0 || wins < 0 || losses < 0 || kills < 0 || deaths < 0) {
+        throw new IllegalArgumentException("career totals must not be negative");
+      }
+      if (wins + losses > matches) {
+        throw new IllegalArgumentException("more results than matches");
+      }
+    }
+  }
 }

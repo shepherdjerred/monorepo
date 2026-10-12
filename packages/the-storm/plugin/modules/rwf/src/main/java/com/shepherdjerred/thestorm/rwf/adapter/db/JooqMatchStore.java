@@ -171,6 +171,27 @@ public final class JooqMatchStore implements MatchStore {
                 .toList());
   }
 
+  @Override
+  public CompletableFuture<Career> career(UUID player) {
+    return database.read(
+        dsl -> {
+          var rows =
+              dsl
+                  .selectFrom(RWF_MATCH_PLAYER)
+                  .where(RWF_MATCH_PLAYER.PLAYER.eq(player.toString()))
+                  .fetch()
+                  .stream()
+                  .map(JooqMatchStore::toRow)
+                  .toList();
+          return new Career(
+              rows.size(),
+              (int) rows.stream().filter(row -> row.outcome() == Outcome.WIN).count(),
+              (int) rows.stream().filter(row -> row.outcome() == Outcome.LOSE).count(),
+              rows.stream().mapToInt(PlayerRow::kills).sum(),
+              rows.stream().mapToInt(PlayerRow::deaths).sum());
+        });
+  }
+
   private static RwfMatchPlayerRecord fetch(DSLContext dsl, UUID matchId, UUID player) {
     var row =
         dsl.selectFrom(RWF_MATCH_PLAYER)

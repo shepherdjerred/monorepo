@@ -6,6 +6,7 @@ import com.shepherdjerred.thestorm.core.players.PlayerDirectory;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.core.schedule.Cancellable;
+import com.shepherdjerred.thestorm.discord.app.DiscordRelay;
 import com.shepherdjerred.thestorm.economy.app.CrystalFormatter;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import com.shepherdjerred.thestorm.npcs.app.NpcActions;
@@ -17,6 +18,7 @@ import com.shepherdjerred.thestorm.quests.adapter.content.CollectionsLoader;
 import com.shepherdjerred.thestorm.quests.adapter.content.ContentLoader;
 import com.shepherdjerred.thestorm.quests.adapter.content.InkDialogue;
 import com.shepherdjerred.thestorm.quests.adapter.db.JooqQuestStore;
+import com.shepherdjerred.thestorm.quests.adapter.discord.QuestDiscordPosts;
 import com.shepherdjerred.thestorm.quests.adapter.luckperms.LuckPermsGrants;
 import com.shepherdjerred.thestorm.quests.adapter.paper.QuestsPaper;
 import com.shepherdjerred.thestorm.quests.adapter.paper.Registries;
@@ -111,6 +113,10 @@ public final class QuestsModule implements StormModule {
                 context.logger(),
                 context.analytics()),
             ink);
+    services
+        .find(DiscordRelay.class)
+        .map(relay -> new QuestDiscordPosts(relay, context.plugin().getServer(), context.logger()))
+        .ifPresent(posts -> service.onMilestone(posts::accept));
     services.provide(QuestHooks.class, service);
     services.provide(QuestProgress.class, service);
     tick = paper.install(service, paper.dialogJournal(service));

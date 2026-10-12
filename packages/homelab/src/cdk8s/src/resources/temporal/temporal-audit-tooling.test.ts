@@ -201,6 +201,19 @@ describe("temporal homelab audit tooling configuration", () => {
   });
 });
 
+describe("temporal Storm Discord announcements", () => {
+  it("gives the infra worker the bridge bot token and #server channel", async () => {
+    const yaml = await synthesizeApp();
+
+    expect(yaml).toContain(
+      "itemPath: vaults/v64ocnykdqju4ui6j6pua56xw4/items/yqp25gif2grm5gkg6l44e6vmxy",
+    );
+    expect(yaml).toContain("name: STORM_DISCORD_BOT_TOKEN");
+    expect(yaml).toContain("name: STORM_DISCORD_CHANNEL_ID");
+    expect(yaml).toContain('value: "1558666120507162634"');
+  });
+});
+
 describe("temporal homelab audit tooling worker topology", () => {
   it("does not synthesize retired default-worker resources", async () => {
     const yaml = await synthesizeApp();

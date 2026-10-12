@@ -116,6 +116,18 @@ only answer a greeting or a remark in the lobby; they do not read your
 messages during the round, and each bot waits a while between lines so chat
 never floods.
 
+## On Discord
+
+The server's Discord channel announces when someone opens an empty Search and
+Destroy lobby, so others know to join. It also posts each result: the map, the
+winning team, the players on it and how long the match lasted, or everyone
+still in the match after a draw. Rounds with only bots and rounds an admin stops
+are not posted.
+
+In that channel, `/rwf-stats <player>` shows a player's matches, wins, losses,
+kills and deaths, and `/status` shows who is online and which games are
+running.
+
 ## Rewards
 
 A win pays 3 Crystals and a loss pays 1. The payout shrinks as the share of

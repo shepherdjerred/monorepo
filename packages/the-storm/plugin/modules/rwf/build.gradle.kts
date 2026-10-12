@@ -1,7 +1,11 @@
 plugins { id("storm.jooq-conventions") }
 
-// Match rewards are paid in crystals through the economy module's Wallets port.
-dependencies { implementation(project(":economy")) }
+dependencies {
+  // Match rewards are paid in crystals through the economy module's Wallets port.
+  implementation(project(":economy"))
+  // Lobbies and results are announced through the discord module's relay port.
+  implementation(project(":discord"))
+}
 
 // The Java Flipt identifiers must agree with the shared managed flag inventory.
 val verifyManagedRwfFlag =

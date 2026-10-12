@@ -1,4 +1,4 @@
-plugins { id("storm.module-conventions") }
+plugins { id("storm.jooq-conventions") }
 
 val libs = the<VersionCatalogsExtension>().named("libs")
 
@@ -7,6 +7,8 @@ dependencies {
   implementation(project(":chat"))
   implementation(project(":economy"))
   implementation(project(":towns"))
+  // Discord /mail sends letters through the mail module's Letters port.
+  implementation(project(":mail"))
   implementation(libs.findLibrary("jda").get()) {
     // Voice is not used; opus natives are large.
     exclude(module = "opus-java")
