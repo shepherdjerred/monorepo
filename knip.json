@@ -164,7 +164,6 @@
         "src/interface-generator.ts",
         "src/utils.ts",
         "src/comment-parser.ts",
-        "src/helm-types.ts",
         "src/yaml-comment-filters.ts",
         "src/yaml-comment-regex-parser.ts",
         "src/yaml-preprocess.ts",
@@ -412,7 +411,6 @@
     "scripts/observability/local-stack/**"
   ],
   "ignoreDependencies": [
-    "@commitlint/types",
     "@eslint-community/eslint-plugin-eslint-comments",
     "@eslint/compat",
     "@eslint/eslintrc",
@@ -528,7 +526,6 @@
     "swiftlint",
     "tflint",
     "uv",
-    "velero",
     "xcodegen"
   ]
 }
