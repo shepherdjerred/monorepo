@@ -139,7 +139,10 @@ that retained volumes would grow the CI pool with every build. That is the
 disk-full failure the July freezes began with.
 
 A claim that outlives any possible workflow means Woodpecker failed to delete
-it. The `WoodpeckerWorkspaceClaimLeaked` alert reports it.
+it. The `ci-workspace-reaper` Temporal Schedule deletes such claims, and the
+terminal step pods left with them, every 15 minutes. The
+`WoodpeckerWorkspaceClaimLeaked` alert fires only when a leak survives two
+hours past that age, which means the reaper is paused or failing.
 
 ## What is watched
 

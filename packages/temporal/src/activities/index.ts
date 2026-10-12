@@ -41,6 +41,7 @@ import { reportDeliveryActivities } from "./reports/report-delivery.ts";
 import { tasknotesCanaryActivities } from "./maintenance/tasknotes-canary.ts";
 import { reportFreshnessActivities } from "./reports/report-freshness.ts";
 import { ciIoObservabilityActivities } from "./maintenance/ci-io-observability.ts";
+import { ciWorkspaceReaperActivities } from "./maintenance/ci-workspace-reaper.ts";
 import { freshrssActivities } from "./maintenance/freshrss.ts";
 import { scoutBryanBucksActivities } from "./scout/scout-bryan-bucks.ts";
 import { fliptFlagInventoryActivities } from "./flipt-flag-inventory.ts";
@@ -92,6 +93,7 @@ export const infraActivities = {
   ...tasknotesCanaryActivities,
   ...golinkClusterActivities,
   ...ciIoObservabilityActivities,
+  ...ciWorkspaceReaperActivities,
   ...opsActivities,
 };
 

@@ -124,6 +124,7 @@ describe("central Workflow schedule routing", () => {
     ["ci-trivy-db-refresh", "runTrivyDbRefreshWorkflow", "2 hours"],
     ["ci-io-telemetry-daily", "runCiIoTelemetry", "30 minutes"],
     ["turbo-cache-clean-daily", "runTurboCacheCleanWorkflow", "30 minutes"],
+    ["ci-workspace-reaper", "runCiWorkspaceReaperWorkflow", "1 hour"],
   ] as const;
 
   it.each(definitions)(
@@ -510,6 +511,8 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "runMainVulnScanWorkflow",
   "runLinkRotScanWorkflow",
   "runTurboCacheCleanWorkflow",
+  // One bounded list-and-delete Activity on the infra queue.
+  "runCiWorkspaceReaperWorkflow",
   // Awaits one scan activity (clone + trivy fs) then report delivery and the
   // Alertmanager publish. No workflow-level sleeps; each activity carries its
   // own startToCloseTimeout + retry budget.
