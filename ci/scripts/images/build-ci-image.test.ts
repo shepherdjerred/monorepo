@@ -45,6 +45,7 @@ test("defines CI images independently", () => {
   expect(ciImageDefinition("ci-base").sourceFiles).toEqual([
     "ci/ci-image/Dockerfile",
     ".mise.toml",
+    "mise.lock",
   ]);
   expect(ciImageDefinition("ci-playwright").sourceFiles).toEqual([
     "ci/ci-playwright/Dockerfile",
@@ -111,7 +112,11 @@ test("fingerprints only the selected CI image source files", async () => {
       },
     ),
   ).toMatch(/^[\da-f]{64}$/);
-  expect(requested).toEqual(["ci/ci-image/Dockerfile", ".mise.toml"]);
+  expect(requested).toEqual([
+    "ci/ci-image/Dockerfile",
+    ".mise.toml",
+    "mise.lock",
+  ]);
   await expect(
     ciImageSourceFingerprint(
       {

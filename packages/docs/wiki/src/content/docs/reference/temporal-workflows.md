@@ -150,6 +150,7 @@ Only corpus capture and context-refresh are scheduled.
 | kometa-daily                     | daily 04:30                      | deterministic | Plex metadata sync                            |
 | ci-bun-cache-gc                  | every 5 min                      | deterministic | Bun cache GC                                  |
 | ci-trivy-db-refresh              | every 6 hours                    | deterministic | Trivy database refresh                        |
+| ci-workspace-reaper              | every 15 min (paused)            | deterministic | leaked CI pods and workspace claims deleted   |
 | dns-audit                        | daily 06:00                      | deterministic | logs                                          |
 | golink-sync                      | daily 05:00                      | deterministic | golink reconcile                              |
 | temporal-failure-watch           | every 5 min                      | deterministic | durable alert occurrence                      |

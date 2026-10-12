@@ -36,9 +36,27 @@ export const CI_BUN_CACHE_GC_ACTIVITY = "ci-bun-cache-gc";
  * Woodpecker deletes the claim when its workflow ends, and no workflow outlives
  * its 270-minute timeout; six hours is comfortably past both. A leak is a
  * Woodpecker cleanup failure (its teardown stops at the first error, before the
- * claim), and each one holds space on the CI pool until someone deletes it.
+ * claim), and each one holds space on the CI pool until the CI workspace reaper
+ * deletes it. The reaper selects leaks by the same age
+ * (CI_WORKSPACE_LEAK_AGE_SECONDS in
+ * packages/temporal/src/activities/maintenance/ci-workspace-reaper.ts).
  */
 export const CI_WORKSPACE_LEAK_AGE_SECONDS = 6 * 60 * 60;
+
+/**
+ * How long past the leak age the leak alert waits for the reaper.
+ *
+ * `runCiWorkspaceReaperWorkflow` runs every 15 minutes, and the infra queue it
+ * runs on executes one Activity at a time, for at most 45 minutes. A claim two
+ * hours past the leak age means the reaper itself is failing or paused.
+ */
+export const CI_WORKSPACE_REAPER_GRACE_SECONDS = 2 * 60 * 60;
+
+/**
+ * `maintenance_job` label on the CI workspace reaper's success metric
+ * (CI_WORKSPACE_REAP_ACTIVITY in ci-workspace-reaper.ts).
+ */
+export const CI_WORKSPACE_REAP_ACTIVITY = "ci-workspace-reap";
 export const TURBO_CACHE_CLEAN_ACTIVITY = "turbo-cache-clean";
 
 function maintenanceWorkerStaleExpression(
@@ -452,16 +470,17 @@ and on ()
         {
           alert: "WoodpeckerWorkspaceClaimLeaked",
           annotations: {
-            summary: "A Woodpecker workspace claim outlived its workflow",
+            summary:
+              "A Woodpecker workspace claim outlived its workflow and the reaper",
             description: escapePrometheusTemplate(
-              "Workspace claim {{ $labels.persistentvolumeclaim }} is older than any workflow can run, so Woodpecker failed to delete it. It holds space on the CI node's pool until someone deletes the claim in woodpecker-ci, and its storage class deletes the volume with it.",
+              "Workspace claim {{ $labels.persistentvolumeclaim }} is older than any workflow can run plus the CI workspace reaper's deadline, so neither Woodpecker nor the reaper deleted it. Check that the ci-workspace-reaper Temporal Schedule is unpaused and succeeding, and whether a pod that is not terminal still mounts the claim. It holds space on the CI node's pool until it is deleted.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(`(
   time() - max by (namespace, persistentvolumeclaim) (
     kube_persistentvolumeclaim_created{namespace="woodpecker-ci"}
   )
-) > ${String(CI_WORKSPACE_LEAK_AGE_SECONDS)}
+) > ${String(CI_WORKSPACE_LEAK_AGE_SECONDS + CI_WORKSPACE_REAPER_GRACE_SECONDS)}
 and on (namespace, persistentvolumeclaim)
   max by (namespace, persistentvolumeclaim) (
     kube_persistentvolumeclaim_info{
@@ -470,6 +489,23 @@ and on (namespace, persistentvolumeclaim)
     }
   )`),
           for: "10m",
+          labels: {
+            severity: "warning",
+            category: "ci",
+            namespace: "woodpecker-ci",
+          },
+        },
+        {
+          alert: "WoodpeckerWorkspaceReaperStale",
+          annotations: {
+            summary: "The CI workspace reaper has not succeeded in an hour",
+            description:
+              "runCiWorkspaceReaperWorkflow deletes leaked Woodpecker step pods and workspace claims every 15 minutes on the infra worker, and has not completed successfully in the last hour. Leaks accumulate on the CI node until it recovers. A paused schedule, or a restarted worker that has not run it yet, reports no metric and does not fire this alert; WoodpeckerWorkspaceClaimLeaked covers that case.",
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            `time() - max(kubernetes_maintenance_last_success_timestamp_seconds{maintenance_job="${CI_WORKSPACE_REAP_ACTIVITY}"}) > 3600`,
+          ),
+          for: "15m",
           labels: {
             severity: "warning",
             category: "ci",

@@ -1,5 +1,9 @@
 import { describe, expect, test } from "vitest";
-import { buildPipelineSteps } from "#src/pipeline/steps.ts";
+import { z } from "zod";
+import {
+  buildPipelineSteps,
+  credentiallessHostedAutomationSteps,
+} from "#src/pipeline/steps.ts";
 import { selectSteps } from "#src/pipeline/select.ts";
 
 const IMAGES = {
@@ -513,6 +517,39 @@ test("the sites lane deploys active sites when their paths change", () => {
     dryRun.commands.join("\n"),
   )?.[1];
   expect(loop?.split(" ")).not.toContain("ts-mc");
+});
+
+test("Glitter Boys artifacts are excluded from shared CI", async () => {
+  const steps = allSteps();
+  for (const key of ["sites", "pr-dryrun"]) {
+    const commands = steps
+      .find((entry) => entry.key === key)
+      ?.commands.join("\n");
+    expect(commands).toBeDefined();
+    expect(commands).not.toContain("glitter-boys");
+  }
+  for (const pipeline of [steps, credentiallessHostedAutomationSteps(IMAGES)]) {
+    const verify = pipeline
+      .find((entry) => entry.key === "verify")
+      ?.commands.join("\n")
+      .replaceAll(String.raw`'\''`, "'");
+    expect(verify).toContain("--filter='!@shepherdjerred/glitter-boys'");
+    expect(verify).toContain(
+      "--filter='!@shepherdjerred/glitter-boys-launcher'",
+    );
+  }
+  // Homelab imports the publication contract through a workspace dependency.
+  // Its inherited ^build must not compile the native application in CI.
+  const launcher = z
+    .object({ scripts: z.record(z.string(), z.string()) })
+    .parse(
+      await Bun.file(
+        new URL("../../glitter-boys-launcher/package.json", import.meta.url),
+      ).json(),
+    );
+  expect(launcher.scripts["build"]).toBeUndefined();
+  expect(launcher.scripts["build:local"]).toContain("cargo build");
+  expect(launcher.scripts["test:ci"]).toBeUndefined();
 });
 
 test("the sites lane selects every declared per-site change filter", async () => {

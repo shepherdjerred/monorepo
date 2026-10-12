@@ -25,6 +25,10 @@ import {
   type ReviewStateResult,
 } from "@shepherdjerred/code-review/github";
 import { fetchHeadPushedAt } from "@shepherdjerred/code-review/head-pushed-at";
+import {
+  GitHubRateLimitError,
+  restCache,
+} from "@shepherdjerred/code-review/github-request";
 import { buildSignalEvent } from "./review-gate-signal.ts";
 import { warnIfFirstReviewIsOversized } from "./review-gate-policy.ts";
 import {
@@ -409,17 +413,67 @@ export async function verifyPassBeforeAccepting(input: {
 export type PollLoopState = {
   passStreak: number;
   lastPollError: Error | null;
+  /** Epoch ms GitHub asked us to wait until after a rate-limit refusal. */
+  resumeAt?: number | null;
 };
 
-/** Record a retryable poll error and reset the pass streak; rethrow anything else. */
+/**
+ * Record a retryable poll error and reset the pass streak; rethrow anything
+ * else. A rate-limit refusal is retryable too: the shared REST bucket refills
+ * on a schedule, so the gate waits for the reset (see nextPollDelayMs) instead
+ * of reporting a quota blip as a review failure. The review evidence the gate
+ * requires is unchanged.
+ */
 function noteTransientPollError(state: PollLoopState, error: unknown): void {
   const err = error instanceof Error ? error : new Error(String(error));
+  if (err instanceof GitHubRateLimitError) {
+    state.lastPollError = err;
+    state.passStreak = 0;
+    state.resumeAt = err.resumeAt;
+    console.warn(
+      `GitHub rate limit reached for the review gate; resuming at ${new Date(err.resumeAt).toISOString()} if before the deadline: ${err.message}`,
+    );
+    return;
+  }
   if (!isRetryablePollError(err)) throw err;
   state.lastPollError = err;
   state.passStreak = 0;
   console.warn(
     `Transient error querying GitHub for the review gate (will retry until the deadline): ${err.message}`,
   );
+}
+
+/** Log how many REST reads were charged versus revalidated for free. */
+export function logRestUsage(): void {
+  console.log(
+    `GitHub REST reads: ${String(restCache.fetched)} charged, ${String(restCache.notModified)} not modified (uncharged 304)`,
+  );
+}
+
+/** Jitter added after a rate-limit reset so concurrent gates do not stampede. */
+const RATE_LIMIT_JITTER_MS = 5000;
+
+/**
+ * Milliseconds to sleep before the next tick: the poll interval, stretched to
+ * a pending rate-limit reset, and never past the deadline so the final tick
+ * and timeout report still run on time.
+ */
+export function nextPollDelayMs(
+  state: PollLoopState,
+  intervalSeconds: number,
+  deadline: number,
+  now: number = Date.now(),
+): number {
+  const interval = intervalSeconds * 1000;
+  const resumeAt = state.resumeAt ?? null;
+  const limited =
+    resumeAt === null
+      ? interval
+      : Math.max(
+          interval,
+          resumeAt - now + Math.floor(Math.random() * RATE_LIMIT_JITTER_MS),
+        );
+  return Math.max(0, Math.min(limited, deadline - now + 1));
 }
 
 /**
@@ -450,6 +504,7 @@ export async function pollOnce(
     return false;
   }
   state.lastPollError = null;
+  state.resumeAt = null;
   const passed = concludeTick(config, poll, observed, startedAt);
   const confirmation = confirmPass(passed, state.passStreak);
   state.passStreak = confirmation.streak;

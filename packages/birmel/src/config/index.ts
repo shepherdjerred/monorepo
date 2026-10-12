@@ -58,9 +58,6 @@ function loadCoreConfig(environment: Environment) {
       reasoningEffort: environment["LLM_REASONING_EFFORT"] ?? "medium",
       maxTokens: parseNumber(environment["LLM_MAX_OUTPUT_TOKENS"], 4096),
     },
-    imageGeneration: {
-      enabled: environment["IMAGE_GENERATION_ENABLED"] === "true",
-    },
     agent: {
       maxSteps: parseNumber(environment["AGENT_MAX_STEPS"], 12),
       responseTimeoutMs: parseNumber(

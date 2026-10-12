@@ -80,9 +80,14 @@ export function reconnectDelayMs(consecutiveFailures: number): number {
  * no longer existed. Re-attempting is the only way to reclaim it, and
  * `install()` throws only while a singleton is actually present.
  */
-function installTemporalRuntime(): void {
+function installTemporalRuntime(
+  options: Pick<
+    ScoutTemporalSupervisorOptions,
+    "metrics" | "namespace" | "stage"
+  >,
+): void {
   try {
-    installConfiguredRuntime();
+    installConfiguredRuntime(options);
   } catch (error: unknown) {
     // Narrow on purpose: an already-present singleton is the one benign
     // outcome. Anything else is a real failure and must not be swallowed.
@@ -105,7 +110,13 @@ export function isRuntimeAlreadyInstalled(error: unknown): boolean {
   );
 }
 
-function installConfiguredRuntime(): void {
+function installConfiguredRuntime(
+  options: Pick<
+    ScoutTemporalSupervisorOptions,
+    "metrics" | "namespace" | "stage"
+  >,
+): void {
+  const { metrics } = options;
   Runtime.install({
     logger: new DefaultLogger("INFO", (entry) => {
       const fields = {
@@ -122,6 +133,27 @@ function installConfiguredRuntime(): void {
         forward: {},
         filter: { core: "INFO", other: "WARN" },
       },
+      // The same exporter shape as `workflow-worker.ts`, so one rule reads
+      // both: `temporal_worker_` prefix, `_total` counters, seconds.
+      ...(metrics === undefined
+        ? {}
+        : {
+            metrics: {
+              metricPrefix: "temporal_worker_",
+              globalTags: {
+                worker: `scout-${options.stage}-${metrics.role}`,
+                worker_role: metrics.role,
+                environment: options.stage,
+                temporal_namespace: options.namespace,
+              },
+              prometheus: {
+                bindAddress: metrics.bindAddress,
+                countersTotalSuffix: true,
+                unitSuffix: true,
+                useSecondsForDurations: true,
+              },
+            },
+          }),
     },
   });
 }
@@ -192,6 +224,19 @@ export type ScoutTemporalSupervisorOptions = {
   readonly stage: ScoutStage;
   readonly activities: ScoutTemporalActivityGroups;
   readonly callGraphTracing: boolean;
+  /**
+   * Where the embedded Workers publish the SDK's own metrics, or `undefined`
+   * for none.
+   *
+   * These Workers run every unversioned Scout Workflow, so without this the
+   * SDK's per-attempt failure counters exist only for the versioned
+   * stable/candidate pods. The server's `failed_workflow_tasks` records a
+   * Workflow Task that keeps failing only once, so it cannot see one that is
+   * wedged: a prod dispatcher Task failed 172 times over 24 hours with no
+   * metric anywhere counting the attempts.
+   */
+  readonly metrics:
+    { readonly bindAddress: string; readonly role: string } | undefined;
   /**
    * The workers this process polls with, from its runtime role's capability
    * table. An empty set is legitimate: the `gateway` role needs the Temporal
@@ -265,7 +310,7 @@ export async function createConnectedRuntime(
   options: ScoutTemporalSupervisorOptions,
   queueClasses: ReadonlySet<ScoutTemporalQueueClass>,
 ): Promise<ConnectedRuntime> {
-  installTemporalRuntime();
+  installTemporalRuntime(options);
   const nativeConnection =
     options.address === undefined
       ? await NativeConnection.connect()

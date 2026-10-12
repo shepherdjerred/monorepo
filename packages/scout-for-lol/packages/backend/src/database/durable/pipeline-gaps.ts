@@ -30,6 +30,10 @@ import {
  * - {@link oldestReadyNotificationIntentAt}: an instruction that is ready to
  *   send and is not being sent.
  * - {@link observationLag}: matches are being found, but late.
+ * - {@link lastCompletePostMatchPollAt}: matches are not being looked for at
+ *   all. The observation lag reads zero over an empty window, so it cannot
+ *   tell stopped discovery from a quiet hour; a 2026-10-10 prod discovery
+ *   stall went 24 hours with every family here at zero.
  *
  * Every read is bounded by a time window or by a state's population and rides
  * an index that already exists; each function names the one it uses.
@@ -215,4 +219,24 @@ export async function observationLag(
     p90Seconds: Math.max(0, row.p90Seconds),
     maxSeconds: Math.max(0, row.maxSeconds),
   };
+}
+
+/**
+ * When post-match discovery last completed a poll with complete evidence.
+ *
+ * `BotState` is a single row (id 1) written by
+ * `league/tasks/recovery/app-state.ts`, which advances `lastSuccessfulPollAt`
+ * only when a poll closes with its whole tail seen. A poll that never closes,
+ * whether its run is wedged or its Schedule is not starting runs, leaves the
+ * column where it was, so its age is the time discovery has been stopped.
+ * `null` means no poll has ever completed. Primary-key read.
+ */
+export async function lastCompletePostMatchPollAt(
+  db: Db,
+): Promise<Date | null> {
+  const row = await db.botState.findUnique({
+    where: { id: 1 },
+    select: { lastSuccessfulPollAt: true },
+  });
+  return row?.lastSuccessfulPollAt ?? null;
 }

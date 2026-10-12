@@ -8,6 +8,7 @@ import {
   validateScenario,
   type MapScenario as Scenario,
 } from "./scenario.ts";
+import { trainingScenarioFor } from "./training-scenarios.ts";
 
 /** Remap just the disposable match's roster; region and schematic identity stay original. */
 export function controlledMap(raw: unknown, scenario: Scenario): MapContent {
@@ -36,12 +37,28 @@ export function controlledMap(raw: unknown, scenario: Scenario): MapContent {
   });
 }
 
+function selectScenario(
+  mapId: string,
+  map: MapContent,
+  ownedScenario: Scenario,
+  requested?: Scenario,
+): Scenario {
+  validateScenario(ownedScenario, map);
+  if (!isDeepStrictEqual(ownedScenario, scenarioFor(mapId)))
+    throw new Error("Owned scenario differs from its neutral registry");
+  if (requested === undefined) return ownedScenario;
+  validateScenario(requested, map);
+  if (!isDeepStrictEqual(requested, trainingScenarioFor(mapId)))
+    throw new Error("Training scenario differs from its frozen catalog");
+  return requested;
+}
+
 /** Private owned-content copy for one fixed map; it cannot change ordinary live rotation. */
 export async function stageMap(
   source: string,
   output: string,
   mapId: string,
-  options: { duel: boolean; mapTool: string },
+  options: { duel: boolean; mapTool: string; trainingScenario?: Scenario },
 ) {
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(mapId))
     throw new Error("Invalid map selection");
@@ -51,12 +68,15 @@ export async function stageMap(
   );
   if (map.id !== mapId)
     throw new Error("Map selection differs from folder identity");
-  const scenario = MapScenario.parse(
+  const ownedScenario = MapScenario.parse(
     await Bun.file(path.join(folder, "scenario.json")).json(),
   );
-  validateScenario(scenario, map);
-  if (!isDeepStrictEqual(scenario, scenarioFor(mapId)))
-    throw new Error("Owned scenario differs from its neutral registry");
+  const scenario = selectScenario(
+    mapId,
+    map,
+    ownedScenario,
+    options.trainingScenario,
+  );
   await mkdir(output, { recursive: false, mode: 0o700 });
   const content = path.join(output, "TheStorm");
   await mkdir(content);
@@ -81,6 +101,11 @@ export async function stageMap(
   }
   const selected = path.join(rwf, "maps", mapId);
   await cp(folder, selected, { recursive: true });
+  if (!isDeepStrictEqual(scenario, ownedScenario))
+    await Bun.write(
+      path.join(selected, "scenario.json"),
+      JSON.stringify(scenario, null, 2) + "\n",
+    );
   if (options.duel) {
     await Bun.write(
       path.join(selected, "map.yml"),

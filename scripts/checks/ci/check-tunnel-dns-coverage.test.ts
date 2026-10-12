@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -11,10 +12,9 @@ import {
   type Zone,
 } from "./check-tunnel-dns-coverage.ts";
 
-const cloudflare = new URL(
-  "../../../packages/homelab/src/tofu/cloudflare/",
-  import.meta.url,
-).pathname;
+const cloudflare = fileURLToPath(
+  new URL("../../../packages/homelab/src/tofu/cloudflare/", import.meta.url),
+);
 
 async function baselineFixture() {
   const [root, module, registry, zones] = await Promise.all([

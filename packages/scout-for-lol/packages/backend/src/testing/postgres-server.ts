@@ -124,7 +124,7 @@ function runAsPostgresOwner(cmd: string[]): RunResult {
 function binariesHint(toolError: string): Error {
   return new Error(
     `${toolError}\nPostgres binaries not found or not working — run \`mise install\` at the repo root ` +
-      `(pinned ubi:theseus-rs/postgresql-binaries in .mise.toml).`,
+      `(pinned github:theseus-rs/postgresql-binaries in .mise.toml).`,
   );
 }
 

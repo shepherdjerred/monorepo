@@ -3,6 +3,7 @@ import { validateSetup, pairedSetup } from "./setup.ts";
 import { DuelStateSchema } from "#learning/duels.ts";
 import wire from "#learning-wire";
 import { scenarioFor } from "#learning/maps/scenario.ts";
+import { trainingScenarioFor } from "#learning/maps/training-scenarios.ts";
 
 function fixture(external: boolean) {
   const match = external
@@ -92,6 +93,29 @@ test("paired setup retains stable personalities, teams, kits and starting condit
       validateSetup(authored.setup, authored.state),
     ),
   ).not.toThrow();
+});
+
+test("accepts only the frozen controlled training starts with matching native roster positions", () => {
+  const input = fixture(true);
+  const scenario = trainingScenarioFor("training-yard");
+  input.setup.scenario = scenario;
+  for (const fighter of input.setup.roster) {
+    const spawn = scenario.spawns.find((entry) => entry.team === fighter.team);
+    if (spawn === undefined) throw new Error("Missing training spawn");
+    fighter.position = spawn.position;
+    fighter.yaw = spawn.yaw;
+    fighter.pitch = spawn.pitch;
+  }
+  expect(validateSetup(input.setup, input.state).scenario).toEqual(scenario);
+  expect(() =>
+    validateSetup(
+      {
+        ...input.setup,
+        scenario: { ...scenario, id: "training-yard-unreviewed" },
+      },
+      input.state,
+    ),
+  ).toThrow("neutral or training scenario");
 });
 
 test("rejects changed candidate identities, duplicate bodies, join order and altered native spawn conditions", () => {

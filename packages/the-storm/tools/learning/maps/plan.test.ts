@@ -7,6 +7,10 @@ import {
   mapScenarios,
   validateScenario,
 } from "./scenario.ts";
+import {
+  trainingMapScenarios,
+  trainingScenarioFor,
+} from "./training-scenarios.ts";
 
 test("admits the owned catalog and rejects map-set or scenario identity changes", async () => {
   const source = path.resolve(
@@ -16,6 +20,18 @@ test("admits the owned catalog and rejects map-set or scenario identity changes"
   const admitted = await trainingMaps(source, false);
   const registered = mapScenarios.map((scenario) => scenario.map).sort();
   expect(admitted.maps.map((entry) => entry.map)).toEqual(registered);
+  expect(trainingMapScenarios.map((scenario) => scenario.map)).toEqual(
+    registered,
+  );
+  for (const scenario of trainingMapScenarios) {
+    const neutral = mapScenarios.find((entry) => entry.map === scenario.map);
+    expect(neutral).toBeDefined();
+    expect(scenario.mapSha256).toBe(neutral?.mapSha256);
+    expect(scenario.region).toEqual(neutral?.region);
+    expect(scenario.sourceTeams).toEqual(neutral?.sourceTeams);
+    expect(scenario.spawnPolicy).toBe("authored");
+    expect(trainingScenarioFor(scenario.map)).toEqual(scenario);
+  }
   const diagnostic = await trainingMaps(source, true);
   expect(diagnostic.maps.map((entry) => entry.map)).toEqual(["training-yard"]);
   expect(() =>

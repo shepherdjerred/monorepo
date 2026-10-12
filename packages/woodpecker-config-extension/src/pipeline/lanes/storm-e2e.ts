@@ -128,6 +128,7 @@ function stormSmokeStep(images: CiImages): CiStep {
         "bunfig.toml",
         "package.json",
         ".mise.toml",
+        "mise.lock",
         "patches/**",
         "turbo.json",
         "ci/scripts/bun-install.sh",

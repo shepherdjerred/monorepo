@@ -31,10 +31,19 @@ import { getOpsSnapshotRuleGroups } from "./rules/ops-snapshot.ts";
 import { getStormBrainRuleGroups } from "./rules/storm-brain.ts";
 import { createBuildkitdMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/buildkitd.ts";
 import { getAlertingControlRuleGroups } from "./rules/platform/alerting-control.ts";
+import { getGlitterLauncherReleaseRuleGroups } from "./rules/glitter-boys-launcher.ts";
 
 export function createPrometheusMonitoring(chart: Chart) {
   createWoodpeckerMonitoring(chart);
   createBuildkitdMonitoring(chart);
+
+  // The release deadline remains monitored independently of telemetry activation.
+  const launcherReleaseGroups = getGlitterLauncherReleaseRuleGroups();
+  if (launcherReleaseGroups.length > 0)
+    new PrometheusRule(chart, "glitter-launcher-release-rules", {
+      metadata: { namespace: "prometheus", labels: { release: "prometheus" } },
+      spec: { groups: launcherReleaseGroups },
+    });
 
   // Keep the control signal, but do not let pending informational alerts make
   // InfoInhibitor fire before Alertmanager has received anything to inhibit.

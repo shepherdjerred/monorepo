@@ -24,6 +24,7 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { postgresClusterPodLabels } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/cluster-label.ts";
 
 export const PHOENIX_HTTP_PORT = 6006;
 // The nonroot image's fixed UID/GID.
@@ -228,7 +229,7 @@ export function createPhoenixDeployment(chart: Chart) {
           to: [
             {
               podSelector: {
-                matchLabels: { cluster_name: "phoenix-postgresql" },
+                matchLabels: postgresClusterPodLabels("phoenix-postgresql"),
               },
             },
           ],

@@ -123,6 +123,11 @@ if ! rg -Fq 'WOODPECKER_BACKEND=local' "$MAC_CI_BOOTSTRAP" ||
   echo "macOS agent must run the local backend and carry the label the native lanes select on" >&2
   exit 1
 fi
+if ! rg -Fq 'mise_current ||' "$TOOLCHAIN" ||
+  ! rg -Fq 'sort -V' "$TOOLCHAIN"; then
+  echo "toolchain must replace a mise older than MISE_BOOTSTRAP_VERSION" >&2
+  exit 1
+fi
 if ! rg -Fq 'AGENT_BUILD_PATH="$HOME/.woodpecker/builds"' "$MAC_CI_BOOTSTRAP" ||
   ! rg -Fq 'mise settings set trusted_config_paths "$AGENT_BUILD_PATH"' "$MAC_CI_BOOTSTRAP" ||
   ! rg -Fq 'WOODPECKER_BACKEND_LOCAL_TEMP_DIR=$AGENT_BUILD_PATH' "$MAC_CI_BOOTSTRAP"; then
@@ -158,6 +163,7 @@ mkdir -p "$TEST_ROOT/profiles"
 cat >"$TEST_ROOT/profiles/mise" <<'EOF'
 #!/usr/bin/env bash
 printf '%s\n' "$*" >>"$CI_PROFILE_COMMAND_LOG"
+printf 'locked=%s\n' "${MISE_LOCKED:-}" >>"$CI_PROFILE_COMMAND_LOG"
 if [ "$1" = which ]; then printf '/test/tools/gh\n'; fi
 EOF
 cat >"$TEST_ROOT/profiles/id" <<'EOF'
@@ -186,6 +192,10 @@ for profile in automation deployment tofu; do
     exit 1
   fi
   rg -Fxq reshim "$profile_log"
+  if rg -q '^locked=$' "$profile_log"; then
+    echo "$profile ran mise without locked mode" >&2
+    exit 1
+  fi
 done
 rg -Fxq 'ln -sf /test/tools/gh /usr/local/bin/gh' "$TEST_ROOT/automation.log"
 

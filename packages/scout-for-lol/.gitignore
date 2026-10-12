@@ -27,6 +27,10 @@ junit.xml
 !packages/frontend/public/generated/scout-showcase/*.png
 !packages/frontend/src/data/generated/
 !packages/frontend/src/data/generated/scout-showcase-assets.json
+# Derived from the committed showcase PNGs by
+# packages/frontend/scripts/optimize-showcase-images.ts on every dev/build.
+packages/frontend/public/generated/scout-showcase/optimized/
+packages/frontend/src/data/generated/scout-showcase-variants.json
 !packages/docs-site/src/assets/generated/
 !packages/docs-site/src/assets/generated/*.png
 !packages/docs-site/src/assets/generated/*.json

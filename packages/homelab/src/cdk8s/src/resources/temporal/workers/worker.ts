@@ -15,6 +15,7 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/audit-rbac.ts";
 import { createTemporalAgentWorker } from "./agent-worker.ts";
 import { createTemporalWorkerCrdReaderRbac } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/crd-rbac.ts";
+import { createTemporalWorkerCiWorkspaceReaperRbac } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/ci-workspace-reaper-rbac.ts";
 import {
   glitterContextEnv,
   glitterCorpusEnv,
@@ -216,6 +217,9 @@ export function createTemporalWorkerDeployment(
 
   // Read-only CRD access for homelab-crd-imports-daily. See ./crd-rbac.ts.
   createTemporalWorkerCrdReaderRbac(chart, [infraServiceAccount]);
+
+  // Deletes leaked Woodpecker step pods and workspace claims in woodpecker-ci.
+  createTemporalWorkerCiWorkspaceReaperRbac(chart, [infraServiceAccount]);
 
   const freshRssManifestVolume = Volume.fromConfigMap(
     chart,
