@@ -1,3 +1,4 @@
+import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import { describe, expect, test, vi } from "vitest";
 import {
   createProductAnalytics,
@@ -33,7 +34,7 @@ describe("Scout product analytics adapter", () => {
       {
         analyticsInstallationId: "7316395a-b815-49d8-9794-9b56b3ce81c0",
         analyticsLifecycleTracked: true,
-        serverId: "1310000000000000001",
+        serverId: DiscordGuildIdSchema.parse("1310000000000000001"),
       },
       {
         event: "guild_installed",
@@ -62,7 +63,7 @@ describe("Scout product analytics adapter", () => {
       {
         analyticsInstallationId: "7316395a-b815-49d8-9794-9b56b3ce81c0",
         analyticsLifecycleTracked: true,
-        serverId: "1310000000000000001",
+        serverId: DiscordGuildIdSchema.parse("1310000000000000001"),
       },
       {
         event: "core_output_delivered",
@@ -115,7 +116,7 @@ describe("Scout product analytics adapter", () => {
     analytics.captureBucksMember(
       {
         analyticsUserId: "5a9c8c6e-1ad6-4bb5-a3de-7c5d9a0ef123",
-        serverId: "1310000000000000001",
+        serverId: DiscordGuildIdSchema.parse("1310000000000000001"),
       },
       {
         event: "bryan_bucks_member_activity",
@@ -172,7 +173,7 @@ describe("Scout product analytics adapter", () => {
         {
           analyticsInstallationId: "7316395a-b815-49d8-9794-9b56b3ce81c0",
           analyticsLifecycleTracked: false,
-          serverId: "1310000000000000001",
+          serverId: DiscordGuildIdSchema.parse("1310000000000000001"),
         },
         {
           event: "first_subscription_created",

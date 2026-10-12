@@ -5,132 +5,9 @@ sidebar:
   order: 8
 ---
 
-The main CI pipeline normally writes repository-backed homelab releases. The
-first Woodpecker release uses the one-time bootstrap procedure below because
-the new pipeline cannot run until its own cluster resources have been released.
-
-This page is for reading the pipeline while it works, and for knowing what a
-failed stage means.
-
-## Bootstrap Woodpecker across the cutover
-
-1. Before merging the cutover PR, inspect the live `main` ruleset. If its old
-   Buildkite required check cannot complete, apply the targeted GitHub OpenTofu
-   ruleset change below with the old context override. Inspect the plan first:
-   it must change only the admin role's bypass to **pull-request-only** and keep
-   `buildkite/monorepo/pr` required. Review the PR's local verification and
-   chart dry run, then use that bypass to merge the PR. Do not report the
-   retired Buildkite check as passing. Confirm the merged commit is the current
-   `main`. Reserve a Woodpecker build number by canceling a pipeline before it
-   starts release work; do not reuse a number that published charts.
-2. From a clean checkout of that exact `main` commit, run the bootstrap script
-   once with `--dry-run`. It validates the chart inventory and the exact root
-   request without changing the cluster.
-3. Supply an ArgoCD admin token and the ChartMuseum credentials through the
-   configured credential wrapper, then run the same command without
-   `--dry-run`. The script suspends root auto-sync, publishes the complete chart
-   set at the reserved number plus 1,000,000, and calls `release-root` with an
-   exact revision and stable request ID. The old `buildkite` account is removed
-   during this release, so its token cannot complete the child syncs.
-4. [Enroll the vault-scoped 1Password service account](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/tofu/README.md#unattended-local-1password-access)
-   once in the operator's login Keychain. Apply the operator-run `argocd`
-   OpenTofu stack through that wrapper to create the `woodpecker` account token
-   in its 1Password item. Confirm the `ci-argocd-credentials`
-   Kubernetes Secret contains the new key and that its token can read `apps`.
-   Check the `apps` ArgoCD Application and Woodpecker server, agent, and config
-   extension health. Set the repository's approval allowlist to the deployed
-   extension's trusted actors, while keeping `require_approval=all_events` and
-   only `volumes` trusted. Trigger a new PR pipeline and require its
-   `ci/woodpecker/pr/ci-complete` status to pass. The first main GitHub OpenTofu
-   apply defers the required-check switch until this status exists on a real
-   PR head. The proof remains valid after that PR merges. Trigger a current-main
-   Woodpecker pipeline after that proof, watch its GitHub OpenTofu workflow,
-   then verify the GitHub ruleset requires the new context.
-5. Only after the new required check is active and healthy, retire the old
-   Buildkite requirement and service through the repository-owned release path.
-   Confirm the final ruleset has the declared PR-only admin bypass and does not
-   allow direct-push bypass.
-
-The premerge OpenTofu change uses the existing 1Password-backed backend and
-GitHub token. Run this only from the reviewed cutover branch. Stop if the plan
-changes the required contexts or any resource besides the `main` ruleset.
-The normal GitHub OpenTofu apply later uses the Woodpecker context default.
-
-```bash
-export TF_VAR_github_token='op://v64ocnykdqju4ui6j6pua56xw4/34gzcrhwdm34lpadyly3rcsu44/TOFU_GITHUB_TOKEN'
-scripts/onepassword/with-service-account.sh \
-  op run --env-file packages/homelab/src/tofu/service-account.env -- \
-  tofu -chdir=packages/homelab/src/tofu/github plan -input=false \
-  -target=github_repository_ruleset.monorepo_main \
-  -var=required_ci_status_context=buildkite/monorepo/pr
-scripts/onepassword/with-service-account.sh \
-  op run --env-file packages/homelab/src/tofu/service-account.env -- \
-  tofu -chdir=packages/homelab/src/tofu/github apply -input=false \
-  -target=github_repository_ruleset.monorepo_main \
-  -var=required_ci_status_context=buildkite/monorepo/pr
-unset TF_VAR_github_token
-```
-
-After merging, run the bootstrap script from the exact `main` commit:
-
-```bash
-bootstrap=packages/homelab/scripts/ci/bootstrap-woodpecker.ts
-commit="EXACT_MAIN_SHA"
-number="RESERVED_BUILD_NUMBER"
-bun --no-install "$bootstrap" "$commit" "$number" --dry-run
-bun --no-install "$bootstrap" "$commit" "$number"
-```
-
-The script refuses a dirty checkout, a commit other than current `main`, or a
-missing credential. It leaves the generated release inventory in a temporary
-directory named in its output. If publication or reconciliation fails, inspect
-that inventory and the ArgoCD operation before retrying with the same number.
-
-Woodpecker stores `approval_allowed_users` in its database, so the chart's
-`WOODPECKER_DEFAULT_APPROVAL_MODE=all_events` does not populate the allowlist.
-After confirming the deployed global configuration extension is exclusive,
-update the repository through the [Woodpecker repository
-API](https://woodpecker-ci.org/api). Import `TRUSTED_ACTORS` from the
-[extension source](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/authorization.ts)
-so the two gates admit the same accounts. The token remains in the process
-environment and is never printed:
-
-```bash
-WOODPECKER_API_TOKEN='op://v64ocnykdqju4ui6j6pua56xw4/covttsojandjk7fx62a3dbk7em/WOODPECKER_API_TOKEN' \
-scripts/onepassword/with-service-account.sh op run -- bun -e '
-import { TRUSTED_ACTORS } from "./packages/woodpecker-config-extension/src/authorization.ts";
-const url = "https://woodpecker.sjer.red/api/repos/1";
-const headers = {
-  Authorization: `Bearer ${process.env.WOODPECKER_API_TOKEN}`,
-  "Content-Type": "application/json",
-};
-const read = async () => {
-  const response = await fetch(url, { headers });
-  if (!response.ok) throw Error(`read: ${response.status}`);
-  return response.json();
-};
-const before = await read();
-if (before.full_name !== "shepherdjerred/monorepo" ||
-    before.require_approval !== "all_events" ||
-    !before.trusted?.volumes || before.trusted?.network ||
-    before.trusted?.security) throw Error("unexpected repository security settings");
-if (JSON.stringify(before.approval_allowed_users) !== JSON.stringify(TRUSTED_ACTORS)) {
-  const response = await fetch(url, {
-    method: "PATCH", headers,
-    body: JSON.stringify({ approval_allowed_users: TRUSTED_ACTORS }),
-  });
-  if (!response.ok) throw Error(`update: ${response.status}`);
-}
-const after = await read();
-if (JSON.stringify(after.approval_allowed_users) !== JSON.stringify(TRUSTED_ACTORS) ||
-    after.require_approval !== "all_events") throw Error("approval settings did not persist");
-console.log("trusted CI actors admitted; all-events approval remains enabled");
-'
-```
-
-Start a fresh PR pipeline after this update. Existing blocked pipelines still
-need individual approval and must not be treated as evidence of automatic
-admission.
+The main Woodpecker pipeline publishes and reconciles repository-backed homelab
+releases. Use this guide to inspect the release sequence and recover a failed
+stage through the repository-owned release workflow.
 
 ## The sequence
 
@@ -223,6 +100,12 @@ same-source drift into this release.
 So a stuck child usually clears on the next release rather than needing a hand
 sync.
 
+Scout child syncs allow the same 40-minute cold report-lake startup budget as
+their Kubernetes probes, plus five minutes for readiness and later sync waves.
+Temporal child syncs cover the schema-migration deadline. The root CI lane
+allows two hours for these sequential waits and the remaining release work;
+every child must still apply successfully and pass the scoped health gate.
+
 ## If pruning looks wrong
 
 Root pruning does not trust ArgoCD's cached `OutOfSync` or `requiresPruning`
@@ -248,6 +131,14 @@ new site bucket, add its `Read`, `Write`, `List`, and `Tagging` actions to that
 identity without changing its credential or other bucket grants. Wait for the
 1Password operator to update the `seaweedfs-s3-credentials` Secret in the
 `seaweedfs` namespace.
+
+Wait for the updated configuration to reach the gateway's mounted file, then
+[reload its identities with SIGHUP](https://github.com/seaweedfs/seaweedfs/blob/4.47/weed/s3api/s3api_server.go#L441):
+
+```bash
+kubectl exec -n seaweedfs deployment/seaweedfs-s3 -- \
+  sh -c 'test "$(cat /proc/1/comm)" = weed && kill -HUP 1'
+```
 
 Use the existing 1Password-backed site credential to probe the new bucket with
 `aws s3api list-objects-v2`. It must succeed for the new bucket and return
@@ -276,6 +167,45 @@ pin exists, do not retry the push. The comparison digest and commit-back key
 come from `packages/version-catalog/src/catalog.json`; verify that the
 real bake target has an exact image entry there and that the publisher is
 reading that structured catalog rather than the generated runtime projection.
+
+## Bootstrap a configuration-extension graph change
+
+The deployed Woodpecker configuration extension selects the workflows for its
+own pull request. The
+[`GLOBAL_SELECTOR_INPUTS` definition](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/pipeline/inputs.ts)
+makes changes under `packages/woodpecker-config-extension` inputs to every
+workflow. If a graph change retires a failing lane, the old extension selects
+that lane for the replacement PR and prevents the ordinary merge gate from
+passing. The
+[`images` release lane](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/pipeline/lanes/release.ts)
+and
+[`version-commit-back` lane](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/pipeline/lanes/ci-images.ts)
+run only on `main`, so those jobs cannot break the cycle before merge. The
+[PR-only repository administrator bypass](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/tofu/github/rulesets.tf)
+provides the narrow landing path for this recovery.
+
+Use this exceptional path only when the new graph removes or replaces the
+blocking workflow:
+
+1. Get explicit repository-owner authorization for an admin merge exception.
+2. Keep the graph change in its Git-Spice PR. Run the configuration extension's
+   focused build, typecheck, tests, and lint locally.
+3. Wait for the exact PR head's automated review, `verify`, and every unaffected
+   required check. Inspect the failed workflow logs and confirm that each
+   failure belongs only to a lane removed or replaced by the new graph.
+4. Have the repository owner merge that reviewed PR with the forge's admin
+   branch-protection override. This is the supported landing mechanism for the
+   bootstrap; do not mark the failing retired lane successful or modify its
+   required-check result.
+5. Monitor the resulting exact `main` pipeline through `images` and
+   `version-commit-back`. Wait for ArgoCD to reconcile
+   `woodpecker-woodpecker-config-extension`, then confirm that its running image
+   digest changed to the newly committed pin.
+6. Retry the affected PR and confirm that the replacement graph is selected.
+
+Never patch the live Deployment or image pin to break this cycle. The exception
+lands reviewed source; the ordinary image release, pin commit, and ArgoCD
+reconciliation still provide the deployment evidence.
 
 ## If GHCR rejects a workload pull
 

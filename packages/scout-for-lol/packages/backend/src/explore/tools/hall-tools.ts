@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { tool } from "ai";
 import { z } from "zod";
 import {
@@ -26,7 +27,7 @@ export type HallExploreCapability = {
  * the only other thing the web route requires.
  */
 export async function resolveHallCapability(
-  guildIds: readonly string[],
+  guildIds: readonly DiscordGuildId[],
 ): Promise<HallExploreCapability | null> {
   const enabled: DiscordGuildId[] = [];
   for (const raw of guildIds) {
@@ -46,7 +47,7 @@ const HallCellSchema = z.strictObject({
   holders: z.array(z.string()),
   games: z.array(
     z.strictObject({
-      matchId: z.string(),
+      matchId: RiotMatchIdSchema,
       gameEndAt: z.string(),
       holder: z.string(),
     }),
@@ -61,7 +62,7 @@ const HallCellSchema = z.strictObject({
  */
 export async function serverNames(
   db: ExtendedPrismaClient,
-  guildIds: readonly string[],
+  guildIds: readonly DiscordGuildId[],
 ): Promise<Map<string, string>> {
   const rows = await db.guildInstall.findMany({
     where: { serverId: { in: [...guildIds] } },

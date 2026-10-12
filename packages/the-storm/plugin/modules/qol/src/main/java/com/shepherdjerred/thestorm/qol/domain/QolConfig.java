@@ -11,11 +11,8 @@ import java.util.regex.Pattern;
  * time module.
  */
 public record QolConfig(
-    String freeFor,
-    String cooldown,
-    String warmup,
+    String searchInterval,
     String landingMemory,
-    int cost,
     int batchSize,
     int minGap,
     int band,
@@ -27,13 +24,8 @@ public record QolConfig(
 
   public QolConfig {
     biomes = List.copyOf(biomes);
-    freeFor = positive(freeFor, "freeFor");
-    cooldown = positive(cooldown, "cooldown");
-    warmup = nonNegative(warmup, "warmup");
+    searchInterval = positive(searchInterval, "searchInterval");
     landingMemory = positive(landingMemory, "landingMemory");
-    if (cost < 0) {
-      throw new IllegalArgumentException("cost must not be negative: " + cost);
-    }
     if (batchSize < 1 || batchSize > 64) {
       throw new IllegalArgumentException("batchSize must be 1-64: " + batchSize);
     }
@@ -54,16 +46,8 @@ public record QolConfig(
     }
   }
 
-  public Duration freeForDuration() {
-    return Duration.parse(freeFor);
-  }
-
-  public Duration cooldownDuration() {
-    return Duration.parse(cooldown);
-  }
-
-  public Duration warmupDuration() {
-    return Duration.parse(warmup);
+  public Duration searchIntervalDuration() {
+    return Duration.parse(searchInterval);
   }
 
   public Duration landingMemoryDuration() {

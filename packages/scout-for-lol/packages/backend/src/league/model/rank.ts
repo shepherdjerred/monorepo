@@ -1,3 +1,4 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import {
   type LoadingScreenRankState,
   type PlayerConfigEntry,
@@ -67,7 +68,7 @@ function ranksFromEntries(entries: readonly RawSummonerLeague[]): Ranks {
 }
 
 async function fetchRanksByPuuid(input: {
-  puuid: string;
+  puuid: LeaguePuuid;
   region: Region;
   source: "rank" | "rank-by-puuid";
   context: Record<string, string>;
@@ -91,7 +92,7 @@ async function fetchRanksByPuuid(input: {
 
 /** Fetch the published Solo/Duo, Flex, and Ranked 5s ranks for a loading-screen player. */
 export async function getRankByPuuid(
-  puuid: string,
+  puuid: LeaguePuuid,
   region: Region,
 ): Promise<RankLookupResult> {
   return fetchRanksByPuuid({

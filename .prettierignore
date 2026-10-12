@@ -4,6 +4,8 @@ node_modules/
 # Build outputs
 dist/
 build/
+# Build-pipeline source, not build output.
+!packages/mc-harness/src/build/
 storybook-static/
 storybook-site/
 **/bin/
@@ -85,7 +87,6 @@ packages/discord-video-stream/
 
 # Agent skills contain vendored/reference material whose source formatting is preserved.
 packages/dotfiles/dot_agents/skills/**
-packages/discord-plays-pokemon/packages/frontend/public/emulatorjs/
 
 # Vendored Data Dragon snapshot (League of Legends static data)
 packages/scout-for-lol/packages/data/src/data-dragon/assets/
@@ -118,6 +119,9 @@ packages/webring/README.md
 # Test fixtures are content under test, not code to format.
 **/__tests__/fixtures/**
 **/e2e/fixtures/**
+
+# Versioned map payloads are byte-hash-bound by details.provenance.json.
+packages/the-storm/server/owned/plugins/TheStorm/rwf/maps/**/details.json
 
 # Explore agent skill bodies are model instructions, not prose to reflow:
 # prettier's markdown printer restructures them (it indents lines following a

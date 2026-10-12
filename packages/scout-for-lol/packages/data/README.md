@@ -9,6 +9,23 @@ re-exported from here. This package owns everything those contracts must not
 know about: Prisma's storage domain, Discord and Riot shapes, and the static
 snapshot below.
 
+Data Dragon URL getters can run in browsers. Cached-image validation and base64
+helpers require Bun and load Node's file-URL conversion when reading local
+assets, so importing the shared module does not initialize server-only code.
+
+## Raw Riot captures and ability icons
+
+Raw match, spectator and timeline schemas validate known fields while retaining
+the complete captured JSON, including future fields, nested arrays, nulls and
+absent optional values. Application protocol schemas remain strict. The lake
+stores complete analytical documents alongside its typed projections; spectator
+credentials remain excluded from analytical data.
+
+The static-data update downloads passive and Q/W/E/R ability icons from the
+same Data Dragon version as the champion facts. The generated asset manifest
+includes the `ability` kind and uses `Champion-slot` identities, such as
+`Ahri-Q`. Regenerate the manifest after changing committed assets.
+
 ## Bryan Bucks storability
 
 `src/model/bucks/bryan-bucks-money.ts` is the Prisma edge of the Bucks economy.
@@ -23,6 +40,9 @@ Prisma `Int` column is 32 bits wide, and a value bound for one has to fit.
   `StorableBucksAmount` **is** a `BucksAmount` — the brands intersect — so
   checking storability never forces a conversion on the way back out, and only
   code that genuinely requires a storable value has to say so.
+- `StorableDareChallengerStakeSchema` and `StorableDarePileOnSchema` do the
+  same for the two Dare inputs a user supplies. Each is still a
+  `StorableBucksStake`, so the ledger takes it unchanged.
 - `storableStake`, `storableAmount`, and `storableDelta` assert an
   already-branded value against that bound at a persistence boundary. Callers
   that must not throw (user input, quote arithmetic) use the schemas'
@@ -96,6 +116,27 @@ Arena augment generation also preserves IDs 71 and 250 from CommunityDragon
 15.23, which appear in recorded matches but are absent from the current
 catalog. `--arena-augments-only` regenerates that cache against the committed
 version without refreshing unrelated assets.
+
+Match history uses `getCachedAugmentNameById` and the separate generated
+`assets/augment-names.json` catalog. The client's English `cherry-augments.json`
+contains recorded IDs from Arena, ARAM Mayhem, and Classic that are absent from
+the detailed Arena endpoint. Generation merges the retained CommunityDragon
+16.19 client snapshot with the current pinned patch, preserving removed IDs;
+current names win only when the augment's internal identity is unchanged.
+Duplicate IDs, conflicting identities, malformed names, and unknown runtime
+IDs fail loudly. Name-only entries do not fabricate report metadata or icons;
+`getCachedArenaAugmentById` continues to return only detailed Arena assets.
+Both the full refresh and `--arena-augments-only` rebuild the name catalog.
+To regenerate only recorded names at the committed version:
+
+```bash
+bun run update-data-dragon --augment-names-only
+```
+
+Classic loading-screen backgrounds retain the 2 MiB asset budget. If the
+upstream PNG exceeds it, the updater recompresses it losslessly, preserving
+dimensions, pixels and metadata. It still fails if the compressed asset exceeds
+the budget; it does not reduce resolution or relax the size check.
 
 The refresh runs weekly via the `scout-data-dragon-weekly-refresh` Temporal
 schedule. Typed readers live beside the assets in `src/data-dragon/`

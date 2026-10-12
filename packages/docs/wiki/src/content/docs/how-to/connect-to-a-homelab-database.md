@@ -5,31 +5,31 @@ sidebar:
   order: 12
 ---
 
-The homelab runs five PostgreSQL clusters under the Zalando
-[postgres-operator](https://github.com/zalando/postgres-operator). None of them
-is reachable from your laptop directly — there is no ingress, no `LoadBalancer`,
-and no tailnet hostname. Every connection goes through the Kubernetes API, either
-by running `psql` inside the pod or by port-forwarding the service.
+Connect through the Kubernetes API, either with `psql` inside a database pod or
+with a service port-forward. The Zalando
+[postgres-operator](https://github.com/zalando/postgres-operator) manages the
+clusters; they have no public database ingress.
 
 ## The clusters
 
-| Cluster                 | Namespace    | User       | Databases                         |
-| ----------------------- | ------------ | ---------- | --------------------------------- |
-| `bugsink-postgresql`    | `bugsink`    | `bugsink`  | `bugsink_db`                      |
-| `grafana-postgresql`    | `prometheus` | `grafana`  | `grafana`                         |
-| `scout-beta-postgresql` | `scout-beta` | `scout`    | `scout`                           |
-| `scout-prod-postgresql` | `scout-prod` | `scout`    | `scout`                           |
-| `temporal-postgresql`   | `temporal`   | `temporal` | `temporal`, `temporal_visibility` |
+| Cluster                 | Namespace    | User         | Databases                         |
+| ----------------------- | ------------ | ------------ | --------------------------------- |
+| `bugsink-postgresql`    | `bugsink`    | `bugsink`    | `bugsink_db`                      |
+| `grafana-postgresql`    | `prometheus` | `grafana`    | `grafana`                         |
+| `phoenix-postgresql`    | `phoenix`    | `phoenix`    | `phoenix_db`                      |
+| `scout-beta-postgresql` | `scout-beta` | `scout`      | `scout`                           |
+| `scout-prod-postgresql` | `scout-prod` | `scout`      | `scout`                           |
+| `temporal-postgresql`   | `temporal`   | `temporal`   | `temporal`, `temporal_visibility` |
+| `woodpecker-postgresql` | `woodpecker` | `woodpecker` | `woodpecker_db`                   |
 
 They are defined in
 [`packages/homelab/src/cdk8s/src/resources/postgres/`](https://github.com/shepherdjerred/monorepo/tree/main/packages/homelab/src/cdk8s/src/resources/postgres).
-Each is a single instance on PostgreSQL 16, scheduled on `torvalds` with a
-node-local ZFS volume.
+Each is a single instance with a node-local ZFS volume. Read the running server
+version before selecting a dump or restore client.
 
 :::caution[Every command needs an explicit namespace]
-The `admin@torvalds` kube context defaults to namespace `default`, and no
-database lives there. A command without `-n` will silently look in the wrong
-place.
+No database lives in namespace `default`. Always pass `-n`; do not depend on
+the current context's namespace.
 :::
 
 ## Find the credentials
@@ -42,19 +42,22 @@ The operator generates one Kubernetes Secret per user, named
 ```bash
 kubectl get secret -n temporal \
   temporal.temporal-postgresql.credentials.postgresql.acid.zalan.do \
-  -o jsonpath='{.data.password}' | base64 -d
+  -o name
 ```
+
+This confirms the Secret exists without printing its values. Supply passwords
+directly to the client environment, as in the port-forward example below.
 
 ## Option 1 — psql inside the pod
 
 The quickest path, and the one that needs nothing installed locally. Every
 cluster is a single instance, so the master pod is always `<cluster>-0` and the
 container is `postgres`. Connecting as the `postgres` superuser inside the pod
-needs no password.
+needs no password when the process runs as the container's `postgres` user.
 
 ```bash
 kubectl exec -n temporal -it temporal-postgresql-0 -c postgres -- \
-  psql -U postgres temporal
+  su postgres -c 'psql -U postgres temporal'
 ```
 
 If you would rather not assume the pod name, select it by label:
@@ -98,3 +101,4 @@ Reach it with `kubectl exec -n postal -it postal-mariadb-0 -- mariadb -u postal 
 - [Cut a homelab release](/how-to/cut-a-homelab-release/)
 - [Pause or debug a schedule](/how-to/pause-or-debug-a-schedule/)
 - [Temporal PostgreSQL's TLS identity](/explanation/temporal/postgresql-tls-identity/)
+- [Upgrade a homelab PostgreSQL major version](/how-to/upgrade-a-homelab-postgresql-major-version/)

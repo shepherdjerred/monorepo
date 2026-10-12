@@ -2,11 +2,13 @@ import { z } from "zod";
 import { getAllChampions } from "#src/model/riot/champion-registry.ts";
 import { QueueTypeSchema } from "#src/model/core/state.ts";
 import { TimelineEventParticipantRoleSchema } from "#src/model/reports/timeline-lake-columns.ts";
-import type {
-  ChallengeCoverage,
-  ChallengeEvidenceMatch,
-  ChallengeProgress,
-} from "#src/model/progression/challenge-public.ts";
+import {
+  ChallengeFrozenValueSchema,
+  type ChallengeFrozenValue,
+  type ChallengeCoverage,
+  type ChallengeEvidenceMatch,
+  type ChallengeProgress,
+} from "#src/model/progression/challenge-evidence.ts";
 import {
   validateContractComplexity,
   validateDistinctGoal,
@@ -116,12 +118,6 @@ export const ChallengeMatchPredicateSchema: z.ZodType<ChallengeMatchPredicate> =
       }),
     ]),
   );
-
-export const ChallengeFrozenValueSchema = z.strictObject({
-  value: z.string().min(1),
-  label: z.string().min(1),
-});
-export type ChallengeFrozenValue = z.infer<typeof ChallengeFrozenValueSchema>;
 
 export type ChallengeProgressGoal =
   | { kind: "count"; target: number }

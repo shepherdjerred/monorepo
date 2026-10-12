@@ -9,7 +9,7 @@
 # Stages: `cctools` (Apple's ld64 + libtapi, the slow part, cached across
 # tags), `image` (the published toolchain), `smoke` (builds every sample).
 ARG SWIFT_IMAGE=swift:6.4.0-noble@sha256:64bab762bc73a3fda6d9ebc559258bd6d7660c10a705bb25ecacad2f99d066f9
-ARG LLVM_VERSION=22
+ARG LLVM_VERSION=23
 
 # ── Apple's open-source ld64 and cctools, with Apple's libtapi so ld64 reads
 # the SDK's .tbd stubs. Built from the same Swift image as the final stage: it
@@ -47,12 +47,12 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ARG LLVM_VERSION
 ARG SDK=27
 # Must match the rust pin in the repo's .mise.toml.
-ARG RUST_VERSION=1.98.1
+ARG RUST_VERSION=1.99.0
 # Not RCODESIGN_*: rcodesign reads every RCODESIGN_ variable as configuration.
 # renovate: datasource=github-releases depName=indygreg/apple-platform-rs
 ARG APPLE_CODESIGN_VERSION=0.29.0
 
-# LLVM matching rustc's (1.98.1 → LLVM 22.1): the Rust static archive carries
+# LLVM matching rustc's (1.99.0 → LLVM 23.1): the Rust static archive carries
 # bitcode that older LLVM tools (lipo, ar, LTO) cannot read.
 # Unpinned on purpose: Ubuntu drops superseded point releases from the
 # archive, so an exact `pkg=version` pin turns every upstream security respin
@@ -82,7 +82,7 @@ RUN apt-get update \
 # Apple's ld64 is the one Darwin linker: it reads the SDK's .tbd stubs through
 # libtapi, links Mac Catalyst (whose re-exported macOS-only libraries LLVM's
 # ld64.lld rejects), and implements the relocatable `ld -r` links Swift Build
-# uses to merge package targets. Its LTO support uses LLVM 22's libLTO, which
+# uses to merge package targets. Its LTO support uses LLVM 23's libLTO, which
 # reads the bitcode rustc emits.
 COPY --from=cctools /opt/cctools /opt/cctools
 RUN ln -s /opt/cctools/bin/arm64-apple-darwin-ld /usr/local/bin/ld64 \

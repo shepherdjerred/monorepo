@@ -3,6 +3,11 @@
   "version": 1,
   "scripts": [
     {
+      "source": "packages/woodpecker-config-extension/src/checkout/checkout.sh",
+      "disposition": "retain",
+      "reason": "Linux clone-container entrypoint owns inherited flock descriptors across exec; Git validation and checkout logic live in the typed Bun helper."
+    },
+    {
       "source": "ci/scripts/annotate-build-summary.sh",
       "disposition": "delete",
       "reason": "Retired with the Buildkite cutover: its only output was a build annotation, and Woodpecker has no annotation surface."
@@ -124,8 +129,8 @@
     },
     {
       "source": "ci/scripts/ci-image-refs.sh",
-      "disposition": "retain",
-      "reason": "Sourced CI bootstrap validates and exports image refs before Bun is guaranteed"
+      "disposition": "delete",
+      "reason": "Retired with the Buildkite bootstrap: the Woodpecker extension resolves image refs in packages/woodpecker-config-extension/src/images.ts"
     },
     {
       "source": "ci/scripts/docker-env.sh",
@@ -291,6 +296,16 @@
       "source": "packages/dotfiles/install_macos.sh",
       "disposition": "retain",
       "reason": "Platform bootstrap precedes Bun"
+    },
+    {
+      "source": "packages/dotfiles/macos-file-limits/apply.sh",
+      "disposition": "retain",
+      "reason": "Boot-time launchd configuration uses only macOS system tools before user runtimes are available"
+    },
+    {
+      "source": "packages/dotfiles/macos-file-limits/install.sh",
+      "disposition": "retain",
+      "reason": "System bootstrap installs the launch daemon before Bun is guaranteed"
     },
     {
       "source": "packages/homelab/mac-ci/bootstrap.sh",
@@ -756,6 +771,11 @@
       "source": "packages/tasknotes-windows/scripts/cross-build.sh",
       "disposition": "retain",
       "reason": "Runs inside the windows-cross-compiler-winui image, which ships no Bun; it only sequences locked dotnet restores and builds"
+    },
+    {
+      "source": "packages/the-storm/server/build-livemap.sh",
+      "disposition": "retain",
+      "reason": "Runs during the server image build with Bash and image-native archive tools; Bun is unavailable in this stage"
     }
   ]
 }

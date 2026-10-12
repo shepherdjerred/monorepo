@@ -602,7 +602,7 @@ describe("suppress", () => {
 
   test.each(table)(
     "%s under %s is %s (%s)",
-    (kind, reason, outcome, conflictReason) => {
+    (kind, reason, outcome, conflictReason = "") => {
       const result = suppress(makeIntent(statesByKind()[kind]), { reason });
       if (outcome === "applied") {
         expect(expectApplied(result).state).toEqual({
@@ -611,7 +611,7 @@ describe("suppress", () => {
         });
         return;
       }
-      expectConflict(result, conflictReason ?? "");
+      expectConflict(result, conflictReason);
     },
   );
 

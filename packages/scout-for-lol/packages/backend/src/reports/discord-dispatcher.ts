@@ -4,7 +4,6 @@ import {
   defaultInstalledGuildsDependencies,
   isScoutInstalledInGuild,
 } from "#src/lib/discord/installed-guilds.ts";
-import { splitMessageIntoChunks } from "#src/discord/utils/message.ts";
 import {
   send as sendChannelMessage,
   ChannelSendError,
@@ -26,10 +25,15 @@ import type {
 import {
   claimScoutEffect,
   completeScoutEffect,
-  recordScoutEffectFailure,
 } from "#src/temporal/effect-claims.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { loadReportRunImage } from "#src/storage/s3-report-run.ts";
+import {
+  freezeReportDelivery,
+  deliverReportChunk,
+  reportAttachmentDigest,
+  ReportDeliveryUnknownError,
+} from "#src/reports/delivery-receipts.ts";
 
 const logger = createLogger("report-discord-dispatcher");
 
@@ -38,45 +42,61 @@ const POST_DELAY_MS = 1000;
 async function deliverChunksAndAnalytics(
   dispatch: ScheduledReportDispatch,
   outputKind: "report_manual" | "report_scheduled",
-  files: AttachmentBuilder[],
+  database: ExtendedPrismaClient,
 ): Promise<void> {
-  for (const [index, content] of splitMessageIntoChunks(
-    dispatch.result.output.content,
-  ).entries()) {
-    const effectKey = `report-discord:${dispatch.result.runId.toString()}:${index.toString()}`;
-    const claim = await claimScoutEffect({
-      key: effectKey,
-      kind: "report-discord",
-    });
-    if (claim === "completed") continue;
-    try {
-      await sendChannelMessage(
-        {
-          content,
-          files: index === 0 ? files : [],
-          nonce: `sr:${dispatch.result.runId.toString(36)}:${index.toString(36)}`,
-          enforceNonce: true,
-        },
-        dispatch.report.channelId,
-        dispatch.report.serverId,
+  const chunks = await freezeReportDelivery(dispatch, database);
+  for (const chunk of chunks) {
+    if (chunk.state === "DELIVERED") continue;
+    const image = dispatch.result.output.image;
+    if (
+      chunk.attachmentKey !== null &&
+      (image === null ||
+        chunk.attachmentName === null ||
+        reportAttachmentDigest(image.data) !== chunk.attachmentDigest)
+    ) {
+      throw new Error(
+        "Report delivery attachment differs from its frozen receipt",
       );
-      await completeScoutEffect(effectKey);
-    } catch (error) {
-      await recordScoutEffectFailure(effectKey, error);
-      throw error;
     }
+    await deliverReportChunk(
+      chunk,
+      async () =>
+        await sendChannelMessage(
+          {
+            content: chunk.content,
+            files:
+              image === null ||
+              chunk.attachmentKey === null ||
+              chunk.attachmentName === null
+                ? []
+                : [
+                    new AttachmentBuilder(image.data, {
+                      name: chunk.attachmentName,
+                    }),
+                  ],
+            nonce: chunk.nonce,
+            enforceNonce: true,
+          },
+          DiscordChannelIdSchema.parse(chunk.channelId),
+          DiscordGuildIdSchema.parse(chunk.serverId),
+        ),
+      database,
+    );
   }
   const analyticsEffectKey = `report-analytics:${dispatch.result.runId.toString()}`;
-  const analyticsClaim = await claimScoutEffect({
-    key: analyticsEffectKey,
-    kind: "report-analytics",
-  });
+  const analyticsClaim = await claimScoutEffect(
+    {
+      key: analyticsEffectKey,
+      kind: "report-analytics",
+    },
+    database,
+  );
   if (analyticsClaim === "execute") {
     await recordCoreOutputDelivered(
       DiscordGuildIdSchema.parse(dispatch.report.serverId),
       outputKind,
     );
-    await completeScoutEffect(analyticsEffectKey);
+    await completeScoutEffect(analyticsEffectKey, database);
   }
 }
 
@@ -200,8 +220,13 @@ export async function deliverReportDispatch(
   dispatch: ScheduledReportDispatch,
   outputKind: "report_manual" | "report_scheduled",
   failureMode: "isolate" | "propagate" = "isolate",
-  isInstalled: GuildInstallCheck = guildInstallCheck(prisma),
+  dependencies: {
+    isInstalled?: GuildInstallCheck;
+    database?: ExtendedPrismaClient;
+  } = {},
 ): Promise<boolean> {
+  const database = dependencies.database ?? prisma;
+  const isInstalled = dependencies.isInstalled ?? guildInstallCheck(database);
   const { id: reportId, channelId, serverId } = dispatch.report;
 
   // Skip guilds the bot is no longer a member of: delivery is impossible and
@@ -222,19 +247,34 @@ export async function deliverReportDispatch(
     return false;
   }
 
-  const image = dispatch.result.output.image;
-  const files =
-    image === null
-      ? []
-      : [new AttachmentBuilder(image.data, { name: image.filename })];
-
   // Isolate each delivery: one failed report must not abort the rest of the
   // batch. Permission errors are already recorded (DB + owner notify) and other
   // errors captured to Sentry inside `send`, so a ChannelSendError just gets a
   // warning here; anything unexpected is reported and we move on.
   try {
-    await deliverChunksAndAnalytics(dispatch, outputKind, files);
+    await deliverChunksAndAnalytics(dispatch, outputKind, database);
+    await database.reportRun.updateMany({
+      where: {
+        id: ReportRunIdSchema.parse(dispatch.result.runId),
+        deliveryState: { in: ["PENDING", "UNKNOWN"] },
+      },
+      data: {
+        deliveryState: "DELIVERED",
+        deliveryError: null,
+        deliveredAt: new Date(),
+      },
+    });
   } catch (error) {
+    if (error instanceof ReportDeliveryUnknownError) {
+      await database.reportRun.updateMany({
+        where: {
+          id: ReportRunIdSchema.parse(dispatch.result.runId),
+          deliveryState: "PENDING",
+          deliveryChunks: { some: { state: { in: ["UNKNOWN", "SENDING"] } } },
+        },
+        data: { deliveryState: "UNKNOWN", deliveryError: error.message },
+      });
+    }
     if (error instanceof ChannelSendError) {
       logger.warn(
         `[ReportDispatch] Failed to deliver report ${reportId.toString()} to channel ${channelId}: ${getErrorMessage(error)}`,
@@ -355,10 +395,13 @@ async function deliverPendingReportRun(input: {
       },
       input.trigger === "SCHEDULED" ? "report_scheduled" : "report_manual",
       "propagate",
-      input.isInstalled,
+      { isInstalled: input.isInstalled, database: input.database },
     );
     await input.database.reportRun.updateMany({
-      where: { id: input.run.id, deliveryState: "PENDING" },
+      where: {
+        id: input.run.id,
+        deliveryState: { in: ["PENDING", "UNKNOWN"] },
+      },
       data: {
         deliveryState: "DELIVERED",
         deliveryError: null,
@@ -373,5 +416,35 @@ async function deliverPendingReportRun(input: {
       },
     });
     if (input.failureMode !== "isolate") throw error;
+  }
+}
+
+/** Recover committed report output even when its original Workflow ended.
+ * This never renders or queries again; receipts arbitrate concurrent senders. */
+export async function reconcileReportDeliveries(
+  database: ExtendedPrismaClient = prisma,
+): Promise<void> {
+  const pending = await database.reportRun.findMany({
+    where: {
+      status: "SUCCESS",
+      deliveryState: "PENDING",
+      createdAt: { lte: new Date(Date.now() - 60_000) },
+    },
+    orderBy: { id: "asc" },
+    take: 100,
+    select: { reportId: true, id: true, trigger: true },
+  });
+  for (const run of pending) {
+    if (run.trigger !== "MANUAL" && run.trigger !== "SCHEDULED")
+      throw new Error(`Unknown report delivery trigger ${run.trigger}`);
+    await deliverPendingReportDispatches(
+      {
+        reportId: run.reportId,
+        runId: run.id,
+        trigger: run.trigger,
+        failureMode: "isolate",
+      },
+      database,
+    );
   }
 }

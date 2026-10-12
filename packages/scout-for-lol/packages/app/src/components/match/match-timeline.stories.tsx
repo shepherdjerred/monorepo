@@ -1,3 +1,8 @@
+import {
+  type LeaguePuuid,
+  RiotMatchIdSchema,
+  LeaguePuuidSchema,
+} from "@scout-for-lol/data";
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { MatchTimeline } from "./match-timeline.tsx";
@@ -20,7 +25,7 @@ type ChartPoint =
   RouterOutputs["consumerMatch"]["chartSeries"]["points"][number];
 
 const PLAYER_ID = 42;
-const MATCH_ID = "NA1_4912837465";
+const MATCH_ID = RiotMatchIdSchema.parse("NA1_4912837465");
 
 const COVERAGE: Coverage = {
   coverage_state: "complete",
@@ -137,7 +142,7 @@ const KEY_EVENTS: TimelineEvent[] = [
 function frame(row: {
   frameIndex: number;
   participantId: number;
-  puuid: string;
+  puuid: LeaguePuuid;
   gold: number;
   xp: number;
 }): TimelineFrame {
@@ -174,10 +179,14 @@ function frame(row: {
   };
 }
 
-// Readable stand-ins rather than random-looking Riot PUUIDs: the frame table
-// prints the column verbatim and nothing here parses it.
-const PUUID_ONE = "story-puuid-blue-top-aatrox";
-const PUUID_TWO = "story-puuid-red-top-wukong";
+// Keep readable prefixes while satisfying the same identity boundary as live
+// timeline rows. Every story loads these fixtures, including the empty states.
+const PUUID_ONE = LeaguePuuidSchema.parse(
+  "story-puuid-blue-top-aatrox".padEnd(78, "a"),
+);
+const PUUID_TWO = LeaguePuuidSchema.parse(
+  "story-puuid-red-top-wukong".padEnd(78, "b"),
+);
 
 const FRAMES: TimelineFrame[] = [
   frame({
@@ -294,7 +303,6 @@ export const Retained: Story = {
     source: { kind: "consumer", playerId: PLAYER_ID },
     matchId: MATCH_ID,
     coverage: COVERAGE,
-    keyEvents: KEY_EVENTS,
     participantIds: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
   },
   parameters: { seedQueries: [seedTimeline] },
@@ -305,7 +313,6 @@ export const NotCaptured: Story = {
     source: { kind: "consumer", playerId: PLAYER_ID },
     matchId: MATCH_ID,
     coverage: null,
-    keyEvents: [],
     participantIds: [],
   },
 };
@@ -315,7 +322,6 @@ export const Loading: Story = {
     source: { kind: "consumer", playerId: PLAYER_ID },
     matchId: MATCH_ID,
     coverage: COVERAGE,
-    keyEvents: [],
     participantIds: [1, 2, 3, 4, 5],
   },
 };
@@ -325,7 +331,6 @@ export const FrameTable: Story = {
     source: { kind: "explore" },
     matchId: MATCH_ID,
     coverage: null,
-    keyEvents: [],
     participantIds: [],
   },
   render: () => (
@@ -346,7 +351,6 @@ export const FrameTableError: Story = {
     source: { kind: "explore" },
     matchId: MATCH_ID,
     coverage: null,
-    keyEvents: [],
     participantIds: [],
   },
   render: () => (
@@ -367,7 +371,6 @@ export const Pagination: Story = {
     source: { kind: "explore" },
     matchId: MATCH_ID,
     coverage: null,
-    keyEvents: [],
     participantIds: [],
   },
   render: () => (
@@ -402,7 +405,6 @@ export const ChampionPicker: Story = {
     source: { kind: "explore" },
     matchId: MATCH_ID,
     coverage: null,
-    keyEvents: [],
     participantIds: [],
   },
   render: () => <ChampionComboboxExample />,

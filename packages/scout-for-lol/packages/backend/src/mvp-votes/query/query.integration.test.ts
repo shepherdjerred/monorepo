@@ -1,8 +1,10 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
-  MatchIdSchema,
+  RiotMatchIdSchema,
 } from "@scout-for-lol/data";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import {
@@ -19,12 +21,12 @@ const { prisma: db } = createTestDatabase("mvp-votes-query");
 
 const GUILD_A = DiscordGuildIdSchema.parse("100000000000000061");
 const GUILD_B = DiscordGuildIdSchema.parse("100000000000000062");
-const MATCH_A = MatchIdSchema.parse("NA1_5000000101");
-const MATCH_B = MatchIdSchema.parse("NA1_5000000102");
+const MATCH_A = RiotMatchIdSchema.parse("NA1_5000000101");
+const MATCH_B = RiotMatchIdSchema.parse("NA1_5000000102");
 const CREATOR = DiscordAccountIdSchema.parse("160509172704739328");
 
 async function seedContest(input: {
-  matchId: string;
+  matchId: RiotMatchId;
   gameCreationAt: Date;
   queueType: string;
 }) {
@@ -39,15 +41,15 @@ async function seedContest(input: {
 }
 
 async function seedVote(input: {
-  matchId: string;
-  serverId: string;
+  matchId: RiotMatchId;
+  serverId: DiscordGuildId;
   voter: number;
   nomineeIndex: number;
   justification?: string;
 }) {
   await upsertMatchMvpVote(
     {
-      matchId: MatchIdSchema.parse(input.matchId),
+      matchId: input.matchId,
       serverId: DiscordGuildIdSchema.parse(input.serverId),
       voterDiscordId: bucksTestDiscordId(input.voter),
       category: "ally",

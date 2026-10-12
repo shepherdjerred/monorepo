@@ -352,6 +352,8 @@ function promotionGuard(stored: MatchObservationRow) {
   return {
     riotMatchId: stored.riotMatchId,
     platformRoute: stored.platformRoute,
+    deliveryMode: stored.deliveryMode,
+    matchDataSource: stored.matchDataSource,
     processingPolicy: "ARCHIVE_ONLY",
     promotedAt: null,
     pipelineOwner: stored.pipelineOwner,

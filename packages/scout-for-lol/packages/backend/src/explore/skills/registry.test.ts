@@ -160,13 +160,13 @@ describe("skill bodies", () => {
     expect(body).toContain("set queryText to null");
   });
 
-  test("the dare body renders the frozen prompt version", () => {
-    // The paraphrase eval hashes this text; the version marker proves the
-    // placeholder resolved rather than shipping literally.
+  test("the dare body describes only SQL contracts", () => {
     const body = dareSkillBody();
-    expect(body).toContain("Legacy translator prompt version: explore-dare-");
     expect(body).toContain("game-set CTE");
     expect(body).toContain("get_dare_language");
+    expect(body).toContain("Canonical standard SQL is the binding contract");
+    expect(body).not.toContain("version 2");
+    expect(body).not.toContain("{{");
   });
 
   test("no body carries a v1 clause the language no longer has", () => {

@@ -495,7 +495,7 @@ export type OpenebsHelmValuesLoki = {
    */
   singleBinary?: OpenebsHelmValuesLokiSingleBinary;
   /**
-   * @default {...} (5 keys)
+   * @default {...} (7 keys)
    */
   minio?: OpenebsHelmValuesLokiMinio;
   /**
@@ -847,6 +847,14 @@ export type OpenebsHelmValuesLokiMinio = {
    * @default {"enabled":true,"storageClass":"openebs-minio-localpv","size":"2Gi"}
    */
   persistence?: OpenebsHelmValuesLokiMinioPersistence;
+  /**
+   * @default {"repository":"docker.io/openebs/minio"}
+   */
+  image?: OpenebsHelmValuesLokiMinioImage;
+  /**
+   * @default {"repository":"docker.io/openebs/mc"}
+   */
+  mcImage?: OpenebsHelmValuesLokiMinioMcImage;
 };
 
 export type OpenebsHelmValuesLokiMinioPersistence = {
@@ -873,6 +881,20 @@ export type OpenebsHelmValuesLokiMinioPersistence = {
    * @default "2Gi"
    */
   size?: string;
+};
+
+export type OpenebsHelmValuesLokiMinioImage = {
+  /**
+   * @default "docker.io/openebs/minio"
+   */
+  repository?: string;
+};
+
+export type OpenebsHelmValuesLokiMinioMcImage = {
+  /**
+   * @default "docker.io/openebs/mc"
+   */
+  repository?: string;
 };
 
 export type OpenebsHelmValuesLokiLokiCanary = {
@@ -1219,6 +1241,8 @@ export type OpenebsHelmParameters = {
   "loki.minio.persistence.enabled"?: string;
   "loki.minio.persistence.storageClass"?: string;
   "loki.minio.persistence.size"?: string;
+  "loki.minio.image.repository"?: string;
+  "loki.minio.mcImage.repository"?: string;
   "loki.deploymentMode"?: string;
   "loki.lokiCanary.enabled"?: string;
   "loki.chunksCache.enabled"?: string;

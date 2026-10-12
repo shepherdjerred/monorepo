@@ -1,5 +1,6 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
-import { MatchIdSchema, PlatformRouteSchema } from "@scout-for-lol/data";
+import { RiotMatchIdSchema, PlatformRouteSchema } from "@scout-for-lol/data";
 import {
   ScoutExploreTimelineInputSchema,
   ScoutExploreTimelineResultSchema,
@@ -15,48 +16,49 @@ import {
   buildMatchesSource,
   buildTimelineCoverageSource,
   listParam,
-  resolveLakeFiles,
+  withLakeQueryRetry,
 } from "#src/reports/duckdb/lake.ts";
 import { runSettledWorkers } from "#src/league/explore-history/worker-pool.ts";
 
 const MAX_PARALLEL_TIMELINE_READS = 3;
 const MatchRefRowSchema = z.object({
-  match_id: MatchIdSchema,
+  match_id: RiotMatchIdSchema,
   platform_id: PlatformRouteSchema,
   game_creation_ms: z.union([z.bigint(), z.number()]).transform(Number),
 });
-const CoverageRowSchema = z.object({ match_id: MatchIdSchema });
+const CoverageRowSchema = z.object({ match_id: RiotMatchIdSchema });
 
-async function resolveMatchRefs(matchIds: string[]): Promise<{
+async function resolveMatchRefs(matchIds: RiotMatchId[]): Promise<{
   refs: z.infer<typeof MatchRefRowSchema>[];
   complete: Set<string>;
 }> {
-  const files = await resolveLakeFiles(resolveLakeDir());
-  const predicate = {
-    sql: "match_id IN (SELECT unnest(?))",
-    params: [listParam(matchIds)],
-  };
-  const matchSource = buildMatchesSource(files, predicate);
-  if (matchSource === undefined) return { refs: [], complete: new Set() };
-  const coverageSource = buildTimelineCoverageSource(files, predicate);
-  return await withDuckDBConnection(async (session) => {
-    const rows = await session.run(
-      `SELECT match_id, any_value(platform_id) AS platform_id, MIN(epoch_ms(game_creation_at)) AS game_creation_ms FROM (${matchSource.sql}) GROUP BY match_id`,
-      bindParams(session, matchSource.params),
-    );
-    const coverageRows =
-      coverageSource === undefined
-        ? []
-        : await session.run(
-            `SELECT DISTINCT match_id FROM (${coverageSource.sql}) WHERE coverage_state = 'complete'`,
-            bindParams(session, coverageSource.params),
-          );
-    return {
-      refs: rows.map((row) => MatchRefRowSchema.parse(row)),
-      complete: new Set(
-        coverageRows.map((row) => CoverageRowSchema.parse(row).match_id),
-      ),
+  return await withLakeQueryRetry(resolveLakeDir(), async (files) => {
+    const predicate = {
+      sql: "match_id IN (SELECT unnest(?))",
+      params: [listParam(matchIds)],
     };
+    const matchSource = buildMatchesSource(files, predicate);
+    if (matchSource === undefined) return { refs: [], complete: new Set() };
+    const coverageSource = buildTimelineCoverageSource(files, predicate);
+    return await withDuckDBConnection(async (session) => {
+      const rows = await session.run(
+        `SELECT match_id, any_value(platform_id) AS platform_id, MIN(epoch_ms(game_creation_at)) AS game_creation_ms FROM (${matchSource.sql}) GROUP BY match_id`,
+        bindParams(session, matchSource.params),
+      );
+      const coverageRows =
+        coverageSource === undefined
+          ? []
+          : await session.run(
+              `SELECT DISTINCT match_id FROM (${coverageSource.sql}) WHERE coverage_state = 'complete'`,
+              bindParams(session, coverageSource.params),
+            );
+      return {
+        refs: rows.map((row) => MatchRefRowSchema.parse(row)),
+        complete: new Set(
+          coverageRows.map((row) => CoverageRowSchema.parse(row).match_id),
+        ),
+      };
+    });
   });
 }
 
@@ -64,7 +66,9 @@ export async function importExploreTimelines(
   rawInput: ScoutExploreTimelineInput,
 ): Promise<ScoutExploreTimelineResult> {
   const input = ScoutExploreTimelineInputSchema.parse(rawInput);
-  const { refs, complete } = await resolveMatchRefs(input.matchIds);
+  const { refs, complete } = await resolveMatchRefs(
+    input.matchIds.map((matchId) => RiotMatchIdSchema.parse(matchId)),
+  );
   const missing = refs.filter((ref) => !complete.has(ref.match_id));
   let nextIndex = 0;
   let ingested = 0;

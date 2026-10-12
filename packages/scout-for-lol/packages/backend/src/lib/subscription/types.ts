@@ -1,3 +1,8 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
+import type {
+  DiscordChannelId,
+  DiscordAccountId,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import { z } from "zod";
 import {
   DiscordAccountIdSchema,
@@ -103,7 +108,12 @@ export type AddSubscriptionResult =
   | {
       kind: "created";
       subscription: { id: number };
-      account: { id: number; puuid: string; region: string; alias: string };
+      account: {
+        id: number;
+        puuid: LeaguePuuid;
+        region: string;
+        alias: string;
+      };
       player: {
         id: number;
         alias: string;
@@ -158,7 +168,7 @@ export type MoveSubscriptionResult =
 export type AddSubscriptionChannelResult =
   | { kind: "added"; allChannelIds: string[] }
   | { kind: "player-not-found" }
-  | { kind: "already-subscribed"; channelId: string }
+  | { kind: "already-subscribed"; channelId: DiscordChannelId }
   | { kind: "internal-error"; message: string };
 
 export type SetSubscriptionFiltersResult =
@@ -179,17 +189,17 @@ export type SetSubscriptionMutedResult =
 
 export type SubscriptionListItem = {
   subscriptionId: number;
-  channelId: string;
+  channelId: DiscordChannelId;
   player: {
     id: number;
     alias: string;
-    discordId: string | null;
+    discordId: DiscordAccountId | null;
     discordUser: ResolvedDiscordUser | null;
     accounts: {
       id: number;
       alias: string;
       region: string;
-      puuid: string;
+      puuid: LeaguePuuid;
       riotGameName: string | null;
       riotTagLine: string | null;
     }[];

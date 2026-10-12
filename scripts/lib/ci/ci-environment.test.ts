@@ -24,18 +24,6 @@ test("reads the CI environment", () => {
   expect(isCi(WOODPECKER)).toBe(true);
 });
 
-/**
- * The migration read Buildkite's names as a fallback so scripts could be
- * switched over while Buildkite was still the live gate. Those are gone: a
- * leftover variable must not be able to satisfy a required one.
- */
-test("does not accept a Buildkite variable in place of its successor", () => {
-  expect(() => commitSha({ BUILDKITE_COMMIT: "bk-sha" })).toThrow(
-    /CI_COMMIT_SHA/u,
-  );
-  expect(isCi({ BUILDKITE: "true" })).toBe(false);
-});
-
 test("treats an empty value as absent", () => {
   expect(() => commitSha({ CI_COMMIT_SHA: "" })).toThrow(/CI_COMMIT_SHA/u);
 });

@@ -11,6 +11,17 @@ export const SCOUT_CLIENT_PROTOCOL_CONTRACT = {
     maxStringBytes: 16_384,
     maxKeyBytes: 256,
     unsafeKeys: ["__proto__", "constructor", "prototype"],
+    credentialKeyFragments: [
+      "password",
+      "jwt",
+      "secret",
+      "authorization",
+      "encryptionkey",
+      "accesstoken",
+      "refreshtoken",
+      "sessiontoken",
+      "idtoken",
+    ],
   },
   envelopeStringMaxBytes: {
     appVersion: 128,

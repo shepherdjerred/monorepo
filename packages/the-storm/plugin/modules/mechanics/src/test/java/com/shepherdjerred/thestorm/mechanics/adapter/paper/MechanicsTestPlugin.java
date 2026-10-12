@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.mechanics.adapter.paper;
 
+import com.shepherdjerred.thestorm.core.compute.DirectComputePool;
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.Services;
@@ -8,6 +9,9 @@ import com.shepherdjerred.thestorm.core.protection.HarmTarget;
 import com.shepherdjerred.thestorm.core.protection.ProtectedAction;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.core.schedule.PaperScheduler;
+import com.shepherdjerred.thestorm.core.world.AuditedBlockChanges;
+import com.shepherdjerred.thestorm.core.world.BlockChanges;
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.mechanics.MechanicsModule;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -38,6 +42,10 @@ public class MechanicsTestPlugin extends JavaPlugin {
   static @Nullable Path directory;
 
   final Services services = new Services();
+
+  /** Worlds the test seals; mechanisms must ignore them. */
+  final SealedWorlds sealed = new SealedWorlds();
+
   private @Nullable StormDatabase database;
 
   @Override
@@ -64,22 +72,31 @@ public class MechanicsTestPlugin extends JavaPlugin {
           }
 
           @Override
+          public boolean isPreserved(Location location) {
+            return false;
+          }
+
+          @Override
           public boolean sameLand(Location a, Location b) {
             return (a.getBlockX() < 0) == (b.getBlockX() < 0);
           }
         };
     services.provide(Protection.class, protection);
+    services.provide(BlockChanges.class, new AuditedBlockChanges(change -> {}));
+    services.provide(SealedWorlds.class, sealed);
     var context =
         new ModuleContext(
             this,
             getLifecycleManager(),
             new PaperScheduler(this),
+            new DirectComputePool(),
             database,
             services,
             directory,
             InstantSource.system(),
             RandomGenerator.getDefault(),
-            getComponentLogger());
+            getComponentLogger(),
+            com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled());
     new MechanicsModule().enable(context);
   }
 

@@ -1,3 +1,4 @@
+import { DiscordChannelIdSchema } from "@scout-for-lol/data";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { ReportFormValueSchema } from "#src/lib/form-schemas.ts";
@@ -19,8 +20,14 @@ function noop(): void {
 }
 
 const CHANNELS = [
-  { id: "1102938475610293847", name: "match-reports" },
-  { id: "1102938475610293848", name: "ranked-grind" },
+  {
+    id: DiscordChannelIdSchema.parse("1102938475610293847"),
+    name: "match-reports",
+  },
+  {
+    id: DiscordChannelIdSchema.parse("1102938475610293848"),
+    name: "ranked-grind",
+  },
 ];
 
 const BOUNDED_QUERY = STARTER_REPORT_QUERY;

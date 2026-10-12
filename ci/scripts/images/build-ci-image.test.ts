@@ -45,11 +45,48 @@ test("defines CI images independently", () => {
   expect(ciImageDefinition("ci-base").sourceFiles).toEqual([
     "ci/ci-image/Dockerfile",
     ".mise.toml",
+    "mise.lock",
   ]);
   expect(ciImageDefinition("ci-playwright").sourceFiles).toEqual([
     "ci/ci-playwright/Dockerfile",
   ]);
   expect(() => ciImageDefinition("unknown")).toThrow("Unknown CI image");
+});
+
+test("CI base authenticates tool downloads through a scoped BuildKit secret", async () => {
+  const command = ciImageBuildCommand(
+    ciImageDefinition("ci-base"),
+    "abc",
+    "/tmp/metadata.json",
+  );
+  const downloadSecret = command[command.indexOf("--secret") + 1];
+  expect(downloadSecret?.split(",")).toEqual([
+    "id=github-download-token",
+    "env=GITHUB_DOWNLOAD_TOKEN",
+  ]);
+  expect(command).not.toContain("--build-arg");
+  expect(
+    ciImageBuildCommand(
+      ciImageDefinition("ci-playwright"),
+      "abc",
+      "/tmp/metadata.json",
+    ),
+  ).not.toContain("--secret");
+  const dockerfile = await Bun.file(
+    new URL("../../ci-image/Dockerfile", import.meta.url),
+  ).text();
+  const downloadMount =
+    /--mount=type=secret,id=github-download-token,env=([A-Z_]+),required=true/.exec(
+      dockerfile,
+    );
+  expect(downloadMount).not.toBeNull();
+  const tokenEnvironment = downloadMount?.[1];
+  if (tokenEnvironment === undefined) {
+    throw new Error("Tool downloads require a build-scoped secret environment");
+  }
+  expect(dockerfile).not.toMatch(
+    new RegExp(String.raw`^(?:ENV|ARG)\s+${tokenEnvironment}\b`, "m"),
+  );
 });
 
 test("requires a canonical Buildx image digest", () => {
@@ -75,7 +112,11 @@ test("fingerprints only the selected CI image source files", async () => {
       },
     ),
   ).toMatch(/^[\da-f]{64}$/);
-  expect(requested).toEqual(["ci/ci-image/Dockerfile", ".mise.toml"]);
+  expect(requested).toEqual([
+    "ci/ci-image/Dockerfile",
+    ".mise.toml",
+    "mise.lock",
+  ]);
   await expect(
     ciImageSourceFingerprint(
       {

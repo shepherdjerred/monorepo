@@ -28,6 +28,7 @@ const GitRefSchema = z.object({ object: z.object({ sha: z.string().min(1) }) });
 
 export type PrRevisionState = z.infer<typeof PrRevisionStateSchema> & {
   mainRefOid: string;
+  mergeBaseRefOid: string;
 };
 
 export async function getPrRevisionState(input: {
@@ -62,7 +63,29 @@ export async function getPrRevisionState(input: {
       }),
     ),
   );
-  return { ...prState, mainRefOid: mainRef.object.sha };
+  // baseRefOid is GitHub's CURRENT base branch tip, not the revision this
+  // proposal was generated from. Compare immutable revisions to prove ancestry.
+  const comparison = z
+    .object({
+      merge_base_commit: z.object({ sha: z.string().min(1) }),
+    })
+    .parse(
+      JSON.parse(
+        await run(
+          [
+            "gh",
+            "api",
+            `repos/${input.repoSlug}/compare/${mainRef.object.sha}...${prState.headRefOid}`,
+          ],
+          { cwd: "/tmp", env: { GH_TOKEN: input.token }, redactOutput: true },
+        ),
+      ),
+    );
+  return {
+    ...prState,
+    mainRefOid: mainRef.object.sha,
+    mergeBaseRefOid: comparison.merge_base_commit.sha,
+  };
 }
 
 export async function isPrBasedOnCurrentMain(input: {
@@ -72,7 +95,7 @@ export async function isPrBasedOnCurrentMain(input: {
   run?: typeof runCommand;
 }): Promise<boolean> {
   const state = await getPrRevisionState(input);
-  return state.baseRefOid === state.mainRefOid;
+  return state.mergeBaseRefOid === state.mainRefOid;
 }
 
 export async function findOpenGeneratedPrUrl(input: {

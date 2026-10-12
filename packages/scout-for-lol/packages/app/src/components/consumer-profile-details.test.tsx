@@ -1,7 +1,11 @@
 import { describe, expect, test, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router";
-import { MatchLoadoutSchema } from "@scout-for-lol/data";
+import {
+  MatchLoadoutSchema,
+  RiotMatchIdSchema,
+  DiscordGuildIdSchema,
+} from "@scout-for-lol/data";
 import { ChampionComparisonTable } from "#src/components/match/champion-comparison-table.tsx";
 import {
   MatchScoreboards,
@@ -123,7 +127,7 @@ describe("player profile details", () => {
           profileSearch="?games=all&amp;queue=flex"
           entries={[
             {
-              matchId: "NA1_123",
+              matchId: RiotMatchIdSchema.parse("NA1_123"),
               gameCreationMs: Date.now(),
               gameDurationSeconds: 1800,
               queue: "flex",
@@ -159,7 +163,10 @@ describe("champion comparison and match timeline", () => {
             {
               playerId: 4,
               alias: "Me",
-              guild: { guildId: "guild", name: "Friends" },
+              guild: {
+                guildId: DiscordGuildIdSchema.parse("810135513265406599"),
+                name: "Friends",
+              },
               viewerLinked: true,
               games: 20,
               wins: 12,
@@ -231,8 +238,8 @@ describe("champion comparison and match timeline", () => {
         />,
       ),
     );
-    expect(html).toContain("Team 100");
-    expect(html).toContain("Team 200");
+    expect(html).toContain("Blue team");
+    expect(html).toContain("Red team");
     expect(html).toContain("Selected");
     expect(html).toContain("Me (Friends)");
   });
@@ -286,7 +293,7 @@ describe("champion comparison and match timeline", () => {
       ),
     );
     expect(html).toContain("Lane matchup");
-    expect(html).toContain("Blue Δ @ 15m");
+    expect(html).toContain("advantage · 15m");
     expect(html).toContain("+500 gold");
     expect(html).toContain("+10 CS");
     expect(html).toContain("+300 XP");

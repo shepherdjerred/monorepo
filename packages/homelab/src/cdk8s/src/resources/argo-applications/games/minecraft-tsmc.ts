@@ -1,4 +1,7 @@
 import type { Chart } from "cdk8s";
+import { siteAnalyticsConfiguration } from "@shepherdjerred/homelab/cdk8s/src/misc/analytics.ts";
+import { createMinecraftProxyTrust } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/proxy-trust.ts";
+import { createMinecraftPublicStatus } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/public-status.ts";
 import { Size } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
@@ -14,11 +17,21 @@ import {
   MINING_RESET_IMAGE_ANNOTATION,
   MINING_RESET_LOCK_ANNOTATION,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/minecraft-mining-reset-guard.ts";
+import {
+  RESTORE_LEASE_ANNOTATION,
+  RESTORE_PHASE_ANNOTATION,
+  RESTORE_IMAGE_ANNOTATION,
+  RESTORE_ACCESS_SELECTOR,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/minecraft-restoration-guard.ts";
 
 const NAMESPACE = "minecraft-tsmc";
+const analytics = siteAnalyticsConfiguration("ts-mc");
 const SECRET_NAME = "minecraft-tsmc-discord";
 const RCON_SECRET_NAME = "minecraft-tsmc-brain";
 const BRAIN_SECRET_NAME = "minecraft-tsmc-storm-brain";
+const RWF_RECORDING_SECRET_NAME = "minecraft-tsmc-rwf-recording";
+// MCBridge agent API (packages/the-storm/plugin/bridge); port-forward only.
+const MC_BRIDGE_PORT = 25_580;
 
 /**
  * The Paper version baked into ghcr.io/shepherdjerred/the-storm-server. The
@@ -38,8 +51,10 @@ export const THE_STORM_PAPER_VERSION = "26.2";
  * URLs, config ConfigMaps or copy init containers here.
  */
 export function createMinecraftTsmcApp(chart: Chart) {
-  // DiscordSRV credentials. Required fields (UPPERCASE_SNAKE labels, matching
-  // the env-var refs below): DISCORD_BOT_TOKEN, DISCORD_CHANNEL_ID.
+  createMinecraftProxyTrust(chart, NAMESPACE, 25_565);
+  createMinecraftPublicStatus(chart);
+  // The Storm bridge credentials. Required fields (UPPERCASE_SNAKE labels, matching
+  // the env-var ref below): DISCORD_BOT_TOKEN. Channel routing lives in Git.
   new OnePasswordItem(chart, "minecraft-tsmc-discord-1p", {
     spec: {
       itemPath:
@@ -61,6 +76,14 @@ export function createMinecraftTsmcApp(chart: Chart) {
   new OnePasswordItem(chart, "minecraft-tsmc-storm-brain-1p", {
     spec: { itemPath: vaultItemPath("storm-brain") },
     metadata: { name: BRAIN_SECRET_NAME, namespace: NAMESPACE },
+  });
+
+  // Search and Destroy recordings pseudonymise players with an HMAC over this
+  // salt. Its own item so it is projected only into the game namespace.
+  // Required field (concealed, UPPERCASE_SNAKE label): RWF_RECORDING_SALT.
+  new OnePasswordItem(chart, "minecraft-tsmc-rwf-recording-1p", {
+    spec: { itemPath: vaultItemPath("the-storm-rwf-recording") },
+    metadata: { name: RWF_RECORDING_SECRET_NAME, namespace: NAMESPACE },
   });
 
   createIngress(chart, "minecraft-tsmc-bluemap-ingress", {
@@ -85,6 +108,17 @@ export function createMinecraftTsmcApp(chart: Chart) {
     disableProbe: true,
   });
 
+  createCloudflareTunnelBinding(chart, "minecraft-tsmc-livemap-cf-tunnel", {
+    serviceName: "minecraft-tsmc-bluemap",
+    fqdn: "livemap.ts-mc.net",
+    namespace: "minecraft-tsmc",
+    disableDnsUpdates: true,
+    port: 8100,
+    // Hibernates at 0 replicas (see above); the public probe additionally made
+    // cloudflared log an unreachable-origin error every minute.
+    disableProbe: true,
+  });
+
   const minecraftValues: HelmValuesForChart<"minecraft"> = {
     replicaCount: 0,
     // Deploy as StatefulSet for mc-router auto-scaling support
@@ -99,25 +133,33 @@ export function createMinecraftTsmcApp(chart: Chart) {
     // The chart sets no command or args, so the image's storm-entrypoint runs.
     image: {
       repository: "ghcr.io/shepherdjerred/the-storm-server",
-      tag: versions["shepherdjerred/the-storm-server"],
+      // Candidate publication must not activate an unprepared production volume.
+      tag: versions["shepherdjerred/the-storm-server/prod"],
     },
+    // Sized for the Search and Destroy world: up to 100 ticking Citizens bot
+    // players share this server with survival. The rwfbots load profile
+    // (packages/the-storm/plugin/modules/rwfbots/LOAD.md) found 100 bots add
+    // under one core and that 6 CPUs tick no faster than 4, since the tick is
+    // one main thread: survival's earlier 2 cores plus one for the bots. The
+    // heap was not measured and keeps its headroom. CPU stays unlimited so
+    // bursts are not throttled.
     resources: {
       requests: {
-        memory: "6Gi",
-        cpu: "2",
+        memory: "8Gi",
+        cpu: "3",
       },
       limits: {
-        memory: "8Gi",
+        memory: "10Gi",
       },
     },
     minecraftServer: {
       eula: true,
       difficulty: "hard",
       maxPlayers: 20,
-      levelType: "LARGEBIOMES",
-      levelSeed: "6723312581398122416",
+      levelType: "NORMAL",
+      levelSeed: "-7243611913275695076",
       viewDistance: 10,
-      memory: "6G",
+      memory: "8G",
       motd: "The Storm | Survival",
       pvp: true,
       gameMode: "survival",
@@ -126,14 +168,13 @@ export function createMinecraftTsmcApp(chart: Chart) {
       // admin regions, and vanilla protection would stop non-ops using the
       // windmill Storm Shards altar.
       spawnProtection: 0,
-      ops: "XiguaJerred",
+      ops: "",
       // TYPE and VERSION repeat the image's own env: the chart always renders
       // TYPE (default VANILLA), and VERSION selects the baked Paper defaults.
       version: THE_STORM_PAPER_VERSION,
       type: "PAPER",
       serviceType: "ClusterIP",
-      // The image removes stale jars but preserves the PVC-only LWCX jar
-      // until the towns module takes over container protection.
+      // The Storm owns gameplay and locks; the image retires every stale jar.
       removeOldMods: true,
 
       extraPorts: [
@@ -146,10 +187,20 @@ export function createMinecraftTsmcApp(chart: Chart) {
             type: "NodePort",
             port: 19_132,
             nodePort: 30_004,
+            externalTrafficPolicy: "Local",
           },
           protocol: "UDP",
           containerPort: 19_132,
           name: "bedrock",
+          ingress: { enabled: false },
+        },
+        {
+          // MCBridge (mc-harness agent API). No Service or ingress: agents
+          // reach it only through `kubectl port-forward` with the bearer token.
+          service: { enabled: false, port: MC_BRIDGE_PORT },
+          protocol: "TCP",
+          containerPort: MC_BRIDGE_PORT,
+          name: "bridge",
           ingress: { enabled: false },
         },
       ],
@@ -170,17 +221,21 @@ export function createMinecraftTsmcApp(chart: Chart) {
     },
 
     extraEnv: {
+      // Ensure the empty list reaches itzg's OPS_FILE synchronization logic.
+      OPS: "",
+      // Empty OPS must clear persisted ops.json entries, not merge with them.
+      EXISTING_OPS_FILE: "SYNCHRONIZE",
       FLIPT_URL: "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
       FLIPT_ENVIRONMENT: "prod",
+      POSTHOG_API_HOST: analytics.apiHost,
+      POSTHOG_PROJECT_TOKEN: analytics.projectToken,
+      CFG_PROXY_PROTOCOL: "true",
+      // Private forum status uses UDP Query, without the PROXY-only game port.
+      ENABLE_QUERY: "true",
+      QUERY_PORT: "25565",
       // Kicks idle players after 60 minutes (server.properties
       // player-idle-timeout, formerly set by the synced server.properties).
       PLAYER_IDLE_TIMEOUT: "60",
-      // DiscordSRV reads its bot token natively from DISCORDSRV_TOKEN.
-      DISCORDSRV_TOKEN: {
-        valueFrom: {
-          secretKeyRef: { name: SECRET_NAME, key: "DISCORD_BOT_TOKEN" },
-        },
-      },
       STORM_BRAIN_BEARER_TOKEN: {
         valueFrom: {
           secretKeyRef: {
@@ -189,23 +244,39 @@ export function createMinecraftTsmcApp(chart: Chart) {
           },
         },
       },
+      // MCBridge disables itself without this token; same storm-brain item.
+      MC_BRIDGE_TOKEN: {
+        valueFrom: {
+          secretKeyRef: { name: BRAIN_SECRET_NAME, key: "MC_BRIDGE_TOKEN" },
+        },
+      },
+      MC_BRIDGE_BIND: "0.0.0.0",
+      // rwf refuses to enable with recording on and no salt.
+      RWF_RECORDING_SALT: {
+        valueFrom: {
+          secretKeyRef: {
+            name: RWF_RECORDING_SECRET_NAME,
+            key: "RWF_RECORDING_SALT",
+          },
+        },
+      },
       DISCORD_BOT_TOKEN: {
         valueFrom: {
           secretKeyRef: { name: SECRET_NAME, key: "DISCORD_BOT_TOKEN" },
         },
       },
-      DISCORD_CHANNEL_ID: {
-        valueFrom: {
-          secretKeyRef: { name: SECRET_NAME, key: "DISCORD_CHANNEL_ID" },
-        },
-      },
-      // Interpolated into plugins/DiscordSRV/config.yml by the image's
-      // PATCH_DEFINITIONS (server/patches/discordsrv-config.json).
-      CFG_DISCORD_CHANNEL_ID: {
-        valueFrom: {
-          secretKeyRef: { name: SECRET_NAME, key: "DISCORD_CHANNEL_ID" },
-        },
-      },
+      // #server in The Storm Discord guild.
+      DISCORD_CHANNEL_ID: "1558666120507162634",
+    },
+    // mc-health ignores positional arguments. Call mc-monitor directly so
+    // Paper receives the required HAProxy PROXY header before the status ping.
+    livenessProbe: {
+      command: ["mc-monitor", "status", "--use-proxy", "--timeout", "2s"],
+      timeoutSeconds: 5,
+    },
+    readinessProbe: {
+      command: ["mc-monitor", "status", "--use-proxy", "--timeout", "2s"],
+      timeoutSeconds: 5,
     },
   };
 
@@ -223,6 +294,14 @@ export function createMinecraftTsmcApp(chart: Chart) {
         targetRevision: versions.minecraft,
         chart: "minecraft",
         helm: {
+          // Own the higher-precedence parameter too: an earlier operational
+          // override must not keep the StatefulSet on an ad hoc image.
+          parameters: [
+            {
+              name: "image.tag",
+              value: versions["shepherdjerred/the-storm-server/prod"],
+            },
+          ],
           valuesObject: minecraftValues,
         },
       },
@@ -240,6 +319,9 @@ export function createMinecraftTsmcApp(chart: Chart) {
             "/spec/replicas",
             `/metadata/annotations/${MINING_RESET_LOCK_ANNOTATION.replaceAll("/", "~1")}`,
             `/metadata/annotations/${MINING_RESET_IMAGE_ANNOTATION.replaceAll("/", "~1")}`,
+            `/metadata/annotations/${RESTORE_LEASE_ANNOTATION.replaceAll("/", "~1")}`,
+            `/metadata/annotations/${RESTORE_PHASE_ANNOTATION.replaceAll("/", "~1")}`,
+            `/metadata/annotations/${RESTORE_IMAGE_ANNOTATION.replaceAll("/", "~1")}`,
             "/spec/podManagementPolicy",
             "/spec/revisionHistoryLimit",
             "/spec/persistentVolumeClaimRetentionPolicy",
@@ -254,6 +336,8 @@ export function createMinecraftTsmcApp(chart: Chart) {
           kind: "Service",
           jsonPointers: [
             "/metadata/annotations/mc-router.itzg.me~1autoScaleUp",
+            `/metadata/annotations/${RESTORE_LEASE_ANNOTATION.replaceAll("/", "~1")}`,
+            `/spec/selector/${RESTORE_ACCESS_SELECTOR.replaceAll("/", "~1")}`,
             "/spec/clusterIP",
             "/spec/clusterIPs",
             "/spec/ipFamilies",

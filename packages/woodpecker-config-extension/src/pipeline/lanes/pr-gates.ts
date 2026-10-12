@@ -1,7 +1,12 @@
 import type { CiImages } from "#src/images.ts";
 import type { CiStep } from "#src/pipeline/model.ts";
-import { MEDIUM_TIER, PR_DRY_RUN_TIER } from "#src/pipeline/tiers.ts";
+import {
+  GATE_TIER,
+  MEDIUM_TIER,
+  PR_DRY_RUN_TIER,
+} from "#src/pipeline/tiers.ts";
 import { GLOBAL_SELECTOR_INPUTS } from "#src/pipeline/inputs.ts";
+import { BUN_CACHE, BUN_CACHE_CONTROL } from "#src/pipeline/cache.ts";
 import {
   GITHUB_DOWNLOAD,
   STATE_BACKEND,
@@ -13,7 +18,7 @@ import {
  */
 
 /**
- * Stand-in for Buildkite's build UUID, which Woodpecker has no equivalent of.
+ * Per-build request UUID, which Woodpecker does not provide.
  *
  * ArgoCD's release-root wants a UUID-shaped request id to attribute an
  * operation to one build. The pipeline number is unique per build, so it is
@@ -24,6 +29,7 @@ const SYNTHETIC_REQUEST_ID =
   'request_id="00000000-0000-4000-8000-$(printf \'%012d\' "$CI_PIPELINE_NUMBER")"';
 
 const DRY_RUN_SITES = [
+  "statically-typed",
   "sjer.red",
   "resume",
   "webring",
@@ -33,12 +39,14 @@ const DRY_RUN_SITES = [
   "wiki",
   "better-skill-capped",
   "glitter",
-  "ts-mc",
   "ts-mc-docs",
   "scout-design-system",
 ];
 
-export function prGateSteps(images: CiImages): CiStep[] {
+export function prGateSteps(
+  images: CiImages,
+  trustedGateImage?: string,
+): CiStep[] {
   return [
     {
       key: "pr-dryrun",
@@ -76,7 +84,9 @@ export function prGateSteps(images: CiImages): CiStep[] {
         'bun --no-install scripts/release/update-versions.ts --commit-back --candidates "$pin_candidates" --dry-run',
         "bun --no-install scripts/release/release.ts --dry-run",
       ],
-      dependsOn: ["verify"],
+      // No dependsOn: the dry run installs and builds its own filtered
+      // subset and reads no verify handoff, so it runs alongside verify
+      // instead of adding its own admission wait and runtime after it.
       timeoutMinutes: 30,
       resources: PR_DRY_RUN_TIER,
       events: ["pull_request"],
@@ -99,17 +109,18 @@ export function prGateSteps(images: CiImages): CiStep[] {
           "packages/scout-for-lol/**",
         ],
       },
-      secrets: [
-        GITHUB_DOWNLOAD,
-        ...STATE_BACKEND,
-        grant("ci-argocd-credentials", "ARGOCD_AUTH_TOKEN"),
-      ],
+      secrets: [GITHUB_DOWNLOAD, ...STATE_BACKEND],
+      volumes: [BUN_CACHE, BUN_CACHE_CONTROL],
     },
     {
       key: "codex-review-gate",
       label: "automated review gate",
-      image: images.base,
-      commands: [". ci/scripts/toolchain.sh", "ci/scripts/review-gate.sh"],
+      image: trustedGateImage ?? images.base,
+      commands:
+        trustedGateImage === undefined
+          ? [". ci/scripts/toolchain.sh", "ci/scripts/review-gate.sh"]
+          : ["cd /app", "bun /app/review-gate.js"],
+      ...(trustedGateImage === undefined ? {} : { skipClone: true }),
       // Multi-provider OR gate: one clean review from any enabled provider
       // passes, a P0 from any of them vetoes, and unanimous quota blocks
       // stay advisory. Only providers confirmed reviewing in production
@@ -120,13 +131,14 @@ export function prGateSteps(images: CiImages): CiStep[] {
         REVIEW_PROVIDERS: "codex,coderabbit",
       },
       timeoutMinutes: 90,
-      resources: MEDIUM_TIER,
+      resources: trustedGateImage === undefined ? MEDIUM_TIER : GATE_TIER,
       events: ["pull_request"],
       // Codex's auth bundle carries a refresh token, so it must outlive the
       // ephemeral step pod.
-      volumes: [
-        { claim: "woodpecker-codex-auth", path: "/woodpecker/codex-auth" },
-      ],
+      volumes:
+        trustedGateImage === undefined
+          ? [{ claim: "woodpecker-codex-auth", path: "/woodpecker/codex-auth" }]
+          : [],
       secrets: [
         GITHUB_DOWNLOAD,
         grant("ci-github-credentials", "GITHUB_REVIEW_TOKEN"),

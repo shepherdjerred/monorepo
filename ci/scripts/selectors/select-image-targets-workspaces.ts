@@ -24,6 +24,9 @@ export type WorkspacePackage = {
 // toolkit-only or frontend-only dep bump changes the embedded artifact even
 // though no file under the target's source prefixes changed.
 const TARGET_EXTRA_OWNERS: Readonly<Record<string, readonly string[]>> = {
+  // The checkout-free review bundle is built from root scripts; its library
+  // ships in the image without becoming a dependency of the HTTP service.
+  "woodpecker-config-extension": ["@shepherdjerred/code-review"],
   "temporal-worker": ["@shepherdjerred/toolkit"],
   "discord-plays-pokemon": ["@discord-plays-pokemon/frontend"],
   "discord-plays-mario-kart": ["@discord-plays-mario-kart/frontend"],
@@ -33,6 +36,60 @@ const TARGET_EXTRA_OWNERS: Readonly<Record<string, readonly string[]>> = {
 // any production image. Keep it out of image closure attribution even when a
 // runtime workspace lists a tooling helper as a development dependency.
 const NON_IMAGE_WORKSPACE_DIRS = new Set(["scripts/"]);
+
+// Some images copy only shared contracts from a workspace. Dependency fingerprints
+// still use the entire closure; source selection follows the copied files.
+const PARTIAL_WORKSPACE_SOURCE_INPUTS: Readonly<
+  Record<string, Readonly<Record<string, readonly string[]>>>
+> = {
+  "storm-forum": {
+    "packages/the-storm": [
+      "packages/the-storm/package.json",
+      "packages/the-storm/public-status.json",
+    ],
+  },
+  "temporal-worker": {
+    "packages/the-storm": [
+      "packages/the-storm/package.json",
+      "packages/the-storm/server/owned/plugins/TheStorm/plot-reconcile.json",
+    ],
+    "packages/homelab": [
+      "packages/homelab/package.json",
+      "packages/homelab/src/domain-registry.ts",
+      "packages/homelab/src/domain-registry.json",
+    ],
+  },
+};
+
+export const pathMatchesPrefix = (path: string, prefix: string): boolean =>
+  prefix.endsWith("/") ? path.startsWith(prefix) : path === prefix;
+
+function workspaceSourceMatches(
+  target: string,
+  dir: string,
+  path: string,
+): boolean {
+  const inputs = PARTIAL_WORKSPACE_SOURCE_INPUTS[target]?.[dir] ?? [`${dir}/`];
+  return inputs.some((prefix) => pathMatchesPrefix(path, prefix));
+}
+
+export function workspaceSourceChanges(
+  changedPaths: readonly string[],
+  owners: Readonly<Record<string, string>>,
+  packages: ReadonlyMap<string, WorkspacePackage>,
+): { target: string; path: string; dir: string }[] {
+  const changes = [];
+  for (const [target, owner] of Object.entries(owners)) {
+    const dirs = targetClosureDirs(target, owner, packages);
+    for (const path of changedPaths) {
+      const dir = dirs.find((candidate) =>
+        workspaceSourceMatches(target, candidate, path),
+      );
+      if (dir !== undefined) changes.push({ target, path, dir });
+    }
+  }
+  return changes;
+}
 
 function stringArray(value: unknown, label: string): string[] {
   if (

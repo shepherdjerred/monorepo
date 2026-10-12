@@ -101,6 +101,7 @@ final class SignCopier implements Listener {
 
   @EventHandler
   void onQuit(PlayerQuitEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getPlayer())) return;
     clipboards.remove(event.getPlayer().getUniqueId());
   }
 }

@@ -1,5 +1,11 @@
-import { RawMatchSchema, type RawMatch } from "@scout-for-lol/data";
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
+import {
+  RawMatchSchema,
+  SCOUT_CLIENT_DATA_VERSION,
+  type RawMatch,
+} from "@scout-for-lol/data";
 import { convertParticipant } from "./lcu-participant.ts";
+import { firstObjectiveTeam } from "./lcu-team.ts";
 import {
   LocalMatchBundleSchema,
   SourcePlayerSchema,
@@ -10,6 +16,19 @@ import {
 } from "./lcu-schema.ts";
 
 export const LOCAL_MATCH_TIMING_DRIFT_MS = 30_000;
+
+/**
+ * A finished game has players on at least two sides — a 1v1 custom has
+ * exactly two. A match-history list row names only the local player, so it
+ * fields one side and is refused rather than published as a one-player match.
+ * Counted from the players, not `teams`: an Arena game lists teams 100 and 0
+ * while its players sit on 100 and 200.
+ */
+const MIN_FIELDED_SIDES = 2;
+
+function fieldedSides(participants: readonly { teamId: number }[]): number {
+  return new Set(participants.map((participant) => participant.teamId)).size;
+}
 
 function stringFrom(record: ValueRecord, ...keys: string[]) {
   for (const key of keys) {
@@ -48,7 +67,7 @@ function sourcePuuid(player: SourcePlayer) {
  * closed instead of receiving plausible-looking zeroes.
  */
 export function convertLcuMatchBundle(
-  riotMatchId: string,
+  riotMatchId: RiotMatchId,
   payload: unknown,
 ): RawMatch | null {
   const parsed = LocalMatchBundleSchema.safeParse(payload);
@@ -88,14 +107,17 @@ export function convertLcuMatchBundle(
   });
   if (
     participants.length !== game.participants.length ||
-    participants.length !== game.participantIdentities.length
+    participants.length !== game.participantIdentities.length ||
+    fieldedSides(participants) < MIN_FIELDED_SIDES
   ) {
     return null;
   }
+  const teams = convertTeams(bundle, participants);
+  if (teams === null) return null;
 
   const converted = RawMatchSchema.safeParse({
     metadata: {
-      dataVersion: "local-1",
+      dataVersion: SCOUT_CLIENT_DATA_VERSION,
       matchId: riotMatchId,
       participants: participants.map((participant) => participant.puuid),
     },
@@ -106,7 +128,7 @@ export function convertLcuMatchBundle(
       gameEndTimestamp: bundle.timing.gameEndTimestamp,
       gameId: game.gameId,
       gameMode: game.gameMode,
-      gameName: game.gameName,
+      ...(game.gameName === undefined ? {} : { gameName: game.gameName }),
       gameStartTimestamp: bundle.timing.gameStartTimestamp,
       gameType: game.gameType,
       gameVersion: game.gameVersion,
@@ -114,7 +136,46 @@ export function convertLcuMatchBundle(
       participants,
       platformId: game.platformId,
       queueId: game.queueId,
-      teams: game.teams.map((team) => ({
+      teams,
+      tournamentCode: game.tournamentCode,
+    },
+  });
+  return converted.success ? converted.data : null;
+}
+
+/**
+ * Match-V5 teams, or `null` when a required "first" can't be proven. Rift
+ * Herald's comes from the payload when stated, otherwise from kill counts and
+ * the timeline. Voidgrubs, optional in Match-V5, appear only when provable.
+ */
+function convertTeams(
+  bundle: LocalMatchBundle,
+  participants: readonly { teamId: number; kills: number }[],
+) {
+  const game = bundle.matchHistory;
+  const statedHerald = game.teams.every(
+    (team) => team.firstRiftHerald !== undefined,
+  );
+  const heraldTeam = statedHerald
+    ? (game.teams.find((team) => team.firstRiftHerald === true)?.teamId ?? null)
+    : firstObjectiveTeam({
+        game,
+        timeline: bundle.timeline,
+        kills: (team) => team.riftHeraldKills,
+        monsterType: "RIFTHERALD",
+      });
+  if (heraldTeam === undefined) return null;
+  const hordeTeam = firstObjectiveTeam({
+    game,
+    timeline: bundle.timeline,
+    kills: (team) => team.hordeKills,
+    monsterType: "HORDE",
+  });
+  const teams = game.teams.flatMap((team) => {
+    const firstDragon = team.firstDragon ?? team.firstDargon;
+    if (firstDragon === undefined) return [];
+    return [
+      {
         bans: team.bans,
         objectives: {
           baron: { first: team.firstBaron, kills: team.baronKills },
@@ -124,22 +185,29 @@ export function convertLcuMatchBundle(
               .filter((participant) => participant.teamId === team.teamId)
               .reduce((sum, participant) => sum + participant.kills, 0),
           },
-          dragon: { first: team.firstDragon, kills: team.dragonKills },
+          dragon: { first: firstDragon, kills: team.dragonKills },
+          ...(hordeTeam === undefined || team.hordeKills === undefined
+            ? {}
+            : {
+                horde: {
+                  first: hordeTeam === team.teamId,
+                  kills: team.hordeKills,
+                },
+              }),
           inhibitor: {
             first: team.firstInhibitor,
             kills: team.inhibitorKills,
           },
           riftHerald: {
-            first: team.firstRiftHerald,
+            first: heraldTeam === team.teamId,
             kills: team.riftHeraldKills,
           },
           tower: { first: team.firstTower, kills: team.towerKills },
         },
         teamId: team.teamId,
         win: team.win === true || team.win === "Win",
-      })),
-      tournamentCode: game.tournamentCode,
-    },
+      },
+    ];
   });
-  return converted.success ? converted.data : null;
+  return teams.length === game.teams.length ? teams : null;
 }

@@ -318,7 +318,6 @@ packages/glitter:typecheck
 packages/resume:test
 packages/resume:lint
 packages/resume:typecheck
-packages/streambot:build
 packages/monarch:build
 packages/llm-observability:build
 packages/discord-plays-core:build
@@ -352,8 +351,6 @@ packages/macos-cross-compiler:test
 packages/macos-cross-compiler:lint
 packages/macos-cross-compiler:typecheck
 packages/sjer.red:test
-packages/ts-mc:test
-packages/ts-mc-docs:test
 packages/release-tools:build
 packages/release-tools:lint
 packages/release-tools:typecheck
@@ -365,6 +362,15 @@ packages/macos-ai-subscription-tracker:build
 packages/macos-ai-subscription-tracker:test
 packages/macos-ai-subscription-tracker:lint
 packages/macos-ai-subscription-tracker:typecheck
+packages/homelab:build
+packages/dotfiles:build
+packages/tasknotes-e2e:build
+packages/seaweedfs-backup:build
+packages/discord-plays-mario-kart:build
+packages/discord-plays-pokemon:build
+packages/scout-for-lol:build
+packages/scout-for-lol/packages/temporal:build
+packages/scout-for-lol/packages/domain:build
 `
     .trim()
     .split("\n"),

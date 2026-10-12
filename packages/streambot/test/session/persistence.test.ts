@@ -2,6 +2,7 @@ import { afterEach, describe, expect, test } from "vitest";
 import { mkdtemp, rm, writeFile, readdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { buildResumeInput } from "@shepherdjerred/streambot/state/resume.ts";
 import {
   loadState,
   moveState,
@@ -57,6 +58,28 @@ afterEach(async () => {
 });
 
 describe("persistence round-trip", () => {
+  test("queue attribution and display metadata survive persistence and resume without history", async () => {
+    const file = await tempFile();
+    const entry = {
+      source: { kind: "url" as const, url: "https://youtu.be/track" },
+      requesterId: U,
+      queuedAt: 850,
+      display: {
+        title: "A track",
+        thumbnailUrl: "https://i.ytimg.com/vi/track/hqdefault.jpg",
+        durationSeconds: 3601,
+      },
+    };
+    const state = makeState({ queue: [entry] });
+    await saveState(file, state);
+    const loaded = await loadState(file, 3600, state.savedAt);
+    const resumed = buildResumeInput(
+      loaded,
+      { guildId: G, channelId: C, idleTimeoutMs: 1000 },
+      { maxResumeAttempts: 3 },
+    );
+    expect(resumed.input.initialQueue?.[1]).toEqual(entry);
+  });
   test("saveState then loadState returns equivalent data", async () => {
     const file = await tempFile();
     const state = makeState();

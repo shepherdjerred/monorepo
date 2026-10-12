@@ -25,8 +25,8 @@ export const httpRequestsTotal = new Counter({
 /**
  * Wall-clock time to serve a request.
  *
- * `/metrics` is excluded by the caller: `getMetrics()` performs a full DB sweep
- * on every scrape, so including it would make this histogram describe our own
+ * `/metrics` is excluded by the caller: `getMetrics()` can perform a full DB
+ * sweep during a scrape, so including it would make this histogram describe our own
  * scrape cost rather than user-facing latency.
  */
 export const httpRequestDuration = new Histogram({

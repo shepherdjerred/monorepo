@@ -185,7 +185,10 @@ describe("getChampionLoadingImageBase64 — missing asset", () => {
     await expect(
       getChampionLoadingImageBase64("NonExistentChampion"),
     ).rejects.toThrow(
-      /Image not found at .*\/champion-loading\/NonExistentChampion_0\.jpg.*Run 'bun run update-data-dragon'/,
+      // Either separator: the message names a real filesystem path, which is
+      // backslashed on Windows. Pinning it to `/` only held while the path was
+      // built from a URL pathname, which is what made every lookup fail there.
+      /Image not found at .*[\\/]champion-loading[\\/]NonExistentChampion_0\.jpg.*Run 'bun run update-data-dragon'/,
     );
   });
 });

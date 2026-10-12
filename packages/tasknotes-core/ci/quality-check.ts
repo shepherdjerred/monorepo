@@ -6,10 +6,29 @@ const members = await workspaceMembers();
 const itemLevelAllow = ["#[", "allow("].join("");
 const crateLevelAllow = ["#![", "allow("].join("");
 
-for (const file of new Bun.Glob("**/*.rs").scanSync({
-  cwd: workspaceRoot,
-  onlyFiles: true,
-})) {
+// Enumerate tracked and new source files without walking Cargo's changing
+// target directory while other workspace tasks compile in parallel.
+const sources = Bun.spawnSync(
+  [
+    "git",
+    "ls-files",
+    "--cached",
+    "--others",
+    "--exclude-standard",
+    "-z",
+    "--",
+    "*.rs",
+  ],
+  { cwd: workspaceRoot, stdout: "pipe", stderr: "pipe" },
+);
+if (sources.exitCode !== 0) {
+  throw new Error(
+    `git ls-files exited with status ${String(sources.exitCode)}.`,
+  );
+}
+const sourcePaths = new TextDecoder().decode(sources.stdout).split("\0");
+for (const file of sourcePaths) {
+  if (file === "") continue;
   if (file.startsWith("target/") || file.includes("/target/")) {
     continue;
   }

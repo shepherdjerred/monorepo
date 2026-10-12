@@ -46,10 +46,11 @@ final class ShippedContentTest {
   void theShippedConfigParses() {
     var config = ConfigFiles.load(OWNED.resolve("npcs.yml"), NpcsConfig.class);
     assertThat(config.movement().speed()).isLessThanOrEqualTo(MovementSettings.MAX_SPEED);
-    assertThat(config.navigator().entity()).isEqualTo("minecraft:llama");
+    assertThat(config.navigator().followRange()).isEqualTo(48.0);
     assertThat(config.markers().available()).isEqualTo("!");
     assertThat(config.markers().turnIn()).isEqualTo("?");
     assertThat(config.guard().attackReach()).isLessThan(config.guard().detectionRadius());
+    assertThat(config.warningPhrases()).hasSize(24).doesNotHaveDuplicates();
   }
 
   @Test
@@ -68,6 +69,8 @@ final class ShippedContentTest {
             "east-guard",
             "west-guard");
     assertThat(content.chunks()).isNotEmpty();
+    assertThat(content.npcs().values().stream().filter(npc -> npc.roles().contains("guard")))
+        .hasSize(8);
     for (var id : List.of("east-guard", "west-guard")) {
       var guard = content.npc(id).orElseThrow();
       assertThat(guard.roles()).contains("guard");
@@ -105,13 +108,12 @@ final class ShippedContentTest {
   }
 
   @Test
-  void theBankerSaysTheBankOpensSoon() {
+  void theBankerPointsPlayersToTheAvailableExchange() {
     var content = shipped();
     var braxton = content.npc("braxton").orElseThrow();
     assertThat(braxton.roles()).containsExactly("banker");
     var greet = content.dialogue(braxton).orElseThrow().nodes().get("greet");
-    assertThat(java.util.Objects.requireNonNull(greet).text())
-        .isEqualTo("The Storm Bank opens soon. Keep your crystals close.");
+    assertThat(java.util.Objects.requireNonNull(greet).text()).contains("/shop braxtons-exchange");
     assertThat(braxton.trainer()).isEmpty();
   }
 
@@ -160,7 +162,7 @@ final class ShippedContentTest {
   void configRecordsRejectBadValues() {
     assertThatThrownBy(() -> new NpcsConfig.Animation(4, 2, 20))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(() -> new NpcsConfig.Navigator("llama", 48))
+    assertThatThrownBy(() -> new NpcsConfig.Navigator(8))
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(() -> new NpcsConfig.Markers("", "?", 2.3))
         .isInstanceOf(IllegalArgumentException.class);

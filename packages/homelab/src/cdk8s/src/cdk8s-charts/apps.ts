@@ -1,3 +1,4 @@
+import { createGlitterBoysLauncherApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/glitter-boys-launcher.ts";
 import type { App } from "cdk8s";
 import { Chart } from "cdk8s";
 import { createOnePasswordApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/1password.ts";
@@ -69,8 +70,11 @@ import { createBuildkitdApp } from "@shepherdjerred/homelab/cdk8s/src/resources/
 import { createAlertDashboardApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/alert-dashboard.ts";
 import { createStashApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/media/stash.ts";
 import { createStormBrainApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/storm-brain.ts";
+import { createMcSandboxApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/mc-sandbox.ts";
+import { createStormForumApplications } from "@shepherdjerred/homelab/cdk8s/src/resources/storm-forum/releases.ts";
 import { createPvcBackupAdmissionPolicies } from "@shepherdjerred/homelab/cdk8s/src/resources/pvc-backup-admission.ts";
 import { createMinecraftMiningResetGuard } from "@shepherdjerred/homelab/cdk8s/src/resources/minecraft-mining-reset-guard.ts";
+import { createMinecraftRestorationGuard } from "@shepherdjerred/homelab/cdk8s/src/resources/minecraft-restoration-guard.ts";
 import { createArgoCdApplicationAdmissionPolicies } from "@shepherdjerred/homelab/cdk8s/src/resources/argocd-application-admission.ts";
 import { createWoodpeckerCiPodGuard } from "@shepherdjerred/homelab/cdk8s/src/resources/woodpecker/ci-pod-guard.ts";
 
@@ -85,6 +89,7 @@ export async function createAppsChart(app: App) {
   createArgoCdApplicationAdmissionPolicies(chart);
   createPvcBackupAdmissionPolicies(chart);
   createMinecraftMiningResetGuard(chart);
+  createMinecraftRestorationGuard(chart);
   createWoodpeckerCiPodGuard(chart);
 
   new Namespace(chart, `maintenance-namespace`, {
@@ -181,6 +186,7 @@ export async function createAppsChart(app: App) {
   createGolinkApp(chart);
   createFreshrssApp(chart);
   createPinchtabApp(chart);
+  createGlitterBoysLauncherApp(chart);
   createFliptApp(chart);
   createPokemonApp(chart);
   createMarioKartApp(chart);
@@ -198,6 +204,8 @@ export async function createAppsChart(app: App) {
   createAlertDashboardApp(chart);
   createStashApp(chart);
   createStormBrainApp(chart);
+  createMcSandboxApp(chart);
+  createStormForumApplications(chart);
 
   // ArgoCD AppProject
   createProject(chart);

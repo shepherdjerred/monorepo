@@ -22,7 +22,6 @@ const GUILD_ID = testGuildId("711");
 const ACTOR_ID = testAccountId("711");
 
 beforeEach(async () => {
-  await db.hallRecordBreakOutbox.deleteMany();
   await db.hallSettings.deleteMany();
 });
 

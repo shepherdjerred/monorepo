@@ -5,6 +5,7 @@
 // Confirmed by comparison with scout-for-lol/backend (working) which also
 // runs on Bun and uses @sentry/bun.
 import * as Sentry from "@sentry/bun";
+import { sentryDataCollection } from "@shepherdjerred/sentry-config";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { filterBirmelSentryEvent } from "./sentry-filters.ts";
 
@@ -30,6 +31,7 @@ export function initializeSentry(): void {
   }
 
   Sentry.init({
+    dataCollection: sentryDataCollection(),
     dsn: config.sentry.dsn,
     environment: config.sentry.environment,
     ...(config.sentry.release != null && config.sentry.release.length > 0
@@ -42,7 +44,7 @@ export function initializeSentry(): void {
     // Otherwise it lands first (initializeSentry runs before initializeTracing),
     // and Birmel's later provider registration collides — no spans
     // reach Tempo. Sentry stays for errors via captureException.
-    skipOpenTelemetrySetup: true,
+    enableOpenTelemetrySetup: false,
     // When debug is on, the SDK logs its own transport activity to stderr —
     // the only way to see "event sent" / "event dropped" details from
     // @sentry/bun, useful when triaging delivery issues.

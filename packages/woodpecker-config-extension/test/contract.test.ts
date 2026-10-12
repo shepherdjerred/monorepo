@@ -27,6 +27,9 @@ describe("Woodpecker v3.18.1 configuration request", () => {
       branch: "main",
       author: "shepherdjerred",
       sender: "shepherdjerred",
+      number: 519,
+      reviewed: 0,
+      reviewed_by: "",
       forge_url: "https://github.com/shepherdjerred/monorepo/pull/3121",
       changed_files: ["packages/woodpecker-config-extension/src/app.ts"],
     });
@@ -38,5 +41,24 @@ describe("Woodpecker v3.18.1 configuration request", () => {
     expect(ConfigExtensionRequestSchema.parse(request).pipeline.from_fork).toBe(
       false,
     );
+  });
+
+  test("reads signed draft state and rejects a malformed boolean", () => {
+    expect(ConfigExtensionRequestSchema.parse(request).pipeline.pr_draft).toBe(
+      false,
+    );
+    const draft = {
+      ...request,
+      pipeline: { ...request.pipeline, pr_draft: true },
+    };
+    expect(ConfigExtensionRequestSchema.parse(draft).pipeline.pr_draft).toBe(
+      true,
+    );
+    expect(
+      ConfigExtensionRequestSchema.safeParse({
+        ...draft,
+        pipeline: { ...draft.pipeline, pr_draft: "false" },
+      }).success,
+    ).toBe(false);
   });
 });

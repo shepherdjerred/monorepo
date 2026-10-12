@@ -57,6 +57,16 @@ final class LootChests {
     chests.forEach(chest -> inventory(chest).clear());
   }
 
+  /** Replenish available slots; a full cache keeps all its existing items. */
+  void restock(RandomGenerator random) {
+    for (var chest : chests) {
+      var inventory = inventory(chest);
+      for (var spec : table.roll(random)) {
+        inventory.addItem(items.arenaItem(spec));
+      }
+    }
+  }
+
   boolean isChest(BlockPos block) {
     return chests.contains(block);
   }

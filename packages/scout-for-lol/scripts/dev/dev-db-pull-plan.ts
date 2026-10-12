@@ -271,8 +271,11 @@ function blanked(column: string): ColumnRedaction {
  * `User` holds live Discord OAuth bearer tokens,
  * `ExploreConversation.shareToken` is the only credential a share link carries,
  * and a `TournamentLobby` carries both the Riot join code and the lobby
- * password. `TournamentRegistration` and `ScoutEffectClaim.key` are documented
- * in the schema as deliberately *not* credentials and are left alone.
+ * password. `TournamentLobby` was dropped with the Tournament API model; it
+ * stays here while a pull can target a deployed pre-retirement schema, and
+ * {@link redactionsForSource} skips it once the source no longer has it.
+ * `ScoutEffectClaim.key` is documented in the schema as deliberately *not* a
+ * credential and is left alone.
  */
 export const REDACTED_COLUMNS: Readonly<
   Record<string, readonly ColumnRedaction[]>
@@ -292,6 +295,25 @@ export const REDACTED_COLUMNS: Readonly<
     blanked("tokenExpiresAt"),
   ],
 };
+
+/**
+ * The redactions that apply to a source schema: a table the source does not
+ * have has no rows to carry, so it is skipped by name rather than failing the
+ * pull. Every other table keeps its redaction.
+ */
+export function redactionsForSource(sourceTables: readonly string[]): {
+  readonly apply: readonly (readonly [string, readonly ColumnRedaction[]])[];
+  readonly absent: readonly string[];
+} {
+  const present = new Set(sourceTables);
+  const entries = Object.entries(REDACTED_COLUMNS);
+  return {
+    apply: entries.filter(([table]) => present.has(table)),
+    absent: entries
+      .filter(([table]) => !present.has(table))
+      .map(([table]) => table),
+  };
+}
 
 const IDENTIFIER_PATTERN = /^[a-z_]\w*$/iu;
 

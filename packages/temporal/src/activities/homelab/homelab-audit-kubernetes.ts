@@ -62,16 +62,34 @@ type Deployment = z.infer<typeof DeploymentSchema>;
 type StatefulSet = z.infer<typeof StatefulSetSchema>;
 type DaemonSet = z.infer<typeof DaemonSetSchema>;
 
+function replicaState(
+  actual: number,
+  desired: number,
+): "none" | "partial" | "all" {
+  if (actual === 0) return "none";
+  return actual >= desired ? "all" : "partial";
+}
+
 function podFinding(pod: Pod): Finding | undefined {
+  const unreadyContainers = (pod.status.containerStatuses ?? [])
+    .filter((container) => !container.ready)
+    .map((container) => container.name)
+    .toSorted();
   const failed =
     !["Running", "Succeeded"].includes(pod.status.phase) ||
-    (pod.status.phase === "Running" &&
-      pod.status.containerStatuses?.some((container) => !container.ready) ===
-        true);
+    (pod.status.phase === "Running" && unreadyContainers.length > 0);
   if (!failed) return undefined;
   return {
+    id: `kubernetes/pod/${pod.metadata.namespace}/${pod.metadata.name}`,
+    condition: JSON.stringify({
+      phase: pod.status.phase,
+      unreadyContainers,
+    }),
     severity: "warning",
-    summary: `${pod.metadata.namespace}/${pod.metadata.name} Pod is ${pod.status.phase}`,
+    summary:
+      unreadyContainers.length === 0
+        ? `${pod.metadata.namespace}/${pod.metadata.name} Pod is ${pod.status.phase}`
+        : `${pod.metadata.namespace}/${pod.metadata.name} Pod is ${pod.status.phase} with unready containers: ${unreadyContainers.join(", ")}`,
     detail: pod.status.containerStatuses
       ?.map(
         (container) =>
@@ -88,6 +106,11 @@ function deploymentFinding(deployment: Deployment): Finding | undefined {
   const updated = deployment.status.updatedReplicas ?? 0;
   if (available >= desired && updated >= desired) return undefined;
   return {
+    id: `kubernetes/deployment/${deployment.metadata.namespace}/${deployment.metadata.name}`,
+    condition: JSON.stringify({
+      available: replicaState(available, desired),
+      updated: replicaState(updated, desired),
+    }),
     severity: "warning",
     summary: `${deployment.metadata.namespace}/${deployment.metadata.name} Deployment has unavailable replicas`,
     detail: `desired=${desired.toString()}; available=${available.toString()}; updated=${updated.toString()}`,
@@ -100,6 +123,8 @@ function statefulSetFinding(statefulSet: StatefulSet): Finding | undefined {
   const ready = statefulSet.status.readyReplicas ?? 0;
   if (ready >= desired) return undefined;
   return {
+    id: `kubernetes/statefulset/${statefulSet.metadata.namespace}/${statefulSet.metadata.name}`,
+    condition: JSON.stringify({ ready: replicaState(ready, desired) }),
     severity: "warning",
     summary: `${statefulSet.metadata.namespace}/${statefulSet.metadata.name} StatefulSet has unavailable replicas`,
     detail: `desired=${desired.toString()}; ready=${ready.toString()}`,
@@ -113,6 +138,11 @@ function daemonSetFinding(daemonSet: DaemonSet): Finding | undefined {
   const updated = daemonSet.status.updatedNumberScheduled ?? 0;
   if (available >= desired && updated >= desired) return undefined;
   return {
+    id: `kubernetes/daemonset/${daemonSet.metadata.namespace}/${daemonSet.metadata.name}`,
+    condition: JSON.stringify({
+      available: replicaState(available, desired),
+      updated: replicaState(updated, desired),
+    }),
     severity: "warning",
     summary: `${daemonSet.metadata.namespace}/${daemonSet.metadata.name} DaemonSet has unavailable pods`,
     detail: `desired=${desired.toString()}; available=${available.toString()}; updated=${updated.toString()}`,

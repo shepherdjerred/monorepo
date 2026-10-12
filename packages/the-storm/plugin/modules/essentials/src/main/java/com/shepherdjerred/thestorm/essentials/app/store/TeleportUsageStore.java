@@ -2,16 +2,19 @@ package com.shepherdjerred.thestorm.essentials.app.store;
 
 import com.shepherdjerred.thestorm.essentials.domain.teleport.TeleportKind;
 import com.shepherdjerred.thestorm.essentials.domain.teleport.TeleportUsage;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-/** Each player's multiplier and cooldown per teleport kind. */
+/** Player-wide usage, with atomic, idempotent delivery confirmation. */
 public interface TeleportUsageStore {
+  /** Delivered travel to record, including the oldest row the active policy may still need. */
+  record Confirmation(
+      UUID player, UUID operation, TeleportKind kind, TeleportUsage usage, Instant retainSince) {}
 
-  /** {@code player}'s usage of {@code kind}, or empty if they never used it. */
-  CompletableFuture<Optional<TeleportUsage>> find(UUID player, TeleportKind kind);
+  CompletableFuture<Optional<TeleportUsage>> find(UUID player, Instant since);
 
-  /** Replaces {@code player}'s usage of {@code kind}. */
-  CompletableFuture<Void> save(UUID player, TeleportKind kind, TeleportUsage usage);
+  /** Record delivery, set the cooldown and clear its charge obligation in one transaction. */
+  CompletableFuture<Void> confirm(Confirmation confirmation);
 }

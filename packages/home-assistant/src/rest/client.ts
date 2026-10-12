@@ -18,6 +18,7 @@ import {
   FireEventResponse,
   HaConfig,
   HistoryResponse,
+  LogbookEntry,
   ServiceCallResult,
 } from "./schemas.js";
 
@@ -132,6 +133,19 @@ export class HomeAssistantRestClient<S extends HaSchema = DefaultHaSchema> {
     const path = `/api/diagnostics/config_entry/${encodeURIComponent(configEntryId)}`;
     const body = ConfigEntryDiagnostics.parse(await this.request("GET", path));
     return dataSchema.parse(body.data);
+  }
+
+  public async getLogbook(
+    entityId: string,
+    start: Date,
+    end: Date,
+  ): Promise<LogbookEntry[]> {
+    const params = new URLSearchParams({
+      entity: entityId,
+      end_time: end.toISOString(),
+    });
+    const path = `/api/logbook/${start.toISOString()}?${params.toString()}`;
+    return z.array(LogbookEntry).parse(await this.request("GET", path));
   }
 
   private buildServicePath(

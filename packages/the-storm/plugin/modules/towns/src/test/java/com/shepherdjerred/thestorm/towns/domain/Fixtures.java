@@ -115,7 +115,8 @@ public final class Fixtures {
             List.of(new ChunkRange(WORLD, new ChunkCorner(-2, -2), new ChunkCorner(1, 1))),
             List.of()),
         List.of(allow),
-        RegionSpawns.unlimited());
+        RegionSpawns.unlimited(),
+        com.shepherdjerred.thestorm.towns.domain.region.RegionProfile.PRESERVE);
   }
 
   public static RegionAllowance allow(Action action, Subject... subjects) {

@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test, vi } from "vitest";
 import {
   ExploreLoadoutCardRequestSchema,
@@ -16,23 +17,23 @@ import {
 import {
   fetchMatchLoadoutRows,
   type LakeMatchLoadoutRow,
-} from "#src/reports/duckdb/consumer-match-loadout-lake-reads.ts";
+} from "#src/reports/duckdb/consumer/match-loadout-lake-reads.ts";
 import {
   fetchTimelineCoverage,
   fetchTimelineEventPage,
-} from "#src/reports/duckdb/consumer-profile-lake-reads.ts";
+} from "#src/reports/duckdb/consumer/profile-lake-reads.ts";
 
-vi.mock("#src/reports/duckdb/consumer-match-loadout-lake-reads.ts", () => ({
+vi.mock("#src/reports/duckdb/consumer/match-loadout-lake-reads.ts", () => ({
   fetchMatchLoadoutRows: vi.fn(),
 }));
-vi.mock("#src/reports/duckdb/consumer-profile-lake-reads.ts", () => ({
+vi.mock("#src/reports/duckdb/consumer/profile-lake-reads.ts", () => ({
   fetchTimelineCoverage: vi.fn(),
   fetchTimelineEventPage: vi.fn(),
 }));
 
 const PUUID = "0192af5b-0c88-7c3a-a17f-858c0a170001";
 const LOADOUT_ROW: LakeMatchLoadoutRow = {
-  match_id: "NA1_12345",
+  match_id: RiotMatchIdSchema.parse("NA1_12345"),
   game_duration_seconds: 1800,
   puuid: PUUID,
   participant_id: 1,
@@ -330,7 +331,7 @@ describe("Explore loadout card hydration", () => {
   test("maps participant fields and asset filenames without retaining the PUUID", () => {
     const card = buildExploreLoadoutCard({
       request: ExploreLoadoutCardRequestSchema.parse({
-        matchId: "NA1_12345",
+        matchId: RiotMatchIdSchema.parse("NA1_12345"),
         puuid: PUUID,
         size: "L",
       }),
@@ -339,7 +340,7 @@ describe("Explore loadout card hydration", () => {
     });
 
     expect(card).toMatchObject({
-      matchId: "NA1_12345",
+      matchId: RiotMatchIdSchema.parse("NA1_12345"),
       championName: "Ahri",
       finalItems: [
         { slot: 0, itemId: 1056, name: "Doran's Ring" },
@@ -379,7 +380,7 @@ describe("Explore loadout card hydration", () => {
   test("marks rune IDs outside the pinned catalog as unknown", () => {
     const card = buildExploreLoadoutCard({
       request: ExploreLoadoutCardRequestSchema.parse({
-        matchId: "NA1_12345",
+        matchId: RiotMatchIdSchema.parse("NA1_12345"),
         puuid: PUUID,
         size: "L",
       }),

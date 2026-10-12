@@ -34,11 +34,13 @@ public class AudioLoader implements ResourceLoader<AudioName, Audio> {
       int sampleRate = sampleRateBuffer.get();
 
       int format = -1;
+      if(rawAudioBuffer==null)throw new java.io.IOException("Cannot decode audio: "+file);
       if (channels == 1) {
         format = AL_FORMAT_MONO16;
       } else if (channels == 2) {
         format = AL_FORMAT_STEREO16;
       }
+      if(format==-1){free(rawAudioBuffer);throw new java.io.IOException("Unsupported audio channels: "+channels);}
 
       int alBufferName = alGenBuffers();
 

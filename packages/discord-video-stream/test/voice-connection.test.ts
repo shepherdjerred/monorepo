@@ -10,6 +10,7 @@ const CLOSE: MediaConnectionCloseInfo = {
   canResume: false,
   deliberate: true,
 };
+const RELAYED_CLOSE: MediaConnectionCloseInfo = { ...CLOSE, source: "go-live" };
 
 function makeConnections(): {
   voice: VoiceConnection;
@@ -50,7 +51,7 @@ describe("VoiceConnection stream close relay", () => {
     voice.streamConnection = first;
     first.emit("close", CLOSE);
 
-    expect(closes).toEqual([CLOSE]);
+    expect(closes).toEqual([RELAYED_CLOSE]);
   });
 
   test("keeps a cleared child observable through teardown, then replaces it", () => {
@@ -61,12 +62,12 @@ describe("VoiceConnection stream close relay", () => {
     voice.streamConnection = first;
     voice.streamConnection = undefined;
     first.emit("close", CLOSE);
-    expect(closes).toEqual([CLOSE]);
+    expect(closes).toEqual([RELAYED_CLOSE]);
 
     voice.streamConnection = second;
     first.emit("close", CLOSE);
-    expect(closes).toEqual([CLOSE]);
+    expect(closes).toEqual([RELAYED_CLOSE]);
     second.emit("close", CLOSE);
-    expect(closes).toEqual([CLOSE, CLOSE]);
+    expect(closes).toEqual([RELAYED_CLOSE, RELAYED_CLOSE]);
   });
 });

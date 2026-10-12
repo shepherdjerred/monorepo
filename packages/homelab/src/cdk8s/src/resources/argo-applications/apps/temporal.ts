@@ -5,7 +5,6 @@ export function createTemporalApp(chart: Chart) {
   return new Application(chart, "temporal-app", {
     metadata: {
       name: "temporal",
-      annotations: { "argocd.argoproj.io/sync-wave": "-1" },
     },
     spec: {
       revisionHistoryLimit: 5,
@@ -19,9 +18,18 @@ export function createTemporalApp(chart: Chart) {
         server: "https://kubernetes.default.svc",
         namespace: "temporal",
       },
+      ignoreDifferences: [
+        {
+          group: "",
+          kind: "ConfigMap",
+          name: "velero-r2-orphan-audit-state",
+          namespace: "temporal",
+          jsonPointers: ["/data/audit.json"],
+        },
+      ],
       syncPolicy: {
         automated: { enabled: true },
-        syncOptions: ["CreateNamespace=true"],
+        syncOptions: ["CreateNamespace=true", "RespectIgnoreDifferences=true"],
       },
     },
   });

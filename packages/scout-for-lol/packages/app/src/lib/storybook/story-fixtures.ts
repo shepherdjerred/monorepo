@@ -1,4 +1,6 @@
 import {
+  DiscordChannelIdSchema,
+  DiscordGuildIdSchema,
   ExploreConversationSchema,
   ReportAiPreviewSummarySchema,
   VisualizationSnapshotSchema,
@@ -19,6 +21,25 @@ import {
  * the contract fails at build time instead of rendering a story nobody could
  * ever see in the product.
  */
+
+/** The server the subscription stories manage. */
+export const STORY_GUILD_ID = DiscordGuildIdSchema.parse("469558207670419456");
+
+/** The postable channels the subscription stories offer. */
+export const STORY_CHANNELS = [
+  {
+    id: DiscordChannelIdSchema.parse("1069813984308248657"),
+    name: "match-reports",
+  },
+  {
+    id: DiscordChannelIdSchema.parse("1069814032311730227"),
+    name: "ranked-only",
+  },
+  {
+    id: DiscordChannelIdSchema.parse("1069814077526343710"),
+    name: "aram-night",
+  },
+];
 
 type PreviewRow = ReportAiPreviewSummary["rows"][number];
 

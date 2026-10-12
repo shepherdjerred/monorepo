@@ -42,7 +42,7 @@ type WatchHandle = {
 
 export type VaultWatchSource = (
   vaultPath: string,
-  onChange: (filename: string | null) => void,
+  onChange: (filename: string | null | undefined) => void,
   onError: (error: unknown) => void,
 ) => WatchHandle;
 
@@ -71,6 +71,24 @@ export function watchVault(
   let needsFullRescan = false;
   let debounceTimer: ReturnType<typeof setTimeout> | null = null;
   let maxWaitTimer: ReturnType<typeof setTimeout> | null = null;
+  let rearmTimer: ReturnType<typeof setTimeout> | null = null;
+
+  function isClosed(): boolean {
+    // User callbacks can close the watcher synchronously.
+    return closed;
+  }
+
+  function scheduleRearm(): void {
+    if (closed) return;
+    rearmTimer ??= setTimeout(() => {
+      rearmTimer = null;
+      if (arm()) {
+        // Include changes after the error rescan, while no watch was armed.
+        needsFullRescan = true;
+        schedule();
+      }
+    }, rearmDelayMs);
+  }
 
   function flush(): void {
     if (debounceTimer !== null) clearTimeout(debounceTimer);
@@ -90,13 +108,15 @@ export function watchVault(
     maxWaitTimer ??= setTimeout(flush, maxWaitMs);
   }
 
-  function arm(): void {
-    if (closed) return;
+  function arm(): boolean {
+    if (closed) return false;
     try {
       watcher = watchSource(
         vaultPath,
         (filename) => {
-          if (filename === null) {
+          if (closed) return;
+          // Bun may omit the filename, while Node reports null.
+          if (filename === null || filename === undefined) {
             needsFullRescan = true;
             schedule();
             return;
@@ -110,18 +130,23 @@ export function watchVault(
           schedule();
         },
         (error) => {
+          if (closed) return;
           events.onError?.(error);
+          if (isClosed()) return;
           watcher?.close();
           watcher = null;
           // The watch itself may have missed events while broken.
           needsFullRescan = true;
           schedule();
-          setTimeout(arm, rearmDelayMs);
+          scheduleRearm();
         },
       );
+      return true;
     } catch (error) {
       events.onError?.(error);
-      setTimeout(arm, rearmDelayMs);
+      if (isClosed()) return false;
+      scheduleRearm();
+      return false;
     }
   }
 
@@ -138,6 +163,7 @@ export function watchVault(
       clearInterval(safetyTimer);
       if (debounceTimer !== null) clearTimeout(debounceTimer);
       if (maxWaitTimer !== null) clearTimeout(maxWaitTimer);
+      if (rearmTimer !== null) clearTimeout(rearmTimer);
       watcher?.close();
     },
   };

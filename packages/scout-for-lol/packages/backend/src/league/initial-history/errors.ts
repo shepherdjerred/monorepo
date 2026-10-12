@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 export type PermanentImportErrorCode = "authentication" | "contract";
 
 export class PermanentImportError extends Error {
@@ -25,7 +26,7 @@ export class LakeStagingError extends Error {
 }
 
 export class ImportStorageError extends Error {
-  constructor(matchId: string, cause: unknown) {
+  constructor(matchId: RiotMatchId, cause: unknown) {
     super(`Canonical storage failed for imported match ${matchId}`, { cause });
     this.name = "ImportStorageError";
   }

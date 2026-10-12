@@ -22,7 +22,9 @@ import type {
 
 import {
   loadWorkspaces,
+  pathMatchesPrefix,
   targetClosureDirs,
+  workspaceSourceChanges,
 } from "./select-image-targets-workspaces.ts";
 import type { WorkspacePackage } from "./select-image-targets-workspaces.ts";
 import { unpublishedImagePinInspectionFailure } from "./select-image-targets-pins.ts";
@@ -60,6 +62,7 @@ const GLOBAL_IMAGE_INPUTS = [
   // The image lane writes the digest handoff every downstream release step
   // reads, so a change to the producer must rebuild every target once.
   "scripts/lib/ci/ci-handoff.ts",
+  "scripts/lib/ci/published-image-release.ts",
   "ci/scripts/images/ghcr-public-access.ts",
   "ci/scripts/images/image-targets.ts",
   "ci/scripts/migration-core.ts",
@@ -87,6 +90,7 @@ const SHARED_APPLICATION_IMAGE_INPUTS = [
 
 export const TARGET_PATH_PREFIXES: Readonly<Record<string, readonly string[]>> =
   {
+    "woodpecker-config-extension": ["scripts/review/", "scripts/lib/review/"],
     "scout-for-lol": [
       "packages/scout-for-lol/scripts/contract-hash.ts",
       "packages/scout-for-lol/tsconfig.base.json",
@@ -97,6 +101,8 @@ export const TARGET_PATH_PREFIXES: Readonly<Record<string, readonly string[]>> =
     "discord-plays-pokemon": ["packages/discord-plays-pokemon/"],
     "discord-plays-mario-kart": ["packages/discord-plays-mario-kart/"],
     infra: [
+      "packages/homelab/src/domain-registry.json",
+      "packages/homelab/src/domain-registry.ts",
       "packages/homelab/images/",
       "packages/homelab/scripts/smoke-images.ts",
       "packages/homelab/src/cdk8s/scripts/generate-caddyfile.ts",
@@ -108,13 +114,12 @@ export const TARGET_PATH_PREFIXES: Readonly<Record<string, readonly string[]>> =
       // server/ (Dockerfile, pinned jar manifest, config bundle).
       "packages/the-storm/plugin/",
       "packages/the-storm/server/",
-      // The Dockerfile also reads this named context during plugin compilation.
+      "packages/the-storm/public-status.json",
+      // The Dockerfile also reads these named contexts during plugin compilation.
       "packages/feature-flags/src/managed-flag-inventory.json",
+      "packages/storm-brain/contracts/companion-chat.json",
     ],
   };
-
-const pathMatchesPrefix = (path: string, prefix: string): boolean =>
-  prefix.endsWith("/") ? path.startsWith(prefix) : path === prefix;
 
 /** Optional changed-file contents the selector attributes precisely. */
 export type SelectorInputs = {
@@ -240,14 +245,12 @@ function addClosureReasons(
   packages: ReadonlyMap<string, WorkspacePackage>,
   reasons: Map<string, string[]>,
 ): void {
-  for (const [target, owner] of Object.entries(IMAGE_TARGET_OWNERS)) {
-    const dirs = targetClosureDirs(target, owner, packages);
-    for (const path of changedPaths) {
-      const dir = dirs.find((candidate) => path.startsWith(candidate));
-      if (dir !== undefined) {
-        addReason(reasons, target, `workspace closure: ${path} under ${dir}/`);
-      }
-    }
+  for (const { target, path, dir } of workspaceSourceChanges(
+    changedPaths,
+    IMAGE_TARGET_OWNERS,
+    packages,
+  )) {
+    addReason(reasons, target, `workspace closure: ${path} under ${dir}/`);
   }
 }
 
@@ -561,6 +564,4 @@ async function main(): Promise<void> {
   console.log(JSON.stringify(targets));
 }
 
-if (import.meta.main) {
-  await main();
-}
+if (import.meta.main) await main();

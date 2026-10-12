@@ -2,12 +2,14 @@ package com.shepherdjerred.thestorm.essentials.adapter.db;
 
 import static com.shepherdjerred.thestorm.essentials.adapter.db.generated.Tables.ESSENTIALS_BACK_HISTORY;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.essentials.app.TeleportAttempt;
 import com.shepherdjerred.thestorm.essentials.app.store.KitClaimStore.KitClaim;
 import com.shepherdjerred.thestorm.essentials.app.store.PlayerStore.KnownPlayer;
+import com.shepherdjerred.thestorm.essentials.app.store.TeleportUsageStore.Confirmation;
 import com.shepherdjerred.thestorm.essentials.domain.back.BackEntry;
 import com.shepherdjerred.thestorm.essentials.domain.home.Home;
 import com.shepherdjerred.thestorm.essentials.domain.home.HomeError;
@@ -21,9 +23,9 @@ import com.shepherdjerred.thestorm.essentials.domain.moderation.ModerationAction
 import com.shepherdjerred.thestorm.essentials.domain.place.PlaceName;
 import com.shepherdjerred.thestorm.essentials.domain.place.Position;
 import com.shepherdjerred.thestorm.essentials.domain.place.Warp;
-import com.shepherdjerred.thestorm.essentials.domain.teleport.Multiplier;
 import com.shepherdjerred.thestorm.essentials.domain.teleport.TeleportKind;
 import com.shepherdjerred.thestorm.essentials.domain.teleport.TeleportUsage;
+import com.shepherdjerred.thestorm.essentials.domain.teleport.TeleportUse;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
@@ -49,6 +51,10 @@ final class JooqStoresTest {
   void open() {
     database = StormDatabase.open(directory.resolve("t.db"));
     database.migrate("essentials", JooqStoresTest.class.getClassLoader());
+  }
+
+  private void confirm(JooqTeleportUsageStore store, Confirmation confirmation) {
+    store.confirm(confirmation).join();
   }
 
   @AfterEach
@@ -207,18 +213,81 @@ final class JooqStoresTest {
   }
 
   @Test
-  void teleportUsageRoundTripsAndIsReplaced() {
+  void teleportHistoryIsSharedDurableAndConfirmedExactlyOnce() {
     var store = new JooqTeleportUsageStore(database);
-    var first = new TeleportUsage(Multiplier.of(1.5), T0, T0.plusSeconds(60));
-    var second = new TeleportUsage(Multiplier.of(2), T0.plusSeconds(90), T0.plusSeconds(210));
+    var cutoff = T0.minus(Duration.ofHours(1));
+    var first = new TeleportUsage(List.of(new TeleportUse(T0, 2)), T0.plusSeconds(60));
+    var second =
+        new TeleportUsage(
+            List.of(new TeleportUse(T0, 2), new TeleportUse(T0.plusSeconds(90), 1)),
+            T0.plusSeconds(210));
+    var operation = UUID.randomUUID();
+    var attempts = new JooqTeleportAttemptStore(database);
+    attempts.insert(new TeleportAttempt(operation, ALICE, TeleportKind.WARP, 15)).join();
 
-    assertThat(store.find(ALICE, TeleportKind.HOME).join()).isEmpty();
-    store.save(ALICE, TeleportKind.HOME, first).join();
-    assertThat(store.find(ALICE, TeleportKind.HOME).join()).contains(first);
-    store.save(ALICE, TeleportKind.HOME, second).join();
-    assertThat(store.find(ALICE, TeleportKind.HOME).join()).contains(second);
-    assertThat(store.find(ALICE, TeleportKind.WARP).join()).isEmpty();
-    assertThat(store.find(BOB, TeleportKind.HOME).join()).isEmpty();
+    assertThat(store.find(ALICE, cutoff).join()).isEmpty();
+    confirm(store, new Confirmation(ALICE, UUID.randomUUID(), TeleportKind.HOME, first, cutoff));
+    assertThat(store.find(ALICE, cutoff).join()).contains(first);
+    confirm(store, new Confirmation(ALICE, operation, TeleportKind.WARP, second, cutoff));
+    confirm(store, new Confirmation(ALICE, operation, TeleportKind.WARP, second, cutoff));
+    assertThat(store.find(ALICE, cutoff).join()).contains(second);
+    assertThat(attempts.pending().join()).isEmpty();
+    assertThat(store.find(BOB, cutoff).join()).isEmpty();
+
+    database.close();
+    database = StormDatabase.open(directory.resolve("t.db"));
+    var reopened = new JooqTeleportUsageStore(database);
+    assertThat(reopened.find(ALICE, cutoff).join()).contains(second);
+    assertThat(reopened.find(ALICE, T0.plusSeconds(90)).join())
+        .contains(new TeleportUsage(List.of(), second.cooldownUntil()));
+  }
+
+  @Test
+  void lateConfirmationCannotShortenAnotherTripCooldownOrChangeItsPayer() {
+    var store = new JooqTeleportUsageStore(database);
+    var operation = UUID.randomUUID();
+    var longer = new TeleportUsage(List.of(new TeleportUse(T0, 2)), T0.plusSeconds(120));
+    var shorter =
+        new TeleportUsage(List.of(new TeleportUse(T0.plusSeconds(1), 1)), T0.plusSeconds(31));
+    confirm(
+        store, new Confirmation(ALICE, operation, TeleportKind.HOME, longer, T0.minusSeconds(1)));
+    confirm(
+        store,
+        new Confirmation(ALICE, UUID.randomUUID(), TeleportKind.WARP, shorter, T0.minusSeconds(1)));
+    assertThat(store.find(ALICE, T0.minusSeconds(1)).join())
+        .contains(
+            new TeleportUsage(
+                List.of(new TeleportUse(T0, 2), new TeleportUse(T0.plusSeconds(1), 1)),
+                longer.cooldownUntil()));
+    assertThatThrownBy(
+            () ->
+                confirm(
+                    store,
+                    new Confirmation(
+                        BOB, operation, TeleportKind.HOME, longer, T0.minusSeconds(1))))
+        .hasRootCauseInstanceOf(IllegalStateException.class);
+    assertThat(store.find(BOB, T0.minusSeconds(1)).join()).isEmpty();
+  }
+
+  @Test
+  void confirmingTripPrunesExpiredUsageInTheSameWrite() {
+    var store = new JooqTeleportUsageStore(database);
+    var retentionCutoff = T0.minus(Duration.ofHours(1));
+    var expired =
+        new TeleportUsage(
+            List.of(new TeleportUse(T0.minus(Duration.ofHours(2)), 4)), T0.minusSeconds(1));
+    var current = new TeleportUse(T0, 2);
+    var usage = new TeleportUsage(List.of(current), T0.plusSeconds(60));
+
+    confirm(
+        store,
+        new Confirmation(ALICE, UUID.randomUUID(), TeleportKind.HOME, expired, retentionCutoff));
+    confirm(
+        store,
+        new Confirmation(ALICE, UUID.randomUUID(), TeleportKind.HOME, usage, retentionCutoff));
+
+    assertThat(store.find(ALICE, retentionCutoff).join())
+        .contains(new TeleportUsage(List.of(current), T0.plusSeconds(60)));
   }
 
   @Test

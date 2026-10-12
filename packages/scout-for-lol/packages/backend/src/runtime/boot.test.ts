@@ -117,8 +117,6 @@ describe("scout runtime boot", () => {
       "report-lake",
       "temporal-core",
       "http-server",
-      // Interim: carried here until `activity-worker` is deployable.
-      "competition-worker",
       "database-seeding",
     ]);
     // The bot token is used, but only to authorize REST — never to open a
@@ -177,7 +175,7 @@ describe("scout runtime boot", () => {
     }
   });
 
-  test("exactly one role composes the database-sweeping collectors", async () => {
+  test("one role per topology composes database-sweeping collectors", async () => {
     const sweepers: ScoutRuntimeRole[] = [];
     for (const role of SCOUT_RUNTIME_ROLES) {
       const log = await boot(role);

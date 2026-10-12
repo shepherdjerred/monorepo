@@ -1,3 +1,7 @@
+import {
+  REPORT_DELIVERY_ACTIVITY_RETRY,
+  REPORT_DELIVERY_ACTIVITY_START_TO_CLOSE_MS,
+} from "#shared/reports/report-delivery-policy.ts";
 import { proxyActivities } from "@temporalio/workflow";
 import type { DataDragonActivities } from "#activities/data-dragon/data-dragon.ts";
 import type {
@@ -307,8 +311,8 @@ export async function runScoutDataDragonUpdate(
 ): Promise<DataDragonUpdateResult | undefined> {
   const { deliverActivityReport } = proxyActivities<ReportDeliveryActivities>({
     taskQueue: reportActivityTaskQueue(reportTaskQueue),
-    startToCloseTimeout: "2 minutes",
-    retry: { maximumAttempts: 3 },
+    startToCloseTimeout: REPORT_DELIVERY_ACTIVITY_START_TO_CLOSE_MS,
+    retry: REPORT_DELIVERY_ACTIVITY_RETRY,
   });
   const startedAt = new Date().toISOString();
   let state: DataDragonVersionState | undefined;

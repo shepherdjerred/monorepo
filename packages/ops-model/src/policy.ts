@@ -5,6 +5,7 @@
 export const OPS_POLICY = {
   /** Cadence of the Temporal `ops-snapshot` schedule. */
   snapshotIntervalMinutes: 5,
+  scheduleObservationMaxAgeMinutes: 30,
   /** A snapshot or source older than this many intervals renders `unknown`. */
   staleAfterIntervals: 3,
   /** Argo apps may be OutOfSync this long (a sync in flight) before warning. */
@@ -28,8 +29,6 @@ export const OPS_POLICY = {
   /** Filesystems above these used ratios warn / error. */
   diskWarningRatio: 0.8,
   diskErrorRatio: 0.9,
-  /** Backups older than this many hours are stale. */
-  backupMaxAgeHours: 36,
   /** Root traces slower than this are listed as slow in the last hour. */
   slowTraceSeconds: 5,
   /**

@@ -77,19 +77,37 @@ afterEach(async () => {
   );
 });
 
+it.each(["ops-restore-rehearsal", "ops-restore-rehearsal-incremental"])(
+  "excludes the %s rehearsal from backup selection",
+  (namespace) => {
+    expect(
+      getPvcBackupLabels(
+        getPvcBackupPolicy(namespace, "pgdata-temporal-postgresql-0"),
+      ),
+    ).toEqual({
+      "velero.io/backup": "disabled",
+      "velero.io/exclude-from-backup": "true",
+    });
+  },
+);
+
 describe("PVC backup policy", () => {
-  it("classifies 50 included and 23 excluded PVCs without duplicates", () => {
+  it("classifies 53 included and 40 excluded PVCs without duplicates", () => {
     const keys = PVC_BACKUP_POLICY.map((entry) =>
       pvcBackupPolicyKey(entry.namespace, entry.name),
     );
-    expect(keys).toHaveLength(73);
-    expect(new Set(keys).size).toBe(73);
+    expect(keys).toHaveLength(93);
+    expect(new Set(keys).size).toBe(93);
     expect(
       PVC_BACKUP_POLICY.filter((entry) => entry.backup === "enabled"),
-    ).toHaveLength(50);
+    ).toHaveLength(53);
     expect(
       PVC_BACKUP_POLICY.filter((entry) => entry.backup === "disabled"),
-    ).toHaveLength(23);
+    ).toHaveLength(40);
+    expect(
+      getPvcBackupPolicy("minecraft-tsmc-restore", "datadir-minecraft-tsmc-0")
+        .backup,
+    ).toBe("disabled");
   });
 
   it("classifies every synthesized and operator-managed PVC", async () => {
@@ -160,9 +178,10 @@ describe("PVC backup policy", () => {
     expect(operatorManagedPvcCount).toBeGreaterThan(0);
     expect(admissionKinds.get("MutatingAdmissionPolicy")).toBe(3);
     expect(admissionKinds.get("MutatingAdmissionPolicyBinding")).toBe(3);
-    // Includes PVC backup, ArgoCD, CI pod, and The Storm's server stop guards.
-    expect(admissionKinds.get("ValidatingAdmissionPolicy")).toBe(4);
-    expect(admissionKinds.get("ValidatingAdmissionPolicyBinding")).toBe(4);
+    // Includes PVC backup, ArgoCD, CI pod, mining reset, restoration
+    // update/scale/delete and Service write/delete paths, and mc-harness sandbox pod guards.
+    expect(admissionKinds.get("ValidatingAdmissionPolicy")).toBe(10);
+    expect(admissionKinds.get("ValidatingAdmissionPolicyBinding")).toBe(10);
   }, 20_000);
 
   it("syncs admission policy updates before PVC changes", () => {
@@ -289,5 +308,43 @@ describe("PVC backup policy", () => {
     ).toThrow(
       "PVC test-unknown/missing-policy-entry is missing from the explicit backup policy",
     );
+  });
+});
+
+describe("PostgreSQL restore backup policy", () => {
+  it("excludes the reserved native restore rehearsal claim", () => {
+    expect(
+      getPvcBackupPolicy(
+        "ops-restore-rehearsal",
+        "pgdata-temporal-postgresql-0",
+      ).backup,
+    ).toBe("disabled");
+  });
+
+  it("excludes isolated PostgreSQL restore copies while retaining every source backup", () => {
+    const clusters = [
+      ["scout-beta", "scout-beta", "scout-beta"],
+      ["phoenix", "phoenix", "phoenix"],
+      ["grafana", "prometheus", "grafana"],
+      ["bugsink", "bugsink", "bugsink"],
+      ["scout-prod", "scout-prod", "scout-prod"],
+      ["temporal", "temporal", "temporal"],
+      ["woodpecker", "woodpecker", "woodpecker"],
+    ] as const;
+    for (const [rehearsal, sourceNamespace, cluster] of clusters) {
+      const name = `pgdata-${cluster}-postgresql-0`;
+      expect(getPvcBackupPolicy(sourceNamespace, name).backup).toBe("enabled");
+      expect(
+        getPvcBackupLabels(
+          getPvcBackupPolicy(`pg18-rehearsal-${rehearsal}`, name),
+        ),
+      ).toEqual({
+        "velero.io/backup": "disabled",
+        "velero.io/exclude-from-backup": "true",
+      });
+      expect(() => getPvcBackupPolicy("unclassified-restore", name)).toThrow(
+        "missing from the explicit backup policy",
+      );
+    }
   });
 });

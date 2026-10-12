@@ -58,6 +58,7 @@ const CaseFileSchema = z
       condition: z.string().nullable(),
       expectation: z.enum(["answerable", "gated-off", "either"]).nullable(),
       capabilities: z.record(z.string(), z.boolean()),
+      analysisEnabled: z.boolean().optional(),
     }),
     prompt: z.array(z.looseObject({ role: z.string(), content: z.string() })),
     candidate: ReplayCaseCandidateSchema,
@@ -77,6 +78,15 @@ const CaseFileSchema = z
      * unsupported.
      */
     trace: z.array(z.unknown()).default([]),
+    payloads: z
+      .array(
+        z.object({
+          toolCallId: z.string(),
+          direction: z.string(),
+          value: z.unknown(),
+        }),
+      )
+      .default([]),
   })
   .loose();
 
@@ -115,10 +125,16 @@ async function observeOnce(
       answer: record.candidate.answer,
       ...judgeEvidenceFromTrace(
         ExploreTraceEntrySchema.array().parse(record.trace),
+        record.payloads,
       ),
       toolNames: record.candidate.toolNames,
       expectation: record.meta.expectation,
-      capabilities: record.meta.capabilities,
+      capabilities: {
+        ...record.meta.capabilities,
+        ...(record.meta.analysisEnabled === undefined
+          ? {}
+          : { analysis: record.meta.analysisEnabled }),
+      },
     }),
     output: Output.object({ schema: JudgeObservationSchema }),
     ...runtime.callOptions({

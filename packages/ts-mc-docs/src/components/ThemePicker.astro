@@ -1,0 +1,48 @@
+---
+import { themeCatalog } from "@shepherdjerred/storm-theme";
+---
+
+<details class="stormThemeControl">
+  <summary>Appearance</summary>
+  <form data-storm-preferences>
+    <label>
+      Appearance
+      <select name="storm_mode">
+        <option value="system">System</option>
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+      </select>
+    </label>
+    <label>
+      Theme
+      <select name="storm_theme">
+        <option value="auto">Follow calendar</option>
+        {themeCatalog.themes.map((theme) => (
+          <option value={theme.id}>{theme.name}</option>
+        ))}
+      </select>
+    </label>
+    <label>
+      <input type="checkbox" name="storm_effects" checked /> Show holiday
+      effects
+    </label>
+    <p>Effects respect reduced motion.</p>
+    <button type="submit">Save appearance</button>
+    <p role="status" data-storm-status></p>
+  </form>
+</details>
+<script>
+  for (const picker of document.querySelectorAll<HTMLDetailsElement>(
+    ".stormThemeControl",
+  )) {
+    picker.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape") return;
+      picker.open = false;
+      picker.querySelector("summary")?.focus();
+    });
+    document.addEventListener("click", (event) => {
+      if (event.target instanceof Node && !picker.contains(event.target))
+        picker.open = false;
+    });
+  }
+</script>

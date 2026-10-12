@@ -1,4 +1,8 @@
-import type { ReportId, VisualizationSnapshot } from "@scout-for-lol/data";
+import {
+  type DiscordGuildId,
+  type ReportId,
+  type VisualizationSnapshot,
+} from "@scout-for-lol/data";
 import { formatDate } from "#src/lib/format/format.ts";
 import { ChartImage } from "#src/components/scoutql/chart-image.tsx";
 import { Section } from "#src/components/chrome/section.tsx";
@@ -9,6 +13,8 @@ type Run = {
   id: number;
   trigger: string;
   status: string;
+  deliveryState: string;
+  deliveryError: string | null;
   startedAt: Date | string;
   durationMs: number | null;
   rowsReturned: number;
@@ -21,7 +27,7 @@ type Run = {
 };
 
 export function ReportRunHistory(props: {
-  guildId: string;
+  guildId: DiscordGuildId;
   reportId: ReportId;
   runs: Run[];
 }) {
@@ -42,6 +48,10 @@ export function ReportRunHistory(props: {
             >
               <div className="flex flex-wrap items-center gap-2 text-xs text-scout-subtle">
                 <ReportRunStatusBadge status={run.status} />
+                <span>
+                  Delivery:{" "}
+                  {run.deliveryState.toLowerCase().replaceAll("_", " ")}
+                </span>
                 <span>{run.trigger}</span>
                 <span>·</span>
                 <span>{formatDate(run.startedAt)}</span>
@@ -52,19 +62,20 @@ export function ReportRunHistory(props: {
                   </>
                 )}
                 <span>·</span>
-                <span>
-                  {run.rowsReturned} rows / {run.rowsScanned} scanned
-                </span>
+                <span>Results: {run.rowsReturned}</span>
               </div>
 
               {run.errorMessage !== null && (
                 <p className="text-sm text-scout-danger">{run.errorMessage}</p>
               )}
+              {run.deliveryError !== null && (
+                <p className="text-sm text-scout-danger">{run.deliveryError}</p>
+              )}
 
               {run.querySnapshot !== null && (
                 <details className="rounded-md border border-border">
                   <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-scout-subtle">
-                    ScoutQL snapshot
+                    Query used
                   </summary>
                   <pre className="max-h-[360px] overflow-auto whitespace-pre-wrap break-words border-t border-border bg-scout-hover/50 p-3 font-mono text-xs leading-5">
                     {run.querySnapshot}

@@ -4,6 +4,7 @@ import type {
   CommandInteraction,
 } from "@shepherdjerred/streambot/discord/commands/command-types.ts";
 import { PlaybackCommandService } from "@shepherdjerred/streambot/commands/playback-command-service.ts";
+import { toRecordMedia } from "@shepherdjerred/streambot/commands/playback-recording.ts";
 import { PlaybackCommandBoundaryError } from "@shepherdjerred/streambot/commands/playback-command-errors.ts";
 import { inferMediaIntent } from "@shepherdjerred/streambot/discovery/media-intent.ts";
 import type {
@@ -11,7 +12,7 @@ import type {
   MediaCandidate,
 } from "@shepherdjerred/streambot/discovery/candidate.ts";
 import type { QueueItemView } from "@shepherdjerred/streambot/machine/view.ts";
-import type { RecordMedia } from "@shepherdjerred/streambot/history/media-history.ts";
+import type { RecordMedia } from "@shepherdjerred/streambot/history/types.ts";
 
 type CommandReply = { readonly message: string };
 
@@ -249,6 +250,17 @@ export class MediaCommandHandler {
     placement: "queue" | "now",
   ): Promise<void> {
     const scope = this.requireScope(interaction);
+    if (this.deps.routePlayback !== undefined) {
+      await this.playback.play({
+        query: candidate.title,
+        source: "auto",
+        placement,
+        userId: interaction.userId,
+        spoken: false,
+        sourceOverride: candidate.source,
+      });
+      return;
+    }
     // History replays, favorites, saved queues, "my usual" and continue-series all arrive here
     // without passing through `PlaybackCommandService.play`, so the rollout gate has to be applied
     // on this path too. Stored sources are deliberately kept mode-less, so with the flag off they
@@ -279,7 +291,7 @@ export class MediaCommandHandler {
     }
     return {
       title: item.title,
-      provider: item.source.kind === "file" ? "local" : "youtube",
+      provider: toRecordMedia(item.source, undefined, undefined).provider,
       source: item.source,
       canonicalUrl: item.provenance?.canonicalUrl,
       channel: item.provenance?.channel,
@@ -355,15 +367,7 @@ function candidateList(
 }
 
 function candidateMedia(candidate: MediaCandidate): RecordMedia {
-  return {
-    title: candidate.title,
-    provider: candidate.source.kind === "file" ? "local" : "youtube",
-    source: candidate.source,
-    canonicalUrl: candidate.canonicalUrl,
-    channel: candidate.channel,
-    thumbnailUrl: candidate.thumbnailUrl,
-    durationSeconds: candidate.durationSeconds,
-  };
+  return toRecordMedia(candidate.source, undefined, candidate);
 }
 
 function nextEpisodeQuery(title: string): string | null {

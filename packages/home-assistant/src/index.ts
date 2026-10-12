@@ -8,6 +8,7 @@ export type {
   ServiceCallChangedStates,
   ServiceCallWithResponse,
   HistoryResponse,
+  LogbookEntry,
   FireEventResponse,
   ConfigEntryDiagnostics,
 } from "./rest/schemas.js";

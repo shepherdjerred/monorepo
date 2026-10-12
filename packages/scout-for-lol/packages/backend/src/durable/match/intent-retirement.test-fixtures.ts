@@ -1,7 +1,7 @@
 import {
   NotificationIntentKeySchema,
-  RiotMatchIdSchema,
   type NotificationIntentKey,
+  type RiotMatchId,
 } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   NotificationIntentSchema,
@@ -71,7 +71,7 @@ export async function seedSubscription(
 /** Record that `puuid` was a tracked account in `matchId`. */
 export async function seedTrackedAccount(
   prisma: ExtendedPrismaClient,
-  args: { matchId: string; puuid: LeaguePuuid },
+  args: { matchId: RiotMatchId; puuid: LeaguePuuid },
 ): Promise<void> {
   await prisma.matchTrackedAccount.create({
     data: { riotMatchId: args.matchId, puuid: args.puuid },
@@ -134,8 +134,8 @@ export async function seedChannelIntent(
   prisma: ExtendedPrismaClient,
   args: {
     name: string;
-    matchId: string;
-    channelId: string;
+    matchId: RiotMatchId;
+    channelId: DiscordChannelId;
     state: "pending" | "ready";
     kind?: NotificationIntentKind;
     freshnessDeadline?: string;
@@ -145,9 +145,9 @@ export async function seedChannelIntent(
   const key = NotificationIntentKeySchema.parse(
     `${kind}-discord:${args.matchId}:${args.name}`,
   );
-  const announces = kind === "settlement" || kind === "dare-summary";
+  const announces = kind === "settlement";
   const outcome = await upsertIntent(prisma, {
-    matchId: RiotMatchIdSchema.parse(args.matchId),
+    matchId: args.matchId,
     intent: NotificationIntentSchema.parse({
       key,
       kind,

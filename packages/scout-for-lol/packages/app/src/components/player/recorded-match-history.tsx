@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/data";
 import type { ComponentProps } from "react";
 import type { Loaded } from "@shepherdjerred/loaded";
 import { Button } from "@scout-for-lol/design-system/components/button";
@@ -6,7 +7,7 @@ import { MatchHistoryList } from "#src/components/player/player-profile-sections
 
 export type HistoryCursor = {
   gameCreationMs: number;
-  matchId: string;
+  matchId: RiotMatchId;
   consumed?: number | undefined;
 };
 
@@ -45,6 +46,8 @@ export function RecordedMatchHistory(props: {
   onRetry: () => void;
   onPrevious: () => void;
   onNext: (cursor: HistoryCursor) => void;
+  filtered?: boolean;
+  onClearFilters?: (() => void) | undefined;
 }) {
   const empty = props.entries.length === 0;
   if (props.history.status === "loading" || props.refetching) {
@@ -72,8 +75,15 @@ export function RecordedMatchHistory(props: {
     return (
       <Section title="Recorded match history" framed={false}>
         <p className="text-sm text-scout-subtle">
-          Scout hasn&apos;t recorded any games for this player yet.
+          {props.filtered === true
+            ? "No matches match these filters."
+            : "No matches recorded yet."}
         </p>
+        {props.filtered === true && (
+          <Button variant="outline" size="sm" onClick={props.onClearFilters}>
+            Clear filters
+          </Button>
+        )}
       </Section>
     );
   }
@@ -81,9 +91,7 @@ export function RecordedMatchHistory(props: {
     <Section title="Recorded match history" framed={false}>
       <div className="space-y-3">
         {empty ? (
-          <p className="text-sm text-scout-subtle">
-            Scout hasn&apos;t recorded any games for this player yet.
-          </p>
+          <p className="text-sm text-scout-subtle">No more matches.</p>
         ) : (
           <MatchHistoryList
             entries={props.entries}

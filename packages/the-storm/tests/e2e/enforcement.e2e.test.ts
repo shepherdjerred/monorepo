@@ -5,10 +5,10 @@ import type { Bot } from "mineflayer";
 import { connectBot, disconnectBot, waitForMessage } from "./harness/bot.ts";
 import { waitForDecision } from "./harness/decisions.ts";
 import { startFakeBrain, type FakeBrain } from "./harness/fake-brain.ts";
-import { RconClient } from "@shepherdjerred/the-storm-brain/rcon";
+import { RconClient } from "#e2e/harness/rcon.ts";
+import { stormModuleConfig } from "@shepherdjerred/mc-harness/sandbox/storm.ts";
 import {
   startServer,
-  stormTestConfig,
   type ServerInfo,
   type StartedServer,
 } from "./harness/server.ts";
@@ -45,12 +45,14 @@ describe.skipIf(external)("active enforcement", () => {
       bootTimeoutMs: 180_000,
       warmCache: Bun.env["STORM_E2E_COLD"] !== "1",
       stormJar,
-      stormConfig: stormTestConfig(await Bun.file(ownedConfig).text(), [
+      stormConfig: stormModuleConfig(await Bun.file(ownedConfig).text(), [
         "tickets",
         "agent",
         "chat",
       ]),
       ownedConfigDir,
+      // No managed-flag gate or recording runs on these three modules.
+      env: {},
       brain: {
         baseUrl: `http://host.docker.internal:${brain.port.toString()}`,
         token,

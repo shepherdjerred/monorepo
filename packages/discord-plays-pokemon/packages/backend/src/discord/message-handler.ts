@@ -12,8 +12,6 @@ import { logger } from "#src/logger.ts";
 import { getConfig } from "#src/config/index.ts";
 import { InputLeaseConflictError } from "#src/emulator/emulator.ts";
 
-export let lastCommand = new Date();
-
 export async function executeInteractiveChord(
   chord: Chord,
   fn: (commandInput: CommandInput) => Promise<void>,
@@ -127,7 +125,6 @@ async function handleMessage(
       return;
     }
     await event.react(`👍`);
-    lastCommand = new Date();
   } else {
     await event.react(`⛔`);
     return;

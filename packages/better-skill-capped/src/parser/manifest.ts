@@ -176,12 +176,8 @@ export const ManifestSchema = z
   .strict();
 
 export type Manifest = z.infer<typeof ManifestSchema>;
-export type ManifestPatch = z.infer<typeof ManifestPatchSchema>;
 export type ManifestVideo = z.infer<typeof ManifestVideoSchema>;
 export type ManifestCommentary = z.infer<typeof ManifestCommentarySchema>;
-export type ManifestStaff = z.infer<typeof ManifestStaffSchema>;
-export type ManifestCourse = z.infer<typeof ManifestCourseSchema>;
-export type ManifestThisWeekData = z.infer<typeof ManifestThisWeekDataSchema>;
 export type ManifestCourseChapters = z.infer<
   typeof ManifestCourseChaptersSchema
 >;

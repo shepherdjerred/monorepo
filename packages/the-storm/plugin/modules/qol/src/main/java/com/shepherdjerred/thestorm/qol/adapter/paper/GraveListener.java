@@ -35,11 +35,13 @@ final class GraveListener implements Listener {
   /** After other plugins (the arena clears its drops at LOWEST) have changed the drops. */
   @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
   void onDeath(PlayerDeathEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getEntity())) return;
     deaths.died(event);
   }
 
   @EventHandler(priority = EventPriority.MONITOR)
   void onJoin(PlayerJoinEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getPlayer())) return;
     safe.sample(event.getPlayer());
     deaths.recover(event.getPlayer());
     opening.recover(event.getPlayer());
@@ -50,6 +52,7 @@ final class GraveListener implements Listener {
 
   @EventHandler(priority = EventPriority.MONITOR)
   void onQuit(PlayerQuitEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getPlayer())) return;
     safe.forget(event.getPlayer().getUniqueId());
   }
 

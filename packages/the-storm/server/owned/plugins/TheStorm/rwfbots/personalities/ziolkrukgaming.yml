@@ -1,0 +1,79 @@
+id: ziolkrukgaming
+name: ZiolkrukGaming
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0OTI0NTc0MiwKICAicHJvZmlsZUlkIiA6ICJjODVhZTlmOWJkNTU0YzFmYjk1ZTg3ZDI2Zjg2MGFmNiIsCiAgInByb2ZpbGVOYW1lIiA6ICJTdGV2ZW4xNzUzIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2UxMzg0YTcwMTU5MGFjNWRhYTlkZmY0ZWQ1YjAwMTQ2MzlkOWE5ZGMwNDU3YmU3NTc1YjAwNTc0YjcyMjUzZDIiCiAgICB9CiAgfQp9
+  signature: "RC4rIr/SVZBaOxKV8PEcqBrUOqcLJGGr8+cSlHiQMAlXXerk8qK7KbeFRjkvHdPYodXl7lhCat1RWLy32i4/nqGqK+wikVzz2aVarHjbQuMYC/EZ0TdKT0EYHuNM+Lp6ZljP0O2oXMZZxivsSVf9vzl8TL3wBkiTftT35V79tUvDo9+UT81Q9lnszJWQeilXHb+H7cCkYac9yilNi6tw3HWUzzAUl7msPkcqwYu9U9astINkx/NPUo26mcFWn+ZJ62DgrLE8kxK9LUlKrnTY/On0p8wGOnJleJENpYp3MAoIKwLuYKMdyvz7FjslNGYWfzrB4KRKowTxF2eAzuadi7pQS6BpNQ/h77uZdRR63TKSj0bH4QGC1dXhfoVJap23ykgTY2OfYDctABII7dgymNzPw1WKjyRlOSHxT3F4/7gQ2G72qairVJIXj8lTYUzPzUFFSbR6s0IYHos/4AxpT+XbFEi3ee+VrfWRdBv+akdRteo646Fqsq85mHimdBhGJHdjjjdFD6BelP8IH+NOH2PalX6r9QgPw/mAOFQtNzUlgbckFg+roTqL5GB9PPO6fO0jZ/UnuFiYEJzdT27KUsjE+HU3qSihOkOtYVohwt4kIJlQ7+qJ04UpZO7eK8px7VE1j3uwhVSY6ZGTCbVxVtQjn89/Um9F/DpYAr0VsTA="
+skill: 0.681
+archetype: turtle
+leverOffsets:
+  reactionMs: 0.76
+  turnRateDegPerTick: 0.47
+  decisionTemperature: 0.09
+  awarenessRadius: 0.17
+  technique: 0.53
+  aggression: -1.81
+kits:
+  trooper: 0.91
+  longbow: 0.34
+  rewind: 0.81
+roles:
+  defend: 1
+  retake: 0.28
+style:
+  aggression: 0.17
+  patience: 0.95
+  teamplay: 0.48
+  risk: 0.14
+voice:
+  tone:
+    - sleepy
+    - mellow
+    - dry
+  verbosity: quiet
+  style: "half asleep at 3am; yawns between words, never in a hurry, accidentally wise"
+lines:
+  greet:
+    - "*yawn* hi"
+    - i'll be by the bomb. resting my eyes
+    - wake me if they come
+  onKill:
+    - "oh. {victim} came to me. thanks"
+    - "didn't even have to move, {victim}"
+    - "mm. gg {victim}"
+  onDeath:
+    - "{killer} woke me up. rude"
+    - "zzz. gg {killer}"
+    - i was blinking
+  onPlant:
+    - "{bomb} lit. nap time"
+    - "i walked all the way to {bomb}. tiring"
+  onDefuse:
+    - "{bomb} defused. can i sleep now"
+    - "turned {bomb} off like an alarm"
+  onWin:
+    - "nice. goodnight {team}"
+    - gg. bed
+  onLoss:
+    - gg. snooze
+    - five more minutes. then rematch
+  onLastAlive:
+    - ugh. i have to do stuff now
+    - fine. awake. briefly
+  taunt:
+    - you're taking forever. i'm comfy
+    - come closer, i'm too tired to walk
+    - i'll still be here. probably asleep
+  lobby:
+    - "*yawn* is it morning or night. doesn't matter"
+    - i'll be on the bomb. it's comfy there
+    - picked trooper. less thinking
+    - "{team} wake me when they push. kidding. mostly"
+    - lobbies are nice. nothing's on fire yet
+quirks:
+  - slow_starter
+  - late_to_everything
+rivals:
+  - xxmaelpak
+bio: Always on at 3am, always slightly asleep, and always somehow alive at the end of the round. Never leaves the bomb because walking is effort. Shares a turtle shell, and a bitter nap schedule rivalry, with xXMaelpak.
+batch: 2
+retired: false

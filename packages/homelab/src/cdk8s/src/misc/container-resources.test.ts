@@ -82,7 +82,10 @@ const WorkloadSchema = z.object({
 
 const MinecraftApplicationSchema = z.object({
   kind: z.literal("Application"),
-  metadata: z.object({ name: z.string() }),
+  metadata: z.object({
+    name: z.string(),
+    annotations: z.record(z.string(), z.string()).optional(),
+  }),
   spec: z.object({
     source: z.object({
       helm: z.object({ valuesObject: z.record(z.string(), z.unknown()) }),
@@ -323,7 +326,7 @@ describe("Container resource requests backstop", () => {
       ],
       [
         "media-plex/main",
-        { requests: { memory: "4096Mi" }, limits: { memory: "12288Mi" } },
+        { requests: { memory: "4096Mi" }, limits: { memory: "16384Mi" } },
       ],
       [
         "media-plex/plex-exporter",
@@ -346,7 +349,7 @@ describe("Container resource requests backstop", () => {
       [
         "scout-beta-scout-backend/main",
         {
-          requests: { cpu: "50m", memory: "3072Mi" },
+          requests: { cpu: "50m", memory: "2048Mi" },
           limits: { memory: "8192Mi" },
         },
       ],
@@ -414,14 +417,14 @@ describe("Container resource requests backstop", () => {
       [
         "temporal-temporal-glitter-context-worker/temporal-glitter-context-worker",
         {
-          requests: { cpu: "750m", memory: "512Mi" },
+          requests: { cpu: "250m", memory: "512Mi" },
           limits: { cpu: "2", memory: "6144Mi" },
         },
       ],
       [
         "temporal-temporal-agent-worker/temporal-agent-worker",
         {
-          requests: { cpu: "500m", memory: "768Mi" },
+          requests: { cpu: "250m", memory: "768Mi" },
           limits: { cpu: "1500m", memory: "1024Mi" },
         },
       ],
@@ -507,7 +510,7 @@ describe("Burst-memory sharing policy", () => {
     });
     for (const [name, cpu, request, limit, heap, mapPort, mapName] of [
       ["minecraft-shuxin", "500m", "8Gi", "8Gi", "7G", 8100, "bluemap"],
-      ["minecraft-tsmc", "2", "6Gi", "8Gi", "6G", 8100, "bluemap"],
+      ["minecraft-tsmc", "3", "8Gi", "10Gi", "8G", 8100, "bluemap"],
       ["minecraft-sjerred", "2", "6Gi", "8Gi", "5G", 8123, "dynmap"],
     ] as const) {
       const values = applications.find((app) => app.metadata.name === name)
@@ -574,6 +577,10 @@ describe("Burst-memory sharing policy", () => {
       },
     });
     expectSjerredPostCutoverCleanup(sjerredApplication);
+    expect(sjerredApplication?.metadata.annotations).toMatchObject({
+      "argocd.argoproj.io/client-side-apply-migration-manager":
+        "argocd-application-controller",
+    });
     expect(sjerred?.["extraEnv"]).toEqual({
       ALLOW_FLIGHT: "TRUE",
       ENABLE_WHITELIST: "TRUE",
@@ -615,12 +622,7 @@ describe("Burst-memory sharing policy", () => {
             },
             {
               name: "CFG_DISCORD_CHANNEL_ID",
-              valueFrom: {
-                secretKeyRef: {
-                  name: "minecraft-sjerred-discord",
-                  key: "DISCORD_CHANNEL_ID",
-                },
-              },
+              value: "1337631455085334650",
             },
           ],
         }),
@@ -630,7 +632,7 @@ describe("Burst-memory sharing policy", () => {
     expect(tempo).toBeDefined();
     expect(tempo?.spec.source.helm.valuesObject["tempo"]).toMatchObject({
       resources: {
-        requests: { cpu: "1", memory: "1Gi" },
+        requests: { cpu: "250m", memory: "1Gi" },
         limits: { memory: "4Gi" },
       },
     });

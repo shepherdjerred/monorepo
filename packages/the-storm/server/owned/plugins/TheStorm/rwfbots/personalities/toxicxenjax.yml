@@ -1,0 +1,83 @@
+id: toxicxenjax
+name: ToxicXenjax
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1MzkwNTk0OCwKICAicHJvZmlsZUlkIiA6ICJhYjNkNTUzYmEzMjM0MTc5OGU0ZmE0NzdkNDE0MmIxMSIsCiAgInByb2ZpbGVOYW1lIiA6ICJDcnlwdGl6b25lIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzYwMDZhNDI1MDZlMWE2YTA3MThmMTRlZTNlNTc0MjJlOWYwMTVhYjNlNGJmODJmNmNhYWMxZTkzMmU5YWNiMmIiCiAgICB9CiAgfQp9
+  signature: "rbuFKv//GFmy8MEi2eSiQ38gWh3RteB9YPXGtRSvnzJD1O2zz3/XtgqY5JRPH1iqLrNEPIkaUjovJGdm3dv8o9bB1Jjpj4dbXITSeiofkAfGcuGBv10zOhd7FSMZpG0L1b84u+FOFwWRXPLK+KxPVAkjG1kwngz0Xl3q4zboShCDLqFanEWBCR/BaVgoplD8NWRjUVJ6jPcm9Q7Zk2ygfH0NOhBIfckRHAPcCqLxLB76tOt5PvdawUqpRxtffXLiqhSH5x/0nzNrL+5a68Brhh+Rei2t4PnIanmZXyUh4jtim9rgTN/3TEHRhyiqletN95e3hOhMz9rl+jbWULDLUwaUuwCoqNIFZAdQ1oDxX6AsXZkdna1VcMEoabQcIgxL7LE8kUJB2IF9SmeB/MhgVeWu2xqzads5kyYXhMfA/B6c4hTGkD5JXKa9DJt2kZIyzUKpWg8TicMJQt2F8Iql44czgaET8OItS1mDebh96ZKDE8isUTfZCXhzy85Rh/BK4KY66Lp8MEE2eoXuzf0JdzIsYwVW5OO+alk612rFwTa/N14IY0vUjmvdLi/rOysdum0oi34hCD77K4Y5c5WTKQ1uEjtsPzcqkUo0pRR8B9KNTBA6yZJFYQOMktxHnIvqAmNJtWrJ2gjefqXSSqWm4IuiIIuEGCFuJPQGXW08ylk="
+skill: 0.319
+archetype: troll
+leverOffsets:
+  reactionMs: 0.05
+  predictionQuality: -0.15
+  decisionTemperature: -2.22
+  coordination: -1.23
+  technique: 0.24
+kits:
+  trooper: 0.51
+  shortbow: 0.62
+  rewind: 0.87
+  spy: 0.81
+roles:
+  plant: 0.74
+  escort: 0.36
+  rotate: 0.35
+  hunt: 0.55
+style:
+  aggression: 0.7
+  patience: 0.18
+  teamplay: 0.08
+  risk: 0.99
+voice:
+  tone:
+    - wholesome
+    - chill
+    - vibey
+  verbosity: chatty
+  style: laid-back wholesome chaos, everything is a vibe, name is a joke he regrets
+lines:
+  greet:
+    - "hey {team}, good vibes only"
+    - despite the name i'm very nice
+    - let's have a chill one
+  onKill:
+    - "sorry {victim}, love you"
+    - "{victim} had to go, no hard feelings"
+    - vibe check passed
+  onDeath:
+    - "{killer} that was a vibe"
+    - honestly deserved
+    - "respect, {killer}"
+  onPlant:
+    - "lit {bomb}, just vibes"
+    - "{bomb} is spicy now"
+  onDefuse:
+    - "{bomb} chill again"
+    - "calmed {bomb} down, deep breaths"
+  onWin:
+    - "good vibes win, {team}"
+    - wholesome victory
+  onLoss:
+    - still a good time
+    - gg, honestly fun
+  onLastAlive:
+    - vibing solo now
+    - zero stress. some stress
+  taunt:
+    - come hang out at the bomb
+    - i'm rewinding to say hi
+    - no stress, just chaos
+  lobby:
+    - lobby vibes are immaculate today
+    - yeah the name's a bit much. i'm nice i swear
+    - rewind kit, chill energy
+    - "{team}, let's just have fun out there"
+    - gg in advance, whatever happens
+quirks:
+  - good_sport
+  - always_gg
+  - spins
+rivals:
+  - themostkraish
+  - mothlynx8
+bio: Picked an edgy name in 2013 and has spent every match since proving it wrong. Plays with total chaos but zero malice. Spends most rounds trying to calm TheMostkraish down.
+batch: 2
+retired: false

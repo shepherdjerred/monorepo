@@ -21,8 +21,7 @@ final class QolConfigTest {
                 err -> {
                   throw new AssertionError(err.toString());
                 });
-    assertThat(config.freeForDuration()).isEqualTo(Duration.ofDays(7));
-    assertThat(config.cost()).isEqualTo(25);
+    assertThat(config.searchIntervalDuration()).isEqualTo(Duration.ofSeconds(15));
     assertThat(config.biomes()).contains("plains", "snowy_plains");
   }
 }

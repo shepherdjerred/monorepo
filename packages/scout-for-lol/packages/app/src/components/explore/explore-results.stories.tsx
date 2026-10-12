@@ -9,6 +9,8 @@ import {
   type ExploreTraceEntry,
   type ReportAiPreviewSummary,
   type VisualizationSnapshot,
+  type RiotMatchId,
+  RiotMatchIdSchema,
 } from "@scout-for-lol/data";
 import {
   championWinRatePreview,
@@ -100,7 +102,10 @@ const LINE_CHART: VisualizationSnapshot = winRateByPatchChart({
   ],
 });
 
-function matchCard(size: "S" | "M" | "L", matchId: string): ExploreMatchCard {
+function matchCard(
+  size: "S" | "M" | "L",
+  matchId: RiotMatchId,
+): ExploreMatchCard {
   return ExploreMatchCardSchema.parse({
     size,
     match: {
@@ -334,9 +339,9 @@ export const MatchCards: Story = {
   render: () => (
     <ExploreMatchCards
       cards={[
-        matchCard("S", "NA1_5635906024"),
-        matchCard("M", "NA1_5635906025"),
-        matchCard("L", "NA1_5635906026"),
+        matchCard("S", RiotMatchIdSchema.parse("NA1_5635906024")),
+        matchCard("M", RiotMatchIdSchema.parse("NA1_5635906025")),
+        matchCard("L", RiotMatchIdSchema.parse("NA1_5635906026")),
       ]}
     />
   ),

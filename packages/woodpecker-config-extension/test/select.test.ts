@@ -2,7 +2,10 @@ import { describe, expect, test } from "vitest";
 import { parse } from "yaml";
 import { selectSteps } from "#src/pipeline/select.ts";
 import { emitWorkflow, shellQuote, wrapCommands } from "#src/pipeline/emit.ts";
-import { buildPipelineSteps } from "#src/pipeline/steps.ts";
+import {
+  buildPipelineSteps,
+  credentiallessHostedAutomationSteps,
+} from "#src/pipeline/steps.ts";
 import { BUN_CACHE, BUN_CACHE_CONTROL } from "#src/pipeline/cache.ts";
 import type { CiStep } from "#src/pipeline/model.ts";
 import { LIGHT_TIER } from "#src/pipeline/tiers.ts";
@@ -203,9 +206,22 @@ describe("selection", () => {
 });
 
 describe("emission", () => {
+  test("allows exhaustive verify to complete from a cold cache", () => {
+    const trusted = buildPipelineSteps({
+      images: IMAGES,
+      changedBase: "x",
+    }).find((candidate) => candidate.key === "verify");
+    const credentialless = credentiallessHostedAutomationSteps(IMAGES).find(
+      (candidate) => candidate.key === "verify",
+    );
+
+    expect(trusted?.timeoutMinutes).toBe(60);
+    expect(credentialless?.timeoutMinutes).toBe(60);
+  });
+
   test("bounds each attempt with a timeout", () => {
     const [command] = wrapCommands(step("a", { timeoutMinutes: 3 }));
-    expect(command).toContain("timeout 180s");
+    expect(command).toContain("timeout -k 30s 180s");
   });
 
   test("retries wrap the timeout, not the other way round", () => {
@@ -214,7 +230,7 @@ describe("emission", () => {
     );
     expect(command).toContain("seq 1 3");
     // Each attempt gets its own budget; a hung attempt cannot eat the rest.
-    expect(command).toContain("timeout 120s");
+    expect(command).toContain("timeout -k 30s 120s");
   });
 
   /** macOS ships no `timeout`; the host's is Homebrew coreutils' `gtimeout`. */
@@ -222,7 +238,7 @@ describe("emission", () => {
     const [command] = wrapCommands(
       step("a", { timeoutMinutes: 3, backend: "local" }),
     );
-    expect(command).toMatch(/^\/opt\/homebrew\/bin\/gtimeout 180s /u);
+    expect(command).toMatch(/^\/opt\/homebrew\/bin\/gtimeout -k 30s 180s /u);
   });
 
   test("quotes commands so embedded quotes survive", () => {
@@ -367,34 +383,113 @@ describe("ported lanes", () => {
   test("scanners are pull-request only", () => {
     expect(keysFor(["bun.lock"], "main")).not.toContain("trivy");
   });
+});
 
-  test("The Storm source and E2E harness select the Paper E2E lane", () => {
+describe("Paper smoke lane", () => {
+  test("The Storm source and E2E harness select the Paper smoke lane", () => {
     expect(
       keysFor(["packages/the-storm/plugin/core/src/main/java/Example.java"]),
-    ).toContain("paper-e2e-pr");
+    ).toContain("paper-smoke-pr");
     expect(keysFor(["packages/the-storm/tests/e2e/boot.test.ts"])).toContain(
-      "paper-e2e-pr",
+      "paper-smoke-pr",
     );
     expect(
+      keysFor(["packages/the-storm/tests/full/modules.test.ts"]),
+    ).toContain("paper-smoke-pr");
+    expect(
       keysFor(["packages/docs/wiki/src/content/docs/index.md"]),
-    ).not.toContain("paper-e2e-pr");
+    ).not.toContain("paper-smoke-pr");
   });
 
-  test("Paper E2E uses the pinned Paper image and service-host addressing", () => {
+  test("Paper smoke loads shared plugins and copies config", () => {
+    const steps = buildPipelineSteps({ images: IMAGES, changedBase: "x" });
+    const lane = "paper-smoke-pr";
+    const candidate = steps.find((item) => item.key === lane);
+    if (candidate === undefined) throw new Error(`missing lane ${lane}`);
+    const paper = candidate.services?.find(
+      (service) => service.name === "paper",
+    );
+    if (paper?.environment === undefined || candidate.environment === undefined)
+      throw new Error(`missing Paper environment for ${lane}`);
+    const dataDir = candidate.environment["STORM_E2E_DATA_DIR"];
+    if (typeof dataDir !== "string")
+      throw new TypeError(`missing data path for ${lane}`);
+    const sharedData = candidate.environment["STORM_E2E_STORM_DATA_DIR"];
+    if (typeof sharedData !== "string")
+      throw new TypeError(`missing shared plugin data path for ${lane}`);
+    expect(sharedData.endsWith("/TheStorm")).toBe(true);
+    expect(paper.environment["EXTRA_ARGS"]).toBe(
+      `--plugins ${sharedData.slice(0, -"/TheStorm".length)}`,
+    );
+    expect(paper.environment["RWF_RECORDING_SALT"]).toBe(
+      "storm-e2e-ci-recording-salt",
+    );
+    expect(paper.environment["COPY_CONFIG_SRC"]).toBe(`${dataDir}/config`);
+    expect(paper.environment["COPY_CONFIG_DEST"]).toBe("/data");
+    const pluginPath = candidate.environment["STORM_E2E_PLUGIN_DIR"];
+    if (typeof pluginPath !== "string")
+      throw new TypeError(`missing plugin path for ${lane}`);
+    expect(candidate.environment["STORM_E2E_FULL"]).toBe("0");
+    expect(paper.environment["FLIPT_ENVIRONMENT"]).toBe("prod");
+  });
+
+  test("Paper CI has one bounded smoke lane with a plugin-only build", () => {
+    const steps = buildPipelineSteps({ images: IMAGES, changedBase: "x" });
+    const paperSteps = steps.filter((candidate) =>
+      candidate.key.startsWith("paper-"),
+    );
+    expect(paperSteps.map((candidate) => candidate.key)).toEqual([
+      "paper-smoke-pr",
+    ]);
+    const paperStep = paperSteps[0];
+    expect(paperStep?.concurrency).toEqual({
+      limit: 6,
+      group: "paper-smoke-pr",
+    });
+    expect(paperStep?.timeoutMinutes).toBe(10);
+    expect(paperStep?.commands).toContain(
+      "bun --no-install run --cwd packages/the-storm build:plugin",
+    );
+    expect(paperStep?.commands.at(-1)).toBe(
+      "bun --no-install run --cwd packages/the-storm test:smoke",
+    );
+  });
+
+  test("Paper smoke uses the pinned Paper image and service-host addressing", () => {
     const paperStep = buildPipelineSteps({
       images: IMAGES,
       changedBase: "x",
-    }).find((candidate) => candidate.key === "paper-e2e-pr");
+    }).find((candidate) => candidate.key === "paper-smoke-pr");
     expect(paperStep?.services?.[0]?.image).toMatch(/@sha256:[a-f0-9]{64}$/u);
     expect(paperStep?.environment?.["STORM_E2E_HOST"]).toBe("paper");
     expect(paperStep?.environment?.["STORM_E2E_RCON_HOST"]).toBe("paper");
   });
 
-  test("Paper E2E connects its fake brain through the service network", () => {
+  test("Paper loads the shared plugin tree and copies Bukkit configuration", () => {
     const paperStep = buildPipelineSteps({
       images: IMAGES,
       changedBase: "x",
-    }).find((candidate) => candidate.key === "paper-e2e-pr");
+    }).find((candidate) => candidate.key === "paper-smoke-pr");
+    const paperService = paperStep?.services?.find(
+      (service) => service.name === "paper",
+    );
+    const dataDir = paperStep?.environment?.["STORM_E2E_DATA_DIR"];
+    if (dataDir === undefined)
+      throw new Error("Paper data directory is required");
+    expect(paperService?.environment?.["EXTRA_ARGS"]).toContain(
+      "--plugins /woodpecker/src/",
+    );
+    expect(paperService?.environment?.["COPY_CONFIG_SRC"]).toBe(
+      `${dataDir}/config`,
+    );
+    expect(paperService?.environment?.["COPY_CONFIG_DEST"]).toBe("/data");
+  });
+
+  test("Paper smoke connects its fake brain through the service network", () => {
+    const paperStep = buildPipelineSteps({
+      images: IMAGES,
+      changedBase: "x",
+    }).find((candidate) => candidate.key === "paper-smoke-pr");
     expect(paperStep?.environment?.["STORM_E2E_BRAIN_HOST"]).toBe(
       "storm-brain",
     );
@@ -409,7 +504,9 @@ describe("ported lanes", () => {
       paperStep?.environment?.["STORM_E2E_BRAIN_TOKEN"],
     );
   });
+});
 
+describe("selected lane contracts", () => {
   test("Semgrep fetches PR and target history before resolving its merge base", () => {
     const semgrep = buildPipelineSteps({
       images: IMAGES,
@@ -486,12 +583,6 @@ describe("ported lanes", () => {
     ).not.toContain("tofu-plan-seaweedfs");
   });
 
-  /** The Buildkite stack manages the thing being removed; it has no successor. */
-  test("no tofu lane exists for the buildkite stack", () => {
-    const steps = buildPipelineSteps({ images: IMAGES, changedBase: "x" });
-    expect(steps.map((s) => s.key)).not.toContain("tofu-plan-buildkite");
-  });
-
   /** Each stack gets only its own provider credentials. */
   test("tofu lanes receive only their own provider grants", () => {
     const steps = buildPipelineSteps({ images: IMAGES, changedBase: "x" });
@@ -507,12 +598,15 @@ describe("ported lanes", () => {
     );
   });
 
-  test("playwright depends on verify and uses the browser image", () => {
+  test("playwright can start alongside verify and uses the browser image", () => {
     const steps = buildPipelineSteps({ images: IMAGES, changedBase: "x" });
     const playwright = steps.find((s) => s.key === "playwright-e2e");
-    expect(playwright?.dependsOn).toEqual(["verify"]);
+    expect(playwright?.dependsOn).toBeUndefined();
     expect(playwright?.image).toBe(IMAGES.playwright);
-    // Selecting it must pull verify in, or it could never become runnable.
+    expect(playwright?.environment?.["CI_PLAYWRIGHT_IMAGE"]).toBe(
+      IMAGES.playwright,
+    );
+    // Removing serialization must not remove verification from the PR graph.
     expect(keysFor(["packages/sjer.red/src/pages/index.astro"])).toEqual(
       expect.arrayContaining(["verify", "playwright-e2e"]),
     );

@@ -4,6 +4,7 @@ import assetManifestData from "./data-dragon/assets/manifest.json" with { type: 
 
 export const GameAssetKindSchema = z.enum([
   "champion",
+  "ability",
   "champion-loading",
   "champion-splash",
   "item",

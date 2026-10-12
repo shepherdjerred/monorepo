@@ -5,7 +5,7 @@ use std::io::Read as _;
 use std::path::Path;
 use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
-use std::time::{Duration, UNIX_EPOCH};
+use std::time::{Duration, Instant, UNIX_EPOCH};
 
 use directories::ProjectDirs;
 use scout_client_core::backend::{
@@ -16,9 +16,10 @@ use scout_client_core::diagnostics::{
     DiagnosticCategory, DiagnosticEvent, DiagnosticLevel, DiagnosticOutcome, Diagnostics, FileSink,
 };
 use scout_client_core::lcu::{
-    LcuClient, LcuEndpoint, LcuError, LeagueLockfile, LiveClient, discover_lockfile,
+    ClashBracketId, ClashRosterId, ClashTournamentId, GameId, LcuClient, LcuEndpoint, LcuError,
+    LcuResource, LeagueLockfile, LiveClient, discover_lockfile,
 };
-use scout_client_core::outbox::ObservationOutbox;
+use scout_client_core::outbox::{LobbyBinding, ObservationOutbox};
 use scout_client_core::protocol::{
     CreatePairingRequest, ExchangePairingResponse, ObservationBatch, ObservationEnvelope,
     ObservationKind, ObservationOutcome, ObservationQuarantineReason, ObservationReceipt,
@@ -86,7 +87,7 @@ pub struct ClientRuntime {
     _reporting: Option<ReportingGuard>,
     commands: mpsc::UnboundedSender<RuntimeCommand>,
     shutdown: watch::Sender<bool>,
-    _thread: std::thread::JoinHandle<()>,
+    thread: std::thread::JoinHandle<()>,
 }
 
 impl ClientRuntime {
@@ -146,7 +147,7 @@ impl ClientRuntime {
             _reporting: reporting,
             commands,
             shutdown,
-            _thread: thread,
+            thread,
         }
     }
 
@@ -191,6 +192,15 @@ impl ClientRuntime {
     pub fn shutdown(&self) {
         if self.shutdown.send(true).is_err() {
             info!("Scout Client collector had already stopped");
+        }
+    }
+
+    /// Shut the collector down and wait for its thread to finish, so another
+    /// collector can take over the outbox.
+    pub fn stop(self) {
+        self.shutdown();
+        if self.thread.join().is_err() {
+            info!("Scout Client collector thread had panicked");
         }
     }
 }
@@ -1421,6 +1431,7 @@ async fn collect_once(
     .await?;
 
     collect_live_frame(live_client, outbox, payloads, Some(&local_puuid)).await?;
+    bind_observed_lobby(outbox, payloads, Some(&local_puuid), diagnostics)?;
     remember_game_start(outbox, payloads)?;
 
     if tick_number % 15 == 1 {
@@ -1510,7 +1521,7 @@ async fn collect_match_state(
         outbox,
         payloads,
         LcuEndpoint::EndOfGame,
-        ObservationSlot::named("post_game", ObservationKind::PostGame),
+        END_OF_GAME_SLOT,
         local_puuid,
         diagnostics,
     )
@@ -1524,7 +1535,7 @@ async fn collect_match_state(
         outbox,
         payloads,
         LcuEndpoint::GameClientEndOfGame,
-        ObservationSlot::named("post_game", ObservationKind::PostGame),
+        GAME_CLIENT_END_OF_GAME_SLOT,
         local_puuid,
         diagnostics,
     )
@@ -1545,6 +1556,107 @@ fn remember_end_of_game(outbox: &ObservationOutbox, payload: &Value) -> Result<(
         .map_err(|error| error.to_string())?;
     outbox
         .remember_end_of_game(&game_id, &body)
+        .map_err(|error| error.to_string())
+}
+
+/// Record the lobby-to-game join that only this client is in a position to see.
+///
+/// LCU answers `partyId` on the lobby and a real `gameId` only once the game is
+/// in progress, and the in-progress session carries no lobby identity at all —
+/// a live capture across all four phases found no field shared between them.
+/// So nothing downstream can reconstruct which lobby a game came from, and the
+/// lobby is where the full roster lives: bots, custom teams, everyone Riot's
+/// spectator API will not report. Remembering the lobby while it is visible and
+/// claiming it when a game starts is what lets the server attach that roster to
+/// a real match.
+///
+/// Both sides are durable, so this survives a client restart between champion
+/// select and the game.
+fn bind_observed_lobby(
+    outbox: &ObservationOutbox,
+    payloads: &HashMap<String, Vec<u8>>,
+    local_puuid: Option<&str>,
+    diagnostics: &Diagnostics,
+) -> Result<(), String> {
+    let observed_at_millis = chrono::Utc::now().timestamp_millis();
+    remember_current_lobby(outbox, payloads, observed_at_millis)?;
+    let Some(session) = payloads.get("gameflow_session") else {
+        return Ok(());
+    };
+    let session = serde_json::from_slice::<Value>(session).map_err(|error| error.to_string())?;
+    if find_string(&session, &["phase"]).as_deref() != Some("InProgress") {
+        return Ok(());
+    }
+    let Some(game_id) = find_string(&session, &["gameId"]) else {
+        return Ok(());
+    };
+    // League reports `gameId: 0` for "no game", and the phase can flip before
+    // `gameData` is filled in. Binding that would spend this game's one
+    // recorded outcome on a placeholder.
+    if game_id == "0" {
+        return Ok(());
+    }
+    // `InProgress` is read on every tick for the length of a match. The outbox
+    // records one outcome per game so this reports the decision exactly once,
+    // rather than repeating it a few hundred times and burying the rest.
+    let (outcome, detail) = match outbox
+        .bind_game_to_lobby(&game_id, observed_at_millis)
+        .map_err(|error| error.to_string())?
+    {
+        LobbyBinding::AlreadyRecorded => return Ok(()),
+        LobbyBinding::Bound(_) => {
+            // The in-game session was enqueued earlier this tick, before the
+            // join existed, and an unchanged session is never sent again. Send
+            // it once more now that `create_observation` can stamp it, or the
+            // server would not learn the game's lobby until post-game — after
+            // prematch needed it. Keyed per game so an offline client cannot
+            // coalesce one game's join away under the next one's.
+            enqueue_coalesced_snapshot(
+                outbox,
+                &format!("lobby_binding:{game_id}"),
+                "gameflow_session",
+                ObservationKind::Gameflow,
+                &session,
+                local_puuid,
+                diagnostics,
+            )?;
+            diagnostics.counters().lobby_bound();
+            (DiagnosticOutcome::Succeeded, "bound to the observed lobby")
+        }
+        LobbyBinding::Unwitnessed => (
+            DiagnosticOutcome::Skipped,
+            "no lobby was observed for this game",
+        ),
+    };
+    diagnostics.record(
+        DiagnosticEvent::new(
+            DiagnosticLevel::Info,
+            DiagnosticCategory::Protocol,
+            "bind_lobby",
+            outcome,
+        )
+        // The lobby and game ids are deliberately absent: a diagnostic carries
+        // the shape of what happened, never an identity.
+        .with_detail(detail),
+    );
+    Ok(())
+}
+
+/// Keep the lobby the player is in, so the next game to start can claim it.
+fn remember_current_lobby(
+    outbox: &ObservationOutbox,
+    payloads: &HashMap<String, Vec<u8>>,
+    observed_at_millis: i64,
+) -> Result<(), String> {
+    let Some(lobby) = payloads.get("lobby") else {
+        return Ok(());
+    };
+    let lobby = serde_json::from_slice::<Value>(lobby).map_err(|error| error.to_string())?;
+    let Some(lobby_id) = find_string(&lobby, &["partyId", "lobbyId"]) else {
+        return Ok(());
+    };
+    outbox
+        .remember_observed_lobby(&lobby_id, observed_at_millis)
         .map_err(|error| error.to_string())
 }
 
@@ -1633,6 +1745,85 @@ fn should_emit_live_game_frame(previous: Option<&[u8]>) -> bool {
     previous.is_none()
 }
 
+/// The profile resources every pass reads: (endpoint, cache key, kind).
+const PROFILE_SNAPSHOT_ENDPOINTS: &[(LcuEndpoint, &str, ObservationKind)] = &[
+    (
+        LcuEndpoint::ChampionMastery,
+        "champion_mastery",
+        ObservationKind::ChampionMastery,
+    ),
+    (
+        LcuEndpoint::ChampionMasteryMilestones,
+        "champion_mastery_milestones",
+        ObservationKind::ChampionMastery,
+    ),
+    (
+        LcuEndpoint::Challenges,
+        "challenges",
+        ObservationKind::Challenges,
+    ),
+    (
+        LcuEndpoint::ChallengeSummary,
+        "challenge_summary",
+        ObservationKind::Challenges,
+    ),
+    (
+        LcuEndpoint::ClashPlayer,
+        "clash_player",
+        ObservationKind::Clash,
+    ),
+    (
+        LcuEndpoint::ClashTournaments,
+        "clash_tournaments",
+        ObservationKind::Clash,
+    ),
+    (
+        LcuEndpoint::ClashSummary,
+        "clash_summary",
+        ObservationKind::Clash,
+    ),
+    (
+        LcuEndpoint::ClashCheckinAllowed,
+        "clash_checkin_allowed",
+        ObservationKind::Clash,
+    ),
+    (
+        LcuEndpoint::ClashCurrentTournamentIds,
+        "clash_current_tournament_ids",
+        ObservationKind::Clash,
+    ),
+    (
+        LcuEndpoint::ClashHistoryAndWinners,
+        "clash_history_and_winners",
+        ObservationKind::Clash,
+    ),
+    (
+        LcuEndpoint::ClashPlayerHistory,
+        "clash_player_history",
+        ObservationKind::Clash,
+    ),
+    (
+        LcuEndpoint::ClashRewards,
+        "clash_rewards",
+        ObservationKind::Clash,
+    ),
+    (
+        LcuEndpoint::ClashStateFlags,
+        "clash_state_flags",
+        ObservationKind::Clash,
+    ),
+    (
+        LcuEndpoint::ClashTournamentState,
+        "clash_tournament_state",
+        ObservationKind::Clash,
+    ),
+    (
+        LcuEndpoint::ClashInvitedRosters,
+        "clash_invited_rosters",
+        ObservationKind::Clash,
+    ),
+];
+
 async fn collect_profile_snapshots(
     client: &LcuClient,
     outbox: &ObservationOutbox,
@@ -1640,95 +1831,208 @@ async fn collect_profile_snapshots(
     local_puuid: Option<&str>,
     diagnostics: &Diagnostics,
 ) -> Result<(), String> {
-    for (endpoint, key, kind) in [
-        (
-            LcuEndpoint::ChampionMastery,
-            "champion_mastery",
-            ObservationKind::ChampionMastery,
-        ),
-        (
-            LcuEndpoint::ChampionMasteryMilestones,
-            "champion_mastery_milestones",
-            ObservationKind::ChampionMastery,
-        ),
-        (
-            LcuEndpoint::Challenges,
-            "challenges",
-            ObservationKind::Challenges,
-        ),
-        (
-            LcuEndpoint::ChallengeSummary,
-            "challenge_summary",
-            ObservationKind::Challenges,
-        ),
-        (
-            LcuEndpoint::ClashPlayer,
-            "clash_player",
-            ObservationKind::Clash,
-        ),
-        (
-            LcuEndpoint::ClashTournaments,
-            "clash_tournaments",
-            ObservationKind::Clash,
-        ),
-        (
-            LcuEndpoint::ClashSummary,
-            "clash_summary",
-            ObservationKind::Clash,
-        ),
-        (
-            LcuEndpoint::ClashCheckinAllowed,
-            "clash_checkin_allowed",
-            ObservationKind::Clash,
-        ),
-        (
-            LcuEndpoint::ClashCurrentTournamentIds,
-            "clash_current_tournament_ids",
-            ObservationKind::Clash,
-        ),
-        (
-            LcuEndpoint::ClashHistoryAndWinners,
-            "clash_history_and_winners",
-            ObservationKind::Clash,
-        ),
-        (
-            LcuEndpoint::ClashPlayerHistory,
-            "clash_player_history",
-            ObservationKind::Clash,
-        ),
-        (
-            LcuEndpoint::ClashRewards,
-            "clash_rewards",
-            ObservationKind::Clash,
-        ),
-        (
-            LcuEndpoint::ClashStateFlags,
-            "clash_state_flags",
-            ObservationKind::Clash,
-        ),
-        (
-            LcuEndpoint::ClashTournamentState,
-            "clash_tournament_state",
-            ObservationKind::Clash,
-        ),
-        (
-            LcuEndpoint::ClashInvitedRosters,
-            "clash_invited_rosters",
-            ObservationKind::Clash,
-        ),
-    ] {
-        observe_endpoint(
-            client,
-            outbox,
-            payloads,
-            endpoint,
-            ObservationSlot::named(key, kind),
-            local_puuid,
-            diagnostics,
-        )
-        .await?;
+    let deadline = Instant::now() + PROFILE_PASS_BUDGET;
+    let mut first_failure = None;
+    let mut any_payload = false;
+    for &(endpoint, key, kind) in PROFILE_SNAPSHOT_ENDPOINTS {
+        if out_of_budget(deadline, diagnostics) {
+            return first_failure.filter(|_| !any_payload).map_or(Ok(()), Err);
+        }
+        // One endpoint failing — Clash's are off outside a tournament window —
+        // must not cost the rest. Failing to keep what was read is another
+        // matter, and ends the pass.
+        match noted_lcu_read(client.get(endpoint).await, diagnostics, key) {
+            Ok(payload) => {
+                any_payload |= payload.is_some();
+                record_endpoint_payload(
+                    outbox,
+                    payloads,
+                    ObservationSlot::named(key, kind),
+                    payload.as_ref(),
+                    local_puuid,
+                    diagnostics,
+                )?;
+            }
+            Err(error) => {
+                first_failure.get_or_insert(error.to_string());
+            }
+        }
+    }
+    collect_clash_details(
+        client,
+        outbox,
+        payloads,
+        (local_puuid, diagnostics),
+        deadline,
+    )
+    .await?;
+    // Only a pass where nothing was read is a failed tick; a 404 is no read.
+    first_failure.filter(|_| !any_payload).map_or(Ok(()), Err)
+}
+
+/// How long one profile pass may spend reading. A League client that stalls
+/// rather than refusing costs each read its full five-second timeout; past
+/// this budget the remaining reads wait for the next pass.
+const PROFILE_PASS_BUDGET: Duration = Duration::from_secs(20);
+
+/// Whether the pass's read budget is spent, recording it when it is.
+fn out_of_budget(deadline: Instant, diagnostics: &Diagnostics) -> bool {
+    let spent = Instant::now() >= deadline;
+    if spent {
+        diagnostics.record(
+            DiagnosticEvent::new(
+                DiagnosticLevel::Warn,
+                DiagnosticCategory::Lcu,
+                "profile_pass",
+                DiagnosticOutcome::Deferred,
+            )
+            .with_detail("read budget spent; remaining reads wait for the next pass"),
+        );
+    }
+    spent
+}
+
+/// The Clash resources only an ID reaches: the player's own roster, its
+/// record, its bracket, and its tournament.
+///
+/// Only the player's own roster is followed. Ingress keeps one snapshot per
+/// player and resource, so a second roster (an invitation, say) read into the
+/// same slot would replace it. For the same reason the bracket and tournament
+/// IDs come from the roster payload just read, never from the cache, which can
+/// hold an earlier roster; the player payload stands in for a bracket the
+/// roster doesn't name.
+///
+/// Built from the League client's field names as best known (`rosterId`,
+/// `bracketId`, `tournamentId`). A name that never appears reads nothing, and
+/// every read is best-effort: each failure is recorded and the rest still
+/// run. A failure to keep what was read is returned.
+async fn collect_clash_details(
+    client: &LcuClient,
+    outbox: &ObservationOutbox,
+    payloads: &mut HashMap<String, Vec<u8>>,
+    observer: (Option<&str>, &Diagnostics),
+    deadline: Instant,
+) -> Result<(), String> {
+    let diagnostics = observer.1;
+    let Some(roster) = ids_from(payloads, &["clash_player"], &["rosterId"])
+        .iter()
+        .find_map(|id| ClashRosterId::parse(id))
+    else {
+        return Ok(());
+    };
+    if out_of_budget(deadline, diagnostics) {
+        return Ok(());
+    }
+    let read = (LcuResource::ClashRoster(roster), "clash_roster");
+    let roster_payload = observe_clash_resource(client, outbox, payloads, read, observer).await?;
+    let from_roster = |key: &str| {
+        roster_payload
+            .as_ref()
+            .and_then(|value| first_value(value, key))
+    };
+    let mut reads = vec![(LcuResource::ClashRosterStats(roster), "clash_roster_stats")];
+    let bracket = from_roster("bracketId")
+        .into_iter()
+        .chain(ids_from(payloads, &["clash_player"], &["bracketId"]))
+        .find_map(|id| ClashBracketId::parse(&id));
+    if let Some(bracket) = bracket {
+        reads.push((LcuResource::ClashBracket(bracket), "clash_bracket"));
+    }
+    if let Some(tournament) =
+        from_roster("tournamentId").and_then(|id| ClashTournamentId::parse(&id))
+    {
+        reads.push((LcuResource::ClashTournament(tournament), "clash_tournament"));
+    }
+    for read in reads {
+        if out_of_budget(deadline, diagnostics) {
+            return Ok(());
+        }
+        observe_clash_resource(client, outbox, payloads, read, observer).await?;
     }
     Ok(())
+}
+
+/// Read one ID-addressed Clash resource into its slot, returning what was
+/// read. A failed read is recorded, under the resource name rather than its
+/// ID, and reads as nothing.
+async fn observe_clash_resource(
+    client: &LcuClient,
+    outbox: &ObservationOutbox,
+    payloads: &mut HashMap<String, Vec<u8>>,
+    (resource, name): (LcuResource, &str),
+    (local_puuid, diagnostics): (Option<&str>, &Diagnostics),
+) -> Result<Option<Value>, String> {
+    let Ok(payload) = noted_lcu_read(client.get_resource(resource).await, diagnostics, name) else {
+        return Ok(None);
+    };
+    record_endpoint_payload(
+        outbox,
+        payloads,
+        ObservationSlot::named(name, ObservationKind::Clash),
+        payload.as_ref(),
+        local_puuid,
+        diagnostics,
+    )?;
+    Ok(payload)
+}
+
+/// The first non-empty value of `key` in `value`, searched depth-first.
+fn first_value(value: &Value, key: &str) -> Option<String> {
+    let mut found = Vec::new();
+    collect_values(value, &[key], &mut found);
+    found.into_iter().next()
+}
+
+/// Every value of `keys` in the cached payloads named `sources`, plus any
+/// scalar a source holds as a bare list (the League client answers some ID
+/// lists as `[123, 456]`). Deduplicated, in the order found.
+fn ids_from(payloads: &HashMap<String, Vec<u8>>, sources: &[&str], keys: &[&str]) -> Vec<String> {
+    let mut found = Vec::new();
+    for source in sources {
+        let Some(value) = payloads
+            .get(*source)
+            .and_then(|body| serde_json::from_slice::<Value>(body).ok())
+        else {
+            continue;
+        };
+        if let Value::Array(items) = &value {
+            found.extend(items.iter().filter_map(scalar_id));
+        }
+        collect_values(&value, keys, &mut found);
+    }
+    let mut seen = std::collections::HashSet::new();
+    found.retain(|id| seen.insert(id.clone()));
+    found
+}
+
+fn scalar_id(value: &Value) -> Option<String> {
+    match value {
+        Value::String(text) if !text.is_empty() => Some(text.clone()),
+        Value::Number(number) => number.as_u64().map(|id| id.to_string()),
+        _ => None,
+    }
+}
+
+/// Every non-empty value of `keys`, searched depth-first.
+fn collect_values(value: &Value, keys: &[&str], found: &mut Vec<String>) {
+    match value {
+        Value::Object(object) => {
+            for (key, child) in object {
+                if keys.contains(&key.as_str())
+                    && let Some(id) = scalar_id(child)
+                {
+                    found.push(id);
+                }
+                collect_values(child, keys, found);
+            }
+        }
+        Value::Array(items) => {
+            for item in items {
+                collect_values(item, keys, found);
+            }
+        }
+        _ => {}
+    }
 }
 
 async fn collect_recent_matches(
@@ -1773,8 +2077,27 @@ async fn collect_recent_matches(
                 .pending_game_timing(&game_id)
                 .map_err(|error| error.to_string())?
         {
+            let Some(parsed_id) = GameId::parse(&game_id) else {
+                continue;
+            };
+            // Wait for the full game rather than send the one-player list row:
+            // the end-of-game bundle stays pending and the next pass retries.
+            let Some(full) = read_full_post_game(client, parsed_id, diagnostics).await else {
+                continue;
+            };
             let end_of_game =
                 serde_json::from_slice::<Value>(&end_of_game).map_err(|error| error.to_string())?;
+            let mut bundle = serde_json::json!({
+                "matchHistory": full.game,
+                "endOfGame": end_of_game,
+                "timing": {
+                    "gameStartTimestamp": timing.started_at_millis,
+                    "gameEndTimestamp": timing.ended_at_millis,
+                },
+            });
+            if let (Some(timeline), Some(fields)) = (full.timeline, bundle.as_object_mut()) {
+                fields.insert("timeline".to_owned(), timeline);
+            }
             enqueue_resource_if_changed(
                 outbox,
                 payloads,
@@ -1783,14 +2106,7 @@ async fn collect_recent_matches(
                     resource: "post_game",
                     kind: ObservationKind::PostGame,
                 },
-                &serde_json::json!({
-                    "matchHistory": game,
-                    "endOfGame": end_of_game,
-                    "timing": {
-                        "gameStartTimestamp": timing.started_at_millis,
-                        "gameEndTimestamp": timing.ended_at_millis,
-                    },
-                }),
+                &bundle,
                 local_puuid,
                 diagnostics,
             )?;
@@ -1804,6 +2120,92 @@ async fn collect_recent_matches(
     }
     Ok(())
 }
+
+/// One finished game as the League client's own match history holds it.
+struct FullPostGame {
+    /// `games/{id}`: every participant, where the history list holds only the
+    /// local player.
+    game: Value,
+    /// `game-timelines/{id}`, when the League client has one.
+    timeline: Option<Value>,
+}
+
+/// Read a finished game's full roster and timeline by ID.
+///
+/// `None` while the full game is unavailable, so the caller retries on its
+/// next pass. A missing or failed timeline read never holds the game back: a
+/// game without a timeline still has a result.
+async fn read_full_post_game(
+    client: &LcuClient,
+    game_id: GameId,
+    diagnostics: &Diagnostics,
+) -> Option<FullPostGame> {
+    let game = client
+        .get_resource(LcuResource::MatchHistoryGame(game_id))
+        .await;
+    let Ok(Some(game)) = game else {
+        record_post_game_read(
+            diagnostics,
+            match game {
+                Err(_) => DiagnosticOutcome::Failed,
+                Ok(_) => DiagnosticOutcome::Skipped,
+            },
+            "full game not available yet; retrying next pass",
+        );
+        return None;
+    };
+    let timeline = client
+        .get_resource(LcuResource::MatchTimeline(game_id))
+        .await;
+    let (outcome, detail) = match &timeline {
+        Ok(Some(_)) => (DiagnosticOutcome::Succeeded, "full game and timeline"),
+        Ok(None) => (DiagnosticOutcome::Succeeded, "full game; no timeline"),
+        Err(_) => (DiagnosticOutcome::Failed, "full game; timeline read failed"),
+    };
+    // Shape only: the game id and payloads stay out of diagnostics.
+    record_post_game_read(diagnostics, outcome, detail);
+    Some(FullPostGame {
+        game,
+        timeline: timeline.ok().flatten(),
+    })
+}
+
+fn record_post_game_read(diagnostics: &Diagnostics, outcome: DiagnosticOutcome, detail: &str) {
+    let level = if outcome == DiagnosticOutcome::Failed {
+        DiagnosticLevel::Warn
+    } else {
+        DiagnosticLevel::Info
+    };
+    diagnostics.record(
+        DiagnosticEvent::new(
+            level,
+            DiagnosticCategory::Protocol,
+            "read_post_game",
+            outcome,
+        )
+        .with_detail(detail),
+    );
+}
+
+/// The League client's end-of-game block.
+///
+/// It and the game client's block both travel as `post_game`, but each needs
+/// its own change-detection key. With one shared key, every pass where this
+/// block was absent cleared the key and the game client's block looked new,
+/// so it was sent again every two seconds — 366 copies of one Arena game.
+const END_OF_GAME_SLOT: ObservationSlot<'static> = ObservationSlot {
+    cache_key: "post_game_end_of_game",
+    resource: "post_game",
+    kind: ObservationKind::PostGame,
+};
+
+/// The game client's own end-of-game block, read when the League client's
+/// is absent. See [`END_OF_GAME_SLOT`].
+const GAME_CLIENT_END_OF_GAME_SLOT: ObservationSlot<'static> = ObservationSlot {
+    cache_key: "post_game_game_client",
+    resource: "post_game",
+    kind: ObservationKind::PostGame,
+};
 
 /// What a collected payload is filed as.
 ///
@@ -1838,36 +2240,75 @@ async fn observe_endpoint(
     local_puuid: Option<&str>,
     diagnostics: &Diagnostics,
 ) -> Result<Option<Value>, String> {
-    let key = slot.cache_key;
-    let payload = match client.get(endpoint).await {
-        Ok(payload) => payload,
-        Err(error) => {
-            // The League client is the other half of every observation, and
-            // until now a failure to read it was invisible: the typed LcuError
-            // was flattened to a string at this line and never recorded, so a
-            // client that had quietly stopped seeing games looked identical to
-            // one with nothing to report.
-            diagnostics.counters().lcu_error();
-            diagnostics.record(
-                DiagnosticEvent::new(
-                    DiagnosticLevel::Warn,
-                    DiagnosticCategory::Lcu,
-                    "lcu_read",
-                    DiagnosticOutcome::Failed,
-                )
-                // The endpoint travels in the detail rather than the operation
-                // because a slot borrows its name; both are bounded text.
-                .with_detail(format!("{key}: {error}")),
-            );
-            return Err(error.to_string());
-        }
-    };
-    if let Some(value) = &payload {
-        enqueue_resource_if_changed(outbox, payloads, slot, value, local_puuid, diagnostics)?;
-    } else {
-        payloads.remove(key);
-    }
+    let payload = noted_lcu_read(client.get(endpoint).await, diagnostics, slot.cache_key)
+        .map_err(|error| error.to_string())?;
+    record_endpoint_payload(
+        outbox,
+        payloads,
+        slot,
+        payload.as_ref(),
+        local_puuid,
+        diagnostics,
+    )?;
     Ok(payload)
+}
+
+/// `read`, with a failure recorded under `name`.
+fn noted_lcu_read<T>(
+    read: Result<T, LcuError>,
+    diagnostics: &Diagnostics,
+    name: &str,
+) -> Result<T, LcuError> {
+    if let Err(error) = &read {
+        record_lcu_read_failure(diagnostics, name, error);
+    }
+    read
+}
+
+/// Record a League client read that failed.
+///
+/// The League client is the other half of every observation, and a failure
+/// to read it used to be invisible: the typed `LcuError` was flattened to a
+/// string and never recorded, so a client that had quietly stopped seeing
+/// games looked identical to one with nothing to report.
+fn record_lcu_read_failure(diagnostics: &Diagnostics, name: &str, error: &LcuError) {
+    diagnostics.counters().lcu_error();
+    diagnostics.record(
+        DiagnosticEvent::new(
+            DiagnosticLevel::Warn,
+            DiagnosticCategory::Lcu,
+            "lcu_read",
+            DiagnosticOutcome::Failed,
+        )
+        // The name travels in the detail rather than the operation because a
+        // slot borrows it; both are bounded text.
+        .with_detail(format!("{name}: {error}")),
+    );
+}
+
+/// File one endpoint read: queue the payload if it changed since this slot
+/// last saw it, or forget the slot when the endpoint has nothing, so a payload
+/// that comes back is sent again.
+fn record_endpoint_payload(
+    outbox: &ObservationOutbox,
+    payloads: &mut HashMap<String, Vec<u8>>,
+    slot: ObservationSlot<'_>,
+    payload: Option<&Value>,
+    local_puuid: Option<&str>,
+    diagnostics: &Diagnostics,
+) -> Result<(), String> {
+    if let Some(value) = payload {
+        return enqueue_resource_if_changed(
+            outbox,
+            payloads,
+            slot,
+            value,
+            local_puuid,
+            diagnostics,
+        );
+    }
+    payloads.remove(slot.cache_key);
+    Ok(())
 }
 
 fn enqueue_if_changed(
@@ -2017,7 +2458,19 @@ fn create_observation(
     .map_err(|error| error.to_string())?;
     observation.local_puuid = local_puuid.map(str::to_owned);
     observation.game_id = find_string(&observation.payload, &["gameId"]);
-    observation.lobby_id = find_string(&observation.payload, &["lobbyId", "partyId"]);
+    observation.lobby_id = match find_string(&observation.payload, &["lobbyId", "partyId"]) {
+        // The lobby says which party it is; nothing else does. An in-game
+        // observation names a game whose lobby only this device witnessed, so
+        // fall back to the join recorded when that game started — otherwise the
+        // roster and the match it belongs to never meet.
+        None => match observation.game_id.as_deref() {
+            Some(game_id) => outbox
+                .lobby_for_game(game_id)
+                .map_err(|error| error.to_string())?,
+            None => None,
+        },
+        found => found,
+    };
     observation.platform_id = find_string(&observation.payload, &["platformId"]);
     observation.league_patch = find_string(&observation.payload, &["gameVersion"]);
     observation.validate().map_err(|error| error.to_string())?;
@@ -2148,11 +2601,164 @@ mod tests {
     };
 
     use super::{
-        RuntimeState, apply_observation_receipt, clear_replay_error, clear_runtime_error,
-        find_string, game_start_evidence, optional_lockfile, outbox_file_name, replay_platform_id,
-        replay_sha256, set_error, set_replay_error, should_emit_live_game_frame,
-        should_refresh_lobby, update_state,
+        END_OF_GAME_SLOT, GAME_CLIENT_END_OF_GAME_SLOT, RuntimeState, apply_observation_receipt,
+        bind_observed_lobby, clear_replay_error, clear_runtime_error, find_string,
+        game_start_evidence, ids_from, optional_lockfile, outbox_file_name,
+        record_endpoint_payload, replay_platform_id, replay_sha256, set_error, set_replay_error,
+        should_emit_live_game_frame, should_refresh_lobby, update_state,
     };
+    use scout_client_core::diagnostics::Diagnostics;
+    use std::collections::HashMap;
+
+    fn lobby_bindings(diagnostics: &Diagnostics) -> Option<u64> {
+        diagnostics
+            .counters()
+            .readings()
+            .into_iter()
+            .find_map(|(name, value)| (name == "lobby_bindings").then_some(value))
+    }
+
+    fn in_progress_session() -> Result<Vec<u8>, serde_json::Error> {
+        serde_json::to_vec(&json!({
+            "phase": "InProgress",
+            "gameData": { "gameId": 5_653_248_720_u64 },
+        }))
+    }
+
+    #[test]
+    fn clash_ids_come_from_the_payloads_already_read() -> Result<(), serde_json::Error> {
+        let mut payloads = HashMap::new();
+        payloads.insert(
+            "clash_player".to_owned(),
+            serde_json::to_vec(&json!({
+                "summonerId": 1,
+                "rosterId": "f1c2a7d0-4b9e-4a17-9c3e-2d8f6a5b1c0e",
+            }))?,
+        );
+        payloads.insert(
+            "clash_current_tournament_ids".to_owned(),
+            serde_json::to_vec(&json!([3021, 3022, 3021]))?,
+        );
+        payloads.insert(
+            "clash_roster".to_owned(),
+            serde_json::to_vec(&json!({ "members": [], "bracketId": 18276 }))?,
+        );
+        payloads.insert(
+            "lobby".to_owned(),
+            serde_json::to_vec(&json!({ "rosterId": "not-from-a-clash-source" }))?,
+        );
+
+        assert_eq!(
+            ids_from(&payloads, &["clash_player"], &["rosterId"]),
+            vec!["f1c2a7d0-4b9e-4a17-9c3e-2d8f6a5b1c0e".to_owned()]
+        );
+        assert_eq!(
+            ids_from(&payloads, &["clash_current_tournament_ids"], &["id"]),
+            vec!["3021".to_owned(), "3022".to_owned()]
+        );
+        assert_eq!(
+            ids_from(&payloads, &["clash_roster"], &["bracketId"]),
+            vec!["18276".to_owned()]
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn an_unchanged_game_client_end_of_game_block_is_sent_once()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let path = std::env::temp_dir().join(format!("scout-runtime-{}.db", Uuid::new_v4()));
+        let outbox = ObservationOutbox::open(&path)?;
+        let diagnostics = Diagnostics::in_memory();
+        let mut payloads = HashMap::new();
+        let block = json!({ "gameId": 5_654_767_039_u64, "queueType": "CHERRY" });
+
+        // Each pass after an Arena game: the League client has no end-of-game
+        // block, so the game client's is read instead — and it doesn't change.
+        for _ in 0..3 {
+            record_endpoint_payload(
+                &outbox,
+                &mut payloads,
+                END_OF_GAME_SLOT,
+                None,
+                Some("puuid"),
+                &diagnostics,
+            )?;
+            record_endpoint_payload(
+                &outbox,
+                &mut payloads,
+                GAME_CLIENT_END_OF_GAME_SLOT,
+                Some(&block),
+                Some("puuid"),
+                &diagnostics,
+            )?;
+        }
+
+        let pending = outbox.pending(100)?;
+        assert_eq!(pending.len(), 1, "an unchanged block is sent once");
+        let sent: ObservationEnvelope = serde_json::from_slice(&pending[0].body)?;
+        assert_eq!(sent.kind, ObservationKind::PostGame);
+        assert_eq!(sent.payload["resource"], "post_game");
+
+        let _ = std::fs::remove_file(&path);
+        Ok(())
+    }
+
+    #[test]
+    fn a_started_game_is_sent_again_carrying_the_lobby_it_came_from()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let path = std::env::temp_dir().join(format!("scout-runtime-{}.db", Uuid::new_v4()));
+        let outbox = ObservationOutbox::open(&path)?;
+        let diagnostics = Diagnostics::in_memory();
+        let mut payloads = HashMap::new();
+
+        // Champion select: the lobby is visible, and no game exists yet.
+        payloads.insert(
+            "lobby".to_owned(),
+            serde_json::to_vec(&json!({ "partyId": "party-1" }))?,
+        );
+        bind_observed_lobby(&outbox, &payloads, Some("puuid"), &diagnostics)?;
+        assert_eq!(outbox.pending(100)?.len(), 0);
+
+        // In game: LCU drops the lobby and names the game, with no link back.
+        payloads.remove("lobby");
+        payloads.insert("gameflow_session".to_owned(), in_progress_session()?);
+        bind_observed_lobby(&outbox, &payloads, Some("puuid"), &diagnostics)?;
+
+        let pending = outbox.pending(100)?;
+        assert_eq!(pending.len(), 1, "the join must reach the server in-game");
+        let sent: ObservationEnvelope = serde_json::from_slice(&pending[0].body)?;
+        assert_eq!(sent.kind, ObservationKind::Gameflow);
+        assert_eq!(sent.game_id.as_deref(), Some("5653248720"));
+        assert_eq!(sent.lobby_id.as_deref(), Some("party-1"));
+        assert_eq!(lobby_bindings(&diagnostics), Some(1));
+
+        // Every later tick of the match reads the same session.
+        bind_observed_lobby(&outbox, &payloads, Some("puuid"), &diagnostics)?;
+        assert_eq!(outbox.pending(100)?.len(), 1);
+        assert_eq!(lobby_bindings(&diagnostics), Some(1));
+
+        let _ = std::fs::remove_file(&path);
+        Ok(())
+    }
+
+    #[test]
+    fn a_game_with_no_witnessed_lobby_sends_nothing_extra() -> Result<(), Box<dyn std::error::Error>>
+    {
+        // A client started mid-game never saw the lobby, so it has no join to
+        // report; the ordinary session observation is all there is.
+        let path = std::env::temp_dir().join(format!("scout-runtime-{}.db", Uuid::new_v4()));
+        let outbox = ObservationOutbox::open(&path)?;
+        let diagnostics = Diagnostics::in_memory();
+        let mut payloads = HashMap::new();
+        payloads.insert("gameflow_session".to_owned(), in_progress_session()?);
+
+        bind_observed_lobby(&outbox, &payloads, Some("puuid"), &diagnostics)?;
+
+        assert_eq!(outbox.pending(100)?.len(), 0);
+        assert_eq!(lobby_bindings(&diagnostics), Some(0));
+        let _ = std::fs::remove_file(&path);
+        Ok(())
+    }
 
     #[test]
     fn recovers_the_platform_a_replay_filename_names() {

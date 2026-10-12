@@ -217,46 +217,32 @@ export const matchHistoryPollingSkipsTotal = new Counter({
 export const prematchDetectionsTotal = new Counter({
   name: "prematch_detections_total",
   help: "Total pre-match game detections",
-  // Status values: "detected", "already_tracked", "deferred_custom_prestart"
-  // (roster still filling during the loading screen),
-  // "deferred_undersized_roster" (the game has started, so this is the roster
-  // Riot will report — notably, bots are never listed at all) and
-  // "owned_by_v2" (the V2 prematch path already captured this game)
+  // Status values from the V2 discovery probe, one per polled account:
+  // "game" (in a live game whose roster is final: ten listed, a started
+  // custom with someone on each side, or one a tracked player's local client
+  // completed with the bots Riot never lists), "idle" (not in a game, or in
+  // one still filling its roster) and "unreadable" (the spectator read could
+  // not answer). v1's detection loop, retired, also wrote "detected",
+  // "already_tracked", "deferred_custom_prestart",
+  // "deferred_undersized_roster", "custom_roster_final",
+  // "client_completed_roster" and "owned_by_v2".
   labelNames: ["status"] as const,
   registers: [registry],
 });
 
 /**
- * Number of games currently being tracked as active
- */
-export const prematchActiveGamesGauge = new Gauge({
-  name: "prematch_active_games",
-  help: "Number of games currently being tracked as active",
-  registers: [registry],
-});
-
-/**
- * Total number of pre-match polling runs skipped due to mutex lock
- */
-export const prematchPollingSkipsTotal = new Counter({
-  name: "prematch_polling_skips_total",
-  help: "Total pre-match polling runs skipped due to mutex lock",
-  labelNames: ["reason"] as const,
-  registers: [registry],
-});
-
-/**
- * Counts pre-match detections where the player's PUUID was already in a
- * non-expired ActiveGame row with a different gameId — i.e. they finished
- * one match and started another within the 2-hour TTL window.
+ * Games the V2 prematch capture took, by why their roster counted as final.
  *
- * This branch is unreachable until the per-PUUID skip-list is removed from
- * `checkActiveGames`. Once removed, a non-zero rate here is direct evidence
- * that the bot now correctly notifies on back-to-back games.
+ * Reasons: "listed" (Riot listed a full roster, or an Arena one), and the two
+ * cases Riot alone would leave waiting forever — "custom_roster_final" (a
+ * started custom with someone on each side, such as a 1v1 or 2v2) and
+ * "client_bots" (a tracked player's local client supplied the bots Riot never
+ * lists).
  */
-export const prematchSubsequentMatchDetectedTotal = new Counter({
-  name: "prematch_subsequent_match_detected_total",
-  help: "Pre-match detections where the player had a prior non-expired ActiveGame row with a different gameId. Direct evidence the per-PUUID skip-list removal is working.",
+export const prematchRosterCompletionsTotal = new Counter({
+  name: "prematch_roster_completions_total",
+  help: "V2 prematch captures by why the roster counted as final",
+  labelNames: ["reason"] as const,
   registers: [registry],
 });
 
@@ -802,8 +788,9 @@ export async function getMetrics(): Promise<string> {
   updateUptimeMetric();
   if (databaseMetricSweepsEnabled()) {
     // Dynamic import to avoid circular dependency issues
-    const { runDatabaseMetricSweeps } = await import("#src/metrics/sweeps.ts");
-    await runDatabaseMetricSweeps();
+    const { sweepDatabaseMetricsWhenStale } =
+      await import("#src/metrics/sweeps.ts");
+    await sweepDatabaseMetricsWhenStale();
   }
   return await registry.metrics();
 }

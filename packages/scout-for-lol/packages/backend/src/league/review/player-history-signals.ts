@@ -2,6 +2,7 @@
 // clock, no logging — everything is injected — so this is fully unit-testable.
 // The DB fetch that produces the inputs lives in player-history.ts.
 
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import {
   computeKda,
@@ -26,7 +27,7 @@ const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 /** One past game for the reviewed player (current match excluded). */
 export type HistoryGame = {
-  matchId: string;
+  matchId: RiotMatchId;
   gameCreationAt: Date;
   championName: string;
   lane: Lane | undefined;

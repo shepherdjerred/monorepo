@@ -54,8 +54,8 @@ const LABELLED_TOTAL = /\bTOTAL:?\s*\$?([\d,]+\.\d{2})/i;
 const SUBTOTAL = /\bSubtotal:?\s*\$?([\d,]+\.\d{2})/i;
 const TAX = /\bTax:?\s*\$?([\d,]+\.\d{2})/i;
 
-function money(raw: string | undefined): number {
-  const value = Number.parseFloat((raw ?? "0").replaceAll(",", ""));
+function money(raw: string | undefined = "0"): number {
+  const value = Number.parseFloat(raw.replaceAll(",", ""));
   return Number.isFinite(value) ? value : 0;
 }
 

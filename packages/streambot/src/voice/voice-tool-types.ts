@@ -3,6 +3,10 @@ import { z } from "zod";
 const EmptyInputSchema = z.strictObject({});
 
 export const voiceToolSchemas = {
+  selectChannel: z.strictObject({
+    channel: z.union([z.number().int().positive(), z.literal("auto")]),
+  }),
+  listChannels: EmptyInputSchema,
   play: z.strictObject({
     query: z.string().min(1),
     source: z.enum(["auto", "history", "local", "youtube"]),
@@ -51,6 +55,8 @@ export const voiceToolSchemas = {
 } as const;
 
 export type ToolName =
+  | "select_channel"
+  | "list_channels"
   | "play"
   | "skip"
   | "stop"
@@ -80,6 +86,14 @@ export type SeekArguments = z.infer<typeof voiceToolSchemas.seek>;
 export type LoopArguments = z.infer<typeof voiceToolSchemas.setLoop>;
 
 export type VoiceCommandInvocation =
+  | {
+      readonly name: "select_channel";
+      readonly arguments: z.infer<typeof voiceToolSchemas.selectChannel>;
+    }
+  | {
+      readonly name: "list_channels";
+      readonly arguments: Record<string, never>;
+    }
   | { readonly name: "play"; readonly arguments: PlayArguments }
   | { readonly name: "skip"; readonly arguments: Record<string, never> }
   | { readonly name: "stop"; readonly arguments: Record<string, never> }

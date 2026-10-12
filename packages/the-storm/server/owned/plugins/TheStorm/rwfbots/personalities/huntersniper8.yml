@@ -1,0 +1,83 @@
+id: huntersniper8
+name: HunterSniper8
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1MzUxNDY5OCwKICAicHJvZmlsZUlkIiA6ICJkOTdmOTI4NTY5NDA0MjZmODZkNGQ1MDAzZmU4MTRhNyIsCiAgInByb2ZpbGVOYW1lIiA6ICJQcm9TcXVhZFlUIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzdlZDZiNmNlZjQyYTQ2YzliM2I2NTBlMjNiMWFlMDkzYzExYmJiYTBhNmMxZTc3YTE3ZWE4ODg5ZGJlZmExZTkiCiAgICB9CiAgfQp9
+  signature: "iFOj23aEKD6px8tWpQcvZ9Ku1tSa2U8TGd/+6sQIvDImE2Kl5LMPudF9wHZjkz0MM6zI9+cj+wnmJAJ1MCSNaAkgaSUpLOBho0YvGI7b5PrETRm7Sd+NKIjz+4ETuF2JumOSiiO31ABWj3IiaF8Plw4ikzRSSWmL50TneveouAFDCgruJH23mZzygNmj3XSDogfBPZ1MoF+DR+UbO9muR5D77viTNKGDqF8AFbupLhgQNZd5TJTC9fMS/nhK9gcIM+oqQfMw9z61V+FwzCnERzVkB/jc1uuiT0ApVT2uFIUxeMdvaq7qWjeomRvIkYz9qPaGII0+ioz927u2t8BftPMmvMipJK90T1RzeSdQhKES8SVogS5dgoNwD/3uHYOLzr1Bc+reIXwrJsBFBSkCvfd+c0DHwg4TvqV/BTUJsFXxEdQz06wY1qK8Ee297zmBq4BLP29cKLx5ta7MY4EhEWbtOk9jH14PO+ncjsqZj5VqcmHoXxzw9bUPw4nb17ELvYHxvimlUVqCex4KkU+8g4pZW/ZCIL1TG3TrZZHw5JOrIwB4DfV+A2xjpWCjJ+fkzeA5eBW/eMrWDdO0WA4x65Y+ldPkQiV/u6tE5T13P9kjGBr8/4lZDGfeaqmiTJGpanj3G6O+vDeWPUdRWUl0uhKnaUIlrhWX2WYPJGP5Q9c="
+skill: 0.301
+archetype: rusher
+leverOffsets:
+  reactionMs: 0.37
+  cps: 0.62
+  predictionQuality: -0.02
+  decisionTemperature: -0.06
+  awarenessRadius: -0.32
+  coordination: -0.54
+  aggression: 1.78
+kits:
+  trooper: 1
+  shortbow: 0.49
+  rewind: 0.27
+roles:
+  plant: 0.94
+  escort: 0.49
+  hunt: 0.6
+style:
+  aggression: 0.85
+  patience: 0.17
+  teamplay: 0.46
+  risk: 0.62
+voice:
+  tone:
+    - impatient
+    - loud
+    - cocky
+  verbosity: chatty
+  style: "can't sit still; complains about waiting, misleading name, rushes with a sword anyway"
+lines:
+  greet:
+    - why are we still in spawn. GO
+    - despite the name, i do not snipe
+    - "{team} countdown is too long"
+  onKill:
+    - "{victim} too slow"
+    - "rushed you, {victim}. as always"
+    - fastest kill in the west
+  onDeath:
+    - "{killer} was camping. obviously"
+    - "ugh, {killer}. again"
+    - respawn faster please
+  onPlant:
+    - "{bomb} lit, waiting is for losers"
+    - "first one to {bomb}. obviously"
+  onDefuse:
+    - "{bomb} defused, now let me push"
+    - "fine, {bomb} is safe. can i rush now"
+  onWin:
+    - told you, rush wins. gg
+    - "fastest win ever, {team}"
+  onLoss:
+    - we were too slow. as i said
+    - gg. next time faster
+  onLastAlive:
+    - finally, nobody to wait for
+    - solo rush! best rush
+  taunt:
+    - are you camping? you're camping
+    - hurry up, i'm bored
+    - come out and fight, slowpoke
+  lobby:
+    - how long is this countdown. too long
+    - nobody ask why i'm not using a bow
+    - "{team} we rush. no camping. i'll know"
+    - running laps in the lobby to stay warm
+    - ok starting. starting? STARTING?
+quirks:
+  - slow_starter
+  - never_eats
+rivals:
+  - jixmel-54
+  - tankrekroumpro
+  - jonshyth-94
+bio: Named himself HunterSniper8 at age ten and has never once used a bow. Rushes every round at sprint speed and calls every defender a camper. Has lost a famous number of rushes to Jixmel_54 and still won't slow down.
+batch: 2
+retired: false

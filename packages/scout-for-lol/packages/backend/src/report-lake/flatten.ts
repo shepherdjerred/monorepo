@@ -12,6 +12,7 @@ import type {
 } from "@scout-for-lol/data";
 import {
   computeKda,
+  matchDataSourceOf,
   rankToLeaguePoints,
   resolveQueueTypeFromGame,
 } from "@scout-for-lol/data";
@@ -96,6 +97,7 @@ export function flattenMatch(match: RawMatch): MatchLakeRow[] {
     game_mode: match.info.gameMode,
     game_type: match.info.gameType,
     game_version: match.info.gameVersion,
+    data_source: matchDataSourceOf(match.metadata),
     end_of_game_result: match.info.endOfGameResult ?? null,
     map_id: match.info.mapId,
     puuid: participant.puuid,

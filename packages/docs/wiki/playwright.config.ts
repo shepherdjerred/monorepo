@@ -1,12 +1,17 @@
 import { defineConfig } from "@playwright/test";
 
-const PORT = 4358;
+const PORT = Number(process.env.WIKI_E2E_PORT ?? "4358");
+if (!Number.isSafeInteger(PORT) || PORT < 1 || PORT > 65_535) {
+  throw new Error("WIKI_E2E_PORT must be a valid TCP port");
+}
 const baseURL = `http://127.0.0.1:${PORT.toString()}`;
 const isCI = process.env.CI !== undefined;
 // Astro 7 detects agent environments and daemonizes preview automatically.
 // Disable that behavior so Playwright owns the server process, observes startup
 // failures, and tears it down with the test run.
-const previewCommand = `ASTRO_PREVIEW_BACKGROUND=0 bun run preview --host 127.0.0.1 --port ${PORT.toString()}`;
+// Keep an unrelated developer preview alive; this foreground server owns only
+// Playwright's port and does not read or replace Astro's shared preview lock.
+const previewCommand = `ASTRO_PREVIEW_BACKGROUND=0 bun run preview --ignore-lock --host 127.0.0.1 --port ${PORT.toString()}`;
 
 export default defineConfig({
   fullyParallel: true,
@@ -32,7 +37,9 @@ export default defineConfig({
   },
   webServer: {
     command: previewCommand,
-    reuseExistingServer: !isCI,
+    // A server on this port may belong to another worktree. Always prove the
+    // current build; parallel local checkouts can choose their own bootstrap port.
+    reuseExistingServer: false,
     url: baseURL,
     // Playwright defaults to 60s, which the browser-E2E pod exceeds under load:
     // it runs several suites at --concurrency=2, so a server can be starved

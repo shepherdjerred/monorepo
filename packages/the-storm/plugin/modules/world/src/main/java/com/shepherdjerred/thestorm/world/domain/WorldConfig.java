@@ -5,18 +5,20 @@ import java.util.List;
 
 /**
  * plugins/TheStorm/world.yml. Paper already owns the main world, the nether and the end; this file
- * lists only the worlds the module creates.
+ * lists the resource worlds operators provision before startup.
  *
  * @param sleepPercentage players in bed required to skip the night, on every overworld
- * @param worlds the created worlds, in order; the first with {@code rtp} is the default landing
- * @param crier main-world bulletin command, disabled until a live rollout
- * @param ambient main-world arrival barks, disabled until a live rollout
+ * @param worlds the provisioned worlds, in order; the first with {@code rtp} is the default landing
+ * @param borders native borders for the preserved worlds
+ * @param crier main-world bulletin command
+ * @param ambient main-world arrival barks
  * @param digest recorded main-world daily activity under {@code /crier digest}
  * @param merchant event-triggered windmill trader visit, disabled until anchor verification
  */
 public record WorldConfig(
     int sleepPercentage,
     List<WorldSpec> worlds,
+    List<WorldBorderSpec> borders,
     CrierConfig crier,
     AmbientConfig ambient,
     DigestConfig digest,
@@ -24,6 +26,13 @@ public record WorldConfig(
 
   public WorldConfig {
     worlds = List.copyOf(worlds);
+    borders = List.copyOf(borders);
+    var bordered = new HashSet<String>();
+    for (var border : borders) {
+      if (!bordered.add(border.world())) {
+        throw new IllegalArgumentException("border world " + border.world() + " is listed twice");
+      }
+    }
     if (crier == null) {
       throw new IllegalArgumentException("crier config is required");
     }

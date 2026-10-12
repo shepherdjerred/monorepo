@@ -26,8 +26,7 @@ public final class LockRules {
     attempt.blocks().stream()
         .flatMap(block -> index.lockAt(block).stream())
         .findFirst()
-        .ifPresent(
-            lock -> problems.add(new LockProblem.AlreadyLocked(lock.owner().equals(player))));
+        .ifPresent(lock -> problems.add(new LockProblem.AlreadyLocked(lock.ownedByPlayer(player))));
     standingProblem(player, attempt.standing()).ifPresent(problems::add);
     if (index.countOf(player) >= policy.maxPerPlayer()) {
       problems.add(new LockProblem.LimitReached(policy.maxPerPlayer()));
@@ -69,7 +68,7 @@ public final class LockRules {
     return owned(player, lock)
         .flatMap(
             found -> {
-              if (target.id().equals(player)) {
+              if (found.ownedByPlayer(target.id())) {
                 return err(new LockProblem.NotYourself());
               }
               var current = Optional.ofNullable(found.trusted().get(target.id()));
@@ -112,7 +111,7 @@ public final class LockRules {
     if (lock.isEmpty()) {
       return err(new LockProblem.NotLocked());
     }
-    return lock.get().owner().equals(player)
+    return lock.get().ownedByPlayer(player)
         ? Result.ok(lock.get())
         : err(new LockProblem.NotYourLock());
   }

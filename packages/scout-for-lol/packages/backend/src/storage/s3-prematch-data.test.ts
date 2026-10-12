@@ -74,7 +74,8 @@ describe("savePrematchDataToS3", () => {
 
     const command = s3Mock.call(0)?.args?.[0];
     expect(command).toBeInstanceOf(PutObjectCommand);
-    if (!(command instanceof PutObjectCommand)) throw new Error("not a put");
+    if (!(command instanceof PutObjectCommand))
+      throw new TypeError("not a put");
     // The object is keyed by the platform-qualified game id — the identity
     // its lock and receipt use — so two platforms' games with one number on
     // one day cannot resolve to the same object.

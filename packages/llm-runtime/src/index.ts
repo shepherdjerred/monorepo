@@ -20,6 +20,7 @@ import {
   type GenerateValidatedObjectResult as InnerGenerateValidatedObjectResult,
   type GoogleCredentials as InnerGoogleCredentials,
   type LlmCallMetadata as InnerLlmCallMetadata,
+  type LlmImageInput as InnerLlmImageInput,
   type LlmRuntimeOptions as InnerLlmRuntimeOptions,
   type LlmRuntimeLogger as InnerLlmRuntimeLogger,
   type LlmRuntimeLogRecord as InnerLlmRuntimeLogRecord,
@@ -42,6 +43,7 @@ import {
   type ProviderOptions as InnerProviderOptions,
 } from "./provider-options.ts";
 import {
+  checkCodexModelAccess as innerCheckCodexModelAccess,
   createCodexConfig as innerCreateCodexConfig,
   type CodexConfig as InnerCodexConfig,
 } from "./codex.ts";
@@ -103,6 +105,7 @@ export type GenerateValidatedObjectResult<SCHEMA extends z.ZodType> = Identity<
 export type GoogleCredentials = Identity<InnerGoogleCredentials>;
 export type ModelRequirements = Identity<InnerModelRequirements>;
 export type LlmCallMetadata = Identity<InnerLlmCallMetadata>;
+export type LlmImageInput = Identity<InnerLlmImageInput>;
 export type LlmRuntimeOptions = Identity<InnerLlmRuntimeOptions>;
 export type LlmRuntimeLogRecord = Identity<InnerLlmRuntimeLogRecord>;
 export type LlmRuntimeLogger = (
@@ -140,6 +143,12 @@ export function createCodexConfig(
   ...args: Parameters<typeof innerCreateCodexConfig>
 ): CodexConfig {
   return innerCreateCodexConfig(...args);
+}
+
+export function checkCodexModelAccess(
+  ...args: Parameters<typeof innerCheckCodexModelAccess>
+): Promise<void> {
+  return innerCheckCodexModelAccess(...args);
 }
 
 export function addTokenBreakdown(

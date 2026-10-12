@@ -59,7 +59,7 @@ export type BucksExploreCapability = {
  * until an explicit mapping exists.
  */
 export async function resolveBucksCapability(
-  guildIds: readonly string[],
+  guildIds: readonly DiscordGuildId[],
 ): Promise<BucksExploreCapability | null> {
   const declared = new Set<string>(
     listGuildsWithFlagEnabled("betting_enabled"),

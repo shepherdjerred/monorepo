@@ -23,6 +23,7 @@ import {
   type PlayerCardPayload,
 } from "@shepherdjerred/streambot/discord/player-card/player-card.ts";
 import type { PlaybackView } from "@shepherdjerred/streambot/machine/view.ts";
+import type { PlaybackChannelNumber } from "@shepherdjerred/streambot/types/playback-channel.ts";
 import type {
   ChannelId,
   GuildId,
@@ -34,6 +35,8 @@ const log = logger.child("player-card");
 
 /** Which session a posted card belongs to, so a button click can be routed back to it. */
 export type CardOwner = {
+  readonly playbackChannel?: PlaybackChannelNumber;
+  readonly instanceId?: string;
   readonly guildId: GuildId;
   readonly voiceChannelId: ChannelId;
 };
@@ -106,6 +109,7 @@ const defaultScheduler: IntervalScheduler = (fn, ms) => {
 };
 
 export type PlayerCardManagerDeps = {
+  readonly webUrl?: (requesterId: string) => Promise<string | undefined>;
   readonly owner: CardOwner;
   /** Text channel the card is posted to; null (a resume with no known status channel) disables it. */
   readonly statusChannelId: ChannelId | null;
@@ -123,6 +127,8 @@ export type PlayerCardManagerDeps = {
 };
 
 export class PlayerCardManager {
+  private webUrl: string | undefined;
+  private webLookupKey: string | undefined;
   private readonly deps: PlayerCardManagerDeps;
   /** Session this card's clicks route to. Mutable: a session can be moved between voice channels. */
   private owner: CardOwner;
@@ -210,7 +216,7 @@ export class PlayerCardManager {
    * is still playing at the new location.
    */
   reown(voiceChannelId: ChannelId): void {
-    this.owner = { guildId: this.owner.guildId, voiceChannelId };
+    this.owner = { ...this.owner, voiceChannelId };
     if (this.messageId !== null) {
       this.deps.port.register(this.messageId, this.owner);
     }
@@ -385,7 +391,39 @@ export class PlayerCardManager {
   }
 
   private render(view: PlaybackView): PlayerCardPayload {
+    const requester = view.current?.requesterId;
+    if (
+      requester !== undefined &&
+      this.deps.webUrl !== undefined &&
+      requester !== this.webLookupKey
+    ) {
+      this.webLookupKey = requester;
+      this.webUrl = undefined;
+      const lookup = this.deps.webUrl;
+      void (async () => {
+        try {
+          const url = await lookup(requester);
+          if (
+            this.webLookupKey === requester &&
+            !this.finished &&
+            !this.finalizing
+          ) {
+            this.webUrl = url;
+            this.refresh();
+          }
+        } catch (error) {
+          log.warn("web remote discovery lookup failed", {
+            layer: "feature_flag",
+            error: getErrorMessage(error),
+          });
+        }
+      })();
+    }
     return renderPlayerCard({
+      ...(this.webUrl === undefined ? {} : { webUrl: this.webUrl }),
+      ...(this.owner.playbackChannel === undefined
+        ? {}
+        : { playbackChannel: this.owner.playbackChannel }),
       view,
       posterUrl: this.posterUrl,
       enabled: this.deps.enabled,

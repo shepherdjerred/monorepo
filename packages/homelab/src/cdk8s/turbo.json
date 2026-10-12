@@ -12,6 +12,10 @@
         // change to them must invalidate this task like a change to the
         // checker itself.
         "scripts/onepassword-lib.ts",
+        "$TURBO_ROOT$/packages/homelab/scripts/tofu/application-secrets.ts",
+        "$TURBO_ROOT$/packages/homelab/src/tofu/application-secrets/desired-state.json",
+        "$TURBO_ROOT$/packages/homelab/scripts/platform-desired-state.ts",
+        "$TURBO_ROOT$/packages/homelab/src/tofu/*/desired-state.json",
         "onepassword-vault-snapshot.json"
       ]
     },
@@ -32,6 +36,9 @@
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/config/analytics-sites.json",
+        "$TURBO_ROOT$/packages/glitter-boys-launcher/published-release.json",
+        "$TURBO_ROOT$/packages/glitter-boys-launcher/scripts/public-release.ts",
+        "$TURBO_ROOT$/packages/glitter-boys-launcher/scripts/release-manifest.ts",
         "src/**",
         "scripts/**",
         "config/**",
@@ -53,7 +60,13 @@
       "outputs": ["src/version-map.generated.ts"]
     },
     "typecheck": {
-      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/config/analytics-sites.json"]
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/config/analytics-sites.json",
+        "$TURBO_ROOT$/packages/glitter-boys-launcher/published-release.json",
+        "$TURBO_ROOT$/packages/glitter-boys-launcher/scripts/public-release.ts",
+        "$TURBO_ROOT$/packages/glitter-boys-launcher/scripts/release-manifest.ts"
+      ]
     },
     // `build` replaces dist/ while ESLint walks the package root. Serialize
     // them so a combined `turbo run build lint` cannot remove the directory
@@ -68,10 +81,6 @@
       "env": ["NODE_ENV"]
     },
     "test:ci": {
-      "dependsOn": ["build", "^build", "generate"],
-      "env": ["NODE_ENV"]
-    },
-    "test:report": {
       "dependsOn": ["build", "^build", "generate"],
       "env": ["NODE_ENV"]
     }

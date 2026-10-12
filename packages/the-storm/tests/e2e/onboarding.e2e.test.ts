@@ -26,7 +26,8 @@ describe("onboarding", () => {
       const shown = (pattern: RegExp) =>
         seen.some((line) => pattern.test(line));
       expect(shown(/Welcome to The Storm/)).toBe(true);
-      expect(shown(/Run \/kit to see the kits/)).toBe(true);
+      expect(shown(/starting supplies arrive automatically/)).toBe(true);
+      expect(shown(/\/kit\b|You received the .* kit/)).toBe(false);
       expect(shown(/Run \/rules/)).toBe(true);
       expect(shown(/File a ticket/)).toBe(true);
     } finally {

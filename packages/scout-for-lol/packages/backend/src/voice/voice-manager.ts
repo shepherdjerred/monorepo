@@ -15,6 +15,10 @@
  * mode, so the next playback join is deafened again.
  */
 
+import type {
+  DiscordGuildId,
+  DiscordChannelId,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import {
   joinVoiceChannel,
   createAudioPlayer,
@@ -55,8 +59,8 @@ export type VoiceManagerConnection = {
 export type EstablishVoiceConnection<C extends VoiceManagerConnection> =
   (input: {
     client: Client;
-    guildId: string;
-    channelId: string;
+    guildId: DiscordGuildId;
+    channelId: DiscordChannelId;
     selfDeaf: boolean;
     onConnectionLost: () => void;
   }) => Promise<C>;
@@ -72,7 +76,7 @@ export type EstablishVoiceConnection<C extends VoiceManagerConnection> =
  * sending at once in either direction. The multiplier exists for future
  * ducking; today's arbiter always returns 1.
  */
-export type PlaybackGate = (guildId: string) => Promise<{
+export type PlaybackGate = (guildId: DiscordGuildId) => Promise<{
   readonly volumeMultiplier: number;
   readonly release: () => void;
 }>;
@@ -82,14 +86,14 @@ export type PlaybackGate = (guildId: string) => Promise<{
  */
 export class VoiceManager<C extends VoiceManagerConnection> {
   private client: Client | null = null;
-  private readonly connections = new Map<string, C>();
-  private readonly players = new Map<string, AudioPlayer>();
-  private readonly modes = new Map<string, ConnectionMode>();
+  private readonly connections = new Map<DiscordGuildId, C>();
+  private readonly players = new Map<DiscordGuildId, AudioPlayer>();
+  private readonly modes = new Map<DiscordGuildId, ConnectionMode>();
   private readonly connectionLostListeners: ((
-    guildId: string,
+    guildId: DiscordGuildId,
     mode: ConnectionMode,
   ) => void)[] = [];
-  private readonly playbackQueues = new Map<string, Promise<unknown>>();
+  private readonly playbackQueues = new Map<DiscordGuildId, Promise<unknown>>();
   /**
    * Serializes `ensureConnected`/`joinChannel` per guild. Both read
    * `this.connections`/`this.modes`, decide whether to establish a new
@@ -101,7 +105,10 @@ export class VoiceManager<C extends VoiceManagerConnection> {
    * overwrites the other's connection (leaking it, un-destroyed) instead of
    * recognizing it should reuse what the first call just created.
    */
-  private readonly connectionQueues = new Map<string, Promise<unknown>>();
+  private readonly connectionQueues = new Map<
+    DiscordGuildId,
+    Promise<unknown>
+  >();
   private playbackGate: PlaybackGate | null = null;
 
   constructor(private readonly establish: EstablishVoiceConnection<C>) {}
@@ -123,7 +130,7 @@ export class VoiceManager<C extends VoiceManagerConnection> {
 
   /** Notify when an established connection is lost (not on deliberate leaves). */
   onConnectionLost(
-    listener: (guildId: string, mode: ConnectionMode) => void,
+    listener: (guildId: DiscordGuildId, mode: ConnectionMode) => void,
   ): void {
     this.connectionLostListeners.push(listener);
   }
@@ -133,11 +140,11 @@ export class VoiceManager<C extends VoiceManagerConnection> {
     this.playbackGate = gate;
   }
 
-  getConnection(guildId: string): C | undefined {
+  getConnection(guildId: DiscordGuildId): C | undefined {
     return this.connections.get(guildId);
   }
 
-  getConnectionMode(guildId: string): ConnectionMode | undefined {
+  getConnectionMode(guildId: DiscordGuildId): ConnectionMode | undefined {
     return this.modes.get(guildId);
   }
 
@@ -149,7 +156,10 @@ export class VoiceManager<C extends VoiceManagerConnection> {
    * channel, whichever channel was asked for. Only a missing or non-ready
    * playback connection triggers a fresh join.
    */
-  async ensureConnected(guildId: string, channelId: string): Promise<C> {
+  async ensureConnected(
+    guildId: DiscordGuildId,
+    channelId: DiscordChannelId,
+  ): Promise<C> {
     if (!this.client) {
       throw new Error("Discord client not initialized");
     }
@@ -161,8 +171,8 @@ export class VoiceManager<C extends VoiceManagerConnection> {
   }
 
   private async ensureConnectedLocked(
-    guildId: string,
-    channelId: string,
+    guildId: DiscordGuildId,
+    channelId: DiscordChannelId,
   ): Promise<C> {
     const existingConnection = this.connections.get(guildId);
     if (
@@ -186,8 +196,8 @@ export class VoiceManager<C extends VoiceManagerConnection> {
    * explicit user action and may move the bot between channels.
    */
   async joinChannel(
-    guildId: string,
-    channelId: string,
+    guildId: DiscordGuildId,
+    channelId: DiscordChannelId,
     mode: ConnectionMode = "playback",
   ): Promise<C> {
     if (!this.client) {
@@ -201,8 +211,8 @@ export class VoiceManager<C extends VoiceManagerConnection> {
   }
 
   private async joinChannelLocked(
-    guildId: string,
-    channelId: string,
+    guildId: DiscordGuildId,
+    channelId: DiscordChannelId,
     mode: ConnectionMode,
   ): Promise<C> {
     if (!this.client) {
@@ -262,7 +272,7 @@ export class VoiceManager<C extends VoiceManagerConnection> {
    * waits its own full duration before playing.
    */
   async playSound(
-    guildId: string,
+    guildId: DiscordGuildId,
     source: SoundSource,
     volume = 1,
   ): Promise<void> {
@@ -275,7 +285,7 @@ export class VoiceManager<C extends VoiceManagerConnection> {
   }
 
   private async performPlaySound(
-    guildId: string,
+    guildId: DiscordGuildId,
     source: SoundSource,
     volume: number,
   ): Promise<void> {
@@ -296,7 +306,7 @@ export class VoiceManager<C extends VoiceManagerConnection> {
   }
 
   private async playResource(
-    guildId: string,
+    guildId: DiscordGuildId,
     source: SoundSource,
     effectiveVolume: number,
   ): Promise<void> {
@@ -368,7 +378,7 @@ export class VoiceManager<C extends VoiceManagerConnection> {
    * Leave a voice channel. Clears the guild's mode, so a later sound-engine
    * join comes back deafened and playback-only.
    */
-  leaveChannel(guildId: string): void {
+  leaveChannel(guildId: DiscordGuildId): void {
     const connection = this.connections.get(guildId);
     if (connection) {
       connection.destroy();
@@ -389,12 +399,12 @@ export class VoiceManager<C extends VoiceManagerConnection> {
   /**
    * Check if connected to a guild's voice channel
    */
-  isConnected(guildId: string): boolean {
+  isConnected(guildId: DiscordGuildId): boolean {
     const connection = this.connections.get(guildId);
     return connection?.state.status === VoiceConnectionStatus.Ready;
   }
 
-  private forget(guildId: string): void {
+  private forget(guildId: DiscordGuildId): void {
     this.connections.delete(guildId);
     this.players.delete(guildId);
     this.modes.delete(guildId);

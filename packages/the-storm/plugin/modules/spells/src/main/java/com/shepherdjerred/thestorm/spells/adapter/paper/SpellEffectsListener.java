@@ -103,6 +103,7 @@ final class SpellEffectsListener implements Listener {
 
   @EventHandler
   void onQuit(PlayerQuitEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getPlayer())) return;
     var player = event.getPlayer();
     if (state.stealth().keys().contains(player.getUniqueId())) {
       state.stealth().stop(player.getUniqueId(), time.instant());

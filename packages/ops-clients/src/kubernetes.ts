@@ -1,5 +1,14 @@
 import { z } from "zod";
 import {
+  VeleroMetadataSchema,
+  VeleroRestoreSchema,
+  ZfsVolumeSchema,
+  type VeleroRestoreStatus,
+  type DeletingZfsVolume,
+  toVeleroRestoreStatus,
+} from "./kubernetes-storage.ts";
+import { BACKUP_MONITORING_ANNOTATIONS } from "@shepherdjerred/ops-model/backup-policy.ts";
+import {
   bearer,
   fetchJson,
   type Fetch,
@@ -247,6 +256,80 @@ function toArgoApplication(
 
 const PAGE_SIZE = 500;
 
+const VeleroScheduleSchema = z.object({
+  metadata: VeleroMetadataSchema,
+  spec: z.object({
+    schedule: z.string().min(1),
+    paused: z.boolean().default(false),
+  }),
+});
+
+const BackupMonitoringSchema = z.object({
+  maxAgeSeconds: z
+    .string()
+    .regex(/^\d+$/u)
+    .pipe(z.coerce.number<string>().positive()),
+  alertForSeconds: z
+    .string()
+    .regex(/^\d+$/u)
+    .pipe(z.coerce.number<string>().nonnegative()),
+  alertSeverity: z.enum(["critical", "warning", "info"]),
+});
+
+export type VeleroScheduleStatus = z.infer<typeof BackupMonitoringSchema> & {
+  name: string;
+  namespace: string;
+  createdAt: string;
+  cronSchedule: string;
+  paused: boolean;
+};
+
+const VeleroBackupSchema = z.object({
+  metadata: z.object({
+    name: z.string(),
+    namespace: z.string(),
+    creationTimestamp: z.iso.datetime({ offset: true }),
+    labels: z.record(z.string(), z.string()).default({}),
+  }),
+  status: z
+    .object({
+      // Newly created backups may not have been observed by the controller yet.
+      phase: z
+        .enum([
+          "New",
+          "Queued",
+          "ReadyToStart",
+          "FailedValidation",
+          "InProgress",
+          "WaitingForPluginOperations",
+          "WaitingForPluginOperationsPartiallyFailed",
+          "Finalizing",
+          "FinalizingPartiallyFailed",
+          "Completed",
+          "PartiallyFailed",
+          "Failed",
+          "Deleting",
+        ])
+        .optional(),
+      startTimestamp: z.iso.datetime({ offset: true }).nullable().optional(),
+      completionTimestamp: z.iso
+        .datetime({ offset: true })
+        .nullable()
+        .optional(),
+    })
+    .optional(),
+});
+
+export type VeleroBackupStatus = {
+  name: string;
+  namespace: string;
+  schedule: string | undefined;
+  createdAt: string;
+  startedAt: string | undefined;
+  completedAt: string | undefined;
+  phase: NonNullable<z.infer<typeof VeleroBackupSchema>["status"]>["phase"];
+};
+
 /**
  * Read-only Kubernetes API client for nodes, pods, and ArgoCD Applications.
  * Callers inject the token provider and `fetch`, so the in-cluster CA and
@@ -336,5 +419,83 @@ export class KubernetesClient {
       ArgoApplicationSchema,
     );
     return apps.map((app) => toArgoApplication(app));
+  }
+
+  async listVeleroSchedules(
+    namespace = "velero",
+  ): Promise<VeleroScheduleStatus[]> {
+    const schedules = await this.#list(
+      `/apis/velero.io/v1/namespaces/${encodeURIComponent(namespace)}/schedules`,
+      VeleroScheduleSchema,
+    );
+    return schedules.map(({ metadata, spec }) => {
+      const monitoring = BackupMonitoringSchema.safeParse({
+        maxAgeSeconds:
+          metadata.annotations[BACKUP_MONITORING_ANNOTATIONS.maxAgeSeconds],
+        alertForSeconds:
+          metadata.annotations[BACKUP_MONITORING_ANNOTATIONS.alertForSeconds],
+        alertSeverity:
+          metadata.annotations[BACKUP_MONITORING_ANNOTATIONS.severity],
+      });
+      if (!monitoring.success)
+        throw new Error(
+          `Velero Schedule ${metadata.namespace}/${metadata.name} has invalid or missing backup monitoring annotations`,
+        );
+      return {
+        name: metadata.name,
+        namespace: metadata.namespace,
+        createdAt: metadata.creationTimestamp,
+        cronSchedule: spec.schedule,
+        paused: spec.paused,
+        ...monitoring.data,
+      };
+    });
+  }
+
+  async listVeleroBackups(namespace = "velero"): Promise<VeleroBackupStatus[]> {
+    const backups = await this.#list(
+      `/apis/velero.io/v1/namespaces/${encodeURIComponent(namespace)}/backups`,
+      VeleroBackupSchema,
+    );
+    return backups.map(({ metadata, status }) => ({
+      name: metadata.name,
+      namespace: metadata.namespace,
+      schedule: metadata.labels["velero.io/schedule-name"],
+      createdAt: metadata.creationTimestamp,
+      startedAt: status?.startTimestamp ?? undefined,
+      completedAt: status?.completionTimestamp ?? undefined,
+      phase: status?.phase,
+    }));
+  }
+
+  async listVeleroRestores(
+    namespace = "velero",
+  ): Promise<VeleroRestoreStatus[]> {
+    const restores = await this.#list(
+      `/apis/velero.io/v1/namespaces/${encodeURIComponent(namespace)}/restores`,
+      VeleroRestoreSchema,
+    );
+    return restores.map((restore) => toVeleroRestoreStatus(restore));
+  }
+
+  async listDeletingZfsVolumes(
+    namespace = "openebs",
+  ): Promise<DeletingZfsVolume[]> {
+    const volumes = await this.#list(
+      `/apis/zfs.openebs.io/v1/namespaces/${encodeURIComponent(namespace)}/zfsvolumes`,
+      ZfsVolumeSchema,
+    );
+    return volumes.flatMap(({ metadata, spec }) =>
+      metadata.deletionTimestamp === undefined
+        ? []
+        : [
+            {
+              name: metadata.name,
+              node: spec.ownerNodeID,
+              dataset: `${spec.poolName}/${metadata.name}`,
+              deletedAt: metadata.deletionTimestamp,
+            },
+          ],
+    );
   }
 }

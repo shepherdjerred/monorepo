@@ -1,11 +1,10 @@
 # Random teleport and first-arrival dialog. Owned by the repository; the plugin
 # never writes it. Durations are ISO-8601.
 
-freeFor: P7D
-cooldown: PT15S
-warmup: PT3S
+# Failed searches have their own throttle. All successful travel pricing,
+# warmup, cooldown and the seven-day cost waiver live in essentials.yml.
+searchInterval: PT15S
 landingMemory: PT5M
-cost: 25
 batchSize: 24
 minGap: 512
 band: 1500

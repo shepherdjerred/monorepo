@@ -110,11 +110,11 @@ const SCOUT_DATA_DRAGON_FAILURE_RULES: PrometheusRule[] = [
     annotations: {
       summary: "Scout Data Dragon Temporal update failed",
       description: escapePrometheusTemplate(
-        "The Scout Data Dragon updater failed {{ $value }} time(s) in the last 24 hours. Check the Temporal UI and worker logs for failure reason {{ $labels.reason }}.",
+        "The Scout Data Dragon updater recorded a failure in the last 24 hours. Check the Temporal UI and worker logs for failure reason {{ $labels.reason }}.",
       ),
     },
     expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-      'max_over_time(scout_data_dragon_runs{outcome="failed"}[24h]) > 0',
+      "time() - max_over_time(scout_data_dragon_last_failure_timestamp[24h]) < 86400",
     ),
     for: "15m",
     labels: {
@@ -135,7 +135,7 @@ const SCOUT_DATA_DRAGON_FAILURE_RULES: PrometheusRule[] = [
       ),
     },
     expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-      'max_over_time(scout_data_dragon_runs{outcome="failed",reason=~"git-push-failed|pr-create-failed"}[24h]) > 0',
+      'time() - max_over_time(scout_data_dragon_last_failure_timestamp{reason=~"git-push-failed|pr-create-failed"}[24h]) < 86400',
     ),
     for: "15m",
     labels: {
@@ -163,14 +163,11 @@ const SCOUT_DATA_DRAGON_FAILURE_RULES: PrometheusRule[] = [
     // so the alert fires on the first failure and clears 24h after the most
     // recent one regardless of worker recreation.
     //
-    // The series name carries an `_s` suffix: the gauge is created with unit
-    // "s" (data-dragon-metrics.ts) and the worker's Temporal Prometheus
-    // exporter runs with `unitSuffix: true` (worker.ts), which appends the unit
-    // to the exported metric name. Same convention as the histogram queried in
-    // temporal-dashboard.ts as `scout_data_dragon_duration_s_bucket`. Querying
-    // the bare (unsuffixed) name matches no series, so the alert never fires.
+    // The SDK exports timestamp gauges without a unit suffix. The duration
+    // histogram does have `_s`, but applying that convention to these gauges
+    // queries an absent metric and misses failures (verified on worker scrapes).
     expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-      "time() - max_over_time(scout_data_dragon_auto_merge_last_failure_timestamp_s[24h]) < 60 * 60 * 24",
+      "time() - max_over_time(scout_data_dragon_auto_merge_last_failure_timestamp[24h]) < 60 * 60 * 24",
     ),
     for: "15m",
     labels: {
@@ -185,7 +182,7 @@ const SCOUT_DATA_DRAGON_FAILURE_RULES: PrometheusRule[] = [
         "The Scout Data Dragon Temporal schedule has not recorded any run, skip, or failure in the last 36 hours.",
     },
     expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-      "absent_over_time(scout_data_dragon_runs[36h])",
+      "absent_over_time(scout_data_dragon_last_run_timestamp[36h]) or time() - max(max_over_time(scout_data_dragon_last_run_timestamp[36h])) > 36 * 3600",
     ),
     for: "30m",
     labels: {
@@ -329,7 +326,7 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
               "The Temporal worker has not been able to keep the Home Assistant event bridge connected. Check worker logs and ha_event_bridge_start_failures_total for the reason.",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "max(ha_event_bridge_connected) == 0",
+            'max(ha_event_bridge_connected{namespace="temporal",service=~".*temporal-home-worker.*metrics.*"}) == 0 or absent(ha_event_bridge_connected{namespace="temporal",service=~".*temporal-home-worker.*metrics.*"})',
           ),
           for: "30m",
           labels: {

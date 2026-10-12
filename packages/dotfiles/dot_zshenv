@@ -10,3 +10,11 @@ setopt no_nomatch
 # is private chezmoi output; it contains the remote credentials only for an
 # explicit `turbo_cache_remote` session switch.
 [[ -f "$HOME/.config/turbo-cache/env.sh" ]] && source "$HOME/.config/turbo-cache/env.sh"
+
+# Match Codex's syntax theme to the current macOS appearance on each launch.
+codex() {
+  local theme=catppuccin-latte
+  # Light mode has no AppleInterfaceStyle key; hide defaults' expected missing-key message.
+  [[ "$(/usr/bin/defaults read -g AppleInterfaceStyle 2>/dev/null)" == Dark ]] && theme=catppuccin-mocha
+  command codex -c "tui.theme=\"$theme\"" "$@"
+}

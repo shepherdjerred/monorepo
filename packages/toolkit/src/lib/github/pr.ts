@@ -81,7 +81,8 @@ export async function getLatestReviewsByAuthor(
   // Sort by date and keep latest per author
   const sortedReviews = reviews.toSorted(
     (a, b) =>
-      new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime(),
+      (b.submittedAt === null ? 0 : new Date(b.submittedAt).getTime()) -
+      (a.submittedAt === null ? 0 : new Date(a.submittedAt).getTime()),
   );
 
   for (const review of sortedReviews) {

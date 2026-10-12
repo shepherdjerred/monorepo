@@ -34,7 +34,8 @@ final class Shadowstep implements Spell {
 
   @Override
   public Result<Effect, CastProblem> prepare(Player caster) {
-    return Aim.creature(tools, caster, settings.range()).flatMap(target -> step(caster, target));
+    return Aim.creatureEffect(tools, caster, settings.range())
+        .flatMap(target -> step(caster, target));
   }
 
   private Result<Effect, CastProblem> step(Player caster, LivingEntity target) {

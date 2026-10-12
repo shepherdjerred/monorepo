@@ -518,7 +518,7 @@ competitions. Read the guide at https://scout-for-lol.com/docs/
 
 You can also try \`/track\` for a simple one-channel setup, or use \`/help\` to see the lightweight commands.
 
-Need help? DM <@160509172704739328> or open a GitHub issue!`);
+Need help or want to report a bug? Use \`/help\` or DM Scout directly. Your message goes to the Scout team's private support inbox.`);
 
     await channel.send({ content: welcomeMessage });
     logger.info(

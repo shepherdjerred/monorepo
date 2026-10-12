@@ -15,11 +15,8 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { SCOUT_GATEWAY_APP_LABEL } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/gateway.ts";
-import {
-  gatewayTopologyRunsRole,
-  SCOUT_GATEWAY_TOPOLOGY,
-  type ScoutGatewayTopology,
-} from "@shepherdjerred/homelab/cdk8s/src/resources/scout/topology.ts";
+import { SCOUT_ACTIVITY_WORKER_APP_LABEL } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/activity-worker.ts";
+import { SCOUT_TEMPORAL_METRICS_PORT } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/temporal-metrics.ts";
 
 export type Stage = "prod" | "beta";
 
@@ -124,6 +121,28 @@ function discordVoiceRtpEgressRule() {
     ],
   };
 }
+/**
+ * Prometheus to the embedded Temporal Workers' SDK exporter, on the roles
+ * that run Workers. Prometheus only: nothing else reads the SDK's metrics.
+ */
+function prometheusTemporalMetricsIngressRule() {
+  return {
+    from: [
+      {
+        namespaceSelector: {
+          matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
+        },
+      },
+    ],
+    ports: [
+      {
+        port: IntOrString.fromNumber(SCOUT_TEMPORAL_METRICS_PORT),
+        protocol: "TCP",
+      },
+    ],
+  };
+}
+
 type WorkflowWorkerImageOverrides = {
   stable?: string;
   candidate?: string;
@@ -133,16 +152,6 @@ export function createScoutChart(
   app: App,
   stage: Stage,
   workflowWorkerImageOverrides?: WorkflowWorkerImageOverrides,
-  /**
-   * Render this stage as though its SCOUT_GATEWAY_TOPOLOGY entry said this.
-   *
-   * Same shape and purpose as `workflowWorkerImageOverrides` above: a
-   * render-time override so a topology can be exercised through the real chart
-   * without editing the standing decision. It is what lets the retirement path
-   * — the rollback this whole state exists for — be proven by rendering it
-   * rather than by mocking the module that decides it.
-   */
-  gatewayTopologyOverride?: ScoutGatewayTopology,
 ) {
   const chart = new Chart(app, `scout-${stage}`, {
     namespace: `scout-${stage}`,
@@ -155,15 +164,8 @@ export function createScoutChart(
     },
   });
 
-  const gatewayTopology =
-    gatewayTopologyOverride ?? SCOUT_GATEWAY_TOPOLOGY[stage];
-  // Voice belongs to whichever pod holds the shard, so this tracks `split`
-  // specifically: a retiring stage has the shard back on the combined pod and
-  // must get its UDP egress back with it.
-  const splitTopology = gatewayTopologyRunsRole(gatewayTopology);
-
   createScoutPostgreSQLDatabase(chart, stage);
-  createScoutDeployment(chart, stage, gatewayTopology);
+  createScoutDeployment(chart, stage);
   const stableImage =
     workflowWorkerImageOverrides?.stable ??
     versions[`shepherdjerred/scout-for-lol/${stage}/workflows/stable`];
@@ -232,6 +234,7 @@ export function createScoutChart(
           ],
           ports: [{ port: IntOrString.fromNumber(3000), protocol: "TCP" }],
         },
+        prometheusTemporalMetricsIngressRule(),
       ],
     },
   });
@@ -243,14 +246,7 @@ export function createScoutChart(
       // Keep the operator-managed PostgreSQL pods outside this policy.
       podSelector: { matchLabels: { app: "scout-backend" } },
       policyTypes: ["Egress"],
-      egress: [
-        ...scoutRuntimeEgressRules(),
-        // Voice follows the shard: only an UNSPLIT beta keeps it here, because
-        // on a split stage `/scout join` runs in scout-gateway.
-        ...(stage === "beta" && !splitTopology
-          ? [discordVoiceRtpEgressRule()]
-          : []),
-      ],
+      egress: [...scoutRuntimeEgressRules()],
     },
   });
 
@@ -259,11 +255,7 @@ export function createScoutChart(
   // matches, and the two above deliberately select `app: scout-backend` alone
   // to keep the operator-managed Patroni/Spilo pods unselected.
   //
-  // Kept rendered through retirement, unlike the voice rule above: it must
-  // keep governing the gateway pod for as long as that pod is terminating, and
-  // it simply selects no pods once the Deployment is at zero replicas. It is
-  // deleted with the Deployment when the stage goes `absent`.
-  if (gatewayTopology !== "absent") {
+  {
     new KubeNetworkPolicy(chart, "scout-gateway-netpol", {
       metadata: { name: "scout-gateway-netpol" },
       spec: {
@@ -291,6 +283,32 @@ export function createScoutChart(
           // egresses from here.
           ...(stage === "beta" ? [discordVoiceRtpEgressRule()] : []),
         ],
+      },
+    });
+  }
+
+  {
+    new KubeNetworkPolicy(chart, "scout-activity-worker-netpol", {
+      metadata: { name: "scout-activity-worker-netpol" },
+      spec: {
+        podSelector: {
+          matchLabels: { app: SCOUT_ACTIVITY_WORKER_APP_LABEL },
+        },
+        policyTypes: ["Ingress", "Egress"],
+        ingress: [
+          {
+            from: [
+              {
+                namespaceSelector: {
+                  matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
+                },
+              },
+            ],
+            ports: [{ port: IntOrString.fromNumber(3000), protocol: "TCP" }],
+          },
+          prometheusTemporalMetricsIngressRule(),
+        ],
+        egress: scoutRuntimeEgressRules(),
       },
     });
   }

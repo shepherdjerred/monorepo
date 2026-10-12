@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/data";
 import { Link } from "react-router";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import {
@@ -12,7 +13,7 @@ import {
 export type ChampionComparisonRow = {
   playerId: number;
   alias: string;
-  guild: { guildId: string; name: string };
+  guild: { guildId: DiscordGuildId; name: string };
   viewerLinked: boolean;
   games: number;
   wins: number;

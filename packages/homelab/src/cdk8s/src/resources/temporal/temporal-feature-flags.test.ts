@@ -99,6 +99,32 @@ describe("Temporal feature-flag boundary", () => {
     expect(configuredComponents).toEqual(expectedComponents);
   });
 
+  test("grants the Flipt operator token only to the repo operations worker", () => {
+    const deployments = synthesizeTemporal().flatMap((resource) => {
+      const parsed = DeploymentSchema.safeParse(resource);
+      return parsed.success ? [parsed.data] : [];
+    });
+    const centralWorkers = deployments.filter(
+      (deployment) =>
+        deployment.spec.template.metadata.labels["app"] === "temporal-worker",
+    );
+    for (const deployment of centralWorkers) {
+      const component = deployment.spec.template.metadata.labels["component"];
+      const operatorToken =
+        deployment.spec.template.spec.containers[0]?.env.find(
+          (entry) => entry.name === "FLIPT_OPERATOR_TOKEN",
+        );
+      if (component === "repo-worker") {
+        expect(operatorToken?.valueFrom?.secretKeyRef).toEqual({
+          key: "operator-token",
+          name: "temporal-flipt-auth",
+        });
+      } else {
+        expect(operatorToken).toBeUndefined();
+      }
+    }
+  });
+
   test("adds an explicit worker egress policy to Flipt", () => {
     const policies = synthesizeTemporal().flatMap((resource) => {
       const parsed = NetworkPolicySchema.safeParse(resource);

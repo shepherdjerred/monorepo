@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/data";
 import { useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/query/trpc.ts";
@@ -20,7 +21,7 @@ import { DiscordUserFormSchema } from "#src/lib/form-schemas.ts";
 
 /** Link a Discord user to a player (via `player.linkDiscord`). */
 export function LinkDiscordDialog(props: {
-  guildId: string;
+  guildId: DiscordGuildId;
   playerAlias: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;

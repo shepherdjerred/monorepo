@@ -9,6 +9,7 @@ import { PlatformRouteSchema } from "@scout-for-lol/domain/identity/routes.ts";
 import {
   IsoInstantSchema,
   RiotMatchIdSchema,
+  type RiotMatchId,
 } from "@scout-for-lol/domain/identity/brands.ts";
 import type * as DatabaseModule from "#src/database/index.ts";
 import type { ProgressionMatchRow } from "#src/progression/progression-lake-reads.ts";
@@ -26,10 +27,9 @@ import {
  *
  * Only the two things that leave the database are stubbed: the lake read
  * that supplies the match's per-player row, and the flag provider. Everything
- * else — the record lock, the cell comparison, the transaction, the path
- * decision and the V2 mint — is production code. This is what proves the flag
- * is read per server and reaches the decision, and that the silent gate is on
- * the evaluator's own path rather than only on the helper's.
+ * else — the record lock, the cell comparison, the transaction and the intent
+ * mint — is production code. This is what proves the silent gate is on the
+ * evaluator's own path rather than only on the helper's.
  */
 
 const { prisma } = createTestDatabase("scout-hall-evaluate-match");
@@ -43,13 +43,9 @@ vi.mock("#src/database/index.ts", async () => {
 
 const stubs = vi.hoisted(
   (): {
-    v2Enabled: boolean;
     rows: unknown[];
-    flagCalls: { name: string; server: unknown }[];
   } => ({
-    v2Enabled: false,
     rows: [],
-    flagCalls: [],
   }),
 );
 
@@ -59,14 +55,8 @@ vi.mock("#src/configuration/flags.ts", async () => {
   );
   return {
     ...actual,
-    isPolicyEnabled: (name: string, context: { server?: unknown }) => {
-      stubs.flagCalls.push({ name, server: context.server });
-      return Promise.resolve(
-        name === "scout_v2_progression_notifications_enabled"
-          ? stubs.v2Enabled
-          : name === "hall_of_fame_enabled",
-      );
-    },
+    isPolicyEnabled: (name: string) =>
+      Promise.resolve(name === "hall_of_fame_enabled"),
   };
 });
 vi.mock("#src/progression/progression-lake-reads.ts", () => ({
@@ -93,7 +83,7 @@ function rankedQueue(): ProgressionMatchRow["queue"] {
   return queue;
 }
 
-function row(matchId: string): ProgressionMatchRow {
+function row(matchId: RiotMatchId): ProgressionMatchRow {
   return {
     match_id: matchId,
     game_end_at: "2026-09-19T09:30:00.000Z",
@@ -132,7 +122,7 @@ function row(matchId: string): ProgressionMatchRow {
 const FIXTURE = await loadRawMatchFixture();
 
 /** The evaluator reads only the metadata before the lake row takes over. */
-function rawMatch(matchId: string): RawMatch {
+function rawMatch(matchId: RiotMatchId): RawMatch {
   return {
     ...FIXTURE,
     metadata: { ...FIXTURE.metadata, matchId, participants: [PUUID] },
@@ -153,6 +143,7 @@ async function observedMatch(
     platformRoute: PlatformRouteSchema.parse("NA1"),
     policy: "FULL",
     deliveryMode,
+    matchDataSource: "RIOT",
     owner: { kind: "temporal-v2" },
     promotion: null,
     gameCreatedAt: IsoInstantSchema.parse("2026-09-19T09:00:00.000Z"),
@@ -163,27 +154,7 @@ async function observedMatch(
   return matchId;
 }
 
-function unobservedMatch(): string {
-  seq += 1;
-  const matchId = RiotMatchIdSchema.parse(
-    `NA1_48${String(seq).padStart(3, "0")}`,
-  );
-  stubs.rows = [row(matchId)];
-  return matchId;
-}
-
-async function expectLegacyOutboxFor(matchId: string): Promise<void> {
-  expect(await prisma.matchNotificationIntent.count()).toBe(0);
-  expect(
-    await prisma.hallRecordBreakOutbox.findMany({
-      select: { guildId: true, matchId: true, channelId: true },
-    }),
-  ).toEqual([{ guildId: GUILD, matchId, channelId: CHANNEL }]);
-}
-
 beforeEach(async () => {
-  stubs.flagCalls = [];
-  await prisma.hallRecordBreakOutbox.deleteMany();
   await prisma.matchNotificationIntent.deleteMany();
   await prisma.hallRecordCell.deleteMany();
   await prisma.hallBaselineRun.deleteMany();
@@ -234,11 +205,10 @@ afterAll(async () => {
 });
 
 describe("evaluateHallMatch's announcement", () => {
-  test("mints the V2 intent, and no outbox row, when the guild has the V2 path on", async () => {
-    stubs.v2Enabled = true;
+  test("mints the hall intent for a live match", async () => {
     const matchId = await observedMatch("live");
 
-    await evaluateHallMatch(rawMatch(matchId), { kind: "temporal-v2" });
+    await evaluateHallMatch(rawMatch(RiotMatchIdSchema.parse(matchId)));
 
     const intents = await prisma.matchNotificationIntent.findMany();
     expect(intents.map((intent) => intent.intentKey)).toEqual([
@@ -249,60 +219,27 @@ describe("evaluateHallMatch's announcement", () => {
       targetId: CHANNEL,
       state: "pending",
     });
-    expect(await prisma.hallRecordBreakOutbox.count()).toBe(0);
-    expect(stubs.flagCalls).toContainEqual({
-      name: "scout_v2_progression_notifications_enabled",
-      server: GUILD,
-    });
   });
 
-  test("writes v1's outbox row when the guild has the V2 path off", async () => {
-    stubs.v2Enabled = false;
-    const matchId = await observedMatch("live");
+  test("a silent backfill updates the records but announces nothing", async () => {
+    const matchId = await observedMatch("silent-backfill");
 
-    await evaluateHallMatch(rawMatch(matchId), { kind: "temporal-v2" });
+    await evaluateHallMatch(rawMatch(RiotMatchIdSchema.parse(matchId)));
 
-    await expectLegacyOutboxFor(matchId);
+    // The record itself is still broken: silence is about the message.
+    const cells = await prisma.hallRecordCell.findMany();
+    expect(cells.map((cell) => cell.currentValue)).toEqual([30]);
+    expect(await prisma.matchNotificationIntent.count()).toBe(0);
   });
-
-  test("keeps legacy ingestion on the outbox when its observation dual-write failed", async () => {
-    stubs.v2Enabled = true;
-    const matchId = unobservedMatch();
-
-    await evaluateHallMatch(rawMatch(matchId), {
-      kind: "legacy-v1",
-      silent: false,
-    });
-
-    await expectLegacyOutboxFor(matchId);
-  });
-
-  test.each([true, false])(
-    "a silent backfill updates the records but announces nothing (V2 on: %s)",
-    async (v2Enabled) => {
-      stubs.v2Enabled = v2Enabled;
-      const matchId = await observedMatch("silent-backfill");
-
-      await evaluateHallMatch(rawMatch(matchId), { kind: "temporal-v2" });
-
-      // The record itself is still broken: silence is about the message.
-      const cells = await prisma.hallRecordCell.findMany();
-      expect(cells.map((cell) => cell.currentValue)).toEqual([30]);
-      expect(await prisma.matchNotificationIntent.count()).toBe(0);
-      expect(await prisma.hallRecordBreakOutbox.count()).toBe(0);
-    },
-  );
 
   test("re-evaluating the same match announces nothing new", async () => {
-    stubs.v2Enabled = true;
     const matchId = await observedMatch("live");
-    await evaluateHallMatch(rawMatch(matchId), { kind: "temporal-v2" });
+    await evaluateHallMatch(rawMatch(RiotMatchIdSchema.parse(matchId)));
 
     // A retried progression Activity: the cells already hold this match, so
-    // nothing breaks again and no second intent or outbox row appears.
-    await evaluateHallMatch(rawMatch(matchId), { kind: "temporal-v2" });
+    // nothing breaks again and no second intent appears.
+    await evaluateHallMatch(rawMatch(RiotMatchIdSchema.parse(matchId)));
 
     expect(await prisma.matchNotificationIntent.count()).toBe(1);
-    expect(await prisma.hallRecordBreakOutbox.count()).toBe(0);
   });
 });

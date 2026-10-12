@@ -11,9 +11,11 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
+import com.shepherdjerred.thestorm.core.analytics.ProductAnalytics;
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.core.schedule.Scheduler;
 import com.shepherdjerred.thestorm.towns.app.Change;
+import com.shepherdjerred.thestorm.towns.app.TownListings;
 import com.shepherdjerred.thestorm.towns.app.TownService;
 import com.shepherdjerred.thestorm.towns.app.TownsState;
 import com.shepherdjerred.thestorm.towns.app.Treasury;
@@ -62,7 +64,16 @@ final class TownCommands {
    * @param scheduler completes saves back onto the main thread
    * @param logger records failed saves
    */
-  record Services(Scheduler scheduler, ComponentLogger logger) {
+  record Services(Scheduler scheduler, ComponentLogger logger, ProductAnalytics analytics) {
+
+    void measured(Player player, CompletableFuture<Void> saved, ProductAnalytics.Action action) {
+      var _ =
+          saved.whenCompleteAsync(
+              (done, failure) -> {
+                if (failure == null) analytics.interaction(player.getUniqueId(), action);
+              },
+              scheduler.mainThread());
+    }
 
     /** Tells {@code player} {@code success} once {@code saved} completes, or that it was undone. */
     void whenSaved(Player player, CompletableFuture<Void> saved, Component success) {
@@ -153,7 +164,91 @@ final class TownCommands {
                                         player -> delete(player, getString(context, NAME))))));
     parts.members().attach(town);
     parts.treasuryCommands().attach(town);
+    town.then(
+        Commands.literal("list")
+            .executes(context -> showDirectory(context, 1))
+            .then(
+                Commands.argument(
+                        "page", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1))
+                    .executes(
+                        context ->
+                            showDirectory(
+                                context,
+                                com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(
+                                    context, "page")))));
+    town.then(
+        Commands.literal("info")
+            .then(
+                Commands.argument(
+                        NAME, com.mojang.brigadier.arguments.StringArgumentType.greedyString())
+                    .suggests(
+                        (context, builder) -> {
+                          new TownListings(state)
+                              .matchingNames(builder.getRemainingLowerCase())
+                              .forEach(builder::suggest);
+                          return builder.buildFuture();
+                        })
+                    .executes(context -> showDirectoryInfo(context, getString(context, NAME)))));
     return town.build();
+  }
+
+  private int showDirectory(CommandContext<CommandSourceStack> context, int page) {
+    var listing = new TownListings(state).page(page, 25);
+    var sender = context.getSource().getSender();
+    var pages = Math.max(1, (listing.total() + 24) / 25);
+    if (page > pages) {
+      sender.sendMessage(Notices.error("Choose a town list page from 1 to " + pages + "."));
+      return Command.SINGLE_SUCCESS;
+    }
+    sender.sendMessage(
+        Notices.info(
+            "Towns and historic sites: page "
+                + page
+                + " of "
+                + pages
+                + " ("
+                + listing.total()
+                + " total)"));
+    listing
+        .towns()
+        .forEach(
+            town ->
+                sender.sendMessage(
+                    Notices.info(
+                        town.name()
+                            + " ["
+                            + town.kind()
+                            + "] — "
+                            + town.members()
+                            + " members, "
+                            + town.claims()
+                            + " claims, "
+                            + town.protectedChunks()
+                            + " permanently protected chunks")));
+    return Command.SINGLE_SUCCESS;
+  }
+
+  private int showDirectoryInfo(CommandContext<CommandSourceStack> context, String name) {
+    var sender = context.getSource().getSender();
+    new TownListings(state)
+        .info(name)
+        .ifPresentOrElse(
+            town -> {
+              sender.sendMessage(Notices.info(town.name() + " [" + town.kind() + "]"));
+              sender.sendMessage(
+                  Notices.info(
+                      town.members()
+                          + " members; "
+                          + town.claims()
+                          + " claims; "
+                          + town.protectedChunks()
+                          + " permanently protected chunks"));
+              sender.sendMessage(Notices.info(town.custody()));
+              sender.sendMessage(Notices.info(town.boundaries()));
+            },
+            () ->
+                sender.sendMessage(Notices.error("No town or historic site named " + name + ".")));
+    return Command.SINGLE_SUCCESS;
   }
 
   private LiteralCommandNode<CommandSourceStack> claim() {
@@ -224,12 +319,15 @@ final class TownCommands {
       return;
     }
     var level = parts.levels().of(player);
+    var result = towns.found(player.getUniqueId(), name, level);
     onTown(
         player,
-        towns.found(player.getUniqueId(), name, level),
+        result,
         town ->
             Notices.success(
                 "Founded " + town.name() + ". Stand in a chunk and type /claim to claim it."));
+    if (result instanceof Result.Ok<Change<Town>, List<TownProblem>>(var change))
+      parts.runtime().measured(player, change.saved(), ProductAnalytics.Action.TOWN_CREATED);
   }
 
   /** Deletes the player's town, then pays its durably queued treasury to them. */
@@ -292,12 +390,15 @@ final class TownCommands {
 
   private void claimHere(Player player) {
     var chunk = chunkOf(player);
+    var result = towns.claim(player.getUniqueId(), chunk);
     onClaim(
         player,
-        towns.claim(player.getUniqueId(), chunk),
+        result,
         claim ->
             Notices.success(
                 "Claimed chunk " + chunk.x() + ", " + chunk.z() + " for " + nameOf(claim) + "."));
+    if (result instanceof Result.Ok<Change<Claim>, List<ClaimProblem>>(var change))
+      parts.runtime().measured(player, change.saved(), ProductAnalytics.Action.LAND_CLAIMED);
   }
 
   private void unclaimHere(Player player) {
@@ -372,7 +473,13 @@ final class TownCommands {
 
   private String describe(Land land) {
     return switch (land) {
+      case Land.HeritageLand(var site, _, _) ->
+          "This is "
+              + site.name()
+              + ", permanently protected historic land. "
+              + "Boundaries were reconstructed from the archive; only proven owners may edit their footprint.";
       case Land.Wilderness _ -> "This is wilderness; anyone may build here.";
+      case Land.WorkLand(var region) -> "This area is reserved for " + region.name() + ".";
       case Land.TownLand(var claim) ->
           "This chunk belongs to "
               + nameOf(claim)
@@ -384,6 +491,12 @@ final class TownCommands {
                   : " " + claim.trusted().size() + " outsider(s) are trusted here.");
       case Land.RegionLand(var region) ->
           "This is " + region.name() + ", an admin region; it cannot be claimed.";
+      case Land.ParcelLand(var parcel) ->
+          "This is "
+              + parcel.definition().name()
+              + ", a preserved holding ("
+              + parcel.phase()
+              + ").";
     };
   }
 

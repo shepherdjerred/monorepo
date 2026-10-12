@@ -49,7 +49,7 @@ export function ChallengeCatalog() {
               Catalog
             </h2>
             <p className="text-sm text-scout-subtle">
-              Published templates are global and immutable by version.
+              Choose a challenge to start a run.
             </p>
           </div>
           <label className="grid gap-1 text-sm" htmlFor="challenge-search">

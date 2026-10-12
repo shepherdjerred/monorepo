@@ -17,6 +17,27 @@ const DashboardSchema = z.object({
 });
 
 describe("Velero dashboard", () => {
+  test("shows event counts without synthesizing healthy status on missing telemetry", () => {
+    const dashboard = DashboardSchema.parse(createVeleroDashboard());
+    const failures = dashboard.panels.find(
+      (panel) => panel.title === "Recorded Failures (24h)",
+    );
+    expect(failures?.targets?.[0]?.expr).toBe(
+      'sum(increase(velero_backup_failure_total{schedule!=""}[24h]))',
+    );
+    expect(
+      dashboard.panels.some((panel) => panel.title === "Current Backup Status"),
+    ).toBe(false);
+    expect(
+      dashboard.panels.find((panel) => panel.title === "Completed Backups (1h)")
+        ?.targets?.[0]?.expr,
+    ).not.toContain("bool");
+    expect(
+      dashboard.panels.find(
+        (panel) => panel.title === "Backup Deletion Success Rate",
+      )?.targets?.[0]?.expr,
+    ).toContain(" > 0");
+  });
   test("sizes only PVCs explicitly enabled for backup", () => {
     const dashboard = DashboardSchema.parse(createVeleroDashboard());
     const storagePanels = dashboard.panels.filter((panel) =>

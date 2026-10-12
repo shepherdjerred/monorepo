@@ -1,3 +1,5 @@
+import { DiscordAccountIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import type { DuckDBValue } from "@duckdb/node-api";
 import { scoutQlSourceCatalog } from "@scout-for-lol/data/model/scoutql/catalog/catalog-columns.ts";
 import type {
@@ -15,7 +17,11 @@ import {
   withDuckDBConnection,
   type DuckDBSession,
 } from "#src/reports/duckdb/instance.ts";
-import { resolveLakeFiles, type BoundParam } from "#src/reports/duckdb/lake.ts";
+import {
+  withLakeQueryRetry,
+  type BoundParam,
+  type LakeFiles,
+} from "#src/reports/duckdb/lake.ts";
 import { loadServerPeople } from "#src/reports/server-people.ts";
 import type { LakeQueryScope } from "#src/reports/duckdb/scope.ts";
 import type {
@@ -84,8 +90,10 @@ function bindParams(
   );
 }
 
-async function queryInput(input: PlanExecutionInput): Promise<PlanQueryInput> {
-  const files = await resolveLakeFiles(input.lakeDir ?? resolveLakeDir());
+async function queryInput(
+  input: PlanExecutionInput,
+  files: LakeFiles,
+): Promise<PlanQueryInput> {
   // Merged before compiling: the merge is transitive, so it runs in code.
   const serverPeople =
     input.scope.kind === "servers"
@@ -110,10 +118,20 @@ async function queryInput(input: PlanExecutionInput): Promise<PlanQueryInput> {
 export async function runPlanAggregation(
   input: PlanExecutionInput,
 ): Promise<PlanAggregationResult> {
+  return await withLakeQueryRetry(
+    input.lakeDir ?? resolveLakeDir(),
+    async (files) => await runPlanAggregationWithFiles(input, files),
+  );
+}
+
+async function runPlanAggregationWithFiles(
+  input: PlanExecutionInput,
+  files: LakeFiles,
+): Promise<PlanAggregationResult> {
   if (input.plan.source === "player_groups") {
-    return await runGroupAggregation(input);
+    return await runGroupAggregation(input, files);
   }
-  const compiled = compileScoutQlPlanQuery(await queryInput(input));
+  const compiled = compileScoutQlPlanQuery(await queryInput(input, files));
   if (compiled === undefined) {
     // Fresh install / empty lake / no competition participants: the answer is
     // structurally empty, exactly as "no facts yet".
@@ -156,7 +174,9 @@ function planRowFrom(
   return {
     label: requireStringField(row, columns.label),
     playerId: optionalNumberField(row, columns.playerId),
-    discordId: optionalStringField(row, columns.discordId),
+    discordId: DiscordAccountIdSchema.nullable().parse(
+      optionalStringField(row, columns.discordId),
+    ),
     keys: columns.groupingKeys.map((key) => requireField(row, key)),
     groupMembers: null,
     outputs: columns.outputs.map((output) => outputValueFrom(row, output)),
@@ -229,9 +249,12 @@ function requireGroupSize(plan: ScoutQlPlan): ScoutQlGroupSize {
 
 async function runGroupAggregation(
   input: PlanExecutionInput,
+  files: LakeFiles,
 ): Promise<PlanAggregationResult> {
   const size = requireGroupSize(input.plan);
-  const projection = compileGroupFactsProjection(await queryInput(input));
+  const projection = compileGroupFactsProjection(
+    await queryInput(input, files),
+  );
   if (projection === undefined) {
     return EMPTY_RESULT;
   }
@@ -275,7 +298,7 @@ function groupFactFrom(
   return {
     playerId: requireNumberField(row, columns.playerId),
     playerAlias: requireStringField(row, columns.playerAlias),
-    matchId: requireStringField(row, columns.matchId),
+    matchId: RiotMatchIdSchema.parse(requireStringField(row, columns.matchId)),
     teamId: requireNumberField(row, columns.teamId),
     playerSubteamId: optionalNumberField(row, columns.playerSubteamId),
     values,

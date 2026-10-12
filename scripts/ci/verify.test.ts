@@ -1,5 +1,19 @@
 import { describe, expect, test } from "vitest";
-import { affectedVerifyFilters } from "../verify.ts";
+import {
+  affectedVerifyFilters,
+  ROOT_SCRIPTS_EXTERNAL_INPUTS,
+} from "../verify.ts";
+
+const REPO_ROOT = new URL("../../", import.meta.url);
+
+describe("root scripts external inputs", () => {
+  test.each(ROOT_SCRIPTS_EXTERNAL_INPUTS)("%s exists", async (input) => {
+    // stat() also resolves for the directory inputs that end in "/".
+    await expect(
+      Bun.file(new URL(input, REPO_ROOT)).stat(),
+    ).resolves.toBeDefined();
+  });
+});
 
 describe("affected verification filters", () => {
   test("unions the affected package graph with root invariants", async () => {
@@ -20,7 +34,7 @@ describe("affected verification filters", () => {
     ]);
   });
 
-  test("selects root scripts when Buildkite scripts change", async () => {
+  test("selects root scripts when CI scripts change", async () => {
     expect(
       await affectedVerifyFilters(
         { CI_CHANGED_BASE: "abc123" },
@@ -96,7 +110,7 @@ describe("affected verification filters", () => {
     "packages/feature-flags/src/managed-flag-drift.ts",
     "packages/feature-flags/src/flipt-resource-payloads.ts",
     "packages/feature-flags/src/flipt-boolean-rollouts.ts",
-    "packages/feature-flags/managed-flag-inventory.json",
+    "packages/feature-flags/src/managed-flag-inventory.json",
   ])("selects root scripts for Renovate fixture %s", async (path) => {
     expect(
       await affectedVerifyFilters(

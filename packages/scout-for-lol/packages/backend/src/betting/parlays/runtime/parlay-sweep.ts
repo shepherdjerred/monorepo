@@ -1,3 +1,11 @@
+import type {
+  DiscordGuildId,
+  DiscordChannelId,
+} from "@scout-for-lol/domain/identity/discord.ts";
+import type {
+  RiotMatchId,
+  DiscordMessageId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import * as Sentry from "@sentry/bun";
 import {
   BucksDeltaSchema,
@@ -22,9 +30,9 @@ import { logBucksTransition } from "#src/betting/transition-log.ts";
 const logger = createLogger("betting-parlay-sweep");
 
 type ClosedParlayMarket = {
-  matchId: string;
-  serverId: string;
-  messageRefs: { channelId: string; messageId: string }[];
+  matchId: RiotMatchId;
+  serverId: DiscordGuildId;
+  messageRefs: { channelId: DiscordChannelId; messageId: DiscordMessageId }[];
 };
 
 export async function closeExpiredParlayWindows(

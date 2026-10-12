@@ -19,14 +19,14 @@
     "prettier": "bunx prettier --write .",
     "docker:build": "docker buildx build --cache-from type=registry,ref=ghcr.io/shepherdjerred/starlight-karma-bot:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t starlight-karma-bot:dev -f Dockerfile ../..",
     "smoke": "bun scripts/smoke.ts",
-    "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
-    "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/ci/run-ci-test.ts"
+    "test:ci": "bun ../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
+    "@shepherdjerred/sentry-config": "workspace:*",
     "@prisma/adapter-libsql": "7.10.0",
     "@prisma/client": "^7.10.0",
     "@prisma/client-runtime-utils": "7.10.0",
-    "@sentry/bun": "^10.75.3",
+    "@sentry/bun": "^11.6.0",
     "@shepherdjerred/config": "workspace:*",
     "@shepherdjerred/feature-flags": "workspace:*",
     "cron-parser": "^5.5.0",
@@ -47,7 +47,6 @@
     "url": "https://github.com/shepherdjerred/monorepo/issues"
   },
   "devDependencies": {
-    "@commitlint/types": "^21.0.0",
     "@shepherdjerred/eslint-config": "workspace:*",
     "@total-typescript/ts-reset": "^0.6.1",
     "@types/bun": "1.4.2",
@@ -56,7 +55,7 @@
     "jiti": "^2.7.0",
     "typescript": "^6.0.3",
     "@typescript/native": "npm:typescript@7.0.2",
-    "vitest": "5.0.1",
-    "@vitest/coverage-istanbul": "5.0.1"
+    "vitest": "5.0.3",
+    "@vitest/coverage-istanbul": "5.0.3"
   }
 }

@@ -3,6 +3,7 @@ import {
   assertSnapshotUpdateSucceeded,
   classicCatalogEntryFromCDragon,
   getCDragonCenteredSplashUrl,
+  getCDragonAugmentNamesUrl,
   getCommunityDragonVersion,
   mergeClassicChampionEntries,
   resolveCDragonAssetUrl,
@@ -11,6 +12,11 @@ import {
 import { ChampionListSchema } from "./update-data-dragon-schemas.ts";
 
 describe("resolveCDragonAssetUrl", () => {
+  test("pins recorded augment names to the English client catalog", () => {
+    expect(getCDragonAugmentNamesUrl("16.19")).toBe(
+      "https://raw.communitydragon.org/16.19/plugins/rcp-be-lol-game-data/global/default/v1/cherry-augments.json",
+    );
+  });
   // Recipe: take the `loadScreenPath` from CommunityDragon's per-champion JSON,
   // lowercase, strip `/lol-game-data/assets`, then prepend the rcp-be plugin
   // path. Verified live against Star Nemesis Fiddlesticks (HTTP 200, ~49 KB)

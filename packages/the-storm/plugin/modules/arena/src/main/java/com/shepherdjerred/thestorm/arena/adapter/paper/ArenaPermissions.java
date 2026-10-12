@@ -17,6 +17,7 @@ final class ArenaPermissions {
   static final String SPECTATE = "thestorm.arena.spectate";
   static final String TOP = "thestorm.arena.top";
   static final String ADMIN = "thestorm.arena.admin";
+  static final String DEBUG = "thestorm.arena.debug";
 
   private final PluginManager manager;
   private final List<Permission> registered = new ArrayList<>();
@@ -30,6 +31,7 @@ final class ArenaPermissions {
     add(SPECTATE, "Watch an arena game", PermissionDefault.TRUE);
     add(TOP, "See an arena's leaderboard", PermissionDefault.TRUE);
     add(ADMIN, "Start and stop games and print arena coordinates", PermissionDefault.OP);
+    add(DEBUG, "Create shared survival practice lobbies at a chosen round", PermissionDefault.OP);
     for (var entry : classes.classes().entrySet()) {
       if (entry.getValue().advanced()) {
         add(

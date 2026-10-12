@@ -7,10 +7,12 @@ import {
 import type { NotificationIntent } from "@scout-for-lol/domain/notifications/intent.ts";
 import type { NotificationTransitionResult } from "@scout-for-lol/domain/notifications/intent-transitions.ts";
 import {
-  matchNotificationIntentRecordToRow,
   matchNotificationIntentRowToRecord,
+  notificationIntentRecordToRow,
+  notificationIntentRowToRecord,
   notificationIntentTransitionPatch,
   type MatchNotificationIntentRecord,
+  type NotificationIntentRecord,
 } from "#src/database/durable/intent-row.ts";
 
 /**
@@ -40,7 +42,15 @@ export async function upsertIntent(
   db: Db,
   record: MatchNotificationIntentRecord,
 ): Promise<UpsertIntentResult> {
-  const row = matchNotificationIntentRecordToRow(record);
+  return await upsertSubjectIntent(db, record);
+}
+
+/** Insert one decision with either a match or Duel subject. */
+export async function upsertSubjectIntent(
+  db: Db,
+  record: NotificationIntentRecord,
+): Promise<UpsertIntentResult> {
+  const row = notificationIntentRecordToRow(record);
   const created = await db.matchNotificationIntent.createMany({
     data: [row],
     skipDuplicates: true,
@@ -56,12 +66,22 @@ export async function upsertIntent(
       `MatchNotificationIntent ${row.intentKey} vanished between a duplicate insert and its read-back`,
     );
   }
-  const existingRow = matchNotificationIntentRecordToRow(
-    matchNotificationIntentRowToRecord(existing),
+  const existingRow = notificationIntentRecordToRow(
+    notificationIntentRowToRecord(existing),
   );
   return Bun.deepEquals(existingRow, row, true)
     ? { outcome: "already-applied" }
     : { outcome: "conflict", reason: "intent-differs" };
+}
+
+export async function getSubjectIntent(
+  db: Db,
+  args: { intentKey: NotificationIntentKey },
+): Promise<NotificationIntentRecord | null> {
+  const row = await db.matchNotificationIntent.findUnique({
+    where: { intentKey: args.intentKey },
+  });
+  return row === null ? null : notificationIntentRowToRecord(row);
 }
 
 export async function getIntent(
@@ -200,7 +220,7 @@ export async function transitionIntent(
         `Cannot transition ${args.intentKey}: the intent was never upserted`,
       );
     }
-    const record = matchNotificationIntentRowToRecord(row);
+    const record = notificationIntentRowToRecord(row);
     const result = args.transition(record.intent);
     if (result.outcome !== "applied") {
       return result;

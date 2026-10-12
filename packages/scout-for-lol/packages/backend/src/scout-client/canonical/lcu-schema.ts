@@ -42,10 +42,15 @@ const LegacyTeamSchema = z
     dragonKills: z.number(),
     firstBaron: z.boolean(),
     firstBlood: z.boolean(),
-    firstDragon: z.boolean(),
+    // The League client spells it `firstDargon`; accept either.
+    firstDragon: z.boolean().optional(),
+    firstDargon: z.boolean().optional(),
     firstInhibitor: z.boolean(),
-    firstRiftHerald: z.boolean(),
+    // Not in the League client's match history; derived where it's provable.
+    firstRiftHerald: z.boolean().optional(),
     firstTower: z.boolean(),
+    /** Voidgrubs. */
+    hordeKills: z.number().optional(),
     inhibitorKills: z.number(),
     riftHeraldKills: z.number(),
     towerKills: z.number(),
@@ -57,7 +62,8 @@ const LegacyMatchSchema = z
     gameDuration: z.number(),
     gameId: z.number(),
     gameMode: z.string(),
-    gameName: z.string(),
+    // Absent from `/lol-match-history/v1/games/{id}`.
+    gameName: z.string().optional(),
     gameType: z.string(),
     gameVersion: z.string(),
     mapId: z.number(),
@@ -107,6 +113,12 @@ export const LocalMatchBundleSchema = z
     matchHistory: LegacyMatchSchema,
     endOfGame: EndOfGameSchema.optional(),
     replay: ReplaySchema.optional(),
+    /**
+     * `/lol-match-history/v1/game-timelines/{gameId}`, raw. Validated where it
+     * is converted (`lcu-timeline.ts`), so a client too old to send it, or a
+     * timeline that doesn't convert, never costs the match itself.
+     */
+    timeline: z.unknown().optional(),
     timing: LocalTimingSchema,
   })
   .strict();

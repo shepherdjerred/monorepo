@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import { App, Chart, Testing } from "cdk8s";
 import { z } from "zod";
@@ -7,6 +8,8 @@ import {
   THE_STORM_PAPER_VERSION,
   createMinecraftTsmcApp,
 } from "./minecraft-tsmc.ts";
+import { createMinecraftShuxinApp } from "./minecraft-shuxin.ts";
+import { siteAnalyticsConfiguration } from "@shepherdjerred/homelab/cdk8s/src/misc/analytics.ts";
 
 // minecraft-tsmc runs ghcr.io/shepherdjerred/the-storm-server, built from
 // packages/the-storm/server. These tests keep the chart values and that image
@@ -14,7 +17,9 @@ import {
 // itzg base must be the same pin the catalog tracks.
 
 // Repo root: this file lives at packages/homelab/src/cdk8s/src/resources/argo-applications/games/.
-const repoRoot = new URL("../../../../../../../../", import.meta.url).pathname;
+const repoRoot = fileURLToPath(
+  new URL("../../../../../../../../", import.meta.url),
+);
 const serverDir = `${repoRoot}packages/the-storm/server`;
 
 const ManifestSchema = z.object({
@@ -22,7 +27,12 @@ const ManifestSchema = z.object({
 });
 
 const HelmValues = z.record(z.string(), z.unknown());
-const HelmSource = z.object({ helm: z.object({ valuesObject: HelmValues }) });
+const HelmSource = z.object({
+  helm: z.object({
+    valuesObject: HelmValues,
+    parameters: z.array(z.object({ name: z.string(), value: z.string() })),
+  }),
+});
 const OpItemSchema = z
   .object({
     kind: z.literal("OnePasswordItem"),
@@ -43,10 +53,35 @@ function envValue(text: string, name: string): string {
   return match[1];
 }
 
-function tsmcValues(): Record<string, unknown> {
+function tsmcHelm() {
   const application = createMinecraftTsmcApp(Testing.chart()).toJson();
   return z.object({ spec: z.object({ source: HelmSource }) }).parse(application)
-    .spec.source.helm.valuesObject;
+    .spec.source.helm;
+}
+
+function tsmcValues(): Record<string, unknown> {
+  return tsmcHelm().valuesObject;
+}
+
+test("Storm analytics uses the shared direct capture bootstrap and production stage", () => {
+  const env = z.record(z.string(), z.unknown()).parse(tsmcValues()["extraEnv"]);
+  const analytics = siteAnalyticsConfiguration("ts-mc");
+  expect(env["POSTHOG_API_HOST"]).toBe(analytics.apiHost);
+  expect(env["POSTHOG_PROJECT_TOKEN"] === analytics.projectToken).toBe(true);
+  expect(env["FLIPT_ENVIRONMENT"]).toBe("prod");
+});
+
+function shuxinValues(): Record<string, unknown> {
+  const application = createMinecraftShuxinApp(Testing.chart()).toJson();
+  return z
+    .object({
+      spec: z.object({
+        source: z.object({
+          helm: z.object({ valuesObject: HelmValues }),
+        }),
+      }),
+    })
+    .parse(application).spec.source.helm.valuesObject;
 }
 
 function synthTsmc(): unknown[] {
@@ -57,6 +92,30 @@ function synthTsmc(): unknown[] {
 }
 
 describe("minecraft-tsmc runs The Storm's image", () => {
+  test("keeps the existing map route while staging the LiveMap hostname", () => {
+    const bindings = synthTsmc()
+      .map((manifest) =>
+        z
+          .object({
+            kind: z.literal("TunnelBinding"),
+            subjects: z.array(
+              z
+                .object({
+                  spec: z.object({ fqdn: z.string() }).loose(),
+                })
+                .loose(),
+            ),
+          })
+          .loose()
+          .safeParse(manifest),
+      )
+      .filter((result) => result.success)
+      .flatMap((result) => result.data.subjects.map(({ spec }) => spec.fqdn));
+
+    expect(bindings).toContain("bluemap.ts-mc.net");
+    expect(bindings).toContain("livemap.ts-mc.net");
+  });
+
   test("projects the brain bearer token into the game namespace", () => {
     const manifests = synthTsmc();
     const item = manifests
@@ -72,6 +131,15 @@ describe("minecraft-tsmc runs The Storm's image", () => {
     const extraEnv = z
       .record(z.string(), z.unknown())
       .parse(values["extraEnv"]);
+    expect(extraEnv["CFG_PROXY_PROTOCOL"]).toBe("true");
+    expect(values["livenessProbe"]).toMatchObject({
+      command: ["mc-monitor", "status", "--use-proxy", "--timeout", "2s"],
+      timeoutSeconds: 5,
+    });
+    expect(values["readinessProbe"]).toMatchObject({
+      command: ["mc-monitor", "status", "--use-proxy", "--timeout", "2s"],
+      timeoutSeconds: 5,
+    });
     expect(extraEnv["STORM_BRAIN_BEARER_TOKEN"]).toEqual({
       valueFrom: {
         secretKeyRef: {
@@ -82,15 +150,40 @@ describe("minecraft-tsmc runs The Storm's image", () => {
     });
   });
 
-  test("pins the image by the catalog's the-storm-server digest", () => {
+  test("uses PROXY-aware health probes for both PROXY-enabled Paper servers", () => {
+    for (const { values, command } of [
+      {
+        values: tsmcValues(),
+        command: ["mc-monitor", "status", "--use-proxy", "--timeout", "2s"],
+      },
+      { values: shuxinValues(), command: ["mc-health", "--use-proxy"] },
+    ]) {
+      expect(values["livenessProbe"]).toMatchObject({
+        command,
+      });
+      expect(values["readinessProbe"]).toMatchObject({
+        command,
+      });
+    }
+  });
+
+  test("pins the image by the accepted production digest", () => {
     const values = tsmcValues();
     expect(values["image"]).toEqual({
       repository: "ghcr.io/shepherdjerred/the-storm-server",
-      tag: versions["shepherdjerred/the-storm-server"],
+      tag: versions["shepherdjerred/the-storm-server/prod"],
     });
-    expect(versions["shepherdjerred/the-storm-server"]).toMatch(
+    expect(versions["shepherdjerred/the-storm-server/prod"]).toMatch(
       /@sha256:[a-f\d]{64}$/,
     );
+    // Helm parameters take precedence over valuesObject. The effective image
+    // must follow the catalog even after an operational image override.
+    expect(tsmcHelm().parameters).toEqual([
+      {
+        name: "image.tag",
+        value: versions["shepherdjerred/the-storm-server/prod"],
+      },
+    ]);
   });
 
   test("leaves plugins and config delivery to the image", () => {
@@ -119,6 +212,7 @@ describe("minecraft-tsmc runs The Storm's image", () => {
         type: "NodePort",
         port: 19_132,
         nodePort: 30_004,
+        externalTrafficPolicy: "Local",
       },
       protocol: "UDP",
       containerPort: 19_132,
@@ -126,7 +220,9 @@ describe("minecraft-tsmc runs The Storm's image", () => {
       ingress: { enabled: false },
     });
   });
+});
 
+describe("minecraft-tsmc image configuration", () => {
   test("bakes the verified Geyser and Floodgate builds", async () => {
     const manifest = z
       .object({
@@ -206,9 +302,28 @@ describe("minecraft-tsmc runs The Storm's image", () => {
     expect(server["spawnProtection"]).toBe(0);
   });
 
-  test("preserves the legacy LWCX jar until towns protection is enabled", async () => {
+  test("synchronizes the operator list with the empty OPS setting", () => {
+    const extraEnv = z
+      .record(z.string(), z.unknown())
+      .parse(tsmcValues()["extraEnv"]);
+    expect(extraEnv["OPS"]).toBe("");
+    expect(extraEnv["EXISTING_OPS_FILE"]).toBe("SYNCHRONIZE");
+    expect(tsmcValues()["minecraftServer"]).toMatchObject({ ops: "" });
+  });
+
+  test("retires PVC-only jars alongside the enabled towns protection", async () => {
     const text = await dockerfile();
-    expect(text).toContain("REMOVE_OLD_MODS_EXCLUDE=LWCX*.jar,LWC*.jar");
+    expect(text).toMatch(/^\s*REMOVE_OLD_MODS_EXCLUDE=$/mu);
+    const config = z
+      .object({ modules: z.object({ towns: z.literal(true) }) })
+      .parse(
+        parseYaml(
+          await Bun.file(
+            `${serverDir}/owned/plugins/TheStorm/config.yml`,
+          ).text(),
+        ),
+      );
+    expect(config.modules.towns).toBe(true);
     expect(tsmcValues()["minecraftServer"]).toMatchObject({
       removeOldMods: true,
     });
@@ -251,5 +366,66 @@ describe("minecraft-tsmc runs The Storm's image", () => {
     expect(envValue(text, "PAPER_CUSTOM_JAR")).toBe(
       `/opt/paper/${manifest.paper.file}`,
     );
+  });
+});
+
+describe("minecraft-tsmc MCBridge", () => {
+  test("wires MCBridge to the storm-brain token on a port-forward-only port", () => {
+    const values = tsmcValues();
+    const extraEnv = z
+      .record(z.string(), z.unknown())
+      .parse(values["extraEnv"]);
+    expect(extraEnv["MC_BRIDGE_TOKEN"]).toEqual({
+      valueFrom: {
+        secretKeyRef: {
+          name: "minecraft-tsmc-storm-brain",
+          key: "MC_BRIDGE_TOKEN",
+        },
+      },
+    });
+    expect(extraEnv["MC_BRIDGE_BIND"]).toBe("0.0.0.0");
+    const server = z
+      .record(z.string(), z.unknown())
+      .parse(values["minecraftServer"]);
+    const ports = z
+      .array(z.record(z.string(), z.unknown()))
+      .parse(server["extraPorts"]);
+    expect(ports).toContainEqual({
+      service: { enabled: false, port: 25_580 },
+      protocol: "TCP",
+      containerPort: 25_580,
+      name: "bridge",
+      ingress: { enabled: false },
+    });
+  });
+});
+
+describe("minecraft-tsmc Search and Destroy recordings", () => {
+  test("projects the rwf recording salt from its own item", () => {
+    const manifests = synthTsmc();
+    const items = manifests
+      .map((manifest) => OpItemSchema.safeParse(manifest))
+      .flatMap((result) => (result.success ? [result.data] : []));
+    const item = items.find(
+      ({ metadata }) => metadata.name === "minecraft-tsmc-rwf-recording",
+    );
+    expect(item?.spec.itemPath).toMatch(/\/items\/the-storm-rwf-recording$/u);
+    expect(
+      items.filter(({ spec }) =>
+        spec.itemPath.endsWith("/items/the-storm-rwf-recording"),
+      ),
+    ).toHaveLength(1);
+
+    const extraEnv = z
+      .record(z.string(), z.unknown())
+      .parse(tsmcValues()["extraEnv"]);
+    expect(extraEnv["RWF_RECORDING_SALT"]).toEqual({
+      valueFrom: {
+        secretKeyRef: {
+          name: "minecraft-tsmc-rwf-recording",
+          key: "RWF_RECORDING_SALT",
+        },
+      },
+    });
   });
 });

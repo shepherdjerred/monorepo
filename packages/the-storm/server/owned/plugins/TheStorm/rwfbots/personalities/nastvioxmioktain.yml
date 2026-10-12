@@ -1,0 +1,81 @@
+id: nastvioxmioktain
+name: Nastvioxmioktain
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NTU4Mjk4MiwKICAicHJvZmlsZUlkIiA6ICJmNmEzZWVlNDE5YTI0M2E0YTNmNmIwOTY4MjllOThkYSIsCiAgInByb2ZpbGVOYW1lIiA6ICJJdHphVE9NY2hlbiIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9mMDk1ZjdkMjdkNTIwYmNiNDMwZmRiNjk4NDAzMGJlYmIxN2VmZDFjNjdlNTU3NDlkM2QxODgzMGNmOWI5N2QzIgogICAgfQogIH0KfQ=="
+  signature: "l0AvOQwTR3krVZihWqY5KnuBxXTZANAU0VcyqKoE+Qs/fprs+BIYfdxJSlupxI+n4M35vdKz6hvPiVwzqaR+NcB/Fyxh0j2sqkFBzI7i90cs/VVbCusAJ2pOqXzuJ+EMNv7rFj9x3jLG2TyA2rmFeOqUr8M8cUxEPJoNnIUdpyYw5+0ioONm9l7iEAJyyKz0JdivZcKN+rcwZIBcPgdMuKfATKsKvAo6a75ZlsirwckTIz1Nut8MVi1GMuglnGxSwjLO3Q4LhoL9xSxOsXIJvRzI7BFUZtnSwLmmcQzW911ZV65d6OxXbvOycvyG8Vr+YO9EkQFzGVnJjpYlqT+qffe6uHcxGhWzKH00vlP1WXaA/WdiRZ4AtuYd/BZClMV9WbaDXqw12u+XF4vhGltYFcDQqSoJy/WDbbr3OxufgavZ3j5P5fIVSVOVY7+tfKJSJu7Y+tUgwwvG9Q3Q0q8yd9Wtapa5LmyjWLQOxA9aj7NXVAHxSN4ejtcHApW/q3sd5wGsDn3MQbFNT/AM4zbf36ZEqYSu6ksbPI+hyybUBHK+T8b7iQIXvJh7+Xm6znwl9q91cEf6SLxqfITU5StosmnG8h7AJuFKxOZLBsRc9FC3LsOM3sYK1wP/Rsp+lSJvZmhWx8ybNyigyLG13UzMa372xmbbqTvzg0+OD0rUmGk="
+skill: 0.419
+archetype: lurker
+leverOffsets:
+  predictionQuality: 0.74
+  awarenessRadius: 0.97
+  coordination: -1.42
+  technique: -0.07
+  aggression: -0.02
+kits:
+  trooper: 0.79
+  shortbow: 0.52
+  ghost: 0.86
+  wraith: 0.53
+roles:
+  plant: 0.31
+  rotate: 0.81
+  hunt: 0.89
+style:
+  aggression: 0.47
+  patience: 0.9
+  teamplay: 0.1
+  risk: 0.62
+voice:
+  tone:
+    - paranoid
+    - whispery
+    - odd
+  verbosity: quiet
+  style: "conspiracy theorist about the map; thinks the walls are listening"
+lines:
+  greet:
+    - they're watching the main route. i'm not taking it
+    - trust no corridor
+    - "{team}, the walls have ears"
+  onKill:
+    - "i knew {victim} would come this way"
+    - the pattern holds
+    - they never suspect the vents
+  onDeath:
+    - "{killer} was in on it"
+    - it was a setup
+    - they knew. how did they know
+  onPlant:
+    - "lit {bomb} while they watched the wrong door"
+    - "{bomb}. nobody saw. nobody."
+  onDefuse:
+    - "{bomb} defused. they wanted me to. or did they"
+    - "{bomb} safe. suspicious"
+  onWin:
+    - exactly as i predicted
+    - gg. the walls agree
+  onLoss:
+    - the server was against us
+    - gg. rigged. probably
+  onLastAlive:
+    - finally. no one to report me
+    - just me. and them. always them
+    - i know where they'll go
+  taunt:
+    - i know your route
+    - you're being watched. by me
+    - check the vents
+  lobby:
+    - this lobby is too quiet. suspicious
+    - the spawn room walls are thinner than they look
+    - shortbow. nobody expects knockback from a guy in a corner
+    - "{team}, don't say the plan out loud. they're listening"
+    - i'm not paranoid. the map is just very observant
+quirks:
+  - blames_lag
+  - stares_down
+rivals:
+  - vustskemzionkouk
+bio: Believes the maps are secretly watching him and hides accordingly, which is accidentally a great lurking strategy. Suspects Vustskemzionkouk is a spy for the other team. Every team.
+batch: 2
+retired: false

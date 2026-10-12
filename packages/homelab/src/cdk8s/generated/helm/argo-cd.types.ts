@@ -1752,7 +1752,7 @@ export type ArgocdHelmValuesDex = {
   /**
    * Dex image
    *
-   * @default {"repository":"ghcr.io/dexidp/dex","tag":"v2.45.1","imagePullPolicy":""}
+   * @default {"repository":"ghcr.io/dexidp/dex","tag":"v2.46.0","imagePullPolicy":""}
    */
   image?: ArgocdHelmValuesDexImage;
   imagePullSecrets?: unknown[];
@@ -2186,7 +2186,7 @@ export type ArgocdHelmValuesDexImage = {
   /**
    * Dex image tag
    *
-   * @default "v2.45.1"
+   * @default "v2.46.0"
    */
   tag?: string;
   /**
@@ -2595,6 +2595,15 @@ export type ArgocdHelmValuesRedis = {
    */
   runtimeClassName?: string;
   /**
+   * Existing Secret name for the embedded Redis password. The Secret must contain the key `auth`.
+   * Only used when `redisSecretInit.enabled` is `false`, otherwise the secret name is `argocd-redis`.
+   * Only applies to the single node Redis deployment. With `redis-ha.enabled` use `redis-ha.existingSecret` instead,
+   * and for external Redis use `externalRedis.existingSecret`.
+   *
+   * @default ""
+   */
+  existingSecret?: string;
+  /**
    * Redis Pod Disruption Budget
    * Ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
    *
@@ -2913,7 +2922,7 @@ export type ArgocdHelmValuesRedisExporter = {
   /**
    * Prometheus redis-exporter image
    *
-   * @default {"repository":"ghcr.io/oliver006/redis_exporter","tag":"v1.91.1","imagePullPolicy":""}
+   * @default {"repository":"ghcr.io/oliver006/redis_exporter","tag":"v1.93.0","imagePullPolicy":""}
    */
   image?: ArgocdHelmValuesRedisExporterImage;
   /**
@@ -2952,7 +2961,7 @@ export type ArgocdHelmValuesRedisExporterImage = {
   /**
    * Tag to use for the redis-exporter
    *
-   * @default "v1.91.1"
+   * @default "v1.93.0"
    */
   tag?: string;
   /**
@@ -3460,7 +3469,7 @@ export type ArgocdHelmValuesRedisha = {
   /**
    * Prometheus redis-exporter sidecar
    *
-   * @default {"enabled":false,"image":"ghcr.io/oliver006/redis_exporter","tag":"v1.75.0"}
+   * @default {"enabled":false,"image":"ghcr.io/oliver006/redis_exporter","tag":"v1.93.0"}
    */
   exporter?: ArgocdHelmValuesRedishaExporter;
   /**
@@ -3494,6 +3503,7 @@ export type ArgocdHelmValuesRedisha = {
   /**
    * Existing Secret to use for redis-ha authentication.
    * By default the redis-secret-init Job is generating this Secret.
+   * When `redisSecretInit.enabled` is `false`, the Argo CD components read the Redis password from this Secret too (key `redis-ha.authKey`).
    *
    * @default "argocd-redis"
    */
@@ -3569,7 +3579,7 @@ export type ArgocdHelmValuesRedishaExporter = {
   /**
    * Tag to use for the redis-exporter
    *
-   * @default "v1.75.0"
+   * @default "v1.93.0"
    */
   tag?: string;
 };
@@ -4016,6 +4026,12 @@ export type ArgocdHelmValuesRedisSecretInitServiceAccountAnnotations = {
 export type ArgocdHelmValuesRedisSecretInitDnsConfig = object;
 
 export type ArgocdHelmValuesServer = {
+  /**
+   * Enable Argo CD server. Set to `false` for an Argo CD Core installation (see [Argo CD Core](#argo-cd-core))
+   *
+   * @default true
+   */
+  enabled?: boolean;
   /**
    * Argo CD server name
    *
@@ -9460,7 +9476,7 @@ export type ArgocdHelmValues = {
   /**
    * Redis container port
    *
-   * @default {...} (40 keys)
+   * @default {...} (41 keys)
    */
   redis?: ArgocdHelmValuesRedis;
   /**
@@ -9483,7 +9499,7 @@ export type ArgocdHelmValues = {
   /**
    * Server
    *
-   * @default {...} (53 keys)
+   * @default {...} (54 keys)
    */
   server?: ArgocdHelmValuesServer;
   /**
@@ -9768,6 +9784,7 @@ export type ArgocdHelmParameters = {
   "redis.enabled"?: string;
   "redis.name"?: string;
   "redis.runtimeClassName"?: string;
+  "redis.existingSecret"?: string;
   "redis.pdb.enabled"?: string;
   "redis.pdb.minAvailable"?: string;
   "redis.pdb.maxUnavailable"?: string;
@@ -9912,6 +9929,7 @@ export type ArgocdHelmParameters = {
   "redisSecretInit.affinity"?: string;
   "redisSecretInit.nodeSelector"?: string;
   "redisSecretInit.tolerations"?: string;
+  "server.enabled"?: string;
   "server.name"?: string;
   "server.replicas"?: string;
   "server.runtimeClassName"?: string;

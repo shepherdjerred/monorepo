@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits } from "discord.js";
+import { Client, GatewayIntentBits, Partials } from "discord.js";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("discord-client");
@@ -25,7 +25,9 @@ const client = new Client({
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildVoiceStates, // Required for voice
     GatewayIntentBits.GuildModeration, // Required for audit log (installer tracking)
+    GatewayIntentBits.DirectMessages,
   ],
+  partials: [Partials.Channel], // DMs have no guild channel cache to populate them.
 });
 
 export { client };

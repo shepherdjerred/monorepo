@@ -1,4 +1,9 @@
 import { assembleSnapshot } from "@shepherdjerred/ops-model/assemble.ts";
+import {
+  DigestRunResponseSchema,
+  type DigestKind,
+  type DigestRunResponse,
+} from "@shepherdjerred/ops-model/digest.ts";
 import type { Severity } from "@shepherdjerred/ops-model/severity.ts";
 import {
   OpsIngestSchema,
@@ -34,16 +39,20 @@ export type OpsPublishSummary = {
   changes: number;
 };
 
-export type OpsDigestKind = "daily" | "weekly";
-
 /** POSTs a JSON body with a bearer token; injectable for tests. */
 export type OpsPoster = (input: {
   url: string;
   token: string;
   body: unknown;
-}) => Promise<void>;
+  responseType?: "json";
+}) => Promise<unknown>;
 
-export const postJson: OpsPoster = async ({ url, token, body }) => {
+export const postJson: OpsPoster = async ({
+  url,
+  token,
+  body,
+  responseType,
+}) => {
   const response = await fetch(url, {
     method: "POST",
     headers: {
@@ -60,7 +69,9 @@ export const postJson: OpsPoster = async ({ url, token, body }) => {
       `POST ${new URL(url).pathname} returned HTTP ${String(response.status)}${detail === "" ? "" : `: ${detail}`}`,
     );
   }
+  if (responseType === "json") return await response.json();
   await response.body?.cancel();
+  return;
 };
 
 /** A failure reason safe to store in a snapshot: bounded and secret-free. */
@@ -217,18 +228,24 @@ export async function publishOpsIngest(input: {
 }
 
 export async function triggerDigest(input: {
-  kind: OpsDigestKind;
+  kind: DigestKind;
   dashboardUrl: string;
   token: string;
   post: OpsPoster;
-}): Promise<{ kind: OpsDigestKind }> {
-  await input.post({
-    url: new URL(
-      `/internal/v1/digests/${input.kind}`,
-      input.dashboardUrl,
-    ).toString(),
-    token: input.token,
-    body: undefined,
-  });
-  return { kind: input.kind };
+}): Promise<DigestRunResponse> {
+  const result = DigestRunResponseSchema.parse(
+    await input.post({
+      url: new URL(
+        `/internal/v1/digests/${input.kind}`,
+        input.dashboardUrl,
+      ).toString(),
+      token: input.token,
+      body: undefined,
+      responseType: "json",
+    }),
+  );
+  if (result.kind !== input.kind) {
+    throw new Error("Digest response kind does not match the requested kind");
+  }
+  return result;
 }

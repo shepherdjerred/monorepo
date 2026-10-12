@@ -178,14 +178,21 @@ const anthropicDesiredState = z.strictObject({
     }),
   ),
   anthropic_api_keys: resourceMap(
-    z.strictObject({
-      api_key_id: nonEmptyString,
-      name: nonEmptyString,
-      status: nonEmptyString,
-      vault_item_id: nonEmptyString,
-      vault_field: nonEmptyString,
-      vault_json_path: optionalNonEmptyString,
-    }),
+    z.discriminatedUnion("status", [
+      z.strictObject({
+        api_key_id: nonEmptyString,
+        name: nonEmptyString,
+        status: z.enum(["active", "inactive"]),
+        vault_item_id: nonEmptyString,
+        vault_field: nonEmptyString,
+        vault_json_path: optionalNonEmptyString,
+      }),
+      z.strictObject({
+        api_key_id: nonEmptyString,
+        name: nonEmptyString,
+        status: z.literal("archived"),
+      }),
+    ]),
   ),
   anthropic_workspace_members: resourceMap(
     z.strictObject({
@@ -324,6 +331,7 @@ const cloudflareTokenCondition = z.strictObject({
     .optional(),
 });
 const cloudflareToken = z.strictObject({
+  managed: z.boolean().optional(),
   supersedes_id: nonEmptyString,
   name: nonEmptyString,
   policies: z.array(cloudflareTokenPolicy),

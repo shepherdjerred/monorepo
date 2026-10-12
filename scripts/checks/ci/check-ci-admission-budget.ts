@@ -18,6 +18,10 @@
 import path from "node:path";
 import { z } from "zod";
 import { readGeneratedStepJson } from "../../lib/ci/generated-steps.ts";
+import {
+  type AdmissionBudgetSchema,
+  PooledAdmissionBudgetSchema,
+} from "../../lib/ci/admission-budget.ts";
 
 const REPO_ROOT = path.resolve(import.meta.dir, "..", "..", "..");
 const BUDGET_PATH = path.join(
@@ -38,6 +42,14 @@ const TierSchema = z.object({
 const StepSchema = z.object({
   key: z.string(),
   backend: z.string().optional(),
+  agentLabels: z.record(z.string(), z.string()).optional(),
+  skipClone: z.boolean().optional(),
+  concurrency: z
+    .object({
+      limit: z.number().int().positive(),
+      group: z.string().optional(),
+    })
+    .optional(),
   resources: TierSchema,
   services: z
     .array(z.object({ name: z.string(), resources: TierSchema }))
@@ -46,17 +58,9 @@ const StepSchema = z.object({
 
 export type AdmissionStep = z.infer<typeof StepSchema>;
 
-const BudgetSchema = z.object({
-  maxWorkflows: z.number().int().positive(),
-  maxServicesPerWorkflow: z.number().int().nonnegative(),
-  quota: z.object({
-    cpu: z.string(),
-    memory: z.string(),
-    "ephemeral-storage": z.string(),
-  }),
-});
+export type AdmissionBudget = z.infer<typeof AdmissionBudgetSchema>;
 
-export type AdmissionBudget = z.infer<typeof BudgetSchema>;
+export type PooledAdmissionBudget = z.infer<typeof PooledAdmissionBudgetSchema>;
 
 const SUFFIXES: Readonly<Record<string, number>> = {
   m: 1e-3,
@@ -95,6 +99,50 @@ function request(tier: z.infer<typeof TierSchema>, resource: Metered): number {
   }
 }
 
+/** Upper bound for held services, respecting literal repository-wide groups. */
+function heldServices(
+  steps: readonly AdmissionStep[],
+  slots: number,
+  resource: Metered,
+): number {
+  const groups = new Map<string, { cost: number; capacity: number }>();
+  let unbounded = 0;
+  for (const step of steps) {
+    const cost = (step.services ?? []).reduce(
+      (sum, service) => sum + request(service.resources, resource),
+      0,
+    );
+    const group = step.concurrency?.group;
+    // A substituted group may differ for each pipeline; it is not a shared
+    // capacity guarantee. Conflicting limits use the larger, conservative cap.
+    if (
+      group === undefined ||
+      step.concurrency === undefined ||
+      !/^[a-z][a-z0-9-]*$/u.test(group)
+    ) {
+      unbounded = Math.max(unbounded, cost);
+    } else {
+      const previous = groups.get(group);
+      groups.set(group, {
+        cost: Math.max(previous?.cost ?? 0, cost),
+        capacity: Math.max(previous?.capacity ?? 0, step.concurrency.limit),
+      });
+    }
+  }
+  const choices = [
+    ...groups.values(),
+    { cost: unbounded, capacity: slots },
+  ].toSorted((a, b) => b.cost - a.cost);
+  let remaining = slots;
+  let total = 0;
+  for (const choice of choices) {
+    const count = Math.min(remaining, choice.capacity);
+    total += count * choice.cost;
+    remaining -= count;
+  }
+  return total;
+}
+
 export function admissionBudgetViolations(
   steps: readonly AdmissionStep[],
   budget: AdmissionBudget,
@@ -120,32 +168,121 @@ export function admissionBudgetViolations(
     const largestStep = Math.max(
       ...podSteps.map((step) => request(step.resources, resource)),
     );
-    const largestServices = Math.max(
-      ...podSteps.map((step) =>
-        (step.services ?? []).reduce(
-          (sum, service) => sum + request(service.resources, resource),
-          0,
-        ),
-      ),
-    );
+    const services = heldServices(podSteps, budget.maxWorkflows, resource);
     // Every in-flight workflow holding its services, while one more step
     // still needs admitting.
-    const worstCase = budget.maxWorkflows * largestServices + largestStep;
+    const worstCase = services + largestStep;
     if (worstCase > quota) {
       violations.push(
-        `${resource}: ${budget.maxWorkflows.toString()} workflows' services (${String(largestServices)} each) plus the largest step (${String(largestStep)}) need ${String(worstCase)}, over the ${budget.quota[resource]} quota; admitted services could starve every step`,
+        `${resource}: ${budget.maxWorkflows.toString()} workflows' held services (${String(services)}) plus the largest step (${String(largestStep)}) need ${String(worstCase)}, over the ${budget.quota[resource]} quota; admitted services could starve every step`,
       );
     }
   }
   return violations;
 }
 
+/** Prove both the steady pools and their bounded overlap with the old agent. */
+export function pooledAdmissionBudgetViolations(
+  steps: readonly AdmissionStep[],
+  budget: PooledAdmissionBudget,
+): string[] {
+  const { pools } = budget;
+  const violations: string[] = [];
+  const steadyWorkflows = Object.values(pools).reduce(
+    (sum, pool) => sum + pool.maxWorkflows,
+    0,
+  );
+  if (steadyWorkflows !== budget.maxWorkflows) {
+    violations.push("the pool workflow caps must sum to maxWorkflows");
+  }
+  if (!(
+    budget.priorities.main > budget.priorities.ready &&
+    budget.priorities.ready > budget.priorities.draft
+  )) {
+    violations.push(
+      "admission priority must order main above ready PRs above drafts",
+    );
+  }
+  for (const resource of METERED) {
+    if (
+      parseQuantity(budget.computeQuota[resource]) +
+        parseQuantity(budget.gateQuota[resource]) !==
+      parseQuantity(budget.quota[resource])
+    ) {
+      violations.push(
+        `${resource}: compute and gate quotas must sum to the existing aggregate budget`,
+      );
+    }
+  }
+
+  const gateSteps = steps.filter((step) =>
+    ["review", "completion"].includes(step.agentLabels?.["ci-pool"] ?? ""),
+  );
+  const computeSteps = steps.filter((step) => !gateSteps.includes(step));
+  // Before routing activates, the old agent may still hold configurations
+  // without today's concurrency groups. It must fit the reduced compute
+  // quota on its own. Activation additionally requires those configurations
+  // to have drained; the overlap proof below uses the deployed group caps.
+  if (budget.legacyMaxWorkflows > 0) {
+    violations.push(
+      ...admissionBudgetViolations(
+        computeSteps.map(({ concurrency: _concurrency, ...step }) => step),
+        {
+          maxWorkflows: budget.legacyMaxWorkflows,
+          maxServicesPerWorkflow: budget.maxServicesPerWorkflow,
+          quota: budget.computeQuota,
+        },
+      ).map((violation) => `before routing: ${violation}`),
+    );
+  }
+  // Old configurations still select the legacy agent. They retain their
+  // services while the newly routed compute workflows start, so include both
+  // caps until that agent is drained and removed from the source.
+  violations.push(
+    ...admissionBudgetViolations(computeSteps, {
+      maxWorkflows:
+        budget.legacyMaxWorkflows +
+        pools.pr.maxWorkflows +
+        pools.main.maxWorkflows,
+      maxServicesPerWorkflow: budget.maxServicesPerWorkflow,
+      quota: budget.computeQuota,
+    }),
+  );
+
+  const gateWorkflows =
+    pools.review.maxWorkflows + pools.completion.maxWorkflows;
+  for (const step of gateSteps) {
+    if (
+      step.backend === "local" ||
+      step.skipClone !== true ||
+      (step.services?.length ?? 0) !== 0
+    ) {
+      violations.push(
+        `${step.key}: gate pools require a checkout-free Kubernetes workflow without services`,
+      );
+    }
+    for (const resource of METERED) {
+      if (
+        gateWorkflows * request(step.resources, resource) >
+        parseQuantity(budget.gateQuota[resource])
+      ) {
+        violations.push(
+          `${step.key}: all ${gateWorkflows.toString()} gate slots must fit simultaneously in the ${resource} reserve`,
+        );
+      }
+    }
+  }
+  return violations;
+}
+
 async function main(): Promise<void> {
-  const budget = BudgetSchema.parse(await Bun.file(BUDGET_PATH).json());
+  const budget = PooledAdmissionBudgetSchema.parse(
+    await Bun.file(BUDGET_PATH).json(),
+  );
   const steps = z
     .array(StepSchema)
     .parse(await readGeneratedStepJson(REPO_ROOT));
-  const violations = admissionBudgetViolations(steps, budget);
+  const violations = pooledAdmissionBudgetViolations(steps, budget);
   for (const violation of violations) {
     console.error(`CI admission budget: ${violation}`);
   }

@@ -1,6 +1,7 @@
 export * from "./model/index.ts";
 export * from "./customs/customs.schema.ts";
 export * from "./scout-client/protocol.schema.ts";
+export * from "./scout-client/lcu-clash.schema.ts";
 export {
   friendGroupHistory,
   getPerson,
@@ -113,7 +114,7 @@ export type {
   StagePromptVariablesMap,
 } from "./review/prompt-variables.ts";
 
-export * from "./model/riot/puuid-key-map.ts";
+export * from "./league/data-source.ts";
 export * from "./league/raw-match.schema.ts";
 export * from "./league/raw-clash.schema.ts";
 export * from "./league/raw-participant.schema.ts";
@@ -181,6 +182,7 @@ export {
   arenaAugmentCache,
   getCachedArenaAugmentById,
 } from "./data-dragon/arena-augments.ts";
+export { getCachedAugmentNameById } from "./data-dragon/augment-names.ts";
 
 // Sound pack exports
 export {

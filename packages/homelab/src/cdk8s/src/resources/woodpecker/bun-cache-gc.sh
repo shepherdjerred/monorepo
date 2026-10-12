@@ -17,9 +17,17 @@ if ((GC_THRESHOLD_PERCENT < 1 || GC_THRESHOLD_PERCENT > 99)); then
 fi
 
 mkdir -p "$CACHE_DIR"
+# ci/scripts/bun-install.sh extracts into this sibling of the data directory
+# (its BUN_TMPDIR). An install killed mid-extraction leaves files behind.
+TMP_DIR="$(dirname "$CACHE_DIR")/tmp"
 
 (
   flock --exclusive 9
+
+  # No install holds the shared lock now, so nothing is mid-extraction.
+  if [[ -d "$TMP_DIR" ]]; then
+    find "$TMP_DIR" -mindepth 1 -depth -delete
+  fi
 
   usage_percent=$(df -P "$CACHE_DIR" | awk 'NR == 2 { sub(/%$/, "", $5); print $5 }')
   case "$usage_percent" in

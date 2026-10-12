@@ -1,3 +1,7 @@
+import {
+  LeaguePuuidSchema,
+  type LeaguePuuid,
+} from "@scout-for-lol/domain/identity/league-account.ts";
 import { beforeEach, expect, test, vi } from "vitest";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
 import type { AuthenticatedScoutClient } from "./authentication.ts";
@@ -10,6 +14,7 @@ const mocks = vi.hoisted(() => ({
   findMany: vi.fn(),
   findUnique: vi.fn(),
   accountFindMany: vi.fn(),
+  aliasFindMany: vi.fn(),
   archiveDescriptor: vi.fn(),
   archivedMatch: vi.fn(),
   selectedLocalMatch: vi.fn(),
@@ -35,6 +40,7 @@ vi.mock("#src/database/index.ts", () => ({
       }),
     scoutClientObservation: { findMany: mocks.findMany },
     account: { findMany: mocks.accountFindMany },
+    leagueIdentityAlias: { findMany: mocks.aliasFindMany },
     scoutClientReplayArtifact: {
       aggregate: mocks.aggregate,
       create: mocks.create,
@@ -134,13 +140,15 @@ beforeEach(() => {
   ]);
   mocks.archiveDescriptor.mockResolvedValue(null);
   mocks.selectedLocalMatch.mockResolvedValue(null);
+  mocks.aliasFindMany.mockResolvedValue([]);
 });
 
 function replayFixture(
   puuid = LOCAL_PUUID,
   goldEarned = MATCH_STATS.goldEarned.toString(),
+  headerVersion = LEAGUE_PATCH,
 ): Uint8Array {
-  const version = Buffer.from(LEAGUE_PATCH, "ascii");
+  const version = Buffer.from(headerVersion, "ascii");
   const header = Buffer.alloc(15);
   header.write("RIOT", 0, "ascii");
   header.writeUInt16LE(2, 4);
@@ -271,7 +279,7 @@ test("keeps a replay retryable until its post-game observation arrives", async (
  * match. The archive reader is mocked, so the rest of `RawMatch` never has to
  * exist for this path.
  */
-function archivedMatchFor(puuid: string) {
+function archivedMatchFor(puuid: LeaguePuuid) {
   return {
     metadata: { dataVersion: "2", matchId: "NA1_123", participants: [puuid] },
     info: {
@@ -308,13 +316,139 @@ function archivedMatchFor(puuid: string) {
   };
 }
 
+/**
+ * The League client, its replays and its payloads all name a player by a
+ * 36-character UUID; Riot and Scout use the 78-character PUUID.
+ */
+const LOCAL_LCU_UUID = "1b2c3d4e-5f60-4718-8a9b-0c1d2e3f4a5b";
+
+/** Answer alias lookups by UUID and by PUUID, as Prisma would. */
+function aliasesFor(rows: readonly { lcuUuid: string; puuid: LeaguePuuid }[]) {
+  mocks.aliasFindMany.mockImplementation(
+    async (query: {
+      where: { lcuUuid?: { in: string[] }; puuid?: LeaguePuuid };
+    }) =>
+      rows.filter((row) =>
+        query.where.puuid === undefined
+          ? (query.where.lcuUuid?.in.includes(row.lcuUuid) ?? false)
+          : row.puuid === query.where.puuid,
+      ),
+  );
+}
+
+test("accepts a replay that names its player by League-client UUID once aliased", async () => {
+  // Every real replay is like this. The observation stores the translated
+  // PUUID as its observer while its payload, like the replay, keeps the UUID.
+  aliasesFor([
+    { lcuUuid: LOCAL_LCU_UUID, puuid: LeaguePuuidSchema.parse(LOCAL_PUUID) },
+  ]);
+  mocks.findMany.mockResolvedValue([
+    {
+      localPuuid: LOCAL_PUUID,
+      leaguePatch: LEAGUE_PATCH,
+      payload: {
+        resource: "match_history_game:123",
+        data: {
+          ...MATCH_HISTORY,
+          participantIdentities: [
+            { participantId: 1, player: { puuid: LOCAL_LCU_UUID } },
+          ],
+        },
+      },
+    },
+  ]);
+  const body = replayFixture(LOCAL_LCU_UUID);
+  const digest = new Bun.CryptoHasher("sha256").update(body).digest("hex");
+
+  await expect(
+    uploadReplay(replayRequest(body), "123", DEVICE),
+  ).resolves.toEqual({ outcome: "accepted", digest, bytes: body.byteLength });
+});
+
+test("stores the replay at its declared length in the replay bucket", async () => {
+  const body = replayFixture();
+
+  await uploadReplay(replayRequest(body), "123", DEVICE);
+
+  expect(mocks.send).toHaveBeenCalledTimes(1);
+  expect(mocks.send.mock.calls[0]?.[0]).toMatchObject({
+    input: {
+      Bucket: "replay-test",
+      ContentLength: body.byteLength,
+      ContentType: "application/vnd.riot.rofl",
+    },
+  });
+});
+
+test("records the storage failure it actually hit", async () => {
+  // Every replay on beta failed this way, recorded only as "SeaweedFS upload
+  // failed" while the real cause was an SDK checksum error.
+  mocks.send.mockRejectedValueOnce(
+    new Error("Unable to calculate hash for flowing readable stream"),
+  );
+
+  await expect(
+    uploadReplay(replayRequest(replayFixture()), "123", DEVICE),
+  ).rejects.toThrow("flowing readable stream");
+  expect(mocks.updateMany).toHaveBeenCalledWith(
+    expect.objectContaining({
+      data: {
+        uploadState: "FAILED",
+        lastError:
+          "storage upload failed: Error: Unable to calculate hash for flowing readable stream",
+      },
+    }),
+  );
+});
+
+test("accepts a replay whose header zero-pads the build revision", async () => {
+  // A real replay: the header says 16.19.823.0722, the match 16.19.823.722.
+  const body = replayFixture(
+    LOCAL_PUUID,
+    MATCH_STATS.goldEarned.toString(),
+    "16.18.817.05716",
+  );
+
+  await expect(
+    uploadReplay(replayRequest(body), "123", DEVICE),
+  ).resolves.toMatchObject({ outcome: "accepted" });
+});
+
+test("still refuses a replay from a different build", async () => {
+  const body = replayFixture(
+    LOCAL_PUUID,
+    MATCH_STATS.goldEarned.toString(),
+    "16.18.818.5716",
+  );
+
+  await expect(
+    uploadReplay(replayRequest(body), "123", DEVICE),
+  ).rejects.toMatchObject({ status: 403 });
+});
+
+test("refuses a UUID-named replay whose player has no alias", async () => {
+  // Without the alias the replay cannot be tied to the uploader, and the
+  // container check must stay exactly as strict as before.
+  mocks.findMany.mockResolvedValue([]);
+  mocks.archiveDescriptor.mockResolvedValue({ key: "raw/NA1_123.json" });
+  mocks.archivedMatch.mockResolvedValue(
+    archivedMatchFor(LeaguePuuidSchema.parse(LOCAL_PUUID)),
+  );
+
+  await expect(
+    uploadReplay(replayRequest(replayFixture(LOCAL_LCU_UUID)), "123", DEVICE),
+  ).rejects.toMatchObject({ status: 403 });
+});
+
 test("accepts a replay vouched for by Riot when no client observed the game", async () => {
   // The case that matters: a replay on disk from before this device was ever
   // paired. No client evidence exists and none ever will, but the server
   // archived the match from Riot and that is enough to vouch for the file.
   mocks.findMany.mockResolvedValue([]);
   mocks.archiveDescriptor.mockResolvedValue({ key: "raw/NA1_123.json" });
-  mocks.archivedMatch.mockResolvedValue(archivedMatchFor(LOCAL_PUUID));
+  mocks.archivedMatch.mockResolvedValue(
+    archivedMatchFor(LeaguePuuidSchema.parse(LOCAL_PUUID)),
+  );
   const body = replayFixture();
   const digest = new Bun.CryptoHasher("sha256").update(body).digest("hex");
 
@@ -345,7 +479,9 @@ test("accepts evidence from another device belonging to the same owner", async (
 test("refuses a Riot match none of the owner's accounts played", async () => {
   mocks.findMany.mockResolvedValue([]);
   mocks.archiveDescriptor.mockResolvedValue({ key: "raw/NA1_123.json" });
-  mocks.archivedMatch.mockResolvedValue(archivedMatchFor("q".repeat(78)));
+  mocks.archivedMatch.mockResolvedValue(
+    archivedMatchFor(LeaguePuuidSchema.parse("q".repeat(78))),
+  );
 
   await expect(
     uploadReplay(replayRequest(replayFixture()), "123", DEVICE),

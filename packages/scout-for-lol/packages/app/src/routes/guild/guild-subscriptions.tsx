@@ -1,6 +1,7 @@
+import { useRouteGuildId } from "#src/lib/routes/route-params.ts";
 import { Loaded } from "@shepherdjerred/loaded";
 import { useState } from "react";
-import { Link, useParams } from "react-router";
+import { Link } from "react-router";
 import {
   useInfiniteQuery,
   useMutation,
@@ -59,7 +60,7 @@ function accountLabel(account: {
 }
 
 export function GuildSubscriptions() {
-  const { guildId } = useParams();
+  const guildId = useRouteGuildId();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { perms } = usePermissions(guildId);

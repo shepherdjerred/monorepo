@@ -24,6 +24,7 @@ const MatchCardsSchema = z.array(ExploreMatchCardSchema).max(5);
 const LoadoutCardsSchema = z.array(ExploreLoadoutCardSchema).max(3);
 
 export type ConversationRow = {
+  preferredModel?: string | null;
   id: string;
   title: string;
   origin: string;
@@ -34,6 +35,8 @@ export type ConversationRow = {
 };
 
 export type MessageRow = {
+  inlineEntities?: string | null;
+  generation?: string | null;
   id: string;
   parentId: string | null;
   role: string;
@@ -78,6 +81,29 @@ export function toMessage(
     versionIndex: versions.index,
     versionCount: versions.count,
     content: row.content,
+    ...(row.inlineEntities == null
+      ? {}
+      : {
+          inlineEntities: parseJsonColumn(
+            row.inlineEntities,
+            ExploreMessageSchema.shape.inlineEntities,
+            "inlineEntities",
+          ),
+        }),
+    ...(row.generation == null
+      ? {}
+      : {
+          generation: parseJsonColumn(
+            row.generation,
+            z
+              .object({
+                model: z.string().min(1),
+                reasoningEffort: z.literal("high"),
+              })
+              .strict(),
+            "generation",
+          ),
+        }),
     queryText: row.queryText,
     caveats: parseJsonColumn(row.caveats, StringArraySchema, "caveats") ?? [],
     followUps:
@@ -108,6 +134,9 @@ export function toConversation(row: ConversationRow): ExploreConversation {
   return ExploreConversationSchema.parse({
     id: row.id,
     title: row.title,
+    ...(row.preferredModel == null
+      ? {}
+      : { preferredModel: row.preferredModel }),
     origin: row.origin,
     shareToken: row.shareToken,
     sharedLeafId: row.sharedLeafId,

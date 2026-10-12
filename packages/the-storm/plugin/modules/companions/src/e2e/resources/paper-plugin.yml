@@ -1,0 +1,19 @@
+name: TheStormCompanionsE2E
+version: "1.0.0"
+main: com.shepherdjerred.thestorm.companions.adapter.paper.CompanionsE2EPlugin
+api-version: "26.2"
+description: Test-only Citizens survival acceptance harness
+dependencies:
+  server:
+    TheStorm:
+      load: BEFORE
+      required: true
+      join-classpath: true
+    Citizens:
+      load: BEFORE
+      required: true
+      join-classpath: true
+    CoreProtect:
+      load: BEFORE
+      required: true
+      join-classpath: true

@@ -1,3 +1,4 @@
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 
 import { createTestDatabase } from "#src/testing/test-database.ts";
@@ -36,7 +37,7 @@ describe("Scout Temporal work ownership", () => {
     const puuid = "a".repeat(78);
     await enqueueChampionMasteryRefresh(
       {
-        puuid,
+        puuid: LeaguePuuidSchema.parse(puuid),
         region: "AMERICA_NORTH",
         fetchedAt: new Date("2026-09-20T00:00:00Z"),
       },
@@ -70,7 +71,7 @@ describe("Scout Temporal work ownership", () => {
     });
 
     await enqueueChampionMasteryRefresh(
-      { puuid, region: "EU_WEST", fetchedAt },
+      { puuid: LeaguePuuidSchema.parse(puuid), region: "EU_WEST", fetchedAt },
       prisma,
     );
 

@@ -1,4 +1,9 @@
-import { Output, stepCountIs, ToolLoopAgent } from "ai";
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
+import { generateText, Output, stepCountIs, ToolLoopAgent } from "ai";
+import { createToolPayloadCapture } from "#src/explore/inspection/tool-payloads.ts";
+import { withExploreSpend } from "#src/explore/spending/model.ts";
+import { hydrateInlineEntities } from "#src/explore/analysis/inline-entities.ts";
+import { authorizedProfileLinks } from "#src/explore/analysis/profile-links.ts";
 import {
   EXPLORE_MAX_HISTORY_TURNS,
   EXPLORE_MAX_OUTPUT_TOKENS,
@@ -9,19 +14,21 @@ import {
   type ExploreAnswer,
   type ExploreMatchCard,
   type ExploreLoadoutCard,
+  type ExploreMessage,
   type ReportAiPreviewSummary,
   type VisualizationSnapshot,
 } from "@scout-for-lol/data";
 import { withLlmSubjectSpan } from "@shepherdjerred/llm-observability/subject";
-import { exploreModel } from "#src/config/dynamic.ts";
-import {
-  createExploreTools,
-  type ExploreAgentParams,
-  type RunState,
-} from "#src/explore/agent-tools.ts";
+import { exploreModel, exploreAnalysisEnabled } from "#src/config/dynamic.ts";
+import { createExploreTools, type RunState } from "#src/explore/agent-tools.ts";
+import type { ExploreAgentParams } from "#src/explore/analysis/agent-types.ts";
 import { resolveCreationCapability } from "#src/explore/creation/capability.ts";
 import { exploreAgentInstructions } from "#src/explore/prompt.ts";
 import { drainExploreStreams } from "#src/explore/stream.ts";
+import {
+  ExploreCardSelectionSchema,
+  repairExploreCardSelection,
+} from "#src/explore/card-selection/repair.ts";
 import { challengeExploreEnabled } from "#src/explore/tools/challenge-tools.ts";
 import { dareExploreEnabled } from "#src/explore/tools/dare-tool-context.ts";
 import { resolveBucksCapability } from "#src/explore/tools/bucks-tools.ts";
@@ -41,7 +48,15 @@ import { scoutExploreTokensUsedTotal } from "#src/metrics/explore.ts";
 
 const logger = createLogger("explore-agent");
 
+function captureForTurn(params: ExploreAgentParams) {
+  return (
+    params.captureToolPayload ??
+    createToolPayloadCapture(params.conversationId, params.runId)
+  );
+}
+
 export type ExploreAgentResult = {
+  inlineEntities?: NonNullable<ExploreMessage["inlineEntities"]>;
   answer: ExploreAnswer;
   /** The result of the last successful query, kept for the transcript. */
   preview: ReportAiPreviewSummary | null;
@@ -64,14 +79,16 @@ export async function streamExploreAgent(
 async function streamExploreAgentInternal(
   params: ExploreAgentParams,
 ): Promise<ExploreAgentResult> {
-  const model = exploreModel();
+  const model = params.model ?? exploreModel();
   const runtime = getLlmRuntime();
   if (runtime === undefined) {
     throw new Error("OpenAI credentials are required for explore");
   }
   assertWithinBudget();
 
+  const profileUrls = new Set<string>();
   const state: RunState = {
+    authorizedProfileUrls: profileUrls,
     toolCalls: 0,
     previewCalls: 0,
     lastPreview: null,
@@ -102,6 +119,7 @@ async function streamExploreAgentInternal(
 
   const clock = { currentTime: new Date().toISOString() };
   const skillOptions = {
+    analysis: exploreAnalysisEnabled(),
     bucks: bucksCapability === null ? null : clock,
     mvpVotes: mvpVotesCapability === null ? null : clock,
     dares: daresEnabled,
@@ -116,7 +134,12 @@ async function streamExploreAgentInternal(
   const agent = new ToolLoopAgent({
     id: "scout-explore-agent",
     instructions: exploreAgentInstructions(skillOptions),
-    model: runtime.languageModel(model, ["tools"]),
+    model: withExploreSpend(runtime.languageModel(model, ["tools"]), {
+      ownerId: params.requesterId,
+      runId: params.runId,
+      model,
+    }),
+    maxRetries: 0,
     tools: createExploreTools({
       params,
       state,
@@ -162,14 +185,84 @@ async function streamExploreAgentInternal(
   // `partialOutputStream`. The prose the page renders comes from the latter —
   // a `text-delta` part is raw JSON here. Both views must be drained together;
   // drainExploreStreams owns that invariant and its regression test.
-  const streamState = await drainExploreStreams(stream, params.emit);
+  const streamState = await drainExploreStreams(
+    stream,
+    params.emit,
+    captureForTurn(params),
+  );
 
-  const answer = ExploreAnswerSchema.parse(await stream.output);
+  // Charge generation even if output validation or artifact hydration fails.
+  const usage = await stream.usage;
+  const recordUsage = (tokens: {
+    inputTokens: number | undefined;
+    outputTokens: number | undefined;
+  }) => {
+    const inputTokens = tokens.inputTokens ?? 0;
+    const outputTokens = tokens.outputTokens ?? 0;
+    scoutExploreTokensUsedTotal.inc({ model, kind: "prompt" }, inputTokens);
+    scoutExploreTokensUsedTotal.inc(
+      { model, kind: "completion" },
+      outputTokens,
+    );
+    recordTokenUsage(inputTokens, outputTokens, model);
+  };
+  recordUsage(usage);
+  let answer = ExploreAnswerSchema.parse(await stream.output);
   if (
     params.surface === "voice" &&
     (answer.spokenAnswer === null || answer.spokenAnswer === undefined)
   ) {
     throw new Error("Voice Explore answers require spokenAnswer");
+  }
+  if (params.surface === "web" || params.surface === "voice") {
+    const steps = await stream.steps;
+    const cards = await repairExploreCardSelection({
+      selection: {
+        matchCards: answer.matchCards,
+        loadoutCards: answer.loadoutCards,
+      },
+      eligibleMatchIds: state.lastMatchIds,
+      eligibleLoadoutPairs: state.lastQueryLoadoutPairs,
+      stepsUsed: steps.length,
+      outputTokensUsed: usage.outputTokens ?? EXPLORE_MAX_OUTPUT_TOKENS,
+      abortSignal: params.abortSignal,
+      correct: async ({ selection, failure, maxOutputTokens, abortSignal }) => {
+        assertWithinBudget();
+        await params.emit({
+          type: "activity",
+          text: "Checking card selections…",
+          toolCallId: null,
+          ignorable: true,
+        });
+        const correction = await generateText({
+          model: withExploreSpend(runtime.languageModel(model), {
+            ownerId: params.requesterId,
+            runId: params.runId,
+            model,
+          }),
+          output: Output.object({ schema: ExploreCardSelectionSchema }),
+          maxOutputTokens,
+          maxRetries: 0,
+          ...(abortSignal === undefined ? {} : { abortSignal }),
+          prompt: JSON.stringify({
+            instruction:
+              "Correct only the requested cards using the latest query's eligible choices. Keep valid requests. Never invent an id or reuse an earlier query. If no eligible choice supports a requested card, explicitly return no such card. No tools are available.",
+            failure: failure.message,
+            selection,
+            eligibleMatchIds: [...state.lastMatchIds],
+            eligibleLoadoutPairs: [...state.lastQueryLoadoutPairs],
+          }),
+          ...runtime.callOptions({
+            workload: "scout.explore",
+            model,
+            sessionId: params.runId,
+          }),
+        });
+        recordUsage(correction.usage);
+        return ExploreCardSelectionSchema.parse(correction.output);
+      },
+    });
+    answer = { ...answer, ...cards };
   }
   const matchCards =
     params.surface === "web" || params.surface === "voice"
@@ -199,15 +292,13 @@ async function streamExploreAgentInternal(
     );
   }
 
-  const usage = await stream.usage;
-  const inputTokens = usage.inputTokens ?? 0;
-  const outputTokens = usage.outputTokens ?? 0;
-  scoutExploreTokensUsedTotal.inc({ model, kind: "prompt" }, inputTokens);
-  scoutExploreTokensUsedTotal.inc({ model, kind: "completion" }, outputTokens);
-  recordTokenUsage(inputTokens, outputTokens, model);
-
+  const linkedAnswer = {
+    ...answer,
+    answer: authorizedProfileLinks(answer.answer, profileUrls),
+  };
   return {
-    answer,
+    answer: linkedAnswer,
+    inlineEntities: await hydrateInlineEntities(linkedAnswer.answer),
     preview: answer.includeVisualization ? state.lastPreview : null,
     visualization: answer.includeVisualization ? state.lastVisualization : null,
     matchCards,
@@ -221,7 +312,7 @@ export type ExploreModelMessage =
 type MatchCardReplayContext = {
   size: string;
   match: {
-    matchId: string;
+    matchId: RiotMatchId;
     teams: readonly { teamId: number; win: boolean; kills: number }[];
   };
 };

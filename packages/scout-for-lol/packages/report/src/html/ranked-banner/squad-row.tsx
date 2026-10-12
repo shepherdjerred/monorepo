@@ -32,6 +32,7 @@ export function SquadRow({
   return (
     <div
       style={{
+        boxSizing: "border-box",
         display: "flex",
         alignItems: "center",
         gap: compact ? "1.2rem" : "3rem",
@@ -44,6 +45,7 @@ export function SquadRow({
     >
       <div
         style={{
+          boxSizing: "border-box",
           width: `${iconRem.toString()}rem`,
           height: `${iconRem.toString()}rem`,
           display: "flex",
@@ -90,6 +92,7 @@ export function SquadRow({
           {isMvp && (
             <span
               style={{
+                boxSizing: "border-box",
                 fontSize: compact ? "1.3rem" : "1.8rem",
                 color: palette.blue[2],
                 background: "rgba(10, 200, 185, 0.15)",

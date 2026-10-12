@@ -4,7 +4,6 @@ import com.shepherdjerred.thestorm.essentials.app.AfkTracker;
 import com.shepherdjerred.thestorm.essentials.app.PlayerDirectory;
 import com.shepherdjerred.thestorm.essentials.app.TpaDesk;
 import com.shepherdjerred.thestorm.essentials.app.store.PlayerStore.KnownPlayer;
-import com.shepherdjerred.thestorm.essentials.domain.place.Position;
 import java.util.Optional;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -43,7 +42,9 @@ final class SessionListener implements Listener {
    * @param spawn where they arrive
    * @param kits the kits, including the starter kit
    */
-  record Arrival(Position spawn, PlayerCommands.Kits kits) {}
+  record Arrival(
+      com.shepherdjerred.thestorm.essentials.app.RuntimeDestinations spawn,
+      PlayerCommands.Kits kits) {}
 
   SessionListener(
       PaperRuntime runtime, PlayerDirectory players, Presence presence, Arrival arrival) {
@@ -55,6 +56,7 @@ final class SessionListener implements Listener {
 
   @EventHandler(priority = EventPriority.MONITOR)
   void onJoin(PlayerJoinEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getPlayer())) return;
     var player = event.getPlayer();
     presence.afk().joined(player.getUniqueId());
     arrival.kits().deliveries().deliver(player.getUniqueId());
@@ -74,6 +76,7 @@ final class SessionListener implements Listener {
 
   @EventHandler(priority = EventPriority.MONITOR)
   void onQuit(PlayerQuitEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getPlayer())) return;
     var id = event.getPlayer().getUniqueId();
     presence.afk().left(id);
     presence.tpa().forget(id);
@@ -83,7 +86,7 @@ final class SessionListener implements Listener {
   }
 
   private void welcome(Player player) {
-    Positions.toLocation(runtime.server(), arrival.spawn())
+    Positions.toLocation(runtime.server(), arrival.spawn().spawn())
         .ifPresent(
             spawn ->
                 runtime.logFailure(player.teleportAsync(spawn), "sending a new player to spawn"));

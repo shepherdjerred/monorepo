@@ -99,11 +99,11 @@ final class NpcBrainTest {
             ordinary.schedule(),
             ordinary.dialogue(),
             ordinary.trainer());
-    var danger = new Situation(TimeOfDay.of(17, 0), true, Optional.of(GATE));
+    var danger = new Situation(TimeOfDay.of(17, 0), true, Optional.of(GATE), Optional.of(INN));
     assertThat(NpcBrain.decide(guard, Optional.of(DAY), PLACES, danger))
         .isEqualTo(new Intent.Pursue(GATE));
     assertThat(NpcBrain.decide(ordinary, Optional.of(DAY), PLACES, danger))
-        .isEqualTo(new Intent.Stand(INN, NpcPose.STANDING));
+        .isEqualTo(new Intent.Flee(INN));
     assertThat(NpcBrain.decide(guard, Optional.of(DAY), PLACES, at(17, false)))
         .isEqualTo(new Intent.Patrol(List.of(GATE, MARKET)));
   }

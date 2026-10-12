@@ -1,4 +1,5 @@
 import * as Sentry from "@sentry/bun";
+import { sentryDataCollection } from "@shepherdjerred/sentry-config";
 import type { SpanProcessor } from "@opentelemetry/sdk-trace-base";
 import { createGameBot } from "@shepherdjerred/discord-stream-lifecycle/lifecycle/game-bot";
 import type {
@@ -59,7 +60,7 @@ export type BootGameBotOptions = {
  * createGameBot runtime, and arm SIGTERM/SIGINT handlers. Returns the runtime so
  * the game can wire its message/socket dispatch and then call `runtime.start()`.
  *
- * Sentry.init runs first with `skipOpenTelemetrySetup: true` so it doesn't
+ * Sentry.init runs first with `enableOpenTelemetrySetup: false` so it doesn't
  * register the global OTel TracerProvider before initializeTracing()'s NodeSDK
  * does (otherwise spans route through Sentry's sampler and never reach Tempo).
  */
@@ -67,6 +68,7 @@ export function bootGameBot(
   options: BootGameBotOptions,
 ): GameBotRuntime<SelfbotPooledUserbot> {
   Sentry.init({
+    dataCollection: sentryDataCollection(),
     dsn: Bun.env["SENTRY_DSN"] ?? options.sentryDsn,
     environment: Bun.env.NODE_ENV ?? "development",
     // VERSION is baked into the image at build time.
@@ -76,7 +78,7 @@ export function bootGameBot(
     // the NodeSDK below fails registration ("duplicate registration of API:
     // trace") — spans then route through Sentry's sampler (tracesSampleRate
     // unset) and never reach Tempo. Sentry stays for errors via captureException.
-    skipOpenTelemetrySetup: true,
+    enableOpenTelemetrySetup: false,
   });
 
   // Start OTLP tracing before any traced network work (Discord login, voice).

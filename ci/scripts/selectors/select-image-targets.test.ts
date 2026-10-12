@@ -69,6 +69,37 @@ function selectWithReasons(
   );
 }
 
+test("rebuilds the bundled review policy when its source or library changes", async () => {
+  for (const path of [
+    "scripts/review/bundled-review-gate.ts",
+    "scripts/lib/review/review-gate-poll.ts",
+    "packages/code-review/src/gate.ts",
+  ]) {
+    expect(await select([path])).toContain("woodpecker-config-extension");
+  }
+});
+
+test("selects infra for an unpublished maintained plugin", async () => {
+  const catalog = PUBLISHED_VERSION_CATALOG.replace(
+    /("name": "shepherdjerred\/velero-plugin",[\s\S]*?"value": "[^"]*@)sha256:[0-9a-f]{64}/,
+    `$1${UNPUBLISHED_IMAGE_DIGEST}`,
+  );
+  const result = await selectImageTargetsWithReasons(["README.md"], REPO_ROOT, {
+    versionCatalogSource: catalog,
+  });
+  expect(result.targets).toEqual(["infra"]);
+  expect(result.report.targets["infra"]).toContain(
+    "unpublished image pin shepherdjerred/velero-plugin requires its first release",
+  );
+});
+
+test("rebuilds both consumers of The Storm's public status contract", async () => {
+  expect(await select(["packages/the-storm/public-status.json"])).toEqual([
+    "infra",
+    "storm-forum",
+  ]);
+});
+
 describe("selectImageTargets", () => {
   test("selects a standalone application image", async () => {
     expect(await select(["packages/tasknotes-server/src/index.ts"])).toEqual([
@@ -110,6 +141,21 @@ describe("selectImageTargets", () => {
     }
   });
 
+  test("rebuilds both registry consumers while keeping homelab image sources scoped", async () => {
+    for (const path of [
+      "packages/homelab/src/domain-registry.json",
+      "packages/homelab/src/domain-registry.ts",
+    ]) {
+      expect(await select([path])).toEqual(["infra", "temporal-worker"]);
+    }
+    expect(await select(["packages/homelab/package.json"])).toEqual([
+      "temporal-worker",
+    ]);
+    expect(
+      await select(["packages/homelab/src/tofu/cloudflare/domain-baseline.tf"]),
+    ).toEqual([]);
+  });
+
   test("rebuilds infra when The Storm's server image inputs change", async () => {
     for (const path of [
       "packages/the-storm/server/Dockerfile",
@@ -123,16 +169,33 @@ describe("selectImageTargets", () => {
     }
   });
 
+  test("rebuilds both sides of The Storm's shared recovery protocol", async () => {
+    expect(
+      await select([
+        "packages/the-storm/server/owned/plugins/TheStorm/plot-reconcile.json",
+      ]),
+    ).toEqual(["infra", "temporal-worker"]);
+    expect(await select(["packages/the-storm/package.json"])).toEqual([
+      "storm-forum",
+      "temporal-worker",
+    ]);
+  });
+
   test("rebuilds infra when the managed flag inventory changes", async () => {
     expect(
       await select(["packages/feature-flags/src/managed-flag-inventory.json"]),
     ).toContain("infra");
   });
 
+  test("rebuilds infra when the shared companion contract changes", async () => {
+    expect(
+      await select(["packages/storm-brain/contracts/companion-chat.json"]),
+    ).toContain("infra");
+  });
+
   test("leaves images alone for The Storm files outside the image context", async () => {
     for (const path of [
       "packages/the-storm/README.md",
-      "packages/the-storm/package.json",
       "packages/the-storm/tests/e2e/boot.test.ts",
     ]) {
       expect(await select([path])).toEqual([]);
@@ -172,6 +235,7 @@ describe("selectImageTargets", () => {
       "ci/scripts/images/bake-retry.ts",
       "ci/scripts/reporting/buildkit-env.ts",
       "scripts/lib/ci/ci-handoff.ts",
+      "scripts/lib/ci/published-image-release.ts",
       "ci/scripts/images/ghcr-public-access.ts",
       "ci/scripts/images/image-targets.ts",
       "ci/scripts/migration-core.ts",

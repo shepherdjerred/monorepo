@@ -5,6 +5,7 @@ import static com.shepherdjerred.thestorm.towns.adapter.db.generated.Tables.TOWN
 import static com.shepherdjerred.thestorm.towns.adapter.db.generated.Tables.TOWNS_CLAIM_TRUST;
 import static com.shepherdjerred.thestorm.towns.adapter.db.generated.Tables.TOWNS_LOCK;
 import static com.shepherdjerred.thestorm.towns.adapter.db.generated.Tables.TOWNS_LOCK_BLOCK;
+import static com.shepherdjerred.thestorm.towns.adapter.db.generated.Tables.TOWNS_LOCK_RESTORATION;
 import static com.shepherdjerred.thestorm.towns.adapter.db.generated.Tables.TOWNS_LOCK_TRUST;
 import static com.shepherdjerred.thestorm.towns.adapter.db.generated.Tables.TOWNS_MEMBER;
 import static com.shepherdjerred.thestorm.towns.adapter.db.generated.Tables.TOWNS_PENDING_PAYOUT;
@@ -180,6 +181,10 @@ public final class JooqTownsStore implements TownsStore {
               dsl.select(TOWNS_LOCK.ID)
                   .from(TOWNS_LOCK)
                   .where(TOWNS_LOCK.OWNER_ID.eq(departed.toString()))
+                  .andNotExists(
+                      DSL.selectOne()
+                          .from(TOWNS_LOCK_RESTORATION)
+                          .where(TOWNS_LOCK_RESTORATION.LOCK_ID.eq(TOWNS_LOCK.ID)))
                   .andExists(ownedBlock)
                   .andNotExists(outsideBlock)
                   .fetchSet(TOWNS_LOCK.ID);

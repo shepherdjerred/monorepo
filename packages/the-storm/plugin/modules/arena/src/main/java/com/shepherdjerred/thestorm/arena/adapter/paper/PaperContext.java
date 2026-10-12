@@ -1,7 +1,10 @@
 package com.shepherdjerred.thestorm.arena.adapter.paper;
 
 import com.shepherdjerred.thestorm.arena.app.ArenaPresence;
+import com.shepherdjerred.thestorm.core.compute.ComputePool;
+import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.schedule.Scheduler;
+import com.shepherdjerred.thestorm.core.world.BlockChanges;
 import java.time.InstantSource;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -18,15 +21,24 @@ final class PaperContext {
 
   private final Plugin plugin;
   private final Scheduler scheduler;
+  private final ComputePool compute;
   private final InstantSource time;
   private final RandomGenerator random;
+  private final BlockChanges blocks;
+  private final com.shepherdjerred.thestorm.core.analytics.GameActivity activity;
   private @Nullable ArenaPresence presence;
 
-  PaperContext(Plugin plugin, Scheduler scheduler, InstantSource time, RandomGenerator random) {
-    this.plugin = plugin;
-    this.scheduler = scheduler;
-    this.time = time;
-    this.random = random;
+  PaperContext(ModuleContext module) {
+    this.plugin = module.plugin();
+    this.scheduler = module.scheduler();
+    this.compute = module.compute();
+    this.time = module.time();
+    this.random = module.random();
+    this.blocks = module.services().require(BlockChanges.class);
+    this.activity =
+        new com.shepherdjerred.thestorm.core.analytics.GameActivity(
+            module.analytics(),
+            com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.Mode.ARENA);
   }
 
   Plugin plugin() {
@@ -41,6 +53,10 @@ final class PaperContext {
     return scheduler;
   }
 
+  ComputePool compute() {
+    return compute;
+  }
+
   Executor mainThread() {
     return scheduler.mainThread();
   }
@@ -51,6 +67,14 @@ final class PaperContext {
 
   RandomGenerator random() {
     return random;
+  }
+
+  BlockChanges blocks() {
+    return blocks;
+  }
+
+  com.shepherdjerred.thestorm.core.analytics.GameActivity activity() {
+    return activity;
   }
 
   ComponentLogger logger() {

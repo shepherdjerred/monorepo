@@ -1,7 +1,7 @@
 # R2 Capacity Remediation Runbook
 
-Procedure for when the `homelab` R2 bucket approaches or exceeds its 1.5 TB
-limit (`R2StorageNearingLimit` / `R2StorageExceedingLimit`), or when the R2
+Procedure for when the `homelab` R2 bucket approaches or exceeds its 1536 GiB
+capacity budget (`R2StorageNearingLimit` / `R2StorageExceedingLimit`), or when the R2
 orphan alerts fire (`VeleroR2OrphanPrefixes` /
 `VeleroR2OrphanBytesExcessive`). Triage first: the inventory distinguishes
 accumulated orphans (the usual cause — TTL-expired backups whose
@@ -25,14 +25,15 @@ aws --version            # local CLI present
 ```
 
 The R2 commands use the repository's standard operator environment names. Run
-the Bun commands below through `op run` with these references (same 1Password
+the commands below from the repository root through the service-account
+wrapper with these references (same 1Password
 item as the Velero cloud credentials); do not resolve them into a checked-in
 env file:
 
 ```bash
-export CLOUDFLARE_R2_ACCESS_KEY_ID='op://v64ocnykdqju4ui6j6pua56xw4/ypce2djferc6zf7bocxft36n6a/CLOUDFLARE_R2_ACCESS_KEY_ID'
-export CLOUDFLARE_R2_SECRET_ACCESS_KEY='op://v64ocnykdqju4ui6j6pua56xw4/ypce2djferc6zf7bocxft36n6a/CLOUDFLARE_R2_SECRET_ACCESS_KEY'
-export CLOUDFLARE_R2_ENDPOINT='op://v64ocnykdqju4ui6j6pua56xw4/ypce2djferc6zf7bocxft36n6a/CLOUDFLARE_R2_ENDPOINT'
+export CLOUDFLARE_R2_ACCESS_KEY_ID='op://v64ocnykdqju4ui6j6pua56xw4/ypce2djferc6zf7bocxft36n6a/ymzh6wey7jw3mwpspsfbft7neu'
+export CLOUDFLARE_R2_SECRET_ACCESS_KEY='op://v64ocnykdqju4ui6j6pua56xw4/ypce2djferc6zf7bocxft36n6a/t6ctg5wex25auwqzdu5ztymncu'
+export CLOUDFLARE_R2_ENDPOINT='op://v64ocnykdqju4ui6j6pua56xw4/ypce2djferc6zf7bocxft36n6a/3dkox447jng7s3vjcbknaztjwe'
 ```
 
 ## Step 1: Read-only triage
@@ -57,15 +58,17 @@ kubectl get backups.velero.io -n velero -o json | jq -r '.items | "total: \(leng
 Inventory the bucket top level, then per-backup under the zfs data prefix:
 
 ```bash
-cd packages/homelab/src/cdk8s
-op run -- bun run r2:inventory
-R2_PREFIX='zfspv-incr/backups/' R2_PREFIX_DEPTH='1' op run -- bun run r2:inventory
+scripts/onepassword/with-service-account.sh op run -- bun run --cwd packages/homelab/src/cdk8s r2:inventory
+R2_PREFIX='zfspv-incr/backups/' R2_PREFIX_DEPTH='1' scripts/onepassword/with-service-account.sh op run -- bun run --cwd packages/homelab/src/cdk8s r2:inventory
 ```
 
-Quantify the guarded orphan set without deleting anything:
+Quantify the guarded orphan set without deleting anything. The inspection
+reads actual ZFS stream ancestry and protects expired fulls and increments
+still required by retained recovery points. An absent Backup CR or metadata
+alone does not make a stream disposable:
 
 ```bash
-op run -- bun run r2:orphans -- inspect --manifest /tmp/r2-orphans.json
+scripts/onepassword/with-service-account.sh op run -- bun run --cwd packages/homelab/src/cdk8s r2:orphans -- inspect --manifest /tmp/r2-orphans.json
 jq -r '"candidates=\(.candidates | length) gib=\(([.candidates[].bytes] | add) / 1024 / 1024 / 1024) protected=\(.protectedBackupNames | length)"' /tmp/r2-orphans.json
 ```
 
@@ -74,12 +77,16 @@ backup that re-uploaded:
 
 ```bash
 export AWS_ACCESS_KEY_ID="$CLOUDFLARE_R2_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$CLOUDFLARE_R2_SECRET_ACCESS_KEY"
-op run -- sh -c 'aws s3api list-multipart-uploads --bucket homelab --endpoint-url "$CLOUDFLARE_R2_ENDPOINT" --region auto --output json' | jq '.Uploads | length'
+scripts/onepassword/with-service-account.sh op run -- sh -c 'aws s3api list-multipart-uploads --bucket homelab --endpoint-url "$CLOUDFLARE_R2_ENDPOINT" --region auto --output json' | jq '.Uploads | length'
 velero backup get | grep -v Completed || true
 ```
 
 ## Step 2: Pick a branch
 
+- **Incomplete chains** (`incompleteChainRoots` is nonempty): stop cleanup.
+  Prove a full isolated recovery, seed the replacement schedules with fulls,
+  and explicitly review which broken recovery points may be retired. The
+  cleanup tool refuses to apply a manifest while retained chains have gaps.
 - **Orphans dominate** (candidates hold most of the excess bytes): follow
   `velero-orphan-snapshot-remediation.md` Steps 2–6 for the guarded manifest
   cleanup — R2 prefixes first, paired local snapshots only after. Never
@@ -95,16 +102,28 @@ velero backup get | grep -v Completed || true
   older than 7 days automatically; for anything younger, wait or investigate
   the uploading backup — do not abort uploads belonging to a running backup.
 
+Approve the exact version-4 manifest only after recovery evidence is available.
+It records every candidate key, size, modification time and ETag. Apply
+revalidates the complete ancestry and protection set, then conditionally HEADs
+and DELETEs each reviewed key using its approved ETag. It never recursively
+deletes a prefix. Before deleting backup data, apply creates an empty, uniquely
+named object under `ops-cleanup-precondition-probes/` and requires the provider
+to reject a mismatched DELETE ETag with `PreconditionFailed`. It removes that
+probe with its correct ETag. Unsupported, ignored, or unauthorized conditional
+deletes stop cleanup. A failed probe may leave this empty diagnostic object;
+it is outside backup data. Keep backup names immutable.
+
 ## Step 3: Verify post-remediation state
 
 ```bash
-cd packages/homelab/src/cdk8s
-op run -- bun run r2:orphans -- inspect --manifest /tmp/r2-postcheck.json
-op run -- bun run r2:inventory
+scripts/onepassword/with-service-account.sh op run -- bun run --cwd packages/homelab/src/cdk8s r2:orphans -- inspect --manifest /tmp/r2-postcheck.json
+scripts/onepassword/with-service-account.sh op run -- bun run --cwd packages/homelab/src/cdk8s r2:inventory
 ```
 
-The fresh inspection must show zero candidates and the inventory must total
-below 1536 GiB. Then trigger both audits and confirm the gauges:
+The fresh inspection must show that the approved keys are gone and retained
+chains remain complete. Review any remaining candidates individually; do not
+delete extra recovery points merely to reach zero or get below 1536 GiB.
+Then trigger both audits and confirm the gauges:
 
 ```bash
 toolkit temporal schedule trigger --schedule-id velero-orphan-audit
@@ -114,8 +133,12 @@ toolkit prom query 'velero_orphan_local_snapshots_total{container="temporal-infr
 toolkit prom query 'velero_orphan_r2_prefixes_total{container="temporal-infra-worker"}'
 ```
 
-Both should report 0. The PagerDuty alerts auto-resolve once the metrics hold
-for their `for:` windows.
+The reported values must match the independent inspection. Orphan alerts have
+a 15-minute pending hold. Freshness uses the original observation time with a
+36-hour threshold, including after a worker restart. State lives in the
+`temporal/velero-r2-orphan-audit-state` ConfigMap; the infra identity can only
+read and update that exact ConfigMap. Empty or corrupt state cannot establish
+a successful zero audit. The R2 audit credential remains read-only.
 
 ## R2 audit credential bootstrap
 
@@ -134,9 +157,16 @@ credential exists (see `requiredEnvironment` in
    `packages/homelab/src/cdk8s/src/resources/temporal/workers/operations-workers.ts`,
    following the existing `EnvValue.fromSecretValue` entries. Refresh the
    committed vault snapshot (`check:1password`).
-4. The next schedule registration unpauses the schedule; trigger one manual
-   run and confirm `velero_r2_orphan_audit_runs_total{outcome="success"}`
-   increments.
+4. Verify the deployed infra worker references the dedicated secret and all
+   four required fields. Production's control worker does not carry Activity
+   credentials or validate them locally. Schedule registration preserves an
+   existing pause; credential provisioning does not unpause this schedule.
+5. After the credential is deployed and an operator authorizes acceptance,
+   trigger one read-only audit and confirm
+   `velero_r2_orphan_audit_runs_total{outcome="success"}` increments. Compare the
+   reported orphan inventory with an independent inspection, then explicitly
+   unpause the schedule. Do not remove its bootstrap pause as a deployment
+   shortcut or give the audit identity write access.
 
 ## History
 

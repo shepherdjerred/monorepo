@@ -9,10 +9,6 @@ import { GLOBAL_SELECTOR_INPUTS } from "#src/pipeline/inputs.ts";
  * Only the PR-side `plan` lanes are here. The `apply` lanes are main-only and
  * gated on the homelab release admission token, so they belong with the
  * release chain rather than with these.
- *
- * The stack whose name is conspicuously absent is `buildkite`: it manages the
- * Buildkite cluster and queues, and has no successor. Woodpecker keeps all of
- * its configuration in-cluster, so that stack is deleted rather than ported.
  */
 
 /** Plugin cache claim, shared by every tofu lane. */
@@ -175,6 +171,7 @@ const PLAN_STACKS = [
  * serialization group, so they live with the release chain.
  */
 const PLATFORM_STACKS = [
+  "application-secrets",
   "openai",
   "anthropic",
   "discord",
@@ -191,7 +188,7 @@ const TOFU_CHANGED = {
 
 function tofuCommands(stack: string, action: "plan" | "apply"): string[] {
   return [
-    ". ci/scripts/toolchain.sh",
+    "MISE_TOOLCHAIN_SCOPE=tofu . ci/scripts/toolchain.sh",
     "ci/scripts/bun-install.sh --frozen-lockfile --filter homelab --production",
     `export TF_PLUGIN_CACHE_DIR=${TOFU_PLUGIN_CACHE.path}`,
     // The plugin cache protocol has no concurrent-writer support, so take an
@@ -215,7 +212,7 @@ function tofuValidateSteps(images: CiImages): CiStep[] {
       label: "tofu validate platforms",
       image: images.base,
       commands: [
-        ". ci/scripts/toolchain.sh",
+        "MISE_TOOLCHAIN_SCOPE=tofu . ci/scripts/toolchain.sh",
         "ci/scripts/bun-install.sh --frozen-lockfile --filter homelab --production",
         `export TF_PLUGIN_CACHE_DIR=${TOFU_PLUGIN_CACHE.path}`,
         `for stack in ${PLATFORM_STACKS.join(" ")}; do`,
@@ -234,7 +231,7 @@ function tofuValidateSteps(images: CiImages): CiStep[] {
       label: "tofu validate posthog",
       image: images.base,
       commands: [
-        ". ci/scripts/toolchain.sh",
+        "MISE_TOOLCHAIN_SCOPE=tofu . ci/scripts/toolchain.sh",
         "ci/scripts/bun-install.sh --frozen-lockfile --filter homelab --production",
         `export TF_PLUGIN_CACHE_DIR=${TOFU_PLUGIN_CACHE.path}`,
         `flock -x ${TOFU_PLUGIN_CACHE.path}/.lock bun --no-install packages/homelab/scripts/tofu/tofu-stack.ts posthog validate`,
@@ -242,9 +239,8 @@ function tofuValidateSteps(images: CiImages): CiStep[] {
       timeoutMinutes: 60,
       resources: MEDIUM_TIER,
       events: ["pull_request"],
-      // The Buildkite lane re-derived a merge base and re-ran the changed-file
-      // check inside the step. Selection now happens before generation, so the
-      // guard is the step's changed-path list.
+      // Selection happens before generation, so the guard is the step's
+      // changed-path list rather than a merge-base check inside the step.
       changed: {
         include: [
           ...GLOBAL_SELECTOR_INPUTS,

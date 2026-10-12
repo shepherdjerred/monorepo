@@ -37,6 +37,7 @@ final class ArrivalListener implements Listener {
 
   @EventHandler(priority = EventPriority.HIGH)
   void onJoin(PlayerJoinEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getPlayer())) return;
     var player = event.getPlayer();
     var at = Guard.position(player);
     if (!guard.permitsQuietly(player, ARRIVE, guard.land(at))) {

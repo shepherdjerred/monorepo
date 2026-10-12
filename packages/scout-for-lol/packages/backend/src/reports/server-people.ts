@@ -1,3 +1,5 @@
+import type { DiscordAccountId } from "@scout-for-lol/domain/identity/discord.ts";
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import type { z } from "zod";
 import type { DiscordGuildId } from "@scout-for-lol/data";
 import {
@@ -23,12 +25,12 @@ import { listParam, type SqlFragment } from "#src/reports/duckdb/lake.ts";
  * one person, which no per-row SQL rule can see.
  */
 export type ServerPerson = {
-  readonly puuid: string;
+  readonly puuid: LeaguePuuid;
   /** The smallest tracked player id in the merged person; stable and numeric. */
   readonly playerId: number;
   /** That player's alias, so a person's label never depends on row order. */
   readonly playerAlias: string;
-  readonly discordId: string | null;
+  readonly discordId: DiscordAccountId | null;
 };
 
 function representative(

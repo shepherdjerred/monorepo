@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { bundleWorkflowCode } from "@temporalio/worker";
+import vm from "node:vm";
+import { z } from "zod";
 
 // Smoke test: webpack-bundle the workflow entry the same way Worker.create
 // does at startup. Catches transitive imports that pull in Node-core schemes
@@ -12,5 +14,18 @@ describe("workflow bundle", () => {
     const workflowsPath = new URL("index.ts", import.meta.url).pathname;
     const bundle = await bundleWorkflowCode({ workflowsPath });
     expect(bundle.code.length).toBeGreaterThan(1000);
+    const context = vm.createContext({ __webpack_module_cache__: {} });
+    vm.runInContext(bundle.code, context);
+    const workflows = z
+      .record(z.string(), z.unknown())
+      .parse(vm.runInContext("__TEMPORAL__.importWorkflows()", context));
+    for (const name of [
+      "maintainStormForumWorkflow",
+      "backupStormForumWorkflow",
+      "runSeaweedFsBackupWorkflow",
+      "runSeaweedFsBackupRetentionAndGcWorkflow",
+    ]) {
+      expect(typeof workflows[name]).toBe("function");
+    }
   }, 60_000);
 });

@@ -9,6 +9,60 @@ homelab audit, deterministic PR-opening refresh jobs, and webhook ingress
 Closed PR cleanup matches Woodpecker pull-request refs or source-branch pushes
 at the exact head commit before cancelling active jobs.
 
+The existing five-minute CI cache maintenance schedule also collects the
+separate main and PR source caches on Liskov. Its activity acquires the clone
+helper's exclusive GC lock, retains seven days, and trims each data claim to
+8 GiB. It preserves active readers and emits its own maintenance outcome.
+
+### CI maintenance dispatch
+
+The `ci-maintenance-dispatch` schedule runs every five minutes in `prod` with
+SKIP overlap and a five-minute catchup window. Its bounded tick wakes the
+durable `ci-maintenance-coordinator` on `monorepo-workflows`. All GitHub and
+Woodpecker I/O runs on `repo-automation`. The production inventory enables
+`ci-maintenance-dispatch-enabled`; its runtime fallback remains off.
+Registration creates this schedule
+paused because older stable workers do not register `runCiMaintenanceTick`.
+After candidate promotion and both manual maintenance canaries pass, enable the
+dispatch flag and unpause this exact schedule. Reconciliation preserves the
+operator's subsequent pause state.
+
+Describe the workflow and read its `ciMaintenance` memo for the pending request ID, pipeline receipt,
+completed fingerprints, and blocked streams. The coordinator allows one
+submission at a time, coalesces repeated ticks, and retains fingerprints
+across worker replacement and continue-as-new. The memo is refreshed after
+each tick; Workflow history records in-flight writes before that snapshot.
+CI image fingerprints cover
+the tool manifest and Dockerfiles. Ready generated PRs freeze their stream.
+
+Writes have one activity attempt. After a lost response, subsequent ticks
+search for the recorded request ID; they never repeat the POST blindly.
+Read failures preserve state. A failed pipeline blocks that stream until an
+operator inspects it and sends `maintenanceRetry` with its exact `kind` and
+`requestId`. The other stream may continue. An absent submission requires an
+API/history audit first: send `maintenanceConfirmAbsent` with its exact
+`requestId` and a non-secret `evidence` explanation, then explicitly retry.
+That signal cannot clear a request with a known pipeline receipt. Never
+confirm absence while the original request or pipeline could still settle.
+
+`toolkit ci maintenance --json` lists recent maintenance receipts separately
+from verification. A successful maintenance run must emit one structured
+result, either completed or deferred for a ready PR. Deferred work does not
+advance its completed fingerprint. Main verification requires the complete
+release graph and cannot be cleared by a maintenance-only manual run.
+
+Vacuum start verification reads Home Assistant recorder history after each start
+request. Short cleaning transitions count as starts even when delayed state
+polling sees the vacuum docked again. A witnessed start followed by logbook
+`vacuum.return_to_base` context records `interrupted/commanded-return` in the
+Workflow memo and outcome metric. The interruption alert is informational:
+active, unsilenced and uninhibited alerts appear in the ops snapshot, while
+Alertmanager routes them to the null receiver without paging or webhook-ledger
+delivery. It never restarts the vacuum automatically or infers who sent the
+command. Missing starts and unexplained stops remain failures.
+Retained histories use the pre-history verification branch through a Temporal
+patch marker.
+
 Production runs one image in twelve single-replica Kubernetes Deployments. The
 `control` role owns schedule reconciliation and public HTTP/event surfaces
 plus the `agent-chat-ingress` command queue and isolated
@@ -19,33 +73,57 @@ Workers, with separate registries, credentials, service accounts, and
 concurrency budgets. The explicit `all` role composes every role in one process
 for local development.
 
+The infra worker's daily DNS audit reads the validated
+`packages/homelab/src/domain-registry.json` inventory in its `getDomains`
+Activity. Domains with `fastmailReady` are audited as mail domains; the others
+are audited as parked. The inventory ships in the worker image, and Activity
+results keep Workflow replay independent of later inventory changes.
+
 Temporal namespaces are environment-scoped: local servers use `dev`, Scout
 beta uses `beta`, and production plus shared control-plane jobs use `prod`.
 The shared cluster contains only the active `beta` and `prod` namespaces plus
 Temporal's internal `temporal-system` namespace. Unexpected workflow starts in
 any other namespace raise `TemporalUnexpectedNamespaceStartAttempted`.
 
-The central Scout worker also polls its unchanged `scout` queue in `beta` for
-the beta-owned Bryan Bucks analytics schedule; all other central queues are
-`prod` only.
+The Bryan Bucks analytics schedule runs in `prod`, where the central Workflow
+executor polls `monorepo-workflows`; its `scout` Activity calls the beta Scout
+data endpoint. The central Scout worker also polls the unchanged `scout` queue
+in `beta` to drain retained executions. The central Workflow and reports
+workers also poll `beta` for the explicit notification acceptance canary.
+Other central Activity queues are `prod` only. Schedule registration retires the old beta schedule without cancelling
+existing executions.
 
-| Role              | Queue or surface                                                                         | Activity concurrency |
-| ----------------- | ---------------------------------------------------------------------------------------- | -------------------: |
-| `control`         | schedules, HTTP APIs, `agent-chat-ingress`, `agent-chat-delivery`, `agent-chat-imessage` |          4 per queue |
-| `home`            | `home`                                                                                   |                    4 |
-| `reports`         | `reports`                                                                                |                    4 |
-| `infra`           | `infra`                                                                                  |                    1 |
-| `repo`            | `repo-automation`, `agent-chat-dispatch`, `agent-chat-receipts`                          |          1 per queue |
-| `scout`           | `scout`                                                                                  |                    1 |
-| `agent`           | `agent-task`                                                                             |                    1 |
-| `glitter-corpus`  | `glitter-corpus`                                                                         |                    1 |
-| `glitter-context` | `glitter-context`                                                                        |                    1 |
-| `maintenance`     | `maintenance`                                                                            |                    1 |
-| `workflows`       | `monorepo-workflows`                                                                     |                 none |
+| Role              | Queue or surface                                                                       |               Activity concurrency |
+| ----------------- | -------------------------------------------------------------------------------------- | ---------------------------------: |
+| `control`         | schedules, HTTP APIs, `agent-chat-ingress`, `agent-chat-delivery`, `agent-chat-photon` |                        4 per queue |
+| `home`            | `home`                                                                                 |                                  4 |
+| `reports`         | `reports`                                                                              |                                  4 |
+| `infra`           | `infra`, `mining-reset`; bounded Ops collection on `ops`                               | 1 on each legacy queue; 4 on `ops` |
+| `repo`            | `repo-automation`, `agent-chat-dispatch`, `agent-chat-receipts`                        |                        1 per queue |
+| `scout`           | `scout`                                                                                |                                  1 |
+| `agent`           | `agent-task`                                                                           |                                  1 |
+| `glitter-corpus`  | `glitter-corpus`                                                                       |                                  1 |
+| `glitter-context` | `glitter-context`                                                                      |                                  1 |
+| `maintenance`     | `maintenance`                                                                          |                                  1 |
+| `workflows`       | `monorepo-workflows`                                                                   |                               none |
 
 The production manifests land in layers. The gateway, Workflow worker, and
 domain Activity Workers deploy independently so each queue has its own
 credentials, concurrency, health, and metrics boundary.
+
+The infra process polls `ops` separately so every-five-minute snapshot fan-out
+can overlap four bounded reads while heavyweight infra automation stays serial.
+Ops queue routing is recorded with the `ops-isolated-activity-queue` Workflow
+patch. Histories created before that patch retain their `infra` Activity queue;
+the infra registry keeps the old Ops Activities available to drain them. The
+same worker credentials, pod limits, and metrics endpoint serve both queues.
+
+Woodpecker log retention uses the serial infra queue and a daily 04:45 Pacific
+Schedule with SKIP overlap, initially paused. The typed minimum retention is
+30 days and destructive execution defaults off. Exact candidates, protections,
+continuation cursors and deletion receipts remain in Workflow results; logs
+alone are deleted. See the [operator procedure](../docs/wiki/src/content/docs/how-to/retain-woodpecker-logs.md)
+for candidate rollout, dry-run review and activation.
 
 The agent worker keeps the Temporal poller at UID 0 and launches provider
 subprocesses at UID 1001. The owner firewall blocks provider access to Temporal.
@@ -55,6 +133,15 @@ clean up private provider-owned session files, and terminate detached
 provider-UID processes before that shared identity is reused.
 Provider subprocesses lose these capabilities when their UID changes, and
 `allowPrivilegeEscalation: false` prevents regaining them.
+
+The image starts the worker under Tini to reap orphaned provider and tool
+processes. The UID cleanup checks require those processes to disappear before
+another turn starts; unreaped zombies otherwise block the queue. Claude's
+required Linux sandbox dependencies, Bubblewrap and socat, ship in the image
+and are checked by the image smoke gate.
+Claude also requires a node and container policy that permit its sandbox's
+user namespaces. Installed binaries alone do not prove that the sandbox can
+start; verify a provider turn under the production subprocess identity.
 
 The shared agent runner keeps authentication separate from tool environments.
 API-key automation uses the Codex SDK. Subscription chats use Claude Agent
@@ -85,7 +172,10 @@ replays retained IDs listed in `TEMPORAL_REPLAY_WORKFLOW_IDS` against the
 candidate bundle, and runs an exact-version canary before opening a 10% ramp.
 Set `TEMPORAL_ADDRESS` to an
 operator-reachable endpoint; native calls use the existing `toolkit temporal`
-passthrough. The first ramp also requires `--stable-build-id <sha>` so an empty
+passthrough. Toolkit resolves the external API token through its credential
+broker and passes it only through the Temporal process environment. In-cluster
+calls to the namespace-local frontend skip that credential lookup. The first ramp also requires
+`--stable-build-id <sha>` so an empty
 deployment has a rollback target. `advance` checks candidate and stable poller
 history, Prometheus rule-evaluation health, and candidate Build ID Workflow
 failure counters across each ramp window. Alerts from other workers remain
@@ -99,6 +189,9 @@ ramp. After rollback and candidate-history drain, rerun `rollback` with no
 active ramp to reset the rejected candidate to the stable catalog value, then
 review and commit both the catalog and `scripts/pin-candidates-state.json`
 changes through the normal pull-request flow before the next candidate.
+The reset records the rejected release number in `withdrawnCandidates`.
+Published handoffs and pending pin branches cannot restore that candidate or an
+older one; a newer candidate can still be retained while its commit-back waits.
 If an operator host dies, use `inspect` before removing a stale lease: it is a
 read-only routing and lease query that remains usable when candidate health
 checks or alert windows are failing.
@@ -125,22 +218,48 @@ target, and `start --stable-build-id` establishes stable before sending 10% to
 candidate. The embedded poller remains only to drain old unversioned histories.
 Production remains embedded until beta acceptance completes.
 
-## BlueBubbles iMessage ingress
+## Photon iMessage ingress
 
-The control worker starts `blueBubblesIngressWorkflow` when both
-`BLUEBUBBLES_URL` and `BLUEBUBBLES_PASSWORD` bootstrap credentials are present.
-Missing both leaves the connector inactive; a partial pair fails startup.
-Behavior uses the typed `temporal-agent-chat-imessage-*` flags, not environment
-variables. Production defaults off with an empty sender allowlist.
+The control gateway mounts signed `POST /webhooks/photon` on the existing agent
+task API server. Bootstrap requires `SPECTRUM_PROJECT_ID`,
+`SPECTRUM_PROJECT_SECRET`, and `SPECTRUM_WEBHOOK_SECRET`. Missing all three
+leaves the route unavailable; a partial set fails startup. Behavior uses the
+typed `temporal-agent-chat-photon-enabled` and `temporal-agent-chat-photon-owners`
+flags. Both default to closed admission: disabled and no permitted senders.
 
-The durable cursor excludes historical messages. Disabled or unowned polling
-advances the ROWID watermark, so activation does not backfill the disabled period.
-It advances by Messages database ROWID only after each command settles,
-and survives worker restarts and Continue-As-New. Incoming commands are processed
-in ROWID order so chat selection cannot race a following message. BlueBubbles
-retains incoming messages while a provider turn runs; ingestion resumes afterward.
-Only exact allowlisted sender handles in direct conversations are accepted.
-Outgoing messages, groups, attachments without text, and reactions are ignored.
+Native Spectrum HMAC verification covers the original body bytes and permits
+five minutes of timestamp skew. The route awaits a completed Temporal Update
+before acknowledging receipt. It accepts only allowlisted inbound text direct
+messages. Conversation and command identities hash the project, space, and
+message IDs; webhook registration changes do not alter deduplication.
+
+Each conversation serializes commands behind its current selection and retains
+up to 50 pending commands, 100 recent fingerprints, and 500,000 bytes of state.
+Continue-As-New carries ordering and admission state after 100 settled commands.
+Late timestamps receive a resend response without running inference. Commands
+use the same syntax below; initial ordinary text requires an explicit `/new`.
+New chats snapshot the existing iMessage provider/model flags.
+
+Preparation and one-attempt reply delivery use `agent-chat-photon`; long
+provider and duplicate-command waits use `agent-chat-ingress`. A failed or
+ambiguous send leaves the checkpointed response in the command execution and
+never automatically repeats inference or delivery. The SDK uses server-marked
+retryable RPCs with its transport idempotency; the Workflow makes one send call.
+Durability begins after gateway receipt. Photon can exhaust its finite webhook
+retry window during an ingress outage, requiring the sender to resend.
+
+Inspect `photonConversationState` for pending commands and ordering. Gateway
+metrics `photon_webhook_total` and `photon_delivery_total` expose bounded outcome
+labels without message bodies. Disabling admission lets accepted work settle.
+BlueBubbles has no bootstrap, credentials, Activity poller, or admission flags.
+Its Workflow definitions remain only for replay of closed histories.
+
+The pinned Spectrum 12.10.1 packages have declaration-only Bun patches. Core's
+optional generic fields admit `undefined` with `exactOptionalPropertyTypes`;
+iMessage derives its definition from its config return type instead of an
+incompatible overloaded conditional type. Runtime SDK code is unchanged.
+
+## iMessage commands
 
 | Input                          | Operation                                                 |
 | ------------------------------ | --------------------------------------------------------- |
@@ -152,13 +271,91 @@ Outgoing messages, groups, attachments without text, and reactions are ignored.
 | Ordinary text                  | Continue the selected chat                                |
 | `/help`                        | Show command syntax and prompt limits                     |
 
-Prompts are limited to 4,000 characters. Poll responses are bounded to 2 MiB,
-999 messages, and 50 durable commands per batch. An oversized backlog fails
-without advancing the cursor. Polling retries connection failures with durable
-backoff. Replies use AppleScript, so the BlueBubbles Private API is unnecessary.
-Delivery has one attempt: an ambiguous send fails its command Workflow without
-repeating inference or sending another reply automatically. The checkpointed
-response remains in Temporal for operator inspection.
+Prompts are limited to 4,000 characters. New chats snapshot
+`temporal-agent-chat-imessage-claude-model` or
+`temporal-agent-chat-imessage-codex-model` according to their provider.
+
+## Report mail configuration
+
+The weekly dependency report resolves first-party deployment aliases to their
+actual GHCR image repository and reads each immutable pinned digest. Internal
+promotion evidence compares the application's baked `GIT_SHA` against GitHub
+source commits, separately from upstream release notes. Images can inherit a
+base-image revision label, so that label alone is insufficient first-party
+build evidence. Missing build identity or upstream notes remains an explicit
+evidence gap; promotion PR prose is not counted as build-change evidence.
+
+The homelab audit preserves informational and suppressed alerts, merges matching
+Prometheus and ledger conditions with both evidence references, and distinguishes
+recovered failures from failures without proven recovery. A long-running Workflow
+needs a stale pending task or repeated Workflow-task failures to become a stall;
+quiet waits and recent Activity heartbeats remain informational.
+
+Ops digest Activity results retain the dashboard's `periodKey`, `status`
+(`sent` or `skipped`), and `duplicate` outcome in Workflow history and results.
+`sent` means the dashboard's mailer accepted the message; it does not establish
+inbox delivery. Histories recorded by older workers contain only `kind` and
+remain replay-compatible; no additional Workflow command is introduced.
+
+The infra worker persists each successful R2 orphan observation in the
+`temporal/velero-r2-orphan-audit-state` ConfigMap before publishing
+its gauges. Startup restores the original observation time and values; other
+roles publish no initialized zero inventory. Conditional writes prevent an
+older concurrent scan from replacing a newer observation. The R2 audit
+credential remains read-only. Missing state or an observation older than
+36 hours is unknown and raises the audit freshness alert.
+
+The reports worker resolves `temporal-email-recipient` and
+`temporal-email-sender` through typed configuration for each delivery activity.
+Defaults preserve the existing homelab routing during a flag-provider outage.
+Postal credentials stay in 1Password; service endpoints and host routing are
+reviewed homelab bootstrap settings. Workflow histories contain no credentials.
+
+`temporal-daily-report-notifications-enabled` resolves per Activity and defaults
+off in production, with beta targeting declared for acceptance. When enabled,
+the homelab audit, CI I/O telemetry, and Scout queue-window daily schedules,
+plus the explicit beta notification canary, use changed-condition mail.
+Each run keeps its full immutable report under
+`reports/observations/<namespace>/<type>/<schedule>/`; a baseline, changed
+actionable condition, or recovery sends mail. An unchanged actionable condition
+sends a reminder after seven days, while unchanged clear reports stay silent.
+Known finding identities ignore changing observation counts; unknown findings
+retain their text so a new failure cannot be hidden. Suppressed, recovered, and
+observing findings remain in the archive without creating active conditions.
+
+Conditional family claims serialize sends and skip decisions across runs.
+A takeover settles the prior pending decision before evaluating the next report;
+pending sends use their existing delivery lease and accepted receipt. The latest
+completed observation also advances on a skip, so a delayed older condition
+cannot replace a newer quiet recovery. Report delivery proxies use the shared
+lease-aware retry policy so an immediate failure cannot exhaust retries
+inside the claim's takeover window. An exhausted delivery fails the Workflow
+without creating a synthetic collection-failure report; actual collector
+failures retain their failure report. A patch marker preserves older recorded
+failure paths during replay. Skips have explicit records and no Postal
+message ID or acceptance time. The freshness monitor counts completed skips
+separately from mail acceptance, using the report's original observation time.
+Each family has a conditional latest-heartbeat index beside its immutable
+receipt or skip prefix. Delivery retries repair a missing index without sending
+again, and older acceptances cannot replace newer ones. The monitor validates
+the indexed original record rather than trusting S3 modification time. Existing
+history migrates in pages of at most 25 records per family per scan; until it
+finishes, an otherwise missing or stale result is `indexing`, while a validated
+recent record can already establish freshness. After migration, each scan reads
+only the index and its original record for each family.
+Manual reports, dependency checkpoints, digests, other canaries, and other schedules
+retain their existing delivery behavior. Postal acceptance still does not
+establish inbox delivery.
+
+`daily-notification-policy-canary` is declared only in `beta` and starts paused.
+After promoting a central Workflow candidate containing `runDailyNotificationCanary`
+and deploying the reports worker with beta polling, trigger the paused schedule
+twice with its declared `attention` input: the first run must have a real Postal
+receipt and the second an explicit unchanged skip. Start the same Workflow in
+`beta` with `condition: "clear"` to verify recovery mail. Inspect the immutable
+reports, family state, skip record, and actual acceptance receipts; a completed
+Workflow alone does not prove delivery. Keep recurring delivery paused during
+this rehearsal. The Workflow rejects every namespace other than `beta`.
 
 ## Documentation
 

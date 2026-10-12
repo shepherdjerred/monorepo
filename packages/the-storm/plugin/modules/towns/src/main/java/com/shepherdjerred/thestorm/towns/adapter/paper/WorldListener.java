@@ -18,12 +18,17 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockDispenseEvent;
+import org.bukkit.event.block.BlockFadeEvent;
 import org.bukkit.event.block.BlockFertilizeEvent;
+import org.bukkit.event.block.BlockFormEvent;
 import org.bukkit.event.block.BlockFromToEvent;
+import org.bukkit.event.block.BlockGrowEvent;
 import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPistonRetractEvent;
 import org.bukkit.event.block.BlockRedstoneEvent;
 import org.bukkit.event.block.BlockSpreadEvent;
+import org.bukkit.event.block.LeavesDecayEvent;
+import org.bukkit.event.block.MoistureChangeEvent;
 import org.bukkit.event.block.SpongeAbsorbEvent;
 import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.world.PortalCreateEvent;
@@ -53,6 +58,51 @@ final class WorldListener implements Listener {
     if (!guard.flows(WorldEffect.FLUID_FLOW, event.getBlock(), event.getToBlock())) {
       event.setCancelled(true);
     }
+  }
+
+  @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+  void onDecay(LeavesDecayEvent event) {
+    event.setCancelled(!naturalChange(event.getBlock()));
+  }
+
+  @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+  void onFade(BlockFadeEvent event) {
+    event.setCancelled(!naturalChange(event.getBlock()));
+  }
+
+  @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+  void onForm(BlockFormEvent event) {
+    event.setCancelled(!naturalChange(event.getBlock()));
+  }
+
+  @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+  void onGrowth(BlockGrowEvent event) {
+    var block = event.getBlock();
+    var effect =
+        block.getBlockData() instanceof org.bukkit.block.data.Ageable
+                && (org.bukkit.Tag.CROPS.isTagged(block.getType())
+                    || block.getType() == Material.NETHER_WART
+                    || block.getType() == Material.COCOA
+                    || block.getType() == Material.SWEET_BERRY_BUSH)
+                && event.getNewState().getType() == block.getType()
+            ? WorldEffect.CROP_GROWTH
+            : WorldEffect.NATURAL_CHANGE;
+    event.setCancelled(!guard.flows(effect, block, block));
+  }
+
+  @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+  void onMoisture(MoistureChangeEvent event) {
+    var block = event.getBlock();
+    var effect =
+        block.getType() == Material.FARMLAND && event.getNewState().getType() == Material.FARMLAND
+            ? WorldEffect.SOIL_MOISTURE
+            : WorldEffect.NATURAL_CHANGE;
+    event.setCancelled(!guard.flows(effect, block, block));
+  }
+
+  private boolean naturalChange(Block block) {
+    var land = guard.land(block);
+    return Guard.flows(WorldEffect.NATURAL_CHANGE, land, land);
   }
 
   /**
@@ -259,7 +309,12 @@ final class WorldListener implements Listener {
 
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
   void onSpread(BlockSpreadEvent event) {
-    var effect = spreadOf(event.getNewState().getType());
+    var effect =
+        event.getSource().getType() == Material.GRASS_BLOCK
+                && event.getBlock().getType() == Material.DIRT
+                && event.getNewState().getType() == Material.GRASS_BLOCK
+            ? WorldEffect.GRASS_REGROWTH
+            : spreadOf(event.getNewState().getType());
     if (!guard.flows(effect, event.getSource(), event.getBlock())) {
       event.setCancelled(true);
     }

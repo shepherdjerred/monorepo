@@ -5,6 +5,7 @@ import {
 } from "#lib/worker-deployment-rollout.ts";
 import type { RolloutCommandRunner } from "#lib/worker-deployment-proofs.ts";
 import { resolveWorkerDeploymentRolloutTarget } from "#lib/worker-deployment-target.ts";
+import { resolveOperatorTemporalApiKey } from "./temporal-operator-credentials.ts";
 import { parseTemporalNamespace } from "#shared/infra/temporal-namespace.ts";
 import {
   parseFlagArguments,
@@ -70,6 +71,7 @@ async function main(): Promise<void> {
   const address = requiredEnvironment(Bun.env, "TEMPORAL_ADDRESS");
   const tls = TemporalTlsSchema.parse(Bun.env["TEMPORAL_TLS"]) === "true";
   const target = rolloutTarget(flags, address);
+  await resolveOperatorTemporalApiKey();
   const stableBuildId = flags.get("--stable-build-id");
   const status = await executeWorkerDeploymentRollout(
     {

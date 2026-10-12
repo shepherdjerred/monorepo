@@ -1,0 +1,84 @@
+id: tishshaiz-39
+name: Tishshaiz_39
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NTc0OTE4NCwKICAicHJvZmlsZUlkIiA6ICJmNjhhMmE2NTNkNjU0NTQ1ODE0ZDg0OWI5NmU0MDllOSIsCiAgInByb2ZpbGVOYW1lIiA6ICJMdWdhdHR1IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2RlOGFkMmRmODJjNmYyZWM5NTNhOGMyYTZiNDJmMDdjOGRhZDk4ZTVlZGY1YjdjNDE2MWYwODQ0YjAzYTk1YTEiCiAgICB9CiAgfQp9
+  signature: "EMxG21sj+y4zNJnfzOlDZ+qMs/AmAZkL/ziA20EQqrOatfyK525PT7IrVFso06RIf6EIq10puViurTgeqU3OchmfTBDsVWw7uKkkEZiLPkvm+L57s7p3m53NYvoWh2B1CXhu8lU+FzDQ61nwEngyuObrPHqrnbyA8jPLznG5UFWIKiYWtIBTNA+cZxaJrmJdTK1GlL30002Dkp31/2bzsw9WKuVmnizMGWeeQhw43UEO9kz9D8vVlMPTdwsXBOjCk5wd0Z1ynNx+QJ1yFFMNPUFjKOBkVTu7dP1wrm7iSbUEC4e8qf4KCp6xekNmy1qP+nuvNoi5ool8sS5vT6OXMBmu3vbYnNWaBP1AQax4nx4k0W0SjXrj/00zKtUPAFwYsGDY/k09/1iegXuYguAnSDlT613xNKzuRbpVVfshvTpu6ToYqw6LvX2cjnv5dtenrIhkXUoH1H+UAcpVgZzkpVMNnMFz5nwGBX1zUd+9htNSgDVueQTFzqbsUNd6EA8iwbjBkzKde/aU6wu5xSf7GL2rE031PJJdY5v2xacukJqiTEure8B+yB2f/6Nbksa2j6wv4cX+Dq0UibAimkCWKr/sUyZ+23FU23cElT+eJhisirZfypIaatayfN8QF0vMARQzaGK7D8yopnXOMnHzjUCPjSWHqQvavWh3epppif8="
+skill: 0.353
+archetype: rusher
+leverOffsets:
+  reactionMs: 0.14
+  cps: 1.06
+  predictionQuality: 0.66
+  decisionTemperature: 0.17
+  awarenessRadius: -0.55
+  coordination: 0.49
+  aggression: 1.43
+kits:
+  trooper: 0.94
+  longbow: 0.14
+  shortbow: 0.47
+  rewind: 0.31
+roles:
+  plant: 0.8
+  escort: 0.43
+  rotate: 0.28
+  hunt: 0.65
+style:
+  aggression: 1
+  patience: 0.16
+  teamplay: 0.36
+  risk: 0.64
+voice:
+  tone:
+    - scrappy
+    - loud
+    - underdog
+  verbosity: chatty
+  style: Scrappy underdog, short shouty bursts, always 'one more', never gives up
+lines:
+  greet:
+    - "Let's GO, {team}!"
+    - I'm small but I'm fast!
+    - First in, first in!
+  onKill:
+    - Got one! GOT ONE!
+    - "{victim}, the little guy wins!"
+    - Scrappy beats shiny!
+  onDeath:
+    - "{killer}, one more round!"
+    - I'll be back up in a sec!
+    - Worth it. I think.
+  onPlant:
+    - "{bomb} lit! I did it!"
+    - Fuse in! Run!
+  onDefuse:
+    - "{bomb} cold! Woo!"
+    - Got there, barely!
+  onWin:
+    - UNDERDOGS!
+    - "We did it, {team}!"
+  onLoss:
+    - One more!
+    - Running it back!
+  onLastAlive:
+    - Still swinging!
+    - Not out yet!
+  taunt:
+    - Can't catch me!
+    - Again! Again!
+    - I'm coming, ready or not!
+  lobby:
+    - First in! Again! Maybe!
+    - One more match, one more rush!
+    - Trooper, full speed, no brakes!
+    - My twin better be on the other team!
+    - "{team}, we never give up! Ever!"
+quirks:
+  - bunny_hops
+  - blames_lag
+rivals:
+  - pastkroxpro
+  - roguethimkrist
+bio: Joined every lobby in 2014 shouting 'first in' and was usually first out. Thinks PastkroxPro is its long-lost twin and fights it to prove who rushes harder.
+batch: 2
+retired: false

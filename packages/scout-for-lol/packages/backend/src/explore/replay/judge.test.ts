@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import { challengeFacts, hallOfFameFacts } from "#src/explore/product-facts.ts";
 import { describe, expect, test } from "vitest";
 import {
@@ -364,6 +365,27 @@ describe("the judge prompt", () => {
 });
 
 describe("judgeEvidenceFromTrace", () => {
+  test("uses captured complete analysis output when the shared trace omits it", () => {
+    const result = { longest: 17, explanation: "x".repeat(900) };
+    const evidence = judgeEvidenceFromTrace(
+      [
+        {
+          toolCallId: "analysis-1",
+          toolName: "analyze_javascript",
+          status: "succeeded",
+          rawOutput: {
+            kind: "omitted",
+            reason: "payload_limit",
+            byteLength: 1200,
+          },
+        },
+      ],
+      [{ toolCallId: "analysis-1", direction: "output", value: result }],
+    );
+    expect(evidence.toolResults).toEqual([
+      { toolName: "analyze_javascript", summary: JSON.stringify(result) },
+    ]);
+  });
   test("carries every successful query, not just the last", () => {
     // One case ran four queries returning 25, 1, 5 and 1 rows; showing only one
     // made the judge say "the shown query returns only one role" about a figure
@@ -419,6 +441,51 @@ describe("judgeEvidenceFromTrace", () => {
     expect(evidence.queries).toEqual([]);
   });
 
+  test("includes captured query rows so the judge can verify named champions", () => {
+    const evidence = judgeEvidenceFromTrace(
+      [
+        {
+          toolCallId: "review-query",
+          toolName: "run_report_query",
+          status: "succeeded",
+          details: {
+            kind: "execution",
+            queryText:
+              "SELECT MAX(champion) AS champion FROM match_participants",
+            rowsReturned: 1,
+          },
+        },
+      ],
+      [
+        {
+          toolCallId: "other-query",
+          direction: "output",
+          value: { champion: "Tristana" },
+        },
+        {
+          toolCallId: "review-query",
+          direction: "output",
+          value: {
+            preview: {
+              rows: [
+                {
+                  champion: "Ezreal",
+                  padding: "x".repeat(600),
+                  kills: 11,
+                  deaths: 7,
+                  assists: 8,
+                },
+              ],
+            },
+          },
+        },
+      ],
+    );
+    expect(evidence.toolResults[0]?.summary).toContain("Ezreal");
+    expect(evidence.toolResults[0]?.summary).toContain('"assists":8');
+    expect(evidence.toolResults[0]?.summary).not.toContain("Tristana");
+  });
+
   test("surfaces what a feature tool returned", () => {
     // Bucks, dares and MVP answers never touch ScoutQL, so without this the
     // judge sees no evidence and calls them unsupported.
@@ -443,6 +510,37 @@ describe("judgeEvidenceFromTrace", () => {
       },
     ]);
     expect(evidence.toolResults[0]?.summary.length).toBeLessThanOrEqual(500);
+  });
+
+  test("grades the complete stored calculation behind a named analysis result", () => {
+    const evidence = judgeEvidenceFromTrace(
+      [
+        {
+          toolName: "analyze_javascript",
+          toolCallId: "analysis-1",
+          status: "succeeded",
+        },
+      ],
+      [
+        {
+          toolCallId: "other-call",
+          direction: "dataset",
+          value: { killer: "wrong identity" },
+        },
+        {
+          toolCallId: "analysis-1",
+          direction: "output",
+          value: { ok: true, dataset: "analysis_result_123" },
+        },
+        {
+          toolCallId: "analysis-1",
+          direction: "dataset",
+          value: { padding: "x".repeat(9000), killer: "Locke", deaths: 7 },
+        },
+      ],
+    );
+    expect(evidence.toolResults[0]?.summary).toContain('"killer":"Locke"');
+    expect(evidence.toolResults[0]?.summary).not.toContain("wrong identity");
   });
 
   test("skips an omitted payload rather than inventing one", () => {
@@ -516,7 +614,7 @@ describe("the judge stays offline", () => {
   // one helper they share out of the runner.
   test("imports nothing that pulls in backend configuration", async () => {
     const source = await Bun.file(
-      new URL("judge.ts", import.meta.url).pathname,
+      fileURLToPath(new URL("judge.ts", import.meta.url)),
     ).text();
     const imports = [...source.matchAll(/from "([^"]+)"/g)].map(
       (entry) => entry[1] ?? "",

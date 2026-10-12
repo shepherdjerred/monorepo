@@ -1,4 +1,8 @@
 import {
+  DiscordGuildIdSchema,
+  type DiscordGuildId,
+} from "@scout-for-lol/domain/identity/discord.ts";
+import {
   afterAll,
   afterEach,
   beforeEach,
@@ -6,11 +10,11 @@ import {
   expect,
   test,
 } from "vitest";
-import type {
-  InteractionEditReplyOptions,
-  InteractionReplyOptions,
+import {
+  type InteractionEditReplyOptions,
+  type InteractionReplyOptions,
+  MessageFlags,
 } from "discord.js";
-import { MessageFlags } from "discord.js";
 import { resetConfigurationForTests } from "#src/configuration.ts";
 import {
   handleScoutPublishButton,
@@ -102,7 +106,7 @@ async function savedAnswer(answerText = "Ahri wins most often.") {
 function fakeInteraction(input: {
   customId: string;
   userId?: string;
-  guildId?: string | null;
+  guildId?: DiscordGuildId | null;
   onFollowUp?: (options: InteractionReplyOptions) => Promise<unknown>;
 }) {
   const calls: string[] = [];
@@ -171,7 +175,10 @@ describe("Scout public publishing", () => {
 
   test.each([
     { kind: "dm", guildId: null },
-    { kind: "wrong guild", guildId: "100000000000000093" },
+    {
+      kind: "wrong guild",
+      guildId: DiscordGuildIdSchema.parse("100000000000000093"),
+    },
   ])("rejects a $kind click privately", async ({ guildId }) => {
     const saved = await savedAnswer();
     const fake = fakeInteraction({

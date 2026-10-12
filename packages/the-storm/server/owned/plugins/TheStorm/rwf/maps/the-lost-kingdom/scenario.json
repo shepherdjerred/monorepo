@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "kind": "rwf-map-scenario",
+  "id": "the-lost-kingdom-trooper-duel-v1",
+  "map": "the-lost-kingdom",
+  "mapSha256": "9595ebb5b8b9ab3d5b32d3e722beb7f4b3959174fd8ca08af71536fb64d78a7a",
+  "world": "minecraft:rwf",
+  "region": {
+    "min": {
+      "x": 2048,
+      "y": 1,
+      "z": 5120
+    },
+    "max": {
+      "x": 2204,
+      "y": 216,
+      "z": 5280
+    }
+  },
+  "sourceTeams": ["PURPLE", "BLUE", "GREEN", "RED"],
+  "spawnPolicy": "source",
+  "spawns": [
+    {
+      "team": "red",
+      "sourceTeam": "RED",
+      "position": [2122.5, 4, 5131.5],
+      "yaw": 356.6822204589844,
+      "pitch": 0
+    },
+    {
+      "team": "blue",
+      "sourceTeam": "BLUE",
+      "position": [2122.5, 4, 5260.5],
+      "yaw": 183.81407165527344,
+      "pitch": 0
+    }
+  ]
+}

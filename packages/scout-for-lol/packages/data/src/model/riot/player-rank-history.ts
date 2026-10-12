@@ -1,3 +1,4 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import { z } from "zod";
 import {
   EARLIER_RANKED_SPLIT_ID,
@@ -60,12 +61,12 @@ export const PlayerRankHistorySchema = z.strictObject({
 export type PlayerRankHistory = z.infer<typeof PlayerRankHistorySchema>;
 
 export type RankHistoryAccount = {
-  puuid: string;
+  puuid: LeaguePuuid;
   label: string;
 };
 
 export type RankHistoryObservation = {
-  puuid: string;
+  puuid: LeaguePuuid;
   queue: RankedQueueType;
   at: Date;
   rank: Rank;

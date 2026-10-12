@@ -1,7 +1,8 @@
 package com.shepherdjerred.thestorm.npcs.domain.config;
 
 import com.shepherdjerred.thestorm.npcs.domain.movement.MovementSettings;
-import java.util.regex.Pattern;
+import java.util.HashSet;
+import java.util.List;
 
 /**
  * {@code plugins/TheStorm/npcs.yml}, owned by the repository. The NPCs themselves are content under
@@ -9,10 +10,11 @@ import java.util.regex.Pattern;
  *
  * @param movement how NPCs walk
  * @param animation which NPCs move and how often they think
- * @param navigator the hidden mob whose pathfinder plans NPC walks
+ * @param navigator Citizens path range
  * @param markers the quest markers above NPCs
  * @param dialog conversation settings
- * @param guard how guards detect and repel hostiles near their posts
+ * @param guard how NPCs detect threats and guards respond
+ * @param warningPhrases shuffled warnings for the first two damaging player hits
  */
 public record NpcsConfig(
     MovementSettings movement,
@@ -20,12 +22,25 @@ public record NpcsConfig(
     Navigator navigator,
     Markers markers,
     Dialog dialog,
-    Guard guard) {
+    Guard guard,
+    List<String> warningPhrases) {
 
-  /** Limits pursuit and attacks to a small area around a guard's post. */
+  public NpcsConfig {
+    warningPhrases = List.copyOf(warningPhrases);
+    if (warningPhrases.size() < 20
+        || warningPhrases.size() > 30
+        || new HashSet<>(warningPhrases).size() != warningPhrases.size()
+        || warningPhrases.stream().anyMatch(phrase -> phrase.isBlank() || phrase.length() > 160)) {
+      throw new IllegalArgumentException(
+          "warningPhrases must contain 20..30 distinct short phrases");
+    }
+  }
+
+  /** Detection follows each NPC; responding guards pursue within an incident's bounded area. */
   public record Guard(
       double detectionRadius,
-      double homeRadius,
+      double responseRadius,
+      double pursuitRadius,
       double attackReach,
       double damage,
       int cooldownTicks) {
@@ -34,8 +49,11 @@ public record NpcsConfig(
       if (!(detectionRadius >= 2 && detectionRadius <= 32)) {
         throw new IllegalArgumentException("guard detectionRadius must be 2..32");
       }
-      if (!(homeRadius >= detectionRadius && homeRadius <= 48)) {
-        throw new IllegalArgumentException("guard homeRadius must be detectionRadius..48");
+      if (!(responseRadius >= detectionRadius && responseRadius <= 128)) {
+        throw new IllegalArgumentException("guard responseRadius must be detectionRadius..128");
+      }
+      if (!(pursuitRadius >= responseRadius && pursuitRadius <= 128)) {
+        throw new IllegalArgumentException("guard pursuitRadius must be responseRadius..128");
       }
       if (!(attackReach >= 1 && attackReach <= 4)) {
         throw new IllegalArgumentException("guard attackReach must be 1..4");
@@ -50,8 +68,8 @@ public record NpcsConfig(
   }
 
   /**
-   * Which NPCs move. Only NPCs with a player within {@code playerRadius} blocks walk or turn; the
-   * rest stand still, which keeps the per-tick cost bounded by what players can see.
+   * Routine animation pauses without a player within {@code playerRadius}; threat reactions
+   * continue in loaded chunks regardless of nearby players.
    *
    * @param playerRadius how close a player must be for an NPC to move
    * @param lookRadius how close a player must be for a resting NPC to turn and look at them
@@ -74,21 +92,13 @@ public record NpcsConfig(
   }
 
   /**
-   * The navigator: an invisible, silent, invulnerable mob with no goals, spawned only to ask its
-   * pathfinder for a path. It must be a passive mob so it exists in Peaceful difficulty.
+   * Citizens navigation limits.
    *
-   * @param entity the entity type key, such as {@code minecraft:llama}; about player-sized, so its
-   *     paths fit a Mannequin
    * @param followRange the longest path it will plan, in blocks; longer walks re-plan
    */
-  public record Navigator(String entity, double followRange) {
-
-    private static final Pattern KEY = Pattern.compile("[a-z0-9_.-]+:[a-z0-9_./-]+");
+  public record Navigator(double followRange) {
 
     public Navigator {
-      if (!KEY.matcher(entity).matches()) {
-        throw new IllegalArgumentException("entity must be a key like minecraft:llama: " + entity);
-      }
       if (!(followRange >= 16 && followRange <= 128)) {
         throw new IllegalArgumentException("followRange must be 16..128: " + followRange);
       }

@@ -1,17 +1,21 @@
+import {
+  type DiscordMessageId,
+  DiscordMessageIdSchema,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import {
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
   LeaguePuuidSchema,
-  MatchIdSchema,
+  RiotMatchIdSchema,
   resolveQueueTypeFromGame,
   RiotTeamIdSchema,
   type DiscordAccountId,
   type DiscordChannelId,
   type DiscordGuildId,
   type LeaguePuuid,
-  type MatchId,
+  type RiotMatchId,
   type RawMatch,
   type RiotTeamId,
 } from "@scout-for-lol/data";
@@ -30,7 +34,7 @@ import {
 } from "#src/mvp-votes/roster.ts";
 
 export type StoredMatchMvpVote = {
-  matchId: MatchId;
+  matchId: RiotMatchId;
   serverId: DiscordGuildId;
   voterDiscordId: DiscordAccountId;
   category: MatchMvpCategory;
@@ -43,7 +47,7 @@ export type StoredMatchMvpVote = {
 };
 
 const StoredMatchMvpVoteRowSchema = z.object({
-  matchId: MatchIdSchema,
+  matchId: RiotMatchIdSchema,
   serverId: DiscordGuildIdSchema,
   voterDiscordId: DiscordAccountIdSchema,
   category: MatchMvpCategorySchema,
@@ -67,7 +71,7 @@ function isUniqueConstraintError(error: unknown): boolean {
 }
 
 function storedRosterMatching(
-  matchId: MatchId,
+  matchId: RiotMatchId,
   storedJson: unknown,
   roster: MatchMvpRoster,
 ): MatchMvpRoster {
@@ -86,7 +90,7 @@ type ContestQueryColumns = {
 };
 
 async function backfillContestQueryColumns(
-  matchId: MatchId,
+  matchId: RiotMatchId,
   stored: ContestQueryColumns,
   next: { gameCreationAt: Date; queueType: string | null },
   prismaClient: ExtendedPrismaClient,
@@ -107,7 +111,7 @@ export async function ensureMatchMvpContest(
   match: RawMatch,
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<MatchMvpRoster> {
-  const matchId = MatchIdSchema.parse(match.metadata.matchId);
+  const matchId = match.metadata.matchId;
   const roster = freezeMatchMvpRoster(match);
   const gameCreationAt = new Date(match.info.gameCreation);
   const queueType = resolveQueueTypeFromGame(
@@ -166,7 +170,7 @@ export async function ensureMatchMvpContest(
 }
 
 export async function loadMatchMvpRoster(
-  matchId: MatchId,
+  matchId: RiotMatchId,
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<MatchMvpRoster | undefined> {
   const row = await prismaClient.matchMvpContest.findUnique({
@@ -180,7 +184,7 @@ const ReportMessageIdsSchema = z.record(z.string(), z.string().min(1));
 
 export type MatchMvpReportRef = {
   channelId: DiscordChannelId;
-  messageId: string;
+  messageId: DiscordMessageId;
 };
 
 function parseReportMessageIds(value: unknown): Record<string, string> {
@@ -188,12 +192,12 @@ function parseReportMessageIds(value: unknown): Record<string, string> {
 }
 
 /**
- * Persist delivered report message IDs on the contest so tally refresh
- * still has a target after ActiveGame rows expire. No-op when this match has
- * no contest (no vote furniture).
+ * Persist delivered report message IDs on the contest, the durable
+ * channel-to-message map tally refresh edits through. No-op when this match
+ * has no contest (no vote furniture).
  */
 export async function recordMatchMvpReportRefs(
-  matchId: MatchId,
+  matchId: RiotMatchId,
   messageIds: ReadonlyMap<string, string>,
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<void> {
@@ -244,7 +248,7 @@ export async function recordMatchMvpReportRefs(
 }
 
 export async function listMatchMvpReportRefs(
-  matchId: MatchId,
+  matchId: RiotMatchId,
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<MatchMvpReportRef[]> {
   const row = await prismaClient.matchMvpContest.findUnique({
@@ -257,14 +261,80 @@ export async function listMatchMvpReportRefs(
   return Object.entries(parseReportMessageIds(row.reportMessageIds)).map(
     ([channelId, messageId]) => ({
       channelId: DiscordChannelIdSchema.parse(channelId),
-      messageId,
+      messageId: DiscordMessageIdSchema.parse(messageId),
     }),
+  );
+}
+
+/** Keep guild ownership even when Discord can no longer resolve the channel. */
+export async function rememberMatchMvpReportTarget(
+  input: MatchMvpReportRef & {
+    matchId: RiotMatchId;
+    serverId: DiscordGuildId;
+  },
+  prismaClient: ExtendedPrismaClient = prisma,
+): Promise<void> {
+  await prismaClient.$transaction(async (tx) => {
+    const created = await tx.matchMvpReportTarget.createMany({
+      data: [input],
+      skipDuplicates: true,
+    });
+    const standing = await tx.matchMvpReportTarget.findUnique({
+      where: {
+        matchId_channelId_messageId: {
+          matchId: input.matchId,
+          channelId: input.channelId,
+          messageId: input.messageId,
+        },
+      },
+      select: { serverId: true },
+    });
+    if (standing?.serverId !== input.serverId) {
+      throw new Error(
+        `MVP report target ${input.channelId} for ${input.matchId} has conflicting guild ownership`,
+      );
+    }
+    if (created.count > 0) {
+      // A legacy request can close when no pre-upgrade guild evidence exists.
+      // The first owned target is new evidence even if the contest already
+      // held this exact channel/message ref, so reopen it in the same commit.
+      await tx.matchMvpTallyRefresh.updateMany({
+        where: {
+          matchId: input.matchId,
+          serverId: input.serverId,
+          pending: false,
+          lastErrorCode: "legacy-target-ownership-unknown",
+        },
+        data: {
+          pending: true,
+          nextAttemptAt: new Date(),
+          requeueGeneration: { increment: 1 },
+          targetProgress: {},
+        },
+      });
+    }
+  });
+}
+
+/** A vote button supplies the report's guild before a later REST lookup can fail. */
+export async function recordMatchMvpOwnedReportRef(
+  input: MatchMvpReportRef & {
+    matchId: RiotMatchId;
+    serverId: DiscordGuildId;
+  },
+  prismaClient: ExtendedPrismaClient = prisma,
+): Promise<void> {
+  await rememberMatchMvpReportTarget(input, prismaClient);
+  await recordMatchMvpReportRefs(
+    input.matchId,
+    new Map([[input.channelId, input.messageId]]),
+    prismaClient,
   );
 }
 
 export async function upsertMatchMvpVote(
   input: {
-    matchId: MatchId;
+    matchId: RiotMatchId;
     serverId: DiscordGuildId;
     voterDiscordId: DiscordAccountId;
     category: MatchMvpCategory;
@@ -360,7 +430,7 @@ export function parseJustification(
 
 export async function setMatchMvpJustification(
   input: {
-    matchId: MatchId;
+    matchId: RiotMatchId;
     serverId: DiscordGuildId;
     voterDiscordId: DiscordAccountId;
     category: MatchMvpCategory;
@@ -383,7 +453,7 @@ export async function setMatchMvpJustification(
 }
 
 export async function listMatchMvpVotes(
-  input: { matchId: MatchId; serverId: DiscordGuildId },
+  input: { matchId: RiotMatchId; serverId: DiscordGuildId },
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<StoredMatchMvpVote[]> {
   const rows = await prismaClient.matchMvpVote.findMany({

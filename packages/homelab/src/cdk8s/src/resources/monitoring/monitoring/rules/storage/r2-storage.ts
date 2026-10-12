@@ -61,6 +61,20 @@ export function getR2StorageRuleGroups(): PrometheusRuleSpecGroups[] {
       name: "velero-r2-orphans",
       rules: [
         {
+          alert: "VeleroZfsBackupChainIncomplete",
+          annotations: {
+            summary:
+              "Retained offsite ZFS recovery points have missing ancestors",
+            message:
+              "A completed Backup CR does not establish recoverability. Inspect stream ancestry, seed full backups and prove isolated recovery before any orphan cleanup.",
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            'max by (bucket) (velero_r2_incomplete_chain_roots{container="temporal-infra-worker"} and on (namespace,pod,bucket) (velero_r2_audit_observation_timestamp_seconds{container="temporal-infra-worker"} == on (bucket) group_left max by (bucket) (velero_r2_audit_observation_timestamp_seconds{container="temporal-infra-worker"}))) > 0',
+          ),
+          for: "5m",
+          labels: { severity: "critical" },
+        },
+        {
           alert: "VeleroR2OrphanPrefixes",
           annotations: {
             summary: "Velero orphan R2 backup prefixes detected",
@@ -69,9 +83,9 @@ export function getR2StorageRuleGroups(): PrometheusRuleSpecGroups[] {
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "velero_orphan_r2_prefixes_total > 0",
+            'max by (bucket) (velero_orphan_r2_prefixes_total{container="temporal-infra-worker"} and on (namespace,pod,bucket) (velero_r2_audit_observation_timestamp_seconds{container="temporal-infra-worker"} == on (bucket) group_left max by (bucket) (velero_r2_audit_observation_timestamp_seconds{container="temporal-infra-worker"}))) > 0',
           ),
-          for: "24h",
+          for: "15m",
           labels: {
             severity: "warning",
           },
@@ -87,9 +101,9 @@ export function getR2StorageRuleGroups(): PrometheusRuleSpecGroups[] {
           // 50 GiB ceiling — under two days of accumulation at the observed
           // September 2026 rate (~30 GiB/day with zero reclamation).
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "velero_orphan_r2_bytes_total > 50 * 1024 * 1024 * 1024",
+            'max by (bucket) (velero_orphan_r2_bytes_total{container="temporal-infra-worker"} and on (namespace,pod,bucket) (velero_r2_audit_observation_timestamp_seconds{container="temporal-infra-worker"} == on (bucket) group_left max by (bucket) (velero_r2_audit_observation_timestamp_seconds{container="temporal-infra-worker"}))) > 50 * 1024 * 1024 * 1024',
           ),
-          for: "24h",
+          for: "15m",
           labels: {
             severity: "warning",
           },
@@ -100,14 +114,13 @@ export function getR2StorageRuleGroups(): PrometheusRuleSpecGroups[] {
             summary:
               "velero-r2-orphan-audit workflow has not run successfully recently",
             message: escapePrometheusTemplate(
-              "The velero-r2-orphan-audit Temporal workflow has not incremented its success counter in 36h+. R2 detection metrics may be stale. Investigate the workflow in the Temporal UI.",
+              "No durably published R2 audit observation is newer than 36h, or its state is unavailable. Investigate the workflow and ConfigMap restoration.",
             ),
           },
-          // Workflow runs daily at 04:00 PT; alert if success metrics disappear
-          // for 36h. The counter is low-frequency and resets on worker rollouts,
-          // so rate/increase are unreliable freshness checks.
+          // Preserve the observation's original time across worker rollouts.
+          // Missing state is unknown and must not look like a successful zero.
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'absent_over_time(velero_r2_orphan_audit_runs_total{outcome="success"}[36h])',
+            'time() - max by (bucket) (velero_r2_audit_observation_timestamp_seconds{container="temporal-infra-worker"}) > 36 * 60 * 60 or label_replace(absent(max(velero_r2_audit_observation_timestamp_seconds{container="temporal-infra-worker"})), "bucket", "homelab", "", "")',
           ),
           for: "1h",
           labels: {

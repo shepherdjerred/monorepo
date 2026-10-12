@@ -1,3 +1,4 @@
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import { z } from "zod";
 
 export const ProgressionAccountSchema = z.strictObject({
@@ -5,6 +6,6 @@ export const ProgressionAccountSchema = z.strictObject({
   playerAlias: z.string().min(1),
   accountId: z.number().int().positive(),
   accountAlias: z.string().min(1),
-  puuid: z.string().min(1),
+  puuid: LeaguePuuidSchema,
 });
 export type ProgressionAccount = z.infer<typeof ProgressionAccountSchema>;

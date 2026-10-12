@@ -5,10 +5,9 @@ function glitterCorpusStorageEnv(
 ): Record<string, EnvValue> {
   return {
     GLITTER_DISCORD_GUILD_ID: EnvValue.fromValue("208425771172102144"),
-    GLITTER_CORPUS_S3_ENDPOINT: EnvValue.fromSecretValue({
-      secret: workerSecret,
-      key: "S3_ENDPOINT",
-    }),
+    GLITTER_CORPUS_S3_ENDPOINT: EnvValue.fromValue(
+      "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
+    ),
     GLITTER_CORPUS_S3_BUCKET: EnvValue.fromValue("glitter-discord-corpus"),
     GLITTER_CORPUS_S3_ACCESS_KEY_ID: EnvValue.fromSecretValue({
       secret: workerSecret,

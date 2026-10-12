@@ -110,6 +110,13 @@ public final class ShopsPaper {
     var settings = config.chestShops();
     var notices = new OwnerNoticesListener(server, state.store(), replies, settings.summaryLines());
     var blocks = new ShopBlocks(plugin, state.registry(), containers(settings.containers()));
+    services.provide(
+        com.shepherdjerred.thestorm.shops.app.ShopRelocation.class,
+        new ShopMoves(
+            new ShopMoves.State(state.registry(), state.store(), locks),
+            blocks,
+            context.scheduler().mainThread(),
+            new ShopMoves.Admission(server, settings.limits())));
     var chestShops =
         new ChestShops(
             wiring,
@@ -117,7 +124,10 @@ public final class ShopsPaper {
                 CreationRules.standard(settings.limits()),
                 new ServerOffers(state.catalogs(), state.registry()),
                 settings.clickCooldown()),
-            new PaperShopEffects(notices, blocks));
+            new PaperShopEffects(
+                notices,
+                blocks,
+                services.require(com.shepherdjerred.thestorm.core.protection.ManagedTrades.class)));
     var templates = new ItemTemplates();
     var protection = services.require(Protection.class);
     var events = server.getPluginManager();
@@ -138,7 +148,8 @@ public final class ShopsPaper {
                 settings.buyClick())),
         plugin);
     events.registerEvents(
-        new ShopClickListener(settings, chestShops, new PaperTools(blocks, templates, replies)),
+        new ShopClickListener(
+            settings, chestShops, new PaperTools(blocks, templates, replies, context.analytics())),
         plugin);
     events.registerEvents(new ShopGuardListener(locks, blocks, chestShops), plugin);
     events.registerEvents(notices, plugin);
@@ -154,7 +165,10 @@ public final class ShopsPaper {
         new CatalogTrades(state.catalogs(), wiring, usage, config.catalogs().maxLots());
     var dialogs =
         new DialogServerShops(
-            catalogTrades, replies, context.scheduler(), config.catalogs().maxDistance());
+            catalogTrades,
+            replies,
+            new DialogServerShops.Controls(context.scheduler(), context.analytics()),
+            config.catalogs().maxDistance());
     var serverShops = new ReadyServerShops(dialogs, state.registry());
     var command = new ShopCommand(serverShops, state.registry(), settings.limits());
     context

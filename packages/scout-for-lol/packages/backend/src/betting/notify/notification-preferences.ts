@@ -29,7 +29,10 @@ const DEFAULT_PREFERENCES: BucksNotificationPreferences = {
   settlementDmHintShownAt: null,
 };
 
-function parseIds(input: { serverId: string; discordIds: readonly string[] }): {
+function parseIds(input: {
+  serverId: DiscordGuildId;
+  discordIds: readonly DiscordAccountId[];
+}): {
   serverId: DiscordGuildId;
   discordIds: DiscordAccountId[];
 } {
@@ -62,7 +65,7 @@ function preferencesFromRow(
 }
 
 export async function getBucksNotificationPreferences(
-  input: { serverId: string; discordId: string },
+  input: { serverId: DiscordGuildId; discordId: DiscordAccountId },
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<BucksNotificationPreferences> {
   const serverId = DiscordGuildIdSchema.parse(input.serverId);
@@ -81,7 +84,7 @@ export async function getBucksNotificationPreferences(
 }
 
 export async function getBucksNotificationPreferencesForUsers(
-  input: { serverId: string; discordIds: readonly string[] },
+  input: { serverId: DiscordGuildId; discordIds: readonly DiscordAccountId[] },
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<ReadonlyMap<string, BucksNotificationPreferences>> {
   const { serverId, discordIds } = parseIds(input);
@@ -105,8 +108,8 @@ export async function getBucksNotificationPreferencesForUsers(
 
 export async function updateBucksNotificationPreferences(
   input: {
-    serverId: string;
-    discordId: string;
+    serverId: DiscordGuildId;
+    discordId: DiscordAccountId;
     updates: BucksNotificationPreferenceUpdates;
   },
   prismaClient: ExtendedPrismaClient = prisma,
@@ -164,7 +167,7 @@ export async function updateBucksNotificationPreferences(
 }
 
 export async function markBucksSettlementDmHintShown(
-  input: { serverId: string; discordId: string },
+  input: { serverId: DiscordGuildId; discordId: DiscordAccountId },
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<void> {
   const serverId = DiscordGuildIdSchema.parse(input.serverId);

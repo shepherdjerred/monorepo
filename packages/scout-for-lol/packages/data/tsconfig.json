@@ -1,5 +1,11 @@
 {
   "extends": "../../tsconfig.base.json",
-  "include": ["generated/**/*", "src/**/*", "scripts/**/*", "../../types/**/*"],
+  "include": [
+    "architecture.config.ts",
+    "generated/**/*",
+    "src/**/*",
+    "scripts/**/*",
+    "../../types/**/*"
+  ],
   "exclude": ["node_modules", "vendor"]
 }

@@ -1,8 +1,4 @@
-import { canControlItem } from "@shepherdjerred/streambot/discord/permissions.ts";
-import {
-  classifyPlayError,
-  isHttpUrl,
-} from "@shepherdjerred/streambot/discord/resolve.ts";
+import { classifyPlayError } from "@shepherdjerred/streambot/discord/resolve.ts";
 import {
   BlockedSourceError,
   isBlockedSource,
@@ -12,11 +8,18 @@ import type { ResolvedSource } from "@shepherdjerred/streambot/machine/types.ts"
 import { findBestMatch } from "@shepherdjerred/streambot/sources/library.ts";
 import type { MediaMode } from "@shepherdjerred/streambot/sources/media-kind.ts";
 import {
+  normalizeVoicePlayQuery as normalizeQuery,
+  type PlayInput,
+  type SelectedMedia,
+  type ResolvePlayableInput,
+  type VoicePlaySource,
+  type VoicePlayPlacement,
+} from "./playback-input.ts";
+import {
   sourceLabel,
   withMode,
   withSpoken,
   type Source,
-  type SubtitlePref,
   withSubtitles,
 } from "@shepherdjerred/streambot/sources/source.ts";
 import type { UserId } from "@shepherdjerred/streambot/types/ids.ts";
@@ -24,17 +27,13 @@ import {
   inferMediaIntent,
   type MediaIntent,
 } from "@shepherdjerred/streambot/discovery/media-intent.ts";
-import type {
-  DiscoveryScope,
-  MediaCandidate,
-} from "@shepherdjerred/streambot/discovery/candidate.ts";
+import type { DiscoveryScope } from "@shepherdjerred/streambot/discovery/candidate.ts";
 import {
   PlaybackCommandBlockedError,
   PlaybackCommandBoundaryError,
 } from "@shepherdjerred/streambot/commands/playback-command-errors.ts";
 import { PlaybackControls } from "@shepherdjerred/streambot/commands/playback-controls.ts";
 import type { PlaybackCommandResult } from "@shepherdjerred/streambot/commands/playback-command-types.ts";
-import type { SportsProvider } from "@shepherdjerred/streambot/sports/types.ts";
 import { sportsEventForSource } from "@shepherdjerred/streambot/sports/sports-resolver.ts";
 import {
   assertSportsSubtitleOptions,
@@ -50,53 +49,15 @@ import {
   toRecordMedia,
 } from "@shepherdjerred/streambot/commands/playback-recording.ts";
 import { searchMediaText } from "@shepherdjerred/streambot/discovery/search-media-text.ts";
+import { playbackTransport } from "@shepherdjerred/streambot/types/playback-channel.ts";
+import { assertNumberedPlayback } from "@shepherdjerred/streambot/commands/numbered-playback.ts";
+import { requestedPlayMode } from "@shepherdjerred/streambot/commands/play-mode.ts";
+import { dispatchPlayRequest } from "./playback-request.ts";
 
 const RESOLVE_TIMEOUT_MS = 30_000;
 
-export type VoicePlaySource = "auto" | "history" | "local" | "youtube";
-export type VoicePlayPlacement = "queue" | "next" | "now";
-
-type PlayInput = {
-  readonly query: string;
-  readonly source: VoicePlaySource;
-  readonly placement: VoicePlayPlacement;
-  readonly userId: UserId;
-  readonly sourceOverride?: Source;
-  readonly signal?: AbortSignal;
-  /** Slash commands may still supply supported URLs; spoken commands never may. */
-  readonly spoken?: boolean;
-  /** Full spoken command after the wake prefix, used to honour “watch” over a model `mode: video`. */
-  readonly utterance?: string;
-  readonly subtitles?: SubtitlePref;
-  /** Per-request transport override; `undefined` and `"auto"` both mean "let the classifier decide". */
-  readonly mode?: MediaMode;
-  readonly provider?: SportsProvider | "auto";
-};
-
-type SelectedMedia = {
-  readonly source: Source;
-  readonly candidate?: MediaCandidate;
-  readonly sports: boolean;
-  readonly preResolved?: ResolvedSource;
-};
-
-type ResolvePlayableInput = {
-  readonly source: Source;
-  readonly preResolved?: ResolvedSource;
-  readonly play: PlayInput;
-  readonly query: string;
-  readonly intent: MediaIntent;
-  readonly scope: DiscoveryScope | null;
-};
-
 export function normalizeVoicePlayQuery(query: string): string {
-  const normalized = query.trim();
-  if (normalized.length === 0)
-    throw new PlaybackCommandBoundaryError("Say what you want me to play.");
-  if (isHttpUrl(normalized)) {
-    throw new PlaybackCommandBoundaryError("Say a title instead of a URL.");
-  }
-  return normalized;
+  return normalizeQuery(query);
 }
 
 /**
@@ -105,26 +66,13 @@ export function normalizeVoicePlayQuery(query: string): string {
  * A spoken listen/watch verb wins over a conflicting model mode. A spoken model
  * `mode: video` is ignored unless the utterance asked to watch.
  */
-function requestedPlayMode(
-  input: PlayInput,
-  intent: MediaIntent,
-  query: string,
-): MediaMode | undefined {
-  const spokenVerbMode =
-    input.spoken === true
-      ? inferMediaIntent({ query: input.utterance ?? query }).mode
-      : undefined;
-  if (spokenVerbMode !== undefined) {
-    return spokenVerbMode;
-  }
-  const unspecified = input.mode === undefined || input.mode === "auto";
-  const modelVideo = input.spoken === true && input.mode === "video";
-  return unspecified || modelVideo ? intent.mode : input.mode;
-}
 
 /** Permission-checked operations shared by slash commands and the voice agent. */
 export class PlaybackCommandService extends PlaybackControls {
   private clarificationGeneration = 0;
+  private assertCurrent(): void {
+    this.deps.assertCurrent?.();
+  }
 
   async isAssistantV2Enabled(userId: UserId): Promise<boolean> {
     const scope = this.scope(userId);
@@ -141,14 +89,7 @@ export class PlaybackCommandService extends PlaybackControls {
 
   assertCanPlayNow(userId: UserId): void {
     const current = this.deps.view().current;
-    if (
-      current !== null &&
-      !canControlItem(
-        userId,
-        current.requesterId,
-        this.deps.config.discord.adminIds,
-      )
-    ) {
+    if (current !== null && !this.canControl(userId, current.requesterId)) {
       throw new PlaybackCommandBoundaryError(
         "Only the requester or an admin can replace the current video.",
       );
@@ -171,6 +112,11 @@ export class PlaybackCommandService extends PlaybackControls {
     userId: UserId,
     requested: MediaMode | undefined,
   ): Promise<MediaMode | undefined> {
+    if (
+      this.deps.playbackChannel !== undefined &&
+      this.deps.routePlayback === undefined
+    )
+      return playbackTransport(this.deps.playbackChannel);
     if (requested === "video") return "video";
     // `"auto"` is the slash command's default, not a choice: normalize it away so an untouched
     // option does not write a redundant `"mode":"auto"` into every persisted source and history
@@ -185,6 +131,7 @@ export class PlaybackCommandService extends PlaybackControls {
 
   async play(input: PlayInput): Promise<PlaybackCommandResult> {
     input.signal?.throwIfAborted();
+    this.deps.preparePlayback?.();
     const query = this.normalizePlayQuery(input);
     const intent = inferMediaIntent({
       query,
@@ -193,6 +140,12 @@ export class PlaybackCommandService extends PlaybackControls {
     });
     const scope = this.scope(input.userId);
     const selected = await this.selectMedia(input, query, intent, scope);
+    if (this.deps.routePlayback === undefined)
+      assertNumberedPlayback(
+        this.deps.playbackChannel,
+        input.spoken === true ? undefined : input.mode,
+        selected.sports,
+      );
     assertSportsSubtitleOptions(selected.sports, input.subtitles);
     const source = withSpoken(
       withMode(
@@ -217,36 +170,71 @@ export class PlaybackCommandService extends PlaybackControls {
         ? {}
         : { preResolved: selected.preResolved }),
     });
+    const target =
+      this.deps.routePlayback === undefined
+        ? this
+        : new PlaybackCommandService(
+            await this.deps.routePlayback(source, preResolved, input.userId),
+          );
+    return await target.commitPlay({
+      input,
+      source,
+      selected,
+      query,
+      intent,
+      scope,
+      preResolved,
+    });
+  }
+
+  private async commitPlay(prepared: {
+    input: PlayInput;
+    source: Source;
+    selected: SelectedMedia;
+    query: string;
+    intent: MediaIntent;
+    scope: DiscoveryScope | null;
+    preResolved: ResolvedSource | undefined;
+  }): Promise<PlaybackCommandResult> {
+    const { input, selected, query, intent, scope, preResolved } = prepared;
+    assertNumberedPlayback(
+      this.deps.playbackChannel,
+      input.spoken === true ? undefined : input.mode,
+      selected.sports,
+    );
+    const source =
+      this.deps.playbackChannel === undefined
+        ? prepared.source
+        : withMode(
+            prepared.source,
+            playbackTransport(this.deps.playbackChannel),
+          );
     input.signal?.throwIfAborted();
     if (input.placement === "now") this.assertCanPlayNow(input.userId);
-    const requestId = selected.sports
-      ? undefined
-      : await recordRequest({
-          deps: this.deps,
-          scope,
-          query,
-          intent,
-          media: toRecordMedia(source, preResolved, selected.candidate),
-        });
-    if (input.placement === "now") markReplacedRequest(this.deps);
-    this.deps.dispatch({
-      type:
-        input.placement === "now"
-          ? "PLAY_NOW"
-          : input.placement === "next"
-            ? "ADD_NEXT"
-            : "ADD",
-      source,
-      requesterId: input.userId,
-      ...(requestId === undefined ? {} : { requestId }),
-      // Resolve queued sports from the stable page when playback starts, after signed URLs may expire.
-      ...(preResolved === undefined ||
-      (selected.sports && input.placement !== "now")
-        ? {}
-        : { preResolved }),
+    this.assertCurrent();
+    const requestId = await recordRequest({
+      deps: this.deps,
+      scope,
+      query,
+      intent,
+      media: toRecordMedia(source, preResolved, selected.candidate),
     });
+    this.assertCurrent();
+    if (input.placement === "now") markReplacedRequest(this.deps);
     const label =
       selected.candidate?.title ?? preResolved?.title ?? sourceLabel(source);
+    const thumbnailUrl =
+      selected.candidate?.thumbnailUrl ?? preResolved?.provenance?.thumbnailUrl;
+    dispatchPlayRequest(this.deps, {
+      source,
+      userId: input.userId,
+      placement: input.placement,
+      label,
+      thumbnailUrl,
+      preResolved,
+      sports: selected.sports,
+      requestId,
+    });
     return this.playResult(input.placement, label);
   }
 

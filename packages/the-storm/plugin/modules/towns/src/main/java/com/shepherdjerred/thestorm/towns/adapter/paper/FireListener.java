@@ -42,6 +42,10 @@ final class FireListener implements Listener {
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
   void onIgnite(BlockIgniteEvent event) {
     var block = event.getBlock();
+    if (guard.land(block).preventsPlayerDamage()) {
+      event.setCancelled(true);
+      return;
+    }
     var igniter = event.getIgnitingEntity();
     var player =
         Optional.ofNullable(event.getPlayer()).map(Culprit::of).or(() -> guard.culprit(igniter));
@@ -71,6 +75,10 @@ final class FireListener implements Listener {
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
   void onPrime(TNTPrimeEvent event) {
     var tnt = event.getBlock();
+    if (guard.land(tnt).preventsPlayerDamage()) {
+      event.setCancelled(true);
+      return;
+    }
     var primer = event.getPrimingEntity();
     var player = guard.culprit(primer);
     if (player.isPresent()) {

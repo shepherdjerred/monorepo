@@ -1,4 +1,4 @@
-import type { DareDeadlineSpecV2 } from "@scout-for-lol/data";
+import type { DareDeadlineSpec } from "@scout-for-lol/data";
 import { ScoutQlCode } from "#src/components/scoutql/scoutql-code.tsx";
 
 export type ValidatedDareDraft = {
@@ -20,12 +20,11 @@ export type ValidatedDareDraft = {
 type DareEditorReviewProps = {
   validated: ValidatedDareDraft | null;
   reviewing: boolean;
-  sqlV3: boolean;
   currentRevision: number;
   previous: {
     plainLanguage: string;
     originalText: string;
-    deadlineSpec: DareDeadlineSpecV2;
+    deadlineSpec: DareDeadlineSpec;
     openingStake: number;
   };
   next: {
@@ -40,9 +39,7 @@ export function DareEditorReview(props: DareEditorReviewProps) {
     <>
       {props.validated !== null && (
         <section className="space-y-3">
-          <h3 className="font-medium">
-            {props.sqlV3 ? "Canonical binding SQL" : "Generated ScoutQL"}
-          </h3>
+          <h3 className="font-medium">Canonical binding SQL</h3>
           <ScoutQlCode queryText={props.validated.canonicalScoutQl} />
           <p className="whitespace-pre-wrap text-sm">
             {props.validated.plainLanguage}

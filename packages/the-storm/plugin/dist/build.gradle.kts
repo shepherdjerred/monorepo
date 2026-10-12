@@ -35,6 +35,40 @@ tasks.jar { enabled = false }
 
 tasks.assemble { dependsOn(tasks.shadowJar) }
 
+// Disposable world fixtures for the full-module real-Paper suite. This jar is
+// separate from TheStorm.jar and is never copied into the production image.
+val e2e = sourceSets.create("e2e") {
+  // One pure-JDK codec is compiled into both local tools. It never enters TheStorm.jar.
+  java.srcDir(rootProject.file("../client/src/main/java/com/shepherdjerred/thestorm/client/wire"))
+  compileClasspath += configurations.compileClasspath.get() + sourceSets.main.get().output
+  runtimeClasspath += output + compileClasspath
+}
+configurations[e2e.compileOnlyConfigurationName].extendsFrom(configurations.compileOnly.get())
+val fixturesJar = tasks.register<Jar>("fixturesJar") {
+  archiveFileName = "TheStormFixtures.jar"
+  from(e2e.output)
+  dependsOn(e2e.classesTaskName)
+}
+tasks.assemble { dependsOn(fixturesJar) }
+
+val testPython = listOf("uv", "run", "--project", rootProject.file("../tools/learning").absolutePath, "--locked", "python")
+val archiveTest = tasks.register<Exec>("archiveTest") {
+  workingDir(rootProject.file("../server"))
+  commandLine(testPython + listOf("-m", "unittest", "-v", "test_archive_progression.py"))
+}
+val worldRestoreTest = tasks.register<Exec>("worldRestoreTest") {
+  workingDir(rootProject.file("../server"))
+  commandLine(testPython + listOf("-m", "unittest", "-v", "test_world_restore.py", "test_database_restore.py", "test_restoration_control.py", "test_restoration_json.py", "test_restoration_files.py", "test_restoration_activation.py", "test_restoration_install.py"))
+}
+tasks.test {
+  dependsOn(archiveTest, worldRestoreTest)
+  // ModulesTest checks the shipped module inventory against the registry.
+  inputs
+      .file(rootProject.file("../server/owned/plugins/TheStorm/config.yml"))
+      .withPropertyName("shippedConfig")
+      .withPathSensitivity(PathSensitivity.RELATIVE)
+}
+
 val runServerDirectory = rootProject.file("run")
 val prepareRunServerContent =
     tasks.register<Copy>("prepareRunServerContent") {
@@ -48,9 +82,16 @@ tasks.runServer {
   dependsOn(prepareRunServerContent)
   downloadPlugins {
     url("https://cdn.modrinth.com/data/Vebnzrzj/versions/b0mk8uS6/LuckPerms-Bukkit-5.5.71.jar")
+    url("https://cdn.modrinth.com/data/1u6JkXh5/versions/F5ea2ov3/worldedit-bukkit-7.4.5.jar")
+    url("https://cdn.modrinth.com/data/Lu3KuzdV/versions/3sehX6Sg/CoreProtect-CE-24.1.jar")
   }
 }
 
 val libs = the<VersionCatalogsExtension>().named("libs")
 
-dependencies { testImplementation(libs.findLibrary("archunit").get()) }
+dependencies {
+  testImplementation(libs.findLibrary("archunit").get())
+  compileOnly(libs.findLibrary("coreprotect").get()) { isTransitive = false }
+  add(e2e.compileOnlyConfigurationName, libs.findLibrary("worldedit-core").get())
+  add(e2e.compileOnlyConfigurationName, libs.findLibrary("worldedit-bukkit").get())
+}

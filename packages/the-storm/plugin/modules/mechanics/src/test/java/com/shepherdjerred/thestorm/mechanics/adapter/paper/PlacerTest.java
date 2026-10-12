@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.mechanics.adapter.paper;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.shepherdjerred.thestorm.core.world.AuditedBlockChanges;
 import com.shepherdjerred.thestorm.mechanics.domain.grid.Cell;
 import com.shepherdjerred.thestorm.mechanics.domain.grid.Pos;
 import com.shepherdjerred.thestorm.mechanics.domain.structure.BlockChange;
@@ -78,7 +79,9 @@ final class PlacerTest {
         List.of(
             new BlockChange(FIRST, PLANKS, Cell.AIR), new BlockChange(SECOND, Cell.AIR, PLANKS));
 
-    Placer.check(grid, bridge(), changes).apply();
+    Placer.check(grid, bridge(), changes)
+        .prepare(new AuditedBlockChanges(change -> {}), "#storm-mechanics")
+        .apply();
 
     assertThat(grid.block(FIRST).getType()).isEqualTo(Material.AIR);
     assertThat(grid.block(SECOND).getType()).isEqualTo(Material.OAK_PLANKS);
@@ -97,6 +100,7 @@ final class PlacerTest {
     var fence = new Structure("minecraft:oak_fence", TEMPLATE, List.of(FIRST));
 
     Placer.check(grid, fence, List.of(new BlockChange(FIRST, Cell.AIR, "minecraft:oak_fence")))
+        .prepare(new AuditedBlockChanges(change -> {}), "#storm-mechanics")
         .apply();
 
     var restored = (Fence) grid.block(FIRST).getBlockData();

@@ -1,3 +1,5 @@
+import type { Interaction } from "discord.js";
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
@@ -17,9 +19,10 @@ import { getErrorMessage } from "#src/utils/errors.ts";
 
 const logger = createLogger("bryan-bucks-analytics");
 
+/** Raw from the interaction; validated before anything is read. */
 type MemberActivityInput = {
-  serverId: string | null;
-  discordId: string;
+  serverId: Interaction["guildId"];
+  discordId: Interaction["user"]["id"];
   activityKind: BucksMemberActivityKind;
   surface: BucksActivitySurface;
   status: "success" | "error";
@@ -79,7 +82,7 @@ export async function captureBucksMemberActivity(
 }
 
 export function captureBucksLifecycle(input: {
-  serverId: string | undefined;
+  serverId: DiscordGuildId | undefined;
   transition: BucksLifecycleTransition;
   amountBucks?: number | undefined;
   matchedBucks?: number | undefined;
@@ -110,7 +113,7 @@ export function captureBucksLifecycle(input: {
 }
 
 export function captureBucksEconomy(input: {
-  serverId: string;
+  serverId: DiscordGuildId;
   movement: BucksLedgerKind;
   deltaBucks: number;
   balanceAfterBucks: number;
@@ -137,7 +140,7 @@ export function captureBucksEconomy(input: {
 }
 
 export function captureBucksEconomySnapshot(input: {
-  serverId: string;
+  serverId: DiscordGuildId;
   memberAccounts: number;
   totalMemberBalanceBucks: number;
   pendingStakeBucks: number;

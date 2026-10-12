@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "channel": "thestorm:rwf_duel_clock",
+  "bytes": 54,
+  "byteOrder": "big-endian",
+  "maximumElapsed": 1200,
+  "sides": ["red", "blue"],
+  "modes": ["authored", "external"],
+  "opponents": [
+    "stationary",
+    "chase",
+    "basic",
+    "authored",
+    "authored-pressure",
+    "authored-patient",
+    "historical"
+  ],
+  "markers": ["begin", "tick", "terminal"],
+  "results": [
+    "waiting",
+    "live",
+    "win",
+    "loss",
+    "draw",
+    "timeout",
+    "stopped",
+    "cancelled"
+  ],
+  "packet": [
+    "match",
+    "seed",
+    "side",
+    "mode",
+    "opponent",
+    "sequence",
+    "marker",
+    "tick",
+    "worldTick",
+    "elapsed",
+    "result"
+  ],
+  "status": ["name", "state", "markers", "error", "receipt"],
+  "expected": ["seed", "side", "mode", "opponent"],
+  "entry": ["marker", "receivedElapsedNanos"],
+  "receipt": [
+    "schema",
+    "kind",
+    "acceptance",
+    "source",
+    "expected",
+    "complete",
+    "error",
+    "entries"
+  ],
+  "golden": {
+    "hex": "01111111112222433384445555555555550000000023c4cca0010103000000010100000000000023280000000000000bb80000000001",
+    "packet": {
+      "match": "11111111-2222-4333-8444-555555555555",
+      "seed": 600100000,
+      "side": "blue",
+      "mode": "external",
+      "opponent": "authored",
+      "sequence": 1,
+      "marker": "tick",
+      "tick": 9000,
+      "worldTick": 3000,
+      "elapsed": 0,
+      "result": "live"
+    }
+  }
+}

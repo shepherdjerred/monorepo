@@ -1,3 +1,9 @@
+import type { DiscordChannelId } from "@scout-for-lol/domain/identity/discord.ts";
+import {
+  type RiotMatchId,
+  type DiscordMessageId,
+  DiscordMessageIdSchema,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import {
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
@@ -27,7 +33,7 @@ type PreparationMessage = Awaited<ReturnType<typeof send>>;
 
 async function disablePreparationMessages(
   messages: readonly PreparationMessage[],
-  matchId: string,
+  matchId: RiotMatchId,
 ): Promise<void> {
   const disabled = await Promise.allSettled(
     messages.map((message) =>
@@ -52,8 +58,8 @@ async function disablePreparationMessages(
 }
 
 export async function disableParlayPreparationReferences(
-  refs: readonly { channelId: string; messageId: string }[],
-  matchId: string,
+  refs: readonly { channelId: DiscordChannelId; messageId: DiscordMessageId }[],
+  matchId: RiotMatchId,
 ): Promise<void> {
   const disabled = await Promise.allSettled(
     refs.map((ref) =>
@@ -92,10 +98,12 @@ export async function disableParlayPreparationReferences(
 }
 
 async function activateMessageReference(input: {
-  ref: { channelId: string; messageId: string };
-  matchId: string;
+  ref: { channelId: DiscordChannelId; messageId: DiscordMessageId };
+  matchId: RiotMatchId;
   content: string;
-}): Promise<{ channelId: string; messageId: string } | undefined> {
+}): Promise<
+  { channelId: DiscordChannelId; messageId: DiscordMessageId } | undefined
+> {
   try {
     await observeBucksDelivery(
       {
@@ -137,8 +145,8 @@ type ParlayPublicationDependencies = {
 async function invalidatePendingPublication(input: {
   prismaClient: ExtendedPrismaClient;
   marketId: number;
-  matchId: string;
-  refs: readonly { channelId: string; messageId: string }[];
+  matchId: RiotMatchId;
+  refs: readonly { channelId: DiscordChannelId; messageId: DiscordMessageId }[];
   disableReferences: typeof disableParlayPreparationReferences;
 }): Promise<void> {
   const settledAt = new Date();
@@ -163,7 +171,7 @@ async function invalidatePendingPublication(input: {
  */
 export async function activatePendingParlayMarkets(
   prismaClient: ExtendedPrismaClient = prisma,
-  matchId?: string,
+  matchId?: RiotMatchId,
   dependencies: ParlayPublicationDependencies = {},
 ): Promise<number> {
   const activateReference =
@@ -329,7 +337,7 @@ export async function publishParlayDefinition(
   const markets: {
     definitionId: number;
     outcomePoolId: number;
-    matchId: string;
+    matchId: RiotMatchId;
     serverId: DiscordGuildId;
     messageRefs: string;
     messages: PreparationMessage[];
@@ -344,7 +352,10 @@ export async function publishParlayDefinition(
       const outcomeRefs = BucksMessageRefsSchema.parse(
         JSON.parse(pool.messageRefs),
       );
-      const refs: { channelId: string; messageId: string }[] = [];
+      const refs: {
+        channelId: DiscordChannelId;
+        messageId: DiscordMessageId;
+      }[] = [];
       const messages: PreparationMessage[] = [];
       for (const outcomeRef of outcomeRefs) {
         signal?.throwIfAborted();
@@ -368,7 +379,10 @@ export async function publishParlayDefinition(
           );
           sentMessages.push(sent);
           messages.push(sent);
-          refs.push({ channelId: outcomeRef.channelId, messageId: sent.id });
+          refs.push({
+            channelId: outcomeRef.channelId,
+            messageId: DiscordMessageIdSchema.parse(sent.id),
+          });
         } catch (error) {
           logger.warn(
             `Could not publish Bryan Bucks parlay ${definition.matchId} in channel ${outcomeRef.channelId}:`,

@@ -33,8 +33,10 @@ import {
  * nothing in CI. Rather than encode a knob that lies, boundaries hold for all
  * edge kinds, and a type shared across a boundary belongs in a shared module.
  *
- * `tsPreCompilationDeps` is deliberately absent for the same reason: with the
- * extractor skipped it changes nothing in any of its three settings.
+ * `tsPreCompilationDeps: true` pins the same answer when the extractor *does*
+ * load: without it a local run (TypeScript 6 on the flat fallback) drops
+ * `import type` edges while CI (TypeScript 7 skipped) keeps them, so a cycle
+ * closed by a type import passed locally and failed only in CI.
  *
  * `exportsFields`/`conditionNames` are what let enhanced-resolve follow the
  * `#subpath/*` imports several packages here declare.
@@ -46,6 +48,7 @@ function baseOptions(
 ) {
   return {
     validate: true,
+    tsPreCompilationDeps: true,
     baseDir: packageRoot,
     outputType: "json",
     doNotFollow: { path: "node_modules" },

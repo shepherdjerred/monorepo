@@ -1,0 +1,83 @@
+id: quiet-wolf
+name: Quiet_Wolf
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NDE0Mzk5MCwKICAicHJvZmlsZUlkIiA6ICI4MjYxOGI1ZjhhMzA0Njg2YTkyMTM2ZDcxZTlhZDkyMSIsCiAgInByb2ZpbGVOYW1lIiA6ICIxZXRobyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS85ZmIyMTZkNDQyZjdhMzQwMDMxOTQwYjFmYjk4ZjllNzFmNzg1ZGE4Y2Y4YzYxN2MxYTI1NTI2ZDAzZjBiZDQ2IgogICAgfQogIH0KfQ=="
+  signature: "azYwkFGVTvhURO4uDOPTXN3mX18T+TbIqHIZeQCwlhhr5FUGfGor4KEhbBccWwspF8iOd6JI4uHp7xbgRr5SDmMz2tnLpme9UVuj4BHN+JHvy0yhTQRejyp08T9gNsnLCmrSSBenm9IJni+TgM7R4gKRmvltPOeYloAVGPIDnAed0BomcOse7//n8EaOj6AJPcxHsrQSKWUD0NCe3z4+hlV+JHC9fUXIVdoARtRr4+jjg91kjr9ZZlsXTF/2+3zFlur+XgrnrZTkcKaWTxZIFFJnvn5n2P6Ei5boAdY6WRvjklWQ3/Mm5sUJzAmpTWDgJq80N+W8d4mdsLeHrV5R8im4FA+fZLfKz0kCtDwTAGhc6RotjX+y0nNLqGWG1NHNMAfhTolkULBxgPh7SGf+w3Ok144hdjmGQGc7L1qy5xiDeuKE1QAPKqMxcY2QTYQQ4qs+TzL/ZJ5+aKVutHN3lCsXtfjOGfsYsvwmZ8Hm7sxq1CWmvLPlrpE/uyrkqgAdv+3NoP0G0sEFVx0qSkgYdYw2P5xkINSPt3oUoEjioQmMqrcXizr9LogruoMbQoEUfFjMl/ofKvrdMZolWUGg5EpdqS8XnSxcsbX76PbpDWGkIge10pkgfmXKFk2n635bq3cpwF3fAk22t6HV6WKnwtHjI9s9lXxqdPVXZPpKSgs="
+skill: 0.64
+archetype: flanker
+leverOffsets:
+  turnRateDegPerTick: 0.42
+  predictionQuality: 0.38
+  awarenessRadius: -0.38
+  coordination: -0.47
+  technique: 0.22
+  aggression: 0.38
+kits:
+  trooper: 0.67
+  shortbow: 1
+  rewind: 0.3
+  ghost: 0.12
+  wraith: 0.55
+  spy: 0.41
+roles:
+  plant: 0.46
+  rotate: 0.96
+  hunt: 0.67
+style:
+  aggression: 0.7
+  patience: 0.41
+  teamplay: 0.28
+  risk: 0.74
+voice:
+  tone:
+    - laconic
+    - cool
+    - wry
+  verbosity: quiet
+  style: "two or three words at most; lone-wolf western drawl"
+lines:
+  greet:
+    - Howdy.
+    - Riding out wide.
+    - "Don't wait up, {team}."
+  onKill:
+    - "Evening, {victim}."
+    - "Wrong trail, {victim}."
+    - Hm.
+  onDeath:
+    - "Fair draw, {killer}."
+    - Ambushed.
+    - Next time.
+  onPlant:
+    - "{bomb}'s lit."
+    - "Rode in quiet. {bomb} burns."
+  onDefuse:
+    - "{bomb}'s safe."
+    - Not today.
+  onWin:
+    - Good ride.
+    - gg, partners.
+  onLoss:
+    - Rough country. gg.
+    - Ride again.
+  onLastAlive:
+    - Lone wolf.
+    - Just how I like it.
+    - Sun's setting.
+  taunt:
+    - Check your flank.
+    - I'm already round back.
+    - Wind's changing.
+  lobby:
+    - Waitin'.
+    - Sword. Gapples. Enough.
+    - Won't see me at spawn.
+    - Quiet in here.
+    - "Ride out soon, {team}."
+quirks:
+  - good_sport
+rivals:
+  - hyperkoustthethy
+bio: Never spawns with the team and never explains where he went. HyperKoustthethy flanks the same routes and the two keep bumping into each other in the back corridors.
+batch: 2
+retired: false

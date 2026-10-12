@@ -4,6 +4,10 @@
  * Creates the context for each tRPC request, including authentication state.
  */
 
+import {
+  type DiscordAccountId,
+  DiscordAccountIdSchema,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import { prisma } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 import { webSessionRejectedTotal } from "#src/metrics/platform/web.ts";
@@ -23,7 +27,7 @@ export const CSRF_HEADER = "x-csrf-token";
 
 export type WebSession = {
   /** Discord snowflake ID from the verified JWT `sub` */
-  discordId: string;
+  discordId: DiscordAccountId;
   /** Raw CSRF token value as carried by the scout_csrf cookie (used to validate header on mutations) */
   csrfToken: string | null;
   /** The Origin header from the request, if any */
@@ -159,7 +163,7 @@ export async function createContext(request: Request): Promise<Context> {
         webSessionRejectedTotal.inc({ reason: "unknown_user" });
       } else {
         webSession = {
-          discordId: claims.sub,
+          discordId: DiscordAccountIdSchema.parse(claims.sub),
           csrfToken: cookies.get(CSRF_COOKIE) ?? null,
           origin: request.headers.get("Origin"),
           csrfHeader: request.headers.get(CSRF_HEADER),

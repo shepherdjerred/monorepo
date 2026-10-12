@@ -4,7 +4,7 @@ import {
   type SettlementAnnouncementSink,
 } from "#src/betting/notify/announcement-sink.ts";
 import { recordSettlementAnnouncementItem } from "#src/database/durable/settlement-announcement-repository.ts";
-import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
+import { type RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type { Db } from "#src/database/index.ts";
 
 /**
@@ -48,14 +48,14 @@ export function checkpointFailingSink(): SettlementAnnouncementSink {
  * transaction's handle cannot.
  */
 export function checkpointRecordingSink(
-  matchId: string,
+  matchId: RiotMatchId,
   options: { thenThrow?: string } = {},
 ): SettlementAnnouncementSink {
   return {
     ...announcingSettlementSink,
     recordAnnouncementItem: async (handle: Db, item) => {
       await recordSettlementAnnouncementItem(handle, {
-        matchId: RiotMatchIdSchema.parse(matchId),
+        matchId: matchId,
         item,
       });
       if (options.thenThrow !== undefined) throw new Error(options.thenThrow);

@@ -1,9 +1,11 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import {
   collectDurablePipelineMetrics,
   scoutDurableBacklogOldestAge,
   scoutDurableNotificationIntents,
   scoutDurableObservationLag,
+  scoutDurablePostmatchPollAge,
   scoutDurableRecoveryBatches,
 } from "#src/metrics/durable-pipeline.ts";
 import { gaugeValue } from "#src/testing/gauge-values.ts";
@@ -39,7 +41,7 @@ afterAll(async () => {
   await prisma.$disconnect();
 });
 
-const MATCH_ID = "NA1_9100";
+const MATCH_ID = RiotMatchIdSchema.parse("NA1_9100");
 const NOW = Date.now();
 const HOUR_MS = 60 * 60 * 1000;
 
@@ -103,7 +105,9 @@ beforeEach(async () => {
   await prisma.matchRecoveryBatch.deleteMany();
   await prisma.scoutWorkflowStart.deleteMany();
   await prisma.matchObservation.deleteMany();
+  await prisma.botState.deleteMany();
   scoutDurableNotificationIntents.reset();
+  scoutDurablePostmatchPollAge.reset();
   scoutDurableObservationLag.reset();
   scoutDurableRecoveryBatches.reset();
   scoutDurableBacklogOldestAge.reset();
@@ -250,7 +254,7 @@ describe("durable pipeline sweep against Postgres", () => {
     const observedAt = new Date(NOW - 10 * 60 * 1000);
     await prisma.matchObservation.create({
       data: {
-        riotMatchId: "NA1_9150",
+        riotMatchId: RiotMatchIdSchema.parse("NA1_9150"),
         platformRoute: "NA1",
         processingPolicy: "FULL",
         deliveryMode: "live",
@@ -265,6 +269,26 @@ describe("durable pipeline sweep against Postgres", () => {
         await gaugeValue(scoutDurableObservationLag, { statistic }),
       ).toBeCloseTo(3 * 3600, 3);
     }
+  });
+
+  test("ages the last complete post-match poll, zero before any poll has completed", async () => {
+    await collectDurablePipelineMetrics(prisma);
+    expect(await gaugeValue(scoutDurablePostmatchPollAge, {})).toBe(0);
+
+    // A poll that opened and never closed leaves the last COMPLETE poll where
+    // it was: this is the wedged-run shape, and it must keep aging.
+    await prisma.botState.create({
+      data: {
+        id: 1,
+        lastSuccessfulPollAt: new Date(NOW - 3 * HOUR_MS),
+        pollStatus: "running",
+        pollStartedAt: new Date(NOW - 2 * HOUR_MS),
+      },
+    });
+    await collectDurablePipelineMetrics(prisma);
+    const age = await gaugeValue(scoutDurablePostmatchPollAge, {});
+    expect(age).toBeGreaterThan(2.9 * 3600);
+    expect(age).toBeLessThan(3.1 * 3600);
   });
 
   test("a failing read writes the sentinel shape instead of failing the scrape", async () => {
@@ -311,6 +335,7 @@ describe("durable pipeline sweep against Postgres", () => {
     expect(
       await gaugeValue(scoutDurableObservationLag, { statistic: "p90" }),
     ).toBe(-1);
+    expect(await gaugeValue(scoutDurablePostmatchPollAge, {})).toBe(-1);
     expect(
       await gaugeValue(scoutDurableNotificationIntents, { state: "pending" }),
     ).toBeUndefined();

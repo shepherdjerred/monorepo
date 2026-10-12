@@ -134,6 +134,14 @@ export function createWoodpeckerCredentialBoundaries(chart: Chart): void {
     },
   });
 
+  new OnePasswordItem(chart, "woodpecker-extension-github-credentials", {
+    spec: { itemPath: vaultItemPath("34gzcrhwdm34lpadyly3rcsu44") },
+    metadata: {
+      name: "woodpecker-extension-github-credentials",
+      namespace: WOODPECKER_NAMESPACE,
+    },
+  });
+
   for (const { secretName, itemId } of CI_CREDENTIAL_ITEMS) {
     new OnePasswordItem(chart, secretName, {
       spec: { itemPath: vaultItemPath(itemId) },

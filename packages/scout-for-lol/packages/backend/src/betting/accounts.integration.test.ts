@@ -1,3 +1,7 @@
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import {
   BucksLedgerContextSchema,
@@ -62,7 +66,7 @@ async function createLedger(accountId: number, count: number): Promise<void> {
 
 async function createPendingParlayPosition(input: {
   poolId: number;
-  matchId: string;
+  matchId: RiotMatchId;
   accountId: number;
 }): Promise<void> {
   const definition = await db.bucksParlayDefinition.create({
@@ -319,7 +323,7 @@ describe("personal positions and open markets", () => {
     });
     const pool = await db.bucksMatchPool.create({
       data: {
-        matchId: "NA1_5000000100",
+        matchId: RiotMatchIdSchema.parse("NA1_5000000100"),
         serverId: SERVER_A,
         detectedAt: new Date("2030-01-01T00:00:00Z"),
         closesAt: new Date("2030-01-01T00:10:00Z"),
@@ -440,7 +444,9 @@ describe("personal positions and open markets", () => {
     for (let index = 0; index < 11; index++) {
       const pool = await db.bucksMatchPool.create({
         data: {
-          matchId: `NA1_50000002${index.toString().padStart(2, "0")}`,
+          matchId: RiotMatchIdSchema.parse(
+            `NA1_50000002${index.toString().padStart(2, "0")}`,
+          ),
           serverId: SERVER_A,
           detectedAt: new Date("2030-01-01T00:00:00Z"),
           closesAt: new Date("2030-01-01T00:10:00Z"),

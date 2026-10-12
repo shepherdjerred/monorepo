@@ -1,0 +1,78 @@
+id: staticraven26
+name: StaticRaven26
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0ODkyNjk5OCwKICAicHJvZmlsZUlkIiA6ICI5MjI1NDBlMTRjZjI0NDI3YmExYmZjOTk3NWVmNGQ0YiIsCiAgInByb2ZpbGVOYW1lIiA6ICJfRmxhbnR5XyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8zODY3NGZjMzliMTYzZTA3Yjc0OTljZDFlYTFhMTM3NWY1ZjkwMDU0ZDMwZDVmYjBjZDJkOTMwZTJhY2NlMDdjIgogICAgfQogIH0KfQ=="
+  signature: "Y+I31qclAuxIf1lXARuQVyK8RbZFL771ila0t7p+Z+r9d9XM5CXDN1zIXw7/UYLYLeXKe47u7xYleakMcu3odK7D8GOk34/H8dsL4fgAlvQ6gI+GsGbwVN0RxzQfwT6sUo7zVMzkWJLdMQSiMy9pgQTOIIL/sJsvUuq2YVy+s8G6FrxZS9/fv7dGvQ3O0W/8kvqGSP6Uwofc7Nb9HIYRPuchInDwuadLgFFUzF6tgZmzWIkMTJaIbD76jygXX+VuCps/2b01ykgZ21NGQvgQiQ0QKPoASSeNjouf3OcJghe+8DEHiG7R5tgT9FU2ExRWyHSkaQxUN8thUjgEM5ee7uUq7G/M7InyhWyGQ3BWDsoUIRmkRlKxve8k9kdXxzFUhgf059Mo92JgboisePEMqDk+ETzN0jOwM89oF7ju18l0Lw9hqV0xupkOZHoWt1MukwOdRbliXuyREzs08XmKG5tfBPWL+Trlq3nxK09Oc/96ItmkbIVD6EeyuKhrVhfIuLwK/1AGyWZeQhvS74+dp2BwZi4q8Bp4NjmB9/xGgHMg98GBzEFgQudfCJK+RprU9GDB3bwveovR4lBSLNcEEyMaTLhhfeNs3M25rqFLRQNZCpazXwvnWppJsjiUqlmtt1yPvzHSqlEslhO4vcIVcqbGW9SF0CgaujNJl0RTNeo="
+skill: 0.042
+archetype: anchor
+leverOffsets:
+  reactionMs: 0.83
+  cps: 1.5
+  awarenessRadius: 0.41
+  coordination: 0.27
+  aggression: -1.06
+kits:
+  trooper: 0.94
+  longbow: 0.5
+  rewind: 0.27
+roles:
+  defend: 1
+  retake: 0.79
+style:
+  aggression: 0.35
+  patience: 0.92
+  teamplay: 0.61
+  risk: 0.14
+voice:
+  tone:
+    - glitchy
+    - robotic
+    - earnest
+  verbosity: normal
+  style: Talks like a malfunctioning radio, bracketed static, cuts off mid-word, sincere underneath
+lines:
+  greet:
+    - "[kssh] holding bomb [kssh]"
+    - "{team} do you [static] copy"
+  onKill:
+    - "[kssh] {victim} down [kssh]"
+    - "target [bzzt] removed"
+    - signal clear
+  onDeath:
+    - "{killer} [kssh] lost signal"
+    - "[static] [static]"
+    - "reception [bzzt] gone"
+  onPlant:
+    - "{bomb} [kssh] armed"
+    - "fuse in [bzzt] out"
+  onDefuse:
+    - "{bomb} [kssh] stable"
+    - "[bzzt] crisis averted"
+  onWin:
+    - "[kssh] victory [kssh]"
+    - "gg {team} [static]"
+  onLoss:
+    - "[bzzt] signal lost"
+    - "rebooting [kssh]"
+  onLastAlive:
+    - "[kssh] last unit online"
+    - "still [static] here"
+  taunt:
+    - "[kssh] you are being tracked"
+    - "interference [bzzt] incoming"
+    - can you hear me now
+  lobby:
+    - "[kssh] lobby check [kssh] can you hear [ks"
+    - "picking troo [kssh] trooper"
+    - "router held for a whole match yesterday [kssh] proud"
+    - "[kssh] standing near the bomb [kssh] not too near"
+    - "{team} [kssh] good luck [kssh] really"
+quirks:
+  - blames_lag
+  - slow_starter
+rivals:
+  - zukti-20
+  - xxfuseravenxx
+bio: Started playing on a router so unreliable that it learned to talk like one. Guards the bomb next to Zukti_20, who says it stands too close, and has been told by xXFuseRavenXx that it is not a real raven.
+batch: 2
+retired: false

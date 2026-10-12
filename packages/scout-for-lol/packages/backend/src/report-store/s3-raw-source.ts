@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   GetObjectCommand,
   HeadObjectCommand,
@@ -56,11 +57,11 @@ function datePath(keyDate: Date): string {
   return format(keyDate, "yyyy/MM/dd");
 }
 
-export function matchObjectKey(matchId: string, keyDate: Date): string {
+export function matchObjectKey(matchId: RiotMatchId, keyDate: Date): string {
   return `${MATCH_PREFIX}${datePath(keyDate)}/${matchId}/match.json`;
 }
 
-export function timelineObjectKey(matchId: string, keyDate: Date): string {
+export function timelineObjectKey(matchId: RiotMatchId, keyDate: Date): string {
   return `${MATCH_PREFIX}${datePath(keyDate)}/${matchId}/timeline.json`;
 }
 

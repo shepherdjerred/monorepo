@@ -1,7 +1,8 @@
 import { mkdtemp, mkdir, rm } from "node:fs/promises";
 import path from "node:path";
 import { tmpdir } from "node:os";
-import { beforeAll, describe, expect, test } from "vitest";
+import { describe, expect, test } from "vitest";
+import releaseHistory from "./__fixtures__/npm-release-history.json";
 
 import {
   classifyConsumerChanges,
@@ -223,70 +224,117 @@ describe("tagless packages", () => {
   });
 });
 
-describe("historical release regressions", () => {
-  beforeAll(async () => {
-    await fetchNpmPackageTags(process.cwd());
-  });
+async function fixtureGit(root: string, ...args: string[]): Promise<void> {
+  await Bun.$`git -C ${root} ${args}`.quiet();
+}
 
-  // These historical comparisons read Git trees from fetched tags. The
-  // repository is large and a loaded CI node can take more than Vitest's
-  // default five seconds without changing the release decision.
-  const historicalGitTimeout = 15_000;
+type HistoricalReleaseFixture = (typeof releaseHistory)[number];
 
-  test(
-    "Webring analytics and TypeDoc-only releases are excluded",
-    async () => {
-      const policy = NPM_PACKAGE_POLICIES.find(
-        (candidate) => candidate.name === "webring",
-      );
-      if (policy === undefined) throw new Error("Webring policy is missing");
-
-      const oneNine = await classifyPackageReleaseRange(
-        process.cwd(),
-        policy,
-        "webring-v1.8.0",
-        "webring-v1.9.0",
-      );
-      const oneTen = await classifyPackageReleaseRange(
-        process.cwd(),
-        policy,
-        "webring-v1.9.0",
-        "webring-v1.10.0",
-      );
-      expect(oneNine.eligible).toBe(false);
-      expect(oneTen.eligible).toBe(false);
-    },
-    historicalGitTimeout,
+async function writeHistoricalTree(
+  root: string,
+  fixture: HistoricalReleaseFixture,
+  after: boolean,
+): Promise<void> {
+  for (const change of fixture.changes) {
+    if (change.path === `${fixture.packagePath}/package.json`) continue;
+    if (!after && change.status === "A") continue;
+    const file = path.join(root, change.path);
+    if (after && change.status === "D") {
+      await rm(file);
+    } else {
+      await mkdir(path.dirname(file), { recursive: true });
+      await Bun.write(file, after ? "after\n" : "before\n");
+    }
+  }
+  await Bun.write(
+    path.join(root, fixture.packagePath, "package.json"),
+    JSON.stringify(
+      after ? fixture.afterPackageJson : fixture.beforePackageJson,
+    ),
   );
+}
 
-  test(
-    "Astro CI and devDependency-only release is excluded",
-    async () => {
-      const policy = NPM_PACKAGE_POLICIES.find(
-        (candidate) => candidate.name === "astro-opengraph-images",
+// Captured manifests and name/status diffs retain the historical input to the
+// classifier. It reads file names and package.json, not other file contents.
+// The fixture records both original commit IDs for reproducible provenance.
+async function historicalRepository(
+  fixture: HistoricalReleaseFixture,
+): Promise<string> {
+  const root = await mkdtemp(path.join(tmpdir(), "npm-release-history-"));
+  try {
+    await fixtureGit(root, "init", "--quiet");
+    for (const [after, tag] of [
+      [false, fixture.previousTag],
+      [true, fixture.tag],
+    ] as const) {
+      await writeHistoricalTree(root, fixture, after);
+      await fixtureGit(root, "add", ".");
+      await fixtureGit(
+        root,
+        "-c",
+        "user.name=eligibility-test",
+        "-c",
+        "user.email=eligibility-test@example.com",
+        "commit",
+        "--quiet",
+        "-m",
+        tag,
       );
-      if (policy === undefined) throw new Error("Astro policy is missing");
+      await fixtureGit(root, "tag", tag);
+    }
+    return root;
+  } catch (error) {
+    await rm(root, { recursive: true, force: true });
+    throw error;
+  }
+}
 
+describe("historical release regressions", () => {
+  test.each(releaseHistory)("$name is excluded", async (fixture) => {
+    const policy = NPM_PACKAGE_POLICIES.find(
+      (candidate) => candidate.name === fixture.packageName,
+    );
+    if (policy === undefined) throw new Error("Package policy is missing");
+    const root = await historicalRepository(fixture);
+    try {
       const decision = await classifyPackageReleaseRange(
-        process.cwd(),
+        root,
         policy,
-        "astro-opengraph-images-v1.17.4",
-        "astro-opengraph-images-v1.18.0",
+        fixture.previousTag,
+        fixture.tag,
       );
       expect(decision.eligible).toBe(false);
-    },
-    historicalGitTimeout,
-  );
+      expect(decision.reasons).toEqual([]);
+      expect(decision.changedFiles).toEqual(
+        fixture.changes.map((change) => change.path).toSorted(),
+      );
+      await expect(
+        classifyPackageRelease(root, {
+          ...policy,
+          tagPrefix: "does-not-exist-v",
+        }),
+      ).rejects.toThrow("No release tag found");
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
 
-  test("missing release tags fail closed", async () => {
-    const policy = NPM_PACKAGE_POLICIES[0];
-    if (policy === undefined) throw new Error("Npm package policy is missing");
-
-    await expect(
-      classifyPackageRelease(process.cwd(), {
-        ...policy,
-        tagPrefix: "does-not-exist-v",
-      }),
-    ).rejects.toThrow("No release tag found");
+  test("fetches package tags from a local Git remote", async () => {
+    const fixture = releaseHistory[0];
+    if (fixture === undefined) throw new Error("Release fixture is missing");
+    const origin = await historicalRepository(fixture);
+    const root = await mkdtemp(path.join(tmpdir(), "npm-release-fetch-"));
+    try {
+      await fixtureGit(root, "init", "--quiet");
+      await fixtureGit(root, "remote", "add", "origin", origin);
+      await fetchNpmPackageTags(root);
+      const tags = await Bun.$`git -C ${root} tag --list`.text();
+      expect(tags.trim().split("\n").toSorted()).toEqual(
+        [fixture.previousTag, fixture.tag].toSorted(),
+      );
+    } finally {
+      await rm(root, { recursive: true, force: true });
+      await rm(origin, { recursive: true, force: true });
+    }
   });
 });

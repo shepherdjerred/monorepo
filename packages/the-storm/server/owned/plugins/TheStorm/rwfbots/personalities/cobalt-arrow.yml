@@ -1,0 +1,83 @@
+id: cobalt-arrow
+name: Cobalt_Arrow
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1Mzc2OTk0OCwKICAicHJvZmlsZUlkIiA6ICI5MTU1ZmYzNTNlMzc0ZmZlYjE0MmE5NmU2MzU2ZjA4NSIsCiAgInByb2ZpbGVOYW1lIiA6ICJlbG5hZFhCIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzljMDJhMjczMmNiZDMwYzdiYTlmM2RhMjc2Yjg3YWM3NjY1Njg1YjgwM2NkZGNlNDkzNjdiMGM4YjI1YjY5ZWYiCiAgICB9CiAgfQp9
+  signature: "sW7NMnks80ZkDef26SIcpoRb6SV7xpdf7U9LRx7AbBd1tWivz4PZYR25iIryPFcsZXJt50ixKVm2pCTJ7noWzwDXOiOb6HONIZPghr3bfYlOHGIbV0+Y9pZmSxjHCVpre7oYbuQhkkIJ2uLnV/zRoQ+MBVUZZ4YhcfZdmW2HA251/9yKzq0q3RqT/thUJGj917dpb/9vAd10MhZvDq0Vti6ITAgaYL/4pVZkmuJOkC5p7v6NMAfSCmiJ0ek+r1Fy+F/TZCTOCjyO/gkweeXeqeCWnhVB9xza2Jv2XB3TKHpJSwN8koWHz891cK8ohsES+v4d8TQ00QRhcGSEMYilDzNPK1jOog467XBRpr2TOpL/buL79UVzSfMRC13wA3dFmyqUCoxuoBr8UWVoaDkKLLDXTEOV8LfVEWRDCoIlrM6/4oDfjpiGbpgytjA+lpeK6dy5gUfGIJ3JeqwHBrBiao8xb5eBhMnLbJDe2mGBZIlK5GTEJRriPGlaMu9Oq87DZWQIwoLgv5iy16qYMK0qe7PUZWX/yxKT+D0zsW0DCJOSrfcsMcrSvy7tzoczZfrTOeBtgHjI9uVaFma1y3rTk5zTrHpaxKbuAN6LrWh0E9tp0NGUtpnj0bmCZmvMCkmueGMZa+/omy2EgOulD5fYr1Ti33J/1JavlQ5YeyZldLQ="
+skill: 0.933
+archetype: rusher
+leverOffsets:
+  reactionMs: 0.35
+  aimErrorDeg: -0.48
+  cps: 1.06
+  decisionTemperature: 0.48
+  awarenessRadius: -0.42
+  coordination: 0.67
+  aggression: 1.11
+kits:
+  trooper: 1
+  shortbow: 0.57
+  rewind: 0.3
+roles:
+  plant: 0.91
+  escort: 0.44
+  rotate: 0.28
+  hunt: 0.56
+style:
+  aggression: 0.93
+  patience: 0.11
+  teamplay: 0.36
+  risk: 0.79
+voice:
+  tone:
+    - cool
+    - confident
+    - clipped
+  verbosity: quiet
+  style: veteran pro rusher, few words, quietly confident, dry one-liners
+lines:
+  greet:
+    - first in. last out. go
+    - "{team}, follow the blue"
+    - push on my call. my call is now
+  onKill:
+    - "{victim}. next"
+    - "too slow, {victim}"
+    - clear
+  onDeath:
+    - "nice, {killer}"
+    - traded. push it
+    - "{killer} earned that"
+  onPlant:
+    - "{bomb} hot. hold it"
+    - "fuse in on {bomb}"
+  onDefuse:
+    - "{bomb} cold"
+    - "{bomb} safe. back to pushing"
+  onWin:
+    - "gg {team}. clean"
+    - that's how it's done
+  onLoss:
+    - gg. reset
+    - we go again
+  onLastAlive:
+    - fine. i'll do it
+    - watch this
+  taunt:
+    - i'm already there
+    - you'll hear me after
+    - blue streak incoming
+  lobby:
+    - sword's sharp. ready
+    - pick trooper. go fast
+    - "{team}. follow if you can"
+    - lobby's slow. round won't be
+    - same plan as always
+quirks:
+  - always_gg
+  - good_sport
+rivals:
+  - mrnestzaiz
+  - swiftkrashtim
+bio: One of the fastest rushers of the 2014 season, known for reaching the enemy bomb before the countdown chime fades. Says little and wins a lot. Shares a decade-old rush-time rivalry with SwiftKrashtim.
+batch: 2
+retired: false

@@ -6,14 +6,14 @@ import static java.util.stream.Collectors.groupingBy;
 
 import com.shepherdjerred.thestorm.arena.adapter.db.generated.tables.records.ArenaSnapshotEffectsRecord;
 import com.shepherdjerred.thestorm.arena.adapter.db.generated.tables.records.ArenaSnapshotsRecord;
-import com.shepherdjerred.thestorm.arena.app.store.SnapshotStore;
-import com.shepherdjerred.thestorm.arena.domain.snapshot.EffectRecord;
-import com.shepherdjerred.thestorm.arena.domain.snapshot.Experience;
-import com.shepherdjerred.thestorm.arena.domain.snapshot.ItemData;
-import com.shepherdjerred.thestorm.arena.domain.snapshot.Position;
-import com.shepherdjerred.thestorm.arena.domain.snapshot.Snapshot;
-import com.shepherdjerred.thestorm.arena.domain.snapshot.Vitals;
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
+import com.shepherdjerred.thestorm.core.snapshot.EffectRecord;
+import com.shepherdjerred.thestorm.core.snapshot.Experience;
+import com.shepherdjerred.thestorm.core.snapshot.ItemData;
+import com.shepherdjerred.thestorm.core.snapshot.Position;
+import com.shepherdjerred.thestorm.core.snapshot.Snapshot;
+import com.shepherdjerred.thestorm.core.snapshot.SnapshotStore;
+import com.shepherdjerred.thestorm.core.snapshot.Vitals;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -41,7 +41,7 @@ public final class JooqSnapshotStore implements SnapshotStore {
               var experience = snapshot.experience();
               dsl.insertInto(ARENA_SNAPSHOTS)
                   .set(ARENA_SNAPSHOTS.PLAYER, player)
-                  .set(ARENA_SNAPSHOTS.ARENA, snapshot.arena())
+                  .set(ARENA_SNAPSHOTS.ARENA, snapshot.scope())
                   .set(ARENA_SNAPSHOTS.WORLD, position.world())
                   .set(ARENA_SNAPSHOTS.X, position.x())
                   .set(ARENA_SNAPSHOTS.Y, position.y())

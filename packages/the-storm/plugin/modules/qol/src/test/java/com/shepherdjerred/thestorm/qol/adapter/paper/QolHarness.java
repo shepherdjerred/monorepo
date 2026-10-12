@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.qol.adapter.paper;
 
+import com.shepherdjerred.thestorm.core.compute.DirectComputePool;
 import com.shepherdjerred.thestorm.core.config.ConfigFiles;
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
@@ -9,6 +10,9 @@ import com.shepherdjerred.thestorm.core.protection.HarmTarget;
 import com.shepherdjerred.thestorm.core.protection.ProtectedAction;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.core.schedule.PaperScheduler;
+import com.shepherdjerred.thestorm.core.world.AuditedBlockChanges;
+import com.shepherdjerred.thestorm.core.world.BlockChanges;
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.essentials.app.AfkStatus;
 import com.shepherdjerred.thestorm.essentials.app.TeleportGuard;
 import com.shepherdjerred.thestorm.essentials.app.TeleportGuards;
@@ -94,13 +98,14 @@ final class QolHarness implements AutoCloseable {
   static final class Land implements Protection {
     Predicate<Location> noContainers = location -> false;
     Predicate<Location> noBuilding = location -> false;
+    Predicate<Location> preserved = location -> false;
 
     @Override
     public Decision check(UUID player, ProtectedAction action, Location location) {
       var denied =
           switch (action) {
             case OPEN_CONTAINER -> noContainers.test(location);
-            case BUILD -> noBuilding.test(location);
+            case BUILD, AUTOMATIC_BUILD -> noBuilding.test(location);
             default -> false;
           };
       return denied
@@ -115,6 +120,11 @@ final class QolHarness implements AutoCloseable {
     }
 
     @Override
+    public boolean isPreserved(Location location) {
+      return preserved.test(location);
+    }
+
+    @Override
     public boolean sameLand(Location a, Location b) {
       return true;
     }
@@ -124,6 +134,10 @@ final class QolHarness implements AutoCloseable {
   final WorldMock world;
   final StormDatabase database;
   final FakeClock clock = FakeClock.at("2026-09-25T12:00:00Z");
+
+  /** Worlds the test seals; graves must ignore deaths there. */
+  final SealedWorlds sealed = new SealedWorlds();
+
   final Guards guards = new Guards();
   final Afk afk = new Afk();
   final Land land = new Land();
@@ -131,6 +145,7 @@ final class QolHarness implements AutoCloseable {
   final FaultyStore store;
   final CombatTracker combat;
   final List<UUID> saved = new CopyOnWriteArrayList<>();
+  final List<AuditedBlockChanges.Change> recordedChanges = new ArrayList<>();
   @Nullable QolPaper paper;
 
   private QolHarness(ServerMock server, WorldMock world, StormDatabase database, QolConfig config) {
@@ -163,17 +178,22 @@ final class QolHarness implements AutoCloseable {
     harness.store.failLoad = unreadable;
     enabling =
         plugin -> {
+          var services = new Services();
+          services.provide(
+              BlockChanges.class, new AuditedBlockChanges(harness.recordedChanges::add));
           var context =
               new ModuleContext(
                   plugin,
                   plugin.getLifecycleManager(),
                   new PaperScheduler(plugin),
+                  new DirectComputePool(),
                   database,
-                  new Services(),
+                  services,
                   directory,
                   harness.clock,
                   RandomGenerator.getDefault(),
-                  plugin.getComponentLogger());
+                  plugin.getComponentLogger(),
+                  com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled());
           harness.paper =
               QolPaper.start(
                   context,
@@ -184,7 +204,8 @@ final class QolHarness implements AutoCloseable {
                       harness.combat,
                       harness.land,
                       harness.guards,
-                      harness.afk),
+                      harness.afk,
+                      harness.sealed),
                   new ServerHooks(
                       GraveFace.PLAIN, player -> harness.saved.add(player.getUniqueId())));
         };

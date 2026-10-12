@@ -1,4 +1,4 @@
-import { mkdir, unlink } from "node:fs/promises";
+import { mkdir, rm, unlink } from "node:fs/promises";
 import path from "node:path";
 import configuration from "#src/configuration.ts";
 import { NdjsonFileWriter } from "#src/report-lake/ndjson-writer.ts";
@@ -9,6 +9,7 @@ import {
   duckDbEmptySelect,
 } from "#src/report-lake/schema.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
+import { PARQUET_COPY_OPTIONS } from "#src/reports/duckdb/writes/parquet.ts";
 import { createS3Client } from "#src/storage/s3-client.ts";
 
 const REBUILD_TIMEOUT_MS = 30 * 60 * 1000;
@@ -16,10 +17,12 @@ const REBUILD_TIMEOUT_MS = 30 * 60 * 1000;
 export async function writeCompetitionRankHistoryParquet(options: {
   buildDir: string;
   foldedIds?: Set<string>;
+  foldedSources?: Set<string>;
   abortSignal?: AbortSignal;
   timeoutMs?: number;
 }): Promise<{ rows: number; skipped: number }> {
-  const { buildDir, foldedIds, abortSignal, timeoutMs } = options;
+  const { buildDir, foldedIds, foldedSources, abortSignal, timeoutMs } =
+    options;
   const bucket = configuration.s3BucketName;
   if (bucket === undefined) {
     throw new Error(
@@ -27,42 +30,50 @@ export async function writeCompetitionRankHistoryParquet(options: {
     );
   }
   const tmpPath = path.join(buildDir, "competition-rank-history.ndjson.tmp");
-  const writer = new NdjsonFileWriter(tmpPath);
-  const skipped = await populateCompetitionRankHistoryFromS3({
-    client: createS3Client(),
-    bucket,
-    writer,
-    ...(foldedIds === undefined ? {} : { foldedIds }),
-    ...(abortSignal === undefined ? {} : { abortSignal }),
-  });
-  await writer.close();
+  const writer = new NdjsonFileWriter(tmpPath, undefined, abortSignal);
+  try {
+    const skipped = await populateCompetitionRankHistoryFromS3({
+      client: createS3Client(),
+      bucket,
+      writer,
+      ...(foldedIds === undefined ? {} : { foldedIds }),
+      ...(foldedSources === undefined ? {} : { foldedSources }),
+      ...(abortSignal === undefined ? {} : { abortSignal }),
+    });
+    await writer.close();
 
-  const outputDir = path.join(buildDir, "competition_rank_history");
-  await mkdir(outputDir, { recursive: true });
-  const parquetPath = path.join(outputDir, "history.parquet");
-  try {
-    await unlink(parquetPath);
-  } catch {
-    // A fresh build has no prior hardlink to replace.
-  }
-  try {
+    const outputDir = path.join(buildDir, "competition_rank_history");
+    await mkdir(outputDir, { recursive: true });
+    const parquetPath = path.join(outputDir, "history.parquet");
+    try {
+      await unlink(parquetPath);
+    } catch {
+      // A fresh build has no previous hardlink to replace.
+    }
     await withDuckDBConnection(
       async (session) => {
         if (writer.rows === 0) {
           await session.run(
-            `COPY (${duckDbEmptySelect(COMPETITION_RANK_HISTORY_LAKE_COLUMNS)}) TO '${parquetPath}' (FORMAT PARQUET)`,
+            `COPY (${duckDbEmptySelect(COMPETITION_RANK_HISTORY_LAKE_COLUMNS)}) TO '${parquetPath}' (${PARQUET_COPY_OPTIONS})`,
           );
           return;
         }
         await session.run(
-          `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(COMPETITION_RANK_HISTORY_LAKE_COLUMNS)})) TO '${parquetPath}' (FORMAT PARQUET)`,
+          `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(COMPETITION_RANK_HISTORY_LAKE_COLUMNS)})) TO '${parquetPath}' (${PARQUET_COPY_OPTIONS})`,
           [tmpPath],
         );
       },
-      { timeoutMs: timeoutMs ?? REBUILD_TIMEOUT_MS },
+      {
+        timeoutMs: timeoutMs ?? REBUILD_TIMEOUT_MS,
+        ...(abortSignal === undefined ? {} : { abortSignal }),
+      },
     );
+    return { rows: writer.rows, skipped };
   } finally {
-    await unlink(tmpPath);
+    try {
+      await writer.abort();
+    } finally {
+      await rm(tmpPath, { force: true });
+    }
   }
-  return { rows: writer.rows, skipped };
 }

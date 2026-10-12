@@ -1,3 +1,8 @@
+import { DiscordChannelIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
+import {
+  RiotMatchIdSchema,
+  DiscordMessageIdSchema,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import {
   afterAll,
   afterEach,
@@ -104,7 +109,7 @@ describe("openBettingPoolsForPrematch", () => {
     const currentGame = gameInfo();
     const opened = await openBettingPoolsForPrematch(
       {
-        matchId: "NA1_5000000001",
+        matchId: RiotMatchIdSchema.parse("NA1_5000000001"),
         gameInfo: currentGame,
         queueType: "classic",
         guildIds: [SERVER_ID],
@@ -133,7 +138,7 @@ describe("openBettingPoolsForPrematch", () => {
   test("does not open a Classic ARAM Mayhem pool", async () => {
     const opened = await openBettingPoolsForPrematch(
       {
-        matchId: "NA1_5000000002",
+        matchId: RiotMatchIdSchema.parse("NA1_5000000002"),
         gameInfo: gameInfo(),
         queueType: "classic aram mayhem",
         guildIds: [SERVER_ID],
@@ -150,7 +155,7 @@ describe("openBettingPoolsForPrematch", () => {
   test("records message references and their reconstructable content together", async () => {
     await openBettingPoolsForPrematch(
       {
-        matchId: "NA1_5000000003",
+        matchId: RiotMatchIdSchema.parse("NA1_5000000003"),
         gameInfo: gameInfo(),
         queueType: "solo",
         guildIds: [SERVER_ID],
@@ -162,9 +167,14 @@ describe("openBettingPoolsForPrematch", () => {
 
     await recordPoolMessageRefs(
       {
-        matchId: "NA1_5000000003",
+        matchId: RiotMatchIdSchema.parse("NA1_5000000003"),
         serverId: SERVER_ID,
-        refs: [{ channelId: "1337623164146155594", messageId: "prematch" }],
+        refs: [
+          {
+            channelId: DiscordChannelIdSchema.parse("1337623164146155594"),
+            messageId: DiscordMessageIdSchema.parse("842064767694252889"),
+          },
+        ],
         prematchContentBase: "Aaron started a game",
       },
       db,
@@ -180,19 +190,15 @@ describe("openBettingPoolsForPrematch", () => {
     });
     expect(pool.prematchContentBase).toBe("Aaron started a game");
     expect(JSON.parse(pool.messageRefs)).toEqual([
-      { channelId: "1337623164146155594", messageId: "prematch" },
+      { channelId: "1337623164146155594", messageId: "842064767694252889" },
     ]);
   });
 
-  // Regression: peekAvailableAt is nullable now (the peek feature is gone),
-  // but a rollback to the pre-removal image still reads it unconditionally.
-  // A pool this code creates must still carry a value or that rollback path
-  // breaks — see prisma/schema.prisma's comment on the column.
-  test("still writes a compatibility peekAvailableAt for rollback safety", async () => {
+  test("leaves the retired Peek timestamp unset", async () => {
     const detectedAt = new Date();
     await openBettingPoolsForPrematch(
       {
-        matchId: "NA1_5000000004",
+        matchId: RiotMatchIdSchema.parse("NA1_5000000004"),
         gameInfo: gameInfo(),
         queueType: "solo",
         guildIds: [SERVER_ID],
@@ -210,10 +216,7 @@ describe("openBettingPoolsForPrematch", () => {
         },
       },
     });
-    expect(pool.peekAvailableAt).not.toBeNull();
-    expect(pool.peekAvailableAt?.getTime()).toBeGreaterThan(
-      detectedAt.getTime(),
-    );
+    expect(pool.peekAvailableAt).toBeNull();
   });
 });
 
@@ -242,7 +245,7 @@ describe("openBettingPoolsForPrematch metrics", () => {
     // the idempotent-upsert path a naive counter would double-count.
     await openBettingPoolsForPrematch(
       {
-        matchId: "NA1_5000000001",
+        matchId: RiotMatchIdSchema.parse("NA1_5000000001"),
         guildIds: [SERVER_ID],
         gameInfo: info,
         trackedAliasByPuuid: new Map([[bucksTestPuuid(0), "jerred"]]),
@@ -253,7 +256,7 @@ describe("openBettingPoolsForPrematch metrics", () => {
     );
     await openBettingPoolsForPrematch(
       {
-        matchId: "NA1_5000000001",
+        matchId: RiotMatchIdSchema.parse("NA1_5000000001"),
         guildIds: [SERVER_ID],
         gameInfo: info,
         trackedAliasByPuuid: new Map([[bucksTestPuuid(0), "jerred"]]),

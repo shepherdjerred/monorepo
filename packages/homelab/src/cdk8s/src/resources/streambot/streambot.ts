@@ -5,6 +5,7 @@ import {
   Deployment,
   DeploymentStrategy,
   EnvValue,
+  type ISecret,
   type PersistentVolumeClaim,
   Secret,
   Service,
@@ -21,13 +22,16 @@ import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/ot
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import { peerUserbotIds } from "@shepherdjerred/homelab/cdk8s/src/resources/userbot-ids.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import {
+  createStreambotWeb,
+  streambotWebProbes,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/streambot/web.ts";
 
 const STREAMBOT_UID = 1000;
 const STREAMBOT_GID = 1000;
 
 /**
- * First-party streambot (the rewrite in packages/streambot). Discord-only — no web server — so it
- * has no Service/Ingress; it makes outbound Discord connections and streams via the selfbot.
+ * First-party streambot with optional authenticated web bootstrap. Media stays in Discord.
  *
  * Runs in the `media` namespace so it can read-only mount the existing movies/tv libraries
  * (RWO PVCs, same single node as Plex). yt-dlp + ffmpeg are baked into the image.
@@ -35,6 +39,10 @@ const STREAMBOT_GID = 1000;
 export function createStreambotDeployment(
   chart: Chart,
   claims: { movies: PersistentVolumeClaim; tv: PersistentVolumeClaim },
+  web?: {
+    publicOrigin: string;
+    plex?: { service: Service; tokenSecret: ISecret };
+  },
 ) {
   const onePasswordItem = new OnePasswordItem(chart, "streambot-config", {
     spec: {
@@ -141,17 +149,29 @@ export function createStreambotDeployment(
     },
   });
 
-  deployment.addContainer(
+  const container = deployment.addContainer(
     withCommonProps({
       name: "streambot",
       image: `ghcr.io/shepherdjerred/streambot:${versions["shepherdjerred/streambot"]}`,
       envVariables: {
+        ...(web?.plex === undefined
+          ? {}
+          : {
+              PLEX_BASE_URL: EnvValue.fromValue(
+                `http://${web.plex.service.name}.media.svc.cluster.local:32400`,
+              ),
+              PLEX_TOKEN: EnvValue.fromSecretValue({
+                secret: web.plex.tokenSecret,
+                key: "password",
+              }),
+            }),
         BOT_TOKEN: fromSecret("BOT_TOKEN"),
         // Pool of userbot tokens (comma-separated, one per Discord account). The bot acquires a free
         // member-userbot per (guild, voice channel); guild/channel are now dynamic (the issuer's VC),
         // so GUILD_ID/VIDEO_CHANNEL_ID/COMMAND_CHANNEL_ID are no longer needed.
         USER_TOKENS: fromSecret("USER_TOKENS"),
-        ADMIN_IDS: fromSecret("ADMIN_IDS"),
+        // This grants bot administration and stays under Git review.
+        ADMIN_IDS: EnvValue.fromValue("160509172704739328"),
         // Peer userbot Discord user IDs (Pokébot + Glitter Kart) so the alone-channel
         // detector excludes them from the "real viewers" count and leaves once the
         // last human exits. Sourced from the canonical map in resources/userbot-ids.ts.
@@ -231,6 +251,7 @@ export function createStreambotDeployment(
         ENVIRONMENT: EnvValue.fromValue("production"),
       },
       ports: [{ number: 9466, name: "metrics" }],
+      ...(web === undefined ? {} : streambotWebProbes()),
       securityContext: {
         user: STREAMBOT_UID,
         group: STREAMBOT_GID,
@@ -303,6 +324,14 @@ export function createStreambotDeployment(
     }),
   );
 
+  // Enable in the owning media chart only after the OAuth secret and redirect are provisioned.
+  // A required secretKeyRef is used when enabled; an incomplete bootstrap must fail startup.
+  if (web !== undefined)
+    createStreambotWeb(chart, deployment, container, {
+      secret,
+      publicOrigin: web.publicOrigin,
+    });
+
   setRevisionHistoryLimit(deployment);
 
   // Request the Intel iGPU so ffmpeg can VAAPI hardware-encode. The intel-device-plugin mounts
@@ -316,7 +345,7 @@ export function createStreambotDeployment(
   );
 
   // Internal-only metrics Service + ServiceMonitor so Prometheus scrapes the streambot `/metrics`
-  // endpoint on :9466. Not Ingress-exposed — streambot is otherwise Discord-only outbound.
+  // endpoint on :9466. The separate web Service never exposes this port.
   new Service(chart, "streambot-metrics-service", {
     selector: deployment,
     metadata: {

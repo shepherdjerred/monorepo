@@ -1,8 +1,10 @@
-import type {
-  InteractionEditReplyOptions,
-  InteractionReplyOptions,
+import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
+import {
+  type Interaction,
+  type InteractionEditReplyOptions,
+  type InteractionReplyOptions,
+  MessageFlags,
 } from "discord.js";
-import { MessageFlags } from "discord.js";
 import {
   DiscordAccountIdSchema,
   EXPLORE_QUESTION_MAX_LENGTH,
@@ -10,8 +12,11 @@ import {
 } from "@scout-for-lol/data";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { isExploreGuildAllowed } from "#src/explore/access.ts";
+import { resolveExploreModel } from "#src/config/dynamic.ts";
 import { tryStartExploreTurn } from "#src/explore/rate-limit.ts";
-import { runPersistedExploreTurn } from "#src/explore/runs/run-turn.ts";
+import type { runPersistedExploreTurn } from "#src/explore/runs/run-turn.ts";
+import { runDurableDiscordExploreTurn } from "#src/explore/runs/discord/turn.ts";
+import { ExploreRunRateLimitedError } from "#src/explore/runs/run-manager.ts";
 import { loadExploreTranscript, startExploreTurn } from "#src/explore/store.ts";
 import {
   exploreActionRow,
@@ -22,7 +27,7 @@ import { exploreVisualizationPayload } from "#src/discord/scout/visualization.ts
 import { scoutExploreTurnsTotal } from "#src/metrics/explore.ts";
 
 export type ScoutAskInteraction = {
-  guildId: string | null;
+  guildId: Interaction["guildId"];
   user: { id: string; username: string; avatar: string | null };
   options: {
     getSubcommand: () => string;
@@ -41,7 +46,7 @@ type ScoutCommandDependencies = {
 
 const defaultDependencies: ScoutCommandDependencies = {
   client: prisma,
-  runTurn: runPersistedExploreTurn,
+  runTurn: async (input) => await runDurableDiscordExploreTurn(input),
 };
 
 export async function executeScout(
@@ -62,7 +67,8 @@ export async function executeScout(
     });
     return;
   }
-  if (!isExploreGuildAllowed(interaction.guildId)) {
+  const guildId = DiscordGuildIdSchema.parse(interaction.guildId);
+  if (!isExploreGuildAllowed(guildId)) {
     await interaction.reply({
       content: "Scout Explore is not enabled in this server.",
       flags: MessageFlags.Ephemeral,
@@ -120,7 +126,11 @@ export async function executeScout(
       attach: { kind: "leaf" },
       origin: "discord",
     });
-    const started = { ...created, question: question.data };
+    const started = {
+      ...created,
+      question: question.data,
+      model: resolveExploreModel(),
+    };
     const transcript = await loadExploreTranscript(
       dependencies.client,
       started.conversationId,
@@ -137,7 +147,7 @@ export async function executeScout(
       identity,
       // Discord asks always carry a guild context (global in production,
       // guild-scoped in beta), so the invoking server is the whole alias scope.
-      guildIds: [interaction.guildId],
+      guildIds: [guildId],
       // `/scout ask` is one-shot with no confirmation UI, and the user upserted
       // above deliberately has no OAuth token, so creation tools stay absent.
       surface: "discord",
@@ -159,6 +169,10 @@ export async function executeScout(
     );
   } catch (error) {
     ticket.finish();
+    if (error instanceof ExploreRunRateLimitedError) {
+      await interaction.editReply({ content: error.rejection.reason });
+      return;
+    }
     if (!runnerOwnsMetrics) {
       scoutExploreTurnsTotal.inc({ status: "error" });
     }

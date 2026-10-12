@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1-labs@sha256:63e440b412b6acba117974e793b7e7f702e58ee65e044bdff1b8d388ee0d853b
+# syntax=docker/dockerfile:1-labs@sha256:ad43eec41369d9ef94412c0d1eb3203d12218d01da225afc92a3aeba3a0e7796
 # trmnl-dashboard image. Build context is the REPO ROOT (single Bun workspace,
 # one root bun.lock, isolated linker). Built via `bun run docker:build` in this
 # package (which passes `-f Dockerfile ../..`).
@@ -22,7 +22,6 @@ COPY --parents \
   package.json bun.lock bunfig.toml patches/ scripts/package.json \
   packages/*/package.json packages/*/packages/*/package.json \
   packages/docs/wiki/package.json \
-  packages/the-storm/brain/package.json \
   packages/homelab/src/cdk8s/package.json \
   packages/homelab/src/helm-types/package.json \
   ./
@@ -36,7 +35,6 @@ COPY --parents \
   package.json bun.lock bunfig.toml patches/ scripts/package.json \
   packages/*/package.json packages/*/packages/*/package.json \
   packages/docs/wiki/package.json \
-  packages/the-storm/brain/package.json \
   packages/homelab/src/cdk8s/package.json \
   packages/homelab/src/helm-types/package.json \
   ./
@@ -61,6 +59,7 @@ COPY --parents \
   tsconfig.base.json \
   packages/trmnl-dashboard \
   packages/config \
+  packages/sentry-config \
   packages/feature-flags \
   packages/home-assistant \
   packages/ops-model \

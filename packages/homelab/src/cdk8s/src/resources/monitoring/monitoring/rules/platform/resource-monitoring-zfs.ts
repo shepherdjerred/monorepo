@@ -16,7 +16,7 @@ export const zfsPvcUsageExpression = `label_replace(
 )
 * on (volumename) group_left(namespace, persistentvolumeclaim)
 max by (volumename, namespace, persistentvolumeclaim) (
-  kube_persistentvolumeclaim_info
+  kube_persistentvolumeclaim_info{volumename!=""}
 )`;
 
 const BUILDKITD_CACHE_PVC_SELECTOR =

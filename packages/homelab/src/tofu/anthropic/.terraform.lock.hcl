@@ -2,26 +2,26 @@
 # Manual edits may be lost in future updates.
 
 provider "registry.terraform.io/ippontech/anthropic" {
-  version     = "1.43.5"
-  constraints = "1.43.5"
+  version     = "1.60.0"
+  constraints = "1.60.0"
   hashes = [
-    "h1:AGhUYx4JnrdV+bXkoxY+ftO9x0Jd5mN2aji907OKvEU=",
-    "h1:CmE2uPRfK1FXywJc/7EnssboDnf/IZfszvJSmLyGbs0=",
-    "h1:KDpj9e/+2LMfDmSwtTO2wTF2OwPxM1b/Uv7h+HUhXn0=",
-    "h1:pz+aoaXZ+fyPJ+UZmJjSzFRGzkjPjwTbV3HNDHRwBWo=",
-    "zh:0a4ea4327b79c4657918e2766b1957dc86e227cee22c9761c29eeb861a86cf68",
-    "zh:1561c6eb3976ae626c1aaef228fb1a99c7668440e3bf3828ce1b8af588ee9afa",
-    "zh:27a2713543011ca16de0cdba351cb84b1aaf230d084b21c98401bd3b47cb34a2",
-    "zh:60eabd64fc37ce5060f0b1b4b0da500fccf306e74678116f009c8fa086ba0c1b",
-    "zh:7562354d11ba930cab3a5b8f1c7392a7b0cbad8011deac45eb159bd3fcc37edd",
-    "zh:7b30c83dd9030bf1081d06216f0e6f89b1a115ea8a2b8593f9632422e8e50f56",
-    "zh:81944569e0099e9a5f2e6f598404c09853f9aa1103d4b782dd1ffe0c10d7244c",
-    "zh:842315b32e3ffae3babd5a7cbf8e008279e8ff3c05076235a378392a43eace7f",
+    "h1:7IdbGvLvD659usUaSXih739rKHvbm0jvYoRqqI789Zc=",
+    "h1:BM9m8AoVNOofA2tsBkmNP8A2vSQdIOeqSvpQC1cXDwg=",
+    "h1:D+saz1yw6Wi6NLUthdgNeE7wik49qMPFWYtPwVD7eGg=",
+    "h1:r2MEosfHRP96jdpd4DeOqOwgV1LvLQKAs1N4XEBCTYU=",
+    "zh:07f512645dc65b554abee523a7c84b657949c9203a1539482baa929a9453665a",
+    "zh:2e320e2f916496d86c6868d77d050e98450921d776cd395bb24d104e79e51025",
+    "zh:6a7ef4b7288be8f015b46a4a0e8ad81bd1a827eab79700878a63f8f7d4d567ed",
+    "zh:7b4ab39ff1848f255cf0baa15098b3384bc32848efef24db1838470961986d0e",
+    "zh:7cbd7960be44cd895c5e0cdf698932db10e97990d7acc4c7b64b12270cc51d83",
+    "zh:87d6fd4dda527e0d72e54f9820b3da2d0b2815f7073365cc22dfd3e0d7e49331",
+    "zh:8828c84269ae4db7710cb861348612cd665702d19d94e2000ee6c530f7378947",
     "zh:890df766e9b839623b1f0437355032a3c006226a6c200cd911e15ee1a9014e9f",
-    "zh:aad66536b54a4f0b5ab6c96c3f1f13ac50c231ca23abf583ca702fdcf4d6601c",
-    "zh:beece91a9a70070ef42afadf9693e13fa6873cc1e8a2edcc65fd8f718c057481",
-    "zh:d8525b1d7732d585b7b132641a05f3d4bf7db3bfcef2b43d4e495d718fada0ab",
-    "zh:eeb36247d0de9c6e43e9624bc6fc8e3bc468bc79e6dcecf7f5228035058693fd",
-    "zh:f468b8b55d18afaa27accbe26e5d905b350501fe35802937210ee4b0cd2567c3",
+    "zh:ab212ce113542cee716278c475dc811d240339c0696afb08e5e87e0c3d0853ef",
+    "zh:ad42597b3708ea8acebd765cb745ab76d48eb55ad79fc9abea73280c61af5cc7",
+    "zh:ad4920e9f0f12d86bc45abac17d65e159fddb457c6d918a07ea22410e15d8251",
+    "zh:d08613b9ed711464952aa6fa9446e852c1707f65113f43dd03c1fd34a6f48a79",
+    "zh:ec5519a0ad4056b65dcef1e5fcf21b99404bfaf034d0dd3b7c477f3e51cafb3b",
+    "zh:efb858364ad37ee4da18860555ad9114a05b3ca5cdff766ab0573a2acffe1793",
   ]
 }

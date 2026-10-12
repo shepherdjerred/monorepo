@@ -1,5 +1,6 @@
 import { Client, Connection } from "@temporalio/client";
 import * as Sentry from "@sentry/bun";
+import { sentryDataCollection } from "@shepherdjerred/sentry-config";
 import { sanitizeHttpCredentialBreadcrumb } from "./observability/http-credentials.ts";
 import { DefaultLogger, NativeConnection, Runtime } from "@temporalio/worker";
 import type { Worker } from "@temporalio/worker";
@@ -58,6 +59,7 @@ import { createQueueWorker } from "./worker-factory.ts";
 import {
   restoreGlitterCorpusMetricsAfterWorkerStart,
   restoreSeaweedFsMetricsAfterWorkerStart,
+  restoreVeleroR2MetricsAfterWorkerStart,
 } from "./observability/restore-startup-metrics.ts";
 import { prepareAgentChatRuntimeRoot } from "./activities/agent/chat/runtime-root.ts";
 
@@ -127,6 +129,7 @@ function initSentry(): void {
   }
 
   Sentry.init({
+    dataCollection: sentryDataCollection(),
     beforeBreadcrumb: sanitizeHttpCredentialBreadcrumb,
     dsn,
     environment: Bun.env["ENVIRONMENT"] ?? "production",
@@ -136,7 +139,7 @@ function initSentry(): void {
     // with the duplicate-registration check and silently fall back to a no-op
     // tracer — no spans reach Tempo. Sentry stays for errors via captureException;
     // performance traces go to Tempo only.
-    skipOpenTelemetrySetup: true,
+    enableOpenTelemetrySetup: false,
   });
   jsonLog("info", "Sentry initialized");
 }
@@ -249,12 +252,12 @@ async function startRoleServices(options: StartRoleServicesOptions): Promise<{
   let httpServers: EventBridgeHandle | undefined;
   if (shouldReconcile && options.roleContract.runsGateway) {
     await registerGatewaySchedules(options, clientConnection);
-    httpServers = await startHttpServers(client);
+    httpServers = startHttpServers(client);
   } else if (options.roleContract.runsGateway) {
     jsonLog("info", "Schedule reconciliation disabled", {
       namespace: options.namespace,
     });
-    httpServers = await startHttpServers(client);
+    httpServers = startHttpServers(client);
   }
   return {
     ...(httpServers === undefined ? {} : { httpServers }),
@@ -272,8 +275,8 @@ async function startRoleServices(options: StartRoleServicesOptions): Promise<{
 // worker throws in parseTemporalBootstrapMetadata before it ever connects.
 // Kubernetes deployments always set both explicitly, so this never masks a
 // real deploy-config bug — only the two local paths above.
-function localBootstrapEnvironment(value: string | undefined): string {
-  return value ?? "dev";
+function localBootstrapEnvironment(value: string | undefined = "dev"): string {
+  return value;
 }
 
 function localReleaseCommit(value: string | undefined): string {
@@ -441,6 +444,9 @@ async function main(): Promise<void> {
   }
   if (roleContract.restoresSeaweedFsBackupMetrics) {
     void restoreSeaweedFsMetricsAfterWorkerStart(() => shutdownStarted);
+  }
+  if (roleContract.restoresVeleroR2AuditMetrics) {
+    void restoreVeleroR2MetricsAfterWorkerStart(() => shutdownStarted);
   }
   if (workerRuns.length === 0) {
     await controlLifecycle;

@@ -1,8 +1,9 @@
+import type { DiscordGuildId } from "@scout-for-lol/data";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { OnboardingShell } from "#src/components/onboarding/onboarding-shell.tsx";
 
 type Guild = {
-  id: string;
+  id: DiscordGuildId;
   name: string;
   icon: string | null;
   isOwner: boolean;
@@ -10,7 +11,7 @@ type Guild = {
 
 export function OnboardingPickGuildStep(props: {
   guilds: Guild[];
-  onSelect: (guildId: string) => void;
+  onSelect: (guildId: DiscordGuildId) => void;
   onBack: () => void;
   onSkip: () => void;
 }) {

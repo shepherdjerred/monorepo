@@ -1,3 +1,4 @@
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import { describe, expect, test } from "vitest";
 import {
   RawCurrentGameInfoSchema,
@@ -10,7 +11,7 @@ const OPPONENT_PUUID = "o".repeat(78);
 
 function participant(input: {
   championId: number;
-  puuid: string | null;
+  puuid: RawCurrentGameParticipant["puuid"];
   riotId: string;
   teamId: number;
   spell1Id: number;
@@ -38,7 +39,7 @@ function standardGame(opposingTopPuuid: string | null) {
     participants: [
       participant({
         championId: 150,
-        puuid: REQUESTER_PUUID,
+        puuid: LeaguePuuidSchema.parse(REQUESTER_PUUID),
         riotId: "Me#NA1",
         teamId: 100,
         spell1Id: 4,
@@ -46,7 +47,9 @@ function standardGame(opposingTopPuuid: string | null) {
       }),
       participant({
         championId: 104,
-        puuid: "ally-jungle",
+        puuid: LeaguePuuidSchema.parse(
+          "ally-jungle0000000000000000000000000000000000000000000000000000000000000000000",
+        ),
         riotId: "Jungle#NA1",
         teamId: 100,
         spell1Id: 4,
@@ -54,7 +57,9 @@ function standardGame(opposingTopPuuid: string | null) {
       }),
       participant({
         championId: 112,
-        puuid: "ally-mid",
+        puuid: LeaguePuuidSchema.parse(
+          "ally-mid0000000000000000000000000000000000000000000000000000000000000000000000",
+        ),
         riotId: "Mid#NA1",
         teamId: 100,
         spell1Id: 12,
@@ -62,7 +67,9 @@ function standardGame(opposingTopPuuid: string | null) {
       }),
       participant({
         championId: 81,
-        puuid: "ally-adc",
+        puuid: LeaguePuuidSchema.parse(
+          "ally-adc0000000000000000000000000000000000000000000000000000000000000000000000",
+        ),
         riotId: "Adc#NA1",
         teamId: 100,
         spell1Id: 21,
@@ -70,7 +77,9 @@ function standardGame(opposingTopPuuid: string | null) {
       }),
       participant({
         championId: 37,
-        puuid: "ally-support",
+        puuid: LeaguePuuidSchema.parse(
+          "ally-support000000000000000000000000000000000000000000000000000000000000000000",
+        ),
         riotId: "Support#NA1",
         teamId: 100,
         spell1Id: 7,
@@ -86,7 +95,9 @@ function standardGame(opposingTopPuuid: string | null) {
       }),
       participant({
         championId: 64,
-        puuid: "enemy-jungle",
+        puuid: LeaguePuuidSchema.parse(
+          "enemy-jungle000000000000000000000000000000000000000000000000000000000000000000",
+        ),
         riotId: "EnemyJungle#NA1",
         teamId: 200,
         spell1Id: 4,
@@ -94,7 +105,9 @@ function standardGame(opposingTopPuuid: string | null) {
       }),
       participant({
         championId: 103,
-        puuid: "enemy-mid",
+        puuid: LeaguePuuidSchema.parse(
+          "enemy-mid000000000000000000000000000000000000000000000000000000000000000000000",
+        ),
         riotId: "EnemyMid#NA1",
         teamId: 200,
         spell1Id: 12,
@@ -102,7 +115,9 @@ function standardGame(opposingTopPuuid: string | null) {
       }),
       participant({
         championId: 222,
-        puuid: "enemy-adc",
+        puuid: LeaguePuuidSchema.parse(
+          "enemy-adc000000000000000000000000000000000000000000000000000000000000000000000",
+        ),
         riotId: "EnemyAdc#NA1",
         teamId: 200,
         spell1Id: 21,
@@ -110,7 +125,9 @@ function standardGame(opposingTopPuuid: string | null) {
       }),
       participant({
         championId: 117,
-        puuid: "enemy-support",
+        puuid: LeaguePuuidSchema.parse(
+          "enemy-support00000000000000000000000000000000000000000000000000000000000000000",
+        ),
         riotId: "EnemySupport#NA1",
         teamId: 200,
         spell1Id: 7,
@@ -124,7 +141,10 @@ describe("current lane opponent", () => {
   test("pairs the requester with the opposing inferred laner", () => {
     expect(
       findCurrentLaneOpponentInGame(
-        { puuid: REQUESTER_PUUID, region: "AMERICA_NORTH" },
+        {
+          puuid: LeaguePuuidSchema.parse(REQUESTER_PUUID),
+          region: "AMERICA_NORTH",
+        },
         standardGame(OPPONENT_PUUID),
       ),
     ).toEqual({
@@ -139,7 +159,10 @@ describe("current lane opponent", () => {
   test("refuses a privacy-scrubbed opposing identity", () => {
     expect(
       findCurrentLaneOpponentInGame(
-        { puuid: REQUESTER_PUUID, region: "AMERICA_NORTH" },
+        {
+          puuid: LeaguePuuidSchema.parse(REQUESTER_PUUID),
+          region: "AMERICA_NORTH",
+        },
         standardGame(null),
       ),
     ).toEqual({
@@ -162,7 +185,10 @@ describe("current lane opponent", () => {
 
     expect(
       findCurrentLaneOpponentInGame(
-        { puuid: REQUESTER_PUUID, region: "AMERICA_NORTH" },
+        {
+          puuid: LeaguePuuidSchema.parse(REQUESTER_PUUID),
+          region: "AMERICA_NORTH",
+        },
         ambiguous,
       ),
     ).toEqual({

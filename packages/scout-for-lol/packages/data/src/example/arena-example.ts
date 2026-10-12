@@ -5,7 +5,7 @@ import {
   ArenaMatchSchema,
   ArenaTeamSchema,
   LeaguePuuidSchema,
-} from "@scout-for-lol/data";
+} from "#src/model/index.ts";
 import { getTeams } from "./arena-teams.ts";
 import {
   createAatroxChampion,

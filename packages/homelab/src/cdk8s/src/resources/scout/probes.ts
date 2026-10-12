@@ -1,5 +1,9 @@
-import { Duration } from "cdk8s";
-import { Probe } from "cdk8s-plus-31";
+import { Duration, Size } from "cdk8s";
+import { Cpu, Probe, Protocol } from "cdk8s-plus-31";
+import {
+  SCOUT_STARTUP_PROBE_PERIOD_SECONDS,
+  SCOUT_STARTUP_PROBE_FAILURE_THRESHOLD,
+} from "@shepherdjerred/homelab/cdk8s/src/scout-release-budgets.ts";
 
 /** The port every Scout runtime role serves its HTTP surface on. */
 export const SCOUT_HTTP_PORT = 3000;
@@ -17,8 +21,8 @@ export function scoutRuntimeProbes() {
   return {
     startup: Probe.fromHttpGet("/ping", {
       port: SCOUT_HTTP_PORT,
-      periodSeconds: Duration.seconds(10),
-      failureThreshold: 240,
+      periodSeconds: Duration.seconds(SCOUT_STARTUP_PROBE_PERIOD_SECONDS),
+      failureThreshold: SCOUT_STARTUP_PROBE_FAILURE_THRESHOLD,
     }),
     liveness: Probe.fromHttpGet("/livez", {
       port: SCOUT_HTTP_PORT,
@@ -30,5 +34,28 @@ export function scoutRuntimeProbes() {
       periodSeconds: Duration.seconds(30),
       failureThreshold: 3,
     }),
+  };
+}
+
+/** Shared admin surface, with voice memory reserved only by its owning role. */
+export function scoutAdminRoleContainerBase(
+  imageVersion: string,
+  role: "gateway" | "activity-worker",
+) {
+  return {
+    image: `ghcr.io/shepherdjerred/scout-for-lol:${imageVersion}`,
+    ports: [{ name: "port-3000", number: 3000, protocol: Protocol.TCP }],
+    securityContext: {
+      ensureNonRoot: false,
+      readOnlyRootFilesystem: false,
+    },
+    resources: {
+      cpu: { request: Cpu.millis(50) },
+      memory: {
+        request: Size.gibibytes(role === "gateway" ? 3 : 2),
+        limit: Size.gibibytes(8),
+      },
+    },
+    ...scoutRuntimeProbes(),
   };
 }

@@ -15,10 +15,9 @@ We deliberately diverged:
   Modeled on `packages/discord-plays-pokemon` (which streams via a browser — we use ffmpeg).
 - **System yt-dlp/ffmpeg.** Baked into the image; no runtime download into a writable dir
   (which broke under our non-root securityContext).
-- **No web UI.** Dropped upstream's express/ejs/bcrypt/argon2/session stack; **real Discord slash
-  commands** are the control surface — a single `/stream` command with subcommands
-  (`/stream play`, `/stream skip`, `/stream queue`, …), accepted in any channel; public status
-  posts to a configured channel.
+- **Discord identity for the web remote.** A React client and Bun API reuse the
+  same playback service as slash commands. Discord OAuth and live voice membership
+  replace upstream's password accounts and Express/EJS stack.
 - **Branded types** for ids/tokens (Zod `.brand()`), validate-at-boundary throughout.
 - **Intel VAAPI hardware encoding** (with software fallback), and adult-source blocking.
 
@@ -45,7 +44,8 @@ live seek and no pause. Our fork adds seek:
   restarts ffmpeg with an input `-ss` offset and re-attaches the demux → stream pipeline onto the
   **same** Go-Live connection — viewers see a seek, not a stream restart. Seek is absolute
   (`/stream seek 1:30`); it acts on the live stream as a side-channel, not a machine event.
-- **Pause is still absent** — no clean implementation for a continuous live stream.
+- Pause and resume restart ordinary media at the saved position. Live sports
+  retain their restricted play, skip/stop, and volume controls.
 - Live streams (yt-dlp `is_live`) play but report no duration; seeking them is not meaningful.
 
 ## Caveats

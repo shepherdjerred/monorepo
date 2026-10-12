@@ -1,3 +1,4 @@
+import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { describe, expect, test } from "vitest";
 import {
   resolvePermissionQueryError,
@@ -8,7 +9,7 @@ describe("permission query state", () => {
   test("a list failure enables the scoped fallback", () => {
     expect(
       shouldQueryScopedPermissions({
-        guildId: "123",
+        guildId: DiscordGuildIdSchema.parse("818851787542395619"),
         listStatus: "error",
         hasListEntry: false,
       }),
@@ -18,7 +19,7 @@ describe("permission query state", () => {
   test("a successful list miss enables the scoped fallback", () => {
     expect(
       shouldQueryScopedPermissions({
-        guildId: "123",
+        guildId: DiscordGuildIdSchema.parse("818851787542395619"),
         listStatus: "success",
         hasListEntry: false,
       }),
@@ -28,7 +29,7 @@ describe("permission query state", () => {
   test("a pending list does not start the fallback prematurely", () => {
     expect(
       shouldQueryScopedPermissions({
-        guildId: "123",
+        guildId: DiscordGuildIdSchema.parse("818851787542395619"),
         listStatus: "pending",
         hasListEntry: false,
       }),

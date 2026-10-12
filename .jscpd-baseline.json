@@ -16,10 +16,6 @@
       "clones": 1,
       "tokens": 119
     },
-    "packages/astro-opengraph-images/src/presets/custom-property.tsx|packages/astro-opengraph-images/src/presets/simple-blog.tsx": {
-      "clones": 1,
-      "tokens": 71
-    },
     "packages/better-skill-capped/src/lib/local-store.test.ts|packages/better-skill-capped/src/lib/safe-storage.test.ts": {
       "clones": 1,
       "tokens": 114
@@ -58,27 +54,11 @@
     },
     "packages/birmel/src/agent-tools/tools/discord/actions/poll-actions.ts|packages/birmel/src/discord/polls/helpers.ts": {
       "clones": 1,
-      "tokens": 90
+      "tokens": 87
     },
     "packages/birmel/src/agent-tools/tools/discord/actions/thread-actions.ts|packages/birmel/src/agent-tools/tools/discord/actions/thread-actions.ts": {
       "clones": 1,
       "tokens": 73
-    },
-    "packages/birmel/src/agent-tools/tools/discord/automod.ts|packages/birmel/src/agent-tools/tools/discord/channels.ts": {
-      "clones": 1,
-      "tokens": 77
-    },
-    "packages/birmel/src/agent-tools/tools/discord/automod.ts|packages/birmel/src/agent-tools/tools/discord/emojis.ts": {
-      "clones": 2,
-      "tokens": 146
-    },
-    "packages/birmel/src/agent-tools/tools/discord/emojis.ts|packages/birmel/src/agent-tools/tools/discord/emojis.ts": {
-      "clones": 1,
-      "tokens": 93
-    },
-    "packages/birmel/src/agent-tools/tools/discord/emojis.ts|packages/birmel/src/agent-tools/tools/discord/events.ts": {
-      "clones": 1,
-      "tokens": 72
     },
     "packages/birmel/src/agent-tools/tools/elections/candidate-stats.ts|packages/birmel/src/agent-tools/tools/elections/election-actions.ts": {
       "clones": 1,
@@ -172,10 +152,6 @@
       "clones": 1,
       "tokens": 107
     },
-    "packages/discord-plays-mario-kart/packages/backend/scripts/e2e-press-to-glass.ts|packages/discord-plays-mario-kart/packages/backend/scripts/e2e-viewer-stats.ts": {
-      "clones": 1,
-      "tokens": 78
-    },
     "packages/discord-plays-mario-kart/packages/backend/scripts/smoke.ts|packages/discord-plays-pokemon/packages/backend/scripts/smoke.ts": {
       "clones": 2,
       "tokens": 401
@@ -242,31 +218,7 @@
     },
     "packages/discord-plays-mario-kart/packages/frontend/src/main.tsx|packages/discord-plays-pokemon/packages/frontend/src/main.tsx": {
       "clones": 2,
-      "tokens": 214
-    },
-    "packages/discord-plays-mario-kart/packages/frontend/src/model/connection.ts|packages/discord-plays-pokemon/packages/frontend/src/model/connection.ts": {
-      "clones": 1,
-      "tokens": 88
-    },
-    "packages/discord-plays-mario-kart/packages/frontend/src/model/notification.ts|packages/discord-plays-pokemon/packages/frontend/src/model/notification.ts": {
-      "clones": 1,
-      "tokens": 90
-    },
-    "packages/discord-plays-mario-kart/packages/frontend/src/stories/button.tsx|packages/discord-plays-pokemon/packages/frontend/src/stories/button.tsx": {
-      "clones": 1,
-      "tokens": 72
-    },
-    "packages/discord-plays-mario-kart/packages/frontend/src/stories/notification.tsx|packages/discord-plays-pokemon/packages/frontend/src/stories/notification.tsx": {
-      "clones": 1,
-      "tokens": 373
-    },
-    "packages/discord-plays-mario-kart/packages/frontend/src/stories/notifications.tsx|packages/discord-plays-pokemon/packages/frontend/src/stories/notifications.tsx": {
-      "clones": 1,
-      "tokens": 151
-    },
-    "packages/discord-plays-mario-kart/packages/frontend/src/util.ts|packages/discord-plays-pokemon/packages/frontend/src/util.ts": {
-      "clones": 1,
-      "tokens": 148
+      "tokens": 207
     },
     "packages/discord-plays-pokemon/packages/backend/scripts/audio-e2e.ts|packages/discord-plays-pokemon/packages/backend/src/emulator/audio/audio-fingerprint.test.ts": {
       "clones": 1,
@@ -404,18 +356,6 @@
       "clones": 1,
       "tokens": 115
     },
-    "packages/home-assistant/src/codegen/introspect.ts|packages/home-assistant/src/codegen/introspect.ts": {
-      "clones": 1,
-      "tokens": 118
-    },
-    "packages/home-assistant/test/ws.test.ts|packages/home-assistant/test/ws.test.ts": {
-      "clones": 1,
-      "tokens": 108
-    },
-    "packages/homelab/scripts/check-suppressions.ts|packages/scout-for-lol/scripts/check-suppressions.ts": {
-      "clones": 1,
-      "tokens": 101
-    },
     "packages/homelab/src/cdk8s/grafana/gitckup-dashboard.ts|packages/homelab/src/cdk8s/grafana/gitckup-dashboard.ts": {
       "clones": 3,
       "tokens": 281
@@ -444,10 +384,6 @@
       "clones": 2,
       "tokens": 146
     },
-    "packages/homelab/src/cdk8s/grafana/scout/scout-dashboard-scheduled-report-panels.ts|packages/homelab/src/cdk8s/grafana/scout/scout-dashboard-scheduled-report-panels.ts": {
-      "clones": 1,
-      "tokens": 88
-    },
     "packages/homelab/src/cdk8s/grafana/scout/scout-dashboard.ts|packages/homelab/src/cdk8s/grafana/tasknotes-dashboard.ts": {
       "clones": 1,
       "tokens": 140
@@ -455,10 +391,6 @@
     "packages/homelab/src/cdk8s/grafana/shared/dashboard-panels.ts|packages/homelab/src/cdk8s/grafana/static-site-probes-dashboard.ts": {
       "clones": 1,
       "tokens": 70
-    },
-    "packages/homelab/src/cdk8s/grafana/storage/seaweedfs-backup-dashboard.ts|packages/homelab/src/cdk8s/grafana/storage/seaweedfs-backup-dashboard.ts": {
-      "clones": 1,
-      "tokens": 72
     },
     "packages/homelab/src/cdk8s/grafana/storage/smartctl-dashboard.ts|packages/homelab/src/cdk8s/grafana/storage/smartctl-dashboard.ts": {
       "clones": 3,
@@ -496,18 +428,6 @@
       "clones": 1,
       "tokens": 72
     },
-    "packages/homelab/src/cdk8s/src/apps/1password.ts|packages/homelab/src/cdk8s/src/resources/argo-applications/platform/1password.ts": {
-      "clones": 2,
-      "tokens": 157
-    },
-    "packages/homelab/src/cdk8s/src/apps/argocd.ts|packages/homelab/src/cdk8s/src/resources/argo-applications/platform/argocd.ts": {
-      "clones": 1,
-      "tokens": 71
-    },
-    "packages/homelab/src/cdk8s/src/argocd-api-contract.test.ts|packages/homelab/src/cdk8s/src/argocd-sync-managed.test.ts": {
-      "clones": 1,
-      "tokens": 72
-    },
     "packages/homelab/src/cdk8s/src/argocd-application-readiness.ts|packages/homelab/src/cdk8s/src/argocd-application-readiness.ts": {
       "clones": 1,
       "tokens": 88
@@ -516,57 +436,37 @@
       "clones": 6,
       "tokens": 505
     },
-    "packages/homelab/src/cdk8s/src/argocd-auto-sync-invariant.test.ts|packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts": {
-      "clones": 1,
-      "tokens": 82
-    },
-    "packages/homelab/src/cdk8s/src/argocd-auto-sync-invariant.test.ts|packages/homelab/src/cdk8s/src/argocd-script.test.ts": {
-      "clones": 2,
-      "tokens": 152
-    },
-    "packages/homelab/src/cdk8s/src/argocd-auto-sync-invariant.test.ts|packages/homelab/src/cdk8s/src/argocd-sync-managed.test.ts": {
-      "clones": 1,
-      "tokens": 82
-    },
     "packages/homelab/src/cdk8s/src/argocd-release-reconciliation.test.ts|packages/homelab/src/cdk8s/src/argocd-release-reconciliation.test.ts": {
-      "clones": 5,
-      "tokens": 437
-    },
-    "packages/homelab/src/cdk8s/src/argocd-release-reconciliation.test.ts|packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts": {
-      "clones": 2,
-      "tokens": 262
+      "clones": 1,
+      "tokens": 72
     },
     "packages/homelab/src/cdk8s/src/argocd-release-reconciliation.test.ts|packages/homelab/src/cdk8s/src/argocd-script.test.ts": {
-      "clones": 10,
-      "tokens": 901
+      "clones": 3,
+      "tokens": 227
     },
     "packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts|packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts": {
       "clones": 13,
-      "tokens": 1391
+      "tokens": 1249
     },
     "packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts|packages/homelab/src/cdk8s/src/argocd-script-support.ts": {
-      "clones": 2,
-      "tokens": 152
+      "clones": 1,
+      "tokens": 71
     },
     "packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts|packages/homelab/src/cdk8s/src/argocd-script.test.ts": {
-      "clones": 4,
-      "tokens": 365
+      "clones": 3,
+      "tokens": 281
     },
     "packages/homelab/src/cdk8s/src/argocd-script-support.ts|packages/homelab/src/cdk8s/src/argocd-sync-managed.test.ts": {
       "clones": 3,
       "tokens": 267
     },
     "packages/homelab/src/cdk8s/src/argocd-script.test.ts|packages/homelab/src/cdk8s/src/argocd-script.test.ts": {
-      "clones": 11,
-      "tokens": 1097
-    },
-    "packages/homelab/src/cdk8s/src/argocd-script.test.ts|packages/homelab/src/cdk8s/src/argocd-sync-managed.test.ts": {
-      "clones": 2,
-      "tokens": 216
+      "clones": 8,
+      "tokens": 668
     },
     "packages/homelab/src/cdk8s/src/argocd-sync-managed.test.ts|packages/homelab/src/cdk8s/src/argocd-sync-managed.test.ts": {
       "clones": 6,
-      "tokens": 688
+      "tokens": 650
     },
     "packages/homelab/src/cdk8s/src/backup-policy/pvc-backup-policy.test.ts|packages/homelab/src/cdk8s/src/resources/woodpecker/ci-namespace.test.ts": {
       "clones": 1,
@@ -587,10 +487,6 @@
     "packages/homelab/src/cdk8s/src/cdk8s-charts/media/redlib.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/tasknotes.ts": {
       "clones": 1,
       "tokens": 75
-    },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/platform/postal.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/platform/postal.ts": {
-      "clones": 1,
-      "tokens": 97
     },
     "packages/homelab/src/cdk8s/src/cdk8s-charts/platform/temporal.ts|packages/homelab/src/cdk8s/src/resources/relay/index.ts": {
       "clones": 1,
@@ -636,13 +532,9 @@
       "clones": 2,
       "tokens": 206
     },
-    "packages/homelab/src/cdk8s/src/resources/phoenix/index.ts|packages/homelab/src/cdk8s/src/resources/woodpecker/config-extension-workload.ts": {
-      "clones": 1,
-      "tokens": 85
-    },
     "packages/homelab/src/cdk8s/src/resources/phoenix/index.ts|packages/homelab/src/cdk8s/src/resources/woodpecker/index.ts": {
       "clones": 1,
-      "tokens": 93
+      "tokens": 92
     },
     "packages/homelab/src/cdk8s/src/resources/postgres/scout-db.ts|packages/homelab/src/cdk8s/src/resources/postgres/single-app-postgresql.ts": {
       "clones": 1,
@@ -658,7 +550,7 @@
     },
     "packages/homelab/src/cdk8s/src/resources/postgres/single-app-postgresql.ts|packages/homelab/src/cdk8s/src/resources/postgres/woodpecker-db.ts": {
       "clones": 1,
-      "tokens": 107
+      "tokens": 96
     },
     "packages/homelab/src/cdk8s/src/resources/temporal/workers/operations-workers.ts|packages/homelab/src/cdk8s/src/resources/temporal/workers/worker.ts": {
       "clones": 1,
@@ -742,7 +634,7 @@
     },
     "packages/pr-fleet-controller/test/run-bundle.test.ts|packages/pr-fleet-controller/test/run-bundle.test.ts": {
       "clones": 3,
-      "tokens": 283
+      "tokens": 281
     },
     "packages/pr-fleet-controller/test/worktree.test.ts|packages/pr-fleet-controller/test/worktree.test.ts": {
       "clones": 2,
@@ -767,14 +659,6 @@
     "packages/scout-for-lol/packages/backend/scripts/lane-priors/lane-prior-cli.ts|packages/scout-for-lol/packages/backend/scripts/update-queue-windows.ts": {
       "clones": 1,
       "tokens": 81
-    },
-    "packages/scout-for-lol/packages/backend/scripts/scoutql/scoutql-v2-rewrite-render.ts|packages/scout-for-lol/packages/data/src/model/legacy/report-query-render.ts": {
-      "clones": 1,
-      "tokens": 70
-    },
-    "packages/scout-for-lol/packages/backend/src/architecture-boundaries.test.ts|packages/scout-for-lol/packages/domain/src/architecture-boundaries.test.ts": {
-      "clones": 1,
-      "tokens": 113
     },
     "packages/scout-for-lol/packages/backend/src/betting/accounts.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/leaderboard/weekly-leaderboard.integration.test.ts": {
       "clones": 1,
@@ -953,8 +837,8 @@
       "tokens": 75
     },
     "packages/scout-for-lol/packages/backend/src/league/tasks/postmatch/get-image.test.ts|packages/scout-for-lol/packages/backend/src/league/tasks/postmatch/get-image.test.ts": {
-      "clones": 3,
-      "tokens": 245
+      "clones": 1,
+      "tokens": 90
     },
     "packages/scout-for-lol/packages/backend/src/league/tasks/postmatch/match-report-classic.test.ts|packages/scout-for-lol/packages/backend/src/league/tasks/postmatch/match-report-classic.test.ts": {
       "clones": 1,
@@ -977,8 +861,8 @@
       "tokens": 112
     },
     "packages/scout-for-lol/packages/backend/src/observability/tracing.ts|packages/temporal/src/observability/tracing.ts": {
-      "clones": 3,
-      "tokens": 309
+      "clones": 2,
+      "tokens": 202
     },
     "packages/scout-for-lol/packages/backend/src/report-lake/report-lake.integration.test.ts|packages/scout-for-lol/packages/backend/src/report-lake/report-lake.integration.test.ts": {
       "clones": 2,
@@ -1059,14 +943,6 @@
     "packages/scout-for-lol/packages/data/src/league/raw-missions.schema.ts|packages/scout-for-lol/packages/data/src/model/arena/arena.ts": {
       "clones": 1,
       "tokens": 81
-    },
-    "packages/scout-for-lol/packages/data/src/model/legacy/report-query-lexer.ts|packages/scout-for-lol/packages/data/src/model/scoutql/parse/tokens.ts": {
-      "clones": 1,
-      "tokens": 124
-    },
-    "packages/scout-for-lol/packages/data/src/model/legacy/report-query-spec.ts|packages/scout-for-lol/packages/data/src/model/scoutql/parse/plan.ts": {
-      "clones": 1,
-      "tokens": 78
     },
     "packages/scout-for-lol/packages/data/src/model/matches/loading-screen.test.ts|packages/scout-for-lol/packages/data/src/model/matches/loading-screen.test.ts": {
       "clones": 1,
@@ -1341,8 +1217,8 @@
       "tokens": 72
     },
     "packages/temporal/src/activities/dpp-pokeemerald-data-refresh.ts|packages/temporal/src/activities/homelab/homelab-crd-imports-refresh.ts": {
-      "clones": 2,
-      "tokens": 161
+      "clones": 1,
+      "tokens": 73
     },
     "packages/temporal/src/activities/dpp-pokeemerald-data-refresh.ts|packages/temporal/src/activities/scout/scout-showcase-refresh.ts": {
       "clones": 1,
@@ -1356,10 +1232,6 @@
       "clones": 1,
       "tokens": 122
     },
-    "packages/temporal/src/activities/homelab/homelab-crd-imports-refresh.ts|packages/temporal/src/activities/scout/scout-showcase-refresh.ts": {
-      "clones": 1,
-      "tokens": 95
-    },
     "packages/temporal/src/activities/maintenance/check-pr-merge-conflicts-git.ts|packages/temporal/src/activities/scout/scout-season-refresh-git.ts": {
       "clones": 1,
       "tokens": 72
@@ -1368,10 +1240,6 @@
       "clones": 1,
       "tokens": 79
     },
-    "packages/temporal/src/activities/maintenance/tasknotes-canary.ts|packages/temporal/src/activities/reports/report-freshness.ts": {
-      "clones": 1,
-      "tokens": 105
-    },
     "packages/temporal/src/shared/agent/agent-task-output.ts|packages/temporal/src/shared/agent/agent-task-output.ts": {
       "clones": 1,
       "tokens": 141
@@ -1379,6 +1247,14 @@
     "packages/temporal/src/shared/agent/agent-task.ts|packages/temporal/src/shared/agent/agent-task.ts": {
       "clones": 1,
       "tokens": 143
+    },
+    "packages/temporal/src/workflows/ops-snapshot.ts|packages/temporal/src/workflows/replay-fixtures/ops-before-ops-queue.ts": {
+      "clones": 3,
+      "tokens": 381
+    },
+    "packages/temporal/src/workflows/replay-fixtures/ops-before-ops-queue.ts|packages/temporal/src/workflows/replay-fixtures/ops-before-temporal.ts": {
+      "clones": 1,
+      "tokens": 82
     },
     "packages/temporal/src/workflows/scout/data-dragon.test.ts|packages/temporal/src/workflows/scout/data-dragon.test.ts": {
       "clones": 1,

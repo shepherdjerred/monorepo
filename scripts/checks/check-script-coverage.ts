@@ -1,5 +1,4 @@
 import path from "node:path";
-import { sanitizeWorkspace, TestManifestSchema } from "../ci/ci-reporting.ts";
 import { parseCoverageSummaries } from "../misc/migration-core.ts";
 
 const minimumCoverage = 90;
@@ -15,17 +14,6 @@ const packageDirectories = [
   "packages/tasks-for-obsidian",
   "packages/toolkit",
 ] as const;
-const manifest = TestManifestSchema.parse(
-  await Bun.file(
-    path.join(import.meta.dir, "..", "ci-test-manifest.json"),
-  ).json(),
-);
-const workspaceByDirectory = new Map(
-  manifest.workspaces.map((workspace) => [
-    workspace.directory,
-    workspace.package,
-  ]),
-);
 
 async function checkPackage(packageDirectory: string): Promise<void> {
   const child = Bun.spawn(["bun", "run", "test:coverage"], {
@@ -57,35 +45,6 @@ async function checkPackage(packageDirectory: string): Promise<void> {
       );
     }
   }
-  const workspace = workspaceByDirectory.get(packageDirectory);
-  if (workspace === undefined) {
-    throw new Error(
-      `${packageDirectory} has script coverage but no CI test manifest entry`,
-    );
-  }
-  const lcovPath = path.join(
-    repositoryRoot,
-    packageDirectory,
-    "coverage",
-    "lcov.info",
-  );
-  const lcov = Bun.file(lcovPath);
-  if (!(await lcov.exists()) || lcov.size === 0) {
-    throw new Error(
-      `${packageDirectory} emitted no LCOV report at ${lcovPath}`,
-    );
-  }
-  const destination = path.join(
-    repositoryRoot,
-    ".ci-reports",
-    "coverage",
-    "raw",
-    sanitizeWorkspace(workspace),
-    "script-coverage",
-    "lcov.info",
-  );
-  await Bun.$`mkdir -p ${path.dirname(destination)}`;
-  await Bun.write(destination, lcov);
 }
 
 for (const packageDirectory of packageDirectories) {

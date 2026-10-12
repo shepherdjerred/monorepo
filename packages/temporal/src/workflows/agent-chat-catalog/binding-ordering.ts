@@ -25,9 +25,9 @@ function sourceSequenceAtLeast(
 
 function sourceEpochMatches(
   existing: string | number | undefined,
-  next: string | number | undefined,
+  next: string | number | undefined = 0,
 ): boolean {
-  return String(existing ?? 0) === String(next ?? 0);
+  return String(existing ?? 0) === String(next);
 }
 
 export function existingBindingWins(

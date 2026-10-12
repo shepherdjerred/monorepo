@@ -1,8 +1,8 @@
+import type { z } from "zod";
 import {
   LeaguePuuidSchema,
   RawChampionMasteryListSchema,
   regionToPlatformRoute,
-  type LeaguePuuid,
   type RawChampionMastery,
   type Region,
 } from "@scout-for-lol/data";
@@ -45,7 +45,7 @@ function snapshotFromRow(
 }
 
 export async function refreshChampionMasterySnapshot(input: {
-  puuid: LeaguePuuid | string;
+  puuid: z.input<typeof LeaguePuuidSchema>;
   region: Region;
   database?: ExtendedPrismaClient;
 }): Promise<ChampionMasterySnapshot> {
@@ -70,7 +70,7 @@ export async function refreshChampionMasterySnapshot(input: {
  * not fabricated and never prevents the caller's primary surface from loading.
  */
 export async function getChampionMasterySnapshot(input: {
-  puuid: LeaguePuuid | string;
+  puuid: z.input<typeof LeaguePuuidSchema>;
   region: Region;
   database?: ExtendedPrismaClient;
   now?: Date;

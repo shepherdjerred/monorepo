@@ -1,0 +1,36 @@
+diff --git a/pkg/zfs/plugin/backup.go b/pkg/zfs/plugin/backup.go
+index 155c68a..888d5eb 100644
+--- a/pkg/zfs/plugin/backup.go
++++ b/pkg/zfs/plugin/backup.go
+@@ -98,8 +97,0 @@ func (p *Plugin) getPrevSnap(volname, schdname string) (string, error) {
+-	size := len(bkpList.Items)
+-	count := p.incremental + 1
+-
+-	if uint64(size)%count == 0 {
+-		// have to start the next snapshot incremental group, take the full backup
+-		return "", nil
+-	}
+-
+@@ -117 +109,3 @@ func (p *Plugin) getPrevSnap(volname, schdname string) (string, error) {
+-		size := len(backups)
++		if len(backups) == 0 {
++			return "", nil
++		}
+@@ -119 +113,2 @@ func (p *Plugin) getPrevSnap(volname, schdname string) (string, error) {
+-		return backups[size-1], nil
++		previous := backups[len(backups)-1]
++		return p.cl.PreviousZFSStream(volname, schdname, previous, p.incremental)
+@@ -284,0 +280,6 @@ func (p *Plugin) doBackup(volumeID string, snapname string, schdname string, por
++	// Flush and close the multipart writer before inspecting the durable stream.
++	p.cl.ExitServer = true
++	wg.Wait()
++	if err := p.cl.PublishZFSStream(volumeID, schdname, snapname); err != nil {
++		return "", err
++	}
+diff --git a/pkg/zfs/plugin/restore.go b/pkg/zfs/plugin/restore.go
+index 62058de..22f619c 100644
+--- a/pkg/zfs/plugin/restore.go
++++ b/pkg/zfs/plugin/restore.go
+@@ -333 +333 @@ func (p *Plugin) doRestore(snapshotID string, port int) (string, error) {
+-	bkpList, err := p.getSnapList(pvname, schdname, bkpname)
++	bkpList, err := p.cl.ZFSChain(pvname, schdname, bkpname)

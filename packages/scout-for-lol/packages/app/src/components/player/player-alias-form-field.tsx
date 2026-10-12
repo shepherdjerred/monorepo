@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/data";
 import { useEffect, useRef } from "react";
 import type { z } from "zod";
 import {
@@ -52,7 +53,7 @@ export function usePlayerAliasDialogForm(
 export function PlayerAliasFormField(props: {
   id: string;
   label: string;
-  guildId: string;
+  guildId: DiscordGuildId;
   field: AliasField;
 }) {
   const error = props.field.state.meta.isTouched

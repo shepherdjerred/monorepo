@@ -1,0 +1,24 @@
+{
+  "items": [
+    {
+      "metadata": {
+        "name": "6hourly-backup-20261004181530",
+        "labels": {
+          "backup-type": "6hourly"
+        }
+      },
+      "spec": {
+        "includedNamespaces": ["*"],
+        "snapshotVolumes": true
+      },
+      "status": {
+        "phase": "Completed",
+        "errors": null,
+        "warnings": 8,
+        "volumeSnapshotsAttempted": 50,
+        "volumeSnapshotsCompleted": 50,
+        "completionTimestamp": "2026-10-04T18:25:39Z"
+      }
+    }
+  ]
+}

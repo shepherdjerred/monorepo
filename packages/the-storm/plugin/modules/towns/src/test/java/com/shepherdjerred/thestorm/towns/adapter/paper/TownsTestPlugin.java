@@ -1,11 +1,15 @@
 package com.shepherdjerred.thestorm.towns.adapter.paper;
 
+import com.shepherdjerred.thestorm.core.compute.DirectComputePool;
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
+import com.shepherdjerred.thestorm.core.expansion.ExpansionSettings;
+import com.shepherdjerred.thestorm.core.expansion.ManagedGameplay;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.Services;
 import com.shepherdjerred.thestorm.core.players.KnownPlayer;
 import com.shepherdjerred.thestorm.core.players.PlayerDirectory;
 import com.shepherdjerred.thestorm.core.schedule.PaperScheduler;
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.economy.app.CrystalFormatter;
 import com.shepherdjerred.thestorm.economy.app.Crystals;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
@@ -48,6 +52,9 @@ public class TownsTestPlugin extends JavaPlugin {
   final Services services = new Services();
   final FakeWallets wallets = new FakeWallets();
 
+  /** Worlds the test seals; towns must protect nothing there. */
+  final SealedWorlds sealed = new SealedWorlds();
+
   /** Governor levels by player, as the tracks module would report them. */
   final Map<UUID, Integer> governor = new HashMap<>();
 
@@ -66,12 +73,22 @@ public class TownsTestPlugin extends JavaPlugin {
     var directory = Objects.requireNonNull(TownsTestPlugin.directory, "directory");
     try {
       var shipped = Files.readString(SHIPPED_CONFIG);
-      if (!shipped.contains("regions: []")) {
-        throw new IllegalStateException("shipped towns config no longer has an empty region list");
+      var regions = shipped.indexOf("\nregions:");
+      if (regions < 0) {
+        throw new IllegalStateException("shipped towns config has no regions section");
       }
       Files.writeString(
           directory.resolve("towns.yml"),
-          shipped.replace("regions: []", Files.readString(TEST_REGIONS)));
+          shipped.substring(0, regions + 1) + Files.readString(TEST_REGIONS));
+      Files.writeString(directory.resolve("parcels.yml"), "parcels: []\n");
+      Files.copy(
+          Path.of("src/test/resources/heritage.yml"),
+          directory.resolve("heritage.yml"),
+          java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+      Files.copy(
+          Path.of("../../../server/owned/plugins/TheStorm/plot-reconcile.json"),
+          directory.resolve("plot-reconcile.json"),
+          java.nio.file.StandardCopyOption.REPLACE_EXISTING);
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
@@ -93,17 +110,25 @@ public class TownsTestPlugin extends JavaPlugin {
           }
         });
     services.provide(PlayerDirectory.class, new Directory());
+    services.provide(SealedWorlds.class, sealed);
+    services.provide(ExpansionSettings.class, new ExpansionSettings(2000, 10, 100, 64, 32, 16, 30));
+    services.provide(
+        ManagedGameplay.class,
+        new ManagedGameplay((key, actor) -> CompletableFuture.completedFuture(false), () -> {}));
     var context =
         new ModuleContext(
             this,
             getLifecycleManager(),
             new PaperScheduler(this),
+            new DirectComputePool(),
             database,
             services,
             directory,
             InstantSource.system(),
             RandomGenerator.getDefault(),
-            getComponentLogger());
+            getComponentLogger(),
+            com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled());
+    new com.shepherdjerred.thestorm.mail.MailModule().enable(context);
     new TownsModule().enable(context);
   }
 

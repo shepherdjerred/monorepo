@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test } from "vitest";
 import type { Rank } from "@scout-for-lol/data/index.ts";
 import {
@@ -13,7 +14,7 @@ const NOW = new Date("2026-07-03T20:00:00Z"); // ~13:00 PDT on 2026-07-03
 
 function game(overrides: Partial<HistoryGame>): HistoryGame {
   return {
-    matchId: "NA1_1",
+    matchId: RiotMatchIdSchema.parse("NA1_1"),
     gameCreationAt: new Date("2026-07-02T00:00:00Z"),
     championName: "LeeSin",
     lane: "jungle",
@@ -40,35 +41,35 @@ function rank(
 // Most-recent-first, matching the DB `orderBy gameCreationAt desc`.
 const GAMES: HistoryGame[] = [
   game({
-    matchId: "NA1_6",
+    matchId: RiotMatchIdSchema.parse("NA1_6"),
     championName: "Yasuo",
     lane: "middle",
     win: false,
     gameCreationAt: new Date("2026-07-03T18:00:00Z"), // today (LA)
   }),
   game({
-    matchId: "NA1_5",
+    matchId: RiotMatchIdSchema.parse("NA1_5"),
     win: false,
     gameCreationAt: new Date("2026-07-03T02:00:00Z"), // 2026-07-02 19:00 PDT → yesterday in LA
   }),
   game({
-    matchId: "NA1_4",
+    matchId: RiotMatchIdSchema.parse("NA1_4"),
     win: false,
     gameCreationAt: new Date("2026-07-02T12:00:00Z"),
   }),
   game({
-    matchId: "NA1_3",
+    matchId: RiotMatchIdSchema.parse("NA1_3"),
     win: true,
     gameCreationAt: new Date("2026-07-01T12:00:00Z"),
   }),
   game({
-    matchId: "NA1_2",
+    matchId: RiotMatchIdSchema.parse("NA1_2"),
     championName: "Viego",
     win: true,
     gameCreationAt: new Date("2026-06-28T12:00:00Z"),
   }),
   game({
-    matchId: "NA1_1",
+    matchId: RiotMatchIdSchema.parse("NA1_1"),
     championName: "Viego",
     win: false,
     gameCreationAt: new Date("2026-06-20T12:00:00Z"), // outside the 7-day week

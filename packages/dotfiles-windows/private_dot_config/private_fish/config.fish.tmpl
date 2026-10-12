@@ -1,0 +1,35 @@
+# MSYS2 fish on Windows. MSYS2_PATH_TYPE=inherit passes the Windows PATH
+# through, so native tools (claude, codex, op, mise) resolve directly; PATH
+# additions live in conf.d/00-path.fish so they precede plugin conf.d files.
+# Public URLs mirror packages/dotfiles/private_dot_config/private_fish/config.fish.tmpl; credentials
+# are deliberately not rendered into this file (secrets stay in 1Password).
+
+set -gx SHELL /usr/bin/fish
+set -gx EDITOR "subl -w"
+set -gx LANG en_US.UTF-8
+set -gx CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS "1"
+
+set -gx GRAFANA_URL 'https://grafana.tailnet-1a49.ts.net'
+set -gx BUGSINK_URL 'https://bugsink.sjer.red'
+set -gx HASS_BASE_URL 'https://homeassistant.sjer.red'
+set -gx LOKI_ADDR 'https://loki.tailnet-1a49.ts.net'
+set -gx PROMETHEUS_URL 'https://prometheus.tailnet-1a49.ts.net'
+set -gx POSTHOG_CLI_PROJECT_ID '549883'
+
+abbr grep rg
+abbr gs git-spice
+# Coding agents use their subscription auth, so direct provider API keys are
+# removed along with the 1Password vault token, and they run without permission
+# prompts or a sandbox.
+abbr claude "env -u OP_SERVICE_ACCOUNT_TOKEN -u (string join \"\" ANTHROPIC _API_KEY) -u (string join \"\" OPENAI _API_KEY) -u (string join \"\" CODEX _API_KEY) claude --dangerously-skip-permissions"
+
+if status is-interactive
+  function codex --wraps codex -d "Run Codex without API keys, approvals, or sandbox"
+      env -u OP_SERVICE_ACCOUNT_TOKEN \
+          -u (string join "" OPENAI _API_KEY) \
+          -u (string join "" CODEX _API_KEY) \
+          -u (string join "" ANTHROPIC _API_KEY) \
+          (command -s codex) --dangerously-bypass-approvals-and-sandbox $argv
+  end
+  fish_vi_key_bindings
+end

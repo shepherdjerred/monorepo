@@ -1,5 +1,8 @@
 import { type FileHandle, open } from "node:fs/promises";
-import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
+import {
+  LeaguePuuidSchema,
+  type LeaguePuuid,
+} from "@scout-for-lol/domain/identity/league-account.ts";
 import { z } from "zod";
 
 const FILE_HEADER_BYTES = 15;
@@ -11,6 +14,29 @@ const MAX_CHUNK_BYTES = 64 * 1024 * 1024;
 const MAX_DURATION_DRIFT_MS = 5000;
 const ZSTD_MAGIC = Buffer.from([0x28, 0xb5, 0x2f, 0xfd]);
 const VersionSchema = z.string().regex(/^\d{1,2}\.\d{1,2}\.\d{1,8}\.\d{1,8}$/);
+/**
+ * Whether two four-part game versions name the same build. Compared part by
+ * part as numbers: a replay header zero-pads the revision ("16.19.823.0722")
+ * where the match and the League client state it bare ("16.19.823.722").
+ * Any part that isn't a number makes the versions unequal.
+ */
+export function sameGameBuild(left: string, right: string): boolean {
+  const leftParts = left.split(".");
+  const rightParts = right.split(".");
+  return (
+    leftParts.length === rightParts.length &&
+    leftParts.every((part, index) => {
+      const other = rightParts[index];
+      return (
+        other !== undefined &&
+        /^\d+$/.test(part) &&
+        /^\d+$/.test(other) &&
+        Number(part) === Number(other)
+      );
+    })
+  );
+}
+
 const ReplayIntegerSchema = z
   .string()
   .regex(/^\d+$/)
@@ -55,7 +81,7 @@ const ReplayParticipantsSchema = z
   .max(20);
 
 export type ReplayParticipantFingerprint = {
-  readonly puuid: string;
+  readonly puuid: LeaguePuuid;
   readonly teamId: number;
   readonly kills: number;
   readonly deaths: number;
@@ -196,11 +222,51 @@ async function validateChunks(
   }
 }
 
-/** Validate the ROFL container and bind its embedded player identity to evidence. */
+/**
+ * Find the uploader among the replay's participants and require their stats to
+ * match the evidence exactly. The replay names them by League-client UUID, so
+ * the participant is compared under the provenance PUUID.
+ */
+function requireObservedParticipant(
+  participants: readonly z.infer<typeof ReplayParticipantSchema>[],
+  provenance: ReplayProvenance,
+  observerIds: ReadonlySet<string>,
+): void {
+  const observer = participants.find((participant) =>
+    observerIds.has(participant.PUUID),
+  );
+  if (observer === undefined) {
+    throw new ReplayContainerError(
+      "Replay does not contain the device player's observed identity",
+      403,
+    );
+  }
+  if (
+    JSON.stringify({
+      ...replayParticipantFingerprint(observer),
+      puuid: provenance.localPuuid,
+    }) !== JSON.stringify(provenance.participant)
+  ) {
+    throw new ReplayContainerError(
+      "Replay participant does not match the observed match",
+      403,
+    );
+  }
+}
+
+/**
+ * Validate the ROFL container and bind its embedded player identity to evidence.
+ *
+ * A replay names players by League-client UUID while provenance is in Riot
+ * PUUIDs, so `observerIds` is every identity that denotes the uploader: their
+ * PUUID and any UUID aliased to it. The matched participant is then compared
+ * under the PUUID, so the fingerprint check stays exactly as strict.
+ */
 export async function validateReplayContainer(
   path: string,
   bytes: number,
   provenance: ReplayProvenance,
+  observerIds: ReadonlySet<string> = new Set([provenance.localPuuid]),
 ): Promise<void> {
   const file = await open(path, "r");
   try {
@@ -229,7 +295,7 @@ export async function validateReplayContainer(
     }
     if (
       provenance.leaguePatch !== null &&
-      version.data !== provenance.leaguePatch
+      !sameGameBuild(version.data, provenance.leaguePatch)
     ) {
       throw new ReplayContainerError(
         "Replay patch does not match the observed match",
@@ -285,24 +351,7 @@ export async function validateReplayContainer(
         400,
       );
     }
-    const observer = participants.data.find(
-      (participant) => participant.PUUID === provenance.localPuuid,
-    );
-    if (observer === undefined) {
-      throw new ReplayContainerError(
-        "Replay does not contain the device player's observed identity",
-        403,
-      );
-    }
-    if (
-      JSON.stringify(replayParticipantFingerprint(observer)) !==
-      JSON.stringify(provenance.participant)
-    ) {
-      throw new ReplayContainerError(
-        "Replay participant does not match the observed match",
-        403,
-      );
-    }
+    requireObservedParticipant(participants.data, provenance, observerIds);
 
     const expectedChunks =
       metadata.data.lastGameChunkId + metadata.data.lastKeyFrameId;

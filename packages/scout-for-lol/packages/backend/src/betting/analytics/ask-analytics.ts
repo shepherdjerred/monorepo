@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   BucksLedgerKindSchema,
   BucksParlaySideSchema,
@@ -37,14 +38,14 @@ export type BucksAskLedgerFact = {
   discordId: DiscordAccountId;
   kind: BucksLedgerKind;
   delta: number;
-  matchId: string | null;
+  matchId: RiotMatchId | null;
   createdAt: Date;
 };
 
 export type BucksAskBetFact = {
   positionType: "outcome" | "parlay";
   discordId: DiscordAccountId;
-  matchId: string;
+  matchId: RiotMatchId;
   marketKey: string;
   subjectPuuid: LeaguePuuid | null;
   subjectAlias: string | null;
@@ -63,7 +64,7 @@ export type BucksAskBetFact = {
 
 type PoolFact = {
   id: number;
-  matchId: string;
+  matchId: RiotMatchId;
   poolState: BucksPoolState;
   winningTeamId: RiotTeamId | null;
   createdAt: Date;

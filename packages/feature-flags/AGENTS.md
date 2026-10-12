@@ -14,8 +14,10 @@ Load the repository `feature-flags` skill for rollout procedure.
   a client per request.
 - Targeting context is typed and explicit. Never use guild, user, or entity IDs
   as metric labels.
-- Flipt has no authentication; reachability is authorization. New consumers
-  require an intentional homelab NetworkPolicy change.
+- Flipt evaluation is credentialless and protected by NetworkPolicy. New
+  consumers require an intentional homelab NetworkPolicy change. Management
+  writes require the existing 1Password-backed operator credential; never
+  place that credential in runtime consumer configuration.
 - A new behavior flag defaults off, is enabled in beta, ramps deliberately, and
   is removed after rollout. Defaults continue to represent safe production
   behavior during a Flipt outage.

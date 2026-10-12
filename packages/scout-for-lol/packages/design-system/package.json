@@ -42,12 +42,11 @@
   "scripts": {
     "build": "bun run generate && bun x --no-install storybook build",
     "dev": "bun run generate && bun x --no-install storybook dev --port 6006 --no-open",
-    "preview": "bun x --no-install vite preview --outDir storybook-static --host 127.0.0.1 --port 6006 --strictPort",
+    "preview": "bun --no-install scripts/preview-storybook.ts",
     "generate": "bun run scripts/generate-tokens.ts",
     "generate:brand": "bun run scripts/generate-brand.ts",
     "check:generated": "bun run scripts/generate-tokens.ts --check && bun run scripts/generate-brand.ts --check",
     "test": "bun run check:generated && bun --no-install --bun vitest --config ../../../../vitest.config.ts run src",
-    "test:report": "CI_TEST_COVERAGE=1 bun ../../../../scripts/ci/run-ci-test.ts",
     "test:ci": "bun ../../../../scripts/ci/run-ci-test.ts",
     "test:e2e": "bun --no-install --bun playwright test",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
@@ -79,13 +78,13 @@
     "react-dom": "19.3.0",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
-    "satori": "^0.33.0",
+    "satori": "^0.47.0",
     "tailwind-merge": "^3.4.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.0",
-    "@playwright/test": "1.63.0",
+    "@playwright/test": "1.64.0",
     "@storybook/addon-a11y": "^10.6.0",
     "@storybook/addon-docs": "^10.6.0",
     "@storybook/react-vite": "^10.6.0",
@@ -93,14 +92,14 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@typescript/native": "npm:typescript@7.0.2",
-    "@vitest/coverage-istanbul": "5.0.1",
+    "@vitest/coverage-istanbul": "5.0.3",
     "ajv": "^8.20.0",
     "eslint": "^10.7.0",
     "prettier": "^3.9.9",
     "storybook": "^10.6.0",
     "typescript": "^6.0.3",
     "vite": "^8.0.11",
-    "vitest": "5.0.1"
+    "vitest": "5.0.3"
   },
   "peerDependencies": {
     "react": "19.3.0",

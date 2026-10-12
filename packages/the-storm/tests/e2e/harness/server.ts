@@ -1,15 +1,35 @@
-import { createHash, randomBytes } from "node:crypto";
-import { cp, mkdir, readdir, rm } from "node:fs/promises";
+import { randomBytes } from "node:crypto";
+import { cp, mkdir, rm } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
-import { docker } from "./docker.ts";
+import { docker } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
 import {
-  paper,
-  serverImage,
-  thirdPartyPlugins,
-  type PluginPin,
-} from "./pins.ts";
-import { RconClient } from "@shepherdjerred/the-storm-brain/rcon";
+  ensureArtifact,
+  paperJarName,
+  stagePinnedPlugins,
+  writeThrottleFreeBukkitYml,
+} from "@shepherdjerred/mc-harness/sandbox/artifacts.ts";
+import { basePaperEnv } from "@shepherdjerred/mc-harness/sandbox/paper-env.ts";
+import {
+  envArgs,
+  publishedPort,
+  reapPidOwnedContainers,
+  startAndAwaitDone,
+  warmMountArgs,
+  warmMounts,
+} from "@shepherdjerred/mc-harness/providers/docker/paper-container.ts";
+import { paper, serverImage } from "@shepherdjerred/mc-harness/pins.ts";
+import { stageCompanionsE2e } from "./companions-e2e.ts";
+import {
+  overlayAgentTopLevel,
+  overlayBrainUrl,
+  overlayRwf,
+  overlaySweep,
+  type RwfOverlay,
+} from "./config-overlays.ts";
+import { thirdPartyPlugins } from "./pins.ts";
+import { RconClient } from "#e2e/harness/rcon.ts";
+import { stageWorld } from "./world-copy.ts";
 
 const ownerLabel = "the-storm.e2e";
 const pidLabel = "the-storm.e2e.pid";
@@ -21,8 +41,7 @@ const ConnectionShape = {
   rconPassword: z.string().min(16),
 };
 
-// A server this run started in Docker, or one CI runs as a sidecar and whose
-// log file it shares with the test container.
+// A run started by us in Docker, or a CI sidecar with a shared log file.
 export const ServerInfoSchema = z.discriminatedUnion("kind", [
   z.object({
     kind: z.literal("container"),
@@ -55,8 +74,30 @@ export type StartServerOptions = {
   stormJar: string;
   mechanicsE2eJar?: string;
   mechanicsConfig?: string;
+  fixturesJar?: string;
+  /** Audited saved-chunk coordinates for the disposable legacy map converter. */
+  mapSourceChunks?: string;
+  /** Explicit unaccepted ONNX export copied only into a disposable fixture server. */
+  learningModelDir?: string;
+  companionsE2eJar?: string;
+  /** Overrides for the staged rwf.yml when the suite plays Search and Destroy. */
+  rwf?: RwfOverlay;
+  /** Disposable rwfbots.yml contents; production-owned configuration stays untouched. */
+  rwfbotsConfig?: string;
+  /** Preserve recordings after a graceful Paper shutdown, before removing its container. */
+  exportRecordingsDir?: string;
+  survivalConfig?: string;
+  /** Optional local world copy for terrain acceptance; copied into the disposable server. */
+  worldDir?: string;
+  /** Save the stopped world save, including its named dimensions, for inspection or provisioning. */
+  exportWorldDir?: string;
   /** Contents of plugins/TheStorm/config.yml. */
   stormConfig: string;
+  /**
+   * Container environment beyond the server basics: the Flipt gate address and
+   * the recording salt the modules under test read at enable.
+   */
+  env: Record<string, string>;
   /** Repository-owned plugin config directory. */
   ownedConfigDir: string;
   /** Fake brain the staged agent.yml points at. */
@@ -68,139 +109,64 @@ export type StartServerOptions = {
     slaAfterMinutes: number;
   };
   agent: { mode: string; reviewSamplePercent: number };
+  /**
+   * Container limits for a profile that measures load; the default is a 1G
+   * heap with no CPU or memory limit.
+   */
+  resources?: ServerResources;
+  /**
+   * Publish the game port on this fixed loopback port, so a real client can
+   * join `localhost`; a random free port otherwise.
+   */
+  gamePort?: number;
 };
 
-const PortBindingSchema = z
-  .string()
-  .trim()
-  .regex(/^[\d.]+:\d+$/u)
-  .transform((binding) => {
-    const [host = "", port = ""] = binding.split(":");
-    return { host, port: Number(port) };
-  });
+/** Docker limits and the JVM heap (itzg's MEMORY) for the server container. */
+export type ServerResources = {
+  cpus: number;
+  /** The JVM heap, as itzg's MEMORY reads it (8G). */
+  heap: string;
+  /** The container memory limit, as `docker create --memory` reads it (10g). */
+  memoryLimit: string;
+};
 
-const OwnedStormConfigSchema = z
-  .object({ modules: z.record(z.string(), z.boolean()) })
-  .strict();
-
-/**
- * Turns the repository-owned config.yml into one with every module disabled.
- * The plugin rejects a config that omits a module, so the key set always
- * follows the owned file.
- */
-export function stormTestConfig(ownedYaml: string, enabled: string[]): string {
-  const owned = OwnedStormConfigSchema.parse(Bun.YAML.parse(ownedYaml));
-  const known = new Set(Object.keys(owned.modules));
-  const unknown = enabled.filter((module) => !known.has(module));
-  if (unknown.length > 0) {
-    throw new Error(`Unknown modules: ${unknown.join(", ")}`);
-  }
-  const on = new Set(enabled);
-  const modules = Object.keys(owned.modules).map(
-    (module) => `  ${module}: ${on.has(module).toString()}`,
+async function stageLearningModel(
+  pluginsDir: string,
+  source: string | undefined,
+  fixturesJar: string | undefined,
+): Promise<void> {
+  if (source === undefined) return;
+  if (fixturesJar === undefined)
+    throw new Error("diagnostic learning model needs fixture jar");
+  const modelDir = path.join(
+    pluginsDir,
+    "TheStorm",
+    "rwfbots",
+    "learning",
+    "diagnostic",
   );
-  return ["modules:", ...modules, ""].join("\n");
-}
-
-async function download(url: string): Promise<Uint8Array> {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`GET ${url} failed: ${response.status.toString()}`);
+  await mkdir(modelDir, { recursive: true });
+  for (const file of ["manifest.json", "actor.onnx"]) {
+    await cp(path.join(source, file), path.join(modelDir, file));
   }
-  return new Uint8Array(await response.arrayBuffer());
 }
 
-/** Downloads once into the cache and verifies the pinned sha256 on every run. */
-async function ensureArtifact(
-  file: string,
-  pin: Pick<PluginPin, "url" | "sha256">,
+async function stageMapSources(
+  pluginsDir: string,
+  options: Pick<
+    StartServerOptions,
+    "mapSourceChunks" | "fixturesJar" | "worldDir"
+  >,
 ): Promise<void> {
-  const cached = Bun.file(file);
-  const exists = await cached.exists();
-  const bytes = exists
-    ? new Uint8Array(await cached.arrayBuffer())
-    : await download(pin.url);
-  const actual = createHash("sha256").update(bytes).digest("hex");
-  if (actual !== pin.sha256) {
+  if (options.mapSourceChunks === undefined) return;
+  if (options.fixturesJar === undefined || options.worldDir === undefined)
     throw new Error(
-      `${path.basename(file)} sha256 mismatch: expected ${pin.sha256}, got ${actual}`,
+      "Map source chunks require fixtures and an explicit copied world",
     );
-  }
-  if (!exists) {
-    await Bun.write(file, bytes);
-  }
-}
-
-function isAlive(pid: number): boolean {
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-/** Removes containers and staging dirs left by runner processes that no longer exist. */
-async function reapOrphans(runsDir: string): Promise<void> {
-  const { stdout } = await docker([
-    "ps",
-    "-a",
-    "--filter",
-    `label=${ownerLabel}`,
-    "--format",
-    `{{.ID}} {{.Label "${pidLabel}"}}`,
-  ]);
-  for (const entry of stdout.split("\n").filter(Boolean)) {
-    const [id = "", pid = ""] = entry.split(" ");
-    if (!isAlive(Number(pid))) {
-      await docker(["rm", "-f", "-v", id]);
-    }
-  }
-  for (const pid of await readdir(runsDir)) {
-    if (!isAlive(Number(pid))) {
-      await rm(path.join(runsDir, pid), { recursive: true, force: true });
-    }
-  }
-}
-
-async function publishedPort(
-  containerId: string,
-  port: number,
-): Promise<{ host: string; port: number }> {
-  const { stdout } = await docker([
-    "port",
-    containerId,
-    `${port.toString()}/tcp`,
-  ]);
-  // Docker may list an IPv6 binding too; the IPv4 loopback one comes first.
-  return PortBindingSchema.parse(stdout.split("\n")[0]);
-}
-
-async function waitForLog(
-  containerId: string,
-  pattern: RegExp,
-  deadline: number,
-): Promise<void> {
-  for (;;) {
-    const { stdout, stderr } = await docker(["logs", containerId]);
-    if (pattern.test(stdout) || pattern.test(stderr)) {
-      return;
-    }
-    const tail = `${stdout.slice(-4000)}\n${stderr.slice(-4000)}`;
-    const { stdout: state } = await docker([
-      "inspect",
-      "-f",
-      "{{.State.Running}}",
-      containerId,
-    ]);
-    if (state.trim() !== "true") {
-      throw new Error(`Server exited before ready:\n${tail}`);
-    }
-    if (Date.now() > deadline) {
-      throw new Error(`Server not ready before deadline:\n${tail}`);
-    }
-    await Bun.sleep(500);
-  }
+  await Bun.write(
+    path.join(pluginsDir, "TheStormFixtures", "source-chunks.json"),
+    Bun.file(options.mapSourceChunks),
+  );
 }
 
 /**
@@ -216,24 +182,27 @@ export async function stagePlugins(
     | "stormConfig"
     | "mechanicsE2eJar"
     | "mechanicsConfig"
+    | "fixturesJar"
+    | "mapSourceChunks"
+    | "learningModelDir"
+    | "companionsE2eJar"
+    | "rwf"
+    | "rwfbotsConfig"
+    | "survivalConfig"
+    | "worldDir"
+    | "exportWorldDir"
     | "warmCache"
   > &
     Partial<
       Pick<StartServerOptions, "ownedConfigDir" | "brain" | "sweep" | "agent">
     >,
 ): Promise<string> {
-  const downloads = path.join(cacheDir, "plugins");
   const pluginsDir = path.join(stagingDir, "plugins");
-  await mkdir(downloads, { recursive: true });
-  await mkdir(pluginsDir, { recursive: true });
-  for (const pin of thirdPartyPlugins) {
-    const jar = `${pin.name}-${pin.version}.jar`;
-    await ensureArtifact(path.join(downloads, jar), pin);
-    await Bun.write(
-      path.join(pluginsDir, jar),
-      Bun.file(path.join(downloads, jar)),
-    );
-  }
+  await stagePinnedPlugins(
+    path.join(cacheDir, "plugins"),
+    pluginsDir,
+    thirdPartyPlugins,
+  );
   await Bun.write(
     path.join(pluginsDir, "TheStorm.jar"),
     Bun.file(options.stormJar),
@@ -242,11 +211,58 @@ export async function stagePlugins(
     await cp(options.ownedConfigDir, path.join(pluginsDir, "TheStorm"), {
       recursive: true,
     });
+    // Citizens' owned config keeps rwfbots' NPCs off the tab and online
+    // lists, as the production image's plugin sync does.
+    await cp(
+      path.join(path.dirname(options.ownedConfigDir), "Citizens"),
+      path.join(pluginsDir, "Citizens"),
+      { recursive: true },
+    );
+  }
+  if (options.fixturesJar !== undefined) {
+    await Bun.write(
+      path.join(pluginsDir, "TheStormFixtures.jar"),
+      Bun.file(options.fixturesJar),
+    );
+    // Recovery exercises a synthetic rental, separate from surveyed production holdings.
+    const parcels = path.join(pluginsDir, "TheStorm", "parcels.yml");
+    const fixture = await Bun.file(
+      path.join(import.meta.dirname, "..", "fixture-rental.yml"),
+    ).text();
+    const entries = fixture
+      .split("\n")
+      .map((line) => (line === "" ? "" : `  ${line}`))
+      .join("\n");
+    await Bun.write(parcels, (await Bun.file(parcels).text()) + entries);
+  }
+  await stageMapSources(pluginsDir, options);
+  await stageLearningModel(
+    pluginsDir,
+    options.learningModelDir,
+    options.fixturesJar,
+  );
+  if (options.companionsE2eJar !== undefined) {
+    await stageCompanionsE2e(pluginsDir, options.companionsE2eJar);
+  }
+  if (options.survivalConfig !== undefined) {
+    await Bun.write(
+      path.join(pluginsDir, "TheStorm", "arena", "survival.yml"),
+      options.survivalConfig,
+    );
   }
   await Bun.write(
     path.join(pluginsDir, "TheStorm", "config.yml"),
     options.stormConfig,
   );
+  if (options.rwf !== undefined) {
+    await overlayRwf(path.join(pluginsDir, "TheStorm", "rwf.yml"), options.rwf);
+  }
+  if (options.rwfbotsConfig !== undefined) {
+    await Bun.write(
+      path.join(pluginsDir, "TheStorm", "rwfbots.yml"),
+      options.rwfbotsConfig,
+    );
+  }
   if (
     options.mechanicsE2eJar !== undefined ||
     options.mechanicsConfig !== undefined
@@ -295,93 +311,28 @@ export async function stagePlugins(
   return pluginsDir;
 }
 
-// Warm-cache mounts, host dir under the cache -> container path, for
-// Paperclip's patched Mojang jar and libraries.
-const warmMounts = [
-  ["paperclip/cache", "/data/cache"],
-  ["paperclip/libraries", "/data/libraries"],
-  ["paperclip/versions", "/data/versions"],
-] as const;
-
 // LuckPerms downloads its libraries (including the H2 driver) from Maven
 // Central on first enable. They cannot be bind-mounted: Docker would create
 // /data/plugins as root and the image's unprivileged plugin sync would fail.
 // Instead they ride in through /plugins and are copied back out after boot.
 const luckPermsLibs = path.join("LuckPerms", "libs");
 
-async function overlayBrainUrl(
-  stagedAgentYml: string,
-  baseUrl: string,
-): Promise<void> {
-  const content = await Bun.file(stagedAgentYml).text();
-  const overlaid = content.replace(
-    /^ {2}baseUrl: .*$/m,
-    `  baseUrl: ${baseUrl}`,
-  );
-  if (overlaid === content) {
-    throw new Error(`No brain.baseUrl line to overlay in ${stagedAgentYml}`);
-  }
-  await Bun.write(stagedAgentYml, overlaid);
-}
-
-async function overlayAgentTopLevel(
-  stagedAgentYml: string,
-  agent: StartServerOptions["agent"],
-): Promise<void> {
-  const content = await Bun.file(stagedAgentYml).text();
-  const lines = content.split("\n");
-  for (const [key, value] of Object.entries(agent)) {
-    const index = lines.findIndex((line) => line.startsWith(`${key}: `));
-    if (index === -1) {
-      throw new Error(
-        `No top-level ${key} line to overlay in ${stagedAgentYml}`,
-      );
-    }
-    lines[index] = `${key}: ${value.toString()}`;
-  }
-  await Bun.write(stagedAgentYml, lines.join("\n"));
-}
-
-async function overlaySweep(
-  stagedAgentYml: string,
-  sweep: StartServerOptions["sweep"],
-): Promise<void> {
-  const content = await Bun.file(stagedAgentYml).text();
-  const lines = content.split("\n");
-  for (const [key, value] of Object.entries(sweep)) {
-    const index = lines.findIndex((line) => line.startsWith(`  ${key}: `));
-    if (index === -1) {
-      throw new Error(`No sweep.${key} line to overlay in ${stagedAgentYml}`);
-    }
-    lines[index] = `  ${key}: ${value.toString()}`;
-  }
-  await Bun.write(stagedAgentYml, lines.join("\n"));
-}
-
-function serverEnv(
-  rconPassword: string,
-  brainToken: string,
-): Record<string, string> {
+function serverEnv(server: {
+  rconPassword: string;
+  brainToken: string;
+  extra: Record<string, string>;
+  heap: string;
+  /** A warm run seeds the pinned jar into /data; a cold run lets the image download it. */
+  warmCache: boolean;
+}): Record<string, string> {
   return {
-    EULA: "TRUE",
-    TYPE: "PAPER",
-    VERSION: paper.version,
-    PAPER_BUILD: paper.build.toString(),
-    ONLINE_MODE: "FALSE",
+    ...basePaperEnv(server.warmCache ? "seeded" : "download"),
     ENABLE_RCON: "true",
-    RCON_PASSWORD: rconPassword,
-    STORM_BRAIN_BEARER_TOKEN: brainToken,
-    // Keep boot hermetic: do not fetch third-party default configs.
-    SKIP_DOWNLOAD_DEFAULTS: "true",
-    MEMORY: "1G",
-    LEVEL_TYPE: "minecraft:flat",
-    GENERATE_STRUCTURES: "false",
-    SPAWN_PROTECTION: "0",
-    DIFFICULTY: "peaceful",
-    MODE: "survival",
-    VIEW_DISTANCE: "4",
-    SIMULATION_DISTANCE: "4",
-    ENABLE_AUTOPAUSE: "false",
+    ENABLE_QUERY: "true",
+    RCON_PASSWORD: server.rconPassword,
+    STORM_BRAIN_BEARER_TOKEN: server.brainToken,
+    ...server.extra,
+    MEMORY: server.heap,
   };
 }
 
@@ -390,8 +341,10 @@ async function bootContainer(
   rconPassword: string,
   deadline: number,
 ): Promise<Omit<ServerInfo & { kind: "container" }, "bootMs">> {
-  await docker(["start", id]);
-  await waitForLog(id, /Done \(\d+\.\d+s\)! For help/u, deadline);
+  await startAndAwaitDone(id, deadline, [
+    "The Storm failed to enable",
+    "Error occurred while enabling",
+  ]);
   const game = await publishedPort(id, 25_565);
   const rcon = await publishedPort(id, 25_575);
   // The Done line proves the game port; prove RCON accepts and executes a
@@ -421,13 +374,10 @@ export async function startServer(
   const runsDir = path.join(cacheDir, "runs");
   const stagingDir = path.join(runsDir, process.pid.toString());
   await mkdir(runsDir, { recursive: true });
-  await reapOrphans(runsDir);
+  await reapPidOwnedContainers({ ownerLabel, pidLabel, runsDir });
   await rm(stagingDir, { recursive: true, force: true });
 
-  const paperJar = path.join(
-    cacheDir,
-    `paper-${paper.version}-${paper.build.toString()}.jar`,
-  );
+  const paperJar = path.join(cacheDir, paperJarName);
   const [pluginsDir] = await Promise.all([
     stagePlugins(cacheDir, stagingDir, options),
     ...(options.warmCache ? [ensureArtifact(paperJar, paper)] : []),
@@ -438,10 +388,8 @@ export async function startServer(
       : []),
   ]);
 
-  // Bukkit throttles reconnects from one address for 4s by default, which
-  // breaks back-to-back bot joins from the test runner.
   const bukkitYml = path.join(stagingDir, "bukkit.yml");
-  await Bun.write(bukkitYml, "settings:\n  connection-throttle: -1\n");
+  await writeThrottleFreeBukkitYml(bukkitYml);
 
   const rconPassword = randomBytes(24).toString("hex");
   const { stdout: containerId } = await docker([
@@ -451,28 +399,47 @@ export async function startServer(
     "--label",
     `${pidLabel}=${process.pid.toString()}`,
     "-p",
-    "127.0.0.1::25565",
+    `127.0.0.1:${options.gamePort?.toString() ?? ""}:25565`,
     "-p",
     "127.0.0.1::25575",
+    "-p",
+    "127.0.0.1::25565/udp",
     "-v",
     `${pluginsDir}:/plugins:ro`,
-    ...(options.warmCache
-      ? warmMounts.flatMap(([dir, target]) => [
-          "-v",
-          `${path.join(cacheDir, dir)}:${target}`,
-        ])
-      : []),
-    ...Object.entries(serverEnv(rconPassword, options.brain.token)).flatMap(
-      ([key, value]) => ["-e", `${key}=${value}`],
+    ...(options.warmCache ? warmMountArgs(cacheDir) : []),
+    ...(options.resources === undefined
+      ? []
+      : [
+          `--cpus=${options.resources.cpus.toString()}`,
+          `--memory=${options.resources.memoryLimit}`,
+        ]),
+    ...envArgs(
+      serverEnv({
+        rconPassword,
+        brainToken: options.brain.token,
+        extra: options.env,
+        heap: options.resources?.heap ?? "1G",
+        warmCache: options.warmCache,
+      }),
     ),
     serverImage,
   ]);
   const id = containerId.trim();
+  let booted = false;
   const stop = async () => {
-    await docker(["rm", "-f", "-v", id]);
-    await rm(stagingDir, { recursive: true, force: true });
+    try {
+      // Failed boots have no recording directory yet. Export only a booted
+      // server, and always remove our container even if an export fails.
+      if (booted) await exportStoppedServer(id, options);
+    } finally {
+      await docker(["rm", "-f", "-v", id]);
+      await rm(stagingDir, { recursive: true, force: true });
+    }
   };
   try {
+    if (options.worldDir !== undefined) {
+      await stageWorld(options.worldDir, stagingDir, id);
+    }
     await docker(["cp", bukkitYml, `${id}:/data/bukkit.yml`]);
     if (options.warmCache) {
       await docker(["cp", paperJar, `${id}:/data/${path.basename(paperJar)}`]);
@@ -482,6 +449,29 @@ export async function startServer(
       rconPassword,
       started + options.bootTimeoutMs,
     );
+    if (options.exportRecordingsDir !== undefined) {
+      const { stdout: owner } = await docker([
+        "exec",
+        id,
+        "stat",
+        "-c",
+        "%u:%g",
+        "/data/plugins/TheStorm",
+      ]);
+      const user = z
+        .string()
+        .regex(/^\d+:\d+$/u)
+        .parse(owner.trim());
+      await docker([
+        "exec",
+        "--user",
+        user,
+        id,
+        "mkdir",
+        "-p",
+        "/data/plugins/TheStorm/rwf-recordings",
+      ]);
+    }
     if (options.warmCache) {
       await docker([
         "cp",
@@ -493,6 +483,7 @@ export async function startServer(
       ...connection,
       bootMs: Date.now() - started,
     });
+    booted = true;
     return { info, stop };
   } catch (error) {
     const { stdout, stderr } = await docker(["logs", id]);
@@ -505,15 +496,25 @@ export async function startServer(
   }
 }
 
-/** The server's console log so far, from Docker or the shared sidecar log file. */
-export async function serverLogs(info: ServerInfo): Promise<string> {
-  switch (info.kind) {
-    case "container": {
-      const { stdout } = await docker(["logs", info.containerId]);
-      return stdout;
-    }
-    case "external": {
-      return Bun.file(info.logFile).text();
-    }
+async function exportStoppedServer(
+  id: string,
+  options: StartServerOptions,
+): Promise<void> {
+  if (
+    options.exportWorldDir !== undefined ||
+    options.exportRecordingsDir !== undefined
+  )
+    await docker(["stop", "--time", "30", id]);
+  if (options.exportRecordingsDir !== undefined) {
+    await mkdir(options.exportRecordingsDir, { recursive: true });
+    await docker([
+      "cp",
+      `${id}:/data/plugins/TheStorm/rwf-recordings/.`,
+      options.exportRecordingsDir,
+    ]);
+  }
+  if (options.exportWorldDir !== undefined) {
+    await mkdir(options.exportWorldDir, { recursive: true });
+    await docker(["cp", `${id}:/data/world/.`, options.exportWorldDir]);
   }
 }

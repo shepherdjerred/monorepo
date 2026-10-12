@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   BucksDeltaSchema,
   BucksParlaySideSchema,
@@ -103,7 +104,7 @@ async function isOpponentPinger(
  */
 export async function placeParlayBet(
   input: {
-    matchId: string;
+    matchId: RiotMatchId;
     serverId: DiscordGuildId;
     discordId: DiscordAccountId;
     side: BucksParlaySide;
@@ -139,7 +140,7 @@ export async function placeParlayBet(
 
 async function placeParlayBetInner(
   input: {
-    matchId: string;
+    matchId: RiotMatchId;
     serverId: DiscordGuildId;
     discordId: DiscordAccountId;
     side: BucksParlaySide;

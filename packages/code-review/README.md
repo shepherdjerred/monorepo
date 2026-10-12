@@ -24,7 +24,12 @@ A `ReviewProvider` (see `src/types.ts`) declares everything consumers need:
     `commit_id === head`; because a clean PR leaves no review artifact,
     `cleanSignal: "thumbsup-reaction"` detects "reviewed, nothing to flag"
     (Codex). `cleanSignal: "none"` declares the provider always posts a
-    review object, so a missing review means "not reviewed yet" (CodeRabbit).
+    review object, so a missing review means "not reviewed yet". CodeRabbit
+    also accepts its completed clean comment: trusted bot identity, a fresh
+    timestamp, an explicit no-actionable-comments result, and final coverage
+    metadata whose source and covered SHAs both equal the head are required.
+    Walkthrough text and rewritten commit links alone never count. Inline and
+    review-body findings still pass through the existing severity gate.
   - `issue-comment`: the provider maintains findings in a persistent issue
     comment and posts a separate acknowledgement naming each reviewed head
     (Qodo). Consumers reuse that same comment snapshot when parsing findings.
@@ -39,7 +44,7 @@ A `ReviewProvider` (see `src/types.ts`) declares everything consumers need:
   numeric priority (0 = most severe), or `null` when unbadged.
 - **`detectSkip: SkipStrategy | null`** — how a deliberate skip ("no
   reviewable files", excluded author, …) is recognized on issue comments.
-- **`detectBlocked: BlockedSignalStrategy | null`** — how a provider-side
+- **`detectBlocked: readonly BlockedSignalStrategy[] | null`** — how a provider-side
   block (Codex quota exhaustion: "reached your Codex usage limits", in
   either the full or the short notice wording) is recognized on issue
   comments. Unlike a skip this is a FAILING
@@ -47,9 +52,9 @@ A `ReviewProvider` (see `src/types.ts`) declares everything consumers need:
   provider's remediation instead of polling to its deadline. Only a
   provider-authored match posted at/after the head push counts, so a stale
   notice cannot pin a newer head. The failed decision carries
-  `blockedReason`, and `gateExitCode` maps it to
-  `REVIEW_GATE_BLOCKED_EXIT_CODE` (42) — the one status the Buildkite step
-  soft-fails on. Every other failure maps to `REVIEW_GATE_FAILURE_EXIT_CODE`.
+  `blockedReason`. Quota exhaustion maps to `REVIEW_GATE_BLOCKED_EXIT_CODE`
+  (42), the status the Woodpecker wrapper treats as advisory. A missing
+  CodeRabbit bot seat and every other failure map to `REVIEW_GATE_FAILURE_EXIT_CODE`.
 - **`requestReview: ReviewRequestStrategy | null`** — how to ask for a
   (re-)review of the head, with an idempotency marker so a consumer never
   posts a duplicate trigger comment; `null` for providers that review
@@ -74,8 +79,8 @@ instead of asking for a re-trigger.
 passes the gate unless an unresolved, current, provider-authored P0 stands
 anywhere — a P0 vetoes the whole gate and fails fast, even while other
 providers are still reviewing. Otherwise any `waiting` provider keeps the gate
-waiting. When every provider failed, unanimous provider-side blocks stay on
-the soft-fail path (`blockedReason` set → exit 42); a single findings failure
+waiting. When every provider failed, unanimous quota blocks stay on
+the advisory path (`usage-limited` → exit 42); a missing seat or findings failure
 among them fails hard (exit 1) with the blocked providers noted as ignored.
 A block is never a pass: no review happened.
 

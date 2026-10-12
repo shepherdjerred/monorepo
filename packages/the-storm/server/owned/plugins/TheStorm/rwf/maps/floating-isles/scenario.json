@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "kind": "rwf-map-scenario",
+  "id": "floating-isles-trooper-duel-v1",
+  "map": "floating-isles",
+  "mapSha256": "cbeba029f3699c15adad9338c190a864ef16234551f1e81ca8b29812d5de09fb",
+  "world": "minecraft:rwf",
+  "region": {
+    "min": {
+      "x": 4096,
+      "y": 0,
+      "z": 2048
+    },
+    "max": {
+      "x": 4279,
+      "y": 116,
+      "z": 2240
+    }
+  },
+  "sourceTeams": ["RED", "BLUE"],
+  "spawnPolicy": "source",
+  "spawns": [
+    {
+      "team": "red",
+      "sourceTeam": "RED",
+      "position": [4136.5, 73, 2199.5],
+      "yaw": 223.1177215576172,
+      "pitch": 0
+    },
+    {
+      "team": "blue",
+      "sourceTeam": "BLUE",
+      "position": [4136.5, 90, 2084.5],
+      "yaw": 319.3594055175781,
+      "pitch": 0
+    }
+  ]
+}

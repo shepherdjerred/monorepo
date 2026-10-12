@@ -44,6 +44,9 @@ describe("/help", () => {
     const payload = replyMock.mock.calls[0]?.[0];
     expect(JSON.stringify(payload)).toContain("/track");
     expect(JSON.stringify(payload)).toContain("audit history");
+    expect(JSON.stringify(payload)).toContain("DM Scout directly");
+    expect(JSON.stringify(payload)).toContain("/app/feedback");
+    expect(JSON.stringify(payload)).not.toContain("GitHub");
     expect(JSON.stringify(payload)).not.toContain("/subscription");
     expect(JSON.stringify(payload)).not.toContain("/scout ask");
   });
@@ -58,7 +61,10 @@ describe("/help", () => {
     );
     const reply: CommandReply = replyMock;
 
-    await executeHelp({ guildId: "100000000000000001", reply });
+    await executeHelp({
+      guildId: DiscordGuildIdSchema.parse("100000000000000001"),
+      reply,
+    });
     expect(JSON.stringify(replyMock.mock.calls[0]?.[0])).toContain(
       "/scout ask",
     );
@@ -73,7 +79,7 @@ describe("/help", () => {
     addFlagOverride("betting_enabled", true, { server });
     addFlagOverride("voice_assistant_enabled", true, { server });
 
-    const gated = await commandList(gatedGuild);
+    const gated = await commandList(DiscordGuildIdSchema.parse(gatedGuild));
     expect(gated).toContain("`/bb`");
     // The voice flag alone is not enough: this deployment has no
     // VOICE_ASSISTANT_ENABLED audio pipeline, so /scout join would answer
@@ -81,7 +87,7 @@ describe("/help", () => {
     expect(gated).not.toContain("`/scout join`");
     expect(gated).not.toContain("`/lobby`");
 
-    const other = await commandList(otherGuild);
+    const other = await commandList(DiscordGuildIdSchema.parse(otherGuild));
     expect(other).not.toContain("`/bb`");
     expect(other).not.toContain("`/scout join`");
     expect(other).not.toContain("`/lobby`");
@@ -97,7 +103,7 @@ describe("/help", () => {
     addFlagOverride("voice_assistant_enabled", true, { server });
 
     try {
-      const gated = await commandList(gatedGuild);
+      const gated = await commandList(DiscordGuildIdSchema.parse(gatedGuild));
       expect(gated).toContain("`/scout join`");
     } finally {
       delete Bun.env["VOICE_ASSISTANT_ENABLED"];
@@ -115,7 +121,10 @@ describe("/help", () => {
         Promise.resolve(payload),
     );
 
-    await executeHelp({ guildId: "100000000000000002", reply: replyMock });
+    await executeHelp({
+      guildId: DiscordGuildIdSchema.parse("100000000000000002"),
+      reply: replyMock,
+    });
 
     expect(JSON.stringify(replyMock.mock.calls[0]?.[0])).toContain(
       "/scout ask",

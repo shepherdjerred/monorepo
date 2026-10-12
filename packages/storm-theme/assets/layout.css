@@ -1,0 +1,13 @@
+:root {
+  --storm-page-width: 1170px;
+  --storm-sidebar-width: 250px;
+  --storm-sidebar-gap: 12px;
+  --storm-frame-padding: 10px;
+  --storm-panel-padding: 20px;
+  --storm-body-font-size: 13px;
+  --storm-logo-width: 270px;
+  --storm-logo-height: 83px;
+  --storm-nav-padding-x: 15px;
+  --storm-nav-padding-y: 8px;
+  --storm-border-radius: 6px;
+}

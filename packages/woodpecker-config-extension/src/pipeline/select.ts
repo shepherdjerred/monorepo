@@ -99,8 +99,7 @@ function directlySelected(step: CiStep, context: SelectionContext): boolean {
  *
  * Closure is the part that matters: a step selected by its own changed-path
  * guard is useless if the step that produces its input was filtered out. The
- * Buildkite selector had the same rule, and the emitter depends on it — the
- * generated workflows carry `depends_on` with no `when`, so a dependency that
+ * emitter depends on it — the generated workflows carry `depends_on` with no `when`, so a dependency that
  * was not emitted would leave its dependent permanently unrunnable.
  *
  * Throws on an unknown dependency or a cycle rather than dropping the edge: a

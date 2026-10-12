@@ -11,7 +11,7 @@ import {
   RankSchema,
   type Rank,
   type LeaguePuuid,
-  type MatchId,
+  type RiotMatchId,
   type DiscordGuildId,
   type RankedQueueType,
 } from "@scout-for-lol/data/index.ts";
@@ -113,7 +113,7 @@ export type PlayerHistoryContext = {
  */
 export async function buildPlayerHistoryContext(options: {
   puuid: LeaguePuuid;
-  currentMatchId: MatchId;
+  currentMatchId: RiotMatchId;
   currentGame: CurrentGameContext;
   rankQueue?: RankedQueueType;
   targetServerIds?: DiscordGuildId[];

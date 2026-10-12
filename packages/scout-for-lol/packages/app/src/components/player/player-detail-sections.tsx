@@ -1,15 +1,19 @@
-import { Link } from "react-router";
 import {
+  type LeaguePuuid,
+  type DiscordGuildId,
+  type DiscordChannelId,
   CompetitionStatusSchema,
   CompetitionVisibilitySchema,
   ParticipantStatusSchema,
   participantStatusToString,
   visibilityToString,
 } from "@scout-for-lol/data";
+import { Link } from "react-router";
 import { MoreHorizontal } from "lucide-react";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { DiscordUser } from "#src/components/discord-user.tsx";
 import { FilterSummary } from "#src/components/subscription/subscription-filter-summary.tsx";
+import { regionName } from "#src/lib/regions.ts";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,7 +35,7 @@ type DiscordName = { username: string; displayName: string } | null;
 type AccountRow = {
   id: number;
   alias: string;
-  puuid: string;
+  puuid: LeaguePuuid;
   region: string;
   riotGameName: string | null;
   riotTagLine: string | null;
@@ -44,7 +48,7 @@ function formatDate(value: Date | string | null): string {
 }
 
 function channelLabel(
-  channels: { id: string; name: string }[] | undefined,
+  channels: { id: DiscordChannelId; name: string }[] | undefined,
   channelId: string,
 ): string {
   const channel = channels?.find((candidate) => candidate.id === channelId);
@@ -84,7 +88,7 @@ function MobileTableScrollHint() {
 
 export type PlayerSubscriptionRow = {
   id: number;
-  channelId: string;
+  channelId: DiscordChannelId;
   creatorDiscordId: string;
   creatorDiscordUser: DiscordName;
   createdTime: Date | string;
@@ -94,7 +98,7 @@ export type PlayerSubscriptionRow = {
 
 export function PlayerSubscriptionsTable(props: {
   subscriptions: PlayerSubscriptionRow[];
-  channels: { id: string; name: string }[] | undefined;
+  channels: { id: DiscordChannelId; name: string }[] | undefined;
   canUpdate: boolean;
   canCreate: boolean;
   canDelete: boolean;
@@ -283,7 +287,7 @@ export function PlayerAccountsTable(props: {
                   </span>
                 )}
               </TableCell>
-              <TableCell>{account.region}</TableCell>
+              <TableCell>{regionName(account.region)}</TableCell>
               <TableCell>{formatDate(account.lastMatchTime)}</TableCell>
               <TableCell>{formatDate(account.lastCheckedAt)}</TableCell>
               {(props.canEdit || props.canTransfer || props.canDelete) && (
@@ -378,7 +382,7 @@ export function Section(props: {
 
 export function CompetitionSection(props: {
   title: string;
-  guildId: string;
+  guildId: DiscordGuildId;
   action?: React.ReactNode;
   rows: {
     id: number;

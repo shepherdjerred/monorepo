@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/data";
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/query/trpc.ts";
@@ -17,7 +18,7 @@ import { PlayerAliasFormSchema } from "#src/lib/form-schemas.ts";
  * inline Delete action).
  */
 export function TransferAccountDialog(props: {
-  guildId: string;
+  guildId: DiscordGuildId;
   account: { riotId: string; region: RegionValue };
   open: boolean;
   onOpenChange: (open: boolean) => void;

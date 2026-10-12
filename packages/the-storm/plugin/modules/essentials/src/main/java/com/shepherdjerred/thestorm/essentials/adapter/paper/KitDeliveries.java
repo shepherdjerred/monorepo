@@ -79,7 +79,7 @@ final class KitDeliveries {
     try {
       if (!items.give(online, kit.name())) {
         Say.error(
-            online, Say.KITS, "Make room in your inventory to receive the " + kit.name() + " kit.");
+            online, Say.STORM, "Make room in your inventory to receive your starter supplies.");
         finished(player);
         return;
       }
@@ -92,7 +92,6 @@ final class KitDeliveries {
         .getPersistentDataContainer()
         .set(marker, PersistentDataType.LONG, kit.claimedAt().toEpochMilli());
     deliveredThisSession.computeIfAbsent(player, ignored -> new HashSet<>()).add(kit);
-    Say.success(online, Say.KITS, "You received the " + kit.name() + " kit.");
     next(player, pending, index + 1);
   }
 

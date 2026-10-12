@@ -18,7 +18,7 @@ import {
   type LibraryEntry,
 } from "@shepherdjerred/streambot/sources/library.ts";
 import { sourceIdentity } from "@shepherdjerred/streambot/sources/source.ts";
-import type { YtdlpSearchResult } from "@shepherdjerred/streambot/sources/ytdlp.ts";
+import type { YtdlpSearchResult } from "@shepherdjerred/streambot/sources/youtube-search-result.ts";
 
 export type DiscoveryServiceDeps = {
   readonly library: () => readonly LibraryEntry[];

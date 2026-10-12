@@ -107,7 +107,7 @@ test("end-to-end: gateway span -> Tempo + private archive", async () => {
 
   const s3Key = llmSpan?.attributes["llm.archive.s3_key"];
   expect(typeof s3Key).toBe("string");
-  if (typeof s3Key !== "string") throw new Error("missing s3_key");
+  if (typeof s3Key !== "string") throw new TypeError("missing s3_key");
 
   const archived = await getMinioObject("llm-archive", s3Key);
   const envelope = gunzipJson(archived);

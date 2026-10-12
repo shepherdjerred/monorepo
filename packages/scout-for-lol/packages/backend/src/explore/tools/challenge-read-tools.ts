@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import { tool } from "ai";
 import { z } from "zod";
 import {
@@ -63,7 +64,7 @@ export const ChallengeReadResultSchema = z.strictObject({
 /** Discord ids of everyone registered in the servers in scope. */
 async function ownersInScope(
   db: ExtendedPrismaClient,
-  guildIds: readonly string[],
+  guildIds: readonly DiscordGuildId[],
 ): Promise<Set<string>> {
   const players = await db.player.findMany({
     where: { serverId: { in: [...guildIds] }, discordId: { not: null } },
@@ -79,7 +80,7 @@ async function ownersInScope(
 export function createChallengeReadTools(options: {
   readonly db: ExtendedPrismaClient;
   readonly requesterId: DiscordAccountId;
-  readonly guildIds: readonly string[];
+  readonly guildIds: readonly DiscordGuildId[];
   readonly track: ToolTracker;
 }) {
   return {

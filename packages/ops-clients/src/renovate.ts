@@ -31,7 +31,7 @@ export function parseDependencyDashboard(body: string): DependencyDashboard {
   const updates: RenovateUpdate[] = [];
   const seen = new Set<string>();
   for (const match of body.matchAll(MARKER_PATTERN)) {
-    const [, marker, branch, rest] = match;
+    const [, marker, branch, rest = ""] = match;
     const state = marker === undefined ? undefined : MARKER_STATES[marker];
     if (state === undefined || branch === undefined) {
       throw new Error(`Unrecognized Renovate marker in: ${match[0]}`);
@@ -44,7 +44,7 @@ export function parseDependencyDashboard(body: string): DependencyDashboard {
     updates.push({
       state,
       branch,
-      title: (rest ?? "").trim() || branch,
+      title: rest.trim() || branch,
     });
   }
   return {

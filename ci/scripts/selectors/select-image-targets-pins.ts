@@ -2,7 +2,10 @@ import {
   resolveManagedImagePins,
   UNPUBLISHED_IMAGE_DIGEST,
 } from "../../../scripts/lib/image-pin-catalog.ts";
-import { APPLICATION_IMAGE_TARGETS } from "../images/image-targets.ts";
+import {
+  APPLICATION_IMAGE_TARGETS,
+  INFRASTRUCTURE_IMAGE_TARGETS,
+} from "../images/image-targets.ts";
 
 function addReason(
   reasons: Map<string, string[]>,
@@ -32,14 +35,14 @@ export async function unpublishedImagePinInspectionFailure(options: {
       (await Bun.file(
         `${options.repoRoot}/packages/version-catalog/src/catalog.json`,
       ).text());
-    for (const { name, pin } of resolveManagedImagePins(
-      versionCatalogSource,
-      APPLICATION_IMAGE_TARGETS,
-    )) {
+    for (const { name, pin } of resolveManagedImagePins(versionCatalogSource, [
+      ...APPLICATION_IMAGE_TARGETS,
+      ...INFRASTRUCTURE_IMAGE_TARGETS,
+    ])) {
       if (pin.digest === UNPUBLISHED_IMAGE_DIGEST) {
         addReason(
           options.reasons,
-          name,
+          INFRASTRUCTURE_IMAGE_TARGETS.includes(name) ? "infra" : name,
           `unpublished image pin ${pin.key} requires its first release`,
         );
       }

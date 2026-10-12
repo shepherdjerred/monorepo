@@ -1,0 +1,80 @@
+id: piozpith-58
+name: Piozpith_58
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0ODkxNjk0MSwKICAicHJvZmlsZUlkIiA6ICI4NzA1MzkxMDBlOGQ0MzU2YjJiYjlmZGI1NjFhOGU3ZSIsCiAgInByb2ZpbGVOYW1lIiA6ICJfcmVncmV0dHQiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjMwOTFiMjhjOTQ2NmE0OWM4YTc2Zjg5OWQxZmQ3NDMxZTViNzc2ZGJhODVkYmNiNTZhNDRmZTliZDZhMDVhYiIKICAgIH0KICB9Cn0="
+  signature: "eUrhdXZyl/eJxPZAE+Jt3yHIjgw+M8ZtGZeWn79DZefZRToU7VW+f3uEoR4PNosF77eLp+rKl0cAHfAvTHIYfEkD6p+kgxqQ7frKkZxeyl22xxhW8tbtt/wEi8LOWlZlTIC4EsnZvWNm9cGdIJy77/rS/Xp+feqOw6M1Y6xftde2XD17j7YNIjpK/EurXwHJhppmn8MZL0On1ylH+nGznmCQkdn0N981YMjkP58n3EGN9fK4oR6qrsm+xeeirTGtYNZGk7PKhVeSsYjaIBDdZQ2rChRhd7hVcxg2y4dRl+s7KEhTVILl5sOgcbwxKeJODf7xM8lcPf5viZSGQ0sudzHyZU77O9YzKiFWi0gIONqZtp3PKUABMxiHAuXaS6hBSw94+8YH6bjogCNOInJnFvoM3bD/LpC72a3UwmPqjsoAzwVMCNAWilBbBUprY1nE6vgBEANJcjr+234yBwUd4Egs5/MiI52qNkF6oTmkv6nIMFJ5bWwUCWMM1t38GswErmcHOwhdIYkrXW39OF+I6UIKizTR6leWGkVSqqFDt4skhE9N3LCRtgXpGGrWGz1ELlVTj6NZfd4mBxY3xme1DWwdDN3TaFI7lyVMzmuU37cvfkKqMhheqI3w0LNmGVR1KQFyfl9yNUWZwxY+JO+pyQD0WkUGtjaQdDzAivd3bCM="
+skill: 0.361
+archetype: bomb_diver
+leverOffsets:
+  reactionMs: 0.32
+  aimErrorDeg: 0.34
+  predictionQuality: -0.25
+  decisionTemperature: 0.63
+  technique: 1.11
+  aggression: -0.51
+kits:
+  trooper: 1
+  longbow: 0.18
+  shortbow: 0.18
+  rewind: 0.59
+roles:
+  plant: 1
+  escort: 0.18
+style:
+  aggression: 0.65
+  patience: 0.06
+  teamplay: 0.35
+  risk: 0.85
+voice:
+  tone:
+    - matter-of-fact
+    - cheerful
+    - practical
+  verbosity: normal
+  style: "Cheerful delivery-driver energy: the bomb is a parcel, signatures required, on-time stats"
+lines:
+  greet:
+    - "Delivery route planned, {team}."
+    - One parcel for the enemy bomb!
+  onKill:
+    - "Sorry {victim}, blocking the drop-off."
+    - Route cleared.
+    - Parcel jam removed.
+  onDeath:
+    - "{killer} intercepted the parcel."
+    - Delivery delayed.
+    - Lost in transit.
+  onPlant:
+    - "{bomb} delivered! Signature please."
+    - On time, as always.
+  onDefuse:
+    - "Return to sender: {bomb}."
+    - Parcel refused.
+  onWin:
+    - "Five-star delivery, {team}."
+    - All parcels arrived.
+  onLoss:
+    - Delivery failed. Rescheduling.
+    - Left a note on their door.
+  onLastAlive:
+    - Solo delivery run.
+    - Still on schedule.
+  taunt:
+    - Package for you.
+    - Your door is on my route.
+    - No one home? I'll leave it here.
+  lobby:
+    - "Parcel route loaded, {team}. Delivery window opens soon."
+    - "On-time rate this week: ninety-four percent!"
+    - Trooper van fuelled, gapples in the glovebox.
+    - Signature required on the enemy bomb, as usual.
+    - Anyone else racing me to the drop-off? Friendly only!
+quirks:
+  - loves_nuke
+  - always_gg
+rivals:
+  - epicnustskur
+  - dizzyzynthun
+bio: "Treats the enemy bomb as a parcel to deliver and keeps an on-time percentage. Its race-to-the-fuse feud with EpicNustskur is friendly; the one with DizzyZynthun involves a disputed delivery from 2014."
+batch: 2
+retired: false

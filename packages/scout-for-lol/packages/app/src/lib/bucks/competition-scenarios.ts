@@ -22,7 +22,7 @@ export type CompetitionScenario = {
   unavailableReason?: string;
 };
 
-type ScenarioContext = {
+export type CompetitionScenarioContext = {
   now: Date;
   timezone: string;
   seasons: SeasonData[];
@@ -121,7 +121,7 @@ function rollingScenario(options: {
 }
 
 export function buildCompetitionScenarios(
-  context: ScenarioContext,
+  context: CompetitionScenarioContext,
 ): CompetitionScenario[] {
   const season = nearestSeason(context.seasons, context.now);
   const dates = fixedDates(context.now, context.timezone);

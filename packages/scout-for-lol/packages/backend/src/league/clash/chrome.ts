@@ -11,6 +11,10 @@ import {
 } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
 import {
+  currentClientClashOpponent,
+  readClientClashTeams,
+} from "#src/league/clash/client-clash.ts";
+import {
   clashTeamLabels,
   loadClashTeamAndTournamentMaps,
 } from "#src/league/clash/store.ts";
@@ -34,7 +38,7 @@ export async function loadClashChrome(input: {
     where: { puuid: { in: puuids } },
   });
   if (registrations.length === 0) {
-    return {};
+    return await clientClashChrome(input.participants, puuids);
   }
   const { teamByKey, tournamentByKey } =
     await loadClashTeamAndTournamentMaps(registrations);
@@ -65,8 +69,13 @@ export async function loadClashChrome(input: {
     tournament === undefined
       ? undefined
       : formatClashThemeLabel(tournament.nameKey, tournament.nameKeySecondary);
-  const blueTeam = bannerFor("blue");
-  const redTeam = bannerFor("red");
+  const riot = { blue: bannerFor("blue"), red: bannerFor("red") };
+  const client =
+    riot.blue === undefined || riot.red === undefined
+      ? await clientClashChrome(input.participants, puuids)
+      : {};
+  const blueTeam = riot.blue ?? client.blueTeam;
+  const redTeam = riot.red ?? client.redTeam;
   return {
     ...(themeLabel === undefined ? {} : { themeLabel }),
     ...(blueTeam === undefined ? {} : { blueTeam }),
@@ -88,4 +97,40 @@ export async function attachClashChrome(
   return clashChrome === undefined
     ? data
     : LoadingScreenDataSchema.parse({ ...data, clashChrome });
+}
+
+/**
+ * The banners the Scout Client can supply: a side whose player's client saw
+ * their roster, and — from that roster's bracket — the team they are playing
+ * now. Riot publishes neither the bracket nor any opponent it doesn't track.
+ */
+async function clientClashChrome(
+  participants: readonly Pick<LoadingScreenParticipant, "puuid" | "team">[],
+  puuids: readonly string[],
+): Promise<ClashLoadingChrome> {
+  const teams = await readClientClashTeams(puuids, new Date());
+  const banners = new Map<Team, ClashTeamBanner>();
+  for (const side of ["blue", "red"] as const) {
+    const sidePuuids = new Set(
+      participants
+        .filter((participant) => participant.team === side)
+        .map((participant) => participant.puuid),
+    );
+    const team = teams.find((candidate) =>
+      candidate.memberPuuids.some((puuid) => sidePuuids.has(puuid)),
+    );
+    if (team === undefined) continue;
+    banners.set(side, { name: team.name, abbreviation: team.abbreviation });
+    const opponent = currentClientClashOpponent(team);
+    const otherSide = side === "blue" ? "red" : "blue";
+    if (opponent !== null && !banners.has(otherSide)) {
+      banners.set(otherSide, opponent);
+    }
+  }
+  const blueTeam = banners.get("blue");
+  const redTeam = banners.get("red");
+  return {
+    ...(blueTeam === undefined ? {} : { blueTeam }),
+    ...(redTeam === undefined ? {} : { redTeam }),
+  };
 }

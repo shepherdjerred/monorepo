@@ -1,3 +1,9 @@
+import {
+  DiscordChannelIdSchema,
+  DiscordGuildIdSchema,
+  type DiscordChannelId,
+  type DiscordGuildId,
+} from "@scout-for-lol/data";
 import { useState } from "react";
 import { formOptions } from "@tanstack/react-form";
 import {
@@ -23,20 +29,22 @@ import { emptySubscriptionFormValue } from "#src/lib/form-schemas.ts";
 import { findRegion, REGIONS, regionLabel } from "#src/lib/regions.ts";
 
 export const subscriptionFormOptions = formOptions({
-  defaultValues: emptySubscriptionFormValue(""),
+  defaultValues: emptySubscriptionFormValue(
+    DiscordChannelIdSchema.parse("817001115665086549"),
+  ),
 });
 
 type SubscriptionFieldsProps = {
   idPrefix: string;
-  guildId: string;
-  channels: { id: string; name: string }[];
+  guildId: DiscordGuildId;
+  channels: { id: DiscordChannelId; name: string }[];
   channelAvailability?: ChannelAvailability;
   onRetryChannels?: () => void;
 };
 
 const DEFAULT_SUBSCRIPTION_FIELDS_PROPS: SubscriptionFieldsProps = {
   idPrefix: "subscription",
-  guildId: "",
+  guildId: DiscordGuildIdSchema.parse("817001115665086549"),
   channels: [],
   channelAvailability: { status: "ready" },
 };

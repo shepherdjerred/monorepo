@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 import {
   BucksLedgerKindSchema,
@@ -162,7 +163,7 @@ describe("resolveLedgerGameLabels", () => {
     });
     await db.bucksMatchPool.create({
       data: {
-        matchId: "NA1_labels_1",
+        matchId: RiotMatchIdSchema.parse("NA1_9100000010"),
         serverId: SERVER_ID,
         detectedAt: new Date("2030-01-01T00:00:00Z"),
         closesAt: new Date("2030-01-01T00:10:00Z"),
@@ -177,7 +178,7 @@ describe("resolveLedgerGameLabels", () => {
         delta: -5,
         balanceAfter: 35,
         kind: BucksLedgerKindSchema.parse("bet_stake"),
-        matchId: "NA1_other",
+        matchId: RiotMatchIdSchema.parse("NA1_9100000030"),
         context: JSON.stringify({
           type: "stake",
           subjectAlias: "jerred",
@@ -192,7 +193,7 @@ describe("resolveLedgerGameLabels", () => {
         delta: 1,
         balanceAfter: 36,
         kind: BucksLedgerKindSchema.parse("earn_game"),
-        matchId: "NA1_labels_1",
+        matchId: RiotMatchIdSchema.parse("NA1_9100000010"),
         context: JSON.stringify({
           type: "earn",
           alias: "jerred",
@@ -237,7 +238,7 @@ describe("resolveLedgerGameLabels", () => {
         delta: -5,
         balanceAfter: 35,
         kind: BucksLedgerKindSchema.parse("bet_stake"),
-        matchId: "NA1_long",
+        matchId: RiotMatchIdSchema.parse("NA1_9100000020"),
         context: JSON.stringify({
           type: "stake",
           subjectAlias: longAlias,
@@ -290,7 +291,7 @@ describe("resolveLedgerGameLabels for dares", () => {
         balanceAfter: 39,
         kind: BucksLedgerKindSchema.parse("dare_payout"),
         // A settled dare stamps the binding match, and there is no pool for it.
-        matchId: "NA1_dare_settlement",
+        matchId: RiotMatchIdSchema.parse("NA1_9100000000"),
         context: dareContext({
           role: "target",
           payoutComponent: "share",
@@ -317,6 +318,6 @@ describe("resolveLedgerGameLabels for dares", () => {
     expect(labels.get(1)).toBe("alpha, bravo");
     expect(labels.get(2)).toBe("alpha, bravo");
     // Never the raw match ID, and never a pool lookup that has no pool.
-    expect(labels.get(1)).not.toContain("NA1_dare_settlement");
+    expect(labels.get(1)).not.toContain("NA1_9100000000");
   });
 });

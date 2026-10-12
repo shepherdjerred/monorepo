@@ -37,7 +37,8 @@ describe("OpenAI voice audio adapter", () => {
     expect(submittedForm?.get("model")).toBe("gpt-4o-transcribe");
     const file = submittedForm?.get("file");
     expect(file).toBeInstanceOf(Blob);
-    if (!(file instanceof Blob)) throw new Error("Missing transcription wave");
+    if (!(file instanceof Blob))
+      throw new TypeError("Missing transcription wave");
     const contents = await file.arrayBuffer();
     expect(new TextDecoder().decode(contents.slice(0, 4))).toBe("RIFF");
   });

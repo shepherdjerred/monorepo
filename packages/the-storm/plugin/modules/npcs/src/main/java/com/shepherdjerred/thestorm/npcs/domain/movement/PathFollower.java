@@ -16,8 +16,8 @@ import java.util.random.RandomGenerator;
  * <p>An NPC first asks the navigator for a path ({@link Phase.Planning}), then steps along its
  * waypoints at {@link MovementSettings#speed()} ({@link Phase.Following}), then rests ({@link
  * Phase.Resting}). It never gets lost for long: a navigator that finds no path, a path that keeps
- * ending short, or a step that makes no progress (the entity did not move, say because the next
- * chunk is unloaded) all end in a teleport to the destination.
+ * ending short, or a step that makes no progress can end an authored routine with a teleport to its
+ * destination. Wandering, fleeing and pursuit instead stop and retry without teleporting.
  *
  * <p>Randomness (wander points and pauses) comes from the injected generator, so a seeded one
  * replays exactly.
@@ -191,7 +191,9 @@ public final class PathFollower {
    * another point later.
    */
   private Tick giveUp(Walker walker, Vec3 target, Observation seen) {
-    if (walker.intent() instanceof Intent.Wander || walker.intent() instanceof Intent.Pursue) {
+    if (walker.intent() instanceof Intent.Wander
+        || walker.intent() instanceof Intent.Pursue
+        || walker.intent() instanceof Intent.Flee) {
       return arrive(walker.intent(), walker.stop(), seen.facing(), seen.tick());
     }
     var facing = Rotation.heading(seen.position(), target, seen.facing());
@@ -213,7 +215,8 @@ public final class PathFollower {
     var until =
         switch (intent) {
           case Intent.Stand _, Intent.Sleep _ -> Long.MAX_VALUE;
-          case Intent.Wander _, Intent.Patrol _, Intent.Pursue _ -> now + dwell();
+          case Intent.Wander _, Intent.Patrol _ -> now + dwell();
+          case Intent.Pursue _, Intent.Flee _ -> now + 1;
         };
     return new Tick(
         new Walker(intent, stop, new Phase.Resting(until)),
@@ -229,6 +232,7 @@ public final class PathFollower {
     return switch (intent) {
       case Intent.Stand(var spot, var _) -> spot.position();
       case Intent.Pursue(var target) -> target.position();
+      case Intent.Flee(var target) -> target.position();
       case Intent.Sleep(var bed) -> bed.position();
       case Intent.Patrol(var route) -> route.get(stop).position();
       case Intent.Wander(var center, var radius) -> {
@@ -248,6 +252,7 @@ public final class PathFollower {
       case Intent.Sleep(var bed) -> bed.rotation();
       case Intent.Wander _, Intent.Patrol _ -> current;
       case Intent.Pursue(var target) -> target.rotation();
+      case Intent.Flee(var target) -> target.rotation();
     };
   }
 }

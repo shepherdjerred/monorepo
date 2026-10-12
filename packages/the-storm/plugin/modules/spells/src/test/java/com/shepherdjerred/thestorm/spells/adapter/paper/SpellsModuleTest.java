@@ -12,7 +12,10 @@ import java.util.List;
 import java.util.Objects;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.WorldCreator;
 import org.bukkit.block.BlockFace;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -31,6 +34,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.mockbukkit.mockbukkit.MockBukkit;
 import org.mockbukkit.mockbukkit.ServerMock;
 import org.mockbukkit.mockbukkit.entity.PlayerMock;
+import org.mockbukkit.mockbukkit.world.WorldMock;
 
 /**
  * The spells module end to end on MockBukkit with a real SQLite store: enable, {@code /spells
@@ -190,6 +194,56 @@ final class SpellsModuleTest {
     // The same click reported twice is silent; the cooldown still holds.
     rightClick(player, focus);
     assertThat(player.getInventory().getItem(20)).isEqualTo(ItemStack.of(Material.REDSTONE, 5));
+  }
+
+  @Test
+  void nothingIsCastInASealedWorld() {
+    var player = spellcaster(1);
+    bind(player, "haste");
+    var focus = focusIn(player);
+    player.getInventory().setItem(20, ItemStack.of(Material.REDSTONE, 20));
+    plugin.sealed.seal("arena");
+    var arena = server.addSimpleWorld("arena");
+    player.teleport(new Location(arena, 0.5, 5, 0.5));
+    said(player);
+
+    rightClick(player, focus);
+
+    assertThat(player.hasPotionEffect(PotionEffectType.SPEED)).isFalse();
+    assertThat(player.getInventory().getItem(20)).isEqualTo(ItemStack.of(Material.REDSTONE, 20));
+    assertThat(player.getCooldown(focus)).isZero();
+    assertThat(said(player)).anyMatch(line -> line.contains("Magic does not work in this world."));
+  }
+
+  @Test
+  void recallRefusesAMarkWhoseWorldWasSealedLater() throws InterruptedException {
+    var player = spellcaster(1);
+    // MockBukkit keys every simple world minecraft:overworld; a Mark needs its own world key.
+    var arena = new WorldMock(WorldCreator.ofKey(NamespacedKey.minecraft("arena")));
+    server.addWorld(arena);
+    player.teleport(new Location(arena, 0.5, 5, 0.5));
+    bind(player, "mark");
+    player.getInventory().setItem(20, ItemStack.of(Material.REDSTONE, 40));
+    player.getInventory().setItem(21, ItemStack.of(Material.LAPIS_LAZULI, 20));
+    var markFocus = focusIn(player);
+    rightClick(player, markFocus);
+    settle();
+    assertThat(said(player)).anyMatch(line -> line.contains("Marked"));
+
+    plugin.sealed.seal("arena");
+    player.teleport(new Location(server.getWorld("world"), 100.5, 5, 100.5));
+    player.getInventory().remove(markFocus);
+    bind(player, "recall");
+    var recall = focusIn(player);
+    said(player);
+
+    rightClick(player, recall);
+
+    assertThat(player.getWorld().getName()).isEqualTo("world");
+    // Mark took 15 redstone; a refused Recall takes nothing more (foci share one item cooldown).
+    assertThat(player.getInventory().getItem(20)).isEqualTo(ItemStack.of(Material.REDSTONE, 25));
+    assertThat(said(player))
+        .anyMatch(line -> line.contains("Your Mark lies in a world closed to magic."));
   }
 
   @Test

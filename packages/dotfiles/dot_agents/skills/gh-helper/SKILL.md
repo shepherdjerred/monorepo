@@ -21,7 +21,8 @@ branches, create feature PRs, or merge them with the generic `gh` examples
 below. Load `monorepo-delivery` before any branch or feature-PR mutation.
 
 This monorepo uses Woodpecker CI, not GitHub Actions. Use
-`toolkit woodpecker` or `toolkit pr health` for CI. The generic Actions examples later in this skill
+`toolkit ci wait` for merge readiness, `toolkit ci explain` for blockers, and
+`toolkit woodpecker` for native CI operations. The generic Actions examples later in this skill
 apply only to repositories that actually use GitHub Actions.
 
 ## MCP Tool Equivalents Reference

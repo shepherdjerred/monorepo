@@ -1,0 +1,84 @@
+id: nyshxaix-38
+name: Nyshxaix_38
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1Mzc4NjY4MCwKICAicHJvZmlsZUlkIiA6ICI2NWI5NTU1YWQyMGU0NWM5YjFkNmU3MjQwNjU0NTBkNCIsCiAgInByb2ZpbGVOYW1lIiA6ICJNSEZfTWVybCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9iYTU4ZDM3MjYzNWUyYjBhYzI4N2NiN2Q5YzJkNGJhYTRiNmQyOTUzZjhkYTQyMGRmZWNjYjY1YzM5MjcwNDFmIgogICAgfQogIH0KfQ=="
+  signature: "GIAFJ50/ch1Nmand0leczwuaF1doXTO/b35dyXQ41n23ejkIoc8I1UndQG8WHg1K/kTRRkhs2PqtYBRJEJ5ZMnIkSPMhF8jVH6QkzOL+bQdzRM3MnFF0if85ZTlr+/St23vlxn+OsmxdRM3adM/cNYm9OOYxgPeoShCW6ZLaKAjxhWuYGCY5gGZqj+AZigix4laJkU8ZZPouyB0jf4sNi6eeA007ITpw+OQnYDS7czZM7X9bhfZlEEH+797PlUe2gBiMj7c/gocu75bcmY8X+tBdCLq3asg+MlH3u2peMkHY67hbd+IH7hyKYaZG4u0dqsvS+OJ88FSzeyACqtKjRK1MbrHZUEQXGabotsBitglRfTg7AaFLSnp1ps4ebLSiSgxnEFKA4arxpYplOpIf3m9nXZ+N9g/GqovQIvmH9D+LhWIA6HBuNEv9hJzJAPxrripBVRlKe1YSY+VT1+iI8wCqvLXpmZ9wE0F4N3txd1PW5SCq31Hc5y1pB5CuNspq0cP69Gs6LHgMk8FntKIkyc7U7LdnESRybdbKZ4xeMruxElec3dYht0Tb7+D0jCgpeg8BTYqMCwxD9Y/l9DvUVdJ+qzuk0PnJ/sd+MJrl6DWZ0rxycKBW71/IuICjPUu09phFq3CgmWqQ3WY/yfzAROeWHMD02ZaDUInKaEn64CQ="
+skill: 0.246
+archetype: troll
+leverOffsets:
+  reactionMs: 0.03
+  turnRateDegPerTick: 0.67
+  decisionTemperature: -1.99
+  coordination: -0.68
+  technique: 0.47
+kits:
+  trooper: 0.57
+  shortbow: 0.79
+  rewind: 1
+  ghost: 0.24
+  spy: 0.76
+roles:
+  plant: 0.62
+  escort: 0.33
+  defend: 0.2
+  rotate: 0.54
+  hunt: 0.45
+style:
+  aggression: 0.64
+  patience: 0.18
+  teamplay: 0.1
+  risk: 0.95
+voice:
+  tone:
+    - pirate
+    - rowdy
+    - theatrical
+  verbosity: chatty
+  style: swashbuckling pirate talk, treasure, plunder and ships, arr optional
+lines:
+  greet:
+    - "ahoy {team}! hoist the colours"
+    - we sail for their bomb, mateys
+    - any treasure on this map?
+  onKill:
+    - "{victim} walks the plank"
+    - "plundered {victim}"
+    - "arr, {victim} be fish food"
+  onDeath:
+    - "{killer} sank me ship"
+    - to davy's locker i go
+    - "a mutiny! by {killer}"
+  onPlant:
+    - "{bomb} be lit, me hearties"
+    - "fire the cannon at {bomb}"
+  onDefuse:
+    - "{bomb} put out with seawater"
+    - "no one burns my ship, {bomb} safe"
+  onWin:
+    - "the treasure be ours, {team}!"
+    - yo ho, a fine haul
+  onLoss:
+    - we be shipwrecked
+    - a storm took us, mateys
+  onLastAlive:
+    - last pirate aboard
+    - the captain goes down with the ship. or not
+  taunt:
+    - i smell treasure on yer bomb
+    - surrender or swim
+    - rewound me ship, back for more
+  lobby:
+    - the lobby be a fine harbour, mateys
+    - shortbow in me belt, rewind in me pocket
+    - "{team}, treasure awaits across the water"
+    - anyone seen a lighthouse? asking for a crew
+    - we sail at the countdown. no stragglers
+quirks:
+  - narrates
+  - loves_nuke
+rivals:
+  - xxbrydaen
+  - mothlynx8
+bio: Sails every map like the high seas and treats enemy bombs as treasure. Has spent years trying to raid xXBrydaen's lighthouse and has the rewinds to prove it. Thinks MothLynx8 would make a fine first mate.
+batch: 2
+retired: false

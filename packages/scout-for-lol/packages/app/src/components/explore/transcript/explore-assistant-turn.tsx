@@ -195,6 +195,7 @@ export const AssistantTurn = memo(function AssistantTurnView(props: {
   readonly message: ExploreMessage;
   readonly actions: ExploreTranscriptActions;
   readonly showRawTrace: boolean;
+  readonly allowIntentActions?: boolean;
   readonly showFollowUps: boolean;
 }) {
   const { message, actions } = props;
@@ -228,12 +229,26 @@ export const AssistantTurn = memo(function AssistantTurnView(props: {
 
   return (
     <div className="space-y-3">
-      <MarkdownAnswer>{message.content}</MarkdownAnswer>
+      <MarkdownAnswer inlineEntities={message.inlineEntities}>
+        {message.content}
+      </MarkdownAnswer>
+      {message.generation != null && (
+        <p className="text-xs text-scout-subtle">
+          {message.generation.model === "gpt-6.1-sol"
+            ? "GPT-6.1 Sol"
+            : message.generation.model === "gpt-6-luna"
+              ? "GPT-6 Luna"
+              : message.generation.model}{" "}
+          · High reasoning
+        </p>
+      )}
 
       <ExploreMatchCards cards={message.matchCards} />
       <ExploreLoadoutCards cards={message.loadoutCards} />
 
-      {props.showRawTrace && <ExploreIntentCards trace={message.trace} />}
+      {props.allowIntentActions === true && (
+        <ExploreIntentCards trace={message.trace} />
+      )}
 
       <ExploreVisualResult
         preview={message.preview}

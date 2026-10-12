@@ -1,7 +1,6 @@
 import { Context } from "@temporalio/activity";
 import { ApplicationFailure } from "@temporalio/common";
 import { client } from "#src/discord/client.ts";
-import configuration from "#src/configuration.ts";
 import type { ScoutTemporalActivityGroups } from "./connected-runtime.ts";
 import { PermanentImportError } from "#src/league/initial-history/errors.ts";
 import {
@@ -9,30 +8,143 @@ import {
   providerForError,
   recordProviderIssue,
 } from "#src/alerts/provider-metrics.ts";
-import { heartbeatWhile, probeQueue, unavailable } from "./activity-runtime.ts";
+import {
+  heartbeatWhile,
+  probeQueue,
+  scheduleReconciliationEnabled,
+  unavailable,
+  NonSupportBackgroundJobInputSchema,
+  type NonSupportBackgroundJobInput,
+} from "./activity-runtime.ts";
 import { createRealtimeActivities } from "#src/temporal/realtime-activities.ts";
-import { createScoutV2BackgroundActivities } from "#src/temporal/v2/background-activities.ts";
-import { createScoutV2LakeActivities } from "#src/temporal/v2/lake-activities.ts";
+import { createScoutBackgroundActivities } from "#src/temporal/background-activities.ts";
+import { createScoutLakeActivities } from "#src/temporal/lake/lake-activities.ts";
 import { temporalWorkHardDisabled } from "#src/temporal/work-features.ts";
 type DetachedWorkInput = Parameters<
   ScoutTemporalActivityGroups["background"]["runDetachedBackgroundWork"]
 >[0];
-
-function scheduleReconciliationEnabled(): boolean {
-  const mode = configuration.temporalScheduleReconciliation;
-  return mode !== "disabled";
+async function drainScoutSupportJobs(): Promise<void> {
+  const { drainSupportJobs } = await import("#src/support/jobs.ts");
+  await drainSupportJobs();
 }
 
 export function providerQuotaApplicationFailure(
   error: unknown,
 ): ApplicationFailure | null {
-  if (classifyLlmProviderIssue(error) !== "quota") {
-    return null;
-  }
+  if (classifyLlmProviderIssue(error) !== "quota") return null;
   return ApplicationFailure.nonRetryable(
     error instanceof Error ? error.message : String(error),
     "ProviderQuotaExhausted",
   );
+}
+
+async function runBackgroundJobByKind(
+  input: NonSupportBackgroundJobInput,
+): Promise<void> {
+  switch (input.kind) {
+    case "competition-refresh": {
+      const { runLifecycleCheck } =
+        await import("#src/league/tasks/competition/lifecycle.ts");
+      await runLifecycleCheck();
+      break;
+    }
+    case "competition-scheduled-updates": {
+      const { runScheduledCompetitionUpdates } =
+        await import("#src/league/tasks/competition/scheduled-update-dispatcher.ts");
+      await runScheduledCompetitionUpdates();
+      break;
+    }
+    case "competition-validation": {
+      const { runDataValidation } =
+        await import("#src/league/tasks/cleanup/validate-data.ts");
+      await runDataValidation(client);
+      break;
+    }
+    case "bucks-reconciliation": {
+      const { reconcileBucksBalances } =
+        await import("#src/betting/settlement/reconcile.ts");
+      await reconcileBucksBalances();
+      break;
+    }
+    case "weekly-bucks-leaderboard": {
+      const { runWeeklyBucksLeaderboard } =
+        await import("#src/betting/leaderboard/weekly-leaderboard.ts");
+      await runWeeklyBucksLeaderboard();
+      break;
+    }
+    case "player-pruning": {
+      const { runPlayerPruning } =
+        await import("#src/league/tasks/cleanup/prune-players.ts");
+      await runPlayerPruning();
+      break;
+    }
+    case "removed-guild-cleanup": {
+      const { reconcileRemovedGuilds } =
+        await import("#src/league/tasks/cleanup/reconcile-removed-guilds.ts");
+      await reconcileRemovedGuilds(client);
+      break;
+    }
+    case "match-time-rebuild": {
+      const { refreshMatchTimes } =
+        await import("#src/league/tasks/maintenance/refresh-match-times.ts");
+      await refreshMatchTimes();
+      break;
+    }
+    case "outreach": {
+      const { runOutreach } =
+        await import("#src/league/tasks/outreach/index.ts");
+      await runOutreach(client);
+      break;
+    }
+    case "conversion-check": {
+      const { updateOutreachConversionMetrics } =
+        await import("#src/league/tasks/outreach/conversions.ts");
+      await updateOutreachConversionMetrics();
+      break;
+    }
+    case "summoner-index-backfill": {
+      const { backfillFromExisting } =
+        await import("#src/lib/riot/summoner-index.ts");
+      await backfillFromExisting();
+      break;
+    }
+    case "custom-nights-expiry": {
+      const { expireCustomNights } =
+        await import("#src/customs/game/expiry.ts");
+      await expireCustomNights();
+      break;
+    }
+    case "notification-intent-expiry": {
+      const { runNotificationIntentExpiry } =
+        await import("#src/durable/match/intent-expiry.ts");
+      await runNotificationIntentExpiry();
+      const { settleTerminalNotificationTips } =
+        await import("#src/temporal/notification/notification-presentation.ts");
+      await settleTerminalNotificationTips();
+      break;
+    }
+    case "progression-reconciliation": {
+      const { reconcileCompetitiveProgression } =
+        await import("#src/progression/reconcile.ts");
+      await reconcileCompetitiveProgression(input.stage);
+      break;
+    }
+    case "mvp-tally-refresh": {
+      const { reconcilePendingMvpTallyRefreshes } =
+        await import("#src/mvp-votes/tally-reconciliation.ts");
+      await reconcilePendingMvpTallyRefreshes();
+      break;
+    }
+    case "clash-snapshot": {
+      const { runClashSnapshot } =
+        await import("#src/league/clash/snapshot.ts");
+      await runClashSnapshot();
+      break;
+    }
+    case "prediction-ingest":
+    case "legacy-backfill":
+      unavailable(input.kind);
+  }
 }
 
 async function runDetachedWork(input: DetachedWorkInput): Promise<void> {
@@ -82,7 +194,7 @@ function createInteractiveActivities(): ScoutTemporalActivityGroups["interactive
 }
 function createBackgroundActivities(): ScoutTemporalActivityGroups["background"] {
   return {
-    ...createScoutV2BackgroundActivities(),
+    ...createScoutBackgroundActivities(),
     probeQueue,
     fetchInitialHistoryPage: async (input) => {
       return await heartbeatWhile(
@@ -148,6 +260,9 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
           const { runIngestionReconciliation } =
             await import("#src/league/tasks/recovery/ingestion-reconciliation.ts");
           await runIngestionReconciliation();
+          const { reconcileReportDeliveries } =
+            await import("#src/reports/discord-dispatcher.ts");
+          await reconcileReportDeliveries();
           const { prisma } = await import("#src/database/index.ts");
           const { findQueuedScoutTemporalWork } =
             await import("#src/temporal/work-store.ts");
@@ -204,126 +319,17 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
     runDetachedBackgroundWork: runDetachedWork,
     runBackgroundJob: async (input) => {
       if (temporalWorkHardDisabled(input.kind)) return;
-      await heartbeatWhile({ kind: input.kind, phase: "running" }, async () => {
-        switch (input.kind) {
-          case "competition-refresh": {
-            const { runLifecycleCheck } =
-              await import("#src/league/tasks/competition/lifecycle.ts");
-            await runLifecycleCheck();
-            break;
-          }
-          case "competition-scheduled-updates": {
-            const { runScheduledCompetitionUpdates } =
-              await import("#src/league/tasks/competition/scheduled-update-dispatcher.ts");
-            await runScheduledCompetitionUpdates();
-            break;
-          }
-          case "competition-validation": {
-            const { runDataValidation } =
-              await import("#src/league/tasks/cleanup/validate-data.ts");
-            await runDataValidation(client);
-            break;
-          }
-          case "bucks-reconciliation": {
-            const { reconcileBucksBalances } =
-              await import("#src/betting/settlement/reconcile.ts");
-            await reconcileBucksBalances();
-            break;
-          }
-          case "weekly-bucks-leaderboard": {
-            const { runWeeklyBucksLeaderboard } =
-              await import("#src/betting/leaderboard/weekly-leaderboard.ts");
-            await runWeeklyBucksLeaderboard();
-            break;
-          }
-          case "player-pruning": {
-            const { runPlayerPruning } =
-              await import("#src/league/tasks/cleanup/prune-players.ts");
-            await runPlayerPruning();
-            break;
-          }
-          case "removed-guild-cleanup": {
-            const { reconcileRemovedGuilds } =
-              await import("#src/league/tasks/cleanup/reconcile-removed-guilds.ts");
-            await reconcileRemovedGuilds(client);
-            break;
-          }
-          case "match-time-rebuild": {
-            const { refreshMatchTimes } =
-              await import("#src/league/tasks/maintenance/refresh-match-times.ts");
-            await refreshMatchTimes();
-            break;
-          }
-          case "outreach": {
-            const { runOutreach } =
-              await import("#src/league/tasks/outreach/index.ts");
-            await runOutreach(client);
-            break;
-          }
-          case "conversion-check": {
-            const { updateOutreachConversionMetrics } =
-              await import("#src/league/tasks/outreach/conversions.ts");
-            await updateOutreachConversionMetrics();
-            break;
-          }
-          case "summoner-index-backfill": {
-            const { backfillFromExisting } =
-              await import("#src/lib/riot/summoner-index.ts");
-            await backfillFromExisting();
-            break;
-          }
-          case "custom-nights-expiry": {
-            const { expireCustomNights } =
-              await import("#src/customs/game/expiry.ts");
-            await expireCustomNights();
-            break;
-          }
-          case "notification-intent-expiry": {
-            const { runNotificationIntentExpiry } =
-              await import("#src/durable/match/intent-expiry.ts");
-            await runNotificationIntentExpiry();
-            break;
-          }
-          case "progression-outbox": {
-            const [
-              { deliverHallRecordBreakOutbox },
-              { deliverDuelStatusOutbox },
-              { reconcileCompetitiveProgression },
-            ] = await Promise.all([
-              import("#src/progression/hall/outbox.ts"),
-              import("#src/progression/duels/outbox.ts"),
-              import("#src/progression/reconcile.ts"),
-            ]);
-            await reconcileCompetitiveProgression(input.stage);
-            await Promise.all([
-              deliverHallRecordBreakOutbox(),
-              deliverDuelStatusOutbox(),
-            ]);
-            break;
-          }
-          case "progression-reconciliation": {
-            const { reconcileCompetitiveProgression } =
-              await import("#src/progression/reconcile.ts");
-            await reconcileCompetitiveProgression(input.stage);
-            break;
-          }
-          case "mvp-tally-refresh": {
-            const { reconcilePendingMvpTallyRefreshes } =
-              await import("#src/mvp-votes/tally-reconciliation.ts");
-            await reconcilePendingMvpTallyRefreshes();
-            break;
-          }
-          case "clash-snapshot": {
-            const { runClashSnapshot } =
-              await import("#src/league/clash/snapshot.ts");
-            await runClashSnapshot();
-            break;
-          }
-          case "prediction-ingest":
-          case "legacy-backfill":
-            unavailable(input.kind);
-        }
-      });
+      if (input.kind === "support-inbox") {
+        await heartbeatWhile(
+          { kind: input.kind, phase: "running" },
+          drainScoutSupportJobs,
+        );
+        return;
+      }
+      const nonSupportInput = NonSupportBackgroundJobInputSchema.parse(input);
+      await heartbeatWhile({ kind: input.kind, phase: "running" }, () =>
+        runBackgroundJobByKind(nonSupportInput),
+      );
       Context.current().heartbeat({ kind: input.kind, phase: "complete" });
     },
     syncScoutBryanBucksAnalytics: async () => {
@@ -407,7 +413,7 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
 }
 function createLakeActivities(): ScoutTemporalActivityGroups["lake"] {
   return {
-    ...createScoutV2LakeActivities(),
+    ...createScoutLakeActivities(),
     probeQueue,
     runDetachedLakeWork: runDetachedWork,
     runReportLakeJob: async (input) => {
@@ -415,6 +421,7 @@ function createLakeActivities(): ScoutTemporalActivityGroups["lake"] {
         const { runReportLakeFold, runReportLakeRebuild } =
           await import("#src/report-lake/compactor.ts");
         const options = {
+          abortSignal: Context.current().cancellationSignal,
           onProgress: (progress: {
             phase: string;
             table?: string;

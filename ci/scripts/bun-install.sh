@@ -22,11 +22,21 @@ LOCK_MODE=${BUN_INSTALL_LOCK_MODE:?BUN_INSTALL_LOCK_MODE must be shared or local
 case "$LOCK_MODE" in
   shared)
     CACHE_LOCK_FILE=${BUN_CACHE_LOCK_FILE:?BUN_CACHE_LOCK_FILE must point to the shared Bun cache lock}
+    CACHE_DIR=${BUN_INSTALL_CACHE_DIR:?BUN_INSTALL_CACHE_DIR must point to the shared Bun cache data directory}
+    # Bun extracts each package into a temporary directory and renames it into
+    # the cache. Its default temporary directory is under ~/.bun on the
+    # container's writable layer, which turned every extraction into a write
+    # to the CI node's OS disk plus a cross-filesystem copy. Extract into a
+    # sibling of the data directory instead, on the same cache volume. Scoped
+    # to the install so other Bun temporary files stay out of the shared cache;
+    # bun-cache-gc.sh clears this directory under its exclusive lock.
+    TMP_DIR="$(dirname "$CACHE_DIR")/tmp"
     # Bun has no bounded cache GC. Every in-cluster install takes a shared lock
     # so maintenance can take the exclusive lock before clearing the cache.
     (
       flock --shared 9
-      bun install "$@"
+      mkdir -p "$TMP_DIR"
+      BUN_TMPDIR="$TMP_DIR" bun install "$@"
     ) 9>"$CACHE_LOCK_FILE"
     ;;
   local)

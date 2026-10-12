@@ -1,7 +1,11 @@
 import path from "node:path";
 
 const siteName = Bun.argv[2];
-if (siteName !== "sjer.red" && siteName !== "webring/example") {
+if (
+  siteName !== "sjer.red" &&
+  siteName !== "webring/example" &&
+  siteName !== "ts-mc-docs"
+) {
   throw new Error(
     `Expected a supported site name, received ${siteName ?? "nothing"}`,
   );

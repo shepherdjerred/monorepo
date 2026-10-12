@@ -17,7 +17,12 @@ import java.util.UUID;
  * @param options what else the owner allows
  */
 public record Lock(
-    UUID id, UUID owner, Set<BlockPos> blocks, Map<UUID, LockGrant> trusted, Options options) {
+    UUID id,
+    UUID owner,
+    Set<BlockPos> blocks,
+    Map<UUID, LockGrant> trusted,
+    Options options,
+    Restoration restoration) {
 
   /** A double chest is the largest container a lock covers. */
   public static final int MAX_BLOCKS = 2;
@@ -28,14 +33,54 @@ public record Lock(
     if (blocks.isEmpty() || blocks.size() > MAX_BLOCKS) {
       throw new IllegalArgumentException("a lock covers one or two blocks, not " + blocks.size());
     }
-    if (trusted.containsKey(owner)) {
-      throw new IllegalArgumentException("a lock's owner is not in its trusted list");
+    if (trusted.containsKey(owner)
+        || restoration.owners().keySet().stream().anyMatch(trusted::containsKey)) {
+      throw new IllegalArgumentException("a lock's owners are not in its trusted list");
     }
+    if (restoration.imported() && !restoration.owners().containsKey(owner)) {
+      throw new IllegalArgumentException("a restored lock must name its primary owner");
+    }
+  }
+
+  /** Recorded historical identities also support joint shop management before anyone rejoins. */
+  public record Restoration(UUID requestId, String holdingId, Map<UUID, String> owners) {
+    private static final UUID NO_REQUEST = new UUID(0, 0);
+    public static final UUID CUSTODIAN =
+        UUID.nameUUIDFromBytes(
+            "the-storm:historical-custody:v1".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+    public static final Restoration NONE = new Restoration(NO_REQUEST, "", Map.of());
+
+    public Restoration {
+      owners = Map.copyOf(owners);
+      if (requestId.equals(NO_REQUEST)) {
+        if (!holdingId.isEmpty() || !owners.isEmpty()) {
+          throw new IllegalArgumentException("an ordinary lock has no restoration metadata");
+        }
+      } else if (!holdingId.matches("[a-z0-9_:-]{1,80}")
+          || owners.isEmpty()
+          || owners.values().stream().anyMatch(String::isBlank)) {
+        throw new IllegalArgumentException("a restored lock needs a holding and named owners");
+      }
+    }
+
+    public boolean imported() {
+      return !requestId.equals(NO_REQUEST);
+    }
+  }
+
+  public boolean ownedByPlayer(UUID player) {
+    return owner.equals(player) || restoration.owners().containsKey(player);
+  }
+
+  public Set<UUID> owners() {
+    var result = new HashSet<>(restoration.owners().keySet());
+    result.add(owner);
+    return Set.copyOf(result);
   }
 
   /** A new lock of {@code owner}'s on {@code blocks}, trusting nobody and allowing nothing else. */
   public static Lock of(UUID id, UUID owner, Set<BlockPos> blocks) {
-    return new Lock(id, owner, blocks, Map.of(), Options.NONE);
+    return new Lock(id, owner, blocks, Map.of(), Options.NONE, Lock.Restoration.NONE);
   }
 
   /**
@@ -54,40 +99,43 @@ public record Lock(
   public Lock withBlock(BlockPos block) {
     var next = new HashSet<>(blocks);
     next.add(block);
-    return new Lock(id, owner, next, trusted, options);
+    return new Lock(id, owner, next, trusted, options, restoration);
   }
 
   /** A copy without {@code block}; only for a lock that covers another block too. */
   public Lock withoutBlock(BlockPos block) {
     var next = new HashSet<>(blocks);
     next.remove(block);
-    return new Lock(id, owner, next, trusted, options);
+    return new Lock(id, owner, next, trusted, options, restoration);
   }
 
   /** A copy that trusts {@code player} with {@code grant}. */
   public Lock withTrust(UUID player, LockGrant grant) {
     var next = new HashMap<>(trusted);
     next.put(player, grant);
-    return new Lock(id, owner, blocks, next, options);
+    return new Lock(id, owner, blocks, next, options, restoration);
   }
 
   /** A copy that no longer trusts {@code player}. */
   public Lock withoutTrust(UUID player) {
     var next = new HashMap<>(trusted);
     next.remove(player);
-    return new Lock(id, owner, blocks, next, options);
+    return new Lock(id, owner, blocks, next, options, restoration);
   }
 
   public Lock withOptions(Options next) {
-    return new Lock(id, owner, blocks, trusted, next);
+    return new Lock(id, owner, blocks, trusted, next, restoration);
   }
 
   /**
    * A copy owned by {@code newOwner}, who inherits it as it stands (for players leaving a town).
    */
   public Lock ownedBy(UUID newOwner) {
+    if (restoration.imported()) {
+      throw new IllegalStateException("restored ownership requires a named historical transfer");
+    }
     var next = new HashMap<>(trusted);
     next.remove(newOwner);
-    return new Lock(id, newOwner, blocks, next, options);
+    return new Lock(id, newOwner, blocks, next, options, restoration);
   }
 }

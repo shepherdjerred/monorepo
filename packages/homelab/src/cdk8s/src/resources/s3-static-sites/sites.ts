@@ -99,18 +99,33 @@ const wikiCsp = [
   "frame-ancestors 'none'",
 ].join("; ");
 
+/** Same-origin homepage and Starlight docs, including Pagefind WASM search. */
+const glitterBoysCsp = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data:",
+  "font-src 'self'",
+  "worker-src 'self' blob:",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+].join("; ");
+
 /**
  * CSP for the Storm docs site. Same shape as `wikiCsp`: Starlight's Pagefind
  * search loads a same-origin WASM module in a web worker, and the only
- * third party is PostHog through the managed proxy host.
+ * third party is PostHog through the managed proxy host. Preferences sync with
+ * the forum at the apex through its credentialed, origin-scoped theme API.
  */
 const tsMcDocsCsp = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://j.sjer.red",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob:",
+  "img-src 'self' https://ts-mc.net data: blob:",
   "font-src 'self' data:",
-  "connect-src 'self' https://j.sjer.red",
+  "connect-src 'self' https://j.sjer.red https://ts-mc.net",
   "worker-src 'self' blob:",
   "object-src 'none'",
   "base-uri 'self'",
@@ -138,6 +153,7 @@ const scoutDocsProbes = [
 
 // DNS records for all sites are managed by OpenTofu (src/tofu/cloudflare/).
 export const staticSites: StaticSiteConfig[] = [
+  { hostname: "statically-typed.com", bucket: "statically-typed" },
   {
     hostname: "sjer.red",
     bucket: "sjer-red",
@@ -150,7 +166,11 @@ export const staticSites: StaticSiteConfig[] = [
     },
   },
   { hostname: "webring.sjer.red", bucket: "webring" },
-  { hostname: "resume.sjer.red", bucket: "resume" },
+  {
+    hostname: "resume.sjer.red",
+    bucket: "resume",
+    responseHeaders: { "X-Frame-Options": "SAMEORIGIN" },
+  },
   {
     hostname: "scout-for-lol.com",
     bucket: "scout-frontend",
@@ -243,7 +263,6 @@ export const staticSites: StaticSiteConfig[] = [
   // applied after ArgoCD, so removing the binding here first would create a
   // window where the old CNAME reaches a tunnel with no route.
   { hostname: "clauderon.com", bucket: "clauderon" },
-  { hostname: "ts-mc.net", bucket: "ts-mc" },
   {
     hostname: "docs.ts-mc.net",
     bucket: "ts-mc-docs",
@@ -253,12 +272,29 @@ export const staticSites: StaticSiteConfig[] = [
         path: "/sitemap-index.xml",
         module: "http_2xx",
       },
+      {
+        endpoint: "world-downloads",
+        path: "/world_downloads/",
+        module: "http_200_no_redirect",
+      },
+      {
+        endpoint: "world-archive-preview",
+        path: "/world-archive/2026-10-04-v1/previews/asterism-2016-02/closeup.png",
+        module: "http_200_no_redirect",
+      },
     ],
     responseHeaders: { "Content-Security-Policy": tsMcDocsCsp },
   },
+  {
+    hostname: "glitter-boys.com",
+    bucket: "glitter-boys",
+    probes: [
+      { endpoint: "docs", path: "/docs/", module: "http_200_no_redirect" },
+    ],
+    responseHeaders: { "Content-Security-Policy": glitterBoysCsp },
+  },
   { hostname: "ppl.glitter-boys.com", bucket: "glitter-boys-ppl" },
   { hostname: "cook.sjer.red", bucket: "cook" },
-  { hostname: "macos-cross.sjer.red", bucket: "macos-cross" },
   { hostname: "cross-compilers.sjer.red", bucket: "cross-compilers" },
   { hostname: "stocks.sjer.red", bucket: "stocks-sjer-red" },
   {

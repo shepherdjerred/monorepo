@@ -1,41 +1,22 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
+import type { MatchDataSource } from "@scout-for-lol/domain/match-processing/states.ts";
 import {
   CustomGameStateSchema,
   CustomNightStateSchema,
   CustomTeamSchema,
   CustomWinnerSchema,
-  MatchIdSchema,
   type RawMatch,
 } from "@scout-for-lol/data";
+import { ApplicationFailure } from "@temporalio/common";
 import type { Db, ExtendedPrismaClient } from "#src/database/index.ts";
 
-export type ManagedCustomResultSource = "RIOT" | "SCOUT_CLIENT";
-
-function resultAuditAttribution(source: ManagedCustomResultSource) {
+function resultAuditAttribution(source: MatchDataSource) {
   return source === "SCOUT_CLIENT"
     ? {
         actorId: "scout-client:canonical-match",
         action: "SCOUT_CLIENT_RESULT_VERIFIED",
       }
     : { actorId: "riot:match-v5", action: "RIOT_RESULT_VERIFIED" };
-}
-
-/**
- * Which historical Tournament API lobby, if any, a Match-V5 payload belongs
- * to. New managed customs are located by their observed roster instead.
- *
- * Exported because the V2 per-match core needs the SAME rule to decide whether
- * a match has a managed custom result to finalize at all. A second copy of "a
- * lobby is matched by its code, or by the match id once one was recorded"
- * could drift, and then V2 would gate on one rule while
- * {@link finalizeManagedCustomResult} finalized on another.
- */
-export function historicalTournamentLobbyIdentity(
-  matchId: string,
-  tournamentCode: string | undefined,
-) {
-  return tournamentCode === undefined || tournamentCode.length === 0
-    ? { matchId }
-    : { code: tournamentCode };
 }
 
 const observedCustomGameInclude = {
@@ -52,7 +33,7 @@ export async function findObservedCustomGame(
   client: ExtendedPrismaClient,
   match: RawMatch,
 ) {
-  const matchId = MatchIdSchema.parse(match.metadata.matchId);
+  const matchId = match.metadata.matchId;
   const bound = await client.customGame.findFirst({
     where: { matchId },
     include: observedCustomGameInclude,
@@ -85,10 +66,28 @@ function requireCompleteRoster(participantCount: number, gameId: string): void {
   }
 }
 
-function requireWinner(winningTeams: ReadonlySet<string>, matchId: string) {
+/**
+ * The selected match evidence cannot finalize this game, and never will.
+ *
+ * Canonical match selection is final, so retrying re-reads the same payload.
+ * A plain error here was treated as transient by the client match dispatcher,
+ * which then slept and retried forever while every match queued behind it
+ * waited; non-retryable sends it to operator review and lets the queue move.
+ */
+function incompleteResult(message: string): ApplicationFailure {
+  return ApplicationFailure.nonRetryable(
+    message,
+    "ManagedCustomResultIncomplete",
+  );
+}
+
+function requireWinner(
+  winningTeams: ReadonlySet<string>,
+  matchId: RiotMatchId,
+) {
   const values = [...winningTeams];
   if (values.length !== 1) {
-    throw new Error(
+    throw incompleteResult(
       `Match ${matchId} did not produce exactly one winning custom team`,
     );
   }
@@ -118,7 +117,7 @@ type ObservedCustomGame = NonNullable<
 
 function verifiedResultNightId(
   game: ObservedCustomGame,
-  matchId: string,
+  matchId: RiotMatchId,
 ): string | null {
   if (game.state !== "VERIFIED") return null;
   if (game.matchId !== matchId) {
@@ -133,7 +132,7 @@ async function projectParticipantResults(
   transaction: Db,
   game: ObservedCustomGame,
   match: RawMatch,
-  matchId: string,
+  matchId: RiotMatchId,
 ) {
   requireCompleteRoster(game.participants.length, game.id);
   const winningTeams = new Set<string>();
@@ -142,7 +141,7 @@ async function projectParticipantResults(
       (candidate) => candidate.puuid === participant.puuid,
     );
     if (riotParticipant === undefined) {
-      throw new Error(
+      throw incompleteResult(
         `Match ${matchId} is missing custom participant ${participant.puuid}`,
       );
     }
@@ -160,60 +159,30 @@ async function projectParticipantResults(
 }
 
 /**
- * Finalizes an observed managed Custom game and, when present, its historical
- * Tournament API row atomically. Called only after authoritative S3 ingestion
- * and before player cursors move.
+ * Finalizes an observed managed Custom game atomically. Called only after
+ * authoritative S3 ingestion and before player cursors move.
  */
 export async function finalizeManagedCustomResult(
   client: ExtendedPrismaClient,
   match: RawMatch,
-  resultSource: ManagedCustomResultSource = "RIOT",
+  resultSource: MatchDataSource = "RIOT",
 ): Promise<string | undefined> {
-  const matchId = MatchIdSchema.parse(match.metadata.matchId);
+  const matchId = match.metadata.matchId;
   const observedGame = await findObservedCustomGame(client, match);
 
-  return client.$transaction(async (transaction) => {
-    const lobby = await transaction.tournamentLobby.findFirst({
-      where: historicalTournamentLobbyIdentity(
-        matchId,
-        match.info.tournamentCode,
-      ),
-      include: {
-        customGame: {
-          include: { participants: true, night: true },
-        },
-      },
-    });
-    if (lobby?.state === "reported") return lobby.customGame?.nightId;
+  if (observedGame === null) return;
 
-    const game =
-      observedGame === null
-        ? lobby?.customGame
-        : await transaction.customGame.findUnique({
-            where: { id: observedGame.id },
-            include: observedCustomGameInclude,
-          });
-    if (game === null) {
-      if (lobby === null) return;
-      await transaction.tournamentLobby.update({
-        where: { id: lobby.id },
-        data: { matchId, state: "reported" },
-      });
-      return;
-    }
-    if (game === undefined) return;
+  return client.$transaction(async (transaction) => {
+    const game = await transaction.customGame.findUnique({
+      where: { id: observedGame.id },
+      include: observedCustomGameInclude,
+    });
+    if (game === null) return;
 
     const verifiedNightId = verifiedResultNightId(game, matchId);
     if (verifiedNightId !== null) return verifiedNightId;
 
-    if (resultDisposition(game.state, game.id) === "VOID") {
-      if (lobby === null) return;
-      await transaction.tournamentLobby.update({
-        where: { id: lobby.id },
-        data: { matchId, state: "reported" },
-      });
-      return;
-    }
+    if (resultDisposition(game.state, game.id) === "VOID") return;
     const winner = await projectParticipantResults(
       transaction,
       game,
@@ -272,12 +241,6 @@ export async function finalizeManagedCustomResult(
         createdAt: completedAt,
       },
     });
-    if (lobby !== null) {
-      await transaction.tournamentLobby.update({
-        where: { id: lobby.id },
-        data: { matchId, state: "reported" },
-      });
-    }
     return game.nightId;
   });
 }

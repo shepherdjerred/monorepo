@@ -43,7 +43,7 @@ Run the side-effect-free queue canary against the deployed Scout workers:
 
 ```bash
 cd packages/scout-for-lol/packages/temporal
-bun run canary -- \
+bun run canary \
   --stage beta \
   --address <beta-address> \
   --namespace beta
@@ -53,23 +53,51 @@ The result must name `scout-beta-realtime`, `scout-beta-interactive`,
 `scout-beta-background`, and `scout-beta-lake`. A missing result means that
 Activity Worker is not polling its declared queue; stop the rollout.
 
-## Enable the durable reconciliation schedules
+## Verify hosted queue ownership
 
-The [two reconciliation Schedules](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/schedules/scout-schedule-definitions.ts)
-are created paused on each stage.
+1. Confirm the application runs the `application` role, and the dedicated
+   gateway and activity worker each have one ready pod. Read the exact
+   deployed image digests and chart revision.
+2. Confirm the application owns `interactive` and `lake`, and the activity
+   worker owns `realtime`, `background`, and competition Activities.
+   Production retains its embedded Workflow poller. Beta Workflow tasks
+   follow the current Worker Deployment build and any nonzero ramp.
+3. Run the queue canary and inspect representative persisted effects.
+   `ScoutTemporalWorkerMissing` requires fresh evidence from each declared
+   owner. `ScoutTemporalWorkflowRoutingUnknown` means the beta routing lookup
+   is unavailable; a healthy candidate alone cannot establish current routing.
+4. For rollback, release the previous accepted image that retains these split
+   roles. Keep the stage claim shared and the existing sync order. Use
+   `release-root` for the exact chart revision; do not return to combined
+   hosted ownership or scale workloads manually.
 
-1. Keep both paused until the matching Scout Workflow bundle passes replay and
-   the stage has healthy Workflow and background Activity pollers.
-2. Unpause `pipeline-reconciliation-v2` in beta. Confirm it drives a pending
-   intent before enabling new V2 notification kinds. Repeat after production's
-   own rollout checks.
-3. When the Hall and Duel V1 drains are ready to retire, unpause
-   `progression-reconciliation` and observe one successful run. Then deploy the
-   change that removes reconciliation from the
-   [`progression-outbox` Activity](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/temporal/activities.ts).
-   Keep the old outbox Schedule until its rows are drained or dispositioned.
+The [hosted chart](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/cdk8s-charts/scout.ts)
+and [worker ownership rules](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/monitoring/monitoring/rules/scout-temporal-rules.ts)
+define these roles and monitoring requirements.
+
+## Verify durable Schedules
+
+1. After the central Schedule owner reconciles, inspect every declared beta
+   fixed Schedule. Confirm it is active unless an explicit operator or
+   credential pause applies. The
+   [pause reference](/reference/temporal-schedules/#pause-behaviour) identifies
+   the two retired migration notes reconciliation clears.
+2. Confirm `clash-snapshot` and `custom-nights-expiry` complete through their
+   background Activity owner. An empty upstream snapshot or no eligible nights
+   is a valid result; inspect the result and Activity history.
+3. Inspect report Schedule ownership, outbox drain, and drift. Keep production's
+   legacy progression delivery Schedule while its producers remain active.
+   Reconciliation never backfills every missed occurrence.
 
 ## Start the beta Workflow Deployment ramp
+
+For Activity-only changes, keep the accepted Workflow Deployment pins and
+routing. Check queue canaries and the changed effects after the backend release.
+A new Workflow ramp is needed when the Workflow bundle changes.
+
+Pin a workflow-capable candidate image through the catalog and release path.
+Retain the accepted stable image and inspect current routing before starting
+another ramp.
 
 Configure the private Temporal endpoint for every rollout command in this
 shell:
@@ -83,7 +111,7 @@ Inspect the current routing and candidate registration before mutating it:
 
 ```bash
 cd packages/temporal
-TEMPORAL_NAMESPACE=beta bun run worker-deployment inspect -- \
+TEMPORAL_NAMESPACE=beta bun run worker-deployment inspect \
   --target scout-beta \
   --build-id <candidate-image-git-sha>
 ```
@@ -92,7 +120,7 @@ For the first ramp, provide the accepted stable build explicitly. Later ramps
 can use the routing already recorded by Temporal:
 
 ```bash
-TEMPORAL_NAMESPACE=beta bun run worker-deployment start -- \
+TEMPORAL_NAMESPACE=beta bun run worker-deployment start \
   --target scout-beta \
   --build-id <candidate-image-git-sha> \
   --stable-build-id <stable-image-git-sha>
@@ -127,11 +155,11 @@ Use the rollout command to advance only after its alert and health windows are
 clean:
 
 ```bash
-TEMPORAL_NAMESPACE=beta bun run worker-deployment status -- \
+TEMPORAL_NAMESPACE=beta bun run worker-deployment status \
   --target scout-beta \
   --build-id <candidate-image-git-sha>
 
-TEMPORAL_NAMESPACE=beta bun run worker-deployment advance -- \
+TEMPORAL_NAMESPACE=beta bun run worker-deployment advance \
   --target scout-beta \
   --build-id <candidate-image-git-sha>
 ```
@@ -153,10 +181,36 @@ candidate at 100% traffic. Promote when:
 The promotion command verifies the two-hour health window again:
 
 ```bash
-TEMPORAL_NAMESPACE=beta bun run worker-deployment promote -- \
+TEMPORAL_NAMESPACE=beta bun run worker-deployment promote \
   --target scout-beta \
   --build-id <candidate-image-git-sha>
 ```
+
+## Accept the beta application release
+
+1. Confirm ArgoCD reconciled the intended revision and all ordinary roles run
+   the published image digest. Preserve the accepted Workflow pins and routing
+   when the Workflow bundle did not change.
+2. Verify fixed Schedules and queue ownership using the checks above. Inspect
+   match, prematch, progression, Explore, report, and competition receipts for
+   one external-effect owner each.
+3. Exercise changed effects and inspect their persisted results. Use focused
+   fixtures for infrequent features and record unavailable live evidence.
+   Keep healthy dispatchers and entity Workflows running.
+
+## Resolve an uncertain report delivery
+
+1. Open **Operations → Match operations** and inspect the report delivery row.
+   Check its channel, frozen content, chunk index, and attempt nonce against
+   Discord. Do not infer a non-send from a missing local response.
+2. Choose **Answer delivery**. Confirm the observed message ID and delivery
+   time, or confirm a verified non-send. A sending attempt is refused until
+   its Activity timeout and grace period have passed.
+3. Review and confirm the prepared operation. A stale nonce is refused.
+   A non-send answer releases only that chunk; the ingestion reconciler sends
+   the archived output with a fresh nonce. Completed chunks are never resent.
+4. Refresh the report's run history and verify the delivery result. Retain the
+   operation's audit record and Discord evidence for the investigated attempt.
 
 ## Repeat in production
 
@@ -175,7 +229,7 @@ If replay, canaries, alerts, or runtime evidence fail, stop routing new Workflow
 tasks to the candidate:
 
 ```bash
-TEMPORAL_NAMESPACE=<beta-or-prod> bun run worker-deployment rollback -- \
+TEMPORAL_NAMESPACE=<beta-or-prod> bun run worker-deployment rollback \
   --target <scout-beta-or-scout-prod> \
   --build-id <candidate-image-git-sha>
 ```

@@ -3,7 +3,7 @@ import type {
   LakeMatchParticipantRow,
   LakeTimelineCoverage,
   LaneDeltaFrame,
-} from "#src/reports/duckdb/consumer-profile-lake-reads.ts";
+} from "#src/reports/duckdb/consumer/profile-lake-reads.ts";
 import { isStandardRiftGame } from "#src/trpc/router/consumer/standard-rift.ts";
 
 export const LANE_DELTA_MINUTE = 15;
@@ -78,7 +78,7 @@ export function buildRoleMatchups(options: {
       blueParticipantId: blueParticipant.participant_id,
       redParticipantId: redParticipant.participant_id,
       at15: {
-        timestampMs: LANE_DELTA_TIMESTAMP_MS,
+        timestampMs: blueFrame.frame_timestamp_ms,
         goldDelta: blueFrame.total_gold - redFrame.total_gold,
         creepScoreDelta:
           blueFrame.minions_killed +

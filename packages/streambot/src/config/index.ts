@@ -61,6 +61,23 @@ function strictBool(
  */
 export function loadConfig(env: EnvLookup = Bun.env): Config {
   const raw = {
+    plex:
+      str(env["PLEX_BASE_URL"]) === undefined &&
+      str(env["PLEX_TOKEN"]) === undefined
+        ? undefined
+        : { baseUrl: str(env["PLEX_BASE_URL"]), token: str(env["PLEX_TOKEN"]) },
+    web:
+      str(env["WEB_PUBLIC_ORIGIN"]) === undefined &&
+      str(env["DISCORD_CLIENT_SECRET"]) === undefined
+        ? undefined
+        : {
+            publicOrigin: str(env["WEB_PUBLIC_ORIGIN"]),
+            clientSecret: str(env["DISCORD_CLIENT_SECRET"]),
+            port:
+              env["WEB_PORT"] === undefined
+                ? undefined
+                : Number(env["WEB_PORT"]),
+          },
     discord: {
       botToken: env["BOT_TOKEN"],
       // Pool of userbot tokens (comma-separated). `TOKEN` is accepted as a single-token fallback for

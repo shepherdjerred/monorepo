@@ -1,4 +1,13 @@
 import type {
+  DiscordGuildId,
+  DiscordChannelId,
+  DiscordAccountId,
+} from "@scout-for-lol/domain/identity/discord.ts";
+import type {
+  RiotMatchId,
+  DiscordMessageId,
+} from "@scout-for-lol/domain/identity/brands.ts";
+import type {
   BucksParlaySide,
   BucksParlayVoidReason,
 } from "@scout-for-lol/data";
@@ -16,7 +25,7 @@ import type { ParlayLegResult } from "#src/betting/parlays/parlay-evaluator.ts";
  * an import cycle when its own summary type stayed behind.
  */
 export type ParlaySettlementBet = {
-  discordId: string;
+  discordId: DiscordAccountId;
   side: BucksParlaySide;
   stake: number;
   grossPayout: number;
@@ -25,12 +34,12 @@ export type ParlaySettlementBet = {
 };
 
 export type ParlaySettlementSummary = {
-  matchId: string;
-  serverId: string;
+  matchId: RiotMatchId;
+  serverId: DiscordGuildId;
   yesResult: boolean | undefined;
   voidReason: BucksParlayVoidReason | undefined;
   legs: ParlayLegResult[];
-  messageRefs: { channelId: string; messageId: string }[];
+  messageRefs: { channelId: DiscordChannelId; messageId: DiscordMessageId }[];
   bets: ParlaySettlementBet[];
 };
 
@@ -42,8 +51,8 @@ export type PendingParlayBet = {
   houseReserve: number;
   grossPayout: number;
   bucksAccount: {
-    discordId: string;
-    serverId: string;
+    discordId: DiscordAccountId;
+    serverId: DiscordGuildId;
     isHouse: boolean;
     balance: number;
   };

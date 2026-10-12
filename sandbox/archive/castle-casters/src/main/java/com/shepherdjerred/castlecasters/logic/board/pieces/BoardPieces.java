@@ -32,6 +32,24 @@ public class BoardPieces {
     return from(boardSettings, new BoardPiecesInitializer());
   }
 
+  public static BoardPieces fromState(BoardSettings settings, Map<QuoridorPlayer, Coordinate> pawns,
+                                      Map<Coordinate, Piece> pieces) {
+    if (pawns.size() != settings.getPlayerCount().toInt()) throw new IllegalArgumentException("Missing pawns");
+    for (int i = 1; i <= pawns.size(); i++) {
+      var player = QuoridorPlayer.fromInt(i);
+      var position = pawns.get(player);
+      if (position == null || position.x() % 2 != 0 || position.y() % 2 != 0
+          || !new com.shepherdjerred.castlecasters.logic.piece.PawnPiece(player).equals(pieces.get(position))) {
+        throw new IllegalArgumentException("Invalid pawn snapshot");
+      }
+    }
+    for (var entry : pieces.entrySet()) {
+      var c = entry.getKey();
+      if (c.x() < 0 || c.y() < 0 || c.x() >= settings.getGridSize() || c.y() >= settings.getGridSize()) throw new IllegalArgumentException("Piece outside board");
+    }
+    return new BoardPieces(new HashMap<>(pieces), new HashMap<>(pawns), settings.getGridSize());
+  }
+
   /**
    * Creates a new BoardPieces object.
    */

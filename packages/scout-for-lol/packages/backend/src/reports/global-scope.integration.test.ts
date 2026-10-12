@@ -1,3 +1,7 @@
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import {
@@ -30,7 +34,7 @@ const lakeDir = resolveLakeDir();
 
 const TRACKED_PUUID = testPuuid("global-tracked");
 
-function trackedMatch(matchId: string, win: boolean) {
+function trackedMatch(matchId: RiotMatchId, win: boolean) {
   return {
     playerId: 1,
     playerAlias: "Tracked Player",
@@ -47,7 +51,7 @@ function trackedMatch(matchId: string, win: boolean) {
 }
 
 /** A participant Scout has match rows for but no account row. */
-function untrackedMatch(matchId: string, alias: string, win: boolean) {
+function untrackedMatch(matchId: RiotMatchId, alias: string, win: boolean) {
   return {
     playerId: 99,
     playerAlias: alias,
@@ -78,9 +82,9 @@ describe("global scope", () => {
       // The exact shape that fans out: one PUUID, two accounts rows.
       alsoTrackedBy: [otherServerId],
       matchFacts: [
-        trackedMatch("NA1_1", true),
-        trackedMatch("NA1_2", false),
-        trackedMatch("NA1_3", true),
+        trackedMatch(RiotMatchIdSchema.parse("NA1_1"), true),
+        trackedMatch(RiotMatchIdSchema.parse("NA1_2"), false),
+        trackedMatch(RiotMatchIdSchema.parse("NA1_3"), true),
       ],
     });
 
@@ -114,10 +118,10 @@ describe("global scope", () => {
   test("global includes participants no server tracks; guild scope excludes them", async () => {
     await writeTestLake(lakeDir, {
       serverId,
-      matchFacts: [trackedMatch("NA1_1", true)],
+      matchFacts: [trackedMatch(RiotMatchIdSchema.parse("NA1_1"), true)],
       untrackedMatchFacts: [
-        untrackedMatch("NA1_1", "Opponent One", false),
-        untrackedMatch("NA1_1", "Opponent Two", false),
+        untrackedMatch(RiotMatchIdSchema.parse("NA1_1"), "Opponent One", false),
+        untrackedMatch(RiotMatchIdSchema.parse("NA1_1"), "Opponent Two", false),
       ],
     });
 
@@ -144,7 +148,10 @@ describe("global scope", () => {
     await writeTestLake(lakeDir, {
       serverId,
       matchFacts: [
-        { ...trackedMatch("NA1_1", true), discordId: testAccountId("77") },
+        {
+          ...trackedMatch(RiotMatchIdSchema.parse("NA1_1"), true),
+          discordId: testAccountId("77"),
+        },
       ],
     });
 
@@ -178,14 +185,18 @@ describe("global scope", () => {
       serverId,
       matchFacts: [
         {
-          ...trackedMatch("NA1_1", true),
+          ...trackedMatch(RiotMatchIdSchema.parse("NA1_1"), true),
           championName: "Jinx",
           championId: 222,
         },
       ],
       untrackedMatchFacts: [
         {
-          ...untrackedMatch("NA1_1", "Opponent One", false),
+          ...untrackedMatch(
+            RiotMatchIdSchema.parse("NA1_1"),
+            "Opponent One",
+            false,
+          ),
           championName: "Jinx",
           championId: 222,
         },
@@ -209,7 +220,7 @@ describe("global scope", () => {
   test("player_groups is refused in global scope rather than answered wrongly", async () => {
     await writeTestLake(lakeDir, {
       serverId,
-      matchFacts: [trackedMatch("NA1_1", true)],
+      matchFacts: [trackedMatch(RiotMatchIdSchema.parse("NA1_1"), true)],
     });
 
     await expect(
@@ -241,9 +252,9 @@ describe("global scope", () => {
     await writeTestLake(lakeDir, {
       serverId,
       matchFacts: [
-        untrackedMatch("NA1_1", "Faker", true),
-        untrackedMatch("NA1_2", "Faker", false),
-        untrackedMatch("NA1_3", "Nobody", true),
+        untrackedMatch(RiotMatchIdSchema.parse("NA1_1"), "Faker", true),
+        untrackedMatch(RiotMatchIdSchema.parse("NA1_2"), "Faker", false),
+        untrackedMatch(RiotMatchIdSchema.parse("NA1_3"), "Nobody", true),
       ],
     });
 
@@ -265,7 +276,7 @@ describe("global scope", () => {
   test("competition sources are refused in global scope", async () => {
     await writeTestLake(lakeDir, {
       serverId,
-      matchFacts: [trackedMatch("NA1_1", true)],
+      matchFacts: [trackedMatch(RiotMatchIdSchema.parse("NA1_1"), true)],
     });
 
     await expect(

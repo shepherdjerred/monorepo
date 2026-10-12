@@ -18,8 +18,11 @@ export function configureConsumerProfileFeatureTest(
   guildIds: DiscordGuildId[],
 ) {
   const previousEnvironment = Bun.env["ENVIRONMENT"];
+  const previousRole = Bun.env["SCOUT_RUNTIME_ROLE"];
   const previousAllowlist = Bun.env["EXPLORE_GUILD_ALLOWLIST"];
   Bun.env["ENVIRONMENT"] = "beta";
+  // Hosted stages name their role; the web surface is the application's.
+  Bun.env["SCOUT_RUNTIME_ROLE"] = "application";
   Bun.env["EXPLORE_GUILD_ALLOWLIST"] = guildIds.join(",");
   resetConfigurationForTests();
   const lakeDir = resolveLakeDir();
@@ -47,6 +50,8 @@ export function configureConsumerProfileFeatureTest(
       await shutdownFeatureFlags();
       if (previousEnvironment === undefined) delete Bun.env["ENVIRONMENT"];
       else Bun.env["ENVIRONMENT"] = previousEnvironment;
+      if (previousRole === undefined) delete Bun.env["SCOUT_RUNTIME_ROLE"];
+      else Bun.env["SCOUT_RUNTIME_ROLE"] = previousRole;
       if (previousAllowlist === undefined)
         delete Bun.env["EXPLORE_GUILD_ALLOWLIST"];
       else Bun.env["EXPLORE_GUILD_ALLOWLIST"] = previousAllowlist;

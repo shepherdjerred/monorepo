@@ -1,3 +1,10 @@
+import type { z } from "zod";
+import {
+  type DiscordGuildId,
+  type DiscordChannelId,
+  type OnboardingStepKind,
+  DiscordChannelIdSchema,
+} from "@scout-for-lol/data";
 import { useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSelector } from "@tanstack/react-form";
@@ -12,7 +19,6 @@ import {
   subscriptionFormOptions,
 } from "#src/components/subscription/subscription-fields.tsx";
 import { useAddSubscription } from "#src/lib/player/use-add-subscription.ts";
-import type { OnboardingStepKind } from "@scout-for-lol/data";
 import { OnboardingShell } from "#src/components/onboarding/onboarding-shell.tsx";
 import { OnboardingNoChannels } from "#src/components/onboarding/onboarding-no-channels.tsx";
 import { TeammateSuggestions } from "#src/components/onboarding/teammate-suggestions.tsx";
@@ -38,17 +44,21 @@ type Mode = "self" | "more";
 
 export function OnboardingSubscribeStep(props: {
   mode: Mode;
-  guildId: string;
-  channels: { id: string; name: string }[];
+  guildId: DiscordGuildId;
+  channels: { id: DiscordChannelId; name: string }[];
   username: string;
   discordId: string;
-  existingSubs: { alias: string; channelId: string }[];
+  existingSubs: { alias: string; channelId: DiscordChannelId }[];
   /** Alias tracked in subscribe-self; feeds teammate suggestions. Empty when skipped. */
   selfAlias: string;
   /** Destination channel of the self subscription; suggestion adds land here. */
   selfChannelId: string;
   /** Reports the alias and channel successfully tracked in subscribe-self. */
-  onSelfAdded?: (self: { alias: string; channelId: string }) => void;
+  /** The form's own channel pick, raw until something reads it as a channel. */
+  onSelfAdded?: (self: {
+    alias: string;
+    channelId: z.input<typeof DiscordChannelIdSchema>;
+  }) => void;
   onAdded: () => void;
   onContinue: () => void;
   onBack: () => void;
@@ -156,7 +166,7 @@ export function OnboardingSubscribeStep(props: {
         {props.mode === "more" && (
           <TeammateSuggestions
             guildId={props.guildId}
-            channelId={props.selfChannelId}
+            channelId={DiscordChannelIdSchema.parse(props.selfChannelId)}
             selfAlias={props.selfAlias}
             onAdded={props.onAdded}
           />

@@ -34,20 +34,38 @@ const REPOSITORY_CHART_URLS = new Set([
 // vault item, while the old OnePasswordItem is a stateless retired resource;
 // leaving it live keeps Scout beta OutOfSync and blocks the root release health
 // wait.
+// scout-prod can retire the activity-worker after its staged queue handoff. The
+// absent topology removes its Deployment, Service, ServiceMonitor, NetworkPolicy
+// and retirement gate prerequisites only after a zero-replica retiring release
+// has removed the worker pod. Exact-revision release-root preflight still
+// reviews every prune candidate before an application sync.
 // trmnl-dashboard is here because #3093 moved its homelab screen onto the ops
 // snapshot, retiring its Kubernetes read access. The ServiceAccount,
 // ClusterRole and ClusterRoleBinding are stateless retired resources; leaving
 // them live keeps trmnl-dashboard OutOfSync and failed the build 17262 release
 // health wait.
+// s3-static-sites retires hostname bindings and probes when ownership moves to
+// an application such as the forum. Its bindings disable DNS updates; static
+// buckets and DNS records are owned outside this chart.
+// woodpecker retires the drained legacy agent after the four dedicated pools
+// take over. The release must remove its absent Deployment; all database and
+// cache resources remain declared in the exact chart inventory.
+// storm-forum replaces its completed, uniquely named release Job on upgrades.
+// Its database and attachment PVCs remain declared. Without pruning, obsolete
+// completed Jobs keep the healthy forum OutOfSync and fail the release gate.
 const PRUNED_RELEASE_CHARTS = new Set([
   "birmel",
   "freshrss",
   "media",
+  "s3-static-sites",
   "scout-beta",
+  "scout-prod",
   "service-probes",
+  "storm-forum",
   "temporal",
   "trmnl-dashboard",
   "turbo-cache",
+  "woodpecker",
 ]);
 
 const ChartMuseumEntrySchema = z.object({

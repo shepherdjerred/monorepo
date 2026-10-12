@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test } from "vitest";
 import type { RawMatch } from "@scout-for-lol/data";
 
@@ -35,9 +36,7 @@ function generateDatePrefixes(startDate: Date, endDate: Date): string[] {
  * Check if a match includes any of the specified participant PUUIDs
  */
 function matchIncludesParticipant(match: RawMatch, puuids: string[]): boolean {
-  return match.metadata.participants.some((puuid: string) =>
-    puuids.includes(puuid),
-  );
+  return match.metadata.participants.some((puuid) => puuids.includes(puuid));
 }
 
 // ============================================================================
@@ -148,7 +147,7 @@ function createMockMatch(participantPuuids: string[]): RawMatch {
   return {
     metadata: {
       dataVersion: "2",
-      matchId: "TEST_MATCH",
+      matchId: RiotMatchIdSchema.parse("NA1_9100000000"),
       participants: participantPuuids,
     },
     info: {

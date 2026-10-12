@@ -1,0 +1,82 @@
+id: tomvaenkriozmc
+name: TomvaenkriozMC
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1MzUyMjQzOCwKICAicHJvZmlsZUlkIiA6ICJkNjliMTI2YjViMzY0MWZlYTg1NDAyMDI5ZjU1MDIxOCIsCiAgInByb2ZpbGVOYW1lIiA6ICJFZ29yS2FsYWNoZXYiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjgwMWJmY2I0OTc0M2RiMGVkYWE4NzNhN2RkZjVlYzkxYWU4M2I3MDIyMWMzMWI0ZmI3ZjkxZDc3MzA2NWYyYiIKICAgIH0KICB9Cn0="
+  signature: "FVRLB+xHunGcVGz70cAOlQILj82TB/lGqiQS1IhFd+pGHWNbOg6dHkDfaLGNCLRutr5trtZHowqM0MiBLGghKmvjXNSK9K20utYNwc1QLlzaU/6OVU6DrJOz408RlmGe1Mr/61EcSISJDY2rtYzRLsVltFkF3CZlNPTBmSm3xSwOoAJJjgnMGE+2ICY1LLsEPKJ/t1HIlF8NLFwDC90+fdX5+X8FHWkBLry06kLrCX3hfj+1EXabST/Dsvfv/m19A35w/gDlErW1qBycDXWWa1FlkO8sRb7Lwc1k+admvnRCiPLcE+aWwj3ZT0UFhgBfVtH5uRjeUB5DADlqCXVsMMr3Su1aD1JnyterUrO2P32qHPQguStU4Ml27CUJYMs/LeVn3x/S4djHbOa9BkuJ1vla656AhzafF2QQEiUWevbBV0ygcwixw5ojGL5Rzp9GMXcQ6PCadXP0BGz3lrBHqRPlHFy1ZFmwkHhIkZVbilo5DjXnu7fg32V5fQRbondWjZ9bwp/XVdew+WWe/mgNK3buy7pGE/8T94j6DJz2HwMJc5glgVllrU5qQahT7HeqHTFcZ9gpMZKsLMOaLWm1kKBxkU4aVRMWCre+NcdyuZt8Jgd1y7JvOz/d4L6idNDcmm/Jxqtb8kOeuOCMrlV2px5EqvD/eBkvF10PbGv+Ub0="
+skill: 0.063
+archetype: flanker
+leverOffsets:
+  turnRateDegPerTick: 1.09
+  predictionQuality: 0.19
+  awarenessRadius: 0.46
+  coordination: -0.58
+  aggression: 0.76
+kits:
+  trooper: 0.55
+  shortbow: 0.9
+  rewind: 0.32
+  wraith: 0.51
+  spy: 0.4
+roles:
+  plant: 0.47
+  defend: 0.17
+  rotate: 0.9
+  hunt: 0.49
+style:
+  aggression: 0.74
+  patience: 0.45
+  teamplay: 0.2
+  risk: 0.74
+voice:
+  tone:
+    - lost
+    - cheerful
+    - rambling
+  verbosity: chatty
+  style: "always lost; asks for directions, narrates wrong turns, apologises to walls"
+lines:
+  greet:
+    - which way is their bomb again?
+    - taking a shortcut! probably
+    - "{team} i'll catch up. somewhere"
+  onKill:
+    - "oh! {victim}! didn't see you there"
+    - "sorry {victim}, i was lost too"
+    - "found someone! it was {victim}"
+  onDeath:
+    - "{killer}, could you point me to spawn"
+    - "i took a wrong turn into {killer}"
+    - map? anyone have a map?
+  onPlant:
+    - "wait, this is {bomb}? nice!"
+    - "accidentally found {bomb} and lit it"
+  onDefuse:
+    - "oh, {bomb} was ours? defused it"
+    - "i was lost near {bomb}. lucky"
+  onWin:
+    - we won? i was in a corner
+    - "gg {team}, where are we"
+  onLoss:
+    - gg, i got lost again
+    - i'll learn the map someday
+  onLastAlive:
+    - it's just me? where am i?
+    - ok, solo exploring
+  taunt:
+    - you won't find me. i can't find me
+    - i'm flanking! from... somewhere
+    - this shortcut is definitely a shortcut
+  lobby:
+    - is this the lobby or am i lost again
+    - can someone point me toward our side of the map
+    - "{team}, if i'm not back in five minutes, i'm in their spawn"
+    - sorry, wall. didn't see you there
+    - i've walked this lobby three times and found two new rooms
+quirks:
+  - late_to_everything
+  - says_sorry
+rivals:
+  - noodlecomet0
+bio: Flanks by accident because he is permanently lost, which makes him impossible to predict. Has walked into enemy spawn more times than any player on record. Argues with NoodleComet0 over who is more lost, and both claim the title.
+batch: 2
+retired: false

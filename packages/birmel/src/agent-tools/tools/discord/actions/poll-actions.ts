@@ -47,8 +47,8 @@ export async function handleCreatePoll(options: {
     channelId,
     question,
     answers,
-    duration,
-    allowMultiselect,
+    duration = 24,
+    allowMultiselect = false,
   } = options;
   if (!answers || question == null || question.length === 0) {
     return {
@@ -56,7 +56,7 @@ export async function handleCreatePoll(options: {
       message: "question and answers are required for create",
     };
   }
-  const dur = duration ?? 24;
+  const dur = duration;
   const expiresAt = new Date(Date.now() + dur * 60 * 60 * 1000);
   const message = await channel.send({
     poll: {
@@ -66,7 +66,7 @@ export async function handleCreatePoll(options: {
         ...(a.emoji != null && a.emoji.length > 0 && { emoji: a.emoji }),
       })),
       duration: dur,
-      allowMultiselect: allowMultiselect ?? false,
+      allowMultiselect,
     },
   });
   if (

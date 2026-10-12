@@ -1,3 +1,4 @@
+import { DiscordChannelIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 import { executeBb } from "#src/discord/commands/bb/bb.ts";
 import { formatBucksNotificationPreferences } from "#src/discord/commands/bb/bb-notifications.ts";
@@ -166,7 +167,7 @@ function fakeNotificationsInteraction(input: {
   return {
     id: "bb-notifications-test",
     guildId: SERVER,
-    channelId: "1337623164146155594",
+    channelId: DiscordChannelIdSchema.parse("1337623164146155594"),
     user: { id: USER },
     options: {
       getSubcommand: () => "notifications",

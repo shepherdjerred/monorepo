@@ -9,8 +9,6 @@ const SecretGrantSchema = z
     key: NonBlankString,
   })
   .strict();
-export type SecretGrant = z.infer<typeof SecretGrantSchema>;
-
 const SecretGrantManifestSchema = z
   .object({
     $schema: NonBlankString.optional(),

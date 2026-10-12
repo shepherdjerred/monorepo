@@ -1,8 +1,9 @@
-import { formatInteger } from "@scout-for-lol/data";
-import type {
-  BucksParlayMarketState,
-  BucksParlaySide,
-  BucksParlayVoidReason,
+import type { DiscordAccountId } from "@scout-for-lol/domain/identity/discord.ts";
+import {
+  formatInteger,
+  type BucksParlayMarketState,
+  type BucksParlaySide,
+  type BucksParlayVoidReason,
 } from "@scout-for-lol/data";
 import {
   renderParlay,
@@ -25,7 +26,7 @@ import { splitMessageIntoChunks } from "#src/discord/utils/message.ts";
 const MAX_VISIBLE_POSITIONS = 15;
 
 export type ParlayPosition = {
-  discordId: string;
+  discordId: DiscordAccountId;
   side: BucksParlaySide;
   stake: number;
   grossPayout: number;

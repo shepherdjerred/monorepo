@@ -7,8 +7,11 @@ import type {
 import {
   createQuotaEngine,
   quotaSecondsUntil,
-  type QuotaRule,
 } from "#src/utils/quota-buckets.ts";
+import {
+  REPORT_AI_MAX_ACTIVE_RUNS,
+  REPORT_AI_QUOTA_RULES,
+} from "#src/configuration/report-ai-quota.ts";
 
 export type ReportAiRateLimitIdentity = {
   guildId: DiscordGuildId;
@@ -38,24 +41,9 @@ export type ReportAiRateLimitTicket = {
   finish: () => void;
 };
 
-const MAX_ACTIVE_GLOBAL_RUNS = 5;
-
-const QUOTA_RULES: QuotaRule<ReportAiQuotaScope>[] = [
-  { scope: "user_guild", window: "minute", limit: 1 },
-  { scope: "user_guild", window: "hour", limit: 3 },
-  { scope: "user_guild", window: "day", limit: 8 },
-  { scope: "user_guild", window: "week", limit: 30 },
-  { scope: "guild", window: "hour", limit: 5 },
-  { scope: "guild", window: "day", limit: 20 },
-  { scope: "guild", window: "week", limit: 100 },
-  { scope: "global", window: "hour", limit: 30 },
-  { scope: "global", window: "day", limit: 150 },
-  { scope: "global", window: "week", limit: 500 },
-];
-
 const engine = createQuotaEngine<ReportAiQuotaScope, ReportAiRateLimitIdentity>(
   {
-    rules: QUOTA_RULES,
+    rules: [...REPORT_AI_QUOTA_RULES],
     scopeKey: (scope, identity) => {
       if (scope === "global") {
         return "global";
@@ -98,7 +86,7 @@ export function tryStartReportAiRun(
     };
   }
 
-  if (activeGlobalRuns >= MAX_ACTIVE_GLOBAL_RUNS) {
+  if (activeGlobalRuns >= REPORT_AI_MAX_ACTIVE_RUNS) {
     return {
       allowed: false,
       quota,

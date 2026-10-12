@@ -17,9 +17,11 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.function.BiPredicate;
+import java.util.function.Function;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.bukkit.entity.Player;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Conversations with NPCs: what an NPC says when clicked, and what each button does. Every button
@@ -114,6 +116,19 @@ public final class NpcTalk {
   public void forget(Player player) {
     advance(player);
     conversations.forget(player.getUniqueId());
+  }
+
+  /** Invalidates every screen and in-flight action when an NPC flees or dies. */
+  public void interrupt(String npc, Function<UUID, @Nullable Player> players) {
+    for (var id : conversations.listeners(npc, java.time.Instant.MIN)) {
+      var player = players.apply(id);
+      if (player == null) {
+        conversations.forget(id);
+      } else {
+        forget(player);
+        wiring.presenter().close(player);
+      }
+    }
   }
 
   private void advance(Player player) {

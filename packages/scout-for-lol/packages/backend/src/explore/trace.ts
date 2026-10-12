@@ -5,6 +5,7 @@ import {
   type ExploreTraceEntry,
   type ExploreTranscript,
 } from "@scout-for-lol/data";
+import { sharedToolPayload } from "#src/explore/inspection/tool-payloads.ts";
 
 /** Fold one tool stream event into its stable, provider-id-keyed timeline. */
 export function recordExploreTraceEvent(
@@ -79,9 +80,23 @@ export function redactSharedExploreTranscript(
       guildIds: [],
       trace: message.trace.map((entry) => ({
         ...entry,
-        rawInput: null,
-        rawOutput: null,
+        rawInput: sharedRaw(entry.toolName, entry.rawInput),
+        rawOutput: sharedRaw(entry.toolName, entry.rawOutput),
       })),
     })),
   });
+}
+
+function sharedRaw(toolName: string, raw: ExploreTraceEntry["rawInput"]) {
+  if (raw === null) return null;
+  if (raw.kind === "omitted")
+    return sharedToolPayload(toolName, {}) === null ? null : raw;
+  const value = sharedToolPayload(toolName, raw.value);
+  return value === null
+    ? null
+    : {
+        ...raw,
+        value,
+        byteLength: new TextEncoder().encode(JSON.stringify(value)).byteLength,
+      };
 }

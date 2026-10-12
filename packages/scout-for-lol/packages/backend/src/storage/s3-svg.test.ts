@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
-import { MatchIdSchema } from "@scout-for-lol/data";
+import { RiotMatchIdSchema } from "@scout-for-lol/data";
 import { saveSvgToS3 } from "#src/storage/s3.ts";
 import {
   currentUtcDatePath,
@@ -17,7 +17,7 @@ async function uploadSvg(
   svgContent = "<svg></svg>",
 ) {
   return saveSvgToS3(
-    MatchIdSchema.parse(matchIdValue),
+    RiotMatchIdSchema.parse(matchIdValue),
     svgContent,
     queueType,
     [],
@@ -49,11 +49,11 @@ describe("saveSvgToS3 success cases", () => {
   test("handles the arena queue", async () => {
     mockSuccessfulPut();
 
-    const result = await uploadSvg("NA1_ARENA", "arena");
+    const result = await uploadSvg("NA1_9400000010", "arena");
     const command = getValidatedPutCommand();
 
     expect(s3Mock.calls()).toHaveLength(1);
-    expect(command.input.Key).toContain("NA1_ARENA");
+    expect(command.input.Key).toContain("NA1_9400000010");
     expect(command.input.Metadata?.["queueType"]).toBe("arena");
     expect(result).toBeDefined();
   });
@@ -62,7 +62,7 @@ describe("saveSvgToS3 success cases", () => {
     mockSuccessfulPut();
 
     await uploadSvg(
-      "NA1_LARGE_SVG",
+      "NA1_9400000070",
       "solo",
       `<svg>${"x".repeat(100_000)}</svg>`,
     );
@@ -77,7 +77,7 @@ describe("saveSvgToS3 success cases", () => {
 
     await expect(
       uploadSvg(
-        "NA1_SPECIAL_CHARS",
+        "NA1_9400000090",
         "solo",
         "<svg><text>&lt;&gt;&amp;&quot;&#x27;</text></svg>",
       ),
@@ -91,7 +91,7 @@ describe("saveSvgToS3 configuration", () => {
     setS3TestBucket(undefined);
     mockSuccessfulPut();
 
-    await expect(uploadSvg("NA1_SVG_NO_BUCKET")).resolves.toBeUndefined();
+    await expect(uploadSvg("NA1_9400000100")).resolves.toBeUndefined();
     expect(s3Mock.calls()).toHaveLength(0);
   });
 });
@@ -99,14 +99,14 @@ describe("saveSvgToS3 configuration", () => {
 describe("saveSvgToS3 error handling", () => {
   test.each([
     {
-      matchId: "NA1_ERROR",
+      matchId: "NA1_9400000060",
       failure: "S3 upload failed",
-      expected: "Failed to save SVG NA1_ERROR to S3",
+      expected: "Failed to save SVG NA1_9400000060 to S3",
     },
     {
-      matchId: "EUW1_NETWORK_ERROR",
+      matchId: "NA1_9400000000",
       failure: "Network timeout",
-      expected: "Failed to save SVG EUW1_NETWORK_ERROR to S3",
+      expected: "Failed to save SVG NA1_9400000000 to S3",
     },
   ])(
     "reports $matchId when upload fails",
@@ -123,11 +123,11 @@ describe("saveSvgToS3 key and URL format", () => {
   test("uses today's date, an SVG extension, and an s3 URL", async () => {
     mockSuccessfulPut();
 
-    const result = await uploadSvg("NA1_DATE_TEST");
+    const result = await uploadSvg("NA1_9400000050");
     const key = getValidatedPutCommand().input.Key;
 
     expect(key).toMatch(
-      /^games\/\d{4}\/\d{2}\/\d{2}\/NA1_DATE_TEST\/report\.svg$/,
+      /^games\/\d{4}\/\d{2}\/\d{2}\/NA1_9400000050\/report\.svg$/,
     );
     expect(key).toContain(`games/${currentUtcDatePath()}/`);
     expect(key.endsWith(".svg")).toBe(true);
@@ -139,11 +139,11 @@ describe("saveSvgToS3 content and metadata", () => {
   test("records content type, match, queue, and upload time", async () => {
     mockSuccessfulPut();
 
-    await uploadSvg("NA1_METADATA");
+    await uploadSvg("NA1_9400000080");
     const command = getValidatedPutCommand();
 
     expect(command.input.ContentType).toBe("image/svg+xml");
-    expect(command.input.Metadata?.["matchId"]).toBe("NA1_METADATA");
+    expect(command.input.Metadata?.["matchId"]).toBe("NA1_9400000080");
     expect(command.input.Metadata?.["queueType"]).toBe("solo");
     expect(command.input.Metadata?.["uploadedAt"]).toBeDefined();
   });
@@ -151,7 +151,11 @@ describe("saveSvgToS3 content and metadata", () => {
   test("encodes Unicode SVG content", async () => {
     mockSuccessfulPut();
 
-    await uploadSvg("NA1_UTF8", "solo", "<svg><text>Hello 世界</text></svg>");
+    await uploadSvg(
+      "NA1_9400000110",
+      "solo",
+      "<svg><text>Hello 世界</text></svg>",
+    );
 
     const body = getValidatedPutCommand().input.Body;
     expect(body).toBeDefined();
@@ -164,15 +168,15 @@ describe("saveSvgToS3 concurrent operations", () => {
     mockSuccessfulPut();
 
     const results = await Promise.all([
-      uploadSvg("NA1_CONCURRENT_1", "solo", "<svg>1</svg>"),
-      uploadSvg("NA1_CONCURRENT_2", "flex", "<svg>2</svg>"),
-      uploadSvg("NA1_CONCURRENT_3", "arena", "<svg>3</svg>"),
+      uploadSvg("NA1_9400000020", "solo", "<svg>1</svg>"),
+      uploadSvg("NA1_9400000030", "flex", "<svg>2</svg>"),
+      uploadSvg("NA1_9400000040", "arena", "<svg>3</svg>"),
     ]);
 
     expect(s3Mock.calls()).toHaveLength(3);
     expect(results).toHaveLength(3);
-    expect(results[0]).toContain("NA1_CONCURRENT_1");
-    expect(results[1]).toContain("NA1_CONCURRENT_2");
-    expect(results[2]).toContain("NA1_CONCURRENT_3");
+    expect(results[0]).toContain("NA1_9400000020");
+    expect(results[1]).toContain("NA1_9400000030");
+    expect(results[2]).toContain("NA1_9400000040");
   });
 });

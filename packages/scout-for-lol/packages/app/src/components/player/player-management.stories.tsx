@@ -1,7 +1,14 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { Loaded } from "@shepherdjerred/loaded";
-import { ROLE_CATALOG, createPermissionSet } from "@scout-for-lol/data";
+import {
+  ROLE_CATALOG,
+  createPermissionSet,
+  RiotMatchIdSchema,
+  DiscordAccountIdSchema,
+  DiscordChannelIdSchema,
+  DiscordGuildIdSchema,
+} from "@scout-for-lol/data";
 import { Label } from "@scout-for-lol/design-system/components/forms/field";
 import type { StorySeed } from "#src/lib/storybook/trpc-stub.ts";
 import { PlayerAliasCombobox } from "./player-alias-combobox.tsx";
@@ -10,7 +17,9 @@ import { PlayerSubscriptionsManager } from "./player-subscriptions-manager.tsx";
 import { RecordedMatchHistory } from "./recorded-match-history.tsx";
 import type { PlayerSubscriptionRow } from "./player-detail-sections.tsx";
 
-const GUILD_ID = "377554990325301252";
+const CREATOR_ACCOUNT = DiscordAccountIdSchema.parse("833685354864292628");
+
+const GUILD_ID = DiscordGuildIdSchema.parse("377554990325301252");
 const SEARCH_QUERY = "sjer";
 
 function noop(): void {
@@ -18,8 +27,14 @@ function noop(): void {
 }
 
 const CHANNELS = [
-  { id: "1102938475610293847", name: "match-reports" },
-  { id: "1102938475610293848", name: "ranked-grind" },
+  {
+    id: DiscordChannelIdSchema.parse("1102938475610293847"),
+    name: "match-reports",
+  },
+  {
+    id: DiscordChannelIdSchema.parse("1102938475610293848"),
+    name: "ranked-grind",
+  },
 ];
 
 /**
@@ -38,9 +53,9 @@ const seedAliasSearch: StorySeed = (trpc, queryClient) => {
         {
           id: 42,
           alias: "sjerred",
-          discordId: "444",
+          discordId: CREATOR_ACCOUNT,
           discordUser: {
-            id: "444",
+            id: CREATOR_ACCOUNT,
             username: "sjerred",
             displayName: "Jerred",
             avatar: null,
@@ -48,7 +63,10 @@ const seedAliasSearch: StorySeed = (trpc, queryClient) => {
           updatedTime: "2026-09-12T22:41:00.000Z",
           accountCount: 2,
           subscriptionCount: 2,
-          channelIds: ["1102938475610293847", "1102938475610293848"],
+          channelIds: [
+            DiscordChannelIdSchema.parse("1102938475610293847"),
+            DiscordChannelIdSchema.parse("1102938475610293848"),
+          ],
         },
         {
           id: 43,
@@ -58,7 +76,7 @@ const seedAliasSearch: StorySeed = (trpc, queryClient) => {
           updatedTime: "2026-09-10T11:03:00.000Z",
           accountCount: 1,
           subscriptionCount: 1,
-          channelIds: ["1102938475610293847"],
+          channelIds: [DiscordChannelIdSchema.parse("1102938475610293847")],
         },
       ],
       nextCursor: null,
@@ -69,8 +87,8 @@ const seedAliasSearch: StorySeed = (trpc, queryClient) => {
 const SUBSCRIPTIONS: PlayerSubscriptionRow[] = [
   {
     id: 1,
-    channelId: "1102938475610293847",
-    creatorDiscordId: "444",
+    channelId: DiscordChannelIdSchema.parse("1102938475610293847"),
+    creatorDiscordId: CREATOR_ACCOUNT,
     creatorDiscordUser: { username: "sjerred", displayName: "Jerred" },
     createdTime: "2026-06-01T18:30:00.000Z",
     filters: {
@@ -81,7 +99,7 @@ const SUBSCRIPTIONS: PlayerSubscriptionRow[] = [
   },
   {
     id: 2,
-    channelId: "1102938475610293848",
+    channelId: DiscordChannelIdSchema.parse("1102938475610293848"),
     creatorDiscordId: "445",
     creatorDiscordUser: { username: "chovy", displayName: "Chovy" },
     createdTime: "2026-07-14T09:05:00.000Z",
@@ -92,7 +110,7 @@ const SUBSCRIPTIONS: PlayerSubscriptionRow[] = [
 
 const MATCH_ENTRIES = [
   {
-    matchId: "NA1_5182736451",
+    matchId: RiotMatchIdSchema.parse("NA1_5182736451"),
     gameCreationMs: Date.now() - 7_200_000,
     gameDurationSeconds: 1942,
     queue: "Ranked Solo/Duo",
@@ -109,7 +127,7 @@ const MATCH_ENTRIES = [
     account: { gameName: "sjerred", tagLine: "NA1", region: "NA" },
   },
   {
-    matchId: "NA1_5182701122",
+    matchId: RiotMatchIdSchema.parse("NA1_5182701122"),
     gameCreationMs: Date.now() - 172_800_000,
     gameDurationSeconds: 2104,
     queue: "Clash",
@@ -205,7 +223,7 @@ const historyArgs = {
   entries: MATCH_ENTRIES,
   nextCursor: {
     gameCreationMs: MATCH_ENTRIES[1]?.gameCreationMs ?? 0,
-    matchId: "NA1_5182701122",
+    matchId: RiotMatchIdSchema.parse("NA1_5182701122"),
   },
   page: 0,
   playerId: 42,

@@ -1,0 +1,21 @@
+# Survival is local game AI. Provider connectivity affects conversation only.
+population: 3
+timeZone: America/Los_Angeles
+opens: "14:00"
+closes: "22:00"
+spawnWorld: world
+thinkTicks: 20
+scanRadius: 8
+scanBlocksPerTick: 128
+actionCooldownTicks: 20
+brainUrl: http://storm-brain-storm-brain-service.storm-brain.svc.cluster.local:3000
+identities:
+  - id: rowan
+    name: Rowan
+    personality: "A patient explorer who enjoys sharing discoveries and helping newcomers."
+  - id: juniper
+    name: Juniper
+    personality: "An inventive builder who likes practical shelters and friendly collaboration."
+  - id: flint
+    name: Flint
+    personality: "A resourceful miner with dry humor who enjoys comparing tools and discoveries."

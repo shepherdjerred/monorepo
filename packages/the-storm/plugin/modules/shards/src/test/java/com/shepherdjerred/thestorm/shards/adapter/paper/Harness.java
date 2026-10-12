@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.shards.adapter.paper;
 import com.shepherdjerred.thestorm.core.config.ConfigFiles;
 import com.shepherdjerred.thestorm.core.schedule.Cancellable;
 import com.shepherdjerred.thestorm.core.schedule.Scheduler;
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.shards.domain.Bonuses;
 import com.shepherdjerred.thestorm.shards.domain.ShardsConfig;
 import java.nio.file.Path;
@@ -40,11 +41,12 @@ final class Harness implements AutoCloseable {
           text);
   final ShardItems shards = new ShardItems(new NamespacedKey(plugin, "shard"), gear, config.item());
   final Clock clock = new Clock();
+  final SealedWorlds sealed = new SealedWorlds();
   final RecordingScheduler scheduler = new RecordingScheduler();
 
   /** The kit with a random whose every roll is {@code roll}. */
   ShardKit kit(double roll) {
-    return new ShardKit(shards, gear, text, new FixedRandom(roll), clock);
+    return new ShardKit(shards, gear, text, new FixedRandom(roll), clock, sealed);
   }
 
   @Override

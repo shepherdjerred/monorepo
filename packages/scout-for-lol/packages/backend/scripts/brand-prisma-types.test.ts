@@ -131,12 +131,36 @@ afterEach(async () => {
 });
 
 describe("brand-prisma-types", () => {
+  test("keeps archived mapping statuses plain without losing runtime status brands", () => {
+    const result = brandPrismaTypesText(`export namespace Prisma {
+  export type PuuidKeyMapCreateInput = {
+    status: string
+  }
+  export type ReportRunCreateInput = {
+    status: string
+  }
+  export type CompetitionParticipantCreateInput = {
+    status: string
+  }
+}`);
+    expect(result.text).toContain(
+      "PuuidKeyMapCreateInput = {\n    status: string",
+    );
+    expect(result.text).toContain(
+      "ReportRunCreateInput = {\n    status: ReportRunStatus",
+    );
+    expect(result.text).toContain(
+      "CompetitionParticipantCreateInput = {\n    status: ParticipantStatus",
+    );
+    expect(result.importedTypes).not.toContain("PuuidKeyMapStatus");
+  });
+
   test("brands payloads, inputs, aggregate outputs, field refs, and payload references", () => {
     const result = brandPrismaTypesText(PRISMA_DECLARATION_FIXTURE);
 
     expect(result.count).toBe(EXPECTED_TRANSFORM_COUNT);
     expect(result.text).toContain(
-      'import { CompetitionId, DiscordAccountId, DiscordGuildId, LeaguePuuid, MatchId, PlayerId, Region, ReportId, ReportRunStatus } from "@scout-for-lol/data";',
+      'import { CompetitionId, DiscordAccountId, DiscordGuildId, LeaguePuuid, PlayerId, Region, ReportId, ReportRunStatus, RiotMatchId } from "@scout-for-lol/data";',
     );
     expect(result.text).toContain(
       "export type Player = $Result.DefaultSelection<Prisma.$PlayerPayload<$Extensions.DefaultArgs>>",
@@ -152,7 +176,7 @@ describe("brand-prisma-types", () => {
     expect(result.text).toContain("serverId: DiscordGuildId");
     expect(result.text).toContain("puuid: LeaguePuuid");
     expect(result.text).toContain("region: Region");
-    expect(result.text).toContain("lastProcessedMatchId: MatchId | null");
+    expect(result.text).toContain("lastProcessedMatchId: RiotMatchId | null");
     expect(result.text).toContain('id?: IntFilter<"Player"> | PlayerId');
     expect(result.text).toContain(
       'discordId?: StringNullableFilter<"Player"> | DiscordAccountId | null',

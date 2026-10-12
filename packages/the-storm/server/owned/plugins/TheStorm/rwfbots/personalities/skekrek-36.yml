@@ -1,0 +1,81 @@
+id: skekrek-36
+name: Skekrek_36
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NTc1OTQ1NywKICAicHJvZmlsZUlkIiA6ICIzNmU5MTE1YzBjYzc0ZjhkOTdmOGFjNjA1ZGMxNGVkYSIsCiAgInByb2ZpbGVOYW1lIiA6ICJEYXJnaVYiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTc5NTNhMGQxNDlkZTA2MWJiNjRhOTk5NGZmZWM2M2ZlZDllYTUxYjFhOTJhZmNjNmIyYjMzY2M1YzNjNzk2NyIKICAgIH0KICB9Cn0="
+  signature: "sRdBtXj9w77O8mn+hZTY6OOqRHkS/GABgJUKRDckmpzS6jKQT2eI7Sc/awf5h6pHuf5dm4X6zODoGoXM055NiMHfKGhW2BZgcNzHSUBMj0HmoafqkVdd5ALWOIe4+pVXa4tcUPi5+mkETui7Nz7mfIrGRYCiYXDIWbNNLDxdrpy+EZ/s2QpbTr7YFVlCYn3ktZzB3QfY0jfmTyABP0ADevk7DYWFkthMnz9xsfquFxztKo3zFf9VG0Gc9qS8p6mehcFwG1fIz3OxCfiFZPywEI1QR384atCPV4kdMSPrE/QW/kPy8GKZBIuqpK3oaQoOWB5qiMPNO9CgBxjalX7BRQKXMuB7G2g5qz7ROLxx/m0ljAXmoonETWZWCe9cq7i2ogH6brK/cizB5ctPhrnWnlGK3K3PxZm/m+dmkDHynSq/PPzJabWK8vEZ/2r49OQxicFrhq40sf+Zw5nBjJutI+/WHD8s8KL29eJu7XeJvudLzieQ/+01eV8FV1ZFFFnjCtaHUbSYNR17JByp+9iAFjiZ8295OwKNDzXfuKR1AlTcy9ObQRjWZOFFguYZ8IVfgRYRFDtS62QJH47q74D+uFApebrMfWUuuJDAO2fH52oiL8atlObJJK/TpjpjySYR+tcCnKIYtgzqM+pFDjeWKf7KE7dK4ztxx+KNhtbhNHg="
+skill: 0.463
+archetype: flanker
+leverOffsets:
+  turnRateDegPerTick: 1.24
+  predictionQuality: 0.69
+  awarenessRadius: 1.5
+  coordination: -0.61
+  aggression: 0.77
+kits:
+  trooper: 0.52
+  shortbow: 1
+  rewind: 0.36
+  ghost: 0.24
+  wraith: 0.43
+  spy: 0.38
+roles:
+  plant: 0.47
+  rotate: 0.98
+  hunt: 0.49
+style:
+  aggression: 0.59
+  patience: 0.42
+  teamplay: 0.22
+  risk: 0.68
+voice:
+  tone:
+    - dry
+    - terse
+    - sarcastic
+  verbosity: quiet
+  style: Two-word sarcasm, lowercase, period at the end of everything.
+lines:
+  greet:
+    - flanking. obviously.
+    - "hi {team}."
+  onKill:
+    - "side door, {victim}."
+    - surprise.
+    - should've turned.
+  onDeath:
+    - cool. great.
+    - "{killer} again."
+    - loved that.
+  onPlant:
+    - "{bomb}. lit."
+    - fuse in. bye.
+  onDefuse:
+    - "{bomb}. fine."
+    - saved it. whatever.
+  onWin:
+    - sure.
+    - gg. i guess.
+  onLoss:
+    - shocking.
+    - unreal.
+  onLastAlive:
+    - love this for me.
+    - just me. neat.
+  taunt:
+    - behind you. no really.
+    - wow. nice angle.
+    - turn around.
+  lobby:
+    - lobby again. thrilling.
+    - shortbow. obviously.
+    - my route. not yours.
+    - waiting. patiently. sort of.
+    - "go {team}. i guess."
+quirks:
+  - stares_down
+  - holds_grudges
+rivals:
+  - xxgolemhunterxx
+bio: Has said a total of nine distinct words in lobby chat since 2013. Fights xXGolemHunterXx for the same flank route and pretends not to care who wins.
+batch: 2
+retired: false

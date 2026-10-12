@@ -39,6 +39,28 @@ stage and may be passed as a targeting attribute. It does not choose where Flipt
 stores or reads flags. Other bootstrap values include `PORT`, `DATABASE_URL`,
 and `TEMPORAL_WORKER_ROLE`.
 
+Shared service connections also belong to reviewed infrastructure wiring.
+Endpoints and storage locations describe how workloads connect, while flags
+describe their behavior. The
+[Temporal worker wiring](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/temporal/workers/operations-workers.ts)
+keeps these connection settings in Git and supplies credentials separately.
+
+1Password keeps secrets and the context needed to use or recover them:
+issuer and account identifiers, credential scopes, and recovery material.
+Dashboard entity selections and mail routing are application behavior.
+They belong to typed configuration, rather than credential fields.
+
+A shared credential has one owning item. Consumers can bind that item in
+several namespaces without maintaining several editable copies of its value.
+The [vault binding helper](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/misc/onepassword-vault.ts)
+supports stable item IDs so title changes do not change consumer identity.
+
+Retired items stay recoverable in the archive. Before removing fields from an
+active item, retain a complete archived copy, including attachments and passkeys.
+JSON templates cannot preserve passkeys, so field-only CLI copies are insufficient
+for those items. [1Password documents that limitation](https://www.1password.dev/cli/item-edit/)
+and the [archive recovery behavior](https://support.1password.com/archive-delete-items/).
+
 ## Which layer?
 
 Six questions, first match wins.

@@ -1,8 +1,16 @@
-import type { MatchId, PlayerConfigEntry } from "@scout-for-lol/data/index.ts";
-import type { ScoutMatchIngestionInput } from "@scout-for-lol/temporal";
-import type { PlayerWithMatchIds } from "#src/league/tasks/postmatch/match-processing.ts";
+import type {
+  RiotMatchId,
+  PlayerConfigEntry,
+  Region,
+} from "@scout-for-lol/data/index.ts";
+import type { PlayerWithMatchIds } from "#src/league/tasks/postmatch/match-history-collection.ts";
 
-export type DiscoveredMatchIntent = Omit<ScoutMatchIngestionInput, "stage"> & {
+/** One completed match discovery found, and the account that surfaced it. */
+export type DiscoveredMatchIntent = {
+  matchId: RiotMatchId;
+  sourcePuuid: string;
+  region: Region;
+  delivery: "live" | "silent-backfill";
   /** Populated after Riot confirms the match completion used for ordering. */
   gameEndTimestamp?: number;
 };
@@ -76,7 +84,7 @@ export async function orderMatchIntentsByCompletion(
 export function deduplicateMatchIntents(
   playersWithMatches: PlayerWithMatchIds[],
 ): DiscoveredMatchIntent[] {
-  const intents = new Map<MatchId, DiscoveredMatchIntent>();
+  const intents = new Map<RiotMatchId, DiscoveredMatchIntent>();
   for (const { player, backfillMatchIds } of playersWithMatches) {
     for (const matchId of backfillMatchIds) {
       intents.set(matchId, {

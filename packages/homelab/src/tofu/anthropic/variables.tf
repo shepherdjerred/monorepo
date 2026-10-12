@@ -13,11 +13,23 @@ variable "anthropic_api_keys" {
     api_key_id      = string
     name            = string
     status          = string
-    vault_item_id   = string
-    vault_field     = string
+    vault_item_id   = optional(string)
+    vault_field     = optional(string)
     vault_json_path = optional(string)
   }))
   default = {}
+
+  validation {
+    condition = alltrue([
+      for key in values(var.anthropic_api_keys) :
+      contains(["active", "inactive", "archived"], key.status) && (
+        key.status == "archived" ?
+        key.vault_item_id == null && key.vault_field == null && key.vault_json_path == null :
+        try(length(key.vault_item_id), 0) > 0 && try(length(key.vault_field), 0) > 0
+      )
+    ])
+    error_message = "Active and inactive keys require a vault rotation target; archived keys must retain only nonsecret metadata."
+  }
 }
 
 variable "anthropic_workspace_members" {

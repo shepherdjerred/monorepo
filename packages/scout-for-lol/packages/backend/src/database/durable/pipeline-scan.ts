@@ -23,8 +23,8 @@ import type { Db } from "#src/database/index.ts";
 import type { ScoutWorkflowStartRecord } from "@scout-for-lol/domain/recovery/workflow-start.ts";
 import { scoutWorkflowStartRowToRecord } from "#src/database/durable/workflow-start-row.ts";
 import {
-  matchNotificationIntentRowToRecord,
-  type MatchNotificationIntentRecord,
+  notificationIntentRowToRecord,
+  type NotificationIntentRecord,
 } from "#src/database/durable/intent-row.ts";
 
 /**
@@ -81,7 +81,7 @@ import {
  * domain union cannot reach production until someone says what driving it
  * would do — which is the question that decides membership of all of them.
  *
- * `temporal/v2/match-reads.ts` spells the same drivable set for its per-match
+ * `temporal/match-reads.ts` spells the same drivable set for its per-match
  * fan-out. The duplication stands because the persistence layer is driven by
  * the application and must not import it; what keeps the two honest is that
  * this table is exhaustive over the domain union, so a state added there fails
@@ -160,9 +160,9 @@ export const NOTIFICATION_INTENT_STATE_KINDS: readonly string[] =
  *
  * The others are `after-result` and must keep being driven, which is why
  * this is a per-KIND table rather than a postmatch-only filter. `settlement`
- * and `dare-summary` are minted INSIDE the fenced settlement effect, so they
- * exist only once the result is known; a filter that kept just `postmatch`
- * would strand exactly the rows that effect has already committed.
+ * is minted INSIDE the fenced settlement effect, so it exists only once the
+ * result is known; a filter that kept just `postmatch` would strand exactly
+ * the rows that effect has already committed.
  *
  * Exhaustive over the domain union for the same reason as
  * {@link INTENT_DRIVABILITY}: a fifth kind has to be classified here before
@@ -172,10 +172,12 @@ const INTENT_TRUTH_WINDOW = {
   prematch: "before-result",
   postmatch: "after-result",
   settlement: "after-result",
-  "dare-summary": "after-result",
   // A record break is a fact the finished game established; it is minted by
   // post-match progression, so it exists only once the result is known.
   "hall-record-break": "after-result",
+  // A Duel has no Riot match result at mint; its own series clock decides freshness.
+  "duel-status": "after-result",
+  "dare-status": "after-result",
 } satisfies Record<NotificationIntentKind, "before-result" | "after-result">;
 
 const BEFORE_RESULT_INTENT_KINDS: readonly string[] = Object.entries(
@@ -323,7 +325,7 @@ export type LiveRecoveryBatchRow = {
  * Workflow reads to know the domain commit stands. The cursor advance has no
  * stage receipt at all — `MatchTrackedAccount.cursorAdvancedAt` is per account
  * and monotonic, so it answers "did this happen" more precisely than one
- * match-wide receipt could (see `match-receipts-v2.ts`) — so the second half of
+ * match-wide receipt could (see `match-receipts.ts`) — so the second half of
  * the question has to be asked of that column. A run that committed the
  * observation and died before the cursors moved is exactly the state this
  * family exists to find, and either check alone would miss half of it.
@@ -368,7 +370,7 @@ export type LiveRecoveryBatchRow = {
  */
 /**
  * Whether a stalled-match listing carries matches whose stage receipts are
- * contested. See {@link listStalledV2MatchProcessing}.
+ * contested. See {@link listStalledMatchProcessing}.
  */
 export type ContestedMatchListing =
   | { readonly kind: "include" }
@@ -377,7 +379,7 @@ export type ContestedMatchListing =
       readonly stageConflictReceiptKind: ReceiptKind;
     };
 
-export async function listStalledV2MatchProcessing(
+export async function listStalledMatchProcessing(
   db: Db,
   args: {
     observationReceiptKind: ReceiptKind;
@@ -476,7 +478,7 @@ export async function listStalledNotificationIntents(
     limit: number;
     after?: ScanPosition | undefined;
   },
-): Promise<MatchNotificationIntentRecord[]> {
+): Promise<NotificationIntentRecord[]> {
   const keyset =
     args.after === undefined
       ? Prisma.empty
@@ -524,7 +526,7 @@ export async function listStalledNotificationIntents(
   return z
     .array(z.unknown())
     .parse(rows)
-    .map((row) => matchNotificationIntentRowToRecord(row));
+    .map((row) => notificationIntentRowToRecord(row));
 }
 
 /**
@@ -545,7 +547,7 @@ export async function listStalledNotificationIntents(
 export async function listUnknownDeliveryIntents(
   db: Db,
   args: { limit: number; after?: ScanPosition | undefined },
-): Promise<MatchNotificationIntentRecord[]> {
+): Promise<NotificationIntentRecord[]> {
   const after = args.after;
   const rows = await db.matchNotificationIntent.findMany({
     where: {
@@ -565,7 +567,7 @@ export async function listUnknownDeliveryIntents(
     orderBy: [{ unknownObservedAt: "asc" }, { intentKey: "asc" }],
     take: args.limit,
   });
-  return rows.map((row) => matchNotificationIntentRowToRecord(row));
+  return rows.map((row) => notificationIntentRowToRecord(row));
 }
 
 /**

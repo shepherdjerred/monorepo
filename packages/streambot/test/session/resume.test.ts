@@ -60,6 +60,7 @@ function makeContext(over: Partial<PlaybackContext> = {}): PlaybackContext {
     lastBlockedRequester: null,
     resumeSeekSeconds: 0,
     crashRetries: 0,
+    completedStreams: 0,
     crashNotice: null,
     pausedPositionSeconds: null,
     startPaused: false,

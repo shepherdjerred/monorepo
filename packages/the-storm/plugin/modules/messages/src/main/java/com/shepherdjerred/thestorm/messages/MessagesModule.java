@@ -9,10 +9,12 @@ import com.shepherdjerred.thestorm.messages.adapter.paper.DeathMessageListener;
 import com.shepherdjerred.thestorm.messages.adapter.paper.MiniText;
 import com.shepherdjerred.thestorm.messages.adapter.paper.MotdListener;
 import com.shepherdjerred.thestorm.messages.adapter.paper.PreferenceStore;
+import com.shepherdjerred.thestorm.messages.adapter.paper.PublicQueryListener;
 import com.shepherdjerred.thestorm.messages.adapter.paper.RegistryChecks;
 import com.shepherdjerred.thestorm.messages.adapter.paper.TabListListener;
 import com.shepherdjerred.thestorm.messages.adapter.paper.ToggleCommands;
 import com.shepherdjerred.thestorm.messages.config.MessagesConfig;
+import com.shepherdjerred.thestorm.messages.config.PublicQueryContract;
 import com.shepherdjerred.thestorm.messages.domain.Channel;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import java.util.ArrayList;
@@ -46,6 +48,9 @@ public final class MessagesModule implements StormModule {
     var commands = config.commands();
     register(
         context,
+        new PublicQueryListener(
+            PublicQueryContract.load().queryIdentity(),
+            context.plugin().getServer().getOnlinePlayers()),
         new DeathMessageListener(
             deaths.catalog(),
             Component.text(deaths.unarmed()),

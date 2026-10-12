@@ -107,7 +107,7 @@ Available tools (already authenticated in this environment — do not attempt to
 - \`tofu\` — for state inspection only. First confirm \`packages/homelab/src/cdk8s/src/tofu/cloudflare\` exists in the worker checkout, then run \`tofu -chdir=packages/homelab/src/cdk8s/src/tofu/cloudflare plan -detailed-exitcode\` to detect drift; exit code 2 from this command means "drift detected" (NOT a failure) — report the drift in the audit body and continue. Never run \`tofu apply\`.
 - \`toolkit gh\` — GitHub CLI for the open-PR survey (§12), scoped to this monorepo by default.
 - \`toolkit woodpecker\` — Woodpecker CLI. \`WOODPECKER_URL\`, \`WOODPECKER_TOKEN\`, and \`WOODPECKER_REPO_ID\` are set; Woodpecker is the source of truth for CI.
-- \`toolkit temporal\` — Temporal CLI. \`TEMPORAL_ADDRESS\` points at the in-cluster frontend service; the wrapper's local homelab profile may be overridden by this explicit environment. Do not use \`kubectl exec\` or \`kubectl port-forward\` for routine audit checks.
+- \`toolkit temporal\` — Temporal CLI. \`TEMPORAL_ADDRESS\` points at the in-cluster frontend service, so toolkit skips external credential lookup. External operator calls receive the API key through toolkit's credential broker. Do not use \`kubectl exec\` or \`kubectl port-forward\` for routine audit checks.
 - \`toolkit\` — local binary at /usr/local/bin/toolkit. Monorepo workflows and observability passthroughs the runbook calls for:
   - \`toolkit alerts list --state open [--json]\` — open Alerts occurrences (§6).
   - \`toolkit bugsink issues [--json]\` — open Bugsink issues (§9). \`toolkit bugsink issue <ID>\` for details.

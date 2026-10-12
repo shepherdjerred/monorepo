@@ -60,24 +60,28 @@ export function ChallengeDraft() {
       </header>
       <Card>
         <CardHeader>
-          <CardTitle>Canonical rules</CardTitle>
+          <CardTitle>Challenge rules</CardTitle>
           <CardDescription>
-            The typed contract below is frozen when this version is published.
+            These rules apply to every run started from this challenge.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm">{draft.data.contract.explanation.join(" ")}</p>
-          <pre className="max-h-80 overflow-auto rounded-md bg-scout-canvas p-3 text-xs">
-            {JSON.stringify(draft.data.contract, null, 2)}
-          </pre>
+          <details>
+            <summary className="cursor-pointer text-sm font-medium">
+              Advanced rule details
+            </summary>
+            <pre className="mt-3 max-h-80 overflow-auto rounded-md bg-scout-canvas p-3 text-xs">
+              {JSON.stringify(draft.data.contract, null, 2)}
+            </pre>
+          </details>
         </CardContent>
       </Card>
       <Card>
         <CardHeader>
           <CardTitle>Historical preview</CardTitle>
           <CardDescription>
-            Preview evidence is informative only and never becomes a run
-            automatically.
+            See how these rules would apply to past matches.
           </CardDescription>
         </CardHeader>
         <CardContent>

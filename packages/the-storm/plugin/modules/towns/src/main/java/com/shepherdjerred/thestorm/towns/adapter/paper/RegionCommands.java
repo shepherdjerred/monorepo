@@ -6,9 +6,9 @@ import static java.util.stream.Collectors.joining;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.tree.LiteralCommandNode;
+import com.shepherdjerred.thestorm.towns.app.TownsState;
 import com.shepherdjerred.thestorm.towns.domain.region.AdminRegion;
 import com.shepherdjerred.thestorm.towns.domain.region.RegionAllowance;
-import com.shepherdjerred.thestorm.towns.domain.region.RegionIndex;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import java.util.Locale;
@@ -25,10 +25,10 @@ final class RegionCommands {
 
   private static final String ID = "id";
 
-  private final RegionIndex regions;
+  private final TownsState state;
 
-  RegionCommands(RegionIndex regions) {
-    this.regions = regions;
+  RegionCommands(TownsState state) {
+    this.state = state;
   }
 
   void register(Commands commands) {
@@ -46,7 +46,7 @@ final class RegionCommands {
                     Commands.argument(ID, word())
                         .suggests(
                             (context, builder) -> {
-                              regions.all().stream()
+                              state.regions().all().stream()
                                   .map(AdminRegion::id)
                                   .filter(id -> id.startsWith(builder.getRemainingLowerCase()))
                                   .forEach(builder::suggest);
@@ -59,12 +59,12 @@ final class RegionCommands {
   }
 
   private int list(CommandSender sender) {
-    if (regions.all().isEmpty()) {
+    if (state.regions().all().isEmpty()) {
       sender.sendMessage(Notices.info("No admin regions are defined."));
       return Command.SINGLE_SUCCESS;
     }
     sender.sendMessage(Notices.info("Admin regions, first listed wins where they overlap:"));
-    for (var region : regions.all()) {
+    for (var region : state.regions().all()) {
       sender.sendMessage(Notices.info(region.id() + " (" + region.name() + ")"));
     }
     return Command.SINGLE_SUCCESS;
@@ -76,7 +76,8 @@ final class RegionCommands {
       return Command.SINGLE_SUCCESS;
     }
     var location = Guard.position(player);
-    regions
+    state
+        .regions()
         .at(
             Guard.world(location).getName(),
             location.getBlockX(),
@@ -89,7 +90,8 @@ final class RegionCommands {
   }
 
   private int byId(CommandSender sender, String id) {
-    regions
+    state
+        .regions()
         .byId(id.toLowerCase(Locale.ROOT))
         .ifPresentOrElse(
             region -> describe(sender, region),

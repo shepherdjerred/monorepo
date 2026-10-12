@@ -6,6 +6,8 @@ import { ZodError } from "zod/v4";
 import { startOrScheduleAgentTask } from "#lib/agent-task-scheduler.ts";
 import { AgentTaskInputV2Schema } from "#shared/agent/agent-task.ts";
 import { buildAgentChatApiRoutes } from "./agent-chat-api.ts";
+import { buildPhotonWebhookRoutes } from "./photon.ts";
+import { closePhotonClient } from "#lib/photon/client.ts";
 
 const COMPONENT = "agent-task-api";
 const DEFAULT_PORT = 9467;
@@ -61,6 +63,7 @@ export function buildAgentTaskApiApp(
 
   app.get("/healthz", (c) => c.text("ok\n"));
   app.route("/", buildAgentChatApiRoutes(token, client));
+  app.route("/", buildPhotonWebhookRoutes(client));
 
   app.post("/agent-tasks", async (c) => {
     if (!bearerMatches(bearerToken(c.req.header("authorization")), token)) {
@@ -142,6 +145,7 @@ export function startAgentTaskApi(client: Client): AgentTaskApiHandle {
     port,
     async close() {
       await server.stop();
+      await closePhotonClient();
       jsonLog("info", "Agent task API server stopped");
     },
   };

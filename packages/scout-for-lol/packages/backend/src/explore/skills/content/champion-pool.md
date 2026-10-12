@@ -6,6 +6,7 @@ surfaces: [web, discord, voice]
 tripwires:
   - Champion mastery is familiarity evidence, not proof of recent form or skill.
 ---
+
 ## Champion pool analysis
 
 Use ScoutQL for games, recency, roles, win rate, pick rate, and performance. Use `get_champion_mastery` only as a separate familiarity signal. Keep recent form, historical comfort, and mastery distinct.

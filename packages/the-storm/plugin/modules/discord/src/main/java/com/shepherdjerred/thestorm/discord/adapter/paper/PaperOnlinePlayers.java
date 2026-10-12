@@ -19,6 +19,12 @@ public final class PaperOnlinePlayers implements OnlinePlayers {
     if (!server.isPrimaryThread()) {
       throw new IllegalStateException("online players are read on the main thread");
     }
-    return server.getOnlinePlayers().stream().map(Player::getName).toList();
+    return server.getOnlinePlayers().stream()
+        .filter(
+            player ->
+                com.shepherdjerred.thestorm.core.players.Humans.isHuman(player)
+                    && !com.shepherdjerred.thestorm.core.players.PlayerVisibility.hidden(player))
+        .map(Player::getName)
+        .toList();
   }
 }

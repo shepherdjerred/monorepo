@@ -1,5 +1,5 @@
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
-import { MatchIdSchema } from "@scout-for-lol/data";
+import { RiotMatchIdSchema } from "@scout-for-lol/data";
 import {
   createTestDatabase,
   deleteIfExists,
@@ -125,7 +125,7 @@ describe("initial history enqueue", () => {
         playerId: existingPlayer.id,
         serverId: existingPlayer.serverId,
         creatorDiscordId: testAccountId("5101"),
-        lastProcessedMatchId: MatchIdSchema.parse("NA1_3"),
+        lastProcessedMatchId: RiotMatchIdSchema.parse("NA1_3"),
         lastMatchTime: new Date("2026-08-23T11:30:00.000Z"),
         lastCheckedAt: new Date("2026-08-23T11:35:00.000Z"),
         createdTime: now,

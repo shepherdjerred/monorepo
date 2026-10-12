@@ -1,6 +1,8 @@
 import { expect, test } from "vitest";
 import { pinCandidatesForDigests } from "./pin-candidate-images.ts";
 
+const GIT_SHA = "f".repeat(40);
+
 function versionCatalogSource(
   entries: readonly { readonly name: string; readonly value: string }[],
 ): string {
@@ -25,6 +27,7 @@ test("publishes a central Workflow candidate without changing stable", () => {
         "shepherdjerred/other": digest,
       },
       "42",
+      GIT_SHA,
       versionCatalogSource([
         {
           name: "shepherdjerred/temporal-worker/workflows/candidate",
@@ -41,6 +44,7 @@ test("publishes a central Workflow candidate without changing stable", () => {
     "shepherdjerred/temporal-worker/workflows/candidate": {
       version: "2.0.0-42",
       digest,
+      gitSha: GIT_SHA,
     },
     "shepherdjerred/other": { version: "2.0.0-42", digest },
   });
@@ -52,6 +56,7 @@ test("does not publish a Workflow pin while stable and candidate diverge", () =>
     pinCandidatesForDigests(
       { "shepherdjerred/temporal-worker": digest },
       "44",
+      GIT_SHA,
       versionCatalogSource([
         {
           name: "shepherdjerred/temporal-worker/workflows/stable",
@@ -75,6 +80,7 @@ test("bootstraps stable and candidate before the first central Workflow rollout"
     pinCandidatesForDigests(
       { "shepherdjerred/temporal-worker": digest },
       "42",
+      GIT_SHA,
       versionCatalogSource([
         {
           name: "shepherdjerred/temporal-worker/workflows/stable",
@@ -91,10 +97,12 @@ test("bootstraps stable and candidate before the first central Workflow rollout"
     "shepherdjerred/temporal-worker/workflows/stable": {
       version: "2.0.0-42",
       digest,
+      gitSha: GIT_SHA,
     },
     "shepherdjerred/temporal-worker/workflows/candidate": {
       version: "2.0.0-42",
       digest,
+      gitSha: GIT_SHA,
     },
   });
 });
@@ -105,6 +113,7 @@ test("publishes a central Workflow candidate after stable bootstrap", () => {
     pinCandidatesForDigests(
       { "shepherdjerred/temporal-worker": digest },
       "43",
+      GIT_SHA,
       versionCatalogSource([
         {
           name: "shepherdjerred/temporal-worker/workflows/stable",
@@ -121,6 +130,7 @@ test("publishes a central Workflow candidate after stable bootstrap", () => {
     "shepherdjerred/temporal-worker/workflows/candidate": {
       version: "2.0.0-43",
       digest,
+      gitSha: GIT_SHA,
     },
   });
 });
@@ -132,6 +142,7 @@ test("bootstraps stable and candidate before the first Scout beta rollout", () =
     pinCandidatesForDigests(
       { "shepherdjerred/scout-for-lol/beta": digest },
       "42",
+      GIT_SHA,
       versionCatalogSource([
         {
           name: "shepherdjerred/scout-for-lol/beta/workflows/stable",
@@ -148,10 +159,12 @@ test("bootstraps stable and candidate before the first Scout beta rollout", () =
     "shepherdjerred/scout-for-lol/beta/workflows/stable": {
       version: "2.0.0-42",
       digest,
+      gitSha: GIT_SHA,
     },
     "shepherdjerred/scout-for-lol/beta/workflows/candidate": {
       version: "2.0.0-42",
       digest,
+      gitSha: GIT_SHA,
     },
   });
 });
@@ -164,6 +177,7 @@ test("publishes only a Scout beta candidate after stable bootstrap", () => {
     pinCandidatesForDigests(
       { "shepherdjerred/scout-for-lol/beta": digest },
       "43",
+      GIT_SHA,
       versionCatalogSource([
         {
           name: "shepherdjerred/scout-for-lol/beta/workflows/stable",
@@ -180,6 +194,7 @@ test("publishes only a Scout beta candidate after stable bootstrap", () => {
     "shepherdjerred/scout-for-lol/beta/workflows/candidate": {
       version: "2.0.0-43",
       digest,
+      gitSha: GIT_SHA,
     },
   });
 });
@@ -190,6 +205,7 @@ test("does not publish a Scout beta pin while tracks diverge", () => {
     pinCandidatesForDigests(
       { "shepherdjerred/scout-for-lol/beta": digest },
       "44",
+      GIT_SHA,
       versionCatalogSource([
         {
           name: "shepherdjerred/scout-for-lol/beta/workflows/stable",
@@ -212,6 +228,7 @@ test("retains a central Workflow candidate until its pin converges with stable",
     pinCandidatesForDigests(
       { "shepherdjerred/temporal-worker": digest },
       "44",
+      GIT_SHA,
       versionCatalogSource([
         {
           name: "shepherdjerred/temporal-worker/workflows/candidate",
@@ -237,6 +254,7 @@ test("bootstraps the legacy Scout beta stable and candidate pins", () => {
     pinCandidatesForDigests(
       { "shepherdjerred/scout-for-lol/beta": digest },
       "43",
+      GIT_SHA,
       versionCatalogSource([
         {
           name: "shepherdjerred/scout-for-lol/beta/workflows/candidate",
@@ -256,10 +274,18 @@ test("bootstraps the legacy Scout beta stable and candidate pins", () => {
     "shepherdjerred/scout-for-lol/beta/workflows/stable": {
       version: "2.0.0-43",
       digest,
+      gitSha: GIT_SHA,
     },
     "shepherdjerred/scout-for-lol/beta/workflows/candidate": {
       version: "2.0.0-43",
       digest,
+      gitSha: GIT_SHA,
     },
   });
+});
+
+test("rejects a non-commit routing identity", () => {
+  expect(() =>
+    pinCandidatesForDigests({}, "43", "short", versionCatalogSource([])),
+  ).toThrow("40-character lowercase SHA");
 });

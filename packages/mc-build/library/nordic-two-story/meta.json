@@ -1,0 +1,14 @@
+{
+  "title": "Nordic two-story house",
+  "tags": [
+    "house",
+    "two-story",
+    "hip-roof",
+    "porch",
+    "chimney",
+    "timber-frame"
+  ],
+  "style": "nordic",
+  "footprint": { "w": 18, "d": 18, "h": 15 },
+  "notes": "Stacked walls with a protruding floor band between stories, a deepslate hip roof with eaves, a covered porch, an exterior chimney and a furnished ground floor. Shows how to build a second story and light an attic-open room."
+}

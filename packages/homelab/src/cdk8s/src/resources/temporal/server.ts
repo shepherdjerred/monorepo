@@ -11,10 +11,13 @@ import {
   Service,
   Volume,
 } from "cdk8s-plus-31";
+import type { ISecret } from "cdk8s-plus-31";
 import {
   withCommonProps,
   setRevisionHistoryLimit,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
+import { authenticatedGatewayContainerDefaults } from "@shepherdjerred/homelab/cdk8s/src/misc/authenticated-gateway-container.ts";
+import { ServiceMonitorSpecEndpointsMetricRelabelingsAction } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { TEMPORAL_POSTGRES_TLS_SECRET } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/temporal-db-tls.ts";
@@ -26,9 +29,22 @@ import {
   addConfigRenderInitContainer,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/server-config.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import {
+  TEMPORAL_EXTERNAL_GATEWAY_PORT,
+  TEMPORAL_GRPC_GATEWAY_CONFIG,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/external-auth.ts";
+
+/**
+ * Matching-service histograms bucketed per task queue: about a quarter of the
+ * server's ~88k series. No dashboard or rule reads them; the schedule-to-start
+ * and service-error metrics that alerts use are kept.
+ */
+export const TEMPORAL_SERVER_DROPPED_METRICS =
+  "(pri_)?(poll_latency|task_write_latency)_(bucket|sum|count)|(task_dispatch_latency|syncmatch_latency)_(bucket|sum|count)";
 
 export type CreateTemporalServerDeploymentProps = {
   dynamicConfigMap: ConfigMap;
+  externalAuthSecret: ISecret;
 };
 
 export function createTemporalServerDeployment(
@@ -124,6 +140,10 @@ export function createTemporalServerDeployment(
         TEMPORAL_SERVER_CONFIG_FILE_PATH: EnvValue.fromValue(
           TEMPORAL_SERVER_CONFIG_PATH,
         ),
+        // Go's GC otherwise ignores the container limit: the server sat at
+        // 3.9 GiB of its 4 GiB for days before an OOM kill. A soft limit at
+        // 80% makes the runtime collect harder instead of crossing the limit.
+        GOMEMLIMIT: EnvValue.fromValue("3200MiB"),
       },
       securityContext: {
         user: UID,
@@ -173,6 +193,37 @@ export function createTemporalServerDeployment(
     }),
   );
 
+  deployment.addContainer(
+    withCommonProps({
+      name: "authenticated-external-gateway",
+      image: `ghcr.io/shepherdjerred/caddy-s3proxy:${versions["shepherdjerred/caddy-s3proxy"]}`,
+      command: ["/bin/sh", "-c"],
+      args: [
+        'printf "%s" "$CADDY_CONFIG" > /tmp/temporal.Caddyfile && exec caddy run --config /tmp/temporal.Caddyfile --adapter caddyfile',
+      ],
+      ports: [
+        { name: "external-grpc", number: TEMPORAL_EXTERNAL_GATEWAY_PORT },
+      ],
+      envVariables: {
+        CADDY_CONFIG: EnvValue.fromValue(TEMPORAL_GRPC_GATEWAY_CONFIG),
+        TEMPORAL_AUTH_TOKEN: EnvValue.fromSecretValue({
+          secret: props.externalAuthSecret,
+          key: "api-token",
+        }),
+      },
+      volumeMounts: [{ path: "/tmp", volume: tmpVolume }],
+      ...authenticatedGatewayContainerDefaults(UID, GID),
+      liveness: Probe.fromTcpSocket({
+        port: TEMPORAL_EXTERNAL_GATEWAY_PORT,
+        periodSeconds: Duration.seconds(30),
+      }),
+      readiness: Probe.fromTcpSocket({
+        port: TEMPORAL_EXTERNAL_GATEWAY_PORT,
+        periodSeconds: Duration.seconds(10),
+      }),
+    }),
+  );
+
   setRevisionHistoryLimit(deployment);
 
   // Separate services: one for gRPC (used by clients/workers/UI/ingress)
@@ -185,6 +236,22 @@ export function createTemporalServerDeployment(
     ports: [{ port: 7233, name: "grpc" }],
   });
 
+  const externalService = new Service(
+    chart,
+    "temporal-external-server-service",
+    {
+      selector: deployment,
+      metadata: { labels: { app: "temporal-external-server" } },
+      ports: [
+        {
+          port: 7233,
+          targetPort: TEMPORAL_EXTERNAL_GATEWAY_PORT,
+          name: "grpc",
+        },
+      ],
+    },
+  );
+
   new Service(chart, "temporal-server-metrics-service", {
     selector: deployment,
     metadata: {
@@ -196,15 +263,22 @@ export function createTemporalServerDeployment(
   createServiceMonitor(chart, {
     name: "temporal-server-metrics",
     matchLabels: { app: "temporal-server-metrics" },
+    metricRelabelings: [
+      {
+        sourceLabels: ["__name__"],
+        regex: TEMPORAL_SERVER_DROPPED_METRICS,
+        action: ServiceMonitorSpecEndpointsMetricRelabelingsAction.DROP,
+      },
+    ],
   });
 
   new TailscaleIngress(chart, "temporal-tailscale-ingress", {
-    service,
+    service: externalService,
     host: "temporal",
     // Temporal's frontend speaks gRPC, not HTTP — an HTTP probe would
     // misreport it as down even when healthy.
     probeModule: "tcp_connect",
   });
 
-  return { deployment, service };
+  return { deployment, service, externalService };
 }

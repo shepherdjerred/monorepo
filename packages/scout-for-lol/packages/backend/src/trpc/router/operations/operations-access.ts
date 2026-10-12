@@ -25,8 +25,9 @@ import {
  * remembers to call. Operating the durable pipeline is the one place in this
  * backend where forgetting a check hands a stranger the power to mark an
  * undelivered message delivered, so the check is made structural: a procedure
- * that is not built from `operationsProcedure` or `operationsMutationProcedure`
- * is not in the operations router at all.
+ * for the pipeline must use `operationsProcedure` or `operationsMutationProcedure`.
+ * The support inbox uses the same structural operator check without the
+ * pipeline rollout flag, so switching off pipeline tools never disables support.
  *
  * The ORDER of the two checks is the whole authorization story:
  *
@@ -66,6 +67,18 @@ const isScoutOperatorSession = middleware(async ({ ctx, next }) => {
       message: "You are not a Scout operator.",
     });
   }
+  return next({ ctx: { ...ctx, user, webSession, operator } });
+});
+
+/** Support remains available independently of the durable-pipeline rollout. */
+export const operatorProcedure = webProcedure.use(isScoutOperatorSession);
+export const operatorMutationProcedure = webMutationProcedure.use(
+  isScoutOperatorSession,
+);
+
+async function requireOperationsConsole(
+  operator: DiscordAccountId,
+): Promise<void> {
   if (
     !(await isPolicyEnabled("scout_operations_console_enabled", {
       user: operator,
@@ -77,12 +90,19 @@ const isScoutOperatorSession = middleware(async ({ ctx, next }) => {
       message: "Scout operations are unavailable",
     });
   }
-  return next({ ctx: { ...ctx, user, webSession, operator } });
-});
+}
 
-export const operationsProcedure = webProcedure.use(isScoutOperatorSession);
-export const operationsMutationProcedure = webMutationProcedure.use(
-  isScoutOperatorSession,
+export const operationsProcedure = operatorProcedure.use(
+  async ({ ctx, next }) => {
+    await requireOperationsConsole(ctx.operator);
+    return next();
+  },
+);
+export const operationsMutationProcedure = operatorMutationProcedure.use(
+  async ({ ctx, next }) => {
+    await requireOperationsConsole(ctx.operator);
+    return next();
+  },
 );
 
 /**

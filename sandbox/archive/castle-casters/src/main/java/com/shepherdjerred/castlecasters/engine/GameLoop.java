@@ -14,24 +14,32 @@ public class GameLoop implements Runnable {
   private final GameLogic gameLogic;
   private final Window window;
   private final Timer timer;
-  private final Thread gameLoopThread;
   private final int targetFramesPerSecond;
   private final int targetUpdatesPerSecond;
+  private final LoopControl control;
+  private boolean windowStarted,gameStarted;
 
   public GameLoop(GameLogic gameLogic,
                   Window window,
                   int targetFramesPerSecond,
                   int targetUpdatesPerSecond) {
+    this(gameLogic, window, targetFramesPerSecond, targetUpdatesPerSecond, new LoopControl(false));
+  }
+
+  public GameLoop(GameLogic gameLogic, Window window, int targetFramesPerSecond,
+                  int targetUpdatesPerSecond, LoopControl control) {
     this.gameLogic = gameLogic;
     this.window = window;
     this.timer = new Timer();
-    gameLoopThread = new Thread(this, "GAME_LOOP_THREAD");
     this.targetFramesPerSecond = targetFramesPerSecond;
     this.targetUpdatesPerSecond = targetUpdatesPerSecond;
+    this.control = control;
   }
 
   public void initialize() throws Exception {
+    windowStarted=true;
     window.initialize();
+    gameStarted=true;
     gameLogic.initialize(window.getWindowSettings().windowSize());
   }
 
@@ -58,8 +66,8 @@ public class GameLoop implements Runnable {
   }
 
   private void cleanup() {
-    gameLogic.cleanup();
-    window.cleanup();
+    try{if(gameStarted)gameLogic.cleanup();}
+    finally{if(windowStarted)window.cleanup();gameStarted=false;windowStarted=false;}
   }
 
   @Override
@@ -69,6 +77,7 @@ public class GameLoop implements Runnable {
       runGameLoop();
     } catch (Exception e) {
       log.catching(e);
+      throw new IllegalStateException("Game loop failed", e);
     } finally {
       cleanup();
     }
@@ -80,7 +89,8 @@ public class GameLoop implements Runnable {
     float updateInterval = 1f / targetUpdatesPerSecond;
 
     while (!window.shouldClose()) {
-      elapsedTime = timer.getElapsedTime();
+      control.drain();
+      elapsedTime = control.elapsed(timer.getElapsedTime());
       accumulator += elapsedTime;
 
       while (accumulator >= updateInterval) {
@@ -96,16 +106,16 @@ public class GameLoop implements Runnable {
 
       printOpenGlErrors();
       printOpenAlErrors();
+      if (control.manual() && control.settled()) {
+        try { Thread.sleep(5); }
+        catch (InterruptedException e) { Thread.currentThread().interrupt(); break; }
+      }
     }
   }
 
   public void start() {
-    if (isOperatingSystemMacOs()) {
-      //noinspection CallToThreadRun
-      gameLoopThread.run();
-    } else {
-      gameLoopThread.start();
-    }
+    // Keep GLFW and its caller-owned lifecycle on one thread on every OS.
+    run();
   }
 
   private void printOpenGlErrors() {
@@ -123,7 +133,4 @@ public class GameLoop implements Runnable {
     }
   }
 
-  private boolean isOperatingSystemMacOs() {
-    return System.getProperty("os.name").contains("Mac");
-  }
 }

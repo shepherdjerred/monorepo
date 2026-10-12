@@ -1,3 +1,4 @@
+import { LeaguePuuidSchema } from "@scout-for-lol/data";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test } from "vitest";
 import { ClashHistorySection } from "#src/routes/consumer/consumer-clash-history.tsx";
@@ -153,7 +154,7 @@ describe("ClashHistorySection", () => {
                 queue: "clash",
                 players: [
                   {
-                    puuid: "p".repeat(78),
+                    puuid: LeaguePuuidSchema.parse("p".repeat(78)),
                     playerAlias: "Scout Classic",
                     teamName: "WE LOVE VIRMEL",
                     teamAbbreviation: "WLV",
@@ -190,7 +191,7 @@ describe("ClashHistorySection", () => {
                 queue: "clash",
                 players: [
                   {
-                    puuid: "p".repeat(78),
+                    puuid: LeaguePuuidSchema.parse("p".repeat(78)),
                     playerAlias: "Scout Classic",
                     teamName: "Nameless Side",
                     sightings: [

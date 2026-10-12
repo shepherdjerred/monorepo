@@ -19,11 +19,53 @@ import type {
   PlaybackCommandServiceDeps,
 } from "@shepherdjerred/streambot/commands/playback-command-types.ts";
 import { sportsEventForSource } from "@shepherdjerred/streambot/sports/sports-resolver.ts";
-import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
+import type {
+  Source,
+  SubtitleTrackRef,
+} from "@shepherdjerred/streambot/sources/source.ts";
 
 /** Permission-checked playback controls shared by slash and voice transports. */
 export class PlaybackControls {
   constructor(protected readonly deps: PlaybackCommandServiceDeps) {}
+  hasNumberedChannels(): boolean {
+    return this.deps.playbackChannel !== undefined;
+  }
+
+  selectChannel(userId: UserId, number: number | "auto"): Promise<string> {
+    if (number === "auto") {
+      if (this.deps.resetChannel === undefined)
+        throw new PlaybackCommandBoundaryError(
+          "Automatic channels are not enabled here.",
+        );
+      return this.deps.resetChannel(userId);
+    }
+    if (this.deps.selectChannel === undefined)
+      throw new PlaybackCommandBoundaryError(
+        "Numbered channels are not enabled here.",
+      );
+    return this.deps.selectChannel(userId, number);
+  }
+  listChannels(userId: UserId): Promise<string> {
+    if (this.deps.listChannels === undefined)
+      throw new PlaybackCommandBoundaryError(
+        "Numbered channels are not enabled here.",
+      );
+    return this.deps.listChannels(userId);
+  }
+
+  protected canControl(userId: UserId, requesterId: UserId | null): boolean {
+    return (
+      this.deps.authorization?.controlItem(userId, requesterId) ??
+      canControlItem(userId, requesterId, this.deps.config.discord.adminIds)
+    );
+  }
+
+  private canManage(userId: UserId): boolean {
+    return (
+      this.deps.authorization?.manageQueue(userId) ??
+      isAdmin(userId, this.deps.config.discord.adminIds)
+    );
+  }
 
   join(): PlaybackCommandResult {
     this.deps.dispatch({ type: "JOIN" });
@@ -74,13 +116,7 @@ export class PlaybackControls {
 
   skip(userId: UserId): PlaybackCommandResult {
     const current = this.deps.view().current;
-    if (
-      !canControlItem(
-        userId,
-        current?.requesterId ?? null,
-        this.deps.config.discord.adminIds,
-      )
-    ) {
+    if (!this.canControl(userId, current?.requesterId ?? null)) {
       throw new PlaybackCommandBoundaryError(
         "Only the requester or an admin can skip this.",
       );
@@ -93,7 +129,7 @@ export class PlaybackControls {
   }
 
   stop(userId: UserId): PlaybackCommandResult {
-    if (!isAdmin(userId, this.deps.config.discord.adminIds)) {
+    if (!this.canManage(userId)) {
       throw new PlaybackCommandBoundaryError(
         "Only an admin can stop playback.",
       );
@@ -177,13 +213,7 @@ export class PlaybackControls {
         `There's no item at position ${String(position)}.`,
       );
     }
-    if (
-      !canControlItem(
-        userId,
-        item.requesterId,
-        this.deps.config.discord.adminIds,
-      )
-    ) {
+    if (!this.canControl(userId, item.requesterId)) {
       throw new PlaybackCommandBoundaryError(
         "Only the requester or an admin can remove this.",
       );
@@ -197,7 +227,7 @@ export class PlaybackControls {
 
   clear(userId: UserId): PlaybackCommandResult {
     this.assertSportsControlSupported();
-    if (!isAdmin(userId, this.deps.config.discord.adminIds)) {
+    if (!this.canManage(userId)) {
       throw new PlaybackCommandBoundaryError(
         "Only an admin can clear the queue.",
       );
@@ -264,6 +294,24 @@ export class PlaybackControls {
     return this.subtitles(userId, "off");
   }
 
+  applySubtitleTrack(userId: UserId, trackRef: SubtitleTrackRef): void {
+    const view = this.controllableCurrent(userId);
+    if (
+      view.state === "resolving" ||
+      view.paused === true ||
+      view.current?.mediaKind === "music"
+    ) {
+      throw new PlaybackCommandBoundaryError(
+        "Subtitles are available while a video is playing.",
+      );
+    }
+    this.deps.dispatch({
+      type: "CHANGE_SUBTITLES",
+      subtitles: { trackRef },
+      positionSeconds: view.positionSeconds ?? 0,
+    });
+  }
+
   subtitles(
     userId: UserId,
     mode: "off" | "auto" | "language",
@@ -315,13 +363,7 @@ export class PlaybackControls {
     if (view.current === null) {
       throw new PlaybackCommandBoundaryError("Nothing is playing.");
     }
-    if (
-      !canControlItem(
-        userId,
-        view.current.requesterId,
-        this.deps.config.discord.adminIds,
-      )
-    ) {
+    if (!this.canControl(userId, view.current.requesterId)) {
       throw new PlaybackCommandBoundaryError(
         "Only the requester or an admin can control this.",
       );

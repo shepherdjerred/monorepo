@@ -15,7 +15,7 @@ bun run typecheck
 bun run deploy       # bun ../../scripts/release/deploy-site.ts sjer-red
 ```
 
-Deploys are a static sync to the object-storage host via the shared [`scripts/release/deploy-site.ts`](../../scripts/release/deploy-site.ts); credentials come from the environment (wrap with `op run`).
+Deploys are a static sync to the object-storage host via the shared [`scripts/release/deploy-site.ts`](../../scripts/release/deploy-site.ts); credentials come from the environment (wrap with [`scripts/onepassword/with-service-account.sh`](../../scripts/onepassword/with-service-account.sh) `op run`, which needs no 1Password desktop approval).
 
 ## Content
 

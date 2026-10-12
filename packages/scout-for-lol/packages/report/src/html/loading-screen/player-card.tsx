@@ -123,7 +123,17 @@ export function resolveParticipantRankDisplay(
     : { text: `Ranked 5s ${ranked5sRank}`, color: palette.gold[3] };
 }
 
-function resolveSpellImage(spellId: number): string | undefined {
+/**
+ * The spell icon, when there is a spell to show.
+ *
+ * A bot carries no summoner spells — the League client exposes its champion
+ * and position and nothing else — so absence here is a fact about the
+ * participant rather than a lookup that failed.
+ */
+function resolveSpellImage(spellId: number | undefined): string | undefined {
+  if (spellId === undefined) {
+    return undefined;
+  }
   const name = first(
     keys(pickBy(summoner.data, (spell) => spell.key === spellId.toString())),
   );
@@ -141,8 +151,8 @@ function SummonerSpells({
   spell2Id,
   iconSize,
 }: {
-  spell1Id: number;
-  spell2Id: number;
+  spell1Id: number | undefined;
+  spell2Id: number | undefined;
   iconSize: number;
 }) {
   const spell1Img = resolveSpellImage(spell1Id);
@@ -155,6 +165,7 @@ function SummonerSpells({
           src={spell1Img}
           alt=""
           style={{
+            boxSizing: "border-box",
             width: `${iconSize.toString()}px`,
             height: `${iconSize.toString()}px`,
             borderRadius: "2px",
@@ -167,6 +178,7 @@ function SummonerSpells({
           src={spell2Img}
           alt=""
           style={{
+            boxSizing: "border-box",
             width: `${iconSize.toString()}px`,
             height: `${iconSize.toString()}px`,
             borderRadius: "2px",
@@ -201,6 +213,7 @@ function RuneIcons({
           src={getRuneIconUrl(keystoneInfo.icon)}
           alt=""
           style={{
+            boxSizing: "border-box",
             width: `${runeSize.toString()}px`,
             height: `${runeSize.toString()}px`,
             borderRadius: "50%",
@@ -254,6 +267,7 @@ export function PlayerCard({
   return (
     <div
       style={{
+        boxSizing: "border-box",
         width: `${sizing.width.toString()}px`,
         height: `${sizing.height.toString()}px`,
         display: "flex",
@@ -296,6 +310,7 @@ export function PlayerCard({
       {/* Bottom overlay with all player info */}
       <div
         style={{
+          boxSizing: "border-box",
           position: "absolute",
           bottom: 0,
           left: 0,

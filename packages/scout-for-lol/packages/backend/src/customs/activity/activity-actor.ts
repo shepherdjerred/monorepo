@@ -83,7 +83,7 @@ async function hasGuildAdministrator(
 
 async function requireGuildMember(
   guildId: DiscordGuildId,
-  discordId: string,
+  discordId: DiscordAccountId,
 ): Promise<DiscordGuildMember> {
   const member = await customsDiscordRead(
     () => botRest().guildMember(guildId, discordId),
@@ -100,7 +100,10 @@ export async function customActivityActor(
 ): Promise<CustomActivityActor> {
   await assertCustomActivityPolicy(claims);
   const guildId = DiscordGuildIdSchema.parse(claims.guildId);
-  const member = await requireGuildMember(guildId, claims.sub);
+  const member = await requireGuildMember(
+    guildId,
+    DiscordAccountIdSchema.parse(claims.sub),
+  );
   return {
     discordId: DiscordAccountIdSchema.parse(claims.sub),
     guildId,
@@ -114,7 +117,7 @@ export async function customActivityActor(
 
 export async function customGuildMemberIdentity(
   actor: CustomActivityActor,
-  discordId: string,
+  discordId: DiscordAccountId,
 ): Promise<{
   discordId: DiscordAccountId;
   displayName: string;

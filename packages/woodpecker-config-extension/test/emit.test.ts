@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import path from "node:path";
 import { parse } from "yaml";
 import { z } from "zod";
 import { BUN_CACHE, BUN_CACHE_CONTROL } from "#src/pipeline/cache.ts";
@@ -16,6 +17,24 @@ function substitute(yaml: string): string {
 
 const EmittedCommands = z.object({
   steps: z.tuple([z.object({ commands: z.array(z.string()) })]),
+});
+
+test("checkout-free startup uses the existing workspace mount instead of creating a checkout", () => {
+  const step = testPipelineSteps().find(
+    (candidate) => candidate.key === "codex-review-gate",
+  );
+  if (step === undefined) throw new Error("Review gate fixture missing");
+  const emitted = z
+    .object({
+      workspace: z.object({ base: z.string(), path: z.string() }),
+      skip_clone: z.literal(true),
+    })
+    .parse(parse(emitWorkflow({ ...step, skipClone: true }, TEST_IDENTITY)));
+  // Woodpecker joins these fields before its startup mkdir/cd. A fresh RWX
+  // volume permits a non-root process to enter its root but not create children.
+  expect(path.posix.join(emitted.workspace.base, emitted.workspace.path)).toBe(
+    emitted.workspace.base,
+  );
 });
 
 describe("variable substitution", () => {
@@ -131,6 +150,7 @@ const EmittedPodOptions = z.object({
 
 const EmittedServices = z.object({
   steps: z.tuple([EmittedPodOptions.loose()]),
+  clone: z.array(EmittedPodOptions.loose()).optional(),
   services: z.array(EmittedPodOptions.loose()).optional(),
 });
 
@@ -140,15 +160,21 @@ describe("pod shape", () => {
    * scheduler cannot see them, and without the step-key label neither can
    * the telemetry or network policy that select CI pods.
    */
-  test("gives every step and service pod requests, limits, and CI labels", () => {
+  test("gives every clone, step and service pod requests, limits, and CI labels", () => {
     let services = 0;
+    let clones = 0;
     for (const step of testPipelineSteps()) {
       if (step.backend === "local") continue;
       const emitted = EmittedServices.parse(
         parse(substitute(emitWorkflow(step, TEST_IDENTITY))),
       );
-      const pods = [emitted.steps[0], ...(emitted.services ?? [])];
+      const pods = [
+        emitted.steps[0],
+        ...(emitted.services ?? []),
+        ...(emitted.clone ?? []),
+      ];
       services += emitted.services?.length ?? 0;
+      clones += emitted.clone?.length ?? 0;
       for (const pod of pods) {
         const options = pod.backend_options.kubernetes;
         for (const resource of ["cpu", "memory", "ephemeral-storage"]) {
@@ -156,12 +182,44 @@ describe("pod shape", () => {
           expect(options.resources.limits[resource], step.key).toBeDefined();
         }
         expect(options.labels["ci.sjer.red/step-key"]).toBe(step.key);
+        expect(options.labels["ci.sjer.red/commit"]).toBe(TEST_IDENTITY.commit);
         expect(options.serviceAccountName).toBe("woodpecker-job");
       }
     }
     expect(services).toBeGreaterThan(0);
+    expect(clones).toBeGreaterThan(0);
   });
 });
+
+test.each(["push", "pull_request", "tag"])(
+  "ordinary %s checkouts preserve native Git plugin settings",
+  (event) => {
+    const step = testPipelineSteps()[0];
+    if (step === undefined) throw new Error("Missing pipeline fixture");
+    const emitted = z
+      .object({
+        clone: z.tuple([
+          z.object({
+            image: z.string(),
+            settings: z.object({
+              depth: z.literal(0),
+              partial: z.literal(false),
+              tags: z.literal(true).optional(),
+            }),
+            commands: z.never().optional(),
+            environment: z.never().optional(),
+          }),
+        ]),
+      })
+      .parse(parse(emitWorkflow(step, { ...TEST_IDENTITY, event })));
+    expect(emitted.clone[0].image).toMatch(
+      /^docker\.io\/woodpeckerci\/plugin-git:\d+\.\d+\.\d+@sha256:[a-f0-9]{64}$/,
+    );
+    expect(emitted.clone[0].settings.tags).toBe(
+      event === "tag" ? true : undefined,
+    );
+  },
+);
 
 describe("service entrypoints", () => {
   test("starts Tempo directly without a shell wrapper", () => {

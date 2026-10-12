@@ -11,6 +11,9 @@ import { PostHogClient } from "@shepherdjerred/ops-clients/posthog.ts";
 import { PrometheusClient } from "@shepherdjerred/ops-clients/prometheus.ts";
 import { ServiceIndex } from "@shepherdjerred/ops-model/catalog.ts";
 import type { SourceId } from "@shepherdjerred/ops-model/snapshot.ts";
+import type { DigestKind as OpsDigestKind } from "@shepherdjerred/ops-model/digest.ts";
+import { parseTemporalNamespace } from "#shared/infra/temporal-namespace.ts";
+import { collectTemporalSchedules } from "./temporal-schedules-collector.ts";
 import { captureCommand } from "#activities/command-runner.ts";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import {
@@ -20,7 +23,6 @@ import {
   recordSourceSuccesses,
   triggerDigest,
   type OpsCollectorOutcome,
-  type OpsDigestKind,
   type OpsPublishSummary,
 } from "./ops-publish.ts";
 import {
@@ -249,7 +251,17 @@ export const opsActivities = {
     );
   },
   async collectOpsMaintenance(): Promise<OpsSourceResult> {
-    return await timed("maintenance", () => collectMaintenance(prometheus()));
+    return await timed("maintenance", (context) =>
+      collectMaintenance(prometheus(), inClusterKubernetes(), context.now),
+    );
+  },
+  async collectOpsTemporal(): Promise<OpsSourceResult> {
+    return await timed("temporal", (context) =>
+      collectTemporalSchedules(
+        parseTemporalNamespace(Bun.env["TEMPORAL_NAMESPACE"]),
+        context,
+      ),
+    );
   },
   async collectOpsAi(): Promise<OpsSourceResult> {
     return await timed("ai", (context) => collectAi(prometheus(), context));
@@ -274,9 +286,7 @@ export const opsActivities = {
     });
   },
 
-  async triggerOpsDigest(
-    kind: OpsDigestKind,
-  ): Promise<{ kind: OpsDigestKind }> {
+  async triggerOpsDigest(kind: OpsDigestKind) {
     return await triggerDigest({
       kind,
       dashboardUrl: requiredEnvironment("OPS_DASHBOARD_URL"),

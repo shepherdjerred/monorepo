@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { z } from "zod";
 import type { RawCurrentGameInfo } from "@scout-for-lol/data";
 import { MATCHES_STAGING_DIR } from "#src/report-lake/paths.ts";
-import { prematchStagingFilePath } from "#src/report-lake/staging.ts";
+import { listStagingFiles } from "#src/report-lake/staging.ts";
 import {
   loadRawMatchFixture,
   rawCurrentGameInfoFixture,
@@ -150,10 +150,14 @@ function gameSeenAt(gameStartTime: number): RawCurrentGameInfo {
 async function stagedPrematchRows(
   gameInfo: RawCurrentGameInfo,
 ): Promise<unknown[]> {
-  const dedupeKey = `${gameInfo.platformId}:${gameInfo.gameId.toString()}`;
-  const text = await Bun.file(
-    prematchStagingFilePath(lakeDir, dedupeKey),
-  ).text();
+  const files = await listStagingFiles(lakeDir, "prematch");
+  const file = files[0];
+  if (file === undefined || files.length !== 1) {
+    throw new Error(
+      `Expected one committed prematch projection for ${gameInfo.platformId}`,
+    );
+  }
+  const text = await Bun.file(file).text();
   return text
     .split("\n")
     .filter((line) => line.length > 0)

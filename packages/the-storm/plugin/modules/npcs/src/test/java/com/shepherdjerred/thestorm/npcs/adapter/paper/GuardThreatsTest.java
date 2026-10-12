@@ -25,7 +25,9 @@ final class GuardThreatsTest {
   private final ServerMock server = MockBukkit.mock();
   private final WorldMock world = server.addSimpleWorld("world");
   private final Location feet = new Location(world, 0.5, 64, 0.5);
-  private final NpcsConfig.Guard guard = new NpcsConfig.Guard(12, 16, 2.5, 4, 20);
+  private final NpcsConfig.Guard guard = new NpcsConfig.Guard(12, 48, 64, 2.5, 4, 20);
+  private final GuardThreats.Filters filters =
+      new GuardThreats.Filters(enemy -> true, enemy -> false, enemy -> true);
 
   @AfterEach
   void stop() {
@@ -39,7 +41,7 @@ final class GuardThreatsTest {
 
     assertThat(
             GuardThreats.nearest(
-                List.of(cow, slime), new GuardThreats.Search(feet, feet, guard), enemy -> true))
+                List.of(cow, slime), new GuardThreats.Search(feet, guard), filters))
         .contains((Enemy) slime);
   }
 
@@ -47,9 +49,28 @@ final class GuardThreatsTest {
   void hostileInsideTheQueryBoxButOutsideTheDetectionCircleIsIgnored() {
     var zombie = world.spawnEntity(feet.clone().add(11, 0, 11), EntityType.ZOMBIE);
 
+    assertThat(GuardThreats.nearest(List.of(zombie), new GuardThreats.Search(feet, guard), filters))
+        .isEmpty();
+  }
+
+  @Test
+  void threatsFollowTheCurrentPositionAndWantedPlayersTakePriority() {
+    var moved = feet.clone().add(90, 0, 0);
+    var zombie = world.spawnEntity(moved.clone().add(1, 0, 0), EntityType.ZOMBIE);
+    var player = server.addPlayer();
+    player.teleport(moved.clone().add(5, 0, 0));
+    var wanted = new GuardThreats.Filters(enemy -> true, player::equals, enemy -> true);
     assertThat(
             GuardThreats.nearest(
-                List.of(zombie), new GuardThreats.Search(feet, feet, guard), enemy -> true))
+                List.of(zombie, player), new GuardThreats.Search(moved, guard), wanted))
+        .contains(player);
+    assertThat(
+            GuardThreats.nearest(List.of(zombie), new GuardThreats.Search(moved, guard), filters))
+        .contains((Enemy) zombie);
+    var obstructed = new GuardThreats.Filters(enemy -> true, enemy -> false, enemy -> false);
+    assertThat(
+            GuardThreats.nearest(
+                List.of(zombie), new GuardThreats.Search(moved, guard), obstructed))
         .isEmpty();
   }
 

@@ -4,7 +4,7 @@ import {
 } from "#src/config/dynamic.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import type { DiscordGuildId } from "@scout-for-lol/data";
-import type { ExtendedPrismaClient } from "#src/database/index.ts";
+import type { Db } from "#src/database/index.ts";
 import type { FeatureTip } from "#src/tips/tip-catalog.ts";
 import { eligibleTips } from "#src/tips/tip-eligibility.ts";
 import {
@@ -35,11 +35,11 @@ export type TipSelectionDeps = {
   /** Injected so the percentage roll is deterministic under test. */
   random?: () => number;
   now?: Date;
-  db?: ExtendedPrismaClient;
+  db?: Db;
   readers?: TipReaders;
 };
 
-function prismaReaders(db: ExtendedPrismaClient | undefined): TipReaders {
+function prismaReaders(db: Db | undefined): TipReaders {
   return {
     lastShownAt: async (audience) => await lastTipShownAt(audience, db),
     shownTipKeys: async (audience) => await shownTipKeys(audience, db),

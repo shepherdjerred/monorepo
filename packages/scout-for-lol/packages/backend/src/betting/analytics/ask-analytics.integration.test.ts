@@ -1,3 +1,7 @@
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { DiscordGuildIdSchema, type DiscordGuildId } from "@scout-for-lol/data";
 import {
@@ -359,7 +363,7 @@ async function expectReusedAliasesRemainSeparate(): Promise<void> {
       source,
       {
         ...source,
-        matchId: "NA1_REUSED_ALIAS",
+        matchId: RiotMatchIdSchema.parse("NA1_9100000060"),
         subjectPuuid: otherPuuid,
         stake: 5,
         payout: 0,
@@ -441,7 +445,7 @@ async function seedDataset(): Promise<void> {
         delta: 1,
         balanceAfter: 101,
         kind: "earn_game",
-        matchId: "NA1_LEDGER",
+        matchId: RiotMatchIdSchema.parse("NA1_9100000010"),
         context: "{}",
         createdAt: date(2),
       },
@@ -464,7 +468,7 @@ async function seedDataset(): Promise<void> {
 
   const oldPool = await makePool({
     serverId: SERVER_A,
-    matchId: "NA1_OLD",
+    matchId: RiotMatchIdSchema.parse("NA1_9100000030"),
     day: 1,
     alias: "jerred",
     poolState: "settled",
@@ -472,7 +476,7 @@ async function seedDataset(): Promise<void> {
   });
   const newPool = await makePool({
     serverId: SERVER_A,
-    matchId: "NA1_NEW",
+    matchId: RiotMatchIdSchema.parse("NA1_9100000020"),
     day: 2,
     alias: "jerry",
     poolState: "settled",
@@ -480,7 +484,7 @@ async function seedDataset(): Promise<void> {
   });
   const refundPool = await makePool({
     serverId: SERVER_A,
-    matchId: "NA1_REFUND",
+    matchId: RiotMatchIdSchema.parse("NA1_9100000050"),
     day: 3,
     alias: "jerry",
     poolState: "voided",
@@ -488,7 +492,7 @@ async function seedDataset(): Promise<void> {
   });
   const pendingPool = await makePool({
     serverId: SERVER_A,
-    matchId: "NA1_PENDING",
+    matchId: RiotMatchIdSchema.parse("NA1_9100000040"),
     day: 4,
     alias: "jerry",
     poolState: "open",
@@ -496,7 +500,7 @@ async function seedDataset(): Promise<void> {
   });
   const foreignPool = await makePool({
     serverId: SERVER_B,
-    matchId: "NA1_FOREIGN",
+    matchId: RiotMatchIdSchema.parse("NA1_9100000000"),
     day: 5,
     alias: "foreign",
     poolState: "settled",
@@ -613,7 +617,7 @@ async function seedParlay(input: {
 }): Promise<void> {
   const definition = await db.bucksParlayDefinition.create({
     data: {
-      matchId: "NA1_NEW",
+      matchId: RiotMatchIdSchema.parse("NA1_9100000020"),
       queueType: "RANKED_SOLO_5x5",
       selectedTeamId: 100,
       subjects: "[]",
@@ -634,7 +638,7 @@ async function seedParlay(input: {
     data: {
       definitionId: definition.id,
       outcomePoolId: input.outcomePoolId,
-      matchId: "NA1_NEW",
+      matchId: RiotMatchIdSchema.parse("NA1_9100000020"),
       serverId: SERVER_A,
       publishedAt: date(2),
       closesAt: date(2),
@@ -677,7 +681,7 @@ async function seedParlay(input: {
 
 async function makePool(input: {
   serverId: DiscordGuildId;
-  matchId: string;
+  matchId: RiotMatchId;
   day: number;
   alias: string;
   poolState: "open" | "settled" | "voided";

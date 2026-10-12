@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema, type RiotMatchId } from "@scout-for-lol/data";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { ChampionPortrait } from "#src/assets/index.tsx";
 import {
@@ -7,7 +8,7 @@ import {
 import { StatusBadge } from "./status-badge.tsx";
 
 type MatchRow = {
-  matchId: string;
+  matchId: RiotMatchId;
   champion: string;
   lane: string;
   queue: string;
@@ -35,7 +36,7 @@ type Story = StoryObj<MatchTableArgs>;
 
 const matches: MatchRow[] = [
   {
-    matchId: "NA1_5182340011",
+    matchId: RiotMatchIdSchema.parse("NA1_5182340011"),
     champion: "Ahri",
     lane: "Mid",
     queue: "Ranked Solo/Duo",
@@ -44,7 +45,7 @@ const matches: MatchRow[] = [
     win: true,
   },
   {
-    matchId: "NA1_5182302884",
+    matchId: RiotMatchIdSchema.parse("NA1_5182302884"),
     champion: "Syndra",
     lane: "Mid",
     queue: "Ranked Solo/Duo",
@@ -53,7 +54,7 @@ const matches: MatchRow[] = [
     win: true,
   },
   {
-    matchId: "NA1_5182199017",
+    matchId: RiotMatchIdSchema.parse("NA1_5182199017"),
     champion: "Yasuo",
     lane: "Mid",
     queue: "Ranked Flex",
@@ -62,7 +63,7 @@ const matches: MatchRow[] = [
     win: false,
   },
   {
-    matchId: "NA1_5182044530",
+    matchId: RiotMatchIdSchema.parse("NA1_5182044530"),
     champion: "LeeSin",
     lane: "Jungle",
     queue: "Ranked Solo/Duo",
@@ -71,7 +72,7 @@ const matches: MatchRow[] = [
     win: true,
   },
   {
-    matchId: "NA1_5181988112",
+    matchId: RiotMatchIdSchema.parse("NA1_5181988112"),
     champion: "Thresh",
     lane: "Support",
     queue: "Ranked Solo/Duo",

@@ -41,6 +41,8 @@ type Fixture = {
   candidateFailures?: number;
   historicalRuleEvaluationSamples?: number;
   historicalPollerSamples?: number;
+  historicalCombinedPollers?: number;
+  historicalNonstickyPollers?: number;
   historicalEvaluationProgress?: number;
   historicalEvaluationAgeSeconds?: number;
   evaluationAgeSeconds?: number;
@@ -148,9 +150,26 @@ function increaseMetricValue(
       : undefined;
 }
 
+function pollerMetricValue(
+  expression: string,
+  fixture: Fixture,
+): number | undefined {
+  if (
+    expression.includes('poller_type=~"workflow_task|sticky_workflow_task"')
+  ) {
+    return fixture.historicalCombinedPollers ?? 1;
+  }
+  return expression.includes("max_over_time") &&
+    expression.includes('poller_type="workflow_task"')
+    ? (fixture.historicalNonstickyPollers ?? 1)
+    : undefined;
+}
+
 function metricValue(expression: string, fixture: Fixture): number {
   const increased = increaseMetricValue(expression, fixture);
   if (increased !== undefined) return increased;
+  const poller = pollerMetricValue(expression, fixture);
+  if (poller !== undefined) return poller;
   if (expression.includes("time() - max by")) {
     return fixture.evaluationAgeSeconds ?? 1;
   }
@@ -743,9 +762,49 @@ describe("Worker Deployment rollback and rejection", () => {
     expect(commands.some((command) => command.includes("--delete"))).toBe(
       false,
     );
+    expect(await Bun.file(rolloutOptions.candidateStatePath).json()).toEqual({
+      schema: "pin-candidates-state/v1",
+      pins: {},
+      withdrawnCandidates: { [rolloutOptions.candidatePinName]: 2 },
+    });
+  });
+
+  test.each([
+    { version: "2.0.0-3", buildNumber: 3, digest: CANDIDATE_DIGEST },
+    { version: "2.0.0-2", buildNumber: 3, digest: CANDIDATE_DIGEST },
+    { version: "2.0.0-2", buildNumber: 2, digest: STABLE_DIGEST },
+  ])("rejects resetting drifted candidate state: %j", async (pin) => {
+    const rolloutOptions = await options("rollback");
+    const catalogBefore = await Bun.file(rolloutOptions.catalogPath).text();
+    const stateBefore = JSON.stringify({
+      schema: "pin-candidates-state/v1",
+      pins: {
+        [rolloutOptions.candidatePinName]: {
+          ...pin,
+          digest: `sha256:${pin.digest}`,
+        },
+      },
+    });
+    await Bun.write(rolloutOptions.candidateStatePath, stateBefore);
+    const commands: string[][] = [];
+    await expect(
+      executeWorkerDeploymentRollout(
+        rolloutOptions,
+        fixtureRunner({}, commands),
+      ),
+    ).rejects.toThrow("Candidate pin state differs from catalog");
+    expect(await Bun.file(rolloutOptions.catalogPath).text()).toBe(
+      catalogBefore,
+    );
+    expect(await Bun.file(rolloutOptions.candidateStatePath).text()).toBe(
+      stateBefore,
+    );
+    expect(commands.some((command) => command.includes("--delete"))).toBe(
+      false,
+    );
     expect(
-      await Bun.file(rolloutOptions.candidateStatePath).text(),
-    ).not.toContain(rolloutOptions.candidatePinName);
+      commands.some((command) => command.includes("set-current-version")),
+    ).toBe(false);
   });
 
   test("rejects resetting a candidate image built from another commit", async () => {
@@ -866,6 +925,54 @@ describe("Worker Deployment rollout safety", () => {
         ),
       ),
     ).rejects.toThrow("Workflow poller history for");
+  });
+
+  test("accepts continuous combined pollers with brief nonsticky gaps", async () => {
+    const commands: string[][] = [];
+    await executeWorkerDeploymentRollout(
+      await options("advance", new Date("2026-08-29T00:31:00Z")),
+      fixtureRunner(
+        {
+          rampingBuildId: CANDIDATE,
+          rampPercentage: 10,
+          rampChangedTime: "2026-08-29T00:00:00Z",
+          historicalCombinedPollers: 1,
+          historicalNonstickyPollers: 1,
+        },
+        commands,
+      ),
+    );
+    const queries = commands.flat();
+    expect(
+      queries.some((argument) =>
+        argument.includes('poller_type=~"workflow_task|sticky_workflow_task"'),
+      ),
+    ).toBe(true);
+    expect(
+      queries.some((argument) =>
+        argument.includes("max_over_time((sum(temporal_worker_num_pollers"),
+      ),
+    ).toBe(true);
+  });
+
+  test.each([
+    [{ historicalCombinedPollers: 0 }, "Workflow poller for"],
+    [{ historicalNonstickyPollers: 0 }, "Nonsticky Workflow poller for"],
+  ])("rejects a sustained poller outage: %j", async (outage, message) => {
+    await expect(
+      executeWorkerDeploymentRollout(
+        await options("advance", new Date("2026-08-29T00:31:00Z")),
+        fixtureRunner(
+          {
+            rampingBuildId: CANDIDATE,
+            rampPercentage: 10,
+            rampChangedTime: "2026-08-29T00:00:00Z",
+            ...outage,
+          },
+          [],
+        ),
+      ),
+    ).rejects.toThrow(message);
   });
 
   test("rejects promotion when the candidate pin was built from another commit", async () => {

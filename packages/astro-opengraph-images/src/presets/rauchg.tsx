@@ -41,6 +41,7 @@ export function rauchg({ title }: RenderFunctionInput): React.ReactNode {
       </div>
       <div
         style={{
+          boxSizing: "border-box",
           display: "flex",
           flexWrap: "wrap",
           justifyContent: "center",

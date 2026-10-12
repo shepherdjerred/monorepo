@@ -6,12 +6,10 @@
     "./*": "./src/*"
   },
   "scripts": {
-    "build": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "test": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run",
     "test:watch": "bun --no-install --bun vitest --config ../../../../vitest.config.ts",
     "test:coverage": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run --coverage",
     "test:ci": "bun ../../../../scripts/ci/run-ci-test.ts",
-    "test:report": "CI_TEST_COVERAGE=1 bun ../../../../scripts/ci/run-ci-test.ts",
     "lint": "bun x eslint src && check-architecture",
     "format": "bun x prettier --check src",
     "format:write": "bun x prettier --write src",
@@ -27,8 +25,8 @@
     "prettier": "^3.9.9",
     "typescript": "^6.0.3",
     "@typescript/native": "npm:typescript@7.0.2",
-    "vitest": "5.0.1",
-    "@vitest/coverage-istanbul": "5.0.1"
+    "vitest": "5.0.3",
+    "@vitest/coverage-istanbul": "5.0.3"
   },
   "description": "Pure domain contracts for Scout for League of Legends: branded identities, codecs, and state-machine schemas",
   "keywords": [

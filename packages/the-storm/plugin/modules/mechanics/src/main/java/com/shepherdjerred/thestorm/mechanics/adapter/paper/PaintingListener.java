@@ -28,7 +28,8 @@ final class PaintingListener implements Listener {
   @EventHandler(ignoreCancelled = true)
   void onInteract(PlayerInteractEntityEvent event) {
     if (event.getHand() != EquipmentSlot.HAND
-        || !(event.getRightClicked() instanceof Painting painting)) {
+        || !(event.getRightClicked() instanceof Painting painting)
+        || kit.sealed(painting.getWorld())) {
       return;
     }
     var player = event.getPlayer();

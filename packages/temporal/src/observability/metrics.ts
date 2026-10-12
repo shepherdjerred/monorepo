@@ -17,6 +17,18 @@ const DEFAULT_METRICS_PORT = 9465;
 export const register = new Registry();
 
 register.setDefaultLabels({ component: "temporal-worker" });
+export const photonWebhookTotal = new Counter({
+  name: "photon_webhook_total",
+  help: "Photon webhook outcomes after signature verification and durable admission",
+  labelNames: ["outcome"] as const,
+  registers: [register],
+});
+export const photonDeliveryTotal = new Counter({
+  name: "photon_delivery_total",
+  help: "Single-attempt Photon reply delivery outcomes",
+  labelNames: ["outcome"] as const,
+  registers: [register],
+});
 collectDefaultMetrics({ register, prefix: "temporal_worker_app_" });
 
 // Billed spend straight from each provider's cost report, per project or
@@ -132,6 +144,13 @@ export const maintenanceRunsTotal = new Counter({
   name: "kubernetes_maintenance_runs_total",
   help: "Temporal maintenance activity runs, by maintenance job and outcome",
   labelNames: ["maintenance_job", "outcome"] as const,
+  registers: [register],
+});
+
+export const ciWorkspaceReaperDeletionsTotal = new Counter({
+  name: "ci_workspace_reaper_deletions_total",
+  help: "Leaked Woodpecker CI pods and workspace claims deleted by the CI workspace reaper, by resource",
+  labelNames: ["resource"] as const,
   registers: [register],
 });
 
@@ -346,11 +365,27 @@ export const veleroOrphanR2PrefixesTotal = new Gauge({
   name: "velero_orphan_r2_prefixes_total",
   help: "Orphan R2 backup prefixes under zfspv-incr/backups/ with no live Backup CR or metadata",
   registers: [register],
+  labelNames: ["bucket"] as const,
 });
 
 export const veleroOrphanR2BytesTotal = new Gauge({
   name: "velero_orphan_r2_bytes_total",
   help: "Total bytes in orphan R2 backup prefixes under zfspv-incr/backups/",
+  registers: [register],
+  labelNames: ["bucket"] as const,
+});
+
+export const veleroR2AuditObservationTimestampSeconds = new Gauge({
+  name: "velero_r2_audit_observation_timestamp_seconds",
+  help: "Original observation time of the durably published R2 audit; startup restoration does not refresh it",
+  labelNames: ["bucket"] as const,
+  registers: [register],
+});
+
+export const veleroR2IncompleteChainRoots = new Gauge({
+  name: "velero_r2_incomplete_chain_roots",
+  help: "Retained volume recovery points missing a full base or intermediate stream",
+  labelNames: ["bucket"] as const,
   registers: [register],
 });
 
@@ -381,8 +416,15 @@ export const veleroOrphanBackupCrOldestAgeSeconds = new Gauge({
 
 export const workflowOutcomeTotal = new Counter({
   name: "temporal_workflow_outcome_total",
-  help: "Outcomes of check-and-skip workflows: executed (body ran) vs skipped (gate short-circuited)",
+  help: "Workflow outcomes: executed, skipped by a gate, or interrupted after an accepted start command",
   labelNames: ["workflow", "outcome", "reason"] as const,
+  registers: [register],
+});
+
+export const workflowOutcomeLastTimestampSeconds = new Gauge({
+  name: "temporal_workflow_outcome_last_timestamp_seconds",
+  help: "Timestamp of the last recorded workflow outcome, including interrupted starts",
+  labelNames: ["workflow", "outcome", "reason"],
   registers: [register],
 });
 

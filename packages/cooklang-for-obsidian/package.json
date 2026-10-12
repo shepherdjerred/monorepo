@@ -10,8 +10,7 @@
     "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "publish:plugin": "bun scripts/publish.ts",
-    "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
-    "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/ci/run-ci-test.ts"
+    "test:ci": "bun ../../scripts/ci/run-ci-test.ts"
   },
   "devDependencies": {
     "@happy-dom/global-registrator": "^20.10.6",
@@ -24,8 +23,8 @@
     "obsidian": "^1.13.1",
     "typescript": "^6.0.3",
     "@typescript/native": "npm:typescript@7.0.2",
-    "vitest": "5.0.1",
-    "@vitest/coverage-istanbul": "5.0.1"
+    "vitest": "5.0.3",
+    "@vitest/coverage-istanbul": "5.0.3"
   },
   "dependencies": {
     "@codemirror/language": "^6.12.4",

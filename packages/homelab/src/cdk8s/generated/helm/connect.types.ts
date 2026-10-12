@@ -187,7 +187,7 @@ export type ConnectHelmValuesConnectApi = {
   /**
    * The 1Password Connect API repository
    *
-   * @default "1password/connect-api"
+   * @default "docker.io/1password/connect-api"
    */
   imageRepository?: string;
   /**
@@ -302,7 +302,7 @@ export type ConnectHelmValuesConnectSync = {
   /**
    * The 1Password Connect Sync repository
    *
-   * @default "1password/connect-sync"
+   * @default "docker.io/1password/connect-sync"
    */
   imageRepository?: string;
   /**
@@ -699,7 +699,7 @@ export type ConnectHelmValuesOperator = {
   /**
    * The 1Password Operator repository
    *
-   * @default "1password/onepassword-operator"
+   * @default "docker.io/1password/onepassword-operator"
    */
   imageRepository?: string;
   /**
@@ -1212,7 +1212,7 @@ export type ConnectHelmValuesAcceptanceTests = {
    */
   fixtures?: ConnectHelmValuesAcceptanceTestsFixtures;
   /**
-   * @default {"enabled":true,"image":{"repository":"curlimages/curl","tag":"latest"}}
+   * @default {"enabled":true,"image":{"repository":"docker.io/curlimages/curl","tag":"latest"}}
    */
   healthCheck?: ConnectHelmValuesAcceptanceTestsHealthCheck;
   /**
@@ -1239,7 +1239,7 @@ export type ConnectHelmValuesAcceptanceTestsHealthCheck = {
    */
   enabled?: boolean;
   /**
-   * @default {"repository":"curlimages/curl","tag":"latest"}
+   * @default {"repository":"docker.io/curlimages/curl","tag":"latest"}
    */
   image?: ConnectHelmValuesAcceptanceTestsHealthCheckImage;
 };
@@ -1248,7 +1248,7 @@ export type ConnectHelmValuesAcceptanceTestsHealthCheckImage = {
   /**
    * The image repository for the health check test container
    *
-   * @default "curlimages/curl"
+   * @default "docker.io/curlimages/curl"
    */
   repository?: string;
   /**

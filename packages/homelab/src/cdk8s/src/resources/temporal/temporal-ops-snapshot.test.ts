@@ -87,7 +87,7 @@ describe("Temporal ops snapshot collector", () => {
     }
   });
 
-  test("lets the infra worker reach Alertmanager, Loki, and Tempo", () => {
+  test("lets the infra worker reach Grafana, Alertmanager, Loki, and Tempo", () => {
     const policy = findTemporalResource(
       resources(),
       "NetworkPolicy",
@@ -106,7 +106,9 @@ describe("Temporal ops snapshot collector", () => {
                 }),
               )
               .optional(),
-            ports: z.array(z.object({ port: z.number() })),
+            ports: z.array(
+              z.object({ port: z.union([z.number(), z.string()]) }),
+            ),
           }),
         ),
       })
@@ -122,6 +124,7 @@ describe("Temporal ops snapshot collector", () => {
     expect(byPort.get(9093)).toBe("prometheus");
     expect(byPort.get(3100)).toBe("loki");
     expect(byPort.get(3200)).toBe("tempo");
+    expect(byPort.get("grafana")).toBe("prometheus");
     // Kubernetes API and the dashboard ingest stay reachable.
     expect(byPort.has(6443)).toBe(true);
     expect(byPort.has(7341)).toBe(true);

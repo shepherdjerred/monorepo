@@ -58,7 +58,7 @@ function stackCommands(
 ): string[] {
   return [
     ...admissionGate(action === "prepare" || action === "apply-saved"),
-    ". ci/scripts/toolchain.sh",
+    "MISE_TOOLCHAIN_SCOPE=tofu . ci/scripts/toolchain.sh",
     ...(stack === "github" && action === "apply"
       ? [
           'ruleset_readiness="$(bun --no-install packages/homelab/scripts/tofu/github-ruleset-ready.ts)"',

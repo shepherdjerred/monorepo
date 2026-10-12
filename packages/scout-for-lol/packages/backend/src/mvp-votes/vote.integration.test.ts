@@ -3,7 +3,7 @@ import {
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
-  MatchIdSchema,
+  RiotMatchIdSchema,
   RawMatchSchema,
 } from "@scout-for-lol/data";
 import { createTestDatabase } from "#src/testing/test-database.ts";
@@ -29,7 +29,7 @@ import {
 const { prisma: db } = createTestDatabase("mvp-votes");
 
 const SERVER_ID = DiscordGuildIdSchema.parse("1337623164146155593");
-const MATCH_ID = MatchIdSchema.parse("NA1_5000000099");
+const MATCH_ID = RiotMatchIdSchema.parse("NA1_5000000099");
 const VOTER = bucksTestDiscordId(1);
 const OTHER = bucksTestDiscordId(2);
 const RIFT_FIXTURE = new URL("../../../../testdata/rift.json", import.meta.url);
@@ -168,7 +168,7 @@ describe("Match MVP votes", () => {
 });
 
 describe("Match MVP report references", () => {
-  test("persists report message refs on the contest, not the ActiveGame TTL", async () => {
+  test("persists report message refs on the contest", async () => {
     const frozen = roster();
     await db.matchMvpContest.create({
       data: { matchId: MATCH_ID, roster: frozen },
@@ -258,7 +258,7 @@ describe("Match MVP report references", () => {
           matchId: MATCH_ID,
         }),
         guildId: SERVER_ID,
-        channelId: "1337623164146155594",
+        channelId: DiscordChannelIdSchema.parse("1337623164146155594"),
         message: { id: "100000000000000001" },
         user: { id: VOTER },
         deferReply: () => Promise.resolve(undefined),
@@ -296,7 +296,7 @@ describe("Match MVP voter eligibility and contest backfill", () => {
 
   test("fills query columns on a contest that predated those fields", async () => {
     const match = RawMatchSchema.parse(await Bun.file(RIFT_FIXTURE).json());
-    const matchId = MatchIdSchema.parse(match.metadata.matchId);
+    const matchId = match.metadata.matchId;
     await db.matchMvpContest.create({
       data: { matchId, roster: freezeMatchMvpRoster(match) },
     });

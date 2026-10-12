@@ -9,10 +9,6 @@ packages/sjer.red/src/content/blog/2024/pokemon/demo2.mp4
 # as a large-file exception for this cleanup.
 packages/sjer.red/src/content/blog/2023/xstate/simulation.mp4
 
-# Discord Plays Pokemon runtime WASM — vendored emulator artifact refreshed by
-# scripts/fetch-wasm.ts and verified by its checked-in SHA sidecar.
-packages/discord-plays-pokemon/packages/backend/assets/pokeemerald.wasm
-
 # Webring RSS test fixture — large feed used to exercise the parser.
 packages/webring/src/testdata/rss-3.xml
 
@@ -27,3 +23,16 @@ packages/scout-for-lol/packages/design-system/assets/fonts/NotoSansCJK/NotoSansC
 packages/scout-for-lol/packages/design-system/assets/fonts/NotoSansCJK/NotoSansCJKjp-Regular.otf
 packages/scout-for-lol/packages/design-system/assets/fonts/NotoSansCJK/NotoSansCJKkr-Regular.otf
 packages/scout-for-lol/packages/design-system/assets/fonts/NotoSansCJK/NotoSansCJKtc-Regular.otf
+
+# Deterministically baked RWF navigation graphs for large imported maps.
+packages/the-storm/server/owned/plugins/TheStorm/rwf/maps/apex-expanse/nav.rwfnav
+packages/the-storm/server/owned/plugins/TheStorm/rwf/maps/cloned-beanstalks/nav.rwfnav
+packages/the-storm/server/owned/plugins/TheStorm/rwf/maps/fancy-castles/nav.rwfnav
+packages/the-storm/server/owned/plugins/TheStorm/rwf/maps/floating-isles/nav.rwfnav
+packages/the-storm/server/owned/plugins/TheStorm/rwf/maps/hemispheres/nav.rwfnav
+packages/the-storm/server/owned/plugins/TheStorm/rwf/maps/modified-tropicals/nav.rwfnav
+packages/the-storm/server/owned/plugins/TheStorm/rwf/maps/rival-castles/nav.rwfnav
+packages/the-storm/server/owned/plugins/TheStorm/rwf/maps/rotated-hemispheres/nav.rwfnav
+packages/the-storm/server/owned/plugins/TheStorm/rwf/maps/saigon/nav.rwfnav
+packages/the-storm/server/owned/plugins/TheStorm/rwf/maps/tropical-resort/nav.rwfnav
+packages/the-storm/server/owned/plugins/TheStorm/rwf/maps/warlords-castles/nav.rwfnav

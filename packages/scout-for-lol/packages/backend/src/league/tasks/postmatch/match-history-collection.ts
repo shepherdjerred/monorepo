@@ -9,12 +9,23 @@ import {
 } from "#src/database/account-cursors.ts";
 import { createLogger } from "#src/logger.ts";
 import { recoverMissedMatches } from "#src/league/tasks/postmatch/gap-recovery.ts";
-import type { PlayerWithMatchIds } from "#src/league/tasks/postmatch/match-processing.ts";
-import type { MatchPollAccount } from "#src/league/tasks/postmatch/match-discovery-selection.ts";
-import { matchHistoryReadCount } from "#src/league/tasks/postmatch/match-discovery-selection.ts";
+import type {
+  RiotMatchId,
+  PlayerConfigEntry,
+} from "@scout-for-lol/data/index.ts";
+import {
+  type MatchPollAccount,
+  matchHistoryReadCount,
+} from "#src/league/tasks/postmatch/match-discovery-selection.ts";
 import { calculatePollingInterval } from "#src/utils/polling-intervals.ts";
 
 const logger = createLogger("postmatch-match-history-collection");
+
+export type PlayerWithMatchIds = {
+  player: PlayerConfigEntry;
+  matchIds: RiotMatchId[];
+  backfillMatchIds: RiotMatchId[];
+};
 
 async function collectNewMatchesForPlayer(
   account: MatchPollAccount,

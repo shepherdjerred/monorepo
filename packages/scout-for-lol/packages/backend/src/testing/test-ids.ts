@@ -53,6 +53,16 @@ export function testGuildId(identifier = "0"): DiscordGuildId {
 }
 
 /**
+ * A distinct Discord account id per small integer, for fixtures that number
+ * their participants. Unlike {@link testAccountId}, 1 and 10 never collide.
+ */
+export function testIndexedAccountId(index: number): DiscordAccountId {
+  return DiscordAccountIdSchema.parse(
+    (100_000_000_000_000_000n + BigInt(index)).toString(),
+  );
+}
+
+/**
  * Creates a valid Discord Account ID (user ID)
  * Discord snowflake IDs are 17-18 numeric characters
  *

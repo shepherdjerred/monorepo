@@ -20,7 +20,6 @@ import {
   type CustomHistory,
 } from "@scout-for-lol/data";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
-import { TournamentLobbyStateSchema } from "#src/league/tournament/lifecycle.ts";
 
 async function loadNight(client: ExtendedPrismaClient, nightId: string) {
   return client.customNight.findUnique({
@@ -32,7 +31,6 @@ async function loadNight(client: ExtendedPrismaClient, nightId: string) {
         orderBy: { sequence: "asc" },
         include: {
           participants: { orderBy: { rosterOrder: "asc" } },
-          tournamentLobby: true,
         },
       },
     },
@@ -89,7 +87,7 @@ function participantSnapshot(
   };
 }
 
-function gameSnapshot(game: GameRow, revealCode: boolean): CustomGameSnapshot {
+function gameSnapshot(game: GameRow): CustomGameSnapshot {
   return CustomGameSnapshotSchema.parse({
     id: game.id,
     sequence: game.sequence,
@@ -125,13 +123,6 @@ function gameSnapshot(game: GameRow, revealCode: boolean): CustomGameSnapshot {
       game.activeCaptain === null
         ? null
         : CustomTeamSchema.parse(game.activeCaptain),
-    tournamentLobby:
-      game.tournamentLobby === null
-        ? null
-        : {
-            state: TournamentLobbyStateSchema.parse(game.tournamentLobby.state),
-            code: revealCode ? game.tournamentLobby.code : null,
-          },
     winner: game.winner === null ? null : CustomWinnerSchema.parse(game.winner),
     voiceState: CustomVoiceStateSchema.parse(game.voiceState),
     voiceReady: game.voiceReady,
@@ -190,10 +181,6 @@ export async function buildCustomNightSnapshot(
   const participants = night.participants.map((participant) =>
     participantSnapshot(participant, accountMap(accounts), now),
   );
-  const canRevealCode =
-    viewerAdministrator ||
-    viewerDiscordId === night.hostDiscordId ||
-    night.cohosts.some((cohost) => cohost.discordId === viewerDiscordId);
   const viewerRole = viewerAdministrator
     ? "ADMIN"
     : viewerDiscordId === night.hostDiscordId
@@ -217,10 +204,7 @@ export async function buildCustomNightSnapshot(
     revision: night.revision,
     viewerRole: CustomRoleSchema.parse(viewerRole),
     participants,
-    currentGame:
-      currentGame === undefined
-        ? null
-        : gameSnapshot(currentGame, canRevealCode),
+    currentGame: currentGame === undefined ? null : gameSnapshot(currentGame),
     recruitmentCounts: recruitmentCounts(participants),
     recruitmentMessageId: night.recruitmentMessageId,
     teamAVoiceChannelId: night.teamAVoiceChannelId,
@@ -246,16 +230,13 @@ export async function buildCustomNightHistory(
     now,
   );
   if (snapshot === undefined) return undefined;
-  const revealCode =
-    viewerDiscordId === night.hostDiscordId ||
-    night.cohosts.some((cohost) => cohost.discordId === viewerDiscordId);
   const audit = await client.customAuditEvent.findMany({
     where: { nightId },
     orderBy: [{ revision: "asc" }, { createdAt: "asc" }],
   });
   return CustomHistorySchema.parse({
     night: snapshot,
-    games: night.games.map((game) => gameSnapshot(game, revealCode)),
+    games: night.games.map((game) => gameSnapshot(game)),
     audit: audit.map((event) => ({
       id: event.id,
       nightId: event.nightId,

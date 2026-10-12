@@ -1,3 +1,5 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import {
   ChallengeContractV1Schema,
@@ -105,11 +107,11 @@ async function createOwnedAccounts() {
   return { first, second };
 }
 
-function matchForParticipant(puuid: string): RawMatch {
+function matchForParticipant(puuid: LeaguePuuid): RawMatch {
   return {
     metadata: {
       dataVersion: "2",
-      matchId: "NA1_9876543210",
+      matchId: RiotMatchIdSchema.parse("NA1_9876543210"),
       participants: [puuid],
     },
     info: {
@@ -482,7 +484,13 @@ describe("challenge timeline durability", () => {
     });
     const slugs = templates
       .map((t) => t.slug)
-      .toSorted((left, right) => (left ?? "").localeCompare(right ?? ""));
+      .toSorted((left, right) => {
+        let leftSlug = left;
+        leftSlug ??= "";
+        let rightSlug = right;
+        rightSlug ??= "";
+        return leftSlug.localeCompare(rightSlug);
+      });
     expect(slugs).toEqual([
       "scout-win-every-champion-arena-first",
       "scout-win-every-champion-arena-win",

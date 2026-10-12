@@ -1,4 +1,10 @@
-import { EmbedBuilder, Colors, SlashCommandBuilder } from "discord.js";
+import {
+  type Interaction,
+  EmbedBuilder,
+  Colors,
+  SlashCommandBuilder,
+} from "discord.js";
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import configuration from "#src/configuration.ts";
 import { createLogger } from "#src/logger.ts";
@@ -6,9 +12,11 @@ import { getDocsUrl, getDashboardUrl } from "#src/discord/commands/links.ts";
 import type { CommandReply } from "#src/discord/commands/define-command.ts";
 import { isExploreGuildAllowed } from "#src/explore/access.ts";
 import { isPolicyEnabled, type FlagName } from "#src/configuration/flags.ts";
+import { getFeedbackUrl } from "#src/discord/utils/feedback.ts";
+import { supportContactRow } from "#src/support/discord.ts";
 
 const logger = createLogger("commands-help");
-type HelpInteraction = { guildId: string | null; reply: CommandReply };
+type HelpInteraction = { guildId: Interaction["guildId"]; reply: CommandReply };
 
 export const helpCommand = new SlashCommandBuilder()
   .setName("help")
@@ -29,8 +37,16 @@ export async function executeHelp(interaction: HelpInteraction): Promise<void> {
         value: `**Dashboard:** ${dashboardUrl}\n**Documentation:** ${docsUrl}`,
       },
       {
+        name: "Help, bugs, and feedback",
+        value: `DM Scout directly or reply to a DM from Scout to reach the Scout team privately. Human replies are always saved in your web conversation; Scout also attempts a Discord notification. You don't need to be friends with the developer.\n**Conversation and feedback:** ${getFeedbackUrl()}\n**Community support server:** https://discord.gg/qmRewyHXFE`,
+      },
+      {
         name: "Lightweight commands",
-        value: await commandList(interaction.guildId),
+        value: await commandList(
+          interaction.guildId === null
+            ? null
+            : DiscordGuildIdSchema.parse(interaction.guildId),
+        ),
       },
       {
         name: "Use the dashboard for",
@@ -40,7 +56,13 @@ export async function executeHelp(interaction: HelpInteraction): Promise<void> {
     )
     .setFooter({ text: "Scout for LoL • Web-first setup" });
 
-  await interaction.reply({ embeds: [embed], ephemeral: true });
+  await interaction.reply({
+    embeds: [embed],
+    ephemeral: true,
+    ...((await isPolicyEnabled("scout_support_conversations_enabled"))
+      ? { components: [supportContactRow()] }
+      : {}),
+  });
   logger.info("✅ Help command completed successfully");
 }
 
@@ -74,7 +96,9 @@ const flagGatedCommands: {
   },
 ];
 
-export async function commandList(guildId: string | null): Promise<string> {
+export async function commandList(
+  guildId: DiscordGuildId | null,
+): Promise<string> {
   const commands = [
     "`/setup` — See the recommended web setup flow",
     "`/track` — Track one player in this channel",

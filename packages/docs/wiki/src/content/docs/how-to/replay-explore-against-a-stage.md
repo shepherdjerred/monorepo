@@ -41,6 +41,10 @@ This writes the dataset pin, including each target guild's real capabilities.
 Beta resolves the one allowlisted guild; prod takes the guilds with the most
 Explore usage that are not yours.
 
+Use a fresh version 3 pin and establish a new baseline after pulling the
+column-free lake. Version 1 or 2 pins and bundles cannot be resumed or used as a
+baseline; do not edit their version fields to bypass the contract checks.
+
 Check the summary it prints. If a guild shows fewer features than you expect,
 the snapshot or the flag registry disagrees with your assumption — fix that
 before spending on a sweep.
@@ -52,7 +56,8 @@ The harness needs secrets for the model, and must be aimed at the pin:
 ```bash
 LAKE="$HOME/.local/share/scout-for-lol/stage-dataset/beta/report-lake"
 cd packages/scout-for-lol
-op run --env-file=./dev-web.env.tpl -- env \
+../../scripts/onepassword/with-service-account.sh \
+  op run --env-file=./dev-web.env.tpl -- env -u OP_SERVICE_ACCOUNT_TOKEN \
   DATABASE_URL="postgres://scout@127.0.0.1:5471/scout_beta_snapshot" \
   REPORT_LAKE_DIR="$LAKE" \
   FEATURE_FLAGS_MODE=disabled \

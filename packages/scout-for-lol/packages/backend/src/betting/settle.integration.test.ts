@@ -26,7 +26,6 @@ import {
   SettlementCheckpointError,
 } from "#src/betting/notify/announcement-sink.ts";
 import { recordSettlementAnnouncementItem } from "#src/database/durable/settlement-announcement-repository.ts";
-import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { settleAndAwardBucks } from "#src/betting/markets/postmatch-hook.ts";
 import { closeBettingWindowsForMatch } from "#src/betting/settlement/sweep.ts";
 import { voidStaleBettingPools } from "#src/betting/settlement/void-stale.ts";
@@ -1272,7 +1271,7 @@ describe("the announcement instruction a settlement records", () => {
         ...announcingSettlementSink,
         recordAnnouncementItem: async (handle, item) => {
           await recordSettlementAnnouncementItem(handle, {
-            matchId: RiotMatchIdSchema.parse(MATCH_ID),
+            matchId: MATCH_ID,
             item,
           });
           throw new Error("the settlement failed after recording");
@@ -1388,7 +1387,7 @@ describe("the announcement instruction a settlement records", () => {
       ...announcingSettlementSink,
       recordAnnouncementItem: async (handle, item) => {
         await recordSettlementAnnouncementItem(handle, {
-          matchId: RiotMatchIdSchema.parse(MATCH_ID),
+          matchId: MATCH_ID,
           item,
         });
       },

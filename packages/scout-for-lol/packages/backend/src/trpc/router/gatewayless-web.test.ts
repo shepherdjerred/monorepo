@@ -9,6 +9,10 @@
  * against a real table.
  */
 
+import type {
+  DiscordAccountId,
+  DiscordGuildId,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 import { ChannelType, PermissionFlagsBits } from "discord.js";
 import {
@@ -20,10 +24,12 @@ import {
 } from "@scout-for-lol/data";
 import type { User } from "#generated/prisma/client/index.js";
 import type { AppRouter } from "#src/trpc/router/index.ts";
-import type { PartialGuild } from "#src/lib/discord-rest.ts";
+import {
+  type PartialGuild,
+  DiscordUpstreamError,
+} from "#src/lib/discord-rest.ts";
 import type { BotRestReader } from "#src/lib/discord/bot-rest.ts";
 import type { DiscordGuildChannel } from "#src/lib/discord/bot-rest-schemas.ts";
-import { DiscordUpstreamError } from "#src/lib/discord-rest.ts";
 import * as databaseModule from "#src/database/index.ts";
 import * as discordUpstreamModule from "#src/trpc/discord-upstream.ts";
 import configuration from "#src/configuration.ts";
@@ -218,7 +224,7 @@ async function botRestFailureCount(): Promise<number> {
 
 type TrpcCaller = ReturnType<AppRouter["createCaller"]>;
 
-function user(discordId: string): User {
+function user(discordId: DiscordAccountId): User {
   return {
     discordId: DiscordAccountIdSchema.parse(discordId),
     discordUsername: "gatewayless",
@@ -233,7 +239,7 @@ function user(discordId: string): User {
   };
 }
 
-function caller(discordId: string = ACTOR): TrpcCaller {
+function caller(discordId: DiscordAccountId = ACTOR): TrpcCaller {
   return appRouter.createCaller({
     user: user(discordId),
     activitySession: null,
@@ -250,7 +256,7 @@ function caller(discordId: string = ACTOR): TrpcCaller {
   });
 }
 
-function asMemberOf(guildIds: readonly string[], asAdmin = true): void {
+function asMemberOf(guildIds: readonly DiscordGuildId[], asAdmin = true): void {
   membership = guildIds.map((id) => ({
     id,
     name: "test-guild",
@@ -292,7 +298,7 @@ async function seedTrackedPlayer(): Promise<void> {
 }
 
 async function seedGrants(
-  discordUserId: string,
+  discordUserId: DiscordAccountId,
   permissions: readonly Permission[],
 ): Promise<void> {
   await prisma.serverPermission.createMany({
@@ -426,13 +432,13 @@ describe("channel picker without a gateway", () => {
     asMemberOf([INSTALLED]);
     state.channels = [
       {
-        id: "1",
+        id: "100000000000000001",
         name: "general",
         type: ChannelType.GuildText,
         permission_overwrites: [],
       },
       {
-        id: "2",
+        id: "100000000000000002",
         name: "stage",
         type: ChannelType.GuildVoice,
         permission_overwrites: [],
@@ -441,7 +447,9 @@ describe("channel picker without a gateway", () => {
 
     await expect(
       caller().guild.listChannels({ guildId: INSTALLED }),
-    ).resolves.toEqual([{ id: "1", name: "general", parentId: null }]);
+    ).resolves.toEqual([
+      { id: "100000000000000001", name: "general", parentId: null },
+    ]);
   });
 
   test("an unreachable Discord is SERVICE_UNAVAILABLE", async () => {
@@ -456,11 +464,16 @@ describe("channel picker without a gateway", () => {
   test("does not offer a channel whose overwrite denies Send Messages", async () => {
     await seedInstall(INSTALLED);
     asMemberOf([INSTALLED]);
-    state.channels = [postableChannel("1", "general"), mutedChannel()];
+    state.channels = [
+      postableChannel("100000000000000001", "general"),
+      mutedChannel(),
+    ];
 
     await expect(
       caller().guild.listChannels({ guildId: INSTALLED }),
-    ).resolves.toEqual([{ id: "1", name: "general", parentId: null }]);
+    ).resolves.toEqual([
+      { id: "100000000000000001", name: "general", parentId: null },
+    ]);
   });
 });
 

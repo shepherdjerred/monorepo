@@ -132,14 +132,10 @@ export function mergeJUnitReports(
       },
     });
   }
-  return `${new XMLBuilder({
+  return `<?xml version="1.0" encoding="UTF-8"?>\n${new XMLBuilder({
     ignoreAttributes: false,
     format: true,
   }).build({
-    "?xml": {
-      "@_version": "1.0",
-      "@_encoding": "utf8",
-    },
     testsuites: {
       "@_tests": totals.tests.toString(),
       "@_failures": totals.failures.toString(),

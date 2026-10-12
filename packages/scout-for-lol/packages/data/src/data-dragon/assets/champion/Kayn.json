@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.19.1",
+  "version": "16.20.1",
   "data": {
     "Kayn": {
       "id": "Kayn",
@@ -226,6 +226,40 @@
           "name": "Battle Academia Kayn (Emerald)",
           "chromas": false,
           "parentSkin": 26
+        },
+        {
+          "id": "141032",
+          "num": 32,
+          "name": "HEARTSTEEL Live My Life Kayn",
+          "chromas": false
+        },
+        {
+          "id": "141033",
+          "num": 33,
+          "name": "HEARTSTEEL Live My Life Kayn (Ruby)",
+          "chromas": true,
+          "parentSkin": 32
+        },
+        {
+          "id": "141034",
+          "num": 34,
+          "name": "HEARTSTEEL Live My Life Kayn (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "141035",
+          "num": 35,
+          "name": "HEARTSTEEL Live My Life Kayn (Catseye)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "141036",
+          "num": 36,
+          "name": "HEARTSTEEL Live My Life Kayn (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 32
         }
       ],
       "lore": "A peerless practitioner of lethal shadow magic, Shieda Kayn battles to achieve his true destiny—to one day lead the Order of Shadow into a new era of Ionian supremacy. He wields the sentient darkin weapon Rhaast, undeterred by its creeping corruption of his body and mind. There are only two possible outcomes: either Kayn bends the weapon to his will... or the malevolent blade consumes him completely, paving the way for the destruction of all Runeterra.",

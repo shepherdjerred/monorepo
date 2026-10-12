@@ -75,7 +75,6 @@ async function runRebuild(): Promise<{
     bucket: "test-bucket",
     writer,
     foldedIds,
-    puuidRemap: new Map(),
   });
   const rows = writer.rows;
   await writer.close();

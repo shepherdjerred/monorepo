@@ -59,7 +59,11 @@ final class RtpSearch {
                   if (failure != null) {
                     pass.done().accept(new Outcome(Optional.empty(), failure));
                   } else {
-                    choose(pass, samples, tried, random);
+                    try {
+                      choose(pass, samples, tried, random);
+                    } catch (RuntimeException error) {
+                      pass.done().accept(new Outcome(Optional.empty(), error));
+                    }
                   }
                 },
                 scheduler.mainThread());

@@ -1,5 +1,8 @@
 import { Database } from "bun:sqlite";
 import { z } from "zod";
+import { browseRuns, migrateHistoryProviders } from "./runs.ts";
+import { HistoryProviderSchema } from "./provider.ts";
+import type { HistoryScope, RecordMedia } from "./types.ts";
 import type { MediaIntent } from "@shepherdjerred/streambot/discovery/media-intent.ts";
 import type { MediaCandidate } from "@shepherdjerred/streambot/discovery/candidate.ts";
 import {
@@ -7,7 +10,6 @@ import {
   sourceIdentity,
   withMode,
   withSpoken,
-  type Source,
 } from "@shepherdjerred/streambot/sources/source.ts";
 
 const RETENTION_MS = 365 * 24 * 60 * 60 * 1000;
@@ -15,7 +17,7 @@ const RETENTION_MS = 365 * 24 * 60 * 60 * 1000;
 const HistoryRowSchema = z.object({
   id: z.string().min(1),
   title: z.string().min(1),
-  provider: z.enum(["history", "local", "youtube"]),
+  provider: z.union([z.literal("history"), HistoryProviderSchema]),
   source_json: z.string().min(1),
   canonical_url: z.string().nullable(),
   channel_name: z.string().nullable(),
@@ -27,22 +29,6 @@ const HistoryRowSchema = z.object({
 export type QueueRequestStatus =
   "queued" | "started" | "completed" | "failed" | "removed" | "skipped";
 
-export type RecordMedia = {
-  readonly title: string;
-  readonly provider: "local" | "youtube";
-  readonly source: Source;
-  readonly canonicalUrl?: string | undefined;
-  readonly channel?: string | undefined;
-  readonly thumbnailUrl?: string | undefined;
-  readonly durationSeconds?: number | undefined;
-};
-
-export type HistoryScope = {
-  readonly guildId: string;
-  readonly channelId: string;
-  readonly userId: string;
-};
-
 /** Durable media request/history/favorites store. Raw audio and transcripts never enter this DB. */
 export class MediaHistoryStore {
   private readonly database: Database;
@@ -52,10 +38,24 @@ export class MediaHistoryStore {
     this.database.run("PRAGMA journal_mode = WAL");
     this.database.run("PRAGMA foreign_keys = ON");
     this.migrate();
+    migrateHistoryProviders(this.database);
   }
 
   close(): void {
     this.database.close();
+  }
+
+  browseRuns(input: Parameters<typeof browseRuns>[1]) {
+    return browseRuns(this.database, input);
+  }
+
+  queuedAt(requestId: string): number | undefined {
+    const row = this.database
+      .query("SELECT created_at FROM queue_requests WHERE id = ?1")
+      .get(requestId);
+    return row === null
+      ? undefined
+      : z.object({ created_at: z.number() }).parse(row).created_at;
   }
 
   prune(nowMs: number = Date.now()): void {
@@ -105,6 +105,8 @@ export class MediaHistoryStore {
     this.database
       .query("UPDATE queue_requests SET status = ?1 WHERE id = ?2")
       .run(status, requestId);
+    if (status !== "queued" && status !== "started")
+      this.finishPlaybackRuns(requestId, status);
   }
 
   finishStartedRequest(
@@ -116,42 +118,24 @@ export class MediaHistoryStore {
         "UPDATE queue_requests SET status = ?1 WHERE id = ?2 AND status IN ('queued', 'started')",
       )
       .run(status, requestId);
+    this.finishPlaybackRuns(requestId, status);
   }
 
-  recordPlaybackStart(input: {
-    readonly requestId?: string;
-    readonly scope: HistoryScope;
-    readonly media: RecordMedia;
-    readonly positionSeconds?: number;
-    readonly nowMs?: number;
-  }): string {
-    const mediaItemId = this.upsertMedia(input.media);
-    const runId = crypto.randomUUID();
-    const nowMs = input.nowMs ?? Date.now();
+  private finishPlaybackRuns(
+    requestId: string,
+    outcome: QueueRequestStatus,
+  ): void {
     this.database
       .query(
-        `INSERT INTO playback_runs
-          (id, queue_request_id, media_item_id, guild_id, channel_id, user_id, started_at, start_position_seconds)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)`,
+        "UPDATE playback_runs SET ended_at = ?1, outcome = ?2 WHERE queue_request_id = ?3 AND ended_at IS NULL",
       )
-      .run(
-        runId,
-        input.requestId ?? null,
-        mediaItemId,
-        input.scope.guildId,
-        input.scope.channelId,
-        input.scope.userId,
-        nowMs,
-        input.positionSeconds ?? 0,
-      );
-    if (input.requestId !== undefined) {
-      this.database
-        .query(
-          "UPDATE queue_requests SET status = 'started' WHERE id = ?1 AND status = 'queued'",
-        )
-        .run(input.requestId);
-    }
-    return runId;
+      .run(Date.now(), outcome, requestId);
+  }
+
+  recordPlaybackStart(input: PlaybackStart): string {
+    return recordPlaybackRun(this.database, input, () =>
+      this.upsertMedia(input.media),
+    );
   }
 
   search(scope: HistoryScope, query: string, limit = 10): MediaCandidate[] {
@@ -451,3 +435,4 @@ export class MediaHistoryStore {
     `);
   }
 }
+import { recordPlaybackRun, type PlaybackStart } from "./record-run.ts";

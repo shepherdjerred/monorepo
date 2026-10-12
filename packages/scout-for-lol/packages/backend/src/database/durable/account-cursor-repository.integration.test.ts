@@ -1,6 +1,7 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { z } from "zod";
-import { MatchIdSchema } from "@scout-for-lol/data";
+import { RiotMatchIdSchema } from "@scout-for-lol/data";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import {
   testAccountId,
@@ -20,8 +21,8 @@ const PUUID = testPuuid("cursor-race");
 const GUILD = testGuildId("7301");
 const OWNER = testAccountId("7301");
 
-const OLDER_MATCH = MatchIdSchema.parse("NA1_8001");
-const NEWER_MATCH = MatchIdSchema.parse("NA1_8002");
+const OLDER_MATCH = RiotMatchIdSchema.parse("NA1_8001");
+const NEWER_MATCH = RiotMatchIdSchema.parse("NA1_8002");
 const OLDER_AT = new Date("2026-09-12T09:00:00.000Z");
 const NEWER_AT = new Date("2026-09-12T11:00:00.000Z");
 
@@ -203,10 +204,13 @@ describe("a polling-activity refresh of an account with a cursor", () => {
 describe("the account cursor time repair migration", () => {
   const MIGRATION = `${import.meta.dir}/../../../prisma/migrations/20260924000000_account_cursor_time_repair/migration.sql`;
   const LATEST_AT = new Date("2026-09-12T13:00:00.000Z");
-  const UNPROCESSED_MATCH = MatchIdSchema.parse("NA1_8003");
+  const UNPROCESSED_MATCH = RiotMatchIdSchema.parse("NA1_8003");
   const MATCHES = [OLDER_MATCH, NEWER_MATCH, UNPROCESSED_MATCH];
 
-  async function observe(matchId: string, gameCreatedAt: Date): Promise<void> {
+  async function observe(
+    matchId: RiotMatchId,
+    gameCreatedAt: Date,
+  ): Promise<void> {
     await prisma.matchObservation.create({
       data: {
         riotMatchId: matchId,

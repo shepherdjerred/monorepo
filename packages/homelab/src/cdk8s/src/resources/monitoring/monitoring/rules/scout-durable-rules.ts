@@ -36,10 +36,9 @@ import { escapePrometheusTemplate } from "./shared.ts";
  * ## Why none of these name a role
  *
  * Every gauge here is produced by whichever role owns the database sweeps —
- * `combined` in prod, `application` in beta — and the rules deliberately do not
+ * `application` in both stages — and the rules deliberately do not
  * say which. They ask whether the answer exists and what it says, so they need
- * no edit when a stage's sweep owner changes and cannot be made wrong by the
- * deferred `activity-worker` role never being deployed.
+ * no edit when a stage's sweep owner changes.
  *
  * ## If you come here to add a stalled-notification alert
  *
@@ -174,7 +173,7 @@ export function getScoutDurableRuleGroup(): PrometheusRuleSpecGroups {
         annotations: {
           summary: "Scout finished live matches without minting their reports",
           message: escapePrometheusTemplate(
-            "Scout {{ $labels.environment }} has {{ $value }} live V2 match(es) observed in the last 6 hours whose processing finished at least 15 minutes ago with a subscribed channel owed a report, but no postmatch intent was minted and no report was rendered. Those reports will never be sent. Check `mintPostmatchNotificationIntentsV2` in recent scoutMatchProcessingV2Workflow histories. After fixing the cause, render the missed reports with scoutSilentPostmatchBackfillV2Workflow; the backfill's receipts clear this alert.",
+            "Scout {{ $labels.environment }} has {{ $value }} live V2 match(es) observed in the last 6 hours whose processing finished at least 15 minutes ago with a subscribed channel owed a report, but no postmatch intent was minted and no report was rendered. Those reports will never be sent. Check `mintPostmatchNotificationIntents` (`mintPostmatchNotificationIntentsV2` in histories recorded before the rename) in recent scoutMatchProcessingWorkflow (or scoutMatchProcessingV2Workflow) histories. After fixing the cause, render the missed reports with scoutSilentPostmatchBackfillWorkflow; the backfill's receipts clear this alert.",
           ),
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -224,6 +223,28 @@ export function getScoutDurableRuleGroup(): PrometheusRuleSpecGroups {
         ),
         for: "30m",
         labels: { severity: "warning" },
+      },
+      {
+        // Discovery that has stopped outright, which the observation lag above
+        // cannot see: it reads 0 over an empty window. Measured from the last
+        // poll that closed with complete evidence, so it grows whether the run
+        // is wedged, its Schedule is not starting runs, or every run fails.
+        // Healthy is about a minute; a large catch-up page takes a few. On
+        // 2026-10-10 a wedged dispatcher held this at 24 hours while every
+        // other rule here stayed green. A planned discovery pause also fires
+        // it; silence it for the maintenance window rather than raising it.
+        alert: "ScoutDurablePostmatchDiscoveryStalled",
+        annotations: {
+          summary: "Scout post-match discovery has stopped completing polls",
+          message: escapePrometheusTemplate(
+            "Scout {{ $labels.environment }} has not completed a post-match discovery poll for over 30 minutes, so finished matches are not being found or reported. Check the postmatch-discovery Schedule's running Workflow, what it is waiting on (the shared match dispatcher in particular), and BotState's poll status.",
+          ),
+        },
+        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+          `(max by (environment) (scout_durable_postmatch_poll_age_seconds) > 1800) or ${absentInBothEnvironments("scout_durable_postmatch_poll_age_seconds")}`,
+        ),
+        for: "10m",
+        labels: { severity: "critical" },
       },
       {
         // The guard on the guards. Every other rule in this group reads a gauge
@@ -278,6 +299,7 @@ export function getScoutDurableRuleGroup(): PrometheusRuleSpecGroups {
             "scout_durable_lake_staging_lag_seconds",
             "scout_durable_observation_lag_seconds",
             "scout_durable_postmatch_mint_gaps",
+            "scout_durable_postmatch_poll_age_seconds",
           ]
             .map((metric) => `(min by (environment) (${metric}) < 0)`)
             .join(" or "),

@@ -151,7 +151,9 @@ export function createTemporalGlitterWorkers(
       name: "temporal-glitter-context-worker",
       component: "glitter-context-worker",
       envVariables: props.contextEnvVariables,
-      cpuRequest: Cpu.millis(750),
+      // 30d CPU p99 0.05 cores, peak 0.12 (5m rate); the 2-core limit covers
+      // bursts.
+      cpuRequest: Cpu.millis(250),
       cpuLimit: Cpu.units(2),
       memoryRequest: Size.mebibytes(512),
       memoryLimit: Size.gibibytes(6),

@@ -1,0 +1,6716 @@
+# Industrial survival arena; equipment and classes use survival.yml rules.
+enabled: true
+entityCap: 64
+arena:
+  id: rustworks
+  name: The Rustworks
+  world: rustworks
+  region:
+    min:
+      x: -96
+      y: 68
+      z: -100
+    max:
+      x: 95
+      y: 103
+      z: 99
+  lobby:
+    x: -78.5
+    y: 73
+    z: -79.5
+    yaw: -90
+    pitch: 0
+  spectator:
+    x: -72.5
+    y: 79
+    z: -79.5
+    yaw: -90
+    pitch: 0
+  exit:
+    x: -97.5
+    y: 73
+    z: -79.5
+    yaw: -90
+    pitch: 0
+  playerSpawns:
+    - x: -48.5
+      y: 73
+      z: -51.5
+      yaw: 0
+      pitch: 0
+    - x: -46.5
+      y: 73
+      z: -51.5
+      yaw: 0
+      pitch: 0
+    - x: -44.5
+      y: 73
+      z: -51.5
+      yaw: 0
+      pitch: 0
+    - x: -42.5
+      y: 73
+      z: -51.5
+      yaw: 0
+      pitch: 0
+  mobSpawns:
+    - x: -51.5
+      y: 73
+      z: -63.5
+    - x: -24.5
+      y: 73
+      z: -45.5
+  classSigns:
+    fighter:
+      x: -89
+      y: 73
+      z: -88
+    ranger:
+      x: -85
+      y: 73
+      z: -88
+    medic:
+      x: -81
+      y: 73
+      z: -88
+    engineer:
+      x: -77
+      y: 73
+      z: -88
+    alchemist:
+      x: -73
+      y: 73
+      z: -88
+    beastmaster:
+      x: -69
+      y: 73
+      z: -88
+  readyBlock:
+    x: -79
+    y: 73
+    z: -74
+  lootChests: []
+  joinSigns: []
+  tier: 1
+  minPlayers: 1
+  maxPlayers: 4
+zones:
+  - id: railhead
+    name: Railhead
+    areas:
+      - min:
+          x: -56
+          y: 68
+          z: -68
+        max:
+          x: -23
+          y: 103
+          z: -46
+      - min:
+          x: -22
+          y: 68
+          z: -61
+        max:
+          x: -15
+          y: 103
+          z: -49
+      - min:
+          x: -32
+          y: 68
+          z: -45
+        max:
+          x: -23
+          y: 103
+          z: -43
+    emeralds: 0
+    requires: []
+    entrance:
+      x: -49.5
+      y: 73
+      z: -62.5
+    spawns:
+      - x: -51.5
+        y: 73
+        z: -63.5
+      - x: -24.5
+        y: 73
+        z: -45.5
+    safePoints:
+      - x: -50.5
+        y: 73
+        z: -63.5
+      - x: -49.5
+        y: 73
+        z: -55.5
+    purchaseSigns: []
+    gate: []
+    stations:
+      - block:
+          x: -47
+          y: 73
+          z: -48
+        type: WORKBENCH
+      - block:
+          x: -41
+          y: 73
+          z: -48
+        type: BANK
+    resources:
+      - block:
+          x: -54
+          y: 73
+          z: -60
+        material: OAK_PLANKS
+        amount: 4
+        perRound: 2
+    defenses:
+      - id: railhead-barricade
+        block:
+          x: -36
+          y: 73
+          z: -48
+        type: BARRICADE
+      - id: railhead-spike_trap
+        block:
+          x: -46
+          y: 73
+          z: -56
+        type: SPIKE_TRAP
+  - id: canteen
+    name: "Workers\u2019 Canteen"
+    areas:
+      - min:
+          x: -14
+          y: 68
+          z: -68
+        max:
+          x: 11
+          y: 103
+          z: -43
+      - min:
+          x: 12
+          y: 68
+          z: -61
+        max:
+          x: 19
+          y: 103
+          z: -49
+      - min:
+          x: -20
+          y: 68
+          z: -42
+        max:
+          x: 3
+          y: 103
+          z: -40
+      - min:
+          x: -22
+          y: 68
+          z: -68
+        max:
+          x: -15
+          y: 103
+          z: -62
+      - min:
+          x: -22
+          y: 68
+          z: -48
+        max:
+          x: -15
+          y: 103
+          z: -43
+    emeralds: 0
+    requires: []
+    entrance:
+      x: -11.5
+      y: 74
+      z: -54.5
+    spawns:
+      - x: -13.5
+        y: 74
+        z: -63.5
+      - x: 9.5
+        y: 75
+        z: -45.5
+    safePoints:
+      - x: -12.5
+        y: 74
+        z: -63.5
+      - x: -11.5
+        y: 74
+        z: -55.5
+    purchaseSigns: []
+    gate:
+      - x: -23
+        y: 74
+        z: -66
+      - x: -23
+        y: 75
+        z: -66
+      - x: -23
+        y: 76
+        z: -66
+      - x: -23
+        y: 77
+        z: -66
+      - x: -23
+        y: 78
+        z: -66
+      - x: -23
+        y: 79
+        z: -66
+      - x: -23
+        y: 74
+        z: -65
+      - x: -23
+        y: 75
+        z: -65
+      - x: -23
+        y: 76
+        z: -65
+      - x: -23
+        y: 77
+        z: -65
+      - x: -23
+        y: 78
+        z: -65
+      - x: -23
+        y: 79
+        z: -65
+      - x: -23
+        y: 74
+        z: -64
+      - x: -23
+        y: 75
+        z: -64
+      - x: -23
+        y: 76
+        z: -64
+      - x: -23
+        y: 77
+        z: -64
+      - x: -23
+        y: 78
+        z: -64
+      - x: -23
+        y: 79
+        z: -64
+      - x: -22
+        y: 74
+        z: -66
+      - x: -22
+        y: 75
+        z: -66
+      - x: -22
+        y: 76
+        z: -66
+      - x: -22
+        y: 77
+        z: -66
+      - x: -22
+        y: 78
+        z: -66
+      - x: -22
+        y: 79
+        z: -66
+      - x: -22
+        y: 74
+        z: -65
+      - x: -22
+        y: 75
+        z: -65
+      - x: -22
+        y: 76
+        z: -65
+      - x: -22
+        y: 77
+        z: -65
+      - x: -22
+        y: 78
+        z: -65
+      - x: -22
+        y: 79
+        z: -65
+      - x: -22
+        y: 74
+        z: -64
+      - x: -22
+        y: 75
+        z: -64
+      - x: -22
+        y: 76
+        z: -64
+      - x: -22
+        y: 77
+        z: -64
+      - x: -22
+        y: 78
+        z: -64
+      - x: -22
+        y: 79
+        z: -64
+    stations:
+      - block:
+          x: -9
+          y: 74
+          z: -48
+        type: INFIRMARY
+    resources:
+      - block:
+          x: -12
+          y: 74
+          z: -60
+        material: WHEAT
+        amount: 3
+        perRound: 2
+    defenses: []
+  - id: freight
+    name: Freight Sidings
+    areas:
+      - min:
+          x: 20
+          y: 68
+          z: -68
+        max:
+          x: 47
+          y: 103
+          z: -46
+      - min:
+          x: 48
+          y: 68
+          z: -61
+        max:
+          x: 55
+          y: 103
+          z: -49
+      - min:
+          x: 12
+          y: 68
+          z: -68
+        max:
+          x: 19
+          y: 103
+          z: -62
+      - min:
+          x: 12
+          y: 68
+          z: -48
+        max:
+          x: 19
+          y: 103
+          z: -46
+      - min:
+          x: 40
+          y: 68
+          z: -45
+        max:
+          x: 47
+          y: 103
+          z: -43
+      - min:
+          x: 12
+          y: 68
+          z: -45
+        max:
+          x: 15
+          y: 103
+          z: -43
+    emeralds: 6
+    requires:
+      - canteen
+    entrance:
+      x: 22.5
+      y: 75
+      z: -54.5
+    spawns:
+      - x: 20.5
+        y: 75
+        z: -63.5
+      - x: 45.5
+        y: 76
+        z: -45.5
+    safePoints:
+      - x: 21.5
+        y: 75
+        z: -63.5
+      - x: 22.5
+        y: 75
+        z: -55.5
+    purchaseSigns:
+      - x: 8
+        y: 75
+        z: -65
+    gate:
+      - x: 11
+        y: 75
+        z: -66
+      - x: 11
+        y: 76
+        z: -66
+      - x: 11
+        y: 77
+        z: -66
+      - x: 11
+        y: 78
+        z: -66
+      - x: 11
+        y: 79
+        z: -66
+      - x: 11
+        y: 80
+        z: -66
+      - x: 11
+        y: 75
+        z: -65
+      - x: 11
+        y: 76
+        z: -65
+      - x: 11
+        y: 77
+        z: -65
+      - x: 11
+        y: 78
+        z: -65
+      - x: 11
+        y: 79
+        z: -65
+      - x: 11
+        y: 80
+        z: -65
+      - x: 11
+        y: 75
+        z: -64
+      - x: 11
+        y: 76
+        z: -64
+      - x: 11
+        y: 77
+        z: -64
+      - x: 11
+        y: 78
+        z: -64
+      - x: 11
+        y: 79
+        z: -64
+      - x: 11
+        y: 80
+        z: -64
+      - x: 12
+        y: 75
+        z: -66
+      - x: 12
+        y: 76
+        z: -66
+      - x: 12
+        y: 77
+        z: -66
+      - x: 12
+        y: 78
+        z: -66
+      - x: 12
+        y: 79
+        z: -66
+      - x: 12
+        y: 80
+        z: -66
+      - x: 12
+        y: 75
+        z: -65
+      - x: 12
+        y: 76
+        z: -65
+      - x: 12
+        y: 77
+        z: -65
+      - x: 12
+        y: 78
+        z: -65
+      - x: 12
+        y: 79
+        z: -65
+      - x: 12
+        y: 80
+        z: -65
+      - x: 12
+        y: 75
+        z: -64
+      - x: 12
+        y: 76
+        z: -64
+      - x: 12
+        y: 77
+        z: -64
+      - x: 12
+        y: 78
+        z: -64
+      - x: 12
+        y: 79
+        z: -64
+      - x: 12
+        y: 80
+        z: -64
+    stations: []
+    resources:
+      - block:
+          x: 22
+          y: 75
+          z: -60
+        material: COBBLESTONE
+        amount: 4
+        perRound: 2
+    defenses: []
+  - id: signal
+    name: Signal House
+    areas:
+      - min:
+          x: 56
+          y: 68
+          z: -68
+        max:
+          x: 87
+          y: 103
+          z: -43
+      - min:
+          x: 52
+          y: 68
+          z: -42
+        max:
+          x: 75
+          y: 103
+          z: -40
+      - min:
+          x: 48
+          y: 68
+          z: -68
+        max:
+          x: 55
+          y: 103
+          z: -62
+      - min:
+          x: 48
+          y: 68
+          z: -48
+        max:
+          x: 55
+          y: 103
+          z: -43
+    emeralds: 6
+    requires:
+      - freight
+    entrance:
+      x: 58.5
+      y: 76
+      z: -54.5
+    spawns:
+      - x: 56.5
+        y: 76
+        z: -63.5
+      - x: 83.5
+        y: 77
+        z: -45.5
+    safePoints:
+      - x: 57.5
+        y: 76
+        z: -63.5
+      - x: 58.5
+        y: 76
+        z: -55.5
+    purchaseSigns:
+      - x: 44
+        y: 76
+        z: -65
+    gate:
+      - x: 47
+        y: 76
+        z: -66
+      - x: 47
+        y: 77
+        z: -66
+      - x: 47
+        y: 78
+        z: -66
+      - x: 47
+        y: 79
+        z: -66
+      - x: 47
+        y: 80
+        z: -66
+      - x: 47
+        y: 81
+        z: -66
+      - x: 47
+        y: 76
+        z: -65
+      - x: 47
+        y: 77
+        z: -65
+      - x: 47
+        y: 78
+        z: -65
+      - x: 47
+        y: 79
+        z: -65
+      - x: 47
+        y: 80
+        z: -65
+      - x: 47
+        y: 81
+        z: -65
+      - x: 47
+        y: 76
+        z: -64
+      - x: 47
+        y: 77
+        z: -64
+      - x: 47
+        y: 78
+        z: -64
+      - x: 47
+        y: 79
+        z: -64
+      - x: 47
+        y: 80
+        z: -64
+      - x: 47
+        y: 81
+        z: -64
+      - x: 48
+        y: 76
+        z: -66
+      - x: 48
+        y: 77
+        z: -66
+      - x: 48
+        y: 78
+        z: -66
+      - x: 48
+        y: 79
+        z: -66
+      - x: 48
+        y: 80
+        z: -66
+      - x: 48
+        y: 81
+        z: -66
+      - x: 48
+        y: 76
+        z: -65
+      - x: 48
+        y: 77
+        z: -65
+      - x: 48
+        y: 78
+        z: -65
+      - x: 48
+        y: 79
+        z: -65
+      - x: 48
+        y: 80
+        z: -65
+      - x: 48
+        y: 81
+        z: -65
+      - x: 48
+        y: 76
+        z: -64
+      - x: 48
+        y: 77
+        z: -64
+      - x: 48
+        y: 78
+        z: -64
+      - x: 48
+        y: 79
+        z: -64
+      - x: 48
+        y: 80
+        z: -64
+      - x: 48
+        y: 81
+        z: -64
+    stations: []
+    resources: []
+    defenses: []
+  - id: warehouse
+    name: Bonded Warehouse
+    areas:
+      - min:
+          x: -56
+          y: 68
+          z: -42
+        max:
+          x: -27
+          y: 103
+          z: -15
+      - min:
+          x: -26
+          y: 68
+          z: -35
+        max:
+          x: -19
+          y: 103
+          z: -22
+      - min:
+          x: -56
+          y: 68
+          z: -45
+        max:
+          x: -33
+          y: 103
+          z: -43
+      - min:
+          x: -44
+          y: 68
+          z: -14
+        max:
+          x: -27
+          y: 103
+          z: -12
+    emeralds: 7
+    requires:
+      - railhead
+    entrance:
+      x: -36.5
+      y: 73
+      z: -37.5
+    spawns:
+      - x: -51.5
+        y: 73
+        z: -37.5
+      - x: -28.5
+        y: 74
+        z: -17.5
+    safePoints:
+      - x: -50.5
+        y: 73
+        z: -37.5
+      - x: -49.5
+        y: 74
+        z: -28.5
+    purchaseSigns:
+      - x: -51
+        y: 73
+        z: -49
+    gate:
+      - x: -50
+        y: 73
+        z: -46
+      - x: -50
+        y: 74
+        z: -46
+      - x: -50
+        y: 75
+        z: -46
+      - x: -50
+        y: 76
+        z: -46
+      - x: -50
+        y: 77
+        z: -46
+      - x: -50
+        y: 78
+        z: -46
+      - x: -51
+        y: 73
+        z: -46
+      - x: -51
+        y: 74
+        z: -46
+      - x: -51
+        y: 75
+        z: -46
+      - x: -51
+        y: 76
+        z: -46
+      - x: -51
+        y: 77
+        z: -46
+      - x: -51
+        y: 78
+        z: -46
+      - x: -52
+        y: 73
+        z: -46
+      - x: -52
+        y: 74
+        z: -46
+      - x: -52
+        y: 75
+        z: -46
+      - x: -52
+        y: 76
+        z: -46
+      - x: -52
+        y: 77
+        z: -46
+      - x: -52
+        y: 78
+        z: -46
+      - x: -50
+        y: 73
+        z: -45
+      - x: -50
+        y: 74
+        z: -45
+      - x: -50
+        y: 75
+        z: -45
+      - x: -50
+        y: 76
+        z: -45
+      - x: -50
+        y: 77
+        z: -45
+      - x: -50
+        y: 78
+        z: -45
+      - x: -51
+        y: 73
+        z: -45
+      - x: -51
+        y: 74
+        z: -45
+      - x: -51
+        y: 75
+        z: -45
+      - x: -51
+        y: 76
+        z: -45
+      - x: -51
+        y: 77
+        z: -45
+      - x: -51
+        y: 78
+        z: -45
+      - x: -52
+        y: 73
+        z: -45
+      - x: -52
+        y: 74
+        z: -45
+      - x: -52
+        y: 75
+        z: -45
+      - x: -52
+        y: 76
+        z: -45
+      - x: -52
+        y: 77
+        z: -45
+      - x: -52
+        y: 78
+        z: -45
+    stations:
+      - block:
+          x: -47
+          y: 74
+          z: -20
+        type: WORKBENCH
+    resources:
+      - block:
+          x: -52
+          y: 74
+          z: -34
+        material: FLINT
+        amount: 2
+        perRound: 2
+    defenses:
+      - id: warehouse-barricade
+        block:
+          x: -36
+          y: 74
+          z: -17
+        type: BARRICADE
+      - id: warehouse-spike_trap
+        block:
+          x: -46
+          y: 74
+          z: -29
+        type: SPIKE_TRAP
+  - id: presshall
+    name: Stamping Mill
+    areas:
+      - min:
+          x: -18
+          y: 68
+          z: -39
+        max:
+          x: 11
+          y: 103
+          z: -18
+      - min:
+          x: 12
+          y: 68
+          z: -35
+        max:
+          x: 19
+          y: 103
+          z: -22
+      - min:
+          x: -26
+          y: 68
+          z: -21
+        max:
+          x: -21
+          y: 103
+          z: -12
+      - min:
+          x: -26
+          y: 68
+          z: -42
+        max:
+          x: -21
+          y: 103
+          z: -36
+      - min:
+          x: -20
+          y: 68
+          z: -17
+        max:
+          x: -9
+          y: 103
+          z: -15
+      - min:
+          x: 4
+          y: 68
+          z: -42
+        max:
+          x: 11
+          y: 103
+          z: -40
+      - min:
+          x: -20
+          y: 68
+          z: -39
+        max:
+          x: -19
+          y: 103
+          z: -36
+      - min:
+          x: -20
+          y: 68
+          z: -21
+        max:
+          x: -19
+          y: 103
+          z: -18
+    emeralds: 7
+    requires:
+      - warehouse
+      - canteen
+    entrance:
+      x: -0.5
+      y: 74
+      z: -36.5
+    spawns:
+      - x: -15.5
+        y: 74
+        z: -36.5
+      - x: 9.5
+        y: 76
+        z: -19.5
+    safePoints:
+      - x: -15.5
+        y: 74
+        z: -36.5
+      - x: -15.5
+        y: 75
+        z: -28.5
+    purchaseSigns:
+      - x: -30
+        y: 73
+        z: -39
+      - x: -2
+        y: 74
+        z: -43
+    gate:
+      - x: -27
+        y: 73
+        z: -40
+      - x: -27
+        y: 74
+        z: -40
+      - x: -27
+        y: 75
+        z: -40
+      - x: -27
+        y: 76
+        z: -40
+      - x: -27
+        y: 77
+        z: -40
+      - x: -27
+        y: 78
+        z: -40
+      - x: -27
+        y: 73
+        z: -39
+      - x: -27
+        y: 74
+        z: -39
+      - x: -27
+        y: 75
+        z: -39
+      - x: -27
+        y: 76
+        z: -39
+      - x: -27
+        y: 77
+        z: -39
+      - x: -27
+        y: 78
+        z: -39
+      - x: -27
+        y: 73
+        z: -38
+      - x: -27
+        y: 74
+        z: -38
+      - x: -27
+        y: 75
+        z: -38
+      - x: -27
+        y: 76
+        z: -38
+      - x: -27
+        y: 77
+        z: -38
+      - x: -27
+        y: 78
+        z: -38
+      - x: -26
+        y: 73
+        z: -40
+      - x: -26
+        y: 74
+        z: -40
+      - x: -26
+        y: 75
+        z: -40
+      - x: -26
+        y: 76
+        z: -40
+      - x: -26
+        y: 77
+        z: -40
+      - x: -26
+        y: 78
+        z: -40
+      - x: -26
+        y: 73
+        z: -39
+      - x: -26
+        y: 74
+        z: -39
+      - x: -26
+        y: 75
+        z: -39
+      - x: -26
+        y: 76
+        z: -39
+      - x: -26
+        y: 77
+        z: -39
+      - x: -26
+        y: 78
+        z: -39
+      - x: -26
+        y: 73
+        z: -38
+      - x: -26
+        y: 74
+        z: -38
+      - x: -26
+        y: 75
+        z: -38
+      - x: -26
+        y: 76
+        z: -38
+      - x: -26
+        y: 77
+        z: -38
+      - x: -26
+        y: 78
+        z: -38
+      - x: -1
+        y: 74
+        z: -40
+      - x: -1
+        y: 75
+        z: -40
+      - x: -1
+        y: 76
+        z: -40
+      - x: -1
+        y: 77
+        z: -40
+      - x: -1
+        y: 78
+        z: -40
+      - x: -1
+        y: 79
+        z: -40
+      - x: -2
+        y: 74
+        z: -40
+      - x: -2
+        y: 75
+        z: -40
+      - x: -2
+        y: 76
+        z: -40
+      - x: -2
+        y: 77
+        z: -40
+      - x: -2
+        y: 78
+        z: -40
+      - x: -2
+        y: 79
+        z: -40
+      - x: -3
+        y: 74
+        z: -40
+      - x: -3
+        y: 75
+        z: -40
+      - x: -3
+        y: 76
+        z: -40
+      - x: -3
+        y: 77
+        z: -40
+      - x: -3
+        y: 78
+        z: -40
+      - x: -3
+        y: 79
+        z: -40
+      - x: -1
+        y: 74
+        z: -39
+      - x: -1
+        y: 75
+        z: -39
+      - x: -1
+        y: 76
+        z: -39
+      - x: -1
+        y: 77
+        z: -39
+      - x: -1
+        y: 78
+        z: -39
+      - x: -1
+        y: 79
+        z: -39
+      - x: -2
+        y: 74
+        z: -39
+      - x: -2
+        y: 75
+        z: -39
+      - x: -2
+        y: 76
+        z: -39
+      - x: -2
+        y: 77
+        z: -39
+      - x: -2
+        y: 78
+        z: -39
+      - x: -2
+        y: 79
+        z: -39
+      - x: -3
+        y: 74
+        z: -39
+      - x: -3
+        y: 75
+        z: -39
+      - x: -3
+        y: 76
+        z: -39
+      - x: -3
+        y: 77
+        z: -39
+      - x: -3
+        y: 78
+        z: -39
+      - x: -3
+        y: 79
+        z: -39
+    stations: []
+    resources:
+      - block:
+          x: -16
+          y: 75
+          z: -33
+        material: IRON_INGOT
+        amount: 2
+        perRound: 2
+    defenses: []
+  - id: foundry
+    name: Copper Foundry
+    areas:
+      - min:
+          x: 20
+          y: 68
+          z: -42
+        max:
+          x: 45
+          y: 103
+          z: -15
+      - min:
+          x: 46
+          y: 68
+          z: -35
+        max:
+          x: 53
+          y: 103
+          z: -22
+      - min:
+          x: 16
+          y: 68
+          z: -45
+        max:
+          x: 39
+          y: 103
+          z: -43
+      - min:
+          x: 12
+          y: 68
+          z: -42
+        max:
+          x: 19
+          y: 103
+          z: -36
+      - min:
+          x: 28
+          y: 68
+          z: -14
+        max:
+          x: 45
+          y: 103
+          z: -12
+      - min:
+          x: 12
+          y: 68
+          z: -21
+        max:
+          x: 19
+          y: 103
+          z: -18
+      - min:
+          x: 16
+          y: 68
+          z: -17
+        max:
+          x: 19
+          y: 103
+          z: -15
+    emeralds: 7
+    requires:
+      - presshall
+      - freight
+    entrance:
+      x: 35.5
+      y: 75
+      z: -37.5
+    spawns:
+      - x: 20.5
+        y: 75
+        z: -37.5
+      - x: 43.5
+        y: 77
+        z: -17.5
+    safePoints:
+      - x: 21.5
+        y: 75
+        z: -37.5
+      - x: 22.5
+        y: 76
+        z: -28.5
+    purchaseSigns:
+      - x: 8
+        y: 75
+        z: -39
+      - x: 34
+        y: 75
+        z: -49
+    gate:
+      - x: 11
+        y: 75
+        z: -40
+      - x: 11
+        y: 76
+        z: -40
+      - x: 11
+        y: 77
+        z: -40
+      - x: 11
+        y: 78
+        z: -40
+      - x: 11
+        y: 79
+        z: -40
+      - x: 11
+        y: 80
+        z: -40
+      - x: 11
+        y: 75
+        z: -39
+      - x: 11
+        y: 76
+        z: -39
+      - x: 11
+        y: 77
+        z: -39
+      - x: 11
+        y: 78
+        z: -39
+      - x: 11
+        y: 79
+        z: -39
+      - x: 11
+        y: 80
+        z: -39
+      - x: 11
+        y: 75
+        z: -38
+      - x: 11
+        y: 76
+        z: -38
+      - x: 11
+        y: 77
+        z: -38
+      - x: 11
+        y: 78
+        z: -38
+      - x: 11
+        y: 79
+        z: -38
+      - x: 11
+        y: 80
+        z: -38
+      - x: 12
+        y: 75
+        z: -40
+      - x: 12
+        y: 76
+        z: -40
+      - x: 12
+        y: 77
+        z: -40
+      - x: 12
+        y: 78
+        z: -40
+      - x: 12
+        y: 79
+        z: -40
+      - x: 12
+        y: 80
+        z: -40
+      - x: 12
+        y: 75
+        z: -39
+      - x: 12
+        y: 76
+        z: -39
+      - x: 12
+        y: 77
+        z: -39
+      - x: 12
+        y: 78
+        z: -39
+      - x: 12
+        y: 79
+        z: -39
+      - x: 12
+        y: 80
+        z: -39
+      - x: 12
+        y: 75
+        z: -38
+      - x: 12
+        y: 76
+        z: -38
+      - x: 12
+        y: 77
+        z: -38
+      - x: 12
+        y: 78
+        z: -38
+      - x: 12
+        y: 79
+        z: -38
+      - x: 12
+        y: 80
+        z: -38
+      - x: 35
+        y: 75
+        z: -46
+      - x: 35
+        y: 76
+        z: -46
+      - x: 35
+        y: 77
+        z: -46
+      - x: 35
+        y: 78
+        z: -46
+      - x: 35
+        y: 79
+        z: -46
+      - x: 35
+        y: 80
+        z: -46
+      - x: 34
+        y: 75
+        z: -46
+      - x: 34
+        y: 76
+        z: -46
+      - x: 34
+        y: 77
+        z: -46
+      - x: 34
+        y: 78
+        z: -46
+      - x: 34
+        y: 79
+        z: -46
+      - x: 34
+        y: 80
+        z: -46
+      - x: 33
+        y: 75
+        z: -46
+      - x: 33
+        y: 76
+        z: -46
+      - x: 33
+        y: 77
+        z: -46
+      - x: 33
+        y: 78
+        z: -46
+      - x: 33
+        y: 79
+        z: -46
+      - x: 33
+        y: 80
+        z: -46
+      - x: 35
+        y: 75
+        z: -45
+      - x: 35
+        y: 76
+        z: -45
+      - x: 35
+        y: 77
+        z: -45
+      - x: 35
+        y: 78
+        z: -45
+      - x: 35
+        y: 79
+        z: -45
+      - x: 35
+        y: 80
+        z: -45
+      - x: 34
+        y: 75
+        z: -45
+      - x: 34
+        y: 76
+        z: -45
+      - x: 34
+        y: 77
+        z: -45
+      - x: 34
+        y: 78
+        z: -45
+      - x: 34
+        y: 79
+        z: -45
+      - x: 34
+        y: 80
+        z: -45
+      - x: 33
+        y: 75
+        z: -45
+      - x: 33
+        y: 76
+        z: -45
+      - x: 33
+        y: 77
+        z: -45
+      - x: 33
+        y: 78
+        z: -45
+      - x: 33
+        y: 79
+        z: -45
+      - x: 33
+        y: 80
+        z: -45
+    stations:
+      - block:
+          x: 25
+          y: 76
+          z: -20
+        type: FORGE
+      - block:
+          x: 31
+          y: 76
+          z: -20
+        type: BANK
+    resources:
+      - block:
+          x: 22
+          y: 76
+          z: -34
+        material: COPPER_INGOT
+        amount: 2
+        perRound: 2
+    defenses: []
+  - id: generator
+    name: Generator House
+    areas:
+      - min:
+          x: 54
+          y: 68
+          z: -39
+        max:
+          x: 87
+          y: 103
+          z: -18
+      - min:
+          x: 46
+          y: 68
+          z: -21
+        max:
+          x: 51
+          y: 103
+          z: -12
+      - min:
+          x: 46
+          y: 68
+          z: -42
+        max:
+          x: 51
+          y: 103
+          z: -36
+      - min:
+          x: 76
+          y: 68
+          z: -42
+        max:
+          x: 87
+          y: 103
+          z: -40
+      - min:
+          x: 52
+          y: 68
+          z: -17
+        max:
+          x: 63
+          y: 103
+          z: -15
+      - min:
+          x: 52
+          y: 68
+          z: -39
+        max:
+          x: 53
+          y: 103
+          z: -36
+      - min:
+          x: 52
+          y: 68
+          z: -21
+        max:
+          x: 53
+          y: 103
+          z: -18
+    emeralds: 7
+    requires:
+      - foundry
+      - signal
+    entrance:
+      x: 70.5
+      y: 76
+      z: -36.5
+    spawns:
+      - x: 56.5
+        y: 76
+        z: -36.5
+      - x: 83.5
+        y: 78
+        z: -19.5
+    safePoints:
+      - x: 56.5
+        y: 76
+        z: -36.5
+      - x: 56.5
+        y: 77
+        z: -28.5
+    purchaseSigns:
+      - x: 42
+        y: 76
+        z: -39
+      - x: 69
+        y: 76
+        z: -43
+    gate:
+      - x: 45
+        y: 76
+        z: -40
+      - x: 45
+        y: 77
+        z: -40
+      - x: 45
+        y: 78
+        z: -40
+      - x: 45
+        y: 79
+        z: -40
+      - x: 45
+        y: 80
+        z: -40
+      - x: 45
+        y: 81
+        z: -40
+      - x: 45
+        y: 76
+        z: -39
+      - x: 45
+        y: 77
+        z: -39
+      - x: 45
+        y: 78
+        z: -39
+      - x: 45
+        y: 79
+        z: -39
+      - x: 45
+        y: 80
+        z: -39
+      - x: 45
+        y: 81
+        z: -39
+      - x: 45
+        y: 76
+        z: -38
+      - x: 45
+        y: 77
+        z: -38
+      - x: 45
+        y: 78
+        z: -38
+      - x: 45
+        y: 79
+        z: -38
+      - x: 45
+        y: 80
+        z: -38
+      - x: 45
+        y: 81
+        z: -38
+      - x: 46
+        y: 76
+        z: -40
+      - x: 46
+        y: 77
+        z: -40
+      - x: 46
+        y: 78
+        z: -40
+      - x: 46
+        y: 79
+        z: -40
+      - x: 46
+        y: 80
+        z: -40
+      - x: 46
+        y: 81
+        z: -40
+      - x: 46
+        y: 76
+        z: -39
+      - x: 46
+        y: 77
+        z: -39
+      - x: 46
+        y: 78
+        z: -39
+      - x: 46
+        y: 79
+        z: -39
+      - x: 46
+        y: 80
+        z: -39
+      - x: 46
+        y: 81
+        z: -39
+      - x: 46
+        y: 76
+        z: -38
+      - x: 46
+        y: 77
+        z: -38
+      - x: 46
+        y: 78
+        z: -38
+      - x: 46
+        y: 79
+        z: -38
+      - x: 46
+        y: 80
+        z: -38
+      - x: 46
+        y: 81
+        z: -38
+      - x: 70
+        y: 76
+        z: -40
+      - x: 70
+        y: 77
+        z: -40
+      - x: 70
+        y: 78
+        z: -40
+      - x: 70
+        y: 79
+        z: -40
+      - x: 70
+        y: 80
+        z: -40
+      - x: 70
+        y: 81
+        z: -40
+      - x: 69
+        y: 76
+        z: -40
+      - x: 69
+        y: 77
+        z: -40
+      - x: 69
+        y: 78
+        z: -40
+      - x: 69
+        y: 79
+        z: -40
+      - x: 69
+        y: 80
+        z: -40
+      - x: 69
+        y: 81
+        z: -40
+      - x: 68
+        y: 76
+        z: -40
+      - x: 68
+        y: 77
+        z: -40
+      - x: 68
+        y: 78
+        z: -40
+      - x: 68
+        y: 79
+        z: -40
+      - x: 68
+        y: 80
+        z: -40
+      - x: 68
+        y: 81
+        z: -40
+      - x: 70
+        y: 76
+        z: -39
+      - x: 70
+        y: 77
+        z: -39
+      - x: 70
+        y: 78
+        z: -39
+      - x: 70
+        y: 79
+        z: -39
+      - x: 70
+        y: 80
+        z: -39
+      - x: 70
+        y: 81
+        z: -39
+      - x: 69
+        y: 76
+        z: -39
+      - x: 69
+        y: 77
+        z: -39
+      - x: 69
+        y: 78
+        z: -39
+      - x: 69
+        y: 79
+        z: -39
+      - x: 69
+        y: 80
+        z: -39
+      - x: 69
+        y: 81
+        z: -39
+      - x: 68
+        y: 76
+        z: -39
+      - x: 68
+        y: 77
+        z: -39
+      - x: 68
+        y: 78
+        z: -39
+      - x: 68
+        y: 79
+        z: -39
+      - x: 68
+        y: 80
+        z: -39
+      - x: 68
+        y: 81
+        z: -39
+    stations: []
+    resources:
+      - block:
+          x: 56
+          y: 77
+          z: -33
+        material: REDSTONE
+        amount: 2
+        perRound: 2
+    defenses: []
+  - id: clinic
+    name: Company Clinic
+    areas:
+      - min:
+          x: -56
+          y: 68
+          z: -11
+        max:
+          x: -24
+          y: 103
+          z: 7
+      - min:
+          x: -23
+          y: 68
+          z: -7
+        max:
+          x: -16
+          y: 103
+          z: 4
+      - min:
+          x: -56
+          y: 68
+          z: 8
+        max:
+          x: -33
+          y: 103
+          z: 10
+      - min:
+          x: -56
+          y: 68
+          z: -14
+        max:
+          x: -45
+          y: 103
+          z: -12
+      - min:
+          x: -56
+          y: 68
+          z: 11
+        max:
+          x: -45
+          y: 103
+          z: 13
+    emeralds: 8
+    requires:
+      - warehouse
+    entrance:
+      x: -36.5
+      y: 74
+      z: -8.5
+    spawns:
+      - x: -51.5
+        y: 74
+        z: -9.5
+      - x: -25.5
+        y: 75
+        z: 5.5
+    safePoints:
+      - x: -50.5
+        y: 74
+        z: -9.5
+      - x: -49.5
+        y: 75
+        z: -1.5
+    purchaseSigns:
+      - x: -40
+        y: 74
+        z: -15
+    gate:
+      - x: -39
+        y: 74
+        z: -12
+      - x: -39
+        y: 75
+        z: -12
+      - x: -39
+        y: 76
+        z: -12
+      - x: -39
+        y: 77
+        z: -12
+      - x: -39
+        y: 78
+        z: -12
+      - x: -39
+        y: 79
+        z: -12
+      - x: -40
+        y: 74
+        z: -12
+      - x: -40
+        y: 75
+        z: -12
+      - x: -40
+        y: 76
+        z: -12
+      - x: -40
+        y: 77
+        z: -12
+      - x: -40
+        y: 78
+        z: -12
+      - x: -40
+        y: 79
+        z: -12
+      - x: -41
+        y: 74
+        z: -12
+      - x: -41
+        y: 75
+        z: -12
+      - x: -41
+        y: 76
+        z: -12
+      - x: -41
+        y: 77
+        z: -12
+      - x: -41
+        y: 78
+        z: -12
+      - x: -41
+        y: 79
+        z: -12
+      - x: -39
+        y: 74
+        z: -11
+      - x: -39
+        y: 75
+        z: -11
+      - x: -39
+        y: 76
+        z: -11
+      - x: -39
+        y: 77
+        z: -11
+      - x: -39
+        y: 78
+        z: -11
+      - x: -39
+        y: 79
+        z: -11
+      - x: -40
+        y: 74
+        z: -11
+      - x: -40
+        y: 75
+        z: -11
+      - x: -40
+        y: 76
+        z: -11
+      - x: -40
+        y: 77
+        z: -11
+      - x: -40
+        y: 78
+        z: -11
+      - x: -40
+        y: 79
+        z: -11
+      - x: -41
+        y: 74
+        z: -11
+      - x: -41
+        y: 75
+        z: -11
+      - x: -41
+        y: 76
+        z: -11
+      - x: -41
+        y: 77
+        z: -11
+      - x: -41
+        y: 78
+        z: -11
+      - x: -41
+        y: 79
+        z: -11
+    stations:
+      - block:
+          x: -47
+          y: 75
+          z: 5
+        type: INFIRMARY
+    resources:
+      - block:
+          x: -52
+          y: 74
+          z: -6
+        material: WHEAT
+        amount: 3
+        perRound: 2
+    defenses:
+      - id: clinic-barricade
+        block:
+          x: -36
+          y: 75
+          z: 8
+        type: BARRICADE
+      - id: clinic-spike_trap
+        block:
+          x: -46
+          y: 75
+          z: -2
+        type: SPIKE_TRAP
+  - id: boilers
+    name: Boiler Court
+    areas:
+      - min:
+          x: -15
+          y: 68
+          z: -14
+        max:
+          x: 11
+          y: 103
+          z: 7
+      - min:
+          x: 12
+          y: 68
+          z: -7
+        max:
+          x: 19
+          y: 103
+          z: 4
+      - min:
+          x: -8
+          y: 68
+          z: -17
+        max:
+          x: 11
+          y: 103
+          z: -15
+      - min:
+          x: -8
+          y: 68
+          z: 8
+        max:
+          x: 11
+          y: 103
+          z: 10
+      - min:
+          x: -20
+          y: 68
+          z: -14
+        max:
+          x: -16
+          y: 103
+          z: -8
+      - min:
+          x: -23
+          y: 68
+          z: 5
+        max:
+          x: -16
+          y: 103
+          z: 7
+      - min:
+          x: 4
+          y: 68
+          z: 11
+        max:
+          x: 11
+          y: 103
+          z: 13
+      - min:
+          x: -23
+          y: 68
+          z: -11
+        max:
+          x: -21
+          y: 103
+          z: -8
+    emeralds: 8
+    requires:
+      - clinic
+      - presshall
+    entrance:
+      x: -1.5
+      y: 75
+      z: -9.5
+    spawns:
+      - x: -14.5
+        y: 75
+        z: -9.5
+      - x: 9.5
+        y: 77
+        z: 7.5
+    safePoints:
+      - x: -13.5
+        y: 75
+        z: -9.5
+      - x: -12.5
+        y: 76
+        z: -1.5
+    purchaseSigns:
+      - x: -20
+        y: 76
+        z: 1
+      - x: -4
+        y: 75
+        z: -21
+    gate:
+      - x: -19
+        y: 76
+        z: 4
+      - x: -19
+        y: 77
+        z: 4
+      - x: -19
+        y: 78
+        z: 4
+      - x: -19
+        y: 79
+        z: 4
+      - x: -19
+        y: 80
+        z: 4
+      - x: -19
+        y: 81
+        z: 4
+      - x: -20
+        y: 76
+        z: 4
+      - x: -20
+        y: 77
+        z: 4
+      - x: -20
+        y: 78
+        z: 4
+      - x: -20
+        y: 79
+        z: 4
+      - x: -20
+        y: 80
+        z: 4
+      - x: -20
+        y: 81
+        z: 4
+      - x: -21
+        y: 76
+        z: 4
+      - x: -21
+        y: 77
+        z: 4
+      - x: -21
+        y: 78
+        z: 4
+      - x: -21
+        y: 79
+        z: 4
+      - x: -21
+        y: 80
+        z: 4
+      - x: -21
+        y: 81
+        z: 4
+      - x: -19
+        y: 76
+        z: 5
+      - x: -19
+        y: 77
+        z: 5
+      - x: -19
+        y: 78
+        z: 5
+      - x: -19
+        y: 79
+        z: 5
+      - x: -19
+        y: 80
+        z: 5
+      - x: -19
+        y: 81
+        z: 5
+      - x: -20
+        y: 76
+        z: 5
+      - x: -20
+        y: 77
+        z: 5
+      - x: -20
+        y: 78
+        z: 5
+      - x: -20
+        y: 79
+        z: 5
+      - x: -20
+        y: 80
+        z: 5
+      - x: -20
+        y: 81
+        z: 5
+      - x: -21
+        y: 76
+        z: 5
+      - x: -21
+        y: 77
+        z: 5
+      - x: -21
+        y: 78
+        z: 5
+      - x: -21
+        y: 79
+        z: 5
+      - x: -21
+        y: 80
+        z: 5
+      - x: -21
+        y: 81
+        z: 5
+      - x: -3
+        y: 75
+        z: -18
+      - x: -3
+        y: 76
+        z: -18
+      - x: -3
+        y: 77
+        z: -18
+      - x: -3
+        y: 78
+        z: -18
+      - x: -3
+        y: 79
+        z: -18
+      - x: -3
+        y: 80
+        z: -18
+      - x: -4
+        y: 75
+        z: -18
+      - x: -4
+        y: 76
+        z: -18
+      - x: -4
+        y: 77
+        z: -18
+      - x: -4
+        y: 78
+        z: -18
+      - x: -4
+        y: 79
+        z: -18
+      - x: -4
+        y: 80
+        z: -18
+      - x: -5
+        y: 75
+        z: -18
+      - x: -5
+        y: 76
+        z: -18
+      - x: -5
+        y: 77
+        z: -18
+      - x: -5
+        y: 78
+        z: -18
+      - x: -5
+        y: 79
+        z: -18
+      - x: -5
+        y: 80
+        z: -18
+      - x: -3
+        y: 75
+        z: -17
+      - x: -3
+        y: 76
+        z: -17
+      - x: -3
+        y: 77
+        z: -17
+      - x: -3
+        y: 78
+        z: -17
+      - x: -3
+        y: 79
+        z: -17
+      - x: -3
+        y: 80
+        z: -17
+      - x: -4
+        y: 75
+        z: -17
+      - x: -4
+        y: 76
+        z: -17
+      - x: -4
+        y: 77
+        z: -17
+      - x: -4
+        y: 78
+        z: -17
+      - x: -4
+        y: 79
+        z: -17
+      - x: -4
+        y: 80
+        z: -17
+      - x: -5
+        y: 75
+        z: -17
+      - x: -5
+        y: 76
+        z: -17
+      - x: -5
+        y: 77
+        z: -17
+      - x: -5
+        y: 78
+        z: -17
+      - x: -5
+        y: 79
+        z: -17
+      - x: -5
+        y: 80
+        z: -17
+    stations: []
+    resources:
+      - block:
+          x: -13
+          y: 75
+          z: -6
+        material: GLOWSTONE_DUST
+        amount: 2
+        perRound: 2
+    defenses: []
+  - id: pumpstation
+    name: Pumping Station
+    areas:
+      - min:
+          x: 20
+          y: 68
+          z: -11
+        max:
+          x: 50
+          y: 103
+          z: 7
+      - min:
+          x: 51
+          y: 68
+          z: -7
+        max:
+          x: 58
+          y: 103
+          z: 4
+      - min:
+          x: 12
+          y: 68
+          z: 8
+        max:
+          x: 27
+          y: 103
+          z: 13
+      - min:
+          x: 12
+          y: 68
+          z: -14
+        max:
+          x: 19
+          y: 103
+          z: -8
+      - min:
+          x: 28
+          y: 68
+          z: 8
+        max:
+          x: 39
+          y: 103
+          z: 10
+      - min:
+          x: 20
+          y: 68
+          z: -14
+        max:
+          x: 27
+          y: 103
+          z: -12
+      - min:
+          x: 12
+          y: 68
+          z: 5
+        max:
+          x: 19
+          y: 103
+          z: 7
+      - min:
+          x: 12
+          y: 68
+          z: -17
+        max:
+          x: 15
+          y: 103
+          z: -15
+    emeralds: 8
+    requires:
+      - boilers
+      - foundry
+    entrance:
+      x: 35.5
+      y: 76
+      z: -8.5
+    spawns:
+      - x: 20.5
+        y: 76
+        z: -9.5
+      - x: 48.5
+        y: 78
+        z: 5.5
+    safePoints:
+      - x: 21.5
+        y: 76
+        z: -9.5
+      - x: 22.5
+        y: 77
+        z: -1.5
+    purchaseSigns:
+      - x: 8
+        y: 76
+        z: -11
+      - x: 33
+        y: 76
+        z: -15
+    gate:
+      - x: 11
+        y: 76
+        z: -12
+      - x: 11
+        y: 77
+        z: -12
+      - x: 11
+        y: 78
+        z: -12
+      - x: 11
+        y: 79
+        z: -12
+      - x: 11
+        y: 80
+        z: -12
+      - x: 11
+        y: 81
+        z: -12
+      - x: 11
+        y: 76
+        z: -11
+      - x: 11
+        y: 77
+        z: -11
+      - x: 11
+        y: 78
+        z: -11
+      - x: 11
+        y: 79
+        z: -11
+      - x: 11
+        y: 80
+        z: -11
+      - x: 11
+        y: 81
+        z: -11
+      - x: 11
+        y: 76
+        z: -10
+      - x: 11
+        y: 77
+        z: -10
+      - x: 11
+        y: 78
+        z: -10
+      - x: 11
+        y: 79
+        z: -10
+      - x: 11
+        y: 80
+        z: -10
+      - x: 11
+        y: 81
+        z: -10
+      - x: 12
+        y: 76
+        z: -12
+      - x: 12
+        y: 77
+        z: -12
+      - x: 12
+        y: 78
+        z: -12
+      - x: 12
+        y: 79
+        z: -12
+      - x: 12
+        y: 80
+        z: -12
+      - x: 12
+        y: 81
+        z: -12
+      - x: 12
+        y: 76
+        z: -11
+      - x: 12
+        y: 77
+        z: -11
+      - x: 12
+        y: 78
+        z: -11
+      - x: 12
+        y: 79
+        z: -11
+      - x: 12
+        y: 80
+        z: -11
+      - x: 12
+        y: 81
+        z: -11
+      - x: 12
+        y: 76
+        z: -10
+      - x: 12
+        y: 77
+        z: -10
+      - x: 12
+        y: 78
+        z: -10
+      - x: 12
+        y: 79
+        z: -10
+      - x: 12
+        y: 80
+        z: -10
+      - x: 12
+        y: 81
+        z: -10
+      - x: 34
+        y: 76
+        z: -12
+      - x: 34
+        y: 77
+        z: -12
+      - x: 34
+        y: 78
+        z: -12
+      - x: 34
+        y: 79
+        z: -12
+      - x: 34
+        y: 80
+        z: -12
+      - x: 34
+        y: 81
+        z: -12
+      - x: 33
+        y: 76
+        z: -12
+      - x: 33
+        y: 77
+        z: -12
+      - x: 33
+        y: 78
+        z: -12
+      - x: 33
+        y: 79
+        z: -12
+      - x: 33
+        y: 80
+        z: -12
+      - x: 33
+        y: 81
+        z: -12
+      - x: 32
+        y: 76
+        z: -12
+      - x: 32
+        y: 77
+        z: -12
+      - x: 32
+        y: 78
+        z: -12
+      - x: 32
+        y: 79
+        z: -12
+      - x: 32
+        y: 80
+        z: -12
+      - x: 32
+        y: 81
+        z: -12
+      - x: 34
+        y: 76
+        z: -11
+      - x: 34
+        y: 77
+        z: -11
+      - x: 34
+        y: 78
+        z: -11
+      - x: 34
+        y: 79
+        z: -11
+      - x: 34
+        y: 80
+        z: -11
+      - x: 34
+        y: 81
+        z: -11
+      - x: 33
+        y: 76
+        z: -11
+      - x: 33
+        y: 77
+        z: -11
+      - x: 33
+        y: 78
+        z: -11
+      - x: 33
+        y: 79
+        z: -11
+      - x: 33
+        y: 80
+        z: -11
+      - x: 33
+        y: 81
+        z: -11
+      - x: 32
+        y: 76
+        z: -11
+      - x: 32
+        y: 77
+        z: -11
+      - x: 32
+        y: 78
+        z: -11
+      - x: 32
+        y: 79
+        z: -11
+      - x: 32
+        y: 80
+        z: -11
+      - x: 32
+        y: 81
+        z: -11
+    stations: []
+    resources: []
+    defenses: []
+  - id: glassworks
+    name: Glassworks
+    areas:
+      - min:
+          x: 64
+          y: 68
+          z: -17
+        max:
+          x: 87
+          y: 103
+          z: 10
+      - min:
+          x: 59
+          y: 68
+          z: -14
+        max:
+          x: 63
+          y: 103
+          z: 7
+      - min:
+          x: 52
+          y: 68
+          z: -14
+        max:
+          x: 58
+          y: 103
+          z: -8
+      - min:
+          x: 76
+          y: 68
+          z: 11
+        max:
+          x: 87
+          y: 103
+          z: 13
+      - min:
+          x: 51
+          y: 68
+          z: 5
+        max:
+          x: 58
+          y: 103
+          z: 7
+      - min:
+          x: 51
+          y: 68
+          z: -11
+        max:
+          x: 51
+          y: 103
+          z: -8
+    emeralds: 8
+    requires:
+      - pumpstation
+      - generator
+    entrance:
+      x: 71.5
+      y: 77
+      z: -9.5
+    spawns:
+      - x: 59.5
+        y: 77
+        z: -9.5
+      - x: 83.5
+        y: 79
+        z: 7.5
+    safePoints:
+      - x: 60.5
+        y: 77
+        z: -9.5
+      - x: 61.5
+        y: 78
+        z: -1.5
+    purchaseSigns:
+      - x: 54
+        y: 78
+        z: 1
+      - x: 68
+        y: 77
+        z: -21
+    gate:
+      - x: 55
+        y: 78
+        z: 4
+      - x: 55
+        y: 79
+        z: 4
+      - x: 55
+        y: 80
+        z: 4
+      - x: 55
+        y: 81
+        z: 4
+      - x: 55
+        y: 82
+        z: 4
+      - x: 55
+        y: 83
+        z: 4
+      - x: 54
+        y: 78
+        z: 4
+      - x: 54
+        y: 79
+        z: 4
+      - x: 54
+        y: 80
+        z: 4
+      - x: 54
+        y: 81
+        z: 4
+      - x: 54
+        y: 82
+        z: 4
+      - x: 54
+        y: 83
+        z: 4
+      - x: 53
+        y: 78
+        z: 4
+      - x: 53
+        y: 79
+        z: 4
+      - x: 53
+        y: 80
+        z: 4
+      - x: 53
+        y: 81
+        z: 4
+      - x: 53
+        y: 82
+        z: 4
+      - x: 53
+        y: 83
+        z: 4
+      - x: 55
+        y: 78
+        z: 5
+      - x: 55
+        y: 79
+        z: 5
+      - x: 55
+        y: 80
+        z: 5
+      - x: 55
+        y: 81
+        z: 5
+      - x: 55
+        y: 82
+        z: 5
+      - x: 55
+        y: 83
+        z: 5
+      - x: 54
+        y: 78
+        z: 5
+      - x: 54
+        y: 79
+        z: 5
+      - x: 54
+        y: 80
+        z: 5
+      - x: 54
+        y: 81
+        z: 5
+      - x: 54
+        y: 82
+        z: 5
+      - x: 54
+        y: 83
+        z: 5
+      - x: 53
+        y: 78
+        z: 5
+      - x: 53
+        y: 79
+        z: 5
+      - x: 53
+        y: 80
+        z: 5
+      - x: 53
+        y: 81
+        z: 5
+      - x: 53
+        y: 82
+        z: 5
+      - x: 53
+        y: 83
+        z: 5
+      - x: 69
+        y: 77
+        z: -18
+      - x: 69
+        y: 78
+        z: -18
+      - x: 69
+        y: 79
+        z: -18
+      - x: 69
+        y: 80
+        z: -18
+      - x: 69
+        y: 81
+        z: -18
+      - x: 69
+        y: 82
+        z: -18
+      - x: 68
+        y: 77
+        z: -18
+      - x: 68
+        y: 78
+        z: -18
+      - x: 68
+        y: 79
+        z: -18
+      - x: 68
+        y: 80
+        z: -18
+      - x: 68
+        y: 81
+        z: -18
+      - x: 68
+        y: 82
+        z: -18
+      - x: 67
+        y: 77
+        z: -18
+      - x: 67
+        y: 78
+        z: -18
+      - x: 67
+        y: 79
+        z: -18
+      - x: 67
+        y: 80
+        z: -18
+      - x: 67
+        y: 81
+        z: -18
+      - x: 67
+        y: 82
+        z: -18
+      - x: 69
+        y: 77
+        z: -17
+      - x: 69
+        y: 78
+        z: -17
+      - x: 69
+        y: 79
+        z: -17
+      - x: 69
+        y: 80
+        z: -17
+      - x: 69
+        y: 81
+        z: -17
+      - x: 69
+        y: 82
+        z: -17
+      - x: 68
+        y: 77
+        z: -17
+      - x: 68
+        y: 78
+        z: -17
+      - x: 68
+        y: 79
+        z: -17
+      - x: 68
+        y: 80
+        z: -17
+      - x: 68
+        y: 81
+        z: -17
+      - x: 68
+        y: 82
+        z: -17
+      - x: 67
+        y: 77
+        z: -17
+      - x: 67
+        y: 78
+        z: -17
+      - x: 67
+        y: 79
+        z: -17
+      - x: 67
+        y: 80
+        z: -17
+      - x: 67
+        y: 81
+        z: -17
+      - x: 67
+        y: 82
+        z: -17
+    stations:
+      - block:
+          x: 64
+          y: 78
+          z: 5
+        type: ALCHEMY
+    resources:
+      - block:
+          x: 61
+          y: 77
+          z: -6
+        material: STRING
+        amount: 2
+        perRound: 2
+    defenses: []
+  - id: coalyard
+    name: Coal Yard
+    areas:
+      - min:
+          x: -56
+          y: 68
+          z: 14
+        max:
+          x: -24
+          y: 103
+          z: 34
+      - min:
+          x: -23
+          y: 68
+          z: 18
+        max:
+          x: -16
+          y: 103
+          z: 31
+      - min:
+          x: -44
+          y: 68
+          z: 11
+        max:
+          x: -24
+          y: 103
+          z: 13
+      - min:
+          x: -32
+          y: 68
+          z: 8
+        max:
+          x: -24
+          y: 103
+          z: 10
+      - min:
+          x: -32
+          y: 68
+          z: 35
+        max:
+          x: -24
+          y: 103
+          z: 37
+    emeralds: 9
+    requires:
+      - clinic
+    entrance:
+      x: -36.5
+      y: 75
+      z: 15.5
+    spawns:
+      - x: -51.5
+        y: 75
+        z: 16.5
+      - x: -27.5
+        y: 76
+        z: 34.5
+    safePoints:
+      - x: -50.5
+        y: 75
+        z: 16.5
+      - x: -49.5
+        y: 75
+        z: 24.5
+    purchaseSigns:
+      - x: -40
+        y: 75
+        z: 7
+    gate:
+      - x: -39
+        y: 75
+        z: 10
+      - x: -39
+        y: 76
+        z: 10
+      - x: -39
+        y: 77
+        z: 10
+      - x: -39
+        y: 78
+        z: 10
+      - x: -39
+        y: 79
+        z: 10
+      - x: -39
+        y: 80
+        z: 10
+      - x: -40
+        y: 75
+        z: 10
+      - x: -40
+        y: 76
+        z: 10
+      - x: -40
+        y: 77
+        z: 10
+      - x: -40
+        y: 78
+        z: 10
+      - x: -40
+        y: 79
+        z: 10
+      - x: -40
+        y: 80
+        z: 10
+      - x: -41
+        y: 75
+        z: 10
+      - x: -41
+        y: 76
+        z: 10
+      - x: -41
+        y: 77
+        z: 10
+      - x: -41
+        y: 78
+        z: 10
+      - x: -41
+        y: 79
+        z: 10
+      - x: -41
+        y: 80
+        z: 10
+      - x: -39
+        y: 75
+        z: 11
+      - x: -39
+        y: 76
+        z: 11
+      - x: -39
+        y: 77
+        z: 11
+      - x: -39
+        y: 78
+        z: 11
+      - x: -39
+        y: 79
+        z: 11
+      - x: -39
+        y: 80
+        z: 11
+      - x: -40
+        y: 75
+        z: 11
+      - x: -40
+        y: 76
+        z: 11
+      - x: -40
+        y: 77
+        z: 11
+      - x: -40
+        y: 78
+        z: 11
+      - x: -40
+        y: 79
+        z: 11
+      - x: -40
+        y: 80
+        z: 11
+      - x: -41
+        y: 75
+        z: 11
+      - x: -41
+        y: 76
+        z: 11
+      - x: -41
+        y: 77
+        z: 11
+      - x: -41
+        y: 78
+        z: 11
+      - x: -41
+        y: 79
+        z: 11
+      - x: -41
+        y: 80
+        z: 11
+    stations: []
+    resources:
+      - block:
+          x: -52
+          y: 75
+          z: 20
+        material: OAK_PLANKS
+        amount: 4
+        perRound: 2
+    defenses: []
+  - id: canal
+    name: Cooling Canal
+    areas:
+      - min:
+          x: -15
+          y: 68
+          z: 14
+        max:
+          x: 11
+          y: 103
+          z: 37
+      - min:
+          x: 12
+          y: 68
+          z: 18
+        max:
+          x: 19
+          y: 103
+          z: 31
+      - min:
+          x: -23
+          y: 68
+          z: 8
+        max:
+          x: -9
+          y: 103
+          z: 13
+      - min:
+          x: -20
+          y: 68
+          z: 38
+        max:
+          x: 3
+          y: 103
+          z: 40
+      - min:
+          x: -23
+          y: 68
+          z: 32
+        max:
+          x: -16
+          y: 103
+          z: 37
+      - min:
+          x: -8
+          y: 68
+          z: 11
+        max:
+          x: 3
+          y: 103
+          z: 13
+      - min:
+          x: -23
+          y: 68
+          z: 14
+        max:
+          x: -16
+          y: 103
+          z: 17
+    emeralds: 9
+    requires:
+      - coalyard
+      - boilers
+    entrance:
+      x: -1.5
+      y: 76
+      z: 15.5
+    spawns:
+      - x: -18.5
+        y: 76
+        z: 15.5
+      - x: 9.5
+        y: 78
+        z: 34.5
+    safePoints:
+      - x: -17.5
+        y: 76
+        z: 15.5
+      - x: -12.5
+        y: 76
+        z: 24.5
+    purchaseSigns:
+      - x: -27
+        y: 75
+        z: 14
+      - x: -1
+        y: 76
+        z: 7
+    gate:
+      - x: -24
+        y: 76
+        z: 13
+      - x: -24
+        y: 77
+        z: 13
+      - x: -24
+        y: 78
+        z: 13
+      - x: -24
+        y: 79
+        z: 13
+      - x: -24
+        y: 80
+        z: 13
+      - x: -24
+        y: 81
+        z: 13
+      - x: -24
+        y: 76
+        z: 14
+      - x: -24
+        y: 77
+        z: 14
+      - x: -24
+        y: 78
+        z: 14
+      - x: -24
+        y: 79
+        z: 14
+      - x: -24
+        y: 80
+        z: 14
+      - x: -24
+        y: 81
+        z: 14
+      - x: -24
+        y: 76
+        z: 15
+      - x: -24
+        y: 77
+        z: 15
+      - x: -24
+        y: 78
+        z: 15
+      - x: -24
+        y: 79
+        z: 15
+      - x: -24
+        y: 80
+        z: 15
+      - x: -24
+        y: 81
+        z: 15
+      - x: -23
+        y: 76
+        z: 13
+      - x: -23
+        y: 77
+        z: 13
+      - x: -23
+        y: 78
+        z: 13
+      - x: -23
+        y: 79
+        z: 13
+      - x: -23
+        y: 80
+        z: 13
+      - x: -23
+        y: 81
+        z: 13
+      - x: -23
+        y: 76
+        z: 14
+      - x: -23
+        y: 77
+        z: 14
+      - x: -23
+        y: 78
+        z: 14
+      - x: -23
+        y: 79
+        z: 14
+      - x: -23
+        y: 80
+        z: 14
+      - x: -23
+        y: 81
+        z: 14
+      - x: -23
+        y: 76
+        z: 15
+      - x: -23
+        y: 77
+        z: 15
+      - x: -23
+        y: 78
+        z: 15
+      - x: -23
+        y: 79
+        z: 15
+      - x: -23
+        y: 80
+        z: 15
+      - x: -23
+        y: 81
+        z: 15
+      - x: 0
+        y: 76
+        z: 10
+      - x: 0
+        y: 77
+        z: 10
+      - x: 0
+        y: 78
+        z: 10
+      - x: 0
+        y: 79
+        z: 10
+      - x: 0
+        y: 80
+        z: 10
+      - x: 0
+        y: 81
+        z: 10
+      - x: -1
+        y: 76
+        z: 10
+      - x: -1
+        y: 77
+        z: 10
+      - x: -1
+        y: 78
+        z: 10
+      - x: -1
+        y: 79
+        z: 10
+      - x: -1
+        y: 80
+        z: 10
+      - x: -1
+        y: 81
+        z: 10
+      - x: -2
+        y: 76
+        z: 10
+      - x: -2
+        y: 77
+        z: 10
+      - x: -2
+        y: 78
+        z: 10
+      - x: -2
+        y: 79
+        z: 10
+      - x: -2
+        y: 80
+        z: 10
+      - x: -2
+        y: 81
+        z: 10
+      - x: 0
+        y: 76
+        z: 11
+      - x: 0
+        y: 77
+        z: 11
+      - x: 0
+        y: 78
+        z: 11
+      - x: 0
+        y: 79
+        z: 11
+      - x: 0
+        y: 80
+        z: 11
+      - x: 0
+        y: 81
+        z: 11
+      - x: -1
+        y: 76
+        z: 11
+      - x: -1
+        y: 77
+        z: 11
+      - x: -1
+        y: 78
+        z: 11
+      - x: -1
+        y: 79
+        z: 11
+      - x: -1
+        y: 80
+        z: 11
+      - x: -1
+        y: 81
+        z: 11
+      - x: -2
+        y: 76
+        z: 11
+      - x: -2
+        y: 77
+        z: 11
+      - x: -2
+        y: 78
+        z: 11
+      - x: -2
+        y: 79
+        z: 11
+      - x: -2
+        y: 80
+        z: 11
+      - x: -2
+        y: 81
+        z: 11
+    stations: []
+    resources:
+      - block:
+          x: -13
+          y: 76
+          z: 19
+        material: BONE
+        amount: 2
+        perRound: 2
+    defenses: []
+  - id: loom
+    name: Textile Mill
+    areas:
+      - min:
+          x: 20
+          y: 68
+          z: 14
+        max:
+          x: 46
+          y: 103
+          z: 34
+      - min:
+          x: 47
+          y: 68
+          z: 18
+        max:
+          x: 54
+          y: 103
+          z: 31
+      - min:
+          x: 28
+          y: 68
+          z: 11
+        max:
+          x: 46
+          y: 103
+          z: 13
+      - min:
+          x: 12
+          y: 68
+          z: 14
+        max:
+          x: 19
+          y: 103
+          z: 17
+      - min:
+          x: 12
+          y: 68
+          z: 32
+        max:
+          x: 19
+          y: 103
+          z: 34
+      - min:
+          x: 40
+          y: 68
+          z: 8
+        max:
+          x: 46
+          y: 103
+          z: 10
+      - min:
+          x: 40
+          y: 68
+          z: 35
+        max:
+          x: 46
+          y: 103
+          z: 37
+      - min:
+          x: 12
+          y: 68
+          z: 35
+        max:
+          x: 15
+          y: 103
+          z: 37
+    emeralds: 9
+    requires:
+      - canal
+      - pumpstation
+    entrance:
+      x: 36.5
+      y: 77
+      z: 15.5
+    spawns:
+      - x: 22.5
+        y: 77
+        z: 16.5
+      - x: 44.5
+        y: 79
+        z: 34.5
+    safePoints:
+      - x: 22.5
+        y: 77
+        z: 16.5
+      - x: 22.5
+        y: 77
+        z: 24.5
+    purchaseSigns:
+      - x: 15
+        y: 78
+        z: 28
+      - x: 33
+        y: 77
+        z: 7
+    gate:
+      - x: 16
+        y: 78
+        z: 31
+      - x: 16
+        y: 79
+        z: 31
+      - x: 16
+        y: 80
+        z: 31
+      - x: 16
+        y: 81
+        z: 31
+      - x: 16
+        y: 82
+        z: 31
+      - x: 16
+        y: 83
+        z: 31
+      - x: 15
+        y: 78
+        z: 31
+      - x: 15
+        y: 79
+        z: 31
+      - x: 15
+        y: 80
+        z: 31
+      - x: 15
+        y: 81
+        z: 31
+      - x: 15
+        y: 82
+        z: 31
+      - x: 15
+        y: 83
+        z: 31
+      - x: 14
+        y: 78
+        z: 31
+      - x: 14
+        y: 79
+        z: 31
+      - x: 14
+        y: 80
+        z: 31
+      - x: 14
+        y: 81
+        z: 31
+      - x: 14
+        y: 82
+        z: 31
+      - x: 14
+        y: 83
+        z: 31
+      - x: 16
+        y: 78
+        z: 32
+      - x: 16
+        y: 79
+        z: 32
+      - x: 16
+        y: 80
+        z: 32
+      - x: 16
+        y: 81
+        z: 32
+      - x: 16
+        y: 82
+        z: 32
+      - x: 16
+        y: 83
+        z: 32
+      - x: 15
+        y: 78
+        z: 32
+      - x: 15
+        y: 79
+        z: 32
+      - x: 15
+        y: 80
+        z: 32
+      - x: 15
+        y: 81
+        z: 32
+      - x: 15
+        y: 82
+        z: 32
+      - x: 15
+        y: 83
+        z: 32
+      - x: 14
+        y: 78
+        z: 32
+      - x: 14
+        y: 79
+        z: 32
+      - x: 14
+        y: 80
+        z: 32
+      - x: 14
+        y: 81
+        z: 32
+      - x: 14
+        y: 82
+        z: 32
+      - x: 14
+        y: 83
+        z: 32
+      - x: 34
+        y: 77
+        z: 10
+      - x: 34
+        y: 78
+        z: 10
+      - x: 34
+        y: 79
+        z: 10
+      - x: 34
+        y: 80
+        z: 10
+      - x: 34
+        y: 81
+        z: 10
+      - x: 34
+        y: 82
+        z: 10
+      - x: 33
+        y: 77
+        z: 10
+      - x: 33
+        y: 78
+        z: 10
+      - x: 33
+        y: 79
+        z: 10
+      - x: 33
+        y: 80
+        z: 10
+      - x: 33
+        y: 81
+        z: 10
+      - x: 33
+        y: 82
+        z: 10
+      - x: 32
+        y: 77
+        z: 10
+      - x: 32
+        y: 78
+        z: 10
+      - x: 32
+        y: 79
+        z: 10
+      - x: 32
+        y: 80
+        z: 10
+      - x: 32
+        y: 81
+        z: 10
+      - x: 32
+        y: 82
+        z: 10
+      - x: 34
+        y: 77
+        z: 11
+      - x: 34
+        y: 78
+        z: 11
+      - x: 34
+        y: 79
+        z: 11
+      - x: 34
+        y: 80
+        z: 11
+      - x: 34
+        y: 81
+        z: 11
+      - x: 34
+        y: 82
+        z: 11
+      - x: 33
+        y: 77
+        z: 11
+      - x: 33
+        y: 78
+        z: 11
+      - x: 33
+        y: 79
+        z: 11
+      - x: 33
+        y: 80
+        z: 11
+      - x: 33
+        y: 81
+        z: 11
+      - x: 33
+        y: 82
+        z: 11
+      - x: 32
+        y: 77
+        z: 11
+      - x: 32
+        y: 78
+        z: 11
+      - x: 32
+        y: 79
+        z: 11
+      - x: 32
+        y: 80
+        z: 11
+      - x: 32
+        y: 81
+        z: 11
+      - x: 32
+        y: 82
+        z: 11
+    stations:
+      - block:
+          x: 25
+          y: 78
+          z: 32
+        type: WORKBENCH
+    resources:
+      - block:
+          x: 22
+          y: 77
+          z: 20
+        material: NETHER_WART
+        amount: 2
+        perRound: 2
+    defenses: []
+  - id: barracks
+    name: Security Depot
+    areas:
+      - min:
+          x: 55
+          y: 68
+          z: 14
+        max:
+          x: 87
+          y: 103
+          z: 37
+      - min:
+          x: 47
+          y: 68
+          z: 8
+        max:
+          x: 63
+          y: 103
+          z: 13
+      - min:
+          x: 52
+          y: 68
+          z: 38
+        max:
+          x: 75
+          y: 103
+          z: 40
+      - min:
+          x: 47
+          y: 68
+          z: 32
+        max:
+          x: 54
+          y: 103
+          z: 37
+      - min:
+          x: 64
+          y: 68
+          z: 11
+        max:
+          x: 75
+          y: 103
+          z: 13
+      - min:
+          x: 47
+          y: 68
+          z: 14
+        max:
+          x: 54
+          y: 103
+          z: 17
+    emeralds: 9
+    requires:
+      - loom
+      - glassworks
+    entrance:
+      x: 71.5
+      y: 78
+      z: 15.5
+    spawns:
+      - x: 55.5
+        y: 78
+        z: 15.5
+      - x: 83.5
+        y: 80
+        z: 34.5
+    safePoints:
+      - x: 56.5
+        y: 78
+        z: 15.5
+      - x: 57.5
+        y: 78
+        z: 24.5
+    purchaseSigns:
+      - x: 43
+        y: 78
+        z: 14
+      - x: 72
+        y: 79
+        z: 7
+    gate:
+      - x: 46
+        y: 78
+        z: 13
+      - x: 46
+        y: 79
+        z: 13
+      - x: 46
+        y: 80
+        z: 13
+      - x: 46
+        y: 81
+        z: 13
+      - x: 46
+        y: 82
+        z: 13
+      - x: 46
+        y: 83
+        z: 13
+      - x: 46
+        y: 78
+        z: 14
+      - x: 46
+        y: 79
+        z: 14
+      - x: 46
+        y: 80
+        z: 14
+      - x: 46
+        y: 81
+        z: 14
+      - x: 46
+        y: 82
+        z: 14
+      - x: 46
+        y: 83
+        z: 14
+      - x: 46
+        y: 78
+        z: 15
+      - x: 46
+        y: 79
+        z: 15
+      - x: 46
+        y: 80
+        z: 15
+      - x: 46
+        y: 81
+        z: 15
+      - x: 46
+        y: 82
+        z: 15
+      - x: 46
+        y: 83
+        z: 15
+      - x: 47
+        y: 78
+        z: 13
+      - x: 47
+        y: 79
+        z: 13
+      - x: 47
+        y: 80
+        z: 13
+      - x: 47
+        y: 81
+        z: 13
+      - x: 47
+        y: 82
+        z: 13
+      - x: 47
+        y: 83
+        z: 13
+      - x: 47
+        y: 78
+        z: 14
+      - x: 47
+        y: 79
+        z: 14
+      - x: 47
+        y: 80
+        z: 14
+      - x: 47
+        y: 81
+        z: 14
+      - x: 47
+        y: 82
+        z: 14
+      - x: 47
+        y: 83
+        z: 14
+      - x: 47
+        y: 78
+        z: 15
+      - x: 47
+        y: 79
+        z: 15
+      - x: 47
+        y: 80
+        z: 15
+      - x: 47
+        y: 81
+        z: 15
+      - x: 47
+        y: 82
+        z: 15
+      - x: 47
+        y: 83
+        z: 15
+      - x: 73
+        y: 79
+        z: 10
+      - x: 73
+        y: 80
+        z: 10
+      - x: 73
+        y: 81
+        z: 10
+      - x: 73
+        y: 82
+        z: 10
+      - x: 73
+        y: 83
+        z: 10
+      - x: 73
+        y: 84
+        z: 10
+      - x: 72
+        y: 79
+        z: 10
+      - x: 72
+        y: 80
+        z: 10
+      - x: 72
+        y: 81
+        z: 10
+      - x: 72
+        y: 82
+        z: 10
+      - x: 72
+        y: 83
+        z: 10
+      - x: 72
+        y: 84
+        z: 10
+      - x: 71
+        y: 78
+        z: 10
+      - x: 71
+        y: 79
+        z: 10
+      - x: 71
+        y: 80
+        z: 10
+      - x: 71
+        y: 81
+        z: 10
+      - x: 71
+        y: 82
+        z: 10
+      - x: 71
+        y: 83
+        z: 10
+      - x: 73
+        y: 79
+        z: 11
+      - x: 73
+        y: 80
+        z: 11
+      - x: 73
+        y: 81
+        z: 11
+      - x: 73
+        y: 82
+        z: 11
+      - x: 73
+        y: 83
+        z: 11
+      - x: 73
+        y: 84
+        z: 11
+      - x: 72
+        y: 79
+        z: 11
+      - x: 72
+        y: 80
+        z: 11
+      - x: 72
+        y: 81
+        z: 11
+      - x: 72
+        y: 82
+        z: 11
+      - x: 72
+        y: 83
+        z: 11
+      - x: 72
+        y: 84
+        z: 11
+      - x: 71
+        y: 78
+        z: 11
+      - x: 71
+        y: 79
+        z: 11
+      - x: 71
+        y: 80
+        z: 11
+      - x: 71
+        y: 81
+        z: 11
+      - x: 71
+        y: 82
+        z: 11
+      - x: 71
+        y: 83
+        z: 11
+    stations: []
+    resources: []
+    defenses:
+      - id: barracks-barricade
+        block:
+          x: 71
+          y: 79
+          z: 35
+        type: BARRICADE
+      - id: barracks-spike_trap
+        block:
+          x: 61
+          y: 78
+          z: 24
+        type: SPIKE_TRAP
+  - id: washhouse
+    name: Wash House
+    areas:
+      - min:
+          x: -56
+          y: 68
+          z: 38
+        max:
+          x: -25
+          y: 103
+          z: 63
+      - min:
+          x: -24
+          y: 68
+          z: 45
+        max:
+          x: -17
+          y: 103
+          z: 57
+      - min:
+          x: -56
+          y: 68
+          z: 35
+        max:
+          x: -33
+          y: 103
+          z: 37
+      - min:
+          x: -44
+          y: 68
+          z: 64
+        max:
+          x: -25
+          y: 103
+          z: 66
+    emeralds: 10
+    requires:
+      - coalyard
+    entrance:
+      x: -36.5
+      y: 76
+      z: 42.5
+    spawns:
+      - x: -51.5
+        y: 76
+        z: 42.5
+      - x: -26.5
+        y: 77
+        z: 60.5
+    safePoints:
+      - x: -50.5
+        y: 76
+        z: 42.5
+      - x: -49.5
+        y: 76
+        z: 50.5
+    purchaseSigns:
+      - x: -36
+        y: 76
+        z: 31
+    gate:
+      - x: -35
+        y: 76
+        z: 34
+      - x: -35
+        y: 77
+        z: 34
+      - x: -35
+        y: 78
+        z: 34
+      - x: -35
+        y: 79
+        z: 34
+      - x: -35
+        y: 80
+        z: 34
+      - x: -35
+        y: 81
+        z: 34
+      - x: -36
+        y: 76
+        z: 34
+      - x: -36
+        y: 77
+        z: 34
+      - x: -36
+        y: 78
+        z: 34
+      - x: -36
+        y: 79
+        z: 34
+      - x: -36
+        y: 80
+        z: 34
+      - x: -36
+        y: 81
+        z: 34
+      - x: -37
+        y: 76
+        z: 34
+      - x: -37
+        y: 77
+        z: 34
+      - x: -37
+        y: 78
+        z: 34
+      - x: -37
+        y: 79
+        z: 34
+      - x: -37
+        y: 80
+        z: 34
+      - x: -37
+        y: 81
+        z: 34
+      - x: -35
+        y: 76
+        z: 35
+      - x: -35
+        y: 77
+        z: 35
+      - x: -35
+        y: 78
+        z: 35
+      - x: -35
+        y: 79
+        z: 35
+      - x: -35
+        y: 80
+        z: 35
+      - x: -35
+        y: 81
+        z: 35
+      - x: -36
+        y: 76
+        z: 35
+      - x: -36
+        y: 77
+        z: 35
+      - x: -36
+        y: 78
+        z: 35
+      - x: -36
+        y: 79
+        z: 35
+      - x: -36
+        y: 80
+        z: 35
+      - x: -36
+        y: 81
+        z: 35
+      - x: -37
+        y: 76
+        z: 35
+      - x: -37
+        y: 77
+        z: 35
+      - x: -37
+        y: 78
+        z: 35
+      - x: -37
+        y: 79
+        z: 35
+      - x: -37
+        y: 80
+        z: 35
+      - x: -37
+        y: 81
+        z: 35
+    stations: []
+    resources: []
+    defenses: []
+  - id: crane
+    name: Gantry Yard
+    areas:
+      - min:
+          x: -16
+          y: 68
+          z: 41
+        max:
+          x: 11
+          y: 103
+          z: 60
+      - min:
+          x: 12
+          y: 68
+          z: 45
+        max:
+          x: 19
+          y: 103
+          z: 57
+      - min:
+          x: -24
+          y: 68
+          z: 58
+        max:
+          x: -17
+          y: 103
+          z: 63
+      - min:
+          x: -24
+          y: 68
+          z: 41
+        max:
+          x: -17
+          y: 103
+          z: 44
+      - min:
+          x: 4
+          y: 68
+          z: 38
+        max:
+          x: 11
+          y: 103
+          z: 40
+      - min:
+          x: -16
+          y: 68
+          z: 61
+        max:
+          x: -9
+          y: 103
+          z: 63
+      - min:
+          x: -24
+          y: 68
+          z: 38
+        max:
+          x: -21
+          y: 103
+          z: 40
+      - min:
+          x: -24
+          y: 68
+          z: 64
+        max:
+          x: -21
+          y: 103
+          z: 66
+    emeralds: 10
+    requires:
+      - washhouse
+      - canal
+    entrance:
+      x: -1.5
+      y: 77
+      z: 43.5
+    spawns:
+      - x: -13.5
+        y: 77
+        z: 43.5
+      - x: 9.5
+        y: 78
+        z: 58.5
+    safePoints:
+      - x: -13.5
+        y: 77
+        z: 43.5
+      - x: -12.5
+        y: 77
+        z: 50.5
+    purchaseSigns:
+      - x: -28
+        y: 76
+        z: 41
+      - x: -3
+        y: 77
+        z: 37
+    gate:
+      - x: -25
+        y: 76
+        z: 40
+      - x: -25
+        y: 77
+        z: 40
+      - x: -25
+        y: 78
+        z: 40
+      - x: -25
+        y: 79
+        z: 40
+      - x: -25
+        y: 80
+        z: 40
+      - x: -25
+        y: 81
+        z: 40
+      - x: -25
+        y: 76
+        z: 41
+      - x: -25
+        y: 77
+        z: 41
+      - x: -25
+        y: 78
+        z: 41
+      - x: -25
+        y: 79
+        z: 41
+      - x: -25
+        y: 80
+        z: 41
+      - x: -25
+        y: 81
+        z: 41
+      - x: -25
+        y: 76
+        z: 42
+      - x: -25
+        y: 77
+        z: 42
+      - x: -25
+        y: 78
+        z: 42
+      - x: -25
+        y: 79
+        z: 42
+      - x: -25
+        y: 80
+        z: 42
+      - x: -25
+        y: 81
+        z: 42
+      - x: -24
+        y: 77
+        z: 40
+      - x: -24
+        y: 78
+        z: 40
+      - x: -24
+        y: 79
+        z: 40
+      - x: -24
+        y: 80
+        z: 40
+      - x: -24
+        y: 81
+        z: 40
+      - x: -24
+        y: 82
+        z: 40
+      - x: -24
+        y: 77
+        z: 41
+      - x: -24
+        y: 78
+        z: 41
+      - x: -24
+        y: 79
+        z: 41
+      - x: -24
+        y: 80
+        z: 41
+      - x: -24
+        y: 81
+        z: 41
+      - x: -24
+        y: 82
+        z: 41
+      - x: -24
+        y: 77
+        z: 42
+      - x: -24
+        y: 78
+        z: 42
+      - x: -24
+        y: 79
+        z: 42
+      - x: -24
+        y: 80
+        z: 42
+      - x: -24
+        y: 81
+        z: 42
+      - x: -24
+        y: 82
+        z: 42
+      - x: -2
+        y: 77
+        z: 40
+      - x: -2
+        y: 78
+        z: 40
+      - x: -2
+        y: 79
+        z: 40
+      - x: -2
+        y: 80
+        z: 40
+      - x: -2
+        y: 81
+        z: 40
+      - x: -2
+        y: 82
+        z: 40
+      - x: -3
+        y: 77
+        z: 40
+      - x: -3
+        y: 78
+        z: 40
+      - x: -3
+        y: 79
+        z: 40
+      - x: -3
+        y: 80
+        z: 40
+      - x: -3
+        y: 81
+        z: 40
+      - x: -3
+        y: 82
+        z: 40
+      - x: -4
+        y: 77
+        z: 40
+      - x: -4
+        y: 78
+        z: 40
+      - x: -4
+        y: 79
+        z: 40
+      - x: -4
+        y: 80
+        z: 40
+      - x: -4
+        y: 81
+        z: 40
+      - x: -4
+        y: 82
+        z: 40
+      - x: -2
+        y: 77
+        z: 41
+      - x: -2
+        y: 78
+        z: 41
+      - x: -2
+        y: 79
+        z: 41
+      - x: -2
+        y: 80
+        z: 41
+      - x: -2
+        y: 81
+        z: 41
+      - x: -2
+        y: 82
+        z: 41
+      - x: -3
+        y: 77
+        z: 41
+      - x: -3
+        y: 78
+        z: 41
+      - x: -3
+        y: 79
+        z: 41
+      - x: -3
+        y: 80
+        z: 41
+      - x: -3
+        y: 81
+        z: 41
+      - x: -3
+        y: 82
+        z: 41
+      - x: -4
+        y: 77
+        z: 41
+      - x: -4
+        y: 78
+        z: 41
+      - x: -4
+        y: 79
+        z: 41
+      - x: -4
+        y: 80
+        z: 41
+      - x: -4
+        y: 81
+        z: 41
+      - x: -4
+        y: 82
+        z: 41
+    stations: []
+    resources: []
+    defenses: []
+  - id: blastpit
+    name: Blast Furnace
+    areas:
+      - min:
+          x: 20
+          y: 68
+          z: 38
+        max:
+          x: 48
+          y: 103
+          z: 63
+      - min:
+          x: 49
+          y: 68
+          z: 45
+        max:
+          x: 56
+          y: 103
+          z: 57
+      - min:
+          x: 16
+          y: 68
+          z: 35
+        max:
+          x: 39
+          y: 103
+          z: 37
+      - min:
+          x: 28
+          y: 68
+          z: 64
+        max:
+          x: 48
+          y: 103
+          z: 66
+      - min:
+          x: 12
+          y: 68
+          z: 38
+        max:
+          x: 19
+          y: 103
+          z: 44
+      - min:
+          x: 12
+          y: 68
+          z: 58
+        max:
+          x: 19
+          y: 103
+          z: 60
+      - min:
+          x: 16
+          y: 68
+          z: 61
+        max:
+          x: 19
+          y: 103
+          z: 63
+    emeralds: 10
+    requires:
+      - crane
+      - loom
+    entrance:
+      x: 36.5
+      y: 78
+      z: 42.5
+    spawns:
+      - x: 20.5
+        y: 78
+        z: 42.5
+      - x: 46.5
+        y: 80
+        z: 60.5
+    safePoints:
+      - x: 21.5
+        y: 78
+        z: 42.5
+      - x: 22.5
+        y: 78
+        z: 50.5
+    purchaseSigns:
+      - x: 8
+        y: 78
+        z: 41
+      - x: 35
+        y: 78
+        z: 31
+    gate:
+      - x: 11
+        y: 78
+        z: 40
+      - x: 11
+        y: 79
+        z: 40
+      - x: 11
+        y: 80
+        z: 40
+      - x: 11
+        y: 81
+        z: 40
+      - x: 11
+        y: 82
+        z: 40
+      - x: 11
+        y: 83
+        z: 40
+      - x: 11
+        y: 78
+        z: 41
+      - x: 11
+        y: 79
+        z: 41
+      - x: 11
+        y: 80
+        z: 41
+      - x: 11
+        y: 81
+        z: 41
+      - x: 11
+        y: 82
+        z: 41
+      - x: 11
+        y: 83
+        z: 41
+      - x: 11
+        y: 78
+        z: 42
+      - x: 11
+        y: 79
+        z: 42
+      - x: 11
+        y: 80
+        z: 42
+      - x: 11
+        y: 81
+        z: 42
+      - x: 11
+        y: 82
+        z: 42
+      - x: 11
+        y: 83
+        z: 42
+      - x: 12
+        y: 78
+        z: 40
+      - x: 12
+        y: 79
+        z: 40
+      - x: 12
+        y: 80
+        z: 40
+      - x: 12
+        y: 81
+        z: 40
+      - x: 12
+        y: 82
+        z: 40
+      - x: 12
+        y: 83
+        z: 40
+      - x: 12
+        y: 78
+        z: 41
+      - x: 12
+        y: 79
+        z: 41
+      - x: 12
+        y: 80
+        z: 41
+      - x: 12
+        y: 81
+        z: 41
+      - x: 12
+        y: 82
+        z: 41
+      - x: 12
+        y: 83
+        z: 41
+      - x: 12
+        y: 78
+        z: 42
+      - x: 12
+        y: 79
+        z: 42
+      - x: 12
+        y: 80
+        z: 42
+      - x: 12
+        y: 81
+        z: 42
+      - x: 12
+        y: 82
+        z: 42
+      - x: 12
+        y: 83
+        z: 42
+      - x: 36
+        y: 78
+        z: 34
+      - x: 36
+        y: 79
+        z: 34
+      - x: 36
+        y: 80
+        z: 34
+      - x: 36
+        y: 81
+        z: 34
+      - x: 36
+        y: 82
+        z: 34
+      - x: 36
+        y: 83
+        z: 34
+      - x: 35
+        y: 78
+        z: 34
+      - x: 35
+        y: 79
+        z: 34
+      - x: 35
+        y: 80
+        z: 34
+      - x: 35
+        y: 81
+        z: 34
+      - x: 35
+        y: 82
+        z: 34
+      - x: 35
+        y: 83
+        z: 34
+      - x: 34
+        y: 78
+        z: 34
+      - x: 34
+        y: 79
+        z: 34
+      - x: 34
+        y: 80
+        z: 34
+      - x: 34
+        y: 81
+        z: 34
+      - x: 34
+        y: 82
+        z: 34
+      - x: 34
+        y: 83
+        z: 34
+      - x: 36
+        y: 78
+        z: 35
+      - x: 36
+        y: 79
+        z: 35
+      - x: 36
+        y: 80
+        z: 35
+      - x: 36
+        y: 81
+        z: 35
+      - x: 36
+        y: 82
+        z: 35
+      - x: 36
+        y: 83
+        z: 35
+      - x: 35
+        y: 78
+        z: 35
+      - x: 35
+        y: 79
+        z: 35
+      - x: 35
+        y: 80
+        z: 35
+      - x: 35
+        y: 81
+        z: 35
+      - x: 35
+        y: 82
+        z: 35
+      - x: 35
+        y: 83
+        z: 35
+      - x: 34
+        y: 78
+        z: 35
+      - x: 34
+        y: 79
+        z: 35
+      - x: 34
+        y: 80
+        z: 35
+      - x: 34
+        y: 81
+        z: 35
+      - x: 34
+        y: 82
+        z: 35
+      - x: 34
+        y: 83
+        z: 35
+    stations:
+      - block:
+          x: 25
+          y: 78
+          z: 58
+        type: FORGE
+    resources:
+      - block:
+          x: 22
+          y: 78
+          z: 46
+        material: IRON_INGOT
+        amount: 2
+        perRound: 2
+    defenses:
+      - id: blastpit-barricade
+        block:
+          x: 36
+          y: 79
+          z: 61
+        type: BARRICADE
+      - id: blastpit-spike_trap
+        block:
+          x: 26
+          y: 78
+          z: 50
+        type: SPIKE_TRAP
+  - id: crypt
+    name: Slag Vault
+    areas:
+      - min:
+          x: 57
+          y: 68
+          z: 41
+        max:
+          x: 87
+          y: 103
+          z: 60
+      - min:
+          x: 49
+          y: 68
+          z: 58
+        max:
+          x: 56
+          y: 103
+          z: 63
+      - min:
+          x: 76
+          y: 68
+          z: 38
+        max:
+          x: 87
+          y: 103
+          z: 40
+      - min:
+          x: 49
+          y: 68
+          z: 41
+        max:
+          x: 56
+          y: 103
+          z: 44
+      - min:
+          x: 57
+          y: 68
+          z: 61
+        max:
+          x: 63
+          y: 103
+          z: 63
+      - min:
+          x: 49
+          y: 68
+          z: 38
+        max:
+          x: 51
+          y: 103
+          z: 40
+      - min:
+          x: 49
+          y: 68
+          z: 64
+        max:
+          x: 51
+          y: 103
+          z: 66
+    emeralds: 10
+    requires:
+      - blastpit
+      - barracks
+    entrance:
+      x: 70.5
+      y: 79
+      z: 43.5
+    spawns:
+      - x: 59.5
+        y: 79
+        z: 43.5
+      - x: 83.5
+        y: 80
+        z: 58.5
+    safePoints:
+      - x: 59.5
+        y: 79
+        z: 43.5
+      - x: 59.5
+        y: 79
+        z: 50.5
+    purchaseSigns:
+      - x: 45
+        y: 79
+        z: 41
+      - x: 67
+        y: 79
+        z: 37
+    gate:
+      - x: 48
+        y: 79
+        z: 40
+      - x: 48
+        y: 80
+        z: 40
+      - x: 48
+        y: 81
+        z: 40
+      - x: 48
+        y: 82
+        z: 40
+      - x: 48
+        y: 83
+        z: 40
+      - x: 48
+        y: 84
+        z: 40
+      - x: 48
+        y: 79
+        z: 41
+      - x: 48
+        y: 80
+        z: 41
+      - x: 48
+        y: 81
+        z: 41
+      - x: 48
+        y: 82
+        z: 41
+      - x: 48
+        y: 83
+        z: 41
+      - x: 48
+        y: 84
+        z: 41
+      - x: 48
+        y: 79
+        z: 42
+      - x: 48
+        y: 80
+        z: 42
+      - x: 48
+        y: 81
+        z: 42
+      - x: 48
+        y: 82
+        z: 42
+      - x: 48
+        y: 83
+        z: 42
+      - x: 48
+        y: 84
+        z: 42
+      - x: 49
+        y: 79
+        z: 40
+      - x: 49
+        y: 80
+        z: 40
+      - x: 49
+        y: 81
+        z: 40
+      - x: 49
+        y: 82
+        z: 40
+      - x: 49
+        y: 83
+        z: 40
+      - x: 49
+        y: 84
+        z: 40
+      - x: 49
+        y: 79
+        z: 41
+      - x: 49
+        y: 80
+        z: 41
+      - x: 49
+        y: 81
+        z: 41
+      - x: 49
+        y: 82
+        z: 41
+      - x: 49
+        y: 83
+        z: 41
+      - x: 49
+        y: 84
+        z: 41
+      - x: 49
+        y: 79
+        z: 42
+      - x: 49
+        y: 80
+        z: 42
+      - x: 49
+        y: 81
+        z: 42
+      - x: 49
+        y: 82
+        z: 42
+      - x: 49
+        y: 83
+        z: 42
+      - x: 49
+        y: 84
+        z: 42
+      - x: 68
+        y: 79
+        z: 40
+      - x: 68
+        y: 80
+        z: 40
+      - x: 68
+        y: 81
+        z: 40
+      - x: 68
+        y: 82
+        z: 40
+      - x: 68
+        y: 83
+        z: 40
+      - x: 68
+        y: 84
+        z: 40
+      - x: 67
+        y: 79
+        z: 40
+      - x: 67
+        y: 80
+        z: 40
+      - x: 67
+        y: 81
+        z: 40
+      - x: 67
+        y: 82
+        z: 40
+      - x: 67
+        y: 83
+        z: 40
+      - x: 67
+        y: 84
+        z: 40
+      - x: 66
+        y: 79
+        z: 40
+      - x: 66
+        y: 80
+        z: 40
+      - x: 66
+        y: 81
+        z: 40
+      - x: 66
+        y: 82
+        z: 40
+      - x: 66
+        y: 83
+        z: 40
+      - x: 66
+        y: 84
+        z: 40
+      - x: 68
+        y: 79
+        z: 41
+      - x: 68
+        y: 80
+        z: 41
+      - x: 68
+        y: 81
+        z: 41
+      - x: 68
+        y: 82
+        z: 41
+      - x: 68
+        y: 83
+        z: 41
+      - x: 68
+        y: 84
+        z: 41
+      - x: 67
+        y: 79
+        z: 41
+      - x: 67
+        y: 80
+        z: 41
+      - x: 67
+        y: 81
+        z: 41
+      - x: 67
+        y: 82
+        z: 41
+      - x: 67
+        y: 83
+        z: 41
+      - x: 67
+        y: 84
+        z: 41
+      - x: 66
+        y: 79
+        z: 41
+      - x: 66
+        y: 80
+        z: 41
+      - x: 66
+        y: 81
+        z: 41
+      - x: 66
+        y: 82
+        z: 41
+      - x: 66
+        y: 83
+        z: 41
+      - x: 66
+        y: 84
+        z: 41
+    stations:
+      - block:
+          x: 62
+          y: 79
+          z: 58
+        type: ALCHEMY
+      - block:
+          x: 68
+          y: 79
+          z: 58
+        type: BANK
+    resources:
+      - block:
+          x: 63
+          y: 79
+          z: 46
+        material: BLAZE_POWDER
+        amount: 1
+        perRound: 2
+    defenses: []
+  - id: ramparts
+    name: Clock Tower
+    areas:
+      - min:
+          x: -56
+          y: 68
+          z: 67
+        max:
+          x: -26
+          y: 103
+          z: 91
+      - min:
+          x: -25
+          y: 68
+          z: 71
+        max:
+          x: -18
+          y: 103
+          z: 84
+      - min:
+          x: -56
+          y: 68
+          z: 64
+        max:
+          x: -45
+          y: 103
+          z: 66
+    emeralds: 11
+    requires:
+      - washhouse
+    entrance:
+      x: -35.5
+      y: 77
+      z: 69.5
+    spawns:
+      - x: -51.5
+        y: 77
+        z: 68.5
+      - x: -27.5
+        y: 77
+        z: 88.5
+    safePoints:
+      - x: -50.5
+        y: 77
+        z: 68.5
+      - x: -49.5
+        y: 77
+        z: 77.5
+    purchaseSigns:
+      - x: -38
+        y: 77
+        z: 63
+    gate:
+      - x: -37
+        y: 77
+        z: 66
+      - x: -37
+        y: 78
+        z: 66
+      - x: -37
+        y: 79
+        z: 66
+      - x: -37
+        y: 80
+        z: 66
+      - x: -37
+        y: 81
+        z: 66
+      - x: -37
+        y: 82
+        z: 66
+      - x: -38
+        y: 77
+        z: 66
+      - x: -38
+        y: 78
+        z: 66
+      - x: -38
+        y: 79
+        z: 66
+      - x: -38
+        y: 80
+        z: 66
+      - x: -38
+        y: 81
+        z: 66
+      - x: -38
+        y: 82
+        z: 66
+      - x: -39
+        y: 77
+        z: 66
+      - x: -39
+        y: 78
+        z: 66
+      - x: -39
+        y: 79
+        z: 66
+      - x: -39
+        y: 80
+        z: 66
+      - x: -39
+        y: 81
+        z: 66
+      - x: -39
+        y: 82
+        z: 66
+      - x: -37
+        y: 77
+        z: 67
+      - x: -37
+        y: 78
+        z: 67
+      - x: -37
+        y: 79
+        z: 67
+      - x: -37
+        y: 80
+        z: 67
+      - x: -37
+        y: 81
+        z: 67
+      - x: -37
+        y: 82
+        z: 67
+      - x: -38
+        y: 77
+        z: 67
+      - x: -38
+        y: 78
+        z: 67
+      - x: -38
+        y: 79
+        z: 67
+      - x: -38
+        y: 80
+        z: 67
+      - x: -38
+        y: 81
+        z: 67
+      - x: -38
+        y: 82
+        z: 67
+      - x: -39
+        y: 77
+        z: 67
+      - x: -39
+        y: 78
+        z: 67
+      - x: -39
+        y: 79
+        z: 67
+      - x: -39
+        y: 80
+        z: 67
+      - x: -39
+        y: 81
+        z: 67
+      - x: -39
+        y: 82
+        z: 67
+    stations: []
+    resources: []
+    defenses: []
+  - id: roofgarden
+    name: Roof Gardens
+    areas:
+      - min:
+          x: -17
+          y: 68
+          z: 64
+        max:
+          x: 11
+          y: 103
+          z: 91
+      - min:
+          x: 12
+          y: 68
+          z: 71
+        max:
+          x: 19
+          y: 103
+          z: 84
+      - min:
+          x: -8
+          y: 68
+          z: 61
+        max:
+          x: 11
+          y: 103
+          z: 63
+      - min:
+          x: -25
+          y: 68
+          z: 85
+        max:
+          x: -18
+          y: 103
+          z: 91
+      - min:
+          x: -25
+          y: 68
+          z: 67
+        max:
+          x: -18
+          y: 103
+          z: 70
+      - min:
+          x: -20
+          y: 68
+          z: 64
+        max:
+          x: -18
+          y: 103
+          z: 66
+    emeralds: 11
+    requires:
+      - ramparts
+      - crane
+    entrance:
+      x: -1.5
+      y: 78
+      z: 68.5
+    spawns:
+      - x: -16.5
+        y: 78
+        z: 68.5
+      - x: 9.5
+        y: 79
+        z: 88.5
+    safePoints:
+      - x: -15.5
+        y: 78
+        z: 68.5
+      - x: -14.5
+        y: 78
+        z: 77.5
+    purchaseSigns:
+      - x: -22
+        y: 78
+        z: 81
+      - x: -3
+        y: 77
+        z: 57
+    gate:
+      - x: -21
+        y: 78
+        z: 84
+      - x: -21
+        y: 79
+        z: 84
+      - x: -21
+        y: 80
+        z: 84
+      - x: -21
+        y: 81
+        z: 84
+      - x: -21
+        y: 82
+        z: 84
+      - x: -21
+        y: 83
+        z: 84
+      - x: -22
+        y: 78
+        z: 84
+      - x: -22
+        y: 79
+        z: 84
+      - x: -22
+        y: 80
+        z: 84
+      - x: -22
+        y: 81
+        z: 84
+      - x: -22
+        y: 82
+        z: 84
+      - x: -22
+        y: 83
+        z: 84
+      - x: -23
+        y: 78
+        z: 84
+      - x: -23
+        y: 79
+        z: 84
+      - x: -23
+        y: 80
+        z: 84
+      - x: -23
+        y: 81
+        z: 84
+      - x: -23
+        y: 82
+        z: 84
+      - x: -23
+        y: 83
+        z: 84
+      - x: -21
+        y: 78
+        z: 85
+      - x: -21
+        y: 79
+        z: 85
+      - x: -21
+        y: 80
+        z: 85
+      - x: -21
+        y: 81
+        z: 85
+      - x: -21
+        y: 82
+        z: 85
+      - x: -21
+        y: 83
+        z: 85
+      - x: -22
+        y: 78
+        z: 85
+      - x: -22
+        y: 79
+        z: 85
+      - x: -22
+        y: 80
+        z: 85
+      - x: -22
+        y: 81
+        z: 85
+      - x: -22
+        y: 82
+        z: 85
+      - x: -22
+        y: 83
+        z: 85
+      - x: -23
+        y: 78
+        z: 85
+      - x: -23
+        y: 79
+        z: 85
+      - x: -23
+        y: 80
+        z: 85
+      - x: -23
+        y: 81
+        z: 85
+      - x: -23
+        y: 82
+        z: 85
+      - x: -23
+        y: 83
+        z: 85
+      - x: -2
+        y: 78
+        z: 60
+      - x: -2
+        y: 79
+        z: 60
+      - x: -2
+        y: 80
+        z: 60
+      - x: -2
+        y: 81
+        z: 60
+      - x: -2
+        y: 82
+        z: 60
+      - x: -2
+        y: 83
+        z: 60
+      - x: -3
+        y: 78
+        z: 60
+      - x: -3
+        y: 79
+        z: 60
+      - x: -3
+        y: 80
+        z: 60
+      - x: -3
+        y: 81
+        z: 60
+      - x: -3
+        y: 82
+        z: 60
+      - x: -3
+        y: 83
+        z: 60
+      - x: -4
+        y: 78
+        z: 60
+      - x: -4
+        y: 79
+        z: 60
+      - x: -4
+        y: 80
+        z: 60
+      - x: -4
+        y: 81
+        z: 60
+      - x: -4
+        y: 82
+        z: 60
+      - x: -4
+        y: 83
+        z: 60
+      - x: -2
+        y: 78
+        z: 61
+      - x: -2
+        y: 79
+        z: 61
+      - x: -2
+        y: 80
+        z: 61
+      - x: -2
+        y: 81
+        z: 61
+      - x: -2
+        y: 82
+        z: 61
+      - x: -2
+        y: 83
+        z: 61
+      - x: -3
+        y: 78
+        z: 61
+      - x: -3
+        y: 79
+        z: 61
+      - x: -3
+        y: 80
+        z: 61
+      - x: -3
+        y: 81
+        z: 61
+      - x: -3
+        y: 82
+        z: 61
+      - x: -3
+        y: 83
+        z: 61
+      - x: -4
+        y: 78
+        z: 61
+      - x: -4
+        y: 79
+        z: 61
+      - x: -4
+        y: 80
+        z: 61
+      - x: -4
+        y: 81
+        z: 61
+      - x: -4
+        y: 82
+        z: 61
+      - x: -4
+        y: 83
+        z: 61
+    stations: []
+    resources: []
+    defenses: []
+  - id: hangar
+    name: Airship Hangar
+    areas:
+      - min:
+          x: 20
+          y: 68
+          z: 67
+        max:
+          x: 46
+          y: 103
+          z: 91
+      - min:
+          x: 47
+          y: 68
+          z: 71
+        max:
+          x: 54
+          y: 103
+          z: 84
+      - min:
+          x: 12
+          y: 68
+          z: 64
+        max:
+          x: 19
+          y: 103
+          z: 70
+      - min:
+          x: 12
+          y: 68
+          z: 85
+        max:
+          x: 19
+          y: 103
+          z: 91
+      - min:
+          x: 20
+          y: 68
+          z: 64
+        max:
+          x: 27
+          y: 103
+          z: 66
+      - min:
+          x: 12
+          y: 68
+          z: 61
+        max:
+          x: 15
+          y: 103
+          z: 63
+    emeralds: 11
+    requires:
+      - roofgarden
+      - blastpit
+    entrance:
+      x: 35.5
+      y: 79
+      z: 69.5
+    spawns:
+      - x: 20.5
+        y: 79
+        z: 68.5
+      - x: 44.5
+        y: 80
+        z: 88.5
+    safePoints:
+      - x: 21.5
+        y: 79
+        z: 68.5
+      - x: 22.5
+        y: 79
+        z: 77.5
+    purchaseSigns:
+      - x: 8
+        y: 79
+        z: 67
+      - x: 32
+        y: 79
+        z: 63
+    gate:
+      - x: 11
+        y: 79
+        z: 66
+      - x: 11
+        y: 80
+        z: 66
+      - x: 11
+        y: 81
+        z: 66
+      - x: 11
+        y: 82
+        z: 66
+      - x: 11
+        y: 83
+        z: 66
+      - x: 11
+        y: 84
+        z: 66
+      - x: 11
+        y: 79
+        z: 67
+      - x: 11
+        y: 80
+        z: 67
+      - x: 11
+        y: 81
+        z: 67
+      - x: 11
+        y: 82
+        z: 67
+      - x: 11
+        y: 83
+        z: 67
+      - x: 11
+        y: 84
+        z: 67
+      - x: 11
+        y: 79
+        z: 68
+      - x: 11
+        y: 80
+        z: 68
+      - x: 11
+        y: 81
+        z: 68
+      - x: 11
+        y: 82
+        z: 68
+      - x: 11
+        y: 83
+        z: 68
+      - x: 11
+        y: 84
+        z: 68
+      - x: 12
+        y: 79
+        z: 66
+      - x: 12
+        y: 80
+        z: 66
+      - x: 12
+        y: 81
+        z: 66
+      - x: 12
+        y: 82
+        z: 66
+      - x: 12
+        y: 83
+        z: 66
+      - x: 12
+        y: 84
+        z: 66
+      - x: 12
+        y: 79
+        z: 67
+      - x: 12
+        y: 80
+        z: 67
+      - x: 12
+        y: 81
+        z: 67
+      - x: 12
+        y: 82
+        z: 67
+      - x: 12
+        y: 83
+        z: 67
+      - x: 12
+        y: 84
+        z: 67
+      - x: 12
+        y: 79
+        z: 68
+      - x: 12
+        y: 80
+        z: 68
+      - x: 12
+        y: 81
+        z: 68
+      - x: 12
+        y: 82
+        z: 68
+      - x: 12
+        y: 83
+        z: 68
+      - x: 12
+        y: 84
+        z: 68
+      - x: 33
+        y: 79
+        z: 66
+      - x: 33
+        y: 80
+        z: 66
+      - x: 33
+        y: 81
+        z: 66
+      - x: 33
+        y: 82
+        z: 66
+      - x: 33
+        y: 83
+        z: 66
+      - x: 33
+        y: 84
+        z: 66
+      - x: 32
+        y: 79
+        z: 66
+      - x: 32
+        y: 80
+        z: 66
+      - x: 32
+        y: 81
+        z: 66
+      - x: 32
+        y: 82
+        z: 66
+      - x: 32
+        y: 83
+        z: 66
+      - x: 32
+        y: 84
+        z: 66
+      - x: 31
+        y: 79
+        z: 66
+      - x: 31
+        y: 80
+        z: 66
+      - x: 31
+        y: 81
+        z: 66
+      - x: 31
+        y: 82
+        z: 66
+      - x: 31
+        y: 83
+        z: 66
+      - x: 31
+        y: 84
+        z: 66
+      - x: 33
+        y: 79
+        z: 67
+      - x: 33
+        y: 80
+        z: 67
+      - x: 33
+        y: 81
+        z: 67
+      - x: 33
+        y: 82
+        z: 67
+      - x: 33
+        y: 83
+        z: 67
+      - x: 33
+        y: 84
+        z: 67
+      - x: 32
+        y: 79
+        z: 67
+      - x: 32
+        y: 80
+        z: 67
+      - x: 32
+        y: 81
+        z: 67
+      - x: 32
+        y: 82
+        z: 67
+      - x: 32
+        y: 83
+        z: 67
+      - x: 32
+        y: 84
+        z: 67
+      - x: 31
+        y: 79
+        z: 67
+      - x: 31
+        y: 80
+        z: 67
+      - x: 31
+        y: 81
+        z: 67
+      - x: 31
+        y: 82
+        z: 67
+      - x: 31
+        y: 83
+        z: 67
+      - x: 31
+        y: 84
+        z: 67
+    stations:
+      - block:
+          x: 25
+          y: 79
+          z: 86
+        type: FORGE
+    resources: []
+    defenses: []
+  - id: control
+    name: Control Room
+    areas:
+      - min:
+          x: 55
+          y: 68
+          z: 64
+        max:
+          x: 87
+          y: 103
+          z: 91
+      - min:
+          x: 64
+          y: 68
+          z: 61
+        max:
+          x: 87
+          y: 103
+          z: 63
+      - min:
+          x: 47
+          y: 68
+          z: 85
+        max:
+          x: 54
+          y: 103
+          z: 91
+      - min:
+          x: 47
+          y: 68
+          z: 67
+        max:
+          x: 54
+          y: 103
+          z: 70
+      - min:
+          x: 52
+          y: 68
+          z: 64
+        max:
+          x: 54
+          y: 103
+          z: 66
+    emeralds: 11
+    requires:
+      - hangar
+      - crypt
+    entrance:
+      x: 70.5
+      y: 80
+      z: 68.5
+    spawns:
+      - x: 54.5
+        y: 80
+        z: 68.5
+      - x: 83.5
+        y: 81
+        z: 88.5
+    safePoints:
+      - x: 55.5
+        y: 80
+        z: 68.5
+      - x: 57.5
+        y: 80
+        z: 77.5
+    purchaseSigns:
+      - x: 50
+        y: 80
+        z: 81
+      - x: 72
+        y: 80
+        z: 57
+    gate:
+      - x: 51
+        y: 80
+        z: 84
+      - x: 51
+        y: 81
+        z: 84
+      - x: 51
+        y: 82
+        z: 84
+      - x: 51
+        y: 83
+        z: 84
+      - x: 51
+        y: 84
+        z: 84
+      - x: 51
+        y: 85
+        z: 84
+      - x: 50
+        y: 80
+        z: 84
+      - x: 50
+        y: 81
+        z: 84
+      - x: 50
+        y: 82
+        z: 84
+      - x: 50
+        y: 83
+        z: 84
+      - x: 50
+        y: 84
+        z: 84
+      - x: 50
+        y: 85
+        z: 84
+      - x: 49
+        y: 80
+        z: 84
+      - x: 49
+        y: 81
+        z: 84
+      - x: 49
+        y: 82
+        z: 84
+      - x: 49
+        y: 83
+        z: 84
+      - x: 49
+        y: 84
+        z: 84
+      - x: 49
+        y: 85
+        z: 84
+      - x: 51
+        y: 80
+        z: 85
+      - x: 51
+        y: 81
+        z: 85
+      - x: 51
+        y: 82
+        z: 85
+      - x: 51
+        y: 83
+        z: 85
+      - x: 51
+        y: 84
+        z: 85
+      - x: 51
+        y: 85
+        z: 85
+      - x: 50
+        y: 80
+        z: 85
+      - x: 50
+        y: 81
+        z: 85
+      - x: 50
+        y: 82
+        z: 85
+      - x: 50
+        y: 83
+        z: 85
+      - x: 50
+        y: 84
+        z: 85
+      - x: 50
+        y: 85
+        z: 85
+      - x: 49
+        y: 80
+        z: 85
+      - x: 49
+        y: 81
+        z: 85
+      - x: 49
+        y: 82
+        z: 85
+      - x: 49
+        y: 83
+        z: 85
+      - x: 49
+        y: 84
+        z: 85
+      - x: 49
+        y: 85
+        z: 85
+      - x: 73
+        y: 81
+        z: 60
+      - x: 73
+        y: 82
+        z: 60
+      - x: 73
+        y: 83
+        z: 60
+      - x: 73
+        y: 84
+        z: 60
+      - x: 73
+        y: 85
+        z: 60
+      - x: 73
+        y: 86
+        z: 60
+      - x: 72
+        y: 81
+        z: 60
+      - x: 72
+        y: 82
+        z: 60
+      - x: 72
+        y: 83
+        z: 60
+      - x: 72
+        y: 84
+        z: 60
+      - x: 72
+        y: 85
+        z: 60
+      - x: 72
+        y: 86
+        z: 60
+      - x: 71
+        y: 80
+        z: 60
+      - x: 71
+        y: 81
+        z: 60
+      - x: 71
+        y: 82
+        z: 60
+      - x: 71
+        y: 83
+        z: 60
+      - x: 71
+        y: 84
+        z: 60
+      - x: 71
+        y: 85
+        z: 60
+      - x: 73
+        y: 81
+        z: 61
+      - x: 73
+        y: 82
+        z: 61
+      - x: 73
+        y: 83
+        z: 61
+      - x: 73
+        y: 84
+        z: 61
+      - x: 73
+        y: 85
+        z: 61
+      - x: 73
+        y: 86
+        z: 61
+      - x: 72
+        y: 81
+        z: 61
+      - x: 72
+        y: 82
+        z: 61
+      - x: 72
+        y: 83
+        z: 61
+      - x: 72
+        y: 84
+        z: 61
+      - x: 72
+        y: 85
+        z: 61
+      - x: 72
+        y: 86
+        z: 61
+      - x: 71
+        y: 80
+        z: 61
+      - x: 71
+        y: 81
+        z: 61
+      - x: 71
+        y: 82
+        z: 61
+      - x: 71
+        y: 83
+        z: 61
+      - x: 71
+        y: 84
+        z: 61
+      - x: 71
+        y: 85
+        z: 61
+    stations:
+      - block:
+          x: 59
+          y: 80
+          z: 86
+        type: ALCHEMY
+    resources:
+      - block:
+          x: 57
+          y: 80
+          z: 72
+        material: REDSTONE
+        amount: 2
+        perRound: 2
+    defenses:
+      - id: control-barricade
+        block:
+          x: 70
+          y: 80
+          z: 89
+        type: BARRICADE
+      - id: control-spike_trap
+        block:
+          x: 61
+          y: 80
+          z: 77
+        type: SPIKE_TRAP
+lobbyArea:
+  min:
+    x: -92
+    y: 68
+    z: -93
+  max:
+    x: -64
+    y: 103
+    z: -72
+expedition:
+  area:
+    min:
+      x: -91
+      y: 68
+      z: 38
+    max:
+      x: -63
+      y: 103
+      z: 68
+  arrival:
+    x: -76.5
+    y: 73
+    z: 55.5
+  returnTo:
+    x: 52.5
+    y: 80
+    z: 82.5
+  returnSign:
+    x: -77
+    y: 73
+    z: 62
+  spawns:
+    - x: -85.5
+      y: 73
+      z: 43.5
+    - x: -67.5
+      y: 73
+      z: 63.5
+  safePoints:
+    - x: -76.5
+      y: 73
+      z: 55.5
+    - x: -81.5
+      y: 73
+      z: 51.5
+machines:
+  - block:
+      x: 9
+      y: 75
+      z: -60
+    type: FOOD
+    interactions: []
+  - block:
+      x: 82
+      y: 78
+      z: -34
+    type: POWER
+    interactions:
+      - x: 82
+        y: 79
+        z: -34
+  - block:
+      x: 46
+      y: 76
+      z: -56
+    type: MYSTERY_BOX
+    interactions: []
+  - block:
+      x: 9
+      y: 76
+      z: -34
+    type: STONEWARD
+    interactions:
+      - x: 9
+        y: 77
+        z: -34
+  - block:
+      x: 48
+      y: 77
+      z: -6
+    type: GALESTRIDE
+    interactions:
+      - x: 48
+        y: 78
+        z: -6
+  - block:
+      x: 82
+      y: 79
+      z: 19
+    type: EMBERWEAVE
+    interactions:
+      - x: 82
+        y: 80
+        z: 19
+  - block:
+      x: -25
+      y: 74
+      z: -5
+    type: SOULBOND
+    interactions:
+      - x: -25
+        y: 75
+        z: -5
+  - block:
+      x: 46
+      y: 79
+      z: 46
+    type: RUNEFORGE
+    interactions: []
+planeParts:
+  - id: engine
+    name: Lift Engine
+    block:
+      x: 9
+      y: 77
+      z: 3
+  - id: wing
+    name: Canvas Wing
+    block:
+      x: 44
+      y: 79
+      z: 30
+  - id: fuel
+    name: Fuel Cell
+    block:
+      x: 82
+      y: 81
+      z: 84
+planeWorkbench:
+  x: 44
+  y: 80
+  z: 84
+bossObjective:
+  x: 82
+  y: 81
+  z: 63
+routes:
+  - id: freight-routes
+    gateZone: freight
+    districts:
+      - canteen
+      - freight
+  - id: signal-routes
+    gateZone: signal
+    districts:
+      - freight
+      - signal
+  - id: warehouse-routes
+    gateZone: warehouse
+    districts:
+      - railhead
+      - warehouse
+  - id: presshall-routes
+    gateZone: presshall
+    districts:
+      - warehouse
+      - canteen
+      - presshall
+  - id: foundry-routes
+    gateZone: foundry
+    districts:
+      - presshall
+      - freight
+      - foundry
+  - id: generator-routes
+    gateZone: generator
+    districts:
+      - foundry
+      - signal
+      - generator
+  - id: clinic-routes
+    gateZone: clinic
+    districts:
+      - warehouse
+      - clinic
+  - id: boilers-routes
+    gateZone: boilers
+    districts:
+      - clinic
+      - presshall
+      - boilers
+  - id: pumpstation-routes
+    gateZone: pumpstation
+    districts:
+      - boilers
+      - foundry
+      - pumpstation
+  - id: glassworks-routes
+    gateZone: glassworks
+    districts:
+      - pumpstation
+      - generator
+      - glassworks
+  - id: coalyard-routes
+    gateZone: coalyard
+    districts:
+      - clinic
+      - coalyard
+  - id: canal-routes
+    gateZone: canal
+    districts:
+      - coalyard
+      - boilers
+      - canal
+  - id: loom-routes
+    gateZone: loom
+    districts:
+      - canal
+      - pumpstation
+      - loom
+  - id: barracks-routes
+    gateZone: barracks
+    districts:
+      - loom
+      - glassworks
+      - barracks
+  - id: washhouse-routes
+    gateZone: washhouse
+    districts:
+      - coalyard
+      - washhouse
+  - id: crane-routes
+    gateZone: crane
+    districts:
+      - washhouse
+      - canal
+      - crane
+  - id: blastpit-routes
+    gateZone: blastpit
+    districts:
+      - crane
+      - loom
+      - blastpit
+  - id: crypt-routes
+    gateZone: crypt
+    districts:
+      - blastpit
+      - barracks
+      - crypt
+  - id: ramparts-routes
+    gateZone: ramparts
+    districts:
+      - washhouse
+      - ramparts
+  - id: roofgarden-routes
+    gateZone: roofgarden
+    districts:
+      - ramparts
+      - crane
+      - roofgarden
+  - id: hangar-routes
+    gateZone: hangar
+    districts:
+      - roofgarden
+      - blastpit
+      - hangar
+  - id: control-routes
+    gateZone: control
+    districts:
+      - hangar
+      - crypt
+      - control
+boxSites:
+  - id: freight-box
+    zone: freight
+    block:
+      x: 46
+      y: 76
+      z: -56
+    beacon:
+      x: 46
+      y: 90
+      z: -56
+  - id: glassworks-box
+    zone: glassworks
+    block:
+      x: 82
+      y: 79
+      z: -2
+    beacon:
+      x: 82
+      y: 93
+      z: -2
+  - id: hangar-box
+    zone: hangar
+    block:
+      x: 44
+      y: 80
+      z: 77
+    beacon:
+      x: 44
+      y: 94
+      z: 77
+lobbyGuide:
+  x: -88
+  y: 73
+  z: -76

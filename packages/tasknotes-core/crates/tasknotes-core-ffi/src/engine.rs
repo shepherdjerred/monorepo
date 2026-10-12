@@ -722,7 +722,7 @@ mod tests {
             snapshot.pending_count, 1,
             "a transient failure keeps the command"
         );
-        assert!(snapshot.dead_letters.is_empty());
+        assert_eq!(snapshot.dead_letters.len(), 0);
     }
 
     #[test]

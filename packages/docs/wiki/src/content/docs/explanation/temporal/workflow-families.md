@@ -75,7 +75,7 @@ That silence is the problem it has to solve.
 [`llm-catalog-refresh.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/activities/agent/llm-catalog-refresh.ts)
 publishes an `LlmCatalogDriftWithheld` occurrence instead, because a withheld
 repricing otherwise looks exactly like a clean week.
-[`llm-catalog-alert.ts`](https://github.com/shepherdjerred/monorepo/blob/d29a823aaa0606544af7da21fb60280738208efb/packages/temporal/src/shared/alerts/llm-catalog-alert.ts)
+[`llm-catalog-alert.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/shared/alerts/llm-catalog-alert.ts)
 derives the firing and the resolving occurrence from one label set, so the next
 run that withholds nothing closes the alert instead of leaving a fixed finding
 to expire on its own.
@@ -157,6 +157,14 @@ The one that touches backups is **detection-only by explicit decision**.
 gauges, a JSON summary, and a pointer to the remediation runbook. Auto-pruning
 was considered and declined in 2026-06-06: destructive automation aimed at
 backups is the one place detection confidence is not enough.
+
+`ci-workspace-reaper` deletes CI state Woodpecker failed to clean up: terminal
+`wp-` step and service pods and `ci-workspace` claims older than any workflow
+can run. It is destructive because what it deletes is disposable and
+unambiguous. Its age threshold is past every workflow timeout. No pod that is
+still running or terminating can lose its claim. Every delete carries the
+listed UID as a precondition. The grant lives on the infra worker, so the CI
+namespace's own maintenance pod stays without an API token.
 
 `golink-sync` reconciles only links owned by the worker's own tag identity.
 Hand-curated links belong to human owners and are never touched.

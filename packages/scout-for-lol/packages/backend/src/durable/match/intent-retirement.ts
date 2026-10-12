@@ -14,7 +14,10 @@ import {
   listRetirableIntents,
   transitionIntent,
 } from "#src/database/durable/intent-repository.ts";
-import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
+import type {
+  MatchNotificationIntentRecord,
+  NotificationIntentRecord,
+} from "#src/database/durable/intent-row.ts";
 import { scoutDurableNotificationIntentsRetired } from "#src/metrics/durable-pipeline.ts";
 import { createLogger } from "#src/logger.ts";
 
@@ -33,7 +36,7 @@ import { createLogger } from "#src/logger.ts";
  * cheap enough for both callers: the send path asks it before minting an
  * attempt, and the scheduled sweep asks it for every drivable intent it can
  * see. The Discord evidence — a deleted channel, a guild Scout left — is the
- * send path's alone (`temporal/v2/notification/intent-audience.ts`), because it
+ * send path's alone (`temporal/notification/intent-audience.ts`), because it
  * costs a request per intent.
  */
 
@@ -124,7 +127,7 @@ export type NotificationRetirementSource = "send" | "sweep";
 export async function retireNotificationIntent(
   db: Db,
   args: {
-    record: MatchNotificationIntentRecord;
+    record: NotificationIntentRecord;
     reason: NotificationRetirementReason;
     source: NotificationRetirementSource;
   },
@@ -137,7 +140,7 @@ export async function retireNotificationIntent(
   if (result.outcome === "applied") {
     scoutDurableNotificationIntentsRetired.inc({ reason, source });
     logger.info(
-      `Retired ${record.intent.kind} intent ${record.intent.key} for ${record.matchId}: its audience is gone (${reason}); nothing will be sent`,
+      `Retired ${record.intent.kind} intent ${record.intent.key} for ${"matchId" in record ? record.matchId : "duelId" in record ? record.duelId : record.dareId.toString()}: its audience is gone (${reason}); nothing will be sent`,
       { intentKey: record.intent.key, reason, source },
     );
   }

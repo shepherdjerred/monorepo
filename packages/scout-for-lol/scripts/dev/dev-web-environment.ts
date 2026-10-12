@@ -8,8 +8,8 @@ export type DevAuthMode = "dev-login" | "oauth";
  * flag's own registered default in
  * `packages/backend/src/configuration/flags.ts` (`FLAG_REGISTRY`), so a local
  * static-mode run behaves like a production Flipt outage rather than
- * inventing new local-only behavior. `scout-consumer-player-profiles-enabled`
- * is the one exception, flipped on to exercise the consumer preview this
+ * inventing new local-only behavior. Consumer profiles, Explore analysis and
+ * the Explore model picker are enabled to exercise the beta features this
  * script boots by default.
  */
 export const DEFAULT_STATIC_FLAG_OVERRIDES: Record<
@@ -26,11 +26,8 @@ export const DEFAULT_STATIC_FLAG_OVERRIDES: Record<
   bucks_transfers_enabled: false,
   challenge_runs_enabled: false,
   clash_surface: false,
-  competition_builder_v2_enabled: false,
   custom_nights_enabled: false,
-  dare_extended_contracts_enabled: false,
   dare_notifications_enabled: false,
-  dare_v2: false,
   debug: false,
   duels_enabled: false,
   explore_creation_enabled: false,
@@ -40,10 +37,8 @@ export const DEFAULT_STATIC_FLAG_OVERRIDES: Record<
   mvp_votes_enabled: false,
   initial_match_history_import_enabled: false,
   scout_operations_console_enabled: false,
-  scout_v2_postmatch_ownership_enabled: true,
-  scout_v2_prematch_ownership_enabled: false,
-  scout_v2_progression_notifications_enabled: false,
-  scoutql_relational_enabled: false,
+  scout_support_conversations_enabled: false,
+  scout_support_report_action_enabled: false,
   "scout-consumer-player-profiles-enabled": true,
   "scout-temporal-call-graph-tracing": false,
   voice_assistant_enabled: false,
@@ -53,6 +48,10 @@ export const DEFAULT_STATIC_FLAG_OVERRIDES: Record<
   // "no static override" warning on every poll.
   "scout-betting-parlay-ai-model": "gpt-5.6-sol",
   "scout-explore-model": "gpt-5.6-luna",
+  "scout-explore-analysis-enabled": true,
+  "scout-explore-model-picker-enabled": true,
+  "scout-explore-spend-policy":
+    '{"globalMonthlyMicros":20000000,"userMonthlyMicros":5000000,"turnMicros":500000}',
   "scout-report-ai-model": "gpt-5.6-sol",
   "scout-feature-tip-percent": 10,
   "scout-feature-tip-cooldown-hours": 72,
@@ -171,8 +170,8 @@ export function buildDevEnvironment(
     VITE_DOCS_ORIGIN: options.docsOrigin,
     // The backend picks its shape from one role rather than two booleans. A
     // local instance that does not own the single BETA gateway runs the same
-    // `application` role the split deployment will: web surface, interactive
-    // and lake workers, report lake, no shard.
+    // `application` role the hosted split does: web surface, interactive and
+    // lake workers, report lake, no shard.
     SCOUT_RUNTIME_ROLE:
       isDesignAuditBoot || !options.discordGatewayEnabled
         ? "application"

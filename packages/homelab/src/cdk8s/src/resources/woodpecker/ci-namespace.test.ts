@@ -3,7 +3,11 @@ import { App, Chart } from "cdk8s";
 import { parse as parseYaml } from "yaml";
 import { z } from "zod";
 import { createWoodpeckerChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/woodpecker.ts";
-import { createStorageClasses } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
+import {
+  createStorageClasses,
+  NVME_STORAGE_CLASS_LZ4,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
+import { escapeHelmGoTemplate } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/shared.ts";
 import {
   CI_BOUNDED_RESOURCES,
   CI_POD_GUARD_POLICY,
@@ -55,7 +59,11 @@ const EnvSchema = z.array(
   z.object({ name: z.string(), value: z.string().optional() }).loose(),
 );
 
-function agentEnvironment(): Map<string, string | undefined> {
+const AGENT_DEPLOYMENTS = ["completion", "main", "pr", "review"].map(
+  (pool) => `woodpecker-woodpecker-agent-${pool}`,
+);
+
+function agentEnvironment(name: string): Map<string, string | undefined> {
   const deployment = z
     .object({
       spec: z.object({
@@ -66,11 +74,78 @@ function agentEnvironment(): Map<string, string | undefined> {
         }),
       }),
     })
-    .parse(find("Deployment", "woodpecker-woodpecker-agent"));
+    .parse(find("Deployment", name));
   const container = deployment.spec.template.spec.containers[0];
   if (container === undefined) throw new Error("agent has no container");
   return new Map(container.env.map((entry) => [entry.name, entry.value]));
 }
+
+it("maps only ready-event completion onto the required PR context", () => {
+  expect(
+    agentEnvironment("woodpecker-woodpecker-server").get(
+      "WOODPECKER_STATUS_CONTEXT_FORMAT",
+    ),
+  ).toBe(
+    escapeHelmGoTemplate(
+      '{{ .context }}/{{ if and (eq .event "pull_request_metadata") (eq .workflow "ci-complete") }}pr{{ else }}{{ .event }}{{ end }}/{{ .workflow }}',
+    ),
+  );
+});
+
+it("isolates source caches on disposable NVMe claims and mounts them in maintenance", () => {
+  const ClaimSchema = z.object({
+    metadata: z.object({
+      namespace: z.literal("woodpecker-ci"),
+      labels: z.record(z.string(), z.string()),
+    }),
+    spec: z.object({
+      storageClassName: z.string(),
+      resources: z.object({ requests: z.object({ storage: z.string() }) }),
+    }),
+  });
+  for (const kind of ["main", "pr", "control"]) {
+    const claim = ClaimSchema.parse(
+      find("PersistentVolumeClaim", `woodpecker-source-${kind}`),
+    );
+    expect(claim.metadata.labels["velero.io/exclude-from-backup"]).toBe("true");
+    expect(claim.spec.storageClassName).toBe(NVME_STORAGE_CLASS_LZ4);
+    expect(claim.spec.resources.requests.storage).toBe(
+      kind === "control" ? "1Gi" : "10Gi",
+    );
+  }
+  const deployment = JSON.stringify(
+    find("Deployment", "temporal-maintenance-worker"),
+  );
+  for (const kind of ["main", "pr", "control"]) {
+    expect(deployment).toContain(`woodpecker-source-${kind}`);
+    expect(deployment).toContain(`/woodpecker/source-${kind}`);
+  }
+  expect(
+    JSON.stringify(find("ConfigMap", "woodpecker-bun-cache-gc")),
+  ).toContain("source-cache-gc.ts");
+});
+
+it("pins review execution to the deployed configuration policy image", () => {
+  const deployment = z
+    .object({
+      spec: z.object({
+        template: z.object({
+          spec: z.object({
+            containers: z.array(
+              z.object({ image: z.string(), env: EnvSchema }),
+            ),
+          }),
+        }),
+      }),
+    })
+    .parse(find("Deployment", "woodpecker-woodpecker-config-extension"));
+  const container = deployment.spec.template.spec.containers[0];
+  if (container === undefined) throw new Error("extension has no container");
+  expect(
+    container.env.find((entry) => entry.name === "CI_GATE_IMAGE")?.value,
+  ).toBe(container.image);
+  expect(container.image).toMatch(/@sha256:[a-f\d]{64}$/u);
+});
 
 const PodTemplateSchema = z.object({
   metadata: z.object({ name: z.string(), namespace: z.string() }).loose(),
@@ -111,6 +186,34 @@ const PodTemplateSchema = z.object({
   }),
 });
 
+const SecretEnvironmentSchema = z.object({
+  spec: z.object({
+    template: z.object({
+      spec: z.object({
+        containers: z.array(
+          z.object({
+            env: z.array(
+              z
+                .object({
+                  name: z.string(),
+                  valueFrom: z
+                    .object({
+                      secretKeyRef: z.object({
+                        name: z.string(),
+                        key: z.string(),
+                      }),
+                    })
+                    .optional(),
+                })
+                .loose(),
+            ),
+          }),
+        ),
+      }),
+    }),
+  }),
+});
+
 describe("Woodpecker CI namespace", () => {
   /**
    * Kueue's pod integration can only be scoped by namespace, and it gates
@@ -131,6 +234,10 @@ describe("Woodpecker CI namespace", () => {
 
   it("holds the CI work, and the control plane holds only the control plane", () => {
     const manifests = woodpeckerManifests();
+    const controlPlaneSecrets = new Set([
+      "woodpecker-extension-github-credentials",
+      "woodpecker-server-credentials",
+    ]);
     const deploymentsIn = (namespace: string) =>
       manifests
         .filter(
@@ -144,7 +251,7 @@ describe("Woodpecker CI namespace", () => {
       "temporal-maintenance-worker",
     ]);
     expect(deploymentsIn("woodpecker")).toEqual([
-      "woodpecker-woodpecker-agent",
+      ...AGENT_DEPLOYMENTS,
       "woodpecker-woodpecker-config-extension",
       "woodpecker-woodpecker-server",
     ]);
@@ -152,13 +259,27 @@ describe("Woodpecker CI namespace", () => {
       if (
         manifest.kind === "PersistentVolumeClaim" ||
         (manifest.kind === "OnePasswordItem" &&
-          manifest.metadata.name !== "woodpecker-server-credentials")
+          !controlPlaneSecrets.has(manifest.metadata.name))
       ) {
         expect(manifest.metadata.namespace, manifest.metadata.name).toBe(
           "woodpecker-ci",
         );
       }
     }
+  });
+
+  it("gives the config extension only its dedicated GitHub approval token", () => {
+    const deployment = SecretEnvironmentSchema.parse(
+      find("Deployment", "woodpecker-woodpecker-config-extension"),
+    );
+    const approvalToken = deployment.spec.template.spec.containers[0]?.env.find(
+      (entry) => entry.name === "GITHUB_APPROVAL_READ_TOKEN",
+    );
+
+    expect(approvalToken?.valueFrom?.secretKeyRef).toEqual({
+      name: "woodpecker-extension-github-credentials",
+      key: "GITHUB_DOWNLOAD_TOKEN",
+    });
   });
 
   /** The clone pod runs as `default`; no CI pod needs the Kubernetes API. */
@@ -206,25 +327,30 @@ describe("Woodpecker CI namespace", () => {
    * selector the clone lands on the production node and the workspace claim
    * binds there with it.
    */
-  it("sends every agent-created pod to liskov at batch priority", () => {
-    const env = agentEnvironment();
-    expect(env.get("WOODPECKER_BACKEND_K8S_NAMESPACE")).toBe("woodpecker-ci");
-    expect(
-      JSON.parse(env.get("WOODPECKER_BACKEND_K8S_POD_NODE_SELECTOR") ?? ""),
-    ).toEqual({ "kubernetes.io/hostname": "liskov" });
-    expect(
-      JSON.parse(env.get("WOODPECKER_BACKEND_K8S_POD_TOLERATIONS") ?? ""),
-    ).toEqual([
-      { key: "ci", operator: "Equal", value: "only", effect: "NoSchedule" },
-    ]);
-    expect(env.get("WOODPECKER_BACKEND_K8S_PRIORITY_CLASS")).toBe("batch-low");
-    expect(env.get("WOODPECKER_BACKEND_K8S_STORAGE_CLASS")).toBe(
-      "ci-workspace",
-    );
-  });
+  it.each(AGENT_DEPLOYMENTS)(
+    "%s sends every pod to liskov at batch priority",
+    (name) => {
+      const env = agentEnvironment(name);
+      expect(env.get("WOODPECKER_BACKEND_K8S_NAMESPACE")).toBe("woodpecker-ci");
+      expect(
+        JSON.parse(env.get("WOODPECKER_BACKEND_K8S_POD_NODE_SELECTOR") ?? ""),
+      ).toEqual({ "kubernetes.io/hostname": "liskov" });
+      expect(
+        JSON.parse(env.get("WOODPECKER_BACKEND_K8S_POD_TOLERATIONS") ?? ""),
+      ).toEqual([
+        { key: "ci", operator: "Equal", value: "only", effect: "NoSchedule" },
+      ]);
+      expect(env.get("WOODPECKER_BACKEND_K8S_PRIORITY_CLASS")).toBe(
+        "batch-low",
+      );
+      expect(env.get("WOODPECKER_BACKEND_K8S_STORAGE_CLASS")).toBe(
+        "ci-workspace",
+      );
+    },
+  );
 
   /** The backend authenticates to the API with the agent pod's own token. */
-  it("mounts the agent's service account token", () => {
+  it.each(AGENT_DEPLOYMENTS)("%s mounts its service account token", (name) => {
     const deployment = z
       .object({
         spec: z.object({
@@ -236,7 +362,7 @@ describe("Woodpecker CI namespace", () => {
           }),
         }),
       })
-      .parse(find("Deployment", "woodpecker-woodpecker-agent"));
+      .parse(find("Deployment", name));
     expect(deployment.spec.template.spec).toMatchObject({
       serviceAccountName: "woodpecker-agent",
       automountServiceAccountToken: true,

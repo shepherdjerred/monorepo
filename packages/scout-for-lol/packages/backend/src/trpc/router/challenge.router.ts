@@ -1,3 +1,4 @@
+import type { DiscordAccountId } from "@scout-for-lol/domain/identity/discord.ts";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import {
@@ -60,7 +61,7 @@ const StartRunInputSchema = z.strictObject({
 });
 type StartRunInput = z.infer<typeof StartRunInputSchema>;
 
-function ownerId(discordId: string) {
+function ownerId(discordId: DiscordAccountId) {
   return DiscordAccountIdSchema.parse(discordId);
 }
 
@@ -75,7 +76,7 @@ function userInputError(error: unknown): never {
 }
 
 async function startRunForUser(
-  discordId: string,
+  discordId: DiscordAccountId,
   input: StartRunInput,
 ): Promise<{ readonly runId: string; readonly revision: number }> {
   const request = await startChallengeRun(prisma, {
@@ -106,7 +107,9 @@ async function assertRunVisibility(
 
   const guilds = await fetchUserGuildsForRequest(user);
   const guildIds = guilds.map((guild) => DiscordGuildIdSchema.parse(guild.id));
-  const runOwnerDiscordId = ownerId(run.ownerDiscordId);
+  const runOwnerDiscordId = ownerId(
+    DiscordAccountIdSchema.parse(run.ownerDiscordId),
+  );
   const sharedPlayers = await prisma.player.findMany({
     where: {
       discordId: runOwnerDiscordId,

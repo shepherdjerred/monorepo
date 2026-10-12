@@ -1,9 +1,9 @@
 import type { ComponentProps } from "react";
 import type { Loaded } from "@shepherdjerred/loaded";
 import { Input } from "@scout-for-lol/design-system/components/input";
-import { Section } from "#src/components/player/player-detail-sections.tsx";
 import { PlayerProfileFilterBar } from "#src/components/player/player-profile-filter-bar.tsx";
-import { ChampionPoolTable } from "#src/components/player/champion-pool-table.tsx";
+import type { ChampionPoolTable } from "#src/components/player/champion-pool-table.tsx";
+import { Button } from "@scout-for-lol/design-system/components/button";
 import { PlayerSummaryCards } from "#src/components/player/player-profile-sections.tsx";
 import {
   RecordedMatchHistory,
@@ -38,6 +38,7 @@ export function CombinedPerformance(props: {
   onRetryHistory: () => void;
   onPreviousHistory: () => void;
   onNextHistory: (cursor: HistoryCursor) => void;
+  onClearFilters?: () => void;
 }) {
   const historyPending =
     props.history.status === "loading" || props.historyRefetching;
@@ -54,8 +55,9 @@ export function CombinedPerformance(props: {
   }
   return (
     <>
-      <h2 className="text-xl font-semibold">Combined performance</h2>
+      <h2 className="text-xl font-semibold">Recent performance</h2>
       <PlayerProfileFilterBar
+        key={filterKey(props.filters)}
         filters={props.filters}
         onChange={props.onFiltersChange}
       />
@@ -71,22 +73,12 @@ export function CombinedPerformance(props: {
             ranks={props.ranks}
             recentForm={props.recentForm}
           />
-          {props.championPool.length > 0 && (
-            <Section title="Champion performance">
-              <ChampionPoolTable
-                key={filterKey(props.filters)}
-                rows={props.championPool}
-                minGamesForRate={props.minGamesForRate}
-                profileSearch={props.profileSearch}
-              />
-            </Section>
-          )}
           {props.onChampionSearchChange !== undefined && (
             <label
               className="block space-y-1 text-sm"
               htmlFor="champion-history-search"
             >
-              <span>Search recorded matches by champion</span>
+              <span>Filter matches by champion</span>
               <Input
                 id="champion-history-search"
                 value={props.championSearch ?? ""}
@@ -96,9 +88,6 @@ export function CombinedPerformance(props: {
                 placeholder="Champion name"
                 maxLength={40}
               />
-              <span className="block text-xs text-scout-subtle">
-                The game limit applies after champion search.
-              </span>
             </label>
           )}
           <RecordedMatchHistory
@@ -113,8 +102,19 @@ export function CombinedPerformance(props: {
             onRetry={props.onRetryHistory}
             onPrevious={props.onPreviousHistory}
             onNext={props.onNextHistory}
+            filtered={
+              props.filters.queues !== undefined ||
+              props.filters.games !== "all" ||
+              (props.championSearch?.length ?? 0) > 0
+            }
+            onClearFilters={props.onClearFilters}
           />
         </>
+      )}
+      {performanceBlank && (
+        <Button variant="outline" onClick={props.onClearFilters}>
+          Clear filters
+        </Button>
       )}
     </>
   );

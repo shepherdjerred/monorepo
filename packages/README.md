@@ -9,6 +9,7 @@ hold only scoped invariants that agents must keep in context.
 | --------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
 | [alert-dashboard](alert-dashboard/)                             | Ops dashboard — snapshot overview, alert ledger, digest email, Grafana previews          |
 | [birmel](birmel/)                                               | Discord bot on an explicit AI SDK agent runtime                                          |
+| [glitter-boys-launcher](glitter-boys-launcher/)                 | Native Rust/egui game installer and launcher for Windows x64                             |
 | [monarch](monarch/)                                             | AI transaction categorization pipeline for Monarch Money                                 |
 | [scout-for-lol](scout-for-lol/)                                 | Discord bot tracking friends' League of Legends matches with rich post-game reports      |
 | [starlight-karma-bot](starlight-karma-bot/)                     | Discord karma bot — points, leaderboards, scheduled recaps                               |
@@ -17,6 +18,8 @@ hold only scoped invariants that agents must keep in context.
 | [temporal](temporal/)                                           | Temporal worker: scheduled automation, agent tasks, homelab audits, PR-opening refreshes |
 | [trmnl-dashboard](trmnl-dashboard/)                             | TRMNL e-ink dashboard backend aggregating home/homelab status                            |
 | [storm-brain](storm-brain/)                                     | LLM classify/triage brain for The Storm's AI staff agent (Bun + Hono)                    |
+| [storm-forum](storm-forum/)                                     | XenForo runtime, owned community portal, release configuration and Activity worker       |
+| [storm-theme](storm-theme/)                                     | Shared Storm calendar, palettes, artwork, preferences, and social-card renderer          |
 
 ## Discord streaming
 
@@ -46,12 +49,13 @@ hold only scoped invariants that agents must keep in context.
 | Package                                         | Description                                                    |
 | ----------------------------------------------- | -------------------------------------------------------------- |
 | [sjer.red](sjer.red/)                           | Personal website (Astro)                                       |
+| [statically-typed](statically-typed/)           | Minimal Berkeley Mono anchor page with a Bun build             |
 | [resume](resume/)                               | LaTeX resume, built and deployed from CI                       |
 | [stocks-sjer-red](stocks-sjer-red/)             | PC-component investment portfolio tracker (Astro)              |
 | [cooklang-rich-preview](cooklang-rich-preview/) | Marketing site for the Cooklang Rich Preview Obsidian plugin   |
+| [glitter-boys](glitter-boys/)                   | Glitter Boys homepage and game setup guides (Astro/Starlight)  |
 | [glitter](glitter/)                             | Glitter Boys friend-group site                                 |
 | [cross-compilers-site](cross-compilers-site/)   | Marketing site for the macOS and Windows cross-compiler images |
-| [ts-mc](ts-mc/)                                 | The Storm Minecraft server portal (Astro)                      |
 | [ts-mc-docs](ts-mc-docs/)                       | The Storm player documentation (Starlight)                     |
 
 ## Libraries
@@ -69,6 +73,7 @@ hold only scoped invariants that agents must keep in context.
 | [loaded](loaded/)                                 | `Loaded<T>` renderability algebra + `LoadingBlock` for async UI state          |
 | [ops-clients](ops-clients/)                       | Zod-validated upstream clients for the ops snapshot collector                  |
 | [ops-model](ops-model/)                           | Ops snapshot contract, severity policy, and the service catalog                |
+| [sentry-config](sentry-config/)                   | Browser-safe Sentry data collection policy shared by application clients       |
 | [voice-assistant](voice-assistant/)               | Shared wake-word voice pipeline (local cascade + OpenAI Realtime turn)         |
 
 ## Plugins & extensions
@@ -78,13 +83,15 @@ hold only scoped invariants that agents must keep in context.
 | [better-skill-capped](better-skill-capped/)     | Web client rebuilding Skill Capped's catalog UI              |
 | [cooklang-for-obsidian](cooklang-for-obsidian/) | Obsidian plugin rendering `.cook` recipes with rich previews |
 | [the-storm](the-storm/)                         | Paper plugin for The Storm (ts-mc.net) Minecraft server      |
-| [the-storm-brain](the-storm/brain/)             | Opt-in Mineflayer companion pilot for The Storm              |
 
 ## Infrastructure & tooling
 
 | Package                                                   | Description                                                                    |
 | --------------------------------------------------------- | ------------------------------------------------------------------------------ |
 | [homelab](homelab/)                                       | Kubernetes homelab: Talos, cdk8s, OpenTofu, ArgoCD                             |
+| [mc-build](mc-build/)                                     | Minecraft block registry, schematics, build DSL, lint, and offline renderer    |
+| [mc-harness](mc-harness/)                                 | Minecraft sandboxes, MCBridge client, and the daemon behind `toolkit mc`       |
+| [unix-socket-daemon](unix-socket-daemon/)                 | Shared unix-socket HTTP daemon scaffolding (serve, idle TTL, PID identity)     |
 | [hkctl](hkctl/)                                           | Development-signed Apple HomeKit command-line app (Mac Catalyst)               |
 | [terraform-provider-asuswrt](terraform-provider-asuswrt/) | Terraform/OpenTofu provider for Asuswrt-Merlin routers                         |
 | [toolkit](toolkit/)                                       | CLI developer tools (`pr`, `alerts`, `bugsink`, `grafana`, `discord`, …)       |
@@ -93,6 +100,7 @@ hold only scoped invariants that agents must keep in context.
 | [justin-principal-engineer](justin-principal-engineer/)   | Local Linear-to-PR queue with Docker coding turns and owner approval           |
 | [release-tools](release-tools/)                           | release-please wrapper for the release lane                                    |
 | [dotfiles](dotfiles/)                                     | Dotfiles & shell config (chezmoi source)                                       |
+| [dotfiles-windows](dotfiles-windows/)                     | Windows PC chezmoi source: shell, configs, winget software record              |
 | [fonts](fonts/)                                           | Berkeley Mono Nerd Fonts patcher                                               |
 
 ## Learning & reference

@@ -3,7 +3,7 @@ import { resolveLakeDir } from "#src/report-lake/paths.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
 import {
   buildPrematchSource,
-  resolveLakeFiles,
+  withLakeQueryRetry,
 } from "#src/reports/duckdb/lake.ts";
 
 const PrematchIdentityRowSchema = z.object({
@@ -22,15 +22,16 @@ export async function fetchDistinctPrematchIdentities(
   options: { lakeDir?: string } = {},
 ): Promise<LakePrematchIdentityRow[]> {
   const lakeDir = options.lakeDir ?? resolveLakeDir();
-  const files = await resolveLakeFiles(lakeDir);
-  const source = buildPrematchSource(files, { sql: "", params: [] });
-  if (source === undefined) return [];
-  const sql = `SELECT DISTINCT puuid, riot_id FROM (${source.sql})`;
-  return await withDuckDBConnection(async (session) => {
-    const params = source.params.map((param) =>
-      param.kind === "list" ? session.list(param.values) : param.value,
-    );
-    const rows = await session.run(sql, params);
-    return rows.map((row) => PrematchIdentityRowSchema.parse(row));
+  return await withLakeQueryRetry(lakeDir, async (files) => {
+    const source = buildPrematchSource(files, { sql: "", params: [] });
+    if (source === undefined) return [];
+    const sql = `SELECT DISTINCT puuid, riot_id FROM (${source.sql})`;
+    return await withDuckDBConnection(async (session) => {
+      const params = source.params.map((param) =>
+        param.kind === "list" ? session.list(param.values) : param.value,
+      );
+      const rows = await session.run(sql, params);
+      return rows.map((row) => PrematchIdentityRowSchema.parse(row));
+    });
   });
 }

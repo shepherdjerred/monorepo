@@ -13,6 +13,7 @@ const RIFT_PATH = `${import.meta.dir}/../../../../testdata/rift.json`;
 
 const ALL_EXPECTED = [
   "info.endOfGameResult",
+  "info.gameName",
   "info.tournamentCode",
   "info.participants[].eligibleForProgression",
   "info.participants[].missions",

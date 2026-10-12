@@ -31,6 +31,7 @@ public final class DailyActivityListener implements Listener {
 
   @EventHandler
   public void onJoin(PlayerJoinEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getPlayer())) return;
     arrival(event.getPlayer());
   }
 
@@ -41,6 +42,7 @@ public final class DailyActivityListener implements Listener {
 
   @EventHandler
   public void onDeath(PlayerDeathEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getEntity())) return;
     if (!mainWorld(event.getPlayer())) {
       return;
     }

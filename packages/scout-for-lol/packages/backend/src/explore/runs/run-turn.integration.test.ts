@@ -4,13 +4,18 @@ import {
   type ReportAiPreviewSummary,
   type ExploreStreamEvent,
 } from "@scout-for-lol/data";
-import type { ExploreAgentParams } from "#src/explore/agent-tools.ts";
+import type { ExploreAgentParams } from "#src/explore/analysis/agent-types.ts";
 import {
   getExploreQuotaStatus,
   resetExploreRateLimitStateForTests,
   tryStartExploreTurn,
 } from "#src/explore/rate-limit.ts";
-import { runPersistedExploreTurn } from "#src/explore/runs/run-turn.ts";
+import {
+  runPersistedExploreTurn,
+  exploreFailureCode,
+} from "#src/explore/runs/run-turn.ts";
+import { ExploreCardSelectionError } from "#src/explore-match/card-selection-error.ts";
+import { ExploreBudgetError } from "#src/explore/spending/ledger.ts";
 import { loadExploreTranscript, startExploreTurn } from "#src/explore/store.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { testAccountId } from "#src/testing/test-ids.ts";
@@ -111,6 +116,7 @@ const failingAgent = async (params: ExploreAgentParams) => {
 
 beforeEach(async () => {
   resetExploreRateLimitStateForTests();
+  await prisma.scoutInteractiveRun.deleteMany();
   await prisma.exploreMessage.deleteMany();
   await prisma.exploreConversation.deleteMany();
   await prisma.user.deleteMany();
@@ -239,9 +245,43 @@ describe("shared persisted Explore turn", () => {
     expect(transcript?.messages[1]?.preview).toBeNull();
     expect(transcript?.messages[1]?.visualization).toBeNull();
   });
+});
 
+describe("persisted Explore failure handling", () => {
+  test("durable failure categories preserve cause without persisting private details", () => {
+    expect(
+      exploreFailureCode(
+        "failed",
+        new ExploreCardSelectionError("match", "private query"),
+      ),
+    ).toBe("explore:invalid_match_card");
+    expect(
+      exploreFailureCode(
+        "failed",
+        new ExploreCardSelectionError("loadout", "private query"),
+      ),
+    ).toBe("explore:invalid_loadout_card");
+    expect(
+      exploreFailureCode("failed", new ExploreBudgetError("private allowance")),
+    ).toBe("explore:budget_exceeded");
+    expect(exploreFailureCode("stopped", new Error("private data"))).toBe(
+      "explore:stopped",
+    );
+    expect(exploreFailureCode("interrupted", new Error("private data"))).toBe(
+      "explore:interrupted",
+    );
+  });
   test("salvages streamed prose after an agent failure and releases the slot", async () => {
     const prepared = await preparedTurn();
+    await prisma.scoutInteractiveRun.create({
+      data: {
+        id: prepared.ticket.runId,
+        kind: "explore",
+        ownerId: userId,
+        conversationId: prepared.started.conversationId,
+        payload: "{}",
+      },
+    });
 
     const terminal = await runPersistedExploreTurn(
       {
@@ -261,6 +301,10 @@ describe("shared persisted Explore turn", () => {
 
     expect(terminal.type).toBe("final");
     expect(terminal.outcome).toBe("failed");
+    const run = await prisma.scoutInteractiveRun.findUniqueOrThrow({
+      where: { id: prepared.ticket.runId },
+    });
+    expect(run.lastError).toBe("explore:execution_failed");
     if (terminal.type === "final") {
       expect(terminal.message.content).toBe("Partial evidence.");
       expect(terminal.message.caveats).toContain(

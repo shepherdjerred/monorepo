@@ -1,5 +1,6 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import { describe, expect, test, vi } from "vitest";
-import { DiscordAccountIdSchema, MatchIdSchema } from "@scout-for-lol/data";
+import { DiscordAccountIdSchema, RiotMatchIdSchema } from "@scout-for-lol/data";
 import {
   routeButton,
   type RoutableButtonInteraction,
@@ -7,7 +8,7 @@ import {
 import { formatBucksCustomId } from "#src/betting/custom-id.ts";
 import { formatBucksNavigationId } from "#src/betting/navigation.ts";
 import { formatParlayCustomId } from "#src/betting/parlays/parlay-custom-id.ts";
-import { formatDareV2CustomId } from "#src/betting/dares/lifecycle/dare-custom-id-v2.ts";
+import { formatDareCustomId } from "#src/betting/dares/lifecycle/dare-custom-id.ts";
 import { formatVoteButtonCustomId } from "#src/mvp-votes/custom-id.ts";
 
 const USER_ID = DiscordAccountIdSchema.parse("160509172704739328");
@@ -17,7 +18,10 @@ const USER_ID = DiscordAccountIdSchema.parse("160509172704739328");
  * `bet-button.integration.test.ts` builds one: the router's parameter type is
  * structural, so a plain object needs no cast and no mock framework.
  */
-function fakeInteraction(customId: string, guildId: string | null = null) {
+function fakeInteraction(
+  customId: string,
+  guildId: DiscordGuildId | null = null,
+) {
   const calls: string[] = [];
   const interaction: RoutableButtonInteraction = {
     customId,
@@ -76,7 +80,7 @@ describe("routeButton", () => {
     expect(malformed.calls).toEqual(["deferUpdate"]);
 
     const valid = fakeInteraction(
-      formatDareV2CustomId({
+      formatDareCustomId({
         kind: "delete",
         dareId: 42,
         revision: 1,
@@ -103,7 +107,7 @@ describe("routeButton", () => {
     const { interaction, calls } = fakeInteraction(
       formatBucksCustomId({
         action: "b",
-        matchId: "NA1_5000000042",
+        matchId: RiotMatchIdSchema.parse("NA1_5000000042"),
         subjectIndex: 0,
         side: "W",
         amount: 10,
@@ -154,7 +158,7 @@ describe("routeButton", () => {
     const valid = fakeInteraction(
       formatParlayCustomId({
         action: "b",
-        matchId: "NA1_5000000042",
+        matchId: RiotMatchIdSchema.parse("NA1_5000000042"),
         side: "YES",
         amount: 5,
       }),
@@ -171,7 +175,7 @@ describe("routeButton", () => {
     const valid = fakeInteraction(
       formatVoteButtonCustomId({
         category: "ally",
-        matchId: MatchIdSchema.parse("NA1_5000000042"),
+        matchId: RiotMatchIdSchema.parse("NA1_5000000042"),
       }),
     );
     await routeButton(valid.interaction);

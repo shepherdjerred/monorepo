@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 // ============================================================================
 // In-Memory Rate Limit Store
 // ============================================================================
@@ -23,7 +24,10 @@ const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
  * @param userId - Discord user ID
  * @returns true if user can create competition, false if rate limited
  */
-export function checkRateLimit(serverId: string, userId: string): boolean {
+export function checkRateLimit(
+  serverId: DiscordGuildId,
+  userId: string,
+): boolean {
   const key = `${serverId}:${userId}`;
   const lastCreation = rateLimitStore.get(key);
 
@@ -43,7 +47,7 @@ export function checkRateLimit(serverId: string, userId: string): boolean {
  * @param serverId - Discord server ID
  * @param userId - Discord user ID
  */
-export function recordCreation(serverId: string, userId: string): void {
+export function recordCreation(serverId: DiscordGuildId, userId: string): void {
   const key = `${serverId}:${userId}`;
   rateLimitStore.set(key, Date.now());
 }
@@ -55,7 +59,10 @@ export function recordCreation(serverId: string, userId: string): void {
  * @param userId - Discord user ID
  * @returns milliseconds remaining, or 0 if not rate limited
  */
-export function getTimeRemaining(serverId: string, userId: string): number {
+export function getTimeRemaining(
+  serverId: DiscordGuildId,
+  userId: string,
+): number {
   const key = `${serverId}:${userId}`;
   const lastCreation = rateLimitStore.get(key);
 
@@ -76,7 +83,7 @@ export function getTimeRemaining(serverId: string, userId: string): number {
  * @param serverId - Discord server ID
  * @param userId - Discord user ID
  */
-export function clearRateLimit(serverId: string, userId: string): void {
+export function clearRateLimit(serverId: DiscordGuildId, userId: string): void {
   const key = `${serverId}:${userId}`;
   rateLimitStore.delete(key);
 }

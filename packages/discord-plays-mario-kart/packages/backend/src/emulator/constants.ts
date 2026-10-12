@@ -47,6 +47,4 @@ export const BUTTON_ORDER = [
   "cLeft",
   "cRight",
 ] as const;
-export type N64Button = (typeof BUTTON_ORDER)[number];
-
 export const MAX_SEATS = 4;

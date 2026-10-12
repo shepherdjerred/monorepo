@@ -2,7 +2,6 @@ import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
-  MatchIdSchema,
 } from "@scout-for-lol/data";
 import { NotificationIntentSchema } from "@scout-for-lol/domain/notifications/intent.ts";
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
@@ -17,7 +16,7 @@ import {
 import { upsertMatchMvpVote } from "#src/mvp-votes/vote.ts";
 
 const { prisma: db } = createTestDatabase("mvp-tally-reconciliation");
-const matchId = MatchIdSchema.parse("NA1_5000000099");
+const matchId = RiotMatchIdSchema.parse("NA1_5000000099");
 const serverId = DiscordGuildIdSchema.parse("1337623164146155593");
 const voterDiscordId = DiscordAccountIdSchema.parse("160509172704739328");
 const key = { matchId, serverId };
@@ -252,7 +251,7 @@ describe("MVP tally lease recovery", () => {
   test("closes only after postmatch intents record a terminal no-send outcome", async () => {
     await vote(1);
     await upsertIntent(db, {
-      matchId: RiotMatchIdSchema.parse(matchId),
+      matchId: matchId,
       intent: NotificationIntentSchema.parse({
         key: "mvp-no-report",
         kind: "postmatch",

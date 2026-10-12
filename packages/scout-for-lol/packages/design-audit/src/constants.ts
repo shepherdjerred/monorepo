@@ -13,5 +13,3 @@ export const viewports = [
   { name: "tablet", width: 768, height: 1024, isMobile: true },
   { name: "mobile", width: 390, height: 844, isMobile: true },
 ] as const;
-
-export type AuditViewport = (typeof viewports)[number];

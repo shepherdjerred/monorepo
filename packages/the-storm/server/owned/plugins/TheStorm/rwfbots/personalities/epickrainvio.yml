@@ -1,0 +1,82 @@
+id: epickrainvio
+name: EpicKrainvio
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NTI5MjI2MCwKICAicHJvZmlsZUlkIiA6ICI5YWRmNmRlNTJkNjE0MzA2YmEzNzQ2NWU1ZDIyYThjMyIsCiAgInByb2ZpbGVOYW1lIiA6ICJMb3JkX29mX3hpYW95YW8iLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZDhiODRhN2Q3Y2U3NzNmNGI4YTVkNWY1ZGYwMGJkY2JjY2MwZmNmZjI1YTBmNTM3MThlOTFlNTkwOTdkMmFmIgogICAgfQogIH0KfQ=="
+  signature: "A4BrmFki/i4DmOd4hzuV5/u3jBI8h+2tBZTfN4wcdibWeJ9wrZmAETLNrLRPSGarSW+YdZO/gaEj+fb60BUkjF8o+Z+9ZcJuDchGBeMhQtVEj6cXjjzITRL4M9ybpwvL8enoXbiX6ruJrfV+rOu6Jwc2r5rqWidhZ2IZQ05k+TCWdCz0sqNq2sVhZtCrCWhENp0RPAkFlIy8BP0YccRKNa8uvV2BZUghMfzWIRn9wdgihF+TSnoyyF+RxvDIuyUJCXwWrjS6Czyuzq8GAhQ/+kMsnNwNoPEDTIwPwhZJo8wqU96rCnCH5NPFkqqjR0aDRRs4+VWECJknCC/OaNI0VCjXPJNi6CHRiDQJMMpKfolh5VY6oBHzP/tmm3WP3ll+QwYai0kMfqf/+Uey4A8ri3Bkj3ea0MkIM7YHQCnJsOOI2BxpmxnW2LmAtfwHCgv5sQgDP0bu1TpNPy7EwUqydL9GcKK3dlqUIjrWHECvdl/+liFmud2HP8SouaU5qCylPlfT2BXiGMPYZYadYCcblZte5PeBDhdfEVRN6PYC4oMg1nHHG7YuT0p2HXfz1684kJtjjkShrdMwFDbWczw0D6MFMyDil8THlbPVmeA5F6km50yIWHSCVHLPvum0fPu4/14itgU8aitcgu5uaUkTxJuES7KLD1vAfdd+NN0Vs5Y="
+skill: 0.243
+archetype: bomb_diver
+leverOffsets:
+  reactionMs: -0.1
+  cps: 0.45
+  decisionTemperature: 0.9
+  awarenessRadius: 0.11
+  technique: 0.88
+  aggression: -0.65
+kits:
+  trooper: 0.97
+  shortbow: 0.18
+  rewind: 0.55
+  ghost: 0.15
+roles:
+  plant: 0.75
+  escort: 0.25
+  hunt: 0.16
+style:
+  aggression: 0.7
+  patience: 0.06
+  teamplay: 0.3
+  risk: 0.98
+voice:
+  tone:
+    - dramatic
+    - heroic
+    - overconfident
+  verbosity: normal
+  style: "movie trailer narrator; every plant is an epic quest"
+lines:
+  greet:
+    - In a world... where one hero... goes for the bomb.
+    - "This summer, {team} rises."
+    - One fuse. One chance. One Krainvio.
+  onKill:
+    - "{victim} has fallen. The quest continues."
+    - No obstacle can stop the hero.
+    - "{victim} was merely the first trial."
+  onDeath:
+    - The hero... has fallen. Sequel incoming.
+    - "{killer}, the villain of this story."
+    - To be continued.
+  onPlant:
+    - "And so {bomb}... was lit."
+    - "The legendary fuse lands upon {bomb}!"
+  onDefuse:
+    - "{bomb} saved, against all odds."
+    - "The hero rescues {bomb}!"
+  onWin:
+    - And they lived victoriously ever after.
+    - "A triumph for {team}. Roll credits."
+  onLoss:
+    - Not every tale ends well. gg.
+    - "Coming soon: the rematch."
+  onLastAlive:
+    - Our hero stands alone.
+    - Against impossible odds...
+    - "{team}, watch this scene."
+  taunt:
+    - Every story needs a villain. Thanks.
+    - The hero approaches your bomb.
+    - Prepare for the climax.
+  lobby:
+    - Before the battle... there was the lobby.
+    - One hero. One Trooper kit. One impossible run.
+    - "{team}... the trailer starts in seconds."
+    - Every great story needs a villain. I wonder who's playing today.
+    - Coming soon... to a bomb near you.
+quirks:
+  - narrates
+  - loves_nuke
+rivals:
+  - lunarfuse83
+bio: Narrates his own runs to the bomb like a film trailer, mostly ending in a cliffhanger. LunarFuse83 is the recurring villain who keeps standing in the way.
+batch: 2
+retired: false

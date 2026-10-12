@@ -34,6 +34,22 @@ dependencies {
   testRuntimeOnly(lib("junit-platform-launcher"))
 }
 
+// Include custom source sets such as dist's e2e configuration, which does not
+// inherit implementation. Constraints add no new libraries; remove each once
+// the upstream dependency graph carries its patched minimum.
+sourceSets.configureEach {
+  val targetConfiguration = implementationConfigurationName
+  dependencies.constraints {
+    add(targetConfiguration, lib("security-plexus-utils")) { because("CVE-2025-67030") }
+    add(targetConfiguration, lib("security-jackson2-core")) {
+      because("CVE-2026-89407 and CVE-2026-89425")
+    }
+    add(targetConfiguration, lib("security-jackson2-databind")) {
+      because("CVE-2026-91776 and CVE-2026-91777")
+    }
+  }
+}
+
 tasks.withType<JavaCompile>().configureEach {
   options.release = 25
   options.encoding = "UTF-8"
@@ -112,5 +128,9 @@ tasks.register("resolveAndLockAll") {
   doFirst {
     require(gradle.startParameter.isWriteDependencyLocks) { "run with --write-locks" }
   }
-  doLast { configurations.filter { it.isCanBeResolved }.forEach { it.resolve() } }
+  doLast {
+    // PMD creates its auxiliary configurations lazily when the task classpath is read.
+    tasks.withType<Pmd>().toList().forEach { it.classpath?.files }
+    configurations.filter { it.isCanBeResolved }.toList().forEach { it.resolve() }
+  }
 }

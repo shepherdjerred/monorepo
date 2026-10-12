@@ -16,9 +16,11 @@ import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.interactions.InteractionHook;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.requests.GatewayIntent;
-import net.dv8tion.jda.api.utils.messages.MessageRequest;
+import net.dv8tion.jda.api.utils.messages.MessageCreateRequest;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
@@ -96,10 +98,19 @@ public final class JdaBridge implements DiscordGateway {
         .addCommands(
             Commands.slash("list", "Who is online on The Storm"),
             Commands.slash("baltop", "Show the richest players in The Storm"),
-            Commands.slash("towns", "Show player towns in The Storm"))
+            Commands.slash("towns", "Show towns, spawn and historic sites in The Storm")
+                .addOptions(
+                    townPageOption(),
+                    new OptionData(OptionType.STRING, "name", "Town or historic site to inspect")))
         .queue(
             commands -> logger.info("Discord bridge connected to #{}", found.getName()),
             error -> logger.warn("Registering Discord slash commands failed", error));
+  }
+
+  /** Discord's integer range must fit the page type consumed by the listener. */
+  static OptionData townPageOption() {
+    return new OptionData(OptionType.INTEGER, "page", "Directory page")
+        .setRequiredRange(1, Integer.MAX_VALUE);
   }
 
   @Override
@@ -109,7 +120,7 @@ public final class JdaBridge implements DiscordGateway {
       logger.debug("Discord is not connected; dropped a post");
       return;
     }
-    withoutMentions(target.sendMessage(text))
+    quietMessage(target.sendMessage(text))
         .queue(sent -> {}, error -> logger.warn("Posting to Discord failed", error));
   }
 
@@ -133,7 +144,7 @@ public final class JdaBridge implements DiscordGateway {
   private void disconnect(@Nullable TextChannel target, @Nullable JDA client, String goodbye) {
     if (target != null) {
       try {
-        withoutMentions(target.sendMessage(goodbye))
+        quietMessage(target.sendMessage(goodbye))
             .submit()
             .get(GOODBYE_WAIT.toMillis(), TimeUnit.MILLISECONDS);
       } catch (ExecutionException | TimeoutException e) {
@@ -156,8 +167,11 @@ public final class JdaBridge implements DiscordGateway {
     }
   }
 
-  static <R extends MessageRequest<R>> R withoutMentions(R request) {
-    return request.setAllowedMentions(EnumSet.noneOf(Message.MentionType.class));
+  /** Keeps feed posts visible without mentions or push/desktop notifications. */
+  static <R extends MessageCreateRequest<R>> R quietMessage(R request) {
+    return request
+        .setAllowedMentions(EnumSet.noneOf(Message.MentionType.class))
+        .setSuppressedNotifications(true);
   }
 
   /** Edits an ephemeral slash-command reply without resolving mentions. */

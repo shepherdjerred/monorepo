@@ -2,6 +2,7 @@
 # for a filtered root install (turbo prune is banned because it corrupts
 # bun.lock). Keep the build context to tracked-ish sources.
 .git
+.local
 .turbo
 node_modules
 **/node_modules

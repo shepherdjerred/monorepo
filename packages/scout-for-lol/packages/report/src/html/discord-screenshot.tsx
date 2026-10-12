@@ -118,6 +118,7 @@ function TimestampColumn(props: {
   return (
     <div
       style={{
+        boxSizing: "border-box",
         display: "flex",
         width: TIMESTAMP_WIDTH,
         flexShrink: 0,
@@ -284,6 +285,7 @@ function BotMessageRow(props: {
         >
           <div
             style={{
+              boxSizing: "border-box",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -331,6 +333,7 @@ function BotMessageRow(props: {
 
         <div
           style={{
+            boxSizing: "border-box",
             display: "flex",
             width: props.embeddedImageLayout.width + 40,
             height: props.embeddedImageLayout.height + 40,
@@ -373,6 +376,7 @@ function DiscordScreenshot(props: {
   return (
     <div
       style={{
+        boxSizing: "border-box",
         width: "100%",
         height: "100%",
         display: "flex",

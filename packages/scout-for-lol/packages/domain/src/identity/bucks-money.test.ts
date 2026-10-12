@@ -9,11 +9,22 @@ import {
   BucksPoolTotalSchema,
   type BucksStake,
   BucksStakeSchema,
+  type DareChallengerStake,
+  DareChallengerStakeSchema,
+  type DarePayout,
+  DarePayoutSchema,
+  type DarePileOn,
+  DarePileOnSchema,
+  type DarePotTotal,
+  DarePotTotalSchema,
   ZERO_BUCKS,
   addAmounts,
+  addPileOns,
   amountToStake,
   applyDelta,
   creditOf,
+  darePayoutOf,
+  darePotOf,
   debitOf,
   stakeToAmount,
   subtractAmounts,
@@ -23,6 +34,7 @@ import {
 const stake = (value: number) => BucksStakeSchema.parse(value);
 const amount = (value: number) => BucksAmountSchema.parse(value);
 const delta = (value: number) => BucksDeltaSchema.parse(value);
+const pileOn = (value: number) => DarePileOnSchema.parse(value);
 
 /** The Int32 bound these brands deliberately no longer carry. Named here only
  * so the tests can assert values above it still parse. */
@@ -205,5 +217,58 @@ describe("brand non-interchangeability", () => {
     expectTypeOf<BucksAmount>().toExtend<number>();
     expectTypeOf<BucksDelta>().toExtend<number>();
     expectTypeOf<BucksPoolTotal>().toExtend<number>();
+  });
+});
+
+describe("Dare money", () => {
+  test("validates exactly like the generic brand each refines", () => {
+    expect(DareChallengerStakeSchema.safeParse(1).success).toBe(true);
+    expect(DareChallengerStakeSchema.safeParse(0).success).toBe(false);
+    expect(DarePileOnSchema.safeParse(1).success).toBe(true);
+    expect(DarePileOnSchema.safeParse(0).success).toBe(false);
+    expect(DarePotTotalSchema.safeParse(0).success).toBe(true);
+    expect(DarePotTotalSchema.safeParse(INT32_MAX * 2).success).toBe(true);
+    expect(DarePotTotalSchema.safeParse(-1).success).toBe(false);
+    expect(DarePayoutSchema.safeParse(0).success).toBe(true);
+    expect(DarePayoutSchema.safeParse(1.5).success).toBe(false);
+  });
+
+  test("a funded pot starts at the challenger's stake", () => {
+    expect(darePotOf(DareChallengerStakeSchema.parse(250))).toBe(250);
+  });
+
+  test("sums one contributor's pile-ons", () => {
+    expect(addPileOns(pileOn(3))).toBe(3);
+    expect(addPileOns(pileOn(3), pileOn(4), pileOn(5))).toBe(12);
+  });
+
+  test("a payout is the share less the cut, and never negative", () => {
+    expect(darePayoutOf(amount(100), amount(5))).toBe(95);
+    expect(darePayoutOf(amount(0), ZERO_BUCKS)).toBe(0);
+    expect(() => darePayoutOf(amount(5), amount(6))).toThrow(z.ZodError);
+  });
+
+  test("no Dare quantity passes for another", () => {
+    expectTypeOf<DareChallengerStake>().not.toExtend<DarePileOn>();
+    expectTypeOf<DarePileOn>().not.toExtend<DareChallengerStake>();
+    expectTypeOf<DarePotTotal>().not.toExtend<DarePayout>();
+    expectTypeOf<DarePayout>().not.toExtend<DarePotTotal>();
+    expectTypeOf<DareChallengerStake>().not.toExtend<DarePotTotal>();
+    expectTypeOf<DarePileOn>().not.toExtend<DarePotTotal>();
+  });
+
+  test("generic money does not satisfy a Dare brand", () => {
+    expectTypeOf<BucksStake>().not.toExtend<DareChallengerStake>();
+    expectTypeOf<BucksStake>().not.toExtend<DarePileOn>();
+    expectTypeOf<BucksPoolTotal>().not.toExtend<DarePotTotal>();
+    expectTypeOf<BucksAmount>().not.toExtend<DarePayout>();
+    expectTypeOf<number>().not.toExtend<DarePotTotal>();
+  });
+
+  test("each Dare brand is still the generic brand it refines", () => {
+    expectTypeOf<DareChallengerStake>().toExtend<BucksStake>();
+    expectTypeOf<DarePileOn>().toExtend<BucksStake>();
+    expectTypeOf<DarePotTotal>().toExtend<BucksPoolTotal>();
+    expectTypeOf<DarePayout>().toExtend<BucksAmount>();
   });
 });

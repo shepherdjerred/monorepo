@@ -1,8 +1,8 @@
-import type { DareDeadlineSpecV2 } from "@scout-for-lol/data";
+import type { DareDeadlineSpec } from "@scout-for-lol/data";
 
 export function dareDeadlineDescription(dare: {
   deadlineAt: string | null;
-  deadlineSpec: DareDeadlineSpecV2;
+  deadlineSpec: DareDeadlineSpec;
 }): string {
   if (dare.deadlineAt !== null) {
     return new Date(dare.deadlineAt).toLocaleString();

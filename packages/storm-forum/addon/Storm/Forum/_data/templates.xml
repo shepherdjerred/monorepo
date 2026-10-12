@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates>
+  <template type="public" title="storm_historical_poll" version_id="4010170" version_string="4.1.1"><![CDATA[
+<xf:if is="$thread.storm_historical_poll && $page == 1">
+  <section class="block stormHistoricalPoll"><div class="block-container">
+    <h2 class="block-header">{$thread.storm_historical_poll.question}</h2>
+    <div class="block-body"><xf:foreach loop="$thread.storm_historical_poll.options" value="$option"><div class="block-row"><span>{$option.text}</span><strong>{$option.votes|number} votes</strong></div></xf:foreach></div>
+    <div class="block-footer"><a href="{$thread.storm_historical_poll.source}" rel="nofollow">Archived poll results</a> · voting closed</div>
+  </div></section>
+</xf:if>
+  ]]></template>
+  <template type="public" title="storm_style_chooser" version_id="2000070" version_string="2.0.0"><![CDATA[
+<xf:title>Appearance and theme</xf:title>
+<xf:head option="metaNoindex"><meta name="robots" content="noindex" /></xf:head>
+<xf:form action="{{ link('misc/style') }}" ajax="true" class="block">
+  <div class="block-container">
+    <div class="block-body">
+      <xf:radiorow name="storm_mode" value="{$stormMode}" label="Appearance">
+        <xf:option value="system">System</xf:option>
+        <xf:option value="light">Light</xf:option>
+        <xf:option value="dark">Dark</xf:option>
+      </xf:radiorow>
+      <xf:selectrow name="storm_theme" value="{$stormTheme}" label="Theme">
+        <xf:option value="auto">Follow calendar</xf:option>
+        <xf:foreach loop="$stormThemes" value="$theme">
+          <xf:option value="{$theme.id}">{$theme.name}</xf:option>
+        </xf:foreach>
+      </xf:selectrow>
+      <xf:checkboxrow label="Holiday effects"><xf:option name="storm_effects" selected="{$stormEffects}">Show holiday effects</xf:option></xf:checkboxrow>
+      <xf:inforow>Effects respect your device’s reduced-motion setting and appear only on holiday themes.</xf:inforow>
+      <xf:inforow>Follow calendar currently uses <strong>{$stormEffectiveTheme}</strong>. Choosing a specific theme keeps it throughout the year.</xf:inforow>
+    </div>
+    <xf:submitrow submit="Save appearance" />
+  </div>
+  <xf:hiddenval name="t">{{ csrf_token() }}</xf:hiddenval>
+  <xf:hiddenval name="_xfRedirect">{$redirect}</xf:hiddenval>
+</xf:form>
+  ]]></template>
+  <template type="public" title="storm_theme_bootstrap" version_id="3000070" version_string="3.0.0"><![CDATA[
+<div id="storm-theme-root" data-storm-surface="forum" data-storm-base="{{ base_url('styles/storm/') }}" data-storm-api="{{ link('storm-theme') }}"></div>
+<link rel="stylesheet" href="{{ base_url('styles/storm/effects.css') }}" />
+<script type="module" src="{{ base_url('styles/storm/browser.js') }}"></script>
+  ]]></template>
+  <template type="public" title="storm_account_recovery" version_id="4010070" version_string="4.1.0"><![CDATA[
+<xf:if is="$user.storm_archived">
+  <div class="block"><div class="block-container"><div class="block-body block-row">
+    <strong>Is this your old account?</strong>
+    <p>This archived profile preserves your posts. Register and verify your email, then ask staff to combine it with your current account. Share ownership evidence privately; a matching name alone is not enough.</p>
+    <xf:if is="$xf.visitor.user_id"><a class="button button--primary" href="{{ link('forums', $stormRecoveryForum) }}">Request account recovery</a>
+    <xf:else /><a class="button button--primary" href="{{ link('register') }}">Register to recover your account</a></xf:if>
+  </div></div></div>
+</xf:if>
+  ]]></template>
+  <template type="public" title="storm_portal" version_id="4010370" version_string="4.1.3"><![CDATA[
+<xf:title>The Storm</xf:title>
+<xf:h1 hidden="true" />
+<xf:css src="storm_forum.less" />
+<section class="stormWelcome">
+  <img src="{{ base_url('styles/storm/logo.svg') }}" alt="The Storm" width="270" height="83" />
+  <div><h1>Welcome to The Storm</h1><p>A place to build, explore, and catch up.</p><p>Minecraft Java + Bedrock · Java server IP: <strong>{$status.connections.java.address}</strong><br />Bedrock: <strong>{$status.connections.bedrock.host}:{$status.connections.bedrock.port}</strong></p>
+    <a class="button button--primary" href="{{ link('forums') }}">Visit the forums</a>
+    <a class="button" href="https://docs.ts-mc.net">Getting started</a>
+  </div>
+</section>
+<xf:foreach loop="$news" value="$thread">
+  <article class="block stormArticle"><div class="block-container">
+    <h2 class="block-header"><a href="{{ link('threads', $thread) }}">{$thread.title}</a></h2>
+    <div class="stormArticleContent">
+    <time class="stormArticleDate" datetime="{{ date($thread.post_date, 'Y-m-d') }}"><span>{{ date($thread.post_date, 'M') }}</span><strong>{{ date($thread.post_date, 'd') }}</strong></time>
+    <div class="stormArticleByline"><span>by <xf:username user="$thread.User" username="{$thread.username}" /> · <xf:date time="$thread.post_date" /> · {$thread.view_count|number} views · {{ array_sum($thread.FirstPost.reactions)|number }} reactions</span><a href="{{ link('threads', $thread) }}">{$thread.reply_count|number} comments</a></div>
+    <div class="stormArticleBody"><div class="stormArticleSnippet">{{ bb_code_snippet($thread.FirstPost.message, 'post', $thread.FirstPost, 750) }}</div><xf:avatar user="$thread.User" size="m" /></div>
+    </div>
+    <div class="block-footer"><a class="stormArticleContinue" href="{{ link('threads', $thread) }}">Continue reading →</a></div>
+  </div></article>
+</xf:foreach>
+<xf:pagenav page="$page" perpage="$perPage" total="$total" link="storm-home" />
+<xf:sidebar>
+  <div class="block stormJoin" data-storm-minecraft="{{ link('storm-status') }}" data-checked-at="{$status.checkedAt}" data-stale-after="{$status.staleAfterSeconds}"><div class="block-container"><h3 class="block-header">Minecraft Java + Bedrock</h3><div class="block-body block-row">
+    <h4 class="stormJoinEdition">Java Edition</h4>
+    <div class="stormJoinAddress"><strong>{$status.connections.java.address}</strong><button type="button" class="button" data-storm-copy="{$status.connections.java.address}" data-storm-copy-label="Java address" aria-label="Copy Java server address">Copy IP</button></div>
+    <small class="u-muted">No port needed: Java finds it automatically.</small>
+    <details class="stormJoinManual"><summary>Manual address and port</summary><div class="stormJoinAddress"><code>{$status.connections.java.host}:{$status.connections.java.port}</code><button type="button" class="button" data-storm-copy="{$status.connections.java.host}:{$status.connections.java.port}" data-storm-copy-label="Java manual address" aria-label="Copy Java manual address and port">Copy</button></div></details>
+    <h4 class="stormJoinEdition">Bedrock Edition</h4>
+    <div class="stormJoinAddress"><strong>{$status.connections.bedrock.host}</strong><button type="button" class="button" data-storm-copy="{$status.connections.bedrock.host}" data-storm-copy-label="Bedrock address" aria-label="Copy Bedrock server address">Copy IP</button></div>
+    <div class="stormJoinAddress stormJoinPort"><span>Port: <strong>{$status.connections.bedrock.port}</strong></span><button type="button" class="button" data-storm-copy="{$status.connections.bedrock.port}" data-storm-copy-label="Bedrock port" aria-label="Copy Bedrock port">Copy port</button></div>
+    <small class="u-muted">Enter the address and port separately.</small>
+    <div class="stormJoinLive" data-storm-minecraft-live aria-live="polite"><xf:include template="storm_minecraft_status" /></div>
+    <span data-storm-copy-status role="status"></span>
+  </div></div></div>
+  <script type="module" src="{{ base_url('styles/storm/minecraft.js') }}"></script>
+  <xf:widget key="storm_recent_threads" />
+</xf:sidebar>
+  ]]></template>
+  <template type="public" title="storm_minecraft_status" version_id="4010270" version_string="4.1.2"><![CDATA[
+<xf:macro name="edition" arg-label="!" arg-info="!">
+  <div class="stormJoinVersion"><strong>{$label}</strong><span data-edition-state><xf:if is="$info.state == 'online'">Online<xf:elseif is="$info.state == 'sleeping'" />Sleeping<xf:elseif is="$info.state == 'starting'" />Starting<xf:else />Status unavailable</xf:if></span>
+    <xf:if is="$info.version"><small><span data-version-label><xf:if is="$info.state == 'online'">Server version<xf:else />Last verified version</xf:if></span>: {$info.version}</small></xf:if>
+  </div>
+</xf:macro>
+<span class="stormJoinBadge{{ $status.state == 'online' ? ' stormJoinBadge--online' : '' }}" data-minecraft-state><xf:if is="$status.state == 'online'">Online<xf:if is="$status.players !== null"> · {{ count($status.players.names) }} / {$status.players.maximum} players</xf:if><xf:elseif is="$status.state == 'sleeping'" />Sleeping<xf:elseif is="$status.state == 'starting'" />Starting<xf:else />Status unavailable</xf:if></span>
+<p data-minecraft-instruction><xf:if is="$status.state == 'sleeping'">Join through Java to wake the server. Bedrock can join once it is online.<xf:elseif is="$status.state == 'starting'" />The server is starting. Check again shortly.<xf:elseif is="$status.state == 'unavailable'" />The status check is unavailable. You can still try joining.<xf:elseif is="$status.bedrock.state == 'online'" />Bedrock joins work while the server is awake.<xf:else />Java is online. Bedrock status is unavailable.</xf:if></p>
+<div class="stormJoinVersions"><xf:macro name="edition" arg-label="Java" arg-info="{$status.java}" /><xf:macro name="edition" arg-label="Bedrock" arg-info="{$status.bedrock}" /></div>
+<section class="stormJoinPlayers" data-minecraft-players aria-label="Online players"><h4>Who's online</h4>
+  <xf:if is="$status.players !== null"><xf:if is="count($status.players.names)"><ul><xf:foreach loop="$status.players.names" value="$name"><li>{$name}</li></xf:foreach></ul><xf:else /><p>No players online.</p></xf:if><xf:else /><p>Player list unavailable.</p></xf:if>
+</section>
+<xf:if is="$status.checkedAt"><small class="u-muted">Checked <xf:date time="$status.checkedAt" /></small></xf:if>
+  ]]></template>
+  <template type="public" title="storm_forum.less" version_id="4010370" version_string="4.1.3"><![CDATA[
+.stormWelcome {display:flex;gap:2rem;align-items:center;padding:2rem;margin-bottom:2rem;border-radius:12px;background:fade(@xf-paletteColor2, 14%);}
+.stormWelcome h1 {margin:0 0 .5rem;font-size:2rem;}
+.stormWelcome .button {margin:.5rem .5rem 0 0;}
+.stormArticle {margin-left:20px;}
+.stormArticle .block-header {font-size:15px;font-weight:normal;padding:8px 12px 8px 36px;}
+.stormArticleContent {position:relative;}
+.stormArticleDate {position:absolute;top:8px;left:-21px;width:48px;text-align:center;background:@xf-contentAltBg;border:1px solid @xf-borderColor;border-radius:3px;overflow:hidden;box-shadow:0 1px 3px fade(#000,10%);line-height:1.1;}
+.stormArticleDate span {display:block;background:@xf-linkColor;color:@xf-contentBg;font-size:11px;font-weight:bold;text-transform:uppercase;padding:5px 2px;}
+.stormArticleDate strong {display:block;font-size:26px;padding:6px 2px;font-weight:normal;font-variant-numeric:tabular-nums;}
+.stormArticleByline {display:flex;justify-content:space-between;gap:10px;padding:8px 12px 8px 36px;color:@xf-textColorDimmed;font-size:11px;}
+.stormArticleBody {display:flex;gap:20px;padding:4px 12px 14px 36px;align-items:flex-start;}
+.stormArticleSnippet {flex:1;min-width:0;line-height:1.5;}
+.stormArticleSnippet img {max-width:100%;height:auto;}
+.stormArticleBody .avatar {flex-shrink:0;border:4px solid @xf-contentAltBg;box-shadow:0 0 0 1px @xf-borderColor;border-radius:50%;}
+.stormArticleContinue {display:block;text-align:right;font-size:12px;font-weight:bold;}
+.stormHistoricalPoll .block-row {display:flex;justify-content:space-between;gap:12px;}
+.stormJoinAddress {display:flex;align-items:center;justify-content:space-between;gap:6px;}
+.stormJoinAddress strong {font-size:16px;overflow-wrap:anywhere;}
+.stormJoinAddress code {font-size:11px;overflow-wrap:anywhere;}
+.stormJoinAddress .button {flex-shrink:0;}
+.stormJoinEdition {font-size:13px;margin:14px 0 6px;}
+.stormJoinEdition:first-child {margin-top:0;}
+.stormJoinManual {margin-top:8px;font-size:11px;}
+.stormJoinManual summary {cursor:pointer;}
+.stormJoinManual .stormJoinAddress {margin-top:8px;}
+.stormJoinPort {margin-top:8px;}
+.stormJoinLive {margin-top:16px;padding-top:14px;border-top:1px solid @xf-borderColor;}
+.stormJoinVersions {display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0;}
+.stormJoinVersion > strong,.stormJoinVersion > span {display:block;font-size:12px;}
+.stormJoinVersion > span {margin-top:3px;}
+.stormJoinPlayers {border-top:1px solid @xf-borderColor;padding-top:12px;}
+.stormJoinPlayers h4 {margin:0 0 8px;font-size:13px;}
+.stormJoinPlayers ul {display:flex;flex-wrap:wrap;gap:6px;list-style:none;padding:0;margin:0;}
+.stormJoinPlayers li {padding:4px 7px;border:1px solid @xf-borderColor;border-radius:4px;background:@xf-contentAltBg;font-size:12px;overflow-wrap:anywhere;max-width:100%;}
+.stormJoin .button {font-size:11px;padding:5px 8px;}
+.stormJoin p {margin:10px 0;font-size:12px;line-height:1.6;}
+.stormJoinBadge {display:inline-block;padding:3px 7px;border-radius:20px;background:@xf-contentHighlightBg;color:@xf-textColor;font-size:11px;font-weight:bold;border:1px solid @xf-borderColor;}
+.stormJoinBadge--online {border-color:@xf-linkColor;}
+.stormJoin small {display:block;margin-top:6px;font-size:11px;}
+.message .reactionsBar {border-radius:3px;font-size:12px;}
+.message .reactionSummary {gap:4px;}
+.reaction--small img {width:16px;height:16px;}
+.reactionSelect {max-width:calc(100vw - 24px);}
+.reactionSelect .reactionSelect-reaction {padding:7px;}
+@media(max-width:650px) {.reactionSelect {flex-wrap:wrap;} .reactionSelect .reactionSelect-reaction {padding:6px;}}
+@media(max-width:450px) {.stormArticleBody .avatar {display:none;} .stormArticleByline {flex-wrap:wrap;}}
+@media(max-width:650px) {.stormWelcome {flex-direction:column;text-align:center;padding:1.5rem;} .stormWelcome h1 {font-size:1.6rem;}}
+  ]]></template>
+</templates>

@@ -65,3 +65,21 @@ The checked arithmetic that produces these values (`addAmounts`,
 `subtractAmounts`, `applyDelta`, `creditOf`, `debitOf`, `stakeToAmount`,
 `amountToStake`, `sumToPoolTotal`) lives here too, because it is pure and
 re-asserts only the semantic domain.
+
+### Dare money
+
+A Dare moves four quantities the product never collapses, so each has its own
+brand refining the generic one it is a case of:
+
+| Brand                 | Refines          | Meaning                                    |
+| --------------------- | ---------------- | ------------------------------------------ |
+| `DareChallengerStake` | `BucksStake`     | the challenger's opening commitment        |
+| `DarePileOn`          | `BucksStake`     | money added to a funded pot afterwards     |
+| `DarePotTotal`        | `BucksPoolTotal` | the opening stake plus every pile-on       |
+| `DarePayout`          | `BucksAmount`    | one target's net share after the house cut |
+
+Refining keeps the generic ledger helpers usable, while a stake never passes
+for a pile-on and a pot never passes for a payout. `darePotOf`, `addPileOns`,
+and `darePayoutOf` are the checked arithmetic between them. Backend code parses
+a Dare amount once where it is read from Prisma or user input and carries the
+brand to the ledger or the rendered message.

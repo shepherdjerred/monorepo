@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   afterAll,
   afterEach,
@@ -226,7 +227,7 @@ describe("prepareBucksPrematch", () => {
       const matchId = `NA1_${queue.id.toString()}`;
       const opened = await openBettingPoolsForPrematch(
         {
-          matchId,
+          matchId: RiotMatchIdSchema.parse(matchId),
           gameInfo: gameInfo({ gameQueueConfigId: queue.id }),
           queueType: queue.type,
           guildIds: [ENABLED],

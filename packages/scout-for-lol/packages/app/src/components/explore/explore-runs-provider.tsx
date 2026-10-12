@@ -135,7 +135,7 @@ export function ExploreRunsProvider(props: { children: ReactNode }) {
     async (conversationId: string): Promise<ExploreTranscript | undefined> => {
       await Promise.all([
         queryClient.invalidateQueries({
-          queryKey: trpc.explore.get.queryKey({ conversationId }),
+          queryKey: trpc.explore.get.queryKey({ conversationId, version: 3 }),
         }),
         queryClient.invalidateQueries({
           queryKey: trpc.explore.list.queryKey(),
@@ -317,6 +317,7 @@ export function ExploreRunsProvider(props: { children: ReactNode }) {
       try {
         const summary = ExploreActiveRunSchema.parse(
           await startMutation.mutateAsync({
+            ...(input.model === undefined ? {} : { model: input.model }),
             conversationId: input.conversationId,
             question: input.question,
             attach: input.attach,

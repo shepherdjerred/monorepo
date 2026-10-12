@@ -11,7 +11,7 @@ export function createTemporalIngressWorkers(
   props: {
     serverServiceName: string;
     secret: ISecret;
-    blueBubblesSecret: ISecret;
+    photonSecret: ISecret;
   },
 ) {
   const gatewayDeployment = createTemporalDomainWorker(chart, {
@@ -51,10 +51,17 @@ export function createTemporalIngressWorkers(
         secret: props.secret,
         key: "AGENT_TASK_API_TOKEN",
       }),
-      BLUEBUBBLES_URL: EnvValue.fromValue("https://jobs.tailnet-1a49.ts.net"),
-      BLUEBUBBLES_PASSWORD: EnvValue.fromSecretValue({
-        secret: props.blueBubblesSecret,
-        key: "password",
+      SPECTRUM_PROJECT_ID: EnvValue.fromSecretValue({
+        secret: props.photonSecret,
+        key: "SPECTRUM_PROJECT_ID",
+      }),
+      SPECTRUM_PROJECT_SECRET: EnvValue.fromSecretValue({
+        secret: props.photonSecret,
+        key: "SPECTRUM_PROJECT_SECRET",
+      }),
+      SPECTRUM_WEBHOOK_SECRET: EnvValue.fromSecretValue({
+        secret: props.photonSecret,
+        key: "SPECTRUM_WEBHOOK_SECRET",
       }),
       AGENT_CHAT_DISCORD_TOKEN: EnvValue.fromSecretValue(
         {
@@ -101,10 +108,7 @@ export function createTemporalIngressWorkers(
         "home",
         "temporal-home-worker",
       ),
-      HA_URL: EnvValue.fromSecretValue({
-        secret: props.secret,
-        key: "HA_URL",
-      }),
+      HA_URL: EnvValue.fromValue("https://homeassistant.tailnet-1a49.ts.net"),
       HA_TOKEN: EnvValue.fromSecretValue({
         secret: props.secret,
         key: "HA_TOKEN",
@@ -124,10 +128,9 @@ export function createTemporalIngressWorkers(
         "reports",
         "temporal-reports-worker",
       ),
-      S3_ENDPOINT: EnvValue.fromSecretValue({
-        secret: props.secret,
-        key: "S3_ENDPOINT",
-      }),
+      S3_ENDPOINT: EnvValue.fromValue(
+        "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
+      ),
       S3_REGION: EnvValue.fromValue("us-east-1"),
       S3_FORCE_PATH_STYLE: EnvValue.fromValue("true"),
       AWS_ACCESS_KEY_ID: EnvValue.fromSecretValue({
@@ -138,25 +141,13 @@ export function createTemporalIngressWorkers(
         secret: props.secret,
         key: "AWS_SECRET_ACCESS_KEY",
       }),
-      POSTAL_HOST: EnvValue.fromSecretValue({
-        secret: props.secret,
-        key: "POSTAL_HOST",
-      }),
-      POSTAL_HOST_HEADER: EnvValue.fromSecretValue({
-        secret: props.secret,
-        key: "POSTAL_HOST_HEADER",
-      }),
+      POSTAL_HOST: EnvValue.fromValue(
+        "http://postal-postal-web-service.postal.svc.cluster.local:5000",
+      ),
+      POSTAL_HOST_HEADER: EnvValue.fromValue("postal.tailnet-1a49.ts.net"),
       POSTAL_API_KEY: EnvValue.fromSecretValue({
         secret: props.secret,
         key: "POSTAL_API_KEY",
-      }),
-      RECIPIENT_EMAIL: EnvValue.fromSecretValue({
-        secret: props.secret,
-        key: "RECIPIENT_EMAIL",
-      }),
-      SENDER_EMAIL: EnvValue.fromSecretValue({
-        secret: props.secret,
-        key: "SENDER_EMAIL",
       }),
       ALERTMANAGER_URL: EnvValue.fromValue(
         "http://prometheus-kube-prometheus-alertmanager.prometheus:9093",

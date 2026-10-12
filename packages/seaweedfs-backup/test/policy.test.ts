@@ -13,6 +13,23 @@ import {
 } from "@shepherdjerred/seaweedfs-backup/schemas";
 
 describe("SeaweedFS backup policy", () => {
+  test.each(["beta", "prod"])(
+    "protects private support screenshots in %s",
+    (stage) => {
+      const support = SEAWEEDFS_BACKUP_POLICY.buckets.find(
+        (bucket) => bucket.name === `scout-support-${stage}`,
+      );
+      if (support === undefined)
+        throw new Error("Missing support backup policy");
+      expect(support.mode).toBe("protected");
+      expect(support.cadences).toContain("daily");
+      for (const suffix of ["PNG", "jpg", "webp"]) {
+        expect(
+          objectIsProtected(`support/private/screenshot.${suffix}`, support),
+        ).toBe(true);
+      }
+    },
+  );
   test("conforms to the published language-neutral JSON Schema", () => {
     const validate = new Ajv2020({
       strict: true,
@@ -56,7 +73,7 @@ describe("SeaweedFS backup policy", () => {
     expect(cloudflareResources).toContain("max_age_seconds = 2592000");
     expect(cloudflareResources).toContain("max_age = 604800");
     expect(cloudflareResources).not.toContain("InfrequentAccess");
-    expect(providers).toContain('version = "~> 5.25.0"');
+    expect(providers).toContain('version = "~> 5.27.0"');
   });
 
   test("requires explicit reasons and unique bucket names", () => {

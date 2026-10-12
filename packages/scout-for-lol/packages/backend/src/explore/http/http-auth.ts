@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import * as Sentry from "@sentry/bun";
 import { TRPCError } from "@trpc/server";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
@@ -19,7 +20,7 @@ import { createContext, type Context } from "#src/trpc/context.ts";
 const logger = createLogger("explore-http-auth");
 
 export type ExploreAuthResult =
-  | { ok: true; identity: ExploreRateLimitIdentity; guildIds: string[] }
+  | { ok: true; identity: ExploreRateLimitIdentity; guildIds: DiscordGuildId[] }
   | { ok: false; status: number; message: string };
 
 export async function authenticateExploreRequest(

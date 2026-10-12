@@ -1,5 +1,8 @@
 package com.shepherdjerred.thestorm;
 
+import com.shepherdjerred.thestorm.core.analytics.AnalyticsRuntime;
+import com.shepherdjerred.thestorm.core.compute.ComputePool;
+import com.shepherdjerred.thestorm.core.compute.PlatformComputePool;
 import com.shepherdjerred.thestorm.core.config.Problem;
 import com.shepherdjerred.thestorm.core.config.StrictYaml;
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
@@ -11,7 +14,9 @@ import com.shepherdjerred.thestorm.core.players.PlayerDirectory;
 import com.shepherdjerred.thestorm.core.players.SqlPlayerDirectory;
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.core.schedule.PaperScheduler;
+import com.shepherdjerred.thestorm.core.world.BlockChanges;
 import com.shepherdjerred.thestorm.core.world.ChunkTickets;
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -31,6 +36,9 @@ public final class TheStormPlugin extends JavaPlugin {
   private final List<StormModule> enabled = new ArrayList<>();
   private final Services services = new Services();
   private @Nullable StormDatabase database;
+  private @Nullable ComputePool compute;
+  private @Nullable AnalyticsPaper analytics;
+  private com.shepherdjerred.thestorm.core.expansion.@Nullable ManagedGameplay gameplay;
 
   /**
    * Enables The Storm or stops the server. Once modules replace third-party plugins (land
@@ -66,30 +74,49 @@ public final class TheStormPlugin extends JavaPlugin {
     }
     var db = StormDatabase.open(getDataPath().resolve("the-storm.db"));
     database = db;
+    var pool = PlatformComputePool.open(getComponentLogger());
+    compute = pool;
     db.migrate("core", getClass().getClassLoader());
     var players = new SqlPlayerDirectory(db);
     services.provide(PlayerDirectory.class, players);
     services.provide(ChunkTickets.class, new ChunkTickets(this));
+    services.provide(SealedWorlds.class, new SealedWorlds());
+    services.provide(BlockChanges.class, CoreProtectBlocks.create(this));
     getServer()
         .getPluginManager()
         .registerEvents(
             new PlayerDirectoryListener(players, InstantSource.system(), getComponentLogger()),
             this);
+    var productAnalytics = new AnalyticsRuntime(db, InstantSource.system(), getComponentLogger());
     var context =
         new ModuleContext(
             this,
             getLifecycleManager(),
             new PaperScheduler(this),
+            pool,
             db,
             services,
             getDataPath(),
             InstantSource.system(),
             RandomGenerator.getDefault(),
-            getComponentLogger());
+            getComponentLogger(),
+            productAnalytics);
+    var analyticsPaper = new AnalyticsPaper(context, productAnalytics);
+    analytics = analyticsPaper;
+    var rollout =
+        com.shepherdjerred.thestorm.core.expansion.ManagedGameplay.remote(
+            requiredEnvironment("FLIPT_URL"), requiredEnvironment("FLIPT_ENVIRONMENT"));
+    gameplay = rollout;
+    services.provide(com.shepherdjerred.thestorm.core.expansion.ManagedGameplay.class, rollout);
+    services.provide(
+        com.shepherdjerred.thestorm.core.expansion.ExpansionSettings.class,
+        context.loadConfig(
+            "expansion.yml", com.shepherdjerred.thestorm.core.expansion.ExpansionSettings.class));
     for (var module : selected) {
       module.enable(context);
       enabled.add(module);
     }
+    analyticsPaper.start(rollout);
     getComponentLogger().info("Enabled modules: {}", ModuleRegistry.ids(selected));
   }
 
@@ -99,11 +126,28 @@ public final class TheStormPlugin extends JavaPlugin {
       module.disable();
     }
     enabled.clear();
+    if (analytics != null) {
+      analytics.close();
+      analytics = null;
+    }
     services.clear();
+    if (gameplay != null) {
+      gameplay.close();
+      gameplay = null;
+    }
+    if (compute != null) {
+      compute.close();
+      compute = null;
+    }
     if (database != null) {
       database.close();
       database = null;
     }
+  }
+
+  /** Typed module ports for integrations; fails if the owning module is disabled. */
+  public <T> T service(Class<T> type) {
+    return services.require(type);
   }
 
   private PluginConfig readConfig() {
@@ -121,5 +165,12 @@ public final class TheStormPlugin extends JavaPlugin {
               "Invalid config.yml: "
                   + String.join("; ", problems.stream().map(Problem::toString).toList()));
     };
+  }
+
+  private static String requiredEnvironment(String key) {
+    var value = System.getenv(key);
+    if (value == null || value.isBlank())
+      throw new IllegalStateException("Missing bootstrap " + key);
+    return value;
   }
 }

@@ -9,11 +9,14 @@ bun = "1.4.2"
 # Temporal's real workflow-worker tests need Node runtime primitives that Bun
 # 1.4 does not implement. Keep the sole exception on the current LTS line.
 node = "24.21.0"
+# The Storm's archive and restore tests require modern Python syntax. Resolve
+# this interpreter through mise inside Gradle rather than the system Python.
+python = "3.15.0"
 # renovate: datasource=github-releases depName=temporalio/cli
 # The short `temporal` registry alias still targets the archived
 # temporalio/temporal release layout, which has no Darwin arm64 artifact.
 "aqua:temporalio/cli" = "1.9.1"
-rust = "1.98.1"
+rust = "1.99.0"
 # renovate: datasource=crate depName=cargo-packager
 "cargo:cargo-packager" = "0.11.8"
 # renovate: datasource=dotnet-sdk depName=dotnet-sdk
@@ -40,17 +43,17 @@ java = "corretto-25.0.4.8.1"
 # renovate: datasource=gradle-version depName=gradle
 gradle = "9.7.1"
 # Repo-wide checks + git hooks (verify/pre-commit call these directly)
-gitleaks = "8"
-shellcheck = "0.11"
+gitleaks = "8.30.1"
+shellcheck = "0.11.0"
 # renovate: datasource=github-releases depName=hadolint/hadolint
 hadolint = "2.15.1"
 # Native-family shims
-go = "1.27.1"
-golangci-lint = "2"
+go = "1.27.2"
+golangci-lint = "2.14.0"
 # Release automation (cooklang publish, release commit-backs) shells out to gh
-gh = "2"
+gh = "2.102.0"
 # CI scripts (bake-images.ts affected-scoping + digest collection) use jq
-jq = "1"
+jq = "1.8.2"
 # Link checker for the weekly Temporal link-rot report (root lychee.toml);
 # pinned here so local runs match the worker image's binary.
 # renovate: datasource=github-releases depName=lycheeverse/lychee extractVersion=^lychee-v(?<version>.*)$
@@ -58,15 +61,15 @@ lychee = "0.24.2"
 # Semantic YAML/JSON comparison in the Minecraft config-drift check test
 # (misc/minecraft-drift-check.test.ts shells out to yq, matching the yq the
 # init container runs at deploy time)
-yq = "4"
+yq = "4.54.1"
 # Shared local/CI Postgres for scout-for-lol dev + tests. Prebuilt binaries
-# (initdb/pg_ctl/psql/createdb/dropdb); major 16 matches the homelab clusters
-# (resources/postgres/*.ts, PostgresqlSpecPostgresqlVersion.VALUE_16).
+# (initdb/pg_ctl/psql/createdb/dropdb); major 18 matches the homelab clusters
+# (resources/postgres/*.ts, PostgresqlSpecPostgresqlVersion.VALUE_18).
 # renovate: datasource=github-releases depName=theseus-rs/postgresql-binaries
-"ubi:theseus-rs/postgresql-binaries" = { version = "16.15.0", extract_all = "true", bin_path = "bin" }
+"github:theseus-rs/postgresql-binaries" = { version = "18.6.0", strip_components = 1, bin_path = "bin" }
 # Homelab automation (helm push, tofu wrappers, ArgoCD sync, site deploys)
-helm = "4"
-opentofu = "1.12.6"
+helm = "4.3.0"
+opentofu = "1.13.1"
 # Tofu-tree lint (packages/homelab lint:tofu), bundled terraform ruleset with
 # a repository-owned empty config — no plugins, no `tflint --init`, no network.
 # renovate: datasource=github-releases depName=terraform-linters/tflint
@@ -75,5 +78,8 @@ tflint = "0.64.0"
 # check:kubeconform). Fetches upstream JSON schemas at validation time.
 # renovate: datasource=github-releases depName=yannh/kubeconform
 kubeconform = "0.8.0"
-argocd = "3"
-awscli = "2"
+# Execute monitoring-rule regression cases with Prometheus's real evaluator.
+# renovate: datasource=github-releases depName=prometheus/prometheus
+"aqua:prometheus/prometheus" = "3.15.0"
+argocd = "3.5.4"
+awscli = "2.37.12"

@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import { describe, it, expect } from "vitest";
 import type { RawMatch, Player } from "@scout-for-lol/data";
 import {
@@ -7,7 +8,7 @@ import {
 } from "@scout-for-lol/data";
 import { toArenaMatch } from "#src/league/model/match.ts";
 
-const currentDir = new URL(".", import.meta.url).pathname;
+const currentDir = fileURLToPath(new URL(".", import.meta.url));
 
 const RAW_FILE_PATHS = [
   `${currentDir}/testdata/matches_2025_09_19_NA1_5370969615.json`,

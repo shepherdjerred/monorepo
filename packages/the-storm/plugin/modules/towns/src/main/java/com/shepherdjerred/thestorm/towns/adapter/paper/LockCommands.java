@@ -168,6 +168,9 @@ final class LockCommands {
 
   /** Locks the container at {@code block} for {@code player}. */
   void lock(Player player, Block block) {
+    if (frozen(player, block)) {
+      return;
+    }
     var blocks = LockGuard.container(block);
     var actor = Guard.actor(player);
     var standing =
@@ -185,6 +188,9 @@ final class LockCommands {
 
   /** Removes the lock on the container at {@code block}. */
   void unlock(Player player, Block block) {
+    if (frozen(player, block)) {
+      return;
+    }
     report(
         player,
         service.unlock(lockedPart(block), locks.mayUnlock(player, lockedPart(block))),
@@ -192,30 +198,40 @@ final class LockCommands {
   }
 
   private void trust(Player player, Block block, String name, Optional<LockGrant> grant) {
+    if (frozen(player, block)) {
+      return;
+    }
     var at = lockedPart(block);
     parts
         .names()
         .resolve(
             player,
             name,
-            target ->
-                report(
-                    player,
-                    service.trust(player.getUniqueId(), at, target, grant),
-                    lock ->
-                        Notices.success(
-                            grant
-                                .map(
-                                    value ->
-                                        target.name()
-                                            + " can now "
-                                            + (value == LockGrant.MANAGE
-                                                ? "open and break it."
-                                                : "open it."))
-                                .orElseGet(() -> target.name() + " can no longer open it."))));
+            target -> {
+              if (frozen(player, block)) {
+                return;
+              }
+              report(
+                  player,
+                  service.trust(player.getUniqueId(), at, target, grant),
+                  lock ->
+                      Notices.success(
+                          grant
+                              .map(
+                                  value ->
+                                      target.name()
+                                          + " can now "
+                                          + (value == LockGrant.MANAGE
+                                              ? "open and break it."
+                                              : "open it."))
+                              .orElseGet(() -> target.name() + " can no longer open it.")));
+            });
   }
 
   private void share(Player player, Block block, boolean on) {
+    if (frozen(player, block)) {
+      return;
+    }
     report(
         player,
         service.shareWithTown(player.getUniqueId(), lockedPart(block), on),
@@ -223,6 +239,9 @@ final class LockCommands {
   }
 
   private void redstone(Player player, Block block, boolean on) {
+    if (frozen(player, block)) {
+      return;
+    }
     report(
         player,
         service.redstone(player.getUniqueId(), lockedPart(block), on),
@@ -241,7 +260,10 @@ final class LockCommands {
       return;
     }
     var people = new ArrayList<UUID>();
-    people.add(found.owner());
+    people.addAll(
+        found.owners().stream()
+            .filter(id -> !found.restoration().owners().containsKey(id))
+            .toList());
     people.addAll(found.trusted().keySet());
     var _ =
         parts
@@ -253,7 +275,9 @@ final class LockCommands {
                     player.sendMessage(Notices.error("Could not look up the lock; try again."));
                     return;
                   }
-                  player.sendMessage(Notices.info(describe(found, names)));
+                  var resolved = new java.util.HashMap<>(found.restoration().owners());
+                  resolved.putAll(names);
+                  player.sendMessage(Notices.info(describe(found, resolved)));
                 });
   }
 
@@ -272,7 +296,7 @@ final class LockCommands {
                 .sorted()
                 .collect(joining(", "));
     return "Locked by "
-        + nameOf.apply(lock.owner())
+        + lock.owners().stream().map(nameOf).sorted().collect(joining(", "))
         + (lock.blocks().size() == 2 ? " (both halves)" : "")
         + (lock.options().sharedWithTown() ? "; their town may open it" : "")
         + "; trusted: "
@@ -290,6 +314,23 @@ final class LockCommands {
       }
     }
     return LockGuard.position(block);
+  }
+
+  private boolean frozen(Player player, Block block) {
+    for (var part : LockGuard.container(block)) {
+      var land = parts.guard().land(part.getLocation()).underlyingLand();
+      if (land instanceof com.shepherdjerred.thestorm.towns.domain.land.Land.WorkLand
+          || (land instanceof com.shepherdjerred.thestorm.towns.domain.land.Land.ParcelLand parcel
+              && parcel.parcel().phase()
+                  != com.shepherdjerred.thestorm.towns.domain.parcel.ProtectedParcel.Phase
+                      .ACTIVE)) {
+        player.sendMessage(
+            Notices.error(
+                "This holding is frozen; its recovery archive retains the container locks."));
+        return true;
+      }
+    }
+    return false;
   }
 
   /** Who placed the container: someone other than {@code player} if anyone else placed a part. */

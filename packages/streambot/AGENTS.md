@@ -7,8 +7,11 @@ architecture, media, voice, and diagnostics reference.
 
 ## Playback
 
-- One XState actor owns each `(guild, voice channel)` session. The machine is
-  pure; invoked actors own I/O. Release the userbot when the session ends.
+- A room coordinator owns numbered playback actors and one voice assistant.
+  Channel 1 is mic audio; 2 is Go Live on the same userbot; 3+ lease extra
+  accounts. Keep each account exclusive to one Discord voice channel globally.
+  The machine is pure; invoked actors own I/O. Release a shared account only
+  after its last playback and assistant turn drain.
 - Identity and channel authority come from the Discord interaction/session,
   never client or model arguments.
 - Preserve the player-card message contract and session persistence across
@@ -16,8 +19,10 @@ architecture, media, voice, and diagnostics reference.
   deterministic terminal transition.
 - Use the in-repo `discord-video-stream` fork. Profile real ffmpeg/VAAPI output
   before changing timing, queues, copying, subtitles, HDR, or buffers.
-- Transport is per item: music over the ordinary voice connection, video over
-  Go Live. Exactly one component may call `sendAudioFrame` — two writers on one
+- Numbered slots fix transport; legacy mixed queues finish in their original
+  mode. Selection is personal to the speaker and current voice channel. Cards
+  bind both slot number and instance; recovery persists one atomic room file.
+  Exactly one component may call `sendAudioFrame` — two writers on one
   RTP timestamp interleave into noise, and both writers succeed while doing it.
   An eslint rule enforces this.
 - A dropped audio frame is silent: the pacer keeps pace and playback reports a

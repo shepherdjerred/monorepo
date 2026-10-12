@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -61,7 +62,7 @@ beforeAll(async () => {
     matchFacts: FACTS.map((fact, index) => ({
       playerId: 1,
       playerAlias: "Differential",
-      matchId: `NA1_diff_${index.toString()}`,
+      matchId: RiotMatchIdSchema.parse(`NA1_81001${index.toString()}`),
       puuid: PLAYER,
       queue: fact.queue,
       win: fact.win,

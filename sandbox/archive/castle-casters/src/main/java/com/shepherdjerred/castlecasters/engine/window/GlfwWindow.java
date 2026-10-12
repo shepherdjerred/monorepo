@@ -37,6 +37,7 @@ public class GlfwWindow implements Window {
   private final MouseTracker mouseTracker;
   private long windowHandle;
   private boolean shouldClose;
+  private boolean initialized;
 
   public GlfwWindow(WindowSettings windowSettings,
                     MouseTracker mouseTracker,
@@ -62,6 +63,7 @@ public class GlfwWindow implements Window {
     if (!glfwInit()) {
       throw new IllegalStateException("Unable to initialize GLFW");
     }
+    initialized=true;
 
     setWindowHints();
     createWindow();
@@ -96,6 +98,9 @@ public class GlfwWindow implements Window {
   }
 
   private void createCallbacks() {
+    glfwSetCharCallback(windowHandle, (window, codepoint) -> eventBus.dispatch(new TextInputEvent(codepoint)));
+    glfwSetWindowSizeCallback(windowHandle, (window, width, height) -> eventBus.dispatch(
+        new com.shepherdjerred.castlecasters.engine.events.LogicalWindowResizeEvent(new WindowSize(width, height))));
     glfwSetErrorCallback((error, description) -> log.error(String.format(
         "GLFW error [%s]: %s",
         Integer.toHexString(error),
@@ -177,12 +182,14 @@ public class GlfwWindow implements Window {
       throw new RuntimeException("Failed to create the GLFW window");
     }
 
-    GLFWVidMode vidmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-
-    glfwSetWindowPos(windowHandle,
-        (vidmode.width() - windowSettings.windowSize().width()) / 2,
-        (vidmode.height() - windowSettings.windowSize().height()) / 2
-    );
+    // A windowed/offscreen context does not require a primary monitor (for example after display sleep).
+    long monitor=glfwGetPrimaryMonitor();
+    if(monitor!=NULL){
+      GLFWVidMode vidmode=glfwGetVideoMode(monitor);
+      if(vidmode!=null)glfwSetWindowPos(windowHandle,
+          (vidmode.width()-windowSettings.windowSize().width())/2,
+          (vidmode.height()-windowSettings.windowSize().height())/2);
+    }
 
     glfwMakeContextCurrent(windowHandle);
 
@@ -190,7 +197,7 @@ public class GlfwWindow implements Window {
       glfwSwapInterval(1);
     }
 
-    glfwShowWindow(windowHandle);
+    if (windowSettings.visible()) glfwShowWindow(windowHandle);
   }
 
   private void setupOpenGl() {
@@ -198,10 +205,9 @@ public class GlfwWindow implements Window {
   }
 
   public void cleanup() {
-    Callbacks.glfwFreeCallbacks(windowHandle);
-//    errorCallback.free();
-    glfwDestroyWindow(windowHandle);
+    if(windowHandle!=NULL){Callbacks.glfwFreeCallbacks(windowHandle);glfwDestroyWindow(windowHandle);windowHandle=NULL;}
     glfwMakeContextCurrent(NULL);
-    glfwTerminate();
+    if(initialized){glfwTerminate();initialized=false;}
+    var callback=glfwSetErrorCallback(null);if(callback!=null)callback.free();
   }
 }

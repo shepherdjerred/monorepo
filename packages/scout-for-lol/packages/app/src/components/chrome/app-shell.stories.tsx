@@ -1,5 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { ALL_PERMISSIONS, type ExploreConversation } from "@scout-for-lol/data";
+import {
+  ALL_PERMISSIONS,
+  type ExploreConversation,
+  DiscordGuildIdSchema,
+} from "@scout-for-lol/data";
 import { storyConversation } from "#src/lib/storybook/story-fixtures.ts";
 import type { StorySeed } from "#src/lib/storybook/trpc-stub.ts";
 import { AppNavigation } from "./app-navigation.tsx";
@@ -19,8 +23,8 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const GUILD_ID = "1337623164146155593";
-const SECOND_GUILD_ID = "1102222222222222222";
+const GUILD_ID = DiscordGuildIdSchema.parse("1337623164146155593");
+const SECOND_GUILD_ID = DiscordGuildIdSchema.parse("1102222222222222222");
 
 const CONVERSATIONS: ExploreConversation[] = [
   storyConversation(
@@ -68,7 +72,13 @@ const seedEverythingEnabled: StorySeed = (trpc, queryClient) => {
   });
   queryClient.setQueryData(trpc.bucks.status.queryOptions().queryKey, {
     state: "available",
-    guilds: [{ id: GUILD_ID, name: "Summoner's Lounge", daresAvailable: true }],
+    guilds: [
+      {
+        id: GUILD_ID,
+        name: "Summoner's Lounge",
+        daresAvailable: true,
+      },
+    ],
   });
   queryClient.setQueryData(trpc.hall.status.queryOptions().queryKey, {
     state: "available",

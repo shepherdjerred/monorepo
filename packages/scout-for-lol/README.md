@@ -119,6 +119,41 @@ describe the report lake, custom games, and Temporal analysis boundaries.
 [AGENTS.md](AGENTS.md) contains only the package invariants agents must always
 apply.
 
+**Architecture boundaries:**
+
+Each Scout package that declares layers has an `architecture.config.ts` checked
+by dependency-cruiser through `@shepherdjerred/architecture`. The cruise sees
+only a package's own tree; see
+[Architecture enforcement](../docs/wiki/src/content/docs/explanation/architecture-enforcement.md)
+for the mechanism.
+
+- `backend`: `configuration/`, `observability/`, `utils/` and `metrics/` sit
+  underneath everything; `database/`, `storage/`, `report-store/`, `durable/`
+  and `analytics/` do not reach into features or transports; `http/` reaches
+  only its endpoint adapters (tRPC, Explore, reports, betting, customs, Scout
+  client, Temporal health). The `layers` list must equal the directories under
+  `src/`, so a new directory is forbidden by every rule until it is named.
+- `domain`: identity is a leaf, and the codec, artifacts, match-processing and
+  notification slices keep their one-way order.
+- `temporal`: `contracts` is a leaf, and the V2 activity, workflow, receipt and
+  backfill contract modules may import only contract modules.
+- `data`: `model/scoutql` depends only on `model/core` and `model/reports`, and
+  `league/` and `data-dragon/` must not import `review/`. `model/legacy` is
+  deliberately not a layer because it is being deleted.
+- `report`: `html/shared` must not import a layout, and `assets` is a leaf.
+- Type-only edge: `app` and `activity` may `import type` from
+  `@scout-for-lol/backend` (the tRPC router type) but not import values.
+  dependency-cruiser cannot see type-only edges here, so
+  `@typescript-eslint/no-restricted-imports` with `allowTypeImports` enforces
+  it. The same ESLint config forbids `temporal`, `report` and `data` from
+  importing the backend at all.
+
+Every boundary has a negative fixture in the package's
+`architecture-fixtures/` directory named `<from-layer>-<what>.ts`.
+`architecture-boundaries.test.ts` cruises the fixtures with the derived rules
+and fails if any boundary lacks one that violates it; `bun run lint` runs
+`check-architecture` against the real source.
+
 **Domain boundaries:**
 
 - Explore owns saved conversational queries, including `/scout ask`.
@@ -146,6 +181,17 @@ packages/
 
 **Development:**
 
+Run the local web app with:
+
+```bash
+bun run --filter='./packages/scout-for-lol' dev:web
+```
+
+The command first runs Turbo's dependency-aware build for the backend and SPA
+workspace closures, then starts the existing development server. This prepares
+runtime exports such as the LLM and Glitter packages on a clean checkout while
+preserving all arguments passed after `--`.
+
 - `mise run check` runs typecheck, lint, format, and test across all packages;
   unused-code (knip) and duplication (jscpd baseline ratchet) gates run at the
   monorepo root (`bun run knip`, `bun run jscpd`)
@@ -164,7 +210,7 @@ The bot requires API tokens for Discord and Riot Games. In test mode (`NODE_ENV=
 - **What's New**: [scout-for-lol.com/whatsnew](https://scout-for-lol.com/whatsnew)
 - **Add to Discord**: [Install Scout](https://discord.com/oauth2/authorize?client_id=1182800769188110366&scope=bot%20applications.commands&permissions=2148352)
 - **GitHub**: [monorepo package](https://github.com/shepherdjerred/monorepo/tree/main/packages/scout-for-lol)
-- **Support**: [GitHub Issues](https://github.com/shepherdjerred/monorepo/issues)
+- **Support**: [Help and feedback](https://scout-for-lol.com/support)
 
 ## Privacy & Terms
 

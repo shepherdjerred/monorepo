@@ -26,7 +26,7 @@ public record QuoridorNode(QuoridorPlayer optimizingPlayer, Match match, Turn tu
         .map(turn -> {
 //          System.out.println(turn);
           var newMatchState = match.doTurnUnchecked(turn);
-          return new QuoridorNode(newMatchState.getActivePlayerId(), newMatchState, turn, matchEvaluator);
+          return new QuoridorNode(optimizingPlayer, newMatchState, turn, matchEvaluator);
         })
         .collect(Collectors.toSet());
   }

@@ -12,15 +12,43 @@
 - `generated/helm/` — **committed** TypeScript types for Helm chart values
 - `imports/` — generated Kubernetes/CRD types (`bun run update-imports`)
 
+## Static-site SPA routes
+
+`src/misc/s3-static-site.ts` generates Caddy routes for S3-backed sites. A
+configured SPA prefix rewrites extensionless document paths to its index object
+before the S3 lookup, so deep links return HTTP 200. Paths ending in a file
+extension keep their original lookup and return HTTP 404 when the asset is
+missing. The S3 error page remains available for that 404 response.
+
 ## Helm value types
 
-The committed types in `generated/helm/` are the source of truth — CI does not regenerate them. When bumping a chart version in `src/versions.ts`, regenerate and commit:
+The committed types in `generated/helm/` are the source of truth — CI does not regenerate them. When changing a chart in `../../../version-catalog/src/catalog.json`, regenerate and commit:
 
 ```bash
 bun run generate-helm-types
 ```
 
-The `helm-types-drift-check` Buildkite step fails any PR that changes a generator input without regenerating.
+The Woodpecker Helm types drift check fails any PR that changes a generator input without regenerating.
+
+## Home Assistant pet-care alerts
+
+`config/homeassistant/configuration.yaml` owns the qualified pet-care problem
+sensors. Temporal owns the holds, incident state, and notification delivery:
+five minutes for litter-robot, feeder, and fountain-operation problems, 45
+minutes for a continuous Litter-Robot waiting or cycling sequence, and 15
+minutes below 650 mL for a fountain shortage. Feeder problems also include
+more than 14 hours without dispensing; the food-status signal combines low
+and empty food. The water check reads the volume sensor's `mL` attribute, not
+its fluid-ounce state or percentage sensor.
+
+After a hold, Temporal creates a persistent HA notification, pushes to
+`notify.mobile_app_jerreds_iphone`, and publishes the warning to Alertmanager.
+Confirmed recovery dismisses the HA notification and resolves the same
+Alertmanager alert. Unknown or unavailable sensor state cancels a pending hold
+without dismissing an active incident. HA startup and WebSocket reconnects
+reconcile the current sensor states. Prometheus continues to alert on missing
+pet-care telemetry; battery, desiccant, filter, and cleaning maintenance rules
+remain separate.
 
 ## 1Password lint
 

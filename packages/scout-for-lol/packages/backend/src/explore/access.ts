@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import { TRPCError } from "@trpc/server";
 import type { User } from "#generated/prisma/client/index.js";
 import type { Environment } from "#src/configuration.ts";
@@ -41,7 +42,7 @@ export function isExploreConfigured(): boolean {
 }
 
 /** Whether Discord Explore is enabled in this exact guild right now. */
-export function isExploreGuildAllowed(guildId: string): boolean {
+export function isExploreGuildAllowed(guildId: DiscordGuildId): boolean {
   return (
     configuration.environment === "prod" || exploreAllowlist().includes(guildId)
   );
@@ -54,8 +55,8 @@ export function exploreGuildCommandGuildIds(): string[] {
 
 export function eligibleExploreGuildIds(
   allowedGuildIds: Iterable<string>,
-  userGuildIds: string[],
-): string[] {
+  userGuildIds: DiscordGuildId[],
+): DiscordGuildId[] {
   return eligibleConsumerGuildIds(allowedGuildIds, userGuildIds);
 }
 
@@ -64,7 +65,7 @@ export type ExploreAccessResult = ReturnType<typeof resolveConsumerAccess>;
 export function resolveExploreAccess(
   environment: Environment,
   allowlist: string[],
-  userGuildIds: string[],
+  userGuildIds: DiscordGuildId[],
   connectedGuildIds: Iterable<string> | undefined,
 ): ExploreAccessResult {
   return resolveConsumerAccess(
@@ -84,7 +85,7 @@ export function resolveExploreAccess(
  */
 export function isExploreAllowed(
   allowlist: string[],
-  userGuildIds: string[],
+  userGuildIds: DiscordGuildId[],
 ): boolean {
   return eligibleExploreGuildIds(allowlist, userGuildIds).length > 0;
 }
@@ -105,7 +106,9 @@ export function isExploreAllowed(
  * the accounts dimension, which is per-server data, so it must answer only for
  * servers this person actually belongs to and may use for this stage.
  */
-export async function assertExploreAccess(user: User): Promise<string[]> {
+export async function assertExploreAccess(
+  user: User,
+): Promise<DiscordGuildId[]> {
   const allowlist = exploreAllowlist();
   const production = configuration.environment === "prod";
   if (!production && allowlist.length === 0) {

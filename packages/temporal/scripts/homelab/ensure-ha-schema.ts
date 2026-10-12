@@ -7,9 +7,12 @@
  */
 import { copyFile, stat } from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 async function main(): Promise<void> {
-  const here = path.dirname(new URL(import.meta.url).pathname);
+  // `fileURLToPath`, not the URL's `pathname`: on Windows that is `/C:/...`,
+  // which `path.resolve` turns into `C:\C:\...`.
+  const here = path.dirname(fileURLToPath(import.meta.url));
   const generatedDir = path.resolve(here, "..", "..", "src", "generated");
   const target = path.join(generatedDir, "ha-schema.ts");
   const stub = path.join(generatedDir, "ha-schema.stub.ts");

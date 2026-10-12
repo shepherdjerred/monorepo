@@ -173,7 +173,7 @@ export async function handleDeleteEvent(
 export async function handleGetEventUsers(
   guild: Guild,
   eventId: string | undefined,
-  limit: number | undefined,
+  limit: number | undefined = 100,
 ): Promise<EventResult> {
   if (eventId == null || eventId.length === 0) {
     return {
@@ -183,7 +183,7 @@ export async function handleGetEventUsers(
   }
   const event = await guild.scheduledEvents.fetch(eventId);
   const subscribers = await event.fetchSubscribers({
-    limit: limit ?? 100,
+    limit: limit,
   });
   const userList = subscribers.map(
     (sub: { user: { id: string; username: string } }) => ({

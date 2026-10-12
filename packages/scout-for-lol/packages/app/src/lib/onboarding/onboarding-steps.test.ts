@@ -1,3 +1,8 @@
+import {
+  DiscordGuildIdSchema,
+  type DiscordGuildId,
+  type OnboardingStepKind,
+} from "@scout-for-lol/data";
 import { describe, expect, test } from "vitest";
 import {
   initialOnboardingState,
@@ -5,11 +10,12 @@ import {
   progressStep,
   type OnboardingState,
 } from "#src/lib/onboarding/onboarding-steps.ts";
-import type { OnboardingStepKind } from "@scout-for-lol/data";
 
 function state(
   step: OnboardingStepKind,
-  selectedGuildId: string | null = "g",
+  selectedGuildId: DiscordGuildId | null = DiscordGuildIdSchema.parse(
+    "100000000000000001",
+  ),
   conceptsBack: OnboardingStepKind = "install",
 ): OnboardingState {
   return { step, selectedGuildId, selectedExampleId: null, conceptsBack };
@@ -28,11 +34,11 @@ describe("onboardingReducer", () => {
   test("select-guild from install sets the guild and jumps to concepts", () => {
     const next = onboardingReducer(initialOnboardingState, {
       type: "select-guild",
-      guildId: "guild-123",
+      guildId: DiscordGuildIdSchema.parse("811701039680242114"),
     });
     expect(next).toEqual({
       step: "concepts",
-      selectedGuildId: "guild-123",
+      selectedGuildId: "811701039680242114",
       selectedExampleId: null,
       // Single-guild path skips pick-guild, so concepts backs to install.
       conceptsBack: "install",
@@ -47,7 +53,7 @@ describe("onboardingReducer", () => {
     expect(picking.step).toBe("pick-guild");
     const concepts = onboardingReducer(picking, {
       type: "select-guild",
-      guildId: "guild-abc",
+      guildId: DiscordGuildIdSchema.parse("810138427507845904"),
     });
     expect(concepts.step).toBe("concepts");
     expect(concepts.conceptsBack).toBe("pick-guild");
@@ -58,7 +64,7 @@ describe("onboardingReducer", () => {
   test("single-guild: back from concepts returns to install", () => {
     const concepts = onboardingReducer(initialOnboardingState, {
       type: "select-guild",
-      guildId: "guild-only",
+      guildId: DiscordGuildIdSchema.parse("810133610910723013"),
     });
     expect(concepts.step).toBe("concepts");
     const back = onboardingReducer(concepts, { type: "back" });
@@ -86,7 +92,7 @@ describe("onboardingReducer", () => {
     const d = onboardingReducer(c, { type: "next" });
     expect(d.step).toBe("done");
     // guild id is preserved across the chain
-    expect(d.selectedGuildId).toBe("g");
+    expect(d.selectedGuildId).toBe("100000000000000001");
   });
 
   test("back chain walks done → concepts", () => {

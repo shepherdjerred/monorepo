@@ -46,7 +46,7 @@ final class Freeze implements Spell {
   @Override
   public Result<Effect, CastProblem> prepare(Player caster) {
     var ticks = Magic.ticks(settings.durationSeconds());
-    return Aim.creature(tools, caster, settings.range())
+    return Aim.creatureEffect(tools, caster, settings.range())
         .map(
             target -> {
               var water = iceable(caster, target);

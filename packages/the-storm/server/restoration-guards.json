@@ -1,0 +1,269 @@
+[
+  {
+    "kind": "ValidatingAdmissionPolicy",
+    "name": "minecraft-tsmc-world-restoration.sjer.red",
+    "spec": {
+      "failurePolicy": "Fail",
+      "matchConditions": [
+        {
+          "expression": "object.metadata.namespace == 'minecraft-tsmc' && object.metadata.name == 'minecraft-tsmc'",
+          "name": "the-storm-server"
+        }
+      ],
+      "matchConstraints": {
+        "matchPolicy": "Equivalent",
+        "resourceRules": [
+          {
+            "apiGroups": ["apps"],
+            "apiVersions": ["v1"],
+            "operations": ["UPDATE"],
+            "resources": ["statefulsets"],
+            "scope": "Namespaced"
+          }
+        ]
+      },
+      "validations": [
+        {
+          "expression": "!(has(oldObject.metadata.annotations) && 'sjer.red/world-restore-lease' in oldObject.metadata.annotations) || ((has(object.metadata.annotations) && 'sjer.red/world-restore-lease' in object.metadata.annotations) && object.metadata.annotations['sjer.red/world-restore-lease'] == oldObject.metadata.annotations['sjer.red/world-restore-lease']) || (oldObject.spec.replicas == 0 && object.spec.replicas == 0 && 'sjer.red/world-restore-phase' in oldObject.metadata.annotations && oldObject.metadata.annotations['sjer.red/world-restore-phase'] == 'OFFLINE' && (!has(object.metadata.annotations) || (!('sjer.red/world-restore-lease' in object.metadata.annotations) && !('sjer.red/world-restore-phase' in object.metadata.annotations) && !('sjer.red/world-restore-image' in object.metadata.annotations))))",
+          "message": "Keep the restoration lease owner until an explicit stopped release",
+          "reason": "Forbidden"
+        },
+        {
+          "expression": "!(has(object.metadata.annotations) && 'sjer.red/world-restore-lease' in object.metadata.annotations) || !('sjer.red/mining-reset-lock' in object.metadata.annotations)",
+          "message": "World restoration and mining reset leases are mutually exclusive",
+          "reason": "Forbidden"
+        },
+        {
+          "expression": "!(has(object.metadata.annotations) && 'sjer.red/world-restore-lease' in object.metadata.annotations) || ('sjer.red/world-restore-phase' in object.metadata.annotations && object.metadata.annotations['sjer.red/world-restore-phase'] in ['OFFLINE', 'VALIDATING'] && 'sjer.red/world-restore-image' in object.metadata.annotations)",
+          "message": "A world restoration lease requires its phase and pinned image",
+          "reason": "Forbidden"
+        },
+        {
+          "expression": "!(has(object.metadata.annotations) && 'sjer.red/world-restore-lease' in object.metadata.annotations) || object.spec.replicas == 0 || ('sjer.red/world-restore-phase' in object.metadata.annotations && object.metadata.annotations['sjer.red/world-restore-phase'] == 'VALIDATING' && object.spec.replicas == 1 && object.spec.template.spec.containers.size() == 1 && object.spec.template.spec.containers[0].image == object.metadata.annotations['sjer.red/world-restore-image'])",
+          "message": "World restoration holds the server offline except for its pinned private acceptance image",
+          "reason": "Forbidden"
+        },
+        {
+          "expression": "!(has(object.metadata.annotations) && 'sjer.red/world-restore-lease' in object.metadata.annotations) || !has(object.spec.template.metadata.labels) || !('sjer.red/world-restore-access' in object.spec.template.metadata.labels)",
+          "message": "Restoration pod templates must omit the closed public route label",
+          "reason": "Forbidden"
+        },
+        {
+          "expression": "!(has(object.metadata.annotations) && 'sjer.red/world-restore-lease' in object.metadata.annotations) || (has(oldObject.metadata.annotations) && 'sjer.red/world-restore-lease' in oldObject.metadata.annotations) || (oldObject.spec.replicas == 0 && object.spec.replicas == 0)",
+          "message": "Acquire a world restoration lease only after stopping the server",
+          "reason": "Forbidden"
+        }
+      ]
+    }
+  },
+  {
+    "kind": "ValidatingAdmissionPolicyBinding",
+    "name": "minecraft-tsmc-world-restoration.sjer.red",
+    "spec": {
+      "policyName": "minecraft-tsmc-world-restoration.sjer.red",
+      "validationActions": ["Deny"]
+    }
+  },
+  {
+    "kind": "ValidatingAdmissionPolicy",
+    "name": "minecraft-tsmc-world-restoration-scale.sjer.red",
+    "spec": {
+      "failurePolicy": "Fail",
+      "matchConditions": [
+        {
+          "expression": "request.namespace == 'minecraft-tsmc' && request.name == 'minecraft-tsmc'",
+          "name": "the-storm-server"
+        }
+      ],
+      "matchConstraints": {
+        "matchPolicy": "Equivalent",
+        "resourceRules": [
+          {
+            "apiGroups": ["apps"],
+            "apiVersions": ["v1"],
+            "operations": ["UPDATE"],
+            "resources": ["statefulsets/scale"],
+            "scope": "Namespaced"
+          }
+        ]
+      },
+      "paramKind": {
+        "apiVersion": "apps/v1",
+        "kind": "StatefulSet"
+      },
+      "validations": [
+        {
+          "expression": "!(has(params.metadata.annotations) && 'sjer.red/world-restore-lease' in params.metadata.annotations) || object.spec.replicas == 0 || ('sjer.red/world-restore-phase' in params.metadata.annotations && params.metadata.annotations['sjer.red/world-restore-phase'] == 'VALIDATING' && 'sjer.red/world-restore-image' in params.metadata.annotations && object.spec.replicas == 1 && params.spec.template.spec.containers.size() == 1 && params.spec.template.spec.containers[0].image == params.metadata.annotations['sjer.red/world-restore-image'])",
+          "message": "World restoration blocks scale requests except for its pinned private acceptance image",
+          "reason": "Forbidden"
+        },
+        {
+          "expression": "!(has(params.metadata.annotations) && 'sjer.red/world-restore-lease' in params.metadata.annotations) || !has(params.spec.template.metadata.labels) || !('sjer.red/world-restore-access' in params.spec.template.metadata.labels)",
+          "message": "Restoration pod templates must omit the closed public route label",
+          "reason": "Forbidden"
+        },
+        {
+          "expression": "!(has(params.metadata.annotations) && 'sjer.red/world-restore-lease' in params.metadata.annotations) || !('sjer.red/mining-reset-lock' in params.metadata.annotations)",
+          "message": "World restoration and mining reset leases are mutually exclusive",
+          "reason": "Forbidden"
+        }
+      ]
+    }
+  },
+  {
+    "kind": "ValidatingAdmissionPolicyBinding",
+    "name": "minecraft-tsmc-world-restoration-scale.sjer.red",
+    "spec": {
+      "paramRef": {
+        "name": "minecraft-tsmc",
+        "namespace": "minecraft-tsmc",
+        "parameterNotFoundAction": "Deny"
+      },
+      "policyName": "minecraft-tsmc-world-restoration-scale.sjer.red",
+      "validationActions": ["Deny"]
+    }
+  },
+  {
+    "kind": "ValidatingAdmissionPolicy",
+    "name": "minecraft-tsmc-world-restoration-delete.sjer.red",
+    "spec": {
+      "failurePolicy": "Fail",
+      "matchConditions": [
+        {
+          "expression": "request.namespace == 'minecraft-tsmc' && request.name == 'minecraft-tsmc'",
+          "name": "the-storm-server"
+        }
+      ],
+      "matchConstraints": {
+        "matchPolicy": "Equivalent",
+        "resourceRules": [
+          {
+            "apiGroups": ["apps"],
+            "apiVersions": ["v1"],
+            "operations": ["DELETE"],
+            "resources": ["statefulsets"],
+            "scope": "Namespaced"
+          }
+        ]
+      },
+      "validations": [
+        {
+          "expression": "!(has(oldObject.metadata.annotations) && 'sjer.red/world-restore-lease' in oldObject.metadata.annotations)",
+          "message": "Release the restoration lease before deleting its StatefulSet",
+          "reason": "Forbidden"
+        }
+      ]
+    }
+  },
+  {
+    "kind": "ValidatingAdmissionPolicyBinding",
+    "name": "minecraft-tsmc-world-restoration-delete.sjer.red",
+    "spec": {
+      "policyName": "minecraft-tsmc-world-restoration-delete.sjer.red",
+      "validationActions": ["Deny"]
+    }
+  },
+  {
+    "kind": "ValidatingAdmissionPolicy",
+    "name": "minecraft-tsmc-world-restoration-service-write.sjer.red",
+    "spec": {
+      "failurePolicy": "Fail",
+      "matchConditions": [
+        {
+          "expression": "request.namespace == 'minecraft-tsmc' && request.name in ['minecraft-tsmc', 'minecraft-tsmc-bedrock', 'minecraft-tsmc-bluemap', 'minecraft-tsmc-rcon']",
+          "name": "the-storm-routes"
+        }
+      ],
+      "matchConstraints": {
+        "matchPolicy": "Equivalent",
+        "resourceRules": [
+          {
+            "apiGroups": [""],
+            "apiVersions": ["v1"],
+            "operations": ["CREATE", "UPDATE"],
+            "resources": ["services"],
+            "scope": "Namespaced"
+          }
+        ]
+      },
+      "paramKind": {
+        "apiVersion": "apps/v1",
+        "kind": "StatefulSet"
+      },
+      "validations": [
+        {
+          "expression": "!(has(params.metadata.annotations) && 'sjer.red/world-restore-lease' in params.metadata.annotations) || ((has(object.metadata.annotations) && 'sjer.red/world-restore-lease' in object.metadata.annotations) && object.metadata.annotations['sjer.red/world-restore-lease'] == params.metadata.annotations['sjer.red/world-restore-lease'] && (has(object.spec.selector) && 'sjer.red/world-restore-access' in object.spec.selector && object.spec.selector['sjer.red/world-restore-access'] == 'closed' && object.spec.type == (request.name == 'minecraft-tsmc-bedrock' ? 'NodePort' : 'ClusterIP')))",
+          "message": "Keep restoration Services closed under the parent lease owner",
+          "reason": "Forbidden"
+        },
+        {
+          "expression": "!(oldObject != null && (has(oldObject.metadata.annotations) && 'sjer.red/world-restore-lease' in oldObject.metadata.annotations)) || ((has(object.metadata.annotations) && 'sjer.red/world-restore-lease' in object.metadata.annotations) && object.metadata.annotations['sjer.red/world-restore-lease'] == oldObject.metadata.annotations['sjer.red/world-restore-lease'] && (has(object.spec.selector) && 'sjer.red/world-restore-access' in object.spec.selector && object.spec.selector['sjer.red/world-restore-access'] == 'closed' && object.spec.type == (request.name == 'minecraft-tsmc-bedrock' ? 'NodePort' : 'ClusterIP'))) || (!(has(params.metadata.annotations) && 'sjer.red/world-restore-lease' in params.metadata.annotations) && params.spec.replicas == 0 && !(has(object.metadata.annotations) && 'sjer.red/world-restore-lease' in object.metadata.annotations))",
+          "message": "Release a restoration Service only after stopping and releasing its parent",
+          "reason": "Forbidden"
+        }
+      ]
+    }
+  },
+  {
+    "kind": "ValidatingAdmissionPolicyBinding",
+    "name": "minecraft-tsmc-world-restoration-service-write.sjer.red",
+    "spec": {
+      "paramRef": {
+        "name": "minecraft-tsmc",
+        "namespace": "minecraft-tsmc",
+        "parameterNotFoundAction": "Allow"
+      },
+      "policyName": "minecraft-tsmc-world-restoration-service-write.sjer.red",
+      "validationActions": ["Deny"]
+    }
+  },
+  {
+    "kind": "ValidatingAdmissionPolicy",
+    "name": "minecraft-tsmc-world-restoration-service-delete.sjer.red",
+    "spec": {
+      "failurePolicy": "Fail",
+      "matchConditions": [
+        {
+          "expression": "request.namespace == 'minecraft-tsmc' && request.name in ['minecraft-tsmc', 'minecraft-tsmc-bedrock', 'minecraft-tsmc-bluemap', 'minecraft-tsmc-rcon']",
+          "name": "the-storm-routes"
+        }
+      ],
+      "matchConstraints": {
+        "matchPolicy": "Equivalent",
+        "resourceRules": [
+          {
+            "apiGroups": [""],
+            "apiVersions": ["v1"],
+            "operations": ["DELETE"],
+            "resources": ["services"],
+            "scope": "Namespaced"
+          }
+        ]
+      },
+      "paramKind": {
+        "apiVersion": "apps/v1",
+        "kind": "StatefulSet"
+      },
+      "validations": [
+        {
+          "expression": "!(has(params.metadata.annotations) && 'sjer.red/world-restore-lease' in params.metadata.annotations) && (!(has(oldObject.metadata.annotations) && 'sjer.red/world-restore-lease' in oldObject.metadata.annotations) || params.spec.replicas == 0)",
+          "message": "Release the restoration lease before deleting its Service",
+          "reason": "Forbidden"
+        }
+      ]
+    }
+  },
+  {
+    "kind": "ValidatingAdmissionPolicyBinding",
+    "name": "minecraft-tsmc-world-restoration-service-delete.sjer.red",
+    "spec": {
+      "paramRef": {
+        "name": "minecraft-tsmc",
+        "namespace": "minecraft-tsmc",
+        "parameterNotFoundAction": "Allow"
+      },
+      "policyName": "minecraft-tsmc-world-restoration-service-delete.sjer.red",
+      "validationActions": ["Deny"]
+    }
+  }
+]

@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "storm-client",
+  "version": "${version}",
+  "name": "The Storm Preview Client",
+  "environment": "client",
+  "mixins": ["storm-client.mixins.json"],
+  "entrypoints": {
+    "client": ["com.shepherdjerred.thestorm.client.PreviewClient"]
+  },
+  "depends": {
+    "fabricloader": "0.19.5",
+    "minecraft": "26.2",
+    "java": ">=25",
+    "fabric-api": "*"
+  }
+}

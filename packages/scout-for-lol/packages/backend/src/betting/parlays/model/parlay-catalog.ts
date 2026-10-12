@@ -286,6 +286,10 @@ export const TEAM_OBJECTIVE_CATALOG = z
     ),
   );
 
+/** How a numeric condition compares its stat to the threshold. */
+export const NumericOperatorSchema = z.enum(["gte", "lte", "eq"]);
+export type NumericOperator = z.infer<typeof NumericOperatorSchema>;
+
 /**
  * The one numeric comparison used by every Bucks condition evaluator.
  *
@@ -294,7 +298,7 @@ export const TEAM_OBJECTIVE_CATALOG = z
  */
 export function compare(
   actual: number,
-  operator: "gte" | "lte" | "eq",
+  operator: NumericOperator,
   threshold: number,
 ): boolean {
   if (operator === "gte") return actual >= threshold;

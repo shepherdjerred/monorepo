@@ -1,4 +1,5 @@
 {
+  "board": {"originX": 21, "originY": 14, "size": 9},
   "height": 34,
   "infinite": false,
   "layers": [

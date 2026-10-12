@@ -9,6 +9,7 @@ type ScheduleStateDefinition = {
   requiredEnvironment?: readonly string[];
   requiredPresentEnvironment?: readonly string[];
   initialPauseNote?: string;
+  retiredPauseNotes?: readonly string[];
 };
 
 function migratedCandidatePauseNote(
@@ -21,6 +22,17 @@ function migratedCandidatePauseNote(
       true
     ? schedule.initialPauseNote
     : undefined;
+}
+
+function retiredAutomaticPause(
+  schedule: ScheduleStateDefinition,
+  previous?: { paused: boolean; note?: string },
+): boolean {
+  return (
+    previous?.paused === true &&
+    previous.note !== undefined &&
+    schedule.retiredPauseNotes?.includes(previous.note) === true
+  );
 }
 
 export function buildScheduleState(
@@ -58,6 +70,9 @@ export function buildScheduleState(
   }
   const migratedNote = migratedCandidatePauseNote(schedule, previous);
   if (migratedNote !== undefined) return { paused: true, note: migratedNote };
+  if (retiredAutomaticPause(schedule, previous)) {
+    return { paused: false };
+  }
   if (previous?.paused === true) {
     return previous.note === undefined
       ? { paused: true }

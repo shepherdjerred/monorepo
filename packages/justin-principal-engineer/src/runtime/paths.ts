@@ -21,7 +21,7 @@ export function runtimePaths(home = os.homedir()): RuntimePaths {
   return {
     root,
     config: path.join(root, "config.json"),
-    tasks: path.join(root, "tasks"),
+    tasks: path.join(root, "tasks.noindex"),
     state: path.join(root, "state"),
     lock: path.join(root, "reconcile.lock"),
     logs: path.join(root, "logs"),

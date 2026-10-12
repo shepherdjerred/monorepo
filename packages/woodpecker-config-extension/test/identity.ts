@@ -13,6 +13,7 @@ export const TEST_IDENTITY: PipelineIdentity = {
   commit: "0123456789abcdef0123456789abcdef01234567",
   branch: "feature/telemetry",
   linkUrl: "https://github.com/shepherdjerred/monorepo/commit/0123456789ab",
+  event: "push",
 };
 
 /**

@@ -123,6 +123,39 @@ final class TpaRequestsTest {
   }
 
   @Test
+  void staffGroupRequestsReachMultipleTargetsAndRetainConsentAndOrdinaryRateLimit() {
+    var first =
+        empty
+            .sendStaff(ALICE, BOB, Direction.TO_REQUESTER, T0)
+            .fold(
+                value -> value,
+                error -> {
+                  throw new AssertionError(error);
+                });
+    var second =
+        first
+            .remaining()
+            .sendStaff(ALICE, CAROL, Direction.TO_REQUESTER, T0)
+            .fold(
+                value -> value,
+                error -> {
+                  throw new AssertionError(error);
+                });
+    assertThat(second.remaining().pendingFor(BOB, T0)).hasSize(1);
+    assertThat(second.remaining().pendingFor(CAROL, T0)).hasSize(1);
+    assertThat(second.remaining().send(ALICE, BOB, Direction.TO_REQUESTER, T0))
+        .isEqualTo(Result.err(new TpaError.TooSoon(INTERVAL)));
+    assertThat(
+            second
+                .remaining()
+                .accepting(CAROL, false)
+                .sendStaff(ALICE, CAROL, Direction.TO_REQUESTER, T0))
+        .isEqualTo(Result.err(new TpaError.NotAccepting()));
+    assertThat(second.remaining().sendStaff(ALICE, BOB, Direction.TO_TARGET, T0))
+        .isEqualTo(Result.err(new TpaError.Conflicting(Direction.TO_REQUESTER)));
+  }
+
+  @Test
   void playersCanTurnRequestsOff() {
     var pending = sent(empty, ALICE, BOB, T0);
     var off = pending.accepting(BOB, false);

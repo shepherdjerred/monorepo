@@ -11,6 +11,7 @@
     }
   },
   "include": [
+    "src/domain-registry.ts",
     "scripts/ci/bootstrap-woodpecker.ts",
     "scripts/argocd/argocd.ts",
     "scripts/argocd/argocd-apply-safety.ts",
@@ -41,6 +42,11 @@
     "scripts/tofu/tofu-stack-manifest.ts",
     "scripts/tofu/tofu-stack.ts",
     "scripts/tofu/tofu-stack.test.ts",
+    "scripts/tofu/application-secrets.ts",
+    "scripts/tofu/secret-read.ts",
+    "scripts/tofu/credential-handoff.ts",
+    "scripts/tofu/credential-handoff.test.ts",
+    "scripts/tofu/application-secrets.integration.test.ts",
     "scripts/tofu/github-ruleset-ready.ts"
   ]
 }

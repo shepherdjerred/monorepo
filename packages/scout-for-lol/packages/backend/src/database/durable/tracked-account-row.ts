@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   IsoInstantSchema,
   RiotMatchIdSchema,
+  type RiotMatchId,
 } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   AccountIdSchema,
@@ -31,7 +32,7 @@ export const MatchTrackedAccountRecordSchema = z.strictObject({
 
 /** Column shape of a MatchTrackedAccount row, minus DB-managed columns. */
 export type MatchTrackedAccountRow = {
-  riotMatchId: string;
+  riotMatchId: RiotMatchId;
   puuid: z.infer<typeof LeaguePuuidSchema>;
   playerId: z.infer<typeof PlayerIdSchema> | null;
   accountId: z.infer<typeof AccountIdSchema> | null;

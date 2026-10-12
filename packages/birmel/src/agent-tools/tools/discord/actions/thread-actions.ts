@@ -1,24 +1,32 @@
-import { ChannelType, type Client } from "discord.js";
+import {
+  ChannelType,
+  ThreadAutoArchiveDuration,
+  type Client,
+} from "discord.js";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import { z } from "zod";
 
 const logger = loggers.tools.child("discord.threads");
 
-type AutoArchiveDuration = 60 | 1440 | 4320 | 10_080;
-
 function parseAutoArchiveDuration(
   value: string | null | undefined,
-): AutoArchiveDuration {
+): ThreadAutoArchiveDuration {
   if (value == null || value.length === 0) {
-    return 1440;
+    return ThreadAutoArchiveDuration.OneDay;
   }
   const parsed = Number.parseInt(value);
-  return parsed === 60 ||
-    parsed === 1440 ||
-    parsed === 4320 ||
-    parsed === 10_080
-    ? parsed
-    : 1440;
+  switch (parsed) {
+    case 60:
+      return ThreadAutoArchiveDuration.OneHour;
+    case 1440:
+      return ThreadAutoArchiveDuration.OneDay;
+    case 4320:
+      return ThreadAutoArchiveDuration.ThreeDays;
+    case 10_080:
+      return ThreadAutoArchiveDuration.OneWeek;
+    default:
+      return ThreadAutoArchiveDuration.OneDay;
+  }
 }
 
 type ThreadResult = {
@@ -190,7 +198,7 @@ export async function handleModifyThread(
     name?: string;
     archived?: boolean;
     locked?: boolean;
-    autoArchiveDuration?: 60 | 1440 | 4320 | 10_080;
+    autoArchiveDuration?: ThreadAutoArchiveDuration;
   } = {};
   if (name !== undefined) {
     updates.name = name;

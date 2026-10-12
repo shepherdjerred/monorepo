@@ -1,3 +1,4 @@
+import { type Interaction, type InteractionEditReplyOptions } from "discord.js";
 import {
   BucksPoolRosterSchema,
   DiscordAccountIdSchema,
@@ -5,7 +6,6 @@ import {
   type BucksPoolParticipant,
   formatInteger,
 } from "@scout-for-lol/data";
-import type { InteractionEditReplyOptions } from "discord.js";
 import { parseBucksCustomId } from "#src/betting/custom-id.ts";
 import {
   placeBet,
@@ -48,7 +48,7 @@ export type BucksButtonEditReplyOptions = {
 
 export type BetButtonInteraction = {
   customId: string;
-  guildId: string | null;
+  guildId: Interaction["guildId"];
   user: { id: string };
   deferReply: (options: { ephemeral: true }) => Promise<unknown>;
   editReply: (options: BucksButtonEditReplyOptions) => Promise<unknown>;

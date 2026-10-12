@@ -18,7 +18,6 @@ export * from "./tempo.types.ts";
 export * from "./pyroscope.types.ts";
 export * from "./alloy.types.ts";
 export * from "./openebs.types.ts";
-export * from "./agent-stack-k8s.types.ts";
 export * from "./kueue.types.ts";
 export * from "./velero.types.ts";
 export * from "./postgres-operator.types.ts";

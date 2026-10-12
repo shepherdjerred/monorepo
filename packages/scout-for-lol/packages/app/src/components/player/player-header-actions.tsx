@@ -1,9 +1,9 @@
+import { type DiscordGuildId, type PermissionSet } from "@scout-for-lol/data";
 import { Link } from "react-router";
-import type { PermissionSet } from "@scout-for-lol/data";
 import { Button } from "@scout-for-lol/design-system/components/button";
 
 export function PlayerHeaderActions(props: {
-  guildId: string;
+  guildId: DiscordGuildId;
   alias: string;
   playerLoaded: boolean;
   permissions: PermissionSet;

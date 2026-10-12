@@ -76,16 +76,16 @@ describe("post-match discovery selection", () => {
         {
           accounts: JSON.stringify([
             {
-              puuid: "one",
+              puuid: puuid("one"),
               trackingStartedAt: "2026-08-01T00:00:00.000Z",
             },
             {
-              puuid: "two",
+              puuid: puuid("two"),
               trackingStartedAt: "2026-08-02T00:00:00.000Z",
             },
           ]),
         },
       ]),
-    ).toEqual(new Set(["one", "two"]));
+    ).toEqual(new Set([puuid("one"), puuid("two")]));
   });
 });

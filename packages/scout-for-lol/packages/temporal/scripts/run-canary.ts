@@ -6,15 +6,16 @@ import {
   WorkflowIdReusePolicy,
 } from "@temporalio/client";
 import { z } from "zod";
+import { temporalOperatorConnectionOptions } from "@shepherdjerred/root-scripts/temporal-replay.ts";
 import {
   SCOUT_WORKFLOW_NAMES,
   ScoutQueueCanaryProbeResultSchema,
   ScoutStageSchema,
+  ScoutBackgroundJobInputSchema,
   scoutQueueCanaryWorkflowId,
   scoutTaskQueues,
 } from "@scout-for-lol/temporal";
 
-const TemporalTlsSchema = z.enum(["true", "false"]).optional();
 const CANARY_TIMEOUT_MS = 60_000;
 
 class CanaryTimeoutError extends Error {
@@ -83,11 +84,12 @@ const buildId = options["build-id"];
 if ((deploymentName === undefined) !== (buildId === undefined)) {
   throw new Error("--deployment-name and --build-id must be supplied together");
 }
-const temporalTls = TemporalTlsSchema.parse(process.env["TEMPORAL_TLS"]);
-const connection = await Connection.connect({
-  address: options.address,
-  ...(temporalTls === "true" ? { tls: true } : {}),
-});
+const connection = await Connection.connect(
+  temporalOperatorConnectionOptions({
+    ...process.env,
+    TEMPORAL_ADDRESS: options.address,
+  }),
+);
 try {
   const client = new Client({ connection, namespace });
   const handle = await client.workflow.start(SCOUT_WORKFLOW_NAMES.queueCanary, {
@@ -95,7 +97,13 @@ try {
     workflowIdReusePolicy: WorkflowIdReusePolicy.REJECT_DUPLICATE,
     workflowIdConflictPolicy: WorkflowIdConflictPolicy.USE_EXISTING,
     taskQueue: scoutTaskQueues(options.stage).workflow,
-    args: [{ stage: options.stage, canaryId }],
+    args: [
+      {
+        stage: options.stage,
+        canaryId,
+        backgroundJobKinds: ScoutBackgroundJobInputSchema.shape.kind.options,
+      },
+    ],
     ...(deploymentName === undefined || buildId === undefined
       ? {}
       : {
@@ -117,6 +125,23 @@ try {
     .array(ScoutQueueCanaryProbeResultSchema)
     .length(4)
     .parse(rawResults);
+  const capabilities = z
+    .array(z.object({ backgroundJobKinds: z.array(z.string()) }))
+    .length(4)
+    .parse(rawResults);
+  const expectedKinds = [
+    ...ScoutBackgroundJobInputSchema.shape.kind.options,
+  ].sort();
+  for (const result of capabilities) {
+    if (
+      JSON.stringify([...result.backgroundJobKinds].sort()) !==
+      JSON.stringify(expectedKinds)
+    ) {
+      throw new Error(
+        "Candidate Workflow does not support every declared Scout background job kind",
+      );
+    }
+  }
   console.log(
     JSON.stringify(
       {

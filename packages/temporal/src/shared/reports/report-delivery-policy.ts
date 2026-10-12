@@ -10,6 +10,9 @@ export const REPORT_DELIVERY_ACTIVITY_START_TO_CLOSE_MS = 2 * MINUTE_MS;
 // and exhaust the budget — losing the report entirely, which is the failure
 // the lease exists to prevent. `reportDeliverySendLeaseBounds` and its unit
 // test hold that relationship.
+// For an immediate failure, the cumulative retry delays must also leave an
+// attempt after takeover: the first retry can be contended, then the final
+// retry settles the abandoned family and per-run claims.
 export const REPORT_DELIVERY_ACTIVITY_RETRY = {
   maximumAttempts: 3,
   initialInterval: 90 * SECOND_MS,

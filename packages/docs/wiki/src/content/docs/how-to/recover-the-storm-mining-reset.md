@@ -11,6 +11,11 @@ The [quarterly schedule](https://github.com/shepherdjerred/monorepo/blob/main/pa
 
 2. Read the `minecraft-tsmc` StatefulSet and Service in namespace `minecraft-tsmc`. The maintenance lock is `sjer.red/mining-reset-lock` on the StatefulSet; `sjer.red/mining-reset-image` pins the Job image across Activity retries. The Service carries `mc-router.itzg.me/autoScaleUp=false` during the reset. Keep the StatefulSet at zero replicas and confirm no ordinary server Pod exists. The [admission guard](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/cdk8s-charts/apps.ts) rejects scale-up while the lock is present.
 
+   If a world restoration owns the server, await that operator. The
+   [mining Activity](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/activities/homelab/mining-reset.ts)
+   defers before creating a backup, reset Job, or router change. Do not release
+   another request's lease to resume a mining reset.
+
 3. Read the matching `mining-reset-YYYYqN` Backup in namespace `velero`. Require phase `Completed`, zero warnings and errors, and exactly one attempted and completed volume snapshot. The [PVC policy](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/backup-policy/pvc-backup-policy.json) includes `datadir-minecraft-tsmc-0`. A completed backup is still separate from a tested restore.
 
 4. Read the matching `mining-reset-YYYYqN` Job in namespace `minecraft-tsmc`. A terminally failed Job is deleted and recreated by the Activity only after its exact command, image, quarter, and PVC are validated; inspect repeated failures and Pod logs before manual intervention. The Job atomically renames `/data/mining` to `/data/.mining-reset/YYYYqN.deleting`, removes the contents, installs `.mining-reset/YYYYqN.done`, then removes the empty checkpoint. A retry resumes deletion even if the checkpoint is empty and leaves any newly regenerated `/data/mining` alone. Do not substitute a different Job or PVC.

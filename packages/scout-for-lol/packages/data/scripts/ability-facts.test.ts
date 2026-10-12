@@ -1,6 +1,6 @@
 import { mkdtemp, mkdir, copyFile, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { describe, expect, test } from "vitest";
 import {
   buildChampionAbilityFacts,
@@ -14,7 +14,12 @@ import {
 import { ChampionAbilityFactsSchema } from "#src/data-dragon/ability-facts.ts";
 
 const FIXTURE_BIN_PATH = `${import.meta.dirname}/fixtures/chogath.bin.json`;
-const DDRAGON_CHOGATH_PATH = `${import.meta.dirname}/../src/data-dragon/assets/champion/Chogath.json`;
+// `resolve` rather than concatenation: copyFile in Bun does not collapse a
+// `..` segment on Windows, so the unresolved path reads as missing.
+const DDRAGON_CHOGATH_PATH = resolve(
+  import.meta.dirname,
+  "../src/data-dragon/assets/champion/Chogath.json",
+);
 
 async function loadJson(path: string): Promise<unknown> {
   const parsed: unknown = JSON.parse(await readFile(path, "utf8"));

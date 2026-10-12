@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import { tool } from "ai";
 import { z } from "zod";
 import {
@@ -84,7 +85,7 @@ export const defaultCompetitionReadDependencies: CompetitionReadDependencies = {
 export function createCompetitionReadTools(
   options: {
     readonly db: ExtendedPrismaClient;
-    readonly guildIds: readonly string[];
+    readonly guildIds: readonly DiscordGuildId[];
     readonly track: ToolTracker;
   },
   dependencies: CompetitionReadDependencies = defaultCompetitionReadDependencies,

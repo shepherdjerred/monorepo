@@ -169,7 +169,7 @@ function envNames(deployment: SynthesizedDeployment): Set<string> {
 }
 
 describe("temporal homelab audit tooling configuration", () => {
-  it("injects Woodpecker and Bugsink configuration", async () => {
+  it("injects Woodpecker, Bugsink and trusted ArgoCD configuration", async () => {
     const yaml = await synthesizeApp();
 
     expect(yaml).toContain("name: BUGSINK_URL");
@@ -178,6 +178,8 @@ describe("temporal homelab audit tooling configuration", () => {
     expect(yaml).toContain("name: WOODPECKER_REPO_ID");
     expect(yaml).toContain("name: WOODPECKER_URL");
     expect(yaml).toContain("value: https://woodpecker.sjer.red");
+    expect(yaml).toContain("name: ARGOCD_SERVER");
+    expect(yaml).toContain("value: argocd.sjer.red");
     // Homelab-audit S3 archiving is unused; HOMELAB_AUDIT_ARCHIVE_* env vars are
     // intentionally not wired (no dead optional secret).
     expect(yaml).not.toContain("name: HOMELAB_AUDIT_ARCHIVE_BUCKET");
@@ -404,7 +406,7 @@ describe("Temporal domain worker isolation", () => {
     });
     expect(context.spec.template.spec.containers[0]?.resources).toEqual({
       limits: { cpu: "2", memory: "6144Mi" },
-      requests: { cpu: "750m", memory: "512Mi" },
+      requests: { cpu: "250m", memory: "512Mi" },
     });
 
     const corpusEnv = envNames(corpus);
@@ -485,13 +487,16 @@ describe("Temporal domain worker isolation", () => {
       "SLEEP_WEBHOOK_TOKEN",
       "AGENT_CHAT_DISCORD_TOKEN",
       "XCODE_CLOUD_WEBHOOK_TOKEN",
-      "BLUEBUBBLES_URL",
-      "BLUEBUBBLES_PASSWORD",
+      "SPECTRUM_PROJECT_ID",
+      "SPECTRUM_PROJECT_SECRET",
+      "SPECTRUM_WEBHOOK_SECRET",
     ]) {
       expect(gatewayEnv).toContain(required);
       expect(homeEnv).not.toContain(required);
       expect(reportsEnv).not.toContain(required);
     }
+    expect(gatewayEnv).not.toContain("BLUEBUBBLES_URL");
+    expect(gatewayEnv).not.toContain("BLUEBUBBLES_PASSWORD");
     const discordToken = gateway.spec.template.spec.containers[0]?.env.find(
       (entry) => entry.name === "AGENT_CHAT_DISCORD_TOKEN",
     );
@@ -511,12 +516,15 @@ describe("Temporal domain worker isolation", () => {
       "AWS_ACCESS_KEY_ID",
       "AWS_SECRET_ACCESS_KEY",
       "POSTAL_API_KEY",
-      "RECIPIENT_EMAIL",
-      "SENDER_EMAIL",
     ]) {
       expect(reportsEnv).toContain(required);
       expect(gatewayEnv).not.toContain(required);
       expect(homeEnv).not.toContain(required);
+    }
+    for (const routing of ["RECIPIENT_EMAIL", "SENDER_EMAIL"]) {
+      expect(reportsEnv).not.toContain(routing);
+      expect(gatewayEnv).not.toContain(routing);
+      expect(homeEnv).not.toContain(routing);
     }
   });
 });

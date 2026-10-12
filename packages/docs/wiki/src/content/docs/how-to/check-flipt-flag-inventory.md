@@ -6,8 +6,8 @@ sidebar:
 ---
 
 Run the operator-only inventory check when you change Flipt state or need to
-diagnose runtime flag drift. A Temporal workflow creates missing declared keys
-every fifteen minutes, then publishes one independently labelled
+diagnose runtime flag drift. A Temporal workflow reconciles declared keys
+every two minutes, then publishes one independently labelled
 `FliptManagedFlagDrift` warning per environment and namespace; each alert
 resolves after that pair returns to an aligned snapshot.
 
@@ -28,10 +28,9 @@ Run the repository command from the monorepo root:
 bun run check-flipt-flag-inventory
 ```
 
-The command checks every environment and product namespace declared in the
-managed inventory: `beta` and `prod`, each containing `scout`, `birmel`,
-`streambot`, `starlight-karma-bot`, `trmnl-dashboard`, `temporal`, and
-`alert-dashboard`.
+The command checks every environment and product namespace declared in
+`packages/feature-flags/src/managed-flag-inventory.json`. This includes the
+Justin namespace in both `beta` and `prod`.
 
 Filter either dimension independently:
 
@@ -42,22 +41,39 @@ bun run check-flipt-flag-inventory -- --environment beta --namespace scout
 ```
 
 `FLIPT_ENVIRONMENT` and `FLIPT_NAMESPACE` are also accepted as exact filters.
-Without filters, the command always checks the complete fourteen-pair matrix.
+Without filters, the command checks every declared environment and namespace
+pair.
 
 ## 3. Create missing declared keys
 
-Create inventory keys that Flipt does not yet have:
+Create inventory keys that Flipt does not yet have. The
+[operator fetcher](https://github.com/shepherdjerred/monorepo/blob/a8b39ec58e8833c5e7dde9037e1b36e83a4e83de/packages/feature-flags/src/flipt-operator-fetcher.ts)
+requires `FLIPT_OPERATOR_TOKEN` for management writes. The
+[Flipt authentication configuration](https://github.com/shepherdjerred/monorepo/blob/a8b39ec58e8833c5e7dde9037e1b36e83a4e83de/packages/homelab/src/cdk8s/src/resources/flipt/index.ts)
+keeps evaluation snapshot reads credentialless and declares the operator secret.
+Inject its existing `operator-token` field from the `flipt-auth` 1Password item
+into the process environment; never paste its value into a command or file.
+For example, substitute the item's vault name in this secret reference:
 
 ```bash
-bun run check-flipt-flag-inventory -- --apply-missing
+FLIPT_OPERATOR_TOKEN='op://<vault>/flipt-auth/operator-token' \
+  scripts/onepassword/with-service-account.sh \
+  op run -- bun run check-flipt-flag-inventory -- --apply-missing
 ```
 
 This creates absent namespaces, segments, and flags from the inventory
 contract. It does not change flags or segments that already exist, and it does
 not delete undeclared Flipt keys. Then it re-runs the complete check.
 
-The scheduled workflow performs the same create-if-missing apply. Use the
-operator flag when you need the keys before the next run.
+The scheduled workflow also creates missing keys. Use the operator flag when
+you need the keys before the next run.
+
+Scheduled reconciliation retires only the exact environment, namespace, and
+key tuples in
+`packages/feature-flags/src/retired-flag-declarations.ts`. Audit deployed and
+pinned consumers before declaring a retirement. Each deletion requires a
+current Flipt revision and a fresh read confirming absence. A retirement that
+is also present in the managed inventory fails before any mutation.
 
 ## 4. Interpret failures
 
@@ -81,8 +97,9 @@ segment rollouts, variant rules, and threshold rollouts together. Partial
 overrides are rejected so an environment cannot inherit an accidental mixture
 of old and new behavior.
 
-The scheduled workflow never deletes Flipt flags, never edits the inventory,
-and never overwrites existing targeting. A failed snapshot request does not
+Other undeclared keys remain in Flipt and continue to raise drift warnings.
+The scheduled workflow never edits the inventory or overwrites existing
+targeting. A failed retirement or snapshot request does not
 resolve an existing alert; the workflow fails so the Temporal failure watcher
 can report the unavailable check separately.
 
@@ -102,10 +119,13 @@ Then run the unfiltered command. This catches accidental drift in every managed
 environment before the operator change is considered complete.
 
 :::caution
-Flipt has no authentication. Network reachability is the authorization
-boundary, so keep the endpoint private and do not expose it publicly.
+The evaluation snapshot used by this check remains credentialless for runtime
+compatibility. The Flipt UI and management API require the `operator` browser
+login from the `flipt-auth` 1Password item. Keep the endpoint private even
+with that gateway in place.
 :::
 
 ## Related
 
 - [Configuration layers](/explanation/homelab/configuration/)
+- [Homelab control-plane access](/reference/homelab-control-plane-access/)

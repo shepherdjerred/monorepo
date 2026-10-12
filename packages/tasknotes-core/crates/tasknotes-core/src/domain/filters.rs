@@ -916,7 +916,7 @@ mod tests {
             contexts: vec!["Home".to_owned()],
             ..FilterConfig::default()
         };
-        assert!(apply_filter(&tasks, &case_sensitive).is_empty());
+        assert_eq!(apply_filter(&tasks, &case_sensitive).len(), 0);
     }
 
     #[test]
@@ -1409,7 +1409,7 @@ mod tests {
             filters: vec![statuses(TaskStatus::Open), statuses(TaskStatus::Done)],
         };
         assert!(chain.is_active());
-        assert!(apply_filter_chain(&tasks, &chain).is_empty());
+        assert_eq!(apply_filter_chain(&tasks, &chain).len(), 0);
     }
 
     #[test]

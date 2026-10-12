@@ -8,9 +8,9 @@ import type { ResourceTier } from "#src/pipeline/model.ts";
 /**
  * Heavy steps: the full turbo graph on a cold cache.
  *
- * The workspace moved from a Buildkite memory volume to the CI node's NVMe,
- * but Woodpecker verify pods have still reached over 13 GiB of memory. Keep
- * memory headroom for heavy builds and releases.
+ * The workspace lives on the CI node's NVMe, but verify pods have still
+ * reached over 13 GiB of memory. Keep memory headroom for heavy builds and
+ * releases.
  */
 export const VERIFY_TIER: ResourceTier = {
   cpuRequest: "1",
@@ -68,6 +68,16 @@ export const LIGHT_TIER: ResourceTier = {
   memoryLimit: "12Gi",
   ephemeralStorageRequest: "1Gi",
   ephemeralStorageLimit: "20Gi",
+};
+
+/** Four trusted, checkout-free gate slots fit in the dedicated Kueue reserve. */
+export const GATE_TIER: ResourceTier = {
+  cpuRequest: "250m",
+  cpuLimit: "1",
+  memoryRequest: "512Mi",
+  memoryLimit: "1Gi",
+  ephemeralStorageRequest: "1Gi",
+  ephemeralStorageLimit: "2Gi",
 };
 
 /**

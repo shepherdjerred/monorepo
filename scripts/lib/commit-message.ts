@@ -20,7 +20,6 @@ export const EXTRA_COMMIT_SCOPES: readonly string[] = [
   "practice",
   "archive",
   "root",
-  "dagger",
   "deps",
   "ci",
   "cooklang",

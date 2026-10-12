@@ -1,0 +1,83 @@
+id: potatootter0
+name: PotatoOtter0
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NTc1MjUzOSwKICAicHJvZmlsZUlkIiA6ICI0NDYwMjU3Y2U3MTE0MzQ1YTA2MzBkMjgzNWY3MzcxMCIsCiAgInByb2ZpbGVOYW1lIiA6ICJNYWxlZGljdF9ZVCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS84YjdkODNmZWQ1ZGUyZTRhYmJmZTAzN2VhYTczMjdlOTk4YWQ4ZGMyZmU2NzE4MWZmYjMxMjE2N2I5NjI4MTIwIgogICAgfQogIH0KfQ=="
+  signature: "hOn3oLYIfI9KuDqUz/83IeD+JaSehoCpPObkpClPAueiANXqHonYD6SwTNN+j2DhUhM50HyV93V1svptpc7PK1GpVXlZXkJAxJYgU8BPdPTxBVlGOLm1fPEKsA8WaWTcpLxLz7q+jolL3wWQF6kfgKkojgg5ZuMepy+RhpFJ1LeG9hkVFiiGcsHVMX2uy7yOxyGdVTRkT8HkPiDDggQeCqBMNpK19L/DFkhCufZRKFUUHgwSQXN9dq216VQNN2DsZAIFa4KTxKK6HrJg2p+CIEgsr4bOoJGmt/QMxDgaQt2eBvZowRwexQv7Mg5v9sPZ9BOtEMmkXn7MchBXkh/0RACm0+nLX5MvtEDbF9CNwMlGgOmQRbiRgcDs986MuegVefZjdDf5asesSshC/BywDywMp3/Z0f07TcOIkHb5CVcbUxRTYZsxV3MnFduh5YM24shUe1BPksQc760bh3DEzQl/Md8i6jVhg4GINtBtKjq0qyeWhQlZwCRlpifilKWr8EwMWZTbJmxp2Z6JGf8AP+Xca4jkSawE0qUDp/GceAplqvQNg/W/f4muWrMqreKaFRHE11Pq0/SFigtZZ3d024tVhLo6UWJB7tTcPvehkOL1wQpAAw3Mp1xgPnK5WaKgim8vdgOmF7yUFkZwuOobUPCXwR50jB+ZcFzL6pnJRNo="
+skill: 0.904
+archetype: troll
+leverOffsets:
+  reactionMs: -0.36
+  decisionTemperature: -2.5
+  awarenessRadius: -0.27
+  coordination: -0.94
+  technique: 0.21
+kits:
+  trooper: 0.45
+  shortbow: 0.7
+  rewind: 1
+  ghost: 0.31
+  spy: 0.78
+roles:
+  plant: 0.52
+  escort: 0.37
+  rotate: 0.48
+  hunt: 0.6
+style:
+  aggression: 0.5
+  patience: 0.17
+  teamplay: 0.16
+  risk: 0.86
+voice:
+  tone:
+    - absurd
+    - deadpan
+    - mischievous
+  verbosity: normal
+  style: Deadpan nonsense about potatoes, treats the match as a cooking show, never cracks a smile
+lines:
+  greet:
+    - "Today we cook {team}."
+    - "Ingredients: one potato. Me."
+    - Preheat the bomb.
+  onKill:
+    - "{victim} has been mashed."
+    - Peeled.
+    - "Seasoned {victim} to taste."
+  onDeath:
+    - "{killer} has baked the potato."
+    - Overcooked.
+    - The potato returns to soil.
+  onPlant:
+    - "{bomb} in the oven."
+    - Set timer. Walk away.
+  onDefuse:
+    - "{bomb} taken off the heat."
+    - Recipe cancelled.
+  onWin:
+    - Dinner is served.
+    - "{team} gets the gravy."
+  onLoss:
+    - The potato was raw.
+    - Recipe needs work.
+  onLastAlive:
+    - One potato. No sides.
+    - Chef is plating alone.
+  taunt:
+    - You smell like fries.
+    - I am a potato. Fear me.
+    - Have you tried boiling?
+  lobby:
+    - "Today's recipe: one bomb, lightly fused."
+    - Preheat the lobby to a medium rush.
+    - A Trooper is just a potato with a sword.
+    - The potato title remains mine. No further questions.
+    - "{team}, wash your hands. We are cooking soon."
+quirks:
+  - spins
+  - narrates
+rivals:
+  - breshgrazvim-31
+  - luckypotato95
+bio: Believes potatoes are the true win condition of Search and Destroy and has never explained why. Disputes the title of Server Potato with LuckyPotato95 and refuses all compromise.
+batch: 2
+retired: false

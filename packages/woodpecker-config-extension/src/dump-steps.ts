@@ -3,10 +3,9 @@
 /**
  * Print the complete pipeline step model as JSON.
  *
- * The credential contract checker used to read `.buildkite/pipeline.yml` and
- * `secret-grants.json`, which no longer exist: the graph is generated rather
- * than committed. This is how an outside checker still sees every step,
- * command and grant without standing up the service.
+ * The graph is generated rather than committed, so this is how an outside
+ * checker such as the credential contract check sees every step, command and
+ * grant without standing up the service.
  *
  * Images are placeholders. Nothing downstream inspects them, and resolving the
  * real ones would need network access and a commit to resolve them at.
@@ -14,6 +13,10 @@
 
 import { buildPipelineSteps } from "#src/pipeline/steps.ts";
 import type { CiImages } from "#src/images.ts";
+import { completionStep } from "#src/pipeline/completion.ts";
+import { routeSteps } from "#src/pipeline/routing.ts";
+import { groupTofuSteps } from "#src/pipeline/group-tofu.ts";
+import { draftPreflightStep } from "#src/pipeline/draft.ts";
 
 const PLACEHOLDER_DIGEST = `sha256:${"0".repeat(64)}`;
 
@@ -32,10 +35,38 @@ const PLACEHOLDER_IMAGES: CiImages = {
   },
 };
 
-const steps = buildPipelineSteps({
-  images: PLACEHOLDER_IMAGES,
-  changedBase: "",
-  imageReleaseBase: "",
-});
+const gateImage = `ghcr.io/shepherdjerred/woodpecker-config-extension@${PLACEHOLDER_DIGEST}`;
+const steps = groupTofuSteps(
+  buildPipelineSteps({
+    images: PLACEHOLDER_IMAGES,
+    trustedGateImage: gateImage,
+    changedBase: "",
+    imageReleaseBase: "",
+  }),
+);
 
-process.stdout.write(`${JSON.stringify(steps, null, 2)}\n`);
+// Include the dynamically appended verdict in admission and grant checks.
+const routed = routeSteps(
+  [
+    ...steps,
+    completionStep(steps, gateImage, "/app"),
+    draftPreflightStep(PLACEHOLDER_IMAGES),
+  ],
+  {
+    event: "pull_request",
+    branch: "main",
+    defaultBranch: "main",
+    draft: false,
+  },
+  gateImage,
+);
+// Inspect every container's own grants and maximum requests. Ordered containers
+// share a workspace but never inherit the setup container's secrets.
+const commands = routed.flatMap((step) => [
+  step,
+  ...(step.orderedSteps ?? []).map((command) => ({
+    ...command,
+    agentLabels: step.agentLabels,
+  })),
+]);
+process.stdout.write(`${JSON.stringify(commands, null, 2)}\n`);

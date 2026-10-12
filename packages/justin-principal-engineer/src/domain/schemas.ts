@@ -13,10 +13,9 @@ export const TaskPhaseSchema = z.enum([
   "merging",
   "completing",
   "needs_human",
+  "blocked",
   "done",
 ]);
-export type TaskPhase = z.infer<typeof TaskPhaseSchema>;
-
 export const LinearIssueSchema = z.object({
   id: z.string().min(1),
   identifier: z.string().min(1),
@@ -25,6 +24,10 @@ export const LinearIssueSchema = z.object({
   url: z.url(),
   priority: z.number().int(),
   team: z.object({ key: z.string().min(1) }).optional(),
+  project: z
+    .object({ id: z.string().min(1), name: z.string().min(1) })
+    .nullable()
+    .optional(),
   createdAt: z.string().min(1),
   state: z.object({
     name: z.string().min(1),
@@ -44,6 +47,12 @@ export const FeedbackSchema = z.object({
   url: z.url().nullable(),
 });
 export type Feedback = z.infer<typeof FeedbackSchema>;
+
+export const ReviewFindingRefSchema = z.object({
+  provider: z.enum(["codex", "coderabbit"]),
+  key: z.string().min(1),
+});
+export type ReviewFindingRef = z.infer<typeof ReviewFindingRefSchema>;
 
 const VisualTargetSchema = z.object({
   package: z.string().min(1),
@@ -65,6 +74,7 @@ export const AgentOutputSchema = z.object({
   summary: z.string().min(1),
   verification: z.array(z.string()),
   resolvedFindingKeys: z.array(z.string().min(1)).default([]),
+  resolvedFindings: z.array(ReviewFindingRefSchema).default([]),
   visualTargets: z.array(VisualTargetSchema).default([]),
 });
 export type AgentOutput = z.infer<typeof AgentOutputSchema>;
@@ -81,24 +91,28 @@ export const AgentOutputWireSchema = z.object({
   summary: AgentOutputSchema.shape.summary,
   verification: AgentOutputSchema.shape.verification,
   resolvedFindingKeys: z.array(z.string().min(1)),
+  resolvedFindings: z.array(ReviewFindingRefSchema),
   visualTargets: z.array(
     VisualTargetSchema.extend({
       waitForSelector: z.string().min(1).nullable(),
     }),
   ),
 });
-export type AgentOutputWire = z.infer<typeof AgentOutputWireSchema>;
-
 export const AgentTurnInputSchema = z.object({
   provider: ProviderSchema,
   model: z.string().min(1),
   prompt: z.string().min(1),
 });
-export type AgentTurnInput = z.infer<typeof AgentTurnInputSchema>;
-
 const OpReferenceSchema = z.string().startsWith("op://");
 
 export const ConfigSchema = z.object({
+  autonomy: z
+    .object({
+      enabledIssueIdentifiers: z
+        .array(z.string().regex(/^AI-[1-9]\d*$/))
+        .default([]),
+    })
+    .default({ enabledIssueIdentifiers: [] }),
   repository: z.object({
     stableCheckout: z.string().startsWith("/"),
     slug: z.string().regex(/^[^/]+\/[^/]+$/),
@@ -108,7 +122,11 @@ export const ConfigSchema = z.object({
     team: z.string().min(1).default("SJ"),
     apiKey: OpReferenceSchema,
   }),
-  woodpecker: z.object({ apiToken: OpReferenceSchema }),
+  woodpecker: z.object({
+    apiToken: OpReferenceSchema,
+    baseUrl: z.url(),
+    repoId: z.number().int().positive(),
+  }),
   pinchtab: z.object({ configPath: z.string().startsWith("/") }),
   github: z.object({
     appId: OpReferenceSchema,
@@ -151,6 +169,21 @@ export type PrHealth = z.infer<typeof PrHealthSchema>;
 export const TaskStateSchema = z.object({
   issue: LinearIssueSchema,
   provider: ProviderSchema,
+  deliveryMode: z
+    .enum(["owner_approved", "autonomous"])
+    .default("owner_approved"),
+  repairTurnsUsed: z.number().int().nonnegative().default(0),
+  implementationStarted: z.boolean().default(false),
+  autonomyReviewPending: z.boolean().default(true),
+  blockedReason: z.string().nullable().default(null),
+  blockedFromPhase: TaskPhaseSchema.nullable().default(null),
+  nextAttemptAt: z.iso.datetime().nullable().default(null),
+  blockedAttempts: z.number().int().nonnegative().default(0),
+  mergeCommitSha: z
+    .string()
+    .regex(/^[0-9a-f]{40}$/)
+    .nullable()
+    .default(null),
   phase: TaskPhaseSchema,
   resumePhase: TaskPhaseSchema.nullable(),
   branch: z.string().min(1),
@@ -163,6 +196,7 @@ export const TaskStateSchema = z.object({
   pendingHealth: PrHealthSchema.nullable(),
   pendingDiagnostics: z.string().nullable(),
   pendingCodexFindingKeys: z.array(z.string().min(1)).default([]),
+  pendingReviewFindings: z.array(ReviewFindingRefSchema).default([]),
   restackInProgress: z.boolean().default(false),
   evidencePublished: z.boolean(),
   evidenceMarkdown: z.array(z.string()),

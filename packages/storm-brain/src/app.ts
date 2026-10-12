@@ -7,10 +7,12 @@ import {
   type BrainDependencies,
 } from "./brain.ts";
 import type { BrainConfig } from "./config.ts";
-import type { FlowFlags } from "./flags.ts";
 import type { BrainMetrics } from "./metrics.ts";
 import { ClassifyRequestSchema, TriageRequestSchema } from "./schemas.ts";
 import type { AggregateLlmUsage } from "@shepherdjerred/llm-runtime";
+import { ConversationRequestSchema } from "./conversation-schema.ts";
+import { ConversationBudgetError } from "./conversation-budget.ts";
+import type { Conversation } from "./conversation.ts";
 
 export type BrainLogger = {
   info: (message: string, fields?: Record<string, unknown>) => void;
@@ -20,12 +22,12 @@ export type BrainLogger = {
 
 export type BrainAppDependencies = {
   brain: BrainDependencies;
-  flags: FlowFlags;
   logger: BrainLogger;
   metrics: BrainMetrics;
+  conversation: { enabled: () => Promise<boolean>; decide: Conversation };
 };
 
-type Flow = "classify" | "triage";
+type Flow = "classify" | "triage" | "conversation";
 
 class PayloadTooLargeError extends Error {}
 class InvalidJsonError extends Error {}
@@ -146,7 +148,6 @@ export function createBrainApp(
   app.post(
     "/v1/classify",
     flowRoute("classify", ClassifyRequestSchema, {
-      enabled: dependencies.flags.classifyEnabled,
       decide: dependencies.brain.classify,
       config,
       dependencies,
@@ -155,18 +156,27 @@ export function createBrainApp(
   app.post(
     "/v1/triage",
     flowRoute("triage", TriageRequestSchema, {
-      enabled: dependencies.flags.triageEnabled,
       decide: dependencies.brain.triage,
       config,
       dependencies,
     }),
   );
 
+  app.post(
+    "/v1/conversation",
+    flowRoute("conversation", ConversationRequestSchema, {
+      enabled: dependencies.conversation.enabled,
+      decide: dependencies.conversation.decide,
+      config,
+      dependencies,
+    }),
+  );
   return app;
 }
 
 type FlowRouteOptions<Request, Body> = {
-  enabled: () => Promise<boolean>;
+  /** Only the conversation flow is still gated by a rollout flag. */
+  enabled?: () => Promise<boolean>;
   decide: (request: Request) => Promise<BrainDecision<Body>>;
   config: BrainConfig;
   dependencies: BrainAppDependencies;
@@ -303,14 +313,13 @@ async function decide<Request, Body>(
 ): Promise<Response> {
   const { request, options, stopTimer, outcome } = args;
   const { dependencies } = options;
-  if (!(await options.enabled())) {
-    stopTimer();
-    outcome("disabled");
-    dependencies.logger.info("Flow is disabled by flag", { flow });
-    return context.text("flow disabled\n", 503);
-  }
-
   try {
+    if (options.enabled !== undefined && !(await options.enabled())) {
+      stopTimer();
+      outcome("disabled");
+      dependencies.logger.info("Flow is disabled by flag", { flow });
+      return context.text("flow disabled\n", 503);
+    }
     const decided = await options.decide(request);
     stopTimer();
     outcome("success");
@@ -322,6 +331,10 @@ async function decide<Request, Body>(
     return context.json(decided.response);
   } catch (error) {
     stopTimer();
+    if (error instanceof ConversationBudgetError) {
+      outcome("budget_exhausted");
+      return context.text("conversation unavailable\n", 429);
+    }
     if (error instanceof BrainUpstreamError) {
       if (error.usage !== undefined) {
         charge(flow, error.usage, dependencies.metrics);

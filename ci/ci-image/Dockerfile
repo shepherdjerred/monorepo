@@ -1,10 +1,10 @@
-# syntax=docker/dockerfile:1-labs@sha256:63e440b412b6acba117974e793b7e7f702e58ee65e044bdff1b8d388ee0d853b
+# syntax=docker/dockerfile:1-labs@sha256:ad43eec41369d9ef94412c0d1eb3203d12218d01da225afc92a3aeba3a0e7796
 # CI toolchain image — baked from the repo's .mise.toml so agents run the
 # EXACT tool versions developers run. Rebuilt every main build via registry
 # cache (near-free when unchanged); the toolchain layers invalidate on
 # .mise.toml changes.
 
-FROM debian:bookworm-slim@sha256:3783cc01769c7b2b1b83a5c5ad96c815348e28ed7da68e2e3687004faa906251 AS base
+FROM debian:bookworm-slim@sha256:7c7b2c966bc9ee8cedfeef67e0e279108992c77681fa595db4a9d65c06ccc587 AS base
 
 # Fail-fast shell for every RUN: a failing producer in a pipeline (curl | sh,
 # printf | sha256sum) must fail the build, not be masked by the consumer.
@@ -17,13 +17,14 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # hadolint ignore=DL3008
 RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends \
     ca-certificates curl git minisign unzip xz-utils zstd python3 ripgrep rsync \
-    build-essential pkg-config libssl-dev libxml2 util-linux \
+    build-essential pkg-config libssl-dev libxml2 util-linux ffmpeg \
     && flock --version \
+    && ffmpeg -version && ffprobe -version \
     && rm -rf /var/lib/apt/lists/*
 
 # Docker CLI + buildx for image-build steps (BuildKit runs in-pod)
-COPY --from=docker:29-cli@sha256:018edbc908e08fcc9dbf029c812c34251e9b4719e6f71ca0e5eae2a987d014ca /usr/local/bin/docker /usr/local/bin/docker
-COPY --from=docker/buildx-bin:0.37.1@sha256:0ef4e936b9057e45a8c6595c01a8116353acd102b6a5720af7c3bcb50346e2ca /buildx /usr/local/lib/docker/cli-plugins/docker-buildx
+COPY --from=docker:29-cli@sha256:1a4c7cb63513f349bdad01fcc6e0f3f2f67d37b9da86f14dc0d4a0942eecda00 /usr/local/bin/docker /usr/local/bin/docker
+COPY --from=docker/buildx-bin:0.38.0@sha256:abcf2315937f37bdb52615d1698a4696e3952e88c440a07e7552cbefbc72b1b6 /buildx /usr/local/lib/docker/cli-plugins/docker-buildx
 
 # swiftlint from the official release zip: the -static build is
 # self-contained (the dynamic binary needs Swift runtime libs neither the
@@ -40,7 +41,7 @@ RUN curl -fsSL "https://github.com/realm/SwiftLint/releases/download/${SWIFTLINT
 # repo's .mise.toml. Verify the release's signed checksum manifest so Renovate
 # only needs to update the version and cannot leave architecture checksums stale.
 # renovate: datasource=github-releases depName=jdx/mise
-ARG MISE_VERSION=v2026.7.13
+ARG MISE_VERSION=v2026.10.6
 ARG MISE_MINISIGN_PUBLIC_KEY=RWTC3g8W3z4RZK3V3qv7fa1QY4JEWyBtqIHW+85QlJpZc5yG+uNYNBSZ
 ARG TARGETARCH
 ENV MISE_DATA_DIR=/opt/mise \
@@ -62,23 +63,27 @@ RUN case "${TARGETARCH}" in \
     && rm "${mise_asset}" SHASUMS256.txt SHASUMS256.txt.minisig \
     && mise --version
 
-COPY .mise.toml /workspace/.mise.toml
+COPY .mise.toml mise.lock /workspace/
 WORKDIR /workspace
-RUN mise trust .mise.toml && mise install && mise reshim \
+# mise installs the URLs and checksums mise.lock records; --locked fails rather
+# than resolving a tool the lockfile does not cover. The download credential
+# is available only to this build step and is never stored in an image layer.
+RUN --mount=type=secret,id=github-download-token,env=GITHUB_TOKEN,required=true \
+    mise trust .mise.toml && mise install --locked && mise reshim \
     && ln -sf "$(mise which gh)" /usr/local/bin/gh \
     && gh --version
 
 # uv/uvx for the python checks (ruff via uvx, pyright bootstraps a venv)
 # renovate: datasource=pypi depName=uv
-ARG UV_VERSION=0.12.18
+ARG UV_VERSION=0.13.0
 RUN curl -LsSf "https://astral.sh/uv/${UV_VERSION}/install.sh" | sh
 
 # The bun download cache is NOT baked into this image anymore. The old
 # bun-cache-warm stage added ~1 GiB compressed that re-pushed/re-pulled on
 # every lockfile change; CI pods now share a persistent node-local cache
-# volume instead (buildkite-bun-cache PVC, mounted by the agent-stack
-# pod-spec-patch in packages/homelab/src/cdk8s/src/resources/argo-applications/
-# buildkite.ts). The static pipeline points BUN_INSTALL_CACHE_DIR at the
+# volume instead (woodpecker-bun-cache PVC, mounted by the generated
+# pipeline's Kubernetes backend options). The pipeline points
+# BUN_INSTALL_CACHE_DIR at the
 # mount's data subdirectory. Every install holds a shared lock while the
 # threshold-based collector takes the exclusive lock before clearing the
 # cache. The shared cache stays warm across builds without living in the image;

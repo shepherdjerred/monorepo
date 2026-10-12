@@ -1,11 +1,11 @@
 import { z, ZodError } from "zod";
 import * as Sentry from "@sentry/bun";
 import {
-  MatchIdSchema,
+  RiotMatchIdSchema,
   LeaguePuuidSchema,
   RegionSchema,
   type LeaguePuuid,
-  type MatchId,
+  type RiotMatchId,
   type Rank,
 } from "@scout-for-lol/data";
 import type { InitialMatchHistoryImport } from "#generated/prisma/client/index.js";
@@ -45,7 +45,7 @@ let riotCallsThisMinute = 0;
 let workerInProgress = false;
 
 const MatchSnapshotSchema = z
-  .array(MatchIdSchema)
+  .array(RiotMatchIdSchema)
   .max(INITIAL_HISTORY_MATCH_COUNT);
 
 type RetryReason =
@@ -147,7 +147,7 @@ async function handOffLiveCursor(
         lastProcessedMatchId:
           job.newestMatchId === null
             ? null
-            : MatchIdSchema.parse(job.newestMatchId),
+            : RiotMatchIdSchema.parse(job.newestMatchId),
         lastMatchTime: job.newestMatchTime,
         lastCheckedAt: now,
         updatedTime: now,
@@ -170,10 +170,10 @@ async function handOffLiveCursor(
 async function ingestOneMatch(
   db: ExtendedPrismaClient,
   job: InitialMatchHistoryImport,
-  matchIds: MatchId[],
+  matchIds: RiotMatchId[],
   now: Date,
 ): Promise<InitialMatchHistoryImport> {
-  const matchId = MatchIdSchema.parse(matchIds[job.nextMatchIndex]);
+  const matchId = RiotMatchIdSchema.parse(matchIds[job.nextMatchIndex]);
   const region = RegionSchema.parse(job.region);
   const match = await fetchInitialMatch({ matchId, region });
   if (match === null) {
@@ -239,7 +239,7 @@ export async function processRiotPhases(
   };
   while (calls < availableCalls) {
     if (job.phase === "queued") {
-      let matchIds: MatchId[];
+      let matchIds: RiotMatchId[];
       try {
         matchIds = await fetchInitialMatchIds({
           puuid: job.puuid,

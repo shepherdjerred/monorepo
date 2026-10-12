@@ -1,5 +1,8 @@
 import { z } from "zod";
-import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import {
   MatchProcessingReceiptSchema,
   receiptScopeKey,
@@ -29,7 +32,7 @@ export const MatchProcessingReceiptRecordSchema = z.strictObject({
 
 /** Column shape of a MatchProcessingReceipt row, minus DB-managed columns. */
 export type MatchProcessingReceiptRow = {
-  riotMatchId: string;
+  riotMatchId: RiotMatchId;
   kind: string;
   version: number;
   scopeKind: string;

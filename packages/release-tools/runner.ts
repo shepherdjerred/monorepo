@@ -13,6 +13,7 @@ export type ReleasePleaseRunnerOptions = {
   readonly targetBranch: string;
   readonly targetBranchSha: string;
   readonly excludedPaths: readonly string[];
+  readonly canUpdateDraft?: () => Promise<boolean>;
 };
 
 export type ReleasePleaseRunnerResult = {
@@ -184,6 +185,7 @@ async function createManifest(
       options.targetBranch,
       "release-please-config.json",
       ".release-please-manifest.json",
+      { draftPullRequest: true },
     );
     const afterManifestSha = await branchSha(
       repository,
@@ -247,8 +249,10 @@ async function createValidatedReleases(
 
 async function createPinnedPullRequests(
   manifest: ManifestType,
+  canUpdateDraft?: () => Promise<boolean>,
 ): Promise<readonly unknown[]> {
   const candidates = await manifest.buildPullRequests();
+  if (canUpdateDraft !== undefined && !(await canUpdateDraft())) return [];
 
   const originalBuildPullRequests = manifest.buildPullRequests;
   manifest.buildPullRequests = async () => candidates;
@@ -266,7 +270,10 @@ export async function runReleasePlease(
   try {
     if (options.phase === "release-pr") {
       await assertTargetBranchSha(options);
-      const pullRequests = await createPinnedPullRequests(created.manifest);
+      const pullRequests = await createPinnedPullRequests(
+        created.manifest,
+        options.canUpdateDraft,
+      );
       await assertTargetBranchSha(options);
       return {
         phase: options.phase,

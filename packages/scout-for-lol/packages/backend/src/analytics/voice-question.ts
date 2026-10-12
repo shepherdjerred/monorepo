@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import type {
   ProductAnalytics,
@@ -6,7 +7,7 @@ import type {
 import { captureWithGuildInstallation } from "#src/analytics/capture-with-installation.ts";
 
 export type VoiceQuestionCapture = {
-  readonly guildId: string;
+  readonly guildId: DiscordGuildId;
   readonly observation: {
     readonly outcome: VoiceQuestionOutcome;
     /** First-reply-audio latency; undefined when no reply audio existed. */

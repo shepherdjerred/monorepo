@@ -2,6 +2,7 @@ const BASE_RELEASE_ENTRYPOINTS = [
   "index.html",
   "app/index.html",
   "docs/index.html",
+  "404.html",
 ] as const;
 const CUSTOMS_ENTRYPOINT = "customs/index.html" as const;
 const KNOWN_RELEASE_ENTRYPOINTS = [

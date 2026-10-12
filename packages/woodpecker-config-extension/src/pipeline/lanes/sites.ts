@@ -15,12 +15,6 @@ import {
  * because one lane covers many sites (or two publish groups) and each has its
  * own answer. Selection decides whether the LANE runs; the step decides which
  * targets within it do.
- *
- * The Buildkite `sites` lane also contained a block that re-ran every per-site
- * check on the early-exit path purely so the build-summary annotation could
- * show "skipped" rather than "not recorded" for each row. That annotation is
- * gone, and so is the block -- it did no work and produced no output anyone
- * reads.
  */
 
 const SITE_DEPLOY_GROUP = { limit: 1, group: "site-deploys" } as const;
@@ -42,6 +36,11 @@ const AWS_ALIASES = [
 
 /** Sites built from source in this step, with the workspace each needs. */
 const SOURCE_BUILT_SITES = [
+  {
+    lane: "site-statically-typed",
+    site: "statically-typed",
+    filter: "'@shepherdjerred/statically-typed'",
+  },
   { lane: "site-webring", site: "webring", filter: "webring" },
   {
     lane: "site-cooklang",
@@ -63,7 +62,6 @@ const SOURCE_BUILT_SITES = [
   // declared workspace dependency; under Bun's isolated linker the consumer
   // has to be selected so its production closure is installed.
   { lane: "site-glitter", site: "glitter", filter: "glitter" },
-  { lane: "site-ts-mc", site: "ts-mc", filter: "'@shepherdjerred/ts-mc'" },
   {
     lane: "site-ts-mc-docs",
     site: "ts-mc-docs",

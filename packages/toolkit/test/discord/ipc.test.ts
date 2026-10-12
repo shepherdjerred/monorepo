@@ -2,27 +2,8 @@ import { describe, expect, test } from "vitest";
 import {
   DaemonStateSchema,
   MessageSchema,
-  parseTtl,
   StatusResponseSchema,
 } from "#lib/discord/ipc.ts";
-
-describe("parseTtl", () => {
-  test("parses bare seconds", () => {
-    expect(parseTtl("90")).toBe(90);
-  });
-
-  test("parses s/m/h suffixes", () => {
-    expect(parseTtl("45s")).toBe(45);
-    expect(parseTtl("30m")).toBe(1800);
-    expect(parseTtl("4h")).toBe(14_400);
-  });
-
-  test("rejects garbage", () => {
-    expect(() => parseTtl("4 hours")).toThrow("Invalid TTL");
-    expect(() => parseTtl("")).toThrow("Invalid TTL");
-    expect(() => parseTtl("-5m")).toThrow("Invalid TTL");
-  });
-});
 
 describe("ipc schemas", () => {
   test("message round-trips", () => {

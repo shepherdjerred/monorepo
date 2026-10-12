@@ -6,6 +6,8 @@ regexTarget = "secret"
 regexes = [
   # PostHog phc_ project tokens are public browser ingestion identifiers.
   '''^phc_[A-Za-z0-9]+$''',
+  # Public 1Password item reference for the Storm production release.
+  '''^xdstbl5gobpao35rjprlp3hzgi$''',
 ]
 paths = [
   '''packages/dotfiles/Library/Application Support/pinchtab/config\.json''',
@@ -58,7 +60,6 @@ paths = [
   # generic API key.
   '''storybook-static/''',
   '''\.venv/''',
-  '''\.moon/''',
   # Built static-site bundles (gitignored) — the design-system Storybook build
   # writes storybook-static/ while the parallel full-tree scan runs, and the
   # bundled vendor JS trips generic-api-key. Same race as the logs/ entry below.

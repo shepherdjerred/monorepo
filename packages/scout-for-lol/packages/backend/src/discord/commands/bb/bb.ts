@@ -42,8 +42,8 @@ import { truncateEmbedFieldValue } from "#src/discord/utils/message.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("command-bb");
-export function buildBbRulesEmbed(dareVersion: 1 | 2 | 3 = 1): EmbedBuilder {
-  return createBbRulesEmbed(dareVersion);
+export function buildBbRulesEmbed(): EmbedBuilder {
+  return createBbRulesEmbed();
 }
 
 /**
@@ -198,11 +198,7 @@ export async function executeBb(
         await replyBbPrizes(interaction);
         break;
       case "rules":
-        await replyBbRules(
-          interaction,
-          serverId,
-          dependencies.isPolicyEnabled ?? isPolicyEnabled,
-        );
+        await replyBbRules(interaction);
         break;
       case "history":
         await replyBbHistory(interaction, serverId, discordId);

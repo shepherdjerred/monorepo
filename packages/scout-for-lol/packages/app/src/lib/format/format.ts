@@ -1,3 +1,4 @@
+import type { DiscordChannelId } from "@scout-for-lol/data";
 /** Format a date (or ISO string, as it arrives over the JSON wire) for display. */
 export function formatDate(value: Date | string | null): string {
   return value === null ? "—" : new Date(value).toLocaleString();
@@ -5,7 +6,7 @@ export function formatDate(value: Date | string | null): string {
 
 /** Resolve a channel id to a `#name` label using the guild channel list. */
 export function channelLabel(
-  channels: { id: string; name: string }[] | undefined,
+  channels: { id: DiscordChannelId; name: string }[] | undefined,
   channelId: string,
 ): string {
   const channel = channels?.find((candidate) => candidate.id === channelId);

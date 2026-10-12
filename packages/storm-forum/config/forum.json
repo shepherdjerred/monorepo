@@ -1,0 +1,223 @@
+{
+  "schemaVersion": 1,
+  "xenforoVersion": "2.3.13",
+  "title": "The Storm",
+  "joinAddress": "ts-mc.net",
+  "smtpHost": "postal-postal-smtp-service.postal.svc.cluster.local",
+  "smtpPort": 25,
+  "sender": "forum@ts-mc.net",
+  "stages": {
+    "beta": {
+      "url": "https://storm-forum-beta.tailnet-1a49.ts.net",
+      "taskQueue": "storm-forum-beta"
+    },
+    "prod": {
+      "url": "https://ts-mc.net",
+      "taskQueue": "storm-forum-prod"
+    }
+  },
+  "minecraft": {
+    "namespace": "minecraft-tsmc",
+    "statefulSet": "minecraft-tsmc",
+    "host": "minecraft-tsmc-status.minecraft-tsmc.svc.cluster.local",
+    "queryPort": 25565,
+    "bedrockPort": 19132,
+    "connections": {
+      "java": { "address": "ts-mc.net", "host": "mc.ts-mc.net", "port": 30000 },
+      "bedrock": { "host": "mc.ts-mc.net", "port": 30004 }
+    },
+    "timeoutMs": 3000,
+    "staleAfterSeconds": 180
+  },
+  "registration": {
+    "approvedPosts": 3,
+    "accountAgeHours": 24,
+    "timerSeconds": 10
+  },
+  "attachmentLimitKiB": 5120,
+  "reactions": [
+    { "key": "like", "title": "Like", "emoji": ":thumbsup:", "score": 1 },
+    {
+      "key": "agree",
+      "title": "Agree",
+      "emoji": ":white_check_mark:",
+      "score": 1
+    },
+    {
+      "key": "disagree",
+      "title": "Disagree",
+      "emoji": ":thumbsdown:",
+      "score": 0
+    },
+    { "key": "funny", "title": "Funny", "emoji": ":laughing:", "score": 1 },
+    { "key": "winner", "title": "Winner", "emoji": ":trophy:", "score": 1 },
+    {
+      "key": "informative",
+      "title": "Informative",
+      "emoji": ":information_source:",
+      "score": 1
+    },
+    { "key": "useful", "title": "Useful", "emoji": ":wrench:", "score": 1 },
+    {
+      "key": "optimistic",
+      "title": "Optimistic",
+      "emoji": ":rainbow:",
+      "score": 1
+    },
+    {
+      "key": "friendly",
+      "title": "Friendly",
+      "emoji": ":handshake:",
+      "score": 1
+    },
+    { "key": "creative", "title": "Creative", "emoji": ":art:", "score": 1 }
+  ],
+  "nodes": [
+    { "key": "official", "title": "Official", "type": "Category" },
+    {
+      "key": "news",
+      "title": "News & Announcements",
+      "parent": "official",
+      "type": "Forum",
+      "access": "public",
+      "article": true
+    },
+    {
+      "key": "rules",
+      "title": "Rules & Getting Started",
+      "parent": "official",
+      "type": "Forum",
+      "access": "public"
+    },
+    { "key": "community", "title": "Community", "type": "Category" },
+    {
+      "key": "general",
+      "title": "General",
+      "parent": "community",
+      "type": "Forum",
+      "access": "public"
+    },
+    {
+      "key": "feedback",
+      "title": "Suggestions & Feedback",
+      "parent": "community",
+      "type": "Forum",
+      "access": "public"
+    },
+    {
+      "key": "voting",
+      "title": "Community Voting",
+      "parent": "feedback",
+      "type": "Forum",
+      "access": "public"
+    },
+    {
+      "key": "bugs",
+      "title": "Bug Reports",
+      "parent": "feedback",
+      "type": "Forum",
+      "access": "public"
+    },
+    {
+      "key": "towns",
+      "title": "Towns",
+      "parent": "community",
+      "type": "Forum",
+      "access": "public"
+    },
+    {
+      "key": "lysergia",
+      "title": "Lysergia",
+      "parent": "towns",
+      "type": "Forum",
+      "access": "public"
+    },
+    {
+      "key": "boomerville",
+      "title": "Boomerville",
+      "parent": "towns",
+      "type": "Forum",
+      "access": "public"
+    },
+    {
+      "key": "keystone",
+      "title": "Keystone",
+      "parent": "towns",
+      "type": "Forum",
+      "access": "public"
+    },
+    {
+      "key": "marketplace",
+      "title": "Marketplace",
+      "parent": "community",
+      "type": "Forum",
+      "access": "public"
+    },
+    { "key": "offtopic", "title": "Off Topic", "type": "Category" },
+    {
+      "key": "chaos",
+      "title": "Chaos",
+      "parent": "offtopic",
+      "type": "Forum",
+      "access": "public",
+      "countMessages": false
+    },
+    {
+      "key": "games",
+      "title": "Forum Games",
+      "parent": "offtopic",
+      "type": "Forum",
+      "access": "public",
+      "countMessages": false
+    },
+    { "key": "support", "title": "Private Support", "type": "Category" },
+    {
+      "key": "reports",
+      "title": "Reports",
+      "parent": "support",
+      "type": "Forum",
+      "access": "author-staff"
+    },
+    {
+      "key": "appeals",
+      "title": "Appeals",
+      "parent": "support",
+      "type": "Forum",
+      "access": "author-staff"
+    },
+    {
+      "key": "applications",
+      "title": "Applications",
+      "parent": "support",
+      "type": "Forum",
+      "access": "author-staff"
+    },
+    {
+      "key": "recovery",
+      "title": "Account Recovery",
+      "description": "Register and verify your email, then request your archived profile here. Share ownership evidence privately with staff. Only you and staff can read your request; a matching username alone is not proof of ownership.",
+      "parent": "support",
+      "type": "Forum",
+      "access": "author-staff"
+    },
+    { "key": "staff", "title": "Staff", "type": "Forum", "access": "staff" }
+  ],
+  "vendorDependencies": [
+    {
+      "key": "flexile-light",
+      "version": "4.1.0",
+      "kind": "style",
+      "path": "vendor/flexile-storm-light.zip",
+      "mode": "light",
+      "sha256": "f90472e8d2dea2039c2b20e0cb0b8f8c94704e4af3f6ae8ec9c4f7a534768653"
+    },
+    {
+      "key": "flexile-dark",
+      "version": "4.1.0",
+      "kind": "style",
+      "path": "vendor/flexile-storm-dark.zip",
+      "mode": "dark",
+      "sha256": "cebdab8ced54fe60fb937f08721a71ea39e0f38e3afb73cfab69547ae45882d0"
+    }
+  ]
+}

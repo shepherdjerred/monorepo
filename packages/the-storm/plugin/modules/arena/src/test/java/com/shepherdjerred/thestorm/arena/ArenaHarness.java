@@ -6,6 +6,7 @@ import com.shepherdjerred.thestorm.arena.domain.geometry.ChunkPos;
 import com.shepherdjerred.thestorm.arena.testing.FakeClock;
 import com.shepherdjerred.thestorm.arena.testing.FakeWallets;
 import com.shepherdjerred.thestorm.arena.testing.Samples;
+import com.shepherdjerred.thestorm.core.compute.DirectComputePool;
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.Services;
@@ -48,7 +49,13 @@ public final class ArenaHarness implements AutoCloseable {
   static final Path SHIPPED = Path.of("../../../server/owned/plugins/TheStorm");
 
   private static final List<String> FILES =
-      List.of("arena.yml", "arena/classes.yml", "arena/waves.yml", "arena/arenas/colosseum.yml");
+      List.of(
+          "arena.yml",
+          "arena/classes.yml",
+          "arena/waves.yml",
+          "arena/survival.yml",
+          "arena/rustworks.yml",
+          "arena/arenas/colosseum.yml");
 
   private static Consumer<JavaPlugin> enabling = plugin -> {};
 
@@ -122,6 +129,9 @@ public final class ArenaHarness implements AutoCloseable {
 
   /** Enables the arena module as the plugin's only module. */
   ArenaHarness enable(Path directory) {
+    services.provide(
+        com.shepherdjerred.thestorm.core.world.BlockChanges.class,
+        new com.shepherdjerred.thestorm.core.world.AuditedBlockChanges(_ -> {}));
     services.provide(Wallets.class, wallets);
     services.provide(CrystalFormatter.class, wallets);
     enabling =
@@ -132,12 +142,14 @@ public final class ArenaHarness implements AutoCloseable {
                         plugin,
                         plugin.getLifecycleManager(),
                         new PaperScheduler(plugin),
+                        new DirectComputePool(),
                         database,
                         services,
                         directory,
                         clock,
                         RandomGenerator.of("L64X128MixRandom"),
-                        plugin.getComponentLogger()));
+                        plugin.getComponentLogger(),
+                        com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled()));
     try {
       MockBukkit.loadWith(
           HarnessPlugin.class,
@@ -164,7 +176,16 @@ public final class ArenaHarness implements AutoCloseable {
       for (var file : FILES) {
         var target = directory.resolve(file);
         Files.createDirectories(target.getParent());
-        Files.copy(SHIPPED.resolve(file), target);
+        var source =
+            file.equals("arena/arenas/colosseum.yml")
+                ? Path.of("src/test/resources/colosseum.yml")
+                : SHIPPED.resolve(file);
+        Files.copy(source, target);
+        if (file.equals("arena/survival.yml") || file.equals("arena/rustworks.yml")) {
+          // Native Paper tests own survival geometry; this fixture covers legacy lifecycle.
+          Files.writeString(
+              target, Files.readString(target).replace("enabled: true", "enabled: false"));
+        }
       }
     } catch (IOException e) {
       throw new UncheckedIOException(e);

@@ -13,6 +13,10 @@
  * render is at most three Discord requests and usually none.
  */
 
+import {
+  DiscordChannelIdSchema,
+  type DiscordChannelId,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import { ChannelType, PermissionFlagsBits } from "discord.js";
 import type { DiscordGuildId } from "@scout-for-lol/data";
 import { botRest, type BotRestReader } from "#src/lib/discord/bot-rest.ts";
@@ -22,11 +26,13 @@ import {
   hasPermission,
 } from "#src/lib/discord/channel-permissions.ts";
 import { createLogger } from "#src/logger.ts";
+import configuration from "#src/configuration.ts";
+import { isDevGuildOverrideGuild } from "#src/lib/discord-rest.ts";
 
 const logger = createLogger("discord-postable-channels");
 
 export type PostableChannel = {
-  id: string;
+  id: DiscordChannelId;
   name: string;
   parentId: string | null;
 };
@@ -82,6 +88,36 @@ export async function readGuildChannelPostability(
   guildId: DiscordGuildId,
   dependencies: PostableChannelDependencies = defaultDependencies(),
 ): Promise<GuildChannelPostability | null> {
+  // The loopback dev-login harness owns this disposable database. Its channel
+  // fixture is shared by pickers and channel guards; deployed requests still
+  // obtain their channel permissions from Discord.
+  if (
+    isDevGuildOverrideGuild(guildId) &&
+    URL.canParse(configuration.databaseUrl) &&
+    new URL(configuration.databaseUrl).pathname === "/scout_design_audit"
+  ) {
+    const channels: DiscordGuildChannel[] = [
+      {
+        id: "1337623164146155594",
+        name: "match-reports",
+        type: ChannelType.GuildText,
+        parent_id: null,
+        permission_overwrites: [],
+      },
+      {
+        id: "1337623164146155595",
+        name: "leaderboards",
+        type: ChannelType.GuildText,
+        parent_id: null,
+        permission_overwrites: [],
+      },
+    ];
+    return {
+      channels,
+      isPostable: (channel) =>
+        channels.some((candidate) => candidate.id === channel.id),
+    };
+  }
   const { rest } = dependencies;
   const [channels, roles, me] = await Promise.all([
     rest.guildChannels(guildId),
@@ -137,7 +173,7 @@ export async function listPostableChannels(
   const postable = guild.channels
     .filter((channel) => guild.isPostable(channel))
     .map((channel) => ({
-      id: channel.id,
+      id: DiscordChannelIdSchema.parse(channel.id),
       name: channel.name,
       parentId: channel.parent_id ?? null,
     }));

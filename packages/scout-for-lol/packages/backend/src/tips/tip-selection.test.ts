@@ -108,6 +108,40 @@ describe("selectTip", () => {
     expect(tip?.key).toBe("competitions");
   });
 
+  test("retired impressions still spend cooldown without relabeling the tip", async () => {
+    addFlagOverride("feature_tips_enabled", true, { server: guildId });
+    const tip = await selectTip(
+      { serverId: guildId },
+      {
+        random: () => 0,
+        now: new Date("2030-01-10T00:00:00Z"),
+        readers: readers({
+          lastShownAt: new Date("2030-01-09T23:00:00Z"),
+          shownKeys: ["tournament-lobbies"],
+        }),
+      },
+    );
+    expect(tip).toBeUndefined();
+  });
+
+  test("retired history cannot become a candidate once all active tips were shown", async () => {
+    addFlagOverride("feature_tips_enabled", true, { server: guildId });
+    const tip = await selectTip(
+      { serverId: guildId },
+      {
+        random: () => 0,
+        readers: readers({
+          shownKeys: [
+            ...FEATURE_TIPS.map(({ key }) => key),
+            "tournament-lobbies",
+          ],
+          available: [...FEATURE_TIPS],
+        }),
+      },
+    );
+    expect(tip).toBeUndefined();
+  });
+
   test("never re-offers a tip this audience has already seen", async () => {
     addFlagOverride("feature_tips_enabled", true, { server: guildId });
     const tip = await selectTip(

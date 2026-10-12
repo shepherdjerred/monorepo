@@ -3,6 +3,8 @@ package com.shepherdjerred.thestorm.spells.adapter.paper;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.core.schedule.Cancellable;
+import com.shepherdjerred.thestorm.core.world.BlockChanges;
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.spells.adapter.paper.spell.Spells;
 import com.shepherdjerred.thestorm.spells.adapter.paper.spell.Toolbox;
 import com.shepherdjerred.thestorm.spells.app.SpellScrolls;
@@ -56,22 +58,30 @@ public final class SpellsPaper {
     var waypoints = new Waypoints(store, async);
     var targets = new Targets(immune(config));
     var harm = new Harm(guard, state, context.time());
+    var changes = context.services().require(BlockChanges.class);
     var tools =
         new Toolbox(
             targets,
             guard,
             harm,
             new Teleports(guard),
-            new TemporaryBlocks(store, server, context.time(), async),
+            new TemporaryBlocks(
+                store,
+                new TemporaryBlocks.Dependencies(
+                    server, context.time(), async, protection, changes)),
             state,
             waypoints,
             fx(config),
             say,
             server,
             context.time(),
-            context.random());
+            context.random(),
+            context.services().require(SealedWorlds.class),
+            changes);
     var items = new SpellItems(context.plugin(), config);
-    var flow = new CastFlow(Spells.create(config.spells(), tools), config.spells(), tools);
+    var flow =
+        new CastFlow(
+            Spells.create(config.spells(), tools), config.spells(), tools, context.analytics());
     var binder = new Binder(items, state, config.spells(), new Binder.Storage(store, async));
     var plugins = server.getPluginManager();
     plugins.registerEvents(new CastListener(items, state, flow, say), context.plugin());

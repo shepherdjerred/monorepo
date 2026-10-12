@@ -11,6 +11,7 @@ tripwires:
     A match card may name only a match_id listed as card-supported by your most
     recent successful run_report_query. Set matchCards to [] otherwise.
 ---
+
 ## Attaching match cards
 
 You may attach source-backed match cards when an individual match makes the answer easier to understand. Set matchCards to [] when none help.

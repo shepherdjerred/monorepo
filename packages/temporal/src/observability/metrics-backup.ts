@@ -8,6 +8,13 @@ export const seaweedFsBackupLastSuccessTimestampSeconds = new Gauge({
   registers: [register],
 });
 
+export const seaweedFsBackupObservationTimestampSeconds = new Gauge({
+  name: "seaweedfs_backup_observation_timestamp_seconds",
+  help: "Completion timestamp of the manifest supplying the current bucket size and object gauges",
+  labelNames: ["bucket", "cadence"] as const,
+  registers: [register],
+});
+
 export const seaweedFsBackupDurationSeconds = new Histogram({
   name: "seaweedfs_backup_duration_seconds",
   help: "SeaweedFS bucket backup duration by cadence and outcome",
@@ -20,6 +27,13 @@ export const seaweedFsBackupStage = new Gauge({
   name: "seaweedfs_backup_stage",
   help: "Current SeaweedFS backup stage; the active stage is 1",
   labelNames: ["cadence", "stage"] as const,
+  registers: [register],
+});
+
+export const seaweedFsBackupStageObservationTimestampSeconds = new Gauge({
+  name: "seaweedfs_backup_stage_observation_timestamp_seconds",
+  help: "Unix timestamp of the latest observed SeaweedFS backup stage by cadence",
+  labelNames: ["cadence"] as const,
   registers: [register],
 });
 
@@ -96,6 +110,12 @@ export const seaweedFsBackupGcOldestCandidateTimestampSeconds = new Gauge({
   help: "Creation timestamp of the oldest pending SeaweedFS backup GC candidate set",
   registers: [register],
 });
+
+// A process restart says nothing about persisted candidates. Publish only
+// after reading their inventory or completing an actual maintenance cycle.
+seaweedFsBackupGcBacklog.remove();
+seaweedFsBackupGcObjects.remove();
+seaweedFsBackupGcOldestCandidateTimestampSeconds.remove();
 
 export const seaweedFsBackupGcRevalidationFailuresTotal = new Counter({
   name: "seaweedfs_backup_gc_revalidation_failures_total",

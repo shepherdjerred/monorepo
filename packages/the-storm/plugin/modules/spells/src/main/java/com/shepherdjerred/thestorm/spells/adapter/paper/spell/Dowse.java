@@ -53,7 +53,11 @@ final class Dowse implements Spell {
     List<Block> doused = screened.allowed();
     return Result.ok(
         () -> {
-          doused.forEach(block -> block.setType(Material.AIR, false));
+          doused.forEach(
+              block ->
+                  tools
+                      .changes()
+                      .set(caster.getName(), block, Material.AIR.createBlockData(), false));
           burning.forEach(creature -> creature.setFireTicks(0));
           tools.fx().cast(kind(), centre);
           doused.forEach(

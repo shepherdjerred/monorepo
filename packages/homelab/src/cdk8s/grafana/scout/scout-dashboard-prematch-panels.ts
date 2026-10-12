@@ -2,7 +2,6 @@ import * as dashboard from "@grafana/grafana-foundation-sdk/dashboard";
 import * as common from "@grafana/grafana-foundation-sdk/common";
 import * as timeseries from "@grafana/grafana-foundation-sdk/timeseries";
 import * as stat from "@grafana/grafana-foundation-sdk/stat";
-import * as table from "@grafana/grafana-foundation-sdk/table";
 import * as prometheus from "@grafana/grafana-foundation-sdk/prometheus";
 
 import {
@@ -13,11 +12,9 @@ import {
 const PREMATCH_FILTER = SCOUT_DASHBOARD_FILTER;
 
 /**
- * Adds the entire "Pre-match" row to the dashboard — both the original
- * baseline panels (active games / detection rate / loading-screen outcomes /
- * spectator-payload save outcomes + p95) and the observability panels added
- * alongside the bug-fix work that removed the per-PUUID skip-list and
- * routed loading-screen rendering through a CommunityDragon fallback.
+ * Adds the entire "Pre-match" row to the dashboard: V2 discovery's probe
+ * outcomes, loading-screen and spectator-payload save outcomes and latency,
+ * skin fallbacks, spectator call volume, and the V2 spectator breaker.
  *
  * Lives in its own file purely to keep `createScoutDashboard` under the
  * 400-line ESLint cap.
@@ -35,29 +32,13 @@ export function addPreMatchRow(
     }),
   );
 
-  // Prematch Active Games
-  builder.withPanel(
-    new stat.PanelBuilder()
-      .title("Prematch Active Games")
-      .datasource(prometheusDatasource)
-      .withTarget(
-        new prometheus.DataqueryBuilder()
-          .expr(
-            `max by (environment) (prematch_active_games{${PREMATCH_FILTER}})`,
-          )
-          .legendFormat("{{environment}}"),
-      )
-      .unit("short")
-      .colorMode(common.BigValueColorMode.Value)
-      .graphMode(common.BigValueGraphMode.Area)
-      .gridPos({ x: 0, y: 28, w: 4, h: 4 }),
-  );
-
   // Prematch Detections
   builder.withPanel(
     new timeseries.PanelBuilder()
       .title("Prematch Detections")
-      .description("Prematch detection outcomes per minute")
+      .description(
+        "Spectator probes per minute from V2 prematch discovery, by outcome: game, idle, unreadable",
+      )
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
@@ -69,7 +50,7 @@ export function addPreMatchRow(
       .unit("short")
       .lineWidth(2)
       .fillOpacity(10)
-      .gridPos({ x: 4, y: 28, w: 10, h: 8 }),
+      .gridPos({ x: 0, y: 28, w: 14, h: 8 }),
   );
 
   // Loading Screen Outcomes
@@ -129,29 +110,6 @@ export function addPreMatchRow(
       .gridPos({ x: 12, y: 36, w: 12, h: 8 }),
   );
 
-  // Subsequent Match Detection Rate (Fix 1 evidence — should rise above 0
-  // once a tracked player plays back-to-back games. This branch was
-  // unreachable before the per-PUUID skip-list was removed.)
-  builder.withPanel(
-    new timeseries.PanelBuilder()
-      .title("Subsequent Match Detection Rate")
-      .description(
-        "Pre-match detections where the player had a prior non-expired ActiveGame row with a different gameId. Direct evidence the per-PUUID skip-list removal is working.",
-      )
-      .datasource(prometheusDatasource)
-      .withTarget(
-        new prometheus.DataqueryBuilder()
-          .expr(
-            `sum by (environment) (rate(prematch_subsequent_match_detected_total{${PREMATCH_FILTER}}[5m])) * 60`,
-          )
-          .legendFormat("{{environment}}"),
-      )
-      .unit("short")
-      .lineWidth(2)
-      .fillOpacity(10)
-      .gridPos({ x: 0, y: 44, w: 12, h: 8 }),
-  );
-
   // Loading Screen Generation p95
   builder.withPanel(
     new timeseries.PanelBuilder()
@@ -168,83 +126,7 @@ export function addPreMatchRow(
       .unit("s")
       .lineWidth(2)
       .fillOpacity(10)
-      .gridPos({ x: 12, y: 44, w: 12, h: 8 }),
-  );
-
-  // Skin Fallback Rate (informational — non-zero but stable is expected
-  // briefly after Riot ships a new skin until the next update-data-dragon).
-  // `or on() vector(0)` so the panel renders a flat 0 line instead of "No data"
-  // when no fallbacks have happened in the lookback window.
-  builder.withPanel(
-    new timeseries.PanelBuilder()
-      .title("Loading Screen Skin Fallback Rate")
-      .description(
-        "Loading screens that fell back to base skin (skin 0) because the requested skin's JPG was missing on disk. Should be ~0 except briefly after Riot ships new skins.",
-      )
-      .datasource(prometheusDatasource)
-      .withTarget(
-        new prometheus.DataqueryBuilder()
-          .expr(
-            `sum by (environment) (rate(prematch_loading_screen_skin_fallback_total{${PREMATCH_FILTER}}[5m])) * 60 or on() vector(0)`,
-          )
-          .legendFormat("{{environment}}"),
-      )
-      .unit("short")
-      .lineWidth(2)
-      .fillOpacity(10)
-      .gridPos({ x: 0, y: 52, w: 12, h: 8 }),
-  );
-
-  // Top Fallback Skins (24h) — table showing which champion+skin combos
-  // are missing assets, so we know what to chase up in update-data-dragon
-  builder.withPanel(
-    new table.PanelBuilder()
-      .title("Top Fallback Skins (24h)")
-      .description(
-        "Champion+skin combinations that hit the runtime fallback most often in the last 24 hours. Indicates which skins update-data-dragon needs to refresh.",
-      )
-      .datasource(prometheusDatasource)
-      .withTarget(
-        new prometheus.DataqueryBuilder()
-          .expr(
-            `topk(10, sum by (champion, requested_skin) (increase(prematch_loading_screen_skin_fallback_total{${PREMATCH_FILTER}}[24h]))) or on() vector(0)`,
-          )
-          .legendFormat("{{champion}} skin {{requested_skin}}")
-          .format(prometheus.PromQueryFormat.Table)
-          .instant(),
-      )
-      .gridPos({ x: 12, y: 52, w: 12, h: 8 }),
-  );
-
-  // Polling Skips by Reason (catches regressions where the cron lock or
-  // breaker silently drops cycles — concurrent_run / timeout_reset / circuit_open)
-  builder.withPanel(
-    new timeseries.PanelBuilder()
-      .title("Pre-match Polling Skips by Reason")
-      .description(
-        "Pre-match polling cycles skipped per minute, broken down by reason. Sustained timeout_reset is critical — pre-match polling has stalled.",
-      )
-      .datasource(prometheusDatasource)
-      .withTarget(
-        new prometheus.DataqueryBuilder()
-          .expr(
-            `sum by (environment, reason) (rate(prematch_polling_skips_total{${PREMATCH_FILTER}}[5m])) * 60`,
-          )
-          .legendFormat("{{environment}} - {{reason}}"),
-      )
-      .unit("short")
-      .lineWidth(2)
-      .fillOpacity(10)
-      .thresholds(
-        new dashboard.ThresholdsConfigBuilder()
-          .mode(dashboard.ThresholdsMode.Absolute)
-          .steps([
-            { value: 0, color: "green" },
-            { value: 0.5, color: "yellow" },
-            { value: 2, color: "red" },
-          ]),
-      )
-      .gridPos({ x: 0, y: 60, w: 12, h: 8 }),
+      .gridPos({ x: 0, y: 44, w: 24, h: 8 }),
   );
 
   // Spectator API Call Rate (sanity-check Fix 1's effect on call volume —
@@ -267,7 +149,7 @@ export function addPreMatchRow(
       .unit("reqps")
       .lineWidth(2)
       .fillOpacity(10)
-      .gridPos({ x: 12, y: 60, w: 12, h: 8 }),
+      .gridPos({ x: 0, y: 52, w: 24, h: 8 }),
   );
 
   // Spectator Circuit Breaker State (0=closed, 1=open, 2=half-open)
@@ -275,13 +157,13 @@ export function addPreMatchRow(
     new stat.PanelBuilder()
       .title("Spectator Circuit Breaker")
       .description(
-        "Spectator API circuit breaker state per instance. 0 = closed (healthy), 1 = open (skipping requests), 2 = half-open (probing).",
+        "V2 prematch discovery's spectator API circuit breaker (spectator-api-v2) per instance. 0 = closed (healthy), 1 = open (skipping requests), 2 = half-open (probing).",
       )
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            `max by (environment) (circuit_breaker_state{name="spectator-api",${PREMATCH_FILTER}})`,
+            `max by (environment) (circuit_breaker_state{name="spectator-api-v2",${PREMATCH_FILTER}})`,
           )
           .legendFormat("{{environment}}"),
       )
@@ -297,6 +179,6 @@ export function addPreMatchRow(
             { value: 2, color: "yellow" },
           ]),
       )
-      .gridPos({ x: 0, y: 68, w: 24, h: 4 }),
+      .gridPos({ x: 0, y: 60, w: 24, h: 4 }),
   );
 }

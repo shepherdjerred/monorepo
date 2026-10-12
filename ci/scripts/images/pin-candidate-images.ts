@@ -60,20 +60,27 @@ function scoutBetaWorkflowPinTargets(
 export function pinCandidatesForDigests(
   digests: Readonly<Record<string, string>>,
   buildNumber: string,
+  gitSha: string,
   versionCatalogSource: string,
-): Record<string, { version: string; digest: string }> {
-  const candidates: Record<string, { version: string; digest: string }> = {};
+): Record<string, { version: string; digest: string; gitSha?: string }> {
+  if (!/^[0-9a-f]{40}$/.test(gitSha)) {
+    throw new Error("Image source commit must be a 40-character lowercase SHA");
+  }
+  const candidates: Record<
+    string,
+    { version: string; digest: string; gitSha?: string }
+  > = {};
   for (const [key, digest] of Object.entries(digests)) {
     const candidate = { version: `2.0.0-${buildNumber}`, digest };
     candidates[key] = candidate;
     if (key === "shepherdjerred/temporal-worker") {
       for (const target of centralWorkflowPinTargets(versionCatalogSource)) {
-        candidates[target] = candidate;
+        candidates[target] = { ...candidate, gitSha };
       }
     }
     if (key === "shepherdjerred/scout-for-lol/beta") {
       for (const target of scoutBetaWorkflowPinTargets(versionCatalogSource)) {
-        candidates[target] = candidate;
+        candidates[target] = { ...candidate, gitSha };
       }
     }
   }

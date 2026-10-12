@@ -1,11 +1,11 @@
 import { z } from "zod";
-import type {
-  ArenaMatch,
-  ClassicMatch,
-  CompletedMatch,
-  MatchId,
+import {
+  type ArenaMatch,
+  type ClassicMatch,
+  type CompletedMatch,
+  type RiotMatchId,
+  isClassicQueueType,
 } from "@scout-for-lol/data/index.ts";
-import { isClassicQueueType } from "@scout-for-lol/data/index.ts";
 import { AttachmentBuilder, EmbedBuilder } from "discord.js";
 import {
   arenaMatchToSvg,
@@ -20,7 +20,7 @@ import { saveImageToS3, saveSvgToS3 } from "#src/storage/s3.ts";
 const logger = createLogger("postmatch-match-report-image");
 
 /** The attachment name the report image travels under. */
-export function reportImageAttachmentName(matchId: MatchId): string {
+export function reportImageAttachmentName(matchId: RiotMatchId): string {
   return `${matchId}.png`;
 }
 
@@ -37,7 +37,7 @@ export const AI_REVIEW_ATTACHMENT_NAME = "ai-review.png";
  */
 export function attachReportImage(
   image: Uint8Array,
-  matchId: MatchId,
+  matchId: RiotMatchId,
 ): [AttachmentBuilder, EmbedBuilder] {
   const attachmentName = reportImageAttachmentName(matchId);
   const attachment = new AttachmentBuilder(Buffer.from(image)).setName(
@@ -68,7 +68,7 @@ export function aiReviewAttachment(image: Uint8Array): AttachmentBuilder {
  */
 export async function createMatchImage(
   matchToRender: CompletedMatch | ArenaMatch | ClassicMatch,
-  matchId: MatchId,
+  matchId: RiotMatchId,
   prerenderedImage: Uint8Array | undefined,
 ): Promise<[AttachmentBuilder, EmbedBuilder]> {
   if (prerenderedImage !== undefined) {

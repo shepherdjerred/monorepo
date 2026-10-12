@@ -1,3 +1,4 @@
+import type { DiscordAccountId } from "@scout-for-lol/domain/identity/discord.ts";
 import { SignJWT, jwtVerify, type JWTPayload } from "jose";
 import { z } from "zod";
 import configuration from "#src/configuration.ts";
@@ -32,7 +33,7 @@ function getKey(): Uint8Array {
 }
 
 export async function signSession(params: {
-  discordId: string;
+  discordId: DiscordAccountId;
   ttlSeconds?: number;
 }): Promise<{ jwt: string; expiresAt: Date }> {
   const ttl = params.ttlSeconds ?? SESSION_TTL_SECONDS;

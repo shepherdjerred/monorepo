@@ -5,6 +5,10 @@
  * Runs periodically to clean up orphaned guilds and channels.
  */
 
+import type {
+  DiscordGuildId,
+  DiscordChannelId,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import { type Client } from "discord.js";
 import {
   DiscordAccountIdSchema,
@@ -40,12 +44,14 @@ export type GuildValidationDependencies = {
   /** The database every read and every delete in this job goes through. */
   readonly db: ExtendedPrismaClient;
   /** Which of these guilds have a live install row. One query, no Discord. */
-  readonly installedAmong: (guildIds: string[]) => Promise<Set<string>>;
+  readonly installedAmong: (
+    guildIds: DiscordGuildId[],
+  ) => Promise<Set<DiscordGuildId>>;
   /**
    * Whether Scout is installed in one guild, confirmed against Discord.
    * Throws when Discord could not be reached; never returns a guessed `false`.
    */
-  readonly isInstalled: (guildId: string) => Promise<boolean>;
+  readonly isInstalled: (guildId: DiscordGuildId) => Promise<boolean>;
   /**
    * One channel straight from the bot REST API.
    *
@@ -55,7 +61,9 @@ export type GuildValidationDependencies = {
    * *cached guild*, so on a process with no gateway it reports every channel as
    * absent — and this function deletes what it is told is absent.
    */
-  readonly readChannel: (channelId: string) => Promise<DiscordChannel | null>;
+  readonly readChannel: (
+    channelId: DiscordChannelId,
+  ) => Promise<DiscordChannel | null>;
 };
 
 export function defaultGuildValidationDependencies(): GuildValidationDependencies {
@@ -124,15 +132,15 @@ export async function runDataValidation(
  * is wired to `deleteMany`.
  */
 export async function resolveOrphanedGuildIds(
-  storedGuildIds: readonly string[],
+  storedGuildIds: readonly DiscordGuildId[],
   dependencies: Pick<
     GuildValidationDependencies,
     "installedAmong" | "isInstalled"
   >,
-): Promise<string[]> {
+): Promise<DiscordGuildId[]> {
   const installed = await dependencies.installedAmong([...storedGuildIds]);
   const candidates = storedGuildIds.filter((id) => !installed.has(id));
-  const orphaned: string[] = [];
+  const orphaned: DiscordGuildId[] = [];
   for (const guildId of candidates) {
     if (!(await dependencies.isInstalled(guildId))) orphaned.push(guildId);
   }
@@ -223,7 +231,7 @@ async function validateGuilds(
  */
 async function cleanupOrphanedGuild(
   db: ExtendedPrismaClient,
-  serverId: string,
+  serverId: DiscordGuildId,
 ): Promise<void> {
   logger.info(`[DataValidation] Cleaning up orphaned guild ${serverId}`);
 
@@ -296,10 +304,10 @@ async function cleanupOrphanedGuild(
  * back the entire subscription table as orphaned.
  */
 export async function resolveOrphanedChannelIds(
-  channelIds: readonly string[],
+  channelIds: readonly DiscordChannelId[],
   dependencies: Pick<GuildValidationDependencies, "readChannel">,
-): Promise<string[]> {
-  const orphaned: string[] = [];
+): Promise<DiscordChannelId[]> {
+  const orphaned: DiscordChannelId[] = [];
   for (const channelId of channelIds) {
     try {
       const channel = await dependencies.readChannel(channelId);
@@ -375,7 +383,7 @@ async function validateChannels(
 async function cleanupOrphanedChannels(
   db: ExtendedPrismaClient,
   client: Client,
-  channelIds: string[],
+  channelIds: DiscordChannelId[],
 ): Promise<void> {
   try {
     // Collect all competitions affected by deleted channels, grouped by owner

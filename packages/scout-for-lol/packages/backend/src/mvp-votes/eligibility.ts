@@ -8,6 +8,7 @@ import {
   type LeaguePuuid,
   type QueueType,
   type RiotTeamId,
+  type RawParticipant,
 } from "@scout-for-lol/data";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
@@ -26,7 +27,7 @@ export function isMvpVoteQueue(queueType: QueueType | undefined): boolean {
 }
 
 export function hasTrackedSideForMvpVotes(input: {
-  participants: readonly { puuid: string; teamId: number }[];
+  participants: readonly { puuid: RawParticipant["puuid"]; teamId: number }[];
   trackedPuuids: readonly LeaguePuuid[];
 }): boolean {
   const tracked = new Set<string>(input.trackedPuuids);
@@ -52,7 +53,7 @@ export function hasTrackedSideForMvpVotes(input: {
 export async function shouldAttachMvpVotes(input: {
   queueType: QueueType | undefined;
   targetGuildIds: readonly DiscordGuildId[];
-  participants: readonly { puuid: string; teamId: number }[];
+  participants: readonly { puuid: RawParticipant["puuid"]; teamId: number }[];
   trackedPuuids: readonly LeaguePuuid[];
 }): Promise<boolean> {
   // V2 attests one postmatch message for every destination. Furniture that

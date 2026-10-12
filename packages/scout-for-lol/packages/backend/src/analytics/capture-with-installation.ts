@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";
@@ -20,7 +21,7 @@ const logger = createLogger("guild-installation-analytics");
  */
 export async function captureWithGuildInstallation(
   input: {
-    guildId: string;
+    guildId: DiscordGuildId;
     what: string;
     event: ProductAnalyticsEvent;
     eventOptions?: ProductAnalyticsEventOptions;

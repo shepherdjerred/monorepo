@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.towns.adapter.paper;
 
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.towns.app.TownsState;
 import com.shepherdjerred.thestorm.towns.domain.land.Land;
 import com.shepherdjerred.thestorm.towns.domain.protection.Act;
@@ -33,28 +34,54 @@ final class Guard {
   private final ProtectionEngine engine;
   private final Notices notices;
   private final Culprits culprits;
+  private final SealedWorlds sealed;
 
-  Guard(TownsState state, ProtectionEngine engine, Notices notices, Culprits culprits) {
-    this.state = state;
-    this.engine = engine;
-    this.notices = notices;
-    this.culprits = culprits;
+  /**
+   * What the guard consults.
+   *
+   * @param sealed worlds where towns protect nothing: no land, no PvP switches, no combat lock
+   */
+  record Parts(
+      TownsState state,
+      ProtectionEngine engine,
+      Notices notices,
+      Culprits culprits,
+      SealedWorlds sealed) {}
+
+  Guard(Parts parts) {
+    this.state = parts.state();
+    this.engine = parts.engine();
+    this.notices = parts.notices();
+    this.culprits = parts.culprits();
+    this.sealed = parts.sealed();
+  }
+
+  /** True in a world a minigame sealed, where every towns rule stands aside. */
+  boolean isSealed(World world) {
+    return sealed.isSealed(world);
   }
 
   Land land(Block block) {
+    if (isSealed(block.getWorld())) {
+      return new Land.Wilderness();
+    }
     return state.landAt(block.getWorld().getName(), block.getX(), block.getY(), block.getZ());
   }
 
   Land land(BlockState block) {
+    if (isSealed(block.getWorld())) {
+      return new Land.Wilderness();
+    }
     return state.landAt(block.getWorld().getName(), block.getX(), block.getY(), block.getZ());
   }
 
   Land land(Location location) {
+    var world = world(location);
+    if (isSealed(world)) {
+      return new Land.Wilderness();
+    }
     return state.landAt(
-        world(location).getName(),
-        location.getBlockX(),
-        location.getBlockY(),
-        location.getBlockZ());
+        world.getName(), location.getBlockX(), location.getBlockY(), location.getBlockZ());
   }
 
   Land land(Entity entity) {
@@ -158,6 +185,9 @@ final class Guard {
   }
 
   boolean permitsHarm(Culprit attacker, Entity victim, boolean tell) {
+    if (isSealed(victim.getWorld())) {
+      return true;
+    }
     var verdict =
         engine.decideHarm(
             attacker.actor(),

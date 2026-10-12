@@ -219,6 +219,18 @@ export function createWoodpeckerMaintenanceWorker(chart: Chart): void {
       WOODPECKER_BUN_CACHE_CLAIM,
     ),
   );
+  const sourceCacheMounts = ["main", "pr", "control"].map((kind) => ({
+    path: `/woodpecker/source-${kind}`,
+    volume: Volume.fromPersistentVolumeClaim(
+      chart,
+      `source-${kind}-volume`,
+      PersistentVolumeClaim.fromClaimName(
+        chart,
+        `source-${kind}-claim`,
+        `woodpecker-source-${kind}`,
+      ),
+    ),
+  }));
   const bunCacheControl = Volume.fromPersistentVolumeClaim(
     chart,
     "temporal-maintenance-bun-cache-control-volume",
@@ -377,6 +389,7 @@ export function createWoodpeckerMaintenanceWorker(chart: Chart): void {
       },
       volumeMounts: [
         { path: WOODPECKER_BUN_CACHE_PATH, volume: bunCache },
+        ...sourceCacheMounts,
         { path: WOODPECKER_BUN_CACHE_CONTROL_PATH, volume: bunCacheControl },
         { path: WOODPECKER_UV_CACHE_PATH, volume: uvCache },
         { path: WOODPECKER_TRIVY_DB_PATH, volume: trivyDb },

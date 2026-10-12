@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import type { User } from "#generated/prisma/client/index.js";
 import type { Environment } from "#src/configuration.ts";
 import configuration from "#src/configuration.ts";
@@ -18,14 +19,14 @@ const logger = createLogger("consumer-access");
  */
 
 export type ConsumerAccessResult =
-  | { kind: "allowed"; guildIds: string[] }
+  | { kind: "allowed"; guildIds: DiscordGuildId[] }
   | { kind: "forbidden" }
   | { kind: "unavailable" };
 
 export function eligibleConsumerGuildIds(
   allowedGuildIds: Iterable<string>,
-  userGuildIds: string[],
-): string[] {
+  userGuildIds: DiscordGuildId[],
+): DiscordGuildId[] {
   const allowed = new Set(allowedGuildIds);
   return userGuildIds.filter((guildId) => allowed.has(guildId));
 }
@@ -33,7 +34,7 @@ export function eligibleConsumerGuildIds(
 export function resolveConsumerAccess(
   environment: Environment,
   betaGuildIds: string[],
-  userGuildIds: string[],
+  userGuildIds: DiscordGuildId[],
   connectedGuildIds: Iterable<string> | undefined,
 ): ConsumerAccessResult {
   let allowedGuildIds: Iterable<string>;
@@ -66,7 +67,7 @@ export type ConsumerGuildAccessResult =
  * its first seconds.
  */
 export type InstalledGuildLookup = (
-  guildIds: string[],
+  guildIds: DiscordGuildId[],
 ) => Promise<Iterable<string>>;
 
 /**
@@ -106,7 +107,7 @@ export type InstalledGuildLookup = (
  * failure propagates, because only then is there no partial truth to serve.
  */
 export async function confirmedInstalledAmong(
-  guildIds: string[],
+  guildIds: DiscordGuildId[],
   dependencies?: InstalledGuildsDependencies,
 ): Promise<Iterable<string>> {
   const { installedGuildIdsAmong, isScoutInstalledInGuild } =
@@ -155,7 +156,7 @@ export async function confirmedInstalledAmong(
  * source must not become a denial telling a real member they have no access.
  */
 export async function installedGuildIdsOrUnavailable(
-  guildIds: string[],
+  guildIds: DiscordGuildId[],
   installedGuilds: InstalledGuildLookup,
 ): Promise<Iterable<string> | undefined> {
   try {

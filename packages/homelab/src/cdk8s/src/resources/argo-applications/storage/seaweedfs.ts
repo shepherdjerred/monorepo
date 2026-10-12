@@ -4,7 +4,10 @@ import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/arg
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import {
   IntOrString,
+  KubeNetworkPolicy,
+  KubePersistentVolumeClaim,
   KubeService,
+  Quantity,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { Namespace } from "cdk8s-plus-31";
@@ -12,15 +15,65 @@ import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/
 import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 
+const FILER_UPSTREAM_PORT = 8888;
+const FILER_GATEWAY_PORT = 8889;
+const FILER_AUTH_SECRET = "seaweedfs-filer-auth";
+export const FILER_GATEWAY_CONFIG = `{
+  admin off
+  auto_https off
+}
+
+:${FILER_GATEWAY_PORT.toString()} {
+  handle /health {
+    respond "ok" 200
+  }
+  handle {
+    basic_auth {
+      operator {$SEAWEEDFS_FILER_BASIC_HASH}
+    }
+    reverse_proxy 127.0.0.1:${FILER_UPSTREAM_PORT.toString()}
+  }
+}
+`;
+
 export function createSeaweedfsApp(chart: Chart) {
   new Namespace(chart, "seaweedfs-namespace", {
     metadata: {
       name: "seaweedfs",
+      annotations: { "argocd.argoproj.io/sync-wave": "-2" },
       labels: {
         "pod-security.kubernetes.io/enforce": "privileged",
       },
     },
   });
+
+  // Adopt and expand the existing claims before changing immutable Helm claim
+  // templates. Preserve their names and bindings; the root release owns quota
+  // changes, while SeaweedFS continues mounting the same datasets.
+  for (const [name, storage] of [
+    ["data-filer-seaweedfs-filer-0", "4Gi"],
+    ["data-seaweedfs-volume-0", "1Ti"],
+  ] as const) {
+    new KubePersistentVolumeClaim(chart, `${name}-capacity`, {
+      metadata: {
+        name,
+        namespace: "seaweedfs",
+        labels: {
+          "velero.io/backup": "disabled",
+          "velero.io/exclude-from-backup": "true",
+        },
+        annotations: {
+          "argocd.argoproj.io/sync-wave": "-1",
+          "argocd.argoproj.io/sync-options": "Prune=false",
+        },
+      },
+      spec: {
+        accessModes: ["ReadWriteOnce"],
+        storageClassName: NVME_STORAGE_CLASS,
+        resources: { requests: { storage: Quantity.fromString(storage) } },
+      },
+    });
+  }
 
   // 1Password secret for S3 credentials
   new OnePasswordItem(chart, "seaweedfs-credentials-onepassword", {
@@ -30,6 +83,17 @@ export function createSeaweedfsApp(chart: Chart) {
     },
     metadata: {
       name: "seaweedfs-s3-credentials",
+      namespace: "seaweedfs",
+    },
+  });
+
+  new OnePasswordItem(chart, "seaweedfs-filer-auth-onepassword", {
+    spec: {
+      itemPath:
+        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/zkvjvzfvj3zzhxq5pumebqdoiu",
+    },
+    metadata: {
+      name: FILER_AUTH_SECRET,
       namespace: "seaweedfs",
     },
   });
@@ -63,7 +127,10 @@ export function createSeaweedfsApp(chart: Chart) {
     probePath: "/status",
   });
 
-  // ClusterIP service for Filer UI (the helm chart creates a headless service which doesn't work with Tailscale ingress)
+  // ClusterIP service for the authenticated Filer UI gateway. The Helm chart
+  // creates a headless service, which does not work with Tailscale ingress.
+  // The raw Filer port remains available only to SeaweedFS components in this
+  // namespace, so the external hostname and UI capabilities remain unchanged.
   new KubeService(chart, "seaweedfs-filer-ui-service", {
     metadata: {
       name: "seaweedfs-filer-ui",
@@ -82,8 +149,74 @@ export function createSeaweedfsApp(chart: Chart) {
       ports: [
         {
           name: "http",
-          port: 8888,
-          targetPort: IntOrString.fromNumber(8888),
+          port: FILER_UPSTREAM_PORT,
+          targetPort: IntOrString.fromNumber(FILER_GATEWAY_PORT),
+        },
+      ],
+    },
+  });
+
+  new KubeNetworkPolicy(chart, "seaweedfs-filer-netpol", {
+    metadata: {
+      name: "seaweedfs-filer-netpol",
+      namespace: "seaweedfs",
+    },
+    spec: {
+      podSelector: {
+        matchLabels: {
+          "app.kubernetes.io/component": "filer",
+          "app.kubernetes.io/name": "seaweedfs",
+        },
+      },
+      policyTypes: ["Ingress"],
+      ingress: [
+        {
+          // SeaweedFS master, volume, S3, and Filer pods retain their existing
+          // internal protocol access, including raw HTTP and gRPC.
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "seaweedfs" },
+              },
+            },
+          ],
+        },
+        {
+          // Tailscale can reach only the authenticated UI gateway.
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "tailscale" },
+              },
+            },
+          ],
+          ports: [
+            {
+              port: IntOrString.fromNumber(FILER_GATEWAY_PORT),
+              protocol: "TCP",
+            },
+          ],
+        },
+        {
+          // Prometheus retains metrics access and probes the public health
+          // path on the same authenticated gateway used by Tailscale.
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
+              },
+            },
+          ],
+          ports: [
+            {
+              port: IntOrString.fromNumber(9327),
+              protocol: "TCP",
+            },
+            {
+              port: IntOrString.fromNumber(FILER_GATEWAY_PORT),
+              protocol: "TCP",
+            },
+          ],
         },
       ],
     },
@@ -93,8 +226,9 @@ export function createSeaweedfsApp(chart: Chart) {
   createIngress(chart, "seaweedfs-filer-ingress", {
     namespace: "seaweedfs",
     service: "seaweedfs-filer-ui",
-    port: 8888,
+    port: FILER_UPSTREAM_PORT,
     hosts: ["seaweedfs-filer"],
+    probePath: "/health",
   });
 
   const seaweedfsValues: HelmValuesForChart<"seaweedfs"> = {
@@ -153,19 +287,14 @@ export function createSeaweedfsApp(chart: Chart) {
         {
           name: "data",
           type: "persistentVolumeClaim",
-          // 512, up from 384: legitimate retained growth (PR assets carry a
-          // 365-day TTL that cannot expire anything until the bucket is a
-          // year old) put the volume on a ~43-day projection to full
-          // (2026-08-28). This renders into a StatefulSet volumeClaimTemplate
-          // — an immutable field — so the live PVC must be expanded first
-          // (kubectl patch pvc data-seaweedfs-volume-0 -n seaweedfs) and the
-          // StatefulSet recreated with --cascade=orphan if the apply is
-          // rejected.
+          // Keep the immutable template at its existing size while the explicit
+          // root-owned claim above expands. A separate reviewed GitOps release
+          // reconciles templates after verifying the unchanged PVC bindings.
           size: Size.gibibytes(512).asString(),
           storageClass: NVME_STORAGE_CLASS,
           // Volume-slot cap. With master.volumeSizeLimitMB at 30 GiB, 88 GiB of
           // data packs into a few dozen volumes, so this is generous headroom, not
-          // a disk-coupled limit — the real governor is now bytes on the 384 GiB
+          // a disk-coupled limit — the real governor is bytes on the data
           // PVC, and disk fill is caught by the PVCStorageHigh alert (>90%). The
           // pre-existing ~360 one-GiB volumes stay allocated but become writable
           // up to 30 GiB, so they absorb new data instead of spawning fresh slots;
@@ -196,12 +325,64 @@ export function createSeaweedfsApp(chart: Chart) {
       },
       data: {
         type: "persistentVolumeClaim",
+        // The root-owned existing claim expands first; template reconciliation
+        // belongs to the subsequent data-preserving GitOps release.
         size: Size.gibibytes(1).asString(),
         storageClass: NVME_STORAGE_CLASS,
       },
       logs: {
         type: "emptyDir",
       },
+      sidecars: [
+        {
+          name: "authenticated-gateway",
+          image: `ghcr.io/shepherdjerred/caddy-s3proxy:${versions["shepherdjerred/caddy-s3proxy"]}`,
+          imagePullPolicy: "IfNotPresent",
+          command: ["/bin/sh", "-c"],
+          args: [
+            'printf "%s" "$CADDY_CONFIG" > /tmp/Caddyfile && exec caddy run --config /tmp/Caddyfile --adapter caddyfile',
+          ],
+          ports: [{ name: "auth-ui", containerPort: FILER_GATEWAY_PORT }],
+          env: [
+            { name: "CADDY_CONFIG", value: FILER_GATEWAY_CONFIG },
+            {
+              name: "SEAWEEDFS_FILER_BASIC_HASH",
+              valueFrom: {
+                secretKeyRef: {
+                  name: FILER_AUTH_SECRET,
+                  key: "basic-hash",
+                },
+              },
+            },
+          ],
+          volumeMounts: [{ name: "filer-gateway-tmp", mountPath: "/tmp" }],
+          resources: {
+            requests: { cpu: "5m", memory: "16Mi" },
+            limits: { cpu: "100m", memory: "64Mi" },
+          },
+          securityContext: {
+            runAsUser: 1000,
+            runAsGroup: 1000,
+            runAsNonRoot: true,
+            readOnlyRootFilesystem: true,
+            allowPrivilegeEscalation: false,
+            privileged: false,
+            capabilities: { drop: ["ALL"] },
+          },
+          livenessProbe: {
+            httpGet: { path: "/health", port: FILER_GATEWAY_PORT },
+            periodSeconds: 30,
+          },
+          readinessProbe: {
+            httpGet: { path: "/health", port: FILER_GATEWAY_PORT },
+            periodSeconds: 10,
+          },
+        },
+      ],
+      extraVolumes: `
+- name: filer-gateway-tmp
+  emptyDir: {}
+`,
       // Enable S3 gateway on filer (used for internal filer operations)
       s3: {
         enabled: true,

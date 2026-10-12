@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type {
   RawCurrentGameInfo,
   RawMatch,
@@ -10,20 +11,14 @@ import {
   buildReceipt,
   lakeStagingEvidenceCodec,
   prematchReceiptMatchId,
-  receiptMatchId,
   recordReceiptFailOpen,
   type LakeStagingEvidence,
   type ReceiptRecordOutcome,
 } from "#src/report-lake/durable-receipts.ts";
 import {
-  matchStagingFilePath,
-  matchTeamBanStagingFilePath,
-  matchTeamStagingFilePath,
-  prematchStagingFilePath,
-  timelineStagingFilePath,
-  writeMatchStagingFile,
-  writePrematchStagingFile,
-  writeTimelineStagingFiles,
+  stageMatchGeneration,
+  stagePrematchGeneration,
+  stageTimelineGeneration,
 } from "#src/report-lake/staging.ts";
 
 /**
@@ -48,11 +43,11 @@ import {
 
 export class ReceiptedStagingError extends Error {
   readonly objectKind: LakeStagingEvidence["objectKind"];
-  readonly matchId: string;
+  readonly matchId: RiotMatchId;
 
   constructor(args: {
     objectKind: LakeStagingEvidence["objectKind"];
-    matchId: string;
+    matchId: RiotMatchId;
   }) {
     super(
       `Report lake staging failed for ${args.objectKind} ${args.matchId}; no receipt was recorded.`,
@@ -95,7 +90,7 @@ type ReceiptOptions = {
 
 async function receiptStagedFiles(args: {
   objectKind: LakeStagingEvidence["objectKind"];
-  matchId: string;
+  matchId: RiotMatchId;
   staged: boolean;
   files: readonly string[];
   options: ReceiptOptions;
@@ -119,8 +114,10 @@ async function receiptStagedFiles(args: {
   });
   const receipt = await recordReceiptFailOpen({
     record: buildReceipt({
-      matchId: receiptMatchId(args.matchId),
+      matchId: args.matchId,
       kind: lakeStagingReceiptKind(args.objectKind),
+      // Version 2 attests the complete projection, including raw_documents.
+      version: 2,
       evidence,
       recordedAt: args.options.now ?? new Date(),
     }),
@@ -136,16 +133,18 @@ export async function stageMatchReceipted(
   options: ReceiptOptions,
 ): Promise<ReceiptedStagingResult> {
   const matchId = match.metadata.matchId;
-  const staged = await writeMatchStagingFile(lakeDir, match);
+  const staged = await stageMatchGeneration(lakeDir, match, {
+    source: {
+      kind: "s3",
+      key: options.source.key,
+      digest: options.source.digest,
+    },
+  });
   return receiptStagedFiles({
     objectKind: "match",
     matchId,
-    staged,
-    files: [
-      matchStagingFilePath(lakeDir, matchId),
-      matchTeamStagingFilePath(lakeDir, matchId),
-      matchTeamBanStagingFilePath(lakeDir, matchId),
-    ],
+    staged: staged.success,
+    files: staged.files,
     options,
   });
 }
@@ -157,20 +156,20 @@ export async function stageTimelineReceipted(
   options: ReceiptOptions,
 ): Promise<ReceiptedStagingResult> {
   const matchId = timeline.metadata.matchId;
-  const staged = await writeTimelineStagingFiles(lakeDir, timeline, observedAt);
+  const staged = await stageTimelineGeneration(lakeDir, timeline, observedAt, {
+    source: {
+      kind: "s3",
+      key: options.source.key,
+      digest: options.source.digest,
+    },
+  });
   return receiptStagedFiles({
     objectKind: "timeline",
     matchId,
-    staged,
-    // Every timeline table is listed, including any the flattener emitted no
-    // rows for. The receipt describes the projection this capture defines, and
-    // "this match produced no events" is part of that projection, not a gap.
-    files: [
-      timelineStagingFilePath(lakeDir, "timeline_events", matchId),
-      timelineStagingFilePath(lakeDir, "timeline_event_participants", matchId),
-      timelineStagingFilePath(lakeDir, "timeline_participant_frames", matchId),
-      timelineStagingFilePath(lakeDir, "timeline_coverage", matchId),
-    ],
+    staged: staged.success,
+    // The generation writes an empty file for a zero-row timeline table, so
+    // every path attested by fileCount exists in the committed projection.
+    files: staged.files,
     options,
   });
 }
@@ -181,13 +180,18 @@ export async function stagePrematchReceipted(
   observedAt: Date,
   options: ReceiptOptions,
 ): Promise<ReceiptedStagingResult> {
-  const dedupeKey = `${gameInfo.platformId}:${gameInfo.gameId.toString()}`;
-  const staged = await writePrematchStagingFile(lakeDir, gameInfo, observedAt);
+  const staged = await stagePrematchGeneration(lakeDir, gameInfo, observedAt, {
+    source: {
+      kind: "s3",
+      key: options.source.key,
+      digest: options.source.digest,
+    },
+  });
   return receiptStagedFiles({
     objectKind: "prematch",
     matchId: prematchReceiptMatchId(gameInfo),
-    staged,
-    files: [prematchStagingFilePath(lakeDir, dedupeKey)],
+    staged: staged.success,
+    files: staged.files,
     options,
   });
 }

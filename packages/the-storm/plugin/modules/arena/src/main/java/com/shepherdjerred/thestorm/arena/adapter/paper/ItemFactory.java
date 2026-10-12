@@ -19,8 +19,8 @@ import org.bukkit.potion.PotionEffectType;
 
 /**
  * Item stacks built once from their specs at enable, so an unknown material, enchantment or potion
- * stops the module instead of failing mid-game. Arena gear is unbreakable: nobody repairs a kit
- * between waves.
+ * stops the module instead of failing mid-game. Arena equipment wears out and is repaired at
+ * resupply checkpoints; reward templates keep their existing durability behavior.
  */
 final class ItemFactory {
 
@@ -52,7 +52,22 @@ final class ItemFactory {
   ItemStack arenaItem(ItemSpec spec) {
     var stack = template(spec).clone();
     keys.tag(stack);
+    stack.editMeta(meta -> meta.setUnbreakable(false));
     return stack;
+  }
+
+  ItemStack classGear(ItemSpec spec, String id) {
+    var stack = arenaItem(spec);
+    keys.gear(stack, id);
+    return stack;
+  }
+
+  boolean isClassGear(ItemStack stack, String id) {
+    return keys.isGear(stack, id);
+  }
+
+  boolean isArenaItem(ItemStack stack) {
+    return keys.isArenaItem(stack);
   }
 
   /** A reward item the player keeps. */

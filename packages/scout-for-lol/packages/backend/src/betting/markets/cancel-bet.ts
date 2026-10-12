@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   BucksPoolRosterSchema,
   BucksStakeSchema,
@@ -58,7 +59,7 @@ export type CancelBetResult =
  */
 export async function cancelBet(
   input: {
-    matchId: string;
+    matchId: RiotMatchId;
     serverId: DiscordGuildId;
     discordId: DiscordAccountId;
     surface?: "button" | "command" | "web";
@@ -95,7 +96,7 @@ export async function cancelBet(
 
 async function cancelBetInner(
   input: {
-    matchId: string;
+    matchId: RiotMatchId;
     serverId: DiscordGuildId;
     discordId: DiscordAccountId;
   },

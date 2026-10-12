@@ -121,10 +121,10 @@ final class PistonListener implements Listener {
     var pos = PaperGrid.pos(head);
     if (!grid.contains(pos)
         || !rules.crushable(grid.cellAt(pos))
-        || !kit.guard().check(owner, ProtectedAction.BREAK, grid, pos).isAllowed()) {
+        || !kit.guard().check(owner, ProtectedAction.AUTOMATIC_BREAK, grid, pos).isAllowed()) {
       return false;
     }
-    head.breakNaturally();
+    kit.changes().breakNaturally("#storm-mechanics-crush", head);
     return true;
   }
 
@@ -186,7 +186,7 @@ final class PistonListener implements Listener {
               var grid = new PaperGrid(piston.getWorld());
               var moves = planner.apply(grid);
               if (!moves.isEmpty() && kit.guard().moves(owner, grid, moves).isAllowed()) {
-                Placer.move(grid, moves);
+                Placer.move(grid, moves, kit.changes());
               }
             });
   }
@@ -194,6 +194,9 @@ final class PistonListener implements Listener {
   /** The switched-on piston signs touching {@code piston}, each with its creator. */
   private Map<Mechanism, UUID> signs(Block piston) {
     var found = new EnumMap<Mechanism, UUID>(Mechanism.class);
+    if (kit.sealed(piston.getWorld())) {
+      return found;
+    }
     for (var face : FACES) {
       var block = piston.getRelative(face);
       if (!PaperGrid.loaded(block)

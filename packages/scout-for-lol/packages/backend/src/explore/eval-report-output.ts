@@ -1,7 +1,7 @@
 /**
  * How a model-eval script emits its report.
  *
- * Shared by the dare-paraphrase and Explore-capability evals because the three
+ * Shared by the Explore model evals (capability and replay judge) because the three
  * steps have to agree across them: `--write` persists the report next to the
  * code it grades, the report always goes to stdout so a run is readable
  * without the file, and a failing report must set a non-zero exit code or the

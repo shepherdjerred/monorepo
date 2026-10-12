@@ -1,12 +1,14 @@
+import {
+  type DiscordGuildId,
+  DuelBestOfSchema,
+  DuelEventFormatSchema,
+  DuelRulesetV1Schema,
+  type DiscordChannelId,
+} from "@scout-for-lol/data";
 import { analyticsMeta } from "#src/lib/analytics.ts";
 import { useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { z } from "zod";
-import {
-  DuelBestOfSchema,
-  DuelEventFormatSchema,
-  DuelRulesetV1Schema,
-} from "@scout-for-lol/data";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   FirstTurretField,
@@ -102,8 +104,8 @@ function roundOverrides(value: z.output<typeof EventCreateSchema>) {
 }
 
 export function DuelEventCreateForm(props: {
-  guildId: string;
-  channels: readonly { id: string; name: string }[];
+  guildId: DiscordGuildId;
+  channels: readonly { id: DiscordChannelId; name: string }[];
   onCreated: (eventId: string) => void;
 }) {
   const trpc = useTRPC();

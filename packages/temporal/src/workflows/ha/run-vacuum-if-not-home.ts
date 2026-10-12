@@ -1,4 +1,4 @@
-import { ApplicationFailure, log } from "@temporalio/workflow";
+import { ApplicationFailure, log, patched } from "@temporalio/workflow";
 import {
   everyoneAway,
   sendNotification,
@@ -6,6 +6,8 @@ import {
   startEligibleVacuums,
   VACUUMS,
   verifyStartedVacuums,
+  verifyVacuumStartHistory,
+  VACUUM_HISTORY_PATCH,
 } from "./util.ts";
 
 export async function runVacuumIfNotHome(): Promise<void> {
@@ -15,7 +17,8 @@ export async function runVacuumIfNotHome(): Promise<void> {
     return;
   }
 
-  const { active, started } = await startEligibleVacuums();
+  const useHistory = patched(VACUUM_HISTORY_PATCH);
+  const { active, started, requestedAt } = await startEligibleVacuums();
 
   if (started.length === 0) {
     if (active.length !== VACUUMS.length) {
@@ -41,10 +44,23 @@ export async function runVacuumIfNotHome(): Promise<void> {
   // sleep) would exceed the schedules' 15-minute workflowExecutionTimeout and
   // break register-schedules.test.ts (WORKFLOW_MAX_SLEEP_MS = 7m); running them
   // in parallel keeps the total sleep budget at ~one unit's worth (~6 min).
-  await verifyStartedVacuums(started, {
+  const options = {
     delaySeconds: 3 * 60,
     retries: 3,
     retryDelaySeconds: 60,
-  });
+  };
+  if (useHistory) {
+    const interrupted = await verifyVacuumStartHistory(
+      started,
+      requestedAt,
+      options,
+    );
+    if (interrupted) {
+      await setOutcome("interrupted", "commanded-return");
+      return;
+    }
+  } else {
+    await verifyStartedVacuums(started, options);
+  }
   await setOutcome("executed", "started");
 }

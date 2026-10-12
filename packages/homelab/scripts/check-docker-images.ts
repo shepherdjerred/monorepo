@@ -135,7 +135,7 @@ function getRegistryInfo(
     }
   }
 
-  // For ghcr.io sub-paths like ghcr.io/buildkite/helm or ghcr.io/recyclarr
+  // Match GitHub Container Registry entries with namespace prefixes.
   if (normalized.startsWith("ghcr.io")) {
     return REGISTRY_AUTH["ghcr.io"];
   }
@@ -156,7 +156,7 @@ function parseImageRef(
   if (!registryInfo) return undefined;
 
   // Determine the actual Docker repository name. Registry URLs may carry a
-  // namespace prefix, e.g. ghcr.io/buildkite/helm + agent-stack-k8s.
+  // namespace prefix in addition to the chart or image name.
   const normalized = entry.registryUrl
     .replace(/^https?:\/\//, "")
     .replace(/\/$/, "");

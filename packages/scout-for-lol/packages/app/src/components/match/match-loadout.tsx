@@ -83,6 +83,30 @@ function RuneRow(props: { runeId: number }) {
   );
 }
 
+/** Absent for a Scout Client match: the League client reports no shards. */
+function StatShardList(props: {
+  shards: NonNullable<MatchRunePage["statShardIds"]>;
+}) {
+  return (
+    <div>
+      <p className="mb-1 text-xs font-medium text-scout-subtle">Stat shards</p>
+      <ul className="space-y-1.5 text-sm">
+        {[
+          { label: "Offense", id: props.shards.offense },
+          { label: "Flex", id: props.shards.flex },
+          { label: "Defense", id: props.shards.defense },
+        ].map((shard) => (
+          <li key={shard.label}>
+            <span>
+              {shard.label}: {shard.id.toString()}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function RunePagePopover(props: { runes: MatchRunePage }) {
   const keystoneId = props.runes.primaryRuneIds[0];
   const keystone = getRuneInfo(keystoneId);
@@ -113,24 +137,9 @@ function RunePagePopover(props: { runes: MatchRunePage }) {
           label={runeTreeName(props.runes.secondaryStyleId)}
           runeIds={props.runes.secondaryRuneIds}
         />
-        <div>
-          <p className="mb-1 text-xs font-medium text-scout-subtle">
-            Stat shards
-          </p>
-          <ul className="space-y-1.5 text-sm">
-            {[
-              { label: "Offense", id: props.runes.statShardIds.offense },
-              { label: "Flex", id: props.runes.statShardIds.flex },
-              { label: "Defense", id: props.runes.statShardIds.defense },
-            ].map((shard) => (
-              <li key={shard.label}>
-                <span>
-                  {shard.label}: {shard.id.toString()}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
+        {props.runes.statShardIds === null ? null : (
+          <StatShardList shards={props.runes.statShardIds} />
+        )}
       </PopoverContent>
     </Popover>
   );

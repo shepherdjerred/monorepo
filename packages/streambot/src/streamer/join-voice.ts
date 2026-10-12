@@ -90,6 +90,7 @@ export async function joinStreamerVoice(options: {
       code: info.code,
       deliberate: info.deliberate,
       atMs: options.now(),
+      ...(info.source === undefined ? {} : { source: info.source }),
     };
     // Once Discord has explicitly disconnected the streamer, a later transient close from the
     // other media transport must not erase that classification. A late deliberate close may,

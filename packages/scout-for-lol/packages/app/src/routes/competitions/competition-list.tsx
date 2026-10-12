@@ -1,6 +1,7 @@
+import { useRouteGuildId } from "#src/lib/routes/route-params.ts";
 import { Loaded } from "@shepherdjerred/loaded";
 import { useState } from "react";
-import { Link, useParams } from "react-router";
+import { Link } from "react-router";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import {
   competitionGameVariantToString,
@@ -24,7 +25,7 @@ import {
 import { STALE_TIME_SLOW_LIST } from "#src/lib/query/stale-times.ts";
 
 export function CompetitionList() {
-  const { guildId } = useParams();
+  const guildId = useRouteGuildId();
   const trpc = useTRPC();
   const { perms } = usePermissions(guildId);
   // Default to hiding cancelled/ended competitions; the toggle shows all.

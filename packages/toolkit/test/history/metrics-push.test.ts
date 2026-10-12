@@ -2,6 +2,7 @@ import { afterEach, describe, expect, test } from "vitest";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { ExportResultCode } from "@opentelemetry/core";
 import {
   AggregationTemporality,
   DataPointType,
@@ -303,7 +304,10 @@ describe("daemon usage metrics export", () => {
     const logged: string[] = [];
     const failing: PushMetricExporter = {
       export: (_metrics, resultCallback) => {
-        resultCallback({ code: 1, error: new Error("connection refused") });
+        resultCallback({
+          code: ExportResultCode.FAILED,
+          error: new Error("connection refused"),
+        });
       },
       forceFlush: () => Promise.resolve(),
       shutdown: () => Promise.resolve(),

@@ -5,15 +5,6 @@
  * `Bun.env` directly, so a variable that CI stops providing fails in one place
  * with a name attached instead of surfacing as an empty string somewhere
  * downstream.
- *
- * During the migration this also read Buildkite's names, so a script could be
- * switched over while Buildkite was still the live gate. Those fallbacks are
- * gone: a stray `BUILDKITE_*` in an environment should not be able to satisfy
- * a required variable.
- *
- * Only variables with a real Woodpecker equivalent are here. Buildkite's job
- * UUID, agent access token, and hook variables have no counterpart, and
- * callers that needed them were rewritten rather than mapped.
  */
 
 type Environment = Readonly<Record<string, string | undefined>>;

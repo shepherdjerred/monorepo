@@ -13,9 +13,12 @@ export function tailwind({
     >
       <div style={twj("bg-gray-50 flex w-full")}>
         <div
-          style={twj(
-            "flex flex-col md:flex-row w-full py-12 px-4 md:items-center justify-between p-8",
-          )}
+          style={{
+            boxSizing: "border-box",
+            ...twj(
+              "flex flex-col md:flex-row w-full py-12 px-4 md:items-center justify-between p-8",
+            ),
+          }}
         >
           <h2
             style={twj(

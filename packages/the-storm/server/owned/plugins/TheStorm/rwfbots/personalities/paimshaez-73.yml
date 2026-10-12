@@ -1,0 +1,84 @@
+id: paimshaez-73
+name: Paimshaez_73
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NTYzNTk0OCwKICAicHJvZmlsZUlkIiA6ICIyODlmYmYwZGViMDU0MTI5YWZlYzBhMWQzMDBlOTgwYyIsCiAgInByb2ZpbGVOYW1lIiA6ICJqb2hubnlsaWtlcGllMiIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9mMjI4YmM1OGYxZmI5MTRmODUxODQxNDhmY2JmNWE2NmFlYWQ0YjVmODg1YjQ1OWRmMGQ3MDE0YzExNzg4YzQxIgogICAgfQogIH0KfQ=="
+  signature: "atey1hFDFzTBJa4a4DBwXcDRQ++vjUQeAKSaSIOPSckHSwo7r+jGHbX+EZ5ucuXZUXRsAnhE8jToie1KCI0ES/yr2nFbEj+qrJVaVec6d+/0aDqGjP81uooVZiWuD/PGpwJ559HMuOSu366FBQCtdor0t1XF48kLwt8BRSgUWyRTN/1oyOw0dALD951wPUSEVGbMD3Kg3hg4IXYF4BXUhCPVoFo9Ylw80NzQGMdIjXWFEqwn6+RtlRKJVLSeGTNX1So+LnL7rH9jRFZomgJT1JbUAZgfMcOleEz4rIJOF8q+a0wqt+u6dFk1FEDi/qrGYf5/Y824044DDBALLv8QxhalxfbNhEHbJXa+2w5wtI7bFUwktQq0NB8XjYxz1WodJXiyk26NauaVdOPSFsMB3IIReYSZ7XK2slja8DcALGsC2FkHLKZkr9JKe0Z+MBnho/msHN0EETtjfPC3jb2NtIsRzKMe1fnZXIuEg18c2bA05V4vC/gYb5uN6CUkAkjW9xSTOxRneZ0NMl5l/wm/LyQi5Q9SIlTwv6UbAV9G5WoP2UC8CupD0csfDeGU+0TlKeD4pY/kytMr7XFyC74D0vXmk1/POevH0WrYDPVXobfTJFaaLKsWAiTJFinfyEbj63+S2o4bUsEgr5tO/Z/xykBLAZjazKDyf59Oy+slMhs="
+skill: 0.937
+archetype: sniper
+leverOffsets:
+  reactionMs: -0.14
+  aimErrorDeg: 1.62
+  cps: -1.32
+  predictionQuality: 1.31
+  awarenessRadius: 1.3
+  technique: 0.12
+  aggression: -0.11
+kits:
+  trooper: 0.15
+  longbow: 0.92
+  shortbow: 0.4
+  spy: 0.15
+roles:
+  defend: 0.88
+  rotate: 0.49
+  hunt: 0.61
+style:
+  aggression: 0.26
+  patience: 0.79
+  teamplay: 0.44
+  risk: 0.19
+voice:
+  tone:
+    - confident
+    - precise
+    - cool
+  verbosity: quiet
+  style: "champion archer; quiet confidence, distances and wind in every line"
+lines:
+  greet:
+    - Bow strung. Long sightline.
+    - "I'll cover the far side, {team}."
+    - Watching from range.
+  onKill:
+    - "{victim}, sixty blocks."
+    - "Clean hit on {victim}."
+    - Wind was right.
+  onDeath:
+    - "Good close-in, {killer}."
+    - Too close for the bow.
+    - Repositioning.
+  onPlant:
+    - "{bomb} lit. Covering from range."
+    - "Fuse on {bomb}. I'll watch the approach."
+  onDefuse:
+    - "{bomb} defused. Back to the perch."
+    - "{bomb} safe. Eyes up."
+  onWin:
+    - "Clean shooting, {team}. gg."
+    - gg. Good angles all round.
+  onLoss:
+    - Missed when it counted. gg.
+    - Wind wasn't with me. gg.
+  onLastAlive:
+    - Last archer. Plenty of arrows.
+    - Long range, last life.
+    - "Hold on, {team}."
+  taunt:
+    - I can see you from here.
+    - Don't stand still.
+    - One more step into the open.
+  lobby:
+    - Wind's calm on this map. Good.
+    - Longbow strung. Arrows counted.
+    - "Find your sightline before the round finds you, {team}."
+    - Long shots start with a quiet lobby.
+    - If anyone wants a tip about leading targets, ask.
+quirks:
+  - bow_spammer
+  - stares_down
+rivals:
+  - piozliost-40
+  - silentbandit65
+bio: Famous for a 2014 arrow across an entire map that nobody has repeated. Has an earnest student in Piozliost_40, who she pretends not to notice but quietly gives tips to after matches.
+batch: 2
+retired: false

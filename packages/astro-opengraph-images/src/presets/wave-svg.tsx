@@ -9,7 +9,12 @@ export function waveSvg({ title }: RenderFunctionInput): React.ReactNode {
         "h-full w-full flex items-start justify-start bg-yellow-50 relative",
       )}
     >
-      <h1 style={twj("text-7xl p-20 font-bold text-left text-gray-900")}>
+      <h1
+        style={{
+          boxSizing: "border-box",
+          ...twj("text-7xl p-20 font-bold text-left text-gray-900"),
+        }}
+      >
         {title}
       </h1>
 

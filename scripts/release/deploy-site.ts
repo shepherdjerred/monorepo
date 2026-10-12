@@ -5,7 +5,9 @@
  * Ported from the old CI's `deploySiteHelper` + `s3SyncStaticSite`
  * (.dagger/src/release.ts) and the `DEPLOY_SITES` catalog (scripts/ci). Runs
  * locally as a plain Bun script; credentials come from the environment — the
- * operator is expected to wrap invocations with `op run`.
+ * operator wraps invocations with
+ * `scripts/onepassword/with-service-account.sh op run`, which reads the
+ * Keychain service account instead of waiting for 1Password desktop approval.
  *
  * Usage:
  *   bun scripts/release/deploy-site.ts <site-name> [--dry-run]
@@ -80,6 +82,16 @@ type DeploySite = DeploySiteBase & DeploySiteBuildEnv;
 // endpoint is the SeaweedFS S3 gateway for target "s3". No site currently uses
 // "r2", but the target is kept so the endpoint logic matches the old helper.
 const DEPLOY_SITES: readonly DeploySite[] = [
+  {
+    bucket: "statically-typed",
+    name: "statically-typed",
+    url: "https://statically-typed.com",
+    buildDir: "packages/statically-typed",
+    buildCmd: "bun --no-install run build",
+    distDir: "packages/statically-typed/dist",
+    target: "s3",
+    immutablePrefixes: [],
+  },
   {
     bucket: "sjer-red",
     name: "sjer.red",
@@ -190,6 +202,18 @@ const DEPLOY_SITES: readonly DeploySite[] = [
     extraExcludes: ["data/*"],
   },
   {
+    bucket: "glitter-boys",
+    name: "glitter-boys",
+    url: "https://glitter-boys.com",
+    buildDir: "packages/glitter-boys",
+    buildCmd: "bun --no-install run build",
+    distDir: "packages/glitter-boys/dist",
+    target: "s3",
+    immutablePrefixes: ["_astro/"],
+    // Native release publication owns this prefix independently of Astro builds.
+    extraExcludes: ["launcher/*"],
+  },
+  {
     bucket: "glitter-boys-ppl",
     name: "glitter",
     url: "https://ppl.glitter-boys.com",
@@ -206,19 +230,12 @@ const DEPLOY_SITES: readonly DeploySite[] = [
     immutablePrefixes: [],
   },
   {
-    bucket: "ts-mc",
-    name: "ts-mc",
-    url: "https://ts-mc.net",
-    buildDir: "packages/ts-mc",
-    buildCmd: "bun --no-install run astro build",
-    distDir: "packages/ts-mc/dist",
-    target: "s3",
-    // Astro's hashed output dir.
-    immutablePrefixes: ["_astro/"],
-  },
-  {
     bucket: "ts-mc-docs",
     name: "ts-mc-docs",
+    // The currently deployed Woodpecker config extension still has one PR
+    // dry-run using the former portal ID; resolve it to the surviving docs
+    // site until that pinned extension is rebuilt and deployed.
+    aliases: ["ts-mc"],
     url: "https://docs.ts-mc.net",
     buildDir: "packages/ts-mc-docs",
     buildCmd: "bun --no-install run astro build",
@@ -226,6 +243,8 @@ const DEPLOY_SITES: readonly DeploySite[] = [
     target: "s3",
     // Astro's hashed output dir.
     immutablePrefixes: ["_astro/"],
+    // Independently published world archives are not part of Astro's dist.
+    extraExcludes: ["world-archive/*"],
   },
 ];
 
@@ -322,6 +341,29 @@ function selectSite(args: string[]): DeploySite {
   return site;
 }
 
+async function assertPrebuiltSite(
+  site: DeploySite,
+  distDir: string,
+): Promise<void> {
+  const glob = new Bun.Glob("**/*");
+  let fileCount = 0;
+  try {
+    for await (const _ of glob.scan({ cwd: distDir, onlyFiles: true })) {
+      fileCount += 1;
+      break;
+    }
+  } catch (error) {
+    const isEnoent =
+      error instanceof Error && "code" in error && error.code === "ENOENT";
+    if (!isEnoent) throw error;
+  }
+  if (fileCount === 0) {
+    throw new Error(
+      `--prebuilt: ${site.distDir} is missing or empty — refusing to sync`,
+    );
+  }
+}
+
 async function main(): Promise<void> {
   const args = Bun.argv.slice(2);
   if (args.includes("--help") || args.includes("-h")) {
@@ -349,24 +391,7 @@ async function main(): Promise<void> {
     // The dist was produced elsewhere (e.g. a CI artifact from a container
     // with build-only tooling like playwright browsers). Refuse to sync a
     // missing/empty dir — with --delete that would wipe the bucket.
-    const glob = new Bun.Glob("**/*");
-    let fileCount = 0;
-    try {
-      for await (const _ of glob.scan({ cwd: distDir, onlyFiles: true })) {
-        fileCount += 1;
-        break;
-      }
-    } catch (error) {
-      // Missing dir (ENOENT) → same refusal as empty; anything else is real.
-      const isEnoent =
-        error instanceof Error && "code" in error && error.code === "ENOENT";
-      if (!isEnoent) throw error;
-    }
-    if (fileCount === 0) {
-      throw new Error(
-        `--prebuilt: ${site.distDir} is missing or empty — refusing to sync`,
-      );
-    }
+    await assertPrebuiltSite(site, distDir);
     console.log(
       `build: skipped (--prebuilt; syncing existing ${site.distDir})`,
     );
@@ -400,6 +425,7 @@ async function main(): Promise<void> {
       `${site.distDir}/index.html is missing — refusing to sync (--delete would remove the site's root files from s3://${site.bucket}/)`,
     );
   }
+  await assertRequiredErrorPage(site.name, distDir, dryRun);
 
   console.log(`+++ sync: ${site.distDir} -> s3://${site.bucket}/`);
   await s3SyncStaticSite({
@@ -417,6 +443,23 @@ async function main(): Promise<void> {
   });
 
   console.log(`--- done: ${site.name}`);
+}
+
+async function assertRequiredErrorPage(
+  siteName: string,
+  distDir: string,
+  dryRun: boolean,
+): Promise<void> {
+  if (
+    dryRun ||
+    !["better-skill-capped", "cooklang-rich-preview"].includes(siteName)
+  )
+    return;
+  if (!(await Bun.file(`${distDir}/404.html`).exists())) {
+    throw new Error(
+      `${siteName}: required 404.html is missing; refusing to publish an incomplete site`,
+    );
+  }
 }
 
 await main();

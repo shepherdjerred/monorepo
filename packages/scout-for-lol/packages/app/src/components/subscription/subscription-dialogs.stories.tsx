@@ -1,9 +1,16 @@
+import {
+  DiscordChannelIdSchema,
+  type SubscriptionFilterSpec,
+} from "@scout-for-lol/data";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import type { SubscriptionFilterSpec } from "@scout-for-lol/data";
 import { AddSubscriptionDialog } from "./add-subscription-dialog.tsx";
 import { SubscriptionChannelDialog } from "./subscription-channel-dialog.tsx";
 import { SubscriptionFilterDialog } from "./subscription-filter-dialog.tsx";
-import { placeholderAvatar } from "#src/lib/storybook/story-fixtures.ts";
+import {
+  placeholderAvatar,
+  STORY_GUILD_ID,
+  STORY_CHANNELS,
+} from "#src/lib/storybook/story-fixtures.ts";
 import type { StorySeed } from "#src/lib/storybook/trpc-stub.ts";
 
 /** Stories have no backend, so every handler is deliberately inert. */
@@ -11,13 +18,8 @@ function noop(): void {
   // Intentionally empty.
 }
 
-const GUILD_ID = "469558207670419456";
-
-const CHANNELS = [
-  { id: "1069813984308248657", name: "match-reports" },
-  { id: "1069814032311730227", name: "ranked-only" },
-  { id: "1069814077526343710", name: "aram-night" },
-];
+const GUILD_ID = STORY_GUILD_ID;
+const CHANNELS = STORY_CHANNELS;
 
 /**
  * The Riot ID and Discord member pickers only query once two characters are
@@ -177,7 +179,7 @@ export const EditFilters: Story = {
         action={{
           kind: "edit",
           alias: "bald",
-          channelId: CHANNELS[1]?.id ?? "",
+          channelId: DiscordChannelIdSchema.parse(CHANNELS[1]?.id ?? ""),
           initial: RANKED_FILTERS,
         }}
         onOpenChange={noop}

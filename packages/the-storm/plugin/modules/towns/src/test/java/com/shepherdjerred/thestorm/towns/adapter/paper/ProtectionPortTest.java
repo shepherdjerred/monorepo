@@ -69,6 +69,16 @@ final class ProtectionPortTest extends AegisServer {
   }
 
   @Test
+  void npcDamageRemainsAllowedInSpawnAndClaims() {
+    var port = port();
+    assertThat(port.checkHarm(bob.getUniqueId(), at(8, 8), HarmTarget.NPC, at(8, 8)).isAllowed())
+        .isTrue();
+    assertThat(
+            port.checkHarm(bob.getUniqueId(), at(500, 500), HarmTarget.NPC, at(170, Z)).isAllowed())
+        .isTrue();
+  }
+
+  @Test
   void sameLandMeansTheSameOwner() {
     var port = port();
 
@@ -86,6 +96,27 @@ final class ProtectionPortTest extends AegisServer {
     assertThat(port.check(bob.getUniqueId(), ProtectedAction.BUILD, at(170, Z)).isAllowed())
         .isFalse();
     assertThat(port.check(alice.getUniqueId(), ProtectedAction.BUILD, at(170, Z)).isAllowed())
+        .isTrue();
+  }
+
+  @Test
+  void preservationBlocksAutomaticChangesEvenForStaff() {
+    var preserved = at(1_000_000, 1_000_000);
+    alice.addAttachment(plugin, Guard.BYPASS_PERMISSION, true);
+    assertThat(port().check(alice.getUniqueId(), ProtectedAction.BUILD, preserved).isAllowed())
+        .as("staff may deliberately repair preserved terrain")
+        .isTrue();
+    for (var action :
+        new ProtectedAction[] {ProtectedAction.AUTOMATIC_BUILD, ProtectedAction.AUTOMATIC_BREAK}) {
+      assertThat(port().check(alice.getUniqueId(), action, preserved).isAllowed())
+          .as("background changes never inherit staff bypass")
+          .isFalse();
+    }
+    assertThat(
+            port()
+                .check(alice.getUniqueId(), ProtectedAction.AUTOMATIC_BUILD, at(500, 500))
+                .isAllowed())
+        .as("ordinary wilderness mechanisms still work")
         .isTrue();
   }
 

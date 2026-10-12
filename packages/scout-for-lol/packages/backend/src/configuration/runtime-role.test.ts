@@ -6,7 +6,6 @@ import {
   SCOUT_TEMPORAL_QUEUE_CLASSES,
   type ScoutRuntimeCapabilities,
   type ScoutRuntimeRole,
-  type ScoutTemporalQueueClass,
 } from "#src/configuration/runtime-role.ts";
 
 /**
@@ -15,8 +14,8 @@ import {
  * A test that asked `scoutRuntimeCapabilities(role)` what a role does and then
  * asserted that answer against itself would pass for any table. Restating the
  * intended split independently is what makes an accidental edit — a subsystem
- * silently gaining a role, or the `combined` row drifting from the behaviour
- * production runs — fail here instead of in beta.
+ * silently gaining a role, or a hosted role drifting from the split — fail
+ * here instead of in beta.
  */
 const EXPECTED: Readonly<Record<ScoutRuntimeRole, ScoutRuntimeCapabilities>> = {
   combined: {
@@ -40,20 +39,12 @@ const EXPECTED: Readonly<Record<ScoutRuntimeRole, ScoutRuntimeCapabilities>> = {
     voiceStateAccess: false,
     reportLakeAccess: true,
     reportLakeFold: true,
-    // Interim combined-minus-shard: realtime, background and the competition
-    // worker sit here until `activity-worker` becomes deployable.
-    temporalWorkers: [
-      "workflow",
-      "interactive",
-      "lake",
-      "realtime",
-      "background",
-    ],
+    temporalWorkers: ["workflow", "interactive", "lake"],
     deferredTemporalWorkers: [],
     discordGateway: false,
     gatewayReadyReconciliation: false,
     httpSurface: "full",
-    competitionActivityWorker: true,
+    competitionActivityWorker: false,
     databaseMetricSweeps: true,
     databaseSeeding: true,
   },
@@ -92,8 +83,11 @@ const EXPECTED: Readonly<Record<ScoutRuntimeRole, ScoutRuntimeCapabilities>> = {
   },
 };
 
-/** Every role except `combined`, which is the un-split shape by definition. */
-const SPLIT_ROLES = SCOUT_RUNTIME_ROLES.filter((role) => role !== "combined");
+const SPLIT_ROLES: readonly ScoutRuntimeRole[] = [
+  "application",
+  "gateway",
+  "activity-worker",
+];
 
 /** Which split roles declare a given capability. */
 function splitRolesWith(
@@ -105,11 +99,32 @@ function splitRolesWith(
 }
 
 describe("scout runtime roles", () => {
+  test.each(SCOUT_RUNTIME_ROLES)(
+    "beta %s leaves Workflow tasks to its versioned deployment",
+    (role) => {
+      const beta = scoutRuntimeCapabilities(role, "beta");
+      expect([
+        ...beta.temporalWorkers,
+        ...beta.deferredTemporalWorkers,
+      ]).not.toContain("workflow");
+      expect(scoutRuntimeCapabilities(role, "prod")).toEqual(
+        scoutRuntimeCapabilities(role, "dev"),
+      );
+    },
+  );
+  test("beta gateway cannot read the lake while its interactive worker can", () => {
+    expect(scoutRuntimeCapabilities("gateway", "beta").reportLakeAccess).toBe(
+      false,
+    );
+    expect(
+      scoutRuntimeCapabilities("application", "beta").reportLakeAccess,
+    ).toBe(true);
+  });
   test.each(SCOUT_RUNTIME_ROLES)("%s declares its exact subsystems", (role) => {
     expect(scoutRuntimeCapabilities(role)).toEqual(EXPECTED[role]);
   });
 
-  test("the vocabulary is exactly the four deployable shapes", () => {
+  test("the vocabulary is combined plus the three hosted roles", () => {
     expect([...SCOUT_RUNTIME_ROLES]).toEqual([
       "combined",
       "application",
@@ -119,25 +134,11 @@ describe("scout runtime roles", () => {
   });
 
   /**
-   * The end state is a partition: two pods polling one activity queue would
-   * double every Riot poll and every delivery, and a queue nobody polls is work
-   * that silently never happens.
-   *
-   * The interim is not a partition, and this pins exactly where it is not.
-   * `realtime` and `background` are declared by BOTH `application` (deployed)
-   * and `activity-worker` (not deployed, and undeployable until the report lake
-   * stops being a single-writer ReadWriteOnce volume). The overlap is safe only
-   * because the second role never runs, so it is written down here rather than
-   * waved through by loosening the check — any OTHER doubled queue still fails.
-   *
-   * When `activity-worker` ships this test fails; the fix is to delete
-   * INTERIM_DOUBLE_OWNED and restore the exact partition, not to extend it.
+   * The split is a partition: a queue with no poller silently stalls, while
+   * two role owners split work across processes and make rollback and
+   * per-role health ambiguous.
    */
-  test("every worker is owned, and only the interim queues are double-owned", () => {
-    const INTERIM_DOUBLE_OWNED = new Set<ScoutTemporalQueueClass>([
-      "realtime",
-      "background",
-    ]);
+  test("the split gives each queue exactly one owner", () => {
     for (const queueClass of SCOUT_TEMPORAL_QUEUE_CLASSES) {
       const owners = SPLIT_ROLES.filter((role) => {
         const capabilities = scoutRuntimeCapabilities(role);
@@ -146,12 +147,11 @@ describe("scout runtime roles", () => {
           capabilities.deferredTemporalWorkers.includes(queueClass)
         );
       });
-      if (INTERIM_DOUBLE_OWNED.has(queueClass)) {
-        expect(owners).toEqual(["application", "activity-worker"]);
-        continue;
-      }
       expect(owners).toHaveLength(1);
     }
+    expect(splitRolesWith((c) => c.competitionActivityWorker)).toEqual([
+      "activity-worker",
+    ]);
   });
 
   test("the split covers every worker combined runs", () => {
@@ -171,27 +171,26 @@ describe("scout runtime roles", () => {
 
   test("exactly one split role owns each singleton responsibility", () => {
     // A second gateway connection means duplicate command handling and
-    // duplicate guild-lifecycle writes; a second report-lake writer means two
-    // processes publishing builds onto one ReadWriteOnce volume; a second
+    // duplicate guild-lifecycle writes; a second report-lake publisher means
+    // two processes racing the CURRENT pointer on one shared volume; a second
     // metric sweeper multiplies one Prometheus scrape into N table sweeps.
-    const owners = splitRolesWith;
-
-    expect(owners((c) => c.discordGateway)).toEqual(["gateway"]);
-    expect(owners((c) => c.voiceAssistant)).toEqual(["gateway"]);
-    expect(owners((c) => c.voiceStateAccess)).toEqual(["gateway"]);
-    expect(owners((c) => c.reportLakeFold)).toEqual(["application"]);
-    expect(owners((c) => c.databaseMetricSweeps)).toEqual(["application"]);
-    expect(owners((c) => c.databaseSeeding)).toEqual(["application"]);
-    expect(owners((c) => c.httpSurface === "full")).toEqual(["application"]);
-    // Not a singleton during the interim, for the same reason as the realtime
-    // and background queues: `application` carries it so the split does not
-    // stop scheduled competition updates, and `activity-worker` still declares
-    // it for when it becomes deployable. Restore the single owner then.
-    expect(owners((c) => c.competitionActivityWorker)).toEqual([
+    expect(splitRolesWith((c) => c.discordGateway)).toEqual(["gateway"]);
+    expect(splitRolesWith((c) => c.voiceAssistant)).toEqual(["gateway"]);
+    expect(splitRolesWith((c) => c.voiceStateAccess)).toEqual(["gateway"]);
+    expect(splitRolesWith((c) => c.reportLakeFold)).toEqual(["application"]);
+    expect(splitRolesWith((c) => c.databaseMetricSweeps)).toEqual([
       "application",
+    ]);
+    expect(splitRolesWith((c) => c.databaseSeeding)).toEqual(["application"]);
+    expect(splitRolesWith((c) => c.httpSurface === "full")).toEqual([
+      "application",
+    ]);
+    expect(splitRolesWith((c) => c.competitionActivityWorker)).toEqual([
       "activity-worker",
     ]);
-    expect(owners((c) => c.gatewayReadyReconciliation)).toEqual(["gateway"]);
+    expect(splitRolesWith((c) => c.gatewayReadyReconciliation)).toEqual([
+      "gateway",
+    ]);
   });
 
   test("every role that runs an activity queue declares lake access", () => {
@@ -260,23 +259,54 @@ describe("scout runtime roles", () => {
 });
 
 describe("runtime role parsing", () => {
-  test("an unset role is the combined default", () => {
-    expect(parseScoutRuntimeRole(undefined)).toBe("combined");
-    expect(parseScoutRuntimeRole("")).toBe("combined");
+  test("an unset role is combined in development", () => {
+    expect(parseScoutRuntimeRole(undefined, "dev")).toBe("combined");
+    expect(parseScoutRuntimeRole("", "dev")).toBe("combined");
   });
 
-  test.each(SCOUT_RUNTIME_ROLES)("parses %s", (role) => {
-    expect(parseScoutRuntimeRole(role)).toBe(role);
+  test.each(["beta", "prod"] as const)(
+    "an unset role is refused in %s",
+    (environment) => {
+      expect(() => parseScoutRuntimeRole(undefined, environment)).toThrow(
+        /SCOUT_RUNTIME_ROLE must be set/,
+      );
+      expect(() => parseScoutRuntimeRole("", environment)).toThrow(
+        /SCOUT_RUNTIME_ROLE must be set/,
+      );
+    },
+  );
+
+  test.each(["beta", "prod"] as const)(
+    "combined is refused in %s",
+    (environment) => {
+      expect(() => parseScoutRuntimeRole("combined", environment)).toThrow(
+        /development-only/,
+      );
+    },
+  );
+
+  test.each(SCOUT_RUNTIME_ROLES)("parses %s in development", (role) => {
+    expect(parseScoutRuntimeRole(role, "dev")).toBe(role);
+  });
+
+  test.each(SPLIT_ROLES)("parses %s in production", (role) => {
+    expect(parseScoutRuntimeRole(role, "prod")).toBe(role);
   });
 
   test("an unrecognised role throws and names the alternatives", () => {
-    expect(() => parseScoutRuntimeRole("worker")).toThrow(
+    expect(() => parseScoutRuntimeRole("worker", "dev")).toThrow(
       /Invalid SCOUT_RUNTIME_ROLE="worker", expected one of: combined, application, gateway, activity-worker/,
     );
   });
 
+  test("the retired application-isolated name is not accepted", () => {
+    expect(() => parseScoutRuntimeRole("application-isolated", "prod")).toThrow(
+      /Invalid SCOUT_RUNTIME_ROLE/,
+    );
+  });
+
   test("a near-miss is not silently coerced", () => {
-    expect(() => parseScoutRuntimeRole("Combined")).toThrow();
-    expect(() => parseScoutRuntimeRole("activity_worker")).toThrow();
+    expect(() => parseScoutRuntimeRole("Combined", "dev")).toThrow();
+    expect(() => parseScoutRuntimeRole("activity_worker", "dev")).toThrow();
   });
 });

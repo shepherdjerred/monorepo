@@ -1,201 +1,95 @@
 ---
-title: Find and interpret a player profile
-description: Use the personalized player hub, filter recorded games, compare champion performance, and inspect match scoreboards and timelines.
+title: Find a player and review a match
+description: Find your profile, compare champions, and review competitive matches with a timeline and map.
 sidebar:
   order: 0
 ---
 
-Use Player Profiles when you want Scout's recorded history for a configured
-player. Profiles require Discord sign-in and only appear for enabled servers
-that you and Scout currently share. You do not need server administrator
-permission.
+Sign in with Discord to see players from servers you share with Scout.
+Server administrator permission is not required.
 
-## Start from the player hub
+## Find a player
 
-1. Open [Player Profiles](/app/players).
-2. Under **Your profiles**, open any configured player linked to your Discord
-   account. A profile can appear more than once when different shared servers
-   register you separately.
-3. Or choose one of the six **Recently active** players, ordered by the newest
-   match Scout recorded.
-4. To find someone else, search their Scout alias or Riot ID in `Name#Tag`
-   form, use the server name to choose the intended registration, and open it.
+1. Open [Players](/app/players).
+2. Choose a profile under **Your profiles** or **Recently active**, or search
+   by player name or Riot ID.
+3. Check the server name when a player has profiles in more than one server.
 
-No result means Scout has no matching configured player inside your enabled
-shared servers. It does not reveal whether the same alias or Riot ID exists in
-another server.
+Use **Find a lobby** to look up up to ten Riot IDs, one `Name#Tag` per line.
+Only players already tracked in your shared servers appear.
 
-## Check which accounts are combined
+## Choose a profile tab
 
-The profile header shows the server alias and how many Riot accounts Scout
-combines. Each account card identifies its Riot ID, region, last observed
-match, last check time, and last observed solo, flex, and ranked-5s ranks.
-Ranked queues use the same crest, division, and league-points treatment as a
-post-match report. An unranked queue stays text-only.
+- **Overview**: recent performance, game filters, and match history.
+- **Champions**: champion performance and mastery.
+- **Progress**: rank history, playing patterns, and challenge runs.
+- **Community**: teammates and opponents from that server's matches.
+- **Accounts**: Riot IDs, regions, and recorded ranks.
 
-Scout combines those accounts because the server configured them as one
-player. It does not infer that relationship from similar names. Ask a server
-manager to correct the configuration if the grouping is wrong.
+Ranks and matches reflect Scout's recorded history. Missing history does not
+mean a player has never played, and small samples can produce misleading win rates.
 
-## Judge freshness
+## Filter matches
 
-Use both timestamps:
+1. On **Overview**, choose Last 20, Last 50, or All time.
+2. Choose Competitive, Solo / duo, Flex, Clash, or All games.
+3. For a custom combination, expand **Choose queues**, select at least one,
+   and choose **Apply queues**.
+4. Filter by champion above the match list if needed.
 
-- **Last observed match** is the newest game Scout recorded for that account.
-- **Last checked by Scout** is the latest automatic poll, including checks that
-  found no new game.
+Filters stay in the address bar. **Clear filters** returns to all recorded
+games. Use Previous and Next beneath history to move through the matches.
 
-Opening the profile does not contact Riot or refresh either value. Scout's
-normal polling and ingest pipeline remains the source of new data.
+## Review a competitive match
 
-## Choose the games to compare
+Choose **View match** on a match card.
 
-The summary, champion table, and match history share one filter:
+**Overview** shows the result, player performance, team comparison, objectives,
+and builds. The selected player's lane comparison uses their team's perspective:
+a positive difference means they were ahead. A comparison at 15 minutes only
+appears when the timeline supports it.
 
-1. Choose **Last 20**, **Last 50**, or **All time**.
-2. Choose **All games**, **Competitive**, **Solo / duo**, **Flex**, or
-   **Clash** for a common queue grouping.
-3. Expand **Choose queues** when you need an exact combination. Queues are
-   grouped into Competitive, Standard, Rotating, and PvE sections.
+Choose another player with **Review player**. A match opened from Explore
+starts with the team overview.
 
-**All games** does not add a queue predicate. Use it when older stored games
-may have a queue Riot had not mapped at ingest time. A custom selection includes
-only the checked queues. The address bar keeps the selected window and queues,
-so you can bookmark or share the same view.
+Arena uses placement and subteams. Other modes retain their relevant
+scoreboards; lane comparisons are only shown for supported Summoner's Rift games.
 
-## Read ranked history
+## Follow the timeline
 
-The **Ranked history** section is independent of the game-window and queue
-filters. It graphs Scout's live post-match rank snapshots for the current
-ranked split (for example 2026 Season 3), not a Riot career graph and not
-imported match history.
+1. Open **Timeline**.
+2. Move the **Match time** slider or use the 10:00, 15:00, 20:00, and End buttons.
+3. Read the gold advantage and choose a champion on the map or in the player
+   picker to compare their gold, CS, level, and XP with their lane opponent.
+4. Choose a **Key moment** to jump to that event. Filter by kills, objectives,
+   team, or player.
 
-1. Choose **Solo / duo**, **Flex**, or **Ranked 5s**.
-2. Read the line as ladder position over the current split. Hover a point for
-   the recorded rank and date.
-3. Previous splits, when Scout has snapshots, appear as peak and last-observed
-   ranks under the graph.
+The map shows recorded positions, not continuous movement or vision.
+An event can fall between snapshots: the displayed snapshot time tells you
+which positions and stats you are seeing. Other maps do not use the
+Summoner's Rift minimap.
 
-An empty queue means Scout has not processed a live ranked game in that queue
-during the current split. Rank history starts when Scout records one.
+**Gold values** provides the chart's values in a table. The time slider, player
+picker, and event buttons also work with a keyboard.
 
-## Read combined performance
+Open **Advanced data** for the paginated event and frame tables.
 
-The summary combines matching games from every Riot account in the profile.
-Current rank does not change with the game filters: it is always Scout's newest
-known rank.
+A match without a timeline still has its Overview. If loading fails, use
+**Retry timeline**.
 
-Champion rows marked with an asterisk have fewer than the displayed minimum
-number of games. Treat their win rates as early evidence, not a stable
-performance claim.
+## Review progress and community
 
-Use **Previous** and **Next** below the champion table to move through ten
-champions at a time.
+In **Progress**, choose a ranked queue to see ranks recorded during the current
+split. Earlier splits appear when available. Playing patterns show roles,
+activity, and recent form.
 
-## Compare players on a champion
+In **Community**, choose the time window and queues to see teammates and rivals.
+Shared matches do not necessarily mean the players queued together.
 
-1. Select the game window and queues you want on a player profile.
-2. Open a champion name in the champion-performance table. The comparison keeps
-   those filters.
-3. Check or clear accessible servers to change the comparison cohort.
-4. Sort by win rate, games, KDA, CS, damage, gold, vision, or alias.
-
-The main leaderboard includes player registrations with at least ten matching
-games. Smaller samples stay in a separate table. A player configured in two
-servers appears as two labeled entries, and rows linked to your Discord account
-are marked **You**.
-
-## Trace a match to an account
-
-Every recorded match card names the Riot account Scout observed for that game
-and shows the participant's summoner spells, keystone, and final item slots.
-Use **Previous** and **Next** to move through twenty matches at a time. The
-selected Last 20 or Last 50 window is also the end of the list.
-
-Type a champion name above history to search recorded games for that champion.
-The Last 20 or Last 50 limit is applied **after** the champion search. Standard
-5v5 rows show both teams' champion portraits and Riot names, with the full
-roster and timeline on the dedicated match page.
-
-Open a victory or defeat label to inspect the match. For standard 5v5 games
-with one participant assigned to each role, the page pairs both teams by lane
-and shows the blue-minus-red gold, CS, and XP differences at 15 minutes when
-Scout retained that timeline frame. The scoreboards highlight the player whose
-profile you opened and include each participant's spells, final items, and
-full rune page; select the keystone icon to inspect the rune choices. Other
-game formats keep the team scoreboards without lane pairing.
-
-Arena pages group participants by subteam and show ordinal placement,
-partners, and any retained augments. Arena history rows show placement instead
-of a generic victory label. Other rotating modes retain their ordinary
-scoreboards and show augments only where the match data includes them; they do
-not borrow Arena placement or Summoner's Rift lane comparisons.
-
-Use the Riot ID, position, KDA, CS, gold, vision, damage, team-relative shares,
-objectives, and any accessible Scout aliases to interpret each participant.
-
-## Explore a captured timeline
-
-When Scout retained the timeline, the match page also provides:
-
-- team-gold and selected-player progression charts;
-- a chronological key-event summary;
-- a filterable event explorer with 100 rows per page; and
-- a frame table with 100 rows per page and every retained frame field.
-
-Choose an event type or participant to narrow the explorer. Open an event to
-see every non-empty retained field; this also works for Riot event types Scout
-does not recognize by name yet.
-
-If the page says **Timeline not captured**, the scoreboards are still complete
-for Scout's stored match row. Scout never contacts Riot from the page to fill
-the historical gap.
-
-Every list and detail includes only data Scout retained. It is not a complete
-Riot match history, and viewing it never starts a manual refresh.
-
-## Explore playing patterns and guild connections
-
-The profile's **Playing patterns** card shows role share, a local-time
-day/hour activity grid, and the current recorded win or loss streak. It compares
-the latest 20 recorded games with the current Riot act when Scout has confirmed
-act dates and games for both groups; otherwise it marks the comparison
-unavailable. These are match observations, not mastery or LP history.
-
-**Community connections** stays within the profile's selected guild. Choose
-30 days, 90 days (the default), or all recorded history, then Standard 5v5,
-Arena, or all queues. Account cards compare main and smurf form under that one
-player. The “main” badge is inferred from the most played all-time recorded
-account, breaking ties by newest match and account ID; it is not an account
-setting. Recently-played-with and rivalry lists group linked smurfs under their
-guild owner and link to the last shared match. Untracked rivals appear only
-after two recorded meetings.
-
-On the Player Profiles hub, **Guild lobby lookup** accepts up to
-ten `Name#Tag` Riot IDs. It matches cached Scout accounts exactly across your
-currently accessible guilds; an unmatched ID is labeled untracked and does not
-trigger a Riot lookup. **Guild community** lets you select one guild and the
-same recorded-history filters. Its People tab shows teammate pairs (at least
-three shared games before ranking them). Team tools show role/champion pool
-coverage, shared-game records for a chosen duo or squad of two to five, and an
-in-house balancer for exactly ten players. The balancer uses recent recorded
-form and observed role share; toggle whether role fit or even strength takes
-priority. Same-team match records do not establish that players queued as a
-premade party.
-
-**Recently detected** lists unexpired game observations for the selected
-guild, with detection time and age. Use Refresh to re-read Scout's stored
-observations. It does not verify the live Spectator state on page load, so a
-recently detected game may already have ended.
-
-## If access disappears
-
-Scout checks your current Discord membership and the server rollout flag on
-every search and profile request. If you leave the shared server or the feature
-is disabled there, search and direct profile links stop returning the player.
+The player hub's **Server community** also includes squad records and team tools.
 
 ## Related
 
-- [Ask and follow up in Explore](/docs/tutorials/first-explore-conversation/)
-- [Add and organize tracked players](/docs/how-to/add-players/)
-- [How players, accounts, and subscriptions relate](/docs/explanation/players-accounts-subscriptions/)
+- [Ask a question in Explore](/docs/tutorials/first-explore-conversation/)
+- [Add and organize players](/docs/how-to/add-players/)
+- [Players, accounts, and subscriptions](/docs/explanation/players-accounts-subscriptions/)

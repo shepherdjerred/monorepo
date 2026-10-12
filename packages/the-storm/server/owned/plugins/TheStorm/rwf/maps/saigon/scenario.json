@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "kind": "rwf-map-scenario",
+  "id": "saigon-trooper-duel-v1",
+  "map": "saigon",
+  "mapSha256": "d234f07b878719a7945c588038f2e7ccd9ba998ce56dc71cc0fe75657f293995",
+  "world": "minecraft:rwf",
+  "region": {
+    "min": {
+      "x": 5120,
+      "y": 0,
+      "z": 4096
+    },
+    "max": {
+      "x": 5377,
+      "y": 67,
+      "z": 4264
+    }
+  },
+  "sourceTeams": ["RED", "BLUE"],
+  "spawnPolicy": "source",
+  "spawns": [
+    {
+      "team": "red",
+      "sourceTeam": "RED",
+      "position": [5169.5, 9, 4169.5],
+      "yaw": 277.877685546875,
+      "pitch": 0
+    },
+    {
+      "team": "blue",
+      "sourceTeam": "BLUE",
+      "position": [5318.5, 9, 4174.5],
+      "yaw": 85.06583404541016,
+      "pitch": 0
+    }
+  ]
+}

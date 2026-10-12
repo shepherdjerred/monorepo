@@ -31,7 +31,10 @@ final class TemporaryBlocksWorldTest {
   private final TemporaryBlocks blocks = newBlocks();
 
   private TemporaryBlocks newBlocks() {
-    return new TemporaryBlocks(store, harness.server, harness.clock, harness.async)
+    return new TemporaryBlocks(
+            store,
+            new TemporaryBlocks.Dependencies(
+                harness.server, harness.clock, harness.async, harness.protection, harness.changes))
         .withLoader(
             (world, key) ->
                 CompletableFuture.completedFuture(world.getBlockAt(key.x(), key.y(), key.z())));
@@ -156,6 +159,106 @@ final class TemporaryBlocksWorldTest {
   }
 
   @Test
+  void preservedLandRejectsEligibilityAndDirectPlacement() {
+    harness.protection.preserveClaim = true;
+    var protectedBlock = air(0);
+    var wilderness = air(-1);
+
+    assertThat(blocks.eligible(List.of(protectedBlock, wilderness), Replaceability.Mode.OPEN_SPACE))
+        .containsExactly(wilderness);
+    place(List.of(protectedBlock), 10);
+
+    assertThat(protectedBlock.getType()).isEqualTo(Material.AIR);
+    assertThat(store.rows).isEmpty();
+    assertThat(harness.recordedChanges).isEmpty();
+  }
+
+  @Test
+  void preservationEstablishedDuringPersistenceRejectsTheDelayedWrite() {
+    var gate = new CompletableFuture<Boolean>();
+    store.gate = gate;
+    var block = air(0);
+    place(List.of(block), 10);
+    harness.protection.preserveClaim = true;
+    gate.complete(true);
+
+    assertThat(block.getType()).isEqualTo(Material.AIR);
+    assertThat(store.rows).isEmpty();
+    assertThat(blocks.holds(block)).isFalse();
+  }
+
+  @Test
+  void staleRecoveryRowsAndMarkersCannotRewritePreservedTerrain() {
+    var block = air(0);
+    blocks.place(List.of(block), Material.GLASS.createBlockData(), Duration.ofSeconds(10));
+    // Restored terrain replaced the old spell block; its stale marker cannot overwrite it.
+    block.setType(Material.DEEPSLATE_BRICKS);
+    harness.protection.preserveClaim = true;
+    var restarted = newBlocks();
+    restarted.recover(
+        () -> {},
+        failure -> {
+          throw new AssertionError(failure);
+        });
+    restarted.chunkLoaded(block.getChunk());
+
+    assertThat(block.getType()).isEqualTo(Material.DEEPSLATE_BRICKS);
+    assertThat(store.rows).isEmpty();
+    assertThat(ChunkMarkers.entries(block.getChunk())).isEmpty();
+    assertThat(harness.recordedChanges).hasSize(1);
+  }
+
+  @Test
+  void preservationDefersExpiryWithoutDiscardingTheRecoveryRowOrMarker() {
+    var block = air(0);
+    place(List.of(block), 10);
+    harness.protection.preserveClaim = true;
+    harness.clock.advance(Duration.ofSeconds(11));
+    blocks.sweep();
+
+    assertThat(block.getType()).isEqualTo(Material.DEEPSLATE_BRICKS);
+    assertThat(store.rows).hasSize(1);
+    assertThat(ChunkMarkers.entries(block.getChunk())).hasSize(1);
+    assertThat(blocks.holds(block)).isTrue();
+    assertThat(harness.recordedChanges).hasSize(1);
+
+    harness.protection.preserveClaim = false;
+    blocks.sweep();
+    assertThat(block.getType()).isEqualTo(Material.AIR);
+    assertThat(store.rows).isEmpty();
+    assertThat(ChunkMarkers.entries(block.getChunk())).isEmpty();
+    assertThat(blocks.holds(block)).isFalse();
+    assertThat(harness.recordedChanges).hasSize(2);
+  }
+
+  @Test
+  void aPreservedMarkerWithoutADatabaseRowCanResumeRecoveryAfterRestart() {
+    var block = air(0);
+    place(List.of(block), 10);
+    store.rows.clear();
+    harness.protection.preserveClaim = true;
+    harness.clock.advance(Duration.ofSeconds(11));
+    var restarted = newBlocks();
+    restarted.recover(
+        () -> {},
+        failure -> {
+          throw new AssertionError(failure);
+        });
+
+    assertThat(block.getType()).isEqualTo(Material.DEEPSLATE_BRICKS);
+    assertThat(ChunkMarkers.entries(block.getChunk())).hasSize(1);
+    assertThat(restarted.holds(block)).isTrue();
+    assertThat(harness.recordedChanges).hasSize(1);
+
+    harness.protection.preserveClaim = false;
+    restarted.sweep();
+    assertThat(block.getType()).isEqualTo(Material.AIR);
+    assertThat(ChunkMarkers.entries(block.getChunk())).isEmpty();
+    assertThat(restarted.holds(block)).isFalse();
+    assertThat(harness.recordedChanges).hasSize(2);
+  }
+
+  @Test
   void aTargetThatMovesBeforePersistenceFinishesGetsNoTemporaryBlocks() {
     var gate = new CompletableFuture<Boolean>();
     store.gate = gate;
@@ -174,6 +277,7 @@ final class TemporaryBlocksWorldTest {
     assertThat(placed).containsExactly(false);
     assertThat(block.getType()).isEqualTo(Material.AIR);
     assertThat(store.rows).isEmpty();
+    assertThat(harness.recordedChanges).isEmpty();
   }
 
   @Test
@@ -195,6 +299,10 @@ final class TemporaryBlocksWorldTest {
     assertThat(blocks.holds(wall.getFirst())).isFalse();
     assertThat(store.pending()).isEmpty();
     assertThat(store.rows).isEmpty();
+    assertThat(harness.recordedChanges)
+        .extracting(change -> change.actor())
+        .containsExactly(
+            "#storm-spells", "#storm-spells", "#storm-spells-revert", "#storm-spells-revert");
   }
 
   @Test

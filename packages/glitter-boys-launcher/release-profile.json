@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "channel": "preview",
+  "manifest_url": "https://glitter-boys.com/launcher/preview.json",
+  "public_keys": [
+    "cf69a125fc5ad83e216f0711ec8583d4d831a5e8e8b623ca2ab1fcb8ac1c9d60"
+  ],
+  "publisher": "CN=Jerred Shepherd, O=Jerred Shepherd, L=Seattle, S=wa, C=US"
+}

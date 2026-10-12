@@ -14,10 +14,12 @@ import {
   JobSchema,
   MINING_IMAGE_ANNOTATION,
   MINING_LOCK_ANNOTATION,
+  WORLD_RESTORE_LEASE_ANNOTATION,
   MINING_NAMESPACE,
   MINING_SERVER,
   MiningPeriodSchema,
   miningBackupName,
+  miningLockOwner,
   PodListSchema,
   PvcListSchema,
   ROUTER_WAKE_ANNOTATION,
@@ -142,16 +144,12 @@ async function acquireLock(
   period: string,
 ): Promise<string | undefined> {
   const server = await readServer(command);
-  const heldBy = server.metadata.annotations?.[MINING_LOCK_ANNOTATION];
-  if (heldBy !== undefined && heldBy !== period) {
-    throw new Error(`Mining reset maintenance lock belongs to ${heldBy}`);
-  }
   if (
-    heldBy === undefined &&
-    server.metadata.annotations?.[MINING_IMAGE_ANNOTATION] !== undefined
+    server.metadata.annotations?.[WORLD_RESTORE_LEASE_ANNOTATION] !== undefined
   ) {
-    throw new Error("Mining reset image exists without its maintenance lock");
+    return undefined;
   }
+  const heldBy = miningLockOwner(server, period);
   if (server.spec.replicas !== 0 || (server.status?.replicas ?? 0) !== 0) {
     if (heldBy === undefined) {
       return undefined;

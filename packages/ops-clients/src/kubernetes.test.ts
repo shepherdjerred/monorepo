@@ -29,6 +29,183 @@ function pod(
   };
 }
 
+function veleroSchedule(annotations: Record<string, string> = {}) {
+  return {
+    metadata: {
+      name: "monthly",
+      namespace: "velero",
+      creationTimestamp: "2026-09-01T00:00:00Z",
+      annotations: {
+        "ops.sjer.red/backup-max-age-seconds": "3801600",
+        "ops.sjer.red/backup-alert-for-seconds": "300",
+        "ops.sjer.red/backup-alert-severity": "warning",
+        ...annotations,
+      },
+    },
+    spec: { schedule: "0 3 1 * *", paused: true },
+    status: { lastBackup: "2026-10-01T03:00:00Z" },
+  };
+}
+
+describe("KubernetesClient Velero schedules", () => {
+  test("reads annotated Velero cadence and rejects missing policy instead of assuming daily", async () => {
+    const schedule = veleroSchedule();
+    const { client: kube } = client({ metadata: {}, items: [schedule] });
+    await expect(kube.listVeleroSchedules()).resolves.toEqual([
+      {
+        name: "monthly",
+        namespace: "velero",
+        createdAt: "2026-09-01T00:00:00Z",
+        cronSchedule: "0 3 1 * *",
+        paused: true,
+        maxAgeSeconds: 3_801_600,
+        alertForSeconds: 300,
+        alertSeverity: "warning",
+      },
+    ]);
+    const broken = client({
+      metadata: {},
+      items: [
+        { ...schedule, metadata: { ...schedule.metadata, annotations: {} } },
+      ],
+    });
+    await expect(broken.client.listVeleroSchedules()).rejects.toThrow(
+      /missing backup monitoring annotations/,
+    );
+  });
+  test.each(["", " ", "\t\n"])(
+    "rejects blank backup timing annotations %j",
+    async (value) => {
+      for (const key of [
+        "ops.sjer.red/backup-max-age-seconds",
+        "ops.sjer.red/backup-alert-for-seconds",
+      ]) {
+        const { client: kube } = client({
+          metadata: {},
+          items: [veleroSchedule({ [key]: value })],
+        });
+        await expect(kube.listVeleroSchedules()).rejects.toThrow(
+          /invalid or missing backup monitoring annotations/,
+        );
+      }
+    },
+  );
+  test("allows an explicit zero alert delay", async () => {
+    const { client: kube } = client({
+      metadata: {},
+      items: [veleroSchedule({ "ops.sjer.red/backup-alert-for-seconds": "0" })],
+    });
+    await expect(kube.listVeleroSchedules()).resolves.toEqual([
+      expect.objectContaining({ alertForSeconds: 0 }),
+    ]);
+  });
+});
+
+describe("KubernetesClient Velero outcomes", () => {
+  test("reads paginated persisted Velero outcomes, including new resources without status", async () => {
+    const metadata = {
+      name: "daily-1",
+      namespace: "velero",
+      creationTimestamp: "2026-10-01T02:00:00Z",
+      labels: { "velero.io/schedule-name": "daily" },
+    };
+    const { client: kube, requests } = client(
+      {
+        metadata: { continue: "page-2" },
+        items: [
+          {
+            metadata,
+            status: {
+              phase: "PartiallyFailed",
+              startTimestamp: "2026-10-01T02:05:00Z",
+              completionTimestamp: "2026-10-01T02:30:00Z",
+            },
+          },
+        ],
+      },
+      {
+        metadata: {},
+        items: [
+          { metadata: { ...metadata, name: "daily-2", labels: {} } },
+          {
+            metadata: { ...metadata, name: "daily-3" },
+            status: {
+              phase: "InProgress",
+              startTimestamp: null,
+              completionTimestamp: null,
+            },
+          },
+        ],
+      },
+    );
+    await expect(kube.listVeleroBackups()).resolves.toEqual([
+      {
+        name: "daily-1",
+        namespace: "velero",
+        schedule: "daily",
+        createdAt: "2026-10-01T02:00:00Z",
+        startedAt: "2026-10-01T02:05:00Z",
+        completedAt: "2026-10-01T02:30:00Z",
+        phase: "PartiallyFailed",
+      },
+      {
+        name: "daily-2",
+        namespace: "velero",
+        schedule: undefined,
+        createdAt: "2026-10-01T02:00:00Z",
+        startedAt: undefined,
+        completedAt: undefined,
+        phase: undefined,
+      },
+      {
+        name: "daily-3",
+        namespace: "velero",
+        schedule: "daily",
+        createdAt: "2026-10-01T02:00:00Z",
+        startedAt: undefined,
+        completedAt: undefined,
+        phase: "InProgress",
+      },
+    ]);
+    expect(requests[1]?.url).toContain("continue=page-2");
+  });
+  test.each(["startTimestamp", "completionTimestamp"])(
+    "rejects malformed %s rather than treating it as absent",
+    async (field) => {
+      const { client: kube } = client({
+        metadata: {},
+        items: [
+          {
+            metadata: {
+              name: "daily",
+              namespace: "velero",
+              creationTimestamp: "2026-10-01T02:00:00Z",
+            },
+            status: { phase: "InProgress", [field]: "not-a-timestamp" },
+          },
+        ],
+      });
+      await expect(kube.listVeleroBackups()).rejects.toThrow();
+    },
+  );
+  test("rejects an unknown Velero phase instead of hiding a producer contract change", async () => {
+    const { client: kube } = client({
+      metadata: {},
+      items: [
+        {
+          metadata: {
+            name: "daily",
+            namespace: "velero",
+            creationTimestamp: "2026-10-01T02:00:00Z",
+          },
+          status: { phase: "UnexpectedPhase" },
+        },
+      ],
+    });
+    await expect(kube.listVeleroBackups()).rejects.toThrow();
+  });
+});
+
 describe("KubernetesClient", () => {
   test("lists nodes with their Ready condition and versions", async () => {
     const { client: kube, requests } = client({

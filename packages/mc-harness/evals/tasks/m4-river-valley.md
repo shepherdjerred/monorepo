@@ -1,0 +1,5 @@
+Make me an impressive river valley in Minecraft, about 160×160 blocks, in a fresh flat sandbox: shape a valley between forested ridges with a river winding through it, then settle it with a farming village — a stone bridge, a watermill, a windmill, a patchwork of fields and orchards, farmhouses and barns, fences, paths and a small church. Make it look hand-built and lived-in, not procedural: natural terrain, varied buildings, crops, animal pens, details. Iterate on it using renders until you would be proud to show it.
+
+Do the work through the repository's build workflow so the result is replayable, and put the finished build into a sandbox that you leave running.
+
+Deliverables: copy your best overview render to `OUT/final.png`. `OUT/result.json`: {"sourceSandbox": "<sbx id holding the finished map>", "buildDir": "<path>", "applyId": "<id of the promote that placed it>", "site": {"min": [x, y, z], "max": [x, y, z]}, "iterations": <n>, "lintErrors": <n>, "lintWarnings": <n>, "verifyMismatches": <n>, "selfCritique": "<2-4 sentences, honest, with rubric scores>"}.

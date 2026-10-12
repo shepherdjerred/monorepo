@@ -29,7 +29,7 @@ test("does not identify a duel from a repeated roster", async () => {
   expect(mocks.findFirst).toHaveBeenCalledTimes(1);
 });
 
-test("retains tournament-code lookup for in-flight legacy duels", async () => {
+test("ignores a Riot tournament code without an observed binding", async () => {
   const tournamentMatch = RawMatchSchema.parse({
     ...fixture,
     info: { ...fixture.info, tournamentCode: "LEGACY-DUEL-CODE" },
@@ -37,12 +37,5 @@ test("retains tournament-code lookup for in-flight legacy duels", async () => {
 
   await expect(duelMatchNeedsTimeline(tournamentMatch)).resolves.toBe(false);
 
-  expect(mocks.findFirst).toHaveBeenNthCalledWith(
-    2,
-    expect.objectContaining({
-      where: expect.objectContaining({
-        tournamentLobby: { is: { code: "LEGACY-DUEL-CODE" } },
-      }),
-    }),
-  );
+  expect(mocks.findFirst).toHaveBeenCalledTimes(1);
 });

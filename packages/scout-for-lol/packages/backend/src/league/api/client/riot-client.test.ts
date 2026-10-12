@@ -1,14 +1,15 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import { describe, test, expect, vi } from "vitest";
 import { RiotClient, type FetchFunction } from "./riot-client.ts";
 import { RiotHttpError } from "./errors.ts";
-import { LeaguePuuidSchema, MatchIdSchema } from "@scout-for-lol/data";
+import { LeaguePuuidSchema, RiotMatchIdSchema } from "@scout-for-lol/data";
 
 function getUrlString(input: string | URL | Request): string {
   if (typeof input === "string") return input;
   return "url" in input ? input.url : input.href;
 }
 
-function championMasteryResponse(puuid: string): Response {
+function championMasteryResponse(puuid: LeaguePuuid): Response {
   return Response.json([
     {
       puuid,
@@ -23,7 +24,7 @@ function championMasteryResponse(puuid: string): Response {
   ]);
 }
 
-function championMasteryFetch(puuid: string) {
+function championMasteryFetch(puuid: LeaguePuuid) {
   let capturedUrl = "";
   const fetchFn: FetchFunction = vi.fn(
     async (input: string | URL | Request): Promise<Response> => {
@@ -39,7 +40,7 @@ describe("RiotClient", () => {
   const testPuuid = LeaguePuuidSchema.parse(
     "00000000-0000-0000-0000-000000000000000000000000000000000000000000000000000000",
   );
-  const testMatchId = MatchIdSchema.parse("NA1_5123456789");
+  const testMatchId = RiotMatchIdSchema.parse("NA1_5123456789");
 
   test("injects X-Riot-Token header and calls correct account by PUUID endpoint", async () => {
     let capturedUrl = "";

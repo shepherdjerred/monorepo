@@ -1,0 +1,6 @@
+apiVersion: v2
+name: storm-brain
+description: The Storm game server brain
+type: application
+version: "$version"
+appVersion: "$appVersion"

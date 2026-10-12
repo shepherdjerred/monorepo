@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test } from "vitest";
 import {
   ParlayGenerationContextSchema,
@@ -45,7 +46,7 @@ const context = ParlayGenerationContextSchema.parse({
     },
   ],
   shortlist: buildParlayShortlist({
-    matchId: "NA1_prompt",
+    matchId: RiotMatchIdSchema.parse("NA1_9100000000"),
     subjects: [{ key: "P1", lane: "adc", tags: ["Assassin"] }],
   }),
 });

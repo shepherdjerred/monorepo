@@ -1,0 +1,83 @@
+id: xxminerpickaxexx
+name: xXMinerPickaxeXx
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0OTE5MDIwNSwKICAicHJvZmlsZUlkIiA6ICI1OWJlOTUyY2EyNjc0OWE4OTM1YmQ5MGQxNmMyN2M4OCIsCiAgInByb2ZpbGVOYW1lIiA6ICJUaGVQZW5zcGlubmV1ciIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS80ZjQ4Mzg5NGZhODExMGE2YzJjMjk0NWRlYzA3MjI5ZjFmZjdjNjg5MzU0NjY3N2I0ZmU0ZTY2Y2Q0MTViOTg2IgogICAgfQogIH0KfQ=="
+  signature: "ao+6E1KaetfRu/RS4c3KXQMhtcrcJbzYOZMRXcyUtaTrSJsz78iAm45vXC3/m6pUgv3kk7nk3Uvcp6qdzEwXK2zpbJjYoDOMEJ6Jc/1Wv5jEsaiyiFGXypjYAP7sHPj50j90NEDQRMZcUh8wMohYtn17r8YyTE2zqe7Fznc8hhAOpMsNAdQl135ZwotFGIwdTLPPzgPsO/I54fHuXJ32wUSwG2wEXpkXyF+fSpG/hOPayybaCKby2c58YwqmPFDNYj4U1xyIZYU7e6tL6O/dhxnS9J7hq0Sg0/xG5nHd0rvwxBE23xroyJqC23nE9abHyZylm9CXmGzEnbgmQaQ4mpfdPB0KJ4ucG4/KQ3wTh+5sXC/gtSUeLK670wmG5JhD72iTnEOBpIlE7vsHxmBroJUy+Vp6PU7BQQU9BWyVTqhq2/1G3/ehV83sKFll8zg3qkzQ3gAn671F/sC68SXUGtiW2Um8JAZ+e/STEYEFwfo7LzcIdUJnncogIBkL/ApsbuXQn3cPu7GdTX/Y4Ut5izahrBweVUxqSHPdDl6rIcaB/qvYRgocPnJubedSZaPeKHefSJq/iklw4OAA0Zmcs2ZW8Q/AGFJb4XFNKvpN4kfZFCHKPK5veOfA/WQu39B50AjAvNLKdMBVlQnxTCyYSUkBWkcI3Hkp3o+sqWgcp3s="
+skill: 0.266
+archetype: troll
+leverOffsets:
+  cps: 0.48
+  decisionTemperature: -1.74
+  awarenessRadius: -1.14
+  coordination: -1.44
+  technique: 0.34
+kits:
+  trooper: 0.5
+  shortbow: 0.69
+  rewind: 0.97
+  spy: 0.73
+roles:
+  plant: 0.52
+  escort: 0.29
+  rotate: 0.49
+  hunt: 0.36
+style:
+  aggression: 0.69
+  patience: 0.14
+  teamplay: 0.16
+  risk: 0.86
+voice:
+  tone:
+    - silly
+    - chaotic
+    - hype
+  verbosity: chatty
+  style: all caps bursts, mining puns everywhere, keyboard smash when excited
+lines:
+  greet:
+    - DIAMONDS?? oh wait wrong game
+    - "pickaxe out, brain off. LETS GO {team}"
+    - who wants to see me dig straight down
+  onKill:
+    - "{victim} got MINED"
+    - "ore you okay {victim}?? lol"
+    - "STRUCK GOLD. thanks {victim}"
+  onDeath:
+    - "{killer} caved me in"
+    - "i fell in lava. metaphorically. {killer} was the lava"
+    - asdfghjkl
+  onPlant:
+    - "{bomb} has been TNT'd (basically)"
+    - "i put fuses in {bomb} i think?? yes?"
+  onDefuse:
+    - "defused {bomb} by accident honestly"
+    - "{bomb} is safe. i was looking for iron"
+  onWin:
+    - WE STRUCK THE MOTHERLODE
+    - "gg {team} we are rich now"
+  onLoss:
+    - bedrock reached. gg
+    - dug too deep again
+  onLastAlive:
+    - solo mining expedition GO
+    - "it's just me and my pickaxe {team}"
+  taunt:
+    - i rewound so hard i forgot what round it is
+    - you're between me and the shiny thing
+    - MINE MINE MINE
+  lobby:
+    - WHERE ARE THE ORES IN THIS LOBBY
+    - "rewind clock = time pickaxe. CHANGE MY MIND"
+    - asdfghjk match starting soon LETS DIG
+    - "{team} we strike the bomb like a vein of DIAMOND"
+    - is there a furnace in spawn. asking for a friend
+quirks:
+  - spins
+  - bunny_hops
+  - celebrates_early
+rivals:
+  - xxpumpkinravenxx
+  - pixelnazvoulon
+bio: Thinks Search and Destroy is a mining game with extra steps and refuses to be corrected. Rewinds at the worst possible moments. Has an ongoing chaos-off with xXPumpkinRavenXx about who is the server's most confusing teammate.
+batch: 2
+retired: false

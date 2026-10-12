@@ -1,7 +1,8 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import {
   LeaguePuuidSchema,
-  MatchIdSchema,
+  RiotMatchIdSchema,
   platformToRegionalRoute,
 } from "@scout-for-lol/data";
 import {
@@ -20,39 +21,44 @@ import { bindParams } from "#src/reports/duckdb/lake-reads.ts";
 import {
   buildMatchesSource,
   listParam,
-  resolveLakeFiles,
+  withLakeQueryRetry,
 } from "#src/reports/duckdb/lake.ts";
 import { runSettledWorkers } from "#src/league/explore-history/worker-pool.ts";
 
 const MAX_PARALLEL_MATCH_READS = 5;
 
-const KnownMatchRowSchema = z.object({ match_id: MatchIdSchema });
+const KnownMatchRowSchema = z.object({ match_id: RiotMatchIdSchema });
 
-async function fetchKnownMatchIds(matchIds: string[]): Promise<Set<string>> {
+async function fetchKnownMatchIds(
+  matchIds: RiotMatchId[],
+): Promise<Set<string>> {
   if (matchIds.length === 0) return new Set();
-  const files = await resolveLakeFiles(resolveLakeDir());
-  const source = buildMatchesSource(files, {
-    sql: "match_id IN (SELECT unnest(?))",
-    params: [listParam(matchIds)],
-  });
-  if (source === undefined) return new Set();
-  return await withDuckDBConnection(async (session) => {
-    const rows = await session.run(
-      `SELECT DISTINCT match_id FROM (${source.sql})`,
-      bindParams(session, source.params),
-    );
-    return new Set(rows.map((row) => KnownMatchRowSchema.parse(row).match_id));
+  return await withLakeQueryRetry(resolveLakeDir(), async (files) => {
+    const source = buildMatchesSource(files, {
+      sql: "match_id IN (SELECT unnest(?))",
+      params: [listParam(matchIds)],
+    });
+    if (source === undefined) return new Set();
+    return await withDuckDBConnection(async (session) => {
+      const rows = await session.run(
+        `SELECT DISTINCT match_id FROM (${source.sql})`,
+        bindParams(session, source.params),
+      );
+      return new Set(
+        rows.map((row) => KnownMatchRowSchema.parse(row).match_id),
+      );
+    });
   });
 }
 
-async function fetchRankedMatchIds(
+async function fetchMatchIds(
   input: ScoutExploreHistoryInput,
-): Promise<string[]> {
+): Promise<RiotMatchId[]> {
   const puuid = LeaguePuuidSchema.parse(input.puuid);
   return await callRiotOrThrow(
     {
       source: "explore-on-demand-list",
-      schema: z.array(MatchIdSchema).max(input.requestedMatches),
+      schema: z.array(RiotMatchIdSchema).max(input.requestedMatches),
       context: { region: input.region },
       sentry: true,
     },
@@ -60,14 +66,14 @@ async function fetchRankedMatchIds(
       riotClient.match.list(
         puuid,
         platformToRegionalRoute(input.region),
-        { count: input.requestedMatches, type: "ranked" },
+        { count: input.requestedMatches, type: input.matchType ?? "ranked" },
         { maxRetries: 0 },
       ),
   );
 }
 
 /**
- * Fetch and permanently ingest the newest ranked games for one account.
+ * Fetch and permanently ingest the newest requested games for one account.
  *
  * The shared Riot client owns rate limiting. This extra five-worker bound
  * prevents one Explore question from consuming every available in-process
@@ -77,7 +83,7 @@ export async function importExploreRankedHistory(
   rawInput: ScoutExploreHistoryInput,
 ): Promise<ScoutExploreHistoryResult> {
   const input = ScoutExploreHistoryInputSchema.parse(rawInput);
-  const matchIds = await fetchRankedMatchIds(input);
+  const matchIds = await fetchMatchIds(input);
   const knownMatchIds = await fetchKnownMatchIds(matchIds);
   const missingMatchIds = matchIds.filter(
     (matchId) => !knownMatchIds.has(matchId),
@@ -93,7 +99,7 @@ export async function importExploreRankedHistory(
       const matchId = missingMatchIds[index];
       if (matchId === undefined) return;
       const match = await fetchInitialMatch({
-        matchId: MatchIdSchema.parse(matchId),
+        matchId: matchId,
         region: input.region,
       });
       if (match === null) {

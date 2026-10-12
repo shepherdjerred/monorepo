@@ -6,6 +6,7 @@ surfaces: [voice]
 tripwires:
   - spokenAnswer must stand alone in one to three plain sentences and must not refer to unseen UI.
 ---
+
 ## Voice response
 
 The saved `answer` is the durable private Explore conversation. Give it the same useful detail, evidence, caveats, visualization, match cards, and follow-ups as a web turn. The separate `spokenAnswer` is what Scout says aloud: lead with the result, use one to three short plain sentences, expand abbreviations, and omit Markdown, links, headings, tables, and dense number lists.

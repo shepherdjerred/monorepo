@@ -1,10 +1,14 @@
+import {
+  type DiscordGuildId,
+  type DiscordChannelId,
+  type ReportId,
+} from "@scout-for-lol/data";
 import { Loaded } from "@shepherdjerred/loaded";
 import { LoadingBlock } from "@shepherdjerred/loaded/react.tsx";
 import { StaleState } from "@scout-for-lol/design-system/domain/states";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { ReportId } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
 import { channelLabel } from "#src/lib/format/format.ts";
@@ -25,7 +29,7 @@ import { ReportQueryPreview } from "#src/components/report/report-query-preview.
 
 type ReportRow = {
   description: string | null;
-  channelId: string;
+  channelId: DiscordChannelId;
   cronExpression: string;
   scheduleTimezone: string;
   isEnabled: boolean;
@@ -34,7 +38,7 @@ type ReportRow = {
 };
 
 function ReportHeaderActions(props: {
-  guildId: string;
+  guildId: DiscordGuildId;
   reportId: ReportId;
   title: string;
   systemManaged: boolean;
@@ -86,9 +90,9 @@ function ReportHeaderActions(props: {
 }
 
 function ReportDefinitionCards(props: {
-  guildId: string;
+  guildId: DiscordGuildId;
   report: ReportRow;
-  channels: { id: string; name: string }[] | undefined;
+  channels: { id: DiscordChannelId; name: string }[] | undefined;
 }) {
   const { guildId, report, channels } = props;
   return (
@@ -135,7 +139,7 @@ function ReportDefinitionCards(props: {
 }
 
 function ReportExploration(props: {
-  guildId: string;
+  guildId: DiscordGuildId;
   reportId: ReportId;
   title: string;
   report: Pick<ReportRow, "queryText" | "sourceCompetitionId">;

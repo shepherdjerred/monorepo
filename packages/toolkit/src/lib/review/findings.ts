@@ -20,6 +20,11 @@ import {
   resolveReviewState,
   type ReviewStateResult,
 } from "@shepherdjerred/code-review/github";
+import {
+  githubGet,
+  graphqlRateLimitError,
+  throwIfRateLimited,
+} from "@shepherdjerred/code-review/github-request";
 import { fetchHeadPushedAt } from "@shepherdjerred/code-review/head-pushed-at";
 import { markQodoFindingResolved } from "@shepherdjerred/code-review/qodo";
 import { z } from "zod";
@@ -36,6 +41,7 @@ export type Finding = {
   path: string | null;
   line: number | null;
   isResolved: boolean;
+  isOutdated: boolean;
   threadId: string | null;
   commentId: number | null;
   url: string | null;
@@ -48,6 +54,7 @@ export async function listFindings(input: {
   token: string;
   provider?: ReviewProvider | undefined;
   head?: string | undefined;
+  includeOutdated?: boolean | undefined;
 }): Promise<{
   head: string;
   findings: Finding[];
@@ -78,7 +85,8 @@ export async function listFindings(input: {
   const findings = threads
     .filter(
       (thread) =>
-        isProviderAuthor(provider, thread.authorLogin) && !thread.isOutdated,
+        isProviderAuthor(provider, thread.authorLogin) &&
+        (!thread.isOutdated || input.includeOutdated === true),
     )
     .map((thread, index) => toFinding(thread, provider, index));
   return { head, findings, reviewState: state };
@@ -153,6 +161,7 @@ function toFinding(
     path: thread.path,
     line: thread.line,
     isResolved: thread.isResolved,
+    isOutdated: thread.isOutdated,
     threadId: thread.threadId,
     commentId: thread.commentId,
     url: thread.url,
@@ -321,7 +330,7 @@ function headers(token: string): Record<string, string> {
 }
 
 async function getJson(url: string, token: string): Promise<unknown> {
-  const response = await fetch(url, { headers: headers(token) });
+  const response = await githubGet(url, { token });
   if (!response.ok) {
     throw new Error(
       `GET ${url} failed: ${String(response.status)} ${response.statusText}`,
@@ -342,11 +351,25 @@ async function sendJson(
     body: JSON.stringify(body),
   });
   if (!response.ok) {
+    throwIfRateLimited(response, await response.text(), new URL(url).pathname);
     throw new Error(
       `${method} ${url} failed: ${String(response.status)} ${response.statusText}`,
     );
   }
-  return response.json();
+  const payload: unknown = await response.json();
+  const pathname = new URL(url).pathname;
+  const errors = pathname.endsWith("/graphql")
+    ? GraphQlSchema.safeParse(payload)
+    : null;
+  if (errors?.success === true && errors.data.errors !== undefined) {
+    const limited = graphqlRateLimitError(
+      response,
+      errors.data.errors,
+      pathname,
+    );
+    if (limited !== null) throw limited;
+  }
+  return payload;
 }
 
 const GraphQlSchema = z.object({ errors: z.array(z.unknown()).optional() });

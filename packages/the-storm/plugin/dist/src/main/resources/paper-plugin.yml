@@ -7,6 +7,14 @@ authors: [ShepherdJerred]
 website: https://ts-mc.net
 dependencies:
   server:
+    Citizens:
+      load: BEFORE
+      required: true
+      join-classpath: true
+    CoreProtect:
+      load: BEFORE
+      required: true
+      join-classpath: true
     # The world module requires Multiverse to load wilds and mining before TheStorm starts.
     Multiverse-Core:
       load: BEFORE
@@ -21,4 +29,9 @@ dependencies:
     BlueMap:
       load: BEFORE
       required: false
+      join-classpath: true
+    # Shop recovery uses the installed WorldEdit clipboard API.
+    WorldEdit:
+      load: BEFORE
+      required: true
       join-classpath: true

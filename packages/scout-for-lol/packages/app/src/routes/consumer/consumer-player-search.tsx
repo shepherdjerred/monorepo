@@ -127,19 +127,16 @@ export function ConsumerPlayerSearch() {
     <div className="mx-auto max-w-5xl space-y-6 px-6 py-8 sm:px-8 sm:py-12">
       <div className="space-y-2">
         <p className="text-sm font-medium text-primary">Player profiles</p>
-        <h1 className="text-3xl font-semibold tracking-tight">
-          Find a player Scout knows
-        </h1>
+        <h1 className="text-3xl font-semibold tracking-tight">Players</h1>
         <p className="max-w-2xl text-scout-subtle">
-          Search a Scout guild alias or Riot ID. Results only include configured
-          players from enabled Discord servers you currently share with Scout.
+          Find a player by name or Riot ID in your shared servers.
         </p>
       </div>
 
       {statusQuery.isError ? (
         <RetryCard
           title="Scout couldn't verify your servers"
-          description="Your Discord membership was not treated as a denial. Retry this temporary availability check."
+          description="Your servers couldn’t load. Try again."
           onRetry={() => {
             void statusQuery.refetch();
           }}
@@ -155,7 +152,7 @@ export function ConsumerPlayerSearch() {
                 className="text-sm font-medium"
                 htmlFor="consumer-player-search"
               >
-                Guild alias or Riot ID
+                Player name or Riot ID
               </label>
               <Combobox<SearchResult>
                 id="consumer-player-search"
@@ -177,9 +174,7 @@ export function ConsumerPlayerSearch() {
                 renderItem={(player) => <PlayerSuggestion player={player} />}
               />
               <p className="text-xs text-scout-subtle">
-                Suggestions begin after two characters. Use the arrow keys and
-                Enter to open a profile. These are Scout-configured accounts and
-                ingested games, not a complete Riot match history.
+                Type at least two characters.
               </p>
             </div>
 
@@ -194,10 +189,6 @@ export function ConsumerPlayerSearch() {
               }}
             />
 
-            <ConsumerLobbySearch />
-
-            <ConsumerGuildCommunity />
-
             <PlayerHome
               home={Loaded.strict(
                 Loaded.fromQuery(homeQuery, ["consumerPlayer.home"]),
@@ -206,6 +197,22 @@ export function ConsumerPlayerSearch() {
                 void homeQuery.refetch();
               }}
             />
+            <details className="border-t pt-4">
+              <summary className="cursor-pointer font-medium">
+                Find a lobby
+              </summary>
+              <div className="mt-4">
+                <ConsumerLobbySearch />
+              </div>
+            </details>
+            <details className="border-t pt-4">
+              <summary className="cursor-pointer font-medium">
+                Server community
+              </summary>
+              <div className="mt-4">
+                <ConsumerGuildCommunity />
+              </div>
+            </details>
           </>,
         )
       )}
@@ -239,7 +246,7 @@ export function PlayerHome(props: {
     return (
       <RetryCard
         title="Your player hub didn't load"
-        description="Scout rechecks your shared servers for this list. Retry without reloading the page."
+        description="Try again to load your players."
         onRetry={props.onRetry}
       />
     );
@@ -252,15 +259,15 @@ export function PlayerHome(props: {
     <div className="space-y-6">
       <PlayerHomeSection
         title="Your profiles"
-        description="Every Scout profile linked to your Discord account across enabled shared servers."
+        description=""
         players={yourProfiles}
         empty="No Scout player is linked to your Discord account yet. You can still search everyone you share access to."
       />
       <PlayerHomeSection
         title="Recently active"
-        description="Six other players with the newest matches Scout recorded."
+        description=""
         players={recentPlayers}
-        empty="No other recently active players are in Scout's stored coverage yet."
+        empty="No recent matches from other players yet."
       />
     </div>
   );

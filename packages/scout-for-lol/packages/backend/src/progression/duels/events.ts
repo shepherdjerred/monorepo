@@ -109,10 +109,10 @@ type StartedSeries = {
 function seriesCreateData(options: {
   readonly event: {
     readonly id: string;
-    readonly guildId: string;
+    readonly guildId: DiscordGuildId;
     readonly bestOf: number;
     readonly rulesetJson: string;
-    readonly channelId: string;
+    readonly channelId: DiscordChannelId;
     readonly organizerDiscordId: string;
     readonly matchWindowHours: number;
   };
@@ -121,7 +121,7 @@ function seriesCreateData(options: {
     readonly competitor: {
       readonly members: readonly {
         readonly playerId: number;
-        readonly discordId: string;
+        readonly discordId: DiscordAccountId;
       }[];
     };
   };
@@ -130,7 +130,7 @@ function seriesCreateData(options: {
     readonly competitor: {
       readonly members: readonly {
         readonly playerId: number;
-        readonly discordId: string;
+        readonly discordId: DiscordAccountId;
       }[];
     };
   };

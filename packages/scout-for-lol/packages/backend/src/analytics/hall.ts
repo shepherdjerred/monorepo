@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import type { ProductAnalytics } from "#src/analytics/product-analytics.ts";
 import { captureWithGuildInstallation } from "#src/analytics/capture-with-installation.ts";
@@ -8,7 +9,7 @@ import { captureWithGuildInstallation } from "#src/analytics/capture-with-instal
  * bounded count of broken record cells.
  */
 export async function captureHallRecordBroken(
-  input: { guildId: string; records: number; eventId?: string },
+  input: { guildId: DiscordGuildId; records: number; eventId?: string },
   options?: {
     db?: ExtendedPrismaClient;
     analytics?: ProductAnalytics;

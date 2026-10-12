@@ -49,7 +49,7 @@ public final class LockAccess {
    * {@code landTown} (empty off claims), or empty when they may not.
    */
   public Optional<Right> open(Lock lock, UUID player, boolean bypass, Optional<UUID> landTown) {
-    if (lock.owner().equals(player)) {
+    if (lock.ownedByPlayer(player)) {
       return Optional.of(Right.OWNER);
     }
     if (lock.trusted().containsKey(player)) {
@@ -63,7 +63,7 @@ public final class LockAccess {
 
   /** Why {@code player} may break the locked container, or empty when they may not. */
   public Optional<Right> breaking(Lock lock, UUID player, boolean bypass, Optional<UUID> landTown) {
-    if (lock.owner().equals(player)) {
+    if (lock.ownedByPlayer(player)) {
       return Optional.of(Right.OWNER);
     }
     if (lock.trusted().get(player) == LockGrant.MANAGE) {
@@ -75,7 +75,7 @@ public final class LockAccess {
   /** Why {@code player} may remove the lock, or empty when they may not. */
   public Optional<Right> unlocking(
       Lock lock, UUID player, boolean bypass, Optional<UUID> landTown) {
-    if (lock.owner().equals(player)) {
+    if (lock.ownedByPlayer(player)) {
       return Optional.of(Right.OWNER);
     }
     return managerOrStaff(lock, player, bypass, landTown);

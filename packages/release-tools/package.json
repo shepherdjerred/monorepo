@@ -6,8 +6,7 @@
   "scripts": {
     "release-please": "release-please",
     "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run",
-    "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
-    "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/ci/run-ci-test.ts"
+    "test:ci": "bun ../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
     "release-please": "17.11.2"
@@ -16,7 +15,7 @@
     "./runner": "./runner.ts"
   },
   "devDependencies": {
-    "@vitest/coverage-istanbul": "5.0.1",
-    "vitest": "5.0.1"
+    "@vitest/coverage-istanbul": "5.0.3",
+    "vitest": "5.0.3"
   }
 }

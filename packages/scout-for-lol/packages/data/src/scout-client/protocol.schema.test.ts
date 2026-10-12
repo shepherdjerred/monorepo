@@ -5,6 +5,8 @@ import {
   ScoutClientCheckInResponseSchema,
   ScoutClientObservationBatchSchema,
   ScoutClientObservationSchema,
+  isScoutClientCredentialKey,
+  withoutScoutClientCredentials,
 } from "./protocol.schema.ts";
 
 const observation = {
@@ -45,6 +47,45 @@ describe("Scout Client protocol", () => {
         schemaVersion: 2,
       }).success,
     ).toBe(false);
+  });
+
+  test("removes credential-named keys at any depth and nothing else", () => {
+    // The shape the League client's end-of-game block actually has.
+    const sent = ScoutClientObservationSchema.parse({
+      ...observation,
+      kind: "post_game",
+      payload: {
+        resource: "post_game",
+        data: {
+          endOfGame: {
+            gameId: 1,
+            multiUserChatId: "1-eog",
+            multiUserChatPassword: "chat-password",
+            mucJwtDto: { jwt: "header.claims.signature", domain: "x" },
+            teams: [{ players: [{ stats: { ASSISTS: 3 } }] }],
+          },
+          lobby: { chatDetails: { chatRoomPassword: "lobby-password" } },
+        },
+      },
+    });
+
+    expect(withoutScoutClientCredentials(sent).payload).toEqual({
+      resource: "post_game",
+      data: {
+        endOfGame: {
+          gameId: 1,
+          multiUserChatId: "1-eog",
+          teams: [{ players: [{ stats: { ASSISTS: 3 } }] }],
+        },
+        lobby: { chatDetails: {} },
+      },
+    });
+  });
+
+  test("keeps fields that only resemble credentials", () => {
+    // Champion mastery reports `tokensEarned`; it is not a credential.
+    expect(isScoutClientCredentialKey("tokensEarned")).toBe(false);
+    expect(isScoutClientCredentialKey("MultiUserChatJWT")).toBe(true);
   });
 
   test("rejects unsafe payload keys", () => {

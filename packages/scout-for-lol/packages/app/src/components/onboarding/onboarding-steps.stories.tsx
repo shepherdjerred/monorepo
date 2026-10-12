@@ -1,4 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import {
+  P,
+  DiscordGuildIdSchema,
+  LeaguePuuidSchema,
+  DiscordChannelIdSchema,
+} from "@scout-for-lol/data";
 import type { StorySeed } from "#src/lib/storybook/trpc-stub.ts";
 import type { RouterOutputs } from "#src/lib/query/trpc.ts";
 import { OnboardingConceptsStep } from "./onboarding-concepts-step.tsx";
@@ -10,15 +16,15 @@ import { OnboardingPickGuildStep } from "./onboarding-pick-guild-step.tsx";
 import { OnboardingReportStep } from "./onboarding-report-step.tsx";
 import { OnboardingSubscribeStep } from "./onboarding-subscribe-step.tsx";
 
-const GUILD_ID = "377554990325301252";
+const GUILD_ID = DiscordGuildIdSchema.parse("377554990325301252");
 
-const REPORTS_CHANNEL = "1102938475610293847";
-const RANKED_CHANNEL = "1102938475610293848";
+const REPORTS_CHANNEL = DiscordChannelIdSchema.parse("1102938475610293847");
+const RANKED_CHANNEL = DiscordChannelIdSchema.parse("1102938475610293848");
 
 const CHANNELS = [
   { id: REPORTS_CHANNEL, name: "match-reports" },
   { id: RANKED_CHANNEL, name: "ranked-grind" },
-  { id: "1102938475610293849", name: "general" },
+  { id: DiscordChannelIdSchema.parse("1102938475610293849"), name: "general" },
 ];
 
 const GUILDS = [
@@ -29,7 +35,7 @@ const GUILDS = [
     isOwner: true,
   },
   {
-    id: "377554990325301253",
+    id: DiscordGuildIdSchema.parse("377554990325301253"),
     name: "Howling Abyss Regulars",
     icon: null,
     isOwner: false,
@@ -47,15 +53,28 @@ function noop(): void {
 }
 
 /**
- * The competition step gates its body on the builder-capabilities flag, so a
- * story that never seeds it renders "Loading builder…" forever.
+ * The competition builder waits on `usePermissions`, which reads the cached
+ * `guild.listManageable` entry, so a story that never seeds it renders
+ * "Loading builder…" forever.
  */
-const seedBuilderV1: StorySeed = (trpc, queryClient) => {
-  queryClient.setQueryData(
-    trpc.competition.builderCapabilities.queryOptions({ guildId: GUILD_ID })
-      .queryKey,
-    { builderV2Enabled: false },
-  );
+const seedCompetitionPermissions: StorySeed = (trpc, queryClient) => {
+  queryClient.setQueryData(trpc.guild.listManageable.queryOptions().queryKey, [
+    {
+      id: GUILD_ID,
+      name: "Baron Steal Enjoyers",
+      icon: null,
+      isOwner: true,
+      isDiscordAdmin: true,
+      customNightsEnabled: false,
+      hallOfFameEnabled: false,
+      mvpVotesEnabled: false,
+      permissions: [
+        P("competitions", "create"),
+        P("competitions", "invite"),
+        P("competitions", "schedule"),
+      ],
+    },
+  ]);
 };
 
 const meta = {
@@ -156,7 +175,9 @@ const seedTeammates: StorySeed = (trpc, queryClient) => {
     kind: "ok",
     suggestions: [
       {
-        puuid: "duo-puuid",
+        puuid: LeaguePuuidSchema.parse(
+          "duo-puuid000000000000000000000000000000000000000000000000000000000000000000000",
+        ),
         gameName: "DuoQueue",
         tagLine: "NA1",
         riotId: "DuoQueue#NA1",
@@ -165,7 +186,9 @@ const seedTeammates: StorySeed = (trpc, queryClient) => {
         lastPlayedMs: 1_771_000_000_000,
       },
       {
-        puuid: "flex-puuid",
+        puuid: LeaguePuuidSchema.parse(
+          "flex-puuid00000000000000000000000000000000000000000000000000000000000000000000",
+        ),
         gameName: "FlexFriend",
         tagLine: "EUW",
         riotId: "FlexFriend#EUW",
@@ -240,7 +263,7 @@ export const ReportStep: Story = {
 
 export const CompetitionStep: Story = {
   args: stepArgs,
-  parameters: { seedQueries: [seedBuilderV1] },
+  parameters: { seedQueries: [seedCompetitionPermissions] },
   render: () => (
     <OnboardingCompetitionStep
       guildId={GUILD_ID}

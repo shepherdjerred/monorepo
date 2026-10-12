@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.19.1",
+  "version": "16.20.1",
   "data": {
     "Aphelios": {
       "id": "Aphelios",
@@ -290,6 +290,68 @@
           "num": 40,
           "name": "Prestige Spirit Blossom Springs Aphelios",
           "chromas": false
+        },
+        {
+          "id": "523041",
+          "num": 41,
+          "name": "HEARTSTEEL Live My Life Aphelios",
+          "chromas": false
+        },
+        {
+          "id": "523042",
+          "num": 42,
+          "name": "HEARTSTEEL Live My Life Aphelios (Ruby)",
+          "chromas": true,
+          "parentSkin": 41
+        },
+        {
+          "id": "523043",
+          "num": 43,
+          "name": "HEARTSTEEL Live My Life Aphelios (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 41
+        },
+        {
+          "id": "523044",
+          "num": 44,
+          "name": "HEARTSTEEL Live My Life Aphelios (Pearl)",
+          "chromas": false,
+          "parentSkin": 41
+        },
+        {
+          "id": "523045",
+          "num": 45,
+          "name": "HEARTSTEEL Live My Life Aphelios (Catseye)",
+          "chromas": false,
+          "parentSkin": 41
+        },
+        {
+          "id": "523046",
+          "num": 46,
+          "name": "HEARTSTEEL Live My Life Aphelios (Peridot)",
+          "chromas": false,
+          "parentSkin": 41
+        },
+        {
+          "id": "523047",
+          "num": 47,
+          "name": "HEARTSTEEL Live My Life Aphelios (Obsidian)",
+          "chromas": false,
+          "parentSkin": 41
+        },
+        {
+          "id": "523048",
+          "num": 48,
+          "name": "HEARTSTEEL Live My Life Aphelios (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 41
+        },
+        {
+          "id": "523049",
+          "num": 49,
+          "name": "HEARTSTEEL Live My Life Aphelios (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 41
         }
       ],
       "lore": "Emerging from moonlight's shadow with weapons drawn, Aphelios kills the enemies of his faith in brooding silence—speaking only through the certainty of his aim, and the firing of each gun. Though fueled by a poison that renders him mute, he is guided by his sister Alune. From her distant temple sanctuary, she pushes an arsenal of moonstone weapons into his hands. For as long as the moon shines overhead, Aphelios will never be alone.",

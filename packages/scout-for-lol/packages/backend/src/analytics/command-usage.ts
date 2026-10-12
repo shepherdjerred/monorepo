@@ -1,3 +1,5 @@
+import type { ChatInputCommandInteraction } from "discord.js";
+import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import { z } from "zod";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
@@ -59,7 +61,8 @@ const DiscordCommandSubcommandSchema = z.enum([
  */
 export async function captureDiscordCommandUsed(
   input: {
-    guildId: string | null;
+    /** Raw from the interaction; validated here like every other field. */
+    guildId: ChatInputCommandInteraction["guildId"];
     commandName: string;
     subcommand?: string | null;
     status: DiscordCommandStatus;
@@ -70,7 +73,8 @@ export async function captureDiscordCommandUsed(
   },
 ): Promise<void> {
   try {
-    if (input.guildId === null) {
+    const guildId = DiscordGuildIdSchema.safeParse(input.guildId);
+    if (!guildId.success) {
       return;
     }
     const commandName = DiscordCommandNameSchema.safeParse(input.commandName);
@@ -83,7 +87,7 @@ export async function captureDiscordCommandUsed(
 
     const db = options?.db ?? prisma;
     const analytics = options?.analytics ?? getProductAnalytics();
-    const install = await findAnalyticsGuildInstallation(db, input.guildId);
+    const install = await findAnalyticsGuildInstallation(db, guildId.data);
     if (install === null) {
       logger.warn(
         "Cannot capture command usage without a GuildInstall lifecycle row",

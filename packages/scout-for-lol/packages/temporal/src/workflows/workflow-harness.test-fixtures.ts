@@ -3,7 +3,7 @@ import { WorkflowFailedError, type Client } from "@temporalio/client";
 import { ApplicationFailure, type Duration } from "@temporalio/common";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
-import type { ScoutPostMatchDiscoveryOwnerV2Result } from "#src/activity-contracts-v2.ts";
+import { withPreRenameActivityNames } from "#src/identifiers.ts";
 import { createScoutWorkerPool } from "./worker-pool.test-fixtures.ts";
 
 /**
@@ -17,7 +17,7 @@ import { createScoutWorkerPool } from "./worker-pool.test-fixtures.ts";
  * the test was actually reporting.
  */
 
-export type ScoutV2WorkflowHarness = {
+export type ScoutWorkflowHarness = {
   /** The client for the environment of the test currently running. */
   client: () => Client;
   /**
@@ -38,13 +38,6 @@ export type ScoutV2WorkflowHarness = {
   startWorkers: (activities: object) => Promise<void>;
 };
 
-const V2_OWNS_DISCOVERY = {
-  resolvePostMatchDiscoveryOwnerV2:
-    (): ScoutPostMatchDiscoveryOwnerV2Result => ({
-      decision: "run-v2",
-    }),
-};
-
 /**
  * Register the per-test environment lifecycle and return the handle tests
  * drive it through.
@@ -53,7 +46,7 @@ const V2_OWNS_DISCOVERY = {
  * scenario inherits another's executions, and the workers are drained before
  * it is torn down.
  */
-export function useScoutV2WorkflowHarness(): ScoutV2WorkflowHarness {
+export function useScoutWorkflowHarness(): ScoutWorkflowHarness {
   const pool = createScoutWorkerPool();
   let environment: TestWorkflowEnvironment | null = null;
 
@@ -95,10 +88,9 @@ export function useScoutV2WorkflowHarness(): ScoutV2WorkflowHarness {
         await Worker.create({
           connection: live.nativeConnection,
           taskQueue: "scout-dev-realtime",
-          // Every discovery asks who owns the pass before it does anything
-          // else. The answer defaults to V2, as the flag does in production;
-          // a test about the v1 handoff overrides it.
-          activities: { ...V2_OWNS_DISCOVERY, ...activities },
+          // As the production Activity worker does: both names, because a
+          // history recorded before the rename patch schedules the old ones.
+          activities: withPreRenameActivityNames(activities),
           maxConcurrentActivityTaskExecutions: 4,
         }),
       );

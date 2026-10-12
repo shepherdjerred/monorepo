@@ -192,9 +192,9 @@ describe("coderabbitProvider", () => {
   test("declares the observed identity, completion, and triggers", () => {
     expect(coderabbitProvider.id).toBe("coderabbit");
     expect(coderabbitProvider.authorLogins).toEqual([CODERABBIT_LOGIN]);
-    expect(coderabbitProvider.completion).toEqual({
+    expect(coderabbitProvider.completion).toMatchObject({
       kind: "review-at-head",
-      cleanSignal: "none",
+      cleanSignal: { marker: "<!-- final_review_risk_coverage:" },
     });
     expect(coderabbitProvider.requestReview).toEqual({
       command: "@coderabbitai review",
@@ -290,7 +290,7 @@ describe("coderabbitProvider", () => {
   });
 
   test("detects the rate-limit notice as a usage block", () => {
-    const blocked = coderabbitProvider.detectBlocked;
+    const blocked = coderabbitProvider.detectBlocked?.[0];
     expect(blocked).not.toBeNull();
     expect(blocked?.reason).toBe("usage-limited");
     expect(matchesBlockedSignal(blocked!, RATE_LIMITED)).toBe(true);

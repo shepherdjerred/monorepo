@@ -8,6 +8,7 @@ import {
   type ExploreMessage,
   type ExploreTraceEntry,
   type ReportAiPreviewSummary,
+  DiscordGuildIdSchema,
 } from "@scout-for-lol/data";
 import {
   championWinRatePreview,
@@ -160,7 +161,7 @@ const seedSuggestionContext: StorySeed = (trpc, queryClient) => {
     state: "available",
     guilds: [
       {
-        id: "1337623164146155593",
+        id: DiscordGuildIdSchema.parse("1337623164146155593"),
         name: "Summoner's Lounge",
         daresAvailable: true,
       },
@@ -181,7 +182,7 @@ const seedSuggestionContext: StorySeed = (trpc, queryClient) => {
   });
   queryClient.setQueryData(trpc.guild.listManageable.queryOptions().queryKey, [
     {
-      id: "1337623164146155593",
+      id: DiscordGuildIdSchema.parse("1337623164146155593"),
       name: "Summoner's Lounge",
       icon: null,
       isOwner: true,

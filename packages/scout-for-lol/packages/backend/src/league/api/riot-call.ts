@@ -1,6 +1,6 @@
 import type { ZodError, ZodType } from "zod";
 import * as Sentry from "@sentry/bun";
-import type { MatchId } from "@scout-for-lol/data";
+import type { RiotMatchId } from "@scout-for-lol/data";
 import { createLogger } from "#src/logger.ts";
 import {
   riotApiErrorsTotal,
@@ -42,7 +42,7 @@ function isTimeoutError(error: unknown): boolean {
 type ValidationFailureSaveToS3 = {
   kind: "save-to-s3";
   assetType: "match" | "timeline";
-  id: MatchId;
+  id: RiotMatchId;
 };
 
 export type CallRiotConfig<T> = {

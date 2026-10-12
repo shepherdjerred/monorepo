@@ -1,6 +1,10 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, it, expect } from "vitest";
-import type { RawParticipant, Player, RawMatch } from "@scout-for-lol/data";
 import {
+  type RawParticipant,
+  type Player,
+  type RawMatch,
   ArenaMatchSchema,
   ArenaTeamSchema,
   LeaguePuuidSchema,
@@ -16,7 +20,7 @@ function makeParticipant(
   overrides: Partial<RawParticipant> & {
     playerSubteamId: number;
     placement: number;
-    puuid: string;
+    puuid: LeaguePuuid;
   },
 ): RawParticipant {
   return makeTestParticipant({
@@ -45,8 +49,10 @@ function makeArenaMatchDto({
         makeParticipant({
           playerSubteamId: sub,
           placement: sub,
-          puuid: longPuuid(
-            `${String.fromCodePoint(65 + playerIndex)}${sub.toString()}`,
+          puuid: LeaguePuuidSchema.parse(
+            longPuuid(
+              `${String.fromCodePoint(65 + playerIndex)}${sub.toString()}`,
+            ),
           ),
         }),
       );
@@ -55,7 +61,7 @@ function makeArenaMatchDto({
   return {
     metadata: {
       dataVersion: "",
-      matchId: "NA1_1",
+      matchId: RiotMatchIdSchema.parse("NA1_1"),
       participants: participants.map((p) => p.puuid),
     },
     info: {

@@ -1,3 +1,4 @@
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import { expect, test } from "vitest";
 import { withSelectedChampionMastery } from "#src/league/tasks/prematch/loading-screen-mastery.ts";
 
@@ -25,8 +26,12 @@ test("selects only the lobby champion's mastery", () => {
     ],
   ]);
 
-  expect(withSelectedChampionMastery(puuid, 1, masteries)).toEqual({
+  expect(
+    withSelectedChampionMastery(LeaguePuuidSchema.parse(puuid), 1, masteries),
+  ).toEqual({
     mastery: { level: 7, points: 123_456 },
   });
-  expect(withSelectedChampionMastery(puuid, 2, masteries)).toEqual({});
+  expect(
+    withSelectedChampionMastery(LeaguePuuidSchema.parse(puuid), 2, masteries),
+  ).toEqual({});
 });

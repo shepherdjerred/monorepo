@@ -13,6 +13,7 @@ tripwires:
     Community MVP votes are this server's Discord ballots, not Riot post-game
     honors. An MVP-only answer sets queryText to null.
 ---
+
 ## Community MVP votes
 
 This server records community MVP votes on Discord after Flex games where at least three tracked players were on one team. These are guild ballots stored in Scout, not Riot honors, honor votes, or post-game medals.

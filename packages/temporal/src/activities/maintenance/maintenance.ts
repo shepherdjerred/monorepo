@@ -57,7 +57,11 @@ export type MaintenanceFetch = (
  * staleness alert watches a job nothing reports.
  */
 export type MaintenanceKind =
-  "kometa" | "ci-bun-cache-gc" | "ci-uv-cache-prune" | "ci-trivy-db-refresh";
+  | "kometa"
+  | "ci-bun-cache-gc"
+  | "ci-source-cache-gc"
+  | "ci-uv-cache-prune"
+  | "ci-trivy-db-refresh";
 
 /**
  * Label attached to every maintenance subprocess for logs and error messages.
@@ -167,6 +171,21 @@ export async function buildMaintenanceCommand(
           BUN_CACHE_LOCK_FILE: `${CI_CACHE_ROOT}/bun-cache-control/.gc.lock`,
           BUN_CACHE_GC_THRESHOLD_PERCENT: "60",
         }),
+        secretValues: [],
+      };
+    case "ci-source-cache-gc":
+      return {
+        kind,
+        command: [
+          "flock",
+          "-w",
+          "600",
+          `${CI_CACHE_ROOT}/source-control/gc.lock`,
+          "bun",
+          `${CI_MAINTENANCE_SCRIPTS}/source-cache-gc.ts`,
+        ],
+        cwd: MAINTENANCE_WORKDIR,
+        env: maintenanceCommandEnvironment({}),
         secretValues: [],
       };
     case "ci-uv-cache-prune":
@@ -489,6 +508,7 @@ export const maintenanceActivities = {
   },
   async runBunCacheGc(): Promise<void> {
     await executeMaintenance("ci-bun-cache-gc");
+    await executeMaintenance("ci-source-cache-gc");
   },
   async runUvCachePrune(): Promise<void> {
     await executeMaintenance("ci-uv-cache-prune");

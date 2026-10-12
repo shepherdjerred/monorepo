@@ -1,3 +1,5 @@
+import type { DiscordAccountId } from "@scout-for-lol/domain/identity/discord.ts";
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import {
   RankSchema,
   type DiscordGuildId,
@@ -8,7 +10,7 @@ import { prisma } from "#src/database/index.ts";
 import { getPlayerOrThrow, notFound } from "#src/lib/player-admin/shared.ts";
 
 export type ProfileAccount = {
-  puuid: string;
+  puuid: LeaguePuuid;
   region: string;
   riotGameName: string | null;
   riotTagLine: string | null;
@@ -25,7 +27,7 @@ export type ResolvedPlayerProfile = {
 };
 
 export type ResolvedGuildPlayerProfile = ResolvedPlayerProfile & {
-  discordId: string | null;
+  discordId: DiscordAccountId | null;
 };
 
 function profileAccount(account: ProfileAccount): ProfileAccount {
@@ -41,7 +43,7 @@ function profileAccount(account: ProfileAccount): ProfileAccount {
 }
 
 export async function resolveGuildPuuids(input: {
-  guildId: string;
+  guildId: DiscordGuildId;
   alias: string;
 }): Promise<ResolvedGuildPlayerProfile> {
   const player = await getPlayerOrThrow(input);
@@ -57,7 +59,7 @@ export async function resolveGuildPuuids(input: {
 export async function resolveConsumerPlayerPuuids(input: {
   playerId: PlayerId;
   guildIds: DiscordGuildId[];
-}): Promise<ResolvedPlayerProfile & { guildId: string }> {
+}): Promise<ResolvedPlayerProfile & { guildId: DiscordGuildId }> {
   const player = await prisma.player.findFirst({
     where: { id: input.playerId, serverId: { in: input.guildIds } },
     include: { accounts: true },

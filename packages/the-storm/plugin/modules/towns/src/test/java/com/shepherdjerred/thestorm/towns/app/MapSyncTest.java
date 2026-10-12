@@ -13,9 +13,15 @@ import com.shepherdjerred.thestorm.towns.domain.claiming.ClaimAllowance;
 import com.shepherdjerred.thestorm.towns.domain.claiming.ClaimLimits;
 import com.shepherdjerred.thestorm.towns.domain.claiming.ClaimPolicy;
 import com.shepherdjerred.thestorm.towns.domain.claiming.Claiming;
+import com.shepherdjerred.thestorm.towns.domain.heritage.HeritageIndex;
+import com.shepherdjerred.thestorm.towns.domain.heritage.HeritageSite;
 import com.shepherdjerred.thestorm.towns.domain.map.Outline;
+import com.shepherdjerred.thestorm.towns.domain.region.BlockCorner;
+import com.shepherdjerred.thestorm.towns.domain.region.Cuboid;
 import com.shepherdjerred.thestorm.towns.domain.region.RegionIndex;
+import com.shepherdjerred.thestorm.towns.domain.region.RegionProfile;
 import com.shepherdjerred.thestorm.towns.domain.town.MembershipPolicy;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.InstantSource;
 import java.util.ArrayList;
@@ -129,6 +135,70 @@ final class MapSyncTest {
     assertThat(map.erasedAll).isEqualTo(1);
     assertThat(pieces(TOWN_A).getFirst().ring()).hasSize(4);
     assertThat(pieces(TOWN_A).getFirst().ring()).contains(new Outline.Corner(16, 16));
+  }
+
+  @Test
+  void preservedCuboidsUseExactBlockEdgesRatherThanExpandedChunks() {
+    var site =
+        heritage(
+            Set.of(),
+            new Cuboid("world", new BlockCorner(164, -64, -40), new BlockCorner(290, 319, 46)));
+    state.attachHeritage(new HeritageIndex(List.of(site)));
+    sync.redrawAll();
+
+    assertThat(pieces(heritageId()).getFirst().ring())
+        .containsExactly(
+            new Outline.Corner(164, -40),
+            new Outline.Corner(291, -40),
+            new Outline.Corner(291, 47),
+            new Outline.Corner(164, 47));
+    assertThat(site.contains(163, 64, 0)).isFalse();
+    assertThat(site.contains(291, 64, 0)).isFalse();
+  }
+
+  @Test
+  void explicitProtectedChunksAndNegativeCuboidsKeepTheirSeparateExactEdges() {
+    var site =
+        heritage(
+            Set.of(new HeritageSite.Chunk(-2, -3)),
+            new Cuboid("world", new BlockCorner(-13, -64, 6), new BlockCorner(-3, 319, 8)));
+    state.attachHeritage(new HeritageIndex(List.of(site)));
+    sync.redrawAll();
+
+    assertThat(pieces(heritageId())).hasSize(2);
+    assertThat(pieces(heritageId()).getFirst().ring())
+        .containsExactly(
+            new Outline.Corner(-32, -48),
+            new Outline.Corner(-16, -48),
+            new Outline.Corner(-16, -32),
+            new Outline.Corner(-32, -32));
+    assertThat(pieces(heritageId()).getLast().ring())
+        .containsExactly(
+            new Outline.Corner(-13, 6),
+            new Outline.Corner(-2, 6),
+            new Outline.Corner(-2, 9),
+            new Outline.Corner(-13, 9));
+    assertThat(site.contains(-16, 64, 7)).isFalse();
+    assertThat(site.contains(-4, 64, 7)).isTrue();
+  }
+
+  private static HeritageSite heritage(Set<HeritageSite.Chunk> chunks, Cuboid area) {
+    return new HeritageSite(
+        "exact",
+        "Exact heritage",
+        HeritageSite.Kind.SERVER,
+        "",
+        "world",
+        RegionProfile.PRESERVE,
+        chunks,
+        List.of(area),
+        Set.of(),
+        List.of(),
+        "Native test footprint");
+  }
+
+  private static UUID heritageId() {
+    return UUID.nameUUIDFromBytes("heritage:exact".getBytes(StandardCharsets.UTF_8));
   }
 
   private List<Outline> pieces(UUID town) {

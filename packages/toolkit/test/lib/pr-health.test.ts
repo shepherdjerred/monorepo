@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import type { WoodpeckerPipeline } from "#lib/woodpecker/ci.ts";
 import type { GitHubCheck, PullRequest } from "#lib/github/types.ts";
-import { buildPrHealthReport, ciHealth } from "#commands/pr/health.ts";
+import { buildPrHealthReport, ciHealth } from "#lib/ci/health.ts";
 
 const HEAD_SHA = "0123456789abcdef0123456789abcdef01234567";
 

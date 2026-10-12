@@ -1,4 +1,5 @@
 import { ServiceSchema } from "@shepherdjerred/ops-model/catalog.ts";
+import { DigestKindSchema } from "@shepherdjerred/ops-model/digest.ts";
 import { SeveritySchema } from "@shepherdjerred/ops-model/severity.ts";
 import {
   ChangeEventSchema,
@@ -18,8 +19,6 @@ export const CursorInputSchema = z.strictObject({
   consumer: z.literal("web"),
   seenSignalIds: z.array(z.string().min(1).max(512)).max(5000),
 });
-export type CursorInput = z.infer<typeof CursorInputSchema>;
-
 export const CursorResponseSchema = z.object({
   consumer: CursorConsumerSchema,
   lastSeenAt: InstantTextSchema,
@@ -48,8 +47,6 @@ export type ChangeListInput = z.infer<typeof ChangeListInputSchema>;
 export const ChangeListResponseSchema = z.object({
   items: z.array(ChangeViewSchema),
 });
-export type ChangeListResponse = z.infer<typeof ChangeListResponseSchema>;
-
 export const ServiceDetailSchema = z.object({
   service: ServiceSchema,
   /** `null` until the first snapshot has been ingested. */
@@ -109,9 +106,6 @@ export const SeriesResponseSchema = z.object({
 });
 export type SeriesResponse = z.infer<typeof SeriesResponseSchema>;
 
-export const DigestKindSchema = z.enum(["daily", "weekly"]);
-export type DigestKind = z.infer<typeof DigestKindSchema>;
-
 export const TrendSchema = z.object({
   id: z.string(),
   label: z.string(),
@@ -153,15 +147,6 @@ export const DigestReportSchema = z.object({
   trends: z.array(TrendSchema),
 });
 export type DigestReport = z.infer<typeof DigestReportSchema>;
-
-export const DigestRunResponseSchema = z.object({
-  kind: DigestKindSchema,
-  periodKey: z.string(),
-  status: z.enum(["sent", "skipped"]),
-  /** True when this period was already handled by an earlier request. */
-  duplicate: z.boolean(),
-});
-export type DigestRunResponse = z.infer<typeof DigestRunResponseSchema>;
 
 export const OpsErrorSchema = z.object({
   error: z.string(),

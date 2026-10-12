@@ -26,15 +26,14 @@ export type FakeFetcher = {
 function response(
   status: number,
   body: unknown,
-  etag: string | undefined,
+  etag: string | null = null,
 ): FliptHttpResponse {
   return {
     ok: status >= 200 && status < 300,
     status,
     statusText: status === 304 ? "Not Modified" : "OK",
     headers: {
-      get: (name: string) =>
-        name.toLowerCase() === "etag" ? (etag ?? null) : null,
+      get: (name: string) => (name.toLowerCase() === "etag" ? etag : null),
     },
     json: () => Promise.resolve(body),
   };

@@ -1,4 +1,5 @@
 import path from "node:path";
+import { prepareMstestConfiguration } from "./mstest-configuration.ts";
 import {
   applyDefaultEnvironment,
   cargoTestJUnit,
@@ -17,7 +18,6 @@ import {
 } from "./gradle-junit.ts";
 
 const repositoryRoot = path.resolve(import.meta.dir, "..", "..");
-const coverageEnabled = Bun.env["CI_TEST_COVERAGE"] === "1";
 if (process.argv.slice(2).length > 0) {
   throw new Error(`Unknown arguments: ${process.argv.slice(2).join(", ")}`);
 }
@@ -59,6 +59,7 @@ await Bun.$`mkdir -p ${outputDirectory}`;
 
 const environment = { ...Bun.env };
 applyDefaultEnvironment(environment, workspace.defaultEnv ?? {});
+const coverageEnabled = workspace.coverageAlways === true;
 let cachedDotnetExecutable: string | undefined;
 let cachedNodeExecutable: string | undefined;
 
@@ -219,11 +220,28 @@ async function commandForStep(
       const coverageArguments = coverageEnabled
         ? dotnetCoverageArguments(step, rawCoverageDirectory, process.cwd())
         : [];
+      const configurationArguments =
+        step.mstest === undefined
+          ? []
+          : [
+              "--config-file",
+              await prepareMstestConfiguration({
+                ...step.mstest,
+                artifacts: rawCoverageDirectory,
+                seedRaw: environment["TASKNOTES_TEST_SEED"],
+              }),
+              "--report-trx",
+              "--report-trx-filename",
+              "results.trx",
+              "--crashdump",
+              "--hangdump",
+            ];
       return [
         await pinnedDotnetExecutable(),
         "test",
         path.resolve(process.cwd(), project),
         ...argumentsList,
+        ...configurationArguments,
         ...coverageArguments,
         "--report-junit",
         "--report-junit-filename",
@@ -233,7 +251,7 @@ async function commandForStep(
     case "gradle":
       if (coverageEnabled) {
         throw new Error(
-          "Gradle steps do not collect coverage: the coverage summary has no JaCoCo parser. Run this workspace's test:report without CI_TEST_COVERAGE=1.",
+          "Gradle steps do not collect coverage; remove coverageAlways from this workspace's manifest entry.",
         );
       }
       return ["mise", "exec", "--", "gradle", ...step.args, "--continue"];
@@ -272,6 +290,8 @@ for (const [index, step] of workspace.steps.entries()) {
     expectedCoveragePath(step, rawCoverageDirectory) !== undefined
   ) {
     await Bun.$`mkdir -p ${rawCoverageDirectory}`;
+    const staleCoverage = expectedCoveragePath(step, rawCoverageDirectory);
+    if (staleCoverage !== undefined) await removeExistingReport(staleCoverage);
   }
   const startedAt = performance.now();
   const command = await commandForStep(step, reportPath, rawCoverageDirectory);

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type {
   PlayerConfigEntry,
-  MatchId,
+  RiotMatchId,
   RawMatch,
 } from "@scout-for-lol/data/index.ts";
 import { createLogger } from "#src/logger.ts";
@@ -13,7 +13,7 @@ const logger = createLogger("postmatch-match-report-debug");
  */
 export function logErrorDetails(
   error: unknown,
-  matchId: MatchId,
+  matchId: RiotMatchId,
   matchData: RawMatch,
   trackedPlayers: PlayerConfigEntry[],
 ): void {

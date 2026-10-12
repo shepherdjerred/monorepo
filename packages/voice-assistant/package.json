@@ -12,16 +12,15 @@
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "lint": "bunx eslint --cache .",
     "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run test",
-    "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
-    "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/ci/run-ci-test.ts"
+    "test:ci": "bun ../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
-    "@openai/agents": "0.18.0",
+    "@openai/agents": "0.20.0",
     "@opentelemetry/api": "^1.9.1",
     "node-av": "^6.1.1",
     "onnxruntime-node": "1.30.0",
-    "sherpa-onnx": "1.13.1",
-    "sherpa-onnx-node": "1.13.1",
+    "sherpa-onnx": "1.13.8",
+    "sherpa-onnx-node": "1.13.8",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -34,6 +33,6 @@
     "eslint": "^10.7.0",
     "jiti": "^2.7.0",
     "typescript": "^6.0.3",
-    "vitest": "5.0.1"
+    "vitest": "5.0.3"
   }
 }

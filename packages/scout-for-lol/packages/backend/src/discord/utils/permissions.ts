@@ -1,5 +1,13 @@
-import type { Channel, Client } from "discord.js";
-import { ChannelType, PermissionFlagsBits } from "discord.js";
+import type {
+  DiscordGuildId,
+  DiscordChannelId,
+} from "@scout-for-lol/domain/identity/discord.ts";
+import {
+  type Channel,
+  type Client,
+  ChannelType,
+  PermissionFlagsBits,
+} from "discord.js";
 import { z } from "zod";
 import { match } from "ts-pattern";
 import {
@@ -246,7 +254,7 @@ export function hasReadMessageHistoryPermission(
  * Get a user-friendly error message for permission failures
  */
 export function getPermissionErrorMessage(
-  channelId: string,
+  channelId: DiscordChannelId,
   reason?: string,
 ): string {
   const baseMessage = `Unable to send message to channel <#${channelId}>`;
@@ -260,7 +268,7 @@ export function getPermissionErrorMessage(
  * Format error message for logging
  */
 export function formatPermissionErrorForLog(
-  channelId: string,
+  channelId: DiscordChannelId,
   error: unknown,
   reason?: string,
 ): string {
@@ -285,7 +293,7 @@ const FIX_STEPS = `**To fix this:**
 function buildPermissionMessage(
   stage: PermissionNotifyStage,
   guildName: string,
-  channelId: string,
+  channelId: DiscordChannelId,
   reasonText: string,
 ): string {
   return match(stage)
@@ -336,7 +344,7 @@ const CHANNEL_MISSING_FIX = `**To fix this:**
 function buildChannelMissingMessage(
   stage: PermissionNotifyStage,
   guildName: string,
-  channelId: string,
+  channelId: DiscordChannelId,
   reasonText: string,
 ): string {
   return match(stage)
@@ -381,8 +389,8 @@ If Scout isn't a fit, no hard feelings — you can remove me, and I'd love to he
  */
 export async function notifyServerOwnerAboutPermissionError(options: {
   client: Client;
-  serverId: string;
-  channelId: string;
+  serverId: DiscordGuildId;
+  channelId: DiscordChannelId;
   stage: PermissionNotifyStage;
   kind?: DeliveryFailureKind;
   reason?: string;

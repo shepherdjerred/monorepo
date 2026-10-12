@@ -3,7 +3,6 @@ import { createLogger } from "#src/logger.ts";
 import { matchHistoryPollingSkipsTotal } from "#src/metrics/index.ts";
 import {
   claimPostMatchPoll,
-  markPostMatchPollStarted,
   type PostMatchPollOwner,
 } from "#src/league/tasks/recovery/app-state.ts";
 
@@ -13,8 +12,7 @@ import {
  * Two guards live here because they answer the same question over different
  * spans. The in-process flag serializes the poll passes inside ONE worker and
  * lasts exactly as long as the call; the durable claim on `BotState` serializes
- * them across workers and lasts as long as the run that took it, which for a V2
- * discovery is a whole Workflow. Keeping them together is what stops a caller
+ * them across workers and lasts as long as the discovery Workflow that took it. Keeping them together is what stops a caller
  * taking one and believing it has the other.
  */
 
@@ -71,35 +69,18 @@ export function endPollingRun(): void {
 }
 
 /**
- * How a pass takes the poll, and therefore how long the poll is held.
+ * Take the durable poll claim, or report who holds it.
  *
- * `process` is v1's: the in-process flag guards the pass, and the poll row is
- * opened unconditionally — v1 has never needed the row to refuse it, because
- * its poll and the maintenance that closes it are one Activity. Unchanged,
- * deliberately: a v1 poll whose worker dies mid-pass must be free to run again
- * on the next Schedule tick, and a durable claim it never released would
- * refuse it for as long as the claim stood.
- *
- * `durable` is V2's, where the poll spans a Workflow: discovery, the children
- * it awaits, and the maintenance that closes it. The in-process flag cannot
- * span that — it is released when the discovery Activity returns — so the pass
- * takes a durable claim instead and hands its identity to the caller, which
- * carries it through to the close.
+ * The poll spans a discovery Workflow: discovery, the children it awaits, and
+ * the maintenance that closes it. The in-process flag cannot span that — it is
+ * released when the discovery Activity returns — so the pass takes a durable
+ * claim and hands its identity to the caller, which carries it to the close.
  */
-export type PostMatchPollOwnership = "process" | "durable";
-
 export type OpenedPoll =
   | { outcome: "held"; since: Date | null }
-  | { outcome: "opened"; owner: PostMatchPollOwner | undefined };
+  | { outcome: "opened"; owner: PostMatchPollOwner };
 
-export async function openPostMatchPoll(
-  ownership: PostMatchPollOwnership,
-  startedAt: Date,
-): Promise<OpenedPoll> {
-  if (ownership === "process") {
-    await markPostMatchPollStarted(startedAt);
-    return { outcome: "opened", owner: undefined };
-  }
+export async function openPostMatchPoll(startedAt: Date): Promise<OpenedPoll> {
   const claim = await claimPostMatchPoll({ startedAt });
   return claim.outcome === "claimed"
     ? { outcome: "opened", owner: claim.owner }

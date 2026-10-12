@@ -7,7 +7,7 @@ describe("member destination", () => {
       label: "Explore and profiles",
       exploreAvailable: true,
       profilesAvailable: true,
-      expected: "/explore",
+      expected: "/players",
     },
     {
       label: "Explore only",

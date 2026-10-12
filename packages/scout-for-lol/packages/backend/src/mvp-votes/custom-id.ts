@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { MatchIdSchema, type MatchId } from "@scout-for-lol/data";
+import { RiotMatchIdSchema, type RiotMatchId } from "@scout-for-lol/data";
 
 /**
  * Discord custom IDs for post-match MVP vote controls.
@@ -28,21 +28,21 @@ export type VoteButtonCustomId = z.infer<typeof VoteButtonCustomIdSchema>;
 export const VoteButtonCustomIdSchema = z.strictObject({
   kind: z.literal("button"),
   category: MatchMvpCategorySchema,
-  matchId: MatchIdSchema,
+  matchId: RiotMatchIdSchema,
 });
 
 export type VoteSelectCustomId = z.infer<typeof VoteSelectCustomIdSchema>;
 export const VoteSelectCustomIdSchema = z.strictObject({
   kind: z.literal("select"),
   category: MatchMvpCategorySchema,
-  matchId: MatchIdSchema,
+  matchId: RiotMatchIdSchema,
 });
 
 export type VoteModalCustomId = z.infer<typeof VoteModalCustomIdSchema>;
 export const VoteModalCustomIdSchema = z.strictObject({
   kind: z.literal("modal"),
   category: MatchMvpCategorySchema,
-  matchId: MatchIdSchema,
+  matchId: RiotMatchIdSchema,
   nomineeIndex: z.number().int().min(0).max(9),
 });
 
@@ -76,7 +76,7 @@ function assertCustomIdLength(id: string): string {
 
 export function formatVoteButtonCustomId(input: {
   category: MatchMvpCategory;
-  matchId: MatchId;
+  matchId: RiotMatchId;
 }): string {
   const parsed = VoteButtonCustomIdSchema.parse({
     kind: "button",
@@ -95,7 +95,7 @@ export function formatVoteButtonCustomId(input: {
 
 export function formatVoteSelectCustomId(input: {
   category: MatchMvpCategory;
-  matchId: MatchId;
+  matchId: RiotMatchId;
 }): string {
   const parsed = VoteSelectCustomIdSchema.parse({
     kind: "select",
@@ -115,7 +115,7 @@ export function formatVoteSelectCustomId(input: {
 
 export function formatVoteModalCustomId(input: {
   category: MatchMvpCategory;
-  matchId: MatchId;
+  matchId: RiotMatchId;
   nomineeIndex: number;
 }): string {
   const parsed = VoteModalCustomIdSchema.parse({
@@ -150,7 +150,7 @@ export function parseVoteCustomId(raw: string): VoteCustomId | undefined {
   }
   if (segments.length === 4) {
     const category = categoryFromWire(segments[2] ?? "");
-    const matchId = MatchIdSchema.safeParse(segments[3]);
+    const matchId = RiotMatchIdSchema.safeParse(segments[3]);
     return category === undefined || !matchId.success
       ? undefined
       : { kind: "button", category, matchId: matchId.data };
@@ -158,7 +158,7 @@ export function parseVoteCustomId(raw: string): VoteCustomId | undefined {
   if (segments.length === 5) {
     const kindWire = segments[2];
     const category = categoryFromWire(segments[3] ?? "");
-    const matchId = MatchIdSchema.safeParse(segments[4]);
+    const matchId = RiotMatchIdSchema.safeParse(segments[4]);
     if (category === undefined || !matchId.success) {
       return undefined;
     }
@@ -172,7 +172,7 @@ export function parseVoteCustomId(raw: string): VoteCustomId | undefined {
   if (segments.length === 6) {
     const kindWire = segments[2];
     const category = categoryFromWire(segments[3] ?? "");
-    const matchId = MatchIdSchema.safeParse(segments[4]);
+    const matchId = RiotMatchIdSchema.safeParse(segments[4]);
     const nomineeRaw = segments[5];
     if (
       kindWire !== "m" ||

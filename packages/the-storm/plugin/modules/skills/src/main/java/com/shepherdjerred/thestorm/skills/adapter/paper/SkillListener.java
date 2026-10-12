@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.skills.adapter.paper;
 
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.skills.app.BlockMove;
 import com.shepherdjerred.thestorm.skills.app.BlockPosition;
 import com.shepherdjerred.thestorm.skills.app.SkillLevels;
@@ -73,6 +74,7 @@ final class SkillListener implements Listener {
   private final ModuleContext context;
   private final SkillLevels levels;
   private final SkillsConfig config;
+  private final SealedWorlds sealed;
   private final NamespacedKey fallingOriginKey;
   private final Map<UUID, SkillProgress> online = new HashMap<>();
   private final Map<UUID, Instant> lastAcrobatics = new HashMap<>();
@@ -80,15 +82,18 @@ final class SkillListener implements Listener {
 
   private record Hit(UUID playerId, Skill skill) {}
 
-  SkillListener(ModuleContext context, SkillLevels levels, SkillsConfig config) {
+  SkillListener(
+      ModuleContext context, SkillLevels levels, SkillsConfig config, SealedWorlds sealed) {
     this.context = context;
     this.levels = levels;
     this.config = config;
+    this.sealed = sealed;
     this.fallingOriginKey = new NamespacedKey(context.plugin(), "skills_falling_origin");
   }
 
   @EventHandler
   void onJoin(PlayerJoinEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getPlayer())) return;
     var player = event.getPlayer();
     var _ =
         levels
@@ -108,6 +113,7 @@ final class SkillListener implements Listener {
 
   @EventHandler
   void onQuit(PlayerQuitEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getPlayer())) return;
     var id = event.getPlayer().getUniqueId();
     online.remove(id);
   }
@@ -512,8 +518,9 @@ final class SkillListener implements Listener {
                 context.scheduler().mainThread());
   }
 
-  private static boolean survival(Player player) {
-    return player.getGameMode() == GameMode.SURVIVAL;
+  /** Whether {@code player} earns skill progress: survival mode, outside any sealed world. */
+  private boolean survival(Player player) {
+    return player.getGameMode() == GameMode.SURVIVAL && !sealed.isSealed(player.getWorld());
   }
 
   private static BlockPosition position(Block block) {

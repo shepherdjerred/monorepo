@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { loadWeeklyBucksStats } from "#src/betting/leaderboard/weekly-leaderboard.ts";
@@ -70,7 +71,7 @@ async function wonBet(accountId: number, settledAt: Date): Promise<void> {
   poolCounter += 1;
   const pool = await db.bucksMatchPool.create({
     data: {
-      matchId: `NA1_stats_${poolCounter.toString()}`,
+      matchId: RiotMatchIdSchema.parse(`NA1_81002${poolCounter.toString()}`),
       serverId: SERVER_ID,
       detectedAt: BEFORE_WINDOW,
       closesAt: BEFORE_WINDOW,
@@ -93,10 +94,10 @@ async function wonBet(accountId: number, settledAt: Date): Promise<void> {
 
 async function wonParlay(accountId: number, settledAt: Date): Promise<void> {
   poolCounter += 1;
-  const matchId = `NA1_parlay_${poolCounter.toString()}`;
+  const matchId = `NA1_81001${poolCounter.toString()}`;
   const pool = await db.bucksMatchPool.create({
     data: {
-      matchId,
+      matchId: RiotMatchIdSchema.parse(matchId),
       serverId: SERVER_ID,
       detectedAt: BEFORE_WINDOW,
       closesAt: BEFORE_WINDOW,
@@ -106,7 +107,7 @@ async function wonParlay(accountId: number, settledAt: Date): Promise<void> {
   });
   const definition = await db.bucksParlayDefinition.create({
     data: {
-      matchId,
+      matchId: RiotMatchIdSchema.parse(matchId),
       queueType: "solo",
       selectedTeamId: 100,
       subjects: "[]",
@@ -126,7 +127,7 @@ async function wonParlay(accountId: number, settledAt: Date): Promise<void> {
     data: {
       definitionId: definition.id,
       outcomePoolId: pool.id,
-      matchId,
+      matchId: RiotMatchIdSchema.parse(matchId),
       serverId: SERVER_ID,
       publishedAt: BEFORE_WINDOW,
       closesAt: BEFORE_WINDOW,

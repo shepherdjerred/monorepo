@@ -101,8 +101,7 @@ final class ContentFilesTest {
     copy(
         "arena/arenas/colosseum.yml",
         text ->
-            text.replace(
-                "  lancer: { x: 1015, y: 65, z: 1005 }", "  wizard: { x: 1015, y: 65, z: 1005 }"));
+            text.replace("  knight: { x: 220, y: 34, z: 3 }", "  wizard: { x: 220, y: 34, z: 3 }"));
 
     assertThatThrownBy(() -> ContentFiles.load(directory))
         .hasMessageContaining("unknown class wizard");

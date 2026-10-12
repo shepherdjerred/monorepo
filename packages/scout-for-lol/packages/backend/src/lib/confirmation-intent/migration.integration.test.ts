@@ -2,10 +2,9 @@ import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { z } from "zod";
 import { ConfirmationIntentPayloadSchema } from "@scout-for-lol/data";
 import {
-  devPostgresPort,
-  ensureDevPostgres,
-  psqlMaintenance,
-} from "#src/testing/postgres-server.ts";
+  replayMigrationsBefore,
+  type MigrationReplay,
+} from "#src/database/migration-replay.test-fixtures.ts";
 
 /**
  * The confirmation-intent migration moves live rows, so it is verified against
@@ -19,7 +18,6 @@ import {
  */
 
 const MIGRATION = "20260904000000_confirmation_intent";
-const MIGRATIONS_DIR = `${import.meta.dir}/../../../prisma/migrations`;
 
 const SERVER_A = "100000000000000001";
 const SERVER_B = "100000000000000002";
@@ -44,66 +42,11 @@ const MigratedRowSchema = z.object({
 });
 type MigratedRow = z.infer<typeof MigratedRowSchema>;
 
-let databaseName = "";
+let replay: MigrationReplay | undefined;
 
 function psql(sql: string): string {
-  const result = Bun.spawnSync(
-    [
-      "psql",
-      "-h",
-      "127.0.0.1",
-      "-p",
-      devPostgresPort().toString(),
-      "-U",
-      "scout",
-      "-d",
-      databaseName,
-      "-v",
-      "ON_ERROR_STOP=1",
-      "-At",
-      "-c",
-      sql,
-    ],
-    { stdout: "pipe", stderr: "pipe" },
-  );
-  if (result.exitCode !== 0) {
-    throw new Error(`psql failed (${sql}): ${result.stderr.toString()}`);
-  }
-  return result.stdout.toString().trim();
-}
-
-function applyMigration(name: string): void {
-  const result = Bun.spawnSync(
-    [
-      "psql",
-      "-h",
-      "127.0.0.1",
-      "-p",
-      devPostgresPort().toString(),
-      "-U",
-      "scout",
-      "-d",
-      databaseName,
-      "-v",
-      "ON_ERROR_STOP=1",
-      "-f",
-      `${MIGRATIONS_DIR}/${name}/migration.sql`,
-    ],
-    { stdout: "pipe", stderr: "pipe" },
-  );
-  if (result.exitCode !== 0) {
-    throw new Error(
-      `applying ${name} failed: ${result.stderr.toString()}${result.stdout.toString()}`,
-    );
-  }
-}
-
-/** Every migration directory, in the order Prisma applies them. */
-function migrationNames(): string[] {
-  const glob = new Bun.Glob("*/migration.sql");
-  return [...glob.scanSync({ cwd: MIGRATIONS_DIR })]
-    .map((file) => file.slice(0, file.indexOf("/")))
-    .sort();
+  if (replay === undefined) throw new Error("The replay database is not built");
+  return replay.psql(sql);
 }
 
 /** The dares and old-shape intents that stand in for live production rows. */
@@ -148,27 +91,17 @@ function migratedRows(): Map<string, MigratedRow> {
 let rows: Map<string, MigratedRow>;
 
 beforeAll(() => {
-  ensureDevPostgres();
-  databaseName = `scout_test_${Date.now().toString()}_intent_migration`;
-  psqlMaintenance(`DROP DATABASE IF EXISTS "${databaseName}" WITH (FORCE)`);
-  psqlMaintenance(`CREATE DATABASE "${databaseName}"`);
-  const names = migrationNames();
-  const target = names.indexOf(MIGRATION);
-  if (target === -1) {
-    throw new Error(`${MIGRATION} is missing from ${MIGRATIONS_DIR}`);
-  }
-  for (const name of names.slice(0, target)) {
-    applyMigration(name);
-  }
+  replay = replayMigrationsBefore(
+    `scout_test_${Date.now().toString()}_intent_migration`,
+    MIGRATION,
+  );
   seedPreMigrationRows();
-  applyMigration(MIGRATION);
+  replay.applyMigration(MIGRATION);
   rows = migratedRows();
 }, 180_000);
 
 afterAll(() => {
-  if (databaseName !== "") {
-    psqlMaintenance(`DROP DATABASE IF EXISTS "${databaseName}" WITH (FORCE)`);
-  }
+  replay?.drop();
 });
 
 describe("the confirmation intent migration", () => {

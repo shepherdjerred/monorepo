@@ -229,13 +229,13 @@ describe("ExploreTranscript", () => {
     );
     expect(sharedMarkup).toContain("Run ScoutQL");
     expect(sharedMarkup).toContain("Rows scanned:");
-    expect(sharedMarkup).not.toContain("Raw JSON");
+    expect(sharedMarkup).not.toContain("Inputs and outputs");
     expect(sharedMarkup).not.toContain("owner-only");
 
     const ownerMarkup = renderToStaticMarkup(
       <ExploreToolTrace trace={messageWithTrace.trace} showRaw />,
     );
-    expect(ownerMarkup).toContain("Raw JSON");
+    expect(ownerMarkup).toContain("Inputs and outputs");
     expect(ownerMarkup).toContain("owner-only");
   });
 
@@ -445,10 +445,16 @@ describe("Explore Dare transcript cards", () => {
       <ExploreTranscript
         messages={[assistantMessage({ trace })]}
         showRawTrace
+        allowIntentActions
       />,
     );
     const ownerStreaming = renderToStaticMarkup(
-      <ExploreTranscript messages={[]} pendingTrace={trace} showRawTrace />,
+      <ExploreTranscript
+        messages={[]}
+        pendingTrace={trace}
+        showRawTrace
+        allowIntentActions
+      />,
     );
     const shared = renderToStaticMarkup(
       <ExploreTranscript messages={[assistantMessage({ trace })]} />,

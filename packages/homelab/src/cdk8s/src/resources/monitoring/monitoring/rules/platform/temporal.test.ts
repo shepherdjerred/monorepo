@@ -55,9 +55,16 @@ describe("Temporal workflow outcome rules", () => {
     expect(expressions.get("TemporalScheduleActionDelayed")).toContain(
       "schedule_action_delay_bucket",
     );
-    expect(expressions.get("TemporalWorkflowTaskFailing")).toContain(
-      "temporal_worker_workflow_task_execution_failed",
-    );
+    // Every worker exports counters with `countersTotalSuffix`, so the rule
+    // must match the `_total` spelling or it can never fire.
+    for (const alert of [
+      "TemporalWorkflowTaskFailing",
+      "TemporalWorkflowNondeterministic",
+    ]) {
+      expect(expressions.get(alert), alert).toContain(
+        '__name__=~"temporal_worker_workflow_task_execution_failed(_total)?"',
+      );
+    }
     expect(expressions.get("TemporalWorkflowNondeterministic")).toContain(
       'failure_reason="NonDeterminismError"',
     );
@@ -127,7 +134,6 @@ describe("Temporal workflow outcome rules", () => {
     }
 
     const healthAlerts = [
-      "TemporalDomainWorkflowPollerUnavailable",
       "TemporalDomainQueueBacklog",
       "TemporalDomainScheduleToStartHigh",
       "TemporalDomainWorkerScrapeDown",
@@ -139,13 +145,25 @@ describe("Temporal workflow outcome rules", () => {
       expect(
         rules
           .map((rule) => rule.labels?.["task_queue"])
-          .toSorted((left, right) => (left ?? "").localeCompare(right ?? "")),
+          .toSorted((left = "", right = "") => left.localeCompare(right)),
       ).toEqual(
         TEMPORAL_DOMAIN_QUEUES.map((definition) => definition.queue).toSorted(
           (left, right) => left.localeCompare(right),
         ),
       );
     }
+
+    const workflowRules = failuresGroup.rules.filter(
+      (rule) => rule.alert === "TemporalDomainWorkflowPollerUnavailable",
+    );
+    expect(workflowRules).toHaveLength(
+      TEMPORAL_DOMAIN_QUEUES.filter(
+        (definition) => definition.workflowPoller !== false,
+      ).length,
+    );
+    expect(
+      workflowRules.map((rule) => rule.labels?.["task_queue"]),
+    ).not.toContain("ops");
 
     const activityRules = failuresGroup.rules.filter(
       (rule) => rule.alert === "TemporalDomainActivityPollerUnavailable",
@@ -204,7 +222,7 @@ describe("Temporal workflow outcome rules", () => {
     // The threshold is the served-namespace count: one namespace served, one
     // required for this production-only queue.
     expect(workflowPollerExpressions).toContain(
-      'count(sum by (exported_namespace) (temporal_worker_num_pollers{namespace="woodpecker",exported_namespace=~"prod",task_queue="maintenance",poller_type="workflow_task"})) < 1',
+      'count(sum by (exported_namespace) (temporal_worker_num_pollers{namespace="woodpecker-ci",exported_namespace=~"prod",task_queue="maintenance",poller_type="workflow_task"})) < 1',
     );
     const scoutBetaExpression = workflowPollerExpressions.find(
       (expression) =>
@@ -293,15 +311,13 @@ describe("Scout Data Dragon failure rules", () => {
     // AND clears 24h later — a bare counter can't do both (increase() misses the
     // first born-at-1 failure; max_over_time(counter) never ages out).
     //
-    // The `_s` suffix is required: the gauge has unit "s" and the worker's
-    // exporter runs with unitSuffix:true, so the exported series is
-    // `..._timestamp_s`. Querying the bare name matched nothing and the alert
-    // never fired — this asserts the suffixed name so the regression can't recur.
+    // Timestamp gauges are exported without a unit suffix, even though the
+    // duration histogram uses `_s`. Match the observed gauge contract.
     expect(expression).toContain(
-      "scout_data_dragon_auto_merge_last_failure_timestamp_s",
+      "scout_data_dragon_auto_merge_last_failure_timestamp[",
     );
     expect(expression).not.toContain(
-      "scout_data_dragon_auto_merge_last_failure_timestamp[",
+      "scout_data_dragon_auto_merge_last_failure_timestamp_s",
     );
     expect(expression).toContain("time() -");
     expect(expression).toContain("60 * 60 * 24");
@@ -309,7 +325,7 @@ describe("Scout Data Dragon failure rules", () => {
     // single-replica worker restart doesn't stale the series and wrongly clear
     // the alert.
     expect(expression).toContain(
-      "max_over_time(scout_data_dragon_auto_merge_last_failure_timestamp_s[24h])",
+      "max_over_time(scout_data_dragon_auto_merge_last_failure_timestamp[24h])",
     );
     expect(expression).not.toContain("increase(");
   });

@@ -95,9 +95,9 @@ export type Resolver<D extends Record<string, ConfigKeyDefinition>> = {
   readonly keys: readonly (keyof D & string)[];
 };
 
-function digestOf(value: unknown): string {
+function digestOf(value: unknown = null): string {
   const hasher = new Bun.CryptoHasher("sha256");
-  hasher.update(JSON.stringify(value ?? null));
+  hasher.update(JSON.stringify(value));
   return hasher.digest("hex").slice(0, 12);
 }
 

@@ -1,7 +1,15 @@
 import { Loaded } from "@shepherdjerred/loaded";
-import { useEffect, useRef, useState } from "react";
-import { Link, useLocation } from "react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useRef } from "react";
+import { Link, useLocation, useSearchParams } from "react-router";
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from "@scout-for-lol/design-system/components/tabs";
+import { ChampionPoolTable } from "#src/components/player/champion-pool-table.tsx";
+import { usePlayerHistoryState } from "#src/lib/player/use-player-history-state.ts";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { Badge } from "@scout-for-lol/design-system/components/badge";
 import { Button } from "@scout-for-lol/design-system/components/button";
@@ -19,17 +27,12 @@ import { PlayerRankHistoryPanel } from "#src/components/player/player-rank-histo
 import { PlayerBehavior } from "#src/components/player/player-behavior.tsx";
 import { ConsumerPlayerCommunity } from "#src/components/player/consumer-player-community.tsx";
 import { RankValue } from "#src/components/player/player-profile-sections.tsx";
-import type { HistoryCursor } from "#src/components/player/recorded-match-history.tsx";
 import { track } from "#src/lib/analytics.ts";
 import { formatRiotId } from "#src/lib/format/riot-id-format.ts";
 import { regionName } from "#src/lib/regions.ts";
 import { useConsumerPlayerParams } from "#src/lib/routes/route-params.ts";
 import { useTRPC } from "#src/lib/query/trpc.ts";
-import {
-  filterKey,
-  playerProfileSearch,
-  type PlayerProfileFilters,
-} from "#src/lib/player/player-profile-filters.ts";
+import { type PlayerProfileFilters } from "#src/lib/player/player-profile-filters.ts";
 import { usePlayerProfileUrlState } from "#src/lib/player/use-player-profile-url-state.ts";
 
 const EntryStateSchema = z.object({
@@ -103,7 +106,7 @@ export function ConsumerPlayerProfile() {
   const { filters, setFilters } = usePlayerProfileUrlState();
   return (
     <ConsumerPlayerProfileContent
-      key={`${playerId.toString()}:${filterKey(filters)}`}
+      key={playerId}
       filters={filters}
       onFiltersChange={(nextFilters, kind) => {
         setFilters(nextFilters);
@@ -132,16 +135,25 @@ function ConsumerPlayerProfileContent(props: {
   const { playerId } = useConsumerPlayerParams();
   const trpc = useTRPC();
   const location = useLocation();
+  const [params, setParams] = useSearchParams();
+  const requestedTab = params.get("tab") ?? "overview";
+  const tab = [
+    "overview",
+    "champions",
+    "progress",
+    "community",
+    "accounts",
+  ].includes(requestedTab)
+    ? requestedTab
+    : "overview";
+  const historyState = usePlayerHistoryState();
   const parsedEntry = EntryStateSchema.safeParse(location.state);
   const entrySurface = parsedEntry.success
     ? parsedEntry.data.entrySurface
     : "direct_link";
-  const [historyCursors, setHistoryCursors] = useState<
-    (HistoryCursor | undefined)[]
-  >([undefined]);
-  const [historyPage, setHistoryPage] = useState(0);
-  const [championSearch, setChampionSearch] = useState("");
-  const currentHistoryCursor = historyCursors[historyPage];
+  const historyPage = historyState.page;
+  const championSearch = historyState.championSearch;
+  const currentHistoryCursor = historyState.cursor;
   const filterInput = profileFilterInput(props.filters);
   const trackedOutcome = useRef<string | null>(null);
 
@@ -166,6 +178,7 @@ function ConsumerPlayerProfileContent(props: {
       {
         enabled: accessIsFresh,
         ...PROTECTED_CONSUMER_PROFILE_QUERY_OPTIONS,
+        placeholderData: keepPreviousData,
       },
     ),
   );
@@ -247,9 +260,8 @@ function ConsumerPlayerProfileContent(props: {
           <CardHeader>
             <CardTitle>Player profile unavailable</CardTitle>
             <CardDescription>
-              Scout could not find this player inside your currently enabled
-              shared servers, or could not verify membership. No other
-              guild&apos;s player data was returned.
+              This player is unavailable. Check that you still share a server
+              with them, then try again.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-2">
@@ -273,7 +285,10 @@ function ConsumerPlayerProfileContent(props: {
     );
   }
 
-  if (summaryQuery.isPending || summaryQuery.isFetching) {
+  if (
+    summaryQuery.isPending ||
+    (summaryQuery.isFetching && !summaryQuery.isPlaceholderData)
+  ) {
     return (
       <ProfileShell>
         <p className="text-sm text-scout-subtle">Loading player profile…</p>
@@ -294,7 +309,7 @@ function ConsumerPlayerProfileContent(props: {
   // One fallback instead of two optional chains and two `??`s: the component
   // was already at the cyclomatic limit, and "absent history" has one shape.
   const { entries, nextCursor } = Loaded.getOrElse(history, EMPTY_HISTORY);
-  const profileSearch = playerProfileSearch(props.filters);
+  const profileSearch = `?${params.toString()}`;
 
   return (
     <ProfileShell>
@@ -318,125 +333,148 @@ function ConsumerPlayerProfileContent(props: {
         </Button>
       </div>
 
-      <div className="grid gap-3 lg:grid-cols-2">
-        {summary.accounts.map((account, index) => (
-          <Card
-            key={`${account.region}:${account.gameName ?? "pending"}:${account.tagLine ?? "pending"}:${index.toString()}`}
-          >
-            <CardHeader className="pb-3">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <CardTitle className="text-lg">
+      <Tabs
+        value={tab}
+        onValueChange={(value) => {
+          const next = new URLSearchParams(params);
+          next.set("tab", value);
+          setParams(next, { replace: true });
+        }}
+      >
+        <TabsList
+          aria-label="Player profile"
+          className="flex h-auto flex-wrap justify-start"
+        >
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="champions">Champions</TabsTrigger>
+          <TabsTrigger value="progress">Progress</TabsTrigger>
+          <TabsTrigger value="community">Community</TabsTrigger>
+          <TabsTrigger value="accounts">Accounts</TabsTrigger>
+        </TabsList>
+        <TabsContent value="champions" className="space-y-6">
+          <h2 className="text-xl font-semibold">Champion performance</h2>
+          <ChampionPoolTable
+            rows={summary.championPool}
+            minGamesForRate={summary.minGamesForRate}
+            profileSearch={profileSearch}
+          />
+          <h2 className="text-xl font-semibold">Champion mastery</h2>
+          {summary.accounts.map((account, index) =>
+            account.mastery === null ? null : (
+              <section key={index} className="space-y-2">
+                <h3 className="font-medium">
                   {formatRiotId(account, "Riot ID pending")}
-                </CardTitle>
-                <Badge variant="outline">{regionName(account.region)}</Badge>
-              </div>
-              <CardDescription className="text-xs">
-                Last match: {observedAt(account.lastMatchTime)}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-3 text-sm sm:grid-cols-3">
-              <div>
-                <p className="text-scout-subtle">Solo / duo</p>
-                <RankValue rank={account.ranks.solo} compact />
-              </div>
-              <div>
-                <p className="text-scout-subtle">Flex</p>
-                <RankValue rank={account.ranks.flex} compact />
-              </div>
-              <div>
-                <p className="text-scout-subtle">Ranked 5s</p>
-                <RankValue rank={account.ranks.ranked5s} compact />
-              </div>
-            </CardContent>
-            {account.mastery !== null && (
-              <CardContent className="border-t pt-3">
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-sm font-medium">Champion mastery</p>
-                  <p className="text-xs text-scout-subtle">
-                    {account.mastery.freshness === "stale" ? "Last known " : ""}
-                    {observedAt(account.mastery.fetchedAt)}
-                  </p>
+                </h3>
+                <p className="text-xs text-scout-subtle">
+                  {account.mastery.freshness === "stale"
+                    ? "Last known · "
+                    : "Updated · "}
+                  {observedAt(account.mastery.fetchedAt)}
+                </p>
+                <ul className="grid gap-2 sm:grid-cols-2">
+                  {account.mastery.champions.map((champion) => (
+                    <li
+                      key={champion.championId}
+                      className="flex justify-between border-b py-2"
+                    >
+                      <span>{champion.championName}</span>
+                      <span className="text-scout-subtle">
+                        M{champion.level} · {masteryPoints(champion.points)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ),
+          )}
+        </TabsContent>
+        <TabsContent value="accounts" className="grid gap-3 lg:grid-cols-2">
+          {summary.accounts.map((account, index) => (
+            <Card
+              key={`${account.region}:${account.gameName ?? "pending"}:${account.tagLine ?? "pending"}:${index.toString()}`}
+            >
+              <CardHeader className="pb-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <CardTitle className="text-lg">
+                    {formatRiotId(account, "Riot ID pending")}
+                  </CardTitle>
+                  <Badge variant="outline">{regionName(account.region)}</Badge>
                 </div>
-                {account.mastery.champions.length === 0 ? (
-                  <p className="mt-2 text-sm text-scout-subtle">
-                    No champion mastery recorded.
-                  </p>
-                ) : (
-                  <ul className="mt-2 space-y-1 text-sm">
-                    {account.mastery.champions.map((champion) => (
-                      <li
-                        key={champion.championId}
-                        className="flex items-center justify-between gap-3"
-                      >
-                        <span>{champion.championName}</span>
-                        <span className="text-scout-subtle">
-                          M{champion.level.toString()} ·{" "}
-                          {masteryPoints(champion.points)}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
+                <CardDescription className="text-xs">
+                  Last match: {observedAt(account.lastMatchTime)}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="grid gap-3 text-sm sm:grid-cols-3">
+                <div>
+                  <p className="text-scout-subtle">Solo / duo</p>
+                  <RankValue rank={account.ranks.solo} compact />
+                </div>
+                <div>
+                  <p className="text-scout-subtle">Flex</p>
+                  <RankValue rank={account.ranks.flex} compact />
+                </div>
+                <div>
+                  <p className="text-scout-subtle">Ranked 5s</p>
+                  <RankValue rank={account.ranks.ranked5s} compact />
+                </div>
               </CardContent>
-            )}
-          </Card>
-        ))}
-      </div>
+            </Card>
+          ))}
+        </TabsContent>
 
-      <ConsumerPlayerChallengeRuns playerId={playerId} />
+        <TabsContent value="progress" className="space-y-6">
+          <ConsumerPlayerChallengeRuns playerId={playerId} />
 
-      <PlayerRankHistoryPanel
-        status={
-          rankHistoryQuery.isPending
-            ? "loading"
-            : rankHistoryQuery.isError
-              ? "error"
-              : "ready"
-        }
-        history={rankHistoryQuery.data}
-        onRetry={() => {
-          void rankHistoryQuery.refetch();
-        }}
-      />
-      <PlayerBehavior behavior={summary.behavior} />
-
-      <ConsumerPlayerCommunity guildId={summary.guild.id} playerId={playerId} />
-
-      <CombinedPerformance
-        filters={props.filters}
-        onFiltersChange={props.onFiltersChange}
-        championPool={summary.championPool}
-        minGamesForRate={summary.minGamesForRate}
-        ranks={summary.ranks}
-        recentForm={summary.recentForm}
-        history={history}
-        historyFetching={historyQuery.isFetching}
-        historyRefetching={historyQuery.isRefetching}
-        entries={entries}
-        nextCursor={nextCursor}
-        historyPage={historyPage}
-        championSearch={championSearch}
-        onChampionSearchChange={(value) => {
-          setChampionSearch(value);
-          setHistoryCursors([undefined]);
-          setHistoryPage(0);
-        }}
-        playerId={playerId}
-        profileSearch={profileSearch}
-        onRetryHistory={() => {
-          void historyQuery.refetch();
-        }}
-        onPreviousHistory={() => {
-          setHistoryPage((page) => page - 1);
-        }}
-        onNextHistory={(cursor) => {
-          setHistoryCursors((cursors) => [
-            ...cursors.slice(0, historyPage + 1),
-            cursor,
-          ]);
-          setHistoryPage((page) => page + 1);
-        }}
-      />
+          <PlayerRankHistoryPanel
+            status={
+              rankHistoryQuery.isPending
+                ? "loading"
+                : rankHistoryQuery.isError
+                  ? "error"
+                  : "ready"
+            }
+            history={rankHistoryQuery.data}
+            onRetry={() => {
+              void rankHistoryQuery.refetch();
+            }}
+          />
+          <PlayerBehavior behavior={summary.behavior} />
+        </TabsContent>
+        <TabsContent value="community">
+          <ConsumerPlayerCommunity
+            guildId={summary.guild.id}
+            playerId={playerId}
+          />
+        </TabsContent>
+        <TabsContent value="overview" className="space-y-6">
+          <CombinedPerformance
+            onClearFilters={() => {
+              setParams({ queue: "all", tab: "overview" }, { replace: true });
+            }}
+            filters={props.filters}
+            onFiltersChange={props.onFiltersChange}
+            championPool={summary.championPool}
+            minGamesForRate={summary.minGamesForRate}
+            ranks={summary.ranks}
+            recentForm={summary.recentForm}
+            history={history}
+            historyFetching={historyQuery.isFetching}
+            historyRefetching={historyQuery.isRefetching}
+            entries={entries}
+            nextCursor={nextCursor}
+            historyPage={historyPage}
+            championSearch={championSearch}
+            onChampionSearchChange={historyState.setChampionSearch}
+            playerId={playerId}
+            profileSearch={profileSearch}
+            onRetryHistory={() => {
+              void historyQuery.refetch();
+            }}
+            onPreviousHistory={historyState.previous}
+            onNextHistory={historyState.next}
+          />
+        </TabsContent>
+      </Tabs>
     </ProfileShell>
   );
 }

@@ -1,6 +1,8 @@
+import type { DiscordChannelId } from "@scout-for-lol/data";
+import { useRouteGuildId } from "#src/lib/routes/route-params.ts";
 import { Loaded } from "@shepherdjerred/loaded";
 import { useState } from "react";
-import { Link, useNavigate, useParams } from "react-router";
+import { Link, useNavigate } from "react-router";
 import {
   useInfiniteQuery,
   useQuery,
@@ -31,7 +33,7 @@ import { LoadMore } from "#src/components/chrome/load-more.tsx";
 import { STALE_TIME_SLOW_LIST } from "#src/lib/query/stale-times.ts";
 
 function channelLabel(
-  channels: { id: string; name: string }[] | undefined,
+  channels: { id: DiscordChannelId; name: string }[] | undefined,
   channelId: string,
 ): string {
   const channel = channels?.find((candidate) => candidate.id === channelId);
@@ -43,7 +45,7 @@ function formatDate(value: Date | string): string {
 }
 
 export function PlayerList() {
-  const { guildId } = useParams();
+  const guildId = useRouteGuildId();
   const trpc = useTRPC();
   const navigate = useNavigate();
   const queryClient = useQueryClient();

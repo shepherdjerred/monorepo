@@ -1,6 +1,6 @@
 import {
-  DARE_V2_MAX_ELIGIBLE_GAMES,
-  DareTargetBindingV2Schema,
+  DARE_MAX_ELIGIBLE_GAMES,
+  DareTargetBindingSchema,
 } from "@scout-for-lol/data";
 import type { PlayerConfigEntry } from "@scout-for-lol/data";
 import { shouldCheckPlayer } from "#src/utils/polling-intervals.ts";
@@ -20,7 +20,7 @@ function checkedAtValue(account: MatchPollAccount): number {
 }
 
 export function matchHistoryReadCount(requiredForActiveDare: boolean): number {
-  return requiredForActiveDare ? DARE_V2_MAX_ELIGIBLE_GAMES : 5;
+  return requiredForActiveDare ? DARE_MAX_ELIGIBLE_GAMES : 5;
 }
 
 function uniquePollAccounts(
@@ -45,7 +45,7 @@ export function activeDareTargetPuuids(
 ): Set<string> {
   const result = new Set<string>();
   for (const target of targets) {
-    const accounts = DareTargetBindingV2Schema.shape.accounts.parse(
+    const accounts = DareTargetBindingSchema.shape.accounts.parse(
       JSON.parse(target.accounts),
     );
     for (const account of accounts) result.add(account.puuid);

@@ -5,11 +5,11 @@ import { customRecruitmentMessage } from "#src/customs/recruitment-message.ts";
 function snapshot(state: "RECRUITING" | "ENDED") {
   return CustomNightSnapshotSchema.parse({
     id: "00000000-0000-4000-8000-000000000001",
-    guildId: "1",
+    guildId: "100000000000000001",
     guildName: "Beta",
-    launchChannelId: "2",
-    voiceLobbyChannelId: "2",
-    hostDiscordId: "3",
+    launchChannelId: "200000000000000002",
+    voiceLobbyChannelId: "200000000000000002",
+    hostDiscordId: "300000000000000003",
     cohostDiscordIds: [],
     state,
     revision: 0,

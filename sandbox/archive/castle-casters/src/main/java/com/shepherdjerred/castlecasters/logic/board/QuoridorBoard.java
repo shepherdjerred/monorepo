@@ -39,6 +39,12 @@ public class QuoridorBoard {
         new BoardPiecesInitializer());
   }
 
+  public static QuoridorBoard fromState(BoardSettings settings,
+      java.util.Map<QuoridorPlayer, Coordinate> pawns, java.util.Map<Coordinate, Piece> pieces) {
+    return new QuoridorBoard(BoardLayout.from(settings, new BoardLayoutInitializer()),
+        BoardPieces.fromState(settings, pawns, pieces), settings);
+  }
+
   /**
    * Creates a new QuoridorBoard.
    */

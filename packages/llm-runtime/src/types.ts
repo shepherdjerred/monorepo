@@ -198,6 +198,12 @@ export type AggregateLlmUsage = {
   catalogCostUsd: number;
 };
 
+/** An image sent alongside the prompt to a vision-capable model. */
+export type LlmImageInput = {
+  data: Uint8Array;
+  mediaType: "image/png" | "image/jpeg" | "image/webp";
+};
+
 export type GenerateValidatedObjectInput<SCHEMA extends z.ZodType> = {
   model: string;
   schema: SCHEMA;
@@ -205,6 +211,12 @@ export type GenerateValidatedObjectInput<SCHEMA extends z.ZodType> = {
   schemaDescription?: string | undefined;
   system?: string | undefined;
   prompt: string;
+  /**
+   * Images sent after the prompt in one user message. The model must accept
+   * image input (catalog `inputModalities`); semantic retries keep the images
+   * and append the correction to the text part.
+   */
+  images?: readonly LlmImageInput[] | undefined;
   workload: string;
   sessionId?: string | undefined;
   traceContext?: RuntimeTraceContext | undefined;

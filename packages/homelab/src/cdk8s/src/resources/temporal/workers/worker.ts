@@ -10,10 +10,12 @@ import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import {
   createTemporalWorkerAuditRbac,
+  createVeleroR2AuditState,
   createTemporalWorkerTasknotesCanaryRbac,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/audit-rbac.ts";
 import { createTemporalAgentWorker } from "./agent-worker.ts";
 import { createTemporalWorkerCrdReaderRbac } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/crd-rbac.ts";
+import { createTemporalWorkerCiWorkspaceReaperRbac } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/ci-workspace-reaper-rbac.ts";
 import {
   glitterContextEnv,
   glitterCorpusEnv,
@@ -52,17 +54,38 @@ export function createTemporalWorkerDeployment(
     "temporal-worker-secret",
     onePasswordItem.name,
   );
-  const blueBubblesItem = new OnePasswordItem(
+  const fliptAuthItem = new OnePasswordItem(chart, "temporal-flipt-auth-1p", {
+    metadata: { name: "temporal-flipt-auth" },
+    spec: { itemPath: vaultItemPath("3mvuwmlazccxpq7tz7myqigtvq") },
+  });
+  const fliptAuthSecret = Secret.fromSecretName(
     chart,
-    "temporal-bluebubbles-1p",
-    {
-      spec: { itemPath: vaultItemPath("gnkfumzmerw725fhm7kck3rfuq") },
-    },
+    "temporal-flipt-auth-secret",
+    fliptAuthItem.name,
   );
-  const blueBubblesSecret = Secret.fromSecretName(
+  const argocdItem = new OnePasswordItem(chart, "temporal-argocd-admin-1p", {
+    spec: { itemPath: vaultItemPath("yikdwue26c7gdbk5ftbvaclkli") },
+  });
+  const bugsinkItem = new OnePasswordItem(chart, "temporal-bugsink-api-1p", {
+    spec: { itemPath: vaultItemPath("jeuqmwh3r4nwu2ivo4pa3gr7om") },
+  });
+  const argocdSecret = Secret.fromSecretName(
     chart,
-    "temporal-bluebubbles-secret",
-    blueBubblesItem.name,
+    "temporal-argocd-admin-secret",
+    argocdItem.name,
+  );
+  const bugsinkSecret = Secret.fromSecretName(
+    chart,
+    "temporal-bugsink-api-secret",
+    bugsinkItem.name,
+  );
+  const photonItem = new OnePasswordItem(chart, "temporal-photon-1p", {
+    spec: { itemPath: vaultItemPath("f67iy2i34gonqynkm2vtsvnueu") },
+  });
+  const photonSecret = Secret.fromSecretName(
+    chart,
+    "temporal-photon-secret",
+    photonItem.name,
   );
   const starlightBotItem = new OnePasswordItem(
     chart,
@@ -135,6 +158,19 @@ export function createTemporalWorkerDeployment(
     "temporal-seaweedfs-backup-secret",
     backupCredentialItem.name,
   );
+  const veleroR2AuditItem = new OnePasswordItem(
+    chart,
+    "temporal-velero-r2-audit-1p",
+    {
+      metadata: { name: "temporal-velero-r2-audit" },
+      spec: { itemPath: vaultItemPath("vz3yuhrsci5hkm5yhkpi5ufpzi") },
+    },
+  );
+  const veleroR2AuditSecret = Secret.fromSecretName(
+    chart,
+    "temporal-velero-r2-audit-secret",
+    veleroR2AuditItem.name,
+  );
   const openAiUsageMonitorItem = new OnePasswordItem(
     chart,
     "temporal-openai-usage-monitor-1p",
@@ -166,6 +202,7 @@ export function createTemporalWorkerDeployment(
   );
 
   createTemporalWorkerIngressReaderRbac(chart, [infraServiceAccount]);
+  createVeleroR2AuditState(chart, infraServiceAccount);
   createTemporalWorkerMaintenanceRbac(chart, [infraServiceAccount]);
   createTemporalMiningResetRbac(chart, infraServiceAccount);
 
@@ -180,6 +217,9 @@ export function createTemporalWorkerDeployment(
 
   // Read-only CRD access for homelab-crd-imports-daily. See ./crd-rbac.ts.
   createTemporalWorkerCrdReaderRbac(chart, [infraServiceAccount]);
+
+  // Deletes leaked Woodpecker step pods and workspace claims in woodpecker-ci.
+  createTemporalWorkerCiWorkspaceReaperRbac(chart, [infraServiceAccount]);
 
   const freshRssManifestVolume = Volume.fromConfigMap(
     chart,
@@ -224,7 +264,9 @@ export function createTemporalWorkerDeployment(
         secret: agentCodexCredential,
         key: "CODEX_AUTH_JSON_B64",
       }),
-      S3_ENDPOINT: EnvValue.fromSecretValue({ secret, key: "S3_ENDPOINT" }),
+      S3_ENDPOINT: EnvValue.fromValue(
+        "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
+      ),
       AWS_ACCESS_KEY_ID: EnvValue.fromSecretValue({
         secret,
         key: "AWS_ACCESS_KEY_ID",
@@ -246,7 +288,7 @@ export function createTemporalWorkerDeployment(
     createTemporalIngressWorkers(chart, {
       serverServiceName: props.serverServiceName,
       secret,
-      blueBubblesSecret,
+      photonSecret,
     });
 
   const workflowDeployments = createTemporalWorkflowWorkers(chart, {
@@ -333,13 +375,19 @@ export function createTemporalWorkerDeployment(
   } = createTemporalOperationsWorkers(chart, {
     serverServiceName: props.serverServiceName,
     secret,
+    fliptAuthSecret,
     scoutBryanBucksControlSecret,
     infraServiceAccount,
-    homelabAuditEnvironment: homelabAuditEnv(secret),
+    homelabAuditEnvironment: homelabAuditEnv(
+      secret,
+      argocdSecret,
+      bugsinkSecret,
+    ),
     talosConfigVolume,
     freshRssManifestVolume,
     freshRssCredentialVolume,
     backupSecret,
+    veleroR2AuditSecret,
     billingSecret: openAiUsageMonitorSecret,
   });
 

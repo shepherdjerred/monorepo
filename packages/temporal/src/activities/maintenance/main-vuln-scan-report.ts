@@ -10,18 +10,45 @@ export const MAIN_VULN_SCAN_TITLE = "Weekly Trivy vulnerability scan of main";
 
 const SCAN_RECEIPT_ID = "trivy-scan";
 
+type Vulnerability = MainVulnScanResult["vulnerabilities"][number];
+type GroupedVulnerability = Vulnerability & { targets: string[] };
+
+/** Repeated lockfiles are affected targets, not additional advisories. */
+function groupVulnerabilities(
+  vulnerabilities: readonly Vulnerability[],
+): GroupedVulnerability[] {
+  const groups = new Map<string, GroupedVulnerability>();
+  for (const vulnerability of vulnerabilities) {
+    const key = JSON.stringify([
+      vulnerability.vulnerabilityId,
+      vulnerability.pkgName,
+      vulnerability.installedVersion,
+      vulnerability.severity,
+      vulnerability.fixedVersion,
+    ]);
+    const existing = groups.get(key);
+    if (existing === undefined) {
+      groups.set(key, { ...vulnerability, targets: [vulnerability.target] });
+    } else if (!existing.targets.includes(vulnerability.target)) {
+      existing.targets.push(vulnerability.target);
+    }
+  }
+  return [...groups.values()].map((group) => ({
+    ...group,
+    targets: group.targets.sort(),
+  }));
+}
+
 function findingSummary(
   vulnerability: MainVulnScanResult["vulnerabilities"][number],
 ): string {
   return `${vulnerability.vulnerabilityId}: ${vulnerability.pkgName}@${vulnerability.installedVersion} (${vulnerability.severity})`;
 }
 
-function findingDetail(
-  vulnerability: MainVulnScanResult["vulnerabilities"][number],
-): string {
+function findingDetail(vulnerability: GroupedVulnerability): string {
   return [
     vulnerability.title,
-    `Target: ${vulnerability.target}`,
+    `Targets (${String(vulnerability.targets.length)}): ${vulnerability.targets.join(", ")}`,
     vulnerability.fixedVersion === undefined
       ? "No fixed version published yet"
       : `Fixed in: ${vulnerability.fixedVersion}`,
@@ -34,7 +61,7 @@ function findingDetail(
 export function countCriticalVulnerabilities(
   result: Pick<MainVulnScanResult, "vulnerabilities">,
 ): number {
-  return result.vulnerabilities.filter(
+  return groupVulnerabilities(result.vulnerabilities).filter(
     (vulnerability) => vulnerability.severity === "CRITICAL",
   ).length;
 }
@@ -48,7 +75,9 @@ export function buildMainVulnScanReport(
   startedAt: string,
   result: MainVulnScanResult,
 ): ActivityReportInput {
-  const total = result.vulnerabilities.length;
+  const groups = groupVulnerabilities(result.vulnerabilities);
+  const total = groups.length;
+  const affectedRows = result.vulnerabilities.length;
   const critical = countCriticalVulnerabilities(result);
   const high = total - critical;
   const clean = total === 0;
@@ -61,14 +90,14 @@ export function buildMainVulnScanReport(
     verdict: clean ? "clear" : "attention",
     headline: clean
       ? `Trivy found no HIGH/CRITICAL vulnerabilities on main@${result.repoSha.slice(0, 12)}.`
-      : `Trivy found ${String(critical)} CRITICAL and ${String(high)} HIGH vulnerabilities on main@${result.repoSha.slice(0, 12)}.`,
+      : `Trivy found ${String(critical)} CRITICAL and ${String(high)} HIGH advisory/package/version combinations across ${String(affectedRows)} affected package/target rows on main@${result.repoSha.slice(0, 12)}.`,
     checks: [
       {
         id: "trivy-scan-completed",
         label: "Trivy filesystem scan of main completed",
         required: true,
         status: "passed",
-        summary: `Scanned main@${result.repoSha.slice(0, 12)} with the warm Woodpecker Trivy DB; ${String(total)} HIGH/CRITICAL findings.`,
+        summary: `Scanned main@${result.repoSha.slice(0, 12)} with the warm Woodpecker Trivy DB; ${String(total)} HIGH/CRITICAL advisory/package/version combinations across ${String(affectedRows)} affected package/target rows.`,
         evidenceReceiptIds: [SCAN_RECEIPT_ID],
       },
     ],
@@ -83,7 +112,7 @@ export function buildMainVulnScanReport(
         excerpt: result.excerpt,
       },
     ],
-    findings: result.vulnerabilities.map((vulnerability) => ({
+    findings: groups.map((vulnerability) => ({
       section:
         vulnerability.severity === "CRITICAL"
           ? "Critical vulnerabilities"
@@ -99,7 +128,7 @@ export function buildMainVulnScanReport(
     actions: clean
       ? []
       : [
-          "Upgrade the affected packages, or record a justified ignore in .trivyignore.",
+          "Upgrade available fixes and assess advisories without published fixes; retain upstream follow-up for unresolved findings.",
         ],
     provenance: {
       source: "https://github.com/shepherdjerred/monorepo",

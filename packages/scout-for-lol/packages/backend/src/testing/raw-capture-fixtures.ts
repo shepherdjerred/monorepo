@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   RawCurrentGameInfoSchema,
   RawMatchSchema,
@@ -38,7 +39,7 @@ export async function loadRawMatchFixture(): Promise<RawMatch> {
  * tell two otherwise identical timelines apart.
  */
 export function rawTimelineFixture(
-  matchId: string,
+  matchId: RiotMatchId,
   overrides: { frameIntervalMs?: number } = {},
 ): RawTimeline {
   return RawTimelineSchema.parse({
@@ -67,7 +68,8 @@ export function rawCurrentGameInfoFixture(): RawCurrentGameInfo {
     participants: [
       {
         championId: 157,
-        puuid: "test-puuid",
+        puuid:
+          "test-puuid00000000000000000000000000000000000000000000000000000000000000000000",
         teamId: 100,
         riotId: "Player#NA1",
         spell1Id: 4,

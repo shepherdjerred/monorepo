@@ -1,4 +1,3 @@
-import { z } from "zod";
 import {
   CompetitionDescriptionSchema,
   CompetitionConfigurationSchema,
@@ -26,6 +25,7 @@ import {
   SeasonIdSchema,
   SubscriptionFilterSpecSchema,
 } from "@scout-for-lol/data";
+import { z } from "zod";
 import {
   CompetitionCronSchema,
   CompetitionScheduledUpdatesSchema,
@@ -155,9 +155,6 @@ export const ReportFormValueSchema = z.object({
 export const ReportAiInstructionsFormSchema = z.object({
   instructions: ReportAiEditRequestSchema.shape.instructions,
 });
-
-export type ReportFormValue = z.input<typeof ReportFormValueSchema>;
-
 const IntegerInputSchema = z
   .string()
   .trim()

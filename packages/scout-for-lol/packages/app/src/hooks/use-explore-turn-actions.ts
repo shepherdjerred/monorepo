@@ -12,6 +12,7 @@ import { shouldOpenStartedExploreConversation } from "#src/lib/explore/explore-n
  */
 export function useExploreTurnActions(params: {
   conversationId: string | null;
+  model?: "gpt-6-luna" | "gpt-6.1-sol" | undefined;
   messages: ExploreMessage[];
   runs: ExploreRunsContextValue;
   /** Kept current by the route on every render; read at submit + settle. */
@@ -26,6 +27,7 @@ export function useExploreTurnActions(params: {
 } {
   const {
     conversationId,
+    model,
     messages,
     runs,
     locationKeyRef,
@@ -39,6 +41,7 @@ export function useExploreTurnActions(params: {
       const submittedLocationKey = locationKeyRef.current;
       void (async () => {
         const started = await runs.startTurn({
+          ...(model === undefined ? {} : { model }),
           conversationId,
           question: text,
           attach: { kind: "leaf" },
@@ -69,6 +72,7 @@ export function useExploreTurnActions(params: {
     },
     [
       conversationId,
+      model,
       locationKeyRef,
       messages,
       navigate,
@@ -84,6 +88,7 @@ export function useExploreTurnActions(params: {
       // id cannot name, which is why `attach` exists.
       void (async () => {
         const started = await runs.startTurn({
+          ...(model === undefined ? {} : { model }),
           conversationId,
           question: edited,
           attach:
@@ -96,7 +101,7 @@ export function useExploreTurnActions(params: {
         if (started !== null) track("explore_turn_started", { kind: "edit" });
       })();
     },
-    [conversationId, messages, runs],
+    [conversationId, model, messages, runs],
   );
 
   const handleRegenerate = useCallback(
@@ -108,6 +113,7 @@ export function useExploreTurnActions(params: {
       const parentId = message.parentId;
       void (async () => {
         const started = await runs.startTurn({
+          ...(model === undefined ? {} : { model }),
           conversationId,
           question: null,
           attach: { kind: "message", messageId: parentId },
@@ -119,7 +125,7 @@ export function useExploreTurnActions(params: {
         }
       })();
     },
-    [conversationId, messages, runs],
+    [conversationId, model, messages, runs],
   );
 
   // Answer a question whose turn was interrupted. Attaches to the question
@@ -129,6 +135,7 @@ export function useExploreTurnActions(params: {
     (question: ExploreMessage) => {
       void (async () => {
         const started = await runs.startTurn({
+          ...(model === undefined ? {} : { model }),
           conversationId,
           question: null,
           attach: { kind: "message", messageId: question.id },
@@ -138,7 +145,7 @@ export function useExploreTurnActions(params: {
         if (started !== null) track("explore_turn_started", { kind: "retry" });
       })();
     },
-    [conversationId, messages, runs],
+    [conversationId, model, messages, runs],
   );
 
   return { ask, handleEdit, handleRegenerate, handleRetry };

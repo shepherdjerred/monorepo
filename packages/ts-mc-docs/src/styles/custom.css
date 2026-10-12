@@ -1,12 +1,715 @@
-/* Storm brand accents for Starlight. */
-:root {
-  --sl-color-accent-low: #003b38;
-  --sl-color-accent: #00d0c6;
-  --sl-color-accent-high: #a8fffb;
+/* The native Flexile frame and this surface share storm-theme/layout.json. */
+html[data-storm-surface="docs"] {
+  --sl-text-body: var(--storm-body-font-size);
+  --sl-text-sm: 12px;
+  --sl-text-xs: 11px;
+  --sl-text-h1: 24px;
+  --sl-text-h2: 20px;
+  --sl-text-h3: 17px;
+  --sl-content-width: 100%;
+  --sl-content-pad-x: 0px;
+  --sl-content-pad-y: 0px;
 }
-
-:root[data-theme="light"] {
-  --sl-color-accent-low: #c2f5f2;
-  --sl-color-accent: #007a74;
-  --sl-color-accent-high: #06302e;
+html[data-storm-surface="docs"] body {
+  font-family: "Trebuchet MS", Helvetica, Arial, sans-serif;
+  font-size: var(--storm-body-font-size);
+  line-height: 1.4;
+  margin: 0;
+  color: var(--storm-text-color);
+}
+.stormDocsPage {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.stormDocsInner {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: var(--storm-page-width);
+  padding-inline: var(--storm-frame-padding);
+  margin-inline: auto;
+}
+.stormDocsPageHeader {
+  position: sticky;
+  top: calc(-1 * var(--storm-masthead-height));
+  z-index: 20;
+}
+.stormDocsHeader {
+  width: 100%;
+  font-size: var(--storm-body-font-size);
+  line-height: 1.4;
+  border-top: 3px solid color-mix(in srgb, var(--storm-chrome-bg), #000 10%);
+}
+.stormDocsTop {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 103px;
+  padding-block: 10px;
+}
+.stormDocsTop > a {
+  flex: 0 0 auto;
+  width: var(--storm-logo-width);
+  max-width: 50%;
+}
+.stormDocsLogo {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 0 2px #fff);
+}
+.stormDocsServer {
+  margin-left: auto;
+  max-width: 410px;
+  padding: 12px;
+  background: #00000021;
+  border-top: 1px solid #ffffff33;
+  border-radius: var(--storm-border-radius);
+  font-style: italic;
+  text-shadow: 0 1px color-mix(in srgb, var(--storm-chrome-bg), #000 15%);
+}
+.stormDocsServer p {
+  margin: 0;
+}
+.stormDocsNavInner {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 35px;
+}
+.stormDocsHeader .stormDocsNav {
+  padding: 0;
+  display: flex;
+  justify-content: start;
+  gap: 3px;
+}
+.stormDocsNav > a,
+.stormDocsNav summary {
+  padding: var(--storm-nav-padding-y) var(--storm-nav-padding-x);
+  display: block;
+  font-weight: bold;
+  cursor: pointer;
+  text-decoration: none;
+  text-shadow: 0 1px #00000059;
+}
+.stormDocsNav [aria-current="page"] {
+  background: var(--storm-sub-nav-bg);
+  border-radius: 4px 4px 0 0;
+  box-shadow: inset 0 1px #fff3;
+}
+.stormDocsHeader details {
+  position: relative;
+}
+.stormDocsNav summary {
+  position: relative;
+  padding-right: 35px;
+  list-style: none;
+}
+.stormDocsNav summary::marker {
+  content: "";
+}
+.stormDocsNav summary::-webkit-details-marker {
+  display: none;
+}
+.stormDocsNav summary::after {
+  content: "▾";
+  position: absolute;
+  right: 11px;
+  color: #fff8;
+}
+.stormDocsNav a:hover,
+.stormDocsNav summary:hover {
+  background: #00000026;
+}
+.stormDocsActions {
+  display: flex;
+  gap: 12px;
+  align-items: end;
+}
+.stormDocsActions [data-storm-account] {
+  display: flex;
+}
+.stormDocsActions a,
+.stormDocsActions summary,
+.stormDocsActions button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  color: var(--storm-chrome-text-color);
+  background: #0000001f;
+  border: 0;
+  border-top: 1px solid #ffffff24;
+  border-radius: 4px 4px 0 0;
+  font: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.stormDocsActions [data-storm-account] > a {
+  font-weight: bold;
+}
+.stormDocsActions [data-storm-account] > a + a {
+  border-left: 1px solid #0000001f;
+}
+.stormDocsActions a:hover,
+.stormDocsActions summary:hover,
+.stormDocsActions button:hover {
+  background: #0003;
+}
+.stormDocsActions img {
+  border-radius: 3px;
+}
+.stormDocsHeader button[data-open-modal] {
+  width: auto;
+  min-height: 0;
+  height: auto;
+  line-height: 1.4;
+  color: var(--storm-chrome-text-color);
+  background: #0000001f;
+  box-shadow: none;
+}
+.stormDocsHeader button[data-open-modal] kbd {
+  display: none;
+}
+.stormDocsHeader button[data-open-modal] svg {
+  width: 18px;
+  height: 18px;
+}
+.stormNavMenu,
+.stormAccountMenu {
+  position: absolute;
+  top: 100%;
+  min-width: 185px;
+  z-index: 100;
+  background: var(--storm-content-bg);
+  color: var(--storm-text-color);
+  border: 1px solid var(--storm-border-color-heavy);
+  border-radius: 4px;
+  box-shadow: 0 4px 18px #0005;
+  padding: 5px;
+}
+.stormAccountMenu {
+  right: 0;
+}
+html[data-storm-surface="docs"] .stormDocsHeader .stormNavMenu a,
+html[data-storm-surface="docs"] .stormDocsHeader .stormAccountMenu a {
+  display: block;
+  padding: 8px 10px;
+  background: transparent;
+  color: var(--storm-link-color);
+  border: 0;
+  border-radius: 3px;
+  text-shadow: none;
+}
+html[data-storm-surface="docs"] .stormDocsHeader .stormNavMenu a:hover,
+html[data-storm-surface="docs"] .stormDocsHeader .stormAccountMenu a:hover {
+  color: var(--storm-link-hover-color);
+  background: var(--storm-content-highlight-bg);
+}
+.stormDocsSubNav {
+  height: 10px;
+  background: var(--storm-sub-nav-bg);
+  box-shadow: inset 0 1px #fff3;
+  border-bottom: 1px solid #0002;
+}
+.stormDocsGarland {
+  height: 58px;
+  background-size: auto 54px;
+}
+html[data-storm-theme="normal"] .stormDocsGarland {
+  height: 0;
+}
+.stormDocsBody {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--storm-sidebar-width);
+  gap: var(--storm-sidebar-gap);
+  align-items: start;
+  padding-block: 25px 20px;
+  flex: 1;
+  min-height: 55vh;
+}
+html[data-storm-surface="docs"] .stormDocsMain {
+  min-width: 0;
+  background: var(--storm-content-bg);
+  border: 1px solid var(--storm-border-color);
+  border-radius: var(--storm-border-radius);
+  box-shadow: 0 2px 12px #0000001f;
+  padding: var(--storm-panel-padding);
+}
+.stormDocsArticle .content-panel {
+  padding: 0;
+  border: 0;
+}
+.stormDocsArticle .sl-container {
+  max-width: none;
+  margin: 0;
+}
+.stormDocsArticle .content-panel:first-child {
+  margin-bottom: 20px;
+}
+.stormDocsArticle h1 {
+  font-size: 24px;
+  line-height: 1.4;
+  text-align: left;
+  font-weight: bold;
+}
+.stormDocsArticle .sl-markdown-content {
+  font-size: var(--storm-body-font-size);
+  line-height: 1.4;
+}
+.stormDocsArticle .sl-markdown-content :is(p, li, td, th) {
+  font-size: inherit;
+  line-height: 1.5;
+}
+.stormDocsArticle .sl-markdown-content :is(h2, h3, h4) {
+  margin-top: 24px;
+  margin-bottom: 12px;
+}
+.stormDocsArticle .sl-markdown-content :is(pre, table) {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.stormDocsArticle .sl-markdown-content a {
+  color: var(--storm-link-color);
+}
+.stormDocsArticle .sl-markdown-content a:hover {
+  color: var(--storm-link-hover-color);
+}
+.stormDocsArticle footer {
+  font-size: 12px;
+}
+.stormDocsArticle footer .meta {
+  margin-top: 24px;
+}
+.stormDocsArticle footer a {
+  color: var(--storm-link-color);
+}
+.stormDocsArticle footer a:hover {
+  color: var(--storm-link-hover-color);
+}
+.stormDocsArticle footer .pagination-links a {
+  padding: 12px;
+  background: var(--storm-content-alt-bg);
+  border-color: var(--storm-border-color);
+  box-shadow: none;
+}
+.stormDocsArticle footer .link-title {
+  font-size: 15px;
+}
+.stormDocsSidebar {
+  min-width: 0;
+  font-size: 12px;
+}
+.stormDocsBlock {
+  background: var(--storm-content-bg);
+  border: 1px solid var(--storm-border-color);
+  border-radius: var(--storm-border-radius);
+  box-shadow: 0 2px 10px #00000017;
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+.stormDocsBlockHeader,
+.stormDocsToc h2 {
+  margin: 0;
+  padding: 9px 12px;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--storm-major-heading-text-color);
+  background: var(--storm-major-heading-bg);
+  border-bottom: 1px solid var(--storm-border-color);
+}
+.stormDocsSidebarContent {
+  padding: 10px 12px;
+}
+.stormDocsSidebar :is(a, summary, span) {
+  font-size: 12px;
+}
+.stormDocsSidebar a {
+  color: var(--storm-link-color);
+  border-radius: 3px;
+}
+.stormDocsSidebar a:hover {
+  color: var(--storm-link-hover-color);
+  background: var(--storm-content-highlight-bg);
+}
+.stormDocsSidebar a[aria-current="page"] {
+  color: var(--storm-selected-item-color);
+  background: var(--storm-selected-item-bg-color);
+}
+.stormDocsSidebar ul {
+  padding-left: 0;
+}
+.stormDocsSidebar li + li {
+  margin-top: 3px;
+}
+.stormDocsSidebar details {
+  border-color: var(--storm-border-color-light);
+}
+.stormDocsToc starlight-toc > nav > ul {
+  padding: 10px 12px;
+}
+.stormDocsSidebar .md\:sl-hidden {
+  display: none;
+}
+.stormDocsFooter {
+  position: relative;
+  background: #1b1b1b;
+  border-top: 5px solid var(--storm-chrome-bg);
+  color: #b7b7b7;
+  font-size: 12px;
+  padding-block: 15px;
+}
+.stormDocsFooter a {
+  color: #d5d5d5;
+  text-decoration: none;
+}
+.stormDocsFooter a:hover {
+  color: #fff;
+}
+.stormDocsFooterLinks {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.stormDocsFooterLinks nav {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+.stormDocsFooter p {
+  margin: 5px 0 0;
+}
+.stormDocsFooter .stormThemeControl {
+  z-index: 25;
+}
+.stormDocsFooter .stormThemeControl summary {
+  padding: 0;
+  font-weight: normal;
+  cursor: pointer;
+}
+.stormDocsFooter .stormThemeControl form {
+  top: auto;
+  bottom: calc(100% + 12px);
+  left: 0;
+  right: auto;
+  max-width: calc(100vw - 24px);
+}
+.stormDocsMenuToggle,
+.stormDocsSmallLogo,
+.stormDocsQuickNew,
+.stormDocsMore {
+  display: none !important;
+}
+.stormDocsDrawer {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: 280px;
+  max-width: calc(100vw - 30px);
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: var(--storm-chrome-text-color);
+  background: var(--storm-chrome-bg);
+  box-shadow: 2px 0 5px #0004;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  font: inherit;
+}
+.stormDocsDrawer::backdrop {
+  background: #0004;
+}
+html[data-storm-menu-open] {
+  overflow: hidden;
+}
+.stormDocsDrawerHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+  font-size: 18px;
+  line-height: 1.4;
+  color: #fff;
+  background: #141414d9;
+  border-block: 1px solid #ffffff26;
+}
+.stormDocsDrawerHeader button {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+.stormDocsDrawerNav > a,
+.stormDocsDrawerNav summary,
+.stormDocsDrawerNav details > a,
+.stormDocsDrawerAccount a {
+  display: block;
+  padding: 10px;
+  color: inherit;
+  font-size: 15px;
+  line-height: 21px;
+  text-decoration: none;
+  border-bottom: 1px solid #0003;
+}
+.stormDocsDrawerNav summary {
+  cursor: pointer;
+  list-style: none;
+}
+.stormDocsDrawerNav > a,
+.stormDocsDrawerNav summary {
+  font-weight: bold;
+}
+.stormDocsDrawerNav summary::-webkit-details-marker {
+  display: none;
+}
+.stormDocsDrawerNav summary::after {
+  content: "⌄";
+  float: right;
+}
+.stormDocsDrawerNav details[open] summary::after {
+  content: "⌃";
+}
+.stormDocsDrawerNav details > a {
+  padding-left: 25px;
+}
+.stormDocsDrawerNav [aria-current="page"] {
+  background: #141414d9;
+}
+.stormDocsDrawerNav a:hover,
+.stormDocsDrawerNav summary:hover,
+.stormDocsDrawerAccount a:hover {
+  color: inherit;
+  background: #0003;
+}
+.stormDocsDrawer .stormDocsSidebar {
+  display: block;
+}
+.stormDocsDrawer .stormDocsBlock {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.stormDocsDrawer .stormDocsBlockHeader,
+.stormDocsDrawer .stormDocsToc h2 {
+  padding: 10px;
+  color: #fff;
+  background: #141414d9;
+  border-block: 1px solid #ffffff26;
+  font-size: 15px;
+}
+.stormDocsDrawer .stormDocsSidebarContent {
+  padding: 0;
+}
+.stormDocsDrawer .stormDocsSidebar :is(a, summary) {
+  display: block;
+  padding: 10px;
+  color: var(--storm-chrome-text-color);
+  font-size: 15px;
+  line-height: 21px;
+  border-radius: 0;
+}
+.stormDocsDrawer .stormDocsSidebar a[aria-current="page"] {
+  background: var(--storm-sub-nav-bg);
+}
+.stormDocsDrawer .stormDocsSidebar span {
+  font-size: inherit;
+  color: inherit;
+}
+.stormDocsDrawer .stormDocsSidebar li + li {
+  margin-top: 0;
+}
+.stormDocsDrawer .stormDocsSidebar ul ul {
+  padding-left: 15px;
+}
+.stormDocsDrawer .stormDocsToc starlight-toc > nav > ul {
+  padding: 0;
+}
+.archive-previews {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-block: 1rem;
+}
+.archive-previews figure {
+  margin: 0;
+  min-width: 0;
+}
+.archive-previews img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 20rem;
+  object-fit: contain;
+  background: var(--sl-color-gray-6);
+  border: 1px solid var(--sl-color-gray-5);
+  border-radius: 0.35rem;
+}
+.archive-previews figcaption {
+  margin-block-start: 0.5rem;
+  font-size: 12px;
+}
+@media (max-width: 1050px) {
+  .stormDocsSecondary {
+    display: none;
+  }
+  .stormDocsMore {
+    display: block !important;
+  }
+  .stormDocsServer {
+    max-width: 330px;
+    font-size: 12px;
+  }
+}
+@media (max-width: 800px) {
+  .stormDocsBody {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .stormDocsSidebar {
+    display: none;
+  }
+  .stormDocsMenuToggle {
+    flex: 0 0 47px;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 47px;
+    height: calc(1.4em + 16px);
+    padding: 0;
+    margin-right: 5px;
+    border: 0;
+    border-radius: 3px;
+    color: var(--storm-text-color);
+    background: var(--storm-content-alt-bg);
+    cursor: pointer;
+  }
+  html[data-storm-surface="docs"] .stormDocsMain {
+    padding: 12px;
+  }
+}
+@media (max-width: 650px) {
+  .stormDocsSubNav {
+    display: none;
+  }
+  .stormDocsTop {
+    flex-direction: column;
+    gap: 0;
+    min-height: 70px;
+  }
+  .stormDocsNavInner {
+    min-height: 45px;
+    align-items: center;
+  }
+  .stormDocsMenuToggle {
+    height: 40px;
+  }
+  .stormDocsTop > a {
+    max-width: 90%;
+    align-self: flex-start;
+  }
+  .stormDocsServer {
+    margin: 8px 0 0;
+    max-width: 100%;
+    text-align: center;
+  }
+  .stormDocsNavInner {
+    padding-inline: 4px;
+    gap: 0;
+  }
+  .stormDocsHeader .stormDocsNav {
+    display: none !important;
+  }
+  .stormDocsSmallLogo {
+    display: block !important;
+    width: 100px;
+    flex: 0 1 100px;
+    min-width: 0;
+  }
+  .stormDocsSmallLogo img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .stormDocsQuickNew {
+    display: flex !important;
+  }
+  .stormDocsActions {
+    flex: 0 0 auto;
+    gap: 0;
+    margin-left: auto;
+  }
+  .stormDocsActions a,
+  .stormDocsActions summary,
+  .stormDocsActions button {
+    padding: 8px 10px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+  .stormDocsActions {
+    padding-top: 1px;
+  }
+  .stormDocsActions [data-storm-account] > a + a {
+    display: none;
+  }
+  .stormDocsActions [data-storm-account] summary {
+    display: block;
+    max-width: 90px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .stormDocsActions [data-storm-account] summary img {
+    vertical-align: middle;
+    margin-right: 5px;
+  }
+  .stormDocsQuickNew,
+  .stormDocsHeader button[data-open-modal] {
+    justify-content: center;
+    width: 36.7px;
+    height: 34.2px;
+    background: transparent;
+  }
+  .stormDocsQuickNew svg {
+    width: 13px;
+    height: 13px;
+  }
+  .stormDocsHeader button[data-open-modal] svg {
+    width: 13px;
+    height: 13px;
+  }
+  .stormDocsHeader button[data-open-modal] {
+    font-size: 0;
+    gap: 0;
+  }
+  .stormDocsBody {
+    padding-top: 15px;
+  }
+  .stormDocsArticle h1 {
+    font-size: 21px;
+  }
+  .archive-previews {
+    grid-template-columns: 1fr;
+  }
+}
+@media print {
+  .stormDocsPageHeader,
+  .stormDocsSidebar,
+  .stormDocsFooter {
+    display: none;
+  }
+  .stormDocsBody {
+    display: block;
+  }
 }

@@ -1,3 +1,4 @@
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -30,7 +31,7 @@ describe("fetchMatchIdsForTimeRange", () => {
       .mockResolvedValueOnce(undefined);
 
     const result = fetchMatchIdsForTimeRange({
-      puuid: "a".repeat(78),
+      puuid: LeaguePuuidSchema.parse("a".repeat(78)),
       region: "AMERICA_NORTH",
       startTimeEpochSeconds: 1,
       endTimeEpochSeconds: 2,

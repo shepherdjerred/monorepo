@@ -11,9 +11,18 @@ import { z } from "zod";
  */
 export const PipelineSchema = z.looseObject({
   event: z.string(),
+  /** Native Go slices encode absent reasons as null. */
+  event_reason: z.array(z.string()).nullish(),
   branch: z.string(),
   commit: z.string(),
   ref: z.string(),
+  /** PR source:target branches; branch itself is the target on GitHub PRs. */
+  refspec: z.string().default(""),
+  /** Woodpecker's pipeline number, also the boundary for superseding older PRs. */
+  number: z.number().int().nonnegative().default(0),
+  /** Native review fields are parsed for contract visibility, never trusted. */
+  reviewed: z.number().int().nonnegative().default(0),
+  reviewed_by: z.string().default(""),
   /**
    * Account that owns the change: the pusher, or the account that opened the
    * pull request. Authenticated by the forge, not taken from commit metadata,
@@ -38,6 +47,8 @@ export const PipelineSchema = z.looseObject({
    * missing, and `authorizePipeline` does not rely on it alone.
    */
   from_fork: z.boolean().default(false),
+  /** Native signed webhook state; omitted by Woodpecker when false. */
+  pr_draft: z.boolean().default(false),
   /**
    * Forge URL for the change being built (the pull request, or the commit on
    * a push). Stamped onto each step pod so a measured pod links back to the
@@ -45,9 +56,8 @@ export const PipelineSchema = z.looseObject({
    */
   forge_url: z.string(),
   /**
-   * Files touched by this push or pull request. This is what replaces
-   * Buildkite's `if_changed` inputs: lane selection reads it directly instead
-   * of shelling out to git in a bootstrap pod.
+   * Files touched by this push or pull request. Lane selection reads it
+   * directly instead of shelling out to git in a bootstrap pod.
    */
   changed_files: z.array(z.string()).default([]),
   /** Operator parameters from a manual trigger, signed with this request. */
@@ -64,19 +74,4 @@ export const ConfigExtensionRequestSchema = z.looseObject({
   repo: RepoSchema,
   pipeline: PipelineSchema,
 });
-
-export type ConfigExtensionRequest = z.infer<
-  typeof ConfigExtensionRequestSchema
->;
 export type Pipeline = z.infer<typeof PipelineSchema>;
-
-export type GeneratedConfig = {
-  /** Filename Woodpecker shows for the workflow. */
-  readonly name: string;
-  /** Workflow YAML. */
-  readonly data: string;
-};
-
-export type ConfigExtensionResponse = {
-  readonly configs: readonly GeneratedConfig[];
-};

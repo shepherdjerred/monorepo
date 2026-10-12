@@ -20,6 +20,7 @@ export function TeamCard({
   return (
     <div
       style={{
+        boxSizing: "border-box",
         width,
         flexShrink: 0,
         display: "flex",

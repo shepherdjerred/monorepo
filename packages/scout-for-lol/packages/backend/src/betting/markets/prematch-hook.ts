@@ -1,3 +1,5 @@
+import { spectatorGameMatchId } from "#src/durable/match/match-identity.ts";
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type { ActionRowBuilder, ButtonBuilder } from "discord.js";
 import type {
   DiscordGuildId,
@@ -37,7 +39,7 @@ export type BucksPrematchAttachment = {
   rows: ActionRowBuilder<ButtonBuilder>[];
   /** The public live-market summary appended to the message content. */
   footer: string;
-  matchId: string;
+  matchId: RiotMatchId;
 };
 
 /**
@@ -57,7 +59,7 @@ export async function prepareBucksPrematch(
   },
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<BucksPrematchAttachment> {
-  const matchId = `${input.gameInfo.platformId}_${input.gameInfo.gameId.toString()}`;
+  const matchId = spectatorGameMatchId(input.gameInfo);
   const trackedAliasByPuuid = new Map(
     input.trackedPlayers.map((player) => [
       player.league.leagueAccount.puuid,
@@ -139,7 +141,7 @@ export async function prepareBucksPrematch(
  * duplicate `computeClosesAt` on the hot path to save one edit.
  */
 export function bucksPrematchFurniture(input: {
-  matchId: string;
+  matchId: RiotMatchId;
   gameInfo: RawCurrentGameInfo;
   trackedAliasByPuuid: ReadonlyMap<string, string>;
 }): Pick<BucksPrematchAttachment, "rows" | "footer"> {

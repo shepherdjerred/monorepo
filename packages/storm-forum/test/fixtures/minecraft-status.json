@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 2,
+  "state": "online",
+  "checkedAt": 1000,
+  "java": { "state": "online", "version": "26.2", "verifiedAt": 1000 },
+  "bedrock": { "state": "online", "version": "26.51", "verifiedAt": 1000 },
+  "players": { "maximum": 20, "names": [".Bedrock Player", "Jerred"] }
+}

@@ -1,3 +1,4 @@
+import type { DiscordChannelId } from "@scout-for-lol/domain/identity/discord.ts";
 import { z } from "zod";
 import {
   COMPETITIVE_PROGRESSION_CATALOG,
@@ -25,21 +26,21 @@ const QueueFamilyArraySchema = HallQueueFamilyIdSchema.array();
 const RecordArraySchema = HallRecordIdSchema.array();
 
 type HallSettingsRow = {
-  readonly guildId: string;
+  readonly guildId: DiscordGuildId;
   readonly catalogVersion: number;
-  readonly channelId: string | null;
+  readonly channelId: DiscordChannelId | null;
   readonly enabledQueueFamilies: string;
   readonly enabledRecords: string;
 };
 
 export type HallBaselineRequest = {
-  readonly guildId: string;
+  readonly guildId: DiscordGuildId;
   readonly revision: number;
   readonly workflowId: string;
   readonly reused: boolean;
 };
 
-export function defaultHallSettings(guildId: string): HallSettings {
+export function defaultHallSettings(guildId: DiscordGuildId): HallSettings {
   return HallSettingsSchema.parse({
     guildId,
     catalogVersion: COMPETITIVE_PROGRESSION_CATALOG_VERSION,
@@ -71,7 +72,7 @@ export function hallSettingsFromRow(row: HallSettingsRow): HallSettings {
 
 export async function getHallSettings(
   db: ExtendedPrismaClient,
-  guildId: string,
+  guildId: DiscordGuildId,
 ): Promise<HallSettings> {
   const parsedGuildId = DiscordGuildIdSchema.parse(guildId);
   const row = await db.hallSettings.findUnique({
@@ -278,7 +279,7 @@ export async function updateHallSettings(
 export async function requestFullHallBaseline(
   db: ExtendedPrismaClient,
   options: {
-    readonly guildId: string;
+    readonly guildId: DiscordGuildId;
     readonly actorDiscordId: string;
     readonly stage: ScoutStage;
     readonly reuseActive?: boolean;
@@ -322,7 +323,7 @@ export async function requestFullHallBaseline(
 export async function requestConfiguredFullHallBaseline(
   tx: Db,
   options: {
-    readonly guildId: string;
+    readonly guildId: DiscordGuildId;
     readonly actorDiscordId: string;
     readonly stage: ScoutStage;
     readonly reuseActive?: boolean;

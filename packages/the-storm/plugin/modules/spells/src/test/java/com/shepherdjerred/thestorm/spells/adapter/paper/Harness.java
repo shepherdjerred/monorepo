@@ -3,11 +3,14 @@ package com.shepherdjerred.thestorm.spells.adapter.paper;
 import com.shepherdjerred.thestorm.core.config.ConfigFiles;
 import com.shepherdjerred.thestorm.core.schedule.Cancellable;
 import com.shepherdjerred.thestorm.core.schedule.Scheduler;
+import com.shepherdjerred.thestorm.core.world.AuditedBlockChanges;
 import com.shepherdjerred.thestorm.spells.domain.config.SpellsConfig;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.InstantSource;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 import org.bukkit.plugin.Plugin;
@@ -27,6 +30,9 @@ final class Harness implements AutoCloseable {
           SpellsConfig.class);
   final Clock clock = new Clock();
   final Async async = new Async(new InlineScheduler(), plugin.getComponentLogger());
+  final FakeProtection protection = new FakeProtection();
+  final List<AuditedBlockChanges.Change> recordedChanges = new ArrayList<>();
+  final AuditedBlockChanges changes = new AuditedBlockChanges(recordedChanges::add);
 
   @Override
   public void close() {

@@ -1,3 +1,4 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import {
   afterAll,
   afterEach,
@@ -81,7 +82,7 @@ async function trackPlayer(input: {
   serverId: DiscordGuildId;
   discordId: DiscordAccountId | null;
   alias: string;
-  puuid: string;
+  puuid: LeaguePuuid;
 }) {
   const now = new Date();
   await db.player.create({
@@ -147,7 +148,7 @@ async function assertRanked5sParticipationBonus() {
     serverId: ENABLED_GUILD,
     discordId: DiscordAccountIdSchema.parse("16050917270473109"),
     alias: "ranked-5s-player",
-    puuid: plainLoserPuuid,
+    puuid: LeaguePuuidSchema.parse(plainLoserPuuid),
   });
 
   const awards = await awardBucksForMatch(withQueue(710), db);
@@ -198,7 +199,7 @@ describe("the announcement instruction an earning records", () => {
       serverId: ENABLED_GUILD,
       discordId: DiscordAccountIdSchema.parse("16050917270473101"),
       alias: "mvp",
-      puuid: mvpPuuid,
+      puuid: LeaguePuuidSchema.parse(mvpPuuid),
     });
 
     // A plain error is still absorbed here — only a typed checkpoint failure
@@ -235,7 +236,7 @@ describe("the announcement instruction an earning records", () => {
       serverId: ENABLED_GUILD,
       discordId: DiscordAccountIdSchema.parse("16050917270473103"),
       alias: "mvp",
-      puuid: mvpPuuid,
+      puuid: LeaguePuuidSchema.parse(mvpPuuid),
     });
 
     await expect(
@@ -248,7 +249,7 @@ describe("the announcement instruction an earning records", () => {
       serverId: ENABLED_GUILD,
       discordId: DiscordAccountIdSchema.parse("16050917270473102"),
       alias: "mvp",
-      puuid: mvpPuuid,
+      puuid: LeaguePuuidSchema.parse(mvpPuuid),
     });
 
     const awards = await awardBucksForMatch(
@@ -272,7 +273,7 @@ describe("awardBucksForMatch", () => {
       serverId: ENABLED_GUILD,
       discordId: DiscordAccountIdSchema.parse("16050917270473100"),
       alias: "mvp",
-      puuid: mvpPuuid,
+      puuid: LeaguePuuidSchema.parse(mvpPuuid),
     });
 
     const awards = await awardBucksForMatch(fixture, db);
@@ -300,7 +301,7 @@ describe("awardBucksForMatch", () => {
       serverId: ENABLED_GUILD,
       discordId: DiscordAccountIdSchema.parse("16050917270473910"),
       alias: "classic-mvp",
-      puuid: mvpPuuid,
+      puuid: LeaguePuuidSchema.parse(mvpPuuid),
     });
 
     const awards = await awardBucksForMatch(withQueue(4310), db);
@@ -315,7 +316,7 @@ describe("awardBucksForMatch", () => {
       serverId: ENABLED_GUILD,
       discordId: DiscordAccountIdSchema.parse("16050917270473101"),
       alias: "winner",
-      puuid: plainWinner.puuid,
+      puuid: LeaguePuuidSchema.parse(plainWinner.puuid),
     });
 
     const awards = await awardBucksForMatch(fixture, db);
@@ -333,7 +334,7 @@ describe("awardBucksForMatch", () => {
       serverId: ENABLED_GUILD,
       discordId: DiscordAccountIdSchema.parse("16050917270473102"),
       alias: "loser",
-      puuid: plainLoser.puuid,
+      puuid: LeaguePuuidSchema.parse(plainLoser.puuid),
     });
 
     const awards = await awardBucksForMatch(fixture, db);
@@ -357,7 +358,7 @@ describe("awardBucksForMatch additional cases", () => {
       serverId: ENABLED_GUILD,
       discordId: DiscordAccountIdSchema.parse("16050917270473110"),
       alias: "clash-mvp",
-      puuid: mvpPuuid,
+      puuid: LeaguePuuidSchema.parse(mvpPuuid),
     });
 
     const awards = await awardBucksForMatch(withQueue(700), db);
@@ -399,7 +400,7 @@ describe("awardBucksForMatch additional cases", () => {
       serverId: ENABLED_GUILD,
       discordId: DiscordAccountIdSchema.parse("16050917270473103"),
       alias: "winner",
-      puuid: plainWinner.puuid,
+      puuid: LeaguePuuidSchema.parse(plainWinner.puuid),
     });
 
     const clashMatch = withQueue(700);
@@ -424,13 +425,13 @@ describe("awardBucksForMatch additional cases", () => {
       serverId: ENABLED_GUILD,
       discordId: DiscordAccountIdSchema.parse("16050917270473104"),
       alias: "winner",
-      puuid: plainWinner.puuid,
+      puuid: LeaguePuuidSchema.parse(plainWinner.puuid),
     });
     await trackPlayer({
       serverId: DISABLED_GUILD,
       discordId: DiscordAccountIdSchema.parse("16050917270473104"),
       alias: "winner",
-      puuid: plainWinner.puuid,
+      puuid: LeaguePuuidSchema.parse(plainWinner.puuid),
     });
 
     const awards = await awardBucksForMatch(fixture, db);
@@ -454,7 +455,7 @@ describe("awardBucksForMatch additional cases", () => {
       serverId: DISABLED_GUILD,
       discordId: DiscordAccountIdSchema.parse("16050917270473105"),
       alias: "winner",
-      puuid: plainWinner.puuid,
+      puuid: LeaguePuuidSchema.parse(plainWinner.puuid),
     });
 
     expect(await awardBucksForMatch(fixture, db)).toEqual([]);
@@ -466,7 +467,7 @@ describe("awardBucksForMatch additional cases", () => {
       serverId: ENABLED_GUILD,
       discordId: null,
       alias: "unlinked",
-      puuid: plainWinner.puuid,
+      puuid: LeaguePuuidSchema.parse(plainWinner.puuid),
     });
 
     expect(await awardBucksForMatch(fixture, db)).toEqual([]);
@@ -478,7 +479,7 @@ describe("awardBucksForMatch additional cases", () => {
       serverId: ENABLED_GUILD,
       discordId: DiscordAccountIdSchema.parse("16050917270473106"),
       alias: "winner",
-      puuid: plainWinner.puuid,
+      puuid: LeaguePuuidSchema.parse(plainWinner.puuid),
     });
 
     // 450 is ARAM: a real game, but deliberately outside the economy.
@@ -491,7 +492,7 @@ describe("awardBucksForMatch additional cases", () => {
       serverId: ENABLED_GUILD,
       discordId: DiscordAccountIdSchema.parse("16050917270473911"),
       alias: "classic-mayhem",
-      puuid: plainWinner.puuid,
+      puuid: LeaguePuuidSchema.parse(plainWinner.puuid),
     });
 
     expect(await awardBucksForMatch(withQueue(2450), db)).toEqual([]);
@@ -503,7 +504,7 @@ describe("awardBucksForMatch additional cases", () => {
       serverId: ENABLED_GUILD,
       discordId: DiscordAccountIdSchema.parse("16050917270473107"),
       alias: "winner",
-      puuid: plainWinner.puuid,
+      puuid: LeaguePuuidSchema.parse(plainWinner.puuid),
     });
 
     expect(await awardBucksForMatch(asRemake(), db)).toEqual([]);
@@ -515,7 +516,7 @@ describe("awardBucksForMatch additional cases", () => {
       serverId: ENABLED_GUILD,
       discordId: DiscordAccountIdSchema.parse("16050917270473108"),
       alias: "winner",
-      puuid: plainWinner.puuid,
+      puuid: LeaguePuuidSchema.parse(plainWinner.puuid),
     });
     await awardBucksForMatch(fixture, db);
 
@@ -559,7 +560,7 @@ describe("earning retry", () => {
       serverId: ENABLED_GUILD,
       discordId: DiscordAccountIdSchema.parse("16050917270473111"),
       alias: "retry-player",
-      puuid: plainWinner.puuid,
+      puuid: LeaguePuuidSchema.parse(plainWinner.puuid),
     });
 
     expect(await awardBucksForMatch(fixture, db)).toEqual([]);
@@ -626,7 +627,7 @@ describe("earning retry", () => {
       serverId: ENABLED_GUILD,
       discordId: originalDiscordId,
       alias: "retry-player",
-      puuid: plainWinner.puuid,
+      puuid: LeaguePuuidSchema.parse(plainWinner.puuid),
     });
 
     expect(await awardBucksForMatch(fixture, db)).toEqual([]);

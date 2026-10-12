@@ -1,11 +1,12 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import { riotClient } from "#src/league/api/api.ts";
 import { getAccountsWithState } from "#src/database/player-accounts.ts";
 import { fetchMatchData } from "#src/league/tasks/postmatch/match-data-fetcher.ts";
 import {
-  MatchIdSchema,
+  RiotMatchIdSchema,
   LeaguePuuidSchema,
   platformToRegionalRoute,
-  type MatchId,
+  type RiotMatchId,
   type Region,
 } from "@scout-for-lol/data";
 import { createLogger } from "#src/logger.ts";
@@ -30,10 +31,16 @@ export type BackfillResult = {
   totalMatchesSaved: number;
   totalMatchesFailed: number;
   accountsProcessed: number;
+  /**
+   * End of the window every account and match was fully archived through, or
+   * undefined when nothing was scanned or any fetch failed. Only this may be
+   * recorded as backfilled: the scan stops 30 minutes before `endTime`.
+   */
+  completeThrough: Date | undefined;
 };
 
 export type MatchHistoryTimeRangeQuery = {
-  puuid: string;
+  puuid: LeaguePuuid;
   region: Region;
   startTimeEpochSeconds: number;
   endTimeEpochSeconds: number;
@@ -53,7 +60,7 @@ function sleep(ms: number): Promise<void> {
 
 export async function fetchMatchIdsForTimeRange(
   query: MatchHistoryTimeRangeQuery,
-): Promise<MatchId[]> {
+): Promise<RiotMatchId[]> {
   const {
     puuid,
     region,
@@ -63,7 +70,7 @@ export async function fetchMatchIdsForTimeRange(
   } = query;
   const regionalRoute = platformToRegionalRoute(region);
   const parsedPuuid = LeaguePuuidSchema.parse(puuid);
-  const allMatchIds: MatchId[] = [];
+  const allMatchIds: RiotMatchId[] = [];
   let offset = 0;
   let hasMore = true;
 
@@ -72,7 +79,7 @@ export async function fetchMatchIdsForTimeRange(
     const matchIds = await callRiotOrUndefined(
       {
         source: "backfill-match-list",
-        schema: z.array(MatchIdSchema),
+        schema: z.array(RiotMatchIdSchema),
         context: { puuid, region, offset },
       },
       () =>
@@ -117,6 +124,7 @@ export async function backfillMatchesToS3(
     totalMatchesSaved: 0,
     totalMatchesFailed: 0,
     accountsProcessed: 0,
+    completeThrough: undefined,
   };
 
   downtimeDetectedTotal.inc({ severity: "backfill" });
@@ -143,9 +151,9 @@ export async function backfillMatchesToS3(
   }
 
   // Collect all unique match IDs across all accounts
-  const uniqueMatchIds = new Set<MatchId>();
+  const uniqueMatchIds = new Set<RiotMatchId>();
   // Track which accounts each match belongs to (for alias metadata)
-  const matchAccountAliases = new Map<MatchId, string[]>();
+  const matchAccountAliases = new Map<RiotMatchId, string[]>();
 
   for (const { config: account } of accountsWithState) {
     const puuid = account.league.leagueAccount.puuid;
@@ -240,6 +248,13 @@ export async function backfillMatchesToS3(
     }
 
     await sleep(DELAY_BETWEEN_MATCH_FETCHES_MS);
+  }
+
+  if (
+    result.accountsProcessed === accountsWithState.length &&
+    result.totalMatchesFailed === 0
+  ) {
+    result.completeThrough = new Date(endTimeEpochSeconds * 1000);
   }
 
   logger.info(

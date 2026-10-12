@@ -3,12 +3,16 @@ import {
   reportLakeCompactionRowsTotal,
   reportLakeLastPublishTimestamp,
 } from "#src/metrics/reports/report-lake.ts";
-import { lakeSchemaFingerprint } from "#src/report-lake/schema.ts";
+import {
+  layoutFingerprint,
+  type ReportLakeLayout,
+} from "#src/report-lake/schema-upgrade/layout.ts";
 
 export type CompactionSummary = {
   buildId: string;
   tier: "fold" | "rebuild";
   matchRows: number;
+  rawDocumentRows?: number;
   matchTeamRows: number;
   matchTeamBanRows: number;
   prematchRows: number;
@@ -28,15 +32,14 @@ export type CompactionSummary = {
 export async function writeCompactionManifest(
   buildDir: string,
   summary: Omit<CompactionSummary, "durationMs">,
-  puuidRemapFingerprint: string,
+  layout: ReportLakeLayout = "current",
 ): Promise<void> {
   await Bun.write(
     path.join(buildDir, "manifest.json"),
     JSON.stringify(
       {
         ...summary,
-        schemaFingerprint: lakeSchemaFingerprint(),
-        puuidRemapFingerprint,
+        schemaFingerprint: layoutFingerprint(layout),
         builtAt: new Date().toISOString(),
       },
       null,
@@ -49,6 +52,7 @@ export function publishCompactionMetrics(
   summary: Omit<CompactionSummary, "durationMs">,
 ): void {
   for (const [table, rows] of [
+    ["raw_documents", summary.rawDocumentRows ?? 0],
     ["matches", summary.matchRows],
     ["match_teams", summary.matchTeamRows],
     ["match_team_bans", summary.matchTeamBanRows],

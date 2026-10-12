@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1-labs@sha256:63e440b412b6acba117974e793b7e7f702e58ee65e044bdff1b8d388ee0d853b
+# syntax=docker/dockerfile:1-labs@sha256:ad43eec41369d9ef94412c0d1eb3203d12218d01da225afc92a3aeba3a0e7796
 # temporal-worker image. Build context is the REPO ROOT (single Bun workspace,
 # one root bun.lock, isolated linker). Built via `bun run docker:build` in this
 # package (which passes `-f Dockerfile ../..`).
@@ -34,7 +34,6 @@ COPY --parents \
   package.json bun.lock bunfig.toml patches/ scripts/package.json \
   packages/*/package.json packages/*/packages/*/package.json \
   packages/docs/wiki/package.json \
-  packages/the-storm/brain/package.json \
   packages/homelab/src/cdk8s/package.json \
   packages/homelab/src/helm-types/package.json \
   ./
@@ -43,11 +42,16 @@ RUN bun install --frozen-lockfile \
   --filter '@shepherdjerred/toolkit'
 
 # ── build: gitignored artifacts (shared dist + compiled toolkit) ────────────
+# Toolkit needs the shared daemon helpers, MC protocol exports, and their
+# shared lighting schema at compile time. Workspace manifests are in deps.
 FROM deps AS build
 COPY --parents \
   tsconfig.base.json \
   packages/scout-for-lol/tsconfig.base.json \
   packages/temporal \
+  packages/the-storm/server/owned/plugins/TheStorm/plot-reconcile.json \
+  packages/homelab/src/domain-registry.ts \
+  packages/homelab/src/domain-registry.json \
   packages/feature-flags \
   packages/code-review \
   packages/glitter-context \
@@ -57,7 +61,11 @@ COPY --parents \
   packages/scout-for-lol/packages/data \
   packages/seaweedfs-backup \
   packages/toolkit \
+  packages/unix-socket-daemon/src \
+  packages/mc-harness/src/protocol \
+  packages/mc-build/src/registry/lighting.ts \
   packages/config \
+  packages/sentry-config \
   packages/ops-model \
   packages/ops-clients \
   packages/version-catalog/package.json \
@@ -92,7 +100,6 @@ COPY --parents \
   package.json bun.lock bunfig.toml patches/ scripts/package.json \
   packages/*/package.json packages/*/packages/*/package.json \
   packages/docs/wiki/package.json \
-  packages/the-storm/brain/package.json \
   packages/homelab/src/cdk8s/package.json \
   packages/homelab/src/helm-types/package.json \
   ./
@@ -110,11 +117,11 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # renovate: datasource=github-releases depName=cli/cli
 ARG GH_CLI_VERSION=2.96.0
 # renovate: datasource=github-releases depName=kubernetes/kubectl
-ARG KUBECTL_VERSION=v1.37.0
+ARG KUBECTL_VERSION=v1.37.1
 # renovate: datasource=github-releases depName=github/github-mcp-server
 ARG GITHUB_MCP_SERVER_VERSION=1.3.0
 # renovate: datasource=github-releases depName=siderolabs/talos
-ARG TALOSCTL_VERSION=v1.14.1
+ARG TALOSCTL_VERSION=v1.14.2
 # renovate: datasource=github-releases depName=opentofu/opentofu
 ARG TOFU_VERSION=1.12.3
 # renovate: datasource=github-releases depName=argoproj/argo-cd
@@ -128,7 +135,7 @@ ARG TEMPORAL_CLI_VERSION=1.7.3
 # renovate: datasource=github-releases depName=grafana/gcx
 ARG GCX_VERSION=1.0.0
 # renovate: datasource=pypi depName=uv
-ARG UV_VERSION=0.12.3
+ARG UV_VERSION=0.13.0
 # renovate: datasource=github-releases depName=aquasecurity/trivy
 ARG TRIVY_VERSION=0.72.0
 # lychee tags carry a `lychee-v` prefix, so the pinned value is the full tag.
@@ -137,10 +144,10 @@ ARG LYCHEE_VERSION=lychee-v0.24.2
 # renovate: datasource=github-releases depName=Kometa-Team/Kometa
 ARG KOMETA_VERSION=2.5.1
 # Shared local/CI Postgres pin — keep in lockstep with .mise.toml's
-# "ubi:theseus-rs/postgresql-binaries" entry: the bot-clone backend tests must
+# "github:theseus-rs/postgresql-binaries" entry: the bot-clone backend tests must
 # run against the same server binaries here as on dev/CI machines.
 # renovate: datasource=github-releases depName=theseus-rs/postgresql-binaries
-ARG POSTGRESQL_BINARIES_VERSION=16.15.0
+ARG POSTGRESQL_BINARIES_VERSION=18.6.0
 ARG KOMETA_COMMIT=1b43f5f113242059c74330bebed041d5f94f50c7
 
 # --- Base system deps: ca-certificates, curl, git, libxml2, and the pod-local agent firewall ---
@@ -155,7 +162,7 @@ ARG KOMETA_COMMIT=1b43f5f113242059c74330bebed041d5f94f50c7
 # hadolint ignore=DL3008
 RUN set -e; \
     apt-get update -qq; \
-    apt-get install -y -qq --no-install-recommends bubblewrap ca-certificates curl git iptables libxml2 procps util-linux; \
+    apt-get install -y -qq --no-install-recommends bubblewrap ca-certificates curl git iptables libxml2 procps socat tini util-linux; \
     rm -rf /var/lib/apt/lists/*
 
 # --- gh CLI (per-arch release tarball) ---
@@ -419,8 +426,12 @@ COPY --from=prod-deps /app/ /app/
 COPY --parents \
   tsconfig.base.json \
   packages/temporal \
+  packages/the-storm/server/owned/plugins/TheStorm/plot-reconcile.json \
+  packages/homelab/src/domain-registry.ts \
+  packages/homelab/src/domain-registry.json \
   packages/temporal-observability \
   packages/config \
+  packages/sentry-config \
   packages/feature-flags \
   packages/code-review \
   packages/glitter-context \
@@ -465,9 +476,15 @@ ENV BUN_INSTALL_CACHE_DIR=/tmp/bun-install-cache
 # Run from the package dir so Bun resolves this package's tsconfig + imports map
 # (the `#generated/*`, `#activities/*`, … subpath imports).
 WORKDIR /app/packages/temporal
+# Reap orphaned provider/tool descendants before the dedicated UID is reused.
+ENTRYPOINT ["/usr/bin/tini", "-s", "--"]
 CMD ["bun", "src/worker.ts"]
 
 FROM runtime AS smoke
+# Prove the bot-clone test database works with the repository's selected
+# PostgreSQL major, not only that the worker and binary can print a version.
+# Keep this throwaway database and tool manifest out of the production stage.
+COPY .mise.toml /tmp/temporal-smoke.mise.toml
 # The smoke harness ships in CI context only — the scoped source COPY
 # excludes ci/, so stage it here (never in the pushed image stage).
 COPY ci/scripts/images/smoke-app-in-image.ts /app/ci/scripts/images/smoke-app-in-image.ts
@@ -480,6 +497,14 @@ ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}
 # points at /tmp so any tool cache has a writable target.
 USER 1000:1000
 ENV HOME=/tmp
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+RUN bun -e 'const pin = Bun.TOML.parse(await Bun.file("/tmp/temporal-smoke.mise.toml").text()).tools["github:theseus-rs/postgresql-binaries"].version; const result = Bun.spawnSync(["postgres", "--version"]); if (result.exitCode !== 0 || !result.stdout.toString().startsWith("postgres (PostgreSQL) " + pin.split(".")[0] + ".")) throw new Error("Temporal PostgreSQL binaries must match the repository major");' \
+    && initdb -D /tmp/temporal-pg-smoke -U smoke --auth=trust --encoding=UTF8 --no-locale --data-checksums \
+    && pg_ctl -D /tmp/temporal-pg-smoke -w -t 30 -l /tmp/temporal-pg-smoke.log -o "-c listen_addresses='' -k /tmp -p 5489" start \
+    && trap 'pg_ctl -D /tmp/temporal-pg-smoke -m fast -w stop' EXIT \
+    && createdb -h /tmp -p 5489 -U smoke temporal_smoke \
+    && [ "$(psql -h /tmp -p 5489 -U smoke -d temporal_smoke -v ON_ERROR_STOP=1 -At -c "SELECT current_setting('data_checksums')")" = "on" ] \
+    && [ "$(psql -h /tmp -p 5489 -U smoke -d temporal_smoke -v ON_ERROR_STOP=1 -At -c "CREATE TABLE smoke (value integer); INSERT INTO smoke VALUES (42); SELECT value FROM smoke;" | tail -1)" = "42" ]
 RUN bun /app/ci/scripts/images/smoke-app-in-image.ts
 
 FROM runtime AS image

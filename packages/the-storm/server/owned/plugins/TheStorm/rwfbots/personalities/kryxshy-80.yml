@@ -1,0 +1,80 @@
+id: kryxshy-80
+name: Kryxshy_80
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0OTE5NjYwNCwKICAicHJvZmlsZUlkIiA6ICIyODlmYmYwZGViMDU0MTI5YWZlYzBhMWQzMDBlOTgwYyIsCiAgInByb2ZpbGVOYW1lIiA6ICJqb2hubnlsaWtlcGllMiIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9kNTNkOWJlMTVhNGVhMmUzMGY2NmUwZjIxM2FmZmIzNmQ0ZWZjNGQwYThjZTY3NDhjZGM5YjllNTBlY2NlYzA0IgogICAgfQogIH0KfQ=="
+  signature: "ZgrqbeCDiq1hsTp+nD0VHRf5gt2hBmSebalrMVoQgqRsWZMOjV3tCOp5ZVt8nCctet860Hb6z6MxhhEY2WmIAllWN+hP5PWe99lGs0CajjMXcGHhtshYv3DJZlHcVncg9MAshRjRWFYiFeuKyfsYc+OB0TB27s/o7EepGRftYeqiHedlwncRyY6CqYAHRQ0WtQ09MbxRjMuYe98cLA6yNkt0SNkV7pPNLpfO2o/gkB+imxTVmwEi8hunym3DiK6knKROb0ycyMf0kuhl38TJTAN3HicrlIxOQUvmiCOugnGE1G74+7xDfnTQwpxJ9cD9WfgctuSWb54K6gFpoB1h7Jl5i49Som0fAV/8fkRCrMFU/MM/x2nvC/nBJY9KSA8Hk2VlBuBBfiDXIlxirrB2rx4YyXResNgCOAH51E8EC+K5O/reTg4cPACA8JmVQm67j9Yu6r/mn6HrCXTxSSvfuNjn8iAwDEFkBvKjrku868pXSk8gr23OSTiiUm/Xeoiq2HLpCU5QZvYwdHbskNd7PhazybNFb549PejivAUufMDaDPORKibzVaANmMCLjzO/8W+cJzSwJyiud2EkjALWy7y3BNqBK7BqXtiMJqc3azphdLu6efpC0IjhtJx48bdVS5eWeplIuaRjvDlyQ6MyfuMgYB5aSzr1+g56fREeQ9M="
+skill: 0.763
+archetype: hunter
+leverOffsets:
+  aimErrorDeg: -0.72
+  turnRateDegPerTick: 0.23
+  predictionQuality: 1.1
+  awarenessRadius: 1.18
+  technique: -1.01
+  aggression: 0.95
+kits:
+  trooper: 0.62
+  longbow: 0.57
+  shortbow: 0.75
+  ghost: 0.23
+roles:
+  rotate: 0.59
+  hunt: 1
+style:
+  aggression: 0.7
+  patience: 0.4
+  teamplay: 0.19
+  risk: 0.55
+voice:
+  tone:
+    - eager
+    - nervous
+    - earnest
+  verbosity: chatty
+  style: anxious tracker who narrates every footprint, apologises, then gets the kill anyway
+lines:
+  greet:
+    - hi everyone! I'll find them, I promise
+    - ok ok ok I'm ready. mostly ready
+    - "{team}, I'm going hunting, please don't laugh"
+  onKill:
+    - "oh! got you {victim}, sorry, good game"
+    - "I found {victim}! I actually found them"
+    - "tracked you three rooms, {victim}. sorry!"
+  onDeath:
+    - "{killer} saw me first. that's fair"
+    - "eep. gg {killer}"
+    - I heard you, I just panicked
+  onPlant:
+    - "I lit {bomb}?? is that allowed? it is? ok!"
+    - "{bomb} is armed, I'm leaving now"
+  onDefuse:
+    - "{bomb} defused! my hands are shaking"
+    - "got {bomb}, sorry I took so long"
+  onWin:
+    - "we won!! thank you {team}"
+    - gg, that was scary and great
+  onLoss:
+    - "sorry {team}, I'll track better"
+    - gg, I'm so sorry
+  onLastAlive:
+    - oh no. ok. I can do this
+    - last one. breathing. hunting
+  taunt:
+    - I can hear your footsteps, just so you know
+    - you left tracks by the bridge, sorry
+    - please come out, I'm nervous
+  lobby:
+    - hi! um, does anyone mind if I take hunt again?
+    - sorry, I already counted the footsteps in spawn
+    - "I'll bring the shortbow, if that's okay with {team}"
+    - good luck everyone! sorry in advance to the other team
+    - practising my tracking on the lobby chickens. there are no chickens
+quirks:
+  - says_sorry
+  - calls_everything
+rivals:
+  - dustyninja34
+bio: Too polite to brag and too good at tracking to stop. Apologises to every victim, usually mid-combo. Mentors DustyNinja34, who has decided they are rivals instead.
+batch: 2
+retired: false

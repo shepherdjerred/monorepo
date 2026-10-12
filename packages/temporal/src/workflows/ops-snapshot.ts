@@ -7,11 +7,11 @@ import {
 import type { OpsActivities } from "#activities/ops/ops-activities.ts";
 import type {
   OpsCollectorOutcome,
-  OpsDigestKind,
   OpsPublishSummary,
 } from "#activities/ops/ops-publish.ts";
 import type { SourceId } from "@shepherdjerred/ops-model/snapshot.ts";
-import { TASK_QUEUES } from "#shared/task-queues.ts";
+import type { DigestKind as OpsDigestKind } from "@shepherdjerred/ops-model/digest.ts";
+import { TASK_QUEUES, type TaskQueue } from "#shared/task-queues.ts";
 
 type CollectorName = {
   [K in keyof OpsActivities]: K extends `collectOps${string}` ? K : never;
@@ -37,44 +37,56 @@ export const OPS_COLLECTORS: readonly (readonly [SourceId, CollectorName])[] = [
   ["logs", "collectOpsLogs"],
   ["traces", "collectOpsTraces"],
   ["maintenance", "collectOpsMaintenance"],
+  ["temporal", "collectOpsTemporal"],
   ["ai", "collectOpsAi"],
 ];
 
 // A snapshot is superseded every five minutes, so a collector gets one quick
 // retry and then reports its source as failed rather than holding the run.
-const collectors = proxyActivities<OpsActivities>({
-  taskQueue: TASK_QUEUES.INFRA,
-  startToCloseTimeout: "60 seconds",
-  retry: {
-    maximumAttempts: 2,
-    initialInterval: "5 seconds",
-    maximumInterval: "5 seconds",
-  },
-});
+function activitiesOn(activityQueue: TaskQueue) {
+  const collectors = proxyActivities<OpsActivities>({
+    taskQueue: activityQueue,
+    startToCloseTimeout: "60 seconds",
+    retry: {
+      maximumAttempts: 2,
+      initialInterval: "5 seconds",
+      maximumInterval: "5 seconds",
+    },
+  });
 
-const { assembleAndPublishOpsSnapshot } = proxyActivities<OpsActivities>({
-  taskQueue: TASK_QUEUES.INFRA,
-  startToCloseTimeout: "30 seconds",
-  retry: {
-    maximumAttempts: 3,
-    initialInterval: "5 seconds",
-    backoffCoefficient: 2,
-    maximumInterval: "20 seconds",
-  },
-});
+  const { assembleAndPublishOpsSnapshot } = proxyActivities<OpsActivities>({
+    taskQueue: activityQueue,
+    startToCloseTimeout: "30 seconds",
+    retry: {
+      maximumAttempts: 3,
+      initialInterval: "5 seconds",
+      backoffCoefficient: 2,
+      maximumInterval: "20 seconds",
+    },
+  });
 
-// The dashboard renders and sends the digest and is idempotent per period,
-// so a retried trigger never sends twice.
-const { triggerOpsDigest } = proxyActivities<OpsActivities>({
-  taskQueue: TASK_QUEUES.INFRA,
-  startToCloseTimeout: "2 minutes",
-  retry: {
-    maximumAttempts: 3,
-    initialInterval: "30 seconds",
-    backoffCoefficient: 2,
-    maximumInterval: "2 minutes",
-  },
-});
+  // The dashboard renders and sends the digest and is idempotent per period,
+  // so a retried trigger never sends twice.
+  const { triggerOpsDigest } = proxyActivities<OpsActivities>({
+    taskQueue: activityQueue,
+    startToCloseTimeout: "2 minutes",
+    retry: {
+      maximumAttempts: 3,
+      initialInterval: "30 seconds",
+      backoffCoefficient: 2,
+      maximumInterval: "2 minutes",
+    },
+  });
+  return { collectors, assembleAndPublishOpsSnapshot, triggerOpsDigest };
+}
+
+const legacyActivities = activitiesOn(TASK_QUEUES.INFRA);
+const isolatedActivities = activitiesOn(TASK_QUEUES.OPS);
+export const OPS_QUEUE_PATCH = "ops-isolated-activity-queue";
+
+function activitiesForRun() {
+  return patched(OPS_QUEUE_PATCH) ? isolatedActivities : legacyActivities;
+}
 
 function failureReason(error: unknown): string {
   if (error instanceof ActivityFailure && error.cause !== undefined) {
@@ -89,13 +101,19 @@ function failureReason(error: unknown): string {
  * source as not collected, which keeps their replay deterministic.
  */
 export const OPS_TRACES_PATCH = "ops-traces-collector";
+export const OPS_TEMPORAL_PATCH = "ops-temporal-schedules-collector";
 
 export async function runOpsSnapshot(): Promise<OpsPublishSummary> {
+  const { collectors, assembleAndPublishOpsSnapshot } = activitiesForRun();
   const collectTraces = patched(OPS_TRACES_PATCH);
+  const collectTemporal = patched(OPS_TEMPORAL_PATCH);
   const outcomes = await Promise.all(
     OPS_COLLECTORS.map(
       async ([source, collector]): Promise<OpsCollectorOutcome> => {
-        if (source === "traces" && !collectTraces) {
+        if (
+          (source === "traces" && !collectTraces) ||
+          (source === "temporal" && !collectTemporal)
+        ) {
           return {
             source,
             ok: false,
@@ -117,8 +135,7 @@ export async function runOpsSnapshot(): Promise<OpsPublishSummary> {
   return await assembleAndPublishOpsSnapshot({ outcomes });
 }
 
-export async function runOpsDigest(input: {
-  kind: OpsDigestKind;
-}): Promise<{ kind: OpsDigestKind }> {
+export async function runOpsDigest(input: { kind: OpsDigestKind }) {
+  const { triggerOpsDigest } = activitiesForRun();
   return await triggerOpsDigest(input.kind);
 }

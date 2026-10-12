@@ -47,6 +47,14 @@ export async function createGickupDeployment(chart: Chart) {
     },
     strategy: DeploymentStrategy.recreate(),
   });
+  // Hot reload retains per-repository gauges for removed repositories. Recreate the
+  // single process on config changes so retired repository labels disappear.
+  deployment.podMetadata.addAnnotation(
+    "checksum/gickup-config",
+    new Bun.CryptoHasher("sha256")
+      .update(JSON.stringify(gickupConfig.data))
+      .digest("hex"),
+  );
 
   const backupVolume = new ZfsSataVolume(chart, "gickup-backup-pvc", {
     storage: Size.gibibytes(256),

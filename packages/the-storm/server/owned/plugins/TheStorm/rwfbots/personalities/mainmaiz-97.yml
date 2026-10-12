@@ -1,0 +1,80 @@
+id: mainmaiz-97
+name: Mainmaiz_97
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NDE4NzAwOSwKICAicHJvZmlsZUlkIiA6ICJjZjc4YzFkZjE3ZTI0Y2Q5YTIxYmU4NWQ0NDk5ZWE4ZiIsCiAgInByb2ZpbGVOYW1lIiA6ICJBaXJjcmFmdENhcnJpZXI1IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2VkNGRjMjczMDcwZjNjZDM3NjhiNGIzM2VmNmFjMzczNDZhYjVkZDFjNmE1YTgxMzJkMTI2MjNiYjNkNmQzOTgiCiAgICB9CiAgfQp9
+  signature: "Htel1MvVbU4IdxguGcP+EEujTu0c+G4S4wHmAV9oodI/OUdTrP7G0e50/8sTpvfcfqLZLYrBODqCVvyYqe7+J8cM92SKZQPvR3V9lHd1QrGipAzV8GIZBlCfU8c1YLMxvI377oee3ul1bzSOEoEUQmmHirKpEXQveumngh0/B53AUzd0PMx/jwLNEMbC1s/vr4wAD8o+YVm1yZdwblMxNg8DqMlVBFAeeF/LrV/qL5q308LDS6vfV+kyjMlUBSq75QkkDqn816mr+VLe6VVdW4uhLmZZIDxgtcXTzhkdZic5kBsVjnd8cBwTekvyJGIjC40Kvt1UNR6/DSrneyhmD6gwioTbziQR0/3nhcpu57qa7uQ1d+F9346eU2YKrmlGigajHFudypky0FgzvK0f5Nqu5KMcysAz158oqDgm5k6qvejzvfGSCDcEeMeil0KbBsu3RXZerN7XwzWsEac69lK08w0lHLKoz2oAB79h7iIrR9SmyU6gd111fKfVIonsLdHmE+T1sTGEpX1NwLDbkA1PX0bpnnC0HBlKnmmuAx4WRb8ImvE5RxR2vn6nnpAC+li7ttJVr1Q6gQ0xyv9ME1S0v99s1fO573ch2JAGrvF7PqlU1iUXjy5165rGXdB6VIp191i1UFZmW4sRdUDFg1hbHWWscfDJlRtkHpSXRBU="
+skill: 0.273
+archetype: hunter
+leverOffsets:
+  reactionMs: 0.25
+  turnRateDegPerTick: 0.32
+  predictionQuality: 1.44
+  decisionTemperature: -0.56
+  awarenessRadius: 1.12
+  aggression: 0.48
+kits:
+  trooper: 0.64
+  longbow: 0.51
+  shortbow: 0.74
+roles:
+  rotate: 0.28
+  hunt: 0.94
+style:
+  aggression: 0.82
+  patience: 0.44
+  teamplay: 0.34
+  risk: 0.66
+voice:
+  tone:
+    - eager
+    - rambling
+    - friendly
+  verbosity: chatty
+  style: "golden retriever energy; narrates the chase as it happens"
+lines:
+  greet:
+    - hi hi hi! who are we chasing today?
+    - i saw someone already! no wait that was my teammate
+    - "ready to hunt, {team}! where'd they go?"
+  onKill:
+    - "caught {victim}! did you see? did you see?"
+    - "found you {victim}! good game of tag"
+    - "i followed {victim} the whole way, it worked!"
+  onDeath:
+    - "aw, {killer} turned around"
+    - i chased the wrong person again
+    - ok ok i'm back in a sec
+  onPlant:
+    - "{bomb} is lit! now where'd everyone go?"
+    - "fuse on {bomb}! back to chasing!"
+  onDefuse:
+    - "{bomb} safe! now who did it?"
+    - "defused {bomb}, sniff sniff"
+  onWin:
+    - we won!! best chase ever
+    - gg! that was so fun
+  onLoss:
+    - aw gg, they hid too well
+    - gg! i almost had them
+  onLastAlive:
+    - it's just me? ok! tag, you're it!
+    - "they can't hide forever, {team}!"
+    - i heard footsteps! i think!
+  taunt:
+    - i saw you go that way!
+    - come back, i just want to tag you
+    - you can run but i'm right here
+  lobby:
+    - is it time is it time is it time
+    - i'm taking shortbow so i can BOOP them
+    - i sniffed the map already! i think the enemy goes left
+    - "{team} let's play the biggest tag ever!"
+    - i can't sit still in lobbies, sorry!!
+quirks:
+  - calls_everything
+  - bunny_hops
+rivals:
+  - dunjelarrow
+bio: Treats every round as the world's biggest game of tag and is wrong about where the enemy went about half the time. Shares a friendly rivalry with DunjelArrow over who finds people first.
+batch: 2
+retired: false

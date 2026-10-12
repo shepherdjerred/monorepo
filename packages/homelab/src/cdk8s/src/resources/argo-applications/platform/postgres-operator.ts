@@ -3,6 +3,7 @@ import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/arg
 import { Namespace } from "cdk8s-plus-31";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
+import { POSTGRES_CLUSTER_NAME_LABEL } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/cluster-label.ts";
 export function createPostgresOperatorApp(chart: Chart) {
   new Namespace(chart, "postgres-operator-namespace", {
     metadata: {
@@ -16,16 +17,22 @@ export function createPostgresOperatorApp(chart: Chart) {
       // migration explicit so a future chart default cannot move clusters back
       // to the deprecated Endpoints-backed DCS.
       kubernetes_use_configmaps: true,
-      // Four single-instance databases share this single-node cluster. Reconcile
-      // them serially during the v2 maintenance event to limit disruption.
+      // Seven single-instance databases share the production node. Keep their
+      // reconciliation serial to limit disruption.
       workers: 1,
+    },
+    configMajorVersionUpgrade: {
+      // Publish desired major pins together, then run each matching live
+      // upgrade only after its independent restore and maintenance checks.
+      // "manual" would run the upgrade as soon as its manifest changes.
+      major_version_upgrade_mode: "off",
     },
     configKubernetes: {
       // Since we have a single-node cluster, reduce resource requirements
       cluster_labels: {
         application: "spilo",
       },
-      cluster_name_label: "cluster-name",
+      cluster_name_label: POSTGRES_CLUSTER_NAME_LABEL,
       enable_cross_namespace_secret: true,
       // Single-node cluster: the operator's PDBs (minAvailable=1 on 1-replica
       // postgres clusters) can never be satisfied, so they permanently block

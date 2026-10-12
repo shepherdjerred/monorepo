@@ -4,9 +4,8 @@
 # conversations in their mouths, and the dialogues below are what they say
 # once there is nothing to do.
 #
-# PLACEHOLDER COORDINATES: every position below is a stand-in near spawn
-# until Spawn Town is rebuilt. Stand where an NPC belongs and run
-# `/npc here <id>` to get a block to paste, then `/npc reload`.
+# Homes use existing buildings, roads, the windmill field, and the timber mine
+# entrance south of town. Dorran stands at the entrance; Marcus is down its stairs.
 #
 # Optional references are written as `none`, never left out.
 
@@ -120,7 +119,7 @@ dialogues:
     start: greet
     nodes:
       greet:
-        text: The nether warp is right behind me. Mind the heat.
+        text: When you travel to the nether, mind the heat and bring a way home.
         next: none
         options:
           - label: Goodbye
@@ -234,9 +233,9 @@ npcs:
     home:
       {
         world: minecraft:overworld,
-        x: -24.5,
-        y: 64.0,
-        z: 20.5,
+        x: -37.5,
+        y: 60.0,
+        z: 166.5,
         yaw: 180.0,
         pitch: 0.0,
       }
@@ -252,9 +251,9 @@ npcs:
     home:
       {
         world: minecraft:overworld,
-        x: -18.5,
+        x: 72.5,
         y: 64.0,
-        z: 20.5,
+        z: 59.5,
         yaw: 180.0,
         pitch: 0.0,
       }
@@ -270,9 +269,9 @@ npcs:
     home:
       {
         world: minecraft:overworld,
-        x: -12.5,
-        y: 64.0,
-        z: 20.5,
+        x: -6.5,
+        y: 67.0,
+        z: -50.5,
         yaw: 180.0,
         pitch: 0.0,
       }
@@ -288,9 +287,9 @@ npcs:
     home:
       {
         world: minecraft:overworld,
-        x: -6.5,
-        y: 64.0,
-        z: 20.5,
+        x: -4.5,
+        y: 67.0,
+        z: 65.5,
         yaw: 180.0,
         pitch: 0.0,
       }
@@ -306,9 +305,9 @@ npcs:
     home:
       {
         world: minecraft:overworld,
-        x: 6.5,
-        y: 64.0,
-        z: 20.5,
+        x: -25.5,
+        y: 63.0,
+        z: 3.5,
         yaw: 180.0,
         pitch: 0.0,
       }
@@ -324,9 +323,9 @@ npcs:
     home:
       {
         world: minecraft:overworld,
-        x: 12.5,
-        y: 64.0,
-        z: 20.5,
+        x: -27.5,
+        y: 72.0,
+        z: -31.5,
         yaw: 180.0,
         pitch: 0.0,
       }
@@ -342,9 +341,9 @@ npcs:
     home:
       {
         world: minecraft:overworld,
-        x: 18.5,
-        y: 64.0,
-        z: 20.5,
+        x: -12.5,
+        y: 71.0625,
+        z: 64.5,
         yaw: 180.0,
         pitch: 0.0,
       }
@@ -360,9 +359,9 @@ npcs:
     home:
       {
         world: minecraft:overworld,
-        x: 24.5,
-        y: 64.0,
-        z: 20.5,
+        x: -11.5,
+        y: 67.0,
+        z: 70.5,
         yaw: 180.0,
         pitch: 0.0,
       }
@@ -378,9 +377,9 @@ npcs:
     home:
       {
         world: minecraft:overworld,
-        x: -24.5,
-        y: 64.0,
-        z: 28.5,
+        x: 41.5,
+        y: 67.0,
+        z: 9.5,
         yaw: 180.0,
         pitch: 0.0,
       }
@@ -396,9 +395,9 @@ npcs:
     home:
       {
         world: minecraft:overworld,
-        x: -18.5,
-        y: 64.0,
-        z: 28.5,
+        x: -36.5,
+        y: 74.0,
+        z: 49.5,
         yaw: 180.0,
         pitch: 0.0,
       }
@@ -414,9 +413,9 @@ npcs:
     home:
       {
         world: minecraft:overworld,
-        x: -12.5,
-        y: 64.0,
-        z: 28.5,
+        x: 38.5,
+        y: 68.0,
+        z: 9.5,
         yaw: 180.0,
         pitch: 0.0,
       }
@@ -433,8 +432,8 @@ npcs:
       {
         world: minecraft:overworld,
         x: -6.5,
-        y: 64.0,
-        z: 28.5,
+        y: 63.0,
+        z: 42.5,
         yaw: 180.0,
         pitch: 0.0,
       }
@@ -450,9 +449,9 @@ npcs:
     home:
       {
         world: minecraft:overworld,
-        x: 6.5,
-        y: 64.0,
-        z: 28.5,
+        x: -75.5,
+        y: 69.0,
+        z: 24.5,
         yaw: 180.0,
         pitch: 0.0,
       }
@@ -468,9 +467,9 @@ npcs:
     home:
       {
         world: minecraft:overworld,
-        x: 12.5,
-        y: 64.0,
-        z: 28.5,
+        x: -43.5,
+        y: 66.0,
+        z: 1.5,
         yaw: 180.0,
         pitch: 0.0,
       }
@@ -486,9 +485,9 @@ npcs:
     home:
       {
         world: minecraft:overworld,
-        x: 18.5,
+        x: -42.5,
         y: 64.0,
-        z: 28.5,
+        z: 166.5,
         yaw: 180.0,
         pitch: 0.0,
       }
@@ -504,9 +503,9 @@ npcs:
     home:
       {
         world: minecraft:overworld,
-        x: 24.5,
+        x: -34.5,
         y: 64.0,
-        z: 28.5,
+        z: 1.5,
         yaw: 180.0,
         pitch: 0.0,
       }
@@ -522,9 +521,9 @@ npcs:
     home:
       {
         world: minecraft:overworld,
-        x: -24.5,
-        y: 64.0,
-        z: 36.5,
+        x: -49.5,
+        y: 70.0,
+        z: 25.5,
         yaw: 180.0,
         pitch: 0.0,
       }
@@ -540,9 +539,9 @@ npcs:
     home:
       {
         world: minecraft:overworld,
-        x: -18.5,
+        x: -35.5,
         y: 64.0,
-        z: 36.5,
+        z: 1.5,
         yaw: 180.0,
         pitch: 0.0,
       }
@@ -558,9 +557,9 @@ npcs:
     home:
       {
         world: minecraft:overworld,
-        x: -12.5,
-        y: 64.0,
-        z: 36.5,
+        x: -76.5,
+        y: 69.0,
+        z: 21.5,
         yaw: 180.0,
         pitch: 0.0,
       }
@@ -576,9 +575,9 @@ npcs:
     home:
       {
         world: minecraft:overworld,
-        x: -6.5,
-        y: 64.0,
-        z: 36.5,
+        x: 68.5,
+        y: 69.0,
+        z: 64.5,
         yaw: 180.0,
         pitch: 0.0,
       }
@@ -594,9 +593,9 @@ npcs:
     home:
       {
         world: minecraft:overworld,
-        x: 6.5,
+        x: -37.5,
         y: 64.0,
-        z: 36.5,
+        z: 1.5,
         yaw: 180.0,
         pitch: 0.0,
       }

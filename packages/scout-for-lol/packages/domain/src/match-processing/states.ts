@@ -23,6 +23,16 @@ export const MatchProcessingPolicySchema = z.enum(["ARCHIVE_ONLY", "FULL"]);
 export type MatchDeliveryMode = z.infer<typeof MatchDeliveryModeSchema>;
 export const MatchDeliveryModeSchema = z.enum(["live", "silent-backfill"]);
 
+/**
+ * Where a match's canonical payload came from. `RIOT` is Match-V5;
+ * `SCOUT_CLIENT` is a paired desktop client's capture, selected only after
+ * Riot has returned nothing for the gap-fill delay. The selection is
+ * recorded once and fixed, so the provenance is a durable fact of the
+ * observation rather than something each reader re-derives.
+ */
+export type MatchDataSource = z.infer<typeof MatchDataSourceSchema>;
+export const MatchDataSourceSchema = z.enum(["RIOT", "SCOUT_CLIENT"]);
+
 const UnownedPipelineOwnerSchema = z.strictObject({
   kind: z.literal("unowned"),
 });

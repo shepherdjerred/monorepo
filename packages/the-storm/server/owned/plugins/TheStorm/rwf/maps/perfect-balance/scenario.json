@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "kind": "rwf-map-scenario",
+  "id": "perfect-balance-trooper-duel-v1",
+  "map": "perfect-balance",
+  "mapSha256": "f1ffd6e3cec863b823ce772f0e893bc5a44fe387d7daa38b3db05870e876fcaa",
+  "world": "minecraft:rwf",
+  "region": {
+    "min": {
+      "x": 1024,
+      "y": 23,
+      "z": 4096
+    },
+    "max": {
+      "x": 1054,
+      "y": 55,
+      "z": 4230
+    }
+  },
+  "sourceTeams": ["BLUE", "RED"],
+  "spawnPolicy": "source",
+  "spawns": [
+    {
+      "team": "red",
+      "sourceTeam": "RED",
+      "position": [1036.5, 27, 4218.5],
+      "yaw": 183.12213134765625,
+      "pitch": 0
+    },
+    {
+      "team": "blue",
+      "sourceTeam": "BLUE",
+      "position": [1037.5, 26, 4109.5],
+      "yaw": 357.87890625,
+      "pitch": 0
+    }
+  ]
+}

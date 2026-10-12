@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.shops.adapter.paper;
 
+import com.shepherdjerred.thestorm.core.compute.DirectComputePool;
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.Services;
@@ -69,6 +70,11 @@ public class ShopsTestPlugin extends JavaPlugin {
     }
 
     @Override
+    public boolean isPreserved(Location location) {
+      return false;
+    }
+
+    @Override
     public boolean sameLand(Location a, Location b) {
       return sameLand;
     }
@@ -113,6 +119,8 @@ public class ShopsTestPlugin extends JavaPlugin {
         });
     services.provide(Protection.class, protection);
     services.provide(
+        com.shepherdjerred.thestorm.core.protection.ManagedTrades.class, location -> true);
+    services.provide(
         PlayerDirectory.class,
         new PlayerDirectory() {
           @Override
@@ -130,12 +138,14 @@ public class ShopsTestPlugin extends JavaPlugin {
             this,
             getLifecycleManager(),
             new PaperScheduler(this),
+            new DirectComputePool(),
             database,
             services,
             directory,
             InstantSource.system(),
             RandomGenerator.getDefault(),
-            getComponentLogger());
+            getComponentLogger(),
+            com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled());
     new ShopsModule().enable(context);
   }
 

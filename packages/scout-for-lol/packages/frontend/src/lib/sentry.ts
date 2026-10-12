@@ -1,4 +1,5 @@
 import * as Sentry from "@sentry/browser";
+import { sentryDataCollection } from "@shepherdjerred/sentry-config";
 
 /** Initialize the frontend's Bugsink-backed Sentry client. */
 export function initSentry(): void {
@@ -10,6 +11,7 @@ export function initSentry(): void {
       ? import.meta.env["PUBLIC_SENTRY_RELEASE"]
       : undefined;
   Sentry.init({
+    dataCollection: sentryDataCollection(),
     dsn: "https://337945d2208840dca4a573be311a1bbb@bugsink.sjer.red/1",
     release: sentryRelease,
     environment: import.meta.env.MODE,

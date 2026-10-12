@@ -75,8 +75,8 @@ const TOKEN_STYLES: Record<ScoutQlTokenKind, TokenStyle> = {
   string: style("chart3"),
   operator: style("textMuted"),
   comment: style("textMuted", { italic: true }),
-  renderKind: style("accent", { bold: true }),
-  renderOption: style("accent"),
+  renderKind: style("text", { bold: true }),
+  renderOption: style("text"),
   plain: style("text"),
   invalid: style("danger", { underline: true }),
 };

@@ -44,6 +44,14 @@ through the AI SDK, so those calls are instrumented by
 `setLlmResponseAttributes` primitives in `./span-helpers` rather than by a
 per-provider wrapper.
 
+Embedding calls retain their input text and output vectors by default. The
+AI SDK uses `ai.value` / `ai.embedding` for single inputs and `ai.values` /
+`ai.embeddings` for batches. The archive processor copies all four attributes
+to S3 and masks credentials in scalar bodies and each batch element before
+forwarding the full content to trace consumers.
+Archive provider attribution accepts the SDK's `gen_ai.provider.name` as well
+as the older `gen_ai.system` attribute.
+
 ## Subject attribution
 
 `./subject` carries the vocabulary for _who_ a call was made on behalf of:

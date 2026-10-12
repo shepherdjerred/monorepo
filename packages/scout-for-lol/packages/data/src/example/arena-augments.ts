@@ -1,4 +1,4 @@
-import { AugmentSchema } from "@scout-for-lol/data";
+import { AugmentSchema } from "#src/model/index.ts";
 
 export function createMasterOfDualityAugment() {
   return AugmentSchema.parse({

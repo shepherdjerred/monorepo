@@ -78,11 +78,6 @@ export type GoalBenchmarkTelemetry = {
   reasoningEffort: string;
 };
 
-export type CatchBenchmarkArtifact = {
-  evaluation: CatchBenchmarkResult;
-  telemetry: GoalBenchmarkTelemetry;
-};
-
 export function evaluateCatchBenchmark(
   input: CatchBenchmarkInput,
 ): CatchBenchmarkResult {

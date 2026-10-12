@@ -4,11 +4,12 @@ import {
   agentChatReceiptWorkerActivities,
   agentChatDeliveryActivities,
   agentChatIngressActivities,
-  imessageAgentChatActivities,
+  photonAgentChatActivities,
   glitterContextWorkerActivities,
   glitterCorpusWorkerActivities,
   homeActivities,
   infraActivities,
+  opsWorkerActivities,
   miningResetWorkerActivities,
   repoActivities,
   reportActivities,
@@ -71,8 +72,8 @@ const ACTIVITY_WORKER_DEFINITIONS: readonly ActivityWorkerDefinition[] = [
   {
     kind: "activity",
     role: "control",
-    taskQueue: TASK_QUEUES.AGENT_CHAT_IMESSAGE,
-    activities: imessageAgentChatActivities,
+    taskQueue: TASK_QUEUES.AGENT_CHAT_PHOTON,
+    activities: photonAgentChatActivities,
     maxConcurrentActivityTaskExecutions: 4,
   },
   {
@@ -109,6 +110,13 @@ const ACTIVITY_WORKER_DEFINITIONS: readonly ActivityWorkerDefinition[] = [
     taskQueue: TASK_QUEUES.INFRA,
     activities: infraActivities,
     maxConcurrentActivityTaskExecutions: 1,
+  },
+  {
+    kind: "activity",
+    role: "infra",
+    taskQueue: TASK_QUEUES.OPS,
+    activities: opsWorkerActivities,
+    maxConcurrentActivityTaskExecutions: 4,
   },
   {
     kind: "activity",
@@ -221,6 +229,7 @@ export type WorkerRoleContract = {
   runsEventBridge: boolean;
   restoresGlitterCorpusMetrics: boolean;
   restoresSeaweedFsBackupMetrics: boolean;
+  restoresVeleroR2AuditMetrics: boolean;
 };
 
 export function getWorkerRoleContract(role: WorkerRole): WorkerRoleContract {
@@ -234,5 +243,6 @@ export function getWorkerRoleContract(role: WorkerRole): WorkerRoleContract {
     restoresGlitterCorpusMetrics:
       role === "all" || role === "glitter" || role === "glitter-corpus",
     restoresSeaweedFsBackupMetrics: role === "all" || role === "backup",
+    restoresVeleroR2AuditMetrics: role === "all" || role === "infra",
   };
 }

@@ -10,11 +10,15 @@ import {
 } from "#src/report-lake/compaction-publish.ts";
 type CompactionSummary = PublishedCompactionSummary;
 import { NdjsonFileWriter } from "#src/report-lake/ndjson-writer.ts";
+import { copyNdjsonToParquet } from "#src/report-lake/parquet/copy-ndjson.ts";
 import { createS3Client } from "#src/storage/s3-client.ts";
+import { reportLakeSchemaUpgradeEnabled } from "#src/config/report-lake-schema-upgrade.ts";
+import { readBuildFingerprint } from "#src/report-lake/build-manifest.ts";
 import {
-  loadPuuidRemap,
-  puuidRemapFingerprint,
-} from "#src/report-lake/puuid-remap.ts";
+  rawDocumentColumns,
+  reportLakeLayout,
+  type ReportLakeLayout,
+} from "#src/report-lake/schema-upgrade/layout.ts";
 import {
   populateMatchesFromS3,
   populatePrematchFromS3,
@@ -25,6 +29,7 @@ import {
   gcOldBuilds,
   newBuildId,
   publishBuild,
+  readCurrentBuildDir,
 } from "#src/report-lake/paths.ts";
 import {
   MATCH_LAKE_COLUMNS,
@@ -32,50 +37,88 @@ import {
   MATCH_TEAM_LAKE_COLUMNS,
   PREMATCH_LAKE_COLUMNS,
 } from "@scout-for-lol/data";
-import { duckDbColumnsSpec } from "#src/report-lake/schema.ts";
 import { removeFoldedStagingFiles } from "#src/report-lake/staging.ts";
+import {
+  reclaimAbandonedPendingGenerations,
+  removeRebuiltGenerations,
+  snapshotStagingGenerations,
+} from "#src/report-lake/staging/generations.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
 import { writeAccountsParquet } from "#src/report-lake/compact-accounts.ts";
 import { rebuildTimelineParquet } from "#src/report-lake/timeline-compaction.ts";
-import type { ReportLakeProgress } from "#src/report-lake/compaction-types.ts";
+import type { CompactionOptions } from "#src/report-lake/compaction-types.ts";
+import { validateStagingSnapshot } from "#src/report-lake/read-staging-rows.ts";
+import { validatePreparedBuild } from "#src/report-lake/schema-upgrade/validate-build.ts";
 
 const logger = createLogger("report-lake-rebuild");
 const GC_KEEP_BUILDS = 2;
 const COMPACTION_TIMEOUT_MS = 30 * 60 * 1000;
 
+async function rebuildLayout(currentDir: string | undefined): Promise<{
+  previousLayout: ReportLakeLayout | undefined;
+  layout: ReportLakeLayout;
+}> {
+  const previousLayout =
+    currentDir === undefined
+      ? undefined
+      : reportLakeLayout(await readBuildFingerprint(currentDir));
+  if (currentDir !== undefined && previousLayout === undefined) {
+    throw new Error(
+      "Published report lake has an unknown schema; refusing to rebuild before its physical layout is established",
+    );
+  }
+  // Do not cold-upgrade during bridge deployment. Once published, the current
+  // layout never depends on the temporary rollout control again.
+  const layout =
+    previousLayout === "legacy-identity-map" &&
+    !(await reportLakeSchemaUpgradeEnabled())
+      ? "legacy-identity-map"
+      : "current";
+  return { previousLayout, layout };
+}
+
 export async function rebuildReportLake(
   prisma: ExtendedPrismaClient,
   lakeDir: string,
   startedAt: number,
-  onProgress?: (progress: ReportLakeProgress) => void,
+  options: Pick<CompactionOptions, "onProgress" | "abortSignal"> = {},
 ): Promise<CompactionSummary> {
-  return await rebuildLocked(prisma, lakeDir, startedAt, onProgress);
-}
-
-async function rebuildLocked(
-  prisma: ExtendedPrismaClient,
-  lakeDir: string,
-  startedAt: number,
-  onProgress?: (progress: ReportLakeProgress) => void,
-): Promise<CompactionSummary> {
+  const { onProgress, abortSignal } = options;
+  const currentDir = await readCurrentBuildDir(lakeDir);
+  const { previousLayout, layout } = await rebuildLayout(currentDir);
   const deadlineAt = Date.now() + COMPACTION_TIMEOUT_MS;
-  const deadline = AbortSignal.timeout(COMPACTION_TIMEOUT_MS);
+  const deadline = AbortSignal.any([
+    AbortSignal.timeout(COMPACTION_TIMEOUT_MS),
+    ...(abortSignal === undefined ? [] : [abortSignal]),
+  ]);
+  deadline.throwIfAborted();
   const remainingTimeoutMs = (): number => Math.max(1, deadlineAt - Date.now());
   const buildId = newBuildId();
   const buildDir = buildDirPath(lakeDir, buildId);
   await mkdir(buildDir, { recursive: true });
+  await reclaimAbandonedPendingGenerations(lakeDir);
+  const stagingSnapshot = await snapshotStagingGenerations(lakeDir);
+  const rebuiltSources = new Set<string>();
+  const writers: NdjsonFileWriter[] = [];
+  const createWriter = (file: string) => {
+    const writer = new NdjsonFileWriter(file, undefined, deadline);
+    writers.push(writer);
+    return writer;
+  };
   let published = false;
 
   try {
     const matchesTmp = path.join(buildDir, "matches.ndjson.tmp");
-    const matchWriter = new NdjsonFileWriter(matchesTmp);
+    const matchWriter = createWriter(matchesTmp);
+    const rawTmp = path.join(buildDir, "raw-documents.ndjson.tmp");
+    const rawWriter = createWriter(rawTmp);
     const matchTeamsTmp = path.join(buildDir, "match-teams.ndjson.tmp");
-    const matchTeamWriter = new NdjsonFileWriter(matchTeamsTmp);
+    const matchTeamWriter = createWriter(matchTeamsTmp);
     const matchTeamBansTmp = path.join(buildDir, "match-team-bans.ndjson.tmp");
-    const matchTeamBanWriter = new NdjsonFileWriter(matchTeamBansTmp);
+    const matchTeamBanWriter = createWriter(matchTeamBansTmp);
     const foldedMatchIds = new Set<string>();
     const prematchTmp = path.join(buildDir, "prematch.ndjson.tmp");
-    const prematchWriter = new NdjsonFileWriter(prematchTmp);
+    const prematchWriter = createWriter(prematchTmp);
     const foldedPrematchIds = new Set<string>();
     const foldedRankHistoryIds = new Set<string>();
 
@@ -86,36 +129,41 @@ async function rebuildLocked(
       );
     }
     const client = createS3Client();
-    const puuidRemap = await loadPuuidRemap(prisma);
+    deadline.throwIfAborted();
     const skippedMatches = await populateMatchesFromS3({
       client,
       bucket,
       writer: matchWriter,
+      rawWriter,
       teamWriter: matchTeamWriter,
       teamBanWriter: matchTeamBanWriter,
       foldedIds: foldedMatchIds,
-      puuidRemap,
+      foldedSources: rebuiltSources,
       abortSignal: deadline,
       onProgress: (progress) => {
         onProgress?.({ phase: "reading-s3", table: "matches", ...progress });
       },
     });
+    deadline.throwIfAborted();
     const skippedPrematches = await populatePrematchFromS3({
       client,
       bucket,
       writer: prematchWriter,
+      rawWriter,
       foldedIds: foldedPrematchIds,
-      puuidRemap,
+      foldedSources: rebuiltSources,
       abortSignal: deadline,
       onProgress: (progress) => {
         onProgress?.({ phase: "reading-s3", table: "prematch", ...progress });
       },
     });
+    deadline.throwIfAborted();
     const timelines = await rebuildTimelineParquet({
       client,
       bucket,
       buildDir,
-      puuidRemap,
+      rawWriter,
+      foldedSources: rebuiltSources,
       abortSignal: deadline,
       timeoutMs: remainingTimeoutMs(),
       onProgress: (progress) => {
@@ -131,6 +179,7 @@ async function rebuildLocked(
     await matchTeamWriter.close();
     await matchTeamBanWriter.close();
     await prematchWriter.close();
+    await rawWriter.close();
     onProgress?.({
       phase: "writing-parquet",
       files: foldedMatchIds.size + foldedPrematchIds.size,
@@ -141,47 +190,65 @@ async function rebuildLocked(
     try {
       await withDuckDBConnection(
         async (session) => {
+          if (rawWriter.rows > 0) {
+            await copyNdjsonToParquet(session, {
+              sourcePath: rawTmp,
+              outputDirectory: path.join(buildDir, "raw_documents"),
+              columns: rawDocumentColumns(layout),
+              partitionByMonth: true,
+            });
+          }
           if (matchWriter.rows > 0) {
-            await session.run(
-              `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(MATCH_LAKE_COLUMNS)})) TO '${path.join(buildDir, "matches")}' (FORMAT PARQUET, PARTITION_BY (month), OVERWRITE_OR_IGNORE)`,
-              [matchesTmp],
-            );
+            await copyNdjsonToParquet(session, {
+              sourcePath: matchesTmp,
+              outputDirectory: path.join(buildDir, "matches"),
+              columns: MATCH_LAKE_COLUMNS,
+              partitionByMonth: true,
+            });
           }
           if (matchTeamWriter.rows > 0) {
-            await session.run(
-              `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(MATCH_TEAM_LAKE_COLUMNS)})) TO '${path.join(buildDir, "match_teams")}' (FORMAT PARQUET, PARTITION_BY (month), OVERWRITE_OR_IGNORE)`,
-              [matchTeamsTmp],
-            );
+            await copyNdjsonToParquet(session, {
+              sourcePath: matchTeamsTmp,
+              outputDirectory: path.join(buildDir, "match_teams"),
+              columns: MATCH_TEAM_LAKE_COLUMNS,
+              partitionByMonth: true,
+            });
           }
           if (matchTeamBanWriter.rows > 0) {
-            await session.run(
-              `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(MATCH_TEAM_BAN_LAKE_COLUMNS)})) TO '${path.join(buildDir, "match_team_bans")}' (FORMAT PARQUET, PARTITION_BY (month), OVERWRITE_OR_IGNORE)`,
-              [matchTeamBansTmp],
-            );
+            await copyNdjsonToParquet(session, {
+              sourcePath: matchTeamBansTmp,
+              outputDirectory: path.join(buildDir, "match_team_bans"),
+              columns: MATCH_TEAM_BAN_LAKE_COLUMNS,
+              partitionByMonth: true,
+            });
           }
           if (prematchWriter.rows > 0) {
-            await session.run(
-              `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(PREMATCH_LAKE_COLUMNS)})) TO '${path.join(buildDir, "prematch")}' (FORMAT PARQUET, PARTITION_BY (month), OVERWRITE_OR_IGNORE)`,
-              [prematchTmp],
-            );
+            await copyNdjsonToParquet(session, {
+              sourcePath: prematchTmp,
+              outputDirectory: path.join(buildDir, "prematch"),
+              columns: PREMATCH_LAKE_COLUMNS,
+              partitionByMonth: true,
+            });
           }
         },
-        { timeoutMs: remainingTimeoutMs() },
+        { timeoutMs: remainingTimeoutMs(), abortSignal: deadline },
       );
     } finally {
       await unlink(matchesTmp);
       await unlink(matchTeamsTmp);
       await unlink(matchTeamBansTmp);
       await unlink(prematchTmp);
+      await unlink(rawTmp);
     }
 
     deadline.throwIfAborted();
-    const accountRows = await writeAccountsParquet(prisma, buildDir);
+    let accountRows = await writeAccountsParquet(prisma, buildDir, deadline);
     onProgress?.({ phase: "writing-accounts", rows: accountRows });
     deadline.throwIfAborted();
     const rankHistory = await writeCompetitionRankHistoryParquet({
       buildDir,
       foldedIds: foldedRankHistoryIds,
+      foldedSources: rebuiltSources,
       abortSignal: deadline,
       timeoutMs: remainingTimeoutMs(),
     });
@@ -194,7 +261,41 @@ async function rebuildLocked(
     });
     deadline.throwIfAborted();
 
+    if (previousLayout === "legacy-identity-map" && layout === "current") {
+      onProgress?.({ phase: "validating-prepared-build" });
+      if (
+        skippedMatches +
+          skippedPrematches +
+          rankHistory.skipped +
+          timelines.skipped >
+        0
+      )
+        throw new Error(
+          "Schema upgrade refuses a rebuild with skipped canonical sources",
+        );
+      const tail = await validateStagingSnapshot(
+        await snapshotStagingGenerations(lakeDir),
+      );
+      if (tail.skippedByTable.size > 0)
+        throw new Error(
+          "Schema upgrade refuses invalid committed staging projections",
+        );
+      if (currentDir === undefined)
+        throw new Error("Schema upgrade lost its published baseline");
+      accountRows = await writeAccountsParquet(prisma, buildDir, deadline);
+      await validatePreparedBuild({
+        lakeDir,
+        previousDir: currentDir,
+        buildDir,
+        layout,
+        staging: tail.snapshot,
+        abortSignal: deadline,
+        timeoutMs: remainingTimeoutMs(),
+      });
+    }
+
     const summary = {
+      rawDocumentRows: rawWriter.rows,
       buildId,
       tier: "rebuild" as const,
       matchRows: matchWriter.rows,
@@ -212,12 +313,8 @@ async function rebuildLocked(
       skippedCompetitionRankHistory: rankHistory.skipped,
       skippedTimelines: timelines.skipped,
     };
-    await writeCompactionManifest(
-      buildDir,
-      summary,
-      puuidRemapFingerprint(puuidRemap),
-    );
-    await publishBuild(lakeDir, buildId);
+    await writeCompactionManifest(buildDir, summary, layout);
+    await publishBuild(lakeDir, buildId, deadline);
     published = true;
     publishCompactionMetrics(summary);
     await removeFoldedStagingFiles(lakeDir, "matches", foldedMatchIds);
@@ -237,6 +334,7 @@ async function rebuildLocked(
     ] as const) {
       await removeFoldedStagingFiles(lakeDir, table, timelines.foldedIds);
     }
+    await removeRebuiltGenerations(stagingSnapshot, rebuiltSources);
     await gcOldBuilds(lakeDir, GC_KEEP_BUILDS);
 
     const durationMs = Date.now() - startedAt;
@@ -246,6 +344,7 @@ async function rebuildLocked(
     return { ...summary, durationMs };
   } finally {
     if (!published) {
+      await Promise.all(writers.map(async (writer) => writer.abort()));
       await rm(buildDir, { recursive: true, force: true });
     }
   }

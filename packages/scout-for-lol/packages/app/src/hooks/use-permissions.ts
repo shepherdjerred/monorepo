@@ -1,11 +1,12 @@
-import { useMemo } from "react";
-import { Loaded } from "@shepherdjerred/loaded";
-import { useQuery } from "@tanstack/react-query";
 import {
+  type DiscordGuildId,
   type Permission,
   type PermissionSet,
   createPermissionSet,
 } from "@scout-for-lol/data";
+import { useMemo } from "react";
+import { Loaded } from "@shepherdjerred/loaded";
+import { useQuery } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 import {
   type QueryError,
@@ -43,7 +44,9 @@ export type GuildPermissions = {
  * `guild.listManageable` entry; falls back to `guild.myPermissions` for
  * deep-links where the guild isn't in that list yet.
  */
-export function usePermissions(guildId: string | undefined): GuildPermissions {
+export function usePermissions(
+  guildId: DiscordGuildId | undefined,
+): GuildPermissions {
   const trpc = useTRPC();
   const listQuery = useQuery(trpc.guild.listManageable.queryOptions());
   const entry = listQuery.data?.find((g) => g.id === guildId);

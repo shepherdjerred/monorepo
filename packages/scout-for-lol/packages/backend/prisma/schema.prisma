@@ -245,7 +245,7 @@ model ClashMembershipHistory {
 // One Clash lobby or finished match Scout saw a tracked player in.
 // source=prematch has no outcome; source=match may set win (pre-Feb leftover).
 model ClashGameSighting {
-  id         Int       @id @default(autoincrement())
+  id         Int      @id @default(autoincrement())
   platform   String
   gameId     String
   puuid      String
@@ -258,8 +258,8 @@ model ClashGameSighting {
   teamRiotId String?
   cupKey     String?
   cupDay     String?
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@unique([platform, gameId, puuid])
   @@index([puuid, observedAt])
@@ -269,11 +269,11 @@ model ClashGameSighting {
 // Champion mastery is public, current account state rather than match history.
 // One PUUID snapshot is shared by every guild that tracks that Riot account.
 model ChampionMasterySnapshot {
-  puuid        String   @id
-  entriesJson  String
-  fetchedAt    DateTime
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  puuid       String   @id
+  entriesJson String
+  fetchedAt   DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Report {
@@ -352,12 +352,52 @@ model ReportRun {
   temporalWorkflowRunId String?   @unique
   createdAt             DateTime  @default(now())
 
-  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  report         Report                @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  deliveryChunks ReportDeliveryChunk[]
 
   @@index([reportId, startedAt])
   @@index([serverId, startedAt])
   @@index([status, startedAt])
   @@index([deliveryState, createdAt])
+}
+
+/// One frozen Discord message and its observed send outcome. SENDING is never
+/// automatically retried: a process can die after Discord accepted the send.
+model ReportDeliveryChunk {
+  reportRunId      Int
+  channelId        String
+  chunkIndex       Int
+  serverId         String
+  content          String
+  attachmentKey    String?
+  attachmentName   String?
+  attachmentDigest String?
+  nonce            String
+  state            String    @default("PENDING")
+  messageId        String?
+  sendStartedAt    DateTime?
+  deliveredAt      DateTime?
+  lastError        String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  run              ReportRun @relation(fields: [reportRunId], references: [id], onDelete: Cascade)
+
+  @@id([reportRunId, channelId, chunkIndex])
+  @@index([state, updatedAt])
+}
+
+/// Target-specific presentation decisions. Kept independently of the subject
+/// tables because match, Duel and Dare intents use different subject rows.
+model NotificationPresentation {
+  intentKey             String   @id
+  serverId              String
+  clashEnabled          Boolean
+  guildPrematchArtifact Boolean  @default(false)
+  tipKey                String?
+  tipText               String?
+  messageJson           String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 }
 
 // Season metadata seeded from packages/data/src/seasons.ts on every bot startup.
@@ -488,7 +528,6 @@ model GuildPermissionError {
   lastOccurrence        DateTime // Most recent occurrence
   consecutiveErrorCount Int       @default(1) // Number of consecutive errors
   lastSuccessfulSend    DateTime? // Last time a message was successfully sent to this server
-  ownerNotified         Boolean   @default(false) // DEPRECATED (was the abandoned-guild latch); unused since notificationStage replaced it
   // Backed-off owner notification escalation for the current failure streak.
   // notificationStage: 0 = none sent, 1 = immediate sent, 2 = +1w sent, 3 = +1mo sent (terminal).
   // lastNotifiedAt anchors the next stage's delay (NOT firstOccurrence) so existing
@@ -666,7 +705,13 @@ model ScoutClientObservation {
   kind             String
   leaguePatch      String?
   platformId       String?
+  /// The observer's Riot API PUUID: the envelope's League-client UUID
+  /// translated through `LeagueIdentityAlias`, or that UUID unchanged when no
+  /// alias exists yet (such a row is quarantined).
   localPuuid       String?
+  /// The observer identity exactly as the client sent it, when it was a
+  /// League-client UUID rather than a Riot API PUUID.
+  localLcuUuid     String?
   lobbyId          String?
   gameId           String?
   payload          Json
@@ -702,6 +747,34 @@ model ScoutClientPlayerSnapshot {
   @@index([kind, capturedAt])
 }
 
+/// The League client names players by a 36-character UUID; Riot's API names
+/// them by a 78-character PUUID encrypted per API key. The two never compare
+/// equal, so every client payload is translated through this table before
+/// anything reads a player identity out of it.
+///
+/// An alias is learned by resolving the Riot ID the client reported alongside
+/// the UUID (`gameName#tagLine`) through account-v1. The UUID-to-Riot-ID link is
+/// the client's claim; the Riot-ID-to-PUUID link is Riot's answer.
+///
+/// `ownerVerified` marks an alias whose PUUID is one of the reporting device
+/// owner's registered accounts — a player's own client vouching for itself.
+/// A verified alias replaces an unverified one; otherwise a UUID never changes
+/// owner, so the first alias stands and a later disagreement is counted rather
+/// than written. That is what stops another client's forged payload from
+/// permanently re-pointing a player who runs the client themselves.
+model LeagueIdentityAlias {
+  lcuUuid             String   @id
+  puuid               String
+  gameName            String
+  tagLine             String
+  source              String
+  ownerVerified       Boolean  @default(false)
+  learnedFromDeviceId String?
+  resolvedAt          DateTime @default(now())
+
+  @@index([puuid])
+}
+
 /// The immutable local Match-V5-compatible observation selected only after
 /// Riot has returned no authoritative payload for two minutes. Recording the
 /// selection prevents later Activity retries from silently changing sources
@@ -721,6 +794,7 @@ model ScoutClientCanonicalMatch {
 /// A saved explore conversation. Explore queries the whole report lake rather
 /// than one server's data, so a conversation belongs to a person, not a guild.
 model ExploreConversation {
+  preferredModel String?
   id            String    @id @default(uuid())
   userId        String
   title         String
@@ -744,8 +818,24 @@ model ExploreConversation {
 
   user     User             @relation(fields: [userId], references: [discordId], onDelete: Cascade)
   messages ExploreMessage[]
+  toolPayloads ExploreToolPayload[]
 
   @@index([userId, updatedAt])
+}
+
+/// Full inspection data is fetched on demand, never replayed into model history.
+model ExploreToolPayload {
+  id String @id @default(uuid())
+  conversationId String
+  runId String
+  toolCallId String
+  toolName String
+  direction String
+  payload String
+  createdAt DateTime @default(now())
+  conversation ExploreConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  @@unique([conversationId, toolCallId, direction])
+  @@index([runId])
 }
 
 /// One turn of an explore conversation, as a node in a tree.
@@ -761,6 +851,8 @@ model ExploreConversation {
 /// share link cannot silently change meaning as the lake grows, and an
 /// anonymous viewer costs no query.
 model ExploreMessage {
+  generation String?
+  inlineEntities String?
   id             String   @id @default(uuid())
   conversationId String
   /// Null for the opening message. Siblings under one parent are versions.
@@ -799,6 +891,29 @@ model ExploreMessage {
 
   @@index([conversationId])
   @@index([conversationId, parentId])
+}
+
+/// Per-provider-request monetary hold. Ambiguous attempts retain their hold.
+model ExploreSpend {
+  id String @id @default(uuid())
+  runId String
+  ownerId String
+  month String
+  model String
+  reservedMicros Int
+  budgetMicros Int
+  state String @default("held")
+  usage String?
+  responseId String?
+  createdAt DateTime @default(now())
+  settledAt DateTime?
+  @@index([month, ownerId])
+  @@index([runId])
+}
+
+model ExploreSandboxLease {
+  id String @id @default(uuid())
+  expiresAt DateTime
 }
 
 model GuildInstall {
@@ -867,21 +982,183 @@ model InstallAttributionToken {
   @@index([expiresAt])
 }
 
-/// Free-text feedback submitted from the web dashboard.
-///
-/// Exists because every prior feedback path was a one-way DM ending in "reply
-/// to a human" — there was nowhere for an answer to land, so nothing was ever
-/// captured. Append-only.
+/// Private support messages from the web dashboard and bot DMs.
+/// Message contents are immutable; operators may mark them read and append replies.
 model Feedback {
-  id        Int      @id @default(autoincrement())
-  discordId String // Submitting web user
-  serverId  String? // Guild in context when submitted, when known
-  rating    Int? // Optional 1-5 sentiment
-  body      String
-  createdAt DateTime @default(now())
+  id               Int                  @id @default(autoincrement())
+  discordId        String // Sender; bot DMs do not require a web account
+  serverId         String? // Guild in context when submitted, when known
+  rating           Int? // Optional 1-5 sentiment
+  body             String
+  createdAt        DateTime             @default(now())
+  source           FeedbackSource       @default(WEB)
+  submissionId     String?              @unique
+  discordMessageId String?              @unique
+  discordChannelId String?
+  discordUsername  String?
+  attachments      Json                 @default("[]")
+  readAt           DateTime?
+  conversationId   String?
+  conversation     SupportConversation? @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  direction        SupportDirection     @default(INBOUND)
+  authorDiscordId  String?
+  context          Json                 @default("{}")
+  screenshots      SupportAttachment[]
+  replies          FeedbackReply[]
 
   @@index([createdAt])
   @@index([discordId, createdAt])
+  @@index([readAt, id])
+  @@index([conversationId, createdAt, id])
+}
+
+enum FeedbackSource {
+  WEB
+  DISCORD_DM
+  DISCORD_MODAL
+}
+
+enum FeedbackReplyStatus {
+  QUEUED
+  SENDING
+  SENT
+  FAILED
+  DM_DISABLED
+}
+
+/// A reply is reserved before contacting Discord; the request id prevents resends.
+model FeedbackReply {
+  id                String              @id
+  feedbackId        Int
+  feedback          Feedback            @relation(fields: [feedbackId], references: [id], onDelete: Cascade)
+  operatorDiscordId String
+  body              String
+  status            FeedbackReplyStatus @default(SENDING)
+  createdAt         DateTime            @default(now())
+  completedAt       DateTime?
+
+  @@index([feedbackId, createdAt])
+}
+
+enum SupportDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum SupportConversationStatus {
+  OPEN
+  WAITING_ON_USER
+  RESOLVED
+}
+
+enum SupportCategory {
+  HELP
+  BUG
+  IDEA
+}
+
+model SupportConversation {
+  id                String                    @id @default(uuid())
+  discordId         String                    @unique
+  username          String?
+  status            SupportConversationStatus @default(OPEN)
+  category          SupportCategory?
+  muted             Boolean                   @default(false)
+  operatorReadAt    DateTime?
+  userReadAt        DateTime?
+  userReadMessageId Int                       @default(0)
+  lastMessageAt     DateTime                  @default(now())
+  lastAlertAt       DateTime?
+  lastReceiptAt     DateTime?
+  createdAt         DateTime                  @default(now())
+  messages          Feedback[]
+  attachments       SupportAttachment[]
+  jobs              SupportJob[]
+
+  @@index([status, lastMessageAt, id])
+}
+
+/// Minimal sender-scoped throttling state survives deletion of message history.
+model SupportSenderThrottle {
+  discordId     String     @id
+  inboundAt     DateTime[] @default([])
+  uploadAt      DateTime[] @default([])
+  lastAlertAt   DateTime?
+  lastReceiptAt DateTime?
+  lastFailureNoticeAt DateTime?
+}
+
+enum SupportAttachmentStatus {
+  PENDING
+  STORED
+  FAILED
+}
+
+model SupportAttachment {
+  id             String                  @id @default(uuid())
+  conversationId String
+  conversation   SupportConversation     @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  feedbackId     Int?
+  feedback       Feedback?               @relation(fields: [feedbackId], references: [id], onDelete: Cascade)
+  name           String
+  contentType    String
+  size           Int
+  sourceUrl      String?
+  digest         String?
+  objectKey      String                  @unique
+  status         SupportAttachmentStatus @default(PENDING)
+  createdAt      DateTime                @default(now())
+  jobs           SupportJob[]
+
+  @@index([feedbackId])
+  @@index([createdAt])
+}
+
+enum SupportJobKind {
+  ALERT
+  ACKNOWLEDGEMENT
+  REPLY
+  ARCHIVE
+  DELETE_OBJECT
+}
+
+enum SupportJobStatus {
+  QUEUED
+  SENDING
+  SENT
+  FAILED
+  BLOCKED
+  UNKNOWN
+  SKIPPED
+}
+
+/// Durable outbox: contains references, not message contents or screenshot bytes.
+model SupportJob {
+  id             String               @id
+  kind           SupportJobKind
+  status         SupportJobStatus     @default(QUEUED)
+  conversationId String?
+  conversation   SupportConversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+  attachmentId   String?
+  attachment     SupportAttachment?   @relation(fields: [attachmentId], references: [id], onDelete: SetNull)
+  replyId        String?
+  objectKey      String?
+  attempts       Int                  @default(0)
+  errorCode      String?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  @@index([status, createdAt])
+}
+
+/// Anonymous support funnel evidence; identifiers deduplicate delivery/interaction events.
+model SupportTouchpoint {
+  id        String   @id
+  surface   String
+  action    String
+  createdAt DateTime @default(now())
+
+  @@index([createdAt, surface, action])
 }
 
 /// A recorded outreach conversion: a guild whose FIRST subscription appeared
@@ -920,6 +1197,9 @@ model BotState {
   id                        Int       @id @default(1)
   lastSuccessfulPollAt      DateTime?
   reconciliationCompletedAt DateTime?
+  // End of the last window ingestion reconciliation backfilled to S3; the next
+  // backfill starts at the later of this and lastSuccessfulPollAt.
+  backfilledThroughAt       DateTime?
   pollStartedAt             DateTime?
   // Last renewal by the holder of a durable poll claim. A claim goes stale
   // only when both its start and its last renewal are past the bound.
@@ -929,36 +1209,7 @@ model BotState {
   pollEvidenceComplete      Boolean?
   pollFailureReason         String?
   pollStatus                String    @default("never")
-  // The durable prematch pass claim. One `scoutRealtimePollWorkflow` run
-  // holds it at a time, named by its Temporal run ID, whichever pipeline owns
-  // the pass. NULL `prematchPassHolder` means the pass is free. A claim goes
-  // stale only when both its start and its last renewal are past the bound.
-  prematchPassHolder        String?
-  prematchPassClaimedAt     DateTime?
-  prematchPassRenewedAt     DateTime?
   updatedAt                 DateTime  @updatedAt
-}
-
-model ActiveGame {
-  id                  Int      @id @default(autoincrement())
-  gameId              BigInt // Riot game ID (from Spectator V5 API)
-  trackedPuuids       String // JSON array of tracked puuids detected in this game
-  prematchMessageIds  String? // JSON object: Discord channel ID -> prematch message ID
-  // JSON object: Discord channel ID -> postmatch report message ID.
-  //
-  // The Bryan Bucks settlement embed replies to the postmatch report, and the
-  // report IDs were previously held only in an in-memory Map for the duration
-  // of one poll. A restart between delivering the report and announcing the
-  // settlement permanently lost the reply target, because the settlement
-  // summary is one-shot and a later pass returns nothing for an already
-  // settled pool.
-  postmatchMessageIds String?
-  prematchMatchId     String?  @unique // Platform-qualified Riot match ID and active-game key
-  detectedAt          DateTime // When we first detected this game
-  expiresAt           DateTime // TTL: auto-cleanup after this time (detectedAt + 3 hours)
-  updatedAt           DateTime @updatedAt
-
-  @@index([expiresAt])
 }
 
 // Records every match for which the AI review pipeline has been entered.
@@ -1052,12 +1303,11 @@ model BucksAccount {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
-  ledgerEntries       BucksLedgerEntry[]
-  bets                BucksBet[]
-  parlayBets          BucksParlayBet[]
-  openPositions       BucksOpenPosition[]
-  dareContributions   BucksDareContribution[]
-  dareV2Contributions BucksDareV2Contribution[]
+  ledgerEntries     BucksLedgerEntry[]
+  bets              BucksBet[]
+  parlayBets        BucksParlayBet[]
+  openPositions     BucksOpenPosition[]
+  dareContributions BucksDareContribution[]
 
   @@unique([serverId, discordId])
   @@index([serverId, balance])
@@ -1240,15 +1490,13 @@ model BucksOpenPosition {
 // Per guild, not per match: one match can be announced in several guilds, and
 // paying guild A's winners out of guild B's losers would be wrong.
 //
-// Not a column on ActiveGame — that row has a 3-hour TTL and is swept every
-// poll, and staked Bucks must outlive it.
+// Staked Bucks outlive the live game, so the pool is its own row.
 model BucksMatchPool {
   id       Int    @id @default(autoincrement())
   matchId  String
   serverId String
 
-  // Copied from ActiveGame so the window does not depend on a row the TTL
-  // sweep deletes.
+  // When the game was detected, which opens the betting window.
   detectedAt DateTime
 
   // Retired with the peek feature; no code reads this anymore, but
@@ -1418,142 +1666,9 @@ model BucksParlayBet {
   @@index([marketId, side])
 }
 
-// One free-text dare bounty: a one-sided pot contributors fund and targets can
-// win by achieving a translated, code-evaluated condition off ingested match
-// data. Targets never stake; achieved splits the pot among them, unachieved
-// refunds the contributors, and both resolved outcomes pay the house cut.
+// A SQL-contract Dare. Draft revisions are private and unfunded; funding
+// freezes one revision into contractJson.
 model BucksDare {
-  id                  Int    @id @default(autoincrement())
-  serverId            String
-  channelId           String
-  challengerDiscordId String
-
-  // BucksDareHorizonKind: next_game | window.
-  horizonKind  String
-  // 1..31, set only for horizonKind "window".
-  windowDays   Int?
-  // Set at activation for "window" dares; the sweep deadline for unachieved.
-  windowEndsAt DateTime?
-
-  // JSON combinator tree with canonical leaf order (DareConditionsSchema).
-  // Settlement evaluates only this; it never touches model output.
-  conditions       String
-  conditionVersion Int
-  evaluatorVersion String
-
-  // The challenger's exact free text, kept for audit alongside the frozen
-  // model translation record. The confirmation the challenger approved is
-  // rendered by code from `conditions`, never from these.
-  originalText String
-  translation  String?
-
-  // Denormalized pot; the contribution rows remain authoritative. Settlement
-  // asserts equality and throws on drift rather than trusting this column.
-  potTotal Int @default(0)
-
-  // BucksDareState: proposed | pending_accept | active | achieved |
-  // unachieved | declined | expired | voided | abandoned.
-  // Deliberately not named `status` — brand-prisma-types would type it
-  // ParticipantStatus.
-  dareState String @default("proposed")
-
-  proposalExpiresAt DateTime
-  acceptDeadline    DateTime?
-  activatedAt       DateTime?
-  settledAt         DateTime?
-  voidReason        String?
-
-  // JSON BucksMessageRef for the public callout message, so serialized pot
-  // and progress edits land on exactly the right message.
-  messageRef String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  targets       BucksDareTarget[]
-  contributions BucksDareContribution[]
-  games         BucksDareGame[]
-
-  @@index([dareState, proposalExpiresAt])
-  @@index([dareState, acceptDeadline])
-  @@index([dareState, windowEndsAt])
-}
-
-// Consent and payee record for one dared player. Identity (alias, accounts) is
-// frozen at creation because Player rows are renameable and prunable; the
-// wallet is bound at accept time so a dare can name someone without a wallet.
-model BucksDareTarget {
-  id        Int       @id @default(autoincrement())
-  dareId    Int
-  dare      BucksDare @relation(fields: [dareId], references: [id], onDelete: Cascade)
-  discordId String
-  playerId  Int
-  alias     String
-
-  // JSON [{puuid, trackingStartedAt}] — the union across the user's Player
-  // rows, frozen at creation. Qualifying-game candidacy reads only these.
-  accounts String
-
-  // Set when the target accepts; targets risk nothing before then.
-  bucksAccountId Int?
-  acceptedAt     DateTime?
-  declinedAt     DateTime?
-
-  // Net payout and house fee recorded at achieved settlement.
-  payout Int?
-  fee    Int?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([dareId, discordId])
-}
-
-// Append-only pot funding. Contributions are never retracted: the void and
-// decline paths refund every row in full, and unachieved refunds each
-// contributor's total minus the house cut.
-model BucksDareContribution {
-  id             Int          @id @default(autoincrement())
-  dareId         Int
-  dare           BucksDare    @relation(fields: [dareId], references: [id], onDelete: Cascade)
-  bucksAccountId Int
-  bucksAccount   BucksAccount @relation(fields: [bucksAccountId], references: [id], onDelete: Cascade)
-  discordId      String
-  amount         Int
-  createdAt      DateTime     @default(now())
-
-  @@index([dareId])
-  // Serves refundable-headroom queries: open dare escrow counts against the
-  // contributor's Int32 credit headroom until the dare resolves.
-  @@index([bucksAccountId])
-}
-
-// Idempotent capture of one qualifying game against one active dare. The
-// unique key makes ingest replays P2002 no-ops, and `leafHits` aligns to the
-// conditions tree's canonical leaf order forever.
-model BucksDareGame {
-  id          Int       @id @default(autoincrement())
-  dareId      Int
-  dare        BucksDare @relation(fields: [dareId], references: [id], onDelete: Cascade)
-  matchId     String
-  gameStartAt DateTime
-  gameEndAt   DateTime
-  queueType   String
-
-  // JSON boolean[] aligned to dareLeavesInCanonicalOrder(conditions).
-  leafHits String
-  // Frozen per-target facts for audit; settlement re-reads leafHits only.
-  snapshot String
-
-  createdAt DateTime @default(now())
-
-  @@unique([dareId, matchId])
-}
-
-// ScoutQL-backed Dare v2. Draft revisions are private and unfunded; funding
-// freezes one revision into contractJson. V1 rows remain in BucksDare and are
-// never migrated or reinterpreted by this model.
-model BucksDareV2 {
   id                    Int       @id @default(autoincrement())
   serverId              String
   channelId             String
@@ -1570,6 +1685,10 @@ model BucksDareV2 {
   activatedAt           DateTime?
   deadlineAt            DateTime?
   settledAt             DateTime?
+  // The match whose settlement made this Dare terminal, when one did. Written
+  // in the settling transaction so a retried settlement can still name every
+  // Dare the match resolved after its in-memory result is gone.
+  settledMatchId        String?
   finalValue            Boolean?
   proofJson             String?
   voidReason            String?
@@ -1581,46 +1700,47 @@ model BucksDareV2 {
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
-  revisions          BucksDareV2Revision[]
-  targets            BucksDareV2Target[]
-  contributions      BucksDareV2Contribution[]
-  evidence           BucksDareV2Evidence[]
+  revisions          BucksDareRevision[]
+  targets            BucksDareTarget[]
+  contributions      BucksDareContribution[]
+  evidence           BucksDareEvidence[]
   intents            ConfirmationIntent[]
   notificationEvents BucksDareNotificationEvent[]
-  activation         BucksDareV2Activation?
+  activation         BucksDareActivation?
 
   @@index([challengerDiscordId, dareState, updatedAt])
   @@index([serverId, dareState, updatedAt])
   @@index([dareState, acceptDeadline])
   @@index([dareState, deadlineAt])
   @@index([calloutRefreshPending, updatedAt])
+  @@index([settledMatchId])
 }
 
 // Durable activation queue for rank and historical-baseline contracts. The
 // frozen snapshot is copied into contractJson before the Dare becomes active.
-model BucksDareV2Activation {
-  dareId        Int         @id
-  dare          BucksDareV2 @relation(fields: [dareId], references: [id], onDelete: Cascade)
+model BucksDareActivation {
+  dareId        Int       @id
+  dare          BucksDare @relation(fields: [dareId], references: [id], onDelete: Cascade)
   revision      Int
   requestedAt   DateTime
   nextAttemptAt DateTime
-  attemptCount  Int         @default(0)
+  attemptCount  Int       @default(0)
   lastAttemptAt DateTime?
   errorCode     String?
   snapshotJson  String?
   completedAt   DateTime?
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   @@index([completedAt, nextAttemptAt, requestedAt])
 }
 
 // Immutable history of draft iterations. Replacing a draft appends a revision;
 // it never mutates the ScoutQL/plan the challenger previously reviewed.
-model BucksDareV2Revision {
-  id                  Int         @id @default(autoincrement())
+model BucksDareRevision {
+  id                  Int       @id @default(autoincrement())
   dareId              Int
-  dare                BucksDareV2 @relation(fields: [dareId], references: [id], onDelete: Cascade)
+  dare                BucksDare @relation(fields: [dareId], references: [id], onDelete: Cascade)
   revision            Int
   originalText        String
   canonicalScoutQl    String
@@ -1640,15 +1760,15 @@ model BucksDareV2Revision {
   displayTitle        String?
   statusPhrasesJson   String?
   translationJson     String?
-  createdAt           DateTime    @default(now())
+  createdAt           DateTime  @default(now())
 
   @@unique([dareId, revision])
 }
 
-model BucksDareV2Target {
-  id             Int         @id @default(autoincrement())
+model BucksDareTarget {
+  id             Int       @id @default(autoincrement())
   dareId         Int
-  dare           BucksDareV2 @relation(fields: [dareId], references: [id], onDelete: Cascade)
+  dare           BucksDare @relation(fields: [dareId], references: [id], onDelete: Cascade)
   targetKey      String
   discordId      String
   playerId       Int
@@ -1659,17 +1779,17 @@ model BucksDareV2Target {
   declinedAt     DateTime?
   payout         Int?
   fee            Int?
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   @@unique([dareId, targetKey])
   @@unique([dareId, discordId])
 }
 
-model BucksDareV2Contribution {
+model BucksDareContribution {
   id             Int          @id @default(autoincrement())
   dareId         Int
-  dare           BucksDareV2  @relation(fields: [dareId], references: [id], onDelete: Cascade)
+  dare           BucksDare    @relation(fields: [dareId], references: [id], onDelete: Cascade)
   bucksAccountId Int
   bucksAccount   BucksAccount @relation(fields: [bucksAccountId], references: [id], onDelete: Cascade)
   discordId      String
@@ -1682,10 +1802,10 @@ model BucksDareV2Contribution {
 
 // Immutable one-row-per-match evidence. The plan is re-evaluated from these
 // rows transactionally; ingestion order cannot change the chronological proof.
-model BucksDareV2Evidence {
-  id                  Int         @id @default(autoincrement())
+model BucksDareEvidence {
+  id                  Int       @id @default(autoincrement())
   dareId              Int
-  dare                BucksDareV2 @relation(fields: [dareId], references: [id], onDelete: Cascade)
+  dare                BucksDare @relation(fields: [dareId], references: [id], onDelete: Cascade)
   matchId             String
   gameStartAt         DateTime
   gameEndAt           DateTime
@@ -1697,7 +1817,7 @@ model BucksDareV2Evidence {
   targetDependencies  String
   evaluationTrace     String
   planVersion         String
-  createdAt           DateTime    @default(now())
+  createdAt           DateTime  @default(now())
 
   @@unique([dareId, matchId])
   @@index([dareId, gameEndAt, matchId])
@@ -1716,18 +1836,18 @@ model BucksDareV2Evidence {
 // `dareId`/`expectedRevision` are nullable because an intent need not have an
 // existing target; a dare intent always sets both, keeping its cascade delete.
 model ConfirmationIntent {
-  id               String       @id @default(uuid())
+  id               String     @id @default(uuid())
   kind             String
   serverId         String
   actorDiscordId   String
   payload          String
-  idempotencyKey   String       @unique
+  idempotencyKey   String     @unique
   expiresAt        DateTime
   consumedAt       DateTime?
   resultJson       String?
-  createdAt        DateTime     @default(now())
+  createdAt        DateTime   @default(now())
   dareId           Int?
-  dare             BucksDareV2? @relation(fields: [dareId], references: [id], onDelete: Cascade)
+  dare             BucksDare? @relation(fields: [dareId], references: [id], onDelete: Cascade)
   expectedRevision Int?
 
   @@index([dareId, expiresAt])
@@ -1737,18 +1857,18 @@ model ConfirmationIntent {
 // freezes the recipients at occurrence time; delivery checks each recipient's
 // current preference so suppression remains an operator-controlled decision.
 model BucksDareNotificationEvent {
-  id               String      @id @default(uuid())
+  id               String    @id @default(uuid())
   dareId           Int
-  dare             BucksDareV2 @relation(fields: [dareId], references: [id], onDelete: Cascade)
+  dare             BucksDare @relation(fields: [dareId], references: [id], onDelete: Cascade)
   revision         Int
   category         String
   kind             String
   actorDiscordId   String?
   matchId          String?
   payload          String
-  deduplicationKey String      @unique
+  deduplicationKey String    @unique
   occurredAt       DateTime
-  createdAt        DateTime    @default(now())
+  createdAt        DateTime  @default(now())
 
   deliveries BucksDareNotificationDelivery[]
 
@@ -1833,141 +1953,6 @@ model BucksWeeklyLeaderboardSnapshot {
 
   @@unique([serverId, runWeek])
   @@index([serverId, postedAt])
-}
-
-// =============================================================================
-// Legacy Tournament-code custom lobbies
-//
-// Scout no longer creates Riot Tournament API lobbies. These models remain so
-// existing games retain provenance and historical results can still project.
-//
-// Deliberately provider-agnostic: only Int/String/BigInt/DateTime/Boolean, no
-// Prisma enum (SQLite has none) and no @db.* native types. Enum-shaped columns
-// are TEXT validated by Zod on read and write, matching how `AuditLog.action`
-// and `DmAuditLog.kind` already work. That keeps the migration portable across
-// the pending Postgres cutover.
-// =============================================================================
-
-/// A registered tournament provider and tournament.
-///
-/// Historical registration rows retained for database compatibility.
-///
-/// Keyed by (apiMode, region) because stub and live IDs are different
-/// namespaces: a code minted under the stub is meaningless under the live API.
-model TournamentRegistration {
-  id               Int      @id @default(autoincrement())
-  apiMode          String // TournamentApiMode: "stub" | "live"
-  /// Riot tournament region code, e.g. "NA". Deliberately NOT named `region`:
-  /// that field name is branded as Scout's own Region enum, and these are a
-  /// different naming scheme entirely.
-  tournamentRegion String
-  providerId       Int
-  tournamentId     Int
-  callbackUrl      String
-  name             String
-  createdAt        DateTime @default(now())
-
-  @@unique([apiMode, tournamentRegion])
-}
-
-/// One historical Scout-created custom lobby, from minted code to report.
-///
-/// Not folded into ActiveGame: that row is keyed by prematchMatchId, which does
-/// not exist until a game starts, and it is hard-deleted every 30 seconds once
-/// past its 3-hour TTL. A lobby exists before any game, may never produce one,
-/// and has to survive for /lobby status and for audit.
-///
-/// The link to ActiveGame is by value — TournamentLobby.matchId equals
-/// ActiveGame.prematchMatchId — so the post-match reply path needs no change.
-model TournamentLobby {
-  id           Int    @id @default(autoincrement())
-  /// The Riot tournament code. This is the join credential, so it is never
-  /// posted to a public channel.
-  code         String @unique
-  apiMode      String // TournamentApiMode
-  providerId   Int
-  tournamentId Int
-  /// Scout Region enum value, e.g. "AMERICA_NORTH".
-  region       String
-  /// Platform id, e.g. "NA1". games/by-code answers with a bare numeric gameId
-  /// and Match-V5 wants {PLATFORM}_{gameId}; this is the missing half.
-  platformId   String
-
-  serverId         String
-  channelId        String
-  creatorDiscordId String
-
-  /// JSON string arrays retained for compatibility with old declared-roster
-  /// lobbies. New lobbies are open, so these arrays are empty: lobby events
-  /// reveal who joined but never which side they chose.
-  bluePuuids    String
-  redPuuids     String
-  blueAliases   String
-  redAliases    String
-  teamSize      Int
-  pickType      String // TournamentPickType
-  mapType       String // TournamentMapType
-  spectatorType String // TournamentSpectatorType
-  lobbyName     String?
-  password      String?
-
-  /// TournamentLobbyState. Advances monotonically; see lifecycle.ts.
-  state String
-
-  /// Observability only. Correctness must NOT depend on these: lobby-events
-  /// replays its whole list every call, multiple events can share a
-  /// millisecond, and `timestamp` is a string. The monotonic state recompute
-  /// is what makes a replay idempotent.
-  processedEventCount Int     @default(0)
-  lastEventTimestamp  String?
-
-  /// JSON object: Discord channel ID -> prematch message ID. Copied onto the
-  /// ActiveGame row once the match ID is known, so the post-match report
-  /// replies to the right message.
-  prematchMessageIds String?
-
-  /// JSON string array of PUUIDs seen in a PlayerJoinedGameEvent.
-  joinedPuuids String @default("[]")
-
-  gameId  BigInt?
-  /// Platform-qualified Riot match ID; joins to ActiveGame.prematchMatchId.
-  matchId String?
-
-  lastPolledAt DateTime?
-  createdAt    DateTime  @default(now())
-  expiresAt    DateTime
-  updatedAt    DateTime  @updatedAt
-
-  /// The historical durable request claim that minted this credential.
-  provision  TournamentLobbyProvision?
-  customGame CustomGame?
-  duelGame   DuelGame?
-
-  @@index([state, expiresAt])
-  @@index([serverId, state])
-  @@index([matchId])
-}
-
-/// Historical claim for one Tournament-V5 code-creation request.
-///
-/// A timeout after the POST may mean Riot minted a credential, so any request
-/// that did not durably reach COMPLETED is intentionally not retried. The
-/// request hash also prevents an idempotency key from being reused for a
-/// different roster or lobby policy.
-model TournamentLobbyProvision {
-  id          String           @id
-  requestHash String
-  state       String           @default("PENDING")
-  lobbyId     Int?             @unique
-  lobby       TournamentLobby? @relation(fields: [lobbyId], references: [id], onDelete: Restrict)
-  lastError   String?
-  claimedAt   DateTime         @default(now())
-  completedAt DateTime?
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-
-  @@index([state, claimedAt])
-  @@index([requestHash, state])
 }
 
 // =============================================================================
@@ -2068,7 +2053,6 @@ model CustomGame {
   map                String
   pickMode           String
   activeCaptain      String?
-  tournamentLobbyId  Int?      @unique
   matchId            String?   @unique
   observedLobbyId    String?
   lobbyObservationId String?   @unique
@@ -2082,10 +2066,9 @@ model CustomGame {
   completedAt        DateTime?
   updatedAt          DateTime  @updatedAt
 
-  night           CustomNight             @relation(fields: [nightId], references: [id], onDelete: Cascade)
-  tournamentLobby TournamentLobby?        @relation(fields: [tournamentLobbyId], references: [id], onDelete: Restrict)
-  participants    CustomGameParticipant[]
-  auditEvents     CustomAuditEvent[]
+  night        CustomNight             @relation(fields: [nightId], references: [id], onDelete: Cascade)
+  participants CustomGameParticipant[]
+  auditEvents  CustomAuditEvent[]
 
   @@unique([nightId, sequence])
   @@index([observedLobbyId])
@@ -2223,7 +2206,7 @@ model ScoutEffectClaim {
 //
 // Enum-shaped and JSON fields remain strings validated by @scout-for-lol/data
 // at every read/write boundary. This follows the provider-neutral persistence
-// convention used by Customs and tournament lobbies.
+// convention used by Customs.
 // =============================================================================
 
 model HallSettings {
@@ -2283,23 +2266,6 @@ model HallBaselineRun {
 
   @@unique([guildId, revision])
   @@index([baselineState, createdAt])
-}
-
-model HallRecordBreakOutbox {
-  id             String    @id @default(uuid())
-  guildId        String
-  matchId        String
-  channelId      String
-  payloadJson    String
-  deliveryStatus String    @default("pending")
-  attemptCount   Int       @default(0)
-  lastError      String?
-  createdAt      DateTime  @default(now())
-  sentAt         DateTime?
-  updatedAt      DateTime  @updatedAt
-
-  @@unique([guildId, matchId])
-  @@index([deliveryStatus, createdAt])
 }
 
 model ChallengeTemplate {
@@ -2642,7 +2608,6 @@ model DuelGame {
   id                   String    @id @default(uuid())
   seriesId             String
   gameNumber           Int
-  tournamentLobbyId    Int?      @unique
   observedLobbyId      String?
   lobbyObservationId   String?   @unique
   matchId              String?   @unique
@@ -2657,8 +2622,7 @@ model DuelGame {
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
 
-  series          DuelSeries       @relation(fields: [seriesId], references: [id], onDelete: Cascade)
-  tournamentLobby TournamentLobby? @relation(fields: [tournamentLobbyId], references: [id], onDelete: Restrict)
+  series DuelSeries @relation(fields: [seriesId], references: [id], onDelete: Cascade)
 
   @@unique([seriesId, gameNumber])
   @@index([observedLobbyId])
@@ -2700,22 +2664,6 @@ model DuelRecord {
   @@index([guildId, scope, wins])
 }
 
-model DuelStatusOutbox {
-  id             String    @id @default(uuid())
-  guildId        String
-  channelId      String
-  dedupeKey      String    @unique
-  payloadJson    String
-  deliveryStatus String    @default("pending")
-  attemptCount   Int       @default(0)
-  lastError      String?
-  createdAt      DateTime  @default(now())
-  sentAt         DateTime?
-  updatedAt      DateTime  @updatedAt
-
-  @@index([deliveryStatus, createdAt])
-}
-
 // =============================================================================
 // Durable match pipeline: operational facts and receipts
 //
@@ -2740,6 +2688,7 @@ model MatchObservation {
   platformRoute    String
   processingPolicy String // MatchProcessingPolicy: ARCHIVE_ONLY | FULL
   deliveryMode     String // MatchDeliveryMode: live | silent-backfill; decided at discovery, never derivable later
+  matchDataSource  String    @default("RIOT") // MatchDataSource: RIOT | SCOUT_CLIENT; canonical payload provenance, fixed at commit
   pipelineOwner    String? // LEGACY_V1 | TEMPORAL_V2; NULL = unowned
   promotedAt       DateTime?
   gameCreatedAt    DateTime
@@ -2764,8 +2713,7 @@ model MatchObservation {
 
 /// Frozen 10-player Flex roster for community MVP votes. Match-global: the
 /// players are a fact of the Riot match, while ballots below are per guild.
-/// `reportMessageIds` is the durable channel→message map for tally edits;
-/// ActiveGame.postmatchMessageIds expires with the 3-hour active-game TTL.
+/// `reportMessageIds` is the durable channel→message map for tally edits.
 model MatchMvpContest {
   matchId          String    @id
   roster           Json
@@ -2834,6 +2782,21 @@ model MatchMvpTallyRefresh {
   @@index([pending, nextAttemptAt, createdAt])
 }
 
+/// Guild ownership for a delivered MVP report target. Discord may later delete
+/// the channel or deny access, so refresh cannot recover its guild by fetching
+/// the channel at the moment it needs to retire a permanently unavailable edit.
+model MatchMvpReportTarget {
+  matchId   String
+  channelId String
+  serverId  String
+  messageId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@id([matchId, channelId, messageId])
+  @@index([matchId, serverId])
+}
+
 /// Association between an observation and one tracked account seen in the
 /// match. FK-by-value on riotMatchId (no relation) so ingestion can record
 /// participants before/independently of any other table. playerId/accountId
@@ -2892,7 +2855,7 @@ model MatchNotificationIntent {
   subjectKind     String  @default("match") // match | duel | dare
   subjectId       String?
   riotMatchId     String? // match subjects only; retained for match fan-out lookup
-  kind            String // NotificationIntentKind: postmatch | prematch | settlement | dare-summary | hall-record-break
+  kind            String // NotificationIntentKind: postmatch | prematch | settlement | hall-record-break | duel-status | dare-status
   originKind      String // NotificationIntentOrigin kind: live | recovery
   recoveryBatchId String? // recovery origin only: the batch whose policy governs delivery
   targetKind      String // NotificationTarget kind: channel | dm
@@ -2963,7 +2926,7 @@ model MatchNotificationIntent {
 /// had its announcements minted and its rows are sweepable; see SJ-203.
 model MatchSettlementAnnouncement {
   riotMatchId String
-  /// closure | settlement | parlay | earnings | late-earnings | dare-summary
+  /// closure | settlement | parlay | earnings | late-earnings
   family      String
   /// The item's identity within its family: a guild id, or a Dare id.
   itemKey     String
@@ -3043,19 +3006,10 @@ model ScoutOperatorAuditEvent {
   @@index([actorDiscordId, createdAt])
 }
 
-/// Permanent old→new PUUID map from a Riot API-key domain change.
-///
-/// Riot encrypts identifiers per API-key holder, so moving between keys
-/// invalidates every stored PUUID. `scripts/migrate-puuid-key.ts` rewrites the
-/// database, but the S3 corpus is canonical and deliberately left untouched —
-/// it holds old-domain PUUIDs permanently, and the report lake is re-derived
-/// from it. This table is what lets that re-derivation stay correct.
-///
-/// It is NOT scratch state. Once the old key is retired, nothing can rebuild
-/// it: only that key could map an old PUUID back to a Riot ID. It is a managed
-/// model, and carried by the legacy SQLite→Postgres import, so the mapping
-/// survives promotion rather than silently degrading rebuilds to old-domain
-/// identifiers.
+/// Archived old→new PUUID evidence from the completed Riot API-key cutover.
+/// Canonical S3 objects and database identities have both been rewritten.
+/// Runtime reads and lake rebuilds no longer consult these records. Preserve
+/// them for historical recovery; retiring application code does not delete data.
 model PuuidKeyMap {
   oldPuuid    String    @id
   gameName    String?
@@ -3065,17 +3019,14 @@ model PuuidKeyMap {
   status      String    @default("pending")
   harvestedAt DateTime? @db.Timestamptz()
   resolvedAt  DateTime? @db.Timestamptz()
-  /// When this mapping's stored references were actually rewritten. A resolved
-  /// row is not usable until then: translating historical payloads to an
-  /// identifier the database does not yet hold would hide the player it names.
+  /// When this mapping's stored references were rewritten during cutover.
   appliedAt   DateTime? @db.Timestamptz()
 
   @@index([status])
 }
 
-/// Applied remap edges retained when a source domain is reused by a later
-/// transition. The live PuuidKeyMap row then remains free to record the current
-/// transition's unresolved or resolved result.
+/// Archived applied edges from earlier API-key domains. Retained as evidence,
+/// not an application translation source.
 model PuuidKeyMapHistory {
   oldPuuid  String
   newPuuid  String
@@ -3085,13 +3036,7 @@ model PuuidKeyMapHistory {
   @@index([oldPuuid])
 }
 
-/// Whether this database has been rewritten to a new Riot key domain.
-///
-/// A single row, deliberately separate from the mapping itself. It has to exist
-/// even when the map is empty — a cutover performed while tracking no accounts
-/// still moves the database to the new domain — and it has to survive every
-/// account present at migration being untracked later. Neither is true of state
-/// derived from the tracked rows or carried on the mapping rows.
+/// Archived database cutover receipt, retained independently of tracked accounts.
 model PuuidKeyMigration {
   /// Always 1. One row describes one database.
   id             Int       @id @default(1)

@@ -1,11 +1,11 @@
-import type { ModalBuilder } from "discord.js";
+import { type Interaction, type ModalBuilder } from "discord.js";
 import { parseVoteCustomId } from "#src/mvp-votes/custom-id.ts";
 import { mvpVoteModal } from "#src/mvp-votes/components.ts";
 import { MVP_VOTE_GUILD_ONLY } from "#src/mvp-votes/copy.ts";
 
 export type VoteSelectInteraction = {
   customId: string;
-  guildId: string | null;
+  guildId: Interaction["guildId"];
   user: { id: string };
   values: string[];
   deferred: boolean;

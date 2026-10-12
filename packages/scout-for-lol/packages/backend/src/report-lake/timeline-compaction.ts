@@ -1,11 +1,11 @@
-import { unlink } from "node:fs/promises";
+import { rm } from "node:fs/promises";
 import path from "node:path";
 import type { S3Client } from "@aws-sdk/client-s3";
 import type { DuckDbColumnType } from "@scout-for-lol/data";
 import { NdjsonFileWriter } from "#src/report-lake/ndjson-writer.ts";
+import { copyNdjsonToParquet } from "#src/report-lake/parquet/copy-ndjson.ts";
 import { populateTimelinesFromS3 } from "#src/report-lake/rebuild-sources.ts";
 import {
-  duckDbColumnsSpec,
   TIMELINE_COVERAGE_LAKE_COLUMNS,
   TIMELINE_EVENT_LAKE_COLUMNS,
   TIMELINE_EVENT_PARTICIPANT_LAKE_COLUMNS,
@@ -20,7 +20,10 @@ type TimelineWriter = {
   columns: Record<string, DuckDbColumnType>;
 };
 
-function timelineWriters(buildDir: string): {
+function timelineWriters(
+  buildDir: string,
+  abortSignal: AbortSignal,
+): {
   entries: TimelineWriter[];
   events: NdjsonFileWriter;
   eventParticipants: NdjsonFileWriter;
@@ -44,7 +47,7 @@ function timelineWriters(buildDir: string): {
     return {
       ...spec,
       path: filePath,
-      writer: new NdjsonFileWriter(filePath),
+      writer: new NdjsonFileWriter(filePath, undefined, abortSignal),
     };
   });
   const events = entries.at(0)?.writer;
@@ -76,52 +79,69 @@ export async function rebuildTimelineParquet(options: {
   client: S3Client;
   bucket: string;
   buildDir: string;
+  rawWriter?: NdjsonFileWriter;
+  foldedSources?: Set<string>;
   abortSignal: AbortSignal;
   timeoutMs: number;
-  /** Old→new PUUIDs for timelines captured under a previous API key. */
-  puuidRemap: ReadonlyMap<string, string>;
   onProgress?: (progress: {
     files: number;
     rows: number;
     skipped: number;
   }) => void;
 }): Promise<TimelineCompactionResult> {
-  const writers = timelineWriters(options.buildDir);
+  options.abortSignal.throwIfAborted();
+  const writers = timelineWriters(options.buildDir, options.abortSignal);
   const foldedIds = new Set<string>();
-  const skipped = await populateTimelinesFromS3({
-    client: options.client,
-    bucket: options.bucket,
-    writers,
-    foldedIds,
-    puuidRemap: options.puuidRemap,
-    abortSignal: options.abortSignal,
-    ...(options.onProgress === undefined
-      ? {}
-      : { onProgress: options.onProgress }),
-  });
-  await Promise.all(writers.entries.map(async (entry) => entry.writer.close()));
   try {
+    const skipped = await populateTimelinesFromS3({
+      client: options.client,
+      bucket: options.bucket,
+      writers: {
+        ...writers,
+        ...(options.rawWriter === undefined
+          ? {}
+          : { rawWriter: options.rawWriter }),
+      },
+      foldedIds,
+      ...(options.foldedSources === undefined
+        ? {}
+        : { foldedSources: options.foldedSources }),
+      abortSignal: options.abortSignal,
+      ...(options.onProgress === undefined
+        ? {}
+        : { onProgress: options.onProgress }),
+    });
+    await Promise.all(
+      writers.entries.map(async (entry) => entry.writer.close()),
+    );
     await withDuckDBConnection(
       async (session) => {
         for (const entry of writers.entries) {
           if (entry.writer.rows === 0) continue;
-          await session.run(
-            `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(entry.columns)})) TO '${path.join(options.buildDir, entry.table)}' (FORMAT PARQUET, PARTITION_BY (month), OVERWRITE_OR_IGNORE)`,
-            [entry.path],
-          );
+          await copyNdjsonToParquet(session, {
+            sourcePath: entry.path,
+            outputDirectory: path.join(options.buildDir, entry.table),
+            columns: entry.columns,
+            partitionByMonth: true,
+          });
         }
       },
-      { timeoutMs: options.timeoutMs },
+      { timeoutMs: options.timeoutMs, abortSignal: options.abortSignal },
     );
+    return {
+      eventRows: writers.events.rows,
+      eventParticipantRows: writers.eventParticipants.rows,
+      participantFrameRows: writers.participantFrames.rows,
+      coverageRows: writers.coverage.rows,
+      skipped,
+      foldedIds,
+    };
   } finally {
-    await Promise.all(writers.entries.map(async (entry) => unlink(entry.path)));
+    await Promise.all(
+      writers.entries.map(async (entry) => {
+        await entry.writer.abort();
+        await rm(entry.path, { force: true });
+      }),
+    );
   }
-  return {
-    eventRows: writers.events.rows,
-    eventParticipantRows: writers.eventParticipants.rows,
-    participantFrameRows: writers.participantFrames.rows,
-    coverageRows: writers.coverage.rows,
-    skipped,
-    foldedIds,
-  };
 }

@@ -15,6 +15,7 @@ import {
   TIMELINE_EVENT_PARTICIPANT_LAKE_COLUMNS as importedTimelineEventParticipantLakeColumns,
   TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS as importedTimelineParticipantFrameLakeColumns,
 } from "@scout-for-lol/data/model/reports/timeline-lake-columns.ts";
+import { RAW_DOCUMENT_LAKE_COLUMNS } from "@scout-for-lol/data/model/reports/raw-document-lake-columns.ts";
 
 const ACCOUNT_LAKE_COLUMNS = importedAccountLakeColumns;
 const COMPETITION_RANK_HISTORY_LAKE_COLUMNS =
@@ -110,8 +111,14 @@ export function duckDbEmptySelect(
  * union by name, so a cosmetic reorder is read-compatible and should not cost a
  * full rebuild; a rename, addition, removal, or type change is not, and does.
  */
-export function lakeSchemaFingerprint(): string {
+export function lakeSchemaFingerprint(
+  rawDocumentColumns: Record<
+    string,
+    DuckDbColumnType
+  > = RAW_DOCUMENT_LAKE_COLUMNS,
+): string {
   const tables: Record<string, Record<string, DuckDbColumnType>> = {
+    raw_documents: rawDocumentColumns,
     matches: MATCH_LAKE_COLUMNS,
     match_teams: MATCH_TEAM_LAKE_COLUMNS,
     match_team_bans: MATCH_TEAM_BAN_LAKE_COLUMNS,

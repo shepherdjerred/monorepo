@@ -1,4 +1,4 @@
-import { type ArenaTeam, type Augment } from "@scout-for-lol/data";
+import { type ArenaTeam, type Augment } from "#src/model/index.ts";
 import {
   createAatroxChampion,
   createLeonaChampion,

@@ -64,7 +64,23 @@ export const middleware = t.middleware;
  */
 const withTrpcMetrics = t.middleware(async ({ path, type, next }) => {
   const start = performance.now();
-  const result = await next();
+  const rawResult = await next();
+  const privateSupport =
+    path.startsWith("feedback.") || path.startsWith("operations.inbox.");
+  // A driver failure can embed query parameters. Support contents never belong
+  // in the HTTP error, logs, or Sentry; preserve the failure code, not its payload.
+  const result =
+    privateSupport &&
+    !rawResult.ok &&
+    rawResult.error.code === "INTERNAL_SERVER_ERROR"
+      ? {
+          ...rawResult,
+          error: new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Scout support is temporarily unavailable. Please retry.",
+          }),
+        }
+      : rawResult;
   const procedure = path === "" ? "unknown" : path;
   trpcCallDuration.observe({ procedure }, (performance.now() - start) / 1000);
   trpcCallsTotal.inc({

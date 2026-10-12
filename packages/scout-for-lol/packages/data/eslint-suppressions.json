@@ -45,9 +45,6 @@
     "max-lines": {
       "count": 1
     },
-    "sonarjs/cognitive-complexity": {
-      "count": 2
-    },
     "unicorn/no-useless-undefined": {
       "count": 1
     },
@@ -59,26 +56,6 @@
     }
   },
   "src/lane-priors/eval.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  "src/model/legacy/report-query-expression.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  "src/model/legacy/report-query-parser.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  "src/model/legacy/report-query-render-validation.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  "src/model/legacy/report-query-render.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }

@@ -1296,6 +1296,36 @@
       "key": "60111",
       "name": "Nautilus",
       "modernKey": "111"
+    },
+    "Jade_Aatrox": {
+      "id": "Jade_Aatrox",
+      "key": "60266",
+      "name": "Aatrox",
+      "modernKey": "266"
+    },
+    "Jade_Caitlyn": {
+      "id": "Jade_Caitlyn",
+      "key": "60051",
+      "name": "Caitlyn",
+      "modernKey": "51"
+    },
+    "Jade_Irelia": {
+      "id": "Jade_Irelia",
+      "key": "60039",
+      "name": "Irelia",
+      "modernKey": "39"
+    },
+    "Jade_Karma": {
+      "id": "Jade_Karma",
+      "key": "60043",
+      "name": "Karma",
+      "modernKey": "43"
+    },
+    "Jade_Quinn": {
+      "id": "Jade_Quinn",
+      "key": "60133",
+      "name": "Quinn",
+      "modernKey": "133"
     }
   }
 }

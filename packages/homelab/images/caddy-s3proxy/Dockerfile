@@ -9,27 +9,37 @@
 # HEAD support, fixes the 304-on-index regression, and returns 206 +
 # Accept-Ranges on byte-range requests (Safari refuses to play video from
 # origins that answer 200 to Range requests). The pinned source is patched
-# locally to flush Caddy's deferred response headers before streaming S3 data.
+# locally to flush Caddy's deferred response headers and preserve the object's
+# Content-Length before streaming. Cloudflare needs that length to serve ranges
+# for large downloads. The build tests full and partial HTTP response framing.
 
 # renovate: datasource=docker depName=caddy
-FROM caddy:2.11.4-builder-alpine@sha256:2b9f32cbba6045e79212bb253f595588d20be8f7d1edf61582c519e124e0d2d8 AS builder
+FROM caddy:2.11.7-builder-alpine@sha256:aa705b1e8e4bce41a7a30de934c1e00f6821667c1d1206424465065c92cb7674 AS builder
 
 # xcaddy --with module for the S3 proxy plugin. The fork keeps the upstream
 # import path and adds HEAD support, the 304-on-index fix, and 206/Accept-Ranges
 # on byte-range responses. The source commit is pinned because the compatibility
 # patch below must be applied to the exact tree it was reviewed against.
 COPY caddy-s3proxy-header-flush.patch /tmp/caddy-s3proxy-header-flush.patch
+COPY get_object_test.go /tmp/get_object_test.go
 RUN git init /tmp/caddy-s3-proxy \
   && git -C /tmp/caddy-s3-proxy remote add origin https://github.com/shepherdjerred/caddy-s3-proxy.git \
   && git -C /tmp/caddy-s3-proxy fetch --depth 1 origin 2333a6ed263df951a2a017ef248af8c97fbf8b42 \
   && git -C /tmp/caddy-s3-proxy checkout --detach FETCH_HEAD \
   && git -C /tmp/caddy-s3-proxy apply --unidiff-zero /tmp/caddy-s3proxy-header-flush.patch \
+  && cp /tmp/get_object_test.go /tmp/caddy-s3-proxy/archive_get_object_test.go \
+  && go -C /tmp/caddy-s3-proxy test -run '^Test(ArchiveResponseLength|ConditionalResponse)$' ./... \
   && xcaddy build --with github.com/lindenlab/caddy-s3-proxy=/tmp/caddy-s3-proxy
 
 # renovate: datasource=docker depName=caddy
-FROM caddy:2.11.4-alpine@sha256:6aeddd44c3078b0f9a35206472a11420648a79c184603ef95957d0a20044cb2b AS runtime
+FROM caddy:2.11.7-alpine@sha256:d8542f48d34a9cf4e4c11a478865229840e87e4c96ea3f439101f31a5d35f75f AS runtime
 
 COPY --from=builder /usr/bin/caddy /usr/bin/caddy
+
+# The base image gives Caddy a file capability for privileged ports. That
+# prevents exec when a hardened gateway drops all capabilities. Workloads use
+# unprivileged listeners instead of relying on binary capabilities.
+RUN setcap -r /usr/bin/caddy
 
 LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"
 
@@ -37,8 +47,10 @@ FROM runtime AS smoke
 # Alpine base: busybox ash supports pipefail, so a failing `caddy list-modules`
 # fails the smoke check instead of being masked by grep.
 SHELL ["/bin/ash", "-o", "pipefail", "-c"]
+RUN test -z "$(getcap /usr/bin/caddy)"
+USER 1000:1000
 RUN caddy version && caddy list-modules | grep -F "http.handlers.s3proxy"
-RUN --mount=type=secret,id=caddyfile \
+RUN --mount=type=secret,id=caddyfile,uid=1000,gid=1000 \
   caddy adapt --config /run/secrets/caddyfile --adapter caddyfile >/dev/null
 
 FROM runtime AS image

@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import {
   RawCurrentGameInfoSchema,
@@ -23,12 +24,12 @@ import type {
 import {
   prematchReceiptMatchId,
   rawArchiveReceiptRecord,
-  receiptMatchId,
   recordReceiptFailOpen,
   storedRawArchiveDescriptor,
   type ReceiptRecordOutcome,
 } from "#src/report-lake/durable-receipts.ts";
 import {
+  archiveClientBundleToS3,
   archiveMatchToS3,
   archiveTimelineToS3,
   savePrematchDataToS3,
@@ -119,13 +120,13 @@ type ArchivedResult<T> = Extract<
 >;
 
 async function receiptArchived<T>(args: {
-  matchId: string;
+  matchId: RiotMatchId;
   artifact: ArtifactDescriptor;
   options: ReceiptOptions;
 }): Promise<ArchivedResult<T>> {
   const receipt = await recordReceiptFailOpen({
     record: rawArchiveReceiptRecord({
-      matchId: receiptMatchId(args.matchId),
+      matchId: args.matchId,
       artifact: args.artifact,
     }),
     writeKind: "raw-archive",
@@ -178,7 +179,7 @@ const ARCHIVE_POOL_MAX_WAIT_MS = 10_000;
  * is what keeps a starved follower from spending its whole lifetime waiting
  * and then failing for want of budget, and it keeps the normal case — one
  * holder, one follower — inside the full external deadline with room to
- * spare. This mirrors the 600/900 split `temporal/v2/effect-fence.ts`
+ * spare. This mirrors the 600/900 split `temporal/effect-fence.ts`
  * documents for the same class of hazard.
  */
 export type ArchiveFenceBudget = {
@@ -240,7 +241,7 @@ function fenceDeadlineFor(clock: FenceClock, now: number): number | null {
  */
 async function readArchivedPayload<T>(args: {
   descriptor: ArtifactDescriptor;
-  matchId: string;
+  matchId: RiotMatchId;
   abortSignal: AbortSignal;
   parse: (value: unknown) => { success: true; data: T } | { success: false };
   expected: string;
@@ -281,7 +282,7 @@ async function readArchivedPayload<T>(args: {
  */
 export async function readArchivedPrematchSnapshot(
   descriptor: ArtifactDescriptor,
-  matchId: string,
+  matchId: RiotMatchId,
 ): Promise<RawCurrentGameInfo> {
   return await readArchivedPayload({
     descriptor,
@@ -295,7 +296,7 @@ export async function readArchivedPrematchSnapshot(
 /** Read a receipted canonical match back from raw storage. */
 export async function readArchivedMatchPayload(
   descriptor: ArtifactDescriptor,
-  matchId: string,
+  matchId: RiotMatchId,
 ): Promise<RawMatch> {
   return await readArchivedPayload({
     descriptor,
@@ -432,7 +433,7 @@ async function withinFenceDeadline<T>(
  * database has always been able to take it.
  */
 async function archiveUnderFence<T>(args: {
-  matchId: string;
+  matchId: RiotMatchId;
   artifactKind: ArtifactKind;
   options: ReceiptOptions;
   put: (abortSignal: AbortSignal) => Promise<RawArchiveResult>;
@@ -462,7 +463,7 @@ async function archiveUnderFence<T>(args: {
         // until after it, inside `withinFenceDeadline`.
         const stored = await storedRawArchiveDescriptor(
           tx,
-          receiptMatchId(args.matchId),
+          args.matchId,
           args.artifactKind,
         );
         if (stored !== null) {
@@ -619,6 +620,36 @@ export async function archivePrematchReceipted(
         abortSignal,
         parse: (value) => RawCurrentGameInfoSchema.safeParse(value),
         expected: "a spectator payload",
+      }),
+  });
+}
+
+/**
+ * Archive the Scout Client post-game bundle a match's result was converted
+ * from, at most once per match, through the same fenced door as the match.
+ */
+export async function archiveClientBundleReceipted(
+  bundle: {
+    readonly matchId: RiotMatchId;
+    readonly payload: unknown;
+    readonly gameCreatedAt: Date;
+    readonly observationId: string;
+  },
+  options: ReceiptOptions = {},
+): Promise<ReceiptedArchiveResult<unknown>> {
+  return await archiveUnderFence({
+    matchId: bundle.matchId,
+    artifactKind: "client_bundle",
+    options,
+    put: async (abortSignal) =>
+      await archiveClientBundleToS3(bundle, abortSignal),
+    readCanonical: async (descriptor, abortSignal) =>
+      await readArchivedPayload({
+        descriptor,
+        matchId: bundle.matchId,
+        abortSignal,
+        parse: (value) => z.json().safeParse(value),
+        expected: "a Scout Client post-game bundle",
       }),
   });
 }

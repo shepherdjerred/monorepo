@@ -16,8 +16,9 @@ finalWave: 72
 # Mob archetypes. type: the entity type. health, damage, speed: multipliers on
 # vanilla values. scale: the scale attribute (1 is vanilla size). name: shown
 # above the mob, or null. equipment: slot to material; never dropped. rider:
-# another archetype riding this one, or null. behavior: VANILLA, CHASE (always
-# hunts the nearest fighter), KAMIKAZE (hunts and explodes with power blast)
+# another archetype riding this one, or null. Every hostile arena mob targets
+# the nearest fighter across the arena. behavior: VANILLA (native combat),
+# CHASE (always hunts the nearest fighter), KAMIKAZE (hunts and explodes with power blast)
 # or FOLLOW (harmless, trails a fighter). blast: explosion power for KAMIKAZE,
 # 0 otherwise.
 mobs:
@@ -241,6 +242,17 @@ mobs:
     name: null
     equipment:
       MAIN_HAND: GOLDEN_SPEAR
+    rider: null
+    behavior: CHASE
+    blast: 0
+  arena-slime:
+    type: SLIME
+    health: 1.0
+    damage: 0.8
+    speed: 1.0
+    scale: 1.0
+    name: null
+    equipment: {}
     rider: null
     behavior: CHASE
     blast: 0
@@ -500,7 +512,7 @@ bosses:
   parched-king:
     mob: parched-king
     name: The Parched King
-    health: 90
+    health: 130
     bar: YELLOW
     abilities:
       - type: SUMMON_ADDS
@@ -518,7 +530,7 @@ bosses:
   gale-sovereign:
     mob: gale-sovereign
     name: The Gale Sovereign
-    health: 110
+    health: 160
     bar: WHITE
     abilities:
       - type: KNOCKBACK_SLAM
@@ -536,7 +548,7 @@ bosses:
   hexmaster:
     mob: hexmaster
     name: The Hexmaster
-    health: 150
+    health: 210
     bar: PURPLE
     abilities:
       - type: LIGHTNING_AURA
@@ -560,7 +572,7 @@ bosses:
   heartwood:
     mob: heartwood
     name: Heartwood
-    health: 200
+    health: 260
     bar: GREEN
     abilities:
       # Four hearts of five hits each; an untouched heart moves every 25 s.
@@ -579,7 +591,7 @@ bosses:
   warlord:
     mob: warlord
     name: Warlord Gorrak
-    health: 230
+    health: 320
     bar: RED
     abilities:
       - type: LIGHTNING_AURA
@@ -609,7 +621,7 @@ bosses:
   ravager:
     mob: ravager
     name: The Ravager
-    health: 280
+    health: 380
     bar: RED
     abilities:
       - type: KNOCKBACK_SLAM
@@ -633,7 +645,7 @@ bosses:
   colossus:
     mob: colossus
     name: The Colossus
-    health: 340
+    health: 460
     bar: BLUE
     abilities:
       - type: KNOCKBACK_SLAM
@@ -657,7 +669,7 @@ bosses:
   warden:
     mob: warden
     name: The Warden
-    health: 450
+    health: 500
     bar: PURPLE
     abilities:
       - type: SHIELD_BREAK

@@ -1,0 +1,81 @@
+id: xxninjariderxx
+name: xXNinjaRiderXx
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0ODg1OTE2MiwKICAicHJvZmlsZUlkIiA6ICJhMzExN2YyMzg3MWM0YzM5OTQ5M2I0OGMwYTliZmZlNCIsCiAgInByb2ZpbGVOYW1lIiA6ICJhY2luNSIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8xMDE4NzY4YzA3N2IyZTIyYzBkMjAxYmQ2M2UyODdjNDQ3YzBiZmFhZjJkN2EyODllNDRiMTk1ODU5OTlkYmU0IgogICAgfQogIH0KfQ=="
+  signature: "rwq5nks4uJh5qxfPjEGZXqfK85sNFVuzRMFPjtiI7JyhzBN7fk0X6W3xXlLuHEL7XqSUuUuu9sXVPwgFpLKhcBHCg5YP6wAzvYv2e0X5TiB1wj+YUSh8lcz8Oh0cXWsLiayDKXpLvN5eobjsM1GPYNbJVBUM3ng+2rT0MOyU3LSuAUpe/crgtdj2CEJK06qR5pgR1E97OyBO+WBO7+qcliJwPu9nE5/blWdZ1+tloVXp/zFPBXcvDqYOMw/Us29gZf1LGw8zEbrFHs7B+P5DfPquEzFBAwVGa9nnCRXE27sFaXm2Cc0o+g/N8JNGjFZpvV6P5/6/qOjiNOhbMMuh2jiq+aX8/hz/noGlUwdoKkLXjxbA46IwhIJZQBAPlcO5svcxnW3dn4GMiEGO02PvdZ42MEtT2y3vNT5OpdZsvsxXfmc3NilgmRbS7CfSGrNl7LThzxJJe0QE0POy2y57Y4/yyvHP0rBK5kIPqRp1iSIOgcFiaNWT21YahT11gSJJ8U9qz7W6qOgaYvvKM7GpTwmZRBGOeST/5NUMHApyf37Q8iORfW/OOt7mKe4RqjbT4o7qvliQMPTgKFxgQTqXMA1EZgZs6PluvNImOSpPrqxJNnzik14C0BO4574kpYZEE5BJW1EauFCB8L4+ZL9e+2MAIa9GQZl0D/I7SrYRjDg="
+skill: 0.904
+archetype: sniper
+leverOffsets:
+  reactionMs: 0.7
+  aimErrorDeg: 1.88
+  turnRateDegPerTick: 0.17
+  cps: -0.82
+  predictionQuality: 1.47
+  awarenessRadius: 0.88
+  technique: -0.25
+  aggression: -0.55
+kits:
+  trooper: 0.15
+  longbow: 0.86
+  shortbow: 0.41
+roles:
+  defend: 0.55
+  rotate: 0.45
+  hunt: 0.7
+style:
+  aggression: 0.35
+  patience: 0.87
+  teamplay: 0.41
+  risk: 0.19
+voice:
+  tone:
+    - precise
+    - clinical
+    - terse
+  verbosity: quiet
+  style: "Military sniper callouts: distance, bearing, confirmation. No emotion"
+lines:
+  greet:
+    - On overwatch.
+    - "Eyes up, {team}."
+  onKill:
+    - "Target down. {victim}."
+    - Confirmed.
+    - Forty blocks. Clean.
+  onDeath:
+    - "{killer} had the angle."
+    - Position compromised.
+    - Spotted. Relocating.
+  onPlant:
+    - "{bomb} armed. Covering."
+    - Charge set.
+  onDefuse:
+    - "{bomb} secure."
+    - Threat neutralised.
+  onWin:
+    - Mission complete.
+    - "Good work, {team}."
+  onLoss:
+    - Mission failed. Debrief.
+    - Regroup.
+  onLastAlive:
+    - Solo. Holding.
+    - Last eyes on the field.
+  taunt:
+    - You're in my scope.
+    - Don't peek.
+    - Wind is calm. You're not.
+  lobby:
+    - "Kit check: Longbow. Arrows counted."
+    - "Pre-mission brief: hold high ground, report contacts."
+    - Spreadsheet updated. Headshot tally open.
+    - Wind speed nil. Visibility good.
+    - "{team}, comms discipline, please. Over."
+quirks:
+  - calls_everything
+rivals:
+  - luckypumpkin92
+  - silentbandit65
+bio: Plays every round like a briefing and once called out wind speed on a map with no wind. Counts headshots against SilentBandit65 and LuckyPumpkin92 in a spreadsheet nobody else may see.
+batch: 2
+retired: false

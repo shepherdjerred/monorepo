@@ -21,7 +21,8 @@ import { setDiscordGatewayState } from "#src/metrics/platform/discord-gateway-he
 import { registerLakeStagingLagSweep } from "#src/report-lake/lake-staging-lag.ts";
 import type { ScoutRuntimeDependencies } from "#src/runtime/boot.ts";
 import type { ScoutTemporalSupervisor } from "#src/temporal/supervisor.ts";
-import { registerPostmatchMintGapSweep } from "#src/temporal/v2/notification/postmatch-mint-gap.ts";
+import { registerPostmatchMintGapSweep } from "#src/temporal/notification/postmatch-mint-gap.ts";
+import { registerPrematchCoverageSweep } from "#src/scout-client/prematch-coverage.ts";
 
 const logger = createLogger("runtime-subsystems");
 
@@ -43,7 +44,10 @@ type CompetitionActivityWorker = {
 export function scoutRuntimeSubsystems(
   role: ScoutRuntimeRole,
 ): ScoutRuntimeDependencies {
-  const capabilities = scoutRuntimeCapabilities(role);
+  const capabilities = scoutRuntimeCapabilities(
+    role,
+    configuration.environment,
+  );
   let temporalSupervisor: ScoutTemporalSupervisor | undefined;
   let httpServer: HttpServerRuntime | undefined;
   let competitionWorker: CompetitionActivityWorker | undefined;
@@ -56,10 +60,12 @@ export function scoutRuntimeSubsystems(
       // here keeps "which role computes it" beside every other role decision
       // rather than making it a consequence of who imported what.
       // The post-match mint gap is registered for the same reason: its
-      // render-receipt vocabulary belongs to the V2 notification lane.
+      // render-receipt vocabulary belongs to the V2 notification lane, and the
+      // client prematch coverage because it reads the prematch receipt kind.
       if (enabled) {
         registerLakeStagingLagSweep();
         registerPostmatchMintGapSweep();
+        registerPrematchCoverageSweep();
       }
     },
 
@@ -130,12 +136,29 @@ export function scoutRuntimeSubsystems(
           stage: configuration.environment,
           activities: createScoutTemporalActivityGroups(),
           callGraphTracing: temporalCallGraphTracing(),
+          metrics:
+            configuration.temporalMetricsAddress === undefined
+              ? undefined
+              : {
+                  bindAddress: configuration.temporalMetricsAddress,
+                  role: configuration.runtimeRole,
+                },
           workers: capabilities.temporalWorkers,
           deferredWorkers: capabilities.deferredTemporalWorkers,
         });
         const { setScoutTemporalSupervisor } =
           await import("#src/temporal/runtime.ts");
         setScoutTemporalSupervisor(temporalSupervisor);
+        if (
+          configuration.environment === "beta" &&
+          capabilities.databaseMetricSweeps
+        ) {
+          const { registerWorkflowRoutingMetrics } =
+            await import("#src/temporal/workflow-routing-metrics.ts");
+          registerWorkflowRoutingMetrics(() =>
+            temporalSupervisor?.readClient(),
+          );
+        }
       },
 
       "discord-gateway": async () => {

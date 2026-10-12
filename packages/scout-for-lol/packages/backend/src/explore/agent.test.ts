@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test } from "vitest";
 import { testExploreLoadoutCard } from "#src/explore/loadout-card-test-fixture.ts";
 import {
@@ -12,7 +13,7 @@ describe("matchCardReplayContext", () => {
         {
           size: "L",
           match: {
-            matchId: "NA1_5635906026",
+            matchId: RiotMatchIdSchema.parse("NA1_5635906026"),
             teams: [
               { teamId: 100, win: true, kills: 91 },
               { teamId: 200, win: false, kills: 88 },
@@ -22,7 +23,7 @@ describe("matchCardReplayContext", () => {
         {
           size: "S",
           match: {
-            matchId: "NA1_5635906025",
+            matchId: RiotMatchIdSchema.parse("NA1_5635906025"),
             teams: [
               { teamId: 100, win: false, kills: 10 },
               { teamId: 200, win: true, kills: 20 },

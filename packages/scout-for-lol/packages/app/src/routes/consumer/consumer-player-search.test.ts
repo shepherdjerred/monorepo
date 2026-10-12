@@ -102,7 +102,7 @@ describe("consumer player hub states", () => {
     );
     expect(html).toContain("North");
     expect(html).toContain(
-      'class="text-sm text-scout-subtle">No other recently active players',
+      'class="text-sm text-scout-subtle">No recent matches from other players yet.',
     );
     expect(html).not.toContain("No Scout player is linked");
   });

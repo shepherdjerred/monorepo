@@ -25,6 +25,7 @@ export function ClashLoadingScreen({
   return (
     <div
       style={{
+        boxSizing: "border-box",
         width: "100%",
         height: "100%",
         display: "flex",
@@ -60,6 +61,7 @@ export function ClashLoadingScreen({
       )}
       <div
         style={{
+          boxSizing: "border-box",
           width: "100%",
           height: "100%",
           display: "flex",

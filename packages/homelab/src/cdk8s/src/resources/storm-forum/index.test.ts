@@ -1,0 +1,299 @@
+import { App, Chart, Testing } from "cdk8s";
+import { describe, expect, it } from "vitest";
+import { z } from "zod";
+import { createStormForumChart } from "./index.ts";
+import { resetProbeRegistry } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/probe-registry.ts";
+import { createServiceProbesChart } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/service-probes-chart.ts";
+
+const fixture = {
+  stage: "beta" as const,
+  image: `ghcr.io/shepherdjerred/storm-forum@sha256:${"a".repeat(64)}`,
+  secretItemId: "a".repeat(26),
+  bundleSha256: "b".repeat(64),
+  bundleKey: "releases/test.zip",
+  releaseId: "c".repeat(12),
+  trustedConnectorCidr: "10.244.0.0/16",
+};
+
+describe("forum upgrade snapshot contract", () => {
+  it("gives upgrade jobs scoped snapshot credentials before account migrations", () => {
+    resetProbeRegistry();
+    const rendered = Testing.synth(
+      createStormForumChart(new App(), {
+        ...fixture,
+        stage: "prod",
+        preUpgradeBackup: {
+          bundleSha256: "d".repeat(64),
+          xenforoVersion: "2.3.8",
+          runtimeImage: `ghcr.io/shepherdjerred/storm-forum@sha256:${"d".repeat(64)}`,
+        },
+      }),
+    );
+    const job = rendered.find((resource) => resource.kind === "Job");
+    const json = JSON.stringify(job);
+    expect(json).toContain('"name":"BACKUP_ACCESS_KEY"');
+    expect(json).toContain('"name":"BACKUP_SECRET_KEY"');
+    expect(json).toContain('"value":"storm-forum-backups"');
+    expect(json).not.toContain('"key":"RESTORE_ACCESS_KEY"');
+    expect(json).toContain(
+      '"name":"BACKUP_SOURCE_XENFORO_VERSION","value":"2.3.8"',
+    );
+    expect(json).toContain(
+      '"name":"BACKUP_SOURCE_BUNDLE_SHA256","value":"' + "d".repeat(64) + '"',
+    );
+    expect(json).toContain(
+      JSON.stringify({
+        name: "BACKUP_SOURCE_RUNTIME_IMAGE",
+        value: fixture.image.replace("a".repeat(64), "d".repeat(64)),
+      }),
+    );
+    expect(json).toContain(
+      '"name":"RUNTIME_IMAGE","value":"' + fixture.image + '"',
+    );
+  });
+  it("preserves the completed bootstrap job until a new release explicitly requests a pre-upgrade backup", () => {
+    resetProbeRegistry();
+    const rendered = Testing.synth(createStormForumChart(new App(), fixture));
+    expect(
+      JSON.stringify(rendered.find((resource) => resource.kind === "Job")),
+    ).not.toContain("BACKUP_");
+    expect(
+      JSON.stringify(rendered.find((resource) => resource.kind === "Job")),
+    ).not.toContain('"name":"RUNTIME_IMAGE"');
+  });
+});
+
+describe("forum isolation and release resources", () => {
+  it.each(["beta", "prod"] as const)(
+    "renders distinct public and admin health probes for %s",
+    (stage) => {
+      resetProbeRegistry();
+      const app = new App();
+      createStormForumChart(app, { ...fixture, stage });
+      createServiceProbesChart(app);
+      const probes = Testing.synth(
+        Chart.of(app.node.findChild("service-probes")),
+      );
+      const namespace = stage === "prod" ? "storm-forum" : "storm-forum-beta";
+      const targets = JSON.stringify(probes);
+      expect(targets).toContain(
+        `http://storm-forum.${namespace}.svc.cluster.local:8080/readyz`,
+      );
+      expect(targets).toContain(
+        `storm-forum-admin.${namespace}.svc.cluster.local:8081`,
+      );
+      expect(probes).toHaveLength(stage === "prod" ? 3 : 2);
+      expect(new Set(probes.map((probe) => probe.metadata.name)).size).toBe(
+        probes.length,
+      );
+    },
+  );
+  it("serves the production community on the apex with no forum subdomain", () => {
+    resetProbeRegistry();
+    const rendered = Testing.synth(
+      createStormForumChart(new App(), { ...fixture, stage: "prod" }),
+    );
+    const bindings = rendered.filter(
+      (resource) => resource.kind === "TunnelBinding",
+    );
+    expect(bindings).toHaveLength(1);
+    expect(JSON.stringify(bindings)).toContain('"fqdn":"ts-mc.net"');
+    expect(JSON.stringify(rendered)).toContain('"value":"https://ts-mc.net"');
+    expect(JSON.stringify(rendered)).not.toContain("forum.ts-mc.net");
+  });
+  it("keeps staging private, password protected, and installs only through an explicit Job", () => {
+    resetProbeRegistry();
+    const chart = createStormForumChart(new App(), fixture);
+    const rendered = Testing.synth(chart);
+    const json = JSON.stringify(rendered);
+    expect(
+      rendered.filter((resource) => resource.kind === "TunnelBinding"),
+    ).toHaveLength(0);
+    expect(json).toContain(
+      "auth_basic_user_file /etc/storm-forum/staging.htpasswd",
+    );
+    expect(json).toContain('"type":"Recreate"');
+    expect(json).toContain('"runAsNonRoot":true');
+    expect(json).toContain('"storage":"32Gi"');
+    const deployments = rendered.filter(
+      (resource) => resource.kind === "Deployment",
+    );
+    expect(JSON.stringify(deployments)).not.toContain('"release"]');
+    expect(rendered.filter((resource) => resource.kind === "Job")).toHaveLength(
+      1,
+    );
+    const database = rendered.find(
+      (resource) =>
+        resource.kind === "Deployment" &&
+        JSON.stringify(resource.metadata).includes("storm-forum-database"),
+    );
+    const web = rendered.find(
+      (resource) =>
+        resource.kind === "Deployment" &&
+        JSON.stringify(resource.metadata).includes("storm-forum-web"),
+    );
+    expect(JSON.stringify(database?.metadata)).toContain(
+      '"argocd.argoproj.io/sync-wave":"-1"',
+    );
+    expect(JSON.stringify(web?.metadata)).toContain(
+      '"argocd.argoproj.io/sync-wave":"1"',
+    );
+    expect(
+      rendered.filter((resource) => resource.kind === "CronJob"),
+    ).toHaveLength(0);
+    const role = rendered.find((resource) => resource.kind === "Role");
+    expect(role?.rules).toEqual([
+      {
+        apiGroups: ["apps"],
+        resources: ["statefulsets"],
+        resourceNames: ["minecraft-tsmc"],
+        verbs: ["get"],
+      },
+    ]);
+  });
+  it("rejects a mutable image tag before creating infrastructure", () => {
+    expect(() =>
+      createStormForumChart(new App(), {
+        ...fixture,
+        image: "ghcr.io/shepherdjerred/storm-forum:latest",
+      }),
+    ).toThrow();
+  });
+  it("restores a production snapshot into the separate beta pair without installing or pruning primary storage", () => {
+    resetProbeRegistry();
+    const rendered = Testing.synth(
+      createStormForumChart(new App(), {
+        ...fixture,
+        storageSlot: "recovery",
+        restore: {
+          manifestKey:
+            "snapshots/prod/f8d36d3a-e74e-4b28-a661-b03ed85c7e55/manifest.json",
+        },
+      }),
+    );
+    const job = rendered.find((resource) => resource.kind === "Job");
+    const jobJson = JSON.stringify(job);
+    expect(jobJson).toContain('"restore"]');
+    expect(jobJson).not.toContain('"release"]');
+    expect(jobJson).toContain('"key":"RESTORE_SECRET_KEY"');
+    expect(jobJson).not.toContain('"key":"BACKUP_SECRET_KEY"');
+    expect(jobJson).not.toContain("ADMIN_PASSWORD");
+    expect(jobJson).toContain('"claimName":"storm-forum-recovery-files"');
+    expect(
+      JSON.stringify(
+        rendered.find(
+          (resource) =>
+            resource.kind === "Deployment" &&
+            JSON.stringify(resource.metadata).includes("storm-forum-database"),
+        ),
+      ),
+    ).toContain('"claimName":"storm-forum-recovery-database"');
+    expect(
+      rendered
+        .filter((resource) => resource.kind === "PersistentVolumeClaim")
+        .map((resource) => resource.metadata.name)
+        .sort((left, right) => left.localeCompare(right)),
+    ).toEqual([
+      "storm-forum-database",
+      "storm-forum-files",
+      "storm-forum-recovery-database",
+      "storm-forum-recovery-files",
+    ]);
+  });
+  it("rejects restoring over the primary pair or into production", () => {
+    const restore = {
+      manifestKey:
+        "snapshots/prod/f8d36d3a-e74e-4b28-a661-b03ed85c7e55/manifest.json",
+    };
+    expect(() =>
+      createStormForumChart(new App(), { ...fixture, restore }),
+    ).toThrow();
+    expect(() =>
+      createStormForumChart(new App(), {
+        ...fixture,
+        stage: "prod",
+        storageSlot: "recovery",
+        restore,
+      }),
+    ).toThrow();
+  });
+  it("refuses the catalog's unpublished bootstrap marker for an active release", () => {
+    expect(() =>
+      createStormForumChart(new App(), {
+        ...fixture,
+        image: `ghcr.io/shepherdjerred/storm-forum@sha256:${"0".repeat(64)}`,
+      }),
+    ).toThrow();
+  });
+});
+
+const WaveMetadataSchema = z.object({
+  name: z.string(),
+  annotations: z.object({
+    "argocd.argoproj.io/sync-wave": z.string().regex(/^-?\d+$/),
+  }),
+});
+const ClaimSchema = z.object({ metadata: WaveMetadataSchema });
+const ConsumerSchema = z.object({
+  metadata: WaveMetadataSchema,
+  spec: z.object({
+    template: z.object({
+      spec: z.object({
+        volumes: z.array(
+          z.object({
+            persistentVolumeClaim: z
+              .object({ claimName: z.string() })
+              .optional(),
+          }),
+        ),
+      }),
+    }),
+  }),
+});
+
+describe("forum delayed storage binding", () => {
+  it.each([
+    { stage: "prod", storageSlot: "primary" },
+    { stage: "beta", storageSlot: "primary" },
+    { stage: "beta", storageSlot: "recovery" },
+  ] as const)(
+    "applies active claims with their first consumer for $stage/$storageSlot",
+    (release) => {
+      resetProbeRegistry();
+      const rendered = Testing.synth(
+        createStormForumChart(new App(), { ...fixture, ...release }),
+      );
+      const claims = rendered
+        .filter((resource) => resource.kind === "PersistentVolumeClaim")
+        .map((resource) => ClaimSchema.parse(resource));
+      const firstConsumers = new Map<string, number>();
+      for (const rawConsumer of rendered.filter(
+        (resource) => resource.kind === "Deployment" || resource.kind === "Job",
+      )) {
+        const consumer = ConsumerSchema.parse(rawConsumer);
+        const wave = Number(
+          consumer.metadata.annotations["argocd.argoproj.io/sync-wave"],
+        );
+        for (const volume of consumer.spec.template.spec.volumes) {
+          if (!volume.persistentVolumeClaim) continue;
+          const name = volume.persistentVolumeClaim.claimName;
+          const previous = firstConsumers.get(name);
+          if (previous === undefined || wave < previous) {
+            firstConsumers.set(name, wave);
+          }
+        }
+      }
+      expect(firstConsumers.size).toBe(2);
+      for (const [name, wave] of firstConsumers) {
+        const claim = claims.find(
+          (resource) => resource.metadata.name === name,
+        );
+        if (!claim) throw new Error(`Missing active claim ${name}`);
+        expect(
+          Number(claim.metadata.annotations["argocd.argoproj.io/sync-wave"]),
+          `${name} must bind in its first consumer's wave`,
+        ).toBe(wave);
+      }
+    },
+  );
+});

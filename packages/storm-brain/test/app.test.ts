@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import { Registry } from "prom-client";
 import { createBrainApp, type BrainAppDependencies } from "#src/app.ts";
 import { BrainUpstreamError } from "#src/brain.ts";
+import { ConversationBudgetError } from "#src/conversation-budget.ts";
 import type { BrainConfig } from "#src/config.ts";
 import { createBrainMetrics } from "#src/metrics.ts";
 import type { AggregateLlmUsage } from "@shepherdjerred/llm-runtime";
@@ -12,6 +13,7 @@ const TOKEN = "test-bearer-token-that-is-long-enough";
 const config: BrainConfig = {
   bearerToken: TOKEN,
   model: "gpt-5.6-luna",
+  conversationModel: "gpt-6-luna",
   maxBodyBytes: 262_144,
   llmTimeoutMs: 1000,
   metricsPort: 9090,
@@ -67,10 +69,6 @@ function dependencies(overrides: Partial<BrainAppDependencies> = {}) {
           usage: usage(),
         }),
       },
-      flags: {
-        classifyEnabled: async () => true,
-        triageEnabled: async () => true,
-      },
       logger: {
         info: (message: string) => {
           logged.push(`info:${message}`);
@@ -83,6 +81,12 @@ function dependencies(overrides: Partial<BrainAppDependencies> = {}) {
         },
       },
       metrics,
+      conversation: {
+        enabled: async () => false,
+        decide: async () => {
+          throw new Error("conversation is not enabled in moderation fixtures");
+        },
+      },
       ...overrides,
     }),
   };
@@ -123,6 +127,98 @@ async function counter(
   );
   return typeof sample?.value === "number" ? sample.value : 0;
 }
+
+describe("storm-brain conversation", () => {
+  test("conversation authenticates, rejects actions and returns only chat", async () => {
+    let calls = 0;
+    const body = {
+      requestId: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+      identity: "rowan",
+      personality: "Friendly builder",
+      message: "Hello",
+      context: "Inventory: 8 logs",
+    };
+    const { app } = dependencies({
+      conversation: {
+        enabled: async () => true,
+        decide: async () => {
+          calls++;
+          return {
+            response: {
+              text: "Hello there!",
+              model: "gpt-6-luna",
+              costMicros: 12,
+            },
+            usage: usage(),
+          };
+        },
+      },
+    });
+    const unauthenticated = await app.request(
+      "/v1/conversation",
+      post(body, null),
+    );
+    expect(unauthenticated.status).toBe(401);
+    const invalid = await app.request(
+      "/v1/conversation",
+      post({ ...body, action: "mine" }),
+    );
+    expect(invalid.status).toBe(400);
+    expect(calls).toBe(0);
+    const reply = await app.request("/v1/conversation", post(body));
+    expect(reply.status).toBe(200);
+    expect(await reply.json()).toEqual({
+      text: "Hello there!",
+      model: "gpt-6-luna",
+      costMicros: 12,
+    });
+    expect(calls).toBe(1);
+  });
+
+  test("conversation fails closed for rollout and shared budget exhaustion", async () => {
+    const body = {
+      requestId: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+      identity: "juniper",
+      personality: "Farmer",
+      message: "Hello",
+      context: "Standing near a farm",
+    };
+    const disabled = dependencies();
+    const disabledReply = await disabled.app.request(
+      "/v1/conversation",
+      post(body),
+    );
+    expect(disabledReply.status).toBe(503);
+    const exhausted = dependencies({
+      conversation: {
+        enabled: async () => true,
+        decide: async () => {
+          throw new ConversationBudgetError("reserved limit reached");
+        },
+      },
+    });
+    const exhaustedReply = await exhausted.app.request(
+      "/v1/conversation",
+      post(body),
+    );
+    expect(exhaustedReply.status).toBe(429);
+    const unavailable = dependencies({
+      conversation: {
+        enabled: async () => {
+          throw new Error("flag provider unavailable");
+        },
+        decide: async () => {
+          throw new Error("must never contact model");
+        },
+      },
+    });
+    const unavailableReply = await unavailable.app.request(
+      "/v1/conversation",
+      post(body),
+    );
+    expect(unavailableReply.status).toBe(500);
+  });
+});
 
 describe("storm-brain app", () => {
   test("probes answer", async () => {
@@ -227,25 +323,6 @@ describe("storm-brain app", () => {
       post({ ...classifyBody, bogus: 1 }),
     );
     expect(unknownKeys.status).toBe(400);
-  });
-
-  test("reports disabled flows with 503", async () => {
-    const { app, metrics } = dependencies({
-      flags: {
-        classifyEnabled: async () => false,
-        triageEnabled: async () => false,
-      },
-    });
-    const classify = await app.request("/v1/classify", post(classifyBody));
-    expect(classify.status).toBe(503);
-    const triage = await app.request("/v1/triage", post(triageBody));
-    expect(triage.status).toBe(503);
-    expect(
-      await counter(metrics, "storm_brain_requests_total", {
-        flow: "triage",
-        outcome: "disabled",
-      }),
-    ).toBe(1);
   });
 
   test("charges billed usage even when the upstream call fails", async () => {

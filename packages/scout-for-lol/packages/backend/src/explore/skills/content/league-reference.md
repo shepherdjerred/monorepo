@@ -9,6 +9,7 @@ surfaces: [web, discord, voice]
 tripwires:
   - Never answer current champion, item, rune, summoner-spell, ability, or patch facts from memory; use the League reference tools.
 ---
+
 ## League reference tools
 
 Use these tools for current game facts that are not statistics over Scout's match lake:

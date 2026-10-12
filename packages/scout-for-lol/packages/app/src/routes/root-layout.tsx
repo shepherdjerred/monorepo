@@ -29,6 +29,7 @@ import {
   shouldRenderGlobalFooter,
 } from "#src/lib/routes/app-navigation.ts";
 import { ExploreRunsProvider } from "#src/components/explore/explore-runs-provider.tsx";
+import { useRoutePresentation } from "#src/hooks/use-route-presentation.ts";
 
 /**
  * Top-level chrome shared by every route (login included): the contract
@@ -37,6 +38,7 @@ import { ExploreRunsProvider } from "#src/components/explore/explore-runs-provid
  * {@link Outlet}.
  */
 export function RootLayout() {
+  useRoutePresentation();
   const location = useLocation();
 
   // Identity is synced here, not in `RequireSession`, because `/login` is
@@ -112,7 +114,9 @@ export function RootLayout() {
         notice={
           <>
             <ContractMismatchBanner />
-            <FeedbackPrompt />
+            <aside aria-label="Feedback">
+              <FeedbackPrompt />
+            </aside>
           </>
         }
         sidebar={navigation}

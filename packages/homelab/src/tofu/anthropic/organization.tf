@@ -52,5 +52,6 @@ output "anthropic_api_key_rotation_units" {
       vault_field     = var.anthropic_api_keys[name].vault_field
       vault_json_path = try(var.anthropic_api_keys[name].vault_json_path, null)
     }
+    if var.anthropic_api_keys[name].status != "archived"
   }
 }

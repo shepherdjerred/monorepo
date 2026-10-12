@@ -17,6 +17,8 @@ const log = logger.child("persistence");
 
 /** A persisted queue entry — the requested source plus who asked for it. */
 export const PersistedQueuedSchema = z.strictObject({
+  display: QueuedDisplaySchema.optional(),
+  queuedAt: z.number().int().nonnegative().optional(),
   source: SourceSchema,
   requesterId: UserIdSchema,
   requestId: z.string().min(1).optional(),
@@ -25,6 +27,8 @@ export type PersistedQueued = z.infer<typeof PersistedQueuedSchema>;
 
 /** The in-progress item, with the resume offset and an optional resolved title for the announce. */
 export const PersistedCurrentSchema = z.strictObject({
+  display: QueuedDisplaySchema.optional(),
+  queuedAt: z.number().int().nonnegative().optional(),
   source: SourceSchema,
   requesterId: UserIdSchema,
   /** Resolved human title (if known), so the back-online message can name the video immediately. */
@@ -250,3 +254,4 @@ export async function saveState(
   await Bun.write(tmp, JSON.stringify(state));
   await rename(tmp, filePath);
 }
+import { QueuedDisplaySchema } from "@shepherdjerred/streambot/metadata/queued-display.ts";

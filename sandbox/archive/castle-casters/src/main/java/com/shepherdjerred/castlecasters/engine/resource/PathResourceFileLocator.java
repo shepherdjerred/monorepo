@@ -64,6 +64,18 @@ public class PathResourceFileLocator implements ResourceFileLocator {
     resourcePaths.put(FIRE_WIZARD_BACK, "wizards/back_fire.png");
     resourcePaths.put(FIRE_WIZARD_SIDE, "wizards/side_fire.png");
     resourcePaths.put(FIRE_WIZARD_CAST, "wizards/cast_fire.png");
+    resourcePaths.put(ICE_WIZARD_FRONT, "wizards/front_frost.png");
+    resourcePaths.put(ICE_WIZARD_BACK, "wizards/back_frost.png");
+    resourcePaths.put(ICE_WIZARD_SIDE, "wizards/side_frost.png");
+    resourcePaths.put(ICE_WIZARD_CAST, "wizards/cast_frost.png");
+    resourcePaths.put(EARTH_WIZARD_FRONT, "wizards/front_earth.png");
+    resourcePaths.put(EARTH_WIZARD_BACK, "wizards/back_earth.png");
+    resourcePaths.put(EARTH_WIZARD_SIDE, "wizards/side_earth.png");
+    resourcePaths.put(EARTH_WIZARD_CAST, "wizards/cast_earth.png");
+    resourcePaths.put(AIR_WIZARD_FRONT, "wizards/front_air.png");
+    resourcePaths.put(AIR_WIZARD_BACK, "wizards/back_air.png");
+    resourcePaths.put(AIR_WIZARD_SIDE, "wizards/side_air.png");
+    resourcePaths.put(AIR_WIZARD_CAST, "wizards/cast_air.png");
     resourcePaths.put(TERRAIN_TILESHEET, "tilesheets/main/terrain.png");
     resourcePaths.put(CASTLE_TILESHEET, "tilesheets/main/castle.png");
     resourcePaths.put(DESERT_TILESHEET, "tilesheets/main/desert.png");

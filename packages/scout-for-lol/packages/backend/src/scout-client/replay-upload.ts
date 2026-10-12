@@ -6,12 +6,15 @@ import { z } from "zod";
 import configuration from "#src/configuration.ts";
 import { prisma, type Db } from "#src/database/index.ts";
 import { createS3Client } from "#src/storage/s3-client.ts";
+import { createLogger } from "#src/logger.ts";
 import type { AuthenticatedScoutClient } from "./authentication.ts";
 import {
   ReplayContainerError,
   validateReplayContainer,
   type ReplayProvenance,
 } from "./replay/container.ts";
+import { lcuUuidsFor } from "./identity-alias.ts";
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import { drainRequestBody } from "./replay/drain.ts";
 import { resolveReplayProvenance } from "./replay/evidence.ts";
 import {
@@ -30,6 +33,7 @@ const PlatformHeaderSchema = z.string().regex(/^[a-z]{2,4}\d{0,2}$/i);
 const FileNotFoundSchema = z.object({ code: z.literal("ENOENT") });
 const BodyChunkSchema = z.instanceof(Uint8Array);
 const s3 = createS3Client();
+const logger = createLogger("scout-client-replay-upload");
 
 export class ReplayUploadError extends Error {
   constructor(
@@ -369,6 +373,21 @@ async function uploadReplayObject(
   );
 }
 
+/** How much of an unexpected error's message is kept on the artifact row. */
+const MAX_LAST_ERROR_CHARS = 300;
+
+/**
+ * What went wrong, in words an operator can act on. An unexpected failure
+ * used to be recorded as a fixed "SeaweedFS upload failed", which hid an SDK
+ * checksum error behind a storage outage that wasn't happening.
+ */
+export function replayFailureDescription(error: unknown): string {
+  if (error instanceof ReplayUploadError) return error.message;
+  const described =
+    error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+  return `storage upload failed: ${described}`.slice(0, MAX_LAST_ERROR_CHARS);
+}
+
 async function markReplayFailed(
   artifactId: string,
   leasedAt: Date,
@@ -377,14 +396,15 @@ async function markReplayFailed(
   const terminalRejection =
     error instanceof ReplayUploadError &&
     [400, 403, 413, 415].includes(error.status);
+  const lastError = replayFailureDescription(error);
+  if (!(error instanceof ReplayUploadError)) {
+    logger.error(`Replay upload failed unexpectedly: ${lastError}`, error);
+  }
   await prisma.scoutClientReplayArtifact.updateMany({
     where: { id: artifactId, uploadState: "UPLOADING", updatedAt: leasedAt },
     data: {
       uploadState: terminalRejection ? "REJECTED" : "FAILED",
-      lastError:
-        error instanceof ReplayUploadError
-          ? error.message
-          : "SeaweedFS upload failed",
+      lastError,
     },
   });
 }
@@ -434,7 +454,15 @@ async function acceptReplay(
   );
   try {
     const received = await receiveReplay(metadata, temporaryPath);
-    await validateReplayContainer(temporaryPath, received.bytes, provenance);
+    await validateReplayContainer(
+      temporaryPath,
+      received.bytes,
+      provenance,
+      new Set([
+        provenance.localPuuid,
+        ...(await lcuUuidsFor(LeaguePuuidSchema.parse(provenance.localPuuid))),
+      ]),
+    );
     await uploadReplayObject(metadata, objectKey, temporaryPath, received);
     const completed = await prisma.scoutClientReplayArtifact.updateMany({
       where: {

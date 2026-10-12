@@ -35,6 +35,7 @@ import type { MediaHistoryStore } from "@shepherdjerred/streambot/history/media-
 import type { MediaFeatureGate } from "@shepherdjerred/streambot/config/media-features.ts";
 import type { SportsCatalog } from "@shepherdjerred/streambot/sports/types.ts";
 import type { TeardownHold } from "@shepherdjerred/streambot/session/teardown-hold.ts";
+import type { PlaybackChannelNumber } from "@shepherdjerred/streambot/types/playback-channel.ts";
 import type {
   VoiceDebugCaptureStatus,
   VoiceDebugStartResult,
@@ -52,6 +53,8 @@ type PlaybackActor = Actor<ReturnType<typeof createPlaybackMachine>>;
 
 /** The slice of a session the command handler drives — bound to one guild + voice channel. */
 export type SessionHandle = {
+  readonly playbackChannel?: PlaybackChannelNumber;
+  readonly instanceId?: string;
   dispatch: (event: PlaybackEvent) => void;
   view: () => PlaybackView;
   setVolume: (percent: number) => Promise<boolean>;
@@ -84,6 +87,8 @@ export type SessionHandle = {
 };
 
 export type Session = {
+  readonly playbackChannel?: PlaybackChannelNumber;
+  readonly instanceId?: string;
   key: string;
   readonly guildId: GuildId;
   voiceChannelId: ChannelId;
@@ -126,6 +131,8 @@ export type Session = {
 
 /** Everything needed to spin up a session actor (manual play, boot resume, or reconnect). */
 export type SpawnParams = {
+  playbackChannel?: PlaybackChannelNumber;
+  instanceId?: string;
   guildId: GuildId;
   voiceChannelId: ChannelId;
   statusChannelId: ChannelId | null;
@@ -172,8 +179,12 @@ export const EMPTY_HANDLE: SessionHandle = {
   },
 };
 
-export function keyOf(guildId: GuildId, channelId: ChannelId): string {
-  return `${guildId}:${channelId}`;
+export function keyOf(
+  guildId: GuildId,
+  channelId: ChannelId,
+  playbackChannel?: PlaybackChannelNumber,
+): string {
+  return `${guildId}:${channelId}${playbackChannel === undefined ? "" : `:${String(playbackChannel)}`}`;
 }
 
 /**

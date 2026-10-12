@@ -1,3 +1,4 @@
+import { type DiscordGuildId, DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { useState } from "react";
 import { Link } from "react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -30,7 +31,7 @@ function MatchRelationList(props: {
       <h4 className="font-medium">{props.title}</h4>
       {rows.length === 0 ? (
         <p className="text-sm text-scout-subtle">
-          No recorded meetings in this window.
+          No shared matches in this period. Try a longer time window.
         </p>
       ) : (
         <ul className="mt-2 space-y-1 text-sm">
@@ -124,7 +125,7 @@ export function PeopleTab(props: {
         membership. Untracked opponents appear only after two meetings.
       </p>
       <div>
-        <h4 className="font-medium">Guild teammate pairs · 3+ shared games</h4>
+        <h4 className="font-medium">Teammate pairs · 3+ shared games</h4>
         <div className="mt-2 grid gap-2 md:grid-cols-2">
           {props.overview.insights.pairs
             .filter((pair) => pair.games >= 3)
@@ -157,7 +158,7 @@ export function PeopleTab(props: {
   );
 }
 
-function LiveTab(props: { guildId: string }) {
+function LiveTab(props: { guildId: DiscordGuildId }) {
   const trpc = useTRPC();
   const live = useQuery(
     trpc.consumerGuild.live.queryOptions(
@@ -169,11 +170,10 @@ function LiveTab(props: { guildId: string }) {
     <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-scout-subtle">
-          Recently detected in game — cached observations, not verified live at
-          this moment.
+          Recently seen in game. Some games may have ended.
         </p>
         <Button variant="outline" onClick={() => void live.refetch()}>
-          Refresh observations
+          Refresh
         </Button>
       </div>
       {live.isPending || live.isFetching ? (
@@ -186,7 +186,7 @@ function LiveTab(props: { guildId: string }) {
         </p>
       ) : live.data.length === 0 ? (
         <p className="text-sm text-scout-subtle">
-          No unexpired game observations for this guild.
+          No games seen recently in this server.
         </p>
       ) : (
         <ul className="space-y-2">
@@ -220,7 +220,7 @@ function ReadyCommunity(props: {
   guilds: RouterOutputs["consumerGuild"]["list"];
 }) {
   const trpc = useTRPC();
-  const [guildId, setGuildId] = useState<string | null>(null);
+  const [guildId, setGuildId] = useState<DiscordGuildId | null>(null);
   const [windowDays, setWindowDays] = useState<WindowDays>(90);
   const [queuePreset, setQueuePreset] = useState<QueuePreset>("standard");
   const [tab, setTab] = useState<CommunityTab>("people");
@@ -244,12 +244,12 @@ function ReadyCommunity(props: {
     <>
       <div className="flex flex-wrap gap-3">
         <label className="text-sm">
-          Guild{" "}
+          Server{" "}
           <select
             className="ml-1 rounded border border-scout-border bg-scout-surface p-1"
             value={selectedGuild}
             onChange={(event) => {
-              setGuildId(event.target.value);
+              setGuildId(DiscordGuildIdSchema.parse(event.target.value));
             }}
           >
             {props.guilds.map((guild) => (
@@ -318,8 +318,8 @@ function ReadyCommunity(props: {
           </Button>
         ))}
       </div>
-      {tab === "live" ? (
-        <LiveTab guildId={selectedGuild ?? ""} />
+      {tab === "live" && selectedGuild !== undefined ? (
+        <LiveTab guildId={selectedGuild} />
       ) : overview.isPending || overview.isFetching ? (
         <p className="text-sm text-scout-subtle">
           Loading recorded guild games…
@@ -369,13 +369,13 @@ export function ConsumerGuildCommunity() {
   } else if (guilds.isError) {
     content = (
       <p className="text-sm text-scout-danger">
-        Could not verify guild access.
+        Could not check your server access.
       </p>
     );
   } else if (guilds.data.length === 0) {
     content = (
       <p className="text-sm text-scout-subtle">
-        No enabled guilds are available.
+        No shared servers have community stats enabled yet.
       </p>
     );
   } else {
@@ -384,10 +384,9 @@ export function ConsumerGuildCommunity() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Guild community</CardTitle>
+        <CardTitle>Server community</CardTitle>
         <CardDescription>
-          Scout-recorded games only. Every view is scoped to a guild you
-          currently share with Scout.
+          Recent games and standings in your servers.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">{content}</CardContent>

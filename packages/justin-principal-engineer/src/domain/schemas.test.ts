@@ -4,6 +4,7 @@ import { z } from "zod";
 import {
   AgentOutputSchema,
   AgentOutputWireSchema,
+  ConfigSchema,
 } from "#src/domain/schemas.ts";
 
 function stringFormats(value: unknown, found: string[] = []): string[] {
@@ -31,6 +32,31 @@ const StrictObjectSchema = z.object({
   type: z.string(),
   properties: z.record(z.string(), z.unknown()),
   required: z.array(z.string()).optional(),
+});
+
+describe("Woodpecker bootstrap configuration", () => {
+  test.each([
+    {},
+    { baseUrl: "https://woodpecker.sjer.red" },
+    { repoId: 1 },
+    { baseUrl: "not-a-url", repoId: 1 },
+    { baseUrl: "https://woodpecker.sjer.red", repoId: 0 },
+    { baseUrl: "https://woodpecker.sjer.red", repoId: 1.5 },
+  ])(
+    "rejects incomplete or invalid CI connection details: %j",
+    async (fields) => {
+      const config: unknown = await Bun.file(
+        new URL("../../config.example.json", import.meta.url),
+      ).json();
+      const valid = ConfigSchema.parse(config);
+      expect(() =>
+        ConfigSchema.parse({
+          ...valid,
+          woodpecker: { apiToken: valid.woodpecker.apiToken, ...fields },
+        }),
+      ).toThrow();
+    },
+  );
 });
 
 function childEntries(value: unknown): [string, unknown][] {

@@ -52,6 +52,9 @@ final class RedstoneListener implements Listener {
       return;
     }
     var source = event.getBlock();
+    if (kit.sealed(source.getWorld())) {
+      return;
+    }
     var signs = poweredSigns(source);
     if (signs.isEmpty()) {
       return;

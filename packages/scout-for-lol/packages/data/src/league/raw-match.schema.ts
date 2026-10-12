@@ -1,4 +1,6 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
+import { preserveRawJson } from "./preserve-raw-json.ts";
 import { RawParticipantSchema } from "./raw-participant.schema.ts";
 import { RawTeamSchema } from "./raw-team.schema.ts";
 
@@ -19,7 +21,7 @@ import { RawTeamSchema } from "./raw-team.schema.ts";
 export const RawMetadataSchema = z
   .object({
     dataVersion: z.string(),
-    matchId: z.string(),
+    matchId: RiotMatchIdSchema,
     participants: z.array(z.string()),
   })
   .strict();
@@ -36,7 +38,9 @@ export const RawInfoSchema = z
     gameId: z.number(),
     gameMode: z.string(),
     gameModeMutators: z.array(z.string()).optional(),
-    gameName: z.string(),
+    // Absent from a match the Scout Client built: the League client's own
+    // match history doesn't carry it. Expected from Riot; see below.
+    gameName: z.string().optional(),
     gameStartTimestamp: z.number(),
     gameType: z.string(),
     gameVersion: z.string(),
@@ -54,12 +58,14 @@ export type RawInfo = z.infer<typeof RawInfoSchema>;
 /**
  * Main RawMatch schema - represents a complete match from Riot Games Match V5 API
  */
-export const RawMatchSchema = z
-  .object({
-    metadata: RawMetadataSchema,
-    info: RawInfoSchema,
-  })
-  .strict();
+export const RawMatchSchema = preserveRawJson(
+  z
+    .object({
+      metadata: RawMetadataSchema,
+      info: RawInfoSchema,
+    })
+    .strict(),
+);
 
 export type RawMatch = z.infer<typeof RawMatchSchema>;
 
@@ -77,7 +83,11 @@ export type RawMatch = z.infer<typeof RawMatchSchema>;
  * issue is `unrecognized_keys`; mixing a refinement issue into it would make the
  * next additive Riot field fail the whole post-match pipeline closed.
  */
-const EXPECTED_MATCH_FIELDS = ["endOfGameResult", "tournamentCode"] as const;
+const EXPECTED_MATCH_FIELDS = [
+  "endOfGameResult",
+  "gameName",
+  "tournamentCode",
+] as const;
 
 const EXPECTED_PARTICIPANT_FIELDS = [
   "eligibleForProgression",

@@ -1,0 +1,85 @@
+id: jollyshathkrai
+name: JollyShathkrai
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1Mzg1MjkwNiwKICAicHJvZmlsZUlkIiA6ICJlZGUyYzdhMGFjNjM0MTNiYjA5ZDNmMGJlZTllYzhlYyIsCiAgInByb2ZpbGVOYW1lIiA6ICJ0aGVEZXZKYWRlIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2JkNDYzYWFiMTgxZDY1ZWRlZGJmYWRhNGNhMjI3Y2I1OTQ1NmM1MjQzNDBiMGI2MzQ2Mjg4ZjE4NDAwNmE1MWMiCiAgICB9CiAgfQp9
+  signature: "gL5x5HY0hmvuPeL1josNjVvTr8QzXb/R3ORNb3HQc+MCyVBye/Hu6GdaNcBIE2l3QQCl5t8jmxUJ6k3b4yl9Hl3KrvfSZyve39devN82RtXh+/+HmCS8URchvIJcUsueutJ657KMAQuVP3F28rmxrrTUPyE5HQWh/OZTb40ebsAkNUCZAmZr8c5fy19cdX0+ITbd8MYIs4+zm4a4JEIKuTvt/jxXCKZbMGYA8bAKKyUNh4sjYSrYVCV7s5230j0BE4mkNsPoJqHf3lhatDCYgr+Mjfys80PDImheTHgy0DrN+8tQe4tOmN8gsKpxandRzlY0eOP19vsDziqJ0frrWdioHV9b2rcYZdpxaki2FFJ9yuwwDakc/u0+eA7+YvEI66ec8HFoN2LV0rQLvSqeTMyUX08BE3tPQpmqd4cLMNaglxWRxUcgwI+m/lmY8j+0navRRmBjQslJfjlJEWZtHPWZZQX/zG7J+G8vjXJJnYlnG891dR7GkaC0WZWBRY/xOWm9UjtDaOI6X2ZbXxT2LygfZz1qZ35T+6Lm+zuF+jnXAcjHKTJrJiPdZlZQ6aWLrkX+5/WK7FZCzwtMl80suZF9/XGqr7DssFvClBwERwQ9ClIaf8Bz6vZ6P4lOp6pSdpQt5SzYlku7+MdtfbW4LXoDsYMdOZOqHsnyM5gfUF0="
+skill: 0.122
+archetype: sniper
+leverOffsets:
+  reactionMs: 0.05
+  aimErrorDeg: 1.63
+  cps: -1.02
+  predictionQuality: 1.16
+  awarenessRadius: 1.18
+  coordination: -0.64
+  technique: -0.11
+  aggression: -0.59
+kits:
+  trooper: 0.14
+  longbow: 1
+  shortbow: 0.42
+  wraith: 0.23
+roles:
+  defend: 0.74
+  rotate: 0.55
+  hunt: 0.48
+style:
+  aggression: 0.24
+  patience: 0.96
+  teamplay: 0.46
+  risk: 0.2
+voice:
+  tone:
+    - jolly
+    - optimistic
+    - giggly
+  verbosity: chatty
+  style: cheerfully terrible sniper who celebrates near-misses and counts arrows lost
+lines:
+  greet:
+    - "hi {team}! i brought sixty-four arrows"
+    - today's the day i hit something
+    - longbow ready. aim... not so much
+  onKill:
+    - "i HIT {victim}!! i hit someone!"
+    - "{victim}, that was my first hit today"
+    - "wow! okay! {victim} down!"
+  onDeath:
+    - "{killer} was too close for my bow"
+    - so close! wait, no
+    - missed twelve, died once
+  onPlant:
+    - "{bomb} lit! i didn't even need to aim"
+    - "lit {bomb}, finally a target that holds still"
+  onDefuse:
+    - "{bomb} saved! no aiming required"
+    - "defused {bomb}. that's my best skill"
+  onWin:
+    - we won! i helped! a little!
+    - "yay {team}, arrows for everyone"
+  onLoss:
+    - the arrows were fun though
+    - i nearly hit a lot of people
+  onLastAlive:
+    - oh no. okay. deep breath
+    - every arrow counts now
+  taunt:
+    - my next arrow is for you. probably
+    - duck! or don't, i'll miss
+    - i'm aiming at you. i think
+  lobby:
+    - sixty-four arrows ready! some might even hit
+    - longbow time. today's the day, i can feel it
+    - "{team}, if you see an arrow, it's probably mine"
+    - my ratio is a secret. a sad, sweet secret
+    - practice shot at the wall. missed the wall
+quirks:
+  - bow_spammer
+  - good_sport
+  - celebrates_early
+rivals:
+  - crimson-miner
+  - xxsniperslimexx
+bio: The happiest bad archer on the server, who cheers every near miss like a hit. Keeps a tally of arrows fired versus hits and the ratio is a secret. Thinks Crimson_Miner is the coolest archer alive.
+batch: 2
+retired: false

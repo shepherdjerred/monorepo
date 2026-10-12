@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import { TRPCError } from "@trpc/server";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import type { User } from "#generated/prisma/client/index.js";
@@ -48,7 +49,7 @@ export async function clashSnapshotEnabledGuildIds(): Promise<string[]> {
 }
 
 export async function clashSurfaceEnabledForGuild(
-  guildId: string,
+  guildId: DiscordGuildId,
 ): Promise<boolean> {
   const parsed = DiscordGuildIdSchema.parse(guildId);
   return (
@@ -58,7 +59,7 @@ export async function clashSurfaceEnabledForGuild(
 }
 
 export async function assertClashSurfaceEnabledForGuild(
-  guildId: string,
+  guildId: DiscordGuildId,
 ): Promise<void> {
   if (await clashSurfaceEnabledForGuild(guildId)) {
     return;
@@ -76,7 +77,7 @@ export async function assertClashSurfaceEnabledForGuild(
  * advertises a surface the tools would then refuse.
  */
 export async function clashExploreEnabled(
-  guildIds: readonly string[],
+  guildIds: readonly DiscordGuildId[],
 ): Promise<boolean> {
   const decisions = await Promise.all(
     guildIds.map((guildId) => clashSurfaceEnabledForGuild(guildId)),

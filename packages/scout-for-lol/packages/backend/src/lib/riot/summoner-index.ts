@@ -8,6 +8,7 @@
  * *search* procedure that reads it is still guild-admin gated.
  */
 
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import { LeaguePuuidSchema, RegionSchema } from "@scout-for-lol/data";
 import type { Prisma } from "#generated/prisma/client/index.js";
 import { prisma } from "#src/database/index.ts";
@@ -17,7 +18,7 @@ import { createLogger } from "#src/logger.ts";
 const logger = createLogger("summoner-index");
 
 export type SummonerSuggestion = {
-  puuid: string;
+  puuid: LeaguePuuid;
   gameName: string;
   tagLine: string;
   region: string;
@@ -110,7 +111,7 @@ export async function recordRiotResolution(params: {
   gameName: string;
   tagLine: string;
   region: string;
-  puuid: string | null;
+  puuid: LeaguePuuid | null;
 }): Promise<void> {
   try {
     if (params.puuid === null) {
@@ -154,7 +155,7 @@ export async function backfillFromExisting(): Promise<{
   const now = new Date();
   const toCreate = new Map<string, Prisma.SummonerIndexCreateManyInput>();
   const consider = (
-    puuid: string,
+    puuid: LeaguePuuid,
     gameName: string,
     tagLine: string,
     region: string,
@@ -214,7 +215,12 @@ export async function backfillFromExisting(): Promise<{
     if (region === undefined) continue;
     const parsed = parseRiotId(identity.riot_id);
     if (parsed === null) continue;
-    consider(identity.puuid, parsed.gameName, parsed.tagLine, region);
+    consider(
+      LeaguePuuidSchema.parse(identity.puuid),
+      parsed.gameName,
+      parsed.tagLine,
+      region,
+    );
   }
 
   const rows = [...toCreate.values()];

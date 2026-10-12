@@ -36,6 +36,8 @@ export type StreamerDependencies = {
  * shared lib's minimum) with Streambot's video-streaming methods.
  */
 export type StreamerLike = PooledUserbot & {
+  /** Independent player/clock on this account's shared voice connection. */
+  createPlaybackHandle?: (transport: "music" | "video") => StreamerLike;
   joinVoice: (
     input: JoinVoiceInput,
     signal: AbortSignal,

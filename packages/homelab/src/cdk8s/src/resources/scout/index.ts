@@ -37,12 +37,14 @@ import {
   createScoutGatewayDeployment,
   SCOUT_DUCKDB_SCRATCH,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/gateway.ts";
-import { createScoutGatewayRetirementGate } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/gateway-retirement-gate.ts";
+import { createScoutActivityWorkerDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/activity-worker.ts";
 import { scoutRuntimeProbes } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/probes.ts";
 import {
-  gatewayTopologyRunsRole,
-  type ScoutGatewayTopology,
-} from "@shepherdjerred/homelab/cdk8s/src/resources/scout/topology.ts";
+  createScoutTemporalMetricsServiceMonitor,
+  scoutTemporalMetricsContainerPort,
+  scoutTemporalMetricsEnv,
+  scoutTemporalMetricsServicePort,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/scout/temporal-metrics.ts";
 
 function requiredBryanBucksControlSecret(secret: ISecret | undefined): ISecret {
   if (secret === undefined) {
@@ -58,11 +60,7 @@ function requiredVoiceOpenAiSecret(secret: ISecret | undefined): ISecret {
   return secret;
 }
 
-export function createScoutDeployment(
-  chart: Chart,
-  stage: Stage,
-  gatewayTopology: ScoutGatewayTopology,
-) {
+export function createScoutDeployment(chart: Chart, stage: Stage) {
   const analytics = scoutAnalyticsConfiguration(stage);
   const deployment = new Deployment(chart, "scout-backend", {
     replicas: 1,
@@ -81,7 +79,7 @@ export function createScoutDeployment(
         "ignore-check.kube-linter.io/run-as-non-root":
           "Scout requires flexible user permissions",
         "ignore-check.kube-linter.io/no-read-only-root-fs":
-          "Scout requires writable filesystem for the report lake and the retained legacy SQLite file",
+          "Scout requires a writable filesystem for the report lake",
       },
     },
   });
@@ -102,13 +100,11 @@ export function createScoutDeployment(
         s3BucketName: "scout-beta",
         selinuxLevel: zfsVolumeSelinuxLevels.scoutBeta,
         cpuRequest: Cpu.millis(50),
-        // 3Gi, up from 2Gi: beta is the only stage that loads the Hey Scout
-        // voice runtime (three sherpa int8 graphs, silero VAD, and the
-        // openWakeWord cascade) on top of the report lake. Sized from
-        // streambot's 2Gi request for a comparable pipeline plus Scout's
-        // existing baseline; re-tune from observed usage under a live session
-        // rather than guessing again.
-        memoryRequest: Size.gibibytes(3),
+        // The isolated application keeps its pre-voice 2Gi baseline. The
+        // gateway owns the voice runtime and its separate 3Gi reservation;
+        // reserving that voice share here too prevents the application from
+        // scheduling when the production node is near its request budget.
+        memoryRequest: Size.gibibytes(2),
       };
     })
     .with("prod", () => {
@@ -183,11 +179,12 @@ export function createScoutDeployment(
   };
 
   const localPathVolume = new ZfsNvmeVolume(chart, "scout-storage-claim", {
-    // 48Gi: the retained legacy /data/db.sqlite is about 12Gi and a full
-    // report-lake rebuild writes a new snapshot beside the retained builds
-    // before garbage collection. 24Gi cannot provide that working headroom;
-    // shrink only after the legacy file is deleted post-soak.
-    storage: Size.gibibytes(48),
+    // A full report-lake rebuild writes large timeline NDJSON intermediates
+    // and Parquet output beside retained builds before garbage collection.
+    // The snapshot-inclusive quota on the 128Gi prod claim left only 26Gi
+    // available during a rebuild, causing EDQUOT. Expand prod to 256Gi while
+    // keeping the independently sized beta claim unchanged.
+    storage: Size.gibibytes(stage === "prod" ? 256 : 48),
   });
   const dataVolumeMount = {
     path: "/data",
@@ -197,12 +194,7 @@ export function createScoutDeployment(
       localPathVolume.claim,
     ),
   };
-  // Voice is a gateway-role capability: the table gives voiceAssistant and
-  // voiceStateAccess to `combined` and `gateway`, never to `application`. So on
-  // a split stage the credential follows the shard into scout-gateway, and this
-  // pod — which runs `application` — neither mounts nor needs it. On an unsplit
-  // stage the combined pod keeps it exactly as #2870 wired it.
-  const splitTopology = gatewayTopologyRunsRole(gatewayTopology);
+  // Voice credentials belong to the dedicated gateway.
   const voiceSecretMount =
     stage === "beta"
       ? {
@@ -238,10 +230,7 @@ export function createScoutDeployment(
       },
     ),
   };
-  const volumeMounts =
-    voiceSecretMount !== undefined && !splitTopology
-      ? [dataVolumeMount, scratchMount, voiceSecretMount]
-      : [dataVolumeMount, scratchMount];
+  const volumeMounts = [dataVolumeMount, scratchMount];
 
   const baseEnvVariables = {
     ...dbEnv,
@@ -298,6 +287,7 @@ export function createScoutDeployment(
       key: "RIOT_API_KEY",
     }),
     S3_BUCKET_NAME: EnvValue.fromValue(s3BucketName),
+    SUPPORT_BUCKET_NAME: EnvValue.fromValue(`scout-support-${stage}`),
     SENTRY_DSN: EnvValue.fromSecretValue({
       secret: Secret.fromSecretName(
         chart,
@@ -321,13 +311,9 @@ export function createScoutDeployment(
     POSTHOG_API_HOST: EnvValue.fromValue(analytics.apiHost),
     POSTHOG_SITE_KEY: EnvValue.fromValue(analytics.siteKey),
     POSTHOG_SITE_HOSTNAME: EnvValue.fromValue(analytics.siteHostname),
-    // The retained legacy SQLite file: read exactly once by the boot-time
-    // importer (scripts/import-legacy-sqlite.ts), never written again, and
-    // kept as the rollback path for the Postgres migration.
-    LEGACY_SQLITE_PATH: EnvValue.fromValue("/data/db.sqlite"),
     // Parquet "report lake" queried by the DuckDB report engine. Disposable
-    // derived data on the same PVC as the legacy DB file; rebuilt from S3 by
-    // the report-lake compaction crons.
+    // derived data on the PVC; rebuilt from S3 by the report-lake compaction
+    // crons.
     REPORT_LAKE_DIR: EnvValue.fromValue("/data/report-lake"),
     // DuckDB for reports and Explore: generous on purpose, since both answer
     // open questions over the whole lake. A query past memory_limit spills to
@@ -424,16 +410,11 @@ export function createScoutDeployment(
         }
       : {};
 
-  // A split stage runs this Deployment as the `application` role, with the
-  // Discord shard — and therefore voice — moved to scout-gateway. Every other
-  // stage stays on the combined role, which is what an unset SCOUT_RUNTIME_ROLE
-  // resolves to, so an unsplit stage's manifest is unchanged by the split.
-  const roleEnvVariables: Record<string, EnvValue> = splitTopology
-    ? {
-        ...envVariables,
-        SCOUT_RUNTIME_ROLE: EnvValue.fromValue("application"),
-      }
-    : { ...envVariables, ...voiceEnvVariables };
+  const roleEnvVariables: Record<string, EnvValue> = {
+    ...envVariables,
+    ...scoutTemporalMetricsEnv,
+    SCOUT_RUNTIME_ROLE: EnvValue.fromValue("application"),
+  };
 
   deployment.addContainer(
     withCommonProps({
@@ -444,6 +425,7 @@ export function createScoutDeployment(
           number: 3000,
           protocol: Protocol.TCP,
         },
+        scoutTemporalMetricsContainerPort,
       ],
       securityContext: {
         ensureNonRoot: false,
@@ -481,7 +463,7 @@ export function createScoutDeployment(
       },
     },
     selector: deployment,
-    ports: [{ name: "metrics", port: 3000 }],
+    ports: [{ name: "metrics", port: 3000 }, scoutTemporalMetricsServicePort],
   });
 
   // Create ServiceMonitor for Prometheus to scrape Scout metrics
@@ -489,30 +471,25 @@ export function createScoutDeployment(
     name: `scout-${stage}`,
     matchLabels: { app: "scout", stage },
   });
+  createScoutTemporalMetricsServiceMonitor(chart, `scout-temporal-${stage}`, {
+    app: "scout",
+    stage,
+  });
 
-  // The gateway role shares this stage's claim and SELinux level by design;
-  // see createScoutGatewayDeployment for why that is safe for this role and
-  // not for activity-worker. The pin is already proven safe for a second pod
-  // above, before any of this stage's resources were built.
-  //
-  // Rendered while retiring as well as while split — at zero replicas, which is
-  // how the rollback retires the pod without an operator scaling it by hand.
-  // Retiring also renders the gate that holds the backend's return to
-  // `combined` until that pod has actually exited.
-  // The claim is still declared on a retiring Deployment; with no pod it is
-  // never mounted, so the read-only co-mount argument above is unaffected.
-  if (gatewayTopology !== "absent") {
-    createScoutGatewayDeployment(chart, stage, {
-      topology: gatewayTopology,
-      imageVersion,
-      envVariables: { ...envVariables, ...voiceEnvVariables },
-      claim: localPathVolume.claim,
-      selinuxLevel,
-      colocateWith: deployment,
-      voiceSecretMount,
-    });
-  }
-  if (gatewayTopology === "retiring") {
-    createScoutGatewayRetirementGate(chart, stage);
-  }
+  // Hosted roles share the stage claim and SELinux level.
+  createScoutGatewayDeployment(chart, stage, {
+    imageVersion,
+    envVariables: { ...envVariables, ...voiceEnvVariables },
+    claim: localPathVolume.claim,
+    selinuxLevel,
+    colocateWith: deployment,
+    voiceSecretMount,
+  });
+  createScoutActivityWorkerDeployment(chart, stage, {
+    imageVersion,
+    envVariables,
+    claim: localPathVolume.claim,
+    selinuxLevel,
+    colocateWith: deployment,
+  });
 }

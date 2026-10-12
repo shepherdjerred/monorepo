@@ -11,6 +11,7 @@ import {
   DRIVE_LEGEND,
 } from "./smartctl-panels.ts";
 import { addNvmePanels } from "./nvme-dashboard-panels.ts";
+import { smartTemperatureCelsiusExpression } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/smartmon-metrics.ts";
 
 // smartmon_* metrics are keyed by the unstable `disk` path (/dev/nvme0, /dev/sda),
 // which can change across reboots / controller re-enumeration. The stable
@@ -240,7 +241,7 @@ export function createSmartctlDashboard() {
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr(bySerial("smartmon_temperature_celsius_value"))
+          .expr(bySerial(smartTemperatureCelsiusExpression()))
           .legendFormat(DRIVE_LEGEND),
       )
       .unit("celsius")
@@ -268,7 +269,7 @@ export function createSmartctlDashboard() {
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr(`max(${bySerial("smartmon_temperature_celsius_value")})`)
+          .expr(`max(${bySerial(smartTemperatureCelsiusExpression())})`)
           .legendFormat("Max Temp"),
       )
       .unit("celsius")
@@ -296,7 +297,7 @@ export function createSmartctlDashboard() {
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr(`avg(${bySerial("smartmon_temperature_celsius_value")})`)
+          .expr(`avg(${bySerial(smartTemperatureCelsiusExpression())})`)
           .legendFormat("Avg Temp"),
       )
       .unit("celsius")
@@ -324,17 +325,17 @@ export function createSmartctlDashboard() {
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr(`min(${bySerial("smartmon_temperature_celsius_value")})`)
+          .expr(`min(${bySerial(smartTemperatureCelsiusExpression())})`)
           .legendFormat("Min"),
       )
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr(`avg(${bySerial("smartmon_temperature_celsius_value")})`)
+          .expr(`avg(${bySerial(smartTemperatureCelsiusExpression())})`)
           .legendFormat("Avg"),
       )
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr(`max(${bySerial("smartmon_temperature_celsius_value")})`)
+          .expr(`max(${bySerial(smartTemperatureCelsiusExpression())})`)
           .legendFormat("Max"),
       )
       .unit("celsius")

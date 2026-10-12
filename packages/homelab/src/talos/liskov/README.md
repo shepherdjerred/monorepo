@@ -29,7 +29,7 @@ committed).
 1. **SecureBoot enrollment** (BIOS): Secure Boot → OS Type "Windows UEFI
    mode", mode Custom, Key Management → Clear Secure Boot Keys (= setup
    mode). Boot the SecureBoot ISO and confirm the Talos auto-enroll prompt:
-   `https://factory.talos.dev/image/<schematic-id>/v1.14.1/metal-amd64-secureboot.iso`
+   `https://factory.talos.dev/image/<schematic-id>/v1.14.2/metal-amd64-secureboot.iso`
    (schematic id: see `patches/image.yaml`).
 2. **Maintenance mode**: note the IP from the console, then
    `talosctl -n <ip> disks --insecure` → put the 990 Pro **1TB** serial into
@@ -38,8 +38,8 @@ committed).
 
    ```bash
    talosctl gen config --with-secrets secrets.yaml \
-     --talos-version v1.14.1 \
-     --kubernetes-version 1.37.0 \
+     --talos-version v1.14.2 \
+     --kubernetes-version 1.37.1 \
      --output-types worker -o liskov-worker.yaml \
      torvalds https://192.168.1.81:6443 \
      --config-patch @patches/image.yaml \
@@ -88,11 +88,12 @@ committed).
 
    # Create the pool: single vdev, same layout as torvalds (ashift=12, autotrim
    # on, atime off; no root-level compression — openebs sets per-dataset
-   # compression via the zfs-ssd-lz4 class). The by-id path pins the command to
-   # the exact 2TB drive by model+serial, so it cannot hit the 1TB OS disk.
+   # compression via the zfs-ssd-lz4 class), except sync=disabled (below). The
+   # by-id path pins the command to the exact 2TB drive by model+serial, so it
+   # cannot hit the 1TB OS disk.
    kubectl -n openebs exec "$NODE_POD" -c openebs-zfs-plugin -- \
      chroot /host /usr/local/sbin/zpool create -f -o ashift=12 -o autotrim=on \
-       -O atime=off -O compression=off -O mountpoint=none \
+       -O atime=off -O compression=off -O mountpoint=none -O sync=disabled \
        zfspv-pool-nvme /dev/disk/by-id/nvme-Samsung_SSD_990_PRO_2TB_<serial>
    ```
 
@@ -101,32 +102,35 @@ committed).
    node pod isn't up yet, wait for the openebs `zfsNode` DaemonSet pod to appear
    on liskov first.
 
+   `sync=disabled` is liskov-only. Every dataset on this pool is a CI
+   workspace or cache that CI rebuilds, so a crash may lose only the last few
+   seconds of disposable writes, and the pool itself stays consistent. Without
+   it, the ZFS intent log writes each fsync (test databases, package managers)
+   to the SSD a second time, about 1.5 TiB a week. Never copy it to torvalds.
+   The one exception is `woodpecker-codex-auth`, whose rotating refresh token
+   must not roll back. After step 7 binds that claim, and whenever it is
+   recreated, pin its dataset back to `standard`:
+
+   ```bash
+   CODEX_PV=$(kubectl -n woodpecker-ci get pvc woodpecker-codex-auth \
+     -o jsonpath='{.spec.volumeName}')
+   kubectl -n openebs exec "$NODE_POD" -c openebs-zfs-plugin -- \
+     chroot /host /usr/local/sbin/zfs set sync=standard "zfspv-pool-nvme/$CODEX_PV"
+   kubectl -n openebs exec "$NODE_POD" -c openebs-zfs-plugin -- \
+     chroot /host /usr/local/sbin/zfs get -r -o name,value,source sync zfspv-pool-nvme
+   ```
+
 6. **Watchdog**: run the verification in `patches/watchdog.yaml`, then apply it.
-7. **Merge the join PR** (Buildkite pinning + tolerations + weighted Kueue
-   admission — they land in one ArgoCD sync by design). Then recreate the git-mirrors
-   PVC on liskov (it is a node-local ZFS volume currently bound on
-   torvalds; step pods pinned to liskov cannot mount it):
-
-   ```bash
-   kubectl delete pvc buildkite-git-mirrors -n buildkite
-   # ArgoCD recreates it; first consumer on liskov binds it there.
-   ```
-
-8. **Confirm**: first builds run on liskov (`kubectl get pods -n buildkite
--o wide`); new Buildkite Jobs carry `kueue.x-k8s.io/queue-name: default`,
-   oversized workloads are `suspend: true` rather than rejected, and the
-   `kueue-system` application is Healthy. Cancel/retry any build whose Job was
-   created before Kueue was enabled and has no queue label. Confirm the
-   `buildkitd-cache-liskov` PVC is bound on liskov and buildkitd is Ready.
-   Then remove the retired cache claim still bound to torvalds:
-
-   ```bash
-   kubectl delete pvc buildkitd-cache -n buildkitd
-   ```
-
-   Grafana node
-   dashboards show both nodes; smartctl/nvme/zfs collector pods present on
-   liskov.
+7. **Reconcile CI placement** through the repository release workflow. The
+   Woodpecker pipeline pins step and service pods to liskov, with the CI
+   toleration and resource requests used by Kueue admission. Cache claims are
+   declared in `src/cdk8s/src/resources/woodpecker/caches.ts`; inspect their
+   node binding before running consumers.
+8. **Confirm**: builds run on liskov (`kubectl get pods -n woodpecker-ci
+-o wide`), oversized workloads wait for Kueue admission, and the
+   `kueue-system` application is Healthy. Confirm `buildkitd-cache-liskov` is
+   bound on liskov and buildkitd is Ready. Grafana node dashboards show both
+   nodes, with smartctl/nvme/zfs collector pods present on liskov.
 
 ## After the soak
 

@@ -1,16 +1,23 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import path from "node:path";
 import { z } from "zod";
+import { refreshFlagSnapshot } from "@shepherdjerred/feature-flags";
 import {
-  initFeatureFlags,
-  shutdownFeatureFlags,
-} from "@shepherdjerred/feature-flags";
+  initializeDynamicConfig,
+  shutdownDynamicConfig,
+  exploreAnalysisEnabled,
+  resolveExploreModel,
+  refreshDynamicConfig,
+} from "#src/config/dynamic.ts";
 import { prisma } from "#src/database/index.ts";
 import { databaseSnapshotId } from "./snapshot-identity.ts";
 import { writableRowCounts } from "./writable-rows.ts";
 import { ME, MY_SERVER } from "#src/configuration/flags.ts";
 import { useStageFlagSemantics } from "./stage-flag-semantics.ts";
+import { replayDynamicConfigSeed } from "./config-seed.ts";
 import { buildDirPath } from "#src/report-lake/paths.ts";
-import { readBuildPuuidRemapFingerprint } from "#src/report-lake/build-manifest.ts";
+import { readBuildFingerprint } from "#src/report-lake/build-manifest.ts";
+import { lakeSchemaFingerprint } from "#src/report-lake/schema.ts";
 import {
   closeDuckDB,
   withDuckDBConnection,
@@ -87,12 +94,20 @@ type FlagSource = "static" | "provider";
 
 async function startFlags(): Promise<FlagSource> {
   const mode = Bun.env["FEATURE_FLAGS_MODE"];
+  await initializeDynamicConfig({
+    environment:
+      mode === "flipt" ? Bun.env : { FEATURE_FLAGS_MODE: "disabled" },
+    seed: replayDynamicConfigSeed(),
+    startPolling: false,
+  });
   if (mode === "flipt") {
-    await initFeatureFlags({ environment: Bun.env });
-    return "provider";
+    if (!(await refreshFlagSnapshot()))
+      throw new Error(
+        "Live flag capture requires a reachable Flipt provider; refusing to label defaults as provider decisions.",
+      );
+    await refreshDynamicConfig();
   }
-  await initFeatureFlags({ environment: { FEATURE_FLAGS_MODE: "disabled" } });
-  return "static";
+  return mode === "flipt" ? "provider" : "static";
 }
 
 /**
@@ -108,7 +123,7 @@ async function startFlags(): Promise<FlagSource> {
  * tallying here is cheaper than teaching a query to index into JSON.
  */
 async function exploreRunFacts(): Promise<
-  readonly { guildId: string; ownerId: string }[]
+  readonly { guildId: DiscordGuildId; ownerId: string }[]
 > {
   const runs = await prisma.scoutInteractiveRun.findMany({
     where: { kind: "explore" },
@@ -137,11 +152,11 @@ async function exploreRunFacts(): Promise<
 async function targetGuilds(
   stage: "beta" | "prod",
   top: number,
-): Promise<readonly { guildId: string; label: string }[]> {
+): Promise<readonly { guildId: DiscordGuildId; label: string }[]> {
   if (stage === "beta") {
     return [{ guildId: MY_SERVER, label: "mine" }];
   }
-  const counts = new Map<string, number>();
+  const counts = new Map<DiscordGuildId, number>();
   for (const fact of await exploreRunFacts()) {
     if (fact.guildId === MY_SERVER || fact.ownerId === ME) continue;
     counts.set(fact.guildId, (counts.get(fact.guildId) ?? 0) + 1);
@@ -163,7 +178,7 @@ async function targetGuilds(
  * history would make several chips answer "nothing here" for reasons that have
  * nothing to do with the model.
  */
-async function busiestRequester(guildId: string): Promise<string> {
+async function busiestRequester(guildId: DiscordGuildId): Promise<string> {
   const counts = new Map<string, number>();
   for (const fact of await exploreRunFacts()) {
     if (fact.guildId !== guildId) continue;
@@ -188,15 +203,14 @@ export async function capturePinForStage(input: {
   const flagSource = await startFlags();
   useStageFlagSemantics(input.stage);
   const buildId = await publishedBuild(input.lakeDir);
-  const fingerprint = await readBuildPuuidRemapFingerprint(
+  const schemaFingerprint = await readBuildFingerprint(
     buildDirPath(input.lakeDir, buildId),
   );
-  if (fingerprint === undefined) {
+  if (schemaFingerprint !== lakeSchemaFingerprint()) {
     throw new Error(
-      `Build ${buildId} records no PUUID remap fingerprint; its identity domain cannot be proven.`,
+      "The pulled lake schema differs from this checkout; rebuild it before capturing the pin.",
     );
   }
-
   const [parquetRows, databaseRows, guilds] = await Promise.all([
     parquetAccountRows(input.lakeDir, buildId),
     prisma.account.count(),
@@ -232,13 +246,17 @@ export async function capturePinForStage(input: {
 
   const now = new Date().toISOString();
   const pin = StageDatasetPinSchema.parse({
-    schemaVersion: 1,
+    schemaVersion: 3,
+    runtime: {
+      analysisEnabled: exploreAnalysisEnabled(),
+      model: resolveExploreModel(),
+    },
     stage: input.stage,
     createdAt: now,
     lake: {
       dir: input.lakeDir,
       buildId,
-      puuidRemapFingerprint: fingerprint,
+      schemaFingerprint,
       pulledAt: now,
       sourcePod: "dev:lake-pull",
     },
@@ -259,7 +277,7 @@ export async function capturePinForStage(input: {
   // singleton the server is meant to keep, and a CLI that leaves it to
   // finalization pays a few seconds of dead time on exit.
   await prisma.$disconnect();
-  await shutdownFeatureFlags();
+  await shutdownDynamicConfig();
   await closeDuckDB();
   return pin;
 }

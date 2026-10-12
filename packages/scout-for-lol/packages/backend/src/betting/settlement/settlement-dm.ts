@@ -1,3 +1,4 @@
+import type { DiscordAccountId } from "@scout-for-lol/domain/identity/discord.ts";
 import { EmbedBuilder } from "discord.js";
 import {
   RiotTeamIdSchema,
@@ -45,13 +46,13 @@ export type SettlementDmMessage = {
 };
 
 export type TeamRecipient = {
-  discordId: string;
+  discordId: DiscordAccountId;
   teamId: RiotTeamId;
 };
 
 /** One recipient's own earnings from this game, already labelled. */
 export type RecipientEarningLine = {
-  discordId: string;
+  discordId: DiscordAccountId;
   line: string;
 };
 

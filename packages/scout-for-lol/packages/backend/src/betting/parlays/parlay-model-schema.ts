@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
   MatchNumericFieldSchema,
+  NumericOperatorSchema,
   OpponentPingFieldSchema,
   ParticipantBooleanFieldSchema,
   ParticipantNumericFieldSchema,
@@ -26,8 +27,10 @@ import {
   type ParlaySubject,
 } from "#src/betting/parlays/model/parlay-criteria.ts";
 
-const NumericOperatorSchema = z.enum(["gte", "lte", "eq"]);
-const ProposalNumericOperatorSchema = z.enum(["gte", "lte"]);
+const ProposalNumericOperatorSchema = NumericOperatorSchema.extract([
+  "gte",
+  "lte",
+]);
 
 // OpenAI strict structured outputs reject `oneOf`, which Zod emits for the
 // canonical discriminated union. Present the model with one closed shape and

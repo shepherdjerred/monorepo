@@ -1,3 +1,4 @@
+import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import {
   checkRateLimit,
@@ -8,6 +9,10 @@ import {
 } from "#src/database/competition/rate-limit.ts";
 
 import { testAccountId } from "#src/testing/test-ids.ts";
+
+const SERVER_ONE = DiscordGuildIdSchema.parse("811908216722529155");
+const SERVER_TWO = DiscordGuildIdSchema.parse("818806288990321838");
+const SERVER_ID = DiscordGuildIdSchema.parse("819630016978081671");
 // Clean up before each test
 beforeEach(() => {
   clearAllRateLimits();
@@ -19,12 +24,12 @@ afterEach(() => {
 
 describe("checkRateLimit", () => {
   test("returns true for first creation", () => {
-    const result = checkRateLimit("server-123", "user-45600000456");
+    const result = checkRateLimit(SERVER_ID, "user-45600000456");
     expect(result).toBe(true);
   });
 
   test("returns false within rate limit window", () => {
-    const serverId = "server-123";
+    const serverId = SERVER_ID;
     const userId = testAccountId("456000004560");
 
     // Record creation
@@ -36,7 +41,7 @@ describe("checkRateLimit", () => {
   });
 
   test("returns true after rate limit window expires", () => {
-    const serverId = "server-123";
+    const serverId = SERVER_ID;
     const userId = testAccountId("456000004560");
 
     // Note: We can't directly manipulate time in the implementation,
@@ -55,17 +60,17 @@ describe("checkRateLimit", () => {
     const userId = testAccountId("456000004560");
 
     // Record on server1
-    recordCreation("server-1000000001", userId);
+    recordCreation(SERVER_ONE, userId);
 
     // Should be limited on server1
-    expect(checkRateLimit("server-1000000001", userId)).toBe(false);
+    expect(checkRateLimit(SERVER_ONE, userId)).toBe(false);
 
     // Should NOT be limited on server2
-    expect(checkRateLimit("server-2000000002", userId)).toBe(true);
+    expect(checkRateLimit(SERVER_TWO, userId)).toBe(true);
   });
 
   test("rate limits are independent per user", () => {
-    const serverId = "server-123";
+    const serverId = SERVER_ID;
 
     // Record for user1
     recordCreation(serverId, "user-10000000001");
@@ -80,7 +85,7 @@ describe("checkRateLimit", () => {
 
 describe("recordCreation", () => {
   test("records creation timestamp", () => {
-    const serverId = "server-123";
+    const serverId = SERVER_ID;
     const userId = testAccountId("456000004560");
 
     // Should be allowed initially
@@ -94,7 +99,7 @@ describe("recordCreation", () => {
   });
 
   test("updates timestamp on subsequent recordings", () => {
-    const serverId = "server-123";
+    const serverId = SERVER_ID;
     const userId = testAccountId("456000004560");
 
     // Record twice
@@ -108,12 +113,12 @@ describe("recordCreation", () => {
 
 describe("getTimeRemaining", () => {
   test("returns 0 for user with no rate limit", () => {
-    const remaining = getTimeRemaining("server-123", "user-45600000456");
+    const remaining = getTimeRemaining(SERVER_ID, "user-45600000456");
     expect(remaining).toBe(0);
   });
 
   test("returns time remaining after recording", () => {
-    const serverId = "server-123";
+    const serverId = SERVER_ID;
     const userId = testAccountId("456000004560");
 
     recordCreation(serverId, userId);
@@ -127,7 +132,7 @@ describe("getTimeRemaining", () => {
   });
 
   test("returns 0 after clearing rate limit", () => {
-    const serverId = "server-123";
+    const serverId = SERVER_ID;
     const userId = testAccountId("456000004560");
 
     recordCreation(serverId, userId);
@@ -140,7 +145,7 @@ describe("getTimeRemaining", () => {
 
 describe("clearRateLimit", () => {
   test("clears rate limit for specific user", () => {
-    const serverId = "server-123";
+    const serverId = SERVER_ID;
     const userId = testAccountId("456000004560");
 
     recordCreation(serverId, userId);
@@ -151,7 +156,7 @@ describe("clearRateLimit", () => {
   });
 
   test("only clears specified user's rate limit", () => {
-    const serverId = "server-123";
+    const serverId = SERVER_ID;
 
     recordCreation(serverId, "user-10000000001");
     recordCreation(serverId, "user-20000000002");
@@ -165,14 +170,14 @@ describe("clearRateLimit", () => {
 
 describe("clearAllRateLimits", () => {
   test("clears all rate limits", () => {
-    recordCreation("server-1000000001", "user-10000000001");
-    recordCreation("server-1000000001", "user-20000000002");
-    recordCreation("server-2000000002", "user-10000000001");
+    recordCreation(SERVER_ONE, "user-10000000001");
+    recordCreation(SERVER_ONE, "user-20000000002");
+    recordCreation(SERVER_TWO, "user-10000000001");
 
     clearAllRateLimits();
 
-    expect(checkRateLimit("server-1000000001", "user-10000000001")).toBe(true);
-    expect(checkRateLimit("server-1000000001", "user-20000000002")).toBe(true);
-    expect(checkRateLimit("server-2000000002", "user-10000000001")).toBe(true);
+    expect(checkRateLimit(SERVER_ONE, "user-10000000001")).toBe(true);
+    expect(checkRateLimit(SERVER_ONE, "user-20000000002")).toBe(true);
+    expect(checkRateLimit(SERVER_TWO, "user-10000000001")).toBe(true);
   });
 });

@@ -6,6 +6,8 @@ import {
   BucksDeltaSchema,
   type BucksStake,
   BucksStakeSchema,
+  DareChallengerStakeSchema,
+  DarePileOnSchema,
 } from "@scout-for-lol/domain/identity/bucks-money.ts";
 
 /**
@@ -63,11 +65,22 @@ export {
   BucksPoolTotalSchema,
   type BucksStake,
   BucksStakeSchema,
+  type DareChallengerStake,
+  DareChallengerStakeSchema,
+  type DarePayout,
+  DarePayoutSchema,
+  type DarePileOn,
+  DarePileOnSchema,
+  type DarePotTotal,
+  DarePotTotalSchema,
   ZERO_BUCKS,
   addAmounts,
+  addPileOns,
   amountToStake,
   applyDelta,
   creditOf,
+  darePayoutOf,
+  darePotOf,
   debitOf,
   stakeToAmount,
   subtractAmounts,
@@ -97,6 +110,22 @@ export const StorableBucksDeltaSchema = BucksDeltaSchema.check(
   z.lte(BUCKS_INT32_MAX),
 ).brand<"StorableBucks">();
 export type StorableBucksDelta = z.infer<typeof StorableBucksDeltaSchema>;
+
+/** A Dare opening stake the `Int` column can hold. Still a
+ * `StorableBucksStake`, so the ledger takes it unchanged. */
+export const StorableDareChallengerStakeSchema =
+  DareChallengerStakeSchema.check(
+    z.lte(BUCKS_INT32_MAX),
+  ).brand<"StorableBucks">();
+export type StorableDareChallengerStake = z.infer<
+  typeof StorableDareChallengerStakeSchema
+>;
+
+/** A Dare pile-on the `Int` column can hold. */
+export const StorableDarePileOnSchema = DarePileOnSchema.check(
+  z.lte(BUCKS_INT32_MAX),
+).brand<"StorableBucks">();
+export type StorableDarePileOn = z.infer<typeof StorableDarePileOnSchema>;
 
 /**
  * Assert a semantically valid stake is also storable.

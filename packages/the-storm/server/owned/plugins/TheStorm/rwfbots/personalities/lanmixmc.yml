@@ -1,0 +1,81 @@
+id: lanmixmc
+name: LanmixMC
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0OTIzOTYxMSwKICAicHJvZmlsZUlkIiA6ICI2YjllM2Q0MDRiZmY0MTEyODJiY2VkOTAzY2M3ZDJmZiIsCiAgInByb2ZpbGVOYW1lIiA6ICJsdWgyOSIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9kYzgzNDVhZGI2OWEyNTkwYThiYThhZWIxMmZkYjk1MWM5MDAxZGQ2ZTM5ZWRlNzFlMzcxZTQ2Zjg4OTM2YmZmIgogICAgfQogIH0KfQ=="
+  signature: "FqMe+XhcewQ9VoLjt+AZ8APqDuDXWpsW94NIMEnX0FOENXwz4vBshDvmDDH3MXbyQDKXKiQ6MERIxCSlgf0Xpf8hwvTJ9IQsZpaZJZGBBoY0uWMhS/lviTMmxAYDxkmigJop6DfCxq+ETO5wwsO9Z0J9W4/Iz8CE0xc/chNhnGgazFBZFCJ6nhy636Cr8IDw/6cEIHYsF6X0CJIRZmMUK7kGQi+D/EfjkCc82a6801oJXZ4ClajzdGAhg3XTuT3sfL1pFmkoxrJ4Ig10X4j4BaZWcfM5THqQL8DCdfXMsoAWx8A0Hgvr/v5aPqDbl6o+9oUsE9VJmssrXSnDhQZe/xO6LYKSWiUS4r1lS7keLm3XfJvzYzqmXREo0lTs4g7xUDzmGzaVUcva5TJvQ1fUyKf6goC9JzNa+ocobgZp+Ge6CjhSnX109dP+6nQDGeTAs6LM9yvmszQp0tvns9wcuityxXPpVwf2GkkGNvl1VXPgjFJZZC7obMUGL95l4hU+ub1h0pYcZ9BstM0SXl5vS0K6hGw0jw8v9sJ/gKdzzWQfH+NwVpP2jiSLWsyuSCm0NT7YWxRd4wRCWy4an0D7dFDKIkONHbcE7A4HU8WCwM4nX2EW7+mLUEs1YZWBWQd12xk95X8P9KkewmEtqLJ5CaCtotYlPLuDepjumPoG1zs="
+skill: 0.845
+archetype: anchor
+leverOffsets:
+  reactionMs: 0.54
+  predictionQuality: -0.2
+  awarenessRadius: 0.47
+  coordination: 0.47
+  technique: 0.38
+  aggression: -0.14
+kits:
+  trooper: 0.88
+  longbow: 0.41
+  rewind: 0.34
+roles:
+  defend: 0.88
+  retake: 0.74
+  hunt: 0.16
+style:
+  aggression: 0.2
+  patience: 0.89
+  teamplay: 0.67
+  risk: 0.12
+voice:
+  tone:
+    - stoic
+    - formal
+    - loyal
+  verbosity: quiet
+  style: "royal guard; short formal oaths, speaks of the bomb as 'the crown'"
+lines:
+  greet:
+    - I stand watch over the crown.
+    - "Guard posted. {team}, go forth."
+    - None shall pass.
+  onKill:
+    - "{victim} approached the crown. Denied."
+    - The guard holds.
+    - "Halt was said, {victim}."
+  onDeath:
+    - "{killer} has bested the guard."
+    - The watch passes to another.
+    - "Well struck, {killer}."
+  onPlant:
+    - "{bomb} burns by royal decree."
+    - Their crown is lit. Returning to post.
+  onDefuse:
+    - "{bomb} is secure. The crown endures."
+    - The flame is quenched.
+  onWin:
+    - "Long live {team}."
+    - The realm is safe.
+  onLoss:
+    - The crown has fallen.
+    - We shall rebuild.
+  onLastAlive:
+    - The last guard stands.
+    - I alone keep the watch.
+  taunt:
+    - The gate is closed.
+    - Turn back.
+    - I have not moved in six rounds. I will not now.
+  lobby:
+    - The guard reports for duty.
+    - "My oath stands: the crown does not fall today."
+    - I carry the longbow, as the guard always has.
+    - "{team}, march when ready. The crown is in my keeping."
+    - No gapples on duty. Discipline before comfort.
+quirks:
+  - stares_down
+  - never_eats
+rivals:
+  - kaigrokpvp
+  - luckymaikrak
+bio: Plays every match as a sworn guard of his team's bomb and has not once broken character since 2013. Refuses golden apples on duty. Has an honourable, long-running feud with bomb diver KaigrokPvP.
+batch: 2
+retired: false

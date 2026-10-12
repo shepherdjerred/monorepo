@@ -7,7 +7,7 @@
 # file reaches /data.
 
 ########################
-## TheStorm.jar
+## TheStorm.jar + MCBridge.jar
 ########################
 # Gradle and Corretto majors match .mise.toml's gradle and java pins
 # (minecraft-tsmc.test.ts enforces the Gradle version). Renovate's Dockerfile
@@ -15,12 +15,18 @@
 FROM gradle:9.7.1-jdk25-corretto@sha256:b65cce4c0be158a0ddb99e431d329d40c02f99c567e0fffdad52d3e44815aa16 AS plugin
 WORKDIR /src
 COPY plugin/ plugin/
+COPY public-status.json public-status.json
 # The world module verifies its managed rollout key during compilation.
 # `managed-flags` is a BuildKit named context supplied by docker-bake.hcl.
 # hadolint ignore=DL3022
 COPY --from=managed-flags managed-flag-inventory.json /feature-flags/src/managed-flag-inventory.json
+# The companions module bundles the shared brain contract from
+# ../../storm-brain/contracts (relative to plugin/); without it TheStorm fails
+# to enable. `storm-brain-contracts` is a BuildKit named context.
+# hadolint ignore=DL3022
+COPY --from=storm-brain-contracts companion-chat.json /storm-brain/contracts/companion-chat.json
 RUN --mount=type=cache,id=the-storm-gradle,target=/home/gradle/.gradle/caches \
-  gradle -p plugin :dist:shadowJar --no-daemon --console=plain
+  gradle -p plugin :dist:shadowJar :bridge:jar --no-daemon --console=plain
 
 ########################
 ## Paper + third-party jars
@@ -30,6 +36,12 @@ RUN --mount=type=cache,id=the-storm-gradle,target=/home/gradle/.gradle/caches \
 FROM itzg/minecraft-server:2026.9.1-java25@sha256:e8640538dac5d54c2838d57fa9641e735ad0cf2b71fb0e8a68da3b542a315749 AS fetch
 COPY server/plugins.json server/fetch.sh /build/
 RUN bash /build/fetch.sh /build/plugins.json /out
+COPY server/build-livemap.sh /build/
+COPY server/livemap/ /build/livemap/
+# Use the verified jar's matching frontend without changing the plugin artifact.
+RUN bash /build/build-livemap.sh \
+  "/out/plugins/$(jq -r '.plugins[] | select(.name == "BlueMap") | .file' /build/plugins.json)" \
+  /out/livemap
 # Pre-extract Paperclip (Mojang server jar download, patch, libraries) at build
 # time so a wake needs no network. Paper reads it back via -DbundlerRepoDir.
 WORKDIR /out/paper
@@ -43,7 +55,12 @@ FROM itzg/minecraft-server:2026.9.1-java25@sha256:e8640538dac5d54c2838d57fa9641e
 COPY --from=fetch /out/paper/ /opt/paper/
 COPY --from=fetch /out/paper-defaults/ /opt/paper-defaults/
 COPY --from=fetch /out/plugins/ /plugins/
+COPY --from=fetch /out/livemap/ /opt/the-storm/livemap/
 COPY --from=plugin --chmod=0644 /src/plugin/dist/build/libs/TheStorm.jar /plugins/
+# MCBridge: the mc-harness agent bridge (HTTP on MC_BRIDGE_PORT, default 25580,
+# reached only by kubectl port-forward). It disables itself without
+# MC_BRIDGE_TOKEN, which the chart injects from 1Password.
+COPY --from=plugin --chmod=0644 /src/plugin/bridge/build/libs/MCBridge.jar /plugins/
 # Repository-owned plugin files (every file under server/owned/plugins/) ride
 # itzg's /plugins sync into /data/plugins: overwritten when they differ, never
 # deleted. Secrets never live here; patches interpolate ${CFG_*} env instead.
@@ -51,22 +68,23 @@ COPY server/owned/plugins/ /plugins/
 COPY server/owned.roots server/remove.list /bundle/
 COPY server/patches/ /bundle/patches/
 COPY server/plugins.json /opt/the-storm/plugins.json
+COPY server/archive-progression.py /opt/the-storm/archive-progression.py
 COPY --chmod=0755 server/storm-entrypoint.sh /usr/local/bin/storm-entrypoint
 
 # PAPER_CUSTOM_JAR + bundlerRepoDir: run the pre-patched Paper, no download.
 # PATCH_DEFINITIONS: force the keys we set in files plugins rewrite themselves.
 # SYNC_SKIP_NEWER_IN_DESTINATION=false: the image wins over a plugin's rewrite.
-# Keep the existing PVC-only LWCX jar while towns protection is disabled.
-# The cleanup still removes other stale jars before syncing the pinned set.
+# The towns module owns locks. Every stale top-level jar is retired.
 ENV TYPE=PAPER \
   VERSION=26.2 \
+  CFG_PROXY_PROTOCOL=false \
   PAPER_CUSTOM_JAR=/opt/paper/paper-26.2-129.jar \
   JVM_DD_OPTS=bundlerRepoDir:/opt/paper \
   PAPER_CONFIG_DEFAULTS_REPO=/opt/paper-defaults \
   PATCH_DEFINITIONS=/bundle/patches \
   SYNC_SKIP_NEWER_IN_DESTINATION=false \
   REMOVE_OLD_MODS=true \
-  REMOVE_OLD_MODS_EXCLUDE=LWCX*.jar,LWC*.jar
+  REMOVE_OLD_MODS_EXCLUDE=
 
 ENTRYPOINT ["/usr/local/bin/storm-entrypoint"]
 
@@ -76,23 +94,29 @@ ENTRYPOINT ["/usr/local/bin/storm-entrypoint"]
 FROM release AS smoke
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # Every third-party jar matches its pin, the jar set is exactly the manifest
-# plus TheStorm.jar, TheStorm.jar is a Paper plugin, Paper is pre-patched at
+# plus TheStorm.jar and MCBridge.jar, both are Paper plugins, Paper is pre-patched at
 # the path PAPER_CUSTOM_JAR names, and every patch op is a $put (a $set on a
 # key an older file lacks stops the boot).
 RUN set -eu; \
   jq -r '.plugins[] | "\(.sha256)  /plugins/\(.file)"' /opt/the-storm/plugins.json \
     | sha256sum --check --strict -; \
   expected=$( { jq -r '.plugins[].file' /opt/the-storm/plugins.json; \
-    echo TheStorm.jar; } | sort); \
+    echo TheStorm.jar; echo MCBridge.jar; } | sort); \
   actual=$(find /plugins -maxdepth 1 -name '*.jar' -printf '%f\n' | sort); \
   [ "$expected" = "$actual" ] || { echo "jar set mismatch"; diff <(echo "$expected") <(echo "$actual"); exit 1; }; \
   unzip -p /plugins/TheStorm.jar paper-plugin.yml > /tmp/paper-plugin.yml; \
   grep -qx 'name: TheStorm' /tmp/paper-plugin.yml; \
   grep -qx "api-version: '26.2'" /tmp/paper-plugin.yml; \
   grep -qx 'main: com.shepherdjerred.thestorm.TheStormPlugin' /tmp/paper-plugin.yml; \
+  unzip -l /plugins/TheStorm.jar contracts/companion-chat.json > /dev/null; \
+  unzip -p /plugins/MCBridge.jar paper-plugin.yml > /tmp/mcbridge-plugin.yml; \
+  grep -qx 'name: MCBridge' /tmp/mcbridge-plugin.yml; \
+  grep -qx 'api-version: "26.2"' /tmp/mcbridge-plugin.yml; \
+  grep -qx 'main: com.shepherdjerred.mcbridge.McBridgePlugin' /tmp/mcbridge-plugin.yml; \
   test -f "$PAPER_CUSTOM_JAR"; \
   test -f /opt/paper/versions/26.2/paper-26.2.jar; \
   test -f /plugins/TheStorm/config.yml; \
+  grep -q '<title>LiveMap</title>' /opt/the-storm/livemap/index.html; \
   for patch in /bundle/patches/*.json; do \
     jq -e '(.file | startswith("/data/")) and (.ops | length > 0) and all(.ops[]; keys == ["$put"])' \
       "$patch" > /dev/null || { echo "patch $patch must be /data-targeted \$put ops only"; exit 1; }; \

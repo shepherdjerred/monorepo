@@ -4,11 +4,6 @@
       "count": 1
     }
   },
-  "src/commands/pr/health.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
   "src/commands/pr/review.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1

@@ -101,8 +101,12 @@ permanent mismatch; comparing only the source target would miss changed Helm
 values at the same chart version.
 
 Once that exact source has been deployed, ordinary same-source drift remains
-the external Application's responsibility after auto-sync is restored; it does
-not broaden the release-scoped gate. Repository-published children keep the
+the external Application's responsibility after auto-sync is restored. A child
+that declares pruning must also report `Synced` before reconciliation skips it:
+retired chart resources otherwise remain and block the final root operation.
+Prometheus declares pruning so replacing the renderer's generated Secret with
+the shared 1Password Secret retires the unused chart-owned Secret. This does not
+broaden the release-scoped health gate. Repository-published children keep the
 stricter boundary: sync status, exact resolved revision, latest deployment
 history, and terminal operation state must agree. This prevents the brief
 post-stage comparison window from skipping a changed external prerequisite.
@@ -236,6 +240,26 @@ rather than a floating tag.
 A floating tag means "whatever is newest when the sync happens", which makes a
 release non-reproducible and makes a partially published set indistinguishable
 from a complete one.
+
+## Why snapshot consumers precede Temporal
+
+The [ops dashboard](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/argo-applications/observability/alert-dashboard.ts)
+and [TRMNL](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/argo-applications/apps/trmnl-dashboard.ts)
+reconcile before Temporal so their validators accept new snapshot source values
+before the producer emits them. A rebuilt consumer also accepts snapshots from
+the previous producer, preserving collection during the transition.
+
+The final root application release policy assigns these consumers to wave -1
+and Temporal to wave 0. That policy is authoritative over annotations in
+individual constructors. Ordering verification applies the policy before
+synthesizing the root chart, matching the manifests the release planner uses.
+
+Workflow promotion alone cannot protect that boundary. The
+[publish Activity](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/activities/ops/ops-publish.ts)
+reports sources absent from an older Workflow as unknown using its own current
+contract. Updating the infra worker can therefore introduce a source before the
+Workflow deployment changes. Consumer readiness depends on local service
+initialization, allowing that order without a Temporal bootstrap dependency.
 
 ## Why a Synced-and-Healthy child still gets retried
 

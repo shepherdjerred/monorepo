@@ -98,7 +98,8 @@ export async function scoutExploreHistoryWorkflow(
   rawInput: ScoutExploreHistoryInput,
 ): Promise<ScoutExploreHistoryResult> {
   const input = ScoutExploreHistoryInputSchema.parse(rawInput);
-  setWorkflowPhase("**Phase:** importing recent ranked match history");
+  const matchType = input.matchType ?? "ranked";
+  setWorkflowPhase(`**Phase:** importing recent ${matchType} match history`);
   const result = await backgroundActivities(input.stage).importExploreHistory(
     input,
   );
@@ -111,7 +112,7 @@ export async function scoutExploreHistoryWorkflow(
       kind: "fold",
     });
   }
-  setWorkflowPhase("**Phase:** recent ranked history is ready");
+  setWorkflowPhase(`**Phase:** recent ${matchType} history is ready`);
   return result;
 }
 

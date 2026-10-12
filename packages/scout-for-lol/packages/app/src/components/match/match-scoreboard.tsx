@@ -107,7 +107,11 @@ export function MatchScoreboards(props: {
           <CardHeader>
             <div className="flex flex-wrap items-center justify-between gap-3">
               <CardTitle className="flex items-center gap-2">
-                Team {team.teamId.toString()}
+                {team.teamId === 100
+                  ? "Blue team"
+                  : team.teamId === 200
+                    ? "Red team"
+                    : `Team ${team.teamId.toString()}`}
                 <Badge variant={team.win ? "default" : "outline"}>
                   {team.win ? "Victory" : "Defeat"}
                 </Badge>
@@ -342,7 +346,8 @@ function signed(value: number): string {
   return `${value > 0 ? "+" : ""}${value.toLocaleString()}`;
 }
 
-function LaneDelta(props: { matchup: RoleMatchup }) {
+function LaneDelta(props: { matchup: RoleMatchup; redPerspective: boolean }) {
+  const direction = props.redPerspective ? -1 : 1;
   return (
     <div className="px-2 text-center">
       <p className="text-xs font-semibold uppercase tracking-wide text-scout-subtle">
@@ -353,12 +358,22 @@ function LaneDelta(props: { matchup: RoleMatchup }) {
       ) : (
         <div
           className="mt-1 space-y-0.5 text-xs"
-          aria-label="Blue side deltas at 15 minutes"
+          aria-label={`${props.redPerspective ? "Red" : "Blue"} side advantage at 15 minutes`}
         >
-          <p>{signed(props.matchup.at15.goldDelta)} gold</p>
-          <p>{signed(props.matchup.at15.creepScoreDelta)} CS</p>
-          <p>{signed(props.matchup.at15.xpDelta)} XP</p>
-          <p className="text-[10px] text-scout-subtle">Blue Δ @ 15m</p>
+          <p>{signed(props.matchup.at15.goldDelta * direction)} gold</p>
+          <p>{signed(props.matchup.at15.creepScoreDelta * direction)} CS</p>
+          <p>{signed(props.matchup.at15.xpDelta * direction)} XP</p>
+          <p className="text-xs text-scout-subtle">
+            {props.redPerspective ? "Red" : "Blue"} advantage · 15m
+          </p>
+          {props.matchup.at15.timestampMs !== 900_000 && (
+            <p className="text-xs text-scout-subtle">
+              Snapshot {Math.floor(props.matchup.at15.timestampMs / 60_000)}:
+              {Math.floor((props.matchup.at15.timestampMs % 60_000) / 1000)
+                .toString()
+                .padStart(2, "0")}
+            </p>
+          )}
         </div>
       )}
     </div>
@@ -374,7 +389,7 @@ export function RolePairedMatchScoreboard(props: {
   return (
     <Card>
       <CardHeader>
-        <div className="grid min-w-[760px] grid-cols-[minmax(280px,1fr)_120px_minmax(280px,1fr)] items-start gap-3">
+        <div className="grid grid-cols-2 items-start gap-3 md:grid-cols-[minmax(0,1fr)_140px_minmax(0,1fr)]">
           <div>
             <CardTitle className="flex items-center gap-2">
               Blue team
@@ -386,7 +401,7 @@ export function RolePairedMatchScoreboard(props: {
               <MatchObjectivesSummary objectives={blue.objectives} />
             </p>
           </div>
-          <p className="pt-1 text-center text-xs text-scout-subtle">
+          <p className="hidden pt-1 text-center text-xs text-scout-subtle md:block">
             Lane matchup
           </p>
           <div className="text-right">
@@ -403,11 +418,11 @@ export function RolePairedMatchScoreboard(props: {
         </div>
       </CardHeader>
       <CardContent className="overflow-x-auto p-0">
-        <div className="min-w-[760px] divide-y">
+        <div className="divide-y">
           {props.matchups.map((matchup) => (
             <div
               key={matchup.role}
-              className="grid grid-cols-[minmax(280px,1fr)_120px_minmax(280px,1fr)] items-center gap-3 py-2"
+              className="grid grid-cols-1 items-center gap-3 py-2 md:grid-cols-[minmax(0,1fr)_140px_minmax(0,1fr)]"
             >
               <ParticipantPanel
                 participant={requireParticipant(
@@ -416,7 +431,12 @@ export function RolePairedMatchScoreboard(props: {
                 )}
                 align="left"
               />
-              <LaneDelta matchup={matchup} />
+              <LaneDelta
+                matchup={matchup}
+                redPerspective={red.participants.some(
+                  (p) => p.selectedPlayer === true,
+                )}
+              />
               <ParticipantPanel
                 participant={requireParticipant(
                   props.teams,

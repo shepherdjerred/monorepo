@@ -1,3 +1,4 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import {
   PlayerRankHistorySchema,
   RankSchema,
@@ -35,7 +36,7 @@ function parseStoredRank(serialized: string | null): Rank | undefined {
 }
 
 type RankSnapshotRow = {
-  puuid: string;
+  puuid: LeaguePuuid;
   soloRank: string | null;
   flexRank: string | null;
   ranked5sRank: string | null;
@@ -54,7 +55,7 @@ function snapshotRank(
 
 function matchObservations(
   rows: {
-    puuid: string;
+    puuid: LeaguePuuid;
     queueType: string;
     rankAfter: string | null;
     rankBefore: string | null;

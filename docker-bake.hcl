@@ -34,8 +34,10 @@ variable "CONTRACT_HASH" {
   default = "dev"
 }
 
-# "true" on main: export per-target registry cache (mode=max). PRs and local
-# builds read cache but never write it.
+# "true" on main: export final-image cache layers (mode=min). The persistent
+# BuildKit daemon retains intermediate layers locally. Exporting those layers
+# to the registry dominated release latency; a lost local cache costs a colder
+# rebuild instead. PRs and local builds read cache but never write it.
 variable "PUSH_CACHE" {
   default = "false"
 }
@@ -56,7 +58,7 @@ function "cachefrom" {
 
 function "cacheto" {
   params = [name]
-  result = equal(PUSH_CACHE, "true") ? ["type=registry,ref=${REGISTRY}/${name}:buildcache,mode=max,image-manifest=true"] : []
+  result = equal(PUSH_CACHE, "true") ? ["type=registry,ref=${REGISTRY}/${name}:buildcache,mode=min,image-manifest=true"] : []
 }
 function "imagetags" {
   params = [name]
@@ -85,6 +87,7 @@ group "app" {
     "discord-plays-pokemon",
     "discord-plays-mario-kart",
     "storm-brain",
+    "storm-forum",
     "woodpecker-config-extension",
   ]
 }
@@ -202,9 +205,25 @@ target "storm-brain" {
   cache-to   = cacheto("storm-brain")
 }
 
+target "storm-forum" {
+  inherits   = ["_app"]
+  dockerfile = "packages/storm-forum/Dockerfile"
+  tags       = imagetags("storm-forum")
+  cache-from = cachefrom("storm-forum")
+  cache-to   = cacheto("storm-forum")
+}
+
 # ── Homelab infra images: self-contained contexts ────────────────────────────
 group "infra" {
-  targets = ["caddy-s3proxy", "obsidian-headless", "redlib", "the-storm-server"]
+  targets = ["caddy-s3proxy", "obsidian-headless", "redlib", "the-storm-server", "velero-plugin"]
+}
+
+target "velero-plugin" {
+  context    = "packages/homelab/images/velero-plugin"
+  target     = "image"
+  tags       = imagetags("velero-plugin")
+  cache-from = cachefrom("velero-plugin")
+  cache-to   = cacheto("velero-plugin")
 }
 
 target "caddy-s3proxy" {
@@ -237,7 +256,10 @@ target "redlib" {
 # repository-owned config bundle. See packages/the-storm/server/README.md.
 target "the-storm-server" {
   context    = "packages/the-storm"
-  contexts   = { managed-flags = "packages/feature-flags/src" }
+  contexts = {
+    managed-flags          = "packages/feature-flags/src"
+    storm-brain-contracts  = "packages/storm-brain/contracts"
+  }
   dockerfile = "server/Dockerfile"
   target     = "image"
   tags       = imagetags("the-storm-server")

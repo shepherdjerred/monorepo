@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { MatchDataSourceSchema } from "@scout-for-lol/domain/match-processing/states.ts";
 import { MATCH_REBUILD_GATED_COLUMNS } from "#src/model/reports/match-rebuild-gated-columns.ts";
 import {
   RUNE_SPELL_COLUMNS,
@@ -49,6 +50,9 @@ export const MatchLakeRowSchema = z.object({
   game_mode: z.string(),
   game_type: z.string(),
   game_version: z.string(),
+  // Where the match payload came from: Riot, or the Scout Client for a game
+  // Riot never published (`matchDataSourceOf`, from `dataVersion`).
+  data_source: MatchDataSourceSchema,
   // Settlement voids a match whose result is not GameComplete. History has to
   // apply the same predicate, or prices are conditioned on games that could
   // never have settled either way.
@@ -251,6 +255,7 @@ export const MATCH_LAKE_COLUMNS: Record<keyof MatchLakeRow, DuckDbColumnType> =
     game_mode: "VARCHAR",
     game_type: "VARCHAR",
     game_version: "VARCHAR",
+    data_source: "VARCHAR",
     end_of_game_result: "VARCHAR",
     map_id: "INTEGER",
     puuid: "VARCHAR",

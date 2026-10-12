@@ -13,6 +13,55 @@ import {
 } from "@shepherdjerred/feature-flags/providers/flipt-client.ts";
 import { toFliptInputs } from "@shepherdjerred/feature-flags/providers/flipt-context.ts";
 
+class SnapshotUnavailableError extends Error {}
+
+async function fetchSnapshot(
+  source: FliptFetcher,
+  options: Parameters<FliptFetcher>[0],
+  signal: AbortSignal,
+) {
+  signal = AbortSignal.any([signal, AbortSignal.timeout(10_000)]);
+  if (signal.aborted)
+    throw new SnapshotUnavailableError("Snapshot request aborted");
+  let abort: (() => void) | undefined;
+  const cancelled = new Promise<never>((_resolve, reject) => {
+    abort = () => {
+      reject(new SnapshotUnavailableError("Snapshot request aborted"));
+    };
+    signal.addEventListener("abort", abort, { once: true });
+  });
+  try {
+    return await Promise.race([source(options), cancelled]);
+  } catch (error) {
+    throw new SnapshotUnavailableError("Snapshot transport unavailable", {
+      cause: error,
+    });
+  } finally {
+    if (abort !== undefined) signal.removeEventListener("abort", abort);
+  }
+}
+
+async function settleRefresh(
+  task: Promise<unknown> | undefined,
+): Promise<void> {
+  try {
+    await task;
+  } catch {
+    // The refresh owner records the failure; later requests can still recover.
+  }
+}
+
+async function observeCompletion(
+  task: Promise<unknown>,
+  cleanup: () => void,
+): Promise<void> {
+  try {
+    await settleRefresh(task);
+  } finally {
+    cleanup();
+  }
+}
+
 export type FliptProviderOptions = {
   readonly url: string;
   readonly namespace: string;
@@ -78,7 +127,11 @@ export class FliptProvider implements Provider {
   private knownKeys: ReadonlySet<string> = new Set();
   private lastSuccessfulRefreshMs: number | undefined;
   private snapshotAgeTimer: ReturnType<typeof setInterval> | undefined;
-  private initializationController: AbortController | undefined;
+  private refreshTimer: ReturnType<typeof setInterval> | undefined;
+  private readonly controller = new AbortController();
+  private refreshTask: Promise<void> | undefined;
+  private freshSnapshot: Promise<boolean> | undefined;
+  private forceFullSnapshot = false;
   private closed = false;
 
   constructor(options: FliptProviderOptions) {
@@ -86,82 +139,168 @@ export class FliptProvider implements Provider {
   }
 
   async initialize(): Promise<void> {
-    if (this.closed) {
-      throw new Error("Flipt provider was closed before initialization");
+    if (this.closed || this.client !== undefined) {
+      throw new Error("Flipt provider already initialized or closed");
     }
-    const initializationController = new AbortController();
-    this.initializationController = initializationController;
     const sourceFetcher =
       this.options.fetcher ??
       createFliptFetcher({
         url: this.options.url,
         namespace: this.options.namespace,
         environment: this.options.environment,
-        signal: initializationController.signal,
+        signal: this.controller.signal,
+        requestTimeoutMilliseconds: 10_000,
       });
     const fetcher: FliptFetcher = async (fetchOptions) => {
-      try {
-        const response = await sourceFetcher(fetchOptions);
-        if (response.ok || response.status === 304) {
-          this.lastSuccessfulRefreshMs = Date.now();
-        } else {
-          this.options.onRefreshFailure?.();
-        }
-        return response;
-      } catch (error) {
-        this.options.onRefreshFailure?.();
-        throw error;
-      }
+      const response = await fetchSnapshot(
+        sourceFetcher,
+        this.forceFullSnapshot ? undefined : fetchOptions,
+        this.controller.signal,
+      );
+      if (!response.ok && response.status !== 304)
+        throw new SnapshotUnavailableError("Snapshot HTTP request unavailable");
+      if (this.forceFullSnapshot && response.status === 304)
+        throw new Error("Unconditional snapshot request returned 304");
+      // refresh() stores ETags before validating the body. A strict refresh must
+      // read the complete body even after an earlier invalid response poisoned
+      // the SDK's ETag. This uses the existing transport, without a second client.
+      return this.forceFullSnapshot
+        ? {
+            ok: response.ok,
+            status: response.status,
+            statusText: response.statusText,
+            headers: {
+              get: (name) =>
+                name.toLowerCase() === "etag"
+                  ? null
+                  : response.headers.get(name),
+            },
+            json: () => response.json(),
+          }
+        : response;
     };
-
     try {
       const client = await createFliptEvaluationClient({
         url: this.options.url,
         namespace: this.options.namespace,
         environment: this.options.environment,
-        updateInterval: this.options.pollIntervalSeconds,
+        // Serialize polling and explicit refresh through the provider.
+        updateInterval: 0,
         fetcher,
       });
-      if (initializationController.signal.aborted) {
+      try {
+        this.controller.signal.throwIfAborted();
+        client.listFlags();
+      } catch (error) {
         client.close();
-        throw new Error("Flipt provider closed during initialization");
+        throw error;
       }
       this.client = client;
-      this.refreshKnownKeys();
-      this.updateSnapshotAge();
+      this.recordSuccessfulRefresh();
+      if (this.options.pollIntervalSeconds > 0) {
+        this.refreshTimer = setInterval(() => {
+          if (this.refreshTask === undefined) {
+            void this.enqueueRefresh(false);
+          }
+        }, this.options.pollIntervalSeconds * 1000);
+      }
       if (this.options.onSnapshotAge !== undefined) {
         this.snapshotAgeTimer = setInterval(
           () => {
             this.updateSnapshotAge();
           },
           Math.min(
-            60 * 1000,
-            Math.max(1 * 1000, this.options.pollIntervalSeconds * 1000),
+            60_000,
+            Math.max(1000, this.options.pollIntervalSeconds * 1000),
           ),
         );
       }
+    } catch (error) {
+      this.options.onRefreshFailure?.();
+      throw error;
+    }
+  }
+
+  private recordSuccessfulRefresh(): void {
+    this.refreshKnownKeys();
+    this.lastSuccessfulRefreshMs = Date.now();
+    this.updateSnapshotAge();
+  }
+
+  private enqueueRefresh(requireFresh: boolean): Promise<void> {
+    const refresh = this.performRefresh(requireFresh, this.refreshTask);
+    this.refreshTask = refresh;
+    void observeCompletion(refresh, () => {
+      if (this.refreshTask === refresh) this.refreshTask = undefined;
+    });
+    return refresh;
+  }
+
+  private isClosed(): boolean {
+    return this.closed;
+  }
+
+  private async performRefresh(
+    requireFresh: boolean,
+    preceding: Promise<void> | undefined,
+  ): Promise<void> {
+    await settleRefresh(preceding);
+    const client = this.client;
+    if (client === undefined || this.isClosed())
+      throw new SnapshotUnavailableError("Flipt provider is unavailable");
+    this.forceFullSnapshot = requireFresh;
+    try {
+      await client.refresh();
+      if (this.isClosed())
+        throw new SnapshotUnavailableError(
+          "Flipt provider closed during refresh",
+        );
+      this.recordSuccessfulRefresh();
+    } catch (error) {
+      if (!this.isClosed()) this.options.onRefreshFailure?.();
+      throw error;
     } finally {
-      if (this.initializationController === initializationController) {
-        this.initializationController = undefined;
-      }
+      this.forceFullSnapshot = false;
+    }
+  }
+
+  /** Requires a validated full snapshot; ordinary reads still use the last good one. */
+  refreshForEvaluation(): Promise<boolean> {
+    if (this.closed || this.client === undefined) return Promise.resolve(false);
+    if (this.freshSnapshot !== undefined) return this.freshSnapshot;
+    const refresh = this.requireFreshSnapshot();
+    this.freshSnapshot = refresh;
+    void observeCompletion(refresh, () => {
+      if (this.freshSnapshot === refresh) this.freshSnapshot = undefined;
+    });
+    return refresh;
+  }
+
+  private async requireFreshSnapshot(): Promise<boolean> {
+    try {
+      await this.enqueueRefresh(true);
+      return true;
+    } catch (error) {
+      if (error instanceof SnapshotUnavailableError) return false;
+      throw error;
     }
   }
 
   onClose(): Promise<void> {
-    // Clears the refresh interval. Without it `bun test` hangs on the open
-    // timer and a pod leaks a poller past shutdown.
     this.closed = true;
-    this.initializationController?.abort();
-    this.initializationController = undefined;
+    this.controller.abort();
+    if (this.refreshTimer !== undefined) clearInterval(this.refreshTimer);
+    if (this.snapshotAgeTimer !== undefined)
+      clearInterval(this.snapshotAgeTimer);
+    this.refreshTimer = undefined;
+    this.snapshotAgeTimer = undefined;
     this.client?.close();
     this.client = undefined;
     this.knownKeys = new Set();
     this.lastSuccessfulRefreshMs = undefined;
-    if (this.snapshotAgeTimer !== undefined) {
-      clearInterval(this.snapshotAgeTimer);
-      this.snapshotAgeTimer = undefined;
-    }
-    return Promise.resolve();
+    // Wait until an in-flight SDK refresh observes the abort before shutdown
+    // completes; no refresh can publish another engine or start a new timer.
+    return settleRefresh(this.refreshTask);
   }
 
   /**

@@ -1,7 +1,8 @@
+import type { DiscordChannelId } from "@scout-for-lol/data";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import type { ReactNode } from "react";
 
-export type DiscordChannel = { id: string; name: string };
+export type DiscordChannel = { id: DiscordChannelId; name: string };
 
 export type ChannelAvailability = {
   status: "loading" | "error" | "empty" | "ready";

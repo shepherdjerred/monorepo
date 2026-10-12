@@ -4,8 +4,8 @@ import {
   type WorkflowStartRequestId,
 } from "@scout-for-lol/domain/identity/brands.ts";
 import type { NotificationIntentState } from "@scout-for-lol/domain/notifications/intent.ts";
-import { SCOUT_V2_MATCH_RECEIPT_KINDS } from "@scout-for-lol/temporal/match-receipts-v2";
-import { SCOUT_V2_WORKFLOW_NAMES } from "@scout-for-lol/temporal/identifiers";
+import { SCOUT_MATCH_RECEIPT_KINDS } from "@scout-for-lol/temporal/match-receipts";
+import { SCOUT_PIPELINE_START_WORKFLOW_TYPES } from "@scout-for-lol/temporal/identifiers";
 import { prisma } from "#src/database/index.ts";
 import {
   getMatchPipelineState,
@@ -14,7 +14,7 @@ import {
 import {
   listLiveRecoveryBatches,
   listStalledNotificationIntents,
-  listStalledV2MatchProcessing,
+  listStalledMatchProcessing,
   listUnacceptedWorkflowStarts,
   listUnknownDeliveryIntents,
   listUnprojectedLakeMatches,
@@ -129,26 +129,38 @@ function unknownDeliveryState(
   return state;
 }
 
+type NotificationQueueSubject =
+  { matchId: RiotMatchId } | { duelId: string } | { dareId: number };
+
+/** Keep the queue's subject explicit without inventing a Riot match for a Duel. */
+function notificationSubject(
+  record: NotificationQueueSubject,
+): NotificationQueueSubject {
+  return "matchId" in record
+    ? { matchId: record.matchId }
+    : "duelId" in record
+      ? { duelId: record.duelId }
+      : { dareId: record.dareId };
+}
+
 export async function readOperationsQueues(args: {
   limit: number;
   now: Date;
   after?: OperationsQueueCursors | undefined;
 }): Promise<{
   stalledMatchProcessing: readonly RiotMatchId[];
-  stalledNotifications: readonly {
+  stalledNotifications: readonly ({
     intentKey: string;
-    matchId: string;
     state: string;
     freshnessDeadline: string;
     attemptCount: number;
-  }[];
-  unknownDeliveries: readonly {
+  } & NotificationQueueSubject)[];
+  unknownDeliveries: readonly ({
     intentKey: string;
-    matchId: string;
     attemptCount: number;
     attemptNonce: string;
     state: string;
-  }[];
+  } & NotificationQueueSubject)[];
   unprojectedMatches: readonly RiotMatchId[];
   liveRecoveryBatches: readonly string[];
   unacceptedWorkflowStarts: readonly {
@@ -187,8 +199,8 @@ export async function readOperationsQueues(args: {
     liveRecoveryBatches,
     unacceptedStarts,
   ] = await Promise.all([
-    listStalledV2MatchProcessing(prisma, {
-      observationReceiptKind: SCOUT_V2_MATCH_RECEIPT_KINDS.observation,
+    listStalledMatchProcessing(prisma, {
+      observationReceiptKind: SCOUT_MATCH_RECEIPT_KINDS.observation,
       // The operator surface is where a contested match must be visible.
       contested: { kind: "include" },
       limit,
@@ -218,7 +230,7 @@ export async function readOperationsQueues(args: {
       after: cursorFor("liveRecoveryBatches"),
     }),
     listUnacceptedWorkflowStarts(prisma, {
-      workflowTypes: SCOUT_V2_WORKFLOW_NAMES,
+      workflowTypes: SCOUT_PIPELINE_START_WORKFLOW_TYPES,
       limit,
       after: startsAfter,
     }),
@@ -265,14 +277,14 @@ export async function readOperationsQueues(args: {
     // console depending on a query it does not own and cannot see change.
     stalledNotifications: notifications.items.map((record) => ({
       intentKey: record.intent.key,
-      matchId: record.matchId,
+      ...notificationSubject(record),
       state: record.intent.state.kind,
       freshnessDeadline: record.intent.freshnessDeadline,
       attemptCount: record.intent.attemptCount,
     })),
     unknownDeliveries: unknown.items.map((record) => ({
       intentKey: record.intent.key,
-      matchId: record.matchId,
+      ...notificationSubject(record),
       attemptCount: record.intent.attemptCount,
       // The nonce is not decoration: `ops_resolve_unknown_delivery` REQUIRES
       // the exact nonce of the attempt being answered, and the domain refuses

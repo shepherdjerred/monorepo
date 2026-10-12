@@ -1,3 +1,4 @@
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import { describe, expect, test } from "vitest";
 import {
   CompetitionIdSchema,
@@ -55,7 +56,7 @@ function makeCompetition(
 const detail = {
   id: 1,
   alias: "player",
-  discordId: "100000000000000001",
+  discordId: DiscordAccountIdSchema.parse("100000000000000001"),
   creatorDiscordId: "100000000000000002",
   createdTime: new Date("2026-01-01T00:00:00Z"),
   updatedTime: new Date("2026-01-02T00:00:00Z"),
@@ -63,7 +64,9 @@ const detail = {
     {
       id: 2,
       alias: "account",
-      puuid: "secret-puuid",
+      puuid: LeaguePuuidSchema.parse(
+        "secret-puuid000000000000000000000000000000000000000000000000000000000000000000",
+      ),
       region: "AMERICA_NORTH",
       riotGameName: "Player",
       riotTagLine: "NA1",
@@ -74,7 +77,7 @@ const detail = {
   subscriptions: [
     {
       id: 3,
-      channelId: "100000000000000003",
+      channelId: DiscordChannelIdSchema.parse("100000000000000003"),
       creatorDiscordId: "100000000000000002",
       createdTime: new Date("2026-01-03T00:00:00Z"),
       filters: JSON.stringify({
@@ -161,7 +164,9 @@ describe("serializePlayerDetail", () => {
     const serialized = serializePlayerDetail(detail, {}, allReadPermissions);
 
     expect(serialized.accounts).toHaveLength(1);
-    expect(serialized.accounts[0]?.puuid).toBe("secret-puuid");
+    expect(serialized.accounts[0]?.puuid).toBe(
+      "secret-puuid000000000000000000000000000000000000000000000000000000000000000000",
+    );
     expect(serialized.subscriptions).toHaveLength(1);
     expect(serialized.subscriptions[0]?.filters).toEqual({
       version: 1,

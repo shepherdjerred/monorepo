@@ -56,6 +56,68 @@ function parseDocuments(yamlContent: string): unknown[] {
 }
 
 describe("S3StaticSites probes", () => {
+  test("uses an unprivileged listener without changing the Service's port", () => {
+    const deployment = parseDocuments(synthesizeStaticSites())
+      .map((document) =>
+        z
+          .object({
+            kind: z.literal("Deployment"),
+            spec: z.object({
+              template: z.object({
+                spec: z.object({
+                  containers: z.array(
+                    z.object({
+                      name: z.string(),
+                      ports: z.array(z.object({ containerPort: z.number() })),
+                      securityContext: z.object({
+                        runAsUser: z.number(),
+                        runAsNonRoot: z.boolean(),
+                        allowPrivilegeEscalation: z.boolean(),
+                        capabilities: z.object({
+                          drop: z.array(z.string()),
+                        }),
+                      }),
+                    }),
+                  ),
+                }),
+              }),
+            }),
+          })
+          .safeParse(document),
+      )
+      .find((result) => result.success);
+    expect(deployment?.success).toBe(true);
+    if (!deployment?.success) throw new Error("static-site Deployment missing");
+    const container = deployment.data.spec.template.spec.containers.find(
+      (candidate) => candidate.name === "caddy",
+    );
+    expect(container?.ports).toEqual([{ containerPort: 8080 }]);
+    expect(container?.securityContext).toEqual({
+      runAsUser: 1000,
+      runAsNonRoot: true,
+      allowPrivilegeEscalation: false,
+      capabilities: { drop: ["ALL"] },
+    });
+
+    const service = parseDocuments(synthesizeStaticSites())
+      .map((document) =>
+        z
+          .object({
+            kind: z.literal("Service"),
+            spec: z.object({
+              ports: z.array(
+                z.object({ port: z.number(), targetPort: z.number() }),
+              ),
+            }),
+          })
+          .safeParse(document),
+      )
+      .find((result) => result.success);
+    expect(service?.success).toBe(true);
+    if (!service?.success) throw new Error("static-site Service missing");
+    expect(service.data.spec.ports).toEqual([{ port: 80, targetPort: 8080 }]);
+  });
+
   test("generates an RSS-aware probe for sjer.red/rss.xml", () => {
     const probes = parseDocuments(synthesizeStaticSites())
       .map((document) => ProbeSchema.safeParse(document))
@@ -128,6 +190,7 @@ describe("generateCaddyfile", () => {
   it("emits a global block with s3proxy ordering and no auto_https", () => {
     expect(out).toContain("order s3proxy last");
     expect(out).toContain("auto_https off");
+    expect(out).toContain("http_port 8080");
   });
 
   it("emits a per-site block for every configured site", () => {
@@ -204,7 +267,7 @@ describe("generateCaddyfile", () => {
   });
 
   describe("spaFallbacks", () => {
-    it("emits a per-prefix s3proxy with overridden 404 fallback", () => {
+    it("rewrites SPA document paths before s3proxy while retaining 404s for missing assets", () => {
       const caddyfile = generateCaddyfile({
         sites: [
           {
@@ -218,7 +281,12 @@ describe("generateCaddyfile", () => {
         s3Endpoint: "https://s3.example.test",
       });
       expect(caddyfile).toContain("handle /app/* {");
-      // Inside the /app/* handle: s3proxy with /app/index.html fallback
+      expect(caddyfile).toContain(String.raw`not path_regexp \.[^/]+$`);
+      expect(caddyfile).toContain("rewrite @spaDocument /app/index.html");
+      expect(
+        caddyfile.indexOf("rewrite @spaDocument /app/index.html"),
+      ).toBeLessThan(caddyfile.indexOf("errors 404 /app/index.html"));
+      // The error page still covers missing assets without changing their status.
       expect(caddyfile).toContain("errors 404 /app/index.html");
       // Fall-through site-wide s3proxy keeps default 404 page
       expect(caddyfile).toContain("errors 404 404.html");

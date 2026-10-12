@@ -75,6 +75,37 @@ afterEach(() => {
 });
 
 describe("HomeAssistantRestClient", () => {
+  it("reads bounded, entity-filtered logbook context and rejects malformed timestamps", async () => {
+    const entry = {
+      when: "2026-10-01T00:00:20+00:00",
+      entity_id: "vacuum.renamed",
+      state: "returning",
+      context_event_type: "call_service",
+      context_domain: "vacuum",
+      context_service: "return_to_base",
+    };
+    const { fn, calls } = makeFetch(() => Response.json([entry]));
+    globalThis.fetch = fn;
+    const client = new HomeAssistantRestClient({
+      baseUrl: "http://ha.local:8123",
+      token: "test",
+    });
+    const start = new Date("2026-10-01T00:00:00Z"),
+      end = new Date("2026-10-01T00:03:00Z");
+    expect(await client.getLogbook("vacuum.renamed", start, end)).toEqual([
+      entry,
+    ]);
+    const url = new URL(calls[0]?.args.url ?? "");
+    expect(url.pathname).toBe("/api/logbook/2026-10-01T00:00:00.000Z");
+    expect(url.searchParams.get("entity")).toBe("vacuum.renamed");
+    expect(url.searchParams.get("end_time")).toBe(end.toISOString());
+    globalThis.fetch = makeFetch(() =>
+      Response.json([{ ...entry, when: "invalid" }]),
+    ).fn;
+    await expect(
+      client.getLogbook("vacuum.renamed", start, end),
+    ).rejects.toThrow();
+  });
   it("sends GET /api/states/:id with bearer auth and parses state", async () => {
     const { fn, calls } = makeFetch(() =>
       Response.json({

@@ -17,6 +17,11 @@ import {
   type MotionLightRoom,
 } from "#shared/infra/motion-light.ts";
 import { cooldownBucket } from "#shared/infra/presence.ts";
+import {
+  PetCareEntityIdSchema,
+  PET_CARE_SENSOR_POLICIES,
+  type PetCareSensorUpdate,
+} from "#shared/infra/pet-care.ts";
 
 const IOS_ACTION_ID_GOOD_NIGHT = "A91A15AA-479E-416C-8F51-BD983A999266";
 
@@ -26,7 +31,16 @@ const IosActionEventData = z.object({
 
 const StateChangedEventData = z.object({
   entity_id: z.string(),
-  new_state: z.object({ state: z.string() }).loose().nullable().optional(),
+  new_state: z
+    .object({
+      state: z.string(),
+      attributes: z.record(z.string(), z.unknown()).optional(),
+      last_changed: z.string().optional(),
+      last_updated: z.string().optional(),
+    })
+    .loose()
+    .nullable()
+    .optional(),
   old_state: z.object({ state: z.string() }).loose().nullable().optional(),
 });
 
@@ -61,6 +75,81 @@ const MOTION_LIGHT_ROOMS_BY_ENTITY = new Map<
 // the bolt cycle. See workflows/ha/reconcile-lock.ts.
 const RECONCILE_LOCK_WORKFLOW_ID = "reconcile-lock";
 const PRESENCE_CHANGED_SIGNAL = "presenceChanged";
+const PET_CARE_WORKFLOW_ID = "pet-care-alerts";
+const PET_CARE_SENSOR_CHANGED_SIGNAL = "petCareSensorChanged";
+
+function timestampMs(value: string | undefined): number {
+  if (value === undefined) return Date.now();
+  const parsed = Date.parse(value);
+  return Number.isFinite(parsed) ? parsed : Date.now();
+}
+
+async function signalPetCareState(
+  client: Client,
+  update: PetCareSensorUpdate,
+): Promise<void> {
+  try {
+    await client.workflow.signalWithStart("petCareAlerts", {
+      taskQueue: TASK_QUEUES.WORKFLOWS,
+      workflowId: PET_CARE_WORKFLOW_ID,
+      workflowIdReusePolicy: WorkflowIdReusePolicy.ALLOW_DUPLICATE,
+      signal: PET_CARE_SENSOR_CHANGED_SIGNAL,
+      signalArgs: [update],
+    });
+  } catch (error: unknown) {
+    const detail = error instanceof Error ? error.message : String(error);
+    console.error(
+      `Failed to signal petCareAlerts for ${update.entityId}: ${detail}`,
+    );
+    throw error;
+  }
+}
+
+function petCareUpdateFromState(
+  entityId: string,
+  state:
+    | {
+        state: string;
+        attributes?: Record<string, unknown> | undefined;
+        last_changed?: string | undefined;
+        last_updated?: string | undefined;
+      }
+    | null
+    | undefined,
+): PetCareSensorUpdate {
+  const changedAtMs = timestampMs(state?.last_changed);
+  const updatedAtMs = timestampMs(state?.last_updated ?? state?.last_changed);
+  const parsedEntityId = PetCareEntityIdSchema.safeParse(entityId);
+  const policy = parsedEntityId.success
+    ? PET_CARE_SENSOR_POLICIES[parsedEntityId.data]
+    : undefined;
+  const detail = state?.attributes?.["problem_detail"];
+  return {
+    entityId,
+    state: state?.state ?? "unavailable",
+    detail:
+      typeof detail === "string" && detail.trim() !== ""
+        ? detail
+        : (policy?.title ?? entityId),
+    changedAtMs,
+    updatedAtMs,
+  };
+}
+
+/** Reconcile current HA states after subscription startup or WebSocket reconnect. */
+export async function syncPetCareStates(
+  client: Client,
+  rest: HomeAssistantRestClient,
+): Promise<void> {
+  const states = await rest.getStates();
+  const statesById = new Map(states.map((state) => [state.entity_id, state]));
+  for (const entityId of Object.keys(PET_CARE_SENSOR_POLICIES)) {
+    await signalPetCareState(
+      client,
+      petCareUpdateFromState(entityId, statesById.get(entityId)),
+    );
+  }
+}
 
 async function bumpLockReconciler(client: Client): Promise<void> {
   try {
@@ -173,6 +262,13 @@ export function handleStateChanged(
   return async (event) => {
     const parsed = StateChangedEventData.safeParse(event.data);
     if (!parsed.success) {
+      return;
+    }
+    if (PetCareEntityIdSchema.safeParse(parsed.data.entity_id).success) {
+      await signalPetCareState(
+        client,
+        petCareUpdateFromState(parsed.data.entity_id, parsed.data.new_state),
+      );
       return;
     }
     const oldState = parsed.data.old_state?.state;

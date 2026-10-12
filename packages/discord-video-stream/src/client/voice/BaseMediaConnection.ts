@@ -61,6 +61,7 @@ export type VideoAttributes = {
  * (e.g. a moderator disconnect) — as opposed to session loss (4006, network failures, ...).
  */
 export type MediaConnectionCloseInfo = {
+  source?: "voice" | "go-live";
   code: number;
   canResume: boolean;
   deliberate: boolean;

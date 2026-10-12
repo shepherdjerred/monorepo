@@ -14,6 +14,10 @@ export type MediaFeatureGate = {
    */
   readonly musicOverVoice: (scope: DiscoveryScope) => Promise<boolean>;
   readonly sportsStreaming?: (scope: DiscoveryScope) => Promise<boolean>;
+  readonly numberedChannels?: (scope: DiscoveryScope) => Promise<boolean>;
+  readonly automaticChannelRouting?: (
+    scope: DiscoveryScope,
+  ) => Promise<boolean>;
 };
 
 async function enabled(
@@ -29,6 +33,16 @@ async function enabled(
 }
 
 export const mediaFeatureGate: MediaFeatureGate = {
+  automaticChannelRouting: (scope) =>
+    enabled("streambot-automatic-channel-routing-enabled", scope),
+  numberedChannels: async (scope) => {
+    const result = await isEnabled("streambot-numbered-channels-enabled", {
+      default: false,
+      targetingKey: scope.guildId,
+      attributes: { server: scope.guildId },
+    });
+    return result.value;
+  },
   assistantV2: (scope) => enabled("streambot-assistant-v2-enabled", scope),
   history: (scope) => enabled("streambot-history-enabled", scope),
   musicOverVoice: (scope) =>
@@ -36,3 +50,25 @@ export const mediaFeatureGate: MediaFeatureGate = {
   sportsStreaming: (scope) =>
     enabled("streambot-sports-streaming-enabled", scope),
 };
+
+export async function webUiEnabled(
+  guildId: string,
+  userId: string,
+): Promise<boolean> {
+  return await enabled("streambot-web-ui-enabled", {
+    guildId,
+    userId,
+    channelId: "web",
+  });
+}
+
+export async function plexPostersEnabled(
+  guildId: string,
+  userId: string,
+): Promise<boolean> {
+  return await enabled("streambot-plex-posters-enabled", {
+    guildId,
+    userId,
+    channelId: "web",
+  });
+}

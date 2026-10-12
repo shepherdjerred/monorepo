@@ -1,5 +1,5 @@
 import {
-  MatchIdSchema,
+  RiotMatchIdSchema,
   type LeaguePuuid,
   type Region,
 } from "@scout-for-lol/data";
@@ -8,7 +8,7 @@ import type { InitialMatchHistoryImport } from "#generated/prisma/client/index.j
 import type { Db } from "#src/database/index.ts";
 
 export const INITIAL_HISTORY_REFETCH_COOLDOWN_MS = 24 * 60 * 60 * 1000;
-const StoredMatchIdsSchema = z.array(MatchIdSchema).max(20);
+const StoredMatchIdsSchema = z.array(RiotMatchIdSchema).max(20);
 
 /**
  * The namespace half of the initial-history advisory lock key.
@@ -96,7 +96,7 @@ async function installSharedCursor(input: {
     latestAccount?.lastProcessedMatchId ??
     (input.newestMatchId === null
       ? null
-      : MatchIdSchema.parse(input.newestMatchId));
+      : RiotMatchIdSchema.parse(input.newestMatchId));
   await input.db.account.updateMany({
     where: { puuid: input.puuid, lastProcessedMatchId: null },
     data: {

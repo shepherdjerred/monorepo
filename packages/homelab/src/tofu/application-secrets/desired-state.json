@@ -1,0 +1,179 @@
+{
+  "$schema": "./desired-state.schema.json",
+  "credentials": {
+    "bugsink": {
+      "revision": 0,
+      "environment": "production",
+      "consumer_probe": "Authenticated Bugsink session and existing issue access",
+      "onepassword_targets": [
+        {
+          "vault_item_id": "g6iok6ni3xsd3dyfet7ln3ybom",
+          "vault_field": "SECRET_KEY",
+          "vault_field_id": "mpb2cceivzns4hw5hgdq3g5lae"
+        }
+      ]
+    },
+    "phoenix": {
+      "revision": 0,
+      "environment": "production",
+      "consumer_probe": "Existing Phoenix session and ingestion",
+      "onepassword_targets": [
+        {
+          "vault_item_id": "exhnzueehuqwi5uw55s2tgl5iu",
+          "vault_field": "PHOENIX_SECRET",
+          "vault_field_id": "mbcil2nue2vn74uhkr6iceare4"
+        }
+      ]
+    },
+    "phoenix_admin": {
+      "revision": 0,
+      "environment": "production",
+      "consumer_probe": "Phoenix admin authentication",
+      "onepassword_targets": [
+        {
+          "vault_item_id": "exhnzueehuqwi5uw55s2tgl5iu",
+          "vault_field": "PHOENIX_ADMIN_SECRET",
+          "vault_field_id": "a7rhfdygvenwp6moq7muodvbdu"
+        }
+      ]
+    },
+    "woodpecker_agent": {
+      "revision": 0,
+      "environment": "shared",
+      "consumer_probe": "Woodpecker agent connects and completes a build",
+      "onepassword_targets": [
+        {
+          "vault_item_id": "covttsojandjk7fx62a3dbk7em",
+          "vault_field": "WOODPECKER_AGENT_SECRET",
+          "vault_field_id": "kuz2p3cuju2ldqr5b5vhjt6p7i"
+        }
+      ]
+    },
+    "woodpecker_grpc": {
+      "revision": 0,
+      "environment": "shared",
+      "consumer_probe": "Woodpecker RPC client authenticates",
+      "onepassword_targets": [
+        {
+          "vault_item_id": "covttsojandjk7fx62a3dbk7em",
+          "vault_field": "WOODPECKER_GRPC_SECRET",
+          "vault_field_id": "g3ybeubq6va7kakoo4lp4iwhi4"
+        }
+      ]
+    },
+    "woodpecker_metrics": {
+      "revision": 0,
+      "environment": "shared",
+      "consumer_probe": "Prometheus scrapes Woodpecker",
+      "onepassword_targets": [
+        {
+          "vault_item_id": "covttsojandjk7fx62a3dbk7em",
+          "vault_field": "WOODPECKER_PROMETHEUS_AUTH_TOKEN",
+          "vault_field_id": "opqeqwcmzuhzphvbt435ciom4i"
+        }
+      ]
+    },
+    "pinchtab": {
+      "revision": 0,
+      "environment": "shared",
+      "consumer_probe": "PinchTab authenticated request from each declared consumer",
+      "onepassword_targets": [
+        {
+          "vault_item_id": "t2dgtdx47yd2gegad6zeelzylu",
+          "vault_field": "PINCHTAB_TOKEN",
+          "vault_field_id": "kqljw5m6f37h26vbeonltdcqja"
+        }
+      ]
+    },
+    "scout_production": {
+      "revision": 0,
+      "environment": "production",
+      "consumer_probe": "Scout login and token validation",
+      "onepassword_targets": [
+        {
+          "vault_item_id": "pacrc4wfbtct4y3qazkvazop5a",
+          "vault_field": "JWT_SIGNING_SECRET",
+          "vault_field_id": "zmapbr6yh2pck73isbgokzff4q"
+        }
+      ]
+    },
+    "scout_beta": {
+      "revision": 0,
+      "environment": "beta",
+      "consumer_probe": "Scout beta login and token validation",
+      "onepassword_targets": [
+        {
+          "vault_item_id": "rtu44pohnp5ixdp2njuv5f6t2e",
+          "vault_field": "JWT_SIGNING_SECRET",
+          "vault_field_id": "jx6nld77cwmgasvnch3dyfmaoq"
+        }
+      ]
+    },
+    "tasknotes": {
+      "revision": 0,
+      "environment": "production",
+      "consumer_probe": "TaskNotes authenticated sync",
+      "onepassword_targets": [
+        {
+          "vault_item_id": "muazxsc3leo4smomvqvwqxzw5q",
+          "vault_field": "AUTH_TOKEN",
+          "vault_field_id": "ol66se5jjm3mhhpaulvyqr4cpq"
+        }
+      ]
+    },
+    "storm_brain": {
+      "revision": 0,
+      "environment": "production",
+      "consumer_probe": "Minecraft companion reaches authenticated brain endpoint",
+      "onepassword_targets": [
+        {
+          "vault_item_id": "mpv7cti3fpwrfobgr6ydnemydy",
+          "vault_field": "STORM_BRAIN_BEARER_TOKEN",
+          "vault_field_id": "psvljpyecze2lahbysxkqzobhu"
+        }
+      ]
+    },
+    "minecraft_rcon": {
+      "revision": 0,
+      "environment": "production",
+      "consumer_probe": "Storm Brain RCON command succeeds",
+      "onepassword_targets": [
+        {
+          "vault_item_id": "mpv7cti3fpwrfobgr6ydnemydy",
+          "vault_field": "MINECRAFT_RCON_PASSWORD",
+          "vault_field_id": "4w4cnn2c2zn366x56tjj3lmi5i"
+        }
+      ]
+    },
+    "chartmuseum": {
+      "revision": 0,
+      "environment": "shared",
+      "consumer_probe": "CI chart push and repository fetch",
+      "onepassword_targets": [
+        {
+          "vault_item_id": "wwoism5fsvmbisv4ef47yxqy2i",
+          "vault_field": "password",
+          "vault_field_id": "password"
+        },
+        {
+          "vault_item_id": "cnutkdwa7uka5hk3wx5gimyfom",
+          "vault_field": "CHARTMUSEUM_PASSWORD",
+          "vault_field_id": "vw57xygo72zmxbflhyasorzfk4"
+        }
+      ]
+    },
+    "postal": {
+      "revision": 0,
+      "environment": "production",
+      "consumer_probe": "Postal login and message delivery",
+      "onepassword_targets": [
+        {
+          "vault_item_id": "n3tfwq24v3rstfedrloupgzaqe",
+          "vault_field": "RAILS_SECRET_KEY",
+          "vault_section_id": "add more",
+          "vault_field_id": "z3afurpgm2xow6lnlt2v5dyl2m"
+        }
+      ]
+    }
+  }
+}

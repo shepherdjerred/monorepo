@@ -1,5 +1,7 @@
 package com.shepherdjerred.thestorm.essentials.domain.teleport;
 
+import java.time.Duration;
+
 /**
  * What a teleport costs right now, and the usage to record once it is paid.
  *
@@ -14,5 +16,14 @@ public record Quote(TeleportKind kind, long cost, Multiplier multiplier, Telepor
     if (cost < 0) {
       throw new IllegalArgumentException("cost must not be negative: " + cost);
     }
+  }
+
+  public Duration cooldown() {
+    return Duration.between(next.trips().getLast().at(), next.cooldownUntil());
+  }
+
+  public double previousPoints() {
+    return next.trips().stream().mapToLong(TeleportUse::halfPoints).sum() / 2.0
+        - next.trips().getLast().halfPoints() / 2.0;
   }
 }

@@ -1,4 +1,8 @@
-import type { MatchId, PlayerConfigEntry } from "@scout-for-lol/data/index.ts";
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
+import type {
+  RiotMatchId,
+  PlayerConfigEntry,
+} from "@scout-for-lol/data/index.ts";
 import { getLastSuccessfulPollAt } from "#src/league/tasks/recovery/app-state.ts";
 import { fetchMatchIdsForTimeRange } from "#src/league/tasks/recovery/backfill-to-s3.ts";
 import { createLogger } from "#src/logger.ts";
@@ -6,15 +10,15 @@ import { createLogger } from "#src/logger.ts";
 const logger = createLogger("postmatch-gap-recovery");
 
 export type GapRecoveryResult = {
-  discordMatchIds: MatchId[];
-  backfillMatchIds: MatchId[];
+  discordMatchIds: RiotMatchId[];
+  backfillMatchIds: RiotMatchId[];
 };
 
 export function recoveryStartAt(input: {
   requiredForActiveDare: boolean;
   lastProcessedMatchTime: Date | undefined;
   lastSuccessfulPollAt: Date | undefined;
-  puuid: string;
+  puuid: LeaguePuuid;
 }): Date | undefined {
   if (input.requiredForActiveDare) {
     if (input.lastProcessedMatchTime === undefined) {
@@ -34,9 +38,9 @@ export function recoveryStartAt(input: {
  */
 export async function recoverMissedMatches(input: {
   player: PlayerConfigEntry;
-  fallbackMatchIds: MatchId[];
+  fallbackMatchIds: RiotMatchId[];
   requiredForActiveDare: boolean;
-  lastProcessedMatchId: MatchId | null;
+  lastProcessedMatchId: RiotMatchId | null;
   lastProcessedMatchTime: Date | undefined;
 }): Promise<GapRecoveryResult> {
   const {

@@ -266,18 +266,21 @@ export function createScoutDashboard() {
     }).decimals(2),
   );
 
-  // Cron Job Performance
+  // Background jobs now run in Temporal; the old in-process cron instruments
+  // have no callers. Server metrics use namespace rather than Scout role/pod.
   builder.withPanel(
     new timeseries.PanelBuilder()
-      .title("Cron Job Duration (95th percentile)")
-      .description("Duration of cron job execution")
+      .title("Background Job Duration (95th percentile)")
+      .description(
+        "Temporal background activity duration. Uses the environment selector; Scout role and instance selectors do not apply to server metrics.",
+      )
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            `sum(rate(cron_job_duration_seconds_sum{${buildFilter()}}[5m])) by (environment, job_name) / sum(rate(cron_job_duration_seconds_count{${buildFilter()}}[5m])) by (environment, job_name)`,
+            'histogram_quantile(0.95, sum by (le, exported_namespace, activityType) (rate(activity_start_to_close_latency_bucket{workflowType="scoutBackgroundJobWorkflow",exported_namespace=~"$environment"}[30m])))',
           )
-          .legendFormat("{{environment}} - {{job_name}}"),
+          .legendFormat("{{exported_namespace}} - {{activityType}}"),
       )
       .unit("s")
       .lineWidth(2)
@@ -285,18 +288,20 @@ export function createScoutDashboard() {
       .gridPos({ x: 0, y: 19, w: 12, h: 8 }),
   );
 
-  // Cron Job Execution Rate
+  // Completed background workflows, rather than a never-emitted cron counter.
   builder.withPanel(
     new timeseries.PanelBuilder()
-      .title("Cron Job Success Rate")
-      .description("Successful cron job executions per minute")
+      .title("Background Job Completion Rate")
+      .description(
+        "Successful Temporal background workflows per second. Uses the environment selector; Scout role and instance selectors do not apply.",
+      )
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            `sum by (environment, job_name) (rate(cron_job_executions_total{status="success",${buildFilter()}}[5m]))`,
+            'sum by (exported_namespace) (rate(workflow_success{workflowType="scoutBackgroundJobWorkflow",exported_namespace=~"$environment"}[30m]))',
           )
-          .legendFormat("{{environment}} - {{job_name}}"),
+          .legendFormat("{{exported_namespace}}"),
       )
       .unit("reqps")
       .lineWidth(2)

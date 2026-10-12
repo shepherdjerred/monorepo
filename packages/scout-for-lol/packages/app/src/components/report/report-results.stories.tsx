@@ -1,5 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { ReportIdSchema, type ReportResultColumn } from "@scout-for-lol/data";
+import {
+  ReportIdSchema,
+  type ReportResultColumn,
+  DiscordGuildIdSchema,
+} from "@scout-for-lol/data";
 import { ReportResultTable } from "./report-result-table.tsx";
 import { ReportRunHistory } from "./report-run-history.tsx";
 import { ReportQueryDocs } from "./report-query-docs.tsx";
@@ -59,6 +63,9 @@ RENDER leaderboard`;
 const RUNS = [
   {
     id: 3,
+    deliveryState: "UNKNOWN",
+    deliveryError:
+      "Discord delivery needs an operator to confirm whether the message arrived.",
     trigger: "SCHEDULE",
     status: "SUCCESS",
     startedAt: "2026-09-13T12:00:00.000Z",
@@ -73,6 +80,8 @@ const RUNS = [
   },
   {
     id: 2,
+    deliveryState: "NOT_REQUESTED",
+    deliveryError: null,
     trigger: "MANUAL",
     status: "FAILED",
     startedAt: "2026-09-12T12:00:00.000Z",
@@ -87,6 +96,8 @@ const RUNS = [
   },
   {
     id: 1,
+    deliveryState: "DELIVERED",
+    deliveryError: null,
     trigger: "SCHEDULE",
     status: "SUCCESS",
     startedAt: "2026-09-06T12:00:00.000Z",
@@ -209,14 +220,22 @@ export const ResultTableDrillDown: Story = {
 export const RunHistory: Story = {
   args: { columns: COLUMNS, rows: [] },
   render: () => (
-    <ReportRunHistory guildId={GUILD_ID} reportId={REPORT_ID} runs={RUNS} />
+    <ReportRunHistory
+      guildId={DiscordGuildIdSchema.parse(GUILD_ID)}
+      reportId={REPORT_ID}
+      runs={RUNS}
+    />
   ),
 };
 
 export const RunHistoryEmpty: Story = {
   args: { columns: COLUMNS, rows: [] },
   render: () => (
-    <ReportRunHistory guildId={GUILD_ID} reportId={REPORT_ID} runs={[]} />
+    <ReportRunHistory
+      guildId={DiscordGuildIdSchema.parse(GUILD_ID)}
+      reportId={REPORT_ID}
+      runs={[]}
+    />
   ),
 };
 

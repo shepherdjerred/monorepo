@@ -26,8 +26,8 @@ per-step grant when needed, and reference it only in the intended workload.
 CI steps use the tokenless service account and explicit `secretKeyRef`
 entries on `container-0`; no `envFrom`, optional refs, or sidecar credentials.
 
-For the homelab vault, use `scripts/onepassword/with-service-account.sh` to
-run 1Password commands without desktop prompts after the one-time Keychain
+For the homelab vault, use the repository-root
+`scripts/onepassword/with-service-account.sh` to run 1Password commands without desktop prompts after the one-time Keychain
 enrollment described in `src/tofu/README.md`. Do not probe with a bare `op`
 command. The `cf` wrapper uses an environment token; test with
 `cf auth whoami` or a read-only call. Do not confuse a 403 with failed login.
@@ -46,6 +46,18 @@ replace it with manual root sync logic or classify pruning from status alone.
 Immutable-field preflight evaluates the revision being applied and respects
 only declared, effective `jsonPointers`. Unknown selectors or operation fields
 fail closed.
+
+Talos and Kubernetes version changes are source and live operations in the
+same delivery. Pair catalog, installer, bootstrap and associated client pins
+with the corresponding live upgrade; never merge a pin-only update or report
+the upgrade complete without verifying the running versions on every node.
+Read the live versions before selecting targets, follow the supported upgrade
+path through required intermediate releases, and do not advance the next pin
+while the previous live upgrade is incomplete. ArgoCD does not upgrade the
+Talos OS or Kubernetes control plane. Use the existing upgrade procedure in
+`README.md` and record per-node versions, health checks and observed disruption
+in the PR. If live execution is blocked, keep the pin change unmerged and
+record the blocker.
 
 Storage deletion, R2 orphan cleanup, state surgery, and resource replacement
 are destructive. Produce and review the exact candidate set first, then use the

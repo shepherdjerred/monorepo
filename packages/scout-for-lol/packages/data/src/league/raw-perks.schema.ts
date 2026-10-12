@@ -28,7 +28,9 @@ export const RawPerkStatsSchema = z
 
 export const RawPerksSchema = z
   .object({
-    statPerks: RawPerkStatsSchema,
+    // Absent from a match the Scout Client built: neither the League client's
+    // match history nor its end-of-game block reports stat shards.
+    statPerks: RawPerkStatsSchema.optional(),
     styles: z.array(RawPerkStyleSchema),
   })
   .strict();

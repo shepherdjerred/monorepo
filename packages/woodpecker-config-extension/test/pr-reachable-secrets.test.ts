@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { selectSteps } from "#src/pipeline/select.ts";
 import { testPipelineSteps } from "./identity.ts";
+import { signRemoteCacheSteps } from "#src/pipeline/turbo-cache.ts";
 
 /**
  * What a pull request can reach.
@@ -23,12 +24,15 @@ const allSteps = testPipelineSteps;
 
 /** The worst case: a pull request against the default branch, touching anything. */
 const pullRequestAgainstMain = (steps: ReturnType<typeof allSteps>) =>
-  selectSteps(steps, {
-    event: "pull_request",
-    branch: "main",
-    defaultBranch: "main",
-    changedFiles: [],
-  });
+  signRemoteCacheSteps(
+    selectSteps(steps, {
+      event: "pull_request",
+      branch: "main",
+      defaultBranch: "main",
+      changedFiles: [],
+    }),
+    "pull-request",
+  );
 
 /**
  * Every credential a pull request can put in front of a step, sorted.
@@ -42,7 +46,7 @@ const pullRequestAgainstMain = (steps: ReturnType<typeof allSteps>) =>
  *
  * - `tofu-plan-*` hold their stack's provider credentials because a plan has
  *   to talk to the provider. They are the reason most of this list exists.
- * - `codex-review-gate` mints a review token; `pr-dryrun` reads ArgoCD.
+ * - `codex-review-gate` mints a review token.
  * - The SeaweedFS names are three distinct identities, each scoped in the
  *   gateway to the buckets its job touches. `SEAWEEDFS_HANDOFF_*` reaches only
  *   the `ci-handoff` bucket and `SEAWEEDFS_TOFU_STATE_*` only
@@ -56,7 +60,6 @@ const pullRequestAgainstMain = (steps: ReturnType<typeof allSteps>) =>
 const PR_REACHABLE_SECRETS = [
   "ANIMEZ_PASSWORD",
   "ANIMEZ_PID",
-  "ARGOCD_AUTH_TOKEN",
   "AVISTAZ_PASSWORD",
   "AVISTAZ_PID",
   "CLOUDFLARE_ACCOUNT_ID",
@@ -81,6 +84,7 @@ const PR_REACHABLE_SECRETS = [
   "TAILSCALE_OAUTH_CLIENT_ID",
   "TAILSCALE_OAUTH_CLIENT_SECRET",
   "TOFU_GITHUB_TOKEN",
+  "TURBO_REMOTE_CACHE_SIGNATURE_KEY",
   "TURBO_TOKEN",
 ];
 
@@ -135,6 +139,36 @@ describe("what a pull request can reach", () => {
     expect([...reachable].sort()).toEqual(PR_REACHABLE_SECRETS);
   });
 
+  test("isolates pull-request cache entries from the trusted namespace", () => {
+    const remoteCacheSteps = pullRequestAgainstMain(allSteps()).filter((step) =>
+      step.secrets?.some((grant) => grant.env === "TURBO_TOKEN"),
+    );
+    expect(remoteCacheSteps.length).toBeGreaterThan(0);
+    expect(
+      remoteCacheSteps.every(
+        (step) => step.environment?.["TURBO_TEAM"] === "monorepo-pull-request",
+      ),
+    ).toBe(true);
+
+    const trustedCacheSteps = signRemoteCacheSteps(
+      selectSteps(allSteps(), {
+        event: "push",
+        branch: "main",
+        defaultBranch: "main",
+        changedFiles: [],
+      }),
+      "trusted",
+    ).filter((step) =>
+      step.secrets?.some((grant) => grant.env === "TURBO_TOKEN"),
+    );
+    expect(trustedCacheSteps.length).toBeGreaterThan(0);
+    expect(
+      trustedCacheSteps.every(
+        (step) => step.environment?.["TURBO_TEAM"] === "monorepo",
+      ),
+    ).toBe(true);
+  });
+
   test("keeps publishing and chart-push credentials out of reach", () => {
     const reachable = new Set(
       pullRequestAgainstMain(allSteps()).flatMap((step) =>
@@ -171,12 +205,15 @@ describe("what a pull request can reach", () => {
    * that quietly stopped selecting anything.
    */
   test("still grants them on a push to the default branch", () => {
-    const selected = selectSteps(allSteps(), {
-      event: "push",
-      branch: "main",
-      defaultBranch: "main",
-      changedFiles: [],
-    });
+    const selected = signRemoteCacheSteps(
+      selectSteps(allSteps(), {
+        event: "push",
+        branch: "main",
+        defaultBranch: "main",
+        changedFiles: [],
+      }),
+      "trusted",
+    );
     const reachable = new Set(
       selected.flatMap((step) =>
         (step.secrets ?? []).map((grant) => grant.env),
@@ -187,5 +224,12 @@ describe("what a pull request can reach", () => {
         true,
       );
     }
+  });
+
+  test("keeps Argo credentials out of every pull-request workflow", () => {
+    const holders = pullRequestAgainstMain(allSteps()).filter((step) =>
+      step.secrets?.some((grant) => grant.env === "ARGOCD_AUTH_TOKEN"),
+    );
+    expect(holders).toEqual([]);
   });
 });

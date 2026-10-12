@@ -14,18 +14,16 @@ import {
   ExploreTurnRequestSchema,
   ExploreMentionCandidateSchema,
   ExploreMentionSearchSchema,
+  ExploreShareTokenSchema,
 } from "@scout-for-lol/data";
-import { consumeDareV2ConfirmationIntent } from "#src/betting/dares/lifecycle/dare-intent-consume-v2.ts";
-import { tryEnsureDareV2Callout } from "#src/betting/dares/presentation/dare-callout-v2.ts";
+import { consumeDareConfirmationIntent } from "#src/betting/dares/lifecycle/dare-intent-consume.ts";
+import { tryEnsureDareCallout } from "#src/betting/dares/presentation/dare-callout.ts";
 import { prisma } from "#src/database/index.ts";
 import {
   assertExploreAccess,
   isExploreConfigured,
 } from "#src/explore/access.ts";
-import {
-  ExploreConversationBusyError,
-  getExploreQuotaStatus,
-} from "#src/explore/rate-limit.ts";
+import { ExploreConversationBusyError } from "#src/explore/rate-limit.ts";
 import {
   ExploreRunRateLimitedError,
   ExploreRunUnavailableError,
@@ -36,6 +34,7 @@ import {
   ExploreNotFoundError,
   listExploreConversations,
   loadExploreTranscript,
+  loadSharedExploreTranscript,
   renameExploreConversation,
   revokeExploreShare,
   setExploreLeaf,
@@ -52,9 +51,17 @@ import {
 } from "#src/trpc/router/explore/explore-intent-access.ts";
 import {
   protectedProcedure,
+  publicProcedure,
   router,
   webMutationProcedure,
 } from "#src/trpc/trpc.ts";
+import { sharedToolPayload } from "#src/explore/inspection/tool-payloads.ts";
+import {
+  exploreModelPickerEnabled,
+  exploreSpendPolicy,
+} from "#src/config/dynamic.ts";
+import { exploreSpendingStatus } from "#src/explore/spending/ledger.ts";
+import { durableExploreQuotaStatus } from "#src/temporal/durable-quota.ts";
 
 /**
  * Conversation management for explore.
@@ -81,14 +88,6 @@ const exploreProcedure = protectedProcedure;
 
 /**
  * The status of one confirmation intent the caller owns.
- *
- * Registered under two names. `dareIntentStatus` is what this procedure was
- * called before confirmation intents stopped being dare-only, and a tab loaded
- * before that deployment keeps polling the old name for a confirmation card it
- * is still showing. The intent migration deliberately preserved those ids so
- * the cards keep working, and dropping the procedure they poll would have
- * undone exactly that. Remove the alias one release after deploy, once stale
- * clients have aged out.
  */
 const intentStatusProcedure = exploreProcedure
   .input(z.strictObject({ intentId: z.uuid() }))
@@ -122,6 +121,53 @@ const intentStatusProcedure = exploreProcedure
 const MENTION_RESULT_LIMIT = 8;
 
 export const exploreRouter = router({
+  toolPayload: publicProcedure
+    .input(
+      z.strictObject({
+        conversationId: z.uuid(),
+        toolCallId: z.string().min(1).max(200),
+        direction: z.enum(["input", "output", "dataset"]),
+        shareToken: ExploreShareTokenSchema.nullable(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const shared = input.shareToken !== null;
+      if (input.shareToken === null) {
+        if (ctx.user === null) throw new TRPCError({ code: "UNAUTHORIZED" });
+        const userId = await requireExploreUser(ctx.user);
+        const owned = await prisma.exploreConversation.findFirst({
+          where: { id: input.conversationId, userId },
+        });
+        if (owned === null) throw new TRPCError({ code: "NOT_FOUND" });
+      } else {
+        const transcript = await loadSharedExploreTranscript(
+          prisma,
+          input.shareToken,
+        );
+        if (
+          transcript?.conversation.id !== input.conversationId ||
+          !transcript.messages.some((message) =>
+            message.trace.some(
+              (entry) => entry.toolCallId === input.toolCallId,
+            ),
+          )
+        ) {
+          throw new TRPCError({ code: "NOT_FOUND" });
+        }
+      }
+      const row = await prisma.exploreToolPayload.findUnique({
+        where: {
+          conversationId_toolCallId_direction: {
+            conversationId: input.conversationId,
+            toolCallId: input.toolCallId,
+            direction: input.direction,
+          },
+        },
+      });
+      if (row === null) return null;
+      const value = z.json().parse(JSON.parse(row.payload));
+      return shared ? sharedToolPayload(row.toolName, value) : value;
+    }),
   /**
    * Whether the caller may use explore, plus their remaining quota. Answers
    * `enabled: false` rather than throwing so the UI can render a "not
@@ -171,9 +217,12 @@ export const exploreRouter = router({
     }
     try {
       const { userId } = await requireExploreUserAndGuilds(ctx.user);
+      const status = await durableExploreQuotaStatus(userId);
       return {
         enabled: true,
-        quota: getExploreQuotaStatus({ userId }).quota,
+        modelPickerEnabled: exploreModelPickerEnabled(),
+        spending: await exploreSpendingStatus(userId, exploreSpendPolicy()),
+        quota: status.quota,
       };
     } catch (error) {
       if (error instanceof TRPCError && error.code === "FORBIDDEN") {
@@ -185,16 +234,15 @@ export const exploreRouter = router({
 
   list: exploreProcedure.query(async ({ ctx }) => {
     const userId = await requireExploreUser(ctx.user);
-    return await listExploreConversations(prisma, userId);
+    const conversations = await listExploreConversations(prisma, userId);
+    return conversations.map(
+      ({ preferredModel: _preferred, ...conversation }) => conversation,
+    );
   }),
 
   intentStatus: intentStatusProcedure,
 
-  /** @deprecated Pre-rename alias; see {@link intentStatusProcedure}. */
-  dareIntentStatus: intentStatusProcedure,
-
-  // Confirming an entity an Explore agent prepared. Nothing mints these yet;
-  // see explore-creation-procedures.ts.
+  // Confirm entities prepared by the Explore agent.
   ...exploreCreationProcedures,
 
   confirmDareIntent: webMutationProcedure
@@ -205,7 +253,7 @@ export const exploreRouter = router({
       if (intent.dareId === null) {
         throw confirmationNotFound();
       }
-      const outcome = await consumeDareV2ConfirmationIntent({
+      const outcome = await consumeDareConfirmationIntent({
         intentId: input.intentId,
         serverId: DiscordGuildIdSchema.parse(intent.serverId),
         actorDiscordId: userId,
@@ -218,7 +266,7 @@ export const exploreRouter = router({
         "insufficient",
       ].includes(outcome.kind)
         ? null
-        : await tryEnsureDareV2Callout(intent.dareId);
+        : await tryEnsureDareCallout(intent.dareId);
       return { ...outcome, callout };
     }),
 
@@ -279,7 +327,7 @@ export const exploreRouter = router({
     }),
 
   get: exploreProcedure
-    .input(conversationInput)
+    .input(conversationInput.extend({ version: z.literal(3).optional() }))
     .query(async ({ ctx, input }) => {
       const userId = await requireExploreUser(ctx.user);
       const transcript = await loadExploreTranscript(
@@ -293,7 +341,19 @@ export const exploreRouter = router({
           message: "Conversation not found.",
         });
       }
-      return transcript;
+      if (input.version === 3) return transcript;
+      const { preferredModel: _preferred, ...conversation } =
+        transcript.conversation;
+      return {
+        conversation,
+        messages: transcript.messages.map(
+          ({
+            generation: _generation,
+            inlineEntities: _entities,
+            ...message
+          }) => message,
+        ),
+      };
     }),
 
   /**

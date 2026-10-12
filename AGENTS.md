@@ -81,6 +81,13 @@ and feature-flag packages. Load the `feature-flags` skill before changing that
 boundary.
 
 Never print, paste, or persist secrets. Use existing 1Password-backed commands.
+Use toolkit for its supported platform commands; it resolves registered
+credentials automatically. Run the command directly before fetching tokens by
+hand. Credential backends and setup belong in `packages/toolkit/README.md`.
+Outside toolkit, wrap `op run`/`op read` for homelab-vault references with
+`scripts/onepassword/with-service-account.sh`; it uses the Keychain service
+account, so commands need no 1Password desktop approval. Start long-lived
+children with `env -u OP_SERVICE_ACCOUNT_TOKEN` so they never hold vault access.
 On macOS, `op whoami` may be false while Desktop-authorized operations work;
 probe with the exact read or `op vault list`. An empty `cf auth list` is normal
 for environment-token authentication; use `cf auth whoami` or a read-only API
@@ -92,6 +99,10 @@ Infrastructure source lives under `packages/homelab`. Change repo-owned IaC and
 let CI and ArgoCD apply it; do not make an untracked dashboard or cluster
 mutation when a declarative path exists. Load the homelab development or
 operations skill before changing or operating that system.
+
+Talos and Kubernetes version bumps must include the matching live cluster
+upgrade. Follow `packages/homelab/AGENTS.md`; never deliver a pin-only update or
+advance to another target while the previous live upgrade remains incomplete.
 
 These are separate acceptance layers:
 
@@ -118,8 +129,17 @@ bunx lefthook run pre-commit
 ```
 
 Woodpecker is the exhaustive gate and the CI source of truth. Use
-`toolkit woodpecker` or `toolkit pr health`, not GitHub Actions. Run `bun run verify` locally only when
-reproducing CI or changing verification machinery.
+`toolkit ci wait <PR>` for merge readiness, `toolkit ci explain <PR>` for
+blockers, and `toolkit ci load` for capacity. Use `toolkit woodpecker` for
+native CI operations and `toolkit pr health` for a one-shot combined report.
+Run `bun run verify` locally only when reproducing CI or changing verification
+machinery.
+
+Minecraft is the only exception to exhaustive CI: keep its CI test suite to
+unit tests and light E2E smoke checks. The committer runs applicable extended
+Paper, gameplay, all-module, load, native-client and playtest checks outside CI
+and records the results. Keep these heavier suites available for local use;
+do not add them back to CI or apply this exception to other packages.
 
 Verify claims from the live tree before reporting them. Preserve unrelated
 worktree changes. Do not call an issue "pre-existing" when the task explicitly
@@ -151,6 +171,7 @@ review gate observes both the code and thread state.
 ## Task-specific guidance
 
 Use the matching repository skill in `.agents/skills/` for repeatable delivery,
-homelab, Scout, Temporal, TaskNotes, docs, Linear, PostHog, Discord, or report
-rendering work. Package-local runtime skills remain application assets and do
-not replace repository workflow guidance.
+homelab, Scout, Temporal, TaskNotes, Minecraft harness and building, docs,
+Linear, PostHog, Discord, or report rendering work. Package-local runtime
+skills remain application assets and do not replace repository workflow
+guidance.

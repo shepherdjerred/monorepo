@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
+import { Worker } from "@temporalio/worker";
 import { SOURCE_IDS } from "@shepherdjerred/ops-model/snapshot.ts";
 import type {
   OpsCollectorOutcome,
@@ -50,11 +51,106 @@ function collectorActivities(attempts: Map<string, number>) {
 }
 
 describe("ops snapshot workflow", () => {
+  test("replays histories created before the Temporal source without scheduling it", async () => {
+    const environment = await TestWorkflowEnvironment.createTimeSkipping();
+    const workflowId = `ops-before-temporal-${crypto.randomUUID()}`;
+    const attempts = new Map<string, number>();
+    try {
+      await runWorkflowWithActivityWorker(environment, {
+        activityTaskQueue: TASK_QUEUES.INFRA,
+        workflowPath: new URL(
+          "replay-fixtures/ops-before-temporal.ts",
+          import.meta.url,
+        ).pathname,
+        activities: {
+          ...collectorActivities(attempts),
+          collectOpsLinear: () =>
+            Promise.resolve({
+              status: {
+                source: "linear",
+                ok: true,
+                observedAt: summary.generatedAt,
+                durationMs: 1,
+              },
+              signals: [],
+              metrics: [],
+              changes: [],
+            }),
+          assembleAndPublishOpsSnapshot: () => Promise.resolve(summary),
+        },
+        execute: () =>
+          environment.client.workflow.execute("runOpsSnapshot", {
+            taskQueue: TASK_QUEUES.WORKFLOWS,
+            workflowId,
+          }),
+      });
+      expect(attempts.get("temporal")).toBeUndefined();
+      const history = await environment.client.workflow
+        .getHandle(workflowId)
+        .fetchHistory();
+      await Worker.runReplayHistory({ workflowsPath: workflowPath }, history);
+    } finally {
+      await environment.teardown();
+    }
+  }, 60_000);
   test("the collector list covers every source exactly once", () => {
     expect(OPS_COLLECTORS.map(([source]) => source).toSorted()).toEqual(
       [...SOURCE_IDS].toSorted(),
     );
   });
+
+  test.each(["runOpsSnapshot", "runOpsDigest"])(
+    "replays %s from before queue isolation on the recorded infra queue",
+    async (workflowType) => {
+      const environment = await TestWorkflowEnvironment.createTimeSkipping();
+      const workflowId = `ops-before-isolation-${crypto.randomUUID()}`;
+      try {
+        await runWorkflowWithActivityWorker(environment, {
+          activityTaskQueue: TASK_QUEUES.INFRA,
+          workflowPath: new URL(
+            "replay-fixtures/ops-before-ops-queue.ts",
+            import.meta.url,
+          ).pathname,
+          activities: {
+            ...collectorActivities(new Map()),
+            collectOpsLinear: () =>
+              Promise.resolve({
+                status: {
+                  source: "linear",
+                  ok: true,
+                  observedAt: summary.generatedAt,
+                  durationMs: 1,
+                },
+                signals: [],
+                metrics: [],
+                changes: [],
+              }),
+            assembleAndPublishOpsSnapshot: () => Promise.resolve(summary),
+            triggerOpsDigest: (kind: string) => Promise.resolve({ kind }),
+          },
+          execute: () =>
+            environment.client.workflow.execute(workflowType, {
+              taskQueue: TASK_QUEUES.WORKFLOWS,
+              workflowId,
+              args: workflowType === "runOpsDigest" ? [{ kind: "daily" }] : [],
+            }),
+        });
+        const history = await environment.client.workflow
+          .getHandle(workflowId)
+          .fetchHistory();
+        const queues = history.events?.flatMap(
+          (event) =>
+            event.activityTaskScheduledEventAttributes?.taskQueue?.name ?? [],
+        );
+        expect(queues?.length).toBeGreaterThan(0);
+        expect(new Set(queues)).toEqual(new Set([TASK_QUEUES.INFRA]));
+        await Worker.runReplayHistory({ workflowsPath: workflowPath }, history);
+      } finally {
+        await environment.teardown();
+      }
+    },
+    60_000,
+  );
 
   test("isolates a failing source and publishes the rest", async () => {
     const environment = await TestWorkflowEnvironment.createTimeSkipping();
@@ -62,7 +158,7 @@ describe("ops snapshot workflow", () => {
     const published: OpsCollectorOutcome[][] = [];
     try {
       const result = await runWorkflowWithActivityWorker(environment, {
-        activityTaskQueue: TASK_QUEUES.INFRA,
+        activityTaskQueue: TASK_QUEUES.OPS,
         workflowPath,
         activities: {
           ...collectorActivities(attempts),
@@ -90,6 +186,7 @@ describe("ops snapshot workflow", () => {
       expect(attempts.get("alerts")).toBe(1);
       // New runs take the patched branch and collect traces.
       expect(attempts.get("traces")).toBe(1);
+      expect(attempts.get("temporal")).toBe(1);
     } finally {
       await environment.teardown();
     }
@@ -101,7 +198,7 @@ describe("ops snapshot workflow", () => {
     try {
       await expect(
         runWorkflowWithActivityWorker(environment, {
-          activityTaskQueue: TASK_QUEUES.INFRA,
+          activityTaskQueue: TASK_QUEUES.OPS,
           workflowPath,
           activities: {
             ...collectorActivities(new Map()),
@@ -123,19 +220,26 @@ describe("ops snapshot workflow", () => {
       await environment.teardown();
     }
   }, 60_000);
+});
 
-  test("the digest workflow triggers its kind on the infra queue", async () => {
+describe("ops digest workflow", () => {
+  test("preserves the delivery result on the isolated ops queue", async () => {
     const environment = await TestWorkflowEnvironment.createTimeSkipping();
     const kinds: string[] = [];
     try {
       await expect(
         runWorkflowWithActivityWorker(environment, {
-          activityTaskQueue: TASK_QUEUES.INFRA,
+          activityTaskQueue: TASK_QUEUES.OPS,
           workflowPath,
           activities: {
             triggerOpsDigest: (kind: string) => {
               kinds.push(kind);
-              return Promise.resolve({ kind });
+              return Promise.resolve({
+                kind,
+                periodKey: "daily:2026-09-24",
+                status: "skipped",
+                duplicate: true,
+              });
             },
           },
           execute: () =>
@@ -145,7 +249,12 @@ describe("ops snapshot workflow", () => {
               workflowId: `test-ops-digest-${crypto.randomUUID()}`,
             }),
         }),
-      ).resolves.toEqual({ kind: "daily" });
+      ).resolves.toEqual({
+        kind: "daily",
+        periodKey: "daily:2026-09-24",
+        status: "skipped",
+        duplicate: true,
+      });
       expect(kinds).toEqual(["daily"]);
     } finally {
       await environment.teardown();

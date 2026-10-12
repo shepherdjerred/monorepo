@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import {
   loadRawMatchFixture,
@@ -7,11 +8,12 @@ import {
 import {
   ArtifactDescriptorSchema,
   ArtifactKindSchema,
+  LakeArtifactKindSchema,
 } from "@scout-for-lol/domain/artifacts/descriptors.ts";
 import { matchProcessingReceiptIdentityKey } from "@scout-for-lol/domain/match-processing/states.ts";
-import { SCOUT_V2_MATCH_RECEIPT_KINDS } from "@scout-for-lol/temporal/match-receipts-v2";
-import { SCOUT_V2_NOTIFICATION_RENDER_RECEIPT_KINDS } from "#src/temporal/v2/notification-receipts.ts";
-import { SCOUT_V2_RECOVERY_CONFLICT_RECEIPT_KIND } from "#src/temporal/v2/recovery-receipts.ts";
+import { SCOUT_MATCH_RECEIPT_KINDS } from "@scout-for-lol/temporal/match-receipts";
+import { SCOUT_NOTIFICATION_RENDER_RECEIPT_KINDS } from "#src/temporal/notification-lane/notification-receipts.ts";
+import { SCOUT_RECOVERY_CONFLICT_RECEIPT_KIND } from "#src/temporal/recovery/recovery-receipts.ts";
 import { MATCH_RECEIPT_KINDS } from "#src/durable/match/receipt-evidence.ts";
 import {
   MatchProcessingReceiptRecordSchema,
@@ -50,6 +52,7 @@ vi.mock("#src/database/durable/receipt-repository.ts", () => ({
 }));
 
 const ARTIFACT_KINDS = ArtifactKindSchema.options;
+const LAKE_ARTIFACT_KINDS = LakeArtifactKindSchema.options;
 
 const {
   RECEIPTED_LAKE_RECEIPT_KINDS,
@@ -60,6 +63,7 @@ const {
   rawArchiveReceiptKind,
 } = await import("#src/report-lake/durable-receipts.ts");
 const {
+  archiveClientBundleReceipted,
   archiveMatchReceipted,
   archivePrematchReceipted,
   archiveTimelineReceipted,
@@ -106,7 +110,7 @@ describe("the no-bucket path", () => {
       family: "timeline",
       archive: async () =>
         await archiveTimelineReceipted(
-          rawTimelineFixture("NA1_5370969615"),
+          rawTimelineFixture(RiotMatchIdSchema.parse("NA1_5370969615")),
           [],
           new Date(),
         ),
@@ -207,7 +211,9 @@ describe("receipted match archival", () => {
 
 describe("receipted timeline archival", () => {
   test("receipts the timeline against its own match id", async () => {
-    const timeline = rawTimelineFixture("NA1_5370969615");
+    const timeline = rawTimelineFixture(
+      RiotMatchIdSchema.parse("NA1_5370969615"),
+    );
     mockSuccessfulPut();
 
     const result = await archiveTimelineReceipted(
@@ -219,6 +225,48 @@ describe("receipted timeline archival", () => {
     if (result.status !== "archived") throw new Error("expected an archive");
     expect(result.artifact.kind).toBe("timeline");
     expect(recordedReceipt().matchId).toBe("NA1_5370969615");
+  });
+});
+
+describe("receipted client bundle archival", () => {
+  test("stores the bundle beside the match it was converted from", async () => {
+    const match = await loadRawMatchFixture();
+    const matchId = match.metadata.matchId;
+    const payload = { resource: "post_game", data: { matchHistory: {} } };
+    mockSuccessfulPut();
+
+    const result = await archiveClientBundleReceipted({
+      matchId,
+      payload,
+      gameCreatedAt: new Date(match.info.gameCreation),
+      observationId: "00000000-0000-4000-8000-000000000001",
+    });
+
+    if (result.status !== "archived") throw new Error("expected an archive");
+    expect(result.artifact.kind).toBe("client_bundle");
+    const put = getValidatedPutCommand().input;
+    expect(put.Key).toMatch(
+      new RegExp(
+        String.raw`^games/\d{4}/\d{2}/\d{2}/${matchId}/client-bundle\.json$`,
+        "u",
+      ),
+    );
+    expect(put.Metadata?.["source"]).toBe("SCOUT_CLIENT");
+    expect(recordedReceipt().receipt.kind).toBe("raw-archive-client-bundle");
+  });
+
+  test("records the match's own source in its archive metadata", async () => {
+    const match = await loadRawMatchFixture();
+    mockSuccessfulPut();
+
+    await archiveMatchReceipted(
+      { ...match, metadata: { ...match.metadata, dataVersion: "local-1" } },
+      [],
+    );
+
+    expect(getValidatedPutCommand().input.Metadata?.["source"]).toBe(
+      "SCOUT_CLIENT",
+    );
   });
 });
 
@@ -267,17 +315,21 @@ describe("a full ingest receipts every one of its artifacts", () => {
       "raw-archive-match",
       "raw-archive-timeline",
       "raw-archive-prematch",
+      "raw-archive-client-bundle",
     ]);
   });
 
   test("staging kinds are distinct from archive kinds for the same artifact", () => {
-    for (const kind of ARTIFACT_KINDS) {
+    for (const kind of LAKE_ARTIFACT_KINDS) {
       expect(lakeStagingReceiptKind(kind)).not.toBe(
         rawArchiveReceiptKind(kind),
       );
     }
+    // A client bundle is archived but never staged: the lake reads the match
+    // converted from it, so it has an archive receipt and no staging one.
+    expect(LAKE_ARTIFACT_KINDS).not.toContain("client_bundle");
     expect(new Set(RECEIPTED_LAKE_RECEIPT_KINDS).size).toBe(
-      ARTIFACT_KINDS.length * 2,
+      ARTIFACT_KINDS.length + LAKE_ARTIFACT_KINDS.length,
     );
   });
 
@@ -299,15 +351,15 @@ describe("a full ingest receipts every one of its artifacts", () => {
       { owner: "match bridge", kinds: Object.values(MATCH_RECEIPT_KINDS) },
       {
         owner: "V2 per-match core",
-        kinds: Object.values(SCOUT_V2_MATCH_RECEIPT_KINDS),
+        kinds: Object.values(SCOUT_MATCH_RECEIPT_KINDS),
       },
       {
         owner: "V2 notification lane",
-        kinds: Object.values(SCOUT_V2_NOTIFICATION_RENDER_RECEIPT_KINDS),
+        kinds: Object.values(SCOUT_NOTIFICATION_RENDER_RECEIPT_KINDS),
       },
       {
         owner: "V2 recovery lane",
-        kinds: [SCOUT_V2_RECOVERY_CONFLICT_RECEIPT_KIND],
+        kinds: [SCOUT_RECOVERY_CONFLICT_RECEIPT_KIND],
       },
     ];
 

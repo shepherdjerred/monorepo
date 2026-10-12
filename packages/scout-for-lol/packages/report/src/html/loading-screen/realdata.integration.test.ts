@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import { test, expect } from "vitest";
 import { loadingScreenToSvg } from "#src/html/loading-screen/index.tsx";
 import { LoadingScreenDataSchema } from "@scout-for-lol/data";
@@ -22,7 +23,7 @@ async function hasLoadingScreenAssets(): Promise<boolean> {
   return file.exists();
 }
 
-const currentDir = new URL(".", import.meta.url).pathname;
+const currentDir = fileURLToPath(new URL(".", import.meta.url));
 
 const FIXTURE_PATHS = [
   `${currentDir}testdata/ranked-flex-5v5.json`,

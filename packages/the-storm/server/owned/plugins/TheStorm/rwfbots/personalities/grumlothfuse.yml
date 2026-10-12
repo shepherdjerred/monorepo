@@ -1,0 +1,81 @@
+id: grumlothfuse
+name: GrumlothFuse
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1Mzg4Mjc2MSwKICAicHJvZmlsZUlkIiA6ICIzNDY4Y2VjMWFlOTY0YWRmYWQyNjEzMGEwZGQ0NjRkYyIsCiAgInByb2ZpbGVOYW1lIiA6ICJzdXJlZWxta18iLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNmI0MGIxOWQ3MTg0MDFiNWZmMWQ1N2I5NjE5ZjA1ZjhhMmFhZmE2ODAwZjk2OGYyYzQzZjMwNTVhMWIwOGRmMSIKICAgIH0KICB9Cn0="
+  signature: "tBZnEs/3SWtCb6+s88b0sQXO/OqEEOcd1iRBoyFAg7Um4uTeBgscc9a8kxoUp9B3Msl114wRk7Aqs2gFwBkN4xxqKFPts4lKvwohjcrPTJrmrMUQaCkiXX5DWSHgpOsn8zhXBr1kLK7i6PMDI+7wfSOSfYtVSko/S2WCich91XdHI9/FV5jrxtbSmc2ouM59CLqla8NMf4kZ5ulsej5W9qOWr2rO5UXwYxAaEgxS0ILp7adY46gjjzdpe4Q+Bfh5DS6WzyW1ypF5EWj1eB5Rjee/xPsQXcWbY0mDJXadORGjFmzJ6NC+C0YtRdHngQ+YhgyIBdrwl+4QOwwsS6oWk7oLkTATHmcvh8ZDOsCoE27Y7hhlp49VI+lJiexYmLODlKDQCOJr4wci3cWaTk10AgBzbKsDHzLUAjTYf4rY7oYjpK9PdIZd61p4wh5Ac4aErA6hUchoCIhCDhY6XQ2rtIupB4dslnzAV/XaDJa6Z1WPtU7eCrWxHBB0K4cCSqJIPFaJdnyEY5qFlYUgmopmGyLgAWhN+y/ygrGzQWX8SMIpkGNmj+L4R54Qu8qQSNWC2QJY4xfDf0BY5m9B0W8NuxCj6IQDlAuBVF+S3z6cQmhuHdb3JJeXreVOzo9Gg2nJSBMHfaYQ0BcevxgYd35NM3DwjYQ7I6bJCEoyyMWJNnc="
+skill: 0.77
+archetype: turtle
+leverOffsets:
+  reactionMs: 0.41
+  turnRateDegPerTick: -0.35
+  predictionQuality: -0.19
+  decisionTemperature: 0.12
+  awarenessRadius: 0.62
+  aggression: -1.8
+kits:
+  trooper: 0.87
+  longbow: 0.31
+  rewind: 0.81
+roles:
+  defend: 0.99
+  rotate: 0.24
+  retake: 0.3
+style:
+  aggression: 0.09
+  patience: 1
+  teamplay: 0.54
+  risk: 0.12
+voice:
+  tone:
+    - grumpy
+    - old-timer
+    - dry
+  verbosity: normal
+  style: grumpy old-timer, back in my day, complains about kids and new kits, secretly fond of everyone
+lines:
+  greet:
+    - back in my day we defended the bomb
+    - "alright {team}, nobody touch my wall"
+    - kids these days, always running
+  onKill:
+    - "get off my lawn, {victim}"
+    - "{victim} rushed. never rush"
+    - patience, youngster
+  onDeath:
+    - "{killer} has no respect for elders"
+    - my knees aren't what they were
+    - back in my day that wouldn't land
+  onPlant:
+    - "{bomb} lit. against my better judgement"
+    - "fine. {bomb}'s armed. happy?"
+  onDefuse:
+    - "{bomb} defused. like the old days"
+    - "nobody lights my bomb, {bomb} safe"
+  onWin:
+    - "told you. defense wins, {team}"
+    - patience. always patience
+  onLoss:
+    - this is why you don't rush
+    - in my day we'd have held
+  onLastAlive:
+    - the old guard holds
+    - i've outlasted better than you
+  taunt:
+    - slow down, it's not a race
+    - you'll learn, youngster
+    - my wall has stood since 2013
+  lobby:
+    - lobbies were shorter in my day
+    - trooper. the only kit that ever made sense
+    - "{team}, defend the bomb. don't make me say it twice"
+    - kids these days and their fancy clocks
+    - fine, fine, good luck. i suppose
+quirks:
+  - holds_grudges
+  - slow_starter
+rivals:
+  - phantomsniper7
+  - noodlewolf7
+bio: Has defended the same corner of every map since 2013 and complains about every rusher he meets. Calls PhantomSniper7's fort a fire hazard. Has never forgiven NoodleWolf7 for arming his bomb in 2014.
+batch: 2
+retired: false

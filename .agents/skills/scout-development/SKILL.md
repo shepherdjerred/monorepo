@@ -17,7 +17,7 @@ Preserve these contracts:
 - ScoutQL is compiled and validated before DuckDB execution. Guild/global scope,
   identity, deterministic ordering, and participant limits are explicit.
 - Bryan Bucks owns Dare management. Explore owns conversational authoring.
-  Versioned Dare semantics must preserve older stored behavior.
+  Dares are v3 SQL contracts only; `compilerVersion` is stored metadata.
 - Tournament custom games and ordinary Riot match ingestion remain distinct
   provenance paths.
 - Discord inputs are user boundaries: answer expected mistakes clearly. Internal
@@ -38,7 +38,9 @@ bun run --filter='./packages/scout-for-lol' dev:web    # backend :3000, SPA http
 bun run --filter='./packages/scout-for-lol' dev:login  # prints a signed session URL
 ```
 
-- `dev:web` runs under `op run --env-file=dev-web.env.tpl`, ensures the local
+- `dev:web` runs under `op run --env-file=dev-web.env.tpl` through
+  `scripts/onepassword/with-service-account.sh` (no 1Password desktop
+  approval), ensures the local
   dev Postgres, applies migrations, and serves the SPA. It defaults to
   `SCOUT_DEV_AUTH_MODE=dev-login`, so no real Discord login is needed; open the
   `dev:login` URL with PinchTab.
@@ -50,8 +52,7 @@ bun run --filter='./packages/scout-for-lol' dev:login  # prints a signed session
   deployed beta bot for the duration — one owner per token — and is what
   guild-picker and channel-picker flows need. A secondary copy only needs
   distinct `--backend-port` and `--web-port`.
-  (`packages/scout-for-lol/scripts/dev/dev-web.ts`; the warning in
-  `dev-web.env.tpl` predates the opt-in default and is stale.)
+  (`packages/scout-for-lol/scripts/dev/dev-web.ts`.)
 - `Failed to start server. Is port 3000 in use?` means something else already
   holds the default backend port (OrbStack and other container runtimes commonly
   do). Pass `--backend-port`/`--web-port` rather than killing the holder.
@@ -62,7 +63,7 @@ bun run --filter='./packages/scout-for-lol' dev:login  # prints a signed session
   The env var is what lets the backend skip the real secrets; `dev:design-audit`
   alone still demands them.
 
-Seven Scout workspaces have a bare `dev` script, so pick deliberately: `app` is
+Six Scout workspaces have a bare `dev` script, so pick deliberately: `app` is
 the SPA behind `dev:web`, `frontend` and `docs-site` are Astro, and
 `design-system` serves its Storybook catalog on port 6006.
 

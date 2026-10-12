@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "identities": ["rowan", "juniper", "flint"],
+  "maxPersonalityChars": 500,
+  "maxMessageChars": 1000,
+  "maxContextChars": 2000,
+  "maxReplyChars": 300,
+  "maxOutputTokens": 512,
+  "monthlyBudgetMicroUsd": 20000000,
+  "timeZone": "America/Los_Angeles",
+  "requestFields": [
+    "requestId",
+    "identity",
+    "personality",
+    "message",
+    "context"
+  ],
+  "responseFields": ["text", "model", "costMicros"]
+}

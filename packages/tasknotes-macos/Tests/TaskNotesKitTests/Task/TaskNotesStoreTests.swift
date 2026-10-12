@@ -94,7 +94,7 @@ struct TaskNotesStoreTests {
         // Reconfiguring builds a *new* engine over the same storage, which is
         // how the app applies a server URL change. The queue survives because
         // it is on disk, not in the engine.
-        store.configure(serverURL: server.baseURL)
+        store.configure(serverURL: server.baseURL, authToken: server.authToken)
         #expect(store.pendingCount == 1)
 
         await store.sync()
@@ -115,7 +115,7 @@ struct TaskNotesStoreTests {
         let store = TaskNotesStore(storage: try FileHostStorage(directory: directory.url))
 
         #expect(store.migrate())
-        store.configure(serverURL: server.baseURL)
+        store.configure(serverURL: server.baseURL, authToken: server.authToken)
 
         // Deliberately not alphabetical. `TaskStoreSnapshot` carries an
         // `IndexMap` projected to an ordered `Vec`, and that order is the
@@ -138,7 +138,7 @@ struct TaskNotesStoreTests {
         let store = TaskNotesStore(storage: try FileHostStorage(directory: directory.url))
 
         #expect(store.migrate())
-        store.configure(serverURL: server.baseURL)
+        store.configure(serverURL: server.baseURL, authToken: server.authToken)
         await store.dispatch(.create(payload: createRequest(title: "Round trip")))
         await store.sync()
         #expect(store.tasks.map(\.status) == [.open])
@@ -187,7 +187,7 @@ struct TaskNotesStoreTests {
         do {
             let store = TaskNotesStore(storage: try FileHostStorage(directory: directory.url))
             #expect(store.migrate())
-            store.configure(serverURL: server.baseURL)
+            store.configure(serverURL: server.baseURL, authToken: server.authToken)
             await store.dispatch(.create(payload: createRequest(title: "Persisted")))
             await store.sync()
             #expect(store.tasks.count == 1)
@@ -213,7 +213,7 @@ struct TaskNotesStoreTests {
         let store = TaskNotesStore(storage: try FileHostStorage(directory: directory.url))
 
         #expect(store.migrate())
-        store.configure(serverURL: server.baseURL)
+        store.configure(serverURL: server.baseURL, authToken: server.authToken)
 
         let optimistic = try #require(
             await store.dispatch(.create(payload: createRequest(title: "Aliased"))))

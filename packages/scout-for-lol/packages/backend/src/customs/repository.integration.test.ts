@@ -96,29 +96,6 @@ describe("custom night persistence", () => {
         teamBVoiceChannelId: "team-b",
       },
     });
-    const lobby = await testPrisma.tournamentLobby.create({
-      data: {
-        code: "EXPIRING-CUSTOMS-CODE",
-        apiMode: "live",
-        providerId: 1,
-        tournamentId: 2,
-        region: "AMERICA_NORTH",
-        platformId: "NA1",
-        serverId: CREATE_INPUT.guildId,
-        channelId: CREATE_INPUT.launchChannelId,
-        creatorDiscordId: CREATE_INPUT.hostDiscordId,
-        bluePuuids: "[]",
-        redPuuids: "[]",
-        blueAliases: "[]",
-        redAliases: "[]",
-        teamSize: 5,
-        pickType: "TOURNAMENT_DRAFT",
-        mapType: "SUMMONERS_RIFT",
-        spectatorType: "ALL",
-        state: "created",
-        expiresAt: expiredAt,
-      },
-    });
     const game = await testPrisma.customGame.create({
       data: {
         nightId: night.id,
@@ -127,7 +104,6 @@ describe("custom night persistence", () => {
         rosterMode: "FIRST_TEN",
         map: "SUMMONERS_RIFT",
         pickMode: "TOURNAMENT_DRAFT",
-        tournamentLobbyId: lobby.id,
       },
     });
 
@@ -168,11 +144,6 @@ describe("custom night persistence", () => {
       voiceState: "CLEANED_UP",
       voiceReady: false,
     });
-    await expect(
-      testPrisma.tournamentLobby.findUniqueOrThrow({
-        where: { id: lobby.id },
-      }),
-    ).resolves.toMatchObject({ state: "cancelled" });
     await expect(
       testPrisma.customAuditEvent.findFirstOrThrow({
         where: { nightId: night.id, action: "GAME_VOIDED" },

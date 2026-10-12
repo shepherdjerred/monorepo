@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import {
   ChampionTagSchema,
@@ -253,7 +254,7 @@ function hash(value: string): string {
   return hasher.digest("hex");
 }
 
-function seedForMatch(matchId: string): string {
+function seedForMatch(matchId: RiotMatchId): string {
   return `scout-parlay-shortlist:${PARLAY_SHORTLIST_VERSION}:${matchId}`;
 }
 
@@ -307,7 +308,7 @@ export function eligibleParticipantFields(input: {
 }
 
 /** Exactly one SHA-256 bucket admits a ping target. */
-export function parlayPingBucket(matchId: string): number {
+export function parlayPingBucket(matchId: RiotMatchId): number {
   return Number.parseInt(
     hash(`${seedForMatch(matchId)}\0ping-gate`)[0] ?? "",
     16,
@@ -315,7 +316,7 @@ export function parlayPingBucket(matchId: string): number {
 }
 
 function selectedPingTarget(
-  matchId: string,
+  matchId: RiotMatchId,
   seed: string,
 ): ParlayCandidateTarget | undefined {
   if (parlayPingBucket(matchId) !== 0) return;
@@ -332,7 +333,7 @@ function selectedPingTarget(
 }
 
 export function buildParlayShortlist(input: {
-  matchId: string;
+  matchId: RiotMatchId;
   subjects: readonly ParlayShortlistSubject[];
 }): ParlayShortlist {
   const subjects = z

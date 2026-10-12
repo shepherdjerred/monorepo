@@ -17,7 +17,6 @@ import {
   scoutExploreTimelineWorkflowId,
   scoutDetachedWorkWorkflowId,
   scoutInteractiveWorkflowId,
-  scoutMatchWorkflowId,
   scoutReportScheduleReconcilerWorkflowId,
   scoutQueueCanaryWorkflowId,
   scoutHallBaselineWorkflowId,
@@ -30,7 +29,6 @@ import {
   type ScoutExploreTimelineInput,
   type ScoutDetachedWorkInput,
   type ScoutInteractiveRunInput,
-  type ScoutMatchIngestionInput,
   type ScoutReportRunInput,
   type ScoutQueueCanaryInput,
   type ScoutStage,
@@ -102,24 +100,6 @@ function startMetadata(
   });
 }
 
-export async function startScoutMatchIngestion(
-  client: Client,
-  input: ScoutMatchIngestionInput,
-): Promise<WorkflowHandle> {
-  return await client.workflow.start(SCOUT_WORKFLOW_NAMES.matchIngestion, {
-    ...RESTART_FAILED_START_POLICIES,
-    workflowId: scoutMatchWorkflowId(input.stage, input.matchId),
-    taskQueue: scoutTaskQueues(input.stage).workflow,
-    args: [input],
-    ...startMetadata(
-      input.stage,
-      "workflow",
-      "Ingest Scout match",
-      "Coordinates durable ingestion for one completed match.",
-    ),
-  });
-}
-
 export async function startScoutQueueCanary(
   client: Client,
   input: ScoutQueueCanaryInput,
@@ -169,6 +149,7 @@ export async function startScoutExploreHistory(
     input.stage,
     input.puuid,
     input.acquisitionBucket,
+    input.matchType,
   );
   return await startOrReuseWorkflow<
     WorkflowHandle<typeof scoutExploreHistoryWorkflow>
@@ -182,8 +163,8 @@ export async function startScoutExploreHistory(
         ...startMetadata(
           input.stage,
           "api",
-          "Import ranked history for Explore",
-          "Fetches recent ranked matches on demand, stores them permanently, and folds them into Scout's report lake.",
+          `Import ${input.matchType ?? "ranked"} history for Explore`,
+          "Fetches recent matches on demand, stores them permanently, and folds them into Scout's report lake.",
         ),
       }),
     () =>

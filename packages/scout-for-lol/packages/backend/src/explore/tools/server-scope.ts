@@ -94,7 +94,9 @@ const ListServersInputSchema = z
   .strict();
 
 export const ListServersDataSchema = z.strictObject({
-  servers: z.array(z.strictObject({ serverId: z.string(), name: z.string() })),
+  servers: z.array(
+    z.strictObject({ serverId: DiscordGuildIdSchema, name: z.string() }),
+  ),
   total: z.number(),
 });
 
@@ -106,7 +108,7 @@ export const ListServersResultSchema = z.strictObject({
 
 export function createListMyServersTool(options: {
   readonly db: ExtendedPrismaClient;
-  readonly guildIds: readonly string[];
+  readonly guildIds: readonly DiscordGuildId[];
   readonly track: ToolTracker;
 }) {
   return tool({

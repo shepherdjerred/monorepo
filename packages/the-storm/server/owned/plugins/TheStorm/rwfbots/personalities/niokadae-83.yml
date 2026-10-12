@@ -1,0 +1,82 @@
+id: niokadae-83
+name: Niokadae_83
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0ODk5MTE2MiwKICAicHJvZmlsZUlkIiA6ICI3MzFiOTdlYTI1MWM0ZjNmYTk0OTEwY2RkMmQwOTU4YiIsCiAgInByb2ZpbGVOYW1lIiA6ICJJbU5vdEFDYXQ2IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2IyOWZhMzQ4NTFhZDJkN2E3OTYxMjI0OGM2NTVhYzllZWY2MzhjZTZjY2IwZDFmMGY2N2FlNDQwMDRmZjkzYWYiCiAgICB9CiAgfQp9
+  signature: "d9bYqi03SiWuObIJ56jkuw+b5lM+53Yf5oV8bMU1+Mit2z1orC+hRFzkPFIWNu9pezKkM1Qp0f3MmblLICaFD62sNRyazQEx/6P8e15R/jDXPXguGNNNvZvJMA0MqJPR6e46QKZ0/9ge8Hyfr5dMYf3yjKBDCvp05+mqhf2Cf5xnPk9QuE0XSOQal9Nv+X/v/VGTo5E0M42S+sj15aoP/FtEiFKPy/M3kIK7NFHi/tEqGMKnQojbzLaDwsOpSklWtgF92SqhtSTHJtlUOv3iqX4O7bzrN4f+TWcNLCxafe4fo/mGD/LwM+u+Voxn5bE3odJkAzcM4vlCq/2NBQp2RQ7dC5pIFdluG07Dg81XutQ9pkcjc2zihfaGxx4x8+QiGDAvQ1ZsoE9lV771ydDPihmbKK9DTXlusYdLWHOHy8buKBAsaEWl/YMt2ZoyXRFlieIVYPxY6SX9i14if0k4co4NDbWPxv91hGu9HzAfkKyL0aRzq7olNnEnW5Imdf3fYYTNIoVwafhjnWItHtwPXWjaakgL6187kg/XUtrIyH/8DeEmUVBOMxrkfZG2kfsjNPa7T/6eRFRi8n5i+L38S+vywejwokelUkNrAlMKh/gwwiMjdKqyeo/rIHUlJTnywvFPZfK5KSMcrUItuUKWjxAYI2PD1l+Uj/72BUbASjo="
+skill: 0.089
+archetype: sniper
+leverOffsets:
+  reactionMs: 0.54
+  aimErrorDeg: 1.72
+  cps: -0.85
+  predictionQuality: 1.55
+  awarenessRadius: 0.76
+  technique: -0.56
+  aggression: -0.96
+kits:
+  trooper: 0.16
+  longbow: 1
+  shortbow: 0.47
+  rewind: 0.15
+roles:
+  defend: 0.98
+  rotate: 0.3
+  hunt: 0.5
+style:
+  aggression: 0.25
+  patience: 0.83
+  teamplay: 0.4
+  risk: 0.21
+voice:
+  tone:
+    - bookish
+    - gentle
+    - studious
+  verbosity: normal
+  style: "Quiet librarian with a bow: shushes, cites chapter and page, overdue-book jokes"
+lines:
+  greet:
+    - "Quiet in the library, {team}."
+    - "Chapter one: the long field."
+  onKill:
+    - "{victim} is overdue."
+    - Shh. Returned.
+    - Filed under defeated.
+  onDeath:
+    - "{killer} skipped to the ending."
+    - Bookmark lost.
+    - Page torn.
+  onPlant:
+    - "{bomb} lit. Late fee applied."
+    - Fuse checked out.
+  onDefuse:
+    - "{bomb} reshelved safely."
+    - Returned on time.
+  onWin:
+    - A satisfying ending.
+    - "{team}, gold star reading."
+  onLoss:
+    - Plot twist. Unwelcome.
+    - Rereading the strategy.
+  onLastAlive:
+    - Final chapter.
+    - Shh. Concentrating.
+  taunt:
+    - Shh. You're too loud.
+    - Your footsteps are overdue.
+    - Silence, please.
+  lobby:
+    - Shh. Chapter one begins shortly.
+    - Longbow checked out. Due back after the match.
+    - "Page forty: always aim slightly above."
+    - Please keep the giggling to a minimum on the perch.
+    - "{team}, quietly now. Quietly."
+quirks:
+  - bow_spammer
+  - good_sport
+rivals:
+  - dizzyblaze58
+  - mothblaze0
+bio: Brought a reading habit to the sniper perch and narrates long shots like book chapters. Shares the back row with DizzyBlaze58 and MothBlaze0 and shushes both of them constantly.
+batch: 2
+retired: false

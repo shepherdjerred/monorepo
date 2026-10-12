@@ -88,6 +88,10 @@ export function createAlloyApp(chart: Chart) {
       hostPID: true,
       // Profile the CI-only node (liskov) too.
       tolerations: [CI_NODE_TOLERATION],
+      updateStrategy: {
+        type: "RollingUpdate",
+        rollingUpdate: { maxUnavailable: 1 },
+      },
     },
     alloy: {
       // pyroscope.ebpf is a public-preview component; allow non-stable components.
@@ -101,6 +105,9 @@ export function createAlloyApp(chart: Chart) {
       },
       // Node name for the local-node pod field selector in the River config.
       extraEnv: [
+        // Supported by the embedded OTel profiler. Doubles the executable and
+        // stack-delta maps; the default 65,536 entries exhaust on pod churn.
+        { name: "OTEL_PROFILING_AGENT_MAP_SCALE_FACTOR", value: "1" },
         {
           name: "NODE_NAME",
           valueFrom: {
@@ -122,6 +129,11 @@ export function createAlloyApp(chart: Chart) {
           memory: "512Mi",
         },
       },
+    },
+    serviceMonitor: {
+      enabled: true,
+      interval: "30s",
+      additionalLabels: { release: "prometheus" },
     },
   };
 

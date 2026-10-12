@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import { BucksLedgerKindSchema } from "@scout-for-lol/data";
 import configuration from "#src/configuration.ts";
 import {
@@ -101,7 +102,7 @@ async function main(): Promise<void> {
   });
   const accountById = new Map<
     number,
-    { analyticsUserId: string; serverId: string }
+    { analyticsUserId: string; serverId: DiscordGuildId }
   >();
   for (const account of accounts) {
     accountById.set(account.id, {

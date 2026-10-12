@@ -1,0 +1,79 @@
+id: lunarfuse83
+name: LunarFuse83
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NTU5MDgwNCwKICAicHJvZmlsZUlkIiA6ICIwNDg2YWUwMWI4Y2I0OWUzODMyZDcwOTNmMWJlNzI3NyIsCiAgInByb2ZpbGVOYW1lIiA6ICJfcGFrbWFuXyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9hMDQ5ZmMyYzFkMzMxOTJiNjQwMzRkYzcwN2JmNGJiYjA5ZjEzZDNmOTdkMGVmMTk2NTVjYmE4OWJmZGJhNmNhIgogICAgfQogIH0KfQ=="
+  signature: "BSyS9jCVo2A2Y31pX9+M01SebBcqTiST/ZLswwPA2Jqu3Y3H7fHSSb/MzvILQ1BGgYfkAJgjI0HL1A2DVDNk9ZSiPC982k8h8s2W+b9Ls4TwUh4B+nN57aYLkEyw7C1zEzGyErS5EH/auXnDSOzTPWg6GejjR+FaAeNzXMOvIWObefKcoGs/lHMbLDKxrpkcJ4WQqTO7gFjG3Ez9G3Fznk00NwAEisifBxkgjgbD31VLkAjSkNo4nyZdILhPfIe9ubgMchJm9HXZEhnIFZWWyrQhqh7cZn8w1f3jAOh511WStvemiAsZjM0A5hCPTBzAUZuaLGEpI/D4Vy63SPrJREdBoPcLn8rt1ZYQ1HtVBGrPHch6EqnejNUwmoG/fkPyjVFhvwFbvHpgu/VkFw8Q6Q7a/AlX+PctZ8cPqPpQv0FEcpA9koIpsVnXExgUaDM117InHiOlhaIQc1YXfnM4jtFGTnNBXi/ED3K91HvlnLVm7EY7HjPMizz65/8H3q0FV64amFcabuF6ML+DsRYa8OSTv9rgU+RJ3vxEW2z/t+uSnhtEm63Wg217n++o6NsVPRx2S+FDvONcGrtYLh3h30Y113a9P3ry5uQduc+UhyfwipRJY3E9KhubVuAp2+GEUde6sHaH24EVRiqUweLuDQQx37l0EXHkyxZf2yLmp1A="
+skill: 0.069
+archetype: anchor
+leverOffsets:
+  reactionMs: 0.66
+  decisionTemperature: 0.87
+  awarenessRadius: 0.43
+  coordination: 0.03
+  aggression: -0.88
+kits:
+  trooper: 1
+  longbow: 0.42
+  rewind: 0.33
+roles:
+  defend: 1
+  retake: 0.72
+style:
+  aggression: 0.32
+  patience: 0.92
+  teamplay: 0.49
+  risk: 0.14
+voice:
+  tone:
+    - dreamy
+    - calm
+    - whimsical
+  verbosity: normal
+  style: "stargazer; talks about the moon and constellations between callouts"
+lines:
+  greet:
+    - The moon is full tonight. Good night for defending.
+    - "I'll watch the bomb and the stars, {team}."
+    - Settling in by the bomb.
+  onKill:
+    - "{victim} drifted out of orbit."
+    - "Sorry {victim}, the stars said no."
+    - Eclipse.
+  onDeath:
+    - "{killer} blocked out my moon."
+    - Shooting star. That was me.
+    - Back to the sky I go.
+  onPlant:
+    - "{bomb} burns like a little sun."
+    - "A new star on {bomb}."
+  onDefuse:
+    - "{bomb} cools under the moonlight."
+    - "The night is calm again. {bomb} defused."
+  onWin:
+    - "The stars aligned for {team}. gg."
+    - A lovely night. gg.
+  onLoss:
+    - Cloudy night. gg.
+    - Even the moon wanes. Rematch.
+  onLastAlive:
+    - Just me and the moon now.
+    - Guarding the last light.
+    - "{team}, the night isn't over."
+  taunt:
+    - You're far from home, little comet.
+    - The bomb is under my moon.
+    - Wish upon a fuse.
+  lobby:
+    - Clear skies tonight. Good for spotting rushers.
+    - Longbow, please. Stars are far, and so are they.
+    - "Orion is up early, {team}. Take it as a sign."
+    - Brightness all the way down. It's nicer that way.
+    - Someone always casts me as the villain. I don't mind.
+quirks:
+  - slow_starter
+  - good_sport
+rivals:
+  - epickrainvio
+bio: Plays with the brightness turned all the way down to see the night sky better, and defends the bomb while doing it. EpicKrainvio keeps casting her as his film's villain, which she finds charming.
+batch: 2
+retired: false

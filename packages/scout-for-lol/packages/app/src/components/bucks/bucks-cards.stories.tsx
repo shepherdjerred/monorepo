@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema, DiscordAccountIdSchema } from "@scout-for-lol/data";
 import type { ComponentProps } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Loaded } from "@shepherdjerred/loaded";
@@ -22,9 +23,9 @@ const noop = () => {
 };
 
 const DISCORD_NAMES: Record<string, string> = {
-  "111": "jerred",
-  "222": "bryan",
-  "333": "hunter",
+  "837550478469304750": "jerred",
+  "831241495443650079": "bryan",
+  "838090828508549143": "hunter",
 };
 
 function nameOf(discordId: string): string {
@@ -32,7 +33,7 @@ function nameOf(discordId: string): string {
 }
 
 const OUTCOME_MARKET: OutcomeMarketView = {
-  matchId: "NA1_5021846713",
+  matchId: RiotMatchIdSchema.parse("NA1_5021846713"),
   sides: [
     {
       teamId: 100,
@@ -41,8 +42,14 @@ const OUTCOME_MARKET: OutcomeMarketView = {
       totalStake: 1200,
       betCount: 2,
       positions: [
-        { discordId: "111", stake: 1000 },
-        { discordId: "222", stake: 200 },
+        {
+          discordId: DiscordAccountIdSchema.parse("837550478469304750"),
+          stake: 1000,
+        },
+        {
+          discordId: DiscordAccountIdSchema.parse("831241495443650079"),
+          stake: 200,
+        },
       ],
     },
     {
@@ -51,7 +58,12 @@ const OUTCOME_MARKET: OutcomeMarketView = {
       trackedPlayers: [],
       totalStake: 350,
       betCount: 1,
-      positions: [{ discordId: "333", stake: 350 }],
+      positions: [
+        {
+          discordId: DiscordAccountIdSchema.parse("838090828508549143"),
+          stake: 350,
+        },
+      ],
     },
   ],
   yourPosition: null,
@@ -65,7 +77,7 @@ const OPEN_MARKETS: BucksOpenMarkets = {
   outcome: [{ ...OUTCOME_MARKET, closesAt: "2026-09-13T18:02:30.000Z" }],
   parlays: [
     {
-      matchId: "NA1_5021846713",
+      matchId: RiotMatchIdSchema.parse("NA1_5021846713"),
       closesAt: "2026-09-13T18:02:30.000Z",
       subjects: ["jerred"],
       legs: [
@@ -75,7 +87,13 @@ const OPEN_MARKETS: BucksOpenMarkets = {
       yesOdds: "2.50",
       noOdds: "1.67",
       yourPosition: null,
-      positions: [{ discordId: "222", side: "YES", stake: 120 }],
+      positions: [
+        {
+          discordId: DiscordAccountIdSchema.parse("831241495443650079"),
+          side: "YES",
+          stake: 120,
+        },
+      ],
     },
   ],
 };
@@ -185,7 +203,7 @@ export const PendingPositions: Story = {
       positions={[
         {
           marketType: "outcome",
-          matchId: "NA1_5021846713",
+          matchId: RiotMatchIdSchema.parse("NA1_5021846713"),
           gameAlias: "jerred",
           sideLabel: "Blue side",
           offeredStake: 1000,
@@ -195,7 +213,7 @@ export const PendingPositions: Story = {
         },
         {
           marketType: "outcome",
-          matchId: "NA1_5021840022",
+          matchId: RiotMatchIdSchema.parse("NA1_5021840022"),
           gameAlias: "bryan",
           sideLabel: "Red side",
           offeredStake: 250,
@@ -205,7 +223,7 @@ export const PendingPositions: Story = {
         },
         {
           marketType: "parlay",
-          matchId: "NA1_5021839114",
+          matchId: RiotMatchIdSchema.parse("NA1_5021839114"),
           subjectAlias: "hunter",
           side: "YES",
           stake: 120,
@@ -227,7 +245,7 @@ export const Ledger: Story = {
           delta: 1500,
           balanceAfter: 3000,
           label: "Bet settled",
-          matchId: "NA1_5021840022",
+          matchId: RiotMatchIdSchema.parse("NA1_5021840022"),
           createdAt: "2026-09-12T22:14:00.000Z",
         },
         {
@@ -235,7 +253,7 @@ export const Ledger: Story = {
           delta: -250,
           balanceAfter: 1500,
           label: "Bet placed",
-          matchId: "NA1_5021840022",
+          matchId: RiotMatchIdSchema.parse("NA1_5021840022"),
           createdAt: "2026-09-12T21:02:00.000Z",
         },
         {

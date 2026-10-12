@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   BucksPoolRosterSchema,
   RiotTeamIdSchema,
@@ -13,7 +14,7 @@ export type OpenMarketSide = {
 };
 
 export type OpenMarketAggregate = {
-  matchId: string;
+  matchId: RiotMatchId;
   closesAt: Date;
   blue: OpenMarketSide;
   red: OpenMarketSide;

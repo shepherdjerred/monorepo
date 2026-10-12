@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import {
   EXPLORE_TITLE_MAX_LENGTH,
   type DiscordAccountId,
@@ -155,7 +156,7 @@ export async function startExploreTurn(
 ): Promise<{
   conversationId: string;
   title: string;
-  messageId: string;
+  messageId: ExploreMessage["id"];
   expectedCurrentLeafId: string | null;
   previousCurrentLeafId: string | null;
   createdConversation: boolean;
@@ -277,7 +278,7 @@ export async function resolveRegenerateTarget(
 ): Promise<{
   conversationId: string;
   title: string;
-  messageId: string;
+  messageId: ExploreMessage["id"];
   question: string;
   expectedCurrentLeafId: string | null;
   previousCurrentLeafId: string | null;
@@ -318,6 +319,8 @@ export async function appendExploreAnswer(
     conversationId: string;
     parentMessageId: string;
     answer: ExploreAnswer;
+    generation?: { model: string; reasoningEffort: "high" };
+    inlineEntities?: NonNullable<ExploreMessage["inlineEntities"]>;
     preview: ReportAiPreviewSummary | null;
     visualization: VisualizationSnapshot | null;
     matchCards?: ExploreMatchCard[] | undefined;
@@ -329,7 +332,7 @@ export async function appendExploreAnswer(
      * to a person, but the tools a turn had depended on this, and replaying it
      * with the wrong guild silently changes which tools existed.
      */
-    guildIds: readonly string[];
+    guildIds: readonly DiscordGuildId[];
     trace: ExploreTraceEntry[];
     /**
      * Move the visible branch only if it still names the leaf this run began
@@ -345,6 +348,14 @@ export async function appendExploreAnswer(
       parentId: input.parentMessageId,
       role: "assistant",
       content: input.answer.answer,
+      generation:
+        input.generation === undefined
+          ? null
+          : JSON.stringify(input.generation),
+      inlineEntities:
+        input.inlineEntities === undefined
+          ? null
+          : JSON.stringify(input.inlineEntities),
       spokenContent: input.answer.spokenAnswer ?? null,
       queryText: input.answer.queryText,
       caveats: JSON.stringify(input.answer.caveats),
@@ -401,7 +412,7 @@ export async function loadExploreSpokenContent(
   prisma: ExtendedPrismaClient,
   input: {
     conversationId: string;
-    messageId: string;
+    messageId: ExploreMessage["id"];
     userId: DiscordAccountId;
   },
 ): Promise<string | null> {

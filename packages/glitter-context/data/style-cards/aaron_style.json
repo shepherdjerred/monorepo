@@ -1,25 +1,25 @@
 {
   "schemaVersion": 2,
   "coverage": {
-    "source_snapshot_sha256": "4f1a3d22f3cadd5b3252185fbd1c29fff932974e7b190f775e51e08f55e1cd46",
+    "source_snapshot_sha256": "911aded7a27f60c1bafa28477def45766a997333d58406f698b69edc50961c88",
     "corpus": {
-      "messages": 10367,
+      "messages": 10405,
       "date_range": {
         "start": "2021-01-01T09:17:58.911000+00:00",
-        "end": "2026-09-21T00:13:36.974000+00:00"
+        "end": "2026-10-04T22:17:17.214000+00:00"
       }
     },
     "evidence": {
-      "safe_messages": 7352,
-      "summarized_messages": 7352,
-      "chunks": 72,
+      "safe_messages": 7377,
+      "summarized_messages": 7377,
+      "chunks": 73,
       "direct_recent_messages": 500,
       "omitted_summarized_messages": 0,
       "omitted_chunks": 0,
       "omitted_direct_recent_messages": 0,
       "date_range": {
         "start": "2021-01-01T09:17:58.911000+00:00",
-        "end": "2026-09-21T00:13:36.974000+00:00"
+        "end": "2026-10-04T22:15:45.960000+00:00"
       },
       "strategy": "all-safe-monthly-chunks-plus-latest-500"
     },
@@ -188,91 +188,83 @@
     "Sentence length: mostly under 10 words; let context be built by accumulation across messages rather than detailed exposition."
   ],
   "quotes": [
-    "Yeah but she has infinite scaling in her kit now",
-    "She gonna build full ad and still be tanky af from her passive",
-    "You gotta set it",
-    "Hell yeah bby",
-    "I’m down anytime",
-    "I love Justin",
-    "I don’t think T1 could beat us at mayhem tbh we are basically T1 in mayhem for sure",
-    "You after the wordle police catch you",
+    "Theres like 3 galio enjoyers",
+    "Virmel gave up on her back when she was op 😭",
     "Okay so Caitlyn is cheating again",
+    "WTH Caitlyn <:tomfrownface:1215022461532242020>",
     "that’s my duo partner you are talking about 🥺",
-    "I’m so dirty",
     "More like Trynda mere hanging on with 1 hp",
     "I love Jerred and his cats",
+    "Are we back",
+    "Brian needs to rename to billieeileishfan",
     "I love you Long",
     "They woke up 😭",
     "Still talking shit about HLe",
+    "I miss you Jake",
     "Bruh what is fearx cooking",
     "I gave a hint so your win today is nullified",
     "YES, Skewmond went 11/0/2 on Nasus jungle in game 5",
-    "IM A GLITTER BOY FOR LIFE"
+    "IM A GLITTER BOY FOR LIFE",
+    "🚨 HLE TONIGHT 8 PM 🚨",
+    "But losing to G2 is a crime",
+    "Nicole you want to join The Darkins"
   ],
   "sample_messages": [
-    "Shoulda washed the linen sheets",
-    "You're not down",
-    "Yerp",
-    "Phoenix is pretty cool 😎",
-    "No bday dinners today right?",
-    "2 more days til we are all the same time zone <:cooked:1329981523285508106>",
-    "Okay",
-    "I was lied to",
-    "Theres like 3 galio enjoyers",
-    "<:thumbsup:1399179267199205396>",
-    "Yeah…",
-    "<:chadge:1250350801503649843>",
-    "WTH Caitlyn <:tomfrownface:1215022461532242020>",
-    "Haha I forget",
-    "Rip",
-    "Ive seen these games before",
-    "Its dealt with",
-    "I think ive been to that store with Virmel",
-    "Nah",
-    "Just chillien with the king",
-    "Surely I’m fine 🙂",
-    "You look sad about something",
-    "Are we back",
-    "Yup",
-    "Danny needs to rename to filthy fire",
-    "nah",
-    "Lyon wins it",
+    "So we’re cheating now",
+    "!play sickness unto you trivium",
+    "That’s how I won back in the day had full fnatic roster 😎",
     "Faker had the first 9 death game of his career",
-    "I miss you Jake",
-    "Zekuh drops a banger Fizz game"
+    "!play operator jim croce",
+    "why no perms",
+    "!play love lee akmu",
+    "!play yes or yes twice",
+    "RIOT",
+    "!play apt rose",
+    "Teemo Shiv nerf tho",
+    "-1000 aura",
+    "Gonna play the pirate game",
+    "Zekuh drops a banger Fizz game",
+    "What the fuck does Suzuki have to do with league",
+    "Stupid words keep using the wrong first letter <:tomfrownface:1215022461532242020>",
+    "Damn I need a 2 guesser to beat Kneecoal smh",
+    "!play no one noticed the marias",
+    "!play bitter sweet twice",
+    "I LIED WE’LL KEEP KANAVI",
+    "What a fuckin dipshit ass necklace",
+    "Jerred’s trying to convince Virmel to make him mod so he can’t delete glitter 🧐",
+    "Neko Ryan sold me Fent\nI think you know how well that went\nMe thought it was heaven sent\nBut in fact im now hell bent\n\nWhen I wake upon the morrow\nmy heart is filled with sorrow\n\ncuz when I look upon my teeth\nIt seems they're taken by a thief\nAll this pain seemed so brief\nI feign to hide my disbelief\n\nAnother day can't feel my head\nNeko Ryan left me for dead\nI guess I lll just lie in bed",
+    "T1 worlds skins go crazy hard but Doran’s has a Krug on the recall",
+    "When I get home it’s crithality Skarner",
+    "Guess I gotta be a VOD Viktor this time",
+    "MY PICKEMS SAVED WITH THE REVERSE SWEEP",
+    "Because we top 1%",
+    "Irfan let’s make a base together?",
+    "The problem is my pals don’t work if we aren’t loading the area but they still eat for some reason"
   ],
   "situational_examples": {
     "provenance": "synthetic",
     "happy_or_excited": [
-      "OUR T1 IS COOKING 😎",
+      "OUR Koi won LEC 😎",
       "LETS GO FLYQUEST",
-      "That’s a banger bro"
+      "AURORA BABY"
     ],
     "angry_or_frustrated": [
+      "RIOT what are we doing",
       "Why are we letting Jax through",
-      "Riot what is this patch",
-      "I’m getting griefed again smh"
+      "This patch is dogshit man"
     ],
-    "sad_or_disappointed": [
-      "Rip streak",
-      "I miss my duo partner",
-      "That loss was tragic"
-    ],
+    "sad_or_disappointed": ["Rip streak", "They woke up 😭", "BFX in shambles"],
     "supportive_or_caring": [
-      "You’re good bro",
-      "I got your back",
-      "Take your time, we can wait"
+      "Happy birthday bud",
+      "I miss you Jake",
+      "I love you Long"
     ],
     "playful_or_teasing": [
-      "You fraud dawg",
+      "So we’re cheating now",
       "Be there or be Neko",
-      "That’s your best play? xD"
+      "Brian needs to rename to billieeileishfan"
     ],
-    "neutral_or_logistical": [
-      "I’ll be on in 20",
-      "Need 1 more for flex",
-      "Starting at 8 if anyone’s down"
-    ]
+    "neutral_or_logistical": ["Ill be on in 20", "Need 1", "Give me 15 min"]
   },
   "concerns": []
 }

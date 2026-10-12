@@ -1,3 +1,4 @@
+import type { DiscordChannelId } from "@scout-for-lol/domain/identity/discord.ts";
 import type {
   Channel,
   Client,
@@ -65,7 +66,7 @@ export function asTextChannel(channel: Channel): SendableChannel | undefined {
  *   consulted before the request keeps gateway roles on their existing path.
  */
 export async function fetchChannelForDelivery(
-  channelId: string,
+  channelId: DiscordChannelId,
   target: Client = client,
 ): Promise<Channel | null> {
   return await target.channels.fetch(channelId, { allowUnknownGuild: true });

@@ -22,6 +22,15 @@ public final class WorldPaper {
       var spawn = world.getSpawnLocation();
       loaded.add(new WildWorld(world.getName(), spec.rtp(), spawn.getBlockX(), spawn.getBlockZ()));
     }
+    for (var spec : config.borders()) {
+      var world = server.getWorld(spec.world());
+      if (world == null) {
+        throw new IllegalStateException("border world " + spec.world() + " must be loaded");
+      }
+      var border = world.getWorldBorder();
+      border.setCenter(spec.centerX(), spec.centerZ());
+      border.setSize(spec.size());
+    }
     for (var world : server.getWorlds()) {
       if (world.getEnvironment() == World.Environment.NORMAL) {
         world.setGameRule(GameRules.PLAYERS_SLEEPING_PERCENTAGE, config.sleepPercentage());

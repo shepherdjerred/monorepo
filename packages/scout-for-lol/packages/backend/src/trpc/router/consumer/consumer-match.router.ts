@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import {
-  MatchIdSchema,
+  RiotMatchIdSchema,
   PlayerIdSchema,
   TimelineCursorSchema,
   TimelineEventFilterSchema,
@@ -17,15 +17,16 @@ import {
   fetchTimelineChartFrames,
   fetchTimelineCoverage,
   fetchTimelineEventPage,
-  fetchTimelineFramesAtIndex,
+  fetchTimelineFramesAtTime,
   type LakeMatchParticipantRow,
-} from "#src/reports/duckdb/consumer-profile-lake-reads.ts";
+} from "#src/reports/duckdb/consumer/profile-lake-reads.ts";
 import {
   buildRoleMatchups,
   LANE_DELTA_MINUTE,
 } from "#src/trpc/router/consumer/consumer-match-role-matchups.ts";
 import {
   fetchMatchTimelineEvents,
+  fetchMatchReviewTimeline,
   fetchMatchTimelineFrames,
   MATCH_KEY_EVENT_TYPES,
 } from "#src/trpc/router/match-timeline.ts";
@@ -33,7 +34,7 @@ import { protectedProcedure, router } from "#src/trpc/trpc.ts";
 
 const MatchInput = z.object({
   playerId: PlayerIdSchema,
-  matchId: MatchIdSchema,
+  matchId: RiotMatchIdSchema,
 });
 
 const TimelinePageInput = MatchInput.extend({
@@ -246,9 +247,9 @@ export const consumerMatchRouter = router({
         limit: 40,
         eventTypes: MATCH_KEY_EVENT_TYPES,
       }),
-      fetchTimelineFramesAtIndex({
+      fetchTimelineFramesAtTime({
         matchId: input.matchId,
-        frameIndex: LANE_DELTA_MINUTE,
+        timestampMs: LANE_DELTA_MINUTE * 60_000,
       }),
     ]);
     return {
@@ -276,6 +277,13 @@ export const consumerMatchRouter = router({
     .query(async ({ ctx, input }) => {
       await authorizeMatch(ctx.user, input);
       return await fetchMatchTimelineFrames(input);
+    }),
+
+  reviewTimeline: protectedProcedure
+    .input(MatchInput)
+    .query(async ({ ctx, input }) => {
+      await authorizeMatch(ctx.user, input);
+      return await fetchMatchReviewTimeline({ matchId: input.matchId });
     }),
 
   chartSeries: protectedProcedure

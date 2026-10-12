@@ -9,6 +9,13 @@ import java.util.UUID;
 public interface ShopEffects {
 
   /**
+   * Called before affordability and again before settlement to catch a lease expiring meanwhile.
+   */
+  default boolean tradeAllowed(com.shepherdjerred.thestorm.shops.domain.shop.SignShop shop) {
+    return true;
+  }
+
+  /**
    * Tells {@code owner} about {@code trade} if they are online.
    *
    * @return whether they were told; if not, the trade waits for their summary on join

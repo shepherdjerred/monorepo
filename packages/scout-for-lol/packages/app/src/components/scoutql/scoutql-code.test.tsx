@@ -59,7 +59,7 @@ describe("ScoutQlCode", () => {
       '<span class="italic text-scout-subtle" data-scoutql-token="comment">-- weekly ranked win rate</span>',
     );
     expect(markup).toContain(
-      '<span class="font-semibold text-scout-accent" data-scoutql-token="renderKind">bar_chart</span>',
+      '<span class="font-semibold text-scout-ink" data-scoutql-token="renderKind">bar_chart</span>',
     );
   });
 

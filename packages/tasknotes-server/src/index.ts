@@ -105,7 +105,9 @@ async function start(): Promise<void> {
 
   updateGauges();
   setInterval(updateGauges, 15_000);
-  console.log(`TaskNotes server listening on port ${String(config.port)}`);
+  console.log(
+    `TaskNotes server listening on ${config.host}:${String(config.port)}`,
+  );
   console.log(`Vault path: ${config.vaultPath}`);
   console.log(`Model config source: ${configSource}`);
   const skipped = repo.skippedFiles();
@@ -119,6 +121,7 @@ async function start(): Promise<void> {
 void start();
 
 export default {
+  hostname: config.host,
   port: config.port,
   fetch: app.fetch,
 };

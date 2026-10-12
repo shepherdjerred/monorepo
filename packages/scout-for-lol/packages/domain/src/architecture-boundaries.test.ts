@@ -1,22 +1,7 @@
-import { describe, expect, it } from "vitest";
-import {
-  cruiseArchitectureFixtures,
-  expectedFixtureRuleNames,
-} from "@shepherdjerred/architecture";
+import { describeArchitectureBoundaries } from "@shepherdjerred/architecture/testing";
 import architecture from "#architecture";
 
-const packageRoot = import.meta.dir.replace(/\/src$/u, "");
-
-describe("dependency-cruiser layer boundaries", () => {
-  it("rejects a committed negative fixture for every declared boundary", async () => {
-    const result = await cruiseArchitectureFixtures({
-      packageRoot,
-      definition: architecture,
-    });
-
-    expect(result.violatedRuleNames).toEqual(
-      expectedFixtureRuleNames(architecture),
-    );
-    expect(result.errorCount).toBe(result.fixtureFiles.length);
-  });
+describeArchitectureBoundaries({
+  packageRoot: import.meta.dir.replace(/\/src$/u, ""),
+  architecture,
 });

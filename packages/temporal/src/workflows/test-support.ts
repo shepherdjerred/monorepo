@@ -21,6 +21,7 @@ export function createReportCapture(reportRunId: string): {
 export async function runWorkflowWithActivityWorker<T>(
   environment: TestWorkflowEnvironment,
   options: {
+    namespace?: string;
     activityTaskQueue: string;
     workflowPath: string;
     activities: NonNullable<WorkerOptions["activities"]>;
@@ -29,11 +30,13 @@ export async function runWorkflowWithActivityWorker<T>(
 ): Promise<T> {
   const workflowWorker = await Worker.create({
     connection: environment.nativeConnection,
+    namespace: options.namespace ?? "default",
     taskQueue: TASK_QUEUES.WORKFLOWS,
     workflowsPath: options.workflowPath,
   });
   const activityWorker = await Worker.create({
     connection: environment.nativeConnection,
+    namespace: options.namespace ?? "default",
     taskQueue: options.activityTaskQueue,
     activities: options.activities,
   });

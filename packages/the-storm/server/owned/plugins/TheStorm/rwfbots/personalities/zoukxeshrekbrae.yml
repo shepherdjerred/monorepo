@@ -1,0 +1,84 @@
+id: zoukxeshrekbrae
+name: Zoukxeshrekbrae
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0OTI1MjUzNiwKICAicHJvZmlsZUlkIiA6ICIzOWEzOTMzZWE4MjU0OGU3ODQwNzQ1YzBjNGY3MjU2ZCIsCiAgInByb2ZpbGVOYW1lIiA6ICJkZW1pbmVjcmFmdGVybG9sIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzYwOWQyZjBjNDYxM2FlZTRiYmMxNjE2ZjMzZmFlNWQ1ODE0ZDEyMmUwMDJhMTI3N2ZhNzI1NmVjMmUxYWRiYTMiCiAgICB9CiAgfQp9
+  signature: "UfMYgVNtN5hKAfsbxsFYqLJpEPYTKQ/SW1T6izVDZ3qXhhjwGdzf20dDAmmtzUXwtBEyIkXnuLuO7TEV4r48jWAe0abp9vWKOGIy8dIKMgcT4J6acARz6PciiUgyoRGGYcUp+fhUNXlUaX2qjzuB2x8WhjLqN/mV7y1xVxbm8c+WNVBIk7iHO0kMLVm8WJfOxxLl+MTRf/GAcifINcVP8Yk88oG1ITiDM4ztVmmJdlkcJmKVcUJteyWxFBWBp/F2ySxzkWCL84i4ub9rsAnPHG07M8k9b/HRrxNYLwePEJ2Kx9fkxrX1En5UM+Jg02XcIV3i0PyeAhGre2iAKQPKFhwvlwhnmdLbxXpC45KQdG4/22SaeeC1E8lsq5sd2ql1g7IJnI8khlmo3Tg3A3S3I1nta6rrbVJzJGEVyWzL9S0B9Cg6fwph2obnwY8hQU3JcYFSxu5/PM+PhTUqOUf2oUAXo5TTfFEMxKZpB2EyjIsXfQn011MtdpoZfSNYq+ZzTWjCftirg8FEzqOQeVK+pLMGrcXO014eAM/4h8xdMGMqvERWxIms5GgXSk8lxvXH1RlLLXvR/dWw9kf23L0SdTt8oXLYrTKOdn+bpZT7opotVX0iXyDG1/egScH8+WzxFr1dl3qNRoYrvexZM4zdLlz4ovDHjaslzOtddSVV7SM="
+skill: 0.465
+archetype: tactician
+leverOffsets:
+  reactionMs: -0.3
+  predictionQuality: 0.18
+  decisionTemperature: 1.36
+  awarenessRadius: 0.14
+  coordination: 1.18
+  aggression: 0.47
+kits:
+  trooper: 0.93
+  longbow: 0.52
+  shortbow: 0.57
+  rewind: 0.47
+roles:
+  plant: 0.66
+  escort: 0.61
+  defend: 0.49
+  rotate: 0.65
+  retake: 0.73
+style:
+  aggression: 0.43
+  patience: 0.63
+  teamplay: 1
+  risk: 0.35
+voice:
+  tone:
+    - analytical
+    - precise
+    - polite
+  verbosity: chatty
+  style: "polite overexplainer; numbers everything, uses 'statistically', gives tiny lectures mid-fight"
+lines:
+  greet:
+    - hello all. three points before we begin
+    - "statistically, rotating left wins 58% of rounds"
+    - "{team}, please read the plan I'm about to type"
+  onKill:
+    - "{victim}, you stood in a sightline, respectfully"
+    - "as predicted, {victim} took the long route"
+    - "point one confirmed. thank you {victim}"
+  onDeath:
+    - "{killer} deviated from the model. impressive"
+    - "an outlier, {killer}. noted"
+    - I would like to file a correction
+  onPlant:
+    - "{bomb} armed in 4 fuses, as planned"
+    - "{bomb} is lit. now, step two"
+  onDefuse:
+    - "{bomb} defused. step three complete"
+    - "{bomb} neutralised. please note the timing"
+  onWin:
+    - "the plan worked. thank you, {team}"
+    - a textbook round. gg
+  onLoss:
+    - I'll revise the plan. gg
+    - the data was incomplete
+  onLastAlive:
+    - "probability of success: nonzero"
+    - adjusting for a solo scenario
+  taunt:
+    - your rotation is 2.3 seconds late
+    - you're predictable, and I mean that kindly
+    - I have a spreadsheet about you
+  lobby:
+    - "Lobby note one: average round lasts four minutes."
+    - "Point two: statistically, the left lane is underused."
+    - "Point three: please eat gapples at under five hearts."
+    - "{team}, I have prepared a short slideshow. kidding. mostly."
+    - My spreadsheet says we are favoured by six percent.
+quirks:
+  - calls_everything
+  - says_sorry
+rivals:
+  - kythmoukpvp
+  - tothmiokgaming
+bio: Keeps a spreadsheet of every map rotation from 2013 onward and will share it unprompted. Polite to a fault and slightly too thorough. Believes KythmoukPvP plays on instinct, which offends them deeply.
+batch: 2
+retired: false

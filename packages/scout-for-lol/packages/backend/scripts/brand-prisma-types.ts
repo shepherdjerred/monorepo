@@ -319,7 +319,6 @@ function instantiatePayloadReferences(text: string): string {
     "User",
     "GuildInstall",
     "BotState",
-    "ActiveGame",
     "MatchAiAttempt",
   ].toSorted((left, right) => right.length - left.length);
   const payloadNames = modelNames
@@ -387,6 +386,8 @@ const FIELD_TYPE_MAP: Record<string, string> = {
   competitionId: "CompetitionId",
   accountId: "AccountId",
   serverId: "DiscordGuildId",
+  guildId: "DiscordGuildId",
+  messageId: "DiscordMessageId",
   channelId: "DiscordChannelId",
   discordId: "DiscordAccountId",
   ownerId: "DiscordAccountId",
@@ -396,7 +397,9 @@ const FIELD_TYPE_MAP: Record<string, string> = {
   grantedBy: "DiscordAccountId",
   puuid: "LeaguePuuid",
   region: "Region",
-  lastProcessedMatchId: "MatchId",
+  lastProcessedMatchId: "RiotMatchId",
+  matchId: "RiotMatchId",
+  riotMatchId: "RiotMatchId",
   visibility: "CompetitionVisibility",
   status: "ParticipantStatus",
   snapshotType: "SnapshotType",
@@ -406,7 +409,7 @@ const FIELD_TYPE_MAP: Record<string, string> = {
   userId: "DiscordAccountId",
 };
 
-const MODEL_FIELD_TYPE_MAP: Record<string, Record<string, string>> = {
+const MODEL_FIELD_TYPE_MAP: Record<string, Record<string, string | null>> = {
   Report: {
     lastRunStatus: "ReportRunStatus",
     sourceCompetitionId: "CompetitionId",
@@ -417,10 +420,9 @@ const MODEL_FIELD_TYPE_MAP: Record<string, Record<string, string>> = {
     trigger: "ReportRunTrigger",
     status: "ReportRunStatus",
   },
-  // Without this the global `status` mapping would brand the PUUID migration's
-  // lifecycle as ParticipantStatus.
+  // Archived migration records are not participant lifecycles.
   PuuidKeyMap: {
-    status: "PuuidKeyMapStatus",
+    status: null,
   },
 };
 

@@ -1,3 +1,11 @@
+import {
+  type LeaguePuuid,
+  LeaguePuuidSchema,
+} from "@scout-for-lol/domain/identity/league-account.ts";
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import {
   QueueTypeSchema,
@@ -14,21 +22,21 @@ import {
   buildTimelineEventParticipantsSource,
   buildTimelineCoverageSource,
   listParam,
-  resolveLakeFiles,
+  withLakeQueryRetry,
   scalarParam,
 } from "#src/reports/duckdb/lake.ts";
 
 const LakeIntSchema = z.union([z.bigint(), z.number()]).transform(Number);
 
 const ProgressionMatchRowSchema = z.strictObject({
-  match_id: z.string(),
+  match_id: RiotMatchIdSchema,
   game_end_at: z.string(),
   game_end_ms: LakeIntSchema,
   game_duration_seconds: LakeIntSchema,
   queue: QueueTypeSchema,
   end_of_game_result: z.string().nullable(),
   early_surrendered: z.boolean(),
-  puuid: z.string(),
+  puuid: LeaguePuuidSchema,
   champion_id: LakeIntSchema,
   champion_name: z.string(),
   team_position: z.string(),
@@ -60,8 +68,8 @@ export type ProgressionMatchRow = z.infer<typeof ProgressionMatchRowSchema> &
 
 export type ProgressionMatchCursor = {
   readonly gameEndMs: number;
-  readonly matchId: string;
-  readonly puuid: string;
+  readonly matchId: RiotMatchId;
+  readonly puuid: LeaguePuuid;
 };
 
 const MATCH_COLUMNS = [
@@ -119,8 +127,8 @@ function cursorPredicate(cursor: ProgressionMatchCursor | undefined): {
 }
 
 const TimelineEventCountRowSchema = z.strictObject({
-  match_id: z.string(),
-  puuid: z.string(),
+  match_id: RiotMatchIdSchema,
+  puuid: LeaguePuuidSchema,
   event_type: z.string(),
   role: TimelineEventParticipantRoleSchema,
   event_count: LakeIntSchema,
@@ -128,8 +136,8 @@ const TimelineEventCountRowSchema = z.strictObject({
 
 export async function fetchTimelineEventCounts(options: {
   readonly matchPuuids: readonly {
-    readonly matchId: string;
-    readonly puuid: string;
+    readonly matchId: RiotMatchId;
+    readonly puuid: LeaguePuuid;
   }[];
   readonly lakeDir?: string;
 }): Promise<
@@ -142,46 +150,52 @@ export async function fetchTimelineEventCounts(options: {
   >
 > {
   if (options.matchPuuids.length === 0) return new Map();
-  const files = await resolveLakeFiles(options.lakeDir ?? resolveLakeDir());
-  const matchIds = [...new Set(options.matchPuuids.map((row) => row.matchId))];
-  const puuids = [...new Set(options.matchPuuids.map((row) => row.puuid))];
-  const events = buildTimelineEventsSource(files, {
-    sql: "match_id IN (SELECT unnest(?))",
-    params: [listParam(matchIds)],
-  });
-  const participants = buildTimelineEventParticipantsSource(files, {
-    sql: "match_id IN (SELECT unnest(?)) AND puuid IN (SELECT unnest(?))",
-    params: [listParam(matchIds), listParam(puuids)],
-  });
-  if (events === undefined || participants === undefined) return new Map();
-  const rows = await withDuckDBConnection(async (session) => {
-    const values = await session.run(
-      `SELECT events.match_id, participants.puuid, events.event_type, participants.role, ` +
-        `count(DISTINCT events.event_id)::BIGINT AS event_count ` +
-        `FROM (${events.sql}) AS events ` +
-        `INNER JOIN (${participants.sql}) AS participants ` +
-        `ON participants.match_id = events.match_id ` +
-        `AND participants.event_id = events.event_id ` +
-        `WHERE participants.puuid IS NOT NULL ` +
-        `GROUP BY events.match_id, participants.puuid, events.event_type, participants.role`,
-      bindParams(session, [...events.params, ...participants.params]),
-    );
-    return values.map((row) => TimelineEventCountRowSchema.parse(row));
-  });
-  const counts = new Map<
-    string,
-    Map<string, Record<string, Record<string, number>>>
-  >();
-  for (const row of rows) {
-    const matchCounts = counts.get(row.match_id) ?? new Map();
-    const puuidCounts = matchCounts.get(row.puuid) ?? {};
-    const eventCounts = puuidCounts[row.event_type] ?? {};
-    eventCounts[row.role] = row.event_count;
-    puuidCounts[row.event_type] = eventCounts;
-    matchCounts.set(row.puuid, puuidCounts);
-    counts.set(row.match_id, matchCounts);
-  }
-  return counts;
+  return await withLakeQueryRetry(
+    options.lakeDir ?? resolveLakeDir(),
+    async (files) => {
+      const matchIds = [
+        ...new Set(options.matchPuuids.map((row) => row.matchId)),
+      ];
+      const puuids = [...new Set(options.matchPuuids.map((row) => row.puuid))];
+      const events = buildTimelineEventsSource(files, {
+        sql: "match_id IN (SELECT unnest(?))",
+        params: [listParam(matchIds)],
+      });
+      const participants = buildTimelineEventParticipantsSource(files, {
+        sql: "match_id IN (SELECT unnest(?)) AND puuid IN (SELECT unnest(?))",
+        params: [listParam(matchIds), listParam(puuids)],
+      });
+      if (events === undefined || participants === undefined) return new Map();
+      const rows = await withDuckDBConnection(async (session) => {
+        const values = await session.run(
+          `SELECT events.match_id, participants.puuid, events.event_type, participants.role, ` +
+            `count(DISTINCT events.event_id)::BIGINT AS event_count ` +
+            `FROM (${events.sql}) AS events ` +
+            `INNER JOIN (${participants.sql}) AS participants ` +
+            `ON participants.match_id = events.match_id ` +
+            `AND participants.event_id = events.event_id ` +
+            `WHERE participants.puuid IS NOT NULL ` +
+            `GROUP BY events.match_id, participants.puuid, events.event_type, participants.role`,
+          bindParams(session, [...events.params, ...participants.params]),
+        );
+        return values.map((row) => TimelineEventCountRowSchema.parse(row));
+      });
+      const counts = new Map<
+        string,
+        Map<string, Record<string, Record<string, number>>>
+      >();
+      for (const row of rows) {
+        const matchCounts = counts.get(row.match_id) ?? new Map();
+        const puuidCounts = matchCounts.get(row.puuid) ?? {};
+        const eventCounts = puuidCounts[row.event_type] ?? {};
+        eventCounts[row.role] = row.event_count;
+        puuidCounts[row.event_type] = eventCounts;
+        matchCounts.set(row.puuid, puuidCounts);
+        counts.set(row.match_id, matchCounts);
+      }
+      return counts;
+    },
+  );
 }
 
 /**
@@ -193,61 +207,68 @@ export async function fetchProgressionMatches(options: {
   readonly puuids: string[];
   readonly startAt: Date;
   readonly endAt?: Date;
-  readonly matchId?: string;
+  readonly matchId?: RiotMatchId;
   readonly cursor?: ProgressionMatchCursor;
   readonly limit?: number;
   readonly lakeDir?: string;
 }): Promise<ProgressionMatchRow[]> {
   if (options.puuids.length === 0) return [];
-  const files = await resolveLakeFiles(options.lakeDir ?? resolveLakeDir());
-  const cursor = cursorPredicate(options.cursor);
-  const endClause =
-    options.endAt === undefined ? "" : " AND epoch_ms(game_end_at) <= ?";
-  const matchClause = options.matchId === undefined ? "" : " AND match_id = ?";
-  const source = buildMatchesSource(files, {
-    sql:
-      "puuid IN (SELECT unnest(?)) AND queue IS NOT NULL AND epoch_ms(game_end_at) >= ?" +
-      endClause +
-      matchClause +
-      ` ${cursor.sql}`,
-    params: [
-      listParam(options.puuids),
-      scalarParam(options.startAt.getTime()),
-      ...(options.endAt === undefined
-        ? []
-        : [scalarParam(options.endAt.getTime())]),
-      ...(options.matchId === undefined ? [] : [scalarParam(options.matchId)]),
-      ...cursor.params,
-    ],
-  });
-  if (source === undefined) return [];
-  const coverage = buildTimelineCoverageSource(files, {
-    sql: "match_id IN (SELECT DISTINCT match_id FROM matches_for_progression)",
-    params: [],
-  });
-  const coverageJoin =
-    coverage === undefined
-      ? "false AS timeline_complete"
-      : "CASE WHEN c.match_id IS NULL THEN false ELSE c.coverage_state = 'complete' END AS timeline_complete";
-  const coverageCte =
-    coverage === undefined ? "" : `, coverage AS (${coverage.sql})`;
-  const coverageJoinSql =
-    coverage === undefined
-      ? ""
-      : " LEFT JOIN coverage c ON c.match_id = m.match_id";
-  const limit = Math.floor(options.limit ?? 100_000);
-  return await withDuckDBConnection(async (session) => {
-    const rows = await session.run(
-      `WITH matches_for_progression AS (${source.sql})${coverageCte} ` +
-        `SELECT ${MATCH_COLUMNS}, ${coverageJoin} ` +
-        `FROM matches_for_progression m${coverageJoinSql} ` +
-        `ORDER BY m.game_end_at ASC, m.match_id ASC, m.puuid ASC LIMIT ?`,
-      bindParams(session, [
-        ...source.params,
-        ...(coverage?.params ?? []),
-        scalarParam(limit),
-      ]),
-    );
-    return rows.map((row) => ProgressionMatchRowSchema.parse(row));
-  });
+  return await withLakeQueryRetry(
+    options.lakeDir ?? resolveLakeDir(),
+    async (files) => {
+      const cursor = cursorPredicate(options.cursor);
+      const endClause =
+        options.endAt === undefined ? "" : " AND epoch_ms(game_end_at) <= ?";
+      const matchClause =
+        options.matchId === undefined ? "" : " AND match_id = ?";
+      const source = buildMatchesSource(files, {
+        sql:
+          "puuid IN (SELECT unnest(?)) AND queue IS NOT NULL AND epoch_ms(game_end_at) >= ?" +
+          endClause +
+          matchClause +
+          ` ${cursor.sql}`,
+        params: [
+          listParam(options.puuids),
+          scalarParam(options.startAt.getTime()),
+          ...(options.endAt === undefined
+            ? []
+            : [scalarParam(options.endAt.getTime())]),
+          ...(options.matchId === undefined
+            ? []
+            : [scalarParam(options.matchId)]),
+          ...cursor.params,
+        ],
+      });
+      if (source === undefined) return [];
+      const coverage = buildTimelineCoverageSource(files, {
+        sql: "match_id IN (SELECT DISTINCT match_id FROM matches_for_progression)",
+        params: [],
+      });
+      const coverageJoin =
+        coverage === undefined
+          ? "false AS timeline_complete"
+          : "CASE WHEN c.match_id IS NULL THEN false ELSE c.coverage_state = 'complete' END AS timeline_complete";
+      const coverageCte =
+        coverage === undefined ? "" : `, coverage AS (${coverage.sql})`;
+      const coverageJoinSql =
+        coverage === undefined
+          ? ""
+          : " LEFT JOIN coverage c ON c.match_id = m.match_id";
+      const limit = Math.floor(options.limit ?? 100_000);
+      return await withDuckDBConnection(async (session) => {
+        const rows = await session.run(
+          `WITH matches_for_progression AS (${source.sql})${coverageCte} ` +
+            `SELECT ${MATCH_COLUMNS}, ${coverageJoin} ` +
+            `FROM matches_for_progression m${coverageJoinSql} ` +
+            `ORDER BY m.game_end_at ASC, m.match_id ASC, m.puuid ASC LIMIT ?`,
+          bindParams(session, [
+            ...source.params,
+            ...(coverage?.params ?? []),
+            scalarParam(limit),
+          ]),
+        );
+        return rows.map((row) => ProgressionMatchRowSchema.parse(row));
+      });
+    },
+  );
 }

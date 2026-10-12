@@ -24,8 +24,15 @@ import {
 
 type BucksPostmatchResult = Awaited<ReturnType<typeof settleAndAwardBucks>>;
 
+/**
+ * `settledDareIds` are the Dares the match's settlement made terminal as read
+ * back from the Dares themselves, so a resumed attempt still names a Dare an
+ * earlier attempt resolved; a Dare that only captured evidence moved no money
+ * and is not a resolution.
+ */
 export function settlementEvidenceOf(
   bucks: BucksPostmatchResult,
+  settledDareIds: readonly number[] = [],
 ): SettlementEvidence {
   return {
     closedBetIds: canonicalIdentities(
@@ -38,9 +45,12 @@ export function settlementEvidenceOf(
         summary.bets.map((bet) => bet.betId),
       ),
     ),
-    resolvedDareIds: canonicalIdentities(
-      bucks.dareSettlements.map((summary) => summary.dareId),
-    ),
+    resolvedDareIds: canonicalIdentities([
+      ...bucks.dareSettlements
+        .filter((summary) => summary.resolution !== "captured")
+        .map((summary) => summary.dareId),
+      ...settledDareIds,
+    ]),
     // The guild whose parlay settled is the settlement's durable identity.
     settledParlayGuildIds: canonicalIdentities(
       bucks.parlaySettlements.map((summary) =>

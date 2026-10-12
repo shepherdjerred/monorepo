@@ -1,10 +1,14 @@
+import { spectatorGameMatchId } from "#src/durable/match/match-identity.ts";
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import * as Sentry from "@sentry/bun";
 import {
   StructuredOutputUsageError,
   generateValidatedObject,
 } from "@shepherdjerred/llm-runtime";
-import type { RankedQueueType } from "@scout-for-lol/data";
-import { RankedQueueTypeSchema } from "@scout-for-lol/data";
+import {
+  type RankedQueueType,
+  RankedQueueTypeSchema,
+} from "@scout-for-lol/data";
 import { bettingParlayAiModel } from "#src/config/dynamic.ts";
 import {
   PARLAY_GENERATION_DEADLINE_MS,
@@ -102,7 +106,7 @@ function chargeUsage(
 
 type GenerationReady = {
   kind: "ready";
-  matchId: string;
+  matchId: RiotMatchId;
   queueType: RankedQueueType;
   selectedTeamId: number;
   subjects: readonly ParlaySubject[];
@@ -122,7 +126,7 @@ async function prepareGeneration(
   if (!rankedQueue.success || input.loadingScreenData?.layout !== "standard") {
     return { kind: "stop", status: "no_context" };
   }
-  const matchId = `${input.gameInfo.platformId}_${input.gameInfo.gameId.toString()}`;
+  const matchId = spectatorGameMatchId(input.gameInfo);
   const [existing, outcomePools] = await Promise.all([
     prismaClient.bucksParlayDefinition.findUnique({
       where: { matchId },
@@ -402,7 +406,7 @@ async function runParlayGenerationInternal(
 ): Promise<void> {
   const startedAt = Date.now();
   const deadline = AbortSignal.timeout(PARLAY_GENERATION_DEADLINE_MS);
-  const matchId = `${input.gameInfo.platformId}_${input.gameInfo.gameId.toString()}`;
+  const matchId = spectatorGameMatchId(input.gameInfo);
 
   try {
     const preparation = await prepareGeneration(input, prismaClient, deadline);

@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/data";
 import { useCallback, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/query/trpc.ts";
@@ -18,7 +19,7 @@ import {
  * successful create (or when the subscription already existed).
  */
 export function useAddSubscription(opts: {
-  guildId: string;
+  guildId: DiscordGuildId;
   onAdded: () => void;
 }) {
   const trpc = useTRPC();

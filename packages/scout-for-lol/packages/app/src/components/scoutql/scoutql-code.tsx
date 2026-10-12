@@ -65,8 +65,8 @@ function scoutQlTokenClassName(kind: ScoutQlTokenKind): string {
     .with("string", () => "text-[var(--scout-color-chart3)]")
     .with("operator", () => "text-scout-subtle")
     .with("comment", () => "italic text-scout-subtle")
-    .with("renderKind", () => "font-semibold text-scout-accent")
-    .with("renderOption", () => "text-scout-accent")
+    .with("renderKind", () => "font-semibold text-scout-ink")
+    .with("renderOption", () => "text-scout-ink")
     .with("plain", () => "text-scout-ink")
     .with("invalid", () => "text-scout-danger underline decoration-wavy")
     .exhaustive();

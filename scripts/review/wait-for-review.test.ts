@@ -1,6 +1,8 @@
 import { describe, expect, test } from "vitest";
+import { z } from "zod";
 import {
   findGeneratedStep,
+  readGeneratedStepJson,
   readGeneratedSteps,
 } from "../lib/ci/generated-steps.ts";
 import {
@@ -314,20 +316,28 @@ describe("review gate timeout budget", () => {
 // blocking findings against current main and 3 against its own 22-commit-stale
 // parser, and no change to that PR could have cleared it.
 describe("review gate source", () => {
-  test("the required Codex gate uses the main-sourced wrapper", async () => {
-    const steps = await readGeneratedSteps(
-      new URL("../..", import.meta.url).pathname,
-    );
-    const gate = findGeneratedStep(steps, "codex-review-gate");
+  test("the required Codex gate uses the trusted image without a PR checkout", async () => {
+    const steps = z
+      .array(
+        z.object({
+          key: z.string(),
+          image: z.string(),
+          commands: z.array(z.string()),
+          skipClone: z.boolean().optional(),
+        }),
+      )
+      .parse(
+        await readGeneratedStepJson(new URL("../..", import.meta.url).pathname),
+      );
+    const gate = steps.find((step) => step.key === "codex-review-gate");
     expect(gate).toBeDefined();
-    const commands = gate?.commands ?? [];
-    // The wrapper is what pins the gate to main's copy of the script; calling
-    // wait-for-review.ts directly would run the PR's own version of the gate
-    // that is supposed to be judging it.
-    expect(commands).not.toContain(
-      "bun --no-install scripts/review/wait-for-review.ts",
+    // The immutable deployed policy image owns the grader. Neither a PR's
+    // checkout nor its dependency installation supplies executable gate code.
+    expect(gate?.image).toMatch(
+      /^ghcr\.io\/shepherdjerred\/woodpecker-config-extension@sha256:[a-f\d]{64}$/u,
     );
-    expect(commands.some((line) => line.includes("review-gate.sh"))).toBe(true);
+    expect(gate?.skipClone).toBe(true);
+    expect(gate?.commands).toEqual(["cd /app", "bun /app/review-gate.js"]);
   });
 
   /**

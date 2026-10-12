@@ -2,10 +2,47 @@ import {
   SportsEventSchema,
   type SportsEvent,
 } from "@shepherdjerred/streambot/sports/types.ts";
+import { isSportsArtworkUrl, type SportsArtwork } from "./artwork.ts";
 
 export const SPORTS_TIME_ZONE = "America/Los_Angeles";
 export const STREAMEAST_HOME = "https://v2.streameast.ga/";
 export const TVSPORTSLIVE_HOME = "https://tvsportslive.fr/";
+
+function sportsImage(tag: string) {
+  const name = attribute(tag, "alt");
+  if (name === undefined || name.trim() === "") return null;
+  const src = attribute(tag, "src");
+  const logoUrl =
+    src === undefined || !URL.canParse(decodeHtml(src), STREAMEAST_HOME)
+      ? undefined
+      : new URL(decodeHtml(src), STREAMEAST_HOME).href;
+  return {
+    name: decodeHtml(name),
+    ...(logoUrl !== undefined && isSportsArtworkUrl(logoUrl)
+      ? { logoUrl }
+      : {}),
+  };
+}
+
+function cardArtwork(
+  card: string,
+  preceding: string,
+): SportsArtwork | undefined {
+  const teams = [...card.matchAll(/<img\b[^>]*>/gi)]
+    .filter(([tag]) => /\bm-card__crest-img\b/u.test(tag))
+    .slice(0, 2)
+    .flatMap(([tag]) => {
+      const image = sportsImage(tag);
+      return image === null ? [] : [image];
+    });
+  const leagueTag = [...preceding.matchAll(/<img\b[^>]*>/gi)].findLast(
+    ([tag]) => /\bse-sport-icon-img--sport\b/u.test(tag),
+  )?.[0];
+  const league = leagueTag === undefined ? null : sportsImage(leagueTag);
+  return league === null && teams.length === 0
+    ? undefined
+    : { teams, ...(league === null ? {} : { league }) };
+}
 
 function localDateKey(date: Date): string {
   const fields = new Map(
@@ -70,12 +107,15 @@ export function parseStreamEastEvents(
   html: string,
   now: Date = new Date(),
 ): SportsEvent[] {
-  const cards = html.match(
-    /<div[^>]+class="m-card\b[^>]*>[\s\S]*?(?=<div[^>]+class="m-card\b|$)/gi,
-  );
-  if (cards === null) return [];
+  const cards = [
+    ...html.matchAll(
+      /<div[^>]+class="m-card\b[^>]*>[\s\S]*?(?=<div[^>]+class="m-card\b|$)/gi,
+    ),
+  ];
 
-  const events = cards.flatMap((card): SportsEvent[] => {
+  const events = cards.flatMap((match): SportsEvent[] => {
+    const card = match[0];
+    const artwork = cardArtwork(card, html.slice(0, match.index));
     const link = /<a[^>]+class="m-card__link"[^>]*>/i.exec(card)?.[0];
     if (link === undefined) return [];
     const href = attribute(link, "href");
@@ -109,6 +149,7 @@ export function parseStreamEastEvents(
             status: /m-card--live\b/i.test(card) ? "live" : "scheduled",
             startsAt,
             pageUrl,
+            ...(artwork === undefined ? {} : { artwork }),
           }),
         ]
       : [];

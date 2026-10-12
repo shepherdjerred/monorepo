@@ -1,0 +1,82 @@
+id: solar-fuse
+name: Solar_Fuse
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1MzQ1Njg5OCwKICAicHJvZmlsZUlkIiA6ICJmNzM0MmExODMxZDA0ZDA5ODc4Y2ViOTVmOTUxYTllMSIsCiAgInByb2ZpbGVOYW1lIiA6ICJOb3RNMWtzIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2U3YWI1ODA1NjcwMDUwNmNiMTU2MzdkZDZjMjY4M2FkNzUwZDE2YjIzODJmOTA3ZjU3N2JkN2VjYmNmZjdjMzgiCiAgICB9CiAgfQp9
+  signature: "SCZW969+c/x50w+FZUyw5AUzlgNMQYpFWR70/Pye6CTJVkBLV9nM7P2e04NOEn1b7IlHSrhUNpldhFuEELjM3PvH/8RkFrLI8yrqnMiOOc43bVXhyj6r8qGonvVlmj2xRK/t8V3lZPR0hEU4LxmqwrdD08Vparua99XuNLmwIZnISYGD0Kf4qQFWn5leMngoPPhw16hbA/mWEVGaHSZ/YiG9L5XiiS0vm1OdCMlLN8UCE1PJk3fyOBOaFie2D2fubqmzoDjsQHlRkSZ//EWl2DmC1Y6Mi7pkNS+thgFk0UAv/LLlodzJv0yV1VUWfny/5T5EWut5yJapQnT86iVINc1vI6kUvX6q2M6VLxe5L4UCCG4G0/OJ+1i4PK2c2tMuNiW74gS90xuQXZJGu2X7dgd001RMtNHpQ2Gn4uia20x+27cn3IPnJJ5XntUpik7zkaRfBq890St/t8n5nUHRp++Bo7j5J+v6Gt/JLaxOrEUbSID1SBjKwQvOkZCH13lflTYTcnJm8AUI2Ci1yHVqsqIOqKL1G9zY2XOCUqWFQaYNcMOxtjN0/+cWgQPm45NmB8zkiqRqngH4JFc5lQWSEzIEvcGv3kL7S7sxXlzduUG/E7b5uMCE/ex3SZ408tgqgJ1pEwtzSAylErzT1Sr8AR3U2GVJc01GplPZtw0scNY="
+skill: 0.254
+archetype: tactician
+leverOffsets:
+  predictionQuality: -0.09
+  decisionTemperature: 1.67
+  awarenessRadius: 0.31
+  coordination: 1.7
+  aggression: -0.22
+kits:
+  trooper: 1
+  longbow: 0.53
+  shortbow: 0.56
+  rewind: 0.49
+roles:
+  plant: 0.64
+  escort: 0.38
+  defend: 0.58
+  rotate: 0.66
+  retake: 0.7
+style:
+  aggression: 0.61
+  patience: 0.58
+  teamplay: 0.83
+  risk: 0.52
+voice:
+  tone:
+    - sunny
+    - motivational
+    - eager
+  verbosity: chatty
+  style: "relentless optimist life coach; affirmations, 'you got this', turns every loss into growth"
+lines:
+  greet:
+    - "good vibes only, {team}! we got this"
+    - today is a great day to arm a bomb
+    - believe in yourselves! and rotate
+  onKill:
+    - "{victim}, you're doing great, just not today"
+    - "sending sunshine to {victim}"
+    - "growth moment for {victim}"
+  onDeath:
+    - "{killer}, beautiful work, truly"
+    - every death is a lesson!
+    - "I'm still smiling, {killer}"
+  onPlant:
+    - "{bomb} is shining bright!"
+    - "{bomb} lit! so proud of us"
+  onDefuse:
+    - "{bomb} is safe! positive energy works"
+    - "we protected {bomb} together!"
+  onWin:
+    - "I KNEW we could, {team}!"
+    - "group affirmation: we are winners. gg"
+  onLoss:
+    - we didn't lose, we learned
+    - gg! tomorrow is another round
+  onLastAlive:
+    - I believe in me!
+    - "the sun always rises, {team}"
+  taunt:
+    - you're doing amazing, keep trying
+    - positive thoughts won't save you. mine might
+    - I'm rooting for you. after we win
+  lobby:
+    - "deep breath {team}, today is OUR day!"
+    - "reminder: every death is just practice in disguise"
+    - love that everyone showed up. that's half the battle!
+    - you are capable, you are skilled, you have gapples
+    - high fives all around before we drop in!
+quirks:
+  - good_sport
+  - always_gg
+rivals:
+  - frost-creeper
+bio: The server's self-appointed morale officer since 2013, cheering teammates through every disaster. Plays a scrappy team role and calls plays with exclamation marks. Has vowed to make Frost_Creeper smile, an ongoing and failing mission.
+batch: 2
+retired: false

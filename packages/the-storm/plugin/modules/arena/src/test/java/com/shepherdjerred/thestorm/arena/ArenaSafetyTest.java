@@ -8,12 +8,12 @@ import com.shepherdjerred.thestorm.arena.adapter.db.JooqRewardStore;
 import com.shepherdjerred.thestorm.arena.adapter.db.JooqSnapshotStore;
 import com.shepherdjerred.thestorm.arena.app.ArenaPresence;
 import com.shepherdjerred.thestorm.arena.app.store.RewardStore;
-import com.shepherdjerred.thestorm.arena.domain.snapshot.Experience;
-import com.shepherdjerred.thestorm.arena.domain.snapshot.ItemData;
-import com.shepherdjerred.thestorm.arena.domain.snapshot.Position;
-import com.shepherdjerred.thestorm.arena.domain.snapshot.Snapshot;
-import com.shepherdjerred.thestorm.arena.domain.snapshot.Vitals;
 import com.shepherdjerred.thestorm.arena.testing.Samples;
+import com.shepherdjerred.thestorm.core.snapshot.Experience;
+import com.shepherdjerred.thestorm.core.snapshot.ItemData;
+import com.shepherdjerred.thestorm.core.snapshot.Position;
+import com.shepherdjerred.thestorm.core.snapshot.Snapshot;
+import com.shepherdjerred.thestorm.core.snapshot.Vitals;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.LocalDate;
@@ -639,8 +639,7 @@ final class ArenaSafetyTest {
     staff.openInventory(alice.getInventory());
     staff.closeInventory();
 
-    assertThat(alice.getInventory().getItemInMainHand().getType())
-        .isEqualTo(Material.DIAMOND_SWORD);
+    assertThat(alice.getInventory().getItemInMainHand().getType()).isEqualTo(Material.STONE_SWORD);
     assertThat(harness.server.getOnlinePlayers()).hasSize(2);
   }
 

@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.mobs.adapter.paper;
 
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.protection.Protection;
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.mobs.app.MobLevels;
 import com.shepherdjerred.thestorm.mobs.domain.config.MobsConfig;
 import com.shepherdjerred.thestorm.mobs.domain.level.LevelCalculator;
@@ -54,6 +55,7 @@ public final class MobsPaper {
       ModuleContext context, MobsConfig config, Supplier<Protection> protection, Hooks hooks) {
     requireKnownNames(config);
     var server = context.plugin().getServer();
+    var sealed = context.services().require(SealedWorlds.class);
     var regions =
         config.adminRegions().anchors().isEmpty()
             ? AdminRegionIndex.none(context.logger())
@@ -68,11 +70,12 @@ public final class MobsPaper {
     var rules =
         new SpawnListener.Rules(
             new SpawnPolicy(config.exclusions(), config.adminRegions().policy()),
-            new LevelCalculator(config.levels()));
+            new LevelCalculator(config.levels()),
+            sealed);
     List<Listener> listeners =
         List.of(
             new SpawnListener(rules, levels, regions, context.random()),
-            new StrengthListener(levels, hooks.loot(), context.random()));
+            new StrengthListener(levels, hooks.loot(), context.random(), sealed));
     listeners.forEach(
         listener -> server.getPluginManager().registerEvents(listener, context.plugin()));
     return new MobsPaper(listeners, levels);

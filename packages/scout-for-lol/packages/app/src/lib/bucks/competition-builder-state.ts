@@ -1,7 +1,10 @@
+import type { z } from "zod";
 import {
+  type DiscordChannelId,
   type CompetitionCriteria,
   type PlayerId,
   getAllSeasons,
+  type DiscordChannelIdSchema,
 } from "@scout-for-lol/data";
 import {
   CompetitionScheduledUpdatesSchema,
@@ -12,8 +15,10 @@ import {
   buildCompetitionScenarios,
   type CompetitionScenario,
 } from "#src/lib/bucks/competition-scenarios.ts";
-import { validateForm } from "#src/lib/bucks/competition-form-state.ts";
-import type { DatesValue } from "#src/lib/bucks/competition-form-state.ts";
+import {
+  validateForm,
+  type DatesValue,
+} from "#src/lib/bucks/competition-form-state.ts";
 import {
   CompetitionBuilderFormValueSchema,
   type CompetitionBuilderFormValue,
@@ -49,7 +54,8 @@ export function competitionBuilderReducer(
 }
 
 export function initialCompetitionBuilderState(options: {
-  channelId: string;
+  /** No channel picked yet is the empty string, as the select reports it. */
+  channelId: DiscordChannelId | "";
   timezone: string;
   now?: Date;
   scenarioId?: string;
@@ -91,7 +97,8 @@ export function buildCompetitionSubmission(state: CompetitionBuilderFormValue):
   | {
       ok: true;
       value: {
-        channelId: string;
+        /** Validated by the server when the request lands. */
+        channelId: z.input<typeof DiscordChannelIdSchema>;
         title: string;
         description: string;
         visibility: CompetitionBuilderFormValue["visibility"];

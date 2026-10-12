@@ -42,7 +42,7 @@ public final class TaskNotesServerProcess {
     /// Where the server is listening.
     public let baseURL: URL
 
-    /// The bearer token this server demands, or `""` when it demands none.
+    /// The bearer token this server demands.
     ///
     /// Exposed so a test configures its client from the same value the server
     /// was started with. Two spellings of one secret is a test that fails for a
@@ -62,13 +62,13 @@ public final class TaskNotesServerProcess {
     /// test that quietly downgrades to "nothing to check" when its dependency
     /// is missing is a test that reports success forever.
     ///
-    /// - Parameter authToken: the bearer token the server will require. The
-    ///   default of `""` is the server's own spelling of "no gate", and it is
-    ///   what every pre-existing test runs against.
+    /// - Parameter authToken: the bearer token the server will require. Each
+    ///   server gets a unique token unless a test is explicitly exercising a
+    ///   particular credential.
     /// - Throws: ``ServerUnavailable`` when the server cannot be started, does
     ///   not answer in time, or comes up with a different auth gate than the one
     ///   asked for.
-    public init(authToken: String = "") throws {
+    public init(authToken: String = UUID().uuidString) throws {
         self.authToken = authToken
         vault = FileManager.default.temporaryDirectory
             .appending(path: "tasknotes-e2e-\(UUID().uuidString)")
@@ -103,11 +103,15 @@ public final class TaskNotesServerProcess {
         environment["VAULT_PATH"] = vault.path(percentEncoded: false)
         environment["PORT"] = String(port)
         environment["AUTH_TOKEN"] = authToken
+        environment["HOST"] = "127.0.0.1"
         // The server imports `./sentry.ts` at module scope; without a DSN it is
         // inert, but the variable is pinned empty so a developer's own DSN in
         // the ambient environment cannot make a test emit events.
         environment["SENTRY_DSN"] = ""
         process.environment = environment
+        if let runID = environment["TASKNOTES_CI_RUN_ID"] {
+            process.arguments?.append("--tasknotes-server-ci-run=\(runID)")
+        }
 
         process.standardOutput = output
         process.standardError = output

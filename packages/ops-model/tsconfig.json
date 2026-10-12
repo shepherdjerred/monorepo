@@ -5,6 +5,7 @@
     "@tsconfig/recommended/tsconfig.json"
   ],
   "compilerOptions": {
+    "target": "ES2020",
     "types": ["@types/bun"],
     "module": "nodenext",
     "moduleResolution": "nodenext",

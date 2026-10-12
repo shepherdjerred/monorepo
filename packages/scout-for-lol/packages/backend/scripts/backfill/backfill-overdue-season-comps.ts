@@ -19,6 +19,7 @@
  *   bun run scripts/backfill/backfill-overdue-season-comps.ts
  */
 
+import type { DiscordChannelId } from "@scout-for-lol/domain/identity/discord.ts";
 import { SEASONS } from "@scout-for-lol/data";
 import { Client, GatewayIntentBits } from "discord.js";
 import { PrismaClient } from "#generated/prisma/client/index.js";
@@ -39,7 +40,7 @@ const prisma = new PrismaClient({
 type AffectedComp = {
   id: number;
   title: string;
-  channelId: string;
+  channelId: DiscordChannelId;
 };
 
 const now = new Date();

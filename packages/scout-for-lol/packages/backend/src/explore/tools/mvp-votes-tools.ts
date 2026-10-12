@@ -2,7 +2,7 @@ import { tool } from "ai";
 import { z } from "zod";
 import {
   DiscordGuildIdSchema,
-  MatchIdSchema,
+  RiotMatchIdSchema,
   type DiscordGuildId,
 } from "@scout-for-lol/data";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
@@ -34,7 +34,7 @@ export type MvpVotesExploreCapability = {
  * Explore for anyone shared by two enabled servers.
  */
 export async function resolveMvpVotesCapability(
-  guildIds: readonly string[],
+  guildIds: readonly DiscordGuildId[],
 ): Promise<MvpVotesExploreCapability | null> {
   const enabled: DiscordGuildId[] = [];
   for (const guildId of guildIds) {
@@ -55,7 +55,7 @@ const LeaderboardToolInputSchema = z.strictObject({
 });
 
 const MatchTallyToolInputSchema = z.strictObject({
-  matchId: MatchIdSchema,
+  matchId: RiotMatchIdSchema,
 });
 
 const MatchMvpExploreNomineeSchema = MatchMvpTallyNomineeSchema.omit({

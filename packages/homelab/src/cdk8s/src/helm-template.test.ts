@@ -329,6 +329,18 @@ describe("Helm Escaping - helm template (dist/)", () => {
 
 describe("Helm Escaping - E2E Content Verification (dist/)", () => {
   it(
+    "woodpecker chart: preserves the server's status context template after Helm",
+    async () => {
+      const result = await helmTemplateChart("woodpecker");
+      expect(result.exitCode).toBe(0);
+      expect(result.stdout).toContain(
+        '{{ .context }}/{{ if and (eq .event "pull_request_metadata") (eq .workflow "ci-complete") }}pr{{ else }}{{ .event }}{{ end }}/{{ .workflow }}',
+      );
+    },
+    HELM_TEMPLATE_TIMEOUT_MS,
+  );
+
+  it(
     "apps chart: Prometheus rules contain unescaped Go templates after Helm",
     async () => {
       const result = await helmTemplateChart("apps");

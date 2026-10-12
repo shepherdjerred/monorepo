@@ -47,6 +47,4 @@ export const PortfolioSchema = z.object({
 });
 
 export type PricePoint = z.infer<typeof PricePointSchema>;
-export type Purchase = z.infer<typeof PurchaseSchema>;
 export type Component = z.infer<typeof ComponentSchema>;
-export type Portfolio = z.infer<typeof PortfolioSchema>;

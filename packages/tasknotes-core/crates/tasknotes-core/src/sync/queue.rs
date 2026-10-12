@@ -776,7 +776,7 @@ mod tests {
     fn dead_lettering_an_unqueued_id_is_a_no_op() {
         let (mut queue, _) = queue();
         queue.dead_letter("nope", &Error::api("x", 400)).unwrap();
-        assert!(queue.dead_letters().is_empty());
+        assert_eq!(queue.dead_letters().len(), 0);
     }
 
     #[test]
@@ -787,7 +787,7 @@ mod tests {
         queue.dead_letter("c1", &Error::api("x", 422)).unwrap();
         queue.retry_dead_letter("c1").unwrap();
         assert_eq!(queue.pending().len(), 1);
-        assert!(queue.dead_letters().is_empty());
+        assert_eq!(queue.dead_letters().len(), 0);
     }
 
     /// ⚠️ **The invariant is "never in neither file", not "never twice".**
@@ -990,7 +990,7 @@ mod tests {
             .retry_dead_letter("c1")
             .expect_err("the requeue write failed");
 
-        assert!(queue.pending().is_empty());
+        assert_eq!(queue.pending().len(), 0);
         assert_eq!(queue.dead_letters().len(), 1, "still inspectable");
     }
 
@@ -1146,7 +1146,7 @@ mod tests {
             1,
             "the command was already queued by the interrupted attempt"
         );
-        assert!(queue.dead_letters().is_empty());
+        assert_eq!(queue.dead_letters().len(), 0);
     }
 
     #[test]
@@ -1193,15 +1193,17 @@ mod tests {
 
     #[test]
     fn an_absent_or_empty_queue_file_is_a_fresh_install() {
-        assert!(
+        assert_eq!(
             parse_durable::<Command>(None, "command queue")
                 .unwrap()
-                .is_empty()
+                .len(),
+            0
         );
-        assert!(
+        assert_eq!(
             parse_durable::<Command>(Some(""), "command queue")
                 .unwrap()
-                .is_empty()
+                .len(),
+            0
         );
     }
 

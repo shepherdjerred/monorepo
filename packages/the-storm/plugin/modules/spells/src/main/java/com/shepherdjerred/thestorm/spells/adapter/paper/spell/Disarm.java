@@ -43,7 +43,8 @@ final class Disarm implements Spell {
 
   @Override
   public Result<Effect, CastProblem> prepare(Player caster) {
-    return Aim.creature(tools, caster, settings.range()).flatMap(target -> disarm(caster, target));
+    return Aim.creatureEffect(tools, caster, settings.range())
+        .flatMap(target -> disarm(caster, target));
   }
 
   private Result<Effect, CastProblem> disarm(Player caster, LivingEntity target) {

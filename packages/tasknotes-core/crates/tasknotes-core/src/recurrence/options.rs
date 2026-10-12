@@ -485,10 +485,10 @@ mod tests {
     fn an_ordinal_weekday_is_kept_only_below_weekly() {
         let monthly = options_for("FREQ=MONTHLY;BYDAY=-1FR", "2026-01-05");
         assert_eq!(monthly.nth_weekday, [(4, -1)]);
-        assert!(monthly.weekday.is_empty());
+        assert_eq!(monthly.weekday.len(), 0);
 
         let weekly = options_for("FREQ=WEEKLY;BYDAY=-1FR", "2026-01-05");
-        assert!(weekly.nth_weekday.is_empty());
+        assert_eq!(weekly.nth_weekday.len(), 0);
         assert_eq!(weekly.weekday, [4]);
     }
 

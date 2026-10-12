@@ -14,10 +14,20 @@ public final class PaperChatOutput implements ChatOutput {
 
   private final Server server;
   private final ChatService service;
+  private final com.shepherdjerred.thestorm.core.module.@org.jspecify.annotations.Nullable ModuleContext
+      context;
 
   public PaperChatOutput(Server server, ChatService service) {
     this.server = server;
     this.service = service;
+    this.context = null;
+  }
+
+  public PaperChatOutput(
+      com.shepherdjerred.thestorm.core.module.ModuleContext context, ChatService service) {
+    this.server = context.plugin().getServer();
+    this.service = service;
+    this.context = context;
   }
 
   @Override
@@ -50,6 +60,34 @@ public final class PaperChatOutput implements ChatOutput {
     var component = MiniMessage.miniMessage().deserialize(service.renderPrivate(line));
     sender.sendMessage(component);
     recipient.sendMessage(component);
+    var runtime = context;
+    if (runtime == null) return;
+    for (var viewer : server.getOnlinePlayers()) {
+      if (viewer.equals(sender)
+          || viewer.equals(recipient)
+          || !viewer.hasPermission("thestorm.essentials.socialspy")
+          || !service.socialSpy(viewer.getUniqueId())) continue;
+      var _ =
+          runtime
+              .services()
+              .require(com.shepherdjerred.thestorm.core.expansion.ManagedGameplay.class)
+              .enabled(
+                  com.shepherdjerred.thestorm.core.expansion.ManagedGameplay.STAFF,
+                  viewer.getUniqueId())
+              .whenCompleteAsync(
+                  (enabled, failure) -> {
+                    if (failure != null) {
+                      runtime.logger().error("SocialSpy rollout evaluation failed", failure);
+                      return;
+                    }
+                    if (Boolean.TRUE.equals(enabled)
+                        && viewer.isOnline()
+                        && viewer.hasPermission("thestorm.essentials.socialspy")
+                        && service.socialSpy(viewer.getUniqueId()))
+                      viewer.sendMessage(Component.text("[SocialSpy] ").append(component));
+                  },
+                  runtime.scheduler().mainThread());
+    }
   }
 
   private void requireMainThread() {

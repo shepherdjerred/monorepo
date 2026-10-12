@@ -20,8 +20,6 @@ const CONTRIBUTOR = bucksTestDiscordId(2);
 async function clearAll(): Promise<void> {
   await db.bucksLedgerEntry.deleteMany();
   await db.bucksDareContribution.deleteMany();
-  await db.bucksDareGame.deleteMany();
-  await db.bucksDareTarget.deleteMany();
   await db.bucksDare.deleteMany();
   await db.bucksAccount.deleteMany();
 }
@@ -43,13 +41,7 @@ async function createDareWithContribution(input: {
       serverId: SERVER,
       channelId: DiscordChannelIdSchema.parse("1000000000000000001"),
       challengerDiscordId: CHALLENGER,
-      horizonKind: "window",
-      windowDays: 7,
-      conditions: JSON.stringify({ version: 1 }),
-      conditionVersion: 1,
-      evaluatorVersion: "1",
-      originalText: "I bet Virmel can't win 7 games on Warwick this month",
-      proposalExpiresAt: new Date("2030-01-01T00:10:00Z"),
+      openingStake: input.amount,
       dareState: input.dareState,
       potTotal: input.amount,
     },
@@ -84,20 +76,22 @@ describe("refundable escrow for dares", () => {
 
   test("keeps counting while active and stops at every terminal state", async () => {
     const account = await db.bucksAccount.create({
-      data: { serverId: SERVER, discordId: CONTRIBUTOR, balance: 200 },
+      data: { serverId: SERVER, discordId: CONTRIBUTOR, balance: 3000 },
     });
     // Distinct powers of two so the expected sum pins exactly which dare
-    // states contributed: only the two open states may count.
+    // states contributed: only the three open states may count.
     const contributionByState: [BucksDareState, number][] = [
-      ["proposed", 1],
+      ["draft", 1],
       ["pending_accept", 2],
-      ["active", 4],
-      ["achieved", 8],
-      ["unachieved", 16],
-      ["declined", 32],
-      ["expired", 64],
-      ["voided", 128],
-      ["abandoned", 256],
+      ["activating", 4],
+      ["active", 8],
+      ["achieved", 16],
+      ["unachieved", 32],
+      ["declined", 64],
+      ["expired", 128],
+      ["voided", 256],
+      ["cancelled", 512],
+      ["deleted", 1024],
     ];
     for (const [dareState, amount] of contributionByState) {
       await createDareWithContribution({
@@ -107,11 +101,11 @@ describe("refundable escrow for dares", () => {
       });
     }
 
-    expect(await refundableBucksHeld(db, account.id)).toBe(6n);
+    expect(await refundableBucksHeld(db, account.id)).toBe(14n);
     const batched = await refundableBucksHeldForAccounts(db, [
       { id: account.id, serverId: SERVER, isHouse: false },
     ]);
-    expect(batched.get(account.id)).toBe(6n);
+    expect(batched.get(account.id)).toBe(14n);
   });
 
   test("holds nothing against the house for another wallet's open dare", async () => {

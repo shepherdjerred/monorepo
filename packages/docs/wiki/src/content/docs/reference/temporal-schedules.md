@@ -29,11 +29,25 @@ For the list of what runs and when, see
 
 ## Pause behaviour
 
-| Situation                             | Result                                                 |
-| ------------------------------------- | ------------------------------------------------------ |
-| Paused in the Temporal UI             | preserved across restarts and reconciliation           |
-| Required environment variable missing | auto-paused at boot, with a note                       |
-| Removed from `SCHEDULES`              | remains on the server until added to the deletion list |
+| Situation                                                  | Result                                                         |
+| ---------------------------------------------------------- | -------------------------------------------------------------- |
+| Paused in the Temporal UI                                  | preserved across restarts and reconciliation                   |
+| Required environment variable missing                      | auto-paused at boot, with a note                               |
+| New declared beta Scout fixed Schedule                     | active; production retains its declaration's activation policy |
+| Beta Scout pause exactly matching a retired migration note | cleared during reconciliation; other pauses preserved          |
+| Removed from `SCHEDULES`                                   | remains on the server until added to the deletion list         |
+
+The beta exception applies only to declared Scout fixed Schedules in
+[`scout-schedule-definitions.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/schedules/scout-schedule-definitions.ts).
+The exact retired notes are:
+
+- `Paused until the matching Scout Temporal feature family is enabled and legacy work is drained`
+- `Paused until the matching Scout Temporal feature family is enabled`
+
+[`schedule-state.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/schedules/schedule-state.ts)
+checks missing credentials before this exception. Manual pauses, including an
+empty note, and credential pauses remain preserved. Reconciliation does not
+backfill missed executions.
 
 ## Catchup windows
 

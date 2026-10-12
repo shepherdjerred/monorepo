@@ -1,4 +1,5 @@
 import { z } from "zod/v4";
+import { postalAddressesConfig } from "#config/postal.ts";
 
 const PostalEnvelopeSchema = z.object({
   status: z.string(),
@@ -132,20 +133,11 @@ export async function sendPostalEmail(
 }
 
 /**
- * Resolve recipient + sender addresses from the standard Postal env vars.
- * Throws if either is unset — both are required for any email-sending
- * activity in this worker.
+ * Resolve routing through typed flags at the activity boundary.
  */
-export function resolvePostalAddresses(): {
+export function resolvePostalAddresses(): Promise<{
   recipient: string;
   sender: string;
-} {
-  const recipient = Bun.env["RECIPIENT_EMAIL"];
-  const sender = Bun.env["SENDER_EMAIL"];
-  if (recipient === undefined || sender === undefined) {
-    throw new Error(
-      "Missing email configuration: RECIPIENT_EMAIL, SENDER_EMAIL",
-    );
-  }
-  return { recipient, sender };
+}> {
+  return postalAddressesConfig();
 }

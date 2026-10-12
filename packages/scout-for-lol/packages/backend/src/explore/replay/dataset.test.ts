@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   StageDatasetPinSchema,
   datasetCoherenceIssues,
+  lakeSchemaIssues,
   datasetRepairHint,
   replayEnvironmentIssues,
   type DatasetCoherenceFacts,
@@ -9,13 +10,14 @@ import {
 } from "./dataset.ts";
 
 const PIN: StageDatasetPin = StageDatasetPinSchema.parse({
-  schemaVersion: 1,
+  schemaVersion: 3,
+  runtime: { analysisEnabled: false, model: "gpt-5.6-luna" },
   stage: "beta",
   createdAt: "2026-09-19T00:00:00.000Z",
   lake: {
     dir: "/data/stage-dataset/beta/report-lake",
     buildId: "build-123",
-    puuidRemapFingerprint: "abc123",
+    schemaFingerprint: "schema-1",
     pulledAt: "2026-09-19T00:00:00.000Z",
     sourcePod: "scout-beta-0",
   },
@@ -59,11 +61,6 @@ function facts(
     pinnedWritableRows: overrides.pinnedWritableRows ?? {
       ConfirmationIntent: "d41d8cd9",
     },
-    // `in` rather than `??`: an explicitly-undefined fingerprint is the case
-    // under test, and a nullish fallback would quietly restore the default.
-    lakeFingerprint:
-      "lakeFingerprint" in overrides ? overrides.lakeFingerprint : "abc123",
-    databaseFingerprint: overrides.databaseFingerprint ?? "abc123",
     accountRows: overrides.accountRows ?? { parquet: 100, database: 120 },
     sampledPuuids: overrides.sampledPuuids ?? {
       checked: 25,
@@ -83,6 +80,14 @@ function environment(
 }
 
 describe("StageDatasetPinSchema", () => {
+  test.each([1, 2])(
+    "rejects retired version %s with a recapture instruction",
+    (schemaVersion) => {
+      expect(() =>
+        StageDatasetPinSchema.parse({ ...PIN, schemaVersion }),
+      ).toThrow("re-capture a fresh v3 pin");
+    },
+  );
   test("rejects unknown fields rather than ignoring them", () => {
     expect(() =>
       StageDatasetPinSchema.parse({ ...PIN, somethingElse: true }),
@@ -101,6 +106,20 @@ describe("StageDatasetPinSchema", () => {
 });
 
 describe("datasetCoherenceIssues", () => {
+  test("rejects absent, changed and checkout-incompatible lake schemas", () => {
+    expect(
+      lakeSchemaIssues({ published: "a", pinned: "a", current: "a" }),
+    ).toEqual([]);
+    expect(
+      lakeSchemaIssues({ published: undefined, pinned: "a", current: "a" }),
+    ).toHaveLength(1);
+    expect(
+      lakeSchemaIssues({ published: "b", pinned: "a", current: "b" })[0],
+    ).toContain("differs from the pin");
+    expect(
+      lakeSchemaIssues({ published: "a", pinned: "a", current: "b" })[0],
+    ).toContain("differs from this checkout");
+  });
   test("accepts a matching pair", () => {
     expect(datasetCoherenceIssues(facts())).toEqual([]);
   });
@@ -122,22 +141,6 @@ describe("datasetCoherenceIssues", () => {
     expect(issues).toEqual([
       expect.stringContaining("restore the snapshot before running again"),
     ]);
-  });
-
-  test("rejects a fingerprint mismatch — the silent identity-split case", () => {
-    const issues = datasetCoherenceIssues(
-      facts({ databaseFingerprint: "different" }),
-    );
-    expect(issues).toHaveLength(1);
-    expect(issues[0]).toContain("PUUID remap fingerprint differs");
-  });
-
-  test("rejects a build that records no fingerprint at all", () => {
-    const issues = datasetCoherenceIssues(
-      facts({ lakeFingerprint: undefined }),
-    );
-    expect(issues).toHaveLength(1);
-    expect(issues[0]).toContain("cannot be proven");
   });
 
   test("allows the database to hold more accounts than the lake", () => {
@@ -169,7 +172,7 @@ describe("datasetCoherenceIssues", () => {
     expect(
       datasetCoherenceIssues(
         facts({
-          databaseFingerprint: "different",
+          snapshotId: "different",
           accountRows: { parquet: 200, database: 100 },
           sampledPuuids: { checked: 25, missingFromDatabase: 3 },
         }),

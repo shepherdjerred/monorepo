@@ -3,7 +3,10 @@ import {
   loadRawMatchFixture,
   rawTimelineFixture,
 } from "#src/testing/raw-capture-fixtures.ts";
-import { Sha256DigestSchema } from "@scout-for-lol/domain/identity/brands.ts";
+import {
+  Sha256DigestSchema,
+  RiotMatchIdSchema,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { ArtifactDescriptorSchema } from "@scout-for-lol/domain/artifacts/descriptors.ts";
 import { archiveMatchToS3, archiveTimelineToS3 } from "#src/storage/s3.ts";
 import {
@@ -96,7 +99,9 @@ describe("timeline partition cutover", () => {
     // pins WHICH day the shared `generateS3Key` derivation picks — the point is
     // that the timeline lands on the same one the match does.
     const gameCreatedAt = new Date("2026-03-10T02:30:00.000Z");
-    const timeline = rawTimelineFixture("NA1_5555555555");
+    const timeline = rawTimelineFixture(
+      RiotMatchIdSchema.parse("NA1_5555555555"),
+    );
     mockSuccessfulPut();
 
     const result = await archiveTimelineToS3(timeline, [], gameCreatedAt);
@@ -124,7 +129,9 @@ describe("timeline partition cutover", () => {
 
   test("ignores the upload time, which is what the old layout used", async () => {
     const gameCreatedAt = new Date("2020-01-02T12:00:00.000Z");
-    const timeline = rawTimelineFixture("NA1_1234567890");
+    const timeline = rawTimelineFixture(
+      RiotMatchIdSchema.parse("NA1_1234567890"),
+    );
     mockSuccessfulPut();
 
     await archiveTimelineToS3(timeline, [], gameCreatedAt);
@@ -135,7 +142,9 @@ describe("timeline partition cutover", () => {
   });
 
   test("stores the timeline digest as object metadata too", async () => {
-    const timeline = rawTimelineFixture("NA1_1234567890");
+    const timeline = rawTimelineFixture(
+      RiotMatchIdSchema.parse("NA1_1234567890"),
+    );
     mockSuccessfulPut();
 
     const result = await archiveTimelineToS3(

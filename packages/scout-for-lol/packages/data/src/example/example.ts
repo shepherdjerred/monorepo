@@ -3,7 +3,7 @@ import {
   type ArenaMatch,
   LeaguePuuidSchema,
   DiscordAccountIdSchema,
-} from "@scout-for-lol/data";
+} from "#src/model/index.ts";
 import { getArenaExampleMatch } from "./arena-example.ts";
 
 type MatchType = "ranked" | "unranked" | "aram" | "arena";

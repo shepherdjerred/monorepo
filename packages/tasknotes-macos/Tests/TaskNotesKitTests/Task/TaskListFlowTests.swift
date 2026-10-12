@@ -27,7 +27,7 @@ struct TodayFlowTests {
         let calendar = fixedCalendar(today: "2026-07-22")
 
         #expect(store.migrate())
-        store.configure(serverURL: server.baseURL)
+        store.configure(serverURL: server.baseURL, authToken: server.authToken)
 
         // Exactly what pressing Return in the compose row does.
         let command = try #require(
@@ -52,7 +52,7 @@ struct TodayFlowTests {
         let store = TaskNotesStore(storage: try FileHostStorage(directory: directory.url))
 
         #expect(store.migrate())
-        store.configure(serverURL: server.baseURL)
+        store.configure(serverURL: server.baseURL, authToken: server.authToken)
 
         // A day far from any 1st, so "the day of the click" and "the scheduled
         // occurrence" can never coincide by luck.
@@ -140,7 +140,7 @@ struct TodayFlowTests {
         let store = TaskNotesStore(storage: try FileHostStorage(directory: directory.url))
 
         #expect(store.migrate())
-        store.configure(serverURL: server.baseURL)
+        store.configure(serverURL: server.baseURL, authToken: server.authToken)
 
         // The machine's real today, because the *server* resolves the rule and
         // advances the field against its own clock; a pinned date here would
@@ -239,7 +239,7 @@ struct TodayFlowTests {
         defer { server.stop() }
         let reopened = TaskNotesStore(storage: try FileHostStorage(directory: directory.url))
         #expect(reopened.migrate())
-        reopened.configure(serverURL: server.baseURL)
+        reopened.configure(serverURL: server.baseURL, authToken: server.authToken)
         #expect(reopened.pendingCount == 1)
 
         await reopened.sync()
@@ -264,7 +264,7 @@ struct TodayFlowTests {
         let calendar = fixedCalendar(today: "2026-07-25")
 
         #expect(store.migrate())
-        store.configure(serverURL: server.baseURL)
+        store.configure(serverURL: server.baseURL, authToken: server.authToken)
         await store.dispatch(.create(payload: createRequest(title: "Groceries")))
         await store.sync()
 

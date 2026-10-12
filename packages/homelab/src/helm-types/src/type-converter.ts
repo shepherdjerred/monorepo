@@ -406,7 +406,13 @@ function inferUniformArrayType(
   elementTypes: Set<string>,
   elementTypeProps: TypeProperty[],
 ): TypeProperty {
-  const { nestedTypeName, chartName, fullKey, propertyName, yamlComment } = ctx;
+  const {
+    nestedTypeName,
+    chartName,
+    fullKey,
+    propertyName = "",
+    yamlComment,
+  } = ctx;
   const elementType = [...elementTypes][0];
   const elementProp = elementTypeProps[0];
   if (elementType === "" || !elementProp || elementType == null) {
@@ -420,12 +426,7 @@ function inferUniformArrayType(
       fullKey !== "" &&
       chartName != null &&
       fullKey != null &&
-      shouldAllowArbitraryProps(
-        fullKey,
-        chartName,
-        propertyName ?? "",
-        yamlComment,
-      );
+      shouldAllowArbitraryProps(fullKey, chartName, propertyName, yamlComment);
     const arrayElementInterface: TypeScriptInterface = {
       name: arrayElementTypeName,
       properties: elementProp.nested.properties,

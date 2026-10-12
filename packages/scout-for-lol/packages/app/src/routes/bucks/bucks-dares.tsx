@@ -1,3 +1,9 @@
+import {
+  type DiscordGuildId,
+  type DareDeadlineSpec,
+  type DarePollHealth,
+  type DareProgress,
+} from "@scout-for-lol/data";
 import { Loaded } from "@shepherdjerred/loaded";
 import { useDelayedLoading } from "@shepherdjerred/loaded/react.tsx";
 import { useState } from "react";
@@ -5,11 +11,6 @@ import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { Search } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router";
 import { z } from "zod";
-import type {
-  DareDeadlineSpecV2,
-  DarePollHealth,
-  DareProgress,
-} from "@scout-for-lol/data";
 import { BucksDareEditor } from "#src/components/bucks/bucks-dare-editor.tsx";
 import { DareList } from "#src/components/bucks/dare-list.tsx";
 import { BucksDareActions } from "#src/components/bucks/bucks-dare-actions.tsx";
@@ -82,7 +83,7 @@ export function BucksDares() {
   );
 }
 
-function DareListPage(props: { guildId: string }) {
+function DareListPage(props: { guildId: DiscordGuildId }) {
   const trpc = useTRPC();
   const navigate = useNavigate();
   const [scope, setScope] = useState<"mine" | "guild" | "needs_action">("mine");
@@ -232,7 +233,7 @@ function DareListPage(props: { guildId: string }) {
   );
 }
 
-function DareDetailPage(props: { guildId: string; dareId: number }) {
+function DareDetailPage(props: { guildId: DiscordGuildId; dareId: number }) {
   const trpc = useTRPC();
   const detail = useQuery(
     trpc.bucks.dareInspect.queryOptions(
@@ -292,7 +293,7 @@ function DareDetailPage(props: { guildId: string; dareId: number }) {
 }
 
 export function DareDetail(props: {
-  guildId: string;
+  guildId: DiscordGuildId;
   dare: {
     id: number;
     state: string;
@@ -306,7 +307,7 @@ export function DareDetail(props: {
     evaluatorVersion: string;
     scoutQlPlanHash: string | null;
     originalText: string;
-    deadlineSpec: DareDeadlineSpecV2;
+    deadlineSpec: DareDeadlineSpec;
     targetAliases: string[];
     openingStake: number;
     potTotal: number;
@@ -393,17 +394,11 @@ export function DareDetail(props: {
         )}
       </dl>
       <section className="space-y-2">
-        <h2 className="text-sm font-medium">
-          {props.dare.compilerVersion === "dare-scoutql-3"
-            ? "Binding SQL contract"
-            : "ScoutQL"}
-        </h2>
-        {props.dare.compilerVersion === "dare-scoutql-3" && (
-          <p className="text-xs text-scout-subtle">
-            This canonical SQL is authoritative; the readable summary is
-            explanatory.
-          </p>
-        )}
+        <h2 className="text-sm font-medium">Binding SQL contract</h2>
+        <p className="text-xs text-scout-subtle">
+          This canonical SQL is authoritative; the readable summary is
+          explanatory.
+        </p>
         <ScoutQlCode queryText={props.dare.canonicalScoutQl} />
         {props.dare.scoutQlPlanHash !== null && (
           <p className="font-mono text-xs text-scout-subtle">

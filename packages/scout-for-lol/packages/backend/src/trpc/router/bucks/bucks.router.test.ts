@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   afterAll,
   beforeAll,
@@ -31,7 +32,10 @@ import {
 import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
 
 const originalEnvironment = Bun.env["ENVIRONMENT"];
+const originalRole = Bun.env["SCOUT_RUNTIME_ROLE"];
 Bun.env["ENVIRONMENT"] = "beta";
+// Hosted stages name their role; the web surface is the application's.
+Bun.env["SCOUT_RUNTIME_ROLE"] = "application";
 resetConfigurationForTests();
 
 const trpc = await createOfflineTrpcHarness("trpc-bucks-test");
@@ -42,7 +46,7 @@ const otherGuildId = DiscordGuildIdSchema.parse("100000000000000062");
 const actor = DiscordAccountIdSchema.parse("300000000000000061");
 const rival = bucksTestDiscordId(7);
 const DARE_CHANNEL_ID = DiscordChannelIdSchema.parse("200000000000000061");
-const MATCH_ID = "NA1_5000009101";
+const MATCH_ID = RiotMatchIdSchema.parse("NA1_5000009101");
 
 function caller() {
   return trpc.authedCaller(actor);
@@ -50,7 +54,7 @@ function caller() {
 
 async function clearAll(): Promise<void> {
   await db.confirmationIntent.deleteMany();
-  await db.bucksDareV2.deleteMany();
+  await db.bucksDare.deleteMany();
   await db.bucksLedgerEntry.deleteMany();
   await db.bucksOpenPosition.deleteMany();
   await db.bucksParlayBet.deleteMany();
@@ -163,8 +167,7 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   resetFlagOverrides("betting_enabled");
-  resetFlagOverrides("dare_v2");
-  resetFlagOverrides("scoutql_relational_enabled");
+  resetFlagOverrides("bucks_dares_enabled");
   addFlagOverride("betting_enabled", true, { server: guildId });
   trpc.setMembership([{ guildId, asAdmin: false }]);
   await clearAll();
@@ -172,14 +175,18 @@ beforeEach(async () => {
 
 afterAll(async () => {
   resetFlagOverrides("betting_enabled");
-  resetFlagOverrides("dare_v2");
-  resetFlagOverrides("scoutql_relational_enabled");
+  resetFlagOverrides("bucks_dares_enabled");
   await shutdownFeatureFlags();
   await db.$disconnect();
   if (originalEnvironment === undefined) {
     delete Bun.env["ENVIRONMENT"];
   } else {
     Bun.env["ENVIRONMENT"] = originalEnvironment;
+  }
+  if (originalRole === undefined) {
+    delete Bun.env["SCOUT_RUNTIME_ROLE"];
+  } else {
+    Bun.env["SCOUT_RUNTIME_ROLE"] = originalRole;
   }
 });
 
@@ -198,9 +205,8 @@ describe("bucks.status", () => {
     });
   });
 
-  test("shows Dares when the v2 and relational flags are enabled", async () => {
-    addFlagOverride("dare_v2", true, { server: guildId });
-    addFlagOverride("scoutql_relational_enabled", true, { server: guildId });
+  test("shows Dares when the Dares flag is enabled", async () => {
+    addFlagOverride("bucks_dares_enabled", true, { server: guildId });
 
     const status = await caller().bucks.status();
     expect(status).toMatchObject({
@@ -209,7 +215,7 @@ describe("bucks.status", () => {
   });
 
   test("keeps Dares available to the owner of an existing private draft", async () => {
-    await db.bucksDareV2.create({
+    await db.bucksDare.create({
       data: {
         serverId: guildId,
         channelId: DARE_CHANNEL_ID,
@@ -223,7 +229,7 @@ describe("bucks.status", () => {
   });
 
   test("does not expose another member's private draft", async () => {
-    await db.bucksDareV2.create({
+    await db.bucksDare.create({
       data: {
         serverId: guildId,
         channelId: DARE_CHANNEL_ID,
@@ -478,7 +484,7 @@ describe("bucks mutations", () => {
   test("placeOutcomeBet answers no_pool for an unknown match", async () => {
     const result = await caller().bucks.placeOutcomeBet({
       guildId,
-      matchId: "NA1_missing",
+      matchId: "NA1_9400000000",
       teamId: 100,
       stake: 1,
     });

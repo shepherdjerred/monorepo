@@ -1,5 +1,6 @@
+import { useRouteGuildId } from "#src/lib/routes/route-params.ts";
 import { Loaded } from "@shepherdjerred/loaded";
-import { Outlet, useLocation, useParams } from "react-router";
+import { Outlet, useLocation } from "react-router";
 import { ForbiddenPanel } from "#src/components/chrome/forbidden-panel.tsx";
 import { useGuildAnalyticsContext } from "#src/hooks/use-guild-analytics-context.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
@@ -10,7 +11,7 @@ export function ConsumerWorkspace() {
 }
 
 export function ConsumerGuildWorkspace() {
-  const { guildId } = useParams();
+  const guildId = useRouteGuildId();
   const location = useLocation();
   const { access } = usePermissions(guildId);
   const contextRoute = analyticsContextRoute(location.pathname);
@@ -28,7 +29,7 @@ export function ConsumerGuildWorkspace() {
       <div className="mx-auto max-w-5xl px-6 py-8 sm:px-8 sm:py-12">
         <ForbiddenPanel
           title="Missing guild id"
-          message="This guild-scoped route requires a guild."
+          message="Choose a server to continue."
         />
       </div>
     );

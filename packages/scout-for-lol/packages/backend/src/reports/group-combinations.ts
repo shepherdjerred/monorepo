@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type {
   ScoutQlGroupSize,
   ScoutQlPlan,
@@ -36,7 +37,7 @@ import type {
 export type GroupFactRow = {
   playerId: number;
   playerAlias: string;
-  matchId: string;
+  matchId: RiotMatchId;
   teamId: number;
   /** Arena subteam (1-8); null for every non-Arena queue. */
   playerSubteamId: number | null;

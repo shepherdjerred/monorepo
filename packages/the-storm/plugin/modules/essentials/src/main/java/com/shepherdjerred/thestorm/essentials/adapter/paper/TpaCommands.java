@@ -40,12 +40,17 @@ final class TpaCommands {
   private final TeleportFlow flow;
   private final TpaDesk desk;
   private final Duration timeout;
+  private final com.shepherdjerred.thestorm.core.expansion.ManagedGameplay flags;
 
-  TpaCommands(PaperRuntime runtime, TeleportFlow flow, TpaDesk desk, Duration timeout) {
+  record Rollout(
+      Duration timeout, com.shepherdjerred.thestorm.core.expansion.ManagedGameplay flags) {}
+
+  TpaCommands(PaperRuntime runtime, TeleportFlow flow, TpaDesk desk, Rollout rollout) {
     this.runtime = runtime;
     this.flow = flow;
     this.desk = desk;
-    this.timeout = timeout;
+    this.timeout = rollout.timeout();
+    this.flags = rollout.flags();
   }
 
   void register(Commands commands) {
@@ -78,6 +83,14 @@ final class TpaCommands {
       String name, TpaRequest.Direction direction) {
     return literal(name)
         .requires(Cmd.permission(EssentialsPermissions.TPA))
+        .executes(
+            context ->
+                Cmd.asPlayer(
+                    context,
+                    player ->
+                        player.sendMessage(
+                            Component.text("Use /" + name + " <player>.")
+                                .append(TeleportInfoCommands.help(TeleportKind.TPA)))))
         .then(
             argument(PLAYER, word())
                 .suggests(Cmd.onlinePlayers(runtime.server()))
@@ -128,7 +141,9 @@ final class TpaCommands {
 
   private void send(Player requester, String targetName, TpaRequest.Direction direction) {
     var target = runtime.server().getPlayerExact(targetName);
-    if (target == null) {
+    if (target == null
+        || !com.shepherdjerred.thestorm.core.players.PlayerVisibility.visibleTo(
+            requester, target)) {
       Say.error(requester, Say.TELEPORT, targetName + " is not online.");
       return;
     }
@@ -142,7 +157,26 @@ final class TpaCommands {
                 + ". It expires in "
                 + DurationText.format(timeout)
                 + ".");
-        notifyTarget(target, requester, request);
+        if (desk.automatic(target.getUniqueId())
+            && target.hasPermission("thestorm.essentials.tpauto")) {
+          runtime.onMain(
+              flags.enabled(
+                  com.shepherdjerred.thestorm.core.expansion.ManagedGameplay.STAFF,
+                  target.getUniqueId()),
+              "automatic request acceptance",
+              enabled -> {
+                if (enabled
+                    && target.isOnline()
+                    && target.hasPermission("thestorm.essentials.tpauto")
+                    && desk.automatic(target.getUniqueId()))
+                  answer(
+                      target,
+                      Optional.of(new TpaSelector.Exact(requester.getUniqueId(), request.id())),
+                      true);
+                else notifyTarget(target, requester, request);
+              },
+              _ -> notifyTarget(target, requester, request));
+        } else notifyTarget(target, requester, request);
       }
       case Result.Err<TpaRequest, TpaError>(var error) ->
           Say.error(requester, Say.TELEPORT, describe(error));

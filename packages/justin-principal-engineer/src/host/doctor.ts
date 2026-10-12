@@ -1,12 +1,13 @@
 import path from "node:path";
 
 import type { Config } from "#src/domain/schemas.ts";
-import { createGitHubAuth } from "#src/integrations/github-app.ts";
+import { checkGitHubAccess } from "#src/integrations/github-access.ts";
 import { readOpReference } from "#src/integrations/secrets.ts";
 import { LinearClient } from "#src/integrations/linear.ts";
 import type { RuntimePaths } from "#src/runtime/paths.ts";
 import { requireSuccess, type CommandRunner } from "#src/runtime/process.ts";
 import { writeInfo } from "#src/runtime/output.ts";
+import { checkConnections } from "#src/integrations/preflight.ts";
 
 const REQUIRED_LABELS = ["agent:codex", "agent:needs-human"] as const;
 
@@ -45,6 +46,7 @@ export async function doctor(input: {
       cwd: input.config.repository.stableCheckout,
     }),
   );
+  await checkConnections(input.config, input.run);
   const digestText = await Bun.file(
     path.join(input.config.repository.stableCheckout, "ci/ci-image/DIGEST"),
   ).text();
@@ -89,23 +91,8 @@ export async function doctor(input: {
     throw new Error(`Missing Linear labels: ${missing.join(", ")}`);
   }
 
-  await Promise.all([
-    readOpReference(input.config.woodpecker.apiToken, input.run),
-    readOpReference(input.config.agents.codex.openAiApiKey, input.run),
-  ]);
-  const github = await createGitHubAuth(input.config, input.paths, input.run);
-  try {
-    requireSuccess(
-      "GitHub App repository access",
-      await input.run(
-        ["gh", "api", `repos/${input.config.repository.slug}`, "--silent"],
-        { env: github.env },
-      ),
-    );
-  } finally {
-    await github.cleanup();
-  }
+  await checkGitHubAccess(input);
   writeInfo(
-    "Doctor passed: macOS, tools, Docker, Linear, 1Password, and GitHub App are ready",
+    "Doctor passed: macOS, tools, Docker, Linear, native OpenAI model access, Woodpecker repository access, and GitHub App are ready",
   );
 }

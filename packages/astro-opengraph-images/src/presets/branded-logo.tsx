@@ -11,7 +11,12 @@ export function brandedLogo({ title }: RenderFunctionInput): React.ReactNode {
       }}
     >
       <div style={twj("flex items-start justify-start h-full")}>
-        <div style={twj("flex flex-col justify-between w-full h-full p-20")}>
+        <div
+          style={{
+            boxSizing: "border-box",
+            ...twj("flex flex-col justify-between w-full h-full p-20"),
+          }}
+        >
           {/* Replace with your own logo */}
           <svg
             width="192"

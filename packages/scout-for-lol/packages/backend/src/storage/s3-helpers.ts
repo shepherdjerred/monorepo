@@ -2,7 +2,7 @@ import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { createS3Client } from "#src/storage/s3-client.ts";
 import configuration from "#src/configuration.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";
-import type { MatchId } from "@scout-for-lol/data/index.ts";
+import type { RiotMatchId } from "@scout-for-lol/data/index.ts";
 import { format } from "date-fns";
 import { createLogger } from "#src/logger.ts";
 import {
@@ -28,7 +28,7 @@ const logger = createLogger("storage-s3-helpers");
  * into the receipts work.
  */
 export function generateS3Key(
-  matchId: MatchId,
+  matchId: RiotMatchId,
   assetType: string,
   extension: string,
   keyDate: Date,
@@ -39,7 +39,7 @@ export function generateS3Key(
 }
 
 type SaveToS3Config = {
-  matchId: MatchId;
+  matchId: RiotMatchId;
   assetType: string;
   extension: string;
   body: string | Uint8Array;
@@ -130,7 +130,7 @@ export async function saveToS3(
  * Stored under failed-validations/{date}/{matchId}/ for easy identification
  */
 function generateFailedValidationS3Key(
-  matchId: MatchId,
+  matchId: RiotMatchId,
   assetType: string,
 ): string {
   const now = new Date();
@@ -153,7 +153,7 @@ export type ValidationIssueReport = {
 };
 
 type SaveFailedPayloadConfig = {
-  matchId: MatchId;
+  matchId: RiotMatchId;
   assetType: "match" | "timeline";
   rawPayload: unknown;
   validationError: ValidationIssueReport;

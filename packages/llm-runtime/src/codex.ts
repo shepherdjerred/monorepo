@@ -9,6 +9,7 @@
  * default if OpenAI ever moves it.
  */
 import { requireNativeRoute } from "@shepherdjerred/llm-models";
+import { z } from "zod";
 
 export type CodexConfig = {
   catalogModelId: string;
@@ -41,4 +42,28 @@ export function createCodexConfig(input: {
       ...(input.env === undefined ? {} : { env: input.env }),
     },
   };
+}
+
+/** Check the native credential and catalog model before starting a coding turn. */
+export async function checkCodexModelAccess(
+  input: { apiKey: string; modelId: string },
+  request: typeof fetch = fetch,
+): Promise<void> {
+  const { routeModelId } = createCodexConfig(input);
+  const response = await request(
+    `https://api.openai.com/v1/models/${encodeURIComponent(routeModelId)}`,
+    {
+      headers: { Authorization: `Bearer ${input.apiKey}` },
+      signal: AbortSignal.timeout(30_000),
+    },
+  );
+  if (!response.ok) {
+    // Provider error bodies can echo credentials; expose only the HTTP status.
+    throw new Error(
+      `OpenAI model access failed (HTTP ${String(response.status)}). Codex needs a native OpenAI credential with access to the configured model.`,
+    );
+  }
+  const model = z.object({ id: z.string() }).parse(await response.json());
+  if (model.id !== routeModelId)
+    throw new Error("OpenAI returned a different model");
 }

@@ -1,0 +1,81 @@
+id: skiothjik-27
+name: Skiothjik_27
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1Mzc5MTM5NiwKICAicHJvZmlsZUlkIiA6ICJmODJmNTQ1MDIzZDA0MTFkYmVlYzU4YWI4Y2JlMTNjNyIsCiAgInByb2ZpbGVOYW1lIiA6ICJSZXNwb25kZW50cyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9lZGRmYzM5NDk4ZDFhYmQyZDBmMzFmZjM2ZTZlODRjNmZmZWY1ZWMyODE5NGI4NjFlZmIyYWNiY2YwYzJiOGMxIgogICAgfQogIH0KfQ=="
+  signature: "bHtzALitH9t3DQqkXbx8psrsmBJYPfRpJQPJH4jDIs5ptaqULF33R0Wi1u1VucadqsMgwgwEReVDu0NLFc2kBPwwB12zdKVuHZqevZ9HNe/upui/H0cf3rZqEQkdJ/UFdI+qTkkBndyjXXeJvSALKkd+kteJte762xaF0XDuwuiz05ob18MpJaTUZvLBn7zm3x6mtkJkpwFpsl8DxqXh7thBupLo5BqARicVz2wAm1DWsKqOBkktHTCe2x+ynGJk6yJRYscKzAZLU5967ldDykpcNAIbZEeuKIQpjW681ODavNrx23cDE4hqIzpie7hngAl+0BDt+eeIWpXMqw5w3RBQ2dLT9RXGokIyitlQvUMIlWcucuLczkKlrMriyFpGyoftjOCVic1/7cTm7QI93i4M+ScRXG2Om3wZUTpwz7yVIME0AsCGvFX5VprJ2+BNPAMo85owYdTsXVlyliisMjtf0zMq7A7jsAgNTaMKdKEMEHvGOHZBfvrJrLu7MOwJlJcWVI3q6GJdMvEgzA47AGsTkjLJd9NeRTi9yCSJAyQ6uFwYAe6J1XxanoOUaEHa+yujL6knORphsQqcv9boKcluXk3W3bFVgqSxbJcAErFxccW+OEzUsRCHuqxUuJyJEX5jIuiNPNxLTL8jzbmirvOZLG3y1WrMMCMlISK00LI="
+skill: 0.345
+archetype: duelist
+leverOffsets:
+  reactionMs: 0.09
+  aimErrorDeg: 0.68
+  cps: 1.76
+  awarenessRadius: 0.16
+  coordination: -0.26
+  technique: 1.26
+  aggression: 0.75
+kits:
+  trooper: 1
+  shortbow: 0.36
+roles:
+  escort: 0.23
+  retake: 0.69
+  hunt: 0.74
+style:
+  aggression: 0.84
+  patience: 0.35
+  teamplay: 0.29
+  risk: 0.58
+voice:
+  tone:
+    - honourable
+    - formal
+    - serene
+  verbosity: quiet
+  style: solemn duelist with a code of honour, bows before and after every fight, formal speech
+lines:
+  greet:
+    - i bow to my opponents
+    - "may the blade guide us, {team}"
+    - i seek a worthy duel
+  onKill:
+    - "an honourable fight, {victim}"
+    - "rest, {victim}. you fought well"
+    - the blade is swift
+  onDeath:
+    - "{killer}, you have honour"
+    - i accept defeat with grace
+    - my blade was not ready
+  onPlant:
+    - "{bomb} is lit. the path is clear"
+    - "{bomb} burns. we proceed"
+  onDefuse:
+    - "{bomb} is calm. as is my heart"
+    - "duty fulfilled at {bomb}"
+  onWin:
+    - "victory with honour, {team}"
+    - a fine day for the blade
+  onLoss:
+    - defeat is a teacher
+    - i bow to the victors
+  onLastAlive:
+    - i stand alone, as the code demands
+    - let them come, one by one
+  taunt:
+    - face me with your blade
+    - i await a true challenge
+    - do you have the courage to duel
+  lobby:
+    - i greet each of you with a bow
+    - the blade must be clean before a duel
+    - trooper kit. the sword is the only honest weapon
+    - "{team}, fight with honour today"
+    - patience in the lobby, ferocity in the field
+quirks:
+  - good_sport
+  - always_gg
+rivals:
+  - puznyk-42
+  - dizzygrykketh
+bio: "Follows a strict code: no bow shots at a duelist, no gapples mid-fight, a bow before and after. Her endless 1v1s with Puznyk_42 are part philosophy debate, part sword fight."
+batch: 2
+retired: false

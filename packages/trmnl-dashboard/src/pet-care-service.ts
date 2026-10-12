@@ -14,6 +14,7 @@ export class PetCareService {
   private readonly clients: PetCareClients;
   private cached: { expiresAt: number; value: PetCareCollection } | undefined;
   private pending: Promise<PetCareCollection> | undefined;
+  private lastSuccessfulWhiskerFetchAt: string | undefined;
 
   public constructor(
     config: AppConfig,
@@ -29,7 +30,10 @@ export class PetCareService {
   }
 
   public async getMetrics(): Promise<string> {
-    return renderPetCareMetrics(await this.getCollection());
+    return renderPetCareMetrics(
+      await this.getCollection(),
+      this.lastSuccessfulWhiskerFetchAt,
+    );
   }
 
   private async getCollection(): Promise<PetCareCollection> {
@@ -44,6 +48,10 @@ export class PetCareService {
     this.pending = pending;
     try {
       const value = await pending;
+      if (value.metrics.litterRobot !== null) {
+        this.lastSuccessfulWhiskerFetchAt =
+          value.metrics.litterRobot.diagnosticsFetchedAt;
+      }
       this.cached = { expiresAt: now + CACHE_DURATION_MS, value };
       return value;
     } finally {
@@ -52,7 +60,11 @@ export class PetCareService {
   }
 }
 
-export function renderPetCareMetrics(collection: PetCareCollection): string {
+export function renderPetCareMetrics(
+  collection: PetCareCollection,
+  lastSuccessfulWhiskerFetchAt = collection.metrics.litterRobot
+    ?.diagnosticsFetchedAt,
+): string {
   const lines = [
     "# HELP trmnl_petcare_source_up Whether a pet-care source was read successfully.",
     "# TYPE trmnl_petcare_source_up gauge",
@@ -72,6 +84,16 @@ export function renderPetCareMetrics(collection: PetCareCollection): string {
       { source: "alertmanager" },
     ),
   ];
+  if (lastSuccessfulWhiskerFetchAt !== undefined) {
+    lines.push(
+      "# HELP trmnl_petcare_whisker_last_success_timestamp_seconds Last validated Whisker diagnostics fetch; device lastSeen is not a heartbeat.",
+      "# TYPE trmnl_petcare_whisker_last_success_timestamp_seconds gauge",
+      metric(
+        "trmnl_petcare_whisker_last_success_timestamp_seconds",
+        new Date(lastSuccessfulWhiskerFetchAt).getTime() / 1000,
+      ),
+    );
+  }
   const robot = collection.metrics.litterRobot;
   if (robot !== null) {
     lines.push(
@@ -89,6 +111,16 @@ export function renderPetCareMetrics(collection: PetCareCollection): string {
       metric("trmnl_petcare_litter_online", bool(robot.online)),
       metric("trmnl_petcare_litter_ready", bool(robot.ready)),
       metric("trmnl_petcare_litter_source_fresh", bool(robot.sourceFresh)),
+      metric(
+        "trmnl_petcare_litter_entity_available",
+        bool(robot.entityAvailable),
+      ),
+      "# HELP trmnl_petcare_litter_last_seen_timestamp_seconds Whisker device-change timestamp; informational, not a source heartbeat.",
+      "# TYPE trmnl_petcare_litter_last_seen_timestamp_seconds gauge",
+      metric(
+        "trmnl_petcare_litter_last_seen_timestamp_seconds",
+        new Date(robot.lastSeenAt).getTime() / 1000,
+      ),
       metric("trmnl_petcare_litter_fault", bool(robot.faulted)),
       metric(
         "trmnl_petcare_litter_hopper_installed",

@@ -33,7 +33,7 @@ const mostSoloGamesCriteria: CompetitionCriteria = {
 
 // Mock the Discord send function BEFORE importing daily-update
 let sentMessages: {
-  channelId: string;
+  channelId: DiscordChannelId;
   content: string | Record<string, unknown>;
 }[] = [];
 
@@ -41,7 +41,7 @@ let sentMessages: {
 class ChannelSendError extends Error {
   constructor(
     message: string,
-    public readonly channelId: string,
+    public readonly channelId: DiscordChannelId,
     public readonly isPermissionError: boolean,
     public readonly originalError?: unknown,
   ) {
@@ -52,7 +52,10 @@ class ChannelSendError extends Error {
 
 // Mock the channel send function
 vi.doMock("../../discord/channel.js", () => ({
-  send: (message: string | Record<string, unknown>, channelId: string) => {
+  send: (
+    message: string | Record<string, unknown>,
+    channelId: DiscordChannelId,
+  ) => {
     sentMessages.push({ channelId, content: message });
     return Promise.resolve({ id: "mock-message-id" });
   },

@@ -9,13 +9,13 @@ import com.shepherdjerred.thestorm.arena.adapter.db.JooqSnapshotStore;
 import com.shepherdjerred.thestorm.arena.app.ArenaPresence;
 import com.shepherdjerred.thestorm.arena.app.ArenaRecords;
 import com.shepherdjerred.thestorm.arena.app.store.LeaderboardStore;
-import com.shepherdjerred.thestorm.arena.domain.snapshot.EffectRecord;
-import com.shepherdjerred.thestorm.arena.domain.snapshot.Experience;
-import com.shepherdjerred.thestorm.arena.domain.snapshot.ItemData;
-import com.shepherdjerred.thestorm.arena.domain.snapshot.Position;
-import com.shepherdjerred.thestorm.arena.domain.snapshot.Snapshot;
-import com.shepherdjerred.thestorm.arena.domain.snapshot.Vitals;
 import com.shepherdjerred.thestorm.arena.testing.Samples;
+import com.shepherdjerred.thestorm.core.snapshot.EffectRecord;
+import com.shepherdjerred.thestorm.core.snapshot.Experience;
+import com.shepherdjerred.thestorm.core.snapshot.ItemData;
+import com.shepherdjerred.thestorm.core.snapshot.Position;
+import com.shepherdjerred.thestorm.core.snapshot.Snapshot;
+import com.shepherdjerred.thestorm.core.snapshot.Vitals;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
@@ -184,16 +184,16 @@ final class ArenaPaperTest {
     alice.performCommand("arena class knight");
 
     var sword = alice.getInventory().getItemInMainHand();
-    assertThat(sword.getType()).isEqualTo(Material.DIAMOND_SWORD);
+    assertThat(sword.getType()).isEqualTo(Material.STONE_SWORD);
     var tag = new NamespacedKey("thestorm", "arena_item");
     assertThat(
             sword.getItemMeta().getPersistentDataContainer().has(tag, PersistentDataType.BOOLEAN))
         .isTrue();
-    assertThat(sword.getItemMeta().isUnbreakable()).isTrue();
+    assertThat(sword.getItemMeta().isUnbreakable()).isFalse();
     assertThat(alice.getInventory().getItemInOffHand().getType()).isEqualTo(Material.SHIELD);
     assertThat(alice.getInventory().getHelmet()).isNotNull();
     assertThat(requireNonNull(alice.getInventory().getHelmet()).getType())
-        .isEqualTo(Material.IRON_HELMET);
+        .isEqualTo(Material.LEATHER_HELMET);
     assertThat(
             Arrays.stream(alice.getInventory().getContents())
                 .filter(Objects::nonNull)

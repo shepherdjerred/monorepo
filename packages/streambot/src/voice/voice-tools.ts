@@ -37,6 +37,10 @@ function isAdvancedPlay(name: ToolName, toolArguments: unknown): boolean {
 
 /** User/session-bound command surface shared by production execution and local dry runs. */
 export type VoiceCommandPort = {
+  readonly selectChannel?: (
+    number: number | "auto",
+  ) => string | Promise<string>;
+  readonly listChannels?: () => string | Promise<string>;
   readonly play: (
     input: PlayArguments,
     signal: AbortSignal,
@@ -85,6 +89,13 @@ export function bindPlaybackVoiceCommandPort(
 ): VoiceCommandPort {
   const observed = attempt ?? NOOP_VOICE_ATTEMPT_OBSERVER.begin();
   return {
+    ...(service.hasNumberedChannels()
+      ? {
+          selectChannel: (number: number | "auto") =>
+            service.selectChannel(userId, number),
+          listChannels: () => service.listChannels(userId),
+        }
+      : {}),
     play: async (input, signal) => {
       const spokenCommand = observed.spokenCommand();
       const { provider, ...playInput } = input;
@@ -244,6 +255,44 @@ export function createStreambotVoiceTools(
   }
 
   return [
+    ...(commands.selectChannel === undefined
+      ? []
+      : [
+          tool({
+            name: "select_channel",
+            description:
+              "Select this speaker's Streambot playback slot, or use auto to restore music on 1 and video/Plex/sports on 2. Channel 1 is mic audio, 2 is Go Live, 3+ are additional videos. Selection is one mutation; play in a separate wake phrase.",
+            parameters: voiceToolSchemas.selectChannel,
+            execute: (input) =>
+              invoke(
+                "select_channel",
+                true,
+                input,
+                () =>
+                  commands.selectChannel?.(input.channel) ??
+                  "Numbered channels are unavailable.",
+              ),
+          }),
+        ]),
+    ...(commands.listChannels === undefined
+      ? []
+      : [
+          tool({
+            name: "list_channels",
+            description:
+              "List Streambot playback slots in this Discord voice channel, including this speaker's selection.",
+            parameters: voiceToolSchemas.listChannels,
+            execute: (input) =>
+              invoke(
+                "list_channels",
+                false,
+                input,
+                () =>
+                  commands.listChannels?.() ??
+                  "Numbered channels are unavailable.",
+              ),
+          }),
+        ]),
     tool({
       name: "play",
       description:

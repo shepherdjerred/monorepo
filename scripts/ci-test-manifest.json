@@ -19,7 +19,7 @@
       "excludedSuites": [
         {
           "path": "e2e",
-          "reason": "Playwright suite; runs in the browser E2E lane (.buildkite/scripts/selection/playwright-targets.ts), not in Vitest reporting."
+          "reason": "Playwright suite; runs in the browser E2E lane (ci/scripts/selection/playwright-targets.ts), not in Vitest reporting."
         },
         {
           "path": "integration/sqlite.integration.test.ts",
@@ -221,7 +221,7 @@
       "excludedSuites": [
         {
           "path": "tests",
-          "reason": "Playwright suite; runs in the browser E2E lane (.buildkite/scripts/selection/playwright-targets.ts), not in Vitest reporting."
+          "reason": "Playwright suite; runs in the browser E2E lane (ci/scripts/selection/playwright-targets.ts), not in Vitest reporting."
         }
       ]
     },
@@ -311,7 +311,9 @@
             "scripts/argocd/argocd-auto-sync-policy.test.ts",
             "scripts/argocd/argocd-child-sync-timeout.test.ts",
             "scripts/argocd/argocd-release-result.test.ts",
-            "scripts/tofu/tofu-stack.test.ts"
+            "scripts/tofu/tofu-stack.test.ts",
+            "scripts/tofu/credential-handoff.test.ts",
+            "scripts/tofu/application-secrets.integration.test.ts"
           ]
         }
       ]
@@ -420,6 +422,47 @@
       ]
     },
     {
+      "package": "@shepherdjerred/unix-socket-daemon",
+      "directory": "packages/unix-socket-daemon",
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["test"]
+        }
+      ]
+    },
+    {
+      "package": "@shepherdjerred/ts-mc-docs",
+      "directory": "packages/ts-mc-docs",
+      "steps": [
+        {
+          "runner": "command",
+          "name": "world-archive",
+          "command": ["bun", "run", "test"]
+        }
+      ]
+    },
+    {
+      "package": "@shepherdjerred/mc-build",
+      "directory": "packages/mc-build",
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["test"]
+        }
+      ]
+    },
+    {
+      "package": "@shepherdjerred/mc-harness",
+      "directory": "packages/mc-harness",
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["test", "evals/test"]
+        }
+      ]
+    },
+    {
       "package": "@shepherdjerred/monarch",
       "directory": "packages/monarch",
       "steps": [
@@ -440,8 +483,7 @@
             "scripts/migration-smoke.test.ts",
             "scripts/dev/",
             "scripts/discord-smoke/",
-            "scripts/puuid-corpus/",
-            "scripts/puuid-migration/"
+            "src/dev-web.test.ts"
           ]
         }
       ]
@@ -458,7 +500,7 @@
       "excludedSuites": [
         {
           "path": "e2e",
-          "reason": "Playwright suite; runs in the browser E2E lane (.buildkite/scripts/selection/playwright-targets.ts), not in Vitest reporting."
+          "reason": "Playwright suite; runs in the browser E2E lane (ci/scripts/selection/playwright-targets.ts), not in Vitest reporting."
         }
       ]
     },
@@ -474,7 +516,7 @@
       "excludedSuites": [
         {
           "path": "e2e",
-          "reason": "Playwright suite; runs in the browser E2E lane (.buildkite/scripts/selection/playwright-targets.ts), not in Vitest reporting."
+          "reason": "Playwright suite; runs in the browser E2E lane (ci/scripts/selection/playwright-targets.ts), not in Vitest reporting."
         }
       ]
     },
@@ -531,7 +573,7 @@
       "excludedSuites": [
         {
           "path": "e2e",
-          "reason": "Playwright suite; runs in the browser E2E lane (.buildkite/scripts/selection/playwright-targets.ts), not in Vitest reporting."
+          "reason": "Playwright suite; runs in the browser E2E lane (ci/scripts/selection/playwright-targets.ts), not in Vitest reporting."
         }
       ]
     },
@@ -605,6 +647,21 @@
       ]
     },
     {
+      "package": "@shepherdjerred/statically-typed",
+      "directory": "packages/statically-typed",
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["test"]
+        }
+      ]
+    },
+    {
+      "package": "@shepherdjerred/sentry-config",
+      "directory": "packages/sentry-config",
+      "steps": [{ "runner": "vitest", "args": ["test"] }]
+    },
+    {
       "package": "starlight-karma-bot",
       "directory": "packages/starlight-karma-bot",
       "steps": [
@@ -612,6 +669,16 @@
           "runner": "vitest"
         }
       ]
+    },
+    {
+      "package": "@shepherdjerred/storm-forum",
+      "directory": "packages/storm-forum",
+      "steps": [{ "runner": "vitest", "args": ["test/"] }]
+    },
+    {
+      "package": "@shepherdjerred/storm-theme",
+      "directory": "packages/storm-theme",
+      "steps": [{ "runner": "vitest", "args": ["test/"] }]
     },
     {
       "package": "@shepherdjerred/storm-brain",
@@ -682,6 +749,7 @@
     {
       "package": "tasknotes-windows",
       "directory": "packages/tasknotes-windows",
+      "coverageAlways": true,
       "excludedSuites": [
         {
           "path": "tests/TaskNotes.Windows.App.Tests/TaskNotes.Windows.App.Tests.csproj",
@@ -701,7 +769,9 @@
             "Release",
             "--property:RestoreLockedMode=true"
           ],
-          "coverageConfig": "coverage.settings.xml"
+          "coverageConfig": "coverage.settings.xml",
+          "name": "unit",
+          "mstest": { "parallel": true, "timeoutMs": 30000 }
         },
         {
           "runner": "dotnet",
@@ -711,7 +781,9 @@
             "Release",
             "--property:RestoreLockedMode=true"
           ],
-          "coverageConfig": "coverage.settings.xml"
+          "coverageConfig": "coverage.settings.xml",
+          "name": "integration",
+          "mstest": { "parallel": true, "timeoutMs": 120000 }
         }
       ]
     },
@@ -774,14 +846,18 @@
             "src/activities",
             "src/event-bridge",
             "src/observability",
+            "src/config",
             "src/schedules",
             "src/shared",
             "src/lib",
             "src/workflows/agent-task.test.ts",
             "src/config/imessage.test.ts",
+            "src/config/photon.test.ts",
+            "src/config/woodpecker-retention.test.ts",
             "src/worker-config.test.ts",
             "scripts/check-workflow-tracing-safety.test.ts",
-            "scripts/cli-arguments.test.ts"
+            "scripts/cli-arguments.test.ts",
+            "scripts/rollout/temporal-operator-credentials.test.ts"
           ]
         },
         {
@@ -838,6 +914,7 @@
             "test/screenshot",
             "test/history",
             "test/discord",
+            "test/mc",
             "scripts",
             "test-integration/catalog.integration.test.ts"
           ]
@@ -932,7 +1009,6 @@
     {
       "package": "@shepherdjerred/root-scripts",
       "directory": "scripts",
-      "coverageSourceDirectories": ["scripts", "ci/scripts"],
       "steps": [
         {
           "runner": "vitest",
@@ -959,24 +1035,66 @@
       "directory": "packages/the-storm",
       "steps": [
         {
+          "runner": "command",
+          "name": "livemap",
+          "command": ["bun", "run", "test:server"]
+        },
+        {
           "runner": "gradle",
           "args": ["-p", "plugin", "test"]
+        },
+        {
+          "runner": "vitest",
+          "args": ["tests/rcon.test.ts"]
+        },
+        {
+          "runner": "gradle",
+          "name": "client",
+          "args": ["-p", "client", "test"]
+        },
+        {
+          "runner": "vitest",
+          "name": "client-controller",
+          "args": ["tools/client"]
+        },
+        {
+          "runner": "command",
+          "name": "rwf-learning-python",
+          "command": ["bun", "run", "test:learning-python"]
+        },
+        {
+          "runner": "vitest",
+          "name": "rwf-learning",
+          "args": ["tools/learning", "--exclude", "**/.cache/**"]
+        },
+        {
+          "runner": "command",
+          "name": "rwf-maps-python",
+          "command": ["bun", "run", "test:maps-python"]
+        },
+        {
+          "runner": "vitest",
+          "name": "rwf-maps",
+          "args": ["tools/maps", "--exclude", "**/.cache/**"]
+        },
+        {
+          "runner": "vitest",
+          "name": "preference-media",
+          "args": ["tests/media"]
         }
       ],
       "excludedSuites": [
         {
           "path": "tests/e2e",
-          "reason": "Real-server E2E runs through test:e2e in the dedicated paper-e2e-pr Woodpecker lane, with Paper as a service and Mineflayer clients. The full reporting task does not start the game server."
-        }
-      ]
-    },
-    {
-      "package": "@shepherdjerred/the-storm-brain",
-      "directory": "packages/the-storm/brain",
-      "steps": [
+          "reason": "The paper-smoke-pr Woodpecker lane runs only plugin.e2e.test.ts and server.e2e.test.ts through test:smoke. The committer runs applicable extended gameplay checks locally through test:e2e. The reporting task does not start Paper."
+        },
         {
-          "runner": "vitest",
-          "args": ["src"]
+          "path": "tests/full",
+          "reason": "The committer runs applicable all-module acceptance checks locally through test:full with disposable world fixtures. This extended Minecraft suite does not run in CI."
+        },
+        {
+          "path": "tests/load",
+          "reason": "The committer runs the 20/50/100-bot rwf load profile locally through test:load on a 4-CPU, 8G-heap Paper container when applicable; it measures tick time and does not run in CI."
         }
       ]
     }
@@ -1021,23 +1139,23 @@
       "package": "stocks-sjer-red",
       "directory": "packages/stocks-sjer-red",
       "reason": "Static Astro site; no test files exist."
-    },
-    {
-      "package": "@shepherdjerred/ts-mc",
-      "directory": "packages/ts-mc",
-      "reason": "Static Astro site; no test files exist."
-    },
-    {
-      "package": "@shepherdjerred/ts-mc-docs",
-      "directory": "packages/ts-mc-docs",
-      "reason": "Static Astro site; no test files exist."
     }
   ],
   "separateTests": [
     {
+      "package": "@shepherdjerred/glitter-boys",
+      "directory": "packages/glitter-boys",
+      "reason": "Owner-requested local-only verification and manual deployment. Run test:local before release; shared CI does not build, test, or publish this site."
+    },
+    {
+      "package": "@shepherdjerred/glitter-boys-launcher",
+      "directory": "packages/glitter-boys-launcher",
+      "reason": "Owner-requested local-only verification and manual releases for the launcher and telemetry image. Run test:local before release; shared CI does not build, test, sign, or publish these artifacts."
+    },
+    {
       "package": "@shepherdjerred/macos-cross-compiler",
       "directory": "packages/macos-cross-compiler",
-      "reason": "Compiler image smoke tests are paused in CI, so the sample builds and Mach-O checks are currently unverified by Buildkite. The smoke stage remains available for explicit local image validation. The SwiftUI macro parity check against Xcode's own plugins (macros:check) needs macOS with each Xcode installed."
+      "reason": "Compiler image smoke tests are paused in CI, so the sample builds and Mach-O checks are currently unverified by Woodpecker. The smoke stage remains available for explicit local image validation. The SwiftUI macro parity check against Xcode's own plugins (macros:check) needs macOS with each Xcode installed."
     },
     {
       "package": "@shepherdjerred/hkctl",

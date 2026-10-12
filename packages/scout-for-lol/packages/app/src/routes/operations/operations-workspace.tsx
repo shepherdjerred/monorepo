@@ -79,6 +79,14 @@ export function OperationsWorkspace() {
 
   return (
     <OperationsPage>
+      <nav aria-label="Operations" className="flex gap-4 text-sm">
+        <Link to="/operations/matches" className="underline">
+          Match operations
+        </Link>
+        <Link to="/operations/inbox" className="underline">
+          Support inbox
+        </Link>
+      </nav>
       <Outlet context={availability.data} />
     </OperationsPage>
   );

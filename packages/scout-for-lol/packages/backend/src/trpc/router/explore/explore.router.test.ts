@@ -47,7 +47,7 @@ async function seedUsers(): Promise<void> {
 
 beforeEach(async () => {
   await trpc.prisma.confirmationIntent.deleteMany();
-  await trpc.prisma.bucksDareV2.deleteMany();
+  await trpc.prisma.bucksDare.deleteMany();
   await trpc.prisma.exploreMessage.deleteMany();
   await trpc.prisma.exploreConversation.deleteMany();
   await seedUsers();
@@ -61,6 +61,95 @@ afterAll(async () => {
 });
 
 describe("explore router", () => {
+  test("lazy payloads require ownership or the current shared branch and token", async () => {
+    const conversation = await trpc.prisma.exploreConversation.create({
+      data: { userId: OWNER, title: "Inspection" },
+    });
+    const answer = await trpc.prisma.exploreMessage.create({
+      data: {
+        conversationId: conversation.id,
+        role: "assistant",
+        content: "Skill loaded",
+        trace: JSON.stringify([
+          {
+            toolCallId: "skill-call",
+            toolName: "load_skill",
+            message: "Loaded",
+            status: "succeeded",
+            durationMs: 760,
+            details: null,
+            rawInput: null,
+            rawOutput: null,
+          },
+        ]),
+      },
+    });
+    await trpc.prisma.exploreConversation.update({
+      where: { id: conversation.id },
+      data: { currentLeafId: answer.id },
+    });
+    await trpc.prisma.exploreToolPayload.createMany({
+      data: [
+        {
+          conversationId: conversation.id,
+          runId: crypto.randomUUID(),
+          toolCallId: "skill-call",
+          toolName: "load_skill",
+          direction: "output",
+          payload: JSON.stringify({
+            ok: true,
+            instructions: "Exact loaded instructions",
+            message: "Loaded",
+          }),
+        },
+        {
+          conversationId: conversation.id,
+          runId: crypto.randomUUID(),
+          toolCallId: "other-branch",
+          toolName: "load_skill",
+          direction: "output",
+          payload: JSON.stringify({ instructions: "Other branch" }),
+        },
+      ],
+    });
+    const input = {
+      conversationId: conversation.id,
+      toolCallId: "skill-call",
+      direction: "output" as const,
+      shareToken: null,
+    };
+    expect(
+      await trpc.authedCaller(OWNER).explore.toolPayload(input),
+    ).toMatchObject({ instructions: "Exact loaded instructions" });
+    await expect(
+      trpc.authedCaller(STRANGER).explore.toolPayload(input),
+    ).rejects.toThrow();
+    await expect(
+      trpc.anonCaller().explore.toolPayload(input),
+    ).rejects.toThrow();
+    const { shareToken } = await trpc
+      .authedCaller(OWNER)
+      .explore.share({ conversationId: conversation.id });
+    expect(
+      await trpc.anonCaller().explore.toolPayload({ ...input, shareToken }),
+    ).toMatchObject({ instructions: "Exact loaded instructions" });
+    await expect(
+      trpc.anonCaller().explore.toolPayload({
+        ...input,
+        toolCallId: "other-branch",
+        shareToken,
+      }),
+    ).rejects.toThrow();
+    await trpc
+      .authedCaller(OWNER)
+      .explore.revokeShare({ conversationId: conversation.id });
+    await expect(
+      trpc.anonCaller().explore.toolPayload({ ...input, shareToken }),
+    ).rejects.toThrow();
+  });
+});
+
+describe("explore management authorization", () => {
   test("an anonymous caller is rejected", async () => {
     await expect(trpc.anonCaller().explore.list()).rejects.toThrow();
   });
@@ -95,7 +184,7 @@ describe("explore router", () => {
   });
 
   test("reloads a confirmation intent's durable outcome for its actor", async () => {
-    const dare = await trpc.prisma.bucksDareV2.create({
+    const dare = await trpc.prisma.bucksDare.create({
       data: {
         serverId: ALLOWED_GUILD,
         channelId: DARE_CHANNEL,

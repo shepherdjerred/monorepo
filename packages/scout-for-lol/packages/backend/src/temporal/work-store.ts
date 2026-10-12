@@ -1,3 +1,6 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
+import { spectatorGameMatchId } from "#src/durable/match/match-identity.ts";
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import {
   LeaguePuuidSchema,
@@ -39,12 +42,12 @@ const ChampionMasteryRefreshPayloadSchema = z.strictObject({
 
 const UniqueViolationSchema = z.object({ code: z.literal("P2002") });
 
-export function parlayTemporalWorkId(matchId: string): string {
+export function parlayTemporalWorkId(matchId: RiotMatchId): string {
   return `parlay:${matchId}`;
 }
 
 export function championMasteryRefreshTemporalWorkId(
-  puuid: string,
+  puuid: LeaguePuuid,
   fetchedAt: Date | undefined,
 ): string {
   return `champion-mastery:${puuid}:${fetchedAt?.getTime().toString() ?? "missing"}`;
@@ -112,7 +115,7 @@ export async function enqueueParlayGeneration(
   input: StartParlayGenerationInput,
 ): Promise<void> {
   const parsed = ParlayWorkPayloadSchema.parse(input);
-  const matchId = `${parsed.gameInfo.platformId}_${parsed.gameInfo.gameId.toString()}`;
+  const matchId = spectatorGameMatchId(parsed.gameInfo);
   const workId = parlayTemporalWorkId(matchId);
   const created = await persistScoutTemporalWork({
     id: workId,
@@ -135,7 +138,7 @@ export async function enqueueParlayGeneration(
  */
 export async function enqueueChampionMasteryRefresh(
   input: {
-    puuid: string;
+    puuid: LeaguePuuid;
     region: string;
     fetchedAt: Date | undefined;
   },

@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1-labs@sha256:63e440b412b6acba117974e793b7e7f702e58ee65e044bdff1b8d388ee0d853b
+# syntax=docker/dockerfile:1-labs@sha256:ad43eec41369d9ef94412c0d1eb3203d12218d01da225afc92a3aeba3a0e7796
 # Headless Discord Plays Mario Kart. Build context is the REPO ROOT (single Bun
 # workspace, one root bun.lock, isolated linker, workspace:* deps). Built via
 # `bun run docker:build` in packages/discord-plays-mario-kart/packages/backend
@@ -24,7 +24,7 @@
 # time. No binaries are committed — the build is reproducible from source.
 # Pinned Emscripten 6 toolchain for the legacy SDL2/GLES2 core.
 # ---------------------------------------------------------------------------
-FROM emscripten/emsdk:6.0.10@sha256:e077d54e2b8970575ebc4f185ac1de0b95c05f2b266134d4ba27449af7aebf65 AS wasm-builder
+FROM emscripten/emsdk:6.0.12@sha256:77638e6c215a65f25a704c0c831d5c2463a8c0468a58c6cb82489dbe621dfa05 AS wasm-builder
 
 WORKDIR /src
 # Copy only the vendored wasm source tree (patches + the pristine `code/` tree).
@@ -59,7 +59,6 @@ COPY --parents \
   packages/discord-video-stream/prebuilds-patched/ \
   packages/*/package.json packages/*/packages/*/package.json \
   packages/docs/wiki/package.json \
-  packages/the-storm/brain/package.json \
   packages/homelab/src/cdk8s/package.json \
   packages/homelab/src/helm-types/package.json \
   ./
@@ -73,6 +72,7 @@ COPY --parents \
   packages/discord-plays-mario-kart/packages/common \
   packages/discord-plays-mario-kart/packages/frontend \
   packages/discord-plays-core \
+  packages/sentry-config \
   packages/discord-stream-lifecycle \
   packages/discord-video-stream \
   packages/loaded \
@@ -98,7 +98,6 @@ COPY --parents \
   packages/discord-video-stream/prebuilds-patched/ \
   packages/*/package.json packages/*/packages/*/package.json \
   packages/docs/wiki/package.json \
-  packages/the-storm/brain/package.json \
   packages/homelab/src/cdk8s/package.json \
   packages/homelab/src/helm-types/package.json \
   ./
@@ -143,6 +142,7 @@ COPY --parents \
   packages/discord-plays-mario-kart/packages/backend \
   packages/discord-plays-mario-kart/packages/common \
   packages/discord-plays-core \
+  packages/sentry-config \
   packages/discord-stream-lifecycle \
   packages/discord-video-stream \
   ./

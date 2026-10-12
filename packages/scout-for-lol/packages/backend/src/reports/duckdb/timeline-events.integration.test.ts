@@ -1,3 +1,8 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { beforeAll, describe, expect, test } from "vitest";
 import type { TimelineEventParticipantLakeRow } from "@scout-for-lol/data";
 import type { ScoutQlPlan } from "@scout-for-lol/data/model/scoutql/parse/plan.ts";
@@ -45,7 +50,7 @@ function event(
 
 function dragon(
   eventId: string,
-  matchId: string,
+  matchId: RiotMatchId,
   input: { killer: number; team: number; atMs: number; kind: string },
 ): ReturnType<typeof testEventRow> {
   return event({
@@ -63,7 +68,7 @@ function dragon(
 function assist(
   eventId: string,
   participantId: number,
-  puuid: string,
+  puuid: LeaguePuuid,
 ): TimelineEventParticipantLakeRow {
   return {
     event_id: eventId,
@@ -94,7 +99,7 @@ beforeAll(async () => {
     matchFacts: [
       {
         ...mira,
-        matchId: "NA1_600",
+        matchId: RiotMatchIdSchema.parse("NA1_600"),
         win: true,
         teamId: 100,
         championId: 103,
@@ -103,7 +108,7 @@ beforeAll(async () => {
       },
       {
         ...jax,
-        matchId: "NA1_600",
+        matchId: RiotMatchIdSchema.parse("NA1_600"),
         win: true,
         teamId: 100,
         championId: 24,
@@ -112,7 +117,7 @@ beforeAll(async () => {
       },
       {
         ...mira,
-        matchId: "NA1_601",
+        matchId: RiotMatchIdSchema.parse("NA1_601"),
         win: false,
         teamId: 100,
         championId: 103,
@@ -123,7 +128,7 @@ beforeAll(async () => {
     untrackedMatchFacts: [
       {
         ...otto,
-        matchId: "NA1_600",
+        matchId: RiotMatchIdSchema.parse("NA1_600"),
         win: false,
         teamId: 200,
         championId: 238,
@@ -132,7 +137,7 @@ beforeAll(async () => {
       },
       {
         ...otto,
-        matchId: "NA1_601",
+        matchId: RiotMatchIdSchema.parse("NA1_601"),
         win: true,
         teamId: 200,
         championId: 238,
@@ -141,13 +146,13 @@ beforeAll(async () => {
       },
     ],
     timelineEvents: [
-      dragon("e1", "NA1_600", {
+      dragon("e1", RiotMatchIdSchema.parse("NA1_600"), {
         killer: 2,
         team: 100,
         atMs: 390_000,
         kind: "FIRE_DRAGON",
       }),
-      dragon("e2", "NA1_600", {
+      dragon("e2", RiotMatchIdSchema.parse("NA1_600"), {
         killer: 8,
         team: 200,
         atMs: 720_000,
@@ -178,19 +183,19 @@ beforeAll(async () => {
         killer_id: 0,
         victim_id: 3,
       }),
-      dragon("e5", "NA1_600", {
+      dragon("e5", RiotMatchIdSchema.parse("NA1_600"), {
         killer: 3,
         team: 100,
         atMs: 1_800_000,
         kind: "ELDER_DRAGON",
       }),
-      dragon("e6", "NA1_601", {
+      dragon("e6", RiotMatchIdSchema.parse("NA1_601"), {
         killer: 8,
         team: 200,
         atMs: 480_000,
         kind: "EARTH_DRAGON",
       }),
-      dragon("e7", "NA1_601", {
+      dragon("e7", RiotMatchIdSchema.parse("NA1_601"), {
         killer: 3,
         team: 100,
         atMs: 1_920_000,

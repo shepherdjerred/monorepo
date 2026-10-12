@@ -1,8 +1,15 @@
+import {
+  DiscordChannelIdSchema,
+  type DiscordChannelId,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import { describe, expect, test } from "vitest";
 import { MAX_LIST_ITEMS, buildListEmbed } from "#src/discord/commands/list.ts";
 import type { SubscriptionListItem } from "#src/lib/subscription/types.ts";
 
-function item(alias: string, channelId: string): SubscriptionListItem {
+function item(
+  alias: string,
+  channelId: DiscordChannelId,
+): SubscriptionListItem {
   return {
     subscriptionId: 1,
     channelId,
@@ -27,7 +34,9 @@ describe("/list", () => {
       Array.from({ length: MAX_LIST_ITEMS }, (_, index) =>
         item(
           `player-${index.toString()}`,
-          `312300000000000${index.toString().padStart(3, "0")}`,
+          DiscordChannelIdSchema.parse(
+            `312300000000000${index.toString().padStart(3, "0")}`,
+          ),
         ),
       ),
       true,

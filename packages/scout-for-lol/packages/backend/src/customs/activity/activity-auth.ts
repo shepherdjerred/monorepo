@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import { SignJWT, jwtVerify } from "jose";
 import { z } from "zod";
 import {
@@ -74,7 +75,9 @@ export async function customsDiscordRead<T>(
 }
 
 /** Whether Scout is installed, with an unreachable Discord surfaced as 503. */
-export async function customsGuildInstalled(guildId: string): Promise<boolean> {
+export async function customsGuildInstalled(
+  guildId: DiscordGuildId,
+): Promise<boolean> {
   return await customsDiscordRead(
     () => isScoutInstalledInGuild(guildId),
     "Scout could not verify this server right now",

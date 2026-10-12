@@ -18,7 +18,7 @@ async function defaultDelay(delayMs: number): Promise<void> {
 /**
  * Retry only transport-class BuildKit failures. Deterministic solve failures
  * return immediately with their original status. Exhausted transient failures
- * return the pipeline's declared transient status so Buildkite can retry the
+ * return the pipeline's declared transient status so the CI wrapper can retry the
  * whole job after a daemon rollout or network interruption.
  */
 export async function retryTransientBuildx(

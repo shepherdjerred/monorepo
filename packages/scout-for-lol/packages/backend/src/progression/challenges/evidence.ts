@@ -1,3 +1,4 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import {
   ChallengeEvidenceMatchSchema,
   type ChallengeEvidenceMatch,
@@ -16,7 +17,7 @@ export async function fetchChallengeEvidence(options: {
   readonly limit?: number;
 }): Promise<{
   readonly evidence: {
-    readonly puuid: string;
+    readonly puuid: LeaguePuuid;
     readonly match: ChallengeEvidenceMatch;
   }[];
   readonly rowsRead: number;
@@ -30,7 +31,7 @@ export async function fetchChallengeEvidence(options: {
     })),
   });
   const evidence: {
-    readonly puuid: string;
+    readonly puuid: LeaguePuuid;
     readonly match: ChallengeEvidenceMatch;
   }[] = [];
   for (const row of rows) {

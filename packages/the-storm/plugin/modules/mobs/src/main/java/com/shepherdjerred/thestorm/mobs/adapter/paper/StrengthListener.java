@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.mobs.adapter.paper;
 
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.mobs.domain.scaling.Rewards;
 import com.shepherdjerred.thestorm.mobs.domain.scaling.Stat;
 import java.util.random.RandomGenerator;
@@ -24,15 +25,21 @@ final class StrengthListener implements Listener {
   private final LevelApplier levels;
   private final ExtraLoot loot;
   private final RandomGenerator random;
+  private final SealedWorlds sealed;
 
-  StrengthListener(LevelApplier levels, ExtraLoot loot, RandomGenerator random) {
+  StrengthListener(
+      LevelApplier levels, ExtraLoot loot, RandomGenerator random, SealedWorlds sealed) {
     this.levels = levels;
+    this.sealed = sealed;
     this.loot = loot;
     this.random = random;
   }
 
   @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
   void onDamage(EntityDamageByEntityEvent event) {
+    if (sealed.isSealed(event.getEntity().getWorld())) {
+      return;
+    }
     var damager = event.getDamager();
     if (damager instanceof Projectile projectile
         && projectile.getShooter() instanceof LivingEntity shooter) {
@@ -52,7 +59,9 @@ final class StrengthListener implements Listener {
   /** Keeps the ledger of who hurt each levelled mob, for {@link Rewards#earned}. */
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
   void onHurt(EntityDamageEvent event) {
-    if (!(event.getEntity() instanceof LivingEntity mob) || levels.levelOf(mob).isEmpty()) {
+    if (sealed.isSealed(event.getEntity().getWorld())
+        || !(event.getEntity() instanceof LivingEntity mob)
+        || levels.levelOf(mob).isEmpty()) {
       return;
     }
     var byPlayer =
@@ -68,7 +77,7 @@ final class StrengthListener implements Listener {
   @EventHandler(priority = EventPriority.HIGH)
   void onDeath(EntityDeathEvent event) {
     var mob = event.getEntity();
-    if (levels.levelOf(mob).isEmpty()) {
+    if (sealed.isSealed(mob.getWorld()) || levels.levelOf(mob).isEmpty()) {
       return;
     }
     var killer = KillLedger.finalBlow(event.getDamageSource());
@@ -90,7 +99,8 @@ final class StrengthListener implements Listener {
    */
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
   void onTransform(EntityTransformEvent event) {
-    if (!(event.getEntity() instanceof LivingEntity original)) {
+    if (sealed.isSealed(event.getEntity().getWorld())
+        || !(event.getEntity() instanceof LivingEntity original)) {
       return;
     }
     var level = levels.levelOf(original);

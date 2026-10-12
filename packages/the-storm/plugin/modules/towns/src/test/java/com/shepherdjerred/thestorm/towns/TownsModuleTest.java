@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.towns;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.shepherdjerred.thestorm.core.compute.DirectComputePool;
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.Services;
@@ -32,10 +33,15 @@ final class TownsModuleTest {
   private JavaPlugin plugin;
 
   @BeforeEach
-  void start() {
-    MockBukkit.mock().addSimpleWorld("world");
+  void start() throws Exception {
+    var server = MockBukkit.mock();
+    server.addSimpleWorld("world");
+    server.addSimpleWorld("settlement");
+    server.addSimpleWorld("rustworks");
     plugin = MockBukkit.createMockPlugin();
     database = StormDatabase.open(directory.resolve("t.db"));
+    Files.writeString(directory.resolve("parcels.yml"), "parcels: []\n");
+    Files.copy(Path.of("src/test/resources/heritage.yml"), directory.resolve("heritage.yml"));
   }
 
   @AfterEach
@@ -49,12 +55,14 @@ final class TownsModuleTest {
         plugin,
         plugin.getLifecycleManager(),
         new PaperScheduler(plugin),
+        new DirectComputePool(),
         database,
         new Services(),
         directory,
         InstantSource.system(),
         RandomGenerator.getDefault(),
-        plugin.getComponentLogger());
+        plugin.getComponentLogger(),
+        com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled());
   }
 
   @Test
@@ -87,8 +95,29 @@ final class TownsModuleTest {
   }
 
   @Test
+  void aParcelWorldTheServerHasNotLoadedStopsTheModule() throws Exception {
+    Files.copy(SHIPPED, directory.resolve("towns.yml"));
+    var parcels = Files.readString(Path.of("../../../server/owned/plugins/TheStorm/parcels.yml"));
+    Files.writeString(
+        directory.resolve("parcels.yml"), parcels.replace("world: world", "world: atlantis"));
+
+    assertThatThrownBy(() -> new TownsModule().enable(context()))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessageContaining("atlantis");
+  }
+
+  @Test
   void aMissingConfigStopsTheModule() {
     assertThatThrownBy(() -> new TownsModule().enable(context()))
         .isInstanceOf(RuntimeException.class);
+  }
+
+  @Test
+  void aMissingHeritageCatalogStopsTheModule() throws Exception {
+    Files.copy(SHIPPED, directory.resolve("towns.yml"));
+    Files.delete(directory.resolve("heritage.yml"));
+    assertThatThrownBy(() -> new TownsModule().enable(context()))
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("heritage.yml");
   }
 }

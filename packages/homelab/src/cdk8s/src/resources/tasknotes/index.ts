@@ -97,6 +97,7 @@ export function createTasknotesDeployment(chart: Chart) {
       envVariables: {
         VAULT_PATH: EnvValue.fromValue("/vault"),
         TASKS_DIR: EnvValue.fromValue("TaskNotes"),
+        HOST: EnvValue.fromValue("0.0.0.0"),
         PORT: EnvValue.fromValue("3000"),
         AUTH_TOKEN: EnvValue.fromSecretValue({
           secret: Secret.fromSecretName(

@@ -38,6 +38,7 @@ export async function slashCommand(params: {
     botId: params.botId,
     command: params.command,
     args: params.args,
+    timeoutSeconds: params.timeoutSeconds,
   });
   renderResult(result, params);
 }

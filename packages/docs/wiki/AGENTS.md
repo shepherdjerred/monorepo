@@ -106,12 +106,12 @@ Prefer updating an existing page over creating a near-duplicate.
 
 ## Verification
 
-From `packages/docs/wiki/`:
+From `packages/docs/wiki/`, build before unit tests inspect its output:
 
 ```bash
 bun run typecheck
-bun run test
 bun run build
+bun run test
 bun run test:e2e
 ```
 

@@ -46,8 +46,7 @@
     "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run",
     "prepublishOnly": "bun run build",
     "publish:npm": "bun ../../scripts/release/publish-npm.ts .",
-    "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
-    "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/ci/run-ci-test.ts"
+    "test:ci": "bun ../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
     "zod": "^4.4.3"
@@ -63,7 +62,7 @@
     "jiti": "^2.7.0",
     "typescript": "^6.0.3",
     "@typescript/native": "npm:typescript@7.0.2",
-    "vitest": "5.0.1",
-    "@vitest/coverage-istanbul": "5.0.1"
+    "vitest": "5.0.3",
+    "@vitest/coverage-istanbul": "5.0.3"
   }
 }

@@ -6,10 +6,14 @@ import {
 import {
   ScoutNotificationIntentKeySchema,
   ScoutPrematchGameRefSchema,
-} from "./contracts-v2.ts";
+} from "./pipeline-contracts.ts";
 import {
-  SCOUT_V2_ACTIVITY_QUEUE_CLASSES,
-  SCOUT_V2_WORKFLOW_NAMES,
+  SCOUT_PIPELINE_ACTIVITY_QUEUE_CLASSES,
+  SCOUT_PIPELINE_START_WORKFLOW_TYPES,
+  SCOUT_PIPELINE_WORKFLOW_NAMES,
+  SCOUT_PRE_RENAME_WORKFLOW_TYPES,
+  SCOUT_WORKFLOW_NAMES,
+  scoutRenamedWorkflowType,
   scoutChallengeRunRecomputeWorkflowId,
   scoutDuelSeriesWorkflowId,
   scoutHallBaselineWorkflowId,
@@ -18,18 +22,16 @@ import {
   scoutExploreTimelineWorkflowId,
   scoutInitialHistoryWorkflowId,
   scoutInteractiveWorkflowId,
-  scoutLakeProjectionV2WorkflowId,
-  scoutClientMatchDispatchV2WorkflowId,
-  scoutMatchProcessingV2WorkflowId,
-  scoutMatchWorkflowId,
+  scoutLakeProjectionWorkflowId,
+  scoutClientMatchDispatchWorkflowId,
+  scoutMatchProcessingWorkflowId,
   scoutNotificationAttemptNonce,
-  scoutNotificationV2WorkflowId,
-  scoutPipelineReconciliationV2WorkflowId,
-  scoutPostMatchDiscoveryV2WorkflowId,
-  scoutPrematchDiscoveryV2WorkflowId,
-  scoutPrematchGameV2MatchId,
-  scoutPrematchGameV2WorkflowId,
-  scoutRecoveryBatchV2WorkflowId,
+  scoutNotificationWorkflowId,
+  scoutPipelineReconciliationWorkflowId,
+  scoutPostMatchDiscoveryWorkflowId,
+  scoutPrematchGameMatchId,
+  scoutPrematchGameWorkflowId,
+  scoutRecoveryBatchWorkflowId,
   scoutReportScheduleId,
   scoutReportScheduleReconcilerWorkflowId,
   scoutTaskQueues,
@@ -47,9 +49,12 @@ describe("Scout Temporal identifiers", () => {
   });
 
   test("uses stable product identifiers without random suffixes", () => {
-    expect(scoutMatchWorkflowId("prod", "NA1_123")).toBe(
-      "scout-prod-match-NA1_123",
-    );
+    expect(
+      scoutExploreHistoryWorkflowId("beta", "puuid_123", 456, "ranked"),
+    ).toBe(scoutExploreHistoryWorkflowId("beta", "puuid_123", 456));
+    expect(
+      scoutExploreHistoryWorkflowId("beta", "puuid_123", 456, "normal"),
+    ).toBe("scout-beta-explore-history-puuid_123-456-normal");
     expect(scoutInitialHistoryWorkflowId("beta", "puuid_123")).toBe(
       "scout-beta-history-puuid_123",
     );
@@ -95,15 +100,14 @@ const gameRef = ScoutPrematchGameRefSchema.parse({
 });
 
 const v2WorkflowIds = [
-  scoutPostMatchDiscoveryV2WorkflowId("prod", "schedule"),
-  scoutMatchProcessingV2WorkflowId("prod", riotMatchId),
-  scoutClientMatchDispatchV2WorkflowId("prod"),
-  scoutPrematchDiscoveryV2WorkflowId("prod"),
-  scoutPrematchGameV2WorkflowId("prod", gameRef),
-  scoutNotificationV2WorkflowId("prod", intentKey),
-  scoutLakeProjectionV2WorkflowId("prod", riotMatchId),
-  scoutRecoveryBatchV2WorkflowId("prod", recoveryBatchId),
-  scoutPipelineReconciliationV2WorkflowId("prod", "gateway-ready"),
+  scoutPostMatchDiscoveryWorkflowId("prod", "schedule"),
+  scoutMatchProcessingWorkflowId("prod", riotMatchId),
+  scoutClientMatchDispatchWorkflowId("prod"),
+  scoutPrematchGameWorkflowId("prod", gameRef),
+  scoutNotificationWorkflowId("prod", intentKey),
+  scoutLakeProjectionWorkflowId("prod", riotMatchId),
+  scoutRecoveryBatchWorkflowId("prod", recoveryBatchId),
+  scoutPipelineReconciliationWorkflowId("prod", "gateway-ready"),
 ];
 
 describe("Scout V2 workflow identifiers", () => {
@@ -112,14 +116,16 @@ describe("Scout V2 workflow identifiers", () => {
       "scout-prod-post-match-discovery-v2-schedule",
       "scout-prod-match-v2-NA1_5312279829",
       "scout-prod-client-match-dispatch-v2",
-      "scout-prod-prematch-discovery-v2",
       "scout-prod-prematch-game-v2-NA1_5312279829",
       "scout-prod-notification-v2-notify:NA1_5312279829:guild:1234567890",
       "scout-prod-lake-projection-v2-NA1_5312279829",
       "scout-prod-recovery-batch-v2-recovery_2026-09-11_01",
       "scout-prod-pipeline-reconciliation-v2-gateway-ready",
     ]);
-    expect(v2WorkflowIds).toHaveLength(SCOUT_V2_WORKFLOW_NAMES.length);
+    // Prematch discovery has no id builder: the Schedule names each action.
+    expect(v2WorkflowIds).toHaveLength(
+      SCOUT_PIPELINE_WORKFLOW_NAMES.length - 1,
+    );
   });
 
   test("keeps every V2 id selectable by the replay tooling", () => {
@@ -132,24 +138,18 @@ describe("Scout V2 workflow identifiers", () => {
     }
   });
 
-  test("separates a V2 execution from its v1 sibling for the same match", () => {
-    expect(scoutMatchProcessingV2WorkflowId("prod", riotMatchId)).not.toBe(
-      scoutMatchWorkflowId("prod", riotMatchId),
-    );
-  });
-
   test("gives one prematch execution per game, not per tracked account", () => {
     const sameGameOtherAccount = ScoutPrematchGameRefSchema.parse({
       ...gameRef,
       puuid: "q".repeat(78),
     });
-    expect(scoutPrematchGameV2WorkflowId("prod", sameGameOtherAccount)).toBe(
-      scoutPrematchGameV2WorkflowId("prod", gameRef),
+    expect(scoutPrematchGameWorkflowId("prod", sameGameOtherAccount)).toBe(
+      scoutPrematchGameWorkflowId("prod", gameRef),
     );
   });
 
   test("composes the match id Riot will assign a live game", () => {
-    expect(scoutPrematchGameV2MatchId(gameRef)).toBe("NA1_5312279829");
+    expect(scoutPrematchGameMatchId(gameRef)).toBe("NA1_5312279829");
   });
 
   test("names each send attempt distinctly and deterministically", () => {
@@ -166,20 +166,60 @@ describe("Scout V2 workflow identifiers", () => {
   });
 
   test("routes each V2 activity to exactly one declared queue class", () => {
-    expect(SCOUT_V2_ACTIVITY_QUEUE_CLASSES.deliverNotificationV2).toBe(
+    expect(SCOUT_PIPELINE_ACTIVITY_QUEUE_CLASSES.deliverNotification).toBe(
       "realtime",
     );
-    expect(SCOUT_V2_ACTIVITY_QUEUE_CLASSES.stageLakeProjectionV2).toBe("lake");
-    expect(SCOUT_V2_ACTIVITY_QUEUE_CLASSES.renderNotificationArtifactV2).toBe(
-      "background",
+    expect(SCOUT_PIPELINE_ACTIVITY_QUEUE_CLASSES.stageLakeProjection).toBe(
+      "lake",
     );
     expect(
-      SCOUT_V2_ACTIVITY_QUEUE_CLASSES.scanPipelineReconciliationPageV2,
+      SCOUT_PIPELINE_ACTIVITY_QUEUE_CLASSES.renderNotificationArtifact,
+    ).toBe("background");
+    expect(
+      SCOUT_PIPELINE_ACTIVITY_QUEUE_CLASSES.scanPipelineReconciliationPage,
     ).toBe("background");
     // `interactive` belongs to human-facing runs; nothing in the durable
     // pipeline may sit in front of one.
-    expect(Object.values(SCOUT_V2_ACTIVITY_QUEUE_CLASSES)).not.toContain(
+    expect(Object.values(SCOUT_PIPELINE_ACTIVITY_QUEUE_CLASSES)).not.toContain(
       "interactive",
+    );
+  });
+});
+
+describe("the generation rename", () => {
+  test("issues every pipeline type under its renamed name", () => {
+    expect(
+      Object.values(SCOUT_WORKFLOW_NAMES).filter((name) =>
+        name.endsWith("V2Workflow"),
+      ),
+    ).toEqual([]);
+    expect(SCOUT_PRE_RENAME_WORKFLOW_TYPES).toMatchObject({
+      scoutMatchProcessingWorkflow: "scoutMatchProcessingV2Workflow",
+      scoutPrematchDiscoveryWorkflow: "scoutPrematchDiscoveryV2Workflow",
+    });
+  });
+
+  test("compares a recorded pre-rename type under the name issued now", () => {
+    for (const [renamed, preRename] of Object.entries(
+      SCOUT_PRE_RENAME_WORKFLOW_TYPES,
+    )) {
+      expect(scoutRenamedWorkflowType(preRename)).toBe(renamed);
+      expect(scoutRenamedWorkflowType(renamed)).toBe(renamed);
+    }
+    expect(scoutRenamedWorkflowType(SCOUT_WORKFLOW_NAMES.reportRun)).toBe(
+      "scoutReportRunWorkflow",
+    );
+  });
+
+  test("filters start rows on both names of every pipeline type", () => {
+    expect(SCOUT_PIPELINE_START_WORKFLOW_TYPES).toHaveLength(
+      SCOUT_PIPELINE_WORKFLOW_NAMES.length * 2,
+    );
+    expect(SCOUT_PIPELINE_START_WORKFLOW_TYPES).toEqual(
+      expect.arrayContaining([
+        "scoutNotificationWorkflow",
+        "scoutNotificationV2Workflow",
+      ]),
     );
   });
 });

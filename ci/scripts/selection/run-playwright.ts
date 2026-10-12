@@ -38,14 +38,29 @@ async function executeGit(
   return { exitCode: await child.exited, stdout };
 }
 
-async function validBase(base: string): Promise<boolean> {
-  return ensureAncestor(
+export async function resolvePlaywrightBase(
+  base: string,
+  execute = executeGit,
+  event = Bun.env["CI_PIPELINE_EVENT"],
+): Promise<string | null> {
+  const valid = await ensureAncestor(
     base,
     "HEAD",
-    executeGit,
-    Bun.env["CI_PIPELINE_EVENT"] === "push" ||
-      Bun.env["CI_PIPELINE_EVENT"] === "manual",
+    execute,
+    event === "push" || event === "manual",
   );
+  if (!valid) return null;
+  const resolved = await execute([
+    "git",
+    "rev-parse",
+    "--verify",
+    "--end-of-options",
+    `${base}^{commit}`,
+  ]);
+  const commit = resolved.stdout.trim();
+  if (resolved.exitCode !== 0 || !/^[a-f\d]{40}$/u.test(commit)) return null;
+  // A movable ref may have changed after the first ancestry check.
+  return (await ensureAncestor(commit, "HEAD", execute, false)) ? commit : null;
 }
 
 async function changedPaths(base: string): Promise<string[]> {
@@ -73,8 +88,12 @@ async function selectionForBuild(): Promise<{
       selection: allPlaywrightTargets("fixed CI I/O corpus requested"),
     };
   }
-  const base = Bun.env["CI_CHANGED_BASE"]?.trim();
-  if (base === undefined || base === "" || !(await validBase(base))) {
+  const requestedBase = Bun.env["CI_CHANGED_BASE"]?.trim();
+  const base =
+    requestedBase === undefined || requestedBase === ""
+      ? null
+      : await resolvePlaywrightBase(requestedBase);
+  if (base === null) {
     return {
       base: null,
       changedPaths: [],
@@ -187,10 +206,6 @@ async function main(): Promise<number> {
   const selectedPackages = context.selection.targets.map(
     (target) => target.package,
   );
-  if (selectedPackages.length === 0) {
-    console.log("Browser E2E: no affected targets");
-    return 0;
-  }
   console.log(`Browser E2E targets: ${selectedPackages.join(", ")}`);
   await rm(".ci-reports", { recursive: true, force: true });
 
@@ -209,6 +224,13 @@ async function main(): Promise<number> {
     ...[...installFilters].flatMap((name) => ["--filter", name]),
   ]);
   if (installStatus !== 0) return installStatus;
+
+  // The root scripts also publish the selection/timing record on an empty
+  // selection. Install their declared dependencies before that cleanup runs.
+  if (selectedPackages.length === 0) {
+    console.log("Browser E2E: no affected targets");
+    return 0;
+  }
 
   if (selectedPackages.includes("sjer.red")) {
     const sjerStatus = await run([

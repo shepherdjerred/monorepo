@@ -1,3 +1,9 @@
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
+import {
+  DiscordAccountIdSchema,
+  type DiscordGuildId,
+} from "@scout-for-lol/domain/identity/discord.ts";
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import * as Sentry from "@sentry/bun";
 import {
   DiscordGuildIdSchema,
@@ -20,27 +26,25 @@ import { classifyMatchForBetting } from "#src/betting/outcome.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 import { queryMatchById } from "#src/storage/s3-query.ts";
-import { loadPuuidRemap } from "#src/report-lake/puuid-remap.ts";
 
 const logger = createLogger("betting-earnings-retry");
 
 const EarnTargetSnapshotSchema = z.array(
   z.object({
-    discordId: z.string(),
+    discordId: DiscordAccountIdSchema,
     alias: z.string(),
-    puuid: z.string(),
+    puuid: LeaguePuuidSchema,
   }),
 );
 
 type PendingEarningMatchLoader = (
-  matchId: string,
+  matchId: RiotMatchId,
   matchCreatedAt: Date,
-  puuidRemap: ReadonlyMap<string, string>,
 ) => Promise<RawMatch | undefined>;
 
 type PendingEarningMarker = {
-  matchId: string;
-  serverId: string;
+  matchId: RiotMatchId;
+  serverId: DiscordGuildId;
   awardedAt: Date;
   targetSnapshotJson: string;
   matchCreatedAt: Date;
@@ -52,7 +56,7 @@ function queueTypeOf(matchData: RawMatch): QueueType | undefined {
 
 function targetsFromSnapshot(
   matchData: RawMatch,
-  serverId: string,
+  serverId: DiscordGuildId,
   serialized: string,
 ): EarnTarget[] {
   const snapshots = EarnTargetSnapshotSchema.parse(JSON.parse(serialized));
@@ -97,7 +101,6 @@ export async function retryPendingBucksEarnings(
 ): Promise<void> {
   // Stored match payloads carry the PUUIDs of whichever key captured them,
   // while the earning rows below hold current ones.
-  const puuidRemap = await loadPuuidRemap(prismaClient);
   const pending = await prismaClient.bucksMatchEarning.findMany({
     where: {
       phase: "postmatch",
@@ -114,7 +117,7 @@ export async function retryPendingBucksEarnings(
       matchCreatedAt: true,
     },
   });
-  const markersByMatch = new Map<string, PendingEarningMarker[]>();
+  const markersByMatch = new Map<RiotMatchId, PendingEarningMarker[]>();
   for (const marker of pending) {
     markersByMatch.set(marker.matchId, [
       ...(markersByMatch.get(marker.matchId) ?? []),
@@ -130,7 +133,7 @@ export async function retryPendingBucksEarnings(
 
     let match: RawMatch | undefined;
     try {
-      match = await loadMatch(matchId, matchCreatedAt, puuidRemap);
+      match = await loadMatch(matchId, matchCreatedAt);
     } catch (error) {
       logger.error(`❌ Could not reload Bryan Bucks match ${matchId}:`, error);
       Sentry.captureException(error, {

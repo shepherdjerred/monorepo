@@ -21,7 +21,7 @@ import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Creates the extra overworlds, publishes {@link WildWorlds}, and optionally registers crier
+ * Validates the provisioned extra overworlds, publishes {@link WildWorlds}, and registers crier
  * interactions.
  */
 public final class WorldModule implements StormModule {
@@ -109,7 +109,7 @@ public final class WorldModule implements StormModule {
                       context.scheduler().mainThread())),
               context.plugin());
     }
-    context.logger().info("{} module created {}", id(), worlds.defaultWorld().name());
+    context.logger().info("{} module loaded {}", id(), worlds.defaultWorld().name());
   }
 
   @Override

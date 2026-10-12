@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/data";
 import { useEffect, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/query/trpc.ts";
@@ -23,7 +24,7 @@ type Member = {
  * submission and should disable submit when it's empty.
  */
 export function DiscordMemberCombobox(props: {
-  guildId: string;
+  guildId: DiscordGuildId;
   value: string;
   onChange: (discordUserId: string) => void;
   disabled?: boolean;

@@ -6,7 +6,19 @@ use rusqlite::{Connection, OptionalExtension, TransactionBehavior, params};
 use thiserror::Error;
 use uuid::Uuid;
 
-use crate::protocol::{MAX_OBSERVATION_BYTES, ObservationEnvelope, ProtocolError};
+use crate::protocol::{
+    LOBBY_ID_MAX_BYTES, MAX_OBSERVATION_BYTES, ObservationEnvelope, ProtocolError,
+};
+
+/// How long a remembered lobby stays eligible to claim a starting game.
+///
+/// The lobby endpoint answers right up to champion select and disappears as the
+/// game begins, so the real gap between the last lobby read and the first
+/// `InProgress` read is a tick or two. This bound exists only to stop an
+/// abandoned lobby from claiming an unrelated game hours later: a stale key is
+/// worse than no key, because it would silently attach one game's roster to
+/// another.
+const LOBBY_BINDING_WINDOW_MILLIS: i64 = 15 * 60 * 1000;
 
 /// One pending outbox row.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -30,6 +42,19 @@ pub struct PendingGameTiming {
     pub ended_at_millis: i64,
 }
 
+/// The one recorded outcome of a game's lobby join.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum LobbyBinding {
+    /// This call recorded the join, to the named lobby.
+    Bound(String),
+    /// This call recorded that no lobby was witnessed for the game. The client
+    /// was not watching when the lobby existed — it started mid-game, or the
+    /// game was joined from outside a lobby this device saw.
+    Unwitnessed,
+    /// An earlier call already recorded this game's outcome.
+    AlreadyRecorded,
+}
+
 /// SQLite-backed at-least-once queue.
 #[derive(Debug, Clone)]
 pub struct ObservationOutbox {
@@ -48,8 +73,24 @@ impl ObservationOutbox {
             path: path.as_ref().to_path_buf(),
         };
         let connection = outbox.connection()?;
-        connection.execute_batch(
-            "PRAGMA journal_mode = WAL;
+        connection.execute_batch(SCHEMA)?;
+        // Columns first: the partial index below is over `coalesce_key`, which
+        // an outbox created by an older build does not have yet.
+        add_missing_columns(&connection)?;
+        connection.execute_batch(COALESCE_KEY_INDEX)?;
+        Ok(outbox)
+    }
+
+    fn connection(&self) -> Result<Connection, OutboxError> {
+        Connection::open(&self.path).map_err(OutboxError::Sqlite)
+    }
+}
+
+/// Tables the outbox creates on open.
+///
+/// Every statement is idempotent, so this runs the same way against a new file
+/// and against one an earlier build left behind.
+const SCHEMA: &str = "PRAGMA journal_mode = WAL;
              PRAGMA synchronous = FULL;
              CREATE TABLE IF NOT EXISTS observation_outbox (
                observation_id TEXT PRIMARY KEY,
@@ -100,58 +141,55 @@ impl ObservationOutbox {
                started_at_millis INTEGER,
                ended_at_millis INTEGER,
                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-             );",
-        )?;
-        let has_coalesce_key = {
-            let mut statement = connection.prepare("PRAGMA table_info(observation_outbox)")?;
-            let columns = statement.query_map([], |row| row.get::<_, String>(1))?;
-            let mut found = false;
-            for column in columns {
-                if column? == "coalesce_key" {
-                    found = true;
-                }
-            }
-            found
-        };
-        if !has_coalesce_key {
-            connection.execute(
-                "ALTER TABLE observation_outbox ADD COLUMN coalesce_key TEXT",
-                [],
-            )?;
-        }
-        let has_sequence_synchronized = {
-            let mut statement = connection.prepare("PRAGMA table_info(outbox_metadata)")?;
-            let columns = statement.query_map([], |row| row.get::<_, String>(1))?;
-            let mut found = false;
-            for column in columns {
-                if column? == "sequence_synchronized" {
-                    found = true;
-                }
-            }
-            found
-        };
-        if !has_sequence_synchronized {
-            connection.execute(
-                "ALTER TABLE outbox_metadata ADD COLUMN sequence_synchronized INTEGER NOT NULL DEFAULT 0
-                 CHECK (sequence_synchronized IN (0, 1))",
-                [],
-            )?;
-            // Older runtimes allocated observations only after a successful
-            // check-in. A legacy metadata row therefore proves that this
-            // device already learned its backend sequence floor.
-            connection.execute("UPDATE outbox_metadata SET sequence_synchronized = 1", [])?;
-        }
-        connection.execute_batch(
-            "CREATE UNIQUE INDEX IF NOT EXISTS observation_outbox_coalesce_key
-             ON observation_outbox(coalesce_key) WHERE coalesce_key IS NOT NULL;",
-        )?;
-        Ok(outbox)
-    }
+             );
+             CREATE TABLE IF NOT EXISTS observed_lobby (
+               singleton INTEGER PRIMARY KEY CHECK (singleton = 1),
+               lobby_id TEXT NOT NULL,
+               observed_at_millis INTEGER NOT NULL
+             );
+             CREATE TABLE IF NOT EXISTS game_lobby_binding (
+               game_id TEXT PRIMARY KEY,
+               lobby_id TEXT,
+               bound_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+             );";
 
-    fn connection(&self) -> Result<Connection, OutboxError> {
-        Connection::open(&self.path).map_err(OutboxError::Sqlite)
-    }
+/// Enforces one pending row per coalescing key, ignoring uncoalesced rows.
+const COALESCE_KEY_INDEX: &str = "CREATE UNIQUE INDEX IF NOT EXISTS
+             observation_outbox_coalesce_key
+             ON observation_outbox(coalesce_key) WHERE coalesce_key IS NOT NULL;";
 
+fn has_column(connection: &Connection, table: &str, column: &str) -> Result<bool, OutboxError> {
+    let mut statement = connection.prepare(&format!("PRAGMA table_info({table})"))?;
+    let mut columns = statement.query_map([], |row| row.get::<_, String>(1))?;
+    columns.try_fold(false, |found, name| Ok(found || name? == column))
+}
+
+/// Add columns to tables an earlier build created without them.
+///
+/// `CREATE TABLE IF NOT EXISTS` leaves an existing table alone, so a column
+/// added to [`SCHEMA`] after a release has to be backfilled here.
+fn add_missing_columns(connection: &Connection) -> Result<(), OutboxError> {
+    if !has_column(connection, "observation_outbox", "coalesce_key")? {
+        connection.execute(
+            "ALTER TABLE observation_outbox ADD COLUMN coalesce_key TEXT",
+            [],
+        )?;
+    }
+    if !has_column(connection, "outbox_metadata", "sequence_synchronized")? {
+        connection.execute(
+            "ALTER TABLE outbox_metadata ADD COLUMN sequence_synchronized INTEGER NOT NULL DEFAULT 0
+             CHECK (sequence_synchronized IN (0, 1))",
+            [],
+        )?;
+        // Older runtimes allocated observations only after a successful
+        // check-in. A legacy metadata row therefore proves that this
+        // device already learned its backend sequence floor.
+        connection.execute("UPDATE outbox_metadata SET sequence_synchronized = 1", [])?;
+    }
+    Ok(())
+}
+
+impl ObservationOutbox {
     /// Return the next durable sequence number.
     ///
     /// # Errors
@@ -494,6 +532,112 @@ impl ObservationOutbox {
             .map_err(OutboxError::Sqlite)
     }
 
+    /// Retain the lobby the local player is in, so a later game can claim it.
+    ///
+    /// Only the most recent lobby is kept: a player is in one lobby at a time,
+    /// and an older one can no longer be the lobby a game starts from.
+    ///
+    /// # Errors
+    ///
+    /// Returns a typed validation or SQLite error.
+    pub fn remember_observed_lobby(
+        &self,
+        lobby_id: &str,
+        observed_at_millis: i64,
+    ) -> Result<(), OutboxError> {
+        validate_lobby_identity(lobby_id, observed_at_millis)?;
+        let connection = self.connection()?;
+        connection.execute(
+            "INSERT INTO observed_lobby (singleton, lobby_id, observed_at_millis)
+             VALUES (1, ?1, ?2)
+             ON CONFLICT(singleton) DO UPDATE SET
+               lobby_id = excluded.lobby_id,
+               observed_at_millis = MAX(
+                 observed_lobby.observed_at_millis,
+                 excluded.observed_at_millis
+               )",
+            params![lobby_id, observed_at_millis],
+        )?;
+        Ok(())
+    }
+
+    /// Tie a starting game to the lobby that assembled it, at most once.
+    ///
+    /// LCU exposes `partyId` on the lobby and `gameId` only once the game is in
+    /// progress, and nothing links the two: the in-progress session carries no
+    /// lobby identity at all. The client is the only party that sees both, so
+    /// it records the join here and stamps it onto later observations.
+    ///
+    /// Exactly one outcome is recorded per game, and the first one wins. A
+    /// game's roster cannot change identity partway through, so a later tick
+    /// must not be able to move it — and since `InProgress` is read on every
+    /// tick for the length of a match, a caller that reacted to the outcome
+    /// repeatedly would bury its own log.
+    ///
+    /// # Errors
+    ///
+    /// Returns a typed validation or SQLite error.
+    pub fn bind_game_to_lobby(
+        &self,
+        game_id: &str,
+        observed_at_millis: i64,
+    ) -> Result<LobbyBinding, OutboxError> {
+        validate_game_timing(game_id, observed_at_millis)?;
+        let connection = self.connection()?;
+        let already = connection
+            .query_row(
+                "SELECT 1 FROM game_lobby_binding WHERE game_id = ?1",
+                [game_id],
+                |_| Ok(()),
+            )
+            .optional()?
+            .is_some();
+        if already {
+            return Ok(LobbyBinding::AlreadyRecorded);
+        }
+        let lobby_id = connection
+            .query_row(
+                "SELECT lobby_id FROM observed_lobby
+                 WHERE singleton = 1
+                   AND observed_at_millis >= ?1
+                   AND observed_at_millis <= ?2",
+                params![
+                    observed_at_millis.saturating_sub(LOBBY_BINDING_WINDOW_MILLIS),
+                    observed_at_millis
+                ],
+                |row| row.get::<_, String>(0),
+            )
+            .optional()?;
+        connection.execute(
+            "INSERT INTO game_lobby_binding (game_id, lobby_id)
+             VALUES (?1, ?2)
+             ON CONFLICT(game_id) DO NOTHING",
+            params![game_id, lobby_id],
+        )?;
+        Ok(match lobby_id {
+            Some(lobby_id) => LobbyBinding::Bound(lobby_id),
+            None => LobbyBinding::Unwitnessed,
+        })
+    }
+
+    /// The lobby this game was started from, when the client witnessed both.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`OutboxError::Sqlite`] if local state cannot be read.
+    pub fn lobby_for_game(&self, game_id: &str) -> Result<Option<String>, OutboxError> {
+        let connection = self.connection()?;
+        connection
+            .query_row(
+                "SELECT lobby_id FROM game_lobby_binding
+                 WHERE game_id = ?1 AND lobby_id IS NOT NULL",
+                [game_id],
+                |row| row.get::<_, String>(0),
+            )
+            .optional()
+            .map_err(OutboxError::Sqlite)
+    }
+
     /// Remove timing evidence after its complete post-game bundle is durable.
     ///
     /// # Errors
@@ -713,6 +857,16 @@ pub struct ReplayInventoryRow {
     pub state: String,
 }
 
+fn validate_lobby_identity(lobby_id: &str, observed_at_millis: i64) -> Result<(), OutboxError> {
+    if lobby_id.is_empty() || lobby_id.len() > LOBBY_ID_MAX_BYTES {
+        return Err(OutboxError::InvalidLobbyId);
+    }
+    if observed_at_millis <= 0 {
+        return Err(OutboxError::InvalidGameTimestamp);
+    }
+    Ok(())
+}
+
 fn validate_game_timing(game_id: &str, timestamp_millis: i64) -> Result<(), OutboxError> {
     if game_id.is_empty() || game_id.len() > 32 {
         return Err(OutboxError::InvalidGameId);
@@ -747,6 +901,9 @@ pub enum OutboxError {
     /// Local game timing must contain a positive Unix timestamp.
     #[error("local game timing contains an invalid timestamp")]
     InvalidGameTimestamp,
+    /// A remembered lobby must have an identity within the protocol bound.
+    #[error("observed lobby has an invalid identity")]
+    InvalidLobbyId,
     /// A retained end-game fragment exceeded the observation wire bound.
     #[error("end-game fragment contains {0} bytes, exceeding the wire limit")]
     FragmentTooLarge(usize),
@@ -762,10 +919,128 @@ mod tests {
 
     use crate::protocol::{ObservationEnvelope, ObservationKind};
 
-    use super::{ObservationOutbox, PendingGameTiming};
+    use super::{LOBBY_BINDING_WINDOW_MILLIS, LobbyBinding, ObservationOutbox, PendingGameTiming};
 
     fn temporary_database() -> std::path::PathBuf {
         std::env::temp_dir().join(format!("scout-outbox-{}.db", Uuid::new_v4()))
+    }
+
+    /// A fixed, positive clock. The binding window is relative, so these tests
+    /// only need two instants a known distance apart.
+    const NOW: i64 = 1_700_000_000_000;
+
+    #[test]
+    fn a_game_claims_the_lobby_that_assembled_it() -> Result<(), Box<dyn std::error::Error>> {
+        let path = temporary_database();
+        let outbox = ObservationOutbox::open(&path)?;
+        outbox.remember_observed_lobby("party-1", NOW)?;
+
+        assert_eq!(
+            outbox.bind_game_to_lobby("game-1", NOW + 90_000)?,
+            LobbyBinding::Bound("party-1".to_owned()),
+        );
+        assert_eq!(
+            outbox.lobby_for_game("game-1")?,
+            Some("party-1".to_owned()),
+            "the join has to survive for the observations that follow it",
+        );
+
+        let _ = fs::remove_file(&path);
+        Ok(())
+    }
+
+    #[test]
+    fn a_games_lobby_is_recorded_once_and_cannot_be_moved() -> Result<(), Box<dyn std::error::Error>>
+    {
+        let path = temporary_database();
+        let outbox = ObservationOutbox::open(&path)?;
+        outbox.remember_observed_lobby("party-1", NOW)?;
+        outbox.bind_game_to_lobby("game-1", NOW)?;
+
+        // A new lobby appearing mid-match must not retarget a started game.
+        outbox.remember_observed_lobby("party-2", NOW + 60_000)?;
+        assert_eq!(
+            outbox.bind_game_to_lobby("game-1", NOW + 60_000)?,
+            LobbyBinding::AlreadyRecorded,
+        );
+        assert_eq!(outbox.lobby_for_game("game-1")?, Some("party-1".to_owned()));
+
+        let _ = fs::remove_file(&path);
+        Ok(())
+    }
+
+    #[test]
+    fn a_game_no_lobby_was_seen_for_records_that_it_has_none()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let path = temporary_database();
+        let outbox = ObservationOutbox::open(&path)?;
+
+        assert_eq!(
+            outbox.bind_game_to_lobby("game-1", NOW)?,
+            LobbyBinding::Unwitnessed,
+            "a client started mid-game never saw the lobby",
+        );
+        assert_eq!(outbox.lobby_for_game("game-1")?, None);
+        assert_eq!(
+            outbox.bind_game_to_lobby("game-1", NOW + 3_000)?,
+            LobbyBinding::AlreadyRecorded,
+            "the absence is recorded too, so the caller reports it once",
+        );
+
+        let _ = fs::remove_file(&path);
+        Ok(())
+    }
+
+    #[test]
+    fn an_abandoned_lobby_cannot_claim_a_much_later_game() -> Result<(), Box<dyn std::error::Error>>
+    {
+        let path = temporary_database();
+        let outbox = ObservationOutbox::open(&path)?;
+        outbox.remember_observed_lobby("party-1", NOW)?;
+
+        assert_eq!(
+            outbox.bind_game_to_lobby("game-1", NOW + LOBBY_BINDING_WINDOW_MILLIS + 1)?,
+            LobbyBinding::Unwitnessed,
+            "a stale key would attach one game's roster to another",
+        );
+
+        let _ = fs::remove_file(&path);
+        Ok(())
+    }
+
+    #[test]
+    fn only_the_current_lobby_is_remembered() -> Result<(), Box<dyn std::error::Error>> {
+        let path = temporary_database();
+        let outbox = ObservationOutbox::open(&path)?;
+        outbox.remember_observed_lobby("party-1", NOW)?;
+        outbox.remember_observed_lobby("party-2", NOW + 60_000)?;
+
+        assert_eq!(
+            outbox.bind_game_to_lobby("game-1", NOW + 120_000)?,
+            LobbyBinding::Bound("party-2".to_owned()),
+            "a player is in one lobby at a time, and it is the latest one",
+        );
+
+        let _ = fs::remove_file(&path);
+        Ok(())
+    }
+
+    #[test]
+    fn a_lobby_identity_outside_the_protocol_bound_is_refused()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let path = temporary_database();
+        let outbox = ObservationOutbox::open(&path)?;
+
+        assert!(outbox.remember_observed_lobby("", NOW).is_err());
+        assert!(
+            outbox
+                .remember_observed_lobby(&"p".repeat(129), NOW)
+                .is_err(),
+            "the envelope would reject it later; fail at the boundary instead",
+        );
+
+        let _ = fs::remove_file(&path);
+        Ok(())
     }
 
     #[test]

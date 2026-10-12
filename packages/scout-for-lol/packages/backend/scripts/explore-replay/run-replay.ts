@@ -1,13 +1,19 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import path from "node:path";
 import { readdir } from "node:fs/promises";
 import { z } from "zod";
+import { ReplayRuntimeProvider } from "#src/explore/replay/runtime-provider.ts";
 import {
-  initFeatureFlags,
-  shutdownFeatureFlags,
-} from "@shepherdjerred/feature-flags";
+  initializeDynamicConfig,
+  shutdownDynamicConfig,
+  exploreAnalysisEnabled,
+} from "#src/config/dynamic.ts";
 import { prisma } from "#src/database/index.ts";
 import { databaseSnapshotId } from "./snapshot-identity.ts";
 import { writableRowCounts } from "./writable-rows.ts";
+import { readBuildFingerprint } from "#src/report-lake/build-manifest.ts";
+import { lakeSchemaFingerprint } from "#src/report-lake/schema.ts";
+import { lakeSchemaIssues } from "#src/explore/replay/dataset.ts";
 import {
   MY_SERVER,
   addFlagOverride,
@@ -20,16 +26,12 @@ import {
 } from "@scout-for-lol/data";
 import { parseReplayCorpus } from "#src/explore/replay/corpus.ts";
 import { useStageFlagSemantics } from "./stage-flag-semantics.ts";
+import { replayDynamicConfigSeed } from "./config-seed.ts";
 import { planConversationTurns } from "#src/explore/replay/plan.ts";
 import { buildTranscript } from "#src/explore/store-mappers.ts";
 import { exploreModel } from "#src/config/dynamic.ts";
 import { streamExploreAgent } from "#src/explore/agent.ts";
 import { buildDirPath } from "#src/report-lake/paths.ts";
-import { readBuildPuuidRemapFingerprint } from "#src/report-lake/build-manifest.ts";
-import {
-  loadPuuidRemap,
-  puuidRemapFingerprint,
-} from "#src/report-lake/puuid-remap.ts";
 import {
   closeDuckDB,
   withDuckDBConnection,
@@ -146,32 +148,29 @@ async function lakeAccountFacts(pin: StageDatasetPin): Promise<{
 /**
  * Refuse to run on a lake and a database that do not describe the same world.
  *
- * The fingerprint comparison is the same one the compactor performs before
- * folding. A mismatch does not surface as an error at query time — it splits
- * one player into two identities — so it has to be an entry condition.
+ * Check the physical schema and the pinned relational contents before replay.
  */
 
 async function verifyDataset(pin: StageDatasetPin): Promise<void> {
   const buildDir = buildDirPath(pin.lake.dir, pin.lake.buildId);
-  const [
-    lakeFingerprint,
-    remap,
-    databaseRows,
-    lakeFacts,
-    snapshotId,
-    writableRows,
-  ] = await Promise.all([
-    readBuildPuuidRemapFingerprint(buildDir),
-    loadPuuidRemap(prisma),
-    prisma.account.count(),
-    lakeAccountFacts(pin),
-    // What this snapshot contains. Checked so a pin reused against a later
-    // pull is refused rather than silently describing data it never saw —
-    // while restoring the same dump, which the writable-row check demands
-    // between sweeps, reproduces it exactly.
-    databaseSnapshotId(),
-    writableRowCounts(),
-  ]);
+  const schemaIssues = lakeSchemaIssues({
+    published: await readBuildFingerprint(buildDir),
+    pinned: pin.lake.schemaFingerprint,
+    current: lakeSchemaFingerprint(),
+  });
+  if (schemaIssues.length > 0) throw new Error(schemaIssues.join("\n"));
+  const [databaseRows, lakeFacts, snapshotId, writableRows] = await Promise.all(
+    [
+      prisma.account.count(),
+      lakeAccountFacts(pin),
+      // What this snapshot contains. Checked so a pin reused against a later
+      // pull is refused rather than silently describing data it never saw —
+      // while restoring the same dump, which the writable-row check demands
+      // between sweeps, reproduces it exactly.
+      databaseSnapshotId(),
+      writableRowCounts(),
+    ],
+  );
 
   const present = await prisma.account.findMany({
     where: { puuid: { in: [...lakeFacts.sampledPuuids] } },
@@ -184,8 +183,6 @@ async function verifyDataset(pin: StageDatasetPin): Promise<void> {
     pinnedSnapshotId: pin.database.snapshotId,
     writableRows,
     pinnedWritableRows: pin.database.writableRows,
-    lakeFingerprint,
-    databaseFingerprint: puuidRemapFingerprint(remap),
     accountRows: { parquet: lakeFacts.rows, database: databaseRows },
     sampledPuuids: {
       checked: lakeFacts.sampledPuuids.length,
@@ -274,6 +271,10 @@ function manifestDifferences(
   current: ReplayManifest,
 ): readonly string[] {
   const differences: string[] = [];
+  if (existing.analysisEnabled !== current.analysisEnabled)
+    differences.push("analysis setting changed");
+  if (existing.capturedAnalysisEnabled !== current.capturedAnalysisEnabled)
+    differences.push("captured analysis setting changed");
   const compare = (label: string, before: string, now: string): void => {
     if (before !== now) differences.push(`${label}: was ${before}, now ${now}`);
   };
@@ -281,9 +282,9 @@ function manifestDifferences(
   compare("guild", existing.guildId, current.guildId);
   compare("lake build", existing.lake.buildId, current.lake.buildId);
   compare(
-    "PUUID remap fingerprint",
-    existing.lake.puuidRemapFingerprint,
-    current.lake.puuidRemapFingerprint,
+    "lake schema fingerprint",
+    existing.lake.schemaFingerprint,
+    current.lake.schemaFingerprint,
   );
   compare("database", existing.database.name, current.database.name);
   compare(
@@ -404,13 +405,15 @@ async function loadBaseline(
   runId: string,
   against: {
     readonly stage: ReplayStage;
-    readonly guildId: string;
+    readonly guildId: DiscordGuildId;
     readonly capabilities: ExploreCapabilitySet;
     /** This run's corpus, or null when it replays chips only. */
     readonly corpus: { readonly sha256: string } | null;
     /** The data this run reads, so a baseline from other data is refused. */
     readonly lake: { readonly buildId: string; readonly fingerprint: string };
     readonly snapshotId: string;
+    readonly analysisEnabled: boolean;
+    readonly model: string;
   },
 ): Promise<ReadonlyMap<string, ReplayBaseline>> {
   const runDir = path.join(replayBundleRoot(Bun.env), runId);
@@ -433,6 +436,9 @@ async function loadBaseline(
   }
   const manifest = ReplayManifestSchema.parse(baselineManifest);
   const conflicts: string[] = [];
+  if (manifest.analysisEnabled !== against.analysisEnabled)
+    conflicts.push("analysis capability differs");
+  if (manifest.model !== against.model) conflicts.push("model differs");
   if (manifest.stage !== against.stage) {
     conflicts.push(`stage ${manifest.stage}, not ${against.stage}`);
   }
@@ -463,9 +469,9 @@ async function loadBaseline(
       `lake build ${manifest.lake.buildId}, not ${against.lake.buildId}`,
     );
   }
-  if (manifest.lake.puuidRemapFingerprint !== against.lake.fingerprint) {
+  if (manifest.lake.schemaFingerprint !== against.lake.fingerprint) {
     conflicts.push(
-      `PUUID remap ${manifest.lake.puuidRemapFingerprint}, not ${against.lake.fingerprint}`,
+      `lake schema ${manifest.lake.schemaFingerprint}, not ${against.lake.fingerprint}`,
     );
   }
   if (manifest.database.snapshotId !== against.snapshotId) {
@@ -848,7 +854,9 @@ async function runGuild(input: {
 
     const model = exploreModel();
     const manifest = ReplayManifestSchema.parse({
-      schemaVersion: 1,
+      schemaVersion: 3,
+      analysisEnabled: exploreAnalysisEnabled(),
+      capturedAnalysisEnabled: pin.runtime.analysisEnabled,
       runId,
       startedAt: new Date().toISOString(),
       stage: pin.stage,
@@ -857,7 +865,7 @@ async function runGuild(input: {
       expectedCapabilities: config.capabilities,
       lake: {
         buildId: pin.lake.buildId,
-        puuidRemapFingerprint: pin.lake.puuidRemapFingerprint,
+        schemaFingerprint: pin.lake.schemaFingerprint,
       },
       database: {
         name: pin.database.name,
@@ -869,6 +877,7 @@ async function runGuild(input: {
       corpusVersion: conversations.corpus?.version ?? null,
       promptSha256: sha256Hex(
         exploreAgentInstructions({
+          analysis: exploreAnalysisEnabled(),
           bucks: config.capabilities.bucks ? { currentTime: "pinned" } : null,
           dares: config.capabilities.dares,
           challenges: config.capabilities.challenges,
@@ -952,9 +961,11 @@ async function runGuild(input: {
         corpus: conversations.corpus,
         lake: {
           buildId: pin.lake.buildId,
-          fingerprint: pin.lake.puuidRemapFingerprint,
+          fingerprint: pin.lake.schemaFingerprint,
         },
         snapshotId: pin.database.snapshotId,
+        analysisEnabled: exploreAnalysisEnabled(),
+        model,
       });
       for (const [caseId, entry] of baselineEntries) {
         baseline.set(caseId, entry);
@@ -968,7 +979,7 @@ async function runGuild(input: {
         executeAgent: streamExploreAgent,
         resolveCapabilities: resolveReplayCapabilities,
         now: () => Date.now(),
-        timeoutMs: 120_000,
+        timeoutMs: 180_000,
         newRunId: () => globalThis.crypto.randomUUID(),
       },
       {
@@ -1019,6 +1030,7 @@ async function runGuild(input: {
                       ? null
                       : chipExpectation(config.capabilities, chip.condition),
                   capabilities: observation.capabilities,
+                  analysisEnabled: exploreAnalysisEnabled(),
                   capabilityMismatches: mismatches,
                   durationMs: observation.durationMs,
                   lakeBuildId: pin.lake.buildId,
@@ -1031,6 +1043,7 @@ async function runGuild(input: {
                 candidate,
                 diff,
                 trace: observation.trace,
+                payloads: observation.payloads,
                 signals,
                 signalWeight: replaySignalWeight(signals),
                 error: observation.error,
@@ -1098,7 +1111,16 @@ export async function runReplay(input: {
   // client that never becomes ready and the first capability resolution hangs
   // forever. "disabled" registers none, so evaluations fall through to the
   // registry defaults the guild overrides are applied to.
-  await initFeatureFlags({ environment: { FEATURE_FLAGS_MODE: "disabled" } });
+  await initializeDynamicConfig({
+    environment: { ...Bun.env, FEATURE_FLAGS_MODE: "disabled" },
+    provider: new ReplayRuntimeProvider({
+      analysisEnabled:
+        input.options.analysisOverride ?? input.pin.runtime.analysisEnabled,
+      model: input.options.modelOverride ?? input.pin.runtime.model,
+    }),
+    seed: replayDynamicConfigSeed(),
+    startPolling: false,
+  });
   await verifyDataset(input.pin);
 
   const stamp = new Date().toISOString().replaceAll(/[:.]/g, "-");
@@ -1163,7 +1185,7 @@ export async function runReplay(input: {
   // singleton the server is meant to keep, and a CLI that leaves it to
   // finalization pays a few seconds of dead time on exit.
   await prisma.$disconnect();
-  await shutdownFeatureFlags();
+  await shutdownDynamicConfig();
   await closeDuckDB();
   return { passed, runDirectories: directories };
 }

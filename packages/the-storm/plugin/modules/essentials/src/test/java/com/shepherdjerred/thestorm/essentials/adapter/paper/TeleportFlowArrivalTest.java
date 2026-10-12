@@ -53,15 +53,19 @@ final class TeleportFlowArrivalTest {
     var plugin = harness.server.getPluginManager().getPlugin("TheStorm");
     var runtime =
         new PaperRuntime(
-            harness.server, new PaperScheduler(plugin), harness.clock, plugin.getComponentLogger());
-    var price = new TeleportPrice(25, Duration.ZERO);
+            harness.server,
+            new PaperScheduler(plugin),
+            harness.clock,
+            plugin.getComponentLogger(),
+            com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled());
+    var price = new TeleportPrice(25, Duration.ZERO, 1);
     var pricing =
         new TeleportPricing(
-            new TeleportPrices(price, price, price, price, price),
-            0.5,
-            0.5,
-            Duration.ofMinutes(10),
-            4);
+            new TeleportPrices(price, price, price, price, price, price),
+            Duration.ofHours(1),
+            4,
+            32,
+            Duration.ofDays(7));
     var payments =
         new TeleportPayments(
             new TeleportPricer(pricing),
@@ -77,7 +81,8 @@ final class TeleportFlowArrivalTest {
                 payments,
                 new GuardRegistry(),
                 new AllowAllProtection(),
-                new BackRecorder(runtime, new JooqBackStore(harness.database), 5)),
+                new BackRecorder(runtime, new JooqBackStore(harness.database), 5, harness.sealed),
+                harness.sealed),
             Duration.ZERO,
             (player, destination) -> completedFuture(true));
 

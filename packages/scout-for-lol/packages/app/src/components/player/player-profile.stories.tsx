@@ -5,6 +5,10 @@ import {
   RankSchema,
   ROLE_CATALOG,
   createPermissionSet,
+  RiotMatchIdSchema,
+  DiscordChannelIdSchema,
+  DiscordGuildIdSchema,
+  LeaguePuuidSchema,
 } from "@scout-for-lol/data";
 import type { PlayerProfileFilters } from "#src/lib/player/player-profile-filters.ts";
 import { ChampionPoolTable } from "./champion-pool-table.tsx";
@@ -120,7 +124,7 @@ const CHAMPION_POOL = [
 
 const MATCH_ENTRIES = [
   {
-    matchId: "NA1_5182736451",
+    matchId: RiotMatchIdSchema.parse("NA1_5182736451"),
     gameCreationMs: Date.now() - 3_600_000,
     gameDurationSeconds: 1942,
     queue: "Ranked Solo/Duo",
@@ -137,7 +141,7 @@ const MATCH_ENTRIES = [
     account: { gameName: "sjerred", tagLine: "NA1", region: "NA" },
   },
   {
-    matchId: "NA1_5182719038",
+    matchId: RiotMatchIdSchema.parse("NA1_5182719038"),
     gameCreationMs: Date.now() - 90_000_000,
     gameDurationSeconds: 2411,
     queue: "Ranked Flex",
@@ -158,7 +162,7 @@ const MATCH_ENTRIES = [
 const SUBSCRIPTIONS: PlayerSubscriptionRow[] = [
   {
     id: 1,
-    channelId: "1102938475610293847",
+    channelId: DiscordChannelIdSchema.parse("1102938475610293847"),
     creatorDiscordId: "444",
     creatorDiscordUser: { username: "sjerred", displayName: "Jerred" },
     createdTime: "2026-06-01T18:30:00.000Z",
@@ -170,7 +174,7 @@ const SUBSCRIPTIONS: PlayerSubscriptionRow[] = [
   },
   {
     id: 2,
-    channelId: "1102938475610293848",
+    channelId: DiscordChannelIdSchema.parse("1102938475610293848"),
     creatorDiscordId: "445",
     creatorDiscordUser: null,
     createdTime: "2026-07-14T09:05:00.000Z",
@@ -183,7 +187,9 @@ const ACCOUNTS = [
   {
     id: 11,
     alias: "sjerred",
-    puuid: "story-puuid-sjerred-na1-000000000000000000000000000000000000000",
+    puuid: LeaguePuuidSchema.parse(
+      "story-puuid-sjerred-na1-000000000000000000000000000000000000000000000000000000",
+    ),
     region: "NA",
     riotGameName: "sjerred",
     riotTagLine: "NA1",
@@ -193,7 +199,9 @@ const ACCOUNTS = [
   {
     id: 12,
     alias: "sjerred",
-    puuid: "story-puuid-sjerred-euw-111111111111111111111111111111111111111",
+    puuid: LeaguePuuidSchema.parse(
+      "story-puuid-sjerred-euw-111111111111111111111111111111111111111000000000000000",
+    ),
     region: "EUW",
     riotGameName: null,
     riotTagLine: null,
@@ -325,8 +333,14 @@ export const DetailTables: Story = {
         <PlayerSubscriptionsTable
           subscriptions={SUBSCRIPTIONS}
           channels={[
-            { id: "1102938475610293847", name: "match-reports" },
-            { id: "1102938475610293848", name: "ranked-grind" },
+            {
+              id: DiscordChannelIdSchema.parse("1102938475610293847"),
+              name: "match-reports",
+            },
+            {
+              id: DiscordChannelIdSchema.parse("1102938475610293848"),
+              name: "ranked-grind",
+            },
           ]}
           canUpdate
           canCreate
@@ -353,7 +367,7 @@ export const DetailTables: Story = {
       </Section>
       <CompetitionSection
         title="Competitions"
-        guildId={GUILD_ID}
+        guildId={DiscordGuildIdSchema.parse(GUILD_ID)}
         rows={COMPETITION_ROWS}
       />
     </div>
@@ -377,7 +391,7 @@ export const CombinedPerformanceLoaded: Story = {
         entries={MATCH_ENTRIES}
         nextCursor={{
           gameCreationMs: MATCH_ENTRIES[1]?.gameCreationMs ?? 0,
-          matchId: "NA1_5182719038",
+          matchId: RiotMatchIdSchema.parse("NA1_5182719038"),
         }}
         historyPage={0}
         playerId={PLAYER_ID}
@@ -400,7 +414,7 @@ export const HeaderActions: Story = {
   render: () => (
     <div className="space-y-4">
       <PlayerHeaderActions
-        guildId={GUILD_ID}
+        guildId={DiscordGuildIdSchema.parse(GUILD_ID)}
         alias="sjerred"
         playerLoaded
         permissions={MANAGER_PERMISSIONS}
@@ -410,7 +424,7 @@ export const HeaderActions: Story = {
         onDelete={noop}
       />
       <PlayerHeaderActions
-        guildId={GUILD_ID}
+        guildId={DiscordGuildIdSchema.parse(GUILD_ID)}
         alias="sjerred"
         playerLoaded
         permissions={VIEWER_PERMISSIONS}

@@ -1,11 +1,18 @@
 import { describe, expect, test } from "vitest";
 import {
+  errorLogQuery,
   errorVolumeQuery,
   LokiClient,
 } from "@shepherdjerred/ops-clients/loki.ts";
 import { sequence } from "@shepherdjerred/ops-clients/test-support/fake-fetch.ts";
 
 describe("LokiClient", () => {
+  test("filters severity metadata and never matches words such as error in info summaries", () => {
+    expect(errorLogQuery('namespace="temporal"')).toBe(
+      '{namespace="temporal"} | detected_level=~"error|fatal|critical"',
+    );
+    expect(errorVolumeQuery("1h")).not.toContain("|~");
+  });
   test("returns error volume by namespace, largest first", async () => {
     const { fetch, requests } = sequence({
       status: "success",

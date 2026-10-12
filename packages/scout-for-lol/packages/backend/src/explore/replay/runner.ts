@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import { z } from "zod";
 import {
   type DiscordAccountId,
@@ -23,6 +24,9 @@ import {
 import { describeThrown } from "#src/explore/replay/describe-thrown.ts";
 import type { ExploreSurface } from "#src/explore/surface.ts";
 import type { ExploreCapabilitySet } from "#src/explore/replay/profiles.ts";
+import type { ToolPayloadCapture } from "#src/explore/inspection/tool-payloads.ts";
+
+export type ReplayToolPayload = Parameters<ToolPayloadCapture>[0];
 
 /**
  * Running one replay case against the real Explore agent.
@@ -31,8 +35,9 @@ import type { ExploreCapabilitySet } from "#src/explore/replay/profiles.ts";
  * it. `run-turn.ts` appends the answer to the conversation and moves its leaf;
  * replaying through it would write into the very conversation being replayed,
  * so turn N's "original history" would start containing replayed answers and
- * the corpus would rot a little with every run. Nothing here persists
- * anything — a replay reads the snapshot and writes only its bundle.
+ * the corpus would rot a little with every run. Tool evidence goes to the
+ * private bundle; spend, sandbox leases and permitted drafts still write to
+ * the disposable snapshot, which must be restored between sweeps.
  */
 
 export type ReplayCaseInput = {
@@ -49,12 +54,13 @@ export type ReplayCaseInput = {
    */
   readonly history: readonly ExploreMessage[];
   readonly requesterId: DiscordAccountId;
-  readonly guildIds: readonly string[];
+  readonly guildIds: readonly DiscordGuildId[];
   readonly surface: ExploreSurface;
   readonly originChannelId: DiscordChannelId | null;
 };
 
 export type ReplayObservation = {
+  readonly payloads: readonly ReplayToolPayload[];
   readonly caseId: string;
   readonly status: "ok" | "error" | "timeout";
   readonly durationMs: number;
@@ -82,7 +88,7 @@ export type ReplayRunnerDependencies = {
    * statically. It is a second call, not a second rule.
    */
   readonly resolveCapabilities: (input: {
-    readonly guildIds: readonly string[];
+    readonly guildIds: readonly DiscordGuildId[];
     readonly surface: ExploreSurface;
   }) => Promise<ExploreCapabilitySet>;
   readonly now: () => number;
@@ -173,6 +179,7 @@ export async function runReplayCase(
   });
 
   const trace: ExploreTraceEntry[] = [];
+  const payloads: ReplayToolPayload[] = [];
   const controller = new AbortController();
   const timer = setTimeout(() => {
     controller.abort();
@@ -181,6 +188,10 @@ export async function runReplayCase(
   const params = agentParams(input, runId, controller.signal, (event) => {
     recordExploreTraceEvent(trace, event);
   });
+  params.captureToolPayload = (payload) => {
+    payloads.push(payload);
+    return Promise.resolve();
+  };
 
   // Recorded before the call so a turn that throws still shows what it was
   // asked. A failed case with no visible prompt is the least useful row in a
@@ -202,6 +213,7 @@ export async function runReplayCase(
       // leaving it "running" in a bundle would read as a tool that is still
       // going, hours after the run ended.
       trace: finalizeExploreTrace(trace),
+      payloads,
       modelMessages,
       capabilities,
       error: null,
@@ -221,6 +233,7 @@ export async function runReplayCase(
       matchCards: [],
       loadoutCards: [],
       trace: finalizeExploreTrace(trace),
+      payloads,
       modelMessages,
       capabilities,
       error: describeThrown(error),

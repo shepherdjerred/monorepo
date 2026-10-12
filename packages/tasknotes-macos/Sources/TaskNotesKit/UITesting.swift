@@ -40,6 +40,9 @@ public enum UITesting {
     /// type exists to prevent.
     public static let serverAddressDefaultsKey = "red.sjer.tasknotes.serverAddress"
 
+    /// A per-run bearer token for an isolated UI-test server.
+    public static let authTokenDefaultsKey = "red.sjer.tasknotes.uiTesting.authToken"
+
     /// An isolated Application Support folder supplied by each UI-test launch.
     public static let storageFolderDefaultsKey = "red.sjer.tasknotes.uiTesting.storageFolder"
 }

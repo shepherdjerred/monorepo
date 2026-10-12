@@ -1,3 +1,5 @@
+import { mailPolicyBodyPattern } from "homelab/src/domain-registry.ts";
+
 type BlackboxHttpModule = {
   prober: "http";
   timeout: string;
@@ -83,6 +85,13 @@ export const TCP_CONNECT_MODULE: BlackboxTcpModule = {
 export const BLACKBOX_MODULES = {
   http_2xx: HTTP_2XX_MODULE,
   http_200_no_redirect: HTTP_200_NO_REDIRECT_MODULE,
+  mta_sts_policy: {
+    ...HTTP_200_NO_REDIRECT_MODULE,
+    http: {
+      ...HTTP_200_NO_REDIRECT_MODULE.http,
+      fail_if_body_not_matches_regexp: [mailPolicyBodyPattern],
+    },
+  },
   rss_2xx: RSS_2XX_MODULE,
   https_2xx_insecure: HTTPS_2XX_INSECURE_MODULE,
   tcp_connect: TCP_CONNECT_MODULE,

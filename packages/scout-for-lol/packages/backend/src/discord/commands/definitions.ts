@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import type { RESTPostAPIApplicationCommandsJSONBody } from "discord.js";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { helpCommand } from "#src/discord/commands/help.ts";
@@ -60,7 +61,7 @@ export function globalCommandPayload(): RESTPostAPIApplicationCommandsJSONBody[]
  */
 export type GuildScopedCommandGroup = {
   enabledGuildIds: () => string[];
-  isEnabled?: (guildId: string) => Promise<boolean>;
+  isEnabled?: (guildId: DiscordGuildId) => Promise<boolean>;
   payload: RESTPostAPIApplicationCommandsJSONBody[];
   /**
    * Per-guild payload for a command that merges several feature gates (the
@@ -71,13 +72,13 @@ export type GuildScopedCommandGroup = {
    * audits and tests.
    */
   guildPayload?: (
-    guildId: string,
+    guildId: DiscordGuildId,
   ) => Promise<RESTPostAPIApplicationCommandsJSONBody[]>;
 };
 
 /** The per-feature gates behind the merged `/scout` guild command. */
 export async function scoutGuildFeatures(
-  guildId: string,
+  guildId: DiscordGuildId,
 ): Promise<ScoutGuildFeatures> {
   return {
     ask: exploreGuildCommandGuildIds().includes(guildId),
@@ -88,7 +89,7 @@ export async function scoutGuildFeatures(
 }
 
 async function scoutGuildCommandPayload(
-  guildId: string,
+  guildId: DiscordGuildId,
 ): Promise<RESTPostAPIApplicationCommandsJSONBody[]> {
   const features = await scoutGuildFeatures(guildId);
   return !features.ask && !features.voice
@@ -119,7 +120,7 @@ export const guildScopedCommandGroups: GuildScopedCommandGroup[] = [
 
 /** Complete guild command payload; an empty array removes stale commands. */
 export async function guildCommandPayload(
-  guildId: string,
+  guildId: DiscordGuildId,
 ): Promise<RESTPostAPIApplicationCommandsJSONBody[]> {
   const payload: RESTPostAPIApplicationCommandsJSONBody[] = [];
   for (const group of guildScopedCommandGroups) {

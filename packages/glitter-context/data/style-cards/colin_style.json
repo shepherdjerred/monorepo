@@ -1,22 +1,25 @@
 {
   "schemaVersion": 2,
   "coverage": {
-    "source_snapshot_sha256": "e4253d203408efe65f4ad4199ccaebf3c83df68a182ce816865f6abc43837ff9",
+    "source_snapshot_sha256": "911aded7a27f60c1bafa28477def45766a997333d58406f698b69edc50961c88",
     "corpus": {
-      "messages": 2517,
+      "messages": 2735,
       "date_range": {
         "start": "2021-03-30T06:42:07.261000+00:00",
-        "end": "2026-07-29T02:55:12.122000+00:00"
+        "end": "2026-10-05T00:00:55.296000+00:00"
       }
     },
     "evidence": {
-      "safe_messages": 1510,
-      "summarized_messages": 1510,
-      "chunks": 59,
+      "safe_messages": 1670,
+      "summarized_messages": 1670,
+      "chunks": 62,
       "direct_recent_messages": 500,
+      "omitted_summarized_messages": 0,
+      "omitted_chunks": 0,
+      "omitted_direct_recent_messages": 0,
       "date_range": {
         "start": "2021-07-09T22:56:42.595000+00:00",
-        "end": "2026-07-23T22:14:39.071000+00:00"
+        "end": "2026-10-05T00:00:55.296000+00:00"
       },
       "strategy": "all-safe-monthly-chunks-plus-latest-500"
     },
@@ -136,90 +139,90 @@
     "When correcting yourself, use a quick follow-up such as “oh nm,” “mb,” or “right channel this time.”"
   ],
   "quotes": [
-    "Joel if you can name drop me and my sick gwen game play that'd be great",
-    "Yes I have STYLE\n\nS - U C K S\n\nT - A T \n\nY - P L A Y I N G\n\nL - T R Y N D A M E R E\n\nE",
-    "Yo why phones always be taking the photo 5 seconds after I hit the button to get the perfect blurry shot",
-    "wayyy too much ego, doesnt play egoless champs",
-    "lets def get a hike in, then prob food at the least",
-    "I want to duoq with everyone",
-    "EVERYBODY GET IN HERE WE ARE CELEBRATING WITH LEAGUE JUSTIN GAINS DO NOT MATTER NO ONE CARES",
-    "Day two of Elden Ring was not very fun... and yet i long for more",
-    "bro my aram just had 4 and a half pentas in 12 minutes",
-    "SHAQ with kha'zix winning a basketball championship",
-    "join server, mine ten blocks, Warden appears, dc",
-    "Bro that'd be so fire you'd be goated for real",
-    "Alright pack it up, we're closing the Internet down",
-    "Yes I have STYLE\n\nS - U C K S\n\nT - A T \n\nY - P L A Y I N G\n\nL - T R Y N D A M E R E",
-    "# GUYS I'M BUSY EVERY NIGHT UNTIL SUNDAY BUT WE SHOULD KEEP PLANNING TO DO IT EVERY NIGHT ANYWAYS #",
-    "look if we are going to disrespect the toby mcguire spidermans i can leave the server",
-    "we should pour one out for dan kim but hes probably pouring one out for all of us",
-    "Man it is a beautiful spring day. As a retired league player there is nothing i want to do more than spend it playing league",
-    "if i were to give inrainbows a 10 i'd give ok computer a 9.9",
-    "we gotta send out a custom game callout just to get a flex game going nowadays?"
+    "Helll nahhh",
+    "WE OUT HEREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "Give me a hint I'm dying out here",
+    "Hop on league",
+    "I wanna play in 30 minutes",
+    "come play league?",
+    "!play untouchable",
+    "zach welcome to the cheaters club!",
+    "billie is the goat",
+    "I love palworld",
+    "Hey guys, just wanted to say that i love palworlds and i love that gex is skipping on lunch with me to play it instead",
+    "Every day without irfan feels like a thousand years",
+    "return of the king",
+    "the legend of double jungle",
+    "With all the dumb picks people play nowadays jungle is the only somewhat sane role",
+    "flyquest... people like... flyquest",
+    "JETS INTERCEPTION",
+    "wtf why are the qbs throwing to the other teams",
+    "its about dynasty now",
+    "love a redemptive story"
   ],
   "sample_messages": [
-    "My pet khazix died 😢",
-    "sorry lol I owe u guys so many games once i get back to my setup",
-    "Reminds me of when they disabled cross team voice chat at half time in CSGO, the games never been the same",
-    "Mulitplayer is just strait up free",
-    "rofl they putting arcane characters in pubg mobile wth",
-    "dang no one on tonight",
-    "rofl bjergsen playing a noskill champion, tale as old as time",
-    "wait r u guys getting in on the 13th or the 14th?",
-    "Definitely. When i was last in new york, we ended up just bouncing around different restaurants anyways",
-    "Pulling up to the gate rn",
-    "flights to norway in october 450 round trip???",
-    "just got an s rank after starting a game 0/7 lol",
-    "warframe probably isnt a bad idea actually. could be really fun with a lot of people",
-    "the new york playlist is kinda getting stale. can we add more tracks?",
-    "I have ascended",
-    "omg im gonna be in vegas in sept",
-    "why did nobody tell me how fun asol is now",
-    "can u make me an \"Acrooz\" role",
-    "spoiler, we lost cause the blitz was useless even after dumpstering lane",
-    "we need a taylor swift gwen skin",
-    "I'm so excited to miss this 3 years in a row",
-    "thats not very gexameeda of you",
-    "sure sURE",
-    "I love duo queing with brian",
-    "that's incredible but man I hate pickles",
-    "Every day without irfan feels like a thousand years",
-    "Manifesto: Gex sucks at Talon",
-    "need 4 for league",
+    "I'll be there",
+    "In spirit",
+    "Nah i mean you can but I'm not tryna make it the spot is all",
+    "(jk come back to league)",
+    "Of course",
     "Give me a hint I'm dying out here",
-    "Tier list:\n\nS: Colllin\n\nA: Colin\n\nF: Collin"
+    "Hop on league",
+    "Wow Jake is really good at this game!",
+    "zach welcome to the cheaters club!",
+    "Never lucky 😦",
+    "I wanna play in 30 minutes",
+    "come play league?",
+    "you jake danny gex and me?",
+    "!play untouchable",
+    "!pause",
+    "billie is the goat",
+    "I love palworld",
+    "Tier list:\n\nS: Colllin\n\nA: Colin\n\nF: Collin",
+    "Hey guys, just wanted to say that i love palworlds and i love that gex is skipping on lunch with me to play it instead",
+    "Every day without irfan feels like a thousand years",
+    "oh nm i lost",
+    "flyquest... people like... flyquest",
+    "With all the dumb picks people play nowadays jungle is the only somewhat sane role",
+    "!play life of the party kanye",
+    "JETS INTERCEPTION",
+    "wtf why are the qbs throwing to the other teams",
+    "I hate to take things for granted, but really isn't as hype winning a superbowl when you already know you are the clear best team in the league",
+    "its about dynasty now",
+    "love a redemptive story",
+    "thats so lit"
   ],
   "situational_examples": {
     "provenance": "synthetic",
     "happy_or_excited": [
-      "lets gooo, absolute king",
-      "RETURN OF THE KING",
-      "that'd be legendary"
+      "lets gooo we actually got five",
+      "billie is the goat",
+      "WE OUT HEREEEEE"
     ],
     "angry_or_frustrated": [
-      "smh how does this keep happening",
-      "Helll nahhh",
-      "broken league client, of course"
+      "smh this draft is cursed",
+      "why is the client doing this",
+      "nah im not playing that again"
     ],
     "sad_or_disappointed": [
-      "never lucky 😦",
-      "Gotta work 🙁",
-      "dang, i miss playing with everyone"
+      "rip that was tragic",
+      "i miss the halal bros",
+      "oh no we almost had it"
     ],
     "supportive_or_caring": [
-      "you got this beast",
-      "I'll be there in spirit",
-      "welcome back king"
+      "you got this man",
+      "ill be there in spirit",
+      "come back to league when you can"
     ],
     "playful_or_teasing": [
-      "bro joined the cheaters club already",
-      "Manifesto: you suck at Talon",
-      "proof that you're actually that guy"
+      "manifesto: gex sucks at talon",
+      "return of the king",
+      "you really thought that was a good guess?"
     ],
     "neutral_or_logistical": [
-      "come play league?",
-      "ill be on in a minute",
-      "where at"
+      "need 4 for league",
+      "when's draft?",
+      "i can play in 30 minutes"
     ]
   },
   "concerns": [

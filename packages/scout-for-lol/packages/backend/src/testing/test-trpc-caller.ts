@@ -1,3 +1,8 @@
+import {
+  DiscordGuildIdSchema,
+  type DiscordGuildId,
+  type DiscordAccountId,
+} from "@scout-for-lol/domain/identity/discord.ts";
 /**
  * Offline tRPC test harness — exercise the web API WITHOUT Discord OAuth or any
  * real Discord backing.
@@ -62,12 +67,16 @@ type TrpcCaller = ReturnType<AppRouter["createCaller"]>;
  * member with `setMembership` and seed `ServerPermission` rows to drive
  * per-permission gating.
  */
-type MembershipConfig = "root" | { guildId: string; asAdmin: boolean }[];
+type MembershipConfig =
+  "root" | { guildId: DiscordGuildId; asAdmin: boolean }[];
 
 // test-ids requires a digits-only identifier (it builds a snowflake).
 const DEFAULT_ACTOR = testAccountId("900000001");
 
-function makeUser(discordId: string, overrides?: Partial<User>): User {
+function makeUser(
+  discordId: DiscordAccountId,
+  overrides?: Partial<User>,
+): User {
   return {
     discordId: DiscordAccountIdSchema.parse(discordId),
     discordUsername: "trpc-harness",
@@ -96,7 +105,7 @@ export type OfflineTrpcHarness = {
    * act as a specific user; defaults to a stable harness actor.
    */
   authedCaller: (
-    discordId?: string,
+    discordId?: DiscordAccountId,
     userOverrides?: Partial<User>,
   ) => TrpcCaller;
   /** A caller with no session — use to assert unauthenticated rejection. */
@@ -108,14 +117,18 @@ export type OfflineTrpcHarness = {
    */
   setMembership: (config: MembershipConfig) => void;
   /** Set the current Discord member IDs returned by guild member fetches. */
-  setGuildMembers: (guildId: string, discordIds: readonly string[]) => void;
+  setGuildMembers: (
+    guildId: DiscordGuildId,
+    discordIds: readonly DiscordAccountId[],
+  ) => void;
 };
 
 // An array whose `.find()` always yields an admin guild, so the actor is
 // treated as admin/owner of whatever guildId the middleware looks up (root mode).
 function rootMembership(): PartialGuild[] {
   const adminGuild: PartialGuild = {
-    id: "root",
+    // Root mode is membership of everything; this id only fills the shape.
+    id: DiscordGuildIdSchema.parse("100000000000000000"),
     name: "test-guild",
     icon: null,
     owner: true,
@@ -184,11 +197,11 @@ export async function createOfflineTrpcHarness(
   // asks about, matching the old cache stub. The bulk (guild-picker) form
   // returns only explicitly-listed guilds, because root mode has no guild list.
   vi.doMock("#src/lib/discord/installed-guilds.ts", () => ({
-    isScoutInstalledInGuild: (guildId: string) =>
+    isScoutInstalledInGuild: (guildId: DiscordGuildId) =>
       Promise.resolve(
         state.membership === "root" || installedGuildIds().has(guildId),
       ),
-    installedGuildIdsAmong: (guildIds: readonly string[]) =>
+    installedGuildIdsAmong: (guildIds: readonly DiscordGuildId[]) =>
       Promise.resolve(
         new Set(guildIds.filter((id) => installedGuildIds().has(id))),
       ),
@@ -200,7 +213,7 @@ export async function createOfflineTrpcHarness(
   // hanging on the network.
   vi.doMock("#src/lib/discord/bot-rest.ts", () => ({
     botRest: () => ({
-      guildExists: (guildId: string) =>
+      guildExists: (guildId: DiscordGuildId) =>
         Promise.resolve(
           state.membership === "root" || installedGuildIds().has(guildId),
         ),
@@ -208,7 +221,7 @@ export async function createOfflineTrpcHarness(
       guildRoles: () => Promise.resolve(null),
       botMember: () => Promise.resolve(null),
       // The offline harness has no cache, so the fresh read is the same stub.
-      freshGuildMember: (guildId: string, userId: string) =>
+      freshGuildMember: (guildId: DiscordGuildId, userId: string) =>
         Promise.resolve(
           state.guildMembers.get(guildId)?.has(userId) === true
             ? {
@@ -219,7 +232,7 @@ export async function createOfflineTrpcHarness(
               }
             : null,
         ),
-      guildMember: (guildId: string, userId: string) =>
+      guildMember: (guildId: DiscordGuildId, userId: string) =>
         Promise.resolve(
           state.guildMembers.get(guildId)?.has(userId) === true
             ? {
@@ -257,7 +270,7 @@ export async function createOfflineTrpcHarness(
   const { appRouter } = await import("#src/trpc/router/index.ts");
 
   const authedCaller = (
-    discordId: string = DEFAULT_ACTOR,
+    discordId: DiscordAccountId = DEFAULT_ACTOR,
     userOverrides?: Partial<User>,
   ) =>
     appRouter.createCaller({
@@ -288,7 +301,10 @@ export async function createOfflineTrpcHarness(
   const setMembership = (config: MembershipConfig) => {
     state.membership = config;
   };
-  const setGuildMembers = (guildId: string, discordIds: readonly string[]) => {
+  const setGuildMembers = (
+    guildId: DiscordGuildId,
+    discordIds: readonly DiscordAccountId[],
+  ) => {
     state.guildMembers.set(guildId, new Set(discordIds));
   };
 

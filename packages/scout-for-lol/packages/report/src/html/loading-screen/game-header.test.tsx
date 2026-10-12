@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import { expect, test } from "vitest";
 import satori from "satori";
 import { LoadingScreenDataSchema } from "@scout-for-lol/data";
@@ -8,7 +9,7 @@ import {
 import { palette } from "@scout-for-lol/design-system/satori/colors";
 import { GameHeader } from "#src/html/loading-screen/game-header.tsx";
 
-const currentDir = new URL(".", import.meta.url).pathname;
+const currentDir = fileURLToPath(new URL(".", import.meta.url));
 
 async function renderHeaderSvg(fileName: string): Promise<string> {
   const raw = await Bun.file(`${currentDir}testdata/${fileName}`).json();

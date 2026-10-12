@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type { WorkspacePackage } from "../selectors/select-image-targets-workspaces.ts";
+import { globalPaths } from "../migration-core.ts";
 import {
   PLAYWRIGHT_TARGETS,
   additionalPlaywrightInstallFilters,
@@ -154,6 +155,31 @@ describe("Playwright target selection", () => {
         PLAYWRIGHT_TARGETS.map((target) => target.package),
       );
     }
+  });
+
+  test("selects artifact producers for every global deployment input", async () => {
+    for (const input of globalPaths) {
+      for (const changedPath of [input, `${input}/nested.ts`]) {
+        const selection = await selectPlaywrightTargets(
+          [changedPath],
+          ".",
+          workspaces,
+        );
+        expect(selection.mode, changedPath).toBe("all");
+        expect(packages(selection), changedPath).toEqual(
+          PLAYWRIGHT_TARGETS.map((target) => target.package),
+        );
+      }
+    }
+  });
+
+  test("does not match a sibling of a global input directory", async () => {
+    const selection = await selectPlaywrightTargets(
+      ["packages/woodpecker-config-extension/src-other/example.ts"],
+      ".",
+      workspaces,
+    );
+    expect(packages(selection)).toEqual([]);
   });
 
   test("selects only static artifact producers for deploy harness changes", async () => {

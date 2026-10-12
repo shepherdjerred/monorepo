@@ -205,6 +205,12 @@ test("forces every runtime-selected fixed-corpus lane", () => {
   }
 });
 
+test("domain registry changes select the OpenTofu lane", () => {
+  expect(selectorPathsForLane("tofu")).toContain(
+    "packages/homelab/src/domain-registry.json",
+  );
+});
+
 test("accepts only one exact main-only platform apply request", () => {
   expect(
     requestedPlatformTofuApply({
@@ -253,6 +259,7 @@ test("other lanes retain global CI inputs", () => {
   for (const globalInput of [
     "packages/woodpecker-config-extension/src",
     "scripts/lib/ci/ci-handoff.ts",
+    "scripts/lib/ci/published-image-release.ts",
     "scripts/lib/ci/ci-artifact.ts",
     "scripts/lib/ci/ci-environment.ts",
   ]) {
@@ -263,6 +270,9 @@ test("other lanes retain global CI inputs", () => {
 });
 
 test("release lanes include their complete imported helper closure", () => {
+  expect(selectorPathsForLane("site-ts-mc-docs")).toContain(
+    "packages/storm-theme",
+  );
   expect(lanePaths["helm"]).toContain(
     "packages/homelab/scripts/helm/helm-release-core.ts",
   );
@@ -276,4 +286,8 @@ test("release lanes include their complete imported helper closure", () => {
       "ci/scripts/images/update-ci-image-pin-core.ts",
     );
   }
+});
+
+test("Glitter Boys has no automatic site release selector", () => {
+  expect(selectorPathsForLane("site-glitter-boys")).toBeUndefined();
 });

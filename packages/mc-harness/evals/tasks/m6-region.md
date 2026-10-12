@@ -1,0 +1,5 @@
+Make me an impressive region map in Minecraft, about 500×500 blocks and up to roughly 50 blocks of relief, in a fresh flat sandbox: a mountain range along one side, a river running from the mountains to a lake or the sea, forests, meadows and farmland, two or three villages connected by roads, and a castle on a ridge overlooking it all. It should read as a believable landscape from above and still reward a close look at the villages and the castle. Iterate on it using renders until you would be proud to show it.
+
+Do the work through the repository's build workflow so the result is replayable, and put the finished build into a sandbox that you leave running.
+
+Deliverables: copy your best overview render to `OUT/final.png`. `OUT/result.json`: {"sourceSandbox": "<sbx id holding the finished map>", "buildDir": "<path>", "applyId": "<id of the promote that placed it>", "site": {"min": [x, y, z], "max": [x, y, z]}, "iterations": <n>, "lintErrors": <n>, "lintWarnings": <n>, "verifyMismatches": <n>, "selfCritique": "<2-4 sentences, honest, with rubric scores>"}.

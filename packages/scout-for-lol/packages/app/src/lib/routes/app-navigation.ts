@@ -1,4 +1,8 @@
-import type { Permission } from "@scout-for-lol/data";
+import {
+  type DiscordGuildId,
+  type Permission,
+  DiscordGuildIdSchema,
+} from "@scout-for-lol/data";
 
 export type ConsumerNavigationAvailability = {
   exploreAvailable: boolean;
@@ -19,6 +23,7 @@ export type ConsumerNavigationAvailability = {
    * every non-operator sees.
    */
   operationsAvailable?: boolean;
+  inboxAvailable?: boolean;
 };
 
 export function consumerNavigationItems(
@@ -47,6 +52,10 @@ export function consumerNavigationItems(
     ...(input.operationsAvailable === true
       ? [{ label: "Operations", to: "/operations/matches" }]
       : []),
+    ...(input.inboxAvailable === true
+      ? [{ label: "Support inbox", to: "/operations/inbox" }]
+      : []),
+    { label: "Help and feedback", to: "/feedback" },
   ];
 }
 
@@ -189,8 +198,13 @@ export function resolveAppShellMode(
     : "workspace";
 }
 
-export function guildIdFromAppPath(pathname: string): string | undefined {
-  return /^\/g\/([^/]+)/.exec(pathname)?.[1];
+export function guildIdFromAppPath(
+  pathname: string,
+): DiscordGuildId | undefined {
+  const parsed = DiscordGuildIdSchema.safeParse(
+    /^\/g\/([^/]+)/.exec(pathname)?.[1],
+  );
+  return parsed.success ? parsed.data : undefined;
 }
 
 export function isExplorePath(pathname: string): boolean {

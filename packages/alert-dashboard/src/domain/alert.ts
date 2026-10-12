@@ -5,6 +5,7 @@ import {
   AlertEventIdSchema,
   AlertFingerprintSchema,
   AlertOccurrenceIdSchema,
+  AlertmanagerGeneratorUrlSchema,
   LabelMapSchema,
   LifecycleStateSchema,
   ResolutionSourceSchema,
@@ -52,7 +53,6 @@ export const AlertEventRecordSchema = z.object({
 });
 
 export type AlertOccurrenceRecord = z.infer<typeof AlertOccurrenceRecordSchema>;
-export type AlertEventRecord = z.infer<typeof AlertEventRecordSchema>;
 
 function digest(value: string): string {
   const hasher = new Bun.CryptoHasher("sha256");
@@ -104,9 +104,9 @@ export function summaryFromMetadata(
 export function normalizeGeneratorUrl(
   value: string | undefined,
 ): string | null {
-  return value === undefined || value.length === 0
-    ? null
-    : z.url().parse(value);
+  if (value === undefined || value.length === 0) return null;
+  AlertmanagerGeneratorUrlSchema.parse(value);
+  return value.startsWith("/") ? null : z.url().parse(value);
 }
 
 export function openingEmail(

@@ -13,6 +13,16 @@ MAC_CI_BOOTSTRAP="${SCRIPT_DIR}/../../packages/homelab/mac-ci/bootstrap.sh"
 MAC_CI_PROVISIONER="${SCRIPT_DIR}/../../packages/homelab/mac-ci/provision-host.sh"
 MACOS_LANES="${SCRIPT_DIR}/../../packages/woodpecker-config-extension/src/pipeline/lanes/macos.ts"
 
+if ! rg -Fq 'mise_ci install --yes bun gitleaks' "$TOOLCHAIN"; then
+  echo "Draft preflight must install only Bun and the secret scanner" >&2
+  exit 1
+fi
+
+if ! rg -Fq 'mise_ci install --yes bun opentofu' "$TOOLCHAIN"; then
+  echo "OpenTofu containers must install only the Bun and OpenTofu toolchain" >&2
+  exit 1
+fi
+
 if ! awk '
   $0 ~ /^[[:space:]]*mise_ci install --yes[[:space:]]*$/ { install_line = NR }
   $0 ~ /^[[:space:]]*mise_ci reshim[[:space:]]*$/ { reshim_line = NR }
@@ -74,6 +84,21 @@ if ! rg -Fq 'ARG MISE_MINISIGN_PUBLIC_KEY=' "$CI_IMAGE" ||
   exit 1
 fi
 
+if ! rg -Fq 'export TMPDIR=/woodpecker/tmp' "$TOOLCHAIN" ||
+  ! rg -Fq 'chmod 1777 "$TMPDIR"' "$TOOLCHAIN" ||
+  ! rg -Fq 'export GRADLE_USER_HOME=/woodpecker/gradle' "$TOOLCHAIN"; then
+  echo "Woodpecker steps must keep temporary files and tool homes on the workflow volume" >&2
+  exit 1
+fi
+
+# A recursive chmod copies every image-layer file it visits into the
+# container's writable layer, even when the mode already matches.
+if rg -q 'chmod -R' "$TOOLCHAIN" ||
+  ! rg -Fq 'expose_tree "${MISE_DATA_DIR}/installs/github-theseus-rs-postgresql-binaries"' "$TOOLCHAIN"; then
+  echo "toolchain.sh must expose Postgres tools without a recursive chmod" >&2
+  exit 1
+fi
+
 if ! rg -Fq 'flock --shared 9' "$BUN_INSTALL_WRAPPER" ||
   ! rg -Fq 'bun install "$@"' "$BUN_INSTALL_WRAPPER" ||
   ! rg -Fq ') 9>"$CACHE_LOCK_FILE"' "$BUN_INSTALL_WRAPPER"; then
@@ -106,6 +131,11 @@ if ! rg -Fq 'WOODPECKER_BACKEND=local' "$MAC_CI_BOOTSTRAP" ||
   echo "macOS agent must run the local backend and carry the label the native lanes select on" >&2
   exit 1
 fi
+if ! rg -Fq 'mise_current ||' "$TOOLCHAIN" ||
+  ! rg -Fq 'sort -V' "$TOOLCHAIN"; then
+  echo "toolchain must replace a mise older than MISE_BOOTSTRAP_VERSION" >&2
+  exit 1
+fi
 if ! rg -Fq 'AGENT_BUILD_PATH="$HOME/.woodpecker/builds"' "$MAC_CI_BOOTSTRAP" ||
   ! rg -Fq 'mise settings set trusted_config_paths "$AGENT_BUILD_PATH"' "$MAC_CI_BOOTSTRAP" ||
   ! rg -Fq 'WOODPECKER_BACKEND_LOCAL_TEMP_DIR=$AGENT_BUILD_PATH' "$MAC_CI_BOOTSTRAP"; then
@@ -135,6 +165,48 @@ TEST_ROOT=$(mktemp -d)
 trap 'rm -rf "$TEST_ROOT"' EXIT
 mkdir -p "$TEST_ROOT/bin" "$TEST_ROOT/cache/data" "$TEST_ROOT/control"
 
+# Execute each narrow profile with recorded external commands. This catches
+# accidental fallthrough to the full toolchain without downloading anything.
+mkdir -p "$TEST_ROOT/profiles"
+cat >"$TEST_ROOT/profiles/mise" <<'EOF'
+#!/usr/bin/env bash
+printf '%s\n' "$*" >>"$CI_PROFILE_COMMAND_LOG"
+printf 'locked=%s\n' "${MISE_LOCKED:-}" >>"$CI_PROFILE_COMMAND_LOG"
+if [ "$1" = which ]; then printf '/test/tools/gh\n'; fi
+EOF
+cat >"$TEST_ROOT/profiles/id" <<'EOF'
+#!/usr/bin/env bash
+printf '1000\n'
+EOF
+cat >"$TEST_ROOT/profiles/ln" <<'EOF'
+#!/usr/bin/env bash
+printf 'ln %s\n' "$*" >>"$CI_PROFILE_COMMAND_LOG"
+EOF
+chmod +x "$TEST_ROOT/profiles/"*
+for profile in automation deployment tofu; do
+  profile_log="$TEST_ROOT/$profile.log"
+  PATH="$TEST_ROOT/profiles:$PATH" CI_PROFILE_COMMAND_LOG="$profile_log" \
+    CI_COMMIT_SHA=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa \
+    MISE_TOOLCHAIN_SCOPE="$profile" bash -c '. "$1"' _ "$TOOLCHAIN" >"$profile_log.stdout"
+  rg -q '^CI_BOOTSTRAP_DIAGNOSTIC \{"schemaVersion":1,"sourceSha":"a{40}","scope":"'"$profile"'","elapsedSeconds":[0-9]+\}$' "$profile_log.stdout"
+  case "$profile" in
+    automation) expected_tools='install --yes bun gh jq' ;;
+    deployment) expected_tools='install --yes bun node gh jq helm argocd awscli' ;;
+    tofu) expected_tools='install --yes bun opentofu' ;;
+  esac
+  actual_tools=$(rg '^install ' "$profile_log")
+  if [ "$actual_tools" != "$expected_tools" ]; then
+    echo "unexpected tools for $profile: $actual_tools" >&2
+    exit 1
+  fi
+  rg -Fxq reshim "$profile_log"
+  if rg -q '^locked=$' "$profile_log"; then
+    echo "$profile ran mise without locked mode" >&2
+    exit 1
+  fi
+done
+rg -Fxq 'ln -sf /test/tools/gh /usr/local/bin/gh' "$TEST_ROOT/automation.log"
+
 cat >"$TEST_ROOT/bin/df" <<'EOF'
 #!/usr/bin/env bash
 printf 'Filesystem 1024-blocks Used Available Capacity Mounted on\n'
@@ -143,6 +215,7 @@ EOF
 cat >"$TEST_ROOT/bin/bun" <<'EOF'
 #!/usr/bin/env bash
 printf '%s\n' "$*" >>"$BUN_GC_TEST_LOG"
+printf '%s\n' "${BUN_TMPDIR:-}" >"$BUN_GC_TEST_LOG.tmpdir"
 EOF
 cat >"$TEST_ROOT/bin/flock" <<'EOF'
 #!/usr/bin/env bash
@@ -151,6 +224,8 @@ EOF
 chmod +x "$TEST_ROOT/bin/df" "$TEST_ROOT/bin/bun" "$TEST_ROOT/bin/flock"
 
 touch "$TEST_ROOT/cache/data/below-threshold-marker"
+mkdir -p "$TEST_ROOT/cache/tmp/interrupted"
+touch "$TEST_ROOT/cache/tmp/interrupted/partial-extraction"
 BUN_INSTALL_CACHE_DIR="$TEST_ROOT/cache/data" \
   BUN_CACHE_LOCK_FILE="$TEST_ROOT/control/.gc.lock" \
   BUN_CACHE_GC_THRESHOLD_PERCENT=60 \
@@ -160,6 +235,10 @@ BUN_INSTALL_CACHE_DIR="$TEST_ROOT/cache/data" \
   "$BUN_CACHE_GC"
 if [[ ! -e "$TEST_ROOT/cache/data/below-threshold-marker" ]]; then
   echo "bun cache collector must preserve a cache below its threshold" >&2
+  exit 1
+fi
+if [[ -n $(find "$TEST_ROOT/cache/tmp" -mindepth 1 -print -quit) ]]; then
+  echo "bun cache collector must clear interrupted extractions at every run" >&2
   exit 1
 fi
 
@@ -183,12 +262,17 @@ fi
 
 : >"$TEST_ROOT/bun.log"
 BUN_CACHE_LOCK_FILE="$TEST_ROOT/control/.gc.lock" \
+  BUN_INSTALL_CACHE_DIR="$TEST_ROOT/cache/data" \
   BUN_INSTALL_LOCK_MODE=shared \
   BUN_GC_TEST_LOG="$TEST_ROOT/bun.log" \
   PATH="$TEST_ROOT/bin:$PATH" \
   "$BUN_INSTALL_WRAPPER" --frozen-lockfile --filter example
 if [[ $(<"$TEST_ROOT/bun.log") != "install --frozen-lockfile --filter example" ]]; then
   echo "bun install wrapper must preserve every install argument" >&2
+  exit 1
+fi
+if [[ $(<"$TEST_ROOT/bun.log.tmpdir") != "$TEST_ROOT/cache/tmp" || ! -d "$TEST_ROOT/cache/tmp" ]]; then
+  echo "shared Bun installs must extract on the cache volume, beside the data directory" >&2
   exit 1
 fi
 
@@ -199,6 +283,10 @@ BUN_INSTALL_LOCK_MODE=local \
   "$BUN_INSTALL_WRAPPER" --frozen-lockfile --filter native-example
 if [[ $(<"$TEST_ROOT/bun.log") != "install --frozen-lockfile --filter native-example" ]]; then
   echo "local Bun install mode must preserve every install argument" >&2
+  exit 1
+fi
+if [[ -n $(<"$TEST_ROOT/bun.log.tmpdir") ]]; then
+  echo "local Bun installs must keep Bun's default temporary directory" >&2
   exit 1
 fi
 

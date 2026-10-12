@@ -21,5 +21,14 @@ export function createS3Client(): S3Client {
       connectionTimeout: 3000,
       requestTimeout: 15_000,
     },
+    // Checksum only when an operation requires one. By default the SDK
+    // checksums every request body, which it cannot do for a streamed file:
+    // a replay PUT (`Body: Bun.file(...)`) failed with "Unable to calculate
+    // hash for flowing readable stream". SeaweedFS also doesn't understand
+    // the default checksum headers (see `scripts/lib/seaweedfs.ts`). Callers
+    // that need integrity verify it themselves — a replay's SHA-256 is
+    // checked before it is stored.
+    requestChecksumCalculation: "WHEN_REQUIRED",
+    responseChecksumValidation: "WHEN_REQUIRED",
   });
 }

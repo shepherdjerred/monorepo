@@ -97,11 +97,14 @@ export const DELETED_SCHEDULE_IDS = [
   // workspace now that each app calls its provider directly.
   "openai-complimentary-usage-hourly",
   // The Riot tournament lobby poller was retired with the Tournament API
-  // integration; its orphaned Schedule kept starting no-op
-  // `scoutRealtimePollWorkflow` runs every 20 seconds.
+  // integration; its orphaned Schedule kept starting no-op v1 realtime polls
+  // every 20 seconds.
   "scout-prod-tournament-lobby-poll",
   // The protobufjs v8 watch retired once @temporalio/proto moved to ^8.
   "protobufjs-v8-watch-weekly",
+  // Hall and Duel delivery are V2 notification intents and their legacy
+  // outbox tables are dropped. Domain reconciliation remains scheduled.
+  "scout-prod-progression-outbox",
 ] as const;
 
 /**
@@ -112,8 +115,13 @@ export const DELETED_SCHEDULE_IDS = [
  * beta-only schedule listed there would never actually be deleted.
  */
 const DELETED_BETA_SCHEDULE_IDS = [
+  // Hall and Duel delivery now have V2 intent owners. Domain reconciliation
+  // remains scheduled; only the drained legacy delivery job is retired.
+  "scout-beta-progression-outbox",
   // Beta twin of scout-prod-tournament-lobby-poll.
   "scout-beta-tournament-lobby-poll",
+  // The executor moved to prod; its Scout Activity still targets beta data.
+  "scout-bryan-bucks-analytics",
 ] as const;
 
 // Schedule deletion prevents future starts but does not stop an execution that
@@ -298,8 +306,18 @@ export function routeDynamicAgentTaskSchedule(
   };
 }
 
-async function reconcileDynamicAgentTaskSchedules(
-  scheduleClient: Client["schedule"],
+export async function reconcileDynamicAgentTaskSchedules(
+  scheduleClient: {
+    list: () => AsyncIterable<{
+      scheduleId: string;
+      memo?: Record<string, unknown>;
+    }>;
+    getHandle: (id: string) => {
+      update: (
+        updater: (prev: ScheduleUpdateOptions) => ScheduleUpdateOptions,
+      ) => Promise<unknown>;
+    };
+  },
   declaredIds: ReadonlySet<string>,
   bootstrap: TemporalBootstrapMetadata,
 ): Promise<void> {
@@ -313,10 +331,21 @@ async function reconcileDynamicAgentTaskSchedules(
     ) {
       continue;
     }
-    await scheduleClient
-      .getHandle(summary.scheduleId)
-      .update((prev) => routeDynamicAgentTaskSchedule(prev, bootstrap));
-    console.warn(`Updated dynamic agent-task schedule: ${summary.scheduleId}`);
+    try {
+      await scheduleClient
+        .getHandle(summary.scheduleId)
+        .update((prev) => routeDynamicAgentTaskSchedule(prev, bootstrap));
+      console.warn(
+        `Updated dynamic agent-task schedule: ${summary.scheduleId}`,
+      );
+    } catch (error: unknown) {
+      // A user can delete a dynamic schedule after visibility lists it.
+      // Missing is already reconciled; authorization and other failures aren't.
+      if (!(error instanceof ScheduleNotFoundError)) throw error;
+      console.warn(
+        `Dynamic agent-task schedule disappeared: ${summary.scheduleId}`,
+      );
+    }
   }
 }
 

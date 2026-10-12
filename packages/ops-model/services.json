@@ -172,15 +172,26 @@
         "minecraft-shuxin",
         "minecraft-sjerred",
         "minecraft-tsmc",
-        "mc-router"
+        "mc-router",
+        "mc-sandbox"
       ],
       "argoApps": [
         "minecraft-shuxin",
         "minecraft-sjerred",
         "minecraft-tsmc",
-        "mc-router"
+        "mc-router",
+        "mc-sandbox"
       ],
       "analyticsSites": ["ts-mc", "ts-mc-docs"]
+    },
+    {
+      "id": "storm-forum",
+      "title": "The Storm forum",
+      "kind": "product",
+      "package": "storm-forum",
+      "aliases": ["xenforo"],
+      "namespaces": ["storm-forum"],
+      "argoApps": ["storm-forum"]
     },
     {
       "id": "temporal",

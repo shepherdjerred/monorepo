@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   StorableBucksStakeSchema,
   BucksPoolRosterSchema,
@@ -66,7 +67,7 @@ export type PlaceBetResult =
 export type PlaceBetInput = {
   /** Which surface asked, so the two cannot drift apart unnoticed. */
   surface?: "button" | "command" | "web";
-  matchId: string;
+  matchId: RiotMatchId;
   serverId: DiscordGuildId;
   discordId: DiscordAccountId;
   /**

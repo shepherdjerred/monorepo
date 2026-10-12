@@ -40,6 +40,34 @@ function issue(input: {
 }
 
 describe("Linear queue selection", () => {
+  test("reads Toolkit's array output and preserves durable issue snapshots", async () => {
+    const selected = issue({ identifier: "AI-99", teamKey: "AI" });
+    const client = new LinearClient(
+      "AI",
+      fakeLinearRunner([], { refreshNodes: [selected] }),
+    );
+    expect(await client.nextIssue()).toEqual(selected);
+    expect(await client.refreshIssue("AI-99")).toEqual(selected);
+    expect(await client.labelNames()).toEqual(
+      new Set(["agent:codex", "agent:autonomous", "agent:ready"]),
+    );
+  });
+
+  test("includes flattened CLI comments as quoted agent context", async () => {
+    const client = new LinearClient("AI", async () => ({
+      exitCode: 0,
+      stderr: "",
+      timedOut: false,
+      stdout: JSON.stringify({
+        description: null,
+        comments: [{ body: "  A useful comment  " }, { body: " " }],
+      }),
+    }));
+    expect(await client.agentContext("AI-99")).toBe(
+      'Linear comments present for agent context:\n"A useful comment"',
+    );
+  });
+
   test("a lone provider label is enough, in any team or state", () => {
     expect(providerForIssue(issue({ identifier: "SJ-1" }))).toBe("codex");
     expect(isEligibleIssue(issue({ identifier: "SJ-1" }))).toBe(true);
@@ -268,11 +296,10 @@ describe("Linear label mutations", () => {
       }),
     );
     const query = recorded.find(
-      (args) => args[2] === "issue" && args[3] === "query",
+      (args) => args[2] === "api" && args[3]?.includes("issue(id:") === true,
     );
-    expect(query).toEqual(
-      expect.arrayContaining(["--all-teams", "--search", "XX-1"]),
-    );
+    expect(query).toBeDefined();
+    expect(query?.at(-1)).toBe(JSON.stringify({ id: "XX-1" }));
     expect(apiVariables(recorded)).toEqual({
       id: "XX-1",
       add: [],

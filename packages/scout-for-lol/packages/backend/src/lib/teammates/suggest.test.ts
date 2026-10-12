@@ -1,10 +1,10 @@
 import { describe, expect, test } from "vitest";
 import {
-  MatchIdSchema,
   RawMatchSchema,
-  type MatchId,
+  type RiotMatchId,
   type RawMatch,
   type Region,
+  type RawParticipant,
 } from "@scout-for-lol/data";
 import { aggregateTeammates } from "#src/lib/teammates/suggest.ts";
 
@@ -25,7 +25,7 @@ async function baseMatch(): Promise<RawMatch> {
 }
 
 type Row = {
-  puuid: string;
+  puuid: RawParticipant["puuid"];
   team: number;
   name?: string;
   tag?: string;
@@ -37,7 +37,7 @@ function roster(
   match: RawMatch,
   rows: Row[],
   opts?: { gameType?: string; end?: number },
-): { match: RawMatch; region: Region; matchId: MatchId } {
+): { match: RawMatch; region: Region; matchId: RiotMatchId } {
   const template = match.info.participants[0];
   if (template === undefined) throw new Error("fixture has no participants");
   const clone = structuredClone(match);
@@ -57,7 +57,7 @@ function roster(
   return {
     region: REGION,
     match: clone,
-    matchId: MatchIdSchema.parse(clone.metadata.matchId),
+    matchId: clone.metadata.matchId,
   };
 }
 

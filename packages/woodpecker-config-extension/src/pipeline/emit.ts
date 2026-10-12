@@ -1,13 +1,24 @@
 import { stringify } from "yaml";
 import { bunInstallEnvironment } from "#src/pipeline/cache.ts";
-import type { CiStep, ResourceTier } from "#src/pipeline/model.ts";
+import {
+  SOURCE_CACHE_PATH,
+  SOURCE_CACHE_CONTROL,
+  SOURCE_CACHE_CONTROL_PATH,
+  SOURCE_CACHE_PREPARATION_IMAGE,
+  ORDINARY_CLONE_IMAGE,
+} from "#src/pipeline/source-cache.ts";
+import { LIGHT_TIER } from "#src/pipeline/tiers.ts";
+import type {
+  CiCommandStep,
+  CiStep,
+  ResourceTier,
+} from "#src/pipeline/model.ts";
 
 /**
  * Node the CI step pods run on, and the taint they must tolerate to get there.
  *
- * Mirrors the Buildkite agent stack: CI never falls back onto the production
- * node. If the CI node is down, steps stay pending rather than displacing
- * production workloads.
+ * CI never falls back onto the production node. If the CI node is down,
+ * steps stay pending rather than displacing production workloads.
  */
 const CI_NODE_SELECTOR = { "kubernetes.io/hostname": "liskov" } as const;
 const CI_TOLERATION = {
@@ -46,9 +57,7 @@ function agentLabels(step: CiStep): Record<string, string> {
  * Pod metadata the CI I/O telemetry attributes cgroup counters through.
  *
  * Woodpecker names step pods `wp-<ulid>`, which carries no information about
- * WHICH step ran. Buildkite's agent stack stamped a job UUID
- * and build/job URLs; nothing equivalent exists here, so the pipeline stamps
- * its own identity instead.
+ * WHICH step ran, so the pipeline stamps its own identity instead.
  *
  * Commit plus step key, rather than a pipeline number: the configuration
  * extension generates this YAML while the pipeline record is still being
@@ -80,6 +89,7 @@ export type PipelineIdentity = {
   readonly branch: string;
   /** Forge URL for the commit this pipeline is building. */
   readonly linkUrl: string;
+  readonly event: string;
 };
 
 /**
@@ -123,7 +133,10 @@ export function wrapCommands(step: CiStep): string[] {
   const timeout = step.backend === "local" ? MACOS_TIMEOUT : "timeout";
   const shell = step.shell ?? "bash";
   const shellOptions = shell === "bash" ? "-euo pipefail" : "-eu";
-  const attemptScript = `${timeout} ${seconds.toString()}s ${shell} ${shellOptions} -c ${shellQuote(body)}`;
+  // Some build tools keep children alive after timeout sends SIGTERM. Escalate
+  // after a short cleanup window so one wedged process tree cannot occupy a CI
+  // runner until the workflow-wide timeout.
+  const attemptScript = `${timeout} -k 30s ${seconds.toString()}s ${shell} ${shellOptions} -c ${shellQuote(body)}`;
 
   if (step.retries === undefined || step.retries <= 1) {
     return [attemptScript];
@@ -163,7 +176,7 @@ function resources(tier: ResourceTier): Record<string, unknown> {
 }
 
 /**
- * Pod shape shared by a step and its services.
+ * Pod shape shared by a clone, step and its services.
  *
  * Services are separate pods, and Woodpecker gives them nothing a step
  * declares: without their own requests they would be invisible to Kueue and
@@ -209,49 +222,98 @@ function backendOptions(
   };
 }
 
-/**
- * Render one step as a complete Woodpecker workflow.
- *
- * One workflow per step rather than one workflow containing many: Buildkite
- * steps were independent pods with their own checkout, and Woodpecker
- * workflows are the unit that gets its own workspace — and the unit
- * `concurrency` applies to, which the serialized lanes depend on.
- *
- * Deliberately emits no path filter. The selector has already decided which
- * steps run and guarantees the result is dependency-closed. A second path
- * filter could strand a dependent. The completion workflow alone carries a
- * status condition so it runs after a failed prerequisite.
- *
- * The rendered text is escaped for Woodpecker's variable substitution; see
- * `escapeSubstitution`.
- */
-export function emitWorkflow(step: CiStep, identity: PipelineIdentity): string {
-  const workflow: Record<string, unknown> = {
-    steps: [
+/** Emit one container with only its own credentials and resource bounds. */
+function emitCommand(
+  command: CiCommandStep,
+  backend: CiStep["backend"],
+  identity: PipelineIdentity,
+): Record<string, unknown> {
+  const step: CiStep = {
+    ...command,
+    label: command.key,
+    ...(backend === undefined ? {} : { backend }),
+  };
+  return {
+    name: step.key,
+    image: step.image,
+    commands: wrapCommands(step),
+    environment: {
+      ...step.environment,
+      ...bunInstallEnvironment(step.volumes),
+    },
+    ...(step.volumes === undefined || step.volumes.length === 0
+      ? {}
+      : {
+          volumes: step.volumes.map(
+            (volume) => `${volume.claim}:${volume.path}`,
+          ),
+        }),
+    ...(step.allowFailure === true ? { failure: "ignore" } : {}),
+    ...(step.backend === "local"
+      ? {}
+      : { backend_options: backendOptions(step, identity) }),
+  };
+}
+
+function ordinaryCloneConfiguration(
+  step: CiStep,
+  identity: PipelineIdentity,
+): Record<string, unknown> {
+  if (step.skipClone === true || step.backend === "local") return {};
+  return {
+    // Match Woodpecker's native Git plugin settings while declaring the pod
+    // metadata that its implicit clone cannot inherit.
+    clone: [
       {
-        name: step.key,
-        image: step.image,
-        commands: wrapCommands(step),
-        environment: {
-          ...step.environment,
-          ...bunInstallEnvironment(step.volumes),
+        name: "clone",
+        image: ORDINARY_CLONE_IMAGE,
+        settings: {
+          depth: 0,
+          partial: false,
+          ...(identity.event === "tag" ? { tags: true } : {}),
         },
-        ...(step.volumes === undefined || step.volumes.length === 0
-          ? {}
-          : {
-              volumes: step.volumes.map(
-                (volume) => `${volume.claim}:${volume.path}`,
-              ),
-            }),
-        ...(step.allowFailure === true ? { failure: "ignore" } : {}),
-        // A local-backend step runs on a host with no pod around it, so a pod
-        // spec would be meaningless -- and Kubernetes secret grants would
-        // silently deliver nothing.
-        ...(step.backend === "local"
-          ? {}
-          : { backend_options: backendOptions(step, identity) }),
+        backend_options: {
+          kubernetes: podOptions(step, identity, LIGHT_TIER),
+        },
       },
     ],
+  };
+}
+
+/**
+ * Render a selected workflow, optionally with sequential command containers
+ * sharing one checkout. No container receives another container's grants.
+ * Selection has already closed dependencies; adding path conditions here
+ * could strand dependents. Only completion runs after a failed prerequisite.
+ */
+export function emitWorkflow(step: CiStep, identity: PipelineIdentity): string {
+  if (step.sourceCache !== undefined && !/^[a-f\d]{40}$/u.test(identity.commit))
+    throw new Error("Source cache requires an exact Git commit SHA");
+  const commands = [step, ...(step.orderedSteps ?? [])];
+  if (
+    new Set(commands.map((command) => command.key)).size !== commands.length
+  ) {
+    throw new Error(`Duplicate container names in workflow ${step.key}`);
+  }
+  const commandBudget = commands.reduce(
+    (total, command) =>
+      total + (command.timeoutMinutes + 0.5) * (command.retries ?? 1),
+    0,
+  );
+  if (commandBudget + 5 > WORKFLOW_TIMEOUT_MINUTES) {
+    throw new Error(`Command timeouts exceed workflow budget for ${step.key}`);
+  }
+  const workflow: Record<string, unknown> = {
+    // Checkout-free workflows run trusted code from their image. Woodpecker's
+    // startup script still creates its working directory before our commands.
+    // Use the existing mount root so a non-root image need not create a checkout
+    // directory on the fresh, root-owned RWX workspace volume.
+    ...(step.skipClone === true
+      ? { workspace: { base: "/woodpecker", path: "." } }
+      : {}),
+    steps: commands.map((command) =>
+      emitCommand(command, step.backend, identity),
+    ),
     ...(step.services === undefined || step.services.length === 0
       ? {}
       : {
@@ -277,6 +339,79 @@ export function emitWorkflow(step: CiStep, identity: PipelineIdentity): string {
       ? {}
       : { depends_on: [...step.dependsOn] }),
     ...(step.skipClone === true ? { skip_clone: true } : {}),
+    ...(step.sourceCache === undefined
+      ? ordinaryCloneConfiguration(step, identity)
+      : {
+          clone: [
+            {
+              name: "prepare-clone",
+              image: SOURCE_CACHE_PREPARATION_IMAGE,
+              // The ZFS driver does not apply fsGroup to RWX claims. Only the
+              // empty workspace and mounted cache roots need ownership setup;
+              // traversing cached objects would serialize every warm checkout.
+              commands: [
+                `chown 1000:1000 . ${SOURCE_CACHE_PATH} ${SOURCE_CACHE_CONTROL_PATH}`,
+              ],
+              volumes: [
+                `${step.sourceCache.claim}:${SOURCE_CACHE_PATH}`,
+                `${SOURCE_CACHE_CONTROL}:${SOURCE_CACHE_CONTROL_PATH}`,
+              ],
+              backend_options: {
+                kubernetes: {
+                  ...podOptions(step, identity, LIGHT_TIER),
+                  // BusyBox's image user initializes fresh root-owned volumes.
+                  // This pod executes no repository code and has no API token.
+                  securityContext: { allowPrivilegeEscalation: false },
+                },
+              },
+            },
+            {
+              name: "clone",
+              image: step.sourceCache.image,
+              commands: [
+                `mkdir -p ${SOURCE_CACHE_CONTROL_PATH}`,
+                `flock -s ${SOURCE_CACHE_CONTROL_PATH}/gc.lock bash /app/packages/woodpecker-config-extension/src/checkout/checkout.sh ${SOURCE_CACHE_PATH} ${SOURCE_CACHE_CONTROL_PATH} ${identity.commit}`,
+              ],
+              volumes: [
+                `${step.sourceCache.claim}:${SOURCE_CACHE_PATH}`,
+                `${SOURCE_CACHE_CONTROL}:${SOURCE_CACHE_CONTROL_PATH}`,
+              ],
+              backend_options: {
+                kubernetes: {
+                  ...podOptions(step, identity, LIGHT_TIER),
+                  securityContext: {
+                    // Ownership was prepared before the non-root helper starts.
+                    runAsUser: 1000,
+                    runAsGroup: 1000,
+                    runAsNonRoot: true,
+                    fsGroup: 1000,
+                    fsGroupChangePolicy: "OnRootMismatch",
+                    allowPrivilegeEscalation: false,
+                  },
+                },
+              },
+            },
+            {
+              name: "finalize-clone",
+              image: SOURCE_CACHE_PREPARATION_IMAGE,
+              // Build images run as root. Git checks the owners of both the
+              // worktree and its Git directory before allowing later fetches.
+              // Transfer only those private roots; cached objects stay under
+              // UID 1000 and this container cannot mount the source cache.
+              commands: ["test -d .git", "test ! -L .git", "chown 0:0 . .git"],
+              backend_options: {
+                kubernetes: {
+                  ...podOptions(step, identity, LIGHT_TIER),
+                  securityContext: {
+                    runAsUser: 0,
+                    runAsGroup: 0,
+                    allowPrivilegeEscalation: false,
+                  },
+                },
+              },
+            },
+          ],
+        }),
     ...(step.runOnFailure === true
       ? { when: [{ status: ["success", "failure"] }] }
       : {}),

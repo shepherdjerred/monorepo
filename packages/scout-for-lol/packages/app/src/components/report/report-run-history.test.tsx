@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { ReportIdSchema } from "@scout-for-lol/data";
+import { ReportIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { renderToStaticMarkup } from "react-dom/server";
 import { ReportRunHistory } from "#src/components/report/report-run-history.tsx";
 
@@ -9,13 +9,15 @@ describe("ReportRunHistory", () => {
       "SELECT games FROM match_participants GROUP BY all RENDER table";
     const markup = renderToStaticMarkup(
       <ReportRunHistory
-        guildId="guild"
+        guildId={DiscordGuildIdSchema.parse("810135513265406599")}
         reportId={ReportIdSchema.parse(1)}
         runs={[
           {
             id: 1,
             trigger: "MANUAL",
             status: "SUCCEEDED",
+            deliveryState: "DELIVERED",
+            deliveryError: null,
             startedAt: "2026-08-08T00:00:00.000Z",
             durationMs: 10,
             rowsReturned: 1,
@@ -30,7 +32,7 @@ describe("ReportRunHistory", () => {
       />,
     );
 
-    expect(markup).toContain("ScoutQL snapshot");
+    expect(markup).toContain("Query used");
     expect(markup).toContain(querySnapshot);
   });
 });

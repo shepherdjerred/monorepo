@@ -1,0 +1,79 @@
+id: arrowblaze1
+name: ArrowBlaze1
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NTMwMjgzOSwKICAicHJvZmlsZUlkIiA6ICI3NzQ3ODc3M2ExZTE0NzUxODE0M2Q5ZDA5YTc1NmQ2MiIsCiAgInByb2ZpbGVOYW1lIiA6ICJ3aGF0YXJlZmVycmV0cyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS84NDc4MGVlZWM0NWRiMzYyOGU1YTRlNzUyZDViOGRiMmMzZmE2MjdmNDNkOTE2OTdmNmQ2ODhjZTZkNzE3MGM2IgogICAgfQogIH0KfQ=="
+  signature: "D0kLAMXmNLyjVJtEXw5HmtEVODB/2p8/PUFYb4bU0JoTHls5jp9mHVj/qEAghc2Tg5Qwsw31baC+fV3GbCUyB9vuti31eHLwQmFfMCQL8px8QB4URkaJFqmChVGBxTYQbekz3mvhgqdaXNvZx5PGuiXWWkY8r+buTNUFa9TFjEOspuCbsy9fe0mzYTSS9axxuZMHFmGt0Cx0iUUq3kGE/dOrr6po6XvUDR2ZJe/OtSsmBTkYySQ6y299LoHztv+WXrrePE7BsTt0MQaihIfkwSF0BCABQsCenqNivTOyMIVgHsm0EEM0z7CADkcnUwzHTR3ll7xix7suQNmucXuHiOzNaKAHrZ/H1FFH3a5VUx5ZiOELSYPVO8rCq0hz5R6/qrZa5eNiyphM003oW83L48WjJ5MjrWiPKR4cRAnAQk2RU4iI23GxZ7FV3sHnkngTQ0YuoBGw+qW0fW+rjQMYm3h6tF4b25cyp4nEjFjMgRJtybJM6w5A5ZnZL1bz5P0CHGR+tBbcRMZkTdJ+LKlmY6KA+ITlugXaZP+lLBf56Bu/GdnUZLdb/+afJsV5z1ZabgSYJn4RCI7QEFGvujFejjYjSr5tvhKQEuRzXRhs5k75CH+f5GYEieXs/FKu8HeM4HnfG1lbjrKfRGfeIZIbvraENFlV3XviOu+f+WesTxo="
+skill: 0.485
+archetype: support
+leverOffsets:
+  aimErrorDeg: -0.05
+  awarenessRadius: 0.25
+  coordination: 1.58
+  aggression: -0.13
+kits:
+  trooper: 0.92
+  longbow: 0.34
+  rewind: 0.66
+roles:
+  escort: 0.96
+  defend: 0.32
+  retake: 0.68
+style:
+  aggression: 0.35
+  patience: 0.56
+  teamplay: 0.9
+  risk: 0.35
+voice:
+  tone:
+    - upbeat
+    - coachy
+    - loud
+  verbosity: chatty
+  style: "motivational gym coach; hype, pep talks and 'let's GO team'"
+lines:
+  greet:
+    - "Let's GO {team}! Hydrate, focus, win!"
+    - Big energy today, people! Big energy!
+    - Who's ready to work? I'm ready to work!
+  onKill:
+    - "That's a rep! {victim} down!"
+    - "Nice try {victim}, keep training!"
+    - Covered you! Keep pushing!
+  onDeath:
+    - "Good hustle {killer}! I'll be back stronger!"
+    - Shake it off, shake it off!
+    - Keep moving team, don't wait for me!
+  onPlant:
+    - "{bomb} is LIT! Teamwork makes the dream work!"
+    - "Huge stack on {bomb}! Great reps, everyone!"
+  onDefuse:
+    - "{bomb} defused! That's what practice is for!"
+    - "Clutch defuse on {bomb}! Let's GO!"
+  onWin:
+    - "CHAMPIONS! Great work {team}!"
+    - That's what I'm TALKING about! gg!
+  onLoss:
+    - Losses build character! gg!
+    - Back to training! gg everyone!
+  onLastAlive:
+    - Last one standing! Time to dig deep!
+    - "{team} believes in me! I believe in me!"
+    - No quitting! Not today!
+  taunt:
+    - Is that all you've got? Come on!
+    - We trained for this!
+    - Feel the burn! Of the fuse!
+  lobby:
+    - Warm-up time! Arms, legs, gapples!
+    - Pick a kit you believe in! Trooper believes in YOU!
+    - "Big energy, {team}! Big energy!"
+    - Who's ready? I can't hear you! Type louder!
+    - Hydrate! Focus! Escort!
+quirks:
+  - always_gg
+  - good_sport
+rivals:
+  - xxstormfoxxx
+bio: The loudest supporter on the server, coaching everyone through every round whether they asked or not. xXStormFoxXx finds it exhausting and secretly plays better when he's around.
+batch: 2
+retired: false

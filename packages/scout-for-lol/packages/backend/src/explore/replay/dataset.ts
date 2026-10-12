@@ -13,10 +13,8 @@ import { CapturedGuildConfigSchema } from "#src/explore/replay/profiles.ts";
  * every answer computed on top reads as a model regression that never
  * happened.
  *
- * The compactor already refuses to fold across that boundary, comparing the
- * build manifest's PUUID-remap fingerprint against the database's. This module
- * reuses the same comparison as an entry condition for the eval, because an
- * eval that cannot trust its own dataset is worse than no eval.
+ * Schema, snapshot contents, account counts and sampled identity coverage are
+ * entry conditions: an eval must trust its dataset before making model calls.
  */
 
 /**
@@ -29,10 +27,12 @@ import { CapturedGuildConfigSchema } from "#src/explore/replay/profiles.ts";
  */
 export const REPLAY_WRITABLE_TABLES = [
   "ConfirmationIntent",
-  "BucksDareV2",
+  "BucksDare",
   // `draft_challenge_contract` writes a ChallengeDraft — a run is what a
   // confirmed contract produces, and a replay never confirms one.
   "ChallengeDraft",
+  "ExploreSpend",
+  "ExploreSandboxLease",
 ] as const;
 
 export const ReplayStageSchema = z.enum(["beta", "prod"]);
@@ -40,15 +40,21 @@ export type ReplayStage = z.infer<typeof ReplayStageSchema>;
 
 export const StageDatasetPinSchema = z
   .object({
-    schemaVersion: z.literal(1),
+    schemaVersion: z.literal(3, {
+      error:
+        "Replay dataset format changed; re-capture a fresh v3 pin and baseline.",
+    }),
+    runtime: z.strictObject({
+      analysisEnabled: z.boolean(),
+      model: z.string().min(1),
+    }),
     stage: ReplayStageSchema,
     createdAt: z.iso.datetime(),
     lake: z
       .object({
         dir: z.string().min(1),
         buildId: z.string().min(1),
-        /** Recorded at pull time; re-checked before every run. */
-        puuidRemapFingerprint: z.string().min(1),
+        schemaFingerprint: z.string().min(1),
         pulledAt: z.iso.datetime(),
         sourcePod: z.string().min(1),
       })
@@ -119,6 +125,25 @@ export const StageDatasetPinSchema = z
 
 export type StageDatasetPin = z.infer<typeof StageDatasetPinSchema>;
 
+/** Schema mismatch is a fixture failure, before any paid model calls. */
+export function lakeSchemaIssues(input: {
+  published: string | undefined;
+  pinned: string;
+  current: string;
+}): string[] {
+  if (input.published === undefined)
+    return [
+      "The lake has no recorded schema fingerprint; rebuild it before replaying.",
+    ];
+  if (input.published !== input.pinned)
+    return ["The published lake schema differs from the pin; re-capture it."];
+  if (input.published !== input.current)
+    return [
+      "The lake schema differs from this checkout; rebuild it before replaying.",
+    ];
+  return [];
+}
+
 /**
  * The lake was pulled before the database, so the database is the later of the
  * two and may legitimately know about accounts the lake has never seen. The
@@ -132,9 +157,6 @@ export type DatasetCoherenceFacts = {
   /** What the writable tables hold now, and held when the pin was captured. */
   readonly writableRows: Readonly<Record<string, string>>;
   readonly pinnedWritableRows: Readonly<Record<string, string>>;
-  /** `undefined` when the build predates the fingerprint, or its manifest is unreadable. */
-  readonly lakeFingerprint: string | undefined;
-  readonly databaseFingerprint: string;
   readonly accountRows: {
     readonly parquet: number;
     readonly database: number;
@@ -185,20 +207,6 @@ export function datasetCoherenceIssues(
   if (facts.snapshotId !== facts.pinnedSnapshotId) {
     issues.push(
       `the database has been restored since this pin was captured (snapshot ${facts.snapshotId}, pin ${facts.pinnedSnapshotId}); re-capture the pin`,
-    );
-  }
-
-  if (facts.lakeFingerprint === undefined) {
-    // Not the same as a mismatch, and worth saying differently: the build is
-    // older than the fingerprint or its manifest did not survive the copy.
-    // Either way coherence cannot be proven, and an unprovable dataset is
-    // treated exactly like a wrong one.
-    issues.push(
-      "the lake build records no PUUID remap fingerprint, so its identity domain cannot be proven",
-    );
-  } else if (facts.lakeFingerprint !== facts.databaseFingerprint) {
-    issues.push(
-      `PUUID remap fingerprint differs: lake ${facts.lakeFingerprint}, database ${facts.databaseFingerprint}`,
     );
   }
 

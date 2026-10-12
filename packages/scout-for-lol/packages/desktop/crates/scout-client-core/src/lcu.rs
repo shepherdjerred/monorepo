@@ -226,22 +226,43 @@ impl LcuClient {
     /// Returns a typed request or HTTP status failure. Caller-controlled URLs
     /// are not accepted.
     pub async fn get(&self, endpoint: LcuEndpoint) -> Result<Option<Value>, LcuError> {
+        self.get_path(endpoint.path()).await
+    }
+
+    /// Read one LCU resource addressed by an ID from another LCU payload. A 404
+    /// means the League client has no such resource (yet).
+    ///
+    /// # Errors
+    ///
+    /// Returns a typed request or HTTP status failure.
+    pub async fn get_resource(&self, resource: LcuResource) -> Result<Option<Value>, LcuError> {
+        self.get_path(&resource.path()).await
+    }
+
+    async fn get_path(&self, path: &str) -> Result<Option<Value>, LcuError> {
         let response = self
             .http
-            .get(format!("{}{}", self.base_url, endpoint.path()))
+            .get(format!("{}{path}", self.base_url))
             .header("Authorization", &self.authorization)
             .header("Accept", "application/json")
             .send()
             .await
-            .map_err(LcuError::Request)?;
+            .map_err(request_error)?;
         if response.status() == StatusCode::NOT_FOUND {
             return Ok(None);
         }
         if !response.status().is_success() {
             return Err(LcuError::Status(response.status()));
         }
-        response.json().await.map(Some).map_err(LcuError::Request)
+        response.json().await.map(Some).map_err(request_error)
     }
+}
+
+/// A failed LCU request, without its URL: a request error's text names the
+/// URL, whose path can carry a roster or game ID, and the text is what
+/// diagnostics record.
+fn request_error(error: reqwest::Error) -> LcuError {
+    LcuError::Request(error.without_url())
 }
 
 /// Curated read-only LCU resources.
@@ -337,6 +358,113 @@ impl LcuEndpoint {
     }
 }
 
+/// A League game ID, as an LCU payload states it.
+///
+/// Only a positive integer parses, so an ID can never smuggle its own path
+/// segment or query into a [`LcuResource`] URL.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct GameId(u64);
+
+/// A positive decimal integer, and nothing else: the only shape a numeric ID
+/// may have before it goes into a [`LcuResource`] path.
+fn positive_integer(value: &str) -> Option<u64> {
+    if value.is_empty() || !value.bytes().all(|byte| byte.is_ascii_digit()) {
+        return None;
+    }
+    value.parse::<u64>().ok().filter(|id| *id > 0)
+}
+
+impl GameId {
+    /// Parse the decimal game ID an LCU payload carries.
+    #[must_use]
+    pub fn parse(value: &str) -> Option<Self> {
+        positive_integer(value).map(Self)
+    }
+}
+
+impl std::fmt::Display for GameId {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.fmt(formatter)
+    }
+}
+
+/// A Clash tournament ID, as an LCU payload states it: a positive integer.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ClashTournamentId(u64);
+
+impl ClashTournamentId {
+    /// Parse the decimal tournament ID an LCU payload carries.
+    #[must_use]
+    pub fn parse(value: &str) -> Option<Self> {
+        positive_integer(value).map(Self)
+    }
+}
+
+/// A Clash bracket ID, as an LCU payload states it: a positive integer.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ClashBracketId(u64);
+
+impl ClashBracketId {
+    /// Parse the decimal bracket ID an LCU payload carries.
+    #[must_use]
+    pub fn parse(value: &str) -> Option<Self> {
+        positive_integer(value).map(Self)
+    }
+}
+
+/// A Clash roster (team) ID, as an LCU payload states it: a UUID, written
+/// back in its canonical hyphenated form so it can't carry anything else.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ClashRosterId(uuid::Uuid);
+
+impl ClashRosterId {
+    /// Parse the roster UUID an LCU payload carries.
+    #[must_use]
+    pub fn parse(value: &str) -> Option<Self> {
+        uuid::Uuid::try_parse(value).ok().map(Self)
+    }
+}
+
+/// Read-only LCU resources addressed by an ID from another LCU payload.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LcuResource {
+    /// One finished game with its full roster and every player's stats.
+    MatchHistoryGame(GameId),
+    /// One finished game's per-minute frames and objective events.
+    MatchTimeline(GameId),
+    /// A Clash tournament: its phases, schedule and entry rules.
+    ClashTournament(ClashTournamentId),
+    /// A Clash roster: its members, positions, captain, and lock-in state.
+    ClashRoster(ClashRosterId),
+    /// A Clash roster's tournament record.
+    ClashRosterStats(ClashRosterId),
+    /// A Clash bracket: its matches and the rosters in each.
+    ClashBracket(ClashBracketId),
+}
+
+impl LcuResource {
+    /// Resource path; the only variable segment is a parsed ID.
+    #[must_use]
+    pub fn path(self) -> String {
+        match self {
+            Self::MatchHistoryGame(game_id) => format!("/lol-match-history/v1/games/{game_id}"),
+            Self::MatchTimeline(game_id) => {
+                format!("/lol-match-history/v1/game-timelines/{game_id}")
+            }
+            Self::ClashTournament(ClashTournamentId(id)) => {
+                format!("/lol-clash/v1/tournament/{id}")
+            }
+            Self::ClashRoster(ClashRosterId(id)) => {
+                format!("/lol-clash/v1/roster/{}", id.hyphenated())
+            }
+            Self::ClashRosterStats(ClashRosterId(id)) => {
+                format!("/lol-clash/v1/roster/{}/stats", id.hyphenated())
+            }
+            Self::ClashBracket(ClashBracketId(id)) => format!("/lol-clash/v1/bracket/{id}"),
+        }
+    }
+}
+
 /// LCU discovery or request failure.
 #[derive(Debug, Error)]
 pub enum LcuError {
@@ -372,7 +500,90 @@ mod tests {
 
     use uuid::Uuid;
 
-    use super::{LeagueLockfile, install_path_from_metadata};
+    use super::{GameId, LcuResource, LeagueLockfile, install_path_from_metadata};
+
+    #[test]
+    fn game_ids_are_only_positive_integers() {
+        assert!(GameId::parse("5653272000").is_some());
+        for invalid in ["", "0", "-1", "12/../34", "12?x=1", " 12", "1e3"] {
+            assert_eq!(GameId::parse(invalid), None, "{invalid:?}");
+        }
+    }
+
+    #[tokio::test]
+    async fn a_failed_request_never_names_the_resource_it_addressed()
+    -> Result<(), Box<dyn std::error::Error>> {
+        // Nothing listens on port 1, so the request fails before any response.
+        let lockfile = super::LeagueLockfile::parse("LeagueClient:1:1:secret:https")?;
+        let client = super::LcuClient::new(&lockfile)?;
+        let roster = super::ClashRosterId::parse("f1c2a7d0-4b9e-4a17-9c3e-2d8f6a5b1c0e")
+            .ok_or("valid roster id")?;
+        let Err(error) = client.get_resource(LcuResource::ClashRoster(roster)).await else {
+            return Err("a request to a closed port must fail".into());
+        };
+        let text = error.to_string();
+        assert!(!text.contains("f1c2a7d0"), "{text}");
+        assert!(!text.contains("/lol-clash/"), "{text}");
+        Ok(())
+    }
+
+    #[test]
+    fn clash_ids_parse_only_their_own_shape() {
+        assert!(super::ClashTournamentId::parse("3021").is_some());
+        assert!(super::ClashBracketId::parse("18276").is_some());
+        assert!(super::ClashRosterId::parse("f1c2a7d0-4b9e-4a17-9c3e-2d8f6a5b1c0e").is_some());
+        for invalid in ["", "0", "12/../34", "12?x=1"] {
+            assert_eq!(
+                super::ClashTournamentId::parse(invalid),
+                None,
+                "{invalid:?}"
+            );
+            assert_eq!(super::ClashBracketId::parse(invalid), None, "{invalid:?}");
+        }
+        for invalid in ["", "not-a-roster", "../roster", "f1c2a7d0/../x"] {
+            assert_eq!(super::ClashRosterId::parse(invalid), None, "{invalid:?}");
+        }
+    }
+
+    #[test]
+    fn clash_resources_address_one_roster_bracket_or_tournament()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let roster = super::ClashRosterId::parse("F1C2A7D0-4B9E-4A17-9C3E-2D8F6A5B1C0E")
+            .ok_or("valid roster id")?;
+        assert_eq!(
+            LcuResource::ClashRoster(roster).path(),
+            "/lol-clash/v1/roster/f1c2a7d0-4b9e-4a17-9c3e-2d8f6a5b1c0e"
+        );
+        assert_eq!(
+            LcuResource::ClashRosterStats(roster).path(),
+            "/lol-clash/v1/roster/f1c2a7d0-4b9e-4a17-9c3e-2d8f6a5b1c0e/stats"
+        );
+        let bracket = super::ClashBracketId::parse("18276").ok_or("valid bracket id")?;
+        assert_eq!(
+            LcuResource::ClashBracket(bracket).path(),
+            "/lol-clash/v1/bracket/18276"
+        );
+        let tournament = super::ClashTournamentId::parse("3021").ok_or("valid tournament id")?;
+        assert_eq!(
+            LcuResource::ClashTournament(tournament).path(),
+            "/lol-clash/v1/tournament/3021"
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn resources_address_one_game() -> Result<(), Box<dyn std::error::Error>> {
+        let game_id = GameId::parse("5653272000").ok_or("valid game id")?;
+        assert_eq!(
+            LcuResource::MatchHistoryGame(game_id).path(),
+            "/lol-match-history/v1/games/5653272000"
+        );
+        assert_eq!(
+            LcuResource::MatchTimeline(game_id).path(),
+            "/lol-match-history/v1/game-timelines/5653272000"
+        );
+        Ok(())
+    }
 
     #[test]
     fn parses_lockfile_without_exposing_password() -> Result<(), Box<dyn std::error::Error>> {

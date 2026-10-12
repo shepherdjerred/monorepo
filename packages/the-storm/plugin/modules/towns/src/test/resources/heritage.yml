@@ -1,0 +1,14 @@
+schemaVersion: 1
+archiveSha256: 89fc7865604b5ab9ecf3030c90a192f8f9c963083cc77135949c953ae6b645fa
+sites:
+  - id: spawn
+    name: Test Heritage Spawn
+    kind: SERVER
+    activeTownName: ""
+    world: world
+    profile: SAFE
+    protectedChunks: [{ x: 62500, z: 62500 }]
+    protectedAreas: []
+    editingChunks: []
+    editors: []
+    provenance: Isolated fixture outside ordinary towns test locations.

@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "kind": "rwf-map-scenario",
+  "id": "pirate-island-trooper-duel-v1",
+  "map": "pirate-island",
+  "mapSha256": "97d4c219d20bcc7c395ac9805317cfe9f02757c8fd63b7d0efce47b7f6462f3d",
+  "world": "minecraft:rwf",
+  "region": {
+    "min": {
+      "x": 2048,
+      "y": 0,
+      "z": 4096
+    },
+    "max": {
+      "x": 2111,
+      "y": 90,
+      "z": 4274
+    }
+  },
+  "sourceTeams": ["RED", "BLUE"],
+  "spawnPolicy": "source",
+  "spawns": [
+    {
+      "team": "red",
+      "sourceTeam": "RED",
+      "position": [2075.5, 66, 4141.5],
+      "yaw": 354.1605224609375,
+      "pitch": 0
+    },
+    {
+      "team": "blue",
+      "sourceTeam": "BLUE",
+      "position": [2079.5, 67, 4229.5],
+      "yaw": 180.65106201171875,
+      "pitch": 0
+    }
+  ]
+}

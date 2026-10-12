@@ -2,10 +2,10 @@ import { z } from "zod";
 import {
   DiscordGuildIdSchema,
   LeaguePuuidSchema,
-  MatchIdSchema,
+  RiotMatchIdSchema,
   type DiscordGuildId,
   type LeaguePuuid,
-  type MatchId,
+  type RiotMatchId,
   type RiotTeamId,
 } from "@scout-for-lol/data";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
@@ -43,7 +43,7 @@ export const MatchMvpGuildTallySchema = z.strictObject({
 });
 
 export const MatchMvpTallyResultSchema = z.strictObject({
-  matchId: MatchIdSchema,
+  matchId: RiotMatchIdSchema,
   showGuildNames: z.boolean(),
   guilds: z.array(MatchMvpGuildTallySchema).min(1),
 });
@@ -92,7 +92,7 @@ function bucketsForTeam(
 
 async function tallyForGuild(
   input: {
-    matchId: MatchId;
+    matchId: RiotMatchId;
     guild: MatchMvpTallyGuild;
     roster: MatchMvpRoster;
   },
@@ -124,7 +124,7 @@ async function tallyForGuild(
  */
 export async function loadMatchMvpTallyForGuilds(
   input: {
-    matchId: MatchId;
+    matchId: RiotMatchId;
     guilds: readonly MatchMvpTallyGuild[];
   },
   prismaClient: ExtendedPrismaClient = prisma,
@@ -162,7 +162,7 @@ export async function loadMatchMvpTallyForGuilds(
 
 export async function loadMatchMvpTallyForGuild(
   input: {
-    matchId: MatchId;
+    matchId: RiotMatchId;
     guild: MatchMvpTallyGuild;
   },
   prismaClient: ExtendedPrismaClient = prisma,

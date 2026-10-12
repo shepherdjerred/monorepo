@@ -69,7 +69,7 @@ function useChampionIconData(): ChampionIconData | undefined {
  */
 export function ChampionIcon({
   name,
-  className,
+  className = "size-6 rounded",
 }: {
   name: string;
   className?: string | undefined;
@@ -85,7 +85,7 @@ export function ChampionIcon({
       alt=""
       aria-hidden
       loading="lazy"
-      className={className ?? "size-6 rounded"}
+      className={className}
     />
   );
 }

@@ -43,6 +43,8 @@ const CLI_CHECKS: readonly { name: string; args: readonly string[] }[] = [
   { name: "pkill", args: ["pkill", "--version"] },
   { name: "pgrep", args: ["pgrep", "--version"] },
   { name: "bwrap", args: ["bwrap", "--version"] },
+  { name: "socat", args: ["socat", "-V"] },
+  { name: "tini", args: ["tini", "--version"] },
   { name: "toolkit", args: ["toolkit", "--version"] },
   { name: "toolkit gh", args: ["toolkit", "gh", "--version"] },
   {

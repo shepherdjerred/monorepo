@@ -24,7 +24,6 @@ import {
   buildWsUrl,
   extractEventData,
   MessageDataString,
-  wait,
   waitForFirstMessage,
   waitForOpen,
 } from "./socket-helpers.js";
@@ -45,7 +44,13 @@ type PendingRequest = {
 };
 
 type ConnectionState =
-  "idle" | "connecting" | "authenticated" | "closed" | "error";
+  | "idle"
+  | "connecting"
+  | "authenticated"
+  | "ready"
+  | "closed"
+  | "error"
+  | "handler-error";
 
 export type ConnectionStateListener = (
   state: ConnectionState,
@@ -72,6 +77,8 @@ export class HomeAssistantEventClient<S extends HaSchema = DefaultHaSchema> {
   private nextId = 1;
   private closedByUser = false;
   private reconnectAttempt = 0;
+  private reconnectTimer: ReturnType<typeof setTimeout> | undefined;
+  private reconnectInFlight = false;
   private pingTimer: ReturnType<typeof setInterval> | undefined;
 
   public constructor(
@@ -100,12 +107,17 @@ export class HomeAssistantEventClient<S extends HaSchema = DefaultHaSchema> {
 
   public async connect(): Promise<void> {
     this.closedByUser = false;
+    this.stopReconnectTimer();
     await this.openAndAuth();
     await this.resubscribeAll();
+    this.requireOpenSocket();
+    this.reconnectAttempt = 0;
+    this.setState("ready");
   }
 
   public async close(): Promise<void> {
     this.closedByUser = true;
+    this.stopReconnectTimer();
     this.stopPingTimer();
     this.failAllPending(new HaWebSocketClosedError());
     const socket = this.socket;
@@ -204,7 +216,6 @@ export class HomeAssistantEventClient<S extends HaSchema = DefaultHaSchema> {
     this.attachMessageHandler(socket);
     this.attachCloseHandler(socket);
     this.setState("authenticated");
-    this.reconnectAttempt = 0;
     this.startPingTimer();
   }
 
@@ -238,7 +249,7 @@ export class HomeAssistantEventClient<S extends HaSchema = DefaultHaSchema> {
       }
       this.setState("closed");
       if (this.opts.reconnect) {
-        void this.scheduleReconnect();
+        this.scheduleReconnect();
       }
     });
     socket.addEventListener("error", (event) => {
@@ -275,12 +286,24 @@ export class HomeAssistantEventClient<S extends HaSchema = DefaultHaSchema> {
     if (subscription === undefined) {
       return;
     }
-    void Promise.resolve(subscription.handler(message.event)).catch(
-      (error: unknown) => {
-        const detail = error instanceof Error ? error.message : String(error);
-        this.emitError(`Subscription handler threw: ${detail}`);
-      },
-    );
+    void this.runSubscriptionHandler(subscription, message.event);
+  }
+
+  private async runSubscriptionHandler(
+    subscription: Subscription,
+    event: EventMessage["event"],
+  ): Promise<void> {
+    try {
+      await subscription.handler(event);
+    } catch (error: unknown) {
+      const detail = error instanceof Error ? error.message : String(error);
+      // The subscription is still active; distinguish its consumer failure
+      // from transport/authentication failures used for connection health.
+      this.setState(
+        "handler-error",
+        new HaWebSocketError(`Subscription handler threw: ${detail}`),
+      );
+    }
   }
 
   private dispatchResult(message: z.infer<typeof ResultMessage>): void {
@@ -323,16 +346,22 @@ export class HomeAssistantEventClient<S extends HaSchema = DefaultHaSchema> {
     // clearServerIds already ran in openAndAuth, so server-id bindings are
     // empty here; the clientKey → subscription map still holds every caller-
     // registered subscription. Rebind each to a fresh server id and keep
-    // going on individual failures so one bad resubscribe doesn't drop the
-    // rest. Subscriptions that fail stay in the registry and get retried on
-    // the next reconnect.
+    // going on individual failures so every subscription is attempted. Failed
+    // restoration must not emit ready; reconnect retries the retained registry.
+    const failures: string[] = [];
     for (const [clientKey, subscription] of this.subscriptions.snapshot()) {
       try {
         await this.subscribeOnServer(clientKey, subscription);
       } catch (error: unknown) {
         const detail = error instanceof Error ? error.message : String(error);
+        failures.push(detail);
         this.emitError(`Resubscribe failed: ${detail}`);
       }
+    }
+    if (failures.length > 0) {
+      throw new HaWebSocketError(
+        `Failed to restore subscriptions: ${failures.join("; ")}`,
+      );
     }
   }
 
@@ -385,23 +414,59 @@ export class HomeAssistantEventClient<S extends HaSchema = DefaultHaSchema> {
     return socket;
   }
 
-  private async scheduleReconnect(): Promise<void> {
+  private scheduleReconnect(): void {
+    if (
+      !this.canReconnect() ||
+      this.reconnectInFlight ||
+      this.reconnectTimer !== undefined
+    ) {
+      return;
+    }
     const delay = Math.min(
       this.opts.initialReconnectDelayMs * 2 ** this.reconnectAttempt,
       this.opts.maxReconnectDelayMs,
     );
     this.reconnectAttempt += 1;
-    await wait(delay);
-    if (this.closedByUser) {
+    this.reconnectTimer = setTimeout(() => {
+      this.reconnectTimer = undefined;
+      void this.reconnect();
+    }, delay);
+  }
+
+  private async reconnect(): Promise<void> {
+    if (!this.canReconnect()) {
       return;
     }
+    this.reconnectInFlight = true;
+    let needsRetry = false;
     try {
       await this.openAndAuth();
       await this.resubscribeAll();
+      this.requireOpenSocket();
+      this.reconnectAttempt = 0;
+      this.setState("ready");
     } catch (error: unknown) {
-      const detail = error instanceof Error ? error.message : String(error);
-      this.emitError(`Reconnect failed: ${detail}`);
-      void this.scheduleReconnect();
+      if (this.canReconnect()) {
+        const detail = error instanceof Error ? error.message : String(error);
+        this.emitError(`Reconnect failed: ${detail}`);
+        needsRetry = true;
+      }
+    } finally {
+      this.reconnectInFlight = false;
+    }
+    // Close during restoration also rejects its pending acknowledgement.
+    // The in-flight attempt owns that failure and schedules exactly one retry.
+    if (needsRetry) this.scheduleReconnect();
+  }
+
+  private canReconnect(): boolean {
+    return this.opts.reconnect && !this.closedByUser;
+  }
+
+  private stopReconnectTimer(): void {
+    if (this.reconnectTimer !== undefined) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = undefined;
     }
   }
 

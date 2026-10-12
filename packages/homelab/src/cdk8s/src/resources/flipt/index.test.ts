@@ -42,7 +42,10 @@ const DeploymentSchema = z
     spec: z.object({
       template: z.object({
         metadata: z
-          .object({ annotations: z.record(z.string(), z.string()) })
+          .object({
+            annotations: z.record(z.string(), z.string()),
+            labels: z.record(z.string(), z.string()),
+          })
           .loose(),
         spec: z
           .object({
@@ -115,7 +118,9 @@ describe("Flipt chart", () => {
     expect(names).toContain("Namespace/flipt");
     expect(names).toContain("Deployment/flipt");
     expect(names).toContain("ConfigMap/flipt-flipt-config");
+    expect(names).toContain("ConfigMap/flipt-flipt-gateway-config");
     expect(names).toContain("ConfigMap/flipt-flipt-seed");
+    expect(names).toContain("OnePasswordItem/flipt-auth");
     expect(names).toContain("PersistentVolumeClaim/flipt-data");
     expect(names).toContain("Service/flipt-flipt-service");
     expect(names).toContain("NetworkPolicy/flipt-ingress-netpol");
@@ -177,6 +182,48 @@ describe("Flipt chart", () => {
     expect(yaml).toContain("telemetry_enabled: false");
   });
 
+  it("authenticates management while preserving evaluation clients", () => {
+    const manifests = synthesize();
+    const config = ConfigMapSchema.parse(
+      findManifest(manifests, "ConfigMap", "flipt-flipt-config"),
+    );
+    const yaml = config.data["config.yml"] ?? "";
+    expect(yaml).toContain("host: 127.0.0.1");
+    expect(yaml).toContain("required: true");
+    expect(yaml).toMatch(/exclude:\n {4}evaluation: true/);
+    expect(yaml).toContain('credential: "${secret:file:operator-token}"');
+    expect(yaml).toContain("base_path: /etc/flipt/secrets");
+
+    const gateway = ConfigMapSchema.parse(
+      findManifest(manifests, "ConfigMap", "flipt-flipt-gateway-config"),
+    ).data["Caddyfile"];
+    expect(gateway).toContain("path /api/v2/*");
+    expect(gateway).toContain(
+      'header Authorization "Bearer {$FLIPT_OPERATOR_TOKEN}"',
+    );
+    expect(gateway).toContain("handle /internal/v1/evaluation/*");
+    expect(gateway).toContain("basic_auth");
+    expect(gateway).toContain(
+      'header_up Authorization "Bearer {$FLIPT_OPERATOR_TOKEN}"',
+    );
+
+    const deployment = DeploymentSchema.parse(
+      findManifest(manifests, "Deployment", "flipt"),
+    );
+    expect(
+      deployment.spec.template.spec.containers.map(({ name }) => name),
+    ).toEqual(["flipt", "authenticated-gateway"]);
+    expect(deployment.spec.template.metadata.labels["app"]).toBe("flipt");
+    const serialized = JSON.stringify(deployment);
+    expect(serialized).toContain(
+      '"secretKeyRef":{"key":"basic-hash","name":"flipt-auth"}',
+    );
+    expect(serialized).toContain(
+      '"secretKeyRef":{"key":"operator-token","name":"flipt-auth"}',
+    );
+    expect(serialized).not.toContain("basic-password");
+  });
+
   it("restarts when the complete Flipt configuration changes", () => {
     const deployment = DeploymentSchema.parse(
       findManifest(synthesize(), "Deployment", "flipt"),
@@ -220,7 +267,7 @@ describe("Flipt chart", () => {
       'git -C "$staging" init --initial-branch=main',
     );
     expect(initializationScript).toContain(
-      'git -C "$staging" add -- "scout/features.yaml"',
+      'git -C "$staging" add -- "woodpecker/features.yaml" "justin/features.yaml" "scout/features.yaml"',
     );
     expect(initializationScript).toContain('if [ -e "$repo" ]');
     expect(initializationScript).not.toContain("data-beta");
@@ -241,6 +288,8 @@ describe("Flipt chart", () => {
       ["beta", "prod"]
         .flatMap((environment) =>
           [
+            "woodpecker",
+            "justin",
             "scout",
             "birmel",
             "streambot",
@@ -250,7 +299,6 @@ describe("Flipt chart", () => {
             "alert-dashboard",
             "storm",
             "the-storm",
-            "the-storm-companion",
           ].map((namespace) => `${environment}.${namespace}.yaml`),
         )
         .toSorted(),
@@ -356,6 +404,9 @@ describe("Flipt network policy", () => {
     // reads degrade to defaults, and both endpoints stay 503 even after
     // their flags are enabled.
     ["storm-brain to read its classify/triage gates", "storm-brain"],
+    ["the production forum to read registration and season", "storm-forum"],
+    ["the private forum to read registration and season", "storm-forum-beta"],
+    ["Citizens companions to read their gameplay gate", "minecraft-tsmc"],
   ])("allows %s", (_label, namespace) => {
     const policy = z
       .object({

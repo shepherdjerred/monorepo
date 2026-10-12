@@ -30,6 +30,7 @@ import {
 import { createLogger } from "#src/logger.ts";
 import configuration from "#src/configuration.ts";
 import { buildDiscordInstallUrl } from "#src/lib/discord/install-url.ts";
+import { invalidateUserGuildsCache } from "#src/lib/discord-rest.ts";
 import {
   AttributionSurfaceSchema,
   mintInstallAttributionToken,
@@ -461,6 +462,8 @@ export async function handleDiscordCallback(
       tokenExpiresAt: new Date(Date.now() + tokens.expires_in * 1000),
     },
   });
+
+  invalidateUserGuildsCache(discordId);
 
   const { jwt } = await signSession({ discordId });
   const csrfToken = generateCsrfToken();

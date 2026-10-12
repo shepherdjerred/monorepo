@@ -1,11 +1,11 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import type {
   Player,
   Subscription,
   CompetitionParticipant,
   Account,
 } from "#generated/prisma/client/index.js";
-import type { ExtendedPrismaClient } from "#src/database/index.ts";
-import { prisma } from "#src/database/index.ts";
+import { type ExtendedPrismaClient, prisma } from "#src/database/index.ts";
 import type { Client } from "discord.js";
 import { groupBy } from "remeda";
 import {
@@ -31,7 +31,7 @@ type PruneResult = {
   totalParticipantsDeleted: number;
   totalSnapshotsDeleted: number;
   serverSummaries: {
-    serverId: string;
+    serverId: DiscordGuildId;
     playersPruned: number;
     accountsDeleted: number;
     playerDetails: {
@@ -48,7 +48,7 @@ type PruneResult = {
  */
 async function notifyServerOwner(
   discordClient: Client | null,
-  serverId: string,
+  serverId: DiscordGuildId,
   playerDetails: PruneResult["serverSummaries"][0]["playerDetails"],
 ): Promise<void> {
   if (!discordClient) {
@@ -246,7 +246,8 @@ export async function pruneOrphanedPlayers(
 
     // Prepare server summaries
     const serverSummaries = Object.entries(playersByServer).map(
-      ([serverId, players]) => {
+      ([rawServerId, players]) => {
+        const serverId = DiscordGuildIdSchema.parse(rawServerId);
         const playerDetails = players.map((player) => ({
           alias: player.alias,
           accountCount: player.accounts.length,

@@ -29,7 +29,7 @@ const PlatformDataSchema = z.object({
 
 export async function handleFetchUrl(
   url: string | undefined,
-  maxLength: number | undefined,
+  maxLength: number | undefined = 2000,
 ): Promise<WebResult> {
   if (url == null || url.length === 0) {
     return { success: false, message: "url is required for fetch-url" };
@@ -44,7 +44,7 @@ export async function handleFetchUrl(
     .replaceAll(/<[^>]+>/g, " ")
     .replaceAll(/\s+/g, " ")
     .trim();
-  const max = maxLength ?? 2000;
+  const max = maxLength;
   if (content.length > max) {
     content = content.slice(0, Math.max(0, max)) + "...";
   }
@@ -112,14 +112,14 @@ export async function handleNews(
   apiKey: string | undefined,
   query: string | undefined,
   newsCategory: string | undefined,
-  newsCount: number | undefined,
+  newsCount: number | undefined = 5,
 ): Promise<WebResult> {
   if (apiKey == null || apiKey.length === 0) {
     return { success: false, message: "News API key not configured" };
   }
   const params = new URLSearchParams({
     apiKey,
-    pageSize: String(newsCount ?? 5),
+    pageSize: String(newsCount),
     language: "en",
   });
   let endpoint: string;

@@ -1,7 +1,7 @@
 import {
-  DARE_V2_MAX_ELIGIBLE_GAMES,
-  DARE_V2_MAX_HORIZON_DAYS,
-  DARE_V2_MAX_TARGETS,
+  DARE_MAX_ELIGIBLE_GAMES,
+  DARE_MAX_HORIZON_DAYS,
+  DARE_MAX_TARGETS,
   formatInteger,
 } from "@scout-for-lol/data";
 import { EmbedBuilder } from "discord.js";
@@ -9,10 +9,6 @@ import {
   BETTING_WINDOW_MS,
   BUCKS_EARNING_QUEUES,
   DARE_ACCEPT_WINDOW_MS,
-  DARE_DEFAULT_WINDOW_DAYS,
-  DARE_MAX_TARGETS,
-  DARE_MAX_WINDOW_DAYS,
-  DARE_NEXT_GAME_TIMEOUT_MS,
   HOUSE_MATCH_LIMIT,
   MINIMUM_BUCKS_TRANSFER,
   PARLAY_BETTING_WINDOW_MS,
@@ -20,7 +16,7 @@ import {
 } from "#src/betting/constants.ts";
 import { EARNED_REWARDS } from "#src/betting/accounts/earnings.ts";
 import { HOUSE_CUT_PERCENT } from "#src/betting/eligibility/house-cut.ts";
-import { DARE_V2_INTENT_TTL_MS } from "#src/betting/constants.ts";
+import { DARE_INTENT_TTL_MS } from "#src/betting/constants.ts";
 
 const BUCKS_COLOR = 0x2e_cc_71;
 
@@ -49,34 +45,17 @@ function hours(milliseconds: number): string {
   return Math.floor(milliseconds / 3_600_000).toString();
 }
 
-function days(milliseconds: number): string {
-  return Math.floor(milliseconds / 86_400_000).toString();
-}
-
-function dareRules(version: 1 | 2 | 3, cut: string): string[] {
-  if (version === 1) {
-    return [
-      `\`/bb dare\` puts a one-sided bounty on up to **${DARE_MAX_TARGETS.toString()}** tracked players: contributors fund the pot, targets risk nothing.`,
-      `Every target must accept within **${hours(DARE_ACCEPT_WINDOW_MS)} hours**; any decline — or a lapsed window — cancels the dare and refunds every contribution free.`,
-      `A windowed dare runs **${DARE_DEFAULT_WINDOW_DAYS.toString()} days** by default (up to **${DARE_MAX_WINDOW_DAYS.toString()}**); a next-game dare waits up to **${days(DARE_NEXT_GAME_TIMEOUT_MS)} days** for that game.`,
-      "Anyone except a target can pile onto the pot at any time. Contributions are append-only — they never come back out early.",
-      `Achieved: the targets split the pot evenly, each share minus **${cut}%** (rounded down; any indivisible remainder goes to the house). Not achieved: each contributor gets their total back minus **${cut}%** (rounded to the nearest BB).`,
-    ];
-  }
-  const contractDescription =
-    version === 3
-      ? "Its canonical standard SQL is the binding contract; the wording and readable summary explain it."
-      : "Its preview explicitly states same-game/cross-game scope, target relationship, queues, bounds, and generated ScoutQL.";
+function dareRules(cut: string): string[] {
   return [
-    `\`/bb dare\` creates a private Explore draft for **1-${DARE_V2_MAX_TARGETS.toString()}** frozen targets. ${contractDescription}`,
-    `Funding is a single-use **${minutes(DARE_V2_INTENT_TTL_MS)} minute** confirmation. It freezes the revision and opens a **${hours(DARE_ACCEPT_WINDOW_MS)} hour** acceptance window; decline, expiry, or challenger cancellation then refunds everyone free.`,
-    `After every target accepts, the contract runs for at most **${DARE_V2_MAX_HORIZON_DAYS.toString()} days** and **${DARE_V2_MAX_ELIGIBLE_GAMES.toString()} eligible games**. Active terms and deadlines cannot be edited or cancelled.`,
+    `\`/bb dare\` creates a private Explore draft for **1-${DARE_MAX_TARGETS.toString()}** frozen targets. Its canonical standard SQL is the binding contract; the wording and readable summary explain it.`,
+    `Funding is a single-use **${minutes(DARE_INTENT_TTL_MS)} minute** confirmation. It freezes the revision and opens a **${hours(DARE_ACCEPT_WINDOW_MS)} hour** acceptance window; decline, expiry, or challenger cancellation then refunds everyone free.`,
+    `After every target accepts, the contract runs for at most **${DARE_MAX_HORIZON_DAYS.toString()} days** and **${DARE_MAX_ELIGIBLE_GAMES.toString()} eligible games**. Active terms and deadlines cannot be edited or cancelled.`,
     "Targets risk nothing. Missing required timeline evidence stays unknown; an unknowable final result voids with full refunds.",
     `Achieved: only targets required by the decisive proof split the pot, each share minus **${cut}%**. Not achieved: contributors receive their totals minus **${cut}%**.`,
   ];
 }
 
-export function buildBbRulesEmbed(dareVersion: 1 | 2 | 3 = 1): EmbedBuilder {
+export function buildBbRulesEmbed(): EmbedBuilder {
   const outcomeWindow = minutes(BETTING_WINDOW_MS);
   const parlayWindow = minutes(PARLAY_BETTING_WINDOW_MS);
   const cut = HOUSE_CUT_PERCENT.toString();
@@ -124,7 +103,7 @@ export function buildBbRulesEmbed(dareVersion: 1 | 2 | 3 = 1): EmbedBuilder {
       },
       {
         name: "Dares",
-        value: dareRules(dareVersion, cut).join("\n"),
+        value: dareRules(cut).join("\n"),
       },
       {
         name: "Voids & refunds",

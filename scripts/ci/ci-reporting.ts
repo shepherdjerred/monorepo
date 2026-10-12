@@ -37,6 +37,13 @@ const StepSchema = z.discriminatedUnion("runner", [
       name: z.string().min(1).optional(),
       args: z.array(z.string()).min(1),
       coverageConfig: z.string().min(1).optional(),
+      mstest: z
+        .object({
+          parallel: z.boolean(),
+          timeoutMs: z.number().int().positive(),
+        })
+        .strict()
+        .optional(),
     })
     .strict(),
   z
@@ -64,11 +71,8 @@ export const TestManifestSchema = z
         .object({
           package: z.string().min(1),
           directory: z.string().min(1),
-          coverageSourceDirectories: z
-            .array(z.string().min(1))
-            .min(1)
-            .optional(),
           defaultEnv: z.record(z.string(), z.string()).optional(),
+          coverageAlways: z.boolean().optional(),
           steps: z.array(StepSchema).min(1),
           // Suites this reporting workspace deliberately does NOT run, each with
           // a rationale. Full reporting is test-only: suites needing service
@@ -378,14 +382,10 @@ export function syntheticJUnit(
           },
         }),
   };
-  return `${new XMLBuilder({
+  return `<?xml version="1.0" encoding="UTF-8"?>\n${new XMLBuilder({
     ignoreAttributes: false,
     format: true,
   }).build({
-    "?xml": {
-      "@_version": "1.0",
-      "@_encoding": "utf8",
-    },
     testsuites: {
       "@_name": workspace,
       "@_tests": "1",

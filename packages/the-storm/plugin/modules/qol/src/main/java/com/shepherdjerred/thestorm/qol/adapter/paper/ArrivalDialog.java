@@ -1,11 +1,14 @@
 package com.shepherdjerred.thestorm.qol.adapter.paper;
 
+import com.shepherdjerred.thestorm.essentials.app.TeleportTravel;
 import com.shepherdjerred.thestorm.qol.domain.QolConfig;
+import com.shepherdjerred.thestorm.qol.domain.text.DurationText;
 import com.shepherdjerred.thestorm.world.app.WildWorlds;
 import io.papermc.paper.dialog.Dialog;
 import io.papermc.paper.registry.data.dialog.ActionButton;
 import io.papermc.paper.registry.data.dialog.DialogBase;
 import io.papermc.paper.registry.data.dialog.action.DialogAction;
+import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -21,7 +24,7 @@ final class ArrivalDialog {
   private final Dialog dialog;
   private final String world;
 
-  ArrivalDialog(QolConfig config, WildWorlds worlds, RtpFlow flow) {
+  ArrivalDialog(QolConfig config, WildWorlds worlds, RtpFlow flow, TeleportTravel.Policy rules) {
     this.world = worlds.defaultWorld().name();
     var options =
         ClickCallback.Options.builder()
@@ -41,6 +44,17 @@ final class ArrivalDialog {
                         DialogBase.builder(Component.text("Pick a place to start"))
                             .canCloseWithEscape(true)
                             .pause(false)
+                            .body(
+                                java.util.List.of(
+                                    DialogBody.plainMessage(
+                                        Component.text(
+                                            "RTP is free for your first "
+                                                + DurationText.of(rules.rtpFreeFor())
+                                                + ". Travel commands share "
+                                                + rules.allowance()
+                                                + " usage points per "
+                                                + DurationText.of(rules.window())
+                                                + " and a cooldown; frequent trips take longer. Use /tpinfo for current prices and rules."))))
                             .build())
                     .type(DialogType.multiAction(buttons).columns(2).build()));
   }

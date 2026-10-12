@@ -1,0 +1,80 @@
+id: xxslimeravenxx
+name: xXSlimeRavenXx
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NDEzOTY2OCwKICAicHJvZmlsZUlkIiA6ICI2MTU1NTMyOTY2OWM0ZDA5YmFiOGJlNDNkYWUwYTRjMyIsCiAgInByb2ZpbGVOYW1lIiA6ICJOb3Ryb19DbGllbnQiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvY2I3YThiNzRhMmU2YWY4YmNiNjRlNmFkZTQzN2ZlZTQ2ODExNDQ1MWJmZWQ0OTcxZDNjODUwOTA3ZWNmNDViZSIKICAgIH0KICB9Cn0="
+  signature: "AxNLmzacvhaeSW2pO1znd0yu76iae2dv1ILV1Nu4hM5lo0ijimSeIK3ugWYz1SZuSt5Qjo6I52MAh2WmLTAxJwaKds/Uh33ggrRoQIhcMnDgMY39BVUH30MZyfQABv1wMBk2oDcCO74QvhS3q8aKbEbDXt8o8FqLHuEPvuuoFVSMefBg8cw8sVGakP+tqM/e1VDCOW2gf9ly4kY3T+cynDtH6SVcWr2YZaVwYqppcfDh274YxWQDq0e7N86tcGdobtboCRdEsPiLgyTnzVJtBSIph07PDV8c/QiAqBkrqnGksnHG+7xsnwpEhHfRRRHtalMZHSgNATd++j+CMguFofCVsKcfY8asSRnMnD8ySqpF1zbbZl/wHyitL9Pk6JUZ9NYQAn8EGyaFLGmKHXA4SEuY+TOw56P7v6s966O8kbfEmwuDhugTUjL+Ua/zMyO5MBBwBaGi+S9RZv7Bvr7xh0i4ZsH3oJwZ3jqwkrAczanQ/iitwDBmhFCnmEsM15bEz2oKuTDlBAKCoAhW9yz3ORRl4UrYcjSrl/xcHAhT0ry+YCaY4/bwypltXvc8G2n5E7sPzMhnQlnuGFFjgqcA+MwJ1nSUu1Hjw8XNZ211fouzGToH6YT9777/S5COPaSPTX2Kth5qftr6qa7WL6W67foiqSio5iRzBbt46QodogI="
+skill: 0.853
+archetype: hunter
+leverOffsets:
+  turnRateDegPerTick: 0.49
+  predictionQuality: 1.2
+  decisionTemperature: -0.89
+  awarenessRadius: 1.3
+  aggression: 0.89
+kits:
+  trooper: 0.73
+  longbow: 0.52
+  shortbow: 0.83
+roles:
+  rotate: 0.46
+  hunt: 0.93
+style:
+  aggression: 0.78
+  patience: 0.37
+  teamplay: 0.38
+  risk: 0.6
+voice:
+  tone:
+    - intense
+    - focused
+    - dry
+  verbosity: normal
+  style: "talks like a bounty hunter tracking a mark; reads footprints"
+lines:
+  greet:
+    - Fresh tracks. Good.
+    - "Who's on the board tonight, {team}?"
+    - I'll take the ones who run.
+  onKill:
+    - "Bounty collected: {victim}."
+    - "Tracked you three rooms, {victim}."
+    - "{victim} left footprints. Always do."
+  onDeath:
+    - "{killer} doubled back. Clever."
+    - Lost the trail.
+    - "Noted, {killer}. You're on the board now."
+  onPlant:
+    - "{bomb} lit. Now they come to me."
+    - "Fuse on {bomb}. Bait set."
+  onDefuse:
+    - "{bomb} cleared. Back on the hunt."
+    - "Defused {bomb}. Who touched it? I'll find out."
+  onWin:
+    - Board's clear. gg.
+    - "Every mark accounted for, {team}."
+  onLoss:
+    - One got away. Several, actually. gg.
+    - Cold trail tonight. Rematch.
+  onLastAlive:
+    - Just me. Just how I like the hunt.
+    - Three left. I know where two of them are.
+    - Quiet now. They can't stay hidden forever.
+  taunt:
+    - I can hear your boots.
+    - Keep running. It helps me find you.
+    - The last place you stood is the first place I look.
+  lobby:
+    - Lobby's a dead end. Nothing to track in here.
+    - Shortbow knocks them off the trail. Sword ends it.
+    - Got three names on my list tonight. Not saying whose.
+    - Tunnel rumours again? I'll find the entrance this time.
+    - "Stay sharp, {team}. Marks get careless at round start."
+quirks:
+  - holds_grudges
+  - calls_everything
+rivals:
+  - xxminerphantomxx
+  - quiethunter22
+bio: Keeps a mental list of everyone who ever escaped him and works through it each night. Is convinced xXMinerPhantomXx has a tunnel and will not rest until he finds it.
+batch: 2
+retired: false

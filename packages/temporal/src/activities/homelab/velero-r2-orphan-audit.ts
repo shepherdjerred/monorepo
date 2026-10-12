@@ -1,25 +1,33 @@
 import { Context } from "@temporalio/activity";
 import {
   ListObjectsV2Command,
+  GetObjectCommand,
   S3Client,
   type _Object,
   type ListObjectsV2CommandOutput,
 } from "@aws-sdk/client-s3";
 import {
-  veleroOrphanR2BytesTotal,
-  veleroOrphanR2PrefixesTotal,
   veleroR2OrphanAuditDurationSeconds,
   veleroR2OrphanAuditRunsTotal,
 } from "#observability/metrics.ts";
 import { listLiveVeleroBackups } from "./velero-orphan-audit.ts";
+import {
+  publishVeleroR2AuditState,
+  recordVeleroR2AuditState,
+} from "./velero-r2-audit-state.ts";
+import {
+  protectZfsBackupChains,
+  readZfsStreamHeader,
+  type ZfsBackupStream,
+} from "@shepherdjerred/ops-model/zfs-backup-chain.ts";
 
 // Detection-only sibling of the local velero-orphan-audit: flags R2 prefixes
 // under zfspv-incr/backups/ whose backup name appears in neither the live
 // `velero.io/v1/Backup` CR set nor the R2 backup metadata, and whose newest
 // object predates the 24h safety fence. The orphan definition intentionally
-// mirrors the operator cleanup tool
-// (packages/homelab/src/cdk8s/scripts/r2-orphan-cleanup-core.ts) so the gauge
-// and a manual `bun run r2:orphans -- inspect` agree. Detection only: deletion
+// identifies unreferenced prefixes, not safely reclaimable bytes. The operator
+// cleanup tool additionally protects OpenEBS restore history and ZFSBackup
+// references, so its candidate set can be smaller. Detection only: deletion
 // stays a reviewed manual operation (see runbooks/r2-capacity-remediation.md).
 
 const R2_ZFS_PREFIX = "zfspv-incr/backups/";
@@ -41,6 +49,7 @@ export type VeleroR2OrphanAuditResult = {
   orphanPrefixCount: number;
   orphanBytes: number;
   workflowDurationSeconds: number;
+  incompleteChainCount: number;
 };
 
 export type VeleroR2OrphanAuditActivities =
@@ -128,6 +137,7 @@ export function computeR2Orphans(input: {
   zfsObjects: readonly R2ObjectSummary[];
   liveBackupNames: readonly string[];
   metadataObjects: readonly R2ObjectSummary[];
+  dependencyBackupNames?: readonly string[];
 }): {
   zfsPrefixCount: number;
   orphanPrefixCount: number;
@@ -159,7 +169,11 @@ export function computeR2Orphans(input: {
     }
     groups.set(name, existing);
   }
-  const protectedNames = new Set([...input.liveBackupNames, ...metadataNames]);
+  const protectedNames = new Set([
+    ...input.liveBackupNames,
+    ...metadataNames,
+    ...(input.dependencyBackupNames ?? []),
+  ]);
   const cutoff = input.observedAt - R2_ORPHAN_MINIMUM_AGE_HOURS * 3_600_000;
   let orphanPrefixCount = 0;
   let orphanBytes = 0;
@@ -201,16 +215,80 @@ export const veleroR2OrphanAuditActivities = {
         listR2Objects(client, bucket, R2_BACKUP_METADATA_BACKUPS_PREFIX),
       ]);
 
+      const streams: ZfsBackupStream[] = [];
+      const data = zfsObjects.filter(
+        (object) =>
+          !object.key.endsWith(".zfsvol") &&
+          !object.key.endsWith(".chain.json"),
+      );
+      for (let index = 0; index < data.length; index += 8) {
+        Context.current().heartbeat({
+          phase: "inspect-stream-ancestry",
+          inspected: index,
+          total: data.length,
+        });
+        streams.push(
+          ...(await Promise.all(
+            data.slice(index, index + 8).map(async (object) => {
+              const volume = /pvc-[0-9a-f-]{36}/.exec(object.key)?.[0];
+              const name = backupName(object.key, R2_ZFS_PREFIX);
+              if (volume === undefined || name === undefined)
+                throw new Error(`Unrecognized ZFS stream key: ${object.key}`);
+              const response = await client.send(
+                new GetObjectCommand({
+                  Bucket: bucket,
+                  Key: object.key,
+                  Range: "bytes=0-311",
+                }),
+              );
+              if (response.Body === undefined)
+                throw new Error(`ZFS stream header missing: ${object.key}`);
+              return {
+                key: object.key,
+                backupName: name,
+                volume,
+                ...readZfsStreamHeader(
+                  await response.Body.transformToByteArray(),
+                ),
+              };
+            }),
+          )),
+        );
+      }
+      const retained = [
+        ...liveBackups,
+        ...metadataObjects.flatMap((object) => {
+          const name = backupName(
+            object.key,
+            R2_BACKUP_METADATA_BACKUPS_PREFIX,
+          );
+          return name === undefined ? [] : [name];
+        }),
+      ];
+      const protection = protectZfsBackupChains(
+        streams,
+        retained,
+        zfsObjects.map((object) => object.key),
+      );
+
       const { zfsPrefixCount, orphanPrefixCount, orphanBytes } =
         computeR2Orphans({
           observedAt: Date.now(),
           zfsObjects,
           liveBackupNames: liveBackups,
           metadataObjects,
+          dependencyBackupNames: protection.protectedBackupNames,
         });
 
-      veleroOrphanR2PrefixesTotal.set(orphanPrefixCount);
-      veleroOrphanR2BytesTotal.set(orphanBytes);
+      const published = await publishVeleroR2AuditState({
+        version: 1,
+        bucket,
+        observedAt: startedAt / 1000,
+        orphanPrefixCount,
+        orphanBytes,
+        incompleteChainCount: protection.incompleteRoots.length,
+      });
+      recordVeleroR2AuditState(published);
 
       outcome = "success";
       return {
@@ -219,6 +297,7 @@ export const veleroR2OrphanAuditActivities = {
         orphanPrefixCount,
         orphanBytes,
         workflowDurationSeconds: (Date.now() - startedAt) / 1000,
+        incompleteChainCount: protection.incompleteRoots.length,
       };
     } finally {
       veleroR2OrphanAuditRunsTotal.inc({ outcome });

@@ -15,7 +15,9 @@ import { opsSnapshotEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temp
 
 function s3Env(secret: ISecret): Record<string, EnvValue> {
   return {
-    S3_ENDPOINT: EnvValue.fromSecretValue({ secret, key: "S3_ENDPOINT" }),
+    S3_ENDPOINT: EnvValue.fromValue(
+      "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
+    ),
     S3_REGION: EnvValue.fromValue("us-east-1"),
     AWS_REGION: EnvValue.fromValue("us-east-1"),
     AWS_DEFAULT_REGION: EnvValue.fromValue("us-east-1"),
@@ -52,9 +54,21 @@ function githubEnv(secret: ISecret): Record<string, EnvValue> {
   };
 }
 
+function veleroR2AuditEnv(secret: ISecret): Record<string, EnvValue> {
+  return Object.fromEntries(
+    [
+      "VELERO_R2_S3_ENDPOINT",
+      "VELERO_R2_S3_BUCKET",
+      "VELERO_R2_S3_ACCESS_KEY_ID",
+      "VELERO_R2_S3_SECRET_ACCESS_KEY",
+    ].map((key) => [key, EnvValue.fromSecretValue({ secret, key })]),
+  );
+}
+
 export type TemporalOperationsWorkerProps = {
   serverServiceName: string;
   secret: ISecret;
+  fliptAuthSecret: ISecret;
   scoutBryanBucksControlSecret: ISecret;
   infraServiceAccount: ServiceAccount;
   homelabAuditEnvironment: Record<string, EnvValue>;
@@ -62,6 +76,7 @@ export type TemporalOperationsWorkerProps = {
   freshRssManifestVolume: Volume;
   freshRssCredentialVolume: Volume;
   backupSecret: ISecret;
+  veleroR2AuditSecret: ISecret;
   billingSecret: ISecret;
 };
 
@@ -98,6 +113,9 @@ export function createTemporalOperationsWorkers(
       ...githubEnv(props.secret),
       ...props.homelabAuditEnvironment,
       ...opsSnapshotEnv(props.secret),
+      // Dedicated homelab-bucket Object Read identity. Never reuse Velero's
+      // write credential or expose it to credentialless workflow workers.
+      ...veleroR2AuditEnv(props.veleroR2AuditSecret),
     },
     volumeMounts: [
       {
@@ -162,19 +180,13 @@ export function createTemporalOperationsWorkers(
         secret: props.secret,
         key: "OPENAI_API_KEY",
       }),
-      S3_BUCKET_NAME: EnvValue.fromSecretValue({
-        secret: props.secret,
-        key: "S3_BUCKET_NAME",
-      }),
+      S3_BUCKET_NAME: EnvValue.fromValue("better-skill-capped"),
       S3_KEY: EnvValue.fromValue("data/manifest.json"),
       WOODPECKER_TOKEN: EnvValue.fromSecretValue({
         secret: props.secret,
         key: "WOODPECKER_TOKEN",
       }),
-      WOODPECKER_REPO_ID: EnvValue.fromSecretValue({
-        secret: props.secret,
-        key: "WOODPECKER_REPO_ID",
-      }),
+      WOODPECKER_REPO_ID: EnvValue.fromValue("1"),
       // HTTP origin, not the agent gRPC endpoint WOODPECKER_SERVER names.
       WOODPECKER_URL: EnvValue.fromValue("https://woodpecker.sjer.red"),
       ALERTMANAGER_URL: EnvValue.fromValue(
@@ -183,6 +195,10 @@ export function createTemporalOperationsWorkers(
       FLIPT_URL: EnvValue.fromValue(
         "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
       ),
+      FLIPT_OPERATOR_TOKEN: EnvValue.fromSecretValue({
+        secret: props.fliptAuthSecret,
+        key: "operator-token",
+      }),
       FLIPT_ENVIRONMENT: EnvValue.fromValue("prod"),
       FRESHRSS_API_URL: EnvValue.fromValue(
         "http://freshrss-service.freshrss.svc.cluster.local/api/greader.php",
@@ -264,10 +280,9 @@ export function createTemporalOperationsWorkers(
         secret: props.backupSecret,
         key: "SEAWEEDFS_BACKUP_SOURCE_SECRET_ACCESS_KEY",
       }),
-      R2_BACKUP_ENDPOINT: EnvValue.fromSecretValue({
-        secret: props.backupSecret,
-        key: "R2_BACKUP_ENDPOINT",
-      }),
+      R2_BACKUP_ENDPOINT: EnvValue.fromValue(
+        "https://48948ed6cd40d73e34d27f0cc10e595f.r2.cloudflarestorage.com",
+      ),
       R2_BACKUP_ACCESS_KEY_ID: EnvValue.fromSecretValue({
         secret: props.backupSecret,
         key: "R2_BACKUP_ACCESS_KEY_ID",

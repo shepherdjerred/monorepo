@@ -1,8 +1,8 @@
-import { useState } from "react";
+import type { DiscordGuildId, DiscordChannelId } from "@scout-for-lol/data";
+import { useState, type ReactNode } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 import type { usePermissions } from "#src/hooks/use-permissions.ts";
-import type { ReactNode } from "react";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   PlayerSubscriptionsTable,
@@ -34,10 +34,10 @@ function Allowed(props: { when: boolean; children: ReactNode }) {
 }
 
 export function PlayerSubscriptionsManager(props: {
-  guildId: string;
+  guildId: DiscordGuildId;
   alias: string;
   subscriptions: PlayerSubscriptionRow[];
-  channels: { id: string; name: string }[] | undefined;
+  channels: { id: DiscordChannelId; name: string }[] | undefined;
   perms: PlayerPermissions;
   refresh: () => void;
   setActionError: (message: string | null) => void;

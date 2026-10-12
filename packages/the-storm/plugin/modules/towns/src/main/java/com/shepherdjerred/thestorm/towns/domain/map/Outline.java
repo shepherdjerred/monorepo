@@ -19,7 +19,8 @@ public record Outline(List<Corner> ring, List<List<Corner>> holes) {
   }
 
   /**
-   * A corner of an outline: block ({@code x}, {@code z}), on a chunk edge.
+   * A corner of an outline in block coordinates. Chunk claims align to chunk edges; preserved
+   * cuboids and parcels use their exact block edges.
    *
    * @param x block x
    * @param z block z

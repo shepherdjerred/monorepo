@@ -1,3 +1,5 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import {
   LeaguePuuidSchema,
   RegionSchema,
@@ -6,15 +8,15 @@ import {
   type RawCurrentGameInfo,
   type RawCurrentGameParticipant,
   type Region,
+  type DiscordAccountId,
 } from "@scout-for-lol/data";
-import type { DiscordAccountId } from "@scout-for-lol/data";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { getActiveGame } from "#src/league/api/spectator.ts";
 
 export type CurrentLaneOpponentResult =
   | {
       kind: "found";
-      puuid: string;
+      puuid: LeaguePuuid;
       riotId: string;
       region: Region;
       lane: Lane;
@@ -24,11 +26,11 @@ export type CurrentLaneOpponentResult =
       message: string;
     };
 
-type LinkedAccount = { puuid: string; region: Region };
+type LinkedAccount = { puuid: LeaguePuuid; region: Region };
 const MIN_LANE_INFERENCE_MARGIN = 2;
 
 function linkedAccounts(
-  rows: { accounts: { puuid: string; region: string }[] }[],
+  rows: { accounts: { puuid: LeaguePuuid; region: string }[] }[],
 ): LinkedAccount[] {
   const unique = new Map<string, LinkedAccount>();
   for (const row of rows) {
@@ -145,7 +147,7 @@ export function findCurrentLaneOpponentInGame(
 export async function resolveCurrentLaneOpponent(input: {
   database: ExtendedPrismaClient;
   requesterId: DiscordAccountId;
-  guildIds: string[];
+  guildIds: DiscordGuildId[];
 }): Promise<CurrentLaneOpponentResult> {
   const players = await input.database.player.findMany({
     where: {

@@ -1,4 +1,6 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
+import { preserveRawJson } from "./preserve-raw-json.ts";
 
 /**
  * Zod schema for Match V5 Timeline API response from Riot Games
@@ -77,13 +79,18 @@ export const RawTimelineParticipantFrameSchema = z
     championStats: RawTimelineChampionStatsSchema.optional(),
     currentGold: z.number(),
     damageStats: RawTimelineDamageStatsSchema.optional(),
-    goldPerSecond: z.number(),
+    /**
+     * Absent from a timeline the Scout Client built from the League client's
+     * own match history, which does not report it. Never filled in.
+     */
+    goldPerSecond: z.number().optional(),
     jungleMinionsKilled: z.number(),
     level: z.number(),
     minionsKilled: z.number(),
     participantId: z.number(),
     position: RawTimelinePositionSchema,
-    timeEnemySpentControlled: z.number(),
+    /** Absent from a client-built timeline, like `goldPerSecond`. */
+    timeEnemySpentControlled: z.number().optional(),
     totalGold: z.number(),
     xp: z.number(),
   })
@@ -207,17 +214,19 @@ export const RawTimelineInfoSchema = z
  */
 export const RawTimelineMetadataSchema = z.object({
   dataVersion: z.string(),
-  matchId: z.string(),
+  matchId: RiotMatchIdSchema,
   participants: z.array(z.string()),
 });
 
 /**
  * Main RawTimeline schema - represents a match timeline from Riot Games Match V5 API
  */
-export const RawTimelineSchema = z.object({
-  metadata: RawTimelineMetadataSchema,
-  info: RawTimelineInfoSchema,
-});
+export const RawTimelineSchema = preserveRawJson(
+  z.object({
+    metadata: RawTimelineMetadataSchema,
+    info: RawTimelineInfoSchema,
+  }),
+);
 
 // Export types
 export type RawTimeline = z.infer<typeof RawTimelineSchema>;

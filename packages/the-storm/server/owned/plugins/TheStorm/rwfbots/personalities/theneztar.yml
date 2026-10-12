@@ -1,0 +1,79 @@
+id: theneztar
+name: TheNeztar
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0ODg3MjYzOCwKICAicHJvZmlsZUlkIiA6ICI5YWRmNmRlNTJkNjE0MzA2YmEzNzQ2NWU1ZDIyYThjMyIsCiAgInByb2ZpbGVOYW1lIiA6ICJMb3JkX29mX3hpYW95YW8iLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZDU3ZGRlZjZjY2IyNzY1YzFkZjM4MjRjZGRlNDFlZjM4ZTBlZmU4YWY1NGEwMTBiZmE1ZjJiODFmNmZmODk1NiIKICAgIH0KICB9Cn0="
+  signature: "G3xpqahHpjTCYVoHMByC68NO6fNqSUV0SNUwJ/cwNNQDm8pTCGt8kVlkkzMcgMMwFK66BP1GLEFnE7cEV2uPUS7v0nYBmVQQnT2lVMuAcpe4151nx2Ca3rXYc02BvQ6bONAB5Zy9I3yIOb0pNSRyQd7Jleu6JE8E/LOnvS4y6v0y+Hfns81OVJbFc0RsoA6MNkSv1M2bzAqlTtFHhDlikpE72+HT+EDAtzyNmPjRGgRd0/X/5/h5jMaqA0XiDBle+4PUABbmvKwHFRI5vH/NGBzNinAIRqRibJxGLmXS1bJLczo38mSsC+mSZz+N35LGBQc31WOX/qRI5B7BdWKmbTCDGAxnuTyLOrB80SsexZv6GKbgzaRE4z+9mgsm5fcSFKRlZP86ERWz+Cjuo7gFdVGsyseYL9Aab1IR7kx1FQd9hvz0ntxhdVds3LROfYAGvCnlWWUvyk3Wg+71ailo+qYm6m9QaYBOXoXBy+khCA/yB0JUzKDoHUpBD2pQDlY0zETKhQxqvQv0vQWOu48BVyCpvyf/an6mrEPykTyQSUp3G9LJV5HRa95kLOcr9fh6cdzkJ/FC7Wo1HY37YYbWualsPflTv6x+BkBzBdgxrmATQMI5JKUHhFzJ68NcicSItY4QwH1y/oKIDuh9O0Z62bk3XylBSbnbxbL9ZnGuM3M="
+skill: 0.507
+archetype: hunter
+leverOffsets:
+  reactionMs: -0.48
+  turnRateDegPerTick: 0.77
+  predictionQuality: 0.86
+  awarenessRadius: 0.83
+  aggression: 0.96
+kits:
+  trooper: 0.59
+  longbow: 0.48
+  shortbow: 0.9
+  ghost: 0.11
+roles:
+  rotate: 0.29
+  hunt: 0.89
+style:
+  aggression: 0.7
+  patience: 0.34
+  teamplay: 0.33
+  risk: 0.71
+voice:
+  tone:
+    - gruff
+    - seasoned
+    - wry
+  verbosity: normal
+  style: Grizzled old hunter, talks about tracks and scents, calls everyone 'kid'
+lines:
+  greet:
+    - "Fresh tracks, {team}."
+    - Let's go find 'em, kids.
+  onKill:
+    - "Tracked {victim} three rooms."
+    - Footprints don't lie.
+    - Bagged one, kid.
+  onDeath:
+    - "{killer} covered their tracks."
+    - Old hunter, new trick.
+    - Lost the scent.
+  onPlant:
+    - "{bomb} lit. Back to hunting."
+    - Fuse done, trail calls.
+  onDefuse:
+    - "{bomb} safe. Now, the hunt."
+    - Stamped that fuse out.
+  onWin:
+    - "Good hunt, {team}."
+    - Season's over, kids.
+  onLoss:
+    - The prey won today.
+    - Back to the woods.
+  onLastAlive:
+    - Just me and the trail.
+    - Quiet. I hear 'em.
+  taunt:
+    - I see your footprints.
+    - Running leaves tracks, kid.
+    - Smell that? It's you.
+  lobby:
+    - Quiet lobby, kid. Good for listening.
+    - Shortbow and patience. That's all a hunter needs.
+    - Every map leaves tracks if you know where to look.
+    - Stay off my trail, kid. Or stay close. Your call.
+    - "{team}, keep your footsteps soft and your eyes open."
+quirks:
+  - holds_grudges
+  - calls_everything
+rivals:
+  - cometotter0
+  - quiethunter22
+bio: Claims to have tracked an enemy across the whole map using only footstep sounds in 2013. Pretends CometOtter0 is a nuisance but secretly saves it the best trails, and respects QuietHunter22 grudgingly.
+batch: 2
+retired: false

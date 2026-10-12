@@ -150,7 +150,12 @@ final class Structures {
     return binder
         .resolve(use.site(records(use.grid())))
         .mapError(Structures::explain)
-        .flatMap(bound -> toggle(owner, use, bound, target));
+        .flatMap(
+            bound -> {
+              if (kit.guard().automaticCells(owner, use.grid(), bound.structure().cells())
+                  instanceof Decision.Denied(var reason)) return Result.err(reason);
+              return toggle(owner, use, bound, target);
+            });
   }
 
   private Result<StructurePlan, Component> toggle(
@@ -174,14 +179,14 @@ final class Structures {
     if (!cooldowns.tryStart(new Key(grid.world().getUID(), bound.keeper()), time.instant())) {
       return Result.err(Component.text("It is still moving; try again in a moment."));
     }
-    // Every change is checked before anything happens, then the stock is stored before any block
-    // moves, and placing cannot fail: an unexpected pop or event can never duplicate a block.
+    // Validate and queue the whole audit before debiting stock or moving any world block.
     var placement = Placer.check(grid, bound.structure(), plan.changes());
+    var prepared = placement.prepare(kit.changes(), "#storm-mechanics");
     kit.signs().setStock(keeper, plan.stock());
     update(keeper);
     applying = true;
     try {
-      placement.apply();
+      prepared.apply();
     } finally {
       applying = false;
     }

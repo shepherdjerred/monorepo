@@ -4,12 +4,12 @@
  * Usage: bun run src/league/review/test-reviews.ts [options]
  */
 
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import {
   generateMatchReview,
   selectPlayerIndex,
 } from "#src/league/review/generator.ts";
 import {
-  MatchIdSchema,
   LeaguePuuidSchema,
   resolveQueueTypeFromGame,
   RawMatchSchema,
@@ -19,7 +19,7 @@ import {
   type PlayerConfigEntry,
   type RawMatch,
   type RawTimeline,
-  type MatchId,
+  type RiotMatchId,
 } from "@scout-for-lol/data/index.ts";
 import { ListObjectsV2Command, GetObjectCommand } from "@aws-sdk/client-s3";
 import { createS3Client } from "#src/storage/s3-client.ts";
@@ -122,7 +122,7 @@ async function fetchMatchFromS3(key: string): Promise<RawMatch | null> {
  * Create a minimal player config for testing
  */
 function createMinimalPlayerConfig(
-  puuid: string,
+  puuid: LeaguePuuid,
   name: string,
 ): PlayerConfigEntry {
   return {
@@ -162,7 +162,7 @@ function convertRawMatchToInternalFormat(
       : "Unknown";
 
   const playerConfig = createMinimalPlayerConfig(
-    firstParticipant.puuid,
+    LeaguePuuidSchema.parse(firstParticipant.puuid),
     playerName,
   );
 
@@ -186,14 +186,14 @@ function convertRawMatchToInternalFormat(
 type S3MatchResult = {
   match: CompletedMatch | ArenaMatch;
   rawMatch: RawMatch;
-  matchId: MatchId;
+  matchId: RiotMatchId;
 };
 
 /**
  * Fetch timeline data from Riot API for a match
  */
 async function fetchTimelineFromRiotApi(
-  matchId: MatchId,
+  matchId: RiotMatchId,
 ): Promise<RawTimeline | undefined> {
   try {
     logger.info(`📊 Fetching timeline from Riot API for ${matchId}`);
@@ -251,7 +251,7 @@ async function getRandomMatchFromS3(
     if (isMatchingType) {
       logger.info(`📦 Using match from S3: ${key}`);
       const match = convertRawMatchToInternalFormat(rawMatch);
-      const matchId = MatchIdSchema.parse(rawMatch.metadata.matchId);
+      const matchId = rawMatch.metadata.matchId;
       return { match, rawMatch, matchId };
     }
   }

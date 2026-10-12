@@ -4,5 +4,14 @@
     "types": ["bun"],
     "noEmit": true
   },
-  "include": ["tests/**/*.ts", "vitest.e2e.config.ts", "eslint.config.ts"]
+  "include": [
+    "scripts/**/*.ts",
+    "tools/**/*.ts",
+    "tests/**/*.ts",
+    "playtests/**/*.ts",
+    "vitest.e2e.config.ts",
+    "vitest.full.config.ts",
+    "vitest.load.config.ts",
+    "eslint.config.ts"
+  ]
 }

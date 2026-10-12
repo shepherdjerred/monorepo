@@ -1,11 +1,12 @@
+import {
+  type DiscordGuildId,
+  ChampionComparisonSortSchema,
+  type ChampionComparisonSort,
+} from "@scout-for-lol/data";
 import { Loaded } from "@shepherdjerred/loaded";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import {
-  ChampionComparisonSortSchema,
-  type ChampionComparisonSort,
-} from "@scout-for-lol/data";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   Card,
@@ -51,7 +52,7 @@ function comparisonInput(options: {
   championId: number;
   filters: PlayerProfileFilters;
   sort: ChampionComparisonSort;
-  guildIds: string[] | undefined;
+  guildIds: DiscordGuildId[] | undefined;
 }) {
   return {
     championId: options.championId,
@@ -97,7 +98,7 @@ function comparisonPage(data: ComparisonOutput | undefined) {
 function comparisonHeader(options: {
   qualified: ComparisonOutput | undefined;
   small: ComparisonOutput | undefined;
-  guildIds: string[] | undefined;
+  guildIds: DiscordGuildId[] | undefined;
 }) {
   const data = options.qualified ?? options.small;
   const availableGuilds = data?.availableGuilds ?? [];
@@ -114,7 +115,7 @@ export function ConsumerChampion() {
   const { filters, setFilters } = usePlayerProfileUrlState();
   const trpc = useTRPC();
   const [sort, setSort] = useState<ChampionComparisonSort>("win_rate");
-  const [guildIds, setGuildIds] = useState<string[] | undefined>();
+  const [guildIds, setGuildIds] = useState<DiscordGuildId[] | undefined>();
   const [qualifiedCursors, setQualifiedCursors] = useState<
     (Cursor | undefined)[]
   >([undefined]);

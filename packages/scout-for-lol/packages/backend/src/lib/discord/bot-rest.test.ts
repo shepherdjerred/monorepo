@@ -1,3 +1,7 @@
+import {
+  DiscordGuildIdSchema,
+  DiscordChannelIdSchema,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import { describe, expect, test } from "vitest";
 import { DiscordUpstreamError } from "#src/lib/discord-rest.ts";
 import {
@@ -10,9 +14,11 @@ import {
   type BotRestGet,
 } from "#src/lib/discord/bot-rest.ts";
 
-const GUILD = "100";
-const BOT = "999";
-const USER = "200";
+const GUILD = DiscordGuildIdSchema.parse("100000000000000100");
+const OTHER_GUILD = DiscordGuildIdSchema.parse("101000000000000101");
+const CHANNEL = DiscordChannelIdSchema.parse("500000000000000005");
+const BOT = "999999999999999999";
+const USER = "200000000000000200";
 
 /** Shaped like discord.js `DiscordAPIError`: a Discord code plus HTTP status. */
 class ApiError extends Error {
@@ -192,8 +198,11 @@ describe("createBotRestReader caching", () => {
   test("caches per guild, not globally", async () => {
     const harness = reader(() => Promise.resolve(ROLES));
     await harness.rest.guildRoles(GUILD);
-    await harness.rest.guildRoles("101");
-    expect(harness.routes).toEqual(["/guilds/100/roles", "/guilds/101/roles"]);
+    await harness.rest.guildRoles(OTHER_GUILD);
+    expect(harness.routes).toEqual([
+      `/guilds/${GUILD}/roles`,
+      `/guilds/${OTHER_GUILD}/roles`,
+    ]);
   });
 
   test("failures are not cached", async () => {
@@ -269,26 +278,29 @@ describe("createBotRestReader routes", () => {
       Promise.resolve({ user: { id: BOT, username: "scout" }, roles: [] }),
     );
     await harness.rest.botMember(GUILD);
-    expect(harness.routes).toEqual(["/guilds/100/members/999"]);
+    expect(harness.routes).toEqual([`/guilds/${GUILD}/members/${BOT}`]);
   });
 
   test("a single channel is read by id and not cached", async () => {
     const harness = reader(() =>
       Promise.resolve({
-        id: "5",
+        id: CHANNEL,
         name: "lobby",
         type: 2,
         guild_id: GUILD,
       }),
     );
-    await harness.rest.channel("5");
-    await harness.rest.channel("5");
-    expect(harness.routes).toEqual(["/channels/5", "/channels/5"]);
+    await harness.rest.channel(CHANNEL);
+    await harness.rest.channel(CHANNEL);
+    expect(harness.routes).toEqual([
+      `/channels/${CHANNEL}`,
+      `/channels/${CHANNEL}`,
+    ]);
   });
 
   test("an unknown channel is an answer, not a failure", async () => {
     const harness = reader(() => Promise.reject(new ApiError(10_003, 404)));
-    await expect(harness.rest.channel("5")).resolves.toBeNull();
+    await expect(harness.rest.channel(CHANNEL)).resolves.toBeNull();
   });
 
   test("member search uses the REST search endpoint and is not cached", async () => {
@@ -304,8 +316,8 @@ describe("createBotRestReader routes", () => {
       limit: 7,
     });
     expect(harness.routes).toEqual([
-      "/guilds/100/members/search",
-      "/guilds/100/members/search",
+      `/guilds/${GUILD}/members/search`,
+      `/guilds/${GUILD}/members/search`,
     ]);
     expect(harness.queries[0]).toBe("query=ali&limit=7");
   });
@@ -328,10 +340,10 @@ describe("display helpers", () => {
       roles: [],
     };
     expect(memberAvatarUrl(member, GUILD)).toContain(
-      "/guilds/100/users/200/avatars/guildavatar",
+      `/guilds/${GUILD}/users/${USER}/avatars/guildavatar`,
     );
     expect(memberAvatarUrl({ ...member, avatar: null }, GUILD)).toContain(
-      "/avatars/200/useravatar",
+      `/avatars/${USER}/useravatar`,
     );
   });
 

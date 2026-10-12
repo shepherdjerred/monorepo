@@ -35,6 +35,19 @@ export function planResultColumnNames(plan: ScoutQlPlan): string[] {
   return [LABEL_COLUMN, ...planOutputNames(plan)];
 }
 
+function assetForPlanColumn(plan: ScoutQlPlan, column: string) {
+  const info = scoutQlSourceCatalog(plan.source)?.columns.get(column);
+  if (info?.asset === undefined) return;
+
+  // Spell names such as "Flash" are ambiguous asset identities. Other
+  // name-backed assets (runes, trees, and champion names) resolve by name, and
+  // virtual champion groups use champion_id despite their VARCHAR catalog type.
+  const ambiguousSpellName = info.type === "varchar" && info.asset === "spell";
+  const championIdKey = info.virtual && column === "champion";
+  if (ambiguousSpellName && !championIdKey) return;
+  return info.asset;
+}
+
 export function planDisplayKind(
   plan: ScoutQlPlan,
   column: string,
@@ -85,11 +98,10 @@ export function planResultColumns(
   plan: ScoutQlPlan,
   columns: string[],
 ): ReportResultColumn[] {
-  const catalog = scoutQlSourceCatalog(plan.source);
   const groupingAsset = (index: number) => {
     const grouping = plan.groupings[index];
     return grouping?.kind === "column"
-      ? catalog?.columns.get(grouping.column)?.asset
+      ? assetForPlanColumn(plan, grouping.column)
       : undefined;
   };
 
@@ -99,7 +111,7 @@ export function planResultColumns(
       column === LABEL_COLUMN
         ? undefined
         : output === undefined
-          ? catalog?.columns.get(column)?.asset
+          ? assetForPlanColumn(plan, column)
           : output.expr.kind === "grouping-ref"
             ? groupingAsset(output.expr.index)
             : undefined;
@@ -115,20 +127,19 @@ export function planResultColumns(
   });
 }
 
-/** Render each asset grouping from its typed key before charts consume labels. */
+/** Render identifier-backed asset groupings before charts consume labels. */
 export function planResultDimensions(
   plan: ScoutQlPlan,
   label: string,
   keys: LakeScalar[],
 ): string[] {
   if (plan.groupings.length === 0) return label.split(" • ");
-  const catalog = scoutQlSourceCatalog(plan.source);
   const rendered = label.split(" • ");
   return plan.groupings.map((grouping, index) => {
     const key = keys[index];
     const asset =
       grouping.kind === "column"
-        ? catalog?.columns.get(grouping.column)?.asset
+        ? assetForPlanColumn(plan, grouping.column)
         : undefined;
     return asset === undefined ||
       key === undefined ||

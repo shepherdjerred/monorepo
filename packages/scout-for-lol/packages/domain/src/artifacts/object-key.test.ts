@@ -1,3 +1,4 @@
+import type { z } from "zod";
 import { describe, expect, test } from "vitest";
 import {
   buildMatchArtifactObjectKey,
@@ -6,7 +7,7 @@ import {
 import { IsoInstantSchema, RiotMatchIdSchema } from "#src/identity/brands.ts";
 
 function keyFor(args: {
-  matchId: string;
+  matchId: z.input<typeof RiotMatchIdSchema>;
   assetName: string;
   extension: string;
   capturedAt: string;

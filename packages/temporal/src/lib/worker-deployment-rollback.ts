@@ -111,6 +111,7 @@ export async function executeWorkerDeploymentRollback(
     const resetState = await prepareCandidatePinStateReset(
       options.candidateStatePath,
       candidatePinName,
+      resetCatalog.candidateValue,
     );
     if (status.currentBuildId === options.buildId) {
       throw new Error("Cannot reset the pin while the candidate is current");

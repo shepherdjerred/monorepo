@@ -7,12 +7,20 @@ import {
   DaemonStateSchema,
   DISCORD_DIR,
   LOGS_DIR,
-  pathExists,
   SOCKET_PATH,
   STATE_PATH,
   StatusResponseSchema,
 } from "#lib/discord/ipc.ts";
 import { renderStatus } from "#lib/discord/render.ts";
+import {
+  daemonRunning,
+  pathExists,
+  pidAlive,
+  stopDaemonPid,
+} from "@shepherdjerred/unix-socket-daemon";
+
+/** Every daemon process command line contains this (`<toolkit|bun run main> discord serve`). */
+const DAEMON_MARKER = "discord serve";
 
 async function readState(): Promise<DaemonState | null> {
   if (!(await pathExists(STATE_PATH))) {
@@ -20,15 +28,6 @@ async function readState(): Promise<DaemonState | null> {
   }
   const raw: unknown = JSON.parse(await Bun.file(STATE_PATH).text());
   return DaemonStateSchema.parse(raw);
-}
-
-function pidAlive(pid: number): boolean {
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 function daemonLogPath(): string {
@@ -50,7 +49,7 @@ export async function daemonStartCommand(options: {
   ttlSeconds: number;
 }): Promise<void> {
   const existing = await readState();
-  if (existing !== null && pidAlive(existing.pid)) {
+  if (existing !== null && (await daemonRunning(existing.pid, DAEMON_MARKER))) {
     console.error(
       `Discord daemon is already running (pid ${String(existing.pid)}). Use 'toolkit discord daemon stop' first.`,
     );
@@ -63,7 +62,7 @@ export async function daemonStartCommand(options: {
     (userToken == null || userToken.length === 0)
   ) {
     console.error(
-      "Set DISCORD_BOT_TOKEN and/or DISCORD_USER_TOKEN in the environment before starting the daemon.\nAsk the user which 1Password item holds the right tokens, then load them with one batched op call wrapping this command.",
+      "toolkit could not resolve DISCORD_BOT_TOKEN or DISCORD_USER_TOKEN (env, ~/.toolkit/config.toml [credentials], macOS Keychain).\nEnroll each token in the Keychain, then retry:\nswift scripts/onepassword/enroll-workstation-secret.swift --service monorepo-workstation-discord-bot-token --ref op://Personal/ytv272dyktkeipt347f2yf5kue/BOT_TOKEN\nswift scripts/onepassword/enroll-workstation-secret.swift --service monorepo-workstation-discord-user-token --ref op://Personal/sskm6skq3mwnyqnhrmqwji6dne/TOKEN",
     );
     process.exit(1);
   }
@@ -117,22 +116,21 @@ export async function daemonStartCommand(options: {
 
 export async function daemonStopCommand(): Promise<void> {
   const state = await readState();
+  let statusPid: number | undefined;
   if (await pathExists(SOCKET_PATH)) {
     try {
+      const status = await daemonRequest(StatusResponseSchema, "/status");
+      statusPid = status.pid;
       await daemonRequest(StatusResponseSchema.partial(), "/shutdown", {});
     } catch {
-      // fall through to pid kill
+      // A dead socket: fall through to the identity-checked PID stop.
     }
   }
-  if (state !== null && pidAlive(state.pid)) {
-    const deadline = Date.now() + 5000;
-    while (Date.now() < deadline && pidAlive(state.pid)) {
-      await new Promise((resolve) => setTimeout(resolve, 200));
-    }
-    if (pidAlive(state.pid)) {
-      process.kill(state.pid, "SIGTERM");
-    }
-  }
+  await stopDaemonPid(state?.pid ?? null, {
+    statusPid,
+    marker: DAEMON_MARKER,
+    waitMs: 5000,
+  });
   await rm(SOCKET_PATH, { force: true });
   await rm(STATE_PATH, { force: true });
   console.log("Discord daemon stopped.");

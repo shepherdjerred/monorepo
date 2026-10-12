@@ -5,6 +5,7 @@ import type {
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
 import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
 import { z } from "zod";
+import { ThreadAutoArchiveDuration } from "discord.js";
 
 const UniqueConstraintErrorSchema = z.object({ code: z.literal("P2002") });
 
@@ -64,7 +65,7 @@ export async function createThreadForSession(options: {
   const thread = await sourceMessage.startThread({
     name:
       options.label ?? `Birmel session ${options.sourceMessageId.slice(-6)}`,
-    autoArchiveDuration: 1440,
+    autoArchiveDuration: ThreadAutoArchiveDuration.OneDay,
   });
   return { threadId: thread.id, parentChannelId: channel.id };
 }

@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.shards.adapter.paper;
 
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import java.time.InstantSource;
 import java.util.random.RandomGenerator;
 
@@ -11,10 +12,12 @@ import java.util.random.RandomGenerator;
  * @param text configured messages
  * @param random the module's injected randomness
  * @param time the module's injected clock
+ * @param sealed worlds that drop no shards
  */
 record ShardKit(
     ShardItems shards,
     StormGear gear,
     ShardText text,
     RandomGenerator random,
-    InstantSource time) {}
+    InstantSource time,
+    SealedWorlds sealed) {}

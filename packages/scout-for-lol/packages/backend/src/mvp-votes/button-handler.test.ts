@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from "vitest";
-import { MatchIdSchema } from "@scout-for-lol/data";
+import { RiotMatchIdSchema } from "@scout-for-lol/data";
 import {
   handleMvpVoteButton,
   type VoteButtonInteraction,
@@ -13,7 +13,7 @@ describe("handleMvpVoteButton", () => {
     const interaction: VoteButtonInteraction = {
       customId: formatVoteButtonCustomId({
         category: "ally",
-        matchId: MatchIdSchema.parse("NA1_5000000042"),
+        matchId: RiotMatchIdSchema.parse("NA1_5000000042"),
       }),
       guildId: null,
       user: { id: "160509172704739328" },

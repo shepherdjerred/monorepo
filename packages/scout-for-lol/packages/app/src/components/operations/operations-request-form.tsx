@@ -53,7 +53,9 @@ function SuppressFields(props: {
 }
 
 function DeliveryFields(props: {
-  draft: OperationsRequestDraft & { kind: "ops_resolve_unknown_delivery" };
+  draft: OperationsRequestDraft & {
+    kind: "ops_resolve_unknown_delivery" | "ops_resolve_report_delivery";
+  };
   onChange: (draft: OperationsRequestDraft) => void;
 }) {
   const { draft } = props;
@@ -158,7 +160,8 @@ function DraftFields(props: {
   if (props.draft.kind === "ops_suppress_stale_notification") {
     return <SuppressFields draft={props.draft} onChange={props.onChange} />;
   }
-  return props.draft.kind === "ops_resolve_unknown_delivery" ? (
+  return props.draft.kind === "ops_resolve_unknown_delivery" ||
+    props.draft.kind === "ops_resolve_report_delivery" ? (
     <DeliveryFields draft={props.draft} onChange={props.onChange} />
   ) : null;
 }

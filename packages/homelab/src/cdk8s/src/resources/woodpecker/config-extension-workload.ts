@@ -47,6 +47,11 @@ export function createWoodpeckerConfigExtension(chart: Chart): void {
     "woodpecker-extension-secret-ref",
     "woodpecker-server-credentials",
   );
+  const githubSecretRef = Secret.fromSecretName(
+    chart,
+    "woodpecker-extension-github-secret-ref",
+    "woodpecker-extension-github-credentials",
+  );
 
   const deployment = new Deployment(chart, "woodpecker-config-extension", {
     replicas: 1,
@@ -67,11 +72,24 @@ export function createWoodpeckerConfigExtension(chart: Chart): void {
       image: `ghcr.io/shepherdjerred/woodpecker-config-extension:${versions["shepherdjerred/woodpecker-config-extension"]}`,
       ports: [{ name: "http", number: CONFIG_EXTENSION_PORT }],
       envVariables: {
+        FEATURE_FLAGS_MODE: EnvValue.fromValue("flipt"),
+        FLIPT_URL: EnvValue.fromValue(
+          "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
+        ),
+        FLIPT_NAMESPACE: EnvValue.fromValue("woodpecker"),
+        FLIPT_ENVIRONMENT: EnvValue.fromValue("prod"),
+        CI_GATE_IMAGE: EnvValue.fromValue(
+          `ghcr.io/shepherdjerred/woodpecker-config-extension:${versions["shepherdjerred/woodpecker-config-extension"]}`,
+        ),
         WOODPECKER_URL: EnvValue.fromValue(WOODPECKER_PUBLIC_HOST),
         CI_REPO_SLUG: EnvValue.fromValue("shepherdjerred/monorepo"),
         WOODPECKER_API_TOKEN: EnvValue.fromSecretValue({
           secret: serverSecretRef,
           key: "WOODPECKER_API_TOKEN",
+        }),
+        GITHUB_APPROVAL_READ_TOKEN: EnvValue.fromSecretValue({
+          secret: githubSecretRef,
+          key: "GITHUB_DOWNLOAD_TOKEN",
         }),
         PORT: EnvValue.fromValue(CONFIG_EXTENSION_PORT.toString()),
       },
@@ -115,6 +133,17 @@ export function createWoodpeckerConfigExtension(chart: Chart): void {
         },
       ],
       egress: [
+        {
+          to: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "flipt" },
+              },
+              podSelector: { matchLabels: { app: "flipt" } },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(8080), protocol: "TCP" }],
+        },
         {
           to: [
             {

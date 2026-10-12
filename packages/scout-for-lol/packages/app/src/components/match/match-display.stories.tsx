@@ -1,5 +1,5 @@
+import { DiscordGuildIdSchema, type MatchLoadout } from "@scout-for-lol/data";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import type { MatchLoadout } from "@scout-for-lol/data";
 import {
   MatchScoreboards,
   RolePairedMatchScoreboard,
@@ -12,6 +12,9 @@ import {
   ChampionComparisonTable,
   type ChampionComparisonRow,
 } from "./champion-comparison-table.tsx";
+
+const SCOUT_TEST_GUILD = DiscordGuildIdSchema.parse("469558207670419456");
+const WEEKLY_FLEX_GUILD = DiscordGuildIdSchema.parse("1069813984308248657");
 
 /** Stories have no backend, so every handler is deliberately inert. */
 function noop(): void {
@@ -312,7 +315,7 @@ const COMPARISON_ROWS: ChampionComparisonRow[] = [
   {
     playerId: 42,
     alias: "bald",
-    guild: { guildId: "469558207670419456", name: "Scout Test Server" },
+    guild: { guildId: SCOUT_TEST_GUILD, name: "Scout Test Server" },
     viewerLinked: true,
     games: 24,
     wins: 15,
@@ -327,7 +330,7 @@ const COMPARISON_ROWS: ChampionComparisonRow[] = [
   {
     playerId: 43,
     alias: "vaughn",
-    guild: { guildId: "469558207670419456", name: "Scout Test Server" },
+    guild: { guildId: SCOUT_TEST_GUILD, name: "Scout Test Server" },
     viewerLinked: false,
     games: 11,
     wins: 4,
@@ -342,7 +345,7 @@ const COMPARISON_ROWS: ChampionComparisonRow[] = [
   {
     playerId: 44,
     alias: "tris",
-    guild: { guildId: "1069813984308248657", name: "Weekly Flex" },
+    guild: { guildId: WEEKLY_FLEX_GUILD, name: "Weekly Flex" },
     viewerLinked: false,
     games: 6,
     wins: 5,

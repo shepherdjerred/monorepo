@@ -340,7 +340,7 @@ export type AlloyHelmValuesConfigReloaderImage = {
   /**
    * Tag of image to use for config reloading.
    *
-   * @default "v0.91.0@sha256:7d9e4eea5f1139e602508871f422b011..."
+   * @default "v0.94.0@sha256:142a1f11df8dd165f00375b0b1826aec..."
    */
   tag?: string;
   /**
@@ -456,6 +456,12 @@ export type AlloyHelmValuesController = {
    * @default "ClusterFirst"
    */
   dnsPolicy?: string;
+  /**
+   * Configures the DNS config for the pod. https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-dns-config
+   *
+   * @default {}
+   */
+  dnsConfig?: AlloyHelmValuesControllerDnsConfig;
   terminationGracePeriodSeconds?: unknown;
   /**
    * The maximum number of revisions that will be maintained in the Controllers's revision history. The history consists of all revisions not represented by a currently applied reversion.
@@ -528,6 +534,8 @@ export type AlloyHelmValuesController = {
 export type AlloyHelmValuesControllerExtraLabels = object;
 
 export type AlloyHelmValuesControllerExtraAnnotations = object;
+
+export type AlloyHelmValuesControllerDnsConfig = object;
 
 export type AlloyHelmValuesControllerUpdateStrategy = object;
 
@@ -826,6 +834,12 @@ export type AlloyHelmValuesService = {
    */
   externalTrafficPolicy?: string;
   /**
+   * Value for traffic distribution. 'PreferSameNode' or 'PreferSameZone' (k8s >= 1.34)
+   *
+   * @default ""
+   */
+  trafficDistribution?: string;
+  /**
    * cloud.google.com/load-balancer-type: Internal
    *
    * @default {}
@@ -970,7 +984,7 @@ export type AlloyHelmValues = {
    */
   configReloader?: AlloyHelmValuesConfigReloader;
   /**
-   * @default {...} (26 keys)
+   * @default {...} (27 keys)
    */
   controller?: AlloyHelmValuesController;
   /**
@@ -978,7 +992,7 @@ export type AlloyHelmValues = {
    */
   networkPolicy?: AlloyHelmValuesNetworkPolicy;
   /**
-   * @default {...} (7 keys)
+   * @default {...} (8 keys)
    */
   service?: AlloyHelmValuesService;
   /**
@@ -1121,6 +1135,7 @@ export type AlloyHelmParameters = {
   "service.clusterIP"?: string;
   "service.internalTrafficPolicy"?: string;
   "service.externalTrafficPolicy"?: string;
+  "service.trafficDistribution"?: string;
   "serviceMonitor.enabled"?: string;
   "serviceMonitor.interval"?: string;
   "serviceMonitor.metricRelabelings"?: string;

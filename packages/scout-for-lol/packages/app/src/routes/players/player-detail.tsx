@@ -1,12 +1,14 @@
+import {
+  type DiscordAccountId,
+  CompetitionStatusSchema,
+} from "@scout-for-lol/data";
 import { Loaded } from "@shepherdjerred/loaded";
 import { LoadingBlock } from "@shepherdjerred/loaded/react.tsx";
 import { StaleState } from "@scout-for-lol/design-system/domain/states";
-import { useRef, useState } from "react";
-import type { ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router";
 import { PlayerSubscriptionsManager } from "#src/components/player/player-subscriptions-manager.tsx";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CompetitionStatusSchema } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
 import { nextRiotIdPollInterval } from "#src/lib/riot-id-poll.ts";
@@ -54,7 +56,7 @@ function Allowed(props: { when: boolean; children: ReactNode }) {
 
 type PlayerSummary = {
   id: number;
-  discordId: string | null;
+  discordId: DiscordAccountId | null;
   discordUser: { username: string; displayName: string } | null;
   creatorDiscordId: string;
   creatorDiscordUser: { username: string; displayName: string } | null;
@@ -297,22 +299,6 @@ export function PlayerDetail() {
               <p className="text-sm text-scout-danger">{actionError}</p>
             )}
 
-            <PlayerSummaryCards
-              player={player}
-              competitionCount={competitions.length}
-              canLink={perms.can("players", "link")}
-              unlinkPending={unlinkMutation.isPending}
-              onLink={() => {
-                setLinkOpen(true);
-              }}
-              onUnlink={() => {
-                if (!globalThis.confirm(`Unlink Discord from "${alias}"?`)) {
-                  return;
-                }
-                unlinkMutation.mutate({ guildId, playerAlias: alias });
-              }}
-            />
-
             <Section
               title="Riot accounts"
               action={
@@ -385,6 +371,28 @@ export function PlayerDetail() {
               refresh={refresh}
               setActionError={setActionError}
             />
+
+            <details>
+              <summary className="cursor-pointer font-medium">
+                Player details and linked Discord account
+              </summary>
+              <div className="mt-4">
+                <PlayerSummaryCards
+                  player={player}
+                  competitionCount={competitions.length}
+                  canLink={perms.can("players", "link")}
+                  unlinkPending={unlinkMutation.isPending}
+                  onLink={() => {
+                    setLinkOpen(true);
+                  }}
+                  onUnlink={() => {
+                    if (!globalThis.confirm(`Unlink Discord from "${alias}"?`))
+                      return;
+                    unlinkMutation.mutate({ guildId, playerAlias: alias });
+                  }}
+                />
+              </div>
+            </details>
 
             <CompetitionSection
               title="Competitions"

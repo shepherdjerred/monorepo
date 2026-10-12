@@ -4,19 +4,19 @@ import {
   NOTIFICATION_DELIVERY_HEARTBEAT_TIMEOUT_MS,
   NOTIFICATION_DELIVERY_START_TO_CLOSE_MS,
   NOTIFICATION_PRE_SEND_BUDGET_MS,
-} from "#src/activity-contracts-v2.ts";
+} from "#src/activity-contracts.ts";
 import type { ScoutStage } from "#src/contracts.ts";
-import { SCOUT_V2_ACTIVITY_QUEUE_CLASSES } from "#src/identifiers.ts";
+import { SCOUT_PIPELINE_ACTIVITY_QUEUE_CLASSES } from "#src/identifiers.ts";
 import {
   BACKGROUND_ACTIVITY_OPTIONS,
   BACKGROUND_ACTIVITY_RETRY_POLICY,
   LAKE_ACTIVITY_OPTIONS,
   NOTIFICATION_DELIVERY_ACTIVITY_OPTIONS,
   REALTIME_ACTIVITY_OPTIONS,
-  backgroundV2Activities,
-  lakeV2Activities,
-  notificationDeliveryV2Activities,
-  realtimeV2Activities,
+  backgroundPipelineActivities,
+  lakePipelineActivities,
+  notificationDeliveryActivities,
+  realtimePipelineActivities,
 } from "./activity-options.ts";
 
 describe("background activity retry ownership", () => {
@@ -36,25 +36,26 @@ describe("V2 proxy factories", () => {
     // start-to-close nor a schedule-to-close timeout throws here rather than
     // at the first Activity a live Workflow tries to schedule.
     for (const stage of STAGES) {
-      expect(() => realtimeV2Activities(stage)).not.toThrow();
-      expect(() => backgroundV2Activities(stage)).not.toThrow();
-      expect(() => lakeV2Activities(stage)).not.toThrow();
-      expect(() => notificationDeliveryV2Activities(stage)).not.toThrow();
+      expect(() => realtimePipelineActivities(stage)).not.toThrow();
+      expect(() => backgroundPipelineActivities(stage)).not.toThrow();
+      expect(() => lakePipelineActivities(stage)).not.toThrow();
+      expect(() => notificationDeliveryActivities(stage)).not.toThrow();
     }
   });
 
   test("expose the V2 activity surface, not v1's", () => {
-    expect(typeof realtimeV2Activities("prod").commitMatchObservationV2).toBe(
-      "function",
-    );
     expect(
-      typeof backgroundV2Activities("prod").scanPipelineReconciliationPageV2,
+      typeof realtimePipelineActivities("prod").commitMatchObservation,
     ).toBe("function");
-    expect(typeof lakeV2Activities("prod").stageLakeProjectionV2).toBe(
+    expect(
+      typeof backgroundPipelineActivities("prod")
+        .scanPipelineReconciliationPage,
+    ).toBe("function");
+    expect(typeof lakePipelineActivities("prod").stageLakeProjection).toBe(
       "function",
     );
     expect(
-      typeof notificationDeliveryV2Activities("prod").deliverNotificationV2,
+      typeof notificationDeliveryActivities("prod").deliverNotification,
     ).toBe("function");
   });
 
@@ -63,12 +64,12 @@ describe("V2 proxy factories", () => {
     // dispatch it, and `interactive` in particular must stay uncovered: that
     // queue serves a human waiting on a turn.
     const factoriesByQueueClass = {
-      realtime: realtimeV2Activities,
-      background: backgroundV2Activities,
-      lake: lakeV2Activities,
+      realtime: realtimePipelineActivities,
+      background: backgroundPipelineActivities,
+      lake: lakePipelineActivities,
     };
     for (const queueClass of new Set(
-      Object.values(SCOUT_V2_ACTIVITY_QUEUE_CLASSES),
+      Object.values(SCOUT_PIPELINE_ACTIVITY_QUEUE_CLASSES),
     )) {
       expect(factoriesByQueueClass).toHaveProperty(queueClass);
     }

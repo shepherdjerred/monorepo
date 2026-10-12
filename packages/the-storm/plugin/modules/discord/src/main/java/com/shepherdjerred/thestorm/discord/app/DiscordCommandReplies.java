@@ -36,9 +36,13 @@ final class DiscordCommandReplies {
     return DiscordText.truncate(page, DiscordText.DISCORD_LIMIT);
   }
 
-  static String towns(TownRead.Listing listing) {
+  static String towns(TownRead.Listing listing, int number, int size) {
     if (listing.total() == 0) {
-      return "No player towns have been founded yet.";
+      return "The public town directory is empty.";
+    }
+    var pages = (listing.total() + size - 1) / size;
+    if (listing.towns().isEmpty()) {
+      return "Choose a town directory page from 1 to " + pages + ".";
     }
     var lines =
         listing.towns().stream()
@@ -49,9 +53,41 @@ final class DiscordCommandReplies {
                         + town.members()
                         + " members, "
                         + town.claims()
-                        + " claims")
+                        + " claims; "
+                        + town.kind()
+                        + "; "
+                        + town.protectedChunks()
+                        + " protected chunks")
             .toList();
-    var page = "Towns (" + listing.total() + "):\n" + String.join("\n", lines);
+    var page =
+        "Towns ("
+            + listing.total()
+            + "), page "
+            + number
+            + "/"
+            + pages
+            + ":\n"
+            + String.join("\n", lines);
     return DiscordText.truncate(page, DiscordText.DISCORD_LIMIT);
+  }
+
+  static String town(TownRead.TownSummary town) {
+    var summary =
+        town.name()
+            + " — "
+            + town.kind()
+            + "\n"
+            + town.members()
+            + " members, "
+            + town.claims()
+            + " claims, "
+            + town.protectedChunks()
+            + " protected chunks\n"
+            + "Custody: "
+            + town.custody()
+            + "\n"
+            + "Boundary evidence: "
+            + town.boundaries();
+    return DiscordText.truncate(DiscordText.forDiscord(summary), DiscordText.DISCORD_LIMIT);
   }
 }

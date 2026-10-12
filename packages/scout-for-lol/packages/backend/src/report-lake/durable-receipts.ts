@@ -1,6 +1,5 @@
 import { z } from "zod";
-import type { Db } from "#src/database/index.ts";
-import { prisma } from "#src/database/index.ts";
+import { type Db, prisma } from "#src/database/index.ts";
 import {
   listReceipts,
   recordReceipt,
@@ -18,6 +17,8 @@ import {
   ArtifactDescriptorSchema,
   type ArtifactDescriptor,
   type ArtifactKind,
+  LakeArtifactKindSchema,
+  type LakeArtifactKind,
 } from "@scout-for-lol/domain/artifacts/descriptors.ts";
 import {
   IsoInstantSchema,
@@ -27,6 +28,7 @@ import {
 import {
   ReceiptKindSchema,
   type ReceiptKind,
+  type ReceiptScope,
 } from "@scout-for-lol/domain/match-processing/states.ts";
 import type { RawCurrentGameInfo } from "@scout-for-lol/data";
 import { prematchObjectResourceId } from "#src/storage/s3-prematch.ts";
@@ -67,13 +69,14 @@ const RAW_ARCHIVE_RECEIPT_KINDS = {
   match: ReceiptKindSchema.parse("raw-archive-match"),
   timeline: ReceiptKindSchema.parse("raw-archive-timeline"),
   prematch: ReceiptKindSchema.parse("raw-archive-prematch"),
+  client_bundle: ReceiptKindSchema.parse("raw-archive-client-bundle"),
 } as const satisfies Record<ArtifactKind, ReceiptKind>;
 
 const LAKE_STAGING_RECEIPT_KINDS = {
   match: ReceiptKindSchema.parse("lake-staging-match"),
   timeline: ReceiptKindSchema.parse("lake-staging-timeline"),
   prematch: ReceiptKindSchema.parse("lake-staging-prematch"),
-} as const satisfies Record<ArtifactKind, ReceiptKind>;
+} as const satisfies Record<LakeArtifactKind, ReceiptKind>;
 
 /** The canonical object store holds this artifact. */
 export function rawArchiveReceiptKind(artifact: ArtifactKind): ReceiptKind {
@@ -81,7 +84,9 @@ export function rawArchiveReceiptKind(artifact: ArtifactKind): ReceiptKind {
 }
 
 /** The lake projection for this artifact reached its staging files. */
-export function lakeStagingReceiptKind(artifact: ArtifactKind): ReceiptKind {
+export function lakeStagingReceiptKind(
+  artifact: LakeArtifactKind,
+): ReceiptKind {
   return LAKE_STAGING_RECEIPT_KINDS[artifact];
 }
 
@@ -110,7 +115,8 @@ export const RECEIPT_VERSION = 1;
  */
 export type LakeStagingEvidence = z.infer<typeof LakeStagingEvidenceSchema>;
 export const LakeStagingEvidenceSchema = z.strictObject({
-  objectKind: ArtifactDescriptorSchema.shape.kind,
+  // Only the kinds the lake projects; a client bundle is never staged.
+  objectKind: LakeArtifactKindSchema,
   sourceObjectKey: ArtifactDescriptorSchema.shape.key,
   digest: ArtifactDescriptorSchema.shape.digest,
   fileCount: z.number().int().positive(),
@@ -242,13 +248,9 @@ export function rawArchiveDescriptorOf(
 export function prematchReceiptMatchId(
   gameInfo: RawCurrentGameInfo,
 ): RiotMatchId {
-  return receiptMatchId(
+  return RiotMatchIdSchema.parse(
     prematchObjectResourceId(gameInfo.platformId, gameInfo.gameId),
   );
-}
-
-export function receiptMatchId(matchId: string): RiotMatchId {
-  return RiotMatchIdSchema.parse(matchId);
 }
 
 /**
@@ -281,13 +283,15 @@ export function buildReceipt(args: {
   kind: ReceiptKind;
   evidence: unknown;
   recordedAt: Date;
+  scope?: ReceiptScope;
+  version?: number;
 }): MatchProcessingReceiptRecord {
   return {
     matchId: args.matchId,
     receipt: {
       kind: args.kind,
-      version: RECEIPT_VERSION,
-      scope: { kind: "global" },
+      version: args.version ?? RECEIPT_VERSION,
+      scope: args.scope ?? { kind: "global" },
       recordedAt: IsoInstantSchema.parse(args.recordedAt.toISOString()),
     },
     evidence: JSON.stringify(args.evidence),

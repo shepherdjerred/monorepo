@@ -59,6 +59,8 @@ function sourceForUrl(url: string): string | undefined {
       url.slice(fontPrefix.length),
     );
   const ranksPrefix = "/assets/scout/shared/ranks/";
+  const mapsPrefix = "/assets/scout/maps/";
+  if (url.startsWith(mapsPrefix)) return resolveScoutAssetSource(resolve(ownedAssetsRoot, "maps"), url.slice(mapsPrefix.length));
   if (url.startsWith(ranksPrefix))
     return resolveScoutAssetSource(
       resolve(ownedAssetsRoot, "ranks"),
@@ -166,6 +168,7 @@ export function scoutAssetsPlugin(options: { emit?: boolean } = {}): Plugin {
 export async function copyScoutAssets(outputRoot: string): Promise<void> {
   const root = resolve(outputRoot, "assets/scout");
   await Promise.all([
+    cp(resolve(ownedAssetsRoot, "maps"), resolve(root, "maps"), { recursive: true }),
     cp(
       resolve(dataAssetsRoot, "img"),
       resolve(root, "game", gameAssetManifest.sourceVersion, "img"),

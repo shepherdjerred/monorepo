@@ -1,3 +1,4 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import * as RealSentry from "@sentry/bun";
 import { LeaguePuuidSchema, type PlayerConfigEntry } from "@scout-for-lol/data";
@@ -45,7 +46,7 @@ const { collectNewMatches } =
 const PUUID_A = "11111111-1111-4111-8111-111111111111";
 const PUUID_B = "22222222-2222-4222-8222-222222222222";
 
-function accountFor(puuid: string): MatchPollAccount {
+function accountFor(puuid: LeaguePuuid): MatchPollAccount {
   const player: PlayerConfigEntry = {
     alias: `player-${puuid.slice(0, 8)}`,
     league: {
@@ -68,7 +69,10 @@ describe("collectNewMatches unavailable-history reporting", () => {
   test("reports the same message for different players so Bugsink groups them", async () => {
     const currentTime = new Date("2026-09-23T00:00:00.000Z");
     await collectNewMatches({
-      playersToCheck: [accountFor(PUUID_A), accountFor(PUUID_B)],
+      playersToCheck: [
+        accountFor(LeaguePuuidSchema.parse(PUUID_A)),
+        accountFor(LeaguePuuidSchema.parse(PUUID_B)),
+      ],
       currentTime,
       requiredDarePuuids: new Set(),
     });
@@ -94,7 +98,7 @@ describe("collectNewMatches unavailable-history reporting", () => {
   test("still fails the collection when a Dare-required player is unavailable", async () => {
     const currentTime = new Date("2026-09-23T00:00:00.000Z");
     const result = await collectNewMatches({
-      playersToCheck: [accountFor(PUUID_A)],
+      playersToCheck: [accountFor(LeaguePuuidSchema.parse(PUUID_A))],
       currentTime,
       requiredDarePuuids: new Set([PUUID_A]),
     });

@@ -1,3 +1,4 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import {
   RegionSchema,
   regionToPlatformRoute,
@@ -12,6 +13,7 @@ import { storedRawArchiveDescriptor } from "#src/report-lake/durable-receipts.ts
 import { readArchivedMatchPayload } from "#src/report-lake/receipted-archive.ts";
 import type { AuthenticatedScoutClient } from "#src/scout-client/authentication.ts";
 import { readSelectedLocalCanonicalMatch } from "#src/scout-client/canonical-match.ts";
+import { withRiotIdentities } from "#src/scout-client/identity-alias.ts";
 import type { ReplayProvenance } from "./container.ts";
 import {
   parseObservedReplayProvenance,
@@ -26,7 +28,7 @@ export type ReplayClaimIdentity = {
 };
 
 type OwnerAccount = {
-  readonly puuid: string;
+  readonly puuid: LeaguePuuid;
   readonly region: string;
 };
 
@@ -67,7 +69,9 @@ async function observedProvenance(
   for (const observedMatch of observedMatches) {
     if (observedMatch.localPuuid === null) continue;
     const provenance = parseObservedReplayProvenance({
-      payload: observedMatch.payload,
+      // The stored payload names players by League-client UUID; the observer
+      // column already holds the translated Riot PUUID.
+      payload: await withRiotIdentities(observedMatch.payload),
       localPuuid: observedMatch.localPuuid,
       leaguePatch: observedMatch.leaguePatch,
       requestedGameId: claim.gameId,

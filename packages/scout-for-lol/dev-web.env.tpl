@@ -1,14 +1,18 @@
-# Template for local web-UI development. Resolves at runtime via:
-#   op run --env-file=dev-web.env.tpl -- ./scripts/dev/dev-web.ts
+# Template for local web-UI development. Resolves at runtime through the
+# Keychain-enrolled 1Password service account, so no desktop approval is needed:
+#   ../../scripts/onepassword/with-service-account.sh \
+#     op run --env-file=dev-web.env.tpl -- env -u OP_SERVICE_ACCOUNT_TOKEN \
+#     ./scripts/dev/dev-web.ts
 #
 # Secrets come from the BETA 1Password item (vault v64ocnykdqju4ui6j6pua56xw4,
 # item rtu44pohnp5ixdp2njuv5f6t2e). Non-secret config is inline.
 #
-# ⚠️  The default gateway-owner copy intentionally disconnects the deployed beta
-# bot from Discord for the duration — only one gateway owner per token. This is
-# authorized for local development/testing. Stop the local backend (Ctrl+C) and
-# beta reconnects within seconds. Secondary copies should pass
-# --no-discord-gateway and use different ports.
+# ⚠️  The default boot leaves the BETA Discord gateway alone. Passing
+# --discord-gateway makes this copy the gateway owner, which intentionally
+# disconnects the deployed beta bot from Discord for the duration — only one
+# gateway owner per token. That is authorized for local development/testing;
+# stop the local backend (Ctrl+C) and beta reconnects within seconds. Secondary
+# copies need different ports.
 
 # ── Build / process identity ──────────────────────────────────────────
 VERSION=local-dev
@@ -23,8 +27,8 @@ PORT=3000
 
 # ── Discord BETA app (public IDs hard-coded in CDK8s; mirrored here) ──
 APPLICATION_ID=1311755320745394317
-DISCORD_TOKEN=op://v64ocnykdqju4ui6j6pua56xw4/rtu44pohnp5ixdp2njuv5f6t2e/DISCORD_TOKEN
-DISCORD_CLIENT_SECRET=op://v64ocnykdqju4ui6j6pua56xw4/rtu44pohnp5ixdp2njuv5f6t2e/DISCORD_CLIENT_SECRET
+DISCORD_TOKEN=op://v64ocnykdqju4ui6j6pua56xw4/rtu44pohnp5ixdp2njuv5f6t2e/aqixd4cchc3adtl3tuddmjqhxu
+DISCORD_CLIENT_SECRET=op://v64ocnykdqju4ui6j6pua56xw4/rtu44pohnp5ixdp2njuv5f6t2e/75dd32shacash2xa527klervaa
 
 # ── Web session signing ───────────────────────────────────────────────
 # Local-only signing secret — deliberately NOT the beta 1Password secret.
@@ -55,8 +59,8 @@ SCOUT_DEV_CONSUMER_GUILD_ID=1337623164146155593
 # report-editor and Explore turn fails at the model call. Same BETA item as the
 # secrets above, and the same fields the deployed beta backend reads, so local
 # spend counts against the beta projects' hard caps.
-OPENAI_API_KEY=op://v64ocnykdqju4ui6j6pua56xw4/rtu44pohnp5ixdp2njuv5f6t2e/OPENAI_API_KEY
-GEMINI_API_KEY=op://v64ocnykdqju4ui6j6pua56xw4/rtu44pohnp5ixdp2njuv5f6t2e/GEMINI_API_KEY
+OPENAI_API_KEY=op://v64ocnykdqju4ui6j6pua56xw4/rtu44pohnp5ixdp2njuv5f6t2e/ufwfqsyzzbpp3nscxku65h6jka
+GEMINI_API_KEY=op://v64ocnykdqju4ui6j6pua56xw4/rtu44pohnp5ixdp2njuv5f6t2e/t5wjbs4lung5byzf536svwqgbq
 BETTING_PARLAY_AI_MODEL=gpt-5.6-sol
 
 # dev:web derives DEV_USER_GUILDS and EXPLORE_GUILD_ALLOWLIST from the local
@@ -64,7 +68,7 @@ BETTING_PARLAY_AI_MODEL=gpt-5.6-sol
 # variables explicitly when testing denied/unavailable states.
 
 # ── Riot / DB / storage ───────────────────────────────────────────────
-RIOT_API_KEY=op://v64ocnykdqju4ui6j6pua56xw4/rtu44pohnp5ixdp2njuv5f6t2e/RIOT_API_KEY
+RIOT_API_KEY=op://v64ocnykdqju4ui6j6pua56xw4/rtu44pohnp5ixdp2njuv5f6t2e/ssqmtsrph3hrlc5v6p77mhoiy4
 # Shared local dev Postgres (postgres-server.ts): dev-web derives
 # scout_dev_<backend-port> when this matches the default; --database-url or
 # SCOUT_DEV_DATABASE_URL override it (e.g. a restored beta snapshot database).

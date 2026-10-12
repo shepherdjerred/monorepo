@@ -1,9 +1,9 @@
 /**
  * Provider-neutral description of one CI step.
  *
- * This is the shape the Buildkite pipeline already had — a keyed step with
- * dependencies, a changed-path guard, a resource tier, and an exact list of
- * credential grants. Keeping it as data rather than YAML is what lets the
+ * A keyed step with dependencies, a changed-path guard, a resource tier, and
+ * an exact list of credential grants. Keeping it as data rather than YAML is
+ * what lets the
  * selector and the emitter stay separate: selection decides WHICH steps run,
  * emission decides what Woodpecker is told to do.
  */
@@ -90,12 +90,13 @@ export type CiStep = {
   /**
    * Agent labels this step requires.
    *
-   * Woodpecker matches these against agent labels to pick a runner; it is the
-   * successor to Buildkite's `agents.queue`.
+   * Woodpecker matches these against agent labels to pick a runner.
    */
   readonly agentLabels?: Readonly<Record<string, string>>;
   /** Shell commands, run in order. */
   readonly commands: readonly string[];
+  /** Ordered containers after this workflow's setup, sharing its checkout. */
+  readonly orderedSteps?: readonly CiCommandStep[];
   /** Inner shell for the timeout wrapper; scanner images may only contain sh. */
   readonly shell?: "bash" | "sh";
   /** Plain environment variables. Credentials go through `secrets`, never here. */
@@ -143,13 +144,31 @@ export type CiStep = {
    * Treat a non-zero exit as advisory rather than failing the build.
    *
    * Reserved for optional scanners whose FINDINGS must not block a merge.
-   * Note this also swallows scanner crashes, which the Buildkite lanes
-   * deliberately distinguished by exit code inside the command itself — port
-   * that logic with the step rather than relying on this flag alone.
+   * Note this also swallows scanner crashes; distinguish findings from
+   * crashes by exit code inside the command itself rather than relying on
+   * this flag alone.
    */
   readonly allowFailure?: boolean;
   /** The workflow needs no source checkout. */
   readonly skipClone?: boolean;
+  /** Trusted clone helper only; never mounted in repository command containers. */
+  readonly sourceCache?: { readonly image: string; readonly claim: string };
   /** Run after failed dependencies so a final verdict can be reported. */
   readonly runOnFailure?: boolean;
 };
+
+/** Per-container commands and grants; workflow scheduling stays on CiStep. */
+export type CiCommandStep = Pick<
+  CiStep,
+  | "key"
+  | "image"
+  | "commands"
+  | "shell"
+  | "environment"
+  | "timeoutMinutes"
+  | "retries"
+  | "resources"
+  | "secrets"
+  | "volumes"
+  | "allowFailure"
+>;

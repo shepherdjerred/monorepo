@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import { match } from "ts-pattern";
 import { CompetitionIdSchema, parseCompetition } from "@scout-for-lol/data";
 import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/parse/compile.ts";
@@ -52,7 +53,7 @@ export type ExecuteReportQueryParams = {
   abortSignal?: AbortSignal | undefined;
   /** The Discord servers a global-scope asker belongs to. Guild-scoped reports
    * resolve aliases from their own scope, including scheduled reports. */
-  askerGuildIds?: string[] | undefined;
+  askerGuildIds?: DiscordGuildId[] | undefined;
 };
 type ReportExecutionParams = Omit<
   ExecuteReportQueryParams,

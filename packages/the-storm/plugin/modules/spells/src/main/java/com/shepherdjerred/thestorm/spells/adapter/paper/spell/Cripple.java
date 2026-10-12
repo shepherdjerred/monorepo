@@ -30,7 +30,7 @@ final class Cripple implements Spell {
         Harm.Blow.none()
             .withPotion(PotionEffectType.SLOWNESS, ticks, settings.amplifier())
             .withPotion(PotionEffectType.WEAKNESS, ticks, settings.amplifier());
-    return Aim.creature(tools, caster, settings.range())
+    return Aim.creatureEffect(tools, caster, settings.range())
         .map(
             target ->
                 () -> {

@@ -5,7 +5,9 @@ import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/arg
 // the activation branch so ArgoCD owns the complete service lifecycle.
 export function createAlertDashboardApp(chart: Chart) {
   return new Application(chart, "alert-dashboard-app", {
-    metadata: { name: "alert-dashboard" },
+    metadata: {
+      name: "alert-dashboard",
+    },
     spec: {
       revisionHistoryLimit: 5,
       project: "default",

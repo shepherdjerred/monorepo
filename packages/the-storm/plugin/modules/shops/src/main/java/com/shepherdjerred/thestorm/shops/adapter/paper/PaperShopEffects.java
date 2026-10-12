@@ -13,10 +13,30 @@ final class PaperShopEffects implements ShopEffects {
 
   private final OwnerNoticesListener notices;
   private final ShopBlocks blocks;
+  private final com.shepherdjerred.thestorm.core.protection.ManagedTrades managedTrades;
 
-  PaperShopEffects(OwnerNoticesListener notices, ShopBlocks blocks) {
+  PaperShopEffects(
+      OwnerNoticesListener notices,
+      ShopBlocks blocks,
+      com.shepherdjerred.thestorm.core.protection.ManagedTrades managedTrades) {
     this.notices = notices;
     this.blocks = blocks;
+    this.managedTrades = managedTrades;
+  }
+
+  @Override
+  public boolean tradeAllowed(com.shepherdjerred.thestorm.shops.domain.shop.SignShop shop) {
+    return blocks
+            .block(shop.sign())
+            .map(block -> managedTrades.active(block.getLocation()))
+            .orElse(false)
+        && shop.container().stream()
+            .allMatch(
+                pos ->
+                    blocks
+                        .block(pos)
+                        .map(block -> managedTrades.active(block.getLocation()))
+                        .orElse(false));
   }
 
   @Override

@@ -9,6 +9,7 @@ import {
   ScoutScheduleOwnershipMemoSchema,
   scoutReportScheduleId,
   scoutTaskQueues,
+  ScoutStageSchema,
   type ScoutStage,
 } from "@scout-for-lol/temporal";
 import type { TemporalExecutionStartMetadata } from "@scout-for-lol/temporal/execution-metadata";
@@ -57,7 +58,7 @@ const CalendarSchema = z.strictObject({
   comment: z.string(),
 });
 const ReportArgumentSchema = z.strictObject({
-  stage: z.enum(["dev", "beta", "prod"]),
+  stage: ScoutStageSchema,
   reportId: z.string(),
   revision: z.number().int().nonnegative(),
   source: z.literal("schedule"),

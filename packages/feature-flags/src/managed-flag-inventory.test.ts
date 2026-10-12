@@ -55,17 +55,6 @@ function exploreModel(environment: string) {
   ).find((flag) => flag.key === "scout-explore-model")?.default;
 }
 
-function dareExtendedContractsFlag(environment: string) {
-  const flag = materializeManagedNamespaceEnvironment(
-    managedFlagInventory,
-    environment,
-    "scout",
-  ).find((candidate) => candidate.key === "dare_extended_contracts_enabled");
-  if (flag === undefined)
-    throw new Error("Dare extended contracts flag missing");
-  return flag;
-}
-
 function scoutPolicyFlag(environment: string, key: string) {
   const flag = materializeManagedNamespaceEnvironment(
     managedFlagInventory,
@@ -92,7 +81,32 @@ function verifySportsGuildRollout(): void {
   ).toBe(true);
 }
 
+function verifyRwfEnabledEnvironments(key: string): void {
+  for (const environment of ["beta", "prod"]) {
+    const flag = materializeManagedNamespaceEnvironment(
+      managedFlagInventory,
+      environment,
+      "the-storm",
+    ).find((candidate) => candidate.key === key);
+    expect(flag).toMatchObject({ default: true, rollouts: [] });
+  }
+}
+
 describe("ManagedFlagInventorySchema", () => {
+  test("Scout report support action is enabled in beta only", () => {
+    const flag = managedFlagInventory.flags.find(
+      ({ key }) => key === "scout_support_report_action_enabled",
+    );
+    const betaOverride = managedFlagInventory.environments
+      .find(({ key }) => key === "beta")
+      ?.overrides.find(
+        ({ key }) => key === "scout_support_report_action_enabled",
+      );
+
+    expect(flag?.default).toBe(false);
+    expect(betaOverride?.default).toBe(true);
+  });
+
   test(
     "limits Streambot sports rollout to named guilds",
     verifySportsGuildRollout,
@@ -109,6 +123,8 @@ describe("ManagedFlagInventorySchema", () => {
       ),
     ).toThrow(/unknown managed environment/);
     expect(managedFlagNamespaces).toEqual([
+      "woodpecker",
+      "justin",
       "scout",
       "birmel",
       "streambot",
@@ -117,7 +133,6 @@ describe("ManagedFlagInventorySchema", () => {
       "temporal",
       "alert-dashboard",
       "the-storm",
-      "the-storm-companion",
       "storm",
     ]);
     expect(
@@ -136,8 +151,8 @@ describe("ManagedFlagInventorySchema", () => {
     ).toContain("temporal-call-graph-tracing");
   });
 
-  test("enables extended Dare contracts only for the beta guild", () => {
-    const betaFlag = dareExtendedContractsFlag("beta");
+  test("enables Dares only for the beta guild", () => {
+    const betaFlag = scoutPolicyFlag("beta", "bucks_dares_enabled");
     expect(betaFlag.default).toBe(false);
     expect(betaFlag.rollouts).toEqual([
       expect.objectContaining({
@@ -146,7 +161,7 @@ describe("ManagedFlagInventorySchema", () => {
       }),
     ]);
 
-    const prodFlag = dareExtendedContractsFlag("prod");
+    const prodFlag = scoutPolicyFlag("prod", "bucks_dares_enabled");
     expect(prodFlag.default).toBe(false);
     expect(prodFlag.rollouts).toEqual([]);
   });
@@ -305,6 +320,19 @@ describe("Managed flag inventory validation", () => {
     ).toBe(false);
   });
 
+  test("rejects empty variant keys before Flipt seed validation", () => {
+    const value = inventory();
+    const flag = value.flags[0];
+    if (flag === undefined) throw new Error("test inventory is empty");
+    flag.default = "";
+    expect(ManagedFlagInventorySchema.safeParse(value).success).toBe(false);
+    expect(
+      ManagedFlagInventorySchema.safeParse(
+        inventory([{ ...fullOverride, default: "" }]),
+      ).success,
+    ).toBe(false);
+  });
+
   test("generated flag keys match managed-flag-inventory.json", async () => {
     const { generateFlagTypesSource } =
       await import("../scripts/generate-flag-types.ts");
@@ -317,35 +345,112 @@ describe("Managed flag inventory validation", () => {
 });
 
 describe("The Storm companion pilot rollout", () => {
-  test("targets Alt 1 in beta while keeping production and fallback off", () => {
-    const key = "the-storm-companion-pilot-enabled";
-    const declared = managedFlagInventory.flags.find(
-      (flag) => flag.key === key,
-    );
-    expect(declared).toMatchObject({ default: false, rollouts: [] });
+  test("activates production gameplay and brain features with safe global defaults", () => {
+    for (const [namespace, keys] of [
+      ["storm", ["storm-brain-classify-enabled", "storm-brain-triage-enabled"]],
+      ["the-storm", ["the-storm-crier-enabled", "the-storm-merchant-enabled"]],
+    ] as const) {
+      const flags = materializeManagedNamespaceEnvironment(
+        managedFlagInventory,
+        "prod",
+        namespace,
+      );
+      for (const key of keys) {
+        expect(flags.find((flag) => flag.key === key)).toMatchObject({
+          default: true,
+        });
+        expect(
+          managedFlagInventory.flags.find((flag) => flag.key === key),
+        ).toMatchObject({ default: false });
+      }
+    }
+  });
 
-    const beta = materializeManagedNamespaceEnvironment(
-      managedFlagInventory,
-      "beta",
-      "the-storm-companion",
-    ).find((flag) => flag.key === key);
-    expect(beta).toMatchObject({
+  test.each([
+    ["the-storm-companions-enabled", "the-storm"],
+    ["the-storm-staff-tools-enabled", "the-storm"],
+    ["the-storm-identity-enabled", "the-storm"],
+    ["the-storm-letters-enabled", "the-storm"],
+    ["the-storm-ip-enforcement-enabled", "the-storm"],
+    ["storm-brain-conversation-enabled", "storm"],
+  ])(
+    "enables %s in beta while keeping production and fallback off",
+    (key, namespace) => {
+      const declared = managedFlagInventory.flags.find(
+        (flag) => flag.key === key,
+      );
+      expect(declared).toMatchObject({ default: false, rollouts: [] });
+
+      const beta = materializeManagedNamespaceEnvironment(
+        managedFlagInventory,
+        "beta",
+        namespace,
+      ).find((flag) => flag.key === key);
+      expect(beta).toMatchObject({
+        default: true,
+        rollouts: [],
+      });
+
+      const prod = materializeManagedNamespaceEnvironment(
+        managedFlagInventory,
+        "prod",
+        namespace,
+      ).find((flag) => flag.key === key);
+      expect(prod).toMatchObject({ default: false, rollouts: [] });
+    },
+  );
+});
+
+describe("Red Warfare Search and Destroy rollout", () => {
+  test("opens /rwf join in beta and production while the fallback stays off", () => {
+    const key = "the-storm-rwf-enabled";
+    expect(
+      managedFlagInventory.flags.find((flag) => flag.key === key),
+    ).toMatchObject({
+      namespace: "the-storm",
+      type: "boolean",
       default: false,
-      rollouts: [
-        {
-          segmentKey: "the-storm-companion-alt-1",
-          constraints: [{ property: "pilot", value: "alt-1" }],
-          result: true,
-        },
-      ],
+      rollouts: [],
     });
 
-    const prod = materializeManagedNamespaceEnvironment(
-      managedFlagInventory,
-      "prod",
-      "the-storm-companion",
-    ).find((flag) => flag.key === key);
-    expect(prod).toMatchObject({ default: false, rollouts: [] });
+    verifyRwfEnabledEnvironments(key);
+  });
+
+  test("lets bots talk in beta and production while the fallback stays silent", () => {
+    const key = "the-storm-rwfbots-chat-enabled";
+    expect(
+      managedFlagInventory.flags.find((flag) => flag.key === key),
+    ).toMatchObject({
+      namespace: "the-storm",
+      source: "the-storm-rwfbots-chat",
+      type: "boolean",
+      default: false,
+      rollouts: [],
+    });
+
+    verifyRwfEnabledEnvironments(key);
+  });
+
+  test("keeps learned Trooper control off until its accepted bundle is shipped", () => {
+    const key = "the-storm-rwfbots-learning-enabled";
+    expect(
+      managedFlagInventory.flags.find((flag) => flag.key === key),
+    ).toMatchObject({
+      namespace: "the-storm",
+      source: "the-storm-rwfbots-learning",
+      type: "boolean",
+      default: false,
+      rollouts: [],
+    });
+    for (const environment of ["beta", "prod"]) {
+      const flag = materializeManagedNamespaceEnvironment(
+        managedFlagInventory,
+        environment,
+        "the-storm",
+      ).find((candidate) => candidate.key === key);
+      expect(flag?.default).toBe(false);
+      expect(flag?.rollouts).toEqual([]);
+    }
   });
 });
 
@@ -356,14 +461,14 @@ describe("durable iMessage ingress rollout", () => {
       "beta",
       "temporal",
     ).find(
-      (candidate) => candidate.key === "temporal-agent-chat-imessage-enabled",
+      (candidate) => candidate.key === "temporal-agent-chat-photon-enabled",
     );
     const prodFlag = materializeManagedNamespaceEnvironment(
       managedFlagInventory,
       "prod",
       "temporal",
     ).find(
-      (candidate) => candidate.key === "temporal-agent-chat-imessage-enabled",
+      (candidate) => candidate.key === "temporal-agent-chat-photon-enabled",
     );
 
     expect(betaFlag?.default).toBe(true);
@@ -427,75 +532,5 @@ describe("ops digest email rollout", () => {
         thresholdRollouts: [],
       });
     }
-  });
-});
-
-describe("Scout V2 post-match ownership", () => {
-  test("keeps V2 as the post-match discovery owner in every environment", () => {
-    // The rollback switch, not a new surface: merging it must change nothing,
-    // so both environments resolve the V2 ownership that already runs.
-    for (const environment of ["beta", "prod"]) {
-      expect(
-        scoutPolicyFlag(environment, "scout_v2_postmatch_ownership_enabled"),
-      ).toMatchObject({ default: true, rollouts: [] });
-    }
-  });
-});
-
-describe("Scout V2 progression notifications", () => {
-  test("targets the beta canary and leaves production off", () => {
-    const beta = scoutPolicyFlag(
-      "beta",
-      "scout_v2_progression_notifications_enabled",
-    );
-    expect(beta.default).toBe(false);
-    expect(beta.rollouts).toEqual([
-      expect.objectContaining({
-        segmentKey: "scout-guild-1337623164146155593",
-        constraints: [
-          expect.objectContaining({
-            property: "server",
-            operator: "eq",
-            value: "1337623164146155593",
-          }),
-        ],
-        result: true,
-      }),
-    ]);
-    expect(beta.rules).toEqual([]);
-
-    expect(
-      scoutPolicyFlag("prod", "scout_v2_progression_notifications_enabled"),
-    ).toMatchObject({ default: false, rollouts: [], rules: [] });
-  });
-});
-
-describe("Scout V2 prematch ownership", () => {
-  test("keeps the declared default on v1 so an unreachable Flipt never moves detection", () => {
-    const declared = managedFlagInventory.flags.find(
-      (flag) => flag.key === "scout_v2_prematch_ownership_enabled",
-    );
-    expect(declared).toMatchObject({ default: false, rollouts: [] });
-  });
-
-  test("hands prematch detection to V2 in beta while prod stays on v1", () => {
-    // The cutover ramps per stage, beta first. Each ramp records its own
-    // environment override, so prod keeps resolving the v1 ownership it runs.
-    expect(
-      scoutPolicyFlag("beta", "scout_v2_prematch_ownership_enabled"),
-    ).toMatchObject({
-      default: true,
-      rollouts: [],
-      rules: [],
-      thresholdRollouts: [],
-    });
-    expect(
-      scoutPolicyFlag("prod", "scout_v2_prematch_ownership_enabled"),
-    ).toMatchObject({
-      default: false,
-      rollouts: [],
-      rules: [],
-      thresholdRollouts: [],
-    });
   });
 });

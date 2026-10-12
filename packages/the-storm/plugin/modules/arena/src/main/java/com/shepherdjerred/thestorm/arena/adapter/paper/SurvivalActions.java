@@ -1,0 +1,236 @@
+package com.shepherdjerred.thestorm.arena.adapter.paper;
+
+import com.shepherdjerred.thestorm.arena.domain.survival.PurchaseConfirmation;
+import com.shepherdjerred.thestorm.arena.domain.survival.SurvivalClass;
+import com.shepherdjerred.thestorm.arena.domain.survival.SurvivalContent;
+import com.shepherdjerred.thestorm.arena.domain.survival.SurvivalPerk;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import org.bukkit.Material;
+import org.bukkit.entity.Player;
+
+/** Purchases, explicitly donated resources and modest class abilities. Main thread only. */
+final class SurvivalActions {
+
+  private final SurvivalRunner runner;
+  private final PurchaseConfirmation purchases = new PurchaseConfirmation();
+  private final Map<UUID, Integer> selfPurchases = new HashMap<>();
+  private final Map<UUID, com.shepherdjerred.thestorm.arena.domain.survival.BoonLoadout> perks =
+      new HashMap<>();
+
+  SurvivalActions(SurvivalRunner runner) {
+    this.runner = runner;
+  }
+
+  void craft(Player player, SurvivalContent.Recipe recipe) {
+    if (runner.items().craft(player, recipe)) {
+      Texts.info(player, "Crafted " + recipe.name() + ".");
+      runner.feedback().play(player, SurvivalFeedback.Cue.CRAFT);
+      runner
+          .feedback()
+          .animate(player, Places.point(Places.at(player)).block(), SurvivalFeedback.Cue.CRAFT);
+    }
+  }
+
+  void unlock(
+      Player player,
+      SurvivalContent.Zone zone,
+      com.shepherdjerred.thestorm.arena.domain.geometry.BlockPos sign) {
+    if (!runner.map().state().unlockable(zone)) {
+      Texts.error(player, routeRequirement(zone));
+      return;
+    }
+    if (!purchases.confirm(
+        player.getUniqueId(), sign.toString(), runner.context().time().instant())) {
+      runner.feedback().play(player, SurvivalFeedback.Cue.CONFIRM);
+      Texts.info(
+          player,
+          zone.name()
+              + " costs "
+              + zone.emeralds()
+              + " emeralds. Click this sign again within three seconds.");
+      return;
+    }
+    if (runner.items().spend(player, Map.of("EMERALD", zone.emeralds()))) {
+      runner.map().unlock(zone);
+      runner.feedback().play(player, SurvivalFeedback.Cue.UNLOCK);
+      runner.feedback().animate(player, sign, SurvivalFeedback.Cue.UNLOCK);
+      runner
+          .online()
+          .forEach(
+              p ->
+                  Texts.info(
+                      p,
+                      player.getName()
+                          + " opened "
+                          + zone.name()
+                          + ". New enemy entrances are active."));
+    }
+  }
+
+  String routeRequirement(SurvivalContent.Zone zone) {
+    if (runner.map().state().accessible(zone.id())) return zone.name() + " is already open.";
+    var missing =
+        zone.requires().stream()
+            .filter(id -> !runner.map().state().accessible(id))
+            .sorted()
+            .map(
+                id ->
+                    runner.map().content().zones().stream()
+                        .filter(z -> z.id().equals(id))
+                        .findFirst()
+                        .orElseThrow()
+                        .name())
+            .collect(java.util.stream.Collectors.joining(" + "));
+    return "Open " + missing + " first to connect " + zone.name() + ".";
+  }
+
+  void repair(Player player, SurvivalContent.Defense defense) {
+    var barricade = defense.type() == SurvivalContent.DefenseType.BARRICADE;
+    if (runner.map().state().strength(defense.id()) >= (barricade ? 5 : 1)) {
+      Texts.info(player, "This defense is ready.");
+      return;
+    }
+    var role = runner.game().player(player.getUniqueId()).orElseThrow().role();
+    var cost =
+        barricade
+            ? Map.of("OAK_PLANKS", role == SurvivalClass.ENGINEER ? 2 : 4)
+            : Map.of("IRON_INGOT", 2, "REDSTONE", 2);
+    if (!runner.items().spend(player, cost)) {
+      return;
+    }
+    if (barricade) {
+      runner.map().state().repair(defense.id());
+      runner.map().barricade(defense, Material.OAK_FENCE);
+    } else {
+      runner.map().arm(defense, player.getUniqueId());
+    }
+    runner.feedback().play(player, SurvivalFeedback.Cue.CRAFT);
+    Texts.info(player, barricade ? "Barricade repaired." : "Trap charged for one activation.");
+  }
+
+  void gather(Player player, SurvivalContent.Resource resource) {
+    var items = runner.items();
+    var material = SurvivalItems.material(resource.material());
+    var amount = runner.map().state().harvestAmount(resource);
+    if (!items.fits(player, material, amount)) {
+      Texts.error(player, "Make room first.");
+      return;
+    }
+    if (!runner.map().state().harvest(player.getUniqueId(), resource)) {
+      Texts.info(player, "Depleted for you this round.");
+      runner.feedback().play(player, SurvivalFeedback.Cue.FAILURE);
+      return;
+    }
+    items.give(player, material, amount);
+    runner.feedback().play(player, SurvivalFeedback.Cue.GATHER);
+    runner.hud().hint(player, "+" + amount + " " + SurvivalItems.name(material), 2);
+  }
+
+  void upgradeNode(Player player, SurvivalContent.Resource resource) {
+    var state = runner.map().state();
+    if (!state.canUpgrade(resource)) {
+      Texts.error(
+          player,
+          state.resourceTier(resource) == 3
+              ? "Fully upgraded."
+              : "Open the next workshop district first.");
+      return;
+    }
+    if (!runner.items().spend(player, Map.of("EMERALD", state.resourceTier(resource) * 8))) return;
+    state.upgrade(resource);
+    runner.feedback().play(player, SurvivalFeedback.Cue.UPGRADE);
+    runner.feedback().animate(player, resource.block(), SurvivalFeedback.Cue.UPGRADE);
+    runner
+        .hud()
+        .hint(
+            player, "Gathering improved for the team · yields " + state.harvestAmount(resource), 3);
+  }
+
+  boolean has(Player player, SurvivalPerk perk) {
+    return runner.isFighter(player.getUniqueId()) && loadout(player).has(perk);
+  }
+
+  String perks(Player player) {
+    return loadout(player).equipped().stream()
+        .map(SurvivalPerk::title)
+        .sorted()
+        .collect(java.util.stream.Collectors.joining(", "));
+  }
+
+  com.shepherdjerred.thestorm.arena.domain.survival.BoonLoadout loadout(Player player) {
+    return perks.computeIfAbsent(
+        player.getUniqueId(),
+        _ -> new com.shepherdjerred.thestorm.arena.domain.survival.BoonLoadout());
+  }
+
+  void perk(Player player, SurvivalPerk perk) {
+    runner.menus().boon(player, perk);
+  }
+
+  void equip(Player player, SurvivalPerk perk, Optional<SurvivalPerk> replace) {
+    var loadout = loadout(player);
+    if (!runner.machines().powered() || !loadout.canEquip(perk, replace)) return;
+    if (!loadout.purchased(perk) && !runner.items().spend(player, Map.of("EMERALD", perk.price())))
+      return;
+    loadout.equip(perk, replace);
+    runner.feedback().perk(player, perk);
+    Texts.info(player, "Equipped " + perk.title() + ". " + perk.description());
+    player.closeInventory();
+  }
+
+  void echoTotem(Player player) {
+    var id = player.getUniqueId();
+    if (runner.game().participants().size() != 1
+        || selfPurchases.getOrDefault(id, 0) >= 2
+        || runner.game().player(id).orElseThrow().selfRevive()) {
+      Texts.info(
+          player,
+          "Solo only: use your current Echo Totem first. Two additional purchases per run.");
+      return;
+    }
+    if (!runner.items().spend(player, Map.of("EMERALD", 16, "BONE", 4))) return;
+    if (!runner.game().purchaseSelfRevive(id))
+      throw new IllegalStateException("Echo Totem purchase rejected");
+    selfPurchases.merge(id, 1, Integer::sum);
+    runner.feedback().play(player, SurvivalFeedback.Cue.PURCHASE);
+    Texts.info(player, "Echo Totem ready. It restores you once when downed.");
+  }
+
+  void leave(UUID id) {
+    perks.remove(id);
+    purchases.remove(id);
+    selfPurchases.remove(id);
+  }
+
+  void donate(Player source, Player target, Material material, int amount) {
+    if (!runner.isFighter(source.getUniqueId())
+        || !runner.isFighter(target.getUniqueId())
+        || source.equals(target)
+        || amount < 1
+        || amount > 64
+        || Places.at(source).distanceSquared(Places.at(target)) > 64) {
+      Texts.error(source, "Donate 1–64 items to a standing teammate within eight blocks.");
+      return;
+    }
+    if (!runner.items().fits(target, material, amount)) {
+      Texts.error(source, "Your teammate's inventory is full.");
+      return;
+    }
+    if (runner.items().count(source, material) < amount) {
+      Texts.error(source, "Carry these items to donate them.");
+      return;
+    }
+    if (runner.items().spend(source, Map.of(material.name(), amount))) {
+      runner.items().give(target, material, amount);
+      Texts.info(source, "Donated " + amount + " " + material + " to " + target.getName() + ".");
+      Texts.info(target, source.getName() + " donated " + amount + " " + material + ".");
+    }
+  }
+
+  void ability(Player player) {
+    runner.talents().ability(player);
+  }
+}

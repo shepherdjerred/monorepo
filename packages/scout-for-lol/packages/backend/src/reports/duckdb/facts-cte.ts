@@ -1,6 +1,7 @@
 import { match } from "ts-pattern";
 import { getAllChampions } from "@scout-for-lol/data";
-import { buildAccountsSource, listParam } from "#src/reports/duckdb/lake.ts";
+import { buildAccountsSource } from "#src/reports/duckdb/lake/accounts-source.ts";
+import { listParam } from "#src/reports/duckdb/lake.ts";
 import type { LakeFiles, SqlFragment } from "#src/reports/duckdb/lake.ts";
 import {
   isTrackedScope,

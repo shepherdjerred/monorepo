@@ -10,28 +10,7 @@ import {
   retryTransientBuildx,
   type BuildxCommandResult,
 } from "./bake-retry.ts";
-
-const outputTailLimit = 128 * 1024;
-
-async function teeOutputTail(
-  stream: ReadableStream<Uint8Array>,
-  destination: NodeJS.WriteStream,
-): Promise<string> {
-  const reader = stream.getReader();
-  const decoder = new TextDecoder();
-  let tail = "";
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    destination.write(value);
-    tail += decoder.decode(value, { stream: true });
-    if (tail.length > outputTailLimit) {
-      tail = tail.slice(-outputTailLimit);
-    }
-  }
-  tail += decoder.decode();
-  return tail;
-}
+import { teeOutputTail } from "../reporting/command-output.ts";
 
 async function execute(
   command: readonly string[],
@@ -42,8 +21,8 @@ async function execute(
     stderr: "pipe",
   });
   const [stdout, stderr, exitCode] = await Promise.all([
-    teeOutputTail(child.stdout, process.stdout),
-    teeOutputTail(child.stderr, process.stderr),
+    teeOutputTail(child.stdout, async (chunk) => Bun.stdout.write(chunk)),
+    teeOutputTail(child.stderr, async (chunk) => Bun.stderr.write(chunk)),
     child.exited,
   ]);
   return { exitCode, stdout, stderr };

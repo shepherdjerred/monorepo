@@ -1,3 +1,4 @@
+import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import { z } from "zod";
 import { ReportQueryTextSchema } from "#src/model/reports/report.ts";
 import { VisualizationSnapshotSchema } from "#src/model/reports/temporal-analysis.ts";
@@ -23,7 +24,10 @@ export const EXPLORE_QUESTION_MAX_LENGTH = 2000;
 export const EXPLORE_MAX_STEPS = 30;
 export const EXPLORE_MAX_TOOL_CALLS = 60;
 export const EXPLORE_MAX_PREVIEW_CALLS = 20;
-export const EXPLORE_MAX_OUTPUT_TOKENS = 4000;
+// The provider counts hidden reasoning against this allowance too. At high
+// reasoning, GPT-6 Luna can consume 4,000 tokens before emitting an answer.
+// Each call still reserves against the per-question and monthly spend policies.
+export const EXPLORE_MAX_OUTPUT_TOKENS = 8000;
 export const EXPLORE_TIMEOUT_MS = 180_000;
 /**
  * How many prior turns are replayed to the model. The transcript is stored in
@@ -118,6 +122,7 @@ export const ExploreTurnRequestSchema = z
     conversationId: ExploreConversationIdSchema.nullable().default(null),
     question: ExploreQuestionSchema.nullable().default(null),
     attach: ExploreAttachPointSchema.default({ kind: "leaf" }),
+    model: z.enum(["gpt-6-luna", "gpt-6.1-sol"]).optional(),
   })
   .strict();
 
@@ -293,6 +298,26 @@ export const ExploreMessageSchema = z
     versionIndex: z.number().int().nonnegative().default(0),
     versionCount: z.number().int().positive().default(1),
     content: z.string(),
+    inlineEntities: z
+      .array(
+        z
+          .object({
+            marker: z.string(),
+            kind: z.enum(["champion", "ability", "item", "rune", "spell"]),
+            assetKey: z.string(),
+            name: z.string(),
+            description: z.string(),
+            version: z.string(),
+          })
+          .strict(),
+      )
+      .max(100)
+      .optional(),
+    generation: z
+      .object({ model: z.string().min(1), reasoningEffort: z.literal("high") })
+      .strict()
+      .nullable()
+      .optional(),
     queryText: ReportQueryTextSchema.nullable().default(null),
     caveats: z.array(z.string()).default([]),
     followUps: z.array(z.string()).default([]),
@@ -306,7 +331,7 @@ export const ExploreMessageSchema = z
      * Defaulted so every row written before the column existed still parses,
      * and so the user turn — which carries none — is not a special case.
      */
-    guildIds: z.array(z.string()).default([]),
+    guildIds: z.array(DiscordGuildIdSchema).default([]),
     trace: z.array(ExploreTraceEntrySchema).default([]),
     createdAt: z.iso.datetime(),
   })
@@ -324,6 +349,8 @@ export type ExploreMessage = z.infer<typeof ExploreMessageSchema>;
  * heard of makes the terminal event unparseable and the answer never lands.
  */
 export const ExploreStreamMessageSchema = ExploreMessageSchema.omit({
+  inlineEntities: true,
+  generation: true,
   matchCards: true,
   loadoutCards: true,
   guildIds: true,
@@ -334,6 +361,7 @@ export const ExploreConversationSchema = z
   .object({
     id: ExploreConversationIdSchema,
     title: ExploreConversationTitleSchema,
+    preferredModel: z.enum(["gpt-6-luna", "gpt-6.1-sol"]).nullable().optional(),
     origin: z.enum(["legacy", "web", "discord", "voice"]).default("legacy"),
     shareToken: ExploreShareTokenSchema.nullable().default(null),
     /** The leaf a share link is pinned to, if the conversation is shared. */

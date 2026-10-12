@@ -11,6 +11,7 @@ import {
   suggestChampionNames,
   type AbilityFacts,
 } from "@scout-for-lol/data";
+import { browserChampions } from "@scout-for-lol/data/browser-assets";
 import type { ToolTracker } from "#src/reports/ai/scoutql-tools.ts";
 
 export const AbilitySlotInputSchema = z.enum(["passive", "Q", "W", "E", "R"]);
@@ -106,6 +107,9 @@ export async function lookupAbilityText(
     lines.push(formatByRank(name, values));
   }
   lines.push(`Description: ${facts.resolvedDescription}`);
+  lines.push(
+    `Inline link: [${facts.name}](scout://ability/${lookup.facts.championKey}-${input.ability})`,
+  );
   if (facts.unresolved.length > 0) {
     lines.push(
       `Unresolved scalings (values unknown — do NOT guess or total them): ${facts.unresolved.join(", ")}`,
@@ -135,6 +139,15 @@ export async function lookupChampionText(
     );
   }
   lines.push("Use lookup_ability for damage numbers and full details.");
+  const champion = browserChampions.find(
+    (value) =>
+      value.name.toLowerCase() === input.champion.toLowerCase() ||
+      value.key.toLowerCase() === input.champion.toLowerCase(),
+  );
+  if (champion !== undefined)
+    lines.push(
+      `Inline link: [${champion.name}](scout://champion/${champion.key})`,
+    );
   return lines.join("\n");
 }
 
@@ -240,6 +253,7 @@ export function lookupItemText(
   );
   if (found.tags.length > 0) lines.push(`Tags: ${found.tags.join(", ")}`);
   lines.push(`Details: ${stripHtml(found.description)}`);
+  lines.push(`Inline link: [${found.name}](scout://item/${foundId})`);
   return lines.join("\n");
 }
 
@@ -263,6 +277,7 @@ export function lookupRuneText(
     `Tree: ${rune.treeName}; slot index: ${String(rune.slot)}`,
     `Summary: ${stripHtml(rune.shortDesc)}`,
     `Details: ${stripHtml(rune.longDesc)}`,
+    `Inline link: [${rune.name}](scout://rune/${rune.id.toString()})`,
   ].join("\n");
 }
 
@@ -286,6 +301,7 @@ export function lookupSummonerSpellText(
     `Cooldown: ${spell.cooldownBurn}s; range: ${spell.rangeBurn}; required level: ${String(spell.summonerLevel)}`,
     `Modes: ${spell.modes.join(", ")}`,
     `Details: ${stripHtml(spell.description)}`,
+    `Inline link: [${spell.name}](scout://spell/${spell.id})`,
   ].join("\n");
 }
 

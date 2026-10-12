@@ -4,27 +4,27 @@
   "private": true,
   "type": "module",
   "imports": {
+    "#architecture": "./architecture.config.ts",
     "#src/*": "./src/*"
   },
   "exports": {
     ".": "./src/index.ts",
     "./activities": "./src/activities.ts",
-    "./activity-contracts-v2": "./src/activity-contracts-v2.ts",
+    "./activity-contracts": "./src/activity-contracts.ts",
     "./contracts": "./src/contracts.ts",
-    "./contracts-v2": "./src/contracts-v2.ts",
-    "./workflow-contracts-v2": "./src/workflow-contracts-v2.ts",
+    "./pipeline-contracts": "./src/pipeline-contracts.ts",
+    "./workflow-contracts": "./src/workflow-contracts.ts",
     "./execution-metadata": "./src/execution-metadata.ts",
     "./identifiers": "./src/identifiers.ts",
-    "./match-receipts-v2": "./src/match-receipts-v2.ts",
+    "./match-receipts": "./src/match-receipts.ts",
     "./signals": "./src/signals.ts",
-    "./silent-postmatch-backfill-v2": "./src/silent-postmatch-backfill-v2.ts",
+    "./silent-postmatch-backfill": "./src/silent-postmatch-backfill.ts",
     "./workflow-ui-interceptor": "./src/workflow-ui-interceptor.ts",
     "./workflows": "./src/workflows/index.ts"
   },
   "scripts": {
-    "build": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
-    "lint": "bun x eslint src --max-warnings=0",
+    "lint": "bun x eslint src --max-warnings=0 && check-architecture",
     "format": "bun x prettier --check src package.json tsconfig.json",
     "test": "bun run test:ci",
     "test:bun": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run src --exclude 'src/workflows/**/*.test.ts'",
@@ -34,8 +34,7 @@
     "replay:histories": "bun scripts/replay-histories.ts",
     "replay:histories:node": "node --experimental-strip-types scripts/replay-histories-node.ts",
     "canary": "bun scripts/run-canary.ts",
-    "test:ci": "bun ../../../../scripts/ci/run-ci-test.ts",
-    "test:report": "CI_TEST_COVERAGE=1 bun ../../../../scripts/ci/run-ci-test.ts"
+    "test:ci": "bun ../../../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
     "@scout-for-lol/domain": "workspace:*",
@@ -45,6 +44,7 @@
   },
   "devDependencies": {
     "@scout-for-lol/data": "workspace:*",
+    "@shepherdjerred/architecture": "workspace:*",
     "@shepherdjerred/root-scripts": "workspace:*",
     "@temporalio/activity": "1.24.0",
     "@temporalio/client": "1.24.0",
@@ -55,6 +55,6 @@
     "bun-types": "1.4.2",
     "eslint": "^10.7.0",
     "typescript": "^6.0.3",
-    "vitest": "5.0.1"
+    "vitest": "5.0.3"
   }
 }

@@ -14,6 +14,7 @@ tripwires:
     A Bucks-only answer runs no ScoutQL; set queryText to null and
     includeVisualization to false unless the tool rows genuinely need a chart.
 ---
+
 ## Bryan Bucks
 
 This server also runs Bryan Bucks, a friendly betting economy (BB are a joke currency, not real money). The four bucks tools answer questions about balances, ledger activity, betting positions, and derived statistics for THIS server only.

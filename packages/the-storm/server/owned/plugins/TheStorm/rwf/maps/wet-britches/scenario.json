@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "kind": "rwf-map-scenario",
+  "id": "wet-britches-trooper-duel-v1",
+  "map": "wet-britches",
+  "mapSha256": "090bb066a36be83a3b4f31bcafeccddea55e46cfabb6f44b68f74faa326875af",
+  "world": "minecraft:rwf",
+  "region": {
+    "min": {
+      "x": 2048,
+      "y": 0,
+      "z": 6144
+    },
+    "max": {
+      "x": 2148,
+      "y": 22,
+      "z": 6184
+    }
+  },
+  "sourceTeams": ["RED", "BLUE"],
+  "spawnPolicy": "source",
+  "spawns": [
+    {
+      "team": "red",
+      "sourceTeam": "RED",
+      "position": [2051.5, 4, 6161.5],
+      "yaw": 273.6522216796875,
+      "pitch": 0
+    },
+    {
+      "team": "blue",
+      "sourceTeam": "BLUE",
+      "position": [2140.5, 4, 6161.5],
+      "yaw": 85.91438293457031,
+      "pitch": 0
+    }
+  ]
+}

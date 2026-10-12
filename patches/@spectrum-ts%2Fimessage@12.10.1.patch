@@ -1,0 +1,13 @@
+diff --git a/dist/index.d.ts b/dist/index.d.ts
+index 3b00a8c3b2d36b5ae53a429fb1fe5043c987bc22..4bd1948bc3ed04556486608bb5b0e25a62863952 100644
+--- a/dist/index.d.ts
++++ b/dist/index.d.ts
+@@ -935,7 +935,7 @@ declare const definedIMessage: Platform<import("@spectrum-ts/core").PlatformDef<
+   };
+ }>;
+ type DefinedIMessagePlatform = typeof definedIMessage;
+-type DefinedIMessageDefinition = DefinedIMessagePlatform extends Platform<infer Definition> ? Definition : never;
++type DefinedIMessageDefinition = ReturnType<DefinedIMessagePlatform["config"]>["__def"];
+ type IMessageDefinition = Omit<DefinedIMessageDefinition, "message"> & {
+   message: NonNullable<DefinedIMessageDefinition["message"]> & {
+     schema: typeof messageSchema;

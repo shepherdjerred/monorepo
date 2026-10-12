@@ -1,3 +1,5 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
+import type { DiscordChannelId } from "@scout-for-lol/domain/identity/discord.ts";
 import {
   P,
   type CreationIntentPayload,
@@ -42,9 +44,9 @@ async function existingSubscription(
   context: CreationToolContext,
   input: {
     guildId: DiscordGuildId;
-    puuid: string;
+    puuid: LeaguePuuid;
     alias: string;
-    channelId: string;
+    channelId: DiscordChannelId;
   },
 ): Promise<string | null> {
   const account = await context.db.account.findUnique({

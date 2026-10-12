@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test } from "vitest";
 import {
   ChampionTagSchema,
@@ -22,7 +23,10 @@ const SUBJECTS: readonly ParlayShortlistSubject[] = [
 
 describe("parlay shortlist", () => {
   test("is ordered, deterministic, and independent of subject source order", () => {
-    const input = { matchId: "NA1_123", subjects: SUBJECTS };
+    const input = {
+      matchId: RiotMatchIdSchema.parse("NA1_123"),
+      subjects: SUBJECTS,
+    };
     const first = buildParlayShortlist(input);
 
     expect(buildParlayShortlist(input)).toEqual(first);
@@ -36,7 +40,10 @@ describe("parlay shortlist", () => {
       }),
     ).toEqual(first);
     expect(
-      buildParlayShortlist({ ...input, matchId: "NA1_124" }).candidates,
+      buildParlayShortlist({
+        ...input,
+        matchId: RiotMatchIdSchema.parse("NA1_124"),
+      }).candidates,
     ).not.toEqual(first.candidates);
   });
 
@@ -45,7 +52,7 @@ describe("parlay shortlist", () => {
     (subjectCount) => {
       const subjects = SUBJECTS.slice(0, subjectCount);
       const shortlist = buildParlayShortlist({
-        matchId: `NA1_${subjectCount.toString()}`,
+        matchId: RiotMatchIdSchema.parse(`NA1_${subjectCount.toString()}`),
         subjects,
       });
       const players = shortlist.candidates.filter(
@@ -74,7 +81,7 @@ describe("parlay shortlist", () => {
 
   test("uses only the union of universal, lane, and champion-tag fields", () => {
     const shortlist = buildParlayShortlist({
-      matchId: "NA1_eligibility",
+      matchId: RiotMatchIdSchema.parse("NA1_9100000000"),
       subjects: SUBJECTS,
     });
     for (const subject of SUBJECTS) {
@@ -112,7 +119,7 @@ describe("parlay shortlist", () => {
   test("admits pings in exactly one hash bucket and selects one subtype deterministically", () => {
     const representativeByBucket = new Map<number, string>();
     for (let index = 0; representativeByBucket.size < 16; index += 1) {
-      const matchId = `NA1_ping_${index.toString()}`;
+      const matchId = RiotMatchIdSchema.parse(`NA1_81001${index.toString()}`);
       representativeByBucket.set(parlayPingBucket(matchId), matchId);
     }
     expect(
@@ -120,13 +127,19 @@ describe("parlay shortlist", () => {
     ).toEqual(Array.from({ length: 16 }, (_, index) => index));
 
     for (const [bucket, matchId] of representativeByBucket) {
-      const first = buildParlayShortlist({ matchId, subjects: SUBJECTS });
+      const first = buildParlayShortlist({
+        matchId: RiotMatchIdSchema.parse(matchId),
+        subjects: SUBJECTS,
+      });
       const pings = first.candidates.filter(
         (candidate) => candidate.kind === "opponent_team_pings",
       );
       expect(pings).toHaveLength(bucket === 0 ? 1 : 0);
       expect(
-        buildParlayShortlist({ matchId, subjects: SUBJECTS }).candidates.filter(
+        buildParlayShortlist({
+          matchId: RiotMatchIdSchema.parse(matchId),
+          subjects: SUBJECTS,
+        }).candidates.filter(
           (candidate) => candidate.kind === "opponent_team_pings",
         ),
       ).toEqual(pings);

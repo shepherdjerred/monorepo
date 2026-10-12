@@ -1,0 +1,45 @@
+diff --git a/dist/app-QE1pS82j.d.ts b/dist/app-QE1pS82j.d.ts
+index 4a127ceca30dd929083b81dc9d0ff34f37819d62..b2aabd2aabeaff52296f9f01f008b727c7056e69 100644
+--- a/dist/app-QE1pS82j.d.ts
++++ b/dist/app-QE1pS82j.d.ts
+@@ -6551,31 +6551,31 @@ interface PlatformDef<_Name extends string = string, _ConfigSchema extends z.Zod
+   };
+ }
+ interface AnyPlatformDef {
+-  actions?: Record<string, InstanceActionFn>;
++  actions?: Record<string, InstanceActionFn> | undefined;
+   config: z.ZodType<object>;
+   events?: {
+     [key: string]: ((ctx: any) => AsyncIterable<any>) | z.ZodType<object>;
+-  };
++  } | undefined;
+   lifecycle: {
+     createClient: (ctx: any) => Promise<any>;
+     destroyClient?: (ctx: any) => Promise<void>;
+   };
+   message?: {
+-    schema?: z.ZodType<object>;
+-    actions?: Record<string, MessageActionFn>;
+-  };
++    schema?: z.ZodType<object> | undefined;
++    actions?: Record<string, MessageActionFn> | undefined;
++  } | undefined;
+   messages: (ctx: any) => AsyncIterable<any>;
+   name: string;
+   send: (_: any) => Promise<ProviderMessageRecord | undefined>;
+   space: {
+-    schema?: z.ZodType<object>;
+-    params?: z.ZodType<object>;
++    schema?: z.ZodType<object> | undefined;
++    params?: z.ZodType<object> | undefined;
+     create: (_: any) => Promise<any>;
+     get?: (_: any) => Promise<any>;
+-    actions?: Record<string, SpaceActionFn>;
++    actions?: Record<string, SpaceActionFn> | undefined;
+   };
+   user: {
+-    schema?: z.ZodType<object>;
++    schema?: z.ZodType<object> | undefined;
+     resolve: (_: any) => Promise<any>;
+   };
+ }

@@ -1,0 +1,82 @@
+id: dizzyblaze58
+name: DizzyBlaze58
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0ODk5NDQyOSwKICAicHJvZmlsZUlkIiA6ICJhZmEyM2ZkNGI3ODY0N2ZjOWMxY2FhMGI3YmFjMDgzOCIsCiAgInByb2ZpbGVOYW1lIiA6ICJaZXRocnVzVFYiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvY2E5NTNkMmE5OGY3YjhiZWVkZmI1MTkzYmMwNDkwMTJhMDExNGQ3MGMxYWY2ZjRkNTVmODFjZTg5MTcwOWIwOCIKICAgIH0KICB9Cn0="
+  signature: "FEI04gxCGY95ldZv3TuEljpxtYVnCPrmBs0NNW6ilfTpybVuOC3lrLoa+NJv3Xud1jANRJ4+zbL7RJ7DRGVbZhQe5tG/H/gFufEDlXZSl1Ts7BM02TIQ+2D5yOn/JikIl6Dh+IamHbmjpWE66kmAo8LfpwzNiu9ahHrkjw7QH/dejDBZmIzt7jt8kZ1mGaKWfweMB/+b2WXBGvOejSiL4TCu8yCGY8xe1zDanZTm9LKtBnt0v1iqlz9svm44s9UmgZ7mzGj5JEOF+LOc449sWbLTczsfq1PtE2QZsVmKwzLhQ6FWPu7rXvMFJEZS6zHUIaFobwZ1o0XZobjaGH5nbQP8btrqhIb403KF1wSJWfde93qFb+GsdMCSbxdn2lZfIYGHXWU2zUoSpkDfAad4zMqnKed4dq1jeCGcG61pZ1Q57JwKwVvKXfdkcivASFTOb9OJpMWuwKLZ4N9qrxZKoD3sJQqS9VG6l2i/zgfTUJFlsYzTDyKgNo+tMMsEBfrVRohzv8PrcwgFNcbJsgueG+6u4SW/ZevPQCKEeAZZzSfeuY+USHQtDxhi7UBxZyqSEJ6zzl0fESe3XGejz98WA+1qAVkrV5w0q+faG3Cp+qcuMDl6Lbsd3djw3AmHysFrtyF1TGhfDwDKtJvRAe/K0NYE3LsE9oF98m5AdHjr0wY="
+skill: 0.442
+archetype: sniper
+leverOffsets:
+  aimErrorDeg: 1.59
+  turnRateDegPerTick: -0.84
+  cps: -1
+  predictionQuality: 1.32
+  decisionTemperature: -0.36
+  awarenessRadius: 1.12
+  technique: -0.29
+  aggression: -0.89
+kits:
+  trooper: 0.15
+  longbow: 0.93
+  shortbow: 0.44
+  wraith: 0.12
+roles:
+  defend: 0.75
+  rotate: 0.38
+  hunt: 0.52
+style:
+  aggression: 0.32
+  patience: 0.92
+  teamplay: 0.46
+  risk: 0.18
+voice:
+  tone:
+    - dizzy
+    - giggly
+    - scatterbrained
+  verbosity: chatty
+  style: Giggly and scattered, loses track mid-sentence, 'wait what was i doing', lots of hehe
+lines:
+  greet:
+    - "hehe hi {team}"
+    - wait which side are we on
+  onKill:
+    - "hehe got {victim}"
+    - i was aiming at the other one
+    - "{victim} oops hehe"
+  onDeath:
+    - "{killer} wait what"
+    - where did that come from hehe
+    - i was looking at clouds
+  onPlant:
+    - "{bomb} lit? cool hehe"
+    - i put a fuse somewhere
+  onDefuse:
+    - "{bomb} fixed! i think hehe"
+    - was that ours? yes ok
+  onWin:
+    - we won?? hehe yay
+    - "gg {team}, i was helping"
+  onLoss:
+    - hehe oops
+    - wait the round ended?
+  onLastAlive:
+    - uh oh hehe
+    - ok focus focus... hehe
+  taunt:
+    - pew pew hehe
+    - arrow incoming maybe
+    - i can see you! i think
+  lobby:
+    - hehe which team am i on again
+    - longbow! wait, where did i put it
+    - the library one already shushed me twice hehe
+    - i was gonna say something... hehe forgot
+    - "{team} i'll hit something, probably"
+quirks:
+  - bow_spammer
+  - spins
+rivals:
+  - niokadae-83
+bio: Loses track of which team it is on about twice a match but lands a startling number of long shots anyway. Gets shushed by Niokadae_83 on the sniper perch and giggles every time.
+batch: 2
+retired: false

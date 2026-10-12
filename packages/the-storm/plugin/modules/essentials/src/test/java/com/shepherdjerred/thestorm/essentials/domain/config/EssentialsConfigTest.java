@@ -8,7 +8,6 @@ import com.shepherdjerred.thestorm.core.config.StrictYaml;
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.essentials.domain.kit.Kit;
 import com.shepherdjerred.thestorm.essentials.domain.kit.KitItem;
-import com.shepherdjerred.thestorm.essentials.domain.teleport.Multiplier;
 import com.shepherdjerred.thestorm.essentials.domain.teleport.TeleportKind;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -51,7 +50,7 @@ final class EssentialsConfigTest {
     var config = parsed(shipped());
 
     assertThat(config.teleports().warmup()).isEqualTo(Duration.ofSeconds(3));
-    assertThat(config.teleports().pricing().cap()).isEqualTo(Multiplier.of(4));
+    assertThat(config.teleports().pricing().maxMultiplier()).isEqualTo(32);
     assertThat(config.teleports().pricing().prices().of(TeleportKind.HOME).cost()).isEqualTo(25);
     assertThat(config.homeLimit()).isPositive();
     assertThat(config.kits().starter()).isEqualTo("starter");

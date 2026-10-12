@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "kind": "rwf-map-scenario",
+  "id": "miner-dispute-trooper-duel-v1",
+  "map": "miner-dispute",
+  "mapSha256": "6dc474c75af0848f965cc83b103f22e69d1d97eeff2b05b4cc1e50053ea5ad24",
+  "world": "minecraft:rwf",
+  "region": {
+    "min": {
+      "x": 4096,
+      "y": 48,
+      "z": 3072
+    },
+    "max": {
+      "x": 4159,
+      "y": 103,
+      "z": 3176
+    }
+  },
+  "sourceTeams": ["RED", "BLUE"],
+  "spawnPolicy": "source",
+  "spawns": [
+    {
+      "team": "red",
+      "sourceTeam": "RED",
+      "position": [4117.5, 51, 3081.5],
+      "yaw": 346.2777099609375,
+      "pitch": 0
+    },
+    {
+      "team": "blue",
+      "sourceTeam": "BLUE",
+      "position": [4117.5, 51, 3160.5],
+      "yaw": 196.2602081298828,
+      "pitch": 0
+    }
+  ]
+}

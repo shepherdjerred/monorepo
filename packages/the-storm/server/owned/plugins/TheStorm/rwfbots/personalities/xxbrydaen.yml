@@ -1,0 +1,80 @@
+id: xxbrydaen
+name: xXBrydaen
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1MzUzNzU4NSwKICAicHJvZmlsZUlkIiA6ICJkYjQwYmNjNWUzMDE0ZmZjOGVlOWQxNDU5MTcyYjdhNCIsCiAgInByb2ZpbGVOYW1lIiA6ICJhWGUxOCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8yODY2ZmQwZjIxMDMzMGIzODNmYTI0NWM3ZWQxZmIxMmYxMDU0NmQ5MTJiZTg3YjRiNzQ0ZTQzNWQ3YTMzM2VhIgogICAgfQogIH0KfQ=="
+  signature: "kYmSIi7Hpn1SuoQqKNg1qX2yeYieSn6LUaL2TLFtGAniw5JJUcVLgjTj79G5aPYkdDaQ/cHfyTxR2HxoHCYFUvmRUxlRr8f0akyQD+vnyoMG1TvtUCIG38u/Ums1v+V2XtAo+P3ZV2GG8+887bc4CUU+tFdABzcqVjKh+SH0l+1FuDEOlPd1W30EZbiDubQmGySsG1/Thl32Z6zvxhpE32g6qB6KvmPifowF8kNoYzbSoMvlglf4yc8/ZZYVZcAp6rUiXE+lXOG76nYFQB9r2fEndA5tvxdqPyxuSMyzN+83C7K1AlgZzBdz1ccJEP8TzEcIJ/rBV97VR+N0xypI6KXiJAH5a6/tpYWQYZmK472BH1RyHKjkMn0f5FTciIlTK7oCxMtjgkPFoaQ/5oKpHamxXi1T7i+6MyNNa2IMgVSkfLXntJK94DhWih6ClHcDoZG+1UGw/4bLTHnk3umXY5DuKSsZSQmyLDE9ClvM8my4lUp4kPAJHIQKAGitSP2V5aXJ/IT/1tOUwISIBv43yE2dAr4Zvyj9fmIc+TILivj+CwT0wGdKv4hFnSaochGpDetMrX4zauao/uTMGm6y+aA/OJb4ajhp77brgWfTt8533tuiF9dO1/7hM+NwTrzarq4CY5S7dPwlFoCzM+ISlnphaKNdJSilTTJOxzNOgh4="
+skill: 0.686
+archetype: anchor
+leverOffsets:
+  reactionMs: 0.18
+  turnRateDegPerTick: -0.82
+  awarenessRadius: 0.13
+  coordination: 0.16
+  aggression: -1.26
+kits:
+  trooper: 0.87
+  longbow: 0.39
+  rewind: 0.29
+roles:
+  escort: 0.28
+  defend: 1
+  retake: 0.64
+style:
+  aggression: 0.33
+  patience: 0.93
+  teamplay: 0.65
+  risk: 0.16
+voice:
+  tone:
+    - stoic
+    - nautical
+    - calm
+  verbosity: normal
+  style: slow seafaring lighthouse-keeper talk, storms and tides, never raises his voice
+lines:
+  greet:
+    - "lamp's lit. i'll keep watch, {team}"
+    - evening, crew. calm seas so far
+    - the bomb is my lighthouse. nobody runs aground
+  onKill:
+    - "rocks got you, {victim}"
+    - warned you about the shallows
+    - one more ship on the reef
+  onDeath:
+    - "the tide takes us all, {killer}"
+    - "a rogue wave named {killer}"
+    - lamp's out. hold the light for me
+  onPlant:
+    - "{bomb} is lit. strange to be on this side"
+    - fuse set. back to my post
+  onDefuse:
+    - "{bomb} is safe. storm passed"
+    - doused it. keep the lamp burning
+  onWin:
+    - "safe harbour, {team}"
+    - the light held. good watch, all
+  onLoss:
+    - we ran aground. it happens
+    - rough waters today
+  onLastAlive:
+    - just the keeper and the lamp now
+    - steady. the light does not leave its post
+  taunt:
+    - you'll see my lamp before you see the bomb
+    - plenty of wrecks on this coast already
+    - turn back. the waters are rough here
+  lobby:
+    - calm seas in the lobby. enjoy it while it lasts
+    - i'll take the longbow. a keeper needs to see far
+    - "tide's coming in, {team}. stay near the light"
+    - any sails on the horizon? i smell a pirate
+    - rest your legs. the round is a long voyage
+quirks:
+  - calls_everything
+  - slow_starter
+rivals:
+  - nyshxaix-38
+  - lirzaek-39
+bio: Treats his team's bomb like a lighthouse and has not abandoned a post since the 2014 season. His long feud with the pirate Nyshxaix_38 is the stuff of lobby legend. Says Lirzaek_39 is the only diver who ever got past him, once.
+batch: 2
+retired: false

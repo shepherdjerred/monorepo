@@ -24,7 +24,11 @@ struct ServerIntegrationTests {
         let server = try TaskNotesServerProcess()
         defer { server.stop() }
         let directory = try TemporaryDirectory()
-        let host = try HostFixture(directory: directory.url, baseURL: server.baseURL)
+        let host = try HostFixture(
+            directory: directory.url,
+            baseURL: server.baseURL,
+            authToken: server.authToken
+        )
         let engine = host.engine()
 
         try engine.restore()
@@ -71,7 +75,11 @@ struct ServerIntegrationTests {
         let server = try TaskNotesServerProcess()
         defer { server.stop() }
         let directory = try TemporaryDirectory()
-        let host = try HostFixture(directory: directory.url, baseURL: server.baseURL)
+        let host = try HostFixture(
+            directory: directory.url,
+            baseURL: server.baseURL,
+            authToken: server.authToken
+        )
         let engine = host.engine()
 
         try engine.restore()
@@ -93,7 +101,11 @@ struct ServerIntegrationTests {
         let server = try TaskNotesServerProcess()
         defer { server.stop() }
         let directory = try TemporaryDirectory()
-        let host = try HostFixture(directory: directory.url, baseURL: server.baseURL)
+        let host = try HostFixture(
+            directory: directory.url,
+            baseURL: server.baseURL,
+            authToken: server.authToken
+        )
         let engine = host.engine()
 
         try engine.restore()
@@ -116,7 +128,11 @@ struct ServerIntegrationTests {
         let server = try TaskNotesServerProcess()
         defer { server.stop() }
         let directory = try TemporaryDirectory()
-        let host = try HostFixture(directory: directory.url, baseURL: server.baseURL)
+        let host = try HostFixture(
+            directory: directory.url,
+            baseURL: server.baseURL,
+            authToken: server.authToken
+        )
         let engine = host.engine()
 
         try engine.restore()
@@ -148,7 +164,7 @@ struct ServerIntegrationTests {
         // core sends — and since Phase 4.5 the host owns no domain-level API at
         // all. What the core builds for a real create is asserted in the core's
         // own tests and in `cargo xtask verify-swift`.
-        let transport = URLSessionTransport()
+        let transport = URLSessionTransport(authToken: server.authToken)
         let base = server.baseURL.absoluteString
         let key = "mutation-\(UUID().uuidString)"
         func create(withKey key: String) async throws -> HttpResponse {
@@ -193,7 +209,11 @@ struct ServerIntegrationTests {
 
         // First "launch": dispatch, then walk away without syncing.
         do {
-            let host = try HostFixture(directory: directory.url, baseURL: server.baseURL)
+            let host = try HostFixture(
+                directory: directory.url,
+                baseURL: server.baseURL,
+                authToken: server.authToken
+            )
             let engine = host.engine()
             try engine.restore()
             _ = try engine.dispatch(input: .create(payload: createRequest(title: "Survivor")))
@@ -203,7 +223,11 @@ struct ServerIntegrationTests {
 
         // Second "launch": a brand-new engine over the same directory. The only
         // thing carrying the command across is the file-backed queue.
-        let host = try HostFixture(directory: directory.url, baseURL: server.baseURL)
+        let host = try HostFixture(
+            directory: directory.url,
+            baseURL: server.baseURL,
+            authToken: server.authToken
+        )
         let engine = host.engine()
         try engine.restore()
         #expect(try engine.snapshot().pendingCount == 1)

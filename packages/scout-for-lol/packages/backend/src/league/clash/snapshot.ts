@@ -246,7 +246,7 @@ async function fetchClashTeam(
 }
 
 function uniqueAccounts(
-  accounts: readonly { puuid: string; region: string }[],
+  accounts: readonly { puuid: LeaguePuuid; region: string }[],
 ): TrackedAccount[] {
   const seen = new Set<string>();
   const unique: TrackedAccount[] = [];

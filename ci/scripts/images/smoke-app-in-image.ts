@@ -64,6 +64,11 @@ const commands: Record<
   string,
   { readonly command: string; readonly env: Record<string, string> }
 > = {
+  "storm-forum": {
+    command:
+      "cd /opt/storm-forum && bun scripts/runtime-smoke.ts && php-fpm --test --nodaemonize --force-stderr --fpm-config /usr/local/etc/php-fpm.conf",
+    env: {},
+  },
   "woodpecker-config-extension": {
     command: [
       "set -eu",
@@ -73,7 +78,10 @@ const commands: Record<
     env: {
       WOODPECKER_URL: "https://woodpecker.sjer.red",
       CI_REPO_SLUG: "monorepo",
+      CI_GATE_IMAGE: `ghcr.io/shepherdjerred/woodpecker-config-extension@sha256:${"0".repeat(64)}`,
+      FEATURE_FLAGS_MODE: "disabled",
       WOODPECKER_API_TOKEN: "smoke-test-token",
+      GITHUB_APPROVAL_READ_TOKEN: "smoke-test-approval-token",
     },
   },
   "alert-dashboard": {
@@ -136,6 +144,7 @@ const commands: Record<
       METRICS_PORT: "18795",
       OPENAI_API_KEY: "smoke-dummy",
       STORM_BRAIN_BEARER_TOKEN: "smoke-brain-token-that-is-long-enough",
+      STORM_COMPANION_BUDGET_DB: "/tmp/storm-companion-smoke.db",
       PORT: "18794",
     },
   },
@@ -241,7 +250,7 @@ const commands: Record<
       "pid=$!",
       "trap 'if kill -0 $pid; then kill $pid; if wait $pid; then :; else cleanup_status=$?; [ $cleanup_status -eq 143 ] || exit $cleanup_status; fi; fi' EXIT",
       "for _ in $(seq 1 30); do",
-      "  if grep -Fq 'TaskNotes server listening on port' /tmp/tasknotes-smoke.log; then exit 0; fi",
+      "  if grep -Fq 'TaskNotes server listening on 127.0.0.1:18789' /tmp/tasknotes-smoke.log; then exit 0; fi",
       "  if ! kill -0 $pid; then cat /tmp/tasknotes-smoke.log; exit 1; fi",
       "  sleep 1",
       "done",
@@ -273,6 +282,9 @@ const commands: Record<
       "setpriv --version",
       "pkill --version",
       "pgrep --version",
+      "bwrap --version",
+      "socat -V",
+      "tini --version",
       "toolkit --version",
       "toolkit woodpecker --version",
       "gcx --version",
@@ -346,14 +358,14 @@ const commands: Record<
       'postgres_bin="$(pg_config --bindir)"',
       '"$postgres_bin/initdb" -D /tmp/smoke-pg -U postgres --auth=trust --no-locale >/dev/null',
       'if ! "$postgres_bin/pg_ctl" -D /tmp/smoke-pg -w -t 30 -l /tmp/smoke-pg.log -o "-c listen_addresses= -c unix_socket_directories=/tmp" start; then cat /tmp/smoke-pg.log; exit 1; fi',
+      // A fresh database needs only its migrations; exercise the ordinary
+      // image startup path, which re-runs them, against it.
+      "bun x --no-install prisma migrate deploy",
       "set +e",
-      // Mirror the full image CMD: migrate → legacy import (which must take
-      // its fresh-install marker path here) → ScoutQL v2 boot-time migration
-      // → boot.
-      String.raw`output="$(timeout 45s sh -c "bun x --no-install prisma migrate deploy && bun run scripts/import-legacy-sqlite.ts --allow-fresh-install && bun run scripts/scoutql/migrate-scoutql-v2.ts --database \"$DATABASE_URL\" --fix && bun run src/index.ts" 2>&1)"`,
+      'output="$(timeout 45s sh -c "bun x --no-install prisma migrate deploy && bun run scripts/check-database-readiness.ts && bun run src/index.ts" 2>&1)"',
       "status=$?",
       String.raw`printf '%s\n' "$output"`,
-      String.raw`printf '%s\n' "$output" | grep -q "Legacy import: fresh" || { echo "importer did not take the fresh-install path"; exit 1; }`,
+      String.raw`printf '%s\n' "$output" | grep -q "Database prepared: ledger verified" || { echo "database readiness failed"; exit 1; }`,
       String.raw`printf '%s\n' "$output" | grep -Fq "HTTP server started" || { echo "backend did not reach HTTP startup"; exit 1; }`,
       String.raw`[ "$status" -eq 0 ] || [ "$status" -eq 124 ] || printf "%s\n" "$output" | grep -iE "` +
         discordAuthPattern +
@@ -366,7 +378,6 @@ const commands: Record<
       TEMPORAL_NAMESPACE: "dev",
       FEATURE_FLAGS_MODE: "disabled",
       DATABASE_URL: "postgres://postgres@localhost/postgres?host=/tmp",
-      LEGACY_SQLITE_PATH: "/tmp/no-legacy-sqlite.db",
       // The gatewayless runtime role: the image must reach HTTP startup with a
       // dummy Discord token, which it can only do without a shard. The lake
       // fold is skipped for the same reason — there is no published build and

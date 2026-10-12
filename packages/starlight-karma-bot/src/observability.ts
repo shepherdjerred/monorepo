@@ -1,12 +1,12 @@
 /** Sentry setup and the process-level fatal handlers.
  *
  *  Its own module so the startup script can arm monitoring *before* the
- *  database bootstrap. Migrations and the legacy import are the riskiest part
- *  of startup and the part this change introduced, so a failure there is
- *  exactly what needs reporting — but it runs before `src/index.ts` is
- *  imported, so initializing Sentry there would have left those failures
- *  visible only in container logs. */
+ *  database bootstrap. Migrations are the riskiest part of startup, so a
+ *  failure there is exactly what needs reporting — but they run before
+ *  `src/index.ts` is imported, so initializing Sentry there would have left
+ *  those failures visible only in container logs. */
 import * as Sentry from "@sentry/bun";
+import { sentryDataCollection } from "@shepherdjerred/sentry-config";
 import configuration from "#src/configuration.ts";
 import { filterStarlightSentryEvent } from "#src/sentry-filters.ts";
 
@@ -21,6 +21,7 @@ export function initObservability(): void {
   initialized = true;
 
   Sentry.init({
+    dataCollection: sentryDataCollection(),
     dsn: configuration.sentryDsn,
     environment: configuration.environment,
     release: configuration.gitSha,

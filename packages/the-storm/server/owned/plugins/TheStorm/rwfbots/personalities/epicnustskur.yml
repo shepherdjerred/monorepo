@@ -1,0 +1,80 @@
+id: epicnustskur
+name: EpicNustskur
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NTcxMzM1NCwKICAicHJvZmlsZUlkIiA6ICIyNDY1ODI2NWVjMjg0NTY4YTg3MDJkOTVlYzdlYTc4MyIsCiAgInByb2ZpbGVOYW1lIiA6ICJBcmdvc1oxMiIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS80MWU5MTNlOTQzYjhlMDU2NTU0YTZmNDk0OWUzODNhY2JhZGY5ZWI2YzUzOWQ4NDVhNTkwMjcwMjhlNWQ1Mjg0IgogICAgfQogIH0KfQ=="
+  signature: "rSaB6wm9tUcaNORt6kh4LmrbAyP4GWS6OstpxweJDhVVcRl+PdauHkSssFyO917q1/VqhzmodkRlAqP37EvjMvhGzbdADv8LN9QJqKIPMPTr9/vZE4zZyHFxg2YoIEg5P66hCP/zaHnj3m0sNpvNPe87KmPwUf8XhN+teaNDkQ7ut3mbr8KB6Y17tY3vhcLHFYmmROdxqyUeV/Cl5CNlvh6OvU9Et3OLr9tSeAV/AQW67kLNRqqFX3FNKDrp3eGVncWEk7peb3vpvFjebeeN7ZH6s21T7bNRg+BRvdcS11q4+B8alS73uEZLUMXgGhJjd911v6cUZrGdHLlL5D936/xge4f7PWRkoap8Cx3DblIqPTy549nuYCWJygFprVKKRQxhJbGCTr2H2taDGxHU7mwQh7g6jjbVyFH3g4d3+tJxjl4U6dagUlZSsgZwnGEyGl+lJjMPd3Gr6yagEIW5n5Zl4UcriajYtngS8iy5bA5WaLrmdrsL5m/XgdDMnDow0HquoUPRSq98wfUIt0CZLX4Oc+L9aLNl/MyA5gxQAZPGApfU1GWKVSZ0JnF86yujeckIaVltrfGOK971fnZEZ2oQv8V4q2hGrYEBqW1y4Dll1Y4bHGu5NWeHbVJLQDIpi/9YMyvzpXpdBP0U/NazvVWW/6zgPCQIEZok3RanEk4="
+skill: 0.486
+archetype: bomb_diver
+leverOffsets:
+  reactionMs: 0.72
+  cps: 1.1
+  decisionTemperature: 0.8
+  technique: 1.14
+  aggression: -0.47
+kits:
+  trooper: 0.94
+  shortbow: 0.19
+  rewind: 0.56
+roles:
+  plant: 0.92
+  escort: 0.29
+style:
+  aggression: 0.64
+  patience: 0.04
+  teamplay: 0.33
+  risk: 0.9
+voice:
+  tone:
+    - frantic
+    - excited
+    - single-minded
+  verbosity: chatty
+  style: Everything is about the bomb, every line mentions fuses, counts down out loud
+lines:
+  greet:
+    - fuses? fuses. FUSES.
+    - "where is their bomb {team}"
+    - "3... 2... 1... running"
+  onKill:
+    - "{victim} was between me and the bomb"
+    - "sorry {victim}, fuse business"
+    - out of the way, fuse coming
+  onDeath:
+    - SO CLOSE to the bomb
+    - "{killer} stole my fuse moment"
+    - i could SEE the bomb
+  onPlant:
+    - "{bomb} LIT LIT LIT"
+    - "fuse stacked! {team} hold!"
+    - tick tick tick
+  onDefuse:
+    - "{bomb} unlit. reluctantly."
+    - i only defuse because i must
+  onWin:
+    - the fuse provides
+    - "{team} we lit it!"
+  onLoss:
+    - not enough fuses
+    - next round, more fuses
+  onLastAlive:
+    - me and a fuse. enough.
+    - going for the bomb, obviously
+  taunt:
+    - your bomb looks lonely
+    - hear that ticking? soon
+    - i can smell the fuse from here
+  lobby:
+    - lobby countdown, fuse countdown, same thing really.
+    - who's racing me to the fuse this round?
+    - sword? i carry it so the kit isn't empty.
+    - ten, nine, eight... sorry, practising.
+    - "{team}, i'll handle the fuses, you handle the people."
+quirks:
+  - loves_nuke
+  - never_eats
+rivals:
+  - piozpith-58
+  - itslinthur
+bio: Has never once been seen holding a sword in a fight on purpose. Shares a race-to-the-fuse scoreboard with Piozpith_58 and ItsLinthur, and cheats at it by not fighting.
+batch: 2
+retired: false

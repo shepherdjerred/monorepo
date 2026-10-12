@@ -1,0 +1,82 @@
+id: kranpioshraim-91
+name: Kranpioshraim_91
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NTU5MzQ3MiwKICAicHJvZmlsZUlkIiA6ICI3Nzc1ZTQ2ZTI2YmY0OTBiODZmMzZmMjkxYTU2MTQ0MSIsCiAgInByb2ZpbGVOYW1lIiA6ICJJQW1TcGFkZUZhbiIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8yZjg3MjE0OGFmZmU0MTliYzExNzFlNzI5ZmQyYzQyOTUxNzg1YWUzYjZiNmQ1YjlmMjVkZDFmM2U4NjU3MzZmIgogICAgfQogIH0KfQ=="
+  signature: "f3zHZWVK3DW1zF5Gy/0n4YnVlpZvnXFXlmZKaPoyIWZFh1Ux3dNj3rvgX86WUkg6o03J/8lh+OFpWYlTOtHjGm+pD3r9/6bhLP7qnx/C7S1V8SRckSey4Jq21/IgpVK4R+Zzz8iXTv4fzbhbP9/lW+aqCIqMX578ASX2ctMg4GZpJgQoOjwHSTDOwQPvEkNTOJlpgOGjzHKaCi1i5FaaF4dTodhQ4eyYhxrXXQJP+OK+Ub+DjKioAqbFWXMWZ5PJCRP/6c+UYgocccXLAniXrm7P4Os5buWuAh+sBKhCB25MGwDDqu/hacjx5SO0ZSY2CXSn7nmzy3k7wkek2Jm0ZReYWzfvt6JcPX6Zl+XXa4TmPRKS3kzxCN5THvfoKs163UbGBxaoijAT8/+jKT36MoOhfrH4w3oP84T6ujNx/ukmBJO5Zzx//43QZai2rV5YO0buZxqqFtO1BmIUAiaSroxcQNVnlWpxDJBewGqRRYQL4MJAFnG/VctQL7Ffi32k0KO8XDOOm0ciQrjdG9t8GEBSZOtGujjTkNxckXUWymdSA7/NOVu4Yie8JbqFvZOrAyoPEZNi3t2Pm39GS+87DZgeuLTquQ+vPkfW7DOuD9huqdkeEDuTX2PLhZBQuSreqduiN3/C3HQWcy1nRBORw41No3iqFkJEA20tm+NEiCY="
+skill: 0.946
+archetype: lurker
+leverOffsets:
+  turnRateDegPerTick: -0.3
+  cps: 0.01
+  predictionQuality: 0.13
+  awarenessRadius: 1.47
+  coordination: -1.33
+  aggression: -0.31
+kits:
+  trooper: 0.66
+  shortbow: 0.56
+  ghost: 0.88
+  wraith: 0.65
+roles:
+  plant: 0.37
+  rotate: 0.76
+  hunt: 0.81
+style:
+  aggression: 0.47
+  patience: 0.83
+  teamplay: 0.24
+  risk: 0.59
+voice:
+  tone:
+    - calm
+    - menacing
+    - precise
+  verbosity: quiet
+  style: "assassin's quiet courtesy; one polite sentence, then nothing"
+lines:
+  greet:
+    - Good evening.
+    - I'll be elsewhere.
+    - "Carry on, {team}."
+  onKill:
+    - "Goodnight, {victim}."
+    - "Thank you, {victim}."
+    - Quietly done.
+  onDeath:
+    - "Well found, {killer}."
+    - Interesting.
+    - Noted, with respect.
+  onPlant:
+    - "{bomb} is lit. Nobody noticed."
+    - "A small fuse on {bomb}."
+  onDefuse:
+    - "{bomb} is safe again."
+    - "Took care of {bomb}."
+  onWin:
+    - A pleasant evening. gg.
+    - "Thank you, {team}."
+  onLoss:
+    - Not my night. gg.
+    - Until next time.
+  onLastAlive:
+    - Now it is quiet.
+    - I prefer it this way.
+    - "Patience, {team}."
+  taunt:
+    - You walked past me.
+    - I've been here a while.
+    - Take your time.
+  lobby:
+    - Good luck.
+    - I prefer the Trooper kit. Quiet work.
+    - See you all after.
+    - "Be careful today, {team}."
+    - I'll be wherever they aren't looking.
+quirks:
+  - stares_down
+rivals:
+  - xoljithblaze
+  - grenourgaming
+bio: Won three community tournaments in 2014 without ever being seen on a scoreboard screenshot. XoljithBlaze lost all three finals to him and still insists it was luck.
+batch: 2
+retired: false

@@ -46,15 +46,24 @@ export async function runUiTests(run: UiTestRun): Promise<number> {
   const port = reservation.port;
   await reservation.stop(true);
   const baseURL = `http://127.0.0.1:${String(port)}`;
+  const authToken = crypto.randomUUID();
 
   await mkdir(path.dirname(fixtureFile), { recursive: true });
-  await Bun.write(fixtureFile, JSON.stringify({ address: baseURL, vault }));
+  await Bun.write(
+    fixtureFile,
+    JSON.stringify({ address: baseURL, authToken, vault }),
+  );
 
-  const server = Bun.spawn(["bun", "run", "src/index.ts"], {
+  const runMarker = Bun.env["TASKNOTES_CI_RUN_ID"];
+  const markerArgument =
+    runMarker === undefined ? [] : [`--tasknotes-server-ci-run=${runMarker}`];
+
+  const server = Bun.spawn(["bun", "run", "src/index.ts", ...markerArgument], {
     cwd: serverPackage,
     env: {
       ...Bun.env,
-      AUTH_TOKEN: "",
+      AUTH_TOKEN: authToken,
+      HOST: "127.0.0.1",
       PORT: String(port),
       SENTRY_DSN: "",
       TASKS_DIR: "TaskNotes",
@@ -72,7 +81,9 @@ export async function runUiTests(run: UiTestRun): Promise<number> {
         );
       }
       try {
-        const response = await fetch(`${baseURL}/api/health`);
+        const response = await fetch(`${baseURL}/api/health`, {
+          headers: { authorization: `Bearer ${authToken}` },
+        });
         if (response.ok) {
           return;
         }
@@ -95,7 +106,10 @@ export async function runUiTests(run: UiTestRun): Promise<number> {
   ): Promise<void> {
     const response = await fetch(`${baseURL}/api/tasks`, {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: {
+        authorization: `Bearer ${authToken}`,
+        "content-type": "application/json",
+      },
       body: JSON.stringify({ title, scheduled, details }),
     });
     if (response.status !== 201) {

@@ -1,0 +1,85 @@
+id: jathkrempickaxe
+name: JathkremPickaxe
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0ODkwNjYxMSwKICAicHJvZmlsZUlkIiA6ICI5ZjJiY2M1M2U4YzM0OTY4YTc5Yzc0NTExYWQ2NmQyYyIsCiAgInByb2ZpbGVOYW1lIiA6ICJLYWJveWlvIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2QxYjc3NTRkN2ZlOTFlZDRmMDBjMjg0NWZiOWE0M2UwMTIxOWZhZmRmYTRkYjIwYjMyMjNmZmJhYWZmNTVmODMiCiAgICB9CiAgfQp9
+  signature: "GIE5kLEw3v2FXOtgg+0HHqZQj5gavOKMgYMzgYIOQlPPDf+egI61js+xkS884Xefq+VZesjArIWTCZGFKkRz/vMJmtDIyEEYkF1QuBaJdAxbPL98a+2J2RZ4YY2m7vH46uAzj34QPcSIyduhImMs31ZymLljA7Enq37KHEX1CUTfrlgpv9zDotOiRwkQm7N5qY2sHo8x7TwydLFVOQpGQMfgfIIjHRjkh+K67YuBbYrkKYbJQnWmNeoEIxxzrRMhw6PeFyCb3m9B0lSOTTJYccPDAi9ELl5/7OZrwRZQZUtymT5Y/eRIfpoSgEgCug8452h3a30K6WGNFsR76K5xWOKBwlhNXs0IEUQ7wm5tzKTaN0/GD/YBEdVlIzvwATNzBNSKRBpPy93mn+c/fHNxnrlk+W+0m2cC9Rf8gYgSV5N9ic5nYwh4tTfQ11FESNp21VifuFTaPUbYwzpm+aHmaP2/hpuWPq7gPbE/xYWFKBrR09AKhS/EeqsC7XWi2awwFSnXr3bwSBhAiUG17fkflzY7rJwe6+DnUxxyvZvrk8fnBJ2Kryn2/BidqeJmbAWyafzRP3LiWyGMPy68PWeExPijb+tpRL5+8KVOumvZZKtHqnxrFPJdKhMSJd23y1xbO2USsIsZYBBwJoqZ6HFKqbdNTTe0ebCgRY5DLP/AC7s="
+skill: 0.672
+archetype: tactician
+leverOffsets:
+  reactionMs: -0.4
+  aimErrorDeg: -0.23
+  predictionQuality: 0.44
+  decisionTemperature: 1.73
+  awarenessRadius: 0.39
+  coordination: 1.48
+kits:
+  trooper: 1
+  longbow: 0.57
+  shortbow: 0.52
+  rewind: 0.55
+roles:
+  plant: 0.47
+  escort: 0.42
+  defend: 0.61
+  rotate: 0.61
+  retake: 0.73
+  hunt: 0.19
+style:
+  aggression: 0.4
+  patience: 0.55
+  teamplay: 0.82
+  risk: 0.42
+voice:
+  tone:
+    - strategic
+    - calm
+    - teacherly
+  verbosity: chatty
+  style: Chess-club strategist, numbered plans, refers to rounds as games and players as pieces
+lines:
+  greet:
+    - "Plan A, {team}: two left, two bomb."
+    - "Opening move: control mid."
+    - Pieces ready?
+  onKill:
+    - "{victim} was the knight. Taken."
+    - Material advantage.
+    - Exchange won.
+  onDeath:
+    - "{killer} saw the fork."
+    - I sacrificed. Use it.
+    - Blunder. Mine.
+  onPlant:
+    - "{bomb} lit. Endgame begins."
+    - "Phase two: hold."
+  onDefuse:
+    - "{bomb} safe. Check averted."
+    - Defended the king.
+  onWin:
+    - "Checkmate, {team}."
+    - Textbook game.
+  onLoss:
+    - Resign, reset.
+    - Let's review the opening.
+  onLastAlive:
+    - King's walk.
+    - I'll calculate this.
+  taunt:
+    - Your rotation is predictable.
+    - Three moves ahead.
+    - You're out of position.
+  lobby:
+    - "Opening for this game: the double flank gambit."
+    - Pieces, please pick kits that cover each other.
+    - Plan A, Plan B, and Plan C if they rush.
+    - My student will play the wrong opening. Again.
+    - "{team}, think three moves ahead."
+quirks:
+  - calls_everything
+  - good_sport
+rivals:
+  - potatofalcon8
+  - sirkioththy
+bio: Brought a whiteboard to a 2014 server meetup to explain rotations. Argues openings with PotatoFalcon8 and mentors SirKioththy, who keeps playing the wrong opening on purpose.
+batch: 2
+retired: false

@@ -1,5 +1,5 @@
 /**
- * Parsing a Buildkite step's shell command: which env names it assigns, where
+ * Parsing a CI step's shell command: which env names it assigns, where
  * those assignments are in force, and which repository scripts it invokes.
  *
  * Split out of check-ci-env.ts, which sits at the repo's max-lines cap (the
@@ -51,9 +51,9 @@ const ASSIGNMENT = /(?<![\w$])([A-Z_][A-Z0-9_]*)=/gu;
  *
  * `x=$(cmd)` is not a subshell for scoping purposes, and treating its parens
  * as one opens a scope, records the assignment inside it, then pops — losing
- * the name from the scope that actually has it. Buildkite escapes the sigil as
- * `$$(`, so both spellings are recognised, and nesting inside a substitution
- * is skipped wholesale.
+ * the name from the scope that actually has it. Commands come from the
+ * generator's step model, before emit escapes `$` for Woodpecker, so only
+ * `$(` opens a substitution; nesting inside one is skipped wholesale.
  */
 export function structuralParens(line: string): string {
   let structural = "";
@@ -62,7 +62,7 @@ export function structuralParens(line: string): string {
     const character = line[index];
     if (character !== "(" && character !== ")") continue;
     if (character === "(") {
-      const opensSubstitution = /\$\$?$/u.test(line.slice(0, index));
+      const opensSubstitution = line.slice(0, index).endsWith("$");
       if (opensSubstitution || substitutionDepth > 0) {
         substitutionDepth += 1;
         continue;

@@ -1,12 +1,11 @@
+import type { MatchDataSource } from "@scout-for-lol/domain/match-processing/states.ts";
 import {
-  MatchIdSchema,
   type PlayerConfigEntry,
   type RawMatch,
   type RawTimeline,
 } from "@scout-for-lol/data";
 import configuration from "#src/configuration.ts";
 import { evaluateHallMatch } from "#src/progression/hall/evaluate-match.ts";
-import type { HallAnnouncementDelivery } from "#src/progression/hall/break-announcement.ts";
 import {
   launchPreparedChallengeRuns,
   prepareChallengeRunsForMatch,
@@ -29,10 +28,9 @@ import {
  */
 export async function processCompetitiveProgressionMatch(input: {
   readonly match: RawMatch;
-  readonly matchDataSource: "RIOT" | "SCOUT_CLIENT";
+  readonly matchDataSource: MatchDataSource;
   readonly timeline: RawTimeline | null | undefined;
   readonly trackedPlayers: PlayerConfigEntry[];
-  readonly delivery: HallAnnouncementDelivery;
 }): Promise<void> {
   const preparedByRun = new Map<string, PreparedChallengeRun>();
   async function prepareCurrentRuns(): Promise<
@@ -48,22 +46,18 @@ export async function processCompetitiveProgressionMatch(input: {
     return prepared;
   }
   let timelineHandled = false;
-  const matchId = MatchIdSchema.parse(input.match.metadata.matchId);
+  const matchId = input.match.metadata.matchId;
   let timeline = input.timeline;
   async function ensureProgressionTimeline(required: boolean): Promise<void> {
     if (timelineHandled) return;
     if (timeline === null || timeline === undefined) {
       // A canonical client result exists specifically because Riot cannot see
-      // this match. Its absent timeline is therefore durable evidence, not a
-      // transient fetch failure: challenge recomputation records missing
-      // timeline coverage, and duel evaluation moves the game to organizer
-      // review. Mark it handled so later rediscovery in this same pass cannot
-      // retry a Riot resource that will never exist and block managed-result
-      // finalization behind it.
-      if (input.matchDataSource === "SCOUT_CLIENT") {
-        timelineHandled = true;
-        return;
-      }
+      // this match, so the fetch reads its timeline from the client. One the
+      // client never sent is durable evidence, not a transient fetch failure:
+      // challenge recomputation records missing timeline coverage, and duel
+      // evaluation moves the game to organizer review. Either way it is
+      // handled, so later rediscovery in this same pass cannot block
+      // managed-result finalization behind a timeline that will never exist.
       timeline = required
         ? await fetchTimelineForProgression(
             input.match,
@@ -83,7 +77,10 @@ export async function processCompetitiveProgressionMatch(input: {
         input.match,
       );
     }
-    timelineHandled = required || timeline !== undefined;
+    timelineHandled =
+      required ||
+      timeline !== undefined ||
+      input.matchDataSource === "SCOUT_CLIENT";
   }
 
   const initiallyPrepared = await prepareCurrentRuns();
@@ -100,7 +97,7 @@ export async function processCompetitiveProgressionMatch(input: {
   }
   await processDuelResult(input.match, timeline, configuration.environment);
 
-  await evaluateHallMatch(input.match, input.delivery);
+  await evaluateHallMatch(input.match);
   // Catch a run start or account edit that committed while evidence was being
   // staged or duel and Hall processing ran. Preparing a match revision
   // supersedes its independently launched recompute, and waiting revisions are

@@ -12,6 +12,4 @@ export async function clearCustomsTestData(
   await deleteIfExists(() => client.customActiveNight.deleteMany());
   await deleteIfExists(() => client.customNight.deleteMany());
   await deleteIfExists(() => client.customConsent.deleteMany());
-  await deleteIfExists(() => client.tournamentLobbyProvision.deleteMany());
-  await deleteIfExists(() => client.tournamentLobby.deleteMany());
 }

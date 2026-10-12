@@ -1,7 +1,7 @@
 import { riotClient } from "#src/league/api/api.ts";
 import {
   type Region,
-  type MatchId,
+  type RiotMatchId,
   type RawMatch,
   type RawTimeline,
   RawMatchSchema,
@@ -18,8 +18,10 @@ import {
   type CallRiotConfig,
 } from "#src/league/api/riot-call.ts";
 import { createLogger } from "#src/logger.ts";
-import { riotApiErrorsTotal } from "#src/metrics/index.ts";
-import { riotCustomMatchMissingFieldsTotal } from "#src/metrics/index.ts";
+import {
+  riotApiErrorsTotal,
+  riotCustomMatchMissingFieldsTotal,
+} from "#src/metrics/index.ts";
 import { saveFailedPayloadToS3 } from "#src/storage/s3-helpers.ts";
 
 const logger = createLogger("match-data-fetcher");
@@ -38,7 +40,7 @@ const logger = createLogger("match-data-fetcher");
  * match played on it at all.
  */
 export async function fetchMatchData(
-  matchId: MatchId,
+  matchId: RiotMatchId,
   route: PlatformRoute | Region,
   failureMode:
     "return_undefined" | "return_undefined_on_404" = "return_undefined",
@@ -121,7 +123,7 @@ export async function fetchMatchData(
  * Validates the response against our schema to ensure type safety and catch API changes.
  */
 export async function fetchMatchTimeline(
-  matchId: MatchId,
+  matchId: RiotMatchId,
   playerRegion: Region | PlatformRoute,
   failureMode:
     | "return_undefined"

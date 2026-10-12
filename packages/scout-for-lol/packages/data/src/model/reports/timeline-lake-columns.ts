@@ -82,12 +82,14 @@ export const TimelineParticipantFrameLakeRowSchema = z.object({
   position_y: z.number().int(),
   current_gold: z.number().int(),
   total_gold: z.number().int(),
-  gold_per_second: z.number().int(),
+  // Null for a timeline the Scout Client built; the League client's match
+  // history doesn't report either value.
+  gold_per_second: z.number().int().nullable(),
   minions_killed: z.number().int(),
   jungle_minions_killed: z.number().int(),
   level: z.number().int(),
   xp: z.number().int(),
-  time_enemy_spent_controlled: z.number(),
+  time_enemy_spent_controlled: z.number().nullable(),
   ability_haste: z.number().nullable(),
   ability_power: z.number().nullable(),
   armor: z.number().nullable(),

@@ -3,7 +3,6 @@ package com.shepherdjerred.thestorm.arena.adapter.paper;
 import java.util.Optional;
 import java.util.UUID;
 import org.bukkit.Location;
-import org.bukkit.block.BlockState;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
@@ -79,7 +78,11 @@ final class ItemGuard implements Listener {
     if (arenas.joining(id)) {
       event.setCancelled(true);
     } else if (member(id)) {
-      event.setCancelled(!arenaItem);
+      var runner = arenas.of(id).orElseThrow();
+      event.setCancelled(
+          !arenaItem
+              || (runner instanceof SurvivalRunner survival
+                  && !survival.items().owns(event.getItem().getItemStack())));
     } else if (arenaItem) {
       event.setCancelled(true);
       event.getItem().remove();
@@ -117,29 +120,20 @@ final class ItemGuard implements Listener {
   }
 
   /** A member's own inventory, or (for a fighter) one of their arena's loot chests. */
-  private boolean mayOpen(GameRunner runner, UUID player, Inventory inventory) {
+  private boolean mayOpen(ArenaRunner runner, UUID player, Inventory inventory) {
+    if (runner.menu(player, inventory)) {
+      return true;
+    }
     var type = inventory.getType();
     if (type == InventoryType.PLAYER || type == InventoryType.CRAFTING) {
       return true;
     }
-    return runner.isFighter(player)
-        && at(inventory)
-            .filter(location -> runner.world().contains(location))
-            .map(
-                location ->
-                    runner
-                        .world()
-                        .definition()
-                        .lootChests()
-                        .contains(Places.pos(location.getBlock())))
-            .orElse(false);
+    return LootAccess.allowed(runner, player, inventory);
   }
 
   /** Where a block's inventory is: its holder block's location, if a block holds it. */
   private static Optional<Location> at(Inventory inventory) {
-    return inventory.getHolder() instanceof BlockState block
-        ? Optional.of(block.getLocation())
-        : Optional.empty();
+    return LootAccess.locations(inventory).stream().findFirst();
   }
 
   /** Players still joining are frozen; outsiders clicking an arena item lose it. */
@@ -189,7 +183,7 @@ final class ItemGuard implements Listener {
     }
   }
 
-  private boolean ownWolf(GameRunner runner, UUID player, Entity entity) {
+  private boolean ownWolf(ArenaRunner runner, UUID player, Entity entity) {
     return !arenas.joining(player) && entity instanceof Wolf && runner.world().owns(entity);
   }
 

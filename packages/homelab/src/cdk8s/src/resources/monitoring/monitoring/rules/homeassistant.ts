@@ -41,10 +41,22 @@ const masterBathroomTemperatureAvailability =
 const masterBathroomTemperatureUnavailableExpr = `${masterBathroomTemperatureAvailability} == 0 or absent(${masterBathroomTemperatureAvailability})`;
 
 const PET_CARE_ENTITY_IDS = [
+  "vacuum.storage_litter_box",
+  "sensor.storage_status_code",
+  "binary_sensor.storage_bonnet_removed",
+  "binary_sensor.storage_drawer_removed",
+  "binary_sensor.storage_laser_dirty",
+  "binary_sensor.litter_robot_problem",
+  "binary_sensor.litter_robot_stalled",
+  "binary_sensor.petlibro_living_room_feeder_problem",
+  "binary_sensor.petlibro_guest_room_feeder_problem",
+  "binary_sensor.petlibro_fountain_water_low",
+  "binary_sensor.petlibro_fountain_operation_problem",
   "binary_sensor.dockstream_2_smart_fountain_water_dispensing_state",
   "binary_sensor.dockstream_2_smart_fountain_wi_fi",
   "sensor.dockstream_2_smart_fountain_remaining_cleaning_days",
   "sensor.dockstream_2_smart_fountain_remaining_filter_day",
+  "sensor.dockstream_2_smart_fountain_remaining_water",
   "sensor.dockstream_2_smart_fountain_remaining_water_2",
   "select.dockstream_2_smart_fountain_water_dispensing_mode",
   ...["", "_2"].flatMap((suffix) => [
@@ -101,29 +113,10 @@ function feederRules(
   const prefix = "granary_smart_camera_feeder";
   return [
     createBinarySensorAlert({
-      name: `PetLibroFeeder${id}FoodLow`,
-      entity: `binary_sensor.${prefix}_food_status${suffix}`,
-      description: `${label} PetLibro feeder reports low food.`,
-      summary: `${label} PetLibro feeder food low`,
-    }),
-    createBinarySensorAlert({
-      name: `PetLibroFeeder${id}DispenserProblem`,
-      entity: `binary_sensor.${prefix}_food_dispenser${suffix}`,
-      description: `${label} PetLibro feeder reports a dispenser failure.`,
-      summary: `${label} PetLibro feeder dispenser problem`,
-    }),
-    createBinarySensorAlert({
       name: `PetLibroFeeder${id}BatteryProblem`,
       entity: `binary_sensor.${prefix}_battery_status${suffix}`,
       description: `${label} PetLibro feeder reports a battery problem.`,
       summary: `${label} PetLibro feeder battery problem`,
-    }),
-    expressionAlert({
-      name: `PetLibroFeeder${id}WifiDisconnected`,
-      expression: `homeassistant_binary_sensor_state{entity="binary_sensor.${prefix}_wi_fi${suffix}"} == 0`,
-      description: `${label} PetLibro feeder Wi-Fi is disconnected.`,
-      summary: `${label} PetLibro feeder offline`,
-      duration: "5m",
     }),
     createSensorAlert({
       name: `PetLibroFeeder${id}DesiccantDue`,
@@ -134,13 +127,6 @@ function feederRules(
       summary: `${label} PetLibro feeder desiccant due`,
       duration: "1h",
     }),
-    expressionAlert({
-      name: `PetLibroFeeder${id}NotDispensing`,
-      expression: `time() - homeassistant_sensor_timestamp_seconds{entity="sensor.${prefix}_last_feed_time${suffix}"} > 50400`,
-      description: `${label} PetLibro feeder has not dispensed food in over 14 hours.`,
-      summary: `${label} PetLibro feeder not dispensing`,
-      duration: "30m",
-    }),
   ];
 }
 
@@ -149,15 +135,6 @@ export function getHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
     {
       name: "homeassistant-petlibro-fountain",
       rules: [
-        createSensorAlert({
-          name: "PetLibroFountainWaterLow",
-          entity:
-            'homeassistant_sensor_unit_percent{entity="sensor.dockstream_2_smart_fountain_remaining_water_2"}',
-          condition: "<",
-          threshold: 60,
-          description: "PetLibro fountain water is below 60%: {{ $value }}%.",
-          summary: "PetLibro fountain water low",
-        }),
         createSensorAlert({
           name: "PetLibroFountainCleaningDue",
           entity:
@@ -177,14 +154,6 @@ export function getHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
           description:
             "PetLibro fountain filter is due: {{ $value }} days remaining.",
           summary: "PetLibro fountain filter due",
-        }),
-        createBinarySensorAlert({
-          name: "PetLibroFountainOperationProblem",
-          entity: "binary_sensor.petlibro_fountain_operation_problem",
-          description:
-            "PetLibro fountain is offline, not in Flowing Water (Constant) mode, or has not dispensed for five minutes.",
-          summary: "PetLibro fountain operation problem",
-          duration: "5m",
         }),
       ],
     },
@@ -259,9 +228,9 @@ export function getHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
         expressionAlert({
           name: "LitterRobotDiagnosticsStale",
           expression:
-            'trmnl_petcare_source_up{source="whisker"} == 0 or trmnl_petcare_litter_source_fresh == 0 or absent(trmnl_petcare_litter_source_fresh)',
+            'trmnl_petcare_source_up{source="whisker"} == 0 or trmnl_petcare_litter_source_fresh == 0 or absent(trmnl_petcare_litter_source_fresh) or time() - trmnl_petcare_whisker_last_success_timestamp_seconds > 900 or absent(trmnl_petcare_whisker_last_success_timestamp_seconds)',
           description:
-            "Fresh Whisker diagnostics are unavailable or the LR5 has not been seen for 15 minutes.",
+            "Validated Whisker diagnostics are unavailable, their last successful fetch is older than 15 minutes, or the associated HA vacuum entity is unavailable. Device lastSeen is not a heartbeat.",
           summary: "Storage LR5 diagnostics stale",
           duration: "10m",
         }),
@@ -289,6 +258,19 @@ export function getHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
     {
       name: "homeassistant-availability",
       rules: [
+        {
+          alert: "VacuumRunInterrupted",
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            'max by (workflow, reason) (temporal_workflow_outcome_last_timestamp_seconds{workflow=~"runVacuumIfNotHome|leavingHome",outcome="interrupted",reason="commanded-return"}) > time() - 86400',
+          ),
+          for: "1m",
+          labels: { severity: "info" },
+          annotations: {
+            summary: "Vacuum cleaning interrupted by a return command",
+            description:
+              "Cleaning was witnessed in Home Assistant recorder history, followed by a vacuum.return_to_base command. No automatic restart was attempted. The command actor is not inferred.",
+          },
+        },
         {
           alert: "HomeAssistantMasterBathroomTemperatureUnavailable",
           annotations: {

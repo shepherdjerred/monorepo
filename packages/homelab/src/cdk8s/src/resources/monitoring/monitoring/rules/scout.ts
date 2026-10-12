@@ -4,6 +4,7 @@ import { escapePrometheusTemplate } from "./shared.ts";
 import {
   SCOUT_GATEWAY_OWNER_BY_STAGE,
   SCOUT_TRPC_NON_FAULT_CODES,
+  scoutGatewayAlertRoleMatcher,
 } from "./scout-alert-constants.ts";
 import { getScoutDurableRuleGroup } from "./scout-durable-rules.ts";
 import { getScoutTemporalRuleGroup } from "./scout-temporal-rules.ts";
@@ -294,18 +295,21 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
           // Previously only caught indirectly (and slowly) by the report-missed
           // alert; this pages within minutes.
           //
-          // Scoped per stage to the role that actually holds the shard there —
-          // beta's `gateway` pod, prod's `combined` pod. The gauge is a plain
+          // Scoped per stage to the roles that can hold the shard during this
+          // release — beta's new `gateway` or its previous `combined` pod,
+          // and prod's `combined` pod. The gauge is a plain
           // prom-client gauge, so every pod that never opens a shard exports it
           // as a truthful 0; an unscoped `min by (environment)` therefore reads
           // beta's `application` pod as a Discord outage the moment the split
-          // lands. `SCOUT_GATEWAY_OWNER_BY_STAGE` is the mapping, and the one
-          // place to edit when prod splits too.
+          // lands. Root sync updates Prometheus before Scout, so a stage with
+          // a rendered gateway accepts either owner through activation and
+          // retirement. `SCOUT_GATEWAY_OWNER_BY_STAGE` selects that overlap.
           //
           // The `absent()` half of each stage is not redundant with the
-          // threshold: scoping to one role means the rule goes quiet if that
-          // stage has no gateway-owning pod scheduled at all, and "nothing is
-          // holding the shard" is exactly the outage this alert exists for.
+          // threshold: scoping to gateway-owning roles means the rule goes
+          // quiet if that stage has no owner pod scheduled at all, and
+          // "nothing is holding the shard" is exactly the outage this alert
+          // exists for.
           alert: "ScoutDiscordDisconnected",
           annotations: {
             summary: "Scout is disconnected from Discord",
@@ -314,10 +318,11 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            SCOUT_GATEWAY_OWNER_BY_STAGE.flatMap(({ environment, role }) => {
-              const selector = `discord_connection_status{environment="${environment}",role="${role}"}`;
+            SCOUT_GATEWAY_OWNER_BY_STAGE.flatMap(({ environment }) => {
+              const roleMatcher = scoutGatewayAlertRoleMatcher();
+              const selector = `discord_connection_status{environment="${environment}",${roleMatcher}}`;
               return [
-                `(min by (environment) (${selector}) == 0)`,
+                `(max by (environment) (${selector}) == 0)`,
                 `absent(${selector})`,
               ];
             }).join(" or "),
@@ -327,28 +332,10 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
             severity: "critical",
           },
         },
-        {
-          // A cron task (polling, dispatch, outreach, cleanup) that stops
-          // succeeding entirely produces nothing and throws nothing. The
-          // per-job last-success timestamp is the only signal. 25h backstop —
-          // every scout cron runs at least daily, so a 25h gap means stalled.
-          alert: "ScoutCronJobStale",
-          annotations: {
-            summary: escapePrometheusTemplate(
-              "Scout cron job {{ $labels.job_name }} is stalled",
-            ),
-            message: escapePrometheusTemplate(
-              "Scout {{ $labels.environment }} cron job {{ $labels.job_name }} has not succeeded in {{ $value | humanizeDuration }}. It may have stopped running (deadlock, unhandled rejection, or scheduler death).",
-            ),
-          },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "(time() - max by (environment, job_name) (cron_job_last_success_timestamp)) > 90000",
-          ),
-          for: "10m",
-          labels: {
-            severity: "warning",
-          },
-        },
+        // Background schedules use TemporalScheduledCurrentFailure and
+        // TemporalScheduleHealthUnknown in ops-snapshot.ts. The retired cron
+        // timestamp has no producers and its daily assumption excludes weekly
+        // work; do not add a duplicate schedule failure alert here.
         {
           alert: "ScoutInitialHistoryImportStale",
           annotations: {

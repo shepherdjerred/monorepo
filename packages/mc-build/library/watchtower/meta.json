@@ -1,0 +1,7 @@
+{
+  "title": "Stone watchtower",
+  "tags": ["tower", "fortification", "battlements", "stone", "landmark"],
+  "style": "medieval",
+  "footprint": { "w": 17, "d": 16, "h": 18 },
+  "notes": "A square `tower` with interior floors, arrow slits, a door and crenellations, a corbel band of upside-down stairs under the parapet, a stub of curtain wall with merlons, and a lantern pole. Textured with a four-block noise palette so the stone reads weathered."
+}

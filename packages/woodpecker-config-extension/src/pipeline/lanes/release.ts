@@ -19,9 +19,8 @@ import {
  * None of them carries a changed-path guard, and that is deliberate. Whether a
  * release is needed depends on something selection cannot know: whether the
  * image lane actually pushed anything this build. So the lanes always run on
- * the default branch and decide internally, exactly as they did under
- * Buildkite -- a guard here would skip a release that pushed images without
- * touching any helm or argocd path.
+ * the default branch and decide internally -- a guard here would skip a
+ * release that pushed images without touching any helm or argocd path.
  */
 
 /** Serializes the whole release so two builds cannot interleave a rollout. */
@@ -37,7 +36,7 @@ const RELEASE_GROUP = { limit: 1, group: "homelab-release" } as const;
  * verdict is a hard failure, since continuing would mutate infrastructure
  * without knowing whether this build was entitled to.
  */
-function admissionGate(installCommand: string): string[] {
+export function admissionGate(installCommand: string): string[] {
   return [
     installCommand,
     'release_admission="$(bun --no-install scripts/ci/homelab-release-admission.ts consume)"',
@@ -95,7 +94,7 @@ export function releaseChainSteps(
         ...admissionGate(
           "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production",
         ),
-        ". ci/scripts/toolchain.sh",
+        "MISE_TOOLCHAIN_SCOPE=automation . ci/scripts/toolchain.sh",
         "bun --no-install ci/scripts/reporting/buildkit-env.ts",
         // The Caddyfile is an input to the in-image smoke test. verify builds
         // it; it travels through the handoff store because each Woodpecker
@@ -124,7 +123,7 @@ export function releaseChainSteps(
           "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter homelab --filter '@homelab/cdk8s' --production",
         ),
         ...releaseRequestedGate(),
-        ". ci/scripts/toolchain.sh",
+        "MISE_TOOLCHAIN_SCOPE=deployment . ci/scripts/toolchain.sh",
         'export ARGOCD_TOKEN="$ARGOCD_AUTH_TOKEN"',
         // Auto-sync is suspended for the whole rollout so ArgoCD cannot
         // reconcile a half-published set of charts.
@@ -168,7 +167,7 @@ export function releaseChainSteps(
           "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter homelab --filter '@homelab/cdk8s' --production",
         ),
         ...releaseRequestedGate(),
-        ". ci/scripts/toolchain.sh",
+        "MISE_TOOLCHAIN_SCOPE=deployment . ci/scripts/toolchain.sh",
         'export ARGOCD_TOKEN="$ARGOCD_AUTH_TOKEN"',
         "bun --no-install scripts/ci/read-ci-handoff.ts argocd-release-expected > argocd-release-expected.json",
         // release-root owns the exact-revision, lifecycle, immutable-field and
@@ -185,7 +184,9 @@ export function releaseChainSteps(
         "helm-push",
         "tofu-apply-arr",
       ],
-      timeoutMinutes: 60,
+      // Sequential cold Scout starts can each consume 45 minutes, Temporal's
+      // migration 20, and the remaining root waves need apply/health time.
+      timeoutMinutes: 120,
       resources: MEDIUM_TIER,
       defaultBranchOnly: true,
       concurrency: RELEASE_GROUP,
@@ -206,7 +207,8 @@ export function releaseChainSteps(
  * seaweedfs must follow helm-push so buckets exist before workloads reference
  * them; tailscale and arr then follow it in order because they share the
  * plugin cache lock. cloudflare waits for argocd-sync because its DNS records
- * point at services that must already be reconciled.
+ * point at services that must already be reconciled. Static-site content must
+ * also be published before a new hostname is exposed.
  */
 function chainedApplyCommands(stack: string): string[] {
   return [
@@ -217,7 +219,7 @@ function chainedApplyCommands(stack: string): string[] {
     '  echo "invalid homelab release admission outcome: $release_admission" >&2',
     "  exit 1",
     "fi",
-    ". ci/scripts/toolchain.sh",
+    "MISE_TOOLCHAIN_SCOPE=tofu . ci/scripts/toolchain.sh",
     `export TF_PLUGIN_CACHE_DIR=${TOFU_PLUGIN_CACHE.path}`,
     `flock -x ${TOFU_PLUGIN_CACHE.path}/.lock bun --no-install packages/homelab/scripts/tofu/tofu-stack.ts ${stack} apply`,
   ];
@@ -254,7 +256,7 @@ function chainedTofuApplies(images: CiImages): CiStep[] {
     },
     {
       stack: "cloudflare",
-      dependsOn: ["homelab-release-admission", "argocd-sync"],
+      dependsOn: ["homelab-release-admission", "argocd-sync", "sites"],
       concurrency: { limit: 1, group: "tofu-cloudflare" },
       secrets: [
         grant("ci-cloudflare-credentials", "CLOUDFLARE_ACCOUNT_ID"),

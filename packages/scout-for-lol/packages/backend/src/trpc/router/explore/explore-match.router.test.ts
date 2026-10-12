@@ -1,14 +1,15 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 import type {
   LakeMatchParticipantRow,
   TimelineChartFrame,
-} from "#src/reports/duckdb/consumer-profile-lake-reads.ts";
-import * as lakeReads from "#src/reports/duckdb/consumer-profile-lake-reads.ts";
+} from "#src/reports/duckdb/consumer/profile-lake-reads.ts";
+import * as lakeReads from "#src/reports/duckdb/consumer/profile-lake-reads.ts";
 import { resetConfigurationForTests } from "#src/configuration.ts";
 import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
 import { testGuildId } from "#src/testing/test-ids.ts";
 
-const MATCH_ID = "EUW1_7988647427";
+const MATCH_ID = RiotMatchIdSchema.parse("EUW1_7988647427");
 
 function matchRow(
   participantId: number,
@@ -99,7 +100,7 @@ const fullFrames = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((participantId) =>
 const fetchFullMatch = vi.fn(async () => swiftplayRows);
 const fetchTimelineChartFrames = vi.fn(async () => fullFrames);
 
-vi.doMock("#src/reports/duckdb/consumer-profile-lake-reads.ts", () => ({
+vi.doMock("#src/reports/duckdb/consumer/profile-lake-reads.ts", () => ({
   ...lakeReads,
   fetchFullMatch,
   fetchTimelineChartFrames,
@@ -161,5 +162,21 @@ describe("exploreMatch.chartSeries", () => {
     await expect(
       caller.exploreMatch.chartSeries({ matchId: MATCH_ID }),
     ).rejects.toMatchObject({ code: "PRECONDITION_FAILED" });
+  });
+});
+
+describe("exploreMatch.reviewTimeline authorization", () => {
+  test("denies a viewer outside the Explore allowlist before reading a match", async () => {
+    setAllowlist(testGuildId("222222"));
+    await expect(
+      trpc.authedCaller().exploreMatch.reviewTimeline({ matchId: MATCH_ID }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+    expect(fetchFullMatch).not.toHaveBeenCalled();
+  });
+  test("denies a missing match", async () => {
+    fetchFullMatch.mockResolvedValueOnce([]);
+    await expect(
+      trpc.authedCaller().exploreMatch.reviewTimeline({ matchId: MATCH_ID }),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
   });
 });

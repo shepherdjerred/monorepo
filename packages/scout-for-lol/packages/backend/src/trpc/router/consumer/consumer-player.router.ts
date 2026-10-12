@@ -1,3 +1,8 @@
+import type {
+  DiscordGuildId,
+  DiscordAccountId,
+} from "@scout-for-lol/domain/identity/discord.ts";
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import {
@@ -36,7 +41,7 @@ const FilterInput = z.object({
 
 const MatchHistoryCursorSchema = z.object({
   gameCreationMs: z.number().int(),
-  matchId: z.string().min(1),
+  matchId: RiotMatchIdSchema,
   consumed: z.number().int().nonnegative().optional(),
 });
 
@@ -82,7 +87,7 @@ const RankedPlayerRowsSchema = z.array(
  * API's one-character compatibility avoids surprising existing callers.
  */
 async function rankedConsumerPlayerIds(input: {
-  guildIds: string[];
+  guildIds: DiscordGuildId[];
   query: string;
 }): Promise<z.infer<typeof PlayerIdSchema>[]> {
   const normalizedQuery = input.query.toLowerCase();
@@ -163,8 +168,8 @@ async function rankedConsumerPlayerIds(input: {
 }
 
 function guildDisplay(
-  guilds: { id: string; name: string; icon: string | null }[],
-  guildId: string,
+  guilds: { id: DiscordGuildId; name: string; icon: string | null }[],
+  guildId: DiscordGuildId,
 ) {
   const guild = guilds.find((candidate) => candidate.id === guildId);
   if (guild === undefined) {
@@ -176,8 +181,8 @@ function guildDisplay(
 }
 
 function guildProfileDisplay(
-  guilds: { id: string; name: string; icon: string | null }[],
-  guildId: string,
+  guilds: { id: DiscordGuildId; name: string; icon: string | null }[],
+  guildId: DiscordGuildId,
 ) {
   const guild = guilds.find((candidate) => candidate.id === guildId);
   if (guild === undefined) {
@@ -193,8 +198,8 @@ function guildProfileDisplay(
 type HomePlayer = {
   id: number;
   alias: string;
-  serverId: string;
-  discordId: string | null;
+  serverId: DiscordGuildId;
+  discordId: DiscordAccountId | null;
   accounts: {
     riotGameName: string | null;
     riotTagLine: string | null;
@@ -214,7 +219,7 @@ function latestMatch(player: HomePlayer): Date | null {
 
 function homePlayer(
   player: HomePlayer,
-  guilds: { id: string; name: string; icon: string | null }[],
+  guilds: { id: DiscordGuildId; name: string; icon: string | null }[],
 ) {
   return {
     playerId: player.id,

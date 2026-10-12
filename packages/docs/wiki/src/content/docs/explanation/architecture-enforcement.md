@@ -168,5 +168,7 @@ root. A package's dependencies are checked by their own packages' gates.
 ## Related
 
 - [Why the CI pipeline has so many steps](/explanation/ci-pipeline-shape/)
+- The Scout package boundaries, in `packages/scout-for-lol/README.md` under
+  "Architecture boundaries".
 - `packages/architecture/README.md` in the repository, for how to opt a package
   in and declare boundaries.

@@ -1,9 +1,10 @@
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import { describe, expect, test } from "vitest";
 import { RankSchema, type Rank } from "#src/model/riot/rank.ts";
 import { buildPlayerRankHistory } from "#src/model/riot/player-rank-history.ts";
 
-const MAIN = "main-puuid";
-const SMURF = "smurf-puuid";
+const MAIN = LeaguePuuidSchema.parse("main-puuid".padEnd(78, "0"));
+const SMURF = LeaguePuuidSchema.parse("smurf-puuid".padEnd(78, "0"));
 
 function rank(
   tier: Rank["tier"],
@@ -75,20 +76,20 @@ describe("buildPlayerRankHistory", () => {
 
   test("extends the current split window past the last bundled act end", () => {
     const history = buildPlayerRankHistory({
-      now: new Date("2026-10-21T12:00:00-07:00"),
+      now: new Date("2027-01-07T12:00:00-08:00"),
       accounts: ACCOUNTS.slice(0, 1),
       observations: [
         {
           puuid: MAIN,
           queue: "flex",
-          at: new Date("2026-10-21T08:00:00-07:00"),
+          at: new Date("2027-01-07T08:00:00-08:00"),
           rank: rank("gold", 2, 5),
         },
       ],
     });
     expect(history.currentSplit.id).toBe("2026_SEASON_3");
     expect(history.currentSplit.end.getTime()).toBe(
-      new Date("2026-10-21T12:00:00-07:00").getTime(),
+      new Date("2027-01-07T12:00:00-08:00").getTime(),
     );
     expect(history.queues.flex.series[0]?.points).toHaveLength(1);
   });

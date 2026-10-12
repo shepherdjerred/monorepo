@@ -1,7 +1,7 @@
 import { Loaded } from "@shepherdjerred/loaded";
 import { Link } from "react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Compass, Settings } from "lucide-react";
+import { Compass, Settings, Users } from "lucide-react";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import {
@@ -16,8 +16,11 @@ export function resolveMemberDestination(input: {
   exploreAvailable: boolean;
   profilesAvailable: boolean;
 }): "/explore" | "/players" | null {
-  if (input.exploreAvailable) return "/explore";
-  return input.profilesAvailable ? "/players" : null;
+  return input.profilesAvailable
+    ? "/players"
+    : input.exploreAvailable
+      ? "/explore"
+      : null;
 }
 
 export function GuildPicker() {
@@ -26,86 +29,86 @@ export function GuildPicker() {
   const profilesQuery = useQuery(
     trpc.consumerPlayer.status.queryOptions(undefined, { retry: 2 }),
   );
-  const memberDestination = resolveMemberDestination({
-    exploreAvailable: exploreQuery.data?.enabled === true,
-    profilesAvailable: profilesQuery.data?.state === "available",
-  });
-  // Both checks answer one question — can this visitor use the member card —
-  // so they are joined rather than ORed field by field. `error` here means
-  // neither check produced an answer; if one succeeded and the other's refresh
-  // failed, the join is `degraded` and the card stays usable.
-  const member = Loaded.all({
-    // Both are access checks, so `strict`: a stale "available" would offer the
-    // member destination on the strength of a recheck that failed.
-    explore: Loaded.strict(Loaded.fromQuery(exploreQuery, ["explore.status"])),
-    profiles: Loaded.strict(
-      Loaded.fromQuery(profilesQuery, ["consumerPlayer.status"]),
-    ),
-  });
-  const memberPending = member.status === "loading";
-  const memberError = member.status === "error";
-
+  const explore = Loaded.strict(
+    Loaded.fromQuery(exploreQuery, ["explore.status"]),
+  );
+  const profiles = Loaded.strict(
+    Loaded.fromQuery(profilesQuery, ["consumerPlayer.status"]),
+  );
   return (
     <div className="mx-auto max-w-5xl space-y-6 px-6 py-8 sm:px-8 sm:py-12">
-      <div className="space-y-2">
-        <p className="text-sm font-medium text-primary">Scout dashboard</p>
-        <h1 className="text-3xl font-semibold tracking-tight">
-          Choose how you want to use Scout
-        </h1>
-        <p className="max-w-2xl text-scout-subtle">
-          Discover the games Scout recorded as a server member, or administer
-          and install Scout for a Discord server.
-        </p>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2">
+      <h1 className="text-3xl font-semibold tracking-tight">Scout</h1>
+      <div className="grid gap-4 md:grid-cols-3">
         <ExperienceCard
-          title="Explore Scout"
-          description="Ask questions across Scout's recorded games and find configured players from enabled servers you share."
+          title="Players"
+          description="Review recent matches, champions, and progress."
+          icon={<Users aria-hidden="true" />}
+        >
+          <AccessAction
+            status={profiles.status}
+            available={
+              profiles.status === "done" && profiles.data.state === "available"
+            }
+            href="/players"
+            label="View players"
+            onRetry={() => void profilesQuery.refetch()}
+          />
+        </ExperienceCard>
+        <ExperienceCard
+          title="Explore"
+          description="Ask questions about your League matches."
           icon={<Compass aria-hidden="true" />}
         >
-          {memberPending ? (
-            <p className="text-sm text-scout-subtle">Checking access…</p>
-          ) : memberError ? (
-            <div className="space-y-3">
-              <p className="text-sm text-scout-subtle">
-                Scout couldn&apos;t verify your member access. This is usually
-                temporary.
-              </p>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  void exploreQuery.refetch();
-                  void profilesQuery.refetch();
-                }}
-              >
-                Retry
-              </Button>
-            </div>
-          ) : memberDestination === null ? (
-            <p className="text-sm text-scout-subtle">
-              Member discovery is not enabled for a Scout server you currently
-              share. Administrator permission is not required when it becomes
-              available.
-            </p>
-          ) : (
-            <Button asChild size="lg">
-              <Link to={memberDestination}>Explore Scout</Link>
-            </Button>
-          )}
+          <AccessAction
+            status={explore.status}
+            available={explore.status === "done" && explore.data.enabled}
+            href="/explore"
+            label="Open Explore"
+            onRetry={() => void exploreQuery.refetch()}
+          />
         </ExperienceCard>
-
         <ExperienceCard
-          title="Manage Scout"
-          description="Open an existing server workspace, continue setup, or add Scout to a new Discord server."
+          title="Manage"
+          description="Set up players, reports, and subscriptions for your server."
           icon={<Settings aria-hidden="true" />}
         >
-          <Button asChild size="lg" variant="outline">
-            <Link to="/manage">Manage Scout</Link>
+          <Button asChild variant="outline">
+            <Link to="/manage">Manage servers</Link>
           </Button>
         </ExperienceCard>
       </div>
     </div>
+  );
+}
+
+function AccessAction(props: {
+  status: string;
+  available: boolean;
+  href: string;
+  label: string;
+  onRetry: () => void;
+}) {
+  if (props.status === "loading")
+    return <p className="text-sm text-scout-subtle">Checking access…</p>;
+  if (props.status === "error")
+    return (
+      <div className="space-y-2">
+        <p className="text-sm">Couldn’t check access.</p>
+        <Button variant="outline" onClick={props.onRetry}>
+          Retry
+        </Button>
+      </div>
+    );
+  if (!props.available)
+    return (
+      <p className="text-sm text-scout-subtle">
+        Not enabled for your servers yet.
+      </p>
+    );
+  return (
+    <Button asChild>
+      <Link to={props.href}>{props.label}</Link>
+    </Button>
   );
 }
 
@@ -116,17 +119,13 @@ function ExperienceCard(props: {
   children: React.ReactNode;
 }) {
   return (
-    <Card className="flex min-h-72 flex-col border-primary/30 bg-gradient-to-br from-scout-surface to-scout-hover/40">
-      <CardHeader className="flex-1 space-y-4">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-          {props.icon}
-        </div>
-        <div className="space-y-2">
-          <CardTitle className="text-2xl" aria-level={2}>
-            {props.title}
-          </CardTitle>
-          <CardDescription>{props.description}</CardDescription>
-        </div>
+    <Card className="flex flex-col">
+      <CardHeader className="flex-1 space-y-3">
+        <div className="text-primary">{props.icon}</div>
+        <CardTitle className="text-xl" aria-level={2}>
+          {props.title}
+        </CardTitle>
+        <CardDescription>{props.description}</CardDescription>
       </CardHeader>
       <CardContent>{props.children}</CardContent>
     </Card>

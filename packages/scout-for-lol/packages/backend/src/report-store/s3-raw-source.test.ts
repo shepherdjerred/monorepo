@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test } from "vitest";
 import {
   type RawObjectKind,
@@ -14,6 +15,9 @@ describe("classifyRawObjectKey", () => {
     ["prematch/2026/07/12/123/spectator-data.json", "prematch"],
     ["games/2026/07/12/NA1_1/report.png", "ignored"],
     ["games/2026/07/12/NA1_1/report.svg", "ignored"],
+    // Evidence a client-sourced match was converted from; the lake reads the
+    // converted match.json beside it, never the bundle.
+    ["games/2026/07/12/NA1_1/client-bundle.json", "ignored"],
     ["failed-validations/2026/07/12/NA1_1/match.json", "ignored"],
     ["prematch/2026/07/12/123/loading-screen.png", "ignored"],
   ];
@@ -30,13 +34,13 @@ describe("deterministic key builders (must mirror the live write paths)", () => 
   const keyDate = new Date(2026, 6, 12, 12, 0, 0);
 
   test("match key mirrors storage/s3-helpers generateS3Key", () => {
-    expect(matchObjectKey("NA1_123", keyDate)).toBe(
+    expect(matchObjectKey(RiotMatchIdSchema.parse("NA1_123"), keyDate)).toBe(
       "games/2026/07/12/NA1_123/match.json",
     );
   });
 
   test("timeline key mirrors storage/s3-helpers generateS3Key", () => {
-    expect(timelineObjectKey("NA1_123", keyDate)).toBe(
+    expect(timelineObjectKey(RiotMatchIdSchema.parse("NA1_123"), keyDate)).toBe(
       "games/2026/07/12/NA1_123/timeline.json",
     );
   });

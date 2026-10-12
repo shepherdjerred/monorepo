@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
@@ -14,6 +15,7 @@ import {
   buildCommunityInsights,
   squadChemistry,
 } from "#src/trpc/router/consumer/community-insights.ts";
+import { listLivePrematchGames } from "#src/temporal/prematch/prematch-reads.ts";
 import { protectedProcedure, router } from "#src/trpc/trpc.ts";
 
 const GuildInput = z.object({ guildId: DiscordGuildIdSchema });
@@ -36,7 +38,7 @@ const STANDARD_QUEUES = [
   "custom",
 ];
 
-async function authorizedGuild(user: User, guildId: string) {
+async function authorizedGuild(user: User, guildId: DiscordGuildId) {
   const guilds = await assertConsumerPlayerScope(user);
   const guild = guilds.find((candidate) => candidate.id === guildId);
   if (guild === undefined)
@@ -222,35 +224,20 @@ export const consumerGuildRouter = router({
         ),
       ),
     );
-    const active = await prisma.activeGame.findMany({
-      where: { expiresAt: { gt: new Date() } },
-      select: {
-        gameId: true,
-        trackedPuuids: true,
-        prematchMatchId: true,
-        detectedAt: true,
-        expiresAt: true,
+    // The prematch captures. A game the report lake already holds is over,
+    // whatever its TTL says.
+    const live = await listLivePrematchGames({
+      now: new Date(),
+      completedMatchIds: async (matchIds) => {
+        const completed = await fetchMatchSupport({ matchIds: [...matchIds] });
+        return new Set(completed.map((match) => match.match_id));
       },
     });
-    const completedMatches = await fetchMatchSupport({
-      matchIds: active.flatMap((game) =>
-        game.prematchMatchId === null ? [] : [game.prematchMatchId],
-      ),
-    });
-    const completed = new Set(completedMatches.map((match) => match.match_id));
-    return active
+    return live
       .flatMap((game) => {
-        if (
-          game.prematchMatchId !== null &&
-          completed.has(game.prematchMatchId)
-        )
-          return [];
-        const tracked = z
-          .array(z.string())
-          .parse(JSON.parse(game.trackedPuuids));
         const guildPlayers = [
           ...new Map(
-            tracked.flatMap((puuid) => {
+            game.participantPuuids.flatMap((puuid) => {
               const player = byPuuid.get(puuid);
               return player === undefined
                 ? []
@@ -262,7 +249,7 @@ export const consumerGuildRouter = router({
           ? []
           : [
               {
-                gameId: game.gameId.toString(),
+                gameId: game.gameId,
                 detectedAt: game.detectedAt,
                 expiresAt: game.expiresAt,
                 players: guildPlayers,

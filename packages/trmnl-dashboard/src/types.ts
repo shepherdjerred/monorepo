@@ -1,7 +1,4 @@
 import type { Status } from "./status.ts";
-
-export type TrmnlPayload = HomePayload | HomelabPayload | PetCarePayload;
-
 export type EntitySummary = {
   entity_id: string;
   label: string;

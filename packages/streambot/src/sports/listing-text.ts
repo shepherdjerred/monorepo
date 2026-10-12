@@ -1,15 +1,22 @@
 import { PlaybackCommandBoundaryError } from "@shepherdjerred/streambot/commands/playback-command-errors.ts";
 import type { DiscoveryScope } from "@shepherdjerred/streambot/discovery/candidate.ts";
-import type { SportsCatalog } from "@shepherdjerred/streambot/sports/types.ts";
+import type {
+  SportsCatalog,
+  SportsEvent,
+} from "@shepherdjerred/streambot/sports/types.ts";
 import type { MediaFeatureGate } from "@shepherdjerred/streambot/config/media-features.ts";
 import { sportsEventTimeLabel } from "@shepherdjerred/streambot/sports/parse-events.ts";
 
-export async function sportsListingText(input: {
+type SportsListingInput = {
   readonly scope: DiscoveryScope | null;
   readonly catalog: SportsCatalog | undefined;
   readonly enabled: MediaFeatureGate["sportsStreaming"];
   readonly signal: AbortSignal;
-}): Promise<string> {
+};
+
+export async function sportsListingEvents(
+  input: SportsListingInput,
+): Promise<readonly SportsEvent[]> {
   if (
     input.scope === null ||
     input.catalog === undefined ||
@@ -20,7 +27,13 @@ export async function sportsListingText(input: {
       "Sports listings are not enabled here.",
     );
   }
-  const events = await input.catalog.listToday(input.signal);
+  return await input.catalog.listToday(input.signal);
+}
+
+export async function sportsListingText(
+  input: SportsListingInput,
+): Promise<string> {
+  const events = await sportsListingEvents(input);
   return events.length === 0
     ? "No sports streams are listed for today."
     : events

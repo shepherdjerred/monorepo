@@ -6,29 +6,27 @@ sidebar:
 ---
 
 Scout's deterministic Workflow code needs only a Temporal connection. Its
-Activities need the Discord gateway, database, credentials, and report-lake
+Activities need Discord REST access, the database, credentials, and report-lake
 volume, so those effectful Workers stay in the backend.
 
 Workflow-only pods can therefore be credentialless and independently
 versioned without introducing a second Discord client or a private control API.
-The split is staged: beta first registers a capable stable version, then a
-distinct candidate. The embedded poller drains old unversioned histories; it
-cannot serve as a Worker Deployment rollback version. It is removed only after
-replay, a version-targeted canary, ramp, soak, stable-pin promotion, and healthy
-versioned pollers. Production follows after beta acceptance.
+Beta's external Worker Deployment owns Workflow tasks. Embedded Workflow
+pollers remain available in development and production during their migration.
+Removing a drained poller does not cancel healthy executions or durable timers.
+The [runtime capability table](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/configuration/runtime-role.ts)
+makes that ownership explicit by stage.
 
 ```mermaid
 flowchart LR
   accTitle: Scout Temporal ownership and queue boundaries
-  accDescr: Temporal dispatches deterministic workflow tasks to credentialless stable and candidate pollers and effectful activity tasks to the Scout backend. During bootstrap the embedded workflow poller drains old unversioned histories.
+  accDescr: Temporal dispatches beta workflow tasks to credentialless stable and candidate pollers and effectful activity tasks to the Scout backend.
 
   T[Temporal server] --> W[Workflow queue]
   W --> S[Credentialless stable workflow poller]
   W --> C[Credentialless candidate workflow poller]
-  W --> E[Embedded drain poller during bootstrap]
   S --> R[Realtime activities]
   C --> R
-  E --> R
   W --> I[Interactive activities]
   W --> B[Background activities]
   W --> L[Serial lake activities]
@@ -36,7 +34,7 @@ flowchart LR
   I --> P
   B --> P
   L --> V[(Report-lake volume)]
-  R --> D[Discord gateway]
+  R --> D[Discord REST]
   B --> D
 ```
 
@@ -51,8 +49,12 @@ counters. Prompts, report results, Discord payloads, images, and partial model
 output stay in Postgres or S3.
 
 This split keeps replay deterministic and limits sensitive data in Temporal
-history. It also lets effect claims remain transactional beside the product
-records they protect.
+history. Effect claims live in Postgres beside the product records they
+protect, but they commit separately from them. A claim is an insert that
+expects a unique violation and then reads the existing row back, and Postgres
+aborts a transaction on that violation, so the read-back cannot run inside one.
+A guarded effect therefore reports its guard and its fact as two outcomes, and
+a run that claimed the guard and died before the fact reconciles on retry.
 
 ## One orchestration queue, four effect queues
 
@@ -71,6 +73,23 @@ credentials or data volumes. A Temporal outage degrades this component without
 taking down HTTP or Discord. Scout does not silently return durable work to its
 legacy scheduler, because two schedulers would make duplicate effects possible.
 
+## One match pipeline
+
+Every match flows through one durable pipeline. The `prematch-poll` and
+`postmatch-discovery` Schedules start discovery Workflows. Prematch discovery
+starts one Workflow per live game, keyed by the game, and never waits for it.
+Post-match discovery hands each completed match to an environment-wide
+dispatcher, which runs one match-processing Workflow at a time in completion
+order, so a later match cannot settle before an earlier one. The
+match-processing Workflow archives, observes, settles, applies progression,
+mints notification intents, and advances the account cursor last; each
+notification and lake projection then runs as its own child Workflow. A
+reconciliation Schedule restarts whatever a durable row says is unfinished.
+
+Matches observed by the retired v1 pipeline keep their `LEGACY_V1` owner.
+They stay readable and are never re-driven, because rewriting their owner
+would sweep years of historical matches into processing and redeliver them.
+
 ## Replay compatibility follows the deployment topology
 
 The workflow-only role registers an exact image Git SHA under
@@ -79,7 +98,11 @@ Candidate and stable images can coexist without duplicating Discord or
 report-lake ownership because neither version runs Activities.
 
 Potentially open Workflows still protect command or control-flow changes with
-replay patches. Retained histories exercise those patches before promotion.
+replay patches. Temporal compares Workflow and Activity types on replay, and
+workers resolve both by name, so renaming a type is staged: a release
+registers the new name beside the old one while still issuing the old one, a
+later release switches issuance behind a patch, and a last one drops the old
+name. Retained histories exercise those patches before promotion.
 Continue-As-New bounds long histories, but it is not a compatibility escape
 hatch for the history that already exists. During the one-time bootstrap, the
 unversioned embedded poller remains available until the first stable versioned
@@ -104,14 +127,23 @@ report's persisted local due date and advances it; older buffered actions then
 become no-ops. This preserves one run after downtime without replaying every
 missed cron occurrence.
 
-Schedules begin paused when a legacy owner still exists. A feature-family
-cutover transfers ownership explicitly; a Temporal outage never activates the
-legacy owner automatically.
+Beta's declared fixed Schedules start active because their durable owners are
+established. Reconciliation clears the exact retired migration pauses while
+preserving operator and credential pauses. Production retains its own activation
+policy. A Temporal outage never activates a legacy owner automatically.
+The [Schedule reference](/reference/temporal-schedules/#pause-behaviour) defines
+the matching notes and precedence.
 
 ## Workflows match product lifecycles
 
-Post-match discovery starts one independently identified child Workflow per
-match and waits until each child is durably started. Initial-history imports
+Discord questions and Dare authoring use the same persisted Explore execution
+as the web app. The gateway reserves shared quota, requests the durable start,
+and waits for the exact saved answer. It does not run a second agent locally.
+The [Explore run adapters](https://github.com/shepherdjerred/monorepo/tree/main/packages/scout-for-lol/packages/backend/src/explore/runs)
+retains pending requests when Temporal acceptance is uncertain.
+
+Post-match discovery waits for the dispatcher to acknowledge each match before
+its maintenance settles Dare deadlines. Initial-history imports
 use one quiet entity Workflow per PUUID: it processes one persisted page per
 Activity, Continues-As-New before history grows, and accepts a Signal when the
 product job is reopened after its cooldown.
@@ -125,6 +157,29 @@ output and interrupts the run instead of issuing a second billable request.
 The SSE broker remains a low-latency process transport. Reconnecting clients
 load persisted snapshots and terminal outcomes; Workflow history never becomes
 the public event store.
+
+## Delivery records distinguish uncertainty from failure
+
+Report output is frozen into per-chunk delivery receipts before the first send.
+Each receipt keeps its destination, content, attachment digest, nonce, and
+returned Discord message ID. A resumed run skips completed chunks.
+The [report delivery implementation](https://github.com/shepherdjerred/monorepo/tree/main/packages/scout-for-lol/packages/backend/src/reports)
+parks uncertain attempts for an operator's answer.
+
+Operators confirm either an observed message or a verified non-send through
+the existing single-use, actor-bound confirmation protocol. A non-send answer
+releases only the investigated chunk with a new nonce. The existing ingestion
+reconciler resumes archived output without rerunning its query or renderer.
+The [operations executor](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/operations/operations-execution.ts)
+commits resolution and its audit record together.
+
+Match notifications also freeze their message presentation before sending.
+Prematch artwork retains the destination guild's Clash decision, while tips
+retain their selection across retries. An uncertain attempt holds its tip
+claim until the delivery is resolved. This prevents retries from changing
+the message that an operator is investigating.
+The [notification implementation](https://github.com/shepherdjerred/monorepo/tree/main/packages/scout-for-lol/packages/backend/src/temporal/notification)
+coordinates these claims transactionally.
 
 ## Replay and outage evidence are release gates
 

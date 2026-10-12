@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import * as Sentry from "@sentry/bun";
 import {
   BUCKS_INT32_MAX,
@@ -129,7 +130,7 @@ async function settleMarketTransaction(
   input: {
     market: {
       id: number;
-      matchId: string;
+      matchId: RiotMatchId;
       serverId: DiscordGuildId;
       messageRefs: string;
     };

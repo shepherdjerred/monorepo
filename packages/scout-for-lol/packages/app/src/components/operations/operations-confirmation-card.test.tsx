@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/data";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test } from "vitest";
 import { OperationsConfirmationView } from "#src/components/operations/operations-confirmation-card.tsx";
@@ -14,7 +15,7 @@ import {
  */
 
 const INTENT_KEY = "match:NA1_1234567890/channel:1337623164146155593";
-const MATCH_ID = "NA1_1234567890";
+const MATCH_ID = RiotMatchIdSchema.parse("NA1_1234567890");
 
 function render(props: {
   draft: OperationsRequestDraft;
@@ -181,7 +182,10 @@ describe("the six arms' answers", () => {
 
   test("a projection repair that names no match is a failure", () => {
     const markup = render({
-      draft: { kind: "ops_repair_projection", riotMatchId: MATCH_ID },
+      draft: {
+        kind: "ops_repair_projection",
+        riotMatchId: MATCH_ID,
+      },
       result: {
         kind: "executed",
         outcome: { kind: "target-not-found", target: "match", id: MATCH_ID },
@@ -217,7 +221,10 @@ describe("the six arms' answers", () => {
 describe("terminal answers that moved nothing", () => {
   test("joined-running is final, detailed, and offers no retry", () => {
     const markup = render({
-      draft: { kind: "ops_repair_projection", riotMatchId: MATCH_ID },
+      draft: {
+        kind: "ops_repair_projection",
+        riotMatchId: MATCH_ID,
+      },
       result: {
         kind: "executed",
         outcome: { kind: "start-authorized", workflow: "repair-projection" },

@@ -1,6 +1,8 @@
 import {
+  getBackfilledThroughAt,
   getLastSuccessfulPollAt,
   getReconciliationCompletedAt,
+  setBackfilledThroughAt,
   setReconciliationCompletedAt,
 } from "#src/league/tasks/recovery/app-state.ts";
 import { detectDowntime } from "#src/league/tasks/recovery/detect-downtime.ts";
@@ -151,10 +153,27 @@ async function reconcileIngestion(): Promise<void> {
   }
 
   if (downtime.shouldBackfill && downtime.lastPollAt !== undefined) {
-    const backfillStart = downtime.lastPollAt;
-    logger.info("Starting S3 backfill for missed matches");
+    // Downtime is measured from the last poll, but a window an earlier run
+    // already backfilled is not backfilled again. Without this, a poll that
+    // stays stalled while the process is up re-scans [lastPollAt, now] on
+    // every run: on 2026-10-11 each run grew past 14 minutes and held the
+    // one-at-a-time background queue that renders post-match reports.
+    const backfilledThroughAt = await getBackfilledThroughAt();
+    const backfillStart =
+      backfilledThroughAt !== undefined &&
+      backfilledThroughAt > downtime.lastPollAt
+        ? backfilledThroughAt
+        : downtime.lastPollAt;
+    logger.info(
+      `Starting S3 backfill for missed matches since ${backfillStart.toISOString()}`,
+    );
     try {
       const result = await backfillMatchesToS3(backfillStart, startupAt);
+      // Record only what was fully archived. The scan stops 30 minutes short
+      // of startupAt, and a partial Riot failure must be retried next run.
+      if (result.completeThrough !== undefined) {
+        await setBackfilledThroughAt(result.completeThrough);
+      }
       logger.info(
         `Backfill completed: ${result.totalMatchesSaved.toString()} matches saved to S3`,
       );

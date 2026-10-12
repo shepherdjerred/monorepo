@@ -52,9 +52,11 @@ public record Walker(Intent intent, int stop, Phase phase) {
 
   /** The destination the navigator should find a path to, while one is wanted. */
   public Optional<Vec3> pathTarget() {
-    return phase instanceof Phase.Planning(var target, var _, var _)
-        ? Optional.of(target)
-        : Optional.empty();
+    return switch (phase) {
+      case Phase.Planning(var target, var _, var _) -> Optional.of(target);
+      case Phase.Following(var target, var _, var _, var _, var _, var _) -> Optional.of(target);
+      case Phase.Resting _ -> Optional.empty();
+    };
   }
 
   /** Whether the NPC is on its way somewhere, as opposed to resting. */

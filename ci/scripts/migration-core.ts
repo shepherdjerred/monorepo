@@ -1,4 +1,7 @@
-import { ALL_IMAGE_TARGETS } from "./images/image-targets.ts";
+import {
+  ALL_IMAGE_TARGETS,
+  INFRASTRUCTURE_IMAGE_TARGETS,
+} from "./images/image-targets.ts";
 import { nativeLanePaths } from "./macos/macos-native-selection.ts";
 import {
   deployScripts,
@@ -9,12 +12,6 @@ import {
   legacyTofuPaths,
   platformTofuPaths,
 } from "./selectors/tofu-lane-paths.ts";
-const infrastructureTargets = [
-  "caddy-s3proxy",
-  "obsidian-headless",
-  "redlib",
-  "the-storm-server",
-] as const;
 // Keep full-image and fallback builds on the same target universe as the
 // closure selector. A second hand-maintained list previously omitted
 // a newly added image, so fixed-corpus recovery could never publish it.
@@ -86,7 +83,7 @@ export function parseBakeArguments(rawArguments: readonly string[]): {
 }
 export function expandTargets(selected: readonly string[]): string[] {
   const targets = [...selected].filter((target) => target !== "infra");
-  if (selected.includes("infra")) targets.push(...infrastructureTargets);
+  if (selected.includes("infra")) targets.push(...INFRASTRUCTURE_IMAGE_TARGETS);
   return targets;
 }
 export function parseStringArray(
@@ -141,6 +138,7 @@ export const globalPaths = [
   "ci/scripts/selectors/ensure-ancestor.ts",
   "ci/scripts/migration-core.ts",
   "scripts/lib/ci/ci-handoff.ts",
+  "scripts/lib/ci/published-image-release.ts",
   "scripts/lib/ci/ci-artifact.ts",
   "scripts/lib/ci/ci-environment.ts",
   "scripts/lib/json.ts",
@@ -172,6 +170,7 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
     "ci/scripts/selection/playwright-targets.ts",
     "ci/scripts/selection/run-playwright.ts",
     ".mise.toml",
+    "mise.lock",
     "scripts/ci/ci-reporting.ts",
     "scripts/ci-test-manifest.json",
     "scripts/ci/namespace-playwright-reports.ts",
@@ -302,6 +301,7 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
     "ci/scripts/images/update-ci-image-pin.ts",
     "scripts/lib/transient-error.ts",
     ".mise.toml",
+    "mise.lock",
   ],
   "ci-playwright": [
     "ci/ci-playwright/Dockerfile",

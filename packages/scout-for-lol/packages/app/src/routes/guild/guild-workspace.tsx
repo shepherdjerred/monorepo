@@ -1,5 +1,6 @@
+import { useRouteGuildId } from "#src/lib/routes/route-params.ts";
 import { Loaded } from "@shepherdjerred/loaded";
-import { Link, Navigate, Outlet, useLocation, useParams } from "react-router";
+import { Link, Navigate, Outlet, useLocation } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Suspense, type ReactNode } from "react";
 import { SectionSkeleton } from "#src/components/chrome/section-skeleton.tsx";
@@ -21,7 +22,7 @@ import {
 import { analyticsContextRoute } from "#src/lib/analytics.ts";
 
 export function GuildWorkspace() {
-  const { guildId } = useParams();
+  const guildId = useRouteGuildId();
   const location = useLocation();
   const trpc = useTRPC();
   // Reuse the guild list already fetched by the picker (same query key →
@@ -135,7 +136,7 @@ export function GuildWorkspace() {
  * handled by the parent; this only picks a landing tab.
  */
 export function GuildSectionIndex() {
-  const { guildId } = useParams();
+  const guildId = useRouteGuildId();
   const trpc = useTRPC();
   const guildsQuery = useQuery(
     trpc.guild.listManageable.queryOptions(undefined, {
@@ -171,7 +172,7 @@ export function GuildPermissionsGate(props: {
   permissions: readonly Permission[];
   children: ReactNode;
 }) {
-  const { guildId } = useParams();
+  const guildId = useRouteGuildId();
   const { perms, access } = usePermissions(guildId);
 
   if (guildId === undefined) {

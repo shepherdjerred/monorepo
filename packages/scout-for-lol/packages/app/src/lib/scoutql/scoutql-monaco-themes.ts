@@ -59,8 +59,8 @@ export function scoutQlTokenStyle(kind: ScoutQlTokenKind): ScoutQlTokenStyle {
     .with("string", () => style("chart3"))
     .with("operator", () => style("textMuted"))
     .with("comment", () => style("textMuted", { italic: true }))
-    .with("renderKind", () => style("accent", { bold: true }))
-    .with("renderOption", () => style("accent"))
+    .with("renderKind", () => style("text", { bold: true }))
+    .with("renderOption", () => style("text"))
     .with("plain", () => style("text"))
     .with("invalid", () => style("danger", { underline: true }))
     .exhaustive();

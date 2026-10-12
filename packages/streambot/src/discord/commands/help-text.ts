@@ -28,12 +28,24 @@ export type PaginatedPages = {
  * playback state, but only advertises voice commands when the validated feature flag is enabled.
  * Must stay under Discord's 2000-char message limit.
  */
-export function helpText(voiceEnabled: boolean): string {
+export function helpText(
+  voiceEnabled: boolean,
+  webUrl?: string,
+  automaticRouting = false,
+): string {
   return [
     "🎬 **Streambot** — `/stream` commands",
+    automaticRouting
+      ? "• Auto routes music to 1, video to 2. `/stream select channel:<n>` overrides Auto; `auto:true` restores it. `/stream channels` shows your room's slots."
+      : "• Channels: 1 music, 2 video, 3+ extra videos. `/stream select channel:<n>` chooses your destination. `/stream channels` shows your room's slots.",
+    ...(webUrl === undefined
+      ? []
+      : [
+          `🌐 **Web remote** — browse Plex, sports, history, and queues: ${webUrl}`,
+        ]),
     "",
     "**Playback**",
-    "• `/stream play <query>` · `playnext <query>` · `join` · `skip` · `seek <time>`",
+    "• `/stream play <query>` · `playnext <query>` · `skip` · `seek <time>`",
     "• `/stream stop` — stop and clear _(admin)_",
     "",
     ...(voiceEnabled
@@ -50,12 +62,12 @@ export function helpText(voiceEnabled: boolean): string {
     "**Queue**",
     "• `/stream queue` · `nowplaying` · `remove` · `move` · `shuffle` · `loop` · `volume`",
     "• `/stream clear` _(admin)_",
-    "• `/stream playback pause|resume|restart|previous|leave`",
+    "• `/stream playback join|pause|resume|restart|previous|leave|chapters`",
     "• `/stream history list|replay` · `/stream personal favorites|usual|continue`",
     "• Personal queues: `favorite-add`, `favorite-remove`, `save-queue`, `saved-queues`, `load-queue`, `delete-queue`",
     "",
     "**Discovery**",
-    "• `/stream list` · `search` · `sources` · `/stream playback sports` · `chapters` · `chapter` · `subtitles`",
+    "• `/stream list` · `search` · `sources` · `/stream playback sports` · `chapter` · `subtitles`",
     "",
     "**Player card** — pause, restart, seek, skip, volume, shuffle, queue, subtitles, stop, loop, and chapters are available as controls.",
     "",

@@ -4,8 +4,14 @@ import { fetchPublicKey } from "#src/signature.ts";
 import { createRawFetcher } from "#src/images.ts";
 import {
   lastCommitWithSuccessfulWorkflows,
+  lastPipelineWithSuccessfulWorkflows,
   lastSuccessfulCommit,
 } from "#src/woodpecker-api.ts";
+import { hasExactHeadApproval } from "#src/github-approval.ts";
+import { cancelSupersededPr } from "#src/superseded-pr.ts";
+import { initFeatureFlags } from "@shepherdjerred/feature-flags";
+import { sourceCacheConfig } from "#src/checkout/config.ts";
+import { maintenanceConfig } from "#src/maintenance-config.ts";
 
 function requireEnv(name: string): string {
   const value = Bun.env[name];
@@ -21,7 +27,16 @@ function requireEnv(name: string): string {
 const serverUrl = requireEnv("WOODPECKER_URL");
 const repoSlug = requireEnv("CI_REPO_SLUG");
 const apiToken = requireEnv("WOODPECKER_API_TOKEN");
+const approvalReadToken = requireEnv("GITHUB_APPROVAL_READ_TOKEN");
 const port = Number(Bun.env["PORT"] ?? "3000");
+const trustedGateImage = requireEnv("CI_GATE_IMAGE");
+if (
+  !/^ghcr\.io\/shepherdjerred\/woodpecker-config-extension(?::[^@\s]+)?@sha256:[a-f\d]{64}$/u.test(
+    trustedGateImage,
+  )
+) {
+  throw new Error("CI_GATE_IMAGE must pin the deployed policy image by digest");
+}
 
 /**
  * Cache the signing key, but never cache a failure.
@@ -38,7 +53,26 @@ async function publicKey(): Promise<KeyObject> {
   return key;
 }
 
+await initFeatureFlags({
+  onInitializationFailure: () => {
+    console.warn("CI rollout flags unavailable");
+  },
+});
 const app = createApp({
+  maintenanceEnabled: async (manual) => {
+    const result = await maintenanceConfig(manual);
+    return result.value;
+  },
+  sourceCacheEnabled: async (branch) => {
+    const config = await sourceCacheConfig(branch);
+    return config.value;
+  },
+  cancelSupersededPr: (repoId, pipeline) =>
+    cancelSupersededPr(repoId, pipeline, {
+      baseUrl: serverUrl,
+      token: apiToken,
+    }),
+  trustedGateImage,
   publicKey,
   imageFetcher: createRawFetcher(repoSlug),
   changedBase: (repoId, branch) =>
@@ -51,15 +85,21 @@ const app = createApp({
       baseUrl: serverUrl,
       token: apiToken,
     }),
-  // The image lane's base must be a commit whose images were built, pushed
-  // AND pinned -- the two workflows named here.
+  // Keep the commit and its artifact coordinates together. Commit-back can
+  // succeed by updating a pending PR, before those pins reach main.
   imageReleaseBase: (repoId, branch) =>
-    lastCommitWithSuccessfulWorkflows(
+    lastPipelineWithSuccessfulWorkflows(
       repoId,
       branch,
       ["images", "version-commit-back"],
       { baseUrl: serverUrl, token: apiToken },
     ),
+  hostedAutomationApproved: (pipeline) =>
+    hasExactHeadApproval(pipeline, {
+      repo: repoSlug,
+      token: approvalReadToken,
+      reviewer: "shepherdjerred",
+    }),
 });
 
 export default { port, fetch: app.fetch };

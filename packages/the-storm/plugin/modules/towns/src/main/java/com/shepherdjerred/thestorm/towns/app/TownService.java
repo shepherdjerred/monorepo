@@ -50,6 +50,9 @@ public final class TownService {
     if (settling.isPlayerBusy(founder)) {
       return Result.err(List.of(new TownProblem.Busy()));
     }
+    if (state().heritageNameReserved(name, java.util.Optional.empty())) {
+      return Result.err(List.of(new TownProblem.NameTaken(name)));
+    }
     var clocks = settling.clocks();
     var founding =
         new Founding(

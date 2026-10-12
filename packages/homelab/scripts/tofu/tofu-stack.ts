@@ -29,6 +29,7 @@ import {
   publishPlatformPlan,
   consumeReviewedPlatformPlan,
 } from "./platform-plan-handoff.ts";
+import { applicationSecrets } from "./application-secrets.ts";
 
 const STACKS_REL = "src/tofu";
 
@@ -398,6 +399,16 @@ async function main(): Promise<void> {
   if (stackName === undefined) usage();
   const stack = parseTofuStack(stackName);
   const action = parseAction(positional[1]);
+  if (stack === "application-secrets") {
+    // Initial phase is source preparation only. No CI credential grants,
+    // backend initialization, imports, plans or writes for this stack yet.
+    if (action !== "validate")
+      throw new Error(
+        "application-secrets is preparation-only; only validate is enabled.",
+      );
+    if (Object.keys(applicationSecrets.credentials).length === 0)
+      throw new Error("application-secrets catalog is empty");
+  }
   if (
     (action === "prepare" || action === "apply-saved") &&
     !REVIEWABLE_PLATFORM_STACKS.has(stack)
@@ -424,15 +435,28 @@ async function main(): Promise<void> {
   if (definition.platform !== undefined) {
     await addDesiredStateEnvironment(stackDir, definition.platform, env);
   }
+  if (action === "plan") {
+    // Grouped PR containers share the checkout. Backend initialization belongs
+    // to this plan alone and must not leave credentials for a later container.
+    const dataRoot = await temporaryDirectory("tofu-plan", env);
+    env["TF_DATA_DIR"] = dataRoot;
+    try {
+      const options = isolatedOptions(env, root);
+      await run(
+        ["tofu", `-chdir=${STACKS_REL}/${stack}`, "init", "-input=false"],
+        options,
+      );
+      await plan(stack, definition, options);
+    } finally {
+      await removeTemporaryDirectory(dataRoot);
+    }
+    return;
+  }
   const options = isolatedOptions(env, root);
   await run(
     ["tofu", `-chdir=${STACKS_REL}/${stack}`, "init", "-input=false"],
     options,
   );
-  if (action === "plan") {
-    await plan(stack, definition, options);
-    return;
-  }
   if (action === "prepare" || action === "apply-saved") {
     await reviewedPlatformOperation({
       stack,

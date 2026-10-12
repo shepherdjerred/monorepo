@@ -17,7 +17,6 @@
     "test:sqlite": "bun run generate && bun --no-install --bun vitest --config ../../vitest.config.ts run ./integration/sqlite.integration.test.ts",
     "test:e2e": "bun --no-install --bun playwright test",
     "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
-    "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/ci/run-ci-test.ts",
     "typecheck": "bun run generate && PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit"
   },
   "imports": {
@@ -38,11 +37,11 @@
     "@base-ui/react": "^1.6.0",
     "@js-temporal/polyfill": "^0.5.1",
     "@opentelemetry/api": "^1.9.1",
-    "@opentelemetry/context-async-hooks": "^2.7.1",
-    "@opentelemetry/exporter-trace-otlp-http": "^0.222.0",
-    "@opentelemetry/resources": "^2.7.1",
-    "@opentelemetry/sdk-node": "^0.222.0",
-    "@opentelemetry/sdk-trace-base": "^2.7.1",
+    "@opentelemetry/context-async-hooks": "^2.12.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.223.0",
+    "@opentelemetry/resources": "^2.12.0",
+    "@opentelemetry/sdk-node": "^0.223.0",
+    "@opentelemetry/sdk-trace-base": "^2.12.0",
     "@opentelemetry/semantic-conventions": "^1.40.0",
     "@prisma/adapter-libsql": "7.10.0",
     "@prisma/client": "^7.10.0",
@@ -59,7 +58,7 @@
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-router": "^8.3.0",
-    "sanitize-html": "^2.17.4",
+    "sanitize-html": "^2.18.0",
     "tailwind-merge": "^3.6.0",
     "zod": "^4.4.3",
     "@shepherdjerred/ops-model": "workspace:*",
@@ -76,7 +75,7 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@types/sanitize-html": "^2.16.1",
-    "@playwright/test": "1.63.0",
+    "@playwright/test": "1.64.0",
     "@vitejs/plugin-react": "^6.0.1",
     "@typescript/native": "npm:typescript@7.0.2",
     "eslint": "^10.7.0",
@@ -85,7 +84,7 @@
     "tailwindcss": "^4.2.4",
     "typescript": "^6.0.3",
     "vite": "^8.0.11",
-    "vitest": "5.0.1",
-    "@vitest/coverage-istanbul": "5.0.1"
+    "vitest": "5.0.3",
+    "@vitest/coverage-istanbul": "5.0.3"
   }
 }

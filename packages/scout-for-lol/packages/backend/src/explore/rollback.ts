@@ -1,9 +1,9 @@
-import type { DiscordAccountId } from "@scout-for-lol/data";
+import type { DiscordAccountId, ExploreMessage } from "@scout-for-lol/data";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 
 type RollbackInput = {
   conversationId: string;
-  messageId: string;
+  messageId: ExploreMessage["id"];
   userId: DiscordAccountId;
   previousCurrentLeafId: string | null;
   createdConversation: boolean;

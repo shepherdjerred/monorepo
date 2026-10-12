@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/data";
 import { useState } from "react";
 import { Link } from "react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -11,7 +12,7 @@ import {
 import { useTRPC } from "#src/lib/query/trpc.ts";
 
 export function ConsumerPlayerCommunity(props: {
-  guildId: string;
+  guildId: DiscordGuildId;
   playerId: number;
 }) {
   const [windowDays, setWindowDays] = useState<30 | 90 | "all">(90);
@@ -43,8 +44,7 @@ export function ConsumerPlayerCommunity(props: {
       <CardHeader>
         <CardTitle>Community connections</CardTitle>
         <CardDescription>
-          Recorded matches for this selected guild only. Same-team meetings do
-          not prove premade parties.
+          Teammates and opponents from this server’s recorded matches.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -101,12 +101,7 @@ export function ConsumerPlayerCommunity(props: {
         ) : (
           <>
             <div>
-              <h4 className="font-medium">Accounts · main and smurf form</h4>
-              <p className="text-xs text-scout-subtle">
-                Main = most played all-time recorded account; ties use newest
-                match, then account ID. This is an inference, not an account
-                setting.
-              </p>
+              <h4 className="font-medium">Account performance</h4>
               <div className="mt-2 grid gap-2 sm:grid-cols-2">
                 {accounts.map((account) => (
                   <p
@@ -115,7 +110,7 @@ export function ConsumerPlayerCommunity(props: {
                   >
                     <span className="font-medium">{account.riotId}</span> ·{" "}
                     {account.region}
-                    {account.isMain ? " · inferred main" : ""}
+                    {account.isMain ? " · most played" : ""}
                     <span className="block text-scout-subtle">
                       {account.wins.toString()}W / {account.games.toString()}{" "}
                       recorded games · {account.kda.toFixed(2)} KDA ·{" "}
@@ -127,7 +122,7 @@ export function ConsumerPlayerCommunity(props: {
               </div>
               {accounts.length === 0 && (
                 <p className="text-sm text-scout-subtle">
-                  No tracked accounts in this guild.
+                  No accounts tracked in this server yet.
                 </p>
               )}
             </div>

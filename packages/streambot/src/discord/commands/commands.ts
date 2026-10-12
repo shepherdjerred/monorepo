@@ -69,6 +69,44 @@ export const commandDefinitions = [
     .setName("stream")
     .setDescription("Control the video stream")
     .addSubcommand((sub) =>
+      sub
+        .setName("select")
+        .setDescription(
+          "Select your Streambot playback channel: 1 audio, 2+ video",
+        )
+        .addIntegerOption((option) =>
+          option
+            .setName("channel")
+            .setDescription(
+              "Playback slot in your current Discord voice channel",
+            )
+            .setRequired(false)
+            .setMinValue(1),
+        )
+        .addBooleanOption((option) =>
+          option
+            .setName("auto")
+            .setDescription(
+              "Automatically use channel 1 for music and 2 for Plex and sports",
+            ),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("channels")
+        .setDescription(
+          "Show Streambot playback channels and your current selection",
+        )
+        .addIntegerOption((option) =>
+          option
+            .setName("page")
+            .setDescription(
+              "Page of playback channels (defaults to your selected channel's page)",
+            )
+            .setMinValue(1),
+        ),
+    )
+    .addSubcommand((sub) =>
       withRequestOptions(
         sub
           .setName("play")
@@ -111,11 +149,6 @@ export const commandDefinitions = [
     )
     .addSubcommand((sub) =>
       sub.setName("skip").setDescription("Skip the current video"),
-    )
-    .addSubcommand((sub) =>
-      sub
-        .setName("join")
-        .setDescription("Join your voice channel and listen for requests"),
     )
     .addSubcommand((sub) =>
       sub
@@ -207,11 +240,6 @@ export const commandDefinitions = [
     )
     .addSubcommand((sub) =>
       sub
-        .setName("chapters")
-        .setDescription("List the chapters of the current video"),
-    )
-    .addSubcommand((sub) =>
-      sub
         .setName("chapter")
         .setDescription("Jump to a chapter of the current video")
         .addIntegerOption((o) =>
@@ -275,6 +303,16 @@ export const commandDefinitions = [
       group
         .setName("playback")
         .setDescription("Playback session controls")
+        .addSubcommand((sub) =>
+          sub
+            .setName("join")
+            .setDescription("Join your voice channel and listen for requests"),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("chapters")
+            .setDescription("List the chapters of the current video"),
+        )
         .addSubcommand((sub) =>
           sub.setName("pause").setDescription("Pause playback"),
         )

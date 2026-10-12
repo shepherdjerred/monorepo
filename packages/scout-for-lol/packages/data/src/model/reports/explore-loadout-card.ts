@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { MatchIdSchema } from "#src/model/matches/match.ts";
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { LeaguePuuidSchema } from "#src/model/riot/league-account.ts";
 
 export const EXPLORE_LOADOUT_BUILD_PATH_MAX_EVENTS = 100;
@@ -11,7 +11,7 @@ export type ExploreLoadoutCardSize = z.infer<
 
 export const ExploreLoadoutCardRequestSchema = z
   .object({
-    matchId: MatchIdSchema,
+    matchId: RiotMatchIdSchema,
     puuid: LeaguePuuidSchema,
     size: ExploreLoadoutCardSizeSchema,
   })
@@ -101,7 +101,7 @@ const ExploreSkillOrderEntrySchema = z
 export const ExploreLoadoutCardSchema = z
   .object({
     size: ExploreLoadoutCardSizeSchema,
-    matchId: MatchIdSchema,
+    matchId: RiotMatchIdSchema,
     participantId: z.number().int().positive(),
     championId: z.number().int().positive(),
     championName: z.string().min(1).max(100),

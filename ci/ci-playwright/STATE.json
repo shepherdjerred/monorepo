@@ -1,7 +1,7 @@
 {
   "schema": "ci-image-pin-state/v1",
-  "buildNumber": 17230,
-  "sourceCommit": "66d2f7bfd525200c9155af07a32473a882a60968",
-  "sourceFingerprint": "sha256:d902740cd6ada7f9e834deac27e4f35afd84bf682bf2ac753ebe709a234bb407",
-  "digest": "sha256:797bef3bf3beb916b128255a2b68bb275143bc07f7e64bca745126c004f85739"
+  "buildNumber": 1007344,
+  "sourceCommit": "12bf78a728710975a5547103d783792b16744457",
+  "sourceFingerprint": "sha256:b8cd426eae173d31e251a15e01d709f54113242023827980e739c7ae735c91cc",
+  "digest": "sha256:40a39f37e96623a5f951af672289fab39578b19c2452e44dd080f3f318ff35e4"
 }

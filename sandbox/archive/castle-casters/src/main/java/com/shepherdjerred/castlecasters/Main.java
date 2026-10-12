@@ -34,6 +34,6 @@ public class Main {
     return new WindowSettings("Castle Casters",
         new WindowSize(1360, 768),
         true,
-        true);
+        false);
   }
 }

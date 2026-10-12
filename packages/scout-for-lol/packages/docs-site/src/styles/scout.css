@@ -42,6 +42,10 @@
 }
 
 @media (max-width: 49.999rem) {
+  .content-panel > .sl-container {
+    margin-inline: auto;
+  }
+
   :root[data-has-sidebar] .header .scout-container {
     /* Starlight fixes its docs-menu button over the global header. Reserve
        that button's slot so Scout's own mobile navigation remains reachable. */

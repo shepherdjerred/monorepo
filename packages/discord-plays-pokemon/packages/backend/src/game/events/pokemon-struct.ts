@@ -27,7 +27,6 @@ const NICKNAME_OFFSET = 8;
 const NICKNAME_LENGTH = 10;
 const FLAGS_OFFSET = 19;
 const CHECKSUM_OFFSET = 28;
-const STATUS_OFFSET = 80;
 const LEVEL_OFFSET = 84;
 const HP_OFFSET = 86;
 const MAX_HP_OFFSET = 88;
@@ -136,11 +135,3 @@ export function parsePartyMon(bytes: Uint8Array): ParsedPartyMon | null {
 }
 
 // Exported for tests and the status-condition field if we want it later.
-export const PARTY_MON_OFFSETS = {
-  status: STATUS_OFFSET,
-  level: LEVEL_OFFSET,
-  hp: HP_OFFSET,
-  maxHp: MAX_HP_OFFSET,
-  checksum: CHECKSUM_OFFSET,
-  substructBase: SUBSTRUCT_BASE,
-} as const;

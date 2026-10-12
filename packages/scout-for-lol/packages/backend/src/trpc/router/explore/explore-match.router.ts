@@ -1,7 +1,8 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import {
-  MatchIdSchema,
+  RiotMatchIdSchema,
   TimelineCursorSchema,
   TimelineEventFilterSchema,
 } from "@scout-for-lol/data";
@@ -14,18 +15,22 @@ import {
 import {
   fetchFullMatch,
   fetchFullMatchTeams,
+  fetchTimelineFramesAtTime,
   fetchTimelineChartFrames,
   fetchTimelineCoverage,
   fetchTimelineEventPage,
-} from "#src/reports/duckdb/consumer-profile-lake-reads.ts";
+} from "#src/reports/duckdb/consumer/profile-lake-reads.ts";
 import {
   fetchMatchTimelineEvents,
+  fetchMatchReviewTimeline,
   fetchMatchTimelineFrames,
   MATCH_KEY_EVENT_TYPES,
 } from "#src/trpc/router/match-timeline.ts";
 import { protectedProcedure, router } from "#src/trpc/trpc.ts";
+import { matchLoadoutFromLakeRow } from "#src/report-lake/loadout.ts";
+import { buildRoleMatchups } from "#src/trpc/router/consumer/consumer-match-role-matchups.ts";
 
-const MatchInput = z.object({ matchId: MatchIdSchema });
+const MatchInput = z.object({ matchId: RiotMatchIdSchema });
 const TimelinePageInput = MatchInput.extend({
   participantIds: TimelineEventFilterSchema.shape.participantIds,
   cursor: TimelineCursorSchema.optional(),
@@ -36,7 +41,7 @@ const TimelineEventPageInput = TimelinePageInput.extend({
 
 async function assertExploreMatch(
   user: Parameters<typeof assertExploreAccess>[0],
-  matchId: string,
+  matchId: RiotMatchId,
 ) {
   await assertExploreAccess(user);
   const rows = await fetchFullMatch({ matchId });
@@ -53,7 +58,7 @@ async function assertExploreMatch(
 export const exploreMatchRouter = router({
   detail: protectedProcedure.input(MatchInput).query(async ({ ctx, input }) => {
     const rows = await assertExploreMatch(ctx.user, input.matchId);
-    const [coverage, keyEvents, teamRows] = await Promise.all([
+    const [coverage, keyEvents, teamRows, laneFrames] = await Promise.all([
       fetchTimelineCoverage({ matchId: input.matchId }),
       fetchTimelineEventPage({
         matchId: input.matchId,
@@ -62,9 +67,29 @@ export const exploreMatchRouter = router({
         eventTypes: MATCH_KEY_EVENT_TYPES,
       }),
       fetchFullMatchTeams({ matchId: input.matchId }),
+      fetchTimelineFramesAtTime({
+        matchId: input.matchId,
+        timestampMs: 900_000,
+      }),
     ]);
+    const snapshot = exploreMatchSnapshot(rows, teamRows);
     return {
-      match: exploreMatchSnapshot(rows, teamRows),
+      match: {
+        ...snapshot,
+        roleMatchups: buildRoleMatchups({ rows, coverage, frames: laneFrames }),
+        teams: snapshot.teams.map((team) => ({
+          ...team,
+          participants: team.participants.map((participant) => {
+            const row = rows.find(
+              (candidate) =>
+                candidate.participant_id === participant.participantId,
+            );
+            if (row === undefined)
+              throw new Error("Explore participant missing from match");
+            return { ...participant, loadout: matchLoadoutFromLakeRow(row) };
+          }),
+        })),
+      },
       timeline: { coverage, keyEvents },
     };
   }),
@@ -81,6 +106,13 @@ export const exploreMatchRouter = router({
     .query(async ({ ctx, input }) => {
       await assertExploreMatch(ctx.user, input.matchId);
       return await fetchMatchTimelineFrames(input);
+    }),
+
+  reviewTimeline: protectedProcedure
+    .input(MatchInput)
+    .query(async ({ ctx, input }) => {
+      await assertExploreMatch(ctx.user, input.matchId);
+      return await fetchMatchReviewTimeline(input);
     }),
 
   chartSeries: protectedProcedure

@@ -37,7 +37,7 @@ describe("dependency OCI release-note metadata", () => {
         if (url.startsWith("https://auth.docker.io/token")) {
           return Response.json({ token: "registry-token" });
         }
-        if (url.endsWith("/manifests/2.0.0")) {
+        if (url.endsWith(`/manifests/sha256%3A${"b".repeat(64)}`)) {
           const headers = new Headers(init?.headers);
           if (!headers.has("Authorization")) {
             return new Response("", {
@@ -83,7 +83,7 @@ describe("dependency OCI release-note metadata", () => {
     }
     expect(
       manifestRequest.startsWith(
-        "https://registry-1.docker.io/v2/owner/image/manifests/2.0.0",
+        "https://registry-1.docker.io/v2/owner/image/manifests/sha256%3A",
       ),
     ).toBe(true);
     expect(

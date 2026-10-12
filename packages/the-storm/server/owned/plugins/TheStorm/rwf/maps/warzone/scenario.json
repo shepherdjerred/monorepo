@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "kind": "rwf-map-scenario",
+  "id": "warzone-trooper-duel-v1",
+  "map": "warzone",
+  "mapSha256": "0f7db396d9f6099f13d097fcfdc6d22bd0910daf65bf14bc7fe5ee80aa5f7329",
+  "world": "minecraft:rwf",
+  "region": {
+    "min": {
+      "x": 1024,
+      "y": 55,
+      "z": 6144
+    },
+    "max": {
+      "x": 1182,
+      "y": 78,
+      "z": 6208
+    }
+  },
+  "sourceTeams": ["RED", "BLUE"],
+  "spawnPolicy": "source",
+  "spawns": [
+    {
+      "team": "red",
+      "sourceTeam": "RED",
+      "position": [1027.5, 65, 6161.5],
+      "yaw": 281.1648864746094,
+      "pitch": 0
+    },
+    {
+      "team": "blue",
+      "sourceTeam": "BLUE",
+      "position": [1173.5, 65, 6185.5],
+      "yaw": 97.32640838623047,
+      "pitch": 0
+    }
+  ]
+}

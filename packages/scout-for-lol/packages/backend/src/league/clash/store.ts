@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import {
   ClashPositionSchema,
   ClashRoleSchema,
@@ -210,7 +211,7 @@ export async function readClashSchedule(): Promise<ClashScheduleTournament[]> {
 }
 
 export type ClashRosterMember = {
-  puuid: string;
+  puuid: LeaguePuuid;
   playerAlias: string;
   riotGameName: string | null;
   riotTagLine: string | null;
@@ -230,7 +231,7 @@ export type ClashRosterTeam = {
 };
 
 export async function readClashRosterForGuild(
-  guildId: string,
+  guildId: DiscordGuildId,
 ): Promise<ClashRosterTeam[]> {
   const accounts = await prisma.account.findMany({
     where: { serverId: DiscordGuildIdSchema.parse(guildId) },
@@ -279,7 +280,7 @@ function groupRosterTeams(input: {
   accountByPuuid: Map<
     string,
     {
-      puuid: string;
+      puuid: LeaguePuuid;
       alias: string;
       riotGameName: string | null;
       riotTagLine: string | null;

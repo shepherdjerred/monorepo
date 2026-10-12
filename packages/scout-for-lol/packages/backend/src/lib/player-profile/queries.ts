@@ -1,3 +1,7 @@
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import {
   computeKda,
@@ -48,8 +52,7 @@ import { fetchHistoryRosters } from "#src/reports/duckdb/community/history-roste
 
 /**
  * Below this many games a rate is noise, so the UI labels it rather than
- * printing a confident number. Matches the pairing job's existing threshold
- * (`league/tasks/pairing/weekly-update.ts`).
+ * printing a confident number. The domain owns the shared threshold.
  */
 const MIN_GAMES_FOR_RATE = LOW_SAMPLE_GAME_THRESHOLD;
 
@@ -58,7 +61,7 @@ const RECENT_FORM_GAMES = 20;
 
 const MatchHistoryCursorSchema = z.object({
   gameCreationMs: z.number().int(),
-  matchId: z.string().min(1),
+  matchId: RiotMatchIdSchema,
   consumed: z.number().int().nonnegative().optional(),
 });
 
@@ -73,7 +76,7 @@ export const PlayerMatchHistoryInput = PlayerLookupInput.extend({
 });
 
 export type MatchHistoryEntry = {
-  matchId: string;
+  matchId: RiotMatchId;
   gameCreationMs: number;
   gameDurationSeconds: number;
   queue: string | null;
@@ -152,7 +155,7 @@ async function decorateHistoryRows(
   const rankByMatchAndPuuid = new Map(
     rankRows.map((row) => [`${row.matchId}:${row.puuid}`, row]),
   );
-  const accountByPuuid = new Map(
+  const accountByPuuid = new Map<string, (typeof accounts)[number]>(
     accounts.map((account) => [account.puuid, account]),
   );
 

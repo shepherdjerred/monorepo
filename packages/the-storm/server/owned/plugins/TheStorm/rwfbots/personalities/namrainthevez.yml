@@ -1,0 +1,80 @@
+id: namrainthevez
+name: Namrainthevez
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1MzU3NDk3NywKICAicHJvZmlsZUlkIiA6ICIwMzFmMzIyYjM1YzE0ZWExYmNmMmY5ZmVjNWZjYmEzYSIsCiAgInByb2ZpbGVOYW1lIiA6ICJTaXJNYXlvckN1cnJ5IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzhhYzk1NWJhYTlmNDQwNmI1MDA0ZjU0MTY2N2YzYWRjODJiMDY2YjFmNzI1ZDBiNzExNThhMjEzYzZjM2ZlOWUiCiAgICB9CiAgfQp9
+  signature: "aTmEq/es9ZBvNQcZC9Cz7hReULer5STZwQWouHSqvnuciIk/eqG9YlF9vln6GsBm30aqy8mYL2ktObt5VdrCoAExlAiua0Z1wR9Ebm8ABVS7sEo8bMi85hKW0He/BtXFx84wm5n/f9nDGdTsBFORPkbRCv66qUGn6r7DNk0M/RB4opJPphxSRhxMiFjDUXo/euMLjGYzQUZbR/RzomEeMlNCnEEp0KsZwiQcR5exrUeL6bdZmIWMgFCteqCbzmAqzNIspZoPDsw/axMCiGDWtcmDPpFQfEnm7bI45wwww/cUwh2jEc0meJovAWlo2OMe7Uzx3ADvSrqYOd2onkIN9LaB5Ujc2cEeRiifIliHvbroXPwQ0TZ+jx7iWTSWpWx3/Jubpw/Yl9Cu9wv5m5k6p8FGeNaCuT53KfXghOJ8XRQ1tE5zatgvv17orM5iR/JIyukjkj2Rq5fvQfP7X46Si7vRfHXI3BEexzYJB9tIQYDVY+O3MWbv9KaxG/Nw5Mb6yxdrM1IPPICqIfyHGrTi4kkLyUfFPHeRE4PVx0Q2uwn1EYgclqerrc0D7pkfkGkX/8voIhEyQh3qQ464Z7NQuTmmZJZOWyTJ6wHTl82tks0unn9RLTeyUF4qIAdM/LOmvJYaD1xXW7olLdk+ymgmgiyJ41FwAa6GMEwi9TH+RRE="
+skill: 0.36
+archetype: hunter
+leverOffsets:
+  turnRateDegPerTick: 0.76
+  predictionQuality: 1.16
+  decisionTemperature: -0.44
+  awarenessRadius: 1.36
+  aggression: 0.78
+kits:
+  trooper: 0.64
+  longbow: 0.57
+  shortbow: 0.78
+roles:
+  rotate: 0.39
+  retake: 0.13
+  hunt: 1
+style:
+  aggression: 0.75
+  patience: 0.45
+  teamplay: 0.29
+  risk: 0.63
+voice:
+  tone:
+    - narrator
+    - hushed
+    - curious
+  verbosity: chatty
+  style: nature documentary narrator, describes enemies as wildlife in their habitat
+lines:
+  greet:
+    - here, in the lobby, the hunter prepares
+    - "observe {team} in its natural habitat"
+    - a fine day for tracking
+  onKill:
+    - "the {victim} did not see the predator"
+    - and so the cycle of life continues
+    - "a rare {victim}, now catalogued"
+  onDeath:
+    - "the hunter becomes the hunted. well done {killer}"
+    - "nature is cruel, {killer}"
+    - a twist in the food chain
+  onPlant:
+    - "the hunter lights {bomb}, a rare sight"
+    - "{bomb} now hisses like an angry goose"
+  onDefuse:
+    - "{bomb} returns to slumber"
+    - the nest is safe once more
+  onWin:
+    - "the herd {team} thrives"
+    - survival of the fittest, it seems
+  onLoss:
+    - the herd moves on
+    - not every hunt succeeds
+  onLastAlive:
+    - alone now, the hunter must be cunning
+    - the last of its kind. tense stuff
+  taunt:
+    - your tracks lead right to you
+    - fresh footprints. how careless
+    - i've seen you near the bomb three times
+  lobby:
+    - "observe: the lobby herd gathers before the migration"
+    - here we see the trooper, sharpening its iron fang
+    - a rare sight. a longbow, preening its string
+    - "the {team} pack grows restless. the hunt begins soon"
+    - note how the youngest player bounces. a sign of vigour
+quirks:
+  - narrates
+  - calls_everything
+rivals:
+  - lunartulthek
+  - neonskaenjuz
+bio: Narrates every match in a hushed documentary voice, whether anyone asked or not. Has filed LunarTulthek under elusive night species and is determined to document her.
+batch: 2
+retired: false

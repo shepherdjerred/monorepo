@@ -35,6 +35,15 @@ final class KitItems {
     this.templates = Map.copyOf(templates);
   }
 
+  com.shepherdjerred.thestorm.essentials.app.StarterSupplies starter(String name) {
+    var items = templates.get(name);
+    if (items == null) throw new IllegalStateException("starter kit is not defined");
+    return new com.shepherdjerred.thestorm.essentials.app.StarterSupplies(
+        items.stream()
+            .map(item -> java.util.Base64.getEncoder().encodeToString(item.serializeAsBytes()))
+            .toList());
+  }
+
   /** Builds every kit, or throws naming every material or enchantment the server does not know. */
   static KitItems build(KitSettings settings) {
     var problems = new ArrayList<String>();

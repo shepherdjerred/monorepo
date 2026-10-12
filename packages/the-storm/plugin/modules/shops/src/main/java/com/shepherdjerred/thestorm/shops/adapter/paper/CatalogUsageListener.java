@@ -21,6 +21,7 @@ final class CatalogUsageListener implements Listener {
 
   @EventHandler(priority = EventPriority.MONITOR)
   public void onJoin(PlayerJoinEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getPlayer())) return;
     Background.logFailure(
         usage.preload(event.getPlayer().getUniqueId()),
         logger,

@@ -71,7 +71,8 @@ final class ClaimingTest {
                               new BlockCorner(-801, 0, -801),
                               new BlockCorner(-800, 10, -800)))),
                   List.of(),
-                  RegionSpawns.unlimited())));
+                  RegionSpawns.unlimited(),
+                  com.shepherdjerred.thestorm.towns.domain.region.RegionProfile.PRESERVE)));
 
   private final Map<ChunkPos, Claim> claims = new HashMap<>();
 

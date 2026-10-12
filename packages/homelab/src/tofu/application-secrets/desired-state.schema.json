@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "const": "./desired-state.schema.json"
+    },
+    "credentials": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]*$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "environment": {
+            "type": "string",
+            "enum": ["production", "beta", "shared"]
+          },
+          "consumer_probe": {
+            "type": "string",
+            "minLength": 1
+          },
+          "onepassword_targets": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "vault_item_id": {
+                  "type": "string",
+                  "pattern": "^[a-z0-9]{26}$"
+                },
+                "vault_field": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "vault_section_id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "vault_field_id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "vault_json_path": {
+                  "type": "string",
+                  "pattern": "^(?:\\/(?:[^~/]|~[01])*)+$"
+                }
+              },
+              "required": ["vault_item_id", "vault_field", "vault_field_id"],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "revision",
+          "environment",
+          "consumer_probe",
+          "onepassword_targets"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["$schema", "credentials"],
+  "additionalProperties": false
+}

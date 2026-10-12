@@ -2,7 +2,7 @@ import {
   type CachedLeaderboard,
   type CompetitionCriteria,
   type CompetitionWithCriteria,
-  type MatchId,
+  type RiotMatchId,
   type Region,
   getCompetitionStatus,
   parseCompetition,
@@ -121,9 +121,9 @@ async function createMissingRankBaselines(
 }
 
 async function collectMatchIds(competition: CompetitionWithCriteria): Promise<{
-  matchIds: MatchId[];
-  aliasesByMatchId: Map<MatchId, string[]>;
-  regionByMatchId: Map<MatchId, Region>;
+  matchIds: RiotMatchId[];
+  aliasesByMatchId: Map<RiotMatchId, string[]>;
+  regionByMatchId: Map<RiotMatchId, Region>;
   participantCount: number;
   accountCount: number;
 }> {
@@ -150,9 +150,9 @@ async function collectMatchIds(competition: CompetitionWithCriteria): Promise<{
     competition.endDate?.getTime() ?? Date.now(),
   );
   const endSeconds = Math.floor(windowEndMs / 1000);
-  const matchIds = new Set<MatchId>();
-  const aliasesByMatchId = new Map<MatchId, string[]>();
-  const regionByMatchId = new Map<MatchId, Region>();
+  const matchIds = new Set<RiotMatchId>();
+  const aliasesByMatchId = new Map<RiotMatchId, string[]>();
+  const regionByMatchId = new Map<RiotMatchId, Region>();
 
   for (const participant of participants) {
     for (const account of participant.player.accounts) {

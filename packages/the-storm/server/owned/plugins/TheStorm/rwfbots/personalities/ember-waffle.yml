@@ -1,0 +1,79 @@
+id: ember-waffle
+name: Ember_Waffle
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NTI4ODk3MywKICAicHJvZmlsZUlkIiA6ICIwNDg2YWUwMWI4Y2I0OWUzODMyZDcwOTNmMWJlNzI3NyIsCiAgInByb2ZpbGVOYW1lIiA6ICJfcGFrbWFuXyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS82MzVmYzg5MzkwMDAwNWZjMjRjYzZhOWM2NzI4ZmYxN2RjNjlkZDgxOTQ3NzM4N2FjY2NiYTVhY2RhZTZiNGM2IgogICAgfQogIH0KfQ=="
+  signature: "RALiSClUIrhv/YZlv1mcy0EZKdzAggT3K1lYyKnbBpZXNRy4yihiaxKGd3T91fLc9RYYUbGmH3k2XjQeyYaehQrOBC4NTpSqHZk7F39bxKDM8pB/Td9YS9MCXG1k8CSWXDgCMkHSoUeSe0GA8PRx3yRr8cuqIM0M8u953OmolX3hRpeRcyrX9uKpPt2JujvvXCYPTaNV8reJMlafnGUXfGpQraFNpMrgEaD5upLpef/UH/xzeGGxa3Z6bSd0FmufwVhCOr0il1PmXXyUDD0lo0Pg/atdWjfI8I2ufYAk7HmTkJZYpCkrM9Xl/IyyAg3IxJgCNNu1rEiOjf8b8U7Dvwv4u++KKpsCyailHV073Nk1uK6eufTWx7fwsWvR7vrsy4YwqXRWHc8x1dtSUj5w7WrDImj1JKAnklOU1UL3saGX9T9cc8HzitX3CR1K+04Z0bCA/ngOX4l0HG9uGMdHXiZMPg/u/b5nyOA719U5wB9twACLKA0DhKOisE61xW1sAjY0EjCt61TaaTfbuSSM6J7HRWySPxRqiIe3el7VpXVT+8JLVn+elIbTM7/ffQk99V9ClbelHiTN5lnhrSdsayDa7XIm8Oar3QgcHPAxNuGKY+ZToLfAnGO7v0pYXpKUCev/JaputRXAM19xsqzphZCVqj1tQZlbzSrhPlQyAs0="
+skill: 0.34
+archetype: bomb_diver
+leverOffsets:
+  reactionMs: 0.33
+  turnRateDegPerTick: -0.27
+  decisionTemperature: 0.58
+  technique: 1.39
+  aggression: -0.76
+kits:
+  trooper: 1
+  shortbow: 0.19
+  rewind: 0.55
+roles:
+  plant: 1
+  escort: 0.32
+style:
+  aggression: 0.69
+  patience: 0.13
+  teamplay: 0.24
+  risk: 0.95
+voice:
+  tone:
+    - sunny
+    - silly
+    - upbeat
+  verbosity: chatty
+  style: "breakfast-themed everything; cheerful diner waitress energy"
+lines:
+  greet:
+    - "Good morning, {team}! Breakfast is served!"
+    - "Order up: one bomb, extra crispy."
+    - Who's hungry for a plant?
+  onKill:
+    - "Sorry {victim}, kitchen's closed."
+    - "{victim} got flipped like a waffle."
+    - Toasted!
+  onDeath:
+    - "{killer} burned my waffles!"
+    - Back to the kitchen I go.
+    - Syrup everywhere. Ugh.
+  onPlant:
+    - "{bomb} is cooking! Hot hot hot!"
+    - "Ding! {bomb} is lit, fresh off the griddle."
+  onDefuse:
+    - "{bomb} cooled down. Nobody likes burnt bombs."
+    - "Took {bomb} off the heat."
+  onWin:
+    - Breakfast champions! gg!
+    - "Waffles for everyone on {team}!"
+  onLoss:
+    - Burnt the batch. gg!
+    - We'll get it next breakfast.
+  onLastAlive:
+    - Last waffle in the box!
+    - One cook, whole kitchen. Let's go.
+    - "{team}, save me some syrup."
+  taunt:
+    - Your bomb is looking golden brown.
+    - I'm coming in hot!
+    - Anyone want a waffle? It's a fuse.
+  lobby:
+    - Morning, hon! Can I get you a gapple to start?
+    - "Today's special: one Trooper kit, extra crispy."
+    - "Table for {team}? Right this way!"
+    - Kitchen's warming up. Orders go out at the bell.
+    - I've got a booking at the gate again. Wish me luck!
+quirks:
+  - loves_nuke
+  - celebrates_early
+rivals:
+  - pickaxeviper9
+bio: Named after a breakfast and played every match like a morning rush at a diner. PickaxeViper9's gate is her favourite and least successful order.
+batch: 2
+retired: false

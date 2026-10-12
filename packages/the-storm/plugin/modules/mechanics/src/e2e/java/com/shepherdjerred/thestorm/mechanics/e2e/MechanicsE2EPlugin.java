@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.mechanics.e2e;
 
+import com.shepherdjerred.thestorm.core.compute.DirectComputePool;
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.Services;
@@ -8,6 +9,9 @@ import com.shepherdjerred.thestorm.core.protection.HarmTarget;
 import com.shepherdjerred.thestorm.core.protection.ProtectedAction;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.core.schedule.PaperScheduler;
+import com.shepherdjerred.thestorm.core.world.AuditedBlockChanges;
+import com.shepherdjerred.thestorm.core.world.BlockChanges;
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.mechanics.MechanicsModule;
 import java.time.InstantSource;
 import java.util.HashSet;
@@ -38,7 +42,9 @@ import org.jspecify.annotations.Nullable;
 public final class MechanicsE2EPlugin extends JavaPlugin implements Listener {
 
   private static final int BRIDGE_Y = -55;
-  private static final int PISTON_X = 8;
+  // Synthetic machinery belongs outside the shipped town and arena protections.
+  private static final int BRIDGE_X = 400;
+  private static final int PISTON_X = 408;
   private static final int PISTON_Y = -45;
   private static final int PISTON_Z = 0;
 
@@ -51,17 +57,40 @@ public final class MechanicsE2EPlugin extends JavaPlugin implements Listener {
     this.database = database;
     var services = new Services();
     services.provide(Protection.class, new OpenProtection());
+    services.provide(
+        BlockChanges.class,
+        new AuditedBlockChanges(
+            change -> {
+              if (change.actor().equals("#storm-mechanics-crush")) {
+                if (!change
+                    .location()
+                    .getBlock()
+                    .getBlockData()
+                    .getAsString()
+                    .equals(change.before().getAsString())) {
+                  throw new IllegalStateException("Crush audit occurred after its world mutation");
+                }
+                getComponentLogger()
+                    .info(
+                        "Audited crush before natural break: {} -> {}",
+                        change.before().getAsString(),
+                        change.after().getAsString());
+              }
+            }));
+    services.provide(SealedWorlds.class, new SealedWorlds());
     var context =
         new ModuleContext(
             this,
             getLifecycleManager(),
             new PaperScheduler(this),
+            new DirectComputePool(),
             database,
             services,
             getDataPath(),
             InstantSource.system(),
             RandomGenerator.getDefault(),
-            getComponentLogger());
+            getComponentLogger(),
+            com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled());
     new MechanicsModule().enable(context);
     var world = getServer().getWorld("world");
     if (world == null) {
@@ -69,6 +98,7 @@ public final class MechanicsE2EPlugin extends JavaPlugin implements Listener {
     }
     prepareBridge(world);
     prepareSuperPush(world);
+    prepareCrush(world);
     getServer().getPluginManager().registerEvents(this, this);
     getComponentLogger().info("Enabled real-Paper mechanics E2E harness");
   }
@@ -92,24 +122,24 @@ public final class MechanicsE2EPlugin extends JavaPlugin implements Listener {
   }
 
   private void prepareBridge(World world) {
-    for (int x = -2; x <= 2; x++) {
+    for (int x = BRIDGE_X - 2; x <= BRIDGE_X + 2; x++) {
       for (int z = -2; z <= 5; z++) {
-        set(world, x, BRIDGE_Y - 2, z, "minecraft:stone");
+        set(world.getBlockAt(x, BRIDGE_Y - 2, z), "minecraft:stone");
       }
     }
-    var near = world.getBlockAt(0, BRIDGE_Y, 0);
-    var far = world.getBlockAt(0, BRIDGE_Y, 4);
-    set(world, 0, BRIDGE_Y, 1, "minecraft:stone");
-    set(world, 0, BRIDGE_Y, 3, "minecraft:stone");
-    set(world, 0, BRIDGE_Y + 1, 0, "minecraft:oak_planks");
-    set(world, 0, BRIDGE_Y + 1, 4, "minecraft:oak_planks");
-    set(world, 0, BRIDGE_Y + 1, 1, "minecraft:oak_planks");
-    set(world, 0, BRIDGE_Y + 1, 2, "minecraft:oak_planks");
-    set(world, 0, BRIDGE_Y + 1, 3, "minecraft:oak_planks");
+    var near = world.getBlockAt(BRIDGE_X, BRIDGE_Y, 0);
+    var far = world.getBlockAt(BRIDGE_X, BRIDGE_Y, 4);
+    set(world.getBlockAt(BRIDGE_X, BRIDGE_Y, 1), "minecraft:stone");
+    set(world.getBlockAt(BRIDGE_X, BRIDGE_Y, 3), "minecraft:stone");
+    set(world.getBlockAt(BRIDGE_X, BRIDGE_Y + 1, 0), "minecraft:oak_planks");
+    set(world.getBlockAt(BRIDGE_X, BRIDGE_Y + 1, 4), "minecraft:oak_planks");
+    set(world.getBlockAt(BRIDGE_X, BRIDGE_Y + 1, 1), "minecraft:oak_planks");
+    set(world.getBlockAt(BRIDGE_X, BRIDGE_Y + 1, 2), "minecraft:oak_planks");
+    set(world.getBlockAt(BRIDGE_X, BRIDGE_Y + 1, 3), "minecraft:oak_planks");
     configureSign(near, "north", "[Bridge]");
     configureSign(far, "south", "[Bridge]");
-    bindSpan(near, "0," + (BRIDGE_Y + 1) + ",0", "0," + BRIDGE_Y + ",4", true);
-    bindSpan(far, "0," + (BRIDGE_Y + 1) + ",4", "0," + BRIDGE_Y + ",0", false);
+    bindSpan(near, BRIDGE_X + "," + (BRIDGE_Y + 1) + ",0", BRIDGE_X + "," + BRIDGE_Y + ",4", true);
+    bindSpan(far, BRIDGE_X + "," + (BRIDGE_Y + 1) + ",4", BRIDGE_X + "," + BRIDGE_Y + ",0", false);
   }
 
   private void prepareSuperPush(World world) {
@@ -119,13 +149,24 @@ public final class MechanicsE2EPlugin extends JavaPlugin implements Listener {
     sign.setBlockData(Bukkit.createBlockData("minecraft:oak_wall_sign[facing=north]"), false);
     configureSign(sign, "north", "[SuperPush]");
     owner(sign);
-    set(world, PISTON_X + 2, PISTON_Y, PISTON_Z, "minecraft:stone");
-    set(world, PISTON_X + 3, PISTON_Y, PISTON_Z, "minecraft:stone");
-    set(world, PISTON_X + 4, PISTON_Y, PISTON_Z, "minecraft:air");
-    set(world, PISTON_X + 5, PISTON_Y, PISTON_Z, "minecraft:air");
-    set(world, PISTON_X + 6, PISTON_Y, PISTON_Z, "minecraft:air");
-    set(world, PISTON_X + 7, PISTON_Y, PISTON_Z, "minecraft:air");
-    set(world, PISTON_X + 8, PISTON_Y, PISTON_Z, "minecraft:air");
+    set(world.getBlockAt(PISTON_X + 2, PISTON_Y, PISTON_Z), "minecraft:stone");
+    set(world.getBlockAt(PISTON_X + 3, PISTON_Y, PISTON_Z), "minecraft:stone");
+    set(world.getBlockAt(PISTON_X + 4, PISTON_Y, PISTON_Z), "minecraft:air");
+    set(world.getBlockAt(PISTON_X + 5, PISTON_Y, PISTON_Z), "minecraft:air");
+    set(world.getBlockAt(PISTON_X + 6, PISTON_Y, PISTON_Z), "minecraft:air");
+    set(world.getBlockAt(PISTON_X + 7, PISTON_Y, PISTON_Z), "minecraft:air");
+    set(world.getBlockAt(PISTON_X + 8, PISTON_Y, PISTON_Z), "minecraft:air");
+  }
+
+  private void prepareCrush(World world) {
+    for (int x = 423; x <= 427; x++) {
+      for (int z = -1; z <= 1; z++) {
+        set(world.getBlockAt(x, PISTON_Y - 2, z), "minecraft:stone");
+      }
+    }
+    set(world.getBlockAt(424, PISTON_Y, 0), "minecraft:piston[facing=east]");
+    configureSign(world.getBlockAt(424, PISTON_Y, -1), "north", "[Crush]");
+    set(world.getBlockAt(425, PISTON_Y, 0), "minecraft:oak_planks");
   }
 
   private void bindSpan(Block block, String anchor, String partner, boolean keeper) {
@@ -173,8 +214,7 @@ public final class MechanicsE2EPlugin extends JavaPlugin implements Listener {
     return sign;
   }
 
-  private static void set(World world, int x, int y, int z, String data) {
-    Block block = world.getBlockAt(x, y, z);
+  private static void set(Block block, String data) {
     BlockData state = Bukkit.createBlockData(data);
     block.setBlockData(state, false);
   }
@@ -190,6 +230,11 @@ public final class MechanicsE2EPlugin extends JavaPlugin implements Listener {
     public Decision checkHarm(
         UUID attacker, Location attackerAt, HarmTarget target, Location victimAt) {
       return Decision.allowed();
+    }
+
+    @Override
+    public boolean isPreserved(Location location) {
+      return false;
     }
 
     @Override

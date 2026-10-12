@@ -1,4 +1,4 @@
-/** Storage ports for snapshots, rewards and the leaderboard. */
+/** Storage ports for rewards and the leaderboard; snapshots use core's port. */
 @NullMarked
 package com.shepherdjerred.thestorm.arena.app.store;
 

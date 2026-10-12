@@ -13,7 +13,6 @@ import {
   listPages,
   sourcesPages,
 } from "@shepherdjerred/streambot/discord/commands/help-text.ts";
-import type { SubtitlePref } from "@shepherdjerred/streambot/sources/source.ts";
 import {
   chaptersText,
   nowPlayingText,
@@ -60,8 +59,8 @@ export class CommandHandler {
       return;
     }
     if (group === "playback") {
-      if (sub === "sports") {
-        await this.handleSports(interaction);
+      if (sub === "join" || sub === "chapters") {
+        await this.runPlaybackCommand(sub, interaction);
         return;
       }
       await this.media.runPlayback(sub, interaction);
@@ -161,11 +160,24 @@ export class CommandHandler {
       case "sources":
         await this.handleSources(interaction);
         return true;
-      case "sports":
-        await this.handleSports(interaction);
-        return true;
       case "help":
-        await interaction.reply(helpText(this.deps.config.voice.enabled));
+        await interaction.reply(
+          helpText(
+            this.deps.config.voice.enabled,
+            await webRemoteUrl(
+              this.deps.config,
+              this.deps.guildId,
+              interaction.userId,
+              this.deps.playbackChannel,
+            ),
+            this.deps.guildId !== undefined &&
+              (await this.deps.featureGate?.automaticChannelRouting?.({
+                guildId: this.deps.guildId,
+                channelId: this.deps.channelId ?? "help",
+                userId: interaction.userId,
+              })) === true,
+          ),
+        );
         return true;
       default:
         return false;
@@ -241,23 +253,6 @@ export class CommandHandler {
       AbortSignal.timeout(SOURCES_TIMEOUT_MS),
     );
     await interaction.replyPaginated(sourcesPages(sources, query));
-  }
-
-  private async handleSports(interaction: CommandInteraction): Promise<void> {
-    await interaction.defer();
-    try {
-      const listing = await this.playback.listSports(
-        interaction.userId,
-        AbortSignal.timeout(SOURCES_TIMEOUT_MS),
-      );
-      await interaction.editReply(listing);
-    } catch (error) {
-      if (error instanceof PlaybackCommandBoundaryError) {
-        await interaction.editReply(error.message);
-        return;
-      }
-      throw error;
-    }
   }
 
   private async handleSkip(interaction: CommandInteraction): Promise<void> {
@@ -427,7 +422,9 @@ export class CommandHandler {
     // reach the streamer and fail the segment.
     if (current.mediaKind === "music") {
       await interaction.reply(
-        "This is playing as audio only, so there's no picture to burn subtitles into. Requeue it with `mode:video` for a video stream.",
+        this.deps.playbackChannel === undefined
+          ? "This is playing as audio only, so there's no picture to burn subtitles into. Requeue it with `mode:video` for a video stream."
+          : "Channel 1 plays mic audio. Select channel 2 or higher and queue the video there to use subtitles.",
       );
       return;
     }
@@ -482,14 +479,7 @@ export class CommandHandler {
         );
         return;
       }
-      const nowView = this.deps.view();
-
-      const subtitles: SubtitlePref = { trackRef };
-      this.deps.dispatch({
-        type: "CHANGE_SUBTITLES",
-        subtitles,
-        positionSeconds: nowView.positionSeconds ?? 0,
-      });
+      this.playback.applySubtitleTrack(interaction.userId, trackRef);
       await interaction.editReply(
         "🔄 Restarting with the selected subtitle track…",
       );
@@ -498,3 +488,4 @@ export class CommandHandler {
     }
   }
 }
+import { webRemoteUrl } from "@shepherdjerred/streambot/discord/web-link.ts";

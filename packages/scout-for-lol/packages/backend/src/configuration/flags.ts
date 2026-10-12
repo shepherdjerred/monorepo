@@ -142,27 +142,20 @@ type FlagOverride = {
   betaOnly?: true;
 };
 
-/**
- * Flag configuration
- */
 type FlagConfig = {
   default: boolean;
   overrides: FlagOverride[];
 };
 
 export type FlagName =
-  | "ai_reports_enabled"
-  | "ai_reports_unlimited"
+  | `ai_reports_${"enabled" | "unlimited"}`
   | "ai_reviews_enabled"
   | "betting_enabled"
   | "bucks_dares_enabled"
-  | "dare_v2"
-  | "dare_extended_contracts_enabled"
   | "dare_notifications_enabled"
   | "bucks_transfers_enabled"
   | "betting_player_bet_outcome_dm_enabled"
   | "betting_settlement_dm_enabled"
-  | "competition_builder_v2_enabled"
   | "challenge_runs_enabled"
   | "clash_surface"
   | "custom_nights_enabled"
@@ -176,11 +169,8 @@ export type FlagName =
   | "initial_match_history_import_enabled"
   | "scout_client_ingestion"
   | "scout_operations_console_enabled"
-  | "scoutql_relational_enabled"
+  | `scout_support_${"conversations" | "report_action"}_enabled`
   | "scout-consumer-player-profiles-enabled"
-  | "scout_v2_postmatch_ownership_enabled"
-  | "scout_v2_prematch_ownership_enabled"
-  | "scout_v2_progression_notifications_enabled"
   | "voice_assistant_enabled";
 
 /**
@@ -212,8 +202,6 @@ const PRODUCTION_HARD_DISABLED_FLAGS: ReadonlySet<FlagName> = new Set<FlagName>(
     "betting_settlement_dm_enabled",
     "bucks_transfers_enabled",
     "bucks_dares_enabled",
-    "dare_v2",
-    "dare_extended_contracts_enabled",
     "dare_notifications_enabled",
     "custom_nights_enabled",
     "duels_enabled",
@@ -281,12 +269,6 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
       { value: true, attributes: { server: MY_SERVER }, betaOnly: true },
     ],
   },
-  competition_builder_v2_enabled: {
-    default: false,
-    overrides: [
-      { value: true, attributes: { server: MY_SERVER }, betaOnly: true },
-    ],
-  },
   ai_reports_enabled: {
     default: false,
     overrides: [
@@ -329,37 +311,19 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
       },
     ],
   },
-  // Free-text Bryan Bucks dare bounties. Gates creating a dare, contributing
-  // to a pot, and accepting only; chicken-out (decline), refunds, sweeps, and
-  // settlement stay ungated so escrowed contributions can always be resolved
-  // after a revocation. Narrower than the betting economy itself, so the
-  // domain requires both flags. Production's hard-disable policy wins before
-  // this registry or Flipt is evaluated.
+  // SQL-contract Bryan Bucks Dares: drafting, the first funding, the Explore
+  // Dare tools, and the web Dares page. Every later action on a funded Dare
+  // needs only `betting_enabled`, and settlement, refunds, and sweeps are
+  // ungated, so escrowed contributions always resolve after a revocation.
+  // Production's hard-disable policy wins before this registry or Flipt is
+  // evaluated.
   bucks_dares_enabled: {
     default: false,
     overrides: [{ value: true, attributes: { server: MY_SERVER } }],
   },
-  // ScoutQL-backed Dare v2 creation. Settlement and refunds never consult
-  // this flag; revoking it only stops new drafts from being funded.
-  dare_v2: {
-    default: false,
-    overrides: [{ value: true, attributes: { server: MY_SERVER } }],
-  },
-  dare_extended_contracts_enabled: {
-    default: false,
-    overrides: [],
-  },
   dare_notifications_enabled: {
     default: false,
     overrides: [],
-  },
-  // Relational/timeline ScoutQL access is an independently ramped capability
-  // because it exposes a wider query surface than Dare v2 creation itself.
-  scoutql_relational_enabled: {
-    default: false,
-    overrides: [
-      { value: true, attributes: { server: MY_SERVER }, betaOnly: true },
-    ],
   },
   // Fee-bearing Bryan Bucks wallet transfers. This is narrower than the
   // betting economy itself, so the domain requires both flags. Production's
@@ -434,47 +398,8 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
     default: false,
     overrides: [],
   },
-  /**
-   * Whether V2 owns scheduled post-match discovery.
-   *
-   * The rollback switch for the V2 cutover. The Schedule always starts
-   * `scoutPostMatchDiscoveryV2Workflow`; each run reads this first and, when
-   * it is off, hands the pass to v1's `scoutPostMatchDiscoveryWorkflow`
-   * instead. On here and in Flipt, because V2 is what runs today and an
-   * unreachable provider must not flip discovery to the other pipeline.
-   * Deliberately absent from `PRODUCTION_HARD_DISABLED_FLAGS`: production is
-   * the environment the switch exists for. A rollback flips it in Flipt and
-   * records the same value as an environment override in
-   * `managed-flag-inventory.json`, or the inventory check reports drift.
-   */
-  scout_v2_postmatch_ownership_enabled: {
-    default: true,
-    overrides: [],
-  },
-  /**
-   * Whether V2 owns scheduled prematch detection.
-   *
-   * The cutover switch for prematch. The `prematch-poll` Schedule always
-   * starts `scoutRealtimePollWorkflow`; each prematch run reads this first
-   * and, when it is on, runs `scoutPrematchDiscoveryV2Workflow` as a child
-   * for live-game detection and keeps only v1's prematch maintenance. Off
-   * here and in Flipt, because v1 is what runs today and an unreachable
-   * provider must not move detection to the other pipeline. Deliberately
-   * absent from `PRODUCTION_HARD_DISABLED_FLAGS`: it ramps per stage, beta
-   * first. Every ramp or rollback flips it in Flipt and records the same
-   * value as an environment override in `managed-flag-inventory.json`, or the
-   * inventory check reports drift.
-   */
-  scout_v2_prematch_ownership_enabled: {
-    default: false,
-    overrides: [],
-  },
-  /**
-   * Per server, mint new Hall record breaks as V2 intents. First path owns
-   * each guild and match; the flag is off by default and ramps per server.
-   * Targeting is mirrored in managed-flag-inventory.json.
-   */
-  scout_v2_progression_notifications_enabled: { default: false, overrides: [] },
+  scout_support_conversations_enabled: { default: false, overrides: [] },
+  scout_support_report_action_enabled: { default: false, overrides: [] },
   initial_match_history_import_enabled: {
     default: false,
     overrides: [],

@@ -92,12 +92,22 @@ describe("clashSightingWriteFromLake", () => {
     ];
     expect(
       clashLakeRowsMissingFromSightings(rows, [
-        { platform: "NA1", gameId: "100", puuid, source: "prematch" },
+        {
+          platform: "NA1",
+          gameId: "100",
+          puuid: LeaguePuuidSchema.parse(puuid),
+          source: "prematch",
+        },
       ]),
     ).toEqual(rows);
     expect(
       clashLakeRowsMissingFromSightings(rows, [
-        { platform: "NA1", gameId: "100", puuid, source: "match" },
+        {
+          platform: "NA1",
+          gameId: "100",
+          puuid: LeaguePuuidSchema.parse(puuid),
+          source: "match",
+        },
       ]),
     ).toEqual([]);
   });

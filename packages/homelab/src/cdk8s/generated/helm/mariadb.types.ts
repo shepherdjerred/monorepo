@@ -507,6 +507,12 @@ explicit_defaults_fo..."
    */
   existingConfigmap?: string;
   /**
+   * Whether information about services should be injected into pod's environment variable
+   *
+   * @default true
+   */
+  enableServiceLinks?: boolean;
+  /**
    * ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#update-strategies
    *
    * @default {"type":"RollingUpdate"}
@@ -1263,6 +1269,12 @@ explicit_defaults_fo..."
    * @default ""
    */
   existingConfigmap?: string;
+  /**
+   * Whether information about services should be injected into pod's environment variable
+   *
+   * @default true
+   */
+  enableServiceLinks?: boolean;
   /**
    * ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#update-strategies
    *
@@ -3008,14 +3020,14 @@ export type MariadbHelmValues = {
    * MariaDB Primary parameters
    * Mariadb Primary parameters
    *
-   * @default {...} (48 keys)
+   * @default {...} (49 keys)
    */
   primary?: MariadbHelmValuesPrimary;
   /**
    * MariaDB Secondary parameters
    * Mariadb Secondary parameters
    *
-   * @default {...} (49 keys)
+   * @default {...} (50 keys)
    */
   secondary?: MariadbHelmValuesSecondary;
   /**
@@ -3146,6 +3158,7 @@ export type MariadbHelmParameters = {
   "primary.containerPorts.mysql"?: string;
   "primary.configuration"?: string;
   "primary.existingConfigmap"?: string;
+  "primary.enableServiceLinks"?: string;
   "primary.updateStrategy.type"?: string;
   "primary.podAffinityPreset"?: string;
   "primary.podAntiAffinityPreset"?: string;
@@ -3233,6 +3246,7 @@ export type MariadbHelmParameters = {
   "secondary.containerPorts.mysql"?: string;
   "secondary.configuration"?: string;
   "secondary.existingConfigmap"?: string;
+  "secondary.enableServiceLinks"?: string;
   "secondary.updateStrategy.type"?: string;
   "secondary.podAffinityPreset"?: string;
   "secondary.podAntiAffinityPreset"?: string;

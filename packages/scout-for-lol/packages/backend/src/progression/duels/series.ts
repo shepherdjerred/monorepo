@@ -1,5 +1,5 @@
-import type { PlayerIdSchema } from "@scout-for-lol/data";
 import {
+  type PlayerIdSchema,
   DUEL_DISCLOSURE_VERSION,
   DiscordAccountIdSchema,
   DuelBestOfSchema,
@@ -16,6 +16,7 @@ import {
   type ScoutStage,
 } from "@scout-for-lol/temporal";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
+import { mintDuelStatusIntent } from "#src/progression/duels/status-intent.ts";
 import {
   duelCompetitorsUseOneRiotRegion,
   duelCompetitorCreateData,
@@ -176,19 +177,20 @@ export async function createDirectDuel(
         },
       },
     });
-    await tx.duelStatusOutbox.create({
-      data: {
-        guildId: options.guildId,
-        channelId: options.channelId,
-        dedupeKey: `duel-invited:${row.id}`,
-        payloadJson: JSON.stringify({
-          kind: "invited",
-          seriesId: row.id,
-          mentionDiscordIds: [...first.accounts, ...second.accounts].map(
-            (account) => account.discordId,
-          ),
-        }),
+    await mintDuelStatusIntent(tx, {
+      stage: options.stage,
+      guildId: options.guildId,
+      channelId: options.channelId,
+      dedupeKey: `duel-invited:${row.id}`,
+      payload: {
+        kind: "invited",
+        seriesId: row.id,
+        mentionDiscordIds: [...first.accounts, ...second.accounts].map(
+          (account) => DiscordAccountIdSchema.parse(account.discordId),
+        ),
       },
+      createdAt: now,
+      freshnessDeadline: deadlineAt,
     });
     return row;
   });
@@ -241,7 +243,7 @@ export async function currentParticipantDiscordIds(
   guildId: DiscordGuildId,
   participants: readonly {
     readonly playerId: number;
-    readonly discordId: string;
+    readonly discordId: DiscordAccountId;
   }[],
 ): Promise<ReadonlyMap<number, string | null>> {
   const players = await db.player.findMany({
@@ -277,7 +279,10 @@ export async function currentDisclosureKeys(
 
 export function effectiveParticipantDiscordId(
   current: ReadonlyMap<number, string | null>,
-  participant: { readonly playerId: number; readonly discordId: string },
+  participant: {
+    readonly playerId: number;
+    readonly discordId: DiscordAccountId;
+  },
 ): string | null | undefined {
   return current.has(participant.playerId)
     ? current.get(participant.playerId)
@@ -290,7 +295,7 @@ export function duelSeriesVisibleTo(
     readonly organizerDiscordId: string;
     readonly participants: readonly {
       readonly playerId: number;
-      readonly discordId: string;
+      readonly discordId: DiscordAccountId;
       readonly acceptedAt: Date | null;
     }[];
   },

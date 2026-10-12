@@ -127,6 +127,22 @@ final class SignWriteListenerTest {
   }
 
   @Test
+  void aSealedWorldBuildsNoMechanism() {
+    grant(5);
+    plugin.sealed.seal("sealed");
+    var sealed = server.addSimpleWorld("sealed");
+    var block = sealed.getBlockAt(5, 64, 0);
+    block.setType(Material.OAK_SIGN);
+
+    var event = write(block, Side.FRONT, "Lobby", "[lift up]", "", "");
+
+    assertThat(event.isCancelled()).isFalse();
+    assertThat(line(event, 1)).isEqualTo("[lift up]");
+    assertThat(owner(block)).isEqualTo("none");
+    assertThat(messages()).isEmpty();
+  }
+
+  @Test
   void aLaterCancellationLeavesNoPersistedMechanism() {
     grant(2);
     var block = signAt(5);

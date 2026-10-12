@@ -72,7 +72,7 @@ export function CompetitionBuilderReview(props: {
 
 export function competitionReviewSummary(
   state: CompetitionBuilderState,
-  channelName: string | undefined,
+  channelName: string | undefined = "not set",
 ): {
   gameVariant: string;
   scoring: string;
@@ -92,6 +92,6 @@ export function competitionReviewSummary(
     scoring: `${CRITERION_LABELS[state.criteria.criteriaType]} · ${queueLabel(state)}${aggregationLabel(state)}`,
     window: windowLabel(state),
     entrants: `${visibilityToString(state.visibility)} · ${roster}`,
-    delivery: `#${channelName ?? "not set"} · Leaderboard updates ${updates}`,
+    delivery: `#${channelName} · Leaderboard updates ${updates}`,
   };
 }

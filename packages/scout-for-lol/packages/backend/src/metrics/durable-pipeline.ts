@@ -1,6 +1,6 @@
 import { Counter, Gauge } from "prom-client";
-import { SCOUT_V2_MATCH_RECEIPT_KINDS } from "@scout-for-lol/temporal/match-receipts-v2";
-import { SCOUT_V2_WORKFLOW_NAMES } from "@scout-for-lol/temporal/identifiers";
+import { SCOUT_MATCH_RECEIPT_KINDS } from "@scout-for-lol/temporal/match-receipts";
+import { SCOUT_PIPELINE_START_WORKFLOW_TYPES } from "@scout-for-lol/temporal/identifiers";
 import type { Db } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 import { registry } from "#src/metrics/registry.ts";
@@ -43,6 +43,10 @@ const logger = createLogger("metrics-durable-pipeline");
  *   backlog family.
  * - *Are matches being found on time?* —
  *   `scout_durable_observation_lag_seconds`.
+ * - *Are matches being looked for at all?* —
+ *   `scout_durable_postmatch_poll_age_seconds`. The lag above reads zero
+ *   when nothing was observed, so a discovery that stopped outright looked
+ *   healthy to it for the whole of a 24-hour prod stall.
  *
  * ## Why every label here is bounded
  *
@@ -144,10 +148,25 @@ export const scoutDurableObservationLag = new Gauge({
 });
 
 /**
+ * How long post-match discovery has gone without completing a poll.
+ *
+ * The observation lag cannot see discovery that has stopped: with nothing
+ * observed in its window it reads zero, which is also what a healthy quiet
+ * hour reads. This is read from the poll's own completion instant instead, so
+ * it grows for as long as no poll finishes, whatever the cause. Zero before any
+ * poll has completed; -1 when the read failed.
+ */
+export const scoutDurablePostmatchPollAge = new Gauge({
+  name: "scout_durable_postmatch_poll_age_seconds",
+  help: "Seconds since post-match discovery last completed a poll with complete evidence, zero before any poll has completed, or -1 when the read failed.",
+  registers: [registry],
+});
+
+/**
  * Live V2 matches that finished their core without a post-match intent.
  *
  * Defined here with every other durable gauge, but FILLED by
- * `temporal/v2/notification/postmatch-mint-gap.ts`: the read excludes matches
+ * `temporal/notification/postmatch-mint-gap.ts`: the read excludes matches
  * carrying the post-match render receipt, whose kind the notification lane
  * owns and `metrics/` may not import. It registers through
  * `sweep-registry.ts`, as the lake lag does. -1 means the read failed.
@@ -165,7 +184,7 @@ export const scoutDurablePostmatchMintGaps = new Gauge({
  * models a kind as a branded kebab-case string on purpose — the owning
  * workflow of a later wave defines its own, so the domain must not enumerate
  * them — but every value that ever reaches this label is a literal in one of
- * the four owner modules (`durable-receipts.ts`, `match-receipts-v2.ts`,
+ * the four owner modules (`durable-receipts.ts`, `match-receipts.ts`,
  * `receipt-evidence.ts`, and the V2 notification and recovery receipt
  * modules). No request, match, guild, or user input can put a value here, so
  * the series count is the number of kinds the source declares.
@@ -268,7 +287,7 @@ function ageSeconds(oldest: Date | null, now: number): number {
  * pays for it and one set of series describes the deployment — see
  * `sweep-policy.ts` for why that is a deployment fact rather than a process
  * one. The lake family and the post-match mint gap are not here: their
- * receipt-kind vocabularies belong to `report-lake/` and `temporal/v2/`, which
+ * receipt-kind vocabularies belong to `report-lake/` and `temporal/`, which
  * `metrics/` may not import, so each registers itself through
  * `sweep-registry.ts`.
  *
@@ -290,8 +309,11 @@ export async function collectDurablePipelineMetrics(db: Db): Promise<void> {
       oldestStalledMatchProcessingAt,
       oldestUnacceptedWorkflowStartAt,
     } = await import("#src/database/durable/pipeline-backlog.ts");
-    const { observationLag, oldestReadyNotificationIntentAt } =
-      await import("#src/database/durable/pipeline-gaps.ts");
+    const {
+      lastCompletePostMatchPollAt,
+      observationLag,
+      oldestReadyNotificationIntentAt,
+    } = await import("#src/database/durable/pipeline-gaps.ts");
 
     const now = Date.now();
     const [
@@ -302,20 +324,22 @@ export async function collectDurablePipelineMetrics(db: Db): Promise<void> {
       workflowStartAt,
       readyAt,
       lag,
+      lastPollAt,
     ] = await Promise.all([
       countNotificationIntentsByState(db),
       countRecoveryBatchesByState(db),
       oldestStalledMatchProcessingAt(db, {
-        observationReceiptKind: SCOUT_V2_MATCH_RECEIPT_KINDS.observation,
+        observationReceiptKind: SCOUT_MATCH_RECEIPT_KINDS.observation,
       }),
       oldestLiveRecoveryBatchAt(db),
       oldestUnacceptedWorkflowStartAt(db, {
-        workflowTypes: SCOUT_V2_WORKFLOW_NAMES,
+        workflowTypes: SCOUT_PIPELINE_START_WORKFLOW_TYPES,
       }),
       oldestReadyNotificationIntentAt(db),
       observationLag(db, {
         observedSince: new Date(now - OBSERVATION_LAG_WINDOW_MS),
       }),
+      lastCompletePostMatchPollAt(db),
     ]);
 
     for (const state of NOTIFICATION_INTENT_STATE_KINDS) {
@@ -342,6 +366,7 @@ export async function collectDurablePipelineMetrics(db: Db): Promise<void> {
     );
     scoutDurableObservationLag.set({ statistic: "p90" }, lag.p90Seconds);
     scoutDurableObservationLag.set({ statistic: "max" }, lag.maxSeconds);
+    scoutDurablePostmatchPollAge.set(ageSeconds(lastPollAt, now));
   } catch (error) {
     for (const family of DURABLE_BACKLOG_FAMILIES) {
       scoutDurableBacklogOldestAge.set({ family }, -1);
@@ -349,6 +374,7 @@ export async function collectDurablePipelineMetrics(db: Db): Promise<void> {
     for (const statistic of OBSERVATION_LAG_STATISTICS) {
       scoutDurableObservationLag.set({ statistic }, -1);
     }
+    scoutDurablePostmatchPollAge.set(-1);
     scoutDurableNotificationIntents.reset();
     scoutDurableRecoveryBatches.reset();
     logger.error("Failed to update durable pipeline metrics", { error });

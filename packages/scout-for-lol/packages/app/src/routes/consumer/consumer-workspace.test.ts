@@ -1,3 +1,4 @@
+import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { describe, expect, test } from "vitest";
 import {
   consumerNavigationItems,
@@ -100,9 +101,10 @@ describe("consumer navigation", () => {
       expected: [],
     },
   ])("shows only enabled member features", (input) => {
-    expect(consumerNavigationItems(input).map((item) => item.label)).toEqual(
-      input.expected,
-    );
+    expect(consumerNavigationItems(input).map((item) => item.label)).toEqual([
+      ...input.expected,
+      "Help and feedback",
+    ]);
   });
 
   test("links Hall of Fame to custom path or /halls", () => {
@@ -114,7 +116,10 @@ describe("consumer navigation", () => {
         bucksAvailable: false,
         hallAvailable: true,
       }),
-    ).toEqual([{ label: "Hall of Fame", to: "/halls" }]);
+    ).toEqual([
+      { label: "Hall of Fame", to: "/halls" },
+      { label: "Help and feedback", to: "/feedback" },
+    ]);
 
     expect(
       consumerNavigationItems({
@@ -125,7 +130,10 @@ describe("consumer navigation", () => {
         hallAvailable: true,
         hallTo: "/halls/123",
       }),
-    ).toEqual([{ label: "Hall of Fame", to: "/halls/123" }]);
+    ).toEqual([
+      { label: "Hall of Fame", to: "/halls/123" },
+      { label: "Help and feedback", to: "/feedback" },
+    ]);
   });
 
   test("resolves Hall of Fame path based on active guild and guild count", () => {
@@ -193,13 +201,15 @@ describe("guild navigation", () => {
   });
 
   test("selecting a server targets its permission-aware index route", () => {
-    expect(guildWorkspacePath("discord-123")).toBe("/g/discord-123");
+    expect(
+      guildWorkspacePath(DiscordGuildIdSchema.parse("810014215985566547")),
+    ).toBe("/g/810014215985566547");
   });
 
   test("uses a direct Manage Scout target for zero or one server", () => {
     expect(resolveManageScoutTarget([])).toBe("/manage");
-    expect(resolveManageScoutTarget([{ id: "discord-123" }])).toBe(
-      "/g/discord-123",
+    expect(resolveManageScoutTarget([{ id: "810014215985566547" }])).toBe(
+      "/g/810014215985566547",
     );
     expect(
       resolveManageScoutTarget([{ id: "one" }, { id: "two" }]),

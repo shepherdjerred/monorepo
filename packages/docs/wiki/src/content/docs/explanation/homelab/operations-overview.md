@@ -146,7 +146,6 @@ records which signals a viewer has already seen.
 
 The email digest follows the same rule. A daily glance and a weekly review
 summarize the stored snapshots. Alertmanager remains the only paging path.
-Sending is gated by the `ops-digest-email-enabled` flag.
 
 ## Why it lives in the alert dashboard
 
@@ -167,3 +166,4 @@ itself.
 - Dashboard, digest, and API: `packages/alert-dashboard/`.
 - Mac export: `packages/toolkit/src/lib/history/`.
 - Alloy receiver: `packages/homelab/src/cdk8s/src/resources/argo-applications/observability/alloy-gateway.ts`.
+- Operator authentication: [Homelab control-plane access](/reference/homelab-control-plane-access/).

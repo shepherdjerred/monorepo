@@ -1,13 +1,16 @@
 import { expect, test } from "vitest";
 import path from "node:path";
-import { serveIntroducedResourceLookup } from "./argocd-script-support.ts";
+import {
+  runArgocdCommand,
+  serveIntroducedResourceLookup,
+} from "./argocd-script-support.ts";
 import {
   readArgocdApiContract,
   resourceOutsideApplicationMessage,
 } from "@shepherdjerred/homelab/cdk8s/scripts/argocd-api-contract.ts";
 
 test("sync-managed rejects detached operations", async () => {
-  const process = Bun.spawn(
+  const { exitCode, stderr } = await runArgocdCommand(
     [
       "bun",
       "--no-install",
@@ -16,16 +19,8 @@ test("sync-managed rejects detached operations", async () => {
       "worker",
       "--async",
     ],
-    {
-      cwd: path.resolve(import.meta.dir, "../../.."),
-      stderr: "pipe",
-      stdout: "pipe",
-    },
+    { cwd: path.resolve(import.meta.dir, "../../..") },
   );
-  const [exitCode, stderr] = await Promise.all([
-    process.exited,
-    new Response(process.stderr).text(),
-  ]);
 
   expect(exitCode).not.toBe(0);
   expect(stderr).toContain(
@@ -79,7 +74,7 @@ test("sync-managed preflights immutable changes before submitting", async () => 
   });
 
   try {
-    const process = Bun.spawn(
+    const { exitCode, stderr } = await runArgocdCommand(
       [
         "bun",
         "--no-install",
@@ -96,14 +91,8 @@ test("sync-managed preflights immutable changes before submitting", async () => 
           ARGOCD_SERVER_URL: server.url.origin,
           ARGOCD_TOKEN: "test-token",
         },
-        stderr: "pipe",
-        stdout: "pipe",
       },
     );
-    const [exitCode, stderr] = await Promise.all([
-      process.exited,
-      new Response(process.stderr).text(),
-    ]);
 
     expect(exitCode).not.toBe(0);
     expect(stderr).toContain(
@@ -177,7 +166,7 @@ test("sync-managed preflights the requested revision", async () => {
   });
 
   try {
-    const process = Bun.spawn(
+    const { exitCode, stderr } = await runArgocdCommand(
       [
         "bun",
         "--no-install",
@@ -196,14 +185,8 @@ test("sync-managed preflights the requested revision", async () => {
           ARGOCD_SERVER_URL: server.url.origin,
           ARGOCD_TOKEN: "test-token",
         },
-        stderr: "pipe",
-        stdout: "pipe",
       },
     );
-    const [exitCode, stderr] = await Promise.all([
-      process.exited,
-      new Response(process.stderr).text(),
-    ]);
 
     expect(exitCode).not.toBe(0);
     expect(stderr).toContain(
@@ -278,7 +261,7 @@ test("sync-managed preflights a resource the requested revision introduces", asy
   });
 
   try {
-    const process = Bun.spawn(
+    const { exitCode, stderr } = await runArgocdCommand(
       [
         "bun",
         "--no-install",
@@ -297,14 +280,8 @@ test("sync-managed preflights a resource the requested revision introduces", asy
           ARGOCD_SERVER_URL: server.url.origin,
           ARGOCD_TOKEN: "test-token",
         },
-        stderr: "pipe",
-        stdout: "pipe",
       },
     );
-    const [exitCode, stderr] = await Promise.all([
-      process.exited,
-      new Response(process.stderr).text(),
-    ]);
 
     expect(exitCode).not.toBe(0);
     expect(stderr).toContain(
@@ -471,7 +448,7 @@ function serveNamespaceScopedPreflight(options: {
 }
 
 async function runSyncManagedAtRevision(origin: string) {
-  const process = Bun.spawn(
+  const { exitCode, stderr } = await runArgocdCommand(
     [
       "bun",
       "--no-install",
@@ -490,14 +467,8 @@ async function runSyncManagedAtRevision(origin: string) {
         ARGOCD_SERVER_URL: origin,
         ARGOCD_TOKEN: "test-token",
       },
-      stderr: "pipe",
-      stdout: "pipe",
     },
   );
-  const [exitCode, stderr] = await Promise.all([
-    process.exited,
-    new Response(process.stderr).text(),
-  ]);
   return { exitCode, stderr };
 }
 

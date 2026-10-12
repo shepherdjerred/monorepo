@@ -1,3 +1,4 @@
+import { DiscordChannelIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import { describe, expect, test, vi } from "vitest";
 import {
   DiscordAccountIdSchema,
@@ -22,7 +23,7 @@ function fakeInteraction(input?: {
   return {
     id: "bb-transfer-test",
     guildId: SERVER,
-    channelId: "1337623164146155594",
+    channelId: DiscordChannelIdSchema.parse("1337623164146155594"),
     user: { id: SENDER },
     options: {
       getSubcommand: () => "transfer",

@@ -31,6 +31,11 @@
     },
     "test:ci": {
       "inputs": [
+        "$TURBO_ROOT$/scripts/ci/ci-reporting.ts",
+        "$TURBO_ROOT$/scripts/ci/mstest-configuration.ts",
+        "$TURBO_ROOT$/scripts/ci/gradle-junit.ts",
+        "$TURBO_ROOT$/scripts/ci-test-manifest.json",
+        "$TURBO_ROOT$/scripts/ci/run-ci-test.ts",
         "**/*.rs",
         "**/Cargo.toml",
         "Cargo.lock",

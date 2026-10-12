@@ -20,7 +20,7 @@ import {
 import {
   buildMatchesSource,
   listParam,
-  resolveLakeFiles,
+  withLakeQueryRetry,
   type BoundParam,
 } from "#src/reports/duckdb/lake.ts";
 
@@ -253,79 +253,84 @@ export async function fetchPopulationFrame(options: {
   timeoutMs?: number;
 }): Promise<PopulationFrame | undefined> {
   const lakeDir = options.lakeDir ?? resolveLakeDir();
-  const files = await resolveLakeFiles(lakeDir);
-  const source = buildMatchesSource(files, {
-    sql:
-      options.queueType === undefined
-        ? "queue IN (SELECT unnest(?)) AND team_position <> '' AND end_of_game_result = 'GameComplete' AND game_duration_seconds >= 300"
-        : "queue = ? AND team_position <> '' AND end_of_game_result = 'GameComplete' AND game_duration_seconds >= 300",
-    params:
-      options.queueType === undefined
-        ? [listParam([...PARLAY_HISTORY_QUEUES])]
-        : [{ kind: "scalar", value: options.queueType }],
+  return await withLakeQueryRetry(lakeDir, async (files) => {
+    const source = buildMatchesSource(files, {
+      sql:
+        options.queueType === undefined
+          ? "queue IN (SELECT unnest(?)) AND team_position <> '' AND end_of_game_result = 'GameComplete' AND game_duration_seconds >= 300"
+          : "queue = ? AND team_position <> '' AND end_of_game_result = 'GameComplete' AND game_duration_seconds >= 300",
+      params:
+        options.queueType === undefined
+          ? [listParam([...PARLAY_HISTORY_QUEUES])]
+          : [{ kind: "scalar", value: options.queueType }],
+    });
+    if (source === undefined) {
+      return;
+    }
+
+    const quantileSelect = QUANTILE_PROBABILITIES.map(
+      (probability, index) =>
+        `quantile_cont(${options.column}, ${probability.toString()}) AS ${quantileAlias(index)}`,
+    ).join(", ");
+
+    const rows = await withDuckDBConnection(
+      async (session) => {
+        const sql =
+          `WITH base AS (SELECT team_position AS lane, ` +
+          `CASE WHEN game_duration_seconds < 900 THEN 10 ` +
+          `WHEN game_duration_seconds < 1500 THEN 20 ` +
+          `WHEN game_duration_seconds < 2100 THEN 30 ` +
+          `WHEN game_duration_seconds < 2700 THEN 40 ELSE 50 END AS bucket, ` +
+          `${options.column} FROM (${source.sql})) ` +
+          `SELECT lane, bucket, count(*)::BIGINT AS n, ${quantileSelect} ` +
+          `FROM base GROUP BY GROUPING SETS ((lane, bucket), (bucket), ())`;
+        return await session.run(sql, bindParams(session, source.params));
+      },
+      { timeoutMs: options.timeoutMs ?? 5000 },
+    );
+
+    let overall: StatCell | undefined;
+    const byBucket: Partial<Record<DurationBucket, StatCell>> = {};
+    const byLaneAndBucket: Partial<
+      Record<ParlayLane, Partial<Record<DurationBucket, StatCell>>>
+    > = {};
+
+    for (const row of rows) {
+      const parsed = PopulationRowSchema.safeParse(row);
+      if (!parsed.success) {
+        continue;
+      }
+      const quantiles: Record<number, number> = {};
+      for (const [index, probability] of QUANTILE_PROBABILITIES.entries()) {
+        const value = z
+          .union([z.bigint(), z.number()])
+          .transform(Number)
+          .safeParse(parsed.data[quantileAlias(index)]);
+        quantiles[probability] = value.success ? value.data : 0;
+      }
+      const cell = cellFromQuantiles(
+        parsed.data.n,
+        quantiles,
+        options.operator,
+      );
+      const lane = parseLane(parsed.data.lane);
+      const bucket = parseBucket(parsed.data.bucket);
+
+      if (lane === undefined && bucket === undefined) {
+        overall = cell;
+      } else if (lane === undefined && bucket !== undefined) {
+        byBucket[bucket] = cell;
+      } else if (lane !== undefined && bucket !== undefined) {
+        const lanes = byLaneAndBucket[lane] ?? {};
+        lanes[bucket] = cell;
+        byLaneAndBucket[lane] = lanes;
+      }
+    }
+
+    return overall === undefined
+      ? undefined
+      : { overall, byBucket, byLaneAndBucket };
   });
-  if (source === undefined) {
-    return undefined;
-  }
-
-  const quantileSelect = QUANTILE_PROBABILITIES.map(
-    (probability, index) =>
-      `quantile_cont(${options.column}, ${probability.toString()}) AS ${quantileAlias(index)}`,
-  ).join(", ");
-
-  const rows = await withDuckDBConnection(
-    async (session) => {
-      const sql =
-        `WITH base AS (SELECT team_position AS lane, ` +
-        `CASE WHEN game_duration_seconds < 900 THEN 10 ` +
-        `WHEN game_duration_seconds < 1500 THEN 20 ` +
-        `WHEN game_duration_seconds < 2100 THEN 30 ` +
-        `WHEN game_duration_seconds < 2700 THEN 40 ELSE 50 END AS bucket, ` +
-        `${options.column} FROM (${source.sql})) ` +
-        `SELECT lane, bucket, count(*)::BIGINT AS n, ${quantileSelect} ` +
-        `FROM base GROUP BY GROUPING SETS ((lane, bucket), (bucket), ())`;
-      return await session.run(sql, bindParams(session, source.params));
-    },
-    { timeoutMs: options.timeoutMs ?? 5000 },
-  );
-
-  let overall: StatCell | undefined;
-  const byBucket: Partial<Record<DurationBucket, StatCell>> = {};
-  const byLaneAndBucket: Partial<
-    Record<ParlayLane, Partial<Record<DurationBucket, StatCell>>>
-  > = {};
-
-  for (const row of rows) {
-    const parsed = PopulationRowSchema.safeParse(row);
-    if (!parsed.success) {
-      continue;
-    }
-    const quantiles: Record<number, number> = {};
-    for (const [index, probability] of QUANTILE_PROBABILITIES.entries()) {
-      const value = z
-        .union([z.bigint(), z.number()])
-        .transform(Number)
-        .safeParse(parsed.data[quantileAlias(index)]);
-      quantiles[probability] = value.success ? value.data : 0;
-    }
-    const cell = cellFromQuantiles(parsed.data.n, quantiles, options.operator);
-    const lane = parseLane(parsed.data.lane);
-    const bucket = parseBucket(parsed.data.bucket);
-
-    if (lane === undefined && bucket === undefined) {
-      overall = cell;
-    } else if (lane === undefined && bucket !== undefined) {
-      byBucket[bucket] = cell;
-    } else if (lane !== undefined && bucket !== undefined) {
-      const lanes = byLaneAndBucket[lane] ?? {};
-      lanes[bucket] = cell;
-      byLaneAndBucket[lane] = lanes;
-    }
-  }
-
-  return overall === undefined
-    ? undefined
-    : { overall, byBucket, byLaneAndBucket };
 }
 
 /**

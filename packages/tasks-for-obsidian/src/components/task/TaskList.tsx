@@ -75,7 +75,7 @@ export function TaskList({
   onToggleSelect,
   pendingIds,
   onRefresh,
-  refreshing,
+  refreshing = false,
   emptyTitle = "No tasks",
   emptySubtitle,
   emptyIcon,
@@ -321,7 +321,7 @@ export function TaskList({
         renderItem={renderItem}
         renderSectionHeader={renderSectionHeader}
         onRefresh={onRefresh}
-        refreshing={refreshing ?? false}
+        refreshing={refreshing}
         stickySectionHeadersEnabled
         removeClippedSubviews={true}
         windowSize={10}

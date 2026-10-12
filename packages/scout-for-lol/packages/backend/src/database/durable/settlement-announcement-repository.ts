@@ -23,7 +23,6 @@ export const SETTLEMENT_ANNOUNCEMENT_FAMILIES = [
   "parlay",
   "earnings",
   "late-earnings",
-  "dare-summary",
 ] as const;
 
 export type SettlementAnnouncementFamily =

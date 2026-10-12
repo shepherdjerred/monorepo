@@ -4,7 +4,7 @@ const turboTasks = [
   "build",
   "typecheck",
   "test:ci",
-  "coverage:portable",
+  "coverage:portable:check",
   "lint",
   "check-suppressions",
   "check-agent-guidance",
@@ -39,6 +39,7 @@ const turboTasks = [
   "line-endings-root",
   "react-version-sync",
   "toolchain-version-sync",
+  "mise-lock-sync",
   "large-files-scout",
   "large-files-homelab",
   "large-files-packages",
@@ -65,7 +66,7 @@ type ChangedFilesReader = (
   base: string,
 ) => Promise<readonly string[] | undefined>;
 
-const ROOT_SCRIPTS_EXTERNAL_INPUTS = [
+export const ROOT_SCRIPTS_EXTERNAL_INPUTS = [
   "packages/version-catalog/src/catalog.json",
   "packages/tasks-for-obsidian/ios/ci_scripts/",
   "packages/dotfiles/dot_local/bin/executable_cf",
@@ -93,7 +94,7 @@ const ROOT_SCRIPTS_EXTERNAL_INPUTS = [
   "packages/feature-flags/src/managed-flag-drift.ts",
   "packages/feature-flags/src/flipt-resource-payloads.ts",
   "packages/feature-flags/src/flipt-boolean-rollouts.ts",
-  "packages/feature-flags/managed-flag-inventory.json",
+  "packages/feature-flags/src/managed-flag-inventory.json",
 ] as const;
 
 const IMAGE_PIN_STATE_INPUTS = new Set([

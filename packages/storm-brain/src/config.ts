@@ -8,6 +8,12 @@ const DEFAULT_MAX_BODY_BYTES = 256 * 1024;
 const DEFAULT_LLM_TIMEOUT_MS = 60_000;
 
 const ModelConfigDefinition = {
+  conversationModel: {
+    schema: z.literal("gpt-6-luna"),
+    sources: ["flag", "default"],
+    default: "gpt-6-luna",
+    names: { flag: "storm-brain-conversation-model" },
+  },
   model: {
     schema: z.string().min(1),
     sources: ["flag", "default"],
@@ -19,6 +25,7 @@ const ModelConfigDefinition = {
 const ServiceConfigSchema = z.object({
   bearerToken: z.string().min(32),
   model: z.string().min(1),
+  conversationModel: z.literal("gpt-6-luna"),
   maxBodyBytes: z
     .number()
     .int()
@@ -64,6 +71,7 @@ export async function loadBrainConfig(
   const config = ServiceConfigSchema.parse({
     bearerToken: required(env, "STORM_BRAIN_BEARER_TOKEN"),
     model: await resolver.value("model"),
+    conversationModel: await resolver.value("conversationModel"),
     maxBodyBytes: integer(
       env,
       "STORM_BRAIN_MAX_BODY_BYTES",

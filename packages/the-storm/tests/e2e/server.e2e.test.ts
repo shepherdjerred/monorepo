@@ -7,7 +7,8 @@ import {
   waitForTranslation,
   waitUntil,
 } from "./harness/bot.ts";
-import { botProtocol, botVersion, paper } from "./harness/pins.ts";
+import { paper } from "@shepherdjerred/mc-harness/pins.ts";
+import { botProtocol, botVersion } from "./harness/pins.ts";
 import {
   ClearCountOutputSchema,
   DayTimelineOutputSchema,
@@ -15,7 +16,7 @@ import {
   ExecuteTestOutputSchema,
   ListOutputSchema,
 } from "./harness/rcon-output.ts";
-import { serverLogs } from "./harness/server.ts";
+import { serverLogs } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
 
 const TimelineArgsSchema = z.tuple([z.literal("minecraft:day"), z.bigint()]);
 
@@ -67,7 +68,9 @@ describe("disposable Paper 26.2 server", () => {
     );
 
     const reply = waitForTranslation(bot, "commands.time.query.timeline");
-    bot.chat("/time query day");
+    // /time is the permission-gated staff command; use Bukkit's namespaced
+    // vanilla command when this test checks vanilla translation output.
+    bot.chat("/minecraft:time query day");
     const [, ticks] = TimelineArgsSchema.parse(await reply);
     const fromBot = Number(ticks);
 
@@ -102,13 +105,25 @@ describe("multi-player flows", () => {
     secondBot,
     rcon,
   }) => {
-    await rcon.command(`tp ${bot.username} 0.5 -60 0.5`);
-    await rcon.command(`tp ${secondBot.username} 4.5 -60 0.5`);
+    // Spawn precedes chunk delivery. Let Paper finish tracking both clients
+    // before moving them out of their initial chunks.
+    await waitUntil("both spawn chunks", () =>
+      [bot, secondBot].every(
+        (player) => player.blockAt(player.entity.position.floored()) !== null,
+      ),
+    );
+    await rcon.command(`tp ${bot.username} 400.5 -60 0.5`);
+    await rcon.command(`tp ${secondBot.username} 404.5 -60 0.5`);
     await waitUntil(
       "bots teleported",
       () =>
-        bot.entity.position.distanceTo(new Vec3(0.5, -60, 0.5)) < 0.1 &&
-        secondBot.entity.position.distanceTo(new Vec3(4.5, -60, 0.5)) < 0.1,
+        bot.entity.position.distanceTo(new Vec3(400.5, -60, 0.5)) < 0.1 &&
+        secondBot.entity.position.distanceTo(new Vec3(404.5, -60, 0.5)) < 0.1,
+    );
+    await waitUntil("both destination chunks", () =>
+      [bot, secondBot].every(
+        (player) => player.blockAt(player.entity.position.floored()) !== null,
+      ),
     );
     await waitUntil(
       "bots see each other",
@@ -122,7 +137,7 @@ describe("multi-player flows", () => {
     await heard;
 
     // Grief-style flow: the first bot breaks a block; the second observes it.
-    const target = new Vec3(2, -60, 0);
+    const target = new Vec3(402, -60, 0);
     await rcon.command(`setblock ${blockArgs(target)} minecraft:dirt`);
     await waitUntil(
       "both bots see dirt",
@@ -164,23 +179,43 @@ describe("26.x features through ViaBackwards", () => {
     bot,
     rcon,
   }) => {
-    const { x, y, z: posZ } = bot.entity.position;
-    const at = `${(x + 2).toString()} ${y.toString()} ${posZ.toString()}`;
+    // Mineflayer's spawn event can precede the first chunk. Wait until the
+    // client is tracked in its spawn chunk before creating entities for it.
+    await waitUntil(
+      "bot spawn chunk",
+      () => bot.blockAt(bot.entity.position.floored()) !== null,
+    );
     const dialogs: unknown[] = [];
+    const entityPackets: string[] = [];
     bot._client.on("packet", (data: unknown, meta: { name: string }) => {
       if (meta.name === "show_dialog") {
         dialogs.push(data);
       }
+      if (meta.name.includes("entity")) {
+        entityPackets.push(meta.name);
+      }
     });
 
+    const summonReplies = [];
     for (const type of [...summoned, "sulfur_cube"]) {
-      await rcon.command(`summon minecraft:${type} ${at}`);
+      summonReplies.push(
+        await rcon.command(
+          `execute at ${bot.username} run minecraft:summon minecraft:${type} ~2 ~ ~`,
+        ),
+      );
     }
     const seen = () =>
       new Set(Object.values(bot.entities).map((entity) => entity.name));
-    await waitUntil("summoned entities", () =>
-      summoned.every((name) => seen().has(name)),
-    );
+    try {
+      await waitUntil("summoned entities", () =>
+        summoned.every((name) => seen().has(name)),
+      );
+    } catch (error) {
+      throw new Error(
+        `${String(error)}; client has ${[...seen()].join(", ")}; entity packets ${JSON.stringify(entityPackets)}; RCON replied ${summonReplies.join(" | ")}`,
+        { cause: error },
+      );
+    }
     // sulfur_cube is new in 26.2; ViaBackwards maps it to a slime for 26.1 clients.
     await waitUntil("sulfur cube as slime", () => seen().has("slime"));
 

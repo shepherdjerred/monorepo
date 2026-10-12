@@ -2,6 +2,7 @@ import { describe, expect, test, vi } from "vitest";
 import { fetchBlockedReason, matchesBlockedSignal } from "./github-blocked.ts";
 import { codexProvider } from "./providers/codex.ts";
 import { greptileProvider } from "./providers/greptile.ts";
+import { coderabbitProvider } from "./providers/coderabbit.ts";
 
 const headPushedAt = "2026-09-23T18:00:00Z";
 const afterPush = "2026-09-23T18:01:00Z";
@@ -21,9 +22,9 @@ const SHORT_USAGE_LIMIT_COMMENT =
 
 describe("matchesBlockedSignal", () => {
   test("matches both observed usage-limit wordings", () => {
-    const strategy = codexProvider.detectBlocked;
+    const strategy = codexProvider.detectBlocked?.[0];
     expect(strategy).not.toBeNull();
-    if (strategy === null) return;
+    if (strategy === undefined) throw new Error("Codex block strategy missing");
     expect(matchesBlockedSignal(strategy, USAGE_LIMIT_COMMENT)).toBe(true);
     expect(matchesBlockedSignal(strategy, SHORT_USAGE_LIMIT_COMMENT)).toBe(
       true,
@@ -31,9 +32,9 @@ describe("matchesBlockedSignal", () => {
   });
 
   test("rejects a null or unrelated body", () => {
-    const strategy = codexProvider.detectBlocked;
+    const strategy = codexProvider.detectBlocked?.[0];
     expect(strategy).not.toBeNull();
-    if (strategy === null) return;
+    if (strategy === undefined) throw new Error("Codex block strategy missing");
     expect(matchesBlockedSignal(strategy, null)).toBe(false);
     expect(matchesBlockedSignal(strategy, "### 💡 Codex Review")).toBe(false);
     expect(
@@ -65,6 +66,35 @@ function mockIssueComments(
 }
 
 describe("fetchBlockedReason", () => {
+  test.each([
+    ["coderabbitai[bot]", afterPush, "missing-seat"],
+    ["coderabbitai[bot]", beforePush, null],
+    ["coderabbitai-evil[bot]", afterPush, null],
+  ])(
+    "binds seat notices to the provider and current head: %s %s",
+    async (login, updatedAt, reason) => {
+      mockIssueComments([
+        {
+          login,
+          updated_at: updatedAt,
+          body: "This PR was authored by a bot without an assigned CodeRabbit review seat.",
+        },
+      ]);
+      try {
+        await expect(
+          fetchBlockedReason({
+            repo: "o/r",
+            number: 1,
+            token: "token",
+            provider: coderabbitProvider,
+            headPushedAt,
+          }),
+        ).resolves.toBe(reason);
+      } finally {
+        vi.restoreAllMocks();
+      }
+    },
+  );
   test("returns the reason for a provider-authored limit notice posted after the push", async () => {
     mockIssueComments([
       {

@@ -1,3 +1,4 @@
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import { z } from "zod";
 import {
   DiscordAccountIdSchema,
@@ -5,12 +6,21 @@ import {
   type DiscordAccountId,
   type DiscordGuildId,
 } from "@scout-for-lol/data";
-import { DareTargetAccountsSchema } from "#src/betting/dares/evaluation/dare-criteria.ts";
 import { findTrackedPlayersWithAccounts } from "#src/betting/tracked-players.ts";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 
+/** The frozen account set one Dare target is evaluated against. */
+const DareTargetAccountsSchema = z
+  .array(
+    z.strictObject({
+      puuid: LeaguePuuidSchema,
+      trackingStartedAt: z.iso.datetime(),
+    }),
+  )
+  .min(1);
+
 /**
- * The closed target list handed to the dare translation model.
+ * The closed target list handed to the Dare authoring model.
  *
  * The model only ever sees `key` and `alias`; the frozen accounts and Discord
  * identity ride along so the command layer can resolve a validated key back to
@@ -35,7 +45,7 @@ export const DareShortlistEntrySchema = z.strictObject({
 export type DareShortlistEntry = z.infer<typeof DareShortlistEntrySchema>;
 
 type GroupedTarget = {
-  discordId: string;
+  discordId: DiscordAccountId;
   playerId: number;
   alias: string;
   /** puuid -> trackingStartedAt ISO string; insertion order is playerId asc,

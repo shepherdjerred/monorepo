@@ -9,6 +9,7 @@ import {
   redactedCopyOutStatement,
   redactionCheckStatement,
   REDACTED_COLUMNS,
+  redactionsForSource,
   tablesWithoutDumpedData,
   defaultDumpPath,
   dumpArgv,
@@ -299,6 +300,27 @@ describe("credential handling", () => {
       TournamentLobby: ["code", "password"],
       User: ["discordAccessToken", "discordRefreshToken", "tokenExpiresAt"],
     });
+  });
+
+  test("skips a redacted table the source schema no longer has", () => {
+    const withLobby = redactionsForSource([
+      "ExploreConversation",
+      "TournamentLobby",
+      "User",
+    ]);
+    expect(withLobby.apply.map(([table]) => table)).toEqual([
+      "ExploreConversation",
+      "TournamentLobby",
+      "User",
+    ]);
+    expect(withLobby.absent).toEqual([]);
+
+    const retired = redactionsForSource(["ExploreConversation", "User"]);
+    expect(retired.apply.map(([table]) => table)).toEqual([
+      "ExploreConversation",
+      "User",
+    ]);
+    expect(retired.absent).toEqual(["TournamentLobby"]);
   });
 
   test("blanks nullable credentials but keeps the unique join code non-null", () => {

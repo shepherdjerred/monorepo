@@ -157,14 +157,6 @@ async function seedGuild(
       },
     },
   });
-  await db.hallRecordBreakOutbox.create({
-    data: {
-      guildId: serverId,
-      matchId: `match-${serverId}`,
-      channelId,
-      payloadJson: "[]",
-    },
-  });
 
   return player.id;
 }
@@ -189,9 +181,6 @@ async function countGuild(
     hallSettings: await db.hallSettings.count({
       where: { guildId: serverId },
     }),
-    hallRecordBreakOutbox: await db.hallRecordBreakOutbox.count({
-      where: { guildId: serverId },
-    }),
     featureTipImpressions: await db.featureTipImpression.count({
       where: { serverId },
     }),
@@ -209,7 +198,6 @@ beforeEach(async () => {
   await prisma.reportRun.deleteMany();
   await prisma.report.deleteMany();
   await prisma.subscription.deleteMany();
-  await prisma.hallRecordBreakOutbox.deleteMany();
   await prisma.hallSettings.deleteMany();
   await prisma.account.deleteMany();
   await prisma.player.deleteMany();
@@ -241,7 +229,6 @@ describe("cleanupRemovedGuild", () => {
       players: 1,
       permissionErrors: 1,
       hallSettings: 1,
-      hallRecordBreakOutbox: 1,
       featureTipImpressions: 1,
     });
 
@@ -257,7 +244,6 @@ describe("cleanupRemovedGuild", () => {
       serverPermissions: 0,
       permissionErrors: 0,
       hallSettings: 0,
-      hallRecordBreakOutbox: 0,
       featureTipImpressions: 0,
     });
 
@@ -276,7 +262,6 @@ describe("cleanupRemovedGuild", () => {
       serverPermissions: 1,
       permissionErrors: 1,
       hallSettings: 1,
-      hallRecordBreakOutbox: 1,
       featureTipImpressions: 1,
     });
   });
@@ -293,7 +278,6 @@ describe("cleanupRemovedGuild", () => {
       players: 0,
       permissionErrors: 0,
       hallSettings: 0,
-      hallRecordBreakOutbox: 0,
       featureTipImpressions: 0,
     });
   });

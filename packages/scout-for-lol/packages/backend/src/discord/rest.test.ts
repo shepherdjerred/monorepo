@@ -1,4 +1,5 @@
-import { afterEach, describe, expect, test } from "vitest";
+import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { resetConfigurationForTests } from "#src/configuration.ts";
 import { listGuildsWithFlagEnabled } from "#src/configuration/flags.ts";
 import { guildCommandPayload } from "#src/discord/commands/definitions.ts";
@@ -11,6 +12,12 @@ import {
 
 const originalAllowlist = Bun.env["EXPLORE_GUILD_ALLOWLIST"];
 const originalEnvironment = Bun.env["ENVIRONMENT"];
+const originalRole = Bun.env["SCOUT_RUNTIME_ROLE"];
+
+// Hosted stages name their role, and these cases run as beta and prod.
+beforeEach(() => {
+  Bun.env["SCOUT_RUNTIME_ROLE"] = "gateway";
+});
 
 afterEach(() => {
   resetGuildCommandWriteCacheForTests();
@@ -23,6 +30,11 @@ afterEach(() => {
     delete Bun.env["ENVIRONMENT"];
   } else {
     Bun.env["ENVIRONMENT"] = originalEnvironment;
+  }
+  if (originalRole === undefined) {
+    delete Bun.env["SCOUT_RUNTIME_ROLE"];
+  } else {
+    Bun.env["SCOUT_RUNTIME_ROLE"] = originalRole;
   }
   resetConfigurationForTests();
 });
@@ -48,7 +60,9 @@ describe("Discord command reconciliation", () => {
     Bun.env["EXPLORE_GUILD_ALLOWLIST"] = guildId;
     resetConfigurationForTests();
 
-    const payload = await guildCommandPayload(guildId);
+    const payload = await guildCommandPayload(
+      DiscordGuildIdSchema.parse(guildId),
+    );
     expect(payload.map((command) => command.name)).toEqual(["bb", "scout"]);
   });
 

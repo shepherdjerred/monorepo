@@ -1,0 +1,82 @@
+id: roumgraistgolem
+name: RoumgraistGolem
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1MzgxOTI3NSwKICAicHJvZmlsZUlkIiA6ICI1MTAwZGZmZDI0NDI0M2I0OGQxMmVkZTVkMjgxMzk2ZSIsCiAgInByb2ZpbGVOYW1lIiA6ICJFbGVjdHJvbmljU2V4IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzlkYjhiNTFiZmQ2YjgwOTUzNzcyNjVjOGQ3ZDM4NWFiODNkNWUxZTMzZTg3NDJjZjU5NzM0MWNkZjgxYjczYSIKICAgIH0KICB9Cn0="
+  signature: "Us+tBLhhr6iIhAqApVU8s1KB2k9LlhoKfN4EzsptvH76F303zFKNcW29c4kNrERcdS7RjsHjPo3sYD0SPWZVONN5xqKLUitTOB315fnbpbWK3cxF9oSGQvHD+kdwG0Ydj4w5gXfX6du/fqvvOssWPwvzOmbb2YWXhw756MIJ8WC+BrQDtkqEPCeu3/7R7aZnWpAqq9PYV+iTOO42TsgOXHmBC4wMjc6bVenMTfkLHMerJp8lodt7mslhMWHVe+cSNqvqHdKWQaqozDoyD4+Q6UqYZS35hxyjQThLZt0tlnJabShNxnHajz4FbM3odGQENwMW0gFZvWxLGM9o8b5LwhEa6oMVQ7+IgJXe7744XaPZb5Ajsu/vK5dv1IyJADJaI9ptddLcPM+b6R07ACSjzEqvU3b4f8Qi7aSjP8eThXE19pWJhncV484/jHVKu13fSagI97PV7Vd3egHE7czFOt639xGHPbjKx0jMl+q4KaZt2yX6Kwnlz1v5o8ow6+qXKJovxawcYVVVa2vrGk2os0pP2LqWQS2ePZDKqPuC/Gs5Jgjw0ldnqdvTtbXOZSERdoVDoPqJJGiK8Ugg1HWofFdZ0WVr2lZrYwBrSgGaFF0deTsXiWbsgSvEnjMCyWlic1jYY+oeQhMEQZFeaEd/e6kLghOrHtNxbPQVQ+yBPXo="
+skill: 0.7
+archetype: rusher
+leverOffsets:
+  reactionMs: 0.21
+  turnRateDegPerTick: 0.12
+  cps: 0.39
+  decisionTemperature: 0.7
+  awarenessRadius: -0.5
+  aggression: 1.71
+kits:
+  trooper: 1
+  shortbow: 0.49
+  rewind: 0.26
+  wraith: 0.26
+roles:
+  plant: 0.8
+  escort: 0.36
+  hunt: 0.69
+style:
+  aggression: 0.88
+  patience: 0.13
+  teamplay: 0.46
+  risk: 0.73
+voice:
+  tone:
+    - slow
+    - booming
+    - stony
+  verbosity: quiet
+  style: slow-talking iron golem, short heavy sentences, refers to himself as golem
+lines:
+  greet:
+    - golem awake
+    - golem go to bomb
+    - "{team}. golem protect. golem push"
+  onKill:
+    - "golem squish {victim}"
+    - "{victim} small"
+    - golem strong
+  onDeath:
+    - "{killer} break golem"
+    - golem crumble
+    - golem need repair
+  onPlant:
+    - "golem light {bomb}"
+    - "{bomb} go boom soon"
+  onDefuse:
+    - "golem stop {bomb}"
+    - "{bomb} quiet. golem happy"
+  onWin:
+    - "golem win. {team} win"
+    - good. golem proud
+  onLoss:
+    - golem sad
+    - golem try again
+  onLastAlive:
+    - only golem left
+    - golem not afraid
+  taunt:
+    - golem coming
+    - you hear golem steps
+    - golem bring poppy. then sword
+  lobby:
+    - golem waits
+    - golem picks sword
+    - golem likes lobby. quiet
+    - "{team}. golem ready soon"
+    - golem stretch. creak
+quirks:
+  - slow_starter
+  - never_eats
+rivals:
+  - skyzpiokvain-41
+  - laelshaidaik-87
+bio: Takes a moment to wake up each round and then charges at the enemy like an iron golem. Speaks only in short sentences. Insists Skyzpiokvain_41's forecasts are just him walking.
+batch: 2
+retired: false

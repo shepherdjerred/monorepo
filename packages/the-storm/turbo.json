@@ -2,7 +2,7 @@
   "$schema": "https://turborepo.dev/schema.json",
   "extends": ["//"],
   "tasks": {
-    // Gradle keeps its own build cache in plugin/**/build and ~/.gradle. Turbo
+    // Gradle keeps its own build cache in plugin/**/build and GRADLE_USER_HOME. Turbo
     // restores the assembled jar on build cache hits. MISE_DATA_DIR and JAVA_HOME
     // must pass through or strict env mode hides the mise-managed JDK/Gradle.
     //
@@ -13,6 +13,8 @@
     // test / test:ci. Gradle's up-to-date checks keep the later steps cheap.
     "build": {
       "inputs": [
+        "client/**",
+        "plugin/**/src/main/resources/**",
         "plugin/**/*.java",
         "plugin/**/*.kts",
         "plugin/**/*.kt",
@@ -25,7 +27,9 @@
         "server/owned/plugins/TheStorm/**",
         "$TURBO_ROOT$/packages/feature-flags/src/managed-flag-inventory.json",
         "!plugin/**/build/**",
-        "!plugin/.gradle/**"
+        "!plugin/.gradle/**",
+        "!client/**/build/**",
+        "!client/.gradle/**"
       ],
       "outputs": ["plugin/dist/build/libs/TheStorm.jar"],
       "passThroughEnv": [
@@ -38,6 +42,12 @@
     "test": {
       "dependsOn": ["lint"],
       "inputs": [
+        "server/**",
+        "package.json",
+        "client/**",
+        "scripts/**",
+        "tools/**",
+        "plugin/**/src/**",
         "plugin/**/*.java",
         "plugin/**/*.kts",
         "plugin/**/*.kt",
@@ -50,7 +60,12 @@
         "server/owned/plugins/TheStorm/**",
         "$TURBO_ROOT$/packages/feature-flags/src/managed-flag-inventory.json",
         "!plugin/**/build/**",
-        "!plugin/.gradle/**"
+        "!plugin/.gradle/**",
+        "!client/**/build/**",
+        "!client/.gradle/**",
+        "!tools/**/.venv/**",
+        "!tools/**/__pycache__/**",
+        "!scripts/**/__pycache__/**"
       ],
       "outputs": [],
       "passThroughEnv": [
@@ -63,6 +78,17 @@
     "test:ci": {
       "dependsOn": ["lint"],
       "inputs": [
+        "$TURBO_ROOT$/scripts/ci/ci-reporting.ts",
+        "$TURBO_ROOT$/scripts/ci/mstest-configuration.ts",
+        "$TURBO_ROOT$/scripts/ci/gradle-junit.ts",
+        "$TURBO_ROOT$/scripts/ci-test-manifest.json",
+        "$TURBO_ROOT$/scripts/ci/run-ci-test.ts",
+        "server/**",
+        "package.json",
+        "client/**",
+        "scripts/**",
+        "tools/**",
+        "plugin/**/src/**",
         "plugin/**/*.java",
         "plugin/**/*.kts",
         "plugin/**/*.kt",
@@ -75,7 +101,12 @@
         "server/owned/plugins/TheStorm/**",
         "$TURBO_ROOT$/packages/feature-flags/src/managed-flag-inventory.json",
         "!plugin/**/build/**",
-        "!plugin/.gradle/**"
+        "!plugin/.gradle/**",
+        "!client/**/build/**",
+        "!client/.gradle/**",
+        "!tools/**/.venv/**",
+        "!tools/**/__pycache__/**",
+        "!scripts/**/__pycache__/**"
       ],
       "outputs": [],
       "passThroughEnv": [
@@ -88,6 +119,10 @@
     "lint": {
       "dependsOn": ["typecheck"],
       "inputs": [
+        "client/**",
+        "scripts/**",
+        "tools/**",
+        "plugin/**/src/**",
         "plugin/**/*.java",
         "plugin/**/*.kts",
         "plugin/**/*.kt",
@@ -102,7 +137,12 @@
         "eslint.config.ts",
         "package.json",
         "!plugin/**/build/**",
-        "!plugin/.gradle/**"
+        "!plugin/.gradle/**",
+        "!client/**/build/**",
+        "!client/.gradle/**",
+        "!tools/**/.venv/**",
+        "!tools/**/__pycache__/**",
+        "!scripts/**/__pycache__/**"
       ],
       "outputs": [],
       "passThroughEnv": [
@@ -115,6 +155,10 @@
     "typecheck": {
       "dependsOn": ["build"],
       "inputs": [
+        "client/**",
+        "scripts/**",
+        "tools/**",
+        "plugin/**/src/**",
         "plugin/**/*.java",
         "plugin/**/*.kts",
         "plugin/**/*.kt",
@@ -131,7 +175,12 @@
         "eslint.config.ts",
         "package.json",
         "!plugin/**/build/**",
-        "!plugin/.gradle/**"
+        "!plugin/.gradle/**",
+        "!client/**/build/**",
+        "!client/.gradle/**",
+        "!tools/**/.venv/**",
+        "!tools/**/__pycache__/**",
+        "!scripts/**/__pycache__/**"
       ],
       "outputs": [],
       "passThroughEnv": [

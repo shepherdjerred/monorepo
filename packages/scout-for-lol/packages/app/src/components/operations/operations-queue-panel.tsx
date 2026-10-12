@@ -1,4 +1,4 @@
-import type { OperationsIntentKind } from "@scout-for-lol/data";
+import type { OperationsIntentKind, RiotMatchId } from "@scout-for-lol/data";
 import { OperationsBlockedReason } from "#src/components/operations/operations-blocked-reason.tsx";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import {
@@ -56,7 +56,7 @@ function RowFacts(props: { facts: readonly OperationsRowFact[] }) {
 export function OperationsQueuePanel(props: {
   queue: OperationsQueue;
   onStart: (draft: OperationsRequestDraft) => void;
-  onInspect: (matchId: string) => void;
+  onInspect: (matchId: RiotMatchId) => void;
   /** Whether an arm can be started right now. The page owns the reason. */
   canStart: (kind: OperationsIntentKind) => boolean;
   /** Fetch the next page of THIS queue. Only called when `hasMore`. */

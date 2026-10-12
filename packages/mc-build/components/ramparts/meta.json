@@ -1,0 +1,8 @@
+{
+  "name": "ramparts",
+  "description": "Town and castle walls along a polyline that follow the terrain: thick base, outer crenellations, walkway, buttresses every ~9, round corner towers and an optional gatehouse with flanking towers and a portcullis.",
+  "tags": ["walls", "castle", "fortification", "settlement", "map"],
+  "exports": [
+    "ramparts(ctx, { points, closed?, ground(x, z), height?, thickness?, style?: stone|dark|sandstone, towers?, gate?: { segment, width?, height? } }) → { gate, cells }"
+  ]
+}

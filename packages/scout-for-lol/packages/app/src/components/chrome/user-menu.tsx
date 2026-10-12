@@ -1,4 +1,5 @@
-import { Bug, ChevronDown, ExternalLink, LogOut } from "lucide-react";
+import { Bug, ChevronDown, LogOut } from "lucide-react";
+import { Link } from "react-router";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   DropdownMenu,
@@ -8,7 +9,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@scout-for-lol/design-system/components/overlays/dropdown-menu";
-import { SUPPORT_URL } from "#src/lib/support.ts";
 import { resetIdentity, trackAndFlush } from "#src/lib/analytics.ts";
 
 async function logout() {
@@ -43,15 +43,19 @@ export function UserMenu(props: { username: string }) {
         <Button
           variant="ghost"
           size="sm"
-          className="gap-1.5 text-sm font-medium"
+          className="min-w-0 max-w-28 gap-1.5 text-sm font-medium sm:max-w-52"
+          aria-label={`Account: ${props.username}`}
         >
-          @{props.username}
-          <ChevronDown className="h-4 w-4 opacity-60" aria-hidden="true" />
+          <span className="truncate">@{props.username}</span>
+          <ChevronDown
+            className="h-4 w-4 shrink-0 opacity-60"
+            aria-hidden="true"
+          />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" sideOffset={8} className="w-52">
         <DropdownMenuLabel className="font-normal !text-left !block px-2 py-1.5">
-          <span className="block text-xs font-semibold text-scout-ink">
+          <span className="block break-all text-xs font-semibold text-scout-ink">
             @{props.username}
           </span>
           <span className="block text-[11px] text-scout-subtle">
@@ -60,14 +64,10 @@ export function UserMenu(props: { username: string }) {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild className="gap-2 text-xs">
-          <a href={SUPPORT_URL} target="_blank" rel="noreferrer">
+          <Link to="/feedback">
             <Bug className="size-3.5 text-scout-subtle" aria-hidden="true" />
-            <span>Report a bug</span>
-            <ExternalLink
-              className="ml-auto size-3 opacity-60"
-              aria-hidden="true"
-            />
-          </a>
+            <span>Help and feedback</span>
+          </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem

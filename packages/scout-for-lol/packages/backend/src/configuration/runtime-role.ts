@@ -13,29 +13,23 @@
  *
  * ## The roles
  *
- * - `combined` — everything, in the order the single-pod deployment has always
- *   booted it. This is the default and the only role Kubernetes runs today;
- *   splitting the deployment is a separate change. Local development uses it
- *   whenever it wants the Discord gateway.
- * - `application` — the web surface: HTTP/tRPC/OAuth/SSE, every embedded
- *   Temporal worker, and the DuckDB report lake. No gateway connection, so it
- *   serves as soon as it is up rather than waiting on a shard. It owns the
- *   report-lake volume and the database-sweeping metric collectors.
- *
- *   INTERIM: it also carries the `realtime` and `background` queues and the
- *   competition activity worker — everything `combined` runs except the shard.
- *   Those belong to `activity-worker`, which cannot be deployed until the
- *   report lake stops being a single-writer ReadWriteOnce volume. Splitting the
- *   shard off without them would stop Riot polling, ingest, report delivery and
- *   scheduled competition updates, so the deployable split is
- *   combined-minus-shard rather than the full four-way one.
+ * - `combined` — everything in one process. Development only: it is the
+ *   default when `SCOUT_RUNTIME_ROLE` is unset in dev, and what local
+ *   development runs whenever it wants the Discord gateway. Any other
+ *   environment refuses it, because a hosted pod running it would be a second
+ *   gateway connection and a second report-lake publisher.
+ * - `application` — the web surface: HTTP/tRPC/OAuth/SSE, the `workflow`,
+ *   `interactive` and `lake` Temporal workers, and the DuckDB report lake. No
+ *   gateway connection, so it serves as soon as it is up rather than waiting
+ *   on a shard. It owns the report-lake volume and the database-sweeping
+ *   metric collectors. Gatewayless local development runs it too.
  * - `gateway` — the Discord gateway connection: commands, guild lifecycle and
  *   the Hey Scout voice assistant. Voice is gateway-coupled by design (it reads
  *   an active voice connection's audio), which makes this role explicitly
  *   stateful and unsplittable from the shard. It runs no Temporal workers, only
- *   a Temporal client, because commands start Workflows they do not execute —
- *   but it still needs the report lake, because `/scout ask` and the Dare
- *   commands answer from it synchronously, in this process.
+ *   a Temporal client. Discord authoring reserves a persisted Explore run and
+ *   waits for the interactive Activity's result. Beta declares no lake access;
+ *   development and production keep their compatibility capability.
  * - `activity-worker` — the `realtime` and `background` Temporal activity
  *   workers plus the competition activity worker: Riot polling, ingestion,
  *   report rendering and Discord delivery over REST. No gateway connection.
@@ -44,6 +38,7 @@
  * the product's HTTP surface — see {@link ScoutRuntimeCapabilities.httpSurface}.
  */
 
+import type { ScoutStage } from "@scout-for-lol/temporal";
 import { z } from "zod";
 
 export const ScoutRuntimeRoleSchema = z.enum([
@@ -122,9 +117,8 @@ export type ScoutRuntimeCapabilities = {
    * declared capability with a boot gate rather than an assumption.
    *
    * The queues are not the only readers, so "runs a worker" is not the test.
-   * `/scout ask` and the Dare commands run the Explore agent in the process
-   * that received the interaction, which puts a lake read on the gateway role
-   * with no queue involved. Every in-process reader is funnelled through
+   * Discord authoring hands off to interactive Activities. Every remaining
+   * in-process reader is funnelled through
    * `reports/duckdb/lake.ts`, which asserts this capability at the read site —
    * the boot gate alone cannot protect a role that declares `false`, because
    * declaring `false` is what skips the gate.
@@ -146,8 +140,7 @@ export type ScoutRuntimeCapabilities = {
    * `combined` has any, and its realtime and background Activities tolerate
    * that because their one cache read, `getActiveServerIds()`, answers
    * "no filter" until the client is ready. A role that owns no gateway runs
-   * these from the start (`activity-worker`, and `application` for now) or
-   * never (`gateway`).
+   * these from the start (`activity-worker`) or never (`gateway`).
    */
   readonly deferredTemporalWorkers: readonly ScoutTemporalQueueClass[];
   /** Log into the Discord gateway and install the command/guild handlers. */
@@ -186,9 +179,9 @@ const NO_WORKERS: readonly ScoutTemporalQueueClass[] = [];
 /**
  * The whole split, in one place.
  *
- * `combined` must stay byte-for-byte equivalent to the pre-role behaviour: it
- * is what production runs, and the role tests assert the rest of the table
- * against it rather than against a prose description.
+ * The hosted roles partition `combined` exactly: every queue and singleton
+ * responsibility `combined` runs has one hosted owner, which the role tests
+ * assert against the table rather than against a prose description.
  */
 const SCOUT_RUNTIME_CAPABILITIES: Readonly<
   Record<ScoutRuntimeRole, ScoutRuntimeCapabilities>
@@ -214,32 +207,12 @@ const SCOUT_RUNTIME_CAPABILITIES: Readonly<
     voiceStateAccess: false,
     reportLakeAccess: true,
     reportLakeFold: true,
-    // INTERIM: combined-minus-shard, not the end state.
-    //
-    // `realtime` and `background` belong to `activity-worker`, but that role
-    // cannot be deployed while the report lake is a single-writer
-    // ReadWriteOnce volume (see the README's activity-worker note). Until it
-    // can be, moving the shard off `combined` without these would stop both
-    // queues outright — Riot polling, prematch, match ingest, report runs,
-    // parlay generation and Discord delivery — so this role carries them.
-    //
-    // They are always-on here rather than deferred: deferral waits for the
-    // gateway login, and this role never logs a shard in, so a deferred worker
-    // would simply never start. That is the shape `activity-worker` already
-    // uses, and it is sound for the same reason — the gatewayless sweep moved
-    // these Activities off the live guild cache and behind ports.
-    //
-    // Remove these and `competitionActivityWorker` below when `activity-worker`
-    // becomes deployable.
-    temporalWorkers: [...ALWAYS_ON_WORKERS, ...DISCORD_WORKERS],
+    temporalWorkers: ALWAYS_ON_WORKERS,
     deferredTemporalWorkers: NO_WORKERS,
     discordGateway: false,
     gatewayReadyReconciliation: false,
     httpSurface: "full",
-    // INTERIM, same reason as the two queues above: `combined` owns this and
-    // `activity-worker` would, so without it here the split silently stops
-    // scheduled competition updates.
-    competitionActivityWorker: true,
+    competitionActivityWorker: false,
     databaseMetricSweeps: true,
     databaseSeeding: true,
   },
@@ -247,21 +220,9 @@ const SCOUT_RUNTIME_CAPABILITIES: Readonly<
     championAssets: true,
     voiceAssistant: true,
     voiceStateAccess: true,
-    // True despite running no Temporal activity queue, because the queues are
-    // not the only lake readers. `/scout ask` and the Dare commands execute
-    // the Explore agent IN PROCESS on whichever pod received the interaction
-    // (`discord/commands/scout.ts` → `explore/agent.ts` → the DuckDB engine),
-    // and this is the role that receives every interaction. It previously
-    // declared `false` while doing exactly this, which made the boot gate skip
-    // the pod that needed it most: DuckDB scans zero parquet files rather than
-    // failing, so every question came back "no games found", successfully.
-    //
-    // Wave 6 must settle this properly, and has two ways to: route
-    // Discord-surface Explore turns through the `interactive` queue — the same
-    // mechanism this role already owes customs voice — or keep executing them
-    // here and give the gateway Deployment the lake volume. Until then the
-    // table says what the process actually does, so the boot gate protects it
-    // honestly.
+    // The dev/prod compatibility topology retains lake access. Beta overrides
+    // it below: Discord Explore and Dare authoring hand off to interactive
+    // Activities, just as web and voice do, and gateway owns no lake reader.
     reportLakeAccess: true,
     reportLakeFold: false,
     temporalWorkers: NO_WORKERS,
@@ -280,8 +241,7 @@ const SCOUT_RUNTIME_CAPABILITIES: Readonly<
     // Reads the lake (report runs, parlay generation, summoner-index
     // backfill) and writes its staging directories (match,
     // prematch and timeline ingest). It does NOT publish builds — see the
-    // README for why that makes this role undeployable beside `application` on
-    // the current ReadWriteOnce volume.
+    // README for the shared-volume and single-publisher contract.
     reportLakeAccess: true,
     reportLakeFold: false,
     temporalWorkers: DISCORD_WORKERS,
@@ -297,25 +257,57 @@ const SCOUT_RUNTIME_CAPABILITIES: Readonly<
 
 export function scoutRuntimeCapabilities(
   role: ScoutRuntimeRole,
+  // The Temporal stage rather than configuration's Environment (the same
+  // three stages): configuration.ts imports this module.
+  stage: ScoutStage = "dev",
 ): ScoutRuntimeCapabilities {
-  return SCOUT_RUNTIME_CAPABILITIES[role];
+  const capabilities = SCOUT_RUNTIME_CAPABILITIES[role];
+  // Beta's external versioned Worker Deployment owns Workflow tasks. Embedded
+  // unversioned workers remain available to dev and the production migration.
+  return stage === "beta"
+    ? {
+        ...capabilities,
+        reportLakeAccess: role !== "gateway" && capabilities.reportLakeAccess,
+        temporalWorkers: capabilities.temporalWorkers.filter(
+          (queue) => queue !== "workflow",
+        ),
+        deferredTemporalWorkers: capabilities.deferredTemporalWorkers.filter(
+          (queue) => queue !== "workflow",
+        ),
+      }
+    : capabilities;
 }
 
 /**
- * Resolve `SCOUT_RUNTIME_ROLE`, defaulting to `combined`.
+ * Resolve `SCOUT_RUNTIME_ROLE` for this environment.
  *
- * An unrecognised value throws rather than falling back: a typo'd role in a
- * Deployment manifest that silently became `combined` would put a second
- * gateway connection and a second report-lake writer into the cluster, which is
- * precisely the failure this vocabulary exists to make impossible.
+ * Unset means `combined` in development and is refused anywhere else: every
+ * hosted pod names its role in its manifest. `combined` itself is refused
+ * outside development, and an unrecognised value always throws rather than
+ * falling back. A hosted pod that silently became `combined` would put a
+ * second gateway connection and a second report-lake writer into the cluster,
+ * which is precisely the failure this vocabulary exists to make impossible.
  */
 export function parseScoutRuntimeRole(
   raw: string | undefined,
+  environment: "dev" | "beta" | "prod",
 ): ScoutRuntimeRole {
-  if (raw === undefined || raw.length === 0) return "combined";
+  if (raw === undefined || raw.length === 0) {
+    if (environment === "dev") return "combined";
+    throw new Error(
+      `SCOUT_RUNTIME_ROLE must be set in ${environment}; expected one of: ${SCOUT_RUNTIME_ROLES.filter((role) => role !== "combined").join(", ")}`,
+    );
+  }
   const parsed = ScoutRuntimeRoleSchema.safeParse(raw);
-  if (parsed.success) return parsed.data;
-  throw new Error(
-    `Invalid SCOUT_RUNTIME_ROLE="${raw}", expected one of: ${SCOUT_RUNTIME_ROLES.join(", ")}`,
-  );
+  if (!parsed.success) {
+    throw new Error(
+      `Invalid SCOUT_RUNTIME_ROLE="${raw}", expected one of: ${SCOUT_RUNTIME_ROLES.join(", ")}`,
+    );
+  }
+  if (environment !== "dev" && parsed.data === "combined") {
+    throw new Error(
+      `SCOUT_RUNTIME_ROLE="combined" is development-only; ${environment} runs the split roles`,
+    );
+  }
+  return parsed.data;
 }

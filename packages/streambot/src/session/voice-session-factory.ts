@@ -2,10 +2,15 @@ import type { SessionManagerDeps } from "@shepherdjerred/streambot/session/sessi
 import type { Session } from "@shepherdjerred/streambot/session/session-types.ts";
 import { buildPlaybackView } from "@shepherdjerred/streambot/machine/view.ts";
 import { VoiceAssistantSession } from "@shepherdjerred/streambot/voice/voice-assistant-session.ts";
+import type { VoiceAssistantSessionOptions } from "@shepherdjerred/streambot/voice/voice-assistant-session.ts";
 
 export function createSessionVoiceAssistant(
   deps: SessionManagerDeps,
   session: Session,
+  options?: Pick<
+    VoiceAssistantSessionOptions,
+    "commandsForUser" | "afterTurn" | "holdTeardown" | "peerUserbotIds"
+  >,
 ): VoiceAssistantSession | null {
   const models = deps.voiceModels ?? null;
   if (models === null) return null;
@@ -16,6 +21,7 @@ export function createSessionVoiceAssistant(
   }
   const userbot = session.entry.userbot;
   return new VoiceAssistantSession({
+    ...options,
     config: deps.config,
     models,
     streamer: userbot,
@@ -43,7 +49,8 @@ export function createSessionVoiceAssistant(
       ...(deps.sports === undefined ? {} : { sports: deps.sports }),
     },
     announce: (message) => deps.announce(session.statusChannelId, message),
-    holdTeardown: () => session.teardownHold.acquire(),
+    holdTeardown:
+      options?.holdTeardown ?? (() => session.teardownHold.acquire()),
     ...(deps.voiceFeedbackClips == null
       ? {}
       : { feedbackClips: deps.voiceFeedbackClips }),

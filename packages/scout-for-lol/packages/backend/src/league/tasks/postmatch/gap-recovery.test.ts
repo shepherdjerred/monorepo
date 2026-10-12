@@ -1,3 +1,4 @@
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import { describe, expect, test } from "vitest";
 import { recoveryStartAt } from "#src/league/tasks/postmatch/gap-recovery.ts";
 
@@ -11,7 +12,9 @@ describe("recoveryStartAt", () => {
         requiredForActiveDare: true,
         lastProcessedMatchTime: cursorTime,
         lastSuccessfulPollAt: discoveryTime,
-        puuid: "puuid-1",
+        puuid: LeaguePuuidSchema.parse(
+          "puuid-100000000000000000000000000000000000000000000000000000000000000000000000",
+        ),
       }),
     ).toEqual(cursorTime);
   });
@@ -22,7 +25,9 @@ describe("recoveryStartAt", () => {
         requiredForActiveDare: true,
         lastProcessedMatchTime: undefined,
         lastSuccessfulPollAt: new Date("2026-09-01T13:00:00.000Z"),
-        puuid: "puuid-1",
+        puuid: LeaguePuuidSchema.parse(
+          "puuid-100000000000000000000000000000000000000000000000000000000000000000000000",
+        ),
       }),
     ).toThrow("Cannot recover required Dare history");
   });

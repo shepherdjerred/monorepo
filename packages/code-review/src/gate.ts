@@ -208,10 +208,12 @@ export function evaluateGate(input: {
 
   if (reviewState === "errored") {
     const blocked = input.blockedReason ?? null;
-    const strategy = provider.detectBlocked;
+    const strategy = provider.detectBlocked?.find(
+      (signal) => signal.reason === blocked,
+    );
     // A recognised block names the operator's real next action (adding
     // credits, not re-triggering a review that quota will reject again).
-    if (blocked !== null && strategy !== null && blocked === strategy.reason) {
+    if (blocked !== null && strategy !== undefined) {
       return {
         state: "failed",
         message:
@@ -449,7 +451,10 @@ export function evaluateMultiGate(input: {
       message:
         `No provider could review ${head}: ${names} reported ${reasons}. ` +
         `Resolve the provider blocks, then re-run this step.`,
-      blockedReason: blockedReasons[0] ?? null,
+      blockedReason:
+        blockedReasons.find((reason) => reason !== "usage-limited") ??
+        blockedReasons[0] ??
+        null,
     };
   }
 
@@ -492,9 +497,9 @@ export function gateExitCode(decision: GateDecision): number {
       return 0;
     }
     case "failed": {
-      return decision.blockedReason === null
-        ? REVIEW_GATE_FAILURE_EXIT_CODE
-        : REVIEW_GATE_BLOCKED_EXIT_CODE;
+      return decision.blockedReason === "usage-limited"
+        ? REVIEW_GATE_BLOCKED_EXIT_CODE
+        : REVIEW_GATE_FAILURE_EXIT_CODE;
     }
     case "waiting": {
       throw new Error("a waiting gate decision has no exit status");

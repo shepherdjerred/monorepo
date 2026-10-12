@@ -1,5 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { getScoutRuleGroups } from "./scout.ts";
+import { scoutGatewayAlertRoleMatcher } from "./scout-alert-constants.ts";
+import { getOpsSnapshotRuleGroups } from "./ops-snapshot.ts";
 
 describe("Scout Temporal alert rules", () => {
   const temporal = getScoutRuleGroups().find(
@@ -15,6 +17,7 @@ describe("Scout Temporal alert rules", () => {
       new Set([
         "ScoutTemporalDisconnected",
         "ScoutTemporalWorkerMissing",
+        "ScoutTemporalWorkflowRoutingUnknown",
         "ScoutTemporalActivityFailing",
         "ScoutTemporalTaskScheduleToStartHigh",
         "ScoutTemporalDurabilityMetricsUnknown",
@@ -33,7 +36,6 @@ describe("Scout Temporal alert rules", () => {
     }
     for (const alert of [
       "ScoutTemporalDisconnected",
-      "ScoutTemporalWorkerMissing",
       "ScoutTemporalDurabilityMetricsUnknown",
     ]) {
       const rule = temporal.rules.find(
@@ -47,35 +49,18 @@ describe("Scout Temporal alert rules", () => {
     }
   });
 
-  test("alerts on a queue class that lost its poller, not on coverage", () => {
+  test("monitors declared owners without expiring outage evidence", () => {
     const rule = temporal?.rules?.find(
       (candidate) => candidate.alert === "ScoutTemporalWorkerMissing",
     );
-    if (rule === undefined) {
-      throw new Error("Missing ScoutTemporalWorkerMissing rule");
-    }
+    if (rule === undefined)
+      throw new Error("Missing ScoutTemporalWorkerMissing");
     const expression = JSON.stringify(rule.expr);
-    // The supervisor zero-fills every queue class on every role, so `max by
-    // (queue_class)` reads 1 when anything polls a class and 0 when nothing
-    // does — the same answer however the classes are shared across pods.
     expect(expression).toContain("max by (environment, queue_class)");
-    // Pairing that with "something polled it before" is what keeps a class no
-    // deployed role has ever polled from firing forever: which role owns which
-    // class is mid-amendment, and the activity-worker Deployment that would
-    // have carried two of them is deferred out of this wave.
-    expect(expression).toContain("max_over_time(");
-    // The memory window must OUTLIVE the outage it remembers. A short lookback
-    // lets an outage walk its own evidence out of the window, at which point
-    // the alert resolves itself while the queue is still dead — worse than
-    // never firing, because a resolved alert reads as a fixed problem.
-    expect(expression).toContain("[30d]");
-    for (const shortWindow of ["[5m]", "[30m]", "[1h]", "[6h]", "[24h]"]) {
-      expect(expression).not.toContain(shortWindow);
-    }
-    // A count of workers per environment is a sum over pods: it survives a
-    // dead pod another replica covers for, and dips during rolling restarts.
-    expect(expression).not.toContain("count by (environment)");
-    expect(expression).not.toContain("< 5");
+    expect(expression).toContain("unless on (environment, queue_class)");
+    expect(expression).toContain("scout_temporal_workflow_routed_version");
+    expect(expression).not.toContain("max_over_time");
+    expect(expression).not.toContain("[30d]");
   });
 
   test("uses live Temporal server labels and second-valued queue latency", () => {
@@ -162,6 +147,10 @@ describe("Scout bot-health alert rules", () => {
     expect(JSON.stringify(rule.expr)).toContain("discord_connection_status");
   });
 
+  test("selects the deployed gateway role", () => {
+    expect(scoutGatewayAlertRoleMatcher()).toBe('role="gateway"');
+  });
+
   test("scopes the Discord gauge to each stage's gateway-owning role", () => {
     const rule = botHealth?.rules?.find(
       (candidate) => candidate.alert === "ScoutDiscordDisconnected",
@@ -175,26 +164,23 @@ describe("Scout bot-health alert rules", () => {
     // series, so naming it here would make the absent() guard fire
     // continuously against a healthy stage.
     //
-    // Beta is retiring its split: the backend is `combined` again and the
-    // gateway Deployment is scaled to zero, so beta names `combined` in the
-    // same revision that hands the shard back. Prod never ran the split.
-    for (const stage of ["beta", "prod"]) {
-      expect(expression).toContain(
-        String.raw`environment=\"${stage}\",role=\"combined\"`,
-      );
-      // Naming a role with no running pod is exactly the continuous page above.
-      expect(expression).not.toContain(
-        String.raw`environment=\"${stage}\",role=\"gateway\"`,
-      );
-    }
-    // The deferred role still owns no pod in either stage.
+    // Prometheus updates before Scout, so each stage accepts its previous
+    // combined owner until its split gateway is scrapeable.
+    expect(expression).toContain(
+      String.raw`environment=\"beta\",role=\"gateway\"`,
+    );
+    expect(expression).toContain(
+      String.raw`environment=\"prod\",role=\"gateway\"`,
+    );
+    // The activity worker has no Discord shard, even while observing.
     expect(expression).not.toContain("activity-worker");
     // Every read of the gauge must be scoped, not just the first.
     const gaugeReads = expression.split("discord_connection_status").length - 1;
-    const scopedReads = expression.split(String.raw`role=\"`).length - 1;
+    const scopedReads = expression.split("role=").length - 1;
     expect(scopedReads).toBe(gaugeReads);
-    // Scoping to one role per stage means the rule goes quiet when that stage
-    // has no gateway-owning pod, which is the outage it exists to catch.
+    // A connected owner keeps the alert clear even if the other role reports
+    // zero during the handoff; losing both roles still trips absent().
+    expect(expression).toContain("max by (environment)");
     expect(expression).toContain("absent(");
   });
 
@@ -227,16 +213,19 @@ describe("Scout bot-health alert rules", () => {
     expect(expression).toContain("259200");
   });
 
-  test("warns when a cron job stalls", () => {
-    const rule = botHealth?.rules?.find(
-      (candidate) => candidate.alert === "ScoutCronJobStale",
-    );
+  test("covers background schedule outcomes through the current Temporal contract", () => {
+    expect(JSON.stringify(getScoutRuleGroups())).not.toContain("cron_job_");
+    const rule = getOpsSnapshotRuleGroups()
+      .flatMap((group) => group.rules ?? [])
+      .find(
+        (candidate) => candidate.alert === "TemporalScheduledCurrentFailure",
+      );
     if (rule === undefined) {
-      throw new Error("Missing ScoutCronJobStale rule");
+      throw new Error("Missing Temporal schedule failure rule");
     }
     expect(rule.labels?.["severity"]).toBe("warning");
     expect(JSON.stringify(rule.expr)).toContain(
-      "cron_job_last_success_timestamp",
+      "temporal_schedule_last_terminal_failed",
     );
   });
 

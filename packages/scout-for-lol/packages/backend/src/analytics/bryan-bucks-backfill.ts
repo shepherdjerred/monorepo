@@ -7,10 +7,10 @@ export const BRYAN_BUCKS_ANALYTICS_EVENT_NAMESPACE =
 export function deterministicBucksAnalyticsEventId(
   kind: string,
   id: number | string,
-  suffix?: string,
+  suffix = "",
 ): string {
   return uuidv5(
-    `${kind}:${id.toString()}:${suffix ?? ""}`,
+    `${kind}:${id.toString()}:${suffix}`,
     BRYAN_BUCKS_ANALYTICS_EVENT_NAMESPACE,
   );
 }

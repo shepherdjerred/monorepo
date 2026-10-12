@@ -1,4 +1,9 @@
 import {
+  type LeaguePuuid,
+  type DiscordGuildId,
+  type RiotMatchId,
+} from "@scout-for-lol/data";
+import {
   notificationActions,
   type NotificationBlocked,
   type NotificationStateKind,
@@ -23,7 +28,7 @@ export type PipelineOwnerKind = "unowned" | "legacy-v1" | "temporal-v2";
 
 export type MatchPipelineData = {
   readonly processing: {
-    readonly matchId: string;
+    readonly matchId: RiotMatchId;
     readonly owner: { readonly kind: PipelineOwnerKind };
     readonly policy: "ARCHIVE_ONLY" | "FULL";
     readonly promotion: { readonly promotedAt: string } | null;
@@ -32,7 +37,7 @@ export type MatchPipelineData = {
       readonly version: number;
       readonly scope:
         | { readonly kind: "global" }
-        | { readonly kind: "guild"; readonly guildId: string }
+        | { readonly kind: "guild"; readonly guildId: DiscordGuildId }
         | { readonly kind: "account"; readonly accountId: number };
       readonly recordedAt: string;
     }[];
@@ -50,7 +55,7 @@ export type MatchPipelineData = {
     };
   }[];
   readonly trackedAccounts: readonly {
-    readonly puuid: string;
+    readonly puuid: LeaguePuuid;
     readonly playerId: number | null;
     readonly accountId: number | null;
     readonly cursorAdvancedAt: string | null;

@@ -54,6 +54,7 @@ function HeroCard({
   return (
     <div
       style={{
+        boxSizing: "border-box",
         display: "flex",
         alignItems: "center",
         gap: "5rem",
@@ -168,6 +169,7 @@ export function RankedSquareReport({ match }: { match: CompletedMatch }) {
       {/* Hero band — splash + title + tier pill, ~45% of canvas */}
       <div
         style={{
+          boxSizing: "border-box",
           display: "flex",
           flexDirection: "column",
           width: `${SQUARE_WIDTH.toString()}px`,
@@ -297,6 +299,7 @@ export function RankedSquareReport({ match }: { match: CompletedMatch }) {
       {/* Body — squad cards or hero card */}
       <div
         style={{
+          boxSizing: "border-box",
           display: "flex",
           flexDirection: "column",
           padding: "5rem 8rem 3rem",
@@ -309,6 +312,7 @@ export function RankedSquareReport({ match }: { match: CompletedMatch }) {
         ) : (
           <div
             style={{
+              boxSizing: "border-box",
               display: "flex",
               flexDirection: "column",
               gap: "2rem",
@@ -377,6 +381,7 @@ export function RankedSquareReport({ match }: { match: CompletedMatch }) {
         {match.commentary !== undefined && match.commentary.length > 0 && (
           <div
             style={{
+              boxSizing: "border-box",
               display: "flex",
               flexDirection: "column",
               gap: "1.5rem",

@@ -26,7 +26,7 @@ import {
   type TemporalBootstrapMetadata,
 } from "#shared/execution-metadata.ts";
 import * as workflowEntrypoint from "#workflows/index.ts";
-import { scoutPostMatchDiscoveryV2InputCodec } from "@scout-for-lol/temporal/workflow-contracts-v2";
+import { scoutPostMatchDiscoveryInputCodec } from "@scout-for-lol/temporal/workflow-contracts";
 
 const DYNAMIC_AGENT_TASK_MEMO = {
   [DYNAMIC_AGENT_TASK_MEMO_KEY]: true,
@@ -103,9 +103,9 @@ test.each(["beta", "prod"] as const)(
   "the %s post-match schedule keeps its ID while routing through V2 dispatch",
   (stage) => {
     const schedule = findScheduleById(`scout-${stage}-postmatch-discovery`);
-    expect(schedule.workflowType).toBe("scoutPostMatchDiscoveryV2Workflow");
+    expect(schedule.workflowType).toBe("scoutPostMatchDiscoveryWorkflow");
     expect(schedule.args).toEqual([
-      scoutPostMatchDiscoveryV2InputCodec.serialize({
+      scoutPostMatchDiscoveryInputCodec.serialize({
         stage,
         trigger: "schedule",
       }),
@@ -124,6 +124,7 @@ describe("central Workflow schedule routing", () => {
     ["ci-trivy-db-refresh", "runTrivyDbRefreshWorkflow", "2 hours"],
     ["ci-io-telemetry-daily", "runCiIoTelemetry", "30 minutes"],
     ["turbo-cache-clean-daily", "runTurboCacheCleanWorkflow", "30 minutes"],
+    ["ci-workspace-reaper", "runCiWorkspaceReaperWorkflow", "1 hour"],
   ] as const;
 
   it.each(definitions)(
@@ -338,6 +339,24 @@ test("billed LLM cost reconciles hourly on the shared Workflow queue", () => {
   });
 });
 
+test("CI maintenance starts paused until its new Workflow is deployed", () => {
+  const schedule = findScheduleById("ci-maintenance-dispatch");
+  expect(schedule.initialPauseNote).toContain("100% candidate traffic");
+  expect(buildScheduleState(schedule, {})).toEqual({
+    paused: true,
+    note: schedule.initialPauseNote,
+  });
+  expect(
+    buildScheduleState(
+      schedule,
+      {},
+      { paused: false, note: "Canary accepted" },
+    ),
+  ).toEqual({
+    paused: false,
+  });
+});
+
 test("billed LLM cost remains paused until the candidate receives all Workflow traffic", () => {
   // Stable workers do not register this Workflow, so its schedule must remain
   // paused until the candidate receives 100% of traffic.
@@ -451,6 +470,8 @@ const ONE_MINUTE = 60 * 1000;
 const ONE_HOUR = 60 * ONE_MINUTE;
 
 const WORKFLOW_MAX_SLEEP_MS: Record<string, number> = {
+  // Drain the longest PHP request before taking the coordinated snapshot.
+  backupStormForumWorkflow: 65_000,
   // preheat: 13 × 15m presence-checked hold chunks (195 minutes) + turn-off backstop
   goodMorningPreheat: 195 * ONE_MINUTE,
   // wake-up: ~30 sec of media ramp + MORNING_HEAT_DURATION (60 minutes) heat hold
@@ -468,6 +489,7 @@ const WORKFLOW_MAX_SLEEP_MS: Record<string, number> = {
 const WORKFLOWS_WITHOUT_EXECUTION_TIMEOUT = new Set<string>();
 
 const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
+  "maintainStormForumWorkflow",
   "fetchSkillCappedManifest",
   "runFreshRssSyncWorkflow",
   "runFliptFlagInventory",
@@ -489,6 +511,8 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "runMainVulnScanWorkflow",
   "runLinkRotScanWorkflow",
   "runTurboCacheCleanWorkflow",
+  // One bounded list-and-delete Activity on the infra queue.
+  "runCiWorkspaceReaperWorkflow",
   // Awaits one scan activity (clone + trivy fs) then report delivery and the
   // Alertmanager publish. No workflow-level sleeps; each activity carries its
   // own startToCloseTimeout + retry budget.
@@ -528,6 +552,8 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   // Reset sleeps while polling the backup and Job only inside its heartbeat
   // Activity; the Workflow awaits that one bounded Activity.
   "runMiningWorldResetWorkflow",
+  "runStormPlotReconciliationWorkflow",
+  "reconcileStormCompanionsWorkflow",
   "runBugsinkHousekeepingWorkflow",
   // Awaits a single pruneScoutImages activity (list+delete). No workflow-level
   // sleeps; the activity carries its own startToCloseTimeout + retry budget.
@@ -539,6 +565,10 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "runVeleroR2OrphanAuditWorkflow",
   "runSeaweedFsBackupWorkflow",
   "runSeaweedFsBackupRetentionAndGcWorkflow",
+  // Bounded inventory and log-retention Activities; no Workflow-level sleeps.
+  "runWoodpeckerLogRetention",
+  // One bounded signalWithStart Activity; durable coordination is separate.
+  "runCiMaintenanceTick",
   "syncGolinks",
   "runGlitterCorpusDaily",
   "runGlitterContextRefresh",
@@ -549,10 +579,10 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   // Scout's schedule entrypoints delegate immediately to queue-specific
   // activities or child workflows. Their activity retry budgets are bounded
   // independently; none sleeps inside Workflow code.
-  "scoutRealtimePollWorkflow",
-  "scoutPostMatchDiscoveryV2Workflow",
+  "scoutPrematchDiscoveryWorkflow",
+  "scoutPostMatchDiscoveryWorkflow",
   "scoutIngestionReconciliationWorkflow",
-  "scoutPipelineReconciliationV2Workflow",
+  "scoutPipelineReconciliationWorkflow",
   "scoutBackgroundJobWorkflow",
   "scoutReportScheduleReconcilerWorkflow",
   "scoutReportLakeWorkflow",
@@ -561,6 +591,8 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   // workflow-level sleeps; the activity carries its own startToCloseTimeout
   // and heartbeat budget.
   "runScheduleRehearsalWorkflow",
+  // One bounded report-delivery Activity; no Workflow-level sleeps.
+  "runDailyNotificationCanary",
 ]);
 
 const SLACK_MS = 5 * ONE_MINUTE;
@@ -653,6 +685,7 @@ describe("Scout lane-prior schedule config", () => {
 describe("Scout Bryan Bucks analytics schedule config", () => {
   test("runs the committed-ledger sync every fifteen minutes", () => {
     expect(findScheduleById("scout-bryan-bucks-analytics")).toMatchObject({
+      namespace: "prod",
       workflowType: "runScoutBryanBucksAnalyticsWorkflow",
       args: [],
       timing: {
@@ -664,6 +697,11 @@ describe("Scout Bryan Bucks analytics schedule config", () => {
       overlap: ScheduleOverlapPolicy.SKIP,
       workflowExecutionTimeout: "15 minutes",
     });
+    expect(
+      DELETED_SCHEDULES.filter(
+        (schedule) => schedule.id === "scout-bryan-bucks-analytics",
+      ),
+    ).toEqual([{ id: "scout-bryan-bucks-analytics", namespace: "beta" }]);
   });
 });
 
@@ -710,8 +748,8 @@ test("terminates running executions of injected retired workflow types", async (
       },
       getHandle(workflowId: string, runId: string) {
         return {
-          terminate: async (reason?: string) => {
-            terminated.push(`${workflowId}/${runId}: ${reason ?? ""}`);
+          terminate: async (reason = "") => {
+            terminated.push(`${workflowId}/${runId}: ${reason}`);
           },
         };
       },

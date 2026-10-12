@@ -35,7 +35,10 @@ export function PlayerColumn({
   totalTeamDamage: number;
   teamSize: number;
 }) {
-  const damagePercent = round((player.damage / (maxTeamDamage || 1)) * 100, 0);
+  const damagePercent = round(
+    (player.damage / (maxTeamDamage === 0 ? 1 : maxTeamDamage)) * 100,
+    0,
+  );
   const teamDamagePercent = getDamageSharePercent(
     player.damage,
     totalTeamDamage,
@@ -45,6 +48,7 @@ export function PlayerColumn({
   return (
     <div
       style={{
+        boxSizing: "border-box",
         flexGrow: highlight ? TRACKED_WEIGHT : 1,
         flexShrink: 1,
         flexBasis: 0,
@@ -63,6 +67,7 @@ export function PlayerColumn({
     >
       <div
         style={{
+          boxSizing: "border-box",
           width: "100%",
           height: SPLASH_HEIGHT,
           display: "flex",
@@ -147,6 +152,7 @@ export function PlayerColumn({
 
       <div
         style={{
+          boxSizing: "border-box",
           display: "flex",
           flex: 1,
           flexDirection: "column",

@@ -14,6 +14,27 @@ public final class TpaDesk {
 
   private final InstantSource time;
   private TpaRequests requests;
+  private final java.util.Set<UUID> automatic = new java.util.HashSet<>();
+
+  public boolean toggleAuto(UUID player) {
+    if (automatic.remove(player)) return false;
+    automatic.add(player);
+    return true;
+  }
+
+  public boolean automatic(UUID player) {
+    return automatic.contains(player);
+  }
+
+  public Result<TpaRequest, TpaError> sendStaff(UUID requester, UUID target) {
+    return requests
+        .sendStaff(requester, target, TpaRequest.Direction.TO_REQUESTER, time.instant())
+        .map(
+            sent -> {
+              requests = sent.remaining();
+              return sent.request();
+            });
+  }
 
   public TpaDesk(InstantSource time, TpaRequests.Rules rules) {
     this.time = time;

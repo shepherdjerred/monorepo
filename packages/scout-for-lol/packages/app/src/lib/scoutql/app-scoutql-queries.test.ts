@@ -1,3 +1,4 @@
+import { DiscordChannelIdSchema } from "@scout-for-lol/data";
 import { describe, expect, test } from "vitest";
 import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/parse/compile.ts";
 import { lintScoutQl } from "@scout-for-lol/data/model/scoutql/editor/lint.ts";
@@ -45,13 +46,21 @@ describe("queries the app authors", () => {
   test("all three onboarding examples run", () => {
     expect(REPORT_EXAMPLES).toHaveLength(3);
     for (const example of REPORT_EXAMPLES) {
-      expectRunnable(example.build("123456789").queryText);
+      expectRunnable(
+        example.build(DiscordChannelIdSchema.parse("821958380719944229"))
+          .queryText,
+      );
     }
   });
 
   test("onboarding examples state a time bound", () => {
     for (const example of REPORT_EXAMPLES) {
-      expect(lintScoutQl(example.build("1").queryText)).toEqual([]);
+      expect(
+        lintScoutQl(
+          example.build(DiscordChannelIdSchema.parse("828542720658922315"))
+            .queryText,
+        ),
+      ).toEqual([]);
     }
   });
 

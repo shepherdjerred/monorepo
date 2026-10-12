@@ -1,3 +1,7 @@
+import type {
+  DiscordGuildId,
+  DiscordAccountId,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import { prisma, type Db } from "#src/database/index.ts";
 import { recordAudit, type RecordAuditInput } from "#src/lib/audit/index.ts";
 
@@ -7,7 +11,7 @@ import { recordAudit, type RecordAuditInput } from "#src/lib/audit/index.ts";
  * Structurally compatible with the post-auth `webMutationProcedure` ctx.
  */
 export type AuditedMutationCtx = {
-  user: { discordId: string };
+  user: { discordId: DiscordAccountId };
   webSession: { ipAddress: string | null; userAgent: string | null };
 };
 
@@ -38,7 +42,7 @@ export type AuditDetail = Pick<
  */
 export async function recordMutationAudit(params: {
   ctx: AuditedMutationCtx;
-  guildId: string;
+  guildId: DiscordGuildId;
   tx: Db;
   detail: AuditDetail | null;
 }): Promise<void> {
@@ -68,7 +72,7 @@ export async function recordMutationAudit(params: {
  */
 export async function runAuditedMutation<TResult>(
   ctx: AuditedMutationCtx,
-  guildId: string,
+  guildId: DiscordGuildId,
   run: (tx: Db) => Promise<TResult>,
   audit: (result: TResult) => AuditDetail | null,
 ): Promise<TResult> {

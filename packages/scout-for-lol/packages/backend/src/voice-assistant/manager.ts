@@ -1,4 +1,5 @@
 import { DiscordGuildIdSchema, type DiscordGuildId } from "@scout-for-lol/data";
+import type { DiscordChannelId } from "@scout-for-lol/data";
 import type { VoiceAudioInput } from "@shepherdjerred/voice-assistant";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { voiceManager, type ConnectionMode } from "#src/voice/voice-manager.ts";
@@ -61,12 +62,12 @@ export type VoiceJoinOutcome = "joined" | "cancelled";
 export type VoiceAssistantManagerDeps = {
   readonly runtime: () => VoiceAssistantRuntime | null;
   readonly joinAssistantChannel: (
-    guildId: string,
-    channelId: string,
+    guildId: DiscordGuildId,
+    channelId: DiscordChannelId,
   ) => Promise<AssistantConnection>;
-  readonly leaveChannel: (guildId: string) => void;
+  readonly leaveChannel: (guildId: DiscordGuildId) => void;
   readonly onConnectionLost: (
-    listener: (guildId: string, mode: ConnectionMode) => void,
+    listener: (guildId: DiscordGuildId, mode: ConnectionMode) => void,
   ) => void;
   /**
    * Unknown users count as human: refusing audio on a cache miss would
@@ -76,11 +77,11 @@ export type VoiceAssistantManagerDeps = {
   readonly isHumanUser: (userId: string) => boolean;
   /** Null when the channel cannot be resolved (skip the empty-channel check). */
   readonly countHumanMembers: (
-    guildId: string,
-    channelId: string,
+    guildId: DiscordGuildId,
+    channelId: DiscordChannelId,
   ) => number | null;
   readonly createSession: (input: {
-    guildId: string;
+    guildId: DiscordGuildId;
     runtime: VoiceAssistantRuntime;
     connection: AssistantConnection;
     onWakeAccepted: () => void;
@@ -88,16 +89,16 @@ export type VoiceAssistantManagerDeps = {
   }) => SessionLike;
   readonly setTimer: (callback: () => void, ms: number) => () => void;
   readonly captureQuestion: (
-    guildId: string,
+    guildId: DiscordGuildId,
     observation: VoiceQuestionObservation,
   ) => void;
   /** Whether `voice_assistant_enabled` currently holds for this guild. */
-  readonly isGuildEnabled: (guildId: string) => Promise<boolean>;
+  readonly isGuildEnabled: (guildId: DiscordGuildId) => Promise<boolean>;
 };
 
 type ActiveSession = {
-  readonly guildId: string;
-  readonly channelId: string;
+  readonly guildId: DiscordGuildId;
+  readonly channelId: DiscordChannelId;
   readonly session: SessionLike;
   readonly bridge: VoiceReceiverBridge;
   cancelInactivityTimer: () => void;
@@ -171,9 +172,11 @@ function defaultDeps(): VoiceAssistantManagerDeps {
  * loss, and process shutdown. Sessions exist only where an explicit `/scout
  * join` created one.
  */
+type PendingJoins = Map<DiscordGuildId, DiscordChannelId>;
+
 export class VoiceAssistantManager {
-  private readonly sessions = new Map<string, ActiveSession>();
-  private readonly joinQueues = new Map<string, Promise<unknown>>();
+  private readonly sessions = new Map<DiscordGuildId, ActiveSession>();
+  private readonly joinQueues = new Map<DiscordGuildId, Promise<unknown>>();
   /**
    * Per-guild cancellation ticket. `join()` captures it at enqueue time (to
    * catch a teardown that lands while THIS request is still queued behind an
@@ -185,9 +188,9 @@ export class VoiceAssistantManager {
    * value is stale by the time it's checked, the request is abandoned
    * instead of silently starting to listen after being told to stop.
    */
-  private readonly epochs = new Map<string, number>();
+  private readonly epochs = new Map<DiscordGuildId, number>();
   /** Guild -> channel a join is currently establishing a connection for. */
-  private readonly pendingJoinChannels = new Map<string, string>();
+  private readonly pendingJoinChannels: PendingJoins = new Map();
   /** Set once by `closeAll()`; never cleared — the process is exiting. */
   private closed = false;
   private readonly deps: VoiceAssistantManagerDeps;
@@ -200,11 +203,11 @@ export class VoiceAssistantManager {
     });
   }
 
-  isActive(guildId: string): boolean {
+  isActive(guildId: DiscordGuildId): boolean {
     return this.sessions.has(guildId);
   }
 
-  activeChannelId(guildId: string): string | undefined {
+  activeChannelId(guildId: DiscordGuildId): string | undefined {
     return this.sessions.get(guildId)?.channelId;
   }
 
@@ -217,7 +220,7 @@ export class VoiceAssistantManager {
    * Capture this as the first synchronous step, before any such await, and
    * pass it to `join()`'s `expectedEpoch` parameter.
    */
-  captureJoinEpoch(guildId: string): number {
+  captureJoinEpoch(guildId: DiscordGuildId): number {
     return this.currentEpoch(guildId);
   }
 
@@ -240,7 +243,7 @@ export class VoiceAssistantManager {
    */
   async join(
     guildId: DiscordGuildId,
-    channelId: string,
+    channelId: DiscordChannelId,
     expectedEpoch?: number,
   ): Promise<VoiceJoinOutcome> {
     if (this.closed) {
@@ -303,7 +306,7 @@ export class VoiceAssistantManager {
 
   private async performJoin(
     guildId: DiscordGuildId,
-    channelId: string,
+    channelId: DiscordChannelId,
   ): Promise<VoiceJoinOutcome> {
     const runtime = this.deps.runtime();
     if (runtime === null) {
@@ -425,7 +428,7 @@ export class VoiceAssistantManager {
 
   private createJoinedSession(
     guildId: DiscordGuildId,
-    channelId: string,
+    channelId: DiscordChannelId,
     runtime: VoiceAssistantRuntime,
     connection: AssistantConnection,
   ): VoiceJoinOutcome {
@@ -466,7 +469,7 @@ export class VoiceAssistantManager {
   }
 
   /** `/scout leave`. Returns false when no session was active. */
-  leave(guildId: string): boolean {
+  leave(guildId: DiscordGuildId): boolean {
     return this.endSession(guildId, "leave-command", { leaveChannel: true });
   }
 
@@ -484,7 +487,8 @@ export class VoiceAssistantManager {
    * `performJoin`'s own check catch it once the connection resolves, instead
    * of Scout starting to listen alone for up to 45 minutes.
    */
-  handleVoiceStateUpdate(guildId: string): void {
+  handleVoiceStateUpdate(id: string): void {
+    const guildId = DiscordGuildIdSchema.parse(id);
     const active = this.sessions.get(guildId);
     const pendingChannelId = this.pendingJoinChannels.get(guildId);
     const channelId = active?.channelId ?? pendingChannelId;
@@ -517,7 +521,8 @@ export class VoiceAssistantManager {
    * handled by the connection-lost listener wired in the constructor, after
    * its own reconnect grace period.
    */
-  handleBotChannelChanged(guildId: string, newChannelId: string | null): void {
+  handleBotChannelChanged(id: string, newChannelId: string | null): void {
+    const guildId = DiscordGuildIdSchema.parse(id);
     if (newChannelId === null) return;
     const active = this.sessions.get(guildId);
     const pendingChannelId = this.pendingJoinChannels.get(guildId);
@@ -585,7 +590,7 @@ export class VoiceAssistantManager {
     }
   }
 
-  private resetInactivityTimer(guildId: string): void {
+  private resetInactivityTimer(guildId: DiscordGuildId): void {
     const active = this.sessions.get(guildId);
     if (active === undefined) return;
     active.cancelInactivityTimer();
@@ -601,14 +606,14 @@ export class VoiceAssistantManager {
    * pending join is cancelled by the same teardown paths that would have
    * ended it had it already started.
    */
-  private invalidate(guildId: string): number {
+  private invalidate(guildId: DiscordGuildId): number {
     const next = (this.epochs.get(guildId) ?? 0) + 1;
     this.epochs.set(guildId, next);
     return next;
   }
 
   /** Read the guild's ticket without bumping it. */
-  private currentEpoch(guildId: string): number {
+  private currentEpoch(guildId: DiscordGuildId): number {
     return this.epochs.get(guildId) ?? 0;
   }
 
@@ -620,8 +625,8 @@ export class VoiceAssistantManager {
    * single check at either point is not enough on its own.
    */
   private async isJoinStillEligible(
-    guildId: string,
-    channelId: string,
+    guildId: DiscordGuildId,
+    channelId: DiscordChannelId,
   ): Promise<{ eligible: true } | { eligible: false; reason: string }> {
     let enabled: boolean;
     try {
@@ -657,7 +662,7 @@ export class VoiceAssistantManager {
   }
 
   private endSession(
-    guildId: string,
+    guildId: DiscordGuildId,
     reason: SessionEndReason,
     options: { leaveChannel: boolean },
   ): boolean {

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { inspectRegisteredTool } from "#src/explore/inspection/tool-contracts.ts";
 import type { ExploreTraceDetails } from "@scout-for-lol/data";
 import {
   BucksAccountQueryResultSchema,
@@ -276,10 +277,6 @@ export type ExploreToolResultInspection = {
 };
 
 /** Validate and project a tool input before it can enter the browser trace. */
-// `load_skill` deliberately has no branch here or in the result inspector:
-// the unknown-name fallthrough (details: null, raw: null) is what keeps the
-// skill instruction text out of persisted traces, which are served
-// unauthenticated to share-link holders.
 export function inspectExploreToolCall(
   toolName: string,
   input: unknown,
@@ -318,7 +315,7 @@ export function inspectExploreToolCall(
   if (toolName === "run_report_query") {
     const parsed = recordedQueryInput(input);
     return {
-      rawInput: JsonValueSchema.parse(parsed),
+      rawInput: JsonValueSchema.parse(ExploreRunQueryInputSchema.parse(input)),
       details: {
         kind: "execution",
         queryText: parsed.queryText,
@@ -351,7 +348,10 @@ export function inspectExploreToolCall(
       details: null,
     };
   }
-  return { details: null, rawInput: null };
+  return {
+    details: null,
+    rawInput: inspectRegisteredTool(toolName, "input", input),
+  };
 }
 
 /** Validate and reduce a tool result into safe shared details plus owner data. */
@@ -459,7 +459,17 @@ export function inspectExploreToolResult(
       details: null,
     };
   }
-  return { succeeded: true, details: null, rawOutput: null };
+  const rawOutput = inspectRegisteredTool(toolName, "output", output);
+  return {
+    succeeded: !(
+      rawOutput !== null &&
+      typeof rawOutput === "object" &&
+      !Array.isArray(rawOutput) &&
+      rawOutput["ok"] === false
+    ),
+    details: null,
+    rawOutput,
+  };
 }
 
 /**

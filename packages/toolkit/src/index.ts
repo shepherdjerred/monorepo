@@ -1,7 +1,12 @@
 #!/usr/bin/env bun
 
 import {
+  requiredCredentialsFor,
+  resolveCredentials,
+} from "#lib/credentials.ts";
+import {
   buildPassthroughInvocation,
+  isCredentialFreePassthrough,
   runPassthrough,
 } from "#lib/passthrough.ts";
 
@@ -30,6 +35,8 @@ Platform commands (native CLI passthroughs):
   tailscale   Tailscale CLI
 
 Monorepo workflows:
+  ci wait [PR]                Block until merge readiness or an actionable blocker
+  ci explain|main|load        Failure evidence, main health, and CI capacity
   brim [--provider <id>] [--dry-run]  Start a session on the least-used AI subscription
   pr health [PR_NUMBER]        Check merge, exact-head Woodpecker CI, and review
   pr asset <PR> <FILE|DIR...>  Upload review media to public.sjer.red
@@ -41,6 +48,7 @@ Monorepo workflows:
   ops summary [--needs-me]     Summarize the homelab ops snapshot
   bugsink <SUBCOMMAND>         Query self-hosted error tracking
   discord <SUBCOMMAND>         Use the local Discord session daemon
+  mc <SUBCOMMAND>              Drive Minecraft sandboxes (WorldEdit, console, snapshots)
   history <SUBCOMMAND>         Search private local agent history
   backup seaweedfs <ACTION>    Inspect, verify, or restore off-site snapshots
 
@@ -74,6 +82,7 @@ type SubcommandHandler = (
 
 /** Workflow commands dispatched as `<command> <subcommand> [args...]`. */
 const SUBCOMMAND_HANDLERS = new Map<string, () => Promise<SubcommandHandler>>([
+  ["ci", () => import("./handlers/ci.ts").then((m) => m.handleCiCommand)],
   [
     "alerts",
     () => import("./handlers/alerts.ts").then((m) => m.handleAlertsCommand),
@@ -87,6 +96,7 @@ const SUBCOMMAND_HANDLERS = new Map<string, () => Promise<SubcommandHandler>>([
     "discord",
     () => import("./handlers/discord.ts").then((m) => m.handleDiscordCommand),
   ],
+  ["mc", () => import("./handlers/mc.ts").then((m) => m.handleMcCommand)],
   [
     "history",
     () => import("./handlers/history.ts").then((m) => m.handleHistoryCommand),
@@ -96,6 +106,48 @@ const SUBCOMMAND_HANDLERS = new Map<string, () => Promise<SubcommandHandler>>([
     () => import("./handlers/backup.ts").then((m) => m.handleBackupCommand),
   ],
 ]);
+
+/**
+ * Brokered credentials resolve into Bun.env just in time; passthrough
+ * children inherit exactly the assembled env. Discord proceeds when either
+ * identity resolves since bot and user tokens serve different commands.
+ * `daemon status`/`stop` never resolve: they only read daemon state.
+ */
+async function resolveCommandCredentials(
+  command: string,
+  args: readonly string[],
+): Promise<void> {
+  const subcommand = args[1];
+  // CI validates help and arguments before resolving its operational credentials.
+  if (command === "ci") {
+    return;
+  }
+  if (
+    command === "discord" &&
+    subcommand === "daemon" &&
+    (args[2] === "status" || args[2] === "stop")
+  ) {
+    return;
+  }
+  if (command !== "discord") {
+    await resolveCredentials(
+      requiredCredentialsFor(command, subcommand, Bun.env, args.slice(1)),
+    );
+    return;
+  }
+  const names = requiredCredentialsFor(command, subcommand, Bun.env);
+  const failures: string[] = [];
+  for (const name of names) {
+    try {
+      await resolveCredentials([name]);
+    } catch (error) {
+      failures.push(error instanceof Error ? error.message : String(error));
+    }
+  }
+  if (failures.length === names.length) {
+    throw new Error(failures.join("\n"));
+  }
+}
 
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
@@ -114,6 +166,10 @@ async function main(): Promise<void> {
   if (command === "--version" || command === "version") {
     console.log(`toolkit ${TOOLKIT_VERSION}`);
     return;
+  }
+
+  if (!isCredentialFreePassthrough(command, args.slice(1))) {
+    await resolveCommandCredentials(command, args);
   }
 
   const passthrough = buildPassthroughInvocation(

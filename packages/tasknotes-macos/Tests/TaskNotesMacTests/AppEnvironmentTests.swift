@@ -76,7 +76,7 @@ struct AppEnvironmentTests {
         defer { server.stop() }
         try await seedVault(of: server, title: "Written by somebody else")
 
-        let fixture = try Fixture(address: server.baseURL.absoluteString)
+        let fixture = try Fixture.connected(to: server)
         defer { fixture.tearDown() }
 
         await fixture.environment.start().value
@@ -103,10 +103,7 @@ struct AppEnvironmentTests {
         defer { server.stop() }
         try await seedVault(of: server, title: "Behind the gate")
 
-        let fixture = try Fixture(
-            address: server.baseURL.absoluteString,
-            tokenStore: InMemoryTokenStore(token: server.authToken)
-        )
+        let fixture = try Fixture.connected(to: server)
         defer { fixture.tearDown() }
 
         await fixture.environment.start().value
@@ -245,7 +242,7 @@ struct AppEnvironmentTests {
         defer { server.stop() }
         try await seedVault(of: server, title: "Opened twice")
 
-        let fixture = try Fixture(address: server.baseURL.absoluteString)
+        let fixture = try Fixture.connected(to: server)
         defer { fixture.tearDown() }
 
         await fixture.environment.start().value
@@ -281,7 +278,10 @@ struct AppEnvironmentTests {
         defer { server.stop() }
         try await seedVault(of: server, title: "Arrived on the retry")
 
-        let fixture = try Fixture(address: server.baseURL.absoluteString)
+        let fixture = try Fixture(
+            address: server.baseURL.absoluteString,
+            tokenStore: InMemoryTokenStore(token: server.authToken)
+        )
         defer { fixture.tearDown() }
         let counters = fixture.storageURL.appending(path: "id-counters.json")
         try "{ this is not the counter file".write(
@@ -312,7 +312,7 @@ struct AppEnvironmentTests {
         defer { server.stop() }
         try await seedVault(of: server, title: "Entered later")
 
-        let fixture = try Fixture(address: "")
+        let fixture = try Fixture.connected(to: server, address: "")
         defer { fixture.tearDown() }
         await fixture.environment.start().value
         let store = try #require(fixture.store)
@@ -387,7 +387,7 @@ struct AppEnvironmentTests {
         defer { server.stop() }
         try await seedVault(of: server, title: "Entered in Settings")
 
-        let fixture = try Fixture(address: "")
+        let fixture = try Fixture.connected(to: server, address: "")
         defer { fixture.tearDown() }
 
         await fixture.environment.start().value
@@ -529,6 +529,16 @@ private struct Fixture {
 
     /// The scratch storage directory, for the cases that corrupt a file in it.
     var storageURL: URL { directory.url }
+
+    static func connected(
+        to server: TaskNotesServerProcess,
+        address: String? = nil
+    ) throws -> Fixture {
+        try Fixture(
+            address: address ?? server.baseURL.absoluteString,
+            tokenStore: InMemoryTokenStore(token: server.authToken)
+        )
+    }
 
     /// - Parameters:
     ///   - address: what to put in the address field, or `nil` to leave whatever

@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   BucksStakeSchema,
   BucksLedgerKindSchema,
@@ -204,7 +205,7 @@ export type LedgerPageEntry = {
   delta: number;
   balanceAfter: number;
   kind: BucksLedgerKind;
-  matchId: string | null;
+  matchId: RiotMatchId | null;
   context: string;
   createdAt: Date;
 };
@@ -450,7 +451,7 @@ export async function getPersonalBucksView(
 
 export type FullLeaderboardRow = {
   accountId: number;
-  discordId: string;
+  discordId: DiscordAccountId;
   balance: number;
 };
 

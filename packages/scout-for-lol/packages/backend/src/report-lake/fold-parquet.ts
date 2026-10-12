@@ -1,6 +1,12 @@
-import { mkdir, unlink } from "node:fs/promises";
+import { mkdir, rm } from "node:fs/promises";
 import path from "node:path";
+import type { DuckDbColumnType } from "@scout-for-lol/data";
+import {
+  rawDocumentColumns,
+  type ReportLakeLayout,
+} from "#src/report-lake/schema-upgrade/layout.ts";
 import { NdjsonFileWriter } from "#src/report-lake/ndjson-writer.ts";
+import { copyNdjsonToParquet } from "#src/report-lake/parquet/copy-ndjson.ts";
 import {
   COMPETITION_RANK_HISTORY_LAKE_COLUMNS,
   MATCH_LAKE_COLUMNS,
@@ -11,7 +17,6 @@ import {
   TIMELINE_EVENT_LAKE_COLUMNS,
   TIMELINE_EVENT_PARTICIPANT_LAKE_COLUMNS,
   TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS,
-  duckDbColumnsSpec,
 } from "#src/report-lake/schema.ts";
 import type { ReportLakeStagingTable } from "#src/report-lake/staging.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
@@ -25,8 +30,13 @@ export type StagingParseResult = {
   skipped: number;
 };
 
-function columnsForTable(table: ReportLakeStagingTable) {
+export function columnsForTable(
+  table: ReportLakeStagingTable,
+  layout: ReportLakeLayout,
+): Record<string, DuckDbColumnType> {
   switch (table) {
+    case "raw_documents":
+      return rawDocumentColumns(layout);
     case "matches":
       return MATCH_LAKE_COLUMNS;
     case "match_teams":
@@ -48,33 +58,54 @@ function columnsForTable(table: ReportLakeStagingTable) {
   }
 }
 
-export async function writeFoldParquet(
-  buildDir: string,
-  buildId: string,
-  table: ReportLakeStagingTable,
-  staged: StagingParseResult,
-): Promise<void> {
-  const columns = columnsForTable(table);
+export async function writeFoldParquet({
+  buildDir,
+  buildId,
+  table,
+  staged,
+  abortSignal,
+  layout = "current",
+}: {
+  buildDir: string;
+  buildId: string;
+  table: ReportLakeStagingTable;
+  staged: StagingParseResult;
+  abortSignal?: AbortSignal | undefined;
+  layout?: ReportLakeLayout;
+}): Promise<void> {
+  abortSignal?.throwIfAborted();
+  const columns = columnsForTable(table, layout);
   for (const [month, rows] of staged.rowsByMonth) {
     const monthDir = path.join(buildDir, table, `month=${month}`);
     await mkdir(monthDir, { recursive: true });
     const tmpPath = path.join(buildDir, `${table}-${month}-fold.ndjson.tmp`);
-    const writer = new NdjsonFileWriter(tmpPath);
-    for (const row of rows) writer.write(row);
-    await writer.close();
-    const parquetPath = path.join(monthDir, `fold-${buildId}.parquet`);
+    const writer = new NdjsonFileWriter(tmpPath, undefined, abortSignal);
     try {
+      for (const row of rows)
+        await writer.write(
+          table === "raw_documents" && layout === "legacy-identity-map"
+            ? { ...row, identity_map_json: "{}" }
+            : row,
+        );
+      await writer.close();
       await withDuckDBConnection(
         async (session) => {
-          await session.run(
-            `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(columns)})) TO '${parquetPath}' (FORMAT PARQUET)`,
-            [tmpPath],
-          );
+          await copyNdjsonToParquet(session, {
+            sourcePath: tmpPath,
+            outputDirectory: monthDir,
+            columns,
+            partitionByMonth: false,
+            fileNamePrefix: `fold-${buildId}`,
+          });
         },
-        { timeoutMs: COMPACTION_TIMEOUT_MS },
+        {
+          timeoutMs: COMPACTION_TIMEOUT_MS,
+          ...(abortSignal === undefined ? {} : { abortSignal }),
+        },
       );
     } finally {
-      await unlink(tmpPath);
+      await writer.abort();
+      await rm(tmpPath, { force: true });
     }
   }
 }

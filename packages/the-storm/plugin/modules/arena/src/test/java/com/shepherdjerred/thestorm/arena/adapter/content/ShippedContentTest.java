@@ -241,7 +241,12 @@ final class ShippedContentTest {
     assertThat(arena.id()).isEqualTo("colosseum");
     assertThat(arena.minPlayers()).isEqualTo(1);
     assertThat(arena.maxPlayers()).isLessThanOrEqualTo(4);
-    assertThat(arena.classSigns().keySet()).isEqualTo(content.classes().classes().keySet());
+    assertThat(arena.classSigns().keySet())
+        .containsExactlyInAnyOrder(
+            "archer", "madman", "guardian", "healer", "wolfmaster", "tank", "knight", "oddjob");
+    assertThat(content.classes().classes().keySet())
+        .containsAll(arena.classSigns().keySet())
+        .contains("chemist", "vanguard", "lancer");
   }
 
   @Test

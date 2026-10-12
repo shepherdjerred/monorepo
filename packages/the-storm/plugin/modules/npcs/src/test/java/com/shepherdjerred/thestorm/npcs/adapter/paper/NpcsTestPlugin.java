@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.npcs.adapter.paper;
 
+import com.shepherdjerred.thestorm.core.compute.DirectComputePool;
 import com.shepherdjerred.thestorm.core.config.ConfigFiles;
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
@@ -12,8 +13,10 @@ import com.shepherdjerred.thestorm.npcs.app.ContentSource;
 import com.shepherdjerred.thestorm.npcs.app.DialogPresenter;
 import com.shepherdjerred.thestorm.npcs.app.DialogueRegistry;
 import com.shepherdjerred.thestorm.npcs.app.NpcCatalog;
+import com.shepherdjerred.thestorm.npcs.app.NpcStateStore;
 import com.shepherdjerred.thestorm.npcs.app.Trainer;
 import com.shepherdjerred.thestorm.npcs.app.TrainerWording;
+import com.shepherdjerred.thestorm.npcs.domain.combat.NpcLedger.Snapshot;
 import com.shepherdjerred.thestorm.npcs.domain.config.NpcsConfig;
 import com.shepherdjerred.thestorm.npcs.domain.content.Content;
 import com.shepherdjerred.thestorm.npcs.domain.content.ContentProblem;
@@ -73,12 +76,14 @@ public class NpcsTestPlugin extends JavaPlugin {
             this,
             getLifecycleManager(),
             new PaperScheduler(this),
+            new DirectComputePool(),
             db,
             new Services(),
             data,
             InstantSource.system(),
             RandomGenerator.getDefault(),
-            getComponentLogger());
+            getComponentLogger(),
+            com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled());
     var catalog = new NpcCatalog(load(data));
     var trainer =
         new Trainer(
@@ -106,8 +111,25 @@ public class NpcsTestPlugin extends JavaPlugin {
                 new ActionRegistry(),
                 trainer,
                 () -> source(data),
-                Runnable::run),
-            new NpcsPaper.Hooks(new Tickets(), new Presenter()));
+                Runnable::run,
+                new MemoryState()),
+            new NpcsPaper.Hooks(
+                new Tickets(), new Presenter(), new TestBodies(getServer(), NpcKeys.of(this))));
+  }
+
+  private static final class MemoryState implements NpcStateStore {
+    private Snapshot snapshot = Snapshot.empty();
+
+    @Override
+    public CompletableFuture<Snapshot> load() {
+      return CompletableFuture.completedFuture(snapshot);
+    }
+
+    @Override
+    public CompletableFuture<Void> save(Snapshot state) {
+      snapshot = state;
+      return CompletableFuture.completedFuture(null);
+    }
   }
 
   @Override

@@ -50,7 +50,9 @@ test("errors fire on failures but never on steady states", () => {
   );
 });
 
-test("target down watches the ServiceMonitor job", () => {
+test("target down watches the declared service metrics endpoint", () => {
   const expr = alert(getStormBrainRuleGroups(), "StormBrainTargetDown");
-  expect(expr).toContain('job="storm-brain/storm-brain-service-monitor"');
+  expect(expr).toContain(
+    'namespace="storm-brain",service="storm-brain-storm-brain-service",endpoint="metrics"',
+  );
 });

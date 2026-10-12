@@ -5,6 +5,11 @@
  * an Administrator of.
  */
 
+import {
+  type DiscordGuildId,
+  type DiscordAccountId,
+  DiscordGuildIdSchema,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import { z } from "zod";
 import { prisma } from "#src/database/index.ts";
 import configuration from "#src/configuration.ts";
@@ -25,7 +30,7 @@ const RefreshResponseSchema = z.object({
 });
 
 const PartialGuildSchema = z.object({
-  id: z.string(),
+  id: DiscordGuildIdSchema,
   name: z.string(),
   icon: z.string().nullable(),
   owner: z.boolean(),
@@ -206,6 +211,10 @@ type CachedGuilds = {
   fetchedAt: number;
 };
 const guildsCache = new Map<string, CachedGuilds>();
+// One page can resolve membership in many parallel tRPC procedures. Share the
+// authoritative read (including token refresh) instead of bursting Discord's
+// per-user rate limit before any successful result has reached the TTL cache.
+const guildsRequests = new Map<string, Promise<PartialGuild[]>>();
 const GUILDS_CACHE_TTL_MS = 5 * 60 * 1000;
 
 /**
@@ -239,7 +248,7 @@ export function devGuildOverride(input: {
   // they would for a server you actually run; a member-only stand-in would
   // block every management screen this exists to let you reach.
   return ids.map((id, index) => ({
-    id,
+    id: DiscordGuildIdSchema.parse(id),
     // Keep local screenshots representative without reflecting the Discord
     // snowflake back into consumer-facing UI. The id remains authoritative
     // for access checks; the ordinal only distinguishes multiple fixtures.
@@ -260,7 +269,7 @@ export function devGuildOverride(input: {
  * deployed client must continue to use its live cache as the installation
  * signal.
  */
-export function isDevGuildOverrideGuild(guildId: string): boolean {
+export function isDevGuildOverrideGuild(guildId: DiscordGuildId): boolean {
   return (
     devGuildOverride({
       environment: configuration.environment,
@@ -310,6 +319,27 @@ export async function fetchUserGuilds(user: User): Promise<PartialGuild[]> {
     guildsCache.delete(user.discordId);
   }
 
+  const pending = guildsRequests.get(user.discordId);
+  if (pending !== undefined) return await pending;
+
+  const request = fetchUncachedUserGuilds(user);
+  guildsRequests.set(user.discordId, request);
+  try {
+    const guilds = await request;
+    // Re-authentication invalidates an old in-flight request too. Its answer
+    // may finish for its original caller, but must not repopulate the cache.
+    if (guildsRequests.get(user.discordId) === request) {
+      guildsCache.set(user.discordId, { guilds, fetchedAt: Date.now() });
+    }
+    return guilds;
+  } finally {
+    if (guildsRequests.get(user.discordId) === request) {
+      guildsRequests.delete(user.discordId);
+    }
+  }
+}
+
+async function fetchUncachedUserGuilds(user: User): Promise<PartialGuild[]> {
   const token = await getFreshUserAccessToken(user);
 
   const response = await fetchWithTimeout(
@@ -353,10 +383,6 @@ export async function fetchUserGuilds(user: User): Promise<PartialGuild[]> {
     );
   }
 
-  guildsCache.set(user.discordId, {
-    guilds: parsed.data,
-    fetchedAt: Date.now(),
-  });
   return parsed.data;
 }
 
@@ -364,6 +390,7 @@ export async function fetchUserGuilds(user: User): Promise<PartialGuild[]> {
  * Invalidate the per-user guild cache. Call when a user re-authenticates
  * or their permissions are known to have changed.
  */
-export function invalidateUserGuildsCache(discordId: string): void {
+export function invalidateUserGuildsCache(discordId: DiscordAccountId): void {
   guildsCache.delete(discordId);
+  guildsRequests.delete(discordId);
 }

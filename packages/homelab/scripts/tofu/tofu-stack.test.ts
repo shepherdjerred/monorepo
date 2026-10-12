@@ -1,4 +1,8 @@
 import { describe, expect, test } from "vitest";
+import { chmod, mkdtemp, rm, stat } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { z } from "zod";
 import {
   buildTofuEnvironment,
   desiredStateVariableValue,
@@ -33,6 +37,7 @@ async function temporaryDirectory(): Promise<string> {
 }
 
 const STACKS: readonly TofuStack[] = [
+  "application-secrets",
   "anthropic",
   "anthropic-federation",
   "argocd",
@@ -125,6 +130,36 @@ const PLATFORM_STACKS: readonly PlatformStack[] = [
 ];
 
 describe("committed platform desired state", () => {
+  test("rejects a nonboolean Cloudflare token management flag", async () => {
+    const stackDir = await temporaryDirectory();
+    await Bun.write(
+      `${stackDir}/desired-state.json`,
+      JSON.stringify({
+        $schema: "../platform-desired-state.schema.json",
+        platform: "cloudflare-tokens",
+        cloudflare_api_tokens: {
+          broken: {
+            managed: "false",
+            supersedes_id: "legacy-token",
+            name: "Replacement",
+            policies: [
+              {
+                effect: "allow",
+                permission_groups: [{ id: "permission", name: "DNS Read" }],
+                resources: { zone: "*" },
+              },
+            ],
+            vault_item_id: "item",
+            vault_field: "CLOUDFLARE_API_TOKEN",
+          },
+        },
+      }),
+    );
+    await expect(
+      loadPlatformDesiredState(stackDir, "cloudflare-tokens"),
+    ).rejects.toThrow("expected boolean");
+  });
+
   test.each(PLATFORM_STACKS)("%s matches its schema", async (platform) => {
     const stackDir = new URL(`../../src/tofu/${platform}/`, import.meta.url)
       .pathname;
@@ -280,7 +315,9 @@ describe("committed platform desired state", () => {
       loadPlatformDesiredState(stackDir, "anthropic-federation"),
     ).rejects.toThrow();
   });
+});
 
+describe("platform credential handoffs", () => {
   test("collects handoffs nested in resource objects", () => {
     expect(
       collectOnePasswordTargets({
@@ -306,6 +343,75 @@ describe("committed platform desired state", () => {
         vault_field: "nested-field",
       },
     ]);
+  });
+
+  test("archived Anthropic keys retain metadata without a vault handoff", async () => {
+    const stackDir = await temporaryDirectory();
+    await Bun.write(
+      `${stackDir}/desired-state.json`,
+      JSON.stringify({
+        $schema: "../platform-desired-state.schema.json",
+        platform: "anthropic",
+        anthropic_workspaces: {},
+        anthropic_api_keys: {
+          retired: {
+            api_key_id: "apikey-retired",
+            name: "Retired integration",
+            status: "archived",
+          },
+        },
+        anthropic_workspace_members: {},
+      }),
+    );
+    const state = await loadPlatformDesiredState(stackDir, "anthropic");
+    expect(collectOnePasswordTargets(state)).toEqual([]);
+  });
+
+  test.each(["active", "inactive"])(
+    "%s Anthropic keys still require a vault handoff",
+    async (status) => {
+      const stackDir = await temporaryDirectory();
+      await Bun.write(
+        `${stackDir}/desired-state.json`,
+        JSON.stringify({
+          $schema: "../platform-desired-state.schema.json",
+          platform: "anthropic",
+          anthropic_workspaces: {},
+          anthropic_api_keys: {
+            missing: { api_key_id: "apikey-missing", name: "Missing", status },
+          },
+          anthropic_workspace_members: {},
+        }),
+      );
+      await expect(
+        loadPlatformDesiredState(stackDir, "anthropic"),
+      ).rejects.toThrow();
+    },
+  );
+
+  test("archived Anthropic keys cannot retain a vault handoff", async () => {
+    const stackDir = await temporaryDirectory();
+    await Bun.write(
+      `${stackDir}/desired-state.json`,
+      JSON.stringify({
+        $schema: "../platform-desired-state.schema.json",
+        platform: "anthropic",
+        anthropic_workspaces: {},
+        anthropic_api_keys: {
+          retired: {
+            api_key_id: "apikey-retired",
+            name: "Retired integration",
+            status: "archived",
+            vault_item_id: "obsolete-item",
+            vault_field: "obsolete-key",
+          },
+        },
+        anthropic_workspace_members: {},
+      }),
+    );
+    await expect(
+      loadPlatformDesiredState(stackDir, "anthropic"),
+    ).rejects.toThrow();
   });
 
   test("collects Discord item-only handoffs", () => {
@@ -336,3 +442,91 @@ describe("desired-state variables", () => {
     );
   });
 });
+
+const Observation = z.object({
+  action: z.string(),
+  data: z.string(),
+  mode: z.number(),
+  cache: z.string(),
+  backendPresent: z.boolean(),
+});
+
+test.each([
+  { initExit: 0, planExit: 0, success: true },
+  { initExit: 0, planExit: 2, success: true },
+  { initExit: 1, planExit: 0, success: false },
+  { initExit: 0, planExit: 1, success: false },
+])(
+  "plan data is private and removed for $initExit/$planExit",
+  async ({ initExit, planExit, success }) => {
+    const fixture = await mkdtemp(path.join(tmpdir(), "tofu-plan-test-"));
+    const log = path.join(fixture, "observations.jsonl");
+    const executable = path.join(fixture, "tofu");
+    try {
+      await Bun.write(
+        executable,
+        String.raw`#!${process.execPath}
+import { appendFileSync, existsSync, statSync, writeFileSync } from "node:fs";
+const action = process.argv[3];
+const data = process.env.TF_DATA_DIR;
+if (!data) throw new Error("No private data directory");
+const backend = data + "/backend-fixture";
+appendFileSync(${JSON.stringify(log)}, JSON.stringify({ action, data,
+  mode: statSync(data).mode & 0o777, cache: process.env.TF_PLUGIN_CACHE_DIR,
+  backendPresent: existsSync(backend) }) + "\n");
+if (action === "init") writeFileSync(backend, "synthetic backend fixture");
+process.exit(action === "init" ? ${String(initExit)} : ${String(planExit)});
+`,
+      );
+      await chmod(executable, 0o700);
+      const child = Bun.spawn(
+        [
+          process.execPath,
+          new URL("tofu-stack.ts", import.meta.url).pathname,
+          "github",
+          "plan",
+        ],
+        {
+          env: {
+            PATH: `${fixture}:${Bun.env["PATH"] ?? ""}`,
+            TMPDIR: fixture,
+            TF_PLUGIN_CACHE_DIR: path.join(fixture, "provider-cache"),
+            TF_DATA_DIR: path.join(fixture, "must-not-inherit"),
+            SEAWEEDFS_TOFU_STATE_ACCESS_KEY_ID: "fixture-state-id",
+            SEAWEEDFS_TOFU_STATE_SECRET_ACCESS_KEY: "fixture-state-key",
+            TOFU_GITHUB_TOKEN: "fixture-github-token",
+          },
+          stdout: "pipe",
+          stderr: "pipe",
+        },
+      );
+      const [stdout, stderr, exitCode] = await Promise.all([
+        new Response(child.stdout).text(),
+        new Response(child.stderr).text(),
+        child.exited,
+      ]);
+      expect(exitCode === 0, stdout + stderr).toBe(success);
+      const recorded = await Bun.file(log).text();
+      const observations = recorded
+        .trim()
+        .split("\n")
+        .map((line) => Observation.parse(JSON.parse(line)));
+      expect(observations.map((item) => item.action)).toEqual(
+        initExit === 0 ? ["init", "plan"] : ["init"],
+      );
+      const first = observations[0];
+      if (first === undefined) throw new Error("Missing init observation");
+      expect(first.data).toContain(path.join(fixture, "tofu-plan."));
+      expect(first.mode).toBe(0o700);
+      expect(first.backendPresent).toBe(false);
+      for (const item of observations) {
+        expect(item.data).toBe(first.data);
+        expect(item.cache).toBe(path.join(fixture, "provider-cache"));
+      }
+      if (initExit === 0) expect(observations[1]?.backendPresent).toBe(true);
+      await expect(stat(first.data)).rejects.toMatchObject({ code: "ENOENT" });
+    } finally {
+      await rm(fixture, { recursive: true, force: true });
+    }
+  },
+);

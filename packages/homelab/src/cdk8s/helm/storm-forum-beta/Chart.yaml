@@ -1,0 +1,6 @@
+apiVersion: v2
+name: storm-forum-beta
+description: The Storm private acceptance forum
+type: application
+version: "$version"
+appVersion: "$appVersion"

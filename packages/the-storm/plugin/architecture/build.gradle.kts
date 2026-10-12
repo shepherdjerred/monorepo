@@ -9,4 +9,7 @@ dependencies {
       .filter { it.projectDir.parentFile.name == "modules" }
       .forEach { testImplementation(project(it.path)) }
   testImplementation(libs.findLibrary("archunit").get())
+  // npcs, companions and rwfbots compile against Citizens (compileOnly, so not on
+  // their runtime classpath); ArchUnit needs the classes to resolve the Citizens rules.
+  testRuntimeOnly(libs.findLibrary("citizens").get()) { isTransitive = false }
 }

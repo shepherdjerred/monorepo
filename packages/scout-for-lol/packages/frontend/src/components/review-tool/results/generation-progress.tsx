@@ -53,8 +53,14 @@ export function GenerationProgress({
   progress,
   elapsedMs,
 }: GenerationProgressProps) {
-  const { step, message, currentStage, totalStages, chunkIndex, chunkTotal } =
-    progress;
+  const {
+    step,
+    message,
+    currentStage = 0,
+    totalStages = 5,
+    chunkIndex,
+    chunkTotal,
+  } = progress;
 
   const elapsedSeconds = Math.floor(elapsedMs / 1000);
   const isComplete = step === "complete";
@@ -125,8 +131,8 @@ export function GenerationProgress({
 
         {/* 5-stage pill progress bar */}
         <PipelinePillProgress
-          currentStage={currentStage ?? 0}
-          totalStages={totalStages ?? 5}
+          currentStage={currentStage}
+          totalStages={totalStages}
           isComplete={isComplete}
         />
       </div>

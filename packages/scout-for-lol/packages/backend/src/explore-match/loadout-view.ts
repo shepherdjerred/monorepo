@@ -1,8 +1,11 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
+import { ExploreCardSelectionError } from "./card-selection-error.ts";
 import {
   EXPLORE_LOADOUT_BUILD_PATH_MAX_EVENTS,
   ExploreLoadoutCardSchema,
   LeaguePuuidSchema,
-  MatchIdSchema,
+  RiotMatchIdSchema,
   getItemInfo,
   getRuneTreeInfo,
   listRunes,
@@ -18,11 +21,11 @@ import {
   fetchTimelineCoverage,
   fetchTimelineEventPage,
   type TimelineEventRead,
-} from "#src/reports/duckdb/consumer-profile-lake-reads.ts";
+} from "#src/reports/duckdb/consumer/profile-lake-reads.ts";
 import {
   fetchMatchLoadoutRows,
   type LakeMatchLoadoutRow,
-} from "#src/reports/duckdb/consumer-match-loadout-lake-reads.ts";
+} from "#src/reports/duckdb/consumer/match-loadout-lake-reads.ts";
 
 const runeById = new Map(listRunes().map((rune) => [rune.id, rune]));
 const spellByNumericId = new Map(
@@ -30,8 +33,8 @@ const spellByNumericId = new Map(
 );
 
 export type ExploreLoadoutPair = {
-  matchId: string;
-  puuid: string;
+  matchId: RiotMatchId;
+  puuid: LeaguePuuid;
 };
 
 export function exploreLoadoutPairKey(pair: ExploreLoadoutPair): string {
@@ -58,7 +61,7 @@ export function loadoutPairsInPreview(
     if (typeof matchIdValue !== "string" || typeof puuidValue !== "string") {
       continue;
     }
-    const matchId = MatchIdSchema.safeParse(matchIdValue);
+    const matchId = RiotMatchIdSchema.safeParse(matchIdValue);
     const puuid = LeaguePuuidSchema.safeParse(puuidValue);
     if (matchId.success && puuid.success) {
       pairs.add(
@@ -93,7 +96,8 @@ export function assertEligibleExploreLoadoutCardRequests(input: {
         }),
       )
     ) {
-      throw new Error(
+      throw new ExploreCardSelectionError(
+        "loadout",
         `Explore loadout card ${request.matchId} was not returned for that participant by the latest query`,
       );
     }
@@ -308,7 +312,7 @@ function runePage(row: LakeMatchLoadoutRow) {
 }
 
 async function timelineForParticipant(
-  matchId: string,
+  matchId: RiotMatchId,
   participantId: number,
   abortSignal: AbortSignal | undefined,
 ): Promise<TimelineEventRead[] | null> {

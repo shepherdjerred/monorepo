@@ -1,0 +1,6 @@
+name: StormConversionGuard
+version: "1.0"
+main: com.shepherdjerred.thestorm.tools.conversionguard.ConversionGuard
+api-version: "1.21"
+load: STARTUP
+description: Freezes disposable world conversion copies before world simulation

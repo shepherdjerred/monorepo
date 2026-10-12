@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/data";
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { Copy, CornerDownLeft, Plus, Trash2 } from "lucide-react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
@@ -59,7 +60,7 @@ type ExplorerFilter = {
 };
 
 export function ReportDataExplorer(props: {
-  guildId: string;
+  guildId: DiscordGuildId;
   onInsertIdentifier: (identifier: string) => void;
 }) {
   const trpc = useTRPC();

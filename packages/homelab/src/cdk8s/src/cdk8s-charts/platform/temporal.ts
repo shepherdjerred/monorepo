@@ -9,6 +9,7 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { createTemporalPostgreSQLDatabase } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/temporal-db.ts";
 import { createTemporalPostgreSQLCertificate } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/temporal-db-tls.ts";
+import { postgresClusterPodLabels } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/cluster-label.ts";
 import { createTemporalDynamicConfig } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/dynamic-config.ts";
 import { createTemporalServerDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/server.ts";
 import { createTemporalUiDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/ui.ts";
@@ -18,6 +19,11 @@ import { createTemporalWorkerDeployment } from "@shepherdjerred/homelab/cdk8s/sr
 import { createTemporalAgentWorkerNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/workers/agent-worker-network-policy.ts";
 import { TEMPORAL_AGENT_POD_SECURITY_ENFORCEMENT } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/workers/agent-worker.ts";
 import { createTemporalWorkerNetworkPolicies } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/workers/worker-network-policies.ts";
+import { SCOUT_STAGES } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/topology.ts";
+import {
+  createTemporalExternalAuthSecret,
+  TEMPORAL_EXTERNAL_GATEWAY_PORT,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/external-auth.ts";
 
 // Every Temporal-namespace workload egresses to cluster DNS the same way;
 // shared here so it is declared once instead of drifting per-policy.
@@ -62,21 +68,34 @@ function scoutBackendIngress(): NetworkPolicyIngressRule {
  * unconditionally, because Discord commands start Workflows they do not execute,
  * so a blocked client here is every slash command failing to dispatch rather
  * than a worker going idle.
- *
- * Beta only, matching the stage that actually renders the split topology.
  */
-function scoutGatewayClientIngress(): NetworkPolicyIngressRule {
-  return {
-    from: [
-      {
+export function scoutGatewayClientIngress(): NetworkPolicyIngressRule[] {
+  return [
+    {
+      from: SCOUT_STAGES.map((stage) => ({
         namespaceSelector: {
-          matchLabels: { "kubernetes.io/metadata.name": "scout-beta" },
+          matchLabels: { "kubernetes.io/metadata.name": `scout-${stage}` },
         },
         podSelector: { matchLabels: { app: "scout-gateway" } },
-      },
-    ],
-    ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
-  };
+      })),
+      ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
+    },
+  ];
+}
+
+/** The split activity worker polls stage-local realtime and background queues. */
+function scoutActivityWorkerIngress(): NetworkPolicyIngressRule[] {
+  return [
+    {
+      from: SCOUT_STAGES.map((stage) => ({
+        namespaceSelector: {
+          matchLabels: { "kubernetes.io/metadata.name": `scout-${stage}` },
+        },
+        podSelector: { matchLabels: { app: "scout-activity-worker" } },
+      })),
+      ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
+    },
+  ];
 }
 
 function scoutWorkflowWorkerIngress(): NetworkPolicyIngressRule {
@@ -123,8 +142,15 @@ export function createTemporalChart(app: App) {
   createTemporalPostgreSQLDatabase(chart);
   createTemporalSchemaMigrationJob(chart);
   const dynamicConfigMap = createTemporalDynamicConfig(chart);
-  const server = createTemporalServerDeployment(chart, { dynamicConfigMap });
-  createTemporalUiDeployment(chart, { serverService: server.service });
+  const externalAuthSecret = createTemporalExternalAuthSecret(chart);
+  const server = createTemporalServerDeployment(chart, {
+    dynamicConfigMap,
+    externalAuthSecret,
+  });
+  createTemporalUiDeployment(chart, {
+    serverService: server.service,
+    externalAuthSecret,
+  });
   createTemporalNamespaceInitJob(chart, { serverService: server.service });
 
   createTemporalWorkerDeployment(chart, {
@@ -142,7 +168,7 @@ export function createTemporalChart(app: App) {
       policyTypes: ["Ingress", "Egress"],
       ingress: [
         {
-          // Allow gRPC from Tailscale (external clients/workers)
+          // Tailscale reaches only the bearer-authenticated gRPC gateway.
           from: [
             {
               namespaceSelector: {
@@ -152,7 +178,12 @@ export function createTemporalChart(app: App) {
               },
             },
           ],
-          ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
+          ports: [
+            {
+              port: IntOrString.fromNumber(TEMPORAL_EXTERNAL_GATEWAY_PORT),
+              protocol: "TCP",
+            },
+          ],
         },
         {
           // Allow gRPC from Temporal UI within namespace
@@ -163,7 +194,12 @@ export function createTemporalChart(app: App) {
               },
             },
           ],
-          ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
+          ports: [
+            {
+              port: IntOrString.fromNumber(7233),
+              protocol: "TCP",
+            },
+          ],
         },
         {
           // Allow gRPC from namespace init job
@@ -243,9 +279,23 @@ export function createTemporalChart(app: App) {
           ],
           ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
         },
+        ...["storm-forum", "storm-forum-beta"].map((namespace) => ({
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": namespace },
+              },
+              podSelector: {
+                matchLabels: { app: "storm-forum", component: "web" },
+              },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
+        })),
         scoutBackendIngress(),
         scoutWorkflowWorkerIngress(),
-        scoutGatewayClientIngress(),
+        ...scoutGatewayClientIngress(),
+        ...scoutActivityWorkerIngress(),
         {
           // Allow Prometheus scraping metrics
           from: [
@@ -261,7 +311,9 @@ export function createTemporalChart(app: App) {
         },
         {
           // Allow blackbox-exporter's in-cluster health probe (gRPC port,
-          // separate from the metrics-scraping rule above)
+          // separate from the metrics-scraping rule above). The probe follows
+          // the Tailscale-facing Service and therefore reaches the
+          // authenticated gateway's target port.
           from: [
             {
               namespaceSelector: {
@@ -271,7 +323,12 @@ export function createTemporalChart(app: App) {
               },
             },
           ],
-          ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
+          ports: [
+            {
+              port: IntOrString.fromNumber(TEMPORAL_EXTERNAL_GATEWAY_PORT),
+              protocol: "TCP",
+            },
+          ],
         },
       ],
       egress: [
@@ -281,7 +338,7 @@ export function createTemporalChart(app: App) {
           to: [
             {
               podSelector: {
-                matchLabels: { cluster_name: "temporal-postgresql" },
+                matchLabels: postgresClusterPodLabels("temporal-postgresql"),
               },
             },
           ],
@@ -371,7 +428,7 @@ export function createTemporalChart(app: App) {
     },
     spec: {
       podSelector: {
-        matchLabels: { cluster_name: "temporal-postgresql" },
+        matchLabels: postgresClusterPodLabels("temporal-postgresql"),
       },
       policyTypes: ["Ingress"],
       ingress: [
@@ -412,7 +469,7 @@ export function createTemporalChart(app: App) {
           to: [
             {
               podSelector: {
-                matchLabels: { cluster_name: "temporal-postgresql" },
+                matchLabels: postgresClusterPodLabels("temporal-postgresql"),
               },
             },
           ],

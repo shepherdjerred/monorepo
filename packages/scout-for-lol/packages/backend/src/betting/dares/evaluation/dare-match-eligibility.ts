@@ -1,10 +1,13 @@
-import { resolveQueueTypeFromGame, type RawMatch } from "@scout-for-lol/data";
+import {
+  resolveQueueTypeFromGame,
+  type DareContract,
+  type RawMatch,
+} from "@scout-for-lol/data";
 import { isRemakeMatch } from "#src/betting/outcome.ts";
-import type { RelationalDareContract } from "#src/betting/dares/dare-v2-common.ts";
 
 export function matchTouchesRelationalDare(
   matchData: RawMatch,
-  contract: RelationalDareContract,
+  contract: DareContract,
 ): boolean {
   const puuids = new Set(
     matchData.info.participants.map((participant) => participant.puuid),

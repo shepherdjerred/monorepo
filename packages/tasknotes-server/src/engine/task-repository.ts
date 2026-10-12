@@ -213,7 +213,7 @@ export class TaskRepository {
       new Set(this.cache.keys()),
     );
     const now = this.clock();
-    const { details, ...rest } = data;
+    const { details = "", ...rest } = data;
     const fields = scrubUndefined(rest);
     const task: Partial<TaskInfo> = {
       status: this.config.defaults.status,
@@ -222,7 +222,7 @@ export class TaskRepository {
       dateCreated: now.toISOString(),
       dateModified: now.toISOString(),
     };
-    const markdown = serializeTaskDocument(task, details ?? "", {
+    const markdown = serializeTaskDocument(task, details, {
       fieldMapping: this.config.fieldMapping,
       taskTag: this.config.taskIdentification.tag,
       storeTitleInFilename: this.config.storeTitleInFilename,

@@ -1,0 +1,28 @@
+{
+  "remote.SSH.remotePlatform": { "cs6035-binexp": "linux" },
+  "remote.SSH.localServerDownload": "always",
+  "workbench.iconTheme": "catppuccin-mocha",
+  "editor.fontSize": 14,
+  "files.autoSave": "afterDelay",
+  "editor.fontFamily": "Berkeley Mono, Menlo, Monaco, 'Courier New', monospace",
+  "workbench.colorTheme": "Catppuccin Mocha",
+  "window.autoDetectColorScheme": true,
+  "workbench.preferredDarkColorTheme": "Catppuccin Mocha",
+  "workbench.preferredLightColorTheme": "Catppuccin Latte",
+  "github.copilot.enable": {
+    "markdown": true,
+    "python": true
+  },
+  "python.analysis.typeCheckingMode": "standard",
+  "terminal.integrated.defaultProfile.windows": "fish",
+  "terminal.integrated.profiles.windows": {
+    "fish": {
+      "path": "C:\\msys64\\usr\\bin\\fish.exe",
+      "args": ["-l"],
+      "env": {
+        "MSYS2_PATH_TYPE": "inherit",
+        "CHERE_INVOKING": "1"
+      }
+    }
+  }
+}

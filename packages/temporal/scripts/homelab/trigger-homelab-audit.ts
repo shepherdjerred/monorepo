@@ -3,11 +3,14 @@
  * (local dev or production). Used in Layer 5 of the verification ladder, after
  * the prompt is dialed in via Layer 2.
  *
+ * The service-account wrapper reads the Keychain-enrolled 1Password service
+ * account, so homelab-vault references need no desktop approval.
+ *
  * Usage (local dev — temporal server start-dev):
  *   temporal server start-dev --namespace dev --ui-port 8233 &
- *   op run --env-file=.env.audit -- TEMPORAL_ADDRESS=localhost:7233 TEMPORAL_NAMESPACE=dev \
+ *   ../../scripts/onepassword/with-service-account.sh op run --env-file=.env.audit -- env -u OP_SERVICE_ACCOUNT_TOKEN TEMPORAL_ADDRESS=localhost:7233 TEMPORAL_NAMESPACE=dev \
  *     TEMPORAL_WORKER_ROLE=all bun run start &
- *   op run --env-file=.env.audit -- TEMPORAL_ADDRESS=localhost:7233 TEMPORAL_NAMESPACE=dev \
+ *   ../../scripts/onepassword/with-service-account.sh op run --env-file=.env.audit -- env -u OP_SERVICE_ACCOUNT_TOKEN TEMPORAL_ADDRESS=localhost:7233 TEMPORAL_NAMESPACE=dev \
  *     bun run scripts/homelab/trigger-homelab-audit.ts
  *
  * Usage (production — kubectl port-forward):

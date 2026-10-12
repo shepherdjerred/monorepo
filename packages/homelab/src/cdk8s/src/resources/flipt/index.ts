@@ -9,16 +9,20 @@ import {
   EnvValue,
   Probe,
   SeccompProfileType,
+  Secret,
   Service,
   Volume,
 } from "cdk8s-plus-31";
+import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import {
   withCommonProps,
   setRevisionHistoryLimit,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
+import { authenticatedGatewayContainerDefaults } from "@shepherdjerred/homelab/cdk8s/src/misc/authenticated-gateway-container.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
+import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { renderFliptFeatures } from "@shepherdjerred/feature-flags/flipt-features-renderer.ts";
 import {
@@ -27,6 +31,29 @@ import {
 } from "@shepherdjerred/feature-flags/managed-flag-inventory.ts";
 
 export const FLIPT_PORT = 8080;
+const FLIPT_UPSTREAM_PORT = 8081;
+
+function createFliptHealthProbes() {
+  // Kubelet connects to the Pod IP; the private upstream only accepts
+  // loopback. The gateway forwards this health route to that upstream.
+  return {
+    startup: Probe.fromHttpGet("/health", {
+      port: FLIPT_PORT,
+      periodSeconds: Duration.seconds(5),
+      failureThreshold: 18,
+    }),
+    liveness: Probe.fromHttpGet("/health", {
+      port: FLIPT_PORT,
+      periodSeconds: Duration.seconds(30),
+      failureThreshold: 3,
+    }),
+    readiness: Probe.fromHttpGet("/health", {
+      port: FLIPT_PORT,
+      periodSeconds: Duration.seconds(10),
+      failureThreshold: 3,
+    }),
+  };
+}
 
 // The image declares no ENTRYPOINT and `CMD ["/flipt","server"]`, so Kubernetes
 // `args` alone would try to exec the flag as a binary. The full command is
@@ -56,6 +83,12 @@ const FLIPT_SECURITY_CONTEXT = {
 const FLIPT_INIT_RESOURCES = {
   cpu: { request: Cpu.millis(5), limit: Cpu.millis(50) },
   memory: { request: Size.mebibytes(8), limit: Size.mebibytes(32) },
+};
+const FLIPT_SEED_VALIDATION_RESOURCES = {
+  cpu: FLIPT_INIT_RESOURCES.cpu,
+  // The pinned v2.13.0 validator uses about 70MiB RSS for either environment's
+  // current managed catalog. Keep headroom for schema validation and startup.
+  memory: { request: Size.mebibytes(64), limit: Size.mebibytes(128) },
 };
 
 const DATA_PATH = "/var/opt/flipt";
@@ -90,8 +123,8 @@ log:
   level: info
   encoding: json
 server:
-  host: 0.0.0.0
-  http_port: ${FLIPT_PORT.toString()}
+  host: 127.0.0.1
+  http_port: ${FLIPT_UPSTREAM_PORT.toString()}
 storage:
   beta:
     branch: main
@@ -112,7 +145,24 @@ environments:
     default: true
     storage: prod
 authentication:
-  required: false
+  required: true
+  exclude:
+    evaluation: true
+  methods:
+    token:
+      enabled: true
+      storage:
+        type: static
+        tokens:
+          operator:
+            credential: "\${secret:file:operator-token}"
+            metadata:
+              role: operator
+secrets:
+  providers:
+    file:
+      enabled: true
+      base_path: /etc/flipt/secrets
 metrics:
   enabled: true
   exporter: prometheus
@@ -122,6 +172,47 @@ meta:
   check_for_updates: false
   telemetry_enabled: false
   state_directory: ${DATA_PATH}/state
+`;
+
+export const CADDY_CONFIG = `{
+  admin off
+  auto_https off
+}
+
+:${FLIPT_PORT.toString()} {
+  @operator {
+    path /api/v2/*
+    header Authorization "Bearer {$FLIPT_OPERATOR_TOKEN}"
+  }
+  handle @operator {
+    reverse_proxy 127.0.0.1:${FLIPT_UPSTREAM_PORT.toString()} {
+      header_up Authorization "Bearer {$FLIPT_OPERATOR_TOKEN}"
+    }
+  }
+  handle /health {
+    reverse_proxy 127.0.0.1:${FLIPT_UPSTREAM_PORT.toString()}
+  }
+  handle /metrics {
+    reverse_proxy 127.0.0.1:${FLIPT_UPSTREAM_PORT.toString()}
+  }
+  handle /evaluate/* {
+    reverse_proxy 127.0.0.1:${FLIPT_UPSTREAM_PORT.toString()}
+  }
+  handle /internal/v1/evaluation/* {
+    reverse_proxy 127.0.0.1:${FLIPT_UPSTREAM_PORT.toString()}
+  }
+  handle /ofrep/* {
+    reverse_proxy 127.0.0.1:${FLIPT_UPSTREAM_PORT.toString()}
+  }
+  handle {
+    basic_auth {
+      operator {$FLIPT_BASIC_HASH}
+    }
+    reverse_proxy 127.0.0.1:${FLIPT_UPSTREAM_PORT.toString()} {
+      header_up Authorization "Bearer {$FLIPT_OPERATOR_TOKEN}"
+    }
+  }
+}
 `;
 
 export function createSeedValidationScript(
@@ -222,14 +313,29 @@ export function createFliptDeployment(chart: Chart) {
   const config = new ConfigMap(chart, "flipt-config", {
     data: { "config.yml": FLIPT_CONFIG },
   });
+  const gatewayConfig = new ConfigMap(chart, "flipt-gateway-config", {
+    data: { Caddyfile: CADDY_CONFIG },
+  });
   const seed = new ConfigMap(chart, "flipt-seed", {
     data: FLIPT_SEED_DATA,
   });
+  const authItem = new OnePasswordItem(chart, "flipt-auth-onepassword", {
+    metadata: { name: "flipt-auth" },
+    spec: { itemPath: vaultItemPath("3mvuwmlazccxpq7tz7myqigtvq") },
+  });
+  const authSecret = Secret.fromSecretName(
+    chart,
+    "flipt-auth-secret",
+    authItem.name,
+  );
 
+  deployment.podMetadata.addLabel("app", "flipt");
   deployment.podMetadata.addAnnotation(
     "config-hash",
     new Bun.CryptoHasher("sha256")
-      .update(`${FLIPT_CONFIG}\n${JSON.stringify(FLIPT_SEED_DATA)}`)
+      .update(
+        `${FLIPT_CONFIG}\n${CADDY_CONFIG}\n${JSON.stringify(FLIPT_SEED_DATA)}`,
+      )
       .digest("hex")
       .slice(0, 12),
   );
@@ -245,6 +351,22 @@ export function createFliptDeployment(chart: Chart) {
   );
   const scratchVolume = Volume.fromEmptyDir(chart, "flipt-tmp-volume", "tmp");
   const seedVolume = Volume.fromConfigMap(chart, "flipt-seed-volume", seed);
+  const authVolume = Volume.fromSecret(chart, "flipt-auth-volume", authSecret);
+  const gatewayConfigVolume = Volume.fromConfigMap(
+    chart,
+    "flipt-gateway-config-volume",
+    gatewayConfig,
+  );
+  const gatewayDataVolume = Volume.fromEmptyDir(
+    chart,
+    "flipt-gateway-data-volume",
+    "flipt-gateway-data",
+  );
+  const gatewayRuntimeConfigVolume = Volume.fromEmptyDir(
+    chart,
+    "flipt-gateway-runtime-config-volume",
+    "flipt-gateway-runtime-config",
+  );
 
   deployment.addInitContainer(
     withCommonProps({
@@ -252,7 +374,7 @@ export function createFliptDeployment(chart: Chart) {
       image: `flipt/flipt:${versions["flipt-io/flipt"]}`,
       command: ["/bin/sh", "-c"],
       args: [VALIDATE_SEEDS_SCRIPT],
-      resources: FLIPT_INIT_RESOURCES,
+      resources: FLIPT_SEED_VALIDATION_RESOURCES,
       securityContext: FLIPT_SECURITY_CONTEXT,
       volumeMounts: [
         { path: "/etc/flipt-seed", volume: seedVolume, readOnly: true },
@@ -282,27 +404,13 @@ export function createFliptDeployment(chart: Chart) {
       name: "flipt",
       image: `flipt/flipt:${versions["flipt-io/flipt"]}`,
       command: [...FLIPT_COMMAND],
-      ports: [{ name: "http", number: FLIPT_PORT }],
+      ports: [{ name: "upstream", number: FLIPT_UPSTREAM_PORT }],
       resources: {
         cpu: { request: Cpu.millis(25), limit: Cpu.millis(500) },
         memory: { request: Size.mebibytes(128), limit: Size.mebibytes(512) },
       },
       securityContext: FLIPT_SECURITY_CONTEXT,
-      startup: Probe.fromHttpGet("/health", {
-        port: FLIPT_PORT,
-        periodSeconds: Duration.seconds(5),
-        failureThreshold: 18,
-      }),
-      liveness: Probe.fromHttpGet("/health", {
-        port: FLIPT_PORT,
-        periodSeconds: Duration.seconds(30),
-        failureThreshold: 3,
-      }),
-      readiness: Probe.fromHttpGet("/health", {
-        port: FLIPT_PORT,
-        periodSeconds: Duration.seconds(10),
-        failureThreshold: 3,
-      }),
+      ...createFliptHealthProbes(),
       envVariables: {
         // Everything Flipt writes lands under DATA_PATH, but HOME is redirected
         // to the scratch volume so a stray write cannot hit the read-only root.
@@ -318,9 +426,39 @@ export function createFliptDeployment(chart: Chart) {
           volume: Volume.fromConfigMap(chart, "flipt-config-volume", config),
         },
         {
+          path: "/etc/flipt/secrets",
+          volume: authVolume,
+          readOnly: true,
+        },
+        {
           path: "/tmp",
           volume: scratchVolume,
         },
+      ],
+    }),
+  );
+
+  deployment.addContainer(
+    withCommonProps({
+      name: "authenticated-gateway",
+      image: `ghcr.io/shepherdjerred/caddy-s3proxy:${versions["shepherdjerred/caddy-s3proxy"]}`,
+      ports: [{ name: "http", number: FLIPT_PORT }],
+      ...authenticatedGatewayContainerDefaults(),
+      ...createFliptHealthProbes(),
+      envVariables: {
+        FLIPT_BASIC_HASH: EnvValue.fromSecretValue({
+          secret: authSecret,
+          key: "basic-hash",
+        }),
+        FLIPT_OPERATOR_TOKEN: EnvValue.fromSecretValue({
+          secret: authSecret,
+          key: "operator-token",
+        }),
+      },
+      volumeMounts: [
+        { path: "/etc/caddy", volume: gatewayConfigVolume, readOnly: true },
+        { path: "/data", volume: gatewayDataVolume },
+        { path: "/config", volume: gatewayRuntimeConfigVolume },
       ],
     }),
   );

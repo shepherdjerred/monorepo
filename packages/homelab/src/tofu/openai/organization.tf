@@ -175,6 +175,9 @@ resource "openai_project_hosted_tool_permissions" "managed" {
 resource "openai_project_spend_limit" "managed" {
   for_each = var.openai_project_spend_limits
 
+  # OpenAI rejects hard-limit writes while spend alerts are being updated.
+  depends_on = [openai_project_spend_alert.managed]
+
   project_id       = openai_project.managed[each.value.project_key].id
   threshold_amount = each.value.threshold_amount
   currency         = each.value.currency

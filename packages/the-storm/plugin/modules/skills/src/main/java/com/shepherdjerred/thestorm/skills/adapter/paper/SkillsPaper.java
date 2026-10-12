@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.skills.adapter.paper;
 
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.skills.app.SkillLevels;
 import com.shepherdjerred.thestorm.skills.domain.SkillsConfig;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
@@ -10,7 +11,8 @@ public final class SkillsPaper {
   private SkillsPaper() {}
 
   public static void install(ModuleContext context, SkillLevels levels, SkillsConfig config) {
-    var listener = new SkillListener(context, levels, config);
+    var listener =
+        new SkillListener(context, levels, config, context.services().require(SealedWorlds.class));
     context.plugin().getServer().getPluginManager().registerEvents(listener, context.plugin());
     var commands = new SkillsCommands(context, levels, config);
     context

@@ -27,6 +27,7 @@ final class PlayerListener implements Listener {
   private final Snapshots snapshots;
   private final ArenaCommands commands;
   private final ItemGuard items;
+  private final Map<java.util.UUID, java.time.Instant> readyClicks = new java.util.HashMap<>();
 
   PlayerListener(PaperContext context, Arenas arenas, ArenaCommands commands, ItemGuard items) {
     this.context = context;
@@ -42,6 +43,7 @@ final class PlayerListener implements Listener {
    */
   @EventHandler(priority = EventPriority.MONITOR)
   void onJoin(PlayerJoinEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getPlayer())) return;
     var player = event.getPlayer();
     items.sweep(player.getInventory());
     items.sweep(player.getEnderChest());
@@ -52,7 +54,9 @@ final class PlayerListener implements Listener {
 
   @EventHandler(priority = EventPriority.MONITOR)
   void onQuit(PlayerQuitEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getPlayer())) return;
     var id = event.getPlayer().getUniqueId();
+    readyClicks.remove(id);
     arenas.all().stream()
         .filter(runner -> runner.awaitsRespawn(id))
         .forEach(runner -> runner.quitWhileDead(id));
@@ -65,6 +69,7 @@ final class PlayerListener implements Listener {
    */
   @EventHandler(priority = EventPriority.LOWEST)
   void clearDrops(PlayerDeathEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getEntity())) return;
     if (arenas.of(event.getPlayer().getUniqueId()).isPresent()) {
       event.getDrops().clear();
       event.setDroppedExp(0);
@@ -78,6 +83,7 @@ final class PlayerListener implements Listener {
    */
   @EventHandler(priority = EventPriority.HIGHEST)
   void onDeath(PlayerDeathEvent event) {
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getEntity())) return;
     var id = event.getPlayer().getUniqueId();
     var runner = arenas.of(id);
     if (runner.isEmpty()) {
@@ -155,13 +161,15 @@ final class PlayerListener implements Listener {
       member(event, block, home.orElseThrow());
       return;
     }
-    if (event.getAction() == Action.RIGHT_CLICK_BLOCK && !joinSign(event, block)) {
+    if (event.getAction() == Action.RIGHT_CLICK_BLOCK
+        && (event.getHand() != org.bukkit.inventory.EquipmentSlot.HAND
+            || !joinSign(event, block))) {
       outsider(event, block);
     }
   }
 
   /** A member reaches only blocks in their arena: its signs, ready block and loot chests. */
-  private void member(PlayerInteractEvent event, Block block, GameRunner runner) {
+  private void member(PlayerInteractEvent event, Block block, ArenaRunner runner) {
     if (!runner.world().contains(block.getLocation())) {
       event.setCancelled(true);
       return;
@@ -179,12 +187,20 @@ final class PlayerListener implements Listener {
             .findFirst();
     if (kit.isPresent()) {
       event.setUseInteractedBlock(Event.Result.DENY);
-      commands.pickClass(player, kit.orElseThrow());
+      if (event.getHand() == org.bukkit.inventory.EquipmentSlot.HAND) {
+        commands.pickClass(player, kit.orElseThrow());
+      }
     } else if (definition.readyBlock().equals(pos)) {
       event.setUseInteractedBlock(Event.Result.DENY);
-      commands.ready(player);
+      if (event.getHand() != org.bukkit.inventory.EquipmentSlot.HAND) return;
+      var now = context.time().instant();
+      var previous = readyClicks.get(player.getUniqueId());
+      if (previous == null || !now.isBefore(previous.plusMillis(250))) {
+        readyClicks.put(player.getUniqueId(), now);
+        commands.ready(player);
+      }
     } else if (block.getState() instanceof Container
-        && !(definition.lootChests().contains(pos) && runner.isFighter(player.getUniqueId()))) {
+        && !LootAccess.allowed(runner, player.getUniqueId(), block)) {
       event.setUseInteractedBlock(Event.Result.DENY);
     }
   }

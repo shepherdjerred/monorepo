@@ -58,5 +58,5 @@ external or Beta audit must
 provide either one base URL or all three surface URLs, plus dedicated read-only
 Discord credentials. Visual snapshots are updated only
 through an explicit local Playwright update command after review; CI never
-updates them. The reviewed command is `bun x --no-install playwright test
+updates them. The reviewed command is `bun --no-install --bun playwright test
 --update-snapshots` from this package directory.

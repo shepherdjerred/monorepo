@@ -109,6 +109,11 @@ const EXCLUDED_FILES = [
   // git username for the bare blobless clone the ci/merge-conflict checker uses
   // to fetch refs/heads/main + refs/pull/*/head before running merge-tree.
   "packages/temporal/src/activities/maintenance/check-pr-merge-conflicts-git.ts",
+  // Intentional: 1Password op:// vault/item locators in the toolkit credential
+  // broker registry and its tests. Locators name vaults/items; no secret value
+  // appears here (values resolve at runtime via `op read` / Keychain).
+  "packages/toolkit/src/lib/credentials.ts",
+  "packages/toolkit/test/lib/credentials.test.ts",
 ];
 
 type Finding = {

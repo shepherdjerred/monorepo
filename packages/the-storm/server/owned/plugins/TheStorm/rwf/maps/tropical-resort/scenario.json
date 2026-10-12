@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "kind": "rwf-map-scenario",
+  "id": "tropical-resort-trooper-duel-v1",
+  "map": "tropical-resort",
+  "mapSha256": "cfe852902b09f30ae7fa349c41b9c971eae5f3e878f57dce6fb96621799fc144",
+  "world": "minecraft:rwf",
+  "region": {
+    "min": {
+      "x": 3072,
+      "y": 0,
+      "z": 5120
+    },
+    "max": {
+      "x": 3436,
+      "y": 129,
+      "z": 5279
+    }
+  },
+  "sourceTeams": ["RED", "BLUE"],
+  "spawnPolicy": "source",
+  "spawns": [
+    {
+      "team": "red",
+      "sourceTeam": "RED",
+      "position": [3127.5, 107, 5217.5],
+      "yaw": 262.1543273925781,
+      "pitch": 0
+    },
+    {
+      "team": "blue",
+      "sourceTeam": "BLUE",
+      "position": [3372.5, 106, 5175.5],
+      "yaw": 78.27050018310547,
+      "pitch": 0
+    }
+  ]
+}

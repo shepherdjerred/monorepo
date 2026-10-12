@@ -77,13 +77,6 @@ export const ServerMessage = z.discriminatedUnion("type", [
 ]);
 
 export type ServerMessage = z.infer<typeof ServerMessage>;
-
-export type StateChangedEvent = {
-  entity_id: string;
-  new_state: unknown;
-  old_state: unknown;
-};
-
 export const EntityRegistryEntry = z
   .object({
     entity_id: z.string().min(1),

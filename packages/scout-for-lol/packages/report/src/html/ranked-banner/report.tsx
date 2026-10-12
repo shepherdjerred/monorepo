@@ -134,6 +134,7 @@ export function RankedBannerReport({ match }: { match: CompletedMatch }) {
       {/* Content */}
       <div
         style={{
+          boxSizing: "border-box",
           position: "relative",
           display: "flex",
           flexDirection: "column",

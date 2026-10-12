@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.tracks.adapter.paper;
 
+import com.shepherdjerred.thestorm.core.compute.DirectComputePool;
 import com.shepherdjerred.thestorm.core.config.ConfigFiles;
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
@@ -65,12 +66,14 @@ public class TracksTestPlugin extends JavaPlugin {
             this,
             getLifecycleManager(),
             scheduler,
+            new DirectComputePool(),
             database,
             services,
             directory,
             InstantSource.system(),
             RandomGenerator.getDefault(),
-            getComponentLogger());
+            getComponentLogger(),
+            com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled());
     var store = new JooqTrackStore(database);
     var sync = new FakePermissionSync(store);
     permissions = sync;

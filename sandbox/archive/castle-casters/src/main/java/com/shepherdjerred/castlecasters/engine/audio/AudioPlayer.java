@@ -24,9 +24,11 @@ public class AudioPlayer {
   public void initialize() {
     String defaultDeviceName = alcGetString(0, ALC_DEFAULT_DEVICE_SPECIFIER);
     device = alcOpenDevice(defaultDeviceName);
+    if(device==0)throw new IllegalStateException("Cannot open the audio device");
 
     int[] attributes = {0};
     context = alcCreateContext(device, attributes);
+    if(context==0)throw new IllegalStateException("Cannot create the audio context");
     alcMakeContextCurrent(context);
 
     ALCCapabilities alcCapabilities = ALC.createCapabilities(device);
@@ -56,7 +58,7 @@ public class AudioPlayer {
   }
 
   public void cleanup() {
-    alcDestroyContext(context);
-    alcCloseDevice(device);
+    if(context!=0){alcMakeContextCurrent(0);alcDestroyContext(context);context=0;}
+    if(device!=0){alcCloseDevice(device);device=0;}
   }
 }

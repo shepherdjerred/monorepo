@@ -5,7 +5,47 @@ import {
   KubeClusterRoleBinding,
   KubeRole,
   KubeRoleBinding,
+  KubeConfigMap,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+
+/** Only the deterministic infra worker can publish this non-secret observation. */
+export function createVeleroR2AuditState(
+  chart: Chart,
+  serviceAccount: ServiceAccount,
+): void {
+  const name = "velero-r2-orphan-audit-state";
+  new KubeConfigMap(chart, name, {
+    metadata: {
+      name,
+      namespace: "temporal",
+      annotations: {
+        "argocd.argoproj.io/sync-options": "ServerSideApply=true",
+      },
+    },
+  });
+  new KubeRole(chart, `${name}-writer`, {
+    metadata: { name, namespace: "temporal" },
+    rules: [
+      {
+        apiGroups: [""],
+        resources: ["configmaps"],
+        resourceNames: [name],
+        verbs: ["get", "update"],
+      },
+    ],
+  });
+  new KubeRoleBinding(chart, `${name}-binding`, {
+    metadata: { name, namespace: "temporal" },
+    roleRef: { apiGroup: "rbac.authorization.k8s.io", kind: "Role", name },
+    subjects: [
+      {
+        kind: "ServiceAccount",
+        name: serviceAccount.name,
+        namespace: "temporal",
+      },
+    ],
+  });
+}
 
 /**
  * Cluster-wide read-only RBAC for the homelab-audit-daily workflow.

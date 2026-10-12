@@ -3,10 +3,17 @@
  * Configure test environment and global setup here
  */
 import { tmpdir } from "node:os";
+import path from "node:path";
 
 // Set test environment variables
 Bun.env.NODE_ENV = "test";
 Bun.env["TEMPORAL_NAMESPACE"] = "dev";
+
+// Hosted stages refuse to boot without a runtime role, and many suites switch
+// ENVIRONMENT to beta or prod to exercise stage-specific behaviour. The web
+// surface they exercise is the application role's. A suite that needs the
+// development default (`combined`) deletes this explicitly.
+Bun.env["SCOUT_RUNTIME_ROLE"] = Bun.env["SCOUT_RUNTIME_ROLE"] ?? "application";
 
 // Set S3_BUCKET_NAME for tests that require it
 // This must be set before the configuration module is imported
@@ -46,7 +53,12 @@ Bun.env["DATABASE_URL"] =
 // where importing the harness would require a running Postgres for pure
 // script tests and drag @scout-for-lol/data into their coverage denominator
 // (the package coverage gate measures every loaded file).
-if (process.cwd() === import.meta.dir) {
+//
+// Compared with `path.relative`, not `===`: on Windows `process.cwd()` is
+// backslashed while vitest hands this module a forward-slashed
+// `import.meta.dir`, so string equality never held there and every
+// database-backed backend test failed before running.
+if (path.relative(process.cwd(), import.meta.dir) === "") {
   const { ensureTestTemplate, sweepStaleTestDatabases } =
     await import("./src/testing/test-template.ts");
   sweepStaleTestDatabases();

@@ -51,10 +51,12 @@ export async function scanRoot(
     if (!allowed.has(extension)) {
       continue;
     }
-    const title = normalizeTitle(
-      path.basename(relative, path.extname(relative)),
+    const filename = path.basename(relative, path.extname(relative));
+    const title = normalizeTitle(filename);
+    // Title cleanup removes release suffixes, including episodes following a show year.
+    const episode = /\bS(?<season>\d{1,2})E(?<episode>\d{1,3})\b/iu.exec(
+      filename.replaceAll("_", " "),
     );
-    const episode = /\bS(?<season>\d{1,2})E(?<episode>\d{1,3})\b/iu.exec(title);
     const year = /(?:^|\D)(?<year>(?:19|20)\d{2})(?:\D|$)/u.exec(title);
     const relativeParts = relative.split(path.sep);
     entries.push({

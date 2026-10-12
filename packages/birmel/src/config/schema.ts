@@ -110,7 +110,8 @@ export const SentryConfigSchema = z.object({
   release: z.string().optional(),
   sampleRate: z.number().min(0).max(1).default(1),
   // Bugsink does not support performance monitoring; keep traces off.
-  tracesSampleRate: z.number().min(0).max(1).default(0),
+  // Bugsink accepts errors only; OpenTelemetry owns performance traces.
+  tracesSampleRate: z.literal(0).default(0),
   // When true, the SDK prints its internal transport/queue activity to stderr
   // and our `beforeSend` hook still emits a log line per captured event. Use
   // when triaging "events sent but not visible in Bugsink" issues.
@@ -199,14 +200,9 @@ export const HealthConfigSchema = z.object({
   port: z.number().int().min(1).max(65_535).default(8080),
 });
 
-export const ImageGenerationConfigSchema = z.object({
-  enabled: z.boolean().default(false),
-});
-
 export const ConfigSchema = z.object({
   discord: DiscordConfigSchema,
   llm: LlmConfigSchema,
-  imageGeneration: ImageGenerationConfigSchema,
   agent: AgentConfigSchema,
   authority: AuthorityConfigSchema,
   telemetry: TelemetryConfigSchema,
@@ -227,7 +223,6 @@ export const ConfigSchema = z.object({
 export type Config = z.infer<typeof ConfigSchema>;
 export type DiscordConfig = z.infer<typeof DiscordConfigSchema>;
 export type LlmConfig = z.infer<typeof LlmConfigSchema>;
-export type ImageGenerationConfig = z.infer<typeof ImageGenerationConfigSchema>;
 export type AgentConfig = z.infer<typeof AgentConfigSchema>;
 export type AuthorityConfig = z.infer<typeof AuthorityConfigSchema>;
 export type TelemetryConfig = z.infer<typeof TelemetryConfigSchema>;

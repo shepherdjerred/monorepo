@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { R2Object } from "./r2-prefix-inventory.ts";
+import { restoreProtectedBackupNames } from "./r2/restore-protection.ts";
 
 export const R2_ORPHAN_MINIMUM_AGE_HOURS = 24;
 export const R2_ZFS_PREFIX = "zfspv-incr/backups/";
@@ -16,10 +17,18 @@ const CandidateSchema = z.object({
   bytes: z.number().int().nonnegative(),
   objects: z.number().int().positive(),
   newest: z.iso.datetime(),
+  objectInventory: z.array(
+    z.object({
+      key: z.string(),
+      size: z.number().int().nonnegative(),
+      lastModified: z.string(),
+      etag: z.string().nullable(),
+    }),
+  ),
 });
 
 export const R2OrphanManifestSchema = z.object({
-  contractVersion: z.literal(2),
+  contractVersion: z.literal(4),
   observedAt: z.iso.datetime(),
   minimumAgeHours: z.literal(R2_ORPHAN_MINIMUM_AGE_HOURS),
   storage: z.object({
@@ -29,6 +38,8 @@ export const R2OrphanManifestSchema = z.object({
   heldBackupNames: z.array(z.string().min(1)),
   onlyBackupName: z.string().min(1).nullable(),
   protectedBackupNames: z.array(z.string().min(1)),
+  incompleteChainRoots: z.array(z.string()),
+  restoreProtectedBackupNames: z.array(z.string().min(1)),
   candidates: z.array(CandidateSchema),
 });
 
@@ -66,8 +77,13 @@ export function buildR2OrphanManifest(input: {
   zfsObjects: readonly R2Object[];
   liveBackupNames: readonly string[];
   metadataBackupNames: readonly string[];
+  zfsBackupNames: readonly string[];
   heldBackupNames?: readonly string[];
   onlyBackupName?: string;
+  chainProtection: {
+    protectedBackupNames: readonly string[];
+    incompleteRoots: readonly string[];
+  };
 }): R2OrphanManifest {
   const observedAt = Date.parse(input.observedAt);
   if (!Number.isFinite(observedAt)) {
@@ -124,12 +140,22 @@ export function buildR2OrphanManifest(input: {
       `Selected R2 backup prefix is missing: ${input.onlyBackupName}; refusing to continue`,
     );
   }
-  const protectedBackupNames = [
+  const directProtectedNames = [
     ...new Set([
       ...input.liveBackupNames,
       ...input.metadataBackupNames,
+      ...input.zfsBackupNames,
       ...heldBackupNames,
+      ...input.chainProtection.protectedBackupNames,
     ]),
+  ].toSorted();
+  const restoreProtectedNames = restoreProtectedBackupNames({
+    objectKeys: input.zfsObjects.map((object) => object.key),
+    protectedBackupNames: directProtectedNames,
+    zfsPrefix: R2_ZFS_PREFIX,
+  });
+  const protectedBackupNames = [
+    ...new Set([...directProtectedNames, ...restoreProtectedNames]),
   ].toSorted();
   const protectedSet = new Set(protectedBackupNames);
   const cutoff = observedAt - R2_ORPHAN_MINIMUM_AGE_HOURS * 3_600_000;
@@ -144,6 +170,12 @@ export function buildR2OrphanManifest(input: {
     .map((group) => ({
       prefix: `${R2_ZFS_PREFIX}${group.backupName}/`,
       ...group,
+      objectInventory: input.zfsObjects
+        .filter((object) =>
+          object.key.startsWith(`${R2_ZFS_PREFIX}${group.backupName}/`),
+        )
+        .map((object) => ({ ...object, etag: object.etag ?? null }))
+        .toSorted((a, b) => a.key.localeCompare(b.key)),
     }))
     .toSorted((left, right) => left.prefix.localeCompare(right.prefix));
   if (
@@ -158,13 +190,15 @@ export function buildR2OrphanManifest(input: {
   }
 
   return R2OrphanManifestSchema.parse({
-    contractVersion: 2,
+    contractVersion: 4,
     observedAt: new Date(observedAt).toISOString(),
     minimumAgeHours: R2_ORPHAN_MINIMUM_AGE_HOURS,
     storage: input.storage,
     heldBackupNames,
     onlyBackupName: input.onlyBackupName ?? null,
     protectedBackupNames,
+    incompleteChainRoots: input.chainProtection.incompleteRoots,
+    restoreProtectedBackupNames: restoreProtectedNames,
     candidates,
   });
 }
@@ -173,6 +207,14 @@ export function assertManifestRevalidated(
   approved: R2OrphanManifest,
   current: R2OrphanManifest,
 ): void {
+  if (
+    approved.incompleteChainRoots.length > 0 ||
+    current.incompleteChainRoots.length > 0
+  ) {
+    throw new Error(
+      "R2 cleanup blocked: retained ZFS backup chains are incomplete; prove recovery and retire affected recovery points before deletion",
+    );
+  }
   if (JSON.stringify(approved) !== JSON.stringify(current)) {
     throw new Error(
       "R2 cleanup manifest no longer matches current Velero and object state; run inspect again",

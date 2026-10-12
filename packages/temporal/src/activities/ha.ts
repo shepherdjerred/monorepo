@@ -10,6 +10,10 @@ import {
   HA_ENTITY_NOT_FOUND_ERROR_TYPE,
   HA_OPTIONAL_MEDIA_PLAYER_ERROR_TYPE,
 } from "#shared/infra/ha-errors.ts";
+import {
+  classifyVacuumStartEvidence,
+  type VacuumStartEvidence,
+} from "#shared/infra/vacuum-evidence.ts";
 
 // Activity signatures stay monomorphic (Temporal's proxyActivities rejects
 // generic methods), so the runtime client is the loose default. Compile-time
@@ -66,6 +70,38 @@ function isOptionalMediaPlayerUnavailable(
 export type HaActivities = typeof haActivities;
 
 export const haActivities = {
+  async getVacuumStartEvidence(
+    entityId: string,
+    requestedAt: string,
+  ): Promise<VacuumStartEvidence> {
+    const start = new Date(requestedAt);
+    const end = new Date();
+    if (
+      !entityId.startsWith("vacuum.") ||
+      !Number.isFinite(start.getTime()) ||
+      start > end ||
+      end.getTime() - start.getTime() > 15 * 60 * 1000
+    ) {
+      throw ApplicationFailure.nonRetryable(
+        "Invalid vacuum evidence window",
+        "VacuumEvidenceWindowError",
+      );
+    }
+    const client = getClient();
+    const [current, history, logbook] = await Promise.all([
+      client.getState(entityId),
+      client.getHistory([entityId], {
+        start,
+        end,
+        significantChangesOnly: true,
+      }),
+      client.getLogbook(entityId, start, end),
+    ]);
+    return classifyVacuumStartEvidence(entityId, requestedAt, current, {
+      history,
+      logbook,
+    });
+  },
   async getEntityState(entityId: string): Promise<EntityState> {
     try {
       return await getClient().getState(entityId);
@@ -128,6 +164,34 @@ export const haActivities = {
   async sendNotification(title: string, message: string): Promise<void> {
     await getClient().callService("notify", "notify", { title, message });
     console.warn(`Sent notification: ${title}`);
+  },
+
+  async setPetCareNotification(input: {
+    entityId: string;
+    title: string;
+    message: string;
+    active: boolean;
+    sendPush: boolean;
+  }): Promise<void> {
+    if (!input.active) {
+      await getClient().callService("persistent_notification", "dismiss", {
+        notification_id: input.entityId,
+      });
+      return;
+    }
+
+    await getClient().callService("persistent_notification", "create", {
+      notification_id: input.entityId,
+      title: input.title,
+      message: input.message,
+    });
+    if (input.sendPush) {
+      await getClient().callService("notify", "mobile_app_jerreds_iphone", {
+        title: input.title,
+        message: input.message,
+        data: { tag: input.entityId },
+      });
+    }
   },
 
   async getEntitiesInDomain(domain: string): Promise<EntityState[]> {

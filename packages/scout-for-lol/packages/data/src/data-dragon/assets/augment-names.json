@@ -1,0 +1,2221 @@
+{
+  "sourceVersions": ["16.19"],
+  "augments": {
+    "1": {
+      "apiName": "AcceleratingSorcery",
+      "name": "Accelerating Sorcery"
+    },
+    "2": {
+      "apiName": "ApexInventor",
+      "name": "Apex Inventor"
+    },
+    "3": {
+      "apiName": "NullAugment",
+      "name": "Null Augment"
+    },
+    "4": {
+      "apiName": "BacktoBasics",
+      "name": "Back To Basics"
+    },
+    "5": {
+      "apiName": "BannerofCommand",
+      "name": "Banner of Command"
+    },
+    "6": {
+      "apiName": "BladeWaltz",
+      "name": "Blade Waltz"
+    },
+    "7": {
+      "apiName": "BluntForce",
+      "name": "Blunt Force"
+    },
+    "8": {
+      "apiName": "BuckleUp",
+      "name": "Buckle Up"
+    },
+    "9": {
+      "apiName": "BuffBuddies",
+      "name": "Buff Buddies"
+    },
+    "10": {
+      "apiName": "CannonFodder",
+      "name": "Cannon Fodder"
+    },
+    "11": {
+      "apiName": "CantTouchThis",
+      "name": "Can't Touch This"
+    },
+    "12": {
+      "apiName": "Castle",
+      "name": "Castle"
+    },
+    "13": {
+      "apiName": "CelestialBody",
+      "name": "Celestial Body"
+    },
+    "14": {
+      "apiName": "Chauffeur",
+      "name": "Chauffeur"
+    },
+    "15": {
+      "apiName": "CircleofDeath",
+      "name": "Circle of Death"
+    },
+    "16": {
+      "apiName": "ComboMaster",
+      "name": "Combo Master"
+    },
+    "17": {
+      "apiName": "ContractKiller",
+      "name": "Contract Killer"
+    },
+    "18": {
+      "apiName": "CourageoftheColossus",
+      "name": "Courage of the Colossus"
+    },
+    "19": {
+      "apiName": "Dashing",
+      "name": "Dashing"
+    },
+    "20": {
+      "apiName": "DawnbringersResolve",
+      "name": "Dawnbringer's Resolve"
+    },
+    "21": {
+      "apiName": "DefensiveManeuvers",
+      "name": "Defensive Maneuvers"
+    },
+    "22": {
+      "apiName": "Deft",
+      "name": "Deft"
+    },
+    "23": {
+      "apiName": "DemonsDance",
+      "name": "Demon's Dance"
+    },
+    "24": {
+      "apiName": "DieAnotherDay",
+      "name": "Die Another Day"
+    },
+    "25": {
+      "apiName": "DiveBomber",
+      "name": "Dive Bomber"
+    },
+    "26": {
+      "apiName": "DontBlink",
+      "name": "Don't Blink"
+    },
+    "27": {
+      "apiName": "Earthwake",
+      "name": "Earthwake"
+    },
+    "28": {
+      "apiName": "Erosion",
+      "name": "Erosion"
+    },
+    "29": {
+      "apiName": "EtherealWeapon",
+      "name": "Ethereal Weapon"
+    },
+    "30": {
+      "apiName": "Eureka",
+      "name": "Eureka"
+    },
+    "31": {
+      "apiName": "Evocation",
+      "name": "Evocation"
+    },
+    "32": {
+      "apiName": "Executioner",
+      "name": "Executioner"
+    },
+    "33": {
+      "apiName": "ExtendoArm",
+      "name": "Extendo-Arm"
+    },
+    "34": {
+      "apiName": "FallenAegis",
+      "name": "Fallen Aegis"
+    },
+    "35": {
+      "apiName": "FeeltheBurn",
+      "name": "Feel the Burn"
+    },
+    "36": {
+      "apiName": "Firebrand",
+      "name": "Firebrand"
+    },
+    "37": {
+      "apiName": "FirstAidKit",
+      "name": "First-Aid Kit"
+    },
+    "38": {
+      "apiName": "FromBeginningToEnd",
+      "name": "From Beginning to End"
+    },
+    "39": {
+      "apiName": "FrostWraith",
+      "name": "Frost Wraith"
+    },
+    "40": {
+      "apiName": "FrozenFoundations",
+      "name": "Frozen Foundations"
+    },
+    "41": {
+      "apiName": "Goliath",
+      "name": "Goliath"
+    },
+    "42": {
+      "apiName": "GuiltyPleasure",
+      "name": "Guilty Pleasure"
+    },
+    "43": {
+      "apiName": "NowYouSeeMe",
+      "name": "Now You See Me"
+    },
+    "44": {
+      "apiName": "IceCold",
+      "name": "Ice Cold"
+    },
+    "45": {
+      "apiName": "InfernalConduit",
+      "name": "Infernal Conduit"
+    },
+    "46": {
+      "apiName": "InfernalSoul",
+      "name": "Infernal Soul"
+    },
+    "47": {
+      "apiName": "ItsCritical",
+      "name": "It's Critical"
+    },
+    "48": {
+      "apiName": "JeweledGauntlet",
+      "name": "Jeweled Gauntlet"
+    },
+    "49": {
+      "apiName": "JuiceBox",
+      "name": "Juice Box"
+    },
+    "50": {
+      "apiName": "KeystoneConjurer",
+      "name": "Keystone Conjurer"
+    },
+    "51": {
+      "apiName": "LightemUp",
+      "name": "Light 'em Up!"
+    },
+    "52": {
+      "apiName": "LightningStrikes",
+      "name": "Lightning Strikes"
+    },
+    "53": {
+      "apiName": "MadScientist",
+      "name": "Mad Scientist"
+    },
+    "54": {
+      "apiName": "MasterofDuality",
+      "name": "Master of Duality"
+    },
+    "55": {
+      "apiName": "MidnightExpress",
+      "name": "Midnight Express"
+    },
+    "56": {
+      "apiName": "MindtoMatter",
+      "name": "Mind to Matter"
+    },
+    "57": {
+      "apiName": "MountainSoul",
+      "name": "Mountain Soul"
+    },
+    "58": {
+      "apiName": "MysticPunch",
+      "name": "Mystic Punch"
+    },
+    "59": {
+      "apiName": "Mythical",
+      "name": "Mythical"
+    },
+    "60": {
+      "apiName": "OceanSoul",
+      "name": "Ocean Soul"
+    },
+    "61": {
+      "apiName": "OkBoomerang",
+      "name": "OK Boomerang"
+    },
+    "62": {
+      "apiName": "OmniSoul",
+      "name": "Omni Soul"
+    },
+    "63": {
+      "apiName": "OutlawsGrit",
+      "name": "Outlaw's Grit"
+    },
+    "64": {
+      "apiName": "Perseverance",
+      "name": "Perseverance"
+    },
+    "65": {
+      "apiName": "PhenomenalEvil",
+      "name": "Phenomenal Evil"
+    },
+    "66": {
+      "apiName": "QuantumComputing",
+      "name": "Quantum Computing"
+    },
+    "67": {
+      "apiName": "RabbleRousing",
+      "name": "Rabble Rousing"
+    },
+    "68": {
+      "apiName": "Recursion",
+      "name": "Recursion"
+    },
+    "69": {
+      "apiName": "Repulsor",
+      "name": "Repulsor"
+    },
+    "70": {
+      "apiName": "RestlessRestoration",
+      "name": "Restless Restoration"
+    },
+    "71": {
+      "apiName": "ScopierWeapons",
+      "name": "Scopier Weapons"
+    },
+    "72": {
+      "apiName": "SearingDawn",
+      "name": "Searing Dawn"
+    },
+    "73": {
+      "apiName": "ShadowRunner",
+      "name": "Shadow Runner"
+    },
+    "74": {
+      "apiName": "ShrinkRay",
+      "name": "Shrink Ray"
+    },
+    "75": {
+      "apiName": "SlowCooker",
+      "name": "Slow Cooker"
+    },
+    "76": {
+      "apiName": "SonicBoom",
+      "name": "Sonic Boom"
+    },
+    "77": {
+      "apiName": "SoulSiphon",
+      "name": "Soul Siphon"
+    },
+    "78": {
+      "apiName": "SpiritLink",
+      "name": "Spirit Link"
+    },
+    "79": {
+      "apiName": "SymphonyofWar",
+      "name": "Symphony of War"
+    },
+    "80": {
+      "apiName": "TankItOrLeaveIt",
+      "name": "Tank It Or Leave It"
+    },
+    "81": {
+      "apiName": "TapDancer",
+      "name": "Tap Dancer"
+    },
+    "82": {
+      "apiName": "TheBrutalizer",
+      "name": "The Brutalizer"
+    },
+    "83": {
+      "apiName": "ThiefsGloves",
+      "name": "Thief's Gloves"
+    },
+    "84": {
+      "apiName": "ThreadtheNeedle",
+      "name": "Thread the Needle"
+    },
+    "85": {
+      "apiName": "Tormentor",
+      "name": "Tormentor"
+    },
+    "86": {
+      "apiName": "TrueshotProdigy",
+      "name": "Trueshot Prodigy"
+    },
+    "87": {
+      "apiName": "Typhoon",
+      "name": "Typhoon"
+    },
+    "88": {
+      "apiName": "UltimateRevolution",
+      "name": "Ultimate Revolution"
+    },
+    "89": {
+      "apiName": "Vanish",
+      "name": "Vanish"
+    },
+    "90": {
+      "apiName": "Vengeance",
+      "name": "Vengeance"
+    },
+    "91": {
+      "apiName": "VirtuousCycle",
+      "name": "Virtuous Cycle"
+    },
+    "92": {
+      "apiName": "Vulnerability",
+      "name": "Vulnerability"
+    },
+    "93": {
+      "apiName": "WarmupRoutine",
+      "name": "Warmup Routine"
+    },
+    "94": {
+      "apiName": "WillingSacrifice",
+      "name": "Willing Sacrifice"
+    },
+    "95": {
+      "apiName": "WindspeakersBlessing",
+      "name": "Windspeaker's Blessing"
+    },
+    "96": {
+      "apiName": "WisdomofAges",
+      "name": "Wisdom of Ages"
+    },
+    "97": {
+      "apiName": "WitchfulThinking",
+      "name": "Witchful Thinking"
+    },
+    "98": {
+      "apiName": "WithHaste",
+      "name": "With Haste"
+    },
+    "99": {
+      "apiName": "ZhonyasEpiphany",
+      "name": "Zhonya's Epiphany"
+    },
+    "102": {
+      "apiName": "DontChase",
+      "name": "Don't Chase"
+    },
+    "103": {
+      "apiName": "BreadAndButter",
+      "name": "Bread And Butter"
+    },
+    "104": {
+      "apiName": "Minionmancer",
+      "name": "Minionmancer"
+    },
+    "105": {
+      "apiName": "Homeguard",
+      "name": "Homeguard"
+    },
+    "107": {
+      "apiName": "TwiceThrice",
+      "name": "Twice Thrice"
+    },
+    "108": {
+      "apiName": "SelfDestruct",
+      "name": "Self Destruct"
+    },
+    "109": {
+      "apiName": "Oathsworn",
+      "name": "Oathsworn"
+    },
+    "110": {
+      "apiName": "Clothesline",
+      "name": "Clothesline"
+    },
+    "112": {
+      "apiName": "UltimateUnstoppable",
+      "name": "Ultimate Unstoppable"
+    },
+    "113": {
+      "apiName": "SkilledSniper",
+      "name": "Skilled Sniper"
+    },
+    "115": {
+      "apiName": "ScopiestWeapons",
+      "name": "Scopiest Weapons"
+    },
+    "116": {
+      "apiName": "Flashy",
+      "name": "Flashy"
+    },
+    "118": {
+      "apiName": "CriticalHealing",
+      "name": "Critical Healing"
+    },
+    "120": {
+      "apiName": "ServeBeyondDeath",
+      "name": "Serve Beyond Death"
+    },
+    "123": {
+      "apiName": "SummonersRoulette",
+      "name": "Summoner's Roulette"
+    },
+    "125": {
+      "apiName": "RaidBoss",
+      "name": "Raid Boss"
+    },
+    "129": {
+      "apiName": "Marksmage",
+      "name": "Marksmage"
+    },
+    "133": {
+      "apiName": "MagicMissile",
+      "name": "Magic Missile"
+    },
+    "134": {
+      "apiName": "DrawYourSword",
+      "name": "Draw Your Sword"
+    },
+    "135": {
+      "apiName": "Spellwake",
+      "name": "Spellwake"
+    },
+    "136": {
+      "apiName": "SlapAround",
+      "name": "Slap Around"
+    },
+    "138": {
+      "apiName": "Goredrink",
+      "name": "Goredrink"
+    },
+    "141": {
+      "apiName": "AllForYou",
+      "name": "All For You"
+    },
+    "149": {
+      "apiName": "Impassable",
+      "name": "Impassable"
+    },
+    "150": {
+      "apiName": "BreadAndJam",
+      "name": "Bread And Jam"
+    },
+    "151": {
+      "apiName": "BreadAndCheese",
+      "name": "Bread And Cheese"
+    },
+    "152": {
+      "apiName": "Quest_SteelYourHeart",
+      "name": "Quest: Steel Your Heart"
+    },
+    "154": {
+      "apiName": "Quest_UrfsChampion",
+      "name": "Quest: Urf's Champion"
+    },
+    "156": {
+      "apiName": "Quest_WoogletsWitchcap",
+      "name": "Quest: Wooglet's Witchcap"
+    },
+    "165": {
+      "apiName": "Restart",
+      "name": "Restart"
+    },
+    "166": {
+      "apiName": "ChainLightning",
+      "name": "Chain Lightning"
+    },
+    "170": {
+      "apiName": "ScopedWeapons",
+      "name": "Scoped Weapons"
+    },
+    "171": {
+      "apiName": "Dematerialize",
+      "name": "Dematerialize"
+    },
+    "172": {
+      "apiName": "MirrorImage",
+      "name": "Mirror Image"
+    },
+    "174": {
+      "apiName": "LaserEyes",
+      "name": "Laser Eyes"
+    },
+    "175": {
+      "apiName": "ParasiticRelationship",
+      "name": "Parasitic Relationship"
+    },
+    "176": {
+      "apiName": "SnowballFight",
+      "name": "Snowball Fight!"
+    },
+    "177": {
+      "apiName": "NestingDoll",
+      "name": "Nesting Doll"
+    },
+    "180": {
+      "apiName": "BigBrain",
+      "name": "Big Brain"
+    },
+    "181": {
+      "apiName": "HeavyHitter",
+      "name": "Heavy Hitter"
+    },
+    "187": {
+      "apiName": "Flashbang",
+      "name": "Flashbang"
+    },
+    "192": {
+      "apiName": "Quest_AngelofRetribution",
+      "name": "Quest: Angel of Retribution"
+    },
+    "193": {
+      "apiName": "CenterOfTheUniverse",
+      "name": "Center of the Universe"
+    },
+    "194": {
+      "apiName": "FeyMagic",
+      "name": "Fey Magic"
+    },
+    "195": {
+      "apiName": "GiantSlayer",
+      "name": "Giant Slayer"
+    },
+    "198": {
+      "apiName": "HolyFire",
+      "name": "Holy Fire"
+    },
+    "200": {
+      "apiName": "BloodBrother",
+      "name": "Blood Brother"
+    },
+    "204": {
+      "apiName": "StackosaurusRex",
+      "name": "Stackosaurus Rex"
+    },
+    "205": {
+      "apiName": "ADAPt",
+      "name": "ADAPt"
+    },
+    "206": {
+      "apiName": "escAPADe",
+      "name": "escAPADe"
+    },
+    "207": {
+      "apiName": "HoldVeryStill",
+      "name": "Hold Very Still"
+    },
+    "208": {
+      "apiName": "OrbitalLaser",
+      "name": "Orbital Laser"
+    },
+    "211": {
+      "apiName": "ItsKillingTime",
+      "name": "It's Killing Time"
+    },
+    "213": {
+      "apiName": "FullyAutomated",
+      "name": "Fully Automated"
+    },
+    "214": {
+      "apiName": "SpinToWin",
+      "name": "Spin To Win"
+    },
+    "215": {
+      "apiName": "DarkBlessing",
+      "name": "Dark Blessing"
+    },
+    "216": {
+      "apiName": "Dreadbringer",
+      "name": "Dreadbringer"
+    },
+    "217": {
+      "apiName": "Deathtouch",
+      "name": "Deathtouch"
+    },
+    "218": {
+      "apiName": "Desecrator",
+      "name": "Desecrator"
+    },
+    "219": {
+      "apiName": "Doomsayer",
+      "name": "Doomsayer"
+    },
+    "220": {
+      "apiName": "FanTheHammer",
+      "name": "Fan the Hammer"
+    },
+    "221": {
+      "apiName": "Trailblazer",
+      "name": "Trailblazer"
+    },
+    "222": {
+      "apiName": "FruitsOfYourLabor",
+      "name": "Fruits of Your Labor"
+    },
+    "223": {
+      "apiName": "SummonerRevolution",
+      "name": "Summoner Revolution"
+    },
+    "224": {
+      "apiName": "PrismaticEgg",
+      "name": "Prismatic Egg"
+    },
+    "225": {
+      "apiName": "DualWield",
+      "name": "Dual Wield"
+    },
+    "226": {
+      "apiName": "Stats",
+      "name": "Stats!"
+    },
+    "227": {
+      "apiName": "StatsOnStats",
+      "name": "Stats on Stats!"
+    },
+    "228": {
+      "apiName": "StatsOnStatsOnStats",
+      "name": "Stats on Stats on Stats!"
+    },
+    "229": {
+      "apiName": "FireSale",
+      "name": "Fire Sale"
+    },
+    "230": {
+      "apiName": "BulletHeaven",
+      "name": "Bullet Heaven"
+    },
+    "231": {
+      "apiName": "LightWarden",
+      "name": "Light Warden"
+    },
+    "232": {
+      "apiName": "SlimeTime",
+      "name": "Slime Time"
+    },
+    "233": {
+      "apiName": "UltimateRoulette",
+      "name": "Ultimate Roulette"
+    },
+    "234": {
+      "apiName": "GambaAnvil",
+      "name": "Gamba Anvil"
+    },
+    "236": {
+      "apiName": "TricksterDemon",
+      "name": "Trickster Demon"
+    },
+    "237": {
+      "apiName": "TransmuteGold",
+      "name": "Transmute: Gold"
+    },
+    "238": {
+      "apiName": "TransmutePrismatic",
+      "name": "Transmute: Prismatic"
+    },
+    "239": {
+      "apiName": "SymbioticMutation",
+      "name": "Symbiotic Mutation"
+    },
+    "240": {
+      "apiName": "ParasiticMutation",
+      "name": "Parasitic Mutation"
+    },
+    "241": {
+      "apiName": "HatTrick",
+      "name": "Hat Trick"
+    },
+    "242": {
+      "apiName": "JuicePress",
+      "name": "Juice Press"
+    },
+    "243": {
+      "apiName": "TransmuteChaos",
+      "name": "Transmute: Chaos"
+    },
+    "250": {
+      "apiName": "SlowAndSteady",
+      "name": "Slow and Steady"
+    },
+    "251": {
+      "apiName": "NumbToPain",
+      "name": "Numb to Pain"
+    },
+    "301": {
+      "apiName": "DivineIntervention",
+      "name": "Divine Intervention"
+    },
+    "302": {
+      "apiName": "GoHSacrificeForSilver",
+      "name": "Sacrifice: For Silver"
+    },
+    "303": {
+      "apiName": "GoHSacrificeForGold",
+      "name": "Sacrifice: For Gold"
+    },
+    "304": {
+      "apiName": "GoHSacrificeForPrismatic",
+      "name": "Sacrifice: For Prismatic"
+    },
+    "305": {
+      "apiName": "LegDay",
+      "name": "Leg Day"
+    },
+    "306": {
+      "apiName": "Parry",
+      "name": "Parry"
+    },
+    "307": {
+      "apiName": "SleepDart",
+      "name": "Sleep Dart"
+    },
+    "308": {
+      "apiName": "Firefox",
+      "name": "Firefox"
+    },
+    "309": {
+      "apiName": "AndMyAxe",
+      "name": "And My Axe!"
+    },
+    "310": {
+      "apiName": "ClownCollege",
+      "name": "Clown College"
+    },
+    "311": {
+      "apiName": "Overflow",
+      "name": "Overflow"
+    },
+    "312": {
+      "apiName": "WellBeRightBack",
+      "name": "We'll Be Right Back"
+    },
+    "313": {
+      "apiName": "TankEngine",
+      "name": "Tank Engine"
+    },
+    "314": {
+      "apiName": "Unshackled",
+      "name": "Unshackled"
+    },
+    "315": {
+      "apiName": "EnergeticCaster",
+      "name": "Energetic Caster"
+    },
+    "316": {
+      "apiName": "GrievousVenom",
+      "name": "Grievous Venom"
+    },
+    "317": {
+      "apiName": "PandorasBox",
+      "name": "Pandora's Box"
+    },
+    "318": {
+      "apiName": "Quest_MadHatter",
+      "name": "Quest: Mad Hatter"
+    },
+    "319": {
+      "apiName": "Quest_ThreeSacredTreasures",
+      "name": "Quest: Three Sacred Treasures"
+    },
+    "320": {
+      "apiName": "CalculatedRisk",
+      "name": "Calculated Risk"
+    },
+    "321": {
+      "apiName": "Bodyguard",
+      "name": "Bodyguard"
+    },
+    "322": {
+      "apiName": "AugmentedPower",
+      "name": "Augmented Power"
+    },
+    "323": {
+      "apiName": "Cerberus",
+      "name": "Cerberus"
+    },
+    "324": {
+      "apiName": "BravestoftheBrave",
+      "name": "Bravest of the Brave"
+    },
+    "326": {
+      "apiName": "SpiritInfusion",
+      "name": "Spirit Infusion"
+    },
+    "327": {
+      "apiName": "UndyingGuard",
+      "name": "Undying Guard"
+    },
+    "328": {
+      "apiName": "EtherealChains",
+      "name": "Infernal Chains"
+    },
+    "329": {
+      "apiName": "Necromancer",
+      "name": "Necromancer"
+    },
+    "330": {
+      "apiName": "Despoil",
+      "name": "Despoil"
+    },
+    "331": {
+      "apiName": "Multitool",
+      "name": "Multitool"
+    },
+    "332": {
+      "apiName": "BloodMage",
+      "name": "Blood Mage"
+    },
+    "333": {
+      "apiName": "Quest_RiteOfTheForgeGod",
+      "name": "Quest: Rite Of The Forge God"
+    },
+    "334": {
+      "apiName": "Hallucinate",
+      "name": "Hallucinate"
+    },
+    "335": {
+      "apiName": "PanicRoom",
+      "name": "Panic Room"
+    },
+    "336": {
+      "apiName": "AimForTheHead",
+      "name": "Aim for the Head"
+    },
+    "338": {
+      "apiName": "HiveMind",
+      "name": "Hive Mind"
+    },
+    "340": {
+      "apiName": "CraftingPrisStatAnvil",
+      "name": "Gain a Prismatic Stat Anvil"
+    },
+    "341": {
+      "apiName": "CraftingAugmentSlot",
+      "name": "Gain an Augment slot"
+    },
+    "342": {
+      "apiName": "CraftingSellAugment",
+      "name": "Level Augments"
+    },
+    "343": {
+      "apiName": "RighteousFury",
+      "name": "Righteous Fury"
+    },
+    "344": {
+      "apiName": "Energetic",
+      "name": "Energetic"
+    },
+    "345": {
+      "apiName": "MagicalGirl",
+      "name": "Magical Girl"
+    },
+    "346": {
+      "apiName": "BreadSandwich",
+      "name": "Bread Sandwich"
+    },
+    "347": {
+      "apiName": "GoHChemtechPutrifier",
+      "name": "Chemtech Putrifier"
+    },
+    "348": {
+      "apiName": "GoHBloodrazor",
+      "name": "Bloodrazor"
+    },
+    "349": {
+      "apiName": "GoHDematerializer",
+      "name": "Dematerializer"
+    },
+    "350": {
+      "apiName": "GoHEnchantedFlask",
+      "name": "Enchanted Flask"
+    },
+    "351": {
+      "apiName": "GoHFrozenMallet",
+      "name": "Frozen Mallet"
+    },
+    "354": {
+      "apiName": "GoHRemnantOfTheWatchers",
+      "name": "Remnant of the Watchers"
+    },
+    "355": {
+      "apiName": "GainStatAnvil",
+      "name": "Gain Stat Anvil"
+    },
+    "356": {
+      "apiName": "SilverSpoon",
+      "name": "Silver Spoon"
+    },
+    "357": {
+      "apiName": "Hybrid",
+      "name": "Hybrid"
+    },
+    "358": {
+      "apiName": "GoHWolf",
+      "name": "Wolf's Frenzy"
+    },
+    "359": {
+      "apiName": "GoHLamb",
+      "name": "Lamb's Respite"
+    },
+    "361": {
+      "apiName": "GoHVoteAllyDemon",
+      "name": "Ally Demon"
+    },
+    "362": {
+      "apiName": "GoHVoteAllyHunter",
+      "name": "Ally Hunter"
+    },
+    "364": {
+      "apiName": "ReplaceAugment",
+      "name": "Replace Augment"
+    },
+    "365": {
+      "apiName": "GoHAbstainFromWealth",
+      "name": "Abstain From Wealth"
+    },
+    "366": {
+      "apiName": "GoHAbstainFromPower",
+      "name": "Abstain From Power"
+    },
+    "367": {
+      "apiName": "GoHAbstainFromRisk",
+      "name": "Abstain From Risk"
+    },
+    "368": {
+      "apiName": "GoHCravingForWealth",
+      "name": "Craving For Wealth"
+    },
+    "369": {
+      "apiName": "GoHCravingForPower",
+      "name": "Craving For Power"
+    },
+    "370": {
+      "apiName": "GoHCravingForRisk",
+      "name": "Craving For Risk"
+    },
+    "371": {
+      "apiName": "GoHCompulsionForWealth",
+      "name": "Compulsion For Wealth"
+    },
+    "372": {
+      "apiName": "GoHCompulsionForPower",
+      "name": "Compulsion For Power"
+    },
+    "373": {
+      "apiName": "GoHCompulsionForRisk",
+      "name": "Compulsion For Risk"
+    },
+    "374": {
+      "apiName": "RiceAndChicken",
+      "name": "Rice and Chicken"
+    },
+    "375": {
+      "apiName": "RiceAndFish",
+      "name": "Rice and Fish"
+    },
+    "376": {
+      "apiName": "RiceAndPork",
+      "name": "Rice and Pork"
+    },
+    "377": {
+      "apiName": "CombinationFriedRice",
+      "name": "Combination Fried Rice"
+    },
+    "378": {
+      "apiName": "TransmuteSilver",
+      "name": "Transmute: Silver"
+    },
+    "379": {
+      "apiName": "WildFire",
+      "name": "Wild Fire"
+    },
+    "380": {
+      "apiName": "Mercy",
+      "name": "Mercy"
+    },
+    "381": {
+      "apiName": "Scavenger",
+      "name": "Scavenger"
+    },
+    "383": {
+      "apiName": "DemonicClasp",
+      "name": "Demonic Clasp"
+    },
+    "384": {
+      "apiName": "Spellcraft",
+      "name": "Spellcraft"
+    },
+    "387": {
+      "apiName": "BigDragonEnergy",
+      "name": "Big Dragon Energy"
+    },
+    "388": {
+      "apiName": "ChromaFlux",
+      "name": "Chroma Flux"
+    },
+    "389": {
+      "apiName": "TrashToTreasure",
+      "name": "Trash To Treasure"
+    },
+    "390": {
+      "apiName": "UnstableTransmutation",
+      "name": "Unstable Transmutation"
+    },
+    "391": {
+      "apiName": "RagsToRiches",
+      "name": "Rags to Riches"
+    },
+    "392": {
+      "apiName": "GoHSwindlersOrb",
+      "name": "Swindler's Orb"
+    },
+    "393": {
+      "apiName": "Quest_VoidImmolation",
+      "name": "Icathia's Fall"
+    },
+    "394": {
+      "apiName": "DustToDiamonds",
+      "name": "Dust To Diamonds"
+    },
+    "396": {
+      "apiName": "DeathDealer",
+      "name": "Death Dealer"
+    },
+    "397": {
+      "apiName": "GotThatDogInEm",
+      "name": "Got That Dog In Em"
+    },
+    "404": {
+      "apiName": "Augment404",
+      "name": "404 Augment Not Found"
+    },
+    "405": {
+      "apiName": "Augment405",
+      "name": "Augment 405"
+    },
+    "1001": {
+      "apiName": "ARAM_ImTheJuggernaut",
+      "name": "Titan's Resolve"
+    },
+    "1002": {
+      "apiName": "ARAM_ApexInventor",
+      "name": "Apex Inventor"
+    },
+    "1004": {
+      "apiName": "ARAM_BacktoBasics",
+      "name": "Back To Basics"
+    },
+    "1005": {
+      "apiName": "ARAM_WeeWooWeeWoo",
+      "name": "Wee Woo Wee Woo"
+    },
+    "1006": {
+      "apiName": "ARAM_BladeWaltz",
+      "name": "Blade Waltz"
+    },
+    "1007": {
+      "apiName": "ARAM_BluntForce",
+      "name": "Blunt Force"
+    },
+    "1009": {
+      "apiName": "ARAM_BuffBuddies",
+      "name": "Buff Buddies"
+    },
+    "1011": {
+      "apiName": "ARAM_CantTouchThis",
+      "name": "Can't Touch This"
+    },
+    "1013": {
+      "apiName": "ARAM_CelestialBody",
+      "name": "Celestial Body"
+    },
+    "1015": {
+      "apiName": "ARAM_CircleofDeath",
+      "name": "Circle of Death"
+    },
+    "1018": {
+      "apiName": "ARAM_CourageoftheColossus",
+      "name": "Courage of the Colossus"
+    },
+    "1019": {
+      "apiName": "ARAM_Dashing",
+      "name": "Dashing"
+    },
+    "1020": {
+      "apiName": "ARAM_DawnbringersResolve",
+      "name": "Dawnbringer's Resolve"
+    },
+    "1022": {
+      "apiName": "ARAM_Deft",
+      "name": "Deft"
+    },
+    "1023": {
+      "apiName": "ARAM_DemonsDance",
+      "name": "Demon's Dance"
+    },
+    "1025": {
+      "apiName": "ARAM_DiveBomber",
+      "name": "Dive Bomber"
+    },
+    "1026": {
+      "apiName": "ARAM_DontBlink",
+      "name": "Don't Blink"
+    },
+    "1027": {
+      "apiName": "ARAM_Earthwake",
+      "name": "Earthwake"
+    },
+    "1028": {
+      "apiName": "ARAM_Erosion",
+      "name": "Erosion"
+    },
+    "1029": {
+      "apiName": "ARAM_EtherealWeapon",
+      "name": "Ethereal Weapon"
+    },
+    "1030": {
+      "apiName": "ARAM_Eureka",
+      "name": "Eureka"
+    },
+    "1032": {
+      "apiName": "ARAM_Executioner",
+      "name": "Executioner"
+    },
+    "1034": {
+      "apiName": "VeilOfWarding",
+      "name": "Veil of Warding"
+    },
+    "1035": {
+      "apiName": "ARAM_FeeltheBurn",
+      "name": "Feel the Burn"
+    },
+    "1036": {
+      "apiName": "ARAM_Firebrand",
+      "name": "Firebrand"
+    },
+    "1037": {
+      "apiName": "ARAM_FirstAidKit",
+      "name": "First-Aid Kit"
+    },
+    "1038": {
+      "apiName": "ARAM_FromBeginningToEnd",
+      "name": "From Beginning To End"
+    },
+    "1039": {
+      "apiName": "ARAM_FrostWraith",
+      "name": "Frost Wraith"
+    },
+    "1041": {
+      "apiName": "ARAM_Goliath",
+      "name": "Goliath"
+    },
+    "1042": {
+      "apiName": "ARAM_GuiltyPleasure",
+      "name": "Guilty Pleasure"
+    },
+    "1044": {
+      "apiName": "ARAM_IceCold",
+      "name": "Ice Cold"
+    },
+    "1045": {
+      "apiName": "ARAM_InfernalConduit",
+      "name": "Infernal Conduit"
+    },
+    "1046": {
+      "apiName": "ARAM_InfernalSoul",
+      "name": "Infernal Soul"
+    },
+    "1047": {
+      "apiName": "ARAM_ItsCritical",
+      "name": "It's Critical"
+    },
+    "1048": {
+      "apiName": "ARAM_JeweledGauntlet",
+      "name": "Jeweled Gauntlet"
+    },
+    "1050": {
+      "apiName": "ARAM_KeystoneConjurer",
+      "name": "Keystone Conjurer"
+    },
+    "1051": {
+      "apiName": "ARAM_LightemUp",
+      "name": "Light 'Em Up!"
+    },
+    "1052": {
+      "apiName": "ARAM_LightningStrikes",
+      "name": "Lightning Strikes"
+    },
+    "1053": {
+      "apiName": "ARAM_MadScientist",
+      "name": "Mad Scientist"
+    },
+    "1054": {
+      "apiName": "ARAM_MasterofDuality",
+      "name": "Master of Duality"
+    },
+    "1056": {
+      "apiName": "ARAM_MindtoMatter",
+      "name": "Mind to Matter"
+    },
+    "1057": {
+      "apiName": "ARAM_MountainSoul",
+      "name": "Mountain Soul"
+    },
+    "1058": {
+      "apiName": "ARAM_MysticPunch",
+      "name": "Mystic Punch"
+    },
+    "1060": {
+      "apiName": "ARAM_OceanSoul",
+      "name": "Ocean Soul"
+    },
+    "1061": {
+      "apiName": "ARAM_OkBoomerang",
+      "name": "Ok Boomerang"
+    },
+    "1062": {
+      "apiName": "ARAM_OmniSoul",
+      "name": "Omni Soul"
+    },
+    "1063": {
+      "apiName": "ARAM_OutlawsGrit",
+      "name": "Outlaw's Grit"
+    },
+    "1064": {
+      "apiName": "ARAM_Perseverance",
+      "name": "Perseverance"
+    },
+    "1066": {
+      "apiName": "ARAM_QuantumComputing",
+      "name": "Quantum Computing"
+    },
+    "1067": {
+      "apiName": "ARAM_RabbleRousing",
+      "name": "Rejuvenation"
+    },
+    "1068": {
+      "apiName": "ARAM_Recursion",
+      "name": "Recursion"
+    },
+    "1069": {
+      "apiName": "ARAM_Repulsor",
+      "name": "Repulsor"
+    },
+    "1070": {
+      "apiName": "ARAM_RestlessRestoration",
+      "name": "Restless Restoration"
+    },
+    "1071": {
+      "apiName": "ARAM_ScopierWeapons",
+      "name": "Scopier Weapons"
+    },
+    "1072": {
+      "apiName": "ARAM_SearingDawn",
+      "name": "Searing Dawn"
+    },
+    "1073": {
+      "apiName": "ARAM_ShadowRunner",
+      "name": "Shadow Runner"
+    },
+    "1074": {
+      "apiName": "ARAM_ShrinkRay",
+      "name": "Shrink Ray"
+    },
+    "1075": {
+      "apiName": "ARAM_SlowCooker",
+      "name": "Slow Cooker"
+    },
+    "1076": {
+      "apiName": "ARAM_SonicBoom",
+      "name": "Sonic Boom"
+    },
+    "1077": {
+      "apiName": "ARAM_SoulSiphon",
+      "name": "Soul Siphon"
+    },
+    "1079": {
+      "apiName": "ARAM_SymphonyofWar",
+      "name": "Symphony of War"
+    },
+    "1080": {
+      "apiName": "ARAM_TankItOrLeaveIt",
+      "name": "Tank It Or Leave It"
+    },
+    "1081": {
+      "apiName": "ARAM_TapDancer",
+      "name": "Tap Dancer"
+    },
+    "1082": {
+      "apiName": "ARAM_TheBrutalizer",
+      "name": "The Brutalizer"
+    },
+    "1084": {
+      "apiName": "ARAM_ThreadtheNeedle",
+      "name": "Thread the Needle"
+    },
+    "1085": {
+      "apiName": "ARAM_Tormentor",
+      "name": "Tormentor"
+    },
+    "1086": {
+      "apiName": "ARAM_TrueshotProdigy",
+      "name": "Trueshot Prodigy"
+    },
+    "1087": {
+      "apiName": "ARAM_Typhoon",
+      "name": "Typhoon"
+    },
+    "1088": {
+      "apiName": "ARAM_UltimateRevolution",
+      "name": "Ultimate Revolution"
+    },
+    "1092": {
+      "apiName": "ARAM_Vulnerability",
+      "name": "Vulnerability"
+    },
+    "1095": {
+      "apiName": "ARAM_WindspeakersBlessing",
+      "name": "Windspeaker's Blessing"
+    },
+    "1097": {
+      "apiName": "ARAM_WitchfulThinking",
+      "name": "Witchful Thinking"
+    },
+    "1098": {
+      "apiName": "ARAM_WithHaste",
+      "name": "With Haste"
+    },
+    "1103": {
+      "apiName": "ARAM_BreadAndButter",
+      "name": "Bread And Butter"
+    },
+    "1104": {
+      "apiName": "ARAM_Minionmancer",
+      "name": "Minionmancer"
+    },
+    "1105": {
+      "apiName": "ARAM_Homeguard",
+      "name": "Homeguard"
+    },
+    "1107": {
+      "apiName": "ARAM_TwiceThrice",
+      "name": "Twice Thrice"
+    },
+    "1108": {
+      "apiName": "ARAM_SelfDestruct",
+      "name": "Self Destruct"
+    },
+    "1112": {
+      "apiName": "ARAM_UltimateUnstoppable",
+      "name": "Ultimate Unstoppable"
+    },
+    "1113": {
+      "apiName": "ARAM_SkilledSniper",
+      "name": "Skilled Sniper"
+    },
+    "1115": {
+      "apiName": "ARAM_ScopiestWeapons",
+      "name": "Scopiest Weapons"
+    },
+    "1116": {
+      "apiName": "ARAM_Flashy",
+      "name": "Flashy"
+    },
+    "1118": {
+      "apiName": "ARAM_CriticalHealing",
+      "name": "Critical Healing"
+    },
+    "1129": {
+      "apiName": "ARAM_Marksmage",
+      "name": "Marksmage"
+    },
+    "1133": {
+      "apiName": "ARAM_MagicMissile",
+      "name": "Magic Missile"
+    },
+    "1134": {
+      "apiName": "ARAM_DrawYourSword",
+      "name": "Draw Your Sword"
+    },
+    "1136": {
+      "apiName": "ARAM_SlapAround",
+      "name": "Slap Around"
+    },
+    "1138": {
+      "apiName": "ARAM_Goredrink",
+      "name": "Goredrink"
+    },
+    "1141": {
+      "apiName": "ARAM_AllForYou",
+      "name": "All For You"
+    },
+    "1149": {
+      "apiName": "ARAM_Impassable",
+      "name": "Impassable"
+    },
+    "1150": {
+      "apiName": "ARAM_BreadAndJam",
+      "name": "Bread And Jam"
+    },
+    "1151": {
+      "apiName": "ARAM_BreadAndCheese",
+      "name": "Bread and Cheese"
+    },
+    "1152": {
+      "apiName": "ARAM_Quest_SteelYourHeart",
+      "name": "Steel Your Heart"
+    },
+    "1154": {
+      "apiName": "ARAM_Quest_UrfsChampion",
+      "name": "Urf's Champion"
+    },
+    "1156": {
+      "apiName": "ARAM_Quest_WoogletsWitchcap",
+      "name": "Wooglet's Witchcap"
+    },
+    "1170": {
+      "apiName": "ARAM_ScopedWeapons",
+      "name": "Scoped Weapons"
+    },
+    "1180": {
+      "apiName": "ARAM_BigBrain",
+      "name": "Big Brain"
+    },
+    "1181": {
+      "apiName": "ARAM_HeavyHitter",
+      "name": "Heavy Hitter"
+    },
+    "1187": {
+      "apiName": "ARAM_Flashbang",
+      "name": "Flashbang"
+    },
+    "1194": {
+      "apiName": "ARAM_FeyMagic",
+      "name": "Fey Magic"
+    },
+    "1195": {
+      "apiName": "ARAM_GiantSlayer",
+      "name": "Giant Slayer"
+    },
+    "1198": {
+      "apiName": "ARAM_HolyFire",
+      "name": "Holy Fire"
+    },
+    "1204": {
+      "apiName": "ARAM_StackosaurusRex",
+      "name": "Stackosaurus Rex"
+    },
+    "1205": {
+      "apiName": "ARAM_ADAPt",
+      "name": "ADAPt"
+    },
+    "1206": {
+      "apiName": "ARAM_escAPADe",
+      "name": "escAPADe"
+    },
+    "1208": {
+      "apiName": "ARAM_OrbitalLaser_Active",
+      "name": "Orbital Laser"
+    },
+    "1211": {
+      "apiName": "ARAM_ItsKillingTime",
+      "name": "It's Killing Time"
+    },
+    "1214": {
+      "apiName": "ARAM_SpinToWin",
+      "name": "Spin To Win"
+    },
+    "1220": {
+      "apiName": "ARAM_FanTheHammer",
+      "name": "Fan The Hammer"
+    },
+    "1225": {
+      "apiName": "ARAM_DualWield",
+      "name": "Dual Wield"
+    },
+    "1237": {
+      "apiName": "ARAM_TransmuteGold",
+      "name": "Transmute: Gold"
+    },
+    "1238": {
+      "apiName": "ARAM_TransmutePrismatic",
+      "name": "Transmute: Prismatic"
+    },
+    "1243": {
+      "apiName": "ARAM_TransmuteChaos",
+      "name": "Transmute: Chaos"
+    },
+    "1250": {
+      "apiName": "ARAM_SlowAndSteady",
+      "name": "Slow And Steady"
+    },
+    "1301": {
+      "apiName": "ARAM_DivineIntervention",
+      "name": "Divine Intervention"
+    },
+    "1305": {
+      "apiName": "ARAM_LegDay",
+      "name": "Leg Day"
+    },
+    "1308": {
+      "apiName": "ARAM_Firefox",
+      "name": "FireFox"
+    },
+    "1310": {
+      "apiName": "ARAM_ClownCollege",
+      "name": "Clown College"
+    },
+    "1311": {
+      "apiName": "ARAM_Overflow",
+      "name": "Overflow"
+    },
+    "1313": {
+      "apiName": "ARAM_Recall",
+      "name": "Cheating"
+    },
+    "1314": {
+      "apiName": "MightyShield",
+      "name": "Mighty Shield"
+    },
+    "1315": {
+      "apiName": "SwiftAndSafe",
+      "name": "Swift and Safe"
+    },
+    "1316": {
+      "apiName": "WindBeneathBlade",
+      "name": "Wind Beneath Blade"
+    },
+    "1317": {
+      "apiName": "ARAM_Upgrade_Cutlass",
+      "name": "Upgrade Cutlass"
+    },
+    "1318": {
+      "apiName": "ARAM_Upgrade_ZH",
+      "name": "Upgrade Zhonya's"
+    },
+    "1319": {
+      "apiName": "ARAM_Upgrade_Immolate",
+      "name": "Upgrade Immolate"
+    },
+    "1320": {
+      "apiName": "ARAM_Upgrade_Collector",
+      "name": "Upgrade Collector"
+    },
+    "1321": {
+      "apiName": "Gash",
+      "name": "Gash"
+    },
+    "1322": {
+      "apiName": "ARAM_GetExcited",
+      "name": "Get Excited!"
+    },
+    "1323": {
+      "apiName": "ARAM_Cruelty",
+      "name": "Cruelty"
+    },
+    "1324": {
+      "apiName": "ARAM_ProteinShake",
+      "name": "Protein Shake"
+    },
+    "1325": {
+      "apiName": "GlassCannon",
+      "name": "Glass Cannon"
+    },
+    "1326": {
+      "apiName": "Nightstalking",
+      "name": "Nightstalking"
+    },
+    "1327": {
+      "apiName": "Adamant",
+      "name": "Adamant"
+    },
+    "1328": {
+      "apiName": "CriticalRhythm",
+      "name": "Critical Rhythm"
+    },
+    "1329": {
+      "apiName": "BiggestSnowballEver",
+      "name": "Biggest Snowball Ever"
+    },
+    "1330": {
+      "apiName": "ReEnergize",
+      "name": "ReEnergize"
+    },
+    "1331": {
+      "apiName": "EmpyreanPromise",
+      "name": "Empyrean Promise"
+    },
+    "1332": {
+      "apiName": "OminousPact",
+      "name": "Ominous Pact"
+    },
+    "1333": {
+      "apiName": "EscapePlan",
+      "name": "Escape Plan"
+    },
+    "1334": {
+      "apiName": "SnowballUpgrade",
+      "name": "Snowball Upgrade"
+    },
+    "1335": {
+      "apiName": "Goldrend",
+      "name": "Goldrend"
+    },
+    "1336": {
+      "apiName": "ARAM_Upgrade_IE",
+      "name": "Upgrade Infinity Edge"
+    },
+    "1337": {
+      "apiName": "KingMe",
+      "name": "King Me"
+    },
+    "1338": {
+      "apiName": "ARAM_Upgrade_Hubris",
+      "name": "Upgrade Hubris"
+    },
+    "1339": {
+      "apiName": "LaserHeal",
+      "name": "Laser Heal"
+    },
+    "1340": {
+      "apiName": "Upgrade_MikaelsBlessing",
+      "name": "Upgrade Mikael's Blessing"
+    },
+    "1341": {
+      "apiName": "HatOnAHat",
+      "name": "Hat on a Hat"
+    },
+    "1342": {
+      "apiName": "SnowballRoulette",
+      "name": "Snowball Roulette"
+    },
+    "1343": {
+      "apiName": "Quest_Sneakerhead",
+      "name": "Sneakerhead"
+    },
+    "1344": {
+      "apiName": "FinalForm",
+      "name": "Final Form"
+    },
+    "1345": {
+      "apiName": "ARAM_SpiritualPurification",
+      "name": "Spiritual Purification"
+    },
+    "1346": {
+      "apiName": "Vampirism",
+      "name": "Vampirism"
+    },
+    "1347": {
+      "apiName": "Poltergeist",
+      "name": "Poltergeist"
+    },
+    "1348": {
+      "apiName": "Flash2",
+      "name": "Flash 2"
+    },
+    "1349": {
+      "apiName": "UltimateAwakening",
+      "name": "Ultimate Awakening"
+    },
+    "1353": {
+      "apiName": "ARAM_TankEngine",
+      "name": "Tank Engine"
+    },
+    "1356": {
+      "apiName": "CriticalMissile",
+      "name": "Critical Missile"
+    },
+    "1358": {
+      "apiName": "PinballSnowball",
+      "name": "Pinball"
+    },
+    "1361": {
+      "apiName": "ARAM_Quest_VoidImmolation",
+      "name": "Icathia's Fall"
+    },
+    "1372": {
+      "apiName": "BabyKitty",
+      "name": "I'm a Baby Kitty Where is Mama"
+    },
+    "1373": {
+      "apiName": "ShrinkEngine",
+      "name": "Shrink Engine"
+    },
+    "1375": {
+      "apiName": "SoulEater",
+      "name": "Soul Eater"
+    },
+    "1379": {
+      "apiName": "Upgrade_SwordOfBlossom",
+      "name": "Upgrade Sword of Blossoming Dawn"
+    },
+    "1384": {
+      "apiName": "Donation",
+      "name": "Donation"
+    },
+    "1386": {
+      "apiName": "YouSpinMeRightRound",
+      "name": "Spin Me Right Round"
+    },
+    "1388": {
+      "apiName": "InfiniteRecursion",
+      "name": "Infinite Recursion"
+    },
+    "1389": {
+      "apiName": "HandOfBaron",
+      "name": "Hand of Baron"
+    },
+    "1390": {
+      "apiName": "ARAM_PhenomenalEvil",
+      "name": "Phenomenal Evil"
+    },
+    "1391": {
+      "apiName": "RedEnvelopes",
+      "name": "Red Envelopes"
+    },
+    "1392": {
+      "apiName": "GoldenSnowball",
+      "name": "Holy Snowball"
+    },
+    "1397": {
+      "apiName": "ARAM_Cerberus",
+      "name": "Cerberus"
+    },
+    "1400": {
+      "apiName": "TrainOfTheDead",
+      "name": "Final City Transit"
+    },
+    "1401": {
+      "apiName": "GrowthSpurt",
+      "name": "Growth Spurt"
+    },
+    "1402": {
+      "apiName": "ARAM_StatsOnStatsOnStats",
+      "name": "Stats on Stats on Stats!"
+    },
+    "1403": {
+      "apiName": "ARAM_StatsOnStats",
+      "name": "Stats on Stats!"
+    },
+    "1404": {
+      "apiName": "ARAM_Stats",
+      "name": "Stats!"
+    },
+    "1405": {
+      "apiName": "ARAM_SpeedDemon",
+      "name": "Speed Demon"
+    },
+    "1406": {
+      "apiName": "GrandmasChiliOil",
+      "name": "Grandma's Chili Oil"
+    },
+    "1409": {
+      "apiName": "ARAM_Poro_Blast",
+      "name": "Poro Blaster"
+    },
+    "1411": {
+      "apiName": "Upgrade_Thornmail",
+      "name": "Upgrade Thornmail"
+    },
+    "1413": {
+      "apiName": "ARAM_StuckInHereWithMe",
+      "name": "Stuck In Here With Me"
+    },
+    "1414": {
+      "apiName": "Dropybara_Active",
+      "name": "Droppybara"
+    },
+    "1415": {
+      "apiName": "Twinfire",
+      "name": "Twin Fire"
+    },
+    "1416": {
+      "apiName": "HextechSoul",
+      "name": "Hextech Soul"
+    },
+    "1418": {
+      "apiName": "ARAM_CrackOpenThatEgg",
+      "name": "Crack Open That Egg"
+    },
+    "1420": {
+      "apiName": "Sonata",
+      "name": "Sonata"
+    },
+    "1421": {
+      "apiName": "PromQueen",
+      "name": "Prom Queen"
+    },
+    "1424": {
+      "apiName": "ARAM_MissingPingAugment",
+      "name": "???"
+    },
+    "1996": {
+      "apiName": "ARAM_Upgrade_Sheen",
+      "name": "Upgrade Sheen"
+    },
+    "2001": {
+      "apiName": "ARAM_WatchOutGrapefruit",
+      "name": "Heads Up Cupcake!"
+    },
+    "2002": {
+      "apiName": "ARAM_VoidRift",
+      "name": "Void Rift"
+    },
+    "2003": {
+      "apiName": "ARAM_PoroKing",
+      "name": "Bounce of the Poro King"
+    },
+    "2004": {
+      "apiName": "ARAM_EmpoweredByTheFaithful",
+      "name": "Empowered By The Faithful"
+    },
+    "2005": {
+      "apiName": "ARAM_InfernoTriggered",
+      "name": "Triggered Inferno"
+    },
+    "2006": {
+      "apiName": "ARAM_Dropkick",
+      "name": "Dropkick"
+    },
+    "2007": {
+      "apiName": "ARAM_LittleDevil",
+      "name": "Devil on Your Shoulder"
+    },
+    "2008": {
+      "apiName": "ARAM_WeightedPopoffs",
+      "name": "Weighted Popoffs"
+    },
+    "2009": {
+      "apiName": "ARAM_Zealot",
+      "name": "Zealot"
+    },
+    "2010": {
+      "apiName": "ARAM_DoubleTap",
+      "name": "Double Tap"
+    },
+    "2016": {
+      "apiName": "ARAM_Juiced",
+      "name": "Juiced"
+    },
+    "2018": {
+      "apiName": "ARAM_Purist_Caster",
+      "name": "Purist - Caster"
+    },
+    "2024": {
+      "apiName": "CritNCast",
+      "name": "Crit 'n Cast"
+    },
+    "2026": {
+      "apiName": "KillSecured",
+      "name": "Kill Secured"
+    },
+    "2031": {
+      "apiName": "ARAM_DropBear",
+      "name": "DropBear"
+    },
+    "2032": {
+      "apiName": "FishBait",
+      "name": "Shark Bait"
+    },
+    "2034": {
+      "apiName": "SharkTempest",
+      "name": "Shark Tempest"
+    },
+    "2042": {
+      "apiName": "BrushPower",
+      "name": "Hide on Bush"
+    },
+    "2043": {
+      "apiName": "NatureIsHealing",
+      "name": "Nature is Healing"
+    },
+    "2046": {
+      "apiName": "PoroCharge_Active",
+      "name": "Poro Stampede"
+    },
+    "2054": {
+      "apiName": "SpellVolley",
+      "name": "Tripleshot"
+    },
+    "2055": {
+      "apiName": "ARAM_Multishot",
+      "name": "Multishot"
+    },
+    "2062": {
+      "apiName": "Ability_SelfAOE_DoubleCast",
+      "name": "Echo Cast"
+    },
+    "2063": {
+      "apiName": "DimensionShift_Active",
+      "name": "Dimension Shift"
+    },
+    "2064": {
+      "apiName": "ARAM_Quickstep",
+      "name": "Quickstep"
+    },
+    "2065": {
+      "apiName": "ARAM_Terror",
+      "name": "Terror"
+    },
+    "2072": {
+      "apiName": "Missile_Split",
+      "name": "Spell Split"
+    },
+    "2073": {
+      "apiName": "ARAM_SustainingStrike",
+      "name": "Siphon"
+    },
+    "2076": {
+      "apiName": "TitansPulse",
+      "name": "Stay Resolute"
+    },
+    "2077": {
+      "apiName": "DarkWind",
+      "name": "Ravenous Bind"
+    },
+    "2078": {
+      "apiName": "ChainReaction",
+      "name": "Chain Reaction"
+    },
+    "2080": {
+      "apiName": "Snowbomb",
+      "name": "Snowblast"
+    },
+    "2082": {
+      "apiName": "Equilibrium",
+      "name": "Our Healing"
+    },
+    "2083": {
+      "apiName": "BurstingTeeth",
+      "name": "Tooth Fairy"
+    },
+    "2087": {
+      "apiName": "ARAM_Archmage",
+      "name": "Archmage"
+    },
+    "2088": {
+      "apiName": "ARAM_Snowday",
+      "name": "Snowday"
+    },
+    "2089": {
+      "apiName": "ARAM_YowchMyCoins",
+      "name": "Yowch, My Coins!"
+    },
+    "2091": {
+      "apiName": "EndlessDecimation",
+      "name": "Endless Decimation"
+    },
+    "2095": {
+      "apiName": "ARAM_HighRoller",
+      "name": "High Roller"
+    },
+    "2096": {
+      "apiName": "LittleExtraHelp",
+      "name": "Lil' Extra Help"
+    },
+    "2097": {
+      "apiName": "VoidDash",
+      "name": "Void Dash"
+    },
+    "2098": {
+      "apiName": "ARAM_EndlessHunt",
+      "name": "En Passant"
+    },
+    "2099": {
+      "apiName": "ARAM_DivineDomain",
+      "name": "Rite of Ascension"
+    },
+    "2100": {
+      "apiName": "ARAM_SpecializedRecursion",
+      "name": "Pursuit of Haste"
+    },
+    "2102": {
+      "apiName": "PressureCooker",
+      "name": "Pressure Cooker"
+    },
+    "2103": {
+      "apiName": "ARAM_BangBang",
+      "name": "From Downtown"
+    },
+    "2104": {
+      "apiName": "ARAM_SpiritBomb",
+      "name": "Spirit Bomb"
+    },
+    "2107": {
+      "apiName": "ARAM_Hellbent",
+      "name": "Hellbent"
+    },
+    "2108": {
+      "apiName": "SupportMain",
+      "name": "Support Main"
+    },
+    "2109": {
+      "apiName": "SnapBack",
+      "name": "Snap Back"
+    },
+    "2111": {
+      "apiName": "Bonk",
+      "name": "BONK!"
+    },
+    "2115": {
+      "apiName": "SquishySlappyGrab",
+      "name": "Squishy Slappy Grab"
+    },
+    "2116": {
+      "apiName": "SpecializedEmpowerment",
+      "name": "Pursuit of Power"
+    },
+    "2118": {
+      "apiName": "SkipTheBasics",
+      "name": "Ult Bot"
+    },
+    "2119": {
+      "apiName": "Overextender",
+      "name": "Overextender"
+    },
+    "2123": {
+      "apiName": "Overloaded",
+      "name": "Overloaded"
+    },
+    "2125": {
+      "apiName": "ItsGoTime",
+      "name": "It's Go Time"
+    },
+    "2126": {
+      "apiName": "KeepGoing",
+      "name": "Reload"
+    },
+    "2127": {
+      "apiName": "ForgedByTheMaster",
+      "name": "Forged By The Master"
+    },
+    "2128": {
+      "apiName": "BloodMoneyBurn",
+      "name": "Combusting Interest"
+    },
+    "2129": {
+      "apiName": "Terraind",
+      "name": "Terrain'd"
+    },
+    "2131": {
+      "apiName": "DontChangeTheChannel",
+      "name": "Don't Change the Channel"
+    },
+    "2132": {
+      "apiName": "WarlockJuicebox",
+      "name": "Warlock Juicebox"
+    },
+    "2133": {
+      "apiName": "MercysStrike",
+      "name": "Mercy's Strike"
+    },
+    "2134": {
+      "apiName": "SurgeField",
+      "name": "Surge Field"
+    },
+    "2135": {
+      "apiName": "Overkill",
+      "name": "Pin Cushion"
+    },
+    "2136": {
+      "apiName": "TrustyWeapon",
+      "name": "Trusty Weapon"
+    },
+    "2137": {
+      "apiName": "PatOnTheBack",
+      "name": "Pat On The Back"
+    },
+    "2138": {
+      "apiName": "WardingWeapon",
+      "name": "Adaptive Ward"
+    },
+    "2139": {
+      "apiName": "PinCushion",
+      "name": "Porcupine"
+    },
+    "2140": {
+      "apiName": "Upgrade_Ravenous",
+      "name": "Upgrade Ravenous Hydra"
+    },
+    "2141": {
+      "apiName": "Quest_UltraHydra",
+      "name": "Ultra Hydra"
+    },
+    "2143": {
+      "apiName": "Upgrade_SunderedSky",
+      "name": "Upgrade Sundered Sky"
+    },
+    "2144": {
+      "apiName": "DoubleDefense",
+      "name": "Bolstered"
+    },
+    "2148": {
+      "apiName": "DoubleStrike",
+      "name": "Double Strike"
+    },
+    "2157": {
+      "apiName": "Upgrade_DeathDance",
+      "name": "Upgrade Death's Dance"
+    },
+    "7001": {
+      "apiName": "Upgrade_ZzRotPortal",
+      "name": "Upgrade: Zz'Rot Portal"
+    },
+    "7002": {
+      "apiName": "DontStopCleavin",
+      "name": "Don't Stop Cleavin'"
+    },
+    "7003": {
+      "apiName": "DoOrDie",
+      "name": "Do or Die"
+    },
+    "7004": {
+      "apiName": "DrinkUp",
+      "name": "Drink Up"
+    },
+    "7005": {
+      "apiName": "HasteMakesWaste",
+      "name": "Haste Makes Waste"
+    },
+    "7006": {
+      "apiName": "StabbyStabby",
+      "name": "Stabby Stabby"
+    },
+    "7007": {
+      "apiName": "Upgrade_DeathFireGrasp",
+      "name": "Upgrade: Deathfire Grasp"
+    },
+    "7008": {
+      "apiName": "DoransBiggestFan",
+      "name": "Doran's Biggest Fan"
+    },
+    "7009": {
+      "apiName": "Upgrade_InnervatingLocket",
+      "name": "Upgrade: Innervating Locket"
+    },
+    "7010": {
+      "apiName": "FutureSightHeartsteel",
+      "name": "Time Warp: Heartsteel"
+    },
+    "7011": {
+      "apiName": "TrueEternity",
+      "name": "True Eternity"
+    },
+    "7012": {
+      "apiName": "HexCore",
+      "name": "The Hex Core"
+    },
+    "7013": {
+      "apiName": "SpiritOfTheJungleMain",
+      "name": "Spirit of the Jungle Main"
+    },
+    "7014": {
+      "apiName": "DipDiveDodge",
+      "name": "Ragebait"
+    },
+    "7015": {
+      "apiName": "SummonersSafari",
+      "name": "Summoner's Safari"
+    },
+    "12317": {
+      "apiName": "ARAM_PandorasBox",
+      "name": "Pandora's Box"
+    }
+  }
+}

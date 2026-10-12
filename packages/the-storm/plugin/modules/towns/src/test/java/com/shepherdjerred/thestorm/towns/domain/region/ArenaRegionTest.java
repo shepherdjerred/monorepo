@@ -35,7 +35,8 @@ final class ArenaRegionTest {
                           new Cuboid(
                               "world", new BlockCorner(0, 0, 0), new BlockCorner(15, 128, 15)))),
                   List.of(),
-                  RegionSpawns.unlimited()),
+                  RegionSpawns.unlimited(),
+                  com.shepherdjerred.thestorm.towns.domain.region.RegionProfile.PRESERVE),
               new AdminRegion(
                   "arena",
                   "Arena",
@@ -54,7 +55,8 @@ final class ArenaRegionTest {
                           "REINFORCEMENTS",
                           "SLIME_SPLIT",
                           "JOCKEY",
-                          "MOUNT")))));
+                          "MOUNT")),
+                  com.shepherdjerred.thestorm.towns.domain.region.RegionProfile.PRESERVE)));
   private final AdminRegion arena = regions.byId("arena").orElseThrow();
   private final AdminRegion spawn = regions.byId("spawn").orElseThrow();
 

@@ -103,8 +103,12 @@ package README documents the Wine patches and the build's limitations. This is
 compile and package evidence only: packaged runtime, UI Automation, and parity
 claims still require `windows:verify` on Windows.
 
-Portable Linux CI uses `build`, `typecheck`, `lint`, `coverage:portable`, and
-`test:ci`. The checked-in `projects.json` classifies every project, and the
+Portable Linux CI uses `build`, `typecheck`, `lint`, `test:ci`, and
+`coverage:portable:check`. The two portable suites run once with coverage,
+randomized ordering, timeouts, and per-test JUnit reports. The uncached coverage
+check consumes those fresh reports and applies the same baseline and changed-line
+ratchets. `bun run coverage:portable` remains the standalone local command that
+runs both suites and checks coverage. The checked-in `projects.json` classifies every project, and the
 quality checker proves the portable solution includes every portable project
 and excludes every WinUI, MSIX, and UI Automation project. The CI test
 manifest lists both Windows-only suites with explicit reasons; they are not

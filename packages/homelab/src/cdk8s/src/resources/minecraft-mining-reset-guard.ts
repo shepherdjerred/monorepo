@@ -1,4 +1,5 @@
 import { ApiObject, type Chart } from "cdk8s";
+import { minecraftMaintenanceMatch } from "./minecraft-maintenance-match.ts";
 
 /**
  * A stopped server must remain stopped while Temporal replaces the disposable
@@ -19,26 +20,7 @@ export function createMinecraftMiningResetGuard(chart: Chart): void {
       annotations: { "argocd.argoproj.io/sync-wave": "-30" },
     },
     spec: {
-      failurePolicy: "Fail",
-      matchConstraints: {
-        matchPolicy: "Equivalent",
-        resourceRules: [
-          {
-            apiGroups: ["apps"],
-            apiVersions: ["v1"],
-            operations: ["UPDATE"],
-            resources: ["statefulsets"],
-            scope: "Namespaced",
-          },
-        ],
-      },
-      matchConditions: [
-        {
-          name: "the-storm-server",
-          expression:
-            "object.metadata.namespace == 'minecraft-tsmc' && object.metadata.name == 'minecraft-tsmc'",
-        },
-      ],
+      ...minecraftMaintenanceMatch("statefulsets"),
       validations: [
         {
           expression: `!has(object.metadata.annotations) || !('${MINING_RESET_LOCK_ANNOTATION}' in object.metadata.annotations) || object.spec.replicas == 0`,

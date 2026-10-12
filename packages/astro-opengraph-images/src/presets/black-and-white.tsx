@@ -2,11 +2,12 @@ import type { RenderFunctionInput } from "#src/types.js";
 
 export function blackAndWhite({
   title,
-  description,
+  description = "",
 }: RenderFunctionInput): React.ReactNode {
   return (
     <div
       style={{
+        boxSizing: "border-box",
         height: "100%",
         width: "100%",
         display: "flex",
@@ -30,7 +31,7 @@ export function blackAndWhite({
           fontSize: 40,
         }}
       >
-        {description ?? ""}
+        {description}
       </div>
     </div>
   );

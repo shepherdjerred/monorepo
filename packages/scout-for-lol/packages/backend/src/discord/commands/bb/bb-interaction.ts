@@ -1,4 +1,4 @@
-import type { ChatInputCommandInteraction } from "discord.js";
+import { type Interaction, type ChatInputCommandInteraction } from "discord.js";
 import type {
   CommandEditReply,
   CommandReply,
@@ -6,10 +6,10 @@ import type {
 
 export type BbCommandInteraction = {
   id: string;
-  guildId: string | null;
+  guildId: Interaction["guildId"];
   /** Where the command was invoked — the channel a dare's public callout and
    * result messages are bound to. */
-  channelId: string | null;
+  channelId: Interaction["channelId"];
   user: { id: string };
   options: Pick<
     ChatInputCommandInteraction["options"],

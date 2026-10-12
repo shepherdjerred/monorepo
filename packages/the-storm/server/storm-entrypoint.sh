@@ -24,6 +24,20 @@ fail() {
   exit 1
 }
 
+require_progression_preparation() {
+  local marker=/data/.the-storm-progression-v1.json
+  if [[ -f $marker ]]; then
+    jq -e '.version == 1 and .status == "complete"' "$marker" >/dev/null ||
+      fail "progression archive is incomplete; finish the stopped-server archive"
+  elif [[ -e /data/world/level.dat || -e /data/plugins/TheStorm/the-storm.db ]]; then
+    fail "existing data requires archive-progression.py against a verified restore before activation"
+  else
+    # A genuinely new world has no old progression to reset. Subsequent boots
+    # retain this marker and never reset a database.
+    printf '%s\n' '{"version":1,"status":"complete","backupId":"new-world"}' >"$marker"
+  fi
+}
+
 remove_stale_files() {
   local list=/bundle/remove.list ledger=/data/.the-storm-removed
   local path target dir
@@ -69,6 +83,32 @@ mirror_owned_roots() {
   done </bundle/owned.roots
 }
 
+install_livemap() {
+  # Only copy bundled static files. Never prune this webroot: BlueMap owns
+  # settings.json, maps, and live data, and open tabs may still use old assets.
+  # Installing index.html before BlueMap starts also prevents default frontend
+  # extraction from replacing the branded viewer on first boot.
+  local source=$1 target=$2 data_owner=$3 data_group=$4 runtime_owner file destination directory
+  [[ -f $source/index.html ]] || fail "LiveMap frontend is missing from the image"
+  # fsGroup can leave the volume root owned by root even when Minecraft runs
+  # unprivileged. Install as the runtime user and retain the shared volume group.
+  runtime_owner=$(id -u)
+  # Root-started images hand off to itzg, which chowns only when /data has the
+  # wrong owner. Preserve an already-correct volume owner in that case.
+  if [[ $runtime_owner != 0 ]]; then
+    data_owner=$runtime_owner
+  fi
+  install -d -m 2775 -o "$data_owner" -g "$data_group" "$(dirname "$target")" "$target"
+  while IFS= read -r -d '' file; do
+    destination=$target/${file#"$source/"}
+    directory=$(dirname "$destination")
+    install -d -m 2775 -o "$data_owner" -g "$data_group" "$directory"
+    install -m 0664 -o "$data_owner" -g "$data_group" "$file" "$destination"
+  done < <(find "$source" -type f -print0)
+}
+
+require_progression_preparation
 remove_stale_files
 mirror_owned_roots
+install_livemap /opt/the-storm/livemap /data/bluemap/web "$(stat -c '%u' /data)" "$(stat -c '%g' /data)"
 exec /image/scripts/start "$@"

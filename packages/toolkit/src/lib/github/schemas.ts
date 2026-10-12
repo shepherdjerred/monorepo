@@ -42,7 +42,8 @@ export const ReviewSchema = z.object({
     "PENDING",
     "DISMISSED",
   ]),
-  submittedAt: z.string(),
+  // GitHub returns null for reviews that are still pending submission.
+  submittedAt: z.string().nullable(),
 });
 
 export const ReviewsResponseSchema = z.object({

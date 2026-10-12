@@ -1,0 +1,84 @@
+id: turbostorm60
+name: TurboStorm60
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NTYyOTg0NiwKICAicHJvZmlsZUlkIiA6ICJhODEzMzJmNjA5MmE0NDQ1Yjk1YzVhZGFjNDA2OTQzYiIsCiAgInByb2ZpbGVOYW1lIiA6ICJTbmFwcHliM2FzdCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS81YWI2NWI2OTlkMzQzZDMwM2IwMzEzYjE4ZmFkMjllZjg2MTE4NjJkY2NjMjJjYWFhYzdhMDg5NmYyZGIyYmIwIgogICAgfQogIH0KfQ=="
+  signature: "K+74NpDsY3gd/Xr40AjzXqFqILZPoPdvzJXKuEMBIVFCfRAvJyamFJ3Fyas0YPnxGeHjdtGmFA9iUwWHdEfYC/q0oPMWdHB9sxGwzrn4qxydynOXP/5rme6u/CLwpDbD7sHMvzdnpRi7nf5MXxI26FwfHzBe964YDeJPKbO3/EAbeqIpk2IcWxpP43QnI2AOgTyH1r5dJVbRKXq9ArXVHa5/X6KDkBlMcL0r5QmSI+Kj4zXJn9BHLOzKxqBPNiIk1bY93Ef2UW5EwrrkyFz467b1Uk1jffWR7g0GE1Jh+9XWXZYuB0Crac+lEsRBqy4F4UPve61BN/Tgmc91DZcrK/IepowxtN5WHO6uXI2VPAmqUN44mv+oGOxeI+YbZQApclms3dPK7M7Gl2IjmMmAoZ5ap6ao2+NUD3QkDiwsWPoi8RAJtpjvRUpTIR67+GeqaY23ff2C435skzsGIX4wHzvwlIQtwwXdZ9nFQl7wfPVLv1hrky5tQNRk9J5MJasGX6ym2u9blHz0ZRztTSoC8tUCVNhWpJeTipVEe/2/zHhJNIF/NUY25m3FRJmC8VdDAOYRU0m+SbT6BW3rFA+EX8P+0nceC3NbVtnNQTtI+++BfeMPYtyeOZOfsThDvP/k0HnDaVVrXwc6MWeUx8TPjn4LGP1UvyMBqXNvuSV21XI="
+skill: 0.168
+archetype: rusher
+leverOffsets:
+  reactionMs: 0.42
+  turnRateDegPerTick: 0.61
+  cps: 0.65
+  decisionTemperature: 0.12
+  awarenessRadius: -0.5
+  technique: 0.98
+  aggression: 1.76
+kits:
+  trooper: 1
+  shortbow: 0.51
+  rewind: 0.26
+  wraith: 0.19
+roles:
+  plant: 0.85
+  escort: 0.55
+  defend: 0.25
+  hunt: 0.69
+style:
+  aggression: 0.91
+  patience: 0.14
+  teamplay: 0.35
+  risk: 0.79
+voice:
+  tone:
+    - competitive
+    - cocky
+    - racer
+  verbosity: normal
+  style: "race car driver; pit-stop talk, laps and pole position"
+lines:
+  greet:
+    - Engines on. Pole position is mine.
+    - "Green flag, {team}! Floor it!"
+    - Fastest lap or bust.
+  onKill:
+    - "{victim} got lapped!"
+    - "Overtook {victim} on the inside."
+    - Out of my lane!
+  onDeath:
+    - "Crashed out. Good line, {killer}."
+    - Pit stop. Back in a sec.
+    - Spun out on the corner.
+  onPlant:
+    - "{bomb} lit! Checkered flag!"
+    - "Fuse on {bomb}. New lap record?"
+  onDefuse:
+    - "{bomb} defused. Pit crew doing great work."
+    - "Box box box, {bomb} safe."
+  onWin:
+    - First place! gg.
+    - "Podium finish for {team}!"
+  onLoss:
+    - Engine trouble. gg.
+    - DNF. Next race.
+  onLastAlive:
+    - Final lap, solo.
+    - Pedal to the metal.
+    - "{team}, I'm bringing it home."
+  taunt:
+    - You're eating my dust.
+    - I'm already a lap ahead.
+    - Slow traffic keep right.
+  lobby:
+    - Pit lane's open. Fuel up on gapples.
+    - Tyres warm. Sword sharp. Ready to race.
+    - "Lap one starts at the bell, {team}."
+    - My stopwatch is reset. Let's make a record.
+    - Two seconds. Someone beat me by two seconds. Once.
+quirks:
+  - celebrates_early
+  - never_eats
+rivals:
+  - xxcometriderxx
+bio: Times every rush with a stopwatch and posts the results nobody asked for. xXCometRiderXx beat his record once by two seconds and has not stopped mentioning it.
+batch: 2
+retired: false

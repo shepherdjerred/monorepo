@@ -1,0 +1,85 @@
+id: xxcometriderxx
+name: xXCometRiderXx
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NDEyNjg4NCwKICAicHJvZmlsZUlkIiA6ICJmZDJlZDMzMzI0Mjk0ZThmOWVlZGNiN2RhMWJiNzlkZSIsCiAgInByb2ZpbGVOYW1lIiA6ICJkcmFtYWdnIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2UzYjNjMzAzOTBkNTUwYTAzN2M4ZjZjODRlMjc0YTYwN2ZmMjc3YWI5YTNiODY3NWQ0NTFkNDdkODI0ZjljZDciCiAgICB9CiAgfQp9
+  signature: "Xqgzltxq0yVxSlB15Vckr1GcAfsPIxrMzyF6Z1Y/mOCINa8IPyQczE3lr8kvTbtVBqSrg7/f9tk1a1hsUyxVIvzm4TcILP1CewnESK3GQtOHyecyKxSn/gM7A6iIaRjFe5dV6o9hNRLOJIKIijAWP6JBT6zA+PK26qR01uI6Fw9Ck1paBXpx75+eDaGLuH21SkomOXurxZkIC1aEUlQwL2laMBgtp0Yr52wExuE45wKpbG5JiOuVUe5+VvbvXk8zhq6gnHFh/wWdigA8fXkWNcW0jIsxHHwb4QGqqDJMheCZFLsFKZLgV5xFLeOUf+uo8G50gS6jNFlrnRZ/lbRv2b6a5ybcbZuj81Yx/TVRkZ+QWtQ+uMK1fBy9gB7QMcK7qxmCtRil5D1bUt6TSVz98B/Y/e7BG/sXP7JJVvV8kv3bi2P/e3NHzaWQ/7CIEM3hGHRT85qPnv+pczqQtK2jGda/uAF2WaUj59NdLKoq1j5oTzh54szoRQ1J4+fzFyKHuVj4LfX4R5ubCZ7LfRptWWn4VY5CXcvE+du3xaJKJ6n3uGBjVGE06DYbq2dR4H55UUgiV0BXX17r0n1xDQxGC586MxXk0Kz/5+Om0Iol04jEPp2wOvPRfaYIyOXFhzv6N9Ytnztjf7ifB80fCjLD+nNfrK7kxYOH7oU0sWNPLz8="
+skill: 0.359
+archetype: rusher
+leverOffsets:
+  reactionMs: 0.3
+  cps: 0.76
+  decisionTemperature: 0.12
+  awarenessRadius: -0.6
+  technique: -0.68
+  aggression: 1.46
+kits:
+  trooper: 1
+  shortbow: 0.47
+  rewind: 0.28
+roles:
+  plant: 0.9
+  escort: 0.41
+  hunt: 0.77
+style:
+  aggression: 0.87
+  patience: 0.11
+  teamplay: 0.38
+  risk: 0.76
+voice:
+  tone:
+    - hype
+    - loud
+    - impatient
+  verbosity: chatty
+  style: "ALL CAPS when excited, which is always; counts down out loud"
+lines:
+  greet:
+    - "3 2 1 GOOOO"
+    - WHO IS READY TO RUSH. me. i am.
+    - "{team} lets GO GO GO"
+  onKill:
+    - "GOT {victim} GOT {victim}"
+    - "OUT OF MY WAY {victim}"
+    - one down keep running
+  onDeath:
+    - NOOO i was SO close
+    - "ok {killer} that was fast. respect"
+    - respawn faster. RESPAWN FASTER
+  onPlant:
+    - "{bomb} IS LIT LETS GOOO"
+    - "FUSE IN FUSE IN {bomb} GOING UP"
+    - told u rushing works
+  onDefuse:
+    - "{bomb} defused now back to RUSHING"
+    - "ok ok saved {bomb} can i go now"
+  onWin:
+    - SPEEDRUN COMPLETE
+    - "GG {team} WE FLEW"
+    - fastest win of my LIFE
+  onLoss:
+    - next round we rush HARDER
+    - gg i went too fast. impossible. but gg
+    - too slow?? me?? gg
+  onLastAlive:
+    - SOLO RUSH SOLO RUSH
+    - ok its me vs everyone. fine. GO
+    - cant stop wont stop
+  taunt:
+    - u guys still walking??
+    - catch me if u can (u cant)
+    - im already at ur bomb btw
+  lobby:
+    - IS IT STARTING YET
+    - SHORTBOW OR TROOPER?? BOTH ARE FAST IF I'M HOLDING THEM
+    - I CHECKED MY NOTEBOOK. TODAY IS A RECORD DAY
+    - "{team} STRETCH YOUR LEGS WE'RE SPRINTING"
+    - TEN SECONDS? NINE? I'M COUNTING ANYWAY
+quirks:
+  - bunny_hops
+  - celebrates_early
+rivals:
+  - turbostorm60
+  - swiftkrashtim
+bio: Spent the summer of 2014 trying to plant faster than TurboStorm60 and keeps a notebook of the times. Has never once walked anywhere.
+batch: 2
+retired: false

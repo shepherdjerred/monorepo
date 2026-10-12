@@ -1,0 +1,81 @@
+id: badgercomet5
+name: BadgerComet5
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0ODk3MDEwNiwKICAicHJvZmlsZUlkIiA6ICJkNGUwNTFjZGRhNDU0NTUxYjk1ZWRiZjdkNTM1ZTA3ZSIsCiAgInByb2ZpbGVOYW1lIiA6ICJFbGVtZW50YWxfTWF4IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzdkZTUzNjQ0NTMyOGRhMzM2MjQ3MjNjMDJlN2Y2ODc5ZDdkYzg3ZTIyZWZlOTA1NmY4ZDhjNzBhMjZiYTMwYTUiCiAgICB9CiAgfQp9
+  signature: "TIgU9Y4fkxwEXzr95MPyFbjTigxwLOiU8QCV/MNqOsSZRiArU0yahHpSOzqO5qCd/RXFyNFIs4Q4+qYP4hnDIC+TfiGJX2ERoQk9nXEmE5XQgy/fXjgQ5MqLyYhGrJB5WwmDJSQlIes45SdtpbyYsmmVzcvdt54wmIxVmLw9u8AZwaEagKkVnhZoLYiEHBHfpvMsm0itaF5yWqVcnJGC/Ea8A6krWaPTPgQOAgB8/nAt1Fu9OtUQ7Z9LBtaKhDqqFdnNdrq+bEOhu89bBoS+EYPU8Q7LqJ0sc11VFbkD/uFG7BssfzSi1cmqyVVvXzXF6PbTsRyt020yNqj59TJIYnHqxzYNxVn32GGglUJLHZcI7COvh2AVlivt1LN4JC27gkbWTGjp7XTIshmAJ1RYBgyaKjfmbpCJY9LU+HzniiGHEEFTmKP1wmq87u+5fjrwfbGay6Vd7tmw1WmwCxE3RYrgTZw5o1ErRi9otTwOevDgXgGYEitbrbrxbvd6FEocPDscHw6KWRuMdDYh6qLQRI1v+Op155LRGAvOddu8OeGgb5cPYo/AkjVQ6If7UChRASRoAE7AsI97ngqWcKCqGOGV7GIEvmCrjgyZqebT+YJAVl8iXHJGlbMqx7KvTqETEN8Zt0AQ4vUmJO5cpQD4+FHUspIWFBOY81J5fLZgw9o="
+skill: 0.766
+archetype: lurker
+leverOffsets:
+  turnRateDegPerTick: -0.32
+  predictionQuality: 0.71
+  awarenessRadius: 1.76
+  coordination: -1.48
+  aggression: -0.04
+kits:
+  trooper: 0.71
+  shortbow: 0.68
+  rewind: 0.16
+  ghost: 0.92
+  wraith: 0.56
+roles:
+  plant: 0.33
+  rotate: 0.89
+  hunt: 0.61
+style:
+  aggression: 0.36
+  patience: 0.8
+  teamplay: 0.1
+  risk: 0.63
+voice:
+  tone:
+    - grumbly
+    - stubborn
+    - earthy
+  verbosity: quiet
+  style: "Burrowing badger: talks about tunnels and digging, grumbles, short and earthy"
+lines:
+  greet:
+    - Digging in. See you later.
+    - "To the tunnels, {team}."
+  onKill:
+    - "Out of the burrow. {victim}."
+    - Grr. Got 'em.
+    - Tunnel ambush.
+  onDeath:
+    - "{killer} found the burrow."
+    - Collapsed.
+    - Grr.
+  onPlant:
+    - "{bomb} lit. Back underground."
+    - Dug in, lit it.
+  onDefuse:
+    - "{bomb} buried safe."
+    - Burrow secured.
+  onWin:
+    - "Good digging, {team}."
+    - Burrow wins.
+  onLoss:
+    - Dig deeper next time.
+    - Grr. Again.
+  onLastAlive:
+    - Deep in the burrow.
+    - They won't find me.
+  taunt:
+    - Mind your feet.
+    - I'm under you.
+    - Grr.
+  lobby:
+    - Still looking for the tunnels.
+    - Dig in, sit tight, pop out. Simple.
+    - Shortbow fits in a burrow. Longbow doesn't.
+    - Hiding bet's still on. I'm winning.
+    - "{team}. Dig deep."
+quirks:
+  - stares_down
+  - holds_grudges
+rivals:
+  - ravenotter9
+  - swift-falcon
+bio: Swears there are tunnels under every map and spent 2014 looking for them. Holds a long bet with RavenOtter9 about who can stay hidden longer and growls at Swift_Falcon for stealing its quiet corners.
+batch: 2
+retired: false

@@ -1,3 +1,5 @@
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import { ProgressionAccountSchema } from "#src/model/progression/account.ts";
 
@@ -90,7 +92,7 @@ export const DuelObjectiveSchema = z.enum(["kills", "lane_cs", "first_turret"]);
 export type DuelObjective = z.infer<typeof DuelObjectiveSchema>;
 
 export const DuelResultEvidenceSchema = z.strictObject({
-  matchId: z.string().min(1),
+  matchId: RiotMatchIdSchema,
   state: z.enum(["verified", "needs_review"]),
   winnerCompetitorId: z.uuid().nullable(),
   objective: DuelObjectiveSchema.nullable(),
@@ -117,16 +119,16 @@ export const DuelStandingSchema = z.strictObject({
 export type DuelStanding = z.infer<typeof DuelStandingSchema>;
 
 export const DuelTimelineInputSchema = z.strictObject({
-  matchId: z.string().min(1),
+  matchId: RiotMatchIdSchema,
   completed: z.boolean(),
   timelineComplete: z.boolean(),
   participants: z.array(
-    z.strictObject({ puuid: z.string().min(1), teamId: z.number().int() }),
+    z.strictObject({ puuid: LeaguePuuidSchema, teamId: z.number().int() }),
   ),
   kills: z.array(
     z.strictObject({
       timestampMs: z.number().int().nonnegative(),
-      killerPuuid: z.string().min(1),
+      killerPuuid: LeaguePuuidSchema,
     }),
   ),
   turretKills: z.array(
@@ -140,7 +142,7 @@ export const DuelTimelineInputSchema = z.strictObject({
       timestampMs: z.number().int().nonnegative(),
       participants: z.array(
         z.strictObject({
-          puuid: z.string().min(1),
+          puuid: LeaguePuuidSchema,
           minionsKilled: z.number().int().nonnegative(),
           jungleMinionsKilled: z.number().int().nonnegative(),
         }),

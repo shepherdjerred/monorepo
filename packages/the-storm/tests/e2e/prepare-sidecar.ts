@@ -1,10 +1,21 @@
-import { cp, mkdir, rm } from "node:fs/promises";
+import {
+  chmod,
+  chown,
+  cp,
+  mkdir,
+  readdir,
+  rm,
+  symlink,
+} from "node:fs/promises";
 import path from "node:path";
-import { RconClient } from "@shepherdjerred/the-storm-brain/rcon";
-import { stagePlugins, stormTestConfig } from "./harness/server.ts";
-import { paper } from "./harness/pins.ts";
+import { RconClient } from "#e2e/harness/rcon.ts";
+import { stagePlugins } from "./harness/server.ts";
+import { e2eProfile, gameplayFixtures } from "./gameplay-fixtures.ts";
+import { paper } from "@shepherdjerred/mc-harness/pins.ts";
 
 const packageRoot = path.resolve(import.meta.dirname, "..", "..");
+const profile = e2eProfile();
+const full = profile !== "e2e";
 const stormJar = path.join(
   packageRoot,
   "plugin",
@@ -13,32 +24,7 @@ const stormJar = path.join(
   "libs",
   "TheStorm.jar",
 );
-const mechanicsE2eJar = path.join(
-  packageRoot,
-  "plugin",
-  "modules",
-  "mechanics",
-  "build",
-  "libs",
-  "TheStormMechanicsE2E.jar",
-);
-const ownedConfig = path.join(
-  packageRoot,
-  "server",
-  "owned",
-  "plugins",
-  "TheStorm",
-  "config.yml",
-);
-const mechanicsConfig = path.join(
-  packageRoot,
-  "server",
-  "owned",
-  "plugins",
-  "TheStorm",
-  "mechanics.yml",
-);
-const ownedConfigDir = path.dirname(ownedConfig);
+const ownedConfigDir = path.join(packageRoot, "server/owned/plugins/TheStorm");
 const pluginVolume = Bun.env["STORM_E2E_PLUGIN_DIR"];
 const dataVolume = Bun.env["STORM_E2E_DATA_DIR"];
 const rconPassword = Bun.env["STORM_E2E_RCON_PASSWORD"];
@@ -70,18 +56,7 @@ const stagingDir = path.join(
 );
 const stagedPlugins = await stagePlugins(cacheDir, stagingDir, {
   stormJar,
-  // The mechanics E2E plugin owns its real-Paper fixture and must be the only
-  // mechanics runtime to avoid duplicate listeners.
-  stormConfig: stormTestConfig(await Bun.file(ownedConfig).text(), [
-    "economy",
-    "chat",
-    "tracks",
-    "towns",
-    "tickets",
-    "agent",
-  ]),
-  mechanicsE2eJar,
-  mechanicsConfig: await Bun.file(mechanicsConfig).text(),
+  ...(await gameplayFixtures(packageRoot, profile)),
   ownedConfigDir,
   brain: {
     baseUrl: `http://${brainHost}:${brainPort.toString()}`,
@@ -93,7 +68,7 @@ const stagedPlugins = await stagePlugins(cacheDir, stagingDir, {
     redriveBackoffMinutes: 0,
     slaAfterMinutes: 10_080,
   },
-  agent: { mode: "shadow", reviewSamplePercent: 100 },
+  agent: { mode: full ? "active" : "shadow", reviewSamplePercent: 100 },
   warmCache: false,
 });
 await rm(pluginVolume, { recursive: true, force: true });
@@ -101,7 +76,35 @@ await rm(dataVolume, { recursive: true, force: true });
 await mkdir(pluginVolume, { recursive: true });
 await mkdir(dataVolume, { recursive: true });
 await cp(stagedPlugins, pluginVolume, { recursive: true });
+// Paper loads this shared tree directly. Keep its writable data and remapped
+// jars beside the staged inputs so the runner observes the same files.
+async function assignPaperOwnership(directory: string): Promise<void> {
+  for (const entry of await readdir(directory, { withFileTypes: true })) {
+    const target = path.join(directory, entry.name);
+    if (!entry.isDirectory() && !entry.isFile())
+      throw new Error(
+        `Staged plugin input must be a file or directory: ${target}`,
+      );
+    if (entry.isDirectory()) await assignPaperOwnership(target);
+    else await chown(target, 1000, 1000);
+  }
+  await chown(directory, 1000, 1000);
+  await chmod(directory, 0o770);
+}
+await assignPaperOwnership(pluginVolume);
+const sharedPlugins = path.join(cacheDir, "sidecar-plugins");
+await rm(sharedPlugins, { force: true });
+await symlink(pluginVolume, sharedPlugins, "dir");
 await mkdir(path.join(dataVolume, "logs"), { recursive: true });
+// The runner creates this shared directory as root; Paper writes as uid 1000.
+await chown(path.join(dataVolume, "logs"), 1000, 1000);
+await chmod(path.join(dataVolume, "logs"), 0o770);
+// The suite reconnects disposable players faster than Bukkit's default throttle.
+await mkdir(path.join(dataVolume, "config"), { recursive: true });
+await Bun.write(
+  path.join(dataVolume, "config", "bukkit.yml"),
+  "settings:\n  connection-throttle: -1\n",
+);
 
 const brainDeadline = Date.now() + 60_000;
 for (;;) {

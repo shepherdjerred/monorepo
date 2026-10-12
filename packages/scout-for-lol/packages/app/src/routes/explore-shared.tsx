@@ -86,7 +86,12 @@ export function ExploreShared() {
         </p>
       </header>
 
-      <ExploreTranscript messages={transcript.messages} />
+      <ExploreTranscript
+        messages={transcript.messages}
+        showRawTrace
+        conversationId={transcript.conversation.id}
+        shareToken={shareToken ?? null}
+      />
 
       <footer className="border-t pt-4">
         <p className="text-sm text-scout-subtle">

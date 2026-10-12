@@ -10,6 +10,7 @@ tripwires:
     Never use a line or area chart when the x axis is a category. A line drawn
     between champions asserts a trend that does not exist.
 ---
+
 ## Choosing a RENDER kind
 
 When `includeVisualization` is true, choose a RENDER kind that matches the data:

@@ -1,0 +1,37 @@
+{
+  "id": "anchor-watchtower",
+  "task": "anchor",
+  "rubric": "micro",
+  "anchor": true,
+  "weak": true,
+  "head": "",
+  "agent": null,
+  "model": null,
+  "runId": null,
+  "collectedAt": "2026-10-07T06:16:13.664Z",
+  "source": "packages/mc-build/library/watchtower (this repository)",
+  "licence": "repository licence",
+  "seconds": null,
+  "usage": null,
+  "checks": {
+    "passed": 0,
+    "total": 0
+  },
+  "lint": {
+    "errors": 0,
+    "warnings": 0,
+    "codes": []
+  },
+  "gridHash": "7fd62cf8acfef427ced4936dbb8b703db0f915411e42811802efd718489ec5fd",
+  "size": {
+    "x": 17,
+    "y": 19,
+    "z": 16
+  },
+  "blocks": 892,
+  "repetition": 0,
+  "schematic": {
+    "path": "/root/.toolkit/mc/bench/anchors/watchtower/site.schem",
+    "sha256": "cc8b21700b9de37bb91f90f2cc7109ca8fa9c0a841001aa2e371f9b885803d88"
+  }
+}

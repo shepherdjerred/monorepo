@@ -29,8 +29,6 @@ const PRODUCTION_DENIED_FLAGS = [
   "betting_settlement_dm_enabled",
   "bucks_transfers_enabled",
   "bucks_dares_enabled",
-  "dare_v2",
-  "dare_extended_contracts_enabled",
   "dare_notifications_enabled",
   "custom_nights_enabled",
   "duels_enabled",
@@ -48,11 +46,9 @@ const PRODUCTION_ALLOWED_FLAGS = [
   "ai_reviews_enabled",
   "challenge_runs_enabled",
   "clash_surface",
-  "competition_builder_v2_enabled",
   "explore_on_demand_riot_enabled",
   "hall_of_fame_enabled",
   "mvp_votes_enabled",
-  "scoutql_relational_enabled",
 ] as const;
 
 beforeEach(() => {
@@ -99,8 +95,6 @@ describe("production hard-disable policy", () => {
         betting_settlement_dm_enabled: true,
         bucks_transfers_enabled: true,
         bucks_dares_enabled: true,
-        dare_v2: true,
-        dare_extended_contracts_enabled: true,
         dare_notifications_enabled: true,
         custom_nights_enabled: true,
         duels_enabled: true,
@@ -162,11 +156,9 @@ describe("production hard-disable policy", () => {
         ai_reviews_enabled: true,
         challenge_runs_enabled: true,
         clash_surface: true,
-        competition_builder_v2_enabled: true,
         explore_on_demand_riot_enabled: true,
         hall_of_fame_enabled: true,
         mvp_votes_enabled: true,
-        scoutql_relational_enabled: true,
       }),
     });
 
@@ -235,17 +227,6 @@ describe("initial history import flag", () => {
       }),
     ).toBe(true);
     resetFlagOverrides("initial_match_history_import_enabled");
-  });
-});
-
-describe("competition builder V2 rollout", () => {
-  test("is off by default and enabled for the beta guild", () => {
-    expect(
-      getFlag("competition_builder_v2_enabled", { server: OTHER_GUILD }),
-    ).toBe(false);
-    expect(
-      getFlag("competition_builder_v2_enabled", { server: MY_SERVER }),
-    ).toBe(true);
   });
 });
 

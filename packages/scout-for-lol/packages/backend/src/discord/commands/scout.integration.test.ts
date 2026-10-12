@@ -1,4 +1,8 @@
 import {
+  DiscordGuildIdSchema,
+  type DiscordGuildId,
+} from "@scout-for-lol/domain/identity/discord.ts";
+import {
   afterAll,
   afterEach,
   beforeEach,
@@ -6,12 +10,13 @@ import {
   expect,
   test,
 } from "vitest";
-import type {
-  InteractionEditReplyOptions,
-  InteractionReplyOptions,
+import {
+  type InteractionEditReplyOptions,
+  type InteractionReplyOptions,
+  MessageFlags,
 } from "discord.js";
-import { MessageFlags } from "discord.js";
-import type { ExploreAgentParams } from "#src/explore/agent-tools.ts";
+import type { ExploreAgentParams } from "#src/explore/analysis/agent-types.ts";
+import { resolveExploreModel } from "#src/config/dynamic.ts";
 import { resetConfigurationForTests } from "#src/configuration.ts";
 import {
   executeScout,
@@ -25,7 +30,7 @@ import { testAccountId } from "#src/testing/test-ids.ts";
 
 const { prisma } = createTestDatabase("discord-scout-command-test");
 const userId = testAccountId("81");
-const allowedGuild = "100000000000000081";
+const allowedGuild = DiscordGuildIdSchema.parse("100000000000000081");
 const originalAllowlist = Bun.env["EXPLORE_GUILD_ALLOWLIST"];
 const originalOrigin = Bun.env["WEB_APP_ORIGIN"];
 
@@ -58,7 +63,7 @@ afterAll(async () => {
 });
 
 function fakeInteraction(input?: {
-  guildId?: string | null;
+  guildId?: DiscordGuildId | null;
   question?: string;
 }) {
   const replies: InteractionReplyOptions[] = [];
@@ -129,7 +134,10 @@ describe("/scout ask", () => {
   test("rejects DMs, unallowlisted guilds, and invalid questions privately", async () => {
     for (const input of [
       { guildId: null, question: "Who wins?" },
-      { guildId: "100000000000000082", question: "Who wins?" },
+      {
+        guildId: DiscordGuildIdSchema.parse("100000000000000082"),
+        question: "Who wins?",
+      },
       { guildId: allowedGuild, question: " ".repeat(10) },
       { guildId: allowedGuild, question: "x".repeat(2001) },
     ]) {
@@ -179,6 +187,18 @@ describe("/scout ask", () => {
       2,
     );
     expect(await prisma.exploreMessage.count()).toBe(4);
+    const savedAnswers = await prisma.exploreMessage.findMany({
+      where: { role: "assistant" },
+      select: { generation: true },
+    });
+    expect(savedAnswers).toHaveLength(2);
+    const expectedGeneration = JSON.stringify({
+      model: resolveExploreModel(),
+      reasoningEffort: "high",
+    });
+    expect(
+      savedAnswers.every((answer) => answer.generation === expectedGeneration),
+    ).toBe(true);
     expect(first.deferred()).toBe(1);
     expect(first.edits).toHaveLength(1);
     const responseJson = JSON.stringify(first.edits[0]);

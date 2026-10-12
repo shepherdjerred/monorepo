@@ -9,6 +9,7 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.damage.DamageSource;
 import org.bukkit.damage.DamageType;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Mannequin;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -125,6 +126,10 @@ public final class Harm implements Listener {
   public boolean strike(Player caster, LivingEntity target, Blow blow) {
     breakStealth(caster);
     if (guard.harmDenial(caster, target).isPresent()) {
+      return false;
+    }
+    if (target instanceof Mannequin && blow.damage() <= 0) {
+      // No attributed damage means no NPC warning, wanted status or guard response.
       return false;
     }
     if (blow.damage() > 0 && !hurt(target, blow.damage(), caster)) {

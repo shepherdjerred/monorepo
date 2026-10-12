@@ -9,7 +9,6 @@
     "pretypecheck": "bun --no-install run --cwd ../helm-types build",
     "test": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run && bun run test:gpu-resources",
     "test:ci": "bun ../../../../scripts/ci/run-ci-test.ts",
-    "test:report": "CI_TEST_COVERAGE=1 bun ../../../../scripts/ci/run-ci-test.ts",
     "test:gpu-resources": "bun run scripts/test-gpu-resources.ts",
     "test:bazarr": "bun run scripts/test-bazarr-providers.ts",
     "test:bazarr:live": "bun run scripts/test-bazarr-providers.ts --live",
@@ -29,15 +28,22 @@
     "diff": "bun run build && bun run scripts/helm-render.ts --diff",
     "audit:grafana": "bun run scripts/grafana-dashboard-audit.ts",
     "check:1password": "bun run scripts/check-1password-items.ts",
+    "check:storage-forecast": "bun run scripts/check-prometheus-storage-forecast.ts",
+    "check:backup-dashboard": "bun run scripts/check-seaweedfs-backup-dashboard.ts",
+    "check:scout-worker-ownership": "bun run scripts/check-scout-worker-ownership.ts",
     "argocd:contract": "bun run scripts/snapshot-argocd-api-contract.ts",
-    "check:caddyfile": "bun run scripts/check-caddyfile.ts"
+    "check:caddyfile": "bun run scripts/check-caddyfile.ts",
+    "audit:1password": "bun run scripts/onepassword/audit-vault.ts"
   },
   "dependencies": {
+    "@shepherdjerred/glitter-boys-launcher": "workspace:*",
+    "@shepherdjerred/root-scripts": "workspace:*",
     "cdk8s": "^2.70.58",
     "cdk8s-plus-31": "^2.6.43",
     "constructs": "^10.6.0",
     "cron-parser": "^5.5.0",
     "fast-xml-parser": "5.11.1",
+    "homelab": "workspace:*",
     "lodash": "4.18.1",
     "remeda": "^2.33.7",
     "ts-pattern": "^5.9.0",
@@ -45,24 +51,23 @@
     "@shepherdjerred/helm-types": "workspace:*",
     "@shepherdjerred/feature-flags": "workspace:*",
     "@shepherdjerred/version-catalog": "workspace:*",
+    "@shepherdjerred/ops-model": "workspace:*",
     "@grafana/grafana-foundation-sdk": "11.6.0-cogv0.0.x.1769699379"
   },
   "devDependencies": {
     "@shepherdjerred/eslint-config": "workspace:*",
-    "homelab": "workspace:*",
     "@temporalio/testing": "1.24.0",
     "@types/bun": "1.4.2",
     "@types/lodash": "^4.17.24",
     "@typescript/native": "npm:typescript@7.0.2",
-    "cdk8s-cli": "2.207.60",
+    "cdk8s-cli": "2.207.64",
     "eslint": "^10.7.0",
     "jiti": "^2.7.0",
     "prettier": "^3.9.9",
     "type-fest": "^5.6.0",
     "typescript": "^6.0.3",
     "yaml": "^2.8.3",
-    "vitest": "5.0.1",
-    "@vitest/coverage-istanbul": "5.0.1",
-    "@shepherdjerred/ops-model": "workspace:*"
+    "vitest": "5.0.3",
+    "@vitest/coverage-istanbul": "5.0.3"
   }
 }

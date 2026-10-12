@@ -1,8 +1,7 @@
 import {
   DiscordGuildIdSchema,
-  MatchIdSchema,
   type DiscordGuildId,
-  type MatchId,
+  type RiotMatchId,
 } from "@scout-for-lol/data";
 import { z } from "zod";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
@@ -11,9 +10,11 @@ import {
   isMissingChannelError,
   isPermissionError,
 } from "#src/discord/utils/permissions.ts";
-import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { createLogger } from "#src/logger.ts";
-import { refreshMvpTallyMessages } from "#src/mvp-votes/message-refresh.ts";
+import {
+  allOwnedMvpTallyTargetsUnavailable,
+  refreshMvpTallyMessages,
+} from "#src/mvp-votes/message-refresh.ts";
 
 const logger = createLogger("mvp-tally-reconciliation");
 // Discord REST retries can outlive one sweep tick. Keep the claim well beyond
@@ -21,14 +22,14 @@ const logger = createLogger("mvp-tally-reconciliation");
 const LEASE_MS = 10 * 60_000;
 const DiscordErrorCodeSchema = z.object({ code: z.number() });
 
-type RefreshKey = { matchId: MatchId; serverId: DiscordGuildId };
+type RefreshKey = { matchId: RiotMatchId; serverId: DiscordGuildId };
 
 async function hasTerminalNoReportOutcome(
-  matchId: MatchId,
+  matchId: RiotMatchId,
   prismaClient: ExtendedPrismaClient,
 ): Promise<boolean> {
   const found = await listIntentsForMatch(prismaClient, {
-    matchId: RiotMatchIdSchema.parse(matchId),
+    matchId: matchId,
   });
   const intents = found.filter((record) => record.intent.kind === "postmatch");
   // Absence of an intent is not evidence that delivery is finished. Every
@@ -59,13 +60,24 @@ function editErrorCode(error: unknown): string {
   return "discord-edit-unknown";
 }
 
+function noUpdateErrorCode(input: {
+  terminalNoReport: boolean;
+  terminalTargets: boolean;
+}): string {
+  return input.terminalTargets
+    ? "report-target-unavailable"
+    : input.terminalNoReport
+      ? "report-unavailable"
+      : "awaiting-report";
+}
+
 /** Claim one coalesced request across gateway and background worker replicas. */
 export async function reconcileMvpTallyRefresh(
   input: RefreshKey,
   prismaClient: ExtendedPrismaClient = prisma,
   refreshMessages: typeof refreshMvpTallyMessages = refreshMvpTallyMessages,
 ): Promise<void> {
-  const matchId = MatchIdSchema.parse(input.matchId);
+  const matchId = input.matchId;
   const serverId = DiscordGuildIdSchema.parse(input.serverId);
   const now = new Date();
   const token = crypto.randomUUID();
@@ -108,14 +120,21 @@ export async function reconcileMvpTallyRefresh(
       prismaClient,
     );
     if (!updated) {
-      const terminal = await hasTerminalNoReportOutcome(matchId, prismaClient);
+      const [terminalNoReport, terminalTargets] = await Promise.all([
+        hasTerminalNoReportOutcome(matchId, prismaClient),
+        allOwnedMvpTallyTargetsUnavailable(claimVersion, prismaClient),
+      ]);
+      const terminal = terminalNoReport || terminalTargets;
       const resolved = await prismaClient.matchMvpTallyRefresh.updateMany({
         where: claimVersion,
         data: {
           pending: !terminal,
           leaseToken: null,
           leaseUntil: null,
-          lastErrorCode: terminal ? "report-unavailable" : "awaiting-report",
+          lastErrorCode: noUpdateErrorCode({
+            terminalNoReport,
+            terminalTargets,
+          }),
           nextAttemptAt: new Date(now.getTime() + 60_000),
         },
       });
@@ -219,7 +238,7 @@ export async function reconcilePendingMvpTallyRefreshes(
   for (const request of requests) {
     await reconcileMvpTallyRefresh(
       {
-        matchId: MatchIdSchema.parse(request.matchId),
+        matchId: request.matchId,
         serverId: DiscordGuildIdSchema.parse(request.serverId),
       },
       prismaClient,

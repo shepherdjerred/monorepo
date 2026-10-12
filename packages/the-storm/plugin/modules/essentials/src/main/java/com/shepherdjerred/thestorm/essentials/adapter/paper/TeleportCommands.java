@@ -5,11 +5,13 @@ import static io.papermc.paper.command.brigadier.Commands.argument;
 import static io.papermc.paper.command.brigadier.Commands.literal;
 
 import com.mojang.brigadier.suggestion.SuggestionProvider;
+import com.shepherdjerred.thestorm.core.analytics.ProductAnalytics;
 import com.shepherdjerred.thestorm.core.protection.Decision;
 import com.shepherdjerred.thestorm.core.protection.ProtectedAction;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.core.text.HouseStyle;
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.essentials.app.WarpDirectory;
 import com.shepherdjerred.thestorm.essentials.app.store.BackStore;
 import com.shepherdjerred.thestorm.essentials.app.store.HomeStore;
@@ -39,6 +41,7 @@ final class TeleportCommands {
   private final TeleportFlow flow;
   private final Places places;
   private final EssentialsConfig config;
+  private final com.shepherdjerred.thestorm.essentials.app.RuntimeDestinations destinations;
 
   /**
    * Where players can go.
@@ -48,7 +51,13 @@ final class TeleportCommands {
    * @param back {@code /back} history
    * @param protection land protection, asked before a home is set
    */
-  record Places(HomeStore homes, WarpDirectory warps, BackStore back, Protection protection) {}
+  record Places(
+      HomeStore homes,
+      WarpDirectory warps,
+      BackStore back,
+      Protection protection,
+      SealedWorlds sealed,
+      com.shepherdjerred.thestorm.essentials.app.RuntimeDestinations destinations) {}
 
   TeleportCommands(
       PaperRuntime runtime, TeleportFlow flow, Places places, EssentialsConfig config) {
@@ -56,6 +65,7 @@ final class TeleportCommands {
     this.flow = flow;
     this.places = places;
     this.config = config;
+    this.destinations = places.destinations();
   }
 
   void register(Commands commands) {
@@ -174,7 +184,7 @@ final class TeleportCommands {
         "Set a warp where you stand");
     commands.register(
         literal("delwarp")
-            .requires(Cmd.permission(EssentialsPermissions.SET_WARP))
+            .requires(Cmd.permission(EssentialsPermissions.DEL_WARP))
             .then(
                 argument("name", word())
                     .suggests(Cmd.suggest(this::warpNames))
@@ -192,7 +202,7 @@ final class TeleportCommands {
   }
 
   private void spawn(Player player) {
-    go(player, TeleportKind.SPAWN, config.spawn(), "spawn");
+    go(player, TeleportKind.SPAWN, destinations.spawn(), "spawn");
   }
 
   private void home(Player player, Optional<PlaceName> requested) {
@@ -214,6 +224,10 @@ final class TeleportCommands {
   }
 
   private void setHome(Player player, PlaceName name) {
+    if (places.sealed().isSealed(player.getWorld())) {
+      Say.error(player, Say.HOMES, "You can't set a home in this world.");
+      return;
+    }
     var decision =
         places
             .protection()
@@ -231,11 +245,15 @@ final class TeleportCommands {
         player,
         result -> {
           switch (result) {
-            case Result.Ok<HomeRules.Change, HomeError>(var change) ->
-                Say.success(
-                    player,
-                    Say.HOMES,
-                    (change == HomeRules.Change.CREATED ? "Home " : "Moved home ") + name + ".");
+            case Result.Ok<HomeRules.Change, HomeError>(var change) -> {
+              Say.success(
+                  player,
+                  Say.HOMES,
+                  (change == HomeRules.Change.CREATED ? "Home " : "Moved home ") + name + ".");
+              runtime
+                  .analytics()
+                  .interaction(player.getUniqueId(), ProductAnalytics.Action.HOME_SET);
+            }
             case Result.Err<HomeRules.Change, HomeError>(var error) ->
                 Say.error(player, Say.HOMES, describe(error));
           }

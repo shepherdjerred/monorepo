@@ -1,24 +1,24 @@
+import type { DiscordChannelId } from "@scout-for-lol/domain/identity/discord.ts";
 import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 import { PlatformRouteSchema } from "@scout-for-lol/domain/identity/routes.ts";
 import {
   IsoInstantSchema,
   NotificationIntentKeySchema,
   RiotMatchIdSchema,
+  type RiotMatchId,
 } from "@scout-for-lol/domain/identity/brands.ts";
 import type * as DatabaseModule from "#src/database/index.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { testChannelId, testGuildId } from "#src/testing/test-ids.ts";
-import { hallBreakRecords } from "#src/temporal/v2/notification/hall-record-break.test-fixtures.ts";
-import type { HallAnnouncementDelivery } from "#src/progression/hall/break-announcement.ts";
+import { hallBreakRecords } from "#src/temporal/notification/hall-record-break.test-fixtures.ts";
 
 /**
  * Where a Hall record break is announced, against real rows.
  *
  * Every case runs the production decision (`announceHallRecordBreak`) over a
- * real observation, outbox and intent table: first path owns the identity,
- * the flag only routes a NEW announcement, a silent match announces nothing on
- * either path, the key survives a channel change, and a different payload
- * under a standing key is refused. The fan-out case proves the minted intent is
+ * real observation and intent table: a silent match announces nothing, the
+ * key survives a channel change, and a different payload under a standing key
+ * is refused. The fan-out case proves the minted intent is
  * one the match's own post-commit fan-out starts a notification child for,
  * with no other wiring.
  */
@@ -40,7 +40,7 @@ const { getIntent } =
   await import("#src/database/durable/intent-repository.ts");
 const { hallRecordBreakIntentKey } =
   await import("#src/durable/match/delivery-intents.ts");
-const { planMatchFanOutV2 } = await import("#src/temporal/v2/match-reads.ts");
+const { planMatchFanOut } = await import("#src/temporal/match/match-reads.ts");
 
 const GUILD = testGuildId("4700");
 const CHANNEL = testChannelId("4701");
@@ -62,6 +62,7 @@ async function observedMatch(
     platformRoute: PlatformRouteSchema.parse("NA1"),
     policy: "FULL",
     deliveryMode,
+    matchDataSource: "RIOT",
     owner: { kind: "temporal-v2" },
     promotion: null,
     gameCreatedAt: IsoInstantSchema.parse("2026-09-19T09:00:00.000Z"),
@@ -72,47 +73,34 @@ async function observedMatch(
 }
 
 function announce(
-  matchId: string,
+  matchId: RiotMatchId,
   overrides: Partial<{
-    v2Enabled: boolean;
-    channelId: string;
+    channelId: DiscordChannelId;
     records: ReturnType<typeof hallBreakRecords>;
-    delivery: HallAnnouncementDelivery;
   }> = {},
 ) {
   return announceHallRecordBreak(prisma, {
     guildId: GUILD,
     matchId,
     channelId: overrides.channelId ?? CHANNEL,
-    records:
-      overrides.records ??
-      hallBreakRecords(2, RiotMatchIdSchema.parse(matchId)),
-    v2Enabled: overrides.v2Enabled ?? true,
-    delivery: overrides.delivery ?? { kind: "temporal-v2" },
+    records: overrides.records ?? hallBreakRecords(2, matchId),
     now: NOW,
   });
 }
 
-function keyOf(matchId: string) {
+function keyOf(matchId: RiotMatchId) {
   return NotificationIntentKeySchema.parse(
-    hallRecordBreakIntentKey(RiotMatchIdSchema.parse(matchId), GUILD),
+    hallRecordBreakIntentKey(matchId, GUILD),
   );
 }
 
-async function outboxRows(matchId: string) {
-  return await prisma.hallRecordBreakOutbox.findMany({
-    where: { guildId: GUILD, matchId },
-  });
-}
-
-async function intentRows(matchId: string) {
+async function intentRows(matchId: RiotMatchId) {
   return await prisma.matchNotificationIntent.findMany({
     where: { riotMatchId: matchId },
   });
 }
 
 beforeEach(async () => {
-  await prisma.hallRecordBreakOutbox.deleteMany();
   await prisma.matchNotificationIntent.deleteMany();
 });
 
@@ -120,27 +108,17 @@ afterAll(async () => {
   await prisma.$disconnect();
 });
 
-describe("with the V2 path on for the guild", () => {
-  test("legacy live delivery can mint after its observation dual-write succeeds", async () => {
+describe("a live match", () => {
+  test("mints one pending hall intent", async () => {
     const matchId = await observedMatch();
 
-    expect(
-      await announce(matchId, {
-        delivery: { kind: "legacy-v1", silent: false },
-      }),
-    ).toBe("intent-minted");
+    expect(await announce(RiotMatchIdSchema.parse(matchId))).toBe(
+      "intent-minted",
+    );
 
-    expect(await intentRows(matchId)).toHaveLength(1);
-    expect(await outboxRows(matchId)).toEqual([]);
-  });
-
-  test("mints one pending hall intent and writes no outbox row", async () => {
-    const matchId = await observedMatch();
-
-    expect(await announce(matchId)).toBe("intent-minted");
-
-    expect(await outboxRows(matchId)).toEqual([]);
-    const stored = await getIntent(prisma, { intentKey: keyOf(matchId) });
+    const stored = await getIntent(prisma, {
+      intentKey: keyOf(RiotMatchIdSchema.parse(matchId)),
+    });
     expect(stored?.matchId).toBe(matchId);
     expect(stored?.intent).toMatchObject({
       kind: "hall-record-break",
@@ -159,125 +137,60 @@ describe("with the V2 path on for the guild", () => {
 
   test("the match's own fan-out starts a notification child for it", async () => {
     const matchId = await observedMatch();
-    await announce(matchId);
+    await announce(RiotMatchIdSchema.parse(matchId));
 
-    const plan = await planMatchFanOutV2({ riotMatchId: matchId });
+    const plan = await planMatchFanOut({
+      riotMatchId: RiotMatchIdSchema.parse(matchId),
+    });
 
-    expect(plan.notificationIntentKeys).toContain(keyOf(matchId));
-  });
-
-  test("an outbox row already standing keeps the announcement on v1", async () => {
-    const matchId = await observedMatch();
-    expect(await announce(matchId, { v2Enabled: false })).toBe("outbox");
-
-    // The flag turns on after v1 took the decision: v1 keeps it, and its row
-    // is upserted exactly as before (here, following a channel change).
-    expect(
-      await announce(matchId, { v2Enabled: true, channelId: OTHER_CHANNEL }),
-    ).toBe("outbox");
-
-    expect(await intentRows(matchId)).toEqual([]);
-    const rows = await outboxRows(matchId);
-    expect(rows).toHaveLength(1);
-    expect(rows[0]?.channelId).toBe(OTHER_CHANNEL);
-    expect(JSON.parse(rows[0]?.payloadJson ?? "null")).toEqual(
-      structuredClone(hallBreakRecords(2, RiotMatchIdSchema.parse(matchId))),
+    expect(plan.notificationIntentKeys).toContain(
+      keyOf(RiotMatchIdSchema.parse(matchId)),
     );
   });
 
   test("a channel change re-evaluating the same break mints no second key", async () => {
     const matchId = await observedMatch();
-    await announce(matchId);
+    await announce(RiotMatchIdSchema.parse(matchId));
 
-    expect(await announce(matchId, { channelId: OTHER_CHANNEL })).toBe(
-      "intent-standing",
-    );
+    expect(
+      await announce(RiotMatchIdSchema.parse(matchId), {
+        channelId: OTHER_CHANNEL,
+      }),
+    ).toBe("intent-standing");
 
-    const rows = await intentRows(matchId);
-    expect(rows.map((row) => row.intentKey)).toEqual([keyOf(matchId)]);
+    const rows = await intentRows(RiotMatchIdSchema.parse(matchId));
+    expect(rows.map((row) => row.intentKey)).toEqual([
+      keyOf(RiotMatchIdSchema.parse(matchId)),
+    ]);
     // The standing row is the decision; its target is not rewritten.
     expect(rows[0]?.targetId).toBe(CHANNEL);
-    expect(await outboxRows(matchId)).toEqual([]);
   });
 
   test("a different payload under a standing key throws instead of choosing", async () => {
     const matchId = await observedMatch();
-    await announce(matchId);
+    await announce(RiotMatchIdSchema.parse(matchId));
 
     await expect(
-      announce(matchId, {
+      announce(RiotMatchIdSchema.parse(matchId), {
         records: hallBreakRecords(1, RiotMatchIdSchema.parse(matchId)),
       }),
     ).rejects.toThrow(/different announcement/u);
-    expect(await intentRows(matchId)).toHaveLength(1);
-  });
-});
-
-describe("with the V2 path off for the guild", () => {
-  test("writes v1's outbox row when nothing stands", async () => {
-    const matchId = await observedMatch();
-
-    expect(await announce(matchId, { v2Enabled: false })).toBe("outbox");
-
-    expect(await outboxRows(matchId)).toHaveLength(1);
-    expect(await intentRows(matchId)).toEqual([]);
-  });
-
-  test("an intent already standing keeps the announcement on V2", async () => {
-    const matchId = await observedMatch();
-    await announce(matchId, { v2Enabled: true });
-
-    // The flag was turned off after V2 took the decision: no outbox row may
-    // appear beside the intent, or the guild would be told twice.
-    expect(await announce(matchId, { v2Enabled: false })).toBe(
-      "intent-standing",
-    );
-
-    expect(await outboxRows(matchId)).toEqual([]);
-    expect(await intentRows(matchId)).toHaveLength(1);
+    expect(await intentRows(RiotMatchIdSchema.parse(matchId))).toHaveLength(1);
   });
 });
 
 describe("a silent or backfilled match", () => {
-  test.each([true, false])(
-    "announces nothing on either path (V2 on: %s)",
-    async (v2Enabled) => {
-      const matchId = await observedMatch("silent-backfill");
+  test("announces nothing", async () => {
+    const matchId = await observedMatch("silent-backfill");
 
-      expect(await announce(matchId, { v2Enabled })).toBe("silent");
+    expect(await announce(RiotMatchIdSchema.parse(matchId))).toBe("silent");
 
-      expect(await outboxRows(matchId)).toEqual([]);
-      expect(await intentRows(matchId)).toEqual([]);
-    },
-  );
+    expect(await intentRows(RiotMatchIdSchema.parse(matchId))).toEqual([]);
+  });
 
   test("a match with no observation is a broken contract, not a default", async () => {
-    await expect(announce("NA1_4799999")).rejects.toThrow(/no observation/u);
-  });
-
-  test("legacy live delivery keeps its outbox when the observation dual-write is absent", async () => {
-    const matchId = "NA1_4799998";
-
-    expect(
-      await announce(matchId, {
-        delivery: { kind: "legacy-v1", silent: false },
-      }),
-    ).toBe("outbox");
-
-    expect(await outboxRows(matchId)).toHaveLength(1);
-    expect(await intentRows(matchId)).toEqual([]);
-  });
-
-  test("legacy silent delivery stays silent without an observation", async () => {
-    const matchId = "NA1_4799997";
-
-    expect(
-      await announce(matchId, {
-        delivery: { kind: "legacy-v1", silent: true },
-      }),
-    ).toBe("silent");
-
-    expect(await outboxRows(matchId)).toEqual([]);
-    expect(await intentRows(matchId)).toEqual([]);
+    await expect(
+      announce(RiotMatchIdSchema.parse("NA1_4799999")),
+    ).rejects.toThrow(/no observation/u);
   });
 });

@@ -16,16 +16,13 @@ import {
   voiceLeaveCommand,
   voiceStatesCommand,
 } from "#commands/discord/voice.ts";
-import {
-  DEFAULT_TTL_SECONDS,
-  IdentityKindSchema,
-  parseTtl,
-} from "#lib/discord/ipc.ts";
+import { DEFAULT_TTL_SECONDS, IdentityKindSchema } from "#lib/discord/ipc.ts";
+import { parseTtl } from "@shepherdjerred/unix-socket-daemon";
 
 const USAGE = `
 toolkit discord — act on Discord through a session daemon
 
-Daemon (start once per session; tokens from env, one op call):
+Daemon (start once per session; tokens resolved by toolkit from Keychain):
   toolkit discord daemon start [--ttl 4h]   Needs DISCORD_BOT_TOKEN and/or DISCORD_USER_TOKEN
   toolkit discord daemon status [--json]
   toolkit discord daemon stop

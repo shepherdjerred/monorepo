@@ -1,3 +1,4 @@
+import type { DiscordAccountId } from "@scout-for-lol/domain/identity/discord.ts";
 import type {
   CustomGameParticipant,
   CustomNightSnapshot,
@@ -6,7 +7,7 @@ import type {
 
 export function customRoleFor(
   snapshot: CustomNightSnapshot,
-  discordId: string,
+  discordId: DiscordAccountId,
   administrator: boolean,
 ): CustomRole {
   if (administrator) return "ADMIN";

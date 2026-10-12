@@ -1,6 +1,10 @@
+import {
+  type DiscordGuildId,
+  type DiscordChannelId,
+  type SubscriptionFilterSpec,
+} from "@scout-for-lol/data";
 import { useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import type { SubscriptionFilterSpec } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
 import { Dialog } from "@scout-for-lol/design-system/components/overlays/dialog";
@@ -26,13 +30,13 @@ export type SubscriptionFilterAction =
   | {
       kind: "edit";
       alias: string;
-      channelId: string;
+      channelId: DiscordChannelId;
       initial: SubscriptionFilterSpec | null;
     }
   | { kind: "bulk" };
 
 type Props = {
-  guildId: string;
+  guildId: DiscordGuildId;
   channels: Channel[];
   action: SubscriptionFilterAction | null;
   onOpenChange: (open: boolean) => void;

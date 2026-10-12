@@ -34,7 +34,6 @@ export type RemovedGuildCleanupSummary = {
   players: number;
   permissionErrors: number;
   hallSettings: number;
-  hallRecordBreakOutbox: number;
   featureTipImpressions: number;
 };
 
@@ -126,9 +125,6 @@ export async function cleanupRemovedGuild(
       const serverPermissions = await tx.serverPermission.deleteMany({
         where: { serverId },
       });
-      const hallRecordBreakOutbox = await tx.hallRecordBreakOutbox.deleteMany({
-        where: { guildId: serverId },
-      });
       const hallSettings = await tx.hallSettings.deleteMany({
         where: { guildId: serverId },
       });
@@ -151,7 +147,6 @@ export async function cleanupRemovedGuild(
         players: players.count,
         permissionErrors: permissionErrors.count,
         hallSettings: hallSettings.count,
-        hallRecordBreakOutbox: hallRecordBreakOutbox.count,
         featureTipImpressions: featureTipImpressions.count,
       };
     },

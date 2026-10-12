@@ -1,5 +1,7 @@
+import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { afterEach, describe, expect, test } from "vitest";
-import { dareV2DraftComponents } from "#src/betting/dares/presentation/dare-components-v2.ts";
+import { dareDraftComponents } from "#src/betting/dares/presentation/dare-components.ts";
 import { resetConfigurationForTests } from "#src/configuration.ts";
 import {
   getDocsUrl,
@@ -37,12 +39,12 @@ describe("stage-aware Discord links", () => {
     expect(getExploreConversationUrl("conversation-id")).toBe(
       "https://beta.scout-for-lol.com/app/explore/conversation-id",
     );
-    expect(getExploreMatchUrl("NA1_1234567890")).toBe(
+    expect(getExploreMatchUrl(RiotMatchIdSchema.parse("NA1_1234567890"))).toBe(
       "https://beta.scout-for-lol.com/app/explore/matches/NA1_1234567890",
     );
-    expect(getHallOfFameUrl("100000000000000001")).toBe(
-      "https://beta.scout-for-lol.com/app/halls/100000000000000001",
-    );
+    expect(
+      getHallOfFameUrl(DiscordGuildIdSchema.parse("100000000000000001")),
+    ).toBe("https://beta.scout-for-lol.com/app/halls/100000000000000001");
   });
 
   test("keeps Scout and Bryan Bucks conversation buttons slashless", () => {
@@ -59,7 +61,7 @@ describe("stage-aware Discord links", () => {
       }),
     );
     const dareButtons = JSON.stringify(
-      dareV2DraftComponents({
+      dareDraftComponents({
         intentId: "10000000-0000-4000-8000-000000000003",
         dareId: 7,
         revision: 2,

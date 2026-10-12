@@ -1,0 +1,37 @@
+{
+  "id": "anchor-hamlet",
+  "task": "anchor",
+  "rubric": "map",
+  "anchor": true,
+  "weak": true,
+  "head": "",
+  "agent": null,
+  "model": null,
+  "runId": null,
+  "collectedAt": "2026-10-07T07:17:07.685Z",
+  "source": "packages/mc-build/components/house/demo.ts (this repository)",
+  "licence": "repository licence",
+  "seconds": null,
+  "usage": null,
+  "checks": {
+    "passed": 0,
+    "total": 0
+  },
+  "lint": {
+    "errors": 0,
+    "warnings": 1,
+    "codes": ["W_DARK_INTERIOR"]
+  },
+  "gridHash": "226ef7ddf48c7b734d97053bc4111071212e67bfecc65066aae153819dbf41f4",
+  "size": {
+    "x": 72,
+    "y": 20,
+    "z": 47
+  },
+  "blocks": 7685,
+  "repetition": 0,
+  "schematic": {
+    "path": "/root/.toolkit/mc/bench/anchors/hamlet/site.schem",
+    "sha256": "4e86fb84e5e776896d7b20c2b533ea70ea0d3df7f077dfc5d863201401494ae6"
+  }
+}

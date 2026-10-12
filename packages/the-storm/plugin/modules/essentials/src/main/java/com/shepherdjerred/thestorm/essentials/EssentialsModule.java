@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.essentials;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.StormModule;
 import com.shepherdjerred.thestorm.core.protection.Protection;
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import com.shepherdjerred.thestorm.essentials.adapter.db.JooqBackStore;
 import com.shepherdjerred.thestorm.essentials.adapter.db.JooqHomeStore;
@@ -52,14 +53,26 @@ public final class EssentialsModule implements StormModule {
     var database = context.database();
     var wallets = context.services().require(Wallets.class);
     var protection = context.services().require(Protection.class);
+    var sealed = context.services().require(SealedWorlds.class);
 
     var guards = new GuardRegistry();
-    var afk = new AfkTracker(context.time(), config.afkTimeout());
+    var afk = new AfkTracker(context.time(), config.afkTimeout(), context.analytics());
     context.services().provide(TeleportGuards.class, guards);
     context.services().provide(AfkStatus.class, afk);
 
     var moderation = ModerationService.load(new JooqModerationLogStore(database), context.time());
+    context.services().provide(ModerationService.class, moderation);
     var players = PlayerDirectory.load(new JooqPlayerStore(database));
+    var staff =
+        new com.shepherdjerred.thestorm.essentials.app.StaffState(
+            new com.shepherdjerred.thestorm.essentials.adapter.db.JooqStaffStore(database));
+    context.services().provide(com.shepherdjerred.thestorm.essentials.app.StaffState.class, staff);
+    context
+        .services()
+        .provide(
+            com.shepherdjerred.thestorm.essentials.app.RuntimeDestinations.class,
+            new com.shepherdjerred.thestorm.essentials.app.RuntimeDestinations(
+                staff, config.spawn()));
     var warps = WarpDirectory.load(new JooqWarpStore(database));
     logLoad(context, moderation.loaded(), "the moderation log");
     logLoad(context, players.loaded(), "known players");
@@ -83,7 +96,7 @@ public final class EssentialsModule implements StormModule {
             context,
             config,
             new EssentialsPaper.App(
-                payments, guards, afk, moderation, players, warps, stores, protection));
+                payments, guards, afk, moderation, players, warps, stores, protection, sealed));
   }
 
   @Override

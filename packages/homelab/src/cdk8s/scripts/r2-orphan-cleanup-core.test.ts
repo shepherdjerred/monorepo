@@ -15,24 +15,26 @@ describe("R2 orphan cleanup manifest", () => {
   test("protects the union of live CRs and backup metadata", () => {
     const objects = [
       {
-        key: "zfspv-incr/backups/live-cr/chunk",
+        key: "zfspv-incr/backups/live-cr/torvalds/zfs/-fixture-pvc-live-cr-live-cr",
         size: 10,
         lastModified: "2026-08-09T00:00:00.000Z",
       },
       {
-        key: "zfspv-incr/backups/metadata-only/chunk",
+        key: "zfspv-incr/backups/metadata-only/torvalds/zfs/-fixture-pvc-metadata-only-metadata-only",
         size: 20,
         lastModified: "2026-08-09T00:00:00.000Z",
       },
       {
-        key: "zfspv-incr/backups/orphan/chunk",
+        key: "zfspv-incr/backups/orphan/torvalds/zfs/-fixture-pvc-orphan-orphan",
         size: 30,
         lastModified: "2026-08-09T00:00:00.000Z",
       },
     ];
     const manifest = buildR2OrphanManifest({
+      chainProtection: { protectedBackupNames: [], incompleteRoots: [] },
       observedAt,
       storage,
+      zfsBackupNames: [],
       zfsObjects: objects,
       liveBackupNames: ["live-cr"],
       metadataBackupNames: ["metadata-only"],
@@ -47,11 +49,13 @@ describe("R2 orphan cleanup manifest", () => {
 
   test("excludes prefixes newer than the 24 hour safety fence", () => {
     const manifest = buildR2OrphanManifest({
+      chainProtection: { protectedBackupNames: [], incompleteRoots: [] },
       observedAt,
       storage,
+      zfsBackupNames: [],
       zfsObjects: [
         {
-          key: "zfspv-incr/backups/recent/chunk",
+          key: "zfspv-incr/backups/recent/torvalds/zfs/-fixture-pvc-recent-recent",
           size: 1,
           lastModified: "2026-08-11T00:00:01.000Z",
         },
@@ -67,11 +71,13 @@ describe("R2 orphan cleanup manifest", () => {
   test("refuses to propose deletions when metadata is empty but ZFS data exists", () => {
     expect(() =>
       buildR2OrphanManifest({
+        chainProtection: { protectedBackupNames: [], incompleteRoots: [] },
         observedAt,
         storage,
+        zfsBackupNames: [],
         zfsObjects: [
           {
-            key: "zfspv-incr/backups/orphan/chunk",
+            key: "zfspv-incr/backups/orphan/torvalds/zfs/-fixture-pvc-orphan-orphan",
             size: 1,
             lastModified: "2026-08-09T00:00:00.000Z",
           },
@@ -84,8 +90,10 @@ describe("R2 orphan cleanup manifest", () => {
 
   test("allows an empty observation when there is no ZFS data at all", () => {
     const manifest = buildR2OrphanManifest({
+      chainProtection: { protectedBackupNames: [], incompleteRoots: [] },
       observedAt,
       storage,
+      zfsBackupNames: [],
       zfsObjects: [],
       liveBackupNames: [],
       metadataBackupNames: [],
@@ -154,11 +162,13 @@ describe("R2 orphan cleanup manifest", () => {
       },
     ]);
     const manifest = buildR2OrphanManifest({
+      chainProtection: { protectedBackupNames: [], incompleteRoots: [] },
       observedAt,
       storage,
+      zfsBackupNames: [],
       zfsObjects: [
         {
-          key: "zfspv-incr/backups/pending-cr/chunk",
+          key: "zfspv-incr/backups/pending-cr/torvalds/zfs/-fixture-pvc-pending-cr-pending-cr",
           size: 1,
           lastModified: "2026-08-09T00:00:00.000Z",
         },
@@ -172,11 +182,13 @@ describe("R2 orphan cleanup manifest", () => {
 
   test("rejects apply when object or protection state drifts", () => {
     const approved = buildR2OrphanManifest({
+      chainProtection: { protectedBackupNames: [], incompleteRoots: [] },
       observedAt,
       storage,
+      zfsBackupNames: [],
       zfsObjects: [
         {
-          key: "zfspv-incr/backups/orphan/chunk",
+          key: "zfspv-incr/backups/orphan/torvalds/zfs/-fixture-pvc-orphan-orphan",
           size: 1,
           lastModified: "2026-08-09T00:00:00.000Z",
         },
@@ -185,11 +197,13 @@ describe("R2 orphan cleanup manifest", () => {
       metadataBackupNames: ["unrelated"],
     });
     const drifted = buildR2OrphanManifest({
+      chainProtection: { protectedBackupNames: [], incompleteRoots: [] },
       observedAt,
       storage,
+      zfsBackupNames: [],
       zfsObjects: [
         {
-          key: "zfspv-incr/backups/orphan/chunk",
+          key: "zfspv-incr/backups/orphan/torvalds/zfs/-fixture-pvc-orphan-orphan",
           size: 2,
           lastModified: "2026-08-09T00:00:00.000Z",
         },
@@ -204,18 +218,83 @@ describe("R2 orphan cleanup manifest", () => {
 });
 
 describe("R2 orphan cleanup safety options", () => {
-  test("holds an existing prefix out of the deletion manifest", () => {
-    const manifest = buildR2OrphanManifest({
+  test("protects expired ancestors and refuses incomplete retained chains", () => {
+    const input = {
       observedAt,
       storage,
+      zfsBackupNames: [],
       zfsObjects: [
         {
-          key: "zfspv-incr/backups/held/chunk",
+          key: "zfspv-incr/backups/expired-full/torvalds/zfs/-fixture-pvc-expired-full-expired-full",
+          size: 10,
+          lastModified: "2026-08-09T00:00:00.000Z",
+          etag: '"original"',
+        },
+      ],
+      liveBackupNames: ["retained"],
+      metadataBackupNames: ["retained"],
+      chainProtection: {
+        protectedBackupNames: ["expired-full"],
+        incompleteRoots: [],
+      },
+    };
+    expect(buildR2OrphanManifest(input).candidates).toEqual([]);
+    const incomplete = buildR2OrphanManifest({
+      ...input,
+      chainProtection: {
+        protectedBackupNames: [],
+        incompleteRoots: ["retained"],
+      },
+    });
+    expect(() => assertManifestRevalidated(incomplete, incomplete)).toThrow(
+      "chains are incomplete",
+    );
+  });
+
+  test("rejects same-size object replacement using the reviewed ETag", () => {
+    const input = {
+      observedAt,
+      storage,
+      zfsBackupNames: [],
+      zfsObjects: [
+        {
+          key: "zfspv-incr/backups/orphan/torvalds/zfs/-fixture-pvc-orphan-orphan",
+          size: 10,
+          lastModified: "2026-08-09T00:00:00.000Z",
+          etag: '"original"',
+        },
+      ],
+      liveBackupNames: [],
+      metadataBackupNames: ["retained"],
+      chainProtection: { protectedBackupNames: [], incompleteRoots: [] },
+    };
+    const approved = buildR2OrphanManifest(input);
+    const replaced = buildR2OrphanManifest({
+      ...input,
+      zfsObjects: input.zfsObjects.map((object) => ({
+        ...object,
+        etag: '"replacement"',
+      })),
+    });
+    expect(() => assertManifestRevalidated(approved, replaced)).toThrow(
+      "no longer matches",
+    );
+  });
+
+  test("holds an existing prefix out of the deletion manifest", () => {
+    const manifest = buildR2OrphanManifest({
+      chainProtection: { protectedBackupNames: [], incompleteRoots: [] },
+      observedAt,
+      storage,
+      zfsBackupNames: [],
+      zfsObjects: [
+        {
+          key: "zfspv-incr/backups/held/torvalds/zfs/-fixture-pvc-held-held",
           size: 1,
           lastModified: "2026-08-09T00:00:00.000Z",
         },
         {
-          key: "zfspv-incr/backups/orphan/chunk",
+          key: "zfspv-incr/backups/orphan/torvalds/zfs/-fixture-pvc-orphan-orphan",
           size: 2,
           lastModified: "2026-08-09T00:00:00.000Z",
         },
@@ -235,8 +314,10 @@ describe("R2 orphan cleanup safety options", () => {
   test("rejects a missing hold", () => {
     expect(() =>
       buildR2OrphanManifest({
+        chainProtection: { protectedBackupNames: [], incompleteRoots: [] },
         observedAt,
         storage,
+        zfsBackupNames: [],
         zfsObjects: [],
         liveBackupNames: [],
         metadataBackupNames: [],
@@ -247,16 +328,18 @@ describe("R2 orphan cleanup safety options", () => {
 
   test("selects exactly one eligible backup prefix", () => {
     const manifest = buildR2OrphanManifest({
+      chainProtection: { protectedBackupNames: [], incompleteRoots: [] },
       observedAt,
       storage,
+      zfsBackupNames: [],
       zfsObjects: [
         {
-          key: "zfspv-incr/backups/selected/chunk",
+          key: "zfspv-incr/backups/selected/torvalds/zfs/-fixture-pvc-selected-selected",
           size: 1,
           lastModified: "2026-08-09T00:00:00.000Z",
         },
         {
-          key: "zfspv-incr/backups/other/chunk",
+          key: "zfspv-incr/backups/other/torvalds/zfs/-fixture-pvc-other-other",
           size: 2,
           lastModified: "2026-08-09T00:00:00.000Z",
         },

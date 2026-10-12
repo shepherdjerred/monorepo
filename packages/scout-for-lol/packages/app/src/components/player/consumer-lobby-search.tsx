@@ -29,11 +29,10 @@ export function ConsumerLobbySearch() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Guild lobby lookup</CardTitle>
+        <CardTitle>Find a lobby</CardTitle>
         <CardDescription>
-          Paste up to 10 Riot IDs, one Name#Tag per line. Scout checks only
-          cached accounts in guilds you can currently access; untracked names
-          are not sent to Riot.
+          Paste up to 10 Riot IDs, one Name#Tag per line, to find players in
+          your servers.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">

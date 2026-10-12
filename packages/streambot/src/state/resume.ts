@@ -1,4 +1,5 @@
 import { formatTimecode } from "@shepherdjerred/streambot/util/timecode.ts";
+import { unresolvedQueuedSource } from "@shepherdjerred/streambot/machine/queued-source.ts";
 import type {
   PlaybackContext,
   PlaybackInput,
@@ -59,21 +60,13 @@ export function buildSnapshot(params: {
       context.current === null
         ? null
         : {
-            source: context.current.source,
-            requesterId: context.current.requesterId,
-            ...(context.current.requestId === undefined
-              ? {}
-              : { requestId: context.current.requestId }),
+            ...unresolvedQueuedSource(context.current),
             ...(context.resolved?.title === undefined
               ? {}
               : { title: context.resolved.title }),
             positionSeconds: Math.max(0, Math.floor(positionSeconds)),
           },
-    queue: context.queue.map((entry) => ({
-      source: entry.source,
-      requesterId: entry.requesterId,
-      ...(entry.requestId === undefined ? {} : { requestId: entry.requestId }),
-    })),
+    queue: context.queue.map((entry) => unresolvedQueuedSource(entry)),
     resumeAttempts,
     resumeKey,
     paused: context.pausedPositionSeconds !== null,
@@ -118,11 +111,7 @@ export function buildResumeInput(
     };
   }
 
-  const queue = restored.queue.map((entry) => ({
-    source: entry.source,
-    requesterId: entry.requesterId,
-    ...(entry.requestId === undefined ? {} : { requestId: entry.requestId }),
-  }));
+  const queue = restored.queue.map((entry) => unresolvedQueuedSource(entry));
 
   const current = restored.current;
   const crashLooping =
@@ -151,16 +140,7 @@ export function buildResumeInput(
   return {
     input: {
       ...base,
-      initialQueue: [
-        {
-          source: current.source,
-          requesterId: current.requesterId,
-          ...(current.requestId === undefined
-            ? {}
-            : { requestId: current.requestId }),
-        },
-        ...queue,
-      ],
+      initialQueue: [unresolvedQueuedSource(current), ...queue],
       initialLoop: restored.loop,
       initialVolume: restored.volume,
       initialSeekSeconds: current.positionSeconds,

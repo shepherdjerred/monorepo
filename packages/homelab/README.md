@@ -12,6 +12,21 @@ See the [homelab overview](../docs/wiki/src/content/docs/explanation/homelab/ove
 for topology and the wiki how-to guides for operator workflows.
 [AGENTS.md](AGENTS.md) contains only always-on package constraints.
 
+## Release scheduling
+
+The root release workflow reconciles at most three child Applications at once
+within a sync wave. Every child in that wave must finish before the next wave
+starts. A failed child stops new work; already-started children are observed to
+completion before the error propagates. Each sync keeps its exact revision,
+request ownership checks, apply-safety preflight, and workload-specific timeout
+floor. Root staging, exact resource batches, and final pruning remain sequential.
+
+Release operations are observed immediately, then every second for ten seconds,
+every two seconds through thirty seconds, and every five seconds thereafter.
+The cadence preserves operation deadlines and the one-minute auto-sync policy
+settling budget. A release still requires restored auto-sync and its scoped
+health checks before writing an applied-and-verified receipt.
+
 ## Layout
 
 | Directory        | Contents                                                                                                      |
@@ -46,6 +61,48 @@ some things I'm proud of:
 
 ## Deployment
 
+The custom Caddy image has no file capabilities, so non-root auth gateways can
+run with all container capabilities dropped. Static sites listen on port 8080
+behind the existing port-80 Service and also drop all capabilities. Image smoke
+checks verify the binary has no file capabilities and runs as a non-root user.
+
+Static-site releases prune retired hostname bindings and probes through the
+release's chart allowlist. TunnelBindings disable DNS updates; OpenTofu owns DNS
+records, and the static-site chart does not own the content buckets.
+
+Prometheus remains distroless and listens on loopback. Its startup, readiness,
+and liveness checks use HTTP through the same-pod gateway to reach the backend
+health endpoints with the operator's original probe timing limits.
+ArgoCD waits for `NoPodReady` and `SomePodsNotReady` rollout conditions within
+the existing sync timeout. Prometheus health requires current-generation
+`Available` and `Reconciled` conditions; failed reconciliation still fails the
+sync. ArgoCD's configuration reconciles before the monitoring application wave.
+Embedded gateway ports declare TCP explicitly so the API's default does not
+leave the Prometheus and Alertmanager custom resources perpetually OutOfSync.
+
+Flipt's upstream also listens only on loopback, at port 8081. Both containers'
+HTTP health probes use the gateway's Pod-addressable port 8080, which forwards
+`/health` to that private upstream. Kubelet cannot reach a loopback listener
+through the Pod IP; probe timing limits and the management authentication
+boundary remain unchanged.
+
+Temporal's external gRPC Service keeps port 7233 and forwards to its authenticated
+gateway on port 17233. The gateway shares the server's Pod network, so its
+listener must avoid Temporal's frontend, history, matching, worker, membership,
+and HTTP ports. The synthesized chart tests check that separation and the
+gateway's Service, network policy, and probe wiring.
+
+Built chart tests validate repo-declared container port names against the API
+server's 15-character and syntax limits. This includes sidecars in external
+Helm values and operator overrides, whose port names are not checked by their
+parent Application or custom-resource schemas.
+
+Storm Forum's active storage claims share a sync wave with their first consumer:
+the database Deployment at -1 and the release Job at 0. The ZFS storage class
+uses `WaitForFirstConsumer`, so an earlier PVC wave would block provisioning
+before ArgoCD could create the required Pod. The web Deployment remains at wave
+1, after the database is healthy and the release Job has completed.
+
 Deploys are driven by the generated Woodpecker pipeline. The
 [CI pipeline guide](../docs/wiki/src/content/docs/explanation/ci-pipeline-shape.md)
 explains its change selection and release ordering:
@@ -74,8 +131,8 @@ ArgoCD, which reverts direct mutations.
 ```bash
 talosctl gen config \
   --with-secrets secrets.yaml \
-  --talos-version v1.14.1 \
-  --kubernetes-version 1.37.0 \
+  --talos-version v1.14.2 \
+  --kubernetes-version 1.37.1 \
   --config-patch-control-plane @torvalds/patches/scheduling.yaml \
   --config-patch-control-plane @torvalds/patches/certsans.yaml \
   --config-patch-control-plane @torvalds/patches/etcd-metrics.yaml \
@@ -220,7 +277,7 @@ kubectl exec pod/shell -n maintenance -- \
 ### Upgrade Talos
 
 ```bash
-VERSION=v1.14.1
+VERSION=v1.14.2
 # Upgrade the CI worker first. The short MagicDNS name is a direct worker
 # endpoint; a worker cannot proxy its own Talos request. Use the Torvalds
 # Tailscale FQDN for all control-plane operations.
@@ -241,7 +298,7 @@ talosctl --nodes torvalds.tailnet-1a49.ts.net version
 ### Upgrade Kubernetes
 
 ```bash
-VERSION=1.37.0
+VERSION=1.37.1
 
 # `upgrade-k8s` discovers liskov by raw Tailscale IP, which does not match
 # its hostname-only Talos API certificate. Upgrade control-plane components,

@@ -84,6 +84,7 @@ function renderOwnerTranscript(trace: ExploreTraceEntry[]): string {
           <ExploreTranscript
             messages={[assistantMessage(trace)]}
             showRawTrace
+            allowIntentActions
           />
         </MemoryRouter>
       </TRPCProvider>
@@ -172,8 +173,7 @@ describe("creation cards in the transcript", () => {
   });
 
   test("offers the confirmation to the owner and to nobody else", () => {
-    // `showRawTrace` is the actor gate: `routes/explore.tsx` passes it, and
-    // `routes/explore-shared.tsx` omits it. A confirm button on a shared page
+    // `allowIntentActions` is separate from raw inspection. A shared page
     // would invite a reader who is not the actor to press it.
     const owner = renderOwnerTranscript(creationTrace("competition"));
     expect(owner).toContain("A weekly KDA report in #general");
@@ -183,6 +183,7 @@ describe("creation cards in the transcript", () => {
     const shared = renderToStaticMarkup(
       <ExploreTranscript
         messages={[assistantMessage(creationTrace("competition"))]}
+        showRawTrace
       />,
     );
     expect(shared).not.toContain("data-confirmation-state");

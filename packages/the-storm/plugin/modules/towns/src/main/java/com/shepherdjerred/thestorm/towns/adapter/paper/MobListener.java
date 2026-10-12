@@ -53,6 +53,14 @@ final class MobListener implements Listener {
     var entity = event.getEntity();
     var block = event.getBlock();
     var land = guard.land(block);
+    if (land instanceof com.shepherdjerred.thestorm.towns.domain.land.Land.HeritageLand) {
+      var grazing =
+          entity instanceof org.bukkit.entity.Sheep
+              && block.getType() == org.bukkit.Material.GRASS_BLOCK
+              && event.getTo() == org.bukkit.Material.DIRT;
+      event.setCancelled(!grazing);
+      return;
+    }
     if (event instanceof EntityBreakDoorEvent) {
       // Every door a mob breaks is griefing, whoever the mob belongs to.
       event.setCancelled(!Guard.flows(WorldEffect.MOB_GRIEF, guard.land(entity), land));
@@ -90,6 +98,12 @@ final class MobListener implements Listener {
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
   void onEntityInteract(EntityInteractEvent event) {
     var block = event.getBlock();
+    if (block.getType() == org.bukkit.Material.FARMLAND
+        && guard.land(block)
+            instanceof com.shepherdjerred.thestorm.towns.domain.land.Land.HeritageLand) {
+      event.setCancelled(true);
+      return;
+    }
     var act = kinds.press(block.getType());
     if (act.isEmpty()) {
       return;
@@ -112,6 +126,11 @@ final class MobListener implements Listener {
 
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
   void onFrostWalk(EntityBlockFormEvent event) {
+    if (guard.land(event.getBlock())
+        instanceof com.shepherdjerred.thestorm.towns.domain.land.Land.HeritageLand) {
+      event.setCancelled(true);
+      return;
+    }
     var culprit = guard.culprit(event.getEntity());
     var build = new Act(Action.BUILD, Subject.BLOCK);
     if (culprit.isPresent()

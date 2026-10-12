@@ -108,7 +108,7 @@ final class Waves {
     draft.announce(announcement(wave));
     if (wave.kind() == WaveKind.UPGRADE) {
       for (var fighter : fighters) {
-        draft.effect(new GameEffect.Upgrade(fighter.id(), fighter.kit()));
+        draft.effect(new GameEffect.Upgrade(fighter.id(), fighter.kit(), number));
       }
     }
     var room = draft.setup.timing().entityCap() - alive;
@@ -167,7 +167,10 @@ final class Waves {
       return;
     }
     var timedOut = !now.isBefore(fighting.startedAt().plus(setup.timing().timeout()));
-    if (timedOut && fighting.boss().isEmpty() && fighting.wave() < setup.table().finalWave()) {
+    if (timedOut
+        && fighting.boss().isEmpty()
+        && fighting.wave() < setup.table().finalWave()
+        && setup.table().kind(fighting.wave()) != WaveKind.BOSS) {
       startWave(draft, fighting.wave() + 1, now, alive);
       return;
     }
@@ -177,6 +180,15 @@ final class Waves {
   private static void cleared(Draft draft, int wave, Instant now) {
     draft.announce(Notice.of(NoticeKind.WAVE_CLEARED, "wave", wave));
     reward(draft, wave);
+    if (wave < draft.setup.table().finalWave() && wave % 5 == 0) {
+      draft.effect(new GameEffect.RestockChests());
+      // Post-boss UPGRADE waves already refill kits; do not grant them twice.
+      if (draft.setup.table().kind(wave + 1) != WaveKind.UPGRADE) {
+        for (var fighter : draft.fighters()) {
+          draft.effect(new GameEffect.Upgrade(fighter.id(), fighter.kit(), wave + 1));
+        }
+      }
+    }
     if (wave == draft.setup.table().finalWave()) {
       victory(draft, wave);
     } else {

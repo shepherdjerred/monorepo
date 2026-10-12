@@ -10,4 +10,7 @@ public sealed interface Owner {
 
   /** Land inside an admin region such as spawn or the arena. */
   record OfRegion(String regionId) implements Owner {}
+
+  /** Separate plot boundaries stay protected even when two plots share an owner. */
+  record OfParcel(String parcelId) implements Owner {}
 }

@@ -24,19 +24,17 @@ const setupFiles =
             : [];
 
 const coverageThresholds =
-  process.env["CI_TEST_COVERAGE"] === "1"
-    ? { lines: 0, functions: 0, statements: 0 }
-    : workspace === "packages/birmel"
-      ? {
-          // Bun's 50% threshold counted the test implementation in coverage.
-          // Vitest always excludes discovered test files, so 40% retains a
-          // stricter production-code-only floor than the previous Bun result.
-          lines: 40,
-        }
-      : workspace === "packages/scout-for-lol" ||
-          workspace === "packages/scout-for-lol/packages/backend"
-        ? { lines: 70, functions: 70 }
-        : undefined;
+  workspace === "packages/birmel"
+    ? {
+        // Bun's 50% threshold counted the test implementation in coverage.
+        // Vitest always excludes discovered test files, so 40% retains a
+        // stricter production-code-only floor than the previous Bun result.
+        lines: 40,
+      }
+    : workspace === "packages/scout-for-lol" ||
+        workspace === "packages/scout-for-lol/packages/backend"
+      ? { lines: 70, functions: 70 }
+      : undefined;
 
 const coverageExclusions =
   workspace === "packages/scout-for-lol"
@@ -196,15 +194,25 @@ export default {
     maxWorkers: 4,
     exclude: [
       ...defaultTestExclude,
+      // Globs, so forward slashes: `path.join` gives backslashes on Windows,
+      // which a glob reads as escapes, and the file is then collected anyway.
       ...(workspace === "packages/scout-for-lol"
         ? [
-            path.join(
-              workspaceRoot,
-              "packages/backend/scripts/branded-types.test.ts",
-            ),
+            path
+              .join(
+                workspaceRoot,
+                "packages/backend/scripts/branded-types.test.ts",
+              )
+              .split(path.sep)
+              .join("/"),
           ]
         : workspace === "packages/scout-for-lol/packages/backend"
-          ? [path.join(workspaceRoot, "scripts/branded-types.test.ts")]
+          ? [
+              path
+                .join(workspaceRoot, "scripts/branded-types.test.ts")
+                .split(path.sep)
+                .join("/"),
+            ]
           : []),
     ],
     setupFiles,

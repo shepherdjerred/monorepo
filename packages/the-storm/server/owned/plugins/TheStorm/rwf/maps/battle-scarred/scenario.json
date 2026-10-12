@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "kind": "rwf-map-scenario",
+  "id": "battle-scarred-trooper-duel-v1",
+  "map": "battle-scarred",
+  "mapSha256": "1d6b2ba3993700aa17f7a185c2874543cc41e7190d56ab35d55767528f6cbc44",
+  "world": "minecraft:rwf",
+  "region": {
+    "min": {
+      "x": 2048,
+      "y": 0,
+      "z": 1024
+    },
+    "max": {
+      "x": 2147,
+      "y": 23,
+      "z": 1173
+    }
+  },
+  "sourceTeams": ["RED", "BLUE"],
+  "spawnPolicy": "source",
+  "spawns": [
+    {
+      "team": "red",
+      "sourceTeam": "RED",
+      "position": [2098.5, 5, 1036.5],
+      "yaw": 0.45835646986961365,
+      "pitch": 0
+    },
+    {
+      "team": "blue",
+      "sourceTeam": "BLUE",
+      "position": [2092.5, 5, 1155.5],
+      "yaw": 185.55995178222656,
+      "pitch": 0
+    }
+  ]
+}

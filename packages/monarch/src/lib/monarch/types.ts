@@ -18,14 +18,6 @@ export const MonarchMerchantSchema = z.object({
   name: z.string(),
   transactionsCount: z.number(),
 });
-
-export type MonarchMerchant = z.infer<typeof MonarchMerchantSchema>;
-
-export type MonarchAccount = {
-  id: string;
-  displayName: string;
-};
-
 export const MonarchTransactionSchema = z.object({
   id: z.string(),
   amount: z.number(),
@@ -33,19 +25,10 @@ export const MonarchTransactionSchema = z.object({
   date: z.string(),
   hideFromReports: z.boolean(),
   // Old transactions (pre-2025) come back with plaidName: null
-  plaidName: z
-    .string()
-    .nullable()
-    .transform((v) => v ?? ""),
-  notes: z
-    .string()
-    .nullable()
-    .transform((v) => v ?? ""),
+  plaidName: z.string().or(z.null().transform(() => "")),
+  notes: z.string().or(z.null().transform(() => "")),
   isRecurring: z.boolean(),
-  reviewStatus: z
-    .string()
-    .nullable()
-    .transform((v) => v ?? ""),
+  reviewStatus: z.string().or(z.null().transform(() => "")),
   needsReview: z.boolean(),
   isSplitTransaction: z.boolean(),
   createdAt: z.string().optional(),

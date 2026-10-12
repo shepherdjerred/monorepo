@@ -10,7 +10,6 @@ import {
   fetchHeadSha,
   listFindings,
   resolveFinding,
-  type Finding,
 } from "#lib/review/findings.ts";
 import {
   gateStatusFor,
@@ -19,9 +18,14 @@ import {
 } from "#lib/review/harvest.ts";
 import {
   resolveProvider,
-  resolveRequiredReviewProvider,
   type ReviewProvider,
 } from "@shepherdjerred/code-review";
+import { listReviewFeedback } from "#lib/review/feedback.ts";
+import { describeFeedback } from "#lib/review/feedback-sources.ts";
+import { resolvePrNumber } from "#lib/ci/github.ts";
+import { sanitizeText } from "#lib/ci/redaction.ts";
+import { resolveCredentials } from "#lib/credentials.ts";
+import { buildPassthroughInvocation } from "#lib/passthrough.ts";
 
 /**
  * Repository the CLI addresses when restarting a pipeline.
@@ -39,6 +43,7 @@ export type ReviewOptions = {
   finding?: string | undefined;
   evidence?: string | undefined;
   all?: boolean | undefined;
+  includeAll?: boolean | undefined;
 };
 
 const DEFAULT_REPO = "shepherdjerred/monorepo";
@@ -88,31 +93,12 @@ function requireToken(): string {
   return token;
 }
 
-function requirePr(prNumber: string | undefined): number {
-  const parsed = Number.parseInt(prNumber ?? "", 10);
+function requirePr(prNumber: string | undefined = ""): number {
+  const parsed = Number.parseInt(prNumber, 10);
   if (!Number.isInteger(parsed) || parsed <= 0) {
     throw new Error("A pull request number is required");
   }
   return parsed;
-}
-
-function describe(finding: Finding): string {
-  const severity =
-    finding.priority === null ? "P?" : `P${String(finding.priority)}`;
-  const where =
-    finding.path === null
-      ? "(general)"
-      : finding.line === null
-        ? finding.path
-        : `${finding.path}:${String(finding.line)}`;
-  const surfaces = [
-    finding.commentId === null ? null : "comment",
-    finding.threadId === null ? null : "thread",
-  ]
-    .filter((surface) => surface !== null)
-    .join("+");
-  const mark = finding.isResolved ? "resolved" : "OPEN    ";
-  return `${mark}  ${severity}  ${finding.title ?? "(untitled)"}\n          ${where}  [${surfaces}]  key=${finding.key}`;
 }
 
 export async function reviewListCommand(
@@ -120,44 +106,34 @@ export async function reviewListCommand(
   options: ReviewOptions = {},
 ): Promise<void> {
   const repo = options.repo ?? DEFAULT_REPO;
-  const number = requirePr(prNumber);
-  const provider = selectedProvider(options);
-  const { head, findings, reviewState } = await listFindings({
+  const number = await resolvePrNumber(prNumber, repo);
+  const token = requireToken();
+  const report = await listReviewFeedback({
     repo,
     number,
-    token: requireToken(),
-    provider,
+    token,
+    provider: options.provider,
+    all: options.includeAll,
   });
-  // A blocked review also yields zero findings, so without this the counts
-  // below read as a clean review rather than one that never ran.
-  const blocked = reviewState.blockedReason;
-  // `listFindings` defaults an unspecified provider the same way.
-  const strategy = (provider ?? resolveRequiredReviewProvider()).detectBlocked;
-  const remediation =
-    blocked !== null && strategy !== null && strategy.reason === blocked
-      ? `: ${strategy.remediation}`
-      : "";
-
-  if (options.json === true) {
-    console.log(
-      JSON.stringify(
-        { repo, pr: number, head, blockedReason: blocked, findings },
-        null,
-        2,
+  const lines = [
+    `${repo}#${String(number)} @ ${report.head.slice(0, 12)}`,
+    ...report.providers
+      .filter((provider) => provider.blockedReason !== null)
+      .map(
+        (provider) =>
+          `${provider.id}: review blocked (${String(provider.blockedReason)})`,
       ),
-    );
-    return;
-  }
-
-  const open = findings.filter((finding) => !finding.isResolved);
-  console.log(`${repo}#${String(number)} @ ${head.slice(0, 9)}`);
-  if (blocked !== null) {
-    console.log(`Review blocked (${blocked})${remediation}`);
-  }
+    `${String(report.findings.length)} feedback item(s)`,
+    ...report.findings.map((finding) => describeFeedback(finding)),
+  ];
   console.log(
-    `${String(findings.length)} finding(s), ${String(open.length)} unresolved\n`,
+    sanitizeText(
+      options.json === true
+        ? JSON.stringify(report, null, 2)
+        : lines.join("\n\n"),
+      [token],
+    ),
   );
-  for (const finding of findings) console.log(describe(finding));
 }
 
 export async function reviewResolveCommand(
@@ -306,7 +282,7 @@ export async function reviewHarvestCommand(
         );
         continue;
       }
-      restartCiPipeline(verdict.pipelineNumber);
+      await restartCiPipeline(verdict.pipelineNumber);
       console.log(
         `#${String(number)} ${provider.displayName}: restarted pipeline ${verdict.pipelineNumber}`,
       );
@@ -322,14 +298,26 @@ export async function reviewHarvestCommand(
  * Woodpecker links a status at the pipeline and restarts at that granularity,
  * so this re-runs the gate rather than one step inside it.
  */
-function restartCiPipeline(pipelineNumber: string): void {
-  const result = Bun.spawnSync([
-    "woodpecker-cli",
-    "pipeline",
-    "start",
-    WOODPECKER_REPO,
-    pipelineNumber,
-  ]);
+async function restartCiPipeline(pipelineNumber: string): Promise<void> {
+  // Same token chain as `toolkit woodpecker` dispatch (env, config, Keychain);
+  // the invocation also supplies the WOODPECKER_SERVER default. Stderr stays
+  // piped (not spawnPassthroughInvocation's inherit) so the failure below
+  // keeps its exact text.
+  await resolveCredentials(["WOODPECKER_TOKEN"]);
+  const invocation = buildPassthroughInvocation(
+    "woodpecker",
+    ["pipeline", "start", WOODPECKER_REPO, pipelineNumber],
+    { ...Bun.env },
+  );
+  if (invocation === null) {
+    throw new Error("toolkit: unknown passthrough command: woodpecker");
+  }
+  const result = Bun.spawnSync([invocation.executable, ...invocation.args], {
+    env: invocation.env,
+    stdin: "ignore",
+    stdout: "pipe",
+    stderr: "pipe",
+  });
   if (result.exitCode !== 0) {
     throw new Error(
       `woodpecker-cli pipeline start ${pipelineNumber} failed: ${result.stderr.toString().trim()}`,

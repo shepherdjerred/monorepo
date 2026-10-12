@@ -28,6 +28,7 @@ See [packages/README.md](packages/README.md) for the complete package list.
 
 ```bash
 mise install                    # install pinned toolchain (bun, node, tofu, …)
+mise lock --platform linux-x64,macos-arm64  # after editing .mise.toml; CI installs --locked
 bun install --frozen-lockfile   # one workspace-wide install
 bunx turbo run generate         # codegen: Prisma clients, etc.
 bunx lefthook install           # arm git hooks
@@ -42,6 +43,14 @@ bun run verify                  # exhaustive whole-repo gate — what CI runs
 `bun run verify` is the CI entry point, not part of the everyday loop; run it
 locally only to reproduce a CI failure or when changing the verification
 machinery itself.
+
+Root dependency overrides include temporary security fixes for upstream exact
+pins: Prisma 7's `deepmerge-ts` (CVE-2026-40345) and `mysql2`
+(GHSA-3f6p-5ww8-9rcr), and Mermaid's Chevrotain dependency on `lodash-es`
+(CVE-2026-4800). Remove each override once its upstream dependency resolves a
+patched version without it. The deepmerge 8 migration changes recursive Map
+merging; repository Prisma configurations use ordinary objects and are verified
+through config loading, schema validation, and client generation.
 
 See [AGENTS.md](AGENTS.md) for always-on repository constraints and
 [`packages/README.md`](packages/README.md) for the current package catalog.

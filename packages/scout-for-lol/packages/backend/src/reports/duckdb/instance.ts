@@ -2,6 +2,7 @@ import type * as DuckDBModuleNamespace from "@duckdb/node-api";
 import type { DuckDBInstance, DuckDBValue } from "@duckdb/node-api";
 import configuration from "#src/configuration.ts";
 import { createLogger } from "#src/logger.ts";
+import { PARQUET_WRITE_SETTINGS } from "./writes/parquet.ts";
 
 const logger = createLogger("duckdb");
 
@@ -146,6 +147,7 @@ async function getInstance(): Promise<DuckDBInstance> {
       threads,
       memory_limit: memoryLimit,
       preserve_insertion_order: "false",
+      ...PARQUET_WRITE_SETTINGS,
       ...spill,
     });
   })();
@@ -213,6 +215,7 @@ async function withDuckDBConnectionSlot<T>(
 
   const timeoutState = { timedOut: false, aborted: false };
   const hasTimedOut = () => timeoutState.timedOut;
+  const hasAborted = () => timeoutState.aborted;
   const abort = () => {
     timeoutState.aborted = true;
     connection.interrupt();
@@ -233,6 +236,9 @@ async function withDuckDBConnectionSlot<T>(
 
   const session: DuckDBSession = {
     run: async (sql, params) => {
+      if (hasAborted()) {
+        throw new DOMException("DuckDB query aborted.", "AbortError");
+      }
       if (hasTimedOut()) {
         throw new ReportQueryTimeoutError(timeoutMs);
       }
@@ -240,7 +246,7 @@ async function withDuckDBConnectionSlot<T>(
         const reader = await connection.runAndReadAll(sql, params);
         return reader.getRowObjects();
       } catch (error) {
-        if (timeoutState.aborted) {
+        if (hasAborted()) {
           throw new DOMException("DuckDB query aborted.", "AbortError");
         }
         if (hasTimedOut()) {

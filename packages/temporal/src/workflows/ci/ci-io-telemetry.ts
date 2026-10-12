@@ -1,3 +1,4 @@
+import { rethrowReportDeliveryFailure } from "#workflows/scout/report-delivery.ts";
 import { proxyActivities } from "@temporalio/workflow";
 import type {
   CiIoObservabilityActivities,
@@ -9,6 +10,10 @@ import type {
 } from "#activities/reports/report-delivery.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { reportActivityTaskQueue } from "#workflows/scout/report-activity-queue.ts";
+import {
+  REPORT_DELIVERY_ACTIVITY_RETRY,
+  REPORT_DELIVERY_ACTIVITY_START_TO_CLOSE_MS,
+} from "#shared/reports/report-delivery-policy.ts";
 
 /**
  * Daily health check on the CI I/O telemetry pipeline itself.
@@ -94,6 +99,8 @@ export function ciIoTelemetryReport(
     checks: results.map((result) => checkFor(result)),
     evidence: results.map((result) => evidenceFor(result, observedAt)),
     findings: failed.map((result) => ({
+      id: `ci-io:${result.id}`,
+      state: "active" as const,
       severity: "warning" as const,
       summary: `CI I/O telemetry check ${result.id} failed`,
       detail: `Query returned ${result.series.toString()} series with values ${JSON.stringify(result.values)}.`,
@@ -159,8 +166,8 @@ function failureReport(startedAt: string, error: unknown): ActivityReportInput {
 export async function runCiIoTelemetry(): Promise<void> {
   const { deliverActivityReport } = proxyActivities<ReportDeliveryActivities>({
     taskQueue: reportActivityTaskQueue(),
-    startToCloseTimeout: "2 minutes",
-    retry: { maximumAttempts: 3 },
+    startToCloseTimeout: REPORT_DELIVERY_ACTIVITY_START_TO_CLOSE_MS,
+    retry: REPORT_DELIVERY_ACTIVITY_RETRY,
   });
   const startedAt = new Date().toISOString();
   try {
@@ -169,6 +176,7 @@ export async function runCiIoTelemetry(): Promise<void> {
       ciIoTelemetryReport(startedAt, new Date().toISOString(), results),
     );
   } catch (error) {
+    rethrowReportDeliveryFailure(error);
     await deliverActivityReport(failureReport(startedAt, error));
     throw error;
   }

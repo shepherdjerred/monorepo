@@ -1,6 +1,10 @@
+import type {
+  DiscordChannelId,
+  DiscordAccountId,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import {
   DUEL_DISCLOSURE_VERSION,
-  DiscordChannelIdSchema,
+  DiscordAccountIdSchema,
   DiscordGuildIdSchema,
   DuelSeriesStatusSchema,
   PlayerIdSchema,
@@ -13,6 +17,7 @@ import type {
 import { prisma } from "#src/database/index.ts";
 import { duelRolloutAllowed } from "#src/progression/duels/access.ts";
 import { duelCompetitorsUseOneRiotRegion } from "#src/progression/duels/competitors.ts";
+import { mintDuelStatusIntent } from "#src/progression/duels/status-intent.ts";
 import {
   duelSeriesOverdue,
   duelSeriesTransitions,
@@ -101,7 +106,7 @@ async function participantsHaveCurrentConsent(
   guildId: DiscordGuildId,
   participants: readonly {
     readonly playerId: number;
-    readonly discordId: string;
+    readonly discordId: DiscordAccountId;
   }[],
 ): Promise<boolean> {
   const playerIds = participants.map((participant) =>
@@ -166,11 +171,12 @@ async function resetStaleParticipantConsent(options: {
 }
 
 async function readyGameForObservedLobby(options: {
+  readonly stage: ScoutDuelSeriesInput["stage"];
   readonly seriesId: string;
   readonly currentState: string;
   readonly gameNumber: number;
-  readonly guildId: string;
-  readonly channelId: string;
+  readonly guildId: DiscordGuildId;
+  readonly channelId: DiscordChannelId;
 }): Promise<boolean> {
   return await prisma.$transaction(async (tx) => {
     const transitioned = await tx.duelSeries.updateMany({
@@ -190,21 +196,21 @@ async function readyGameForObservedLobby(options: {
         gameNumber: options.gameNumber,
         gameState: "code_ready",
       },
-      update: { gameState: "code_ready", tournamentLobbyId: null },
+      update: { gameState: "code_ready" },
     });
-    await tx.duelStatusOutbox.upsert({
-      where: { dedupeKey: `duel-code-ready:${game.id}` },
-      create: {
-        guildId: options.guildId,
-        channelId: DiscordChannelIdSchema.parse(options.channelId),
-        dedupeKey: `duel-code-ready:${game.id}`,
-        payloadJson: JSON.stringify({
-          kind: "code_ready",
-          seriesId: options.seriesId,
-          gameNumber: options.gameNumber,
-        }),
+    const now = new Date();
+    await mintDuelStatusIntent(tx, {
+      stage: options.stage,
+      guildId: options.guildId,
+      channelId: options.channelId,
+      dedupeKey: `duel-code-ready:${game.id}`,
+      payload: {
+        kind: "code_ready",
+        seriesId: options.seriesId,
+        gameNumber: options.gameNumber,
       },
-      update: {},
+      createdAt: now,
+      freshnessDeadline: new Date(now.getTime() + 2 * 60 * 60 * 1000),
     });
     return true;
   });
@@ -285,6 +291,7 @@ export async function refreshDuelSeriesWorkflowState(
   }
   const gameNumber = existingGame?.gameNumber ?? 1;
   const codeReady = await readyGameForObservedLobby({
+    stage: input.stage,
     seriesId: series.id,
     currentState,
     guildId: series.guildId,
@@ -318,21 +325,20 @@ export async function markDuelSeriesOverdue(
       data: { seriesState: "overdue" },
     });
     if (updated.count === 0) return null;
-    await tx.duelStatusOutbox.upsert({
-      where: { dedupeKey: `duel-overdue:${series.id}` },
-      create: {
-        guildId: series.guildId,
-        channelId: series.channelId,
-        dedupeKey: `duel-overdue:${series.id}`,
-        payloadJson: JSON.stringify({
-          kind: "overdue",
-          seriesId: series.id,
-          mentionDiscordIds: series.participants.map(
-            (participant) => participant.discordId,
-          ),
-        }),
+    await mintDuelStatusIntent(tx, {
+      stage: input.stage,
+      guildId: series.guildId,
+      channelId: series.channelId,
+      dedupeKey: `duel-overdue:${series.id}`,
+      payload: {
+        kind: "overdue",
+        seriesId: series.id,
+        mentionDiscordIds: series.participants.map((participant) =>
+          DiscordAccountIdSchema.parse(participant.discordId),
+        ),
       },
-      update: {},
+      createdAt: now,
+      freshnessDeadline: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
     });
     return currentState;
   });

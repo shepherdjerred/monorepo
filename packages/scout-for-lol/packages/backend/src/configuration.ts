@@ -49,7 +49,8 @@ function getOptionalEnvVar(
   }
 }
 
-const EnvironmentSchema = z.enum(["dev", "beta", "prod"]);
+/** The deployment stage this process runs in. */
+export const EnvironmentSchema = z.enum(["dev", "beta", "prod"]);
 export type Environment = z.infer<typeof EnvironmentSchema>;
 
 /**
@@ -175,6 +176,7 @@ function computeConfiguration() {
   // the process has not connected to yet.
   const runtimeRole = parseScoutRuntimeRole(
     env.get("SCOUT_RUNTIME_ROLE").asString(),
+    environment,
   );
   // Local-only escape hatch for the boot-time report-lake fold, which is the
   // one startup step a developer routinely cannot satisfy: with no published
@@ -249,9 +251,12 @@ function computeConfiguration() {
     // Derived, not read from the environment: the role decides the subsystems,
     // so a consumer asking "may this process do X" asks the table rather than
     // re-deriving X from a role name at the call site.
-    runtimeCapabilities: scoutRuntimeCapabilities(runtimeRole),
+    runtimeCapabilities: scoutRuntimeCapabilities(runtimeRole, environment),
     skipReportLakeFold,
     temporalAddress: getOptionalEnvVar("TEMPORAL_ADDRESS"),
+    // Bind address for the embedded Workers' SDK Prometheus exporter. Unset
+    // runs no exporter, which is what local processes want.
+    temporalMetricsAddress: getOptionalEnvVar("TEMPORAL_METRICS_ADDRESS"),
     temporalNamespace,
     temporalScheduleReconciliation,
     discordToken: getRequiredEnvVar("DISCORD_TOKEN"),
@@ -262,13 +267,11 @@ function computeConfiguration() {
       "WEB_APP_ORIGIN",
       "https://scout-for-lol.com",
     ),
-    // Where owners are pointed to leave feedback when the bot is removed from
-    // their server. Defaults to the marketing site; override to a dedicated form.
-    feedbackUrl: getOptionalEnvVar("FEEDBACK_URL", "https://scout-for-lol.com"),
     riotApiToken: getRequiredEnvVar("RIOT_API_KEY"),
     databaseUrl: getRequiredEnvVar("DATABASE_URL"),
     port: env.get("PORT").default("3000").asPortNumber(),
     s3BucketName: getOptionalEnvVar("S3_BUCKET_NAME"),
+    supportBucketName: getOptionalEnvVar("SUPPORT_BUCKET_NAME"),
     // Local Parquet "report lake" queried by the DuckDB report engine.
     // Disposable derived data: rebuilt from the Stored* tables by the
     // report-lake compaction crons.
@@ -418,6 +421,9 @@ const configuration: Configuration = {
   get temporalAddress() {
     return getConfiguration().temporalAddress;
   },
+  get temporalMetricsAddress() {
+    return getConfiguration().temporalMetricsAddress;
+  },
   get temporalNamespace() {
     const current = getConfiguration();
     if (current.temporalNamespace !== current.environment) {
@@ -445,9 +451,6 @@ const configuration: Configuration = {
   get webAppOrigin() {
     return getConfiguration().webAppOrigin;
   },
-  get feedbackUrl() {
-    return getConfiguration().feedbackUrl;
-  },
   get riotApiToken() {
     return getConfiguration().riotApiToken;
   },
@@ -459,6 +462,9 @@ const configuration: Configuration = {
   },
   get s3BucketName() {
     return getConfiguration().s3BucketName;
+  },
+  get supportBucketName() {
+    return getConfiguration().supportBucketName;
   },
   get reportLakeDir() {
     return getConfiguration().reportLakeDir;

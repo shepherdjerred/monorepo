@@ -12,6 +12,8 @@ import path from "node:path";
 export type ReplayStageName = "beta" | "prod";
 
 export type ReplayCliOptions = {
+  readonly analysisOverride: boolean | null;
+  readonly modelOverride: string | null;
   readonly stage: ReplayStageName;
   /**
    * Guilds to run as, by label or id. Empty means every guild in the pin,
@@ -42,6 +44,8 @@ Replays Explore cases against a pinned stage dataset and writes a bundle.
 
 Options:
   --stage <beta|prod>      Which pinned dataset to read (default: beta)
+  --analysis <on|off>     Explicit candidate analysis setting (default: captured)
+  --model <id>            Explicit candidate model (default: captured)
   --guild <label|id>       Guild to run as; repeat or comma-separate
                            (default: every guild in the dataset pin)
   --chips                  Include the shipped starter chips
@@ -115,8 +119,22 @@ export function defaultDatasetPinPath(
   );
 }
 
+function parseAnalysis(value: string): boolean {
+  if (value !== "on" && value !== "off")
+    throw new Error("--analysis must be on or off");
+  return value === "on";
+}
+
+function parseModel(value: string): string {
+  const model = value.trim();
+  if (model.length === 0) throw new Error("--model must not be empty");
+  return model;
+}
+
 export function parseReplayArgs(args: readonly string[]): ReplayCliParseResult {
   let stage: ReplayStageName = "beta";
+  let analysisOverride: boolean | null = null;
+  let modelOverride: string | null = null;
   const guilds: string[] = [];
   let includeChips = false;
   let includeConversations = false;
@@ -140,6 +158,17 @@ export function parseReplayArgs(args: readonly string[]): ReplayCliParseResult {
         continue;
       case "--stage":
         stage = parseStage(requireValue(args, index, "--stage"));
+        index += 1;
+        continue;
+      case "--analysis": {
+        analysisOverride = parseAnalysis(
+          requireValue(args, index, "--analysis"),
+        );
+        index += 1;
+        continue;
+      }
+      case "--model":
+        modelOverride = parseModel(requireValue(args, index, "--model"));
         index += 1;
         continue;
       case "--guild":
@@ -196,6 +225,8 @@ export function parseReplayArgs(args: readonly string[]): ReplayCliParseResult {
   return {
     kind: "options",
     options: {
+      analysisOverride,
+      modelOverride,
       stage,
       guilds: deduplicated,
       // Chips need no corpus, so they are what an unqualified run does.

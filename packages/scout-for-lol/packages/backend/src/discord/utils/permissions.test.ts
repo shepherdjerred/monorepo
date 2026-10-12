@@ -1,3 +1,4 @@
+import { DiscordChannelIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import { describe, expect, test } from "vitest";
 import {
   isPermissionError,
@@ -301,20 +302,24 @@ describe("checkSendMessagePermission - member resolution", () => {
 
 describe("getPermissionErrorMessage", () => {
   test("includes channel ID in message", () => {
-    const message = getPermissionErrorMessage("123456789");
-    expect(message).toContain("<#123456789>");
+    const message = getPermissionErrorMessage(
+      DiscordChannelIdSchema.parse("821958380719944229"),
+    );
+    expect(message).toContain("<#821958380719944229>");
   });
 
   test("includes reason when provided", () => {
     const message = getPermissionErrorMessage(
-      "123456789",
+      DiscordChannelIdSchema.parse("821958380719944229"),
       "Missing Send Messages permission",
     );
     expect(message).toContain("Missing Send Messages permission");
   });
 
   test("provides default message when no reason given", () => {
-    const message = getPermissionErrorMessage("123456789");
+    const message = getPermissionErrorMessage(
+      DiscordChannelIdSchema.parse("821958380719944229"),
+    );
     expect(message).toContain("Send Messages");
     expect(message).toContain("View Channel");
   });
@@ -324,19 +329,22 @@ describe("formatPermissionErrorForLog", () => {
   test("formats permission error correctly", () => {
     const error = { code: 50_013, message: "Missing Permissions" };
     const message = formatPermissionErrorForLog(
-      "123456789",
+      DiscordChannelIdSchema.parse("821958380719944229"),
       error,
       "Missing Send Messages",
     );
-    expect(message).toContain("123456789");
+    expect(message).toContain("821958380719944229");
     expect(message).toContain("Missing Send Messages");
     expect(message).toContain("Discord Permission Error");
   });
 
   test("formats non-permission error correctly", () => {
     const error = new Error("Network error");
-    const message = formatPermissionErrorForLog("123456789", error);
-    expect(message).toContain("123456789");
+    const message = formatPermissionErrorForLog(
+      DiscordChannelIdSchema.parse("821958380719944229"),
+      error,
+    );
+    expect(message).toContain("821958380719944229");
     expect(message).toContain("Network error");
     expect(message).not.toContain("Discord Permission Error");
   });
@@ -344,7 +352,7 @@ describe("formatPermissionErrorForLog", () => {
   test("includes reason when provided", () => {
     const error = { code: 50_013, message: "Missing Permissions" };
     const message = formatPermissionErrorForLog(
-      "123456789",
+      DiscordChannelIdSchema.parse("821958380719944229"),
       error,
       "Custom reason",
     );

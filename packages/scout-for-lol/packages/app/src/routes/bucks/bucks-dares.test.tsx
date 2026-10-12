@@ -8,7 +8,7 @@ import { Loaded } from "@shepherdjerred/loaded";
 import { describe, expect, test, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router";
-import { DareProgressSchema } from "@scout-for-lol/data";
+import { DareProgressSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
 import {
   DareDetail,
   parseBucksDareId,
@@ -384,11 +384,11 @@ describe("DareList", () => {
 });
 
 describe("DareDetail", () => {
-  test("renders contract metadata, ScoutQL, evidence, and proof", () => {
+  test("renders contract metadata, SQL, evidence, and proof", () => {
     const html = renderToStaticMarkup(
       <MemoryRouter>
         <DareDetail
-          guildId="100000000000000061"
+          guildId={DiscordGuildIdSchema.parse("100000000000000061")}
           dare={{
             id: 42,
             state: "settled",
@@ -396,10 +396,11 @@ describe("DareDetail", () => {
             currentRevision: 2,
             fundedRevision: 1,
             plainLanguage: "Virmel wins three games",
-            canonicalScoutQl: "FROM matches RETURN count(*) >= 3",
+            canonicalScoutQl:
+              "SELECT COUNT(*) >= 3 AS achieved FROM T1 p WHERE p.win",
             semanticProofPlan: "Count qualifying wins.",
-            compilerVersion: "2",
-            evaluatorVersion: "2",
+            compilerVersion: "dare-scoutql-3",
+            evaluatorVersion: "dare-evaluator-3",
             scoutQlPlanHash: "a".repeat(64),
             originalText: "Virmel wins three games",
             deadlineSpec: { kind: "relative", days: 7 },
@@ -439,11 +440,11 @@ describe("DareDetail", () => {
     expect(html).not.toContain("Revise in Explore");
   });
 
-  test("identifies canonical standard SQL as the binding v3 contract", () => {
+  test("identifies canonical standard SQL as the binding contract", () => {
     const html = renderToStaticMarkup(
       <MemoryRouter>
         <DareDetail
-          guildId="100000000000000061"
+          guildId={DiscordGuildIdSchema.parse("100000000000000061")}
           dare={{
             id: 43,
             state: "active",

@@ -17,14 +17,29 @@ layout, layering table and commands.
 - Parse config, content and player input once, at the adapter, into records
   with `StrictYaml`. No defaults or fallbacks for missing or unknown values.
 - The plugin never writes files the repository owns (config and content YAML).
-- Tests must not be skipped; MockBukkit gaps are fixed by moving logic into the
-  pure domain or covered by the real-server integration tests.
+- CI runs unit tests and the explicit `test:smoke` selection only. Keep the
+  smoke selection to quick startup, plugin loading and client interactions;
+  extended gameplay, all-module, load and native-client acceptance belongs to
+  the committer outside CI. Run the applicable local suites and record results
+  (see README.md). This exception applies only to Minecraft.
+- Keep test assertions intact; MockBukkit gaps are fixed by moving logic into
+  the pure domain or covered by committer-run real-server integration tests.
 - No `@SuppressWarnings`, `NOPMD` or `CHECKSTYLE:OFF`; the repository
   suppression check rejects them. Fix the finding instead.
 - Change dependencies only in `plugin/gradle/libs.versions.toml`, then refresh
   locks and verification metadata (README.md).
-- Copying from GPL/LGPL plugins is allowed with the upstream header kept;
-  Citizens (OSL-3.0), Towny and unlicensed code are clean-room only.
+- Copying from GPL/LGPL plugins is allowed with the upstream header kept.
+  Citizens (OSL-3.0) is a runtime plugin and compile-only API dependency for
+  story NPC bodies, survival companions and rwfbots bodies, used only from
+  their Paper/Citizens adapters; never copy or adapt its source.
+  libraryaddict/RedWarfare is ported under the
+  licence recorded in `NOTICE`, with an attribution header on each ported
+  file. Towny and other unlicensed code are clean-room only.
+
+- Gameplay that a player triggers through world interaction can be proven with
+  `toolkit mc playtest run playtests/` (Citizens actors on the `storm-dev`
+  sandbox; see the repository `minecraft-harness` skill). Client-only flows stay in
+  `tests/e2e`.
 
 ```bash
 bunx turbo run build typecheck test lint --filter=@shepherdjerred/the-storm

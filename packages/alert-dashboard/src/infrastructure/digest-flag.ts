@@ -11,16 +11,26 @@ import {
 } from "@shepherdjerred/feature-flags/observability.ts";
 import { z } from "zod";
 
-import type { DigestGatePort } from "#application/ports";
-
 const TARGETING_KEY = "alert-dashboard";
 
 const DEFINITION = {
-  opsDigestEmailEnabled: {
+  alertEmailEnabled: {
     schema: z.boolean(),
     sources: ["flag", "default"],
     default: false,
-    names: { flag: "ops-digest-email-enabled" },
+    names: { flag: "alert-dashboard-email-enabled" },
+  },
+  alertEmailFrom: {
+    schema: z.email(),
+    sources: ["flag", "default"],
+    default: "alerts@sjer.red",
+    names: { flag: "alert-dashboard-email-from" },
+  },
+  alertEmailTo: {
+    schema: z.email(),
+    sources: ["flag", "default"],
+    default: "dependencies@sjer.red",
+    names: { flag: "alert-dashboard-email-to" },
   },
 } as const;
 
@@ -30,7 +40,11 @@ function createResolver() {
     sources: {
       flag: createFlagConfigSource({
         targetingKey: TARGETING_KEY,
-        kinds: { opsDigestEmailEnabled: "boolean" },
+        kinds: {
+          alertEmailEnabled: "boolean",
+          alertEmailFrom: "string",
+          alertEmailTo: "string",
+        },
       }),
     },
     hooks: {
@@ -47,6 +61,21 @@ function createResolver() {
       },
     },
   });
+}
+
+/** Incident mail is constructed at startup; changes require a restart. */
+export async function alertEmailConfig() {
+  const resolver = createResolver();
+  const [enabled, from, to] = await Promise.all([
+    resolver.value("alertEmailEnabled"),
+    resolver.value("alertEmailFrom"),
+    resolver.value("alertEmailTo"),
+  ]);
+  return {
+    EMAIL_ENABLED: String(enabled),
+    POSTAL_FROM: from,
+    POSTAL_TO: to,
+  };
 }
 
 export type FlagMetricSink = {
@@ -82,14 +111,14 @@ export function flagMetricsRecorder(sink: FlagMetricSink): FlagMetricsRecorder {
 }
 
 /**
- * Initialize the process-wide flag client (one per process) and return the
- * digest gate. `FEATURE_FLAGS_MODE`, `FLIPT_URL`, `FLIPT_NAMESPACE`, and
+ * Initialize the process-wide flag client (one per process).
+ * `FEATURE_FLAGS_MODE`, `FLIPT_URL`, `FLIPT_NAMESPACE`, and
  * `FLIPT_ENVIRONMENT` are bootstrap variables read by the flags package.
  */
-export async function createDigestGate(options: {
+export async function initFeatureFlagClient(options: {
   environment: InitFeatureFlagsOptions["environment"];
   metrics: FlagMetricsRecorder;
-}): Promise<DigestGatePort & { shutdown: () => Promise<void> }> {
+}): Promise<{ shutdown: () => Promise<void> }> {
   await initFeatureFlags({
     ...(options.environment === undefined
       ? {}
@@ -105,10 +134,5 @@ export async function createDigestGate(options: {
       );
     },
   });
-  const resolver = createResolver();
-  return {
-    digestEmailEnabled: () =>
-      resolver.value("opsDigestEmailEnabled", { targetingKey: TARGETING_KEY }),
-    shutdown: () => shutdownFeatureFlags(),
-  };
+  return { shutdown: () => shutdownFeatureFlags() };
 }

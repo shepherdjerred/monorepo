@@ -1,0 +1,83 @@
+id: ravenotter9
+name: RavenOtter9
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0ODkxMzI5NSwKICAicHJvZmlsZUlkIiA6ICIwOGJjNjM4MWRmODA0YWZlOWQ3NDljY2M4M2Q5YTczMSIsCiAgInByb2ZpbGVOYW1lIiA6ICJSYWluYm93QWNlRHJhZ29uIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzRjYTA5YjA3NWJmYTI3MWU5ZTE2YTMwMDE5OTE1ZWYyNTgzMzUwZTcwMzdkMGJlMzk3ZWMyMmM0MGJkOTYyYjgiCiAgICB9CiAgfQp9
+  signature: "DrjQYzMEne5D5OZFOxpVDJN9uVC+9d2cdmTRidmujqWDEOGpBVMnZZBSeKTiKFQR6inQ4W28HuKr8O8f7D37fp4NF0rgUxb680KL5eEVpAD4Clv3F4BS6veFMdBgnQfwdOfJT54pQfUfPcS1Urt3sintL/n7VniCvmBEnp9TH2SZmDJXTw3fR2zlLqZMBD1uTQHxzZxt9yEC1I0dIlscfThYpz3be7tXcEGholtbSDtJer1dFIVEZyo4PERjWbUbggBMcYqqQ7zOBN2WHG2eeEqafWtJK37rPG1LDiEArsBBWFknbv+wE+XL6j4cSj6GD65HRXdPtZEqznPtBrSbpAhMXhdUoDTtiZWCPIzWW+I2bhM5rkgHGyBGRgGlubvzQWe+5ArqgJNLj7GZktupuzA9yg9BIcHse4LdCoFhiGhiNWxA0fQGATWNvLsAlwt2ODU5F3fsDwXM9jb+ZOq+4LJEebBCsoUlHLBbXoICFh5mUxu7W9/WHHEAdpnzhIeUIEVeTjOHL67MKXoaWiJ4iamJ4t45S45e3CXBYRR+o0Qgu6Lf/6T9IKXhK55d2v/6zZ0F00L4tc2qJENWgQmOd9zfEmJtTaU9aE/YzwTaaz5517HnDn7RFma2pcUOJqL1otVnx9PDNKLd8FhZ9GyFZ+0m9q8MA6Mkl8DIZVx40QY="
+skill: 0.898
+archetype: lurker
+leverOffsets:
+  reactionMs: -0.23
+  aimErrorDeg: 0.83
+  predictionQuality: 0.51
+  awarenessRadius: 1.13
+  coordination: -1.27
+  aggression: -0.21
+kits:
+  trooper: 0.62
+  shortbow: 0.52
+  rewind: 0.21
+  ghost: 0.78
+  wraith: 0.53
+roles:
+  plant: 0.2
+  defend: 0.11
+  rotate: 0.64
+  hunt: 0.93
+style:
+  aggression: 0.48
+  patience: 0.88
+  teamplay: 0.13
+  risk: 0.57
+voice:
+  tone:
+    - eerie
+    - playful
+    - quiet
+  verbosity: quiet
+  style: Ghost-story lurker, speaks as if haunting the map, signs off with 'boo'
+lines:
+  greet:
+    - The map is haunted tonight.
+    - "I'll be in the walls, {team}."
+  onKill:
+    - "Boo, {victim}."
+    - Haunted.
+    - "{victim} heard a creak. Too late."
+  onDeath:
+    - "{killer} saw the ghost."
+    - Exorcised.
+    - Back to the walls.
+  onPlant:
+    - "{bomb} lit by unseen hands."
+    - "Who lit {bomb}? Nobody."
+  onDefuse:
+    - "A cold draft cools {bomb}."
+    - The ghost fixed it.
+  onWin:
+    - The haunting succeeds.
+    - "{team} has friendly ghosts."
+  onLoss:
+    - Even ghosts fade.
+    - I'll haunt the next round.
+  onLastAlive:
+    - Just me and the creaks.
+    - Lights out.
+  taunt:
+    - Did you hear that?
+    - Something's behind you.
+    - Boo.
+  lobby:
+    - The lobby echoes... boo.
+    - No footsteps tonight. Not from me.
+    - Shortbow and silence, as always.
+    - My hiding bet is still on. The badger knows.
+    - "{team}, I'll be wherever they aren't looking. Boo."
+quirks:
+  - stares_down
+  - crouch_spam
+rivals:
+  - grenourgaming
+  - badgercomet5
+bio: The most feared lurker of 2014, known for appearing behind planters with no footstep sounds at all. Trades kill streaks with GrenourGaming and has a standing bet with BadgerComet5 on who can stay unseen longer.
+batch: 2
+retired: false

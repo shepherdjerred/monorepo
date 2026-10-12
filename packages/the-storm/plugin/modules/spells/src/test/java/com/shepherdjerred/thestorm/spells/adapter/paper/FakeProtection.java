@@ -27,6 +27,7 @@ final class FakeProtection implements Protection {
   final Set<UUID> residents = new HashSet<>();
   final List<ProtectedAction> actions = new ArrayList<>();
   final List<HarmTarget> harms = new ArrayList<>();
+  boolean preserveClaim;
 
   static boolean inClaim(Location location) {
     return location.getX() >= 0;
@@ -45,6 +46,7 @@ final class FakeProtection implements Protection {
       UUID attacker, Location attackerAt, HarmTarget target, Location victimAt) {
     harms.add(target);
     return switch (target) {
+      case NPC -> Decision.allowed();
       case PLAYER ->
           inClaim(attackerAt) || inClaim(victimAt)
               ? new Decision.Denied(NO_PVP)
@@ -54,6 +56,11 @@ final class FakeProtection implements Protection {
               ? new Decision.Denied(AEGIS)
               : Decision.allowed();
     };
+  }
+
+  @Override
+  public boolean isPreserved(Location location) {
+    return preserveClaim && inClaim(location);
   }
 
   @Override

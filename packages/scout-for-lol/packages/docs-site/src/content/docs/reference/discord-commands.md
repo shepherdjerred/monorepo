@@ -26,6 +26,24 @@ answer.
 
 ![The Discord slash-command entry for /track, showing the riot-id, region, and alias option pills with the riot-id hint "Riot ID, for example Faker#KR1".](../../../assets/discord-track-options.png)
 
+## `/help`
+
+Shows setup links, available commands, and ways to reach the Scout team. For
+help, bug reports, or feedback, DM Scout directly or reply to a DM from Scout.
+Messages are stored in a private conversation shared with Scout's human team.
+Replies are always readable in the web conversation; Scout also attempts a DM
+notification. The `/help` embed contains the dashboard and documentation links,
+the command list, and a summary of what the dashboard is for. Choose
+**Contact Scout** in `/help` to write privately without opening a DM, or add
+screenshots in the web form. The command also links to the support Discord
+server. If Discord prevents you from messaging Scout, use the web form.
+Production includes `/scout ask` in every server where Scout is installed;
+beta includes it only in selected beta servers. Server-scoped commands appear
+only where their matching feature is enabled, mirroring where they are
+registered.
+
+![The /help embed listing the dashboard and documentation links, the lightweight commands with one-line descriptions, and what the dashboard is for.](../../../assets/discord-help.png)
+
 ## `/track`
 
 Creates a player, a Riot account, and a subscription posting to **the channel
@@ -79,17 +97,6 @@ Must be run inside a server.
 
 Reports that Scout is online, names the current server, and gives the Discord
 gateway latency in milliseconds.
-
-## `/help`
-
-An embed containing the dashboard URL, the documentation URL, the command list,
-and a summary of what the dashboard is for. Production includes `/scout ask` in
-every server where Scout is installed; beta includes it only in selected beta
-servers. Server-scoped commands are listed only in servers
-where the matching feature is enabled, mirroring where the commands themselves
-are registered.
-
-![The /help embed listing the dashboard and documentation links, the lightweight commands with one-line descriptions, and what the dashboard is for.](../../../assets/discord-help.png)
 
 ## `/scout ask`
 

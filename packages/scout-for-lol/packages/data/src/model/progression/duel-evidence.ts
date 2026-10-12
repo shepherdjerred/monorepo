@@ -1,3 +1,4 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import type {
   DuelCompetitor,
   DuelObjective,
@@ -15,7 +16,7 @@ type ObjectiveCrossing = {
 
 function competitorForPuuid(
   competitors: readonly DuelCompetitor[],
-  puuid: string,
+  puuid: LeaguePuuid,
 ): DuelCompetitor | undefined {
   return competitors.find((competitor) =>
     competitor.accounts.some((account) => account.puuid === puuid),

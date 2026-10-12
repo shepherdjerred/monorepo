@@ -4,9 +4,11 @@ import {
   S3ObjectKeySchema,
   Sha256DigestSchema,
   IsoInstantSchema,
+  type RiotMatchId,
 } from "@scout-for-lol/domain/identity/brands.ts";
 import { PlatformRouteSchema } from "@scout-for-lol/domain/identity/routes.ts";
 import {
+  MatchDataSourceSchema,
   MatchDeliveryModeSchema,
   MatchProcessingPolicySchema,
   PipelineOwnerSchema,
@@ -23,7 +25,10 @@ import { dateFromIsoInstant } from "#src/database/durable/row-values.ts";
  * codec's schema enforce). `deliveryMode` is the domain's closed enum stored
  * as TEXT with a matching CHECK, per the string-state-column convention; it
  * is part of what an observation asserts, so two producers naming different
- * modes for one match conflict rather than one quietly winning. Receipts live
+ * modes for one match conflict rather than one quietly winning.
+ * `matchDataSource` is the canonical payload's provenance under the same
+ * convention: fixed when the observation commits, and a claim like the mode.
+ * Receipts live
  * in their own table; assembling a full MatchProcessingState is the
  * observation repository's job.
  */
@@ -45,6 +50,7 @@ export const MatchObservationRecordSchema = z
     platformRoute: PlatformRouteSchema,
     policy: MatchProcessingPolicySchema,
     deliveryMode: MatchDeliveryModeSchema,
+    matchDataSource: MatchDataSourceSchema,
     owner: PipelineOwnerSchema,
     promotion: z.strictObject({ promotedAt: IsoInstantSchema }).nullable(),
     gameCreatedAt: IsoInstantSchema,
@@ -73,10 +79,11 @@ export const MatchObservationRecordSchema = z
 
 /** Column shape of a MatchObservation row, minus the DB-managed timestamps. */
 export type MatchObservationRow = {
-  riotMatchId: string;
+  riotMatchId: RiotMatchId;
   platformRoute: string;
   processingPolicy: string;
   deliveryMode: string;
+  matchDataSource: string;
   pipelineOwner: string | null;
   promotedAt: Date | null;
   gameCreatedAt: Date;
@@ -92,6 +99,7 @@ const RawObservationRowSchema = z.object({
   platformRoute: z.string(),
   processingPolicy: z.string(),
   deliveryMode: z.string(),
+  matchDataSource: z.string(),
   pipelineOwner: z.string().nullable(),
   promotedAt: z.date().nullable(),
   gameCreatedAt: z.date(),
@@ -150,6 +158,7 @@ export function matchObservationRowToRecord(
     platformRoute: raw.platformRoute,
     policy: raw.processingPolicy,
     deliveryMode: raw.deliveryMode,
+    matchDataSource: raw.matchDataSource,
     owner: ownerFromColumn(raw.pipelineOwner),
     promotion:
       raw.promotedAt === null
@@ -172,6 +181,7 @@ export function matchObservationRecordToRow(
     platformRoute: record.platformRoute,
     processingPolicy: record.policy,
     deliveryMode: record.deliveryMode,
+    matchDataSource: record.matchDataSource,
     pipelineOwner: ownerToColumn(record.owner),
     promotedAt:
       record.promotion === null

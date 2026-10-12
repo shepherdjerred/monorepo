@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import { expect, test } from "vitest";
 import { Children, isValidElement, type ReactNode } from "react";
 import { LoadingScreenDataSchema } from "@scout-for-lol/data";
@@ -5,7 +6,7 @@ import { LoadingScreen } from "#src/html/loading-screen/loading-screen.tsx";
 import { getLoadingScreenCanvasDimensions } from "#src/html/loading-screen/index.tsx";
 import { StandardLayout } from "#src/html/loading-screen/standard-layout.tsx";
 
-const currentDir = new URL(".", import.meta.url).pathname;
+const currentDir = fileURLToPath(new URL(".", import.meta.url));
 
 async function loadFixture(fileName: string) {
   const raw: unknown = await Bun.file(

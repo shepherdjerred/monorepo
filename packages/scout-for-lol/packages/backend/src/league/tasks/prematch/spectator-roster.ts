@@ -1,6 +1,7 @@
 import {
   isArenaQueueOrMode,
   type RawCurrentGameInfo,
+  resolveQueueTypeFromGame,
 } from "@scout-for-lol/data";
 
 /**
@@ -42,4 +43,32 @@ export function rosterIsAsCompleteAsItWillGet(
   gameInfo: RawCurrentGameInfo,
 ): boolean {
   return gameInfo.gameLength >= 0;
+}
+
+/**
+ * Whether a short roster is a custom that has started, and so is final.
+ *
+ * A custom is legitimately smaller than ten — 1v1 and 2v2 duels, 3v3s, any
+ * ad-hoc size — so "fewer than ten" says nothing about whether it is still
+ * loading. Play having started does ({@link rosterIsAsCompleteAsItWillGet}):
+ * Riot has listed every human it ever will. With somebody on each side the
+ * loading screen can render, so there is nothing left to wait for.
+ *
+ * A side holding only bots is empty here, because Riot never lists bots; that
+ * case is the local client's to finish (`clientRosterCompletion`).
+ */
+export function isStartedCustomRosterFinal(
+  gameInfo: RawCurrentGameInfo,
+): boolean {
+  if (!rosterIsAsCompleteAsItWillGet(gameInfo)) return false;
+  const queueType = resolveQueueTypeFromGame(
+    gameInfo.gameQueueConfigId,
+    gameInfo.gameMode,
+    gameInfo.gameType,
+  );
+  if (queueType !== "custom") return false;
+  const teams = new Set(
+    gameInfo.participants.map((participant) => participant.teamId),
+  );
+  return teams.has(100) && teams.has(200);
 }

@@ -2,6 +2,7 @@
 
 import { Glob } from "bun";
 import path from "node:path";
+import { DomainRegistrySchema } from "../../../packages/homelab/src/domain-registry.ts";
 
 const REPO_ROOT = path.resolve(import.meta.dir, "..", "..", "..");
 const CDK8S_RESOURCES = path.join(REPO_ROOT, "packages/homelab/src/cdk8s/src");
@@ -47,6 +48,8 @@ const FQDN_REGEX = /\bfqdn\s*:\s*["'`]([^"'`]+)["'`]/;
 //   // @tunnel-dns-coverage:hostnames-from ../resources/s3-static-sites/sites.ts
 const HOSTNAMES_FROM_DIRECTIVE =
   /\/\/\s*@tunnel-dns-coverage:hostnames-from\s+(\S+)/;
+const MAIL_DOMAINS_FROM_DIRECTIVE =
+  /\/\/\s*@tunnel-dns-coverage:mail-domains-from\s+(\S+)/;
 const HOSTNAME_LITERAL_REGEX = /\bhostname\s*:\s*["'`]([^"'`]+)["'`]/g;
 
 const ZONE_REGEX =
@@ -151,6 +154,14 @@ async function resolveDynamicHostnames(
   const callLine = line - 1;
   const windowStart = lineStarts[Math.max(0, callLine - PRECEDING_LINES)] ?? 0;
   const searchWindow = text.slice(windowStart, offset);
+  const mailDirective = MAIL_DOMAINS_FROM_DIRECTIVE.exec(searchWindow);
+  if (mailDirective?.[1] !== undefined) {
+    const sourcePath = path.resolve(path.dirname(abs), mailDirective[1]);
+    const registry = DomainRegistrySchema.parse(
+      await Bun.file(sourcePath).json(),
+    );
+    return Object.keys(registry.domains).map((domain) => `mta-sts.${domain}`);
+  }
   const directive = HOSTNAMES_FROM_DIRECTIVE.exec(searchWindow);
   if (directive?.[1] === undefined) {
     throw new Error(
@@ -273,7 +284,105 @@ export async function collectDnsNames(
       });
     }
   }
+  const baselineFile = path.join(tofuCloudflare, "domain-baseline.tf");
+  if (await Bun.file(baselineFile).exists()) {
+    const moduleFile = path.join(
+      tofuCloudflare,
+      "modules/domain-baseline/main.tf",
+    );
+    const registryFile = path.resolve(
+      tofuCloudflare,
+      "../../domain-registry.json",
+    );
+    const [rootText, moduleText, registry, zones] = await Promise.all([
+      Bun.file(baselineFile).text(),
+      Bun.file(moduleFile).text(),
+      Bun.file(registryFile)
+        .json()
+        .then((value: unknown) => DomainRegistrySchema.parse(value)),
+      collectZones(tofuCloudflare),
+    ]);
+    names.push(
+      ...baselineDnsNames(rootText, moduleText, registry, {
+        zones,
+        file: baselineFile,
+      }),
+    );
+  }
   return names;
+}
+
+/** Resolve only the repo-owned baseline contract, validating its real DNS resource. */
+export function baselineDnsNames(
+  rootText: string,
+  moduleText: string,
+  registryValue: unknown,
+  context: { zones: Map<string, Zone>; file: string },
+): DnsName[] {
+  const { zones, file } = context;
+  const registry = DomainRegistrySchema.parse(registryValue);
+  const module = /module\s+"domain_baseline"\s*\{([^}]+)\}/.exec(rootText)?.[1];
+  if (
+    module === undefined ||
+    ![
+      /^\s*source\s*=\s*"\.\/modules\/domain-baseline"\s*$/m,
+      /^\s*for_each\s*=\s*local\.domain_registry\.domains\s*$/m,
+      /^\s*zone_id\s*=\s*local\.baseline_zone_ids\[each\.key\]\s*$/m,
+      /^\s*domain\s*=\s*each\.key\s*$/m,
+    ].every((field) => field.test(module)) ||
+    /\bcount\s*=/.test(module) ||
+    !/domain_registry\s*=\s*jsondecode\(file\("\$\{path.module\}\/\.\.\/\.\.\/domain-registry.json"\)\)/.test(
+      rootText,
+    )
+  ) {
+    throw new Error(
+      "Unsupported domain_baseline wiring: DNS coverage cannot be proven",
+    );
+  }
+  const host = extractDnsRecordBlocks(moduleText).find(
+    (block) => block.resourceName === "mta_sts_host",
+  );
+  if (
+    host === undefined ||
+    ![
+      /^\s*zone_id\s*=\s*var\.zone_id\s*$/m,
+      /^\s*name\s*=\s*"mta-sts"\s*$/m,
+      /^\s*type\s*=\s*"CNAME"\s*$/m,
+      /^\s*content\s*=\s*"3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"\s*$/m,
+      /^\s*proxied\s*=\s*true\s*$/m,
+    ].every((field) => field.test(host.body)) ||
+    /\b(?:count|for_each)\s*=/.test(host.body)
+  ) {
+    throw new Error(
+      "domain_baseline must provision an unconditional proxied mta-sts Tunnel CNAME",
+    );
+  }
+  const zoneMap =
+    /baseline_zone_ids\s*=\s*\{([^}]+)\}/.exec(rootText)?.[1] ?? "";
+  const refs = new Map<string, string>();
+  for (const match of zoneMap.matchAll(
+    /"([^"]+)"\s*=\s*cloudflare_zone\.(\w+)\.id/g,
+  )) {
+    if (match[1] !== undefined && match[2] !== undefined)
+      refs.set(match[1], match[2]);
+  }
+  const domains = Object.keys(registry.domains);
+  if (
+    refs.size !== domains.length ||
+    zones.size !== domains.length ||
+    domains.some((domain) => zones.get(refs.get(domain) ?? "")?.name !== domain)
+  ) {
+    throw new Error(
+      "Every managed Cloudflare zone needs exactly one matching domain registry and baseline binding",
+    );
+  }
+  return domains.map((domain) => ({
+    file,
+    line: lineOf(rootText, rootText.indexOf('module "domain_baseline"')),
+    resourceName: `module.domain_baseline["${domain}"].cloudflare_dns_record.mta_sts_host`,
+    name: "mta-sts",
+    zoneRef: refs.get(domain),
+  }));
 }
 
 export function expandCoveredFqdns(

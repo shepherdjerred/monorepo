@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import {
   EXPLORE_ANSWER_MAX_LENGTH,
   EXPLORE_INTERRUPTED_CAVEAT,
@@ -18,13 +19,14 @@ export async function persistPartialAnswer(
   client: ExtendedPrismaClient,
   input: {
     stopped: boolean;
+    model?: string | undefined;
     conversationId: string;
     parentMessageId: string;
     expectedCurrentLeafId: string | null;
     text: string;
     trace: ExploreTraceEntry[];
     /** Same per-turn guild context the full answer records. */
-    guildIds: readonly string[];
+    guildIds: readonly DiscordGuildId[];
     existingMessageId: string | null;
   },
 ): Promise<ExploreMessage | null> {
@@ -65,6 +67,11 @@ export async function persistPartialAnswer(
     conversationId: input.conversationId,
     parentMessageId: input.parentMessageId,
     answer,
+    ...(input.model === undefined
+      ? {}
+      : {
+          generation: { model: input.model, reasoningEffort: "high" as const },
+        }),
     preview: null,
     visualization: null,
     trace: finalizeExploreTrace(input.trace),

@@ -1,7 +1,10 @@
 import type { DiscordAccountId, DiscordGuildId } from "@scout-for-lol/data";
-import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
+import { prisma, type Db } from "#src/database/index.ts";
 import type { FeatureTipKey } from "#src/analytics/product-analytics.ts";
-import { parseTipKey } from "#src/tips/tip-catalog.ts";
+import {
+  parsePersistedTipKey,
+  type PersistedFeatureTipKey,
+} from "#src/tips/tip-catalog.ts";
 
 /**
  * Who a tip is aimed at. A guild-channel message has no `discordId`; a DM
@@ -29,25 +32,25 @@ function audienceWhere(audience: TipAudience) {
  */
 export async function shownTipKeys(
   audience: TipAudience,
-  db: ExtendedPrismaClient = prisma,
-): Promise<Set<FeatureTipKey>> {
+  db: Db = prisma,
+): Promise<Set<PersistedFeatureTipKey>> {
   const rows = await db.featureTipImpression.findMany({
     where: audienceWhere(audience),
     select: { tipKey: true },
   });
-  return new Set(rows.map((row) => parseTipKey(row.tipKey)));
+  return new Set(rows.map((row) => parsePersistedTipKey(row.tipKey)));
 }
 
 /** When this audience last saw a tip, or undefined if it never has. */
 export async function lastTipShownAt(
   audience: TipAudience,
-  db: ExtendedPrismaClient = prisma,
+  db: Db = prisma,
 ): Promise<Date | undefined> {
   const rows = await db.featureTipImpression.findMany({
     where: audienceWhere(audience),
     select: { shownAt: true, tipKey: true },
   });
-  for (const row of rows) parseTipKey(row.tipKey);
+  for (const row of rows) parsePersistedTipKey(row.tipKey);
   return rows.reduce<Date | undefined>(
     (latest, row) =>
       latest === undefined || row.shownAt > latest ? row.shownAt : latest,
@@ -70,7 +73,7 @@ export async function lastTipShownAt(
  */
 export async function claimTip(
   input: TipAudience & { tipKey: FeatureTipKey; shownAt?: Date },
-  db: ExtendedPrismaClient = prisma,
+  db: Db = prisma,
 ): Promise<boolean> {
   const { count } = await db.featureTipImpression.createMany({
     data: [
@@ -89,7 +92,7 @@ export async function claimTip(
 /** Mark a claimed row as a delivered impression without changing its timestamp. */
 export async function confirmTipClaim(
   input: TipAudience & { tipKey: FeatureTipKey },
-  db: ExtendedPrismaClient = prisma,
+  db: Db = prisma,
 ): Promise<void> {
   await db.featureTipImpression.updateMany({
     where: {
@@ -109,7 +112,7 @@ export async function confirmTipClaim(
  */
 export async function releaseTipClaim(
   input: TipAudience & { tipKey: FeatureTipKey },
-  db: ExtendedPrismaClient = prisma,
+  db: Db = prisma,
 ): Promise<void> {
   await db.featureTipImpression.deleteMany({
     where: {

@@ -33,7 +33,7 @@ an activating contract also shows snapshot attempts and the next retry.
 
 Draft owners can validate, historically preview, or revise a draft with the
 advanced editor, or return to Explore for conversational revision.
-The advanced editor exposes the typed contract plan and generated ScoutQL with
+The advanced editor exposes the binding canonical SQL and readable summary with
 diagnostics, semantic explanation, and a meaning diff before revision. Funding,
 acceptance, decline, contribution, and cancellation first create a revision-
 bound, single-use confirmation; merely opening or sharing a card never moves BB.
@@ -41,5 +41,4 @@ bound, single-use confirmation; merely opening or sharing a card never moves BB.
 ## Related
 
 - [Bryan Bucks rules and limits](/docs/reference/bryan-bucks-rules/)
-- [Dare contract ScoutQL](/docs/reference/bryan-bucks-dare-scoutql/)
 - [Author and revise a Dare](/docs/how-to/bryan-bucks-author-a-dare/)

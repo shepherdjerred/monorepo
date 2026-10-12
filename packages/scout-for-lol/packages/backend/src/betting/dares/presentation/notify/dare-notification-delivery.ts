@@ -1,3 +1,4 @@
+import type { DiscordAccountId } from "@scout-for-lol/domain/identity/discord.ts";
 import type { Client } from "discord.js";
 import { z } from "zod";
 import {
@@ -7,7 +8,7 @@ import {
 import {
   DareNotificationCategorySchema,
   DareNotificationKindSchema,
-} from "#src/betting/dares/presentation/notify/dare-notification-outbox.ts";
+} from "#src/betting/dares/presentation/notify/dare-status-message.ts";
 import { getBucksNotificationPreferences } from "#src/betting/notify/notification-preferences.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
@@ -43,7 +44,7 @@ const DareNotificationEventSchema = z.object({
 
 type DeliveryRow = {
   id: number;
-  discordId: string;
+  discordId: DiscordAccountId;
   attemptCount: number;
   event: {
     category: string;

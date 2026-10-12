@@ -33,10 +33,18 @@ strictly validated Whisker diagnostics payload for LR5 and hopper data. It
 discovers the Whisker config entry through Home Assistant's entity registry;
 the internal ID and raw diagnostics are never returned or exported as labels.
 
-`/api/pets` is controlled by the managed `pet-dashboard-enabled` flag and is
-absent (404) by default. The internal metrics endpoint remains available to the
-restricted Prometheus ServiceMonitor so alerts can be verified before the TRMNL
-screen is enabled.
+LR5 source health requires a validated diagnostics fetch and availability of the
+vacuum entity associated with that config entry. The exporter records the last
+successful fetch time across failures; alerts detect failed, missing, or expired
+observations. Whisker's `lastSeen` remains informational because it records device
+changes rather than a polling heartbeat. Offline and robot faults have separate
+metrics and alerts.
+The `DRAWER_ALMOST_FULL` advisory does not set the robot-fault metric; explicit
+hardware-fault fields and unknown status codes remain actionable.
+
+`/api/pets` requires the TRMNL API key like the other payload routes. The
+internal metrics endpoint is served to the restricted Prometheus
+ServiceMonitor.
 
 ## Configuration
 
@@ -46,8 +54,11 @@ screen is enabled.
 - Server: `PORT` (3000), `DISPLAY_TIME_ZONE` (`America/Los_Angeles`)
 - Home Assistant: `HA_URL`, `HA_BATTERY_THRESHOLD`,
   `HA_UNAVAILABLE_IGNORED_DOMAINS` (CSV of domains with no durable state),
-  and `HA_PRESENCE_ENTITIES` / `HA_SECURITY_ENTITIES` /
-  `HA_CLIMATE_ENTITIES` (CSV of `entity_id:label` pairs). Expected-unavailable
+  with connection wiring declared in homelab IaC. Presence, security, and
+  climate tiles use `trmnl-ha-presence-entities`, `trmnl-ha-security-entities`,
+  and `trmnl-ha-climate-entities` (CSV of `entity_id:label` pairs). Typed
+  configuration resolves these flags for each home payload. Defaults preserve
+  the homelab's existing tiles during a provider outage. Expected-unavailable
   entity globs (companion diagnostics, rooftop Play, living-room TV) live in
   `UNAVAILABLE_IGNORED_ENTITY_GLOBS` in source. Named presence/security/climate
   tiles still warn if those entities are unavailable. The home unavailable
@@ -89,7 +100,7 @@ From the repository root, validate all four layouts for all three plugins:
 ```bash
 docker run --rm --entrypoint sh \
   -v "$(pwd):/workspace" -w /workspace \
-  trmnl/trmnlp:v0.11.0@sha256:4ac6d7f35ff30665b6c3b2634c2ba830488b2ee38783acc2ce953b652cb1c973 \
+  trmnl/trmnlp:v0.26.0@sha256:dacc7cb7039db091bbc336959724af93f6d75a1d628a66fe3a96973879c59dc9 \
   packages/trmnl-dashboard/scripts/trmnlp-ci.sh validate
 ```
 
@@ -98,15 +109,15 @@ Preview one plugin at `http://localhost:4567`:
 ```bash
 docker run --rm --entrypoint sh -p 4567:4567 \
   -v "$(pwd):/workspace" -w /workspace \
-  trmnl/trmnlp:v0.11.0@sha256:4ac6d7f35ff30665b6c3b2634c2ba830488b2ee38783acc2ce953b652cb1c973 \
+  trmnl/trmnlp:v0.26.0@sha256:dacc7cb7039db091bbc336959724af93f6d75a1d628a66fe3a96973879c59dc9 \
   packages/trmnl-dashboard/scripts/trmnlp-ci.sh serve pets
 ```
 
-Buildkite runs the same validation without secrets on pull requests. On main,
+Woodpecker runs the same validation without secrets on pull requests. On main,
 the path-selected `trmnl` lane validates all three projects before publishing
 any of them, then pushes plugin `303046`, `303047`, and `464652` in that order.
 The publisher uses the dedicated account-level `TRMNL_API_KEY` from
-`buildkite-trmnl-credentials`; this is intentionally separate from the
+`ci-trmnl-credentials`; this is intentionally separate from the
 dashboard service's polling key.
 
 For an intentional remote-to-repository refresh, provide the account key

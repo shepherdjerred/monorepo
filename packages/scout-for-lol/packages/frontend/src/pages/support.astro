@@ -2,10 +2,11 @@
 import Layout from "../layouts/Layout.astro";
 import Navbar from "../components/layout/Navbar.astro";
 import Footer from "../components/layout/Footer.astro";
-import { DOCS_ORIGIN } from "../lib/marketing-constants.ts";
+import { APP_ORIGIN, DOCS_ORIGIN } from "../lib/marketing-constants.ts";
 import { surfaceHref } from "@scout-for-lol/design-system/layout";
 
 const docsUrl = surfaceHref(DOCS_ORIGIN, "/docs/");
+const feedbackUrl = surfaceHref(APP_ORIGIN, "/app/feedback");
 import Header from "../components/layout/Header.astro";
 import InfoBox from "../components/marketing/InfoBox.astro";
 import { Icon } from "astro-icon/components";
@@ -14,7 +15,7 @@ import Button from "../components/marketing/Button.astro";
 
 <Layout
   title="Support · Scout for LoL"
-  description="Get help with Scout — Discord support, GitHub issues, and feature requests."
+  description="Get help with Scout — DM the bot, send feedback, or join the support Discord."
 >
   <div class="bg-scout-surface">
     <Navbar activePage="support" />
@@ -40,14 +41,12 @@ import Button from "../components/marketing/Button.astro";
               >
                 Discord
               </a>{" "}
-              or open an issue on
+              or send us a message through the
               <a
-                href="https://github.com/shepherdjerred/monorepo/issues"
-                target="_blank"
-                rel="noopener noreferrer"
+                href={feedbackUrl}
                 class="text-scout-ink hover:underline font-medium"
               >
-                GitHub
+                feedback form
               </a>
               .
             </InfoBox>
@@ -55,6 +54,20 @@ import Button from "../components/marketing/Button.astro";
 
           <!-- Support Options -->
           <div class="space-y-8">
+            <div class="bg-scout-surface border-2 border-scout-border rounded-xl p-8">
+              <h2 class="text-2xl font-semibold text-scout-ink mb-4">
+                DM Scout for help
+              </h2>
+              <p class="text-scout-subtle">
+                Open Scout's profile in your Discord server and choose Message,
+                or reply to a DM from Scout. Your message goes to the Scout
+                team's private support inbox. You can also run /help and choose
+                Contact Scout to write privately without opening a DM. Human
+                replies are always saved in your web conversation, and Scout
+                also attempts a Discord notification. If Discord blocks your DM,
+                use the form below. Please don't include passwords or tokens.
+              </p>
+            </div>
             <!-- Discord Support -->
             <div class="hover:shadow-lg transition-shadow bg-scout-surface border-2 border-scout-border rounded-xl p-8">
               <div class="flex flex-row items-start mb-4">
@@ -94,37 +107,32 @@ import Button from "../components/marketing/Button.astro";
               </div>
             </div>
 
-            <!-- GitHub Issues -->
+            <!-- Persistent feedback form -->
             <div class="hover:shadow-lg transition-shadow bg-scout-surface border-2 border-scout-border rounded-xl p-8">
               <div class="flex flex-row items-start mb-4">
                 <div class="shrink-0">
                   <Icon
-                    name="simple-icons:github"
+                    name="heroicons:chat-bubble-left-right"
                     class="h-12 w-12 text-scout-ink"
                   />
                 </div>
                 <h2 class="ml-6 text-2xl font-semibold text-scout-ink">
-                  Open a GitHub Issue
+                  Send feedback or report a bug
                 </h2>
               </div>
               <div>
                 <p class="text-scout-subtle mb-4">
-                  Report bugs, request features, or track existing issues. Best
-                  for:
+                  Sign in with Discord and send a message directly to the Scout
+                  team. Best for:
                 </p>
                 <ul class="list-disc list-inside space-y-2 text-scout-subtle mb-6">
                   <li>Bug reports with detailed information</li>
                   <li>Feature requests with specific use cases</li>
-                  <li>Technical discussions and documentation</li>
-                  <li>Tracking issue resolution and updates</li>
+                  <li>Questions about setup or confusing behavior</li>
+                  <li>Feedback about what's working and what's missing</li>
                 </ul>
-                <Button
-                  href="https://github.com/shepherdjerred/monorepo/issues"
-                  external={true}
-                  variant="primary"
-                  color="gray"
-                >
-                  Open an Issue
+                <Button href={feedbackUrl} variant="primary" color="gray">
+                  Send a message
                   <Icon
                     name="heroicons:arrow-top-right-on-square"
                     class="ml-2 -mr-1 h-5 w-5"
@@ -176,17 +184,9 @@ import Button from "../components/marketing/Button.astro";
                     class="h-6 w-6 text-scout-brand mr-3 shrink-0"
                   />
                   <span>
-                    <strong>Search existing issues:</strong> Your question might
-                    already be answered in{" "}
-                    <a
-                      href="https://github.com/shepherdjerred/monorepo/issues"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="text-scout-brand hover:text-scout-brand underline"
-                    >
-                      existing GitHub issues
-                    </a>
-                    .
+                    <strong>Include what happened:</strong> Tell us what you
+                    tried, what you expected, and what Scout did instead.
+                    Screenshots and error messages help.
                   </span>
                 </li>
               </ul>

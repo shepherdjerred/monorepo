@@ -1,3 +1,9 @@
+import {
+  DiscordGuildIdSchema,
+  DiscordChannelIdSchema,
+  type DiscordGuildId,
+} from "@scout-for-lol/domain/identity/discord.ts";
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test } from "vitest";
 import type { MessageCreateOptions } from "discord.js";
 import {
@@ -22,6 +28,13 @@ import {
   markReplyPermissionError,
 } from "#src/league/discord/channel.ts";
 
+const ANNOUNCE_CHANNEL = DiscordChannelIdSchema.parse("1337623164146155594");
+
+const ANNOUNCE_GUILD = DiscordGuildIdSchema.parse("1337623164146155593");
+
+const MATCH_NA1_1 = RiotMatchIdSchema.parse("NA1_1");
+const MATCH_NA1_5000000042 = RiotMatchIdSchema.parse("NA1_5000000042");
+
 const WINNER_DISCORD_ID = bucksTestDiscordId(1);
 const LOSER_DISCORD_ID = bucksTestDiscordId(2);
 
@@ -45,8 +58,8 @@ function firstEmbedJson(message: MessageCreateOptions) {
 describe("formatSettlementBody", () => {
   test("lists every bettor and the in-game player's earned Bucks", () => {
     const summary: SettlementSummary = {
-      matchId: "NA1_5000000042",
-      serverId: "1337623164146155593",
+      matchId: MATCH_NA1_5000000042,
+      serverId: ANNOUNCE_GUILD,
       winningTeamId: 100,
       voidReason: undefined,
       winnersPool: poolTotal(10),
@@ -118,8 +131,8 @@ describe("formatSettlementBody", () => {
 
   test("summarizes voided and fully unmatched refunds without bettor rows", () => {
     const summary: SettlementSummary = {
-      matchId: "NA1_5000000042",
-      serverId: "1337623164146155593",
+      matchId: MATCH_NA1_5000000042,
+      serverId: ANNOUNCE_GUILD,
       winningTeamId: undefined,
       voidReason: "no_counterparty",
       winnersPool: poolTotal(0),
@@ -174,8 +187,8 @@ describe("formatSettlementBody", () => {
 
   test("shows a partial result and summarizes only its unmatched refund", () => {
     const summary: SettlementSummary = {
-      matchId: "NA1_5000000042",
-      serverId: "1337623164146155593",
+      matchId: MATCH_NA1_5000000042,
+      serverId: ANNOUNCE_GUILD,
       winningTeamId: 100,
       voidReason: undefined,
       winnersPool: poolTotal(10),
@@ -222,8 +235,8 @@ describe("formatSettlementBody", () => {
 describe("formatSettlementBody house cuts", () => {
   test("omits the fee parenthetical when a small winner pays no fee", () => {
     const summary: SettlementSummary = {
-      matchId: "NA1_5000000042",
-      serverId: "1337623164146155593",
+      matchId: MATCH_NA1_5000000042,
+      serverId: ANNOUNCE_GUILD,
       winningTeamId: 100,
       voidReason: undefined,
       winnersPool: poolTotal(1),
@@ -281,8 +294,8 @@ describe("formatSettlementBody house cuts", () => {
 
   test("omits house-match details and the synthetic account", () => {
     const summary: SettlementSummary = {
-      matchId: "NA1_5000000042",
-      serverId: "1337623164146155593",
+      matchId: MATCH_NA1_5000000042,
+      serverId: ANNOUNCE_GUILD,
       winningTeamId: 100,
       voidReason: undefined,
       winnersPool: poolTotal(25),
@@ -345,8 +358,8 @@ describe("formatSettlementBody house cuts", () => {
 describe("settlement outcome message", () => {
   test("fits a full settlement into one bounded embed", () => {
     const summary: SettlementSummary = {
-      matchId: "NA1_5000000042",
-      serverId: "1337623164146155593",
+      matchId: MATCH_NA1_5000000042,
+      serverId: ANNOUNCE_GUILD,
       winningTeamId: 100,
       voidReason: undefined,
       winnersPool: poolTotal(80),
@@ -446,8 +459,8 @@ describe("settlement outcome bounds", () => {
       parlay: undefined,
       framing: undefined,
       summary: {
-        matchId: "NA1_5000000042",
-        serverId: "1337623164146155593",
+        matchId: MATCH_NA1_5000000042,
+        serverId: ANNOUNCE_GUILD,
         winningTeamId: 100,
         voidReason: undefined,
         winnersPool: poolTotal(0),
@@ -457,7 +470,7 @@ describe("settlement outcome bounds", () => {
       },
       earnings: [
         {
-          serverId: "1337623164146155593",
+          serverId: ANNOUNCE_GUILD,
           discordId: WINNER_DISCORD_ID,
           alias: "A".repeat(2000),
           reasons: ["played"],
@@ -474,11 +487,11 @@ describe("settlement outcome bounds", () => {
   });
 });
 
-const SERVER_ID = "1337623164146155593";
+const SERVER_ID = ANNOUNCE_GUILD;
 
-function parlaySummary(serverId: string) {
+function parlaySummary(serverId: DiscordGuildId) {
   return {
-    matchId: "NA1_1",
+    matchId: MATCH_NA1_1,
     serverId,
     yesResult: true,
     voidReason: undefined,
@@ -503,7 +516,7 @@ describe("buildAnnouncements", () => {
       closures: [],
       settlements: [
         {
-          matchId: "NA1_1",
+          matchId: MATCH_NA1_1,
           serverId: SERVER_ID,
           winningTeamId: 100,
           voidReason: undefined,
@@ -541,7 +554,7 @@ describe("buildAnnouncements", () => {
     const announcements = buildAnnouncements({
       closures: [
         {
-          matchId: "NA1_1",
+          matchId: MATCH_NA1_1,
           serverId: SERVER_ID,
           messageRefs: [],
           humanMatchedPerSide: 0,
@@ -584,9 +597,9 @@ async function capturedNonce(kind: "outcome" | "parlay"): Promise<unknown> {
   await sendSettlementMessage(
     {
       message: { embeds: [{ title: "Outcome" }] },
-      matchId: "NA1_5000000042",
-      channelId: "1337623164146155594",
-      guildId: "1337623164146155593",
+      matchId: MATCH_NA1_5000000042,
+      channelId: ANNOUNCE_CHANNEL,
+      guildId: ANNOUNCE_GUILD,
       kind,
     },
     {
@@ -629,9 +642,9 @@ describe("sendSettlementMessage", () => {
     await sendSettlementMessage(
       {
         message: { embeds: [{ title: "Outcome" }] },
-        matchId: "NA1_5000000042",
-        channelId: "1337623164146155594",
-        guildId: "1337623164146155593",
+        matchId: MATCH_NA1_5000000042,
+        channelId: ANNOUNCE_CHANNEL,
+        guildId: ANNOUNCE_GUILD,
         kind: "outcome",
       },
       {
@@ -666,9 +679,9 @@ describe("sendSettlementMessage", () => {
     await sendSettlementMessage(
       {
         message: { embeds: [{ title: "Outcome" }] },
-        matchId: "NA1_5000000042",
-        channelId: "1337623164146155594",
-        guildId: "1337623164146155593",
+        matchId: MATCH_NA1_5000000042,
+        channelId: ANNOUNCE_CHANNEL,
+        guildId: ANNOUNCE_GUILD,
         kind: "outcome",
         postmatchMessageId: "postmatch-message",
       },
@@ -694,16 +707,16 @@ describe("sendSettlementMessage", () => {
     const replyError = markReplyPermissionError(
       new ChannelSendError(
         "missing Read Message History",
-        "1337623164146155594",
+        ANNOUNCE_CHANNEL,
         true,
       ),
     );
     await sendSettlementMessage(
       {
         message: { embeds: [{ title: "Outcome" }] },
-        matchId: "NA1_5000000042",
-        channelId: "1337623164146155594",
-        guildId: "1337623164146155593",
+        matchId: MATCH_NA1_5000000042,
+        channelId: ANNOUNCE_CHANNEL,
+        guildId: ANNOUNCE_GUILD,
         kind: "outcome",
         postmatchMessageId: "postmatch-message",
       },
@@ -728,7 +741,7 @@ describe("sendSettlementMessage", () => {
     const attempts: MessageCreateOptions[] = [];
     const replyError = new ChannelSendError(
       "Discord rejected reply",
-      "1337623164146155594",
+      ANNOUNCE_CHANNEL,
       true,
       { code: 50_013, message: "Missing Permissions" },
     );
@@ -736,9 +749,9 @@ describe("sendSettlementMessage", () => {
     await sendSettlementMessage(
       {
         message: { embeds: [{ title: "Outcome" }] },
-        matchId: "NA1_5000000042",
-        channelId: "1337623164146155594",
-        guildId: "1337623164146155593",
+        matchId: MATCH_NA1_5000000042,
+        channelId: ANNOUNCE_CHANNEL,
+        guildId: ANNOUNCE_GUILD,
         kind: "outcome",
         postmatchMessageId: "postmatch-message",
       },

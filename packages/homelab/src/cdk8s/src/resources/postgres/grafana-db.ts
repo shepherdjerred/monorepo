@@ -30,7 +30,7 @@ export function createGrafanaPostgreSQLDatabase(chart: Chart) {
       numberOfInstances: 1, // Single node setup for homelab
       teamId: "homelab",
       postgresql: {
-        version: PostgresqlSpecPostgresqlVersion.VALUE_16, // Latest stable PostgreSQL version supported
+        version: PostgresqlSpecPostgresqlVersion.VALUE_18,
         parameters: {
           // PostgreSQL configuration optimized for Grafana
           max_connections: "200",

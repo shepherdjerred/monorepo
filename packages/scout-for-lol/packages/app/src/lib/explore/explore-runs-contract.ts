@@ -13,6 +13,7 @@ import type { ExplorePendingTurn } from "#src/lib/explore/explore-turn-state.ts"
  * reaching into `components/` for a type inverts the app's composition order.
  */
 export type StartExploreTurnInput = {
+  model?: "gpt-6-luna" | "gpt-6.1-sol";
   conversationId: string | null;
   question: string | null;
   attach: ExploreAttachPoint;

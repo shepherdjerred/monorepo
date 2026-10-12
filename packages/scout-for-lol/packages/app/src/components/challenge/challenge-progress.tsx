@@ -30,7 +30,7 @@ export function ChallengeProgress(props: { progress: ChallengeProgressValue }) {
     return (
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-3">
-          <span className="font-medium">Distinct coverage</span>
+          <span className="font-medium">Progress</span>
           <Badge variant={progress.completed ? "default" : "outline"}>
             {progress.current.toString()} / {progress.target.toString()}
           </Badge>

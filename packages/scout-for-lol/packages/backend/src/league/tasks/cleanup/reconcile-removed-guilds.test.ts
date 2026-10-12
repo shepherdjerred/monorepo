@@ -82,7 +82,7 @@ function discordClient(
     isReady: () => false,
     guilds: {
       cache: new Map(),
-      fetch: (serverId: string) =>
+      fetch: (serverId: DiscordGuildId) =>
         verifiableIds.includes(serverId)
           ? Promise.resolve(mockGuild({ id: serverId }))
           : Promise.reject(unknownGuildError()),

@@ -14,7 +14,7 @@ See [AGENTS.md](AGENTS.md) for implementation invariants and contributor notes.
 # Run from source
 bun run src/index.ts pr health
 
-# Compile a standalone binary to dist/toolkit
+# Compile a standalone binary to dist/toolkit (ad-hoc signed on macOS)
 bun run build
 
 # Install globally to ~/.local/bin/toolkit
@@ -63,6 +63,137 @@ Common plumbing such as `git`, `bun`, `kubectl`, `helm`, `tofu`, `aws`, `op`,
 
 ## Monorepo workflows
 
+### Wait for CI and merge readiness
+
+`toolkit ci maintenance --json` reports recent explicit maintenance runs and
+the durable Temporal coordinator's memo key. It distinguishes release notes, CI
+image refreshes, and superseded source requests from normal main recovery.
+Maintenance success is never merge-readiness evidence. Inspect a failed or
+ambiguous submission and its coordinator state before retrying it.
+
+```bash
+toolkit ci wait                         # Infer the PR for this branch
+toolkit ci wait 3447 --json             # One final report; progress on stderr
+toolkit ci wait 3447 --until settled    # Collect all blocking check results
+toolkit ci wait 3447 --timeout 2h       # Optional deadline; no default deadline
+toolkit ci explain 3447                # Current blockers and bounded failure logs
+toolkit ci main                        # Current main verification and last completed verdict
+toolkit ci load                        # Queue, compute/gate admission, CPU/memory/disk/I/O
+toolkit ci timings --since 72h --json   # Recent timing cohorts and per-workflow phases
+toolkit pr review list 3447 --json      # Human and provider feedback with full bodies
+```
+
+CI commands resolve `WOODPECKER_TOKEN` through the registered credential broker,
+as the native Woodpecker command does. An explicit token retains precedence;
+custom server URLs or repository IDs require an explicit token.
+
+`wait` pins the initial PR head (or asserts `--head <full SHA>`), subscribes to
+Woodpecker events before reading status, and refreshes GitHub metadata every
+30 seconds. Repeated REST reads send the previous `ETag`; GitHub does not
+charge an unchanged `304` against the shared 5,000/hr REST quota, so a
+steady-state poll is nearly free. It returns as soon as a blocking check fails, merge conflicts
+appear, human intervention is needed, or all merge requirements pass. A ready
+candidate gets a fresh check of head, base, pipeline attempt, rules, and main.
+`--until settled` waits for the remaining blocking results after a CI failure;
+head changes and structural blockers still return immediately.
+
+PR observation considers both normal PR pipelines and signed ready-for-review
+metadata pipelines for the exact head. Title and label changes cannot replace
+verification evidence. A green draft preflight cannot make a ready PR mergeable;
+the full pipeline and its own published completion verdict must pass.
+
+Woodpecker workflow results and the `ci-complete` gate determine hard CI
+failures. Failed service cleanup children inside successful workflows do not
+block a merge. Required GitHub checks must also publish success for the current
+pipeline; optional external checks are advisory. Human approval is required
+only when the effective branch rules require it, or a human requests changes.
+A branch behind main is acceptable when the branch rules do not require it
+to be current.
+
+Long queues and builds are normal. Keep awaiting the same foreground process;
+do not restart polls or diagnose an outage from elapsed time alone. A sparse
+heartbeat appears every five minutes. Disconnects reconnect with backoff and a
+fresh snapshot. When GitHub refuses a read because a rate limit is exhausted,
+the wait prints the limit and reset time to stderr, sleeps until the reset
+(plus a few seconds of jitter), and resumes polling; a reset past `--timeout`
+ends with the timeout outcome. `load` reports each unavailable telemetry source explicitly.
+
+`explain` and wait reports include pipeline elapsed time, workflow start delays,
+time without any active workflow, and per-step API phase timings in JSON. The
+report identifies the pipeline attempt and numeric workflow IDs. The string
+`taskId` matches the native pod task-UUID label: Woodpecker 3.19 uses the workflow
+ID's decimal representation for both its queue and backend task ID. API phase timings
+include admission and pod startup; they are not process CPU time. Parallel phases
+overlap and must not be added together to estimate elapsed pipeline time.
+Missing timestamps remain unknown, including activity totals with incomplete
+workflow evidence. Live intervals account for local clock skew. Completion delay
+is a lower bound because the pipeline API does not identify required dependencies.
+
+`timings` reads every pipeline created in the requested window, with four detail
+requests at a time. It groups actual workflow shapes into draft, noop, ready PR,
+main, maintenance, and other work, then separates attempts and outcomes. Each
+cohort reports successful latency sample counts and nearest-rank p50/p95 values;
+failed or canceled runs do not become successful latency samples. Individual
+step distributions expose checkout, review, verification, publication, and
+deployment costs. They overlap and are not additive. Structured checkout and
+toolchain measurements are reported separately from native step durations;
+toolchain bootstrap excludes workspace dependency installation. Checkout byte
+counts measure stored Git objects, not network traffic.
+
+The native API exposes only the latest attempt. The command also reads successful
+clone, review, verification, draft-preflight and maintenance command logs, with
+four concurrent requests and an 8 MiB limit per step. Missing, malformed or
+oversized evidence stays unknown; raw logs are never copied into the report.
+Final structured review signals distinguish exact-head completion during this
+pipeline (`fresh`), completion before it (`reused`), both (`mixed`), and a gate
+passing solely on quota exemptions. Provider details preserve partial quota
+coverage; the existing gate can pass with one completed provider. Rounded
+timestamps at the run boundary remain unknown. Historical full verification of
+drafts also has its own cohort. At least 30 distinct fresh successful ready heads
+are needed to assess the target p95. This sample includes `mixed` gates with a
+proven fresh provider while preserving their separate cohort. Reruns are excluded
+and duplicate heads use the slowest eligible success. Sample sufficiency alone
+does not certify the SLO.
+
+Main is checked automatically. Push runs and full manual main runs contribute
+to its verdict. A manual run must include verification, release admission,
+image publication, chart publication and ArgoCD reconciliation without skipped
+workflows; partial manual jobs cannot clear a failure. A failed last completed
+run keeps main red while its recovery build is pending. When main is red, report its evidence and
+await instructions; do not independently fix it. `ci explain --main` is an
+alias for `ci main`.
+
+| Wait exit | Meaning                                                       |
+| --------- | ------------------------------------------------------------- |
+| 0         | Merge ready                                                   |
+| 1         | Blocking check failure or merge conflict                      |
+| 2         | Usage, authentication, API, or contract error                 |
+| 3         | Human intervention (review, draft, pipeline approval)         |
+| 4         | PR head changed; explicitly start a new wait for the new head |
+| 5         | Main red; report and await instructions                       |
+| 6         | Requested timeout; this does not mean CI failed               |
+| 7         | PR closed or already merged                                   |
+
+`--json` reserves stdout for one final JSON report. Failure reports include up
+to three failed workflows with at most 60 lines / 4,000 characters of logs
+each, review excerpts when relevant, and commands for deeper evidence.
+Secrets and terminal control sequences are removed before truncation.
+`explain` is a one-shot diagnostic; a pending report exits 0 and has
+`ready: false`. SIGINT and SIGTERM cancel the foreground wait with exits 130
+and 143. The command does not merge or mutate the PR.
+
+GitHub credentials come from `GH_TOKEN` or `gh auth token`. One-shot commands
+(`ci explain`, `ci main`, `pr health`, `pr review`) still exit 2 on a GitHub
+rate limit, with the resource, used/limit, and retry time in the message.
+`gh api rate_limit` is not authoritative for the shared bucket; read the
+`x-ratelimit-*` headers of a real request instead.
+The default Woodpecker connection resolves `WOODPECKER_TOKEN` through the
+registered credential broker, preserving environment and credential-locator
+config overrides. The broker uses `OP_SERVICE_ACCOUNT_TOKEN` or the enrolled
+macOS Keychain credential for 1Password authentication. Custom `WOODPECKER_URL` or
+`WOODPECKER_REPO_ID` connections require an explicit token. Load telemetry
+uses the configured `kubectl` context and `gcx --context homelab`.
+
 ### PR health, reviews, and media
 
 `toolkit pr health [PR_NUMBER] [--json]` combines three independent signals:
@@ -71,15 +202,20 @@ Common plumbing such as `git`, `bun`, `kubectl`, `helm`, `tofu`, `aws`, `op`,
   head;
 - the Woodpecker pipeline for that exact head SHA, including authoritative job
   state and `toolkit woodpecker pipeline log show <repo> <pipeline>` investigation commands;
-- GitHub PR/check/review metadata from `gh`.
+- GitHub PR/check/review metadata from `gh` and the GitHub REST API.
 
 GitHub’s status can lag or describe a different state. The exact-head
 Woodpecker pipeline wins when they disagree. Healthy and pending reports exit 0;
 unhealthy reports exit 1. JSON retains the top-level `prNumber`, `prUrl`,
 `overallStatus`, `checks`, and `nextSteps` fields.
 
-`toolkit pr review list|resolve|harvest` inspects and resolves code-review
-provider findings. `toolkit pr asset <PR> <file|dir...> [--markdown]` uploads
+`toolkit pr review list [PR] [--json] [--all] [--provider NAME]` lists current,
+unresolved feedback across human reviewers and registered providers. Each item
+includes author, provider, nullable priority, full contents, path/line,
+resolution state, and a `toolkit gh api` command for the original surface.
+Omitting PR infers the current branch; `--all` includes resolved/outdated items.
+`resolve` and `harvest` retain the existing provider finding handles.
+`toolkit pr asset <PR> <file|dir...> [--markdown]` uploads
 the lightest useful review artifact to `public.sjer.red`; directories require
 a root `index.html`, and asciinema `.cast` files get a self-contained player.
 
@@ -114,8 +250,94 @@ PinchTab credentials or config.
 - `toolkit bugsink ...` queries teams, projects, issues, events, stacktraces,
   and releases in self-hosted Bugsink.
 - `toolkit discord ...` operates the private local Discord session daemon.
+- `toolkit mc ...` drives disposable Minecraft sandboxes through the
+  mc-harness daemon. See [Minecraft sandboxes](#minecraft-sandboxes).
 - `toolkit history ...` searches the private, rebuildable local agent-history
   index. It never treats prior conversation as current deployment truth.
+
+#### Minecraft sandboxes
+
+`toolkit mc` is a thin client for the `@shepherdjerred/mc-harness` daemon. The
+daemon runs from the monorepo checkout (`bun run
+packages/mc-harness/src/daemon/main.ts`), needs Docker, and stages the
+repo-built MCBridge plugin, so build it first:
+
+```bash
+mise exec -- gradle -p packages/the-storm/plugin :bridge:assemble
+toolkit mc daemon start [--ttl 4h]
+toolkit mc sandbox up [--profile paper] [--provider docker|kubernetes] [--world flat|void] [--ttl 2h] [--keep]
+toolkit mc info
+toolkit mc we --world world --pos1 0,-60,0 --pos2 4,-56,4 "//set stone"
+toolkit mc region read --world world 0,-60,0 4,-56,4
+toolkit mc we-undo
+toolkit mc sandbox down --all
+toolkit mc daemon stop
+```
+
+A sandbox is Paper 26.2 with WorldEdit and MCBridge in a local container, or
+with `--provider kubernetes` (the default for the `storm-prod` and
+`storm-candidate` profiles) a pod in the cluster's `mc-sandbox` namespace
+reached through `kubectl port-forward`. Its
+game, RCON, and bridge ports are published on `127.0.0.1` only; the bridge
+token and RCON password live in `~/.toolkit/mc/sandboxes/<id>/record.json`
+(mode `0600`) and never appear in command output. `--target <id>` selects a
+sandbox; without it the command uses the only running one and fails when there
+are none or several. A sandbox is removed when its TTL expires or the daemon
+stops, unless it was created with `--keep`. There is no live-server target yet.
+
+Coordinates may be negative anywhere (`--pos1 -3,-60,-3`, `region read
+-6,-61,-6 6,-44,6`, `cmd tp agent -60 0`); no `--opt=` or `--` is needed.
+`toolkit mc <command> --help` prints that command's usage. Each `we` op reports
+`changed N`, the blocks whose state really changed; WorldEdit's own "blocks
+affected" message counts attempted sets and can be higher.
+
+| Command                                                   | Purpose                                        |
+| --------------------------------------------------------- | ---------------------------------------------- |
+| `mc cmd <command…>`                                       | Console command with captured feedback         |
+| `mc we --world w [--pos1] [--pos2] [--at] "//cmd"`        | WorldEdit as the `agent:<session>` actor       |
+| `mc we-undo [--steps n]`                                  | Undo that session's WorldEdit history          |
+| `mc paste --world w --file f.schem --at x,y,z [--rotate]` | Paste a Sponge schematic through WorldEdit     |
+| `mc region read --world w <a> <b> [--out f.json]`         | Exact block states and palette counts          |
+| `mc snapshot create\|ls\|get\|restore`                    | Server-side `.schem` snapshots for undo        |
+| `mc info`, `mc players`, `mc events`, `mc logs`           | Versions, players, bridge events, console tail |
+| `mc registry --out f.json`                                | Block registry (input to mc-build's registry)  |
+| `mc actor spawn\|ls\|observe\|act\|quit`                  | Citizens test actors (paper, storm-dev)        |
+| `mc playtest run <file\|dir…> [--profile] [--target]`     | Run scenario files; reports under `runs/`      |
+| `mc playtest ls\|show <run-id>\|new <name>`               | Past runs, one report, scaffold a scenario     |
+
+Every command accepts `--json`. The daemon logs requests (never secrets) to
+`~/.toolkit/mc/logs/`. `cmd`, `we` and `paste` accept `--record <buildDir>` to
+append the op to a build's op log once it succeeds. Recorded writes hold the
+build's publication lock from the server mutation through recording, excluding
+render snapshots; a busy or missing build fails before the server write.
+Recorded pastes retain the exact schematic bytes sent to the server.
+
+#### Minecraft builds
+
+`toolkit mc build …` runs the mc-harness build CLI from the checkout (it needs
+the `@shepherdjerred/mc-build` registry, renderer and compile child, which stay
+out of the compiled binary). A build directory holds `build.json`, the op log,
+the captured site and renders; the repository `minecraft-building` skill
+(`.agents/skills/minecraft-building`) describes the loop.
+
+```bash
+toolkit mc build init ./cottage --name cottage --world world --anchor 26,-60,26
+toolkit mc build capture ./cottage --target <id> --world world 20,-61,20 40,-45,40
+toolkit mc build canvas ./cottage                # void sandbox seeded with the site
+toolkit mc build compile ./cottage               # build.ts → schematic paste op + lint
+toolkit mc build import ./cottage house.litematic --at 26,-60,26   # .litematic/.schem
+toolkit mc build import ./cottage statue.obj --height 24 --solid   # OBJ mesh → blocks
+toolkit mc build run ./cottage                   # reset canvas, replay ops, freeze result
+toolkit mc build render ./cottage                # contact sheet PNG
+toolkit mc build replay ./cottage                # fresh sandbox, diff against the frozen result
+toolkit mc build promote ./cottage --target <id> [--confirm <planHash>]
+toolkit mc build undo <applyId>
+```
+
+Promote refuses when the target no longer matches the captured site, requires
+the plan hash from its dry run, takes an undo snapshot, pastes the frozen
+canvas result, and verifies it cell by cell. Applies are journaled under
+`~/.toolkit/mc/journal/<target>/`.
 
 #### History search
 
@@ -233,6 +455,87 @@ daemon log each scan until Brim rewrites it.
 
 Run `toolkit --help` or a workflow’s `--help` for the complete command surface.
 
+## Credentials
+
+Run supported toolkit commands directly; they resolve their registered
+credentials before dispatch. Each credential uses the first available source:
+
+1. A non-empty environment variable.
+2. Its entry in `~/.toolkit/config.toml` under `[credentials]`, containing an
+   `op://` reference or `keychain:<service>` locator.
+3. Its registered backend below.
+
+Native passthroughs invoked with exactly `--help`, `-h`, or `--version`, plus
+the exact invocation `toolkit argocd version --client`, run without credential
+resolution. ArgoCD also supports a bare subcommand path ending in `--help` or
+`-h`, such as `toolkit argocd app rollback --help`, and the equivalent
+`toolkit argocd help app rollback` form (including root `argocd help`). The help
+subcommand remains credential-free with global options and `--` operands;
+option values and application names equal to `help` retain authentication.
+Inherited options are recognized before, within and after the command path,
+including after the help flag. Repeated help booleans retain native ordering.
+Their arguments, native output, and exit status are preserved.
+These ArgoCD invocations also remove `ARGOCD_AUTH_TOKEN` from the child
+environment because native help prints its default value. Server commands
+continue to inherit the configured token.
+Other invocations still resolve credentials, including `argocd version` and
+commands carrying metadata flags as arguments or after `--`.
+
+Every ArgoCD invocation sets an empty native `--auth-token` help default through
+`ARGOCD_OPTS`. The API client still reads `ARGOCD_AUTH_TOKEN`, and explicit
+command-line flags retain precedence. Native help and usage therefore cannot
+print the registered environment token. Streams remain inherited, preserving
+terminal detection, confirmation prompts, exit codes and signals.
+`ARGOCD_OPTS` must not set `--auth-token`: use `ARGOCD_AUTH_TOKEN` for that
+credential instead. Other `ARGOCD_OPTS` settings are preserved. Toolkit rejects
+the unsafe setting without printing its value, including for help commands.
+Option names are checked after ArgoCD-compatible quote and escape parsing;
+header values and root paths containing the same text are preserved.
+
+| Commands                                                                                                | Registered backend        |
+| ------------------------------------------------------------------------------------------------------- | ------------------------- |
+| `woodpecker`, `pr`, `linear`, `posthog`, `cf`, `argocd`, `grafana`, `prom`, `loki`, `tempo`, `temporal` | 1Password service account |
+| `bugsink`, `discord`                                                                                    | macOS Keychain            |
+
+The registry in `src/lib/credentials.ts` owns the variable names and secret
+locators. Backend failures are errors; a missing Keychain secret does not
+automatically fall through to 1Password. A config override selects a different
+backend explicitly. Toolkit logs credential names and backends, never values.
+The native Temporal CLI performs authentication, while toolkit supplies its
+`TEMPORAL_API_KEY` for external addresses. Toolkit skips that credential lookup
+when the effective address is the exact in-cluster service; an explicit
+`--address` takes precedence over `TEMPORAL_ADDRESS` for this decision.
+
+For the 1Password backend, `OP_SERVICE_ACCOUNT_TOKEN` wins. Otherwise, on
+macOS, toolkit reads the enrolled service account from Keychain and invokes
+`op` with that token. If the command reports missing enrollment, use the
+repository's existing setup from its root:
+
+```bash
+swift scripts/onepassword/enroll-service-account.swift
+```
+
+Commands outside toolkit reuse the same Keychain credential by wrapping
+`op run` or `op read` with `scripts/onepassword/with-service-account.sh`, so
+homelab-vault references never wait for 1Password desktop approval. Packages
+can also call `resolveCredentials` from `@shepherdjerred/toolkit/lib/credentials.ts`
+before spawning subprocesses, as the Temporal Worker Deployment rollout does.
+
+Outside macOS, supply `OP_SERVICE_ACCOUNT_TOKEN` through the existing secret
+manager integration. For Bugsink and Discord, a missing credential error names
+the exact workstation-secret enrollment command. Never paste tokens into chat,
+CLI arguments, or the toolkit config file; the config stores locators only.
+
+`ci` uses the registered `WOODPECKER_TOKEN` credential for the default
+connection, unless `WOODPECKER_TOKEN` is supplied in the environment. The
+credential broker can bootstrap its 1Password service account from
+`OP_SERVICE_ACCOUNT_TOKEN` or the enrolled macOS Keychain credential. Custom
+Woodpecker URLs or repository IDs require an explicit token. CI help and
+argument validation run before credentials are resolved. GitHub access uses
+`GH_TOKEN` or `gh auth token`.
+Commands such as `gh`, `temporal`, and `tailscale` retain native authentication;
+S3 workflows retain the AWS credential chain.
+
 ## Configuration
 
 Toolkit behavior settings resolve `environment -> ~/.toolkit/config.toml ->
@@ -250,8 +553,9 @@ its keys in the TOML file. It reads them once at start.
 
 ## Environment variables
 
-Toolkit-owned workflows use these variables. Native passthrough credentials
-remain owned by their native CLIs and shell configuration.
+Toolkit-owned workflows use these variables. The credential broker supplies
+registered token variables automatically; native authentication and AWS
+profiles remain owned by their respective clients.
 
 | Variable              | Purpose                                     |
 | --------------------- | ------------------------------------------- |
@@ -275,4 +579,6 @@ bun run test:integration
 `src/index.ts` separates platform passthroughs from monorepo workflow routers.
 The typed passthrough registry and subprocess runner live in
 `src/lib/passthrough.ts`; service-specific workflow code lives under
-`src/commands/` and `src/lib/`.
+`src/commands/` and `src/lib/`. Unix passthroughs replace the process with
+`execve`; Windows starts a child with inherited console streams and returns its
+exit code.

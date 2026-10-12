@@ -1,6 +1,10 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { PlayerIdSchema } from "@scout-for-lol/data";
+import {
+  PlayerIdSchema,
+  DiscordGuildIdSchema,
+  DiscordChannelIdSchema,
+} from "@scout-for-lol/data";
 import { DirectDuelForm } from "./direct-duel-form.tsx";
 import { DuelEventCreateForm } from "./duel-event-create-form.tsx";
 import { DuelEventRegistrationForms } from "./duel-event-registration-forms.tsx";
@@ -9,11 +13,14 @@ import {
   FirstTurretField,
 } from "./duel-form-fields.tsx";
 
-const GUILD_ID = "1084396924348997663";
+const GUILD_ID = DiscordGuildIdSchema.parse("1084396924348997663");
 
 const CHANNELS = [
-  { id: "1084396924348997666", name: "league-reports" },
-  { id: "1084396924348997667", name: "duels" },
+  {
+    id: DiscordChannelIdSchema.parse("1084396924348997666"),
+    name: "league-reports",
+  },
+  { id: DiscordChannelIdSchema.parse("1084396924348997667"), name: "duels" },
 ];
 
 const ACCOUNTS = [

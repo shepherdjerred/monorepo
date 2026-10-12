@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test } from "vitest";
 import {
   formatBucksCustomId,
@@ -9,7 +10,7 @@ import {
 
 const BASE: BucksCustomId = {
   action: "b",
-  matchId: "NA1_5421167767",
+  matchId: RiotMatchIdSchema.parse("NA1_5421167767"),
   subjectIndex: 0,
   side: "W",
   amount: 5,
@@ -26,7 +27,7 @@ describe("Bryan Bucks custom IDs", () => {
               side,
               amount,
               subjectIndex,
-              matchId: "EUW1_1234567890123",
+              matchId: RiotMatchIdSchema.parse("EUW1_1234567890123"),
             };
             expect(parseBucksCustomId(formatBucksCustomId(original))).toEqual(
               original,
@@ -40,7 +41,7 @@ describe("Bryan Bucks custom IDs", () => {
   test("stays well inside Discord's length limit at the worst case", () => {
     const longest = formatBucksCustomId({
       action: "b",
-      matchId: "EUW1_1234567890123",
+      matchId: RiotMatchIdSchema.parse("EUW1_1234567890123"),
       subjectIndex: 9,
       side: "L",
       amount: 1000,
@@ -53,7 +54,10 @@ describe("Bryan Bucks custom IDs", () => {
 
   test("throws when an ID would exceed the limit", () => {
     expect(() =>
-      formatBucksCustomId({ ...BASE, matchId: "X".repeat(200) }),
+      formatBucksCustomId({
+        ...BASE,
+        matchId: RiotMatchIdSchema.parse(`NA1_${"9".repeat(196)}`),
+      }),
     ).toThrow(/over Discord's 100 limit/);
   });
 

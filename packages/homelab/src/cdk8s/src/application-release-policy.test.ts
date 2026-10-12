@@ -107,11 +107,19 @@ describe("applyApplicationReleasePolicy", () => {
     const expectedWaves = new Map([
       ["1password", "-20"],
       ["argocd", "-18"],
+      ["postgres-operator", "-18"],
       ["tailscale", "-18"],
       ["prometheus", "-1"],
+      ["alert-dashboard", "-1"],
+      ["trmnl-dashboard", "-1"],
       ["temporal", "0"],
       ["kueue", "1"],
       ["woodpecker", "3"],
+      ["scout-beta", "4"],
+      ["scout-prod", "4"],
+      ["grafana-db", "4"],
+      ["bugsink", "4"],
+      ["phoenix", "4"],
       ["worker", "4"],
     ]);
     const applications = [...expectedWaves.keys()].map((name) =>

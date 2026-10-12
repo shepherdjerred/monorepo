@@ -26,6 +26,7 @@ public record TownsConfig(
     PvpPolicy pvp,
     long denialCooldownMillis,
     GriefLimits grief,
+    int spawnRadiusBlocks,
     List<AdminRegion> regions) {
 
   /** The most chunks all regions together may overlap, so the region index stays small. */
@@ -33,6 +34,9 @@ public record TownsConfig(
 
   public TownsConfig {
     regions = List.copyOf(regions);
+    if (spawnRadiusBlocks < 16 || spawnRadiusBlocks > 256) {
+      throw new IllegalArgumentException("spawnRadiusBlocks must be between 16 and 256");
+    }
     if (denialCooldownMillis < 0) {
       throw new IllegalArgumentException("denialCooldownMillis must not be negative");
     }

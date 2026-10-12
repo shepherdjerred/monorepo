@@ -2,9 +2,9 @@
   "$schema": "../platform-desired-state.schema.json",
   "platform": "cloudflare-tokens",
   "cloudflare_api_tokens": {
-    "buildkite": {
+    "woodpecker": {
       "supersedes_id": "409e97aba1f4bacff237d260edebbfd1",
-      "name": "monorepo Buildkite Cloudflare 2026-08",
+      "name": "monorepo Woodpecker Cloudflare 2026-08",
       "policies": [
         {
           "effect": "allow",
@@ -12,6 +12,14 @@
             {
               "id": "bf7481a1826f439697cb59a20b22293e",
               "name": "Workers R2 Storage Write"
+            },
+            {
+              "id": "abe78e2276664f4db588c1f675a77486",
+              "name": "Mass URL Redirects Write"
+            },
+            {
+              "id": "755c05aa014b4f9ab263aa80b8167bd8",
+              "name": "Turnstile Sites Write"
             }
           ],
           "resources": {
@@ -26,6 +34,18 @@
             {
               "id": "3030687196b94b638145a3953da2b699",
               "name": "Zone Settings Write"
+            },
+            {
+              "id": "c03055bc037c4ea9afb9a9f104b7b721",
+              "name": "SSL and Certificates Write"
+            },
+            {
+              "id": "9ff81cbbe65c400b97d92c3c1033cab6",
+              "name": "Cache Settings Write"
+            },
+            {
+              "id": "74e1036f577a48528b78d2413b40538d",
+              "name": "Dynamic URL Redirects Write"
             },
             {
               "id": "fb6778dc191143babbfaa57993f1d275",
@@ -43,6 +63,7 @@
       "vault_field": "CLOUDFLARE_API_TOKEN"
     },
     "temporal-audit": {
+      "managed": false,
       "supersedes_id": "409e97aba1f4bacff237d260edebbfd1",
       "name": "Temporal Cloudflare audit 2026-08",
       "policies": [
@@ -83,6 +104,7 @@
       "vault_field": "CLOUDFLARE_API_TOKEN"
     },
     "cf-cli": {
+      "managed": false,
       "supersedes_id": "6a2be1d4b515e085c81bbe6999445d51",
       "name": "cf CLI Cloudflare 2026-08",
       "policies": [
@@ -127,6 +149,7 @@
       "vault_field": "credential"
     },
     "cloudflare-operator": {
+      "managed": false,
       "supersedes_id": "4d76466089e0e37912b698c584085af3",
       "name": "Cloudflare Operator 2026-08",
       "policies": [
@@ -159,6 +182,7 @@
       "vault_field": "CLOUDFLARE_API_TOKEN"
     },
     "r2-exporter": {
+      "managed": false,
       "supersedes_id": "ce9ab72576cbff081c3f774c49afa922",
       "name": "R2 Exporter 2026-08",
       "policies": [
@@ -181,6 +205,7 @@
       "vault_field": "CLOUDFLARE_API_TOKEN"
     },
     "ddns": {
+      "managed": false,
       "supersedes_id": "86e250662681397b4d12a0ab1e8fd266",
       "name": "DDNS sjer.red 2026-08",
       "policies": [

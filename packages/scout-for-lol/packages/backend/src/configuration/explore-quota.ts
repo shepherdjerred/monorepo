@@ -1,3 +1,7 @@
+import type {
+  ExploreQuotaScope,
+  ExploreQuotaWindow,
+} from "@scout-for-lol/data";
 import { z } from "zod";
 
 /**
@@ -78,13 +82,13 @@ export type ExploreQuotaLimits = z.infer<typeof ExploreQuotaLimitsSchema>;
  * become the first wall for the second concurrent explorer.
  */
 export const DEFAULT_EXPLORE_QUOTA_LIMITS: ExploreQuotaLimits = {
-  userMinute: 12,
-  userHour: 90,
-  userDay: 300,
-  userWeek: 900,
-  globalHour: 360,
-  globalDay: 1800,
-  globalWeek: 6000,
+  userMinute: 4,
+  userHour: 30,
+  userDay: 100,
+  userWeek: 300,
+  globalHour: 120,
+  globalDay: 600,
+  globalWeek: 2000,
 };
 
 /**
@@ -109,3 +113,39 @@ export const ExploreQuotaLimitsInputSchema = z.union([
     })
     .pipe(ExploreQuotaLimitsSchema),
 ]);
+
+/**
+ * Explore answers that may run at once across every user.
+ *
+ * Fixed, unlike the question ceilings: it bounds concurrent provider work
+ * rather than spend, and both admission paths refuse at the same number.
+ */
+export const EXPLORE_MAX_ACTIVE_RUNS = 5;
+
+export type ExploreQuotaRule = {
+  scope: ExploreQuotaScope;
+  window: ExploreQuotaWindow;
+  limit: number;
+};
+
+/**
+ * The question quota as ordered rules: the per-user windows narrowest first,
+ * then the global windows.
+ *
+ * The one place a limits object becomes rules. The in-process limiter and the
+ * durable reservation both read this list, so they cannot disagree about which
+ * windows exist, which scope each charges, or the order a refusal names them.
+ */
+export function exploreQuotaRules(
+  limits: ExploreQuotaLimits,
+): ExploreQuotaRule[] {
+  return [
+    { scope: "user", window: "minute", limit: limits.userMinute },
+    { scope: "user", window: "hour", limit: limits.userHour },
+    { scope: "user", window: "day", limit: limits.userDay },
+    { scope: "user", window: "week", limit: limits.userWeek },
+    { scope: "global", window: "hour", limit: limits.globalHour },
+    { scope: "global", window: "day", limit: limits.globalDay },
+    { scope: "global", window: "week", limit: limits.globalWeek },
+  ];
+}

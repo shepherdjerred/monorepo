@@ -23,6 +23,7 @@ const STREAM_CONFIG: Pick<Config, "stream" | "voice"> = {
     vaapiDevice: "/dev/dri/renderD128",
     readrate: 1,
     readrateInitialBurst: 2.5,
+    videoPlayoutDelayMaxMs: 1000,
   },
   voice: {
     enabled: false,

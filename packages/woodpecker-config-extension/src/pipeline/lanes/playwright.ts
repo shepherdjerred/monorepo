@@ -2,7 +2,9 @@ import type { CiImages } from "#src/images.ts";
 import { HANDOFF_KEYS } from "#src/pipeline/lanes/tofu.ts";
 import type { CiStep } from "#src/pipeline/model.ts";
 import { BROWSER_TIER } from "#src/pipeline/tiers.ts";
+import { diagnosticCommands } from "#src/pipeline/diagnostics.ts";
 import { GLOBAL_SELECTOR_INPUTS } from "#src/pipeline/inputs.ts";
+import { BUN_CACHE, BUN_CACHE_CONTROL } from "#src/pipeline/cache.ts";
 import {
   TURBO_CACHE_TOKEN,
   TURBO_REMOTE_CACHE_ENVIRONMENT,
@@ -11,33 +13,32 @@ import {
 /**
  * Browser end-to-end suites.
  *
- * Buildkite ran this as `playwright-e2e-pr` and `playwright-e2e-main` with the
- * same command; the pair collapses for the same reason the resume lane's did.
+ * One step covers pull requests and the default branch.
  *
  * The step runs a selector of its own (`run-playwright.ts`) that decides which
  * suites to execute from the changed set. That is deliberate and stays: the
  * pipeline-level guard decides whether the LANE runs at all, and the in-step
  * selector decides which of the seven Playwright projects inside it do.
  */
-export function playwrightSteps(
-  images: CiImages,
-  changedBase: string | undefined,
-): CiStep[] {
+export function playwrightSteps(images: CiImages, changedBase = ""): CiStep[] {
   return [
     {
       key: "playwright-e2e",
       label: "playwright e2e",
       image: images.playwright,
       environment: {
-        CI_CHANGED_BASE: changedBase ?? "",
+        CI_CHANGED_BASE: changedBase,
+        // Browser suites already hash this input; supply the actual pinned
+        // image so a browser/toolchain change cannot reuse an older result.
+        CI_PLAYWRIGHT_IMAGE: images.playwright,
         ...TURBO_REMOTE_CACHE_ENVIRONMENT,
       },
-      commands: [
+      commands: diagnosticCommands("playwright-e2e", [
         // Postgres scope: several suites need a live database.
         "MISE_TOOLCHAIN_SCOPE=postgres . ci/scripts/toolchain.sh",
         // A PR compares against its target branch even before main has a
         // successful Woodpecker pipeline to supply a changed-file base.
-        'if [ "$CI_PIPELINE_EVENT" = "pull_request" ]; then',
+        'if [ "$CI_PIPELINE_EVENT" = "pull_request" ] || [ "$CI_PIPELINE_EVENT" = "pull_request_metadata" ]; then',
         '  if git fetch --no-tags --depth=100 origin "$CI_COMMIT_SHA" && git fetch --no-tags --depth=100 origin "$CI_COMMIT_TARGET_BRANCH"; then',
         '    if ! CI_CHANGED_BASE="$(git merge-base HEAD FETCH_HEAD)"; then CI_CHANGED_BASE=""; fi',
         "  else",
@@ -46,19 +47,22 @@ export function playwrightSteps(
         "  export CI_CHANGED_BASE",
         "fi",
         'if [ -n "$CI_CHANGED_BASE" ]; then export TURBO_SCM_BASE="$CI_CHANGED_BASE"; fi',
-        'export TURBO_CACHE="local:rw,remote:rw"',
+        // One Turbo run in a fresh workspace never reads a local cache back.
+        'export TURBO_CACHE="remote:rw"',
         // Playwright configs use CI=true to enable JUnit reporters and bounded
         // workers; Woodpecker supplies CI=woodpecker by default.
         "export CI=true",
         "bun --no-install ci/scripts/selection/run-playwright.ts",
         // The suites build these bundles to test them; the deploy lane then
         // ships exactly what was tested instead of rebuilding.
-        "if [ -d packages/sjer.red/dist ]; then bun --no-install scripts/ci/ci-artifact.ts put sjer-red-dist packages/sjer.red/dist; fi",
-        "if [ -d packages/docs/wiki/dist ]; then bun --no-install scripts/ci/ci-artifact.ts put wiki-dist packages/docs/wiki/dist; fi",
-      ],
-      dependsOn: ["verify"],
+        "if [ -d packages/sjer.red/dist ]; then bun --no-install scripts/ci/ci-artifact.ts put sjer-red-dist; fi",
+        "if [ -d packages/docs/wiki/dist ]; then bun --no-install scripts/ci/ci-artifact.ts put wiki-dist; fi",
+      ]),
+      // This workflow builds its own Turbo prerequisites in its own workspace.
+      // Completion and deployment still wait for both verification and E2E.
       timeoutMinutes: 30,
       resources: BROWSER_TIER,
+      volumes: [BUN_CACHE, BUN_CACHE_CONTROL],
       secrets: [
         {
           secret: "ci-github-credentials",

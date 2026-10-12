@@ -1,5 +1,9 @@
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
-import { ArtifactKindSchema } from "@scout-for-lol/domain/artifacts/descriptors.ts";
+import { LakeArtifactKindSchema } from "@scout-for-lol/domain/artifacts/descriptors.ts";
 import { scoutDurableLakeStagingLag } from "#src/metrics/durable-pipeline.ts";
 import { collectLakeStagingLagMetrics } from "#src/report-lake/lake-staging-lag.ts";
 import {
@@ -30,12 +34,12 @@ afterAll(async () => {
   await prisma.$disconnect();
 });
 
-const MATCH_ID = "NA1_9200";
+const MATCH_ID = RiotMatchIdSchema.parse("NA1_9200");
 const NOW = Date.now();
 const HOUR_MS = 60 * 60 * 1000;
 
 async function seedReceipt(
-  matchId: string,
+  matchId: RiotMatchId,
   kind: string,
   recordedAt: Date,
 ): Promise<void> {
@@ -91,19 +95,21 @@ describe("lake staging lag sweep against Postgres", () => {
         artifact_kind: "prematch",
       }),
     ).toBe(0);
-    expect(ArtifactKindSchema.options).toHaveLength(3);
+    // The lake's kinds only: a client bundle is archived but never staged, so
+    // it is no lake's backlog.
+    expect(LakeArtifactKindSchema.options).toHaveLength(3);
   });
 
   test("takes the oldest unstaged archive when several are waiting", async () => {
     // The read groups by match and orders by the earliest recording, so the
     // lag has to be the longest wait rather than whichever row came back first.
     await seedReceipt(
-      "NA1_9201",
+      RiotMatchIdSchema.parse("NA1_9201"),
       rawArchiveReceiptKind("match"),
       new Date(NOW - HOUR_MS),
     );
     await seedReceipt(
-      "NA1_9202",
+      RiotMatchIdSchema.parse("NA1_9202"),
       rawArchiveReceiptKind("match"),
       new Date(NOW - 8 * HOUR_MS),
     );

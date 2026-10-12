@@ -1,3 +1,5 @@
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test } from "vitest";
 import type { MatchLakeRow } from "#src/model/reports/lake-columns.ts";
 import {
@@ -25,6 +27,7 @@ function matchRow(): MatchLakeRow {
     game_mode: "CLASSIC",
     game_type: "MATCHED_GAME",
     game_version: "16.1.1",
+    data_source: "RIOT",
     end_of_game_result: "GameComplete",
     map_id: 11,
     puuid: "puuid-1",
@@ -150,7 +153,9 @@ const holderOne: HallRecordHolder = {
   playerAlias: "One",
   accountId: 10,
   accountAlias: "One#NA1",
-  puuid: "puuid-one",
+  puuid: LeaguePuuidSchema.parse(
+    "puuid-one000000000000000000000000000000000000000000000000000000000000000000000",
+  ),
 };
 
 const holderTwo: HallRecordHolder = {
@@ -158,7 +163,9 @@ const holderTwo: HallRecordHolder = {
   playerAlias: "Two",
   accountId: 20,
   accountAlias: "Two#NA1",
-  puuid: "puuid-two",
+  puuid: LeaguePuuidSchema.parse(
+    "puuid-two000000000000000000000000000000000000000000000000000000000000000000000",
+  ),
 };
 
 function candidate(holder: HallRecordHolder, value: number): HallCandidate {
@@ -168,7 +175,9 @@ function candidate(holder: HallRecordHolder, value: number): HallCandidate {
     value,
     holder,
     evidence: {
-      matchId: `match-${holder.playerId.toString()}`,
+      matchId: RiotMatchIdSchema.parse(
+        `NA1_${(9_800_000_000 + holder.playerId).toString()}`,
+      ),
       gameEndAt: "2026-01-01T00:30:00.000Z",
       value,
       holder,
@@ -278,7 +287,7 @@ describe("Hall of Fame domain", () => {
       value: 0,
       holder: holderOne,
       evidence: {
-        matchId: "match-penta-0",
+        matchId: RiotMatchIdSchema.parse("NA1_9100000000"),
         gameEndAt: "2026-01-01T00:30:00.000Z",
         value: 0,
         holder: holderOne,

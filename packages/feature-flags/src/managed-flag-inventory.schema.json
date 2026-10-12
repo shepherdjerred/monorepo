@@ -99,7 +99,9 @@
         },
         {
           "if": { "properties": { "type": { "const": "variant" } } },
-          "then": { "properties": { "default": { "type": "string" } } }
+          "then": {
+            "properties": { "default": { "type": "string", "minLength": 1 } }
+          }
         }
       ]
     },

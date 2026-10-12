@@ -5,9 +5,8 @@ import { TASK_QUEUES } from "#shared/task-queues.ts";
 const { runVeleroR2OrphanAudit } =
   proxyActivities<VeleroR2OrphanAuditActivities>({
     taskQueue: TASK_QUEUES.INFRA,
-    // The activity lists two R2 prefixes (~3k objects) plus the live Backup
-    // CRs. Heartbeats fire per listing page so a worker death surfaces
-    // promptly.
+    // List both R2 prefixes and inspect stream headers with bounded concurrency.
+    // Heartbeat each listing page and header batch so worker loss surfaces promptly.
     startToCloseTimeout: "10 minutes",
     heartbeatTimeout: "90 seconds",
     retry: {
@@ -29,6 +28,7 @@ export async function runVeleroR2OrphanAuditWorkflow(): Promise<void> {
     zfsPrefixCount: result.zfsPrefixCount,
     orphanPrefixCount: result.orphanPrefixCount,
     orphanBytes: result.orphanBytes,
+    incompleteChainCount: result.incompleteChainCount,
     durationSeconds: result.workflowDurationSeconds,
   });
 

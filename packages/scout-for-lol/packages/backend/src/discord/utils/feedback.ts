@@ -2,17 +2,13 @@
  * Feedback messaging helpers.
  *
  * Used when the bot is removed from a server to invite the owner to tell us
- * why, so we can improve. The destination is configurable via `FEEDBACK_URL`.
+ * why, so we can improve. Always links to the persistent web form.
  */
 
-import configuration from "#src/configuration.ts";
+import { getDashboardUrl } from "#src/discord/commands/links.ts";
 
 export function getFeedbackUrl(): string {
-  return (
-    configuration.feedbackUrl ??
-    configuration.webAppOrigin ??
-    "https://scout-for-lol.com"
-  );
+  return `${getDashboardUrl()}feedback`;
 }
 
 /**
@@ -28,5 +24,5 @@ ${getFeedbackUrl()}
 
 If this was a mistake, you can re-invite Scout any time and set things back up with \`/setup\` or the web dashboard. Thanks for giving it a try!
 
-*This is an automated message. Replies to this DM aren't monitored.*`;
+*This is an automated message. If you can still message Scout, replies also go to the Scout team's private support inbox.*`;
 }

@@ -128,7 +128,7 @@ function ConversationRow(props: {
     >
       <Link
         to={`/explore/${conversation.id}`}
-        className="flex min-w-0 flex-1 items-center px-2.5 py-1.5 text-left text-sm text-inherit no-underline outline-none"
+        className="flex min-w-0 flex-1 items-center rounded px-2.5 py-1.5 text-left text-sm text-inherit no-underline focus-visible:ring-2 focus-visible:ring-scout-primary"
         onClick={(event) => {
           if (
             event.defaultPrevented ||
@@ -161,7 +161,7 @@ function ConversationRow(props: {
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                className="flex size-6 items-center justify-center rounded text-scout-subtle transition-colors hover:bg-scout-canvas hover:text-scout-ink focus:outline-none"
+                className="flex size-6 items-center justify-center rounded text-scout-subtle transition-colors hover:bg-scout-canvas hover:text-scout-ink focus-visible:ring-2 focus-visible:ring-scout-primary"
                 aria-label={`Actions for ${conversation.title}`}
               >
                 <MoreHorizontal className="size-3.5" />

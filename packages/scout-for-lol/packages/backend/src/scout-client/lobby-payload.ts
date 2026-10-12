@@ -1,5 +1,13 @@
-import type { ScoutClientObservation } from "@scout-for-lol/data";
-import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
+import {
+  parseLane,
+  type Lane,
+  type ScoutClientObservation,
+} from "@scout-for-lol/data";
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 
 type ObservedGameState = "PLAYING" | "RESULT_PENDING";
@@ -92,7 +100,7 @@ export function lobbyParticipantPuuids(payload: unknown): ReadonlySet<string> {
 
 export function sameRoster(
   observed: ReadonlySet<string>,
-  expected: readonly { readonly puuid: string }[],
+  expected: readonly { readonly puuid: LeaguePuuid }[],
 ): boolean {
   return (
     observed.size === expected.length &&
@@ -129,7 +137,7 @@ function observedLobbyTeams(payload: unknown): {
 export function observedLobbyMatchesCustomTeams(
   payload: unknown,
   expected: readonly {
-    readonly puuid: string;
+    readonly puuid: LeaguePuuid;
     readonly side: string | null;
   }[],
 ): boolean {
@@ -147,8 +155,8 @@ export function observedLobbyMatchesCustomTeams(
 /** Require each duel competitor to remain intact on one opposing lobby side. */
 export function observedLobbyMatchesDuelTeams(
   payload: unknown,
-  competitorOne: readonly { readonly puuid: string }[],
-  competitorTwo: readonly { readonly puuid: string }[],
+  competitorOne: readonly { readonly puuid: LeaguePuuid }[],
+  competitorTwo: readonly { readonly puuid: LeaguePuuid }[],
 ): boolean {
   const observed = observedLobbyTeams(payload);
   return (
@@ -196,7 +204,7 @@ export function observedLobbyMatchesDuelSettings(payload: unknown): boolean {
 /** Extract the authoritative Riot match identity from live post-game evidence. */
 export function observedPostGameMatchId(
   observation: ScoutClientObservation,
-): string | null {
+): RiotMatchId | null {
   if (
     observation.kind !== "post_game" ||
     observationResource(observation.payload) !== "post_game" ||
@@ -223,5 +231,73 @@ export function observedMatchEndedAt(
   const match = MatchV5TimingSchema.safeParse(data);
   return new Date(
     match.success ? match.data.info.gameEndTimestamp : observation.capturedAt,
+  );
+}
+
+/**
+ * A bot the local client saw occupying a custom-game slot.
+ *
+ * Riot's Spectator API omits bots from `participants` entirely, so a custom
+ * against nine of them reports one player for the whole match. The LCU lobby
+ * is the only place they appear.
+ */
+export type ObservedLobbyBot = {
+  readonly side: "blue" | "red";
+  readonly championId: number;
+  /** The slot the bot was assigned, when it maps to a standard lane. */
+  readonly lane: Lane | undefined;
+};
+
+/**
+ * The bot's own fields. A lobby member carries `botChampionId: 0` and
+ * `botPosition: "NONE"` when it is a human, so `isBot` is what separates them
+ * rather than the presence of the keys.
+ */
+const LobbyBotSchema = z.object({
+  isBot: z.literal(true),
+  botChampionId: z.number().int().positive(),
+  botPosition: z.string().min(1),
+});
+
+/**
+ * Custom lobbies assign a side by which array holds the slot, not by `teamId`:
+ * every entry in both arrays reports `teamId: 0`.
+ */
+const LobbyCustomTeamsSchema = z.object({
+  gameConfig: z.object({
+    customTeam100: z.array(z.unknown()),
+    customTeam200: z.array(z.unknown()),
+  }),
+});
+
+/**
+ * The bots in an observed custom lobby, in slot order per side.
+ *
+ * Returns an empty list for a lobby with no bots and for any payload that is
+ * not a custom lobby. A human slot is skipped rather than rejected: the lobby
+ * does not say which champion a human picked, so they are only knowable from
+ * the Spectator roster, which reports them in full.
+ */
+export function observedLobbyBots(
+  payload: unknown,
+): readonly ObservedLobbyBot[] {
+  const parsed = LobbyCustomTeamsSchema.safeParse(observationData(payload));
+  if (!parsed.success) return [];
+  const sides = [
+    { side: "blue", slots: parsed.data.gameConfig.customTeam100 },
+    { side: "red", slots: parsed.data.gameConfig.customTeam200 },
+  ] as const;
+  return sides.flatMap(({ side, slots }) =>
+    slots.flatMap((slot) => {
+      const bot = LobbyBotSchema.safeParse(slot);
+      if (!bot.success) return [];
+      return [
+        {
+          side,
+          championId: bot.data.botChampionId,
+          lane: parseLane(bot.data.botPosition),
+        },
+      ];
+    }),
   );
 }

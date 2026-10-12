@@ -1,3 +1,5 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test } from "vitest";
 import { LeaguePuuidSchema } from "@scout-for-lol/data";
 import type {
@@ -20,7 +22,7 @@ import {
 const PUUID_A = LeaguePuuidSchema.parse("a".repeat(78));
 const PUUID_B = LeaguePuuidSchema.parse("b".repeat(78));
 
-function subject(key: string, puuid: string): ParlaySubject {
+function subject(key: string, puuid: LeaguePuuid): ParlaySubject {
   return { key, puuid: LeaguePuuidSchema.parse(puuid), alias: key };
 }
 
@@ -32,7 +34,7 @@ function historyMatch(input: {
   dragons?: number;
 }): ParlayHistoryMatch {
   return {
-    matchId: `NA1_${input.index.toString()}`,
+    matchId: RiotMatchIdSchema.parse(`NA1_${input.index.toString()}`),
     createdAtMs: 1_700_000_000_000 + input.index,
     durationSeconds: input.durationSeconds ?? 1800,
     win: input.win ?? true,

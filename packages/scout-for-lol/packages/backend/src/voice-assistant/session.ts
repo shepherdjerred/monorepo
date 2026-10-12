@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import {
   CloudVerificationRateLimiter,
   isQuotaExhaustedError,
@@ -70,7 +71,7 @@ export type VoiceQuestionObservation = {
 };
 type VoiceUserProfile = { username: string; avatar: string | null };
 export type ScoutVoiceSessionOptions = {
-  readonly guildId: string;
+  readonly guildId: DiscordGuildId;
   readonly models: LocalVoiceModels;
   readonly openAiApiKey: string;
   readonly createAssistantAudio: () => AssistantAudioSink;

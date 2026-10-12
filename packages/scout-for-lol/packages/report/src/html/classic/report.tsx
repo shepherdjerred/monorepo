@@ -54,6 +54,7 @@ function ClassicSpell({ spellId }: { spellId: number }) {
       width={48}
       height={48}
       style={{
+        boxSizing: "border-box",
         width: 48,
         height: 48,
         border: `2px solid ${classicPalette.gold.shadow}`,
@@ -67,6 +68,7 @@ function ClassicItem({ itemId }: { itemId: number }) {
     return (
       <div
         style={{
+          boxSizing: "border-box",
           display: "flex",
           width: 56,
           height: 56,
@@ -83,6 +85,7 @@ function ClassicItem({ itemId }: { itemId: number }) {
       width={56}
       height={56}
       style={{
+        boxSizing: "border-box",
         width: 56,
         height: 56,
         border: `1px solid ${classicPalette.gold.shadow}`,
@@ -129,6 +132,7 @@ function PlayerRow({
   return (
     <div
       style={{
+        boxSizing: "border-box",
         display: "flex",
         width: "100%",
         height: CLASSIC_MATCH_ROW_HEIGHT,
@@ -150,6 +154,7 @@ function PlayerRow({
           width={56}
           height={56}
           style={{
+            boxSizing: "border-box",
             width: 56,
             height: 56,
             border: `2px solid ${isTracked ? classicPalette.gold.highlight : colors.accent}`,
@@ -259,6 +264,7 @@ function TeamHeader({
     <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
       <div
         style={{
+          boxSizing: "border-box",
           display: "flex",
           width: "100%",
           height: 44,
@@ -283,6 +289,7 @@ function TeamHeader({
       </div>
       <div
         style={{
+          boxSizing: "border-box",
           display: "flex",
           width: "100%",
           height: 36,
@@ -361,6 +368,7 @@ export function ClassicMatchReport({ match }: { match: ClassicMatch }) {
   return (
     <div
       style={{
+        boxSizing: "border-box",
         display: "flex",
         flexDirection: "column",
         width: "100%",
@@ -372,6 +380,7 @@ export function ClassicMatchReport({ match }: { match: ClassicMatch }) {
     >
       <div
         style={{
+          boxSizing: "border-box",
           display: "flex",
           position: "relative",
           width: "100%",

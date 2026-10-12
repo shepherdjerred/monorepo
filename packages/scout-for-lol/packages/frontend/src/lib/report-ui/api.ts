@@ -1,3 +1,4 @@
+import type { RawParticipant } from "@scout-for-lol/data";
 import { z } from "zod";
 
 const RIOT_API_BASE = "https://americas.api.riotgames.com";
@@ -75,7 +76,7 @@ type RiotMatchResponse = {
       item6: number;
       lane: string;
       level: number;
-      puuid: string;
+      puuid: RawParticipant["puuid"];
       role: string;
       summoner1Id: number;
       summoner2Id: number;

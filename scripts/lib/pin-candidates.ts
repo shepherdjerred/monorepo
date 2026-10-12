@@ -1,4 +1,3 @@
-import { z } from "zod";
 import { format } from "prettier";
 import {
   parseVersionCatalogText,
@@ -6,67 +5,12 @@ import {
   type VersionCatalog,
   type VersionCatalogEntry,
 } from "@shepherdjerred/version-catalog";
-
-const DigestSchema = z
-  .string()
-  .regex(/^sha256:[0-9a-f]{64}$/, "digest must be canonical sha256");
-const VersionSchema = z.string().min(1);
-const CandidateSchema = z
-  .object({ version: VersionSchema, digest: DigestSchema })
-  .strict();
-/**
- * The commit an image was built from, as baked into its `GIT_SHA`.
- *
- * Optional because pins minted before this field existed have none. Without
- * it a pin records only a version and a digest, and the commit it corresponds
- * to lives nowhere in the repo — so a reviewer cannot tell `2.0.0-13000` from
- * `2.0.0-13153` and an operator has nothing to contradict a wrong assumption.
- * That is precisely how a Worker Deployment came to route to a Build ID no
- * running pod carried. Build numbers do not order with commits: 13000 is
- * `3f9be51c` while 13153 is `c42ee297`.
- */
-const GitShaSchema = z
-  .string()
-  .regex(/^[0-9a-f]{40}$/, "gitSha must be a 40-character lowercase commit");
-const PinSchema = CandidateSchema.extend({
-  buildNumber: z.number().int().positive(),
-  gitSha: GitShaSchema.optional(),
-});
-
-export const PinCandidatesSchema = z
-  .object({
-    schema: z.literal("pin-candidates/v1"),
-    buildNumber: z.number().int().positive(),
-    candidates: z.record(z.string().min(1), CandidateSchema),
-  })
-  .strict();
-
-export const PinCandidatesStateSchema = z
-  .object({
-    schema: z.literal("pin-candidates-state/v1"),
-    pins: z.record(z.string().min(1), PinSchema),
-  })
-  .strict();
-
-export type PinCandidates = z.infer<typeof PinCandidatesSchema>;
-export type PinCandidatesState = z.infer<typeof PinCandidatesStateSchema>;
+import {
+  imageKeys,
+  type PinCandidates,
+  type PinCandidatesState,
+} from "./pin-candidates-schema.ts";
 type PinStatePin = PinCandidatesState["pins"][string];
-
-function parseJson(text: string, description: string): unknown {
-  try {
-    return JSON.parse(text);
-  } catch (error) {
-    throw new Error(`${description} is not valid JSON`, { cause: error });
-  }
-}
-
-export function parsePinCandidates(text: string): PinCandidates {
-  return PinCandidatesSchema.parse(parseJson(text, "pin candidates"));
-}
-
-export function parsePinCandidatesState(text: string): PinCandidatesState {
-  return PinCandidatesStateSchema.parse(parseJson(text, "pin candidate state"));
-}
 
 export function serializePinCandidatesState(state: PinCandidatesState): string {
   const pins = Object.fromEntries(
@@ -74,7 +18,7 @@ export function serializePinCandidatesState(state: PinCandidatesState): string {
       left.localeCompare(right),
     ),
   );
-  return `${JSON.stringify({ schema: state.schema, pins }, null, 2)}\n`;
+  return `${JSON.stringify({ ...state, pins }, null, 2)}\n`;
 }
 
 export function parseVersionCatalogSource(source: string): Map<string, string> {
@@ -133,33 +77,6 @@ export function mergeVersionCatalogSources(
   return serializeVersionCatalog({ ...main, entries });
 }
 
-function imageKeys(versions: Map<string, string>): Set<string> {
-  return new Set(
-    [...versions.entries()]
-      .filter(([, value]) => value.includes("@sha256:"))
-      .map(([key]) => key),
-  );
-}
-
-export function validateStateAgainstVersions(
-  state: PinCandidatesState,
-  versions: Map<string, string>,
-): void {
-  const allowed = imageKeys(versions);
-  for (const [key, pin] of Object.entries(state.pins)) {
-    if (!allowed.has(key)) {
-      throw new Error(`pin state contains unknown image key ${key}`);
-    }
-    const actual = versions.get(key);
-    const expected = `${pin.version}@${pin.digest}`;
-    if (actual !== expected) {
-      throw new Error(
-        `pin state drift for ${key}: expected ${expected}, found ${String(actual)}`,
-      );
-    }
-  }
-}
-
 /**
  * Keep only pins for images that still exist in the current catalog.
  *
@@ -180,8 +97,17 @@ export function retainCurrentImagePins(
     .map(([key]) => key);
   return {
     state: {
-      schema: state.schema,
+      ...state,
       pins: Object.fromEntries(retained),
+      ...(state.withdrawnCandidates === undefined
+        ? {}
+        : {
+            withdrawnCandidates: Object.fromEntries(
+              Object.entries(state.withdrawnCandidates).filter(([key]) =>
+                allowed.has(key),
+              ),
+            ),
+          }),
     },
     retiredKeys,
   };
@@ -204,6 +130,26 @@ function pinsEqual(
   right: { version: string; digest: string },
 ): boolean {
   return left.version === right.version && left.digest === right.digest;
+}
+
+function mergeSameBuildPins(
+  key: string,
+  current: PinStatePin,
+  incoming: PinStatePin,
+): PinStatePin {
+  if (
+    !pinsEqual(current, incoming) ||
+    (current.gitSha !== undefined &&
+      incoming.gitSha !== undefined &&
+      current.gitSha !== incoming.gitSha)
+  ) {
+    throw new Error(
+      `conflicting candidates for ${key} at build ${current.buildNumber.toString()}`,
+    );
+  }
+  // Older pins have no gitSha. Preserve the known image commit when one side
+  // enriches an otherwise identical pin.
+  return current.gitSha === undefined ? incoming : current;
 }
 
 function samePinState(
@@ -265,13 +211,9 @@ function mergePinStateEntry(
   if (pending === undefined || pending.buildNumber < main.buildNumber) {
     return main;
   }
-  if (pending.buildNumber > main.buildNumber) return pending;
-  if (!pinsEqual(main, pending)) {
-    throw new Error(
-      `conflicting candidates for ${key} at build ${main.buildNumber.toString()}`,
-    );
-  }
-  return main;
+  return pending.buildNumber > main.buildNumber
+    ? pending
+    : mergeSameBuildPins(key, main, pending);
 }
 
 export function mergePinStates(
@@ -280,6 +222,14 @@ export function mergePinStates(
   base: PinCandidatesState,
   supersededPendingKeys: ReadonlySet<string> = new Set(),
 ): PinCandidatesState {
+  const withdrawnCandidates: Record<string, number> = {};
+  for (const state of [base, main, pending]) {
+    for (const [key, build] of Object.entries(
+      state.withdrawnCandidates ?? {},
+    )) {
+      withdrawnCandidates[key] = Math.max(withdrawnCandidates[key] ?? 0, build);
+    }
+  }
   const pins = new Map(Object.entries(main.pins));
   const keys = new Set([
     ...Object.keys(base.pins),
@@ -296,11 +246,21 @@ export function mergePinStates(
           pending.pins[key],
           base.pins[key],
         );
-    if (result === undefined) pins.delete(key);
+    if (
+      result === undefined ||
+      result.buildNumber <= (withdrawnCandidates[key] ?? 0)
+    )
+      pins.delete(key);
     else pins.set(key, result);
   }
 
-  return { schema: main.schema, pins: Object.fromEntries(pins) };
+  return {
+    schema: main.schema,
+    pins: Object.fromEntries(pins),
+    ...(Object.keys(withdrawnCandidates).length === 0
+      ? {}
+      : { withdrawnCandidates }),
+  };
 }
 
 export function mergePinCandidates(
@@ -309,6 +269,7 @@ export function mergePinCandidates(
 ): PinCandidatesState {
   const pins = { ...state.pins };
   for (const [key, candidate] of Object.entries(batch.candidates)) {
+    if (batch.buildNumber <= (state.withdrawnCandidates?.[key] ?? 0)) continue;
     const current = pins[key];
     if (current === undefined || batch.buildNumber > current.buildNumber) {
       pins[key] = { buildNumber: batch.buildNumber, ...candidate };
@@ -317,13 +278,12 @@ export function mergePinCandidates(
     if (batch.buildNumber < current.buildNumber) {
       continue;
     }
-    if (!pinsEqual(current, candidate)) {
-      throw new Error(
-        `conflicting candidates for ${key} at build ${batch.buildNumber.toString()}`,
-      );
-    }
+    pins[key] = mergeSameBuildPins(key, current, {
+      buildNumber: batch.buildNumber,
+      ...candidate,
+    });
   }
-  return { schema: "pin-candidates-state/v1", pins };
+  return { ...state, pins };
 }
 
 export async function rewriteVersionCatalogSource(

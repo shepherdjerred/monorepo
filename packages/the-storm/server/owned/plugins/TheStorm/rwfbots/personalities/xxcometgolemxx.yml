@@ -1,0 +1,83 @@
+id: xxcometgolemxx
+name: xXCometGolemXx
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTE1Mzc4MDY1OSwKICAicHJvZmlsZUlkIiA6ICJlZDUzZGQ4MTRmOWQ0YTNjYjRlYjY1MWRjYmE3N2U2NiIsCiAgInByb2ZpbGVOYW1lIiA6ICI0MTQxNDE0MWgiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZTM1OWJkOTA1OTZjNzFiYmE5NGMyMTE5M2UyYjdmNjNjMDU0YjBkNmQ1ZDA4ZDg0MGQ1ODgxMzg3MDhlYjliMyIKICAgIH0KICB9Cn0="
+  signature: "Tsn9eJP4YyHti2kav+YPP5Fr/jgd183602IU/KqeDqxaUEQJ1iML6AOZoLf3bHkaoLCfj+jnHydgTQu1n3GicTPhn1ytjH508EAG6dLI3OfzHlyEK9jK9wLUdOnnrU/HogWosGF4JDul1k7ddTB649W49PZXgfuNLuxt0gKNFWTjfq4hxz9pb7T0ziEaWyhoOyOWf8XOu2J1XKmenwBz1cD8wDg//fuxKwG0v7VtKdWGn35rKw3KmdovCflWsND2y7B6QHzzrxbelJtuVnAjHEwxfyI2TEa2W4FgGM+YFn5VZnFBL6Q6UJarMtqnEA6RWo6BG0fmpiSODa1z0l3FnGl+yk9Pr7mxNdOSMJrm33IEZaSnFUDHoFjWR6P55zwwLLiVba49iFho5O7idYpaJVK3uD3LQ6ZdH94S7iag8IfvWbahR58n94FRDlmyRRRc/kibhWw4hvSK+upsNmczrFK8bRGKwWp86dBtQ4BSOcbWf8oYys5JJpJhLf/S/X/dVuwdjU3Wmy9VT94QiTLp74/Uze4YLtDBrViXlOxWB8Yl2gHgc59RlpbE9kQ/0d5vbQTKsaT0B73lrQbN6XIfPEOwnEH/aFWZhKrbixHcwAOQ2N2DzkglP47uhYfHoF7GswLiOO2DA/If4HwcoifzwrigJYEdp8IXjRZxZcKK6QA="
+skill: 0.529
+archetype: tactician
+leverOffsets:
+  cps: 0.44
+  predictionQuality: 0.75
+  decisionTemperature: 1.03
+  awarenessRadius: 0.43
+  coordination: 1.61
+kits:
+  trooper: 0.86
+  longbow: 0.52
+  shortbow: 0.46
+  rewind: 0.45
+roles:
+  plant: 0.58
+  escort: 0.54
+  defend: 0.64
+  rotate: 0.7
+  retake: 0.7
+style:
+  aggression: 0.45
+  patience: 0.64
+  teamplay: 0.79
+  risk: 0.36
+voice:
+  tone:
+    - calm
+    - procedural
+    - spacey
+  verbosity: normal
+  style: "mission control flight director, call signs, go/no-go polls and countdowns"
+lines:
+  greet:
+    - "mission control online. {team}, report status"
+    - "go/no-go poll: we are go"
+    - launch window opens in ten
+  onKill:
+    - "target {victim} neutralized"
+    - "{victim} has left orbit"
+    - confirmed impact
+  onDeath:
+    - "{killer} took out comms"
+    - control lost, switching to backup
+    - signal lost. good luck crew
+  onPlant:
+    - "{bomb} ignition confirmed"
+    - "{bomb} countdown begins"
+  onDefuse:
+    - "abort sequence on {bomb} successful"
+    - "{bomb} safe, stand down"
+  onWin:
+    - "mission success, {team}"
+    - splashdown confirmed. great flight
+  onLoss:
+    - mission scrubbed. debrief soon
+    - we'll launch again
+  onLastAlive:
+    - control is alone. stay on frequency
+    - one capsule left, steady
+  taunt:
+    - we have you on telemetry
+    - your trajectory is predictable
+    - orbit decaying, crew
+  lobby:
+    - "lobby is t-minus ready. check in, {team}"
+    - "kit check: trooper go, longbow go, rewind go"
+    - weather's go. comms are go. we are go
+    - flight plan filed for their bomb
+    - all stations, hold for countdown
+quirks:
+  - calls_everything
+  - always_gg
+rivals:
+  - toulxestwaffle
+  - lynxpumpkin8
+bio: Runs his team like a launch room, polling everyone before every push. Claims the 2014 season was one long mission. Keeps a respectful rivalry with LynxPumpkin8 and a less respectful one with ToulxestWaffle.
+batch: 2
+retired: false

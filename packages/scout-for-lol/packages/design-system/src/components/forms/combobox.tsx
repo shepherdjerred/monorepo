@@ -63,6 +63,14 @@ export function Combobox<T>(props: ComboboxProps<T>) {
     !props.isLoading && activeIndex >= 0 ? props.items[activeIndex] : undefined;
   const optionId = (item: T): string =>
     `${listId}-${encodeURIComponent(props.getKey(item))}`;
+  const activeOptionId =
+    activeItem === undefined ? undefined : optionId(activeItem);
+  useEffect(() => {
+    if (activeOptionId === undefined) return;
+    document
+      .querySelector(`#${CSS.escape(activeOptionId)}`)
+      ?.scrollIntoView({ block: "nearest" });
+  }, [activeOptionId]);
 
   function onKeyDown(event: KeyboardEvent<HTMLInputElement>): void {
     if (!showPopover || event.nativeEvent.isComposing) return;
@@ -97,13 +105,12 @@ export function Combobox<T>(props: ComboboxProps<T>) {
           required={props.required}
           placeholder={props.placeholder}
           role="combobox"
+          aria-autocomplete="list"
           aria-expanded={showPopover}
           aria-invalid={props.ariaInvalid}
           aria-describedby={props.ariaDescribedBy}
           aria-controls={listId}
-          aria-activedescendant={
-            activeItem === undefined ? undefined : optionId(activeItem)
-          }
+          aria-activedescendant={activeOptionId}
           autoComplete="off"
           className={props.className}
           onChange={(event) => {
@@ -118,21 +125,37 @@ export function Combobox<T>(props: ComboboxProps<T>) {
         />
       </PopoverAnchor>
       <PopoverContent
+        role="region"
+        aria-label="Suggestions"
         className="scout-combobox__content"
         onOpenAutoFocus={(event) => {
           event.preventDefault();
         }}
       >
-        <ul id={listId} role="listbox" className="scout-combobox__list">
+        <ul
+          id={listId}
+          role="listbox"
+          aria-label="Suggestions"
+          aria-busy={props.isLoading}
+          className="scout-combobox__list"
+        >
           {props.isLoading && props.items.length === 0 ? (
-            <li className="scout-muted">Searching…</li>
+            <li
+              role="option"
+              aria-selected={false}
+              aria-disabled="true"
+              className="scout-muted"
+            >
+              Searching…
+            </li>
           ) : (
             props.items.map((item, index) => (
-              <li key={props.getKey(item)}>
+              <li key={props.getKey(item)} role="presentation">
                 <button
                   type="button"
                   id={optionId(item)}
                   role="option"
+                  tabIndex={-1}
                   aria-selected={index === activeIndex}
                   className={cn("scout-combobox__option")}
                   onMouseEnter={() => {

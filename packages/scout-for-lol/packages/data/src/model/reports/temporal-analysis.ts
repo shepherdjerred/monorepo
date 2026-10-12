@@ -46,12 +46,7 @@ export type ResolvedTemporalBucket = z.infer<
   typeof ResolvedTemporalBucketSchema
 >;
 
-/**
- * A rolling window of N whole days. Shared with the legacy `DURING LAST <n>
- * DAYS` window (`legacy/report-query-window.ts`, which the boot-time migration
- * still compiles) because it is the same concept in both clauses — the
- * calendar variants differ, but this one must not drift.
- */
+/** A rolling window of N whole days. */
 export const RelativeTemporalWindowSchema = z
   .object({
     kind: z.literal("relative"),

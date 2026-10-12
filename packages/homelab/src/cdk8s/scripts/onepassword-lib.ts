@@ -33,6 +33,22 @@ export function hash(value: string): string {
   return createHash("sha256").update(value, "utf8").digest("hex");
 }
 
+/** Binding and destination metadata shared by the offline linter and vault audit. */
+export const OnePasswordManifestSchema = z.object({
+  apiVersion: z.string().optional(),
+  kind: z.string().optional(),
+  metadata: z
+    .object({ name: z.string().optional(), namespace: z.string().optional() })
+    .optional(),
+  spec: z
+    .object({
+      itemPath: z.string().optional(),
+      // ArgoCD consumers live in the destination, rather than the Application namespace.
+      destination: z.object({ namespace: z.string().optional() }).optional(),
+    })
+    .optional(),
+});
+
 // --- 1Password operator field-label -> secret-key transform ---------------------
 // Faithful port of formatSecretDataName / createValidSecretDataName from
 // github.com/1Password/onepassword-operator pkg/kubernetessecrets/kubernetes_secrets_builder.go
@@ -86,6 +102,14 @@ export const SnapshotItemSchema = z.object({
    * source — the operator skips these, so a required secretKeyRef to one fails at deploy.
    */
   blankFields: z.array(z.string()),
+  /** Hashed selectors grouped by physical field; no credential values. */
+  fieldSelectors: z.array(
+    z.object({
+      label: z.string(),
+      id: z.string(),
+      section: z.string().nullable(),
+    }),
+  ),
 });
 export type SnapshotItem = z.infer<typeof SnapshotItemSchema>;
 
@@ -104,6 +128,9 @@ const OpFieldSchema = z.object({
   label: z.string().optional(),
   value: z.string().optional(),
   type: z.string().optional(),
+  section: z
+    .object({ id: z.string(), label: z.string().optional() })
+    .optional(),
 });
 
 const OpUrlSchema = z.object({
@@ -120,11 +147,26 @@ const OpFileSchema = z.object({
 export const OpItemSchema = z.object({
   id: z.string(),
   title: z.string(),
+  version: z.number().int().optional(),
+  category: z.string().optional(),
   fields: z.array(OpFieldSchema).optional(),
   urls: z.array(OpUrlSchema).optional(),
   files: z.array(OpFileSchema).optional(),
 });
 export type OpItem = z.infer<typeof OpItemSchema>;
+
+/** Preserve exact field identity for adoption checks without storing values. */
+export function snapshotFieldSelectors(
+  item: OpItem,
+): SnapshotItem["fieldSelectors"] {
+  return (item.fields ?? [])
+    .map((field) => ({
+      label: hash(field.label ?? field.id),
+      id: hash(field.id),
+      section: field.section === undefined ? null : hash(field.section.id),
+    }))
+    .toSorted((left, right) => left.id.localeCompare(right.id));
+}
 
 export const OpItemListSchema = z.array(
   z.object({ id: z.string(), title: z.string() }),

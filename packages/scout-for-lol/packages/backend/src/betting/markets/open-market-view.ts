@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   BucksParlaySideSchema,
   BucksStakeSchema,
@@ -43,11 +44,11 @@ export type OpenOutcomeMarketSide = {
   trackedPlayers: string[];
   totalStake: number;
   betCount: number;
-  positions: { discordId: string; stake: number }[];
+  positions: { discordId: DiscordAccountId; stake: number }[];
 };
 
 export type OpenOutcomeMarketView = {
-  matchId: string;
+  matchId: RiotMatchId;
   closesAt: Date;
   sides: OpenOutcomeMarketSide[];
   yourPosition: {
@@ -59,14 +60,18 @@ export type OpenOutcomeMarketView = {
 };
 
 export type OpenParlayMarketView = {
-  matchId: string;
+  matchId: RiotMatchId;
   closesAt: Date;
   subjects: string[];
   legs: string[];
   yesProbabilityBps: number;
   yesOdds: string;
   noOdds: string;
-  positions: { discordId: string; side: BucksParlaySide; stake: number }[];
+  positions: {
+    discordId: DiscordAccountId;
+    side: BucksParlaySide;
+    stake: number;
+  }[];
   yourPosition: { side: BucksParlaySide; stake: number } | null;
 };
 

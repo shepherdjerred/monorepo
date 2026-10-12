@@ -1,12 +1,15 @@
 package com.shepherdjerred.thestorm.essentials.testing;
 
+import com.shepherdjerred.thestorm.core.compute.DirectComputePool;
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.Services;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.core.schedule.PaperScheduler;
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import com.shepherdjerred.thestorm.essentials.EssentialsModule;
+import com.shepherdjerred.thestorm.essentials.app.ModerationService;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -46,6 +49,11 @@ public final class PaperHarness implements AutoCloseable {
 
   public final ServerMock server;
   public final StormDatabase database;
+  public final Services services = new Services();
+
+  /** Worlds the test seals; no teleport may leave or enter them. */
+  public final SealedWorlds sealed = new SealedWorlds();
+
   public final FakeClock clock = FakeClock.at("2026-09-25T12:00:00Z");
 
   private PaperHarness(ServerMock server, StormDatabase database) {
@@ -60,9 +68,21 @@ public final class PaperHarness implements AutoCloseable {
     writeConfig(directory);
     var database = StormDatabase.open(directory.resolve("t.db"));
     var harness = new PaperHarness(server, database);
-    var services = new Services();
+    var services = harness.services;
     services.provide(Wallets.class, wallets);
     services.provide(Protection.class, new AllowAllProtection());
+    services.provide(SealedWorlds.class, harness.sealed);
+    services.provide(
+        com.shepherdjerred.thestorm.core.expansion.ExpansionSettings.class,
+        new com.shepherdjerred.thestorm.core.expansion.ExpansionSettings(
+            2000, 10, 100, 64, 32, 16, 30));
+    services.provide(
+        com.shepherdjerred.thestorm.core.expansion.ManagedGameplay.class,
+        new com.shepherdjerred.thestorm.core.expansion.ManagedGameplay(
+            (key, actor) ->
+                java.util.concurrent.CompletableFuture.completedFuture(
+                    !key.equals(com.shepherdjerred.thestorm.core.expansion.ManagedGameplay.IP)),
+            () -> {}));
     enabling =
         plugin ->
             new EssentialsModule()
@@ -71,16 +91,25 @@ public final class PaperHarness implements AutoCloseable {
                         plugin,
                         plugin.getLifecycleManager(),
                         new PaperScheduler(plugin),
+                        new DirectComputePool(),
                         database,
                         services,
                         directory,
                         harness.clock,
                         RandomGenerator.getDefault(),
-                        plugin.getComponentLogger()));
+                        plugin.getComponentLogger(),
+                        com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled()));
     try {
       MockBukkit.loadWith(
           HarnessPlugin.class,
           new PluginDescriptionFile("TheStorm", "1", HarnessPlugin.class.getName()));
+      // MockBukkit fires real pre-login events when tests add players. Wait for
+      // the ban-list replay so a startup refusal cannot masquerade as a ban kick.
+      var moderation = services.require(ModerationService.class);
+      harness.until(() -> moderation.loaded().isDone());
+      moderation.loaded().join();
+      var staff = services.require(com.shepherdjerred.thestorm.essentials.app.StaffState.class);
+      harness.until(() -> staff.ready());
     } catch (RuntimeException e) {
       harness.close();
       throw e;
@@ -92,7 +121,9 @@ public final class PaperHarness implements AutoCloseable {
     try {
       var yaml =
           Files.readString(SHIPPED)
-              .replace("  y: 64.0\n", "  y: 5.0\n")
+              .replace("  x: 68.5\n", "  x: 0.5\n")
+              .replace("  y: 69.0\n", "  y: 5.0\n")
+              .replace("  z: 66.5\n", "  z: 0.5\n")
               .replace("warmup: PT3S", "warmup: PT0S")
               .replace("tpaInterval: PT10S", "tpaInterval: PT0S")
               // MockBukkit's written-book mock cannot measure styled pages; plain text works.

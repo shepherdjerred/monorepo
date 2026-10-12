@@ -4,6 +4,7 @@ import static com.shepherdjerred.thestorm.quests.domain.Fixtures.quest;
 import static com.shepherdjerred.thestorm.quests.domain.Fixtures.stage;
 import static com.shepherdjerred.thestorm.quests.domain.Fixtures.talk;
 
+import com.shepherdjerred.thestorm.core.compute.DirectComputePool;
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.Services;
@@ -150,12 +151,14 @@ public class QuestsTestPlugin extends JavaPlugin {
             this,
             getLifecycleManager(),
             new PaperScheduler(this),
+            new DirectComputePool(),
             db,
             new Services(),
             data,
             InstantSource.system(),
             RandomGenerator.getDefault(),
-            getComponentLogger());
+            getComponentLogger(),
+            com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled());
     var paper =
         new QuestsPaper(
             context,
@@ -192,7 +195,8 @@ public class QuestsTestPlugin extends JavaPlugin {
                 context.scheduler().mainThread(),
                 InstantSource.system(),
                 RandomGenerator.getDefault(),
-                getComponentLogger()));
+                getComponentLogger(),
+                com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled()));
     service = built;
     tick = paper.install(built, (player, view) -> journals.add(view));
   }
@@ -217,6 +221,11 @@ public class QuestsTestPlugin extends JavaPlugin {
     public Decision checkHarm(
         UUID attacker, Location attackerAt, HarmTarget target, Location victimAt) {
       return Decision.allowed();
+    }
+
+    @Override
+    public boolean isPreserved(Location location) {
+      return false;
     }
 
     @Override

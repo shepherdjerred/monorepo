@@ -89,6 +89,12 @@ type ConflictReason = z.infer<typeof ConflictReasonSchema>;
 
 const OutcomeSchema = z.discriminatedUnion("kind", [
   z.looseObject({
+    kind: z.literal("report-delivery-resolved"),
+    runId: z.int(),
+    chunkIndex: z.int(),
+    state: z.enum(["PENDING", "DELIVERED"]),
+  }),
+  z.looseObject({
     kind: z.literal("start-authorized"),
     workflow: WorkflowKindSchema,
   }),
@@ -354,6 +360,21 @@ function fromOutcome(
   dispatch: z.infer<typeof DispatchSchema> | null,
 ): OperationsConfirmationOutcome {
   switch (outcome.kind) {
+    case "report-delivery-resolved":
+      return {
+        status: "confirmed",
+        effect: "performed",
+        heading: "Report delivery resolved",
+        message:
+          outcome.state === "PENDING"
+            ? "The chunk is released for delivery by reconciliation."
+            : "The chunk is recorded as delivered.",
+        facts: [
+          { label: "Run", value: outcome.runId.toString() },
+          { label: "Chunk", value: outcome.chunkIndex.toString() },
+        ],
+        reason: null,
+      };
     case "start-authorized":
       return fromDispatch(outcome.workflow, dispatch);
     case "notification-suppressed":

@@ -1,0 +1,80 @@
+id: rionaesttaimmel
+name: Rionaesttaimmel
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NTY1NzM1OCwKICAicHJvZmlsZUlkIiA6ICJlNjY3ZTI3OTdkMGM0Y2VjYWEyOWRlODljNjM4OGVjMCIsCiAgInByb2ZpbGVOYW1lIiA6ICI3X2hwIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzE1NTc4ZDBmN2ZhMWJmODA2NzAxN2Y4MDJhNjE3NWMwMGRmYTZiMjNhMzdlNmYzYTQ5NzM2MTYwZWQzOGE2ZDMiCiAgICB9CiAgfQp9
+  signature: "w9qrDP9atYR9ETDA08llOtSkSEtSOcuUTRqQemE2ec4ojSZVWWnAzUB897JSfkaL53M03Z0GWEh95L8a6PLMXPwZoimCbPzE66Of80StSVW03a9ekpJ+MGJRSU3gW4abwjavD0Ks31wPWpuMADT0MML7x4a2QXUDGLqj6dCcjz2sXpox5Yk6u0xmDkNJSDZXcDjCzS6NwcWqnnD6VxDSJpdBWhMuCr88BvGS/LwdpxfhgJsksjL26DDq74YkSNfPECgbNqaqy7Az9VDIyD9HB1LxHXMdZDkFrsEvx/q0KFaheVZxX7Klhj1vbgjcZcTVjh9m+C3WCSTzVtv/ndofzKLtQhjZW21TlqdGoN8SHrG3OUIeaO0RFSemtx/SRPLswKR9+kUO+yoj+vovRvOxZnmFEs3kS1n1XfBKcc0eCEaCDJ7/ZLEyZ4EYpzJFifzE2IIPUHUMWLIDeMQ1Ssxda36J2oD4W9mrY8VfIrBlHI2z/yerjmZ0Nx2hjzpY3R+GdBYcqHYmrlWArkcSFbH3z4AITkDqZFoXFjWHQtoE7GGPr7zJMA8509SNWlYOLoYtirfoYnaS3n/s9ozj89hzxri5sN3ZEAblwSwT+Ur99iLi4pejIkj0E1rekw32hcd8uQPWQXQg6Hj2zR/mRvWpERbQCDGWuKxbrTpAre2KLjU="
+skill: 0.648
+archetype: anchor
+leverOffsets:
+  reactionMs: 0.61
+  decisionTemperature: 1.16
+  awarenessRadius: 1.1
+  coordination: 0.31
+  aggression: -1.17
+kits:
+  trooper: 1
+  longbow: 0.39
+  rewind: 0.29
+roles:
+  defend: 1
+  retake: 0.57
+style:
+  aggression: 0.33
+  patience: 0.86
+  teamplay: 0.61
+  risk: 0.11
+voice:
+  tone:
+    - dry
+    - witty
+    - british
+  verbosity: normal
+  style: "deadpan, slightly posh understatement; treats chaos as a mild inconvenience"
+lines:
+  greet:
+    - Right then. I'll mind the bomb.
+    - "Shall we, {team}? Lovely."
+    - Put the kettle on, I'm guarding.
+  onKill:
+    - "Terribly sorry, {victim}. Not today."
+    - "Do mind the bomb, {victim}."
+    - Bit rude of them, really.
+  onDeath:
+    - "Oh, how tiresome. Well done, {killer}."
+    - Slight inconvenience.
+    - I'll be back after a cup of tea.
+  onPlant:
+    - "{bomb} appears to be on fire. Splendid."
+    - "Popped a fuse on {bomb}. As one does."
+  onDefuse:
+    - "{bomb} defused. Crisis politely averted."
+    - "There. {bomb} is fine."
+  onWin:
+    - "Jolly good, {team}. gg."
+    - Rather well done, all of us.
+  onLoss:
+    - Bit of a shambles. gg.
+    - Ah well. Chin up.
+  onLastAlive:
+    - Just me, then. Marvellous.
+    - "Bit of a pickle, {team}."
+    - Keep calm, as they say.
+  taunt:
+    - I'd turn back if I were you.
+    - The bomb is closed for the afternoon.
+    - Must you?
+  lobby:
+    - Lovely lobby. Bit cramped.
+    - Trooper, please. Nothing too dramatic.
+    - I'll put the kettle on near the bomb.
+    - "Do try not to shout, {team}."
+    - Another speed plant coming my way, I expect. Fine.
+quirks:
+  - good_sport
+  - always_gg
+rivals:
+  - dukthurblaze
+  - kynjour-07
+bio: Has defended the bomb against DukthurBlaze's speed plants for two years without once raising his voice. Finds Kynjour_07's shouting a bit much, frankly.
+batch: 2
+retired: false

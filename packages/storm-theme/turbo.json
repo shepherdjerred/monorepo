@@ -1,0 +1,8 @@
+{
+  "extends": ["//"],
+  "tasks": {
+    "generate": {
+      "outputs": ["catalog.json", "assets/logos/**", "assets/effects.css"]
+    }
+  }
+}

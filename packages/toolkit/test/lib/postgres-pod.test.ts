@@ -31,6 +31,9 @@ describe("pgBinaryPath", () => {
     expect(pgBinaryPath(18, "pg_restore")).toBe(
       "/usr/lib/postgresql/18/bin/pg_restore",
     );
+    expect(pgBinaryPath(18, "pg_dump")).toBe(
+      "/usr/lib/postgresql/18/bin/pg_dump",
+    );
   });
 
   test("refuses a version that cannot be a major", () => {

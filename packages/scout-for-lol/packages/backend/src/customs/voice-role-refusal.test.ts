@@ -11,6 +11,10 @@
  * is to refuse.
  */
 
+import {
+  DiscordGuildIdSchema,
+  DiscordChannelIdSchema,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import configuration, {
   resetConfigurationForTests,
@@ -54,8 +58,8 @@ afterEach(() => {
  */
 const claims = {
   sub: "900000000000000001",
-  guildId: "900000000000000002",
-  channelId: "900000000000000003",
+  guildId: DiscordGuildIdSchema.parse("900000000000000002"),
+  channelId: DiscordChannelIdSchema.parse("900000000000000003"),
   instanceId: "instance",
   applicationId: "900000000000000004",
   type: "customs_activity",

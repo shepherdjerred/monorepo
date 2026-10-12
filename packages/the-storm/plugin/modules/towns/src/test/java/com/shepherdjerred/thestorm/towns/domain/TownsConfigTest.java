@@ -39,9 +39,11 @@ final class TownsConfigTest {
         witherBufferChunks: 8
         raidRadiusBlocks: 64
         thrownItemMemoryTicks: 100
+      spawnRadiusBlocks: 32
       regions:
         - id: spawn
           name: Spawn
+          profile: SAFE
           areas:
             chunks:
               - world: world
@@ -61,12 +63,22 @@ final class TownsConfigTest {
   }
 
   @Test
-  void theShippedFileHasNoUnverifiedRegions() {
+  void theShippedFileProtectsTheMeasuredTownAndArena() {
     var config = ConfigFiles.load(SHIPPED, TownsConfig.class);
 
-    assertThat(config.regions()).isEmpty();
+    assertThat(config.regions())
+        .extracting(com.shepherdjerred.thestorm.towns.domain.region.AdminRegion::id)
+        .containsExactly("spawn", "arena", "settlement", "rustworks");
     assertThat(config.claims().worlds()).containsExactly("world");
     assertThat(config.claims().defaultFlags()).containsExactly(ClaimFlag.PVP);
+    for (var id : Set.of("settlement", "rustworks")) {
+      var region =
+          config.regions().stream()
+              .filter(value -> value.id().equals(id))
+              .findFirst()
+              .orElseThrow();
+      assertThat(region.areas().all()).allSatisfy(area -> assertThat(area.world()).isEqualTo(id));
+    }
   }
 
   @Test
@@ -82,6 +94,8 @@ final class TownsConfigTest {
   @ValueSource(
       strings = {
         "denialCooldownMillis: 2000\n",
+        "spawnRadiusBlocks: 32\n",
+        "    profile: SAFE\n",
         "  thrownItemMemoryTicks: 100\n",
         "  autoLockOnPlace: true\n",
         "  toggleCooldownHours: 168\n",
@@ -138,6 +152,8 @@ final class TownsConfigTest {
         "denialCooldownMillis: 2000|denialCooldownMillis: -5",
         "from: {x: -4, z: -4}|from: {x: 5, z: -4}",
         "id: spawn|id: Spawn Town",
+        "spawnRadiusBlocks: 32|spawnRadiusBlocks: 0",
+        "profile: SAFE|profile: SAFISH",
         "to: {x: 3, z: 3}|to: {x: 300, z: 300}",
       })
   void invalidValuesAreRejected(String replacement) {
@@ -152,6 +168,7 @@ final class TownsConfigTest {
             + """
               - id: spawn
                 name: Again
+                profile: SAFE
                 areas:
                   chunks: []
                   cuboids:

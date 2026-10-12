@@ -65,7 +65,7 @@ export function createPlexDeployment(
     withCommonProps({
       resources: {
         // Reserve the baseline; share spare RAM for transcoding bursts.
-        memory: { request: Size.gibibytes(4), limit: Size.gibibytes(12) },
+        memory: { request: Size.gibibytes(4), limit: Size.gibibytes(16) },
       },
       image: `plexinc/pms-docker:${versions["plexinc/pms-docker"]}`,
       envVariables: {
@@ -273,4 +273,12 @@ export function createPlexDeployment(
 
   // Create ServiceMonitor for Prometheus to scrape Plex metrics
   createServiceMonitor(chart, { name: "plex", interval: "60s" });
+  return {
+    service,
+    tokenSecret: Secret.fromSecretName(
+      chart,
+      "plex-artwork-token",
+      plexSecrets.name,
+    ),
+  };
 }

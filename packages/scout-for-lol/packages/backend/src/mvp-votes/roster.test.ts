@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test } from "vitest";
 import { LeaguePuuidSchema } from "@scout-for-lol/data";
 import {
@@ -37,7 +38,10 @@ describe("freezeMatchMvpRosterFromParticipants", () => {
       participant(6, 7),
       participant(4, 5),
     ];
-    const roster = freezeMatchMvpRosterFromParticipants("NA1_1", shuffled);
+    const roster = freezeMatchMvpRosterFromParticipants(
+      RiotMatchIdSchema.parse("NA1_1"),
+      shuffled,
+    );
     expect(roster.participants.map((entry) => entry.puuid)).toEqual(
       Array.from({ length: 10 }, (_unused, index) => puuid(index)),
     );
@@ -47,7 +51,9 @@ describe("freezeMatchMvpRosterFromParticipants", () => {
 
   test("rejects a roster that is not 10 players", async () => {
     expect(() =>
-      freezeMatchMvpRosterFromParticipants("NA1_1", [participant(0, 1)]),
+      freezeMatchMvpRosterFromParticipants(RiotMatchIdSchema.parse("NA1_1"), [
+        participant(0, 1),
+      ]),
     ).toThrow(/not 10/u);
   });
 
@@ -59,7 +65,10 @@ describe("freezeMatchMvpRosterFromParticipants", () => {
       challenges: { abilityUses: 400, legendaryItemUsed: ["3031"] },
       missions: { playerScore0: 1 },
     }));
-    const roster = freezeMatchMvpRosterFromParticipants("NA1_1", extras);
+    const roster = freezeMatchMvpRosterFromParticipants(
+      RiotMatchIdSchema.parse("NA1_1"),
+      extras,
+    );
     expect(roster.participants).toHaveLength(10);
     expect(roster.participants[0]).toEqual({
       puuid: puuid(0),
@@ -89,7 +98,10 @@ describe("freezeMatchMvpRosterFromParticipants", () => {
         riotIdTagline: "NA1",
       };
     });
-    const roster = freezeMatchMvpRosterFromParticipants("NA1_1", participants);
+    const roster = freezeMatchMvpRosterFromParticipants(
+      RiotMatchIdSchema.parse("NA1_1"),
+      participants,
+    );
     expect(roster.participants[0]?.riotId).toBe("Champ0");
     expect(roster.participants[1]?.riotId).toBe("OldSummoner");
     expect(roster.participants[2]?.riotId).toBe("Player2#NA1");

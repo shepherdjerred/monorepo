@@ -21,6 +21,7 @@ final class InspectorEditingUITests: XCTestCase {
         let storageFolder = "TaskNotes-UITests-\(UUID().uuidString)"
         var app = TestApp.launch(
             serverAddress: server.address,
+            authToken: server.authToken,
             storageFolder: storageFolder
         ) { addTeardownBlock($0) }
 
@@ -103,6 +104,7 @@ final class InspectorEditingUITests: XCTestCase {
         app.terminate()
         app = TestApp.launch(
             serverAddress: server.address,
+            authToken: server.authToken,
             storageFolder: storageFolder
         ) { addTeardownBlock($0) }
         selectTask("Inspector journey", id: "TaskNotes/Inspector journey.md", in: app)
@@ -249,6 +251,7 @@ final class InspectorEditingUITests: XCTestCase {
 
 private struct SeededServer {
     let address: String
+    let authToken: String
     private let vault: URL
 
     init() throws {
@@ -258,6 +261,7 @@ private struct SeededServer {
         let data = try Data(contentsOf: packageRoot.appending(path: ".build/ui-test-fixture.json"))
         let fixture = try JSONDecoder().decode(Fixture.self, from: data)
         address = fixture.address
+        authToken = fixture.authToken
         vault = URL(filePath: fixture.vault, directoryHint: .isDirectory)
     }
 
@@ -267,6 +271,7 @@ private struct SeededServer {
 
     private struct Fixture: Decodable {
         let address: String
+        let authToken: String
         let vault: String
     }
 }

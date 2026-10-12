@@ -5,8 +5,10 @@ import {
   PrHealthSchema,
   type Feedback,
   type PrHealth,
+  type ReviewFindingRef,
 } from "#src/domain/schemas.ts";
 import { requireSuccess, type CommandRunner } from "#src/runtime/process.ts";
+import { mergeWithGitSpice } from "#src/integrations/github-merge.ts";
 
 const PullRequestSchema = z.object({
   number: z.number().int().positive(),
@@ -14,7 +16,10 @@ const PullRequestSchema = z.object({
   headRefOid: z.string().min(1),
   isDraft: z.boolean(),
   mergedAt: z.string().nullable(),
-  author: z.object({ login: z.string() }),
+  baseRefName: z.string().min(1),
+  headRefName: z.string().min(1),
+  mergeCommit: z.object({ oid: z.string().regex(/^[0-9a-f]{40}$/) }).nullable(),
+  author: z.object({ login: z.string(), is_bot: z.boolean() }),
 });
 export type PullRequest = z.infer<typeof PullRequestSchema>;
 export type GitHubIdentity = Readonly<{
@@ -40,6 +45,8 @@ const ReviewSchema = z.object({
   user: ApiAuthorSchema,
 });
 const FindingsSchema = z.object({
+  head: z.string().min(1).optional(),
+  blockedReason: z.string().nullable().optional(),
   findings: z.array(
     z.object({
       key: z.string().min(1),
@@ -65,7 +72,15 @@ export class GitHubClient {
   ) {}
 
   private verifyPullRequest(pr: PullRequest): PullRequest {
-    if (pr.author.login !== this.identity.expectedBotLogin) {
+    const expectedLogin = this.identity.expectedBotLogin;
+    // gh serializes GraphQL Bot actors as app/<slug>; REST uses <slug>[bot].
+    const appLogin = expectedLogin.endsWith("[bot]")
+      ? `app/${expectedLogin.slice(0, -"[bot]".length)}`
+      : undefined;
+    if (
+      !pr.author.is_bot ||
+      (pr.author.login !== expectedLogin && pr.author.login !== appLogin)
+    ) {
       throw new Error(
         `Refusing PR #${String(pr.number)}: author ${pr.author.login} is not ${this.identity.expectedBotLogin}`,
       );
@@ -76,10 +91,11 @@ export class GitHubClient {
   private async command(
     args: readonly string[],
     cwd?: string,
+    executable = "gh",
   ): Promise<string> {
     return requireSuccess(
       "GitHub command",
-      await this.run(["gh", ...args], {
+      await this.run([executable, ...args], {
         ...(cwd === undefined ? {} : { cwd }),
         env: this.env,
       }),
@@ -113,7 +129,7 @@ export class GitHubClient {
             "--repo",
             this.repository,
             "--json",
-            "number,url,headRefOid,isDraft,mergedAt,author",
+            "number,url,headRefOid,isDraft,mergedAt,author,baseRefName,headRefName,mergeCommit",
           ]),
         ),
       ),
@@ -137,7 +153,7 @@ export class GitHubClient {
             "--state",
             "open",
             "--json",
-            "number,url,headRefOid,isDraft,mergedAt,author",
+            "number,url,headRefOid,isDraft,mergedAt,author,baseRefName,headRefName,mergeCommit",
           ]),
         ),
       );
@@ -182,9 +198,7 @@ export class GitHubClient {
       ({ commands: values }) => values ?? [],
     );
     for (const command of commands) {
-      // Matches exactly what `toolkit pr health` emits for a failing pipeline.
-      // Strict rather than lenient: the captured values are spliced straight
-      // into a subprocess argument list.
+      // Match Toolkit's exact failure format before constructing subprocess args.
       const match =
         /^toolkit woodpecker pipeline log show (?<repo>[\w.-]+\/[\w.-]+) (?<pipeline>\d+)$/u.exec(
           command,
@@ -203,79 +217,104 @@ export class GitHubClient {
     return sections.join("\n\n").slice(-100_000);
   }
 
-  public async resolveCodexFindings(
+  public async reviewDiagnostics(
     number: number,
-    evidence: string,
     checkout: string,
-    requestedKeys: readonly string[],
-  ): Promise<string[]> {
-    const listed = requireSuccess(
-      "List Codex findings",
-      await this.run(
-        [
-          "toolkit",
-          "pr",
-          "review",
-          "list",
-          String(number),
-          "--provider",
-          "codex",
-          "--json",
-        ],
-        { cwd: checkout, env: this.env },
-      ),
-    );
-    const findings = FindingsSchema.parse(JSON.parse(listed.stdout)).findings;
-    const resolved: string[] = [];
-    for (const finding of findings) {
-      if (finding.isResolved || !requestedKeys.includes(finding.key)) continue;
-      requireSuccess(
-        `Resolve Codex finding ${finding.key}`,
+    expectedHead: string,
+  ): Promise<{
+    text: string;
+    findings: ReviewFindingRef[];
+    blockedReasons: string[];
+  }> {
+    const findings: ReviewFindingRef[] = [];
+    const blockedReasons: string[] = [];
+    const text: string[] = [];
+    for (const provider of ["codex", "coderabbit"] as const) {
+      const result = requireSuccess(
+        "Read provider findings",
         await this.run(
           [
             "toolkit",
             "pr",
             "review",
-            "resolve",
+            "list",
             String(number),
             "--provider",
-            "codex",
-            "--finding",
-            finding.key,
-            "--evidence",
-            evidence,
+            provider,
+            "--json",
           ],
           { cwd: checkout, env: this.env },
         ),
       );
-      resolved.push(finding.key);
+      const data = FindingsSchema.parse(JSON.parse(result.stdout));
+      if (data.head !== expectedHead)
+        throw new Error("Review diagnostics do not match the observed PR head");
+      text.push(`${provider}:\n${result.stdout.slice(-40_000)}`);
+      findings.push(
+        ...data.findings
+          .filter((finding) => !finding.isResolved)
+          .map((finding) => ({ provider, key: finding.key })),
+      );
+      if (data.blockedReason !== undefined && data.blockedReason !== null)
+        blockedReasons.push(`${provider}: ${data.blockedReason}`);
     }
-    return resolved;
+    return { text: text.join("\n\n"), findings, blockedReasons };
   }
 
-  public async openCodexFindingKeys(
+  public async resolveFindings(
     number: number,
+    evidence: string,
     checkout: string,
-  ): Promise<string[]> {
-    const listed = requireSuccess(
-      "List Codex findings",
-      await this.run(
-        [
-          "toolkit",
-          "pr",
-          "review",
-          "list",
-          String(number),
-          "--provider",
-          "codex",
-          "--json",
-        ],
-        { cwd: checkout, env: this.env },
-      ),
-    );
-    return FindingsSchema.parse(JSON.parse(listed.stdout))
-      .findings.filter(({ isResolved }) => !isResolved)
-      .map(({ key }) => key);
+    requested: readonly ReviewFindingRef[],
+  ): Promise<ReviewFindingRef[]> {
+    const resolved: ReviewFindingRef[] = [];
+    for (const provider of ["codex", "coderabbit"] as const) {
+      const keys = requested
+        .filter((ref) => ref.provider === provider)
+        .map((ref) => ref.key);
+      if (keys.length === 0) continue;
+      const result = requireSuccess(
+        "List addressed review findings",
+        await this.run(
+          [
+            "toolkit",
+            "pr",
+            "review",
+            "list",
+            String(number),
+            "--provider",
+            provider,
+            "--json",
+          ],
+          { cwd: checkout, env: this.env },
+        ),
+      );
+      for (const finding of FindingsSchema.parse(JSON.parse(result.stdout))
+        .findings) {
+        if (finding.isResolved || !keys.includes(finding.key)) continue;
+        requireSuccess(
+          "Resolve addressed review finding",
+          await this.run(
+            [
+              "toolkit",
+              "pr",
+              "review",
+              "resolve",
+              String(number),
+              "--provider",
+              provider,
+              "--finding",
+              finding.key,
+              "--evidence",
+              evidence,
+            ],
+            { cwd: checkout, env: this.env },
+          ),
+        );
+        resolved.push({ provider, key: finding.key });
+      }
+    }
+    return resolved;
   }
 
   public async feedback(
@@ -392,17 +431,22 @@ export class GitHubClient {
     ]);
   }
 
-  public async merge(number: number, headSha: string): Promise<void> {
-    await this.command([
-      "pr",
-      "merge",
-      String(number),
-      "--repo",
-      this.repository,
-      "--squash",
-      "--delete-branch",
-      "--match-head-commit",
-      headSha,
-    ]);
+  public async merge(
+    number: number,
+    headSha: string,
+    input: {
+      checkout: string;
+      branch: string;
+      readyCommand: readonly string[];
+    },
+  ): Promise<PullRequest> {
+    return await mergeWithGitSpice(number, headSha, {
+      ...input,
+      repository: this.repository,
+      env: this.env,
+      run: this.run,
+      pullRequest: this.pullRequest.bind(this),
+      command: this.command.bind(this),
+    });
   }
 }

@@ -1,3 +1,4 @@
+import type { DiscordGuildId, DiscordChannelId } from "@scout-for-lol/data";
 import { useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@scout-for-lol/design-system/components/button";
@@ -36,8 +37,8 @@ function withoutAdded(
  * form below stays the fallback for every state.
  */
 export function TeammateSuggestions(props: {
-  guildId: string;
-  channelId: string;
+  guildId: DiscordGuildId;
+  channelId: DiscordChannelId;
   selfAlias: string;
   onAdded: () => void;
 }) {

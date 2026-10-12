@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "kind": "rwf-map-scenario",
+  "id": "rotated-hemispheres-trooper-duel-v1",
+  "map": "rotated-hemispheres",
+  "mapSha256": "5bf76677d0927149d8d70d96d0ccae30cdbc068b07f24193db8af708a2f40411",
+  "world": "minecraft:rwf",
+  "region": {
+    "min": {
+      "x": 4096,
+      "y": 1,
+      "z": 4096
+    },
+    "max": {
+      "x": 4304,
+      "y": 73,
+      "z": 4305
+    }
+  },
+  "sourceTeams": ["PURPLE", "BLUE", "GREEN", "RED"],
+  "spawnPolicy": "source",
+  "spawns": [
+    {
+      "team": "red",
+      "sourceTeam": "RED",
+      "position": [4192.5, 41, 4273.5],
+      "yaw": 186.29681396484375,
+      "pitch": 0
+    },
+    {
+      "team": "blue",
+      "sourceTeam": "BLUE",
+      "position": [4192.5, 41, 4114.5],
+      "yaw": 354.71600341796875,
+      "pitch": 0
+    }
+  ]
+}

@@ -1,3 +1,11 @@
+import {
+  DiscordGuildIdSchema,
+  type DiscordGuildId,
+} from "@scout-for-lol/domain/identity/discord.ts";
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test, vi } from "vitest";
 import { BucksPoolTotalSchema } from "@scout-for-lol/data";
 import {
@@ -5,13 +13,13 @@ import {
   refreshSettledPoolMessages,
 } from "#src/betting/markets/postmatch-hook.ts";
 import type { SettlementSummary } from "#src/betting/settlement/settlement-types.ts";
-import { defaultDareV2CalloutDependencies } from "#src/betting/dares/presentation/dare-callout-v2.ts";
+import { defaultDareCalloutDependencies } from "#src/betting/dares/presentation/dare-callout.ts";
 
 describe("refreshSettledPoolMessages", () => {
   test("removes straight-bet controls once even when no outcome is announced", async () => {
     const settlement: SettlementSummary = {
-      matchId: "NA1_123",
-      serverId: "guild-one",
+      matchId: RiotMatchIdSchema.parse("NA1_123"),
+      serverId: DiscordGuildIdSchema.parse("813397242200260844"),
       winningTeamId: 100,
       voidReason: undefined,
       winnersPool: BucksPoolTotalSchema.parse(100),
@@ -20,8 +28,8 @@ describe("refreshSettledPoolMessages", () => {
       bets: [],
     };
     const refreshed: (readonly {
-      matchId: string;
-      serverId: string;
+      matchId: RiotMatchId;
+      serverId: DiscordGuildId;
     }[])[] = [];
 
     await refreshSettledPoolMessages(
@@ -46,7 +54,7 @@ describe("refreshPendingDareV2CalloutsWithoutBlocking", () => {
 
     await expect(
       refreshPendingDareV2CalloutsWithoutBlocking(
-        defaultDareV2CalloutDependencies,
+        defaultDareCalloutDependencies,
         refresh,
       ),
     ).resolves.toBeUndefined();

@@ -1,6 +1,7 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import {
-  MatchIdSchema,
+  RiotMatchIdSchema,
   missingExpectedMatchFields,
   RawMatchSchema,
   RegionSchema,
@@ -18,7 +19,7 @@ const EXPECTED_FIELDS = [
   "info.participants[].summonerId",
 ];
 
-const savedPayloads: { matchId: string; issueCount: number }[] = [];
+const savedPayloads: { matchId: RiotMatchId; issueCount: number }[] = [];
 let matchResponse: unknown;
 let matchFailure: Error | null = null;
 
@@ -37,7 +38,7 @@ vi.doMock("#src/league/api/api.ts", () => ({
 vi.doMock("#src/storage/s3-helpers.ts", async (importOriginal) => ({
   ...(await importOriginal()),
   saveFailedPayloadToS3: (config: {
-    matchId: string;
+    matchId: RiotMatchId;
     validationError: { issues: readonly unknown[] };
   }) => {
     savedPayloads.push({
@@ -51,7 +52,7 @@ vi.doMock("#src/storage/s3-helpers.ts", async (importOriginal) => ({
 const { fetchMatchData } =
   await import("#src/league/tasks/postmatch/match-data-fetcher.ts");
 
-const matchId = MatchIdSchema.parse("NA1_5421167767");
+const matchId = RiotMatchIdSchema.parse("NA1_5421167767");
 const region = RegionSchema.parse("AMERICA_NORTH");
 
 async function riftMatch() {

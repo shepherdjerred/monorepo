@@ -17,7 +17,7 @@ import {
     <Navbar activePage="getting-started" />
     <main>
       <div class="relative px-6 lg:px-8">
-        <div class="mx-auto max-w-3xl py-32 sm:py-48 lg:py-56">
+        <div class="mx-auto max-w-3xl py-12 sm:py-20">
           <p class="text-sm font-semibold uppercase tracking-wide text-scout-brand">
             Getting started
           </p>
@@ -26,9 +26,30 @@ import {
           </h1>
           <p class="mt-6 text-lg leading-8 text-scout-subtle">
             Sign in, add Scout to your Discord server, and choose the players
-            and channels you want to watch. Discord stays focused on
-            notifications; the dashboard handles the settings.
+            and channels you want to watch.
           </p>
+          <ol class="mt-8 space-y-5 text-scout-ink">
+            <li>
+              <h2 class="text-lg font-semibold">1. Add Scout to your server</h2>
+              <p class="text-scout-subtle">
+                Sign in with Discord, choose Manage, and select your server.
+              </p>
+            </li>
+            <li>
+              <h2 class="text-lg font-semibold">2. Add a player</h2>
+              <p class="text-scout-subtle">
+                Enter their Riot ID and region. Add their other accounts to the
+                same player.
+              </p>
+            </li>
+            <li>
+              <h2 class="text-lg font-semibold">3. Choose a channel</h2>
+              <p class="text-scout-subtle">
+                Create a subscription for match notifications. Scout will post
+                when that player plays.
+              </p>
+            </li>
+          </ol>
           <div class="mt-10 flex flex-wrap gap-4">
             <a
               href={APP_LOGIN_URL}

@@ -2,7 +2,7 @@ import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 export const DISCORD_INTEGRATION_MOD_URL = versions["mc2discord-forge-1.12.2"];
 
-const configPath = new URL("mc2discord-config.toml", import.meta.url).pathname;
+const configPath = new URL("mc2discord-config.toml", import.meta.url);
 const configTemplate = await Bun.file(configPath).text();
 
 export function getDiscordIntegrationConfigMapManifest(name: string): object {
@@ -42,6 +42,7 @@ export function getDiscordIntegrationExtraVolumes(name: string): object[] {
 
 export function getDiscordIntegrationConfigInitContainer(
   secretName: string,
+  channelId: string,
 ): object {
   return {
     name: "configure-discord-integration",
@@ -67,9 +68,7 @@ exec mc-image-helper sync-and-interpolate \
       },
       {
         name: "CFG_DISCORD_CHANNEL_ID",
-        valueFrom: {
-          secretKeyRef: { name: secretName, key: "DISCORD_CHANNEL_ID" },
-        },
+        value: channelId,
       },
     ],
     resources: {

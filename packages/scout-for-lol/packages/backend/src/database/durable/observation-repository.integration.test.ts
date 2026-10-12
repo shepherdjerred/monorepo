@@ -49,6 +49,7 @@ function observation(
     promotedAt: Date | null;
     observedAt: Date;
     deliveryMode: string;
+    matchDataSource: string;
     matchObjectKey: string | null;
     matchDigest: string | null;
   }> = {},
@@ -62,6 +63,7 @@ function observation(
     gameCreatedAt: AT,
     observedAt: LATER,
     deliveryMode: "live",
+    matchDataSource: "RIOT",
     matchObjectKey: null,
     matchDigest: null,
     timelineObjectKey: null,
@@ -185,6 +187,32 @@ describe("delivery mode", () => {
     ).toEqual({ outcome: "conflict", reason: "observation-differs" });
     const stored = await getObservation(prisma, { matchId: live.matchId });
     expect(stored?.deliveryMode).toBe("live");
+  });
+});
+
+describe("payload provenance", () => {
+  test("a client-captured observation is stored and read back as one", async () => {
+    const record = observation(150, { matchDataSource: "SCOUT_CLIENT" });
+    expect(record.matchDataSource).toBe("SCOUT_CLIENT");
+    expect(await observeMatch(prisma, record)).toEqual({ outcome: "applied" });
+    expect(await getObservation(prisma, { matchId: record.matchId })).toEqual(
+      record,
+    );
+  });
+
+  test("a RIOT and a SCOUT_CLIENT observation of one match conflict", async () => {
+    // Which payload is canonical is fixed when the observation commits; a
+    // second producer naming the other source is disagreement, not an update.
+    const riot = observation(151);
+    expect(await observeMatch(prisma, riot)).toEqual({ outcome: "applied" });
+    expect(
+      await observeMatch(
+        prisma,
+        observation(151, { matchDataSource: "SCOUT_CLIENT" }),
+      ),
+    ).toEqual({ outcome: "conflict", reason: "observation-differs" });
+    const stored = await getObservation(prisma, { matchId: riot.matchId });
+    expect(stored?.matchDataSource).toBe("RIOT");
   });
 });
 
@@ -385,6 +413,7 @@ describe("promoteObservation", () => {
       gameCreatedAt: new Date("2026-09-07T09:00:00.000Z"),
       observedAt: LATER,
       deliveryMode: "live",
+      matchDataSource: "RIOT",
       matchObjectKey: null,
       matchDigest: null,
       timelineObjectKey: null,

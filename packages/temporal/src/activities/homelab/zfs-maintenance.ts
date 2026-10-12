@@ -224,7 +224,7 @@ async function runCommand(
   dependencies: ZfsMaintenanceDependencies,
   nodePod: ZfsCollectorPod,
   command: string,
-  pool?: string,
+  pool = "unknown",
 ): Promise<string> {
   try {
     return await dependencies.execInPod(nodePod, command);
@@ -232,7 +232,7 @@ async function runCommand(
     const context = [
       `node=${nodePod.node}`,
       `pod=${nodePod.pod}`,
-      `pool=${pool ?? "unknown"}`,
+      `pool=${pool}`,
       `command=${command}`,
     ].join(", ");
     throw new Error(`ZFS maintenance command failed: ${context}`, {

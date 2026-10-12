@@ -1,4 +1,4 @@
-import { formatInteger } from "@scout-for-lol/data";
+import { formatInteger, type RiotMatchId } from "@scout-for-lol/data";
 import { Badge } from "@scout-for-lol/design-system/components/badge";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import {
@@ -11,7 +11,7 @@ import {
 export type BucksPendingPositionView =
   | {
       marketType: "outcome";
-      matchId: string;
+      matchId: RiotMatchId;
       gameAlias: string;
       sideLabel: string;
       offeredStake: number;
@@ -21,7 +21,7 @@ export type BucksPendingPositionView =
     }
   | {
       marketType: "parlay";
-      matchId: string;
+      matchId: RiotMatchId;
       subjectAlias: string;
       side: string;
       stake: number;
@@ -35,7 +35,7 @@ function positionKey(position: BucksPendingPositionView): string {
 /** The caller's own pending positions, as `/bb balance` reports them. */
 export function BucksPendingPositions(props: {
   positions: BucksPendingPositionView[];
-  onCancelOutcome: (matchId: string) => void;
+  onCancelOutcome: (matchId: RiotMatchId) => void;
 }) {
   if (props.positions.length === 0) {
     return null;

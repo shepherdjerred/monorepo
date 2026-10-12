@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import {
   DiscordAccountIdSchema,
   ExploreTurnRequestSchema,
@@ -73,7 +74,7 @@ async function completedVoiceExplore(input: {
 
 export async function startVoiceExplore(input: {
   userId: string;
-  guildId: string;
+  guildId: DiscordGuildId;
   question: string;
   conversationId: string | null;
   username: string;

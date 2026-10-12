@@ -31,6 +31,7 @@ export function Names({
         width="72"
         height="72"
         style={{
+          boxSizing: "border-box",
           width: "7rem",
           height: "7rem",
           borderRadius: "50%",

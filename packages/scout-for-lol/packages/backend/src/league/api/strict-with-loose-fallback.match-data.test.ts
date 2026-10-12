@@ -1,6 +1,5 @@
 import { describe, expect, test } from "vitest";
 import { RawMatchSchema } from "@scout-for-lol/data/index.ts";
-import { parseWithUnknownKeyFallback } from "#src/league/api/strict-with-loose-fallback.ts";
 
 const TESTDATA_PATH = `${import.meta.dir}/../model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json`;
 
@@ -30,12 +29,11 @@ function injectKeyIntoEachParticipant(
   return count;
 }
 
-describe("parseWithUnknownKeyFallback against real RawMatchSchema", () => {
-  test("recovers from gameEndedInIGNBSurrender + teamIGNBSurrendered drift", async () => {
+describe("RawMatchSchema with additive Riot fields", () => {
+  test("preserves gameEndedInIGNBSurrender + teamIGNBSurrendered drift", async () => {
     const raw: unknown = JSON.parse(await Bun.file(TESTDATA_PATH).text());
 
-    // Inject the two new Riot fields into every participant — same shape as
-    // the prod ZodError we observed in scout-prod / scout-beta.
+    // Inject the two newer Riot fields into every participant.
     const participantCount = injectKeyIntoEachParticipant(
       raw,
       "gameEndedInIGNBSurrender",
@@ -43,27 +41,22 @@ describe("parseWithUnknownKeyFallback against real RawMatchSchema", () => {
     );
     injectKeyIntoEachParticipant(raw, "teamIGNBSurrendered", false);
 
-    const result = parseWithUnknownKeyFallback(RawMatchSchema, raw);
+    const result = RawMatchSchema.safeParse(raw);
 
-    expect(result.ok).toBe(true);
-    if (!result.ok) throw new Error("unreachable");
+    expect(result.success).toBe(true);
+    if (!result.success) throw new Error("unreachable");
 
-    // One path per (participant, key) pair
-    const expectedCount = participantCount * 2;
-    expect(result.unknownKeyPaths.length).toBe(expectedCount);
-    expect(
-      result.unknownKeyPaths.every(
-        (p) =>
-          p.endsWith(".gameEndedInIGNBSurrender") ||
-          p.endsWith(".teamIGNBSurrendered"),
-      ),
-    ).toBe(true);
-    expect(
-      result.unknownKeyPaths.every((p) => p.startsWith("info.participants[")),
-    ).toBe(true);
-
-    // Parsed data preserved the legitimate fields
+    // The new Riot fields and the known fields remain available to consumers.
     expect(result.data.metadata.matchId).toBe("NA1_5370969615");
     expect(result.data.info.participants.length).toBeGreaterThan(0);
+    expect(
+      result.data.info.participants
+        .slice(0, participantCount)
+        .every(
+          (participant) =>
+            Reflect.get(participant, "gameEndedInIGNBSurrender") === false &&
+            Reflect.get(participant, "teamIGNBSurrendered") === false,
+        ),
+    ).toBe(true);
   });
 });

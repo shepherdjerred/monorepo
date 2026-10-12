@@ -1,6 +1,7 @@
 import { Chart, JsonPatch } from "cdk8s";
 import { Construct } from "constructs";
 import {
+  Capability,
   ConfigMap,
   Deployment,
   DeploymentStrategy,
@@ -14,6 +15,15 @@ import { withCommonProps } from "./common.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { ApiObject } from "cdk8s";
 import { Probe } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com.ts";
+import {
+  mailPolicyText,
+  type MailPolicy,
+} from "homelab/src/domain-registry.ts";
+
+export type MailPolicyHost = {
+  hostname: string;
+  policy: MailPolicy;
+};
 
 export type StaticSiteProbeConfig = {
   endpoint: string;
@@ -40,9 +50,9 @@ export type StaticSiteReverseProxy = {
 };
 
 /**
- * SPA-style fallback for client-side routing. When requests under
- * `pathPrefix` would 404 against the bucket, serve `fallbackPath` instead so
- * the SPA's router can handle the URL.
+ * SPA-style fallback for client-side routing. Extensionless paths under
+ * `pathPrefix` are rewritten to `fallbackPath` before the bucket lookup so
+ * successful document responses retain HTTP 200. Missing assets still 404.
  *
  * Without this, deep links like `/app/g/123/audit` (handled client-side by
  * React Router) would 404 on hard-refresh because the bucket has no object
@@ -144,6 +154,7 @@ export function renderHeaderBlock(
 
 export type S3StaticSitesProps = {
   sites: StaticSiteConfig[];
+  mailPolicies?: MailPolicyHost[];
   s3Endpoint: string;
   s3Region?: string;
   credentialsSecretName: string;
@@ -151,9 +162,12 @@ export type S3StaticSitesProps = {
 
 export type CaddyfileGeneratorProps = {
   sites: StaticSiteConfig[];
+  mailPolicies?: MailPolicyHost[];
   s3Endpoint: string;
   s3Region?: string;
 };
+
+const STATIC_SITE_HTTP_PORT = 8080;
 
 /**
  * Generates a Caddyfile for S3 static sites.
@@ -165,6 +179,7 @@ export function generateCaddyfile(props: CaddyfileGeneratorProps): string {
   blocks.push(`{
 	order s3proxy last
 	auto_https off
+	http_port ${STATIC_SITE_HTTP_PORT.toString()}
 }
 `);
 
@@ -216,7 +231,11 @@ ${rewriteLine}\t\treverse_proxy ${proxy.upstream} {
           false,
         );
         return `\thandle ${spa.pathPrefix} {
-${routeHeaders ? `${routeHeaders}\n` : ""}${renderS3Proxy(spa.fallbackPath)}
+${routeHeaders ? `${routeHeaders}\n` : ""}\t\t@spaDocument {
+\t\t\tnot path_regexp \\.[^/]+$
+\t\t}
+\t\trewrite @spaDocument ${spa.fallbackPath}
+${renderS3Proxy(spa.fallbackPath)}
 \t}`;
       })
       .join("\n\n");
@@ -249,6 +268,25 @@ ${proxyBlocks ? `\n${proxyBlocks}\n` : ""}${spaBlocks ? `\n${spaBlocks}\n` : ""}
 	handle {
 ${renderS3Proxy(notFoundPage)}
 	}
+}
+`);
+  }
+
+  for (const host of props.mailPolicies ?? []) {
+    const policy = mailPolicyText(host.policy);
+    blocks.push(`http://${host.hostname} {
+\theader {
+\t\tContent-Type "text/plain; charset=utf-8"
+\t\tCache-Control "no-store"
+\t\tX-Content-Type-Options "nosniff"
+\t\t-Server
+\t}
+\thandle /.well-known/mta-sts.txt {
+\t\trespond \`${policy}\` 200
+\t}
+\thandle {
+\t\trespond "Not found" 404
+\t}
 }
 `);
   }
@@ -367,7 +405,7 @@ export class S3StaticSites extends Construct {
         resources: {},
         name: "caddy",
         image: `ghcr.io/shepherdjerred/caddy-s3proxy:${versions["shepherdjerred/caddy-s3proxy"]}`,
-        portNumber: 80,
+        portNumber: STATIC_SITE_HTTP_PORT,
         envVariables: {
           AWS_ACCESS_KEY_ID: EnvValue.fromSecretValue({
             secret: credentialsSecret,
@@ -382,6 +420,9 @@ export class S3StaticSites extends Construct {
           readOnlyRootFilesystem: false,
           user: 1000,
           group: 1000,
+          capabilities: {
+            drop: [Capability.ALL],
+          },
         },
       }),
     );
@@ -411,8 +452,52 @@ export class S3StaticSites extends Construct {
         name: "s3-static-sites",
       },
       selector: deployment,
-      ports: [{ port: 80 }],
+      ports: [{ port: 80, targetPort: STATIC_SITE_HTTP_PORT }],
     });
+
+    for (const host of props.mailPolicies ?? []) {
+      // Each policy has a body-aware public Probe below; the backend health is
+      // already covered by the static-site fleet served by this same Caddy.
+      // @tunnel-dns-coverage:mail-domains-from ../../../domain-registry.json
+      createCloudflareTunnelBinding(
+        this,
+        `tunnel-${hostnameSlug(host.hostname)}`,
+        {
+          serviceName: this.service.name,
+          namespace,
+          fqdn: host.hostname,
+          disableDnsUpdates: true,
+          disableProbe: true,
+          port: 80,
+        },
+      );
+
+      new Probe(this, `probe-${hostnameSlug(host.hostname)}`, {
+        metadata: {
+          name: `static-site-${hostnameSlug(host.hostname)}`,
+          namespace,
+          labels: { release: "prometheus" },
+        },
+        spec: {
+          jobName: `static-site-${host.hostname}`,
+          interval: "60s",
+          module: "mta_sts_policy",
+          prober: {
+            url: "prometheus-prometheus-blackbox-exporter.prometheus:9115",
+          },
+          targets: {
+            staticConfig: {
+              static: [`https://${host.hostname}/.well-known/mta-sts.txt`],
+              labels: {
+                endpoint: "mta-sts",
+                path: "/.well-known/mta-sts.txt",
+                site: host.hostname,
+              },
+            },
+          },
+        },
+      });
+    }
 
     for (const site of props.sites) {
       // DNS is managed by OpenTofu — operator must not touch DNS records.

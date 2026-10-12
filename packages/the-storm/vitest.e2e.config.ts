@@ -19,17 +19,21 @@ const rootConfig = RootConfigModuleSchema.parse(
 
 // Real-server end-to-end suite: one disposable Paper server per run, shared
 // by every file. Run with `bun run test:e2e` after building TheStorm.jar.
-export default mergeConfig(
-  rootConfig,
-  defineConfig({
-    test: {
-      include: ["tests/e2e/**/*.e2e.test.ts"],
-      globalSetup: ["tests/e2e/global-setup.ts"],
-      // One shared server and world: files must not race each other.
-      fileParallelism: false,
-      testTimeout: 60_000,
-      // Covers a cold boot that downloads Paper and patches the Mojang jar.
-      hookTimeout: 200_000,
-    },
-  }),
-);
+export function paperTestConfig(include: string[]) {
+  return mergeConfig(
+    rootConfig,
+    defineConfig({
+      test: {
+        include,
+        globalSetup: ["tests/e2e/global-setup.ts"],
+        // One shared server and world: files must not race each other.
+        fileParallelism: false,
+        testTimeout: 60_000,
+        // Covers a cold boot that downloads Paper and patches the Mojang jar.
+        hookTimeout: 200_000,
+      },
+    }),
+  );
+}
+
+export default paperTestConfig(["tests/e2e/**/*.e2e.test.ts"]);

@@ -1,4 +1,15 @@
 import type { DiscordAccountId, DiscordGuildId } from "@scout-for-lol/data";
+import { ExploreQuotaSnapshotSchema } from "@scout-for-lol/data";
+import { exploreQuotaLimits } from "#src/config/dynamic.ts";
+import {
+  EXPLORE_MAX_ACTIVE_RUNS,
+  exploreQuotaRules,
+} from "#src/configuration/explore-quota.ts";
+import {
+  REPORT_AI_MAX_ACTIVE_RUNS,
+  REPORT_AI_QUOTA_RULES,
+} from "#src/configuration/report-ai-quota.ts";
+import { QUOTA_WINDOW_MS } from "#src/utils/quota-buckets.ts";
 import {
   prisma,
   type Db,
@@ -47,55 +58,79 @@ export async function durableExploreQuotaRejection(
   const active = await database.scoutInteractiveRun.count({
     where: { kind: "explore", state: { in: ACTIVE_STATUSES } },
   });
-  if (active >= 5) {
+  if (active >= EXPLORE_MAX_ACTIVE_RUNS) {
     return {
       reason: "Explore is busy right now. Try again shortly.",
       retryAfterSeconds: 30,
     };
   }
-  const rules = [
-    { durationMs: 60_000, limit: 4, label: "minute" },
-    { durationMs: 3_600_000, limit: 30, label: "hour" },
-    { durationMs: 86_400_000, limit: 100, label: "day" },
-    { durationMs: 604_800_000, limit: 300, label: "week" },
-  ];
-  for (const rule of rules) {
-    const start = startOfWindow(now, rule.durationMs);
+  if (
+    (await database.scoutInteractiveRun.count({
+      where: {
+        kind: "explore",
+        ownerId: userId,
+        state: { in: ACTIVE_STATUSES },
+      },
+    })) > 0
+  ) {
+    return {
+      reason: "You already have an Explore answer running.",
+      retryAfterSeconds: 30,
+    };
+  }
+  // Every user window is checked before any global one, so a person at their
+  // own ceiling is told so rather than that Explore is busy.
+  for (const rule of exploreQuotaRules(exploreQuotaLimits())) {
+    const durationMs = QUOTA_WINDOW_MS[rule.window];
+    const start = startOfWindow(now, durationMs);
     const used = await countSince({
       database,
       kind: "explore",
-      ownerId: userId,
       since: start,
+      ...(rule.scope === "user" ? { ownerId: userId } : {}),
     });
     if (used >= rule.limit) {
+      const subject = rule.scope === "user" ? "You have" : "Explore has";
       return {
-        reason: `You have used ${used.toString()} of ${rule.limit.toString()} questions for this ${rule.label}.`,
+        reason: `${subject} used ${used.toString()} of ${rule.limit.toString()} questions for this ${rule.window}.`,
         retryAfterSeconds: Math.max(
           1,
-          Math.ceil((start.getTime() + rule.durationMs - now) / 1000),
-        ),
-      };
-    }
-  }
-  const globalRules = [
-    { durationMs: 3_600_000, limit: 120, label: "hour" },
-    { durationMs: 86_400_000, limit: 600, label: "day" },
-    { durationMs: 604_800_000, limit: 2000, label: "week" },
-  ];
-  for (const rule of globalRules) {
-    const start = startOfWindow(now, rule.durationMs);
-    const used = await countSince({ database, kind: "explore", since: start });
-    if (used >= rule.limit) {
-      return {
-        reason: `Explore has used ${used.toString()} of ${rule.limit.toString()} questions for this ${rule.label}.`,
-        retryAfterSeconds: Math.max(
-          1,
-          Math.ceil((start.getTime() + rule.durationMs - now) / 1000),
+          Math.ceil((start.getTime() + durationMs - now) / 1000),
         ),
       };
     }
   }
   return null;
+}
+
+/** The UI reads the same persistent counters and policy as reservation. */
+export async function durableExploreQuotaStatus(
+  userId: DiscordAccountId,
+  now = Date.now(),
+  database: QuotaClient = prisma,
+) {
+  const rules = exploreQuotaRules(exploreQuotaLimits());
+  const quota = await Promise.all(
+    rules.map(async (rule) => {
+      const durationMs = QUOTA_WINDOW_MS[rule.window];
+      const start = startOfWindow(now, durationMs);
+      const used = await countSince({
+        database,
+        kind: "explore",
+        since: start,
+        ...(rule.scope === "user" ? { ownerId: userId } : {}),
+      });
+      return ExploreQuotaSnapshotSchema.parse({
+        scope: rule.scope,
+        window: rule.window,
+        used,
+        limit: rule.limit,
+        remaining: Math.max(0, rule.limit - used),
+        resetsAt: new Date(start.getTime() + durationMs).toISOString(),
+      });
+    }),
+  );
+  return { quota };
 }
 
 export async function durableReportAiQuotaRejection(
@@ -110,7 +145,7 @@ export async function durableReportAiQuotaRejection(
       state: { in: ACTIVE_STATUSES },
     },
   });
-  if (active >= 5) {
+  if (active >= REPORT_AI_MAX_ACTIVE_RUNS) {
     return {
       reason: "AI report editing is busy. Try again shortly.",
       retryAfterSeconds: 60,
@@ -132,20 +167,9 @@ export async function durableReportAiQuotaRejection(
   }
   if (exempt) return null;
 
-  const rules = [
-    { durationMs: 60_000, limit: 1, scope: "user_guild" },
-    { durationMs: 3_600_000, limit: 3, scope: "user_guild" },
-    { durationMs: 86_400_000, limit: 8, scope: "user_guild" },
-    { durationMs: 604_800_000, limit: 30, scope: "user_guild" },
-    { durationMs: 3_600_000, limit: 5, scope: "guild" },
-    { durationMs: 86_400_000, limit: 20, scope: "guild" },
-    { durationMs: 604_800_000, limit: 100, scope: "guild" },
-    { durationMs: 3_600_000, limit: 30, scope: "global" },
-    { durationMs: 86_400_000, limit: 150, scope: "global" },
-    { durationMs: 604_800_000, limit: 500, scope: "global" },
-  ] as const;
-  for (const rule of rules) {
-    const start = startOfWindow(now, rule.durationMs);
+  for (const rule of REPORT_AI_QUOTA_RULES) {
+    const durationMs = QUOTA_WINDOW_MS[rule.window];
+    const start = startOfWindow(now, durationMs);
     const used = await countSince({
       database,
       kind: "report-ai",
@@ -158,7 +182,7 @@ export async function durableReportAiQuotaRejection(
         reason: "AI report editing quota is exhausted for this time window.",
         retryAfterSeconds: Math.max(
           1,
-          Math.ceil((start.getTime() + rule.durationMs - now) / 1000),
+          Math.ceil((start.getTime() + durationMs - now) / 1000),
         ),
       };
     }

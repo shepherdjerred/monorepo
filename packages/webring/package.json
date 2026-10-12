@@ -28,8 +28,7 @@
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "deploy": "bun ../../scripts/release/deploy-site.ts webring",
     "publish:npm": "bun ../../scripts/release/publish-npm.ts .",
-    "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
-    "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/ci/run-ci-test.ts"
+    "test:ci": "bun ../../scripts/ci/run-ci-test.ts"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -43,7 +42,7 @@
     "htmlparser2": "^12.0.0",
     "remeda": "^2.33.7",
     "rss-parser": "^3.13.0",
-    "sanitize-html": "^2.17.4",
+    "sanitize-html": "^2.18.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -62,9 +61,9 @@
     "typedoc-plugin-extras": "^4.0.1",
     "typedoc-plugin-zod": "^1.4.3",
     "typescript": "^6.0.3",
-    "vitest": "5.0.1",
+    "vitest": "5.0.3",
     "@typescript/native": "npm:typescript@7.0.2",
-    "@vitest/coverage-istanbul": "5.0.1"
+    "@vitest/coverage-istanbul": "5.0.3"
   },
   "files": [
     "dist",

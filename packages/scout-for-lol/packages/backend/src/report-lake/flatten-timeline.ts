@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type {
   RawTimeline,
   RawTimelineEvent,
@@ -16,18 +17,22 @@ export type FlattenedTimeline = {
   coverage: TimelineCoverageLakeRow[];
 };
 
-function nullable<T>(value: T | undefined): T | null {
-  return value ?? null;
+function nullable<T>(value: T | null | undefined = null): T | null {
+  return value;
 }
 
-function eventId(matchId: string, frameIndex: number, index: number): string {
+function eventId(
+  matchId: RiotMatchId,
+  frameIndex: number,
+  index: number,
+): string {
   return `${matchId}:${frameIndex.toString()}:${index.toString()}`;
 }
 
 function flattenEvent(options: {
   event: RawTimelineEvent;
   id: string;
-  matchId: string;
+  matchId: RiotMatchId;
   month: string;
   observedAt: string;
   frameIndex: number;
@@ -77,7 +82,7 @@ function flattenEvent(options: {
 function eventParticipantRows(options: {
   event: RawTimelineEvent;
   id: string;
-  matchId: string;
+  matchId: RiotMatchId;
   month: string;
   observedAt: string;
   puuidByParticipant: Map<number, string>;
@@ -165,7 +170,7 @@ function participantFrameRow(options: {
   frame: RawTimelineParticipantFrame;
   frameIndex: number;
   frameTimestampMs: number;
-  matchId: string;
+  matchId: RiotMatchId;
   month: string;
   observedAt: string;
   puuidByParticipant: ReadonlyMap<number, string>;
@@ -183,12 +188,12 @@ function participantFrameRow(options: {
     position_y: frame.position.y,
     current_gold: frame.currentGold,
     total_gold: frame.totalGold,
-    gold_per_second: frame.goldPerSecond,
+    gold_per_second: nullable(frame.goldPerSecond),
     minions_killed: frame.minionsKilled,
     jungle_minions_killed: frame.jungleMinionsKilled,
     level: frame.level,
     xp: frame.xp,
-    time_enemy_spent_controlled: frame.timeEnemySpentControlled,
+    time_enemy_spent_controlled: nullable(frame.timeEnemySpentControlled),
     ...championFrameStats(frame),
     ...damageFrameStats(frame),
   };

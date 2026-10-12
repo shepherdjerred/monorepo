@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 
 export const DareProgressValueSchema = z.union([
@@ -33,7 +34,7 @@ export const DareTargetProgressSchema = z.strictObject({
 });
 
 export const DareCoverageGapSchema = z.strictObject({
-  matchId: z.string().min(1),
+  matchId: RiotMatchIdSchema,
   gameEndAt: z.iso.datetime(),
   sourceReferences: z.array(z.string().min(1)),
   targetKeys: z.array(z.string().min(1)),
@@ -42,7 +43,7 @@ export const DareCoverageGapSchema = z.strictObject({
 
 export const DareProgressChangeSchema = z.strictObject({
   kind: z.enum(["advance", "regression", "coverage", "evidence"]),
-  matchId: z.string().min(1),
+  matchId: RiotMatchIdSchema,
   occurredAt: z.iso.datetime(),
   summary: z.string().min(1),
   conditionKeys: z.array(z.string().min(1)),

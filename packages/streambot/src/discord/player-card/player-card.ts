@@ -18,6 +18,10 @@ import {
 } from "@shepherdjerred/streambot/discord/player-card/player-controls.ts";
 import type { PlaybackView } from "@shepherdjerred/streambot/machine/view.ts";
 import { sportsEventForSource } from "@shepherdjerred/streambot/sports/sports-resolver.ts";
+import {
+  playbackChannelLabel,
+  type PlaybackChannelNumber,
+} from "@shepherdjerred/streambot/types/playback-channel.ts";
 
 /** Cells in the progress bar (one knob plus the track around it). */
 const PROGRESS_BAR_CELLS = 24;
@@ -27,6 +31,7 @@ const MAX_CHAPTER_OPTIONS = 25;
 export type ButtonStyleName = "primary" | "secondary" | "danger" | "success";
 
 export type ButtonSpec = {
+  readonly url?: string;
   readonly id: string;
   readonly label: string;
   readonly style: ButtonStyleName;
@@ -62,6 +67,8 @@ export type PlayerCardPayload = {
 };
 
 export type PlayerCardInput = {
+  readonly webUrl?: string;
+  readonly playbackChannel?: PlaybackChannelNumber;
   readonly view: PlaybackView;
   /** TMDB poster for the current item, when one was found. */
   readonly posterUrl: string | null;
@@ -178,11 +185,7 @@ function renderDescription(input: PlayerCardInput): string {
     view.current?.mediaKind !== null &&
     view.current?.mediaKind !== undefined
   ) {
-    lines.push(
-      view.current.mediaKind === "music"
-        ? "🎵 Audio only — use `mode:video` to force a video stream"
-        : "📺 Video stream",
-    );
+    lines.push(transportBadge(input));
   }
 
   if (view.current?.provenance !== undefined) {
@@ -197,6 +200,13 @@ function renderDescription(input: PlayerCardInput): string {
 
   lines.push(renderMetaLine(view));
   return lines.join("\n");
+}
+
+function transportBadge(input: PlayerCardInput): string {
+  if (input.view.current?.mediaKind !== "music") return "📺 Video stream";
+  return input.playbackChannel === undefined
+    ? "🎵 Audio only — use `mode:video` to force a video stream"
+    : "🎵 Mic audio — select channel 2 or higher for Go Live video";
 }
 
 function button(
@@ -324,7 +334,7 @@ function renderPlainAnnouncement(input: PlayerCardInput): PlayerCardPayload {
   const who =
     current === null ? "" : ` (requested by <@${current.requesterId}>)`;
   return {
-    content: `▶️ Now playing **${title}**${who}`,
+    content: `${input.playbackChannel === undefined ? "" : `${playbackChannelLabel(input.playbackChannel)} · `}▶️ Now playing **${title}**${who}`,
     embed:
       input.posterUrl === null
         ? null
@@ -346,10 +356,11 @@ export function renderPlayerCard(input: PlayerCardInput): PlayerCardPayload {
   }
   const { view } = input;
   const title = view.current?.title ?? "Nothing playing";
+  const rows = buildRows(view);
   return {
     content: "",
     embed: {
-      title: input.finished ? title : `▶️ ${title}`,
+      title: `${input.playbackChannel === undefined ? "" : `${playbackChannelLabel(input.playbackChannel)} · `}${input.finished ? title : `▶️ ${title}`}`,
       description: renderDescription(input),
       imageUrl: null,
       thumbnailUrl:
@@ -357,7 +368,22 @@ export function renderPlayerCard(input: PlayerCardInput): PlayerCardPayload {
     },
     // A finished session keeps its card as readable history, but every control is removed rather
     // than left dangling on a session that no longer exists.
-    rows: input.finished ? [] : buildRows(view),
+    rows: input.finished
+      ? []
+      : rows.map((row, index) =>
+          index !== rows.length - 1 || input.webUrl === undefined
+            ? row
+            : [
+                ...row,
+                {
+                  id: "web-remote",
+                  label: "Open web remote",
+                  url: input.webUrl,
+                  style: "secondary",
+                  disabled: false,
+                } satisfies ButtonSpec,
+              ],
+        ),
     select: input.finished ? null : buildChapterSelect(view),
   };
 }

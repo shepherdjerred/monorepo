@@ -22,6 +22,11 @@ public final class AllowAllProtection implements Protection {
   }
 
   @Override
+  public boolean isPreserved(Location location) {
+    return false;
+  }
+
+  @Override
   public boolean sameLand(Location a, Location b) {
     return true;
   }

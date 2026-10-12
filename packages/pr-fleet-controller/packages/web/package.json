@@ -12,7 +12,6 @@
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "test": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run",
     "test:ci": "bun ../../../../scripts/ci/run-ci-test.ts",
-    "test:report": "CI_TEST_COVERAGE=1 bun ../../../../scripts/ci/run-ci-test.ts",
     "lint": "bunx eslint --cache ."
   },
   "dependencies": {
@@ -33,7 +32,7 @@
     "jiti": "^2.7.0",
     "typescript": "^6.0.3",
     "vite": "^8.0.11",
-    "vitest": "5.0.1",
-    "@vitest/coverage-istanbul": "5.0.1"
+    "vitest": "5.0.3",
+    "@vitest/coverage-istanbul": "5.0.3"
   }
 }

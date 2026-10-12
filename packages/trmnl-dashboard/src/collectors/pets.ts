@@ -242,9 +242,16 @@ function buildLitterRobot(
     return null;
   }
   return {
-    status: componentStatus(alerts, (alert) =>
-      alert.alertname.startsWith("LitterRobot"),
-    ),
+    status: worstStatus([
+      componentStatus(alerts, (alert) =>
+        alert.alertname.startsWith("LitterRobot"),
+      ),
+      robot.sourceFresh
+        ? robot.faulted || !robot.online
+          ? "warning"
+          : "ok"
+        : "unknown",
+    ]),
     name: "Storage",
     online: robot.online,
     ready: robot.ready,
@@ -430,7 +437,10 @@ function booleanState(
 function sumOptional(values: (number | null)[]): number | null {
   return values.some((value) => value == null)
     ? null
-    : values.reduce<number>((sum, value) => sum + (value ?? 0), 0);
+    : values.reduce<number>(
+        (sum, value) => (value === null ? sum : sum + value),
+        0,
+      );
 }
 
 function resultOrNull<T>(

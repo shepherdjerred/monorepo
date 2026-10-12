@@ -7,8 +7,11 @@ const DeploymentSchema = z.object({
   kind: z.literal("Deployment"),
   metadata: z.object({ name: z.string() }).loose(),
   spec: z.object({
+    replicas: z.literal(1),
+    strategy: z.object({ type: z.literal("Recreate") }),
     template: z.object({
       spec: z.object({
+        securityContext: z.object({ fsGroup: z.literal(1000) }).loose(),
         containers: z.array(
           z
             .object({
@@ -56,4 +59,22 @@ test("synthesizes authenticated brain, Flipt, and monitoring wiring", () => {
   if (deployment === undefined) {
     throw new Error("Missing Deployment/storm-brain manifest");
   }
+  expect(Testing.synth(chart)).toContainEqual(
+    expect.objectContaining({
+      kind: "PersistentVolumeClaim",
+      metadata: expect.objectContaining({
+        name: "storm-brain-budget",
+        labels: expect.objectContaining({
+          "velero.io/backup": "enabled",
+          "velero.io/exclude-from-backup": "false",
+        }),
+      }),
+      spec: expect.objectContaining({
+        accessModes: ["ReadWriteOnce"],
+        resources: { requests: { storage: "1Gi" } },
+      }),
+    }),
+  );
+  expect(manifests).toContain('"STORM_COMPANION_BUDGET_DB"');
+  expect(manifests).toContain('"/data/companion-budget.db"');
 });

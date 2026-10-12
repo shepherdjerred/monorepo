@@ -1,5 +1,27 @@
-// Temporal requires wrappers rather than re-exports from its entry point.
+// Declare explicit workflow wrappers, deriving their contracts from delegates.
+import * as canary from "./notification-canary.ts";
+export const runDailyNotificationCanary = canary.runDailyNotificationCanary;
+import * as stormForum from "./homelab/storm-forum.ts";
+import * as seaweedBackup from "./homelab/seaweedfs-backup.ts";
+import type { ForumStage } from "@shepherdjerred/storm-forum/contracts";
+export const maintainStormForumWorkflow = (stage: ForumStage) =>
+  stormForum.maintainStormForumWorkflow(stage);
+export const backupStormForumWorkflow = (stage: ForumStage) =>
+  stormForum.backupStormForumWorkflow(stage);
+export const runSeaweedFsBackupWorkflow = (
+  input: Parameters<typeof seaweedBackup.runSeaweedFsBackupWorkflow>[0],
+) => seaweedBackup.runSeaweedFsBackupWorkflow(input);
+export const runSeaweedFsBackupRetentionAndGcWorkflow = () =>
+  seaweedBackup.runSeaweedFsBackupRetentionAndGcWorkflow();
+import { runWoodpeckerLogRetention as _runWoodpeckerLogRetention } from "./ci/woodpecker-retention.ts";
+import * as ciMaintenance from "./ci/maintenance.ts";
+export const runCiMaintenanceTick = ciMaintenance.runCiMaintenanceTick;
+export const runCiMaintenanceCoordinator =
+  ciMaintenance.runCiMaintenanceCoordinator;
 import { fetchSkillCappedManifest as _fetchSkillCappedManifest } from "./homelab/fetcher.ts";
+export const runWoodpeckerLogRetention = (
+  input: Parameters<typeof _runWoodpeckerLogRetention>[0] = {},
+) => _runWoodpeckerLogRetention(input);
 import { generateDependencySummary as _generateDependencySummary } from "./deps-summary.ts";
 import { runDnsAudit as _runDnsAudit } from "./homelab/dns-audit.ts";
 import { syncGolinks as _syncGolinks } from "./homelab/golink-sync.ts";
@@ -12,13 +34,19 @@ import { goodNight as _goodNight } from "./ha/good-night.ts";
 import { welcomeHome as _welcomeHome } from "./ha/welcome-home.ts";
 import { leavingHome as _leavingHome } from "./ha/leaving-home.ts";
 import { reconcileLock as _reconcileLock } from "./ha/reconcile-lock.ts";
+import {
+  petCareAlerts as _petCareAlerts,
+  type PetCareAlertsState,
+} from "./ha/pet-care-alerts.ts";
 import { runVacuumIfNotHome as _runVacuumIfNotHome } from "./ha/run-vacuum-if-not-home.ts";
 import { motionLight as _motionLight } from "./ha/motion-light.ts";
 import { sleepAc as _sleepAc, sleepMusic as _sleepMusic } from "./ha/sleep.ts";
 import type { MotionLightRoom } from "#shared/infra/motion-light.ts";
 import type { SleepAutomationInput } from "#shared/schemas.ts";
 import { runZfsMaintenanceWorkflow as _runZfsMaintenanceWorkflow } from "./homelab/zfs-maintenance.ts";
-import { runMiningWorldResetWorkflow as _runMiningWorldResetWorkflow } from "./homelab/mining-reset.ts";
+import { runMiningWorldResetWorkflow as resetMiningWorld } from "./homelab/mining-reset.ts";
+import { runStormPlotReconciliationWorkflow as _runStormPlotReconciliationWorkflow } from "./homelab/storm-plots.ts";
+import { reconcileStormCompanionsWorkflow as reconcileCompanions } from "./homelab/storm-companions.ts";
 import { runBugsinkHousekeepingWorkflow as _runBugsinkHousekeepingWorkflow } from "./bugsink.ts";
 import { runScoutImageGcWorkflow as _runScoutImageGcWorkflow } from "./scout/scout-image-gc.ts";
 import type {
@@ -52,7 +80,8 @@ import type {
   ScoutSeasonRefreshResult,
 } from "#activities/scout/scout-season-refresh.ts";
 import { runHomelabAuditWorkflow as _runHomelabAuditWorkflow } from "./homelab/homelab-audit.ts";
-import { runCiIoTelemetry as _runCiIoTelemetry } from "./ci/ci-io-telemetry.ts";
+import * as ciIoTelemetry from "./ci/ci-io-telemetry.ts";
+import * as ciWorkspaceReaper from "./ci/ci-workspace-reaper.ts";
 import { runTasknotesCanary as _runTasknotesCanary } from "./tasknotes-canary.ts";
 import { monitorReportFreshness as _monitorReportFreshness } from "./scout/report-freshness.ts";
 import { deliverReportWorkflow as _deliverReportWorkflow } from "./scout/report-delivery.ts";
@@ -75,12 +104,10 @@ import {
   runGlitterCorpusChannelOverlap as _runGlitterCorpusChannelOverlap,
   runGlitterCorpusDaily as _runGlitterCorpusDaily,
   runGlitterCorpusInventory as _runGlitterCorpusInventory,
-} from "./glitter/glitter-corpus.ts";
-import type {
-  GlitterCorpusBackfillInput,
-  GlitterCorpusChannelBackfillInput,
-  GlitterCorpusChannelOverlapInput,
-  GlitterCorpusSnapshotResult,
+  type GlitterCorpusBackfillInput,
+  type GlitterCorpusChannelBackfillInput,
+  type GlitterCorpusChannelOverlapInput,
+  type GlitterCorpusSnapshotResult,
 } from "./glitter/glitter-corpus.ts";
 import type {
   ChannelStateResult,
@@ -97,7 +124,7 @@ import type {
   GlitterContextAuditResult,
 } from "#activities/glitter/context/audit/glitter-context-audit-schema.ts";
 import { runMainVulnScanWorkflow as runMainVulnScanWorkflowImplementation } from "./ci/main-vuln-scan.ts";
-import { runLinkRotScanWorkflow as runLinkRotScanWorkflowImplementation } from "./link-rot-scan.ts";
+import * as linkRotScan from "./link-rot-scan.ts";
 import { runScheduleRehearsalWorkflow as runScheduleRehearsalWorkflowImplementation } from "./schedule-rehearsal.ts";
 import type { ScheduleRehearsalResult } from "#activities/scout/schedule-rehearsal.ts";
 import {
@@ -115,21 +142,12 @@ import {
   type WorkerDeploymentCanaryInput,
 } from "./worker-deployment-canary.ts";
 
-import {
-  runSeaweedFsBackupRetentionAndGcWorkflow as _runSeaweedFsBackupRetentionAndGcWorkflow,
-  runSeaweedFsBackupWorkflow as _runSeaweedFsBackupWorkflow,
-} from "./homelab/seaweedfs-backup.ts";
-import type { BackupCadence } from "@shepherdjerred/seaweedfs-backup/schemas";
 import { runLlmBilledCostReconciliation as _runLlmBilledCostReconciliation } from "./llm-billed-cost.ts";
 import type { LlmBillingSnapshot } from "#shared/llm-billing.ts";
 import {
   runOpsDigest as _runOpsDigest,
   runOpsSnapshot as _runOpsSnapshot,
 } from "./ops-snapshot.ts";
-import type {
-  OpsDigestKind,
-  OpsPublishSummary,
-} from "#activities/ops/ops-publish.ts";
 import { agentChatWorkflow as _agentChatWorkflow } from "./agent-chat.ts";
 import { agentChatTurnReceiptWorkflow as _agentChatTurnReceiptWorkflow } from "./agent-chat-turn-receipt.ts";
 import type { AgentChatReceiptInput } from "#shared/agent/agent-chat-receipt.ts";
@@ -154,6 +172,15 @@ import type {
 } from "#shared/agent/agent-chat-imessage.ts";
 import { blueBubblesIngressWorkflow as _blueBubblesIngressWorkflow } from "./imessage/ingress.ts";
 import { imessageAgentChatWorkflow as _imessageAgentChatWorkflow } from "./imessage/message.ts";
+import { photonAgentChatWorkflow as _photonAgentChatWorkflow } from "./photon/message.ts";
+import { photonConversationWorkflow as _photonConversationWorkflow } from "./photon/conversation.ts";
+
+export const photonConversationWorkflow = (
+  ...args: Parameters<typeof _photonConversationWorkflow>
+) => _photonConversationWorkflow(...args);
+export const photonAgentChatWorkflow = (
+  ...args: Parameters<typeof _photonAgentChatWorkflow>
+) => _photonAgentChatWorkflow(...args);
 
 export async function blueBubblesIngressWorkflow(
   cursor: BlueBubblesCursor,
@@ -179,15 +206,12 @@ export async function fetchSkillCappedManifest(): Promise<void> {
 export async function runKometaWorkflow(): Promise<void> {
   return runKometaWorkflowImplementation();
 }
-export async function runMainVulnScanWorkflow(): Promise<void> {
-  return runMainVulnScanWorkflowImplementation();
-}
-export async function runCiIoTelemetry(): Promise<void> {
-  return _runCiIoTelemetry();
-}
-export async function runLinkRotScanWorkflow(): Promise<void> {
-  return runLinkRotScanWorkflowImplementation();
-}
+export const runMainVulnScanWorkflow = () =>
+  runMainVulnScanWorkflowImplementation();
+export const runCiIoTelemetry = ciIoTelemetry.runCiIoTelemetry;
+export const runCiWorkspaceReaperWorkflow =
+  ciWorkspaceReaper.runCiWorkspaceReaperWorkflow;
+export const runLinkRotScanWorkflow = linkRotScan.runLinkRotScanWorkflow;
 export async function runScheduleRehearsalWorkflow(): Promise<ScheduleRehearsalResult> {
   return runScheduleRehearsalWorkflowImplementation();
 }
@@ -248,13 +272,11 @@ export async function welcomeHome(firstArrival = true): Promise<void> {
   return _welcomeHome(firstArrival);
 }
 
-export async function leavingHome(): Promise<void> {
-  return _leavingHome();
-}
+export const leavingHome = (): Promise<void> => _leavingHome();
 
-export async function reconcileLock(): Promise<void> {
-  return _reconcileLock();
-}
+export const reconcileLock = (): Promise<void> => _reconcileLock();
+
+export const petCareAlerts = (s: PetCareAlertsState = {}) => _petCareAlerts(s);
 
 export async function runVacuumIfNotHome(): Promise<void> {
   return _runVacuumIfNotHome();
@@ -275,9 +297,11 @@ export async function sleepAc(input?: SleepAutomationInput): Promise<void> {
 export async function runZfsMaintenanceWorkflow(): Promise<void> {
   return _runZfsMaintenanceWorkflow();
 }
+export const runMiningWorldResetWorkflow = () => resetMiningWorld();
+export const reconcileStormCompanionsWorkflow = () => reconcileCompanions();
 
-export async function runMiningWorldResetWorkflow(): Promise<void> {
-  return _runMiningWorldResetWorkflow();
+export async function runStormPlotReconciliationWorkflow(): Promise<void> {
+  return _runStormPlotReconciliationWorkflow();
 }
 
 export async function runBugsinkHousekeepingWorkflow(): Promise<void> {
@@ -426,31 +450,15 @@ export async function runGlitterCorpusDaily(): Promise<GlitterCorpusSnapshotResu
   return _runGlitterCorpusDaily();
 }
 
-export async function runSeaweedFsBackupWorkflow(input: {
-  cadence: BackupCadence;
-}): Promise<{ snapshotId: string; buckets: number }> {
-  return _runSeaweedFsBackupWorkflow(input);
-}
-
-export async function runSeaweedFsBackupRetentionAndGcWorkflow(): Promise<{
-  deletedSnapshots: number;
-  deletedObjects: number;
-  candidateObjects: number;
-}> {
-  return _runSeaweedFsBackupRetentionAndGcWorkflow();
-}
-
 export async function runLlmBilledCostReconciliation(): Promise<LlmBillingSnapshot> {
   return _runLlmBilledCostReconciliation();
 }
 
-export async function runOpsSnapshot(): Promise<OpsPublishSummary> {
-  return _runOpsSnapshot();
-}
+export const runOpsSnapshot = () => _runOpsSnapshot();
 
-export async function runOpsDigest(input: {
-  kind: OpsDigestKind;
-}): Promise<{ kind: OpsDigestKind }> {
+export async function runOpsDigest(
+  input: Parameters<typeof _runOpsDigest>[0],
+): ReturnType<typeof _runOpsDigest> {
   return _runOpsDigest(input);
 }
 

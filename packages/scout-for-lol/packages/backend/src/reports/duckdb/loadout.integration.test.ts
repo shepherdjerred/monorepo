@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -7,10 +8,8 @@ import { LOADOUT_COLUMNS } from "@scout-for-lol/data/model/reports/lake-columns.
 import type { LakeFiles } from "#src/reports/duckdb/lake.ts";
 import { guildScope } from "#src/reports/duckdb/scope.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
-import {
-  writeTempTestLake,
-  type TestLakeMatchFact,
-} from "#src/testing/test-report-lake.ts";
+import { writeTempTestLake } from "#src/testing/test-report-lake.ts";
+import type { TestLakeMatchFact } from "#src/testing/report-lake/rows.ts";
 import { testGuildId, testPuuid } from "#src/testing/test-ids.ts";
 import {
   avgOf,
@@ -42,7 +41,7 @@ function game(
     playerId: 1,
     playerAlias: "Mira",
     puuid: testPuuid("loadout-mira"),
-    matchId: `NA1_L${hour.toString()}`,
+    matchId: RiotMatchIdSchema.parse(`NA1_81001${hour.toString()}`),
     queue: "solo",
     win: false,
     surrendered: false,

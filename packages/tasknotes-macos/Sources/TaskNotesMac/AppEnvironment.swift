@@ -110,8 +110,7 @@ public final class AppEnvironment {
         // Named distinctly rather than shadowing the parameter: the whole
         // point of this line is that the resolved store may differ from the
         // one passed in, and shadowing would hide exactly that.
-        let resolvedTokenStore =
-            tokenStore ?? (Self.isUITesting ? InMemoryTokenStore() : KeychainTokenStore())
+        let resolvedTokenStore = tokenStore ?? Self.defaultTokenStore(defaults: defaults)
         let storageFolder =
             Self.isUITesting
             ? defaults.string(forKey: UITesting.storageFolderDefaultsKey) ?? "TaskNotes-UITests"
@@ -160,6 +159,13 @@ public final class AppEnvironment {
     private nonisolated static func editableToken(_ store: any ServerTokenStore) -> String {
         guard case .success(let token) = store.token() else { return "" }
         return token ?? ""
+    }
+
+    private static func defaultTokenStore(defaults: UserDefaults) -> any ServerTokenStore {
+        guard Self.isUITesting else { return KeychainTokenStore() }
+        return InMemoryTokenStore(
+            token: defaults.string(forKey: UITesting.authTokenDefaultsKey)
+        )
     }
 
     /// Bring the engine up.

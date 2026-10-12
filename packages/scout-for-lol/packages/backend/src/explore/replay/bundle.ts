@@ -1,3 +1,4 @@
+import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import { appendFile, mkdir, stat, readdir, chmod } from "node:fs/promises";
 import path from "node:path";
 import { homedir } from "node:os";
@@ -140,7 +141,12 @@ export async function appendBundleLine(
 
 export const ReplayManifestSchema = z
   .object({
-    schemaVersion: z.literal(1),
+    schemaVersion: z.literal(3, {
+      error:
+        "Replay bundle format changed; capture a fresh v3 pin and rerun the baseline.",
+    }),
+    analysisEnabled: z.boolean(),
+    capturedAnalysisEnabled: z.boolean(),
     runId: z.string().min(1),
     startedAt: z.iso.datetime(),
     stage: z.enum(["beta", "prod"]),
@@ -154,13 +160,13 @@ export const ReplayManifestSchema = z
      */
     profile: z.string().min(1),
     /** The guild this bundle actually ran as. The identity `profile` is not. */
-    guildId: z.string().min(1),
+    guildId: DiscordGuildIdSchema,
     /** What the profile promised, as resolved and asserted per case. */
     expectedCapabilities: z.record(z.string(), z.boolean()),
     lake: z
       .object({
         buildId: z.string().min(1),
-        puuidRemapFingerprint: z.string().min(1),
+        schemaFingerprint: z.string().min(1),
       })
       .strict(),
     database: z

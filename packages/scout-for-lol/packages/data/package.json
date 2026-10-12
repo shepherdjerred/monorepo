@@ -9,19 +9,18 @@
     "./*": "./src/*"
   },
   "scripts": {
-    "generate": "bun run scripts/generate-permission-catalog.ts && bun run scripts/generate-asset-manifest.ts --check && bun run scripts/generate-dare-paraphrase-schema.ts && bun run scripts/generate-scout-client-protocol.ts",
+    "generate": "bun run scripts/generate-permission-catalog.ts && bun run scripts/generate-asset-manifest.ts --check && bun run scripts/generate-scout-client-protocol.ts",
     "generate:asset-manifest": "bun run scripts/generate-asset-manifest.ts --write",
     "check:asset-manifest": "bun run scripts/generate-asset-manifest.ts --check",
     "test": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run",
     "test:watch": "bun --no-install --bun vitest --config ../../../../vitest.config.ts",
     "test:coverage": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run --coverage",
     "test:ci": "bun ../../../../scripts/ci/run-ci-test.ts",
-    "lint": "bun x eslint src --max-warnings=0",
+    "lint": "bun x eslint src --max-warnings=0 && check-architecture",
     "format": "bun x prettier --check src",
     "format:write": "bun x prettier --write src",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
-    "update-data-dragon": "bun run scripts/update-data-dragon.ts",
-    "test:report": "CI_TEST_COVERAGE=1 bun ../../../../scripts/ci/run-ci-test.ts"
+    "update-data-dragon": "bun run scripts/update-data-dragon.ts"
   },
   "dependencies": {
     "@scout-for-lol/domain": "workspace:*",
@@ -36,19 +35,22 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@shepherdjerred/architecture": "workspace:*",
     "ajv": "^8.20.0",
     "bun-types": "1.4.2",
     "eslint": "^10.7.0",
     "prettier": "^3.9.9",
+    "sharp": "^0.35.5",
     "typescript": "^6.0.3",
     "@typescript/native": "npm:typescript@7.0.2",
-    "vitest": "5.0.1",
-    "@vitest/coverage-istanbul": "5.0.1"
+    "vitest": "5.0.3",
+    "@vitest/coverage-istanbul": "5.0.3"
   },
   "imports": {
     "#competitive-progression-catalog": "./competitive-progression-catalog.json",
     "#competitive-progression-catalog-schema": "./competitive-progression-catalog.schema.json",
     "#generated/*": "./generated/*",
+    "#architecture": "./architecture.config.ts",
     "#src/*": "./src/*"
   }
 }

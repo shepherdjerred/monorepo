@@ -3,7 +3,7 @@ import {
   type RegionalRoute,
   type PlatformRoute,
   type LeaguePuuid,
-  type MatchId,
+  type RiotMatchId,
   type RiotGameName,
   type RiotTagLine,
   type EpochSeconds,
@@ -11,7 +11,7 @@ import {
   RawAccountSchema,
   RawChampionMasteryListSchema,
   type RawChampionMastery,
-  MatchIdSchema,
+  RiotMatchIdSchema,
   RawClashPlayerListSchema,
   RawClashTeamSchema,
   RawClashTournamentListSchema,
@@ -45,7 +45,7 @@ export type RiotClientOptions = RateLimiterOptions & {
   fetchFn?: FetchFunction | undefined;
 };
 
-const MatchIdListSchema = z.array(MatchIdSchema);
+const MatchIdListSchema = z.array(RiotMatchIdSchema);
 
 export class RiotClient {
   private readonly apiKey: string;
@@ -108,7 +108,7 @@ export class RiotClient {
       regionalRoute: RegionalRoute,
       params: MatchListParams = {},
       requestOptions: RateLimitedRequestOptions = {},
-    ): Promise<MatchId[]> => {
+    ): Promise<RiotMatchId[]> => {
       const searchParams = new URLSearchParams();
       if (params.count !== undefined)
         searchParams.set("count", params.count.toString());
@@ -130,7 +130,7 @@ export class RiotClient {
     },
 
     get: async (
-      matchId: MatchId | string,
+      matchId: RiotMatchId,
       regionalRoute: RegionalRoute,
       requestOptions: RateLimitedRequestOptions = {},
     ): Promise<unknown> => {
@@ -139,7 +139,7 @@ export class RiotClient {
     },
 
     timeline: async (
-      matchId: MatchId | string,
+      matchId: RiotMatchId,
       regionalRoute: RegionalRoute,
     ): Promise<unknown> => {
       const url = `https://${regionalRoute.toLowerCase()}.api.riotgames.com/lol/match/v5/matches/${encodeURIComponent(matchId)}/timeline`;

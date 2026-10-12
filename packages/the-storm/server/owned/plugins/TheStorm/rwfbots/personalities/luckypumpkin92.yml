@@ -1,0 +1,81 @@
+id: luckypumpkin92
+name: LuckyPumpkin92
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTE0NTY5NjI2NywKICAicHJvZmlsZUlkIiA6ICJjODVhZTlmOWJkNTU0YzFmYjk1ZTg3ZDI2Zjg2MGFmNiIsCiAgInByb2ZpbGVOYW1lIiA6ICJTdGV2ZW4xNzUzIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2YyNjk0YjY4NjRmNDIyN2JlZjk3OGU4ZTMwNGQxYmE4ODdmOGZhOWZhMTI0MTZmNTMwODdjMTllNGY4NzRkMTAiCiAgICB9CiAgfQp9
+  signature: "kO5v6lsYCh/b3+Ppvf1oCiX/R6vd9XO0mCpWTBZwuygOptmJe0Vo9O/pVxej+p23vMnKUEyfuK3rkNFM9e4kFm8WyxVU7ijjWb5vB9SyatK5rn2LLu4k60HR/zaSCAZAVMbYiqTzq2IPoFfhE5iW1ogRU1tiNwcnY/6Fl99HlWAcRNIpyM/HwdtLXJVeiHIQn/O8h9w2JtK0/k5/YV+eLnjQPESU8tkvj9TKYlAadqt/kkqXaUh0uwBYfTUyWlJu5i4y7q8VT/NEc01YogAe2D545Xg+x9UJ7QOTXI/2MXXO39WPzFS1KERa2EmeFBjMttyzRIVeGWi+PNEqnNZWzuVvbh3tFqDqKMoKqYyWio/8uCIqnwztWosFeSzXg24OgNmMCdAwEG3WgrOEB0pKIt1v0UHEKO6JImCb20NxHCiPM14+IgOuI8/5OTFhZHzmRf0ws4jAaVZ7aP75avxXMgIKpyIOmqFQ1/+Aq5d8LoY+V7eLQynv8/zgWV+RPwqeuNB+Na0opKyD+tVLL4TxMykdEb43YYLzcK6XdBAet3kqB6+opYCl/k5vqE9I9/DAY8W2hpbYY3TefuSUbmG0+9RTRahLE6dirJ6WsuUc1vi23m2ZRCfaLWTzy3YrbVWK785NPn5QqYObJxr6mKyzNa8GwC1K+oR8kfRPLxgy1+Y="
+skill: 0.728
+archetype: sniper
+leverOffsets:
+  aimErrorDeg: 2.13
+  cps: -0.51
+  predictionQuality: 1.26
+  awarenessRadius: 1.04
+  coordination: -0.35
+  technique: 0
+  aggression: -0.77
+kits:
+  trooper: 0.14
+  longbow: 1
+  shortbow: 0.41
+roles:
+  plant: 0.22
+  defend: 0.73
+  rotate: 0.43
+  hunt: 0.67
+style:
+  aggression: 0.37
+  patience: 0.96
+  teamplay: 0.5
+  risk: 0.27
+voice:
+  tone:
+    - cozy
+    - patient
+    - seasonal
+  verbosity: normal
+  style: Harvest-festival gentle, autumn metaphors, ends lines with a small leaf or pumpkin pun
+lines:
+  greet:
+    - "Pumpkin patch is open, {team}."
+    - Grabbing my bow and a warm drink.
+  onKill:
+    - "{victim} has been harvested."
+    - Right in season.
+    - "Picked {victim} off the vine."
+  onDeath:
+    - "{killer} carved me up."
+    - Squashed. Fair enough.
+    - Fell like an autumn leaf.
+  onPlant:
+    - "{bomb} is ripening now."
+    - Planted. It grows fast, this one.
+  onDefuse:
+    - "Frost on {bomb}, nice and calm."
+    - "{bomb} stays in the cellar."
+  onWin:
+    - "Bountiful harvest, {team}."
+    - Pie for everyone.
+  onLoss:
+    - A rough frost this year.
+    - We replant next round.
+  onLastAlive:
+    - Last pumpkin in the patch.
+    - Steady hands, cold breath.
+  taunt:
+    - Stand still, I'm gathering.
+    - You're ripe from here.
+    - Long field, short life.
+  lobby:
+    - "Fence line is calling me again, {team}. Leaf it to me."
+    - Punch bow is strung and ready for the harvest.
+    - A good sightline is like a full pumpkin patch.
+    - Bring your gapples, the frost comes early tonight.
+    - My sightline rival is here. The leaves are rustling.
+quirks:
+  - good_sport
+  - always_gg
+rivals:
+  - hyperraven89
+bio: Learned the Punch bow on the old harvest map and never left the fence line overlooking it. Has a polite, decade-long scoreboard feud with HyperRaven89 over who owns the long sightline.
+batch: 2
+retired: false

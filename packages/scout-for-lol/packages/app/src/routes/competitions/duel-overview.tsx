@@ -69,8 +69,7 @@ export function DuelOverview() {
         <p className="text-sm font-medium text-primary">Guild competition</p>
         <h1 className="text-3xl font-semibold tracking-tight">Duels</h1>
         <p className="max-w-2xl text-scout-subtle">
-          Friendly 1v1 and 2v2 competition. No entry fees, prizes, wagers, Elo,
-          or automatic no-show wins.
+          Challenge friends to a 1v1 or 2v2, or organize a tournament.
         </p>
       </header>
       {creationReady ? (
@@ -79,8 +78,7 @@ export function DuelOverview() {
             <CardHeader>
               <CardTitle>Direct challenge</CardTitle>
               <CardDescription>
-                Every participant must accept the custom-match disclosure before
-                results become member-visible.
+                Invite players and agree to share the match results.
               </CardDescription>
             </CardHeader>
             <CardContent>

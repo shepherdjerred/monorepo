@@ -1,3 +1,4 @@
+import type { DiscordAccountId } from "@scout-for-lol/domain/identity/discord.ts";
 import type { MessageCreateOptions } from "discord.js";
 import {
   BucksMessageRefsSchema,
@@ -34,7 +35,7 @@ import {
 
 type StoredUnmatchedPosition = {
   id: number;
-  bucksAccount: { discordId: string };
+  bucksAccount: { discordId: DiscordAccountId };
   predictedTeamId: number;
   stake: number;
   humanMatchedStake: number | null;

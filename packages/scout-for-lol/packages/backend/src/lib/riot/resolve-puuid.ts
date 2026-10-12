@@ -1,3 +1,4 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import {
   type Region,
   type RiotId,
@@ -13,13 +14,13 @@ import { recordRiotResolution } from "#src/lib/riot/summoner-index.ts";
 const logger = createLogger("resolve-puuid");
 
 export type PuuidResolutionResult =
-  | { success: true; puuid: string; lookupTime: number }
+  | { success: true; puuid: LeaguePuuid; lookupTime: number }
   | { success: false; error: string };
 
 export type RiotIdResolutionResult =
   | {
       kind: "ok";
-      puuid: string;
+      puuid: LeaguePuuid;
       gameName: string;
       tagLine: string;
       lookupTime: number;

@@ -1,3 +1,4 @@
+import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import { afterEach, describe, expect, test } from "vitest";
 import { ApplicationIntegrationType, InteractionContextType } from "discord.js";
 import {
@@ -231,7 +232,9 @@ describe("guild /scout payload merge", () => {
     resetConfigurationForTests();
 
     // Explore-only guild: /scout carries ask alone — no dead voice entries.
-    const exploreOnly = await guildCommandPayload("100000000000000001");
+    const exploreOnly = await guildCommandPayload(
+      DiscordGuildIdSchema.parse("100000000000000001"),
+    );
     const exploreScout = exploreOnly.find(
       (command) => command.name === "scout",
     );
@@ -265,7 +268,9 @@ describe("guild /scout payload merge", () => {
     // Neither gate: no /scout registration at all.
     Bun.env["EXPLORE_GUILD_ALLOWLIST"] = "";
     resetConfigurationForTests();
-    const neither = await guildCommandPayload("300000000000000003");
+    const neither = await guildCommandPayload(
+      DiscordGuildIdSchema.parse("300000000000000003"),
+    );
     expect(neither.map((command) => command.name)).not.toContain("scout");
   });
 });

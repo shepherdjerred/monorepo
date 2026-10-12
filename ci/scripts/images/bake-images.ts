@@ -1,4 +1,5 @@
 import { rm } from "node:fs/promises";
+import { teeOutputTail } from "../reporting/command-output.ts";
 import { asRecord } from "../../../scripts/lib/json.ts";
 import { writeJsonHandoff } from "../../../scripts/lib/ci/ci-handoff.ts";
 import {
@@ -29,13 +30,16 @@ import type { PushOptions, PushOutcome } from "./bake-image-push-types.ts";
 import { productionBakeEnvironment } from "./production-bake-environment.ts";
 import { runMain } from "../../../scripts/lib/transient.ts";
 import { pinCandidatesForDigests } from "./pin-candidate-images.ts";
-import { readLiveVersionCatalogSource } from "./live-version-catalog.ts";
+import { lastSuccessfulImageReleaseCommit } from "./live-version-catalog.ts";
+import {
+  recordPublishedImageRelease,
+  resolvePublishedImageCatalog,
+} from "../../../scripts/lib/ci/published-image-release.ts";
 import { TransientError } from "../../../scripts/lib/transient-error.ts";
 import {
   writeFallbackReport,
   type TextWriter,
 } from "./image-selection-report.ts";
-import { ensureAncestor } from "../selectors/ensure-ancestor.ts";
 
 const registry = "ghcr.io/shepherdjerred";
 const selectionReport = "image-selection-report.json";
@@ -60,13 +64,21 @@ export async function execute(
     stdout: "pipe",
     stderr: "pipe",
   });
+  const buildProgress =
+    command[0] === "docker" && command[1] === "buildx" && command[2] === "bake";
   const [stdout, stderr, exitCode] = await Promise.all([
-    new Response(child.stdout).text(),
-    new Response(child.stderr).text(),
+    buildProgress
+      ? teeOutputTail(child.stdout, async (chunk) => Bun.stdout.write(chunk))
+      : new Response(child.stdout).text(),
+    buildProgress
+      ? teeOutputTail(child.stderr, async (chunk) => Bun.stderr.write(chunk))
+      : new Response(child.stderr).text(),
     child.exited,
   ]);
-  if (stdout.length > 0) await Bun.stdout.write(stdout);
-  if (stderr.length > 0) await Bun.stderr.write(stderr);
+  // Machine-readable commands (selectors, manifests, catalogs) need their full
+  // result. Only build progress is streamed and truncated for retry evidence.
+  if (!buildProgress && stdout.length > 0) await Bun.stdout.write(stdout);
+  if (!buildProgress && stderr.length > 0) await Bun.stderr.write(stderr);
   return { exitCode, stdout, stderr };
 }
 
@@ -85,36 +97,6 @@ export async function annotate(
   }
 }
 
-/**
- * Newest main commit with completed image and pin-handoff evidence.
- *
- * The configuration extension resolves this before any step is generated — it
- * asks Woodpecker for the newest main pipeline whose `images` AND
- * `version-commit-back` workflows both succeeded, then writes it into every
- * step's environment. Both are required: a pipeline can go green with images
- * skipped, and treating such a commit as the base would make this build
- * believe images already exist for content nobody built.
- *
- * Reading it here rather than asking the API again keeps one answer per build.
- * The commit is still validated against this checkout, deepening Woodpecker's
- * shallow clone when needed, because an environment variable is not proof
- * that the commit is reachable from HEAD.
- */
-export async function lastSuccessfulImageReleaseCommit(
-  currentCommit: string,
-  executor: CommandExecutor = execute,
-  environment: Readonly<Record<string, string | undefined>> = Bun.env,
-): Promise<string | undefined> {
-  const commit = environment["CI_LAST_IMAGE_RELEASE_COMMIT"];
-  if (commit === undefined || commit.length === 0) return undefined;
-  const canFetch =
-    environment["CI_PIPELINE_EVENT"] === "push" ||
-    environment["CI_PIPELINE_EVENT"] === "manual";
-  return (await ensureAncestor(commit, currentCommit, executor, canFetch))
-    ? commit
-    : undefined;
-}
-
 export async function selectedTargets(
   options: {
     readonly affected: boolean;
@@ -123,9 +105,9 @@ export async function selectedTargets(
   },
   commit: string,
   executor: CommandExecutor = execute,
-  imageBaseCommit: (
-    currentCommit: string,
-  ) => Promise<string | undefined> = lastSuccessfulImageReleaseCommit,
+  imageBaseCommit: (currentCommit: string) => Promise<string | undefined> = (
+    current,
+  ) => lastSuccessfulImageReleaseCommit(current, executor),
 ): Promise<{ readonly targets: string[]; readonly fallbackReason: string }> {
   if (fixedCorpusMode(options.environment ?? Bun.env)) {
     return {
@@ -207,6 +189,7 @@ async function setVersionCatalogMetadata(source: string): Promise<void> {
 async function setPinCandidatesMetadata(
   digests: Readonly<Record<string, string>>,
   buildNumber: string,
+  gitSha: string,
   versionCatalogSource?: string,
 ): Promise<void> {
   const parsedBuildNumber = Number(buildNumber);
@@ -218,6 +201,7 @@ async function setPinCandidatesMetadata(
   const candidates = pinCandidatesForDigests(
     digests,
     buildNumber,
+    gitSha,
     catalogSource,
   );
   await writeJsonHandoff("pin-candidates", {
@@ -269,6 +253,7 @@ export async function runSmoke(
         "docker",
         "buildx",
         "bake",
+        "--progress=plain",
         "--builder",
         "ci",
         ...smokeArguments,
@@ -309,6 +294,7 @@ export async function pushImages(
     readonly writeCandidates?: (
       digests: Readonly<Record<string, string>>,
       buildNumber: string,
+      gitSha: string,
       versionCatalogSource: string,
     ) => Promise<void>;
     readonly writeText?: TextWriter;
@@ -359,6 +345,7 @@ export async function pushImages(
         "docker",
         "buildx",
         "bake",
+        "--progress=plain",
         "--builder",
         "ci",
         "--push",
@@ -415,7 +402,7 @@ export async function pushImages(
     digests[managedPin.key] = digest;
   }
   await writeMetadata(digests);
-  await writeCandidates(digests, buildNumber, versionCatalog);
+  await writeCandidates(digests, buildNumber, commit, versionCatalog);
   await writeText(pushOutcomes, `${JSON.stringify(outcomes)}\n`);
 }
 
@@ -434,10 +421,13 @@ async function main(): Promise<void> {
   // Every push records the live catalog for Helm and the no-target metadata
   // path, and derives Temporal Workflow candidate pins from it. Fetch it first
   // so the same bounded fetch also exposes the image-release base to selection.
-  const liveVersionCatalog = options.push
-    ? await readLiveVersionCatalogSource(execute)
+  const release = options.push
+    ? await resolvePublishedImageCatalog(commit, execute)
     : undefined;
-  const selection = await selectedTargets(options, commit);
+  const liveVersionCatalog = release?.catalog;
+  const selection = await selectedTargets(options, commit, execute, () =>
+    Promise.resolve(release?.baseCommit),
+  );
   const bakeTargets = expandTargets(selection.targets);
   if (bakeTargets.length === 0) {
     console.log("no image-owning packages affected — nothing to build");
@@ -447,8 +437,14 @@ async function main(): Promise<void> {
         liveVersionCatalog ?? (await Bun.file(VERSION_CATALOG_URL).text()),
       );
       await setDigestMetadata({});
-      await setPinCandidatesMetadata({}, buildNumber);
+      await setPinCandidatesMetadata(
+        {},
+        buildNumber,
+        commit,
+        liveVersionCatalog,
+      );
       await Bun.write(pushOutcomes, "[]\n");
+      await recordPublishedImageRelease(commit, buildNumber);
     }
     return;
   }
@@ -488,6 +484,7 @@ async function main(): Promise<void> {
   if (!(await Bun.file(selectionReport).exists())) {
     await writeFallbackReport(selection.targets, selection.fallbackReason);
   }
+  if (options.push) await recordPublishedImageRelease(commit, buildNumber);
   const annotationArguments = ["--report", selectionReport];
   if (await Bun.file(pushOutcomes).exists()) {
     annotationArguments.push("--outcomes", pushOutcomes);

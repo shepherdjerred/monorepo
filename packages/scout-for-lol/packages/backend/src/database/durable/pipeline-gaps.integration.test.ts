@@ -1,3 +1,7 @@
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { ReceiptKindSchema } from "@scout-for-lol/domain/match-processing/states.ts";
 import {
@@ -42,7 +46,10 @@ beforeEach(async () => {
   await clearGapTables(prisma);
 });
 
-function owed(matchId: string, overrides: Partial<OwedMatch> = {}): OwedMatch {
+function owed(
+  matchId: RiotMatchId,
+  overrides: Partial<OwedMatch> = {},
+): OwedMatch {
   return {
     matchId,
     observedAt: new Date(NOW - 2 * HOUR_MS),
@@ -61,16 +68,16 @@ async function unminted(): Promise<number> {
 
 describe("countUnmintedLivePostmatchMatches", () => {
   test("counts a finished live V2 match that is owed a report and has none", async () => {
-    await seedOwedMatch(prisma, owed("NA1_9301"));
-    await seedOwedMatch(prisma, owed("NA1_9302"));
+    await seedOwedMatch(prisma, owed(RiotMatchIdSchema.parse("NA1_9301")));
+    await seedOwedMatch(prisma, owed(RiotMatchIdSchema.parse("NA1_9302")));
     expect(await unminted()).toBe(2);
   });
 
   test("does not count a match whose postmatch intent was minted", async () => {
-    await seedOwedMatch(prisma, owed("NA1_9311"));
+    await seedOwedMatch(prisma, owed(RiotMatchIdSchema.parse("NA1_9311")));
     await seedIntent(prisma, {
       key: "postmatch:NA1_9311",
-      matchId: "NA1_9311",
+      matchId: RiotMatchIdSchema.parse("NA1_9311"),
       state: "pending",
       createdAt: new Date(NOW - HOUR_MS),
     });
@@ -78,10 +85,10 @@ describe("countUnmintedLivePostmatchMatches", () => {
   });
 
   test("a prematch intent is not a report", async () => {
-    await seedOwedMatch(prisma, owed("NA1_9312"));
+    await seedOwedMatch(prisma, owed(RiotMatchIdSchema.parse("NA1_9312")));
     await seedIntent(prisma, {
       key: "prematch:NA1_9312",
-      matchId: "NA1_9312",
+      matchId: RiotMatchIdSchema.parse("NA1_9312"),
       state: "pending",
       kind: "prematch",
       createdAt: new Date(NOW - HOUR_MS),
@@ -93,10 +100,10 @@ describe("countUnmintedLivePostmatchMatches", () => {
     // The core advances accounts one at a time. A match with any account
     // still unadvanced is mid-run, and the last advance time of the others
     // says nothing about whether the mint has happened.
-    await seedOwedMatch(prisma, owed("NA1_9314"));
+    await seedOwedMatch(prisma, owed(RiotMatchIdSchema.parse("NA1_9314")));
     await prisma.matchTrackedAccount.create({
       data: {
-        riotMatchId: "NA1_9314",
+        riotMatchId: RiotMatchIdSchema.parse("NA1_9314"),
         puuid: testPuuid("NA1_9314-second"),
         cursorAdvancedAt: null,
       },
@@ -107,8 +114,11 @@ describe("countUnmintedLivePostmatchMatches", () => {
   test("does not count a match the silent backfill has rendered", async () => {
     // The backfill mints no intent on purpose; its render receipt is the only
     // trace, and without this exclusion a remediated incident keeps paging.
-    await seedOwedMatch(prisma, owed("NA1_9313"));
-    await seedReceipt(prisma, { matchId: "NA1_9313", kind: RENDER_RECEIPT });
+    await seedOwedMatch(prisma, owed(RiotMatchIdSchema.parse("NA1_9313")));
+    await seedReceipt(prisma, {
+      matchId: RiotMatchIdSchema.parse("NA1_9313"),
+      kind: RENDER_RECEIPT,
+    });
     expect(await unminted()).toBe(0);
   });
 
@@ -150,7 +160,10 @@ describe("countUnmintedLivePostmatchMatches", () => {
   ] satisfies [string, Partial<OwedMatch>][])(
     "does not count %s",
     async (_label, overrides) => {
-      await seedOwedMatch(prisma, owed("NA1_9320", overrides));
+      await seedOwedMatch(
+        prisma,
+        owed(RiotMatchIdSchema.parse("NA1_9320"), overrides),
+      );
       expect(await unminted()).toBe(0);
     },
   );
@@ -160,7 +173,7 @@ describe("oldestReadyNotificationIntentAt", () => {
   test("is null when nothing is ready", async () => {
     await seedIntent(prisma, {
       key: "postmatch:NA1_9401",
-      matchId: "NA1_9401",
+      matchId: RiotMatchIdSchema.parse("NA1_9401"),
       state: "pending",
       createdAt: new Date(NOW - 5 * HOUR_MS),
     });
@@ -171,13 +184,13 @@ describe("oldestReadyNotificationIntentAt", () => {
     const oldest = new Date(NOW - 2 * HOUR_MS);
     await seedIntent(prisma, {
       key: "postmatch:NA1_9402",
-      matchId: "NA1_9402",
+      matchId: RiotMatchIdSchema.parse("NA1_9402"),
       state: "ready",
       createdAt: new Date(NOW - 10 * MINUTE_MS),
     });
     await seedIntent(prisma, {
       key: "postmatch:NA1_9403",
-      matchId: "NA1_9403",
+      matchId: RiotMatchIdSchema.parse("NA1_9403"),
       state: "ready",
       createdAt: oldest,
     });
@@ -192,7 +205,7 @@ describe("oldestReadyNotificationIntentAt", () => {
     });
     await seedIntent(prisma, {
       key: "postmatch:NA1_9404",
-      matchId: "NA1_9404",
+      matchId: RiotMatchIdSchema.parse("NA1_9404"),
       state: "ready",
       createdAt: new Date(NOW - 5 * HOUR_MS),
       recoveryBatchId: "batch-held",
@@ -202,7 +215,7 @@ describe("oldestReadyNotificationIntentAt", () => {
     await seedRecoveryBatch(prisma, { id: "batch-normal", policy: "normal" });
     await seedIntent(prisma, {
       key: "postmatch:NA1_9405",
-      matchId: "NA1_9405",
+      matchId: RiotMatchIdSchema.parse("NA1_9405"),
       state: "ready",
       createdAt: released,
       recoveryBatchId: "batch-normal",
@@ -227,7 +240,9 @@ describe("observationLag", () => {
     for (let index = 1; index <= 10; index += 1) {
       const observedAt = new Date(NOW - 30 * MINUTE_MS);
       await seedOwedMatch(prisma, {
-        matchId: `NA1_95${String(index).padStart(2, "0")}`,
+        matchId: RiotMatchIdSchema.parse(
+          `NA1_95${String(index).padStart(2, "0")}`,
+        ),
         observedAt,
         completedAt: observedAt,
         gameCreatedAt: new Date(observedAt.getTime() - index * 10 * MINUTE_MS),
@@ -258,7 +273,7 @@ describe("observationLag", () => {
   ])("leaves out %s", async (_label, overrides) => {
     const observedAt = overrides.observedAt ?? recent;
     await seedOwedMatch(prisma, {
-      matchId: "NA1_9601",
+      matchId: RiotMatchIdSchema.parse("NA1_9601"),
       completedAt: observedAt,
       gameCreatedAt: new Date(observedAt.getTime() - 10 * HOUR_MS),
       subscription: null,

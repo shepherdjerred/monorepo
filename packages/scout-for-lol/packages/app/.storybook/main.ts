@@ -13,8 +13,8 @@ const config: StorybookConfig = {
   typescript: { reactDocgen: false },
   // Resolve the theme before first paint, exactly as index.html does for the
   // SPA. scoutAssetsPlugin serves this URL in dev and emits it on build.
-  previewHead: (head) =>
-    `${head ?? ""}<script src="/assets/scout/brand/theme-bootstrap.js"></script>`,
+  previewHead: (head = "") =>
+    `${head}<script src="/assets/scout/brand/theme-bootstrap.js"></script>`,
 };
 
 export default config;

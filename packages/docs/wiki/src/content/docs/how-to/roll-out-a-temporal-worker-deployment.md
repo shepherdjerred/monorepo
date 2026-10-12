@@ -39,6 +39,26 @@ Set `TEMPORAL_ADDRESS` (and `TEMPORAL_TLS=true` for the private TLS endpoint) in
 the operator shell. The package command uses the existing `toolkit temporal`
 passthrough and never falls back to Kubernetes-only service DNS.
 
+The SDK replay and canary subprocesses also require `TEMPORAL_API_KEY` at the
+external endpoint. When it is unset and `TEMPORAL_TLS=true`, the command
+resolves it once through toolkit's
+[credential broker](https://github.com/shepherdjerred/monorepo/blob/main/packages/toolkit/src/lib/credentials.ts),
+which reads the Keychain-enrolled 1Password service account, and passes it to
+its subprocesses. No `op run` wrapper or desktop approval is needed. Set
+`TEMPORAL_REPLAY_WORKFLOW_IDS` to comma-separated representative retained
+execution IDs before `start`. For central production, from `packages/temporal`:
+
+```bash
+TEMPORAL_NAMESPACE=prod \
+TEMPORAL_TLS=true \
+  bun run worker-deployment start --build-id <candidate-image-git-sha>
+```
+
+An explicit `TEMPORAL_API_KEY` still wins. SDK commands reject empty
+credentials and credentials supplied without `TEMPORAL_TLS=true`. In-cluster
+workers continue to use their private endpoint without this external
+credential.
+
 During Scout bootstrap, verify that stable and candidate are both capable,
 distinct images and both exact versions have registered pollers. Pass the
 stable image SHA with `--stable-build-id` on the first `start` command.
@@ -100,8 +120,11 @@ TEMPORAL_NAMESPACE=prod bun run worker-deployment advance --build-id <candidate-
 After at least two hours at 50%, run the same command again. It advances to
 100%. Each transition rechecks candidate and stable poller history, Prometheus
 rule-evaluation health, and candidate Build ID Workflow failure counters over
-the entire required window. Temporal alerts from other workers remain visible
-in monitoring but do not block these transitions.
+the entire required window. Poller history requires a Workflow poller at every
+sample and a nonsticky poller within every minute; brief nonsticky handoffs
+while sticky pollers remain active do not count as a worker outage. Temporal
+alerts from other workers remain visible in monitoring but do not block these
+transitions.
 An early, repeated, or out-of-order command fails without changing routing.
 
 ## Promote at 100% traffic

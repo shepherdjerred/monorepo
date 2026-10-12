@@ -1,5 +1,7 @@
 #!/usr/bin/env bun
 
+import path from "node:path";
+import { parseArgs } from "node:util";
 import { doctor } from "#src/host/doctor.ts";
 import { LaunchdService } from "#src/host/launchd.ts";
 import { Reconciler } from "#src/reconcile.ts";
@@ -8,14 +10,57 @@ import { runtimePaths } from "#src/runtime/paths.ts";
 import { runCommand } from "#src/runtime/process.ts";
 import { writeInfo } from "#src/runtime/output.ts";
 import { StateStore } from "#src/runtime/state-store.ts";
+import {
+  initFeatureFlags,
+  shutdownFeatureFlags,
+} from "@shepherdjerred/feature-flags";
+import { formatTaskStatus } from "#src/reconcile-autonomy.ts";
 
 const USAGE = `justin-principal-engineer
 
 Usage:
   justin-principal-engineer doctor
-  justin-principal-engineer reconcile
+  justin-principal-engineer reconcile [--runner-source <package-directory>]
+  justin-principal-engineer retry <issue-identifier> [--runner-source <package-directory>]
+  justin-principal-engineer merge-ready <issue-identifier> [--runner-source <package-directory>]
   justin-principal-engineer daemon <install|start|stop|status|uninstall>
 `;
+
+async function runReconcile(
+  command: "reconcile" | "merge-ready" | "retry",
+  args: readonly string[],
+  paths: ReturnType<typeof runtimePaths>,
+): Promise<void> {
+  const { values } = parseArgs({
+    args: args.slice(command === "reconcile" ? 1 : 2),
+    options: { "runner-source": { type: "string" } },
+    strict: true,
+  });
+  const reconciler = new Reconciler(
+    await loadConfig(paths),
+    paths,
+    runCommand,
+    values["runner-source"] === undefined
+      ? undefined
+      : path.resolve(values["runner-source"]),
+  );
+  if (command === "retry") {
+    const identifier = args[1];
+    if (identifier === undefined) throw new Error(USAGE);
+    await reconciler.retryTask(identifier);
+  } else if (command === "merge-ready") {
+    const states = await new StateStore(paths).list();
+    const state = states.find(
+      (candidate) => candidate.issue.identifier === args[1],
+    );
+    if (state === undefined)
+      throw new Error("Merge readiness requires an existing task");
+    if (!(await reconciler.mergeReady(state)))
+      throw new Error("Task is not ready to merge");
+  } else {
+    await reconciler.reconcile();
+  }
+}
 
 async function main(args: readonly string[]): Promise<void> {
   const paths = runtimePaths();
@@ -24,13 +69,12 @@ async function main(args: readonly string[]): Promise<void> {
     await doctor({ config: await loadConfig(paths), paths, run: runCommand });
     return;
   }
-  if (command === "reconcile") {
-    const reconciler = new Reconciler(
-      await loadConfig(paths),
-      paths,
-      runCommand,
-    );
-    await reconciler.reconcile();
+  if (
+    command === "reconcile" ||
+    command === "merge-ready" ||
+    command === "retry"
+  ) {
+    await runReconcile(command, args, paths);
     return;
   }
   if (command === "daemon") {
@@ -50,7 +94,7 @@ async function main(args: readonly string[]): Promise<void> {
         const store = new StateStore(paths);
         const states = await store.list();
         for (const state of states) {
-          writeInfo(`${state.issue.identifier}: ${state.phase}`);
+          writeInfo(formatTaskStatus(state));
         }
         return;
       }
@@ -70,8 +114,16 @@ async function main(args: readonly string[]): Promise<void> {
 }
 
 try {
+  await initFeatureFlags({
+    environment: {
+      ...Bun.env,
+      FEATURE_FLAGS_MODE: Bun.env["FEATURE_FLAGS_MODE"] ?? "disabled",
+    },
+  });
   await main(process.argv.slice(2));
 } catch (error) {
   console.error(error instanceof Error ? error.message : String(error));
-  process.exit(1);
+  process.exitCode = 1;
+} finally {
+  await shutdownFeatureFlags();
 }

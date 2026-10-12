@@ -54,27 +54,6 @@ const UpdateTransactionResponseSchema = z.object({
   }),
 });
 
-const TransactionSplitTxnSchema = z.object({
-  id: z.string(),
-  merchant: z.object({ id: z.string(), name: z.string() }),
-  category: z.object({ id: z.string(), name: z.string() }),
-  amount: z.number(),
-  notes: z
-    .string()
-    .nullable()
-    .transform((v) => v ?? ""),
-});
-
-const TransactionSplitsResponseSchema = z.object({
-  getTransaction: z.object({
-    id: z.string(),
-    amount: z.number(),
-    category: z.object({ id: z.string(), name: z.string() }),
-    merchant: z.object({ id: z.string(), name: z.string() }),
-    splitTransactions: z.array(TransactionSplitTxnSchema),
-  }),
-});
-
 const UpdateTransactionSplitResponseSchema = z.object({
   updateTransactionSplit: z.object({
     transaction: z.object({
@@ -94,9 +73,6 @@ export type TransactionsResponse = z.infer<typeof TransactionsResponseSchema>;
 export type CategoriesResponse = z.infer<typeof CategoriesResponseSchema>;
 export type UpdateTransactionResponse = z.infer<
   typeof UpdateTransactionResponseSchema
->;
-export type TransactionSplitsResponse = z.infer<
-  typeof TransactionSplitsResponseSchema
 >;
 export type UpdateTransactionSplitResponse = z.infer<
   typeof UpdateTransactionSplitResponseSchema
@@ -279,17 +255,6 @@ export async function updateTransactionSplits(
   );
 }
 
-export async function getTransactionSplits(
-  transactionId: string,
-): Promise<TransactionSplitsResponse> {
-  return gqlRequest(
-    "TransactionSplitQuery",
-    TRANSACTION_SPLITS_QUERY,
-    { id: transactionId },
-    TransactionSplitsResponseSchema,
-  );
-}
-
 const GET_TRANSACTIONS_QUERY = `
   query Web_GetTransactionsList($offset: Int, $limit: Int, $filters: TransactionFilterInput, $orderBy: TransactionOrdering) {
     allTransactions(filters: $filters) {
@@ -412,36 +377,6 @@ const UPDATE_TRANSACTION_MUTATION = `
         }
         message
         code
-      }
-    }
-  }
-`;
-
-const TRANSACTION_SPLITS_QUERY = `
-  query TransactionSplitQuery($id: UUID!) {
-    getTransaction(id: $id) {
-      id
-      amount
-      category {
-        id
-        name
-      }
-      merchant {
-        id
-        name
-      }
-      splitTransactions {
-        id
-        merchant {
-          id
-          name
-        }
-        category {
-          id
-          name
-        }
-        amount
-        notes
       }
     }
   }

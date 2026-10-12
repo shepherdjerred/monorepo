@@ -22,21 +22,23 @@ function pipeline(overrides: Record<string, unknown>) {
 
 describe("pipeline authorization", () => {
   test("admits the owner", () => {
-    expect(authorizePipeline(pipeline({}))).toEqual({ allowed: true });
+    expect(authorizePipeline(pipeline({}))).toEqual({
+      allowed: true,
+      actorClass: "owner-controlled",
+    });
   });
 
   test("admits the owner's agent account and the repository's bots", () => {
     for (const login of [
       "derrej",
       "long-summer-intern[bot]",
+      "justin-principal-engineer[bot]",
       "renovate[bot]",
     ]) {
       const result = authorizePipeline(
         pipeline({ author: login, sender: login }),
       );
-      expect(result, `${login} should be able to run CI`).toEqual({
-        allowed: true,
-      });
+      expect(result.allowed, `${login} should be able to run CI`).toBe(true);
     }
   });
 
@@ -45,6 +47,34 @@ describe("pipeline authorization", () => {
       pipeline({ author: "mallory", sender: "mallory" }),
     );
     expect(result.allowed).toBe(false);
+  });
+
+  test("Justin still requires a trusted sender and a non-fork PR", () => {
+    expect(
+      authorizePipeline(
+        pipeline({
+          author: "justin-principal-engineer[bot]",
+          sender: "mallory",
+        }),
+      ).allowed,
+    ).toBe(false);
+    expect(
+      authorizePipeline(
+        pipeline({
+          author: "justin-principal-engineer[bot]",
+          sender: "justin-principal-engineer[bot]",
+          from_fork: true,
+        }),
+      ).allowed,
+    ).toBe(false);
+    expect(
+      authorizePipeline(
+        pipeline({
+          author: "app/justin-principal-engineer",
+          sender: "app/justin-principal-engineer",
+        }),
+      ).allowed,
+    ).toBe(false);
   });
 
   /**
@@ -91,7 +121,10 @@ describe("pipeline authorization", () => {
       sender: "shepherdjerred",
     });
     expect(pushed.from_fork).toBe(false);
-    expect(authorizePipeline(pushed)).toEqual({ allowed: true });
+    expect(authorizePipeline(pushed)).toEqual({
+      allowed: true,
+      actorClass: "owner-controlled",
+    });
   });
 
   /**
@@ -119,7 +152,10 @@ describe("pipeline authorization", () => {
     const result = authorizePipeline(
       pipeline({ event: "manual", author: "shepherdjerred", sender: "" }),
     );
-    expect(result).toEqual({ allowed: true });
+    expect(result).toEqual({
+      allowed: true,
+      actorClass: "owner-controlled",
+    });
   });
 
   test("refuses an untrusted manual trigger", () => {
@@ -150,9 +186,23 @@ describe("pipeline authorization", () => {
   test("allowlists exactly the owner's accounts", () => {
     expect([...TRUSTED_ACTORS].sort()).toEqual([
       "derrej",
+      "justin-principal-engineer[bot]",
       "long-summer-intern[bot]",
       "renovate[bot]",
       "shepherdjerred",
     ]);
+  });
+
+  test("classifies hosted Renovate separately from owner-controlled bots", () => {
+    for (const identities of [
+      { author: "renovate[bot]", sender: "renovate[bot]" },
+      { author: "shepherdjerred", sender: "renovate[bot]" },
+      { author: "renovate[bot]", sender: "shepherdjerred" },
+    ]) {
+      expect(authorizePipeline(pipeline(identities))).toEqual({
+        allowed: true,
+        actorClass: "hosted-automation",
+      });
+    }
   });
 });

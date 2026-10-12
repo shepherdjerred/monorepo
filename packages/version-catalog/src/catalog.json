@@ -3,6 +3,54 @@
   "schemaVersion": 1,
   "entries": [
     {
+      "name": "bluemap/archive-cli",
+      "category": "upstream",
+      "artifactType": "package",
+      "management": {
+        "managed": false
+      },
+      "value": "5.28",
+      "notes": [
+        "Storm archive's static low-resolution viewers. CLI artifact is checksum-pinned in the overview configuration; upgrades require a new immutable viewer release."
+      ]
+    },
+    {
+      "name": "minecraft/archive-upgrader",
+      "category": "upstream",
+      "artifactType": "package",
+      "management": {
+        "managed": false
+      },
+      "value": "1.17.1",
+      "notes": [
+        "One-shot vanilla conversion of disposable legacy archive copies, before the world-height expansion. Original downloads remain unchanged."
+      ]
+    },
+    {
+      "name": "itzg/minecraft-server-java17-archive",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": false
+      },
+      "value": "2026.9.1-java17@sha256:38afacde5d0cd46c255d744b582fd4b07524d43989da614f2bc9703c529d0fb9",
+      "notes": [
+        "Java 17 for the one-shot vanilla 1.17.1 archive converter. Changes require a new immutable overview release."
+      ]
+    },
+    {
+      "name": "unmined/unmined-cli",
+      "category": "upstream",
+      "artifactType": "package",
+      "management": {
+        "managed": false
+      },
+      "value": "0.20.10",
+      "notes": [
+        "Storm archive's bounded 2D preview renderer. Apple Silicon CLI artifact is checksum-pinned in the archive catalogue; never redistribute the tool binary."
+      ]
+    },
+    {
       "name": "stashapp/stash",
       "category": "upstream",
       "artifactType": "image",
@@ -24,7 +72,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "v0.12.0@sha256:ad4163685598187f6d645c8873b16760001b0d94c6055e2306738c5098f7b512"
+      "value": "v0.26.0@sha256:dacc7cb7039db091bbc336959724af93f6d75a1d628a66fe3a96973879c59dc9"
     },
     {
       "name": "connect",
@@ -36,7 +84,7 @@
         "registryUrl": "https://1password.github.io/connect-helm-charts/",
         "versioning": "semver"
       },
-      "value": "2.4.1"
+      "value": "2.4.2"
     },
     {
       "name": "argo-cd",
@@ -48,7 +96,7 @@
         "registryUrl": "https://argoproj.github.io/argo-helm",
         "versioning": "semver"
       },
-      "value": "10.9.2"
+      "value": "10.10.2"
     },
     {
       "name": "cert-manager",
@@ -72,7 +120,7 @@
         "registryUrl": "https://intel.github.io/helm-charts/",
         "versioning": "semver"
       },
-      "value": "0.37.0"
+      "value": "0.37.1"
     },
     {
       "name": "node-feature-discovery",
@@ -96,7 +144,7 @@
         "registryUrl": "https://prometheus-community.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "91.5.1"
+      "value": "92.2.0"
     },
     {
       "name": "prometheus-adapter",
@@ -120,7 +168,7 @@
         "registryUrl": "https://prometheus-community.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "11.18.0"
+      "value": "11.20.0"
     },
     {
       "name": "tailscale-operator",
@@ -152,10 +200,9 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1002644@sha256:63e7c6dd3442a3e904e07fa6a2f7e2e47734543fe89976f826c40a5369e674bb",
+      "value": "2.0.0-1007972@sha256:8056f99052d9ff568b03d950a8bf6335d549cd3cec9bfac9233bc03e67d3ca62",
       "notes": [
-        "not managed by renovate — built from packages/streambot; CI's version commit-back fills the",
-        "real tag@digest after the first image push. Seed digest is a placeholder until then."
+        "not managed by renovate — built from packages/streambot and updated by CI version commit-back."
       ]
     },
     {
@@ -165,7 +212,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-16936@sha256:69e47978784b9099ac63e52f8d378b08fc0c2323dc7ae8c1740dae562c7c86db",
+      "value": "2.0.0-1006677@sha256:70c405620a9d16032e4af1c1eef97fb4fb7a11e14f3bc0f603b65db2910d6d46",
       "notes": [
         "not managed by renovate — built from upstream redlib's glibc Dockerfile.ubuntu",
         "at REDLIB_SOURCE_REF (pinned in the since-removed CI pipeline). The published image is",
@@ -232,7 +279,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "docker"
       },
-      "value": "2.18.1@sha256:e35570d636471f8aabfac7044057712679f954844a763ba735baa9659ea142b5"
+      "value": "2.18.2@sha256:d3c53deb09f6b8fffd1476c7154da538394193955d1e909f3b126068102fb7cf"
     },
     {
       "name": "linuxserver/bazarr",
@@ -244,7 +291,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "semver"
       },
-      "value": "1.6.1@sha256:762f802274598da27255b2e5778f262b2b71b355a23e3812d9ee1520f8dbe37c"
+      "value": "1.6.2@sha256:c1673816321156b904af9b7e6415ea547ae9622e4acc375358f1e1eb9ed1e904"
     },
     {
       "name": "seerr-team/seerr",
@@ -256,7 +303,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "semver"
       },
-      "value": "v3.4.1@sha256:f4768de5f616248d723e05891f3345a1402123775d03bf0890dbfedc0831bda1"
+      "value": "v3.5.0@sha256:27602401178d54f1964442287b9f23f67a3fa2252645ee8065839ea1c3f69e45"
     },
     {
       "name": "kometateam/kometa",
@@ -268,7 +315,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "v2.5.1@sha256:20388de48f0e088ad9feb9904f6a452fd9ef933a79c7b2bf186e388224e8f437"
+      "value": "v2.5.2@sha256:06e498cded70c9815522c6b2d8708b31759c1e37714746d1eeb56f1e40a8fd95"
     },
     {
       "name": "linuxserver/prowlarr",
@@ -280,7 +327,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "semver"
       },
-      "value": "2.6.5@sha256:f2b26429893d4c4cb71941b7ee50b1bdecd9d5f9f9e02d5410615e9f4f7c8d95"
+      "value": "2.6.5@sha256:f9151e5bc1025c6d0a630d503210cdcb6bb55a7cc098562609d96a408d838902"
     },
     {
       "name": "qdm12/gluetun",
@@ -304,7 +351,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "docker"
       },
-      "value": "5.2.3@sha256:457e4eec2ee3f5e4ef59f237ad51f6143deba9f7445ab48bb5204a98888ef9aa",
+      "value": "5.2.4@sha256:b522f9f4b769f8f36d49d22d5eb6a92e9aa18904c6a1830b1439df511ec21983",
       "notes": [
         "Keep this on qBittorrent app versions only. LinuxServer also publishes",
         "stale OS-style tags like 20.04.1 that resolve to old app builds."
@@ -320,7 +367,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "semver"
       },
-      "value": "6.4.4@sha256:adb6c09d6b729ea5e642c99cea35af72702ef476bf4763f153299ac5db9f0b4f"
+      "value": "6.4.4@sha256:7dfd049e79c00b16fbc29c3f5d96a9e7b9e73a23930b4c5b3c4541d60b366814"
     },
     {
       "name": "linuxserver/sonarr",
@@ -332,7 +379,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "semver"
       },
-      "value": "4.0.20@sha256:a5c1a5fecbef946927ab90ad68df319ac5fe644057e5fc18cd993f01ac07b2b2"
+      "value": "4.0.20@sha256:f247545d23ba8b233d6604575347e48a623fe6ad75dda02348bf81917f3b5c06"
     },
     {
       "name": "timothyjmiller/cloudflare-ddns",
@@ -356,7 +403,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "2026.9.3@sha256:072c067d25ccbe61d46e18f0d0723255f2bb5304f7317caa95b27031520ff92c"
+      "value": "2026.10.0@sha256:9b49eed8f62806d5d45ddf59ecefb5710429598ea6d3fcccd2af938f621b2b07"
     },
     {
       "name": "tailscale/golink",
@@ -380,7 +427,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "docker"
       },
-      "value": "2026.9.3@sha256:d8922685169707fd91e8b9729902d975f06157d005e422874d201e0261dda196"
+      "value": "2026.10.0@sha256:1b64d38f38d922bf9d59336451fd6453e1d614f934456af4ee3d2a51061be3a4"
     },
     {
       "name": "bropat/eufy-security-ws",
@@ -404,7 +451,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "11.24.1@sha256:00abebce88205b47c3b611e983bbc692753170e3603c691bc5765f82265cafa4"
+      "value": "11.24.3@sha256:3fef66d575ea0ea9d50aad3e05c36619228557cfa888557eac2035215a29a321"
     },
     {
       "name": "koush/scrypted",
@@ -449,7 +496,7 @@
         "datasource": "github-releases",
         "versioning": "semver"
       },
-      "value": "v1.11.9"
+      "value": "v1.11.10"
     },
     {
       "name": "magico13/ha-emporia-vue",
@@ -527,7 +574,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "semver"
       },
-      "value": "2.1.5@sha256:455bb8427106eb8522f9133a43d4e6ca799d4983c1b53e77a2bc6f7290855483"
+      "value": "2.1.6@sha256:8a381a5a11225475cc4a14ad4fee7c627fdc4fa5804fe3a34febe3aeda9f4e23"
     },
     {
       "name": "dotdc/grafana-dashboards-kubernetes",
@@ -575,6 +622,30 @@
         "versioning": "semver"
       },
       "value": "1.5.0"
+    },
+    {
+      "name": "itzg/mc-router",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "semver"
+      },
+      "value": "1.47.2@sha256:64ae69eaa7a6800a79bbf962f027f4020878efa25183359115bc7f6ee569c36e"
+    },
+    {
+      "name": "haproxy",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "docker"
+      },
+      "value": "3.4.6-alpine@sha256:7af8255207ee9964ccb4eec8ce4b7a40b777769665e3ae83897fb01b24d8a43a"
     },
     {
       "name": "jorenn92/maintainerr",
@@ -634,7 +705,7 @@
         "registryUrl": "https://grafana.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "2.3.1"
+      "value": "2.4.0"
     },
     {
       "name": "alloy",
@@ -646,7 +717,19 @@
         "registryUrl": "https://grafana.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "1.12.1"
+      "value": "1.13.1"
+    },
+    {
+      "name": "grafana/grafana-image-renderer",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "semver"
+      },
+      "value": "v5.12.6@sha256:4b3d29a66c1dd11d513f8378907953b3c2c0c0535cbf5cf8fe83f7f398ae8b4c"
     },
     {
       "name": "openebs",
@@ -658,7 +741,19 @@
         "registryUrl": "https://openebs.github.io/openebs",
         "versioning": "semver"
       },
-      "value": "4.6.1"
+      "value": "4.6.2"
+    },
+    {
+      "name": "shepherdjerred/storm-forum",
+      "category": "internal-image",
+      "artifactType": "image",
+      "management": {
+        "managed": false
+      },
+      "value": "2.0.0-1007972@sha256:0d56525c1fbf6d722ddd4764d401320524009cd99bc47ca7c09a9d4887f7123b",
+      "notes": [
+        "CI-published Storm forum image; publication alone does not activate public production."
+      ]
     },
     {
       "name": "shepherdjerred/scout-for-lol/beta",
@@ -667,7 +762,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1002844@sha256:1634fe7e57839826d6c6920297c791d44622a3cb24663132c02f6f7623ada74f",
+      "value": "2.0.0-1007972@sha256:c6d3fcbbad81d4f660da46c9c86b877793f35ae46c9fd12ad457ac9c1d31ea8b",
       "notes": ["not managed by renovate — beta updated by version-commit-back"]
     },
     {
@@ -681,9 +776,9 @@
         "versioning": "semver",
         "packageName": "shepherdjerred/scout-for-lol"
       },
-      "value": "2.0.0-17343@sha256:797fc49df459bb0d91933a80b9443fa3651478a7623befb18194ced43e347d8b",
+      "value": "2.0.0-1008523@sha256:d4ab832cde525daa54208c58eb080c86e3a4bee7ff904dd6186a51937ff50985",
       "notes": [
-        "Prod promotion = merging the Renovate PR for this pin. Each 2.0.0-<n>",
+        "Prod promotion = merging a reviewed PR for this pin (normally Renovate). Each 2.0.0-<n>",
         "tag is minted by the scout-tag-release CI step only after site version",
         "<n> is archived, pointing at the backend digest beta serves it against —",
         "so every tag Renovate can offer is a complete backend+site pair. The",
@@ -699,7 +794,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-13153@sha256:146077c0658715f5f15493d33e58923a1dd31ff65a97976b12359c39ffabb1d7",
+      "value": "2.0.0-1008523@sha256:d4ab832cde525daa54208c58eb080c86e3a4bee7ff904dd6186a51937ff50985",
       "notes": [
         "Candidate Scout beta Workflow Worker image - updated by version commit-back",
         "not managed by renovate"
@@ -712,9 +807,9 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-12197@sha256:9acbf285a1fbe164deea3e2fe0a16a000a442cc0d269e74b2e4850f49e4946db",
+      "value": "2.0.0-1008059@sha256:dfb3cc5fabe04243eb590b5fb95a2f47cb226553dcfde96187937ec5b3a79447",
       "notes": [
-        "Stable Scout beta Workflow Worker image - promoted after a healthy 100% ramp",
+        "Stable Scout beta Workflow Worker image - bootstrapped from the accepted beta backend image; later pins are promoted after a healthy 100% ramp",
         "not managed by renovate"
       ]
     },
@@ -725,7 +820,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-9495@sha256:513c2c6ef457ee91b8a18ec2c6f999558617560f57b21cc70440e3ab833c0347",
+      "value": "2.0.0-1005566@sha256:10130d8c61a5a91dc66c81324b8d74bb5941b3da0efde52c9b0ad5b2ec88eae6",
       "notes": [
         "Candidate Scout prod Workflow Worker image - advanced explicitly after beta acceptance",
         "not managed by renovate"
@@ -738,7 +833,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-9495@sha256:513c2c6ef457ee91b8a18ec2c6f999558617560f57b21cc70440e3ab833c0347",
+      "value": "2.0.0-1005566@sha256:10130d8c61a5a91dc66c81324b8d74bb5941b3da0efde52c9b0ad5b2ec88eae6",
       "notes": [
         "Stable Scout prod Workflow Worker image - promoted after a healthy 100% ramp",
         "not managed by renovate"
@@ -751,7 +846,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1002644@sha256:faaf1a029180da3a01f7ad6bb56bd1961e073a7fc4dca096700351f7fb9706de",
+      "value": "2.0.0-1007972@sha256:8b7e124e09ff3eb01df26ecdd64519845465c526de2fff1f5c49d0c88e0d9ea2",
       "notes": ["not managed by renovate — beta updated by version-commit-back"]
     },
     {
@@ -765,7 +860,7 @@
         "versioning": "semver",
         "packageName": "shepherdjerred/starlight-karma-bot"
       },
-      "value": "2.0.0-16579@sha256:4d7c5ad9dd5b52b011aa60f3e4bed0a9343ccd98273fe3eddace718bad30a498"
+      "value": "2.0.0-1007344@sha256:ee7862a0f9652cec406e518db41ce328a8334831c9d89f111265761e60be7460"
     },
     {
       "name": "shepherdjerred/birmel",
@@ -774,7 +869,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1002792@sha256:26b6daaf218b857da5e407962d4fa70e7b8bdb0251b8dbbb22f4cee984845f56",
+      "value": "2.0.0-1007972@sha256:5d466bb6a8a57f57ad5d6616589852a3229ddcf11566190373cca488e28834eb",
       "notes": ["not managed by renovate"]
     },
     {
@@ -784,7 +879,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1002844@sha256:4095f67b105297e60a15e9a4d6138c445d91f7bca7ec06c5efac0bb6aa7f8f31",
+      "value": "2.0.0-1007972@sha256:98a0be444bd96d5f1e1dfa56262d526f66f5a8436dda94063dee54b049d1cfb6",
       "notes": [
         "not managed by renovate — bootstrap build, pushed by hand: Woodpecker",
         "needs this service to generate the pipeline that would otherwise build",
@@ -798,7 +893,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1002644@sha256:7e0db9ed32f2523e3968fa906c8ba6413092e766a500daf64ff1db5ddb28e97a",
+      "value": "2.0.0-1007972@sha256:a47aa94b78c688b0501cfdfbf6e3af73cf338d29cf4ade1dc680230bf4f7dfe5",
       "notes": [
         "not managed by renovate — CI version-commit-back replaces this after each",
         "image push."
@@ -811,11 +906,9 @@
       "management": {
         "managed": false
       },
-      "value": "0.0.0-0@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "value": "2.0.0-1007972@sha256:b1f9f47703c3d82d3fd8568148be217a68154bef575d1b1b27627be3a2947041",
       "notes": [
-        "not managed by renovate — pre-first-publish placeholder. The main image",
-        "release injects the built digest into chart synthesis and version",
-        "commit-back replaces this pin before a later release can use source state."
+        "not managed by renovate — main image releases update this pin through version commit-back."
       ]
     },
     {
@@ -825,7 +918,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1002844@sha256:f3d1ec102e93e5e7905d437144df6e97cc7bfb6bd4f69df1921d0c1a9179934e",
+      "value": "2.0.0-1007972@sha256:88c7b14ba2274442c85d68d59b837db0563c31e94adae0cf6ede94c713b2bf50",
       "notes": ["not managed by renovate"]
     },
     {
@@ -835,10 +928,9 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1002644@sha256:8b1651dd8b9d9c158d2d39a8a2ca2a50eed82ef02b6d27f16fe81b1e4eeb751a",
+      "value": "2.0.0-1007972@sha256:71f33e2e21fe42d67c8bc244e028aef124ded6e67b0e76a87c080dac215702cf",
       "notes": [
-        "not managed by renovate — placeholder digest; CI version-commit-back fills",
-        "the real digest after the first successful image push."
+        "not managed by renovate — CI version commit-back updates the image digest."
       ]
     },
     {
@@ -851,7 +943,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "1.30.0@sha256:258b8edfc8a76a61f60d2d6a14d8f8d12495d78abf38646a2137612dfa264a21"
+      "value": "1.30.1@sha256:48b63b9bc3d042a1301c32971b01af8841c7f059b452589c5bf77f475ba44c61"
     },
     {
       "name": "oven/bun",
@@ -878,19 +970,6 @@
       "value": "0.15.2@sha256:a2205fc99765e42ce566dae3c8ff9fc3e3338cf44decb816ddb3d54d8d4bc05d"
     },
     {
-      "name": "agent-stack-k8s",
-      "category": "upstream",
-      "artifactType": "helm-chart",
-      "management": {
-        "managed": true,
-        "datasource": "docker",
-        "registryUrl": "https://ghcr.io/buildkite/helm",
-        "versioning": "semver",
-        "packageName": "agent-stack-k8s"
-      },
-      "value": "0.50.0@sha256:9d0d052f73362fe28143faa9b0a5ee3fdefedc93e2d7ad9ab8f65b15d50ca4bd"
-    },
-    {
       "name": "texlive/texlive",
       "category": "upstream",
       "artifactType": "image",
@@ -900,7 +979,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "TL2024-historic@sha256:7995b32f28e7d91c11fc8b222b97244949c58cb2b61c4705e2d3f39f97bc8c31"
+      "value": "TL2024-historic@sha256:fb0fed9b911b4836314f8041d27d7ff75dd1544d12ee359a2a91f765609c072d"
     },
     {
       "name": "grafana/tempo",
@@ -912,7 +991,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "3.0.3@sha256:0296560ac66f8a3600d7fb3014a52c189d4d9c3549ad6ff441bf2409855d68d5"
+      "value": "3.1.0@sha256:3076b8dcdfb32fd6bc5ccef85e7b7313e6199b9cb84366257fc17ecb696db5fd"
     },
     {
       "name": "minio/mc",
@@ -948,7 +1027,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "0.72.0@sha256:cffe3f5161a47a6823fbd23d985795b3ed72a4c806da4c4df16266c02accdd6f"
+      "value": "0.75.0@sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa"
     },
     {
       "name": "semgrep/semgrep",
@@ -960,7 +1039,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "1.170.0@sha256:c98f8829eea377274ee4b10656458b078b88232469b2ff913f091c2317347c9d"
+      "value": "1.180.0@sha256:529ee8a277ec8adc5b534d7c74eea0a47e9de21d62852b6ba7ac6ba9566845c3"
     },
     {
       "name": "woodpeckerci/woodpecker-server",
@@ -972,7 +1051,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "v3.18.1@sha256:58dafbe56bb3529d78b48ee8d56a1f4b0886748763fd04ac23c01cc06c3dd24e"
+      "value": "v3.19.0@sha256:6ca167a3c58b50c5a3c903dd8db92b39cfc30c560a47052cff7dd0235123a9cb"
     },
     {
       "name": "woodpeckerci/woodpecker-agent",
@@ -984,7 +1063,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "v3.18.1@sha256:73ee7cc63161b40bfefa4a26eae45c518a09124ab34f7e3c5e781df85e1ba4ac"
+      "value": "v3.19.0@sha256:f85f163e09494ace3377a3f3a6043f131fb47e3e627f7438de42417ee06ca56d"
     },
     {
       "name": "woodpecker-ci/plugin-git",
@@ -999,6 +1078,18 @@
       ]
     },
     {
+      "name": "woodpeckerci/plugin-git",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "semver"
+      },
+      "value": "2.10.1@sha256:550075c844fcec0af41d9d28f9860aa5d8c43e1e9419be4b9266dc02c2f29804"
+    },
+    {
       "name": "ducktors/turborepo-remote-cache",
       "category": "upstream",
       "artifactType": "image",
@@ -1008,7 +1099,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "2.14.1@sha256:8aa1c158d885757149fa953e92c0c8da544cf4a1e9a19b7feb684e59cf7b4bb0",
+      "value": "2.14.3@sha256:781b0549dca80cf5aca27bf416fc766d44cad57333a7368098a755c5f12b8822",
       "notes": [
         "Self-hosted Turborepo remote cache backing the workspace task graph."
       ]
@@ -1024,7 +1115,7 @@
         "versioning": "semver",
         "packageName": "kueue/charts/kueue"
       },
-      "value": "0.19.6@sha256:f74af5397ba326b94b4d2808f5fb6eac4996ab0f20a3358af0afd3a7a1e12c1a"
+      "value": "0.20.1@sha256:909f655fee23166bfe112b2e0fd18193d10e463e1f7287ff99c285060da87981"
     },
     {
       "name": "tonistiigi/binfmt",
@@ -1052,7 +1143,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "v0.33.0@sha256:6c2fa84a6b61ccd72899dde4239f8d5717f05f9a8ca6f3cad185fb1a95a94de3",
+      "value": "v0.34.0@sha256:b059f8d7226d0b326bc871af489a5dddf65e36af4d20d14251b072974d9ee87c",
       "notes": [
         "Persistent BuildKit daemon backing CI image builds (bounded-GC cache on a",
         "compressed ZFS PVC, replacing the per-run throwaway builder inside dind —",
@@ -1069,7 +1160,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "3.14-alpine@sha256:9e9fde4d32eedce0b661d9ab91e826b62dddf28e928c230ec55f1866cac66b01"
+      "value": "3.14-alpine@sha256:f6a589d43c42b9e7f7dc67a12d37132491f362859a5d750607710cc56da3bc72"
     },
     {
       "name": "bitnamilegacy/kubectl",
@@ -1093,7 +1184,7 @@
         "registryUrl": "https://vmware-tanzu.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "12.2.0"
+      "value": "12.2.1"
     },
     {
       "name": "velero/velero-plugin-for-aws",
@@ -1105,18 +1196,16 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "v1.14.0@sha256:7e82f717f44e89671212e0dfce7e061321c386ea84a33bca64a671670ca6c278",
+      "value": "v1.14.4@sha256:c85a7fa803569e3128c33e4f5766f84ab156c8d171c9f1dd2715581d45ce98fa",
       "notes": [
-        "PINNED to v1.14.0 (last release that works on Cloudflare R2). The plugin always sets an",
-        "(often empty) `Tagging` field on PutObject; v1.14.1's dependency bump pulled a newer",
-        "aws-sdk-go-v2 that started emitting an empty `x-amz-tagging` header on the wire, which R2",
-        "rejects with `501 NotImplemented` (\"Header 'x-amz-tagging' with value '' not implemented\").",
-        "That fails Velero's backup-metadata upload, so every backup since the v1.14.1 deploy",
-        "(2026-06-21, PR #1307) is marked Failed and leaves orphaned ZFS snapshots + R2 data behind",
-        "(incidents #5860 and #5849). v1.14.2 is NOT a fix — it still sets Tagging unconditionally; the",
-        "upstream guard (velero-io/velero-plugin-for-aws#299) is on main, not in any release yet.",
-        "Renovate is blocked to <1.14.1 in renovate.json until a release contains #299 and is",
-        "verified on R2."
+        "v1.14.1-1.14.2 send an empty x-amz-tagging header, which Cloudflare R2 rejects with",
+        "501 NotImplemented; backup-metadata uploads then fail and leave orphaned ZFS/R2 data",
+        "(incidents #5860 and #5849). renovate.json excludes that broken release window.",
+        "The upstream guard (velero-io/velero-plugin-for-aws#299) landed in v1.14.3. v1.14.4's",
+        "buildPutObjectInput sets Tagging only when configured. Its released source passed an",
+        "R2 upload/read-back/delete probe with this repository's storage-location settings.",
+        "Verify the released plugin's R2 upload path before future version bumps. A successful",
+        "object probe does not prove a complete Velero backup or restore."
       ]
     },
     {
@@ -1140,7 +1229,7 @@
         "datasource": "github-releases",
         "versioning": "semver"
       },
-      "value": "v1.37.0"
+      "value": "v1.37.1"
     },
     {
       "name": "paper",
@@ -1210,7 +1299,7 @@
         "registryUrl": "https://ghcr.io/recyclarr",
         "versioning": "docker"
       },
-      "value": "8.7.2@sha256:6e69e009e1cd7493ff6093e8e187b5d3788c75b4a2c0c5127b6a1beda1c19728"
+      "value": "8.7.3@sha256:9c6c74d52cfc6f740a5a3624aa83867e171bb70b90453ddb7a4048b8c80445f9"
     },
     {
       "name": "siderolabs/talos",
@@ -1221,7 +1310,7 @@
         "datasource": "github-releases",
         "versioning": "semver"
       },
-      "value": "1.14.1"
+      "value": "1.14.2"
     },
     {
       "name": "postgres-operator",
@@ -1233,7 +1322,7 @@
         "registryUrl": "https://opensource.zalando.com/postgres-operator/charts/postgres-operator",
         "versioning": "semver"
       },
-      "value": "2.0.2"
+      "value": "2.0.3"
     },
     {
       "name": "cooperspencer/gickup",
@@ -1293,7 +1382,7 @@
         "registryUrl": "https://charts.bitnami.com/bitnami",
         "versioning": "semver"
       },
-      "value": "28.2.3"
+      "value": "28.3.1"
     },
     {
       "name": "seaweedfs",
@@ -1305,7 +1394,7 @@
         "registryUrl": "https://seaweedfs.github.io/seaweedfs/helm",
         "versioning": "semver"
       },
-      "value": "4.47.0"
+      "value": "4.48.0"
     },
     {
       "name": "mariadb",
@@ -1317,7 +1406,7 @@
         "registryUrl": "https://charts.bitnami.com/bitnami",
         "versioning": "semver"
       },
-      "value": "28.0.2"
+      "value": "28.1.1"
     },
     {
       "name": "bitnami/mariadb",
@@ -1329,7 +1418,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "latest@sha256:c12340aa3504ba0df3e198a5d2375528761e7ddcaa1935f28d34d844f5e14f75"
+      "value": "latest@sha256:354e5aec20455bce931a05fa791c51e4a45879015bee09591295c76fe88c037e"
     },
     {
       "name": "bitnami/mysqld-exporter",
@@ -1341,7 +1430,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "latest@sha256:0ede898447e52b6de75642db8c49dd053577fb97c3b06b74939e3accf7a13fe8"
+      "value": "latest@sha256:389ccc1a8661857e34770432c9c737b1cc59351d13be91b93df03db817d0a7db"
     },
     {
       "name": "postalserver/postal",
@@ -1356,6 +1445,18 @@
       "value": "3.3.7@sha256:e54b4a7eb106ee15eda5664311c4b9415546d4196f5c4336d23a78d6ce57b819"
     },
     {
+      "name": "library/php",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "docker"
+      },
+      "value": "8.5.11-fpm-bookworm@sha256:dd198c828c224e479bdaa184cdcf04a28c73d186bf5a885493bf9cc78d7196ef"
+    },
+    {
       "name": "library/mariadb",
       "category": "upstream",
       "artifactType": "image",
@@ -1365,7 +1466,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "11.8@sha256:79d59758afc91b89b120b0a8904d637f5a3b3e1c4900f29b740d6d46c72fef68"
+      "value": "11.8@sha256:6422478cb8e159f080fb1d8ccf65101e26fe51385787fde7d16c3b165a331f15"
     },
     {
       "name": "boky/postfix",
@@ -1401,7 +1502,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "latest@sha256:cfc4eee658595834ef304eadb0c3ea721f3b7cb6404ad8b7cb909cc5b5145b23",
+      "value": "latest@sha256:4b3d9475d65571d28cbb19544d3820ec2945e4c8b2f18279394282b8dc3a592e",
       "notes": [
         "Alpine-based image bundling yq + busybox coreutils (sh/find/cmp/diff/cp);",
         "used by the Minecraft config-drift init container for semantic YAML/JSON",
@@ -1430,7 +1531,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "2.54.0@sha256:ae0f6f4bce38d2b8c40becc0d6241a08d9f57186ea03029de2189a2b5e722d94",
+      "value": "2.54.0@sha256:a4bb51f1a3553df194ce679fc1db721d8bfba2046fa1a88fe9d4ac551ffbce25",
       "notes": [
         "Initializes Flipt's local storage as committed normal Git repositories."
       ]
@@ -1457,7 +1558,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "bookworm-slim@sha256:3783cc01769c7b2b1b83a5c5ad96c815348e28ed7da68e2e3687004faa906251"
+      "value": "bookworm-slim@sha256:7c7b2c966bc9ee8cedfeef67e0e279108992c77681fa595db4a9d65c06ccc587"
     },
     {
       "name": "library/nginx",
@@ -1469,7 +1570,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "1.31.6-alpine@sha256:d10753d9289b8e3f884386351f73554ce72b631378949deddd75e83ee296c427"
+      "value": "1.31.6-alpine@sha256:df221db836e1754089190208cee7eeda94f233197056426eda74a43ab1abeac2"
     },
     {
       "name": "bugsink/bugsink",
@@ -1481,7 +1582,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "2.6.0@sha256:46fc01ffbd6054f2d493a25fd9de6efbddd9092d0fef363bfdb8117cf9ac61f5"
+      "value": "2.6.1@sha256:c5e3657451f4ba1ddb145a5118a4347314206cc5ba98f40e5f268c6c0975963e"
     },
     {
       "name": "arizephoenix/phoenix",
@@ -1493,7 +1594,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "regex:^version-(?<major>[0-9]+)[.](?<minor>[0-9]+)[.](?<patch>[0-9]+)-nonroot$"
       },
-      "value": "version-20.16.0-nonroot@sha256:e4a41a209b07289581a5d48167a11051c12704ac48983056fe0989b6f13b467a",
+      "value": "version-20.20.0-nonroot@sha256:2ac6874a4f743a626060adb6988b6dbd558530a0e06685334f63f8a779aaabb5",
       "notes": [
         "Phoenix publishes semver releases only under version-X.Y.Z tags; the nonroot",
         "variant runs as UID 65532 and is the one the upstream Helm chart deploys."
@@ -1513,13 +1614,25 @@
       ]
     },
     {
+      "name": "shepherdjerred/velero-plugin",
+      "category": "internal-image",
+      "artifactType": "image",
+      "management": {
+        "managed": false
+      },
+      "value": "2.0.0-1007972@sha256:eab187b9e23ad8351e4fc7871ad9fd30e27559d643c449a98be703ad48cf076c",
+      "notes": [
+        "First-publication marker; must be replaced by the CI-built digest before deployment. OpenEBS 3.6.0 with tested GUID ancestry and full rotation fixes."
+      ]
+    },
+    {
       "name": "shepherdjerred/caddy-s3proxy",
       "category": "internal-image",
       "artifactType": "image",
       "management": {
         "managed": false
       },
-      "value": "2.0.0-16936@sha256:b8317dbeb9baeaf705b76ad6c2153ac850dcc8f3e7ed19b8d221a0069704afea",
+      "value": "2.0.0-1007972@sha256:e5b0fa6a202d7029e614e7df1983a216bcd45e71fb59c13494bb1c5858950527",
       "notes": [
         "Custom caddy-s3proxy image - Caddy with s3proxy plugin for serving static sites from S3",
         "not managed by renovate"
@@ -1532,11 +1645,23 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-0@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "value": "2.0.0-1007571@sha256:8d71ceb5287d1230d6be361eb25ea4f8613d66607486a0287f9c664d9f3006f4",
       "notes": [
         "The Storm's Minecraft server image (minecraft-tsmc), built from packages/the-storm/server",
-        "by the infra bake group. not managed by renovate — CI's version commit-back writes the real",
-        "tag@digest after the first image push; the zero digest is the unpublished placeholder."
+        "by the infra bake group. Not managed by renovate; CI version commit-back updates the pin."
+      ]
+    },
+    {
+      "name": "shepherdjerred/the-storm-server/prod",
+      "category": "internal-image",
+      "artifactType": "image",
+      "management": {
+        "managed": false
+      },
+      "value": "2.0.0-1008336@sha256:4c056c0a82c55c009297585aa0f5f2040a398e77510343b36d34bb102a3664e2",
+      "notes": [
+        "Accepted minecraft-tsmc production image. Promote explicitly after the selected stopped-server progression archive and release checks.",
+        "CI publishes and updates shepherdjerred/the-storm-server separately; candidate publication never activates production."
       ]
     },
     {
@@ -1546,7 +1671,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1002644@sha256:9c312ddf176ff90fdb74bcd5457452f7a7441e3982d8bf1b0cc1d88f2da77674",
+      "value": "2.0.0-1007972@sha256:f184cb45e0edebe34da85168d4761ef8d71736255be44ec9f7bfe734cf16ff9a",
       "notes": [
         "Custom tasknotes-server image - TaskNotes API server for mobile app",
         "not managed by renovate"
@@ -1559,7 +1684,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-16936@sha256:985e6499b130f9f4927de45ae54cb13299a363409941717737c8d0433a45bbbe",
+      "value": "2.0.0-1006677@sha256:c6bdc852849cad9029086d305723870342110637d6a7cf760d636c28ca897188",
       "notes": [
         "Custom obsidian-headless image - Official Obsidian Headless CLI for vault sync",
         "not managed by renovate"
@@ -1575,7 +1700,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "1.32.0@sha256:c3e752127759616bb1615e0f9ba0e21635aeb5fdeb922de4f371c350955f46ae"
+      "value": "1.32.1@sha256:acecbab5b0b8ae9cf4012b508866ca97feda3709577bf157b537239f40029049"
     },
     {
       "name": "temporalio/ui",
@@ -1587,7 +1712,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "2.54.1@sha256:ff0943fe532b8e33c46cd28b29e81e0ce0b6f55b9ee50a38ef1b437cc4de3fa5"
+      "value": "2.55.0@sha256:3899d5cf749b5555c9f798d46f2423b1d6190ea391ca713db5d1bba961759e58"
     },
     {
       "name": "temporalio/admin-tools",
@@ -1599,7 +1724,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "1.32.0@sha256:a9f84fb9a374b2374fe2e67c8efc0468ff3f1c66c8a0b14597ec86e349e62bca"
+      "value": "1.32.1@sha256:9ef0dc5b063bf4ffd5c1512de72e0e73e225bd2c7006a18ce69bd592a8862a83"
     },
     {
       "name": "shepherdjerred/temporal-worker",
@@ -1608,7 +1733,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1002844@sha256:381e817cfdc8ece21cf1e17e1b4c9f3828f01cb3ee98e576f3c2996d4d231c55",
+      "value": "2.0.0-1007972@sha256:23292c9182db1fef80a2dbdb322b7b33920c61b6723c58a0902d86ee46a51b55",
       "notes": [
         "Custom temporal-worker image - updated by CI pipeline",
         "not managed by renovate"
@@ -1621,7 +1746,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1002826@sha256:34825872a97c73cb1f463011eb8623296db89282f207912a3baca360b16c9beb",
+      "value": "2.0.0-1007695@sha256:b6337d09a0f45df85aaad6e7fd712a55886a51e461715f0c2bc868b0e7bdf2f0",
       "notes": [
         "Candidate central Workflow Worker image - updated by CI pipeline",
         "not managed by renovate"
@@ -1634,7 +1759,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1002817@sha256:b3479221851e3ccbbcf1bb2f1c279fdcb48dca602aae8dec1dcec1f32e0ac273",
+      "value": "2.0.0-1005566@sha256:49e6b12c31de035699be83c0b1a1dd0c57960284e267f8bae3bea23d9903c912",
       "notes": [
         "Stable central Workflow Worker image - promoted after a healthy 100% ramp",
         "not managed by renovate"
@@ -1647,7 +1772,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1002644@sha256:2323d0c6b8e7a8a33699f78c33a4ceefbfc851314977b106a270ad253b2ce2c6",
+      "value": "2.0.0-1007972@sha256:144daa4aed3b64f3d6ee56295583fa495ffef9308eee655a71221f612d32d33a",
       "notes": [
         "Custom TRMNL dashboard image - updated by CI pipeline",
         "not managed by renovate"
@@ -1664,11 +1789,23 @@
         "versioning": "semver",
         "packageName": "flipt/flipt"
       },
-      "value": "v2.13.0@sha256:d96f7cbe499dfa2cb1e626ce0230a9d5e068896975a855000a7a8645826862e4",
+      "value": "v2.13.1@sha256:3118adad2f21d2d4793765265e9eb1c99b547019f062ce438430089ba7cea89b",
       "notes": [
         "Feature flag server. Fair Core License; the free tier covers the UI, local git storage, and evaluation.",
         "A bump requires re-capturing packages/feature-flags/src/providers/fixtures/flipt-snapshot.default.json,",
         "because the provider fetches the internal /internal/v1/evaluation/snapshot API."
+      ]
+    },
+    {
+      "name": "shepherdjerred/glitter-boys-launcher",
+      "category": "internal-image",
+      "artifactType": "image",
+      "management": {
+        "managed": false
+      },
+      "value": "0.1.0-0@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "notes": [
+        "Unpublished bootstrap marker; publish a locally verified service image and commit its immutable digest before activation."
       ]
     }
   ]

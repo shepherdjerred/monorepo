@@ -1,4 +1,10 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
+import {
+  type Interaction,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+} from "discord.js";
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   StoredBucksLedgerContextSchema,
   BucksPoolRosterSchema,
@@ -139,7 +145,7 @@ function needsRosterLookup(context: LedgerContext): boolean {
 
 async function loadRosterLabels(
   serverId: DiscordGuildId,
-  matchIds: ReadonlySet<string>,
+  matchIds: ReadonlySet<RiotMatchId>,
   prismaClient: ExtendedPrismaClient,
 ): Promise<Map<string, string | undefined>> {
   const labels = new Map<string, string | undefined>();
@@ -195,10 +201,10 @@ function collectLabelSources(
   contexts: ReadonlyMap<number, LedgerContext>,
 ): {
   labels: Map<number, string>;
-  rosterMatchIds: Set<string>;
+  rosterMatchIds: Set<RiotMatchId>;
 } {
   const labels = new Map<number, string>();
-  const rosterMatchIds = new Set<string>();
+  const rosterMatchIds = new Set<RiotMatchId>();
   for (const entry of entries) {
     const context = contexts.get(entry.id);
     const fromContext = contextAliasLabel(context);
@@ -365,7 +371,7 @@ export function renderBucksHistory(
 
 export type BucksNavigationInteraction = {
   customId: string;
-  guildId: string | null;
+  guildId: Interaction["guildId"];
   user: { id: string };
   deferReply: (options: { ephemeral: true }) => Promise<unknown>;
   deferUpdate: () => Promise<unknown>;

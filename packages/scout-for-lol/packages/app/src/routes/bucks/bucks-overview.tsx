@@ -1,7 +1,11 @@
+import {
+  type DiscordAccountId,
+  formatInteger,
+  type RiotMatchId,
+} from "@scout-for-lol/data";
 import { Loaded } from "@shepherdjerred/loaded";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { formatInteger } from "@scout-for-lol/data";
 import {
   ErrorState,
   StaleState,
@@ -115,7 +119,7 @@ export function WalletPanel(props: {
    */
   wallet: Loaded<WalletData>;
   onRetry: () => void;
-  onCancelOutcome: (matchId: string) => void;
+  onCancelOutcome: (matchId: RiotMatchId) => void;
 }) {
   return Loaded.match(props.wallet, {
     loading: () => <DelayedLoadingState label="Loading your wallet…" />,
@@ -144,8 +148,10 @@ export function WalletPanel(props: {
 function usePositionNames(
   markets:
     | {
-        outcome: { sides: { positions: { discordId: string }[] }[] }[];
-        parlays: { positions: { discordId: string }[] }[];
+        outcome: {
+          sides: { positions: { discordId: DiscordAccountId }[] }[];
+        }[];
+        parlays: { positions: { discordId: DiscordAccountId }[] }[];
       }
     | undefined,
 ): (discordId: string) => string {
@@ -236,7 +242,10 @@ export function BucksOverview() {
     }),
   );
 
-  const placeOutcome = (matchId: string, submission: BucksBetSubmission) => {
+  const placeOutcome = (
+    matchId: RiotMatchId,
+    submission: BucksBetSubmission,
+  ) => {
     const key = `outcome:${matchId}`;
     placeOutcomeMutation.mutate(
       {
@@ -255,7 +264,10 @@ export function BucksOverview() {
       },
     );
   };
-  const placeParlay = (matchId: string, submission: BucksBetSubmission) => {
+  const placeParlay = (
+    matchId: RiotMatchId,
+    submission: BucksBetSubmission,
+  ) => {
     const key = `parlay:${matchId}`;
     placeParlayMutation.mutate(
       {
@@ -281,7 +293,7 @@ export function BucksOverview() {
   // forms) while the wallet answer is still loading or failed, since an
   // impossible mutation is worse than a brief false negative.
   const canBet = walletQuery.data?.eligible === true;
-  const requestCancel = (matchId: string) => {
+  const requestCancel = (matchId: RiotMatchId) => {
     setCancelError(null);
     setCancelTarget(matchId);
   };

@@ -22,8 +22,8 @@ const config: StorybookConfig = {
   // The Scout theme must resolve before first paint, exactly as the deleted
   // index.html arranged it. scoutAssetsPlugin serves this URL from
   // SCOUT_THEME_BOOTSTRAP_SCRIPT in dev and emits the file on build.
-  previewHead: (head) =>
-    `${head ?? ""}<script src="/assets/scout/brand/theme-bootstrap.js"></script>`,
+  previewHead: (head = "") =>
+    `${head}<script src="/assets/scout/brand/theme-bootstrap.js"></script>`,
 };
 
 export default config;

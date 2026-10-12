@@ -38,7 +38,7 @@ export async function handleGetOwner(
 
 export async function handleGetHistory(
   guildId: string | undefined,
-  limit: number | undefined,
+  limit: number | undefined = 10,
 ): Promise<ElectionResult> {
   if (guildId == null || guildId.length === 0) {
     return { success: false, message: "guildId is required" };
@@ -46,7 +46,7 @@ export async function handleGetHistory(
   const elections = await prisma.electionPoll.findMany({
     where: { guildId },
     orderBy: { scheduledStart: "desc" },
-    take: limit ?? 10,
+    take: limit,
   });
   const data = elections.map((e) => ({
     id: e.id,

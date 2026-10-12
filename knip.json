@@ -27,7 +27,8 @@
     "packages/woodpecker-config-extension": {
       // dump-steps.ts is invoked as a subprocess by check-ci-env (see
       // scripts/lib/ci/generated-steps.ts), which knip cannot see.
-      "entry": ["src/dump-steps.ts", "test/**/*.ts"],
+      // The trusted clone container invokes checkout/main.ts through flock.
+      "entry": ["src/dump-steps.ts", "src/checkout/main.ts", "test/**/*.ts"],
       "project": ["src/**/*.ts", "test/**/*.ts"]
     },
     "packages/birmel": {
@@ -61,6 +62,35 @@
       "project": [
         "src/**/*.ts",
         "test/**/*.ts",
+        "architecture-fixtures/**/*.ts"
+      ]
+    },
+    "packages/mc-build": {
+      "entry": [
+        "scripts/**/*.ts",
+        "test/fixtures/**/*.ts",
+        "library/*/build.ts"
+      ],
+      "project": [
+        "src/**/*.ts",
+        "test/**/*.ts",
+        "scripts/**/*.ts",
+        "library/**/*.ts"
+      ]
+    },
+    "packages/mc-harness": {
+      "entry": [
+        "architecture-fixtures/**/*.ts",
+        "scripts/**/*.ts",
+        "playtests/**/*.ts",
+        "evals/test/**/*.ts"
+      ],
+      "project": [
+        "src/**/*.ts",
+        "test/**/*.ts",
+        "scripts/**/*.ts",
+        "playtests/**/*.ts",
+        "evals/**/*.ts",
         "architecture-fixtures/**/*.ts"
       ]
     },
@@ -102,7 +132,14 @@
       "project": ["src/**/*.ts", "test/**/*.ts"]
     },
     "packages/glitter-context": {
-      "entry": ["src/index.ts", "test/**/*.ts", "scripts/**/*.ts"],
+      "entry": [
+        "src/index.ts",
+        // Published as the "./schema" subpath, which consumers resolve through
+        // dist/. Knip cannot map that back to source, so declare it here.
+        "src/schema.ts",
+        "test/**/*.ts",
+        "scripts/**/*.ts"
+      ],
       "project": ["src/**/*.ts", "test/**/*.ts", "scripts/**/*.ts"]
     },
     "packages/llm-observability": {
@@ -119,10 +156,7 @@
     "packages/homelab/src/cdk8s": {
       "entry": ["src/**/*.ts", "scripts/**/*.ts"],
       "project": ["src/**/*.ts", "scripts/**/*.ts"],
-      // `homelab` is a graph edge, not an import: the Argo CD script tests
-      // here spawn packages/homelab/scripts, so a change there must select
-      // this package's tests.
-      "ignoreDependencies": ["cdk8s-cli", "homelab"]
+      "ignoreDependencies": ["cdk8s-cli"]
     },
     "packages/homelab/src/helm-types": {
       "entry": [
@@ -137,7 +171,6 @@
         "src/interface-generator.ts",
         "src/utils.ts",
         "src/comment-parser.ts",
-        "src/helm-types.ts",
         "src/yaml-comment-filters.ts",
         "src/yaml-comment-regex-parser.ts",
         "src/yaml-preprocess.ts",
@@ -194,6 +227,14 @@
     "packages/scout-for-lol/packages/domain": {
       "entry": ["src/**/*.test.ts", "architecture-fixtures/**/*.ts"],
       "project": ["src/**/*.ts", "architecture-fixtures/**/*.ts"]
+    },
+    "packages/scout-for-lol/packages/temporal": {
+      "entry": ["scripts/**/*.ts", "architecture-fixtures/**/*.ts"],
+      "project": [
+        "src/**/*.ts",
+        "scripts/**/*.ts",
+        "architecture-fixtures/**/*.ts"
+      ]
     },
     "packages/scout-for-lol/packages/report": {
       "project": ["src/**/*.{ts,tsx}"]
@@ -252,12 +293,24 @@
       "entry": ["src/**/*.astro"],
       "project": ["src/**/*.{ts,astro,css}", "*.ts"]
     },
-    "packages/ts-mc": {
-      "entry": ["src/**/*.astro"],
-      "project": ["src/**/*.{ts,astro,css}", "*.ts"]
-    },
     "packages/ts-mc-docs": {
       "project": ["src/**/*.{ts,astro,mdx}", "*.ts"]
+    },
+    // Docker acceptance harnesses invoke these fixtures as subprocesses.
+    "packages/storm-forum": {
+      "entry": [
+        "scripts/*.ts",
+        "test/backup-roundtrip.ts",
+        "test/release-preflight.ts",
+        "test/release-installation.ts",
+        "test/s3-fixture.ts",
+        "test/smtp-fixture.ts"
+      ],
+      "project": ["src/**/*.ts", "scripts/**/*.ts", "test/**/*.ts"]
+    },
+    "packages/storm-theme": {
+      "entry": ["scripts/*.ts", "src/render-cli.ts"],
+      "project": ["src/**/*.ts", "scripts/**/*.ts", "test/**/*.ts"]
     },
     "packages/streambot": {
       "entry": ["test/**/*.ts", "integration/**/*.ts", "e2e/**/*.ts"],
@@ -268,14 +321,17 @@
         "e2e/**/*.ts"
       ]
     },
-    // Vitest configs and global setup are reached through test:e2e; the
-    // Woodpecker lane invokes prepare-sidecar.ts as a script. Knip cannot
-    // infer either command-line entry from imports.
+    // Vitest configs and global setup are reached through test:e2e, test:full
+    // and test:load; the Woodpecker lane invokes prepare-sidecar.ts as a
+    // script. Knip cannot infer either command-line entry from imports.
     "packages/the-storm": {
       "entry": [
         "vitest.e2e.config.ts",
+        "vitest.full.config.ts",
+        "vitest.load.config.ts",
         "tests/e2e/global-setup.ts",
-        "tests/e2e/prepare-sidecar.ts"
+        "tests/e2e/prepare-sidecar.ts",
+        "playtests/**/*.playtest.ts"
       ]
     },
     "packages/temporal": {
@@ -340,10 +396,10 @@
     "optionalPeerDependencies": "error",
     "catalog": "error",
     "duplicates": "off",
-    "types": "off",
+    "types": "error",
     "nsExports": "off",
     "nsTypes": "off",
-    "enumMembers": "off",
+    "enumMembers": "error",
     "namespaceMembers": "off",
     "unresolved": "error",
     "unlisted": "error",
@@ -362,7 +418,6 @@
     "scripts/observability/local-stack/**"
   ],
   "ignoreDependencies": [
-    "@commitlint/types",
     "@eslint-community/eslint-plugin-eslint-comments",
     "@eslint/compat",
     "@eslint/eslintrc",
@@ -422,46 +477,6 @@
     "yoga-wasm-web",
     "zod"
   ],
-  "ignoreFiles": [
-    "packages/discord-plays-mario-kart/packages/frontend/src/model/connection.ts",
-    "packages/discord-plays-mario-kart/packages/frontend/src/util.ts",
-    "packages/discord-plays-pokemon/packages/frontend/src/util.ts",
-    "packages/monarch/src/lib/costco/receipt-parser.ts"
-  ],
-  "ignoreIssues": {
-    "packages/better-skill-capped/src/components/ui/card.tsx": ["exports"],
-    "packages/discord-plays-mario-kart/packages/backend/src/util.ts": [
-      "exports"
-    ],
-    "packages/discord-plays-mario-kart/packages/frontend/src/controller-ui.tsx": [
-      "exports"
-    ],
-    "packages/discord-plays-pokemon/packages/backend/src/emulator/audio/wav.ts": [
-      "exports"
-    ],
-    "packages/discord-plays-pokemon/packages/backend/src/game/events/pokemon-struct.ts": [
-      "exports"
-    ],
-    "packages/discord-plays-pokemon/packages/backend/src/discord/message-handler.ts": [
-      "exports"
-    ],
-    "packages/discord-plays-pokemon/packages/backend/src/emulator/constants.ts": [
-      "exports"
-    ],
-    "packages/discord-plays-pokemon/packages/backend/src/game/command/command.ts": [
-      "exports"
-    ],
-    "packages/home-assistant/src/codegen/introspect.ts": ["exports"],
-    "packages/monarch/src/lib/conservice/client.ts": ["exports"],
-    "packages/monarch/src/lib/enrichment.ts": ["exports"],
-    "packages/monarch/src/lib/monarch/api.ts": ["exports"],
-    "packages/scout-for-lol/packages/frontend/src/lib/review-tool/reset-defaults.ts": [
-      "exports"
-    ],
-    "packages/tasknotes-server/src/sentry.ts": ["exports"],
-    "packages/temporal/src/observability/tracing.ts": ["exports"],
-    "packages/temporal/src/workflows/ha/util.ts": ["exports"]
-  },
   "ignoreBinaries": [
     "argocd",
     "ffmpeg",
@@ -473,13 +488,11 @@
     "kubectl",
     "mktemp",
     "mise",
-    "op",
     "pinchtab",
     "swift",
     "swiftlint",
     "tflint",
     "uv",
-    "velero",
     "xcodegen"
   ]
 }

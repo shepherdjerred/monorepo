@@ -75,7 +75,7 @@ export function useExploreShare(params: {
   const refresh = useCallback(
     async (conversationId: string): Promise<void> => {
       await queryClient.invalidateQueries({
-        queryKey: trpc.explore.get.queryKey({ conversationId }),
+        queryKey: trpc.explore.get.queryKey({ conversationId, version: 3 }),
       });
       await queryClient.invalidateQueries({
         queryKey: trpc.explore.list.queryKey(),

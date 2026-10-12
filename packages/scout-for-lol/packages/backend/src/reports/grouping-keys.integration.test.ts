@@ -1,3 +1,7 @@
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { testGuildId, testPuuid } from "#src/testing/test-ids.ts";
@@ -18,7 +22,7 @@ const now = new Date(Date.UTC(2026, 4, 17, 12, 0, 0));
 const lakeDir = resolveLakeDir();
 
 function fact(
-  matchId: string,
+  matchId: RiotMatchId,
   alias: string,
   extra: { win: boolean; teamId: number; teamPosition?: string },
 ) {
@@ -58,11 +62,19 @@ describe("grouping keys", () => {
       serverId,
       matchFacts: [
         {
-          ...fact("NA1_1", "Blue", { win: true, teamId: 100 }),
+          ...fact(RiotMatchIdSchema.parse("NA1_1"), "Blue", {
+            win: true,
+            teamId: 100,
+          }),
           firstDragon: true,
         },
       ],
-      untrackedMatchFacts: [fact("NA1_1", "Red", { win: false, teamId: 200 })],
+      untrackedMatchFacts: [
+        fact(RiotMatchIdSchema.parse("NA1_1"), "Red", {
+          win: false,
+          teamId: 200,
+        }),
+      ],
     });
 
     const result = await executeReportQuery({
@@ -91,13 +103,17 @@ describe("grouping keys", () => {
     await writeTestLake(lakeDir, {
       serverId,
       matchFacts: [
-        fact("NA1_1", "Mid", {
+        fact(RiotMatchIdSchema.parse("NA1_1"), "Mid", {
           win: true,
           teamId: 100,
           teamPosition: "MIDDLE",
         }),
         // ARAM and Arena rows carry '' rather than NULL.
-        fact("NA1_2", "Aram", { win: true, teamId: 100, teamPosition: "" }),
+        fact(RiotMatchIdSchema.parse("NA1_2"), "Aram", {
+          win: true,
+          teamId: 100,
+          teamPosition: "",
+        }),
       ],
     });
 

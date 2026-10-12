@@ -7,20 +7,21 @@ events:
     title: Stormnight
     firstDay: 10-28
     lastDay: 10-31
-    spawnRadius: 64
+    spawnRadius: 128
     dailyDoors: 11
+    # Lower door halves, relative to the preserved vanilla spawn (0,65,0).
     doors:
-      - { east: 24, up: 0, south: 0, material: DARK_OAK_DOOR }
-      - { east: 20, up: 0, south: 12, material: DARK_OAK_DOOR }
-      - { east: 12, up: 0, south: 20, material: DARK_OAK_DOOR }
-      - { east: 0, up: 0, south: 24, material: DARK_OAK_DOOR }
-      - { east: -12, up: 0, south: 20, material: DARK_OAK_DOOR }
-      - { east: -20, up: 0, south: 12, material: DARK_OAK_DOOR }
-      - { east: -24, up: 0, south: 0, material: DARK_OAK_DOOR }
-      - { east: -20, up: 0, south: -12, material: DARK_OAK_DOOR }
-      - { east: -12, up: 0, south: -20, material: DARK_OAK_DOOR }
-      - { east: 0, up: 0, south: -24, material: DARK_OAK_DOOR }
-      - { east: 12, up: 0, south: -20, material: DARK_OAK_DOOR }
+      - { east: -7, up: 2, south: -52, material: OAK_DOOR }
+      - { east: -28, up: 7, south: -34, material: SPRUCE_DOOR }
+      - { east: -4, up: 2, south: -41, material: JUNGLE_DOOR }
+      - { east: -55, up: 4, south: -4, material: SPRUCE_DOOR }
+      - { east: -76, up: 4, south: 22, material: OAK_DOOR }
+      - { east: -49, up: 5, south: 24, material: SPRUCE_DOOR }
+      - { east: -8, up: -2, south: 43, material: SPRUCE_DOOR }
+      - { east: -38, up: 9, south: 49, material: SPRUCE_DOOR }
+      - { east: -8, up: 2, south: 65, material: SPRUCE_DOOR }
+      - { east: 18, up: -2, south: 7, material: SPRUCE_DOOR }
+      - { east: 69, up: 4, south: 66, material: SPRUCE_DOOR }
     rewards:
       - { kind: TRICK, material: ROTTEN_FLESH, amount: 3, weight: 25 }
       - { kind: TRICK, material: POISONOUS_POTATO, amount: 1, weight: 10 }
@@ -33,16 +34,17 @@ events:
     title: Winter Vigil
     firstDay: 12-24
     lastDay: 01-01
-    spawnRadius: 64
+    spawnRadius: 128
     dailyDoors: 7
+    # Lower door halves, relative to the preserved vanilla spawn (0,65,0).
     doors:
-      - { east: 8, up: 0, south: 0, material: SPRUCE_DOOR }
-      - { east: 4, up: 0, south: 7, material: SPRUCE_DOOR }
-      - { east: -4, up: 0, south: 7, material: SPRUCE_DOOR }
-      - { east: -8, up: 0, south: 0, material: SPRUCE_DOOR }
-      - { east: -4, up: 0, south: -7, material: SPRUCE_DOOR }
-      - { east: 4, up: 0, south: -7, material: SPRUCE_DOOR }
-      - { east: 0, up: 0, south: -10, material: SPRUCE_DOOR }
+      - { east: -28, up: 7, south: -34, material: SPRUCE_DOOR }
+      - { east: -55, up: 4, south: -4, material: SPRUCE_DOOR }
+      - { east: -49, up: 5, south: 24, material: SPRUCE_DOOR }
+      - { east: -8, up: -2, south: 43, material: SPRUCE_DOOR }
+      - { east: -38, up: 9, south: 49, material: SPRUCE_DOOR }
+      - { east: -8, up: 2, south: 65, material: SPRUCE_DOOR }
+      - { east: 18, up: -2, south: 7, material: SPRUCE_DOOR }
     rewards:
       - { kind: TREAT, material: COOKIE, amount: 4, weight: 30 }
       - { kind: TREAT, material: PUMPKIN_PIE, amount: 2, weight: 25 }

@@ -25,4 +25,7 @@ public interface Protection {
    * redstone power) from driving mechanisms on another's.
    */
   boolean sameLand(Location a, Location b);
+
+  /** Whether immutable preservation or an active recovery forbids background block changes. */
+  boolean isPreserved(Location location);
 }

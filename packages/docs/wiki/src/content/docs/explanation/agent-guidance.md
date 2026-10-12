@@ -100,6 +100,28 @@ symlinks, and the absence of repository Cursor rule copies. It does not judge
 whether prose is wise. Fresh-session discovery tests remain the behavioral
 proof.
 
+## APIs and browser work serve different needs
+
+The [personal guidance](https://github.com/shepherdjerred/monorepo/blob/main/packages/dotfiles/AGENTS.md)
+prefers supported APIs and authenticated CLIs for structured operations. They
+provide explicit inputs, results, and errors that are easier to verify.
+Visual checks, interactive authentication, and UI-only capabilities make a
+browser the appropriate first choice. Agents can choose that route directly.
+
+When an appropriate API fails, browser access lets the authorized task
+continue. A Linear report preserves the failure as actionable work.
+An intentional UI choice or an absent API does not imply broken tooling.
+An uncertain write requires read-back before another attempt, regardless of
+which interface performs it.
+
+The [PinchTab skill](https://github.com/shepherdjerred/monorepo/blob/main/packages/dotfiles/dot_agents/skills/pinchtab-helper/SKILL.md)
+keeps website content outside the instruction boundary. Broad browsing and
+page evaluation expand capability while task authorization governs its use.
+The [Mac setup](https://github.com/shepherdjerred/monorepo/blob/main/packages/dotfiles/run_once_after_install-pinchtab-daemon.sh.tmpl)
+permits local and private sites needed for development and operator work.
+The [hosted browser](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/pinchtab/index.ts)
+retains its separate firewall boundary for public HTTPS destinations.
+
 ## Delivery evidence remains layered
 
 Guidance follows the same acceptance model as the homelab. Source, CI,

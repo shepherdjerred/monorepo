@@ -51,7 +51,7 @@ final class JdaListener extends ListenerAdapter {
     if ("list".equals(name)) {
       event.deferReply().queue();
       relay.listPlayers(
-          reply -> JdaBridge.withoutMentions(event.getHook().sendMessage(reply)).queue());
+          reply -> JdaBridge.quietMessage(event.getHook().sendMessage(reply)).queue());
       return;
     }
     if (!"baltop".equals(name) && !"towns".equals(name)) {
@@ -74,7 +74,11 @@ final class JdaListener extends ListenerAdapter {
               if ("baltop".equals(name)) {
                 commands.baltop(reply);
               } else {
-                commands.towns(reply);
+                commands.towns(
+                    event.getOption("page", 1, option -> option.getAsInt()),
+                    java.util.Optional.ofNullable(
+                        event.getOption("name", option -> option.getAsString())),
+                    reply);
               }
             },
             error -> bridge.logCommandFailure("deferring Discord read command", error));

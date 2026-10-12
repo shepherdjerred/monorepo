@@ -19,11 +19,10 @@
     "test:watch": "bun --no-install --bun vitest --config ../../../../vitest.config.ts",
     "test:coverage": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run --coverage",
     "test:ci": "bun ../../../../scripts/ci/run-ci-test.ts",
-    "lint": "bun x eslint src --max-warnings=0",
+    "lint": "bun x eslint src --max-warnings=0 && check-architecture",
     "format": "bun x prettier --check src",
     "format:write": "bun x prettier --write src",
-    "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
-    "test:report": "CI_TEST_COVERAGE=1 bun ../../../../scripts/ci/run-ci-test.ts"
+    "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit"
   },
   "dependencies": {
     "@resvg/resvg-js": "^2.6.2",
@@ -33,20 +32,21 @@
     "echarts": "^6.0.0",
     "react": "19.3.0",
     "remeda": "^2.21.2",
-    "satori": "^0.33.0",
+    "satori": "^0.47.0",
     "ts-pattern": "^5.7.0",
     "yoga-wasm-web": "^0.3.3",
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@shepherdjerred/architecture": "workspace:*",
     "@types/chroma-js": "^3.1.2",
     "@types/react": "^19.3.0",
     "bun-types": "1.4.2",
     "eslint": "^10.7.0",
     "typescript": "^6.0.3",
     "@typescript/native": "npm:typescript@7.0.2",
-    "vitest": "5.0.1",
-    "@vitest/coverage-istanbul": "5.0.1"
+    "vitest": "5.0.3",
+    "@vitest/coverage-istanbul": "5.0.3"
   },
   "description": "Generate report images for League of Legends",
   "keywords": [
@@ -63,6 +63,7 @@
     "url": "https://github.com/shepherdjerred/monorepo/issues"
   },
   "imports": {
+    "#architecture": "./architecture.config.ts",
     "#src/*": "./src/*"
   }
 }

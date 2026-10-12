@@ -11,6 +11,7 @@ export type R2Object = {
   key: string;
   size: number;
   lastModified: string;
+  etag?: string;
 };
 
 type InventoryGroup = {
@@ -164,10 +165,12 @@ async function listObjects(
       const key = textFromXml(content, "Key");
       const sizeText = textFromXml(content, "Size");
       const lastModified = textFromXml(content, "LastModified");
+      const etag = textFromXml(content, "ETag");
       if (
         key === undefined ||
         sizeText === undefined ||
-        lastModified === undefined
+        lastModified === undefined ||
+        etag === undefined
       ) {
         throw new TypeError(
           "R2 object listing omitted required object metadata",
@@ -182,7 +185,7 @@ async function listObjects(
           `R2 object ${key} has invalid LastModified ${lastModified}`,
         );
       }
-      return { key, size, lastModified };
+      return { key, size, lastModified, etag };
     },
   );
 

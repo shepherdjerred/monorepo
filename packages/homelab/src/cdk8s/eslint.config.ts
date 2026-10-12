@@ -14,10 +14,6 @@ const config = [
     rules: { "custom-rules/require-container-resources": "error" },
   },
   {
-    files: ["src/misc/modded-minecraft.ts"],
-    rules: { "no-secrets/no-secrets": "off" },
-  },
-  {
     files: ["src/**/*.ts"],
     rules: {
       // Imports of the loose CRD shim are silent strict-typing regressions —
