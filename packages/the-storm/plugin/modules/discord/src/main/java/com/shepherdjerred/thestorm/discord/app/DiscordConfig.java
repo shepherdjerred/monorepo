@@ -14,6 +14,7 @@ import java.util.regex.Pattern;
  * @param maxInboundLength the longest Discord message relayed into the game, in characters
  * @param messages what the bot posts
  * @param lobbyPing who a minigame lobby post may ping
+ * @param milestones which town and skill milestones are posted
  */
 public record DiscordConfig(
     String tokenEnv,
@@ -22,7 +23,8 @@ public record DiscordConfig(
     String source,
     int maxInboundLength,
     DiscordMessages messages,
-    LobbyPing lobbyPing) {
+    LobbyPing lobbyPing,
+    Milestones milestones) {
 
   /** Discord's limit on a custom status. */
   public static final int MAX_STATUS_LENGTH = 128;

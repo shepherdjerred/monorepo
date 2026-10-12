@@ -29,6 +29,11 @@ public record SeasonalConfig(String mainWorld, String timeZone, List<Event> even
     return ZoneId.of(timeZone);
   }
 
+  /** The events running on {@code day}, in authored order. */
+  public List<Event> activeOn(java.time.LocalDate day) {
+    return events.stream().filter(event -> event.window().contains(day)).toList();
+  }
+
   /** Inclusive annual window, daily visit cap, and weighted outcomes. */
   public record Event(
       String id,

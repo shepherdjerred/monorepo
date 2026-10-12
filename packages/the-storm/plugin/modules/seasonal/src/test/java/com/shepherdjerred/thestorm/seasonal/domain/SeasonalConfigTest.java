@@ -5,12 +5,26 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.shepherdjerred.thestorm.core.config.ConfigFiles;
 import com.shepherdjerred.thestorm.core.config.StrictYaml;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
 
 final class SeasonalConfigTest {
 
   private static final Path SHIPPED =
       Path.of("../../../server/owned/plugins/TheStorm/seasonal.yml");
+
+  @Test
+  void activeEventsFollowTheirWindowsAcrossNewYear() {
+    var config = ConfigFiles.load(SHIPPED, SeasonalConfig.class);
+
+    assertThat(config.activeOn(LocalDate.of(2026, 10, 30)))
+        .extracting(SeasonalConfig.Event::id)
+        .containsExactly("stormnight");
+    assertThat(config.activeOn(LocalDate.of(2027, 1, 1)))
+        .extracting(SeasonalConfig.Event::id)
+        .containsExactly("winter_vigil");
+    assertThat(config.activeOn(LocalDate.of(2026, 11, 1))).isEmpty();
+  }
 
   @Test
   void shippedEventsHaveAuthoredMainWorldDoors() {

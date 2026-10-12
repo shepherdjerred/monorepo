@@ -10,6 +10,7 @@ import com.shepherdjerred.thestorm.discord.adapter.discord.JdaBridge;
 import com.shepherdjerred.thestorm.discord.adapter.paper.PaperOnlinePlayers;
 import com.shepherdjerred.thestorm.discord.adapter.paper.SealedPlayers;
 import com.shepherdjerred.thestorm.discord.adapter.paper.ServerEventsListener;
+import com.shepherdjerred.thestorm.discord.adapter.paper.TownMilestonePosts;
 import com.shepherdjerred.thestorm.discord.adapter.paper.VanillaPlainText;
 import com.shepherdjerred.thestorm.discord.app.DiscordConfig;
 import com.shepherdjerred.thestorm.discord.app.DiscordReadCommands;
@@ -17,6 +18,7 @@ import com.shepherdjerred.thestorm.discord.app.DiscordRelay;
 import com.shepherdjerred.thestorm.discord.domain.DiscordCredentials;
 import com.shepherdjerred.thestorm.economy.app.CrystalFormatter;
 import com.shepherdjerred.thestorm.economy.app.PlayerLeaderboard;
+import com.shepherdjerred.thestorm.towns.app.TownMilestones;
 import com.shepherdjerred.thestorm.towns.app.TownRead;
 import java.util.List;
 import java.util.Optional;
@@ -26,9 +28,10 @@ import org.jspecify.annotations.Nullable;
 /**
  * The Discord bridge (replaces DiscordSRV): Global chat both ways, join, leave, death and
  * advancement posts, wake and sleep posts, and the {@code /list}, {@code /baltop}, and {@code
- * /towns} commands. Needs the chat, economy, and towns modules. Other modules post through the
- * {@link DiscordRelay} service: tickets, and Search and Destroy and Mob Arena lobbies and results
- * (lobby posts may ping the roles in {@code lobbyPing}).
+ * /towns} commands, and town foundings and claim milestones. Needs the chat, economy, and towns
+ * modules. Other modules post through the {@link DiscordRelay} service: tickets, quest and skill
+ * milestones, and Search and Destroy and Mob Arena lobbies and results (lobby posts may ping the
+ * roles in {@code lobbyPing}).
  *
  * <p>The bot token and channel id come from environment variables named in {@code discord.yml};
  * without them the module refuses to start.
@@ -86,8 +89,13 @@ public final class DiscordModule implements StormModule {
     server
         .getPluginManager()
         .registerEvents(new ServerEventsListener(relay, text, sealed), context.plugin());
+    var towns =
+        context
+            .services()
+            .require(TownMilestones.class)
+            .subscribe(new TownMilestonePosts(relay, server, context.logger())::accept);
     bridge.start(credentials, relay, commands);
-    running = new Running(bridge, relay, subscription);
+    running = new Running(bridge, relay, subscription, towns);
   }
 
   @Override
@@ -98,6 +106,7 @@ public final class DiscordModule implements StormModule {
       // Discord stops reaching the game first; then the goodbye; then the connection closes.
       current.relay().stopRelaying();
       current.subscription().cancel();
+      current.towns().close();
       current.bridge().stop(current.relay().stopMessage());
     }
   }
@@ -116,5 +125,9 @@ public final class DiscordModule implements StormModule {
     };
   }
 
-  private record Running(JdaBridge bridge, DiscordRelay relay, Subscription subscription) {}
+  private record Running(
+      JdaBridge bridge,
+      DiscordRelay relay,
+      Subscription subscription,
+      TownMilestones.Subscription towns) {}
 }

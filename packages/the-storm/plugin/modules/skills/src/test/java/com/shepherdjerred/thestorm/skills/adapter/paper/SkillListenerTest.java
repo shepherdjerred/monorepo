@@ -11,6 +11,7 @@ import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.skills.app.BlockMove;
 import com.shepherdjerred.thestorm.skills.app.BlockPosition;
 import com.shepherdjerred.thestorm.skills.app.RankedSkillPlayer;
+import com.shepherdjerred.thestorm.skills.app.SkillLevelUp;
 import com.shepherdjerred.thestorm.skills.app.SkillLevels;
 import com.shepherdjerred.thestorm.skills.app.SkillProgress;
 import com.shepherdjerred.thestorm.skills.domain.Skill;
@@ -46,6 +47,7 @@ final class SkillListenerTest {
 
   private final SealedWorlds sealed = new SealedWorlds();
   private final RecordingLevels levels = new RecordingLevels();
+  private final List<SkillLevelUp> levelUps = new ArrayList<>();
   private ServerMock server;
   private StormDatabase database;
   private SkillListener listener;
@@ -69,7 +71,12 @@ final class SkillListenerTest {
             RandomGenerator.getDefault(),
             plugin.getComponentLogger(),
             com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled());
-    listener = new SkillListener(context, levels, new SkillsConfig(10, 60), sealed);
+    listener =
+        new SkillListener(
+            context,
+            levels,
+            new SkillsConfig(10, 60),
+            new SkillListener.Hooks(sealed, levelUps::add));
   }
 
   @AfterEach
@@ -97,6 +104,7 @@ final class SkillListenerTest {
     listener.onMend(mend(bob, arena, 7));
 
     assertThat(levels.awards).isEmpty();
+    assertThat(levelUps).isEmpty();
   }
 
   private PlayerMock playerIn(World world, String name) {

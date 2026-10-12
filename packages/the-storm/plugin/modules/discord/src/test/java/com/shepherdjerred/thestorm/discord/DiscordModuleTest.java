@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.shepherdjerred.thestorm.discord.app.DiscordConfig;
 import com.shepherdjerred.thestorm.discord.app.DiscordMessages;
 import com.shepherdjerred.thestorm.discord.app.LobbyPing;
+import com.shepherdjerred.thestorm.discord.app.Milestones;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -43,8 +44,14 @@ final class DiscordModuleTest {
               "**{player}** opened {arena}",
               "{arena} boss wave {wave}: {boss}",
               "{arena} ({tier}) over at {wave}: {players}",
-              "{arena} ({tier}) record {wave}: {players}"),
-          new LobbyPing(List.of(), 30));
+              "{arena} ({tier}) record {wave}: {players}",
+              "**{player}** founded {town}",
+              "{town} claims {claims}",
+              "**{player}** completed {quest}",
+              "**{player}** {skill} {level}",
+              "{event} until {until}"),
+          new LobbyPing(List.of(), 30),
+          new Milestones(List.of(25, 50), 100));
 
   @Test
   void refusesToStartWithoutSecrets() {

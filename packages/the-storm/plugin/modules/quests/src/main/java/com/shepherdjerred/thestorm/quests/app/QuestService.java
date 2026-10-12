@@ -40,6 +40,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 import java.util.random.RandomGenerator;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
@@ -87,6 +88,7 @@ public final class QuestService implements QuestHooks, QuestProgress {
   private final Describe.Lookup lookup;
   private final QuestTextRenderer textRenderer;
   private final Map<UUID, PlayerQuests> sessions = new HashMap<>();
+  private final List<Consumer<QuestMilestone>> milestones = new ArrayList<>();
   private final Map<UUID, CompletableFuture<Void>> loading = new HashMap<>();
   private final Map<UUID, CompletableFuture<Void>> saving = new HashMap<>();
   private final Map<UUID, Set<String>> deferredDiscoveries = new HashMap<>();
@@ -864,7 +866,7 @@ public final class QuestService implements QuestHooks, QuestProgress {
                         effect.action()))
             .toList();
     if (after.equals(before) && pending.isEmpty()) {
-      if (save.measured()) measure(player, outcome);
+      if (save.measured()) measure(player, outcome, catalog);
       effects(player, outcome, catalog);
       present(player, after);
       if (afterSave != null) {
@@ -920,7 +922,7 @@ public final class QuestService implements QuestHooks, QuestProgress {
     if (sessions.containsKey(player)) {
       sessions.put(player, committed.outcome().state());
     }
-    if (committed.measured()) measure(player, committed.outcome());
+    if (committed.measured()) measure(player, committed.outcome(), committed.catalog());
     if (handoverPending(player)) {
       deferredNotices.put(player, new DeferredNotices(committed.outcome(), committed.catalog()));
     } else {
@@ -932,13 +934,30 @@ public final class QuestService implements QuestHooks, QuestProgress {
     }
   }
 
-  private void measure(UUID player, Outcome outcome) {
+  /**
+   * Calls {@code listener} on the main thread each time a player's completion of a story or track
+   * quest is saved.
+   */
+  public void onMilestone(Consumer<QuestMilestone> listener) {
+    milestones.add(listener);
+  }
+
+  private void measure(UUID player, Outcome outcome, Catalog catalog) {
     for (var effect : outcome.effects()) {
       switch (effect) {
         case Effect.Accepted _ ->
             wiring.analytics().interaction(player, ProductAnalytics.Action.QUEST_STARTED);
-        case Effect.Completed _ ->
-            wiring.analytics().interaction(player, ProductAnalytics.Action.QUEST_COMPLETED);
+        case Effect.Completed(var id) -> {
+          wiring.analytics().interaction(player, ProductAnalytics.Action.QUEST_COMPLETED);
+          catalog
+              .quest(id)
+              .filter(QuestMilestone::worthTelling)
+              .ifPresent(
+                  quest -> {
+                    var milestone = new QuestMilestone(player, quest.name());
+                    List.copyOf(milestones).forEach(listener -> listener.accept(milestone));
+                  });
+        }
         default -> {
           /* Progress ticks and automatic rewards are not product interactions. */
         }

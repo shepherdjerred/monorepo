@@ -3,6 +3,8 @@ plugins { id("storm.jooq-conventions") }
 val libs = the<VersionCatalogsExtension>().named("libs")
 
 dependencies {
+  // Story and questline completions are announced through the discord module's relay port.
+  implementation(project(":discord"))
   // Quest givers, turn-ins and markers go through the NPCs' app ports.
   implementation(project(":npcs"))
   // Crystal rewards are paid through the economy's Wallets port.

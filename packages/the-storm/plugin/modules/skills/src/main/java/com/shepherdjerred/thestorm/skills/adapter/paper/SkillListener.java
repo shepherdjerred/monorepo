@@ -4,6 +4,7 @@ import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.skills.app.BlockMove;
 import com.shepherdjerred.thestorm.skills.app.BlockPosition;
+import com.shepherdjerred.thestorm.skills.app.SkillLevelUp;
 import com.shepherdjerred.thestorm.skills.app.SkillLevels;
 import com.shepherdjerred.thestorm.skills.app.SkillProgress;
 import com.shepherdjerred.thestorm.skills.domain.RepairRules;
@@ -20,6 +21,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.WeakHashMap;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 import net.kyori.adventure.text.Component;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -72,6 +74,7 @@ final class SkillListener implements Listener {
       Set.of("thestorm:quest_spawned", "thestorm:arena_entity");
 
   private final ModuleContext context;
+  private final Consumer<SkillLevelUp> levelUps;
   private final SkillLevels levels;
   private final SkillsConfig config;
   private final SealedWorlds sealed;
@@ -82,12 +85,20 @@ final class SkillListener implements Listener {
 
   private record Hit(UUID playerId, Skill skill) {}
 
-  SkillListener(
-      ModuleContext context, SkillLevels levels, SkillsConfig config, SealedWorlds sealed) {
+  /**
+   * Where progression is limited and reported.
+   *
+   * @param sealed worlds that earn no experience
+   * @param levelUps told of every saved level up, on the main thread
+   */
+  record Hooks(SealedWorlds sealed, Consumer<SkillLevelUp> levelUps) {}
+
+  SkillListener(ModuleContext context, SkillLevels levels, SkillsConfig config, Hooks hooks) {
+    this.levelUps = hooks.levelUps();
     this.context = context;
     this.levels = levels;
     this.config = config;
-    this.sealed = sealed;
+    this.sealed = hooks.sealed();
     this.fallingOriginKey = new NamespacedKey(context.plugin(), "skills_falling_origin");
   }
 
@@ -513,6 +524,8 @@ final class SkillListener implements Listener {
                     player.sendMessage(
                         Component.text(
                             skill.displayName() + " reached level " + progress.level(skill) + "!"));
+                    levelUps.accept(
+                        new SkillLevelUp(id, skill, prior.level(skill), progress.level(skill)));
                   }
                 },
                 context.scheduler().mainThread());

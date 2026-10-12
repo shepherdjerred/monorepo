@@ -25,6 +25,13 @@ lobbyPing:
   roles: []
   cooldownMinutes: 30
 
+# Progress worth a post: a town reaching one of these claim counts (once per
+# town while the server is up), and a skill crossing each multiple of
+# skillLevelEvery (skills cap at 1000).
+milestones:
+  townClaims: [25, 50, 100, 200]
+  skillLevelEvery: 100
+
 # What the bot posts, in Discord markdown. {placeholders} are filled with
 # escaped text; mentions and push/desktop notifications are disabled except
 # for lobbyPing. Discord still shows unread activity; mute the linked channel
@@ -52,3 +59,8 @@ messages:
   arenaBossWave: "**{arena}** reached boss wave {wave}: {boss}"
   arenaRunEnded: "**{arena}** ({tier}) run over at wave {wave}: {players}"
   arenaRecord: "New **{arena}** ({tier}) record: wave {wave}! {players}"
+  townFounded: "**{player}** founded the town of **{town}**"
+  townGrew: "**{town}** now claims {claims} chunks"
+  questMilestone: "**{player}** completed **{quest}**"
+  skillMilestone: "**{player}** reached {skill} level {level}"
+  seasonalActive: "**{event}** is on until {until}. Join ts-mc.net to take part"
