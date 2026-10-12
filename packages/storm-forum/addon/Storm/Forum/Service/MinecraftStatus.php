@@ -92,21 +92,29 @@ final class MinecraftStatus
         }
         if ($cacheVersion === 2 || $cacheVersion === 2.0) {
             // Name-only caches cannot render real skin heads or identify players in games.
-            $oldPlayers = self::objectFields($data['players'] ?? null, ['maximum', 'names']);
-            if (!self::isNonnegativeInteger($oldPlayers['maximum'] ?? null) || $oldPlayers['maximum'] > 100000
-                || !is_array($oldPlayers['names'] ?? null) || !array_is_list($oldPlayers['names'])
-                || count($oldPlayers['names']) > $oldPlayers['maximum']) {
-                throw new \RuntimeException('Invalid legacy Minecraft player roster');
+            $hasPlayers = array_key_exists('players', $data);
+            if (($data['java']['state'] === 'online') !== $hasPlayers) {
+                throw new \RuntimeException('Legacy Minecraft roster does not match Java health');
             }
-            foreach ($oldPlayers['names'] as $name) {
-                if (!is_string($name) || !preg_match('/^[^\p{Cc}<>]{1,64}$/uD', $name)) {
-                    throw new \RuntimeException('Invalid legacy Minecraft player name');
+            if ($hasPlayers) {
+                $oldPlayers = self::objectFields($data['players'] ?? null, ['maximum', 'names']);
+                if (!self::isNonnegativeInteger($oldPlayers['maximum'] ?? null) || $oldPlayers['maximum'] > 100000
+                    || !is_array($oldPlayers['names'] ?? null) || !array_is_list($oldPlayers['names'])
+                    || count($oldPlayers['names']) > $oldPlayers['maximum']) {
+                    throw new \RuntimeException('Invalid legacy Minecraft player roster');
+                }
+                foreach ($oldPlayers['names'] as $name) {
+                    if (!is_string($name) || !preg_match('/^[^\p{Cc}<>]{1,64}$/uD', $name)) {
+                        throw new \RuntimeException('Invalid legacy Minecraft player name');
+                    }
+                }
+                if (count(array_unique($oldPlayers['names'], SORT_STRING)) !== count($oldPlayers['names'])
+                    || $data['java']['state'] !== 'online') {
+                    throw new \RuntimeException('Invalid legacy Minecraft player roster');
                 }
             }
-            if (count(array_unique($oldPlayers['names'], SORT_STRING)) !== count($oldPlayers['names'])
-                || $data['java']['state'] !== 'online') {
-                throw new \RuntimeException('Invalid legacy Minecraft player roster');
-            }
+            if ($result['java']['state'] === 'online') $result['java']['state'] = 'unavailable';
+            if ($result['state'] === 'online' && $result['bedrock']['state'] !== 'online') $result['state'] = 'unavailable';
             return $result;
         }
         $hasPlayers = array_key_exists('players', $data);
@@ -158,7 +166,7 @@ final class MinecraftStatus
                     || !is_string($game['name'] ?? null) || $game['name'] === '' || mb_strlen($game['name'], 'UTF-8') > 64
                     || !in_array($game['kind'] ?? null, ['ARENA', 'RWF'], true)
                     || !in_array($game['phase'] ?? null, ['WAITING', 'STARTING', 'RUNNING'], true)
-                    || !is_string($game['progress'] ?? null) || mb_strlen($game['progress'], 'UTF-8') > 32
+                    || (array_key_exists('progress', $game) && (!is_string($game['progress']) || mb_strlen($game['progress'], 'UTF-8') > 32))
                     || !self::isNonnegativeInteger($game['players'] ?? null) || $game['players'] < 1
                     || $game['players'] > count($players['identities'] ?? [])) {
                     throw new \RuntimeException('Invalid Minecraft game summary');
@@ -166,11 +174,8 @@ final class MinecraftStatus
                 $key = $game['kind'] . ':' . $game['id'];
                 if (isset($gameIds[$key])) throw new \RuntimeException('Duplicate Minecraft game summary');
                 $gameIds[$key] = true;
-                $games[] = [
-                    'id'=>$game['id'], 'kind'=>$game['kind'], 'name'=>$game['name'],
-                    'phase'=>$game['phase'], 'players'=>(int)$game['players'],
-                    ...($game['progress'] === '' ? [] : ['progress'=>$game['progress']]),
-                ];
+                $game['players'] = (int)$game['players'];
+                $games[] = $game;
             }
             if ($data['java']['state'] !== 'online') throw new \RuntimeException('Minecraft games require a successful Query check');
             if ($fresh) $result['games'] = $games;

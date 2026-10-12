@@ -7,6 +7,12 @@ $check = static function (bool $condition): void { if (!$condition) { throw new 
 $cachePath = '/var/lib/storm-forum/status.json';
 $oldCache = is_file($cachePath) ? file_get_contents($cachePath) : null;
 try {
+    $legacy = json_decode(file_get_contents('/opt/storm-forum/test/fixtures/minecraft-status-v2.json'), true, 512, JSON_THROW_ON_ERROR);
+    $legacy['checkedAt'] = time();
+    file_put_contents($cachePath, json_encode($legacy, JSON_THROW_ON_ERROR));
+    $controller = $app->controller(Storm\Forum\Pub\Controller\Status::class, $app->request());
+    $public = $controller->actionIndex()->getParam('data');
+    $check($public['status']['state'] === 'online' && $public['status']['players'] === null && $public['status']['games'] === null);
     $fixture = json_decode(file_get_contents('/opt/storm-forum/test/fixtures/minecraft-status.json'), true, 512, JSON_THROW_ON_ERROR);
     $fixture['checkedAt'] = time();
     $fixture['java']['verifiedAt'] = time(); $fixture['bedrock']['verifiedAt'] = time();
@@ -15,6 +21,10 @@ try {
     $reply = $controller->actionIndex(); $public = $reply->getParam('data');
     $check($reply->getResponseType() === 'json' && $public['status']['players']['names'] === $fixture['players']['names'] && $public['status']['games'] === $fixture['games']);
     $check(str_contains($public['html'], '.Bedrock Player') && str_contains($public['html'], '26.51') && str_contains($public['html'], 'Colosseum') && !str_contains(json_encode($public), 'svc.cluster.local'));
+    unset($fixture['games'][0]['progress']);
+    file_put_contents($cachePath, json_encode($fixture, JSON_THROW_ON_ERROR));
+    $public = $controller->actionIndex()->getParam('data');
+    $check($public['status']['games'] === $fixture['games'] && str_contains($public['html'], 'Colosseum'));
     $fixture['checkedAt'] -= 181;
     file_put_contents($cachePath, json_encode($fixture, JSON_THROW_ON_ERROR));
     $public = $controller->actionIndex()->getParam('data');

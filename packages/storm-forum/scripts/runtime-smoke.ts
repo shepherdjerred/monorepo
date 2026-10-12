@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { NativeConnection } from "@temporalio/worker";
 import { createForumConfig } from "#src/config.ts";
-import { MinecraftStatusSchema } from "#src/minecraft.ts";
+import { MinecraftStatusSchema } from "#src/minecraft-cache.ts";
 import { publicQueryContract } from "#src/minecraft-query.ts";
 assert.equal(publicQueryContract.schemaVersion, 2);
 MinecraftStatusSchema.parse(

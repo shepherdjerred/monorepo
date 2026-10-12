@@ -153,6 +153,13 @@ status, heads, and game summaries after the configured stale interval.
 Both cache readers validate aggregate and edition health against the six allowed
 combinations in `config/minecraft-status-states.json`.
 
+The worker and PHP reader explicitly migrate the previous v2 name-only cache,
+including partial outages without a Java roster. Verified versions survive the
+upgrade, but player identities and games require a fresh Query response. Invalid
+caches still fail validation. Query contract changes require a compatible forum
+runtime release as well as the Minecraft image; publishing the forum image alone
+does not advance the production release inventory.
+
 Java players can use `ts-mc.net` through SRV discovery, or explicitly connect to
 `mc.ts-mc.net:30000`. Bedrock uses `mc.ts-mc.net` with port `30004`; the website
 apex is not its game endpoint. Java can wake a sleeping server; Bedrock can join
