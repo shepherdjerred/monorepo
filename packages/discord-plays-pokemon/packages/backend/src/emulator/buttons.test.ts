@@ -18,5 +18,12 @@ describe("commandToButtonMask", () => {
     expect(commandToButtonMask("l")).toBe(BUTTON.left);
     expect(commandToButtonMask("r")).toBe(BUTTON.right);
   });
+
+  test("maps the shoulder buttons", () => {
+    expect(commandToButtonMask("lb")).toBe(BUTTON.l);
+    expect(commandToButtonMask("lshoulder")).toBe(BUTTON.l);
+    expect(commandToButtonMask("rb")).toBe(BUTTON.r);
+    expect(commandToButtonMask("rshoulder")).toBe(BUTTON.r);
+  });
 });
 import { describe, expect, test } from "vitest";

@@ -25,6 +25,10 @@ import {
   type GoalControlServer,
 } from "#src/goal/control/control-server.ts";
 import { createGameEventWatcher } from "#src/game/events/watcher.ts";
+import type { GameEvent } from "#src/game/events/types.ts";
+import { InputLog } from "#src/game/input-log.ts";
+import { float32ToS16le } from "#src/emulator/audio/pcm-s16.ts";
+import type { DriverFeedService } from "@shepherdjerred/discord-plays-core/driver-feed/service.ts";
 import { readGameSnapshot } from "#src/game/events/snapshot.ts";
 import { readSpatialSnapshot } from "#src/game/spatial/spatial-snapshot.ts";
 import {
@@ -37,6 +41,7 @@ import { logger } from "#src/logger.ts";
 export const POKEMON_SAVE_FILE = "pokeemerald.flash";
 export const POKEMON_GOAL_STATE_FILE = "goal-state.json";
 export const POKEMON_GOAL_MEMORY_DIR = "goal-memory";
+const INPUT_LOG_CAPACITY = 30;
 
 /**
  * A guild's progress: snapshotted into `saves/<guildId>/history/` before every
@@ -84,18 +89,56 @@ export class PokemonGameDriver implements GameDriver<SelfbotPooledUserbot> {
    */
   private readonly goalGuildIds: ReadonlySet<string>;
   private readonly factories: PokemonDriverFactories;
+  private readonly driverFeed: DriverFeedService | undefined;
   private botClient: BotClient | null = null;
   /** Per-active-session bag of teardown handles. Null when idle. */
   private active: ActiveSessionRuntime | null = null;
+  private readonly gameEventListeners = new Set<(event: GameEvent) => void>();
+  private readonly sessionListeners = new Set<
+    (runtime: ActiveSessionRuntime | null) => void
+  >();
+  /** Recent accepted commands from Discord and the web page. */
+  readonly inputLog = new InputLog(INPUT_LOG_CAPACITY);
 
   constructor(params: {
     config: Config;
     goalGuildIds: ReadonlySet<string>;
     factories?: PokemonDriverFactories;
+    /** The in-browser live feed; encodes every frame while a session runs. */
+    driverFeed?: DriverFeedService | undefined;
   }) {
     this.config = params.config;
     this.goalGuildIds = params.goalGuildIds;
     this.factories = params.factories ?? defaultFactories;
+    this.driverFeed = params.driverFeed;
+  }
+
+  /** Subscribe to in-game events (catches, badges, …) from every session. */
+  onGameEvent(listener: (event: GameEvent) => void): () => void {
+    this.gameEventListeners.add(listener);
+    return () => {
+      this.gameEventListeners.delete(listener);
+    };
+  }
+
+  /** Subscribe to sessions starting (the runtime) and ending (null). */
+  onSessionChange(
+    listener: (runtime: ActiveSessionRuntime | null) => void,
+  ): () => void {
+    this.sessionListeners.add(listener);
+    return () => {
+      this.sessionListeners.delete(listener);
+    };
+  }
+
+  private notifySessionChange(runtime: ActiveSessionRuntime | null): void {
+    for (const listener of this.sessionListeners) {
+      try {
+        listener(runtime);
+      } catch (error) {
+        logger.error("session listener failed", error);
+      }
+    }
   }
 
   /** Whether `/goal` is available to sessions in `guildId`. */
@@ -145,6 +188,7 @@ export class PokemonGameDriver implements GameDriver<SelfbotPooledUserbot> {
       await emulator.init();
       emulator.start();
       logger.info("emulator running", { guildId: session.guildId });
+      this.driverFeed?.startSession();
 
       const streamer = this.factories.createStreamer({
         selfbotClient: session.userbotEntry.userbot.client,
@@ -162,11 +206,15 @@ export class PokemonGameDriver implements GameDriver<SelfbotPooledUserbot> {
       });
       parts.streamer = streamer;
       await streamer.login();
+      const driverFeed = this.driverFeed;
       emulator.onFrame((frame) => {
         streamer.pushFrame(frame);
+        // Each frame is a fresh Buffer, so both encoders may hold it.
+        driverFeed?.pushFrame(frame);
       });
       emulator.onAudio(({ pcm }) => {
         streamer.pushAudio(pcm);
+        driverFeed?.pushAudio(float32ToS16le(pcm));
       });
       await streamer.start();
 
@@ -224,48 +272,7 @@ export class PokemonGameDriver implements GameDriver<SelfbotPooledUserbot> {
         parts.goalControlServer = goalControlServer;
       }
 
-      if (
-        config.bot.notifications.enabled &&
-        config.bot.notifications.events.enabled
-      ) {
-        const eventsConfig = config.bot.notifications.events;
-        try {
-          const watcher = createGameEventWatcher({
-            reader: emulator.memoryReader(),
-            symbols: emulator.gameSymbols(),
-          });
-          const toggles: EventToggles = {
-            faint: eventsConfig.faint,
-            whiteout: eventsConfig.whiteout,
-            badge: eventsConfig.badge,
-            evolution: eventsConfig.evolution,
-            catch: eventsConfig.catch,
-            levelUp: eventsConfig.level_up,
-            dexEntry: eventsConfig.dex_entry,
-          };
-          const notifier = createEventNotifier({
-            client: botClient,
-            channelId: session.textChannelId,
-            toggles,
-            mode: eventsConfig.mode,
-            attachScreenshot: eventsConfig.attach_screenshot,
-            renderScreenshot: () =>
-              encodePng(emulator.renderFrame(), WIDTH, HEIGHT, 3),
-          });
-          const interval = eventsConfig.poll_interval_frames;
-          emulator.addFrameHook((frame) => {
-            if (frame % interval !== 0) return;
-            for (const event of watcher.poll()) {
-              notifier.enqueue(event);
-            }
-          });
-          logger.info("game event notifications enabled", {
-            guildId: session.guildId,
-          });
-        } catch (error) {
-          logger.error("failed to start game event notifications", error);
-        }
-      }
+      this.startGameEvents(session, emulator, botClient);
 
       const commandConfig = config.game.commands;
       const timing: CommandTiming = {
@@ -288,6 +295,7 @@ export class PokemonGameDriver implements GameDriver<SelfbotPooledUserbot> {
         ...(goalControlServer === undefined ? {} : { goalControlServer }),
         timing,
       };
+      this.notifySessionChange(this.active);
     } catch (error) {
       await this.teardown(parts, session).catch((teardownError: unknown) => {
         logger.error(
@@ -312,7 +320,70 @@ export class PokemonGameDriver implements GameDriver<SelfbotPooledUserbot> {
     if (runtime === null) {
       return;
     }
+    this.notifySessionChange(null);
     await this.teardown(runtime, session);
+  }
+
+  /**
+   * Watch the save for in-game events and fan each one out to the Discord
+   * notifier (when configured) and every `onGameEvent` subscriber. One watcher
+   * per session: polling advances its baseline, so it must not be shared by
+   * independent pollers.
+   */
+  private startGameEvents(
+    session: Session<SelfbotPooledUserbot>,
+    emulator: Emulator,
+    botClient: BotClient,
+  ): void {
+    const eventsConfig = this.config.bot.notifications.events;
+    const notify =
+      this.config.bot.notifications.enabled && eventsConfig.enabled;
+    try {
+      const watcher = createGameEventWatcher({
+        reader: emulator.memoryReader(),
+        symbols: emulator.gameSymbols(),
+      });
+      const toggles: EventToggles = {
+        faint: eventsConfig.faint,
+        whiteout: eventsConfig.whiteout,
+        badge: eventsConfig.badge,
+        evolution: eventsConfig.evolution,
+        catch: eventsConfig.catch,
+        levelUp: eventsConfig.level_up,
+        dexEntry: eventsConfig.dex_entry,
+      };
+      const notifier = notify
+        ? createEventNotifier({
+            client: botClient,
+            channelId: session.textChannelId,
+            toggles,
+            mode: eventsConfig.mode,
+            attachScreenshot: eventsConfig.attach_screenshot,
+            renderScreenshot: () =>
+              encodePng(emulator.renderFrame(), WIDTH, HEIGHT, 3),
+          })
+        : undefined;
+      const interval = eventsConfig.poll_interval_frames;
+      emulator.addFrameHook((frame) => {
+        if (frame % interval !== 0) return;
+        for (const event of watcher.poll()) {
+          notifier?.enqueue(event);
+          for (const listener of this.gameEventListeners) {
+            try {
+              listener(event);
+            } catch (error) {
+              logger.error("game event listener failed", error);
+            }
+          }
+        }
+      });
+      logger.info("game event watcher started", {
+        guildId: session.guildId,
+        discordNotifications: notify,
+      });
+    } catch (error) {
+      logger.error("failed to start game event watcher", error);
+    }
   }
 
   /**
@@ -323,6 +394,9 @@ export class PokemonGameDriver implements GameDriver<SelfbotPooledUserbot> {
     parts: SessionParts,
     session: Session<SelfbotPooledUserbot>,
   ): Promise<void> {
+    // The live feed first: its clients are dropped and resync on the next
+    // session rather than freezing on the last frame.
+    this.driverFeed?.stopSession();
     try {
       await parts.goalManager?.shutdown();
     } catch (error) {
@@ -366,7 +440,7 @@ export class PokemonGameDriver implements GameDriver<SelfbotPooledUserbot> {
   }
 
   welcomeMessage(session: Session<SelfbotPooledUserbot>): string {
-    return `Starting Pokémon in <#${session.voiceChannelId}>. Visit https://pokemon.sjer.red/?g=${session.guildId} to watch.`;
+    return `Starting Pokémon in <#${session.voiceChannelId}>. Visit https://pokebot.sjer.red/ to watch and play.`;
   }
 }
 

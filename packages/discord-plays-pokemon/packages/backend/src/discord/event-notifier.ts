@@ -6,11 +6,8 @@ import {
   notificationSendErrorsTotal,
 } from "#src/observability/metrics.ts";
 import type { GameEvent, GameEventKind } from "#src/game/events/types.ts";
-import {
-  speciesName,
-  nationalDexName,
-} from "#src/game/events/generated/species.ts";
 import { BADGES } from "#src/game/events/data/badges.ts";
+import { describeGameEvent } from "#src/game/events/describe.ts";
 
 // Per-event-kind enable flags (from config bot.notifications.events).
 export type EventToggles = Readonly<Record<GameEventKind, boolean>>;
@@ -35,72 +32,37 @@ const COLORS: Record<GameEventKind, number> = {
   dexEntry: 0x1a_bc_9c,
 };
 
-// Display names are stored uppercase (BULBASAUR); title-case for prose.
-function titleCase(name: string): string {
-  return name.replaceAll(/[A-Z]+/gi, (word) => {
-    const first = word[0];
-    return first === undefined ? word : first + word.slice(1).toLowerCase();
-  });
+export function eventToEmbed(event: GameEvent): EmbedBuilder {
+  const description = describeGameEvent(event);
+  return new EmbedBuilder()
+    .setColor(COLORS[event.kind])
+    .setTitle(description.title)
+    .setDescription(emphasise(event, description.text));
 }
 
-export function eventToEmbed(event: GameEvent): EmbedBuilder {
-  const embed = new EmbedBuilder().setColor(COLORS[event.kind]);
+// Discord renders markdown: bold the badge name and the shiny call-out as the
+// embeds always have. The shared text stays plain for other transports.
+function emphasise(event: GameEvent, text: string): string {
   switch (event.kind) {
-    case "faint":
-      return embed
-        .setTitle("💀 Fainted")
-        .setDescription(
-          `${titleCase(speciesName(event.species))} (Lv. ${String(event.level)}) fainted.`,
-        );
-    case "whiteout":
-      return embed
-        .setTitle("⬜ Whiteout")
-        .setDescription("The whole party fainted — blacked out!");
     case "badge": {
-      // badgeIndex is always 0-7 (the diff iterates the 8 badge flags).
       const badge = BADGES[event.badgeIndex];
-      if (badge === undefined) {
-        throw new Error(
-          `Badge index out of range: ${String(event.badgeIndex)}`,
-        );
-      }
-      return embed
-        .setTitle("🏅 Badge earned")
-        .setDescription(
-          `Earned the **${badge.name}** — ${badge.leader}, ${badge.city}.`,
-        );
+      return badge === undefined
+        ? text
+        : text.replace(badge.name, `**${badge.name}**`);
     }
-    case "evolution":
-      return embed
-        .setTitle("✨ Evolution")
-        .setDescription(
-          `${titleCase(speciesName(event.fromSpecies))} evolved into ${titleCase(speciesName(event.toSpecies))}!`,
-        );
     case "catch":
-      return embed
-        .setTitle("🎯 Caught a Pokémon")
-        .setDescription(
-          `Caught ${titleCase(speciesName(event.species))}!${event.shiny ? " ✨ **Shiny!**" : ""}`,
-        );
+      return text.replace("✨ Shiny!", "✨ **Shiny!**");
+    case "faint":
+    case "whiteout":
+    case "evolution":
     case "levelUp":
-      return embed
-        .setTitle("⬆️ Level up")
-        .setDescription(
-          `${titleCase(speciesName(event.species))} grew from Lv. ${String(event.fromLevel)} to Lv. ${String(event.toLevel)}.`,
-        );
-    case "dexEntry": {
-      const name = nationalDexName(event.nationalDexNumber);
-      return embed
-        .setTitle("📖 New Pokédex entry")
-        .setDescription(
-          `#${String(event.nationalDexNumber)}${name === undefined ? "" : ` ${titleCase(name)}`} registered.`,
-        );
-    }
+    case "dexEntry":
+      return text;
   }
 }
 
 function describe(event: GameEvent): string {
-  return eventToEmbed(event).data.description ?? event.kind;
+  return describeGameEvent(event).text;
 }
 
 export function createEventNotifier(deps: {

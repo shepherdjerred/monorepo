@@ -1,4 +1,5 @@
 import { wait } from "#src/util.ts";
+import { InputLeaseConflictError } from "#src/emulator/emulator.ts";
 import type { Chord } from "#src/game/command/chord.ts";
 import type { CommandInput } from "#src/game/command/command-input.ts";
 
@@ -25,5 +26,23 @@ export async function execute(
     if (delayBetweenActionsMs > 0) {
       await wait(delayBetweenActionsMs);
     }
+  }
+}
+
+/**
+ * Run a chord a person sent. Returns false, without running anything further,
+ * when goal mode holds the input lease; every other failure propagates.
+ */
+export async function executeInteractiveChord(
+  chord: Chord,
+  fn: (commandInput: CommandInput) => Promise<void>,
+  delayBetweenActionsMs: number,
+): Promise<boolean> {
+  try {
+    await execute(chord, fn, delayBetweenActionsMs);
+    return true;
+  } catch (error) {
+    if (error instanceof InputLeaseConflictError) return false;
+    throw error;
   }
 }

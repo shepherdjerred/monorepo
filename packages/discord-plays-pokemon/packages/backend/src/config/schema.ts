@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { DriverFeedConfigSchema } from "@shepherdjerred/discord-plays-core/driver-feed/config.ts";
 import {
   botConfigFields,
   gameConfigRootFields,
@@ -113,6 +114,7 @@ export const ConfigSchema = z.strictObject({
     ...streamConfigFields,
     video: z.strictObject(streamVideoConfigFields),
   }),
+  driver_feed: DriverFeedConfigSchema,
   game: z.strictObject({
     enabled: z.boolean(),
     // Path to the built pokeemerald.wasm (built from source; see

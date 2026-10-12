@@ -1,4 +1,3 @@
-import { match } from "ts-pattern";
 import { buildArchiveSpanProcessor } from "@shepherdjerred/llm-observability";
 import { bootGameBot } from "@shepherdjerred/discord-plays-core/entry.ts";
 import { handleMessages } from "./discord/message-handler.ts";
@@ -7,36 +6,28 @@ import {
   POKEMON_SAVE_HISTORY_ENTRIES,
   PokemonGameDriver,
 } from "./lifecycle/pokemon-driver.ts";
-import { parseCommandInput } from "./game/command/command-input.ts";
 import type { CommandInput } from "./game/command/command-input.ts";
 import { enqueueCommand } from "./emulator/command-sink.ts";
-import type { CommandTiming } from "./emulator/command-sink.ts";
-import type { Emulator } from "./emulator/emulator.ts";
-import { encodePng } from "@shepherdjerred/discord-plays-core/image/png.ts";
-import { HEIGHT, WIDTH } from "./emulator/constants.ts";
+import {
+  AUDIO_SAMPLE_RATE,
+  DISPLAY_ASPECT,
+  GBA_FPS,
+  HEIGHT,
+  WIDTH,
+} from "./emulator/constants.ts";
+import { DriverFeedService } from "@shepherdjerred/discord-plays-core/driver-feed/service.ts";
+import {
+  resolveDriverFeedConfig,
+  resolveDriverFeedVideo,
+} from "@shepherdjerred/discord-plays-core/driver-feed/config.ts";
+import { WebPublisher } from "./webserver/web-publisher.ts";
+import { handleRequest } from "./webserver/dispatch.ts";
 import { createWebServer } from "./webserver/index.ts";
 import { logger } from "./logger.ts";
 import { getConfig } from "./config/index.ts";
 import { readGoalGuildIds } from "./config/goal-guilds.ts";
-import type {
-  LoginResponse,
-  StatusResponse,
-  ScreenshotResponse,
-} from "@discord-plays-pokemon/common";
 
 const config = await getConfig();
-
-async function enqueueWebCommand(
-  emulator: Emulator,
-  command: CommandInput,
-  timing: CommandTiming,
-): Promise<void> {
-  try {
-    await enqueueCommand(emulator, command, timing);
-  } catch (error) {
-    logger.error(error);
-  }
-}
 
 // ---- bot + pool + session manager + driver ----
 // One userbot, one emulator, one game at a time. The "pool" in the shared lib is
@@ -47,7 +38,35 @@ logger.info("goal mode guild allowlist", {
   goalEnabled: config.game.goal.enabled,
   guildIds: [...goalGuildIds],
 });
-const driver = new PokemonGameDriver({ config, goalGuildIds });
+// The in-browser live feed. Off unless enabled in config or the Deployment;
+// until sign-in lands it admits any same-origin page while a game runs.
+const driverFeedConfig = resolveDriverFeedConfig(config.driver_feed, Bun.env);
+const driverFeed = driverFeedConfig.enabled
+  ? new DriverFeedService({
+      config: driverFeedConfig,
+      video: resolveDriverFeedVideo(config.stream.video, Bun.env),
+      source: {
+        width: WIDTH,
+        height: HEIGHT,
+        fps: GBA_FPS,
+        pixelFormat: "rgba",
+      },
+      // Converted from the mixer's Float32 to the feed's s16le per chunk.
+      audio: { sampleRate: AUDIO_SAMPLE_RATE, channels: 2 },
+      displayAspect: DISPLAY_ASPECT,
+      scaleFlags: "neighbor",
+      logger,
+    })
+  : undefined;
+const driver = new PokemonGameDriver({ config, goalGuildIds, driverFeed });
+driverFeed?.setAdmission(() =>
+  driver.getActiveRuntime() === null
+    ? { admitted: false, reason: "no game is running" }
+    : {
+        admitted: true,
+        isStillAdmitted: () => driver.getActiveRuntime() !== null,
+      },
+);
 
 const runtime = bootGameBot({
   serviceName: "discord-plays-pokemon",
@@ -98,65 +117,30 @@ await runtime.start();
 
 // ---- web server (optional) ----
 if (config.web.enabled) {
-  const { socket } = createWebServer({
+  const { server, socket } = createWebServer({
     port: config.web.port,
     webAssetsPath: config.web.assets,
     isApiEnabled: config.web.api.enabled,
     isCorsEnabled: config.web.cors,
   });
+  driverFeed?.attach(server);
 
   if (socket) {
+    const publisher = new WebPublisher({
+      io: socket.io,
+      driver,
+      botClient: runtime.bot,
+      driverFeedEnabled: driverFeed !== undefined,
+    });
+    publisher.start();
     socket.events.subscribe((event) => {
-      match(event)
-        .with({ request: { kind: "command" } }, (commandEvent) => {
-          logger.info("handling command request", commandEvent.request);
-          const active = driver.getActiveRuntime();
-          if (active === null) return;
-          try {
-            const parsed = parseCommandInput(commandEvent.request.value);
-            if (parsed) {
-              void enqueueWebCommand(active.emulator, parsed, active.timing);
-            } else {
-              logger.error("invalid command", commandEvent.request.value);
-            }
-          } catch (error) {
-            logger.error(error);
-          }
-        })
-        .with({ request: { kind: "login" } }, (loginEvent) => {
-          logger.info("handling login request", loginEvent.request);
-          const player = { discordId: "id", discordUsername: "username" };
-          const response: LoginResponse = { kind: "login", value: player };
-          loginEvent.socket.emit("response", response);
-        })
-        .with({ request: { kind: "screenshot" } }, (screenshotEvent) => {
-          logger.info("handling screenshot request", screenshotEvent.request);
-          const active = driver.getActiveRuntime();
-          if (active === null) {
-            logger.error("no active session for screenshot request");
-            return;
-          }
-          const png = encodePng(
-            active.emulator.renderFrame(),
-            WIDTH,
-            HEIGHT,
-            3,
-          );
-          const response: ScreenshotResponse = {
-            kind: "screenshot",
-            value: png.toString("base64"),
-          };
-          screenshotEvent.socket.emit("response", response);
-        })
-        .with({ request: { kind: "status" } }, (statusEvent) => {
-          logger.info("handling status request", statusEvent.request);
-          const response: StatusResponse = {
-            kind: "status",
-            value: { playerList: [] },
-          };
-          statusEvent.socket.emit("response", response);
-        })
-        .exhaustive();
+      void (async () => {
+        try {
+          await handleRequest(event, { driver, config, publisher });
+        } catch (error) {
+          logger.error("web request failed", error);
+        }
+      })();
     });
   }
 }

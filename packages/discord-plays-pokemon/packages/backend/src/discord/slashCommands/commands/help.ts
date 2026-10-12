@@ -10,7 +10,9 @@ import {
   b,
   down,
   left,
+  leftShoulder,
   right,
+  rightShoulder,
   select,
   start,
   up,
@@ -42,6 +44,8 @@ export async function help(
     `B: ${b.join(", ")}`,
     `Start: ${start.join(", ")}`,
     `Select: ${select.join(", ")}`,
+    `L: ${leftShoulder.join(", ")}`,
+    `R: ${rightShoulder.join(", ")}`,
   ];
   const commandString = commands.map((command) => `* ${command}`).join("\n");
   const config = await getConfig();

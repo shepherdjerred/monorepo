@@ -80,6 +80,21 @@ bitrate_max_kbps = 4000
 # VAAPI h264 on an Intel iGPU; also enableable via STREAM_HARDWARE_ACCELERATION env
 hardware_acceleration = false
 vaapi_device = "/dev/dri/renderD128"
+# VAAPI encode-pipeline depth for the in-browser feed's encoder (VAAPI only)
+encoder_async_depth = 1
+
+[driver_feed]
+# Low-latency live video in the web page, alongside the Go-Live stream. Starts a
+# second ffmpeg process while a game runs. Also toggleable with DRIVER_FEED_ENABLED.
+enabled = false
+# Square-pixel output height; the 3:2 GBA picture is upscaled crisply (720x480)
+height = 480
+bitrate_kbps = 2500
+bitrate_max_kbps = 4000
+# 30 frames is ~0.5 s at the GBA's ~60 fps: a joining viewer's longest wait
+keyframe_interval_frames = 30
+max_client_buffer_bytes = 131072
+max_clients = 8
 
 [game]
 # should the emulator + game components be enabled
