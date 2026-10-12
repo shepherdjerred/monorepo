@@ -114,19 +114,7 @@ export function addCiCapacityHealthPanels(
         query: `histogram_quantile(${String(quantile)}, sum by (le) (rate(kueue_admission_wait_time_seconds_bucket{cluster_queue="woodpecker"}[30m])))`,
         legend: `p${String(quantile * 100)}`,
       })),
-      gridPos: { x: 0, y: 98, w: 8, h: 8 },
-      unit: "s",
-    }),
-  );
-
-  builder.withPanel(
-    createTimeseriesPanel({
-      title: "Woodpecker Limiter Queue Delay",
-      targets: [0.5, 0.95, 0.99].map((quantile) => ({
-        query: `histogram_quantile(${String(quantile)}, sum by (le) (rate(woodpecker_limiter_work_wait_duration_seconds_bucket{namespace="woodpecker"}[30m])))`,
-        legend: `p${String(quantile * 100)}`,
-      })),
-      gridPos: { x: 8, y: 98, w: 8, h: 8 },
+      gridPos: { x: 0, y: 98, w: 12, h: 8 },
       unit: "s",
     }),
   );
@@ -148,7 +136,7 @@ export function addCiCapacityHealthPanels(
           legend: "{{label_ci_sjer_red_step_key}}",
         },
       ],
-      gridPos: { x: 16, y: 98, w: 8, h: 8 },
+      gridPos: { x: 12, y: 98, w: 12, h: 8 },
     }),
   );
 

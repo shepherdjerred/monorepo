@@ -436,10 +436,6 @@
       "clones": 2,
       "tokens": 146
     },
-    "packages/homelab/src/cdk8s/grafana/scout/scout-dashboard-scheduled-report-panels.ts|packages/homelab/src/cdk8s/grafana/scout/scout-dashboard-scheduled-report-panels.ts": {
-      "clones": 1,
-      "tokens": 88
-    },
     "packages/homelab/src/cdk8s/grafana/scout/scout-dashboard.ts|packages/homelab/src/cdk8s/grafana/tasknotes-dashboard.ts": {
       "clones": 1,
       "tokens": 140
@@ -552,10 +548,6 @@
       "clones": 1,
       "tokens": 75
     },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/platform/postal.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/platform/postal.ts": {
-      "clones": 1,
-      "tokens": 97
-    },
     "packages/homelab/src/cdk8s/src/cdk8s-charts/platform/temporal.ts|packages/homelab/src/cdk8s/src/resources/relay/index.ts": {
       "clones": 1,
       "tokens": 88
@@ -602,7 +594,7 @@
     },
     "packages/homelab/src/cdk8s/src/resources/phoenix/index.ts|packages/homelab/src/cdk8s/src/resources/woodpecker/index.ts": {
       "clones": 1,
-      "tokens": 93
+      "tokens": 92
     },
     "packages/homelab/src/cdk8s/src/resources/postgres/scout-db.ts|packages/homelab/src/cdk8s/src/resources/postgres/single-app-postgresql.ts": {
       "clones": 1,

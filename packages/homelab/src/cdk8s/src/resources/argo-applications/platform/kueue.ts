@@ -72,7 +72,10 @@ export function createKueueApp(chart: Chart) {
   });
 
   const kueueValues: HelmValuesForChart<"kueue"> = {
-    enablePrometheus: true,
+    // Only renders an unselected ServiceMonitor and a Role for a
+    // `prometheus-k8s` account this cluster does not have; the monitor below
+    // does the scraping with Prometheus' cluster-wide read access.
+    enablePrometheus: false,
     controllerManager: {
       manager: {
         priorityClassName: "infrastructure-critical",
@@ -96,11 +99,6 @@ export function createKueueApp(chart: Chart) {
     },
     managerConfig: {
       controllerManagerConfigYaml: KUEUE_CONFIG_YAML,
-    },
-    metrics: {
-      // This cluster's Prometheus Operator lives in `prometheus`, not the
-      // chart default `monitoring` namespace.
-      prometheusNamespace: "prometheus",
     },
   };
 

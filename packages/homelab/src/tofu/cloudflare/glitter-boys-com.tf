@@ -3,25 +3,6 @@ resource "cloudflare_zone" "glitter_boys_com" {
   name    = "glitter-boys.com"
 }
 
-# Fly.io app CNAMEs
-resource "cloudflare_dns_record" "glitter_boys_com_cname_beta" {
-  zone_id = cloudflare_zone.glitter_boys_com.id
-  ttl     = 1
-  name    = "beta"
-  type    = "CNAME"
-  content = "glitter-boys-beta.fly.dev"
-  proxied = false
-}
-
-resource "cloudflare_dns_record" "glitter_boys_com_cname_prod" {
-  zone_id = cloudflare_zone.glitter_boys_com.id
-  ttl     = 1
-  name    = "prod"
-  type    = "CNAME"
-  content = "glitter-boys-prod.fly.dev"
-  proxied = false
-}
-
 # Homelab static site: Cloudflare Tunnel → s3-static-sites Caddy → glitter-boys-ppl bucket
 resource "cloudflare_dns_record" "glitter_boys_com_cname_ppl" {
   zone_id = cloudflare_zone.glitter_boys_com.id
