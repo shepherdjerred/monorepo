@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.rwf.adapter.paper;
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.core.snapshot.PlayerStates;
 import com.shepherdjerred.thestorm.rwf.adapter.content.RwfConfig;
+import com.shepherdjerred.thestorm.rwf.app.LobbySizes;
 import com.shepherdjerred.thestorm.rwf.app.MatchEvents;
 import com.shepherdjerred.thestorm.rwf.app.MatchNotification;
 import com.shepherdjerred.thestorm.rwf.app.MatchView;
@@ -154,9 +155,15 @@ final class MatchRunner implements MatchView, MatchEvents {
   private OptionalInt showcase = OptionalInt.empty();
   private @Nullable UUID keepingSnapshot;
   private int lastTitle;
+  private final LobbySizes lobbySizes;
 
   MatchRunner(Parts parts) {
     this.parts = parts;
+    this.lobbySizes =
+        new LobbySizes(
+            parts.config().match().automaticSizing(),
+            parts.config().match().targetCombatants(),
+            parts.config().match().maxCombatants());
     this.rotation = new MapRotation<>(parts.maps(), parts.context().random());
     this.match =
         RwfMatch.open(
@@ -171,6 +178,10 @@ final class MatchRunner implements MatchView, MatchEvents {
 
   boolean ready() {
     return ready;
+  }
+
+  LobbySizes lobbySizes() {
+    return lobbySizes;
   }
 
   boolean live() {
@@ -399,8 +410,9 @@ final class MatchRunner implements MatchView, MatchEvents {
    * the lobby one by one over the first part of the countdown.
    */
   private void fillWithBots() {
-    var target = showcase.orElse(parts.config().match().targetCombatants());
-    var drafted = parts.bots().fill(match.matchId(), target - match.members().size());
+    var draftedTarget = lobbySizes.draft(currentMap().definition(), showcase);
+    var drafted =
+        parts.bots().fill(match.matchId(), Math.max(0, draftedTarget - match.members().size()));
     var now = now();
     var budget =
         match.phase() instanceof Phase.Countdown countdown
@@ -609,6 +621,7 @@ final class MatchRunner implements MatchView, MatchEvents {
   }
 
   private void nextMap() {
+    lobbySizes.resetDraft();
     rewinders.clear();
     tallies.clear();
     pendingPay.clear();

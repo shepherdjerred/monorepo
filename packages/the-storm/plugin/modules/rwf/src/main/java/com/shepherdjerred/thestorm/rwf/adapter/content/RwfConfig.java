@@ -57,6 +57,7 @@ public record RwfConfig(
    *
    * @param minHumans the fewest humans a match starts with, and keeps counting down with
    * @param targetCombatants how many combatants bots fill the match up to
+   * @param automaticSizing whether ordinary matches use the map's large preset
    * @param maxCombatants the most combatants in a match
    * @param countdown from enough humans to going live
    * @param endLinger how long the result is shown before the map resets
@@ -65,6 +66,7 @@ public record RwfConfig(
   public record Match(
       int minHumans,
       int targetCombatants,
+      boolean automaticSizing,
       int maxCombatants,
       Duration countdown,
       Duration endLinger,

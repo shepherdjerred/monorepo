@@ -193,6 +193,7 @@ async function run(
     warmCache: true,
     stormJar: path.join(packageRoot, "plugin/dist/build/libs/TheStorm.jar"),
     ...configs,
+    ...(options.rwfMap === undefined ? {} : { rwfMap: options.rwfMap }),
     ...(options.rwfDuel
       ? {
           rwf: { ...rwfTestSettings, targetCombatants: 2, maxCombatants: 2 },

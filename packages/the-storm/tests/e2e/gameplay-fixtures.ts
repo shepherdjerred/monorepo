@@ -70,11 +70,14 @@ export async function gameplayFixtures(
     | "mechanicsConfig"
     | "companionsE2eJar"
     | "rwf"
+    | "rwfMap"
     | "survivalConfig"
   >
 > {
   return {
     ...(await profileFixtures(packageRoot, profile)),
+    // These suites assert authored Training Yard coordinates, bombs and spawn capacity.
+    rwfMap: "training-yard",
     companionsE2eJar: path.join(
       packageRoot,
       "plugin/modules/companions/build/libs/TheStormCompanionsE2E.jar",

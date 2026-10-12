@@ -42,6 +42,8 @@ export type RwfOverlay = {
   noHumansAbort: string;
   /** How many combatants rwfbots fills a countdown to; the owned value when absent. */
   targetCombatants?: number;
+  /** Test and training profiles keep fixed rosters unless explicitly testing map sizing. */
+  automaticSizing?: boolean;
   /** The most combatants in a match; the owned value when absent. */
   maxCombatants?: number;
   /** Whether `/rwf admin loadtest <n>` is allowed; the owned value (off) when absent. */
@@ -57,6 +59,7 @@ export async function overlayRwf(
   await overlayFields(stagedRwfYml, { world: rwf.world }, "", "top-level");
   await overlaySection(stagedRwfYml, "match", {
     minHumans: rwf.minHumans,
+    automaticSizing: (rwf.automaticSizing ?? false).toString(),
     countdown: rwf.countdown,
     endLinger: rwf.endLinger,
     noHumansAbort: rwf.noHumansAbort,

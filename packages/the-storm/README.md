@@ -1202,7 +1202,7 @@ the spawn. Change the room in `LobbyBuild`, rebake and commit all four files.
 
 Commands: `/rwf join` (gated by the managed Flipt flag
 `the-storm-rwf-enabled`; a missing `FLIPT_URL` or `FLIPT_ENVIRONMENT` keeps it
-closed), `/rwf leave`, `/rwf kit <id>`, `/rwf who`, `/rwf spectate` and
+closed), `/rwf leave`, `/rwf kit <id>`, `/rwf who`, `/rwf size`, `/rwf spectate` and
 `/rwf spectate next` (`thestorm.rwf.spectate`, granted by default, behind the
 same Flipt flag), and for `thestorm.rwf.admin`: `/rwf admin status`,
 `/rwf admin repair` (re-verifies the current map and the lobby between
@@ -1210,6 +1210,29 @@ matches, re-pasting whatever differs), `/rwf admin loadtest <n>` (only when `loa
 and `/rwf admin showcase [count]`. Joining snapshots a player's belongings
 through the shared crash-safe snapshot machinery and restores them on leave,
 death, disconnect or the next login.
+
+Ordinary matches use `match.automaticSizing: true`: automatic sizing chooses
+the large preset for each map. `/rwf size` shows small, medium and large totals,
+players per team, and the bot deficit after current humans. Medium targets are
+16 combatants for horizontal footprints up to 128×128 blocks, 32 up to
+200×200, and 48 above that. Small halves the target; large adds half. Presets
+round down to equal teams and cap at the smallest team's saved spawn capacity
+and `maxCombatants`. For example, the training yard defaults to 16 total,
+Red Sand Seas to 24, and Apex Expanse to 72. These footprint-based suggestions
+are initial tuning values, rather than measured match-quality ratings.
+
+Administrators can use `/rwf admin size auto|small|medium|large` or
+`/rwf admin size team <players>` (humans and bots combined per team). This is
+one shared lobby: overrides affect everyone, last until module restart, and
+apply when a countdown next drafts bots. An ongoing draft keeps its original
+target. A team override follows the map's team count on rotation, bounded by
+the server cap; it may reuse spawn positions. Bots fill the deficit up to the
+target; missing bots, governor reductions, or additional human joins can
+change the actual roster. With `automaticSizing: false`, ordinary matches use
+`targetCombatants`, preserving explicit duel and training profiles.
+The E2E/full/load gameplay fixtures select Training Yard explicitly because
+their geometry assertions use that map. A native preview with `--rwf-map`
+selects its requested map; neither selection changes the production catalog.
 
 Watchers (`/rwf spectate`) are snapshotted through the same keeper under the
 `rwf_watch` scope, then put in spectator mode at the map's spectator point
