@@ -33,9 +33,11 @@ enum MacAcceptanceWorkspace {
         else { throw WorkspaceError.creationFailed }
         let identifier = created.element.identifier
         let window = try selectedWindow(app: app, identifier: identifier)
-        guard window.identifier == identifier,
-            window.buttons["facet.capture.open"].waitForExistence(timeout: 10)
-        else { throw WorkspaceError.invalidIdentity }
+        guard window.identifier == identifier else { throw WorkspaceError.invalidIdentity }
+        guard window.buttons["facet.capture.open"].waitForExistence(timeout: 10) else {
+            throw WorkspaceError.captureControlUnavailable(
+                identifier: identifier, appState: app.state.rawValue, appEnabled: app.isEnabled)
+        }
         return window
     }
 
@@ -55,5 +57,8 @@ enum MacAcceptanceWorkspace {
         return identifier == prefix + uuid.uuidString.lowercased()
     }
 
-    private enum WorkspaceError: Error { case invalidIdentity, creationFailed }
+    private enum WorkspaceError: Error {
+        case invalidIdentity, creationFailed
+        case captureControlUnavailable(identifier: String, appState: UInt, appEnabled: Bool)
+    }
 }

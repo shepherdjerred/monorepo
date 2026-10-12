@@ -14,6 +14,12 @@
             case descriptor, process, unsafeInterface, window, dimensions, permission, capture,
                 timeout
             case geometry(String)
+            case foregroundMismatch(
+                expectedPID: pid_t, actualForegroundPID: pid_t?, phase: CapturePhase)
+        }
+
+        private enum CapturePhase {
+            case beforeActivation, afterActivation, beforeCapture, afterCapture, afterDecode
         }
 
         private struct Descriptor: Decodable {
@@ -31,27 +37,32 @@
             else { throw CaptureError.window }
             try unlockedSession()
             guard CGPreflightScreenCaptureAccess() else { throw CaptureError.permission }
-            let owner = try process(app, foreground: false)
+            let owner = try process(app, foreground: false, phase: .beforeActivation)
             app.activate()
-            guard try process(app) == owner else { throw CaptureError.process }
+            guard try process(app, phase: .afterActivation) == owner else {
+                throw CaptureError.process
+            }
             for (index, window) in windows.enumerated() {
                 try safeInterface(app)
                 try validateWindow(window, app: app)
                 let snapshot = try snapshot(window, pid: owner.pid)
                 let baseName = windows.count == 1 ? name : "\(name) — window \(index + 1)"
                 for (surfaceIndex, surface) in snapshot.surfaces.enumerated() {
-                    try validate(snapshot, window: window, app: app, owner: owner)
+                    try validate(
+                        snapshot, window: window, app: app, owner: owner, phase: .beforeCapture)
                     let scale = try visibleScale(surface.frame)
                     let deadline = ContinuousClock.now.advanced(by: .seconds(10))
                     let png = try await capture(surface, scale: scale, deadline: deadline)
-                    try validate(snapshot, window: window, app: app, owner: owner)
+                    try validate(
+                        snapshot, window: window, app: app, owner: owner, phase: .afterCapture)
                     guard let image = NSBitmapImageRep(data: png),
                         abs(Double(image.pixelsWide) - (surface.frame.width * scale).rounded())
                             <= 1,
                         abs(Double(image.pixelsHigh) - (surface.frame.height * scale).rounded())
                             <= 1
                     else { throw CaptureError.dimensions }
-                    try validate(snapshot, window: window, app: app, owner: owner)
+                    try validate(
+                        snapshot, window: window, app: app, owner: owner, phase: .afterDecode)
                     let attachment = XCTAttachment(data: png, uniformTypeIdentifier: "public.png")
                     attachment.name =
                         surfaceIndex == 0 ? baseName : "\(baseName) — sheet \(surfaceIndex)"
@@ -102,7 +113,7 @@
         }
 
         private static func process(
-            _ app: XCUIApplication, foreground: Bool = true
+            _ app: XCUIApplication, foreground: Bool = true, phase: CapturePhase
         ) throws -> ProcessOwner {
             let environment = ProcessInfo.processInfo.environment
             guard let path = environment["FACET_E2E_DESCRIPTOR"],
@@ -138,10 +149,12 @@
                 !application.isTerminated, let launch = application.launchDate
             else { throw CaptureError.process }
             if foreground {
-                guard
-                    NSWorkspace.shared.frontmostApplication?.processIdentifier
-                        == application.processIdentifier
-                else { throw CaptureError.process }
+                let actual = NSWorkspace.shared.frontmostApplication?.processIdentifier
+                guard actual == application.processIdentifier else {
+                    throw CaptureError.foregroundMismatch(
+                        expectedPID: application.processIdentifier, actualForegroundPID: actual,
+                        phase: phase)
+                }
             }
             var info = proc_bsdinfo()
             let size = Int32(MemoryLayout<proc_bsdinfo>.size)
@@ -258,7 +271,7 @@
 
         private static func validate(
             _ snapshot: WorkspaceSnapshot, window: XCUIElement, app: XCUIApplication,
-            owner: ProcessOwner
+            owner: ProcessOwner, phase: CapturePhase
         ) throws {
             try Task.checkCancellation()
             try safeInterface(app)
@@ -274,7 +287,7 @@
                         "changed-target", frame: expected.frame, pid: owner.pid, windows: current)
                 }
             }
-            guard try process(app) == owner else { throw CaptureError.process }
+            guard try process(app, phase: phase) == owner else { throw CaptureError.process }
         }
     }
 
