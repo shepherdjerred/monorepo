@@ -1392,11 +1392,10 @@ async function nukeMatch(
 }
 
 /**
- * A second paid match the same day, with no daily cap: it lasts past the
- * minimum length, then everyone off the armer's team is killed. Everyone is
- * paid in full except `idle`, who never turns their head: they are AFK, earn
- * nothing and lose up to two credits, never more than they hold.
- */
+ * A second paid match the same day, no daily cap: past the minimum length
+ * the armer's foes die to void damage (`/kill` is a suicide, which forfeits
+ * and clears AFK). All are paid in full but `idle`, who never turns: AFK,
+ * they earn nothing and lose up to two credits, never more than they hold. */
 async function secondPaidMatch(
   rcon: RconClient,
   server: ServerInfo,
@@ -1418,7 +1417,7 @@ async function secondPaidMatch(
   await Bun.sleep(Math.max(0, 62_000 - (Date.now() - begun)));
   for (const [index, { bot: player }] of humans.entries()) {
     if (teams[index] !== winners) {
-      await rcon.command(`minecraft:kill ${player.username}`);
+      await rcon.command(`damage ${player.username} 999 out_of_world`);
     }
   }
   await announcer.log.until(new RegExp(`${winners} Team wins!`, "u"), 15_000);
