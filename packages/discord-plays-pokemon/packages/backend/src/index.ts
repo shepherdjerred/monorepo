@@ -26,8 +26,13 @@ import { createWebServer } from "./webserver/index.ts";
 import { logger } from "./logger.ts";
 import { getConfig } from "./config/index.ts";
 import { readGoalGuildIds } from "./config/goal-guilds.ts";
+import { publicOriginFromEnv } from "@shepherdjerred/discord-plays-core/webserver/origin.ts";
 
 const config = await getConfig();
+const webPublicOrigin =
+  config.web.enabled && config.web.api.enabled
+    ? publicOriginFromEnv(Bun.env)
+    : undefined;
 
 // ---- bot + pool + session manager + driver ----
 // One userbot, one emulator, one game at a time. The "pool" in the shared lib is
@@ -121,7 +126,8 @@ if (config.web.enabled) {
     port: config.web.port,
     webAssetsPath: config.web.assets,
     isApiEnabled: config.web.api.enabled,
-    isCorsEnabled: config.web.cors,
+    isCorsEnabled: false,
+    publicOrigin: webPublicOrigin,
   });
   driverFeed?.attach(server);
 

@@ -28,14 +28,17 @@ const EVENT_FEED_CAPACITY = 20;
 
 export type WebPublisherOptions = {
   readonly io: Server;
-  readonly driver: PokemonGameDriver;
+  readonly driver: Pick<
+    PokemonGameDriver,
+    "onSessionChange" | "onGameEvent" | "getActiveRuntime" | "inputLog"
+  >;
   readonly botClient: BotClient;
   readonly driverFeedEnabled: boolean;
 };
 
 export class WebPublisher {
   private readonly io: Server;
-  private readonly driver: PokemonGameDriver;
+  private readonly driver: WebPublisherOptions["driver"];
   private readonly botClient: BotClient;
   private readonly driverFeedEnabled: boolean;
   private state: GameStateView | null = null;
@@ -52,6 +55,10 @@ export class WebPublisher {
 
   start(): void {
     this.driver.onSessionChange((runtime) => {
+      this.events.length = 0;
+      const events: EventsResponse = { kind: "events", value: [] };
+      this.io.emit("response", events);
+      this.driver.inputLog.clear();
       if (runtime === null) {
         this.publishState(null);
       } else {
@@ -82,7 +89,7 @@ export class WebPublisher {
   }
 
   /** Everything a freshly opened page needs to render. */
-  sendSnapshot(socket: Socket): void {
+  sendSnapshot(socket: Pick<Socket, "emit">): void {
     const state: StateResponse = { kind: "state", value: this.state };
     const events: EventsResponse = { kind: "events", value: [...this.events] };
     const inputs: InputsResponse = {

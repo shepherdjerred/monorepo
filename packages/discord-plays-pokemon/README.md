@@ -28,6 +28,9 @@ Fully headless — no browser, no emulator UI, no GPU, no desktop:
   badges, Pokédex, money, goal), an in-game event feed, recent inputs from
   Discord and the web, and who is in the voice channel
   (`backend/src/webserver/web-publisher.ts`).
+  With the web API enabled, `WEB_PUBLIC_ORIGIN` must name this deployment's
+  exact origin. Socket handshakes are restricted to it, and the event/input
+  feeds are cleared when the game session changes.
 - **Goal agent** — optional Codex goal mode reads a versioned engine observation
   (phase, readiness, current map, collision, party, inventory, progression, and
   battle state) and plays through serialized semantic controls. Its primary

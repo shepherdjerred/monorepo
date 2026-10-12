@@ -33,6 +33,12 @@ export class InputLog {
     return [...this.entries];
   }
 
+  /** A new session must not inherit another guild's activity. */
+  clear(): void {
+    this.entries.length = 0;
+    for (const listener of this.listeners) listener([]);
+  }
+
   subscribe(listener: (entries: InputRecord[]) => void): () => void {
     this.listeners.add(listener);
     return () => {

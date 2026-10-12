@@ -12,13 +12,16 @@ type SocketChannel = GameSocketChannel<Request>;
 export function createSocket({
   server,
   isCorsEnabled,
+  publicOrigin,
 }: {
   server: http.Server;
   isCorsEnabled: boolean;
+  publicOrigin: string;
 }): SocketChannel {
   return createGameSocket({
     server,
     isCorsEnabled,
+    allowedOrigin: publicOrigin,
     requestSchema: RequestSchema,
     ownedUpgradePaths: [DRIVER_FEED_PATH],
     // Commands arrive per keypress.

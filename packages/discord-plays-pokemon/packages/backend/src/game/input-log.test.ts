@@ -2,6 +2,20 @@ import { describe, expect, test } from "vitest";
 import { InputLog } from "./input-log.ts";
 
 describe("InputLog", () => {
+  test("clears history and notifies connected viewers", () => {
+    const log = new InputLog(3);
+    log.record({ user: "a", source: "web", command: "a" });
+    const sizes: number[] = [];
+    log.subscribe((entries) => {
+      sizes.push(entries.length);
+    });
+    log.clear();
+    expect(log.recent()).toEqual([]);
+    expect(sizes).toEqual([0]);
+    log.record({ user: "b", source: "discord", command: "b" });
+    expect(log.recent()).toHaveLength(1);
+    expect(sizes).toEqual([0, 1]);
+  });
   test("keeps only the most recent entries, oldest first", () => {
     const log = new InputLog(2);
     const at = new Date("2026-10-12T12:00:00.000Z");

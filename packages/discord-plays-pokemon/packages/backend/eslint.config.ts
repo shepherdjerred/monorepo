@@ -52,6 +52,7 @@ const config = [
         "src/game/input-log.test.ts",
         "src/emulator/audio/pcm-s16.test.ts",
         "src/webserver/dispatch.test.ts",
+        "src/webserver/web-publisher.test.ts",
         "src/goal/schema-helpers.test.ts",
         "src/goal/control/semantic-control-routes.test.ts",
         "src/goal/control/goal-control-gate.test.ts",
