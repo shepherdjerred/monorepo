@@ -23,6 +23,9 @@ http://:8082 {
   handle /healthz {
     respond "ok" 200
   }
+  handle /.well-known/acme-challenge/* {
+    reverse_proxy 127.0.0.1:8080
+  }
   handle {
     import controller
   }

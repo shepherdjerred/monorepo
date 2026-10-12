@@ -14,7 +14,8 @@ Verify the Caddy Deployment is running and its certificate storage is bound.
 Confirm the controller still works through the existing public hostname.
 
 Caddy obtains a public certificate through HTTP-01 on the existing tunnel's
-internal bootstrap listener. Check its logs for successful certificate issuance.
+internal bootstrap listener, which forwards ACME challenge paths to Caddy's
+HTTP port. Check its logs for successful certificate issuance.
 Pod readiness alone does not prove a certificate exists.
 
 ## 2. Activate the router forwards
@@ -25,6 +26,10 @@ new HTTP and HTTPS forwards declared in
 Apply only a reviewed plan containing the two intended additions.
 If those rules already exist, import their matching addresses before planning.
 Do not import a new rule that has not been created.
+The default import script skips missing Mario Kart state entries so the first
+apply can create the rules. Only if both rules already exist on the router,
+run `import.sh --mario-kart-forwards-exist` with the same credential wrapper
+as the router workflow to adopt them.
 
 Check HTTPS directly against the router's home address while preserving the
 hostname for TLS. Run from outside the home network to verify WAN forwarding:
