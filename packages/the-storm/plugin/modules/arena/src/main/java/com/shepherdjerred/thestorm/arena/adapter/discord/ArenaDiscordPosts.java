@@ -60,6 +60,8 @@ public final class ArenaDiscordPosts {
   public void accept(ArenaNotification notification) {
     try {
       headlines.accept(notification).forEach(this::post);
+      var setup = notification.after().setup();
+      relay.onActivity("arena:" + setup.arenaId(), ArenaHeadlines.activity(notification.after()));
     } catch (RuntimeException e) {
       logger.error(Component.text("arena: posting to Discord failed"), e);
     }

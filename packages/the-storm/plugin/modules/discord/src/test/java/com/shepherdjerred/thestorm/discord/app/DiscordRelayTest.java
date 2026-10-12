@@ -65,6 +65,8 @@ final class DiscordRelayTest {
   private final List<String> relayed = new ArrayList<>();
   private final List<Runnable> mainThread = new ArrayList<>();
   private final List<String> online = new ArrayList<>();
+  private final List<Duration> later = new ArrayList<>();
+  private final List<String> presences = new ArrayList<>();
 
   private final GlobalChat chat =
       new GlobalChat() {
@@ -89,7 +91,9 @@ final class DiscordRelayTest {
 
         @Override
         public Cancellable runOnMainThreadLater(Duration delay, Runnable task) {
-          throw new UnsupportedOperationException();
+          later.add(delay);
+          mainThread.add(task);
+          return () -> {};
         }
 
         @Override
@@ -116,6 +120,11 @@ final class DiscordRelayTest {
         @Override
         public void ping(String text, List<String> roles) {
           posts.add("PING" + roles + " " + text);
+        }
+
+        @Override
+        public void presence(String text) {
+          presences.add(text);
         }
       };
 
@@ -333,5 +342,70 @@ final class DiscordRelayTest {
             "Riversend claims 25",
             "**Bob** completed The Storm Watch",
             "**Carol** Mining 200");
+  }
+
+  @Test
+  void presenceSumsUpPlayersAndGamesAtMostOncePerInterval() {
+    online.add("Alice");
+    relay.onJoin("Alice");
+    relay.onActivity("rwf", Optional.of("S&D: 6 playing"));
+    runMainThread();
+    assertThat(presences).containsExactly("1 online · S&D: 6 playing");
+    assertThat(later).containsExactly(Duration.ZERO);
+
+    now = now.plusSeconds(5);
+    relay.onActivity("arena:rustworks", Optional.of("Rustworks: wave 41"));
+    relay.onActivity("arena:rustworks", Optional.of("Rustworks: wave 41"));
+    assertThat(later)
+        .as("one pending refresh, held to the interval")
+        .hasSize(2)
+        .last()
+        .isEqualTo(Duration.ofSeconds(15));
+    runMainThread();
+    assertThat(presences).last().isEqualTo("1 online · Rustworks: wave 41 · S&D: 6 playing");
+
+    online.clear();
+    now = now.plusSeconds(30);
+    relay.onActivity("rwf", Optional.empty());
+    relay.onActivity("arena:rustworks", Optional.empty());
+    runMainThread();
+    assertThat(presences).last().isEqualTo("Awake");
+  }
+
+  @Test
+  void moduleCommandsRegisterOnceAndCannotShadowBuiltIns() {
+    var changes = new ArrayList<String>();
+    relay.onCommandsChanged(() -> changes.add("changed"));
+    var top =
+        new DiscordCommand(
+            "arena-top",
+            "Best waves",
+            List.of(new DiscordCommand.Option("arena", "Which arena", false)),
+            (options, reply) -> reply.accept("top " + options));
+
+    relay.addCommand(top);
+
+    assertThat(relay.commands()).containsExactly(top);
+    assertThat(relay.command("arena-top")).contains(top);
+    assertThat(changes).containsExactly("changed");
+    org.assertj.core.api.Assertions.assertThatThrownBy(() -> relay.addCommand(top))
+        .isInstanceOf(IllegalArgumentException.class);
+    org.assertj.core.api.Assertions.assertThatThrownBy(
+            () -> relay.addCommand(new DiscordCommand("list", "x", List.of(), (o, r) -> {})))
+        .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  void statusListsPlayersAndGamesOnTheMainThread() {
+    var replies = new ArrayList<String>();
+    online.add("Alice");
+    relay.onActivity("rwf", Optional.of("S&D: 2 playing"));
+    mainThread.clear();
+
+    relay.status(replies::add);
+    assertThat(replies).isEmpty();
+    runMainThread();
+
+    assertThat(replies).containsExactly("Online (1): Alice\n• S&D: 2 playing");
   }
 }

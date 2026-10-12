@@ -12,6 +12,8 @@ import com.shepherdjerred.thestorm.discord.domain.InboundMessage;
 import com.shepherdjerred.thestorm.discord.domain.MatchLength;
 import com.shepherdjerred.thestorm.discord.domain.MessageTemplate;
 import com.shepherdjerred.thestorm.discord.domain.PlayerList;
+import com.shepherdjerred.thestorm.discord.domain.PresenceLine;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.InstantSource;
 import java.util.List;
@@ -22,6 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import org.jspecify.annotations.Nullable;
 
 /**
  * The bridge's use cases. Game events become Discord posts; Discord messages become Global chat.
@@ -36,6 +39,12 @@ public final class DiscordRelay {
   private final Map<String, Instant> lastPing = new ConcurrentHashMap<>();
   private final Set<String> postedTownMilestones = ConcurrentHashMap.newKeySet();
   private final List<Supplier<List<SeasonalEvent>>> seasonalEvents = new CopyOnWriteArrayList<>();
+  private final Map<String, DiscordCommand> commands = new ConcurrentHashMap<>();
+  private final Map<String, String> activities = new java.util.HashMap<>();
+  private volatile Runnable commandsChanged = () -> {};
+  private boolean presencePending;
+  private @Nullable String lastPresence;
+  private @Nullable Instant lastPresenceAt;
   private volatile boolean stopping;
 
   public DiscordRelay(DiscordConfig config, DiscordGateway gateway, Game game) {
@@ -98,15 +107,17 @@ public final class DiscordRelay {
     }
   }
 
-  /** Posts that {@code player} joined. */
+  /** Posts that {@code player} joined. Main thread. */
   public void onJoin(String player) {
     post(config.messages().joinTemplate().render(Map.of("player", DiscordText.forDiscord(player))));
+    refreshPresence();
   }
 
-  /** Posts that {@code player} left. */
+  /** Posts that {@code player} left. Main thread. */
   public void onLeave(String player) {
     post(
         config.messages().leaveTemplate().render(Map.of("player", DiscordText.forDiscord(player))));
+    refreshPresence();
   }
 
   /** Posts a death, given the game's final plain death message. */
@@ -424,6 +435,124 @@ public final class DiscordRelay {
                 "id", Long.toString(ticket.id()),
                 "server", ticket.server(),
                 "staff", DiscordText.forDiscord(ticket.staff()))));
+  }
+
+  /** Built-in commands; a module may not add one with these names. */
+  private static final Set<String> BUILT_IN = Set.of("list", "status", "baltop", "towns");
+
+  /** The shortest gap between two presence updates, well inside Discord's rate limit. */
+  static final Duration PRESENCE_INTERVAL = Duration.ofSeconds(20);
+
+  /** Escapes player or game text for a {@link DiscordCommand} reply. */
+  public static String escape(String gameText) {
+    return DiscordText.forDiscord(gameText);
+  }
+
+  /**
+   * Adds a module's read-only slash command. If the bot is already connected, the guild's commands
+   * are registered again.
+   */
+  public void addCommand(DiscordCommand command) {
+    if (BUILT_IN.contains(command.name())
+        || commands.putIfAbsent(command.name(), command) != null) {
+      throw new IllegalArgumentException("a slash command is already named " + command.name());
+    }
+    commandsChanged.run();
+  }
+
+  /** Every module command, by name. */
+  public List<DiscordCommand> commands() {
+    return commands.values().stream()
+        .sorted(java.util.Comparator.comparing(DiscordCommand::name))
+        .toList();
+  }
+
+  /** The module command named {@code name}, if any. */
+  public java.util.Optional<DiscordCommand> command(String name) {
+    return java.util.Optional.ofNullable(commands.get(name));
+  }
+
+  /** Called by the bridge once connected, to register commands added later. */
+  public void onCommandsChanged(Runnable listener) {
+    commandsChanged = listener;
+  }
+
+  /**
+   * Sets what {@code game} is doing for the bot's status, such as {@code S&D: 6 playing}; empty
+   * when it is idle. Main thread.
+   */
+  public void onActivity(String game, java.util.Optional<String> summary) {
+    var changed =
+        summary.isPresent()
+            ? !summary.orElseThrow().equals(activities.put(game, summary.orElseThrow()))
+            : activities.remove(game) != null;
+    if (changed) {
+      refreshPresence();
+    }
+  }
+
+  /**
+   * Updates the bot's status soon, at most once per {@link #PRESENCE_INTERVAL}. Main thread; the
+   * update itself runs on a later tick, after joins and quits have settled.
+   */
+  public void refreshPresence() {
+    if (presencePending || stopping) {
+      return;
+    }
+    presencePending = true;
+    var now = game.time().instant();
+    var wait =
+        lastPresenceAt == null
+            ? Duration.ZERO
+            : Duration.between(now, lastPresenceAt.plus(PRESENCE_INTERVAL));
+    game.scheduler()
+        .runOnMainThreadLater(wait.isNegative() ? Duration.ZERO : wait, this::flushPresence);
+  }
+
+  private void flushPresence() {
+    presencePending = false;
+    if (stopping) {
+      return;
+    }
+    var text = presenceText();
+    if (!text.equals(lastPresence)) {
+      lastPresence = text;
+      lastPresenceAt = game.time().instant();
+      gateway.presence(text);
+    }
+  }
+
+  private String presenceText() {
+    return PresenceLine.format(
+        game.players().names().size(),
+        List.copyOf(new java.util.TreeMap<>(activities).values()),
+        config.status());
+  }
+
+  /**
+   * Answers {@code /status}: who is online and what is running, read on the main thread. Called on
+   * a JDA thread.
+   */
+  public void status(Consumer<String> reply) {
+    if (stopping) {
+      reply.accept(config.messages().stop());
+      return;
+    }
+    game.scheduler()
+        .runOnMainThread(
+            () -> {
+              var lines = new java.util.ArrayList<String>();
+              lines.add(
+                  PlayerList.format(
+                      game.players().names(),
+                      config.messages().listTemplate(),
+                      config.messages().listEmptyTemplate()));
+              new java.util.TreeMap<>(activities)
+                  .values()
+                  .forEach(activity -> lines.add("• " + DiscordText.forDiscord(activity)));
+              reply.accept(
+                  DiscordText.truncate(String.join("\n", lines), DiscordText.DISCORD_LIMIT));
+            });
   }
 
   /** The message to post as the server goes to sleep. */

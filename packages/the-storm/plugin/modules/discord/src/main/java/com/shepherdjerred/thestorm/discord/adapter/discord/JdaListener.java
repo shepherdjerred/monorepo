@@ -54,7 +54,13 @@ final class JdaListener extends ListenerAdapter {
           reply -> JdaBridge.quietMessage(event.getHook().sendMessage(reply)).queue());
       return;
     }
-    if (!"baltop".equals(name) && !"towns".equals(name)) {
+    if ("status".equals(name)) {
+      event.deferReply().queue();
+      relay.status(reply -> JdaBridge.quietMessage(event.getHook().sendMessage(reply)).queue());
+      return;
+    }
+    var module = relay.command(name);
+    if (!"baltop".equals(name) && !"towns".equals(name) && module.isEmpty()) {
       return;
     }
     if (!event.isFromGuild() || event.getChannel().getIdLong() != channelId) {
@@ -71,7 +77,13 @@ final class JdaListener extends ListenerAdapter {
             hook -> {
               java.util.function.Consumer<String> reply =
                   text -> bridge.editReply(hook, relay.isStopping() ? relay.stopMessage() : text);
-              if ("baltop".equals(name)) {
+              if (module.isPresent()) {
+                var options = new java.util.HashMap<String, String>();
+                event
+                    .getOptions()
+                    .forEach(option -> options.put(option.getName(), option.getAsString()));
+                module.orElseThrow().handler().answer(java.util.Map.copyOf(options), reply);
+              } else if ("baltop".equals(name)) {
                 commands.baltop(reply);
               } else {
                 commands.towns(

@@ -17,4 +17,7 @@ public interface DiscordGateway {
    * @param roles Discord role ids the text mentions
    */
   void ping(String text, List<String> roles);
+
+  /** Sets the bot's custom status. Ignored while the bot is not connected. */
+  void presence(String text);
 }

@@ -6,6 +6,7 @@ import com.shepherdjerred.thestorm.arena.adapter.db.JooqRewardStore;
 import com.shepherdjerred.thestorm.arena.adapter.db.JooqSnapshotStore;
 import com.shepherdjerred.thestorm.arena.adapter.db.JooqSurvivalProgress;
 import com.shepherdjerred.thestorm.arena.adapter.discord.ArenaDiscordPosts;
+import com.shepherdjerred.thestorm.arena.adapter.discord.ArenaTopCommand;
 import com.shepherdjerred.thestorm.arena.adapter.paper.ArenaPaper;
 import com.shepherdjerred.thestorm.arena.adapter.paper.ChunkKeeper;
 import com.shepherdjerred.thestorm.arena.adapter.paper.ServerHooks;
@@ -119,6 +120,14 @@ public final class ArenaModule implements StormModule {
                         context.logger()))
             .map(posts -> started.events().subscribe(posts::accept))
             .orElse(null);
+    context
+        .services()
+        .find(DiscordRelay.class)
+        .ifPresent(
+            relay ->
+                relay.addCommand(
+                    new ArenaTopCommand(leaderboard, content.arenas(), context.logger())
+                        .command()));
   }
 
   @Override

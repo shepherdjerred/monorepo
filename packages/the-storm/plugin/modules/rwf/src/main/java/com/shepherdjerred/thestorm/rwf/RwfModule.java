@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.rwf;
 
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.StormModule;
+import com.shepherdjerred.thestorm.core.players.PlayerDirectory;
 import com.shepherdjerred.thestorm.core.world.ChunkTickets;
 import com.shepherdjerred.thestorm.discord.app.DiscordRelay;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
@@ -11,6 +12,7 @@ import com.shepherdjerred.thestorm.rwf.adapter.content.RwfConfig;
 import com.shepherdjerred.thestorm.rwf.adapter.db.JooqMatchStore;
 import com.shepherdjerred.thestorm.rwf.adapter.db.JooqSnapshotStore;
 import com.shepherdjerred.thestorm.rwf.adapter.discord.RwfDiscordPosts;
+import com.shepherdjerred.thestorm.rwf.adapter.discord.RwfStatsCommand;
 import com.shepherdjerred.thestorm.rwf.adapter.paper.RwfPaper;
 import com.shepherdjerred.thestorm.rwf.adapter.paper.ServerHooks;
 import com.shepherdjerred.thestorm.rwf.adapter.record.GzipRecorder;
@@ -154,6 +156,17 @@ public final class RwfModule implements StormModule {
                         context.logger()))
             .map(posts -> started.events().subscribe(posts::accept))
             .orElse(null);
+    context
+        .services()
+        .find(DiscordRelay.class)
+        .ifPresent(
+            relay ->
+                relay.addCommand(
+                    new RwfStatsCommand(
+                            matches,
+                            context.services().require(PlayerDirectory.class),
+                            context.logger())
+                        .command()));
     context.services().provide(CombatantActions.class, started.actions());
     context
         .services()

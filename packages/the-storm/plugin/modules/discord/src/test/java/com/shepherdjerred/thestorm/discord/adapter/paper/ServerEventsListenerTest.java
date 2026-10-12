@@ -67,6 +67,11 @@ final class ServerEventsListenerTest {
               public void ping(String text, List<String> roles) {
                 posts.add(text);
               }
+
+              @Override
+              public void presence(String text) {
+                // The bot status is not under test here.
+              }
             },
             new DiscordRelay.Game(new SilentChat(), new Inline(), List::of, () -> Instant.EPOCH));
     listener = new ServerEventsListener(relay, new VanillaPlainText(new EmptyLanguage()), sealed);
@@ -172,9 +177,10 @@ final class ServerEventsListenerTest {
       task.run();
     }
 
+    /** Presence refreshes are dropped; these tests only read posts. */
     @Override
     public Cancellable runOnMainThreadLater(Duration delay, Runnable task) {
-      throw new UnsupportedOperationException();
+      return () -> {};
     }
 
     @Override

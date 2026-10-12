@@ -60,6 +60,17 @@ public final class ArenaHeadlines {
     return List.copyOf(headlines);
   }
 
+  /** What {@code game} is doing, for a status line; empty when nobody is in it. */
+  public static Optional<String> activity(ArenaGame game) {
+    var name = game.setup().arenaName();
+    return switch (game.phase()) {
+      case Phase.Fighting fighting -> Optional.of(name + ": wave " + fighting.wave());
+      case Phase.Intermission between ->
+          Optional.of(name + ": wave " + Math.max(1, between.nextWave() - 1));
+      case Phase.Lobby _, Phase.Countdown _ -> lobby(game).map(_ -> name + ": lobby open");
+    };
+  }
+
   private static Optional<Member.InLobby> lobby(ArenaGame game) {
     return game.members().stream()
         .filter(Member.InLobby.class::isInstance)
