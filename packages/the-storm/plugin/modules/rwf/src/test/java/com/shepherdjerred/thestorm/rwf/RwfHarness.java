@@ -5,6 +5,7 @@ import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.Services;
 import com.shepherdjerred.thestorm.core.schedule.PaperScheduler;
+import com.shepherdjerred.thestorm.core.status.PublicGameDirectory;
 import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.economy.app.CrystalFormatter;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
@@ -174,6 +175,7 @@ public final class RwfHarness implements AutoCloseable {
     services.provide(Wallets.class, wallets);
     services.provide(CrystalFormatter.class, wallets);
     services.provide(SealedWorlds.class, sealed);
+    services.provide(PublicGameDirectory.class, new PublicGameDirectory());
     if (withBots) {
       services.provide(BotRoster.class, bots);
     }
