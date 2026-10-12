@@ -125,6 +125,24 @@ final class PaperContext {
     return plugin.getComponentLogger();
   }
 
+  /**
+   * As {@link #onMain(CompletableFuture, Consumer, String)}, and on failure, after logging it, runs
+   * {@code otherwise} on the main thread so the caller can undo what waited on the result.
+   */
+  <T> void onMain(CompletableFuture<T> future, Consumer<T> then, Runnable otherwise, String what) {
+    var _ =
+        future.whenCompleteAsync(
+            (value, failure) -> {
+              if (failure != null) {
+                logger().error("Could not {}", what, failure);
+                guarded(what, otherwise);
+              } else {
+                guarded(what, () -> then.accept(value));
+              }
+            },
+            mainThread());
+  }
+
   /** Runs {@code then} on the main thread with the result, or logs why {@code what} failed. */
   <T> void onMain(CompletableFuture<T> future, Consumer<T> then, String what) {
     var _ =

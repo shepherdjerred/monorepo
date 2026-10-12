@@ -33,6 +33,7 @@ final class MatchHeadlinesTest {
         Optional.of(team),
         Optional.empty(),
         true,
+        false,
         com.shepherdjerred.thestorm.rwf.domain.match.Score.ZERO);
   }
 
@@ -43,6 +44,7 @@ final class MatchHeadlinesTest {
         Optional.empty(),
         Optional.empty(),
         true,
+        false,
         com.shepherdjerred.thestorm.rwf.domain.match.Score.ZERO);
   }
 

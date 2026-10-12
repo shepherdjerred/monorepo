@@ -3,29 +3,23 @@ package com.shepherdjerred.thestorm.rwf.adapter.paper;
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.rwf.app.ActionRefusal;
 import com.shepherdjerred.thestorm.rwf.app.CombatantActions;
+import com.shepherdjerred.thestorm.rwf.app.KitUse;
+import com.shepherdjerred.thestorm.rwf.domain.ability.AbilityInput;
+import com.shepherdjerred.thestorm.rwf.domain.ability.kits.Rewind;
 import com.shepherdjerred.thestorm.rwf.domain.combat.AttackType;
-import com.shepherdjerred.thestorm.rwf.domain.combat.DamageFormula;
 import com.shepherdjerred.thestorm.rwf.domain.combat.HitWindow;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.CombatantId;
 import com.shepherdjerred.thestorm.rwf.domain.geometry.Vec3;
-import com.shepherdjerred.thestorm.rwf.domain.kit.RewindError;
-import com.shepherdjerred.thestorm.rwf.domain.kit.RewindTrail;
-import com.shepherdjerred.thestorm.rwf.domain.kit.Rewinder;
+import com.shepherdjerred.thestorm.rwf.domain.match.Combatant;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent;
-import java.util.List;
 import java.util.Optional;
-import org.bukkit.Effect;
-import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.Sound;
 import org.bukkit.entity.AbstractArrow;
 import org.bukkit.entity.Arrow;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.util.Vector;
 
 /**
  * {@link CombatantActions} over the real server API. Each action checks what a human doing the same
@@ -43,14 +37,12 @@ final class PaperCombatantActions implements CombatantActions {
   /** Vanilla's arrow speed at full draw. */
   static final double ARROW_SPEED = 3.0;
 
-  /** The most landing nudges one rewind makes. */
-  static final int MAX_NUDGES = 1_000;
-
   private final MatchRunner runner;
   private final CombatTracker tracker;
   private final Recordings recordings;
   private final Keys keys;
   private final ServerHooks hooks;
+  private final BotKitUses kitUses;
 
   /**
    * What the actions need.
@@ -60,13 +52,15 @@ final class PaperCombatantActions implements CombatantActions {
    * @param recordings where bot intents go
    * @param keys item tags
    * @param hooks the server operations tests replace
+   * @param kitUses what a bot's kit items do
    */
   record Parts(
       MatchRunner runner,
       CombatTracker tracker,
       Recordings recordings,
       Keys keys,
-      ServerHooks hooks) {}
+      ServerHooks hooks,
+      BotKitUses kitUses) {}
 
   PaperCombatantActions(Parts parts) {
     this.runner = parts.runner();
@@ -74,6 +68,7 @@ final class PaperCombatantActions implements CombatantActions {
     this.recordings = parts.recordings();
     this.keys = parts.keys();
     this.hooks = parts.hooks();
+    this.kitUses = parts.kitUses();
   }
 
   private Result<Player, ActionRefusal> fighter(CombatantId id) {
@@ -125,74 +120,25 @@ final class PaperCombatantActions implements CombatantActions {
     return fighter(id)
         .fold(
             player -> {
-              var rewinder = runner.rewinder(id);
-              if (rewinder.isEmpty()) {
+              var abilities = runner.match().abilities();
+              if (!runner.live() || !(abilities.state(id) instanceof Rewind.Clock clock)) {
                 return Optional.of(ActionRefusal.NO_TIME_MACHINE);
               }
-              return switch (rewinder.orElseThrow().use(runner.now())) {
-                case Result.Err<Rewinder.Rewind, RewindError>(var error) ->
-                    Optional.of(
-                        error == RewindError.COOLING_DOWN
-                            ? ActionRefusal.COOLING_DOWN
-                            : ActionRefusal.NO_LANDING);
-                case Result.Ok<Rewinder.Rewind, RewindError>(var rewind) -> {
-                  runner.rewinder(id, rewind.next());
-                  runner.hooks().abilityUsed(id, "rewind", Optional.empty());
-                  rewind(player, rewind.to());
-                  intent(id, "rewind", "");
-                  yield Optional.empty();
-                }
-              };
+              var refusal =
+                  Rewind.refusal(abilities.ready(id, Rewind.ID, runner.now()), clock)
+                      .map(
+                          why ->
+                              why == Rewind.Refusal.COOLING_DOWN
+                                  ? ActionRefusal.COOLING_DOWN
+                                  : ActionRefusal.NO_LANDING);
+              // The kit answers either way, as Red Warfare did: a refusal in red, or the jump.
+              runner.handle(new MatchEvent.Ability(id, new AbilityInput.Rewind(), runner.now()));
+              if (refusal.isEmpty()) {
+                intent(id, "rewind", "");
+              }
+              return refusal;
             },
             Optional::of);
-  }
-
-  /**
-   * Carries out a Time Machine use in the original's order: the message; out of any passenger; the
-   * enderman sound and ender signal where the player leaves; the teleport, which also leaves any
-   * vehicle and nudges the landing off an entity standing exactly there (the original's {@code
-   * UtilPlayer.tele}); the sound and signal where they land, facing the way they faced there; then
-   * fall distance, fire and velocity cleared and nobody credited for a later fall or burn.
-   */
-  private void rewind(Player player, RewindTrail.Spot to) {
-    Texts.info(player, "You step sideways into the river of time..");
-    var world = player.getWorld();
-    var from = Places.at(player);
-    var target = Places.location(world, to.position());
-    target.setYaw(to.yaw());
-    target.setPitch(to.pitch());
-    var _ = player.eject();
-    world.playSound(from, Sound.ENTITY_ENDERMAN_TELEPORT, 1, 1);
-    world.playEffect(from, Effect.ENDER_SIGNAL, 9);
-    var _ = player.eject();
-    var _ = player.leaveVehicle();
-    clearOfEntities(target, player.getNearbyEntities(1, 1, 1));
-    player.teleport(target);
-    world.playSound(target, Sound.ENTITY_ENDERMAN_TELEPORT, 1, 1);
-    world.playEffect(target, Effect.ENDER_SIGNAL, 9);
-    player.setFallDistance(0);
-    player.setFireTicks(0);
-    player.setVelocity(new Vector());
-    tracker.clearFallCredit(player.getUniqueId());
-  }
-
-  /**
-   * The original's landing nudge: while an entity near the player stands within 0.1 of {@code
-   * target}, move it by up to 0.01 sideways and up to 0.01 up. The upward step makes it clear in
-   * about twenty steps; {@link #MAX_NUDGES} only keeps the tick safe from an entity that keeps
-   * pace, which the original left unbounded.
-   */
-  private void clearOfEntities(Location target, List<Entity> nearby) {
-    var random = runner.random();
-    for (var step = 0;
-        step < MAX_NUDGES
-            && nearby.stream().anyMatch(entity -> entity.getLocation().distance(target) <= 0.1);
-        step++) {
-      target.add(
-          random.nextDouble(-0.01, 0.01),
-          random.nextDouble(0, 0.01),
-          random.nextDouble(-0.01, 0.01));
-    }
   }
 
   @Override
@@ -225,8 +171,7 @@ final class PaperCombatantActions implements CombatantActions {
     if (!hooks.lineOfSight().test(attackerEntity, targetEntity)) {
       return Optional.of(ActionRefusal.NO_LINE_OF_SIGHT);
     }
-    var hit = CombatListener.hit(AttackType.MELEE, attackerEntity, targetEntity, 0);
-    var damage = DamageFormula.finalDamage(hit);
+    var damage = runner.kits().damage(AttackType.MELEE, attackerEntity, targetEntity, 0);
     if (HitWindow.resolve(damage, AttackType.MELEE, tracker.guard(targetEntity))
         instanceof HitWindow.Resolution.Blocked) {
       return Optional.of(ActionRefusal.HIT_WINDOW);
@@ -248,7 +193,8 @@ final class PaperCombatantActions implements CombatantActions {
                 return Optional.of(ActionRefusal.BAD_FORCE);
               }
               var bow = player.getInventory().getItemInMainHand();
-              if (bow.getType() != Material.BOW || !hasArrows(player, bow)) {
+              var type = bow.getType();
+              if ((type != Material.BOW && type != Material.CROSSBOW) || !hasArrows(player, bow)) {
                 return Optional.of(ActionRefusal.NO_BOW);
               }
               var velocity = Places.vector(direction).normalize().multiply(force * ARROW_SPEED);
@@ -309,11 +255,48 @@ final class PaperCombatantActions implements CombatantActions {
   }
 
   @Override
+  public Optional<ActionRefusal> useKit(CombatantId id, int slot, KitUse use) {
+    return fighter(id)
+        .fold(
+            player -> {
+              var item = slot < 0 || slot > 8 ? null : player.getInventory().getItem(slot);
+              var kit = runner.member(id).flatMap(Combatant::kit);
+              if (item == null || !keys.isKitItem(item) || kit.isEmpty()) {
+                return Optional.of(ActionRefusal.NO_KIT_ITEM);
+              }
+              if (runner.powers().frozen(player.getUniqueId())) {
+                return Optional.of(ActionRefusal.FROZEN);
+              }
+              player.getInventory().setHeldItemSlot(slot);
+              intent(id, "kit", item.getType().name());
+              return kitUses.use(player, kit.orElseThrow(), item, use);
+            },
+            Optional::of);
+  }
+
+  @Override
+  public Optional<ActionRefusal> useStreak(CombatantId id) {
+    return fighter(id)
+        .fold(
+            player -> {
+              intent(id, "streak", "drop");
+              return runner.powers().streaks().useCarried(player);
+            },
+            Optional::of);
+  }
+
+  @Override
   public Optional<ActionRefusal> pickKit(CombatantId id, String kitId) {
     if (runner.member(id).isEmpty()) {
       return Optional.of(ActionRefusal.NOT_A_MEMBER);
     }
+    var access = runner.picker().access(id);
+    if (access.isEmpty()) {
+      return Optional.of(ActionRefusal.KIT_LOCKED);
+    }
     intent(id, "kit", kitId);
-    return runner.handle(new MatchEvent.PickKit(id, kitId)).map(ActionRefusal::of);
+    return runner
+        .handle(new MatchEvent.PickKit(id, kitId, access.orElseThrow()))
+        .map(ActionRefusal::of);
   }
 }

@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.rwfbots.adapter.paper;
 
 import com.shepherdjerred.thestorm.rwf.app.MatchView;
 import com.shepherdjerred.thestorm.rwf.app.view.MatchState;
+import com.shepherdjerred.thestorm.rwf.app.view.StreakItems;
 import com.shepherdjerred.thestorm.rwfbots.app.BotProfile;
 import com.shepherdjerred.thestorm.rwfbots.app.BotThought;
 import com.shepherdjerred.thestorm.rwfbots.app.DecisionBoard;
@@ -17,6 +18,8 @@ import com.shepherdjerred.thestorm.rwfbots.domain.perception.PerceptionState;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.Reflex;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.ReflexContext;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.ReflexInput;
+import com.shepherdjerred.thestorm.rwfbots.domain.reflex.StreakPlay;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.BodyCommand;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.WorldSnapshot;
 import java.util.Arrays;
@@ -256,6 +259,13 @@ public final class BotTicker {
         roster.harness().active(match.matchId())
             ? roster.harness().commands(controls)
             : learning.commands(controls);
+    if (StreakPlay.now(streaks(bot), input, bot.nextStreak())) {
+      commands =
+          java.util.stream.Stream.concat(
+                  commands.stream(), java.util.stream.Stream.of(new BodyCommand.UseStreak()))
+              .toList();
+      bot.nextStreak(tick + StreakPlay.GAP_TICKS);
+    }
     driver.apply(bot, commands, match.ids(), tick);
   }
 
@@ -288,6 +298,25 @@ public final class BotTicker {
       }
     }
     return bot.profile().isPresent();
+  }
+
+  /** How many killstreak rewards called in from the sky {@code bot} carries. */
+  private int streaks(BotBody bot) {
+    return roster
+        .bodies()
+        .entity(bot.uuid())
+        .map(
+            entity -> {
+              var count = 0;
+              for (var slot = 0; slot < HOTBAR_AND_STORAGE; slot++) {
+                var stack = entity.getInventory().getItem(slot);
+                if (stack != null && StreakItems.DROPPED.contains(stack.getType().name())) {
+                  count += stack.getAmount();
+                }
+              }
+              return count;
+            })
+        .orElse(0);
   }
 
   private int gapples(BotBody bot) {

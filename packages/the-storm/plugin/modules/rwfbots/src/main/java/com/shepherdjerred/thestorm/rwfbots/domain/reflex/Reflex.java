@@ -8,6 +8,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.BodyCommand;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Hop;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.Kit;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Option;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Stance;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Waypoint;
@@ -166,6 +167,7 @@ public final class Reflex {
         state = state.withPath(0, input.decision().snapshotTick());
       }
       ability();
+      kitItems();
       var target = input.target();
       var bomb = bombInReach();
       if (state.isEating() || shouldStartEating(target)) {
@@ -203,7 +205,7 @@ public final class Reflex {
           decision.target().isEmpty() && state.waypointIndex() >= decision.waypoints().size();
       var burst = killed || (idle && (now / CROUCH_BURST_TICKS) % 3 == 0);
       var tap = burst && (now / CROUCH_TAP_TICKS) % 2 == 0;
-      var stealth = idle && decision.stance() == Stance.STEALTH;
+      var stealth = idle && sneaksWaiting();
       commands.add(new BodyCommand.Sneak(tap || stealth));
     }
 
@@ -224,6 +226,24 @@ public final class Reflex {
       if (ability.isPresent() && state.abilityUsedFor() != input.decision().snapshotTick()) {
         commands.add(new BodyCommand.UseAbility(ability.get()));
         state = state.withAbilityUsedFor(input.decision().snapshotTick());
+      }
+    }
+
+    /**
+     * Uses the first kit item whose moment it is ({@link KitPlay}), at most one a tick and each
+     * kit's uses at least the item's gap apart; never while eating or drawing a bow.
+     */
+    private void kitItems() {
+      if (now < state.nextKitUse() || state.isEating() || state.isDrawing()) {
+        return;
+      }
+      for (var item : context.loadout().kitItems()) {
+        var use = KitPlay.choose(item, input, state.waypointIndex());
+        if (use.isPresent()) {
+          commands.add(use.orElseThrow());
+          state = state.withNextKitUse(now + item.move().gapTicks());
+          return;
+        }
       }
     }
 
@@ -385,10 +405,12 @@ public final class Reflex {
       var apart = apart(SEPARATION, 0);
       var closing = closing(distance, apart);
       // Outside contact range, pursue rather than spending most acceleration circling.
-      var strafeWeight = distance > REACH + 0.5 ? 0.25 : 1.0;
+      var charging = context.loadout().body() == Kit.Body.CHARGE && distance > REACH + 0.5;
+      // An Inertia runs straight in: a strafe turns it and its momentum is lost.
+      var strafeWeight = charging ? 0.0 : distance > REACH + 0.5 ? 0.25 : 1.0;
       var move = side.scale(strafeWeight).plus(radial.scale(closing)).plus(apart.scale(2.5));
       var point = self.pos().plus(move.isZero() ? radial : move.normalized());
-      var sprint = now >= state.wTapUntil() && closing > 0;
+      var sprint = (charging || now >= state.wTapUntil()) && closing > 0;
       commands.add(new BodyCommand.MoveToward(point, sprint));
       // RWF's melee rules have no airborne critical-hit bonus. Stay grounded for control;
       // navigation still jumps over terrain, and external combat actions can request a jump.
@@ -623,9 +645,18 @@ public final class Reflex {
         var look = Facing.looking(self.eye(), watch.get());
         state = state.withAim(AimController.steer(state.aim(), look, levers()));
       }
-      if (input.decision().stance() == Stance.STEALTH) {
+      if (sneaksWaiting()) {
         commands.add(new BodyCommand.Sneak(true));
       }
+    }
+
+    /**
+     * Whether the bot sneaks while it stands waiting: in a stealthy stance, or as a Dwarf with no
+     * enemy in sight, whose experience fills only while it sneaks.
+     */
+    private boolean sneaksWaiting() {
+      return input.decision().stance() == Stance.STEALTH
+          || (context.loadout().body() == Kit.Body.SNEAK_WHEN_IDLE && input.target().isEmpty());
     }
   }
 }

@@ -114,8 +114,7 @@ final class RwfLobbyTest {
             "alcove-label:rewind");
     assertThat(harness.lobbyWorld.getEntitiesByClass(ItemDisplay.class))
         .extracting(display -> display.getItemStack().getType())
-        .containsExactlyInAnyOrder(
-            Material.IRON_SWORD, Material.BOW, Material.ARROW, Material.CLOCK);
+        .containsExactlyInAnyOrder(Material.IRON_SWORD, Material.BOW, Material.BOW, Material.CLOCK);
     assertThat(harness.lobbyWorld.getEntities()).allMatch(entity -> !entity.isPersistent());
   }
 

@@ -30,9 +30,10 @@ import org.jspecify.annotations.Nullable;
  * The lobby's dressing, as display entities because the lobby's schematic carries no block
  * entities: the rules on the briefing room's screen, the live match board over the vote terrace, a
  * podium display per map on the ballot with its name, author and votes, the leaderboard wall, the
- * free-rotation wall's header, and in each kit alcove the kit's menu icon over its pedestal with
- * its name and summary above. Every entity is tagged, not saved with the world, and swept before
- * the lobby is dressed again, so they are never duplicated. Main thread only.
+ * free-rotation wall with this week's free kits in its slots, and in each kit alcove the kit's menu
+ * icon over its pedestal with its name and summary above. Every entity is tagged, not saved with
+ * the world, and swept before the lobby is dressed again, so they are never duplicated. Main thread
+ * only.
  */
 final class LobbyDisplays {
 
@@ -43,12 +44,23 @@ final class LobbyDisplays {
   static final String PODIUM = "podium:";
   static final String LEADERBOARD = "leaderboard:";
   static final String ROTATION = "rotation";
+  static final String ROTATION_ITEM = "rotation-item:";
+  static final String ROTATION_LABEL = "rotation-label:";
+
+  /** How far above a rotation slot's item its name floats, inside the slot's recess. */
+  private static final double SLOT_LABEL_HEIGHT = 0.9;
 
   /** Wide enough that no rule or kit line wraps. */
   private static final int LINE_WIDTH = 400;
 
-  /** How far above the item its label floats. */
-  private static final double LABEL_HEIGHT = 1.6;
+  /**
+   * How far above the item its label starts: just over the item, so the whole label fits under the
+   * alcove's lintel.
+   */
+  private static final double LABEL_HEIGHT = 0.45;
+
+  /** How large an alcove's label is drawn, so its lines fit in the alcove's opening. */
+  private static final float LABEL_SCALE = 0.6F;
 
   static final List<String> RULES_LINES =
       List.of(
@@ -68,10 +80,12 @@ final class LobbyDisplays {
   private final List<KitSpec> kits;
   private final KitFactory items;
   private final Consumer<Display> style;
+  private final Supplier<List<KitSpec>> rotation;
   private final Supplier<Map<StatsStore.Stat, List<StatsStore.Totals>>> leaders;
   private final Supplier<Boolean> showStats;
   private final Map<String, TextDisplay> texts = new HashMap<>();
   private final Map<String, List<String>> shown = new HashMap<>();
+  private List<KitSpec> wall = List.of();
 
   /**
    * What the displays are made of.
@@ -81,6 +95,7 @@ final class LobbyDisplays {
    * @param room the lobby
    * @param kits the kits, one per alcove, with their items
    * @param style styles each display once spawned (its billboard)
+   * @param rotation this week's free kits, or none while the kit shop is off for everyone here
    * @param leaders the leaderboards as last read
    * @param showStats whether the statistics feature is on
    */
@@ -90,6 +105,7 @@ final class LobbyDisplays {
       LobbyRoom room,
       KitFactory kits,
       Consumer<Display> style,
+      Supplier<List<KitSpec>> rotation,
       Supplier<Map<StatsStore.Stat, List<StatsStore.Totals>>> leaders,
       Supplier<Boolean> showStats) {}
 
@@ -99,6 +115,7 @@ final class LobbyDisplays {
     this.room = parts.room();
     this.items = parts.kits();
     this.style = parts.style();
+    this.rotation = parts.rotation();
     this.leaders = parts.leaders();
     this.showStats = parts.showStats();
     this.kits = room.layout().kits().stream().map(items::require).toList();
@@ -138,19 +155,67 @@ final class LobbyDisplays {
           part,
           spawnText(at(leaderboard.display()), part, Component.text(title(leaderboard.stat()))));
     }
-    var _ = spawnText(at(layout.rotation().header()), ROTATION, rotation());
+    texts.put(ROTATION, spawnText(at(layout.rotation().header()), ROTATION, rotation(List.of())));
+    wall = List.of();
+    showWall(rotation.get());
     for (var kit : kits) {
       var alcove = layout.alcove(kit.id()).orElseThrow();
       var where = at(alcove.display());
       where.setYaw(alcove.stand().yaw() + 180);
-      spawnItem(where, kit);
-      var _ = spawnText(where.clone().add(0, LABEL_HEIGHT, 0), LABEL + kit.id(), label(kit));
+      spawnItem(where, kit, ITEM + kit.id());
+      var text = spawnText(where.clone().add(0, LABEL_HEIGHT, 0), LABEL + kit.id(), label(kit));
+      text.setTransformation(
+          new org.bukkit.util.Transformation(
+              new org.joml.Vector3f(),
+              new org.joml.AxisAngle4f(),
+              new org.joml.Vector3f(LABEL_SCALE, LABEL_SCALE, LABEL_SCALE),
+              new org.joml.AxisAngle4f()));
     }
+  }
+
+  /**
+   * Puts this week's {@code free} kits in the rotation wall's slots, one each in order, and names
+   * them in the header; when the week turns or the shop opens, the old ones come down first.
+   */
+  private void showWall(List<KitSpec> free) {
+    if (free.equals(wall)) {
+      return;
+    }
+    for (var entity : context.lobbyWorld().getEntities()) {
+      if (keys.lobbyPart(entity)
+          .filter(part -> part.startsWith(ROTATION_ITEM) || part.startsWith(ROTATION_LABEL))
+          .isPresent()) {
+        entity.remove();
+      }
+    }
+    var layout = room.layout().rotation();
+    var slots = layout.slots();
+    for (var i = 0; i < Math.min(free.size(), slots.size()); i++) {
+      var kit = free.get(i);
+      var where = at(slots.get(i));
+      where.setYaw(layout.stand().yaw() + 180);
+      spawnItem(where, kit, ROTATION_ITEM + (i + 1));
+      var _ =
+          spawnText(
+              where.clone().add(0, SLOT_LABEL_HEIGHT, 0),
+              ROTATION_LABEL + (i + 1),
+              Component.text(kit.name(), NamedTextColor.GREEN, TextDecoration.BOLD));
+    }
+    var header = texts.get(ROTATION);
+    if (header != null) {
+      header.text(rotation(free));
+    }
+    wall = List.copyOf(free);
   }
 
   /** Redraws the match board, the podiums and the leaderboards, only where their text changed. */
   void update(LobbyStatus status, Optional<Ballot> ballot) {
     var board = new ArrayList<>(boardLines(status));
+    var free = rotation.get();
+    if (!free.isEmpty()) {
+      board.add(rotationLine(free));
+    }
+    showWall(free);
     ballot.filter(Ballot::opened).ifPresent(open -> board.addAll(ballotLines(open)));
     draw(BOARD, board);
     var podiums = room.layout().podiums();
@@ -191,6 +256,7 @@ final class LobbyDisplays {
     }
     texts.clear();
     shown.clear();
+    wall = List.of();
   }
 
   /** The lobby displays standing in the world now, by part, for tests and diagnostics. */
@@ -217,7 +283,7 @@ final class LobbyDisplays {
             SpawnReason.CUSTOM);
   }
 
-  private void spawnItem(Location where, KitSpec kit) {
+  private void spawnItem(Location where, KitSpec kit, String part) {
     var _ =
         context
             .lobbyWorld()
@@ -226,7 +292,7 @@ final class LobbyDisplays {
                 ItemDisplay.class,
                 display -> {
                   display.setItemStack(items.icon(kit, false));
-                  decorate(display, ITEM + kit.id());
+                  decorate(display, part);
                 },
                 SpawnReason.CUSTOM);
   }
@@ -245,11 +311,16 @@ final class LobbyDisplays {
     return text;
   }
 
-  /** The free-rotation wall's header; the weekly rotation arrives with the kit shop. */
-  private static Component rotation() {
+  /** The free-rotation wall's header: the week's free kits, or a promise while the shop is off. */
+  private static Component rotation(List<KitSpec> free) {
     return Component.text("Free this week", NamedTextColor.GREEN, TextDecoration.BOLD)
         .appendNewline()
-        .append(Component.text("The kit shop opens soon", NamedTextColor.GRAY));
+        .append(
+            Component.text(
+                free.isEmpty()
+                    ? "The kit shop opens soon"
+                    : "Play these four for free until Monday",
+                NamedTextColor.GRAY));
   }
 
   private static Component label(KitSpec kit) {
@@ -259,6 +330,11 @@ final class LobbyDisplays {
     }
     return text.appendNewline()
         .append(Component.text("/rwf kit " + kit.id(), NamedTextColor.YELLOW));
+  }
+
+  /** The weekly free kits, as the board shows them. */
+  static String rotationLine(List<KitSpec> free) {
+    return "Free kits this week: " + String.join(", ", free.stream().map(KitSpec::name).toList());
   }
 
   private static String title(LobbyLayout.Leaderboard.Stat stat) {

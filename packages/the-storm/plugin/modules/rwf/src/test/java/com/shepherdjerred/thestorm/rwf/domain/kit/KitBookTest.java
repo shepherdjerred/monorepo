@@ -4,7 +4,7 @@ import static com.shepherdjerred.thestorm.rwf.testing.Samples.T0;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.shepherdjerred.thestorm.core.result.Result;
+import com.shepherdjerred.thestorm.rwf.domain.ability.kits.Rewind;
 import com.shepherdjerred.thestorm.rwf.domain.geometry.BlockPos;
 import com.shepherdjerred.thestorm.rwf.domain.geometry.Vec3;
 import java.util.List;
@@ -72,19 +72,20 @@ final class KitBookTest {
       var rewind = KitBook.REWIND;
 
       assertThat(rewind.hotbar())
-          .containsExactly(ItemSpec.of("IRON_SWORD"), ItemSpec.of("CLOCK").named("Time Machine"));
+          .containsExactly(
+              ItemSpec.of("IRON_SWORD"), ItemSpec.of("CLOCK").named("Time Machine", "gold"));
       assertThat(rewind.armor().get(2))
           .isEqualTo(
               ItemSpec.armor("IRON_CHESTPLATE", ArmorSlot.CHESTPLATE).enchanted("protection", 1));
       assertThat(rewind.armor().get(3).material()).isEqualTo("CHAINMAIL_HELMET");
-      assertThat(rewind.ability()).contains(Rewinder.ABILITY);
+      assertThat(rewind.ability()).contains(Rewind.ID);
     }
 
     @Test
     void everyKitHasAMenuIconAndASummaryThatFitsATooltip() {
       assertThat(KitBook.MILESTONE_ONE)
           .extracting(kit -> kit.menu().icon())
-          .containsExactly("IRON_SWORD", "BOW", "ARROW", "CLOCK");
+          .containsExactly("IRON_SWORD", "BOW", "BOW", "CLOCK");
       for (var kit : KitBook.MILESTONE_ONE) {
         assertThat(kit.menu().summary()).isNotEmpty().allMatch(line -> line.length() <= 40);
       }
@@ -97,7 +98,8 @@ final class KitBookTest {
     @Test
     void kitsAreFoundById() {
       assertThat(KitBook.byId("shortbow")).contains(KitBook.SHORTBOW);
-      assertThat(KitBook.byId("ninja")).isEmpty();
+      assertThat(KitBook.byId("ninja")).contains(KitBook.NINJA);
+      assertThat(KitBook.byId("pirate")).isEmpty();
     }
 
     @Test
@@ -109,6 +111,7 @@ final class KitBookTest {
                       "X",
                       "d",
                       100,
+                      KitTier.BASIC,
                       KitAvailability.FREE,
                       Optional.empty(),
                       List.of(),
@@ -124,6 +127,7 @@ final class KitBookTest {
                       "X",
                       "d",
                       0,
+                      KitTier.BASIC,
                       KitAvailability.FREE,
                       Optional.empty(),
                       List.of(),
@@ -150,53 +154,6 @@ final class KitBookTest {
 
     private static RewindTrail.Spot spot(int second) {
       return new RewindTrail.Spot(at(second), second, -second);
-    }
-
-    @Test
-    void theClockStartsOnCooldownAndFillsTheBarAsItRecharges() {
-      var clock = Rewinder.start(T0);
-
-      assertThat(clock.ready(T0.plusSeconds(29))).isFalse();
-      assertThat(clock.ready(T0.plusSeconds(30))).isTrue();
-      assertThat(clock.use(T0)).isEqualTo(Result.err(RewindError.COOLING_DOWN));
-      assertThat(clock.charge(T0)).isZero();
-      assertThat(clock.charge(T0.plusSeconds(15))).isEqualTo(0.5);
-      assertThat(clock.charge(T0.plusSeconds(30))).isEqualTo(1);
-      assertThat(clock.charge(T0.plusSeconds(90))).isEqualTo(1);
-    }
-
-    @Test
-    void withNoTrailThereIsNowhereToLand() {
-      assertThat(Rewinder.start(T0).use(T0.plusSeconds(30)))
-          .isEqualTo(Result.err(RewindError.NO_LANDING));
-    }
-
-    @Test
-    void theClockLandsWhereThePlayerStoodAboutThirtySecondsAgoFacingTheSameWay() {
-      var clock = Rewinder.start(T0);
-      for (var tick = 0; tick <= 40 * 20; tick++) {
-        var now = T0.plusMillis(tick * 50L);
-        clock = clock.trimmed(now, Rewinding::safe);
-        if (tick % 20 == 0) {
-          clock = clock.track(spot(tick / 20), now);
-        }
-      }
-
-      var rewind =
-          clock
-              .use(T0.plusSeconds(40))
-              .fold(
-                  ok -> ok,
-                  error -> {
-                    throw new AssertionError(error);
-                  });
-
-      assertThat(rewind.to()).isEqualTo(spot(9));
-      assertThat(rewind.to().yaw()).isEqualTo(9);
-      assertThat(rewind.to().pitch()).isEqualTo(-9);
-      assertThat(rewind.next().trail().samples()).isEmpty();
-      assertThat(rewind.next().ready(T0.plusSeconds(69))).isFalse();
-      assertThat(rewind.next().ready(T0.plusSeconds(70))).isTrue();
     }
 
     @Test
@@ -233,13 +190,6 @@ final class KitBookTest {
 
       assertThat(trail.samples()).hasSize(2_000);
       assertThat(trail.landing()).contains(spot(0));
-    }
-
-    @Test
-    void dyingForgetsTheTrail() {
-      var clock = Rewinder.start(T0).track(spot(0), T0).died();
-
-      assertThat(clock.trail().samples()).isEmpty();
     }
   }
 

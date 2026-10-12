@@ -62,6 +62,8 @@ public record MatchState(
    * @param team their team once the match has started, lower-case
    * @param kit their kit id
    * @param alive whether they are still fighting
+   * @param disguised whether they look to the enemy like one of their own (a Spy, a dressed
+   *     Skinner)
    */
   public record Fighter(
       UUID uuid,
@@ -69,7 +71,8 @@ public record MatchState(
       Optional<String> personalityId,
       Optional<String> team,
       Optional<String> kit,
-      boolean alive) {
+      boolean alive,
+      boolean disguised) {
 
     public boolean bot() {
       return personalityId.isPresent();
@@ -173,7 +176,8 @@ public record MatchState(
         personality,
         view.team().map(MatchState::teamName),
         view.kit(),
-        view.alive());
+        view.alive(),
+        view.disguised());
   }
 
   private static Bomb bomb(MatchSnapshot.BombView view) {

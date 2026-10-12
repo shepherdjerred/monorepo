@@ -99,6 +99,7 @@ final class PlayerListener implements Listener {
     runner
         .memberOf(id)
         .ifPresent(member -> runner.handle(new MatchEvent.Disconnect(member.id(), runner.now())));
+    runner.picker().forget(id);
     watchers.quit(event.getPlayer());
   }
 
@@ -238,8 +239,12 @@ final class PlayerListener implements Listener {
         && event.useItemInHand() != Event.Result.DENY
         && runner.fighting(player.getUniqueId())) {
       event.setUseItemInHand(Event.Result.DENY);
+      // The kit itself tells the player why the clock would not work, in Red Warfare's words.
       actions
           .useRewind(member.orElseThrow().id())
+          .filter(
+              refusal ->
+                  refusal != ActionRefusal.COOLING_DOWN && refusal != ActionRefusal.NO_LANDING)
           .ifPresent(refusal -> Texts.error(player, refusal));
     }
   }
@@ -270,7 +275,7 @@ final class PlayerListener implements Listener {
     if (keys.isSelector(item)) {
       event.setUseItemInHand(Event.Result.DENY);
       event.setUseInteractedBlock(Event.Result.DENY);
-      runner.openKitMenu(player).ifPresent(refusal -> Texts.error(player, refusal));
+      runner.picker().open(player).ifPresent(refusal -> Texts.error(player, refusal));
       return true;
     }
     if (keys.isLeave(item)) {

@@ -14,6 +14,7 @@ import com.shepherdjerred.thestorm.rwf.adapter.paper.ChunkHolder;
 import com.shepherdjerred.thestorm.rwf.adapter.paper.ServerHooks;
 import com.shepherdjerred.thestorm.rwf.app.BotRoster;
 import com.shepherdjerred.thestorm.rwf.app.CombatantActions;
+import com.shepherdjerred.thestorm.rwf.app.FeatureGates;
 import com.shepherdjerred.thestorm.rwf.app.JoinGate;
 import com.shepherdjerred.thestorm.rwf.app.MatchEvents;
 import com.shepherdjerred.thestorm.rwf.app.MatchView;
@@ -21,6 +22,7 @@ import com.shepherdjerred.thestorm.rwf.domain.combatant.CombatantId;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchSnapshot;
 import com.shepherdjerred.thestorm.rwf.testing.FakeBotRoster;
 import com.shepherdjerred.thestorm.rwf.testing.FakeClock;
+import com.shepherdjerred.thestorm.rwf.testing.FakeMobGoals;
 import com.shepherdjerred.thestorm.rwf.testing.FakeSavedPlayerData;
 import com.shepherdjerred.thestorm.rwf.testing.FakeWallets;
 import com.shepherdjerred.thestorm.rwf.testing.Samples;
@@ -135,8 +137,18 @@ public final class RwfHarness implements AutoCloseable {
   public final Services services = new Services();
   public final FakeBotRoster bots;
   public final SealedWorlds sealed = new SealedWorlds();
+
+  /** The goals mobs were given, as MockBukkit keeps none. */
+  public final FakeMobGoals mobGoals = new FakeMobGoals();
+
+  /** The kit and killstreak gates the module is enabled with; every feature on unless replaced. */
+  public FeatureGates kitGates = FeatureGates.open();
+
   public final FakeSavedPlayerData saved = new FakeSavedPlayerData();
   private RwfModule module = new RwfModule();
+
+  /** How long enabling may take to paste the lobby and first map. */
+  private static final Duration PREPARATION = Duration.ofSeconds(30);
 
   /**
    * The match features the managed flags answer with, read as each match opens; every feature off
@@ -200,8 +212,8 @@ public final class RwfHarness implements AutoCloseable {
     services.provide(Wallets.class, wallets);
     services.provide(MoneyFormatter.class, wallets);
     services.provide(SealedWorlds.class, sealed);
-    services.provide(PublicGameDirectory.class, new PublicGameDirectory());
     services.provide(SavedPlayerData.class, saved);
+    services.provide(PublicGameDirectory.class, new PublicGameDirectory());
     if (withBots) {
       services.provide(BotRoster.class, bots);
     }
@@ -213,8 +225,10 @@ public final class RwfHarness implements AutoCloseable {
                         ? Optional.of(SALT)
                         : Optional.ofNullable(environment.get(name)),
                 Optional.of(JoinGate.open()),
-                Optional.of(new ServerHooks(chunks, display -> {}, (a, b) -> true, player -> {})),
-                Optional.of(() -> CompletableFuture.completedFuture(features))));
+                Optional.of(
+                    new ServerHooks(chunks, display -> {}, (a, b) -> true, player -> {}, mobGoals)),
+                Optional.of(() -> CompletableFuture.completedFuture(features)),
+                Optional.of(kitGates)));
     enabling =
         plugin ->
             module.enable(
@@ -238,10 +252,19 @@ public final class RwfHarness implements AutoCloseable {
       close();
       throw e;
     }
-    until(() -> view().current().isPresent());
-    // With one map to offer, the lobby chooses it at once and its terrain is ready before anyone
-    // joins, as it was before the vote: the snapshot has the map's teams once it is loaded.
-    until(() -> view().current().filter(snapshot -> !snapshot.teams().isEmpty()).isPresent());
+    try {
+      // Pasting the lobby and first map takes longer on a busy machine than a gameplay step.
+      until(() -> view().current().isPresent(), PREPARATION);
+      // With one map to offer, the lobby chooses it at once and its terrain is ready before anyone
+      // joins, as it was before the vote: the snapshot has the map's teams once it is loaded.
+      until(
+          () -> view().current().filter(snapshot -> !snapshot.teams().isEmpty()).isPresent(),
+          PREPARATION);
+    } catch (AssertionError e) {
+      // A harness that never opened must not leave MockBukkit mocking for the next test.
+      close();
+      throw e;
+    }
     return this;
   }
 
@@ -357,10 +380,15 @@ public final class RwfHarness implements AutoCloseable {
 
   /** Runs server ticks (clock still) until {@code condition} holds, failing after five seconds. */
   public void until(BooleanSupplier condition) {
-    var deadline = System.nanoTime() + Duration.ofSeconds(5).toNanos();
+    until(condition, Duration.ofSeconds(5));
+  }
+
+  /** Runs server ticks (clock still) until {@code condition} holds, failing after {@code limit}. */
+  public void until(BooleanSupplier condition, Duration limit) {
+    var deadline = System.nanoTime() + limit.toNanos();
     while (!condition.getAsBoolean()) {
       if (System.nanoTime() > deadline) {
-        throw new AssertionError("condition not met within 5s");
+        throw new AssertionError("condition not met within " + limit);
       }
       server.getScheduler().performOneTick();
       Thread.onSpinWait();

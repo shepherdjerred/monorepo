@@ -35,8 +35,7 @@ final class RwfBotsConfigTest {
     assertThat(config.thinkRates().perceptionEveryTicks()).isEqualTo(2);
     assertThat(config.thinkRates().tacticsEveryTicks()).isEqualTo(5);
     assertThat(config.governor().toSettings().level1Mspt()).isEqualTo(40);
-    assertThat(config.draft().availableKits())
-        .containsExactlyInAnyOrder(Kit.TROOPER, Kit.LONGBOW, Kit.SHORTBOW, Kit.REWIND);
+    assertThat(config.draft().availableKits()).containsExactlyInAnyOrder(Kit.values());
     assertThat(config.traces().enabled()).isTrue();
     assertThat(config.traces().directory()).isEqualTo("rwfbots-traces");
   }
@@ -54,7 +53,8 @@ final class RwfBotsConfigTest {
 
   @Test
   void anUnknownKitIsRefused() throws IOException {
-    var yaml = Files.readString(shipped()).replace("kits: [trooper", "kits: [paladin, trooper");
+    var yaml = Files.readString(shipped()).replaceFirst("\\[\\s*trooper", "[paladin, trooper");
+    assertThat(yaml).contains("paladin");
     var file = directory.resolve("rwfbots.yml");
     Files.writeString(file, yaml);
 

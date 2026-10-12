@@ -28,9 +28,13 @@ public final class PersonalityFiles {
 
   private PersonalityFiles() {}
 
-  /** Loads the catalog under {@code dataDirectory}, which is {@code plugins/TheStorm}. */
+  /**
+   * Loads the catalog under {@code dataDirectory}, which is {@code plugins/TheStorm}, with each
+   * personality's weights over the kits added since it was authored ({@link KitWeightsFile}).
+   */
   public static PersonalityCatalog load(Path dataDirectory) {
-    return loadDirectory(dataDirectory.resolve(DIRECTORY));
+    return KitWeightsFile.load(dataDirectory)
+        .applyTo(loadDirectory(dataDirectory.resolve(DIRECTORY)));
   }
 
   /** Loads the catalog from the personalities directory itself. */

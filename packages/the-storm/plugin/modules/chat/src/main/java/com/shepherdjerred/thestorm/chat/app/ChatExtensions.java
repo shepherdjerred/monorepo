@@ -17,6 +17,7 @@ public final class ChatExtensions implements ChannelRegistry, PrefixRegistry {
   private final CopyOnWriteArrayList<ChatTap> taps = new CopyOnWriteArrayList<>();
   private final AtomicReference<PrefixProvider> prefixes =
       new AtomicReference<>(PrefixProvider.NONE);
+  private final AtomicReference<NameColors> nameColors = new AtomicReference<>(NameColors.NONE);
 
   @Override
   public Subscription registerMembership(ChatChannel channel, ChannelMembership membership) {
@@ -42,6 +43,19 @@ public final class ChatExtensions implements ChannelRegistry, PrefixRegistry {
     var registered = new Registered<>(tap);
     taps.add(tap);
     return () -> registered.remove(taps);
+  }
+
+  @Override
+  public Subscription registerNameColors(NameColors colors) {
+    if (!nameColors.compareAndSet(NameColors.NONE, colors)) {
+      throw new IllegalStateException("chat name colours are already registered");
+    }
+    return () -> nameColors.compareAndSet(colors, NameColors.NONE);
+  }
+
+  /** The colour of {@code speaker}'s name as {@code viewer} sees it, if a module colours it. */
+  public Optional<String> nameColor(UUID speaker, UUID viewer) {
+    return nameColors.get().color(speaker, viewer);
   }
 
   @Override

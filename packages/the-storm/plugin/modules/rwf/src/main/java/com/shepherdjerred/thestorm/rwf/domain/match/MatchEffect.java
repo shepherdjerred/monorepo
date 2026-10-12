@@ -1,11 +1,13 @@
 package com.shepherdjerred.thestorm.rwf.domain.match;
 
+import com.shepherdjerred.thestorm.rwf.domain.ability.AbilityEffect;
 import com.shepherdjerred.thestorm.rwf.domain.bomb.FuseBonus;
 import com.shepherdjerred.thestorm.rwf.domain.combat.AttackType;
 import com.shepherdjerred.thestorm.rwf.domain.combat.Attribution;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.CombatantId;
 import com.shepherdjerred.thestorm.rwf.domain.geometry.BlockPos;
 import com.shepherdjerred.thestorm.rwf.domain.geometry.Spawn;
+import com.shepherdjerred.thestorm.rwf.domain.killstreak.Killstreak;
 import java.util.List;
 
 /** What the server must do after a match changes. The Paper adapter carries these out in order. */
@@ -147,4 +149,13 @@ public sealed interface MatchEffect {
 
   /** Count one of {@code stat} for the player, such as "Armed" or "Defused". */
   record RecordStat(CombatantId id, String stat) implements MatchEffect {}
+
+  /** Carry out what a kit ability did. */
+  record Ability(AbilityEffect effect) implements MatchEffect {}
+
+  /**
+   * A living combatant's killstreak reached a reward: they are told and given its item, if
+   * killstreaks are on for them.
+   */
+  record KillstreakEarned(CombatantId id, Killstreak.Earned earned) implements MatchEffect {}
 }

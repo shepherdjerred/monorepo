@@ -71,7 +71,7 @@ public record MatchSnapshot(
         now,
         match.map().map(MapDefinition::id).or(() -> match.ballot().flatMap(Ballot::chosen)),
         match.map().map(MapDefinition::teamColors).orElseGet(List::of),
-        match.members().stream().map(CombatantView::of).toList(),
+        match.members().stream().map(member -> CombatantView.of(member, match)).toList(),
         match.bombs().stream().map(bomb -> BombView.of(bomb, now)).toList(),
         match.phase() instanceof Phase.Live live
             ? Optional.of(new PoisonView(live.poison().stage(), live.poison().untilPoison(now)))
@@ -129,24 +129,32 @@ public record MatchSnapshot(
       Optional<TeamColor> team,
       Optional<String> kit,
       boolean alive,
+      boolean disguised,
       Score score) {
 
-    static CombatantView of(Combatant combatant) {
+    static CombatantView of(Combatant combatant, RwfMatch match) {
+      var disguised =
+          combatant.alive()
+              && combatant
+                  .kit()
+                  .filter(kit -> match.abilities().disguised(combatant.id(), kit))
+                  .isPresent();
       return new CombatantView(
           combatant.id(),
           combatant.name(),
           combatant.team(),
           combatant.kit(),
           combatant.alive(),
+          disguised,
           combatant.score());
     }
 
     /**
-     * The team {@code viewer} believes this combatant is on. Today that is always the real team;
-     * disguise kits such as Spy will answer differently per viewer when they are ported.
+     * The team a viewer on {@code viewerTeam} believes this combatant is on: the viewer's own for a
+     * disguised Spy or dressed Skinner, the real team otherwise.
      */
-    public Optional<TeamColor> apparentTeam(CombatantId viewer) {
-      return team;
+    public Optional<TeamColor> apparentTeam(Optional<TeamColor> viewerTeam) {
+      return disguised && viewerTeam.isPresent() && !viewerTeam.equals(team) ? viewerTeam : team;
     }
   }
 

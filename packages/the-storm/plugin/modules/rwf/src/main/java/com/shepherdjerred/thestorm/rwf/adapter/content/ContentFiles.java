@@ -35,7 +35,7 @@ public final class ContentFiles {
   public static RwfCatalog catalog(Path directory, Function<String, BlockData> blockData) {
     var config = ConfigFiles.load(directory.resolve(SETTINGS), RwfConfig.class);
     var kits = ConfigFiles.load(directory.resolve(KITS), KitsFile.class);
-    kits.mustMatch(KitBook.MILESTONE_ONE);
+    kits.mustMatch(KitBook.ALL);
     var sources = new ArrayList<MapSource>();
     for (var folder : mapFolders(directory.resolve(MAPS))) {
       var file = mapFile(folder);
@@ -47,8 +47,7 @@ public final class ContentFiles {
             "Required file " + folder.resolve(DETAILS_FILE) + " is missing");
       sources.add(new MapSource(file.toDefinition(), folder, blockData));
     }
-    return new RwfCatalog(
-        config, KitBook.MILESTONE_ONE, sources, lobby(directory.resolve(LOBBY), blockData));
+    return new RwfCatalog(config, KitBook.ALL, sources, lobby(directory.resolve(LOBBY), blockData));
   }
 
   /**
@@ -58,11 +57,11 @@ public final class ContentFiles {
   public static RwfContent load(Path directory, Function<String, BlockData> blockData) {
     var config = ConfigFiles.load(directory.resolve(SETTINGS), RwfConfig.class);
     var kits = ConfigFiles.load(directory.resolve(KITS), KitsFile.class);
-    kits.mustMatch(KitBook.MILESTONE_ONE);
+    kits.mustMatch(KitBook.ALL);
     var maps = maps(directory.resolve(MAPS), blockData);
     var lobby = lobby(directory.resolve(LOBBY), blockData);
     try {
-      return new RwfContent(config, KitBook.MILESTONE_ONE, maps, lobby);
+      return new RwfContent(config, KitBook.ALL, maps, lobby);
     } catch (IllegalArgumentException e) {
       throw new IllegalStateException("rwf content does not agree: " + e.getMessage(), e);
     }

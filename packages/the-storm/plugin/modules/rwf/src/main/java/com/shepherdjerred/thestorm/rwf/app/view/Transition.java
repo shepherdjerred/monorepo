@@ -83,6 +83,14 @@ public record Transition(Change change, List<Effect> effects, MatchState after) 
 
     /** A combatant looked around, so they are not AFK. */
     record LookedAround(UUID uuid) implements Change {}
+
+    /**
+     * A combatant's kit ability acted.
+     *
+     * @param uuid who
+     * @param action what, such as {@code Warp} or {@code Hit}
+     */
+    record KitActed(UUID uuid, String action) implements Change {}
   }
 
   /** An effect on a combatant another module acts on. */
@@ -154,7 +162,7 @@ public record Transition(Change change, List<Effect> effects, MatchState after) 
           new Change.Operated();
       case MatchEvent.Damaged damaged ->
           new Change.Damaged(damaged.victim().uuid(), damaged.attacker().map(CombatantId::uuid));
-      case MatchEvent.Tick _ -> new Change.Ticked();
+      case MatchEvent.Tick _, MatchEvent.Online _ -> new Change.Ticked();
       case MatchEvent.ForceStart _ -> new Change.ForceStarted();
       case MatchEvent.Stop _ -> new Change.Stopped();
       case MatchEvent.Died died ->
@@ -163,6 +171,8 @@ public record Transition(Change change, List<Effect> effects, MatchState after) 
           new Change.BombClicked(click.id().uuid(), click.bombId());
       case MatchEvent.ResetDone _ -> new Change.Reset();
       case MatchEvent.LookedAround looked -> new Change.LookedAround(looked.id().uuid());
+      case MatchEvent.Ability ability ->
+          new Change.KitActed(ability.actor().uuid(), ability.input().getClass().getSimpleName());
     };
   }
 
@@ -204,6 +214,8 @@ public record Transition(Change change, List<Effect> effects, MatchState after) 
           MatchEffect.PoisonDamage _,
           MatchEffect.StripFood _,
           MatchEffect.RevertCraters _,
+          MatchEffect.Ability _,
+          MatchEffect.KillstreakEarned _,
           MatchEffect.Pay _ ->
           Optional.empty();
     };

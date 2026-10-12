@@ -26,7 +26,7 @@ public final class DamageFormula {
 
   /** The damage dealt by {@code hit} before the hit window is applied. */
   public static double finalDamage(Hit hit) {
-    var damage = hit.baseDamage() + sharpness(hit);
+    var damage = hit.baseDamage() + sharpness(hit) + hit.bonus();
     if (!hit.attack().has(AttackType.Flag.IGNORE_ARMOR)) {
       damage -= damage * (ArmorRating.rating(hit.victimArmor()) / 25D);
     }
@@ -49,19 +49,41 @@ public final class DamageFormula {
    * @param weapon the held item for melee hits, whose Sharpness counts
    * @param victimArmor what the victim wears
    * @param multiplier a kit's single damage multiplier, 1 when there is none
+   * @param bonus damage a kit adds before armor, such as a Berserker's bloodlust
    */
   public record Hit(
       AttackType attack,
       double baseDamage,
       Optional<ItemSpec> weapon,
       List<ItemSpec> victimArmor,
-      double multiplier) {
+      double multiplier,
+      double bonus) {
 
     public Hit {
       if (baseDamage < 0 || multiplier < 0) {
         throw new IllegalArgumentException("damage and multiplier must not be negative");
       }
       victimArmor = List.copyOf(victimArmor);
+    }
+
+    /** This hit with {@code base} as its raw damage. */
+    public Hit withBase(double base) {
+      return new Hit(attack, base, weapon, victimArmor, multiplier, bonus);
+    }
+
+    /** This hit with {@code extra} more kit bonus. */
+    public Hit plus(double extra) {
+      return new Hit(attack, baseDamage, weapon, victimArmor, multiplier, bonus + extra);
+    }
+
+    /** This hit scaled by {@code factor}, a kit's single multiplier. */
+    public Hit times(double factor) {
+      return new Hit(attack, baseDamage, weapon, victimArmor, factor, bonus);
+    }
+
+    /** This hit against {@code armor}. */
+    public Hit against(List<ItemSpec> armor) {
+      return new Hit(attack, baseDamage, weapon, armor, multiplier, bonus);
     }
 
     /** A melee swing with {@code weapon} at someone wearing {@code victimArmor}. */
@@ -71,12 +93,13 @@ public final class DamageFormula {
           WeaponDamage.of(weapon.material()),
           Optional.of(weapon),
           victimArmor,
-          1);
+          1,
+          0);
     }
 
     /** Any other damage of {@code amount}. */
     public static Hit of(AttackType attack, double amount, List<ItemSpec> victimArmor) {
-      return new Hit(attack, amount, Optional.empty(), victimArmor, 1);
+      return new Hit(attack, amount, Optional.empty(), victimArmor, 1, 0);
     }
   }
 }

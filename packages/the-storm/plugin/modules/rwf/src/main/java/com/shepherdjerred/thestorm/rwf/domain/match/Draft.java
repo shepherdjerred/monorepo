@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.rwf.domain.match;
 
+import com.shepherdjerred.thestorm.rwf.domain.ability.Abilities;
 import com.shepherdjerred.thestorm.rwf.domain.bomb.Bomb;
 import com.shepherdjerred.thestorm.rwf.domain.combat.DamageLog;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.CombatantId;
@@ -26,6 +27,7 @@ final class Draft {
   final long seed;
   Phase phase;
   Optional<MapDefinition> map;
+  Abilities abilities;
   private final List<Combatant> members;
   private final List<Combatant> departed;
   private final List<Bomb> bombs;
@@ -42,6 +44,7 @@ final class Draft {
     this.members = new ArrayList<>(match.members());
     this.departed = new ArrayList<>(match.departed());
     this.bombs = new ArrayList<>(match.bombs());
+    this.abilities = match.abilities();
     this.damage = match.damage();
     this.pinned = new HashMap<>(match.pinned());
   }
@@ -178,7 +181,9 @@ final class Draft {
 
   RwfMatch.Step step() {
     return new RwfMatch.Step(
-        new RwfMatch(settings, matchId, seed, phase, map, members, departed, bombs, damage, pinned),
+        new RwfMatch(
+            settings, matchId, seed, phase, map, members, departed, bombs, damage, pinned,
+            abilities),
         List.copyOf(effects));
   }
 }

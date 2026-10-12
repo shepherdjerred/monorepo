@@ -41,6 +41,7 @@ final class RedWarfareParityTest {
         Optional.of(team),
         Optional.of("trooper"),
         alive,
+        false,
         Score.ZERO);
   }
 

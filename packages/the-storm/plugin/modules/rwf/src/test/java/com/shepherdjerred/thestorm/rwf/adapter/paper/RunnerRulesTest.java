@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.rwf.adapter.paper;
 import static com.shepherdjerred.thestorm.rwf.testing.Samples.T0;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.shepherdjerred.thestorm.rwf.domain.ability.Abilities;
 import com.shepherdjerred.thestorm.rwf.domain.combat.DamageLog;
 import com.shepherdjerred.thestorm.rwf.domain.match.Ballot;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchSettings;
@@ -42,7 +43,8 @@ final class RunnerRulesTest {
         List.of(),
         List.of(),
         DamageLog.EMPTY,
-        Map.of());
+        Map.of(),
+        Abilities.NONE);
   }
 
   @Test

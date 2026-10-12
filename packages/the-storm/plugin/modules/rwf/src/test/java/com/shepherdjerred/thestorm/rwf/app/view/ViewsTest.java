@@ -51,12 +51,14 @@ final class ViewsTest {
                 Optional.of(TeamColor.RED),
                 Optional.of("trooper"),
                 true,
+                false,
                 com.shepherdjerred.thestorm.rwf.domain.match.Score.ZERO),
             new MatchSnapshot.CombatantView(
                 BOT_1,
                 "Rusher",
                 Optional.of(TeamColor.BLUE),
                 Optional.of("longbow"),
+                false,
                 false,
                 com.shepherdjerred.thestorm.rwf.domain.match.Score.ZERO)),
         List.of(
@@ -229,6 +231,21 @@ final class ViewsTest {
             seen.add(id);
             return Optional.empty();
           }
+
+          @Override
+          public Optional<ActionRefusal> useStreak(CombatantId id) {
+            seen.add(id);
+            return Optional.of(ActionRefusal.NO_KIT_ITEM);
+          }
+
+          @Override
+          public Optional<ActionRefusal> useKit(
+              CombatantId id, int slot, com.shepherdjerred.thestorm.rwf.app.KitUse use) {
+            seen.add(id);
+            return use.target().filter(ALICE::equals).isPresent()
+                ? Optional.empty()
+                : Optional.of(ActionRefusal.NO_KIT_ITEM);
+          }
         };
     var bots = BotActions.over(actions, () -> Optional.of(snapshot()));
 
@@ -238,8 +255,16 @@ final class ViewsTest {
     assertThat(bots.shootBow(BOT_1.uuid(), new Point(0, 1, 0), 1)).isEmpty();
     assertThat(bots.consume(BOT_1.uuid(), 2)).isEmpty();
     assertThat(bots.pickKit(BOT_1.uuid(), "longbow")).isEmpty();
+    assertThat(
+            bots.useKit(
+                BOT_1.uuid(), 2, Optional.of(ALICE.uuid()), Optional.of(new Point(1, 2, 3))))
+        .isEmpty();
+    assertThat(bots.useKit(BOT_1.uuid(), 2, Optional.empty(), Optional.empty()))
+        .contains(ActionRefusal.NO_KIT_ITEM);
+    assertThat(bots.useKit(BOT_1.uuid(), 2, Optional.of(UUID.randomUUID()), Optional.empty()))
+        .contains(ActionRefusal.NOT_A_MEMBER);
     assertThat(bots.clickBomb(UUID.randomUUID(), "red-1")).contains(ActionRefusal.NOT_A_MEMBER);
     assertThat(bots.melee(BOT_1.uuid(), UUID.randomUUID())).contains(ActionRefusal.NOT_A_MEMBER);
-    assertThat(seen).containsExactly(BOT_1, BOT_1, BOT_1, ALICE, BOT_1, BOT_1, BOT_1);
+    assertThat(seen).containsExactly(BOT_1, BOT_1, BOT_1, ALICE, BOT_1, BOT_1, BOT_1, BOT_1, BOT_1);
   }
 }

@@ -31,10 +31,12 @@
 import { clamp, round, type Rng } from "./random.ts";
 import {
   ARCHETYPES,
+  EXPANDED_KITS,
   KITS,
   LEVER_KEYS,
   ROLES,
   type Archetype,
+  type ExpandedKit,
   type Kit,
   type LeverKey,
   type Role,
@@ -393,6 +395,48 @@ function ordered<K extends string>(
     }
   }
   return result;
+}
+
+/**
+ * How each archetype leans on the expanded kits: the kit that suits its play
+ * most at about 0.6, a couple more lower. The director only offers the kits
+ * rwfbots.yml allows, so these weights only matter for kits on offer.
+ */
+export const EXPANDED_PROFILES: Record<
+  Archetype,
+  Partial<Record<ExpandedKit, number>>
+> = {
+  rusher: { berserker: 0.6, explosive: 0.45, grappler: 0.35 },
+  lurker: { ninja: 0.6, decoy: 0.45, skinner: 0.35 },
+  sniper: { spotter: 0.6, tracker: 0.45, pyro: 0.3 },
+  bomb_diver: { saboteur: 0.6, ninja: 0.4, decoy: 0.3 },
+  anchor: { sapper: 0.6, engineer: 0.5, demolitions: 0.45, juggernaut: 0.35 },
+  flanker: { grappler: 0.6, warper: 0.45, ninja: 0.35 },
+  support: { medic: 0.65, bannerman: 0.55, teleporter: 0.4, sacrificial: 0.3 },
+  duelist: { berserker: 0.55, vampire: 0.5, bleeder: 0.4, equality: 0.3 },
+  hunter: { tracker: 0.6, venom: 0.45, spotter: 0.35 },
+  turtle: { juggernaut: 0.6, dwarf: 0.45, frost: 0.4, engineer: 0.35 },
+  troll: { explosive: 0.5, inertia: 0.45, sacrificial: 0.4, decoy: 0.35 },
+  tactician: { spotter: 0.5, medic: 0.45, teleporter: 0.4, bannerman: 0.35 },
+};
+
+/**
+ * The archetype's expanded-kit weights scaled by up to +-15%. Drawn from its
+ * own stream so the original traits stay exactly as they were.
+ */
+export function sampleExpandedKits(
+  rng: Rng,
+  archetype: Archetype,
+): Partial<Record<ExpandedKit, number>> {
+  const profile = EXPANDED_PROFILES[archetype];
+  const kits: Partial<Record<ExpandedKit, number>> = {};
+  for (const kit of EXPANDED_KITS) {
+    const weight = profile[kit];
+    if (weight !== undefined) {
+      kits[kit] = round(clamp(weight * rng.float(0.85, 1.15), 0.1, 1), 2);
+    }
+  }
+  return kits;
 }
 
 /** Every knob of one personality, from its archetype's profile. */

@@ -11,6 +11,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.map.NavSites;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -57,20 +58,27 @@ final class ShippedLobbyTest {
 
     assertThat(LobbyNav.problems(artifact)).isEmpty();
     assertThat(artifact.sites().bombs()).isEmpty();
+    var expected =
+        new java.util.ArrayList<>(
+            List.of(
+                LobbyNav.SPAWN,
+                LobbyNav.side("red"),
+                LobbyNav.side("blue"),
+                LobbyNav.side("green"),
+                LobbyNav.side("purple"),
+                LobbyNav.side("yellow")));
+    // Every kit's alcove, all 33 of the full kit list, in the armory's order.
+    var kits = LobbyFolder.load(LOBBY).layout().kits();
+    assertThat(kits)
+        .containsExactlyInAnyOrderElementsOf(
+            com.shepherdjerred.thestorm.rwf.domain.kit.KitBook.ALL.stream()
+                .map(com.shepherdjerred.thestorm.rwf.domain.kit.KitSpec::id)
+                .toList());
+    kits.forEach(kit -> expected.add(LobbyNav.alcove(kit)));
+    expected.add(LobbyNav.BALCONY);
     assertThat(artifact.sites().spawns())
         .extracting(NavSites.Site::name)
-        .containsExactly(
-            LobbyNav.SPAWN,
-            LobbyNav.side("red"),
-            LobbyNav.side("blue"),
-            LobbyNav.side("green"),
-            LobbyNav.side("purple"),
-            LobbyNav.side("yellow"),
-            LobbyNav.alcove("trooper"),
-            LobbyNav.alcove("longbow"),
-            LobbyNav.alcove("shortbow"),
-            LobbyNav.alcove("rewind"),
-            LobbyNav.BALCONY);
+        .containsExactlyElementsOf(expected);
   }
 
   @Test

@@ -105,7 +105,7 @@ public final class SnapshotCapture {
             fighter
                 .team()
                 .orElseThrow(() -> new IllegalStateException(fighter.name() + " has no team"))),
-        kit.isDisguiseKit(),
+        fighter.disguised(),
         kit,
         fighter.alive() && !entity.isDead(),
         pos,

@@ -32,7 +32,8 @@ final class RwfMatchSeedTest {
                 original.departed(),
                 original.bombs(),
                 original.damage(),
-                original.pinned()));
+                original.pinned(),
+                original.abilities()));
     assertThat(original.seed()).isEqualTo(Samples.SEED);
   }
 
@@ -63,7 +64,8 @@ final class RwfMatchSeedTest {
               empty.departed(),
               empty.bombs(),
               empty.damage(),
-              empty.pinned());
+              empty.pinned(),
+              empty.abilities());
       assertThatThrownBy(() -> match.reseedEmptyLobby(1))
           .as("cannot reseed %s", phase)
           .isInstanceOf(IllegalStateException.class);

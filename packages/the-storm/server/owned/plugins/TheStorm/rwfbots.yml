@@ -51,11 +51,47 @@ levers:
   technique: { min: 0.0, max: 1.0, exponent: 1.2, lowerIsBetter: false }
   aggression: { min: 0.0, max: 1.0, exponent: 1.0, lowerIsBetter: false }
 
-# The kits rwf ships that bots may be given (rwf/kits.yml). A personality
-# draws from its kit weights over these; one whose weights name none of them
-# (its favourites ship later) plays any of them, chosen uniformly.
+# The kits rwf ships that bots may be given (rwf/kits.yml): all of them, since
+# bots own nothing and the shop and the weekly rotation never limit them. A
+# personality draws from its kit weights over these; one whose weights name
+# none of them plays any of them, chosen uniformly.
 draft:
-  kits: [trooper, longbow, shortbow, rewind]
+  kits:
+    [
+      trooper,
+      berserker,
+      demolitions,
+      dwarf,
+      explosive,
+      ghost,
+      juggernaut,
+      longbow,
+      medic,
+      pyro,
+      rewind,
+      shortbow,
+      spy,
+      teleporter,
+      vampire,
+      venom,
+      warper,
+      ninja,
+      frost,
+      skinner,
+      wraith,
+      bleeder,
+      equality,
+      inertia,
+      sacrificial,
+      sapper,
+      saboteur,
+      spotter,
+      grappler,
+      bannerman,
+      engineer,
+      tracker,
+      decoy,
+    ]
 
 # The most line-of-sight rays one think job casts (three per enemy inside a
 # bot's awareness radius); bots past the budget perceive on the next job.

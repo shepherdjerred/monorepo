@@ -1,20 +1,24 @@
 package com.shepherdjerred.thestorm.rwf.adapter.paper;
 
 import com.shepherdjerred.thestorm.rwf.app.ActionRefusal;
+import com.shepherdjerred.thestorm.rwf.domain.ability.KitCombat;
 import com.shepherdjerred.thestorm.rwf.domain.combat.AttackType;
 import com.shepherdjerred.thestorm.rwf.domain.combat.CombatRules;
 import com.shepherdjerred.thestorm.rwf.domain.combat.DamageFormula;
 import com.shepherdjerred.thestorm.rwf.domain.combat.HitWindow;
 import com.shepherdjerred.thestorm.rwf.domain.combat.Knockback;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
+import com.shepherdjerred.thestorm.rwf.domain.geometry.Vec3;
 import io.papermc.paper.event.entity.EntityKnockbackEvent;
 import java.util.Optional;
+import java.util.random.RandomGenerator;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.AbstractArrow;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Firework;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.Event;
@@ -29,6 +33,8 @@ import org.bukkit.event.entity.EntityShootBowEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerVelocityEvent;
 import org.bukkit.inventory.ItemStack;
 
 /**
@@ -45,6 +51,7 @@ final class CombatListener implements Listener {
   private final CombatTracker tracker;
   private final PaperContext context;
   private final ServerHooks hooks;
+  private final Sacrifices sacrifices;
 
   CombatListener(
       MatchRunner runner, CombatTracker tracker, PaperContext context, ServerHooks hooks) {
@@ -52,6 +59,7 @@ final class CombatListener implements Listener {
     this.tracker = tracker;
     this.context = context;
     this.hooks = hooks;
+    this.sacrifices = new Sacrifices(runner, context, tracker);
   }
 
   private boolean inWorld(Entity entity) {
@@ -120,8 +128,7 @@ final class CombatListener implements Listener {
   /** Applies the rules' damage and knockback for {@code strike}. */
   private void strike(Strike strike) {
     var victim = strike.victim();
-    var damage =
-        DamageFormula.finalDamage(hit(strike.type(), strike.attacker(), victim, strike.raw()));
+    var damage = runner.kits().damage(strike.type(), strike.attacker(), victim, strike.raw());
     var landed =
         switch (HitWindow.resolve(damage, strike.type(), tracker.guard(victim))) {
           case HitWindow.Resolution.Blocked _ -> 0.0;
@@ -138,16 +145,35 @@ final class CombatListener implements Listener {
     knockback(strike);
     hooks.hurt().accept(victim);
     victim.getWorld().playSound(Places.at(victim), Sound.ENTITY_PLAYER_HURT, 1, 1);
+    if (sacrifices.shield(
+        Optional.of(strike.attacker()),
+        victim,
+        hit(strike.type(), strike.attacker(), victim, strike.raw()))) {
+      return;
+    }
     var before = victim.getHealth();
     runner.damaged(victim, Optional.of(strike.attacker().getUniqueId()), landed, strike.type());
     victim.setHealth(Math.max(0, before - landed));
+    runner.kits().hit(strike.attacker(), victim, strike.type(), landed);
   }
 
   private void knockback(Strike strike) {
-    var attacker = strike.attacker();
     var victim = strike.victim();
-    var level = 0;
+    var knockback = push(strike.source(), strike.attacker(), victim, context.random());
+    victim.setVelocity(Places.vector(knockback));
     if (strike.type().has(AttackType.Flag.MELEE)) {
+      sprintReset(strike.attacker());
+    }
+  }
+
+  /**
+   * The knockback {@code attacker}'s hit through {@code source} (themselves for melee, or their
+   * projectile) gives {@code victim}: a level for sprinting and each of the weapon's Knockback in
+   * melee, the bow's Punch for an arrow.
+   */
+  static Vec3 push(Entity source, Player attacker, LivingEntity victim, RandomGenerator random) {
+    var level = 0;
+    if (source instanceof Player) {
       level =
           (attacker.isSprinting() ? 1 : 0)
               + KitFactory.enchantmentLevel(
@@ -155,18 +181,22 @@ final class CombatListener implements Listener {
     }
     var params =
         Knockback.Params.hit(
-            Places.vec(strike.source().getLocation()),
+            Places.vec(source.getLocation()),
             Places.vec(Places.at(victim)),
             Places.vec(victim.getVelocity()),
             level);
-    var knockback = Knockback.compute(params, context.random());
-    if (strike.source() instanceof AbstractArrow arrow) {
+    var knockback = Knockback.compute(params, random);
+    if (source instanceof AbstractArrow arrow) {
       var bow = arrow.getWeapon();
       var punch = bow == null ? 0 : KitFactory.enchantmentLevel(bow, "punch");
       knockback = Knockback.finish(knockback.plus(Knockback.arrow(knockback, punch)));
     }
-    victim.setVelocity(Places.vector(knockback));
-    if (strike.type().has(AttackType.Flag.MELEE) && attacker.isSprinting()) {
+    return knockback;
+  }
+
+  /** A sprinting attacker who lands a melee hit stops sprinting and slows. */
+  static void sprintReset(Player attacker) {
+    if (attacker.isSprinting()) {
       attacker.setSprinting(false);
       attacker.setVelocity(
           Places.vector(Knockback.sprintReset(Places.vec(attacker.getVelocity()))));
@@ -183,7 +213,7 @@ final class CombatListener implements Listener {
     return DamageFormula.Hit.of(type, raw, armor);
   }
 
-  private static AttackType cause(EntityDamageEvent event) {
+  static AttackType cause(EntityDamageEvent event) {
     return switch (event.getCause()) {
       case FALL -> AttackType.FALL;
       case VOID -> AttackType.VOID;
@@ -225,7 +255,9 @@ final class CombatListener implements Listener {
                         member.id(),
                         effect.getType().getKey().getKey(),
                         effect.getAmplifier(),
-                        effect.getDuration()));
+                        // A kit's effect for the rest of the match is infinite; the row keeps the
+                        // longest duration it can hold.
+                        effect.isInfinite() ? Integer.MAX_VALUE : effect.getDuration()));
   }
 
   /** Damage from the world (fall, fire, lava) is left to vanilla but remembered for attribution. */
@@ -239,6 +271,40 @@ final class CombatListener implements Listener {
     }
     tracker.hurt(victim, cause(event), event.getFinalDamage());
     runner.damaged(victim, Optional.empty(), event.getFinalDamage(), cause(event));
+    runner.kits().hurt(victim, cause(event), event.getFinalDamage());
+  }
+
+  /** A Grappler's landing, or anyone a kit spared a fall, takes no fall damage. */
+  @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
+  void onSparedFall(EntityDamageEvent event) {
+    if (event.getCause() == EntityDamageEvent.DamageCause.FALL
+        && event.getEntity() instanceof Player victim
+        && inWorld(victim)
+        && runner.powers().noFall(victim.getUniqueId())) {
+      event.setCancelled(true);
+    }
+  }
+
+  /**
+   * A kit that may not sprint (the Juggernaut) that the server sees sprinting is put back where it
+   * stands on every move, as Red Warfare's {@code onSprintToggle} did; its client is kept from
+   * sprinting by the food level it is shown (see {@code KitPowers}).
+   */
+  @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
+  void onSprintMove(PlayerMoveEvent event) {
+    var player = event.getPlayer();
+    if (player.isSprinting()
+        && inWorld(player)
+        && runner.fighting(player.getUniqueId())
+        && runner
+            .kits()
+            .side(player.getUniqueId())
+            .filter(s -> !KitCombat.maySprint(s.kit()))
+            .isPresent()) {
+      player.eject();
+      player.leaveVehicle();
+      player.teleport(Places.at(player));
+    }
   }
 
   /** The end screen's fireworks are for show: they hurt nobody in the match's worlds. */
@@ -247,6 +313,23 @@ final class CombatListener implements Listener {
     if (event.getDamager() instanceof Firework && inWorld(event.getEntity())) {
       event.setCancelled(true);
     }
+  }
+
+  /**
+   * Every push a kit's holder takes is scaled by its knockback share (the Juggernaut's 0.8), as Red
+   * Warfare's {@code PlayerVelocityEvent} handler scaled it, whatever pushed them.
+   */
+  @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
+  void onVelocity(PlayerVelocityEvent event) {
+    var player = event.getPlayer();
+    if (!inWorld(player) || !runner.fighting(player.getUniqueId())) {
+      return;
+    }
+    runner
+        .kits()
+        .side(player.getUniqueId())
+        .map(side -> KitCombat.knockback(side.kit()))
+        .ifPresent(scale -> event.setVelocity(event.getVelocity().multiply(scale)));
   }
 
   /** Nothing hurts a member before the match goes live: the lobby, preview and freeze. */

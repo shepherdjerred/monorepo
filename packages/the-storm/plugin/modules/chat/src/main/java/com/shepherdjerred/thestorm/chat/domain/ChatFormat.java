@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.chat.domain;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /** Builds the MiniMessage for a chat line: trusted format and prefix, escaped player text. */
 public final class ChatFormat {
@@ -50,21 +51,48 @@ public final class ChatFormat {
    */
   public static String channelLine(
       LineTemplate template, String prefix, String player, String message) {
+    return channelLine(template, new Speech(prefix, player, message), Optional.empty());
+  }
+
+  /** {@code speech} in {@code template}, the player's name in {@code color} if given. */
+  public static String channelLine(LineTemplate template, Speech speech, Optional<String> color) {
     return template.render(
         Map.of(
-            "prefix", spaced(prefix),
-            "player", MiniMessageText.escape(player),
-            "message", MiniMessageText.escape(message)));
+            "prefix", spaced(speech.prefix()),
+            "player", colored(MiniMessageText.escape(speech.player()), color),
+            "message", MiniMessageText.escape(speech.message())));
   }
 
   /** A {@code /me} line in {@code channel}; the player and action are escaped here. */
   public static String emoteLine(LineTemplate template, ChannelKey channel, Speech speech) {
+    return emoteLine(template, channel, speech, Optional.empty());
+  }
+
+  /** As {@link #emoteLine(LineTemplate, ChannelKey, Speech)}, the name in {@code color}. */
+  public static String emoteLine(
+      LineTemplate template, ChannelKey channel, Speech speech, Optional<String> color) {
     return template.render(
         Map.of(
             "channel", channel.tag(),
             "prefix", spaced(speech.prefix()),
-            "player", MiniMessageText.escape(speech.player()),
+            "player", colored(MiniMessageText.escape(speech.player()), color),
             "message", MiniMessageText.escape(speech.message())));
+  }
+
+  /** A MiniMessage colour name: lower-case words joined by underscores. */
+  private static final java.util.regex.Pattern COLOR_NAME =
+      java.util.regex.Pattern.compile("[a-z]+(_[a-z]+)*");
+
+  /** {@code escaped} wrapped in the colour {@code color} names, which must be a colour name. */
+  static String colored(String escaped, Optional<String> color) {
+    if (color.isEmpty()) {
+      return escaped;
+    }
+    var name = color.orElseThrow();
+    if (!COLOR_NAME.matcher(name).matches()) {
+      throw new IllegalArgumentException("not a colour name: " + name);
+    }
+    return "<" + name + ">" + escaped + "</" + name + ">";
   }
 
   /** A private message line, shown the same to sender and recipient; all values are escaped. */

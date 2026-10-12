@@ -197,7 +197,9 @@ type Draft = {
 /**
  * The knobs of a personality: a pure function of its batch seed, id and
  * archetype, so carried personalities pick up profile changes and a batch can
- * be regenerated bit for bit.
+ * be regenerated bit for bit. The kits added since personalities were first
+ * authored are weighted apart, in `rwfbots/kit-weights.yml`
+ * (`expanded-kit-weights.ts`), so no personality file is rewritten for them.
  */
 function traitsOf(batchSeed: string, id: string, archetype: Archetype): Traits {
   return sampleTraits(new Rng(`${batchSeed}:traits:${id}`), archetype);

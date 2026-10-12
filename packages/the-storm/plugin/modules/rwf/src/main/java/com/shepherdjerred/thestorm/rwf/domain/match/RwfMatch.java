@@ -4,6 +4,7 @@
 package com.shepherdjerred.thestorm.rwf.domain.match;
 
 import com.shepherdjerred.thestorm.core.result.Result;
+import com.shepherdjerred.thestorm.rwf.domain.ability.Abilities;
 import com.shepherdjerred.thestorm.rwf.domain.bomb.Bomb;
 import com.shepherdjerred.thestorm.rwf.domain.combat.DamageLog;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.CombatantId;
@@ -13,7 +14,9 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.SplittableRandom;
 import java.util.UUID;
+import java.util.random.RandomGenerator;
 
 /**
  * One Search and Destroy match: an immutable state and its transitions. Each event gives the next
@@ -38,6 +41,7 @@ import java.util.UUID;
  * @param bombs the map's bombs once live
  * @param damage every living combatant's recent damage, for kills and assists
  * @param pinned teams an operator assigned members to before the teams are dealt
+ * @param abilities every kit ability's state once live
  */
 public record RwfMatch(
     MatchSettings settings,
@@ -49,7 +53,8 @@ public record RwfMatch(
     List<Combatant> departed,
     List<Bomb> bombs,
     DamageLog damage,
-    Map<CombatantId, TeamColor> pinned) {
+    Map<CombatantId, TeamColor> pinned,
+    Abilities abilities) {
 
   public RwfMatch {
     members = List.copyOf(members);
@@ -70,7 +75,8 @@ public record RwfMatch(
         List.of(),
         List.of(),
         DamageLog.EMPTY,
-        Map.of());
+        Map.of(),
+        Abilities.NONE);
   }
 
   /**
@@ -93,7 +99,8 @@ public record RwfMatch(
         List.of(),
         List.of(),
         DamageLog.EMPTY,
-        Map.of());
+        Map.of(),
+        Abilities.NONE);
   }
 
   /** Applies {@code event}. */
@@ -107,8 +114,10 @@ public record RwfMatch(
             Roster.disconnect(draft, disconnect.id(), disconnect.now());
             yield Optional.empty();
           }
-          case MatchEvent.PickKit pick -> Roster.pickKit(draft, pick.id(), pick.kitId(), false);
-          case MatchEvent.ForceKit force -> Roster.pickKit(draft, force.id(), force.kitId(), true);
+          case MatchEvent.PickKit pick ->
+              Roster.pickKit(draft, pick.id(), pick.kitId(), Optional.of(pick.access()));
+          case MatchEvent.ForceKit force ->
+              Roster.pickKit(draft, force.id(), force.kitId(), Optional.empty());
           case MatchEvent.BallotOpened opened -> Voting.opened(draft, opened.candidates());
           case MatchEvent.Vote vote -> Voting.cast(draft, vote.id(), vote.mapId());
           case MatchEvent.SetMap set -> Voting.set(draft, set.candidate());
@@ -139,6 +148,11 @@ public record RwfMatch(
             yield Optional.empty();
           }
           case MatchEvent.ResetDone _ -> Flow.resetDone(draft);
+          case MatchEvent.Ability ability -> Kits.act(draft, ability);
+          case MatchEvent.Online online -> {
+            Kits.online(draft, online.players());
+            yield Optional.empty();
+          }
         };
     return refusal
         .<Result<Step, MatchError>>map(Result::err)
@@ -151,6 +165,11 @@ public record RwfMatch(
 
   public Optional<Bomb> bomb(String bombId) {
     return bombs.stream().filter(bomb -> bomb.id().equals(bombId)).findFirst();
+  }
+
+  /** The match's randomness at {@code now}, derived from the seed so replays agree. */
+  public RandomGenerator random(Instant now) {
+    return new SplittableRandom(seed ^ now.toEpochMilli());
   }
 
   /** The map vote, while the lobby and the countdown run. */
@@ -173,7 +192,8 @@ public record RwfMatch(
     if (!(phase instanceof Phase.Lobby lobby) || lobby.ballot().opened()) {
       throw new IllegalStateException("only a lobby with no vote open changes its rules");
     }
-    return new RwfMatch(next, matchId, seed, phase, map, members, departed, bombs, damage, pinned);
+    return new RwfMatch(
+        next, matchId, seed, phase, map, members, departed, bombs, damage, pinned, abilities);
   }
 
   /** Reconfigures only an empty lobby, preserving its identity, map, ballot and rules. */
@@ -182,7 +202,8 @@ public record RwfMatch(
       throw new IllegalStateException("Only an empty lobby can be reseeded.");
     }
     return new RwfMatch(
-        settings, matchId, nextSeed, phase, map, members, departed, bombs, damage, pinned);
+        settings, matchId, nextSeed, phase, map, members, departed, bombs, damage, pinned,
+        abilities);
   }
 
   /**

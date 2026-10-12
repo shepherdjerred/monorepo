@@ -103,6 +103,8 @@ final class PersonalityFilesTest {
     var content = directory.resolve(PersonalityFiles.DIRECTORY);
     Files.createDirectories(content);
     Files.writeString(content.resolve("ash-42.yml"), GOOD);
+    Files.writeString(
+        directory.resolve("rwfbots/kit-weights.yml"), "personalities:\n  ash-42: {}\n");
 
     assertThat(PersonalityFiles.load(directory).all()).hasSize(1);
   }

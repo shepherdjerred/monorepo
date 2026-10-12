@@ -66,4 +66,20 @@ public final class FakeBotActions implements BotActions {
   public Optional<ActionRefusal> pickKit(UUID bot, String kitId) {
     return record("kit " + kitId);
   }
+
+  @Override
+  public Optional<ActionRefusal> useStreak(UUID bot) {
+    return record("streak");
+  }
+
+  @Override
+  public Optional<ActionRefusal> useKit(
+      UUID bot, int slot, Optional<UUID> target, Optional<Point> at) {
+    return record(
+        "use "
+            + slot
+            + target.map(on -> " on " + on).orElse("")
+            + at.map(p -> String.format(Locale.ROOT, " at %.1f,%.1f,%.1f", p.x(), p.y(), p.z()))
+                .orElse(""));
+  }
 }

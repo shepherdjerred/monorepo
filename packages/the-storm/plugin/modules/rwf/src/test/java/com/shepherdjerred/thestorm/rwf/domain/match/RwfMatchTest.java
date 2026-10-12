@@ -13,6 +13,7 @@ import com.shepherdjerred.thestorm.rwf.domain.bomb.FuseType;
 import com.shepherdjerred.thestorm.rwf.domain.combat.AttackType;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.CombatantId;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
+import com.shepherdjerred.thestorm.rwf.domain.kit.KitAccess;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchEffect.Announce;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchEffect.BombArmed;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchEffect.BombRemoved;
@@ -108,15 +109,30 @@ final class RwfMatchTest {
     }
 
     @Test
+    void aKitTheyHaveNotBoughtIsRefusedUnlessItIsFreeThisWeek() {
+      play.join(ALICE);
+      var access = KitAccess.of(java.util.Set.of("ninja"), java.util.Set.of("spy"));
+      assertThat(play.refused(new PickKit(ALICE, "dwarf", access)))
+          .isEqualTo(MatchError.KIT_LOCKED);
+      assertThat(play.refused(new PickKit(ALICE, "medic", KitAccess.MILESTONE_ONE)))
+          .isEqualTo(MatchError.KIT_LOCKED);
+      play.ok(new PickKit(ALICE, "ninja", access));
+      play.ok(new PickKit(ALICE, "spy", access));
+      assertThat(play.member(ALICE).kit()).contains("spy");
+    }
+
+    @Test
     void pickingAKitEquipsIt() {
       play.join(ALICE);
 
-      var effects = play.ok(new PickKit(ALICE, "longbow"));
+      var effects = play.ok(new PickKit(ALICE, "longbow", KitAccess.EVERYTHING));
 
       assertThat(effects).contains(new Equip(ALICE, "longbow"));
       assertThat(play.member(ALICE).kit()).contains("longbow");
-      assertThat(play.refused(new PickKit(ALICE, "ninja"))).isEqualTo(MatchError.UNKNOWN_KIT);
-      assertThat(play.refused(new PickKit(BOB, "trooper"))).isEqualTo(MatchError.NOT_A_MEMBER);
+      assertThat(play.refused(new PickKit(ALICE, "pirate", KitAccess.EVERYTHING)))
+          .isEqualTo(MatchError.UNKNOWN_KIT);
+      assertThat(play.refused(new PickKit(BOB, "trooper", KitAccess.EVERYTHING)))
+          .isEqualTo(MatchError.NOT_A_MEMBER);
     }
 
     @Test
@@ -225,7 +241,7 @@ final class RwfMatchTest {
     @Test
     void goingLiveBalancesTeamsEquipsAndPlaces() {
       play.join(ALICE);
-      play.ok(new PickKit(ALICE, "longbow"));
+      play.ok(new PickKit(ALICE, "longbow", KitAccess.EVERYTHING));
       var effects = play.start(Samples.twoTeams(), BOB, CAROL, DAVE);
 
       assertThat(play.match.phase()).isInstanceOf(Live.class);
@@ -276,7 +292,8 @@ final class RwfMatchTest {
           .isEqualTo(MatchError.MAP_LOCKED);
       assertThat(play.refused(new Join(CAROL, "Carol", play.now)))
           .isEqualTo(MatchError.IN_PROGRESS);
-      assertThat(play.refused(new PickKit(ALICE, "longbow"))).isEqualTo(MatchError.NOT_PRE_GAME);
+      assertThat(play.refused(new PickKit(ALICE, "longbow", KitAccess.EVERYTHING)))
+          .isEqualTo(MatchError.NOT_PRE_GAME);
       assertThat(play.refused(new ForceStart(play.now))).isEqualTo(MatchError.NOT_PRE_GAME);
     }
   }
@@ -684,7 +701,8 @@ final class RwfMatchTest {
       assertThat(snapshot.teams()).containsExactly(TeamColor.RED, TeamColor.BLUE);
       assertThat(snapshot.combatants()).hasSize(4).allMatch(MatchSnapshot.CombatantView::alive);
       var alice = snapshot.combatant(ALICE).orElseThrow();
-      assertThat(alice.apparentTeam(BOB)).isEqualTo(alice.team());
+      assertThat(alice.apparentTeam(snapshot.combatant(BOB).orElseThrow().team()))
+          .isEqualTo(alice.team());
       assertThat(snapshot.bombs()).hasSize(2);
       assertThat(snapshot.bomb("red-1").orElseThrow().team()).contains(TeamColor.RED);
       assertThat(snapshot.bomb("red-1").orElseThrow().state())

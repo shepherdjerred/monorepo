@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.chat.adapter.paper;
 
 import com.shepherdjerred.thestorm.chat.app.OutgoingLine;
 import io.papermc.paper.chat.ChatRenderer;
+import java.util.function.Function;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
@@ -14,9 +15,13 @@ import org.bukkit.entity.Player;
 final class ChannelRenderer implements ChatRenderer {
 
   private final OutgoingLine line;
-  private final Component rendered;
+  private final Function<Audience, Component> rendered;
 
-  ChannelRenderer(OutgoingLine line, Component rendered) {
+  /**
+   * @param line the line
+   * @param rendered the line as each viewer sees it (a speaker's name may be coloured per viewer)
+   */
+  ChannelRenderer(OutgoingLine line, Function<Audience, Component> rendered) {
     this.line = line;
     this.rendered = rendered;
   }
@@ -28,6 +33,6 @@ final class ChannelRenderer implements ChatRenderer {
   @Override
   public Component render(
       Player source, Component sourceDisplayName, Component message, Audience viewer) {
-    return rendered;
+    return rendered.apply(viewer);
   }
 }

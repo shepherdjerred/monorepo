@@ -8,6 +8,7 @@ import com.shepherdjerred.thestorm.rwf.app.MatchNotification;
 import com.shepherdjerred.thestorm.rwf.domain.combat.AttackType;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.CombatantId;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
+import com.shepherdjerred.thestorm.rwf.domain.kit.KitAccess;
 import com.shepherdjerred.thestorm.rwf.domain.match.Ballot;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchEffect;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent;
@@ -205,8 +206,8 @@ final class MatchAnalyticsTest {
                     List.of(
                         new Ballot.Candidate(map.id(), map.name(), map.author()),
                         new Ballot.Candidate("yard", "Yard", map.author()))),
-                new MatchEvent.PickKit(HUMAN, "longbow"),
-                new MatchEvent.PickKit(BOT, "trooper"),
+                new MatchEvent.PickKit(HUMAN, "longbow", KitAccess.MILESTONE_ONE),
+                new MatchEvent.PickKit(BOT, "trooper", KitAccess.MILESTONE_ONE),
                 new MatchEvent.Vote(HUMAN, map.id()),
                 new MatchEvent.AssignTeam(HUMAN, TeamColor.RED),
                 new MatchEvent.AssignTeam(BOT, TeamColor.BLUE)));
@@ -255,6 +256,7 @@ final class MatchAnalyticsTest {
                         Optional.empty(),
                         Optional.empty(),
                         true,
+                        false,
                         com.shepherdjerred.thestorm.rwf.domain.match.Score.ZERO))
             .toList(),
         List.of(),

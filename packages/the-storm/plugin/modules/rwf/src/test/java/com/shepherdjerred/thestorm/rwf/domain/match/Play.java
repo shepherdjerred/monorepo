@@ -122,12 +122,15 @@ final class Play {
 
   /**
    * Joins everyone, opens a vote on {@code map} alone and force-starts: the map loads and the match
-   * goes live at once. Returns the effects of the step that went live.
+   * goes live at once, and every member looks around so nobody is AFK. Returns the effects of the
+   * step that went live.
    */
   List<MatchEffect> start(MapDefinition map, CombatantId... players) {
     var effects = startIdle(map, players);
-    for (var player : players) {
-      ok(new MatchEvent.LookedAround(player));
+    for (var member : match.members()) {
+      if (member.alive()) {
+        ok(new MatchEvent.LookedAround(member.id()));
+      }
     }
     return effects;
   }

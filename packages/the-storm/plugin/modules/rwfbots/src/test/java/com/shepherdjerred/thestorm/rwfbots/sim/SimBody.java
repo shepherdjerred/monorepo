@@ -77,6 +77,9 @@ final class SimBody {
   final Map<CombatantId, Integer> attacksOn = new HashMap<>();
   final List<Decision> decisions = new ArrayList<>();
 
+  /** Every kit item the body was told to use. */
+  final List<BodyCommand.UseKit> kitUses = new ArrayList<>();
+
   SimBody(SimWorld.Spawn spawn) {
     this.id = new CombatantId(spawn.id());
     this.team = spawn.team();

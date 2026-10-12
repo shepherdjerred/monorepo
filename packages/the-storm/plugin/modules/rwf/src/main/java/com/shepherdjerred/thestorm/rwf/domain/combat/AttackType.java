@@ -6,6 +6,7 @@ package com.shepherdjerred.thestorm.rwf.domain.combat;
 
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -228,6 +229,16 @@ public record AttackType(String name, String deathMessage, Set<Flag> flags) {
 
   private static AttackType of(String name, String deathMessage, Flag... flags) {
     return new AttackType(name, deathMessage, Set.of(flags));
+  }
+
+  /**
+   * How a fall into the void is credited: to whoever last hit the victim on their way down, shot or
+   * pushed, as the original's "Fall" condition did; to nobody if nobody did.
+   *
+   * @param lastHit how the attacker who last hit the victim did it, if one did
+   */
+  public static AttackType intoVoid(Optional<AttackType> lastHit) {
+    return lastHit.map(hit -> hit.has(Flag.PROJECTILE) ? VOID_SHOT : VOID_PUSHED).orElse(VOID);
   }
 
   public boolean has(Flag flag) {

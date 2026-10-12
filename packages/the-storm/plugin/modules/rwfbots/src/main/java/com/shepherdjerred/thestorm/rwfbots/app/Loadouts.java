@@ -1,28 +1,63 @@
 package com.shepherdjerred.thestorm.rwfbots.app;
 
+import com.shepherdjerred.thestorm.rwf.app.view.KitHotbar;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.Loadout;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Kit;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Predicate;
 
 /**
- * Where the rwf kits put their items: the Bomb Fuse is locked in hotbar slot 0, the weapon follows
- * in slot 1, and the bow or the golden apples sit in slot 2.
+ * Where an rwf kit puts its items, read from rwf's own kit list so a bot reaches for the slot a
+ * player's hotbar has: the Bomb Fuse locked in slot 0, then the kit's items in its order. The melee
+ * weapon is the first sword or axe (a Wraith, which carries none, swings its bow).
  */
 public final class Loadouts {
 
   /** The hotbar slot rwf locks the Bomb Fuse into. */
   public static final int FUSE_SLOT = 0;
 
-  public static final int WEAPON_SLOT = 1;
-
-  public static final int SECOND_SLOT = 2;
+  private static final Set<String> BOWS = Set.of("BOW", "CROSSBOW");
 
   private Loadouts() {}
 
   public static Loadout rwf(Kit kit) {
+    var id = kit.name().toLowerCase(Locale.ROOT);
+    var hotbar =
+        KitHotbar.of(id)
+            .orElseThrow(() -> new IllegalArgumentException("rwf has no kit " + id))
+            .slots();
+    var weapon =
+        slot(hotbar, Loadouts::weapon)
+            .or(() -> hotbar.stream().map(KitHotbar.Slot::slot).findFirst())
+            .orElseThrow(() -> new IllegalArgumentException(id + " carries nothing to swing"));
+    var items = new ArrayList<Loadout.KitItem>();
+    for (var move : kit.moves()) {
+      var slot =
+          slot(hotbar, move.item()::equals)
+              .orElseThrow(() -> new IllegalArgumentException(id + " carries no " + move.item()));
+      items.add(new Loadout.KitItem(move, slot));
+    }
     return new Loadout(
-        WEAPON_SLOT,
-        kit.hasBow() ? SECOND_SLOT : -1,
-        kit.hasGapples() ? SECOND_SLOT : -1,
-        FUSE_SLOT);
+        weapon,
+        slot(hotbar, BOWS::contains).orElse(-1),
+        slot(hotbar, "GOLDEN_APPLE"::equals).orElse(-1),
+        FUSE_SLOT,
+        items,
+        kit.body());
+  }
+
+  private static boolean weapon(String material) {
+    return material.endsWith("_SWORD") || material.endsWith("_AXE");
+  }
+
+  private static Optional<Integer> slot(List<KitHotbar.Slot> hotbar, Predicate<String> material) {
+    return hotbar.stream()
+        .filter(slot -> material.test(slot.material()))
+        .map(KitHotbar.Slot::slot)
+        .findFirst();
   }
 }

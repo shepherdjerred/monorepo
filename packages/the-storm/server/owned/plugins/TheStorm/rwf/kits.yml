@@ -1,23 +1,30 @@
 # Red Warfare Search and Destroy kits, as the operator sees them. Owned by the
 # repository; the plugin never writes it. The kits themselves are code
 # (domain/kit/KitBook.java); this file must describe them exactly, kit for
-# kit, or the module refuses to start, so a change to either is visible in the
-# other. Milestone 1 ships the four free kits; see plugin/modules/rwf/KITS.md
-# for the rest.
+# kit and in kit-menu order, or the module refuses to start, so a change to
+# either is visible in the other. See plugin/modules/rwf/KITS.md for what each
+# kit's ability does.
 #
 # Every kit carries the Blaze Powder "Bomb Fuse" in hotbar slot 0; a kit's
 # fuseBonus (type BOMB_ARMING, BOMB_DEFUSING or BOMB_SPEED with a level, or
-# null) is written on the fuse. hotbar items follow the fuse in slot order;
-# armor names its slot (HELMET, CHESTPLATE, LEGGINGS, BOOTS). Prices are
-# credits; a kit is PURCHASE exactly when it has a price. icon is the material
-# the kit menu and the lobby alcove show it by; summary is one to four lines of
-# at most 40 characters, the icon's lore and the alcove's label.
+# null) is written on the fuse. hotbar items follow the fuse in slot order (an
+# AIR item keeps a slot empty) and a kit's arrow is moved to inventory slot 9;
+# armor names its slot (HELMET, CHESTPLATE, LEGGINGS, BOOTS). An item's look
+# (or null) gives its name's chat colour, lore and lore colour, a glint, and a
+# dye (#RRGGBB, or team for the wearer's team colour). Prices are Red Warfare
+# credits; a kit is PURCHASE exactly when it has a price. tier (BASIC, MID or
+# ADVANCED) follows the price and drives the weekly free rotation. icon and
+# iconTint are what the kit menu and the lobby alcove show it by; summary is
+# one to four lines of at most 40 characters, the alcove's label. A description
+# keeps Red Warfare's lines (a literal block, one line each) and its section-sign
+# colours; an empty item name is Red Warfare's bare colour title.
 kits:
   - id: trooper
     name: Trooper
     description: >-
-      The kit that sets the standards for all others. It receives a set of iron armor and an iron sword, along with golden apples with which it can quickly recover from fights.
+      The kit that sets the standards for all others. It receives a set of iron armor and an iron sword, along with five golden apples with which it can quickly recover from fights.
     price: 0
+    tier: BASIC
     availability: FREE
     fuseBonus: null
     hotbar:
@@ -26,49 +33,559 @@ kits:
           amount: 1,
           name: null,
           enchantments: { sharpness: 1 },
+          look: null,
         }
-      - { material: GOLDEN_APPLE, amount: 3, name: null, enchantments: {} }
+      - {
+          material: GOLDEN_APPLE,
+          amount: 3,
+          name: null,
+          enchantments: {},
+          look: null,
+        }
     armor:
-      - { material: IRON_BOOTS, slot: BOOTS, enchantments: {} }
-      - { material: IRON_LEGGINGS, slot: LEGGINGS, enchantments: {} }
-      - { material: IRON_CHESTPLATE, slot: CHESTPLATE, enchantments: {} }
-      - { material: IRON_HELMET, slot: HELMET, enchantments: {} }
+      - { material: IRON_BOOTS, slot: BOOTS, enchantments: {}, dye: null }
+      - { material: IRON_LEGGINGS, slot: LEGGINGS, enchantments: {}, dye: null }
+      - {
+          material: IRON_CHESTPLATE,
+          slot: CHESTPLATE,
+          enchantments: {},
+          dye: null,
+        }
+      - { material: IRON_HELMET, slot: HELMET, enchantments: {}, dye: null }
     ability: null
     icon: IRON_SWORD
+    iconTint: null
     summary:
-      - Iron sword with Sharpness I
-      - 3 golden apples to recover
-      - Full iron armour
+      - "Iron sword with Sharpness I"
+      - "3 golden apples to recover"
+      - "Full iron armour"
+  - id: berserker
+    name: Berserker
+    description: >-
+      An offensive kit with a powerful axe and low armor. Its damage increases by half a heart every kill as it works up a bloodlust.
+    price: 400
+    tier: ADVANCED
+    availability: PURCHASE
+    fuseBonus: null
+    hotbar:
+      - {
+          material: IRON_AXE,
+          amount: 1,
+          name: null,
+          enchantments: { sharpness: 2 },
+          look: null,
+        }
+      - {
+          material: COOKED_BEEF,
+          amount: 2,
+          name: null,
+          enchantments: {},
+          look: null,
+        }
+    armor:
+      - { material: IRON_BOOTS, slot: BOOTS, enchantments: {}, dye: null }
+      - {
+          material: IRON_CHESTPLATE,
+          slot: CHESTPLATE,
+          enchantments: {},
+          dye: null,
+        }
+      - { material: IRON_HELMET, slot: HELMET, enchantments: {}, dye: null }
+    ability: berserker
+    icon: DIAMOND_AXE
+    iconTint: null
+    summary:
+      - "Iron axe with Sharpness II"
+      - "+0.7 damage per kill, up to +7"
+      - "No leggings"
+  - id: demolitions
+    name: Demolitions
+    description: >-
+      A kit equipped with a flaming sword and two landmines which it can set. When triggered by an enemy, they will explode, dealing severe damage! Additionally, it can fuse and defuse bombs twice as fast!
+    price: 300
+    tier: MID
+    availability: PURCHASE
+    fuseBonus: { type: BOMB_SPEED, level: 5 }
+    hotbar:
+      - {
+          material: IRON_SWORD,
+          amount: 1,
+          name: "Flaming Sword",
+          enchantments: { fire_aspect: 2 },
+          look:
+            {
+              nameColor: "red",
+              lore: [],
+              loreColor: null,
+              glint: false,
+              dye: null,
+            },
+        }
+      - {
+          material: STONE_PRESSURE_PLATE,
+          amount: 2,
+          name: "Landmine",
+          enchantments: {},
+          look:
+            {
+              nameColor: "yellow",
+              lore: [],
+              loreColor: null,
+              glint: false,
+              dye: null,
+            },
+        }
+    armor:
+      - { material: GOLDEN_BOOTS, slot: BOOTS, enchantments: {}, dye: null }
+      - {
+          material: CHAINMAIL_LEGGINGS,
+          slot: LEGGINGS,
+          enchantments: {},
+          dye: null,
+        }
+      - {
+          material: CHAINMAIL_CHESTPLATE,
+          slot: CHESTPLATE,
+          enchantments: {},
+          dye: null,
+        }
+      - {
+          material: CHAINMAIL_HELMET,
+          slot: HELMET,
+          enchantments: {},
+          dye: null,
+        }
+    ability: demolitions
+    icon: STONE_PRESSURE_PLATE
+    iconTint: null
+    summary:
+      - "Fuse with Bomb Speed V"
+      - "Fire Aspect II sword"
+      - "2 landmines that blow up enemies"
+  - id: dwarf
+    name: Dwarf
+    description: >-
+      A defensive kit that gains power by sneaking. As it levels up, it gets stronger and stronger, but there is a cost. The more powerful a dwarf is, the slower it gets. When not sneaking, it will lose power at the same rate as it gained, with a much higher cost for sprinting.
+    price: 500
+    tier: ADVANCED
+    availability: PURCHASE
+    fuseBonus: null
+    hotbar:
+      - {
+          material: IRON_SWORD,
+          amount: 1,
+          name: null,
+          enchantments: {},
+          look: null,
+        }
+    armor:
+      - { material: IRON_BOOTS, slot: BOOTS, enchantments: {}, dye: null }
+      - { material: IRON_LEGGINGS, slot: LEGGINGS, enchantments: {}, dye: null }
+      - {
+          material: IRON_CHESTPLATE,
+          slot: CHESTPLATE,
+          enchantments: {},
+          dye: null,
+        }
+      - { material: IRON_HELMET, slot: HELMET, enchantments: {}, dye: null }
+    ability: dwarf
+    icon: EXPERIENCE_BOTTLE
+    iconTint: null
+    summary:
+      - "Sneak to level up your gear"
+      - "Levels add Sharpness and Protection"
+      - "Strong dwarves are slow"
+  - id: explosive
+    name: Explosive
+    description: >-
+      An offensive kit equipped with RPGs and grenades. When launched, RPGs will soar through the air until they make contact, then explode. Beware, because explosives can be damaged by their own RPGs. Grenades will explode a short time after being thrown. Though they can't be thrown as far or deal as much damage, you will get more over time and can throw multiple at once.
+    price: 150
+    tier: BASIC
+    availability: PURCHASE
+    fuseBonus: null
+    hotbar:
+      - {
+          material: STONE_SWORD,
+          amount: 1,
+          name: null,
+          enchantments: { knockback: 1 },
+          look: null,
+        }
+      - {
+          material: EGG,
+          amount: 5,
+          name: "RPG",
+          enchantments: {},
+          look:
+            {
+              nameColor: "yellow",
+              lore: [],
+              loreColor: null,
+              glint: false,
+              dye: null,
+            },
+        }
+      - {
+          material: FIREWORK_STAR,
+          amount: 10,
+          name: "Grenade",
+          enchantments: {},
+          look:
+            {
+              nameColor: "yellow",
+              lore: [],
+              loreColor: null,
+              glint: false,
+              dye: "team",
+            },
+        }
+    armor:
+      - { material: DIAMOND_BOOTS, slot: BOOTS, enchantments: {}, dye: null }
+      - {
+          material: GOLDEN_LEGGINGS,
+          slot: LEGGINGS,
+          enchantments: {},
+          dye: null,
+        }
+      - {
+          material: GOLDEN_CHESTPLATE,
+          slot: CHESTPLATE,
+          enchantments: {},
+          dye: null,
+        }
+      - { material: DIAMOND_HELMET, slot: HELMET, enchantments: {}, dye: null }
+    ability: explosive
+    icon: FIREWORK_STAR
+    iconTint: "#FF0000"
+    summary:
+      - "5 RPGs that explode on contact"
+      - "Grenades that refill over time"
+  - id: ghost
+    name: Ghost
+    description: >-
+      This kit is invisible and can sneak around unseen by the enemy, but its invisibility is not perfect. Held items, sprint particles, flames, and arrows will all reveal a ghost's presence. While it has no armor, it is given enderpearls to help travel around and make hasty escapes.
+    price: 150
+    tier: BASIC
+    availability: PURCHASE
+    fuseBonus: null
+    hotbar:
+      - {
+          material: GOLDEN_SWORD,
+          amount: 1,
+          name: null,
+          enchantments: { sharpness: 2 },
+          look: null,
+        }
+      - { material: AIR, amount: 1, name: null, enchantments: {}, look: null }
+      - {
+          material: ENDER_PEARL,
+          amount: 4,
+          name: null,
+          enchantments: {},
+          look: null,
+        }
+    armor: []
+    ability: ghost
+    icon: GHAST_TEAR
+    iconTint: null
+    summary:
+      - "Invisible, but held items show"
+      - "Golden sword with Sharpness II"
+      - "4 ender pearls, no armour"
+  - id: juggernaut
+    name: Juggernaut
+    description: |-
+      A defensive kit that will only take a fraction of the normal melee and ranged damage it would normally take with an extra 5 hearts!
+      Juggernauts however will still suffer from the damage it would normally take from other sources, such as fall.
+      Additionally, due to its heavy armor, it's hard to knock a juggernaut back.
+      This comes at great cost to its mobility, as it cannot sprint.
+    price: 350
+    tier: MID
+    availability: PURCHASE
+    fuseBonus: null
+    hotbar:
+      - {
+          material: STONE_SWORD,
+          amount: 1,
+          name: null,
+          enchantments: {},
+          look: null,
+        }
+    armor:
+      - { material: IRON_BOOTS, slot: BOOTS, enchantments: {}, dye: null }
+      - { material: IRON_LEGGINGS, slot: LEGGINGS, enchantments: {}, dye: null }
+      - {
+          material: DIAMOND_CHESTPLATE,
+          slot: CHESTPLATE,
+          enchantments: {},
+          dye: null,
+        }
+      - { material: IRON_HELMET, slot: HELMET, enchantments: {}, dye: null }
+    ability: juggernaut
+    icon: DIAMOND_CHESTPLATE
+    iconTint: null
+    summary:
+      - "15 hearts, takes 60% of hits"
+      - "Hard to knock back"
+      - "Cannot sprint"
   - id: longbow
     name: Longbow
-    description: A supporting archer, this kit receives a bow that will send enemies flying.
+    description: >-
+      A supporting archer, this kit receives a bow that will send enemies flying.
     price: 0
+    tier: BASIC
     availability: FREE
     fuseBonus: null
     hotbar:
-      - { material: STONE_SWORD, amount: 1, name: null, enchantments: {} }
+      - {
+          material: STONE_SWORD,
+          amount: 1,
+          name: null,
+          enchantments: {},
+          look: null,
+        }
       - {
           material: BOW,
           amount: 1,
           name: null,
-          enchantments: { infinity: 1, punch: 3 },
+          enchantments: { punch: 3, infinity: 1 },
+          look: null,
         }
-      - { material: ARROW, amount: 1, name: null, enchantments: {} }
+      - { material: ARROW, amount: 1, name: null, enchantments: {}, look: null }
     armor:
-      - { material: CHAINMAIL_BOOTS, slot: BOOTS, enchantments: {} }
-      - { material: IRON_LEGGINGS, slot: LEGGINGS, enchantments: {} }
-      - { material: IRON_CHESTPLATE, slot: CHESTPLATE, enchantments: {} }
-      - { material: CHAINMAIL_HELMET, slot: HELMET, enchantments: {} }
+      - { material: CHAINMAIL_BOOTS, slot: BOOTS, enchantments: {}, dye: null }
+      - { material: IRON_LEGGINGS, slot: LEGGINGS, enchantments: {}, dye: null }
+      - {
+          material: IRON_CHESTPLATE,
+          slot: CHESTPLATE,
+          enchantments: {},
+          dye: null,
+        }
+      - {
+          material: CHAINMAIL_HELMET,
+          slot: HELMET,
+          enchantments: {},
+          dye: null,
+        }
     ability: null
     icon: BOW
+    iconTint: null
     summary:
-      - Bow with Punch III and Infinity
-      - Stone sword
-      - Iron and chainmail armour
+      - "Bow with Punch III and Infinity"
+      - "Stone sword"
+      - "Iron and chainmail armour"
+  - id: medic
+    name: Medic
+    description: |-
+      This supportive kit can heal allies with its wand, but it has a limit of 25 hearts per player.
+      After that, they can only heal minorly by giving regeneration.
+      To heal more efficiently, medics can see the overall health of every player over their heads.
+
+      §4§lThis kit loses its healing ability in small games with less than 20 players
+    price: 0
+    tier: MID
+    availability: FREE
+    fuseBonus: null
+    hotbar:
+      - {
+          material: IRON_SWORD,
+          amount: 1,
+          name: null,
+          enchantments: {},
+          look: null,
+        }
+      - {
+          material: BLAZE_ROD,
+          amount: 1,
+          name: "",
+          enchantments: {},
+          look:
+            {
+              nameColor: "gold",
+              lore: [],
+              loreColor: null,
+              glint: false,
+              dye: null,
+            },
+        }
+      - {
+          material: GOLDEN_APPLE,
+          amount: 20,
+          name: null,
+          enchantments: {},
+          look: null,
+        }
+    armor:
+      - { material: GOLDEN_BOOTS, slot: BOOTS, enchantments: {}, dye: null }
+      - {
+          material: GOLDEN_LEGGINGS,
+          slot: LEGGINGS,
+          enchantments: {},
+          dye: null,
+        }
+      - {
+          material: GOLDEN_CHESTPLATE,
+          slot: CHESTPLATE,
+          enchantments: {},
+          dye: null,
+        }
+      - { material: GOLDEN_HELMET, slot: HELMET, enchantments: {}, dye: null }
+    ability: medic
+    icon: GOLDEN_APPLE
+    iconTint: null
+    summary:
+      - "Wand heals nearby allies"
+      - "20 golden apples, full gold"
+      - "Sees everyone's health"
+      - "No healing at 20 players or fewer"
+  - id: pyro
+    name: Pyro
+    description: >-
+      A master of fire, this kit is given a flaming bow and sword, and fire resistant leather armor.
+    price: 200
+    tier: BASIC
+    availability: PURCHASE
+    fuseBonus: null
+    hotbar:
+      - {
+          material: IRON_SWORD,
+          amount: 1,
+          name: "Molten Sword",
+          enchantments: { fire_aspect: 2 },
+          look:
+            {
+              nameColor: "red",
+              lore: [],
+              loreColor: null,
+              glint: false,
+              dye: null,
+            },
+        }
+      - {
+          material: BOW,
+          amount: 1,
+          name: "Charred Bow",
+          enchantments: { infinity: 1, flame: 2 },
+          look:
+            {
+              nameColor: "red",
+              lore: [],
+              loreColor: null,
+              glint: false,
+              dye: null,
+            },
+        }
+      - { material: ARROW, amount: 1, name: null, enchantments: {}, look: null }
+    armor:
+      - {
+          material: CHAINMAIL_BOOTS,
+          slot: BOOTS,
+          enchantments:
+            {
+              fire_protection: 1,
+              blast_protection: 2,
+              projectile_protection: 1,
+            },
+          dye: null,
+        }
+      - {
+          material: LEATHER_LEGGINGS,
+          slot: LEGGINGS,
+          enchantments:
+            {
+              fire_protection: 1,
+              blast_protection: 2,
+              projectile_protection: 1,
+            },
+          dye: "#FF0000",
+        }
+      - {
+          material: LEATHER_CHESTPLATE,
+          slot: CHESTPLATE,
+          enchantments:
+            {
+              fire_protection: 1,
+              blast_protection: 2,
+              projectile_protection: 1,
+            },
+          dye: "#FF0000",
+        }
+      - {
+          material: LEATHER_HELMET,
+          slot: HELMET,
+          enchantments:
+            {
+              fire_protection: 1,
+              blast_protection: 2,
+              projectile_protection: 1,
+            },
+          dye: "#FF0000",
+        }
+    ability: null
+    icon: FLINT_AND_STEEL
+    iconTint: null
+    summary:
+      - "Fire Aspect II sword"
+      - "Flame II bow"
+      - "Fire and blast resistant leather"
+  - id: rewind
+    name: Rewind
+    description: >-
+      This kit is a master of hitting and running, as it has a magical clock that will teleport it where it was 30 seconds in the past. While health is unchanged, if the user was on fire, it will be put out like it never existed.
+    price: 0
+    tier: MID
+    availability: FREE
+    fuseBonus: null
+    hotbar:
+      - {
+          material: IRON_SWORD,
+          amount: 1,
+          name: null,
+          enchantments: {},
+          look: null,
+        }
+      - {
+          material: CLOCK,
+          amount: 1,
+          name: "Time Machine",
+          enchantments: {},
+          look:
+            {
+              nameColor: "gold",
+              lore: [],
+              loreColor: null,
+              glint: false,
+              dye: null,
+            },
+        }
+    armor:
+      - { material: IRON_BOOTS, slot: BOOTS, enchantments: {}, dye: null }
+      - { material: IRON_LEGGINGS, slot: LEGGINGS, enchantments: {}, dye: null }
+      - {
+          material: IRON_CHESTPLATE,
+          slot: CHESTPLATE,
+          enchantments: { protection: 1 },
+          dye: null,
+        }
+      - {
+          material: CHAINMAIL_HELMET,
+          slot: HELMET,
+          enchantments: {},
+          dye: null,
+        }
+    ability: rewind
+    icon: CLOCK
+    iconTint: null
+    summary:
+      - "Time Machine: back 30 seconds"
+      - "Iron sword"
+      - "Iron and chainmail armour"
   - id: shortbow
     name: Shortbow
-    description: A powerful archer, this kit receives a bow with which it deals precise damage.
+    description: >-
+      A powerful archer, this kit receives a bow with which it deals precise damage.
     price: 0
+    tier: BASIC
     availability: FREE
     fuseBonus: null
     hotbar:
@@ -77,47 +594,1041 @@ kits:
           amount: 1,
           name: null,
           enchantments: { knockback: 1 },
+          look: null,
         }
       - {
           material: BOW,
           amount: 1,
           name: null,
-          enchantments: { infinity: 1, power: 2 },
+          enchantments: { power: 2, infinity: 1 },
+          look: null,
         }
-      - { material: ARROW, amount: 1, name: null, enchantments: {} }
+      - { material: ARROW, amount: 1, name: null, enchantments: {}, look: null }
     armor:
-      - { material: CHAINMAIL_BOOTS, slot: BOOTS, enchantments: {} }
-      - { material: IRON_LEGGINGS, slot: LEGGINGS, enchantments: {} }
-      - { material: IRON_CHESTPLATE, slot: CHESTPLATE, enchantments: {} }
-      - { material: CHAINMAIL_HELMET, slot: HELMET, enchantments: {} }
-    ability: null
-    icon: ARROW
-    summary:
-      - Bow with Power II and Infinity
-      - Wooden sword with Knockback I
-      - Iron and chainmail armour
-  - id: rewind
-    name: Rewind
-    description: >-
-      This kit is a master of hitting and running, as it has a magical clock that will teleport it where it was 30 seconds in the past. While health is unchanged, if the user was on fire, it will be put out like it never existed.
-    price: 0
-    availability: FREE
-    fuseBonus: null
-    hotbar:
-      - { material: IRON_SWORD, amount: 1, name: null, enchantments: {} }
-      - { material: CLOCK, amount: 1, name: Time Machine, enchantments: {} }
-    armor:
-      - { material: IRON_BOOTS, slot: BOOTS, enchantments: {} }
-      - { material: IRON_LEGGINGS, slot: LEGGINGS, enchantments: {} }
+      - { material: CHAINMAIL_BOOTS, slot: BOOTS, enchantments: {}, dye: null }
+      - { material: IRON_LEGGINGS, slot: LEGGINGS, enchantments: {}, dye: null }
       - {
           material: IRON_CHESTPLATE,
           slot: CHESTPLATE,
-          enchantments: { protection: 1 },
+          enchantments: {},
+          dye: null,
         }
-      - { material: CHAINMAIL_HELMET, slot: HELMET, enchantments: {} }
-    ability: rewind
-    icon: CLOCK
+      - {
+          material: CHAINMAIL_HELMET,
+          slot: HELMET,
+          enchantments: {},
+          dye: null,
+        }
+    ability: null
+    icon: BOW
+    iconTint: null
     summary:
-      - "Time Machine: back 30 seconds"
-      - Iron sword
-      - Iron and chainmail armour
+      - "Bow with Power II and Infinity"
+      - "Wooden sword with Knockback I"
+      - "Iron and chainmail armour"
+  - id: spy
+    name: Spy
+    description: >-
+      A sneaky kit that always looks like the team of the view. He looks like a trooper!
+    price: 250
+    tier: MID
+    availability: PURCHASE
+    fuseBonus: null
+    hotbar:
+      - {
+          material: IRON_SWORD,
+          amount: 1,
+          name: null,
+          enchantments: {},
+          look: null,
+        }
+    armor:
+      - { material: IRON_BOOTS, slot: BOOTS, enchantments: {}, dye: null }
+      - { material: IRON_LEGGINGS, slot: LEGGINGS, enchantments: {}, dye: null }
+      - {
+          material: IRON_CHESTPLATE,
+          slot: CHESTPLATE,
+          enchantments: {},
+          dye: null,
+        }
+      - { material: IRON_HELMET, slot: HELMET, enchantments: {}, dye: null }
+    ability: spy
+    icon: SKELETON_SKULL
+    iconTint: null
+    summary:
+      - "Every viewer sees you on their team"
+      - "Shown as a Trooper"
+      - "Iron gear"
+  - id: teleporter
+    name: Teleporter
+    description: >-
+      A supportive kit that can create teleporters to transfer their team across the map. Step on one and sneak to use it! Beware, the enemies can easily break the teleporters.
+    price: 0
+    tier: MID
+    availability: FREE
+    fuseBonus: null
+    hotbar:
+      - {
+          material: IRON_SWORD,
+          amount: 1,
+          name: null,
+          enchantments: {},
+          look: null,
+        }
+      - {
+          material: QUARTZ,
+          amount: 1,
+          name: "Teleport Creator",
+          enchantments: {},
+          look:
+            {
+              nameColor: "blue",
+              lore: ["Right click on ground to create teleporter"],
+              loreColor: "green",
+              glint: false,
+              dye: null,
+            },
+        }
+      - {
+          material: MAP,
+          amount: 1,
+          name: "Remote Teleporter",
+          enchantments: {},
+          look:
+            {
+              nameColor: "blue",
+              lore:
+                [
+                  "Right click with this to open a menu where you can select one of your teammates to create a teleporter to",
+                  "You can also destroy all existing teleporters with this!",
+                ],
+              loreColor: "green",
+              glint: false,
+              dye: null,
+            },
+        }
+    armor:
+      - { material: IRON_BOOTS, slot: BOOTS, enchantments: {}, dye: null }
+      - { material: IRON_LEGGINGS, slot: LEGGINGS, enchantments: {}, dye: null }
+      - {
+          material: IRON_CHESTPLATE,
+          slot: CHESTPLATE,
+          enchantments: {},
+          dye: null,
+        }
+      - { material: IRON_HELMET, slot: HELMET, enchantments: {}, dye: null }
+    ability: teleporter
+    icon: SPAWNER
+    iconTint: null
+    summary:
+      - "Place two linked teleporters"
+      - "Allies sneak on one to cross"
+      - "Remote: place one under an ally"
+  - id: vampire
+    name: Vampire
+    description: >-
+      A kit that must pick its early kills carefully, as it only starts with 8 hearts. However, every kill grants it a vital reward of 2 hearts, with a maximum of 20.
+    price: 300
+    tier: MID
+    availability: PURCHASE
+    fuseBonus: null
+    hotbar:
+      - {
+          material: IRON_SWORD,
+          amount: 1,
+          name: "Vampiric Sword",
+          enchantments: { sharpness: 1 },
+          look:
+            {
+              nameColor: "red",
+              lore: [],
+              loreColor: null,
+              glint: false,
+              dye: null,
+            },
+        }
+    armor:
+      - { material: IRON_BOOTS, slot: BOOTS, enchantments: {}, dye: null }
+      - { material: IRON_LEGGINGS, slot: LEGGINGS, enchantments: {}, dye: null }
+      - {
+          material: IRON_CHESTPLATE,
+          slot: CHESTPLATE,
+          enchantments: {},
+          dye: null,
+        }
+      - { material: IRON_HELMET, slot: HELMET, enchantments: {}, dye: null }
+    ability: vampire
+    icon: RED_DYE
+    iconTint: null
+    summary:
+      - "Starts with 8 hearts"
+      - "A kill adds a heart and Regeneration"
+      - "Up to 20 hearts"
+  - id: venom
+    name: Venom
+    description: >-
+      An offensive kit that excels at hit and runs. Its blade is coated in deadly poison and paralyzer, making every hit it lands poison its foe and slow them down!
+    price: 400
+    tier: ADVANCED
+    availability: PURCHASE
+    fuseBonus: null
+    hotbar:
+      - {
+          material: IRON_SWORD,
+          amount: 1,
+          name: "Poisoned Sword",
+          enchantments: {},
+          look:
+            {
+              nameColor: "dark_green",
+              lore: ["", "Venom I"],
+              loreColor: "gray",
+              glint: true,
+              dye: null,
+            },
+        }
+    armor:
+      - { material: IRON_BOOTS, slot: BOOTS, enchantments: {}, dye: null }
+      - { material: IRON_LEGGINGS, slot: LEGGINGS, enchantments: {}, dye: null }
+      - {
+          material: GOLDEN_CHESTPLATE,
+          slot: CHESTPLATE,
+          enchantments: {},
+          dye: null,
+        }
+      - {
+          material: CHAINMAIL_HELMET,
+          slot: HELMET,
+          enchantments: {},
+          dye: null,
+        }
+    ability: venom
+    icon: POTION
+    iconTint: "#4E9331"
+    summary:
+      - "Hits poison and slow for 6 seconds"
+      - "Iron, gold and chainmail"
+  - id: warper
+    name: Warper
+    description: >-
+      A supportive kit, it has the ability to warp a group of enemies to where it was standing 10 seconds ago, making it useful against an otherwise strong defense.
+    price: 250
+    tier: MID
+    availability: PURCHASE
+    fuseBonus: null
+    hotbar:
+      - {
+          material: IRON_SWORD,
+          amount: 1,
+          name: null,
+          enchantments: { sharpness: 1 },
+          look: null,
+        }
+      - {
+          material: BLAZE_ROD,
+          amount: 1,
+          name: "Warper's Wand",
+          enchantments: {},
+          look:
+            {
+              nameColor: "gold",
+              lore: [],
+              loreColor: null,
+              glint: false,
+              dye: null,
+            },
+        }
+    armor:
+      - { material: IRON_BOOTS, slot: BOOTS, enchantments: {}, dye: null }
+      - { material: IRON_LEGGINGS, slot: LEGGINGS, enchantments: {}, dye: null }
+      - {
+          material: IRON_CHESTPLATE,
+          slot: CHESTPLATE,
+          enchantments: {},
+          dye: null,
+        }
+      - { material: IRON_HELMET, slot: HELMET, enchantments: {}, dye: null }
+    ability: warper
+    icon: BLAZE_ROD
+    iconTint: null
+    summary:
+      - "Wand warps nearby enemies to"
+      - "where you stood 10 seconds ago"
+      - "30 second recharge"
+  - id: ninja
+    name: Ninja
+    description: |-
+      The ninja starts with enderpearls and can sprint about the map with a speed boost
+      He is known as one who can outrun the stronger warriors
+      With fall protection, he's not afraid of heights!
+    price: 200
+    tier: BASIC
+    availability: PURCHASE
+    fuseBonus: null
+    hotbar:
+      - {
+          material: IRON_SWORD,
+          amount: 1,
+          name: null,
+          enchantments: {},
+          look: null,
+        }
+      - {
+          material: ENDER_PEARL,
+          amount: 6,
+          name: null,
+          enchantments: {},
+          look: null,
+        }
+    armor:
+      - {
+          material: CHAINMAIL_BOOTS,
+          slot: BOOTS,
+          enchantments: { feather_falling: 2 },
+          dye: null,
+        }
+      - {
+          material: CHAINMAIL_LEGGINGS,
+          slot: LEGGINGS,
+          enchantments: {},
+          dye: null,
+        }
+      - {
+          material: IRON_CHESTPLATE,
+          slot: CHESTPLATE,
+          enchantments: {},
+          dye: null,
+        }
+      - { material: IRON_HELMET, slot: HELMET, enchantments: {}, dye: null }
+    ability: ninja
+    icon: ENDER_PEARL
+    iconTint: null
+    summary:
+      - "Speed II and Night Vision"
+      - "6 ender pearls"
+      - "Feather Falling II boots"
+  - id: frost
+    name: Frost
+    description: |-
+      Master of ice and frost, this special guy can freeze the hands of your enemies for 10 seconds!
+      When frozen, your enemies cannot switch items or use their offhand!
+    price: 150
+    tier: BASIC
+    availability: PURCHASE
+    fuseBonus: null
+    hotbar:
+      - {
+          material: IRON_SWORD,
+          amount: 1,
+          name: null,
+          enchantments: {},
+          look: null,
+        }
+    armor:
+      - {
+          material: LEATHER_BOOTS,
+          slot: BOOTS,
+          enchantments: {},
+          dye: "#00FFFF",
+        }
+      - {
+          material: LEATHER_LEGGINGS,
+          slot: LEGGINGS,
+          enchantments: {},
+          dye: "#00FFFF",
+        }
+      - {
+          material: LEATHER_CHESTPLATE,
+          slot: CHESTPLATE,
+          enchantments: {},
+          dye: "#00FFFF",
+        }
+      - {
+          material: LEATHER_HELMET,
+          slot: HELMET,
+          enchantments: {},
+          dye: "#00FFFF",
+        }
+    ability: frost
+    icon: ICE
+    iconTint: null
+    summary:
+      - "Hits freeze enemy hands for 10s"
+      - "16 second recharge"
+      - "Frost armour softens blows"
+  - id: skinner
+    name: Skinner
+    description: |-
+      A stealth fighter kit which gains the nametag and nametag color of any enemy slain nearby.
+      Much like an adaptive Spy.
+      Every kill they are defenseless for 3 seconds.
+    price: 300
+    tier: MID
+    availability: PURCHASE
+    fuseBonus: null
+    hotbar:
+      - {
+          material: IRON_SWORD,
+          amount: 1,
+          name: null,
+          enchantments: { silk_touch: 1 },
+          look: null,
+        }
+    armor:
+      - { material: IRON_BOOTS, slot: BOOTS, enchantments: {}, dye: null }
+      - { material: IRON_LEGGINGS, slot: LEGGINGS, enchantments: {}, dye: null }
+      - {
+          material: IRON_CHESTPLATE,
+          slot: CHESTPLATE,
+          enchantments: {},
+          dye: null,
+        }
+      - { material: IRON_HELMET, slot: HELMET, enchantments: {}, dye: null }
+    ability: skinner
+    icon: LEATHER_CHESTPLATE
+    iconTint: "#FFDAB9"
+    summary:
+      - "Takes the name of enemies"
+      - "slain nearby"
+      - "Defenceless 3s after each kill"
+  - id: wraith
+    name: Wraith
+    description: |-
+      A kit that is extremely similar to what Ghost is, however this kit functions differently!
+
+      Inferior to a normal ghost, wraith has no enderpearls or sword but instead must make do with a bow with power II!
+    price: 200
+    tier: BASIC
+    availability: PURCHASE
+    fuseBonus: null
+    hotbar:
+      - {
+          material: BOW,
+          amount: 1,
+          name: null,
+          enchantments: { power: 2, infinity: 1 },
+          look: null,
+        }
+      - { material: ARROW, amount: 1, name: null, enchantments: {}, look: null }
+    armor: []
+    ability: wraith
+    icon: TIPPED_ARROW
+    iconTint: null
+    summary:
+      - "Invisible like a Ghost"
+      - "Bow with Power II and Infinity"
+      - "No armour"
+  - id: bleeder
+    name: Bleeder
+    description: >-
+      One of the most feared kits, the bleeder can permanently destroy the health of his foes with every blow
+    price: 400
+    tier: ADVANCED
+    availability: PURCHASE
+    fuseBonus: null
+    hotbar:
+      - {
+          material: WOODEN_SWORD,
+          amount: 1,
+          name: "The Bleeder",
+          enchantments: {},
+          look:
+            {
+              nameColor: "dark_red",
+              lore: [],
+              loreColor: null,
+              glint: false,
+              dye: null,
+            },
+        }
+    armor:
+      - { material: CHAINMAIL_BOOTS, slot: BOOTS, enchantments: {}, dye: null }
+      - {
+          material: CHAINMAIL_LEGGINGS,
+          slot: LEGGINGS,
+          enchantments: {},
+          dye: null,
+        }
+      - {
+          material: CHAINMAIL_CHESTPLATE,
+          slot: CHESTPLATE,
+          enchantments: {},
+          dye: null,
+        }
+      - {
+          material: CHAINMAIL_HELMET,
+          slot: HELMET,
+          enchantments: {},
+          dye: null,
+        }
+    ability: bleeder
+    icon: WOODEN_SWORD
+    iconTint: null
+    summary:
+      - "Hits deal 2-3 damage"
+      - "and take that much max health"
+      - "Full chainmail"
+  - id: equality
+    name: Equality
+    description: >-
+      You will always take 3 damage, you will always deal 3 damage. You were born equal and you will die equal.
+    price: 350
+    tier: MID
+    availability: PURCHASE
+    fuseBonus: null
+    hotbar:
+      - {
+          material: IRON_SWORD,
+          amount: 1,
+          name: null,
+          enchantments: {},
+          look: null,
+        }
+    armor:
+      - {
+          material: LEATHER_BOOTS,
+          slot: BOOTS,
+          enchantments: {},
+          dye: "#FFFFFF",
+        }
+      - {
+          material: LEATHER_LEGGINGS,
+          slot: LEGGINGS,
+          enchantments: {},
+          dye: "#000000",
+        }
+      - {
+          material: LEATHER_CHESTPLATE,
+          slot: CHESTPLATE,
+          enchantments: {},
+          dye: "#FFFFFF",
+        }
+      - {
+          material: LEATHER_HELMET,
+          slot: HELMET,
+          enchantments: {},
+          dye: "#000000",
+        }
+    ability: equality
+    icon: SMOOTH_STONE_SLAB
+    iconTint: null
+    summary:
+      - "Every hit you deal or take is 3"
+      - "Iron sword"
+      - "Black and white leather"
+  - id: inertia
+    name: Inertia
+    description: >-
+      An unstoppable force that can be as much danger to itself as it is to others. Damage increases as you run, sharp turns negate this and running into a wall can be quite painful.
+    price: 350
+    tier: MID
+    availability: PURCHASE
+    fuseBonus: null
+    hotbar:
+      - {
+          material: WOODEN_SWORD,
+          amount: 1,
+          name: null,
+          enchantments: {},
+          look: null,
+        }
+      - {
+          material: SHIELD,
+          amount: 1,
+          name: null,
+          enchantments: {},
+          look: null,
+        }
+    armor:
+      - {
+          material: IRON_BOOTS,
+          slot: BOOTS,
+          enchantments: { protection: 2 },
+          dye: null,
+        }
+      - {
+          material: IRON_LEGGINGS,
+          slot: LEGGINGS,
+          enchantments: { protection: 2 },
+          dye: null,
+        }
+      - {
+          material: IRON_CHESTPLATE,
+          slot: CHESTPLATE,
+          enchantments: { protection: 2 },
+          dye: null,
+        }
+      - {
+          material: IRON_HELMET,
+          slot: HELMET,
+          enchantments: { protection: 2 },
+          dye: null,
+        }
+    ability: inertia
+    icon: QUARTZ
+    iconTint: null
+    summary:
+      - "Running builds up melee damage"
+      - "Sharp turns lose it"
+      - "Running into a wall hurts"
+  - id: sacrificial
+    name: Sacrificial
+    description: >-
+      This kit will lets the user sacrifice their health in place of one of their allies. When being sacrificed for, the ally will transfer all damage taken to the sacrificial, who must consume their every replenishing steak to survive. Be cautious, for the sacrificial will take 5x more damage when directly attacked!
+    price: 500
+    tier: ADVANCED
+    availability: PURCHASE
+    fuseBonus: null
+    hotbar:
+      - {
+          material: WOODEN_SWORD,
+          amount: 1,
+          name: null,
+          enchantments: { knockback: 1 },
+          look: null,
+        }
+      - {
+          material: RED_DYE,
+          amount: 1,
+          name: "Sacrificial Magic",
+          enchantments: {},
+          look:
+            {
+              nameColor: "red",
+              lore: [],
+              loreColor: null,
+              glint: false,
+              dye: null,
+            },
+        }
+      - {
+          material: COOKED_BEEF,
+          amount: 10,
+          name: null,
+          enchantments: {},
+          look: null,
+        }
+      - {
+          material: SHEARS,
+          amount: 2,
+          name: "Destroy Sacrificial Bonds",
+          enchantments: {},
+          look:
+            {
+              nameColor: "red",
+              lore: [],
+              loreColor: null,
+              glint: false,
+              dye: null,
+            },
+        }
+    armor:
+      - { material: IRON_BOOTS, slot: BOOTS, enchantments: {}, dye: null }
+      - { material: IRON_LEGGINGS, slot: LEGGINGS, enchantments: {}, dye: null }
+      - {
+          material: IRON_CHESTPLATE,
+          slot: CHESTPLATE,
+          enchantments: {},
+          dye: null,
+        }
+      - { material: IRON_HELMET, slot: HELMET, enchantments: {}, dye: null }
+    ability: sacrificial
+    icon: COOKED_BEEF
+    iconTint: null
+    summary:
+      - "Bond allies: take their damage"
+      - "Steaks come back every 20s"
+      - "Direct hits on you hurt 4x"
+  - id: sapper
+    name: Sapper
+    description: >-
+      A bomb disposal expert. Its fuse defuses three seconds faster, and its training means explosions only do it half the harm they do to anyone else.
+    price: 150
+    tier: BASIC
+    availability: PURCHASE
+    fuseBonus: { type: BOMB_DEFUSING, level: 3 }
+    hotbar:
+      - {
+          material: IRON_SWORD,
+          amount: 1,
+          name: null,
+          enchantments: {},
+          look: null,
+        }
+    armor:
+      - { material: CHAINMAIL_BOOTS, slot: BOOTS, enchantments: {}, dye: null }
+      - {
+          material: CHAINMAIL_LEGGINGS,
+          slot: LEGGINGS,
+          enchantments: {},
+          dye: null,
+        }
+      - {
+          material: CHAINMAIL_CHESTPLATE,
+          slot: CHESTPLATE,
+          enchantments: {},
+          dye: null,
+        }
+      - {
+          material: CHAINMAIL_HELMET,
+          slot: HELMET,
+          enchantments: {},
+          dye: null,
+        }
+    ability: sapper
+    icon: SHEARS
+    iconTint: null
+    summary:
+      - "Fuse with Bomb Defusing III"
+      - "Half damage from explosions"
+      - "Iron sword, full chainmail"
+  - id: saboteur
+    name: Saboteur
+    description: >-
+      A quiet bomber. Its fuse arms three seconds faster, and while its team arms a bomb the enemy cannot see how far along the fuse is until there are ten seconds left.
+    price: 200
+    tier: BASIC
+    availability: PURCHASE
+    fuseBonus: { type: BOMB_ARMING, level: 3 }
+    hotbar:
+      - {
+          material: STONE_SWORD,
+          amount: 1,
+          name: null,
+          enchantments: {},
+          look: null,
+        }
+    armor:
+      - {
+          material: LEATHER_BOOTS,
+          slot: BOOTS,
+          enchantments: {},
+          dye: "#2B2B2B",
+        }
+      - {
+          material: LEATHER_LEGGINGS,
+          slot: LEGGINGS,
+          enchantments: {},
+          dye: "#2B2B2B",
+        }
+      - {
+          material: LEATHER_CHESTPLATE,
+          slot: CHESTPLATE,
+          enchantments: {},
+          dye: "#2B2B2B",
+        }
+      - {
+          material: LEATHER_HELMET,
+          slot: HELMET,
+          enchantments: {},
+          dye: "#2B2B2B",
+        }
+    ability: saboteur
+    icon: REDSTONE_TORCH
+    iconTint: null
+    summary:
+      - "Fuse with Bomb Arming III"
+      - "Hides your team's arming progress"
+      - "until 10 seconds are left"
+  - id: spotter
+    name: Spotter
+    description: >-
+      A scout who marks targets. Looking through its spyglass makes every enemy in sight within 60 blocks glow for its team for six seconds.
+    price: 250
+    tier: MID
+    availability: PURCHASE
+    fuseBonus: null
+    hotbar:
+      - {
+          material: IRON_SWORD,
+          amount: 1,
+          name: null,
+          enchantments: {},
+          look: null,
+        }
+      - {
+          material: SPYGLASS,
+          amount: 1,
+          name: "Spotter's Glass",
+          enchantments: {},
+          look:
+            {
+              nameColor: "aqua",
+              lore: ["Use to mark enemies in sight for your team"],
+              loreColor: "green",
+              glint: false,
+              dye: null,
+            },
+        }
+    armor:
+      - { material: CHAINMAIL_BOOTS, slot: BOOTS, enchantments: {}, dye: null }
+      - { material: IRON_LEGGINGS, slot: LEGGINGS, enchantments: {}, dye: null }
+      - {
+          material: IRON_CHESTPLATE,
+          slot: CHESTPLATE,
+          enchantments: {},
+          dye: null,
+        }
+      - {
+          material: CHAINMAIL_HELMET,
+          slot: HELMET,
+          enchantments: {},
+          dye: null,
+        }
+    ability: spotter
+    icon: SPYGLASS
+    iconTint: null
+    summary:
+      - "Spyglass marks enemies in sight"
+      - "They glow for your team for 6s"
+      - "30 second recharge"
+  - id: grappler
+    name: Grappler
+    description: >-
+      A climber with a grappling hook. Cast it and reel in to be pulled to the hook, then land without fall damage.
+    price: 300
+    tier: MID
+    availability: PURCHASE
+    fuseBonus: null
+    hotbar:
+      - {
+          material: STONE_SWORD,
+          amount: 1,
+          name: null,
+          enchantments: {},
+          look: null,
+        }
+      - {
+          material: FISHING_ROD,
+          amount: 1,
+          name: "Grappling Hook",
+          enchantments: {},
+          look:
+            {
+              nameColor: "gold",
+              lore: ["Cast, then reel in to be pulled to the hook"],
+              loreColor: "green",
+              glint: false,
+              dye: null,
+            },
+        }
+    armor:
+      - { material: IRON_BOOTS, slot: BOOTS, enchantments: {}, dye: null }
+      - {
+          material: CHAINMAIL_LEGGINGS,
+          slot: LEGGINGS,
+          enchantments: {},
+          dye: null,
+        }
+      - {
+          material: IRON_CHESTPLATE,
+          slot: CHESTPLATE,
+          enchantments: {},
+          dye: null,
+        }
+      - {
+          material: CHAINMAIL_HELMET,
+          slot: HELMET,
+          enchantments: {},
+          dye: null,
+        }
+    ability: grappler
+    icon: FISHING_ROD
+    iconTint: null
+    summary:
+      - "Hook pulls you to where it lands"
+      - "No fall damage for 3s after"
+      - "5 second recharge"
+  - id: bannerman
+    name: Bannerman
+    description: >-
+      A rallying point for its team. It plants a banner that gives nearby allies Regeneration until the enemy tears it down.
+    price: 300
+    tier: MID
+    availability: PURCHASE
+    fuseBonus: null
+    hotbar:
+      - {
+          material: IRON_SWORD,
+          amount: 1,
+          name: null,
+          enchantments: {},
+          look: null,
+        }
+      - {
+          material: WHITE_BANNER,
+          amount: 1,
+          name: "Rallying Banner",
+          enchantments: {},
+          look:
+            {
+              nameColor: "gold",
+              lore: ["Place to give allies within 6 blocks Regeneration"],
+              loreColor: "green",
+              glint: false,
+              dye: "team",
+            },
+        }
+    armor:
+      - { material: IRON_BOOTS, slot: BOOTS, enchantments: {}, dye: null }
+      - { material: IRON_LEGGINGS, slot: LEGGINGS, enchantments: {}, dye: null }
+      - {
+          material: CHAINMAIL_CHESTPLATE,
+          slot: CHESTPLATE,
+          enchantments: {},
+          dye: null,
+        }
+      - { material: IRON_HELMET, slot: HELMET, enchantments: {}, dye: null }
+    ability: bannerman
+    icon: WHITE_BANNER
+    iconTint: null
+    summary:
+      - "Plant a banner: Regeneration I"
+      - "for allies within 6 blocks"
+      - "Enemies break it in 3 hits"
+  - id: engineer
+    name: Engineer
+    description: >-
+      A builder of cover. It raises a short-lived barricade wherever it looks, though never right beside a bomb.
+    price: 400
+    tier: ADVANCED
+    availability: PURCHASE
+    fuseBonus: null
+    hotbar:
+      - {
+          material: STONE_SWORD,
+          amount: 1,
+          name: null,
+          enchantments: {},
+          look: null,
+        }
+      - {
+          material: BRICKS,
+          amount: 1,
+          name: "Barricade",
+          enchantments: {},
+          look:
+            {
+              nameColor: "gold",
+              lore: ["Right click a block to raise a 3x2 wall for 8 seconds"],
+              loreColor: "green",
+              glint: false,
+              dye: null,
+            },
+        }
+    armor:
+      - { material: IRON_BOOTS, slot: BOOTS, enchantments: {}, dye: null }
+      - { material: IRON_LEGGINGS, slot: LEGGINGS, enchantments: {}, dye: null }
+      - {
+          material: IRON_CHESTPLATE,
+          slot: CHESTPLATE,
+          enchantments: {},
+          dye: null,
+        }
+      - { material: IRON_HELMET, slot: HELMET, enchantments: {}, dye: null }
+    ability: engineer
+    icon: BRICKS
+    iconTint: null
+    summary:
+      - "Raises a 3x2 wall for 8 seconds"
+      - "Not within 4 blocks of a bomb"
+      - "25 second recharge"
+  - id: tracker
+    name: Tracker
+    description: >-
+      A hunter that reads the ground. It sees the footprints enemies left in the last eight seconds, and its first hit on someone marks them on its team's compasses.
+    price: 400
+    tier: ADVANCED
+    availability: PURCHASE
+    fuseBonus: null
+    hotbar:
+      - {
+          material: IRON_SWORD,
+          amount: 1,
+          name: null,
+          enchantments: {},
+          look: null,
+        }
+      - {
+          material: CROSSBOW,
+          amount: 1,
+          name: null,
+          enchantments: {},
+          look: null,
+        }
+      - {
+          material: ARROW,
+          amount: 32,
+          name: null,
+          enchantments: {},
+          look: null,
+        }
+    armor:
+      - { material: CHAINMAIL_BOOTS, slot: BOOTS, enchantments: {}, dye: null }
+      - { material: IRON_LEGGINGS, slot: LEGGINGS, enchantments: {}, dye: null }
+      - {
+          material: IRON_CHESTPLATE,
+          slot: CHESTPLATE,
+          enchantments: {},
+          dye: null,
+        }
+      - {
+          material: CHAINMAIL_HELMET,
+          slot: HELMET,
+          enchantments: {},
+          dye: null,
+        }
+    ability: tracker
+    icon: CROSSBOW
+    iconTint: null
+    summary:
+      - "Sees enemy footprints"
+      - "First hit marks the target"
+      - "on your team's compasses"
+  - id: decoy
+    name: Decoy
+    description: >-
+      A trickster. It sends a running copy of itself the way it looks and turns invisible while the enemy chases the copy.
+    price: 450
+    tier: ADVANCED
+    availability: PURCHASE
+    fuseBonus: null
+    hotbar:
+      - {
+          material: IRON_SWORD,
+          amount: 1,
+          name: null,
+          enchantments: {},
+          look: null,
+        }
+      - {
+          material: ARMOR_STAND,
+          amount: 1,
+          name: "Decoy",
+          enchantments: {},
+          look:
+            {
+              nameColor: "gold",
+              lore: ["Right click to send a running copy of you"],
+              loreColor: "green",
+              glint: false,
+              dye: null,
+            },
+        }
+    armor:
+      - { material: IRON_BOOTS, slot: BOOTS, enchantments: {}, dye: null }
+      - { material: IRON_LEGGINGS, slot: LEGGINGS, enchantments: {}, dye: null }
+      - {
+          material: IRON_CHESTPLATE,
+          slot: CHESTPLATE,
+          enchantments: {},
+          dye: null,
+        }
+      - { material: IRON_HELMET, slot: HELMET, enchantments: {}, dye: null }
+    ability: decoy
+    icon: ARMOR_STAND
+    iconTint: null
+    summary:
+      - "Sends a running copy of you"
+      - "You turn invisible for 3s"
+      - "35 second recharge"

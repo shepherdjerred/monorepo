@@ -39,4 +39,16 @@ public interface CombatantActions {
 
   /** Pick {@code kitId} in the lobby. */
   Optional<ActionRefusal> pickKit(CombatantId id, String kitId);
+
+  /**
+   * Use the kit item in hotbar {@code slot} (0 to 8) as a right-click on it would: a Medic's wand,
+   * an RPG, a landmine at the feet, a Spotter's glass and so on.
+   */
+  Optional<ActionRefusal> useKit(CombatantId id, int slot, KitUse use);
+
+  /**
+   * Call in the first killstreak reward carried that falls from the sky (a supply crate, attack
+   * dogs, an iron golem, napalm), on the block at the feet, as using its item there would.
+   */
+  Optional<ActionRefusal> useStreak(CombatantId id);
 }

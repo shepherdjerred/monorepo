@@ -25,4 +25,10 @@ public interface ChannelRegistry {
 
   /** Adds a tap that hears every delivered channel line. */
   Subscription registerTap(ChatTap tap);
+
+  /**
+   * Colours speakers' names per viewer. One provider at a time; a second while the first is
+   * registered is a wiring bug and throws.
+   */
+  Subscription registerNameColors(NameColors colors);
 }

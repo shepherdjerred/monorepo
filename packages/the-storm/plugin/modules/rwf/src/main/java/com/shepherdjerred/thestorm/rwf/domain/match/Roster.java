@@ -4,8 +4,11 @@
 // packages/the-storm/NOTICE.
 package com.shepherdjerred.thestorm.rwf.domain.match;
 
+import com.shepherdjerred.thestorm.rwf.domain.combat.AttackType;
+import com.shepherdjerred.thestorm.rwf.domain.combat.Attribution;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.CombatantId;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
+import com.shepherdjerred.thestorm.rwf.domain.kit.KitAccess;
 import com.shepherdjerred.thestorm.rwf.domain.kit.KitBook;
 import java.time.Instant;
 import java.util.List;
@@ -52,7 +55,13 @@ final class Roster {
 
   private static void depart(Draft draft, Combatant member, Instant now) {
     if (draft.phase instanceof Phase.Live) {
+      var wasAlive = member.alive();
       draft.depart(member.left(now, true));
+      if (wasAlive) {
+        Kits.died(
+            draft,
+            new Kits.Loss(member.id(), Attribution.of(Optional.empty(), AttackType.QUIT), now));
+      }
       draft.effect(new MatchEffect.Restore(member.id()));
       draft.announce(Notice.of(NoticeKind.LEFT, "player", member.name()));
       Standings.check(draft, now);
@@ -67,10 +76,13 @@ final class Roster {
   }
 
   /**
-   * {@code id} picks {@code kitId}: while kits are open, or for an operator at any point until the
-   * match goes live (the kit is given at once once teams are dealt).
+   * {@code id} picks {@code kitId}: while kits are open, and only a kit {@code access} allows; or,
+   * with no access to check, for an operator at any point until the match goes live (the kit is
+   * given at once once teams are dealt).
    */
-  static Optional<MatchError> pickKit(Draft draft, CombatantId id, String kitId, boolean forced) {
+  static Optional<MatchError> pickKit(
+      Draft draft, CombatantId id, String kitId, Optional<KitAccess> access) {
+    var forced = access.isEmpty();
     var member = draft.member(id);
     if (member.isEmpty()) {
       return Optional.of(MatchError.NOT_A_MEMBER);
@@ -82,6 +94,9 @@ final class Roster {
     var kit = KitBook.byId(kitId);
     if (kit.isEmpty()) {
       return Optional.of(MatchError.UNKNOWN_KIT);
+    }
+    if (access.isPresent() && !access.orElseThrow().allows(kit.orElseThrow())) {
+      return Optional.of(MatchError.KIT_LOCKED);
     }
     var current = member.orElseThrow();
     if (draft.phase instanceof Phase.Freeze) {

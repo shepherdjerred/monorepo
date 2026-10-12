@@ -306,6 +306,8 @@ export const THE_STORM_BOOLEAN_FLAG_KEYS = [
   "the-storm-merchant-enabled",
   "the-storm-shop-rentals-enabled",
   "the-storm-rwf-enabled",
+  "the-storm-rwf-kits-enabled",
+  "the-storm-rwf-killstreaks-enabled",
   "the-storm-rwfbots-chat-enabled",
   "the-storm-rwfbots-learning-enabled",
   "the-storm-rwf-match-flow-enabled",

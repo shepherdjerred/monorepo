@@ -18,6 +18,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.geom.Facing;
  * @param decisionTick the snapshot tick of the decision the waypoint index belongs to
  * @param lastJumpTick when the bot last jumped
  * @param abilityUsedFor the decision tick whose ability has already been triggered, or -1
+ * @param nextKitUse the earliest tick a kit item may be used again
  */
 public record ReflexState(
     AimState aim,
@@ -32,7 +33,8 @@ public record ReflexState(
     int waypointIndex,
     long decisionTick,
     long lastJumpTick,
-    long abilityUsedFor) {
+    long abilityUsedFor,
+    long nextKitUse) {
 
   public ReflexState {
     if (strafeDir != 1 && strafeDir != -1) {
@@ -45,7 +47,7 @@ public record ReflexState(
 
   /** A fresh life looking along {@code look}. */
   public static ReflexState initial(Facing look) {
-    return new ReflexState(AimState.looking(look), 0, -1, 1, 0, -1, -1, false, 0, 0, -1, -1, -1);
+    return new ReflexState(AimState.looking(look), 0, -1, 1, 0, -1, -1, false, 0, 0, -1, -1, -1, 0);
   }
 
   public boolean isDrawing() {
@@ -70,7 +72,8 @@ public record ReflexState(
         waypointIndex,
         decisionTick,
         lastJumpTick,
-        abilityUsedFor);
+        abilityUsedFor,
+        nextKitUse);
   }
 
   public ReflexState withClick(double newNextClickAt, long newWTapUntil) {
@@ -87,7 +90,8 @@ public record ReflexState(
         waypointIndex,
         decisionTick,
         lastJumpTick,
-        abilityUsedFor);
+        abilityUsedFor,
+        nextKitUse);
   }
 
   public ReflexState withStrafe(int newDir, long newFlip) {
@@ -104,7 +108,8 @@ public record ReflexState(
         waypointIndex,
         decisionTick,
         lastJumpTick,
-        abilityUsedFor);
+        abilityUsedFor,
+        nextKitUse);
   }
 
   public ReflexState withDrawStart(long tick) {
@@ -121,7 +126,8 @@ public record ReflexState(
         waypointIndex,
         decisionTick,
         lastJumpTick,
-        abilityUsedFor);
+        abilityUsedFor,
+        nextKitUse);
   }
 
   public ReflexState withEating(long since, boolean nowHealing) {
@@ -138,7 +144,8 @@ public record ReflexState(
         waypointIndex,
         decisionTick,
         lastJumpTick,
-        abilityUsedFor);
+        abilityUsedFor,
+        nextKitUse);
   }
 
   public ReflexState withNextFuseClick(long tick) {
@@ -155,7 +162,8 @@ public record ReflexState(
         waypointIndex,
         decisionTick,
         lastJumpTick,
-        abilityUsedFor);
+        abilityUsedFor,
+        nextKitUse);
   }
 
   public ReflexState withPath(int index, long forDecisionTick) {
@@ -172,7 +180,8 @@ public record ReflexState(
         index,
         forDecisionTick,
         lastJumpTick,
-        abilityUsedFor);
+        abilityUsedFor,
+        nextKitUse);
   }
 
   public ReflexState withLastJump(long tick) {
@@ -189,7 +198,8 @@ public record ReflexState(
         waypointIndex,
         decisionTick,
         tick,
-        abilityUsedFor);
+        abilityUsedFor,
+        nextKitUse);
   }
 
   public ReflexState withAbilityUsedFor(long tick) {
@@ -206,6 +216,25 @@ public record ReflexState(
         waypointIndex,
         decisionTick,
         lastJumpTick,
+        tick,
+        nextKitUse);
+  }
+
+  public ReflexState withNextKitUse(long tick) {
+    return new ReflexState(
+        aim,
+        nextClickAt,
+        wTapUntil,
+        strafeDir,
+        nextStrafeFlip,
+        drawStart,
+        eatingSince,
+        healing,
+        nextFuseClick,
+        waypointIndex,
+        decisionTick,
+        lastJumpTick,
+        abilityUsedFor,
         tick);
   }
 }

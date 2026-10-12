@@ -1,11 +1,16 @@
 package com.shepherdjerred.thestorm.rwf.adapter.paper;
 
+import com.shepherdjerred.thestorm.rwf.domain.ability.kits.Saboteur;
+import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
 import com.shepherdjerred.thestorm.rwf.domain.map.BombSite;
 import com.shepherdjerred.thestorm.rwf.domain.map.MapDefinition;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchSnapshot;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import net.kyori.adventure.text.Component;
@@ -17,6 +22,7 @@ import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
 import org.bukkit.entity.TNTPrimed;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
@@ -40,6 +46,45 @@ final class BombMarkers {
   private final Map<String, TNTPrimed> primed = new HashMap<>();
   private final Map<String, TextDisplay> holograms = new HashMap<>();
   private final Map<String, BombSite> sites = new HashMap<>();
+  private final Map<String, TextDisplay> concealed = new HashMap<>();
+  private final Map<String, Set<UUID>> hiddenFrom = new HashMap<>();
+  private final Map<String, TeamColor> armers = new HashMap<>();
+
+  /**
+   * Who looks at the bombs and which teams have a Saboteur alive, for {@link #update(MatchSnapshot,
+   * Sabotage)}.
+   *
+   * @param viewers every combatant's entity with their team
+   * @param sabotaging the teams with a living Saboteur
+   */
+  record Sabotage(Map<Player, TeamColor> viewers, Set<TeamColor> sabotaging) {
+
+    /** Nobody sabotaging. */
+    static final Sabotage NONE = new Sabotage(Map.of(), Set.of());
+
+    Sabotage {
+      viewers = Map.copyOf(viewers);
+      sabotaging = Set.copyOf(sabotaging);
+    }
+
+    /** Who watches {@code runner}'s bombs, and which of its teams have a Saboteur alive. */
+    static Sabotage of(MatchRunner runner) {
+      var viewers = new HashMap<Player, TeamColor>();
+      var sabotaging = new HashSet<TeamColor>();
+      for (var member : runner.match().members()) {
+        if (member.team().isEmpty()) {
+          continue;
+        }
+        var team = member.team().orElseThrow();
+        runner.entity(member.id()).ifPresent(player -> viewers.put(player, team));
+        if (member.alive() && member.kit().filter(Saboteur.ID::equals).isPresent()) {
+          sabotaging.add(team);
+        }
+      }
+      return new Sabotage(viewers, sabotaging);
+    }
+  }
+
   private BooleanSupplier original = () -> false;
 
   BombMarkers(PaperContext context, Keys keys, Consumer<Display> style) {
@@ -156,6 +201,7 @@ final class BombMarkers {
     if (hologram != null) {
       hologram.remove();
     }
+    uncover(bombId);
   }
 
   /** The fuse ran out: a bang at the site; the crater is the map's job. */
@@ -175,6 +221,15 @@ final class BombMarkers {
 
   /** Updates every hologram from {@code snapshot} and keeps armed TNT pinned to its site. */
   void update(MatchSnapshot snapshot) {
+    update(snapshot, Sabotage.NONE);
+  }
+
+  /**
+   * Updates every hologram from {@code snapshot}, hiding a Saboteur team's progress from the
+   * viewers {@link Saboteur#hides} names, and keeps armed TNT pinned to its site.
+   */
+  void update(MatchSnapshot snapshot, Sabotage sabotage) {
+    conceal(snapshot, sabotage);
     for (var entry : primed.entrySet()) {
       var site = sites.get(entry.getKey());
       var tnt = entry.getValue();
@@ -240,8 +295,116 @@ final class BombMarkers {
         .orElseGet(() -> Component.text("Unarmed nuke", NamedTextColor.WHITE));
   }
 
+  /** Shows each viewer the true hologram or, while a Saboteur hides it from them, a blank one. */
+  private void conceal(MatchSnapshot snapshot, Sabotage sabotage) {
+    for (var view : snapshot.bombs()) {
+      remember(view);
+      var main = holograms.get(view.id());
+      var site = sites.get(view.id());
+      if (main == null || site == null) {
+        continue;
+      }
+      var hidden = hiddenFrom(view, sabotage);
+      if (hidden.isEmpty()) {
+        uncover(view.id());
+      } else {
+        cover(view.id(), main, site, hidden);
+      }
+    }
+  }
+
+  /** Keeps the last team seen arming {@code view}: an armed bomb's state names only its owner. */
+  private void remember(MatchSnapshot.BombView view) {
+    switch (view.state()) {
+      case MatchSnapshot.BombView.State.Arming arming -> armers.put(view.id(), arming.team());
+      case MatchSnapshot.BombView.State.Idle _, MatchSnapshot.BombView.State.Destroyed _ ->
+          armers.remove(view.id());
+      case MatchSnapshot.BombView.State.Armed _ -> {}
+    }
+  }
+
+  /** Whether a Saboteur keeps a bomb's progress from a team, for the teams' sidebars. */
+  java.util.function.BiPredicate<MatchSnapshot.BombView, TeamColor> concealed(Sabotage sabotage) {
+    return (view, team) ->
+        Saboteur.hides(
+            view, Optional.ofNullable(armers.get(view.id())), team, sabotage.sabotaging());
+  }
+
+  /** The viewers a Saboteur keeps from {@code view}'s progress. */
+  private Set<UUID> hiddenFrom(MatchSnapshot.BombView view, Sabotage sabotage) {
+    var armer = Optional.ofNullable(armers.get(view.id()));
+    var hidden = new HashSet<UUID>();
+    sabotage
+        .viewers()
+        .forEach(
+            (viewer, team) -> {
+              if (Saboteur.hides(view, armer, team, sabotage.sabotaging())) {
+                hidden.add(viewer.getUniqueId());
+              }
+            });
+    return hidden;
+  }
+
+  /** {@code hidden} see a blank hologram over {@code bombId}; everyone else, the true one. */
+  private void cover(String bombId, TextDisplay main, BombSite site, Set<UUID> hidden) {
+    var blank =
+        concealed.computeIfAbsent(
+            bombId,
+            id ->
+                world()
+                    .spawn(
+                        main.getLocation(),
+                        TextDisplay.class,
+                        display -> {
+                          display.setPersistent(false);
+                          style.accept(display);
+                          keys.tagBomb(display, id);
+                        },
+                        SpawnReason.CUSTOM));
+    blank.text(
+        title(site)
+            .appendNewline()
+            .append(Component.text("Something is happening...", NamedTextColor.GRAY)));
+    for (var player : world().getPlayers()) {
+      var hide = hidden.contains(player.getUniqueId());
+      show(player, main, !hide);
+      show(player, blank, hide);
+    }
+    hiddenFrom.put(bombId, hidden);
+  }
+
+  private void show(Player player, Entity display, boolean visible) {
+    if (visible) {
+      player.showEntity(context.plugin(), display);
+    } else {
+      player.hideEntity(context.plugin(), display);
+    }
+  }
+
+  /** Nobody is kept from {@code bombId}'s progress any more. */
+  private void uncover(String bombId) {
+    var blank = concealed.remove(bombId);
+    if (blank != null) {
+      blank.remove();
+    }
+    var hidden = hiddenFrom.remove(bombId);
+    var main = holograms.get(bombId);
+    if (hidden == null || main == null) {
+      return;
+    }
+    for (var player : world().getPlayers()) {
+      if (hidden.contains(player.getUniqueId())) {
+        player.showEntity(context.plugin(), main);
+      }
+    }
+  }
+
   /** Removes every entity and forgets the map. */
   void clear() {
+    concealed.values().forEach(Entity::remove);
+    concealed.clear();
+    hiddenFrom.clear();
+    armers.clear();
     primed.values().forEach(Entity::remove);
     primed.clear();
     holograms.values().forEach(Entity::remove);
