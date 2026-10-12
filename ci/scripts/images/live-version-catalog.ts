@@ -84,6 +84,9 @@ export function retainPublishedImagePins(
         entry.value === `0.0.0@${UNPUBLISHED_IMAGE_DIGEST}`
           ? 0n
           : releaseNumber(entry.value);
+      // Prepared services can remain unpublished across unrelated releases.
+      // Their marker cannot replace an already published pin in current main.
+      if (value === `0.0.0@${UNPUBLISHED_IMAGE_DIGEST}`) return entry;
       const publishedBuild = releaseNumber(value);
       const withdrawn = withdrawnCandidates[entry.name];
       if (withdrawn !== undefined && publishedBuild <= BigInt(withdrawn)) {

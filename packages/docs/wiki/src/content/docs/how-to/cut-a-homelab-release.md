@@ -162,6 +162,12 @@ If you expected a rebuild and got none, check whether your commit only moved a
 pin. The `images` workflow prints its comparison base, changed paths, target
 reasons, and push outcomes as an image release summary in the Woodpecker log.
 
+If an unrelated release fails on a prepared service, check its bootstrap pin.
+The [pin retention contract](https://raw.githubusercontent.com/shepherdjerred/monorepo/main/ci/scripts/images/live-version-catalog.ts)
+accepts the exact `0.0.0@sha256:` marker with an all-zero digest and preserves
+published pins. Publish and verify the service image, then commit its immutable
+release pin before activating it.
+
 If the image push finishes but candidate classification reports that no managed
 pin exists, do not retry the push. The comparison digest and commit-back key
 come from `packages/version-catalog/src/catalog.json`; verify that the
