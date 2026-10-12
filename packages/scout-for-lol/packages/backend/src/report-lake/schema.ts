@@ -116,10 +116,11 @@ export function lakeSchemaFingerprint(
     string,
     DuckDbColumnType
   > = RAW_DOCUMENT_LAKE_COLUMNS,
+  matchColumns: Record<string, DuckDbColumnType> = MATCH_LAKE_COLUMNS,
 ): string {
   const tables: Record<string, Record<string, DuckDbColumnType>> = {
     raw_documents: rawDocumentColumns,
-    matches: MATCH_LAKE_COLUMNS,
+    matches: matchColumns,
     match_teams: MATCH_TEAM_LAKE_COLUMNS,
     match_team_bans: MATCH_TEAM_BAN_LAKE_COLUMNS,
     prematch: PREMATCH_LAKE_COLUMNS,

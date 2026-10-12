@@ -17,11 +17,17 @@ import {
   TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS,
 } from "@scout-for-lol/data/model/reports/timeline-lake-columns.ts";
 import { duckDbColumnsSpec } from "#src/report-lake/schema.ts";
+import { readBuildFingerprint } from "#src/report-lake/build-manifest.ts";
+import { reportLakeLayout } from "#src/report-lake/schema-upgrade/layout.ts";
 import { listStagingFiles } from "#src/report-lake/staging.ts";
 import { snapshotStagingGenerations } from "#src/report-lake/staging/generations.ts";
 import { retryLakeQuery } from "#src/reports/duckdb/lake/query-retry.ts";
 import type { LakeFiles as CapturedLakeFiles } from "#src/reports/duckdb/lake/files.ts";
 import { assertReportLakeAccess } from "#src/reports/duckdb/lake/access.ts";
+import {
+  columnList,
+  parquetColumnList,
+} from "#src/reports/duckdb/lake/column-list.ts";
 
 /**
  * Lake file resolution and relation-SQL builders for the DuckDB report
@@ -116,6 +122,7 @@ export async function resolveLakeFiles(
     return {
       matchesParquet: [],
       matchesStaging,
+      matchesHasDataSource: true,
       matchTeamsParquet: [],
       matchTeamsStaging,
       matchTeamBansParquet: [],
@@ -160,9 +167,13 @@ export async function resolveLakeFiles(
   const accountsParquet = (await Bun.file(accountsPath).exists())
     ? accountsPath
     : undefined;
+  const matchesHasDataSource =
+    reportLakeLayout(await readBuildFingerprint(buildDir)) !==
+    "legacy-identity-map-pre-data-source";
   return {
     matchesParquet,
     matchesStaging,
+    matchesHasDataSource,
     matchTeamsParquet,
     matchTeamsStaging,
     matchTeamBansParquet,
@@ -183,11 +194,6 @@ export async function resolveLakeFiles(
   };
 }
 
-/** Column list rendered from our own constants — safe to embed in SQL text. */
-function columnList(columns: Record<string, string>): string {
-  return Object.keys(columns).join(", ");
-}
-
 type UnionSourceInput = {
   parquetFiles: string[];
   stagingFiles: string[];
@@ -195,6 +201,8 @@ type UnionSourceInput = {
     string,
     "VARCHAR" | "INTEGER" | "BIGINT" | "DOUBLE" | "BOOLEAN" | "TIMESTAMP"
   >;
+  /** Physical-file compatibility projections for exact older layouts. */
+  parquetColumnExpressions?: Record<string, string>;
   dedupe:
     | "matches"
     | "match-teams"
@@ -235,7 +243,7 @@ function compactedFirstSource(
   const cols = columnList(input.columns);
   const where =
     input.predicate.sql.length > 0 ? ` WHERE ${input.predicate.sql}` : "";
-  const compacted = `SELECT ${cols}, 1 AS src FROM read_parquet(?)${where}`;
+  const compacted = `SELECT ${parquetColumnList(input.columns, input.parquetColumnExpressions)}, 1 AS src FROM read_parquet(?)${where}`;
   const compactedParams = [
     listParam(input.parquetFiles),
     ...input.predicate.params,
@@ -275,7 +283,9 @@ export function buildUnionSource(
   const params: BoundParam[] = [];
 
   if (input.parquetFiles.length > 0) {
-    branches.push(`SELECT ${cols}, 1 AS src FROM read_parquet(?)${where}`);
+    branches.push(
+      `SELECT ${parquetColumnList(input.columns, input.parquetColumnExpressions)}, 1 AS src FROM read_parquet(?)${where}`,
+    );
     params.push(listParam(input.parquetFiles), ...input.predicate.params);
   }
   if (input.stagingFiles.length > 0) {
@@ -336,10 +346,14 @@ export function buildMatchesSource(
   predicate: SqlFragment,
   loadout: readonly string[] = [],
 ): SqlFragment | undefined {
+  const legacyParquet = files.matchesHasDataSource === false;
   return buildUnionSource({
     parquetFiles: files.matchesParquet,
     stagingFiles: files.matchesStaging,
     columns: matchReadColumns(loadout),
+    ...(legacyParquet
+      ? { parquetColumnExpressions: { data_source: "CAST(NULL AS VARCHAR)" } }
+      : {}),
     dedupe: "matches",
     predicate,
   });

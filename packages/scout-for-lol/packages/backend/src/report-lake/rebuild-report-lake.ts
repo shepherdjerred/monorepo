@@ -16,6 +16,7 @@ import { reportLakeSchemaUpgradeEnabled } from "#src/config/report-lake-schema-u
 import { readBuildFingerprint } from "#src/report-lake/build-manifest.ts";
 import {
   rawDocumentColumns,
+  matchColumns,
   reportLakeLayout,
   type ReportLakeLayout,
 } from "#src/report-lake/schema-upgrade/layout.ts";
@@ -32,7 +33,6 @@ import {
   readCurrentBuildDir,
 } from "#src/report-lake/paths.ts";
 import {
-  MATCH_LAKE_COLUMNS,
   MATCH_TEAM_BAN_LAKE_COLUMNS,
   MATCH_TEAM_LAKE_COLUMNS,
   PREMATCH_LAKE_COLUMNS,
@@ -69,11 +69,11 @@ async function rebuildLayout(currentDir: string | undefined): Promise<{
   }
   // Do not cold-upgrade during bridge deployment. Once published, the current
   // layout never depends on the temporary rollout control again.
-  const layout =
-    previousLayout === "legacy-identity-map" &&
-    !(await reportLakeSchemaUpgradeEnabled())
-      ? "legacy-identity-map"
-      : "current";
+  const retainPreviousLayout =
+    previousLayout !== undefined &&
+    previousLayout !== "current" &&
+    !(await reportLakeSchemaUpgradeEnabled());
+  const layout = retainPreviousLayout ? previousLayout : "current";
   return { previousLayout, layout };
 }
 
@@ -202,7 +202,7 @@ export async function rebuildReportLake(
             await copyNdjsonToParquet(session, {
               sourcePath: matchesTmp,
               outputDirectory: path.join(buildDir, "matches"),
-              columns: MATCH_LAKE_COLUMNS,
+              columns: matchColumns(layout),
               partitionByMonth: true,
             });
           }
@@ -261,7 +261,11 @@ export async function rebuildReportLake(
     });
     deadline.throwIfAborted();
 
-    if (previousLayout === "legacy-identity-map" && layout === "current") {
+    if (
+      previousLayout !== undefined &&
+      previousLayout !== "current" &&
+      layout === "current"
+    ) {
       onProgress?.({ phase: "validating-prepared-build" });
       if (
         skippedMatches +
