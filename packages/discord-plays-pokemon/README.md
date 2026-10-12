@@ -105,6 +105,29 @@ for repeatable real-model catch measurements. It requires an immutable
 Git worktrees and never overwrites existing results. Read the package-local
 `pokemon-goal-benchmark` skill for the benchmark workflow.
 
+## Web play
+
+The Emerald page uses Discord OAuth and shares its feed, sound, controls, and
+session hooks with Mario Kart through `@shepherdjerred/discord-plays-web`.
+Sign in and join the running game's voice channel to watch its video and sound.
+Sending inputs also requires `stream.minimum_in_channel` real players.
+Goal mode keeps the controls until its lease ends. The server checks the
+session cookie and current voice membership for each command; the page never
+chooses its own identity or channel.
+
+When the web API is enabled, set `WEB_PUBLIC_ORIGIN` to the page's origin and
+`DISCORD_CLIENT_SECRET` to the bot application's OAuth secret. Register
+`https://pokebot.sjer.red/api/auth/discord/callback` in that application's
+Discord OAuth redirect list before deploying. For local sign-in, register the
+local origin plus `/api/auth/discord/callback` and use that origin for the page
+and backend proxy. Cookies are HttpOnly and Secure on HTTPS; SQLite sessions
+live at `<state_root_dir>/web-sessions.sqlite` on the saves volume.
+
+Enable `[driver_feed].enabled` or `DRIVER_FEED_ENABLED=true` to serve the feed.
+Homelab enables it and injects the OAuth secret from the `pokemon-config`
+1Password item. WebSockets admit only the configured origin. Signed-out
+visitors can read the progress panels; the video requires voice membership.
+
 ## Deployment
 
 Runs on the homelab Kubernetes cluster via ArgoCD

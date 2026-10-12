@@ -204,7 +204,6 @@
       "project": ["src/**/*.ts"]
     },
     "packages/discord-plays-pokemon/packages/frontend": {
-      "entry": ["src/stories/**/*.tsx"],
       "project": ["src/**/*.{ts,tsx,css}", "*.ts"]
     },
     "packages/discord-plays-pokemon": {

@@ -50,6 +50,25 @@ export function PressButton({
       aria-pressed={pressed}
       disabled={disabled}
       className={className}
+      onKeyDown={(event) => {
+        if (event.key !== " " && event.key !== "Enter") return;
+        event.preventDefault();
+        event.stopPropagation();
+        if (!event.repeat) onPress(code);
+      }}
+      onKeyUp={(event) => {
+        if (event.key !== " " && event.key !== "Enter") return;
+        event.preventDefault();
+        event.stopPropagation();
+        end();
+      }}
+      onBlur={end}
+      onClick={(event) => {
+        // Assistive activation may emit a click without pointer/key events.
+        if (event.detail !== 0) return;
+        onPress(code);
+        onRelease(code);
+      }}
       onPointerDown={(event) => {
         event.preventDefault();
         event.currentTarget.setPointerCapture(event.pointerId);

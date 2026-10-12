@@ -22,11 +22,6 @@ export const StatusSchema = z.strictObject({
   playBlocker: PlayBlockerSchema.nullable(),
 });
 
-export type StatusRequest = z.infer<typeof StatusRequestSchema>;
-export const StatusRequestSchema = z.strictObject({
-  kind: z.literal("status"),
-});
-
 /** Sent on request, and pushed when the session or the viewer's voice state changes. */
 export type StatusResponse = z.infer<typeof StatusResponseSchema>;
 export const StatusResponseSchema = z.strictObject({

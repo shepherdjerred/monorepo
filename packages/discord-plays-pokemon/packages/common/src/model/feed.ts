@@ -54,6 +54,9 @@ export const InputRejectionSchema = z.enum([
   "no-session",
   "invalid",
   "goal-mode",
+  "signed-out",
+  "not-in-voice",
+  "too-few-players",
 ]);
 
 export type InputResultResponse = z.infer<typeof InputResultResponseSchema>;

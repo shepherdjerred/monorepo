@@ -50,11 +50,14 @@ export function signIn(): void {
 export function useSignOut(socket: Socket): () => Promise<void> {
   const queryClient = useQueryClient();
   return async () => {
-    await fetch(AUTH_LOGOUT_PATH, {
+    const response = await fetch(AUTH_LOGOUT_PATH, {
       method: "POST",
       credentials: "same-origin",
       redirect: "manual",
     });
+    if (!response.ok) {
+      throw new Error(`Could not sign out (${String(response.status)}).`);
+    }
     queryClient.setQueryData<Me>(ME_QUERY_KEY, SIGNED_OUT);
     socket.disconnect().connect();
   };

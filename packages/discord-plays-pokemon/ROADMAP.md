@@ -22,16 +22,7 @@ This document tracks the planned work for this repository.
   - Possibly some sort of wizard/GUI
   - GUI could help the user install dependencies/configure the application
 - Database with Prisma
-- Notifications to use web UI for easier input
 - Stream overlay
-
-### UI
-
-- Auth
-  - Could use a JWT. Send via Discord, save to browser. Requires a server-side secret
-  - Does Discord do SSO?
-- Player must be in channel to send commands
-- Player must be watching stream
 
 ## In Progress
 

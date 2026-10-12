@@ -31,7 +31,10 @@ fix lands once.
   web UIs talk to: schema-validated requests, the ping ack with server time,
   and upgrade policing (`destroyUpgrade: false` plus an explicit list of
   upgrade paths other handlers own). Games subscribe to its `events` and own
-  dispatch.
+  dispatch. `allowedOrigin` restricts handshakes to a deployment's public
+  origin; games opt into this alongside their cookie identity hook.
+- `src/webserver/protocol.ts` — the browser-safe status request shared by the
+  games; their response payloads stay in each game's common package.
 - `src/driver-feed/` — the low-latency in-browser video feed. A second ffmpeg
   process encodes the game's frames to H.264 (`encoder.ts`), `flv.ts` and
   `annex-b.ts` cut its output into access units, `hub.ts` fans them out to

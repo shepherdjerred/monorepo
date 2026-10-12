@@ -8,7 +8,6 @@ import type {
   GameEventEntry,
   GameStateView,
   InputsResponse,
-  Player,
   StateResponse,
   Status,
   StatusResponse,
@@ -21,6 +20,8 @@ import type {
   PokemonGameDriver,
 } from "#src/lifecycle/pokemon-driver.ts";
 import { logger } from "#src/logger.ts";
+import type { DiscordUser } from "@shepherdjerred/discord-plays-core/auth/protocol.ts";
+import type { PlayPolicy } from "./play-policy.ts";
 
 /** ~0.5 s at the GBA's ~60 fps: often enough to feel live. */
 const STATE_POLL_FRAMES = 30;
@@ -34,6 +35,8 @@ export type WebPublisherOptions = {
   >;
   readonly botClient: BotClient;
   readonly driverFeedEnabled: boolean;
+  readonly policy: PlayPolicy;
+  readonly identify: (socket: Socket) => Promise<DiscordUser | undefined>;
 };
 
 export class WebPublisher {
@@ -41,6 +44,8 @@ export class WebPublisher {
   private readonly driver: WebPublisherOptions["driver"];
   private readonly botClient: BotClient;
   private readonly driverFeedEnabled: boolean;
+  private readonly policy: PlayPolicy;
+  private readonly identify: WebPublisherOptions["identify"];
   private state: GameStateView | null = null;
   private stateJson = "null";
   private readonly events: GameEventEntry[] = [];
@@ -51,6 +56,8 @@ export class WebPublisher {
     this.driver = options.driver;
     this.botClient = options.botClient;
     this.driverFeedEnabled = options.driverFeedEnabled;
+    this.policy = options.policy;
+    this.identify = options.identify;
   }
 
   start(): void {
@@ -84,12 +91,12 @@ export class WebPublisher {
       }
     });
     this.io.on("connection", (socket: Socket) => {
-      this.sendSnapshot(socket);
+      void this.identifyAndSend(socket, true);
     });
   }
 
   /** Everything a freshly opened page needs to render. */
-  sendSnapshot(socket: Pick<Socket, "emit">): void {
+  sendSnapshot(socket: Pick<Socket, "emit">, user: DiscordUser | undefined): void {
     const state: StateResponse = { kind: "state", value: this.state };
     const events: EventsResponse = { kind: "events", value: [...this.events] };
     const inputs: InputsResponse = {
@@ -99,41 +106,50 @@ export class WebPublisher {
     socket.emit("response", state);
     socket.emit("response", events);
     socket.emit("response", inputs);
-    this.sendStatus(socket);
+    this.sendStatus(socket, user);
   }
 
-  sendStatus(socket: Pick<Socket, "emit">): void {
-    const response: StatusResponse = { kind: "status", value: this.status() };
+  sendStatus(
+    socket: Pick<Socket, "emit">,
+    user: DiscordUser | undefined,
+  ): void {
+    const response: StatusResponse = {
+      kind: "status",
+      value: this.status(user),
+    };
     socket.emit("response", response);
   }
 
   private broadcastStatus(): void {
-    const response: StatusResponse = { kind: "status", value: this.status() };
-    this.io.emit("response", response);
+    for (const socket of this.io.sockets.sockets.values()) {
+      void this.identifyAndSend(socket, false);
+    }
   }
 
-  private status(): Status {
+  private async identifyAndSend(
+    socket: Socket,
+    snapshot: boolean,
+  ): Promise<void> {
+    try {
+      const user = await this.identify(socket);
+      if (!socket.connected) return;
+      if (snapshot) this.sendSnapshot(socket, user);
+      else this.sendStatus(socket, user);
+    } catch (error) {
+      logger.error("web session lookup failed", error);
+    }
+  }
+
+  private status(user: DiscordUser | undefined): Status {
     const runtime = this.driver.getActiveRuntime();
     return {
       sessionActive: runtime !== null,
       driverFeedEnabled: this.driverFeedEnabled,
-      playerList: runtime === null ? [] : this.playersIn(runtime),
+      playerList: this.policy.players(),
+      playBlocker: this.policy.blockerFor(user),
+      voiceChannelName: this.policy.voiceChannelName(),
+      minimumInChannel: this.policy.minimumInChannel,
     };
-  }
-
-  private playersIn(runtime: ActiveSessionRuntime): Player[] {
-    const { guildId, voiceChannelId } = runtime.session;
-    const guild = this.botClient.guilds.cache.get(guildId);
-    if (guild === undefined) return [];
-    return [...guild.voiceStates.cache.values()]
-      .filter(
-        (state) =>
-          state.channelId === voiceChannelId && state.member?.user.bot !== true,
-      )
-      .map((state) => ({
-        discordId: state.id,
-        discordUsername: state.member?.displayName ?? state.id,
-      }));
   }
 
   private watchSession(runtime: ActiveSessionRuntime): void {

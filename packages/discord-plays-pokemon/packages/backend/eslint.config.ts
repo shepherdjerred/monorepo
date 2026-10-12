@@ -53,6 +53,8 @@ const config = [
         "src/emulator/audio/pcm-s16.test.ts",
         "src/webserver/dispatch.test.ts",
         "src/webserver/web-publisher.test.ts",
+        "src/webserver/play-policy.test.ts",
+        "src/webserver/driver-feed-admission.test.ts",
         "src/goal/schema-helpers.test.ts",
         "src/goal/control/semantic-control-routes.test.ts",
         "src/goal/control/goal-control-gate.test.ts",

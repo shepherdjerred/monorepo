@@ -1,107 +1,108 @@
-import { Notifications } from "./stories/notifications.tsx";
-import type { Notification } from "./model/notification.ts";
-import lodash from "lodash";
 import { useState } from "react";
-import { Container } from "./stories/container.tsx";
-import { P, match } from "ts-pattern";
-import { GamePage } from "./pages/game-page.tsx";
-import { LoginPage } from "./pages/login-page.tsx";
-import { useInterval } from "react-use";
-import type { Connection } from "./model/connection.ts";
+import {
+  useMe,
+  signIn,
+  useSignOut,
+} from "@shepherdjerred/discord-plays-web/session/me.ts";
 import { socket } from "./socket.ts";
-import type {
-  CommandRequest,
-  LoginRequest,
-  Player,
-  ScreenshotRequest,
-  Status,
-} from "@discord-plays-pokemon/common";
+import { useGame } from "./use-game.ts";
+import { disabledReason } from "./game.ts";
+import { Controller } from "./controller.tsx";
+import { GameScreen } from "./game-screen.tsx";
+import { ActivityPanels, Avatar, TrainerPanels } from "./trainer-panels.tsx";
 
 export function App() {
-  const [player, _setPlayer] = useState<Player>();
-  const [status, _setStatus] = useState<Status>({
-    sessionActive: false,
-    driverFeedEnabled: false,
-    playerList: [],
-  });
-  const [connection, setConnection] = useState<Connection>({
-    status: "connecting",
-    latency: undefined,
-  });
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-
-  useInterval(() => {
-    const start = Date.now();
-
-    socket.emit("ping", () => {
-      const duration = Date.now() - start;
-      setConnection((prev) => ({
-        ...prev,
-        latency: duration,
-      }));
-    });
-  }, 2000);
-
-  function handleLogin(token: string) {
-    console.log("logging in with:", token);
-
-    const loginRequest: LoginRequest = { kind: "login", value: { token } };
-    socket.emit("request", loginRequest);
-  }
-
-  function handleKeyPress(key: string) {
-    console.log(key);
-    const request: CommandRequest = {
-      kind: "command",
-      value: key,
-    };
-    socket.emit("request", request);
-  }
-
-  function handleNotificationClose(id: string) {
-    setNotifications((prev) =>
-      lodash.filter(prev, (notification) => notification.id !== id),
-    );
-  }
-
-  function handleScreenshot() {
-    console.log("screenshot");
-    const request: ScreenshotRequest = {
-      kind: "screenshot",
-    };
-    socket.emit("request", request);
-  }
-
-  const page = match(player)
-    .with(P.not(P.nullish), (player) => {
-      return (
-        <GamePage
-          status={status}
-          connection={connection}
-          onKey={handleKeyPress}
-          onScreenshot={handleScreenshot}
-          player={player}
-        />
-      );
-    })
-    .with(P.nullish, () => {
-      return <LoginPage handleLogin={handleLogin} />;
-    })
-    .exhaustive();
-
+  const { me, loading } = useMe();
+  const signOut = useSignOut(socket);
+  const game = useGame();
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [signingOut, setSigningOut] = useState(false);
+  const handleSignOut = async () => {
+    setSigningOut(true);
+    setAuthError(null);
+    try {
+      await signOut();
+    } catch {
+      setAuthError("Could not sign out. Please try again.");
+    } finally {
+      setSigningOut(false);
+    }
+  };
   return (
-    <>
-      <div className="bg-white dark:bg-slate-900 min-h-screen min-w-full">
-        <Container>
-          <div className="flex flex-col justify-center h-full gap-y-5">
-            {page}
+    <div className="page">
+      <header className="topbar">
+        <a className="brand" href="/" aria-label="Discord Plays Pokémon home">
+          <span className="pokeball" aria-hidden="true" />
+          <span>
+            DISCORD PLAYS
+            <strong>
+              POKÉMON <em>EMERALD</em>
+            </strong>
+          </span>
+        </a>
+        <div className="identity">
+          {me.signedIn ? (
+            <>
+              <Avatar user={me.user} />
+              <span className="identity-name">{me.user.name}</span>
+              <button
+                className="quiet-button"
+                type="button"
+                disabled={signingOut}
+                onClick={() => {
+                  void handleSignOut();
+                }}
+              >
+                {signingOut ? "Signing out…" : "Sign out"}
+              </button>
+            </>
+          ) : (
+            <button type="button" onClick={signIn} disabled={loading}>
+              {loading ? "Checking sign-in…" : "Sign in with Discord"}
+            </button>
+          )}
+        </div>
+      </header>
+      <main>
+        <div className="intro">
+          <div>
+            <p className="eyebrow">ONE SAVE. EVERYONE’S ADVENTURE.</p>
+            <h1>
+              A little chaos.
+              <br />
+              <span>A whole lot of Hoenn.</span>
+            </h1>
           </div>
-        </Container>
-      </div>
-      <Notifications
-        notifications={notifications}
-        onClose={handleNotificationClose}
-      />
-    </>
+          <p>
+            Join the voice channel, take the controls,
+            <br className="desktop-break" /> and see where we end up together.
+          </p>
+        </div>
+        {authError !== null && (
+          <p className="notice" role="alert">
+            {authError}
+          </p>
+        )}
+        <div className="layout">
+          <div className="main-column">
+            <GameScreen game={game} signedIn={me.signedIn} />
+            <Controller reason={disabledReason(game, me.signedIn)} />
+            {game.notice !== null && (
+              <p className="notice" role="status">
+                {game.notice}
+              </p>
+            )}
+            <TrainerPanels game={game} />
+          </div>
+          <aside className="side-column">
+            <ActivityPanels game={game} />
+          </aside>
+        </div>
+      </main>
+      <footer className="page-footer">
+        <span>Made for the journey, played together.</span>
+        <span>Discord Plays Pokémon · Hoenn region</span>
+      </footer>
+    </div>
   );
 }

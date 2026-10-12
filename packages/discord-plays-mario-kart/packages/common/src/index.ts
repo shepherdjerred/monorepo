@@ -2,6 +2,10 @@ export * from "./model/index.ts";
 export * from "./model/keyboard.ts";
 export * from "./model/mk64.ts";
 export * from "./model/status.ts";
+export {
+  StatusRequestSchema,
+  type StatusRequest,
+} from "@shepherdjerred/discord-plays-core/webserver/protocol.ts";
 export * from "./model/input.ts";
 export * from "./model/screenshot.ts";
 export * from "./model/leaderboard.ts";

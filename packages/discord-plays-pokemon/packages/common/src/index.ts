@@ -1,9 +1,9 @@
 export * from "./model/index.ts";
-export * from "./model/keyboard.ts";
-export * from "./model/login.ts";
-export * from "./model/player.ts";
 export * from "./model/status.ts";
+export {
+  StatusRequestSchema,
+  type StatusRequest,
+} from "@shepherdjerred/discord-plays-core/webserver/protocol.ts";
 export * from "./model/command.ts";
-export * from "./model/screenshot.ts";
 export * from "./model/game-state.ts";
 export * from "./model/feed.ts";
