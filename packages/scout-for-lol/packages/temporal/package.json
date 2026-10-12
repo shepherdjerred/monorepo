@@ -23,7 +23,6 @@
     "./workflows": "./src/workflows/index.ts"
   },
   "scripts": {
-    "build": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "lint": "bun x eslint src --max-warnings=0 && check-architecture",
     "format": "bun x prettier --check src package.json tsconfig.json",

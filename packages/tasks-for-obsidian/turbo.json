@@ -65,7 +65,7 @@
     },
     "test:ci": {
       "inputs": [
-        "$TURBO_DEFAULT$",
+        "$TURBO_EXTENDS$",
         "$TURBO_ROOT$/packages/tasknotes-fixtures/**"
       ]
     }
