@@ -78,8 +78,14 @@ and total helper time; object bytes exclude network protocol overhead.
 Shared download caches are paired with explicit tool paths: Bun uses
 `/woodpecker/bun-cache/data`, and uv uses `/woodpecker/uv-cache`. The emitter
 only supplies a shared path when its declared volume is mounted. Bun's download
-cache and its maintenance-lock volume must be mounted together. Installed
-dependencies remain private to each workflow workspace.
+cache and its maintenance-lock volume must be mounted together. The trusted
+graph mounts that pair on every in-cluster container that runs
+`ci/scripts/bun-install.sh`, so no lane downloads its dependency closure into
+`~/.bun` on the CI node's OS disk; the credentialless hosted-automation graph
+mounts no shared cache. Installed dependencies remain private to each workflow
+workspace. Verify and Playwright use `TURBO_CACHE=remote:rw`: each is one Turbo
+run in a fresh workspace, so a local cache there would be written and never
+read.
 
 ## OpenTofu PR checks
 
