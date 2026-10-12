@@ -4,6 +4,7 @@ import { mkdir } from "node:fs/promises";
 import path from "node:path";
 
 import { optionalEnv, requireEnv, run } from "../lib/run.ts";
+import { readRequiredHandoff } from "../lib/ci/ci-handoff.ts";
 import {
   readScoutPostHogSite,
   requireMarketingIdentifiers,
@@ -393,10 +394,7 @@ async function main(): Promise<void> {
     case "resolve-backend-digest": {
       const index = args.indexOf("--candidate-digest");
       const candidate = index === -1 ? null : (args[index + 1] ?? "");
-      const catalogPath = args.includes("--version-catalog-file")
-        ? requiredArg(args, "--version-catalog-file")
-        : `${repoRoot()}/packages/version-catalog/src/catalog.json`;
-      const source = await Bun.file(catalogPath).text();
+      const source = await readBackendCatalogSource(args);
       process.stdout.write(`${resolveBackendDigest(candidate, source)}\n`);
       break;
     }
@@ -433,6 +431,21 @@ async function main(): Promise<void> {
     default:
       usage();
   }
+}
+
+/** Older deployed CI generators also receive the published catalog contract. */
+export async function readBackendCatalogSource(
+  args: string[],
+  pipelineNumber: string | null = optionalEnv("CI_PIPELINE_NUMBER"),
+  readPublished: () => Promise<string> = () =>
+    readRequiredHandoff("version-catalog"),
+): Promise<string> {
+  if (args.includes("--version-catalog-file")) {
+    return Bun.file(requiredArg(args, "--version-catalog-file")).text();
+  }
+  return pipelineNumber === null
+    ? Bun.file(`${repoRoot()}/packages/version-catalog/src/catalog.json`).text()
+    : readPublished();
 }
 
 if (import.meta.main) {
