@@ -1,6 +1,7 @@
-import { log, proxyActivities, sleep } from "@temporalio/workflow";
+import { log, patched, proxyActivities, sleep } from "@temporalio/workflow";
 import type { MiningResetActivities } from "#activities/homelab/mining-reset.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
+import { announceStormMiningResetDone } from "./storm-announcements.ts";
 
 const { resetMiningWorld } = proxyActivities<MiningResetActivities>({
   taskQueue: TASK_QUEUES.MINING_RESET,
@@ -24,6 +25,15 @@ export async function runMiningWorldResetWorkflow(): Promise<void> {
     const result = await resetMiningWorld(period);
     if (result.kind === "completed") {
       log.info(result.message);
+      // Histories recorded before the Discord notice existed replay without it.
+      if (patched("storm-reset-discord-notice")) {
+        try {
+          await announceStormMiningResetDone(period);
+        } catch (error) {
+          // The reset is done; a missed announcement must not fail it.
+          log.warn("Announcing the mining reset on Discord failed", { error });
+        }
+      }
       return;
     }
     if (attempt === 48) {

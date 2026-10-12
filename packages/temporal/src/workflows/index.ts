@@ -47,6 +47,7 @@ import { runZfsMaintenanceWorkflow as _runZfsMaintenanceWorkflow } from "./homel
 import { runMiningWorldResetWorkflow as resetMiningWorld } from "./homelab/mining-reset.ts";
 import { runStormPlotReconciliationWorkflow as _runStormPlotReconciliationWorkflow } from "./homelab/storm-plots.ts";
 import { reconcileStormCompanionsWorkflow as reconcileCompanions } from "./homelab/storm-companions.ts";
+import { announceStormMiningResetCountdownWorkflow as announce } from "./homelab/storm-announcements.ts";
 import { runBugsinkHousekeepingWorkflow as _runBugsinkHousekeepingWorkflow } from "./bugsink.ts";
 import { runScoutImageGcWorkflow as _runScoutImageGcWorkflow } from "./scout/scout-image-gc.ts";
 import type {
@@ -294,15 +295,13 @@ export async function sleepAc(input?: SleepAutomationInput): Promise<void> {
   return _sleepAc(input);
 }
 
-export async function runZfsMaintenanceWorkflow(): Promise<void> {
-  return _runZfsMaintenanceWorkflow();
-}
+export const runZfsMaintenanceWorkflow = () => _runZfsMaintenanceWorkflow();
 export const runMiningWorldResetWorkflow = () => resetMiningWorld();
 export const reconcileStormCompanionsWorkflow = () => reconcileCompanions();
+export const announceStormMiningResetCountdownWorkflow = () => announce();
 
-export async function runStormPlotReconciliationWorkflow(): Promise<void> {
-  return _runStormPlotReconciliationWorkflow();
-}
+export const runStormPlotReconciliationWorkflow = () =>
+  _runStormPlotReconciliationWorkflow();
 
 export async function runBugsinkHousekeepingWorkflow(): Promise<void> {
   return _runBugsinkHousekeepingWorkflow();

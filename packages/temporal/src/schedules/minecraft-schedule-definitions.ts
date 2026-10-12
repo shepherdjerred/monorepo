@@ -33,6 +33,22 @@ export const MINECRAFT_SCHEDULES = schedulesInNamespace("prod", [
       "Awaiting Citizens survival rollout and real-server acceptance",
   },
   {
+    id: "the-storm-mining-reset-countdown",
+    workflowType: "announceStormMiningResetCountdownWorkflow",
+    args: [],
+    timing: {
+      kind: "cron",
+      expression: "0 17 * * *",
+      timezone: "America/Los_Angeles",
+    },
+    taskQueue: TASK_QUEUES.WORKFLOWS,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "15 minutes",
+    memo: "Warn The Storm's Discord a week and a day before an unpaused mining reset; posts through the bridge bot without waking the server",
+    initialPauseNote:
+      "Awaiting the infra worker's Storm Discord credential rollout and a live channel post check",
+  },
+  {
     id: "the-storm-mining-reset-quarterly",
     workflowType: "runMiningWorldResetWorkflow",
     args: [],
