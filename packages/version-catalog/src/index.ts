@@ -20,6 +20,7 @@ export const VersionCatalogEntrySchema = z
     category: z.enum(["upstream", "internal-image"]),
     artifactType: z.enum(["image", "helm-chart", "package", "source"]),
     management: VersionCatalogManagementSchema,
+    imagePublisher: z.enum(["ci", "local"]).optional(),
     notes: z.array(z.string().min(1)).optional(),
     releaseNotesOverride: z
       .object({
@@ -29,7 +30,19 @@ export const VersionCatalogEntrySchema = z
       .strict()
       .optional(),
   })
-  .strict();
+  .strict()
+  .superRefine((entry, context) => {
+    if (
+      entry.imagePublisher !== undefined &&
+      (entry.category !== "internal-image" || entry.artifactType !== "image")
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["imagePublisher"],
+        message: "imagePublisher requires an internal image entry",
+      });
+    }
+  });
 
 export const VersionCatalogSchema = z
   .object({
@@ -94,6 +107,9 @@ export function serializeVersionCatalog(catalog: VersionCatalog): string {
       artifactType: entry.artifactType,
       management: canonicalManagement(entry.management),
       value: entry.value,
+      ...(entry.imagePublisher === undefined
+        ? {}
+        : { imagePublisher: entry.imagePublisher }),
       ...(entry.notes === undefined ? {} : { notes: entry.notes }),
       ...(entry.releaseNotesOverride === undefined
         ? {}

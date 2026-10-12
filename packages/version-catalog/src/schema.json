@@ -44,6 +44,10 @@
               }
             ]
           },
+          "imagePublisher": {
+            "enum": ["ci", "local"],
+            "description": "Internal image publisher. Omitted means CI; local pins are owned by local publication and never advanced by CI handoffs."
+          },
           "notes": {
             "type": "array",
             "items": { "type": "string", "minLength": 1 }
@@ -55,6 +59,14 @@
             "properties": {
               "url": { "type": "string", "format": "uri" },
               "summary": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
+        "dependentSchemas": {
+          "imagePublisher": {
+            "properties": {
+              "category": { "const": "internal-image" },
+              "artifactType": { "const": "image" }
             }
           }
         }

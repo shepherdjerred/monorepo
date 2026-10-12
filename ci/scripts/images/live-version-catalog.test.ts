@@ -7,6 +7,7 @@ import {
 } from "./live-version-catalog.ts";
 import {
   parseVersionCatalogText,
+  serializeVersionCatalog,
   type VersionCatalogEntry,
 } from "../../../packages/version-catalog/src/index.ts";
 import type { LiveCatalogExecutor } from "./live-version-catalog.ts";
@@ -125,6 +126,65 @@ function candidates(
 function entries(source: string): readonly VersionCatalogEntry[] {
   return parseVersionCatalogText(source).entries;
 }
+
+function localCatalog(value: string): string {
+  const parsed = parseVersionCatalogText(
+    catalog([
+      ["local-image", value],
+      ["worker", pin(100)],
+    ]),
+  );
+  return serializeVersionCatalog({
+    ...parsed,
+    entries: parsed.entries.map((entry) =>
+      entry.name === "local-image"
+        ? { ...entry, imagePublisher: "local" }
+        : entry,
+    ),
+  });
+}
+
+test("retains local bootstrap and published pins from current source across CI releases", () => {
+  const bootstrap = `0.1.0-0@${UNPUBLISHED_IMAGE_DIGEST}`;
+  const main = localCatalog(bootstrap);
+  const released = retainPublishedImagePins(
+    main,
+    main,
+    candidates(200, ["worker"]),
+  );
+  expect(entries(released)[0]?.value).toBe(bootstrap);
+  expect(entries(released)[1]?.value).toBe(pin(200, "b"));
+  const localPublication = `0.1.0-1@sha256:${"d".repeat(64)}`;
+  const current = localCatalog(localPublication);
+  const retained = retainPublishedImagePins(current, released, candidates(201));
+  const next = retainPublishedImagePins(current, retained, candidates(202));
+  expect(entries(next)[0]?.value).toBe(localPublication);
+  expect(entries(next)[1]?.value).toBe(pin(200, "b"));
+});
+
+test("CI cannot overwrite local ownership declared by either catalog", () => {
+  const local = localCatalog(`0.1.0-0@${UNPUBLISHED_IMAGE_DIGEST}`);
+  const legacy = catalog([
+    ["local-image", pin(100)],
+    ["worker", pin(100)],
+  ]);
+  expect(
+    entries(retainPublishedImagePins(local, legacy, candidates(200)))[0]?.value,
+  ).toBe(`0.1.0-0@${UNPUBLISHED_IMAGE_DIGEST}`);
+  for (const [current, previous] of [
+    [local, legacy],
+    [legacy, local],
+    [local, local],
+  ] as const) {
+    expect(() =>
+      retainPublishedImagePins(
+        current,
+        previous,
+        candidates(200, ["local-image"]),
+      ),
+    ).toThrow("CI candidate contains locally published image key");
+  }
+});
 
 test("retains a new image's first publication before commit-back", () => {
   const name = "shepherdjerred/velero-plugin";

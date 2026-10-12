@@ -214,6 +214,10 @@ docker push ghcr.io/shepherdjerred/glitter-boys-launcher:<release-tag>
 
 Verify the published image is publicly pullable and record its immutable digest
 in the version catalog before activation. Shared CI does not build or publish it.
+Its catalog entry declares `imagePublisher: "local"`; CI release handoffs preserve
+that source-owned pin and reject CI publication candidates for it. Omitted
+`imagePublisher` means CI publication. This ownership is separate from the
+catalog's `management` field, which controls Renovate updates.
 The homelab chart owns the tunnel, secret reference, private ServiceMonitor, alerts,
 and Grafana dashboard. Its checked-in release stage is `prepared`, which renders
 no workload. Activation requires a real published image digest and a granted

@@ -37,6 +37,8 @@ function releaseNumber(value: string): bigint {
  * metadata, upstream versions and newer image pins remain authoritative.
  * A no-target release writes this catalog back to the handoff, so retention
  * survives any number of consecutive no-target or partial-image builds.
+ * Locally published entries remain owned by current source, including their
+ * unpublished bootstrap markers. They cannot appear in CI pin candidates.
  */
 export function retainPublishedImagePins(
   currentSource: string,
@@ -47,15 +49,27 @@ export function retainPublishedImagePins(
   const current = parseVersionCatalogText(currentSource);
   const previous = parseVersionCatalogText(previousSource);
   const batch = parsePinCandidates(candidatesSource);
+  const localKeys = new Set(
+    [...current.entries, ...previous.entries]
+      .filter((entry) => entry.imagePublisher === "local")
+      .map((entry) => entry.name),
+  );
   const published = new Map(
     previous.entries
       .filter(
         (entry) =>
-          entry.category === "internal-image" && entry.artifactType === "image",
+          entry.category === "internal-image" &&
+          entry.artifactType === "image" &&
+          !localKeys.has(entry.name),
       )
       .map((entry) => [entry.name, entry.value]),
   );
   for (const [key, candidate] of Object.entries(batch.candidates)) {
+    if (localKeys.has(key)) {
+      throw new Error(
+        `CI candidate contains locally published image key ${key}`,
+      );
+    }
     if (!published.has(key)) {
       throw new Error(
         `Published candidate contains unknown internal image key ${key}`,

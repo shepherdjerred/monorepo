@@ -43,4 +43,52 @@ describe("version catalog", () => {
       "version catalog names must be unique",
     );
   });
+
+  test.each(["ci", "local"])(
+    "round trips the %s image publisher",
+    (imagePublisher) => {
+      const imageEntry = rawCatalog.entries.find(
+        (entry) => entry.category === "internal-image",
+      );
+      const catalog = {
+        ...rawCatalog,
+        entries: [{ ...imageEntry, imagePublisher }],
+      };
+      const validate = new Ajv2020({
+        strict: true,
+        validateFormats: false,
+      }).compile(catalogSchema);
+      expect(validate(catalog)).toBe(true);
+      expect(
+        parseVersionCatalogText(
+          serializeVersionCatalog(parseVersionCatalog(catalog)),
+        ),
+      ).toEqual(catalog);
+    },
+  );
+
+  test.each([
+    { category: "upstream", artifactType: "image", imagePublisher: "local" },
+    {
+      category: "internal-image",
+      artifactType: "package",
+      imagePublisher: "ci",
+    },
+    {
+      category: "internal-image",
+      artifactType: "image",
+      imagePublisher: "unknown",
+    },
+  ])("both schemas reject an invalid publisher declaration: %j", (fields) => {
+    const catalog = {
+      ...rawCatalog,
+      entries: [{ ...rawCatalog.entries[0], ...fields }],
+    };
+    const validate = new Ajv2020({
+      strict: true,
+      validateFormats: false,
+    }).compile(catalogSchema);
+    expect(validate(catalog)).toBe(false);
+    expect(() => parseVersionCatalog(catalog)).toThrow();
+  });
 });

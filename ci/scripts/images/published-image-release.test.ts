@@ -8,6 +8,7 @@ import {
 } from "../../../scripts/lib/ci/published-image-release.ts";
 import type { CiHandoffConfig } from "../../../scripts/lib/ci/ci-handoff.ts";
 import type { LiveCatalogExecutor } from "./live-version-catalog.ts";
+import rawCatalog from "../../../packages/version-catalog/src/catalog.json" with { type: "json" };
 
 const config: CiHandoffConfig = {
   endpoint: "https://s3.test",
@@ -127,6 +128,31 @@ test("writes one complete publication record under the serialized image lane", a
     return new Response(null, { status: 200 });
   });
   expect(writes).toEqual([value]);
+});
+
+test("publishes the full catalog without treating local bootstrap pins as CI releases", async () => {
+  const value = {
+    ...release(8003, "shepherdjerred/streambot"),
+    versionCatalog: JSON.stringify(rawCatalog),
+  };
+  const writes: unknown[] = [];
+  await writePublishedImageRelease(value, config, async (request) => {
+    if (request.method === "GET") return new Response(null, { status: 404 });
+    writes.push(await request.json());
+    return new Response(null, { status: 200 });
+  });
+  expect(writes).toEqual([value]);
+  await expect(
+    readPublishedImageRelease(config, async () => Response.json(value)),
+  ).resolves.toEqual(value);
+  const bad = {
+    ...value,
+    pinCandidates: release(8003, "shepherdjerred/glitter-boys-launcher")
+      .pinCandidates,
+  };
+  await expect(writePublishedImageRelease(bad, config)).rejects.toThrow(
+    "CI candidate contains locally published image key",
+  );
 });
 
 test("never overwrites a newer head or a conflicting record for the same pipeline", async () => {
