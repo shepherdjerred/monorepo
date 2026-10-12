@@ -27,6 +27,7 @@ import {
   yard,
 } from "./harness/rwf-humans.ts";
 import { eventually, status, waitForLobby } from "./harness/rwf-match.ts";
+import { lookAround } from "./harness/rwfbots.ts";
 import type { RconClient } from "#e2e/harness/rcon.ts";
 
 /**
@@ -135,6 +136,9 @@ describe("The match experience behind its flags", () => {
         bot.setControlState("forward", false);
         expect(bot.entity.position.distanceTo(frozenAt)).toBeLessThan(0.5);
         await a.log.until(/The game has begun!/u, 15_000);
+        // Activity during the live match keeps both humans eligible for carry-over.
+        await lookAround(bot);
+        await lookAround(secondBot);
         const [teamA, teamB] = await Promise.all([
           teamOf(a.log),
           teamOf(b.log),
