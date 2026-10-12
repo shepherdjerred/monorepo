@@ -203,10 +203,14 @@ final class PlayerListener implements Listener {
         return;
       }
     }
+    // As the original: any click with the clock in that hand, unless something already denied its
+    // use; outside a live fight it does nothing and says nothing.
     if (item != null
         && item.getType() == Material.CLOCK
         && keys.isKitItem(item)
-        && rightClick(event)) {
+        && event.getAction() != Action.PHYSICAL
+        && event.useItemInHand() != Event.Result.DENY
+        && runner.fighting(player.getUniqueId())) {
       event.setUseItemInHand(Event.Result.DENY);
       actions
           .useRewind(member.orElseThrow().id())

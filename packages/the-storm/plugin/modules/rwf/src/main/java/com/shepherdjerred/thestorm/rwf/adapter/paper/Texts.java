@@ -125,8 +125,8 @@ final class Texts {
           entry(ActionRefusal.NO_TIME_MACHINE, "You have no Time Machine."),
           entry(
               ActionRefusal.COOLING_DOWN,
-              "Your timestream is too unstable! Using it now would kill you!"),
-          entry(ActionRefusal.NO_LANDING, "No landing spots found!"));
+              "Your timestream is too unstable! Attempting to use it now would kill you!"),
+          entry(ActionRefusal.NO_LANDING, "No landing spots found in the last 10 seconds!"));
 
   private Texts() {}
 

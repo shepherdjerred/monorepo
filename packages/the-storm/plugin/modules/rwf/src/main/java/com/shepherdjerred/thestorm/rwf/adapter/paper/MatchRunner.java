@@ -187,6 +187,11 @@ final class MatchRunner implements MatchView, MatchEvents {
     return match.phase() instanceof Phase.Live;
   }
 
+  /** The match's randomness, for the few rolls the adapter makes itself. */
+  java.util.random.RandomGenerator random() {
+    return parts.context().random();
+  }
+
   Instant now() {
     return parts.context().time().instant();
   }
@@ -999,6 +1004,7 @@ final class MatchRunner implements MatchView, MatchEvents {
       return;
     }
     var killerId = killer.flatMap(this::memberOf).map(Combatant::id);
+    rewinders.computeIfPresent(victim.orElseThrow().id(), (id, rewinder) -> rewinder.died());
     tallies.computeIfAbsent(victim.orElseThrow().id(), ignored -> new Tally()).deaths++;
     killerId.ifPresent(k -> tallies.computeIfAbsent(k, ignored -> new Tally()).kills++);
     parts

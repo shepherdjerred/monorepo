@@ -215,6 +215,41 @@ final class RwfBorderAndRewindTest {
   }
 
   @Test
+  void anyClickWithTheClockUsesItAsTheOriginalDid() {
+    running = RwfHarness.start(directory);
+    var harness = running;
+    var player = harness.loadedPlayer("Alice");
+    harness.enter(player);
+    player.performCommand("rwf kit rewind");
+    harness.until(() -> harness.snapshot().phase() == MatchSnapshot.PhaseKind.COUNTDOWN);
+    harness.tick(Duration.ofSeconds(91));
+    harness.until(() -> harness.snapshot().phase() == MatchSnapshot.PhaseKind.LIVE);
+    player.teleport(new Location(harness.rwf, 31.5, 65, 20.5));
+    harness.ticks(10);
+    harness.tick(Duration.ofSeconds(31));
+    player.teleport(new Location(harness.rwf, 31.5, 65, 40.5));
+    harness.ticks(10);
+    var clock =
+        java.util.Arrays.stream(player.getInventory().getContents())
+            .filter(item -> item != null && item.getType() == org.bukkit.Material.CLOCK)
+            .findFirst()
+            .orElseThrow();
+
+    harness
+        .server
+        .getPluginManager()
+        .callEvent(
+            new org.bukkit.event.player.PlayerInteractEvent(
+                player,
+                org.bukkit.event.block.Action.LEFT_CLICK_AIR,
+                clock,
+                null,
+                org.bukkit.block.BlockFace.SELF));
+
+    assertThat(player.getLocation().getZ()).isEqualTo(20.5);
+  }
+
+  @Test
   void theTrailSkipsSpotsNextToAPressurePlate() {
     running = RwfHarness.start(directory);
     var harness = running;

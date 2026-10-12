@@ -16,10 +16,7 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Predicate;
-import org.bukkit.Material;
 import org.bukkit.Sound;
-import org.bukkit.Tag;
-import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 
 /**
@@ -100,7 +97,7 @@ final class Battlefield {
             SafeTeleport.safe(
                 position.toBlock(),
                 minY,
-                block -> footing(world.getBlockAt(block.x(), block.y(), block.z())));
+                block -> Footings.of(world.getBlockAt(block.x(), block.y(), block.z()).getType()));
     var next = rewinder.trimmed(now, safe);
     var at = Places.at(player);
     var here = Places.vec(at);
@@ -109,21 +106,5 @@ final class Battlefield {
     }
     player.setExp((float) next.charge(now));
     return next;
-  }
-
-  /** What {@code block} is to a Time Machine landing; burning blocks count as traps. */
-  static SafeTeleport.Footing footing(Block block) {
-    var type = block.getType();
-    if (Tag.PRESSURE_PLATES.isTagged(type)
-        || type == Material.TRIPWIRE
-        || type == Material.LAVA
-        || type == Material.FIRE
-        || type == Material.SOUL_FIRE) {
-      return SafeTeleport.Footing.TRAP;
-    }
-    if (!block.isCollidable()) {
-      return SafeTeleport.Footing.CLEAR;
-    }
-    return type.isSolid() ? SafeTeleport.Footing.STANDABLE : SafeTeleport.Footing.PARTIAL;
   }
 }

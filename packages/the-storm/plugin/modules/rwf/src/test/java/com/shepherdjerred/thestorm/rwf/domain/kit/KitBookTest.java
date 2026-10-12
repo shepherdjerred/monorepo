@@ -225,14 +225,14 @@ final class KitBookTest {
     }
 
     @Test
-    void theTrailIsBounded() {
-      var trail = new RewindTrail(List.of(), 3);
-      for (var second = 0; second < 10; second++) {
-        trail = trail.record(spot(second), T0.plusSeconds(second));
+    void theTrailKeepsEverySampleUntilTrimmedLikeTheOriginal() {
+      var trail = RewindTrail.empty();
+      for (var tick = 0; tick < 2_000; tick++) {
+        trail = trail.record(spot(tick), T0.plusMillis(tick * 50L));
       }
 
-      assertThat(trail.samples()).hasSize(3);
-      assertThat(trail.landing()).contains(spot(7));
+      assertThat(trail.samples()).hasSize(2_000);
+      assertThat(trail.landing()).contains(spot(0));
     }
 
     @Test
@@ -302,7 +302,57 @@ final class KitBookTest {
     void nothingBelowTheWorldIsSafe() {
       assertThat(SafeTeleport.safe(new BlockPos(0, -65, 0), -64, world(Map.of()))).isFalse();
       assertThat(SafeTeleport.safe(new BlockPos(0, 64, 0), 63, world(Map.of()))).isTrue();
+      // The original refused feet below y 1 in a world whose bottom was 0.
       assertThat(SafeTeleport.safe(new BlockPos(0, 64, 0), 64, world(Map.of()))).isFalse();
+      var lowFloor = Map.of(new BlockPos(0, 63, 0), SafeTeleport.Footing.CLEAR);
+      assertThat(SafeTeleport.safe(new BlockPos(0, 64, 0), 62, world(lowFloor))).isTrue();
+      assertThat(SafeTeleport.safe(new BlockPos(0, 64, 0), 63, world(lowFloor))).isFalse();
+    }
+
+    @Test
+    void trapsAreSoughtAtTheNineteenBlockFacesOneBlockDownLevelAndUp() {
+      assertThat(SafeTeleport.FACES).hasSize(19).doesNotHaveDuplicates();
+      for (var dy = -1; dy <= 1; dy++) {
+        for (var face : SafeTeleport.FACES) {
+          var trap = FEET.plus(face.x(), face.y() + dy, face.z());
+          assertThat(SafeTeleport.safe(FEET, -64, world(Map.of(trap, SafeTeleport.Footing.TRAP))))
+              .as("trap at %s", trap)
+              .isFalse();
+        }
+      }
+      // The up and down faces reach two blocks; the secondary directions reach two sideways.
+      for (var trap :
+          List.of(
+              new BlockPos(0, 66, 0),
+              new BlockPos(0, 62, 0),
+              new BlockPos(-2, 63, -1),
+              new BlockPos(1, 65, 2))) {
+        assertThat(SafeTeleport.safe(FEET, -64, world(Map.of(trap, SafeTeleport.Footing.TRAP))))
+            .as("trap at %s", trap)
+            .isFalse();
+      }
+      // Corners two away and anything three away are outside the original's shape.
+      for (var clear :
+          List.of(
+              new BlockPos(2, 64, 2),
+              new BlockPos(-2, 64, -2),
+              new BlockPos(2, 64, 0),
+              new BlockPos(0, 67, 0),
+              new BlockPos(0, 64, 3))) {
+        assertThat(SafeTeleport.safe(FEET, -64, world(Map.of(clear, SafeTeleport.Footing.TRAP))))
+            .as("trap at %s", clear)
+            .isTrue();
+      }
+    }
+
+    @Test
+    void waterOrLavaAtTheFeetIsNotHeadroom() {
+      assertThat(SafeTeleport.safe(FEET, -64, world(Map.of(FEET, SafeTeleport.Footing.PARTIAL))))
+          .isFalse();
+      assertThat(
+              SafeTeleport.safe(
+                  FEET, -64, world(Map.of(new BlockPos(0, 65, 0), SafeTeleport.Footing.PARTIAL))))
+          .isFalse();
     }
   }
 }

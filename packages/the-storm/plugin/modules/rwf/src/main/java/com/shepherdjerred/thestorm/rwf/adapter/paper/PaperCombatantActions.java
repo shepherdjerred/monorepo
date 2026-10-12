@@ -12,12 +12,15 @@ import com.shepherdjerred.thestorm.rwf.domain.kit.RewindError;
 import com.shepherdjerred.thestorm.rwf.domain.kit.RewindTrail;
 import com.shepherdjerred.thestorm.rwf.domain.kit.Rewinder;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent;
+import java.util.List;
 import java.util.Optional;
 import org.bukkit.Effect;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.AbstractArrow;
 import org.bukkit.entity.Arrow;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
@@ -141,9 +144,11 @@ final class PaperCombatantActions implements CombatantActions {
   }
 
   /**
-   * Carries out a Time Machine use as the original did: a message, the enderman sound and ender
-   * signal where the player leaves and where they land, out of any vehicle, facing the way they
-   * faced there, stopped, with fire and fall distance cleared and nobody credited for a later fall.
+   * Carries out a Time Machine use in the original's order: the message; out of any passenger; the
+   * enderman sound and ender signal where the player leaves; the teleport, which also leaves any
+   * vehicle and nudges the landing off an entity standing exactly there (the original's {@code
+   * UtilPlayer.tele}); the sound and signal where they land, facing the way they faced there; then
+   * fall distance, fire and velocity cleared and nobody credited for a later fall or burn.
    */
   private void rewind(Player player, RewindTrail.Spot to) {
     Texts.info(player, "You step sideways into the river of time..");
@@ -155,6 +160,9 @@ final class PaperCombatantActions implements CombatantActions {
     var _ = player.eject();
     world.playSound(from, Sound.ENTITY_ENDERMAN_TELEPORT, 1, 1);
     world.playEffect(from, Effect.ENDER_SIGNAL, 9);
+    var _ = player.eject();
+    var _ = player.leaveVehicle();
+    clearOfEntities(target, player.getNearbyEntities(1, 1, 1));
     player.teleport(target);
     world.playSound(target, Sound.ENTITY_ENDERMAN_TELEPORT, 1, 1);
     world.playEffect(target, Effect.ENDER_SIGNAL, 9);
@@ -162,6 +170,20 @@ final class PaperCombatantActions implements CombatantActions {
     player.setFireTicks(0);
     player.setVelocity(new Vector());
     tracker.clearFallCredit(player.getUniqueId());
+  }
+
+  /**
+   * The original's landing nudge: while an entity near the player stands within 0.1 of {@code
+   * target}, move it by up to 0.01 sideways and up to 0.01 up.
+   */
+  private void clearOfEntities(Location target, List<Entity> nearby) {
+    var random = runner.random();
+    while (nearby.stream().anyMatch(entity -> entity.getLocation().distance(target) <= 0.1)) {
+      target.add(
+          random.nextDouble(-0.01, 0.01),
+          random.nextDouble(0, 0.01),
+          random.nextDouble(-0.01, 0.01));
+    }
   }
 
   @Override

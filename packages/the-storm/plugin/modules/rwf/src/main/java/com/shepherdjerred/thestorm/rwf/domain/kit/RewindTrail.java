@@ -18,42 +18,29 @@ import java.util.function.Predicate;
  * {@linkplain #trimmed trims} the trail every tick, as the original did: the oldest sample is
  * dropped once the one after it is itself {@link #WINDOW} old, unless the oldest is still safe and
  * the next is not. The landing spot is therefore the oldest safe position within the window, or the
- * most recent one older than it. The buffer holds at most {@code capacity} samples, which bounds
- * memory when a safe old spot is kept behind a run of spots that have since become unsafe.
+ * most recent one older than it. Like the original, the trail has no other bound: it is cleared on
+ * every use and death and dropped at the end of the match.
  *
  * @param samples oldest first
- * @param capacity the most samples kept
  */
-public record RewindTrail(List<Sample> samples, int capacity) {
+public record RewindTrail(List<Sample> samples) {
 
   /** How far back the clock reaches. */
   public static final Duration WINDOW = Duration.ofSeconds(30);
 
-  /** Samples to keep: two windows of one per tick. */
-  public static final int DEFAULT_CAPACITY = 1_200;
-
   public RewindTrail {
-    if (capacity < 1) {
-      throw new IllegalArgumentException("capacity must be positive");
-    }
-    if (samples.size() > capacity) {
-      throw new IllegalArgumentException("more samples than capacity");
-    }
     samples = List.copyOf(samples);
   }
 
   public static RewindTrail empty() {
-    return new RewindTrail(List.of(), DEFAULT_CAPACITY);
+    return new RewindTrail(List.of());
   }
 
-  /** Records a safe spot at {@code now}, dropping the oldest sample if the trail is full. */
+  /** Records a safe spot at {@code now}. */
   public RewindTrail record(Spot spot, Instant now) {
     var next = new ArrayList<>(samples);
     next.add(new Sample(spot, now));
-    while (next.size() > capacity) {
-      next.removeFirst();
-    }
-    return new RewindTrail(next, capacity);
+    return new RewindTrail(next);
   }
 
   /**
@@ -69,7 +56,7 @@ public record RewindTrail(List<Sample> samples, int capacity) {
             || safe.test(samples.get(first + 1).spot().position()))) {
       first++;
     }
-    return first == 0 ? this : new RewindTrail(samples.subList(first, samples.size()), capacity);
+    return first == 0 ? this : new RewindTrail(samples.subList(first, samples.size()));
   }
 
   /** Where the clock would land the player: the oldest sample. */
@@ -78,7 +65,7 @@ public record RewindTrail(List<Sample> samples, int capacity) {
   }
 
   public RewindTrail cleared() {
-    return new RewindTrail(List.of(), capacity);
+    return empty();
   }
 
   /**
