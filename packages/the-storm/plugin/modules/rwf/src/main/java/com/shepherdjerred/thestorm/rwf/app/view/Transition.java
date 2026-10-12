@@ -36,12 +36,32 @@ public record Transition(Change change, List<Effect> effects, MatchState after) 
     record KitPicked(UUID uuid, String kitId) implements Change {}
 
     /**
-     * The lobby settled on a map.
+     * The chosen map is loaded and ready to preview and play.
      *
      * @param mapId the map
      * @param blocksSha256 the hex SHA-256 of the map's blocks, which names its exact terrain
      */
-    record MapChosen(String mapId, String blocksSha256) implements Change {}
+    record MapReady(String mapId, String blocksSha256) implements Change {}
+
+    /** The chosen map could not be loaded. */
+    record MapFailed(String mapId) implements Change {}
+
+    /** The lobby's map vote opened on these maps. */
+    record BallotOpened(List<String> mapIds) implements Change {
+
+      public BallotOpened {
+        mapIds = List.copyOf(mapIds);
+      }
+    }
+
+    /** A member voted for a map. */
+    record Voted(UUID uuid, String mapId) implements Change {}
+
+    /** A combatant was hurt in a live match. */
+    record Damaged(UUID victim, Optional<UUID> attacker) implements Change {}
+
+    /** An operator set the map, skipped or extended a phase, or placed a member on a team. */
+    record Operated() implements Change {}
 
     /** Time passed. */
     record Ticked() implements Change {}
@@ -83,6 +103,12 @@ public record Transition(Change change, List<Effect> effects, MatchState after) 
     /** The rules counted a stat, such as {@code Armed} or {@code Defused}. */
     record StatRecorded(UUID uuid, String stat) implements Effect {}
 
+    /** The combatant stands still at their spawn until the match goes live. */
+    record Frozen(UUID uuid) implements Effect {}
+
+    /** The combatant may move again. */
+    record Unfrozen(UUID uuid) implements Effect {}
+
     /** The rules killed these combatants outright. */
     record Killed(List<UUID> victims) implements Effect {
 
@@ -95,7 +121,13 @@ public record Transition(Change change, List<Effect> effects, MatchState after) 
   public static Transition of(MatchNotification notification) {
     var effects = new ArrayList<Effect>();
     for (var effect : notification.effects()) {
-      effect(effect).ifPresent(effects::add);
+      switch (effect) {
+        case MatchEffect.Freeze freeze ->
+            freeze.ids().forEach(id -> effects.add(new Effect.Frozen(id.uuid())));
+        case MatchEffect.Unfreeze unfreeze ->
+            unfreeze.ids().forEach(id -> effects.add(new Effect.Unfrozen(id.uuid())));
+        default -> effect(effect).ifPresent(effects::add);
+      }
     }
     return new Transition(
         change(notification.event()), effects, MatchState.of(notification.after()));
@@ -107,8 +139,17 @@ public record Transition(Change change, List<Effect> effects, MatchState after) 
       case MatchEvent.Leave leave -> new Change.Left(leave.id().uuid());
       case MatchEvent.Disconnect gone -> new Change.Left(gone.id().uuid());
       case MatchEvent.PickKit pick -> new Change.KitPicked(pick.id().uuid(), pick.kitId());
-      case MatchEvent.MapChosen chosen ->
-          new Change.MapChosen(chosen.map().id(), chosen.map().blocksSha256());
+      case MatchEvent.ForceKit force -> new Change.KitPicked(force.id().uuid(), force.kitId());
+      case MatchEvent.BallotOpened opened ->
+          new Change.BallotOpened(opened.candidates().stream().map(c -> c.mapId()).toList());
+      case MatchEvent.Vote vote -> new Change.Voted(vote.id().uuid(), vote.mapId());
+      case MatchEvent.MapReady ready ->
+          new Change.MapReady(ready.map().id(), ready.map().blocksSha256());
+      case MatchEvent.MapFailed failed -> new Change.MapFailed(failed.mapId());
+      case MatchEvent.SetMap _, MatchEvent.Skip _, MatchEvent.Extend _, MatchEvent.AssignTeam _ ->
+          new Change.Operated();
+      case MatchEvent.Damaged damaged ->
+          new Change.Damaged(damaged.victim().uuid(), damaged.attacker().map(CombatantId::uuid));
       case MatchEvent.Tick _ -> new Change.Ticked();
       case MatchEvent.ForceStart _ -> new Change.ForceStarted();
       case MatchEvent.Stop _ -> new Change.Stopped();
@@ -138,6 +179,13 @@ public record Transition(Change change, List<Effect> effects, MatchState after) 
           Optional.of(new Effect.Killed(kill.victims().stream().map(CombatantId::uuid).toList()));
       case MatchEffect.CaptureSnapshot _,
           MatchEffect.EnterLobby _,
+          MatchEffect.ReturnToLobby _,
+          MatchEffect.NeedBallot _,
+          MatchEffect.PrepareMap _,
+          MatchEffect.PreviewMap _,
+          MatchEffect.Freeze _,
+          MatchEffect.Unfreeze _,
+          MatchEffect.Death _,
           MatchEffect.GiveFuse _,
           MatchEffect.Announce _,
           MatchEffect.Tell _,

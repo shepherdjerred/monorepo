@@ -67,18 +67,6 @@ export async function generateFlagTypesSource(): Promise<string> {
     const booleanFlags = nsFlags.filter((flag) => flag.type === "boolean");
     const variantFlags = nsFlags.filter((flag) => flag.type === "variant");
 
-    // All flags in namespace
-    lines.push(`export const ${prefixUpper}_FLAG_KEYS = [`);
-    for (const flag of nsFlags) {
-      lines.push(`  ${JSON.stringify(flag.key)},`);
-    }
-    lines.push("] as const;");
-    lines.push("");
-    lines.push(
-      `export type ${prefixPascal}FlagKey = (typeof ${prefixUpper}_FLAG_KEYS)[number];`,
-    );
-    lines.push("");
-
     // Boolean flags in namespace
     if (booleanFlags.length === nsFlags.length) {
       lines.push(
@@ -106,6 +94,17 @@ export async function generateFlagTypesSource(): Promise<string> {
     lines.push("");
     lines.push(
       `export type ${prefixPascal}VariantFlagKey = (typeof ${prefixUpper}_VARIANT_FLAG_KEYS)[number];`,
+    );
+    lines.push("");
+
+    // Every flag in the namespace, spread from the typed tuples above rather
+    // than a second copy of each literal, so the file stays within its budget.
+    lines.push(
+      `export const ${prefixUpper}_FLAG_KEYS = [...${prefixUpper}_BOOLEAN_FLAG_KEYS, ...${prefixUpper}_VARIANT_FLAG_KEYS] as const;`,
+    );
+    lines.push("");
+    lines.push(
+      `export type ${prefixPascal}FlagKey = (typeof ${prefixUpper}_FLAG_KEYS)[number];`,
     );
     lines.push("");
   }

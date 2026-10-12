@@ -22,7 +22,7 @@ import java.util.UUID;
  * @param bombs every bomb and nuke; empty before the match is live
  * @param poison the end-of-game poison while live
  * @param winner the winning team once ended with a winner
- * @param startsAt when the match goes live, while the countdown runs
+ * @param startsAt when the countdown, the preview or the freeze ends
  */
 public record MatchState(
     UUID matchId,
@@ -45,6 +45,9 @@ public record MatchState(
   public enum Phase {
     LOBBY,
     COUNTDOWN,
+    PREPARING,
+    PREVIEW,
+    FREEZE,
     LIVE,
     ENDED,
     RESETTING
@@ -138,6 +141,9 @@ public record MatchState(
         switch (snapshot.phase()) {
           case LOBBY -> Phase.LOBBY;
           case COUNTDOWN -> Phase.COUNTDOWN;
+          case PREPARING -> Phase.PREPARING;
+          case PREVIEW -> Phase.PREVIEW;
+          case FREEZE -> Phase.FREEZE;
           case LIVE -> Phase.LIVE;
           case ENDED -> Phase.ENDED;
           case RESETTING -> Phase.RESETTING;

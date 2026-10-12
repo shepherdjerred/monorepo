@@ -46,9 +46,19 @@ final class ViewsTest {
         List.of(TeamColor.RED, TeamColor.BLUE),
         List.of(
             new MatchSnapshot.CombatantView(
-                ALICE, "Alice", Optional.of(TeamColor.RED), Optional.of("trooper"), true),
+                ALICE,
+                "Alice",
+                Optional.of(TeamColor.RED),
+                Optional.of("trooper"),
+                true,
+                com.shepherdjerred.thestorm.rwf.domain.match.Score.ZERO),
             new MatchSnapshot.CombatantView(
-                BOT_1, "Rusher", Optional.of(TeamColor.BLUE), Optional.of("longbow"), false)),
+                BOT_1,
+                "Rusher",
+                Optional.of(TeamColor.BLUE),
+                Optional.of("longbow"),
+                false,
+                com.shepherdjerred.thestorm.rwf.domain.match.Score.ZERO)),
         List.of(
             new MatchSnapshot.BombView(
                 "red-1",
@@ -59,15 +69,24 @@ final class ViewsTest {
                     42,
                     Optional.of(
                         new MatchSnapshot.BombView.State.Arming(
-                            TeamColor.RED, 0.25, List.of(ALICE))))),
+                            TeamColor.RED, 0.25, List.of(ALICE)))),
+                com.shepherdjerred.thestorm.rwf.domain.match.MatchSnapshot.BombView.progressOf(
+                    new MatchSnapshot.BombView.State.Armed(
+                        42,
+                        Optional.of(
+                            new MatchSnapshot.BombView.State.Arming(
+                                TeamColor.RED, 0.25, List.of(ALICE)))))),
             new MatchSnapshot.BombView(
                 "nuke-1",
                 true,
                 Optional.empty(),
                 Samples.NUKE,
-                new MatchSnapshot.BombView.State.Idle())),
+                new MatchSnapshot.BombView.State.Idle(),
+                com.shepherdjerred.thestorm.rwf.domain.match.MatchSnapshot.BombView.progressOf(
+                    new MatchSnapshot.BombView.State.Idle()))),
         Optional.of(new MatchSnapshot.PoisonView(PoisonClock.Stage.WARNED, Duration.ofSeconds(30))),
         Optional.of(new Outcome.Winner(TeamColor.BLUE)),
+        Optional.empty(),
         Optional.empty());
   }
 
@@ -99,8 +118,9 @@ final class ViewsTest {
   void theTransitionKeepsTheMapHashDeathsAndCombatantEffects() {
     var map = Samples.twoTeams();
     var chosen =
-        Transition.of(new MatchNotification(new MatchEvent.MapChosen(map), List.of(), snapshot()));
-    assertThat(chosen.change()).isEqualTo(new Transition.Change.MapChosen("harbour", Samples.SHA));
+        Transition.of(
+            new MatchNotification(new MatchEvent.MapReady(map, T0), List.of(), snapshot()));
+    assertThat(chosen.change()).isEqualTo(new Transition.Change.MapReady("harbour", Samples.SHA));
 
     var died =
         Transition.of(

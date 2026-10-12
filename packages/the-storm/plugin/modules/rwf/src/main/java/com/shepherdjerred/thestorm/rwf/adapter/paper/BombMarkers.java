@@ -1,15 +1,16 @@
 package com.shepherdjerred.thestorm.rwf.adapter.paper;
 
-import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
 import com.shepherdjerred.thestorm.rwf.domain.map.BombSite;
 import com.shepherdjerred.thestorm.rwf.domain.map.MapDefinition;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchSnapshot;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
@@ -39,6 +40,7 @@ final class BombMarkers {
   private final Map<String, TNTPrimed> primed = new HashMap<>();
   private final Map<String, TextDisplay> holograms = new HashMap<>();
   private final Map<String, BombSite> sites = new HashMap<>();
+  private BooleanSupplier original = () -> false;
 
   BombMarkers(PaperContext context, Keys keys, Consumer<Display> style) {
     this.context = context;
@@ -46,8 +48,13 @@ final class BombMarkers {
     this.style = style;
   }
 
+  /** Whether bombs look and sound as Red Warfare's did, read as each effect plays. */
+  void effects(BooleanSupplier originalEffects) {
+    this.original = originalEffects;
+  }
+
   private World world() {
-    return context.world();
+    return context.mapWorld();
   }
 
   /** Removes every bomb entity left in the world by a crash. */
@@ -156,6 +163,12 @@ final class BombMarkers {
     var site = site(bombId);
     removePrimed(bombId);
     var at = Places.center(world(), site.position());
+    if (original.getAsBoolean()) {
+      // Red Warfare's huge explosion, heard across the whole map.
+      world().spawnParticle(Particle.EXPLOSION_EMITTER, at, 1);
+      world().playSound(at, Sound.ENTITY_GENERIC_EXPLODE, Sounds.MAP_WIDE, 0);
+      return;
+    }
     world().spawnParticle(Particle.EXPLOSION_EMITTER, at, 3);
     world().playSound(at, Sound.ENTITY_GENERIC_EXPLODE, 4, 1);
   }
@@ -180,47 +193,51 @@ final class BombMarkers {
       if (hologram == null || site == null) {
         continue;
       }
-      hologram.text(title(site).appendNewline().append(state(view)));
+      hologram.text(
+          original.getAsBoolean() && !view.progress().isEmpty() ? bars(view) : text(site, view));
     }
+  }
+
+  /**
+   * Red Warfare's hologram while teams work on a bomb ({@code TeamBomb.drawHologram}): one
+   * ten-segment bar per team, filled in the team's colour and the rest dark red.
+   */
+  static Component bars(MatchSnapshot.BombView view) {
+    var text = Component.text();
+    var first = true;
+    for (var arming : view.progress()) {
+      if (!first) {
+        text.appendNewline();
+      }
+      first = false;
+      text.append(Scoreboards.bar(arming, "█"));
+    }
+    return text.build();
+  }
+
+  /**
+   * Red Warfare's hologram otherwise: "Exploding in N" in the owner's (for a nuke, the armer's)
+   * colour while it burns, else the team's bomb, or an unarmed nuke.
+   */
+  static Component text(BombSite site, MatchSnapshot.BombView view) {
+    if (view.state() instanceof MatchSnapshot.BombView.State.Armed armed) {
+      var color = view.team().map(Scoreboards::color).orElse(NamedTextColor.WHITE);
+      return Component.text("Exploding in ", color, TextDecoration.BOLD)
+          .append(
+              Component.text(
+                  String.valueOf(armed.remaining()), NamedTextColor.DARK_RED, TextDecoration.BOLD));
+    }
+    return title(site);
   }
 
   private static Component title(BombSite site) {
     return site.owner()
         .team()
-        .map(team -> Component.text(team.displayName() + "'s Bomb", Scoreboards.color(team)))
-        .orElseGet(() -> Component.text("Nuke", NamedTextColor.GOLD));
-  }
-
-  private static Component state(MatchSnapshot.BombView view) {
-    return switch (view.state()) {
-      case MatchSnapshot.BombView.State.Idle _ -> Component.text("Idle", NamedTextColor.GRAY);
-      case MatchSnapshot.BombView.State.Arming arming ->
-          Component.text(
-              arming.team().shortName() + " arming " + Math.round(arming.progress() * 100) + "%",
-              NamedTextColor.YELLOW);
-      case MatchSnapshot.BombView.State.Armed armed ->
-          armed
-              .defusing()
-              .map(
-                  defusing ->
-                      Component.text(
-                          defusing.team().shortName()
-                              + " defusing "
-                              + Math.round(defusing.progress() * 100)
-                              + "%",
-                          NamedTextColor.AQUA))
-              .orElseGet(
-                  () ->
-                      Component.text(
-                          "Armed by "
-                              + view.team().map(TeamColor::shortName).orElse("?")
-                              + ": "
-                              + armed.remaining()
-                              + "s",
-                          NamedTextColor.RED));
-      case MatchSnapshot.BombView.State.Destroyed _ ->
-          Component.text("Destroyed", NamedTextColor.DARK_GRAY);
-    };
+        .map(
+            team ->
+                Component.text(
+                    team.displayName() + "'s Bomb", Scoreboards.color(team), TextDecoration.BOLD))
+        .orElseGet(() -> Component.text("Unarmed nuke", NamedTextColor.WHITE));
   }
 
   /** Removes every entity and forgets the map. */

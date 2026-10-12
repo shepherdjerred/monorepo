@@ -147,7 +147,7 @@ public final class FakeMatch implements MatchView, MatchEvents, CombatantActions
   }
 
   public void fireMapChosen() {
-    fire(new MatchEvent.MapChosen(map), List.of());
+    fire(new MatchEvent.MapReady(map, T0), List.of());
   }
 
   public void fireTick() {
@@ -166,7 +166,13 @@ public final class FakeMatch implements MatchView, MatchEvents, CombatantActions
         members.values().stream()
             .map(
                 m ->
-                    new MatchSnapshot.CombatantView(m.id(), m.name(), m.team(), m.kit(), m.alive()))
+                    new MatchSnapshot.CombatantView(
+                        m.id(),
+                        m.name(),
+                        m.team(),
+                        m.kit(),
+                        m.alive(),
+                        com.shepherdjerred.thestorm.rwf.domain.match.Score.ZERO))
             .toList(),
         phase == MatchSnapshot.PhaseKind.LOBBY || phase == MatchSnapshot.PhaseKind.COUNTDOWN
             ? List.of()
@@ -178,7 +184,11 @@ public final class FakeMatch implements MatchView, MatchEvents, CombatantActions
                     new BlockPos(4, 1, 16),
                     redArmed
                         ? new MatchSnapshot.BombView.State.Armed(40, Optional.empty())
-                        : new MatchSnapshot.BombView.State.Idle()),
+                        : new MatchSnapshot.BombView.State.Idle(),
+                    com.shepherdjerred.thestorm.rwf.domain.match.MatchSnapshot.BombView.progressOf(
+                        redArmed
+                            ? new MatchSnapshot.BombView.State.Armed(40, Optional.empty())
+                            : new MatchSnapshot.BombView.State.Idle())),
                 new MatchSnapshot.BombView(
                     BLUE_BOMB,
                     false,
@@ -186,10 +196,15 @@ public final class FakeMatch implements MatchView, MatchEvents, CombatantActions
                     new BlockPos(28, 1, 16),
                     blueArmed
                         ? new MatchSnapshot.BombView.State.Armed(40, Optional.empty())
-                        : new MatchSnapshot.BombView.State.Idle())),
+                        : new MatchSnapshot.BombView.State.Idle(),
+                    com.shepherdjerred.thestorm.rwf.domain.match.MatchSnapshot.BombView.progressOf(
+                        blueArmed
+                            ? new MatchSnapshot.BombView.State.Armed(40, Optional.empty())
+                            : new MatchSnapshot.BombView.State.Idle()))),
         Optional.empty(),
         outcome,
-        Optional.ofNullable(startsAt));
+        Optional.ofNullable(startsAt),
+        Optional.empty());
   }
 
   @Override

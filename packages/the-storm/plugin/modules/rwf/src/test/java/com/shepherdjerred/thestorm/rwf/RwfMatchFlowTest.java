@@ -475,11 +475,11 @@ final class RwfMatchFlowTest {
     // is, with no new login.
     alice.performCommand("rwf join");
     harness.until(() -> harness.inMatch(alice));
-    harness.until(() -> alice.getWorld().equals(harness.rwf));
+    harness.until(() -> alice.getWorld().equals(harness.lobbyWorld));
     harness.until(() -> harness.snapshot().phase() == MatchSnapshot.PhaseKind.COUNTDOWN);
 
     assertThat(harness.snapshot().combatants()).hasSize(1);
-    assertThat(alice.getWorld()).isEqualTo(harness.rwf);
+    assertThat(alice.getWorld()).isEqualTo(harness.lobbyWorld);
   }
 
   @Test

@@ -3,7 +3,10 @@ package com.shepherdjerred.thestorm.tools.rwfmap;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.shepherdjerred.thestorm.core.result.Result;
-import com.shepherdjerred.thestorm.rwf.domain.lobby.LobbyBuild;
+import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
+import com.shepherdjerred.thestorm.rwf.domain.geometry.Vec3;
+import com.shepherdjerred.thestorm.rwf.domain.kit.KitBook;
+import com.shepherdjerred.thestorm.rwf.domain.kit.KitSpec;
 import com.shepherdjerred.thestorm.rwfbots.domain.lobby.LobbyNav;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavArtifact;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavCodec;
@@ -13,15 +16,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Checks a map folder's committed {@code nav.rwfnav} and {@code nav.summary.json} against a fresh
  * bake: both must match byte for byte, the committed artifact must decode, carry the schematic's
- * hash and validate clean. The lobby is checked the same way, and its {@code blocks.schem} and
- * {@code lobby.yml} must also still be what {@link LobbyBuild} generates. Every finding is
- * reported, not just the first.
+ * hash and validate clean. The lobby is checked the same way, and its places must be standable.
+ * Every finding is reported, not just the first.
  */
 public final class Verifier {
 
@@ -52,41 +56,67 @@ public final class Verifier {
   }
 
   /**
-   * Verifies the lobby folder: the schematic and layout are what the generator builds, the declared
-   * hash is the schematic's, and the nav files match a fresh bake.
+   * Verifies the lobby folder: the declared hash is the schematic's, every place a player stands is
+   * standable (something solid underfoot, room for feet and head), each shipped kit has exactly one
+   * alcove, each team has a side, and the nav files match a fresh bake.
    */
   public static List<String> verify(LobbyFolder lobby) {
+    return verify(lobby, SHIPPED_KITS);
+  }
+
+  /**
+   * The kits the lobby's alcoves must show: the ones the server ships. The full kit book takes its
+   * place once every kit ships, and the check takes any list of kits.
+   */
+  public static final List<KitSpec> SHIPPED_KITS = KitBook.MILESTONE_ONE;
+
+  /** {@link #verify(LobbyFolder)} against {@code kits}, one alcove each. */
+  public static List<String> verify(LobbyFolder lobby, List<KitSpec> kits) {
     var failures = new ArrayList<String>();
-    var generated = LobbyFolder.generated();
-    var schematic = committed(lobby.blocksFile());
-    if (schematic.isEmpty()
-        || !Arrays.equals(schematic.orElseThrow(), LobbyFolder.generatedBytes())) {
-      failures.add(lobby.blocksFile() + " is not what LobbyBuild generates; run bakeRwfLobby");
-    }
-    if (!lobby.file().blocksSha256().equals(generated.sha256())) {
+    var sha = lobby.schematic().sha256();
+    if (!lobby.file().blocksSha256().equals(sha)) {
       failures.add(
           "lobby.yml declares blocksSha256 "
               + lobby.file().blocksSha256()
-              + " but LobbyBuild generates "
-              + generated.sha256());
+              + " but blocks.schem hashes to "
+              + sha
+              + "; set it and run bakeRwfLobby");
     }
-    if (!lobby.layout().equals(LobbyBuild.layout())) {
-      failures.add(
-          "lobby.yml describes "
-              + lobby.layout()
-              + " but LobbyBuild lays the room out as "
-              + LobbyBuild.layout());
+    var layout = lobby.layout();
+    var classified = lobby.classify();
+    for (var stand : layout.stands()) {
+      standable(classified, stand.position()).ifPresent(failures::add);
+    }
+    var wanted = kits.stream().map(KitSpec::id).collect(Collectors.toUnmodifiableSet());
+    if (!new HashSet<>(layout.kits()).equals(wanted)) {
+      failures.add("the alcoves show " + layout.kits() + " but the shipped kits are " + wanted);
+    }
+    for (var team : TeamColor.values()) {
+      if (layout.side(team).isEmpty()) {
+        failures.add("the lobby has no side for " + team);
+      }
     }
     var baked = Baker.bake(lobby);
     if (!baked.playable()) {
       failures.add("the lobby bakes with problems: " + baked.problems());
     }
     navFiles(
-        new Committed(
-            LobbyNav.ID, lobby.navFile(), lobby.summaryFile(), lobby.schematic().sha256()),
-        baked,
-        failures);
+        new Committed(LobbyNav.ID, lobby.navFile(), lobby.summaryFile(), sha), baked, failures);
     return List.copyOf(failures);
+  }
+
+  /** Why nobody can stand at {@code at}, if they cannot. */
+  static Optional<String> standable(SchematicClassification blocks, Vec3 at) {
+    var x = (int) Math.floor(at.x());
+    var y = (int) Math.floor(at.y());
+    var z = (int) Math.floor(at.z());
+    if (!blocks.shape(x, y - 1, z).standable()) {
+      return Optional.of("nothing to stand on below " + at);
+    }
+    if (blocks.shape(x, y, z).blocksMovement() || blocks.shape(x, y + 1, z).blocksMovement()) {
+      return Optional.of("no room to stand at " + at);
+    }
+    return Optional.empty();
   }
 
   private static void navFiles(Committed target, Baker.Baked baked, List<String> failures) {

@@ -121,8 +121,29 @@ class Recording:
     reason: str = ""
 
 
+# Version 4 adds structured occurrence rows (ballot, kills, chat, world changes,
+# projectiles, abilities, effects, killstreaks and pulses) beside the training
+# rows; its frames, inputs and observations are those of version 3. Training
+# reads neither, so each is only checked for its shape and tick.
+READABLE_VERSIONS = ("3", "4")
+OCCURRENCE_FIELDS = {"B": 7, "J": 10, "A": 5, "U": 6, "K": 5, "C": 6, "V": None, "D": None, "S": 5}
+
+
+def occurrence(row: list[str]) -> None:
+    expected = OCCURRENCE_FIELDS[row[0]]
+    if expected is not None and len(row) != expected:
+        raise ValueError(f"invalid {row[0]} occurrence size")
+    if row[0] == "V" and (len(row) < 5 or len(row) % 2 == 0):
+        raise ValueError("a ballot pairs each map with its votes")
+    if row[0] == "D" and len(row) < 7:
+        raise ValueError("invalid kill occurrence size")
+    if int(row[1]) < 0:
+        raise ValueError("negative occurrence tick")
+
+
 def read(stream: TextIO) -> Recording:
     record: Recording | None = None
+    version = ""
     ended = False
     count = len(features())
     for number, line in enumerate(stream, 1):
@@ -130,8 +151,9 @@ def read(stream: TextIO) -> Recording:
         tag = row[0]
         try:
             if tag == "H":
-                if record is not None or len(row) != 7 or row[1] != "3":
-                    raise ValueError("training requires exactly one schema 3 header")
+                if record is not None or len(row) != 7 or row[1] not in READABLE_VERSIONS:
+                    raise ValueError("training requires exactly one schema 3 or 4 header")
+                version = row[1]
                 if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", row[3]):
                     raise ValueError("invalid map identity")
                 if not re.fullmatch(r"[a-f0-9]{64}", row[4]):
@@ -171,6 +193,10 @@ def read(stream: TextIO) -> Recording:
                     raise ValueError("invalid or duplicate end row")
                 record.winner, record.reason = row[2], row[3]
                 ended = True
+            elif tag in OCCURRENCE_FIELDS:
+                if version != "4":
+                    raise ValueError(f"occurrence row {tag} requires schema 4")
+                occurrence(row)
             elif tag not in ("E", "I", "P"):
                 raise ValueError(f"unknown row {tag}")
         except (ValueError, IndexError) as error:

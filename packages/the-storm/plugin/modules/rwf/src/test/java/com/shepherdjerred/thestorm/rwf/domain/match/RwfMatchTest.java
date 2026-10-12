@@ -37,7 +37,6 @@ import com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent.ForceStart;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent.Join;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent.Leave;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent.LookedAround;
-import com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent.MapChosen;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent.PickKit;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent.ResetDone;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent.Stop;
@@ -146,12 +145,18 @@ final class RwfMatchTest {
     void enoughPlayersAndAMapStartTheCountdown() {
       play.join(ALICE);
       play.join(BOB);
-      play.ok(new MapChosen(Samples.twoTeams()));
+      var opened = play.ballot(Samples.twoTeams());
 
       var effects = play.tick(1);
 
-      assertThat(play.match.phase())
-          .isEqualTo(new Countdown(play.now.plusSeconds(90), play.now, 90));
+      // One map on the ballot: nothing to vote on, so it is chosen and loaded at once.
+      assertThat(only(opened, MatchEffect.PrepareMap.class))
+          .containsExactly(new MatchEffect.PrepareMap(Samples.twoTeams().id()));
+      var countdown = (Countdown) play.match.phase();
+      assertThat(countdown.startsAt()).isEqualTo(play.now.plusSeconds(90));
+      assertThat(countdown.waitingSince()).isEqualTo(play.now);
+      assertThat(countdown.lastAnnounced()).isEqualTo(90);
+      assertThat(countdown.ballot().chosen()).contains(Samples.twoTeams().id());
       assertThat(notices(effects)).containsExactly(NoticeKind.COUNTDOWN);
     }
 
@@ -160,7 +165,7 @@ final class RwfMatchTest {
       var waiting = new Play(MatchSettings.RED_WARFARE, T0);
       waiting.join(ALICE);
       waiting.join(BOB);
-      waiting.ok(new MapChosen(Samples.twoTeams()));
+      waiting.ballot(Samples.twoTeams());
 
       waiting.tick(0);
       assertThat(waiting.match.phase()).isInstanceOf(Lobby.class);
@@ -174,7 +179,7 @@ final class RwfMatchTest {
     void theCountdownStopsWhenPlayersLeave() {
       play.join(ALICE);
       play.join(BOB);
-      play.ok(new MapChosen(Samples.twoTeams()));
+      play.ballot(Samples.twoTeams());
       play.tick(1);
       play.ok(new Leave(BOB, play.now));
 
@@ -188,8 +193,9 @@ final class RwfMatchTest {
     void theCountdownAnnouncesItsWayToLive() {
       play.join(ALICE);
       play.join(BOB);
-      play.ok(new MapChosen(Samples.twoTeams()));
+      play.ballot(Samples.twoTeams());
       play.tick(1);
+      play.ready(Samples.twoTeams());
 
       var effects = tickFor(play, 90);
 
@@ -207,7 +213,7 @@ final class RwfMatchTest {
     @Test
     void forceStartNeedsTwoPlayers() {
       play.join(ALICE);
-      play.ok(new MapChosen(Samples.twoTeams()));
+      play.ballot(Samples.twoTeams());
 
       assertThat(play.refused(new ForceStart(play.now))).isEqualTo(MatchError.TOO_FEW_PLAYERS);
     }
@@ -262,7 +268,11 @@ final class RwfMatchTest {
     void theMapIsLockedAndNobodyJoinsOnceLive() {
       play.start(Samples.twoTeams(), ALICE, BOB);
 
-      assertThat(play.refused(new MapChosen(Samples.threeTeams())))
+      var three = Samples.threeTeams();
+      assertThat(
+              play.refused(
+                  new MatchEvent.SetMap(
+                      new Ballot.Candidate(three.id(), three.name(), three.author()))))
           .isEqualTo(MatchError.MAP_LOCKED);
       assertThat(play.refused(new Join(CAROL, "Carol", play.now)))
           .isEqualTo(MatchError.IN_PROGRESS);

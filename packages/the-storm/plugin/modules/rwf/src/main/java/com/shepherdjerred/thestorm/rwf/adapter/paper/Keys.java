@@ -24,6 +24,9 @@ final class Keys {
   private final NamespacedKey lobby;
   private final NamespacedKey selector;
   private final NamespacedKey leave;
+  private final NamespacedKey compass;
+  private final NamespacedKey nextGame;
+  private final NamespacedKey kitLayout;
 
   Keys(Plugin plugin) {
     this.item = new NamespacedKey(plugin, "rwf_item");
@@ -32,6 +35,9 @@ final class Keys {
     this.lobby = new NamespacedKey(plugin, "rwf_lobby");
     this.selector = new NamespacedKey(plugin, "rwf_selector");
     this.leave = new NamespacedKey(plugin, "rwf_leave");
+    this.compass = new NamespacedKey(plugin, "rwf_compass");
+    this.nextGame = new NamespacedKey(plugin, "rwf_next_game");
+    this.kitLayout = new NamespacedKey(plugin, "rwf_kit_layout");
   }
 
   /** Marks {@code stack} as a kit item. */
@@ -59,6 +65,39 @@ final class Keys {
     tag(stack);
     stack.editMeta(
         meta -> meta.getPersistentDataContainer().set(leave, PersistentDataType.BOOLEAN, true));
+  }
+
+  /** Marks {@code stack} as the spectator compass (a kit item too, so it never leaves). */
+  void tagCompass(ItemStack stack) {
+    tag(stack);
+    stack.editMeta(
+        meta -> meta.getPersistentDataContainer().set(compass, PersistentDataType.BOOLEAN, true));
+  }
+
+  boolean isCompass(ItemStack stack) {
+    return has(stack, compass);
+  }
+
+  /** Marks {@code stack} as the dead's "Join next game" item (a kit item too). */
+  void tagNextGame(ItemStack stack) {
+    tag(stack);
+    stack.editMeta(
+        meta -> meta.getPersistentDataContainer().set(nextGame, PersistentDataType.BOOLEAN, true));
+  }
+
+  boolean isNextGame(ItemStack stack) {
+    return has(stack, nextGame);
+  }
+
+  /** Marks {@code stack} as the dead's "Change kit layout" item (a kit item too). */
+  void tagKitLayout(ItemStack stack) {
+    tag(stack);
+    stack.editMeta(
+        meta -> meta.getPersistentDataContainer().set(kitLayout, PersistentDataType.BOOLEAN, true));
+  }
+
+  boolean isKitLayout(ItemStack stack) {
+    return has(stack, kitLayout);
   }
 
   boolean isSelector(ItemStack stack) {

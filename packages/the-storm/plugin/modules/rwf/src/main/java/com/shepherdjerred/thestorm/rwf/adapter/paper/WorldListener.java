@@ -38,7 +38,7 @@ final class WorldListener implements Listener {
   }
 
   private boolean inWorld(Location location) {
-    return location.getWorld().equals(context.world());
+    return context.ours(location.getWorld());
   }
 
   private boolean guarded(Location location, Player player) {

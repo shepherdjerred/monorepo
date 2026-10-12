@@ -14,13 +14,17 @@ import com.shepherdjerred.thestorm.rwf.app.MatchView;
 import com.shepherdjerred.thestorm.rwf.app.PayoutService;
 import com.shepherdjerred.thestorm.rwf.app.Pseudonyms;
 import com.shepherdjerred.thestorm.rwf.app.Recorder;
+import com.shepherdjerred.thestorm.rwf.app.RwfFeatures;
 import com.shepherdjerred.thestorm.rwf.app.map.MapResourceRegistry;
 import com.shepherdjerred.thestorm.rwf.app.store.MatchStore;
+import com.shepherdjerred.thestorm.rwf.app.store.StatsStore;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 import org.bukkit.GameRules;
 import org.bukkit.World;
 import org.bukkit.event.HandlerList;
@@ -65,11 +69,13 @@ public final class RwfPaper {
   private final List<MapWorld> maps;
   private final LobbyRoom lobby;
   private final LobbyDisplays displays;
+  private final com.shepherdjerred.thestorm.rwf.app.store.QuarantineStore quarantines;
   private final List<Listener> listeners;
   private final Cancellable clock;
   private final RwfPermissions permissions;
   private final SealedWorlds sealed;
   private final PublicGameDirectory publicGames;
+  private final TeamChat teamChat;
 
   private RwfPaper(Parts parts) {
     this.context = parts.context();
@@ -79,11 +85,13 @@ public final class RwfPaper {
     this.maps = parts.maps();
     this.lobby = parts.lobby();
     this.displays = parts.displays();
+    this.quarantines = parts.quarantines();
     this.listeners = parts.listeners();
     this.clock = parts.clock();
     this.publicGames = parts.publicGames();
     this.permissions = parts.permissions();
     this.sealed = parts.sealed();
+    this.teamChat = parts.teamChat();
   }
 
   private record Parts(
@@ -98,7 +106,9 @@ public final class RwfPaper {
       Cancellable clock,
       RwfPermissions permissions,
       SealedWorlds sealed,
-      PublicGameDirectory publicGames) {}
+      PublicGameDirectory publicGames,
+      TeamChat teamChat,
+      com.shepherdjerred.thestorm.rwf.app.store.QuarantineStore quarantines) {}
 
   /**
    * The ports the adapters use.
@@ -110,6 +120,9 @@ public final class RwfPaper {
    * @param pseudonyms the pseudonymiser; empty when recording is off
    * @param gate the managed rollout decision for joining
    * @param hooks the server operations tests replace
+   * @param features the managed match feature flags
+   * @param stats lifetime statistics, history and preferences
+   * @param quarantines the maps an operator quarantined, kept across restarts
    */
   public record App(
       SnapshotStore snapshots,
@@ -118,22 +131,22 @@ public final class RwfPaper {
       Recorder recorder,
       Optional<Pseudonyms> pseudonyms,
       JoinGate gate,
-      ServerHooks hooks) {}
+      ServerHooks hooks,
+      RwfFeatures.Source features,
+      StatsStore stats,
+      com.shepherdjerred.thestorm.rwf.app.store.QuarantineStore quarantines) {}
 
-  /** Starts the module's Paper side. The configured world must be loaded already. */
+  /** Starts the module's Paper side. The configured worlds must be loaded already. */
   public static RwfPaper start(
       ModuleContext module, RwfCatalog content, MapResourceRegistry resources, App app) {
     var config = content.config();
-    var world = module.plugin().getServer().getWorld(config.world());
-    if (world == null) {
-      throw new IllegalStateException(
-          "rwf.yml names world "
-              + config.world()
-              + ", which is not loaded; provision it through Multiverse before enabling rwf");
-    }
+    var lobbyWorld = loadedWorld(module, config.worlds().lobby());
+    var mapWorld = loadedWorld(module, config.worlds().maps());
     var sealed = module.services().require(SealedWorlds.class);
-    sealed.seal(world);
-    gameRules(world);
+    for (var world : List.of(lobbyWorld, mapWorld)) {
+      sealed.seal(world);
+      gameRules(world);
+    }
     var context =
         new PaperContext(
             new PaperContext.Parts(
@@ -142,7 +155,8 @@ public final class RwfPaper {
                 module.compute(),
                 module.time(),
                 module.random(),
-                world,
+                lobbyWorld,
+                mapWorld,
                 module
                     .services()
                     .require(com.shepherdjerred.thestorm.core.world.BlockChanges.class),
@@ -157,10 +171,22 @@ public final class RwfPaper {
     for (var map : content.rotation()) {
       maps.add(new MapWorld(context, map, app.hooks().chunks(), resources));
     }
+    var statsHolder = new AtomicReference<Stats>();
+    var featureHolder = new AtomicReference<MatchRunner>();
     var lobby = new LobbyRoom(context, content.lobby(), app.hooks().chunks());
     var displays =
         new LobbyDisplays(
-            new LobbyDisplays.Parts(context, keys, lobby, kits, app.hooks().displayStyle()));
+            new LobbyDisplays.Parts(
+                context,
+                keys,
+                lobby,
+                kits,
+                app.hooks().displayStyle(),
+                () -> Optional.ofNullable(statsHolder.get()).map(Stats::leaders).orElseGet(Map::of),
+                () ->
+                    Optional.ofNullable(featureHolder.get())
+                        .map(started -> started.features().stats())
+                        .orElse(false)));
     var bots = new Bots(module.services());
     var tracker = new CombatTracker(context.time());
     var inputs = new Inputs();
@@ -197,9 +223,10 @@ public final class RwfPaper {
                 app.store(),
                 recordings,
                 lobby,
-                new LobbyHud(context.server()),
+                new LobbyHud(context.server(), boards::lobby),
                 displays,
-                new KitMenu.Opener(context.server(), kits, content.kits())));
+                new KitMenu.Opener(context.server(), kits, content.kits()),
+                app.features()));
     var actions =
         new PaperCombatantActions(
             new PaperCombatantActions.Parts(runner, tracker, recordings, keys, app.hooks()));
@@ -207,7 +234,48 @@ public final class RwfPaper {
     var _ = runner.subscribe(watchers::onTransition);
     var metrics = new MatchAnalytics(context.activity());
     var _ = runner.subscribe(metrics::accept);
+    // Kit picks, map votes and finished matches; the killstreaks and kit shop call its hooks.
+    var productEvents = new RwfAnalytics(context.analytics());
+    var _ = runner.subscribe(productEvents::accept);
+    var hats = new Hats(runner, context);
+    var _ = runner.subscribe(hats::accept);
     var guard = new ItemGuard(runner, keys);
+    var spectating = new Spectating(runner, watchers, keys, context);
+    var teamChat =
+        new TeamChat(
+            new TeamChat.Parts(
+                runner,
+                watchers,
+                app.stats(),
+                context,
+                line ->
+                    runner
+                        .memberOf(line.speaker())
+                        .ifPresent(
+                            member ->
+                                recordings.chat(
+                                    member.id(),
+                                    MatchRunner.machineName(line.channel().name()),
+                                    line.text()))));
+    runner.tools(spectating, teamChat);
+    bombs.effects(() -> runner.features().bombEffects());
+    runner.onDeath(spectating::death);
+    teamChat.register(
+        module.services().find(com.shepherdjerred.thestorm.chat.app.ChannelRegistry.class));
+    var stats = new Stats(runner, app.stats(), context);
+    statsHolder.set(stats);
+    // The leaderboards are read again as each lobby opens its vote, after the last match settled.
+    var _ =
+        runner.subscribe(
+            notification -> {
+              if (notification.event()
+                      instanceof
+                      com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent.BallotOpened
+                  && runner.features().stats()) {
+                stats.refreshLeaders(() -> {});
+              }
+            });
+    featureHolder.set(runner);
     List<Listener> listeners =
         List.of(
             new PlayerListener(
@@ -218,12 +286,25 @@ public final class RwfPaper {
             new CombatListener(runner, tracker, context, app.hooks()),
             new WorldListener(runner, context, bombs),
             new AfkWatch(runner),
+            spectating,
+            hats,
             inputs);
     listeners.forEach(
         listener -> context.server().getPluginManager().registerEvents(listener, module.plugin()));
     var commands =
         new RwfCommands(
-            new RwfCommands.Parts(context, runner, watchers, kits, app.gate(), config, bots));
+            new RwfCommands.Parts(
+                context,
+                runner,
+                watchers,
+                kits,
+                app.gate(),
+                config,
+                bots,
+                stats,
+                spectating,
+                teamChat,
+                app.quarantines()));
     module
         .lifecycle()
         .registerEventHandler(
@@ -257,13 +338,26 @@ public final class RwfPaper {
                 clock,
                 permissions,
                 sealed,
-                publicGames));
+                publicGames,
+                teamChat,
+                app.quarantines()));
     snapshots.load(player -> runner.memberOf(player).isPresent(), () -> {});
     started.prepareMaps();
     return started;
   }
 
-  /** The rules of a sealed match world. */
+  private static World loadedWorld(ModuleContext module, String name) {
+    var world = module.plugin().getServer().getWorld(name);
+    if (world == null) {
+      throw new IllegalStateException(
+          "rwf.yml names world "
+              + name
+              + ", which is not loaded; provision it through Multiverse before enabling rwf");
+    }
+    return world;
+  }
+
+  /** The rules of a sealed rwf world. */
   static void gameRules(World world) {
     world.setGameRule(GameRules.SPAWN_MOBS, false);
     world.setGameRule(GameRules.FIRE_SPREAD_RADIUS_AROUND_PLAYER, 0);
@@ -278,7 +372,7 @@ public final class RwfPaper {
     world.setGameRule(GameRules.NATURAL_HEALTH_REGENERATION, true);
   }
 
-  /** Prepares the lobby and first map. The runner prepares at most one following map. */
+  /** Prepares the lobby. The runner prepares each map the lobby votes for. */
   private void prepareMaps() {
     lobby.prepare(
         ok -> {
@@ -286,25 +380,24 @@ public final class RwfPaper {
             context.logger().error("rwf: the lobby could not be prepared; admission stays closed");
             return;
           }
-          prepareFirstMap();
-        });
-  }
-
-  private void prepareFirstMap() {
-    var map = maps.getFirst();
-    map.prepare(
-        ok -> {
-          if (!ok) {
-            context
-                .logger()
-                .error("rwf: map {} could not be prepared; admission stays closed", map.id());
-            return;
-          }
-          context
-              .logger()
-              .info("rwf: lobby and map {} are ready; {} maps in rotation", map.id(), maps.size());
-          displays.open();
-          runner.open(map);
+          context.logger().info("rwf: the lobby is ready; {} maps in rotation", maps.size());
+          // The operator's quarantines outlast a restart: they leave the rotation before the
+          // first vote is offered.
+          context.onMain(
+              quarantines.all(),
+              kept -> {
+                kept.forEach(
+                    (mapId, reason) -> {
+                      if (runner.rotation().byId(mapId).isPresent()
+                          && runner.rotation().playable().size() > 1) {
+                        var _ = runner.rotation().quarantine(mapId);
+                        context.logger().info("rwf: {} stays quarantined: {}", mapId, reason);
+                      }
+                    });
+                displays.open();
+                runner.open();
+              },
+              "read the quarantined rwf maps");
         });
   }
 
@@ -325,6 +418,7 @@ public final class RwfPaper {
    * permissions.
    */
   public void stop() {
+    teamChat.unregister();
     watchers.stop();
     runner.stop();
     clock.cancel();
@@ -344,7 +438,8 @@ public final class RwfPaper {
     maps.forEach(MapWorld::release);
     displays.clear();
     lobby.release();
-    sealed.unseal(context.world().getName());
+    sealed.unseal(context.lobbyWorld().getName());
+    sealed.unseal(context.mapWorld().getName());
     publicGames.replace(PublicGameDirectory.Kind.RWF, List.of());
   }
 }

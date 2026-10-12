@@ -264,8 +264,13 @@ final class RwfPaperTest {
             alice, alice.getLocation(), new Location(harness.overworld, 0, 70, 0));
     harness.server.getPluginManager().callEvent(out);
     var within =
-        new PlayerTeleportEvent(alice, alice.getLocation(), new Location(harness.rwf, 10, 66, 10));
+        new PlayerTeleportEvent(
+            alice, alice.getLocation(), new Location(harness.lobbyWorld, 140, 66, 30));
     harness.server.getPluginManager().callEvent(within);
+    // Only the match moves a member between the lobby and the map world.
+    var across =
+        new PlayerTeleportEvent(alice, alice.getLocation(), new Location(harness.rwf, 10, 66, 10));
+    harness.server.getPluginManager().callEvent(across);
     var in = new PlayerTeleportEvent(bob, bob.getLocation(), new Location(harness.rwf, 10, 66, 10));
     harness.server.getPluginManager().callEvent(in);
     bob.setGameMode(GameMode.CREATIVE);
@@ -275,6 +280,7 @@ final class RwfPaperTest {
 
     assertThat(out.isCancelled()).isTrue();
     assertThat(within.isCancelled()).isFalse();
+    assertThat(across.isCancelled()).isTrue();
     assertThat(in.isCancelled()).isTrue();
     assertThat(staff.isCancelled()).isFalse();
   }

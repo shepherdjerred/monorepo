@@ -1,8 +1,12 @@
 package com.shepherdjerred.thestorm.rwf.adapter.paper;
 
+import com.shepherdjerred.thestorm.rwf.app.ActionRefusal;
 import com.shepherdjerred.thestorm.rwf.domain.combat.AttackType;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.CombatantId;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent;
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -15,6 +19,7 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
@@ -74,7 +79,7 @@ final class PlayerListener implements Listener {
   }
 
   private boolean inWorld(Player player) {
-    return player.getWorld().equals(context.world());
+    return context.ours(player.getWorld());
   }
 
   /** On join: kit items never survive outside, and a crash's snapshot is restored. */
@@ -150,21 +155,22 @@ final class PlayerListener implements Listener {
   }
 
   /**
-   * Members and watchers cannot teleport out of the rwf world (pearls, homes, warps, /back, /tpa, a
-   * spectator's jump to someone elsewhere) and nobody else may teleport into it while they are not
-   * staff.
+   * Members and watchers cannot teleport out of the rwf worlds (pearls, homes, warps, /back, /tpa,
+   * a spectator's jump to someone elsewhere), and move between the lobby and the map world only
+   * when the match moves them; nobody else may teleport into them while they are not staff.
    */
   @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
   void onTeleport(PlayerTeleportEvent event) {
     var player = event.getPlayer();
     var id = player.getUniqueId();
-    if (snapshots.restoring(id) || runner.isBot(id)) {
-      // Being put back where they were, or a bot the roster is placing.
+    if (snapshots.restoring(id) || runner.isBot(id) || runner.moving()) {
+      // Being put back where they were, a bot the roster is placing, or the match moving them.
       return;
     }
-    var toRwf = event.getTo().getWorld().equals(context.world());
+    var to = event.getTo().getWorld();
+    var toRwf = context.ours(to);
     if (runner.memberOf(id).isPresent() || watchers.watching(id)) {
-      if (!toRwf) {
+      if (!toRwf || !to.equals(player.getWorld())) {
         event.setCancelled(true);
         Texts.error(player, "You cannot leave the match that way. Use /rwf leave.");
       }
@@ -173,6 +179,23 @@ final class PlayerListener implements Listener {
     if (toRwf && !inWorld(player) && !Staff.exempt(player)) {
       event.setCancelled(true);
       Texts.error(player, "Join Search and Destroy with /rwf join.");
+    }
+  }
+
+  /** A member frozen at their spawn may look around but not move until the match goes live. */
+  @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
+  void onFrozenMove(PlayerMoveEvent event) {
+    var player = event.getPlayer();
+    if (!runner.frozen(player.getUniqueId())) {
+      return;
+    }
+    var from = event.getFrom();
+    var to = event.getTo();
+    if (from.getX() != to.getX() || from.getZ() != to.getZ() || to.getY() > from.getY()) {
+      var held = from.clone();
+      held.setYaw(to.getYaw());
+      held.setPitch(to.getPitch());
+      event.setTo(held);
     }
   }
 
@@ -191,6 +214,9 @@ final class PlayerListener implements Listener {
     if (item != null && rightClick(event) && lobbyItem(event, player, item)) {
       return;
     }
+    if (podium(event, player)) {
+      return;
+    }
     var block = event.getClickedBlock();
     if (event.getAction() == Action.RIGHT_CLICK_BLOCK && block != null && item != null) {
       var site = bombs.siteAt(Places.pos(block));
@@ -199,7 +225,7 @@ final class PlayerListener implements Listener {
         event.setUseItemInHand(Event.Result.DENY);
         actions
             .clickBomb(member.orElseThrow().id(), site.orElseThrow().id())
-            .ifPresent(refusal -> Texts.error(player, refusal));
+            .ifPresent(refusal -> refuseBomb(player, refusal));
         return;
       }
     }
@@ -216,6 +242,24 @@ final class PlayerListener implements Listener {
           .useRewind(member.orElseThrow().id())
           .ifPresent(refusal -> Texts.error(player, refusal));
     }
+  }
+
+  /** A right-click on a vote podium's lodestone votes for its map; whether it was one. */
+  private boolean podium(PlayerInteractEvent event, Player player) {
+    var block = event.getClickedBlock();
+    if (event.getAction() != Action.RIGHT_CLICK_BLOCK
+        || block == null
+        || !block.getWorld().equals(context.lobbyWorld())) {
+      return false;
+    }
+    var podium = runner.lobbyRoom().layout().podiumAt(Places.pos(block));
+    if (podium.isEmpty()) {
+      return false;
+    }
+    event.setUseInteractedBlock(Event.Result.DENY);
+    event.setUseItemInHand(Event.Result.DENY);
+    runner.voteAt(player, podium.orElseThrow()).ifPresent(refusal -> Texts.error(player, refusal));
+    return true;
   }
 
   /**
@@ -256,8 +300,26 @@ final class PlayerListener implements Listener {
     if (bomb.isPresent() && keys.isFuse(player.getInventory().getItemInMainHand())) {
       actions
           .clickBomb(member.orElseThrow().id(), bomb.orElseThrow())
-          .ifPresent(refusal -> Texts.error(player, refusal));
+          .ifPresent(refusal -> refuseBomb(player, refusal));
     }
+  }
+
+  /** Red Warfare said why a bomb click failed at most this often. */
+  static final Duration REFUSAL_EVERY = Duration.ofSeconds(2);
+
+  private final Map<java.util.UUID, java.time.Instant> refused = new HashMap<>();
+
+  /** Why a bomb click failed; with the bomb effects on, at most every two seconds per player. */
+  private void refuseBomb(Player player, ActionRefusal refusal) {
+    if (runner.features().bombEffects()) {
+      var now = runner.now();
+      var last = refused.get(player.getUniqueId());
+      if (last != null && now.isBefore(last.plus(REFUSAL_EVERY))) {
+        return;
+      }
+      refused.put(player.getUniqueId(), now);
+    }
+    Texts.error(player, refusal);
   }
 
   /** The combatant id of {@code player}, for commands. */

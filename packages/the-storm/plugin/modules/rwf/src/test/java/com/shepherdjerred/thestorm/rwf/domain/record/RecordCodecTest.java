@@ -79,7 +79,7 @@ final class RecordCodecTest {
             Optional.of(TeamColor.RED),
             RecordEnd.Reason.LAST_TEAM_STANDING,
             Map.of("p1", 3L));
-    return new MatchRecord(header, events, frames, inputs, List.of(), intents, end);
+    return new MatchRecord(header, events, frames, inputs, List.of(), intents, List.of(), end);
   }
 
   /**
@@ -146,6 +146,7 @@ final class RecordCodecTest {
                 new InputFrame(new InputFrame.Legacy(2, "p1", 0, 0, 0))),
             List.of(new ObservationFrame(0, "p1", "rwf-combat-v1", List.of(0.25, -0.75))),
             legacy.intents(),
+            List.of(),
             legacy.end());
     var text = RecordCodec.encode(record);
     assertThat(text).contains("N\t0\tp1\t65\t26950\t-1225\ttrue\tfalse\t6\t42\t-1\tHUMAN\n");
@@ -160,10 +161,10 @@ final class RecordCodecTest {
   }
 
   @Test
-  void humansAreSampledEveryTickAndBotsEveryOther() {
+  void humansAndBotsAreSampledEveryTick() {
     assertThat(Frame.due(false, 7)).isTrue();
     assertThat(Frame.due(false, 8)).isTrue();
-    assertThat(Frame.due(true, 7)).isFalse();
+    assertThat(Frame.due(true, 7)).isTrue();
     assertThat(Frame.due(true, 8)).isTrue();
   }
 
@@ -232,6 +233,7 @@ final class RecordCodecTest {
                 new MatchRecord(
                     header,
                     List.of(new RecordEvent(5, "a", "b", ""), new RecordEvent(4, "a", "b", "")),
+                    List.of(),
                     List.of(),
                     List.of(),
                     List.of(),

@@ -245,7 +245,7 @@ final class RwfBotsFlowTest {
     harness.match.fireJoin(new CombatantId.Human(alice.getUniqueId()), alice.getName());
     // The map was chosen with other blocks than the artifact was baked from.
     var stale = new FakeMatch("f".repeat(64));
-    harness.match.fire(new MatchEvent.MapChosen(stale.map()), List.of());
+    harness.match.fire(new MatchEvent.MapReady(stale.map(), FakeMatch.T0), List.of());
 
     assertThat(harness.roster().fill(FakeMatch.MATCH_ID, 3)).isEmpty();
     assertThat(harness.bodies.created()).isZero();

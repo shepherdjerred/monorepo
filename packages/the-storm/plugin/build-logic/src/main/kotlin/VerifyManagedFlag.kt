@@ -10,10 +10,15 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 
 /**
- * Checks one Java Flipt client's {@code NAMESPACE_KEY} and {@code FLAG_KEY} constants against the
- * managed flag whose {@code source} is {@link #flagSource} in the shared inventory.
+ * Checks one Java Flipt client's {@code NAMESPACE_KEY} and flag key constant ({@link #flagConstant},
+ * {@code FLAG_KEY} unless set) against the managed flag whose {@code source} is {@link #flagSource}
+ * in the shared inventory. A client evaluating several flags names one constant per flag.
  */
 abstract class VerifyManagedFlag : DefaultTask() {
+  init {
+    flagConstant.convention("FLAG_KEY")
+  }
+
   @get:InputFile
   @get:PathSensitive(PathSensitivity.RELATIVE)
   abstract val inventory: RegularFileProperty
@@ -23,6 +28,8 @@ abstract class VerifyManagedFlag : DefaultTask() {
   abstract val source: RegularFileProperty
 
   @get:Input abstract val flagSource: Property<String>
+
+  @get:Input abstract val flagConstant: Property<String>
 
   @TaskAction
   fun verify() {
@@ -43,7 +50,7 @@ abstract class VerifyManagedFlag : DefaultTask() {
             ?: throw GradleException("expected exactly one managed flag for $id")
     if (flag["type"] != "boolean" ||
         flag["default"] != false ||
-        flag["key"] != constant("FLAG_KEY") ||
+        flag["key"] != constant(flagConstant.get()) ||
         flag["namespace"] != constant("NAMESPACE_KEY")) {
       throw GradleException("Flipt $id identifiers differ from managed inventory")
     }

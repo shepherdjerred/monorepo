@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.rwf.domain.lobby;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.shepherdjerred.thestorm.core.result.Result;
+import com.shepherdjerred.thestorm.rwf.domain.match.Ballot;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchError;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchSettings;
@@ -25,7 +26,11 @@ final class LobbyStatusTest {
           Duration.ofSeconds(90),
           Duration.ofHours(1),
           Duration.ofSeconds(15),
-          Duration.ofMinutes(1));
+          Duration.ofMinutes(1),
+          Duration.ZERO,
+          Duration.ZERO,
+          Duration.ZERO,
+          false);
 
   private RwfMatch match = RwfMatch.open(SETTINGS, Samples.MATCH, Samples.SEED);
   private Instant now = Samples.T0;
@@ -56,7 +61,11 @@ final class LobbyStatusTest {
 
   @Test
   void aLobbyShortOfPlayersSaysHowManyMoreItNeeds() {
-    on(new MatchEvent.MapChosen(Samples.twoTeams()));
+    var map = Samples.twoTeams();
+    on(
+        new MatchEvent.BallotOpened(
+            java.util.List.of(new Ballot.Candidate(map.id(), map.name(), map.author()))));
+    on(new MatchEvent.MapReady(map, now));
     on(new MatchEvent.Join(Samples.ALICE, "Alice", now));
     on(new MatchEvent.Join(Samples.BOT_1, "Rusher", now));
     tick(Duration.ofSeconds(1));
@@ -73,7 +82,11 @@ final class LobbyStatusTest {
 
   @Test
   void theCountdownCountsWholeSecondsDownAndDrainsItsProgress() {
-    on(new MatchEvent.MapChosen(Samples.twoTeams()));
+    var map = Samples.twoTeams();
+    on(
+        new MatchEvent.BallotOpened(
+            java.util.List.of(new Ballot.Candidate(map.id(), map.name(), map.author()))));
+    on(new MatchEvent.MapReady(map, now));
     on(new MatchEvent.Join(Samples.ALICE, "Alice", now));
     on(new MatchEvent.Join(Samples.BOB, "Bob", now));
     on(new MatchEvent.Join(Samples.CAROL, "Carol", now));

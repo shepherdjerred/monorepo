@@ -12,6 +12,7 @@ import com.shepherdjerred.thestorm.rwf.domain.match.MatchSnapshot;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -24,6 +25,13 @@ final class MatchAnalyticsTest {
   private static final class Recording implements ProductAnalytics {
     private final List<Action> actions = new ArrayList<>();
     private final List<Mode> modes = new ArrayList<>();
+    private final List<Map.Entry<GameEvent, Map<String, Object>>> games = new ArrayList<>();
+
+    @Override
+    public void game(UUID player, GameEvent event, Map<String, Object> properties) {
+      assertThat(player).isEqualTo(PLAYER);
+      games.add(Map.entry(event, ProductAnalytics.checked(properties)));
+    }
 
     @Override
     public void interaction(UUID player, Action action) {
@@ -76,6 +84,56 @@ final class MatchAnalyticsTest {
         .containsExactly(ProductAnalytics.Mode.SEARCH_AND_DESTROY, ProductAnalytics.Mode.SURVIVAL);
   }
 
+  @Test
+  void humansKitsVotesAndFinishedMatchesAreNamedEventsAndBotsSendNone() {
+    var recording = new Recording();
+    var events = new RwfAnalytics(recording);
+    events.accept(
+        new MatchNotification(
+            new MatchEvent.PickKit(HUMAN, "longbow"),
+            List.of(),
+            snapshot(MatchSnapshot.PhaseKind.COUNTDOWN, List.of(HUMAN, BOT))));
+    events.accept(
+        new MatchNotification(
+            new MatchEvent.PickKit(BOT, "trooper"),
+            List.of(),
+            snapshot(MatchSnapshot.PhaseKind.COUNTDOWN, List.of(HUMAN, BOT))));
+    events.accept(
+        new MatchNotification(
+            new MatchEvent.Vote(HUMAN, "harbour"),
+            List.of(),
+            snapshot(MatchSnapshot.PhaseKind.COUNTDOWN, List.of(HUMAN, BOT))));
+    events.accept(
+        new MatchNotification(
+            new MatchEvent.ForceStart(Instant.EPOCH),
+            List.of(),
+            snapshot(MatchSnapshot.PhaseKind.LIVE, List.of(HUMAN, BOT))));
+    events.accept(
+        new MatchNotification(
+            new MatchEvent.Stop(),
+            List.of(),
+            snapshot(MatchSnapshot.PhaseKind.ENDED, List.of(HUMAN, BOT))));
+    events.killstreakUsed(HUMAN, "compass", 2);
+    events.killstreakUsed(BOT, "compass", 2);
+    events.kitPurchased(HUMAN, "medic", 300);
+
+    assertThat(recording.games)
+        .extracting(Map.Entry::getKey)
+        .containsExactly(
+            ProductAnalytics.GameEvent.RWF_KIT_SELECTED,
+            ProductAnalytics.GameEvent.RWF_MAP_VOTE,
+            ProductAnalytics.GameEvent.RWF_MATCH_COMPLETED,
+            ProductAnalytics.GameEvent.RWF_KILLSTREAK_USED,
+            ProductAnalytics.GameEvent.RWF_KIT_PURCHASED);
+    assertThat(recording.games.get(0).getValue()).containsEntry("kit", "longbow");
+    assertThat(recording.games.get(1).getValue()).containsEntry("map", "harbour");
+    assertThat(recording.games.get(2).getValue())
+        .containsEntry("result", "stopped")
+        .containsEntry("humans", 1L)
+        .containsEntry("bots", 1L)
+        .containsKeys("kills", "assists", "duration_s", "map", "kit");
+  }
+
   private static MatchSnapshot snapshot(MatchSnapshot.PhaseKind phase, List<CombatantId> roster) {
     return new MatchSnapshot(
         new UUID(0, 1),
@@ -87,9 +145,15 @@ final class MatchAnalyticsTest {
             .map(
                 id ->
                     new MatchSnapshot.CombatantView(
-                        id, "Player", Optional.empty(), Optional.empty(), true))
+                        id,
+                        "Player",
+                        Optional.empty(),
+                        Optional.empty(),
+                        true,
+                        com.shepherdjerred.thestorm.rwf.domain.match.Score.ZERO))
             .toList(),
         List.of(),
+        Optional.empty(),
         Optional.empty(),
         Optional.empty(),
         Optional.empty());

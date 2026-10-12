@@ -88,6 +88,7 @@ public final class RwfBotsPaper {
    * @param store where records are written
    * @param bodies the bodies bots inhabit
    * @param world the match world
+   * @param lobbyWorld the lobby world, where bots wait and wander before a match
    * @param tickTimes the server's recent tick times in nanoseconds, for the governor
    * @param chatGate the managed flag that gates bot chat; unused when chat is disabled
    * @param lobby the lobby's baked navigation
@@ -100,6 +101,7 @@ public final class RwfBotsPaper {
       PersonalityStatsStore store,
       Bodies bodies,
       World world,
+      World lobbyWorld,
       Supplier<long[]> tickTimes,
       ChatGate chatGate,
       NavArtifact lobby,
@@ -151,7 +153,8 @@ public final class RwfBotsPaper {
                 new LobbyLoop(module.compute()),
                 app.lobby(),
                 new BodyDriver(
-                    new BodyDriver.Parts(app.bodies(), actions, app.world(), stimuli, bot -> {})),
+                    new BodyDriver.Parts(
+                        app.bodies(), actions, app.lobbyWorld(), stimuli, bot -> {})),
                 actions,
                 app.config(),
                 module.time(),
@@ -225,7 +228,7 @@ public final class RwfBotsPaper {
                         Duration.ofSeconds(chatConfig.flagRefreshSeconds()),
                         app.chatGate(),
                         roster,
-                        app.world(),
+                        java.util.List.of(app.world(), app.lobbyWorld()),
                         services.require(com.shepherdjerred.thestorm.chat.app.NpcChat.class),
                         module.scheduler(),
                         module.time(),

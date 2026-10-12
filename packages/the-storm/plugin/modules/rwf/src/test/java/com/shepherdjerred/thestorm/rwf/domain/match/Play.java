@@ -26,7 +26,16 @@ final class Play {
           Duration.ofSeconds(90),
           Duration.ofSeconds(15),
           Duration.ofSeconds(15),
-          Duration.ofMinutes(1));
+          Duration.ofMinutes(1),
+          Duration.ZERO,
+          Duration.ZERO,
+          Duration.ZERO,
+          false);
+
+  /** The full flow: a 20-second vote lead, a 10-second preview, a 5-second freeze, carry-over. */
+  static final MatchSettings FLOW =
+      SETTINGS.withFlow(
+          Duration.ofSeconds(20), Duration.ofSeconds(10), Duration.ofSeconds(5), true);
 
   RwfMatch match;
   Instant now;
@@ -97,9 +106,23 @@ final class Play {
     return ok(new MatchEvent.Join(id, name(id), now));
   }
 
+  /** Opens the vote on {@code maps}. */
+  List<MatchEffect> ballot(MapDefinition... maps) {
+    return ok(
+        new MatchEvent.BallotOpened(
+            java.util.Arrays.stream(maps)
+                .map(map -> new Ballot.Candidate(map.id(), map.name(), map.author()))
+                .toList()));
+  }
+
+  /** The chosen {@code map} finished loading. */
+  List<MatchEffect> ready(MapDefinition map) {
+    return ok(new MatchEvent.MapReady(map, now));
+  }
+
   /**
-   * Joins everyone, chooses {@code map}, force-starts, and has everyone look around so nobody is
-   * AFK. Returns the force-start's effects.
+   * Joins everyone, opens a vote on {@code map} alone and force-starts: the map loads and the match
+   * goes live at once. Returns the effects of the step that went live.
    */
   List<MatchEffect> start(MapDefinition map, CombatantId... players) {
     var effects = startIdle(map, players);
@@ -114,12 +137,24 @@ final class Play {
     for (var player : players) {
       join(player);
     }
-    ok(new MatchEvent.MapChosen(map));
-    return ok(new MatchEvent.ForceStart(now));
+    ballot(map);
+    var forced = ok(new MatchEvent.ForceStart(now));
+    if (match.phase() instanceof Phase.Live || match.phase() instanceof Phase.Ended) {
+      return forced;
+    }
+    var live = new java.util.ArrayList<>(forced);
+    live.addAll(ready(map));
+    return live;
   }
 
   List<MatchEffect> died(CombatantId victim, Optional<CombatantId> killer) {
     return ok(new MatchEvent.Died(victim, killer, AttackType.MELEE, now));
+  }
+
+  /** {@code by} hurt {@code victim} by {@code amount} with a sword, from {@code before} of 20. */
+  List<MatchEffect> hurt(CombatantId victim, CombatantId by, double amount, double before) {
+    return ok(
+        new MatchEvent.Damaged(victim, Optional.of(by), amount, before, 20, AttackType.MELEE, now));
   }
 
   List<MatchEffect> click(CombatantId who, String bombId) {

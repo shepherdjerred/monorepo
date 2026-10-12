@@ -1,4 +1,4 @@
-"""Read complete bot-only schema-3 captures for the blind preference pack."""
+"""Read complete bot-only schema 3 or 4 captures for the blind preference pack."""
 
 from __future__ import annotations
 

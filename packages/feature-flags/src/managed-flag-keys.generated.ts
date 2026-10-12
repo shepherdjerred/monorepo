@@ -18,19 +18,6 @@ export const MANAGED_NAMESPACES = [
 
 export type ManagedNamespaceKey = (typeof MANAGED_NAMESPACES)[number];
 
-export const WOODPECKER_FLAG_KEYS = [
-  "woodpecker-maintenance-lanes-enabled",
-  "woodpecker-source-incremental-enabled",
-  "woodpecker-prepared-workspace-enabled",
-  "woodpecker-format-cache-enabled",
-  "woodpecker-gradle-seed-enabled",
-  "woodpecker-small-check-grouping-enabled",
-  "woodpecker-bun-copyfile-enabled",
-  "woodpecker-source-cache-enabled",
-] as const;
-
-export type WoodpeckerFlagKey = (typeof WOODPECKER_FLAG_KEYS)[number];
-
 export const WOODPECKER_BOOLEAN_FLAG_KEYS = WOODPECKER_FLAG_KEYS;
 
 export type WoodpeckerBooleanFlagKey =
@@ -41,9 +28,12 @@ export const WOODPECKER_VARIANT_FLAG_KEYS = [] as const;
 export type WoodpeckerVariantFlagKey =
   (typeof WOODPECKER_VARIANT_FLAG_KEYS)[number];
 
-export const JUSTIN_FLAG_KEYS = ["justin_autonomous_devex_enabled"] as const;
+export const WOODPECKER_FLAG_KEYS = [
+  ...WOODPECKER_BOOLEAN_FLAG_KEYS,
+  ...WOODPECKER_VARIANT_FLAG_KEYS,
+] as const;
 
-export type JustinFlagKey = (typeof JUSTIN_FLAG_KEYS)[number];
+export type WoodpeckerFlagKey = (typeof WOODPECKER_FLAG_KEYS)[number];
 
 export const JUSTIN_BOOLEAN_FLAG_KEYS = JUSTIN_FLAG_KEYS;
 
@@ -53,49 +43,12 @@ export const JUSTIN_VARIANT_FLAG_KEYS = [] as const;
 
 export type JustinVariantFlagKey = (typeof JUSTIN_VARIANT_FLAG_KEYS)[number];
 
-export const SCOUT_FLAG_KEYS = [
-  "scout_support_conversations_enabled",
-  "scout_support_report_action_enabled",
-  "ai_reports_enabled",
-  "ai_reports_unlimited",
-  "ai_reviews_enabled",
-  "betting_enabled",
-  "betting_player_bet_outcome_dm_enabled",
-  "betting_settlement_dm_enabled",
-  "bucks_dares_enabled",
-  "bucks_transfers_enabled",
-  "challenge_runs_enabled",
-  "clash_surface",
-  "custom_nights_enabled",
-  "dare_notifications_enabled",
-  "debug",
-  "duels_enabled",
-  "explore-guild-allowlist",
-  "explore_creation_enabled",
-  "explore_on_demand_riot_enabled",
-  "feature_tips_enabled",
-  "hall_of_fame_enabled",
-  "initial_match_history_import_enabled",
-  "llm-daily-token-budget",
-  "llm-hourly-token-budget",
-  "mvp_votes_enabled",
-  "scout-betting-parlay-ai-model",
-  "scout-consumer-player-profiles-enabled",
-  "scout-explore-analysis-enabled",
-  "scout-explore-model",
-  "scout-explore-model-picker-enabled",
-  "scout-explore-quota-limits",
-  "scout-explore-spend-policy",
-  "scout-feature-tip-cooldown-hours",
-  "scout-feature-tip-percent",
-  "scout-report-ai-model",
-  "scout-temporal-call-graph-tracing",
-  "scout_client_ingestion",
-  "scout_operations_console_enabled",
-  "voice_assistant_enabled",
+export const JUSTIN_FLAG_KEYS = [
+  ...JUSTIN_BOOLEAN_FLAG_KEYS,
+  ...JUSTIN_VARIANT_FLAG_KEYS,
 ] as const;
 
-export type ScoutFlagKey = (typeof SCOUT_FLAG_KEYS)[number];
+export type JustinFlagKey = (typeof JUSTIN_FLAG_KEYS)[number];
 
 export const SCOUT_BOOLEAN_FLAG_KEYS = [
   "scout_support_conversations_enabled",
@@ -146,31 +99,12 @@ export const SCOUT_VARIANT_FLAG_KEYS = [
 
 export type ScoutVariantFlagKey = (typeof SCOUT_VARIANT_FLAG_KEYS)[number];
 
-export const BIRMEL_FLAG_KEYS = [
-  "birmel-activity-tracking-enabled",
-  "birmel-agent-auxiliary-timeout-ms",
-  "birmel-agent-max-steps",
-  "birmel-agent-response-timeout-ms",
-  "birmel-birthdays-enabled",
-  "birmel-daily-posts-enabled",
-  "birmel-elections-enabled",
-  "birmel-image-generation-enabled",
-  "birmel-llm-classifier-model",
-  "birmel-llm-embedding-model",
-  "birmel-llm-image-model",
-  "birmel-llm-max-output-tokens",
-  "birmel-llm-memory-model",
-  "birmel-llm-model",
-  "birmel-llm-reasoning-effort",
-  "birmel-persona-enabled",
-  "birmel-persona-style-model",
-  "birmel-responder-enabled",
-  "birmel-responder-engagement-window-ms",
-  "birmel-responder-transcript-max-messages",
-  "birmel-responder-transcript-window-ms",
+export const SCOUT_FLAG_KEYS = [
+  ...SCOUT_BOOLEAN_FLAG_KEYS,
+  ...SCOUT_VARIANT_FLAG_KEYS,
 ] as const;
 
-export type BirmelFlagKey = (typeof BIRMEL_FLAG_KEYS)[number];
+export type ScoutFlagKey = (typeof SCOUT_FLAG_KEYS)[number];
 
 export const BIRMEL_BOOLEAN_FLAG_KEYS = [
   "birmel-activity-tracking-enabled",
@@ -203,29 +137,12 @@ export const BIRMEL_VARIANT_FLAG_KEYS = [
 
 export type BirmelVariantFlagKey = (typeof BIRMEL_VARIANT_FLAG_KEYS)[number];
 
-export const STREAMBOT_FLAG_KEYS = [
-  "player-card-enabled",
-  "streambot-assistant-v2-enabled",
-  "streambot-automatic-channel-routing-enabled",
-  "streambot-history-enabled",
-  "streambot-idle-timeout-seconds",
-  "streambot-music-over-voice-enabled",
-  "streambot-numbered-channels-enabled",
-  "streambot-player-card-repost-after-messages",
-  "streambot-player-card-tick-ms",
-  "streambot-playlist-limit",
-  "streambot-plex-posters-enabled",
-  "streambot-reconnect-delay-seconds",
-  "streambot-reconnect-enabled",
-  "streambot-reconnect-max-attempts",
-  "streambot-sports-streaming-enabled",
-  "streambot-subtitle-languages",
-  "streambot-subtitles-include-auto-generated",
-  "streambot-web-ui-enabled",
-  "subtitles-enabled",
+export const BIRMEL_FLAG_KEYS = [
+  ...BIRMEL_BOOLEAN_FLAG_KEYS,
+  ...BIRMEL_VARIANT_FLAG_KEYS,
 ] as const;
 
-export type StreambotFlagKey = (typeof STREAMBOT_FLAG_KEYS)[number];
+export type BirmelFlagKey = (typeof BIRMEL_FLAG_KEYS)[number];
 
 export const STREAMBOT_BOOLEAN_FLAG_KEYS = [
   "player-card-enabled",
@@ -258,13 +175,12 @@ export const STREAMBOT_VARIANT_FLAG_KEYS = [
 export type StreambotVariantFlagKey =
   (typeof STREAMBOT_VARIANT_FLAG_KEYS)[number];
 
-export const STARLIGHT_KARMA_BOT_FLAG_KEYS = [
-  "karma-admin-user-id",
-  "karma-emoji",
+export const STREAMBOT_FLAG_KEYS = [
+  ...STREAMBOT_BOOLEAN_FLAG_KEYS,
+  ...STREAMBOT_VARIANT_FLAG_KEYS,
 ] as const;
 
-export type StarlightKarmaBotFlagKey =
-  (typeof STARLIGHT_KARMA_BOT_FLAG_KEYS)[number];
+export type StreambotFlagKey = (typeof STREAMBOT_FLAG_KEYS)[number];
 
 export const STARLIGHT_KARMA_BOT_BOOLEAN_FLAG_KEYS = [] as const;
 
@@ -279,14 +195,13 @@ export const STARLIGHT_KARMA_BOT_VARIANT_FLAG_KEYS = [
 export type StarlightKarmaBotVariantFlagKey =
   (typeof STARLIGHT_KARMA_BOT_VARIANT_FLAG_KEYS)[number];
 
-export const TRMNL_DASHBOARD_FLAG_KEYS = [
-  "trmnl-ha-presence-entities",
-  "trmnl-ha-security-entities",
-  "trmnl-ha-climate-entities",
-  "pet-dashboard-enabled",
+export const STARLIGHT_KARMA_BOT_FLAG_KEYS = [
+  ...STARLIGHT_KARMA_BOT_BOOLEAN_FLAG_KEYS,
+  ...STARLIGHT_KARMA_BOT_VARIANT_FLAG_KEYS,
 ] as const;
 
-export type TrmnlDashboardFlagKey = (typeof TRMNL_DASHBOARD_FLAG_KEYS)[number];
+export type StarlightKarmaBotFlagKey =
+  (typeof STARLIGHT_KARMA_BOT_FLAG_KEYS)[number];
 
 export const TRMNL_DASHBOARD_BOOLEAN_FLAG_KEYS = [
   "pet-dashboard-enabled",
@@ -304,24 +219,12 @@ export const TRMNL_DASHBOARD_VARIANT_FLAG_KEYS = [
 export type TrmnlDashboardVariantFlagKey =
   (typeof TRMNL_DASHBOARD_VARIANT_FLAG_KEYS)[number];
 
-export const TEMPORAL_FLAG_KEYS = [
-  "ci-maintenance-dispatch-enabled",
-  "ci-workspace-seed-refresh-enabled",
-  "temporal-email-recipient",
-  "temporal-email-sender",
-  "temporal-daily-report-notifications-enabled",
-  "temporal-agent-chat-discord-claude-default-model",
-  "temporal-agent-chat-discord-codex-default-model",
-  "temporal-agent-chat-imessage-claude-model",
-  "temporal-agent-chat-imessage-codex-model",
-  "temporal-agent-chat-photon-enabled",
-  "temporal-agent-chat-photon-owners",
-  "temporal-call-graph-tracing",
-  "woodpecker-log-retention-enabled",
-  "woodpecker-log-retention-days",
+export const TRMNL_DASHBOARD_FLAG_KEYS = [
+  ...TRMNL_DASHBOARD_BOOLEAN_FLAG_KEYS,
+  ...TRMNL_DASHBOARD_VARIANT_FLAG_KEYS,
 ] as const;
 
-export type TemporalFlagKey = (typeof TEMPORAL_FLAG_KEYS)[number];
+export type TrmnlDashboardFlagKey = (typeof TRMNL_DASHBOARD_FLAG_KEYS)[number];
 
 export const TEMPORAL_BOOLEAN_FLAG_KEYS = [
   "ci-maintenance-dispatch-enabled",
@@ -330,6 +233,7 @@ export const TEMPORAL_BOOLEAN_FLAG_KEYS = [
   "temporal-agent-chat-photon-enabled",
   "temporal-call-graph-tracing",
   "woodpecker-log-retention-enabled",
+  "the-storm-rwf-recording-archive-enabled",
 ] as const;
 
 export type TemporalBooleanFlagKey =
@@ -349,14 +253,12 @@ export const TEMPORAL_VARIANT_FLAG_KEYS = [
 export type TemporalVariantFlagKey =
   (typeof TEMPORAL_VARIANT_FLAG_KEYS)[number];
 
-export const ALERT_DASHBOARD_FLAG_KEYS = [
-  "alert-dashboard-email-enabled",
-  "alert-dashboard-email-from",
-  "alert-dashboard-email-to",
-  "ops-digest-email-enabled",
+export const TEMPORAL_FLAG_KEYS = [
+  ...TEMPORAL_BOOLEAN_FLAG_KEYS,
+  ...TEMPORAL_VARIANT_FLAG_KEYS,
 ] as const;
 
-export type AlertDashboardFlagKey = (typeof ALERT_DASHBOARD_FLAG_KEYS)[number];
+export type TemporalFlagKey = (typeof TEMPORAL_FLAG_KEYS)[number];
 
 export const ALERT_DASHBOARD_BOOLEAN_FLAG_KEYS = [
   "alert-dashboard-email-enabled",
@@ -374,23 +276,12 @@ export const ALERT_DASHBOARD_VARIANT_FLAG_KEYS = [
 export type AlertDashboardVariantFlagKey =
   (typeof ALERT_DASHBOARD_VARIANT_FLAG_KEYS)[number];
 
-export const THE_STORM_FLAG_KEYS = [
-  "the-storm-analytics-enabled",
-  "the-storm-staff-tools-enabled",
-  "the-storm-identity-enabled",
-  "the-storm-letters-enabled",
-  "the-storm-ip-enforcement-enabled",
-  "the-storm-companions-enabled",
-  "the-storm-crier-enabled",
-  "the-storm-survival-enabled",
-  "the-storm-merchant-enabled",
-  "the-storm-shop-rentals-enabled",
-  "the-storm-rwf-enabled",
-  "the-storm-rwfbots-chat-enabled",
-  "the-storm-rwfbots-learning-enabled",
+export const ALERT_DASHBOARD_FLAG_KEYS = [
+  ...ALERT_DASHBOARD_BOOLEAN_FLAG_KEYS,
+  ...ALERT_DASHBOARD_VARIANT_FLAG_KEYS,
 ] as const;
 
-export type TheStormFlagKey = (typeof THE_STORM_FLAG_KEYS)[number];
+export type AlertDashboardFlagKey = (typeof ALERT_DASHBOARD_FLAG_KEYS)[number];
 
 export const THE_STORM_BOOLEAN_FLAG_KEYS = THE_STORM_FLAG_KEYS;
 
@@ -402,18 +293,12 @@ export const THE_STORM_VARIANT_FLAG_KEYS = [] as const;
 export type TheStormVariantFlagKey =
   (typeof THE_STORM_VARIANT_FLAG_KEYS)[number];
 
-export const STORM_FLAG_KEYS = [
-  "storm-forum-registration-enabled",
-  "storm-forum-season",
-  "storm-forum-calendar-enabled",
-  "storm-brain-classify-enabled",
-  "storm-brain-conversation-enabled",
-  "storm-brain-conversation-model",
-  "storm-brain-model",
-  "storm-brain-triage-enabled",
+export const THE_STORM_FLAG_KEYS = [
+  ...THE_STORM_BOOLEAN_FLAG_KEYS,
+  ...THE_STORM_VARIANT_FLAG_KEYS,
 ] as const;
 
-export type StormFlagKey = (typeof STORM_FLAG_KEYS)[number];
+export type TheStormFlagKey = (typeof THE_STORM_FLAG_KEYS)[number];
 
 export const STORM_BOOLEAN_FLAG_KEYS = [
   "storm-forum-registration-enabled",
@@ -432,6 +317,13 @@ export const STORM_VARIANT_FLAG_KEYS = [
 ] as const;
 
 export type StormVariantFlagKey = (typeof STORM_VARIANT_FLAG_KEYS)[number];
+
+export const STORM_FLAG_KEYS = [
+  ...STORM_BOOLEAN_FLAG_KEYS,
+  ...STORM_VARIANT_FLAG_KEYS,
+] as const;
+
+export type StormFlagKey = (typeof STORM_FLAG_KEYS)[number];
 
 export const MANAGED_FLAG_KEYS = [
   ...WOODPECKER_FLAG_KEYS,

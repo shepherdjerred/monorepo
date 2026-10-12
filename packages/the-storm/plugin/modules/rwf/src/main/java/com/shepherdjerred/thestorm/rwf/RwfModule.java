@@ -11,12 +11,14 @@ import com.shepherdjerred.thestorm.rwf.adapter.content.MapSource;
 import com.shepherdjerred.thestorm.rwf.adapter.content.RwfConfig;
 import com.shepherdjerred.thestorm.rwf.adapter.db.JooqMatchStore;
 import com.shepherdjerred.thestorm.rwf.adapter.db.JooqSnapshotStore;
+import com.shepherdjerred.thestorm.rwf.adapter.db.JooqStatsStore;
 import com.shepherdjerred.thestorm.rwf.adapter.discord.RwfDiscordPosts;
 import com.shepherdjerred.thestorm.rwf.adapter.discord.RwfStatsCommand;
 import com.shepherdjerred.thestorm.rwf.adapter.paper.RwfPaper;
 import com.shepherdjerred.thestorm.rwf.adapter.paper.ServerHooks;
 import com.shepherdjerred.thestorm.rwf.adapter.record.GzipRecorder;
 import com.shepherdjerred.thestorm.rwf.adapter.record.Retention;
+import com.shepherdjerred.thestorm.rwf.adapter.remote.FliptRwfFeatures;
 import com.shepherdjerred.thestorm.rwf.adapter.remote.FliptRwfGate;
 import com.shepherdjerred.thestorm.rwf.app.CombatantActions;
 import com.shepherdjerred.thestorm.rwf.app.JoinGate;
@@ -27,6 +29,7 @@ import com.shepherdjerred.thestorm.rwf.app.PayoutService;
 import com.shepherdjerred.thestorm.rwf.app.Pseudonyms;
 import com.shepherdjerred.thestorm.rwf.app.Recorder;
 import com.shepherdjerred.thestorm.rwf.app.RecordingSummary;
+import com.shepherdjerred.thestorm.rwf.app.RwfFeatures;
 import com.shepherdjerred.thestorm.rwf.domain.map.MapDefinition;
 import com.shepherdjerred.thestorm.rwf.domain.record.Frame;
 import com.shepherdjerred.thestorm.rwf.domain.record.InputFrame;
@@ -65,15 +68,21 @@ public final class RwfModule implements StormModule {
    * @param gate the join gate; empty means the Flipt gate from {@code FLIPT_URL} and {@code
    *     FLIPT_ENVIRONMENT}
    * @param server the server operations tests replace; empty means the real server's
+   * @param features the match feature flags; empty means Flipt from {@code FLIPT_URL} and {@code
+   *     FLIPT_ENVIRONMENT}, every feature off when they are unset
    */
   public record Hooks(
       Function<String, Optional<String>> env,
       Optional<JoinGate> gate,
-      Optional<ServerHooks> server) {
+      Optional<ServerHooks> server,
+      Optional<RwfFeatures.Source> features) {
 
     public static Hooks production() {
       return new Hooks(
-          name -> Optional.ofNullable(System.getenv(name)), Optional.empty(), Optional.empty());
+          name -> Optional.ofNullable(System.getenv(name)),
+          Optional.empty(),
+          Optional.empty(),
+          Optional.empty());
     }
   }
 
@@ -82,6 +91,7 @@ public final class RwfModule implements StormModule {
   private @Nullable Recorder recorder;
   private @Nullable FliptRwfGate flipt;
   private MatchEvents.@Nullable Subscription discordPosts;
+  private RwfFeatures.@Nullable Source features;
 
   public RwfModule() {
     this(Hooks.production());
@@ -128,8 +138,11 @@ public final class RwfModule implements StormModule {
                     .server()
                     .orElseGet(
                         () ->
-                            ServerHooks.production(
-                                context.services().require(ChunkTickets.class)))));
+                            ServerHooks.production(context.services().require(ChunkTickets.class))),
+                features(context, config),
+                new JooqStatsStore(context.database()),
+                new com.shepherdjerred.thestorm.rwf.adapter.db.JooqQuarantineStore(
+                    context.database())));
     paper = started;
     context
         .services()
@@ -170,12 +183,12 @@ public final class RwfModule implements StormModule {
     context
         .logger()
         .info(
-            "rwf: {} kits, {} maps in rotation ({} quarantined: {}), world {}, recording {}",
+            "rwf: {} kits, {} maps in rotation ({} quarantined: {}), worlds {}, recording {}",
             content.kits().size(),
             content.rotation().size(),
             config.quarantine().size(),
             config.quarantine().keySet(),
-            config.world(),
+            config.worlds(),
             pseudonyms.isPresent() ? "on" : "off");
   }
 
@@ -217,8 +230,8 @@ public final class RwfModule implements StormModule {
         new GzipRecorder(
             context.dataDirectory(),
             config.recording().directory(),
-            context.compute(),
-            context.time());
+            new GzipRecorder.Parts(
+                context.compute(), context.time(), GzipRecorder.Alarms.logging(context.logger())));
     var now = context.time().instant();
     var _ =
         context
@@ -234,11 +247,43 @@ public final class RwfModule implements StormModule {
                 (report, failure) -> {
                   if (failure != null) {
                     context.logger().error("Could not prune rwf recordings", failure);
-                  } else if (report.deleted() > 0) {
-                    context.logger().info("Pruned {} old rwf recordings", report.deleted());
+                  } else {
+                    if (report.deleted() > 0) {
+                      context.logger().info("Pruned {} archived rwf recordings", report.deleted());
+                    }
+                    if (report.bytesOverCap() > 0) {
+                      context
+                          .logger()
+                          .warn(
+                              "rwf recordings exceed their {}-byte cap by {} bytes; {} are not"
+                                  + " archived yet and are kept",
+                              config.recording().maxBytes(),
+                              report.bytesOverCap(),
+                              report.unarchived());
+                    }
                   }
                 });
     return recorder;
+  }
+
+  /** The feature flags: the test hook, or Flipt from the environment, all off when unset. */
+  private RwfFeatures.Source features(ModuleContext context, RwfConfig config) {
+    if (hooks.features().isPresent()) {
+      return hooks.features().orElseThrow();
+    }
+    var base = hooks.env().apply("FLIPT_URL").filter(v -> !v.isBlank());
+    var environment = hooks.env().apply("FLIPT_ENVIRONMENT").filter(v -> !v.isBlank());
+    if (base.isEmpty() || environment.isEmpty()) {
+      context
+          .logger()
+          .warn("FLIPT_URL or FLIPT_ENVIRONMENT is unset; every rwf match feature stays off");
+      return RwfFeatures.Source.fixed(RwfFeatures.NONE);
+    }
+    var source =
+        new FliptRwfFeatures(
+            URI.create(base.orElseThrow()), environment.orElseThrow(), config.worlds().maps());
+    features = source;
+    return source;
   }
 
   /** The join gate: the test hook, or Flipt from the environment, closed when unset. */
@@ -255,7 +300,8 @@ public final class RwfModule implements StormModule {
       return player -> CompletableFuture.completedFuture(false);
     }
     var gate =
-        new FliptRwfGate(URI.create(base.orElseThrow()), environment.orElseThrow(), config.world());
+        new FliptRwfGate(
+            URI.create(base.orElseThrow()), environment.orElseThrow(), config.worlds().maps());
     flipt = gate;
     return gate;
   }
@@ -287,6 +333,10 @@ public final class RwfModule implements StormModule {
       flipt.close();
       flipt = null;
     }
+    if (features != null) {
+      features.close();
+      features = null;
+    }
   }
 
   private static IllegalStateException missingSalt(String variable) {
@@ -317,6 +367,10 @@ public final class RwfModule implements StormModule {
 
         @Override
         public void intent(Intent intent) {}
+
+        @Override
+        public void occurrence(
+            com.shepherdjerred.thestorm.rwf.domain.record.Occurrence occurrence) {}
 
         @Override
         public CompletableFuture<RecordingSummary> end(RecordEnd end) {

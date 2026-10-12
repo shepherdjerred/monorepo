@@ -99,7 +99,7 @@ async function health(rcon: RconClient, bot: Bot): Promise<number> {
 }
 
 async function teamOf(log: Transcript): Promise<Team> {
-  const seen = await log.until(/You are in (?<team>Red|Blue) Team\./u, 30_000);
+  const seen = await log.until(/You are in (?<team>Red|Blue) Team/u, 30_000);
   return z.enum(["Red", "Blue"]).parse(seen.groups?.["team"]);
 }
 
@@ -178,7 +178,7 @@ async function fillsWithBots(match: Match): Promise<string[]> {
   const wanted = match.target - 1;
   const listBefore = ListOutputSchema.parse(await rcon.command("list"));
   bot.chat("/rwf join");
-  await log.until(/The game will begin in \d+ seconds\./u);
+  await log.until(/The game will begin in /u);
   const names = await joinedBots(rcon, log, bot.username, wanted);
   expect(names).toHaveLength(wanted);
   expect(new Set(names).size).toBe(wanted);
@@ -757,7 +757,7 @@ async function watchShowcase(match: Match, outsider: Bot): Promise<void> {
     "Watchers: 1, showcase: no",
   );
   expect(bot.game.gameMode).toBe("spectator");
-  expect(match.log.has(/You earned/u)).toBe(false);
+  expect(match.log.has(/Given \d+ credit/u)).toBe(false);
   await expectCredits(bot, 0);
 
   bot.chat("/rwf leave");
@@ -806,7 +806,7 @@ describe("Search and Destroy with rwfbots", () => {
 
       // The match plays out to a result; bots are free to win, lose or nuke.
       const ended = await match.log.until(
-        /^\[RWF\]: (?<team>Red|Blue) Team wins!$/u,
+        /^(?<team>Red|Blue) Team wins!$/u,
         matchBudgetMs,
       );
       const winner = z.enum(["Red", "Blue"]).parse(ended.groups?.["team"]);

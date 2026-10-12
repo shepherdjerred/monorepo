@@ -175,7 +175,12 @@ public final class BlockTable {
   private static final Set<String> LIQUID_IDS = Set.of("water", "bubble_column");
   private static final Set<String> HAZARD_IDS = Set.of("fire", "soul_fire", "lava");
 
-  private static final Set<String> PANE_IDS = Set.of("glass_pane", "iron_bars", "chain");
+  private static final Set<String> PANE_IDS =
+      Set.of("glass_pane", "iron_bars", "chain", "iron_chain", "copper_chain");
+
+  // A lantern's small box still stops a walker and is nothing to stand on.
+  private static final Set<String> LANTERN_IDS =
+      Set.of("lantern", "soul_lantern", "copper_lantern");
 
   // Partial legacy furniture is conservatively a full-cell obstacle. It must not
   // create a passable corridor through an actual collision box.
@@ -491,7 +496,9 @@ public final class BlockTable {
   }
 
   private static Optional<Classified> fenceOrWall(BlockState state) {
-    return state.idEndsWith("_fence") || state.idEndsWith("_wall")
+    return state.idEndsWith("_fence")
+            || state.idEndsWith("_wall")
+            || LANTERN_IDS.contains(state.id())
         ? Optional.of(FENCE)
         : Optional.empty();
   }

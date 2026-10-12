@@ -38,4 +38,16 @@ public enum MatchError {
   NOT_RESETTING,
   /** The match is already resetting. */
   ALREADY_RESETTING,
+  /** The map vote is not open. */
+  NO_BALLOT,
+  /** A map vote is already open. */
+  BALLOT_ALREADY_OPEN,
+  /** That map is not on the ballot. */
+  NOT_ON_BALLOT,
+  /** The map vote has closed. */
+  VOTE_CLOSED,
+  /** Nothing is waiting that could be skipped or extended. */
+  NOTHING_TO_SKIP,
+  /** That team does not play on this map. */
+  UNKNOWN_TEAM,
 }

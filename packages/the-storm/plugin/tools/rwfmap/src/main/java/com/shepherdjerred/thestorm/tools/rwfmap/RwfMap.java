@@ -15,10 +15,10 @@ import java.util.Optional;
  * The command line: {@code rwfmap bake <mapDir> [--out <file>]} writes {@code nav.rwfnav} and
  * {@code nav.summary.json} next to the map (or the artifact to {@code --out} and the summary beside
  * it); {@code rwfmap verify <mapDir>} re-bakes in memory and fails when the committed files differ.
- * {@code rwfmap bake-lobby <lobbyDir>} writes the generated lobby's {@code blocks.schem}, then its
- * nav files once {@code lobby.yml} declares the schematic's hash; {@code rwfmap verify-lobby
- * <lobbyDir>} fails when any of the four lobby files is not what the generator and a fresh bake
- * produce. Exit codes: 0 success, 1 usage, 2 the map or its artifacts are wrong.
+ * {@code rwfmap bake-lobby <lobbyDir>} bakes the lobby's nav files once {@code lobby.yml} declares
+ * the hash of its {@code blocks.schem}; {@code rwfmap verify-lobby <lobbyDir>} fails when the
+ * lobby's hash, places or nav files are not what its schematic and a fresh bake produce. Exit
+ * codes: 0 success, 1 usage, 2 the map or its artifacts are wrong.
  */
 public final class RwfMap {
 
@@ -33,7 +33,7 @@ public final class RwfMap {
         rwfmap verify <mapDir>                 fail if the committed nav files are stale
         rwfmap verify-details <mapDir>         validate allowed payloads against terrain
         rwfmap close-starts <mapDir>           find grounded close-combat starts on original terrain
-        rwfmap bake-lobby <lobbyDir>           write the generated lobby and bake its nav files
+        rwfmap bake-lobby <lobbyDir>           bake the lobby's nav files
         rwfmap verify-lobby <lobbyDir>         fail if the committed lobby files are stale
       """;
 
@@ -140,16 +140,14 @@ public final class RwfMap {
   }
 
   private static int bakeLobby(Path folder, PrintStream out, PrintStream err) {
-    var generated = LobbyFolder.generated();
-    write(folder.resolve(MapFolder.BLOCKS_FILE), LobbyFolder.generatedBytes());
-    out.println("wrote the generated lobby: blocksSha256 " + generated.sha256());
     var lobby = LobbyFolder.load(folder);
-    if (!lobby.file().blocksSha256().equals(generated.sha256())) {
+    var sha = lobby.schematic().sha256();
+    if (!lobby.file().blocksSha256().equals(sha)) {
       err.println(
           "rwfmap: set blocksSha256 in "
               + folder.resolve(LobbyFolder.LOBBY_FILE)
               + " to "
-              + generated.sha256()
+              + sha
               + " and bake again");
       return FAILED;
     }
@@ -174,7 +172,7 @@ public final class RwfMap {
   private static int verifyLobby(Path folder, PrintStream out, PrintStream err) {
     var failures = Verifier.verify(LobbyFolder.load(folder));
     if (failures.isEmpty()) {
-      out.println("verified the lobby: its files match the generator and a fresh bake");
+      out.println("verified the lobby: its hash, places and nav files all agree");
       return OK;
     }
     err.println("rwfmap: the lobby failed verification:");

@@ -22,6 +22,7 @@ final class LobbyRoom {
     this.terrain =
         new Terrain(
             context,
+            context.lobbyWorld(),
             new Terrain.Source(LoadedLobby.ID, lobby.blocks(), lobby.blocksSha256()),
             chunks);
   }
@@ -30,9 +31,14 @@ final class LobbyRoom {
     return layout;
   }
 
+  /** The world the lobby stands in. */
+  org.bukkit.World world() {
+    return context.lobbyWorld();
+  }
+
   /** Where joining players and arriving bots appear. */
   Location spawn() {
-    return Places.location(context.world(), layout.spawn());
+    return Places.location(context.lobbyWorld(), layout.spawn());
   }
 
   /** Whether {@code location} is inside the room. */

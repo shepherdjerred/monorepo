@@ -53,4 +53,27 @@ public enum NoticeKind {
   CREDITS_GIVEN,
   /** "Two credits were removed for afking": told after settlement, with what was taken. */
   AFK_PENALTY,
+  /**
+   * A death message: {template} is the attack type's message with %Killed% and %Killer%, filled
+   * from {killed}/{killedTeam} and {killer}/{killerTeam} in team colours.
+   */
+  DEATH,
+  /** "Scored a kill assist worth {share}!" */
+  KILL_ASSIST,
+  /** "Stolen a kill!" */
+  STOLEN_KILL,
+  /** "Your killer has {hearts} ❤ left." */
+  KILLER_HEALTH,
+  /** "Vote for the next map: {maps}" */
+  BALLOT_OPEN,
+  /** "You voted for {map}" */
+  VOTED,
+  /** "{map} by {author} won the vote with {votes} votes" */
+  MAP_CHOSEN,
+  /** "{map} could not be loaded; the vote goes on without it." */
+  MAP_FAILED,
+  /** "Previewing {map} by {author}" */
+  PREVIEW,
+  /** "Get ready: the match starts in {seconds} seconds" */
+  FREEZE,
 }

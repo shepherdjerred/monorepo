@@ -73,8 +73,16 @@ public final class PayoutService {
   /** Persists the match immediately, then queues its payouts behind earlier ledger work. */
   public CompletableFuture<List<Paid>> settle(
       MatchStore.MatchRow match, List<MatchStore.PlayerRow> players) {
+    return settle(match, players, java.util.Optional.empty());
+  }
+
+  /** Persists the match, players and statistics immediately, then serializes ledger work. */
+  public CompletableFuture<List<Paid>> settle(
+      MatchStore.MatchRow match,
+      List<MatchStore.PlayerRow> players,
+      java.util.Optional<com.shepherdjerred.thestorm.rwf.app.store.MatchStats> stats) {
     return store
-        .record(match, players)
+        .record(match, players, stats)
         .thenCompose(
             ignored ->
                 enqueue(

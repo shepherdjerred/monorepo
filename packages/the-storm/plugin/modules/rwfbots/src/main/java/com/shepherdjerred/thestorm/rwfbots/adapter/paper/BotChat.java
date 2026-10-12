@@ -81,7 +81,7 @@ public final class BotChat implements Consumer<MatchNotification> {
    * @param flagRefresh how often the flag is evaluated again
    * @param gate the managed rollout flag
    * @param roster the bots, for their personalities and to keep their bodies out of the audience
-   * @param world the match world, whose human players hear the bots
+   * @param worlds the match and lobby worlds, whose human players hear the bots
    * @param npc chat, which checks, routes and delivers each line
    * @param scheduler the main thread
    * @param time the clock
@@ -92,7 +92,7 @@ public final class BotChat implements Consumer<MatchNotification> {
       Duration flagRefresh,
       ChatGate gate,
       Roster roster,
-      World world,
+      List<World> worlds,
       NpcChat npc,
       Scheduler scheduler,
       InstantSource time,
@@ -274,9 +274,11 @@ public final class BotChat implements Consumer<MatchNotification> {
       return;
     }
     var audience = new HashSet<UUID>();
-    for (var player : parts.world().getPlayers()) {
-      if (!parts.roster().isBot(player.getUniqueId())) {
-        audience.add(player.getUniqueId());
+    for (var world : parts.worlds()) {
+      for (var player : world.getPlayers()) {
+        if (!parts.roster().isBot(player.getUniqueId())) {
+          audience.add(player.getUniqueId());
+        }
       }
     }
     var channel = line.teamOnly() ? ChatChannel.TEAM : ChatChannel.GLOBAL;

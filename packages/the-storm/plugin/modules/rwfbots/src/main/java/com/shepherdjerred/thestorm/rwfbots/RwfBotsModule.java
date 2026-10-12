@@ -42,7 +42,8 @@ public final class RwfBotsModule implements StormModule {
    * What tests replace.
    *
    * @param bodies makes the bodies; empty means Citizens, which must then be loaded
-   * @param world the match world; empty means the world rwf runs in, read from rwf.yml
+   * @param world the match world; empty means the map world rwf runs in, read from rwf.yml
+   * @param lobbyWorld the lobby world; empty means the lobby world named in rwf.yml
    * @param tickTimes the server's recent tick times; empty means the real server's
    * @param chatGate the bot chat flag; empty means Flipt from {@code FLIPT_URL} and {@code
    *     FLIPT_ENVIRONMENT}, closed when either is unset
@@ -50,13 +51,19 @@ public final class RwfBotsModule implements StormModule {
   public record Hooks(
       Optional<Function<ModuleContext, Bodies>> bodies,
       Optional<World> world,
+      Optional<World> lobbyWorld,
       Optional<Supplier<long[]>> tickTimes,
       Optional<ChatGate> chatGate,
       Optional<LearningGate> learningGate) {
 
     public static Hooks production() {
       return new Hooks(
-          Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
+          Optional.empty(),
+          Optional.empty(),
+          Optional.empty(),
+          Optional.empty(),
+          Optional.empty(),
+          Optional.empty());
     }
   }
 
@@ -117,7 +124,9 @@ public final class RwfBotsModule implements StormModule {
                 },
                 context.scheduler().mainThread());
     var bodies = hooks.bodies().map(make -> make.apply(context)).orElseGet(() -> citizens(context));
-    var world = hooks.world().orElseGet(() -> rwfWorld(context));
+    var world = hooks.world().orElseGet(() -> rwfWorld(context, RwfWorldName.Worlds::maps));
+    var lobbyWorld =
+        hooks.lobbyWorld().orElseGet(() -> rwfWorld(context, RwfWorldName.Worlds::lobby));
     var accepted =
         new AcceptedModels(
             new AcceptedModels.Parts(
@@ -154,6 +163,7 @@ public final class RwfBotsModule implements StormModule {
                 store,
                 bodies,
                 world,
+                lobbyWorld,
                 hooks.tickTimes().orElseGet(() -> context.plugin().getServer()::getTickTimes),
                 chatGate,
                 lobby,
@@ -209,13 +219,13 @@ public final class RwfBotsModule implements StormModule {
     return new FliptLearningGate(URI.create(base.orElseThrow()), environment.orElseThrow());
   }
 
-  /** The world rwf runs in, as its config names it. */
-  private static World rwfWorld(ModuleContext context) {
-    var config = context.loadConfig("rwf.yml", RwfWorldName.class);
-    var world = context.plugin().getServer().getWorld(config.world());
+  /** One of the worlds rwf runs in, as its config names it. */
+  private static World rwfWorld(
+      ModuleContext context, java.util.function.Function<RwfWorldName.Worlds, String> which) {
+    var name = which.apply(context.loadConfig("rwf.yml", RwfWorldName.class).worlds());
+    var world = context.plugin().getServer().getWorld(name);
     if (world == null) {
-      throw new IllegalStateException(
-          "rwf.yml names world " + config.world() + ", which is not loaded");
+      throw new IllegalStateException("rwf.yml names world " + name + ", which is not loaded");
     }
     return world;
   }

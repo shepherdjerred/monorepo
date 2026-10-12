@@ -5,11 +5,15 @@
 # Kits live in rwf/kits.yml, maps in rwf/maps/<id>/ (map.yml + blocks.schem)
 # and the lobby room players wait in before a match in rwf/lobby/.
 
-# The world matches run in. An operator provisions it through Multiverse (a
-# flat or void world is fine; the maps bring their own terrain) and it must be
-# loaded before TheStorm enables. The module seals it: every other module
-# leaves it alone.
-world: rwf
+# The two worlds Search and Destroy runs in: the lobby players wait in, and the
+# maps matches are fought on. An operator provisions both through Multiverse
+# (void worlds are fine; the lobby and the maps bring their own terrain) and
+# both must be loaded before TheStorm enables. The module seals them: every
+# other module leaves them alone, and members move between them only when the
+# match moves them.
+worlds:
+  lobby: rwf_lobby
+  maps: rwf
 
 # Where a player stands when no map places them elsewhere; once a map is
 # chosen its own spectator point is used.
@@ -18,6 +22,13 @@ spectator: { x: 31.5, y: 76.0, z: 31.5, yaw: 0.0, pitch: 45.0 }
 match:
   # A match counts down and starts only with at least this many humans.
   minHumans: 1
+  # Red Warfare's lobby (LobbyManager#getMinPlayers): it wants 4 players
+  # before counting down, one fewer for every 15 s it has waited, never under
+  # 2. Bots count: once a human is in and the map is loaded, drafted bots walk
+  # in over the next 15 s.
+  minPlayers: 4
+  absoluteMinPlayers: 2
+  relaxEvery: PT15S
   # Fixed target when automaticSizing is false, and the default showcase
   # count. Without the rwfbots module matches are humans only.
   targetCombatants: 8
@@ -35,6 +46,15 @@ match:
   endLinger: PT15S
   # A live match with no humans left is stopped, unpaid, after this long.
   noHumansAbort: PT30S
+  # With the match flow flag on (the-storm-rwf-match-flow-enabled): the lobby
+  # votes between three maps, the vote closes this long before the countdown
+  # ends so the chosen map loads meanwhile, everyone flies over the map for
+  # previewLength, then stands frozen at their spawn for freezeLength. With the
+  # flag off the next map is drawn at random and the match goes live when the
+  # countdown ends.
+  voteLead: PT20S
+  previewLength: PT10S
+  freezeLength: PT5S
 
 # The ported Red Warfare constants this build plays by. They are pinned: the
 # module refuses to start if a value here disagrees with the code, so this

@@ -13,18 +13,18 @@ final class MatchRunnerStartedAtTest {
   @Test
   void usesTheLiveInstantWhenItPrecedesTheEnd() {
     var live = ENDED.minus(Duration.ofMinutes(3));
-    assertThat(MatchRunner.startedAtFor(live, ENDED)).isEqualTo(live);
+    assertThat(RunnerRules.startedAtFor(live, ENDED)).isEqualTo(live);
   }
 
   @Test
   void fallsBackToTheEndWhenTheMatchNeverWentLive() {
-    assertThat(MatchRunner.startedAtFor(null, ENDED)).isEqualTo(ENDED);
+    assertThat(RunnerRules.startedAtFor(null, ENDED)).isEqualTo(ENDED);
   }
 
   @Test
   void neverStartsAfterItEnds() {
     // A start decided in the same step as the end can carry a later clock read.
     var live = ENDED.plus(Duration.ofMillis(3));
-    assertThat(MatchRunner.startedAtFor(live, ENDED)).isEqualTo(ENDED);
+    assertThat(RunnerRules.startedAtFor(live, ENDED)).isEqualTo(ENDED);
   }
 }

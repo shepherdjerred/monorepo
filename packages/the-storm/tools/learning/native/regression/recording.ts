@@ -1,4 +1,4 @@
-/** Common original v3 all-bot recording envelope; each case checks its own ending and roster. */
+/** Common original v3 or v4 all-bot recording envelope; each case checks its own ending and roster. */
 export function botRecording(recording: string, match: string) {
   const rows = recording
     .trim()
@@ -9,7 +9,7 @@ export function botRecording(recording: string, match: string) {
   const endings = rows.filter((row) => row[0] === "X");
   if (
     header?.[0] !== "H" ||
-    header[1] !== "3" ||
+    !["3", "4"].includes(header[1] ?? "") ||
     header[2] !== match ||
     header[3] !== "training-yard" ||
     members.length !== 16 ||

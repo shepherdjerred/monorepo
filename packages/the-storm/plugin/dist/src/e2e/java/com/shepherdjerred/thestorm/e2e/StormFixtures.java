@@ -286,17 +286,20 @@ public final class StormFixtures extends JavaPlugin {
   }
 
   /**
-   * The world rwf.yml names, as an operator would provision it through Multiverse: flat and empty,
-   * loaded before TheStorm enables so the module can seal it and paste its maps.
+   * The two worlds rwf.yml names, as an operator would provision them through Multiverse: flat and
+   * empty, loaded before TheStorm enables so the module can seal them and paste the lobby and maps.
    */
   private void rwfWorld() {
-    var name = Objects.requireNonNull(yaml("rwf.yml").getString("world"), "rwf.yml world");
-    Objects.requireNonNull(
-        new WorldCreator(name)
-            .type(WorldType.FLAT)
-            .generatorSettings(VOID_PRESET)
-            .generateStructures(false)
-            .createWorld());
+    var worlds = section(yaml("rwf.yml"), "worlds");
+    for (var key : java.util.List.of("lobby", "maps")) {
+      var name = Objects.requireNonNull(worlds.getString(key), "rwf.yml worlds." + key);
+      Objects.requireNonNull(
+          new WorldCreator(name)
+              .type(WorldType.FLAT)
+              .generatorSettings(VOID_PRESET)
+              .generateStructures(false)
+              .createWorld());
+    }
   }
 
   private YamlConfiguration yaml(String path) {

@@ -16,6 +16,14 @@ import java.time.Duration;
  * @param relaxEvery every this long of waiting takes one off the player requirement
  * @param endLinger how long the end screen lasts before the arena resets
  * @param minimumRewardLength matches shorter than this pay nobody
+ * @param voteLead how long before the countdown ends the map vote closes, so the chosen map can
+ *     load while it finishes
+ * @param previewLength how long members fly over the chosen map before the teams are dealt; zero
+ *     skips the preview
+ * @param freezeLength how long everyone stands still at their spawn before the fight; zero skips
+ *     the freeze
+ * @param carryOver whether humans stay in for the next match when one ends on its own (bots, and
+ *     everyone after a stop, are always released)
  */
 public record MatchSettings(
     int minPlayers,
@@ -24,7 +32,11 @@ public record MatchSettings(
     Duration countdown,
     Duration relaxEvery,
     Duration endLinger,
-    Duration minimumRewardLength) {
+    Duration minimumRewardLength,
+    Duration voteLead,
+    Duration previewLength,
+    Duration freezeLength,
+    boolean carryOver) {
 
   /** Red Warfare's Search and Destroy server: 4 wanted, 2 at least, 60 at most, 90 s countdown. */
   public static final MatchSettings RED_WARFARE =
@@ -35,7 +47,11 @@ public record MatchSettings(
           Duration.ofSeconds(90),
           Duration.ofSeconds(15),
           Duration.ofSeconds(15),
-          Duration.ofMinutes(1));
+          Duration.ofMinutes(1),
+          Duration.ofSeconds(20),
+          Duration.ofSeconds(10),
+          Duration.ofSeconds(5),
+          true);
 
   public MatchSettings {
     if (absoluteMinPlayers < 1 || minPlayers < absoluteMinPlayers || maxPlayers < minPlayers) {
@@ -46,7 +62,10 @@ public record MatchSettings(
         || relaxEvery.isNegative()
         || relaxEvery.isZero()
         || endLinger.isNegative()
-        || minimumRewardLength.isNegative()) {
+        || minimumRewardLength.isNegative()
+        || voteLead.isNegative()
+        || previewLength.isNegative()
+        || freezeLength.isNegative()) {
       throw new IllegalArgumentException("durations must be positive");
     }
   }
@@ -65,6 +84,27 @@ public record MatchSettings(
         countdown,
         relaxEvery,
         endLinger,
-        minimumRewardLength);
+        minimumRewardLength,
+        voteLead,
+        previewLength,
+        freezeLength,
+        carryOver);
+  }
+
+  /** These settings with a different preview, freeze and carry-over, as the flags decide. */
+  public MatchSettings withFlow(
+      Duration newVoteLead, Duration newPreview, Duration newFreeze, boolean newCarryOver) {
+    return new MatchSettings(
+        minPlayers,
+        absoluteMinPlayers,
+        maxPlayers,
+        countdown,
+        relaxEvery,
+        endLinger,
+        minimumRewardLength,
+        newVoteLead,
+        newPreview,
+        newFreeze,
+        newCarryOver);
   }
 }

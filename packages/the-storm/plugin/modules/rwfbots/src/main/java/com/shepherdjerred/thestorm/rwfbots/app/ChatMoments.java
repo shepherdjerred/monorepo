@@ -57,7 +57,9 @@ public final class ChatMoments {
             Transition.Effect.Teleported _,
             Transition.Effect.Equipped _,
             Transition.Effect.Restored _,
-            Transition.Effect.Spectating _ -> {}
+            Transition.Effect.Spectating _,
+            Transition.Effect.Frozen _,
+            Transition.Effect.Unfrozen _ -> {}
       }
     }
     if (after.phase() == MatchState.Phase.ENDED) {

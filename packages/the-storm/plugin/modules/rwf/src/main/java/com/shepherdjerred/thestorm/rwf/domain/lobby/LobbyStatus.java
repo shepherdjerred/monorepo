@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.rwf.domain.lobby;
 
 import com.shepherdjerred.thestorm.rwf.domain.map.MapDefinition;
+import com.shepherdjerred.thestorm.rwf.domain.match.Ballot;
 import com.shepherdjerred.thestorm.rwf.domain.match.Phase;
 import com.shepherdjerred.thestorm.rwf.domain.match.RwfMatch;
 import java.time.Duration;
@@ -36,6 +37,12 @@ public record LobbyStatus(
     WAITING,
     /** Counting down to the start. */
     COUNTDOWN,
+    /** The chosen map is still loading. */
+    PREPARING,
+    /** Flying over the chosen map. */
+    PREVIEW,
+    /** Standing at the spawns, about to fight. */
+    FREEZE,
     /** Being played. */
     LIVE,
     /** Showing the result. */
@@ -55,7 +62,11 @@ public record LobbyStatus(
 
   /** The status of {@code match} at {@code now}. */
   public static LobbyStatus of(RwfMatch match, Instant now) {
-    var map = match.map().map(MapDefinition::name);
+    var map =
+        match
+            .map()
+            .map(MapDefinition::name)
+            .or(() -> match.ballot().flatMap(LobbyStatus::proposed).map(Ballot.Candidate::name));
     var bots = (int) match.members().stream().filter(member -> member.id().isBot()).count();
     var humans = match.members().size() - bots;
     var settings = match.settings();
@@ -81,9 +92,29 @@ public record LobbyStatus(
         yield new LobbyStatus(
             Stage.COUNTDOWN, map, humans, bots, 0, seconds, remaining / (double) total);
       }
+      case Phase.Preparing _ -> new LobbyStatus(Stage.PREPARING, map, humans, bots, 0, 0, 1);
+      case Phase.Preview preview ->
+          new LobbyStatus(
+              Stage.PREVIEW, map, humans, bots, 0, secondsUntil(now, preview.until()), 1);
+      case Phase.Freeze freeze ->
+          new LobbyStatus(Stage.FREEZE, map, humans, bots, 0, secondsUntil(now, freeze.until()), 1);
       case Phase.Live _ -> new LobbyStatus(Stage.LIVE, map, humans, bots, 0, 0, 1);
       case Phase.Ended _ -> new LobbyStatus(Stage.ENDED, map, humans, bots, 0, 0, 1);
       case Phase.Resetting _ -> new LobbyStatus(Stage.RESETTING, map, humans, bots, 0, 0, 0);
     };
+  }
+
+  private static int secondsUntil(Instant now, Instant until) {
+    var left = Duration.between(now, until);
+    return left.isNegative() ? 0 : (int) Math.ceil(left.toMillis() / 1000D);
+  }
+
+  /** The map the vote chose, or the only map on offer when there is nothing to vote on. */
+  private static Optional<Ballot.Candidate> proposed(Ballot ballot) {
+    var chosen = ballot.chosen().flatMap(ballot::candidate);
+    if (chosen.isPresent() || ballot.candidates().size() != 1) {
+      return chosen;
+    }
+    return Optional.of(ballot.candidates().getFirst());
   }
 }

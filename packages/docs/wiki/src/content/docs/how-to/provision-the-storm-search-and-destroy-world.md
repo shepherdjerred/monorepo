@@ -1,9 +1,9 @@
 ---
-title: Provision The Storm's Search and Destroy world
-description: Create the sealed rwf world, wire its recording salt, ship a map, enable the modules and flag, and verify the first bot-filled round.
+title: Provision The Storm's Search and Destroy worlds
+description: Create the sealed lobby and map worlds, wire the recording salt, ship a map, enable the modules and flags, and verify the first bot-filled round.
 ---
 
-Provision the dedicated Search and Destroy world on `minecraft-tsmc` before
+Provision the dedicated Search and Destroy worlds on `minecraft-tsmc` before
 switching on The Storm's `rwf` and `rwfbots` modules. Players see the result
 described at
 [docs.ts-mc.net/search-and-destroy](https://docs.ts-mc.net/search-and-destroy/).
@@ -12,12 +12,14 @@ Every repository step below ships through a pull request and the
 [homelab release](/how-to/cut-a-homelab-release/) path. Only step 1 and the
 final checks run against the live server.
 
-## 1. Create the void world
+## 1. Create the two void worlds
 
-Read the `world` key in `server/owned/plugins/TheStorm/rwf.yml` under
-[the owned plugin configuration](packages/the-storm/server/owned/plugins/TheStorm/)
-and use that exact name below. The module looks the world up by that name;
-a world with any other name is not the Search and Destroy world.
+Read the `worlds` section of `server/owned/plugins/TheStorm/rwf.yml` under
+[the owned plugin configuration](packages/the-storm/server/owned/plugins/TheStorm/):
+`worlds.lobby` names the world the lobby is pasted into and `worlds.maps` the
+world the maps are played in. Create both, each with the command below and
+its exact name. The module looks each world up by name and refuses to enable
+while either is missing.
 
 Create the world with the Multiverse-Core 5.8.0 that
 [the image bakes in](packages/the-storm/server/plugins.json). The
@@ -38,8 +40,8 @@ Do not pass `--generator`. No void generator plugin is baked into the image,
 and The Storm deliberately ships none: Multiverse loads its worlds before
 The Storm enables, and Bukkit refuses a generator whose plugin is not yet
 enabled, so the world would fail to load on every later boot. For the same
-reason the world is not listed in `world.yml`; the `rwf` module checks and
-seals it itself.
+reason neither world is listed in `world.yml`; the `rwf` module checks and
+seals both itself.
 
 ## 2. Create the recording salt
 
@@ -82,12 +84,11 @@ Place each map under
 been played. The image delivers the whole owned directory on every boot, so
 nothing is copied to the volume by hand.
 
-The lobby room ships the same way from
+The lobby ships the same way from
 `server/owned/plugins/TheStorm/rwf/lobby/` (`lobby.yml`, `blocks.schem` and its
-nav files). It is generated, so there is nothing to build by hand: the module
-pastes it at `128,64,16` in the same world, east of the maps, and keeps that
-area free of maps. Place new maps so their regions do not overlap it; the
-module refuses to enable if one does.
+nav files). The module pastes it at `0,64,0` in the lobby world, so maps never
+share its space. Maps share the map world, so place new maps so their regions
+do not overlap one another; the module refuses to enable if two do.
 
 ## 4. Enable the modules
 
@@ -113,23 +114,35 @@ file and merge it. Then confirm Flipt matches:
 bun run check-flipt-flag-inventory -- --environment prod --namespace the-storm
 ```
 
-Do not toggle the flag in the Flipt UI alone; the inventory reconciler
+The match experience has a flag per part, each declared in the same
+inventory `false` by default with a `beta` override of `true`:
+`the-storm-rwf-match-flow-enabled` (map vote, preview and freeze),
+`the-storm-rwf-carry-over-enabled`, `the-storm-rwf-death-feed-enabled`,
+`the-storm-rwf-team-chat-enabled`, `the-storm-rwf-spectator-tools-enabled`,
+`the-storm-rwf-bomb-effects-enabled` and `the-storm-rwf-stats-enabled`. The
+module reads them as each match opens, so a change reaches the next match.
+Open them for production the same way, one override at a time.
+
+Do not toggle a flag in the Flipt UI alone; the inventory reconciler
 reports that as drift. The
 [flag inventory guide](/how-to/check-flipt-flag-inventory/) covers the
 command and its failure modes.
 
 ## 6. Verify the first round
 
-1. Run `/rwf admin status` as an operator and confirm it reports the loaded
-   world, the map set and zero active matches. This guide was written from
+1. Run `/rwf admin status` as an operator and confirm it reports the ready
+   lobby, the playable maps, the match features read from the flags and zero
+   humans. This guide was written from
    the module contract, not a live server, so if the command is missing,
    check the rwf command registration under
    [the plugin modules](packages/the-storm/plugin/modules/) for its current
    name.
-2. Join as a human with `/rwf join`. You must land on the gold spawn pad of
-   the lobby room, with the rules, the match board and four kit alcoves
-   around you and a countdown bar at the top of the screen. The lobby must
-   fill with bots and start a round with you as the only person.
+2. Join as a human with `/rwf join`. You must land on the lobby's plaza in
+   the lobby world, with the rules, the match board, the vote podiums, the
+   leaderboards and a kit alcove per kit around you and a countdown bar at the
+   top of the screen. The lobby must fill with bots and start a round with you
+   as the only person. With the match flow flag on, the chosen map previews
+   and everyone freezes at their start before the round begins.
 3. Watch the pod while the round runs. The chart requests 3 CPU (sized from
    the rwfbots load profile) and limits memory to 10 Gi; CPU above the
    request is burst, and memory must stay inside the limit:

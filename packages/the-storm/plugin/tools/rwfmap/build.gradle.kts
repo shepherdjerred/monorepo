@@ -1,7 +1,7 @@
 // rwfmap: the offline map analysis for Search and Destroy bots. It bakes every
 // rwf map (map.yml + blocks.schem) into the nav.rwfnav artifact rwfbots loads
 // and verifies the committed artifacts byte for byte when verifyRwfMaps is run.
-// It also writes the generated lobby (rwf/lobby) and verifies it the same way.
+// It also bakes the lobby (rwf/lobby) and verifies it the same way.
 // It is a tool, not a gameplay module: dist never
 // shades it and the architecture project never puts it on its classpath.
 plugins {
@@ -30,7 +30,7 @@ application { mainClass = mainClassName }
 /** The maps the server ships, each in its own `<id>/` folder. */
 val mapsRoot = rootProject.file("../server/owned/plugins/TheStorm/rwf/maps")
 
-/** The generated lobby room: lobby.yml, blocks.schem and its nav files. */
+/** The lobby: lobby.yml, blocks.schem and its nav files. */
 val lobbyFolder = rootProject.file("../server/owned/plugins/TheStorm/rwf/lobby")
 
 val mapFolders =
@@ -90,21 +90,18 @@ mapFolders.forEach { folder ->
 val bakeRwfLobby =
     tasks.register<JavaExec>("bakeRwfLobby") {
       group = "rwf"
-      description = "Writes the generated lobby's blocks.schem and bakes its nav files."
+      description = "Bakes the lobby's nav files from its blocks.schem."
       classpath = sourceSets.main.get().runtimeClasspath
       mainClass = mainClassName
       args("bake-lobby", lobbyFolder.absolutePath)
-      inputs.file(lobbyFolder.resolve("lobby.yml"))
-      outputs.files(
-          lobbyFolder.resolve("blocks.schem"),
-          lobbyFolder.resolve("nav.rwfnav"),
-          lobbyFolder.resolve("nav.summary.json"))
+      inputs.files(lobbyFolder.resolve("lobby.yml"), lobbyFolder.resolve("blocks.schem"))
+      outputs.files(lobbyFolder.resolve("nav.rwfnav"), lobbyFolder.resolve("nav.summary.json"))
     }
 
 val verifyRwfLobby =
     tasks.register<JavaExec>("verifyRwfLobby") {
       group = "rwf"
-      description = "Verifies the committed lobby against its generator and a fresh bake."
+      description = "Verifies the committed lobby's hash, places and nav files."
       classpath = sourceSets.main.get().runtimeClasspath
       mainClass = mainClassName
       args("verify-lobby", lobbyFolder.absolutePath)

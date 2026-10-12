@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.rwf.adapter.paper;
 
 import com.shepherdjerred.thestorm.rwf.adapter.content.MapBlocks;
 import com.shepherdjerred.thestorm.rwf.adapter.content.Schematic;
+import com.shepherdjerred.thestorm.rwf.domain.geometry.BlockPos;
 import com.shepherdjerred.thestorm.rwf.domain.geometry.Cuboid;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -34,10 +35,22 @@ final class Terrain {
    * @param id the map id, or the lobby's, for logs
    * @param blocks the schematic over its region
    * @param blocksSha256 the hash the region's blocks must have
+   * @param warm points whose chunks are held with the terrain's: a map's spectator point, so the
+   *     dead and watchers arrive without waiting for a load
    */
-  record Source(String id, MapBlocks blocks, String blocksSha256) {}
+  record Source(String id, MapBlocks blocks, String blocksSha256, List<BlockPos> warm) {
+    Source {
+      warm = List.copyOf(warm);
+    }
+
+    /** A terrain with nothing outside its blocks to keep warm. */
+    Source(String id, MapBlocks blocks, String blocksSha256) {
+      this(id, blocks, blocksSha256, List.of());
+    }
+  }
 
   private final PaperContext context;
+  private final World world;
   private final Source source;
   private final ChunkHolder chunks;
   private final List<int[]> held = new ArrayList<>();
@@ -45,8 +58,9 @@ final class Terrain {
   private boolean ready;
   private boolean released;
 
-  Terrain(PaperContext context, Source source, ChunkHolder chunks) {
+  Terrain(PaperContext context, World world, Source source, ChunkHolder chunks) {
     this.context = context;
+    this.world = world;
     this.source = source;
     this.chunks = chunks;
   }
@@ -63,8 +77,9 @@ final class Terrain {
     return source.blocks().region();
   }
 
-  private World world() {
-    return context.world();
+  /** The world the terrain stands in. */
+  World world() {
+    return world;
   }
 
   /** Whether the terrain is pasted and verified. */
@@ -92,6 +107,12 @@ final class Terrain {
     for (var x = region.min().x() >> 4; x <= region.max().x() >> 4; x++) {
       for (var z = region.min().z() >> 4; z <= region.max().z() >> 4; z++) {
         list.add(new int[] {x, z});
+      }
+    }
+    for (var point : source.warm()) {
+      var chunk = new int[] {point.x() >> 4, point.z() >> 4};
+      if (list.stream().noneMatch(held -> held[0] == chunk[0] && held[1] == chunk[1])) {
+        list.add(chunk);
       }
     }
     return list;

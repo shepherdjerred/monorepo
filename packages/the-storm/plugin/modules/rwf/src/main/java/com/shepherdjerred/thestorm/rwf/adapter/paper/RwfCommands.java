@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.rwf.adapter.paper;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.mojang.brigadier.tree.LiteralCommandNode;
@@ -10,10 +11,17 @@ import com.shepherdjerred.thestorm.rwf.adapter.content.RwfConfig;
 import com.shepherdjerred.thestorm.rwf.app.JoinGate;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
 import com.shepherdjerred.thestorm.rwf.domain.lobby.LobbySizing;
+import com.shepherdjerred.thestorm.rwf.domain.match.Ballot;
+import com.shepherdjerred.thestorm.rwf.domain.match.MatchError;
+import com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchSnapshot;
+import com.shepherdjerred.thestorm.rwf.domain.match.Phase;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
+import java.time.Duration;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -22,7 +30,11 @@ import java.util.function.Supplier;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-/** {@code /rwf}: join, leave, watch, pick a kit, see who is in, and the admin tools. */
+/**
+ * {@code /rwf}: join, leave, watch, pick a kit, vote for the map, see who is in and how long is
+ * left, the spectator tools, and the operator's tools to run matches; plus {@code /suicide} inside
+ * a match.
+ */
 final class RwfCommands {
 
   private static final int OK = Command.SINGLE_SUCCESS;
@@ -30,10 +42,14 @@ final class RwfCommands {
   private final PaperContext context;
   private final MatchRunner runner;
   private final Watchers watchers;
+  private final com.shepherdjerred.thestorm.rwf.app.store.QuarantineStore quarantines;
   private final KitFactory kits;
   private final JoinGate gate;
   private final RwfConfig config;
   private final Bots bots;
+  private final Stats stats;
+  private final Spectating spectating;
+  private final TeamChat teamChat;
 
   /**
    * What the commands need.
@@ -45,6 +61,9 @@ final class RwfCommands {
    * @param gate the managed rollout decision for joining
    * @param config the module settings
    * @param bots the bot roster, for the load test and status
+   * @param stats statistics and match history
+   * @param spectating the dead's and watchers' tools
+   * @param teamChat the auto team chat toggle
    */
   record Parts(
       PaperContext context,
@@ -53,25 +72,42 @@ final class RwfCommands {
       KitFactory kits,
       JoinGate gate,
       RwfConfig config,
-      Bots bots) {}
+      Bots bots,
+      Stats stats,
+      Spectating spectating,
+      TeamChat teamChat,
+      com.shepherdjerred.thestorm.rwf.app.store.QuarantineStore quarantines) {}
 
   RwfCommands(Parts parts) {
     this.context = parts.context();
     this.runner = parts.runner();
     this.watchers = parts.watchers();
+    this.quarantines = parts.quarantines();
     this.kits = parts.kits();
     this.gate = parts.gate();
     this.config = parts.config();
     this.bots = parts.bots();
+    this.stats = parts.stats();
+    this.spectating = parts.spectating();
+    this.teamChat = parts.teamChat();
   }
 
   void register(Commands commands) {
     commands.register(tree(), "Red Warfare Search and Destroy: /rwf join");
+    commands.register(suicide(), "Give up your life in a Search and Destroy match");
+  }
+
+  LiteralCommandNode<CommandSourceStack> suicide() {
+    return Commands.literal("suicide")
+        .requires(permission(RwfPermissions.SUICIDE))
+        .executes(ctx -> asPlayer(ctx, this::killSelf))
+        .build();
   }
 
   LiteralCommandNode<CommandSourceStack> tree() {
-    return Commands.literal("rwf")
-        .executes(ctx -> usage(ctx.getSource().getSender()))
+    var root = Commands.literal("rwf");
+    stats.addTo(root);
+    return root.executes(ctx -> usage(ctx.getSource().getSender()))
         .then(
             Commands.literal("join")
                 .requires(permission(RwfPermissions.PLAY))
@@ -80,19 +116,21 @@ final class RwfCommands {
             Commands.literal("leave")
                 .requires(permission(RwfPermissions.PLAY).or(permission(RwfPermissions.SPECTATE)))
                 .executes(ctx -> asPlayer(ctx, this::leave)))
+        .then(spectate())
         .then(
-            Commands.literal("spectate")
+            Commands.literal("goto")
                 .requires(permission(RwfPermissions.SPECTATE))
-                .executes(ctx -> asPlayer(ctx, this::spectate))
                 .then(
-                    Commands.literal("next")
+                    Commands.argument("player", StringArgumentType.word())
+                        .suggests(suggest(this::followableNames))
                         .executes(
                             ctx ->
                                 asPlayer(
                                     ctx,
                                     player ->
-                                        watchers
-                                            .next(player)
+                                        spectating
+                                            .goTo(
+                                                player, StringArgumentType.getString(ctx, "player"))
                                             .ifPresent(message -> Texts.error(player, message))))))
         .then(
             Commands.literal("kit")
@@ -108,6 +146,31 @@ final class RwfCommands {
                                         pickKit(
                                             player, StringArgumentType.getString(ctx, "kit"))))))
         .then(
+            Commands.literal("kits")
+                .requires(permission(RwfPermissions.PLAY))
+                .executes(ctx -> asPlayer(ctx, this::kitMenu)))
+        .then(
+            Commands.literal("vote")
+                .requires(permission(RwfPermissions.VOTE))
+                .executes(ctx -> ballot(ctx.getSource().getSender()))
+                .then(
+                    Commands.argument("map", StringArgumentType.word())
+                        .suggests(suggest(this::ballotIds))
+                        .executes(
+                            ctx ->
+                                asPlayer(
+                                    ctx,
+                                    player ->
+                                        vote(player, StringArgumentType.getString(ctx, "map"))))))
+        .then(
+            Commands.literal("time")
+                .requires(permission(RwfPermissions.PLAY).or(permission(RwfPermissions.SPECTATE)))
+                .executes(ctx -> time(ctx.getSource().getSender())))
+        .then(
+            Commands.literal("teamchat")
+                .requires(permission(RwfPermissions.PLAY))
+                .executes(ctx -> asPlayer(ctx, teamChat::toggle)))
+        .then(
             Commands.literal("who")
                 .requires(permission(RwfPermissions.PLAY))
                 .executes(ctx -> who(ctx.getSource().getSender())))
@@ -115,47 +178,154 @@ final class RwfCommands {
             Commands.literal("size")
                 .requires(permission(RwfPermissions.PLAY))
                 .executes(ctx -> size(ctx.getSource().getSender())))
+        .then(admin())
+        .build();
+  }
+
+  private LiteralArgumentBuilder<CommandSourceStack> spectate() {
+    return Commands.literal("spectate")
+        .requires(permission(RwfPermissions.SPECTATE))
+        .executes(ctx -> asPlayer(ctx, this::spectate))
         .then(
-            Commands.literal("admin")
-                .requires(permission(RwfPermissions.ADMIN))
-                .then(sizeCommand())
+            Commands.literal("next")
+                .executes(
+                    ctx ->
+                        asPlayer(
+                            ctx,
+                            player ->
+                                spectating
+                                    .cycle(player, 1)
+                                    .ifPresent(message -> Texts.error(player, message)))))
+        .then(
+            Commands.literal("previous")
+                .executes(
+                    ctx ->
+                        asPlayer(
+                            ctx,
+                            player ->
+                                spectating
+                                    .cycle(player, -1)
+                                    .ifPresent(message -> Texts.error(player, message)))));
+  }
+
+  private LiteralArgumentBuilder<CommandSourceStack> admin() {
+    return Commands.literal("admin")
+        .requires(permission(RwfPermissions.ADMIN))
+        .then(sizeCommand())
+        .then(Commands.literal("status").executes(ctx -> status(ctx.getSource().getSender())))
+        .then(Commands.literal("repair").executes(ctx -> repair(ctx.getSource().getSender())))
+        .then(
+            Commands.literal("loadtest")
                 .then(
-                    Commands.literal("status").executes(ctx -> status(ctx.getSource().getSender())))
+                    Commands.argument("bots", IntegerArgumentType.integer(1, config.match().maxCombatants()))
+                        .executes(
+                            ctx ->
+                                loadTest(
+                                    ctx.getSource().getSender(),
+                                    IntegerArgumentType.getInteger(ctx, "bots")))))
+        .then(
+            Commands.literal("showcase")
+                .executes(
+                    ctx -> showcase(ctx.getSource().getSender(), config.match().targetCombatants()))
                 .then(
-                    Commands.literal("repair").executes(ctx -> repair(ctx.getSource().getSender())))
-                .then(
-                    Commands.literal("loadtest")
-                        .then(
-                            Commands.argument(
-                                    "bots",
-                                    IntegerArgumentType.integer(1, config.match().maxCombatants()))
-                                .executes(
-                                    ctx ->
-                                        loadTest(
-                                            ctx.getSource().getSender(),
-                                            IntegerArgumentType.getInteger(ctx, "bots")))))
-                .then(
-                    Commands.literal("showcase")
+                    Commands.argument(
+                            "count", IntegerArgumentType.integer(2, config.match().maxCombatants()))
                         .executes(
                             ctx ->
                                 showcase(
-                                    ctx.getSource().getSender(), config.match().targetCombatants()))
+                                    ctx.getSource().getSender(),
+                                    IntegerArgumentType.getInteger(ctx, "count")))))
+        .then(
+            run("start")
+                .executes(ctx -> refusal(ctx, new MatchEvent.ForceStart(runner.now()), "Started.")))
+        .then(run("stop").executes(ctx -> refusal(ctx, new MatchEvent.Stop(), "Stopped.")))
+        .then(run("forcestop").executes(ctx -> forceStop(ctx.getSource().getSender())))
+        .then(
+            run("skip")
+                .executes(ctx -> refusal(ctx, new MatchEvent.Skip(runner.now()), "Moved on.")))
+        .then(
+            run("extend")
+                .then(
+                    Commands.argument("seconds", IntegerArgumentType.integer(1, 600))
+                        .executes(
+                            ctx ->
+                                refusal(
+                                    ctx,
+                                    new MatchEvent.Extend(
+                                        Duration.ofSeconds(
+                                            IntegerArgumentType.getInteger(ctx, "seconds"))),
+                                    "Extended."))))
+        .then(
+            run("setmap")
+                .then(
+                    Commands.argument("map", StringArgumentType.word())
+                        .suggests(suggest(this::mapIds))
+                        .executes(
+                            ctx ->
+                                setMap(
+                                    ctx.getSource().getSender(),
+                                    StringArgumentType.getString(ctx, "map")))))
+        .then(
+            run("team")
+                .then(
+                    Commands.argument("player", StringArgumentType.word())
+                        .suggests(suggest(this::memberNames))
                         .then(
-                            Commands.argument(
-                                    "count",
-                                    IntegerArgumentType.integer(2, config.match().maxCombatants()))
+                            Commands.argument("team", StringArgumentType.word())
+                                .suggests(suggest(RwfCommands::teamNames))
                                 .executes(
                                     ctx ->
-                                        showcase(
+                                        team(
                                             ctx.getSource().getSender(),
-                                            IntegerArgumentType.getInteger(ctx, "count"))))))
-        .build();
+                                            StringArgumentType.getString(ctx, "player"),
+                                            StringArgumentType.getString(ctx, "team"))))))
+        .then(
+            run("forcekit")
+                .then(
+                    Commands.argument("player", StringArgumentType.word())
+                        .suggests(suggest(this::memberNames))
+                        .then(
+                            Commands.argument("kit", StringArgumentType.word())
+                                .suggests(suggest(kits::kitIds))
+                                .executes(
+                                    ctx ->
+                                        forceKit(
+                                            ctx.getSource().getSender(),
+                                            StringArgumentType.getString(ctx, "player"),
+                                            StringArgumentType.getString(ctx, "kit"))))))
+        .then(
+            run("quarantine")
+                .then(
+                    Commands.argument("map", StringArgumentType.word())
+                        .suggests(suggest(this::mapIds))
+                        .executes(
+                            ctx ->
+                                quarantine(
+                                    ctx.getSource().getSender(),
+                                    StringArgumentType.getString(ctx, "map")))))
+        .then(
+            run("unquarantine")
+                .then(
+                    Commands.argument("map", StringArgumentType.word())
+                        .suggests(suggest(this::mapIds))
+                        .executes(
+                            ctx ->
+                                unquarantine(
+                                    ctx.getSource().getSender(),
+                                    StringArgumentType.getString(ctx, "map")))));
+  }
+
+  private static LiteralArgumentBuilder<CommandSourceStack> run(String name) {
+    return Commands.literal(name).requires(permission(RwfPermissions.RUN));
   }
 
   private static int usage(CommandSender sender) {
     Texts.info(
         sender,
-        "/rwf join, /rwf leave, /rwf kit <kit>, /rwf who, /rwf size, /rwf spectate, /rwf spectate next");
+        "/rwf join, /rwf leave, /rwf kit <kit>, /rwf kits, /rwf vote <map>, /rwf time, /rwf who,"
+            + " /rwf size,"
+            + " /rwf teamchat, /rwf stats, /rwf top, /rwf history, /rwf spectate [next|previous],"
+            + " /rwf goto <player>, /suicide");
     return OK;
   }
 
@@ -188,14 +358,37 @@ final class RwfCommands {
     return command.build();
   }
 
+  /**
+   * The map lobby sizes are read from: the one being played, else the vote's choice, else the first
+   * map on the ballot.
+   */
+  private Optional<com.shepherdjerred.thestorm.rwf.domain.map.MapDefinition> sizingMap() {
+    var current = runner.currentMap().map(MapWorld::definition);
+    if (current.isPresent()) {
+      return current;
+    }
+    return runner
+        .match()
+        .ballot()
+        .flatMap(
+            ballot ->
+                ballot
+                    .chosen()
+                    .or(
+                        () ->
+                            ballot.candidates().stream().findFirst().map(Ballot.Candidate::mapId)))
+        .flatMap(id -> runner.rotation().byId(id))
+        .map(MapWorld::definition);
+  }
+
   private int setSize(CommandSender sender, LobbySizing.Selection selection) {
     if (!runner.ready()) {
       Texts.error(sender, "The match is still being prepared.");
       return 0;
     }
+    var teams = sizingMap().map(map -> map.teams().size()).orElse(2);
     if (selection.mode() == LobbySizing.Mode.TEAM
-        && (long) selection.count() * runner.currentMap().definition().teams().size()
-            > config.match().maxCombatants()) {
+        && (long) selection.count() * teams > config.match().maxCombatants()) {
       Texts.error(sender, "That team size exceeds the combatant cap for this map.");
       return 0;
     }
@@ -211,7 +404,12 @@ final class RwfCommands {
       Texts.info(sender, "The match is still being prepared.");
       return OK;
     }
-    var map = runner.currentMap().definition();
+    var chosen = sizingMap();
+    if (chosen.isEmpty()) {
+      Texts.info(sender, "The next map is not chosen yet; sizes follow it once the vote closes.");
+      return OK;
+    }
+    var map = chosen.orElseThrow();
     var sizes = LobbySizing.recommend(map, config.match().maxCombatants());
     var teams = map.teams().size();
     Texts.info(
@@ -272,7 +470,10 @@ final class RwfCommands {
         + " bots";
   }
 
-  /** The managed flag decides, off the main thread; the match decides after. */
+  /**
+   * The managed flag decides, off the main thread; the match decides after. A match already under
+   * way makes the player a watcher who joins the next one.
+   */
   private void join(Player player) {
     context.onMain(
         gate.allows(player.getUniqueId()),
@@ -284,11 +485,19 @@ final class RwfCommands {
           if (!player.isOnline()) {
             return;
           }
-          var refusal =
-              watchers.watching(player.getUniqueId())
-                  ? watchers.join(player)
-                  : runner.admit(player);
-          refusal.ifPresent(message -> Texts.error(player, message));
+          if (watchers.watching(player.getUniqueId())) {
+            watchers.join(player).ifPresent(message -> Texts.error(player, message));
+            return;
+          }
+          if (runner.underWay() && !runner.showcase()) {
+            watchers
+                .watchThenJoin(player)
+                .ifPresentOrElse(
+                    message -> Texts.error(player, message),
+                    () -> Texts.info(player, "A match is under way: you join the next one."));
+            return;
+          }
+          runner.admit(player).ifPresent(message -> Texts.error(player, message));
         },
         "evaluate the rwf join flag for " + player.getName());
   }
@@ -321,6 +530,68 @@ final class RwfCommands {
     runner.pickKit(player, kit).ifPresent(error -> Texts.error(player, error));
   }
 
+  private void kitMenu(Player player) {
+    runner.openKitMenu(player).ifPresent(error -> Texts.error(player, error));
+  }
+
+  /** {@code /suicide}: a living member in a live match dies, credited as a suicide. */
+  private void killSelf(Player player) {
+    if (!runner.fighting(player.getUniqueId())) {
+      Texts.error(player, "You can only do that while fighting in a Search and Destroy match.");
+      return;
+    }
+    runner.suicide(player);
+  }
+
+  private void vote(Player player, String mapId) {
+    if (!runner.features().matchFlow()) {
+      Texts.error(player, "Map voting is not open yet.");
+      return;
+    }
+    runner.vote(player, mapId).ifPresent(error -> Texts.error(player, error));
+  }
+
+  private int ballot(CommandSender sender) {
+    var ballot = runner.match().ballot().filter(Ballot::opened);
+    if (ballot.isEmpty() || !runner.features().matchFlow()) {
+      Texts.info(sender, "There is no map vote open.");
+      return OK;
+    }
+    for (var line : LobbyDisplays.ballotLines(ballot.orElseThrow())) {
+      Texts.info(sender, line);
+    }
+    var ids = ballot.orElseThrow().candidates().stream().map(Ballot.Candidate::mapId).toList();
+    Texts.info(sender, "Vote with /rwf vote <" + String.join("|", ids) + ">.");
+    return OK;
+  }
+
+  private int time(CommandSender sender) {
+    var snapshot = runner.current();
+    if (snapshot.isEmpty()) {
+      Texts.info(sender, "The match is still being prepared.");
+      return OK;
+    }
+    var view = snapshot.orElseThrow();
+    if (runner.match().phase() instanceof Phase.Live live) {
+      // Red Warfare's /time: how long the game has run and, before it starts, the poison.
+      Texts.timeProgress(
+              Duration.between(live.startedAt(), view.now()),
+              view.poison().map(MatchSnapshot.PoisonView::untilDamage))
+          .forEach(sender::sendMessage);
+      return OK;
+    }
+    var phase = view.phase().name().toLowerCase(Locale.ROOT);
+    var until =
+        view.startsAt()
+            .map(at -> Duration.between(view.now(), at))
+            .filter(left -> !left.isNegative())
+            .map(left -> ": " + left.toSeconds() + "s left");
+    var poison =
+        view.poison().map(p -> ", poison in " + Math.max(0, p.untilDamage().toSeconds()) + "s");
+    Texts.info(sender, "Phase " + phase + until.orElse("") + poison.orElse(""));
+    return OK;
+  }
+
   private int who(CommandSender sender) {
     var snapshot = runner.current();
     if (snapshot.isEmpty()) {
@@ -336,11 +607,8 @@ final class RwfCommands {
             + ", "
             + view.combatants().size()
             + " combatants");
-    // Teams are dealt when the match goes live; before that everyone is in the lobby.
-    var waiting =
-        view.phase() == MatchSnapshot.PhaseKind.LOBBY
-            || view.phase() == MatchSnapshot.PhaseKind.COUNTDOWN;
-    if (waiting || view.teams().isEmpty()) {
+    // Teams are dealt as the match freezes; before that everyone is in the lobby.
+    if (view.teams().isEmpty() || view.combatants().stream().allMatch(c -> c.team().isEmpty())) {
       Texts.info(sender, "In the lobby: " + names(view, Optional.empty()));
       return OK;
     }
@@ -366,7 +634,14 @@ final class RwfCommands {
 
   private int status(CommandSender sender) {
     var match = runner.match();
-    Texts.info(sender, "Ready: " + runner.ready() + ", phase: " + match.phase());
+    Texts.info(
+        sender,
+        "Ready: "
+            + runner.ready()
+            + ", phase: "
+            + match.phase().getClass().getSimpleName()
+            + ", features: "
+            + runner.features());
     Texts.info(
         sender,
         "Match "
@@ -386,38 +661,51 @@ final class RwfCommands {
             + ", showcase: "
             + (runner.showcase() ? "yes" : "no")
             + ", bots arriving: "
-            + runner.arriving());
-    if (runner.ready()) {
-      var map = runner.currentMap();
-      Texts.info(sender, "Map busy: " + map.busy() + ", cratered blocks: " + map.crateredBlocks());
-    }
+            + runner.arriving()
+            + ", playable maps: "
+            + runner.rotation().playable().size());
+    runner
+        .currentMap()
+        .ifPresent(
+            map ->
+                Texts.info(
+                    sender,
+                    "Map "
+                        + map.id()
+                        + " busy: "
+                        + map.busy()
+                        + ", cratered blocks: "
+                        + map.crateredBlocks()));
     var lobby = runner.lobbyRoom();
     Texts.info(sender, "Lobby ready: " + lobby.ready() + ", busy: " + lobby.busy());
     return OK;
   }
 
   private int repair(CommandSender sender) {
-    if (!runner.ready() || runner.live()) {
-      Texts.error(sender, "Repair only between matches, once the maps are ready.");
+    if (!runner.ready() || runner.match().phase().started()) {
+      Texts.error(sender, "Repair only between matches, once the lobby is ready.");
       return OK;
     }
-    var map = runner.currentMap();
     var lobby = runner.lobbyRoom();
-    if (map.busy() || lobby.busy()) {
+    var current = runner.currentMap();
+    if (lobby.busy() || current.filter(MapWorld::busy).isPresent()) {
       Texts.error(sender, "The map or the lobby is already being verified or pasted.");
       return OK;
     }
-    Texts.info(sender, "Verifying " + map.map().id() + " and the lobby...");
-    map.verifyAndRepair(
-        ok -> {
-          Texts.info(
-              sender,
-              ok ? "Map " + map.map().id() + " is intact." : "Map repair failed; see the log.");
-          lobby.verifyAndRepair(
-              intact ->
-                  Texts.info(
-                      sender,
-                      intact ? "The lobby is intact." : "Lobby repair failed; see the log."));
+    Texts.info(
+        sender, "Verifying the lobby" + current.map(m -> " and " + m.id()).orElse("") + "...");
+    lobby.verifyAndRepair(
+        intact -> {
+          Texts.info(sender, intact ? "The lobby is intact." : "Lobby repair failed; see the log.");
+          current.ifPresent(
+              map ->
+                  map.verifyAndRepair(
+                      ok ->
+                          Texts.info(
+                              sender,
+                              ok
+                                  ? "Map " + map.id() + " is intact."
+                                  : "Map repair failed; see the log.")));
         });
     return OK;
   }
@@ -451,11 +739,145 @@ final class RwfCommands {
     return OK;
   }
 
-  private static Predicate<CommandSourceStack> permission(String permission) {
+  /** Sends {@code event} as an operator; says why it was refused, or {@code done}. */
+  private int refusal(CommandContext<CommandSourceStack> ctx, MatchEvent event, String done) {
+    var sender = ctx.getSource().getSender();
+    if (!runner.ready()) {
+      Texts.error(sender, "The match is still being prepared.");
+      return OK;
+    }
+    runner
+        .handle(event)
+        .ifPresentOrElse(error -> Texts.error(sender, error), () -> Texts.info(sender, done));
+    return OK;
+  }
+
+  /** Stops the match even while it resets: everyone carried over is let go too. */
+  private int forceStop(CommandSender sender) {
+    runner.forceStop();
+    Texts.info(sender, "Stopped; everyone in the match was let go.");
+    return OK;
+  }
+
+  private int setMap(CommandSender sender, String mapId) {
+    var map = runner.rotation().byId(mapId);
+    if (map.isEmpty()) {
+      Texts.error(sender, "There is no map " + mapId + " in the rotation.");
+      return OK;
+    }
+    var definition = map.orElseThrow().definition();
+    runner
+        .handle(
+            new MatchEvent.SetMap(
+                new Ballot.Candidate(definition.id(), definition.name(), definition.author())))
+        .ifPresentOrElse(
+            error -> Texts.error(sender, error),
+            () -> Texts.info(sender, "The next match is played on " + definition.name() + "."));
+    return OK;
+  }
+
+  private int team(CommandSender sender, String name, String teamName) {
+    var team =
+        Arrays.stream(TeamColor.values())
+            .filter(color -> color.name().equalsIgnoreCase(teamName))
+            .findFirst();
+    if (team.isEmpty()) {
+      Texts.error(sender, "There is no team " + teamName + ".");
+      return OK;
+    }
+    var member = runner.match().members().stream().filter(m -> m.name().equals(name)).findFirst();
+    if (member.isEmpty()) {
+      Texts.error(sender, Texts.describe(MatchError.NOT_A_MEMBER));
+      return OK;
+    }
+    runner
+        .handle(new MatchEvent.AssignTeam(member.orElseThrow().id(), team.orElseThrow()))
+        .ifPresentOrElse(
+            error -> Texts.error(sender, error),
+            () ->
+                Texts.info(sender, name + " plays for " + team.orElseThrow().displayName() + "."));
+    return OK;
+  }
+
+  private int forceKit(CommandSender sender, String name, String kit) {
+    var member = runner.match().members().stream().filter(m -> m.name().equals(name)).findFirst();
+    if (member.isEmpty()) {
+      Texts.error(sender, Texts.describe(MatchError.NOT_A_MEMBER));
+      return OK;
+    }
+    runner
+        .handle(new MatchEvent.ForceKit(member.orElseThrow().id(), kit))
+        .ifPresentOrElse(
+            error -> Texts.error(sender, error),
+            () -> Texts.info(sender, name + " now uses " + kit + "."));
+    return OK;
+  }
+
+  private int quarantine(CommandSender sender, String mapId) {
+    try {
+      if (!runner.rotation().quarantine(mapId)) {
+        Texts.error(sender, "There is no map " + mapId + " in the rotation.");
+        return OK;
+      }
+    } catch (IllegalStateException last) {
+      Texts.error(sender, "The last playable map cannot be quarantined.");
+      return OK;
+    }
+    context.onMain(
+        quarantines.quarantine(
+            mapId, "quarantined by an operator", sender.getName(), context.time().instant()),
+        ignored ->
+            Texts.info(
+                sender,
+                mapId
+                    + " is out of every ballot, across restarts, until /rwf admin unquarantine "
+                    + mapId
+                    + "."),
+        "quarantine rwf map " + mapId);
+    return OK;
+  }
+
+  private int unquarantine(CommandSender sender, String mapId) {
+    if (!runner.rotation().release(mapId)) {
+      Texts.error(sender, mapId + " is not quarantined by an operator.");
+      return OK;
+    }
+    context.onMain(
+        quarantines.release(mapId),
+        ignored -> Texts.info(sender, mapId + " is back in the rotation."),
+        "release rwf map " + mapId);
+    return OK;
+  }
+
+  private Collection<String> ballotIds() {
+    return runner
+        .match()
+        .ballot()
+        .map(ballot -> ballot.candidates().stream().map(Ballot.Candidate::mapId).toList())
+        .orElseGet(List::of);
+  }
+
+  private Collection<String> mapIds() {
+    return runner.rotation().playable().stream().map(MapWorld::id).toList();
+  }
+
+  private Collection<String> memberNames() {
+    return runner.match().members().stream().map(m -> m.name()).toList();
+  }
+
+  private Collection<String> followableNames() {
+    return runner.followable().stream().map(Player::getName).toList();
+  }
+
+  private static Collection<String> teamNames() {
+    return Arrays.stream(TeamColor.values()).map(c -> c.name().toLowerCase(Locale.ROOT)).toList();
+  }
+
+  static Predicate<CommandSourceStack> permission(String permission) {
     return source -> source.getSender().hasPermission(permission);
   }
 
-  private static int asPlayer(CommandContext<CommandSourceStack> ctx, Consumer<Player> action) {
+  static int asPlayer(CommandContext<CommandSourceStack> ctx, Consumer<Player> action) {
     if (ctx.getSource().getSender() instanceof Player player) {
       action.accept(player);
       return OK;
@@ -464,11 +886,12 @@ final class RwfCommands {
     return 0;
   }
 
-  private static SuggestionProvider<CommandSourceStack> suggest(
-      Supplier<Collection<String>> options) {
+  static SuggestionProvider<CommandSourceStack> suggest(Supplier<Collection<String>> options) {
     return (ctx, builder) -> {
       var typed = builder.getRemaining().toLowerCase(Locale.ROOT);
-      options.get().stream().filter(option -> option.startsWith(typed)).forEach(builder::suggest);
+      options.get().stream()
+          .filter(option -> option.toLowerCase(Locale.ROOT).startsWith(typed))
+          .forEach(builder::suggest);
       return builder.buildFuture();
     };
   }

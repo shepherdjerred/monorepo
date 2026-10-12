@@ -134,6 +134,8 @@ public final class RwfBotsHarness implements AutoCloseable {
             new RwfBotsModule.Hooks(
                 Optional.of(ctx -> bodies),
                 Optional.of(world),
+                // The synthetic map's west half stands in for the lobby, in the same world.
+                Optional.of(world),
                 Optional.of(() -> tickTimes),
                 Optional.of(
                     new ChatGate() {

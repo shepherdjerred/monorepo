@@ -7,17 +7,18 @@ import com.shepherdjerred.thestorm.rwf.domain.poison.PoisonClock;
 import com.shepherdjerred.thestorm.rwf.domain.reward.Payout;
 import java.time.Duration;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.regex.Pattern;
 
 /**
- * {@code rwf.yml}: the world matches run in, where players stand outside a match, how matches fill
- * and start, the ported rule constants (pinned, so the file documents them and the module refuses a
- * file that disagrees with the code), rewards, recording, the load test switch and the maps kept
- * out of the rotation.
+ * {@code rwf.yml}: the two worlds the lobby and the matches run in, where players stand outside a
+ * match, how matches fill and start, the ported rule constants (pinned, so the file documents them
+ * and the module refuses a file that disagrees with the code), rewards, recording, the load test
+ * switch and the maps kept out of the rotation.
  *
- * @param world the loaded world matches run in; the module seals it
+ * @param worlds the loaded lobby and map worlds; the module seals both
  * @param spectator where players stand when no match places them elsewhere
  * @param match how matches fill and start
  * @param rules the ported Red Warfare constants this build plays by
@@ -28,7 +29,7 @@ import java.util.regex.Pattern;
  *     are verified, but no match is played on them
  */
 public record RwfConfig(
-    String world,
+    Worlds worlds,
     PointEntry spectator,
     Match match,
     Rules rules,
@@ -41,9 +42,6 @@ public record RwfConfig(
   private static final Pattern MAP_ID = Pattern.compile("[a-z0-9]+(?:-[a-z0-9]+)*");
 
   public RwfConfig {
-    if (!WORLD.matcher(world).matches()) {
-      throw new IllegalArgumentException("world must be a plain world name: " + world);
-    }
     for (var entry : quarantine.entrySet()) {
       if (!MAP_ID.matcher(entry.getKey()).matches()) {
         throw new IllegalArgumentException("quarantine names no map id: " + entry.getKey());
@@ -55,45 +53,100 @@ public record RwfConfig(
     quarantine = Collections.unmodifiableMap(new TreeMap<>(quarantine));
   }
 
-  /** The domain settings for these rules: a match starts with {@code minHumans} members. */
+  /**
+   * The two sealed worlds: the lobby players wait in, and the maps matches are fought on.
+   *
+   * @param lobby the lobby world
+   * @param maps the map world
+   */
+  public record Worlds(String lobby, String maps) {
+
+    public Worlds {
+      for (var world : List.of(lobby, maps)) {
+        if (!WORLD.matcher(world).matches()) {
+          throw new IllegalArgumentException("worlds must be plain world names: " + world);
+        }
+      }
+      if (lobby.equals(maps)) {
+        throw new IllegalArgumentException("the lobby and the maps stand in different worlds");
+      }
+    }
+  }
+
+  /**
+   * The domain settings for these rules, with the full match flow: a match starts with {@code
+   * minHumans} members. The runner turns the vote, preview, freeze and carry-over off as the flags
+   * decide.
+   */
   public MatchSettings matchSettings() {
     return new MatchSettings(
-        match.minHumans(),
-        match.minHumans(),
+        match.minPlayers(),
+        match.absoluteMinPlayers(),
         match.maxCombatants(),
         match.countdown(),
-        match.countdown(),
+        match.relaxEvery(),
         match.endLinger(),
-        rewards.minMatchLength());
+        rewards.minMatchLength(),
+        match.voteLead(),
+        match.previewLength(),
+        match.freezeLength(),
+        true);
   }
 
   /**
    * How matches fill and start.
    *
    * @param minHumans the fewest humans a match starts with, and keeps counting down with
+   * @param minPlayers players (humans and bots) a lobby wants before it counts down, as Red
+   *     Warfare's LobbyManager had it
+   * @param absoluteMinPlayers the fewest players the requirement relaxes to
+   * @param relaxEvery how long a waiting lobby takes to want one player fewer
    * @param targetCombatants how many combatants bots fill the match up to
    * @param automaticSizing whether ordinary matches use the map's large preset
    * @param maxCombatants the most combatants in a match
    * @param countdown from enough humans to going live
    * @param endLinger how long the result is shown before the map resets
    * @param noHumansAbort how long a live match runs with no humans before it is stopped unpaid
+   * @param voteLead how long before the countdown ends the map vote closes, so the chosen map loads
+   *     meanwhile
+   * @param previewLength how long members fly over the chosen map before the teams are dealt
+   * @param freezeLength how long everyone stands still at their spawn before the fight
    */
   public record Match(
       int minHumans,
+      int minPlayers,
+      int absoluteMinPlayers,
+      Duration relaxEvery,
       int targetCombatants,
       boolean automaticSizing,
       int maxCombatants,
       Duration countdown,
       Duration endLinger,
-      Duration noHumansAbort) {
+      Duration noHumansAbort,
+      Duration voteLead,
+      Duration previewLength,
+      Duration freezeLength) {
 
     public Match {
       if (minHumans < 1 || targetCombatants < minHumans || maxCombatants < targetCombatants) {
         throw new IllegalArgumentException(
             "need 1 <= minHumans <= targetCombatants <= maxCombatants");
       }
+      if (absoluteMinPlayers < 1
+          || minPlayers < absoluteMinPlayers
+          || maxCombatants < minPlayers
+          || !positive(relaxEvery)) {
+        throw new IllegalArgumentException(
+            "need 1 <= absoluteMinPlayers <= minPlayers <= maxCombatants and relaxEvery > 0");
+      }
       if (!positive(countdown) || !positive(noHumansAbort) || endLinger.isNegative()) {
         throw new IllegalArgumentException("countdown and noHumansAbort must be positive");
+      }
+      if (voteLead.isNegative() || voteLead.compareTo(countdown) > 0) {
+        throw new IllegalArgumentException("voteLead must be between zero and the countdown");
+      }
+      if (!positive(previewLength) || !positive(freezeLength)) {
+        throw new IllegalArgumentException("previewLength and freezeLength must be positive");
       }
     }
   }
@@ -162,8 +215,9 @@ public record RwfConfig(
    *
    * @param enabled whether matches are recorded at all
    * @param directory the folder under the plugin data folder recordings are written to
-   * @param retentionDays recordings older than this are deleted at enable
-   * @param maxBytes the oldest recordings are deleted at enable until the folder fits this
+   * @param retentionDays archived recordings older than this are deleted at enable; a recording
+   *     that is not archived is never deleted
+   * @param maxBytes the oldest archived recordings are deleted at enable until the folder fits this
    * @param saltEnv the environment variable holding the pseudonym salt; required when enabled
    */
   public record Recording(

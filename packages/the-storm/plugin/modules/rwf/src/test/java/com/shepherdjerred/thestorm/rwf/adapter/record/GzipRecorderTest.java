@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.rwf.adapter.record;
 import static com.shepherdjerred.thestorm.rwf.testing.Samples.T0;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.shepherdjerred.thestorm.core.compute.ComputePool;
 import com.shepherdjerred.thestorm.core.compute.DirectComputePool;
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.rwf.app.Pseudonyms;
@@ -11,6 +12,7 @@ import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
 import com.shepherdjerred.thestorm.rwf.domain.record.Frame;
 import com.shepherdjerred.thestorm.rwf.domain.record.InputFrame;
 import com.shepherdjerred.thestorm.rwf.domain.record.MatchRecord;
+import com.shepherdjerred.thestorm.rwf.domain.record.Occurrence;
 import com.shepherdjerred.thestorm.rwf.domain.record.RecordCodec;
 import com.shepherdjerred.thestorm.rwf.domain.record.RecordEnd;
 import com.shepherdjerred.thestorm.rwf.domain.record.RecordEvent;
@@ -26,9 +28,11 @@ import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayDeque;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.Executor;
 import java.util.zip.GZIPInputStream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -52,7 +56,10 @@ final class GzipRecorderTest {
     var alice = pseudonyms.of(Samples.ALICE.uuid());
     var bot = pseudonyms.of(Samples.BOT_1.uuid());
     var recorder =
-        new GzipRecorder(directory, "rwf-recordings", new DirectComputePool(), new FakeClock(T0));
+        new GzipRecorder(
+            directory,
+            "rwf-recordings",
+            new GzipRecorder.Parts(new DirectComputePool(), new FakeClock(T0), new Alarms()));
     var header =
         new RecordHeader(
             MatchRecord.SCHEMA_VERSION,
@@ -114,21 +121,200 @@ final class GzipRecorderTest {
   }
 
   @Test
-  void retentionDeletesOldThenOversizedRecordings() throws IOException {
+  void retentionDeletesArchivedOldThenOversizedRecordings() throws IOException {
     var root = directory.resolve("rwf-recordings");
     var old = write(root.resolve("2026/09/01/a.rwfrec.gz"), 100, T0.minus(Duration.ofDays(40)));
     var big = write(root.resolve("2026/10/01/b.rwfrec.gz"), 300, T0.minus(Duration.ofDays(2)));
     var recent = write(root.resolve("2026/10/03/c.rwfrec.gz"), 100, T0.minus(Duration.ofHours(1)));
     write(root.resolve("2026/10/03/notes.txt"), 10, T0);
+    for (var file : List.of(old, big, recent)) {
+      archive(file);
+    }
 
     var report = Retention.prune(root, Duration.ofDays(30), 250, T0);
 
     assertThat(report.deleted()).isEqualTo(2);
     assertThat(report.kept()).isEqualTo(1);
+    assertThat(report.unarchived()).isZero();
+    assertThat(report.bytesOverCap()).isZero();
     assertThat(Files.exists(old)).isFalse();
+    assertThat(Files.exists(Retention.markerOf(old))).isFalse();
     assertThat(Files.exists(big)).isFalse();
     assertThat(Files.exists(recent)).isTrue();
     assertThat(Retention.list(root)).containsExactly(recent);
+  }
+
+  @Test
+  void retentionNeverDeletesARecordingThatIsNotArchived() throws IOException {
+    var root = directory.resolve("rwf-recordings");
+    var ancient =
+        write(root.resolve("2026/01/01/a.rwfrec.gz"), 400, T0.minus(Duration.ofDays(200)));
+    var mismatched =
+        write(root.resolve("2026/02/01/b.rwfrec.gz"), 400, T0.minus(Duration.ofDays(100)));
+    Files.writeString(
+        Retention.markerOf(mismatched),
+        new Retention.Marker("rwf/b.rwfrec.gz", "a".repeat(64), 399).encode());
+    var garbled = write(root.resolve("2026/03/01/c.rwfrec.gz"), 400, T0.minus(Duration.ofDays(90)));
+    Files.writeString(Retention.markerOf(garbled), "archived, honest");
+    var writing =
+        write(root.resolve("2026/03/02/d.rwfrec.gz.part"), 400, T0.minus(Duration.ofDays(80)));
+    var archived =
+        write(root.resolve("2026/03/03/e.rwfrec.gz"), 400, T0.minus(Duration.ofDays(70)));
+    archive(archived);
+
+    var report = Retention.prune(root, Duration.ofDays(30), 100, T0);
+
+    assertThat(report.deleted()).isEqualTo(1);
+    assertThat(Files.exists(archived)).isFalse();
+    assertThat(List.of(ancient, mismatched, garbled, writing)).allMatch(Files::exists);
+    assertThat(report.unarchived()).isEqualTo(3);
+    assertThat(report.kept()).isEqualTo(3);
+    assertThat(report.bytesOverCap()).isEqualTo(1200 - 100);
+  }
+
+  @Test
+  void markersRoundTripAndRefuseNonsense() {
+    var marker = new Retention.Marker("the-storm/rwf/x.rwfrec.gz", "b".repeat(64), 12);
+    assertThat(Retention.Marker.decode(marker.encode())).contains(marker);
+    assertThat(Retention.Marker.decode("rwf-archive-v2\tk\t" + "b".repeat(64) + "\t1")).isEmpty();
+    assertThat(Retention.Marker.decode("rwf-archive-v1\tk\tnot-hex\t1")).isEmpty();
+    assertThat(Retention.Marker.decode("rwf-archive-v1\tk\t" + "b".repeat(64) + "\t-1")).isEmpty();
+  }
+
+  @Test
+  void aLaggingWriterDropsNothingAndOnlyWarns() throws IOException {
+    var alarms = new Alarms();
+    var pool = new ManualPool();
+    var recorder =
+        new GzipRecorder(
+            directory, "rwf-recordings", new GzipRecorder.Parts(pool, new FakeClock(T0), alarms));
+    var samples = GzipRecorder.BACKLOG_WARNING * 2 + 7;
+
+    var recording = recorder.begin(header(MatchRecord.SCHEMA_VERSION));
+    for (var tick = 0; tick < samples; tick++) {
+      recording.frame(new Frame(tick, "p1", 0, 2048, 0, 0, 0, 80, 0, 0));
+    }
+    assertThat(Files.exists(directory.resolve("rwf-recordings"))).isFalse();
+    var summary =
+        recording.end(new RecordEnd(samples, Optional.empty(), RecordEnd.Reason.DRAW, Map.of()));
+    pool.runAll();
+
+    var done = summary.join();
+    assertThat(done.droppedFrames()).isZero();
+    assertThat(alarms.backlogs).isEqualTo(1);
+    assertThat(alarms.drops).isZero();
+    var file = directory.resolve(done.file().orElseThrow());
+    assertThat(file.getFileName().toString()).endsWith(".rwfrec.gz");
+    assertThat(Files.exists(file.resolveSibling(file.getFileName() + ".part"))).isFalse();
+    var record =
+        ((Result.Ok<MatchRecord, RecordCodec.Problem>) RecordCodec.decode(decompress(file)))
+            .value();
+    assertThat(record.frames()).hasSize(samples);
+  }
+
+  @Test
+  void aStalledWriterDropsPastTheCapAndSaysSoLoudly() {
+    var alarms = new Alarms();
+    var pool = new ManualPool();
+    var recorder =
+        new GzipRecorder(
+            directory,
+            "rwf-recordings",
+            new GzipRecorder.Parts(pool, new FakeClock(T0), alarms),
+            10);
+
+    var recording = recorder.begin(header(MatchRecord.SCHEMA_VERSION));
+    for (var tick = 0; tick < 25; tick++) {
+      recording.frame(new Frame(tick, "p1", 0, 2048, 0, 0, 0, 80, 0, 0));
+    }
+    var summary =
+        recording.end(new RecordEnd(25, Optional.empty(), RecordEnd.Reason.DRAW, Map.of()));
+    pool.runAll();
+
+    assertThat(summary.join().droppedFrames()).isEqualTo(15);
+    assertThat(alarms.drops).isEqualTo(1);
+    assertThat(alarms.finishedWithDrops).isEqualTo(15);
+  }
+
+  @Test
+  void anOpenRecordingIsAPartFileUntilItEnds() {
+    var pool = new ManualPool();
+    var recorder =
+        new GzipRecorder(
+            directory,
+            "rwf-recordings",
+            new GzipRecorder.Parts(pool, new FakeClock(T0), new Alarms()));
+
+    var recording = recorder.begin(header(MatchRecord.SCHEMA_VERSION));
+    recording.occurrence(new Occurrence.Killstreak(1, "p1", "compass", 2));
+    pool.runAll();
+
+    var root = directory.resolve("rwf-recordings");
+    assertThat(Retention.list(root)).isEmpty();
+    var summary =
+        recording.end(new RecordEnd(2, Optional.empty(), RecordEnd.Reason.DRAW, Map.of()));
+    pool.runAll();
+    assertThat(Retention.list(root))
+        .containsExactly(directory.resolve(summary.join().file().orElseThrow()));
+  }
+
+  private static RecordHeader header(int version) {
+    return new RecordHeader(
+        version,
+        Samples.MATCH,
+        "training-yard",
+        Samples.SHA,
+        Samples.SEED,
+        List.of(new RosterEntry("p1", TeamColor.RED, "trooper", false)),
+        CombatRules.COMBAT_RULES_VERSION);
+  }
+
+  private static void archive(Path file) throws IOException {
+    Files.writeString(
+        Retention.markerOf(file),
+        new Retention.Marker("the-storm/rwf/" + file.getFileName(), "c".repeat(64), size(file))
+            .encode());
+  }
+
+  /** Counts what the recorder reported. */
+  private static final class Alarms implements GzipRecorder.Alarms {
+    int backlogs;
+    int drops;
+    int finishedWithDrops;
+
+    @Override
+    public void backlog(Path file, int waiting) {
+      backlogs++;
+    }
+
+    @Override
+    public void dropped(Path file, int total) {
+      drops++;
+    }
+
+    @Override
+    public void finishedWithDrops(Path file, int total) {
+      finishedWithDrops = total;
+    }
+  }
+
+  /** A pool that holds work until the test runs it, as a writer that has fallen behind. */
+  private static final class ManualPool implements ComputePool {
+    private final ArrayDeque<Runnable> queued = new ArrayDeque<>();
+
+    @Override
+    public Executor executor() {
+      return queued::add;
+    }
+
+    void runAll() {
+      while (!queued.isEmpty()) {
+        queued.poll().run();
+      }
+    }
+
+    @Override
+    public void close() {}
   }
 
   private static Path write(Path file, int bytes, Instant modified) throws IOException {

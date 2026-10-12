@@ -1,0 +1,61 @@
+# A small test lobby for the MockBukkit suites: the stone waiting room that
+# came before the war-room build. MockBukkit cannot make block data for the
+# walls, panes and lanterns the shipped lobby uses, so the suites paste this
+# room instead; the shipped lobby is checked by rwfmap and the real-server
+# suites. The podiums stand on the room's floor, the boards on its walls.
+name: Waiting Room
+region:
+  min: { x: 128, y: 64, z: 16 }
+  max: { x: 158, y: 72, z: 46 }
+spawn: { x: 143.5, y: 65.0, z: 31.5, yaw: 270.0, pitch: 0.0 }
+sides:
+  - team: RED
+    at: { x: 143.5, y: 65.0, z: 22.5, yaw: 0.0, pitch: 0.0 }
+  - team: BLUE
+    at: { x: 143.5, y: 65.0, z: 40.5, yaw: 180.0, pitch: 0.0 }
+  - team: GREEN
+    at: { x: 137.5, y: 65.0, z: 22.5, yaw: 0.0, pitch: 0.0 }
+  - team: PURPLE
+    at: { x: 137.5, y: 65.0, z: 40.5, yaw: 180.0, pitch: 0.0 }
+  - team: YELLOW
+    at: { x: 149.5, y: 65.0, z: 22.5, yaw: 0.0, pitch: 0.0 }
+alcoves:
+  - kit: trooper
+    display: { x: 157.5, y: 66.25, z: 22.5 }
+    stand: { x: 154.5, y: 65.0, z: 22.5, yaw: 270.0, pitch: 0.0 }
+  - kit: longbow
+    display: { x: 157.5, y: 66.25, z: 28.5 }
+    stand: { x: 154.5, y: 65.0, z: 28.5, yaw: 270.0, pitch: 0.0 }
+  - kit: shortbow
+    display: { x: 157.5, y: 66.25, z: 34.5 }
+    stand: { x: 154.5, y: 65.0, z: 34.5, yaw: 270.0, pitch: 0.0 }
+  - kit: rewind
+    display: { x: 157.5, y: 66.25, z: 40.5 }
+    stand: { x: 154.5, y: 65.0, z: 40.5, yaw: 270.0, pitch: 0.0 }
+rotation:
+  header: { x: 129.5, y: 68.0, z: 31.5, yaw: 270.0, pitch: 0.0 }
+  slots:
+    - { x: 129.5, y: 66.5, z: 27.5 }
+    - { x: 129.5, y: 66.5, z: 35.5 }
+  stand: { x: 133.5, y: 65.0, z: 31.5, yaw: 90.0, pitch: 0.0 }
+podiums:
+  - click: { x: 138, y: 64, z: 28 }
+    display: { x: 138.5, y: 67.0, z: 28.5 }
+    stand: { x: 139.5, y: 65.0, z: 28.5, yaw: 90.0, pitch: 0.0 }
+  - click: { x: 138, y: 64, z: 31 }
+    display: { x: 138.5, y: 67.0, z: 31.5 }
+    stand: { x: 139.5, y: 65.0, z: 31.5, yaw: 90.0, pitch: 0.0 }
+  - click: { x: 138, y: 64, z: 34 }
+    display: { x: 138.5, y: 67.0, z: 34.5 }
+    stand: { x: 139.5, y: 65.0, z: 34.5, yaw: 90.0, pitch: 0.0 }
+leaderboards:
+  - stat: KILLS
+    display: { x: 137.5, y: 67.0, z: 45.5, yaw: 180.0, pitch: 0.0 }
+  - stat: WINS
+    display: { x: 143.5, y: 68.5, z: 45.5, yaw: 180.0, pitch: 0.0 }
+  - stat: WIN_STREAK
+    display: { x: 149.5, y: 67.0, z: 45.5, yaw: 180.0, pitch: 0.0 }
+rules: { x: 143.5, y: 66.5, z: 17.5, yaw: 0.0, pitch: 0.0 }
+board: { x: 143.5, y: 66.5, z: 45.5, yaw: 180.0, pitch: 0.0 }
+balcony: { x: 131.5, y: 69.0, z: 31.5, yaw: 90.0, pitch: 0.0 }
+blocksSha256: 63d4513bab8df532597dbabd5a49abe32ffcbb64f186f1ef14111000c4cf78a3

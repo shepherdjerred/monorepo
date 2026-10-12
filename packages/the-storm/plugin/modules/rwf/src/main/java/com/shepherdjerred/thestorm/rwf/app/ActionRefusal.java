@@ -53,20 +53,26 @@ public enum ActionRefusal {
   /** The Time Machine has no landing spot yet. */
   NO_LANDING;
 
-  /** The refusal for a match rule the request tripped. */
+  /**
+   * The refusal for a match rule the request tripped: the refusal of the same name, or the one a
+   * group of rules shares. A rule with neither fails loudly; {@code ActionRefusalTest} maps every
+   * rule.
+   */
   public static ActionRefusal of(MatchError error) {
     return switch (error) {
-      case NOT_A_MEMBER, ALREADY_JOINED, IN_PROGRESS, FULL -> NOT_A_MEMBER;
-      case NOT_ALIVE -> NOT_ALIVE;
-      case NOT_LIVE -> NOT_LIVE;
-      case NOT_PRE_GAME, NO_MAP, MAP_LOCKED, TOO_FEW_PLAYERS -> NOT_PRE_GAME;
-      case UNKNOWN_KIT -> UNKNOWN_KIT;
-      case UNKNOWN_BOMB -> UNKNOWN_BOMB;
-      case BOMB_DESTROYED -> BOMB_DESTROYED;
-      case CANNOT_ARM_OWN_BOMB -> CANNOT_ARM_OWN_BOMB;
-      case CANNOT_DEFUSE_ENEMY_BOMB -> CANNOT_DEFUSE_ENEMY_BOMB;
-      case CANNOT_DEFUSE_OWN_NUKE -> CANNOT_DEFUSE_OWN_NUKE;
+      case ALREADY_JOINED, IN_PROGRESS, FULL -> NOT_A_MEMBER;
       case NOT_RESETTING, ALREADY_RESETTING -> NOT_LIVE;
+      case NO_MAP,
+          MAP_LOCKED,
+          TOO_FEW_PLAYERS,
+          NO_BALLOT,
+          BALLOT_ALREADY_OPEN,
+          NOT_ON_BALLOT,
+          VOTE_CLOSED,
+          NOTHING_TO_SKIP,
+          UNKNOWN_TEAM ->
+          NOT_PRE_GAME;
+      default -> valueOf(error.name());
     };
   }
 }

@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "directory": "rwf-recordings",
+  "recordingSuffix": ".rwfrec.gz",
+  "partSuffix": ".rwfrec.gz.part",
+  "markerSuffix": ".archived",
+  "marker": "rwf-archive-v1"
+}

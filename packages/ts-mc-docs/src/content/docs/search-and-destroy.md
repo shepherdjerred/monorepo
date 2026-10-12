@@ -9,16 +9,17 @@ for the next round and `/rwf leave` to go back to survival.
 
 ## The lobby
 
-Joining takes you to the lobby, a stone room where everyone waits for the
-round to start. Nothing can hurt you there, and if you fall out of it you are
-put back on the gold spawn pad.
+Joining takes you to the lobby, a war room in a world of its own where
+everyone waits for the round to start. Nothing can hurt you there, and if you
+fall out of it you are put back on the plaza.
 
-- The **rules** hang on the north wall.
-- The **match board** on the south wall shows the map, how many players and
-  bots have joined, and how long until the round starts.
-- Each **kit alcove** along the east wall shows a kit's icon, name and what
-  it carries, with the command to pick it.
-- The **balcony** on the west side looks out of a window towards the maps.
+- The **rules** and the **match board** show how to play, the map, how many
+  players and bots have joined, and how long until the round starts.
+- Each **kit alcove** shows a kit's icon, name and what it carries, with the
+  command to pick it.
+- Three **vote podiums** show the maps you can vote for, and the
+  **leaderboards** show the top players for kills, wins and win streak.
+- The **balcony** looks out over the lobby.
 
 Your hotbar holds two lobby items. Right-click the **nether star** to open
 the kit menu and click a kit to pick it; your current kit glints. Right-click
@@ -32,6 +33,34 @@ start appear in the middle of your screen.
 Your survival inventory, XP, health and effects are saved when you enter and
 restored when you leave. If the server crashes mid-round, they are restored
 the next time you log in.
+
+## The new match flow
+
+These parts of Search and Destroy are rolling out and may not be switched on
+yet:
+
+- **Map vote.** Three maps go on the vote as the lobby opens. Vote with
+  `/rwf vote <map>` or by right-clicking a podium's lodestone. The vote
+  closes 20 seconds before the start, and the map with the most votes wins.
+- **Preview and freeze.** Before the round, everyone looks around the chosen
+  map for 10 seconds (you can still change kit), then teams are dealt and
+  everyone is frozen at their start for 5 seconds.
+- **Straight into the next round.** When a round ends, you go back to the
+  lobby with your kit and play the next round without typing `/rwf join`
+  again. `/rwf leave` still takes you back to survival.
+- **Death messages and assists.** Every death is announced in team colours,
+  the tab list shows kills, and if you did more than a tenth of the damage
+  to someone a teammate killed, you are told your assist.
+- **Team chat.** During a round your chat goes to your team; start a line
+  with `@` (or use `/g`) to talk to everyone, and `/rwf teamchat` flips the
+  default. The dead and watchers talk among themselves.
+- **Spectating.** When you die you watch your killer for a moment, then get a
+  compass to pick who to follow.
+- **Bombs.** Armed bombs hiss and smoke, each team's arming progress shows above
+  the bomb, and the explosion is heard across the map.
+- **Statistics.** `/rwf stats` shows your lifetime kills, assists, wins and
+  more, `/rwf stats top <stat>` the leaders and `/rwf stats history` your last
+  matches.
 
 ## How a round works
 
@@ -148,8 +177,9 @@ lists the players with the most Credits.
 ## Recordings
 
 Matches are recorded to train the bots. A recording holds positions, actions
-and pseudonymous ids. It does not include chat, player names or IP
-addresses. You are told this when you join.
+and pseudonymous ids. It does not include what you say in chat (only that a
+line was sent and how long it was), player names or IP addresses. You are told
+this when you join.
 
 ## Watching
 
@@ -167,14 +197,21 @@ join it.
 
 ## Commands
 
-| Command              | What it does                                      |
-| -------------------- | ------------------------------------------------- |
-| `/rwf join`          | Queue for the next round                          |
-| `/rwf leave`         | Leave the game or stop watching, back to survival |
-| `/rwf kit <name>`    | Choose your kit for the next round                |
-| `/rwf who`           | List the players in the round and mark bots       |
-| `/rwf spectate`      | Watch the round in spectator mode without playing |
-| `/rwf spectate next` | While watching, follow the next living player     |
+| Command                       | What it does                                       |
+| ----------------------------- | -------------------------------------------------- |
+| `/rwf join`                   | Queue for the next round                           |
+| `/rwf leave`                  | Leave the game or stop watching, back to survival  |
+| `/rwf kit <name>`             | Choose your kit for the next round                 |
+| `/rwf kits`                   | List the kits                                      |
+| `/rwf who`                    | List the players in the round and mark bots        |
+| `/rwf vote <map>`             | Vote for the next map                              |
+| `/rwf time`                   | How long until the round starts or how long in     |
+| `/rwf teamchat`               | Switch whether your chat goes to your team         |
+| `/rwf stats [player]`         | Lifetime statistics                                |
+| `/suicide`                    | Die, during a round                                |
+| `/rwf spectate`               | Watch the round in spectator mode without playing  |
+| `/rwf spectate next/previous` | While watching, follow the next or previous player |
+| `/rwf goto <player>`          | While watching, follow that player                 |
 
 ## Transparency
 

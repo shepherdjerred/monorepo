@@ -21,6 +21,7 @@ import java.util.Optional;
  * @param forfeited whether they threw the match away: a suicide or a quit while it was live
  * @param afk whether they have not looked around since the match went live (Red Warfare's AFK
  *     check); false before it starts
+ * @param score their kills, assists and killstreak progress this match
  */
 public record Combatant(
     CombatantId id,
@@ -33,7 +34,8 @@ public record Combatant(
     Optional<Instant> diedAt,
     Optional<Instant> leftAt,
     boolean forfeited,
-    boolean afk) {
+    boolean afk,
+    Score score) {
 
   public Combatant {
     if (name.isBlank()) {
@@ -54,7 +56,8 @@ public record Combatant(
         Optional.empty(),
         Optional.empty(),
         false,
-        false);
+        false,
+        Score.ZERO);
   }
 
   public boolean onTeam(TeamColor color) {
@@ -63,7 +66,18 @@ public record Combatant(
 
   Combatant withKit(String kitId) {
     return new Combatant(
-        id, name, joinedAt, Optional.of(kitId), team, alive, fuse, diedAt, leftAt, forfeited, afk);
+        id,
+        name,
+        joinedAt,
+        Optional.of(kitId),
+        team,
+        alive,
+        fuse,
+        diedAt,
+        leftAt,
+        forfeited,
+        afk,
+        score);
   }
 
   /**
@@ -82,18 +96,30 @@ public record Combatant(
         diedAt,
         leftAt,
         forfeited,
-        true);
+        true,
+        score);
   }
 
   Combatant withFuse(FuseBonus bonus) {
     return new Combatant(
-        id, name, joinedAt, kit, team, alive, Optional.of(bonus), diedAt, leftAt, forfeited, afk);
+        id,
+        name,
+        joinedAt,
+        kit,
+        team,
+        alive,
+        Optional.of(bonus),
+        diedAt,
+        leftAt,
+        forfeited,
+        afk,
+        score);
   }
 
   /** They looked around, so they are not AFK. */
   Combatant active() {
     return new Combatant(
-        id, name, joinedAt, kit, team, alive, fuse, diedAt, leftAt, forfeited, false);
+        id, name, joinedAt, kit, team, alive, fuse, diedAt, leftAt, forfeited, false, score);
   }
 
   /**
@@ -112,7 +138,8 @@ public record Combatant(
         Optional.of(now),
         leftAt,
         forfeited || forfeit,
-        afk && !forfeit);
+        afk && !forfeit,
+        score);
   }
 
   /** Gone from the match; leaving a live match forfeits its rewards. */
@@ -128,6 +155,38 @@ public record Combatant(
         diedAt,
         Optional.of(now),
         forfeited || forfeit,
-        afk && !forfeit);
+        afk && !forfeit,
+        score);
+  }
+
+  /** The kit's own fuse bonus, or none, replacing the fuse they carried. */
+  Combatant withFuseOrNone(Optional<FuseBonus> bonus) {
+    return new Combatant(
+        id, name, joinedAt, kit, team, alive, bonus, diedAt, leftAt, forfeited, afk, score);
+  }
+
+  Combatant scored(Score newScore) {
+    return new Combatant(
+        id, name, joinedAt, kit, team, alive, fuse, diedAt, leftAt, forfeited, afk, newScore);
+  }
+
+  /**
+   * Carried into the next match: back in the lobby with the kit they had, and nothing else of the
+   * match they finished.
+   */
+  Combatant carried(Instant now) {
+    return new Combatant(
+        id,
+        name,
+        now,
+        kit,
+        Optional.empty(),
+        false,
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        false,
+        false,
+        Score.ZERO);
   }
 }
