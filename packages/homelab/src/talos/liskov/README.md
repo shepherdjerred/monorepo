@@ -12,13 +12,13 @@ own taints. The K8s side of the contract lives in `src/cdk8s/src/misc/nodes.ts`.
 
 ## Patches
 
-| File                    | What                                                 | Delta vs torvalds                                                                  |
-| ----------------------- | ---------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `patches/image.yaml`    | install pin, disk serial, hostname, ZFS params       | AMD schematic; no RAPL caps (105W eco in BIOS is the AMD equivalent)               |
-| `patches/kubelet.yaml`  | reservations, eviction, pids cap, cgroup enforcement | systemReserved 24Gi (same as torvalds), kubeReserved 4Gi (no etcd)                 |
-| `patches/sysctls.yaml`  | kptr_restrict, panic_on_rcu_stall                    | identical                                                                          |
-| `patches/watchdog.yaml` | hardware watchdog                                    | `sp5100_tco` (AMD) instead of `iTCO_wdt` — **live-verify before arming, see file** |
-| `patches/certsans.yaml` | Talos API certificate SANs                           | adds Liskov's canonical Tailscale FQDN                                             |
+| File                    | What                                                 | Delta vs torvalds                                                                                                                       |
+| ----------------------- | ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `patches/image.yaml`    | install pin, disk serial, hostname, ZFS params       | AMD schematic; no RAPL caps (105W eco in BIOS is the AMD equivalent); ZFS dirty-data and txg module parameters (see "SSD write tuning") |
+| `patches/kubelet.yaml`  | reservations, eviction, pids cap, cgroup enforcement | systemReserved 24Gi (same as torvalds), kubeReserved 4Gi (no etcd)                                                                      |
+| `patches/sysctls.yaml`  | kptr_restrict, panic_on_rcu_stall, vm.dirty_*        | adds page-cache writeback tuning for the disposable OS disk (see "SSD write tuning")                                                    |
+| `patches/watchdog.yaml` | hardware watchdog                                    | `sp5100_tco` (AMD) instead of `iTCO_wdt` — **live-verify before arming, see file**                                                      |
+| `patches/certsans.yaml` | Talos API certificate SANs                           | adds Liskov's canonical Tailscale FQDN                                                                                                  |
 
 Tailscale: create a real `patches/tailscale.yaml` from
 `patches/tailscale.example.yaml` with a fresh auth key (gitignored, never
@@ -131,6 +131,48 @@ committed).
    `kueue-system` application is Healthy. Confirm `buildkitd-cache-liskov` is
    bound on liskov and buildkitd is Ready. Grafana node dashboards show both
    nodes, with smartctl/nvme/zfs collector pods present on liskov.
+
+## SSD write tuning
+
+Both of liskov's drives are consumer 990 PROs (600 TBW for the 1 TB OS disk,
+1,200 TBW for the 2 TB pool). On 2026-10-12 the OS disk was at 19% wear after
+120 TB, taking 2.3 TB/day, 86% of it from CI step pods' writable layers; the
+pool took 5.5 TB/day while workspace peaks summed to 2.9 TB/day. Most of the
+difference is scratch that is written and deleted within seconds. Two patches
+keep that scratch in RAM:
+
+- `patches/sysctls.yaml`: `vm.dirty_expire_centisecs=6000` and
+  `vm.dirty_writeback_centisecs=1500` for `/var` (xfs). Applies without a
+  reboot (`apply-config --mode=no-reboot`).
+- `patches/image.yaml`: `zfs_dirty_data_max_max=8 GiB`, `zfs_dirty_data_max=8 GiB`,
+  `zfs_txg_timeout=30` as ZFS module parameters. `zfs_dirty_data_max_max` is
+  read only at module load, so this needs a reboot of liskov (CI-only outage;
+  the pool imports unchanged).
+
+Coupling: dirty data is counted inside the ARC, so the 8 GiB budget lives
+under the 16 GiB `zfs_arc_max` and adds nothing to the kubelet's 24Gi
+`systemReserved`. Raising the dirty budget further means raising `zfs_arc_max`
+and `systemReserved` in lockstep, and lowering `computeQuota.memory` in
+`src/cdk8s/src/misc/ci-admission-budget.json` by the same amount: the Kueue
+quotas (82Gi) plus buildkitd (5Gi) already sit within ~4Gi of the ~91.5Gi
+allocatable. Canaries: `ZfsArcHitRateLow` (cache squeezed), `ZfsAnonDataHigh`
+(now 12 GiB), `LiskovMemoryAvailableLow`.
+
+Verify after applying, through the OpenEBS node pod on liskov (read-only):
+
+```bash
+NODE_POD=$(kubectl -n openebs get pod -l name=openebs-zfs-node \
+  --field-selector spec.nodeName=liskov -o jsonpath='{.items[0].metadata.name}')
+kubectl -n openebs exec "$NODE_POD" -c openebs-zfs-plugin -- sh -c \
+  'cat /host/proc/sys/vm/dirty_expire_centisecs /host/proc/sys/vm/dirty_writeback_centisecs;
+   for p in zfs_dirty_data_max_max zfs_dirty_data_max zfs_txg_timeout zfs_arc_max; do
+     printf "%s=" $p; cat /host/sys/module/zfs/parameters/$p; done;
+   tail -20 /host/proc/spl/kstat/zfs/zfspv-pool-nvme/txgs'
+```
+
+Then watch 24 h of `increase(nvme_data_units_written_total{node="liskov"}[1d]) * 512000`
+per device; the targets are under 0.3 TB/day on `nvme0n1` and under 2.5 TB/day
+on `nvme1n1`.
 
 ## After the soak
 

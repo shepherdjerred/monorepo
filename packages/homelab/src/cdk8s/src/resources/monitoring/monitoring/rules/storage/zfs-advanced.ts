@@ -20,8 +20,13 @@ export function getZfsAdvancedRuleGroups(): PrometheusRuleSpecGroups[] {
             ),
             summary: "High ZFS anonymous data usage",
           },
+          // Anonymous (dirty) data sits inside the ARC. liskov's CI pool runs
+          // with an 8 GiB zfs_dirty_data_max (src/talos/liskov/patches/
+          // image.yaml), so a healthy burst there reaches 8 GiB by design; the
+          // alert fires only above 12 GiB, where dirty data would be
+          // squeezing the 16 GiB ARC's cached reads.
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "node_zfs_arc_anon_data > 8589934592", // 8GB
+            "node_zfs_arc_anon_data > 12884901888", // 12 GiB
           ),
           for: "15m",
           labels: { severity: "warning" },

@@ -4,7 +4,18 @@
 #   this node via its ci=only toleration) symbolize kernel stacks.
 # - panic_on_rcu_stall=1: cheap bonus freeze signal; the hardware watchdog
 #   (patches/watchdog.yaml) is the primary auto-recovery mechanism.
+# liskov-only page-cache writeback tuning for the OS disk (Talos /var, xfs).
+# CI step pods write short-lived files into their container writable layers:
+# compiler scratch, extracted archives, test fixtures that are deleted within
+# seconds. With the kernel defaults (expire 30 s, writeback every 5 s) those
+# pages reach the 1 TB consumer NVMe before they are unlinked, which measured
+# at 2.3 TB/day of OS-disk writes on 2026-10-12. Letting dirty pages age for a
+# minute lets that scratch die in RAM. Only disposable pod data is at risk on
+# a crash: the node holds no state that is not rebuilt by the next workflow.
+# Not for torvalds, whose /var carries production state.
 machine:
   sysctls:
     kernel.kptr_restrict: "1"
     kernel.panic_on_rcu_stall: "1"
+    vm.dirty_expire_centisecs: "6000"
+    vm.dirty_writeback_centisecs: "1500"
