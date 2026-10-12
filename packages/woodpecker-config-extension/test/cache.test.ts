@@ -4,7 +4,6 @@ import {
   BUN_CACHE_CONTROL,
   CARGO_CACHE,
   GO_CACHE,
-  GRADLE_HOME,
   SCCACHE,
   TOOL_CACHE,
   UV_CACHE,
@@ -60,18 +59,16 @@ test("every trusted toolchain container mounts the tool cache; full scopes mount
   expect(steps.length).toBeGreaterThan(10);
   for (const step of steps) {
     expect(claims(step), step.key).toContain(TOOL_CACHE.claim);
+    expect(claims(step), step.key).not.toContain("woodpecker-gradle-home");
+    expect(sharedCacheEnvironment(step.volumes), step.key).not.toHaveProperty(
+      "GRADLE_USER_HOME",
+    );
     const narrow = step.commands.every(
       (command) =>
         !command.includes("ci/scripts/toolchain.sh") ||
         command.includes("MISE_TOOLCHAIN_SCOPE="),
     );
-    for (const cache of [
-      CARGO_CACHE,
-      SCCACHE,
-      GO_CACHE,
-      GRADLE_HOME,
-      UV_CACHE,
-    ]) {
+    for (const cache of [CARGO_CACHE, SCCACHE, GO_CACHE, UV_CACHE]) {
       if (narrow) expect(claims(step), step.key).not.toContain(cache.claim);
       else expect(claims(step), step.key).toContain(cache.claim);
     }
@@ -81,7 +78,6 @@ test("every trusted toolchain container mounts the tool cache; full scopes mount
   expect(sharedCacheEnvironment(verify?.volumes)).toMatchObject({
     RUSTC_WRAPPER: "sccache",
     GOMODCACHE: "/woodpecker/go-cache/mod",
-    GRADLE_USER_HOME: "/woodpecker/gradle-home",
     UV_PYTHON_INSTALL_DIR: "/woodpecker/uv-cache/python",
     BUN_INSTALL: "/woodpecker/tool-cache/bun",
   });
@@ -121,7 +117,6 @@ test("toolchain caches follow the toolchain scope of each container", () => {
     CARGO_CACHE.claim,
     SCCACHE.claim,
     GO_CACHE.claim,
-    GRADLE_HOME.claim,
     UV_CACHE.claim,
   ]);
   const narrow = withSharedToolCaches(
@@ -138,7 +133,6 @@ test("toolchain caches follow the toolchain scope of each container", () => {
     CARGO_CACHE.claim,
     SCCACHE.claim,
     GO_CACHE.claim,
-    GRADLE_HOME.claim,
     UV_CACHE.claim,
   ]);
   const ordered = withSharedToolCaches(
@@ -172,13 +166,7 @@ test("download caches are explicitly directed to their mounted volumes", () => {
     UV_PYTHON_INSTALL_DIR: "/woodpecker/uv-cache/python",
   });
   expect(
-    sharedCacheEnvironment([
-      CARGO_CACHE,
-      SCCACHE,
-      GO_CACHE,
-      TOOL_CACHE,
-      GRADLE_HOME,
-    ]),
+    sharedCacheEnvironment([CARGO_CACHE, SCCACHE, GO_CACHE, TOOL_CACHE]),
   ).toEqual({
     BUN_INSTALL_LOCK_MODE: "local",
     CI_CARGO_CACHE_DIR: "/woodpecker/cargo-cache",
@@ -192,7 +180,6 @@ test("download caches are explicitly directed to their mounted volumes", () => {
     XDG_CACHE_HOME: "/woodpecker/tool-cache/xdg",
     NUGET_PACKAGES: "/woodpecker/tool-cache/nuget",
     BUN_INSTALL: "/woodpecker/tool-cache/bun",
-    GRADLE_USER_HOME: "/woodpecker/gradle-home",
   });
 });
 

@@ -98,13 +98,17 @@ shared claims, mounted by `withSharedToolCaches` on every trusted container
 that sources `ci/scripts/toolchain.sh`: the tool cache (`XDG_CACHE_HOME`,
 `NUGET_PACKAGES`, and `BUN_INSTALL` for `bunx` inside tasks) on every scope,
 plus Cargo's registry and Git caches, sccache, Go's module and build caches,
-Gradle's user home and uv's Python installs on the full scope. Cargo has no
-variable for its caches alone, so the toolchain preamble links
+and uv's Python installs on the full scope. Gradle's writable user home stays
+on each workflow's volume at `/woodpecker/gradle`: its cache locks require
+communication between processes, which separate pods cannot provide. The
+toolchain preamble overrides shared Gradle paths from older pipeline definitions
+so the source repair takes effect before the extension itself is deployed.
+Cargo has no variable for its caches alone, so the toolchain preamble links
 `~/.cargo/{registry,git}` to the mounted claim instead of moving `CARGO_HOME`.
 The root `turbo.json` passes every such variable through strict env mode so
 tasks inherit them; `BUN_INSTALL_CACHE_DIR` is deliberately not passed, because
 it names the collected cache whose readers hold the collector's lock. None of
-these caches has a collector: Cargo, Go, Gradle and sccache expire or bound
+these caches has a collector: Cargo, Go and sccache expire or bound
 their own entries, and the homelab's per-claim usage alert covers the rest.
 The source-cache clone copies Git objects with the filesystem's clone facility
 (`cp --reflink=auto`), which ZFS turns into a block clone within the pool.

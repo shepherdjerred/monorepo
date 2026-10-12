@@ -86,7 +86,7 @@ fi
 
 if ! rg -Fq 'export TMPDIR=/woodpecker/tmp' "$TOOLCHAIN" ||
   ! rg -Fq 'chmod 1777 "$TMPDIR"' "$TOOLCHAIN" ||
-  ! rg -Fq 'export GRADLE_USER_HOME="${GRADLE_USER_HOME:-/woodpecker/gradle}"' "$TOOLCHAIN"; then
+  ! rg -Fq 'export GRADLE_USER_HOME=/woodpecker/gradle' "$TOOLCHAIN"; then
   echo "Woodpecker steps must keep temporary files and tool homes off the OS disk" >&2
   exit 1
 fi
@@ -205,9 +205,22 @@ ln -s "$TEST_ROOT/profiles/mise" "$TEST_ROOT/profile-home/.local/bin/mise"
 for profile in automation deployment tofu; do
   profile_log="$TEST_ROOT/$profile.log"
   HOME="$TEST_ROOT/profile-home" PATH="$TEST_ROOT/profiles:$PATH" \
-    CI_WORKSPACE="$TEST_ROOT" CI_PROFILE_COMMAND_LOG="$profile_log" \
+    CI_WORKSPACE=/woodpecker/src/test CI_PROFILE_COMMAND_LOG="$profile_log" \
+    GRADLE_USER_HOME=/woodpecker/gradle-home \
     CI_COMMIT_SHA=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa \
-    MISE_TOOLCHAIN_SCOPE="$profile" bash -c '. "$1"' _ "$TOOLCHAIN" >"$profile_log.stdout"
+    MISE_TOOLCHAIN_SCOPE="$profile" bash -c '
+      # Exercise the real Woodpecker preamble without writing to /woodpecker
+      # on the test host. Other filesystem operations retain their behavior.
+      mkdir() {
+        if [ "$*" != "-p /woodpecker/tmp" ]; then command mkdir "$@"; fi
+      }
+      chmod() {
+        if [ "$*" != "1777 /woodpecker/tmp" ]; then command chmod "$@"; fi
+      }
+      . "$1"
+      test "$GRADLE_USER_HOME" = /woodpecker/gradle
+      test "$TMPDIR" = /woodpecker/tmp
+    ' _ "$TOOLCHAIN" >"$profile_log.stdout"
   rg -q '^CI_BOOTSTRAP_DIAGNOSTIC \{"schemaVersion":1,"sourceSha":"a{40}","scope":"'"$profile"'","elapsedSeconds":[0-9]+\}$' "$profile_log.stdout"
   case "$profile" in
     automation) expected_tools='install --yes bun gh jq' ;;

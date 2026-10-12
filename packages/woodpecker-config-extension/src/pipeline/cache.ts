@@ -22,8 +22,8 @@ export const UV_CACHE = {
  * Toolchain caches that otherwise land in the container's home directory --
  * the writable layer on the CI node's OS disk -- and are rebuilt by every
  * step. Each claim is a separate ZFS dataset with its own quota, so one tool
- * filling its cache cannot starve another. None has a collector: Cargo, Go,
- * Gradle and sccache bound or expire their own caches, and the homelab's
+ * filling its cache cannot starve another. None has a collector: Cargo, Go
+ * and sccache bound or expire their own caches, and the homelab's
  * per-claim usage alert covers the rest.
  */
 
@@ -53,12 +53,6 @@ export const GO_CACHE = {
 export const TOOL_CACHE = {
   claim: "woodpecker-tool-cache",
   path: "/woodpecker/tool-cache",
-} as const satisfies StepVolume;
-
-/** Gradle's user home: distributions, dependency cache, build caches. */
-export const GRADLE_HOME = {
-  claim: "woodpecker-gradle-home",
-  path: "/woodpecker/gradle-home",
 } as const satisfies StepVolume;
 
 /** sccache evicts least-recently-used objects above this size. */
@@ -116,7 +110,6 @@ const TOOLCHAIN_CACHE_ENVIRONMENT: readonly (readonly [
       BUN_INSTALL: `${TOOL_CACHE.path}/bun`,
     },
   ],
-  [GRADLE_HOME, { GRADLE_USER_HOME: GRADLE_HOME.path }],
 ];
 
 function mountedAt(
@@ -176,7 +169,6 @@ const FULL_TOOLCHAIN_CACHES: readonly StepVolume[] = [
   CARGO_CACHE,
   SCCACHE,
   GO_CACHE,
-  GRADLE_HOME,
   UV_CACHE,
 ];
 

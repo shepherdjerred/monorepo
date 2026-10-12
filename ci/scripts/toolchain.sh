@@ -23,9 +23,10 @@ case "${CI_WORKSPACE:-}" in
     export TMPDIR=/woodpecker/tmp
     mkdir -p "$TMPDIR"
     chmod 1777 "$TMPDIR"
-    # The emitter mounts a shared Gradle home on full-toolchain containers;
-    # anything else keeps Gradle's downloads on the workflow volume.
-    export GRADLE_USER_HOME="${GRADLE_USER_HOME:-/woodpecker/gradle}"
+    # Gradle's writable caches require lock-owner communication, which does
+    # not work across step pods. Keep the home on this workflow's volume,
+    # overriding shared paths emitted by older configuration extensions too.
+    export GRADLE_USER_HOME=/woodpecker/gradle
     ;;
 esac
 
