@@ -124,6 +124,25 @@ public final class JdaBridge implements DiscordGateway {
         .queue(sent -> {}, error -> logger.warn("Posting to Discord failed", error));
   }
 
+  @Override
+  public void ping(String text, java.util.List<String> roles) {
+    var target = channel;
+    if (target == null) {
+      logger.debug("Discord is not connected; dropped a ping");
+      return;
+    }
+    rolePing(target.sendMessage(text), roles)
+        .queue(sent -> {}, error -> logger.warn("Posting to Discord failed", error));
+  }
+
+  /** Lets a lobby post notify exactly {@code roles}; users, everyone and here stay off. */
+  static <R extends MessageCreateRequest<R>> R rolePing(R request, java.util.List<String> roles) {
+    return request
+        .setAllowedMentions(EnumSet.noneOf(Message.MentionType.class))
+        .mentionRoles(roles)
+        .setSuppressedNotifications(false);
+  }
+
   /** Queues {@code goodbye} and disconnects off the Paper thread. */
   public void stop(String goodbye) {
     @Nullable TextChannel target;

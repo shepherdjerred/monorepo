@@ -33,9 +33,9 @@ import java.util.List;
  * needs economy; towns (the Protection provider) needs tracks and chat; essentials, shops,
  * mechanics and spells need Protection. World loads before qol, which teleports into those worlds.
  * Discord reads economy and towns; agent needs tickets and chat, and reads essentials moderation
- * history when that module is on. Rwf (Search and Destroy) needs economy and posts through discord
- * when it is on; rwfbots provides its bot roster and so comes after rwf. World loads before qol,
- * which teleports into those worlds.
+ * history when that module is on. Arena and rwf (Search and Destroy) need economy and post through
+ * discord when it is on; rwfbots provides its bot roster and so comes after rwf. World loads before
+ * qol, which teleports into those worlds.
  */
 final class Modules {
 

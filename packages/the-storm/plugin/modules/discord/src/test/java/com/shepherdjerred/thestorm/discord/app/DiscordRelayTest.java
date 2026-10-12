@@ -46,7 +46,12 @@ final class DiscordRelayTest {
               "Ticket #{id} [{server}] triaged [{priority}]: {evidence}",
               "**{player}** opened a Search and Destroy lobby",
               "{map}: **{team}** won in {duration}. GG {winners}",
-              "{map}: draw after {duration}: {players}"));
+              "{map}: draw after {duration}: {players}",
+              "**{player}** opened {arena}",
+              "{arena} boss wave {wave}: {boss}",
+              "{arena} ({tier}) over at {wave}: {players}",
+              "{arena} ({tier}) record {wave}: {players}"),
+          new LobbyPing(List.of("123456789012345678"), 30));
 
   private static final String ZWSP = String.valueOf((char) 0x200B);
 
@@ -92,9 +97,27 @@ final class DiscordRelayTest {
         }
       };
 
+  private Instant now = Instant.parse("2026-10-11T12:00:00Z");
+
+  /** Records quiet posts as they are and pings as {@code PING[roles] text}. */
+  private final DiscordGateway gateway =
+      new DiscordGateway() {
+        @Override
+        public void post(String text) {
+          posts.add(text);
+        }
+
+        @Override
+        public void ping(String text, List<String> roles) {
+          posts.add("PING" + roles + " " + text);
+        }
+      };
+
   private final DiscordRelay relay =
       new DiscordRelay(
-          CONFIG, posts::add, new DiscordRelay.Game(chat, scheduler, () -> List.copyOf(online)));
+          CONFIG,
+          gateway,
+          new DiscordRelay.Game(chat, scheduler, () -> List.copyOf(online), () -> now));
 
   private void runMainThread() {
     var tasks = List.copyOf(mainThread);
@@ -240,8 +263,48 @@ final class DiscordRelayTest {
 
     assertThat(posts)
         .containsExactly(
-            "**Alice\\_** opened a Search and Destroy lobby",
+            "PING[123456789012345678] <@&123456789012345678> **Alice\\_** opened a Search and"
+                + " Destroy lobby",
             "Desert \\*Ruins\\*: **Red Team** won in 12m 5s. GG Alice, bob",
             "Docks: draw after 42s: alice, Carol");
+  }
+
+  @Test
+  void pingsEachGamesLobbyOncePerCooldown() {
+    relay.onRwfLobbyOpened("Alice");
+    relay.onArenaLobbyOpened("Rustworks", "Bob");
+    now = now.plus(Duration.ofMinutes(29));
+    relay.onRwfLobbyOpened("Carol");
+    now = now.plus(Duration.ofMinutes(1));
+    relay.onRwfLobbyOpened("Dave");
+
+    assertThat(posts)
+        .containsExactly(
+            "PING[123456789012345678] <@&123456789012345678> **Alice** opened a Search and Destroy"
+                + " lobby",
+            "PING[123456789012345678] <@&123456789012345678> **Bob** opened Rustworks",
+            "**Carol** opened a Search and Destroy lobby",
+            "PING[123456789012345678] <@&123456789012345678> **Dave** opened a Search and Destroy"
+                + " lobby");
+  }
+
+  @Test
+  void postsArenaBossWavesRunsAndRecords() {
+    relay.onArenaBossWave("Rust*works*", 30, "The Foreman");
+    relay.onArenaRunEnded(
+        new ArenaRunResult(
+            "Rustworks",
+            "Ominous II",
+            List.of(new ArenaRunResult.Player("bob", 31), new ArenaRunResult.Player("Alice", 34)),
+            false));
+    relay.onArenaRunEnded(
+        new ArenaRunResult(
+            "Rustworks", "Ominous II", List.of(new ArenaRunResult.Player("Carol", 50)), true));
+
+    assertThat(posts)
+        .containsExactly(
+            "Rust\\*works\\* boss wave 30: The Foreman",
+            "Rustworks (Ominous II) over at 34: Alice (34), bob (31)",
+            "Rustworks (Ominous II) record 50: Carol (50)");
   }
 }
