@@ -70,13 +70,16 @@ final class LiveSyncConflictUITests: XCTestCase {
     func testPreviewAndKeepBothVersions() async throws {
         let scenario = try scenario()
         let (app, surface) = try launch(scenario)
+        #if os(macOS)
+            let other = try secondWorkspace(app: app, surface: surface)
+        #endif
         let open = surface.buttons["facet.conflicts.open"]
         XCTAssertTrue(
             open.waitForExistence(timeout: 30),
             "Resume the session and wait for its durable conflict first.")
         activate(open)
         #if os(macOS)
-            assertConflictSheetOwnership(app: app, surface: surface)
+            assertConflictSheetOwnership(app: app, surface: surface, nonowner: other)
         #endif
         let local = surface.buttons.matching(identifier: "facet.conflict.preview.local")
         let remote = surface.buttons.matching(identifier: "facet.conflict.preview.remote")
@@ -166,7 +169,7 @@ final class LiveSyncConflictUITests: XCTestCase {
         app.launch()
         addTeardownBlock { @MainActor in app.terminate() }
         #if os(macOS)
-            return (app, try MacAcceptanceWorkspace.create(app: app))
+            return (app, try MacAcceptanceWorkspace.initial(app: app))
         #else
             return (app, app)
         #endif
@@ -224,9 +227,26 @@ final class LiveSyncConflictUITests: XCTestCase {
 
 #if os(macOS)
     extension LiveSyncConflictUITests {
-        private func assertConflictSheetOwnership(app: XCUIApplication, surface: XCUIElement) {
+        private func secondWorkspace(app: XCUIApplication, surface: XCUIElement) throws
+            -> XCUIElement
+        {
+            let other = try MacAcceptanceWorkspace.create(app: app)
+            XCTAssertNotEqual(surface.identifier, other.identifier)
+            XCTAssertEqual(
+                app.windows.matching(
+                    NSPredicate(format: "identifier BEGINSWITH %@", "facet.workspace.")
+                ).count, 2)
+            XCTAssertEqual(other.sheets.count, 0)
+            return other
+        }
+
+        private func assertConflictSheetOwnership(
+            app: XCUIApplication, surface: XCUIElement, nonowner: XCUIElement
+        ) {
             XCTAssertTrue(surface.sheets.element.waitForExistence(timeout: 10))
             XCTAssertEqual(surface.sheets.count, 1)
+            XCTAssertTrue(nonowner.exists)
+            XCTAssertEqual(nonowner.sheets.count, 0)
             for other in app.windows.matching(
                 NSPredicate(format: "identifier BEGINSWITH %@", "facet.workspace.")
             ).allElementsBoundByIndex where other.identifier != surface.identifier {
