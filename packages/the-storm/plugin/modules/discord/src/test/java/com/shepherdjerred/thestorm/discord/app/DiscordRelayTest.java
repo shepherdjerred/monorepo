@@ -50,8 +50,14 @@ final class DiscordRelayTest {
               "**{player}** opened {arena}",
               "{arena} boss wave {wave}: {boss}",
               "{arena} ({tier}) over at {wave}: {players}",
-              "{arena} ({tier}) record {wave}: {players}"),
-          new LobbyPing(List.of("123456789012345678"), 30));
+              "{arena} ({tier}) record {wave}: {players}",
+              "**{player}** founded {town}",
+              "{town} claims {claims}",
+              "**{player}** completed {quest}",
+              "**{player}** {skill} {level}",
+              "{event} until {until}"),
+          new LobbyPing(List.of("123456789012345678"), 30),
+          new Milestones(List.of(25, 50), 100));
 
   private static final String ZWSP = String.valueOf((char) 0x200B);
 
@@ -212,6 +218,7 @@ final class DiscordRelayTest {
     relay.onAdvancement("Alice", "story/mine_stone", "Stone Age", true);
     relay.onAdvancement("Alice", "recipes/misc/torch", "", false);
     relay.onAdvancement("Alice", "story/secret", "Hidden", false);
+    relay.addSeasonalEvents(() -> List.of(new SeasonalEvent("Storm*night*", "Nov 2")));
     relay.onServerStarted();
 
     assertThat(posts)
@@ -220,7 +227,8 @@ final class DiscordRelayTest {
             "**Alice** left",
             "Alice was slain by Zombie",
             "**Alice** got **Stone Age**",
-            "The Storm has woken up");
+            "The Storm has woken up",
+            "Storm\\*night\\* until Nov 2");
     assertThat(relay.stopMessage()).isEqualTo("The Storm sleeps. Join ts-mc.net to wake it.");
     assertThat(relay.status()).isEqualTo("Awake");
   }
@@ -306,5 +314,24 @@ final class DiscordRelayTest {
             "Rust\\*works\\* boss wave 30: The Foreman",
             "Rustworks (Ominous II) over at 34: Alice (34), bob (31)",
             "Rustworks (Ominous II) record 50: Carol (50)");
+  }
+
+  @Test
+  void postsTownQuestAndSkillMilestones() {
+    var town = UUID.randomUUID();
+    relay.onTownFounded("Rivers*end*", "Alice");
+    relay.onTownGrew(town, "Riversend", 24);
+    relay.onTownGrew(town, "Riversend", 25);
+    relay.onTownGrew(town, "Riversend", 25);
+    relay.onQuestMilestone("Bob", "The Storm Watch");
+    relay.onSkillLevelUp("Carol", "Mining", 98, 99);
+    relay.onSkillLevelUp("Carol", "Mining", 99, 201);
+
+    assertThat(posts)
+        .containsExactly(
+            "**Alice** founded Rivers\\*end\\*",
+            "Riversend claims 25",
+            "**Bob** completed The Storm Watch",
+            "**Carol** Mining 200");
   }
 }

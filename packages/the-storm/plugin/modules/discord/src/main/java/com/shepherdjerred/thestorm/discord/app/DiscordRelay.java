@@ -16,8 +16,12 @@ import java.time.Instant;
 import java.time.InstantSource;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
  * The bridge's use cases. Game events become Discord posts; Discord messages become Global chat.
@@ -30,6 +34,8 @@ public final class DiscordRelay {
   private final DiscordGateway gateway;
   private final Game game;
   private final Map<String, Instant> lastPing = new ConcurrentHashMap<>();
+  private final Set<String> postedTownMilestones = ConcurrentHashMap.newKeySet();
+  private final List<Supplier<List<SeasonalEvent>>> seasonalEvents = new CopyOnWriteArrayList<>();
   private volatile boolean stopping;
 
   public DiscordRelay(DiscordConfig config, DiscordGateway gateway, Game game) {
@@ -134,9 +140,30 @@ public final class DiscordRelay {
                     DiscordText.forDiscord(title))));
   }
 
-  /** Posts that the server woke up. Called once the bot is connected. */
+  /** Posts that the server woke up, then each seasonal event running now. Called on connect. */
   public void onServerStarted() {
     post(config.messages().start());
+    for (var source : seasonalEvents) {
+      for (var event : source.get()) {
+        post(
+            config
+                .messages()
+                .seasonalActiveTemplate()
+                .render(
+                    Map.of(
+                        "event", DiscordText.forDiscord(event.title()),
+                        "until", DiscordText.forDiscord(event.until()))));
+      }
+    }
+  }
+
+  /**
+   * Adds the seasonal events running now to every wake post. {@code events} is called on a JDA
+   * thread and must be thread-safe. A module that registers after the bot has connected misses the
+   * current wake post.
+   */
+  public void addSeasonalEvents(Supplier<List<SeasonalEvent>> events) {
+    seasonalEvents.add(events);
   }
 
   /** Posts a newly filed ticket. */
@@ -261,6 +288,64 @@ public final class DiscordRelay {
                 "tier", DiscordText.forDiscord(run.tier()),
                 "wave", Integer.toString(run.furthest()),
                 "players", String.join(", ", players))));
+  }
+
+  /** Posts a newly founded town. Main thread. */
+  public void onTownFounded(String town, String founder) {
+    post(
+        config
+            .messages()
+            .townFoundedTemplate()
+            .render(
+                Map.of(
+                    "town", DiscordText.forDiscord(town),
+                    "player", DiscordText.forDiscord(founder))));
+  }
+
+  /**
+   * Posts a town reaching a claim milestone, once per town and milestone while the server is up.
+   * Main thread.
+   */
+  public void onTownGrew(UUID townId, String town, int claims) {
+    if (!config.milestones().townClaims().contains(claims)
+        || !postedTownMilestones.add(townId + ":" + claims)) {
+      return;
+    }
+    post(
+        config
+            .messages()
+            .townGrewTemplate()
+            .render(
+                Map.of("town", DiscordText.forDiscord(town), "claims", Integer.toString(claims))));
+  }
+
+  /** Posts a completed story or questline quest. */
+  public void onQuestMilestone(String player, String quest) {
+    post(
+        config
+            .messages()
+            .questMilestoneTemplate()
+            .render(
+                Map.of(
+                    "player", DiscordText.forDiscord(player),
+                    "quest", DiscordText.forDiscord(quest))));
+  }
+
+  /** Posts a skill level up that crossed a configured milestone; other level ups are dropped. */
+  public void onSkillLevelUp(String player, String skill, int from, int to) {
+    var milestone = config.milestones().skillMilestone(from, to);
+    if (milestone == 0) {
+      return;
+    }
+    post(
+        config
+            .messages()
+            .skillMilestoneTemplate()
+            .render(
+                Map.of(
+                    "player", DiscordText.forDiscord(player),
+                    "skill", DiscordText.forDiscord(skill),
+                    "level", Integer.toString(milestone))));
   }
 
   /**
