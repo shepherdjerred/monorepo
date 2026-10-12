@@ -164,13 +164,18 @@ final class PaperSavedPlayerDataTest {
   }
 
   @Test
-  void aFolderThatIsNotALevelOrHasNoPlayerDataIsUnavailable() throws IOException {
-    Files.createDirectories(level.resolve("players").resolve("data"));
+  void aLevelWithNoPlayerDataFolderIsUnavailable() throws IOException {
     assertThat(PlayerDataFiles.locate(level)).isEmpty();
+    Files.createDirectories(level.resolve("players"));
+    assertThat(PlayerDataFiles.locate(level)).isEmpty();
+  }
 
-    Files.writeString(level.resolve("level.dat"), "");
-    Files.delete(level.resolve("players").resolve("data"));
-    assertThat(PlayerDataFiles.locate(level)).isEmpty();
+  @Test
+  void aFreshLevelWithoutLevelDatStillHasItsPlayerData() throws IOException {
+    Files.createDirectories(level.resolve("players").resolve("data"));
+
+    assertThat(PlayerDataFiles.locate(level))
+        .contains(new PlayerDataFiles(level.resolve("players").resolve("data")));
   }
 
   @Test

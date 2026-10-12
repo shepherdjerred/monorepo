@@ -5,6 +5,7 @@ import type { ServerResources, StartServerOptions } from "./harness/server.ts";
 import {
   fullRwfTestSettings,
   rwfTestSettings,
+  suiteMaps,
 } from "./harness/rwf-settings.ts";
 
 /**
@@ -150,7 +151,7 @@ async function profileFixtures(
         stormConfig: withBots(owned),
         survivalConfig: survival.replace(/^enabled: false$/mu, "enabled: true"),
         fixturesJar,
-        rwf: fullRwfTestSettings,
+        rwf: { ...fullRwfTestSettings, maps: suiteMaps },
       };
     }
     case "load": {
@@ -159,7 +160,12 @@ async function profileFixtures(
         stormConfig: withBots(owned),
         survivalConfig: survival.replace(/^enabled: false$/mu, "enabled: true"),
         fixturesJar,
-        rwf: { ...rwfTestSettings, maxCombatants: 101, loadtest: true },
+        rwf: {
+          ...rwfTestSettings,
+          maxCombatants: 101,
+          loadtest: true,
+          maps: suiteMaps,
+        },
       };
     }
     case "e2e": {
@@ -179,7 +185,7 @@ async function profileFixtures(
           "rwf",
         ]),
         fixturesJar,
-        rwf: rwfTestSettings,
+        rwf: { ...rwfTestSettings, maps: suiteMaps },
         mechanicsE2eJar: path.join(
           packageRoot,
           "plugin/modules/mechanics/build/libs/TheStormMechanicsE2E.jar",

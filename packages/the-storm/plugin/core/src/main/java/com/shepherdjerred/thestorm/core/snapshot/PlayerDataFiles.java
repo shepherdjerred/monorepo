@@ -21,13 +21,12 @@ public record PlayerDataFiles(Path directory) {
   static final Path LEGACY = Path.of("playerdata");
 
   /**
-   * The player-data folder under {@code level} (the folder holding {@code level.dat}), preferring
-   * the 26.x layout; empty if the level has neither folder.
+   * The player-data folder under {@code level}, the server's level directory ({@code
+   * Server#getLevelDirectory()}), preferring the 26.x layout; empty if the level has neither
+   * folder. Paper creates {@code players/data} as it starts, before a fresh world has written its
+   * {@code level.dat}, so only the folder is looked for.
    */
   public static Optional<PlayerDataFiles> locate(Path level) {
-    if (!Files.isRegularFile(level.resolve("level.dat"))) {
-      return Optional.empty();
-    }
     for (var candidate : new Path[] {CURRENT, LEGACY}) {
       var directory = level.resolve(candidate);
       if (Files.isDirectory(directory)) {

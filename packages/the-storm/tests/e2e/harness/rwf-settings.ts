@@ -15,6 +15,12 @@ export const rwfTestSettings: RwfOverlay = {
   noHumansAbort: "PT5S",
 };
 
+/**
+ * The map the gameplay suites are written against. The rotation opens on the
+ * first map in id order, so they stage the training yard alone.
+ */
+export const suiteMaps = ["training-yard"];
+
 /** The full lane leaves time for staggered bot arrivals and lobby activity. */
 export const fullRwfTestSettings: RwfOverlay = {
   ...rwfTestSettings,
