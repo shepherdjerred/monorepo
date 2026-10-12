@@ -41,7 +41,7 @@ masking settings statically.
 
 Source-only, like discord-plays-core: `package.json#exports` maps `./*` to
 `src/`, and frontends import subpaths such as
-`@shepherdjerred/discord-plays-web/feed/feed-canvas.tsx`. Changes here must be
+`@shepherdjerred/discord-plays-web/feed/use-driver-feed.ts`. Changes here must be
 verified against both frontends.
 
 ```bash

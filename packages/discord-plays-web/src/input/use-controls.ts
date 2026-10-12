@@ -51,8 +51,9 @@ export function useControls(
     [report],
   );
   const releaseAll = useCallback(() => {
-    report(pressed.current.releaseAll());
-  }, [report]);
+    // Release one at a time so each callback sees the held state after its edge.
+    for (const code of pressed.current.codes) release(code);
+  }, [release]);
 
   return { pressedCodes, press, release, releaseAll };
 }
