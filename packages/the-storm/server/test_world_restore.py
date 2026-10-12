@@ -492,6 +492,59 @@ class RestoreTest(unittest.TestCase):
                 self.assertEqual((archive / "failed-journal.json").read_bytes(), original)
                 self.assertEqual((archive / "transplant.log").read_text(), "failed before writes\n")
 
+    def test_restart_arenas_resumes_after_receipt_write_before_atomic_replace(self):
+        parent = self.root
+        real_replace = Path.replace
+        for point in ("initial-journal", "failure-receipt", "final-journal"):
+            with self.subTest(point=point):
+                self.root = parent / point
+                self.root.mkdir()
+                staging, candidate, modern, proof = self.failed_arena_fixture()
+                original = (staging / restore.JOURNAL).read_bytes()
+                historical = restore.fingerprint(staging / "heritage-preserved-layout/world")
+                current = restore.fingerprint(modern)
+                abandoned: list[Path] = []
+
+                def interrupt_replace(
+                    path: Path, target: Path, failure_point: str = point, leftovers: list[Path] = abandoned
+                ):
+                    value = json.loads(path.read_text())
+                    if (
+                        (failure_point == "initial-journal" and value.get("phase") == "ARENA_TRANSPLANT_RESTARTING")
+                        or (failure_point == "failure-receipt" and target.name == "failed-journal.json")
+                        or (failure_point == "final-journal" and value.get("phase") == "NATIVE_HERITAGE_PRESERVED")
+                    ):
+                        leftovers.append(path)
+                        raise OSError("fixture interrupted before atomic replace")
+                    return real_replace(path, target)
+
+                with (
+                    patch.object(Path, "replace", interrupt_replace),
+                    self.assertRaisesRegex(OSError, "fixture interrupted"),
+                ):
+                    restore.restart_arenas(staging, candidate, modern, proof)
+                self.assertEqual(len(abandoned), 1)
+                partial = abandoned[0].read_bytes()
+                restore.restart_arenas(staging, candidate, modern, proof)
+                completed = json.loads((staging / restore.JOURNAL).read_text())
+                self.assertEqual(completed["phase"], "NATIVE_HERITAGE_PRESERVED")
+                self.assertEqual(len(completed["arenaTransplantRestarts"]), 1)
+                archive = staging / completed["arenaTransplantRestarts"][0]["archive"]
+                self.assertEqual((archive / "failed-journal.json").read_bytes(), original)
+                self.assertEqual(abandoned[0].read_bytes(), partial)
+                self.assertEqual(restore.fingerprint(archive / "world"), historical)
+                self.assertEqual(restore.fingerprint(staging / "heritage-preserved-layout/world"), historical)
+                self.assertEqual(restore.fingerprint(modern), current)
+
+    def test_restart_arenas_ignores_legacy_abandoned_receipt_temporary(self):
+        staging, candidate, modern, proof = self.failed_arena_fixture()
+        temporary = staging / (restore.JOURNAL + ".tmp")
+        temporary.write_bytes(b'{"partial":')
+        restore.restart_arenas(staging, candidate, modern, proof)
+        completed = json.loads((staging / restore.JOURNAL).read_text())
+        self.assertEqual(completed["phase"], "NATIVE_HERITAGE_PRESERVED")
+        self.assertEqual(temporary.read_bytes(), b'{"partial":')
+
     def activation_fixture(self):
         staging, modern = self.root / "stage", self.root / "modern"
         source = staging / "arena-preserved-layout/world"

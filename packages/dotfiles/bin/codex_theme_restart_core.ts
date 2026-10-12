@@ -67,7 +67,7 @@ export function parseAgent(value: unknown): Agent | undefined {
     thread,
     sessionSource,
     name:
-      agent.get("name") === undefined ? undefined : string(agent.get("name")),
+      agent.get("name") == null ? undefined : string(agent.get("name")),
   };
 }
 
@@ -302,6 +302,15 @@ async function continuePane(
   wasWorking: boolean,
 ): Promise<string> {
   const resumed = await verifyLaunch(runtime, target);
+  // Herdr requires a name to launch; restore an originally unnamed pane only
+  // after confirming that the replacement is our exact conversation.
+  if (target.agent.name === undefined)
+    await runtime.call(target.session, [
+      "agent",
+      "rename",
+      target.agent.pane,
+      "--clear",
+    ]);
   if (!wasWorking) return "Same conversation restored";
   if (resumed.status === "working")
     return "Existing turn is already working; no duplicate prompt sent";

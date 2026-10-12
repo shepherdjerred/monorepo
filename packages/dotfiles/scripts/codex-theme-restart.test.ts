@@ -159,6 +159,15 @@ test("requires an authoritative current UUID rather than launch argv or another 
   );
 });
 
+test("accepts an absent or null pane name while rejecting malformed names", () => {
+  for (const name of [undefined, null]) {
+    expect(parseAgent({ ...agent(), name })?.name).toBeUndefined();
+  }
+  expect(() => parseAgent({ ...agent(), name: 12 })).toThrow(
+    "Expected a nonempty string",
+  );
+});
+
 type Scenario = {
   status?: string;
   resumedStatus?: string;
@@ -173,6 +182,7 @@ type Scenario = {
   startupFailure?: boolean;
   bypass?: boolean;
   lostBypass?: boolean;
+  unnamed?: boolean;
 };
 function fixture(scenario: Scenario = {}) {
   const calls: string[][] = [];
@@ -182,11 +192,12 @@ function fixture(scenario: Scenario = {}) {
   let launchedArguments: readonly string[] = [];
   let reported = false;
   let afterDiscovery = false;
+  let name: string | null = scenario.unnamed ? null : "my-codex";
   const handlers: Record<string, () => unknown> = {
     "agent list": () => ({
       agents: [
         { agent: "claude" },
-        agent(scenario.status, scenario.unknown ? null : thread),
+        { ...agent(scenario.status, scenario.unknown ? null : thread), name },
       ],
     }),
     "pane process-info": () => {
@@ -227,7 +238,7 @@ function fixture(scenario: Scenario = {}) {
         : !reported && started && scenario.noResumedIdentity
           ? null
           : thread;
-      return { pane: agent(status, conversation) };
+      return { pane: { ...agent(status, conversation), name } };
     },
     "agent send-keys": () => {
       keys++;
@@ -256,7 +267,15 @@ function fixture(scenario: Scenario = {}) {
     },
     async call(session, args) {
       calls.push([session, ...args]);
-      if (args[0] === "agent" && args[1] === "start") launchedArguments = args;
+      if (args[0] === "agent" && args[1] === "start") {
+        launchedArguments = args;
+        if (args[2] === undefined) throw new Error("Missing start name");
+        name = args[2];
+      }
+      if (args[0] === "agent" && args[1] === "rename") {
+        if (args[3] === undefined) throw new Error("Missing rename argument");
+        name = args[3] === "--clear" ? null : args[3];
+      }
       const handler = handlers[`${args[0] ?? ""} ${args[1] ?? ""}`];
       if (handler === undefined) throw new Error("Unexpected test command");
       return handler();
@@ -332,6 +351,42 @@ test.each(["idle", "done", "blocked", "unknown"])(
     expect(calls.filter((call) => call[2] === "prompt")).toEqual([]);
   },
 );
+
+test.each(["idle", "working"])(
+  "preserves an unnamed %s pane after verifying its replacement",
+  async (status) => {
+    const { calls, runtime, execute } = fixture({ status, unnamed: true });
+    expect(await execute()).toMatchObject({ status: "restarted" });
+    const start = calls.findIndex((call) => call[2] === "start");
+    const clear = calls.findIndex((call) => call[2] === "rename");
+    expect(calls[start]?.[3]).toMatch(/^theme-[a-f0-9]{12}$/);
+    expect(clear).toBeGreaterThan(start);
+    expect(
+      calls.slice(start + 1, clear).some((call) => call[2] === "process-info"),
+    ).toBe(true);
+    expect(calls[clear]).toEqual([
+      "test-session",
+      "agent",
+      "rename",
+      "w1:p2",
+      "--clear",
+    ]);
+    const prompt = calls.findIndex((call) => call[2] === "prompt");
+    if (status === "working") expect(prompt).toBeGreaterThan(clear);
+    else expect(prompt).toBe(-1);
+    const rediscovered = await discover(runtime, "test-session", "dark");
+    expect(rediscovered.targets[0]?.agent.name).toBeUndefined();
+  },
+);
+
+test("does not rename an unverified replacement of an unnamed pane", async () => {
+  const { calls, execute } = fixture({
+    unnamed: true,
+    wrongResumedThread: true,
+  });
+  expect(await execute()).toMatchObject({ status: "failed" });
+  expect(calls.filter((call) => call[2] === "rename")).toEqual([]);
+});
 
 test("does not inject another prompt if the shared daemon is already continuing work", async () => {
   const { calls, execute } = fixture({
