@@ -248,6 +248,8 @@ targets:
       - path: UITests/LiveSyncLifecycleUITests.swift
     dependencies:
       - target: TaskNotesAcceptance
+      - package: TaskNotesPackage
+        product: TaskNotesKit
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: red.sjer.tasknotes.mac.acceptance.uitests

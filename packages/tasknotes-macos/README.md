@@ -48,6 +48,8 @@ away from the UI actor.
 Engine, account and selected-profile ownership is application-wide. The Mac
 application starts them even with no visible workspace; view tasks await that
 shared startup.
+DEBUG native acceptance also prepares its synthetic fixture in the application
+bootstrap, with concurrent restored windows sharing one registration and result.
 Startup publishes the engine, importer and account together after their initial
 reads succeed. A failed preparation closes its unpublished engine and permits a
 fresh startup attempt. Account requests check cancellation and their original

@@ -96,6 +96,9 @@ public final class FacetStore {
     #if DEBUG
         public internal(set) var acceptanceConfiguration: FacetAcceptanceConfiguration?
         @ObservationIgnored internal var acceptanceControl: FacetAcceptanceControl?
+        @ObservationIgnored internal var acceptanceVaultDirectory: URL?
+        @ObservationIgnored internal var acceptanceVaultEngine: FacetEngine?
+        @ObservationIgnored internal var acceptanceVaultTask: _Concurrency.Task<Void, any Error>?
     #endif
     public var acceptanceDirectory: URL? {
         #if DEBUG
@@ -182,20 +185,6 @@ public final class FacetStore {
         error = FacetFailureDiagnostic(failure).action
     }
 
-    #if DEBUG
-        /// A real, private Markdown vault for native acceptance runs. Release
-        /// onboarding always uses a user-selected provider or Obsidian account.
-        public func prepareAcceptanceVault(_ directory: URL) async {
-            if let existing = profiles.first(where: { $0.name == directory.lastPathComponent }) {
-                await selectProfile(existing.id)
-                return
-            }
-            approveStandard = true
-            await openLocal(directory)
-            approveStandard = false
-        }
-    #endif
-
     public func openLocal(_ directory: URL) async {
         guard let engine else { return }
         do {
@@ -264,6 +253,55 @@ public final class FacetStore {
                 reconcile: { if self.foreground { await self.resumeSync() } }))
     }
 }
+
+#if DEBUG
+    extension FacetStore {
+        /// Application-owned preparation survives cancelled window waiters and
+        /// retains its result so restored windows cannot register or select again.
+        public func prepareAcceptanceVault(_ directory: URL) async throws {
+            guard let root = acceptanceDirectory, let engine,
+                directory.isFileURL,
+                directory.standardizedFileURL == directory,
+                directory.resolvingSymlinksInPath() == directory,
+                directory == root.appendingPathComponent("Native acceptance")
+            else { throw FacetAcceptanceError.invalidDescriptor }
+            if let task = acceptanceVaultTask {
+                guard acceptanceVaultDirectory == directory, acceptanceVaultEngine === engine else {
+                    throw FacetAcceptanceError.invalidDescriptor
+                }
+                try await task.value
+                return
+            }
+            acceptanceVaultDirectory = directory
+            acceptanceVaultEngine = engine
+            let task = _Concurrency.Task {
+                let existing = try await engine.profiles().filter {
+                    $0.name == directory.lastPathComponent
+                }
+                guard existing.count <= 1 else { throw FacetAcceptanceError.invalidDescriptor }
+                let profile: FacetProfile
+                if let registered = existing.first {
+                    guard registered.kind == "local_folder", registered.approveStandard else {
+                        throw FacetAcceptanceError.invalidDescriptor
+                    }
+                    profile = registered
+                } else {
+                    profile = try await engine.registerLocal(
+                        directory: directory, approveStandard: true)
+                }
+                let registered = try await engine.profiles()
+                guard self.engine === engine else { throw FacetAcceptanceError.invalidDescriptor }
+                self.profiles = registered
+                await self.selectProfile(profile.id)
+                guard self.engine === engine, self.selectedProfileID == profile.id,
+                    self.snapshot?.profileId == profile.id, self.error == nil
+                else { throw FacetAcceptanceError.invalidDescriptor }
+            }
+            acceptanceVaultTask = task
+            try await task.value
+        }
+    }
+#endif
 
 extension FacetStore {
     public var isIsolatedLaunch: Bool { Self.requiresIsolation }

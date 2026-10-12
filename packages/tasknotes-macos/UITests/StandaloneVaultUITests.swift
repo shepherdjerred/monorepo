@@ -1,4 +1,5 @@
 import Foundation
+import TaskNotesKit
 import XCTest
 
 @MainActor
@@ -283,12 +284,11 @@ private struct LocalJourney {
     func waitForNote(_ title: String, status: String? = nil) throws -> Data {
         let deadline = Date().addingTimeInterval(10)
         repeat {
-            if let bytes = try note(title) {
-                let source = try XCTUnwrap(String(data: bytes, encoding: .utf8))
+            if let note = try note(title) {
                 if let status {
-                    if source.contains("\nstatus: \(status)\n") { return bytes }
+                    if note.document.properties["status"] == .string(status) { return note.bytes }
                 } else {
-                    return bytes
+                    return note.bytes
                 }
             }
             RunLoop.current.run(until: Date().addingTimeInterval(0.1))
@@ -305,23 +305,28 @@ private struct LocalJourney {
         throw LocalAcceptanceLaunchError.noteDidNotConverge
     }
 
-    private func note(_ title: String) throws -> Data? {
+    private func note(_ title: String) throws -> LocalNote? {
         let enumerator = try XCTUnwrap(
             FileManager.default.enumerator(
                 at: vault,
                 includingPropertiesForKeys: [.isRegularFileKey]))
-        var result: Data?
+        var result: LocalNote?
         for case let url as URL in enumerator where url.pathExtension == "md" {
             let bytes = try Data(contentsOf: url)
-            let lines = try XCTUnwrap(String(data: bytes, encoding: .utf8)).components(
-                separatedBy: .newlines)
-            if lines.contains("title: \(title)") || lines.contains("title: \"\(title)\"") {
+            let path = String(url.path.dropFirst(vault.path.count + 1))
+            let document = try FacetMarkdownDocument(path: path, bytes: bytes)
+            if document.properties["title"] == .string(title) {
                 XCTAssertNil(result, "Exactly one note must own the synthetic task title.")
-                result = bytes
+                result = LocalNote(bytes: bytes, document: document)
             }
         }
         return result
     }
+}
+
+private struct LocalNote {
+    let bytes: Data
+    let document: FacetMarkdownDocument
 }
 
 private struct AcceptanceDescriptor: Decodable {
