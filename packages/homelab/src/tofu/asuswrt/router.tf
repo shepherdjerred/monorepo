@@ -49,6 +49,24 @@ resource "asuswrt_dhcp_static_lease" "lease_173" {
 }
 
 # --- Port forwards ---
+resource "asuswrt_port_forward" "mario_kart_http" {
+  provider      = asuswrt.router
+  name          = "Mario Kart HTTP"
+  protocol      = "TCP"
+  external_port = "80"
+  internal_ip   = "192.168.1.81"
+  internal_port = "30080"
+}
+
+resource "asuswrt_port_forward" "mario_kart_https" {
+  provider      = asuswrt.router
+  name          = "Mario Kart HTTPS"
+  protocol      = "TCP"
+  external_port = "443"
+  internal_ip   = "192.168.1.81"
+  internal_port = "30443"
+}
+
 resource "asuswrt_port_forward" "plex" {
   provider      = asuswrt.router
   name          = "Plex"

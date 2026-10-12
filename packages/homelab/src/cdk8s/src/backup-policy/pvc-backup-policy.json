@@ -241,6 +241,12 @@
   },
   {
     "namespace": "mario-kart",
+    "name": "mario-kart-edge-data",
+    "backup": "enabled",
+    "reason": "Public HTTPS certificate keys and ACME account state"
+  },
+  {
+    "namespace": "mario-kart",
     "name": "mario-kart-rom-volume",
     "backup": "enabled",
     "reason": "Mario Kart runtime ROM state"

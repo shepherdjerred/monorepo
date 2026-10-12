@@ -26,6 +26,8 @@ asuswrt_dhcp_static_lease.lease_173	50:26:EF:29:70:EE
 asuswrt_port_forward.plex	Plex
 asuswrt_port_forward.minecraft_mc_router	Minecraft mc-router
 asuswrt_port_forward.minecraft_bedrock	Mineraft Bedrock
+asuswrt_port_forward.mario_kart_http	Mario Kart HTTP
+asuswrt_port_forward.mario_kart_https	Mario Kart HTTPS
 asuswrt_wireless_network.wl0	0
 asuswrt_wireless_network.wl1	1
 asuswrt_system.ax88u	system

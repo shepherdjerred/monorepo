@@ -14,6 +14,8 @@
  * Run after `bun run docker:build` (turbo wires `smoke` dependsOn `docker:build`).
  */
 
+import { marioKartCaddyfile } from "#cdk8s/src/resources/mario-kart-caddyfile.ts";
+
 type SmokeResult = { image: string; ok: boolean; detail: string };
 
 /** Run a command to completion, capturing stdout/stderr and the exit code. */
@@ -22,18 +24,19 @@ async function run(
   opts: { timeoutMs?: number; stdin?: Blob } = {},
 ): Promise<{ stdout: string; stderr: string; exitCode: number | null }> {
   const proc = Bun.spawn(cmd, {
-    stdin: opts.stdin,
+    ...(opts.stdin === undefined ? {} : { stdin: opts.stdin }),
     stdout: "pipe",
     stderr: "pipe",
   });
 
-  let timedOut = false;
-  const timer = opts.timeoutMs
-    ? setTimeout(() => {
-        timedOut = true;
-        proc.kill("SIGKILL");
-      }, opts.timeoutMs)
-    : undefined;
+  const timeout = { triggered: false };
+  const timer =
+    opts.timeoutMs !== undefined && opts.timeoutMs > 0
+      ? setTimeout(() => {
+          timeout.triggered = true;
+          proc.kill("SIGKILL");
+        }, opts.timeoutMs)
+      : undefined;
 
   const [stdout, stderr, exitCode] = await Promise.all([
     new Response(proc.stdout).text(),
@@ -42,7 +45,7 @@ async function run(
   ]);
   if (timer) clearTimeout(timer);
 
-  return { stdout, stderr, exitCode: timedOut ? 124 : exitCode };
+  return { stdout, stderr, exitCode: timeout.triggered ? 124 : exitCode };
 }
 
 /** Force-remove a container by name, ignoring "no such container". */
@@ -62,7 +65,7 @@ async function smokeCaddyS3Proxy(): Promise<SmokeResult> {
   await forceRemove(name);
   try {
     let caddyfile: Blob;
-    const providedCaddyfile = process.env["CADDYFILE_SMOKE_PATH"];
+    const providedCaddyfile = Bun.env["CADDYFILE_SMOKE_PATH"];
     if (providedCaddyfile === undefined) {
       // Local smoke runs have cdk8s dependencies installed, so generate the
       // same config inline. CI passes verify's artifact to keep this image lane
@@ -156,15 +159,51 @@ async function smokeCaddyS3Proxy(): Promise<SmokeResult> {
       };
     }
 
+    const marioKart = await run(
+      [
+        "docker",
+        "run",
+        "--rm",
+        "-i",
+        "--name",
+        `${name}-mk64`,
+        "--user",
+        "1000:1000",
+        "--cap-drop",
+        "ALL",
+        "--read-only",
+        "--tmpfs",
+        "/data:uid=1000,gid=1000",
+        "--tmpfs",
+        "/config:uid=1000,gid=1000",
+        "--tmpfs",
+        "/tmp:uid=1000,gid=1000",
+        "--entrypoint",
+        "sh",
+        image,
+        "-c",
+        "cat > /tmp/Caddyfile && caddy validate --config /tmp/Caddyfile --adapter caddyfile",
+      ],
+      { stdin: new Blob([marioKartCaddyfile("mario-kart-ui-service:8081")]) },
+    );
+    if (marioKart.exitCode !== 0) {
+      return {
+        image,
+        ok: false,
+        detail: `Mario Kart Caddyfile validation failed (exit ${String(marioKart.exitCode)})\n${marioKart.stdout}\n${marioKart.stderr}`,
+      };
+    }
+
     return {
       image,
       ok: true,
-      detail: `version=${version.stdout.trim()}; s3proxy module present; generated production config validates`,
+      detail: `version=${version.stdout.trim()}; s3proxy module present; static-site and Mario Kart production configs validate`,
     };
   } finally {
     await forceRemove(name);
     await forceRemove(`${name}-mod`);
     await forceRemove(`${name}-val`);
+    await forceRemove(`${name}-mk64`);
   }
 }
 
@@ -276,7 +315,7 @@ async function smokeObsidianHeadless(): Promise<SmokeResult> {
 async function smokeRedlib(): Promise<SmokeResult> {
   const image = "redlib:dev";
   const name = "smoke-redlib";
-  const port = 18080;
+  const port = 18_080;
   await forceRemove(name);
   try {
     // redlib listens on 8080 by default; publish it to a host port.
@@ -310,8 +349,8 @@ async function smokeRedlib(): Promise<SmokeResult> {
         // Any HTTP response means the server booted and is serving.
         served = res.status > 0;
         if (served) break;
-      } catch (err) {
-        lastErr = err instanceof Error ? err.message : String(err);
+      } catch (error) {
+        lastErr = error instanceof Error ? error.message : String(error);
       }
       await Bun.sleep(1000);
     }
@@ -336,7 +375,7 @@ async function smokeRedlib(): Promise<SmokeResult> {
 }
 
 async function main(): Promise<void> {
-  const checks: Array<{ label: string; fn: () => Promise<SmokeResult> }> = [
+  const checks: { label: string; fn: () => Promise<SmokeResult> }[] = [
     { label: "caddy-s3proxy", fn: smokeCaddyS3Proxy },
     { label: "obsidian-headless", fn: smokeObsidianHeadless },
     { label: "redlib", fn: smokeRedlib },
