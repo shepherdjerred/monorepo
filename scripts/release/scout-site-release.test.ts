@@ -10,6 +10,7 @@ import path from "node:path";
 import {
   computeReleaseInputDigest,
   hashReleaseInputFiles,
+  readBackendCatalogSource,
   writeScoutReleaseState,
 } from "./scout-site-release.ts";
 import { selectPostHogSite } from "../lib/scout/scout-analytics-config.ts";
@@ -190,6 +191,21 @@ test("backend CLI resolves a retained publication instead of the checkout pin", 
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
+});
+
+test("older CI commands require the retained catalog without a new option", async () => {
+  const source = versionCatalogSource(
+    "shepherdjerred/scout-for-lol/beta",
+    `2.0.0-8864@${DIGEST}`,
+  );
+  expect(
+    await readBackendCatalogSource([], "8872", () => Promise.resolve(source)),
+  ).toBe(source);
+  await expect(
+    readBackendCatalogSource([], "8872", () =>
+      Promise.reject(new Error("required handoff absent")),
+    ),
+  ).rejects.toThrow("required handoff absent");
 });
 
 test("production pin resolution returns only the exact canonical pin", () => {
