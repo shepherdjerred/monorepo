@@ -484,3 +484,26 @@ test("GitHub quota refusals surface the limit and reset", async () => {
   expect(failure).toBeInstanceOf(GitHubRateLimitError);
   expect(String(failure)).toContain("used 5000/5000");
 });
+
+test("GraphQL quota refusals answered with HTTP 200 raise the typed error", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () =>
+      Response.json(
+        { errors: [{ type: "RATE_LIMITED", message: "API rate limit" }] },
+        {
+          headers: {
+            "x-ratelimit-remaining": "0",
+            "x-ratelimit-reset": "4102444800",
+            "x-ratelimit-resource": "graphql",
+          },
+        },
+      ),
+    ),
+  );
+  const failure = await new GitHubClient("test").decision(1).then(
+    () => null,
+    (error: unknown) => error,
+  );
+  expect(failure).toBeInstanceOf(GitHubRateLimitError);
+});

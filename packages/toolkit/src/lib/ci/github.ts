@@ -3,6 +3,7 @@ import { isProviderAuthor, PROVIDERS } from "@shepherdjerred/code-review";
 import {
   ConditionalCache,
   githubGet,
+  graphqlRateLimitError,
   throwIfRateLimited,
 } from "@shepherdjerred/code-review/github-request";
 import { captureJson } from "./process.ts";
@@ -208,6 +209,18 @@ export class GitHubClient {
       throwIfRateLimited(response, await response.text(), "/graphql");
       throw new Error(`GitHub GraphQL failed (${String(response.status)})`);
     }
+    const payload: unknown = await response.json();
+    const graphqlErrors = z
+      .object({ errors: z.array(z.unknown()) })
+      .safeParse(payload);
+    if (graphqlErrors.success) {
+      const limited = graphqlRateLimitError(
+        response,
+        graphqlErrors.data.errors,
+        "/graphql",
+      );
+      if (limited !== null) throw limited;
+    }
     const result = z
       .object({
         errors: z.array(z.unknown()).optional(),
@@ -225,7 +238,7 @@ export class GitHubClient {
           })
           .optional(),
       })
-      .parse(await response.json());
+      .parse(payload);
     if (result.errors !== undefined || result.data === undefined)
       throw new Error("GitHub GraphQL did not return a PR decision");
     return result.data.repository.pullRequest;

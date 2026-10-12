@@ -22,6 +22,7 @@ import {
 } from "@shepherdjerred/code-review/github";
 import {
   githubGet,
+  graphqlRateLimitError,
   throwIfRateLimited,
 } from "@shepherdjerred/code-review/github-request";
 import { fetchHeadPushedAt } from "@shepherdjerred/code-review/head-pushed-at";
@@ -355,7 +356,20 @@ async function sendJson(
       `${method} ${url} failed: ${String(response.status)} ${response.statusText}`,
     );
   }
-  return response.json();
+  const payload: unknown = await response.json();
+  const pathname = new URL(url).pathname;
+  const errors = pathname.endsWith("/graphql")
+    ? GraphQlSchema.safeParse(payload)
+    : null;
+  if (errors?.success === true && errors.data.errors !== undefined) {
+    const limited = graphqlRateLimitError(
+      response,
+      errors.data.errors,
+      pathname,
+    );
+    if (limited !== null) throw limited;
+  }
+  return payload;
 }
 
 const GraphQlSchema = z.object({ errors: z.array(z.unknown()).optional() });

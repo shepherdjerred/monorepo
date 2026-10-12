@@ -5,6 +5,7 @@ import { CiObserver } from "#lib/ci/observer.ts";
 import { evaluateReadiness, EXIT_CODES } from "#lib/ci/readiness.ts";
 import {
   sleepUntilRateLimitReset,
+  timeoutResult,
   waitForCi,
   type WaitResult,
 } from "#lib/ci/wait.ts";
@@ -58,21 +59,23 @@ function reportRateLimit(error: GitHubRateLimitError, resumeAt: number): void {
 
 /**
  * The PR's current head, waiting out a quota refusal like every later poll.
- * A reset beyond the requested deadline reports the refusal instead.
+ * Returns null when the requested deadline arrives first, so the caller can
+ * report a timeout instead of a failure.
  */
 async function initialPr(
   observer: CiObserver,
   number: number,
   signal: AbortSignal,
   deadline: number | null,
-): ReturnType<GitHubClient["pr"]> {
+): Promise<Awaited<ReturnType<GitHubClient["pr"]>> | null> {
   for (;;) {
     try {
       return await observer.github.pr(number, signal);
     } catch (error) {
       if (!(error instanceof GitHubRateLimitError)) throw error;
-      if (deadline !== null && error.resumeAt > deadline) throw error;
+      if (deadline !== null && error.resumeAt > deadline) return null;
       await sleepUntilRateLimitReset(error, signal, reportRateLimit);
+      if (deadline !== null && Date.now() >= deadline) return null;
     }
   }
 }
@@ -95,12 +98,24 @@ async function runWait(
   process.once("SIGINT", interrupt);
   process.once("SIGTERM", terminate);
   try {
+    const started = Date.now();
+    const deadline =
+      options.timeoutMs === undefined ? null : started + options.timeoutMs;
     const initial = await initialPr(
       observer,
       number,
       controller.signal,
-      options.timeoutMs === undefined ? null : Date.now() + options.timeoutMs,
+      deadline,
     );
+    if (initial === null) {
+      await reportResult(
+        timeoutResult(null, started),
+        observer,
+        options.json,
+        controller.signal,
+      );
+      return;
+    }
     const head = options.head ?? initial.head.sha;
     console.error(
       `Waiting for PR #${String(number)} @ ${head.slice(0, 12)}. Long queues and builds are expected; keep this process running. Use toolkit ci load for capacity information.`,
@@ -109,9 +124,9 @@ async function runWait(
       {
         head,
         until: options.until,
-        ...(options.timeoutMs === undefined
+        ...(deadline === null
           ? {}
-          : { timeoutMs: options.timeoutMs }),
+          : { timeoutMs: Math.max(0, deadline - Date.now()) }),
         signal: controller.signal,
       },
       {
