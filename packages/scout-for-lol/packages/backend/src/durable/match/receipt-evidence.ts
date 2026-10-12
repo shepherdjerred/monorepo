@@ -95,9 +95,6 @@ export const progressionEvidenceCodec = defineVersionedCodec({
 export type SettlementEvidence = Parameters<
   typeof settlementEvidenceCodec.serialize
 >[0];
-export type ProgressionEvidence = Parameters<
-  typeof progressionEvidenceCodec.serialize
->[0];
 
 /** Sort and deduplicate an identity list so replayed evidence compares equal. */
 export function canonicalIdentities<T extends string | number>(

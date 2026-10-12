@@ -60,9 +60,6 @@ export const ReplayCorpusTurnSchema = z
     answerMessageId: z.uuid(),
   })
   .strict();
-
-export type ReplayCorpusTurn = z.infer<typeof ReplayCorpusTurnSchema>;
-
 export const ReplayCorpusEntrySchema = z
   .object({
     conversationId: z.uuid(),

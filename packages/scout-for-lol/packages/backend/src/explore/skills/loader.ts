@@ -24,10 +24,6 @@ export const EXPLORE_SKILL_CAPABILITIES = [
 ] as const;
 
 export const ExploreSkillCapabilitySchema = z.enum(EXPLORE_SKILL_CAPABILITIES);
-export type ExploreSkillCapability = z.infer<
-  typeof ExploreSkillCapabilitySchema
->;
-
 const ExploreSkillFrontmatterSchema = z.strictObject({
   name: z
     .string()

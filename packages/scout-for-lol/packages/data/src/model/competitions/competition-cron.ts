@@ -61,9 +61,6 @@ export const CompetitionCronSchema = z
       previous = current;
     }
   });
-
-export type CompetitionCron = z.infer<typeof CompetitionCronSchema>;
-
 export const ReportScheduleTimezoneSchema = z
   .string()
   .trim()

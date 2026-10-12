@@ -13,7 +13,3 @@ import type { Prisma } from "#generated/prisma/client/index.js";
 export const competitionWithSeasonInclude = {
   season: true,
 } satisfies Prisma.CompetitionInclude;
-
-export type CompetitionRowWithSeason = Prisma.CompetitionGetPayload<{
-  include: typeof competitionWithSeasonInclude;
-}>;

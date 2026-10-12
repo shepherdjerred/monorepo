@@ -61,18 +61,7 @@ export function loadingScreenLayoutForQueueType(
     .exhaustive();
 }
 
-/**
- * Branded type for Riot game IDs (from spectator API).
- */
-export type GameId = z.infer<typeof GameIdSchema>;
 export const GameIdSchema = z.number().int().positive().brand<"GameId">();
-
-/**
- * Branded type for Riot champion IDs (e.g., 1=Annie, 266=Aatrox).
- */
-export type LoadingScreenChampionId = z.infer<
-  typeof LoadingScreenChampionIdSchema
->;
 export const LoadingScreenChampionIdSchema = z
   .number()
   .int()
@@ -119,7 +108,6 @@ export const LoadingScreenMasterySchema = z.strictObject({
   level: z.number().int().nonnegative(),
   points: z.number().int().nonnegative(),
 });
-export type LoadingScreenMastery = z.infer<typeof LoadingScreenMasterySchema>;
 
 /**
  * Summoner spells are known for a player and unknowable for a bot.

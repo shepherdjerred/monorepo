@@ -77,7 +77,6 @@ export {
   addAmounts,
   addPileOns,
   amountToStake,
-  applyDelta,
   creditOf,
   darePayoutOf,
   darePotOf,

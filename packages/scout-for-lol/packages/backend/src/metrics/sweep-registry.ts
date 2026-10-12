@@ -49,8 +49,3 @@ export async function runRegisteredDatabaseMetricSweeps(): Promise<void> {
     await sweep();
   }
 }
-
-/** Test-only reset; the map is a process-wide singleton otherwise. */
-export function resetDatabaseMetricSweepsForTest(): void {
-  sweeps.clear();
-}

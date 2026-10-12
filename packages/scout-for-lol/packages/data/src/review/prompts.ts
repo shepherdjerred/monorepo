@@ -7,8 +7,6 @@
  */
 
 import { z } from "zod";
-import type { Lane } from "#src/model/riot/lane.ts";
-
 /**
  * Random behavior schema - weighted random prompts
  */
@@ -42,22 +40,6 @@ export type Personality = {
   styleCard: string;
   filename?: string;
 };
-
-/**
- * Lane context mapping (relative paths from prompts directory)
- */
-export const LANE_CONTEXT_MAP: Record<Lane, string> = {
-  top: "lanes/top.txt",
-  middle: "lanes/middle.txt",
-  jungle: "lanes/jungle.txt",
-  adc: "lanes/adc.txt",
-  support: "lanes/support.txt",
-};
-
-/**
- * Files to exclude from personality selection
- */
-export const EXCLUDED_PERSONALITY_FILES = new Set(["generic.json"]);
 
 /**
  * Select 3-6 random behaviors from a list using weighted sampling without replacement.

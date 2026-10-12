@@ -103,10 +103,6 @@ export const ScoutSilentPostmatchBackfillInputSchema = z
     (input) => new Set(input.riotMatchIds).size === input.riotMatchIds.length,
     { message: "riotMatchIds must not repeat a match", path: ["riotMatchIds"] },
   );
-export type ScoutSilentPostmatchBackfillInput = z.infer<
-  typeof ScoutSilentPostmatchBackfillInputSchema
->;
-
 export const ScoutSilentBackfillMatchOutcomeSchema = z.discriminatedUnion(
   "outcome",
   [
@@ -140,10 +136,6 @@ export const ScoutSilentPostmatchBackfillSummarySchema = z.strictObject({
   /** Every requested match, in request order. */
   outcomes: z.array(ScoutSilentBackfillMatchOutcomeSchema).readonly(),
 });
-export type ScoutSilentPostmatchBackfillSummary = z.infer<
-  typeof ScoutSilentPostmatchBackfillSummarySchema
->;
-
 export const scoutSilentPostmatchBackfillInputCodec = defineVersionedCodec({
   kind: "scout-silent-postmatch-backfill-v2-input",
   version: SCOUT_CONTRACT_VERSION,

@@ -194,24 +194,3 @@ const rootLogger = new Logger<ILogObj>(baseSettings);
 export function createLogger(name: string): Logger<ILogObj> {
   return rootLogger.getSubLogger({ name });
 }
-
-/**
- * Default logger for quick use
- * Prefer createLogger() with a module name for better log organization
- * @lintignore
- */
-export const logger = rootLogger;
-
-/**
- * Log levels for reference
- * @lintignore
- */
-export const LogLevel = {
-  SILLY: 0,
-  TRACE: 1,
-  DEBUG: 2,
-  INFO: 3,
-  WARN: 4,
-  ERROR: 5,
-  FATAL: 6,
-} as const;

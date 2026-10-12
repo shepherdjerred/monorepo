@@ -3,8 +3,6 @@ import { ChampionSchema } from "#src/model/riot/champion.ts";
 import { PlayerConfigEntrySchema } from "#src/model/riot/player-config.ts";
 import { match } from "ts-pattern";
 import { AugmentSchema } from "#src/model/arena/augment.ts";
-
-export type PlayerMetrics = z.infer<typeof PlayerMetricsSchema>;
 export const PlayerMetricsSchema = z.strictObject({
   playerScore0: z.number(), // Likely kills/eliminations
   playerScore1: z.number(), // Likely assists
@@ -19,8 +17,6 @@ export const PlayerMetricsSchema = z.strictObject({
   playerScore10: z.number().optional(), // Unknown - likely unused
   playerScore11: z.number().optional(), // Unknown - likely unused
 });
-
-export type TeamSupportMetrics = z.infer<typeof TeamSupportMetricsSchema>;
 export const TeamSupportMetricsSchema = z.strictObject({
   damageShieldedOnTeammate: z.number(),
   healsOnTeammate: z.number(),

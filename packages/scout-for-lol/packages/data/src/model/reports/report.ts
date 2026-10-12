@@ -188,10 +188,6 @@ export const ReportChartOptionsSchema = z
       });
     }
   });
-
-export type ReportLeaderboardOptions = z.infer<
-  typeof ReportLeaderboardOptionsSchema
->;
 export const ReportLeaderboardOptionsSchema = z
   .object({
     // Rows to `@mention` instead of showing a plain alias: a non-negative
@@ -201,8 +197,6 @@ export const ReportLeaderboardOptionsSchema = z
       .optional(),
   })
   .strict();
-
-export type ReportTableOptions = z.infer<typeof ReportTableOptionsSchema>;
 export const ReportTableOptionsSchema = z
   .object({ sparkline: z.boolean().optional() })
   .strict();
@@ -353,25 +347,6 @@ export type Report = {
   updatedTime: Date;
   revision: number;
 };
-
-export type ReportRun = {
-  id: ReportRunId;
-  reportId: ReportId;
-  serverId: DiscordGuildId;
-  trigger: ReportRunTrigger;
-  status: ReportRunStatus;
-  startedAt: Date;
-  completedAt: Date | null;
-  durationMs: number | null;
-  rowsReturned: number;
-  rowsScanned: number;
-  errorMessage: string | null;
-  querySnapshot: string | null;
-  visualizationS3Key: string | null;
-  visualizationByteSize: number | null;
-  createdAt: Date;
-};
-
 export const ReportCreateInputSchema = z.object({
   title: ReportTitleSchema,
   description: ReportDescriptionSchema.nullable().default(null),

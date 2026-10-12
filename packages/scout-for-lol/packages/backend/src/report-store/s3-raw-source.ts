@@ -1,15 +1,12 @@
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   GetObjectCommand,
-  HeadObjectCommand,
   ListObjectsV2Command,
   type ListObjectsV2CommandOutput,
-  PutObjectCommand,
   type S3Client,
 } from "@aws-sdk/client-s3";
 import { format } from "date-fns";
 import { z } from "zod";
-import { getErrorMessage } from "#src/utils/errors.ts";
 import { computeSha256Digest } from "#src/storage/object-integrity.ts";
 
 /**
@@ -281,39 +278,5 @@ function isNotFoundError(error: unknown): boolean {
     (parsed.data.name === "NotFound" ||
       parsed.data.name === "NoSuchKey" ||
       parsed.data.$metadata?.httpStatusCode === 404)
-  );
-}
-
-export async function rawObjectExists(
-  client: S3Client,
-  bucket: string,
-  key: string,
-): Promise<boolean> {
-  try {
-    await client.send(new HeadObjectCommand({ Bucket: bucket, Key: key }));
-    return true;
-  } catch (error) {
-    if (isNotFoundError(error)) {
-      return false;
-    }
-    throw new Error(`HeadObject failed for ${key}: ${getErrorMessage(error)}`, {
-      cause: error,
-    });
-  }
-}
-
-export async function putRawJsonObject(
-  client: S3Client,
-  bucket: string,
-  key: string,
-  body: string,
-): Promise<void> {
-  await client.send(
-    new PutObjectCommand({
-      Bucket: bucket,
-      Key: key,
-      Body: new TextEncoder().encode(body),
-      ContentType: "application/json",
-    }),
   );
 }

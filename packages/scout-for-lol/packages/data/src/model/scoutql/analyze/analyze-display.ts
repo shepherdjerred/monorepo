@@ -1,7 +1,6 @@
 import type { ScoutQlExprAst } from "#src/model/scoutql/parse/ast.ts";
 import type { ReportDisplayKind } from "#src/model/reports/report.ts";
 import type {
-  ScoutQlAggregateExpr,
   ScoutQlEvidence,
   ScoutQlPredicate,
 } from "#src/model/scoutql/parse/expression.ts";
@@ -300,21 +299,4 @@ export function inferEvidence(
   return call.kind === "call" && call.name === "avg" && call.args.length === 1
     ? (averageEvidence(call, ctx) ?? { kind: "sample" })
     : (quotientEvidence(call, ctx) ?? { kind: "sample" });
-}
-
-/** Whether an aggregate expression mentions another output by alias. */
-export function containsOutputRef(expr: ScoutQlAggregateExpr): boolean {
-  switch (expr.kind) {
-    case "output-ref":
-      return true;
-    case "arithmetic":
-      return containsOutputRef(expr.left) || containsOutputRef(expr.right);
-    case "scalar-call":
-      return expr.args.some((arg) => containsOutputRef(arg));
-    case "count-star":
-    case "aggregate":
-    case "quantile":
-    case "literal":
-      return false;
-  }
 }

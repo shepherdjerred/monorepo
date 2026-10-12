@@ -22,10 +22,6 @@ export const PlayerProfileQueueSelectionSchema = z
       });
     }
   });
-export type PlayerProfileQueueSelection = z.infer<
-  typeof PlayerProfileQueueSelectionSchema
->;
-
 export const PlayerProfileFilterSchema = z.object({
   games: PlayerProfileGameWindowSchema.default(20),
   queues: PlayerProfileQueueSelectionSchema.optional(),
@@ -94,10 +90,6 @@ export const ChampionComparisonCohortSchema = z.enum([
   "qualified",
   "small_sample",
 ]);
-export type ChampionComparisonCohort = z.infer<
-  typeof ChampionComparisonCohortSchema
->;
-
 export const ChampionComparisonCursorSchema = z.object({
   offset: z.number().int().nonnegative(),
 });

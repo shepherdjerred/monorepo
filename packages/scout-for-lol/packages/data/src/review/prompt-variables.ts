@@ -174,19 +174,3 @@ export const STAGE_PROMPT_VARIABLES = {
     ],
   },
 } as const satisfies Record<PromptStageName, StagePromptVariables>;
-
-/**
- * Type for the stage variables map - ensures type safety when accessing
- */
-export type StagePromptVariablesMap = typeof STAGE_PROMPT_VARIABLES;
-
-/**
- * Get variables for a specific stage
- *
- * This is type-safe and will error if an invalid stage name is used.
- */
-export function getStageVariables(
-  stage: PromptStageName,
-): StagePromptVariables {
-  return STAGE_PROMPT_VARIABLES[stage];
-}

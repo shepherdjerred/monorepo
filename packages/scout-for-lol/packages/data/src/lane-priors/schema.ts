@@ -41,9 +41,6 @@ export type LanePriorEntry = z.infer<typeof LanePriorEntrySchema>;
 export const ChampionLanePriorSchema = LanePriorEntrySchema.extend({
   championId: z.number().int().positive(),
 });
-
-export type ChampionLanePrior = z.infer<typeof ChampionLanePriorSchema>;
-
 export const SpellPairLanePriorSchema = LanePriorEntrySchema.extend({
   spellPair: SpellPairKeySchema,
   spellIds: z.tuple([
@@ -51,9 +48,6 @@ export const SpellPairLanePriorSchema = LanePriorEntrySchema.extend({
     z.number().int().nonnegative(),
   ]),
 });
-
-export type SpellPairLanePrior = z.infer<typeof SpellPairLanePriorSchema>;
-
 export const LanePriorSourceSchema = z.strictObject({
   startDate: z.string().min(1),
   endDate: z.string().min(1),

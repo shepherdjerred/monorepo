@@ -127,10 +127,6 @@ export const ExploreCapabilityEvalReportSchema = z
   })
   .strict();
 
-export type ExploreCapabilityEvalReport = z.infer<
-  typeof ExploreCapabilityEvalReportSchema
->;
-
 export function exploreCapabilityEvalSha256(text: string): string {
   const hasher = new Bun.CryptoHasher("sha256");
   hasher.update(text);

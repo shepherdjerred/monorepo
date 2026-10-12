@@ -10,6 +10,3 @@ export const PlayerConfigEntrySchema = z.strictObject({
   }),
   discordAccount: DiscordSchema.nullable().optional(),
 });
-
-export type PlayerConfig = z.infer<typeof PlayerConfigSchema>;
-export const PlayerConfigSchema = z.array(PlayerConfigEntrySchema);

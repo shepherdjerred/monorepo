@@ -33,7 +33,6 @@ import {
   type StagingSource,
 } from "#src/report-lake/staging/generations.ts";
 import {
-  competitionRankHistoryStagingDir,
   ensureLakeScaffold,
   matchTeamBansStagingDir,
   matchTeamsStagingDir,
@@ -110,19 +109,6 @@ export function prematchStagingFilePath(
     `${sanitizeFileStem(dedupeKey)}.jsonl`,
   );
 }
-
-export function competitionRankHistoryStagingFilePath(
-  lakeDir: string,
-  leaderboard: CachedLeaderboard,
-): string {
-  const date = new Date(leaderboard.calculatedAt).toISOString().slice(0, 10);
-  return path.join(
-    competitionRankHistoryStagingDir(lakeDir),
-    `${stagingIdForCompetitionRankHistory(leaderboard.competitionId, date)}.jsonl`,
-  );
-}
-
-export type StagingFileEntry = Awaited<ReturnType<typeof listEntries>>[number];
 
 export function timelineStagingFilePath(
   lakeDir: string,

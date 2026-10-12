@@ -4,13 +4,8 @@ import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account
 export {
   type LeaguePuuid,
   LeaguePuuidSchema,
-  type LeagueSummonerId,
   LeagueSummonerIdSchema,
 } from "@scout-for-lol/domain/identity/league-account.ts";
-
-export type RegionGroup = z.infer<typeof RegionGroupSchema>;
-export const RegionGroupSchema = z.enum(["AMERICAS", "ASIA", "EUROPE", "SEA"]);
-
 export type Region = z.infer<typeof RegionSchema>;
 export const RegionSchema = z.enum([
   "BRAZIL",
@@ -79,8 +74,6 @@ export const RiotIdSchema = z
     return { game_name: gameName, tag_line: tagLine };
   })
   .pipe(RiotIdPartsSchema);
-
-export type LeagueAccount = z.infer<typeof LeagueAccountSchema>;
 export const LeagueAccountSchema = z.strictObject({
   puuid: LeaguePuuidSchema,
   region: RegionSchema,

@@ -19,11 +19,9 @@ import type {
   User,
   Guild,
   TextChannel,
-  DMChannel,
   Client,
   GuildMember,
   Message,
-  PermissionsBitField,
 } from "discord.js";
 import { ChannelType, PermissionFlagsBits } from "discord.js";
 import { testAccountId, testGuildId, testChannelId } from "./test-ids.ts";
@@ -244,36 +242,6 @@ export function mockTextChannel(
 }
 
 /**
- * Create a mock Discord DMChannel object
- * @lintignore
- */
-export function mockDMChannel(
-  overrides: Record<string, unknown> = {},
-): DMChannel {
-  const defaults: Record<string, unknown> = {
-    id: testChannelId("2"),
-    type: ChannelType.DM,
-    isDMBased: () => true,
-    isTextBased: () => true,
-    isSendable: () => true,
-    isThread: () => false,
-    isVoiceBased: () => false,
-    recipient: mockUser(),
-    createdAt: new Date(),
-    createdTimestamp: Date.now(),
-    send: (_content: unknown) =>
-      Promise.resolve({
-        id: "message-id",
-        content: typeof _content === "string" ? _content : "",
-        author: mockUser({ bot: true }),
-      }),
-    client: mockClient(),
-  };
-
-  return castMock<DMChannel>({ ...defaults, ...overrides });
-}
-
-/**
  * Create a mock Discord Message object
  * @lintignore
  */
@@ -348,25 +316,4 @@ export function mockClient(overrides: Record<string, unknown> = {}): Client {
   };
 
   return castMock<Client>({ ...defaults, ...overrides });
-}
-
-/**
- * Create a mock PermissionsBitField object
- * @lintignore
- */
-export function mockPermissions(
-  permissions: bigint = PermissionFlagsBits.ViewChannel,
-): PermissionsBitField {
-  return castMock<PermissionsBitField>({
-    bitfield: permissions,
-    has: (permission: bigint | bigint[]) => {
-      const perms = Array.isArray(permission) ? permission : [permission];
-      return perms.every((p) => (permissions & p) === p);
-    },
-    add: () => mockPermissions(),
-    remove: () => mockPermissions(),
-    serialize: () => ({}),
-    toArray: () => [],
-    freeze: () => mockPermissions(),
-  });
 }

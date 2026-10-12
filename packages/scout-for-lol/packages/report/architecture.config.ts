@@ -40,7 +40,6 @@ export const layers = [
   "html/ranked-square",
   "html/shared",
   "html/snapshot",
-  "match",
   "testing",
 ];
 

@@ -32,9 +32,6 @@ export const WebCompetitionDatesSchema = z.discriminatedUnion("type", [
   }),
   z.object({ type: z.literal("SEASON"), seasonId: SeasonIdSchema }),
 ]);
-
-export type WebCompetitionDates = z.infer<typeof WebCompetitionDatesSchema>;
-
 /**
  * Everything a caller supplies to create a competition, minus the guild it
  * belongs to and the acting owner (both come from the authenticated caller).

@@ -8,7 +8,6 @@ import {
   type RelationalScoutQlJsonValue as JsonValue,
 } from "#src/reports/duckdb/relational-scoutql-json.ts";
 import {
-  CANONICAL_DARE_SCOUTQL_LIMITS,
   RAW_RELATIONAL_SCOUTQL_LIMITS,
   type RelationalScoutQlComplexityLimits,
 } from "#src/reports/duckdb/relational-scoutql-limits.ts";
@@ -460,21 +459,6 @@ export async function validateRelationalScoutQl(input: {
   return await validateRelationalScoutQlWithLimits(
     input,
     RAW_RELATIONAL_SCOUTQL_LIMITS,
-  );
-}
-
-/**
- * Structural validation envelope for canonical Dare queries. Callers must
- * additionally reverse-compile, semantically validate, and exact-round-trip
- * the query before accepting it as a contract.
- */
-export async function validateCanonicalDareScoutQl(input: {
-  queryText: string;
-  allowedTargetKeys: readonly string[];
-}): Promise<RelationalScoutQlValidation> {
-  return await validateRelationalScoutQlWithLimits(
-    input,
-    CANONICAL_DARE_SCOUTQL_LIMITS,
   );
 }
 

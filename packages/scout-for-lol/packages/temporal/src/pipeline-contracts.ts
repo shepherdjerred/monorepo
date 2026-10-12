@@ -164,10 +164,6 @@ export const ScoutDurableCommitConflictReasonSchema = z.enum([
    */
   "policy-held",
 ]);
-export type ScoutDurableCommitConflictReason = z.infer<
-  typeof ScoutDurableCommitConflictReasonSchema
->;
-
 /**
  * What a durable write answered.
  *

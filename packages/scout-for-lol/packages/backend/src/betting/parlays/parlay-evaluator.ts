@@ -22,7 +22,6 @@ import {
   ParlaySubjectsSchema,
   parlaySemanticIssues,
   renderParlayCondition,
-  type GeneratedParlay,
   type ParlayCondition,
   type ParlaySubject,
 } from "#src/betting/parlays/model/parlay-criteria.ts";
@@ -196,8 +195,4 @@ export function evaluateParlay(input: {
     yesResult: legs.every((leg) => leg.passed),
     legs,
   };
-}
-
-export function serializeParlayCriteria(criteria: GeneratedParlay): string {
-  return JSON.stringify(GeneratedParlaySchema.parse(criteria));
 }

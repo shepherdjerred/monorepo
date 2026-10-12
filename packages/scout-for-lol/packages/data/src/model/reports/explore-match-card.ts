@@ -2,8 +2,6 @@ import { z } from "zod";
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 
 export const ExploreMatchCardSizeSchema = z.enum(["S", "M", "L"]);
-export type ExploreMatchCardSize = z.infer<typeof ExploreMatchCardSizeSchema>;
-
 export const ExploreMatchCardRequestSchema = z
   .object({
     matchId: RiotMatchIdSchema,

@@ -17,8 +17,6 @@ export const CustomNightStateSchema = z.enum([
   "INTERMISSION",
   "ENDED",
 ]);
-export type CustomNightState = z.infer<typeof CustomNightStateSchema>;
-
 export const CustomGameStateSchema = z.enum([
   "ROSTER_OPEN",
   "CAPTAINS_SET",
@@ -30,8 +28,6 @@ export const CustomGameStateSchema = z.enum([
   "VERIFIED",
   "VOID",
 ]);
-export type CustomGameState = z.infer<typeof CustomGameStateSchema>;
-
 export const CustomAvailabilitySchema = z.enum([
   "READY",
   "MAYBE",
@@ -50,10 +46,7 @@ export type CustomRosterMode = z.infer<typeof CustomRosterModeSchema>;
 export const CustomTeamSchema = z.enum(["A", "B"]);
 export type CustomTeam = z.infer<typeof CustomTeamSchema>;
 export const CustomSideSchema = z.enum(["BLUE", "RED"]);
-export type CustomSide = z.infer<typeof CustomSideSchema>;
 export const CustomWinnerSchema = CustomTeamSchema;
-export type CustomWinner = z.infer<typeof CustomWinnerSchema>;
-
 export const CustomMapSchema = z.enum(["SUMMONERS_RIFT", "HOWLING_ABYSS"]);
 export type CustomMap = z.infer<typeof CustomMapSchema>;
 export const CustomPickModeSchema = z.enum([
@@ -91,8 +84,6 @@ export const CustomVoiceStateSchema = z.enum([
   "CLEANING_UP",
   "FAILED",
 ]);
-export type CustomVoiceState = z.infer<typeof CustomVoiceStateSchema>;
-
 export const CustomAccountSchema = z.strictObject({
   accountId: z.number().int().positive(),
   puuid: LeaguePuuidSchema,
@@ -203,10 +194,6 @@ export const CustomSnapshotEnvelopeSchema = z.strictObject({
   sequence: z.number().int().nonnegative(),
   snapshot: CustomNightSnapshotSchema.nullable(),
 });
-export type CustomSnapshotEnvelope = z.infer<
-  typeof CustomSnapshotEnvelopeSchema
->;
-
 export const CustomRevisionInputSchema = z.strictObject({
   nightId: z.uuid(),
   expectedRevision: z.number().int().nonnegative(),
@@ -282,7 +269,6 @@ export const CustomAuditEventSchema = z.strictObject({
   ]),
   createdAt: z.iso.datetime(),
 });
-export type CustomAuditEvent = z.infer<typeof CustomAuditEventSchema>;
 export const CustomHistorySchema = z.strictObject({
   night: CustomNightSnapshotSchema,
   games: z.array(CustomGameSnapshotSchema),

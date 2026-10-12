@@ -126,11 +126,3 @@ export async function ensureVoiceAssistantRuntime(): Promise<VoiceRuntimeStatus>
 export function getVoiceAssistantRuntime(): VoiceAssistantRuntime | null {
   return runtime;
 }
-
-/** Test-only: install or clear a fake runtime. */
-export function setVoiceAssistantRuntimeForTests(
-  value: VoiceAssistantRuntime | null,
-): void {
-  runtime = value;
-  inFlight = null;
-}

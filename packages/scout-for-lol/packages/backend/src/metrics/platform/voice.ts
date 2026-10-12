@@ -55,21 +55,6 @@ export const scoutVoiceRateLimitedTotal = new Counter({
   labelNames: ["reason"] as const,
   registers: [registry],
 });
-
-export const scoutVoiceAudioTokensTotal = new Counter({
-  name: "scout_voice_audio_tokens_total",
-  help: "OpenAI voice audio tokens billed by direction when reported.",
-  labelNames: ["direction"] as const,
-  registers: [registry],
-});
-
-export const scoutVoiceTranscriptionUsageTotal = new Counter({
-  name: "scout_voice_transcription_usage_total",
-  help: "OpenAI transcription usage by unit and direction.",
-  labelNames: ["unit", "direction"] as const,
-  registers: [registry],
-});
-
 export const scoutVoiceActivationStageLatencySeconds = new Histogram({
   name: "scout_voice_activation_stage_latency_seconds",
   help: "Latency of each wake activation stage in seconds.",
@@ -130,14 +115,6 @@ export const scoutVoiceReplyDurationSeconds = new Histogram({
   buckets: [0.5, 1, 2, 5, 10, 20, 30],
   registers: [registry],
 });
-
-export const scoutVoiceToolCallsTotal = new Counter({
-  name: "scout_voice_tool_calls_total",
-  help: "Voice League tool calls by tool and outcome.",
-  labelNames: ["tool", "outcome"] as const,
-  registers: [registry],
-});
-
 export const scoutVoiceActiveSessions = new Gauge({
   name: "scout_voice_active_sessions",
   help: "Voice assistant sessions currently listening in a channel.",

@@ -19,4 +19,3 @@ export const ChallengeRunStatusSchema = z.enum([
   "archived",
   "failed",
 ]);
-export type ChallengeRunStatus = z.infer<typeof ChallengeRunStatusSchema>;

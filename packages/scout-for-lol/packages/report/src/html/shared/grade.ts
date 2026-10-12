@@ -19,13 +19,6 @@ export function gradeFromKda(kda: number): Grade {
   return kda >= 1 ? "C" : "D";
 }
 
-export function gradeForPlayer(
-  player: CompletedMatch["players"][number],
-): Grade {
-  const { kills, deaths, assists } = player.champion;
-  return gradeFromKda(computeKda(kills, deaths, assists));
-}
-
 /**
  * MVP = highest KDA among tracked players. Returns undefined when only one
  * tracked player exists (no comparison to make).

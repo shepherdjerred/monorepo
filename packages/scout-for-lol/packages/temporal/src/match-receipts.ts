@@ -67,10 +67,6 @@ export const ScoutMatchStageEvidenceSchema = z.strictObject({
   riotMatchId: RiotMatchIdSchema,
   phase: z.enum(SCOUT_MATCH_PHASES),
 });
-export type ScoutMatchStageEvidence = z.infer<
-  typeof ScoutMatchStageEvidenceSchema
->;
-
 export const scoutMatchStageEvidenceCodec = defineVersionedCodec({
   kind: "scout-v2-match-stage-evidence",
   version: SCOUT_CONTRACT_VERSION,
@@ -98,10 +94,6 @@ export const scoutMatchStageEvidenceCodec = defineVersionedCodec({
  */
 export const SCOUT_MATCH_STAGE_CONFLICT_RECEIPT_KIND: ReceiptKind =
   ReceiptKindSchema.parse("v2-match-stage-conflict");
-
-export type ScoutMatchStageConflictEvidence = z.infer<
-  typeof ScoutMatchStageConflictEvidenceSchema
->;
 export const ScoutMatchStageConflictEvidenceSchema = z.strictObject({
   riotMatchId: RiotMatchIdSchema,
 });
@@ -124,10 +116,6 @@ export const SCOUT_CLIENT_MATCH_TERMINAL_RECEIPT_KIND: ReceiptKind =
 export const ScoutClientMatchTerminalEvidenceSchema = z.strictObject({
   riotMatchId: RiotMatchIdSchema,
 });
-export type ScoutClientMatchTerminalEvidence = z.infer<
-  typeof ScoutClientMatchTerminalEvidenceSchema
->;
-
 export const scoutClientMatchTerminalEvidenceCodec = defineVersionedCodec({
   kind: "scout-v2-client-match-terminal-evidence",
   version: SCOUT_CONTRACT_VERSION,

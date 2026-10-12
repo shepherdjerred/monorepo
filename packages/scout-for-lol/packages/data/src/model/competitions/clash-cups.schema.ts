@@ -17,8 +17,6 @@ export const ClashCupDaySchema = z.enum(["day_1", "day_2"]);
 export type ClashCupDay = z.infer<typeof ClashCupDaySchema>;
 
 export const ClashCupSourceSchema = z.enum(["manual"]);
-export type ClashCupSource = z.infer<typeof ClashCupSourceSchema>;
-
 export const ClashCupSchema = z
   .strictObject({
     nameKey: z.string().min(1),
@@ -61,4 +59,3 @@ export const ClashCupsFileSchema = z
       }
     }
   });
-export type ClashCupsFile = z.infer<typeof ClashCupsFileSchema>;

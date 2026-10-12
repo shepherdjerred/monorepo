@@ -10,15 +10,12 @@ import {
 // ALLOW-LIST: a match passes the dimension iff its value is in the set. Add new
 // dimensions (champion, role, win/loss) as additional members here — no DB
 // migration is needed because the whole spec is stored as JSON.
-export type QueueFilter = z.infer<typeof QueueFilterSchema>;
 export const QueueFilterSchema = z.object({
   type: z.literal("queue"),
   // Non-empty on purpose: "no constraint" is the ABSENCE of the filter, never
   // an empty allow-list. This keeps notify-all semantics unambiguous.
   queues: z.array(QueueTypeSchema).min(1),
 });
-
-export type SubscriptionFilter = z.infer<typeof SubscriptionFilterSchema>;
 export const SubscriptionFilterSchema = z.discriminatedUnion("type", [
   QueueFilterSchema,
 ]);

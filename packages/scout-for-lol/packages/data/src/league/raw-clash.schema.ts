@@ -17,11 +17,7 @@ export const ClashPositionSchema = z.enum([
   "BOTTOM",
   "UTILITY",
 ]);
-export type ClashPosition = z.infer<typeof ClashPositionSchema>;
-
 export const ClashRoleSchema = z.enum(["CAPTAIN", "MEMBER"]);
-export type ClashRole = z.infer<typeof ClashRoleSchema>;
-
 export const RawClashPlayerSchema = z.strictObject({
   /** Present on current by-puuid responses. */
   puuid: z.string().min(1).optional(),
@@ -72,6 +68,3 @@ export const RawClashTournamentSchema = z.strictObject({
 export type RawClashTournament = z.infer<typeof RawClashTournamentSchema>;
 
 export const RawClashTournamentListSchema = z.array(RawClashTournamentSchema);
-export type RawClashTournamentList = z.infer<
-  typeof RawClashTournamentListSchema
->;

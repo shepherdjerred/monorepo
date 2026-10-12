@@ -59,12 +59,6 @@ export function exploreVisualizationPayload(
   };
 }
 
-export function exploreChartAttachment(
-  message: ExploreMessage,
-): AttachmentBuilder | null {
-  return exploreVisualizationPayload(message).files?.[0] ?? null;
-}
-
 export function usesNativeDiscordVisualization(
   snapshot: VisualizationSnapshot,
 ): boolean {

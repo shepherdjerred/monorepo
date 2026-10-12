@@ -17,10 +17,6 @@ import { CompetitionDatesSchema } from "#src/database/competition/competition-da
 import { validateCompetitionConfiguration } from "#src/database/competition/configuration-validation.ts";
 
 // ============================================================================
-// Constants
-// ============================================================================
-
-// ============================================================================
 // Helper Functions
 // ============================================================================
 
@@ -117,11 +113,6 @@ export const CompetitionCreationSchema = z
       path: ["criteriaConfig"],
     },
   );
-
-export type CompetitionCreationInput = z.infer<
-  typeof CompetitionCreationSchema
->;
-
 // ============================================================================
 // Database Validation Functions
 // ============================================================================

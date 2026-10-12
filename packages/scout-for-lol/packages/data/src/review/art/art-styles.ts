@@ -9,13 +9,6 @@ import type { ArtStyle } from "./art-categories.ts";
 import { ART_STYLES } from "./art-styles-list.ts";
 
 /**
- * Selection result
- */
-export type StyleSelection = {
-  style: string;
-};
-
-/**
  * Select a random style from the styles array
  */
 export function selectRandomStyle(): ArtStyle {

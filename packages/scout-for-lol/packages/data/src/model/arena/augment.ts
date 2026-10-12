@@ -5,8 +5,6 @@ export const AugmentRaritySchema = z.union([
   z.literal("gold"),
   z.literal("silver"),
 ]);
-export type AugmentRarity = z.infer<typeof AugmentRaritySchema>;
-
 // Full augments are retrieved from the CommunityDragon API. The Riot API only provides the ID
 export const FullAugmentSchema = z.object({
   id: z.number(),
@@ -27,8 +25,6 @@ export const MinimalAugmentSchema = z.strictObject({
   id: z.number(),
   type: z.literal("id"),
 });
-export type MinimalAugment = z.infer<typeof MinimalAugmentSchema>;
-
 export const AugmentSchema = z.discriminatedUnion("type", [
   FullAugmentSchema,
   MinimalAugmentSchema,

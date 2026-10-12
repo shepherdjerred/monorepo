@@ -86,8 +86,6 @@ export const DuelSeriesStatusSchema = z.enum([
   "no_contest",
   "cancelled",
 ]);
-export type DuelSeriesStatus = z.infer<typeof DuelSeriesStatusSchema>;
-
 export const DuelObjectiveSchema = z.enum(["kills", "lane_cs", "first_turret"]);
 export type DuelObjective = z.infer<typeof DuelObjectiveSchema>;
 

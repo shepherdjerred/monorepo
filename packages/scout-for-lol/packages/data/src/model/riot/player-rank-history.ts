@@ -11,20 +11,14 @@ import {
 } from "#src/model/riot/league-points.ts";
 import {
   RankSchema,
-  RankedQueueTypeSchema,
   type Rank,
   type RankedQueueType,
 } from "#src/model/riot/rank.ts";
-
-export const RANKED_HISTORY_QUEUES = RankedQueueTypeSchema.options;
-
 export const RankHistoryPointSchema = z.strictObject({
   at: z.date(),
   leaguePoints: z.number(),
   rank: RankSchema,
 });
-export type RankHistoryPoint = z.infer<typeof RankHistoryPointSchema>;
-
 export const RankHistorySeriesSchema = z.strictObject({
   accountLabel: z.string().min(1),
   points: z.array(RankHistoryPointSchema),

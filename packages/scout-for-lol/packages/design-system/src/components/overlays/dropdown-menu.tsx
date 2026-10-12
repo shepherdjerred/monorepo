@@ -6,7 +6,6 @@ import { cn } from "#src/lib/cn.ts";
 export const DropdownMenu = DropdownPrimitive.Root;
 export const DropdownMenuTrigger = DropdownPrimitive.Trigger;
 export const DropdownMenuGroup = DropdownPrimitive.Group;
-export const DropdownMenuPortal = DropdownPrimitive.Portal;
 export const DropdownMenuSub = DropdownPrimitive.Sub;
 export const DropdownMenuRadioGroup = DropdownPrimitive.RadioGroup;
 

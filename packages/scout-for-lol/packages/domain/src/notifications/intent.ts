@@ -182,20 +182,12 @@ export const NotificationUnsentSuppressionReasonSchema =
     "recipient-preference",
     "guild-left",
   ]);
-
-export type NotificationRetryableFailureReason = z.infer<
-  typeof NotificationRetryableFailureReasonSchema
->;
 export const NotificationRetryableFailureReasonSchema = z.enum([
   "network",
   "rate-limited",
   "service-unavailable",
   "timeout",
 ]);
-
-export type NotificationTerminalFailureReason = z.infer<
-  typeof NotificationTerminalFailureReasonSchema
->;
 export const NotificationTerminalFailureReasonSchema = z.enum([
   "permission-denied",
   "dm-disabled",

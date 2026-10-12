@@ -35,8 +35,6 @@ import { ReportRunIdSchema } from "#src/model/reports/report.ts";
  * machine's suppression reason is a closed enum the operator does not pick.
  */
 export const OperatorNoteSchema = z.string().trim().min(1).max(280);
-export type OperatorNote = z.infer<typeof OperatorNoteSchema>;
-
 /**
  * How an operator answers an `unknown-delivery` attempt.
  *
@@ -62,10 +60,6 @@ export const OperatorDeliveryAnswerSchema = z.discriminatedUnion("outcome", [
     attemptNonce: NotificationAttemptNonceSchema,
   }),
 ]);
-export type OperatorDeliveryAnswer = z.infer<
-  typeof OperatorDeliveryAnswerSchema
->;
-
 /**
  * The operations arms of {@link ConfirmationIntentPayloadSchema}.
  *

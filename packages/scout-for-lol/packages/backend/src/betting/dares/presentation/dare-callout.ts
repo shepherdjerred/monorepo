@@ -401,17 +401,6 @@ export async function refreshDareCallout(
   });
 }
 
-export async function refreshDareCallouts(
-  dareIds: readonly number[],
-  dependencies: DareCalloutDependencies = defaultDareCalloutDependencies,
-): Promise<void> {
-  await Promise.all(
-    [...new Set(dareIds)].map(async (dareId) => {
-      await refreshDareCallout(dareId, dependencies);
-    }),
-  );
-}
-
 /** Result-post states that may still reach Discord and run the follow-up. */
 const OWED_RESULT_POST_STATES = ["pending", "ready", "sending"];
 

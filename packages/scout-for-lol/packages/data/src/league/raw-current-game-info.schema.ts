@@ -19,9 +19,6 @@ export const RawBannedChampionSchema = z.object({
   teamId: z.number(),
   pickTurn: z.number(),
 });
-
-export type RawBannedChampion = z.infer<typeof RawBannedChampionSchema>;
-
 /**
  * Participant in an active game
  */

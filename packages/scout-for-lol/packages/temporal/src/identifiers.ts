@@ -367,10 +367,6 @@ export function scoutDuelSeriesWorkflowId(
   return `scout-${stage}-duel-series-${seriesId}`;
 }
 
-export function scoutSchedulePrefix(stage: ScoutStage): string {
-  return `scout-${stage}-report-`;
-}
-
 // ───────────────────────────────────────────────────────────────────────────
 // V2 durable pipeline identifiers
 // ───────────────────────────────────────────────────────────────────────────

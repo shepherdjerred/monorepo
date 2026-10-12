@@ -1,5 +1,4 @@
 import {
-  OpponentPingFieldSchema,
   ParticipantNumericFieldSchema,
   TeamObjectiveSchema,
   type OpponentPingField,
@@ -168,8 +167,3 @@ export const OPPONENT_PING_HISTORY_COLUMNS: Record<
   pushPings: "push_pings",
   visionClearedPings: "vision_cleared_pings",
 };
-
-/** Opponent ping fields a generated parlay may propose. */
-export function groundedOpponentPingFields(): OpponentPingField[] {
-  return [...OpponentPingFieldSchema.options];
-}

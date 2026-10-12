@@ -12,25 +12,21 @@ import type { scoutExploreTimelineWorkflow } from "@scout-for-lol/temporal/workf
 import {
   SCOUT_WORKFLOW_NAMES,
   scoutIngestionReconciliationGatewayReadyWorkflowId,
-  scoutInitialHistoryWorkflowId,
   scoutExploreHistoryWorkflowId,
   scoutExploreTimelineWorkflowId,
   scoutDetachedWorkWorkflowId,
   scoutInteractiveWorkflowId,
   scoutReportScheduleReconcilerWorkflowId,
-  scoutQueueCanaryWorkflowId,
   scoutHallBaselineWorkflowId,
   scoutChallengeRunRecomputeWorkflowId,
   scoutDuelSeriesWorkflowId,
   scoutTaskQueues,
   type ScoutIngestionReconciliationInput,
-  type ScoutInitialHistoryInput,
   type ScoutExploreHistoryInput,
   type ScoutExploreTimelineInput,
   type ScoutDetachedWorkInput,
   type ScoutInteractiveRunInput,
   type ScoutReportRunInput,
-  type ScoutQueueCanaryInput,
   type ScoutStage,
   type ScoutHallBaselineInput,
   type ScoutChallengeRunRecomputeInput,
@@ -38,7 +34,6 @@ import {
 } from "@scout-for-lol/temporal";
 import { duelSeriesChangedSignal } from "@scout-for-lol/temporal/signals";
 import { reconcileReportSchedulesSignal } from "@scout-for-lol/temporal/signals";
-import { requestInitialHistoryRunSignal } from "@scout-for-lol/temporal/signals";
 import {
   buildTemporalExecutionStartMetadata,
   ExecutionMetadataSchema,
@@ -98,47 +93,6 @@ function startMetadata(
     summary,
     description,
   });
-}
-
-export async function startScoutQueueCanary(
-  client: Client,
-  input: ScoutQueueCanaryInput,
-): Promise<WorkflowHandle> {
-  return await client.workflow.start(SCOUT_WORKFLOW_NAMES.queueCanary, {
-    ...IDEMPOTENT_START_POLICIES,
-    workflowId: scoutQueueCanaryWorkflowId(input.stage, input.canaryId),
-    taskQueue: scoutTaskQueues(input.stage).workflow,
-    args: [input],
-    ...startMetadata(
-      input.stage,
-      "operator",
-      "Probe Scout task queues",
-      "Checks that every Scout workflow and Activity queue is available.",
-    ),
-  });
-}
-
-export async function startScoutInitialHistory(
-  client: Client,
-  input: ScoutInitialHistoryInput,
-): Promise<WorkflowHandle> {
-  return await client.workflow.signalWithStart(
-    SCOUT_WORKFLOW_NAMES.initialHistory,
-    {
-      ...IDEMPOTENT_START_POLICIES,
-      workflowId: scoutInitialHistoryWorkflowId(input.stage, input.puuid),
-      taskQueue: scoutTaskQueues(input.stage).workflow,
-      args: [input],
-      signal: requestInitialHistoryRunSignal,
-      signalArgs: [],
-      ...startMetadata(
-        input.stage,
-        "workflow",
-        "Import initial Scout history",
-        "Coordinates the durable initial match-history import for one linked account.",
-      ),
-    },
-  );
 }
 
 export async function startScoutExploreHistory(

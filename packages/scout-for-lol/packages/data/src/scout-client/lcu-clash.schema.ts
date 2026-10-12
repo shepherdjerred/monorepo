@@ -67,26 +67,5 @@ export const LcuClashBracketSchema = z
     rosters: z.array(LcuClashBracketRosterSchema).optional(),
   })
   .loose();
-
-export const LcuClashTournamentPhaseSchema = z
-  .object({
-    id: IdSchema.optional(),
-    registrationTime: z.number().optional(),
-    startTime: z.number().optional(),
-    cancelled: z.boolean().optional(),
-  })
-  .loose();
-
-export const LcuClashTournamentSchema = z
-  .object({
-    id: IdSchema.optional(),
-    nameLocKey: z.string().optional(),
-    nameLocKeySecondary: z.string().optional(),
-    status: z.string().optional(),
-    phases: z.array(LcuClashTournamentPhaseSchema).optional(),
-  })
-  .loose();
-
 export type LcuClashRoster = z.infer<typeof LcuClashRosterSchema>;
 export type LcuClashBracket = z.infer<typeof LcuClashBracketSchema>;
-export type LcuClashTournament = z.infer<typeof LcuClashTournamentSchema>;

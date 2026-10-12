@@ -41,15 +41,6 @@ export type MatchRenderOptions = {
   enableRankedDesigns?: boolean;
 };
 
-export async function matchToImage(
-  match: CompletedMatch,
-  options: MatchRenderOptions = {},
-): Promise<Buffer> {
-  const svg = await matchToSvg(match, options);
-  const png = await svgToPng(svg);
-  return png;
-}
-
 export async function matchToSvg(
   match: CompletedMatch,
   options: MatchRenderOptions = {},

@@ -33,7 +33,6 @@ export const ClassicQueueTypeSchema = z.enum([
   "classic",
   "classic aram mayhem",
 ]);
-export type ClassicQueueType = z.infer<typeof ClassicQueueTypeSchema>;
 
 export function isClassicQueueType(queueType: QueueType | undefined): boolean {
   return ClassicQueueTypeSchema.safeParse(queueType).success;

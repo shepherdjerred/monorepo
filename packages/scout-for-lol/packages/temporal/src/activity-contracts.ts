@@ -354,10 +354,6 @@ export const ScoutMatchPipelineStateSchema = z.strictObject({
     cursorAdvanced: z.int().nonnegative(),
   }),
 });
-export type ScoutMatchPipelineState = z.infer<
-  typeof ScoutMatchPipelineStateSchema
->;
-
 export const ScoutMatchPipelineStateResultSchema = z.discriminatedUnion(
   "kind",
   [

@@ -34,5 +34,3 @@ export const RawPerksSchema = z
     styles: z.array(RawPerkStyleSchema),
   })
   .strict();
-
-export type RawPerks = z.infer<typeof RawPerksSchema>;

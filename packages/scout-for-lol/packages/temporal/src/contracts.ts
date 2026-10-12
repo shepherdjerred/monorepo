@@ -347,6 +347,3 @@ export const ScoutScheduleOwnershipMemoSchema = z.strictObject({
   reportId: OpaqueIdentifierSchema,
   schemaVersion: z.literal(1),
 });
-export type ScoutScheduleOwnershipMemo = z.infer<
-  typeof ScoutScheduleOwnershipMemoSchema
->;
