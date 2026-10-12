@@ -11,9 +11,16 @@
     @MainActor
     enum MacAcceptanceCapture {
         private enum CaptureError: Error {
-            case descriptor, process, unsafeInterface, window, dimensions, permission, capture,
+            case descriptor, process, window, dimensions, permission, capture,
                 timeout
             case geometry(String)
+            case sessionUnavailable(phase: CapturePhase)
+            case sessionOffConsole(phase: CapturePhase)
+            case sessionLocked(phase: CapturePhase)
+            case applicationState(phase: CapturePhase, rawValue: UInt)
+            case alertCount(phase: CapturePhase, count: Int)
+            case secureFieldCount(phase: CapturePhase, count: Int)
+            case forbiddenControl(phase: CapturePhase, index: Int)
             case foregroundMismatch(
                 expectedPID: pid_t, actualForegroundPID: pid_t?, phase: CapturePhase)
         }
@@ -35,7 +42,7 @@
             guard !windows.isEmpty,
                 Set(windows.map(\.identifier)).count == windows.count
             else { throw CaptureError.window }
-            try unlockedSession()
+            try unlockedSession(phase: .beforeActivation)
             guard CGPreflightScreenCaptureAccess() else { throw CaptureError.permission }
             let owner = try process(app, foreground: false, phase: .beforeActivation)
             app.activate()
@@ -43,7 +50,7 @@
                 throw CaptureError.process
             }
             for (index, window) in windows.enumerated() {
-                try safeInterface(app)
+                try safeInterface(app, phase: .afterActivation)
                 try validateWindow(window, app: app)
                 let snapshot = try snapshot(window, pid: owner.pid)
                 let baseName = windows.count == 1 ? name : "\(name) — window \(index + 1)"
@@ -73,25 +80,38 @@
             }
         }
 
-        private static func unlockedSession() throws {
-            guard let session = CGSessionCopyCurrentDictionary() as? [String: Any],
-                session["kCGSSessionOnConsoleKey"] as? Bool == true,
-                session["CGSSessionScreenIsLocked"] as? Bool != true
-            else { throw CaptureError.unsafeInterface }
+        private static func unlockedSession(phase: CapturePhase) throws {
+            guard let session = CGSessionCopyCurrentDictionary() as? [String: Any] else {
+                throw CaptureError.sessionUnavailable(phase: phase)
+            }
+            guard session["kCGSSessionOnConsoleKey"] as? Bool == true else {
+                throw CaptureError.sessionOffConsole(phase: phase)
+            }
+            guard session["CGSSessionScreenIsLocked"] as? Bool != true else {
+                throw CaptureError.sessionLocked(phase: phase)
+            }
         }
 
-        private static func safeInterface(_ app: XCUIApplication) throws {
-            try unlockedSession()
+        private static func safeInterface(_ app: XCUIApplication, phase: CapturePhase) throws {
+            try unlockedSession(phase: phase)
             let forbidden = [
                 "facet.account.email", "facet.account.password", "facet.account.code",
                 "facet.account.vault-password", "facet.account.signin", "facet.account.error",
             ]
-            guard app.state == .runningForeground, app.alerts.count == 0,
-                app.secureTextFields.count == 0,
-                !forbidden.contains(where: {
-                    app.descendants(matching: .any).matching(identifier: $0).count > 0
-                })
-            else { throw CaptureError.unsafeInterface }
+            let state = app.state
+            guard state == .runningForeground else {
+                throw CaptureError.applicationState(phase: phase, rawValue: state.rawValue)
+            }
+            let alerts = app.alerts.count
+            guard alerts == 0 else { throw CaptureError.alertCount(phase: phase, count: alerts) }
+            let secureFields = app.secureTextFields.count
+            guard secureFields == 0 else {
+                throw CaptureError.secureFieldCount(phase: phase, count: secureFields)
+            }
+            for (index, identifier) in forbidden.enumerated()
+            where app.descendants(matching: .any).matching(identifier: identifier).count > 0 {
+                throw CaptureError.forbiddenControl(phase: phase, index: index)
+            }
         }
 
         private static func validateWindow(_ window: XCUIElement, app: XCUIApplication) throws {
@@ -274,7 +294,7 @@
             owner: ProcessOwner, phase: CapturePhase
         ) throws {
             try Task.checkCancellation()
-            try safeInterface(app)
+            try safeInterface(app, phase: phase)
             guard CGPreflightScreenCaptureAccess() else { throw CaptureError.permission }
             try validateWindow(window, app: app)
             guard window.identifier == snapshot.identifier,

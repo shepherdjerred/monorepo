@@ -50,6 +50,10 @@ application starts them even with no visible workspace; view tasks await that
 shared startup.
 DEBUG native acceptance also prepares its synthetic fixture in the application
 bootstrap, with concurrent restored windows sharing one registration and result.
+The DEBUG acceptance app validates its isolated launch descriptor and disables
+automatic window restoration, so each launch starts with one workspace. Its cold
+relaunch checks prove persisted vault data; production window-layout restoration
+remains automatic and requires separate runtime verification.
 Startup publishes the engine, importer and account together after their initial
 reads succeed. A failed preparation closes its unpublished engine and permits a
 fresh startup attempt. Account requests check cancellation and their original

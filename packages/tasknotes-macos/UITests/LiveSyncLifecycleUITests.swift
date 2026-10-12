@@ -105,7 +105,7 @@ final class LiveSyncLifecycleUITests: XCTestCase {
 
     private func workspace(_ app: XCUIApplication) throws -> XCUIElement {
         #if os(macOS)
-            try MacAcceptanceWorkspace.create(app: app)
+            try MacAcceptanceWorkspace.initial(app: app)
         #else
             app
         #endif

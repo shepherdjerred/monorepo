@@ -56,6 +56,7 @@ struct TaskNotesApp: App {
         // Restores window size, position, and screen across launches. Required
         // by the definition of done, and one line.
         .defaultSize(width: 1100, height: 720)
+        .facetWorkspaceRestoration()
         .commands {
             // File > Quick Add…. A separate conformer rather than more cases
             // inside `TaskNotesCommands`, because it belongs beside the panel
