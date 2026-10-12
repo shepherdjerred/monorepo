@@ -1969,7 +1969,7 @@
       "owner": "the-storm",
       "namespace": "the-storm",
       "source": "the-storm-core",
-      "purpose": "Collect named player product metrics; evaluated once on server boot, beta first.",
+      "purpose": "Collect named player product metrics; evaluated once on server boot.",
       "type": "boolean",
       "default": false,
       "rollouts": [],
@@ -2548,6 +2548,14 @@
     {
       "key": "prod",
       "overrides": [
+        {
+          "key": "the-storm-analytics-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
         {
           "key": "woodpecker-source-cache-enabled",
           "type": "boolean",
