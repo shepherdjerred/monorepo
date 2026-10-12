@@ -206,6 +206,12 @@ export const driverFeedUnitsDroppedTotal = new Counter({
   registers: [registry],
 });
 
+export const driverFeedAudioChunksDroppedTotal = new Counter({
+  name: "driver_feed_audio_chunks_dropped_total",
+  help: "Audio chunks withheld from a driver-feed client because its socket backlog exceeded the ceiling",
+  registers: [registry],
+});
+
 const DRIVER_FEED_LATENCY_BUCKETS = [
   1, 2, 4, 8, 16, 25, 33, 50, 66, 100, 150, 250, 500, 1000,
 ];

@@ -24,7 +24,10 @@ Fully headless — no browser, no game UI, no desktop:
   encoded a second time and pushed over a WebSocket straight into the controller
   page, where the browser decodes them with WebCodecs onto a canvas. That skips
   Discord's voice pipeline and its client-side de-jitter buffer, which was the
-  single largest chunk of the input-to-picture delay. The Go-Live stream is for
+  single largest chunk of the input-to-picture delay. The game's sound rides the
+  same socket as raw PCM and plays through Web Audio about 50 ms behind the
+  picture (the page's jitter lead), with a sound toggle on the feed; browsers
+  start it on the first click or key press. The Go-Live stream is for
   spectators and does not depend on the feed. Production enables the feed in its
   GitOps-managed environment; the code default is off, so enable `[driver_feed]`
   in `config.toml` for other deployments.

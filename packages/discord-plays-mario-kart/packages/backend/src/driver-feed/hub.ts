@@ -19,10 +19,12 @@
 // matters more than the bitrate the extra IDRs cost.
 
 import {
+  DRIVER_FEED_AUDIO_FLAG,
   DRIVER_FEED_KEYFRAME_FLAG,
   DRIVER_FEED_HEADER_BYTES,
 } from "@discord-plays-mario-kart/common";
 import {
+  driverFeedAudioChunksDroppedTotal,
   driverFeedClientBufferBytes,
   driverFeedClients,
   driverFeedUnitsDroppedTotal,
@@ -38,6 +40,13 @@ export function frameDriverFeedMessage(unit: AccessUnit): Buffer {
   const header = Buffer.alloc(DRIVER_FEED_HEADER_BYTES);
   header[0] = unit.isDecoderEntryPoint ? DRIVER_FEED_KEYFRAME_FLAG : 0;
   return Buffer.concat([header, unit.bytes]);
+}
+
+/** Prefix the audio header to one chunk of interleaved s16le PCM. */
+export function frameDriverFeedAudioMessage(pcm: Buffer): Buffer {
+  const header = Buffer.alloc(DRIVER_FEED_HEADER_BYTES);
+  header[0] = DRIVER_FEED_AUDIO_FLAG;
+  return Buffer.concat([header, pcm]);
 }
 
 /**
@@ -124,6 +133,25 @@ export class DriverFeedHub {
       driverFeedUnitsSentTotal.inc();
     }
     driverFeedClientBufferBytes.set(peakBuffered);
+  }
+
+  /**
+   * Offer one chunk of game audio to every client.
+   *
+   * Audio has no decoder state, so a client waiting for a keyframe still gets
+   * it. A client over the backlog ceiling does not: the video path is already
+   * resyncing it, and audio queued behind that backlog would play late.
+   */
+  broadcastAudio(pcm: Buffer): void {
+    if (this.clients.size === 0) return;
+    const payload = frameDriverFeedAudioMessage(pcm);
+    for (const client of this.clients.keys()) {
+      if (client.bufferedBytes > this.options.maxClientBufferBytes) {
+        driverFeedAudioChunksDroppedTotal.inc();
+        continue;
+      }
+      client.send(payload);
+    }
   }
 
   /** Drop every client (session teardown). */
