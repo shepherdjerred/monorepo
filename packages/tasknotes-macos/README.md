@@ -148,7 +148,10 @@ account responses.
 The Obsidian account sheet owns visible progress, verification guidance and
 redacted errors. Account diagnostics correlate HTTP status and response-decoding
 failures by a native request UUID and timestamp, retaining only fixed engine
-categories. A successful account with no Sync vaults has an explicit empty
+categories. A closed `requestKind` identifies sign-in, vault listing, sign-out,
+vault authorization or user information without retaining URLs or response text;
+an account rejection alone does not establish that credentials were incorrect.
+A successful account with no Sync vaults has an explicit empty
 state. Dismissal cancels only that sheet's request and fences late replies;
 credentials remain transient and clear after success or dismissal. Startup
 publishes the engine and account together, so failed initialization can retry.

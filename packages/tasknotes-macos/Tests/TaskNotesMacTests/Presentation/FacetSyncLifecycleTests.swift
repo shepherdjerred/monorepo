@@ -45,22 +45,37 @@ import Testing
                 .fields
             #expect(exported?["durable"] == .null)
             #expect(exported?["remoteVaultID"] == .null)
+        #endif
+    }
+
+    @Test func acceptanceAccountDiagnosticsEncodeExplicitUnknownsAndValidateSharedSchema() throws {
+        #if DEBUG
+            let schema = try FacetSchema.acceptance()
+            func check(_ value: some Encodable, definition: String) throws -> FacetValue {
+                let parsed = try FacetJSON.parse(JSONEncoder().encode(value))
+                try schema.validate(parsed, definition: definition)
+                return parsed
+            }
             let diagnostic = FacetAccountExchangeDiagnostic(
-                stage: .preflight, statusCode: nil, failureClassification: nil)
+                requestKind: .signIn, stage: .preflight, statusCode: nil, failureClassification: nil
+            )
             let exchange = try check(diagnostic, definition: "accountExchange")
             #expect(exchange.object?.fields["statusCode"] == .null)
             #expect(exchange.object?.fields["failureClassification"] == .null)
             #expect(exchange.object?.fields["boundaryCode"] == .null)
             #expect(exchange.object?.fields["requestID"]?.text == diagnostic.requestID.uuidString)
             #expect(exchange.object?.fields["capturedAt"]?.text == diagnostic.capturedAt)
+            #expect(exchange.object?.fields["requestKind"]?.text == "sign_in")
             let rejection = try check(
                 FacetAccountExchangeDiagnostic(
-                    stage: .post, statusCode: 200, failureClassification: "account_rejected",
+                    requestKind: .listVaults, stage: .post, statusCode: 200,
+                    failureClassification: "account_rejected",
                     boundaryCode: "account_rejected", requestID: diagnostic.requestID),
                 definition: "accountExchange")
             #expect(rejection.object?.fields["boundaryCode"]?.text == "account_rejected")
             let hostile = FacetAccountExchangeDiagnostic(
-                stage: .post, statusCode: 200, failureClassification: "account_rejected",
+                requestKind: .signIn, stage: .post, statusCode: 200,
+                failureClassification: "account_rejected",
                 boundaryCode: "private peer error")
             #expect(throws: FacetContractError.self) {
                 try check(hostile, definition: "accountExchange")
@@ -81,5 +96,26 @@ import Testing
                 try schema.validate(.unsigned(9_007_199_254_740_992), definition: "count")
             }
         #endif
+    }
+
+    @Test(arguments: FacetAccountExchangeDiagnostic.RequestKind.allCases)
+    func acceptanceSchemaRequiresAnExactClosedOperation(
+        kind: FacetAccountExchangeDiagnostic.RequestKind
+    ) throws {
+        let schema = try FacetSchema.acceptance()
+        let diagnostic = FacetAccountExchangeDiagnostic(
+            requestKind: kind, stage: .post, statusCode: 200,
+            failureClassification: "account_rejected", boundaryCode: "account_rejected")
+        let encoded = try FacetJSON.parse(JSONEncoder().encode(diagnostic))
+        try schema.validate(encoded, definition: "accountExchange")
+        var fields = try #require(encoded.object?.fields)
+        fields["requestKind"] = .string("unknown_private_operation")
+        #expect(throws: FacetContractError.self) {
+            try schema.validate(.object(fields), definition: "accountExchange")
+        }
+        fields.removeValue(forKey: "requestKind")
+        #expect(throws: FacetContractError.self) {
+            try schema.validate(.object(fields), definition: "accountExchange")
+        }
     }
 }
