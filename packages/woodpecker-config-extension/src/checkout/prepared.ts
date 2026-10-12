@@ -258,7 +258,7 @@ export async function publishPreparedSeed(
       path.join(temporary, "manifest.json"),
       JSON.stringify(manifest),
     );
-    await collectPreparedSeeds(root);
+    await collectPreparedSeeds(root, temporary);
     const space = await capacity();
     if ((space.blocks - space.bfree) / space.blocks > 0.7)
       return { status: "deferred" as const, manifest };
@@ -328,7 +328,10 @@ async function publishIndex(index: string, manifest: SeedManifest) {
 }
 
 /** Caller holds the exclusive seed lock; keep two generations per profile. */
-export async function collectPreparedSeeds(root: string) {
+export async function collectPreparedSeeds(
+  root: string,
+  activeDirectory?: string,
+) {
   for (const profile of SeedProfileSchema.options) {
     const parent = path.join(root, "v1", profile);
     let entries;
@@ -339,6 +342,7 @@ export async function collectPreparedSeeds(root: string) {
         continue;
       throw error;
     }
+    await collectInterrupted(parent, entries, activeDirectory);
     const generations = await Promise.all(
       entries
         .filter(
@@ -367,5 +371,25 @@ export async function collectPreparedSeeds(root: string) {
         await rm(index);
       await rm(old.directory, { recursive: true });
     }
+  }
+}
+
+async function collectInterrupted(
+  parent: string,
+  entries: readonly { name: string; isDirectory: () => boolean }[],
+  activeDirectory?: string,
+) {
+  // The exclusive seed lock proves no other publisher is using these paths.
+  // Reclaim a killed publisher's partial copy before enforcing capacity.
+  for (const entry of entries) {
+    const directory = path.join(parent, entry.name);
+    if (
+      directory !== activeDirectory &&
+      entry.isDirectory() &&
+      /^[a-f\d]{64}-[a-f\d]{40}\.tmp-[a-f\d]{8}(?:-[a-f\d]{4}){3}-[a-f\d]{12}$/u.test(
+        entry.name,
+      )
+    )
+      await rm(directory, { recursive: true });
   }
 }

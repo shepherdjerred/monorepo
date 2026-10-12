@@ -125,11 +125,20 @@ test("prepared seeds keep dependencies private and apply source additions and de
   await Bun.write(join(publisher, "untracked-secret"), "must not be retained");
   const root = join(input.root, "seeds");
   const image = `fixture@sha256:${"a".repeat(64)}`;
+  const interrupted = join(
+    root,
+    "v1",
+    "verify",
+    `${"a".repeat(64)}-${source}.tmp-${crypto.randomUUID()}`,
+  );
+  await mkdir(interrupted, { recursive: true });
+  await Bun.write(join(interrupted, "unfinished"), "interrupted copy");
   const deferred = await publishPreparedSeed(publisher, root, "verify", {
     image,
     capacity: async () => ({ blocks: 100, bfree: 29 }),
   });
   expect(deferred.status).toBe("deferred");
+  expect(await Bun.file(join(interrupted, "unfinished")).exists()).toBe(false);
   expect(
     await Bun.file(
       join(root, "indexes", "verify", `${deferred.manifest.fingerprint}.json`),
