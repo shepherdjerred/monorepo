@@ -44,10 +44,8 @@ and a matching `address<TAB>import-id` line in the `IMPORTS` heredoc inside
 A resource missing from it is never imported, so `apply` creates the duplicate
 this step exists to prevent.
 
-The Mario Kart HTTP and HTTPS forwards are new managed rules. The default
-script skips them when absent from state so `apply` can create them. If both
-rules already exist on the router, pass `--mario-kart-forwards-exist` to adopt
-them before planning. Do not pass this flag on their first activation.
+Choose the appropriate [router import mode](/reference/asuswrt-import/)
+before adopting existing Mario Kart forwards.
 
 ## 3. Review the plan and apply
 

@@ -26,10 +26,9 @@ new HTTP and HTTPS forwards declared in
 Apply only a reviewed plan containing the two intended additions.
 If those rules already exist, import their matching addresses before planning.
 Do not import a new rule that has not been created.
-The default import script skips missing Mario Kart state entries so the first
-apply can create the rules. Only if both rules already exist on the router,
-run `import.sh --mario-kart-forwards-exist` with the same credential wrapper
-as the router workflow to adopt them.
+Choose the appropriate mode from the
+[router import options](/reference/asuswrt-import/) when adopting existing
+forwards.
 
 Check HTTPS directly against the router's home address while preserving the
 hostname for TLS. Run from outside the home network to verify WAN forwarding:
