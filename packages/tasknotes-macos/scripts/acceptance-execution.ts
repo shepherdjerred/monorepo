@@ -14,6 +14,45 @@ export type AcceptanceCommand = (
   capture?: boolean,
 ) => Promise<string>;
 
+/** xcresulttool can materialize a bundle database; same-bundle reads must serialize. */
+export async function readAcceptanceResultReports(
+  resultBundle: string,
+  destinations: { summary: string; tests: string },
+  command: AcceptanceCommand,
+): Promise<{ summaryJSON: string; testsJSON: string }> {
+  const reports: Partial<Record<"summary" | "tests", string>> = {};
+  const failures: unknown[] = [];
+  for (const kind of ["summary", "tests"] as const) {
+    try {
+      const report = await command(
+        [
+          "xcrun",
+          "xcresulttool",
+          "get",
+          "test-results",
+          kind,
+          "--compact",
+          "--path",
+          resultBundle,
+        ],
+        true,
+      );
+      await Bun.write(destinations[kind], report);
+      reports[kind] = report;
+    } catch (error) {
+      failures.push(error);
+    }
+  }
+  if (failures.length > 0)
+    throw new AggregateError(
+      failures,
+      "Native result reports could not be read",
+    );
+  const { summary: summaryJSON, tests: testsJSON } = reports;
+  assert.ok(summaryJSON && testsJSON, "Native result documents are required");
+  return { summaryJSON, testsJSON };
+}
+
 export type AcceptanceStage = {
   resultBundle: string;
   receipt: string;
@@ -97,34 +136,13 @@ export async function executeAcceptanceStages(
       failures.push(error);
     }
     try {
-      const reports = await Promise.allSettled(
-        ["summary", "tests"].map(async (kind) => {
-          const report = await command(
-            [
-              "xcrun",
-              "xcresulttool",
-              "get",
-              "test-results",
-              kind,
-              "--compact",
-              "--path",
-              stage.resultBundle,
-            ],
-            true,
-          );
-          await Bun.write(`${stage.receipt}.${kind}.json`, report);
-          return report;
-        }),
-      );
-      const summaryJSON =
-        reports[0]?.status === "fulfilled" ? reports[0].value : undefined;
-      const testsJSON =
-        reports[1]?.status === "fulfilled" ? reports[1].value : undefined;
-      for (const report of reports)
-        if (report.status === "rejected") failures.push(report.reason);
-      assert.ok(
-        summaryJSON && testsJSON,
-        "Exact singleton result documents are required",
+      const { summaryJSON, testsJSON } = await readAcceptanceResultReports(
+        stage.resultBundle,
+        {
+          summary: `${stage.receipt}.summary.json`,
+          tests: `${stage.receipt}.tests.json`,
+        },
+        command,
       );
       const summary: unknown = JSON.parse(summaryJSON);
       const tests: unknown = JSON.parse(testsJSON);

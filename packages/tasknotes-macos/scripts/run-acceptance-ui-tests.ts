@@ -5,6 +5,7 @@ import path from "node:path";
 import {
   acceptanceStages,
   executeAcceptanceStages,
+  readAcceptanceResultReports,
 } from "./acceptance-execution.ts";
 import {
   acceptanceSigningArguments,
@@ -192,32 +193,14 @@ export async function runAcceptanceUiTests(
         ]);
       }
     }
-    const reports = await Promise.all(
-      ["summary", "tests"].map((kind) =>
-        command(
-          [
-            "xcrun",
-            "xcresulttool",
-            "get",
-            "test-results",
-            kind,
-            "--compact",
-            "--path",
-            result,
-          ],
-          true,
-        ),
-      ),
+    const { summaryJSON, testsJSON } = await readAcceptanceResultReports(
+      result,
+      {
+        summary: path.join(evidence, "test-summary.json"),
+        tests: path.join(evidence, "test-tree.json"),
+      },
+      command,
     );
-    const [summaryJSON, testsJSON] = reports;
-    assert.ok(
-      summaryJSON && testsJSON,
-      "Native result summary and test tree are required",
-    );
-    await Promise.all([
-      Bun.write(path.join(evidence, "test-summary.json"), summaryJSON),
-      Bun.write(path.join(evidence, "test-tree.json"), testsJSON),
-    ]);
     const summary: unknown = JSON.parse(summaryJSON);
     const testTree: unknown = JSON.parse(testsJSON);
     if (!smokeOnly) assertExactStandaloneResults(summary, testTree, tests);
