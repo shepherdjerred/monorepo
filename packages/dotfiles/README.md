@@ -7,3 +7,5 @@ changes to exact live targets, then verify a clean targeted diff. See the
 [chezmoi constraints](AGENTS.md#chezmoi) in [AGENTS.md](AGENTS.md).
 
 For macOS open-file exhaustion, follow [How to persist higher file limits](macos-file-limits/README.md).
+
+The Windows PC uses a separate source, [dotfiles-windows](../dotfiles-windows/).
