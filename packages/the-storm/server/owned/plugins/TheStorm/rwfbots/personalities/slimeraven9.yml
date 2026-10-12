@@ -1,0 +1,77 @@
+id: slimeraven9
+name: SlimeRaven9
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTczNTUxNywKICAicHJvZmlsZUlkIiA6ICI0NDAzZGM1NDc1YmM0YjE1YTU0OGNmZGE2YjBlYjdkOSIsCiAgInByb2ZpbGVOYW1lIiA6ICJBdW50YnJpeCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8xZDE0Mjc2YTU3NjZiNGE2ZGIzZTM1ODQzZWQ0Mzk1ZDhkZWY0YzQzMDk2MWMzNzQ3MjIzNDg2YmYwMmM1MjIxIgogICAgfQogIH0KfQ=="
+  signature: "puaSj6EUSC2vwOQ3gpNI7VoQizoSJQjn0GRQraeMNOJiCuMPGvAi9Ol38XBRKRbRuf0BORYMYgdrWx7UVje0i6crBfmsHEOcOmDLy+yAQEhyQyCN4xV1VSmFJEZ8+1+iZMGlLqSQyLe9dIZuZj1TjuNCnuiMTwoUw/DnncCHkLVmTzTBMLGGcQz/H9uvGO+vFu/yRO5ipD7mszRSFHZCMs1YeNuS1lKngyIgfE0rr3VSn4B5m3M81uTkjWSvxBeZ1/MCSAhGyl0aK0brFzV2y7s5agIBc/3M3Z7dOKn5coJoz/8cFR+Ceqdmk21CypGt4myNWorFCoQy3MbgaRREa2v8sIFSGb+e+S7gc6KdS84SIJ5I5IMQWcFqd5pt1SF2p7uYWKJl7qoH2/m8Jw5ByYmhKPVEtBqyK2T4p0Ak04e9Si6Cf4TI+ilw5PDlDlOLL3d3vRB/nWR173wWC9GCYHKipniS2+MTP7TTmOH2spEEEizEYXY14onAkL+Njvke7YyHpfPrrfAXMwP6qOB/YJzYDxQA/YxS6iangJe+L6uHq93BHPyfxbAPVsI9iAGVfF1p2hA+p/J/7FWTtfVXlQGnzIiTxL9Ln9xkq01qEX2h0aMKkohzDmnu43Y54xV07MHlr0AB0DpNjhFOX5LGZQY6bdo/AmbNR1qveCT62bM="
+skill: 0.115
+archetype: lurker
+leverOffsets:
+  reactionMs: -0.32
+  predictionQuality: 0.29
+  decisionTemperature: 0.03
+  awarenessRadius: 1
+  coordination: -1.82
+  aggression: -0.51
+kits:
+  trooper: 0.72
+  longbow: 0.34
+  shortbow: 0.56
+  ghost: 0.89
+  wraith: 0.66
+roles:
+  plant: 0.36
+  escort: 0.24
+  rotate: 0.77
+  hunt: 0.83
+style:
+  aggression: 0.63
+  patience: 0.9
+  teamplay: 0.15
+  risk: 0.57
+voice:
+  tone:
+    - watchful
+    - hushed
+  verbosity: quiet
+  style: "tired lighthouse bearings, steady reassurance; lowercase whispers, deliberate pauses"
+lines:
+  greet:
+    - oil wick checked, coast watched
+    - oil wick here. quietly.
+  onKill:
+    - a clear signal through the fog
+    - the oil wick was here a while
+  onDeath:
+    - lost the light around that bend
+    - heard it too late beside the oil wick
+  onPlant:
+    - warning light at the bomb
+    - oil wick is watching the quiet entrance
+  onDefuse:
+    - warning extinguished
+    - no noise. no fuse. just the oil wick.
+  onWin:
+    - oil wick guided us home
+    - the oil wick stayed out of sight
+  onLoss:
+    - the oil wick missed a rock
+    - the oil wick waited one corner too long
+  onLastAlive:
+    - one light still on the coast
+    - nobody move near my oil wick
+  taunt:
+    - your approach was visible from shore
+    - the oil wick heard that approach coming
+  lobby:
+    - polishing my oil wick before the round
+    - please leave the oil wick switched on
+    - "My oil wick: I will hold the quiet route."
+    - With my oil wick, leave one quiet approach for me.
+quirks:
+  - slow_starter
+  - always_gg
+rivals:
+  - xxzalmoztun
+bio: SlimeRaven9 lit a coastal tower so returning builders could find home and still brings an oil wick to the queue. xXZalmoztun keeps asking whether it really helps.
+batch: 3
+retired: false

@@ -1,0 +1,74 @@
+id: crimsonmaxzil
+name: CrimsonMaxzil
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NDIyMzkyNCwKICAicHJvZmlsZUlkIiA6ICIxZjk0OTQzN2RlYmQ0ODgyYTlhYzZhZmZmN2RhNDcxMSIsCiAgInByb2ZpbGVOYW1lIiA6ICJNaWlra2FLIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzk4ODU3NTQ5OTUyYWM2MGNhMDExMGY2ZmE0NzcxOGEyYTA0MjIyNjdiZmRmOTViY2E1YjE3Y2ViMmQ5Yzk5ZTYiCiAgICB9CiAgfQp9
+  signature: "O3kM2jSAAZfPuHTRoigTIljzd3tR6WzQJ2zKKDo4cpStrqB3uT0uvFEgNFzVlgRZ3Dt+BDwTa9iCR5b/8C+YjsIXrDRj6b1sWII3iXls05IYi5/2/asni2QfVddjB0e2+ARZ4fLvHuGZtxPTRmymTAQwS/nOcohIWVYJirC1XTMIgVduP2/E0Zh8ESdKSv8y4rRVrDB+d+YjPSjB44ExjFrX20zQ9mWdjv7UfYPgg0gzDruE+oI6wuX+xBVifgiRsHM1RlE/ChR5IpV2MsuIN98F7GfgTVpAPptns6yUM1qDh0YgsctY7X1M2ssPUoW5ou1uQoJpjrzKH32E+n9c6MgxBkQxPgoAB0VOr9LgNa+ngCgKQsB4dTojazAxzCKkpD6JKzl4pswJUgatDE2ZzKWVuv25Wx+JRvy19WujhROV66yTjtBqeZLM7aTFN9BcOPmK6WzQAUGO9MS9595JPzcQy58cDsuqfeJFC7q/86iM7BA8PyCUSDOau4tLYAoRzaMkqsM02/DDyxMW7zsgwPZp5UNZ+jdHb8pyqTM+q4GSZjkaKbARGFCmsJZpe8JJLM7vzCCIL52ya0jWyPT+5tOx02hQRxdIwjjG1xJad2rBtqV8EDX60kBT171DLynpT2SbvyBnHXVKC99JOTNnJgG+v5jcb38gOVQ8OhetQRQ="
+skill: 0.518
+archetype: turtle
+leverOffsets:
+  reactionMs: 0.83
+  aimErrorDeg: -0.09
+  decisionTemperature: 0.42
+  awarenessRadius: 0.23
+  coordination: 0.49
+  aggression: -1.83
+kits:
+  trooper: 1
+  longbow: 0.26
+  rewind: 0.73
+roles:
+  defend: 1
+  retake: 0.48
+  hunt: 0.22
+style:
+  aggression: 0.2
+  patience: 0.97
+  teamplay: 0.52
+  risk: 0
+voice:
+  tone:
+    - gentle
+    - cautious
+  verbosity: normal
+  style: "patient gardening talk, stubborn lane defence; unhurried words, conservative estimates and tiny victories"
+lines:
+  greet:
+    - mulch basket packed, lets grow into this
+    - mulch basket is ready. no need to hurry.
+  onKill:
+    - cleared a little room for my mulch basket
+    - mulch basket waited for the opening
+  onDeath:
+    - my mulch basket has met a weed
+    - mulch basket should have waited another moment
+  onPlant:
+    - this seed has a very short season
+    - mulch basket checked the site first
+  onDefuse:
+    - pulled it out by the root
+    - mulch basket checked the corner twice
+  onWin:
+    - a fine harvest for the mulch basket crew
+    - mulch basket got there eventually
+  onLoss:
+    - bad weather for my mulch basket today
+    - mulch basket needed one more safe corner
+  onLastAlive:
+    - one mulch basket still in the garden
+    - the mulch basket will take this slowly
+  taunt:
+    - that lane could use some pruning
+    - the mulch basket can wait out that peek
+  lobby:
+    - checking the soil with my mulch basket
+    - my mulch basket is for the roof garden later
+    - "My mulch basket: I will keep a safe route home."
+    - With my mulch basket, please check the blind corner first.
+quirks:
+  - gapple_hoarder
+  - always_gg
+rivals:
+  - mouthjaivoxfuse
+bio: CrimsonMaxzil grew a roof garden over the old kit shop and still brings a mulch basket to the queue. MouthjaivoxFuse keeps asking whether it really helps.
+batch: 3
+retired: false

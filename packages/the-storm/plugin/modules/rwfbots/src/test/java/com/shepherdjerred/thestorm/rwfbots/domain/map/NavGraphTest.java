@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.rwfbots.domain.map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.within;
 
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos;
@@ -39,6 +40,51 @@ final class NavGraphTest {
     var from = sealed.nodeAt(SyntheticMap.RED_SPAWN).orElseThrow();
     var to = sealed.nodeAt(new BlockPos(29, 1, 2)).orElseThrow();
     assertThat(sealed.path(from, to)).isEmpty();
+  }
+
+  @Test
+  void reusableSearchesKeepExactPathsAcrossGoalsAndChangingPenalties() {
+    var workspace = graph.workspace();
+    for (var from = 0; from < graph.nodeCount(); from += 37) {
+      var to = (from * 7 + 13) % graph.nodeCount();
+      java.util.function.IntToDoubleFunction penalty = node -> (node % 11) * 0.2;
+      assertThat(graph.path(from, to, penalty, workspace)).isEqualTo(graph.path(from, to, penalty));
+      assertThat(graph.path(to, from, node -> 0, workspace)).isEqualTo(graph.path(to, from));
+    }
+  }
+
+  @Test
+  void goalLimitedDistancesMatchFullDijkstraIncludingDuplicateAndMissingTargets() {
+    var workspace = graph.workspace();
+    var targets = new int[] {0, graph.nodeCount() - 1, 7, 7, -1};
+    for (var from = 0; from < graph.nodeCount(); from += 29) {
+      var complete = graph.costsFrom(from);
+      var targeted = graph.costsToTargets(from, targets, workspace);
+      for (var i = 0; i < targets.length; i++) {
+        assertThat(targeted[i])
+            .isEqualTo(targets[i] == -1 ? Float.POSITIVE_INFINITY : complete[targets[i]]);
+      }
+    }
+  }
+
+  @Test
+  void overlappingSearchesFailAndReleaseTheWorkspaceAfterAnException() {
+    var workspace = graph.workspace();
+    var from = node(SyntheticMap.RED_SPAWN);
+    var to = node(new BlockPos(29, 1, 2));
+    assertThatThrownBy(
+            () ->
+                graph.path(
+                    from,
+                    to,
+                    ignored -> {
+                      graph.path(from, to, node -> 0, workspace);
+                      return 0;
+                    },
+                    workspace))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("workspace already in use");
+    assertThat(graph.path(from, to, ignored -> 0, workspace)).isEqualTo(graph.path(from, to));
   }
 
   @Test

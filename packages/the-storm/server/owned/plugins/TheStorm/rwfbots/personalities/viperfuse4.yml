@@ -1,0 +1,74 @@
+id: viperfuse4
+name: ViperFuse4
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTY4MjYyOSwKICAicHJvZmlsZUlkIiA6ICIwNWU0OTczZTk5ZDk0NGY2YjczNjY3ZTEzMzdiY2IzOSIsCiAgInByb2ZpbGVOYW1lIiA6ICJNaW5lX1NraW4iLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjFlODJjYWI3NmRhNzZiYjdiYmU1YjE2ZmE4YWRkYjk5NWJjMWI1MjJkMWYxYWMxMDhkY2Y3NjI2MGJkOTIzNiIKICAgIH0KICB9Cn0="
+  signature: "Il0IplSDva/K0Cf/+kL76LKWOFv4IV7q6z0GDm9GDIKIge0ehSjkMvpfVrId54WRoym80cwstdVvE2uODcNGWJGbORK26gzMcOGqepd5lC1yFAfXLr0YJf1kX58+nRB94WPxBK92mjSXR9A5IaZRXHgeKp4pbmH77ch1dKWGb64zkUlHEDPf38UnGeEN44637emHlRNjtF3LTwsjyC59DEEZ8yqR3a2bzmpd8DVFTQ+OsT3d6yhjKE7kv8su2WaGDLQEsj+FLOZyiRvW1vDBC5nQWGguJchZF0P9IsZfWsJPKyVqWRNhvb0cGg1O8hyYkFLNiWBfgMmZ+O4mxPc9/jBFqul21HlsXNapsXGEwUFeY9Y98DNvYKi995hWPSp0KPX/UNQWODL3T5mlnA03bozaAwydCh3pfOCpHM0Jj4o39fINFCvOuCqilCyjWiBsmEv9S5blDZl6nE9TUch6VBoUEJ36EhQSFyy283x7JRPqCP7gzoYXvtAaOqzrTU1Csnsc5L0Joyoq9B7VkycuNIDmDpkc472EZhpjDQcJSEdlVorDRgDZvtNBp8DU6Eo/P9rPtAdn2vFKrTWs3cg7uY2NlVWnmBGJXKCUC1HzVUHZFqhjvniMvF4rJeMkG+1c8I/R85QlAYzRZQaTJnfDZBUkMbQ4aafPEfDvX8vRxrc="
+skill: 0.277
+archetype: bomb_diver
+leverOffsets:
+  reactionMs: 0.21
+  cps: -0.14
+  predictionQuality: -0.93
+  decisionTemperature: 0.88
+  technique: 0.76
+  aggression: -0.48
+kits:
+  trooper: 0.91
+  shortbow: 0.18
+  rewind: 0.6
+  ghost: 0.24
+roles:
+  plant: 1
+  escort: 0.26
+style:
+  aggression: 0.62
+  patience: 0.1
+  teamplay: 0.29
+  risk: 1
+voice:
+  tone:
+    - steady
+    - urgent
+  verbosity: normal
+  style: "buoyancy checks and practical nautical talk; breathless objective reports, oddly calm at a fuse"
+lines:
+  greet:
+    - mooring cleat fastened, ready to cast off
+    - mooring cleat packed, where is the bomb?
+  onKill:
+    - found a gap in that hull
+    - a clear path for the mooring cleat
+  onDeath:
+    - a little water over the rail
+    - mooring cleat was one corner from the fuse
+  onPlant:
+    - not a cargo I want to keep
+    - "mooring cleat is parked beside {bomb}"
+  onDefuse:
+    - unloaded that safely
+    - "mooring cleat and {bomb} can both stay intact"
+  onWin:
+    - mooring cleat brought us back to dock
+    - mooring cleat got the objective done
+  onLoss:
+    - the mooring cleat voyage met a reef
+    - mooring cleat took too long reaching the site
+  onLastAlive:
+    - one hand still at the tiller
+    - the mooring cleat still has a fuse to find
+  taunt:
+    - your push is sailing against the wind
+    - the mooring cleat got closer to your bomb
+  lobby:
+    - tightening the bolts on my mooring cleat
+    - keeping the mooring cleat dry for the voyage home
+    - "My mooring cleat: cover my approach to the bomb."
+    - With my mooring cleat, call the safest bomb route.
+quirks:
+  - loves_nuke
+  - always_gg
+rivals:
+  - kraxjyxbrost-82
+bio: ViperFuse4 launched a leaky ferry between two rival team docks and still brings a mooring cleat to the queue. Kraxjyxbrost_82 keeps asking whether it really helps.
+batch: 3
+retired: false

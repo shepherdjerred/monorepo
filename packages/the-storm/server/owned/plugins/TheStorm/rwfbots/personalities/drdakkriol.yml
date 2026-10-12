@@ -1,0 +1,72 @@
+id: drdakkriol
+name: DrDakkriol
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTkxNjM1MywKICAicHJvZmlsZUlkIiA6ICJiODU0NWMxMDlhZjE0ZGRjYmY4ZjhmZjg4ZTU2NzI4OSIsCiAgInByb2ZpbGVOYW1lIiA6ICJQdGFrb3B5c2tDWiIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS83MjUzYzVjYzc5M2UxYTUwNThjOTQxZjgyYWM2YTU1NDVlMjFiYzE3NjViZGM5YWIyMmE0NWY3NTg3OTQwMWIyIgogICAgfQogIH0KfQ=="
+  signature: "JV45NNhDPWNBTa5b3/61Kyjxs0nKiq5YoR1UNpaoj0XOxa3hsB0sn2moIqP7gfJR6XkL4NefLgQjRag1xrjDmUZZZRqNggYOLn36SLJb/zMFv/q+C4hp26vSybAj8+7+wD7yjSdUj6G9JwzpHQTnDimjkrqYhroBF0ReYpaPiqJahNlo8KAktaAjvaYp6UsOtekIUqyLJya2uwP+0HTHyl8DyWQvCZ6iAt81+KAT89f2NP60QoFzg0P/dZ7v8v8ECSIicyv1PZFnJcQCunpW+KR3bsHIKiqYjZYSn8Ycixyz27LFfbQEHPyuNVKjXVarAEYWNjvBNjnczVzeuSjNN0byKn1MOpSCc3zI0EqHVm7o7Jqfc4nV2+wZcMaFOSRhPfF6VbosAqVlLwU0lXPM3WijZfm1QjtPxYS9gJlIuQ2aNiY0NPN9mNdnV7hWbjOyZYFI23RMnHnin/meKRSxT3wEfrce6IofmaBY78UoTMJD6EsGmSosXiGAo9kzx4/90eiPEMOktNonOF0QVIa44saa0nfUt/JkGpYVdjNOaFPgdIDeLDD50OgnaqopYwiVPjY1T9+xMXOzzRZo8SlreJrruKC3R3GsMB/WTFY3MXK5bpCIN+aT7nQ6D1zpZSyBtrsmy/sG6t442ozLHvp2oYq8G4tLtBNe/0EJ+G4H0Ws="
+skill: 0.505
+archetype: support
+leverOffsets:
+  cps: 0.19
+  awarenessRadius: 0.55
+  coordination: 2.04
+  aggression: -0.4
+kits:
+  trooper: 1
+  longbow: 0.33
+  rewind: 0.7
+roles:
+  escort: 1
+  defend: 0.41
+  retake: 0.61
+style:
+  aggression: 0.44
+  patience: 0.67
+  teamplay: 0.92
+  risk: 0.28
+voice:
+  tone:
+    - brisk
+    - helpful
+  verbosity: normal
+  style: "absurdly serious station announcements; gentle check-ins, thanks and useful kit reminders"
+lines:
+  greet:
+    - coal shovel checked, service departing
+    - coal shovel is here, everyone got their kit?
+  onKill:
+    - one less delay for my coal shovel
+    - one less problem beside the coal shovel
+  onDeath:
+    - my coal shovel reports a cancelled service
+    - sorry, the coal shovel corner is open
+  onPlant:
+    - last departure from this platform
+    - coal shovel can watch while you plant
+  onDefuse:
+    - service restored on this line
+    - coal shovel is here to help at the fuse
+  onWin:
+    - coal shovel reports arrival on schedule
+    - coal shovel says everyone helped
+  onLoss:
+    - wrong platform for my coal shovel
+    - coal shovel says we can tidy that up
+  onLastAlive:
+    - last service, just my coal shovel
+    - one coal shovel still trying to help
+  taunt:
+    - your connection left a moment ago
+    - the coal shovel brought a team to that corner
+  lobby:
+    - please queue beside my coal shovel
+    - my coal shovel says the lobby service is delayed
+    - "My coal shovel: I will stay close to the push."
+    - With my coal shovel, call if you need an escort.
+quirks:
+  - says_sorry
+  - always_gg
+rivals:
+  - moundol-05
+bio: DrDakkriol linked three friends bases with an unnecessarily elaborate minecart line and still brings a coal shovel to the queue. Moundol_05 keeps asking whether it really helps.
+batch: 3
+retired: false

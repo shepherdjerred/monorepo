@@ -6,9 +6,11 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.Hop;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Waypoint;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.IntToDoubleFunction;
 
 /**
@@ -295,6 +297,48 @@ public final class NavGraph {
     return cost;
   }
 
+  /** Exact directed distances to the requested nodes; -1 denotes an unresolved target. */
+  public float[] costsToTargets(int from, int[] targets, SearchWorkspace workspace) {
+    workspace.acquire(cellOfNode.length);
+    try {
+      var wanted = targets(targets);
+      var remaining = wanted.cardinality();
+      workspace.g[from] = 0;
+      workspace.open.push(0, from);
+      while (!workspace.open.isEmpty() && remaining > 0) {
+        var node = workspace.open.pop();
+        if (workspace.closed[node]) continue;
+        workspace.closed[node] = true;
+        if (wanted.get(node)) remaining--;
+        for (var edge = edgeStart[node]; edge < edgeStart[node + 1]; edge++) {
+          var next = edgeTo[edge];
+          var through = workspace.g[node] + edgeCost[edge];
+          if (through < workspace.g[next]) {
+            workspace.g[next] = through;
+            workspace.open.push(through, next);
+          }
+        }
+      }
+      var result = new float[targets.length];
+      for (var i = 0; i < targets.length; i++) {
+        result[i] = targets[i] == -1 ? INF : workspace.g[targets[i]];
+      }
+      return result;
+    } finally {
+      workspace.release();
+    }
+  }
+
+  private BitSet targets(int[] nodes) {
+    var result = new BitSet(cellOfNode.length);
+    for (var node : nodes) {
+      if (node < -1 || node >= cellOfNode.length)
+        throw new IllegalArgumentException("invalid target node");
+      if (node >= 0) result.set(node);
+    }
+    return result;
+  }
+
   public int edgeStart(int node) {
     return edgeStart[node];
   }
@@ -358,7 +402,28 @@ public final class NavGraph {
    * {@code penalty} (non-negative), or empty if none exists.
    */
   public Optional<NavPath> path(int from, int to, IntToDoubleFunction penalty) {
-    var search = new Search(cellOfNode.length, to);
+    return path(from, to, penalty, workspace());
+  }
+
+  /** An exclusively owned, reusable workspace; it retains arrays, never graph or map assets. */
+  public SearchWorkspace workspace() {
+    return new SearchWorkspace(cellOfNode.length);
+  }
+
+  /** Finds the same path while reusing scratch arrays; overlapping workspace use is rejected. */
+  public Optional<NavPath> path(
+      int from, int to, IntToDoubleFunction penalty, SearchWorkspace workspace) {
+    workspace.acquire(cellOfNode.length);
+    try {
+      return search(from, to, penalty, workspace);
+    } finally {
+      workspace.release();
+    }
+  }
+
+  private Optional<NavPath> search(
+      int from, int to, IntToDoubleFunction penalty, SearchWorkspace workspace) {
+    var search = new Search(workspace, to);
     search.g[from] = 0;
     search.open.push(heuristic(from, to), from);
     while (!search.open.isEmpty()) {
@@ -395,22 +460,53 @@ public final class NavGraph {
     }
   }
 
-  /** The scratch arrays of one A* run. */
+  /** Arrays and heap owned by one batch, reused only after the previous search has finished. */
+  public static final class SearchWorkspace {
+    private final float[] g;
+    private final int[] cameFrom;
+    private final int[] viaEdge;
+    private final boolean[] closed;
+    private final MinHeap open = new MinHeap(64);
+    private final AtomicBoolean inUse = new AtomicBoolean();
+
+    private SearchWorkspace(int size) {
+      g = new float[size];
+      cameFrom = new int[size];
+      viaEdge = new int[size];
+      closed = new boolean[size];
+    }
+
+    private void acquire(int size) {
+      if (size != g.length)
+        throw new IllegalArgumentException("workspace belongs to another graph size");
+      if (!inUse.compareAndSet(false, true))
+        throw new IllegalStateException("workspace already in use");
+      Arrays.fill(g, INF);
+      Arrays.fill(cameFrom, -1);
+      Arrays.fill(closed, false);
+      open.clear();
+    }
+
+    private void release() {
+      inUse.set(false);
+    }
+  }
+
+  /** A search's goal and borrowed scratch arrays. */
   private final class Search {
     final float[] g;
     final int[] cameFrom;
     final int[] viaEdge;
     final boolean[] closed;
-    final MinHeap open = new MinHeap(64);
+    final MinHeap open;
     final BlockPos goal;
 
-    Search(int n, int to) {
-      g = new float[n];
-      Arrays.fill(g, INF);
-      cameFrom = new int[n];
-      Arrays.fill(cameFrom, -1);
-      viaEdge = new int[n];
-      closed = new boolean[n];
+    Search(SearchWorkspace workspace, int to) {
+      g = workspace.g;
+      cameFrom = workspace.cameFrom;
+      viaEdge = workspace.viaEdge;
+      closed = workspace.closed;
+      open = workspace.open;
       goal = cell(to);
     }
   }

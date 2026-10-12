@@ -1,0 +1,75 @@
+id: swiftarrow03
+name: SwiftArrow03
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NTYwNDAzMSwKICAicHJvZmlsZUlkIiA6ICJiOTc3ODUwYWMxMGE0Mjk4YmRiNWNhYjBhODA0NmM4YSIsCiAgInByb2ZpbGVOYW1lIiA6ICJTb3JheER1YmJlciIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9mZTU1OGEzYWU4OTBhYzY2ZTYzMTA2NjVmNmM5NmM1MTQ1MDFhY2VmNWVlNjZiODFlNWY5ODcyYzEyZDE4MDI5IgogICAgfQogIH0KfQ=="
+  signature: "EauoZbyduXDu/Hss46UjgQF5DihyQK31q4viOWDLmYE/wVf/y7VdnROS2YmPK7epDVxnTqksHPvL+mwsXVUC76RWAQh5vLJ53WSlv3nTmaV2L7reJnk0RtunyAKWFpHYdOVALWzL3gTbvaB9chpkZ2uuE5sn/BpZyoY5yKQl4SUT/mnc5qGnbKEigASRqp4qGhr2yZco3Rdk7MMcYyflbl6f91I6b3ZZg1VvThJN6EqAtO0YLlOd4C9421abI1ZJvzBMGE0EEQhdizD5MgLBHU3pkv2+lmIXFk32Bqr5XVSptQE7nLU8z3hRpe5RaPNwcDtZSv58owRqftroGRMeLx08tOlkhxArdBWASaTDWlfV1GPFmdo+UFOcyZFtB4mCZK8g+CM42i9BOVwC31IGaDBeP+d3yg+hHTgk2TOZSOrFVXbAp/dm+WV0C+1lWzg/OhmdUseWlkTltACQS0nRiXOV5vFFgVtmTHsbnKfZcS51FyeRjOQj1yv2cAYtoUOFP2M1O7D9DkqUff1ouD+4LEQAPjBwzLgChBhu0mJP+ZB9NYcqKZS/WJmUBVzHVQQe8GEFcxnWiG7dFKpVDIgfG/k2W9f86+IRc4q3pQAwLRCgrRMZYwpaoj3qXeaZYlTC9JES+9zGRj+FXH88/jCDaJZ+/idrQ+cXCEbD9QiOikM="
+skill: 0.145
+archetype: bomb_diver
+leverOffsets:
+  reactionMs: 0.83
+  turnRateDegPerTick: 0.9
+  cps: -0.54
+  decisionTemperature: 0.82
+  technique: 0.78
+  aggression: -0.67
+kits:
+  trooper: 1
+  shortbow: 0.18
+  rewind: 0.64
+  ghost: 0.35
+roles:
+  plant: 1
+  escort: 0.1
+  defend: 0.15
+style:
+  aggression: 0.69
+  patience: 0.18
+  teamplay: 0.34
+  risk: 0.89
+voice:
+  tone:
+    - dreamy
+    - urgent
+  verbosity: normal
+  style: "sky metaphors punctuated by exact callouts; breathless objective reports, oddly calm at a fuse"
+lines:
+  greet:
+    - planet model says this is our orbit
+    - planet model packed, where is the bomb?
+  onKill:
+    - a little spark beside my planet model
+    - a clear path for the planet model
+  onDeath:
+    - my planet model did not show that collision
+    - planet model was one corner from the fuse
+  onPlant:
+    - starting a very small eclipse
+    - "planet model is parked beside {bomb}"
+  onDefuse:
+    - light returns to the bomb
+    - "planet model and {bomb} can both stay intact"
+  onWin:
+    - a bright mark in my planet model
+    - planet model got the objective done
+  onLoss:
+    - a cloudy night for the planet model
+    - planet model took too long reaching the site
+  onLastAlive:
+    - one small planet model in a big sky
+    - the planet model still has a fuse to find
+  taunt:
+    - that shot went into another orbit
+    - the planet model got closer to your bomb
+  lobby:
+    - showing the lobby my planet model
+    - the ceiling is blocking my planet model
+    - "My planet model: cover my approach to the bomb."
+    - With my planet model, call the safest bomb route.
+quirks:
+  - loves_nuke
+  - always_gg
+rivals:
+  - mrtaembroth
+bio: SwiftArrow03 named the roof above spawn an observatory despite owning no telescope and still brings a planet model to the queue. MrTaembroth keeps asking whether it really helps.
+batch: 3
+retired: false

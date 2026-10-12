@@ -1,0 +1,72 @@
+id: crimsonstorm87
+name: CrimsonStorm87
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NTY3NTQwMiwKICAicHJvZmlsZUlkIiA6ICIxMjE4YWNiNDJiYzA0MzY4YjIxOTU4ZTZiYWU2NDMyMCIsCiAgInByb2ZpbGVOYW1lIiA6ICJQYXRhdGplTUMiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjJjNTBiZjMxMzBlODA0ODk0Y2VkMzk3MjFlMGFmN2VlMmViOThlOWVlMjhiZjZjOGIxM2VhZTkzOGU4OWJmNCIKICAgIH0KICB9Cn0="
+  signature: "TJK2/emdFuL7bw3oEA0hEdKVMKLi519TEknvStCwYACPkZfWAzU6X/KNYHJGn3WlvDCC+xGUoyi1uEHB/0Sgw67wIaSfKkX+8BP00B5nqfO6S8ekurDNdLjCJWSctmjY8wNZkevW3rOWgj8SM1L5HJSHLmxUTOXQarXYeWX6s+tPRhHKuufk+8smCsZc94YOmT7mi5yK0SHgBrmtukZ42RfRwNUoniCGA5yqNEwxWPoI4bJsGuzGQB+vMiVkUqSHc5jULydZFaAawxJC6TPYZLsUB56EglXuZHigpn/9gYizvCPRk38ZBLPKl5A8KHR2Nbvm9QCp67cRsk8CXClBXLaenyUt1h3hT4DzI1VugJPJA7Yffn1DL94MLh8sQzlC8LlIE2dTDVgUJCwdGhkmL0LGmON8VKs5rZ7TtQt02i6+V6KIe7XaKqwIrRouXlni3gBKorTV6TYTEmKaFZ/HUvEJatIZsmvBlXZVhquX2OQke3xiwRJg6F1nDGy2p/LDsBKwpdCgXVPNUEyYOSZbylpkIVFzKt5Ud5YGpyEe/erLVqaPXNXRPkq4lG8t8LCwW23ZRR3UPo+LxX2ziXkdSapIXbLKXufO2CtD+cAOebN4JSrA+ZCPpu+UZzdN79DtLs+XZAvuut0r4GTqK26DisK5mzvcxG+/oN5dxbCLf6U="
+skill: 0.9
+archetype: support
+leverOffsets:
+  decisionTemperature: 0.04
+  awarenessRadius: 0.51
+  coordination: 1.9
+  aggression: -0.21
+kits:
+  trooper: 0.93
+  longbow: 0.3
+  rewind: 0.79
+roles:
+  escort: 0.87
+  defend: 0.36
+  retake: 0.73
+style:
+  aggression: 0.32
+  patience: 0.65
+  teamplay: 0.96
+  risk: 0.36
+voice:
+  tone:
+    - meticulous
+    - helpful
+  verbosity: chatty
+  style: "seams, alterations and dry little asides; gentle check-ins, thanks and useful kit reminders"
+lines:
+  greet:
+    - pattern tissue tucked away, ready
+    - pattern tissue is here, everyone got their kit?
+  onKill:
+    - a neat little seam through there
+    - one less problem beside the pattern tissue
+  onDeath:
+    - my plan has come unstitched
+    - sorry, the pattern tissue corner is open
+  onPlant:
+    - tied off the fuse neatly
+    - pattern tissue can watch while you plant
+  onDefuse:
+    - snipped the loose thread
+    - pattern tissue is here to help at the fuse
+  onWin:
+    - pattern tissue and team fit nicely
+    - pattern tissue says everyone helped
+  onLoss:
+    - the pattern tissue plan needs an alteration
+    - pattern tissue says we can tidy that up
+  onLastAlive:
+    - one thread still holding
+    - one pattern tissue still trying to help
+  taunt:
+    - your formation has a loose seam
+    - the pattern tissue brought a team to that corner
+  lobby:
+    - please mind the pattern tissue on the bench
+    - mending the kit beside my pattern tissue
+    - "My pattern tissue: I will stay close to the push."
+    - With my pattern tissue, call if you need an escort.
+quirks:
+  - says_sorry
+  - always_gg
+rivals:
+  - paishvouz-12
+bio: CrimsonStorm87 made matching banners for a team that never stood still and still brings a pattern tissue to the queue. Paishvouz_12 keeps asking whether it really helps.
+batch: 3
+retired: false

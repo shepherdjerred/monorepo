@@ -1,0 +1,77 @@
+id: xxravenbadgerxx
+name: xXRavenBadgerXx
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODQ4NDA4OSwKICAicHJvZmlsZUlkIiA6ICI3Mjc2ZThmYzVkNjE0ODNjYmMwN2IxYjIzNjI3MDA4ZSIsCiAgInByb2ZpbGVOYW1lIiA6ICJXYWJvV2ViaSIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS85OGMwMmE1ZDlkNThmM2I3OTE5ZTQzZGRlMGRkYThmMzIwNTYyYTE2YTk4YjM1YWYwODU5ODkzZmFmMDJmM2I5IgogICAgfQogIH0KfQ=="
+  signature: "eH8p/AkIctJnJxwVAW0pLc7s0Sj2sCND+GpWFu9N/xYryryEzDgJsdgw4pviXRjzrfGgm3L7Ang8u536O5Ekr6NDuDpkRBJvvymhKiLBz8Nlom2hmVDaePBQD/5cimHp8LactVvY4JbIKjrvxGjNJK9aQr4Ulj6WYGNXH0HXAgs/3aUDLgxOKNd27oPd0ba4AeEmDJjvHjYeUQVKZwNHnsoG4SnT3u9RcgFt0owUYN7erZj0wHcSnXexkrUFZb9Q49ManyAR93T2G9ndm5F4A3vnu0skBPsp+AVxuyeezF+y96ZjJqS0Os2Vu9QLTTtXBCzd107Xa+/K+n1eDgLMQpuAn4QGp8ZrVTpV8mRE0gC38oXUpJM8ZmZ2zmDRIw/+HpGXOL8rTGKqu97olTLCSfO13SGHO5KhSi2QFm1Y4Aqgtltqa2Pa37jV1MAC9qm8Uu62eCiGsQ1jyBx5cpg2PleMa/gjV3Ovu550QhxM++FQ4XplwPtTFHA/E6/GdxjF4zSeQILtGC5TaiKS4YIim43G/c+PDDmxzHEr1lfTlO0oxPOEqOTYr7bzfGVOhZLRbpU4Uc1xVsHSOn1pZBqhcb0qHoxnLlJ7bjb90NwKe93RYqklXAl/3Nd3sZIpwFwxaUjJxW0GH/Dhbitgec5G+OjZka/nIRlTt6E7IOOftRo="
+skill: 0.315
+archetype: flanker
+leverOffsets:
+  aimErrorDeg: 0.41
+  turnRateDegPerTick: 0.93
+  predictionQuality: 0.13
+  awarenessRadius: -0.44
+  coordination: -0.65
+  aggression: 0.48
+kits:
+  trooper: 0.61
+  longbow: 0.11
+  shortbow: 0.87
+  rewind: 0.32
+  wraith: 0.51
+  spy: 0.39
+roles:
+  plant: 0.41
+  rotate: 1
+  hunt: 0.48
+style:
+  aggression: 0.67
+  patience: 0.35
+  teamplay: 0.23
+  risk: 0.7
+voice:
+  tone:
+    - fussy
+    - nimble
+  verbosity: normal
+  style: "paper crafts and tiny careful corrections; quick side remarks and route changes mid-sentence"
+lines:
+  greet:
+    - folded lily survived the queue
+    - folded lily is taking the other entrance
+  onKill:
+    - one clean fold in the plan
+    - folded lily found a side door
+  onDeath:
+    - my folded lily is a little crumpled
+    - folded lily chose an occupied side door
+  onPlant:
+    - tucking the fuse into the fold
+    - "folded lily came around the back of {bomb}"
+  onDefuse:
+    - unfolded that just in time
+    - folded lily found a quieter route to the fuse
+  onWin:
+    - folded lily stayed in one piece
+    - folded lily took the long way for a reason
+  onLoss:
+    - another crease in my folded lily
+    - folded lily took the long way for no reason
+  onLastAlive:
+    - one folded lily left on the table
+    - one folded lily coming around the edge
+  taunt:
+    - that push folded very quickly
+    - the folded lily is somewhere to the side
+  lobby:
+    - please do not squash my folded lily
+    - making another folded lily while we wait
+    - "My folded lily: I will try the side approach."
+    - With my folded lily, keep them looking forward for me.
+quirks:
+  - crouch_spam
+  - always_gg
+rivals:
+  - lildavon
+bio: xXRavenBadgerXx folded paper creatures while waiting for the 2014 queue and still brings a folded lily to the queue. LilDavon keeps asking whether it really helps.
+batch: 3
+retired: false

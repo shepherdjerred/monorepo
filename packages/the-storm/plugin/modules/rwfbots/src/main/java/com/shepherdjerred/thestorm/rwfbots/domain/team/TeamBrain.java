@@ -328,15 +328,20 @@ public final class TeamBrain {
       slotNodes[j] = graph.nearestNodeWithin(slots.get(j).pos(), 3).orElse(-1);
     }
     var profit = new double[bots.size()][slots.size()];
+    var workspace = graph.workspace();
+    var distances = new HashMap<Integer, float[]>();
     for (var i = 0; i < bots.size(); i++) {
       var bot = bots.get(i);
       var from = graph.nearestNodeWithin(bot.pos(), 2);
-      var costs = from.isPresent() ? graph.costsFrom(from.getAsInt()) : new float[0];
+      var costs =
+          from.isPresent()
+              ? distances.computeIfAbsent(
+                  from.getAsInt(), node -> graph.costsToTargets(node, slotNodes, workspace))
+              : new float[0];
       for (var j = 0; j < slots.size(); j++) {
         var node = slotNodes[j];
-        var reachable = node >= 0 && costs.length > 0 && Float.isFinite(costs[node]);
-        var distance =
-            reachable ? costs[node] : bot.pos().horizontalDistance(slots.get(j).pos()) * 2;
+        var reachable = node >= 0 && costs.length > 0 && Float.isFinite(costs[j]);
+        var distance = reachable ? costs[j] : bot.pos().horizontalDistance(slots.get(j).pos()) * 2;
         var erratic =
             dealing.situation().memberOf(bot.id()).archetype() == Archetype.TROLL
                 ? ERRATIC * random.nextDouble()

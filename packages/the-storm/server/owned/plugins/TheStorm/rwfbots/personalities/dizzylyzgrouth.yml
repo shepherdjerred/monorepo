@@ -1,0 +1,74 @@
+id: dizzylyzgrouth
+name: DizzyLyzgrouth
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTg4MDgxNSwKICAicHJvZmlsZUlkIiA6ICJlNGEzYTJlNjI5YTI0OTBiODVmMzU1Y2M5MTU2YzQwNSIsCiAgInByb2ZpbGVOYW1lIiA6ICJIdW50YXJ0XyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8yMmNkNDBjOWQxZTJlOTY2M2U4MTEwNzY4OWFhZjIzMWJkODljYWFmNjY3NzQ5NTViNTFhMWYwOGY1NjkyYjkxIgogICAgfQogIH0KfQ=="
+  signature: "ATt11Mqq8onMsczjlVNvmDr39gw3Y54AHablsRXHY3UnfacSELV/skPltPHKA8TWerMhUzUQRf21fo8Qtb64P2LWSVg4g+Knedypgi2xbeyBDvwQ2FfrtrSs18i4u6Ig52uilI9+B0sdyhD+Sj5BMtDN4xPed5IgQLYMB7pUEZX2Gmpn3Gwvg55uARSgyFJdLKbpn0PimSrGXCLn3bbr8VtwyeRin5oL6k+Y42jmGSktotVwu04wxUA0XW2rgg8ZhOndcbc9WNnxgjb5a5nZu/r6vs9AYd9OlWyszvjWPenKpt/LX2evFvwWVlGLoiYi8H7C6q812VSaSUH9zaqQCcBmddBzcLhQ2aoli1XzxKOUUgia3M0g4473EpIt0MFg5sLPC24fhjQe1tYc52ixUxnwPE3JABCW/eQQ7rdJa88WfBIGuv0lQ/VccuSckP0jisMYknAQfhn9k8t74wQodAC2KlR14Q5mncy1DwXEgwKE/uCXNQQJRdjpjiq6TUEPDiGhMRHuYV9Y+P0YA2hMijbMYa5qudFanbeY88KFPpRrCvCFNXVEwPGJpJ8fRFb9DVSoAny/wEI+xD13QXsg3yWBDvsEJecqAK6wsWgCsd5akGu2/x1kWs2BQLyRIzPEeGi5jNiM3oZUOAlhyAesqPoeCvRI+yL5ZLI9QndM7d0="
+skill: 0.692
+archetype: rusher
+leverOffsets:
+  reactionMs: 0.63
+  cps: 0.61
+  predictionQuality: 0.5
+  decisionTemperature: 0.74
+  awarenessRadius: -0.52
+  aggression: 1.23
+kits:
+  trooper: 1
+  shortbow: 0.51
+  rewind: 0.26
+roles:
+  plant: 0.82
+  escort: 0.53
+  hunt: 0.58
+style:
+  aggression: 0.96
+  patience: 0.15
+  teamplay: 0.48
+  risk: 0.75
+voice:
+  tone:
+    - excitable
+    - eager
+  verbosity: chatty
+  style: "enthusiastic clues and upside-down maps; fast fragments, impatient countdowns"
+lines:
+  greet:
+    - clue envelope found, clue understood
+    - clue envelope ready, I am taking the first corner
+  onKill:
+    - that corner was the next clue
+    - clue envelope keeps moving, next corner
+  onDeath:
+    - the clue was apparently a trap
+    - a pause for the clue envelope, then straight back
+  onPlant:
+    - a very loud treasure chest
+    - clue envelope is already on the next approach
+  onDefuse:
+    - solved that little puzzle
+    - quick hands, quick clue envelope, clear
+  onWin:
+    - clue envelope led us to the prize
+    - clue envelope barely stopped all round
+  onLoss:
+    - the clue envelope was upside down again
+    - clue envelope ran ahead of the plan
+  onLastAlive:
+    - one clue and no hints
+    - my clue envelope and I will keep moving
+  taunt:
+    - that trail led you in a circle
+    - my clue envelope got here before that push
+  lobby:
+    - does anyone recognise my clue envelope?
+    - the answer is definitely near my clue envelope
+    - "My clue envelope: first corner is mine."
+    - With my clue envelope, please follow after the opening.
+quirks:
+  - bunny_hops
+  - always_gg
+rivals:
+  - lucky-noodle
+bio: DizzyLyzgrouth hid tiny treasure chests along the old lobby walking route and still brings a clue envelope to the queue. Lucky_Noodle keeps asking whether it really helps.
+batch: 3
+retired: false

@@ -121,7 +121,7 @@ public final class Planner {
   static final double CLOSE_FIGHT = 4;
 
   /** Cover this close to a teammate, or to cover a teammate claimed, is theirs. */
-  static final double COVER_ROOM = 2.5;
+  public static final double COVER_ROOM = 2.5;
 
   /** Cover this close to an enemy is no cover. */
   static final double TOO_CLOSE_COVER = 4;
@@ -487,7 +487,7 @@ public final class Planner {
       Situation situation, TacticsContext context, Vec3 goal, Vec3 threat) {
     var nav = context.nav();
     var node = situation.board().claimedCover().get(situation.self().id());
-    if (node == null) {
+    if (node == null || !coverAvailable(situation, context, node)) {
       return Optional.empty();
     }
     var feet = nav.graph().feet(node);
@@ -516,6 +516,15 @@ public final class Planner {
    * @param radius how far from {@code near} to look
    */
   record CoverSearch(Vec3 near, Vec3 threat, double radius) {}
+
+  /** Whether a cover claim leaves room for every teammate's accepted claim. */
+  static boolean coverAvailable(Situation situation, TacticsContext context, int node) {
+    var graph = context.nav().graph();
+    var point = graph.feet(node);
+    return situation.board().claimedCover().entrySet().stream()
+        .filter(entry -> !entry.getKey().equals(situation.self().id()))
+        .noneMatch(entry -> graph.feet(entry.getValue()).horizontalDistance(point) < COVER_ROOM);
+  }
 
   /** Unclaimed cover from {@code search}'s threat around its point, nearest first. */
   static Optional<CoverSpot> coverNear(
@@ -1015,7 +1024,6 @@ public final class Planner {
   static Optional<CoverSpot> peekSpot(Situation situation, TacticsContext context, Vec3 enemy) {
     var nav = context.nav();
     var self = situation.self().pos();
-    var me = situation.self().id();
     Optional<CoverSpot> best = Optional.empty();
     var bestDistance = Double.POSITIVE_INFINITY;
     for (var point : nav.cover().points()) {
@@ -1034,7 +1042,7 @@ public final class Planner {
       if (point.protectsStanding(sector)
           || !beside
           || crowded
-          || situation.board().isCoverClaimed(point.node(), me)) {
+          || !coverAvailable(situation, context, point.node())) {
         continue;
       }
       best = Optional.of(new CoverSpot(point.node(), feet));
@@ -1166,7 +1174,7 @@ public final class Planner {
             context.seed(),
             new RoutePenalty.Tolls(
                 situation.board().pathsOfOthers(situation.self().id()), corridor, extra));
-    return graph
+    return context
         .path(from.getAsInt(), to.getAsInt(), penalty)
         .map(found -> found.toFollow())
         .orElseGet(List::of);

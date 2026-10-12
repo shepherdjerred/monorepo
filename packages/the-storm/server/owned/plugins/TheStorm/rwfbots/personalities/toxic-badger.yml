@@ -1,0 +1,73 @@
+id: toxic-badger
+name: Toxic_Badger
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTgxMjU1OSwKICAicHJvZmlsZUlkIiA6ICIyOWM2MTQyM2MwMTc0YWI4ODgwZWM2MzBlYzIyYmZjMSIsCiAgInByb2ZpbGVOYW1lIiA6ICJSb2NvX2NvcCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9kYzJlMGRhOGQzNzNlZmNhMjI1YjkzNTFjOWJmNjNlNTU2YmIzNjFhMTY1YmE1ODRkODljYTQ2ZDg4NWFlMDk1IgogICAgfQogIH0KfQ=="
+  signature: "hPHGGXlTuySBY1TbRFK6hzlfdrderigFb5fOm5hA6qsZHu7+cLS5bTbvVz+06URTqo75Y8poe2o3pFjny3PvhZtJM+RxxbWFUS5c766hJDLWkE+1S8oc6q35t8CQ7UAiL8d/90UI0M4uwPzCiRXjei7Q/bJqv2xVUOFkbPaSo1B467YxVVVnFWoyKu86oamaWn3erH/3r7CHrVHtEYb2OXpznhmqqy1HccM87ngKwil6C4v5GkeEvpQRhTNcvqOJ2NSxMKpMST0xfAq+naw1oCnbSpD8533ymoLcVhFUVP+fkA/B7mrtnqddIGPaP+3thc5vMkgtxWAfbQrkNqOFnwha0LR831Ybcpt9AYgtlWELEm+tV6mEgJmXeb2Y3YrP4TtpdBtEwh7kD3xj2KR+C32FRVAH5AfBONx1eWiqIzGsFFdrJmlKG866IuMGdqjvQhBUKiJlr2BxexBDugnBEOU6l5QKa9gBKKR1uosqUd3jmRd/MMOrDiDz9RNhdzVZtaedib8hFANKLSyvIAvPS8wWfDHIj/9KZwY4LrkgCuLTjXC91rFYtppio3RiWBWGw4Ev2DvVgdB7iXa3kwbDamhCDLr0AR9gunZRWT6Yo0JyCkvV2iOz/cw7vzRiXdQpSK9h6U44FklUZTF1oP9kNuwnB5BP5Dg4hMqlF5J/LXc="
+skill: 0.343
+archetype: support
+leverOffsets:
+  decisionTemperature: -0.14
+  awarenessRadius: 0.28
+  coordination: 1.73
+  aggression: -0.26
+kits:
+  trooper: 0.99
+  longbow: 0.33
+  rewind: 0.69
+  ghost: 0.17
+roles:
+  escort: 1
+  defend: 0.34
+  retake: 0.57
+style:
+  aggression: 0.41
+  patience: 0.58
+  teamplay: 1
+  risk: 0.28
+voice:
+  tone:
+    - earnest
+    - helpful
+  verbosity: normal
+  style: "museum labels for even embarrassing plays; gentle check-ins, thanks and useful kit reminders"
+lines:
+  greet:
+    - velvet barrier prepared, exhibit opening
+    - velvet barrier is here, everyone got their kit?
+  onKill:
+    - a fascinating example of an opening
+    - one less problem beside the velvet barrier
+  onDeath:
+    - please do not put that in the exhibit
+    - sorry, the velvet barrier corner is open
+  onPlant:
+    - a short-lived interactive exhibit
+    - velvet barrier can watch while you plant
+  onDefuse:
+    - preserved the team instead
+    - velvet barrier is here to help at the fuse
+  onWin:
+    - velvet barrier has a new story
+    - velvet barrier says everyone helped
+  onLoss:
+    - a cautionary exhibit for the velvet barrier
+    - velvet barrier says we can tidy that up
+  onLastAlive:
+    - the last visitor in the gallery
+    - one velvet barrier still trying to help
+  taunt:
+    - your approach belongs in the archives
+    - the velvet barrier brought a team to that corner
+  lobby:
+    - please look without touching my velvet barrier
+    - writing a new label for my velvet barrier
+    - "My velvet barrier: I will stay close to the push."
+    - With my velvet barrier, call if you need an escort.
+quirks:
+  - says_sorry
+  - always_gg
+rivals:
+  - reshrelgrulbrul
+bio: Toxic_Badger opened a one-room museum for abandoned arena souvenirs and still brings a velvet barrier to the queue. Reshrelgrulbrul keeps asking whether it really helps.
+batch: 3
+retired: false

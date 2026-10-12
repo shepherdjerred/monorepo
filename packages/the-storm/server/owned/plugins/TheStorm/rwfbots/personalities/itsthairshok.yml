@@ -1,0 +1,75 @@
+id: itsthairshok
+name: ItsThairshok
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NTU0NDkyMiwKICAicHJvZmlsZUlkIiA6ICIwMzQ2N2E0Yzc5ZGU0ZGM5YTQ4NzU5MGY5NmEwODFmMiIsCiAgInByb2ZpbGVOYW1lIiA6ICJTaGFrYVlhbWkiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOTI1NTNlMThlNzRjMDJiZWNlZjUwMDIxNmJlZjhlMTM0NzNkZWY0YWRiYmZmMTQwY2Q1ZDUyODk1MTZhZDcxYiIKICAgIH0KICB9Cn0="
+  signature: "LRJwMXMzDpJP869h93zGuincRNdIKM8RO2gtNkB1NMpyXAJXzMN/mYKpRFjL9XrJTe6eS0pVvAmwIUTNpImsLH+LZJsyucOVhE/00JmPu6ZXy8yiLLpq1m8cvySegHES6S0BjrsDlMZibaa8pyg5s7OIL6yRYWt2t+yv92PrjhwbjpxeCaKAA3Nhdl5Il6vvod6IrLcPekNjWan3xLsXwrl3v3JG1mpTrqH++GCRkltkFGN1QSyF3/upQw8jqFC+aBiUm9OAgJpH3px2BCkx0Bv4ZwpX8StUc/F8tFcRpp6p58K7hXJwOMvE6u+Zqltm4vYCfI0cuMRIP6CN+EgcS6VA1wM7L+uOR8oGowl7ujTIeymyE3I3ekJrGK2AqQ+/2Tf9pmozHwz1og91Sz+AQeYfkTIqIy1IGTZ1eJn/RPUb5a4KOwhRdbGyyA89AhWa6OX8eEwWJoElq9Xx+4MD9yVyh4WmAxHcse2CXP0VngTOr9sIUFy8ipOMpqaQ1Pzv1GobKxnpyF6LaD7kFcWPwT/cr/92k9V/6ufgWgBQLW6eTFw+xyW1qPevMT+LdE7u0D02gZ3axMkkY6TVloYlSWBvVYKifmduviPpop/1xDNF2WudTqYlujGAA3afkwdqgZSFFjO7tA1dg1sqxRfTnq6nZIm2w/uvaXvEUlkSnNc="
+skill: 0.618
+archetype: rusher
+leverOffsets:
+  reactionMs: 0.88
+  cps: 0.37
+  decisionTemperature: 0.34
+  awarenessRadius: -0.4
+  coordination: 0.23
+  technique: 0.4
+  aggression: 1.7
+kits:
+  trooper: 1
+  shortbow: 0.56
+  rewind: 0.3
+roles:
+  plant: 0.84
+  escort: 0.65
+  hunt: 0.75
+style:
+  aggression: 0.91
+  patience: 0.13
+  teamplay: 0.51
+  risk: 0.76
+voice:
+  tone:
+    - cosy
+    - eager
+  verbosity: normal
+  style: "kitchen chatter and imaginary baked snacks; fast fragments, impatient countdowns"
+lines:
+  greet:
+    - bread tin ready, kitchen open
+    - bread tin ready, I am taking the first corner
+  onKill:
+    - another order off the bread tin
+    - bread tin keeps moving, next corner
+  onDeath:
+    - left my bread tin in the oven again
+    - a pause for the bread tin, then straight back
+  onPlant:
+    - setting the timer beside my bread tin
+    - bread tin is already on the next approach
+  onDefuse:
+    - took that out before it burned
+    - quick hands, quick bread tin, clear
+  onWin:
+    - bread tin deserves a day off
+    - bread tin barely stopped all round
+  onLoss:
+    - the bread tin has seen better batches
+    - bread tin ran ahead of the plan
+  onLastAlive:
+    - one cook and a very busy bread tin
+    - my bread tin and I will keep moving
+  taunt:
+    - that push needed longer to rise
+    - my bread tin got here before that push
+  lobby:
+    - who borrowed my bread tin?
+    - dusting the flour off my bread tin
+    - "My bread tin: first corner is mine."
+    - With my bread tin, please follow after the opening.
+quirks:
+  - bunny_hops
+  - always_gg
+rivals:
+  - mysticstorm13
+bio: ItsThairshok ran a tiny spawn bakery with a queue of hungry regulars and still brings a bread tin to the queue. MysticStorm13 keeps asking whether it really helps.
+batch: 3
+retired: false

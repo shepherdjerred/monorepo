@@ -1,0 +1,77 @@
+id: hypertazreth
+name: HyperTazreth
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjEyMzk2OSwKICAicHJvZmlsZUlkIiA6ICJmYTQzOGQ0N2ZjMDc0ZjJhOGU1N2Y4YjFjNjUwOWE2OCIsCiAgInByb2ZpbGVOYW1lIiA6ICJtYXR0eW03ayIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9hMDRiNDkwMDRmYWE1YWIxMjUyOTdhYTVkMjE5ODM4MmU1Y2M5MTc5YWViZjM5Mzc1MGQzY2IxZjZlYTk0ODI0IgogICAgfQogIH0KfQ=="
+  signature: "KPfCXVUEa7y8CI49NHB7R4rM9xsSzk3sjJL7O/moMC4coymnafUrJqszxp0xzyhjLDdWe7t/q9WMVp0ZDXQKRodt+9z3Whdr7O2mI1oJOh/2d84oQM4kO+ZChC+oNZVWqETY1/vHSoqt9+ae+ZRbjKu/jsBZELFKhy3i9WfW79ErZgIvNuTT7Ar5KYLNZRmU+056WuvcSvtlmGEt2Wo1fFvniNNE00qXBzdDdfhxELLzqIRfHaDObfNxZIcC9LDaH1c+cV4H5uOUYxAiK0q0NXzYkr0g6KvaQCePWK82TQJPZdwkkVTFI7kn1UHNdVzaIrbYRz8lhmKEqiHzh8mLA/ozCa1ZDr0j71tfWFTTaSfK3U5P0JWE37YuNToKh8p1AjlOPyIev95wnMEYHH7O5vfJRaqP++YQ9+T1uX8BlkZuL6svlVhTk0v6uxXF9Hbd/Hn2+B+wwR8MnZbAcy+nMUqImxEeUAFJ6yelCmf8GunQqjSr4muVe9/h6Sst3a4qP70Og2q0nDJj9GeRQIcSX++pIqnWreW68XMtZ6yxVPA3zR/O4p5kwB3VUaHsVVORc4a/LxRsGm+xmcO+753O96S9W5R5sLSzIZSrDdtPk+Vnw3yWORQ0VGL1IcwCby4LwdI5xoM8IQuhbT6Q5GmpDVHI68lGXNORT2/mT17J00o="
+skill: 0.246
+archetype: tactician
+leverOffsets:
+  aimErrorDeg: -0.09
+  predictionQuality: 0.16
+  decisionTemperature: 1.04
+  awarenessRadius: 0.69
+  coordination: 1.76
+kits:
+  trooper: 1
+  longbow: 0.49
+  shortbow: 0.54
+  rewind: 0.53
+roles:
+  plant: 0.53
+  escort: 0.48
+  defend: 0.5
+  rotate: 0.58
+  retake: 0.64
+  hunt: 0.13
+style:
+  aggression: 0.49
+  patience: 0.64
+  teamplay: 0.85
+  risk: 0.41
+voice:
+  tone:
+    - busy
+    - analytical
+  verbosity: normal
+  style: "ingredient lists and improvised kitchen fixes; numbered ideas, concise route calls, quick revisions"
+lines:
+  greet:
+    - gravy jug washed, team fed
+    - gravy jug ready, first route agreed?
+  onKill:
+    - a useful pinch of pressure
+    - gravy jug confirms a clean opening
+  onDeath:
+    - too much heat on that corner
+    - gravy jug needs a revision on that route
+  onPlant:
+    - letting the bomb simmer
+    - gravy jug confirms the site is reached
+  onDefuse:
+    - taken off the heat
+    - gravy jug confirms the fuse is clear
+  onWin:
+    - gravy jug can serve this round
+    - gravy jug and team followed through
+  onLoss:
+    - the gravy jug recipe needs work
+    - gravy jug had a missing step
+  onLastAlive:
+    - one cook still stirring
+    - gravy jug says there is still a route
+  taunt:
+    - your push could use seasoning
+    - the gravy jug predicted that rotation
+  lobby:
+    - there is soup beside my gravy jug
+    - please return my gravy jug after dinner
+    - "My gravy jug: I will call the first rotation."
+    - With my gravy jug, tell me when a route closes.
+quirks:
+  - calls_everything
+  - always_gg
+rivals:
+  - phantompickaxe3
+bio: HyperTazreth fed a team from a cramped kitchen beneath their spawn and still brings a gravy jug to the queue. PhantomPickaxe3 keeps asking whether it really helps.
+batch: 3
+retired: false

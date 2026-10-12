@@ -1,0 +1,74 @@
+id: mumxenkraez-82
+name: Mumxenkraez_82
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTkxOTYwOCwKICAicHJvZmlsZUlkIiA6ICJkMWU5ODViZGYyMTg0OWQwYmFlZTNlYjBiNDM2ZmExYiIsCiAgInByb2ZpbGVOYW1lIiA6ICJSb3NleUNoYW40MjAiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYzdlMThjNjQ3ZWY0MTIxNzBjMWIxZDZiOWYyYWZiYmM0ZTE3YWYxMjNlZWNjOTYwODY4NjIxN2RhMjRjNzI4ZCIKICAgIH0KICB9Cn0="
+  signature: "mPtaUXKFy+/IjNjbScxqAluGR9CDvw5yKmmLPDsHuoqbQrTfkKtINTO+Vovar2J3xzpoj/OcgDhFh2k1QqSDjFM+MuUZ+wVCwtiiPI5sKw/Ors/ImEdi02xn945HwGuvtRyG0Uj302KAiCRccuKx68hdVJvK4nwQn13nsWPPGqq4t13E5Uz18NqF4bV/6/0X5U76wQ5lSPwvyMoQVGwCE4Tfk1uFlN/4PB5XO5uWXj3aHyiG8cVx8Uq1Ne63JAqha8xZksxXnBcyDg4AYs8roWpD7lrkCV0YTpKnP3Twv/FTB7LAAN28uLGm5w5v/eLp74fJnKyolaY8LxwWjFOhhiCVzA2xoL+qZwQ5A+WWf79GQpJJOYw/2UK37mK5VM/qAZzmhfwkfUSP8FnmeBRGD08LCTSevdgCbx+L4kJxJWrtY6wbGltHibc6cLGac3aZlE34qa+PPepSUoWQtZYNxNErJoV9HgK44P0/Qbj75ZtXdagAYtBhcy9qUUZBBOW9gulXfu8U2biC3SsILMv3jcRbDtMgz/uq3zw7p2NsAwAWSZHcHND2ssIQAleAWTBSf2vwuCw75FvwLYOWG9/PK8zx1GYTfOlCOgFn9l/q5vilrG5J4ihqFxUylIG88j2A3tXwB/i+AVp8076cXX/QLf1JdicOs/hnQD0RVosA988="
+skill: 0.285
+archetype: anchor
+leverOffsets:
+  reactionMs: 0.48
+  aimErrorDeg: -1.43
+  awarenessRadius: 1.26
+  coordination: -0.08
+  aggression: -0.76
+kits:
+  trooper: 1
+  longbow: 0.39
+  shortbow: 0.19
+  rewind: 0.32
+roles:
+  defend: 0.79
+  retake: 0.7
+  hunt: 0.15
+style:
+  aggression: 0.32
+  patience: 0.83
+  teamplay: 0.45
+  risk: 0.09
+voice:
+  tone:
+    - observant
+    - grounded
+  verbosity: chatty
+  style: "local forecasts and quiet predictions; reassuring statements and firm location reports"
+lines:
+  greet:
+    - weather vane predicts a lively round
+    - weather vane stays here, I have this corner
+  onKill:
+    - a sudden change on the weather vane
+    - weather vane and corner still secure
+  onDeath:
+    - the weather vane missed that gust
+    - someone watch the weather vane corner
+  onPlant:
+    - pressure dropping at the bomb
+    - weather vane guards the exit from the site
+  onDefuse:
+    - storm warning cancelled
+    - weather vane is staying by our bomb
+  onWin:
+    - clear skies over my weather vane
+    - weather vane never left the post
+  onLoss:
+    - my weather vane forecast was optimistic
+    - weather vane held the wrong corner
+  onLastAlive:
+    - one weather vane in the storm
+    - the weather vane holds here a little longer
+  taunt:
+    - your push is mostly hot air
+    - the weather vane has not moved for that push
+  lobby:
+    - taking a reading from my weather vane
+    - please stop breathing onto my weather vane
+    - "My weather vane: I will guard the home approach."
+    - With my weather vane, call before rotating off defence.
+quirks:
+  - stares_down
+  - always_gg
+rivals:
+  - dusty-golem
+bio: Mumxenkraez_82 logged the weather from a glass hut above the old arena and still brings a weather vane to the queue. Dusty_Golem keeps asking whether it really helps.
+batch: 3
+retired: false

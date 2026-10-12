@@ -15,9 +15,18 @@ const BASE_URL = "https://api.mineskin.org";
 const POLL_MS = 2000;
 const MAX_WAIT_MS = 180_000;
 const MAX_SUBMIT_ATTEMPTS = 5;
-/** Jobs that fail because MineSkin's own upstream is rate limited are resubmitted. */
+/** Documented transient server failures are resubmitted, within a bounded retry budget. */
 const MAX_JOB_ATTEMPTS = 6;
 const JOB_RETRY_BASE_MS = 30_000;
+const RETRYABLE_JOB_CODES = new Set([
+  "invalid_skin_data",
+  "skin_change_failed",
+  "generator_timeout",
+  "job_failed",
+  "no_account_available",
+  "internal_error",
+  "unexpected_error",
+]);
 
 /** A job MineSkin gave up on for a transient reason, such as `proxy_rate_limited`. */
 class TransientJobFailure extends Error {}
@@ -208,7 +217,7 @@ export class MineSkin {
           this.nextAllowedAt = Date.now() + 1000 * 2 ** attempt;
         }
         console.error(
-          `mineskin: rate limited submitting ${name} (${describe(body.errors)}); waiting`,
+          `mineskin: rate limited submitting ${name} (${describe(body.errors)}); waiting ${String(Math.ceil((this.nextAllowedAt - Date.now()) / 1000))} s`,
         );
         continue;
       }
@@ -251,7 +260,9 @@ export class MineSkin {
       const status = body.job?.status;
       if (status === "failed") {
         const transient = (body.errors ?? []).some(
-          (error) => error.code?.includes("rate_limit") === true,
+          (error) =>
+            error.code?.includes("rate_limit") === true ||
+            (error.code !== undefined && RETRYABLE_JOB_CODES.has(error.code)),
         );
         throw new (transient ? TransientJobFailure : Error)(
           `mineskin: job ${jobId} failed: ${describe(body.errors)}`,

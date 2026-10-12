@@ -1,0 +1,73 @@
+id: phantombandit2
+name: PhantomBandit2
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NDg2NjEyMCwKICAicHJvZmlsZUlkIiA6ICJmMzJjNjM1YTc5Njc0Y2M2OGEwYmUxOGY0Nzc1M2E0MiIsCiAgInByb2ZpbGVOYW1lIiA6ICIweDFVIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2U2Njc1OWQ0MGM2NDE4YjYwNWRkZDc3MjNiNzBhZWJiMThmZjQ3OWQ3M2NiNDlkOWFmYTljOTczZWE3OTQ0YSIKICAgIH0KICB9Cn0="
+  signature: "Tn0dUXALi4OKxqVPFTZomz1mqcgAnm7rKgvHoVX/3VFWYtfObFoIj8KT5RdYvs8NMhqmmJe+llzyUHeK2PSVIex1MngHOV1igTrKuSrNXTXRp9bymN6sbb2YMsc7K3J5/mG5rUCH1M03aHcKH10GFrCqnYwHg3WVbkLa/JqjRcJUZeF9pQm6rNnE6AFYdySpDwwyvy52R61es1hQlCuXS/iUng/ejWIu8XbfU1mu/GXJMV/YKO+DLOV7GfC4Si4YPr5G2+eb7NvKEDr+C75YFlP7nsTP/kA0EPz7tQLUn6uu1Dsh6xWJp8aiT5W4b1o/qHGqdpc/vXgrFCUMcYUEv8pRYhmNX0bZjWmONVlMV/DtpxLV1hjm19bQB5WJgKFC9kZTbMlKMiGrhbV705Xzut96Q6K20DrSg+C6YWIlCER9QMIAfxQIoHUc3jgMRifl1xinycAxTnIGdA5dCqbgt4rniTGyTQRqyPopNqtJmJZ7rDeua0VVWTjx4qd8cnJCfLNR8yGDAIGxkouO380SRSNS5NNkqAyYA2CMo9UtLmBmn/8i8nL0qDgRYv3deywa9CDxTKHVSeuNatMM9TQ8GnIv7lRIwKj3jimLo3+o80TVN047WoRor7kty2sNQwEFxfm8yb72ZQBB6I3IId9pKKhZUYxQyHvzV1Uo3cuVWRg="
+skill: 0.888
+archetype: turtle
+leverOffsets:
+  reactionMs: 0.63
+  decisionTemperature: 0.22
+  awarenessRadius: 0.62
+  coordination: 0.15
+  technique: -0.46
+  aggression: -1.41
+kits:
+  trooper: 0.99
+  longbow: 0.32
+  rewind: 0.9
+roles:
+  defend: 0.89
+  retake: 0.38
+style:
+  aggression: 0.17
+  patience: 0.79
+  teamplay: 0.43
+  risk: 0.1
+voice:
+  tone:
+    - brisk
+    - cautious
+  verbosity: normal
+  style: "absurdly serious station announcements; unhurried words, conservative estimates and tiny victories"
+lines:
+  greet:
+    - switch lever checked, service departing
+    - switch lever is ready. no need to hurry.
+  onKill:
+    - one less delay for my switch lever
+    - switch lever waited for the opening
+  onDeath:
+    - my switch lever reports a cancelled service
+    - switch lever should have waited another moment
+  onPlant:
+    - last departure from this platform
+    - switch lever checked the site first
+  onDefuse:
+    - service restored on this line
+    - switch lever checked the corner twice
+  onWin:
+    - switch lever reports arrival on schedule
+    - switch lever got there eventually
+  onLoss:
+    - wrong platform for my switch lever
+    - switch lever needed one more safe corner
+  onLastAlive:
+    - last service, just my switch lever
+    - the switch lever will take this slowly
+  taunt:
+    - your connection left a moment ago
+    - the switch lever can wait out that peek
+  lobby:
+    - please queue beside my switch lever
+    - my switch lever says the lobby service is delayed
+    - "My switch lever: I will keep a safe route home."
+    - With my switch lever, please check the blind corner first.
+quirks:
+  - gapple_hoarder
+  - always_gg
+rivals:
+  - dioxskiol-51
+bio: PhantomBandit2 linked three friends bases with an unnecessarily elaborate minecart line and still brings a switch lever to the queue. Dioxskiol_51 keeps asking whether it really helps.
+batch: 3
+retired: false

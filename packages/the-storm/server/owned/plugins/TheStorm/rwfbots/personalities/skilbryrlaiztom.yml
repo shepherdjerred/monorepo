@@ -1,0 +1,78 @@
+id: skilbryrlaiztom
+name: Skilbryrlaiztom
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NDg2OTEwMSwKICAicHJvZmlsZUlkIiA6ICJmZDJlZDMzMzI0Mjk0ZThmOWVlZGNiN2RhMWJiNzlkZSIsCiAgInByb2ZpbGVOYW1lIiA6ICJkcmFtYWdnIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2ZhNGVlZDkwODM4ODA2YzhjZTlmY2JhN2M3ODAxYWMyZTQ1MDAyZWJjOWE5MWM4NjU0Yjk2MTQwYjc1N2I5OWUiCiAgICB9CiAgfQp9
+  signature: "MXbSR4BVGTpginkmn4+5w9JeEA6xhObAVqxM4VU/NIi402sjrxnnfPcz6HgFkfBKlS8KyUGZtEovIUvVs1hJnoBBwAPEn6nifBRhRPyAVXWdzAVn39e97fqmuqdHnMd8ayrEVuL8hkwiaOX3Obk9pmxUXZOwJizTNjy3wbTdUrKCelzUVkJfa5q7emGEQ+3sxFsLzaHMHG/boMYxaQDj8G3g02DQEqaE0QPP/1aeSoOLwZbOdOKh9YXVObadHl1q2w0Gxn4g6p0yjGOBuKp5N0t0u6C0JqUJcKi/iiGwzx/XrvX+i+K0rkZkJt7wmIcStzj1QS00qt2tuS+mB2PBMBjtwQM4hjQZF++7CzHAAQ0eecEp7VK6Bz4p8PkzhXd9wD+fO1gsaDsWfZpUzljz/jAFyMp16yML5ZmSgsTs/toK/Rr7llpiwYoZKl2E9WAsDT18MtuUynB2b2vLIZ2ON61rQdCT6KkC8N6w+vxLkqNivxnetg0rqqocPFyTtpLKCN4g81iqpSs6wNOgfqtsfubw5eO/bDWMnkgK+s1ty6VTwLbLhsAY6QJCzMfPByM8By5/C/JnS/3+0yrm4uw7XifCM1JzKwDnGSU+umiB88Ggt2F7KDMvX+6HbLWCdqSg9ZhaDX6UMnetTskuHqJFFRs5TdTnTJ/f+VekPqMaGRM="
+skill: 0.378
+archetype: sniper
+leverOffsets:
+  reactionMs: 0.54
+  aimErrorDeg: 1.26
+  cps: -0.6
+  predictionQuality: 1.79
+  awarenessRadius: 1.16
+  coordination: 0.56
+  technique: -0.17
+  aggression: -0.75
+kits:
+  trooper: 0.16
+  longbow: 0.88
+  shortbow: 0.49
+  wraith: 0.33
+roles:
+  defend: 0.7
+  rotate: 0.43
+  retake: 0.14
+  hunt: 0.65
+style:
+  aggression: 0.2
+  patience: 0.88
+  teamplay: 0.46
+  risk: 0.12
+voice:
+  tone:
+    - observant
+    - focused
+  verbosity: chatty
+  style: "local forecasts and quiet predictions; short range notes and patient, exact corrections"
+lines:
+  greet:
+    - cloud notebook predicts a lively round
+    - cloud notebook in place, checking the long angle
+  onKill:
+    - a sudden change on the cloud notebook
+    - cloud notebook found the range
+  onDeath:
+    - the cloud notebook missed that gust
+    - cloud notebook needed a closer angle
+  onPlant:
+    - pressure dropping at the bomb
+    - cloud notebook covers the far entrance
+  onDefuse:
+    - storm warning cancelled
+    - cloud notebook can wait, hands on the fuse
+  onWin:
+    - clear skies over my cloud notebook
+    - cloud notebook had a clear view of that
+  onLoss:
+    - my cloud notebook forecast was optimistic
+    - cloud notebook kept the wrong sight line
+  onLastAlive:
+    - one cloud notebook in the storm
+    - one cloud notebook, one long angle
+  taunt:
+    - your push is mostly hot air
+    - the cloud notebook saw that peek twice
+  lobby:
+    - taking a reading from my cloud notebook
+    - please stop breathing onto my cloud notebook
+    - "My cloud notebook: I will cover the long angle."
+    - With my cloud notebook, call the close flank for me.
+quirks:
+  - bow_spammer
+  - always_gg
+rivals:
+  - krairthaxkrailtv
+bio: Skilbryrlaiztom logged the weather from a glass hut above the old arena and still brings a cloud notebook to the queue. KrairthaxkrailTV keeps asking whether it really helps.
+batch: 3
+retired: false

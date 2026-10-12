@@ -1,0 +1,74 @@
+id: lucky-waffle
+name: Lucky_Waffle
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTY4NDU2NSwKICAicHJvZmlsZUlkIiA6ICJjNGRiNjkxZDNkYmU0ZWI5YThiNjgzM2I4ODNkYmM0NCIsCiAgInByb2ZpbGVOYW1lIiA6ICJpbW5reXkiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjVmYzNmNzA2ZmZiZDk4MjVjOGNmMGZhMDlmZDU1MDBlN2ViYjUwMGQ4YmM0MmZiN2I0N2VjZTFmZGRkOGNiNyIKICAgIH0KICB9Cn0="
+  signature: "JFzDmN6IQ7N2KWTo2fNegX0COI7dPwA4LuJItS0qz1lARIf140pvYr7AskyCai9XVqlNs8ur+1UqTQTeJcsu3gN3NgJp8wHMVJAeqmwOvHwNg/Lp6ijf44L6vDYUyb4WikEE8ToDWVGdgZhDi9NCIK2yYSXzQ5ECncm7Z4Nv8DtNcFuGWOlmzIhQu9NpB1Upul3QznOaAXjZQzywwCy0hh0Kvoz/eaKuvZ65LldK1ZqJqrTFcMk0WRXgOsHetY6oPmfBPt66pWoWLZ+z/qKgEx83TCX9M1ATvTu4S5tM0bXGDH38SAQZ3bJ4eUuzsItUXhsMXJpRXM5yjkdKu/WNpbqMOv/Qy/rSyNF7WPv55avZNz6CzkY83dzC0XhNL7iqeaqYdetMFuMmLX4Y9MTKvWWLCT808x2l+x++943kTfTiN8lQMXET2OBJf1RBcDNwqEvG7TP7zTO+PFV0hVQTNSMAjQXJ8sgAVxA6ia3t2eJE0ljGg6Bb2KhBkYwXwl7GYfyE+MHMt29pIXYdq0ouRQ8ksmggq6BYNfoBYzzUtKFnJF91bPMqAF39x/rRBOtzk8qSKUGF4VFUuQo2ZK4XOH6619GBpw/XlQwpXYbcgc3ZYjhYV7sOSP5vsOMS5okz78oO6jj9SwAigSi7VsviL44xHPOuTaLuTesxnoRh/YE="
+skill: 0.295
+archetype: turtle
+leverOffsets:
+  reactionMs: 0.67
+  aimErrorDeg: -0.31
+  cps: -0.13
+  decisionTemperature: 0.41
+  awarenessRadius: 0.19
+  aggression: -1.57
+kits:
+  trooper: 1
+  longbow: 0.31
+  rewind: 0.79
+roles:
+  plant: 0.28
+  defend: 0.94
+  retake: 0.4
+style:
+  aggression: 0.1
+  patience: 0.95
+  teamplay: 0.73
+  risk: 0.04
+voice:
+  tone:
+    - earnest
+    - cautious
+  verbosity: normal
+  style: "museum labels for even embarrassing plays; unhurried words, conservative estimates and tiny victories"
+lines:
+  greet:
+    - gallery map prepared, exhibit opening
+    - gallery map is ready. no need to hurry.
+  onKill:
+    - a fascinating example of an opening
+    - gallery map waited for the opening
+  onDeath:
+    - please do not put that in the exhibit
+    - gallery map should have waited another moment
+  onPlant:
+    - a short-lived interactive exhibit
+    - gallery map checked the site first
+  onDefuse:
+    - preserved the team instead
+    - gallery map checked the corner twice
+  onWin:
+    - gallery map has a new story
+    - gallery map got there eventually
+  onLoss:
+    - a cautionary exhibit for the gallery map
+    - gallery map needed one more safe corner
+  onLastAlive:
+    - the last visitor in the gallery
+    - the gallery map will take this slowly
+  taunt:
+    - your approach belongs in the archives
+    - the gallery map can wait out that peek
+  lobby:
+    - please look without touching my gallery map
+    - writing a new label for my gallery map
+    - "My gallery map: I will keep a safe route home."
+    - With my gallery map, please check the blind corner first.
+quirks:
+  - gapple_hoarder
+  - always_gg
+rivals:
+  - golempickaxe2
+bio: Lucky_Waffle opened a one-room museum for abandoned arena souvenirs and still brings a gallery map to the queue. GolemPickaxe2 keeps asking whether it really helps.
+batch: 3
+retired: false

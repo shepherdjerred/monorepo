@@ -1,0 +1,76 @@
+id: xxwolfcreeperxx
+name: xXWolfCreeperXx
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTMzNjI5NCwKICAicHJvZmlsZUlkIiA6ICIwNDg2YWUwMWI4Y2I0OWUzODMyZDcwOTNmMWJlNzI3NyIsCiAgInByb2ZpbGVOYW1lIiA6ICJfcGFrbWFuXyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8zNTZmMDgwMDI2OTI4YzcwOGU1OWZkZjZjMTUzYzkxNjY1OGQyNGVkODI0NTBiMTkwMjFjZjFhYmExMWM2ZWIiCiAgICB9CiAgfQp9
+  signature: "oX2vCu48/ClEY8Ta5S/7m31/9vs6YFb6teWwuE7yflzDhYUev3ChpGMNyqHzGjabjPLIceKUSGxXBgF6WfeUEh9mRq/PIGvcrKaD7OkI0lfNvibUZN549ykK56CVDENkwG0TyPIlRSCW3jYe/68YLHWPGIkZWyRnqopfJ6pnY7hSDLyOxG8LknZyIAGVPVuDAaxaosf19msJzEG9/kjSawpGioOyKw3k08xdTdcUB/+fk9r499NwH9Xv3bHg8WsG70XnJYI9+k4i0wFaM1t1/nOt2Eyk8Bob4V6+bOMTY3IrJppcVwpdA/tcuhU7Fdz3NnMKiXsi8x+HlEoOvW+Jkfwh4cN64CEUHLsnJdHUbMhSN9iEiH4OML5oDXgFj98yWDK6vZtq7XS/eMNQnHBuR3WnJRoZtVKJrUjqJJd6i5ApsvdGRRWIsfmbjUiRbtTy539Kn/FSdHFyaBR198Yw3gI66q+h8PddYhmANaUd/QnlycyQFAf0JAD+XcX3A+LsoBL2a88+1suqSj1Fy/gX0wDyYG1UxKmprRNJAqSOQaHrJb3DdwmbvYhjcD+w7Hj3jx6GOyvG5uJR7SCzgzbDtf2TrkqS2KVr7AdsOOF3gQXE+sI2OgmESfOnthPTM8p+c6mjK8CBISukCRZEm7SMXEanKrJGJH3KiIVviTYzb7o="
+skill: 0.643
+archetype: lurker
+leverOffsets:
+  aimErrorDeg: -1.08
+  turnRateDegPerTick: -0.52
+  predictionQuality: 0.69
+  awarenessRadius: 1.31
+  coordination: -1.04
+  aggression: -0.66
+kits:
+  trooper: 0.79
+  longbow: 0.29
+  shortbow: 0.56
+  ghost: 0.91
+  wraith: 0.6
+roles:
+  plant: 0.29
+  rotate: 0.66
+  hunt: 0.89
+style:
+  aggression: 0.44
+  patience: 0.82
+  teamplay: 0
+  risk: 0.63
+voice:
+  tone:
+    - cosy
+    - hushed
+  verbosity: chatty
+  style: "kitchen chatter and imaginary baked snacks; lowercase whispers, deliberate pauses"
+lines:
+  greet:
+    - flour scoop ready, kitchen open
+    - flour scoop here. quietly.
+  onKill:
+    - another order off the flour scoop
+    - the flour scoop was here a while
+  onDeath:
+    - left my flour scoop in the oven again
+    - heard it too late beside the flour scoop
+  onPlant:
+    - setting the timer beside my flour scoop
+    - flour scoop is watching the quiet entrance
+  onDefuse:
+    - took that out before it burned
+    - no noise. no fuse. just the flour scoop.
+  onWin:
+    - flour scoop deserves a day off
+    - the flour scoop stayed out of sight
+  onLoss:
+    - the flour scoop has seen better batches
+    - the flour scoop waited one corner too long
+  onLastAlive:
+    - one cook and a very busy flour scoop
+    - nobody move near my flour scoop
+  taunt:
+    - that push needed longer to rise
+    - the flour scoop heard that approach coming
+  lobby:
+    - who borrowed my flour scoop?
+    - dusting the flour off my flour scoop
+    - "My flour scoop: I will hold the quiet route."
+    - With my flour scoop, leave one quiet approach for me.
+quirks:
+  - slow_starter
+  - always_gg
+rivals:
+  - lilskaeshbroul
+bio: xXWolfCreeperXx ran a tiny spawn bakery with a queue of hungry regulars and still brings a flour scoop to the queue. LilSkaeshbroul keeps asking whether it really helps.
+batch: 3
+retired: false

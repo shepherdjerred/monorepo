@@ -69,6 +69,8 @@ bun run --cwd packages/the-storm test:smoke # the light CI selection
 bun run --cwd packages/the-storm test:e2e   # extended gameplay
 bun run --cwd packages/the-storm test:full  # all modules together
 bun run --cwd packages/the-storm test:load  # 20/50/100-bot load profile
+STORM_CAPACITY_MAP=apex-expanse bun run --cwd packages/the-storm test:capacity
+STORM_CAPACITY_MAP=apex-expanse bun run --cwd packages/the-storm test:capacity-native
 ```
 
 Native-client acceptance uses
@@ -2216,8 +2218,15 @@ the tick's hits, bow shots, eating, fuse clicks and footsteps), publishes it
 to the `ThinkLoop`, reads the newest `DecisionBoard`, runs each bot's
 `Reflex.tick` and applies the `BodyCommand`s to its body. The `ThinkLoop`
 keeps two one-slot mailboxes (`AtomicReference`): the newest snapshot
-replaces one not yet consumed, and a CAS flag ensures at most one think job
-runs on core's `ComputePool`. The job runs perception (10 Hz), the team step
+replaces one not yet consumed, and a CAS flag ensures at most one thinking cycle
+runs on core's `ComputePool`. Each cycle uses bounded parallel perception,
+team planning, and tactics stages. Asynchronous barriers merge results in stable
+order without blocking pool workers. Tactics reads frozen team boards; an ordered
+merge resolves competing cover claims before publishing decisions. Search scratch
+arrays are reused exclusively by each batch and released when the match retires.
+Each immutable snapshot indexes combatants by ID while preserving roster order,
+so repeated enemy lookups do not scan the entire lobby.
+The cycle runs perception (10 Hz), the team step
 (about 1 Hz) and tactics (4 Hz) for the bots whose slot is due
 (`(tick + slot) % period == 0`), under a line-of-sight ray budget, with a
 fresh `SplittableRandom` per bot per job seeded from the match, the bot and
@@ -2248,8 +2257,57 @@ unset) measures 20, 50 and 100 bots against the plan's bars in
 
 The age of the decision a bot follows, which `/rwfbots debug` calls
 staleness, is about `tacticsEveryTicks` (5) by design; it is reported, not
-judged. `plugin/modules/rwfbots/LOAD.md` holds the measured runs: 4 CPUs is
-the tested shape.
+judged. `plugin/modules/rwfbots/LOAD.md` holds the historical serial-engine
+measurements. The parallel engine requires its own capacity evidence.
+
+`test:capacity` is separate extended local acceptance for 100, 128, 192 and
+256 total combatants (one human plus bots), on either `apex-expanse` or
+`warlords-castles` selected with `STORM_CAPACITY_MAP`. It caps Docker at 3
+CPUs by default with an 8G heap and 10GiB memory, matching the production CPU request
+conservatively. `STORM_CAPACITY_CPUS=4` or `6` compares larger CPU budgets;
+the evidence verifies the exact enforced limit. Production has no CPU limit.
+It uses a 90-second baseline, 20-second settling period and
+150 seconds of live measurement per size, rearming ordinary matches when
+needed. Run each map twice. This does not change shipped match limits or
+automatic presets.
+
+Every size must keep each sampled ten-second tick p95 below 50ms and within
+8ms of baseline, board lag p95 at most three ticks, governor level zero,
+and no complete thinking cycles over 50ms, including queueing and all stage
+boundaries. Perception age uses actual observation ticks,
+including bots waiting for their first observation: p95 at most five ticks,
+maximum ten ticks, and no pending first observations after settling. Heap
+and container memory must stay below 90% of their limits. The container
+peak includes startup and reset. Results and incremental checkpoints are saved under
+`.cache/e2e/capacity/`, including arrival and reset tick windows, startup
+telemetry, exact rosters and cleanup. Arrival, settling and reset costs remain
+separate from the live measuring window.
+
+`/rwfbots debug load reset` returns the current interval and starts the next
+one together, preserving think jobs completed across that boundary. The load
+harness uses it for continuous sampling; `/rwfbots debug reset` starts a fresh
+phase without returning the previous interval.
+
+`STORM_CAPACITY_RAY_BUDGET` changes only the disposable fixture's LOS budget
+for calibration. `STORM_CAPACITY_PROBE_TOTAL` selects one size for a quick
+probe; an incomplete matrix always fails the release verdict. Full acceptance
+uses the shipped budget and all four sizes. These suites remain outside CI.
+For an incomplete calibration probe only, `STORM_CAPACITY_PROFILE=cpu|alloc`
+captures another 90 seconds after the measuring window with Spark and saves
+the profile locally under `.cache/e2e/capacity/profiles/`. The evidence labels
+this diagnostic mode explicitly; profiled probes cannot establish release
+acceptance. Compare clean measuring windows and keep the separate profiler
+overhead out of capacity claims.
+
+`test:capacity-native` boots the same disposable capacity profile with an
+ordinary rendered Minecraft client. It joins a 256-combatant draft, moves
+through normal input, waits for normal combat and match completion, and requires
+the original recording to attribute the human's combat death to a bot, corroborated
+by health loss observed in the native client. It also checks bot movement.
+Screenshots, client commands, observations and the original recording remain
+under `.cache/e2e/capacity-native/`. Run this on a machine able to launch the
+client, separately from the load matrix so client rendering cannot affect its
+measurements.
 
 Filling a match: the `Director` drafts personalities from
 `rwfbots/personalities/*.yml` (never one whose name an online human uses),
@@ -2409,6 +2467,12 @@ one bot's levers, decision and refusals. `/rwfbots debug slots` lists each
 team's objective and every bot's slot, and draws them for the sender for ten
 seconds: a dust ring at each slot and a trail along each bot's route, in team
 colours.
+
+`/rwfbots debug load` returns compact interval measurements, including the
+perception age of living bots, board lag, peak governor level, slow-job count
+and heap peak. `/rwfbots debug reset` starts a new measuring interval. Perception
+is served oldest first with stable slot ties, including initial perceptions;
+one perception larger than the LOS budget is allowed to prevent starvation.
 
 `bun run rwf:trails <recording.gz> --out <trails.png>` draws a match recording
 from above: every combatant's path, solid until first contact (the first

@@ -1,0 +1,75 @@
+id: toxicthionkek
+name: ToxicThionkek
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjE1Mzc1MiwKICAicHJvZmlsZUlkIiA6ICIwMzQ2N2E0Yzc5ZGU0ZGM5YTQ4NzU5MGY5NmEwODFmMiIsCiAgInByb2ZpbGVOYW1lIiA6ICJTaGFrYVlhbWkiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjU4ODY1OTYzY2Y5ZGZkOGM3ZTJiMjZiNGYxMTA2NjBiMjEyZWQxYmZmYTE1OTYyYWFiYWQyZTA5OGQ2ZmU4NCIKICAgIH0KICB9Cn0="
+  signature: "DLX58eXP7nCB58d68hS5YNM0AVVoL1CxoPcP6ijphgSY68hO+Ui2qViuM+DiLNJzxryP66dx4cJd2dt/JSUksoWkJAJfI/fyd2mK5meEuasip61L/IbBSamIrsNEK3YNX+gr6I8hJCd9Ki/ZoktryBNr1LEqM/6rF9Ycf8NCpAs3l7YDbK6s3V5dXlksQENQdvYd67JhdoW/7d+xGy1wfjHqcsasZ+2a3rnv5wNIuW6V201b48MqJLX30BO2hwU7E34QUCuIHgxz6SnbaTBwsZjSA651XrLXHCaQBiR99G17Hl2ERPgvr6t5DBoX8Awv1P2SRAJ7TZV3V7IWq5T/nPePJNE8NZ7URPkpGZQSrOholcMHHKiBVimjoB8K9EBZ7n0LkazX2D6VRWR8ju5e5jxHBS5QQFDOPg7neEFUXPQEUOdW6iJZoT2TZIZyrTGYm7ut1dorBbU3sZx4hv49HVaDhcz5WKWQv/17zIgRHaC7XGWhySHMJy3pu666bUTBP8Xms89/t8ezFyhlJ1O+eza+RrL3ujlQ+wFvnKQwgd1xp0wtnWMeEzfngnS4LqNMiBrpscG1zEZM+XvHBr/l44ywctgvtsc+m1TyeBsH9I4xEpdQS3e4PJeD7uQ5/DVwqn5HatZuhyrkRuQJwTLFQM7WHzw7X2x5zXT9dNME+M8="
+skill: 0.019
+archetype: troll
+leverOffsets:
+  decisionTemperature: -2.32
+  awarenessRadius: 0.96
+  coordination: -1.7
+  technique: 0.23
+  aggression: 1.33
+kits:
+  trooper: 0.44
+  shortbow: 0.64
+  rewind: 1
+  spy: 0.77
+roles:
+  plant: 0.4
+  escort: 0.29
+  rotate: 0.48
+  hunt: 0.64
+style:
+  aggression: 0.63
+  patience: 0.26
+  teamplay: 0.2
+  risk: 0.96
+voice:
+  tone:
+    - watchful
+    - mischievous
+  verbosity: normal
+  style: "tired lighthouse bearings, steady reassurance; deadpan object conversations and harmless overconfidence"
+lines:
+  greet:
+    - lens cloth checked, coast watched
+    - lens cloth has appointed itself captain
+  onKill:
+    - a clear signal through the fog
+    - lens cloth is now insufferably proud
+  onDeath:
+    - lost the light around that bend
+    - lens cloth would like a different replay
+  onPlant:
+    - warning light at the bomb
+    - lens cloth calls this interior decorating
+  onDefuse:
+    - warning extinguished
+    - lens cloth says it knew the correct wire
+  onWin:
+    - lens cloth guided us home
+    - lens cloth is requesting a trophy shelf
+  onLoss:
+    - the lens cloth missed a rock
+    - lens cloth has misplaced the blame form
+  onLastAlive:
+    - one light still on the coast
+    - lens cloth insists this was the plan
+  taunt:
+    - your approach was visible from shore
+    - the lens cloth gave that push three out of ten
+  lobby:
+    - polishing my lens cloth before the round
+    - please leave the lens cloth switched on
+    - "My lens cloth: I will cause a useful distraction."
+    - With my lens cloth, try not to laugh during my push.
+quirks:
+  - celebrates_early
+  - always_gg
+rivals:
+  - epicpumpkin17
+bio: ToxicThionkek lit a coastal tower so returning builders could find home and still brings a lens cloth to the queue. EpicPumpkin17 keeps asking whether it really helps.
+batch: 3
+retired: false

@@ -1,0 +1,75 @@
+id: sniperslime8
+name: SniperSlime8
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjM2Mjc0NSwKICAicHJvZmlsZUlkIiA6ICJjODVhZTlmOWJkNTU0YzFmYjk1ZTg3ZDI2Zjg2MGFmNiIsCiAgInByb2ZpbGVOYW1lIiA6ICJTdGV2ZW4xNzUzIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzNhZjhmMjQ3NzUyNjBlOGZjNzliZGNiYzQzZThmYzQyMmMwN2ZiNWFiNDlkNjU2NDg1MTY4MDQzZDlkNjQyMTUiCiAgICB9CiAgfQp9
+  signature: "k6spWUQEvAL57mWt0mmI6pSKdnjuF3kCIxbRQ6+piMXA/ErWgxX7PyAfSL8efEkokF0SQG35PqmAPHRyQ7828j0jDOzmd+ShXQJloflWkYYjPHSoSZ0L1y/xy0zSFjvhf4eB/+XaIxA4Fnvqw6lv8bR78xjjLkGKUQ+7iBAHqvafmy5hg0MqXOesCNabC1q0U10KImJIxmI2JzrunKExUXpBP2ac/ieIS0Rq1bagymh2UwdLicbzP/ZDNJGjJEOJtYBLyj6vRxyAHECZwYaywZVHAv57tZr1AklTa/EwvllsjT6xhJzL0i94bs6Vxnb+250BDNR+DNLVPvhCdwcQTH41R99ICU+Y7g9L5qABjHzX9fjDgmGb1mGMFQISV8oL7YqANaW45CblKjwGdlTl9CYBbMaNvWG/TNzb/N0v4PlfLxHExfU/t6j5YhFGuGf5Nsfd5KdSRru9rG9Nd3jmJkskByftd1zvFHLSVxtkFaCBWBkCZxolAdcgXyNIF1TkUS27t2Yh7125kRtqguLw+xmQh7B/goBrA3C1jpinK8u+ZeezHXXhZ4T7ZnBZ60hTQIBKQ4lSjqzi2egW0lTZzvD9ZdFOIw/rOppVztbyV+KjL2pYF+3N9Hy+QbBreubbaGiHrUfzE9hKE+V9x3HA5UfWCaNq+N6TCE91FQyhq4E="
+skill: 0.953
+archetype: bomb_diver
+leverOffsets:
+  reactionMs: 0.05
+  aimErrorDeg: 0.21
+  decisionTemperature: 0.71
+  awarenessRadius: -0.3
+  technique: 0.9
+  aggression: -0.25
+kits:
+  trooper: 0.98
+  longbow: 0.28
+  shortbow: 0.22
+  rewind: 0.68
+roles:
+  plant: 0.91
+  escort: 0.12
+  retake: 0.3
+style:
+  aggression: 0.69
+  patience: 0.06
+  teamplay: 0.31
+  risk: 1
+voice:
+  tone:
+    - polite
+    - urgent
+  verbosity: normal
+  style: "postal announcements and absurd courtesy; breathless objective reports, oddly calm at a fuse"
+lines:
+  greet:
+    - letter opener sorted, delivery begins
+    - letter opener packed, where is the bomb?
+  onKill:
+    - delivered to the correct corner
+    - a clear path for the letter opener
+  onDeath:
+    - returned to sender
+    - letter opener was one corner from the fuse
+  onPlant:
+    - an urgent parcel at the bomb
+    - "letter opener is parked beside {bomb}"
+  onDefuse:
+    - delivery cancelled politely
+    - "letter opener and {bomb} can both stay intact"
+  onWin:
+    - letter opener delivered the whole round
+    - letter opener got the objective done
+  onLoss:
+    - the letter opener took the scenic route
+    - letter opener took too long reaching the site
+  onLastAlive:
+    - one final delivery to make
+    - the letter opener still has a fuse to find
+  taunt:
+    - that push had the wrong address
+    - the letter opener got closer to your bomb
+  lobby:
+    - checking the name on my letter opener
+    - no unpaid postage in my letter opener, please
+    - "My letter opener: cover my approach to the bomb."
+    - With my letter opener, call the safest bomb route.
+quirks:
+  - loves_nuke
+  - always_gg
+rivals:
+  - dizzy-waffle
+bio: SniperSlime8 delivered handwritten notes between feuding builders in 2014 and still brings a letter opener to the queue. Dizzy_Waffle keeps asking whether it really helps.
+batch: 3
+retired: false

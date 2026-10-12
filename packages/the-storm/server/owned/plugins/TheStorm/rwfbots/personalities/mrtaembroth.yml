@@ -1,0 +1,76 @@
+id: mrtaembroth
+name: MrTaembroth
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjM4MzI4MiwKICAicHJvZmlsZUlkIiA6ICJmMzJjNjM1YTc5Njc0Y2M2OGEwYmUxOGY0Nzc1M2E0MiIsCiAgInByb2ZpbGVOYW1lIiA6ICIweDFVIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzI0NzAxM2ZkNTk3OTIzNDE4M2JjMTAwNDc3MGNjN2YyNTVjNWY5ZTMyYjEzYjJkMmQzZjFjZjlmZjAyMDAwNDAiCiAgICB9CiAgfQp9
+  signature: "TttghoSLrsAV3iNvWHg6SnltLy3mkTpgI7hLeI7PE1MBnf47pJ31jiPalDTxysKKasbLU70N6mt0q3r89wZqVPbHPRluZleHewMG9ezIOYQq1t3nsdA3Elco0XxegFn8i6oqY4IJWA03CedRBDdbqclWxAtPTKJn39AXuiWKDJdFrV+dAhDcrjKOy38fv/DxhBP+kpaYvI3uUWvWAsCxh6ven+VAOe/vMy2vf5ZJ4eidJVq0aVMDp69vG0B+5XXVsGdMw45d/XOdKk+t7vVGhiuJylatgiORnnUO1w/04hqJd1KrS/DBd+3/w+HUqAdOlrKuLR/rPmuXXIXm70KqAeezK6ouzndEQM4di7WRb2yE/NDxV1ohMgp2ZjrSbPinQwHQ+/HI5wI6kY5Guav9RbMPGYRCyv7KqRtZz7q8QN8y1tZ37xpU3TTguHKszvKCqnMAoEys0c+zhCHXuBNUc4NiW4qvE97EqLoRcZTGg1a4ykESkfqMMH4FL8CAOoKK7QnngMfeL9wAc7YUaqfb3XGn3eJUt609zelQpMym1exv+ZISPZ2vqAC6+GYqCX5mXUh9V5Ma0tQrM3T/AEWIMp19On/puKjoDgBlIRT7gm4xfr44Emjc7wsjGsxhC0u0SzZJLIyJAoyPKjsxycMwz8k/2VkX92C3ajIzuq+xbJg="
+skill: 0.427
+archetype: tactician
+leverOffsets:
+  cps: 0.43
+  predictionQuality: 0.96
+  decisionTemperature: 1.18
+  awarenessRadius: 0.49
+  coordination: 1.66
+kits:
+  trooper: 0.93
+  longbow: 0.56
+  shortbow: 0.45
+  rewind: 0.45
+roles:
+  plant: 0.62
+  escort: 0.45
+  defend: 0.5
+  rotate: 0.63
+  retake: 0.64
+style:
+  aggression: 0.43
+  patience: 0.68
+  teamplay: 0.86
+  risk: 0.41
+voice:
+  tone:
+    - playful
+    - analytical
+  verbosity: normal
+  style: "tiny winter expeditions, serious snow forts; numbered ideas, concise route calls, quick revisions"
+lines:
+  greet:
+    - pinecone marker thawed out, ready
+    - pinecone marker ready, first route agreed?
+  onKill:
+    - a tidy little snowball effect
+    - pinecone marker confirms a clean opening
+  onDeath:
+    - slid right out of that plan
+    - pinecone marker needs a revision on that route
+  onPlant:
+    - a warm spot in the snow
+    - pinecone marker confirms the site is reached
+  onDefuse:
+    - cooled the bomb right down
+    - pinecone marker confirms the fuse is clear
+  onWin:
+    - pinecone marker has survived the thaw
+    - pinecone marker and team followed through
+  onLoss:
+    - the fort melted around us
+    - pinecone marker had a missing step
+  onLastAlive:
+    - one mitten still waving
+    - pinecone marker says there is still a route
+  taunt:
+    - your footing looked a bit icy
+    - the pinecone marker predicted that rotation
+  lobby:
+    - warming my pinecone marker by the lobby lamp
+    - please stop hiding my pinecone marker in snow
+    - "My pinecone marker: I will call the first rotation."
+    - With my pinecone marker, tell me when a route closes.
+quirks:
+  - calls_everything
+  - always_gg
+rivals:
+  - thekemviosh
+bio: MrTaembroth built a snow fort that lasted longer than the team inside it and still brings a pinecone marker to the queue. TheKemviosh keeps asking whether it really helps.
+batch: 3
+retired: false

@@ -1,0 +1,74 @@
+id: grimrider47
+name: GrimRider47
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTk4MjQ0NiwKICAicHJvZmlsZUlkIiA6ICI0OWIzODUyNDdhMWY0NTM3YjBmN2MwZTFmMTVjMTc2NCIsCiAgInByb2ZpbGVOYW1lIiA6ICJiY2QyMDMzYzYzZWM0YmY4IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzg4ODA1MGUyOWI5ZjgxNmQyYzZlZTM3MzMzMjI4ZjNlNGVkZGMwZmY2MmFhMGNjYWY5OGUxY2Y0MzBjZjA2ZjYiCiAgICB9CiAgfQp9
+  signature: "LxhdNS+nhzDM+yfxYlHo2t0c7amUOabFgix8SqlLErvaaJE/prL67QP/r7Uj5yzu7wg7OIWPB2QEIAt1KZ59po/OuYvcKqrUk2qnLVHMA7tvpZ02Ua9dMYXg6FuluDf75hSZFSaBGK9gyo8/K49RKgGzkb2xK67B8mQa++LsNApbQSCJEIKuDhasM+bLEIMjU7jdWoldnHWwlsDUiqRpIPuWV4RQSFsXeCxFAHg17gazdqVrENJhzKlfs57UeIybGhPSMryvmonLQ6/kL6oiNbJMrFXRmu2io/LhPoRZtjM8c0HqdQ3SA+MY1WJvtY4xV6w5jL85DBnbLKOh5F3ie54AvG0SPWA4aGiSpovmfo1b0U9uuZPNZihxl1coqGjekfZT3veRqRIDgveKnrYAI6y6f7RfYRzGoKj4cxKJhnIoH3P1sTYrkkSLHkxjNJINyuvKD9ybCXhIze7+/UENrS+4x2ktxsv9o5Z48VkM6bw8GzP66wKJ3egoZeMQKf81we+6sDTLFjB8bXF1Mk23AwoBWYtzPGPuUeAd256BK3AmBjr1mQ/UTys4Q6Sf4T8S/50yJc3HiLG+0Tvxz8n/qZUQ9C99qzH9NIwU/ul813oo+75MGxhVX3UtfLKhOSGsB6FEAvTyYiyXoJTB77M7RF3ZSoBEYjTAvpRJd878TX8="
+skill: 0.369
+archetype: lurker
+leverOffsets:
+  aimErrorDeg: 0.31
+  predictionQuality: 0.9
+  awarenessRadius: 1.48
+  coordination: -1.02
+  aggression: -0.27
+kits:
+  trooper: 0.62
+  shortbow: 0.57
+  ghost: 0.91
+  wraith: 0.61
+roles:
+  plant: 0.15
+  rotate: 0.6
+  hunt: 0.86
+style:
+  aggression: 0.29
+  patience: 0.9
+  teamplay: 0.17
+  risk: 0.63
+voice:
+  tone:
+    - earnest
+    - hushed
+  verbosity: chatty
+  style: "museum labels for even embarrassing plays; lowercase whispers, deliberate pauses"
+lines:
+  greet:
+    - exhibit label prepared, exhibit opening
+    - exhibit label here. quietly.
+  onKill:
+    - a fascinating example of an opening
+    - the exhibit label was here a while
+  onDeath:
+    - please do not put that in the exhibit
+    - heard it too late beside the exhibit label
+  onPlant:
+    - a short-lived interactive exhibit
+    - exhibit label is watching the quiet entrance
+  onDefuse:
+    - preserved the team instead
+    - no noise. no fuse. just the exhibit label.
+  onWin:
+    - exhibit label has a new story
+    - the exhibit label stayed out of sight
+  onLoss:
+    - a cautionary exhibit for the exhibit label
+    - the exhibit label waited one corner too long
+  onLastAlive:
+    - the last visitor in the gallery
+    - nobody move near my exhibit label
+  taunt:
+    - your approach belongs in the archives
+    - the exhibit label heard that approach coming
+  lobby:
+    - please look without touching my exhibit label
+    - writing a new label for my exhibit label
+    - "My exhibit label: I will hold the quiet route."
+    - With my exhibit label, leave one quiet approach for me.
+quirks:
+  - slow_starter
+  - always_gg
+rivals:
+  - xxrarjiozjioz
+bio: GrimRider47 opened a one-room museum for abandoned arena souvenirs and still brings an exhibit label to the queue. xXRarjiozjioz keeps asking whether it really helps.
+batch: 3
+retired: false

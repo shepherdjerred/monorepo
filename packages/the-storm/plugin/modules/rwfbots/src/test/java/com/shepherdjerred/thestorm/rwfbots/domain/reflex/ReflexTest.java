@@ -351,7 +351,7 @@ final class ReflexTest {
   @Test
   void walkingLeavesAResponseMarginBeyondTheMeleeSpacingBand() {
     var self = combatant(1, RED, new Vec3(5.5, 1, 5.5));
-    var ally = combatant(2, RED, new Vec3(5.5, 1, 8.25));
+    var ally = combatant(2, RED, self.pos().plus(0, 0, Reflex.SEPARATION + 0.25));
     var move = walkingMove(self, ally);
     assertThat(move.waypoint().x()).isGreaterThan(self.pos().x());
     assertThat(move.waypoint().z()).isLessThan(self.pos().z());
@@ -360,7 +360,7 @@ final class ReflexTest {
   @Test
   void walkersAnticipateConvergingTeammatesBeforeTheyCrossTheSpacingBand() {
     var self = combatant(1, RED, new Vec3(5.5, 1, 5.5));
-    var ally = combatant(2, RED, self.pos().plus(0, 0, 3.25));
+    var ally = combatant(2, RED, self.pos().plus(0, 0, Reflex.WALK_SEPARATION + 0.25));
     var stationary = walkingMove(self, ally);
     var converging = walkingMove(self, ally.withVel(new Vec3(0, 0, -0.2)));
     assertThat(stationary.waypoint().z()).isEqualTo(self.pos().z());
@@ -371,7 +371,9 @@ final class ReflexTest {
   @Test
   void walkersAvoidTeammatesCrossingBetweenDistantPredictionEndpoints() {
     var self = combatant(1, RED, new Vec3(5.5, 1, 5.5));
-    var ally = combatant(2, RED, self.pos().plus(0, 0, 3.25)).withVel(new Vec3(0, 0, -7));
+    var ally =
+        combatant(2, RED, self.pos().plus(0, 0, Reflex.WALK_SEPARATION + 0.25))
+            .withVel(new Vec3(0, 0, -7));
     var move = walkingMove(self, ally);
     assertThat(move.waypoint().z()).isLessThan(self.pos().z());
     assertThat(move.waypoint().x()).isGreaterThan(self.pos().x());
@@ -381,7 +383,9 @@ final class ReflexTest {
   void walkersIgnoreConvergenceOutsideTheirReactionWindowAndRecedingTeammates() {
     var self = combatant(1, RED, new Vec3(5.5, 1, 5.5));
     var distant = combatant(2, RED, self.pos().plus(0, 0, 100)).withVel(new Vec3(0, 0, -0.2));
-    var receding = combatant(2, RED, self.pos().plus(0, 0, 3.25)).withVel(new Vec3(0, 0, 0.2));
+    var receding =
+        combatant(2, RED, self.pos().plus(0, 0, Reflex.WALK_SEPARATION + 0.25))
+            .withVel(new Vec3(0, 0, 0.2));
     assertThat(walkingMove(self, distant).waypoint().z()).isEqualTo(self.pos().z());
     assertThat(walkingMove(self, receding).waypoint().z()).isEqualTo(self.pos().z());
   }

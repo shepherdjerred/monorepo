@@ -1,0 +1,74 @@
+id: thothgryxdostxel
+name: Thothgryxdostxel
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTQwMjU4MywKICAicHJvZmlsZUlkIiA6ICJlYjM0ODc2ODEyZDU0YjVhOGJkZmEwY2U0YWQwNDNkMyIsCiAgInByb2ZpbGVOYW1lIiA6ICJSYXJlczUwMDAiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZmI2MmU2N2MwYzI1N2IwYWVhYzk2MmE0NzZjZjY5MTUwOTVhNjlkY2MxNzMyMTgxMjlhOTJmMDgyMGM2ZmEyNCIKICAgIH0KICB9Cn0="
+  signature: "WeoZnvrSWIADG0v/kGhiA2ya1cLC9QMEAoYKofRj2ddk1oakUgr2Lv1NdNAQFCzZdXSZq5uYDxwbPqOOOEF0dGm6thvg6GI9jfrrd9prRCC71Jwfk11MeTa4ogpkJ1LkJLSXa0J6G74HF5So19VHvaBKBCGopCKeZGMe5n6h2bUdsNykYB49AMBlQakKUNf+xnW0H6kWlC5pZ7G2Oo8tRKNMD52flXS12oGEP6J2WUaihLd+ohitzuAvvZ1xK8UvVK6ZJeTpPdyjy0eyIN5KVHxkOJ+IS88vghMkvjDh1rnI3LqcmJgWbbmAXToGNoIw/qUDRS+oJlaQ1kc+ObYE24gtEbIWoCqC7aU1ze1BK7VXj8j5H1NalqRclA02S93MVfSxtdkzS4txYo+UmBBrtnITcFBQ/s9XMqVx5UVwTqHPRMBZ7ze+6hcQBqZxPAIehkPGTFQUr4+zXE+WCLW1IWKu3NESuFbDXmHHu3N2/IXeEKqblXf7MteohSkO2d1GxVxJ51qWY0kVuYHwT/zOZ20cdq44mDKM+6yQONz7BGQ6Q4NJhYnG5hkHSYT+rinPxbdags1UVWRQVZm1oot8kvxhceJwyn/X7RK/ws6XLGO+/K904kVe5BLwYQ+EsPxYIUM6I+d4GiLpmEBaexlZ2GXzpQdonbZeuHhu1IYpxss="
+skill: 0.674
+archetype: troll
+leverOffsets:
+  decisionTemperature: -2.15
+  coordination: -1.2
+  technique: 0.57
+  aggression: -1.22
+kits:
+  trooper: 0.55
+  shortbow: 0.78
+  rewind: 0.87
+  spy: 0.79
+roles:
+  plant: 0.54
+  escort: 0.35
+  rotate: 0.48
+  hunt: 0.42
+style:
+  aggression: 0.6
+  patience: 0.32
+  teamplay: 0.06
+  risk: 0.96
+voice:
+  tone:
+    - measured
+    - mischievous
+  verbosity: normal
+  style: "soft beat counts and tiny timing worries; deadpan object conversations and harmless overconfidence"
+lines:
+  greet:
+    - gear tray is almost on time
+    - gear tray has appointed itself captain
+  onKill:
+    - right on the gear tray beat
+    - gear tray is now insufferably proud
+  onDeath:
+    - my gear tray skipped a beat
+    - gear tray would like a different replay
+  onPlant:
+    - gear tray is counting now
+    - gear tray calls this interior decorating
+  onDefuse:
+    - stopped just before the chime
+    - gear tray says it knew the correct wire
+  onWin:
+    - gear tray and team in perfect time
+    - gear tray is requesting a trophy shelf
+  onLoss:
+    - my gear tray needs adjusting
+    - gear tray has misplaced the blame form
+  onLastAlive:
+    - only one gear tray still ticking
+    - gear tray insists this was the plan
+  taunt:
+    - a little early on that swing
+    - the gear tray gave that push three out of ten
+  lobby:
+    - listening for the gear tray tick
+    - my gear tray is not a countdown shortcut
+    - "My gear tray: I will cause a useful distraction."
+    - With my gear tray, try not to laugh during my push.
+quirks:
+  - celebrates_early
+  - always_gg
+rivals:
+  - volxunpro
+bio: Thothgryxdostxel built a clock tower that chimed one block too early and still brings a gear tray to the queue. VolxunPro keeps asking whether it really helps.
+batch: 3
+retired: false

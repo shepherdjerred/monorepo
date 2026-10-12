@@ -1,0 +1,76 @@
+id: hypertazpour
+name: HyperTazpour
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTgwMjEzOSwKICAicHJvZmlsZUlkIiA6ICIyOGQyZDFmZDEyNGY0NGMyOGYxZDgwNDY4NGFkOTA2ZCIsCiAgInByb2ZpbGVOYW1lIiA6ICJzcGlmZnRvcGlhNyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS85MjhjODI2ZWM0NmJhZmIyMDMzNjkzZTZmOTliMTk2ODY0NGY0ZGE5ZDMwMDk0YjZlZjU5OTlkNWVhM2E5YTNhIgogICAgfQogIH0KfQ=="
+  signature: "PdwCfasduwBfvuPj2BQEN6IGZ9BBwq+oo5ggk8gtbB8x8Ff/WsTC3o99K2IodhYaBzvducTLFZC1f9pYcoex3+YXMSE3IELRKbXwee4lWEydjvANVsQyjbA6Pro091vNmFeQ3fD7Ptd6+Ib4ThzXWfv5K1RGgRWdMV4XDKXwjhHTw5xXQeVLlWXrqzHtgyDgWhpm8UjUdnIxDjAlYN2h8jIr4eiznnLT6FAYIj9p9C8V3rGFNef09aHmiTWTPowJB046mzq/P8SM2cXPBuQZ8gtgHEi/K0hxl+LBXzSw/dv0d7VXbWfEv7uNvt5TOi/dRKTATIwByXPx7yaFElSyte8hexbz5dIY/usUYpoWF0m8sYXvkJaxySwa3j9Cr44BerrhT5B0kZmT+k3LT5RfcTn9WMCyrn2MBaTQAkjP+sIvr3MubFbeR/QS0mAAbU7DM+jgnSk1EgOO7yKJF7i18UbV91o2CzYCBwCr6H5ScePL1N90zymEMISJR0TyQhlB2GVYUK/SyzFpsSyQkx+a88k8h+yFGGfH/491iUn9BnK+wlQ12pJZTK3oduAEGakJ/DiEUC0Y3ZHapVA8e4sRDskOIn1RAQMFxi4BfYJCJ585eNpiIZVyZqgtHd0M4caukSIZGSW/REDlX1Mao6FcZh1BKsrAAWEKzClhEzOXePA="
+skill: 0.177
+archetype: sniper
+leverOffsets:
+  reactionMs: -0.29
+  aimErrorDeg: 1.82
+  cps: -1.07
+  predictionQuality: 1.3
+  awarenessRadius: 0.56
+  technique: -0.22
+  aggression: -0.5
+kits:
+  trooper: 0.13
+  longbow: 0.95
+  shortbow: 0.47
+roles:
+  escort: 0.2
+  defend: 0.7
+  rotate: 0.45
+  hunt: 0.59
+style:
+  aggression: 0.28
+  patience: 0.92
+  teamplay: 0.46
+  risk: 0.09
+voice:
+  tone:
+    - excitable
+    - focused
+  verbosity: chatty
+  style: "enthusiastic clues and upside-down maps; short range notes and patient, exact corrections"
+lines:
+  greet:
+    - treasure token found, clue understood
+    - treasure token in place, checking the long angle
+  onKill:
+    - that corner was the next clue
+    - treasure token found the range
+  onDeath:
+    - the clue was apparently a trap
+    - treasure token needed a closer angle
+  onPlant:
+    - a very loud treasure chest
+    - treasure token covers the far entrance
+  onDefuse:
+    - solved that little puzzle
+    - treasure token can wait, hands on the fuse
+  onWin:
+    - treasure token led us to the prize
+    - treasure token had a clear view of that
+  onLoss:
+    - the treasure token was upside down again
+    - treasure token kept the wrong sight line
+  onLastAlive:
+    - one clue and no hints
+    - one treasure token, one long angle
+  taunt:
+    - that trail led you in a circle
+    - the treasure token saw that peek twice
+  lobby:
+    - does anyone recognise my treasure token?
+    - the answer is definitely near my treasure token
+    - "My treasure token: I will cover the long angle."
+    - With my treasure token, call the close flank for me.
+quirks:
+  - bow_spammer
+  - always_gg
+rivals:
+  - drbraizdaelzal
+bio: HyperTazpour hid tiny treasure chests along the old lobby walking route and still brings a treasure token to the queue. DrBraizdaelzal keeps asking whether it really helps.
+batch: 3
+retired: false

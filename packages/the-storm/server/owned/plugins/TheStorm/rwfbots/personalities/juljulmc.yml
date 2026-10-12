@@ -1,0 +1,74 @@
+id: juljulmc
+name: JuljulMC
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODUyNjY1NiwKICAicHJvZmlsZUlkIiA6ICI1ZTI1YzI0ZmIxMGI0MTlmOWIzYTQzMWIyOTYzYjQ2YSIsCiAgInByb2ZpbGVOYW1lIiA6ICJ2NHIxbiIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8yMzdkNDZmYzJkNWYxODE2ODc5YzM3MGY0OWJjYWQ4NDg3NTU2OWE2MjUzNjhhZGYwYTFkYjZiMjNiZmExNmY4IgogICAgfQogIH0KfQ=="
+  signature: "gYhDZBBohf2wOsV+Qpzyp9ClMdWNvgXsh+M3NTvONwPohS9ig//8non43v49OoasRcsZdakxfguogglwY3wKlR0/jGGTDb1pJtkVEIykRBy0t5RzmU+EsQ7iV6hAhabBmAuvek3wSsnU+uQ6XGc4dcI1dHD0no5kaizqyHyiZpE+RU/miWgt3LkAITOxgvfMrhSoy5kDjfZ7Gc/VyJ1/t+M/AVzm9k+QZ+3ufY1EagOux7UhUfXc/NKbnmhrqpUPENw6rTsR3E0t0x71ORBXk/RZ5O+a7GnsqQ+IzPZ4kqcolVpIMORU5VsUeUkTeC/8aVNibV6/2fISbxpmteq7AD9SNUw462nz3JgGt0km6+28+DwDXcdVD/MkwvTEgLuymwJ5Vtd9wXLPkaLKS+vJw28SWyI2iFVH9/BW4QIWLFx+eove8ifLXAxgkeDYJab5LmsGHl7eB9ESWQFTH9AM8t9SYtxILB265JmKpWws+X7UlFtt8j4SyCtqPcHDDrrL1qdyTjP/AZSf5a7ULrk9Tl1dsftKo+OveKeQvKdLEt292KkGNDbnUOGLf8o1tJeJUbmQlLdC9q0I28neLmlLTq1ZG1YVgODIUug069ddlRQSJjtB1liZ2OAZwVHlg137Hr9gzbVbwZj1KwDhgAnYcgxyT3A61e4Eq50XTifCwtM="
+skill: 0.508
+archetype: duelist
+leverOffsets:
+  aimErrorDeg: 0.87
+  cps: 1.53
+  decisionTemperature: 0.69
+  coordination: -0.33
+  technique: 1.6
+  aggression: 0.9
+kits:
+  trooper: 0.94
+  shortbow: 0.35
+  spy: 0.1
+roles:
+  escort: 0.27
+  retake: 0.52
+  hunt: 0.7
+style:
+  aggression: 0.84
+  patience: 0.27
+  teamplay: 0.3
+  risk: 0.53
+voice:
+  tone:
+    - meticulous
+    - competitive
+  verbosity: normal
+  style: "seams, alterations and dry little asides; brief courteous challenges and honest shot assessments"
+lines:
+  greet:
+    - measuring tape tucked away, ready
+    - measuring tape ready, good fights everyone
+  onKill:
+    - a neat little seam through there
+    - good exchange beside the measuring tape
+  onDeath:
+    - my plan has come unstitched
+    - fair hit, the measuring tape left that gap
+  onPlant:
+    - tied off the fuse neatly
+    - measuring tape earned a moment at the bomb
+  onDefuse:
+    - snipped the loose thread
+    - measuring tape can settle this at the fuse
+  onWin:
+    - measuring tape and team fit nicely
+    - measuring tape had some good fights today
+  onLoss:
+    - the measuring tape plan needs an alteration
+    - measuring tape wants another clean round
+  onLastAlive:
+    - one thread still holding
+    - one measuring tape, one fair chance
+  taunt:
+    - your formation has a loose seam
+    - the measuring tape is ready for that peek
+  lobby:
+    - please mind the measuring tape on the bench
+    - mending the kit beside my measuring tape
+    - "My measuring tape: I will contest the middle."
+    - With my measuring tape, give the middle fight a clear lane.
+quirks:
+  - good_sport
+  - always_gg
+rivals:
+  - emberrazskel
+bio: JuljulMC made matching banners for a team that never stood still and still brings a measuring tape to the queue. EmberRazskel keeps asking whether it really helps.
+batch: 3
+retired: false

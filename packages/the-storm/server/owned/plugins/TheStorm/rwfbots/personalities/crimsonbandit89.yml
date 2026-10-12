@@ -1,0 +1,72 @@
+id: crimsonbandit89
+name: CrimsonBandit89
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTQxNzE5MCwKICAicHJvZmlsZUlkIiA6ICJlZGUyYzdhMGFjNjM0MTNiYjA5ZDNmMGJlZTllYzhlYyIsCiAgInByb2ZpbGVOYW1lIiA6ICJ0aGVEZXZKYWRlIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzZmNTJiMTcxNGMxMmNlMGQ1MWZmMzA0YTRjZmQ0NDIzYjIwNzExMWY5MGE0MzczMmRhZTZkYmQ0NGIxYzkxNCIKICAgIH0KICB9Cn0="
+  signature: "RbaA1GPzVauq+DyEzMv9E3dl/STRZeYAfLhttkO779JCt+ui9t4fJCLxXEl5U3XP7Fe8N4LBiRXkf3oPU09xUnpJBxHNi1iRk7T915zXiBTVGXlb3SL9f+BO5vXifHUqst0V4OCQOwhCblouuqEq9qzE54jyPA6/8zgRZdza9qwJcOaeJwvZs7ua8DbDbwuJA0sZwY1fa3mah7O9QlAH8aJr2c4O8fS2xXhxqdGLiROXFzHppEpByNLESi79sFYvQHT8Qn5UuAfsHEZYXlxR/ihPT2lFaYD2nKpZPbTT/meMAAoUC8AwJj4kQ2ea8kB549/A8fOpoisWi26VeJOkMFaVjLIrznddFnmZPN2T+72ZVbjOuVIA4ey6VSBp5rpquoma0qFKejmFvBdSN+1NeQ31nIuQFX4DM7KSgGOh2FiWtVWwNvCdVZi/WecajUHH6ACboFFzj0IimujaDXJukd+iylrWKvaiVrU0Ajxj5gY1EN2lbhhvK+ETbZ8jggd0NrbRsgSOSaBGCQoT6DaBQi/g+IKNe3k7RkLuFIJ5yy1ryd+d3AjdKJnznZcgn+Z+WU16j1zhcTlNkyWHc2EOtN1N1JPGKZcBtsFIoELKgGwNSy6Dco/Spx2ab/tJwPVSMawmo7dfzDLw2JGRUUw8tKXJVLrJjMEgQ00o6x1Oq4A="
+skill: 0.557
+archetype: support
+leverOffsets:
+  predictionQuality: 0.91
+  awarenessRadius: 0.37
+  coordination: 1.39
+  aggression: 0.09
+kits:
+  trooper: 1
+  longbow: 0.29
+  rewind: 0.64
+roles:
+  escort: 0.97
+  defend: 0.36
+  retake: 0.56
+style:
+  aggression: 0.38
+  patience: 0.54
+  teamplay: 0.91
+  risk: 0.43
+voice:
+  tone:
+    - measured
+    - helpful
+  verbosity: quiet
+  style: "soft beat counts and tiny timing worries; gentle check-ins, thanks and useful kit reminders"
+lines:
+  greet:
+    - wooden escapement is almost on time
+    - wooden escapement is here, everyone got their kit?
+  onKill:
+    - right on the wooden escapement beat
+    - one less problem beside the wooden escapement
+  onDeath:
+    - my wooden escapement skipped a beat
+    - sorry, the wooden escapement corner is open
+  onPlant:
+    - wooden escapement is counting now
+    - wooden escapement can watch while you plant
+  onDefuse:
+    - stopped just before the chime
+    - wooden escapement is here to help at the fuse
+  onWin:
+    - wooden escapement and team in perfect time
+    - wooden escapement says everyone helped
+  onLoss:
+    - my wooden escapement needs adjusting
+    - wooden escapement says we can tidy that up
+  onLastAlive:
+    - only one wooden escapement still ticking
+    - one wooden escapement still trying to help
+  taunt:
+    - a little early on that swing
+    - the wooden escapement brought a team to that corner
+  lobby:
+    - listening for the wooden escapement tick
+    - my wooden escapement is not a countdown shortcut
+    - "My wooden escapement: I will stay close to the push."
+    - With my wooden escapement, call if you need an escort.
+quirks:
+  - says_sorry
+  - always_gg
+rivals:
+  - hyperpickaxe91
+bio: CrimsonBandit89 built a clock tower that chimed one block too early and still brings a wooden escapement to the queue. HyperPickaxe91 keeps asking whether it really helps.
+batch: 3
+retired: false

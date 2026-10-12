@@ -1,0 +1,77 @@
+id: grimbadger51
+name: GrimBadger51
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjM4NzQ2NSwKICAicHJvZmlsZUlkIiA6ICI0YzZhZTVkNzc0ZDE0MjBkYmJiNThjNDMzZGM3NjNlMCIsCiAgInByb2ZpbGVOYW1lIiA6ICJKdXN0VHJhbnNHaXJsIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzI5MWRhYWUzYzllYmNmODNjZjJlODU4Mjk0NjhjOWFlNGQ4OWM3M2RmYjI4MjA3N2I4YzkzODU1NGY4MzI0M2MiCiAgICB9CiAgfQp9
+  signature: "drWjhPLKxpG/kuel98SFWTnFkGPll4qBZkvb7yyue8Ak9QPBfgR5G0K76p5pfXkG0exzKjbWgq5QUKyU/S5dJzNtYLJZMi6HABuSOCYpMrCYwXkDTJvJLxZHoVAV0mCEVVwRHrDISXa0lxT5dvpaUYVLpsNFO/aB1uls99GWsjDfbRgAR+lFzllprY0j5+Qlp5vN0jbF0dmzXXaaU8orWHC09VKXRAHoJWMjH1ht0/ZPVox2jORJEJ/2TzXB0dYkHu9gTZJmtzwBzvd1WId0MNOWAHJ1r11nVyugNDBXoFvcY1KjEd+Q9maqqIEPDvTJMmGO2FlxDHNOD0UB7M7zv81If/I5Ld3akHhaY4O3SNOcm1IarV7h1LeJUueIbk8Yttwg3xusps5dquNwJfzSn1hOFUiQF3gDC6J268wT1HLMuWCZXECjuAJA3NqXUQmaL5DN35dJtCUqyEmX3omlroj7gZCi9KLSBzDKzAeIVI8QxnfBXQltLqICUGIokCQbHNHNrAGINRClldNaEvWYVmmmH/lcyDdmVrnJmKkGXf865cM8iD7JStG+v4HUNN7JnWtnkhm7xDfGgsTaRU1PrFOHCHIZyN5kJMJ8jSKQZzaha2QvJ5nupXGwNvzGwD1bKZvkBYJJV3TbZ2q6SGNLpk9a5jia2+hZRyk+fhgAf4E="
+skill: 0.515
+archetype: flanker
+leverOffsets:
+  turnRateDegPerTick: 1.19
+  cps: -0.4
+  predictionQuality: 0.22
+  decisionTemperature: 0.15
+  coordination: -0.63
+  aggression: 0.51
+kits:
+  trooper: 0.63
+  shortbow: 0.94
+  rewind: 0.39
+  ghost: 0.14
+  wraith: 0.52
+  spy: 0.38
+roles:
+  plant: 0.39
+  rotate: 1
+  hunt: 0.51
+style:
+  aggression: 0.77
+  patience: 0.35
+  teamplay: 0.3
+  risk: 0.65
+voice:
+  tone:
+    - polite
+    - nimble
+  verbosity: chatty
+  style: "postal announcements and absurd courtesy; quick side remarks and route changes mid-sentence"
+lines:
+  greet:
+    - delivery ledger sorted, delivery begins
+    - delivery ledger is taking the other entrance
+  onKill:
+    - delivered to the correct corner
+    - delivery ledger found a side door
+  onDeath:
+    - returned to sender
+    - delivery ledger chose an occupied side door
+  onPlant:
+    - an urgent parcel at the bomb
+    - "delivery ledger came around the back of {bomb}"
+  onDefuse:
+    - delivery cancelled politely
+    - delivery ledger found a quieter route to the fuse
+  onWin:
+    - delivery ledger delivered the whole round
+    - delivery ledger took the long way for a reason
+  onLoss:
+    - the delivery ledger took the scenic route
+    - delivery ledger took the long way for no reason
+  onLastAlive:
+    - one final delivery to make
+    - one delivery ledger coming around the edge
+  taunt:
+    - that push had the wrong address
+    - the delivery ledger is somewhere to the side
+  lobby:
+    - checking the name on my delivery ledger
+    - no unpaid postage in my delivery ledger, please
+    - "My delivery ledger: I will try the side approach."
+    - With my delivery ledger, keep them looking forward for me.
+quirks:
+  - crouch_spam
+  - always_gg
+rivals:
+  - swiftpickaxe68
+bio: GrimBadger51 delivered handwritten notes between feuding builders in 2014 and still brings a delivery ledger to the queue. SwiftPickaxe68 keeps asking whether it really helps.
+batch: 3
+retired: false

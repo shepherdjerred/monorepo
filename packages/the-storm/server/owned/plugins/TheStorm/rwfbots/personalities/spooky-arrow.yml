@@ -1,0 +1,75 @@
+id: spooky-arrow
+name: Spooky_Arrow
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NDg5MTQ4NSwKICAicHJvZmlsZUlkIiA6ICI2MTU1NTMyOTY2OWM0ZDA5YmFiOGJlNDNkYWUwYTRjMyIsCiAgInByb2ZpbGVOYW1lIiA6ICJOb3Ryb19DbGllbnQiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjM0NmI4MWQ3OTA3OTFjN2NjMzIxOGM0MjFjODY1OTczMGNiYmM5YzdiNzBhZTI1NWE1YTMxZjFjMzljZGI5NSIKICAgIH0KICB9Cn0="
+  signature: "tfoIk3Qm2HhMkDcuk9tOPl9X2RluweP2evxNfwcB+kMPXBMkvesaKRsnqozM5/8vVxpoWwA2uJPtd+OtKDrH0NbCi1bmL+GgIHK8WduepL4wtmN0MB4zzj+NalQxNYEuMbBodr2Sy5pRiUk4pmDB+EV0x+IZLdtFSpetbVdhCzg8XufCPVO6JbqU5wLtV2p0Txs52kvw4dSK1hHqTrrB86iVS9jwDE9ZGMIT0D2QBMeqXsGqwMUqrL74a5kQIqnzzP6u2EUMDGdUj3Q6CW23mgfIYV0GpCCAbGr49a5RBLhpK15s1ugQiK2G2qDv2BqZcJVopalsyZ2ThY5S0Hvqf1oHXhfee95e1IJdnRLrSCckuz+cZ4paP1V1V6b6SatzSBjyfihJ69tj5yY/1Jtk6Ynq+7BDmJsss2P4x2R7del4gYaz2aANI9YA78j8Q6UK4Dq/heDIPhjEsP/0QEikA2HD9BhQWcXOqQx8ZcySSXbSr/juJd5ju9eT53K6Ze2xOoLxTpFK+dXCv/Zvifr6Fza7juhZJuPVFs5EsaEX7pPokhNUDGs6ckS4NpHQ0EYZsobsKUUoV1azAPl60nL2YzXCwqIIn9DYUO5yO60Pp1Vza0MXXtC9KdxnrelOcf5fBBl14PxzpB7+kGolp55P7N4ITXw4CX9hA/yGge9H++U="
+skill: 0.223
+archetype: sniper
+leverOffsets:
+  aimErrorDeg: 1.63
+  cps: -1.36
+  predictionQuality: 1.56
+  awarenessRadius: 0.5
+  coordination: 0.08
+  technique: -0.44
+  aggression: -0.86
+kits:
+  trooper: 0.13
+  longbow: 1
+  shortbow: 0.41
+roles:
+  defend: 0.76
+  rotate: 0.32
+  hunt: 0.55
+style:
+  aggression: 0.34
+  patience: 0.95
+  teamplay: 0.47
+  risk: 0.18
+voice:
+  tone:
+    - theatrical
+    - focused
+  verbosity: quiet
+  style: "backstage whispers and hurried scene changes; short range notes and patient, exact corrections"
+lines:
+  greet:
+    - curtain rope in place, curtain soon
+    - curtain rope in place, checking the long angle
+  onKill:
+    - a quick scene change for the curtain rope
+    - curtain rope found the range
+  onDeath:
+    - missed my cue by a whole scene
+    - curtain rope needed a closer angle
+  onPlant:
+    - cue the dramatic ticking
+    - curtain rope covers the far entrance
+  onDefuse:
+    - cut that effect, safely
+    - curtain rope can wait, hands on the fuse
+  onWin:
+    - take a bow beside the curtain rope
+    - curtain rope had a clear view of that
+  onLoss:
+    - the curtain rope needs a better rehearsal
+    - curtain rope kept the wrong sight line
+  onLastAlive:
+    - one performer, one curtain rope
+    - one curtain rope, one long angle
+  taunt:
+    - your entrance was a bit loud
+    - the curtain rope saw that peek twice
+  lobby:
+    - has anyone seen the curtain rope?
+    - do not lean on the painted curtain rope
+    - "My curtain rope: I will cover the long angle."
+    - With my curtain rope, call the close flank for me.
+quirks:
+  - bow_spammer
+  - always_gg
+rivals:
+  - lyshpuzdae-51
+bio: Spooky_Arrow worked the curtains at a player-built theatre between duels and still brings a curtain rope to the queue. Lyshpuzdae_51 keeps asking whether it really helps.
+batch: 3
+retired: false

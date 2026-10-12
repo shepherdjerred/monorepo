@@ -1,0 +1,76 @@
+id: xxstormsniperxx
+name: xXStormSniperXx
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTk4OTQ3NSwKICAicHJvZmlsZUlkIiA6ICI3Mjc2ZThmYzVkNjE0ODNjYmMwN2IxYjIzNjI3MDA4ZSIsCiAgInByb2ZpbGVOYW1lIiA6ICJXYWJvV2ViaSIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9mOTkwMmVmNjZlZmYzZmJhOWJkNTc0MzA4MTk3MDkxNjc1ZWQ4ZWI5YmFhN2JmNGRiN2M3MDE5MjQ2MzdhYzFiIgogICAgfQogIH0KfQ=="
+  signature: "VBVC32ZCsDynPrdEXsmscv+n1LQpCdp+/jbCeVbW4gepo1SZH5lrI0JMZQKpBTisp/D4lDZJAKXk+NUJND2GPTI9HHpJtvmCisohZ86XE+L+VLTfh2nC1eQa/I9P1q+g4vjzkP2amPQcO1aUiK6j570lyDMS4pNbIjBguFxCbCWiVmyKGdn7lQIeYqDlfOS5HcwI6H7bOoJQTZ8t5wGc8pjPu28edn1kNLYbFY0kDqSZv31sIx59Nf2WXIZ5vfHqqFKc45MiVdCTCgGAkV4ZbSuBzXzphWAGxHGUKEsXvcZ8NoDIoaVZLs8bzSMm2HcnLk7JN/9wfoVRlAjS1zxXM+byA7HYlidvSS66iGDxCjDiKOnLwiE35IqSq6+vFynHeg1yCcE1W8BrEiHjsXNwGFbA6ToalC6V9T0J4BZRSQdiJ4Qw6chiaY0KAozwN/xU0VSv3JbCjGH5raArFvCZJWJyQCADdMXnAM9G87wi69LkhYhHXKJS7a2iUlaADvNgwf+m1REOKoSwihDz4uShFNlTdfya4SetK8U+jx/3cPm+u/sT0cdedq8Ss6vQV6YcWZCpOL/I3B5o0WZSZ9ibBU8zY/7aaqzeI3oyHSg4C/WkVFiiGc3yOODOYajICocMSlQeNIZZeiiN6Gb2d7xBqax8WHC1KQptBMH6/6aMI1Y="
+skill: 0.362
+archetype: sniper
+leverOffsets:
+  aimErrorDeg: 1.82
+  cps: -0.84
+  predictionQuality: 1.37
+  decisionTemperature: 0.2
+  awarenessRadius: 0.77
+  coordination: 0.05
+  technique: -0.16
+  aggression: -0.85
+kits:
+  trooper: 0.14
+  longbow: 1
+  shortbow: 0.42
+roles:
+  defend: 0.7
+  rotate: 0.47
+  hunt: 0.55
+style:
+  aggression: 0.27
+  patience: 0.91
+  teamplay: 0.53
+  risk: 0.23
+voice:
+  tone:
+    - gentle
+    - focused
+  verbosity: quiet
+  style: "patient gardening talk, stubborn lane defence; short range notes and patient, exact corrections"
+lines:
+  greet:
+    - bean pole packed, lets grow into this
+    - bean pole in place, checking the long angle
+  onKill:
+    - cleared a little room for my bean pole
+    - bean pole found the range
+  onDeath:
+    - my bean pole has met a weed
+    - bean pole needed a closer angle
+  onPlant:
+    - this seed has a very short season
+    - bean pole covers the far entrance
+  onDefuse:
+    - pulled it out by the root
+    - bean pole can wait, hands on the fuse
+  onWin:
+    - a fine harvest for the bean pole crew
+    - bean pole had a clear view of that
+  onLoss:
+    - bad weather for my bean pole today
+    - bean pole kept the wrong sight line
+  onLastAlive:
+    - one bean pole still in the garden
+    - one bean pole, one long angle
+  taunt:
+    - that lane could use some pruning
+    - the bean pole saw that peek twice
+  lobby:
+    - checking the soil with my bean pole
+    - my bean pole is for the roof garden later
+    - "My bean pole: I will cover the long angle."
+    - With my bean pole, call the close flank for me.
+quirks:
+  - bow_spammer
+  - always_gg
+rivals:
+  - lunardainvol
+bio: xXStormSniperXx grew a roof garden over the old kit shop and still brings a bean pole to the queue. LunarDainvol keeps asking whether it really helps.
+batch: 3
+retired: false

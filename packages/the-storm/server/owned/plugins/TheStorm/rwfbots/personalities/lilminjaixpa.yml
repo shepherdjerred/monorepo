@@ -1,0 +1,75 @@
+id: lilminjaixpa
+name: LilMinjaixpa
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NTU2MzY5NywKICAicHJvZmlsZUlkIiA6ICJjOWZkZjFiMThhZGI0MGE3OTQwMzMyMTg3NThhZDJkMCIsCiAgInByb2ZpbGVOYW1lIiA6ICJfc3BhY2VfODAiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjBmNjJiZDFjYWJjNDMzMjkzZTQ1ZTJlN2YzZWI3ZTIzNTRjNWZkZTAwNDA5NzkwZjdjZTE1ODAyMTY5NDk0NCIKICAgIH0KICB9Cn0="
+  signature: "cCnvshjLcud7KYDIWi4y7muo/xxPavhmCl8y2cgxv7ap65sZieAUKkFbOgw0e9UibP/mSCne+BIH3bV5wknqdSVQo+2r4Q11SiY9GBr2X9UETXoZ+xcNq0lmW1vBLF++coCWRCVOjQgd8gXz5uoH6QpnAgr/Y4aCBc2DfbUDcHvoemPt0/gx+ba+7l5M6KUywW7qXzM5KQXK70/j1pX0aCpeBrPYAAU5A5SIMOjuSNbHYG/nhfb84W4YzL/KnU9EY575QyjeTGCyCCEQ4qcbCTW9YHPN1HihDcCDoFvSVG2Yw0MdoYgmbPruioF2s4CjGh+asMz4j/kFoKPrAsBkW/tufXJ8Jk6gdL4w/jueU23MPPM9tZAMiZYxpJdZ4HDlODeyBsO9vzIfMxkavcSt0j+Mb8qhmm3tcdmsBznNQ+DY2SVeknfMAPulCkQgsNt8UuNBCji7ZR0y6zI1IrN1VxCL5fQ5XNsOaCYGCpb+qsN1rko9RkQyBUfn8G2Bh5Pwf2FG115kSYor1fpW9FR66nE8fu5+HMTshsmy38j/ZvU7bwAaSDVVKwswHAml5JQ+BNLNavWlifJBb6NndTee7Dpq0bOb5F+8WmuYNFDTabAmK2nzcq9kxGzJEfAz+GSe2sF5Zogoinh7tDXXNF7t424vAqKRznO9rYYZwSvGaUU="
+skill: 0.032
+archetype: hunter
+leverOffsets:
+  turnRateDegPerTick: 0.76
+  cps: -0.97
+  predictionQuality: 1.23
+  awarenessRadius: 0.87
+  coordination: 0.04
+  aggression: 1.29
+kits:
+  trooper: 0.68
+  longbow: 0.48
+  shortbow: 0.77
+  ghost: 0.15
+roles:
+  plant: 0.24
+  rotate: 0.26
+  hunt: 0.95
+style:
+  aggression: 0.71
+  patience: 0.37
+  teamplay: 0.37
+  risk: 0.56
+voice:
+  tone:
+    - dreamy
+    - intent
+  verbosity: normal
+  style: "sky metaphors punctuated by exact callouts; tracks small clues aloud, then gives terse pursuit calls"
+lines:
+  greet:
+    - meteor pouch says this is our orbit
+    - meteor pouch ready, looking for tracks
+  onKill:
+    - a little spark beside my meteor pouch
+    - meteor pouch followed that trail correctly
+  onDeath:
+    - my meteor pouch did not show that collision
+    - the meteor pouch trail doubled back
+  onPlant:
+    - starting a very small eclipse
+    - "meteor pouch found a path to {bomb}"
+  onDefuse:
+    - light returns to the bomb
+    - meteor pouch tracked the ticking down
+  onWin:
+    - a bright mark in my meteor pouch
+    - meteor pouch followed it to the end
+  onLoss:
+    - a cloudy night for the meteor pouch
+    - meteor pouch lost the trail near the finish
+  onLastAlive:
+    - one small meteor pouch in a big sky
+    - the meteor pouch has one trail left
+  taunt:
+    - that shot went into another orbit
+    - the meteor pouch noticed those footsteps
+  lobby:
+    - showing the lobby my meteor pouch
+    - the ceiling is blocking my meteor pouch
+    - "My meteor pouch: I will look for the last opponent."
+    - With my meteor pouch, call the last place you saw them.
+quirks:
+  - holds_grudges
+  - always_gg
+rivals:
+  - grothbrastviper
+bio: LilMinjaixpa named the roof above spawn an observatory despite owning no telescope and still brings a meteor pouch to the queue. GrothbrastViper keeps asking whether it really helps.
+batch: 3
+retired: false

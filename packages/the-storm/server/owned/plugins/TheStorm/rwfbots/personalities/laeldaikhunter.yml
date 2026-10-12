@@ -1,0 +1,74 @@
+id: laeldaikhunter
+name: LaeldaikHunter
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODc5ODY2NywKICAicHJvZmlsZUlkIiA6ICIwNTljODIxYzhhODU0NGJiOWJiODVhOGMxNjVhYTc5YiIsCiAgInByb2ZpbGVOYW1lIiA6ICJoZWxsc3RydWNrZWR6IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzI2ZmQyYjg2NWFhNmZjMDNjOTFiMjQyNGExZmVjNjhjMDk5Yjg5OGE2ZjBjYjliZTJjOWNiNjgxYTBiNmE4N2UiCiAgICB9CiAgfQp9
+  signature: "rIvK86GFqHIsP3LH17EynzNHnBkLc96sD/BT4e1PlPCUFNH08C61uPg3AXKWF0rum001/5yExfPEY8HEudqsRzRiYykLK8/Jnex4MIwHhrpklBc1eklqSWg1PnR8grIB0c2dFmgM1H9bf6X9mHZifzamfxKasTBVZcIrIGX4yZn6BTos5d1U2KLsiLSVkui0uYvLth+3atzA1roRn5nyoESggEhDRPdFI6YwoiTlTdo2IZiG5G4KNbXeZU8msJrDu5XgXxC88EqEuc4ipeeadGFozF4jqGguhlqUO3sFC27RIKT1w7RkwTzapWsQovnWcMnMyu9s+3SYsd0d7r6ymvFPxsbALeMx3eJuVckM7ZBUOOmXnZDh1tqLUqCII9MMw6Cpt1mpMcSgOs1WkDtMP3hj36J6wrPyZFZYlOCqCOoQeoHHSSc6k5xT9iuILKHRLr7bypUWbLjgFVaxldPjJpTc57IgccgPq5S5WjO16UG1dIBGn2ztldX5cyfTy/fC7lo6QunGQVnB5Fc9QjvSA1bNI/q/7kyPQjCkO3Eb3oulc35uak59Xsj8oh7FLhrIGoHMiyBLksK3AS0Qyt/HuhH81KJaaD2ZqEyItfJn/jiVuX8UqmueDlerRvC9CVe8mnZWZ6J2tm086wts30q/74juc8A5C5cxaWzOH3fTxzI="
+skill: 0.314
+archetype: rusher
+leverOffsets:
+  reactionMs: 0.9
+  aimErrorDeg: 0.79
+  cps: 0.66
+  decisionTemperature: 0.28
+  awarenessRadius: -0.52
+  aggression: 1.69
+kits:
+  trooper: 0.98
+  shortbow: 0.51
+  rewind: 0.34
+roles:
+  plant: 0.83
+  escort: 0.46
+  hunt: 0.69
+style:
+  aggression: 0.94
+  patience: 0.14
+  teamplay: 0.49
+  risk: 0.61
+voice:
+  tone:
+    - patient
+    - eager
+  verbosity: quiet
+  style: "deliberate pottery talk and wet clay worries; fast fragments, impatient countdowns"
+lines:
+  greet:
+    - potters wheel is steady today
+    - potters wheel ready, I am taking the first corner
+  onKill:
+    - that opening held its shape
+    - potters wheel keeps moving, next corner
+  onDeath:
+    - the whole thing slumped
+    - a pause for the potters wheel, then straight back
+  onPlant:
+    - letting this one fire
+    - potters wheel is already on the next approach
+  onDefuse:
+    - cooled that down safely
+    - quick hands, quick potters wheel, clear
+  onWin:
+    - potters wheel came out of the kiln intact
+    - potters wheel barely stopped all round
+  onLoss:
+    - a small crack in the potters wheel plan
+    - potters wheel ran ahead of the plan
+  onLastAlive:
+    - one piece still on the wheel
+    - my potters wheel and I will keep moving
+  taunt:
+    - your push has not quite set
+    - my potters wheel got here before that push
+  lobby:
+    - washing the clay off my potters wheel
+    - please let my potters wheel dry in peace
+    - "My potters wheel: first corner is mine."
+    - With my potters wheel, please follow after the opening.
+quirks:
+  - bunny_hops
+  - always_gg
+rivals:
+  - toxicgolem97
+bio: LaeldaikHunter sold lopsided flowerpots from a stall by the arena gate and still brings a potters wheel to the queue. ToxicGolem97 keeps asking whether it really helps.
+batch: 3
+retired: false

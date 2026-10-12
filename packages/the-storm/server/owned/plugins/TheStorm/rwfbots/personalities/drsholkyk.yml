@@ -1,0 +1,74 @@
+id: drsholkyk
+name: DrSholkyk
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4OTI2NTYyMSwKICAicHJvZmlsZUlkIiA6ICJjNWE4ZTZmZGIyYmI0NmJiYjE3NjVhYjE2NmMwNTZlOCIsCiAgInByb2ZpbGVOYW1lIiA6ICJDZWlsaW5nQmlyZCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9iMjI3YWFlNjgzNWEyZTk5ZDAzZGFhMzQ5ZWYxNjliNGNmZDQwNzM3MDZjNWQ2OWRjMWEyMjkyNTZlMzg0YzkzIgogICAgfQogIH0KfQ=="
+  signature: "LjAivXC1rLK/37AetxeNkqOvWkVhEDf+UA9JoCsKTqkD71oZrjbNzrlm7589XCHkLLQ4Q8/XKa+hd0pWMsPB/66nDcD42G75EOPBbkqtwe8z/aYRiIC5VG+8R0kS3iOUF9WACbBOOXW9F2awBK0Etyx6E8ZTMOhtrcErtnj9jpztrns8URkJBzdhtzSZpKJxEGTBQst+z7/hjx4+JFmxHHm18HMZ07xkKOkGNf9K6F20qOHe/5P9X3zfBnI8D3v0UFnE83eBrzNaIsJr2Ym6WTvIluo1eelPA9gok/IhorcZlVcB6AVMu37InWnMacdY3tsqslKZDBdo+5ptkdeuohqpIIHx4lOeEimI9mSIaxLaOywVITuAtojgifMcQHUND1XRbEIn1ld+2gZ2tL22BDwO1UnAOgFY+TXxQi5yapkq1JBpB34YDIbmndTqX6vqb3YtGJy/sO8CcwRLTrvvApTArKVI6XWIvwJfSoZ6FMLvrSdR/AWCLwBJTHBGlpT+i4fMfUQLJ9uzT/e9oeGBtZ64Rg8l0JI5Gvo6Y39mHc1mQVpB+avF+HwYAitNfMBdUaX5cnngFMHeaI4jsiailltLHliJ3cu/ldCQwe79cvbqNyqtPVBmbPHUVbW7/wMIMnLWKqdLYFqnbfuQUhZrK0tnrihFNo22IpugXTDe9T8="
+skill: 0.036
+archetype: hunter
+leverOffsets:
+  turnRateDegPerTick: 0.63
+  predictionQuality: 0.59
+  decisionTemperature: -0.13
+  awarenessRadius: 1.11
+  aggression: 0.61
+kits:
+  trooper: 0.69
+  longbow: 0.53
+  shortbow: 0.84
+  wraith: 0.11
+roles:
+  defend: 0.24
+  rotate: 0.45
+  hunt: 0.97
+style:
+  aggression: 0.68
+  patience: 0.36
+  teamplay: 0.34
+  risk: 0.59
+voice:
+  tone:
+    - steady
+    - intent
+  verbosity: normal
+  style: "buoyancy checks and practical nautical talk; tracks small clues aloud, then gives terse pursuit calls"
+lines:
+  greet:
+    - tiller rope fastened, ready to cast off
+    - tiller rope ready, looking for tracks
+  onKill:
+    - found a gap in that hull
+    - tiller rope followed that trail correctly
+  onDeath:
+    - a little water over the rail
+    - the tiller rope trail doubled back
+  onPlant:
+    - not a cargo I want to keep
+    - "tiller rope found a path to {bomb}"
+  onDefuse:
+    - unloaded that safely
+    - tiller rope tracked the ticking down
+  onWin:
+    - tiller rope brought us back to dock
+    - tiller rope followed it to the end
+  onLoss:
+    - the tiller rope voyage met a reef
+    - tiller rope lost the trail near the finish
+  onLastAlive:
+    - one hand still at the tiller
+    - the tiller rope has one trail left
+  taunt:
+    - your push is sailing against the wind
+    - the tiller rope noticed those footsteps
+  lobby:
+    - tightening the bolts on my tiller rope
+    - keeping the tiller rope dry for the voyage home
+    - "My tiller rope: I will look for the last opponent."
+    - With my tiller rope, call the last place you saw them.
+quirks:
+  - holds_grudges
+  - always_gg
+rivals:
+  - hunterpumpkin2
+bio: DrSholkyk launched a leaky ferry between two rival team docks and still brings a tiller rope to the queue. HunterPumpkin2 keeps asking whether it really helps.
+batch: 3
+retired: false

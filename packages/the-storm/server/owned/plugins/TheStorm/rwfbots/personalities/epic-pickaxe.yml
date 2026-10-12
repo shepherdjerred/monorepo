@@ -1,0 +1,76 @@
+id: epic-pickaxe
+name: Epic_Pickaxe
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjIxOTAyMSwKICAicHJvZmlsZUlkIiA6ICJjOTQ0MTdlMTY5M2M0NDQyOWNiNDhlMzU2YWE3NWJjNyIsCiAgInByb2ZpbGVOYW1lIiA6ICJBSlhYVEhFQkVBU1QiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMzUzN2I2ZGYzNGM4MTk3MGMwYTcyMDEyYTUyYTE2NWEzMDFlYWFiMDdmOTQ0OTE1MTBjZWNjYjY1YzYwMWU3OSIKICAgIH0KICB9Cn0="
+  signature: "EAB18gsRH7iF9vN8/XDCn+XBGl1FfA7l4LzWQGJpXTwUdsGQXnyCjXM0MCcN8gYC4EUbILDPmkdVBDytx6UB8wV+WBP0DiCObFgVvtdesuUzy7/HO/x+oS/oHi9PYP1YBllnPnyE5Ypxm2Pp2Bc1QdfAh8lzqiN3GUd4C4DwuscDmX+ONuLCVt8Sz3YZpS027FmyA0VExS9icIG5Nm94HaySJLF1mNeYPQFRXMHDSl/gFYAocXRc6DVPF8il/sd7xIak9XX9jsvT3DxloRS5ZlaAJi51tkvnIUkFQHW5zMhU+08q9xDNfIwhO9g0jPlHXeX14tS+/jAgcaUEB48iyBvtbxMPl7GkApCSldpMuWQfr+Hg5w25/IYbOYAN+kmfEzo2s34tMCQ7aC5lBlkJ7K9S/JOt2LLluOQK94tOGBKJ06kqZuisKnI+C5omr0UxYixgVGZi5arCnXWWljQl0JBrutEX6rIo08OtFSsxrvkPSMGBP4YHhrmWc8aImOMaQR1tPTUxHODxcLEpkvjpI176UcYmcK4vjQnaviVvZLryJmEXL3KvM/tseGgsGhunkvIXu8+a7s0jvsp51WJSyECg1qCYOyJkryzBzi56EiWMFVLGLaudwnna0MjQxdZr61NDYr1Gt4ZVWM3dphV9aWHJs/RLh1QALHS1r4ACO2E="
+skill: 0.043
+archetype: sniper
+leverOffsets:
+  aimErrorDeg: 1.18
+  turnRateDegPerTick: 0.71
+  cps: -0.61
+  predictionQuality: 1.37
+  awarenessRadius: 0.89
+  coordination: 0.62
+  technique: 0.19
+  aggression: -0.42
+kits:
+  trooper: 0.14
+  longbow: 1
+  shortbow: 0.41
+roles:
+  defend: 0.81
+  rotate: 0.43
+  hunt: 0.68
+style:
+  aggression: 0.31
+  patience: 0.93
+  teamplay: 0.47
+  risk: 0.14
+voice:
+  tone:
+    - busy
+    - focused
+  verbosity: chatty
+  style: "ingredient lists and improvised kitchen fixes; short range notes and patient, exact corrections"
+lines:
+  greet:
+    - copper saucepan washed, team fed
+    - copper saucepan in place, checking the long angle
+  onKill:
+    - a useful pinch of pressure
+    - copper saucepan found the range
+  onDeath:
+    - too much heat on that corner
+    - copper saucepan needed a closer angle
+  onPlant:
+    - letting the bomb simmer
+    - copper saucepan covers the far entrance
+  onDefuse:
+    - taken off the heat
+    - copper saucepan can wait, hands on the fuse
+  onWin:
+    - copper saucepan can serve this round
+    - copper saucepan had a clear view of that
+  onLoss:
+    - the copper saucepan recipe needs work
+    - copper saucepan kept the wrong sight line
+  onLastAlive:
+    - one cook still stirring
+    - one copper saucepan, one long angle
+  taunt:
+    - your push could use seasoning
+    - the copper saucepan saw that peek twice
+  lobby:
+    - there is soup beside my copper saucepan
+    - please return my copper saucepan after dinner
+    - "My copper saucepan: I will cover the long angle."
+    - With my copper saucepan, call the close flank for me.
+quirks:
+  - bow_spammer
+  - always_gg
+rivals:
+  - louximskuthskox
+bio: Epic_Pickaxe fed a team from a cramped kitchen beneath their spawn and still brings a copper saucepan to the queue. Louximskuthskox keeps asking whether it really helps.
+batch: 3
+retired: false

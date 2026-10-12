@@ -1,0 +1,73 @@
+id: xxroushrouz
+name: xXRoushrouz
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjM1MjI5MiwKICAicHJvZmlsZUlkIiA6ICIwZDkwYzA0M2E4YTA0YWY1YTZiOWUxMjQxZmJiNTU5ZCIsCiAgInByb2ZpbGVOYW1lIiA6ICJTYXJhZ2lybHkwMTE0MzIiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYzdhYTVlMmZiOTczYzU3MjExZTVlNmQxMTg3YWFkNjlmNDBlYTRhOWVkZWYzZjdhNzExZjRmNjljMDA2ZDgwYiIKICAgIH0KICB9Cn0="
+  signature: "vz8UWWZURU0df/Y0GHIBSmkPSGUOD3c7r1MSp5X7JF7u+dVkgWfN9K6bsGiEa0Y7Z+KECWNG/pjfQXpGuVm0e+5AkVDggZ7nWpneaphLu6+DmrqIv+iPsZo6AkaSEgh7XpoMi3PKDHFe+TVHq0cNn2o6GYKaKsyvzsZhtHsi5fEjFeguJm7pzsww1JnDsYzF8Dofz8xnizJmcazFnP3ifne3Mbs/fOhop3wRie/5l45TXWwCJNLukZxuKcWqZn2GO8oYSH7ceW9Z1jh1nMxDu8nxqQ8Rq86W17lW/yXGDP7gMVJ0Wzs4nvMTjY838sJa9SEIqtfNKOxD5jzTYpXV6i9fC9cVq9LfSmAOwi4ISducafrR3OdNkHwUweCamaIAg1csIfDFFw4m7MAwfzCHbCYIFSFx4aCmJ1wV8ilHQpY/VAgQYEkCZ/QC1Y+pMmF/O4OCiMMlM50eXmxX3EIXB6BneC6JlxFL5amVJ1u3WFojH3uZqJE0ZvyUkI2z9fNJPN3ENvqHWKW9rJykmemYMzkJz1rNRVlXEI4D0zbL4Q2k7P4FOSKA31OO7bJYCtoZVNOwo7gpMRErGtBRmypdR7YiHkWJxPRMD3PS4u+uEkkMHQRfIYpCDDA0bxGniypSn40O6ZC5kb1plcsVWWB6qvYSM8/zERBfEXD0qNEPpyQ="
+skill: 0.52
+archetype: anchor
+leverOffsets:
+  reactionMs: 0.4
+  aimErrorDeg: -0.03
+  turnRateDegPerTick: -1.11
+  awarenessRadius: 0.64
+  coordination: 0.62
+  aggression: -1.2
+kits:
+  trooper: 0.95
+  longbow: 0.46
+  rewind: 0.28
+roles:
+  defend: 1
+  retake: 0.75
+style:
+  aggression: 0.25
+  patience: 0.9
+  teamplay: 0.59
+  risk: 0.15
+voice:
+  tone:
+    - excitable
+    - grounded
+  verbosity: chatty
+  style: "enthusiastic clues and upside-down maps; reassuring statements and firm location reports"
+lines:
+  greet:
+    - wax map found, clue understood
+    - wax map stays here, I have this corner
+  onKill:
+    - that corner was the next clue
+    - wax map and corner still secure
+  onDeath:
+    - the clue was apparently a trap
+    - someone watch the wax map corner
+  onPlant:
+    - a very loud treasure chest
+    - wax map guards the exit from the site
+  onDefuse:
+    - solved that little puzzle
+    - wax map is staying by our bomb
+  onWin:
+    - wax map led us to the prize
+    - wax map never left the post
+  onLoss:
+    - the wax map was upside down again
+    - wax map held the wrong corner
+  onLastAlive:
+    - one clue and no hints
+    - the wax map holds here a little longer
+  taunt:
+    - that trail led you in a circle
+    - the wax map has not moved for that push
+  lobby:
+    - does anyone recognise my wax map?
+    - the answer is definitely near my wax map
+    - "My wax map: I will guard the home approach."
+    - With my wax map, call before rotating off defence.
+quirks:
+  - stares_down
+  - always_gg
+rivals:
+  - banditlynx5
+bio: xXRoushrouz hid tiny treasure chests along the old lobby walking route and still brings a wax map to the queue. BanditLynx5 keeps asking whether it really helps.
+batch: 3
+retired: false

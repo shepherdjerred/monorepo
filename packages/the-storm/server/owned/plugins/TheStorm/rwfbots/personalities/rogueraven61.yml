@@ -1,0 +1,74 @@
+id: rogueraven61
+name: RogueRaven61
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTg4NDI0MSwKICAicHJvZmlsZUlkIiA6ICJmYjZkM2E5Zjk3MWY0ZTdlYmQ0MjE2Yjk0MjE5NDA3NCIsCiAgInByb2ZpbGVOYW1lIiA6ICJHb2xkZW5BcHBsZUdIRyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS81N2MyOTM3M2FkMWU0N2Q3ZjFlYjBmZTk1ODhiMDQzMDFjMzkyYmNkYzRmYTY2OWY1NTNkNDhhMzJiYzM5ZTA2IgogICAgfQogIH0KfQ=="
+  signature: "G/nARBYbHBdjMR3UZK+HE7/P3RNpyuSGW9/3z/U50igiZX89qFYMx1MxFDUT0Y1p6IUwbyXGENzPp0W41711w1r5iBX0xmAPpRRTKBLSy5t2m1rY0iEW6K6Mf9WZuHxsbS0PrOUdr0+vUUMQTOxphYACxluKYK4TqqpHyYHXzdtrwhz9XzDyCHON6ycbOedgHTNgQZ8RWEdHR9D7kCCPPacFEUzy30fCI+nAnrU5SBj0De6wYWwOLAyxk08mnJrTaAhO6l+29H6L7Eee+PzOm0qFF5g09DrTkcK5h6XNe73WQmT61L7rulnnRaHQNbp/sj3QK6H0Dpfk0sTR7snMrdXUL5aiT9lL0FHBF4Y1UQPmPQ9JsZBDYde1v+GmuvDcAZi/cW06bmQfFtehylvWknPywjYgTOQGMqhyCKG5f40HWs78HiIB2OXo+Fbm8w9IZJS/T4EDl2PVKphim1t7qHkM9nga1ckc5usPzqYyM40oz346C1Xva1NXsPw1TVEVJV/rLky1pD/hr6E3zIIeVW9kvUac0Mn8WJSLWqLkRRgV5ab6+vZ2B8mwFhs+HCP4HQdfnW50BvVjhltW0kIEHUR6G0TH6gqTXpL3SMxm5/0leBoqJIauO9G7e5i0v9chH9L8f4txFcmf9y+QWD69kQLuhdvteU0UqUqSKodzINY="
+skill: 0.862
+archetype: troll
+leverOffsets:
+  aimErrorDeg: 0.42
+  decisionTemperature: -1.97
+  coordination: -0.79
+  technique: 0.43
+kits:
+  trooper: 0.45
+  shortbow: 0.7
+  rewind: 0.89
+  spy: 0.81
+roles:
+  plant: 0.45
+  escort: 0.21
+  rotate: 0.57
+  hunt: 0.54
+style:
+  aggression: 0.66
+  patience: 0.24
+  teamplay: 0.12
+  risk: 0.83
+voice:
+  tone:
+    - steady
+    - mischievous
+  verbosity: quiet
+  style: "buoyancy checks and practical nautical talk; deadpan object conversations and harmless overconfidence"
+lines:
+  greet:
+    - anchor chain fastened, ready to cast off
+    - anchor chain has appointed itself captain
+  onKill:
+    - found a gap in that hull
+    - anchor chain is now insufferably proud
+  onDeath:
+    - a little water over the rail
+    - anchor chain would like a different replay
+  onPlant:
+    - not a cargo I want to keep
+    - anchor chain calls this interior decorating
+  onDefuse:
+    - unloaded that safely
+    - anchor chain says it knew the correct wire
+  onWin:
+    - anchor chain brought us back to dock
+    - anchor chain is requesting a trophy shelf
+  onLoss:
+    - the anchor chain voyage met a reef
+    - anchor chain has misplaced the blame form
+  onLastAlive:
+    - one hand still at the tiller
+    - anchor chain insists this was the plan
+  taunt:
+    - your push is sailing against the wind
+    - the anchor chain gave that push three out of ten
+  lobby:
+    - tightening the bolts on my anchor chain
+    - keeping the anchor chain dry for the voyage home
+    - "My anchor chain: I will cause a useful distraction."
+    - With my anchor chain, try not to laugh during my push.
+quirks:
+  - celebrates_early
+  - always_gg
+rivals:
+  - vividminer63
+bio: RogueRaven61 launched a leaky ferry between two rival team docks and still brings an anchor chain to the queue. VividMiner63 keeps asking whether it really helps.
+batch: 3
+retired: false

@@ -1,0 +1,75 @@
+id: itsshaelbroujou
+name: ItsShaelbroujou
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTk3MzUwMSwKICAicHJvZmlsZUlkIiA6ICJiYTllNWY4YTc0Yzg0MzQ5YjY3ZTg2MzBlMDRmMTI2ZiIsCiAgInByb2ZpbGVOYW1lIiA6ICJhbW9ndXNwYWRvdyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8xNTE1NWIwNzFlMTcyMWEwNzAxM2RmMTJmOTk4YTIzMzJkNzE2ZjllNTRhMWVjM2E2NmYzNTY5NzgyNzljOWFkIgogICAgfQogIH0KfQ=="
+  signature: "fzUnMmmgtgQjIa8gI1c72CcCVZbzn2kiDCXXNM/VljITTBM5/VDF0pxZDHiZR5/0QIlJKl51DnVdukDwYz0ipKBbMtIHlrBlyxQW3yNK/DaxpTFyF80jG4x8MBbgh7AQJPmns5poop+ANvoyDVH8DqXyc87bty+auytiwoiGaKmBwMu06xBSW58FYpc1vAOMoEImRhDU6VAyYNp+JyNxGfvVx0jy702wWpvA+oKcns+bcf7WF14S//wb5BCbORyB9DvBhl6YinOMzHvrdv1Y4+okZjx0IXuPza+8vMRxF6T8meqhGFBdmxaYj7QhLwhp4nRAXGo1mxx3PXLtqbGuPsT2eZSsMSRIVUyVBzvzXL9r+rwyocabSK4zayUigghi0PRjpFEDeMUACSJ/ee+9KjAqBn0ak+TCPpVGj1pUTjdkdHXd5fuv3dGCBl1VrtqwaDwdqMbSB86rl7RtqvKyqk2fOs/T8lU64bcb9e0S32ghcnYgpJinoMPyuVXSWHs+Yjj1lfzrPs7Xup/6Yr6rZtrj+s0kMZ4KvjIIhWjY1Hq9g3hW4pmZjHIa2lfkIrGuC7iF5AA4YRYfph81MqHFAeTZOkxMIaz1Ru3Aaq7BIzQUBKnjsL00sgiGGiCmYTZcJrlutT6vE6TeWiCyhxKmGTfXHaOMbUM4fCEQloL60sc="
+skill: 0.944
+archetype: troll
+leverOffsets:
+  decisionTemperature: -2.38
+  awarenessRadius: 0.4
+  coordination: -1.01
+  technique: 0.67
+kits:
+  trooper: 0.44
+  shortbow: 0.77
+  rewind: 1
+  spy: 0.8
+roles:
+  plant: 0.47
+  escort: 0.44
+  defend: 0.24
+  rotate: 0.57
+  hunt: 0.44
+style:
+  aggression: 0.64
+  patience: 0.35
+  teamplay: 0.14
+  risk: 0.83
+voice:
+  tone:
+    - observant
+    - mischievous
+  verbosity: quiet
+  style: "local forecasts and quiet predictions; deadpan object conversations and harmless overconfidence"
+lines:
+  greet:
+    - hail jar predicts a lively round
+    - hail jar has appointed itself captain
+  onKill:
+    - a sudden change on the hail jar
+    - hail jar is now insufferably proud
+  onDeath:
+    - the hail jar missed that gust
+    - hail jar would like a different replay
+  onPlant:
+    - pressure dropping at the bomb
+    - hail jar calls this interior decorating
+  onDefuse:
+    - storm warning cancelled
+    - hail jar says it knew the correct wire
+  onWin:
+    - clear skies over my hail jar
+    - hail jar is requesting a trophy shelf
+  onLoss:
+    - my hail jar forecast was optimistic
+    - hail jar has misplaced the blame form
+  onLastAlive:
+    - one hail jar in the storm
+    - hail jar insists this was the plan
+  taunt:
+    - your push is mostly hot air
+    - the hail jar gave that push three out of ten
+  lobby:
+    - taking a reading from my hail jar
+    - please stop breathing onto my hail jar
+    - "My hail jar: I will cause a useful distraction."
+    - With my hail jar, try not to laugh during my push.
+quirks:
+  - celebrates_early
+  - always_gg
+rivals:
+  - xillyzyt
+bio: ItsShaelbroujou logged the weather from a glass hut above the old arena and still brings a hail jar to the queue. XillyzYT keeps asking whether it really helps.
+batch: 3
+retired: false

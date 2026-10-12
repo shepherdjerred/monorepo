@@ -1,0 +1,73 @@
+id: phantompickaxe3
+name: PhantomPickaxe3
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTI4OTI5OSwKICAicHJvZmlsZUlkIiA6ICIyZmI1ZGJhYTY2NTA0OGEyYjZhYzU5YWE2Nzk5MDYzNSIsCiAgInByb2ZpbGVOYW1lIiA6ICJkcmFnbG9uZXIiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZmIwODYwNmFkODY5OWNmZGU1NDAyZmE1ZGJjNzRmNWQ1MTkzMDE4Y2Y1ZDRhMjEwNzMyZDcwNGUwNjU2MDQ2NyIKICAgIH0KICB9Cn0="
+  signature: "bPCDDphvs/tyZxihUwTh5j0yGbcrz+VGokgHaTAk8HKspO3a2FW7IQ2KRXoeYEeT2nUi0MypwMCgyipm1x58QyeZLn9+V382JH+7M1JFNiw8Z8bzD45INgkZMK2DGuvLDTORo6yKleaaIUkJMQYB52ACWM9DlNARBBX73UJ+DPYTIqzw2FHBaSuce/9Ogfyz2901o8Y3+YtynTDtwJ1/v46M2CD9jDD6halEoqzXTEKEA6m9TanfgdrPB0ef49kV75HsUC5B6QefCAjfWGW2zdaQ4uWOOhuzTVi/WBHpGYKVahP+6l9A/V+o7g3pfB0/wxT5RdBhr3SAEgeFusgR7XHq+W82DW3pNpKQjUBqOL5Ew23oamYUdxzedtCcpH5BRdVOYRGWiKIgppUkyPetvVUSdol2WjTb+gAlHUW3jGPhT6EDytVmIDBVJ82/KeyAmIaOaNtUHDfpVy5VRzGfUzTp2p6VW+lsi5ES3/3OU+BCd4YtHWYJ1XRIL3wK/kae5hRWmcScoxjYJ9N7Ctgmkje/I+u+i9BsjMpyrq62i4xx6exsrzn0kSQXgBWG6siXO8EKw4gB/o2tDdjrEb89CWxHP67bsQQp17r70Oni+abmYRV9uTeNyRyhblCFtE76ILWQKCHg0+QgT/rHMY+tRPyQog4SShVmgfqEHNM6eQQ="
+skill: 0.922
+archetype: turtle
+leverOffsets:
+  reactionMs: 0.63
+  decisionTemperature: 0.51
+  awarenessRadius: 0.64
+  coordination: 0.08
+  aggression: -1.44
+kits:
+  trooper: 0.93
+  longbow: 0.34
+  rewind: 0.73
+  wraith: 0.3
+roles:
+  defend: 1
+  retake: 0.35
+style:
+  aggression: 0.09
+  patience: 0.96
+  teamplay: 0.61
+  risk: 0.05
+voice:
+  tone:
+    - precise
+    - cautious
+  verbosity: normal
+  style: "map annotations and quiet route corrections; unhurried words, conservative estimates and tiny victories"
+lines:
+  greet:
+    - my inked coastline points toward trouble
+    - inked coastline is ready. no need to hurry.
+  onKill:
+    - inked coastline gets another little cross
+    - inked coastline waited for the opening
+  onDeath:
+    - there is a hole in my inked coastline
+    - inked coastline should have waited another moment
+  onPlant:
+    - inked coastline marks the fuse
+    - inked coastline checked the site first
+  onDefuse:
+    - erasing that from my inked coastline
+    - inked coastline checked the corner twice
+  onWin:
+    - inked coastline finally matches the terrain
+    - inked coastline got there eventually
+  onLoss:
+    - time to redraw my inked coastline
+    - inked coastline needed one more safe corner
+  onLastAlive:
+    - one dot left on my inked coastline
+    - the inked coastline will take this slowly
+  taunt:
+    - your route is wandering off my inked coastline
+    - the inked coastline can wait out that peek
+  lobby:
+    - unfolding my inked coastline on the lobby floor
+    - please do not spill cocoa on my inked coastline
+    - "My inked coastline: I will keep a safe route home."
+    - With my inked coastline, please check the blind corner first.
+quirks:
+  - gapple_hoarder
+  - always_gg
+rivals:
+  - shizshoumfuse
+bio: PhantomPickaxe3 kept a hand-drawn atlas of the 2013 rotation and still brings an inked coastline to the queue. ShizshoumFuse keeps asking whether it really helps.
+batch: 3
+retired: false

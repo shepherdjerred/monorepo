@@ -1,0 +1,75 @@
+id: creeperlynx7
+name: CreeperLynx7
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODc2MzY0MywKICAicHJvZmlsZUlkIiA6ICJmNjhhMmE2NTNkNjU0NTQ1ODE0ZDg0OWI5NmU0MDllOSIsCiAgInByb2ZpbGVOYW1lIiA6ICJMdWdhdHR1IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2JkYzZhMzE2NjNkYWIyMjZkODVlOWFmMTQ3OTUyNTAxYWM2NmFhNjk1YzhhZDEzOGRiOTM3YWE2YTA3NTI1MGEiCiAgICB9CiAgfQp9
+  signature: "qcd/F5e6QcePxmlg/Sns8ZE0i3qidEQS9zMhiKvzKRs/jf2CTkqg7QoJdeMZHS6TcXORl0G+xla2z6Hxz1jsZK30mjD5OecDgI+1x4KOUW5+09aHAvkQSEILzr87x7PbtGQ7v8XFB1ERHbp9QMohAMh24545gZh+2dvrB2GsoCMbErdIQCHcwRHTcbMzDhgYOspWv8/ZexsBxv1lmH/MEvbJmRxz1MnEGtsZo/qhafTzUJa4wgR3Exs7iyVDAkq39GKb+fYiCbMKHO30H7mGLrZ3eVYLj29eYw9n5Tf+1JcByLjBRL+M1nYCZaWowO+fIhSwsUdN7ylskODuYgRVakcneVu+ozhCf3tUNj9VdHe63sfMKEI6Uz30dshdl8nmWATy9fR7OWXBQgQel+VZ1f5s/6k6mJvF6s73Nblh9ckjLeFKmbh+4R12nOaF4U4eaSk4gSSr/i26swmYkXIkHmh5uVx8rKaQSXuAlM2qFQupIjlMxdLDR0YPEPO3DVA4DkB848l4lKMrLBpafT2J7VNHRYPM3yDdIYBLF5YDxlmQ1IjhqLeOX1YlxNpl0kzCP82/UlyeKlM9Dc/t0Ui2MkIoj/b8Dsmt2cuZNOjS4M0MoYbTSye9TMdMyUCRBWnsp6UlYqYQd7CjcSWNjhVE0gt7jGVSvScUgm1LFT0Jhas="
+skill: 0.459
+archetype: lurker
+leverOffsets:
+  aimErrorDeg: 1.5
+  predictionQuality: 0.29
+  awarenessRadius: 1.87
+  coordination: -1.53
+  aggression: -0.64
+kits:
+  trooper: 0.77
+  shortbow: 0.53
+  ghost: 0.91
+  wraith: 0.53
+roles:
+  plant: 0.32
+  rotate: 0.73
+  retake: 0.16
+  hunt: 0.83
+style:
+  aggression: 0.41
+  patience: 0.79
+  teamplay: 0.17
+  risk: 0.62
+voice:
+  tone:
+    - soft-spoken
+    - hushed
+  verbosity: quiet
+  style: "tiny aquarium metaphors and creature worries; lowercase whispers, deliberate pauses"
+lines:
+  greet:
+    - reed bundle ready, fish fed
+    - reed bundle here. quietly.
+  onKill:
+    - a splash and then quiet
+    - the reed bundle was here a while
+  onDeath:
+    - out of my depth there
+    - heard it too late beside the reed bundle
+  onPlant:
+    - something is bubbling at the bomb
+    - reed bundle is watching the quiet entrance
+  onDefuse:
+    - water is calm again
+    - no noise. no fuse. just the reed bundle.
+  onWin:
+    - a quiet evening for my reed bundle
+    - the reed bundle stayed out of sight
+  onLoss:
+    - cloudy water in the reed bundle plan
+    - the reed bundle waited one corner too long
+  onLastAlive:
+    - one small splash left
+    - nobody move near my reed bundle
+  taunt:
+    - that bait was a little obvious
+    - the reed bundle heard that approach coming
+  lobby:
+    - putting my reed bundle away before the round
+    - the pond can wait for my reed bundle
+    - "My reed bundle: I will hold the quiet route."
+    - With my reed bundle, leave one quiet approach for me.
+quirks:
+  - slow_starter
+  - always_gg
+rivals:
+  - toxicslime11
+bio: CreeperLynx7 maintained a glass pond under the old lobby stairs and still brings a reed bundle to the queue. ToxicSlime11 keeps asking whether it really helps.
+batch: 3
+retired: false

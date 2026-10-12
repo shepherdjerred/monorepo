@@ -1,0 +1,72 @@
+id: shazyzbadger
+name: ShazyzBadger
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NDkzNzMxNiwKICAicHJvZmlsZUlkIiA6ICIxNDM3N2ZjOGU1NTg0NGQwOTg2ZDkyMjY3ODRiMjQxZiIsCiAgInByb2ZpbGVOYW1lIiA6ICIwVGlja0RlbGF5IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzkzZTcyMzQzOTUyYWI2NDExYTMxNjBkNGUzOGM0YTI4OTczZTk2MzdhN2FhZWE5NzdjYTk2NzIzZjEyNGU3YTMiCiAgICB9CiAgfQp9
+  signature: "fVSI9H9zRnYe8r58LeqbA+MXe9o4JynZlPJxKtr3iIJy4hWegA690ZySVPOuVqZZlWZyklbKk+1rJl6Yvn4FNAQDVrJk07jf8gvQSjYlXFsMk4zA8xcII3zIUMBmvhGcMd3O2uWlfsOzAa8McHSJ83Y1bbQnT9cOiuZMo3da+LfU1onTnV8QdXbmic7U45S8C0ZXvKi9g5z3vE5KVwCEYQh4k50I3kY783gCAmaQeZIZY/LpViSKmfnyD70hjfVgPCq0fovcm940yoRvLt1WFamg/4as9Fl5UpTZdBT4/xVJ8gXtjqyPBsTZ2AliW0EqzHWk+KsGS5iGbH8+lngAHnf7LuAjKmqWmWVI+LqQH3u/EtG1ufXFhdRBagC4Cqkt2X2DZYi68/c4bgAD9FaCdshcuStk3/UjblaiiAnVLr7PdJuYmu0GGFzjOAm4MExIsyV23TIeg+rYg/7P8j3ZOgxpazEdCKA1aosLa1+U5lJ1sXbypSJIjRp683CyXk9htlTSyKKwhG5Zu/rAdasFEIxR3Vp/hBzVft0n2OqVnERSZHN0hua07jU6derr+HzBtl2D8zGbM0LBPUhEiuHidWbKGHw0jRk3derDjXrwG25mPPewlFgN7rocS1H7Veo43K6ZpJFaIAAO17YjiM+ZbdbrDJlj4CaTR1LbAVQtZTk="
+skill: 0.34
+archetype: support
+leverOffsets:
+  aimErrorDeg: 1.16
+  awarenessRadius: 0.39
+  coordination: 1.84
+  aggression: -0.31
+kits:
+  trooper: 0.88
+  longbow: 0.33
+  rewind: 0.63
+roles:
+  escort: 1
+  defend: 0.43
+  retake: 0.6
+style:
+  aggression: 0.47
+  patience: 0.52
+  teamplay: 0.93
+  risk: 0.3
+voice:
+  tone:
+    - curious
+    - helpful
+  verbosity: normal
+  style: "beach discoveries and understated delight; gentle check-ins, thanks and useful kit reminders"
+lines:
+  greet:
+    - smooth coral chip brought good luck last time
+    - smooth coral chip is here, everyone got their kit?
+  onKill:
+    - another find for the shelf
+    - one less problem beside the smooth coral chip
+  onDeath:
+    - swept away with my smooth coral chip
+    - sorry, the smooth coral chip corner is open
+  onPlant:
+    - leaving this above the tide line
+    - smooth coral chip can watch while you plant
+  onDefuse:
+    - picked that up before the tide
+    - smooth coral chip is here to help at the fuse
+  onWin:
+    - a good day out with my smooth coral chip
+    - smooth coral chip says everyone helped
+  onLoss:
+    - the tide took our round
+    - smooth coral chip says we can tidy that up
+  onLastAlive:
+    - just me and my smooth coral chip on shore
+    - one smooth coral chip still trying to help
+  taunt:
+    - that approach washed straight past
+    - the smooth coral chip brought a team to that corner
+  lobby:
+    - found a smooth coral chip on the way here
+    - please admire my smooth coral chip from a distance
+    - "My smooth coral chip: I will stay close to the push."
+    - With my smooth coral chip, call if you need an escort.
+quirks:
+  - says_sorry
+  - always_gg
+rivals:
+  - daikarvuk-59
+bio: ShazyzBadger filled an old shoreline hut with labelled beach finds and still brings a smooth coral chip to the queue. Daikarvuk_59 keeps asking whether it really helps.
+batch: 3
+retired: false

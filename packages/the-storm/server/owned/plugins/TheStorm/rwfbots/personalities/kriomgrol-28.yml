@@ -1,0 +1,75 @@
+id: kriomgrol-28
+name: Kriomgrol_28
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTkyNTk5NiwKICAicHJvZmlsZUlkIiA6ICI5YWRmNmRlNTJkNjE0MzA2YmEzNzQ2NWU1ZDIyYThjMyIsCiAgInByb2ZpbGVOYW1lIiA6ICJMb3JkX29mX3hpYW95YW8iLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYTk2NzRmYTg1NThjZWZkYzM5YTBkZGQzMDJhM2EwNDNkYTkzNWMyZTI1ZjAwMjM0N2QzMDFkMjNjNjQyZGRhNSIKICAgIH0KICB9Cn0="
+  signature: "vywWd0LYgJdBKeNDbvNyprRPYXZz9L0q6GFgTHMoMfPB2vB5afSnDAtbtqRo9Qb5eyeD3/cqlgP7Zxn2n+xli+hHxL1auLrY+DAG6TL25IoC1BqDKX15pxtvAplJa+n5xlNc+LwrJtE/dl2stCOAmpeCE0eK9CiK32QsJd5miPFE4PtBdgqdFUaVBr5orvxu344SCvK5kzU3naSjFnxwnuA0oEAf78Xnf9BOahnqUoC2xxWz3sfVm3NxUAKzctilz4K/MwdGg+uhmFArJzihUd00cvGa4CdhOYKuCaJocAA+A7zjo1YZtSrxBmdVAyOwQTDb4+HUiPUIoPrdQ6yIiyem/N3JB+yp8e7zTR4xCaNYbfVewxenfXk7Xu5y4L9/dmqHgM4dkphoDsoE0479m1IzwiMWwDsGxVIsoU1hw+3pOrs9ZXEJU1CoD5AfpsPsfTioDaDBDMy7dVN23lJeDmi/CgDmvk61qN4twSUvOyu9BFpUh1UdVnfs/QD+QGLz91bJ4shh4OG7YYNWmITgAEOVrLWQbcMnLytchyr9Guciv8T3UinURzwzEKNdAnlv4nyXF72efLF0NLip4eXumDVab7B5wi6o6Jn+9rvNbP6NT5EZ+BLlFHVSefPiqs0dbtPXxaLe0gJ8A8MlxKA0GWavHcedVD0hQzY8C6INpUw="
+skill: 0.819
+archetype: sniper
+leverOffsets:
+  reactionMs: -1.26
+  aimErrorDeg: 1.43
+  cps: -0.69
+  predictionQuality: 1.04
+  awarenessRadius: 1.32
+  technique: -0.45
+  aggression: -0.37
+kits:
+  trooper: 0.16
+  longbow: 1
+  shortbow: 0.45
+roles:
+  defend: 0.82
+  rotate: 0.45
+  hunt: 0.5
+style:
+  aggression: 0.28
+  patience: 0.76
+  teamplay: 0.33
+  risk: 0.16
+voice:
+  tone:
+    - measured
+    - focused
+  verbosity: normal
+  style: "soft beat counts and tiny timing worries; short range notes and patient, exact corrections"
+lines:
+  greet:
+    - pocket dial is almost on time
+    - pocket dial in place, checking the long angle
+  onKill:
+    - right on the pocket dial beat
+    - pocket dial found the range
+  onDeath:
+    - my pocket dial skipped a beat
+    - pocket dial needed a closer angle
+  onPlant:
+    - pocket dial is counting now
+    - pocket dial covers the far entrance
+  onDefuse:
+    - stopped just before the chime
+    - pocket dial can wait, hands on the fuse
+  onWin:
+    - pocket dial and team in perfect time
+    - pocket dial had a clear view of that
+  onLoss:
+    - my pocket dial needs adjusting
+    - pocket dial kept the wrong sight line
+  onLastAlive:
+    - only one pocket dial still ticking
+    - one pocket dial, one long angle
+  taunt:
+    - a little early on that swing
+    - the pocket dial saw that peek twice
+  lobby:
+    - listening for the pocket dial tick
+    - my pocket dial is not a countdown shortcut
+    - "My pocket dial: I will cover the long angle."
+    - With my pocket dial, call the close flank for me.
+quirks:
+  - bow_spammer
+  - always_gg
+rivals:
+  - nyxmoush-25
+bio: Kriomgrol_28 built a clock tower that chimed one block too early and still brings a pocket dial to the queue. Nyxmoush_25 keeps asking whether it really helps.
+batch: 3
+retired: false

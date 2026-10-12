@@ -1,0 +1,73 @@
+id: mrmeshpaeshke
+name: MrMeshpaeshke
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4OTM0MzAyNCwKICAicHJvZmlsZUlkIiA6ICJjNTI3ZWI1ZTQ1MDE0NTRkYWQwMjhmM2Q0M2ZkZGViNiIsCiAgInByb2ZpbGVOYW1lIiA6ICJDYWxsQmFkIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzQyMjI1NzZhNTdiMjJjOWU2YzEyZDMzMjFlOGNmMjAzMDk2YjUwZDZiNTBiZjEwZTJhOWUzYmZlNzE4OTIwMWIiCiAgICB9CiAgfQp9
+  signature: "eOxADHcDU/BybBJFS6L8ESnqViKKwJcdGy4zHnmjYBKOjWE05Ryeg85J5VdkQRgA3NvEPtvVHhWgU1Y1ggsDJ/yCUZHf3hYe2hdsYsI416rYdFvO9rt+6zB/vYLzyOhjlTFkPvklwUZeEzWlH5/0WvV7q74Izn78CQZS7T6mh3hqd/f1OaB3GsZ6qAzp4ZZbsFQR1AYWj5L1Yt6rSy48+QKHNN3UrZ7dc+sEKwtCfzDG5iD6JnBNF0vhiOQaU7aD505HODz656OJFXw1OxjHOg09sbxNPJJL6Y2orwBRPC6fFAHWTLGMztiiT0pV71ERhHaZYVPRFcrHDwLecMD9gC6jK5PHr19zyeJ1/1lSEjVHK18vpeZJR7FyBdJZM6JLMkSQGufMux7LdYt8Ut1niBLBSujH8u8TaHboq25zUGqttCdw4oFUtWbWJXRO69vvM2G4HZiijVHQji/C6mjTcv78N1pKWiuGJ40KKOC8DLD6lnXvkctTzqb2Y0V4RXqdc8JzK5Ak/u6JpXP2xT2vpnZzZcRJYbXxhyUJJ+S8snxtCKMjGxbQlbW1Ch50TieVJvcVoo6x/pRBkF8BcIAdWH0QXnHE5O0h//+dXlgpSZmxMEJA44yymtGONNCBWVssbCOYt7Wqh9uwOKzAbkEbzGik4aDKrB9GBkh02F53HTA="
+skill: 0.3
+archetype: rusher
+leverOffsets:
+  reactionMs: 0.15
+  cps: 0.44
+  decisionTemperature: 0.33
+  awarenessRadius: -0.9
+  aggression: 1.66
+kits:
+  trooper: 1
+  shortbow: 0.63
+  rewind: 0.34
+roles:
+  plant: 0.7
+  escort: 0.51
+  hunt: 0.63
+style:
+  aggression: 0.96
+  patience: 0.12
+  teamplay: 0.31
+  risk: 0.73
+voice:
+  tone:
+    - dry
+    - eager
+  verbosity: normal
+  style: "imaginary roof leaks and tidy-angle demands; fast fragments, impatient countdowns"
+lines:
+  greet:
+    - slate tile checked, no leaks yet
+    - slate tile ready, I am taking the first corner
+  onKill:
+    - a small opening under the eaves
+    - slate tile keeps moving, next corner
+  onDeath:
+    - found the one loose tile
+    - a pause for the slate tile, then straight back
+  onPlant:
+    - something ticking under the roof
+    - slate tile is already on the next approach
+  onDefuse:
+    - one less repair bill
+    - quick hands, quick slate tile, clear
+  onWin:
+    - slate tile kept the rain out
+    - slate tile barely stopped all round
+  onLoss:
+    - the slate tile plan has sprung a leak
+    - slate tile ran ahead of the plan
+  onLastAlive:
+    - one tile holding the roof
+    - my slate tile and I will keep moving
+  taunt:
+    - your angle would collect rain
+    - my slate tile got here before that push
+  lobby:
+    - inspecting my slate tile for cracks
+    - the slate tile repair can wait one round
+    - "My slate tile: first corner is mine."
+    - With my slate tile, please follow after the opening.
+quirks:
+  - bunny_hops
+  - always_gg
+rivals:
+  - crimsonvounde
+bio: MrMeshpaeshke reroofed the same spawn cottage after every group building session and still brings a slate tile to the queue. CrimsonVounde keeps asking whether it really helps.
+batch: 3
+retired: false

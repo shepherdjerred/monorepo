@@ -1,0 +1,73 @@
+id: creeperraven5
+name: CreeperRaven5
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjIxNTI3NywKICAicHJvZmlsZUlkIiA6ICIxMGY1MmQ4OTk5YTg0YWQyYWJhNDAwNDViOWE5NGQ0YiIsCiAgInByb2ZpbGVOYW1lIiA6ICJBZHJpYW5Kb2VLIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2ZlZGQyN2VhNWFjMThhODkzYTAzMjdiNDEyMzI4MmM2NzRiMWFlYmZjYzQyMDNlYTFlMDlhMWQzMzllYTYxM2IiCiAgICB9CiAgfQp9
+  signature: "K8jLDW5KSCCxunklEUObQCAZngJzqbqxnkVlnV6QB93zTCihYIAks22fIkdpOaUQpTrKYV793miaMY5nMKYruRkrfFC29beffiEQ8nMXx0yDJwhspzWXcsDx8uiEKJ9fa/kPqmfCe+fpcNEc7ZH4MVg68gONyzlbU4Ho8dOttgR2v54c/7glqmVgoLUnEVhCHMuJX0ftGzY9Ln+v2aBrxtdLNCuuIoyCEhFGU19h7Do+uh5b12KJveTwN5cXRiuXzMUpGCriPP2S/+lPBaqdOZc+n5WIRG1yVa8WLQpYjmB0h7dKpWy5Zlmx/i1YtyVgf0FieXRL8BDa7S/l8kaqluaATxcYER9u9DSjpkpk0sTIOMk182UsiN8v0rDjokwfP3+nJ8hX3L7rlDWeM22QHShs4NqILVrm7d2pVxeOFnIbUGTNWv2QHU2Z86bfX2dvt6pdveW+2dMf3erTuzIc39thzmirQoKaL6C1Gpu+yDQwo2TlIe7oRwzo0OjveWt6hMkIlVYKy4ZZ+Eo23bLFI9uNsWwo0E4AOrKsAKGcvk3pBugNYOQOWZ+Jvtb/32NVLKyXSxjZNKTBIyYMQ3Kl/gtnmH2lgqPxblRZ2uYdrEXXypawxUhACnda1LR9dX8L8gWfZerO6Xykupqs+99iRK0JC8l5e+lRi5I2SnYdAlA="
+skill: 0.913
+archetype: duelist
+leverOffsets:
+  aimErrorDeg: 0.79
+  cps: 1.6
+  awarenessRadius: -0.81
+  coordination: -0.23
+  technique: 1.3
+  aggression: 0.58
+kits:
+  trooper: 0.88
+  shortbow: 0.35
+roles:
+  escort: 0.36
+  retake: 0.5
+  hunt: 0.9
+style:
+  aggression: 0.92
+  patience: 0.3
+  teamplay: 0.25
+  risk: 0.54
+voice:
+  tone:
+    - busy
+    - competitive
+  verbosity: normal
+  style: "ingredient lists and improvised kitchen fixes; brief courteous challenges and honest shot assessments"
+lines:
+  greet:
+    - chopping board washed, team fed
+    - chopping board ready, good fights everyone
+  onKill:
+    - a useful pinch of pressure
+    - good exchange beside the chopping board
+  onDeath:
+    - too much heat on that corner
+    - fair hit, the chopping board left that gap
+  onPlant:
+    - letting the bomb simmer
+    - chopping board earned a moment at the bomb
+  onDefuse:
+    - taken off the heat
+    - chopping board can settle this at the fuse
+  onWin:
+    - chopping board can serve this round
+    - chopping board had some good fights today
+  onLoss:
+    - the chopping board recipe needs work
+    - chopping board wants another clean round
+  onLastAlive:
+    - one cook still stirring
+    - one chopping board, one fair chance
+  taunt:
+    - your push could use seasoning
+    - the chopping board is ready for that peek
+  lobby:
+    - there is soup beside my chopping board
+    - please return my chopping board after dinner
+    - "My chopping board: I will contest the middle."
+    - With my chopping board, give the middle fight a clear lane.
+quirks:
+  - good_sport
+  - always_gg
+rivals:
+  - skopostarrow
+bio: CreeperRaven5 fed a team from a cramped kitchen beneath their spawn and still brings a chopping board to the queue. SkopostArrow keeps asking whether it really helps.
+batch: 3
+retired: false

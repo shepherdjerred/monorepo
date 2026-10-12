@@ -1,0 +1,74 @@
+id: lildavon
+name: LilDavon
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTgxNTE4NywKICAicHJvZmlsZUlkIiA6ICJmNzM0MmExODMxZDA0ZDA5ODc4Y2ViOTVmOTUxYTllMSIsCiAgInByb2ZpbGVOYW1lIiA6ICJOb3RNMWtzIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzI3ZDhmYzBhOWU5NWMwMjU2NjliMjJmMzlmMGNhMGZiZTYzNjc5MzM1MjgxYjJkMjk2Mjk3YzEwOGQ2MTU2MDIiCiAgICB9CiAgfQp9
+  signature: "XWHR5MA+AZJL65MG7T9hN3Q9eM82Pn/pmVJVtQ0CZrBtTv1dbobBsIY+dnaHQecHTGpwHaTPKTLMUVV5Z5rEweu510G1xPWTcbI1IgorC9lky+I7OCZLqZOORxWtCfrDStLbNsv4lyAjrvUa7qb63OZ6R9jZGRBDxy/Gwdvr9trqwb9t1ha0lbXEF5KvSjLYdbjbtlBTP9FTGlpcGlG9A+9FVdUgKzbj7OUgw4fnVc6zCWtQPyEIkVKDqqs/yt/+q2XQTtQ0ATJqTwSm2sLEh50LjLoAKrni/cwzL+Xf0REwrg+1MCcm1yKs5ly8/lcvQcUHiGxWAIKJvjfHp9zbXmqhT6EO6lxgFkUxd5572BSzI4ymZX275CvpovSmO3O3Y/b3yr+TFVh+zcD1oPYfMIi5KiTLCq58K/V4SU5KdTsIu0PUsv2qHNJPRBb41v/YAPs9CcTzH3GftDXhW8755NKqR6TWglH7hmoewRsR7/pfP1dZI9r5K+VWYkT7Uhw3UHKHJ13a5pNDN9rJMBr1H6nGGSiLzpAUf+r8Zt/axMXEYWm64nFj1PoyesbTSRwjNR3uMRARheGbcJ/J56isLmQnDjlCHOKCaqxOn4lb3Nnciv8Dkq6qVMtQJF5kTpBzOn5vpyEs0eb7udjwhvLlgj/Xxpy2KUbHrMjNvjEdTw8="
+skill: 0.744
+archetype: anchor
+leverOffsets:
+  reactionMs: 0.39
+  aimErrorDeg: -0.02
+  cps: -0.85
+  awarenessRadius: 0.19
+  coordination: 0.46
+  aggression: -0.79
+kits:
+  trooper: 0.93
+  longbow: 0.43
+  rewind: 0.29
+  ghost: 0.32
+roles:
+  defend: 1
+  retake: 0.61
+style:
+  aggression: 0.22
+  patience: 0.85
+  teamplay: 0.57
+  risk: 0.1
+voice:
+  tone:
+    - steady
+    - grounded
+  verbosity: normal
+  style: "buoyancy checks and practical nautical talk; reassuring statements and firm location reports"
+lines:
+  greet:
+    - bow lantern fastened, ready to cast off
+    - bow lantern stays here, I have this corner
+  onKill:
+    - found a gap in that hull
+    - bow lantern and corner still secure
+  onDeath:
+    - a little water over the rail
+    - someone watch the bow lantern corner
+  onPlant:
+    - not a cargo I want to keep
+    - bow lantern guards the exit from the site
+  onDefuse:
+    - unloaded that safely
+    - bow lantern is staying by our bomb
+  onWin:
+    - bow lantern brought us back to dock
+    - bow lantern never left the post
+  onLoss:
+    - the bow lantern voyage met a reef
+    - bow lantern held the wrong corner
+  onLastAlive:
+    - one hand still at the tiller
+    - the bow lantern holds here a little longer
+  taunt:
+    - your push is sailing against the wind
+    - the bow lantern has not moved for that push
+  lobby:
+    - tightening the bolts on my bow lantern
+    - keeping the bow lantern dry for the voyage home
+    - "My bow lantern: I will guard the home approach."
+    - With my bow lantern, call before rotating off defence.
+quirks:
+  - stares_down
+  - always_gg
+rivals:
+  - neonslime85
+bio: LilDavon launched a leaky ferry between two rival team docks and still brings a bow lantern to the queue. NeonSlime85 keeps asking whether it really helps.
+batch: 3
+retired: false

@@ -1,0 +1,72 @@
+id: zaeljaeninja
+name: ZaeljaeNinja
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NTYzMTQxNSwKICAicHJvZmlsZUlkIiA6ICI5MGQ1NDY0OGEzNWE0YmExYTI2Yjg1YTg4NTU4OGJlOSIsCiAgInByb2ZpbGVOYW1lIiA6ICJFdW4wbWlhIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzg1MzMyMTc5NzI1Nzg1ZGRjOTNjNmM3YmFhZTg2ZTNlZTkyZDBkMTcyZTUyZjZlODYwMTczMGFiNmU5NTVjYjUiCiAgICB9CiAgfQp9
+  signature: "DieYS202TU1vBC3AJYpP0ku4Cf8nsRzmdUf29i9U2Eg05BTDdGOF2HCp6JaJuVO+akkaTThFtggcv+Ed/Um753HR+xObLytz364lh36e4tOGnqmBbuhLVQpqVznXtmtMNtiRdlNiQl0vtJZkZAhleS+fLgFxs+09GD4ySPWZ+5ds78BPjoiqW/eFDl6X6imKtVf52vp5nC8XESspab8JjAvXHxGF9+hoceSMv3W59hy9RMZKe1temQoy3XsMH9oC/ZOuLvhCo2l9qFk+F76Z+UwZ6flLT/OngYhjkA61uC2SxjF2/5hyzFHAfTAmQrHyWbjvc4eXfWAfdyn3aOkF3dLTAAPjcsfZQ5QazszLPhbEKEwmWDkOYDvyO5T7EvNoI6HUWgPdR83/LgEUgjfbx26btCUxgDX4HoJbFEtGbcx5L4PX1FZtQ1ZbSFSLMD+odEdPjmZJZ+1sSVQtX4NzKBj3PGvF7eFlLmHFzdDelIVlQ397GLuddKeYTNSe+rcTFgQWm/qL7hUc5Xaxka3BzAh+EJ/OaDgqP5C2dHr+dS1Cg9rTxeh9qJJxT6Zq+DDkmT+bLHYJaDwDNf9/wT5FoZLhsVzRce5dh1lCzbO3EcVHQxKHQdxxL75TGW7XHw1IbK3B/cuCDTcGbcp5lpWg2d7o1pfHPpDUsjaLhUHzWHs="
+skill: 0.489
+archetype: turtle
+leverOffsets:
+  reactionMs: 0.72
+  decisionTemperature: 0.51
+  awarenessRadius: 0.15
+  coordination: -0.6
+  aggression: -1.44
+kits:
+  trooper: 1
+  longbow: 0.27
+  rewind: 0.81
+roles:
+  defend: 1
+  retake: 0.49
+style:
+  aggression: 0.13
+  patience: 0.94
+  teamplay: 0.48
+  risk: 0.01
+voice:
+  tone:
+    - dreamy
+    - cautious
+  verbosity: chatty
+  style: "sky metaphors punctuated by exact callouts; unhurried words, conservative estimates and tiny victories"
+lines:
+  greet:
+    - night journal says this is our orbit
+    - night journal is ready. no need to hurry.
+  onKill:
+    - a little spark beside my night journal
+    - night journal waited for the opening
+  onDeath:
+    - my night journal did not show that collision
+    - night journal should have waited another moment
+  onPlant:
+    - starting a very small eclipse
+    - night journal checked the site first
+  onDefuse:
+    - light returns to the bomb
+    - night journal checked the corner twice
+  onWin:
+    - a bright mark in my night journal
+    - night journal got there eventually
+  onLoss:
+    - a cloudy night for the night journal
+    - night journal needed one more safe corner
+  onLastAlive:
+    - one small night journal in a big sky
+    - the night journal will take this slowly
+  taunt:
+    - that shot went into another orbit
+    - the night journal can wait out that peek
+  lobby:
+    - showing the lobby my night journal
+    - the ceiling is blocking my night journal
+    - "My night journal: I will keep a safe route home."
+    - With my night journal, please check the blind corner first.
+quirks:
+  - gapple_hoarder
+  - always_gg
+rivals:
+  - falconarrow2
+bio: ZaeljaeNinja named the roof above spawn an observatory despite owning no telescope and still brings a night journal to the queue. FalconArrow2 keeps asking whether it really helps.
+batch: 3
+retired: false

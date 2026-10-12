@@ -129,7 +129,8 @@ final class SimWorld {
             spawn.kit(),
             archetype,
             quirks,
-            seed ^ (spawn.id() * 0x9E3779B97F4A7C15L));
+            seed ^ (spawn.id() * 0x9E3779B97F4A7C15L),
+            null);
     bodies.put(body.id, body);
     return body;
   }

@@ -1,0 +1,73 @@
+id: turborider74
+name: TurboRider74
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODc4NTMyMSwKICAicHJvZmlsZUlkIiA6ICIxODEzOTc2N2Q2YjU0N2E5OWY3M2M0ZjRmZjEzOTZhNCIsCiAgInByb2ZpbGVOYW1lIiA6ICJVc2FXaW1hIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2YzM2ViMTZmMzA2OWZiZmY1YTViMjNlYmI5MmZiZjk0OTZlYTcyNDEyNzJkMTgxNDJlODY0ODYzZmI4ZWViNmYiCiAgICB9CiAgfQp9
+  signature: "dCSCnWjWjEG51ox/razqzkmqrZMymNHqLSlBntahKOX0tq2PxPuEcBWwnZx7MFV6QjMtGHSXE0NWcBIAUPMlJXzo1OI6BzniQvKAS3nzbKKwLslssaNebjKcXP3yTIxI+64rA0ISOwBQL59L1O6Pjdco+h7zTVe4gsy9LfQ7QWLNz2I3tyadoX+ldf1QntKytpvh1/i7U7fRnHo6gq5pDhEtCr4cLzH0ZdEbWkVhRik7A7JtZD4qNyGf/7MAjUdYq9TS2pfU9ylRr9tZv/jVGGAonvylLtzm1SgybFJ/XlRBJJ/jTfCIiw6lsDPJpWjtr2j8IUN4yTFN8kYlPhVGbqoNHDjzzE2BvvahN0gqD9sHOYJg2/2IiwQr3lZaSR8/r8RWsnlP0h6NrZhH1ojZYlnakY7rdSkaWsGktXg4FcHyroQlrDVGeIXisDoR9fnGhyFRlV5nbrmUPCMYW10Ak8ZzWgraUV3F0OWH/ZcmLGwN3X/PM45016hZSGk5wWoMQ4U4x8dfimxNIyLyNPG78fzqE6URjV26Cfe57aBs+qw2nxDXE3ZfjCAW6B/Y3vHj/S9I3tXy1/rzKlbsNiIVN/gzF/pvLOSEj6a5j5kglE4n4wH5QdkpX/ia3AlSebh6Gd6vJwxpq3Sp89P33kxvdab8h3YcCvXd8hEM7EQyHTw="
+skill: 0.461
+archetype: hunter
+leverOffsets:
+  turnRateDegPerTick: 0.48
+  cps: 0.83
+  predictionQuality: 0.91
+  awarenessRadius: 0.84
+  technique: -0.81
+  aggression: 1.21
+kits:
+  trooper: 0.55
+  longbow: 0.56
+  shortbow: 0.95
+roles:
+  rotate: 0.49
+  hunt: 0.89
+style:
+  aggression: 0.8
+  patience: 0.41
+  teamplay: 0.27
+  risk: 0.6
+voice:
+  tone:
+    - patient
+    - intent
+  verbosity: normal
+  style: "deliberate pottery talk and wet clay worries; tracks small clues aloud, then gives terse pursuit calls"
+lines:
+  greet:
+    - clay wire is steady today
+    - clay wire ready, looking for tracks
+  onKill:
+    - that opening held its shape
+    - clay wire followed that trail correctly
+  onDeath:
+    - the whole thing slumped
+    - the clay wire trail doubled back
+  onPlant:
+    - letting this one fire
+    - "clay wire found a path to {bomb}"
+  onDefuse:
+    - cooled that down safely
+    - clay wire tracked the ticking down
+  onWin:
+    - clay wire came out of the kiln intact
+    - clay wire followed it to the end
+  onLoss:
+    - a small crack in the clay wire plan
+    - clay wire lost the trail near the finish
+  onLastAlive:
+    - one piece still on the wheel
+    - the clay wire has one trail left
+  taunt:
+    - your push has not quite set
+    - the clay wire noticed those footsteps
+  lobby:
+    - washing the clay off my clay wire
+    - please let my clay wire dry in peace
+    - "My clay wire: I will look for the last opponent."
+    - With my clay wire, call the last place you saw them.
+quirks:
+  - holds_grudges
+  - always_gg
+rivals:
+  - xxninjacometxx
+bio: TurboRider74 sold lopsided flowerpots from a stall by the arena gate and still brings a clay wire to the queue. xXNinjaCometXx keeps asking whether it really helps.
+batch: 3
+retired: false

@@ -1,0 +1,77 @@
+id: reshrelgrulbrul
+name: Reshrelgrulbrul
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NTU0ODM1NiwKICAicHJvZmlsZUlkIiA6ICI0MWNlOThmMDllMzU0NGVjYjE4ZTYwYThlODEyOGEyOCIsCiAgInByb2ZpbGVOYW1lIiA6ICJNb25zdGVySGl0IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2FjMGZkYTgwMmYwYWJiZWNmOWQ0ZTgyMTc3OWQ1ZjAyMGVhZWFmYjllNmEyOTU5OWNkMWJjMzkyOTg3Njk0YWEiCiAgICB9CiAgfQp9
+  signature: "HxICyayjyB5bDG3IHRWRzz3ttrkfDOXZQjnUHddGZyBGmAzRSAMLFrbu7nQt/+V3FpgjSp8b/qBcBhMIIm+AOtvrJ87RrIBqsA50dCPzLT9PUFRuRm1pEnCcncSZ7RFdYbK7QCAI8Wtc2wsDragsh0IuCGhlLtZmJCLy7tKkXFSdjJ3JMwkzh1wozog9JzbNuhVPghxUr7P50oqrPZ3qc7tuCz36Pby9LdMMHrcbe5a8LxycojUBN2tF6eWs+4q+OVxJIVjAwrjHo6ZI2nH+BT9fPDuOQPAEWldBy18vAwmZFgSxCpwumEF6p0x52NCElPV1v0oTXLtdhkwYL7SjLLr4YsfFBWlZlfq8AW3LrffCJahHPgDdZZMKbNdO3kLIG5TjDKXoMfEGSDTQGvV9JFEmPCkceBb74jSTpF5AqYG2MooV5eAm8t6ikFvhEIL8XHgoMBBww6NC/0szouPx0k1gZZzxjzeHmrHBD4ETaSDW33mfOp2EmunKdhX4+4PrzcJbmvuSjhOJdTltpttYcwwVr32ZI0lsZUwCLKd85vBOc6NcxvS1AcqKIXsPXHyhnDWxRqZuHPwAakblwLcDf5om6auXMJzUbsGIwvt5VnVlmj8Y+3SrwNr6lF0BuDKpMsggZGlDpbLFZ2KyOPNxHdM+WG9pw2u/i14AzAIfnzg="
+skill: 0.931
+archetype: tactician
+leverOffsets:
+  turnRateDegPerTick: -0.23
+  predictionQuality: 0.06
+  decisionTemperature: 1.5
+  awarenessRadius: 0.02
+  coordination: 1.48
+  technique: -0.87
+kits:
+  trooper: 0.92
+  longbow: 0.53
+  shortbow: 0.48
+  rewind: 0.5
+roles:
+  plant: 0.5
+  escort: 0.37
+  defend: 0.52
+  rotate: 0.72
+  retake: 0.69
+style:
+  aggression: 0.51
+  patience: 0.69
+  teamplay: 0.88
+  risk: 0.37
+voice:
+  tone:
+    - brisk
+    - analytical
+  verbosity: normal
+  style: "absurdly serious station announcements; numbered ideas, concise route calls, quick revisions"
+lines:
+  greet:
+    - station clock checked, service departing
+    - station clock ready, first route agreed?
+  onKill:
+    - one less delay for my station clock
+    - station clock confirms a clean opening
+  onDeath:
+    - my station clock reports a cancelled service
+    - station clock needs a revision on that route
+  onPlant:
+    - last departure from this platform
+    - station clock confirms the site is reached
+  onDefuse:
+    - service restored on this line
+    - station clock confirms the fuse is clear
+  onWin:
+    - station clock reports arrival on schedule
+    - station clock and team followed through
+  onLoss:
+    - wrong platform for my station clock
+    - station clock had a missing step
+  onLastAlive:
+    - last service, just my station clock
+    - station clock says there is still a route
+  taunt:
+    - your connection left a moment ago
+    - the station clock predicted that rotation
+  lobby:
+    - please queue beside my station clock
+    - my station clock says the lobby service is delayed
+    - "My station clock: I will call the first rotation."
+    - With my station clock, tell me when a route closes.
+quirks:
+  - calls_everything
+  - always_gg
+rivals:
+  - xxroushrouz
+bio: Reshrelgrulbrul linked three friends bases with an unnecessarily elaborate minecart line and still brings a station clock to the queue. xXRoushrouz keeps asking whether it really helps.
+batch: 3
+retired: false

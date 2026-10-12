@@ -1,0 +1,72 @@
+id: frostwaffle97
+name: FrostWaffle97
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjE0NjQ2MywKICAicHJvZmlsZUlkIiA6ICI2MjgwNTgwYzhkYzg0MWM5YjYyZjY0NTZjMWVjNWJjNyIsCiAgInByb2ZpbGVOYW1lIiA6ICJPMnRoZUMiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNmI4ZWQzYWNjYzI0MmIzZTY1M2EzYzY5NTBhZTViMmU2MTliYjhlNTJjY2EwYmU5ZDBjMmRhMWRmNGQ3MDdkNyIKICAgIH0KICB9Cn0="
+  signature: "u8Emsts1s/ikUdnq2kjlAcI+WazSRVeAh/FMD9wbi/t00lhRrp7MmP0KUZEkQ9BaIhvCtyOS0QGc7MwcEfzKzZmzX3FlSOYXrprTynOIzcMdrcdxO/5ci+eShD4AJAACRo8cauX1a2agv7MYHH2T8s9lNSRMUE60slDGFTT7A1DNDBHInF+Vr+9Vw9AvZLSnuwbZQ3oy+1uIqy9d2TBJMV15/muJHtDBKdW5GWQwsq/eVXzGmQQXJXwol75aiE3dvaFORS+THVI5161E/leUEC/JRSRR4VsHr4k0V0cbJyn7WVRxTNsn+X95U3oQ696aDcjTWiFv9V72Ih3EfKjaET2hxpRndRaGeJLRcbIf+13YnLVYrojhRrL4vR23S5FNNP2egl2KATN7HI+dtVEzkme8xoc8WrnNGTWWHMlPWgrkhUlTrFvBgNrd19PDgFuZgqrtzdaaI9CXz03m67QAdmZp1muCDkVoXkzJx/LR3v8ge6I7nP/7SczOajDN1dWB0gTw0MY0Ixqar/JAAbHnivt/XrbFh8WeVZKzRjfTUOMPPgrwz4aNdmh+JJ2CJFHAsLL3nSE+esrwJWKRjXjVrDIBhzQh8iqtpcpwXr7NW0vIAztVtl27O26X/RWNlMYdcjbTtzsONFhgqwaIKvCXtL0EBtny102yQ88Ci6kiPjM="
+skill: 0.488
+archetype: bomb_diver
+leverOffsets:
+  reactionMs: -0.19
+  decisionTemperature: 0.54
+  awarenessRadius: 0.67
+  technique: 1.16
+  aggression: -0.92
+kits:
+  trooper: 1
+  shortbow: 0.17
+  rewind: 0.54
+roles:
+  plant: 0.98
+  escort: 0.17
+style:
+  aggression: 0.8
+  patience: 0.16
+  teamplay: 0.21
+  risk: 0.94
+voice:
+  tone:
+    - watchful
+    - urgent
+  verbosity: quiet
+  style: "tired lighthouse bearings, steady reassurance; breathless objective reports, oddly calm at a fuse"
+lines:
+  greet:
+    - keeper log checked, coast watched
+    - keeper log packed, where is the bomb?
+  onKill:
+    - a clear signal through the fog
+    - a clear path for the keeper log
+  onDeath:
+    - lost the light around that bend
+    - keeper log was one corner from the fuse
+  onPlant:
+    - warning light at the bomb
+    - "keeper log is parked beside {bomb}"
+  onDefuse:
+    - warning extinguished
+    - "keeper log and {bomb} can both stay intact"
+  onWin:
+    - keeper log guided us home
+    - keeper log got the objective done
+  onLoss:
+    - the keeper log missed a rock
+    - keeper log took too long reaching the site
+  onLastAlive:
+    - one light still on the coast
+    - the keeper log still has a fuse to find
+  taunt:
+    - your approach was visible from shore
+    - the keeper log got closer to your bomb
+  lobby:
+    - polishing my keeper log before the round
+    - please leave the keeper log switched on
+    - "My keeper log: cover my approach to the bomb."
+    - With my keeper log, call the safest bomb route.
+quirks:
+  - loves_nuke
+  - always_gg
+rivals:
+  - lyxskaertv
+bio: FrostWaffle97 lit a coastal tower so returning builders could find home and still brings a keeper log to the queue. LyxskaerTV keeps asking whether it really helps.
+batch: 3
+retired: false

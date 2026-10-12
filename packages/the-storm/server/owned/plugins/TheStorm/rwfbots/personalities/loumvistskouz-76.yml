@@ -1,0 +1,74 @@
+id: loumvistskouz-76
+name: Loumvistskouz_76
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4OTMzNTQxOCwKICAicHJvZmlsZUlkIiA6ICJkODYwY2JiYWM0Njg0ODhjOWI4MTY3MGVjZjQ5OGRmMSIsCiAgInByb2ZpbGVOYW1lIiA6ICJDb2FzdGxpbmVDcmVhIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2YzYjBjYjMxODg3N2UyNzU1MTM1YzEzMGE0MTcyZjFiMTJkZDhkZjBjNTM2OTkwNTU0MzFhYWM0OGU4ZWJlNGMiCiAgICB9CiAgfQp9
+  signature: "xU/vbdN598baa34IsQETbjW5NFzVDbRRWKQnPIcRenbcBI/KQiSXkigEjU/nlPcMFkP9hGl5OtrCiLIH2jupjTwBIN8Tgyn00ZciaESHmCCRrhMrozwtD/6Iy/Fx1sjkTYZbPwy5cl4DYUgrWSnTw5AS/DqdM4RoZbVIXX0MR5WtHyVedhNuPeK1ZvOuMaoCDVaPZ9xOjnOoS4ptdTwpr6cGX6MWaAXBSn7brNvjNXGj7UVQlBO2QhC07JsZ8NkwXY8pclrrT3Zk7X4LyuP/+kJl1dIX1HnPftlgoUfwP1F9Y7Oj1BImTcYrU2hb2x3Xp2y4VAYsDb8/si2MxCksSo1ZBowtNvfetSLZ489VAy6AvlfqvPQj8eIrcUqIlf9YJUV3QJehZ2tPh1pk+dEzUQpaQqEtRfqDCvi6oC2JGg+t9Tv9k8FbWhJZvdqomAB+hCi8/GgZAGuFpOJ/uPiDaFEwGsxaOD15sKFf5iGAdDAOyyvrGxN+P9RxXNE8/BtJf7oDOmrkFuWcq/h8VMNFTD3WC4GvTuEG9dP4fm/8j4rEaG9wia5lb/6kHYTk+4WsjpUVVVXwj6Zqd2ujstnVsf3vJqRNqrrxWMffTanFNq1cdtx3g3lols/zkIgpfjJV4SvZ7EsbLtPuxvXst12cjA/NdhdHWoA8PBSmFUaKKMM="
+skill: 0.533
+archetype: lurker
+leverOffsets:
+  reactionMs: 1.18
+  predictionQuality: -0.12
+  awarenessRadius: 1.25
+  coordination: -1.16
+  aggression: -0.62
+kits:
+  trooper: 0.6
+  shortbow: 0.62
+  ghost: 0.8
+  wraith: 0.62
+roles:
+  plant: 0.32
+  rotate: 0.64
+  hunt: 0.81
+style:
+  aggression: 0.47
+  patience: 0.78
+  teamplay: 0.12
+  risk: 0.55
+voice:
+  tone:
+    - dry
+    - hushed
+  verbosity: chatty
+  style: "imaginary roof leaks and tidy-angle demands; lowercase whispers, deliberate pauses"
+lines:
+  greet:
+    - ridge cap checked, no leaks yet
+    - ridge cap here. quietly.
+  onKill:
+    - a small opening under the eaves
+    - the ridge cap was here a while
+  onDeath:
+    - found the one loose tile
+    - heard it too late beside the ridge cap
+  onPlant:
+    - something ticking under the roof
+    - ridge cap is watching the quiet entrance
+  onDefuse:
+    - one less repair bill
+    - no noise. no fuse. just the ridge cap.
+  onWin:
+    - ridge cap kept the rain out
+    - the ridge cap stayed out of sight
+  onLoss:
+    - the ridge cap plan has sprung a leak
+    - the ridge cap waited one corner too long
+  onLastAlive:
+    - one tile holding the roof
+    - nobody move near my ridge cap
+  taunt:
+    - your angle would collect rain
+    - the ridge cap heard that approach coming
+  lobby:
+    - inspecting my ridge cap for cracks
+    - the ridge cap repair can wait one round
+    - "My ridge cap: I will hold the quiet route."
+    - With my ridge cap, leave one quiet approach for me.
+quirks:
+  - slow_starter
+  - always_gg
+rivals:
+  - kystnaigristshy
+bio: Loumvistskouz_76 reroofed the same spawn cottage after every group building session and still brings a ridge cap to the queue. Kystnaigristshy keeps asking whether it really helps.
+batch: 3
+retired: false

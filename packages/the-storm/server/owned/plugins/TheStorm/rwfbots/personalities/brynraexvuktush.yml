@@ -1,0 +1,74 @@
+id: brynraexvuktush
+name: Brynraexvuktush
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NTY3ODA4OCwKICAicHJvZmlsZUlkIiA6ICIxNTUyNmU1OGZhOWE0NjBmODhhNmZhNjk1M2RlNjgzNyIsCiAgInByb2ZpbGVOYW1lIiA6ICJQaWVkcml0YTE3IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzgzYzJmYzgzY2ZmYzZhOTllN2YyYWY5NzI1M2JkOGQ2YTFkOGI5Mzc3ZTUwMzMyNjhjMDkxYzQxYzM1ZTY5ZTYiCiAgICB9CiAgfQp9
+  signature: "d4RpPS2sEJzHN6sdJDBM3hZxzZN12g+Vij7H4Vg16zcn9hvnz+HlEf6SeLN45n1mvPClT+frb2KAz3PPyl15YoGW7ZKdcHCwjGoqJXMZrAqjwQZma4RzsgW+mpzRgw9wTeDZq/GX4vK3PCLitzwfCMuIILuhPS/S6aMHwyhETRGLsFW4biIZAdEMLA94zSA0qsuohOVvOSJVUMASBaKnnmq8j4B9l+ZCMQZlCGQv5r6+rQu8ygIdlauyRAYIxgbdpboPhd1bSuQdwa70RBedMBtn2svUNeg+2aUp3JEdeG/ctSUZ912LoLcS9Tgom6/lR7XZVOTU9qAyn/UaRnTbD+7MHQG7vbQgIv/rCUqXmH0jGZkXns5C9T1n0N8fka8k+Cel4e7tW6nKV7tPu4DzHPttUeeidQ+54OxIeRmJdeBxYOWCgCgG+uc5LUCFQnaTfObOIKACBGpA02dG3LahxaXpB6qvBeV64jeM7tIn7AGYmqFc9yUy6jTMQ2KIPzi4GMUDufY81Yqh0ovOw2nWlzNBsvm2VY+dDOADYmHCq2wXpFCT21+VOU3hpG4VwFki1zZ3TOD0vK/e+2fqeqcL/EEfEnaeNFIE8Dik8SqrNSzGL1bwwsBf8MRIbJHElDp6J2ifnuUDCkeVl16ShzSfHFi6IVcKwwQ/Hhf8PjeUx0s="
+skill: 0.041
+archetype: bomb_diver
+leverOffsets:
+  reactionMs: 0.35
+  cps: -0.63
+  decisionTemperature: 0.97
+  awarenessRadius: 0.42
+  technique: 1
+  aggression: 0.1
+kits:
+  trooper: 1
+  shortbow: 0.2
+  rewind: 0.67
+roles:
+  plant: 0.99
+  escort: 0.16
+  hunt: 0.19
+style:
+  aggression: 0.71
+  patience: 0.15
+  teamplay: 0.23
+  risk: 1
+voice:
+  tone:
+    - fussy
+    - urgent
+  verbosity: quiet
+  style: "paper crafts and tiny careful corrections; breathless objective reports, oddly calm at a fuse"
+lines:
+  greet:
+    - paper fox survived the queue
+    - paper fox packed, where is the bomb?
+  onKill:
+    - one clean fold in the plan
+    - a clear path for the paper fox
+  onDeath:
+    - my paper fox is a little crumpled
+    - paper fox was one corner from the fuse
+  onPlant:
+    - tucking the fuse into the fold
+    - "paper fox is parked beside {bomb}"
+  onDefuse:
+    - unfolded that just in time
+    - "paper fox and {bomb} can both stay intact"
+  onWin:
+    - paper fox stayed in one piece
+    - paper fox got the objective done
+  onLoss:
+    - another crease in my paper fox
+    - paper fox took too long reaching the site
+  onLastAlive:
+    - one paper fox left on the table
+    - the paper fox still has a fuse to find
+  taunt:
+    - that push folded very quickly
+    - the paper fox got closer to your bomb
+  lobby:
+    - please do not squash my paper fox
+    - making another paper fox while we wait
+    - "My paper fox: cover my approach to the bomb."
+    - With my paper fox, call the safest bomb route.
+quirks:
+  - loves_nuke
+  - always_gg
+rivals:
+  - taestroshwaffle
+bio: Brynraexvuktush folded paper creatures while waiting for the 2014 queue and still brings a paper fox to the queue. TaestroshWaffle keeps asking whether it really helps.
+batch: 3
+retired: false

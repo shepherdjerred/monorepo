@@ -1,0 +1,77 @@
+id: shizshoumfuse
+name: ShizshoumFuse
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODY0MzQ0MCwKICAicHJvZmlsZUlkIiA6ICI1MTAwZGZmZDI0NDI0M2I0OGQxMmVkZTVkMjgxMzk2ZSIsCiAgInByb2ZpbGVOYW1lIiA6ICJFbGVjdHJvbmljU2V4IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzRmMTkxMGM2NTdhYmIwNjFlYTY3N2U1YWE3MDE3NTg5NDY4NjdiNjlmNzVkODcxM2U2MWU0MDk4ZTAxNGZlOTkiCiAgICB9CiAgfQp9
+  signature: "x9Gx7rBGFoHqrrZcKKwI+fIWEoP+tfv2tFwSeKQ28qvYP9EzrP/AidcE5D39lseSYQ/In0pZ94E+eUyz2ETHcwKmzNWooSulebtvDVIDFpdzDWCu90TZisSGSmn6qAcw4TzSb5FzgATec0IQgS5GWxSSrllLootflnNgxdaPPGY0Ti3j6HP5RcbvpjEXeQyqg35w/4DaQeKQvr7OTFsaQuKc4cTfmK563zDFEgiVVYFY5zXIDJoWAx5guXQLsyLN6CW1+r/Ss+L5JVNtZsu9wll9viV2FN4jimPOHMP9P9u2W9B58k3/OsWzx0PTltNdSAiGlgmOoPZMTtASV1crQZ2jqWbv33Ur/m39ZPCzC8vAajLFP8IpBF73As/OnzucQD2GH1Rz3ukXVDAvf+Am+F3TKrT2a8NhfKfqvyYCMxxV+Be7vffM6ZHaSty/43zWPVm6xv1+2wkWyLD0er3hn/7YqME37xQu3Y1ZL+d3Iwm/IrhLgvaW0uP/yOVMbk+TXeG0hp5LxWQHY/vnOOL9/c6OxSI3PkP6rKHUJQhEDciwvxwRW5OIenkc9EqHJ/rwwAkLY3baB2hvchdEml4l4CbA6/FkPThQbh+khxHV4y5cDo4Lq2QaZGwRmboMiIMijMUtWCSWBTbj0C6PsyotssU8CfqSlJuvtTml8K/MDMg="
+skill: 0.431
+archetype: sniper
+leverOffsets:
+  aimErrorDeg: 1.25
+  cps: -0.92
+  predictionQuality: 1.65
+  awarenessRadius: 0.55
+  coordination: 0.93
+  technique: -0.57
+  aggression: -0.83
+kits:
+  trooper: 0.14
+  longbow: 0.89
+  shortbow: 0.5
+  wraith: 0.2
+roles:
+  plant: 0.17
+  defend: 0.85
+  rotate: 0.15
+  hunt: 0.59
+style:
+  aggression: 0.28
+  patience: 0.94
+  teamplay: 0.51
+  risk: 0.28
+voice:
+  tone:
+    - patient
+    - focused
+  verbosity: quiet
+  style: "deliberate pottery talk and wet clay worries; short range notes and patient, exact corrections"
+lines:
+  greet:
+    - glaze cup is steady today
+    - glaze cup in place, checking the long angle
+  onKill:
+    - that opening held its shape
+    - glaze cup found the range
+  onDeath:
+    - the whole thing slumped
+    - glaze cup needed a closer angle
+  onPlant:
+    - letting this one fire
+    - glaze cup covers the far entrance
+  onDefuse:
+    - cooled that down safely
+    - glaze cup can wait, hands on the fuse
+  onWin:
+    - glaze cup came out of the kiln intact
+    - glaze cup had a clear view of that
+  onLoss:
+    - a small crack in the glaze cup plan
+    - glaze cup kept the wrong sight line
+  onLastAlive:
+    - one piece still on the wheel
+    - one glaze cup, one long angle
+  taunt:
+    - your push has not quite set
+    - the glaze cup saw that peek twice
+  lobby:
+    - washing the clay off my glaze cup
+    - please let my glaze cup dry in peace
+    - "My glaze cup: I will cover the long angle."
+    - With my glaze cup, call the close flank for me.
+quirks:
+  - bow_spammer
+  - always_gg
+rivals:
+  - toxic-comet
+bio: ShizshoumFuse sold lopsided flowerpots from a stall by the arena gate and still brings a glaze cup to the queue. Toxic_Comet keeps asking whether it really helps.
+batch: 3
+retired: false

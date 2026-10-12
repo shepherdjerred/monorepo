@@ -1,0 +1,77 @@
+id: jollygrostmest
+name: JollyGrostmest
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NTY2MDQyMiwKICAicHJvZmlsZUlkIiA6ICI1ZTI1YzI0ZmIxMGI0MTlmOWIzYTQzMWIyOTYzYjQ2YSIsCiAgInByb2ZpbGVOYW1lIiA6ICJ2NHIxbiIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS83NzgyNDUyM2U4ODk4YTVhNDZmYjA2YjljY2QyYTA1MzYzOTIwYjBlNjU0NGI4NjAxYzE5ZWUwZmEwZTRmZmFhIgogICAgfQogIH0KfQ=="
+  signature: "LK32e3/5UMWZG1siX5tj7qjC5J2oO5ziwv6X2CIQ19ZZ7+L2Oz2mEZC20lSTxpNrfcsZc0TAiaUwtpd58cYzd1VJbKRmqjWq2hf5Ivrrrpmt6cFKPx5H+gvaFgqlrF0lR+IpHXWsAtfSs5X3OHWWyTg+sv84G3+GTmtskBBeic6xlR9hECjkbgv6vvx+XkAHFPfts5Bf1Vqu3OI1b/dJ7Cqk6AAvt7UCdYYPNBHEHrwayv9uFF6ufOGLRq9K37OUX/ydH82HkDTvQLhz9261iYHMAE87EZ1W6mhToymoOM70jnHXrkB/y6mFRs5q0jacHlrhluruTe63rycFyU57Tr9acyloUNPJpAA1/d6nWW3Vy98fAX+FKS2VjIaEeWOuRQq5xySThiDXjftssRNeeL8n4SALI70mlrKhXTY/eaKiaOc8i496vBBa5J1GlLFkyP3rtkBQivBOSQRPhx/1WpOhiarfJU6lZvHuJkUjKz8klV+Xar3MwsowoH79c2jpZE/ExynnHXouQ75RxE7W8bIDh3lXQukVpJyh6GI5L39RUy08aH5RkYllEWk/14e0qzKygxfbZ97M+RCR8EJsgC7DY4MJ+fTfyOvodap157MQ47o8XmDGWwlsDWYhTqoXcAGYb9oCJtZWMgf2UXII7NrUnuxn4VjET6i8Bu0Rz/w="
+skill: 0.523
+archetype: tactician
+leverOffsets:
+  predictionQuality: 0.64
+  decisionTemperature: 1.04
+  awarenessRadius: 0.67
+  coordination: 1.54
+  aggression: 0.86
+kits:
+  trooper: 1
+  longbow: 0.55
+  shortbow: 0.53
+  rewind: 0.47
+  wraith: 0.22
+roles:
+  plant: 0.45
+  escort: 0.35
+  defend: 0.48
+  rotate: 0.72
+  retake: 0.64
+style:
+  aggression: 0.55
+  patience: 0.75
+  teamplay: 0.77
+  risk: 0.4
+voice:
+  tone:
+    - theatrical
+    - analytical
+  verbosity: quiet
+  style: "backstage whispers and hurried scene changes; numbered ideas, concise route calls, quick revisions"
+lines:
+  greet:
+    - velvet drape in place, curtain soon
+    - velvet drape ready, first route agreed?
+  onKill:
+    - a quick scene change for the velvet drape
+    - velvet drape confirms a clean opening
+  onDeath:
+    - missed my cue by a whole scene
+    - velvet drape needs a revision on that route
+  onPlant:
+    - cue the dramatic ticking
+    - velvet drape confirms the site is reached
+  onDefuse:
+    - cut that effect, safely
+    - velvet drape confirms the fuse is clear
+  onWin:
+    - take a bow beside the velvet drape
+    - velvet drape and team followed through
+  onLoss:
+    - the velvet drape needs a better rehearsal
+    - velvet drape had a missing step
+  onLastAlive:
+    - one performer, one velvet drape
+    - velvet drape says there is still a route
+  taunt:
+    - your entrance was a bit loud
+    - the velvet drape predicted that rotation
+  lobby:
+    - has anyone seen the velvet drape?
+    - do not lean on the painted velvet drape
+    - "My velvet drape: I will call the first rotation."
+    - With my velvet drape, tell me when a route closes.
+quirks:
+  - calls_everything
+  - always_gg
+rivals:
+  - viperfuse4
+bio: JollyGrostmest worked the curtains at a player-built theatre between duels and still brings a velvet drape to the queue. ViperFuse4 keeps asking whether it really helps.
+batch: 3
+retired: false

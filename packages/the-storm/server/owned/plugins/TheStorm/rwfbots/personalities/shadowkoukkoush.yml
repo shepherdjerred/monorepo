@@ -1,0 +1,73 @@
+id: shadowkoukkoush
+name: ShadowKoukkoush
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTI5MjU2NSwKICAicHJvZmlsZUlkIiA6ICI2NGY0MGFiNzFmM2E0NGZiYjg0N2I5ZWFhOWZjNDRlNSIsCiAgInByb2ZpbGVOYW1lIiA6ICJvZGF2aWRjZXNhciIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9lYmI1ZGUzYjUzM2RiYWRjZjIxODZmYWVjODlhYTQ1YmQ1M2Q2ZWVmN2U1NjkwNjJlYTNkZmM0YWZmNTg0MTMwIgogICAgfQogIH0KfQ=="
+  signature: "uiaKx4Nc4RCxczxCBzm6Rq+jySAvHBTbAyk+cbZGIqgDWrEC0XelQHLkbt2ugmo7rn0Mqvuk2HtnnKMvZnojdYAH3iV7KHWdsODhE+zZKl4NdKA3fr0Vbny2w4KQBdo3TDvRepzj81NrEBF37EsSpO2z7dzimnBm2Go28QNxDxAN+a2PjrWOW/RmEpFTjL/WdUn0s9AhIASbMNsjIsOe0vRO3Ljl6sD1i8+aHspHHJSRH89gfbMQexDracAJbvWNIeAUdYNzYo0K6W4mGJpe3DWrWHoY3yItAdkq1GB3X0ugt8bdJzs3/4i3SqVDRkBMPf9k/s3EZ7OkOhEv+ZD2w+ZKQ5/K41HRvs1kqKdWiSyv+iV4PeJKrA2iu2tSW5yjepwl9SzRNNhFHLN37SxyWudtM/XbbEGDlXM6TUtdmJIdhlGs8rmcWU3eqkUZFNIbju+PUJoLXQVIiS0PuqqNRO3Zn1f1MNKxKF551Sy0opfFpJEtemLTmxPtyWD+7StsVvj7j6POK9loLiM15EccrVR84T0Y2ID64+KKos1XiW2H7q7GI7kPCCrts5FKg9fwCWK8MZfUHgoSNbYOHu7n9hToraop4CnlZD8NuRmjJBZFYUX6mVHrs5e0ia8hrzx5wDJm27hK1Xc6fCGjDhs9fTgnKWAUA1YKVWiJXkBOmA4="
+skill: 0.117
+archetype: turtle
+leverOffsets:
+  reactionMs: 0.8
+  predictionQuality: 0.55
+  decisionTemperature: 0.44
+  awarenessRadius: 0.23
+  coordination: -0.29
+  aggression: -1.11
+kits:
+  trooper: 0.89
+  longbow: 0.26
+  rewind: 0.75
+roles:
+  defend: 0.91
+  retake: 0.34
+style:
+  aggression: 0.07
+  patience: 0.84
+  teamplay: 0.45
+  risk: 0.03
+voice:
+  tone:
+    - cosy
+    - cautious
+  verbosity: chatty
+  style: "kitchen chatter and imaginary baked snacks; unhurried words, conservative estimates and tiny victories"
+lines:
+  greet:
+    - cake stand ready, kitchen open
+    - cake stand is ready. no need to hurry.
+  onKill:
+    - another order off the cake stand
+    - cake stand waited for the opening
+  onDeath:
+    - left my cake stand in the oven again
+    - cake stand should have waited another moment
+  onPlant:
+    - setting the timer beside my cake stand
+    - cake stand checked the site first
+  onDefuse:
+    - took that out before it burned
+    - cake stand checked the corner twice
+  onWin:
+    - cake stand deserves a day off
+    - cake stand got there eventually
+  onLoss:
+    - the cake stand has seen better batches
+    - cake stand needed one more safe corner
+  onLastAlive:
+    - one cook and a very busy cake stand
+    - the cake stand will take this slowly
+  taunt:
+    - that push needed longer to rise
+    - the cake stand can wait out that peek
+  lobby:
+    - who borrowed my cake stand?
+    - dusting the flour off my cake stand
+    - "My cake stand: I will keep a safe route home."
+    - With my cake stand, please check the blind corner first.
+quirks:
+  - gapple_hoarder
+  - always_gg
+rivals:
+  - thistlekramlynx
+bio: ShadowKoukkoush ran a tiny spawn bakery with a queue of hungry regulars and still brings a cake stand to the queue. ThistlekramLynx keeps asking whether it really helps.
+batch: 3
+retired: false

@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.rwfbots.domain.tactics;
 
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavGraph;
+import java.util.BitSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.IntToDoubleFunction;
@@ -39,8 +40,9 @@ public final class RoutePenalty {
 
   /** The penalty for a bot with {@code seed} paying {@code tolls} on {@code graph}. */
   public static IntToDoubleFunction of(NavGraph graph, long seed, Tolls tolls) {
-    var occupied = tolls.occupied();
-    var corridor = tolls.corridor();
+    // Dense nav ids make bit membership cheap, including misses beside long lane corridors.
+    var occupied = membership(tolls.occupied());
+    var corridor = tolls.corridor().map(RoutePenalty::membership);
     var extra = tolls.extra();
     return node -> {
       var cell = graph.cell(node);
@@ -48,19 +50,25 @@ public final class RoutePenalty {
       if (!occupied.isEmpty() && near(graph, node, occupied)) {
         penalty += OCCUPIED;
       }
-      if (corridor.isPresent() && !corridor.orElseThrow().contains(node)) {
+      if (corridor.isPresent() && !corridor.orElseThrow().get(node)) {
         penalty += OFF_LANE;
       }
       return penalty + extra.applyAsDouble(node);
     };
   }
 
-  private static boolean near(NavGraph graph, int node, Set<Integer> occupied) {
-    if (occupied.contains(node)) {
+  private static BitSet membership(Set<Integer> nodes) {
+    var bits = new BitSet();
+    for (var node : nodes) bits.set(node);
+    return bits;
+  }
+
+  private static boolean near(NavGraph graph, int node, BitSet occupied) {
+    if (occupied.get(node)) {
       return true;
     }
     for (var edge = graph.edgeStart(node); edge < graph.edgeEnd(node); edge++) {
-      if (occupied.contains(graph.edgeTarget(edge))) {
+      if (occupied.get(graph.edgeTarget(edge))) {
         return true;
       }
     }

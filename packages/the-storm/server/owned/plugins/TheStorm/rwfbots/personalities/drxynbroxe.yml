@@ -1,0 +1,73 @@
+id: drxynbroxe
+name: DrXynbroxe
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4OTM4NjY2NiwKICAicHJvZmlsZUlkIiA6ICI3MWU4ODU5ODVkOGM0ZDg2ODMxODYxNDU1NjE3MDY2YyIsCiAgInByb2ZpbGVOYW1lIiA6ICJKb3NoeV9XYXNoeSIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS82Y2UwNzJlNWY0MWI1ZjRiN2YxNjU5M2QyNGU5N2U0ODQyMTZlYzAyM2I0MTRlMjFmNWUxMGU5ZjM2ZDMxNThmIgogICAgfQogIH0KfQ=="
+  signature: "UEYUHbNqiQ9EssXg2Tu/pyzxtRsFL/BY1+wvtEl+EXQLnd9d2Ft5nz4br63DoOdLH6HkpOikjemej8xeKnh/WnfSVR2MLJf0iicZXYDE8HVirJU6qPslTCWiNl/8W2aQlPazCQMlQJkz3H7hwjyTsiZpphA31iWDF/wXUEnoFeLrIxMqOvTz8Nuj0Ssv+cC16cbGc1HYOKas6FHVFoYKEm/XOadvF+ZdUuHLoPfyO5Mlfa97HhytF1zue72DWUZUPWDMH0zNdrqJ4jtBq76tl6Isaz0h8jCvCh41ewBiDJmY8BWkYfIsXNYiZYLCxRqrvncXZBi47rtbsxiwN4bPaOdxKQQhG27D9izQYFcXUEEhCmPjpX3r/tHwjOVrDG924SOsXJktjO1i28GEHVEXhSe+irX37CsbYB/nCDpR6ykke151pV7fQ21nABwZbggs31a+uLpuUZUNQKf14SlN7Tv1QKIr+CtIpcxktOJTcSM6OX/G43j3BCqYJJS4GLGiv0DWAZQZah969sH+C/K4f9dLaTIAGvFpTm9jaVBmvXu78mfsNsmfNUIL/SOE2Nw1UBNZEqxP47iHkGwJvtg7bCxiWEUPW0kb97dbpOmo7Qo8d1MLHAdEcn5Q4IvSrVcfGJkhVazzzZWKTf+ZANUgteGeYp6gXDjsMf63v+KUbW0="
+skill: 0.303
+archetype: support
+leverOffsets:
+  decisionTemperature: -0.62
+  awarenessRadius: 0.52
+  coordination: 2.24
+  aggression: -0.78
+kits:
+  trooper: 0.92
+  longbow: 0.28
+  rewind: 0.76
+roles:
+  escort: 0.84
+  defend: 0.35
+  rotate: 0.13
+  retake: 0.7
+style:
+  aggression: 0.36
+  patience: 0.53
+  teamplay: 1
+  risk: 0.32
+voice:
+  tone:
+    - dry
+    - helpful
+  verbosity: normal
+  style: "imaginary roof leaks and tidy-angle demands; gentle check-ins, thanks and useful kit reminders"
+lines:
+  greet:
+    - roof ladder checked, no leaks yet
+    - roof ladder is here, everyone got their kit?
+  onKill:
+    - a small opening under the eaves
+    - one less problem beside the roof ladder
+  onDeath:
+    - found the one loose tile
+    - sorry, the roof ladder corner is open
+  onPlant:
+    - something ticking under the roof
+    - roof ladder can watch while you plant
+  onDefuse:
+    - one less repair bill
+    - roof ladder is here to help at the fuse
+  onWin:
+    - roof ladder kept the rain out
+    - roof ladder says everyone helped
+  onLoss:
+    - the roof ladder plan has sprung a leak
+    - roof ladder says we can tidy that up
+  onLastAlive:
+    - one tile holding the roof
+    - one roof ladder still trying to help
+  taunt:
+    - your angle would collect rain
+    - the roof ladder brought a team to that corner
+  lobby:
+    - inspecting my roof ladder for cracks
+    - the roof ladder repair can wait one round
+    - "My roof ladder: I will stay close to the push."
+    - With my roof ladder, call if you need an escort.
+quirks:
+  - says_sorry
+  - always_gg
+rivals:
+  - bravorxaishyt
+bio: DrXynbroxe reroofed the same spawn cottage after every group building session and still brings a roof ladder to the queue. BravorxaishYT keeps asking whether it really helps.
+batch: 3
+retired: false

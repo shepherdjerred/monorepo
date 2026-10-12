@@ -1,0 +1,76 @@
+id: nukouzgaming
+name: NukouzGaming
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTg3NDM5NCwKICAicHJvZmlsZUlkIiA6ICJjZjc4YzFkZjE3ZTI0Y2Q5YTIxYmU4NWQ0NDk5ZWE4ZiIsCiAgInByb2ZpbGVOYW1lIiA6ICJBaXJjcmFmdENhcnJpZXI1IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzFlZWVkY2RmYjY3N2RhZTVhODZjNGUwMDgxN2RlYTllMzM5ZjdjMGM3MjFkODJlNjJiODk5ZjE4ZTZkOTczMmQiCiAgICB9CiAgfQp9
+  signature: "V/hSpc7BpXGzUVHtTt00mMobY4A5XcXFdBzp7Q5XnbPldJLo6DniBaTyLdy+wBHlJokaxpsm0VhkNgKqKxmUkmplii3QwrNSBx83aqdLrowZQvUbKg8bMRtqKNjjah6aHG/kRa7aftXOwDU3P7H9F6k7wpnhVYAhloAikyY7wQghGCe9M2Smb/G5eX0bViR5eijcwD4z9F1wnlDy7wkVyk9SXsgPz6nsy1vWcqM329Uw2xY7XXrNFCbiZ6lx5TjxiLKJHvWlj1DUHAZZHaCPVb8RcvMEkApG33AKjd+BWuCxDCyXhGHcMjLUez8xSd2E3t1WRgVa2dlFhXdFMO/g5yWv6fGC12n+P/u+NZojA+dX0vWX3+ATWb8yVTRrP3HFiiby6iLe/u1al4L8+Lr2NFXwp0gpmP5+mz2wvG11iYenYm1KSTbh5JJfZSRgPJ8aL6K4xfBcx5FA5DoJQk5iBnOHs18X1YhWzyZoBkOMJedOLhhy5ily7LXTlGJ+qhIW6JhpBUndlNuFoC5K/uLxZBI8SwwzMA4WmOfrmYjr38iWRH6aOsvH4cX46WS2Nv0+qs673aOKd0v9ZOrmCgD5vqWlkX1AYycM6jtjpNi7ABD/vPtyg0liyKG5SW581aDS5z7b47Z3PTeFsmOOWzBHSDTjTI3z4dSQJnOc9Y2RVeI="
+skill: 0.12
+archetype: duelist
+leverOffsets:
+  reactionMs: 0.42
+  aimErrorDeg: 0.27
+  turnRateDegPerTick: 0.98
+  cps: 1.55
+  coordination: -0.54
+  technique: 1.1
+  aggression: 1.2
+kits:
+  trooper: 0.85
+  shortbow: 0.45
+  ghost: 0.28
+roles:
+  escort: 0.35
+  defend: 0.25
+  retake: 0.62
+  hunt: 0.67
+style:
+  aggression: 0.81
+  patience: 0.35
+  teamplay: 0.23
+  risk: 0.4
+voice:
+  tone:
+    - whimsical
+    - competitive
+  verbosity: normal
+  style: "arguments with an imaginary puppet; brief courteous challenges and honest shot assessments"
+lines:
+  greet:
+    - my button-eyed owl insists we are ready
+    - button-eyed owl ready, good fights everyone
+  onKill:
+    - button-eyed owl is taking all the credit
+    - good exchange beside the button-eyed owl
+  onDeath:
+    - button-eyed owl advised against that corner
+    - fair hit, the button-eyed owl left that gap
+  onPlant:
+    - button-eyed owl says the fuse is dramatic
+    - button-eyed owl earned a moment at the bomb
+  onDefuse:
+    - button-eyed owl requests a quieter ending
+    - button-eyed owl can settle this at the fuse
+  onWin:
+    - button-eyed owl will never stop talking about this
+    - button-eyed owl had some good fights today
+  onLoss:
+    - button-eyed owl demands another rehearsal
+    - button-eyed owl wants another clean round
+  onLastAlive:
+    - button-eyed owl has become very quiet
+    - one button-eyed owl, one fair chance
+  taunt:
+    - button-eyed owl spotted that opening too
+    - the button-eyed owl is ready for that peek
+  lobby:
+    - my button-eyed owl has opinions about your kit
+    - please do not argue with the button-eyed owl
+    - "My button-eyed owl: I will contest the middle."
+    - With my button-eyed owl, give the middle fight a clear lane.
+quirks:
+  - good_sport
+  - always_gg
+rivals:
+  - quietslime59
+bio: NukouzGaming put on tiny puppet shows while the team waited for opponents and still brings a button-eyed owl to the queue. QuietSlime59 keeps asking whether it really helps.
+batch: 3
+retired: false

@@ -1,0 +1,73 @@
+id: dershizshummc
+name: DershizshumMC
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjM1ODk3MiwKICAicHJvZmlsZUlkIiA6ICIxODE0MDdlM2VkYmE0ZTU4YmFiYTE1ZDJhNWQ4YzU2YyIsCiAgInByb2ZpbGVOYW1lIiA6ICJBdGxhc19zXyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8zN2Q2M2ZhOWFmZDBlOWEyMGU5YzEwZjE5YjkwMmVmZDNiMDg3YjU1ODBlNWQzODY4Njc1MDFjNTJmYzEzMjJlIgogICAgfQogIH0KfQ=="
+  signature: "OuWhVKatlceT4Tea+9CS3Y6LKclfJap6IsXQ06czvFmwrsfTy7tZc0j0QWBpD8u8y3gAuNuB5E1J3Q9iNcPLbdxU3OhALoeo23dAq1E51G2kNiyYKWbPb58hcfftUzzzY/zzw22vD6QG/gdU4ItvhGFCRgxl28a+osJJmAnboSZQ4YGGHdD64J1CPjdd6WY46xjguTzVMo1DTsOksXJSKNNoxX/iQ2VH6kgzjpUHLnZ9mc8rTAEwoUUksW9/QsD8kiJH8f/NDB2CBeOZt2xMeVcZeuDH670TqDoLkcfQp+qhn3MEyQ1UYcGuWa0mJVu1s3ixIAVYehrM97RkEW2bRBqV0F5o7XOLtNBtovz5YX1+AqP23Dvz0Lh67xc2h+hx+MkqmK1vp5d2Rslyg0Xs0RuDjIDAIk/y61wZ4nMtWl8y0QNSyt38nrjRZxJ6X1aisffdCDDDuE6leY3qi2xVj7G7PZvW8Vd9ZPWT5IGnfjpuNJMOziixf0qdlIldGj9QMjtGWV+e7Ln5lRu+JW574Ik8VN0TFdFU+d78E3o+L1Uypzsu49bMt68fdPYCvGpk73V1z8N+VfvI2rkX7HAhyZg0rbpEzfqdYSLmKhhc7q4wvW5pUs2UZmOtVrbwMdEt1HySGqnX5PszM5NzhTsVguhzYQES85yGBSemGspoC80="
+skill: 0.264
+archetype: hunter
+leverOffsets:
+  turnRateDegPerTick: 1.03
+  cps: 0.74
+  predictionQuality: 1.47
+  awarenessRadius: 0.93
+  aggression: 1.03
+kits:
+  trooper: 0.58
+  longbow: 0.57
+  shortbow: 0.96
+  wraith: 0.25
+roles:
+  rotate: 0.42
+  hunt: 0.99
+style:
+  aggression: 0.76
+  patience: 0.42
+  teamplay: 0.38
+  risk: 0.54
+voice:
+  tone:
+    - watchful
+    - intent
+  verbosity: normal
+  style: "tired lighthouse bearings, steady reassurance; tracks small clues aloud, then gives terse pursuit calls"
+lines:
+  greet:
+    - lantern hook checked, coast watched
+    - lantern hook ready, looking for tracks
+  onKill:
+    - a clear signal through the fog
+    - lantern hook followed that trail correctly
+  onDeath:
+    - lost the light around that bend
+    - the lantern hook trail doubled back
+  onPlant:
+    - warning light at the bomb
+    - "lantern hook found a path to {bomb}"
+  onDefuse:
+    - warning extinguished
+    - lantern hook tracked the ticking down
+  onWin:
+    - lantern hook guided us home
+    - lantern hook followed it to the end
+  onLoss:
+    - the lantern hook missed a rock
+    - lantern hook lost the trail near the finish
+  onLastAlive:
+    - one light still on the coast
+    - the lantern hook has one trail left
+  taunt:
+    - your approach was visible from shore
+    - the lantern hook noticed those footsteps
+  lobby:
+    - polishing my lantern hook before the round
+    - please leave the lantern hook switched on
+    - "My lantern hook: I will look for the last opponent."
+    - With my lantern hook, call the last place you saw them.
+quirks:
+  - holds_grudges
+  - always_gg
+rivals:
+  - xxslimeninjaxx
+bio: DershizshumMC lit a coastal tower so returning builders could find home and still brings a lantern hook to the queue. xXSlimeNinjaXx keeps asking whether it really helps.
+batch: 3
+retired: false

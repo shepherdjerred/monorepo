@@ -1,0 +1,75 @@
+id: minerbadger5
+name: MinerBadger5
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjA4NzQ1OSwKICAicHJvZmlsZUlkIiA6ICJlNzM4MTYzZTYwM2M0MTFkOTg4MzNiYzkyZTI4Y2IyYSIsCiAgInByb2ZpbGVOYW1lIiA6ICJYZW5va3JhdGVzUml0dmEiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNTk3ZjdjOWExMDE2ZTI0ZjBkMWYyYjk1ZWRhNDk3MzVlNmZkMmRjZGVmZjNjZWJjNzdiZWY3ZGRlMmExYmMxZiIKICAgIH0KICB9Cn0="
+  signature: "ZFVrvX8a0pztwsusVmC2bppILtiegdU5/CxGdHSsuZhXwUCjcsEzLQn+tGlR8i7z4qhB4SR8ow1VK/7r4FpyUSkweDOQF560VCKf+FA+m9GIS7GK2VpCzMwmD2A8oD+L9TR1k1f593PIWA9f/acztKojWCQZecCg3Wg4yQPLHIxQ4TnlsGuelL5EduMu0QUD4LgW7s5UYpDeZy1eg+Md3VzfaNfYb5HFayC718MLy9A+BFZVD0keEIMST9bWup9rHum3AZXX5/HN8BDMuOwLZb5o/xAbH7L3ir/yZ2lfb9732eIIcF7+US2dHQ4mt/v3vi5wgLYs3JKjyuTTP5YeLURqs+j/ja+Fxuei9IUENjstv3u+M1Pj2yo8j4abtQMR5wbSJWjv5nS2IDi2TD55ziFp0Z7cFbCiQwpVBgGbq6VZeLFavWvMqctrQyeYzbBARNIDuKASbUeUm7tlLdgGQo2lQUTbp0s9YeZttUp4oNmtDRoN8uFAv4AbtR3RZF/FETfAjUqiWAzPuzFcaRx9L9MMHOLDYY3439PpKRTJtpunk6N8EIFB0sDJHBCGfzhSXFBV3dzAOQrjiQVGaYteTy5adk9Gozv7M7nnlktR98SRgo+VMXZBAgbVv1frayXXGVVrSfRB7lONo+o9DIeZsfSQ46TTj5ZHmtqYYcDCucM="
+skill: 0.306
+archetype: troll
+leverOffsets:
+  turnRateDegPerTick: -0.51
+  decisionTemperature: -2.13
+  coordination: -0.7
+  technique: 0.56
+kits:
+  trooper: 0.56
+  shortbow: 0.73
+  rewind: 0.86
+  spy: 0.91
+roles:
+  plant: 0.5
+  escort: 0.2
+  defend: 0.14
+  rotate: 0.42
+  hunt: 0.45
+style:
+  aggression: 0.58
+  patience: 0.34
+  teamplay: 0.06
+  risk: 0.91
+voice:
+  tone:
+    - bookish
+    - mischievous
+  verbosity: quiet
+  style: "brief footnotes and revised-edition rematches; deadpan object conversations and harmless overconfidence"
+lines:
+  greet:
+    - leather clasp ready, new chapter
+    - leather clasp has appointed itself captain
+  onKill:
+    - a short footnote to that duel
+    - leather clasp is now insufferably proud
+  onDeath:
+    - a regrettable page break
+    - leather clasp would like a different replay
+  onPlant:
+    - a cliffhanger at the bomb
+    - leather clasp calls this interior decorating
+  onDefuse:
+    - closing that chapter gently
+    - leather clasp says it knew the correct wire
+  onWin:
+    - the leather clasp gets a happy ending
+    - leather clasp is requesting a trophy shelf
+  onLoss:
+    - the leather clasp needs a revised edition
+    - leather clasp has misplaced the blame form
+  onLastAlive:
+    - one last page to turn
+    - leather clasp insists this was the plan
+  taunt:
+    - I have read that opening before
+    - the leather clasp gave that push three out of ten
+  lobby:
+    - resting my leather clasp on the lobby shelf
+    - please do not dog-ear my leather clasp
+    - "My leather clasp: I will cause a useful distraction."
+    - With my leather clasp, try not to laugh during my push.
+quirks:
+  - celebrates_early
+  - always_gg
+rivals:
+  - xashjythfox
+bio: MinerBadger5 bound a book of old match stories with mismatched covers and still brings a leather clasp to the queue. XashjythFox keeps asking whether it really helps.
+batch: 3
+retired: false

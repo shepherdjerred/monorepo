@@ -1,0 +1,72 @@
+id: itsgrythzu
+name: ItsGrythzu
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NTU0MjExNCwKICAicHJvZmlsZUlkIiA6ICI5NmYyMmIwNmI2YWM0OGNkYTE5OWEzMjFkZDY4NTFmNCIsCiAgInByb2ZpbGVOYW1lIiA6ICJtZW93ZWRkZCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9hYTY1OWRkZTkwM2NlMjYxOWZmYjRiMWQ3OTg1ZjBmMzYyYTI4ZTA4OTllMDQxODhlZWI2MDEzOGJiZmYxY2Y3IgogICAgfQogIH0KfQ=="
+  signature: "V4bTfv/0cA2nbmjiR6d3b7ugZYGPhu+wh691O+CQfAAXJX4HaN+W7LafRAmqOpRsrA39FeWLnYXnHuM42/dhnZl0plobDQLwCp1c6hEA8qg0qCu5zuC0w6KcuMBxrw57EdmAoSu1m/Qu0xQzA+6N7YfApo5aJqcrLEAYEzuNHFLzwhvlHsCWOOqzjIF6loBj5i4ib8XSspBr066UMgPZexmYDHCn/2ymCh8qH9N+9ffGl4mzB6h738iQW3zZM1GKJNltI/+WsZl9yf4M2EMBgOw3zF1/Swtamqb2ovTTPJIMChGNA4mPwlrOKSjPmNOKo45JsNhxnaORpQoC8fCWxH/sWnXtJohMUfcwkjMZEwKZESwY0GhLdAul6P6D+66jLvpOvpKfXrazKkS/H7cp+lSN5EtptPdvSj+CXW/6HcDclGm0fY+EFOAjD3sNzyTJOVqWxAjYfVdqCV/3hX/e+ZQXgUxUJ6QMBqR3lBI1xvPmAzQgaGoeBrFDBKD0SBgo1NYEnQsZTRlXBDooAaTqwQE3RGrR+4FYoVq7e68yhWMhEZUJ+x2/IAAXyaUdWv1Q/UAfV7aZnPr6FPrnRIDYVZIDMrQ8dPvSs86hETKItNEEoatI5GrC4Z3nBiAAADbZ8DGW5Q3zNgSUHLyfBTHRQMmWwW4dzQ/jAOCJEE7Fqm4="
+skill: 0.049
+archetype: support
+leverOffsets:
+  decisionTemperature: 0.17
+  awarenessRadius: -0.11
+  coordination: 1.2
+  aggression: -0.2
+kits:
+  trooper: 1
+  longbow: 0.32
+  rewind: 0.72
+roles:
+  escort: 0.97
+  defend: 0.42
+  retake: 0.65
+style:
+  aggression: 0.34
+  patience: 0.5
+  teamplay: 1
+  risk: 0.32
+voice:
+  tone:
+    - practical
+    - helpful
+  verbosity: quiet
+  style: "carpentry checks and repairable mistakes; gentle check-ins, thanks and useful kit reminders"
+lines:
+  greet:
+    - bench clamp packed, joints checked
+    - bench clamp is here, everyone got their kit?
+  onKill:
+    - that opening needed a wedge
+    - one less problem beside the bench clamp
+  onDeath:
+    - a weak joint in my plan
+    - sorry, the bench clamp corner is open
+  onPlant:
+    - the fuse is fitted snugly
+    - bench clamp can watch while you plant
+  onDefuse:
+    - took that assembly apart
+    - bench clamp is here to help at the fuse
+  onWin:
+    - solid work around the bench clamp
+    - bench clamp says everyone helped
+  onLoss:
+    - back to the bench with my bench clamp
+    - bench clamp says we can tidy that up
+  onLastAlive:
+    - one bench clamp holding the frame
+    - one bench clamp still trying to help
+  taunt:
+    - that angle needs a little sanding
+    - the bench clamp brought a team to that corner
+  lobby:
+    - checking the edge on my bench clamp
+    - my bench clamp is for repairs after the match
+    - "My bench clamp: I will stay close to the push."
+    - With my bench clamp, call if you need an escort.
+quirks:
+  - says_sorry
+  - always_gg
+rivals:
+  - krourtast-23
+bio: ItsGrythzu repaired a rickety spawn bridge every weekend and still brings a bench clamp to the queue. Krourtast_23 keeps asking whether it really helps.
+batch: 3
+retired: false

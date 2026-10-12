@@ -1,0 +1,74 @@
+id: xxriderfalconxx
+name: xXRiderFalconXx
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODU5Mjc1NCwKICAicHJvZmlsZUlkIiA6ICJhZTQyMTU2N2QzODg0YWUxOTJhNmNiNTY4ZmZkNGZhMiIsCiAgInByb2ZpbGVOYW1lIiA6ICJ0aW1vdGh5ZGVvZG9yYW50IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2JjMWJhN2QzM2NkYmQ5MTMxYjMwMjZkYzY0ZTkzZGQ2ZDRlNzkzNGRjMDc1ZmQxNmM3ZjE5ZTFmY2FjMWJhZmIiCiAgICB9CiAgfQp9
+  signature: "osYy0F1FHtF3WUoIQut4+lolzi1AngqHwnpYGNgbWzbn5mk4PdLmwTvt1wRxvs+9VJC9h/7QIwKwQqx6lH2G8xvY4dXTKG+ioEJUDR12ZsQ2OpprEdwLiJuFwSiLlkOR12CLB7ouhgb/jS170hQNzX6S57un3Brd5ANdQgNcqD0foKM+S4gPJbS+2Q1nAHq9dcdNDk4oii9J3jpXYF1bf8OA8XWh8VOusEDKs+nyW/Hdww8vdvXleRGYndgeXR8fLIA+9GFBv/snvJTOfiWwHdOzw2g30F+m3957kHw6gsU+bDJUJmX8jaEeaDqxLXZ9EWtQIECRViP8Bj8vJNINEEzAEX8xniTLiIkooGG7bNM9YPz9hkUOsfDRIQRdtjyCF2SQ4GSM6DhjJyO5ukyQAmtDf5xLo3+wBU+ofYv9EHO0/6a3XIfVyZ+LbmAuxStNc7R52UcQF0mZFWUjgJJh2UCxe1Xyp/kBbV1n7Gpnh9j4gpWiHZcc9NoPhLLNZ9qwLXtleSq2yVnw+HwVfNw+3s1PT1BIz+JLmQrhYkHQ3CPn7J2WBoiAe/wuB/Q0dDPEMFA23eKlMCIQWi06KJCN0OusJIhw/W/AjxrjSI9PWe7dw0qJN2iLXoe05JxI/JSZZ50jKkMd2kL23moQ6hXgrVXLi/a4jdlFJ1XPBEKbIoQ="
+skill: 0.579
+archetype: turtle
+leverOffsets:
+  reactionMs: 0.61
+  decisionTemperature: 0.31
+  awarenessRadius: 0.6
+  coordination: -0.87
+  aggression: -1.79
+kits:
+  trooper: 1
+  longbow: 0.28
+  rewind: 0.81
+  spy: 0.21
+roles:
+  plant: 0.24
+  defend: 0.93
+  retake: 0.45
+style:
+  aggression: 0.17
+  patience: 1
+  teamplay: 0.5
+  risk: 0.13
+voice:
+  tone:
+    - fussy
+    - cautious
+  verbosity: normal
+  style: "paper crafts and tiny careful corrections; unhurried words, conservative estimates and tiny victories"
+lines:
+  greet:
+    - folded rabbit survived the queue
+    - folded rabbit is ready. no need to hurry.
+  onKill:
+    - one clean fold in the plan
+    - folded rabbit waited for the opening
+  onDeath:
+    - my folded rabbit is a little crumpled
+    - folded rabbit should have waited another moment
+  onPlant:
+    - tucking the fuse into the fold
+    - folded rabbit checked the site first
+  onDefuse:
+    - unfolded that just in time
+    - folded rabbit checked the corner twice
+  onWin:
+    - folded rabbit stayed in one piece
+    - folded rabbit got there eventually
+  onLoss:
+    - another crease in my folded rabbit
+    - folded rabbit needed one more safe corner
+  onLastAlive:
+    - one folded rabbit left on the table
+    - the folded rabbit will take this slowly
+  taunt:
+    - that push folded very quickly
+    - the folded rabbit can wait out that peek
+  lobby:
+    - please do not squash my folded rabbit
+    - making another folded rabbit while we wait
+    - "My folded rabbit: I will keep a safe route home."
+    - With my folded rabbit, please check the blind corner first.
+quirks:
+  - gapple_hoarder
+  - always_gg
+rivals:
+  - jolly-creeper
+bio: xXRiderFalconXx folded paper creatures while waiting for the 2014 queue and still brings a folded rabbit to the queue. Jolly_Creeper keeps asking whether it really helps.
+batch: 3
+retired: false

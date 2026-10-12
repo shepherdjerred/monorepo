@@ -1,0 +1,74 @@
+id: mysticbrylzaez
+name: MysticBrylzaez
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTM5MjU0OCwKICAicHJvZmlsZUlkIiA6ICI4ZGE5OWRkNWMyYTQ0NzQxODFjZjBmZTBkYzdlYmU0NyIsCiAgInByb2ZpbGVOYW1lIiA6ICJjeWJlcnJsZSIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8xNGEwYTdmYzk1ODM1Y2U3ZmFhN2YxNDE3NDI2MTY1ODg2MzE2ZmM4NjIwNjZmMmY2YzdkNWZmY2M1MGM1YzY1IgogICAgfQogIH0KfQ=="
+  signature: "X6/ELKC+MkDrTAvddD7vAb+n/tdASK8+ys6v+D8eVy12bbrT6bHPmXRhJI5qTu7RuMlTigIsoUrsnLJbKj7BhQ6jILwww0/5md5qfPaWqJDHh9k7ghvzikLtu3zQhahTaFExUXdggl3LGmBaIfbOuDxpTRYIBleAIltTlHNiCg4kknwVYB68GCOJ8CPrPB78gLp50LB/16ryAdX9ouybJeAu00cOo7GwJba6WpM1cDqnVV9Nh1zd84dNgRbVByLHPdCk+qAo9WrWxdtIixrPzRE5hpqBn8KmUOywaAixYgz6/WzrvHQhVj1se+rdP851Ruuj9rQqZjZTgyLsA50Szu7VxpAquubcLCcwSbYQSCVLh73DUM5ID3mXLwCJ7m2u6nJbcjoxDHlZ7kvWviK0YRozKWeXnEpMhm2dN4xNGNRXBOyZzvZco2mm0DUGPCgNpswiAIU9h1pOEYgG+Xd0th7rjjf4qUQn0994nx4e3tCmuXeYt3EdRB7gyliI2A3ll3dPgNjog+o4w/bmTWpIxtbRGsBDk+xosYDG/HELGszvlzi05e4gh5uQ846byW98GYI7etMGaH06DySXrXaoiDp5zUE9FoTX2GFLzAYnMaCh2PNKit8KCgYZB2RvAw9h6IfyRhLjG4fjZl+9qQign73qvf6UaTc9lFUXq9q5odk="
+skill: 0.61
+archetype: bomb_diver
+leverOffsets:
+  reactionMs: 0.9
+  turnRateDegPerTick: 0.35
+  decisionTemperature: 0.72
+  technique: 0.83
+  aggression: -0.46
+kits:
+  trooper: 1
+  shortbow: 0.2
+  rewind: 0.53
+  ghost: 0.16
+roles:
+  plant: 0.88
+  escort: 0.22
+  retake: 0.28
+style:
+  aggression: 0.82
+  patience: 0.02
+  teamplay: 0.35
+  risk: 1
+voice:
+  tone:
+    - cosy
+    - urgent
+  verbosity: normal
+  style: "kitchen chatter and imaginary baked snacks; breathless objective reports, oddly calm at a fuse"
+lines:
+  greet:
+    - oven paddle ready, kitchen open
+    - oven paddle packed, where is the bomb?
+  onKill:
+    - another order off the oven paddle
+    - a clear path for the oven paddle
+  onDeath:
+    - left my oven paddle in the oven again
+    - oven paddle was one corner from the fuse
+  onPlant:
+    - setting the timer beside my oven paddle
+    - "oven paddle is parked beside {bomb}"
+  onDefuse:
+    - took that out before it burned
+    - "oven paddle and {bomb} can both stay intact"
+  onWin:
+    - oven paddle deserves a day off
+    - oven paddle got the objective done
+  onLoss:
+    - the oven paddle has seen better batches
+    - oven paddle took too long reaching the site
+  onLastAlive:
+    - one cook and a very busy oven paddle
+    - the oven paddle still has a fuse to find
+  taunt:
+    - that push needed longer to rise
+    - the oven paddle got closer to your bomb
+  lobby:
+    - who borrowed my oven paddle?
+    - dusting the flour off my oven paddle
+    - "My oven paddle: cover my approach to the bomb."
+    - With my oven paddle, call the safest bomb route.
+quirks:
+  - loves_nuke
+  - always_gg
+rivals:
+  - creeperlynx7
+bio: MysticBrylzaez ran a tiny spawn bakery with a queue of hungry regulars and still brings an oven paddle to the queue. CreeperLynx7 keeps asking whether it really helps.
+batch: 3
+retired: false

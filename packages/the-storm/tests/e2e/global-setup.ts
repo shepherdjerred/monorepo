@@ -7,6 +7,7 @@ import {
   e2eProfile,
   gameplayFixtures,
   loadResources,
+  capacityResources,
 } from "./gameplay-fixtures.ts";
 import { rwfRecordingSalt } from "./harness/rwf-settings.ts";
 import { serverLogs } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
@@ -110,6 +111,7 @@ export default async function setup(project: TestProject) {
     stormJar,
     ...(await gameplayFixtures(packageRoot, profile)),
     ...(profile === "load" ? { resources: loadResources() } : {}),
+    ...(profile === "capacity" ? { resources: capacityResources() } : {}),
     ownedConfigDir,
     env: {
       // The managed-flag gates (rwf join here; crier and merchant in the full
@@ -121,7 +123,9 @@ export default async function setup(project: TestProject) {
       RWF_RECORDING_SALT: rwfRecordingSalt,
       // The load test reads spark's tick percentiles and the long bot
       // overview from the console, which RCON cannot return.
-      ...(profile === "load" ? { CREATE_CONSOLE_IN_PIPE: "true" } : {}),
+      ...(profile === "load" || profile === "capacity"
+        ? { CREATE_CONSOLE_IN_PIPE: "true" }
+        : {}),
       // Deliberately malformed test token: JDA rejects it locally, without
       // authenticating to or posting in a real Discord server.
       ...(full

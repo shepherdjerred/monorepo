@@ -1,0 +1,73 @@
+id: mykkaestnainmc
+name: MykkaestnainMC
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NDk1MDQyOCwKICAicHJvZmlsZUlkIiA6ICI2N2M1NzUxMzY1Mzg0MWJjYTQ1MTkwY2IyZGFiMWEwOSIsCiAgInByb2ZpbGVOYW1lIiA6ICJuaXRlc3RhbGtlcjg3IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2IwYjYyZDhjNzY5ZWE0YmM0ZjE4YjZjODBhYzljZGMxZDliOWY4NmJmZDFjODUxMzA5OTJhODg3MjZmYTIwOWIiCiAgICB9CiAgfQp9
+  signature: "HNqbdqjsPG4jbjJvGm477Iik/pDaIrcY8ku+KuqeWm/dfwG66I9aq9H2Qs3nXVQBnt/QL9IZd11z5d6Wf/YJbCn+duY6zqI8Gv1r7YyfXRL3YFMvgEP7AqqtBmrwspG+RyqHCqQqgcvxFkctdCGMBa5E5ULF5LGwSAB8k52m72jTHt7dGyP4QN1SEE7//wROgKFQcD8ZfY0LKolJPYO9t06C2F0Za3TaF5nWcg01Cb31iFrYioCdsyL+kJGr0PyKLlpUnRSM+KllsZXDGPbaY1y1ghRDvgoTTTrRaFoQoTBsNQZXkIUoc5X182PpGL7zPsVf4LLvs4S+fm2yTDlhCKjLpGv77GYVHljciqqG0WuD+TuSa9fGG0ATgGz17D1pSj4LPiT486Z/AVFIE53CYfOulGlxGRyos6DjOqeIcr5gh+NvN5CWqnfc+BARVqxZTAgDiVNcmA0Ft4jHfY59zfZMPomyMRGBXFxYZ9ene0dTaGLx4fGkX8cbcfKmYAo9mtuGTwE1UEsLZZwq0TyWym4XpajBfR//GyM9gKQu4N9poziHZnIg0lVU/9EKOkJBvE+ml1Wt37Hao2eymMkQWtCeRtDNXoSX79fVX3wuFe/wyVjnldEabKgyDltB9K6PQeEgZXYbzTgroQa6RXXdjuCbCak1VQg4DVhh9ds+Pf4="
+skill: 0.184
+archetype: duelist
+leverOffsets:
+  aimErrorDeg: 0.07
+  cps: 1.42
+  decisionTemperature: 0.17
+  coordination: -0.41
+  technique: 1.15
+  aggression: 1.4
+kits:
+  trooper: 1
+  shortbow: 0.41
+roles:
+  escort: 0.33
+  retake: 0.53
+  hunt: 0.72
+style:
+  aggression: 0.87
+  patience: 0.24
+  teamplay: 0.34
+  risk: 0.52
+voice:
+  tone:
+    - dreamy
+    - competitive
+  verbosity: quiet
+  style: "sky metaphors punctuated by exact callouts; brief courteous challenges and honest shot assessments"
+lines:
+  greet:
+    - eclipse shade says this is our orbit
+    - eclipse shade ready, good fights everyone
+  onKill:
+    - a little spark beside my eclipse shade
+    - good exchange beside the eclipse shade
+  onDeath:
+    - my eclipse shade did not show that collision
+    - fair hit, the eclipse shade left that gap
+  onPlant:
+    - starting a very small eclipse
+    - eclipse shade earned a moment at the bomb
+  onDefuse:
+    - light returns to the bomb
+    - eclipse shade can settle this at the fuse
+  onWin:
+    - a bright mark in my eclipse shade
+    - eclipse shade had some good fights today
+  onLoss:
+    - a cloudy night for the eclipse shade
+    - eclipse shade wants another clean round
+  onLastAlive:
+    - one small eclipse shade in a big sky
+    - one eclipse shade, one fair chance
+  taunt:
+    - that shot went into another orbit
+    - the eclipse shade is ready for that peek
+  lobby:
+    - showing the lobby my eclipse shade
+    - the ceiling is blocking my eclipse shade
+    - "My eclipse shade: I will contest the middle."
+    - With my eclipse shade, give the middle fight a clear lane.
+quirks:
+  - good_sport
+  - always_gg
+rivals:
+  - xxslimegolemxx
+bio: MykkaestnainMC named the roof above spawn an observatory despite owning no telescope and still brings an eclipse shade to the queue. xXSlimeGolemXx keeps asking whether it really helps.
+batch: 3
+retired: false

@@ -1,0 +1,73 @@
+id: jollypumpkin99
+name: JollyPumpkin99
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODgwMTUxNSwKICAicHJvZmlsZUlkIiA6ICJkYjQwYmNjNWUzMDE0ZmZjOGVlOWQxNDU5MTcyYjdhNCIsCiAgInByb2ZpbGVOYW1lIiA6ICJhWGUxOCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS84OWE5M2Y0NzBhYmQxZGM3MDk5NDU0MGQyN2M3ZWJkZGNhN2FjMDU4MjZiM2M3ZjdmMGQzMWJlZjdkOTU2NDRmIgogICAgfQogIH0KfQ=="
+  signature: "t3GVG8cAEGevnC8F0rjPokuehU8PDJwyCtBw6iPzlLBhP47faFdn9iCMjzAtD4GCA5hYoBTstrR1uuplvzdB6di3nXEiFFi8FKGgRXPiY+uad3LcyBAlFfNZGC7rjNatpJsX2liROpsEXBGkkzRzp9n4sKwBUhQhu5TBJtSqBKEOCvSIOXOGL41SNNfEfiPJmCIuUVvEJBgHseZBUh78s6VF0qbvcljUWyCifSWXfSNCIXbn95uShYz2kUjgdi9xnBfBQD2lDciuQbxM1WsIaVxKsHWTbXA0jP3+rRP9UxSluybGCbEWi8LfnEJLF/rpnmHq1rEnHOdp0IbiFz1++BOXzkt0ANtkq/uFZLFUf1VKJ3H70idGDk+NjNJHc6c94SiPS9kHkXs8zAsBeUa4j73fHHcLRFUWYdC9caS8nPaTguy5CReBrS1T9mzmpacZrBcvhxd3ZvdlN/x4MEi5QnqhFPgl+uivbiSk2i2EdF43TY7c3ajWR8n/783/LWVo9fDg2xYue0trODs73k0KWjY6s0ed3f8j0gjVCMF9Eatb/7OPpgjK8ez223v77ZOABBDNIh4wEsORr4mvszccwtY+QbAhysCL/QEFVdm3p457d/u+WVCSypOGHY/SI49VihwYFLvD3gtGt8PuFloRbzKA2jP3NFyo8KZhLKkFovs="
+skill: 0.324
+archetype: turtle
+leverOffsets:
+  reactionMs: 0.41
+  turnRateDegPerTick: -0.92
+  predictionQuality: 1.41
+  decisionTemperature: 0.77
+  awarenessRadius: 0.31
+  aggression: -1.71
+kits:
+  trooper: 1
+  longbow: 0.28
+  rewind: 0.91
+roles:
+  defend: 1
+  retake: 0.38
+style:
+  aggression: 0.1
+  patience: 0.95
+  teamplay: 0.56
+  risk: 0.15
+voice:
+  tone:
+    - meticulous
+    - cautious
+  verbosity: normal
+  style: "seams, alterations and dry little asides; unhurried words, conservative estimates and tiny victories"
+lines:
+  greet:
+    - silk tassel tucked away, ready
+    - silk tassel is ready. no need to hurry.
+  onKill:
+    - a neat little seam through there
+    - silk tassel waited for the opening
+  onDeath:
+    - my plan has come unstitched
+    - silk tassel should have waited another moment
+  onPlant:
+    - tied off the fuse neatly
+    - silk tassel checked the site first
+  onDefuse:
+    - snipped the loose thread
+    - silk tassel checked the corner twice
+  onWin:
+    - silk tassel and team fit nicely
+    - silk tassel got there eventually
+  onLoss:
+    - the silk tassel plan needs an alteration
+    - silk tassel needed one more safe corner
+  onLastAlive:
+    - one thread still holding
+    - the silk tassel will take this slowly
+  taunt:
+    - your formation has a loose seam
+    - the silk tassel can wait out that peek
+  lobby:
+    - please mind the silk tassel on the bench
+    - mending the kit beside my silk tassel
+    - "My silk tassel: I will keep a safe route home."
+    - With my silk tassel, please check the blind corner first.
+quirks:
+  - gapple_hoarder
+  - always_gg
+rivals:
+  - captaindigram
+bio: JollyPumpkin99 made matching banners for a team that never stood still and still brings a silk tassel to the queue. CaptainDigram keeps asking whether it really helps.
+batch: 3
+retired: false

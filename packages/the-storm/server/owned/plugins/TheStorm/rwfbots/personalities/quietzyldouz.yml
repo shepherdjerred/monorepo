@@ -1,0 +1,73 @@
+id: quietzyldouz
+name: QuietZyldouz
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NDg2MzEzNSwKICAicHJvZmlsZUlkIiA6ICIxNDgxNzQxN2VhNWI0OGM1OTMzNzA5YjZjMTcxZTc3YSIsCiAgInByb2ZpbGVOYW1lIiA6ICJJdHNtZV90byIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS84NGE1ZDIwMTMzN2QwMTAwNjc3ODZhNWY3ZTA1NDdlMzFjMTg0OTU0MWJhNDBmN2QxYjc4ZWNjMjNjODc2YzVmIgogICAgfQogIH0KfQ=="
+  signature: "EfmvW7ASWXl4M+U/hHF6H1qacjQLDuk6HJW/8wdP+Q7alDo/3w+PYuZvBCCcqKfwme59r4pnOy+bASwV3ADW71rrrUJPircyHW3iiTPJTO4tq9HRx7lY20wy/Qoa79YgtnN9stQUPIxfrNnLMmRuikE7JNN1MKO+oXaxsy3cxvgC+UXJRqhf3ptiJRvvNXm6DqMBdYakPFTJo8j7BVyBMiKS/uoLvnCnUSqv+cCdQhGSa81kPULbDo5m3byL0jq6L0CpaDcVGoVwmJu4W9gFQJbYIHv0qal5tv4OzrHal8miz4s0Pt6EKPhMupyxeAmmyxJD9XTESz7wBDuUhRaXV2nT+GiV9I7RCD2aQ0MJjMrkb4WYTaMo9dG5uyKKpuMmNF6GlbpcpXderPZCo56fvmt0g9QJLL4ZRY8WmUhNNPvdiJP151pnIh8NjyDni0r70HKcdunbh5muhjXjJyAwHOHdy1wUsQAbQ9R0jREmCLpg2rCwhnbXYU5b/5hqCRAJuC7Um2XvwH30Pwb1vxRO6RCpPB3qQSwjG1X6de3qW708BDpx7xN74LRZ8ST9JYbaL0Ftf/VvgJ+HKGl6ccmwvMfYbmNjN9LhMVp3HFvv3rGggPiuB5xTmlhaKUoFiFi7pbcXxYFl2c253++InBU6McwtZ6G8jaK7VU6XAGb+tdA="
+skill: 0.514
+archetype: support
+leverOffsets:
+  awarenessRadius: 0.87
+  coordination: 1.97
+  technique: 0.22
+  aggression: -0.29
+kits:
+  trooper: 0.95
+  longbow: 0.28
+  rewind: 0.67
+roles:
+  plant: 0.13
+  escort: 1
+  defend: 0.4
+  retake: 0.57
+style:
+  aggression: 0.39
+  patience: 0.55
+  teamplay: 0.99
+  risk: 0.19
+voice:
+  tone:
+    - theatrical
+    - helpful
+  verbosity: normal
+  style: "backstage whispers and hurried scene changes; gentle check-ins, thanks and useful kit reminders"
+lines:
+  greet:
+    - costume trunk in place, curtain soon
+    - costume trunk is here, everyone got their kit?
+  onKill:
+    - a quick scene change for the costume trunk
+    - one less problem beside the costume trunk
+  onDeath:
+    - missed my cue by a whole scene
+    - sorry, the costume trunk corner is open
+  onPlant:
+    - cue the dramatic ticking
+    - costume trunk can watch while you plant
+  onDefuse:
+    - cut that effect, safely
+    - costume trunk is here to help at the fuse
+  onWin:
+    - take a bow beside the costume trunk
+    - costume trunk says everyone helped
+  onLoss:
+    - the costume trunk needs a better rehearsal
+    - costume trunk says we can tidy that up
+  onLastAlive:
+    - one performer, one costume trunk
+    - one costume trunk still trying to help
+  taunt:
+    - your entrance was a bit loud
+    - the costume trunk brought a team to that corner
+  lobby:
+    - has anyone seen the costume trunk?
+    - do not lean on the painted costume trunk
+    - "My costume trunk: I will stay close to the push."
+    - With my costume trunk, call if you need an escort.
+quirks:
+  - says_sorry
+  - always_gg
+rivals:
+  - arrowotter2
+bio: QuietZyldouz worked the curtains at a player-built theatre between duels and still brings a costume trunk to the queue. ArrowOtter2 keeps asking whether it really helps.
+batch: 3
+retired: false

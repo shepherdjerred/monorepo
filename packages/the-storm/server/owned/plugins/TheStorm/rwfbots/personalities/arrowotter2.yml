@@ -1,0 +1,73 @@
+id: arrowotter2
+name: ArrowOtter2
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjE4NTcyOCwKICAicHJvZmlsZUlkIiA6ICI1NjExYmE1MjFmNDM0OWYwOWE0MTI5ZTM0NjQzMDM1OSIsCiAgInByb2ZpbGVOYW1lIiA6ICJHdXlOYW1lZEthaW5lIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzVjOWRkZGFkYWZhOTA1NGFkZTFjMDVlYWZlNmE4MGZlMTRhZjIyNWJlMzc5MDJiMTJlODA5MzRmOGUyOThiYTMiCiAgICB9CiAgfQp9
+  signature: "UdDWLamFUVIDXoOux2eUY4Qrv2IZTkav5vV26RT7xKU90MVyswHX8iCMcOXWfSSv7ZHCs40ZYdb52oyQwc81AGDiyZLLrRVVOHpvXeVpet/+57lT/H4wW1XPYSTQolJJbkRKSg1ek6D/IUYWBu7hRNHI5KAnnMVeQ0W+XL2C1mA1ZsCW5E8U+pr0KlRMbMtyon7NFTZnndiSoUqNwN5eCgp4OtwZsSBMfP27qyvQjATgxZJVVF8dHuqD6zTuRfM1JuoEds+W8QhPEPsoFFShwEWnOO2L5J0AMCLSGSE5iLBJ1sELfhLWYY9hSNyqhBd9n0rHo5hzO116sudgiBUmlMzHvCFS+mioIgTK0Vy2FdbnHso01a3cF8UWAhE7Exy0m8q75CjqkNZ76z/SuvGh0wXwQcwJW7wFmCcAU3lLVLPi6VdpEIL5TzcZCeZset+9oaPvGGUVAcpVXcbehyHUjryf/gxx9mxKvUpb+89lo8nrVCEubr8xtdi6A0LKpAzEjdOCN7qr6IhAtN6EdTNpKYKaVXp1QgXoTWWMefMf279ttLHyk8WLeRKmLVxcUetihX/S5GcBvulKHRCVFWB063UQvbs2ae0V//hy6ywYzv/hwbEripLn1N4UUMvkEqIjiphsAuGQgq3ww2XVwIp1wNVHj/8abY1dZGbZczzXA/o="
+skill: 0.307
+archetype: anchor
+leverOffsets:
+  reactionMs: 0.96
+  aimErrorDeg: -1.13
+  awarenessRadius: 1.04
+  coordination: 0.04
+  aggression: -0.75
+kits:
+  trooper: 0.85
+  longbow: 0.44
+  shortbow: 0.25
+  rewind: 0.26
+roles:
+  defend: 0.83
+  retake: 0.71
+style:
+  aggression: 0.32
+  patience: 0.88
+  teamplay: 0.57
+  risk: 0.13
+voice:
+  tone:
+    - watchful
+    - grounded
+  verbosity: chatty
+  style: "tired lighthouse bearings, steady reassurance; reassuring statements and firm location reports"
+lines:
+  greet:
+    - lamp chimney checked, coast watched
+    - lamp chimney stays here, I have this corner
+  onKill:
+    - a clear signal through the fog
+    - lamp chimney and corner still secure
+  onDeath:
+    - lost the light around that bend
+    - someone watch the lamp chimney corner
+  onPlant:
+    - warning light at the bomb
+    - lamp chimney guards the exit from the site
+  onDefuse:
+    - warning extinguished
+    - lamp chimney is staying by our bomb
+  onWin:
+    - lamp chimney guided us home
+    - lamp chimney never left the post
+  onLoss:
+    - the lamp chimney missed a rock
+    - lamp chimney held the wrong corner
+  onLastAlive:
+    - one light still on the coast
+    - the lamp chimney holds here a little longer
+  taunt:
+    - your approach was visible from shore
+    - the lamp chimney has not moved for that push
+  lobby:
+    - polishing my lamp chimney before the round
+    - please leave the lamp chimney switched on
+    - "My lamp chimney: I will guard the home approach."
+    - With my lamp chimney, call before rotating off defence.
+quirks:
+  - stares_down
+  - always_gg
+rivals:
+  - drzygrer
+bio: ArrowOtter2 lit a coastal tower so returning builders could find home and still brings a lamp chimney to the queue. DrZygrer keeps asking whether it really helps.
+batch: 3
+retired: false

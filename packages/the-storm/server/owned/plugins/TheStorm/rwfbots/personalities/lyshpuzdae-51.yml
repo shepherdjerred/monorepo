@@ -1,0 +1,75 @@
+id: lyshpuzdae-51
+name: Lyshpuzdae_51
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjIxMjA2NCwKICAicHJvZmlsZUlkIiA6ICI5ZjJiY2M1M2U4YzM0OTY4YTc5Yzc0NTExYWQ2NmQyYyIsCiAgInByb2ZpbGVOYW1lIiA6ICJLYWJveWlvIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzdiNWRmY2MxOTYwYjY3YjcyZjcyYjEwNTZiZDk1YTUwNmY2YjczZWUwNjAwNmFkZGNmYjlkZTJmMjU4ZWQ2M2IiCiAgICB9CiAgfQp9
+  signature: "VQppBKZBiWrD78uF73EUDvoKXwkoWOD2mR4YIX9mcdyvFdTyOcI89Nt6Ous1j1Ly83xyNK+WBgp6dy8SVReh7i6NwendNZCNaBPMb2dR/XhjCotF0oq9W/YbOPBJC1veySQiuWJBQ7u79W72sVtjRQB59zTPWgMzhxnFqAme15VC1fYgOP5MovIepZkBLxlU2RDQftqnM4llntEXOWv/E1Od2uKjr86KORPXVUk6Os3V/S16G3pmLHYMQHMBg53bdW0nVKj0MHgTVjy7Y84ZLwqLklvHeZhZmbPGFssaqTjjSLzasDkqAgDA37o7zWeLFeMm5lnvM4DNC0fUkahrMG11u/k0wq1K75f72BDOQB3/oUrKFuDRy4llg2Icqq09vxuyv1MRgg+OIf1rKN+nUW5AyRrJS9eYE7cJs6iAFoN6KZF4Zfp0tKwo4ZSFMv5sJVXfaxTb3lytCdueGaDS1wKKINd/4J50HbZ0nQSwt3+TfOxMRp9sEhZrnmwEBng4vblaj/lvFBU3vvthMe6ChXLJKT91rreav61aKW3xTL4noaYJUdTG7Kwb5srt06plnx3TUGcZviiwf3udhrcoUNI2wh2lExdD1Osr56YPjMaWyGwqSUgKnYn/ByUkfL+F3bOPy9GsBcGXWbdYbCDbP0eR1cVSSo3s4f4sOvX6UoA="
+skill: 0.64
+archetype: rusher
+leverOffsets:
+  reactionMs: 0.84
+  aimErrorDeg: -1.18
+  cps: 0.34
+  decisionTemperature: 0.51
+  awarenessRadius: -0.11
+  aggression: 1.43
+kits:
+  trooper: 1
+  shortbow: 0.62
+  rewind: 0.28
+roles:
+  plant: 0.68
+  escort: 0.29
+  defend: 0.28
+  hunt: 0.92
+style:
+  aggression: 0.87
+  patience: 0.11
+  teamplay: 0.41
+  risk: 0.91
+voice:
+  tone:
+    - watchful
+    - eager
+  verbosity: normal
+  style: "tired lighthouse bearings, steady reassurance; fast fragments, impatient countdowns"
+lines:
+  greet:
+    - beacon lens checked, coast watched
+    - beacon lens ready, I am taking the first corner
+  onKill:
+    - a clear signal through the fog
+    - beacon lens keeps moving, next corner
+  onDeath:
+    - lost the light around that bend
+    - a pause for the beacon lens, then straight back
+  onPlant:
+    - warning light at the bomb
+    - beacon lens is already on the next approach
+  onDefuse:
+    - warning extinguished
+    - quick hands, quick beacon lens, clear
+  onWin:
+    - beacon lens guided us home
+    - beacon lens barely stopped all round
+  onLoss:
+    - the beacon lens missed a rock
+    - beacon lens ran ahead of the plan
+  onLastAlive:
+    - one light still on the coast
+    - my beacon lens and I will keep moving
+  taunt:
+    - your approach was visible from shore
+    - my beacon lens got here before that push
+  lobby:
+    - polishing my beacon lens before the round
+    - please leave the beacon lens switched on
+    - "My beacon lens: first corner is mine."
+    - With my beacon lens, please follow after the opening.
+quirks:
+  - bunny_hops
+  - always_gg
+rivals:
+  - xxriderriderxx
+bio: Lyshpuzdae_51 lit a coastal tower so returning builders could find home and still brings a beacon lens to the queue. xXRiderRiderXx keeps asking whether it really helps.
+batch: 3
+retired: false

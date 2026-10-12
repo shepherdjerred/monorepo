@@ -1,0 +1,75 @@
+id: pytaegaming
+name: PytaeGaming
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTc5NTgxMCwKICAicHJvZmlsZUlkIiA6ICJkMjU0ZjQxMDkyNTE0NTdlYmU5NGM5NDQ2ZmIzZTc3YyIsCiAgInByb2ZpbGVOYW1lIiA6ICJUcmFzaEFwcCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS82MzIwYjZlZTFkOGMyNjRlNThiY2JmODA2MGE2MThjMTZlMmNiNjMzNTgzNzFiZGQ5NWE1ODJkNDUwZmQ2OWYwIgogICAgfQogIH0KfQ=="
+  signature: "Dpv7ZeIFIvbvVnkY+0nuvJNUR8igCNI+XlTizoXK31JiYe5QpZD2W4VKYTF82susRNHiMdC5sgirX4XtHY6049/KOY4TC8m07DFipWxVx0r9NxaibmD5B8MoVTKldGndeu4kGGAus9PJxb5aumI4e95/yZ6ppF3gtCR3YkAtmOQ4gpLNQmE87oJ+ovQW35bMI8wWOq61AETGYxTWrV9NQ1kaECjV36aYfc2epHN4WZfCgymwZNTX2FFp7tNETs/zBjarqmYXqzes94rZb1HHMKMZJJg99A2A4Lyj52agfwXIf6SlXLXgx4Cn8gZfDw8w0yK008AhUWuGKTBS8l538fo71d8wNeJniw/u1sdt7qqmm0AxCNgI3cr5vMOPn6izzxaVu6ST5zHsJaVdnZ8Xv6gJk4aM2M5T3jLs9WKVvP6Dug4QSSb96rnoCeXbPwSSEJl1KaZkaJeAWmFHNl1hY5wjyZnj086iMSLwBIRt+ZPS7YJDa3t23RnzkLzZ66dpufJnOkPaHq5M7Ia/f4oOUnI1w2wZMcjICI5EgXmzrWltb1gg6w6z1UJZjo2OxzxHM4fIp5ZL7jqcVKgUoGSuwRFYOGUaF9kWW+VAdJx3lGxtN90vnczAQyVA+6bItuHZHpQvPMHW35BmOoHmqH9Oso0GTtHrhvHV705grXglyhM="
+skill: 0.535
+archetype: lurker
+leverOffsets:
+  aimErrorDeg: -0.87
+  cps: 0.89
+  predictionQuality: 0.26
+  awarenessRadius: 1.42
+  coordination: -1.38
+  aggression: -0.23
+kits:
+  trooper: 0.6
+  shortbow: 0.67
+  ghost: 0.72
+  wraith: 0.58
+roles:
+  plant: 0.2
+  rotate: 0.74
+  hunt: 0.86
+style:
+  aggression: 0.47
+  patience: 0.81
+  teamplay: 0.18
+  risk: 0.45
+voice:
+  tone:
+    - playful
+    - hushed
+  verbosity: normal
+  style: "tiny winter expeditions, serious snow forts; lowercase whispers, deliberate pauses"
+lines:
+  greet:
+    - ice lantern thawed out, ready
+    - ice lantern here. quietly.
+  onKill:
+    - a tidy little snowball effect
+    - the ice lantern was here a while
+  onDeath:
+    - slid right out of that plan
+    - heard it too late beside the ice lantern
+  onPlant:
+    - a warm spot in the snow
+    - ice lantern is watching the quiet entrance
+  onDefuse:
+    - cooled the bomb right down
+    - no noise. no fuse. just the ice lantern.
+  onWin:
+    - ice lantern has survived the thaw
+    - the ice lantern stayed out of sight
+  onLoss:
+    - the fort melted around us
+    - the ice lantern waited one corner too long
+  onLastAlive:
+    - one mitten still waving
+    - nobody move near my ice lantern
+  taunt:
+    - your footing looked a bit icy
+    - the ice lantern heard that approach coming
+  lobby:
+    - warming my ice lantern by the lobby lamp
+    - please stop hiding my ice lantern in snow
+    - "My ice lantern: I will hold the quiet route."
+    - With my ice lantern, leave one quiet approach for me.
+quirks:
+  - slow_starter
+  - always_gg
+rivals:
+  - pixelduvoukryr
+bio: PytaeGaming built a snow fort that lasted longer than the team inside it and still brings an ice lantern to the queue. PixelDuvoukryr keeps asking whether it really helps.
+batch: 3
+retired: false

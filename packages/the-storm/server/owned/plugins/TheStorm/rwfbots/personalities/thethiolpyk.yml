@@ -1,0 +1,72 @@
+id: thethiolpyk
+name: TheThiolpyk
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NTYyMTA2NSwKICAicHJvZmlsZUlkIiA6ICJjMjVlMWMxZTE1YTQ0N2IwOTQ2Zjg2YzYzYzhjYjZkOCIsCiAgInByb2ZpbGVOYW1lIiA6ICJiaWdpYm9zMzIxIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzEwZGI4OGRhOGQ3YzgxN2FkYTAyYTk2NTEwMTM5YTdlYjEwNzJhZTEyZWQ5OTUzZjEzNWJlYWEwZDc1ZmM5NTMiCiAgICB9CiAgfQp9
+  signature: "RaduWu6+vC9PxZv4sIh+aXG4A7HQ90wv0VrVdEjEJYPQqACoGRCzcUuyiCbKWf6jGq9z+mrn/tqWl2OQxM8Jd+6hNWaBZY2P4l76zCWSnlogro1UJx3Ny2IWNnONubD33baFANaac3Qk5lbY3R02XaWCm1egDgQrOaEL6fMkhJ99PSCak2ntrlKuasr9VQqQq/M6Ig4p2aQpzmqBKgztwvqqxXP8/zXkhaDbBcJB0HmbTU8Zw64moUxhkNFIH2QRHMi4DLB5X+h6fLqqeBCQ+jW/H2BTXZaC8JesH/AGQgk+Fd1KRo5ieQfvV3xWfKrEvn1V+FOciKHICjFXjN2uiVx76iXK/uGeghrDOA089MFvXH28cE9ohg7lfm8oMRaakyrRHV81oXJkc3wt07tUQXIusINbTSDQpBpqLYckfHjq7Pm6Djq7jMsR5FKU3Ywjy6UbtXD/XKKeUgp/Jo+hbUxUeXsWpOny4+ZHw0AIQT3htDiVVHObBkU1wUFHDiohARRPsespfjZvIRLqftQObFRO7sMdBTFSiC6PJ0qz/wML24dosBdsWiLhfOzAQkUFjZqb2uNnR0bhnLAUuLKOcH8G677I1mnDsSCd/ht2lb1BsWBK1E+UJBBCIQkPSKhF8cN1a91BAK7NCYNKESvEPRv9pUPPkVfakSj4lucERDM="
+skill: 0.662
+archetype: anchor
+leverOffsets:
+  reactionMs: 0.29
+  decisionTemperature: -1.21
+  awarenessRadius: 0.9
+  coordination: 0.23
+  aggression: -1.26
+kits:
+  trooper: 1
+  longbow: 0.4
+  rewind: 0.29
+roles:
+  defend: 0.97
+  retake: 0.65
+style:
+  aggression: 0.21
+  patience: 0.84
+  teamplay: 0.77
+  risk: 0.14
+voice:
+  tone:
+    - soft-spoken
+    - grounded
+  verbosity: normal
+  style: "tiny aquarium metaphors and creature worries; reassuring statements and firm location reports"
+lines:
+  greet:
+    - glass bubbler ready, fish fed
+    - glass bubbler stays here, I have this corner
+  onKill:
+    - a splash and then quiet
+    - glass bubbler and corner still secure
+  onDeath:
+    - out of my depth there
+    - someone watch the glass bubbler corner
+  onPlant:
+    - something is bubbling at the bomb
+    - glass bubbler guards the exit from the site
+  onDefuse:
+    - water is calm again
+    - glass bubbler is staying by our bomb
+  onWin:
+    - a quiet evening for my glass bubbler
+    - glass bubbler never left the post
+  onLoss:
+    - cloudy water in the glass bubbler plan
+    - glass bubbler held the wrong corner
+  onLastAlive:
+    - one small splash left
+    - the glass bubbler holds here a little longer
+  taunt:
+    - that bait was a little obvious
+    - the glass bubbler has not moved for that push
+  lobby:
+    - putting my glass bubbler away before the round
+    - the pond can wait for my glass bubbler
+    - "My glass bubbler: I will guard the home approach."
+    - With my glass bubbler, call before rotating off defence.
+quirks:
+  - stares_down
+  - always_gg
+rivals:
+  - noodlemoth7
+bio: TheThiolpyk maintained a glass pond under the old lobby stairs and still brings a glass bubbler to the queue. NoodleMoth7 keeps asking whether it really helps.
+batch: 3
+retired: false

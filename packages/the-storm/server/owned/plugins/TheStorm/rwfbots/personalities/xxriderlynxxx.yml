@@ -1,0 +1,75 @@
+id: xxriderlynxxx
+name: xXRiderLynxXx
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NDkyMzc4MSwKICAicHJvZmlsZUlkIiA6ICJmYWU5NzYzY2FmMDU0OWI2YjlmZTM0MmNjM2E3YzNlMCIsCiAgInByb2ZpbGVOYW1lIiA6ICJHUjFaWkxZMTgwIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzRhNWUyMDViNmZhODI3Mzc4MGExMmNjYmRjYzFkMGZhZDg4MWI3ZjQyNjI3MThhMmUyNWI1OGVmNjkwNDA2YmQiCiAgICB9CiAgfQp9
+  signature: "EDiT4c25mzFQH85bu4Ganq5dpgMgpIwFgT6cPhRTsv42wUk+rQNPNH+FvqmBCcJrNLPt+SmpfXlz+CFcI8Dbsqh2oOc/F2CWSY2lecYD2KRZTRcUqozkKG3VkTEtZJdLIEWs0MsS6mJisUAeCdT0UmurbH+/Jnw023CRIP3EUS2Y4mxt3Jhi+rtHj0rLgKLV+vy6Z/j6ml377Ksidl0EqrKW2saVWrBlVyN0ujyzZvAkMefpFhik4aklYAwEP530ELkSBCkZXQ/Mod1pEJFC3WsEIIQl1IpgV3CTX3higO+sgjc2m3bkhA4Z5rhnGkeB4Zn0CKGNKWRYOrbpvaXMr+QnXo4SgZo4uRK7gy9x7pQ6j5bUwv7+gY+4p6uWFsbaIvJJ1Kml1mRz9UNTDP5CBz5JKoSuCaKUZIP6luQH9nAsCwpdccq+uFaiUuripgevBWGRwAJq5BfPergmcI7W4i29ejhYGvVYP6zTQBNlSX23dgQZKHN2rKm8erZ/UiXgQ+r0wli2F9BxIOpSrfvyIAU8oEPvLaZNcR2me9VL60JQzzQCTWJbfAxK79SfLQShn6kuJjud2TwD9P2VcehNgMwovHgZUF/X1ON1r97nJIgNSxE8OWT4RxHbZOsvICTcmG0UdPrmg9BT+GQ2NtpueSimf0QMGgQEGIRpdCqCJuM="
+skill: 0.659
+archetype: duelist
+leverOffsets:
+  aimErrorDeg: -0.08
+  cps: 1.24
+  decisionTemperature: 0.17
+  awarenessRadius: 0.38
+  coordination: -0.27
+  technique: 1.48
+  aggression: 1.86
+kits:
+  trooper: 0.96
+  shortbow: 0.42
+  spy: 0.16
+roles:
+  escort: 0.35
+  retake: 0.54
+  hunt: 0.83
+style:
+  aggression: 0.81
+  patience: 0.26
+  teamplay: 0.23
+  risk: 0.6
+voice:
+  tone:
+    - theatrical
+    - competitive
+  verbosity: normal
+  style: "backstage whispers and hurried scene changes; brief courteous challenges and honest shot assessments"
+lines:
+  greet:
+    - wooden sword prop in place, curtain soon
+    - wooden sword prop ready, good fights everyone
+  onKill:
+    - a quick scene change for the wooden sword prop
+    - good exchange beside the wooden sword prop
+  onDeath:
+    - missed my cue by a whole scene
+    - fair hit, the wooden sword prop left that gap
+  onPlant:
+    - cue the dramatic ticking
+    - wooden sword prop earned a moment at the bomb
+  onDefuse:
+    - cut that effect, safely
+    - wooden sword prop can settle this at the fuse
+  onWin:
+    - take a bow beside the wooden sword prop
+    - wooden sword prop had some good fights today
+  onLoss:
+    - the wooden sword prop needs a better rehearsal
+    - wooden sword prop wants another clean round
+  onLastAlive:
+    - one performer, one wooden sword prop
+    - one wooden sword prop, one fair chance
+  taunt:
+    - your entrance was a bit loud
+    - the wooden sword prop is ready for that peek
+  lobby:
+    - has anyone seen the wooden sword prop?
+    - do not lean on the painted wooden sword prop
+    - "My wooden sword prop: I will contest the middle."
+    - With my wooden sword prop, give the middle fight a clear lane.
+quirks:
+  - good_sport
+  - always_gg
+rivals:
+  - epic-pickaxe
+bio: xXRiderLynxXx worked the curtains at a player-built theatre between duels and still brings a wooden sword prop to the queue. Epic_Pickaxe keeps asking whether it really helps.
+batch: 3
+retired: false

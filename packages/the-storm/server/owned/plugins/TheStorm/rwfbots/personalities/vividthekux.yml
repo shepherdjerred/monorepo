@@ -1,0 +1,77 @@
+id: vividthekux
+name: VividThekux
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4OTM1NjA1MSwKICAicHJvZmlsZUlkIiA6ICI2YTgyYTNiNDNhYWE0NTBiOTJhZjRmOWM5ZTBjOTFmZSIsCiAgInByb2ZpbGVOYW1lIiA6ICJKYW5lVm9pZDExIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzZkY2M3ZDQ1YzdjZDI1ZTBiYWYzMDc2MWE3YTZkOWVjMzg0MGI2MDY4OTA1NDE0ZGM5YzZiNmZmMzlmYWIzZmYiCiAgICB9CiAgfQp9
+  signature: "UbqCMH7lNorvnm780o5QNFu7Qh3CGEuLwgWstPaHuSUSCOcw7A9SdO9wuTmAkp3VNRJRQdUu4HpiTgiGbEw0Fbg5Fu78RWWPRqXXQKDmoX1PjTfUJ1z3S/amQCYa/cudoPkCsWZqd6JuRsMF4W6vKboHJ0TrAGmFeUp4fBwPiRh0e1orNcKaGbUEHWGzA5amLXLwyv+Plx+nm/k7biecWxgUWZxqohfLujWHWV9ivNwPHk0dChKhjOcZ8tO8Ti3sLt5/5mucFzzbycgkUrFtYOZBOsJuaQFpW3VZ7kg7Z26FuztJRDiwNHBsGcZR46O8OSXz1e9ed3R8FgFxElLR6u1fl4o2X4+GvGpF0eVd1iEeu2oIlIj+kit2jlacbgI3aIm3a8qT2hVACztn9OB5vaIvSQceM/ZO+3CKLxgd98lORPJ1hLY661wFSKqNspRE0iHwu+ASYYyZqgH4UDUgPYL2VhEa8N55K02rErWZRQACArhSG5sp7ATTUdt+xII8r6iOLkOB0UravxfiwNm4QKv3NqDw9f9LTTZZcmMUJgmRpEDwtW4VDlSP1IrNJ1TIfbGpdQjsCpor7pJzbD3pWb8apk8xjLCfRheaWvtSw+pshZpLyM7UyVYCzuME9PIhsFkaZ8ac/zdDge21DHgZl+Rxw56xy7gw/uOPoR2/B1Q="
+skill: 0.83
+archetype: tactician
+leverOffsets:
+  aimErrorDeg: -0.46
+  cps: -0.15
+  predictionQuality: 0.11
+  decisionTemperature: 1.21
+  awarenessRadius: 0.09
+  coordination: 1.49
+kits:
+  trooper: 1
+  longbow: 0.45
+  shortbow: 0.48
+  rewind: 0.45
+roles:
+  plant: 0.52
+  escort: 0.62
+  defend: 0.43
+  rotate: 0.51
+  retake: 0.84
+style:
+  aggression: 0.55
+  patience: 0.71
+  teamplay: 0.84
+  risk: 0.37
+voice:
+  tone:
+    - airy
+    - analytical
+  verbosity: quiet
+  style: "gusts, tangled metaphors and abrupt turns; numbered ideas, concise route calls, quick revisions"
+lines:
+  greet:
+    - tail knot caught a good breeze
+    - tail knot ready, first route agreed?
+  onKill:
+    - a clean lift over that corner
+    - tail knot confirms a clean opening
+  onDeath:
+    - my tail knot met a tree
+    - tail knot needs a revision on that route
+  onPlant:
+    - tying the fuse down securely
+    - tail knot confirms the site is reached
+  onDefuse:
+    - untangled that in a hurry
+    - tail knot confirms the fuse is clear
+  onWin:
+    - tail knot is flying high
+    - tail knot and team followed through
+  onLoss:
+    - no breeze for the tail knot today
+    - tail knot had a missing step
+  onLastAlive:
+    - one string still in the air
+    - tail knot says there is still a route
+  taunt:
+    - that push lost its lift
+    - the tail knot predicted that rotation
+  lobby:
+    - unwinding my tail knot in the lobby
+    - please step over the tail knot line
+    - "My tail knot: I will call the first rotation."
+    - With my tail knot, tell me when a route closes.
+quirks:
+  - calls_everything
+  - always_gg
+rivals:
+  - jollyotter95
+bio: VividThekux held kite races from a windy hill above the old map gate and still brings a tail knot to the queue. JollyOtter95 keeps asking whether it really helps.
+batch: 3
+retired: false

@@ -1,0 +1,75 @@
+id: quietgrouthshur
+name: QuietGrouthshur
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTMyMjc3NiwKICAicHJvZmlsZUlkIiA6ICI2YTQ3NjRhZWEwNWY0MTE1OTc0NzFlZjNjYWU4ZTdmZiIsCiAgInByb2ZpbGVOYW1lIiA6ICJiYWRlZW5kamVoIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2QzM2Q0NDA0ZTIxMjJkOTViNjE1M2NjMjZiNzhkOTE5ODJjOWRmNjI0M2E1YjhlNDg1NTFjM2NlY2ZmY2ZhNDgiCiAgICB9CiAgfQp9
+  signature: "FoZxukVbRLGT9HkTPrIztZ3gKJdMh1TuEHZMteNbDwbLwDLSmigV8bT6RcPJf1u5cazX0QJeaQxjQTcOEt2bBGWYjcdEF3ksFIT0OIdq01u9RJUdvnioHG3dII4e4HRAHpblTzPtMR1tTStW7X8h9+15o+Qg9IHNrIrrdo5fAikf3uD8IHkwN3X70+FbO3i023EXa6Qnw48pnALc5HFADfWzhy0e+ixt/9c2lMfCWG1dyvT7RMRxwXvOFBscsqtPvcACNJrMDhO9Xx9pMCMElCFRxVb4giqQ5DJZYX7yv5NXrTxN302+CSLhN+osBeNqzGq5rg9GN3ZqhT2Pghvim2hPzubIzs75I5eCxxBxNwxiJAMAre7ahjNOSAWsDGHgzceBESXanlS7iWMSuXbt6fDexWiXEQrE2JUhib352BQeN6ReOMeyAeVTUCVEf3s3/fVk1E/LYLktxJXWCZjk4duDdCp5e6pmE5r0fYxgjqThiG0hdVjB5bJ6TODpqHIvMOPmF54WJOtkC6njdh/Br7fz0EfvVWdVIF8PaI5hy+3Z1dcS+B59Ar25aGo3Oe9F1e2Aa31HoDnePIx3/GwfxJvjWBHH5KeSZFbw0FL6YcHeUkYKxweXfAr6jL6e6ZkXeW+7oklUVjF6gybVogs3Eug4rrzPeo/i6Y25/dFETCI="
+skill: 0.862
+archetype: duelist
+leverOffsets:
+  reactionMs: -0.17
+  aimErrorDeg: 1.06
+  cps: 1.04
+  coordination: -0.02
+  technique: 1.49
+  aggression: 1.23
+kits:
+  trooper: 1
+  shortbow: 0.42
+  rewind: 0.31
+roles:
+  escort: 0.51
+  defend: 0.19
+  retake: 0.53
+  hunt: 0.93
+style:
+  aggression: 0.87
+  patience: 0.45
+  teamplay: 0.22
+  risk: 0.5
+voice:
+  tone:
+    - cosy
+    - competitive
+  verbosity: quiet
+  style: "kitchen chatter and imaginary baked snacks; brief courteous challenges and honest shot assessments"
+lines:
+  greet:
+    - pastry brush ready, kitchen open
+    - pastry brush ready, good fights everyone
+  onKill:
+    - another order off the pastry brush
+    - good exchange beside the pastry brush
+  onDeath:
+    - left my pastry brush in the oven again
+    - fair hit, the pastry brush left that gap
+  onPlant:
+    - setting the timer beside my pastry brush
+    - pastry brush earned a moment at the bomb
+  onDefuse:
+    - took that out before it burned
+    - pastry brush can settle this at the fuse
+  onWin:
+    - pastry brush deserves a day off
+    - pastry brush had some good fights today
+  onLoss:
+    - the pastry brush has seen better batches
+    - pastry brush wants another clean round
+  onLastAlive:
+    - one cook and a very busy pastry brush
+    - one pastry brush, one fair chance
+  taunt:
+    - that push needed longer to rise
+    - the pastry brush is ready for that peek
+  lobby:
+    - who borrowed my pastry brush?
+    - dusting the flour off my pastry brush
+    - "My pastry brush: I will contest the middle."
+    - With my pastry brush, give the middle fight a clear lane.
+quirks:
+  - good_sport
+  - always_gg
+rivals:
+  - spookytimbryk
+bio: QuietGrouthshur ran a tiny spawn bakery with a queue of hungry regulars and still brings a pastry brush to the queue. SpookyTimbryk keeps asking whether it really helps.
+batch: 3
+retired: false

@@ -1,0 +1,74 @@
+id: dizzy-waffle
+name: Dizzy_Waffle
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTk3ODg3MSwKICAicHJvZmlsZUlkIiA6ICI2YjllM2Q0MDRiZmY0MTEyODJiY2VkOTAzY2M3ZDJmZiIsCiAgInByb2ZpbGVOYW1lIiA6ICJsdWgyOSIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9hNGRkMzVjY2E4NTdlMzQ4ODA5NjdmMGZmYzdhZDY2NWRlZTFiZmJiNzhiZThhMWZiN2VhNjZjNmU0YzdjZDZmIgogICAgfQogIH0KfQ=="
+  signature: "yYllmmjVT4c9ndDMzYzOwaX1NX446zn/c/kYxkLvfEz17fo+RJalb9+VKP6sPt0BGE8Wnv/hhzw715kudGI+mCF/Iw318CJLjToItIN3bTaATCc49KPiFvaJIPaLgcX9Ye1r3Y5P+IwDg42ibyjDBkj6cD5Ib3uMMRCSSMHwvXNlBFQBSZu5QEjP0JdWW7eXIaueWe+7Ifq233fc++TSKqnX2G5mT8VGo9rr0dgbdvG2A5X2n8aybd5yZsxBLRiiaDu0tVvXsfmfkaO9rVeUuKrfAT7dembqUo6kjFUI9xXtlI4N/y8Y1XzN+TQNzd4mG6IkVTGJN4dMJpEsslX7JpvZ/CnvEclya4eXM4tpvDNesCrLQep2KJonD2vCpOG6kUbRw+/PUxdU666V5Lrcng1cWPaRE3Zs8xMz2xn9UstxBaTXOzPqaDMX/270yivXu+M0oiU5FBBLCmNlYYljHEYQlY4o9MJz1CsOA2uxdqCJC/69ye8oQMsuXQzAbmwKq94QR0U62J/vQPMIRSDRLJZ/y8jWsqgR7spvXJI2lIdoM3k5nheWDrqei5G/19YTtggTYDyWt3grBiGiz/dQsSPc3a/75ky4LNBPrXePHgDcPzSO7qZAzjAmd5jx2n/BvfX9ezGDvDo3AEqeTXF38nIv4dkMjZZ50Ryr1SWg3m0="
+skill: 0.57
+archetype: hunter
+leverOffsets:
+  reactionMs: -0.68
+  turnRateDegPerTick: 0.67
+  predictionQuality: 1.32
+  awarenessRadius: 1.27
+  aggression: 0.96
+kits:
+  trooper: 0.66
+  longbow: 0.43
+  shortbow: 0.95
+  rewind: 0.12
+roles:
+  plant: 0.21
+  rotate: 0.41
+  hunt: 1
+style:
+  aggression: 0.8
+  patience: 0.44
+  teamplay: 0.45
+  risk: 0.58
+voice:
+  tone:
+    - gentle
+    - intent
+  verbosity: normal
+  style: "patient gardening talk, stubborn lane defence; tracks small clues aloud, then gives terse pursuit calls"
+lines:
+  greet:
+    - sprout label packed, lets grow into this
+    - sprout label ready, looking for tracks
+  onKill:
+    - cleared a little room for my sprout label
+    - sprout label followed that trail correctly
+  onDeath:
+    - my sprout label has met a weed
+    - the sprout label trail doubled back
+  onPlant:
+    - this seed has a very short season
+    - "sprout label found a path to {bomb}"
+  onDefuse:
+    - pulled it out by the root
+    - sprout label tracked the ticking down
+  onWin:
+    - a fine harvest for the sprout label crew
+    - sprout label followed it to the end
+  onLoss:
+    - bad weather for my sprout label today
+    - sprout label lost the trail near the finish
+  onLastAlive:
+    - one sprout label still in the garden
+    - the sprout label has one trail left
+  taunt:
+    - that lane could use some pruning
+    - the sprout label noticed those footsteps
+  lobby:
+    - checking the soil with my sprout label
+    - my sprout label is for the roof garden later
+    - "My sprout label: I will look for the last opponent."
+    - With my sprout label, call the last place you saw them.
+quirks:
+  - holds_grudges
+  - always_gg
+rivals:
+  - grimfalcon23
+bio: Dizzy_Waffle grew a roof garden over the old kit shop and still brings a sprout label to the queue. GrimFalcon23 keeps asking whether it really helps.
+batch: 3
+retired: false

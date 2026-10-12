@@ -1,0 +1,73 @@
+id: brerjith-06
+name: Brerjith_06
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTI4NTQzNiwKICAicHJvZmlsZUlkIiA6ICJiMzMwZWE4OWE3MTY0OWZjYTMwZmI5ZjU5MTQ5ZjNjMCIsCiAgInByb2ZpbGVOYW1lIiA6ICJUQUxLX0FMT1RfIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzI1MzE3NzE0MmY4ZWMwMGVjNTc5Mjc5MmJiM2IwOGY4OTk4YjgyOTA4MDA2MTRlODc3MzIwYzE0M2MzNWI5ODAiCiAgICB9CiAgfQp9
+  signature: "lkCqSpEVN+vCkgbCciv/8VUay7DjQOjACnheE84qvUVx/qN2/HiSlHXIy8Zd8Z01Djr0C4OM0ca9lzLncEC0N8rwuXBVsLJNHzpYsIAYXzl+j5c+DhmLh+5GADBFZavNqBgAMNPUe9O9BiHhSdfBsj67HQAXiJPiujm+L1fQShErITcclkZosc8PA2m5gCWCokbn9Km6gcbzMBiBKeUOO2roSyIMuDhN/axm3e3cuRNt0a73zTtZLHoCzSzLe1or3nJEar1ac0KoN+lBx/yWkmMbyWhDSMaUX/tyEIoWLN6Uk2WXesHixH7Y6vCPGqm4M9T+/PZ8S32o1r7M40d2YPly9Z7CKkh/XpXg/kPVyskglnWIGQXT/o11Uy3xBCjso/g0eKTb+FwfMpLSVWuvdcQD5SFgavXFkvHAQX8YlMLUBwu2zPh/oKo7N+vKzK4mF7ekcu+62o5JtH4dVYcgBZ1IFKifnVbYTIZPAEG14kpVxndUTliKn97sOIwX165Hw5XvapQyy4TgohZPKIyhN7oLXP4YpvHw4U+oSV0a1oltgKir9kbiQNVdpk4DB1+E9RDNRgGqK3Hoo4vp7EaSTUHPiAaBdAszx1UpE3u0dNMsdziqz0mIrBUxOfyu1VvLboPr73u/y7EipXBTEJRoJKXzLAygZIqvP8FSdkH2ZBM="
+skill: 0.303
+archetype: support
+leverOffsets:
+  cps: -0.42
+  awarenessRadius: 0.73
+  coordination: 1.52
+  aggression: -0.38
+kits:
+  trooper: 1
+  longbow: 0.3
+  rewind: 0.78
+  spy: 0.28
+roles:
+  escort: 0.98
+  defend: 0.53
+  retake: 0.51
+style:
+  aggression: 0.41
+  patience: 0.62
+  teamplay: 1
+  risk: 0.33
+voice:
+  tone:
+    - precise
+    - helpful
+  verbosity: normal
+  style: "map annotations and quiet route corrections; gentle check-ins, thanks and useful kit reminders"
+lines:
+  greet:
+    - my scale ruler points toward trouble
+    - scale ruler is here, everyone got their kit?
+  onKill:
+    - scale ruler gets another little cross
+    - one less problem beside the scale ruler
+  onDeath:
+    - there is a hole in my scale ruler
+    - sorry, the scale ruler corner is open
+  onPlant:
+    - scale ruler marks the fuse
+    - scale ruler can watch while you plant
+  onDefuse:
+    - erasing that from my scale ruler
+    - scale ruler is here to help at the fuse
+  onWin:
+    - scale ruler finally matches the terrain
+    - scale ruler says everyone helped
+  onLoss:
+    - time to redraw my scale ruler
+    - scale ruler says we can tidy that up
+  onLastAlive:
+    - one dot left on my scale ruler
+    - one scale ruler still trying to help
+  taunt:
+    - your route is wandering off my scale ruler
+    - the scale ruler brought a team to that corner
+  lobby:
+    - unfolding my scale ruler on the lobby floor
+    - please do not spill cocoa on my scale ruler
+    - "My scale ruler: I will stay close to the push."
+    - With my scale ruler, call if you need an escort.
+quirks:
+  - says_sorry
+  - always_gg
+rivals:
+  - thouklelpumpkin
+bio: Brerjith_06 kept a hand-drawn atlas of the 2013 rotation and still brings a scale ruler to the queue. ThouklelPumpkin keeps asking whether it really helps.
+batch: 3
+retired: false

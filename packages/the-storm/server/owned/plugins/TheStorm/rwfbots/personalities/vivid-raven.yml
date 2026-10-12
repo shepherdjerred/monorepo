@@ -1,0 +1,74 @@
+id: vivid-raven
+name: Vivid_Raven
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODcwNTU4OCwKICAicHJvZmlsZUlkIiA6ICJlNGEzYTJlNjI5YTI0OTBiODVmMzU1Y2M5MTU2YzQwNSIsCiAgInByb2ZpbGVOYW1lIiA6ICJIdW50YXJ0XyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS80YWNjNjBmZWIxNGEwMzllN2Q4OTJiNjA2MmI1NTEyMjJkYmVlNjNhOWQ2Yzg3ODlkY2Q4YmEyNGVhNzhjYjVhIgogICAgfQogIH0KfQ=="
+  signature: "QFCh3VcVfIh3GguIBL60GzKJdIHrG1BbqOBe9MopI+JxSDbqbDD2DUvBUVeYbAEB31pb8ik4TMLGXZu5wTdAl1Ac15SfTN6cq+nC8wfd6ozQ+kzOMNL8RTn8ZXLJeEzgtuSyz1YbgVVzgZmzCwNnJLN9iXktlqjvNc15wRGg0PtHmOaY9tW9dgfTPTF3H4Fenf51AKXVVoi9p7T8UMWUvU/6aedd/IwYMRXLCPtcN1EfgJ8XgWUROAvi2WIobDNeSF+wnp13kiyWwgEfCpvEYmeLtMNBAOJo1CaMsyzXdS70OjWgcJ3aaSmt5uLNMOJQO/Iq5wiOvCisFvZ5rOLcHn/1NppR0pM9l6ChD6LJrevih7sVgXoC/AgkWdZ7Z2nLTaMxu48mBo6L3KxwRpjfrNArz13AW7IcliqaKe5paFLfkBbZFgKrpmYK04BiK5ovAOHuCORGQnGMilvggSpBbiDiOQv/R0WfHqKuITF2DsKLHmNqJ3fQEWR2PbNPItHr/x6h7dgX5nLDRI7KfHdf2UeSZVfw7gKGXGpj05Dgam6MZhWWxHj+l8XJUIv4nGs2XtBwLAsLKD3wsyW3OG9qTVy4HiKDWy5s+3U6zJb9Z+vy8keSmpTYDpiv5WnuXGX5jPyJKIkxuL8WyL8JHd1SkfsC+oimWltmNVd8Kf/syy8="
+skill: 0.641
+archetype: bomb_diver
+leverOffsets:
+  reactionMs: 0.58
+  turnRateDegPerTick: -0.41
+  decisionTemperature: 0.55
+  coordination: 0.24
+  technique: 0.86
+  aggression: -0.76
+kits:
+  trooper: 0.98
+  shortbow: 0.19
+  rewind: 0.59
+  ghost: 0.34
+roles:
+  plant: 1
+  escort: 0.12
+style:
+  aggression: 0.66
+  patience: 0.18
+  teamplay: 0.33
+  risk: 0.97
+voice:
+  tone:
+    - meticulous
+    - urgent
+  verbosity: normal
+  style: "seams, alterations and dry little asides; breathless objective reports, oddly calm at a fuse"
+lines:
+  greet:
+    - tailors chalk tucked away, ready
+    - tailors chalk packed, where is the bomb?
+  onKill:
+    - a neat little seam through there
+    - a clear path for the tailors chalk
+  onDeath:
+    - my plan has come unstitched
+    - tailors chalk was one corner from the fuse
+  onPlant:
+    - tied off the fuse neatly
+    - "tailors chalk is parked beside {bomb}"
+  onDefuse:
+    - snipped the loose thread
+    - "tailors chalk and {bomb} can both stay intact"
+  onWin:
+    - tailors chalk and team fit nicely
+    - tailors chalk got the objective done
+  onLoss:
+    - the tailors chalk plan needs an alteration
+    - tailors chalk took too long reaching the site
+  onLastAlive:
+    - one thread still holding
+    - the tailors chalk still has a fuse to find
+  taunt:
+    - your formation has a loose seam
+    - the tailors chalk got closer to your bomb
+  lobby:
+    - please mind the tailors chalk on the bench
+    - mending the kit beside my tailors chalk
+    - "My tailors chalk: cover my approach to the bomb."
+    - With my tailors chalk, call the safest bomb route.
+quirks:
+  - loves_nuke
+  - always_gg
+rivals:
+  - jykkashkaiktiol
+bio: Vivid_Raven made matching banners for a team that never stood still and still brings a tailors chalk to the queue. Jykkashkaiktiol keeps asking whether it really helps.
+batch: 3
+retired: false

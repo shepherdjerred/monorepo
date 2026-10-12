@@ -1,0 +1,74 @@
+id: xozbryrriolkyz
+name: Xozbryrriolkyz
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTgxOTEwMCwKICAicHJvZmlsZUlkIiA6ICI1NDM5MzhmOGVlODk0YzNiYWVhYzE0OGZlY2Y4MTJiZSIsCiAgInByb2ZpbGVOYW1lIiA6ICJMb3hkaW5nWVQiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOTU2NTAxNmFhMWFmMDU2ZTZlYWE1YmEyZjU2NzZjZjI4MjdiYTljYmZhYTU4YjhhYWU4MTU3Yjg2NzUxOTdhZCIKICAgIH0KICB9Cn0="
+  signature: "w8WIhFwKvLgdpW7Mk5SXPzpbjH4wl3LwL7OEWap+pA66S1fqiYqjYj3gX2Z8hlzGZ29xXgJq7+LlgMe6fnoK3ZxBitFLBnBVLlcQBnHpIaipflAM+0oWtHBYLo93gcHySZH2negRgbQqD1BOCfqRKCDiMKaoOtEkxuD51or2FVxLnkbDsKlpy+p4Qj4nSfPX/ZZEoNFnNAniBzFNI6X+QLNFnuZoRjPxg+ZQhmAN0mzPaqMdeXMVsKjvYohK2cgxAXWAQvOipEJ0jH5LcDSxyTe0LQTX/Y/MxCov0A6NyoV2EoJglzGk19mnRA4iA3KNlx/a+DGgUJCEQ1prQQsxJxWErieyJ9pAr6AO4HNpFZdrXEquAKKHbqKAvXkPJO4kLZodhsl9m+ukJZNVegewNkt4TM+98HX+ARmpRDK1wFrad4axO6Wh76NLSeUg4P2PaiDmsKCDEJZToItT+hwm+6tVte0X9UqR52F5z1yrcJaERaNOk9ygO5S6jPb9ntcU3ha191AmBjLZFAhzpT1Yjq14w+GrFcKgVdIeTjXexT4uudjr39aA66EhxbdMb9ypgEJnyBEABTUovzA9BoDIRgksyl0F7BEMy/MEwB9pp2ZdcZewVwa/lEFyQI0QDyLMXsiangRiW1qvXKLGDcRGvMkD82UqffJkATTID4zFa7w="
+skill: 0.302
+archetype: duelist
+leverOffsets:
+  aimErrorDeg: 0.77
+  cps: 1.56
+  decisionTemperature: -1.32
+  awarenessRadius: -0.01
+  coordination: -0.24
+  technique: 1.35
+  aggression: 0.89
+kits:
+  trooper: 0.88
+  shortbow: 0.4
+roles:
+  escort: 0.25
+  retake: 0.4
+  hunt: 0.72
+style:
+  aggression: 0.9
+  patience: 0.29
+  teamplay: 0.31
+  risk: 0.51
+voice:
+  tone:
+    - excitable
+    - competitive
+  verbosity: chatty
+  style: "enthusiastic clues and upside-down maps; brief courteous challenges and honest shot assessments"
+lines:
+  greet:
+    - coin pouch found, clue understood
+    - coin pouch ready, good fights everyone
+  onKill:
+    - that corner was the next clue
+    - good exchange beside the coin pouch
+  onDeath:
+    - the clue was apparently a trap
+    - fair hit, the coin pouch left that gap
+  onPlant:
+    - a very loud treasure chest
+    - coin pouch earned a moment at the bomb
+  onDefuse:
+    - solved that little puzzle
+    - coin pouch can settle this at the fuse
+  onWin:
+    - coin pouch led us to the prize
+    - coin pouch had some good fights today
+  onLoss:
+    - the coin pouch was upside down again
+    - coin pouch wants another clean round
+  onLastAlive:
+    - one clue and no hints
+    - one coin pouch, one fair chance
+  taunt:
+    - that trail led you in a circle
+    - the coin pouch is ready for that peek
+  lobby:
+    - does anyone recognise my coin pouch?
+    - the answer is definitely near my coin pouch
+    - "My coin pouch: I will contest the middle."
+    - With my coin pouch, give the middle fight a clear lane.
+quirks:
+  - good_sport
+  - always_gg
+rivals:
+  - jollybandit78
+bio: Xozbryrriolkyz hid tiny treasure chests along the old lobby walking route and still brings a coin pouch to the queue. JollyBandit78 keeps asking whether it really helps.
+batch: 3
+retired: false

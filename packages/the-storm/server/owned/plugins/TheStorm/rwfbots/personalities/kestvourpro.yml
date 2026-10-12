@@ -1,0 +1,73 @@
+id: kestvourpro
+name: KestvourPro
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODQ3NjUwNiwKICAicHJvZmlsZUlkIiA6ICIxZmVjOTEzN2Q3ZTM0ODk3YTY5OTY0MGJkMTllMGM0MiIsCiAgInByb2ZpbGVOYW1lIiA6ICJzcGlmZnRvcGlhNiIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8zMjU1MGVhMjdhZTJkZGRkMWI1MjAxYTNmM2IxMTYyNzhjZWVhZDE1YmJkNmM1YTQ4NDkxOWRhNDVjNTNhY2VlIgogICAgfQogIH0KfQ=="
+  signature: "dSBkMSn2/9RYlPoiCsBU1zRwCC7wQ6iGRzvaynGxypzN9KoJws2n2rluSJxo1RjHQhyBeBehfgo0tJ0glpZnoqJ7eU3ibXFDIFBvzJ6Mr/GRnpXTBnDSzRnwewBLY5+9K9tHBjGbb6+yAS7Qn/JhM5IqUTsBSGUOJoFO1RVruGU5RAOmtTQxYqgpIcKWIp4gT/D/twNmgWCfGvbnWIQzKjs1vU16qSAd/IkG8vEw01kPE/dRQJbNIqZlqyhfy/l7NJtRfEVkk34BO3HIQhsDDb/ijMzyGGLjon4hNu83V/Jo+raQRArouAzovDZWFuShEool5OEiYqedJ6Br/hZWI0x1t/aij58FN9RqvaUv/FWDlafv4aPUc6erVPgjL1/Jv2ZXYnKfSrLgizbluYeitxSehEg6zvAORrOxFQrrHywBmBuSxyXKRZUucx3IgftYe2UW1fIzpnED15hH+z8m5nUz3/VW2VfkXOKhI3vUHct8Bes5eQi3XqeJmEOo2CxRJ/M4lbyFWMAZPOUY0VgnyqdBkcHeZJ6z4NaF43WMwOresgMl5OTXNE+nAxqKb14sVeK9HZTfn4EwzTUkApSqjJVTz7e/Mf/4AwQYf/gntRUxdYdMoE7/PvinbzLGWGGyHzexoDJOSqK4obcy4zc2IIaGn6rfT87IhqbEA5k1ND4="
+skill: 0.017
+archetype: anchor
+leverOffsets:
+  reactionMs: 0.26
+  aimErrorDeg: -0.14
+  predictionQuality: 0.65
+  awarenessRadius: 0.66
+  coordination: -0.07
+  aggression: -0.29
+kits:
+  trooper: 1
+  longbow: 0.48
+  rewind: 0.34
+roles:
+  defend: 0.92
+  retake: 0.73
+style:
+  aggression: 0.25
+  patience: 0.97
+  teamplay: 0.54
+  risk: 0.21
+voice:
+  tone:
+    - meticulous
+    - grounded
+  verbosity: chatty
+  style: "seams, alterations and dry little asides; reassuring statements and firm location reports"
+lines:
+  greet:
+    - button tin tucked away, ready
+    - button tin stays here, I have this corner
+  onKill:
+    - a neat little seam through there
+    - button tin and corner still secure
+  onDeath:
+    - my plan has come unstitched
+    - someone watch the button tin corner
+  onPlant:
+    - tied off the fuse neatly
+    - button tin guards the exit from the site
+  onDefuse:
+    - snipped the loose thread
+    - button tin is staying by our bomb
+  onWin:
+    - button tin and team fit nicely
+    - button tin never left the post
+  onLoss:
+    - the button tin plan needs an alteration
+    - button tin held the wrong corner
+  onLastAlive:
+    - one thread still holding
+    - the button tin holds here a little longer
+  taunt:
+    - your formation has a loose seam
+    - the button tin has not moved for that push
+  lobby:
+    - please mind the button tin on the bench
+    - mending the kit beside my button tin
+    - "My button tin: I will guard the home approach."
+    - With my button tin, call before rotating off defence.
+quirks:
+  - stares_down
+  - always_gg
+rivals:
+  - grimloul-81
+bio: KestvourPro made matching banners for a team that never stood still and still brings a button tin to the queue. Grimloul_81 keeps asking whether it really helps.
+batch: 3
+retired: false

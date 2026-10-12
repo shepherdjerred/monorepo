@@ -1,0 +1,78 @@
+id: thelkast-55
+name: Thelkast_55
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODUyOTczMiwKICAicHJvZmlsZUlkIiA6ICJiOWIzY2RlZmIyZmQ0YWY1ODQxMGViZWZjY2ZmYTBhYiIsCiAgInByb2ZpbGVOYW1lIiA6ICJpbnRlcnNlY2F0byIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9iYWQzYjVjZWM0ZDNmODVkNDBlZWZiMTMzZWNkNzFiOTliOGYxMWNiYTBiODllMTAzMzM0OTA2NTFkZjJkNTRjIgogICAgfQogIH0KfQ=="
+  signature: "FguXnbB645QBRXo9/3NZLGPTuI5ahJn2Yr19aBejFE3U61zYTKnepQBIb9XG4Gkm5GL9MZw1ZPjXLIzcSClPGmPD6YXYCkJnmnqZmDNmbXlaYYWeW8obRN5z+PoHqJ5PDTEtvEeZ9j6uwtvZZTw3yCnQjQc9qlpier6RgpwxEJ012pDtLoQePZdCLnux3RD7aYWvx+trfS4BRHSKYIPd1JHNFynqJw6P2H6dwc+a9KZJ1Ixs8RjnBn13nMw72sMDZLdmELZYIUtbjYlCa+Ef5d9raVkQ+92D+K3uZL7SS8xP9vTyl6Wpa1hxUUawzLnZvm6qiDPIpsEm6RAubYYQZc75L2baFwJxEu7V2Mw+4QFsUY7t643BrWCsi//6Ny5+vpe2txw8JuktCAJAq+0uC2wjXAIGjscUKlRxOOcVkh9MrtnRNqoxDlxrC5PlbGHfptJlnH0X7blxMyJ627yfunl1h2uoeyTaHIdb4PY43AOACiUcRsPd9fSf6VvT0LOJDKJ1Hhbz5GN7gkmePp357iz8g1yGj690hNNGDwLDE+ETsjTnGEo0K1MXxhN0exdnnEP1B1PI1XVAwhJkkKZ+/VCi3W7lsfSUEJxBymOhDcjNo4DmSzBgFT3r3VeboSG4CxeWYf2EHz3pjU8fi+U4DQFZv9jr/I7EFBQBb1GYEpE="
+skill: 0.024
+archetype: tactician
+leverOffsets:
+  turnRateDegPerTick: 0.58
+  predictionQuality: 0.63
+  decisionTemperature: 1.27
+  awarenessRadius: 0.8
+  coordination: 1.27
+  technique: 0.41
+kits:
+  trooper: 0.91
+  longbow: 0.53
+  shortbow: 0.57
+  rewind: 0.5
+  ghost: 0.17
+roles:
+  plant: 0.5
+  escort: 0.55
+  defend: 0.67
+  rotate: 0.73
+  retake: 0.65
+style:
+  aggression: 0.34
+  patience: 0.58
+  teamplay: 0.91
+  risk: 0.44
+voice:
+  tone:
+    - practical
+    - analytical
+  verbosity: normal
+  style: "carpentry checks and repairable mistakes; numbered ideas, concise route calls, quick revisions"
+lines:
+  greet:
+    - oak wedge packed, joints checked
+    - oak wedge ready, first route agreed?
+  onKill:
+    - that opening needed a wedge
+    - oak wedge confirms a clean opening
+  onDeath:
+    - a weak joint in my plan
+    - oak wedge needs a revision on that route
+  onPlant:
+    - the fuse is fitted snugly
+    - oak wedge confirms the site is reached
+  onDefuse:
+    - took that assembly apart
+    - oak wedge confirms the fuse is clear
+  onWin:
+    - solid work around the oak wedge
+    - oak wedge and team followed through
+  onLoss:
+    - back to the bench with my oak wedge
+    - oak wedge had a missing step
+  onLastAlive:
+    - one oak wedge holding the frame
+    - oak wedge says there is still a route
+  taunt:
+    - that angle needs a little sanding
+    - the oak wedge predicted that rotation
+  lobby:
+    - checking the edge on my oak wedge
+    - my oak wedge is for repairs after the match
+    - "My oak wedge: I will call the first rotation."
+    - With my oak wedge, tell me when a route closes.
+quirks:
+  - calls_everything
+  - always_gg
+rivals:
+  - grimjaviol
+bio: Thelkast_55 repaired a rickety spawn bridge every weekend and still brings an oak wedge to the queue. GrimJaviol keeps asking whether it really helps.
+batch: 3
+retired: false

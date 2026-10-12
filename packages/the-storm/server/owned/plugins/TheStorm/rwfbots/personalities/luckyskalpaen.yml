@@ -1,0 +1,73 @@
+id: luckyskalpaen
+name: LuckySkalpaen
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NTc0MTU2MCwKICAicHJvZmlsZUlkIiA6ICJjNWVmOGQ1NDIwOWY0OTdlYWYzYzA1NjA3MjZhYTMwNSIsCiAgInByb2ZpbGVOYW1lIiA6ICJNaXNoX0RheCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8xNGY5NTFiNzZmYzJkNzRhNTYwMWNlN2YyODQ2ZmY3MWU3YTk5YWMxNDI2ZTE5NGU5MjQyZDliZTdiM2FjYmEyIgogICAgfQogIH0KfQ=="
+  signature: "DCpyEify/Veeai4mfzp9yKAhgm1h+veLhrCWzkLZIu9TGNcGCQrCVYw0suH5H4TjX1G+7DeU0Gf3nIBK0P6chujb4g3AopZDl4v1zlHvX3Ch+BygfEZfkE+R08r5E8Xjqwjv5No6CrEbb3BpwTvaclobXB1qb+zwasSHGWKLH8HS6GXBYZHlVUWm0zV+DSgsx+i3mCkZE0BeJOB1m4+apE//CyFP/pyhA2n5uLwqX0Ov6N+4SpomQ9l/ugvY5R0EGv4zvM9hA8r5f+ZYczI/jtKFxRtGlaq7aGfAGO9LfMrxBWS2i55M1gIpErScchUojqIRTNWWJo2uGZgWx+nAPiKpICz4rfxX8Eqv58kQ7igW9HTWGo+/9yOowyVaFM1FOO02N7qha0+GM9bRnpjnsF+cPWsgfoeHX913wGX5mRz4rtce/1uEuuE+CVfcmu8YNRF+tqcq/0u5l/5NnTizSmgk7vRc4zyJhAsq9tJFOhoqlzSFuW1SVl8iPdQjHhBWSQMcb60hqBMX2iVR4IJlGxCRelcCyx0ry9HyEVIoHvxD4N06q3jCvUfz53pT7/9Eb+nixgsNlFn4ILPRi1aPKqBlcAtJeyfZH1OT+Xm4vesCJnt5qthSfo7/L2IjPIs4bG5sxUZTHq+86/vqRlF3udhl6FvmcycTch9l7nHq2/c="
+skill: 0.139
+archetype: support
+leverOffsets:
+  decisionTemperature: 0.04
+  awarenessRadius: 0.73
+  coordination: 1.41
+  aggression: -0.62
+kits:
+  trooper: 1
+  longbow: 0.31
+  rewind: 0.76
+  wraith: 0.28
+roles:
+  escort: 0.94
+  defend: 0.5
+  retake: 0.66
+style:
+  aggression: 0.26
+  patience: 0.6
+  teamplay: 1
+  risk: 0.43
+voice:
+  tone:
+    - patient
+    - helpful
+  verbosity: chatty
+  style: "deliberate pottery talk and wet clay worries; gentle check-ins, thanks and useful kit reminders"
+lines:
+  greet:
+    - drying board is steady today
+    - drying board is here, everyone got their kit?
+  onKill:
+    - that opening held its shape
+    - one less problem beside the drying board
+  onDeath:
+    - the whole thing slumped
+    - sorry, the drying board corner is open
+  onPlant:
+    - letting this one fire
+    - drying board can watch while you plant
+  onDefuse:
+    - cooled that down safely
+    - drying board is here to help at the fuse
+  onWin:
+    - drying board came out of the kiln intact
+    - drying board says everyone helped
+  onLoss:
+    - a small crack in the drying board plan
+    - drying board says we can tidy that up
+  onLastAlive:
+    - one piece still on the wheel
+    - one drying board still trying to help
+  taunt:
+    - your push has not quite set
+    - the drying board brought a team to that corner
+  lobby:
+    - washing the clay off my drying board
+    - please let my drying board dry in peace
+    - "My drying board: I will stay close to the push."
+    - With my drying board, call if you need an escort.
+quirks:
+  - says_sorry
+  - always_gg
+rivals:
+  - dustypemkaeth
+bio: LuckySkalpaen sold lopsided flowerpots from a stall by the arena gate and still brings a drying board to the queue. DustyPemkaeth keeps asking whether it really helps.
+batch: 3
+retired: false

@@ -2,11 +2,17 @@ package com.shepherdjerred.thestorm.rwfbots.domain.tactics;
 
 import com.shepherdjerred.thestorm.rwfbots.domain.difficulty.Levers;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavArtifact;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.NavGraph;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.NavGraph.SearchWorkspace;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.NavPath;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.Archetype;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.Quirk;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.Style;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Kit;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.IntToDoubleFunction;
+import org.jspecify.annotations.Nullable;
 
 /**
  * What the think step needs that does not change during a match.
@@ -19,6 +25,7 @@ import java.util.Set;
  * @param quirks its personality's habits; LATE_TO_EVERYTHING delays its first move
  * @param seed the bot's own seed for this match (match seed mixed with the bot), for route noise
  *     and quirk timing
+ * @param workspace exclusively owned batch scratch, or null for allocating offline callers
  */
 public record TacticsContext(
     NavArtifact nav,
@@ -27,7 +34,18 @@ public record TacticsContext(
     Kit kit,
     Archetype archetype,
     Set<Quirk> quirks,
-    long seed) {
+    long seed,
+    @Nullable SearchWorkspace workspace) {
+
+  public TacticsContext withWorkspace(NavGraph.SearchWorkspace scratch) {
+    return new TacticsContext(nav, levers, style, kit, archetype, quirks, seed, scratch);
+  }
+
+  public Optional<NavPath> path(int from, int to, IntToDoubleFunction penalty) {
+    return workspace == null
+        ? nav.graph().path(from, to, penalty)
+        : nav.graph().path(from, to, penalty, workspace);
+  }
 
   /** The shortest and longest a late bot waits before its first move, in ticks. */
   public static final int LATE_MIN_TICKS = 40;

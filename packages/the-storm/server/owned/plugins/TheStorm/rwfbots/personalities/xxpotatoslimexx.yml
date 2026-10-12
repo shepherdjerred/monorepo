@@ -1,0 +1,75 @@
+id: xxpotatoslimexx
+name: xXPotatoSlimeXx
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODc3MDU4NSwKICAicHJvZmlsZUlkIiA6ICJlMTNkYWY5NTc3YzE0NTUyODBjNzNmYWQ4NThmMmU5MSIsCiAgInByb2ZpbGVOYW1lIiA6ICJUMGJpaWkiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMmRlYTUyNDZkNTI3MTY2OGIyNDJkMDkzNDEwMmNiMTAzOTI0YjIxZDA0NWQ0MGJhN2E2YzZiYjYwOWYzMTBiZiIKICAgIH0KICB9Cn0="
+  signature: "RLPKpY+2i9HVngZaRdOmwK86elttjSj5WccYUkn/ipVVtO085WQOsnFT2kdXsfWKYFL4XE3tfucDFAfAnoK0opJbEAJf0yi1eZ64Yu70H53avlc/W3ZbG1NeTfN3qrmJmT+3howVvOOSVu5ehC/4ul07XkkPRf7gZIqMte9ufORpypdq2O0Xg8HABXCU8HJEZu9m2bCVNsMhEDBTh3En9BacfJ041RKARhecokH9TvX0KL89ljDcyfw/hxv34QElXU3DKHytJCOguDdNrHrNjJ/xhBqJZUrwVmG5AGFosUVczsatq3CPZ2ZyXJbEe49DKRGPZOeNqiiZzpWolW2S9+wLW+6U3rrEH096MgS+DORaOsT6ZNBL9CYSB+i2HJDuGl1T7Of7le83EZRQj7fHuF6FLRngxVLop676022ZDyYWm7LcExr2Lp6HFYNmj6vnPVBqSTdOCGGiYQ/qzWswKq77KPv9HJ+PvmBYpb39gobjJIjdShxEFafezTHBjToT7En7gUImleiZREd+UTmAu415hc+D0C0ea4zNXoQcUV2Y0MjFacmaWJ0D7r9eSdrcsklAROQectGSroArWqAqR5cVyz6H2hcfScHsNzPWDpcMCcK3JfqZJVINf8HmaEM0odSPDol5FrJhd33HNMpEoLln9G0QSOh3x7uJGwnf5sM="
+skill: 0.536
+archetype: rusher
+leverOffsets:
+  reactionMs: 0.56
+  cps: 0.27
+  decisionTemperature: 0
+  awarenessRadius: -0.69
+  technique: -0.36
+  aggression: 1.72
+kits:
+  trooper: 1
+  shortbow: 0.53
+  rewind: 0.3
+roles:
+  plant: 0.82
+  escort: 0.33
+  retake: 0.3
+  hunt: 0.9
+style:
+  aggression: 0.9
+  patience: 0.11
+  teamplay: 0.36
+  risk: 0.72
+voice:
+  tone:
+    - practical
+    - eager
+  verbosity: normal
+  style: "carpentry checks and repairable mistakes; fast fragments, impatient countdowns"
+lines:
+  greet:
+    - wooden mallet packed, joints checked
+    - wooden mallet ready, I am taking the first corner
+  onKill:
+    - that opening needed a wedge
+    - wooden mallet keeps moving, next corner
+  onDeath:
+    - a weak joint in my plan
+    - a pause for the wooden mallet, then straight back
+  onPlant:
+    - the fuse is fitted snugly
+    - wooden mallet is already on the next approach
+  onDefuse:
+    - took that assembly apart
+    - quick hands, quick wooden mallet, clear
+  onWin:
+    - solid work around the wooden mallet
+    - wooden mallet barely stopped all round
+  onLoss:
+    - back to the bench with my wooden mallet
+    - wooden mallet ran ahead of the plan
+  onLastAlive:
+    - one wooden mallet holding the frame
+    - my wooden mallet and I will keep moving
+  taunt:
+    - that angle needs a little sanding
+    - my wooden mallet got here before that push
+  lobby:
+    - checking the edge on my wooden mallet
+    - my wooden mallet is for repairs after the match
+    - "My wooden mallet: first corner is mine."
+    - With my wooden mallet, please follow after the opening.
+quirks:
+  - bunny_hops
+  - always_gg
+rivals:
+  - solarkashtush
+bio: xXPotatoSlimeXx repaired a rickety spawn bridge every weekend and still brings a wooden mallet to the queue. SolarKashtush keeps asking whether it really helps.
+batch: 3
+retired: false

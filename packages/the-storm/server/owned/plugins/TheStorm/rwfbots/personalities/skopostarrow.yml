@@ -1,0 +1,73 @@
+id: skopostarrow
+name: SkopostArrow
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTQxMDU5MywKICAicHJvZmlsZUlkIiA6ICI3ZGY4NmY1MWFjZmI0MjQzYTkzNDQ1OTAyZDEzYTc0MSIsCiAgInByb2ZpbGVOYW1lIiA6ICJNclJpcHRpZGUiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNWIwMmJlMTk2ZGNmNDNjODUxMTM1MjU3NDhhMWJkNmUzMzM3N2MzOWZmMzc0NGYxZTI3OWNjNDBkZTNiNGMyMCIKICAgIH0KICB9Cn0="
+  signature: "wmS5LtmirFCl4aJgwAS8VUm1YWLEMDtNZZLjikgNW6jep3BZJH7OLwDknKWjehSBs7/xDLmsLk6b6FctQOqhoqyzsYfvIHtuwvFtza7ZZ/PLojUEGAK70OuPrVwpbpobujyyvQ0PUFI0q1VpGjfUgjDsulh8h7tC01TRo5j9vsnksuFfholXK6vX0MgbwE3QbeHa/WSYAhzT9IGT592bMICc7uznnQed/d7rfGSIXCwL5VDwwbW+ssEpZYdHb5rNjTwXN7svcBUgjMFzfb9Q7/bY4kINwwB90QqieuKlb0+tZMsTTDlQKGmAe2sk74brla1ctIacc1pdm8LVMLgVCpdgVzuh+jBP1yJ4A6Vks+HiuHCMD+++WZTnE4jlWnc8zBUp1qbady/ZV1UmTzyBAKCGAxTEuo3Gxgh1BbxfNz3u23L7bxVFb4kbbm1d0DzFo9DJ2OysdOf+vweImkcFEoPGnSkM2SQJGDagP3D22XIMRnJGZqXfKCrPHedoNcuvtBYG53KWwcNVVkMvUqktu6WTNM/EaXj60ncJ5R1oUMx+Z0LSptC2V7G3bmZrFCMgVkwUMh2pgeGRh0Ty5Au4zdoqrb/S8AfxiBZAygJppQAvu6hNSWC12UbibbW/6mhY9oL0kNSffbw+aggj+x0U11wXvri6Ae3wR7kp08q07TA="
+skill: 0.116
+archetype: duelist
+leverOffsets:
+  aimErrorDeg: 0.43
+  cps: 1.27
+  decisionTemperature: 0.23
+  coordination: -0.51
+  technique: 1.49
+  aggression: 1
+kits:
+  trooper: 1
+  shortbow: 0.37
+roles:
+  escort: 0.43
+  retake: 0.46
+  hunt: 0.82
+style:
+  aggression: 0.88
+  patience: 0.35
+  teamplay: 0.29
+  risk: 0.52
+voice:
+  tone:
+    - brisk
+    - competitive
+  verbosity: normal
+  style: "absurdly serious station announcements; brief courteous challenges and honest shot assessments"
+lines:
+  greet:
+    - brake handle checked, service departing
+    - brake handle ready, good fights everyone
+  onKill:
+    - one less delay for my brake handle
+    - good exchange beside the brake handle
+  onDeath:
+    - my brake handle reports a cancelled service
+    - fair hit, the brake handle left that gap
+  onPlant:
+    - last departure from this platform
+    - brake handle earned a moment at the bomb
+  onDefuse:
+    - service restored on this line
+    - brake handle can settle this at the fuse
+  onWin:
+    - brake handle reports arrival on schedule
+    - brake handle had some good fights today
+  onLoss:
+    - wrong platform for my brake handle
+    - brake handle wants another clean round
+  onLastAlive:
+    - last service, just my brake handle
+    - one brake handle, one fair chance
+  taunt:
+    - your connection left a moment ago
+    - the brake handle is ready for that peek
+  lobby:
+    - please queue beside my brake handle
+    - my brake handle says the lobby service is delayed
+    - "My brake handle: I will contest the middle."
+    - With my brake handle, give the middle fight a clear lane.
+quirks:
+  - good_sport
+  - always_gg
+rivals:
+  - mrkruzraemthosh
+bio: SkopostArrow linked three friends bases with an unnecessarily elaborate minecart line and still brings a brake handle to the queue. MrKruzraemthosh keeps asking whether it really helps.
+batch: 3
+retired: false

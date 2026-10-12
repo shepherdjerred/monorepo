@@ -1,0 +1,72 @@
+id: kaldolskuzshist
+name: Kaldolskuzshist
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjEzMDM4MCwKICAicHJvZmlsZUlkIiA6ICJiYzRlZGZiNWYzNmM0OGE3YWM5ZjFhMzlkYzIzZjRmOCIsCiAgInByb2ZpbGVOYW1lIiA6ICI4YWNhNjgwYjIyNDYxMzQwIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzRiZWM4ZTZhZmYzOTdmY2Q3OGIwZGIyYTA0NTVhNWUzM2VlYmVhOTc0NDNiNDU1ZWRkY2I3Zjk4ODFhYjM1ZTkiCiAgICB9CiAgfQp9
+  signature: "rtV7A0btCMkjP0NJB+xrBN8xQ231tQFGEcKWKmzE6N8P0gZSryUehOvUhHIA21HFHetDsfiZ/OcuggArJNidqUfCjQPj/P+ZrfdPqRYuja7z8GBIB3UNpkrwtUy+/xuObM/Mz3Tvhy2SNYgELIXZ/CIQYN+G3AW6Zy1V7Oie6qxAYQ3HaZ+HenRSDWrgiLxtLaPdxvry0LkM2QLqEf5YswFv8kIkOhcp4ZtyXa3rKKTg9dgLItc4buf7ZKOOHi5wveTH6miD/rBPi0ykJQNq1nvhOKo+VhDqynhOOCbwUc45YRTGYQIbVDRgfFrR1JgWwDgzH7CQfbdiVEBjOLKmNdr6j8dp1gXkwMxPk22dfQYcmk0zSUocOujqLNpV8vNqXquenldhiDlMBTXqu8UmE9Nk8kY1Q2EuDXTPsK4r9aBhaY46WOgd8mKZy7iZMMn7yEk/JDu5XzC3dZH57aGgMTW1kT0Nfs3lK3NfRJ07HeJ/loy70DzITT0Xn+67lAFmeIse3ZhlpMetOMHguOjlx0SbFzu7cBUBCmXeWDEGVccNI5t2wycUs9MvQyodADvEkg4v2xI7GLAZElUut4uL1SbkLzitRqf7kleoL4QjWAvoBorlV8FVLPB0HMr8OprCjWbwrtBnj+9VT/CcKRgW86uIDQ9FwSGYXD9l9U9uTZ8="
+skill: 0.932
+archetype: turtle
+leverOffsets:
+  reactionMs: 0.42
+  predictionQuality: -0.22
+  decisionTemperature: 0.33
+  awarenessRadius: 0.18
+  aggression: -2.38
+kits:
+  trooper: 0.92
+  longbow: 0.32
+  rewind: 0.8
+roles:
+  defend: 0.87
+  retake: 0.42
+style:
+  aggression: 0.08
+  patience: 0.93
+  teamplay: 0.63
+  risk: 0.07
+voice:
+  tone:
+    - bookish
+    - cautious
+  verbosity: quiet
+  style: "brief footnotes and revised-edition rematches; unhurried words, conservative estimates and tiny victories"
+lines:
+  greet:
+    - chapter index ready, new chapter
+    - chapter index is ready. no need to hurry.
+  onKill:
+    - a short footnote to that duel
+    - chapter index waited for the opening
+  onDeath:
+    - a regrettable page break
+    - chapter index should have waited another moment
+  onPlant:
+    - a cliffhanger at the bomb
+    - chapter index checked the site first
+  onDefuse:
+    - closing that chapter gently
+    - chapter index checked the corner twice
+  onWin:
+    - the chapter index gets a happy ending
+    - chapter index got there eventually
+  onLoss:
+    - the chapter index needs a revised edition
+    - chapter index needed one more safe corner
+  onLastAlive:
+    - one last page to turn
+    - the chapter index will take this slowly
+  taunt:
+    - I have read that opening before
+    - the chapter index can wait out that peek
+  lobby:
+    - resting my chapter index on the lobby shelf
+    - please do not dog-ear my chapter index
+    - "My chapter index: I will keep a safe route home."
+    - With my chapter index, please check the blind corner first.
+quirks:
+  - gapple_hoarder
+  - always_gg
+rivals:
+  - quietgrouthshur
+bio: Kaldolskuzshist bound a book of old match stories with mismatched covers and still brings a chapter index to the queue. QuietGrouthshur keeps asking whether it really helps.
+batch: 3
+retired: false

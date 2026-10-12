@@ -2,14 +2,17 @@ package com.shepherdjerred.thestorm.rwfbots.app;
 
 import com.shepherdjerred.thestorm.core.compute.ComputePool;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavArtifact;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.NavGraph;
 import com.shepherdjerred.thestorm.rwfbots.domain.perception.Percept;
 import com.shepherdjerred.thestorm.rwfbots.domain.perception.Perception;
 import com.shepherdjerred.thestorm.rwfbots.domain.perception.PerceptionState;
 import com.shepherdjerred.thestorm.rwfbots.domain.perception.SenseContext;
+import com.shepherdjerred.thestorm.rwfbots.domain.tactics.Planner;
 import com.shepherdjerred.thestorm.rwfbots.domain.tactics.Situation;
 import com.shepherdjerred.thestorm.rwfbots.domain.tactics.Tactics;
 import com.shepherdjerred.thestorm.rwfbots.domain.tactics.TacticsContext;
 import com.shepherdjerred.thestorm.rwfbots.domain.tactics.TacticsState;
+import com.shepherdjerred.thestorm.rwfbots.domain.tactics.Thought;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Blackboard;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.SharedSighting;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.SlotFit;
@@ -28,12 +31,14 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SplittableRandom;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.LongSupplier;
+import java.util.stream.IntStream;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -44,10 +49,11 @@ import org.jspecify.annotations.Nullable;
  * cycle, and publishes a {@link DecisionBoard} into a second one-slot mailbox that the main thread
  * reads with one volatile read.
  *
- * <p>Only one job runs at a time, so the per-bot and per-team think state belongs to the job alone.
- * The main thread only registers bots, bumps life epochs and asks for rethinks through concurrent
- * maps. Randomness is a fresh {@link SplittableRandom} per bot per job, seeded from the match seed,
- * the bot and the tick, so a replay with the same snapshots makes the same decisions.
+ * <p>Only one cycle runs at a time. Its bounded parallel stages return proposals; ordered barriers
+ * alone commit bot and team state. No worker waits for another task on the shared compute pool. The
+ * main thread only registers bots, bumps life epochs and asks for rethinks through concurrent maps.
+ * Randomness is a fresh {@link SplittableRandom} per bot per job, seeded from the match seed, the
+ * bot and the tick, so a replay with the same snapshots makes the same decisions.
  */
 public final class ThinkLoop {
 
@@ -70,7 +76,10 @@ public final class ThinkLoop {
   private final ConcurrentHashMap<CombatantId, Integer> epochs = new ConcurrentHashMap<>();
   private final Set<CombatantId> replans = ConcurrentHashMap.newKeySet();
   private final ThinkStats stats = new ThinkStats();
-  private final Worker worker = new Worker();
+  private final Worker worker;
+  private final AtomicReference<@Nullable Failure> failure = new AtomicReference<>();
+  private volatile int failedGeneration = -1;
+  private volatile CompletableFuture<Void> completion = CompletableFuture.completedFuture(null);
   private volatile @Nullable Match match;
   private volatile boolean closed;
 
@@ -96,10 +105,13 @@ public final class ThinkLoop {
     this.governor = parts.governor();
     this.traces = parts.traces();
     this.nanoClock = parts.nanoClock();
+    this.worker = new Worker();
   }
 
   /** The match the loop thinks for. */
   private record Match(int generation, long seed, long navigationRevision, NavArtifact nav) {}
+
+  private record Failure(int generation, RuntimeException problem) {}
 
   // ---- main thread -----------------------------------------------------------------------------
 
@@ -108,6 +120,8 @@ public final class ThinkLoop {
     profiles.clear();
     epochs.clear();
     replans.clear();
+    failure.set(null);
+    inbox.set(null);
     outbox.set(DecisionBoard.EMPTY);
     match = new Match(generation.incrementAndGet(), seed, 0, nav);
   }
@@ -129,6 +143,7 @@ public final class ThinkLoop {
     replans.clear();
     inbox.set(null);
     outbox.set(DecisionBoard.EMPTY);
+    if (!running.get()) worker.retire();
   }
 
   public boolean inMatch() {
@@ -174,6 +189,12 @@ public final class ThinkLoop {
     if (closed || match == null) {
       return;
     }
+    var problem = failure.getAndSet(null);
+    if (problem != null && problem.generation() == match.generation()) {
+      outbox.set(DecisionBoard.EMPTY);
+      throw problem.problem();
+    }
+    if (match.generation() == failedGeneration) return;
     inbox.set(snapshot);
     schedule();
   }
@@ -189,7 +210,7 @@ public final class ThinkLoop {
 
   /** Whether a job is running or queued right now. */
   public boolean busy() {
-    return running.get();
+    return running.get() || !completion.isDone();
   }
 
   /** Stops accepting snapshots. A running job finishes on its own. */
@@ -203,7 +224,8 @@ public final class ThinkLoop {
       return;
     }
     try {
-      compute.executor().execute(this::run);
+      var queuedAt = nanoClock.getAsLong();
+      compute.executor().execute(() -> run(queuedAt));
     } catch (RejectedExecutionException rejected) {
       running.set(false);
       throw rejected;
@@ -212,20 +234,44 @@ public final class ThinkLoop {
 
   // ---- worker thread ---------------------------------------------------------------------------
 
-  private void run() {
-    try {
-      WorldSnapshot snapshot;
-      while ((snapshot = inbox.getAndSet(null)) != null) {
-        var current = match;
-        if (current != null) {
-          worker.think(current, snapshot);
-        }
-      }
-    } finally {
-      running.set(false);
+  private void run(long queuedAt) {
+    var current = match;
+    var snapshot = inbox.getAndSet(null);
+    if (current == null || snapshot == null) {
+      finished(current, queuedAt, null);
+      return;
     }
-    if (inbox.get() != null && !closed) {
-      schedule();
+    try {
+      completion =
+          worker
+              .think(current, snapshot, queuedAt)
+              .whenComplete((ignored, problem) -> finished(current, queuedAt, problem));
+    } catch (RuntimeException problem) {
+      finished(current, queuedAt, problem);
+    }
+  }
+
+  private void finished(@Nullable Match current, long queuedAt, @Nullable Throwable problem) {
+    if (problem != null) {
+      stats.record(nanoClock.getAsLong() - queuedAt);
+      if (current != null) {
+        failedGeneration = current.generation();
+        failure.set(
+            new Failure(
+                current.generation(),
+                new IllegalStateException("Bot thinking cycle failed", problem)));
+      }
+    }
+    if (match == null) worker.retire();
+    running.set(false);
+    var live = match;
+    if (inbox.get() != null && !closed && live != null && live.generation() != failedGeneration) {
+      try {
+        schedule();
+      } catch (RejectedExecutionException rejected) {
+        failedGeneration = live.generation();
+        failure.set(new Failure(live.generation(), rejected));
+      }
     }
   }
 
@@ -242,6 +288,7 @@ public final class ThinkLoop {
     @Nullable Decision decision;
     long lastPerceived = NEVER;
     long lastThought = NEVER;
+    long awaitingSince = NEVER;
 
     Mind(BotProfile profile, Match match, int epoch) {
       var nav = match.nav();
@@ -259,7 +306,8 @@ public final class ThinkLoop {
               profile.kit(),
               profile.archetype(),
               profile.quirks(),
-              seed(match.seed(), profile.id().value(), ROUTE_SALT));
+              seed(match.seed(), profile.id().value(), ROUTE_SALT),
+              null);
       this.tacticsState = TacticsState.fresh(epoch);
     }
 
@@ -279,7 +327,8 @@ public final class ThinkLoop {
               before.kit(),
               before.archetype(),
               before.quirks(),
-              before.seed());
+              before.seed(),
+              null);
       lastPerceived = NEVER;
       lastThought = NEVER;
     }
@@ -292,6 +341,7 @@ public final class ThinkLoop {
       epoch = newEpoch;
       tacticsState = tacticsState.nextLife(newEpoch);
       decision = null;
+      lastPerceived = NEVER;
     }
   }
 
@@ -314,41 +364,117 @@ public final class ThinkLoop {
   }
 
   /** One job's fixed inputs. */
-  private record Cycle(Match current, WorldSnapshot snapshot, int multiplier, Counters counters) {
+  private record Cycle(
+      Match current,
+      WorldSnapshot snapshot,
+      int multiplier,
+      Counters counters,
+      List<BotProfile> profiles) {
 
     long tick() {
       return snapshot.tick();
     }
   }
 
-  /** The job: owns the think state; only ever runs on one thread at a time. */
+  /** The cycle coordinator owns mutable state; parallel operations only return proposals. */
   private final class Worker {
     private final Map<CombatantId, Mind> minds = new HashMap<>();
     private final Map<TeamId, Team> teams = new HashMap<>();
     private int generationSeen = -1;
+    private final ThinkBatches batches = new ThinkBatches(compute);
+    private List<NavGraph.SearchWorkspace> workspaces = List.of();
 
-    void think(Match current, WorldSnapshot snapshot) {
-      var started = nanoClock.getAsLong();
+    void retire() {
+      minds.clear();
+      teams.clear();
+      workspaces = List.of();
+      generationSeen = -1;
+    }
+
+    CompletableFuture<Void> think(Match current, WorldSnapshot snapshot, long started) {
       if (generationSeen != current.generation()) {
         minds.clear();
         teams.clear();
         generationSeen = current.generation();
+        workspaces =
+            IntStream.range(0, compute.parallelism())
+                .mapToObj(ignored -> current.nav().graph().workspace())
+                .toList();
       }
-      var cycle = new Cycle(current, snapshot, governor.thinkPeriodMultiplier(), new Counters());
       var active = activeMinds(current, snapshot);
-      for (var mind : active) {
-        perceive(cycle, mind);
+      var cycle =
+          new Cycle(
+              current,
+              snapshot,
+              governor.thinkPeriodMultiplier(),
+              new Counters(),
+              active.stream().map(mind -> mind.profile).toList());
+      // The schedule timestamp is aligned to a slot; freshness uses the actual observation tick.
+      var sensing = selectSensing(cycle, active);
+      return batches
+          .map(sensing, mind -> observe(cycle, mind))
+          .thenCompose(
+              observations -> {
+                if (!current(cycle)) return CompletableFuture.completedFuture(List.<TeamStep>of());
+                for (var observation : observations) commitObservation(cycle, observation);
+                var orderedTeams =
+                    teams.entrySet().stream()
+                        .sorted(Map.Entry.comparingByKey(Comparator.comparing(TeamId::value)))
+                        .map(Map.Entry::getValue)
+                        .toList();
+                return batches.map(orderedTeams, team -> teamStep(cycle, team));
+              })
+          .thenCompose(
+              plans -> {
+                if (!current(cycle)) return CompletableFuture.completedFuture(List.<Proposal>of());
+                for (var plan : plans) {
+                  plan.team().board = plan.board();
+                  plan.team().lastTick = plan.tick();
+                }
+                return batches.indexed(
+                    selectTactics(cycle, active),
+                    (batch, work) -> propose(cycle, work, workspaces.get(batch)));
+              })
+          .thenAccept(
+              proposals -> {
+                for (var proposal : proposals) commitTactics(cycle, proposal);
+                publishBoard(cycle, active, started);
+              });
+    }
+
+    private List<Mind> selectSensing(Cycle cycle, List<Mind> active) {
+      var sensing = new ArrayList<>(active);
+      sensing.sort(
+          Comparator.comparingLong((Mind m) -> m.percept == null ? NEVER : m.percept.tick())
+              .thenComparingInt(m -> m.profile.slot()));
+      var selected = new ArrayList<Mind>();
+      var counters = cycle.counters();
+      var period = rates.perceptionEveryTicks() * cycle.multiplier();
+      for (var mind : sensing) {
+        if (mind.percept != null && !due(mind.lastPerceived, cycle.tick(), period)) continue;
+        var rays =
+            rayEstimate(
+                cycle.snapshot().require(mind.profile.id()),
+                cycle.snapshot(),
+                mind.profile.levers().awarenessRadius());
+        if (counters.raysUsed > 0 && counters.raysUsed + rays > rates.losRayBudget()) {
+          counters.deferred++;
+        } else {
+          counters.raysUsed += rays;
+          selected.add(mind);
+        }
       }
-      for (var team : teams.values()) {
-        teamStep(cycle, team);
-      }
-      for (var mind : active) {
-        decide(cycle, mind);
-      }
+      return selected;
+    }
+
+    private void publishBoard(Cycle cycle, List<Mind> active, long started) {
+      var current = cycle.current();
+      var snapshot = cycle.snapshot();
       var counters = cycle.counters();
       var thoughts = new HashMap<CombatantId, BotThought>();
+      var perceptions = freshness(active);
       for (var mind : minds.values()) {
-        if (mind.decision != null && mind.percept != null) {
+        if (publishable(mind, snapshot) && mind.decision != null && mind.percept != null) {
           thoughts.put(mind.profile.id(), new BotThought(mind.decision, mind.percept, mind.epoch));
         }
       }
@@ -368,8 +494,45 @@ public final class ThinkLoop {
                 counters.perceived,
                 counters.thought,
                 counters.deferred,
-                plans));
+                plans,
+                perceptions));
       }
+    }
+
+    private boolean valid(Mind mind) {
+      return mind.profile.equals(profiles.get(mind.profile.id()))
+          && mind.epoch == epoch(mind.profile.id());
+    }
+
+    private boolean publishable(Mind mind, WorldSnapshot snapshot) {
+      if (!mind.profile.equals(profiles.get(mind.profile.id()))) return false;
+      // Keep a dead bot's last thought for diagnostics, with its original tick and life epoch.
+      // Living bots never publish an obsolete life; commit guards still reject stale proposals.
+      return mind.epoch == epoch(mind.profile.id())
+          || snapshot.combatant(mind.profile.id()).map(view -> !view.alive()).orElse(false);
+    }
+
+    private boolean current(Cycle cycle) {
+      var live = match;
+      return live != null
+          && live.generation() == cycle.current().generation()
+          && live.navigationRevision() == cycle.current().navigationRevision();
+    }
+
+    private Map<CombatantId, PerceptionAge> freshness(List<Mind> active) {
+      var observations = new HashMap<CombatantId, PerceptionAge>();
+      for (var mind : active) {
+        // A rewind invalidates decisions, not the fact that an earlier observation happened.
+        // Retain its actual timestamp until the new life is perceived; rejected observations
+        // never advance it. Only a bot never perceived is awaiting its first observation.
+        if (!mind.profile.equals(profiles.get(mind.profile.id()))) continue;
+        observations.put(
+            mind.profile.id(),
+            new PerceptionAge(
+                mind.percept == null ? mind.awaitingSince : mind.percept.tick(),
+                mind.percept == null));
+      }
+      return observations;
     }
 
     /** The registered bots alive in the snapshot, in slot order, with their minds up to date. */
@@ -390,6 +553,7 @@ public final class ThinkLoop {
           mind.newLife(epoch);
         }
         mind.observeNavigation(current);
+        if (mind.awaitingSince == NEVER) mind.awaitingSince = snapshot.tick();
         team(current, profile.team());
         active.add(mind);
       }
@@ -414,31 +578,28 @@ public final class ThinkLoop {
       return team;
     }
 
-    private void perceive(Cycle cycle, Mind mind) {
-      var current = cycle.current();
-      var snapshot = cycle.snapshot();
-      var counters = cycle.counters();
-      var tick = cycle.tick();
-      var period = rates.perceptionEveryTicks() * cycle.multiplier();
-      if (mind.percept != null && !due(mind.lastPerceived, tick, period)) {
-        return;
-      }
-      var self = snapshot.require(mind.profile.id());
-      var rays = rayEstimate(self, snapshot, mind.profile.levers().awarenessRadius());
-      if (mind.percept != null
-          && counters.raysUsed > 0
-          && counters.raysUsed + rays > rates.losRayBudget()) {
-        counters.deferred++;
-        return;
-      }
-      counters.raysUsed += rays;
-      var random = randomFor(current, mind.profile.id(), tick);
-      var percept = mind.perception.perceive(mind.perceptionState, self, snapshot, random);
+    private Observation observe(Cycle cycle, Mind mind) {
+      var random = randomFor(cycle.current(), mind.profile.id(), cycle.tick());
+      return new Observation(
+          mind,
+          mind.perception.perceive(
+              mind.perceptionState,
+              cycle.snapshot().require(mind.profile.id()),
+              cycle.snapshot(),
+              random));
+    }
+
+    private void commitObservation(Cycle cycle, Observation observation) {
+      var mind = observation.mind();
+      if (!current(cycle) || !valid(mind)) return;
+      var percept = observation.percept();
       mind.perceptionState = percept.state();
       mind.percept = percept;
-      mind.lastPerceived = aligned(tick, mind.profile.slot(), period);
-      counters.perceived++;
-      share(current, mind, percept, snapshot);
+      mind.lastPerceived =
+          aligned(
+              cycle.tick(), mind.profile.slot(), rates.perceptionEveryTicks() * cycle.multiplier());
+      cycle.counters().perceived++;
+      share(cycle.current(), mind, percept, cycle.snapshot());
     }
 
     private void share(Match current, Mind mind, Percept percept, WorldSnapshot snapshot) {
@@ -465,12 +626,12 @@ public final class ThinkLoop {
               randomFor(current, mind.profile.id(), snapshot.tick() + 1));
     }
 
-    private void teamStep(Cycle cycle, Team team) {
+    private TeamStep teamStep(Cycle cycle, Team team) {
       var snapshot = cycle.snapshot();
       var period = rates.teamEveryTicks() * cycle.multiplier();
       var members = new HashMap<CombatantId, SlotFit.Member>();
       var views = new ArrayList<CombatantView>();
-      for (var profile : profiles()) {
+      for (var profile : cycle.profiles()) {
         if (!profile.team().equals(team.board.team())) {
           continue;
         }
@@ -486,48 +647,93 @@ public final class ThinkLoop {
       // A bot that joined since the last deal must get a slot before it thinks.
       var unassigned = !team.board.plan().assignment().keySet().containsAll(members.keySet());
       if (views.isEmpty() || (!unassigned && !due(team.lastTick, snapshot.tick(), period))) {
-        return;
+        return new TeamStep(team, team.board, team.lastTick);
       }
-      team.lastTick = snapshot.tick();
       var current = cycle.current();
-      team.board =
+      return new TeamStep(
+          team,
           TeamBrain.tick(
               team.board,
               new TeamBrain.TeamSituation(current.nav(), snapshot, views, members),
               new SplittableRandom(
-                  seed(current.seed(), team.board.team().value().hashCode(), snapshot.tick())));
+                  seed(current.seed(), team.board.team().value().hashCode(), snapshot.tick()))),
+          snapshot.tick());
     }
 
-    private void decide(Cycle cycle, Mind mind) {
-      var current = cycle.current();
-      var snapshot = cycle.snapshot();
-      var tick = cycle.tick();
+    private List<TacticsWork> selectTactics(Cycle cycle, List<Mind> active) {
+      var selected = new ArrayList<TacticsWork>();
       var period = rates.tacticsEveryTicks() * cycle.multiplier();
+      for (var mind : active) {
+        var id = mind.profile.id();
+        var forced = replans.contains(id) || mind.decision == null;
+        if (!valid(mind)
+            || mind.percept == null
+            || (!forced && !due(mind.lastThought, cycle.tick(), period))) continue;
+        replans.remove(id);
+        selected.add(new TacticsWork(mind, team(cycle.current(), mind.profile.team()).board));
+      }
+      return selected;
+    }
+
+    private Proposal propose(Cycle cycle, TacticsWork work, NavGraph.SearchWorkspace workspace) {
+      var mind = work.mind();
       var id = mind.profile.id();
-      var forced = replans.contains(id) || mind.decision == null;
-      if (!forced && !due(mind.lastThought, tick, period)) {
-        return;
-      }
-      var percept = mind.percept;
-      if (percept == null) {
-        return;
-      }
-      replans.remove(id);
-      var team = team(current, mind.profile.team());
-      var board = team.board;
+      var board = work.board();
       var role = board.roleOf(id).orElseThrow(() -> new IllegalStateException(id + " has no role"));
-      var situation = new Situation(snapshot.require(id), snapshot, percept, board, role);
+      var percept = java.util.Objects.requireNonNull(mind.percept);
+      var situation =
+          new Situation(cycle.snapshot().require(id), cycle.snapshot(), percept, board, role);
       var thought =
           Tactics.think(
-              mind.tacticsState, situation, mind.tacticsContext, randomFor(current, id, tick + 2));
+              mind.tacticsState,
+              situation,
+              mind.tacticsContext.withWorkspace(workspace),
+              randomFor(cycle.current(), id, cycle.tick() + 2));
+      return new Proposal(mind, thought);
+    }
+
+    private boolean conflicting(Cycle cycle, Proposal proposal, Blackboard board) {
+      var cover = proposal.thought().note().cover();
+      if (cover.isEmpty()) return false;
+      var graph = cycle.current().nav().graph();
+      var point = graph.feet(cover.orElseThrow());
+      return board.claimedCover().entrySet().stream()
+          .filter(entry -> !entry.getKey().equals(proposal.mind().profile.id()))
+          .anyMatch(
+              entry -> graph.feet(entry.getValue()).horizontalDistance(point) < Planner.COVER_ROOM);
+    }
+
+    private void commitTactics(Cycle cycle, Proposal original) {
+      var mind = original.mind();
+      if (!current(cycle) || !valid(mind)) return;
+      var id = mind.profile.id();
+      var team = team(cycle.current(), mind.profile.team());
+      var proposal =
+          conflicting(cycle, original, team.board)
+              ? propose(cycle, new TacticsWork(mind, team.board), workspaces.getFirst())
+              : original;
+      if (conflicting(cycle, proposal, team.board)) {
+        throw new IllegalStateException("Conflicting cover proposal for " + id);
+      }
+      var thought = proposal.thought();
       mind.tacticsState = thought.state();
       mind.decision = thought.decision();
       team.board = team.board.note(id, thought.note());
-      mind.lastThought = aligned(tick, mind.profile.slot(), period);
+      mind.lastThought =
+          aligned(
+              cycle.tick(), mind.profile.slot(), rates.tacticsEveryTicks() * cycle.multiplier());
       cycle.counters().thought++;
       traces.record(thought.trace(), thought.decision());
     }
   }
+
+  private record Observation(Mind mind, Percept percept) {}
+
+  private record TeamStep(Team team, Blackboard board, long tick) {}
+
+  private record TacticsWork(Mind mind, Blackboard board) {}
+
+  private record Proposal(Mind mind, Thought thought) {}
 
   /** Whether a layer last run at {@code last} is due at {@code tick} with {@code period}. */
   static boolean due(long last, long tick, int period) {

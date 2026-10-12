@@ -1,0 +1,76 @@
+id: xxbanditpotatoxx
+name: xXBanditPotatoXx
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NTU5OTk3OSwKICAicHJvZmlsZUlkIiA6ICJlMzViZmUxZDU4NmU0NmY0OTU2ZWE3MTMwOWU3OGE3OSIsCiAgInByb2ZpbGVOYW1lIiA6ICJtdjFmb3JldmVyIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2M5NmM4NzdjNTczNGM4ZTFhNDUzOWE5NjkwNTkwOWI1OTE4NmRjY2RmYmM3NWU5MGJiN2Q0MDU0NzU4YjNjNDciCiAgICB9CiAgfQp9
+  signature: "g/5PGHeUpcPeE+0mBBez95aue/XtnnTu6LFxgMDEy9XUuuGwTCMoop0VXcgcDImB86HmiE6nEDkc4NXth2uMKv5sGgvmvDK1fk92GWtlgO09rVON/+Ab/4P3UXWW0m1o8CRkMReUohO8JziJa8aA+DJwV6ksbE99vfVK9PWsS+4OjRZjx69KnPZYdZF/P1ch5/rHcDPwNwkHUZDLc/6r0WlKkYJmOuOd163qt9sGL7lkkH0IQ50wOJE5c7djXjOTtBHx+Ui7Sp1zkA6weFlHE5XE5T24suAxzSBBqBJfoMzCduaDLAZBaE97qCodRSyf52bIs4lv5YHtDXr8ntX0DXLTo+qSzWncn3iv2tHBBc9TFuGugqVI1M70h9OUhZyMO1hA4kGgQYIKkcRMz6Siuk732LS0JY7z+V3HpTEnPy/PQPl5q9wLpxebNikTQe7cPvBL0OsvOgl1M59Xevmau48Di0rPclHhoEXW/n/T0NhVxtwbIUITgdEUV4gBXgrrrVr5kuYOqyqm1+6HSxtNCeG2/LluHwcZ3eMKiFIV/3KX1XE5nERtqWylLYPrwyZVTgu9fP5q9gv1doSXAcYbc0rAiEaTb+qN8wh//r2JlCALM80g8lGnXt+Eqh87ccSDn8Hm3DJPcHT6EL7IpHlBZwmducwmvz1GrO5QkLgWnRA="
+skill: 0.934
+archetype: flanker
+leverOffsets:
+  turnRateDegPerTick: 1.03
+  cps: 0.7
+  predictionQuality: 0.57
+  coordination: -0.11
+  aggression: 0.59
+kits:
+  trooper: 0.67
+  shortbow: 0.92
+  rewind: 0.38
+  ghost: 0.18
+  wraith: 0.57
+  spy: 0.37
+roles:
+  plant: 0.43
+  rotate: 1
+  hunt: 0.51
+style:
+  aggression: 0.56
+  patience: 0.43
+  teamplay: 0.26
+  risk: 0.7
+voice:
+  tone:
+    - theatrical
+    - nimble
+  verbosity: quiet
+  style: "backstage whispers and hurried scene changes; quick side remarks and route changes mid-sentence"
+lines:
+  greet:
+    - prompt book in place, curtain soon
+    - prompt book is taking the other entrance
+  onKill:
+    - a quick scene change for the prompt book
+    - prompt book found a side door
+  onDeath:
+    - missed my cue by a whole scene
+    - prompt book chose an occupied side door
+  onPlant:
+    - cue the dramatic ticking
+    - "prompt book came around the back of {bomb}"
+  onDefuse:
+    - cut that effect, safely
+    - prompt book found a quieter route to the fuse
+  onWin:
+    - take a bow beside the prompt book
+    - prompt book took the long way for a reason
+  onLoss:
+    - the prompt book needs a better rehearsal
+    - prompt book took the long way for no reason
+  onLastAlive:
+    - one performer, one prompt book
+    - one prompt book coming around the edge
+  taunt:
+    - your entrance was a bit loud
+    - the prompt book is somewhere to the side
+  lobby:
+    - has anyone seen the prompt book?
+    - do not lean on the painted prompt book
+    - "My prompt book: I will try the side approach."
+    - With my prompt book, keep them looking forward for me.
+quirks:
+  - crouch_spam
+  - always_gg
+rivals:
+  - vivid-rider
+bio: xXBanditPotatoXx worked the curtains at a player-built theatre between duels and still brings a prompt book to the queue. Vivid_Rider keeps asking whether it really helps.
+batch: 3
+retired: false

@@ -1,0 +1,76 @@
+id: laigroshrythmc
+name: LaigroshrythMC
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NDk0MzIxOSwKICAicHJvZmlsZUlkIiA6ICI2ZjMzNmQxNzI4ODY0ZTJkOTYxNTFjOGY4YjkzMGFjOCIsCiAgInByb2ZpbGVOYW1lIiA6ICJTVVNfQUoiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMWRhMDI1MDIwMmMxNGVlYWNlM2VkNzZjNDU0ODlhOWIzMzBkODZjNGRjY2ExOGE2YjYxZTViZWE1ZWU4MjM5IgogICAgfQogIH0KfQ=="
+  signature: "ZZcuyBNV4hCm4pyCTTMxSyZlHvJWNB2d9zZLHo+2LvLydYpxnoNzP1J1RxoPVZRQPizsRDrO/JPAk9xcM5VDtzpIaJl2i4lHo7AdXKura85ioHmsUW8x+tnuLYyYOwd9PsDAAgDNYJ/WtJ2fly7rOQRsA8WJrk15IUBeUqX8JQsVjISRB6g/8ADa2xh6zdcfRs8+GXAbSznAJCL2hdlyArOrgqAesB5lAwgzc7xo6dsvLLF8Xspn+E7nSm5SDvxCHh0L5xNeHiUHkfB/sqipEpKOcLxRsJHRbhn9kNKE2VwSqHfFUeedo+2UxdeSJVtGQzDQVOWeCLt4aFt9UBAJ9HAKgpIWIa6j/Wi+F0ys2/9R88Xfh8c8qnViDNC2+HPbID5C+yTlo/HWtk+dK33cbeO78e6bSHSFTMS/MXCgK+nGAHwmfYMEKTE8uHCTHRtTx/xd1pzPZEWBwaZp2MEFsMvGV2stJCL1uHqAJAu8C25oZC/kXhFKW6nQoOhQ9Worx+2fAxEQyfpnBReSO8rxHYJi1fXiCx1DP2q90ZEYrc0HPfvWhHUh2JJXqHV/wgsRt88lwo5qXdFllW7p5UFwTLaYZ1NFDpWslMeUSU7qEYDqxT2542xWrY4fI9q8XJ4uAtjxiZWO+lpv+8c2Rmulz699zjxQ0JWRCFpIcDw2R4c="
+skill: 0.464
+archetype: troll
+leverOffsets:
+  aimErrorDeg: 0.28
+  decisionTemperature: -2.5
+  coordination: -1.43
+  technique: -0.1
+kits:
+  trooper: 0.44
+  shortbow: 0.64
+  rewind: 0.99
+  ghost: 0.28
+  spy: 0.79
+roles:
+  plant: 0.54
+  escort: 0.24
+  rotate: 0.59
+  retake: 0.25
+  hunt: 0.55
+style:
+  aggression: 0.65
+  patience: 0.31
+  teamplay: 0.04
+  risk: 0.92
+voice:
+  tone:
+    - theatrical
+    - mischievous
+  verbosity: normal
+  style: "backstage whispers and hurried scene changes; deadpan object conversations and harmless overconfidence"
+lines:
+  greet:
+    - footlight cover in place, curtain soon
+    - footlight cover has appointed itself captain
+  onKill:
+    - a quick scene change for the footlight cover
+    - footlight cover is now insufferably proud
+  onDeath:
+    - missed my cue by a whole scene
+    - footlight cover would like a different replay
+  onPlant:
+    - cue the dramatic ticking
+    - footlight cover calls this interior decorating
+  onDefuse:
+    - cut that effect, safely
+    - footlight cover says it knew the correct wire
+  onWin:
+    - take a bow beside the footlight cover
+    - footlight cover is requesting a trophy shelf
+  onLoss:
+    - the footlight cover needs a better rehearsal
+    - footlight cover has misplaced the blame form
+  onLastAlive:
+    - one performer, one footlight cover
+    - footlight cover insists this was the plan
+  taunt:
+    - your entrance was a bit loud
+    - the footlight cover gave that push three out of ten
+  lobby:
+    - has anyone seen the footlight cover?
+    - do not lean on the painted footlight cover
+    - "My footlight cover: I will cause a useful distraction."
+    - With my footlight cover, try not to laugh during my push.
+quirks:
+  - celebrates_early
+  - always_gg
+rivals:
+  - thezaxmost
+bio: LaigroshrythMC worked the curtains at a player-built theatre between duels and still brings a footlight cover to the queue. TheZaxmost keeps asking whether it really helps.
+batch: 3
+retired: false

@@ -1,0 +1,73 @@
+id: golempickaxe2
+name: GolemPickaxe2
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NDg4MzEzOSwKICAicHJvZmlsZUlkIiA6ICJlNzM4MTYzZTYwM2M0MTFkOTg4MzNiYzkyZTI4Y2IyYSIsCiAgInByb2ZpbGVOYW1lIiA6ICJYZW5va3JhdGVzUml0dmEiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODU2MDM1ZmM4MDAwOWNmMmYzOGJiYmQ4YWEyYWRhMGIyMzQ5ZDI3YzE1ZDM0NWRmNTVlMWNmYTk1NjYwMTk5ZSIKICAgIH0KICB9Cn0="
+  signature: "Mgl+EIsJo+Jmh66jN+hfnjSB4poLQ58n3bgtN64qn4F98zebeoUhWG4dreKr4Cad6F5BfVjqAr+s2hYIX8Fw+nx6XfMufz+8TgLviyh4MC3BzYf5pY+4wrzeXhKUHxd1xNskFeKv1pjzBPoOyhYaVULbmQypGExgz6dM6TrMfSZu0Pgbr+41KardYjEDgykAPPJNFIPmYHereRvoMrZ04tkODML6qnBFj0fyAHMOYws97x9sVyy3rFQ1i2Q76qNaY1qVcDdTw5TU8DNU7Cda3izgwiqWnE99p4db0lCLHXPJ54jK39IJcZFwrWJpcZ1h2hVqtQgAd0IkAchwCtxoyjal77LIReJsBloZ/QmtQHlK8ELMw92LmoPF1i7ouR740gs9w5ACiFIRSbljssoULZyj3FQbvgKn5QrDLlazZh/1h9dI9s7ltYB94/cgg+n+ZLecWxKsUw/fXXGfkncJopQxZxr+Ii72B/kBVNprNEshXZ+MYeUoBz6Ya+2iYGDIUfrDu3G+SjZreHE59SUujJc8BM/AGAa7BougkPfdc99b5XOsH2wTL//KdvluxgvyBseFka63Uz96SBuPaRu2AuhrGN9ml7psv7BsBWPtKU9zg2qaGFK4lPaJQW+W++Lgwb3SaVbA4xolNe0OhG4UfIS2YaDYlRDNr11M1YwDzMI="
+skill: 0.469
+archetype: anchor
+leverOffsets:
+  reactionMs: 0.65
+  awarenessRadius: 0.73
+  coordination: 0.52
+  technique: 0.12
+  aggression: -0.76
+kits:
+  trooper: 0.87
+  longbow: 0.42
+  rewind: 0.26
+roles:
+  plant: 0.18
+  defend: 1
+  retake: 0.58
+style:
+  aggression: 0.24
+  patience: 0.88
+  teamplay: 0.68
+  risk: 0.11
+voice:
+  tone:
+    - dreamy
+    - grounded
+  verbosity: normal
+  style: "sky metaphors punctuated by exact callouts; reassuring statements and firm location reports"
+lines:
+  greet:
+    - comet diary says this is our orbit
+    - comet diary stays here, I have this corner
+  onKill:
+    - a little spark beside my comet diary
+    - comet diary and corner still secure
+  onDeath:
+    - my comet diary did not show that collision
+    - someone watch the comet diary corner
+  onPlant:
+    - starting a very small eclipse
+    - comet diary guards the exit from the site
+  onDefuse:
+    - light returns to the bomb
+    - comet diary is staying by our bomb
+  onWin:
+    - a bright mark in my comet diary
+    - comet diary never left the post
+  onLoss:
+    - a cloudy night for the comet diary
+    - comet diary held the wrong corner
+  onLastAlive:
+    - one small comet diary in a big sky
+    - the comet diary holds here a little longer
+  taunt:
+    - that shot went into another orbit
+    - the comet diary has not moved for that push
+  lobby:
+    - showing the lobby my comet diary
+    - the ceiling is blocking my comet diary
+    - "My comet diary: I will guard the home approach."
+    - With my comet diary, call before rotating off defence.
+quirks:
+  - stares_down
+  - always_gg
+rivals:
+  - jiostshokninja
+bio: GolemPickaxe2 named the roof above spawn an observatory despite owning no telescope and still brings a comet diary to the queue. JiostshokNinja keeps asking whether it really helps.
+batch: 3
+retired: false

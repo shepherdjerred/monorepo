@@ -1,0 +1,74 @@
+id: slimelynx9
+name: SlimeLynx9
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODU5MDI2NiwKICAicHJvZmlsZUlkIiA6ICJlZDUzZGQ4MTRmOWQ0YTNjYjRlYjY1MWRjYmE3N2U2NiIsCiAgInByb2ZpbGVOYW1lIiA6ICI0MTQxNDE0MWgiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjA3NmVjYzFkYzkyMjdlMGYzNGNhMTNiZWU5ZjlmNTZkMTQ5ZTA3MGU2YjFiY2E1YThhZjBlMTI2MzllNTJiZSIKICAgIH0KICB9Cn0="
+  signature: "nQBIsBlnvyGK2h79vq+XjDIXUiThoIPcKvuOWI8eBaMYdzQX1skuabNUirerNx/yLFSVH6bZGPutbOH+FMDVLYR20RI9QlSoxw00YsnjeYwK9IIJCjNcux467xtO9FQrPtmYNGw9sqUR99gHOpq/SPIK+rdIsM3LYnrTKcTnkg1mr/1WkUjdF0bdbkdy8/dHQ27XZ+Vl1P9Hspat4Be4oHAfqOzwPVfRVoMtC9Hy+3eG6Nb2O2G0hv40ycj3Au0NvEbBBte0RXG/Ddyjg1HpIOz/RifjfZOKJhKG9JQYFXTalhzmvDgoD6zx2Q0EFAT1BlnrkBL0T5tJ0hr67mceZGpzFcHP/CNcy+0KC2rnCKi4uyxk/EO1BmWKZWyHLptGLklYY5IBvewFzPmwQaDfTU5tW/UN1HFtBo/j3oVI1UMUMJOUekagR61jkozX9t4kO2Pro03THlXu6DzfMvKx7rBJdm5Gt4sHummzv/RJ+/o0Tg9X1asmxkyIKVrnHFGnIuqwHMMcIu0xMhf61LaQxEO/sb3ZdMd0IHxCpw3siDrMNtglZQdrTa8ACT5EkTAdFY9xjzP5Wy4D4l4k6KQCKTe3mrR+rjh5Alpm2F2pmjIEkMTL6aEyqR+mKJA3F6zM8g0MmrE0l2saDuWf6rJ1SFG1fkuJP0d/x+kzZurkhi4="
+skill: 0.091
+archetype: rusher
+leverOffsets:
+  reactionMs: 0.08
+  turnRateDegPerTick: 0.15
+  cps: 0.75
+  decisionTemperature: 0.61
+  awarenessRadius: -0.05
+  aggression: 1.94
+kits:
+  trooper: 0.98
+  shortbow: 0.61
+  rewind: 0.33
+roles:
+  plant: 0.77
+  escort: 0.44
+  hunt: 0.77
+style:
+  aggression: 0.91
+  patience: 0.2
+  teamplay: 0.43
+  risk: 0.83
+voice:
+  tone:
+    - fussy
+    - eager
+  verbosity: normal
+  style: "paper crafts and tiny careful corrections; fast fragments, impatient countdowns"
+lines:
+  greet:
+    - paper crane survived the queue
+    - paper crane ready, I am taking the first corner
+  onKill:
+    - one clean fold in the plan
+    - paper crane keeps moving, next corner
+  onDeath:
+    - my paper crane is a little crumpled
+    - a pause for the paper crane, then straight back
+  onPlant:
+    - tucking the fuse into the fold
+    - paper crane is already on the next approach
+  onDefuse:
+    - unfolded that just in time
+    - quick hands, quick paper crane, clear
+  onWin:
+    - paper crane stayed in one piece
+    - paper crane barely stopped all round
+  onLoss:
+    - another crease in my paper crane
+    - paper crane ran ahead of the plan
+  onLastAlive:
+    - one paper crane left on the table
+    - my paper crane and I will keep moving
+  taunt:
+    - that push folded very quickly
+    - my paper crane got here before that push
+  lobby:
+    - please do not squash my paper crane
+    - making another paper crane while we wait
+    - "My paper crane: first corner is mine."
+    - With my paper crane, please follow after the opening.
+quirks:
+  - bunny_hops
+  - always_gg
+rivals:
+  - thiolgraiztaijix
+bio: SlimeLynx9 folded paper creatures while waiting for the 2014 queue and still brings a paper crane to the queue. Thiolgraiztaijix keeps asking whether it really helps.
+batch: 3
+retired: false

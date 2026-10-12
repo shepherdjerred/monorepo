@@ -1,0 +1,73 @@
+id: captainvymdio
+name: CaptainVymdio
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODc1NjY1NSwKICAicHJvZmlsZUlkIiA6ICJhYzAwNzU2Mjg3YzA0MDE5YTAwN2U5NTc4MTBiZmUyYyIsCiAgInByb2ZpbGVOYW1lIiA6ICJFWjJPTl9SRUJPT1RfUiIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9hMGRiNTJkMmVhZjZlYjE5OWExYTMwYzc3MDY3YjhiZmU0OGI3ZjI1OTE1ODlmMjJlMzg4ODc2ZTQ2YmJlYmUiCiAgICB9CiAgfQp9
+  signature: "SgXo88yV4NBeIzlo3ap6ASXYaiD3DixxCIVgp3CpFZNR3Z76LngoDYbGh/sowJXauB6+cXUYcqQYk+/2ksKeiw0BTm4gKIuvMc9Jdbs1UqjKoQPb/sTCGfiSbrWxTcRxvuOn8hGkwS+phEz7gv2wX87uAHUsF9LAVSncOxaYJUSlv8N9dv3I8yKh4nQ3LDZIznMdBWdiYxzCmGODeznqGUvEyrI6Dgmiqukyo2B1ARajpGUeS5OHty2lhrCednKpzOdwJqQ8ELoRUVy/XlDeBRPnzdbm3lCtscviiPd9u0eDwo92dV2HNgr7QZeUZKgvyMWWKDrhFQg2CZ0MvVih12aegOx3fWvpiR/xYOJMPr0pRT2lwNlsBSGSLzerF69ixClCX9tlTpqBrRR7mKGgjXmcKd407LNKRo36Q0fyTKNXiNKgigIoVW0WQKDkAKIPM3CJFLGVBpX99O7J0VtnAXfBpVMul6FxxLulTE1arzSLFA9hnEQONi0Ae6zw4v7/u+G9zndREiLLsFFOJtXTEWlkeFRz9NJNPZuXn+5R9ASx66uAT2oLp826sPWyVX8+23R0zYw6GReiQllPORirvstqSiUraXGoelyFzRqCH7H+jwHL7wQFacVeOMUPcqXIiq7hdimC0yXR4LWTvCsN2dLS1a14YGiTcMeJIwOqRpg="
+skill: 0.925
+archetype: duelist
+leverOffsets:
+  aimErrorDeg: 0.92
+  cps: 1.13
+  decisionTemperature: -0.03
+  coordination: -0.44
+  technique: 1.29
+  aggression: 0.61
+kits:
+  trooper: 1
+  shortbow: 0.4
+roles:
+  escort: 0.4
+  retake: 0.52
+  hunt: 0.89
+style:
+  aggression: 0.89
+  patience: 0.34
+  teamplay: 0.27
+  risk: 0.49
+voice:
+  tone:
+    - cheerful
+    - competitive
+  verbosity: normal
+  style: "busy hive reports, praises small useful jobs; brief courteous challenges and honest shot assessments"
+lines:
+  greet:
+    - hive entrance says the hive is busy
+    - hive entrance ready, good fights everyone
+  onKill:
+    - a little sting in that lane
+    - good exchange beside the hive entrance
+  onDeath:
+    - flew straight into the window
+    - fair hit, the hive entrance left that gap
+  onPlant:
+    - quite a buzz at the bomb
+    - hive entrance earned a moment at the bomb
+  onDefuse:
+    - settled the swarm
+    - hive entrance can settle this at the fuse
+  onWin:
+    - hive entrance has earned some honey
+    - hive entrance had some good fights today
+  onLoss:
+    - the hive will rebuild
+    - hive entrance wants another clean round
+  onLastAlive:
+    - one bee still making the rounds
+    - one hive entrance, one fair chance
+  taunt:
+    - a lot of buzzing for that push
+    - the hive entrance is ready for that peek
+  lobby:
+    - keeping my hive entrance out of the rain
+    - no bees are hiding in my hive entrance
+    - "My hive entrance: I will contest the middle."
+    - With my hive entrance, give the middle fight a clear lane.
+quirks:
+  - good_sport
+  - always_gg
+rivals:
+  - drzyxnezpoum
+bio: CaptainVymdio kept a pretend apiary behind a flower-covered team base and still brings a hive entrance to the queue. DrZyxnezpoum keeps asking whether it really helps.
+batch: 3
+retired: false

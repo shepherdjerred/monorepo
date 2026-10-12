@@ -1,0 +1,75 @@
+id: solarkashtush
+name: SolarKashtush
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4OTI5MTYyNSwKICAicHJvZmlsZUlkIiA6ICI1NzYyMzI3MmMxMTU0ODA3YjZkMzZlOGJjNjYwNDQ5YyIsCiAgInByb2ZpbGVOYW1lIiA6ICJBZGFtVGhlSGVkZ2Vob2ciLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNGFlM2E4YzkwOTZhNWNlZjJhOGIxNTg2MmM2NWEyMjQ5ODYxNmNkMGZiMTM5YjVkNjRjMGQ5ZTg0YmU4NzJjZiIKICAgIH0KICB9Cn0="
+  signature: "Tk/Irg3UjR+g0L4eZwGjqOtqVM8ihTSrYYybY7p5gv/dKIARDAKhw1Q3Ke0TibWS+UwdkPU5RiLPIgoTEe35j3vm5MCyTvAp96MIMUW8aHazY1Rxt0cSxLp+tyFGy7lbNNtXwrglX0pxmsY5MFRaI+wrYuMJ6cQhzySfxoMlYpl+8BmPHFvDU4KSTF5SM81a8tLm8ks/eWK/99GiIGDa08yUSGLq8W80C9DWZWaoCqWG59Eqz9nO5p66Xq886H3sdsHL+91L7t7nQ+SyTLsEes7d2/lxrA9vEqwcfRzyKcdQaJkSBvzVevZhvZKBHAOnPfzRE+cHaMSl46JctFrqrQ3Gu21M1LC8hVsda1F9ZrjBClyAkwIV6yHM0ovtT6IogtZUq0y9gu2UHRqusBTTuKm99UhtwPlTT7hpbeCgk2BcLg5iqpL3+p/6vUovvjW4gRp1c/cXgoVAMUJX/ykLvDuuX5v1zkCoDAl+ez1D1ALDRt5sCRZKF0f9WDFcwvhHUTxvbTrGK/CIjj9URQHTsB2nPQEQ95v9LGwnPHFhOmQ+eEQgqWZCFTodeiIcc4lBR8S+exiK86SIt/oXOVNPPPMeLNdHcE8ZT7TGRrfxZgK7yIzI2V5OV/LEGxhSsSJPbutmbKBHMpCPnemO3EvgCws+eJQJL6O3GY4FXRIDxYk="
+skill: 0.962
+archetype: lurker
+leverOffsets:
+  turnRateDegPerTick: -0.33
+  predictionQuality: -0.04
+  decisionTemperature: -0.5
+  awarenessRadius: 1.4
+  coordination: -1.6
+  aggression: -0.62
+kits:
+  trooper: 0.66
+  shortbow: 0.56
+  ghost: 0.73
+  wraith: 0.67
+roles:
+  plant: 0.48
+  rotate: 0.79
+  hunt: 0.8
+style:
+  aggression: 0.53
+  patience: 0.87
+  teamplay: 0
+  risk: 0.6
+voice:
+  tone:
+    - whimsical
+    - hushed
+  verbosity: chatty
+  style: "arguments with an imaginary puppet; lowercase whispers, deliberate pauses"
+lines:
+  greet:
+    - my wooden jester insists we are ready
+    - wooden jester here. quietly.
+  onKill:
+    - wooden jester is taking all the credit
+    - the wooden jester was here a while
+  onDeath:
+    - wooden jester advised against that corner
+    - heard it too late beside the wooden jester
+  onPlant:
+    - wooden jester says the fuse is dramatic
+    - wooden jester is watching the quiet entrance
+  onDefuse:
+    - wooden jester requests a quieter ending
+    - no noise. no fuse. just the wooden jester.
+  onWin:
+    - wooden jester will never stop talking about this
+    - the wooden jester stayed out of sight
+  onLoss:
+    - wooden jester demands another rehearsal
+    - the wooden jester waited one corner too long
+  onLastAlive:
+    - wooden jester has become very quiet
+    - nobody move near my wooden jester
+  taunt:
+    - wooden jester spotted that opening too
+    - the wooden jester heard that approach coming
+  lobby:
+    - my wooden jester has opinions about your kit
+    - please do not argue with the wooden jester
+    - "My wooden jester: I will hold the quiet route."
+    - With my wooden jester, leave one quiet approach for me.
+quirks:
+  - slow_starter
+  - always_gg
+rivals:
+  - fusesniper7
+bio: SolarKashtush put on tiny puppet shows while the team waited for opponents and still brings a wooden jester to the queue. FuseSniper7 keeps asking whether it really helps.
+batch: 3
+retired: false

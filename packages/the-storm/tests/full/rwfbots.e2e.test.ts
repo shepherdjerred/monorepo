@@ -780,10 +780,10 @@ describe("Search and Destroy with rwfbots", () => {
     async ({ bot, rcon, server }) => {
       const match = await newMatch(bot, rcon, server);
       const { think } = await ownedYaml("rwfbots.yml", OwnedBotsSchema);
-      // With Citizens present the module enables over every shipped persona
-      // and the training yard's nav artifact.
+      // With Citizens present the module enables every shipped persona and
+      // loads navigation when the runner prepares a map.
       expect(await serverLogs(server)).toContain(
-        `rwfbots: ${match.catalog.size.toString()} personalities, 1 maps with nav artifacts, traces on`,
+        `rwfbots: ${match.catalog.size.toString()} personalities, navigation follows prepared maps, traces on`,
       );
       await expectCredits(bot, 0);
       const statsBefore = await personalityStats(server, "stats-before");

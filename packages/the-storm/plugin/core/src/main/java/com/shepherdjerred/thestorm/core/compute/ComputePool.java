@@ -24,6 +24,11 @@ public interface ComputePool extends AutoCloseable {
    */
   Executor executor();
 
+  /** Maximum concurrent CPU tasks; implementations with serial execution use one. */
+  default int parallelism() {
+    return 1;
+  }
+
   /**
    * Runs {@code work} on the pool and completes the future with its result or failure. Throws
    * {@link RejectedExecutionException} once the pool is closed.

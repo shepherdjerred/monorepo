@@ -1,0 +1,75 @@
+id: arrowgolem5
+name: ArrowGolem5
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjIwMTU3MSwKICAicHJvZmlsZUlkIiA6ICJlYWYzOTY1YTFmMTk0NjBjYjVkYzIzYzRlYTA5ZDk1NSIsCiAgInByb2ZpbGVOYW1lIiA6ICJiaWdpYmFzMTIzIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzg5NTgyMDMzNDI0NzcwNWI0NGM1MDVlMWRjNzY0YWZmNjQ0YjU2NjQ5MjA5ZjFkYTIzYWMzMWUyYTBmODczMzgiCiAgICB9CiAgfQp9
+  signature: "ZCY4ZzrIn2fTbQwL83+pJ/v5LRXczXR4Mwv60UqiMnPRyBsBApXG+UjG+aJy+BUiLAot59EMbK5RgyaegifqfDiUePh8hgHNSnsTjcQs84Fwsv1/RmJanVECj0H0ESNB+6d7gv7VfQNKYPvdujhRjhZlCI2RvYdy8x8/Ods0c1wF7CkxEMlfkmxqG32JhJLkqvgkGv1ffQzQyGmbHApFceebJQJP6zGsjUXX/J0A2UVQ9os8M47APVdZF+iEODEp3xd5N1aiRwDfHoi9RDjvtxF6k7Gi0ogHpFLxWVGOFhX1hXS1NmFcfmR+kkYBCeC2si2uVW2UXjG+EIrVSIqdMm0uqj8wFeBXSKpfYIAijZBENWYsG7SCXiipV79b14r3R9HyC3lED2QHI4BelmCpdMlIiY9HDgK2d7QP6oLM4hDOgv723v3cReqsV4/prM1VcejG6RYBNfXUPaCrVKgkFlZD6ld79QLvLVWhIpeX7BXkn6bcbXuLt+4OfaO9ITXYPmzx0EM0KLrEpBklyuFlguNrdd7E8qZqYlC2VadLR0jblVLtofizH7XXMMyh82NavKARZRnQTii6JzN2ekGB6d1BTj3DGQHqvD7KKoj7DaNGvTZ5FLfDediEe3zwS87b3SFRld3BDANBvULg5XjoKZzN4MyA771uc3M92HdarqY="
+skill: 0.056
+archetype: duelist
+leverOffsets:
+  reactionMs: 0.72
+  aimErrorDeg: 0.2
+  cps: 1.04
+  predictionQuality: -1.5
+  coordination: -0.35
+  technique: 1.37
+  aggression: 1.24
+kits:
+  trooper: 1
+  shortbow: 0.42
+roles:
+  escort: 0.26
+  defend: 0.17
+  retake: 0.49
+  hunt: 0.81
+style:
+  aggression: 0.88
+  patience: 0.25
+  teamplay: 0.36
+  risk: 0.57
+voice:
+  tone:
+    - watchful
+    - competitive
+  verbosity: chatty
+  style: "tired lighthouse bearings, steady reassurance; brief courteous challenges and honest shot assessments"
+lines:
+  greet:
+    - storm shutter checked, coast watched
+    - storm shutter ready, good fights everyone
+  onKill:
+    - a clear signal through the fog
+    - good exchange beside the storm shutter
+  onDeath:
+    - lost the light around that bend
+    - fair hit, the storm shutter left that gap
+  onPlant:
+    - warning light at the bomb
+    - storm shutter earned a moment at the bomb
+  onDefuse:
+    - warning extinguished
+    - storm shutter can settle this at the fuse
+  onWin:
+    - storm shutter guided us home
+    - storm shutter had some good fights today
+  onLoss:
+    - the storm shutter missed a rock
+    - storm shutter wants another clean round
+  onLastAlive:
+    - one light still on the coast
+    - one storm shutter, one fair chance
+  taunt:
+    - your approach was visible from shore
+    - the storm shutter is ready for that peek
+  lobby:
+    - polishing my storm shutter before the round
+    - please leave the storm shutter switched on
+    - "My storm shutter: I will contest the middle."
+    - With my storm shutter, give the middle fight a clear lane.
+quirks:
+  - good_sport
+  - always_gg
+rivals:
+  - thexiozjouzdim
+bio: ArrowGolem5 lit a coastal tower so returning builders could find home and still brings a storm shutter to the queue. TheXiozjouzdim keeps asking whether it really helps.
+batch: 3
+retired: false

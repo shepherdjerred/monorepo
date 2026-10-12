@@ -1,0 +1,76 @@
+id: nuzjaiktaethkek
+name: Nuzjaiktaethkek
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjA3NjkyMiwKICAicHJvZmlsZUlkIiA6ICI2N2M1NzUxMzY1Mzg0MWJjYTQ1MTkwY2IyZGFiMWEwOSIsCiAgInByb2ZpbGVOYW1lIiA6ICJuaXRlc3RhbGtlcjg3IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2RkNzcwNzZhZTg2NDdlNTU0ZWM5YWViOGJjNWI4MDM5MDRkNTdmMWRkM2NjMmM5YzkzZGY5NzY0N2Q4YzU0ZDciCiAgICB9CiAgfQp9
+  signature: "TwQ8zKROjSOm2xD8y4Ji61BzQAnMIKfjhQdCXjGjwStWm/wQI0WJveXynWcLr9xFna4eRfUbIdYTE5MNk1h0XmnJ8v0NAegPsxEsP94lVedR1ltuCos07gdQ7sL9Ol9vmxwtB0ozP3GNU8cvKg/7xQfSbczQp/qbEsmoLXUCaizizE4bcnuK+yW8EhFI8uAEotY6UjHp0kG9qGtoW3XzXxBd/+Q3m9vhrht8m0kcFV2Spkg6qhqnOhGDbkeK0Yqrm+zXbSWA0i2k2evwruJINidlCym0V4kR4gUfdI0U/QDwAg9XwLfMGErHkqlif/Xa+lU93hRYojLVRdwiTotnsT/mnOJ0t/5tyWeSOlKxonLb3p8JekjaMCSz3wVULlikh82t38WBh43ct9osayfm9NreVIW+vhwYIgKo6M2/0lDLweeLJtdp1zzJYvqSaEVcUkO1D3YDysK8X5bLS7jLurGF1WbDxohYO/xp23ZfV9I6iOrM+fvdhdYyAIchtdZZWNWoFXm9mA0aJM7o3KVuXpfvvDxeEwsPdsH3zicTxIS2Q3IimJqGctWFWO6LLJ8dLiQIV8vf7Uv9I+0TFNJSBHxyQv3kaROfHzgb2k7b+VwnlVF7AXwP7kMppn8Jl3S/Zy2jVaVao2qPRVQOJ13gFVCSkGgABwj7g/J+D5TTj9s="
+skill: 0.016
+archetype: flanker
+leverOffsets:
+  turnRateDegPerTick: 1.12
+  predictionQuality: 0.57
+  coordination: -0.79
+  technique: 1.05
+  aggression: 0.57
+kits:
+  trooper: 0.67
+  shortbow: 1
+  rewind: 0.38
+  wraith: 0.49
+  spy: 0.45
+roles:
+  plant: 0.35
+  escort: 0.12
+  rotate: 1
+  hunt: 0.57
+style:
+  aggression: 0.66
+  patience: 0.44
+  teamplay: 0.23
+  risk: 0.63
+voice:
+  tone:
+    - cheerful
+    - nimble
+  verbosity: normal
+  style: "busy hive reports, praises small useful jobs; quick side remarks and route changes mid-sentence"
+lines:
+  greet:
+    - comb scraper says the hive is busy
+    - comb scraper is taking the other entrance
+  onKill:
+    - a little sting in that lane
+    - comb scraper found a side door
+  onDeath:
+    - flew straight into the window
+    - comb scraper chose an occupied side door
+  onPlant:
+    - quite a buzz at the bomb
+    - "comb scraper came around the back of {bomb}"
+  onDefuse:
+    - settled the swarm
+    - comb scraper found a quieter route to the fuse
+  onWin:
+    - comb scraper has earned some honey
+    - comb scraper took the long way for a reason
+  onLoss:
+    - the hive will rebuild
+    - comb scraper took the long way for no reason
+  onLastAlive:
+    - one bee still making the rounds
+    - one comb scraper coming around the edge
+  taunt:
+    - a lot of buzzing for that push
+    - the comb scraper is somewhere to the side
+  lobby:
+    - keeping my comb scraper out of the rain
+    - no bees are hiding in my comb scraper
+    - "My comb scraper: I will try the side approach."
+    - With my comb scraper, keep them looking forward for me.
+quirks:
+  - crouch_spam
+  - always_gg
+rivals:
+  - brukman-61
+bio: Nuzjaiktaethkek kept a pretend apiary behind a flower-covered team base and still brings a comb scraper to the queue. Brukman_61 keeps asking whether it really helps.
+batch: 3
+retired: false

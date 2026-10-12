@@ -1,0 +1,76 @@
+id: badgerrider9
+name: BadgerRider9
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODc5MTc4NCwKICAicHJvZmlsZUlkIiA6ICJmODJmNTQ1MDIzZDA0MTFkYmVlYzU4YWI4Y2JlMTNjNyIsCiAgInByb2ZpbGVOYW1lIiA6ICJSZXNwb25kZW50cyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS81MmRlZDY5OTliOGI4MjYwMDExNWY1ZTEwNDcwMTcwN2IzNzA2NWIxY2YwZmI0MGQwODA0Y2MyOTAwNmYzNTA1IgogICAgfQogIH0KfQ=="
+  signature: "B+EWHEceuwMvSK52D/exQ6T/vI9FmqM1iXwhd/XNUnxJTpR+UoBvWlXlESVgXdfhE7GJiG2pLgRrc18jk2WsHvPxwOQe51Y9YLq+itn3hVA2Q7uUk1O+snF97MzNu889SZS4lKFSAcb7eupfcS++YL3wn2+NS8O3++F1f6Ms8zIfpQLTfSZlcEZv27z2GGDmPWYTcrCvhSOfPPoini+saK9EZTmFSlsFlqAg3YOP0wCIwkXBoeInS1rd5SMVZSwPbx6M6SBWLSgkM8MhKUvjPppHlOQ+NnZZpS3mRmv7wD40BIEZNFBWSSgeiCX4gZbtlgVWmew8vVhFrtgra+EApFpX1XeRHYOhEjTnAQ2BC9Fox7pbA6jLMIKEGi0xsbffXkzUZo5Cct4/wTnKIIwFq8vtE7+ucPYlmXGLy3IQFlSqbF7D3T2Vdd/2UE7P3YZ1rcM6z5j6RdQmJxg6fqCI5rbFm6CzpeDKp5GQ6VZDqqt/5btkJVXVpcBQ+N+LX8kylKiOvEK8tAhOZlXYNQ7zfQ9o5y+Z99yMHq/YBPl/H3dQM4CaKb02NPr8tnMwGwxh8kLHq9BANJfWuaRd1WDuuFeViRXmeoNOa2wDAMJAWiu1A7moL0DFL2ojkMBoTyXBChXSNBkbTucFJ6qbD95ySWn/KfJLw/uDw5I9Kz0s+QM="
+skill: 0.853
+archetype: flanker
+leverOffsets:
+  reactionMs: 0.31
+  aimErrorDeg: -0.23
+  turnRateDegPerTick: 0.84
+  predictionQuality: 0.42
+  coordination: -0.84
+  aggression: 0.46
+kits:
+  trooper: 0.53
+  shortbow: 1
+  rewind: 0.39
+  wraith: 0.5
+  spy: 0.44
+roles:
+  plant: 0.41
+  rotate: 1
+  hunt: 0.49
+style:
+  aggression: 0.52
+  patience: 0.46
+  teamplay: 0.25
+  risk: 0.61
+voice:
+  tone:
+    - patient
+    - nimble
+  verbosity: normal
+  style: "deliberate pottery talk and wet clay worries; quick side remarks and route changes mid-sentence"
+lines:
+  greet:
+    - coil bowl is steady today
+    - coil bowl is taking the other entrance
+  onKill:
+    - that opening held its shape
+    - coil bowl found a side door
+  onDeath:
+    - the whole thing slumped
+    - coil bowl chose an occupied side door
+  onPlant:
+    - letting this one fire
+    - "coil bowl came around the back of {bomb}"
+  onDefuse:
+    - cooled that down safely
+    - coil bowl found a quieter route to the fuse
+  onWin:
+    - coil bowl came out of the kiln intact
+    - coil bowl took the long way for a reason
+  onLoss:
+    - a small crack in the coil bowl plan
+    - coil bowl took the long way for no reason
+  onLastAlive:
+    - one piece still on the wheel
+    - one coil bowl coming around the edge
+  taunt:
+    - your push has not quite set
+    - the coil bowl is somewhere to the side
+  lobby:
+    - washing the clay off my coil bowl
+    - please let my coil bowl dry in peace
+    - "My coil bowl: I will try the side approach."
+    - With my coil bowl, keep them looking forward for me.
+quirks:
+  - crouch_spam
+  - always_gg
+rivals:
+  - xxpickaxeslimexx
+bio: BadgerRider9 sold lopsided flowerpots from a stall by the arena gate and still brings a coil bowl to the queue. xXPickaxeSlimeXx keeps asking whether it really helps.
+batch: 3
+retired: false

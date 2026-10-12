@@ -1,0 +1,75 @@
+id: xxrarjiozjioz
+name: xXRarjiozjioz
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NTcyNDU4MSwKICAicHJvZmlsZUlkIiA6ICJhODc1ZTI3NjZjOTc0N2Y5OTM3YzBmMzNhMWQ3N2JmMCIsCiAgInByb2ZpbGVOYW1lIiA6ICJzcGlmZnRvcGlhMTAiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMmE0ZmYyN2Q0ZTRjNTJiMTg3NTQ3MDVlNGQ0YjJkNjUyZDRiM2VkZTFlMzYxZjk2NmZkMDQyYTMyNDMxOTViMSIKICAgIH0KICB9Cn0="
+  signature: "i88qfLwl/r/Yzr3M+f2CwxeQLPu3qR2Nw1DFYOWXu78OwbupA9qu11tuXmZebK+pYvpMo2NLwifS0IS6msXQmCbGnekSpVIlReTkDPAkv1lutVvPVynBfeia+deUsIlbqcqwklGvDOJoHs4uI/5zp64eEtgM9SKpfOKakIkZouF/24u/RyUJRImlqXup/bcNjOIMz38tNoke7oOAtAKYQWgPWlkyCFlRqJakW6KdO/YSaLRPFU/Yw6lz8bmTZ35nP6cWUJB6KQTI49kMSRxuHT8oHKwLx6OcaqcSaUaROXmBhiPCoVtInHoeXFnS54ZCG6qymr9NKgDHm+2JquvtVPQLQNri7RhIerHdgzhcFn7gHpRU0mxSvQ8oEhjHwr5qrM6VUxQQ0UjKdcy+MsdHS4nwIGTQZVj3ooW7Ij1Onz/GL49vm0wA86Y+4vxP2CsCzE7PUDzs5UkslUlRTtB5nnMOrD7LB2PE/LKqKLIowaKyyqDqyLd1FGspsaLjTX1/oQ2aaTDv3t0B5OXVQv1Qdl6MPo6bGbO66COOA9kcd6RTN3o5F0xtsHKf0Uq/SOGzspvevfUXCFrpHOKXsNya9K1jHAgg1PBLvNRMPIYAnNIuDJibM8nFslz6l1rTpyT9bIeghCLZYM/5Yx/j2oUv3X3jQcW2UgkR0bcYPYSFh1M="
+skill: 0.788
+archetype: duelist
+leverOffsets:
+  reactionMs: -0.08
+  aimErrorDeg: 0.79
+  cps: 1.01
+  decisionTemperature: -0.08
+  coordination: -0.48
+  technique: 1.47
+  aggression: 1.04
+kits:
+  trooper: 1
+  shortbow: 0.44
+  spy: 0.24
+roles:
+  escort: 0.26
+  retake: 0.64
+  hunt: 0.83
+style:
+  aggression: 0.98
+  patience: 0.35
+  teamplay: 0.27
+  risk: 0.51
+voice:
+  tone:
+    - practical
+    - competitive
+  verbosity: chatty
+  style: "carpentry checks and repairable mistakes; brief courteous challenges and honest shot assessments"
+lines:
+  greet:
+    - sanding block packed, joints checked
+    - sanding block ready, good fights everyone
+  onKill:
+    - that opening needed a wedge
+    - good exchange beside the sanding block
+  onDeath:
+    - a weak joint in my plan
+    - fair hit, the sanding block left that gap
+  onPlant:
+    - the fuse is fitted snugly
+    - sanding block earned a moment at the bomb
+  onDefuse:
+    - took that assembly apart
+    - sanding block can settle this at the fuse
+  onWin:
+    - solid work around the sanding block
+    - sanding block had some good fights today
+  onLoss:
+    - back to the bench with my sanding block
+    - sanding block wants another clean round
+  onLastAlive:
+    - one sanding block holding the frame
+    - one sanding block, one fair chance
+  taunt:
+    - that angle needs a little sanding
+    - the sanding block is ready for that peek
+  lobby:
+    - checking the edge on my sanding block
+    - my sanding block is for repairs after the match
+    - "My sanding block: I will contest the middle."
+    - With my sanding block, give the middle fight a clear lane.
+quirks:
+  - good_sport
+  - always_gg
+rivals:
+  - potatofox2
+bio: xXRarjiozjioz repaired a rickety spawn bridge every weekend and still brings a sanding block to the queue. PotatoFox2 keeps asking whether it really helps.
+batch: 3
+retired: false

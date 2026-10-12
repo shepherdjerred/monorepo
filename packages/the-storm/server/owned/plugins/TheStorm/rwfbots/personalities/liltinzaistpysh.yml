@@ -1,0 +1,75 @@
+id: liltinzaistpysh
+name: LilTinzaistpysh
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NTU2OTk1MCwKICAicHJvZmlsZUlkIiA6ICI3MzFiOTdlYTI1MWM0ZjNmYTk0OTEwY2RkMmQwOTU4YiIsCiAgInByb2ZpbGVOYW1lIiA6ICJJbU5vdEFDYXQ2IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzdiZGE0Yjg0NDExZGY4ZGUwYmI3ZmUyYzIyMTJjODhhMWY3YmVmZTlhMjgwNzEwNmMwMjBkMmY2MDM5NTlmYjMiCiAgICB9CiAgfQp9
+  signature: "pmYs1J2ZMSG57Iy/wlvALUPMOHKvddk/S5dGcBbfLJFYQu9cZ60rlYTFfnNWaSe3iyyh+O2gjDtgjUiEViDvvjlWGiIOIsXSYnrvRbYtKinHTm1Q11eAwLWYHLvUU3WZFG5jRp88nbhZoWOFYzljzw/8ZYZujYQYJba+lE2lSkm5yZFrzubQxhoT0uihk5DFSXY5OAIaWiPxequVvkW3PAytmakxIsES9a8VP3JcTsAoH6gVQETSnSNg6zR59sJoPgZ2J57UvBmHL09sM29YFF9vNgRS1mehr5grFZMb0Rdab4GJMwwObbdl+oegQ1xgHP7a2KxRI6a273oIym6CjtDoi6qAJRYyDXQrDGIqY4dFm6J2RpTVGNBkUbm7PdSAVcGNRQ4tiIkvQB5887Q/WNbtNwCS8gyjCke52iCLUIE/IQPyy2SigYpDqPFYH+xcU1DwHRaFsMBXJ2X60iD8AQHYVlBT+16eqzadUrK7fqveJQzNeDcGpJgWdxZaerth0+Q4BDclc/1OWk3x9nt+s2KrJb6Kfoe49z2nrQ8qTIET3NJUkgGN+n4N2VjznEY2ML4ox59vMFTdJf1TYufYKhOemSIrPv/GQb7kzN++Q+dacUfWa4zfX8oYAlWGt8i5lDhk7fnbHq6LJ4orsE9SQ9e03/FNHWLdkEMO/2YEEFM="
+skill: 0.724
+archetype: rusher
+leverOffsets:
+  reactionMs: 0.28
+  cps: 0.57
+  predictionQuality: -0.77
+  decisionTemperature: 0.45
+  awarenessRadius: -0.47
+  aggression: 1.86
+kits:
+  trooper: 0.86
+  shortbow: 0.6
+  rewind: 0.32
+roles:
+  plant: 0.69
+  escort: 0.47
+  rotate: 0.26
+  hunt: 0.79
+style:
+  aggression: 0.99
+  patience: 0.19
+  teamplay: 0.38
+  risk: 0.75
+voice:
+  tone:
+    - measured
+    - eager
+  verbosity: normal
+  style: "soft beat counts and tiny timing worries; fast fragments, impatient countdowns"
+lines:
+  greet:
+    - brass pendulum is almost on time
+    - brass pendulum ready, I am taking the first corner
+  onKill:
+    - right on the brass pendulum beat
+    - brass pendulum keeps moving, next corner
+  onDeath:
+    - my brass pendulum skipped a beat
+    - a pause for the brass pendulum, then straight back
+  onPlant:
+    - brass pendulum is counting now
+    - brass pendulum is already on the next approach
+  onDefuse:
+    - stopped just before the chime
+    - quick hands, quick brass pendulum, clear
+  onWin:
+    - brass pendulum and team in perfect time
+    - brass pendulum barely stopped all round
+  onLoss:
+    - my brass pendulum needs adjusting
+    - brass pendulum ran ahead of the plan
+  onLastAlive:
+    - only one brass pendulum still ticking
+    - my brass pendulum and I will keep moving
+  taunt:
+    - a little early on that swing
+    - my brass pendulum got here before that push
+  lobby:
+    - listening for the brass pendulum tick
+    - my brass pendulum is not a countdown shortcut
+    - "My brass pendulum: first corner is mine."
+    - With my brass pendulum, please follow after the opening.
+quirks:
+  - bunny_hops
+  - always_gg
+rivals:
+  - shiollummc
+bio: LilTinzaistpysh built a clock tower that chimed one block too early and still brings a brass pendulum to the queue. ShiollumMC keeps asking whether it really helps.
+batch: 3
+retired: false

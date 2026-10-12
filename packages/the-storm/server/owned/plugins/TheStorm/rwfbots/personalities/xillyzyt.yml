@@ -1,0 +1,75 @@
+id: xillyzyt
+name: XillyzYT
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjA5NDU1NCwKICAicHJvZmlsZUlkIiA6ICI5MTU1ZmYzNTNlMzc0ZmZlYjE0MmE5NmU2MzU2ZjA4NSIsCiAgInByb2ZpbGVOYW1lIiA6ICJlbG5hZFhCIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzEyYmFlMGU2OTVkYTBmMjU0M2U5MzdiZThlM2YzNGU2ZjM5MDZjNzI1MjNlMTZiNjcyZGU3YjMwODhlNGM3YWUiCiAgICB9CiAgfQp9
+  signature: "IdS7gEQ4eYzOB5LC27EQG3QgJ7rbwiHOu5r9TgCnQcXyn9nMaGVpZwdvTKutyeVqWJO8iUimqJ3OD1tqjZQnh33tco70Wogf5tEael23/JpcUYe0xaDYh1+bJ0YTKMvYTjgkk3gLMDfUtWHgsnLhs2kvDAMFmk/SLBznkMIob1fpRAFyFS84ZF3MWmGXcO2gCCCbKylQCWH0cHDea4sBBnw7JXMNOZKw8egNf7JjEuAnDFTGpfw6KKrrXgDkXiGLz8hZ7zE0gSW7DBdpQi6TTBDUuU2jheHosPYsKMRqEpJ1FxobHkqVV5u9t6xLS0GTYh7ubsuKLYxLYt5jMCTbkJbOIGFB3aZ9dQrVnH8hYqaIIbxEZtPjTMkEleRahdDra2bBzUdo2xRFpJcL5nZC8l9wg7ts9EfxEFlKttGjGqIUYa473NJMhurfGEfpgHza5i6jcInnHvaet5C3TlCtXFhNB0CePUr/XbCzRkD2onGiTkioVxZd6Pvvtj9q3LtdRjdUmXax3jxP1F76+cXOnGIkXB1KV3peor0BlpgsOl1t9G8xhjXVdkz6pT8ZfCkY6Y56wHo/1ISu3lYf0KgMgILIQHD8P7pGnLByreSCjGoHHCuLXZIghLMBnwFJesO3V5425kifMArSgn2KGipEu9glh1WSjh6/AuLJG3qNRI8="
+skill: 0.906
+archetype: sniper
+leverOffsets:
+  aimErrorDeg: 1.92
+  cps: -1.45
+  predictionQuality: 1.26
+  decisionTemperature: 0.2
+  awarenessRadius: 1.17
+  technique: -0.29
+  aggression: -0.95
+kits:
+  trooper: 0.15
+  longbow: 0.94
+  shortbow: 0.43
+roles:
+  defend: 0.68
+  rotate: 0.41
+  hunt: 0.55
+style:
+  aggression: 0.25
+  patience: 0.88
+  teamplay: 0.39
+  risk: 0.24
+voice:
+  tone:
+    - bookish
+    - focused
+  verbosity: normal
+  style: "brief footnotes and revised-edition rematches; short range notes and patient, exact corrections"
+lines:
+  greet:
+    - linen spine ready, new chapter
+    - linen spine in place, checking the long angle
+  onKill:
+    - a short footnote to that duel
+    - linen spine found the range
+  onDeath:
+    - a regrettable page break
+    - linen spine needed a closer angle
+  onPlant:
+    - a cliffhanger at the bomb
+    - linen spine covers the far entrance
+  onDefuse:
+    - closing that chapter gently
+    - linen spine can wait, hands on the fuse
+  onWin:
+    - the linen spine gets a happy ending
+    - linen spine had a clear view of that
+  onLoss:
+    - the linen spine needs a revised edition
+    - linen spine kept the wrong sight line
+  onLastAlive:
+    - one last page to turn
+    - one linen spine, one long angle
+  taunt:
+    - I have read that opening before
+    - the linen spine saw that peek twice
+  lobby:
+    - resting my linen spine on the lobby shelf
+    - please do not dog-ear my linen spine
+    - "My linen spine: I will cover the long angle."
+    - With my linen spine, call the close flank for me.
+quirks:
+  - bow_spammer
+  - always_gg
+rivals:
+  - brerjith-06
+bio: XillyzYT bound a book of old match stories with mismatched covers and still brings a linen spine to the queue. Brerjith_06 keeps asking whether it really helps.
+batch: 3
+retired: false

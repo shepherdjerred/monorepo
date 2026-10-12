@@ -1,0 +1,76 @@
+id: xxsniperbadgerxx
+name: xXSniperBadgerXx
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODY5NDM4NCwKICAicHJvZmlsZUlkIiA6ICIxODE0MDdlM2VkYmE0ZTU4YmFiYTE1ZDJhNWQ4YzU2YyIsCiAgInByb2ZpbGVOYW1lIiA6ICJBdGxhc19zXyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9lYzZlODg2Nzc2ODZiOTU1NTkwYWYyYzQyZmY3ZmY3MjMwZDlmNTkyYWZjYzkxM2Y4NDBhMGRhMGUwZDlhNDNiIgogICAgfQogIH0KfQ=="
+  signature: "DyJ0vBZBtxkIFmCqpUiGa6/Ny8lr5bTh+nciIekCGm7Ww8VV/iykHTMtNWEwZPzDScs7G03AlXDdW172eYNt97kXOJEWBw/ER7elnng+CghRsyiQ6emcFfoTvscONFv16q+3yB6GoCEflj763R42w4MxoiLXn9sDcPbQZfRgSAOK7wVMzSGqjBubI+tutnOtTZdG7fqDaZHZT+OYd2ZbJrsv1oxCSjGixMdqB24E8nhZ/steRR8A7gvJP/R1EXJQlCk3vDrxFDVrgErEgpBrSReRkG0GPO5KMuG0YNN7I70tYTbRBuM0lD2DcUj66DXzpowaX5eTJHoECPBkXXnoqF6E9e4SGdnJ1z9s7WyPhFYZRBrBotq1wgnmUrwfmjCbISRsAPCzvsOUlz8LXAKHZ5O70dKw8kvih7eCSm+pEPx6wcwJMp1QLwcCAlPKmg0MTAAEXCNe9z+obhlm+r6oefEw/CzJTGtDUkYHEvX6SW59dYb8NNhujYXhGDSUWOj5Dj2iecX8gfA3ug08aAQbvgy29HiIz796/Q74XeLmDSW5+P8+tF8JYoID0Qgv6iIOzZWvDEY3hZz1KkLRofcDaO0iFCjYc/rIz80VrcFUiwDZkRIGso8MxDzFUI+mlHvbAt4X6yGmIh28YoF/PmVYPpycwFjxf1MCYmCSc76xkQA="
+skill: 0.858
+archetype: tactician
+leverOffsets:
+  aimErrorDeg: 0.54
+  predictionQuality: 0.87
+  decisionTemperature: 1.63
+  awarenessRadius: 0.65
+  coordination: 1.49
+kits:
+  trooper: 0.87
+  longbow: 0.48
+  shortbow: 0.48
+  rewind: 0.49
+roles:
+  plant: 0.48
+  escort: 0.59
+  defend: 0.49
+  rotate: 0.88
+  retake: 0.5
+style:
+  aggression: 0.34
+  patience: 0.71
+  teamplay: 0.72
+  risk: 0.38
+voice:
+  tone:
+    - patient
+    - analytical
+  verbosity: quiet
+  style: "deliberate pottery talk and wet clay worries; numbered ideas, concise route calls, quick revisions"
+lines:
+  greet:
+    - stoneware jug is steady today
+    - stoneware jug ready, first route agreed?
+  onKill:
+    - that opening held its shape
+    - stoneware jug confirms a clean opening
+  onDeath:
+    - the whole thing slumped
+    - stoneware jug needs a revision on that route
+  onPlant:
+    - letting this one fire
+    - stoneware jug confirms the site is reached
+  onDefuse:
+    - cooled that down safely
+    - stoneware jug confirms the fuse is clear
+  onWin:
+    - stoneware jug came out of the kiln intact
+    - stoneware jug and team followed through
+  onLoss:
+    - a small crack in the stoneware jug plan
+    - stoneware jug had a missing step
+  onLastAlive:
+    - one piece still on the wheel
+    - stoneware jug says there is still a route
+  taunt:
+    - your push has not quite set
+    - the stoneware jug predicted that rotation
+  lobby:
+    - washing the clay off my stoneware jug
+    - please let my stoneware jug dry in peace
+    - "My stoneware jug: I will call the first rotation."
+    - With my stoneware jug, tell me when a route closes.
+quirks:
+  - calls_everything
+  - always_gg
+rivals:
+  - jyshrouzfalcon
+bio: xXSniperBadgerXx sold lopsided flowerpots from a stall by the arena gate and still brings a stoneware jug to the queue. JyshrouzFalcon keeps asking whether it really helps.
+batch: 3
+retired: false

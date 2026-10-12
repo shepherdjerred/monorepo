@@ -1,0 +1,78 @@
+id: zaixpyzpro
+name: ZaixpyzPro
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjEzOTU2NCwKICAicHJvZmlsZUlkIiA6ICI1MzE4YWJhNDJiMTk0ODNiODFiMWY2N2Y1ODVjNDdkNSIsCiAgInByb2ZpbGVOYW1lIiA6ICJocHllZiIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8yNjY3YjZhZGZkNDllNzUyZGZjNDhhZDg1N2Y3NzdjMmIwODRhMGZlNmE4ZDMxOThlZTU2N2ZjMjQxODYyZDM1IgogICAgfQogIH0KfQ=="
+  signature: "M6kcpLzqmYVaidpElcGNw7rqri2rj8ZTmOrtTDyMPsShqkr6yD7+ypVQCbe+qobBciPqGVg8TBevr/DDqgrJm+xfKRe5jrv/dNuZmgHhAoH4jiO35zeoHGuJJw9PV7CBDLidOdKFXgxpMIXMK4bGB8T1RvpmR5lCHDRXY4E0DZ9PI6VHm8Pvlykx4a6gtBk4UlJRFTeHoy5t3LPa9Z80HN2/vYD/o4S+FHIKvAVuU1B0FM5EfodjEL5ubuL5kplsakUv0PKwyCfy10ZRotmyZOnTmro3OALkzqtiRqwAO6Dush5Z5LWxK7HDRuFlaqxbITLBGcNaeoNfONmxwASN2Tn+NZrkUUMX+CPVmWEm3Xtg1k5C8GCYTiKgNAIJKs4tEUwVCk5nyfQkKR91D13k70rToe4TNCJQdskDJtsgcb7+wF6tMi3Vt4QUMmufTy5CoX3HdPZQdf3fJywTYeNg+cckKO+Z+NXFHHnUAVO1rQE19u1sSIlPBUlFXTxIrviOR3jinqMz79i7nmryqYoaZwGI3cUm7VK+5fw8tLdpro66CD6RIvQLLMTo6LeQ4Kpb3m/+y6gtBuYLiGopa2/On5QVPPsPEEJdCN0lnQEKERP/IX1iVeV3P0+UDSnJGv/lBWxhe+lfJ3G+iGK8TrxalS8GvmZ4V9nqekGeteunw2w="
+skill: 0.053
+archetype: sniper
+leverOffsets:
+  aimErrorDeg: 1.78
+  turnRateDegPerTick: 0.31
+  cps: -0.77
+  predictionQuality: 1.69
+  decisionTemperature: 0.19
+  awarenessRadius: 0.86
+  technique: -0.04
+  aggression: -0.85
+kits:
+  trooper: 0.16
+  longbow: 1
+  shortbow: 0.42
+  wraith: 0.14
+roles:
+  plant: 0.22
+  defend: 0.9
+  rotate: 0.43
+  hunt: 0.53
+style:
+  aggression: 0.41
+  patience: 0.81
+  teamplay: 0.47
+  risk: 0.26
+voice:
+  tone:
+    - watchful
+    - focused
+  verbosity: normal
+  style: "tired lighthouse bearings, steady reassurance; short range notes and patient, exact corrections"
+lines:
+  greet:
+    - fog bell checked, coast watched
+    - fog bell in place, checking the long angle
+  onKill:
+    - a clear signal through the fog
+    - fog bell found the range
+  onDeath:
+    - lost the light around that bend
+    - fog bell needed a closer angle
+  onPlant:
+    - warning light at the bomb
+    - fog bell covers the far entrance
+  onDefuse:
+    - warning extinguished
+    - fog bell can wait, hands on the fuse
+  onWin:
+    - fog bell guided us home
+    - fog bell had a clear view of that
+  onLoss:
+    - the fog bell missed a rock
+    - fog bell kept the wrong sight line
+  onLastAlive:
+    - one light still on the coast
+    - one fog bell, one long angle
+  taunt:
+    - your approach was visible from shore
+    - the fog bell saw that peek twice
+  lobby:
+    - polishing my fog bell before the round
+    - please leave the fog bell switched on
+    - "My fog bell: I will cover the long angle."
+    - With my fog bell, call the close flank for me.
+quirks:
+  - bow_spammer
+  - always_gg
+rivals:
+  - darkpaeskai
+bio: ZaixpyzPro lit a coastal tower so returning builders could find home and still brings a fog bell to the queue. DarkPaeskai keeps asking whether it really helps.
+batch: 3
+retired: false

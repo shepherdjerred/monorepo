@@ -1,0 +1,74 @@
+id: cobaltsniper21
+name: CobaltSniper21
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTg1NjI4NiwKICAicHJvZmlsZUlkIiA6ICJhMGJjZDk2ZjIxMjQ0ZGZiYmQwODllYmVmMTVhM2U3MCIsCiAgInByb2ZpbGVOYW1lIiA6ICJCb2xzaGVicmlja3MiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOTg0M2QzMDQ3MDRkMDJkYjQxZTgwMWY3Mzk5ZTdlNzA0YmQwMjE3MGNmMjdiMzFiNzY0OWYzOGQ2MGY5YTNjIgogICAgfQogIH0KfQ=="
+  signature: "gz2xO0VOd9q0a1dJU4ANUcv6/bMcbzz/xkWkz7f0wDpz1A4u/oIcQ3iRx8HzL57qT/WJnyI6eUjzduYVh8JY7RXZ++rBK0nKpzw+Yu6t2neE6awVvQG6Ae0Yxo35FCMWV7R/+Eq3DfRay6j6xJy0mbTee/J1MVRPNSS7RuzK3awVho6d2fPruVhlmho6Gxtq2GQEhcYEDbUsO8Lnbtrf6uU19xPSo2FbqpTLB8RStf4MBOOwO/LxBPguDuvi44iKvde3EPqfuzrRyOezx1usYNPj+F7HvEuYLt3k34w+YGa6gLLMmNP8e2WUwnVb9+Y+2bWtr9addQ/KCbO0ESWCkyuDT/1ls8Se8xroAZhIbwUeXSxhg+0fity7iuaXU1SiTgGx/EBi3eN3DvQ/08rKXwEBPTdwCtM63QOT4G3AR2xxWlQIxkb1zg2XFWjuD8ajeUCX1Z+N9NKGiwO4KCJk76gerNGzCj4PLDSbck8bsKWEVCvdsDJRxz6tVoPR+lrN/A8nmZ6hqnW1XGyor0/Y8l67AYt6pEEXDKnth2WqFgaj3XWJKz38sWsowmUWjD4Wc+2UvngIJj5fsYrQfPYYR9/lFVAtXuktj5TXyht2y3ye2JWyTVkytO63cOR9tiZZj9cBjuogkpXI89okCwt9JainCytxTiYbc3cXcouOZnE="
+skill: 0.718
+archetype: turtle
+leverOffsets:
+  reactionMs: 0.27
+  decisionTemperature: 0.33
+  awarenessRadius: 0.45
+  technique: 0.42
+  aggression: -1.39
+kits:
+  trooper: 0.91
+  longbow: 0.26
+  rewind: 0.72
+  spy: 0.22
+roles:
+  plant: 0.21
+  defend: 0.94
+  retake: 0.41
+style:
+  aggression: 0.14
+  patience: 0.98
+  teamplay: 0.52
+  risk: 0
+voice:
+  tone:
+    - whimsical
+    - cautious
+  verbosity: normal
+  style: "arguments with an imaginary puppet; unhurried words, conservative estimates and tiny victories"
+lines:
+  greet:
+    - my cardboard giant insists we are ready
+    - cardboard giant is ready. no need to hurry.
+  onKill:
+    - cardboard giant is taking all the credit
+    - cardboard giant waited for the opening
+  onDeath:
+    - cardboard giant advised against that corner
+    - cardboard giant should have waited another moment
+  onPlant:
+    - cardboard giant says the fuse is dramatic
+    - cardboard giant checked the site first
+  onDefuse:
+    - cardboard giant requests a quieter ending
+    - cardboard giant checked the corner twice
+  onWin:
+    - cardboard giant will never stop talking about this
+    - cardboard giant got there eventually
+  onLoss:
+    - cardboard giant demands another rehearsal
+    - cardboard giant needed one more safe corner
+  onLastAlive:
+    - cardboard giant has become very quiet
+    - the cardboard giant will take this slowly
+  taunt:
+    - cardboard giant spotted that opening too
+    - the cardboard giant can wait out that peek
+  lobby:
+    - my cardboard giant has opinions about your kit
+    - please do not argue with the cardboard giant
+    - "My cardboard giant: I will keep a safe route home."
+    - With my cardboard giant, please check the blind corner first.
+quirks:
+  - gapple_hoarder
+  - always_gg
+rivals:
+  - vioxdashgaming
+bio: CobaltSniper21 put on tiny puppet shows while the team waited for opponents and still brings a cardboard giant to the queue. VioxdashGaming keeps asking whether it really helps.
+batch: 3
+retired: false

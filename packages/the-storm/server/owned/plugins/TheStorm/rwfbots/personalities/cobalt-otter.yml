@@ -1,0 +1,73 @@
+id: cobalt-otter
+name: Cobalt_Otter
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTk0Njg1NCwKICAicHJvZmlsZUlkIiA6ICJkOTdmOTI4NTY5NDA0MjZmODZkNGQ1MDAzZmU4MTRhNyIsCiAgInByb2ZpbGVOYW1lIiA6ICJSb21lbGxvUHJvaHUiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvY2E4YzNlNzZjMzU4NWNmZjdkZjNlNjhkMmI0ZTZlMzEwNDdkODA5MGVhZDMzMTZhOTVkNmMzODI2N2Q0M2ZjZCIKICAgIH0KICB9Cn0="
+  signature: "pRIK149pL6RNMECEFM0p7wz1LVawsBpsvY/XBQBoK8e8cdi0vgsnyhxt4gplE62eYasiXm/uD3SiygQGpysZxihJHKcKjA6UW5sHSp1RXmDH0QRNw0MoLqwEnHj94Psy2MUbnZRGtjfOwQswp82BB0g4zkDUVS/456rMv072Osu7rtCispDF4CVJbQCkh+Pgye/A50w3FnkpcOGi8TiYZ0BbfBCPFwkg7Ogf7TiOoLzMzw9IiWcU70zmvbZsGRTN1SaP5lGHYRW/tfM4fUWgAV4G0NnDQDXKLa//nggKs4nchrLl+6gKRxuiETkSrUfgcS3vDWlVmR5CRdhoCOUR/Wyc2haHl7di/A3l/8HRhWHepbh202VDkkyV1NlYXTr0zwbEyQCxZBRouVdCjs9f4ZMLUbRgQLc2yPhLMKzX8X/tzH3xhRUYUQfyEBoxy9caMvgIM5XhPy1JPu9UqGhOndrt2rgeh53GXwJhCBa2OngUhTL2iZT9uPw6SeEba6a7/eeN8OolBhj1Rtop9N/WYoNAMIlumo9zdKnWZVJfW2HMAePyCzxvF27x7acqhNbdgxXoE87a3Ac1lUdtLAcfgtPcWMHUlLHNgJTCTQpSrpAw+Q+q6a7l2eJ2t7LquxwC9gTY2VQroJUN3iFRdHMCnRDzVfwDXiopaai7cCymYtk="
+skill: 0.771
+archetype: support
+leverOffsets:
+  reactionMs: -0.19
+  awarenessRadius: 1.06
+  coordination: 2.11
+  aggression: -0.42
+kits:
+  trooper: 1
+  longbow: 0.27
+  shortbow: 0.15
+  rewind: 0.73
+roles:
+  escort: 1
+  defend: 0.5
+  retake: 0.64
+style:
+  aggression: 0.34
+  patience: 0.57
+  teamplay: 0.89
+  risk: 0.26
+voice:
+  tone:
+    - whimsical
+    - helpful
+  verbosity: quiet
+  style: "arguments with an imaginary puppet; gentle check-ins, thanks and useful kit reminders"
+lines:
+  greet:
+    - my painted dragon insists we are ready
+    - painted dragon is here, everyone got their kit?
+  onKill:
+    - painted dragon is taking all the credit
+    - one less problem beside the painted dragon
+  onDeath:
+    - painted dragon advised against that corner
+    - sorry, the painted dragon corner is open
+  onPlant:
+    - painted dragon says the fuse is dramatic
+    - painted dragon can watch while you plant
+  onDefuse:
+    - painted dragon requests a quieter ending
+    - painted dragon is here to help at the fuse
+  onWin:
+    - painted dragon will never stop talking about this
+    - painted dragon says everyone helped
+  onLoss:
+    - painted dragon demands another rehearsal
+    - painted dragon says we can tidy that up
+  onLastAlive:
+    - painted dragon has become very quiet
+    - one painted dragon still trying to help
+  taunt:
+    - painted dragon spotted that opening too
+    - the painted dragon brought a team to that corner
+  lobby:
+    - my painted dragon has opinions about your kit
+    - please do not argue with the painted dragon
+    - "My painted dragon: I will stay close to the push."
+    - With my painted dragon, call if you need an escort.
+quirks:
+  - says_sorry
+  - always_gg
+rivals:
+  - brynraexvuktush
+bio: Cobalt_Otter put on tiny puppet shows while the team waited for opponents and still brings a painted dragon to the queue. Brynraexvuktush keeps asking whether it really helps.
+batch: 3
+retired: false

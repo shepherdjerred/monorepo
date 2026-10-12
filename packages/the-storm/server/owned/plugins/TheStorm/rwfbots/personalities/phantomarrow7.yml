@@ -1,0 +1,73 @@
+id: phantomarrow7
+name: PhantomArrow7
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4OTM1NDI0OCwKICAicHJvZmlsZUlkIiA6ICIwZDkwYzA0M2E4YTA0YWY1YTZiOWUxMjQxZmJiNTU5ZCIsCiAgInByb2ZpbGVOYW1lIiA6ICJTYXJhZ2lybHkwMTE0MzIiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNGFkZjZjNDlmOGI5MDY5ZGE2YjNlYmNkMTFkZGJkZGJiN2I4YjJmNTZkYjNiOGVmMWNlOTI3MzM3M2RkMDQyNyIKICAgIH0KICB9Cn0="
+  signature: "bKqkZ7YUMGIn/eMpLPosvAobNwn76WjNw11pJz5vw64bf3srATAPDLVYhhNAu8o0kuHCQjM6HJRzD+yn/mO8rqnzALkLoQlNt4ngELpnpD20xvnyiqJYeFci+UAoSE9Fcz2CqByKt1o7Tqgd/6e6WO2HAm1ARXTVCb3tgO/piOCgNfEcnObzchtbdTSG85g7SCB7eJc3vmmS9MqhiRDOi26mpxtjq8a7+U+bRWzf0bKC41tmYT1IvmmMYQ3IxAT1M5ncMnIZXX0laGEtxehsNJ57x7xUp3RKzvxAwRUyb4BdRyTaLwhqVoewP4ksLAZosZP9gD/XARRQY0/CpPhSES+BjztHF/VXR8j8AH6bQaFh7M9o73TgbkwetOOkU0+9rsnxFFigNZqltGRhV+hp5MtbK3lH9kZ7lqOPktRRoH+z17XnvdMvK3HrpbNcGXK+fSsIdL9HIdMTXUCWAsyN4S0GTnNSW3JGZq1d1DPyZxs5uyBNFkwGyyaZkNLOSuFK2i04zK3zHkE626OesIzV1H00s9DnrEZTIVEr9Hm+hC/Wg8LrmbsLBpMhewtMa/GeeRZ9nteDv52x+OAhARQW5Nu29pMR7tdgs3Cgqm5M5nOmSd2oA88z5TeTtv02qXEyI8L0nQ0JJPSMzqrR2zGKu1dsoAEslITnhoI6bm5vME8="
+skill: 0.447
+archetype: anchor
+leverOffsets:
+  reactionMs: 0.05
+  cps: 0.38
+  awarenessRadius: 0.43
+  coordination: -0.06
+  aggression: -1.1
+kits:
+  trooper: 1
+  longbow: 0.4
+  rewind: 0.29
+  wraith: 0.19
+roles:
+  defend: 0.85
+  retake: 0.66
+style:
+  aggression: 0.23
+  patience: 0.93
+  teamplay: 0.68
+  risk: 0.17
+voice:
+  tone:
+    - animated
+    - grounded
+  verbosity: chatty
+  style: "chain reactions and distracted marble chatter; reassuring statements and firm location reports"
+lines:
+  greet:
+    - runaway bead at the start, here we go
+    - runaway bead stays here, I have this corner
+  onKill:
+    - that set the next piece rolling
+    - runaway bead and corner still secure
+  onDeath:
+    - my runaway bead has left the track
+    - someone watch the runaway bead corner
+  onPlant:
+    - the final part of the chain reaction
+    - runaway bead guards the exit from the site
+  onDefuse:
+    - caught it before the big drop
+    - runaway bead is staying by our bomb
+  onWin:
+    - runaway bead reached the finish
+    - runaway bead never left the post
+  onLoss:
+    - the runaway bead course needs a railing
+    - runaway bead held the wrong corner
+  onLastAlive:
+    - one last piece still rolling
+    - the runaway bead holds here a little longer
+  taunt:
+    - your route has a very sharp drop
+    - the runaway bead has not moved for that push
+  lobby:
+    - trying not to drop my runaway bead
+    - there is a runaway bead under the lobby bench
+    - "My runaway bead: I will guard the home approach."
+    - With my runaway bead, call before rotating off defence.
+quirks:
+  - stares_down
+  - always_gg
+rivals:
+  - nyxshashtv
+bio: PhantomArrow7 filled a workshop with a marble course nobody finished on the first try and still brings a runaway bead to the queue. NyxshashTV keeps asking whether it really helps.
+batch: 3
+retired: false

@@ -1,0 +1,76 @@
+id: grimjaviol
+name: GrimJaviol
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTg2MzM0MSwKICAicHJvZmlsZUlkIiA6ICJjNWVmOGQ1NDIwOWY0OTdlYWYzYzA1NjA3MjZhYTMwNSIsCiAgInByb2ZpbGVOYW1lIiA6ICJNaXNoX0RheCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS82MmU1NDMyM2YyOGRiYjBlNjkxNjc0ZjQzZTI1M2YyMDRhNjcyYzFhNzZiOTFlMTliZGQzM2Y3NmE1YjczYTg0IgogICAgfQogIH0KfQ=="
+  signature: "ows13EqSW5M7FonFr5uyTJukVX5kx2vggqiw2SCUezBHhG6omyjUCYbvcQ1MmS06FTQ1YD+rUC8AcV6pBPtvx8lkqke33KDIieLSmNmnR8eh7qyve8ueGsx5qTBT5uik+HKgRL9ll2tPIttda5U46CttyT1KwvoOFK75BdsH+EqDFyRt8Es0xXfpaki2NieiagPo3V9RLho0DMImmU7OgFk+Ouf5g2DUwA3uIsjvmaFxAQAVPB1zgbAmNji5jou2N6WXyS8f8vEX/pZ4VZvP3smg67iQp+uZHEF1sZM6N661T3TSPTq/Ybqoy0ltPxKpVMB/MbFU5r62MyBRXMOnO2f4EYZpahABZ+UaE7fxmMI5zqIdz/FJv6b3iSrEDqjd4LAorzVlo5THALdFk38ZcjOEZTCudZ0dzIjpc/68EEkylTu/FJowiqhABmCyimh/Oq8nqg/n973Hlm9PvCj3Xg1Ql/56DAumFIuFn39cJGagbyaBJnJpX8ie/4R6zoe04nYNfWDDB+wSEW4I7Xk6zvO++9dOxDb5iyD64SbhJsJ/WT5bUIrqkJZ+uL9YWeLY5Bn+47TOVegI4IKmeRKfb8WUotfo2UQXWQOsYCXMLcr6Na571/qFLjoQpFhrHSqfjhS8PiSD20+AeYrMxl49B4df7U1A4iD34EhxNivTvRE="
+skill: 0.108
+archetype: tactician
+leverOffsets:
+  aimErrorDeg: -0.2
+  predictionQuality: 0.88
+  decisionTemperature: 1.23
+  awarenessRadius: 0.26
+  coordination: 1.6
+kits:
+  trooper: 0.94
+  longbow: 0.57
+  shortbow: 0.46
+  rewind: 0.43
+roles:
+  plant: 0.62
+  escort: 0.5
+  defend: 0.46
+  rotate: 0.85
+  retake: 0.65
+style:
+  aggression: 0.43
+  patience: 0.66
+  teamplay: 0.8
+  risk: 0.42
+voice:
+  tone:
+    - excitable
+    - analytical
+  verbosity: chatty
+  style: "enthusiastic clues and upside-down maps; numbered ideas, concise route calls, quick revisions"
+lines:
+  greet:
+    - trail marker found, clue understood
+    - trail marker ready, first route agreed?
+  onKill:
+    - that corner was the next clue
+    - trail marker confirms a clean opening
+  onDeath:
+    - the clue was apparently a trap
+    - trail marker needs a revision on that route
+  onPlant:
+    - a very loud treasure chest
+    - trail marker confirms the site is reached
+  onDefuse:
+    - solved that little puzzle
+    - trail marker confirms the fuse is clear
+  onWin:
+    - trail marker led us to the prize
+    - trail marker and team followed through
+  onLoss:
+    - the trail marker was upside down again
+    - trail marker had a missing step
+  onLastAlive:
+    - one clue and no hints
+    - trail marker says there is still a route
+  taunt:
+    - that trail led you in a circle
+    - the trail marker predicted that rotation
+  lobby:
+    - does anyone recognise my trail marker?
+    - the answer is definitely near my trail marker
+    - "My trail marker: I will call the first rotation."
+    - With my trail marker, tell me when a route closes.
+quirks:
+  - calls_everything
+  - always_gg
+rivals:
+  - kathjen-85
+bio: GrimJaviol hid tiny treasure chests along the old lobby walking route and still brings a trail marker to the queue. Kathjen_85 keeps asking whether it really helps.
+batch: 3
+retired: false

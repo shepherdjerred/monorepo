@@ -1,0 +1,75 @@
+id: mrkruzraemthosh
+name: MrKruzraemthosh
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODc4MjE1MCwKICAicHJvZmlsZUlkIiA6ICJiMWQ4MTJlYzI4YTU0NDNhOTUxODhmNDkyZjVjYzIyMSIsCiAgInByb2ZpbGVOYW1lIiA6ICJzcGlmZnRvcGlhMyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8zOWIyZjkxZGMwYWU4NjhkYzViNWFlNGQzODg3ODNmZTE3MTNmOWFiMzE1YWE0NzkyZDk4MWJiZTY4NjMyMTAwIgogICAgfQogIH0KfQ=="
+  signature: "vxAvyXIaJhopJW9jG646uLybrs/NZ0rYQcLnlbhli99dQSoRtqdFObHI82Jk0Nihrvt05Iwq/x/dyGZa4Yc9/bdCntbS7WX+ms1DkUXDw8xeaFeaiSvieZXRCNDl71wz70WZD2RrVZoq8DIdb2RxPjKEIuq3MbVhJ+zeW9YoLaOKO777KFYM3Rqsliq36JeqWMfThOtfjBUhEPakgFSCBZjzPfv56vD44drFMCjSTOrQqVPUPesndoOkW2UOYfg4U9smQHay+o3to3kLOHk4r4Zj0UQk914pbk37veWmzVSuYm+claJyMqiZRybpWLov60ys0WYIF2j1Q9psm3nb/3usATo5Zpj8Lzjw3hTRIqhRVBrx7wSxt/SEtuiZfGnzBXWSAwxdo0RTsKGW3cyLHylNVulF7xuRvrIkkMqceGzTWR/g1zg46bR10ajWjrcCtcomTs56KCFxwVesBhEVBcGTjPLr/mkirTUR9RNhdl77pHras5rmgMNE2eWRl7t91ElVc0VBvlLAduOEbSU2qeHIEN1s8qeExZmMeEql6dYmYHGe5CmEyzDsTvnsvYww+B+9U4eyCPF4ByX7z7hLfiooP6z4CSNSlADBSMvLBGg66mVHkIXtBWVdVNfT6tRMGmRJ16SePUMMxR8XgodOHzGP+9l00AVr+PVemP9h2OM="
+skill: 0.281
+archetype: rusher
+leverOffsets:
+  reactionMs: 0.19
+  turnRateDegPerTick: 0.46
+  cps: 0.79
+  decisionTemperature: 0.02
+  awarenessRadius: -0.62
+  coordination: 0.03
+  aggression: 1.44
+kits:
+  trooper: 0.94
+  shortbow: 0.51
+  rewind: 0.28
+roles:
+  plant: 0.71
+  escort: 0.36
+  hunt: 0.65
+style:
+  aggression: 0.94
+  patience: 0.19
+  teamplay: 0.4
+  risk: 0.84
+voice:
+  tone:
+    - meticulous
+    - eager
+  verbosity: quiet
+  style: "seams, alterations and dry little asides; fast fragments, impatient countdowns"
+lines:
+  greet:
+    - thimble tucked away, ready
+    - thimble ready, I am taking the first corner
+  onKill:
+    - a neat little seam through there
+    - thimble keeps moving, next corner
+  onDeath:
+    - my plan has come unstitched
+    - a pause for the thimble, then straight back
+  onPlant:
+    - tied off the fuse neatly
+    - thimble is already on the next approach
+  onDefuse:
+    - snipped the loose thread
+    - quick hands, quick thimble, clear
+  onWin:
+    - thimble and team fit nicely
+    - thimble barely stopped all round
+  onLoss:
+    - the thimble plan needs an alteration
+    - thimble ran ahead of the plan
+  onLastAlive:
+    - one thread still holding
+    - my thimble and I will keep moving
+  taunt:
+    - your formation has a loose seam
+    - my thimble got here before that push
+  lobby:
+    - please mind the thimble on the bench
+    - mending the kit beside my thimble
+    - "My thimble: first corner is mine."
+    - With my thimble, please follow after the opening.
+quirks:
+  - bunny_hops
+  - always_gg
+rivals:
+  - meshkyxioshlynx
+bio: MrKruzraemthosh made matching banners for a team that never stood still and still brings a thimble to the queue. MeshkyxioshLynx keeps asking whether it really helps.
+batch: 3
+retired: false

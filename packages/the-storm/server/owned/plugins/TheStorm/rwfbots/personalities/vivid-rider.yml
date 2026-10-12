@@ -1,0 +1,72 @@
+id: vivid-rider
+name: Vivid_Rider
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjM3OTczMSwKICAicHJvZmlsZUlkIiA6ICIyMDZlMWZkYjI5Yzk0NGYxOTQ5OTg4NzAwNTQxMGQ2NyIsCiAgInByb2ZpbGVOYW1lIiA6ICJoNHlsMzMiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMzFhODQxYzg3ZDkxOTAwNDRjYjBkNGU1ZTA0Njk3NzUyYTkxZDAyN2EwODM1MTE0NzA1MTVjZGI2OTU2ZTEwOSIKICAgIH0KICB9Cn0="
+  signature: "Isf0BZSglu+OCQK5ru+WQdPGcTm5lpun5+GRFc8tCosyLaT1rlU0V9OexG5PAFwixuS5axUjz6JqwRpwnac9ou+i5/pYWPqfmRyke8gauhXbGZjY5MzBVV5+m1ON/hpRNbxuvpXJ0Ll6qm+H7l/YS14+vCvhXbgLRvnu24j7lXTG4YDnHsD/FU6vb19mb8296YJzwzQR3Un5MUC3zx1+8tisDyCbthLC9YFgLEcKDeNGg2BOO3ZsDrp4zDLe+ZIwFT1QrdruVu793v3tm3I1ao+vBLATKvUoVjo4vz76gEnuc0RI9sJ9UFjrqIjvMffJ3k3Pc8pGMD+bqds6EHRjjxbieowxuThY+j5u8wg0btzp9A4sKaZPI6dzSR07yVkAqVG8gCq9zZmIxl389u6sG9tslw9szH2TxGFkmXU95aXZf687sTnhB7h01wAXAaMXdWp+ARY5yq0gdGbflaI2z+tSxkU0X1HNlRAdcLY0eUyMo5J+ApfMvWJjv59MB+B4Gz3qewB3F8KgvWtv1Trt2W34hpmJmw5SdcQJ2Jy48HDK0WYuAQ7qH9PPH/qQdcj2rYFmElTqUOfK/9sCgLT38o4y+2JjaFpXF3a7U3Ue2+iuG+d1wc1ehZeyzYLH5ns0Pk5CJ6/85Mo043M40Y4bjh14nA9InfOXt9Ev2oPFqJM="
+skill: 0.145
+archetype: support
+leverOffsets:
+  predictionQuality: 1.04
+  awarenessRadius: 0.54
+  coordination: 1.79
+  aggression: -0.34
+kits:
+  trooper: 1
+  longbow: 0.26
+  rewind: 0.71
+roles:
+  escort: 0.99
+  defend: 0.48
+  retake: 0.62
+style:
+  aggression: 0.37
+  patience: 0.51
+  teamplay: 0.86
+  risk: 0.25
+voice:
+  tone:
+    - playful
+    - helpful
+  verbosity: normal
+  style: "tiny winter expeditions, serious snow forts; gentle check-ins, thanks and useful kit reminders"
+lines:
+  greet:
+    - hot cocoa flask thawed out, ready
+    - hot cocoa flask is here, everyone got their kit?
+  onKill:
+    - a tidy little snowball effect
+    - one less problem beside the hot cocoa flask
+  onDeath:
+    - slid right out of that plan
+    - sorry, the hot cocoa flask corner is open
+  onPlant:
+    - a warm spot in the snow
+    - hot cocoa flask can watch while you plant
+  onDefuse:
+    - cooled the bomb right down
+    - hot cocoa flask is here to help at the fuse
+  onWin:
+    - hot cocoa flask has survived the thaw
+    - hot cocoa flask says everyone helped
+  onLoss:
+    - the fort melted around us
+    - hot cocoa flask says we can tidy that up
+  onLastAlive:
+    - one mitten still waving
+    - one hot cocoa flask still trying to help
+  taunt:
+    - your footing looked a bit icy
+    - the hot cocoa flask brought a team to that corner
+  lobby:
+    - warming my hot cocoa flask by the lobby lamp
+    - please stop hiding my hot cocoa flask in snow
+    - "My hot cocoa flask: I will stay close to the push."
+    - With my hot cocoa flask, call if you need an escort.
+quirks:
+  - says_sorry
+  - always_gg
+rivals:
+  - silentjoki
+bio: Vivid_Rider built a snow fort that lasted longer than the team inside it and still brings a hot cocoa flask to the queue. SilentJoki keeps asking whether it really helps.
+batch: 3
+retired: false

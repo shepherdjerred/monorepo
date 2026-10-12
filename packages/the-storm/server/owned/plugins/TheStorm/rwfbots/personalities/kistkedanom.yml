@@ -1,0 +1,73 @@
+id: kistkedanom
+name: Kistkedanom
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjMxMDQzNSwKICAicHJvZmlsZUlkIiA6ICIxYTFiYWI1ZjFkMzU0NzFjYTc1OTlkZmRiOGIwYjBkNyIsCiAgInByb2ZpbGVOYW1lIiA6ICJDcmVhdG9yRWxpemFoODciLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZDlhZWY2NGI0OWUyYzBiNDE3NGRhOTc4Y2U5NDFjNGEyNGQxZmI1MGE0MmNiZGRlZGM0YjFjODdhMWRlYjI0NCIKICAgIH0KICB9Cn0="
+  signature: "fPo7PEVEezveNlhyCMozMekj25eoz6Ou6UwrA3fVDR5Hzvfob2VN8W2s9fbre2bR5RCQ7quVOpiCJG35dqgrEcyYe1imr1EgoopNnOXrY9X1kTuAohu3ineOEA/GeGR/jbd/imR4XUp1mEl7Nr6a2je8f8rARe9EYI5b/HToioKmb9KWZbXmL8bmYWbqGhfnc0J8BO0pAvvt8kB5xybiYbpRjB5u9feu8dikPnqfZZVMZ/OQNfO92eKxfxlfc+w283wNpZV+DdD6eS8Od6IOTM/4lzCrbSO2w/Ynaw3ct6lQNTmCtwC4MRVRJTUaws/sCxaLeemp+1obci35YZletpiloLlZSObPMFMAfqJ3J0cv1ridMRhrfOMaeEbaOa/g8YsWA8WONm/zp7Kw4TXbhm6y5HvZumjw3umb7KzE9vF1xr7Nv100JC14dqqwpPSZk0FJBjjfbzd3fDmF45OS14bjnQUeM7lB6Q/x+3QPP1kxrdVCqFNs0pk5B/G5620krxaIoXn2Jcp/Q8SvsaSDGYsff4zw9IlgxaE+qClYnQwE2u+HWaNQmGFAOEBGwsBGLIrKaKgkkczBvq4UMIqOgyW1e/CBCEqOf9s8SphyqoqzZ7v4U3qUHhF1lCUnYsSF8m/xB2G7KgOcNO+e1SukN7ORD9TFO1D9tExlZUku3sU="
+skill: 0.316
+archetype: anchor
+leverOffsets:
+  reactionMs: 0.51
+  predictionQuality: -0.54
+  awarenessRadius: 1.19
+  coordination: 0.46
+  technique: -0.17
+  aggression: -1.09
+kits:
+  trooper: 0.86
+  longbow: 0.47
+  rewind: 0.29
+roles:
+  defend: 1
+  retake: 0.55
+style:
+  aggression: 0.28
+  patience: 0.9
+  teamplay: 0.55
+  risk: 0.08
+voice:
+  tone:
+    - earnest
+    - grounded
+  verbosity: normal
+  style: "museum labels for even embarrassing plays; reassuring statements and firm location reports"
+lines:
+  greet:
+    - archive drawer prepared, exhibit opening
+    - archive drawer stays here, I have this corner
+  onKill:
+    - a fascinating example of an opening
+    - archive drawer and corner still secure
+  onDeath:
+    - please do not put that in the exhibit
+    - someone watch the archive drawer corner
+  onPlant:
+    - a short-lived interactive exhibit
+    - archive drawer guards the exit from the site
+  onDefuse:
+    - preserved the team instead
+    - archive drawer is staying by our bomb
+  onWin:
+    - archive drawer has a new story
+    - archive drawer never left the post
+  onLoss:
+    - a cautionary exhibit for the archive drawer
+    - archive drawer held the wrong corner
+  onLastAlive:
+    - the last visitor in the gallery
+    - the archive drawer holds here a little longer
+  taunt:
+    - your approach belongs in the archives
+    - the archive drawer has not moved for that push
+  lobby:
+    - please look without touching my archive drawer
+    - writing a new label for my archive drawer
+    - "My archive drawer: I will guard the home approach."
+    - With my archive drawer, call before rotating off defence.
+quirks:
+  - stares_down
+  - always_gg
+rivals:
+  - kriomgrol-28
+bio: Kistkedanom opened a one-room museum for abandoned arena souvenirs and still brings an archive drawer to the queue. Kriomgrol_28 keeps asking whether it really helps.
+batch: 3
+retired: false

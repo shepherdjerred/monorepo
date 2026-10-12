@@ -1,0 +1,75 @@
+id: hyperbrekolkriok
+name: HyperBrekolkriok
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjM2ODk4MiwKICAicHJvZmlsZUlkIiA6ICIxN2MyYTQyNjYyMWM0MTU3OTZkZjI2ZGUwMGM3ZjRlNSIsCiAgInByb2ZpbGVOYW1lIiA6ICJSYWRBcnRodXI4MiIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9iNzhmNmFlNTY4NjdhNTkzNWM0OGY2MmFmMDFhMWY1MjhhOTRmNGNiNzdiZDlkYzQ5NWEyMWExZWU2ODdjMTViIgogICAgfQogIH0KfQ=="
+  signature: "m5OBwkqZS4lnEcZ77iV3UzHszRrGrpxW/qk9QPLz8A328ZACHnTmBxwvC1pqGfh3wGbY4XcuSlLvZxLbhPgOWjxmtpMKgCRs7R+qc1rqBa7eggl+e9yaHc9hvrZXpBujy247B2EqUtSq10elzQsy1f35g8UjLkx2Mg5W9eGDHQBoywoFVbZNAN1HahXc+I91kdX0uKrzXFIZFN6kfJt5ozsVt+wTS96beWsl1oBqWighp+iND/dmSKzFSlBuIs2j7JbH+jQidOJOc4WBBCzvxsmzZOntB+DMDaxVIOMC23XhZGw9ys8ifnWjqWov/o5b9vj64XPSaFzddeq04JQ9Zv49A0fHiKsyke+ARmDChDwT7ASE8LACHlVhwnP/eIw4XXu/m5n3vklV6H6XVsB5V8qJnZJxayvk8cj7o7mMo56T1xoLkIMJwTlkKLUPNjLRBvAAMfQNpDuSu95fpEr4bJEbSrt9kCjxJFV9ekcxeyQ35RYOgvcz0baDPCfRGRcgN1avg89kEd0HanbaeBJg4RMXLpn4eKgz2DlbTw3a8gjyRTdJ0AtxeOhB3IgFG9eE/ZPVZpQmIRnSdRLh+Z4F+bEmBYxxDXv0YY+vexXe0uqzhaMRgwQqzbJRBNLhdcUDgakzFbfiaJYa9/0jg+06yHnF13deHqSrZnOo/R/tsCA="
+skill: 0.658
+archetype: troll
+leverOffsets:
+  cps: -0.44
+  decisionTemperature: -2.23
+  awarenessRadius: -0.13
+  coordination: -0.83
+  technique: -0.21
+kits:
+  trooper: 0.52
+  shortbow: 0.75
+  rewind: 1
+  spy: 0.81
+roles:
+  plant: 0.43
+  escort: 0.36
+  rotate: 0.65
+  hunt: 0.33
+style:
+  aggression: 0.68
+  patience: 0.33
+  teamplay: 0.03
+  risk: 0.87
+voice:
+  tone:
+    - polite
+    - mischievous
+  verbosity: chatty
+  style: "postal announcements and absurd courtesy; deadpan object conversations and harmless overconfidence"
+lines:
+  greet:
+    - parcel scale sorted, delivery begins
+    - parcel scale has appointed itself captain
+  onKill:
+    - delivered to the correct corner
+    - parcel scale is now insufferably proud
+  onDeath:
+    - returned to sender
+    - parcel scale would like a different replay
+  onPlant:
+    - an urgent parcel at the bomb
+    - parcel scale calls this interior decorating
+  onDefuse:
+    - delivery cancelled politely
+    - parcel scale says it knew the correct wire
+  onWin:
+    - parcel scale delivered the whole round
+    - parcel scale is requesting a trophy shelf
+  onLoss:
+    - the parcel scale took the scenic route
+    - parcel scale has misplaced the blame form
+  onLastAlive:
+    - one final delivery to make
+    - parcel scale insists this was the plan
+  taunt:
+    - that push had the wrong address
+    - the parcel scale gave that push three out of ten
+  lobby:
+    - checking the name on my parcel scale
+    - no unpaid postage in my parcel scale, please
+    - "My parcel scale: I will cause a useful distraction."
+    - With my parcel scale, try not to laugh during my push.
+quirks:
+  - celebrates_early
+  - always_gg
+rivals:
+  - xxmothpumpkinxx
+bio: HyperBrekolkriok delivered handwritten notes between feuding builders in 2014 and still brings a parcel scale to the queue. xXMothPumpkinXx keeps asking whether it really helps.
+batch: 3
+retired: false

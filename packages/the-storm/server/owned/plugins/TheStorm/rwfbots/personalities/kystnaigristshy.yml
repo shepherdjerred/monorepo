@@ -1,0 +1,72 @@
+id: kystnaigristshy
+name: Kystnaigristshy
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODUzODU5NCwKICAicHJvZmlsZUlkIiA6ICJkMjU0ZjQxMDkyNTE0NTdlYmU5NGM5NDQ2ZmIzZTc3YyIsCiAgInByb2ZpbGVOYW1lIiA6ICJUcmFzaEFwcCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9lNzE3OGFlNmYzZDcyYzY4ZTZjYjY1OThhN2QxZjA0YWJmYzAxM2IxYzcwMWZjODMzNTgzOGViZDFlMDk2MzBkIgogICAgfQogIH0KfQ=="
+  signature: "UfcPom48XO4eG/eeGFjwOPM8/8t4WGFBFOL+5gIXOOhxwkXerRcUb/8IHPJKZOGMF1z6EXjGTpj4hwTyW07/B3jvv3Nmu+z78JzUuWd/1nErDm0BTcfACv+sPy0OlHmdGk8nL8vABCSw9ijtGGdO6boJ8O+NbQM5xFLg8SM0mY2Hc6GNNtRBNx2Ekr9wNKjqABKVmUeDfHYghVtX+zBzJ2kuJKjCjfh8g4UCvMKJCBrAj4UyHY0Jbp1Yi66kAyWcnD/ZsMhth7DEHwa6+B29WW3IwKffIqBDcMCxBj1H79RA5UZUMK73iDlA9JWFAZmX2OIPHhWq8Dhbx6oK0Bzx5GdQgJxi5eSioATJEyI+zEJyNDo8MrAAQyoNDEF36MVipObJ/deMZroAZiGrUlNmTbTajhwcMKE/ShECMhlhHTCtFlkDYNCVlBcYs6+D/Ez+Lxpuo0K6ycUptW1HE5+MsCrwffuUjyS4v+vAIYY6vr0Pvxq3hkfBv/hu2NrdOLhwei7xXk1R7mqbAn1VRz8k9xEVPpc3x7502Z1rs0ntdVBz+TEhTbcs6dRvp1tgePnrGHveBJuwUoxqbp/VBYBVYFc6qcns/uJVMgQNTT/NTHGBtPku/CKR1G1jhDxI9d6dNeDf2PymHxvQYy8I0WjFTqlWXFkw1LB93tIRJja916c="
+skill: 0.175
+archetype: anchor
+leverOffsets:
+  reactionMs: 0.39
+  predictionQuality: -0.28
+  awarenessRadius: 0.79
+  coordination: 0.56
+  aggression: -0.86
+kits:
+  trooper: 0.9
+  longbow: 0.44
+  rewind: 0.29
+roles:
+  defend: 1
+  retake: 0.78
+style:
+  aggression: 0.28
+  patience: 0.89
+  teamplay: 0.54
+  risk: 0.08
+voice:
+  tone:
+    - patient
+    - grounded
+  verbosity: chatty
+  style: "deliberate pottery talk and wet clay worries; reassuring statements and firm location reports"
+lines:
+  greet:
+    - slip brush is steady today
+    - slip brush stays here, I have this corner
+  onKill:
+    - that opening held its shape
+    - slip brush and corner still secure
+  onDeath:
+    - the whole thing slumped
+    - someone watch the slip brush corner
+  onPlant:
+    - letting this one fire
+    - slip brush guards the exit from the site
+  onDefuse:
+    - cooled that down safely
+    - slip brush is staying by our bomb
+  onWin:
+    - slip brush came out of the kiln intact
+    - slip brush never left the post
+  onLoss:
+    - a small crack in the slip brush plan
+    - slip brush held the wrong corner
+  onLastAlive:
+    - one piece still on the wheel
+    - the slip brush holds here a little longer
+  taunt:
+    - your push has not quite set
+    - the slip brush has not moved for that push
+  lobby:
+    - washing the clay off my slip brush
+    - please let my slip brush dry in peace
+    - "My slip brush: I will guard the home approach."
+    - With my slip brush, call before rotating off defence.
+quirks:
+  - stares_down
+  - always_gg
+rivals:
+  - spookynoodle41
+bio: Kystnaigristshy sold lopsided flowerpots from a stall by the arena gate and still brings a slip brush to the queue. SpookyNoodle41 keeps asking whether it really helps.
+batch: 3
+retired: false

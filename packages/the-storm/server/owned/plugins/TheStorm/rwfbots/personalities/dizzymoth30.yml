@@ -1,0 +1,74 @@
+id: dizzymoth30
+name: DizzyMoth30
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NTczMTg4NiwKICAicHJvZmlsZUlkIiA6ICI3NmM4Y2ZlYjE1N2U0MGEwYmNlNjQ4NTgwZGEwNmQwNSIsCiAgInByb2ZpbGVOYW1lIiA6ICJTcGlrZWhpZGRlbiIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9hNmFkZDZmYzMwNWI4OWI0OTkyMGUwNDgwZjhlMjhhMmE3OWZmNjMyMTdhNmUzNWE2NGE1NjVkNWNjOGMwMzQ5IgogICAgfQogIH0KfQ=="
+  signature: "GoO4/D/bVokZ7S3usmFPBcXZGgStlBpdIuskcS6hI8GheTbNetPO/jGPzfUtWD3kQ1P1zVZXcI6XW1Ji7SPJEONVoxjBsir+IjtqIpg4YSjk6iTIDAlbuY0Z7JHhYmRUCe8Mo3Brw5Mg6mWuq8p1ys2bMyyVjQQTUneDCNgNtdT6PM+XnFtSqYvVyZco+gfZVEmYoHnlulD6y2aRjYDpXesSgGrYHuRTbI3LXE/1UHzzAle/r86R4VfVZqVWFiCH8jrSIY8SdGxVdQ8E9+c4ujNrf9icJzqYgDwRlL+uNBMQ/thZM/YVPZEAYTh5YdFeQdbas3xOIPYfPfQEM83w8Q13Hk+CGHjg9CvubLIenrxM9Q20NWeGLnV15gzjSGK270uE356GY1FQejP1N6QnjY0BgXWUuBmtRSkHSYi7+8sCY2pkEB+awxdEUsykhDRyz2Ci2V0qHa3N/wXz3JclhFf55aLeUJ8IRFl/aEn3COaaO56C08YfgocD3DZKbWcmXQ5qTbDQyh51BbAafFTn4K2X2e34Gdp+RxndxTCr5Pv2bSeKWePMZ84UAkNDQDPsmhEIiozJLXAdYYBQBZ9RSXK1wBOOJc4LDOjrTiMUSFTTN5RLgNdrs16cmO88FLIlBuXJ59OUxz5mO1XtzdJ6lEJmCJhRexPH0cW+CvuYVZs="
+skill: 0.52
+archetype: lurker
+leverOffsets:
+  aimErrorDeg: 0.91
+  predictionQuality: 0.21
+  awarenessRadius: 1.52
+  coordination: -1.24
+  aggression: -0.6
+kits:
+  trooper: 0.79
+  shortbow: 0.52
+  ghost: 0.75
+  wraith: 0.67
+roles:
+  plant: 0.36
+  rotate: 0.63
+  hunt: 1
+style:
+  aggression: 0.51
+  patience: 0.77
+  teamplay: 0.17
+  risk: 0.57
+voice:
+  tone:
+    - fussy
+    - hushed
+  verbosity: normal
+  style: "paper crafts and tiny careful corrections; lowercase whispers, deliberate pauses"
+lines:
+  greet:
+    - folded frog survived the queue
+    - folded frog here. quietly.
+  onKill:
+    - one clean fold in the plan
+    - the folded frog was here a while
+  onDeath:
+    - my folded frog is a little crumpled
+    - heard it too late beside the folded frog
+  onPlant:
+    - tucking the fuse into the fold
+    - folded frog is watching the quiet entrance
+  onDefuse:
+    - unfolded that just in time
+    - no noise. no fuse. just the folded frog.
+  onWin:
+    - folded frog stayed in one piece
+    - the folded frog stayed out of sight
+  onLoss:
+    - another crease in my folded frog
+    - the folded frog waited one corner too long
+  onLastAlive:
+    - one folded frog left on the table
+    - nobody move near my folded frog
+  taunt:
+    - that push folded very quickly
+    - the folded frog heard that approach coming
+  lobby:
+    - please do not squash my folded frog
+    - making another folded frog while we wait
+    - "My folded frog: I will hold the quiet route."
+    - With my folded frog, leave one quiet approach for me.
+quirks:
+  - slow_starter
+  - always_gg
+rivals:
+  - mrshiosttok
+bio: DizzyMoth30 folded paper creatures while waiting for the 2014 queue and still brings a folded frog to the queue. MrShiosttok keeps asking whether it really helps.
+batch: 3
+retired: false

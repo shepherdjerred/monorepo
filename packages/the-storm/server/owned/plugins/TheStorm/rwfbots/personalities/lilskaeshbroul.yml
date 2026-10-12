@@ -1,0 +1,76 @@
+id: lilskaeshbroul
+name: LilSkaeshbroul
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODY5ODYzNSwKICAicHJvZmlsZUlkIiA6ICIzNmU5MTE1YzBjYzc0ZjhkOTdmOGFjNjA1ZGMxNGVkYSIsCiAgInByb2ZpbGVOYW1lIiA6ICJEYXJnaVYiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOWFhMGQwZDlhMGNmZWYyY2Q0ZGQwZDBkNWZkM2I4YjkyODE1YmJhNTZhMzQ4ZDg4MGQwNGQ5MjM3ZDI5ZjE0MSIKICAgIH0KICB9Cn0="
+  signature: "HmdfzfVQJ66eam3frzFl8OIFkAGbXN15hSj9IxG+eZQvsMIqWLDWTymH/MeOZ0qiOIWhVXBwtAEPSCRObWodnlb+8u2+akLav5kQN8yI/puANeSQ1BkLUI54M1SmF2+DZ7OSDfSDxPQnMXBnAa7yXPIGWXlUI2TEu+fPF7Z1zBwLmRtEWDLn2Dhrzj8IWLhzvzz3Fe1ia4xomn9kyttA+N6qTIc2FJKmvi9iUL5PnLDYwkQnSKxUaS0ltffaWE7GoN7CoqOjCdOjHd3nMsuIXteBzKQQf/Ur6YSshQpO/k3boOM4Mh4mwm4wk7z2gtizi7c7f2sHLTq4ec6Jm8h7cNsdP2hpLwq9gs4p8Y+DPXg91xx3+C/HhWKwwXGpYyNC/DU6g9E/JSYN6eWit15KZACKjX4ipEgPnlyiqeLR38qWkY0S/aDysCe5KJOhJiSdXE9smTYHt713brZTMrArWqd1SXeM8Sg6uGj7xpY4vzDgYtMSYapPcOuYGkKnA3qjEDUFzfStEmIvapDfE1uPX7wej3EXILsqor7ilXpjjLHCwLxZyRohE5G0W0eb6OgQNSIo49SZCKXWtYI7TOs3rayyA6ES2NKkcNO365LRfX0uOPLuVQ+WELO5Ar5n3XS/yRjYHc48D8WmSi2gKnHkL0nHXgJqRJPkRuQFHAGK4lA="
+skill: 0.572
+archetype: flanker
+leverOffsets:
+  reactionMs: -0.52
+  turnRateDegPerTick: 0.84
+  predictionQuality: 0.39
+  coordination: -0.98
+  aggression: 0.5
+kits:
+  trooper: 0.59
+  shortbow: 0.95
+  rewind: 0.39
+  ghost: 0.21
+  wraith: 0.48
+  spy: 0.41
+roles:
+  plant: 0.31
+  rotate: 1
+  hunt: 0.54
+style:
+  aggression: 0.62
+  patience: 0.42
+  teamplay: 0.4
+  risk: 0.87
+voice:
+  tone:
+    - meticulous
+    - nimble
+  verbosity: normal
+  style: "seams, alterations and dry little asides; quick side remarks and route changes mid-sentence"
+lines:
+  greet:
+    - seam ripper tucked away, ready
+    - seam ripper is taking the other entrance
+  onKill:
+    - a neat little seam through there
+    - seam ripper found a side door
+  onDeath:
+    - my plan has come unstitched
+    - seam ripper chose an occupied side door
+  onPlant:
+    - tied off the fuse neatly
+    - "seam ripper came around the back of {bomb}"
+  onDefuse:
+    - snipped the loose thread
+    - seam ripper found a quieter route to the fuse
+  onWin:
+    - seam ripper and team fit nicely
+    - seam ripper took the long way for a reason
+  onLoss:
+    - the seam ripper plan needs an alteration
+    - seam ripper took the long way for no reason
+  onLastAlive:
+    - one thread still holding
+    - one seam ripper coming around the edge
+  taunt:
+    - your formation has a loose seam
+    - the seam ripper is somewhere to the side
+  lobby:
+    - please mind the seam ripper on the bench
+    - mending the kit beside my seam ripper
+    - "My seam ripper: I will try the side approach."
+    - With my seam ripper, keep them looking forward for me.
+quirks:
+  - crouch_spam
+  - always_gg
+rivals:
+  - skozskaethpvp
+bio: LilSkaeshbroul made matching banners for a team that never stood still and still brings a seam ripper to the queue. SkozskaethPvP keeps asking whether it really helps.
+batch: 3
+retired: false

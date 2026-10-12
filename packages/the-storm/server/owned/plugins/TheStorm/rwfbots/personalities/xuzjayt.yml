@@ -1,0 +1,73 @@
+id: xuzjayt
+name: XuzjaYT
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTI2MjYyOCwKICAicHJvZmlsZUlkIiA6ICI3Mjc2ZThmYzVkNjE0ODNjYmMwN2IxYjIzNjI3MDA4ZSIsCiAgInByb2ZpbGVOYW1lIiA6ICJXYWJvV2ViaSIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8xZTFiNDRmYjYwZWE4ODliMzM4YjRiMDQxOTg4ZjFjMjc2Y2VkNWVmMzJhM2NmZjViOTg5YTZmMDE5MDU0ZTAyIgogICAgfQogIH0KfQ=="
+  signature: "xelBNGHhgwJLhEBSOZkWkYuXTZeRT6hSZoJWBSgOgy6HkW3J2TyeGUf58sHsfpTceB9qbiQRixgsSfAuSEqB01EQV4A5OuJmMu80xTRC0gIsYdAknJP691nh1GZjzKJAPvUkHNCX/i5e867YW21l4Vn2PXNJ8vqblK4S05AXt5gMhjZ8RZXYfa0AilCJIIRSOc4dsuT7kBH1RGSA6tJx9lkUPTKoN+synbicuwyLdaKLoA+15NMHUTCp7BFOkU/FdXDF+HmdvriMzS19Dlkz9/nEaLwUWrnPUQSe4nuT8FTXiDMLuGmiU5zvNjH+aCeMk9EnkcvCTpv/oJ0RVy5bck4kevN96fG33b0CHkLhwgKNbnaFwdhADweibH6rRHlXlS9EdMYF1cwhKhJr6PdzWbVnKm5yTCaByApJajNM7gCMyB2OVqLqC+donMJ0MhLFDaTim/2V9qW7BYV9B7E3I5hUrxm4Hwi7M4+NjOjz6YqUsMt3RK1EARW+hHhPJWOT3P9UqtdSdnRwJzlYa7PzxK617z4ZbnJzpuXKVfYT9A1IsOoZjD/Q4IqaQF6I2OsXc13OKED6nnst0ibZ/QSBDGk42RIJhV2NxHUfLJrGtBjF+HXmJXtEHtcBBvWv6EoM6FjnstX3XxSwRV7FWehDVlBj9c2846K70x7/NMlzabY="
+skill: 0.716
+archetype: duelist
+leverOffsets:
+  aimErrorDeg: 1.07
+  turnRateDegPerTick: -1.26
+  cps: 1.05
+  coordination: -0.27
+  technique: 1.65
+  aggression: 1.12
+kits:
+  trooper: 1
+  shortbow: 0.36
+roles:
+  escort: 0.44
+  retake: 0.7
+  hunt: 0.83
+style:
+  aggression: 0.79
+  patience: 0.31
+  teamplay: 0.31
+  risk: 0.56
+voice:
+  tone:
+    - precise
+    - competitive
+  verbosity: quiet
+  style: "map annotations and quiet route corrections; brief courteous challenges and honest shot assessments"
+lines:
+  greet:
+    - my route tracing points toward trouble
+    - route tracing ready, good fights everyone
+  onKill:
+    - route tracing gets another little cross
+    - good exchange beside the route tracing
+  onDeath:
+    - there is a hole in my route tracing
+    - fair hit, the route tracing left that gap
+  onPlant:
+    - route tracing marks the fuse
+    - route tracing earned a moment at the bomb
+  onDefuse:
+    - erasing that from my route tracing
+    - route tracing can settle this at the fuse
+  onWin:
+    - route tracing finally matches the terrain
+    - route tracing had some good fights today
+  onLoss:
+    - time to redraw my route tracing
+    - route tracing wants another clean round
+  onLastAlive:
+    - one dot left on my route tracing
+    - one route tracing, one fair chance
+  taunt:
+    - your route is wandering off my route tracing
+    - the route tracing is ready for that peek
+  lobby:
+    - unfolding my route tracing on the lobby floor
+    - please do not spill cocoa on my route tracing
+    - "My route tracing: I will contest the middle."
+    - With my route tracing, give the middle fight a clear lane.
+quirks:
+  - good_sport
+  - always_gg
+rivals:
+  - slimelynx9
+bio: XuzjaYT kept a hand-drawn atlas of the 2013 rotation and still brings a route tracing to the queue. SlimeLynx9 keeps asking whether it really helps.
+batch: 3
+retired: false

@@ -1,0 +1,75 @@
+id: krourtast-23
+name: Krourtast_23
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjMxMzc0OSwKICAicHJvZmlsZUlkIiA6ICI5MDczN2E1N2RlYjk0MWYxYTEyMzE1MmJkZmZjMTBmYiIsCiAgInByb2ZpbGVOYW1lIiA6ICJNaW5lU2tpbl8xNCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9mMjNlODVlMDVmYjQ0YjI1NWNiODAyZjM5ZDgyY2Y5NDEwYWNiZDhhNGFlYzE0NWQzOWIwY2MwMmFiYjZjYzhmIgogICAgfQogIH0KfQ=="
+  signature: "sgO8uIMUKbnuCRksFhWbWKTkFi0lDUwbA4D4a60aQwWLUrnmx1pcMUvCbb6wUgwwHUiWt4YhJajFdQx0C7RusjW0NFSwWhL+R7hsd+treFmq7nmBz8PK1HL4l4ZxUOS6zc0jnm32FBj9GJi3yr7UGd+c9oNjHLbWzvZxvQJ5OFQUiGRC1DP+5PPKDAJxPjJphoyMgWPuLUjoPppXYdt+xCvf6vlbABXa1kzJlgnJid+TlLDLNGmBWD5mYOqG70NuYqbQmE1ZC8WVU3VOgvWEIvLuAvlqb0N9EwRjZbQQmBQU4DKDJ3Kg1zUU2/2jxvoyoDHZ566mAF9iu8JaFqD0g+NHaJN8k4tEhCUaabkZ5b887jS7bkSKzAkh1G/ukSwhsec4osxH7G4SiSPYlR7FSunuU7s0M4cjvDt9X8Ns2HlCCw5q3s1AgwvuX+Ae46DD+46/0sOPPGigQI/qll8ol4++T2JHd8ZAWRmg+Rfxs8jdQeIF/NunGR+MSZPbCswbZf21HhtwxrnCuFv6EKhnhEuO8n2wyb2oOLNqVC2wYneGCWZJXiC9yWbbCSKrlKkZ4PtEQjqw6OMw7pO5p4E4aPe3r5583iuwgOiUzkm5oq8esKbJ1C3PG43dH2icKNCel0ChZJgfjNtcBHVIsvM+3Ph0OMeH5na1KN+fPhzSMlc="
+skill: 0.426
+archetype: duelist
+leverOffsets:
+  reactionMs: 0.16
+  aimErrorDeg: 0.37
+  cps: 1.18
+  predictionQuality: 0.28
+  coordination: -0.2
+  technique: 1.19
+  aggression: 0.6
+kits:
+  trooper: 0.99
+  longbow: 0.26
+  shortbow: 0.38
+roles:
+  escort: 0.39
+  retake: 0.45
+  hunt: 0.91
+style:
+  aggression: 0.71
+  patience: 0.23
+  teamplay: 0.28
+  risk: 0.49
+voice:
+  tone:
+    - polite
+    - competitive
+  verbosity: normal
+  style: "postal announcements and absurd courtesy; brief courteous challenges and honest shot assessments"
+lines:
+  greet:
+    - envelope seal sorted, delivery begins
+    - envelope seal ready, good fights everyone
+  onKill:
+    - delivered to the correct corner
+    - good exchange beside the envelope seal
+  onDeath:
+    - returned to sender
+    - fair hit, the envelope seal left that gap
+  onPlant:
+    - an urgent parcel at the bomb
+    - envelope seal earned a moment at the bomb
+  onDefuse:
+    - delivery cancelled politely
+    - envelope seal can settle this at the fuse
+  onWin:
+    - envelope seal delivered the whole round
+    - envelope seal had some good fights today
+  onLoss:
+    - the envelope seal took the scenic route
+    - envelope seal wants another clean round
+  onLastAlive:
+    - one final delivery to make
+    - one envelope seal, one fair chance
+  taunt:
+    - that push had the wrong address
+    - the envelope seal is ready for that peek
+  lobby:
+    - checking the name on my envelope seal
+    - no unpaid postage in my envelope seal, please
+    - "My envelope seal: I will contest the middle."
+    - With my envelope seal, give the middle fight a clear lane.
+quirks:
+  - good_sport
+  - always_gg
+rivals:
+  - mrraenskovul
+bio: Krourtast_23 delivered handwritten notes between feuding builders in 2014 and still brings an envelope seal to the queue. MrRaenskovul keeps asking whether it really helps.
+batch: 3
+retired: false

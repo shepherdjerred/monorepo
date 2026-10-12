@@ -1,0 +1,75 @@
+id: neonraekdour
+name: NeonRaekdour
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTk0Mjk2MCwKICAicHJvZmlsZUlkIiA6ICI0YWU5MTM5MzZhOGU0MWU0YWNlMTYyYjI4YmM0MzMwMyIsCiAgInByb2ZpbGVOYW1lIiA6ICJ6ZXJ2YXRpb24iLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYmEyOTY2YjBiZmM5MDlhNmNhOGNlOGJlNGJmZTU3OGM1MGM0NDJmOTUyOGNmOTQxYjM4YzFmMzU0ZWZiNzFlZiIKICAgIH0KICB9Cn0="
+  signature: "to62yHWchBljHZ+lp4FNcyXzc5QKkKkJcfcTwbPg4Qs/uh9Kq+/VxhusrVwWiAMRk3z+sW5pcJmd+8JyYNwUMwVfih4tllRNkckpwolB/ATEw2aKnznqu8txaDwk6VO2Hac23oSdBO5nsOpN6FKRw72DlP8W3c0Ax3coqkQlyUXYtD4BDtx7HA0N5xQZMR2DabkO+DOIaJ21t3OV7hOQX3t4p1CP3J9FZJOOFb+I9BMC2twgvoS4+gxXVdjjsPwtqkghX6FtETm8izUb8qGhRs75K1eBlmwtNFamvI/YU7UMIxLIkWWwt1nk252EJk5ZdWl8zNv+sMnnkrnptLpoVRw/zF06WvTNfSZzf3xjZsO8/QOPjBeLIDPVo/cRCjmlmCiHwo6e1NNKhvu8l7hgtyJIRzTZ7CMefMEBjnnERSCj8FpsGqfJ9B4CUhE6ckFUxkuEOIR/DFM+CJiWu78jXgLBVde6ZkOP8YN5Q5/lYmzjwzSJOweodXlS96NYlMjDxTGNbiCmOnpLM4joyFq+R/lC3vqnzQQ1bAwScSVwYz0ZyOToWSKf6nBj2rJZs9qNm9lEQfeysuySPwGciQPCzoeudaWuZIKPrsNGz+gn2gXVIPtjEMjhJsr4glHefZMtedctXmciwiPadUGTsdHt7hKiFAwhRoQ6lfe8SSDnD5Q="
+skill: 0.181
+archetype: rusher
+leverOffsets:
+  reactionMs: 0.24
+  aimErrorDeg: 0.4
+  turnRateDegPerTick: -0.22
+  cps: 0.73
+  decisionTemperature: 0.5
+  awarenessRadius: -0.54
+  aggression: 1.35
+kits:
+  trooper: 0.99
+  shortbow: 0.54
+  rewind: 0.29
+roles:
+  plant: 0.68
+  escort: 0.48
+  hunt: 0.74
+style:
+  aggression: 0.93
+  patience: 0.13
+  teamplay: 0.36
+  risk: 0.76
+voice:
+  tone:
+    - whimsical
+    - eager
+  verbosity: chatty
+  style: "arguments with an imaginary puppet; fast fragments, impatient countdowns"
+lines:
+  greet:
+    - my sock knight insists we are ready
+    - sock knight ready, I am taking the first corner
+  onKill:
+    - sock knight is taking all the credit
+    - sock knight keeps moving, next corner
+  onDeath:
+    - sock knight advised against that corner
+    - a pause for the sock knight, then straight back
+  onPlant:
+    - sock knight says the fuse is dramatic
+    - sock knight is already on the next approach
+  onDefuse:
+    - sock knight requests a quieter ending
+    - quick hands, quick sock knight, clear
+  onWin:
+    - sock knight will never stop talking about this
+    - sock knight barely stopped all round
+  onLoss:
+    - sock knight demands another rehearsal
+    - sock knight ran ahead of the plan
+  onLastAlive:
+    - sock knight has become very quiet
+    - my sock knight and I will keep moving
+  taunt:
+    - sock knight spotted that opening too
+    - my sock knight got here before that push
+  lobby:
+    - my sock knight has opinions about your kit
+    - please do not argue with the sock knight
+    - "My sock knight: first corner is mine."
+    - With my sock knight, please follow after the opening.
+quirks:
+  - bunny_hops
+  - always_gg
+rivals:
+  - crimsonstorm87
+bio: NeonRaekdour put on tiny puppet shows while the team waited for opponents and still brings a sock knight to the queue. CrimsonStorm87 keeps asking whether it really helps.
+batch: 3
+retired: false

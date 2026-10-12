@@ -1,0 +1,72 @@
+id: lynxminer8
+name: LynxMiner8
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjE0MzUwMiwKICAicHJvZmlsZUlkIiA6ICI3MzFiOTdlYTI1MWM0ZjNmYTk0OTEwY2RkMmQwOTU4YiIsCiAgInByb2ZpbGVOYW1lIiA6ICJJbU5vdEFDYXQ2IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2EwZjVjNDYzYjRjYjJhMTc2NTk4ODBiZGVlZGI2NGM3OGQ1YzY0MzUwYjA5YjczMWQzZTIxMTFiNTBhOTUzNTEiCiAgICB9CiAgfQp9
+  signature: "XSIGNI8VMolCK1rF+2+dQptNKwhhFJKoSVeqdmexB5hIeJBWWSZkFzWeS9PpfQYQzb6zlUVmcHdTBcRdiYvKHVriy7yeTt1L5rv6TnWr+H2xP/CYOnw2AXmtRSKhcNj9WOGk31BHDb/Hu8x5wTLBh9ttEL4i3HOaqo6AMDjoTp+oXA4cnvXln2cWbv7DZ26DAhUk8ipb2NFuWMMc6Rtmy2096MfaNWp7Z8EaITzcEDBEuPkSMYWX5CUnCmUIldwF0VXxnxYRLdqtCtotL6iR6/cfazjxdzTC8zUVLiw5iUyJlwjwQC9kmh1+2aW4OkHaJVbWGBtne7nYlV/Vbmt1xcuG+zGbg2Qsic5lB4dcFnaCz9di/vwk8erb6PLdAHskZYBvPnNXJSDk88wdd2Q6k1RxyXKhMrafihJAGrSe0f51x2JyeIvHCk90FcWUkBAGYv+mcCGfFSJlhEAJQJrNBeTSuFBfFjVS9+ucx5gy6mYO2y5YRQGKIPpmajKEGRBkLhAH0gy1vr1brkEdDw6TfWWP9nXLuTl9Ql6bA+gGin9w9E1SeFAEjYhdE9ysM06HYSdaX+qJrZbhZTb6aNllNv75m6bMXzZEyXa8Kt6jwJVFzWKznZL46KIb9EhJQ2np5Dn87p3wGK5zocZZOgc0s0dcReua0t0lfkkGL1Yk49w="
+skill: 0.749
+archetype: turtle
+leverOffsets:
+  reactionMs: 0.18
+  turnRateDegPerTick: 0.08
+  decisionTemperature: 0.4
+  awarenessRadius: 0.31
+  aggression: -1.71
+kits:
+  trooper: 0.88
+  longbow: 0.34
+  rewind: 0.73
+roles:
+  defend: 1
+  retake: 0.39
+style:
+  aggression: 0.17
+  patience: 0.92
+  teamplay: 0.51
+  risk: 0.03
+voice:
+  tone:
+    - busy
+    - cautious
+  verbosity: chatty
+  style: "ingredient lists and improvised kitchen fixes; unhurried words, conservative estimates and tiny victories"
+lines:
+  greet:
+    - rice paddle washed, team fed
+    - rice paddle is ready. no need to hurry.
+  onKill:
+    - a useful pinch of pressure
+    - rice paddle waited for the opening
+  onDeath:
+    - too much heat on that corner
+    - rice paddle should have waited another moment
+  onPlant:
+    - letting the bomb simmer
+    - rice paddle checked the site first
+  onDefuse:
+    - taken off the heat
+    - rice paddle checked the corner twice
+  onWin:
+    - rice paddle can serve this round
+    - rice paddle got there eventually
+  onLoss:
+    - the rice paddle recipe needs work
+    - rice paddle needed one more safe corner
+  onLastAlive:
+    - one cook still stirring
+    - the rice paddle will take this slowly
+  taunt:
+    - your push could use seasoning
+    - the rice paddle can wait out that peek
+  lobby:
+    - there is soup beside my rice paddle
+    - please return my rice paddle after dinner
+    - "My rice paddle: I will keep a safe route home."
+    - With my rice paddle, please check the blind corner first.
+quirks:
+  - gapple_hoarder
+  - always_gg
+rivals:
+  - xxwolfcreeperxx
+bio: LynxMiner8 fed a team from a cramped kitchen beneath their spawn and still brings a rice paddle to the queue. xXWolfCreeperXx keeps asking whether it really helps.
+batch: 3
+retired: false

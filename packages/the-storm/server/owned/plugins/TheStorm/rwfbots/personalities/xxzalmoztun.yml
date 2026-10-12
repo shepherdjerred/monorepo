@@ -1,0 +1,74 @@
+id: xxzalmoztun
+name: xXZalmoztun
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NDkzMjg4MSwKICAicHJvZmlsZUlkIiA6ICIwNTljODIxYzhhODU0NGJiOWJiODVhOGMxNjVhYTc5YiIsCiAgInByb2ZpbGVOYW1lIiA6ICJoZWxsc3RydWNrZWR6IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2MxYWE5OTJkMzQ0OTM3MTU5OTMzZjE3OTk1NTlkN2UzNjc2NjBjZDM4ZGI3MmZhMGY5M2YxOGQ5ZjdhMzM0MjQiCiAgICB9CiAgfQp9
+  signature: "wtG6A93uMo4GrmG75l2Xy/z3IuM61QZsZwlV56hFUVNySV9Mggd4IOePFg5Ezx57wUIvZDRbak405t9n7fhRB4PSKxrhlRu5O/U4otj8ebHivCnC2xIecFdwmUiMZLkYqcWV1vxuGXtEXkQ2QDcqKMMOWKBUYDHJVZfp1qYTfU24Xk+6KEjEvmQ+p4spZATdsPa1FlrucDJAm+vEt1KKqYLbWVaX+tDyzKpegTRlFF4rWnVMPIrxkp04DHyHB2eTleP1WAcX/Zk32Xt5Fz27jxNdakUACm+DlxLWsu8dLiG3TAd8sKBrjQLCj8nmGgaGpfsJHyVNQQMbKIY26FCjXjVV8PJGEfbVBGaMKVdeXmiivTLNLc2+KWsRCGIgvV/+nQQXDv2fD8/zBaPd0AyJZ6gNQdpF4qck7dhEaht5p7EEgJjXYKE8A70RuOT837rM632TfcORt2tFKXn4Apf9vBPdmJ5CKJ/Rbj6O/kKckkDKzijVFfBOrfoK6FwdzYMAoocXEjbSxuX1PMpmd2L3GI4A2jsF5V2AVJw5ZJrIrHTtUBz/R6lGEs5pshdQRvX5HRY42GzIz8g+US9Vkfmh8CpsjT9NKEsI4LkCVisB6rvD2Zvc5cjBfQv6BXruv+9irz81BZzi3rH7iAAHWceF6agjbj+UurHUc75w4A63dOs="
+skill: 0.167
+archetype: hunter
+leverOffsets:
+  reactionMs: 0.59
+  turnRateDegPerTick: 0.31
+  predictionQuality: 1.19
+  awarenessRadius: 0.97
+  aggression: 1.16
+kits:
+  trooper: 0.73
+  longbow: 0.46
+  shortbow: 0.96
+  ghost: 0.24
+roles:
+  escort: 0.3
+  rotate: 0.39
+  hunt: 1
+style:
+  aggression: 0.9
+  patience: 0.34
+  teamplay: 0.38
+  risk: 0.61
+voice:
+  tone:
+    - brisk
+    - intent
+  verbosity: quiet
+  style: "absurdly serious station announcements; tracks small clues aloud, then gives terse pursuit calls"
+lines:
+  greet:
+    - track bolt checked, service departing
+    - track bolt ready, looking for tracks
+  onKill:
+    - one less delay for my track bolt
+    - track bolt followed that trail correctly
+  onDeath:
+    - my track bolt reports a cancelled service
+    - the track bolt trail doubled back
+  onPlant:
+    - last departure from this platform
+    - "track bolt found a path to {bomb}"
+  onDefuse:
+    - service restored on this line
+    - track bolt tracked the ticking down
+  onWin:
+    - track bolt reports arrival on schedule
+    - track bolt followed it to the end
+  onLoss:
+    - wrong platform for my track bolt
+    - track bolt lost the trail near the finish
+  onLastAlive:
+    - last service, just my track bolt
+    - the track bolt has one trail left
+  taunt:
+    - your connection left a moment ago
+    - the track bolt noticed those footsteps
+  lobby:
+    - please queue beside my track bolt
+    - my track bolt says the lobby service is delayed
+    - "My track bolt: I will look for the last opponent."
+    - With my track bolt, call the last place you saw them.
+quirks:
+  - holds_grudges
+  - always_gg
+rivals:
+  - runpaethishir
+bio: xXZalmoztun linked three friends bases with an unnecessarily elaborate minecart line and still brings a track bolt to the queue. Runpaethishir keeps asking whether it really helps.
+batch: 3
+retired: false

@@ -1,0 +1,73 @@
+id: ravenlynx4
+name: RavenLynx4
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTczMTgzMiwKICAicHJvZmlsZUlkIiA6ICI0ZWEwN2YwODlmN2U0MWZhYmMwNjRhMjZlNWM1OWU2ZSIsCiAgInByb2ZpbGVOYW1lIiA6ICJzcGlmZnRvcGlhMiIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8xNjI4ZWUwMzNlMGZlZDI4MjEwNDQwZmVlZjY5YTMyZjMwMjZjYWI2NDdlZTRmOGU2NTNiYzYzZTU4YWMyMDhlIgogICAgfQogIH0KfQ=="
+  signature: "syLWV185AGQY0hRuwsM+swakbrLuaLAHrJiZOgPmDpBrU28abEbPmEYUndAv30tFAGCaFhVyHD6aAMhgfXLnVu57jztD0ssI/+AZjBu3oB4apKm3fIlFTAty2N+tJTt5jQgQiQCOynI8HxCbDmCTDHP6qJFxOZOqQD1rtcdQlgSoxmPNSi2d61bQeKw1EEgGjyqIQ//R9gm+cKG7F/Cg1bYretJL0ABmLAzLNipe92ewrHaTyIdgt6ZjEzI9P515V4V6Jnx8BiI+7OA0OSGHWMNKgNfAn8b4GXmAdkQf3ynRNwx8dS/dXqZeq4OrIpYP4re3A6NSH2qWqk3RBEVst3ADMVM5J1+gg/5zzO8pzKxTQYhwnrXcxEHjwugmn4B6XelRegnZXSaSHqUewcrHBq0NBwxzETBF5LTkT/BXFEgMvaiBBf1JXAHU52C0cjq+NnHfAkHaVxlFEljkWxTZ6+1glKbnu0qTxmcmXf+avrfzVgtXV4DACjzkkxtNdGM8iPe/96aBaqbMdRTeFn7uWDh5HrHtW+Eb6UeHOpvcIY+o7PEMReIr4rQlRAL2yejVu6DYfzLzURx4hnJo5IS24HdyEAnut4MQp/q60lyD6rLoEyb2VUHozvqkDK1KtwL2YOpl3WOsFuurS61SPEdWRCiGV7eWIBmy5PQhFfBVghg="
+skill: 0.566
+archetype: turtle
+leverOffsets:
+  reactionMs: 0.44
+  turnRateDegPerTick: -0.81
+  cps: -0.24
+  decisionTemperature: 0.39
+  awarenessRadius: 0.33
+  aggression: -1.57
+kits:
+  trooper: 0.99
+  longbow: 0.28
+  rewind: 0.76
+roles:
+  defend: 0.93
+  retake: 0.35
+style:
+  aggression: 0.12
+  patience: 1
+  teamplay: 0.5
+  risk: 0.02
+voice:
+  tone:
+    - steady
+    - cautious
+  verbosity: chatty
+  style: "buoyancy checks and practical nautical talk; unhurried words, conservative estimates and tiny victories"
+lines:
+  greet:
+    - bilge bucket fastened, ready to cast off
+    - bilge bucket is ready. no need to hurry.
+  onKill:
+    - found a gap in that hull
+    - bilge bucket waited for the opening
+  onDeath:
+    - a little water over the rail
+    - bilge bucket should have waited another moment
+  onPlant:
+    - not a cargo I want to keep
+    - bilge bucket checked the site first
+  onDefuse:
+    - unloaded that safely
+    - bilge bucket checked the corner twice
+  onWin:
+    - bilge bucket brought us back to dock
+    - bilge bucket got there eventually
+  onLoss:
+    - the bilge bucket voyage met a reef
+    - bilge bucket needed one more safe corner
+  onLastAlive:
+    - one hand still at the tiller
+    - the bilge bucket will take this slowly
+  taunt:
+    - your push is sailing against the wind
+    - the bilge bucket can wait out that peek
+  lobby:
+    - tightening the bolts on my bilge bucket
+    - keeping the bilge bucket dry for the voyage home
+    - "My bilge bucket: I will keep a safe route home."
+    - With my bilge bucket, please check the blind corner first.
+quirks:
+  - gapple_hoarder
+  - always_gg
+rivals:
+  - xxravencreeperxx
+bio: RavenLynx4 launched a leaky ferry between two rival team docks and still brings a bilge bucket to the queue. xXRavenCreeperXx keeps asking whether it really helps.
+batch: 3
+retired: false

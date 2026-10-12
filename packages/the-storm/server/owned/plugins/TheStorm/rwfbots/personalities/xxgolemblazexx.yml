@@ -1,0 +1,73 @@
+id: xxgolemblazexx
+name: xXGolemBlazeXx
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTM0OTAyNiwKICAicHJvZmlsZUlkIiA6ICI4ZTYwMzY1MWQyZTQ0MmVhYjk1OGM4YThjYmFiYThmNiIsCiAgInByb2ZpbGVOYW1lIiA6ICJTdG9pY19TaWdtYSIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS83OGYzMDE3NGVhMzIxYWZkMzMzZjY4MTU5NWYwNjI4ZmI0NGQzNDNjNzIzODBkMzBhNDU1MDBlZDYyMTIyZDdlIgogICAgfQogIH0KfQ=="
+  signature: "xh43at+apaLbalaFOa8qwE/55+0+nRX0JoQ0vfgr6ceZW8i73fsaPHDRlnCxoUZK1FRFH+ukX6JoGUe6cxJr/xLs2bCZxhldv43zPeQYhQtmekwOkTQlPFmk2oFSHrKCyXZztGxYEwjOfPtdD+f0Bjoeh6kSPA1zKZhZA7DnltkeEzjj9UpnS+qBBqfQrsXpElqPFBwrYzoovyyAVns4qQM8cJYcCEWGEJbZUD8tBA4t0QOOrid3gLFqNw3G4dBe9Hl7txJodFrVmyCD+QRO7GErxIOkyFYkk5bSkmzaQnDXPg2tJ+KjCYCN4GhGQ2+pKSC4wdC7zrzQs5suSbY2bkfPtUzMavCHu8z3Umzp45F7h4nNLj3ag4WZPiouElEKeRoZL4iaJoyxXLQOhuwdYZOOoTJPwFx6wMGasS0B0FBHv2ASfI/ShZU/T/8WZCoO0fviURImkHlxPRw9KWJhP+Eq4vJVFyBslDV172ee+rCVw78+9pwBZB+ynG1NjGrsUpxwXiXLeLQMsyLRpoJJMiZmbr/AFQVwjCHOWP3jk/Ssw2YVeqdGRzvU/upGvpz9OM8Qj4e+Axuob1m30vtt6YULBF7c5KmPwWmVcbGn8z0JySoIdnoQlFTCxnPcvNeJt2y708pFNCQSKyUdbmIFzfojNjn+SUR4Y6MTshoiZIo="
+skill: 0.953
+archetype: duelist
+leverOffsets:
+  aimErrorDeg: 0.7
+  cps: 1.88
+  awarenessRadius: -0.56
+  coordination: -0.15
+  technique: 1.09
+  aggression: 1.14
+kits:
+  trooper: 1
+  shortbow: 0.42
+roles:
+  escort: 0.28
+  retake: 0.63
+  hunt: 0.77
+style:
+  aggression: 0.81
+  patience: 0.27
+  teamplay: 0.29
+  risk: 0.41
+voice:
+  tone:
+    - measured
+    - competitive
+  verbosity: normal
+  style: "soft beat counts and tiny timing worries; brief courteous challenges and honest shot assessments"
+lines:
+  greet:
+    - copper spring is almost on time
+    - copper spring ready, good fights everyone
+  onKill:
+    - right on the copper spring beat
+    - good exchange beside the copper spring
+  onDeath:
+    - my copper spring skipped a beat
+    - fair hit, the copper spring left that gap
+  onPlant:
+    - copper spring is counting now
+    - copper spring earned a moment at the bomb
+  onDefuse:
+    - stopped just before the chime
+    - copper spring can settle this at the fuse
+  onWin:
+    - copper spring and team in perfect time
+    - copper spring had some good fights today
+  onLoss:
+    - my copper spring needs adjusting
+    - copper spring wants another clean round
+  onLastAlive:
+    - only one copper spring still ticking
+    - one copper spring, one fair chance
+  taunt:
+    - a little early on that swing
+    - the copper spring is ready for that peek
+  lobby:
+    - listening for the copper spring tick
+    - my copper spring is not a countdown shortcut
+    - "My copper spring: I will contest the middle."
+    - With my copper spring, give the middle fight a clear lane.
+quirks:
+  - good_sport
+  - always_gg
+rivals:
+  - brouzgrulcomet
+bio: xXGolemBlazeXx built a clock tower that chimed one block too early and still brings a copper spring to the queue. BrouzgrulComet keeps asking whether it really helps.
+batch: 3
+retired: false

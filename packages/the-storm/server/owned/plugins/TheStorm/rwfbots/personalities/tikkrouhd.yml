@@ -1,0 +1,75 @@
+id: tikkrouhd
+name: TikkrouHD
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTc1NDcxNSwKICAicHJvZmlsZUlkIiA6ICI5MjI1NDBlMTRjZjI0NDI3YmExYmZjOTk3NWVmNGQ0YiIsCiAgInByb2ZpbGVOYW1lIiA6ICJfRmxhbnR5XyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9iODgxNTAxNDc5OWE1YmI3ZTA4NGE5N2M2YjU3OWYzNTk2YTRjMGU2YmI4YjU5YmM3MjRiMGQxOWFkN2Q4NzY1IgogICAgfQogIH0KfQ=="
+  signature: "Wy18EyTrXh5AY/TU638DCKO3KF5zBaYM0GeerlwTFWBteYTcdLc8sOLrvl5A9iCd27e8d2hDvFM4oya4IZFXERhjbuevvOQIm+rHRUDjyWFZkU1h106zHggedjHEm1ulW2lixaoK6tGx3o3ehdBqTx0+R/fFiS2/aPFvTJqKHX3WPNi5DQBtHavzQcJwcxPt7nESH2vBhh2VnvWA9Zu2gx6QDNmqTUGqZ7D/yheQs9l+Ggns929gp9zv6Wvl0JlOpbOjQ3dBnsYAZ6kBd6q+EZT4/dV8e9eSob84ymFn1xheV3b9PxGIrWIqiJ9PRu6w32QZ6sgtdoRWJEY2CdPS+k5LATfNK75wzYZAz07P10HO10SCe0yZZZGxIQrcs6Yk19RKxfvt4TCrYff5MMRfUKv/Hxh+sHlUETHUcJRAmg/VTty5fh35C6PJxHAlkbJ49Wisy66dMAwcDVStLgPZCTJGrHFKvQcZ4AEiH6pInNSNu1KU5hQZkcVilhwCyRnjomrlwtL04Z0TnH5sQ6MWB/gG9rki8Md9lQDHYw1RbNhQGoVFfWD80ETbdFmJWb24rmKCX0IMXrIOpgCfaNtjVotqWiNUL6ZGkwTTtwpgX0m8cRR2R29v8W3oqKSDm6MkrLkrECGtjk8w9Fj2Xel82Ks2NpeHqo6AOKKDJAhab5c="
+skill: 0.435
+archetype: troll
+leverOffsets:
+  reactionMs: -0.13
+  cps: 0.12
+  decisionTemperature: -2.36
+  coordination: -1.21
+  technique: -0.32
+kits:
+  trooper: 0.52
+  shortbow: 0.75
+  rewind: 0.93
+  spy: 0.86
+roles:
+  plant: 0.42
+  escort: 0.23
+  rotate: 0.47
+  hunt: 0.61
+style:
+  aggression: 0.72
+  patience: 0.36
+  teamplay: 0.03
+  risk: 0.9
+voice:
+  tone:
+    - excitable
+    - mischievous
+  verbosity: quiet
+  style: "enthusiastic clues and upside-down maps; deadpan object conversations and harmless overconfidence"
+lines:
+  greet:
+    - puzzle ring found, clue understood
+    - puzzle ring has appointed itself captain
+  onKill:
+    - that corner was the next clue
+    - puzzle ring is now insufferably proud
+  onDeath:
+    - the clue was apparently a trap
+    - puzzle ring would like a different replay
+  onPlant:
+    - a very loud treasure chest
+    - puzzle ring calls this interior decorating
+  onDefuse:
+    - solved that little puzzle
+    - puzzle ring says it knew the correct wire
+  onWin:
+    - puzzle ring led us to the prize
+    - puzzle ring is requesting a trophy shelf
+  onLoss:
+    - the puzzle ring was upside down again
+    - puzzle ring has misplaced the blame form
+  onLastAlive:
+    - one clue and no hints
+    - puzzle ring insists this was the plan
+  taunt:
+    - that trail led you in a circle
+    - the puzzle ring gave that push three out of ten
+  lobby:
+    - does anyone recognise my puzzle ring?
+    - the answer is definitely near my puzzle ring
+    - "My puzzle ring: I will cause a useful distraction."
+    - With my puzzle ring, try not to laugh during my push.
+quirks:
+  - celebrates_early
+  - always_gg
+rivals:
+  - mykkaestnainmc
+bio: TikkrouHD hid tiny treasure chests along the old lobby walking route and still brings a puzzle ring to the queue. MykkaestnainMC keeps asking whether it really helps.
+batch: 3
+retired: false

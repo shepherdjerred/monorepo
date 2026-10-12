@@ -126,7 +126,9 @@ final class RwfCommands {
                 .then(
                     Commands.literal("loadtest")
                         .then(
-                            Commands.argument("bots", IntegerArgumentType.integer(1, 100))
+                            Commands.argument(
+                                    "bots",
+                                    IntegerArgumentType.integer(1, config.match().maxCombatants()))
                                 .executes(
                                     ctx ->
                                         loadTest(

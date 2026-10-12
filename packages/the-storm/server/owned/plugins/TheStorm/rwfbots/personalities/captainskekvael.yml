@@ -1,0 +1,72 @@
+id: captainskekvael
+name: CaptainSkekvael
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjI2NzY1NCwKICAicHJvZmlsZUlkIiA6ICIxMjE4YWNiNDJiYzA0MzY4YjIxOTU4ZTZiYWU2NDMyMCIsCiAgInByb2ZpbGVOYW1lIiA6ICJQYXRhdGplTUMiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZmM2MDZhNmQ1YjFhYTUzYjM1MzFkYTBlYTFjN2MxZGM5YzcwOGIwMGJlNzA2NmUwNTdmNWEyNTRiM2Y0NGM0YSIKICAgIH0KICB9Cn0="
+  signature: "RcygpCsXqzRnrctxOz47/jp8Ksg5Gb9QP8WMAkzQMmTLlysfN7FvEs5Ik3zKwvRKKr9iiOxfBpJ/0gQm/Nzzt6MGjjs6K7c/GPjEBVMvv1OQtfvFLI8MoJBOwZHrK0GFkBwioYjfWWhcqDiMCQP52rZFGA95NR8oiVty5E3QfRAO1pSP0fSbzBgU95TVM2xMtFFLuyh2k0tv/Io8P5DCDBQFmBREpmULdiRlsvqiOJh7cto62Vjapjn+7vMpjqOCbO176ZoR/EsymFswaM0P0yJ6Vzt+8sgyNDz2DnQz3IJZQIknNRQgJNprUI6GfQRn9GhDhE+bCV6oK/W1Nu4wE8UcZkW3hZmyljoSBHTRzlAOjwrUXKAYCEFGshd6RpzyxH28a50fFHjcEZo3LtKe7b5aNL3/E83mmFFctvP2MqrkgCuKpqCZ6IcW6giahgvfLwpC9H3lUnEqs455NVq8lW9mN7Y1hXzMOvS9DTanLOkgeFiI907lpYRwPi3L9/XuDeEE9uxcrV7gTm2YiNQAGzL5m4eDWMiZoVgJ/P2k+7IfjdnGvlfR2bd3J+fgLoY+og+HsUwHWIPeC4IT3UJBYUhZ0f1FZHMH2767AEGcDimUo0wePRKelB4jIBLBOdgeL+l0Xhp/+2vnKoXm+BUY/C+IbyKPd07wg2xK4iKskoY="
+skill: 0.291
+archetype: turtle
+leverOffsets:
+  reactionMs: 0.44
+  predictionQuality: -0.91
+  decisionTemperature: 0.1
+  awarenessRadius: 0.07
+  aggression: -2.04
+kits:
+  trooper: 0.86
+  longbow: 0.33
+  rewind: 0.73
+roles:
+  defend: 0.86
+  retake: 0.27
+style:
+  aggression: 0.11
+  patience: 0.91
+  teamplay: 0.5
+  risk: 0.04
+voice:
+  tone:
+    - playful
+    - cautious
+  verbosity: normal
+  style: "tiny winter expeditions, serious snow forts; unhurried words, conservative estimates and tiny victories"
+lines:
+  greet:
+    - snow fort flag thawed out, ready
+    - snow fort flag is ready. no need to hurry.
+  onKill:
+    - a tidy little snowball effect
+    - snow fort flag waited for the opening
+  onDeath:
+    - slid right out of that plan
+    - snow fort flag should have waited another moment
+  onPlant:
+    - a warm spot in the snow
+    - snow fort flag checked the site first
+  onDefuse:
+    - cooled the bomb right down
+    - snow fort flag checked the corner twice
+  onWin:
+    - snow fort flag has survived the thaw
+    - snow fort flag got there eventually
+  onLoss:
+    - the fort melted around us
+    - snow fort flag needed one more safe corner
+  onLastAlive:
+    - one mitten still waving
+    - the snow fort flag will take this slowly
+  taunt:
+    - your footing looked a bit icy
+    - the snow fort flag can wait out that peek
+  lobby:
+    - warming my snow fort flag by the lobby lamp
+    - please stop hiding my snow fort flag in snow
+    - "My snow fort flag: I will keep a safe route home."
+    - With my snow fort flag, please check the blind corner first.
+quirks:
+  - gapple_hoarder
+  - always_gg
+rivals:
+  - drtaerloul
+bio: CaptainSkekvael built a snow fort that lasted longer than the team inside it and still brings a snow fort flag to the queue. DrTaerloul keeps asking whether it really helps.
+batch: 3
+retired: false

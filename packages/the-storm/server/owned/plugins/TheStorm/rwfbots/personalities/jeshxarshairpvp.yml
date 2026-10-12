@@ -1,0 +1,75 @@
+id: jeshxarshairpvp
+name: JeshxarshairPvP
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjE5NTAyNiwKICAicHJvZmlsZUlkIiA6ICI4YmM3MjdlYThjZjA0YWUzYTI4MDVhY2YzNjRjMmQyNCIsCiAgInByb2ZpbGVOYW1lIiA6ICJub3RpbnZlbnRpdmUiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjc5NDhhYWY0ODRmNDJkZDVkMWRmZTY5ZDBmMDBiYTlmODBjYWI0M2I3NWY2MmU5ODNmODQ3ZmZjYzA3NmE2NSIKICAgIH0KICB9Cn0="
+  signature: "JPh8nJhyvV1uBRaKytfBRaPhOm48AbxtXBR7PHlFQOa2phrMk7JZGU4WDA0jbANvtjhXeu96b16ZJP4/blo2MqD5XT75MaTXDDmtHQ+FJN3LlI+lezIcNTxfsSGfqxL1OLp4uhhGsgO62VmZR6/BdICV3U1qbpN9bd0ziI7SrRfs8KmNvbvcKAi8nnkvqGgs/7XIG27lRC9b0P6eYdVt9E72sb6NAuU5NJolEwYmjbeplttTOOeXl3XCC0i79IO7CXDJHDwwoG3p62gRMz6NZJS79MZ8tKb3NXpSdAHhS/HMEdojb0I8aU5tBHvACF2WiTY15YYgqfHpKmNsrXn9xpdKfbCiQ0il5E9C8JCcsQ9qkXyny/Yl+I+vZxaTtzbupDp8VIRqtzupDrrqQnzZe9QrJb3MtqgFZEftNOXIxV4LEmrp4xczx28XKM0/49NTexsUZG98qPLwTTUH90hbDecJ7CAnlST6cGRcwqj0FgTadD2owusSfL63AcrAyaKS/CYpYHx6zwUrL+ibHeLfU+NkuHnK76qz7nnsHQWcdxD2SUI1udaf1ODQ3uy+r2YnnbOrmtOaT9fxGFpT1SsDwEvUE00qiQxLGRAef1hFmevgjAPR8JtklNBnmq9DIthQVrfQVbxKYmH3qKjaV/JBRd52WT2K7nNi/1/i04xB/ws="
+skill: 0.948
+archetype: rusher
+leverOffsets:
+  reactionMs: 0.3
+  aimErrorDeg: -0.11
+  turnRateDegPerTick: -0.85
+  cps: 0.54
+  decisionTemperature: 0.6
+  awarenessRadius: -0.19
+  aggression: 1.67
+kits:
+  trooper: 0.85
+  shortbow: 0.56
+  rewind: 0.33
+roles:
+  plant: 0.74
+  escort: 0.51
+  hunt: 0.87
+style:
+  aggression: 0.9
+  patience: 0.16
+  teamplay: 0.44
+  risk: 0.66
+voice:
+  tone:
+    - cheerful
+    - eager
+  verbosity: normal
+  style: "busy hive reports, praises small useful jobs; fast fragments, impatient countdowns"
+lines:
+  greet:
+    - hive frame says the hive is busy
+    - hive frame ready, I am taking the first corner
+  onKill:
+    - a little sting in that lane
+    - hive frame keeps moving, next corner
+  onDeath:
+    - flew straight into the window
+    - a pause for the hive frame, then straight back
+  onPlant:
+    - quite a buzz at the bomb
+    - hive frame is already on the next approach
+  onDefuse:
+    - settled the swarm
+    - quick hands, quick hive frame, clear
+  onWin:
+    - hive frame has earned some honey
+    - hive frame barely stopped all round
+  onLoss:
+    - the hive will rebuild
+    - hive frame ran ahead of the plan
+  onLastAlive:
+    - one bee still making the rounds
+    - my hive frame and I will keep moving
+  taunt:
+    - a lot of buzzing for that push
+    - my hive frame got here before that push
+  lobby:
+    - keeping my hive frame out of the rain
+    - no bees are hiding in my hive frame
+    - "My hive frame: first corner is mine."
+    - With my hive frame, please follow after the opening.
+quirks:
+  - bunny_hops
+  - always_gg
+rivals:
+  - luckyninja54
+bio: JeshxarshairPvP kept a pretend apiary behind a flower-covered team base and still brings a hive frame to the queue. LuckyNinja54 keeps asking whether it really helps.
+batch: 3
+retired: false

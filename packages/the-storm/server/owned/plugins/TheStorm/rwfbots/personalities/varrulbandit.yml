@@ -1,0 +1,72 @@
+id: varrulbandit
+name: VarrulBandit
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODc5NDg0NSwKICAicHJvZmlsZUlkIiA6ICJlNjY3ZTI3OTdkMGM0Y2VjYWEyOWRlODljNjM4OGVjMCIsCiAgInByb2ZpbGVOYW1lIiA6ICI3X2hwIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2YxZWZkMWE5N2RjYjNlNWViOGIxMDhlYjdjYjUxMGYzM2I4MGNiMGVmNTkzN2JlZTUwNzdmNDc5NjY2MTk4MmEiCiAgICB9CiAgfQp9
+  signature: "UsSyAmvBvOqwgQKPrfMuvf92Bx6w13/5h2XRfLAR62YDcncaWmj/qMJc01tN7ZGKQXys0SHjilEzfto1C2qdwP5pvNXgS3qurLCsc5s5QsJJD1Jbj3ZrbcAGfaub0ATwg+C7+iFtsrf/5qO2tRO9SD4pdl5HALc8ppiFdphXCbk2fb0jFpA98mGfP5iw3FGbyaxiQkRSVrtklWdJBjCUXUKJDvKir4cXvU5l0vsCMge4huR7WyJ82r1bKM1ynrgxUBauLIubArqIbsIlcdI5VBKcPOMFZFkqFRtdKa05YKDvtEZi7W+cZdRSuYo5fZotlpI9O42Q1wGhpg1bcNeYM7o3LfpieSKT91YCJWWrUbzoiazvHzCm2o/zJzqjCtfb3oUYog7J74ulca0JYq3twqCm9sK8OLCR1wvyuLSvCt+kDO5Xqfms00I5PtCqNBwV2w26ayq9GLUti/GLOGa3+3NnJ1+6ZsEWJ1t17mWz2+4A9hh+K+QvCM2ZzUxD4CIXCl/HqHwZ0/RyBIn/cpjAt4pJgPIwRoj5/ZWAuudnC5naJB13SJ84wTTcx9gcIw/nykrc8clHhT8vystcB2YOjWgYz6olYXiy8Yh8vgctkqWr1esYvpY4TJDt3LwVn2/bm8oNIXcLWN9dp9E/nBKmABd5FbS1mciGvNMdCNvpXKo="
+skill: 0.649
+archetype: support
+leverOffsets:
+  turnRateDegPerTick: -0.51
+  awarenessRadius: 0.5
+  coordination: 1.97
+  aggression: -0.44
+kits:
+  trooper: 0.95
+  longbow: 0.28
+  rewind: 0.69
+roles:
+  escort: 0.89
+  defend: 0.38
+  retake: 0.69
+style:
+  aggression: 0.37
+  patience: 0.45
+  teamplay: 1
+  risk: 0.39
+voice:
+  tone:
+    - busy
+    - helpful
+  verbosity: chatty
+  style: "ingredient lists and improvised kitchen fixes; gentle check-ins, thanks and useful kit reminders"
+lines:
+  greet:
+    - salt cellar washed, team fed
+    - salt cellar is here, everyone got their kit?
+  onKill:
+    - a useful pinch of pressure
+    - one less problem beside the salt cellar
+  onDeath:
+    - too much heat on that corner
+    - sorry, the salt cellar corner is open
+  onPlant:
+    - letting the bomb simmer
+    - salt cellar can watch while you plant
+  onDefuse:
+    - taken off the heat
+    - salt cellar is here to help at the fuse
+  onWin:
+    - salt cellar can serve this round
+    - salt cellar says everyone helped
+  onLoss:
+    - the salt cellar recipe needs work
+    - salt cellar says we can tidy that up
+  onLastAlive:
+    - one cook still stirring
+    - one salt cellar still trying to help
+  taunt:
+    - your push could use seasoning
+    - the salt cellar brought a team to that corner
+  lobby:
+    - there is soup beside my salt cellar
+    - please return my salt cellar after dinner
+    - "My salt cellar: I will stay close to the push."
+    - With my salt cellar, call if you need an escort.
+quirks:
+  - says_sorry
+  - always_gg
+rivals:
+  - mrmeshpaeshke
+bio: VarrulBandit fed a team from a cramped kitchen beneath their spawn and still brings a salt cellar to the queue. MrMeshpaeshke keeps asking whether it really helps.
+batch: 3
+retired: false

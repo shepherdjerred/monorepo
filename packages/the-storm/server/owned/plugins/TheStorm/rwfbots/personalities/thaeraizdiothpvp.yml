@@ -1,0 +1,77 @@
+id: thaeraizdiothpvp
+name: ThaeraizdiothPvP
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTM5OTAyOSwKICAicHJvZmlsZUlkIiA6ICIxNzNkZTMxZjIzODE0YzY1YjVmZWMyMTAyYmIxZjExNSIsCiAgInByb2ZpbGVOYW1lIiA6ICJCSVROVyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS85ZTNiYTMwZWFlZmJlNTViOWJmNGUyNzdjYmEzNTVlZjNhNmVhOTAxZTlhY2U1ZWI3OTRjYzc5YzFhODRkNDUwIgogICAgfQogIH0KfQ=="
+  signature: "yPympFX9PHhjua8fmIdJezSWWXRWYvhNAPTz+LcuDifeD9XXKFiCg062M+dg2CY/FBBSciW9xPLeIk65Bf9T+/0WfCGpypzPSBzPERTSQdvacLlq/eGmdCyZXaaX+x4lg9ob3D/LumxsYsDRWqW0s2GT+fcyB8v0J4Qnlta+nJsiJYVY3px+mNITEnVAEI61hSJLxSV9uow72PF2BRKjH448LlME2dGe4k9g52Ql/jpG9k8UX3/wyz+SJ0N+zokxdIfWzU/qh0NkZsrnl24PltpYBxMUIf2XwQHGQhAFDW385UNZTJ1ZnoR4FkDf//Tnp9kTa3dtdE6EXzjgp48vRvf0K+7m0X9/+vJjUnsnhEGLW5wF+yhRIJMi/00Jh94BhqkVgxnmzU9+nc8ACTS/M3spTnoWMJoTJtvamRw4L++fhvm0kW7IlmobKbcfrRzMTwEOfYHqvMouEhUh3U4POYrDCcFKL1ANmW5cZt1mHYS+QSfpkaci65smowM7vukjjmkH02FiH2i2hc6dAO5ONdo0FJ2ybULHiEeeeuCLpMbrd16rJq2cVuYtX0Nry7AVYH5pcwTP2enAmJNmx+JXfsbOx8wczWJYE/YEq3LFjJZCoXJD5aoKUZmzCKEaItDgMozy6BinXG1tx0aIKKBk2AXnnGo9CTwPNUH4qCkAKUE="
+skill: 0.581
+archetype: sniper
+leverOffsets:
+  aimErrorDeg: 2.16
+  turnRateDegPerTick: -0.46
+  cps: -1.07
+  predictionQuality: 1.81
+  awarenessRadius: 0.3
+  coordination: 0.91
+  technique: -0.17
+  aggression: -0.54
+kits:
+  trooper: 0.14
+  longbow: 0.97
+  shortbow: 0.5
+  wraith: 0.32
+roles:
+  defend: 0.76
+  rotate: 0.33
+  hunt: 0.55
+style:
+  aggression: 0.26
+  patience: 0.83
+  teamplay: 0.36
+  risk: 0.18
+voice:
+  tone:
+    - cosy
+    - focused
+  verbosity: quiet
+  style: "kitchen chatter and imaginary baked snacks; short range notes and patient, exact corrections"
+lines:
+  greet:
+    - biscuit cutter ready, kitchen open
+    - biscuit cutter in place, checking the long angle
+  onKill:
+    - another order off the biscuit cutter
+    - biscuit cutter found the range
+  onDeath:
+    - left my biscuit cutter in the oven again
+    - biscuit cutter needed a closer angle
+  onPlant:
+    - setting the timer beside my biscuit cutter
+    - biscuit cutter covers the far entrance
+  onDefuse:
+    - took that out before it burned
+    - biscuit cutter can wait, hands on the fuse
+  onWin:
+    - biscuit cutter deserves a day off
+    - biscuit cutter had a clear view of that
+  onLoss:
+    - the biscuit cutter has seen better batches
+    - biscuit cutter kept the wrong sight line
+  onLastAlive:
+    - one cook and a very busy biscuit cutter
+    - one biscuit cutter, one long angle
+  taunt:
+    - that push needed longer to rise
+    - the biscuit cutter saw that peek twice
+  lobby:
+    - who borrowed my biscuit cutter?
+    - dusting the flour off my biscuit cutter
+    - "My biscuit cutter: I will cover the long angle."
+    - With my biscuit cutter, call the close flank for me.
+quirks:
+  - bow_spammer
+  - always_gg
+rivals:
+  - xxpotatoslimexx
+bio: ThaeraizdiothPvP ran a tiny spawn bakery with a queue of hungry regulars and still brings a biscuit cutter to the queue. xXPotatoSlimeXx keeps asking whether it really helps.
+batch: 3
+retired: false

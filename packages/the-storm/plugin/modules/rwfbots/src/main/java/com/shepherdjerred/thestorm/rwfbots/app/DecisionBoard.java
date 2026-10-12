@@ -17,6 +17,8 @@ import java.util.Optional;
  * @param thought how many bots ran tactics this job
  * @param deferred how many due perceptions the ray budget pushed to the next job
  * @param plans each team's playbook slots and who holds them, for debugging
+ * @param perceptions the observation timestamp of every living bot, including pending first
+ *     perceptions
  */
 public record DecisionBoard(
     long tick,
@@ -25,14 +27,17 @@ public record DecisionBoard(
     int perceived,
     int thought,
     int deferred,
-    Map<TeamId, TeamPlan> plans) {
+    Map<TeamId, TeamPlan> plans,
+    Map<CombatantId, PerceptionAge> perceptions) {
 
   /** The board before any job has run. */
-  public static final DecisionBoard EMPTY = new DecisionBoard(0, Map.of(), 0, 0, 0, 0, Map.of());
+  public static final DecisionBoard EMPTY =
+      new DecisionBoard(0, Map.of(), 0, 0, 0, 0, Map.of(), Map.of());
 
   public DecisionBoard {
     thoughts = Map.copyOf(thoughts);
     plans = Map.copyOf(plans);
+    perceptions = Map.copyOf(perceptions);
     if (tick < 0 || thinkNanos < 0 || perceived < 0 || thought < 0 || deferred < 0) {
       throw new IllegalArgumentException("board counters must not be negative");
     }

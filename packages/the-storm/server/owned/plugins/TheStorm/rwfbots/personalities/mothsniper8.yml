@@ -1,0 +1,76 @@
+id: mothsniper8
+name: MothSniper8
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODY1NTAxNywKICAicHJvZmlsZUlkIiA6ICJjYmNkNDQzZGE1NTI0OGU3ODM3NWNmZjYwMmQzZWI0NyIsCiAgInByb2ZpbGVOYW1lIiA6ICJPX1JlaSIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8zZGMyMzA4ZmJlN2IyODdhMTkwZjk5ZWEzMDc0NmU4ODFkNjA2NTViMjk2NDdkMzA1ZDM2NGRlYTlhNGRkNDliIgogICAgfQogIH0KfQ=="
+  signature: "OSipISTgzkD0Y8wHBqQXcTrHQVZIKqb2nb8YlfSANpVj7KPzEaHKkBXfGmQ0Blhw9OxWnoo4xbc38HEZjsFZH0a1St2pObp4gKOfsQ+7Nv4oeFt2pjsa/d8ns8MaEKkzxrmfOv1gbGtk2g+ElFCqUdqiRFbPIzQAu4PQfuT4zqey2cDIf5KJiPViNS37DD830IE8ZZ2e/lXFcDfUjAx9C+Yl/PRkx3dglfbz5D1sws+PsBbYF2QEH7IR63UhsiG61b0c8gPdzRKuSTTtagJ8k3G9ssfSw7dnWaJTsFX1bodT6tGbwYa6wJLikTsOF1eqBO1cG8SsqBl5iP2bhdpSjI1c7/toOgBW8leB104NEg9aGTyHpb6NLA45Ydq9M64SQq9ThUyXf0ugKTRqp8Hqv4h/6vIBlpGSdVgntERUP6Q1BSaNaT3uCOeXJqcRTSb0cxAW0ZffkmxPrPSKxppNvia40UrgM7yxuwpZrGmDzUFmOZUA93xC3ydUTM5R8TCtfUyY4GJqyLaPNi7o8OMK8t53Ih1HshF+XWbst0gVzPP3qId9t/ExadbrxR5Tc5K2GLynHekMO6UIq0X7HBxE3RmpdjoBZz98rFhxrb8gPQ/KxhrdNo3USYHYVz5+azfIN0yR/IeB/bxLNzTKSt2YjdRfQseo2BGDUnEOIUadY8w="
+skill: 0.862
+archetype: sniper
+leverOffsets:
+  aimErrorDeg: 1.43
+  turnRateDegPerTick: -0.07
+  cps: -1.24
+  predictionQuality: 1.32
+  awarenessRadius: 1.38
+  coordination: -0.38
+  technique: -0.25
+  aggression: -0.36
+kits:
+  trooper: 0.16
+  longbow: 0.93
+  shortbow: 0.43
+roles:
+  defend: 0.75
+  rotate: 0.28
+  hunt: 0.66
+style:
+  aggression: 0.35
+  patience: 0.86
+  teamplay: 0.44
+  risk: 0.09
+voice:
+  tone:
+    - cheerful
+    - focused
+  verbosity: normal
+  style: "busy hive reports, praises small useful jobs; short range notes and patient, exact corrections"
+lines:
+  greet:
+    - wax candle says the hive is busy
+    - wax candle in place, checking the long angle
+  onKill:
+    - a little sting in that lane
+    - wax candle found the range
+  onDeath:
+    - flew straight into the window
+    - wax candle needed a closer angle
+  onPlant:
+    - quite a buzz at the bomb
+    - wax candle covers the far entrance
+  onDefuse:
+    - settled the swarm
+    - wax candle can wait, hands on the fuse
+  onWin:
+    - wax candle has earned some honey
+    - wax candle had a clear view of that
+  onLoss:
+    - the hive will rebuild
+    - wax candle kept the wrong sight line
+  onLastAlive:
+    - one bee still making the rounds
+    - one wax candle, one long angle
+  taunt:
+    - a lot of buzzing for that push
+    - the wax candle saw that peek twice
+  lobby:
+    - keeping my wax candle out of the rain
+    - no bees are hiding in my wax candle
+    - "My wax candle: I will cover the long angle."
+    - With my wax candle, call the close flank for me.
+quirks:
+  - bow_spammer
+  - always_gg
+rivals:
+  - slimesniper2
+bio: MothSniper8 kept a pretend apiary behind a flower-covered team base and still brings a wax candle to the queue. SlimeSniper2 keeps asking whether it really helps.
+batch: 3
+retired: false

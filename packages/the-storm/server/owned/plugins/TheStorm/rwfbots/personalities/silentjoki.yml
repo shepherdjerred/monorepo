@@ -1,0 +1,73 @@
+id: silentjoki
+name: SilentJoki
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NDIwOTA0NiwKICAicHJvZmlsZUlkIiA6ICI0MDUxNzNiODY0OTM0NTUxOThlOGMzOGJmNmJmNjZiMSIsCiAgInByb2ZpbGVOYW1lIiA6ICJzcGFjZWNhZGV0MTgiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjc4MTdlZTJmMTJiMjliYzY4M2U3MDVmZTdiN2QwMGMwZTViOTc3NmViZGRkZDRmMzNlMTVkZWY3M2RiYzk3MSIKICAgIH0KICB9Cn0="
+  signature: "S/y3OL0o2d8FM3j4zdYuYgTf2ADrD7hVuZYgKrEy7DE2BiEpjC/3IUwd4FKuFTfxbMfN/1z1fPrDa8wZhxy2lWu8dJhfR+cy6yJNxpuU12w4Fzq71iYjWLT/mrWgq+fqPuE6PfU02zm19iRs27SU2QbyEWk/zjrCTMuTPmqn58sW4j2bpGYZKMKGPr/fQHHtWQckdRdHekbRt/oXA8j5gr8tKwft48zi909e3bYfz238yBc703vzG61w5mtJ7J25Jz0WI8ZQLSLztnfkBkg1yThI4e0SjFOyohhiRfICnOXKB+Py9mUjbr5E998DeZDS+u47/xecX9FZdYPaIUdJ4HASDWU3BYlKHwBVvmySbKMNsaHPkzWU2V3ElOuhBjpkIWfECObMdVaBBdaSCIy7EnCe1KDJ+YzJkZY9P5IRttCNG5BAGff8tn2tG9T9ovz0IFjZvENppNv9hySXewkdlS46jLptDI7eSBfvJtqi3G1LO3x0cqd0zx7zvhMZVd2aqcvI0OHKXMRvn8WLL+YwsSe0ZqV02ODOCWSNKS0KqJY34cj3wiaBfSRRC6RXri9Ed8gp2HDBH27jgC0LsI2mXfUSKHwtBzhmidolAS50OcVl726rixKNQgh4V7jk4EUlL/aO6GmottZM1WyhKOpGBv1qqkaSTUhbC3g0uyclYmM="
+skill: 0.059
+archetype: bomb_diver
+leverOffsets:
+  reactionMs: 0.16
+  cps: 0.02
+  decisionTemperature: 0.66
+  coordination: 0.12
+  technique: 0.67
+  aggression: 0
+kits:
+  trooper: 0.87
+  shortbow: 0.22
+  rewind: 0.53
+roles:
+  plant: 0.92
+  escort: 0.18
+style:
+  aggression: 0.65
+  patience: 0.23
+  teamplay: 0.25
+  risk: 0.98
+voice:
+  tone:
+    - theatrical
+    - urgent
+  verbosity: normal
+  style: "backstage whispers and hurried scene changes; breathless objective reports, oddly calm at a fuse"
+lines:
+  greet:
+    - prop crown in place, curtain soon
+    - prop crown packed, where is the bomb?
+  onKill:
+    - a quick scene change for the prop crown
+    - a clear path for the prop crown
+  onDeath:
+    - missed my cue by a whole scene
+    - prop crown was one corner from the fuse
+  onPlant:
+    - cue the dramatic ticking
+    - "prop crown is parked beside {bomb}"
+  onDefuse:
+    - cut that effect, safely
+    - "prop crown and {bomb} can both stay intact"
+  onWin:
+    - take a bow beside the prop crown
+    - prop crown got the objective done
+  onLoss:
+    - the prop crown needs a better rehearsal
+    - prop crown took too long reaching the site
+  onLastAlive:
+    - one performer, one prop crown
+    - the prop crown still has a fuse to find
+  taunt:
+    - your entrance was a bit loud
+    - the prop crown got closer to your bomb
+  lobby:
+    - has anyone seen the prop crown?
+    - do not lean on the painted prop crown
+    - "My prop crown: cover my approach to the bomb."
+    - With my prop crown, call the safest bomb route.
+quirks:
+  - loves_nuke
+  - always_gg
+rivals:
+  - lynxminer8
+bio: SilentJoki worked the curtains at a player-built theatre between duels and still brings a prop crown to the queue. LynxMiner8 keeps asking whether it really helps.
+batch: 3
+retired: false

@@ -1,0 +1,75 @@
+id: tirtukphantom
+name: TirtukPhantom
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTc0MjM3NCwKICAicHJvZmlsZUlkIiA6ICI1ZjU5NmViY2JlOTQ0NmQxYmI0M2JlNGYzZjRiOGJlNSIsCiAgInByb2ZpbGVOYW1lIiA6ICJUZWlsMHNzIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzkxODM5NWZmM2RlN2IyZGU5NjBjOGU5Yzc4Y2EyZjA0Njg2OTgxNDZkMWQ1NGU5YWViZTgyM2FmYmIyNjNjMDciCiAgICB9CiAgfQp9
+  signature: "ue3ciL5OSjqGX7MPGq7UkV1tSFcyZBbU4+j9/2tFweCbPMX6ZD4qNlt21iz01nKnQAnbbbePvbOE02rcFx8YgPqhZXg8KrJFZKwnNXT2sxA7yP6p64mFnDQAbQVBCWyCyyGIALvC8du+B7hOpvzDq6FXgaOk0sPSc0X0hkWUTRpfc4ejYk/z3AnbqkUw4mjteCgL34iaIkSE9ez5H5gdRTiEYycrRWyly/bo2R/aksbH9NZVxVXUrHJH7PEccHTMR/Fy9jLRHuDL4cOmFgpRp7jyKG9WJcwwZYp+1IkMFTM1jGLxSlJP4vfd5gTVO2rzjefw1SgmTSr22ghCfU/P48WJ1Wm2e9gETdWSFCWHIp4AiQ5U7OD/r6OJaHDztnlotu9Z3SPAg43iNu2UdiUM/UQ3IJfDkzUmxvv1bNewpPR+Y7iHtzOs31vQWqgX97armD+JLghM/GxiBy7QsZHol4byMsnugCoter02mfNkYbRGo00TKlVjWPvRbzylfYSMdNtaLrmR8nNP0et/xvlDioBkUo1F/roNxZeQtqOyKFQmRvwoS5yEmtPwhkQFpSSONV8gmnv8t80hXEClCldlApf+J3S2MNX9YH7lHMQ97C2JnPDBu334VObxS4u8O0k7wniEY8TddKPlC4ccFk/1Z7zyUOF7RZx4vGdSSwUhOfY="
+skill: 0.672
+archetype: flanker
+leverOffsets:
+  turnRateDegPerTick: 1.5
+  predictionQuality: 0.6
+  coordination: -0.78
+  technique: -0.4
+  aggression: 0.33
+kits:
+  trooper: 0.56
+  shortbow: 0.9
+  rewind: 0.37
+  wraith: 0.46
+  spy: 0.44
+roles:
+  plant: 0.39
+  rotate: 1
+  hunt: 0.51
+style:
+  aggression: 0.69
+  patience: 0.53
+  teamplay: 0.26
+  risk: 0.72
+voice:
+  tone:
+    - steady
+    - nimble
+  verbosity: normal
+  style: "buoyancy checks and practical nautical talk; quick side remarks and route changes mid-sentence"
+lines:
+  greet:
+    - caulking iron fastened, ready to cast off
+    - caulking iron is taking the other entrance
+  onKill:
+    - found a gap in that hull
+    - caulking iron found a side door
+  onDeath:
+    - a little water over the rail
+    - caulking iron chose an occupied side door
+  onPlant:
+    - not a cargo I want to keep
+    - "caulking iron came around the back of {bomb}"
+  onDefuse:
+    - unloaded that safely
+    - caulking iron found a quieter route to the fuse
+  onWin:
+    - caulking iron brought us back to dock
+    - caulking iron took the long way for a reason
+  onLoss:
+    - the caulking iron voyage met a reef
+    - caulking iron took the long way for no reason
+  onLastAlive:
+    - one hand still at the tiller
+    - one caulking iron coming around the edge
+  taunt:
+    - your push is sailing against the wind
+    - the caulking iron is somewhere to the side
+  lobby:
+    - tightening the bolts on my caulking iron
+    - keeping the caulking iron dry for the voyage home
+    - "My caulking iron: I will try the side approach."
+    - With my caulking iron, keep them looking forward for me.
+quirks:
+  - crouch_spam
+  - always_gg
+rivals:
+  - xxriderpickaxexx
+bio: TirtukPhantom launched a leaky ferry between two rival team docks and still brings a caulking iron to the queue. xXRiderPickaxeXx keeps asking whether it really helps.
+batch: 3
+retired: false

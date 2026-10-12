@@ -1,0 +1,74 @@
+id: roguerushshaeth
+name: RogueRushshaeth
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTQ0ODg3OCwKICAicHJvZmlsZUlkIiA6ICI0YWU5MTM5MzZhOGU0MWU0YWNlMTYyYjI4YmM0MzMwMyIsCiAgInByb2ZpbGVOYW1lIiA6ICJ6ZXJ2YXRpb24iLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjIyOTczNzY0OTc1YTYxZDE2MWQ5MDdjOTNlNzdmMjI2NzQ0MDU5MWVkNThlNDU1YTNhMDg0N2Q3MWM0NjU0OSIKICAgIH0KICB9Cn0="
+  signature: "Gqe4ENJfE2fQ+gPzHqptgwQ6xbutwu8xQu+HjOMXvyCmHOO0zlf/uXx59mbB+MGDRlTT8P8yb4BmMxJDZBZAF0Y6CLobDjr2THshDrYwGq2DwSpZWxejqSPOUBnYSxj/VWgAKspylXc4xfThV3LL6yWJ5A+iT0f/RCiRigz4sf7gYAO6/RR/PKhGKsSUHxhUrcMNX0HH+ltXpYnc0/Jf4quo6I4cou90EnnA2HqnfxDCpiFEg88ANrUMYbhqKShgcB1mhD8cw0N0UvGkPI6pH2DSjfnESwm+s6wo4cecZZ9g0IhHXiDrtr9AoVxH15hDFTiqhrx6eqp2T8lD548GzjtCpxvsoNiC36t/bHpYI6LoIawzpdhYBmjZeCBVUcKbQXzSosSQ0Kju/CWWiCy5IcrulyB2edTnPJknePBBewcGLB5FkCzOZvjl58DS0yGuTsYTrw2foUnwL3MHSeWs29fITDC4acMEW0i/rMGFpaawWRjhsL7Pjav7GVRJjBLkahQL5b8r2sqLqZATXNG/d3IqwEyEDY4A23dexbaFN3yeqpVzsdZ43Ej4BqF1GDPV3oekNoFbM9yShH8/h1oYTpp9lcu6EaynDvzcz03KaqrPq4Qj2OavwXn2KVx8m7a/xcXGKDA7ewSWKO+mfE8HFPP8Rkv9vP89ckLws1Gv89Q="
+skill: 0.865
+archetype: hunter
+leverOffsets:
+  aimErrorDeg: 0.01
+  turnRateDegPerTick: 0.51
+  predictionQuality: 1.11
+  decisionTemperature: 0.78
+  awarenessRadius: 1.17
+  aggression: 1.09
+kits:
+  trooper: 0.61
+  longbow: 0.49
+  shortbow: 0.85
+roles:
+  plant: 0.12
+  rotate: 0.41
+  hunt: 0.98
+style:
+  aggression: 0.74
+  patience: 0.48
+  teamplay: 0.33
+  risk: 0.65
+voice:
+  tone:
+    - cosy
+    - intent
+  verbosity: normal
+  style: "kitchen chatter and imaginary baked snacks; tracks small clues aloud, then gives terse pursuit calls"
+lines:
+  greet:
+    - rolling pin ready, kitchen open
+    - rolling pin ready, looking for tracks
+  onKill:
+    - another order off the rolling pin
+    - rolling pin followed that trail correctly
+  onDeath:
+    - left my rolling pin in the oven again
+    - the rolling pin trail doubled back
+  onPlant:
+    - setting the timer beside my rolling pin
+    - "rolling pin found a path to {bomb}"
+  onDefuse:
+    - took that out before it burned
+    - rolling pin tracked the ticking down
+  onWin:
+    - rolling pin deserves a day off
+    - rolling pin followed it to the end
+  onLoss:
+    - the rolling pin has seen better batches
+    - rolling pin lost the trail near the finish
+  onLastAlive:
+    - one cook and a very busy rolling pin
+    - the rolling pin has one trail left
+  taunt:
+    - that push needed longer to rise
+    - the rolling pin noticed those footsteps
+  lobby:
+    - who borrowed my rolling pin?
+    - dusting the flour off my rolling pin
+    - "My rolling pin: I will look for the last opponent."
+    - With my rolling pin, call the last place you saw them.
+quirks:
+  - holds_grudges
+  - always_gg
+rivals:
+  - varrulbandit
+bio: RogueRushshaeth ran a tiny spawn bakery with a queue of hungry regulars and still brings a rolling pin to the queue. VarrulBandit keeps asking whether it really helps.
+batch: 3
+retired: false

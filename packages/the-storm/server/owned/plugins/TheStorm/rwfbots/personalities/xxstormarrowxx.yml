@@ -1,0 +1,73 @@
+id: xxstormarrowxx
+name: xXStormArrowXx
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTkzODkyMSwKICAicHJvZmlsZUlkIiA6ICJiZmQ3MjMxMGNmYWY0Yjc5OTNlYzhiYzU3ODg3YzU5ZCIsCiAgInByb2ZpbGVOYW1lIiA6ICJBbHBoYVNwQW0iLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNTliZmY5YTA3MjEzMzViYjMwZjM1MGZiYjViN2ZhNDY5MmU2ZThmNjFhMzQ3ZmZhN2JmODdkOWJjZmVhMTQyNSIKICAgIH0KICB9Cn0="
+  signature: "aPXIHfWZsJvz5H8WZ3XTYFnNJtw3cVqt5QY0PyrGBaTUiR/LPgUQyeXic/cXpF+GSpbippu+ZXrPj3tRl069VZR3KhKiLqasNTfeg3dAkL5pZjbFZAGvEU96YLVmOZvxS+j1NOl9E0lklx0acnkS+4dzaZOI5be/ABpWViol85vtcEPXw6Pxw72xLRGpmNrRLu45GBntiPj1ULVzn/YhZvEtdQA04VjEEWRwsy1WD5+gY3otasjGTt16z+JxqmLyydCeBIbKU7nzZfPjx1ZLYdJIrXA9Mezf91wmyOxU9XH16XJpT0+sDx4oqQV247a4HTP1tm7/IkQ0i58LPnkPTXfw7tIWfHuM9n04hvDdEmH5JO+7gH1UPlRlIDb2DNL5xmlJ69n00sY7L4l/i4rjFFj4apU+BtlNlT80VMGct8pzToGmZ0DMOPf6K0z8MXwlpEzyYp4FQe047RkqNNXwZQJz/cgaPnQkfoebzi1gCLtKpJGFtYIMFRpe/IvRpcx+vAQD6+s4Df3Nx20ObjQfIN5eEqeZQA1RpFW9muEcpFXkKeZmJTFs2v0o2r4yqLNr9jK+fdLh+GHZj9PvYJRDEmRGwYOCZWgGx27dOFRJxvxxDtQURWDlgrS55G2j9tXrVsNrinzPtvn1LMBIr4goyfXIRLEwXMVvtQdROIwZI04="
+skill: 0.737
+archetype: support
+leverOffsets:
+  predictionQuality: 0.24
+  awarenessRadius: 0.63
+  coordination: 1.16
+  aggression: -0.82
+kits:
+  trooper: 0.86
+  longbow: 0.32
+  rewind: 0.71
+roles:
+  escort: 0.93
+  defend: 0.48
+  rotate: 0.2
+  retake: 0.57
+style:
+  aggression: 0.25
+  patience: 0.6
+  teamplay: 1
+  risk: 0.42
+voice:
+  tone:
+    - steady
+    - helpful
+  verbosity: normal
+  style: "buoyancy checks and practical nautical talk; gentle check-ins, thanks and useful kit reminders"
+lines:
+  greet:
+    - mast collar fastened, ready to cast off
+    - mast collar is here, everyone got their kit?
+  onKill:
+    - found a gap in that hull
+    - one less problem beside the mast collar
+  onDeath:
+    - a little water over the rail
+    - sorry, the mast collar corner is open
+  onPlant:
+    - not a cargo I want to keep
+    - mast collar can watch while you plant
+  onDefuse:
+    - unloaded that safely
+    - mast collar is here to help at the fuse
+  onWin:
+    - mast collar brought us back to dock
+    - mast collar says everyone helped
+  onLoss:
+    - the mast collar voyage met a reef
+    - mast collar says we can tidy that up
+  onLastAlive:
+    - one hand still at the tiller
+    - one mast collar still trying to help
+  taunt:
+    - your push is sailing against the wind
+    - the mast collar brought a team to that corner
+  lobby:
+    - tightening the bolts on my mast collar
+    - keeping the mast collar dry for the voyage home
+    - "My mast collar: I will stay close to the push."
+    - With my mast collar, call if you need an escort.
+quirks:
+  - says_sorry
+  - always_gg
+rivals:
+  - moukpynhunter
+bio: xXStormArrowXx launched a leaky ferry between two rival team docks and still brings a mast collar to the queue. MoukpynHunter keeps asking whether it really helps.
+batch: 3
+retired: false

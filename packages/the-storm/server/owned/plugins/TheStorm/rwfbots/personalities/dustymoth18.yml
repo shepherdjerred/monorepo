@@ -1,0 +1,74 @@
+id: dustymoth18
+name: DustyMoth18
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjA4MzY5MCwKICAicHJvZmlsZUlkIiA6ICJmODJmNTQ1MDIzZDA0MTFkYmVlYzU4YWI4Y2JlMTNjNyIsCiAgInByb2ZpbGVOYW1lIiA6ICJSZXNwb25kZW50cyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9kYTM4YjkyOTdlMDFiYmMxOGEzMDlkNjU2MDQxOTAwYjBlYWY2YWNkOGNiYmJhNWZhYjIzODQ1OWJjYmQ2YTI5IgogICAgfQogIH0KfQ=="
+  signature: "bAnYLb+d40Fx4PZEJ1o4yjdzVE2x6CeiIBnZfTK7qLfEnIEcTwFIhuhhVJxYQ6jJ1yXdIVs1RDC3+5JA7CRWovdmby8Tbpm6qBS8b2VLgXIYWkVYGhO7DSxPSt1QEYNHNnNniFh360QQGVq1VqBqr43AENrWXA4QZ5HDNuluVKB5JTeTwMTfCOzV0TS//4SIajnN88CePLR6Gf9R9cQuZjZqdQYqO1utyIdE9CYP/eGuQa7hg76QqiEF3em3JCzmAaxcuEPCFlLAAHqkdsmvJKA7V/bV/By2391+ZDE8R5udw8ygRbUQ8Z7dd+lHTn3naHx197fWoIWP2QsMmzKXfNBZUlThtwyFObhUWYgi8j9P1XmYMQfb85nad61or6i4Qneuh+Q5+cibQpr4wERJqlT+Oiq7DRGoGWxJbhue9I0XBkqiaqxUQMKdenJAJptEQLB3rPKEBu2mEW0wF/sxMy0P/HvdwOCxVP/8F/LS4i1hMwRwy8vHa0tdvjgGdV135BjUx0zZYs3X1llemy5UYptbhJ275OpS/lNASQXfdFQrH72zWXxddLMrIXWt3iEq/VuTK8XoigX2Wv/nQujCPBxpCpkMpyffW4AcfM/+DZZ+B85apkF1QxNw/HnNkB+MxXT6Ua3QQuMX7odYL4jUIu1cgDkyPjxTRNml94xAnQY="
+skill: 0.472
+archetype: anchor
+leverOffsets:
+  reactionMs: 0.8
+  turnRateDegPerTick: 0.19
+  predictionQuality: 1.2
+  awarenessRadius: 0.48
+  coordination: 0.35
+  aggression: -0.75
+kits:
+  trooper: 1
+  longbow: 0.4
+  rewind: 0.31
+  wraith: 0.22
+roles:
+  defend: 0.9
+  retake: 0.81
+style:
+  aggression: 0.35
+  patience: 0.81
+  teamplay: 0.6
+  risk: 0.07
+voice:
+  tone:
+    - bookish
+    - grounded
+  verbosity: chatty
+  style: "brief footnotes and revised-edition rematches; reassuring statements and firm location reports"
+lines:
+  greet:
+    - page ribbon ready, new chapter
+    - page ribbon stays here, I have this corner
+  onKill:
+    - a short footnote to that duel
+    - page ribbon and corner still secure
+  onDeath:
+    - a regrettable page break
+    - someone watch the page ribbon corner
+  onPlant:
+    - a cliffhanger at the bomb
+    - page ribbon guards the exit from the site
+  onDefuse:
+    - closing that chapter gently
+    - page ribbon is staying by our bomb
+  onWin:
+    - the page ribbon gets a happy ending
+    - page ribbon never left the post
+  onLoss:
+    - the page ribbon needs a revised edition
+    - page ribbon held the wrong corner
+  onLastAlive:
+    - one last page to turn
+    - the page ribbon holds here a little longer
+  taunt:
+    - I have read that opening before
+    - the page ribbon has not moved for that push
+  lobby:
+    - resting my page ribbon on the lobby shelf
+    - please do not dog-ear my page ribbon
+    - "My page ribbon: I will guard the home approach."
+    - With my page ribbon, call before rotating off defence.
+quirks:
+  - stares_down
+  - always_gg
+rivals:
+  - waffleraven2
+bio: DustyMoth18 bound a book of old match stories with mismatched covers and still brings a page ribbon to the queue. WaffleRaven2 keeps asking whether it really helps.
+batch: 3
+retired: false

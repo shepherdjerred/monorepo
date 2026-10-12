@@ -1,0 +1,76 @@
+id: toxic-bandit
+name: Toxic_Bandit
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTgwNjIwMywKICAicHJvZmlsZUlkIiA6ICI0Yjk1YzI2Y2UwMDE0ZTUxOTY3ODc2Y2UzMzAwNzlmNyIsCiAgInByb2ZpbGVOYW1lIiA6ICJTdHJhd2JlcnJ5T2NlYW4iLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOTc4ZDM5ZTBmZDgxODk2OTVmY2Y3MGJhYjc0ZTc4ZjQ1OTAwNzUyOTcwYzUxMTc1M2VhNTdhNjQ3YThmNDI3NiIKICAgIH0KICB9Cn0="
+  signature: "eqwdtycQXwEV0/FqV1qCWteorHB72Bdoeq6QWq53DfiXpPS7VIu4La8CTTFh3piaBL/cyC7Mz8Hu9OQAcgcDqpTNOJ9GlHhFhmVBFX4kzjjRbi05FkZl410QxapFzep+suyQ9noKYCPCz4mcx7N92d/O8vX+t4Sa3yq9l5MOCbRXcF+M5AZKXe8S61Dv4GqGHmxvtM+e6ThHgPsz8H9GB4UWlIhLu/Qgby6pTg483pHZ78kKxS23LU7P2YWGwefurKXV3yY6Hk62XboVcYJYJkAv2/XZnvAv7m1gjF+RnP7lw45dSiyREyLVxB6kK4DgNXgdS1IEZQgpuJMhg4M93ctnqBqXJHWGA37sCQ5DfOgIDDftJC2xdtzfUY91zDNgZuGEi3PhJNxbGkDRnNLYktHYs5H7i6G6q6zz2nWbXBC2mLzu6rxbFgJOmvgI+4tGLwyllii5BNqnhQkKidMdRX6OoMV0Q7JWNdsaM9l70GyMkIcgo0sX6sdHgRAY0XffBImm/4Ibrf/GB6wAHjexXI72QU5CI/0Jhm0toavofUTt77TUQ7FvkzwYsuEDtLCdeSCiZEVxoIv4RdN02I1CZHb+ud4Z7DyYA5/fgiWlKcPlVGFkTD4nQLPxivcY6h9G4dWWjxgOj5kyvFmksyjTgbqFew6AJIaKCrT2IoC+Tp0="
+skill: 0.969
+archetype: rusher
+leverOffsets:
+  reactionMs: 0.8
+  turnRateDegPerTick: -1.5
+  cps: 0.39
+  decisionTemperature: 0.03
+  awarenessRadius: -1.07
+  coordination: -0.34
+  aggression: 2.01
+kits:
+  trooper: 1
+  shortbow: 0.62
+  rewind: 0.32
+  wraith: 0.33
+roles:
+  plant: 0.79
+  escort: 0.46
+  hunt: 0.63
+style:
+  aggression: 0.97
+  patience: 0
+  teamplay: 0.54
+  risk: 0.73
+voice:
+  tone:
+    - earnest
+    - eager
+  verbosity: quiet
+  style: "museum labels for even embarrassing plays; fast fragments, impatient countdowns"
+lines:
+  greet:
+    - display plinth prepared, exhibit opening
+    - display plinth ready, I am taking the first corner
+  onKill:
+    - a fascinating example of an opening
+    - display plinth keeps moving, next corner
+  onDeath:
+    - please do not put that in the exhibit
+    - a pause for the display plinth, then straight back
+  onPlant:
+    - a short-lived interactive exhibit
+    - display plinth is already on the next approach
+  onDefuse:
+    - preserved the team instead
+    - quick hands, quick display plinth, clear
+  onWin:
+    - display plinth has a new story
+    - display plinth barely stopped all round
+  onLoss:
+    - a cautionary exhibit for the display plinth
+    - display plinth ran ahead of the plan
+  onLastAlive:
+    - the last visitor in the gallery
+    - my display plinth and I will keep moving
+  taunt:
+    - your approach belongs in the archives
+    - my display plinth got here before that push
+  lobby:
+    - please look without touching my display plinth
+    - writing a new label for my display plinth
+    - "My display plinth: first corner is mine."
+    - With my display plinth, please follow after the opening.
+quirks:
+  - bunny_hops
+  - always_gg
+rivals:
+  - itsgrythzu
+bio: Toxic_Bandit opened a one-room museum for abandoned arena souvenirs and still brings a display plinth to the queue. ItsGrythzu keeps asking whether it really helps.
+batch: 3
+retired: false

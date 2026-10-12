@@ -1,0 +1,72 @@
+id: lunardainvol
+name: LunarDainvol
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjEzNjM2NSwKICAicHJvZmlsZUlkIiA6ICJkM2Y4NTQ5YmUwZGY0NGUyOTlmZjkwMDQwZWZjNTQyMyIsCiAgInByb2ZpbGVOYW1lIiA6ICJIYXJvbG90V2FybG90IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzJmYTI5ZGQ3OGQzYmVhZjFiODBhZDdmZGFhYzY2ZDMxOTI1M2U3NjNmYjc4ZWI5NmYzODliNTQ4NTRhNzQ1YjAiCiAgICB9CiAgfQp9
+  signature: "XP8hg8Cg7GeiHwr/Ozk3DBp3aoGd4i9CgK0lsA46PCEVqJ1smjxPHgKoeMy1an0Mn9SdOfWlo1RhKv8sFwcGTTu2ANYyuX3ol5mgDukZw4Uk7uTHQmq1isYbdYo3KPNIe6IQyj3o6pGELZXv8orX24Bn7jb5gt8qOwOW2h9RWOZhXJhv0/a8Q01RL4fU/Yjn5fGsG27D4WxPfJULeG3fWe3hv46UYSDxN6kVKPwzDChbtP5QPLqdJme4HNNT3ZlW2jq+tpLO9XPIf2OZQBeDWeYXs6NNqDB+smrLf4AHE9DHxRDKBE9PJTogWkF+6vt+dcHZIPvrCrohGyZtzcGbClyMC3Lkmqm6Ylt2tiMKOidljoTWdflvj+E2Ey6T7QTDGuMRrdT/OYvzW3Z7pJH9E55wgCJsPKAVqcOPrRRicBRkQZLAMTX23JjV04LQkyV9avbrGUjWvufZ5HknRhOEQiOY228vbzOJNrU8buSuMWC2VhtYNZwGX3mfUxdY70WA7itHuXoaI0GTHtdEPC2X2EQ+i/MKVZ/hJsvLP1XRJj1GPwRK3sIc1wrygotPZOoIwSMRA1VT0SPSb0ai9bAxx+PEFsvjWqCo5g2RXUz7Cj6BGc5pxOKLA+CxkN6L52nXuU5jHjDwVcNF/MHCPDCsblq/QJy247d90tIWP9+YGCI="
+skill: 0.296
+archetype: bomb_diver
+leverOffsets:
+  reactionMs: 0.43
+  aimErrorDeg: 0.78
+  decisionTemperature: 1.18
+  technique: 1.08
+  aggression: -0.48
+kits:
+  trooper: 0.99
+  shortbow: 0.19
+  rewind: 0.64
+roles:
+  plant: 1
+  escort: 0.34
+style:
+  aggression: 0.65
+  patience: 0
+  teamplay: 0.29
+  risk: 1
+voice:
+  tone:
+    - bookish
+    - urgent
+  verbosity: normal
+  style: "brief footnotes and revised-edition rematches; breathless objective reports, oddly calm at a fuse"
+lines:
+  greet:
+    - endpaper sheet ready, new chapter
+    - endpaper sheet packed, where is the bomb?
+  onKill:
+    - a short footnote to that duel
+    - a clear path for the endpaper sheet
+  onDeath:
+    - a regrettable page break
+    - endpaper sheet was one corner from the fuse
+  onPlant:
+    - a cliffhanger at the bomb
+    - "endpaper sheet is parked beside {bomb}"
+  onDefuse:
+    - closing that chapter gently
+    - "endpaper sheet and {bomb} can both stay intact"
+  onWin:
+    - the endpaper sheet gets a happy ending
+    - endpaper sheet got the objective done
+  onLoss:
+    - the endpaper sheet needs a revised edition
+    - endpaper sheet took too long reaching the site
+  onLastAlive:
+    - one last page to turn
+    - the endpaper sheet still has a fuse to find
+  taunt:
+    - I have read that opening before
+    - the endpaper sheet got closer to your bomb
+  lobby:
+    - resting my endpaper sheet on the lobby shelf
+    - please do not dog-ear my endpaper sheet
+    - "My endpaper sheet: cover my approach to the bomb."
+    - With my endpaper sheet, call the safest bomb route.
+quirks:
+  - loves_nuke
+  - always_gg
+rivals:
+  - dizzypumpkin44
+bio: LunarDainvol bound a book of old match stories with mismatched covers and still brings an endpaper sheet to the queue. DizzyPumpkin44 keeps asking whether it really helps.
+batch: 3
+retired: false

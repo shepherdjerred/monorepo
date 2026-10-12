@@ -1,0 +1,73 @@
+id: kraxjyxbrost-82
+name: Kraxjyxbrost_82
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NDg4MDc5NCwKICAicHJvZmlsZUlkIiA6ICI2MjgwNTgwYzhkYzg0MWM5YjYyZjY0NTZjMWVjNWJjNyIsCiAgInByb2ZpbGVOYW1lIiA6ICJPMnRoZUMiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYmJlZDMyMzEzYTdmYzVhZGFhNjRmZDNhMTc3OWRmMGFmOWM5MmQ2ZDQ3MDNjYzAxNDNhZTlhZmMwMTg4MTRlMyIKICAgIH0KICB9Cn0="
+  signature: "Fu4m5hxYe+SI6glK5WYBAAaClseGnBy3q/Xmszb/PpHcSVrCX/xLYURqFkoIFBUNBE+bFaRtQ1Bn2rOs1M4u3UGfz4/bhjkynE9t1m4W//ScjBPTvad+gkVLKm1r4/Yik/ecok4AdwoN/vHRnUQmjbvduNImiM3NUtkDth3d+W9xlaJrfMX5o6WNZqmnapBL+KFIJ6mUr0pdC9BByexEq5CSifj65omL5WmSmBRdKAYpG55LhlXzZAAWXVbdG06SXf1dfQ0McSbfm1SViHsyzpxXq/74VfXjx8WWAGIDY6CMMbSdf94UuRBaAdS8yKgFSbew2vZ5tA6NPnTlAGkI6mxCFU/9z8eNhSbxNhyXzWL5L/1JKTW6fAe7atL0tCyl8ILpQ6oIw/xXuKOqqS9i/8Au9flZYR/uxmHDwhfPkLAluBvQI4UQSKhKhry9EfkFKAEwwb6UbqSI3oWlwEjm+wVvZhuACw1u5L2HcT5nhvwaWQnCOtuiD9gzJON+Ei/z81W5qbDU4Rnk/ZsjlzdZeSoniXC+PHNf7KF3ZX6JSdjpyxesyMyvZADkd8ZJCy4lv5HB4BLu2htQlhSH1LHJ4nntG3Oa+3JGpZ4UDfPjvTJeWX2GTMXFKB8KAgDAW+4OB0O/PwKZXKKrLvK3JA/Z7LenbO9WBW4x7f55xVqqxqY="
+skill: 0.747
+archetype: support
+leverOffsets:
+  aimErrorDeg: 0.01
+  turnRateDegPerTick: 0.1
+  awarenessRadius: 0.4
+  coordination: 1.51
+  aggression: -0.17
+kits:
+  trooper: 1
+  longbow: 0.32
+  rewind: 0.6
+roles:
+  escort: 0.98
+  defend: 0.48
+  retake: 0.54
+style:
+  aggression: 0.32
+  patience: 0.59
+  teamplay: 0.83
+  risk: 0.28
+voice:
+  tone:
+    - dreamy
+    - helpful
+  verbosity: normal
+  style: "sky metaphors punctuated by exact callouts; gentle check-ins, thanks and useful kit reminders"
+lines:
+  greet:
+    - orrery crank says this is our orbit
+    - orrery crank is here, everyone got their kit?
+  onKill:
+    - a little spark beside my orrery crank
+    - one less problem beside the orrery crank
+  onDeath:
+    - my orrery crank did not show that collision
+    - sorry, the orrery crank corner is open
+  onPlant:
+    - starting a very small eclipse
+    - orrery crank can watch while you plant
+  onDefuse:
+    - light returns to the bomb
+    - orrery crank is here to help at the fuse
+  onWin:
+    - a bright mark in my orrery crank
+    - orrery crank says everyone helped
+  onLoss:
+    - a cloudy night for the orrery crank
+    - orrery crank says we can tidy that up
+  onLastAlive:
+    - one small orrery crank in a big sky
+    - one orrery crank still trying to help
+  taunt:
+    - that shot went into another orbit
+    - the orrery crank brought a team to that corner
+  lobby:
+    - showing the lobby my orrery crank
+    - the ceiling is blocking my orrery crank
+    - "My orrery crank: I will stay close to the push."
+    - With my orrery crank, call if you need an escort.
+quirks:
+  - says_sorry
+  - always_gg
+rivals:
+  - arrowgolem5
+bio: Kraxjyxbrost_82 named the roof above spawn an observatory despite owning no telescope and still brings an orrery crank to the queue. ArrowGolem5 keeps asking whether it really helps.
+batch: 3
+retired: false

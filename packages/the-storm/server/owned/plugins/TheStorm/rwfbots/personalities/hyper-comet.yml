@@ -1,0 +1,75 @@
+id: hyper-comet
+name: Hyper_Comet
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODUzNDUzMCwKICAicHJvZmlsZUlkIiA6ICIyZDUxZmI0ZmJjM2Y0MjJjOTMyYzIzMDg5NGU2YmM1MiIsCiAgInByb2ZpbGVOYW1lIiA6ICJGR0ZTX3N0dWRpbyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9mNzFjNmRkNWUzZGFiMzQzN2I0ZDY4MjQ0YzkwZjUzMzg3NmE4MDc3YWZjYzU4YmFlMmEwNDk1NDI2YTJjYWJmIgogICAgfQogIH0KfQ=="
+  signature: "Wvtqwf10iDurvh6LDtSgdJxD4aZiS5cjqAfvSOu3BY28qr3LD86mImmkv9D7l80ojFUUn8+49CJTVvzT6UkSQL4YkukOBxjFyXBofigD3UA+isUtvDwYxvDLj5AjPKeIuw5WINFWkfS1ViZ9x8fHsGKWoUUVSegpm5JqYQJJvR94AnO3phsbWAqaNhT50jLCxcRPtaKXe1J27DjEgPFgL49r/BEBSyWVFMa+lSylSiLHlDpnWdhBvcjMqVxkGA9z1ZCx3yGL3rsYyusx2Q+clUl0/Q+6KLSeZv7kqrCpGTUu8NizXivz9jAdgRb5AZ/D0jMILUN7J/LWiipiNZjDd/7tBBxaAvsViisNLOH41Cn1+V4XKDDhDhhfT1FXK350hGsvrkp9seOUSFNNYXo4Fzr60YmJFBaIp1Va++cHORcc6avf0KD0uMCFwRzF/6f402luL79RfJ3Br1qH2JwKRMxlI9CBl0/2E6dTrNNtWMwwDZOzuY1/iXzSx/enF2Xjo25zzWedYK9z+Kp9u7Ydz3NN7fjIMwGn//bLRsYxWXL/XSyOvVSUVSY9i/YRMAxBrWyXAXWdHZg0szH1N3MRnkZNrw2oL1kicJt19AtrSFH8K4ckNtAt6lN9TapEvliFTKiSmD8faiinZ8GEG7sfVn5Ss7iSuxW5yl7bJJljNuY="
+skill: 0.033
+archetype: duelist
+leverOffsets:
+  aimErrorDeg: 0.54
+  cps: 1.56
+  awarenessRadius: 0.16
+  coordination: -0.72
+  technique: 1
+  aggression: 1.17
+kits:
+  trooper: 0.94
+  shortbow: 0.4
+  spy: 0.26
+roles:
+  escort: 0.3
+  rotate: 0.18
+  retake: 0.41
+  hunt: 0.57
+style:
+  aggression: 0.78
+  patience: 0.22
+  teamplay: 0.33
+  risk: 0.54
+voice:
+  tone:
+    - patient
+    - competitive
+  verbosity: normal
+  style: "deliberate pottery talk and wet clay worries; brief courteous challenges and honest shot assessments"
+lines:
+  greet:
+    - ceramic stamp is steady today
+    - ceramic stamp ready, good fights everyone
+  onKill:
+    - that opening held its shape
+    - good exchange beside the ceramic stamp
+  onDeath:
+    - the whole thing slumped
+    - fair hit, the ceramic stamp left that gap
+  onPlant:
+    - letting this one fire
+    - ceramic stamp earned a moment at the bomb
+  onDefuse:
+    - cooled that down safely
+    - ceramic stamp can settle this at the fuse
+  onWin:
+    - ceramic stamp came out of the kiln intact
+    - ceramic stamp had some good fights today
+  onLoss:
+    - a small crack in the ceramic stamp plan
+    - ceramic stamp wants another clean round
+  onLastAlive:
+    - one piece still on the wheel
+    - one ceramic stamp, one fair chance
+  taunt:
+    - your push has not quite set
+    - the ceramic stamp is ready for that peek
+  lobby:
+    - washing the clay off my ceramic stamp
+    - please let my ceramic stamp dry in peace
+    - "My ceramic stamp: I will contest the middle."
+    - With my ceramic stamp, give the middle fight a clear lane.
+quirks:
+  - good_sport
+  - always_gg
+rivals:
+  - shixmylsniper
+bio: Hyper_Comet sold lopsided flowerpots from a stall by the arena gate and still brings a ceramic stamp to the queue. ShixmylSniper keeps asking whether it really helps.
+batch: 3
+retired: false

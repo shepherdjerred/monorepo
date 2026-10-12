@@ -1,0 +1,77 @@
+id: rershorider
+name: RershoRider
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODQ2MzkzNiwKICAicHJvZmlsZUlkIiA6ICI5YWRmNmRlNTJkNjE0MzA2YmEzNzQ2NWU1ZDIyYThjMyIsCiAgInByb2ZpbGVOYW1lIiA6ICJMb3JkX29mX3hpYW95YW8iLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMmFhMDEzMjk3NzZlZThjODBkNTYwYzkwOWM5Mjg4MWY0YzI5MmIyNzBmNzAzYzY4MzU2MmI2Y2UyZDNjMDIyIgogICAgfQogIH0KfQ=="
+  signature: "PAk894el86FK8qXyVb+DJJuv2GX6H3KbNkAod4kg5Br+y7Dlj9xbcvo1ktJrYRieXW326rpn+mg1Zm1Nq671k+50YtexSRVAvYWJ0/3gtZ2xuFmtOT/q7WciAgvJeDV5JsLGeoOY4i9sBT1LJjBHQgIKZItNgpVYd5SDuDg7lS6o4HUs/8rszAFhC4k8D2PkHeS6RgGhjgCulntTX9i0euyFygMVElDGWuzlM93OwbIUq8kmffdp86qdNOElY82+SMS/stLa5T1lqCW78gJA/PDMe91klmf4ShHHxCsXt6eT8Im9Z0g4hHFOo1NnCMBBaFNnvV8hR7EU1H8YQQ8l5o/4WuvgIJ3PqVPT9c+HTNUNx7HhDsVDHK9q8WBkERwp2h8wVVtaut3FrYj1ln/NfDAq/X+0jxZKLMt6G7Noh9LhoxKhkcsuVYWvGPXonO1eKHU/lTepdbq25QXL8ZdBBEZCayV5zyDLw0BscTKdWOR0Pz5bcRI+chNj/PMfl6F3qBr6Frnk6SMGzHC9lOj9q+yQiHOhlHeTrlRzPbQhE+RwcMVPAge3H4bxmq6nx8ScCgZYgnEgIcKix5uooWvBlXlxbE+/vY+EGveVlGHnS6VTZQlwu+VdUBjWmePfR47a7p5k1c+RWoLt69dUyRkI87mxCbDusUvgZ4OhPvAbKaQ="
+skill: 0.977
+archetype: tactician
+leverOffsets:
+  turnRateDegPerTick: -0.28
+  predictionQuality: 0.48
+  decisionTemperature: 1.51
+  awarenessRadius: 0.58
+  coordination: 1.52
+  technique: -0.8
+kits:
+  trooper: 1
+  longbow: 0.47
+  shortbow: 0.47
+  rewind: 0.49
+roles:
+  plant: 0.51
+  escort: 0.62
+  defend: 0.35
+  rotate: 0.7
+  retake: 0.61
+style:
+  aggression: 0.43
+  patience: 0.68
+  teamplay: 0.81
+  risk: 0.34
+voice:
+  tone:
+    - curious
+    - analytical
+  verbosity: quiet
+  style: "beach discoveries and understated delight; numbered ideas, concise route calls, quick revisions"
+lines:
+  greet:
+    - seabird feather brought good luck last time
+    - seabird feather ready, first route agreed?
+  onKill:
+    - another find for the shelf
+    - seabird feather confirms a clean opening
+  onDeath:
+    - swept away with my seabird feather
+    - seabird feather needs a revision on that route
+  onPlant:
+    - leaving this above the tide line
+    - seabird feather confirms the site is reached
+  onDefuse:
+    - picked that up before the tide
+    - seabird feather confirms the fuse is clear
+  onWin:
+    - a good day out with my seabird feather
+    - seabird feather and team followed through
+  onLoss:
+    - the tide took our round
+    - seabird feather had a missing step
+  onLastAlive:
+    - just me and my seabird feather on shore
+    - seabird feather says there is still a route
+  taunt:
+    - that approach washed straight past
+    - the seabird feather predicted that rotation
+  lobby:
+    - found a seabird feather on the way here
+    - please admire my seabird feather from a distance
+    - "My seabird feather: I will call the first rotation."
+    - With my seabird feather, tell me when a route closes.
+quirks:
+  - calls_everything
+  - always_gg
+rivals:
+  - pytaegaming
+bio: RershoRider filled an old shoreline hut with labelled beach finds and still brings a seabird feather to the queue. PytaeGaming keeps asking whether it really helps.
+batch: 3
+retired: false

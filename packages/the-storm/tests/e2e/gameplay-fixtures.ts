@@ -9,12 +9,30 @@ import {
 
 /**
  * Which server a run boots. `e2e` is the focused suite with rwf played by
- * humans only; `full` is every shipped module plus rwf and its bots; `load` is
- * `full` on the production pod's resources with the rwf load test switched on.
+ * humans only; `full` enables every shipped module plus rwf and its bots.
+ * `load` retains the historical four-CPU test shape; `capacity` uses a
+ * measured CPU cap and imported maps to judge the requested higher match limits.
  */
-export type E2eProfile = "e2e" | "full" | "load";
+export type E2eProfile = "e2e" | "full" | "load" | "capacity";
 
-const ProfileSchema = z.enum(["e2e", "full", "load"]);
+const ProfileSchema = z.enum(["e2e", "full", "load", "capacity"]);
+
+export function capacityMap(): string {
+  return z
+    .enum(["apex-expanse", "warlords-castles"])
+    .parse(Bun.env["STORM_CAPACITY_MAP"]);
+}
+
+export function capacityResources(): ServerResources & { cpus: number } {
+  return {
+    cpus: z.coerce
+      .number()
+      .pipe(z.union([z.literal(3), z.literal(4), z.literal(6)]))
+      .parse(Bun.env["STORM_CAPACITY_CPUS"] ?? 3),
+    heap: "8G",
+    memoryLimit: "10g",
+  };
+}
 
 /** The profile from STORM_E2E_PROFILE, or STORM_E2E_FULL=1 as the CI lanes set it. */
 export function e2eProfile(): E2eProfile {
@@ -26,9 +44,8 @@ export function e2eProfile(): E2eProfile {
 }
 
 /**
- * The load profile mirrors the production pod (minecraft-tsmc): a 4-CPU
- * request, an 8G heap and a 10Gi memory limit. The CPU is capped here so the
- * numbers do not depend on the workstation's spare cores;
+ * The load profile retains its historical 4-CPU cap, 8G heap and 10Gi memory
+ * limit. The CPU is capped so numbers do not depend on the workstation's spare cores;
  * `STORM_E2E_LOAD_CPUS` measures another cap (6 to size the pod).
  */
 export function loadResources(): ServerResources {
@@ -71,13 +88,17 @@ export async function gameplayFixtures(
     | "companionsE2eJar"
     | "rwf"
     | "rwfMap"
+    | "rwfbotsConfig"
     | "survivalConfig"
   >
 > {
   return {
     ...(await profileFixtures(packageRoot, profile)),
     // These suites assert authored Training Yard coordinates, bombs and spawn capacity.
-    rwfMap: "training-yard",
+    rwfMap: profile === "capacity" ? capacityMap() : "training-yard",
+    ...(profile === "capacity"
+      ? { rwfbotsConfig: await capacityBotsConfig(packageRoot) }
+      : {}),
     companionsE2eJar: path.join(
       packageRoot,
       "plugin/modules/companions/build/libs/TheStormCompanionsE2E.jar",
@@ -112,6 +133,14 @@ async function profileFixtures(
     "plugin/dist/build/libs/TheStormFixtures.jar",
   );
   switch (profile) {
+    case "capacity": {
+      return {
+        stormConfig: withBots(owned),
+        survivalConfig: survival.replace(/^enabled: false$/mu, "enabled: true"),
+        fixturesJar,
+        rwf: { ...fullRwfTestSettings, countdown: "PT60S", maxCombatants: 256 },
+      };
+    }
     case "full": {
       // Every shipped module plus Search and Destroy with its bots, which
       // fill each countdown to the owned targetCombatants (8). The countdown
@@ -161,4 +190,24 @@ async function profileFixtures(
       };
     }
   }
+}
+
+async function capacityBotsConfig(packageRoot: string): Promise<string> {
+  const owned = await Bun.file(
+    path.join(packageRoot, "server/owned/plugins/TheStorm/rwfbots.yml"),
+  ).text();
+  const raw = Bun.env["STORM_CAPACITY_RAY_BUDGET"];
+  if (raw === undefined) return owned;
+  const budget = z.coerce.number().int().positive().parse(raw);
+  const overlaid = owned.replace(
+    /^ {2}losRayBudgetPerThink: \d+$/mu,
+    `  losRayBudgetPerThink: ${budget.toString()}`,
+  );
+  if (
+    overlaid === owned &&
+    !owned.includes(`  losRayBudgetPerThink: ${budget.toString()}`)
+  ) {
+    throw new Error("The capacity fixture could not find the LOS budget");
+  }
+  return overlaid;
 }

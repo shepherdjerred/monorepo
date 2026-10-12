@@ -204,8 +204,52 @@ final class TacticsCommitmentTest {
             Kit.TROOPER,
             Archetype.TACTICIAN,
             Set.of(),
-            42),
+            42,
+            null),
         new SplittableRandom(1));
+  }
+
+  @Test
+  void aYoungCoverPlanYieldsWhenATeammateClaimsItsSpace() {
+    var situation = situation(Role.ROTATE, 20, -1);
+    var context =
+        new TacticsContext(
+            NAV,
+            levers(1),
+            new Style(0.5, 0.5, 0.5, 0.5),
+            Kit.TROOPER,
+            Archetype.TACTICIAN,
+            Set.of(),
+            42,
+            null);
+    var node = NAV.graph().nearestNode(SELF).orElseThrow();
+    var nearby = NAV.graph().nearestNode(SELF.plus(1, 0, 0)).orElseThrow();
+    var plan =
+        Plan.of(
+            Option.TAKE_SLOT,
+            95,
+            new PlanStep.Cover(Optional.of(node), SELF, SELF.plus(20, 0, 0), 200));
+    var state = new TacticsState(Optional.of(plan), 95, 0, 0, RewindClock.UNSTARTED);
+    var board =
+        situation
+            .board()
+            .claimCover(situation.self().id(), node)
+            .claimCover(
+                new com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantId(3), nearby);
+    var contested =
+        new Situation(
+            situation.self(), situation.snapshot(), situation.percept(), board, situation.role());
+    assertThat(Planner.coverAvailable(situation, context, node)).isTrue();
+    assertThat(Planner.coverAvailable(contested, context, node)).isFalse();
+    var thought = Tactics.think(state, contested, context, new SplittableRandom(1));
+    assertThat(thought.state().plan().orElseThrow()).isNotEqualTo(plan);
+    assertThat(
+            thought
+                .note()
+                .cover()
+                .map(cover -> Planner.coverAvailable(contested, context, cover))
+                .orElse(true))
+        .isTrue();
   }
 
   @Test

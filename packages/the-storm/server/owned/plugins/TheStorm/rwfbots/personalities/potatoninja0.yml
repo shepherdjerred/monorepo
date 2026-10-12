@@ -1,0 +1,77 @@
+id: potatoninja0
+name: PotatoNinja0
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODc3ODQ1MCwKICAicHJvZmlsZUlkIiA6ICI2MTU1NTMyOTY2OWM0ZDA5YmFiOGJlNDNkYWUwYTRjMyIsCiAgInByb2ZpbGVOYW1lIiA6ICJOb3Ryb19DbGllbnQiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNmViMzdiMzgzMGI2MWM1NTU5NWZmMWE4YjI0MzM3ZjI1Y2I3ZjEwYTE2ODRlNGY4MDM3ZDVkNDVlZjYwNWEyNiIKICAgIH0KICB9Cn0="
+  signature: "qjFRjwqE878QuhVYOam2c9QlHAiMSdNYgB842Rm5LBOj+KmAcEtmT1esSv8Y7oLkPLYgN9xKtYQ4EIF5esWLyHkigNTQ1A0IcpEiyCi6PEBEsV0ZUhgqTzLq3P7/6v7SgJ8endWwWlQ9PYMX6zwW0w6R9pAgxzXsuAc6PFyWMSby57N9usdFq7aGM7RqnVSif4Hs/PpWlj5hEDh2cjney2Be4JedHsGmtIgUEq+sjyERbuJ8o8QiUSH83cusB01u8f283FXJMnFdf888ZtB9GmlRL4iEMCoh2ctVjwdCZvSElp/crwMcUi8p3QcsWC/meiUkI12DyJCG6IcWnFnWhJZSHY2WdlswFw6NwtaMuf5MkreDvA5sQUtWw3hLirN0rzQyj+0RnVnjKFvgJerDjAv1rY+4JJ0U/r9abmFMaj51QlvdV9jk/yvUj1rXA2jdBpjK05JcNQ0SVEUoqcIqSybWnppQKRMvEOhrbOF+XM20n8A4remrEpYqVYIuet+pBs9TGvr5zi7w98E3Z0m/kK6cvtqePPJXAD949voeLrVqX+PwbsxVnpVFldxhUbWYGQdkVLuXWqYbpZNQDCFpjoMs4K/72kCxr2vF+4shzNtaioGMJMH7v9TGfVpqwgK2rJkOcB/i3MvPpUjRPgKc3mH7weuKGbSJfUsT+DzcEGM="
+skill: 0.248
+archetype: tactician
+leverOffsets:
+  reactionMs: 0.92
+  cps: 0.14
+  predictionQuality: 0.23
+  decisionTemperature: 1.51
+  awarenessRadius: 0.25
+  coordination: 1.54
+kits:
+  trooper: 0.93
+  longbow: 0.55
+  shortbow: 0.44
+  rewind: 0.43
+roles:
+  plant: 0.62
+  escort: 0.6
+  defend: 0.64
+  rotate: 0.67
+  retake: 0.67
+style:
+  aggression: 0.46
+  patience: 0.66
+  teamplay: 0.88
+  risk: 0.53
+voice:
+  tone:
+    - cheerful
+    - analytical
+  verbosity: chatty
+  style: "busy hive reports, praises small useful jobs; numbered ideas, concise route calls, quick revisions"
+lines:
+  greet:
+    - queen marker says the hive is busy
+    - queen marker ready, first route agreed?
+  onKill:
+    - a little sting in that lane
+    - queen marker confirms a clean opening
+  onDeath:
+    - flew straight into the window
+    - queen marker needs a revision on that route
+  onPlant:
+    - quite a buzz at the bomb
+    - queen marker confirms the site is reached
+  onDefuse:
+    - settled the swarm
+    - queen marker confirms the fuse is clear
+  onWin:
+    - queen marker has earned some honey
+    - queen marker and team followed through
+  onLoss:
+    - the hive will rebuild
+    - queen marker had a missing step
+  onLastAlive:
+    - one bee still making the rounds
+    - queen marker says there is still a route
+  taunt:
+    - a lot of buzzing for that push
+    - the queen marker predicted that rotation
+  lobby:
+    - keeping my queen marker out of the rain
+    - no bees are hiding in my queen marker
+    - "My queen marker: I will call the first rotation."
+    - With my queen marker, tell me when a route closes.
+quirks:
+  - calls_everything
+  - always_gg
+rivals:
+  - xouzist-95
+bio: PotatoNinja0 kept a pretend apiary behind a flower-covered team base and still brings a queen marker to the queue. Xouzist_95 keeps asking whether it really helps.
+batch: 3
+retired: false

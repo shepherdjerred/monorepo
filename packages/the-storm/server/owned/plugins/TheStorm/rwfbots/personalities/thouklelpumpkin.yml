@@ -1,0 +1,75 @@
+id: thouklelpumpkin
+name: ThouklelPumpkin
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODYxNDI5NSwKICAicHJvZmlsZUlkIiA6ICIwNDg2YWUwMWI4Y2I0OWUzODMyZDcwOTNmMWJlNzI3NyIsCiAgInByb2ZpbGVOYW1lIiA6ICJfcGFrbWFuXyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS81NWFkMDZiODE5NTQwY2FhYjIxMWFiMDE4ZmM5NzU3OTExYmY0ZGE0YWUzMzRkOWExMWYxNzJmNTBhYmZhNDRhIgogICAgfQogIH0KfQ=="
+  signature: "hkKN6UV1NW6lX/0jx6NkZ7M9OxeYfdRNdN/SnVCIz3CT1LBE683LtVIJSmipSZh1C/pgagb5r1mufQC4d30qIO+9xLY9kmLQsnmfjWhmb8RhpZ1D5RVON9iENTZ//GhNWJ+0sjQtY4G0S750E0RILYxkG4hBB+zhaNXHUFHanYfXpHVUjXus8O9+rQ9J2kaBb8AF4h09hvotxAnOcFOx3AnxZwewpsb8L+7XGBCftuaDFf1u++l5pEICh4N94t3JQKTfN5GzT9IdJI9PhzqF7sMt+5m9Suu+jinfVU1k0WhvAcpBG0d29sHI2RBd3ZhdJYg0FcS7hHfNGT+y0L+tELJhwcJKZvLOJupKYF19GLNZrPgHWRU4XuB95lrRA9tTMLJaMZnj7LNoEVGvQQEHQyn3uEGy4Ql/J0n5EiZJoN8xpeO9UoUN8zRCm8RLkQrZpVv5tgf9O+0VjJ+WLfiDipFPjZAzF7JBlNpEmlmDbKO1Hz8QanTtZ4lgl0Di4DPIi605W7/sVwYmEMCjZYOesCc2OSoBlL2ZF/VYSpK6OHSSId3JNx3OAZfYcsjkU6klsaaWComEGWALewJwmDQV504itnrDi0+NcGkLlZCk4yjLe4AhgwuJjpcBQ+ILvpVUm0rQipSLLY0tkg2XxFmpzmDanEDsREQVaOpcpFemy7c="
+skill: 0.224
+archetype: lurker
+leverOffsets:
+  reactionMs: 0.51
+  turnRateDegPerTick: -0.55
+  predictionQuality: 0.85
+  awarenessRadius: 1.27
+  coordination: -1.13
+  aggression: -0.23
+kits:
+  trooper: 0.73
+  shortbow: 0.65
+  ghost: 0.78
+  wraith: 0.66
+roles:
+  plant: 0.29
+  rotate: 0.62
+  hunt: 0.81
+style:
+  aggression: 0.44
+  patience: 0.78
+  teamplay: 0.18
+  risk: 0.53
+voice:
+  tone:
+    - curious
+    - hushed
+  verbosity: chatty
+  style: "beach discoveries and understated delight; lowercase whispers, deliberate pauses"
+lines:
+  greet:
+    - sea glass shard brought good luck last time
+    - sea glass shard here. quietly.
+  onKill:
+    - another find for the shelf
+    - the sea glass shard was here a while
+  onDeath:
+    - swept away with my sea glass shard
+    - heard it too late beside the sea glass shard
+  onPlant:
+    - leaving this above the tide line
+    - sea glass shard is watching the quiet entrance
+  onDefuse:
+    - picked that up before the tide
+    - no noise. no fuse. just the sea glass shard.
+  onWin:
+    - a good day out with my sea glass shard
+    - the sea glass shard stayed out of sight
+  onLoss:
+    - the tide took our round
+    - the sea glass shard waited one corner too long
+  onLastAlive:
+    - just me and my sea glass shard on shore
+    - nobody move near my sea glass shard
+  taunt:
+    - that approach washed straight past
+    - the sea glass shard heard that approach coming
+  lobby:
+    - found a sea glass shard on the way here
+    - please admire my sea glass shard from a distance
+    - "My sea glass shard: I will hold the quiet route."
+    - With my sea glass shard, leave one quiet approach for me.
+quirks:
+  - slow_starter
+  - always_gg
+rivals:
+  - brukxoth-71
+bio: ThouklelPumpkin filled an old shoreline hut with labelled beach finds and still brings a sea glass shard to the queue. Brukxoth_71 keeps asking whether it really helps.
+batch: 3
+retired: false

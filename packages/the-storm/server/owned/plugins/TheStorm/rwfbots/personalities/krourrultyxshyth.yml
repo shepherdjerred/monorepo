@@ -1,0 +1,76 @@
+id: krourrultyxshyth
+name: Krourrultyxshyth
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODYwMzQ2NywKICAicHJvZmlsZUlkIiA6ICIyNDY1ODI2NWVjMjg0NTY4YTg3MDJkOTVlYzdlYTc4MyIsCiAgInByb2ZpbGVOYW1lIiA6ICJBcmdvc1oxMiIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9mZDJiYzhiOGNlNzcxYzhmY2Y4OTMyMWMzYzliM2Q1MGNiYTFhZjI3NDc1NjYzOWJkMGFkOTA2OGYxMjU4MmFmIgogICAgfQogIH0KfQ=="
+  signature: "f3ROsl513LVPaRrfY7AdzUJa1FoYV6i7gfn/JoooZHtbGr+2QvEbper4S/FRV/FkhVxeo8cookgTEo8dTBUw4WMmRlry3mAYQV+9ePZUFEaU0tagrVthgt7czTdgLN6OdhG1O5aV6pXjC0w3AY9tMWvRa5Tcxj111i6Gxi5BOS3j9zdwEfYmK55K3jiwZykaUeNkRCL6YjZqbO9pOoNc7Xt1IgobOQKA01tzhNYkkJ95/arE3NLwghHBr4mAssoNAe80rw1baOu+2NtV0+0at5LsUde0yMKQ/VJ4F0SMECFAwoMvJvbyf8FzaCsfVCI1k4kfWtYvneISEBTU7ThUhD1PmZ8vuyrOe7QDYwOrgOVp34gnnSO8aZ4LvMl9rZirU8faQGyMV3j+YL0GbvRmLRQpHs99J5S7d3cdPqsnyvPygOhKmOakCoZJ/wkKL67cRW3631WqCu+uCmgt72oQGkWc3eWRX2/tZSKo8H31D1CNdpdIeGIaeWxVt8E9RnfyfTwhHAl+e87u26UsKxU1ASxb1ZngYfx0fM3yKHOnU/FHzsVblqWxKKaqQf5aQJ6P/XJYHkuhDIbi9+PWDwWti3/TcsUoyk+yo0O10t4tUwItf784uv8HmPXAzPFzrTfVEyhrhVa528r9OhkKVb83vcbRU6Jyt4IyvqZZcj83r9Q="
+skill: 0.421
+archetype: flanker
+leverOffsets:
+  aimErrorDeg: 0.31
+  turnRateDegPerTick: 1.35
+  cps: -1.07
+  predictionQuality: 0.8
+  coordination: -0.01
+  aggression: 0.09
+kits:
+  trooper: 0.56
+  shortbow: 0.95
+  rewind: 0.33
+  wraith: 0.46
+  spy: 0.36
+roles:
+  plant: 0.39
+  rotate: 1
+  hunt: 0.44
+style:
+  aggression: 0.66
+  patience: 0.38
+  teamplay: 0.26
+  risk: 0.68
+voice:
+  tone:
+    - practical
+    - nimble
+  verbosity: normal
+  style: "carpentry checks and repairable mistakes; quick side remarks and route changes mid-sentence"
+lines:
+  greet:
+    - carving gouge packed, joints checked
+    - carving gouge is taking the other entrance
+  onKill:
+    - that opening needed a wedge
+    - carving gouge found a side door
+  onDeath:
+    - a weak joint in my plan
+    - carving gouge chose an occupied side door
+  onPlant:
+    - the fuse is fitted snugly
+    - "carving gouge came around the back of {bomb}"
+  onDefuse:
+    - took that assembly apart
+    - carving gouge found a quieter route to the fuse
+  onWin:
+    - solid work around the carving gouge
+    - carving gouge took the long way for a reason
+  onLoss:
+    - back to the bench with my carving gouge
+    - carving gouge took the long way for no reason
+  onLastAlive:
+    - one carving gouge holding the frame
+    - one carving gouge coming around the edge
+  taunt:
+    - that angle needs a little sanding
+    - the carving gouge is somewhere to the side
+  lobby:
+    - checking the edge on my carving gouge
+    - my carving gouge is for repairs after the match
+    - "My carving gouge: I will try the side approach."
+    - With my carving gouge, keep them looking forward for me.
+quirks:
+  - crouch_spam
+  - always_gg
+rivals:
+  - xxstormarrowxx
+bio: Krourrultyxshyth repaired a rickety spawn bridge every weekend and still brings a carving gouge to the queue. xXStormArrowXx keeps asking whether it really helps.
+batch: 3
+retired: false

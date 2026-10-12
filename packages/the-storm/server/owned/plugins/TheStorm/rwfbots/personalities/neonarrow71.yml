@@ -1,0 +1,74 @@
+id: neonarrow71
+name: NeonArrow71
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODQ4MDE5NiwKICAicHJvZmlsZUlkIiA6ICJkODBlMGYyNjU2M2U0NzI3YWNiZDNlMmRlNDkxYzFiZSIsCiAgInByb2ZpbGVOYW1lIiA6ICJYX0thZWxpc19YIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2I5YzA4MGVmZTQzMWYzMDRkMDJlZjQzYzljN2JmZTNkNTIyZTNkYWE1Nzc5NTM1NTEyZmQzNGFmYzhlM2MxMjAiCiAgICB9CiAgfQp9
+  signature: "ehulzSbH/z3qkkEGmgXCk3Z74jxieJ46q7b5LY9eRseWSPOypccN8b67CvTiACLgdez/ESGsSEnTPmwdfBU+Ku4y5CAlS0dM+j4NDFbz6w+pfwo8KIIJLXTTN+iRjsGfLav3KxMRXFRTdzJxID5CP/m/BQnwxvXZDy2HNy+amot5wWxLs2i1xFE6NGElJGDtFBgIaos7UMwlSrKDGAOrklaYDicS/tQ2Y1BTsZfESPndXQfLOoo4iNbt+8B/010gNk76JkVaoi+YgD4+GNBTojQIEPiNk4DloDE84xbjJ0QYFkOMyOHgfrEQmFS6D4hBPG8OHVrKnrMyV9bz+nwpnJ5lTLZamMLwqEfiZJODGAzwGZeiZ/0yh3ROrAO48UMKhCzxvdbYW8BUNHMax9h6Csn/nhvBYccekoFGUQWNNgvG+brQ7SwbQqap9+azjZctt1J3Ah3XB4qf9Kqsdgc8ASXwGSzwM1hZ8aVTmi8TtdQKO1UxxBrRGEg6mhULfm3AZ+D0H7N73YS8RuA410lnP9LEl1EPcwkc9iut0tUg6Wg4xNIo7eXce1n0VPSWvGVWA7yKLwyNV33KI+m2KhluboYOhFQj7Le/HTQ7g3ptD6IIsF9V09V8sTmwwFTPELEITLurcmu6YGCL9gXVBeSK/xCqHkofsyE4dXsOAK4QBo8="
+skill: 0.936
+archetype: duelist
+leverOffsets:
+  aimErrorDeg: 0.56
+  turnRateDegPerTick: 0.01
+  cps: 1.74
+  awarenessRadius: 0.35
+  coordination: -0.13
+  technique: 1.24
+  aggression: 1.5
+kits:
+  trooper: 0.89
+  shortbow: 0.37
+roles:
+  escort: 0.28
+  retake: 0.55
+  hunt: 0.81
+style:
+  aggression: 0.82
+  patience: 0.31
+  teamplay: 0.39
+  risk: 0.52
+voice:
+  tone:
+    - soft-spoken
+    - competitive
+  verbosity: quiet
+  style: "tiny aquarium metaphors and creature worries; brief courteous challenges and honest shot assessments"
+lines:
+  greet:
+    - lily basket ready, fish fed
+    - lily basket ready, good fights everyone
+  onKill:
+    - a splash and then quiet
+    - good exchange beside the lily basket
+  onDeath:
+    - out of my depth there
+    - fair hit, the lily basket left that gap
+  onPlant:
+    - something is bubbling at the bomb
+    - lily basket earned a moment at the bomb
+  onDefuse:
+    - water is calm again
+    - lily basket can settle this at the fuse
+  onWin:
+    - a quiet evening for my lily basket
+    - lily basket had some good fights today
+  onLoss:
+    - cloudy water in the lily basket plan
+    - lily basket wants another clean round
+  onLastAlive:
+    - one small splash left
+    - one lily basket, one fair chance
+  taunt:
+    - that bait was a little obvious
+    - the lily basket is ready for that peek
+  lobby:
+    - putting my lily basket away before the round
+    - the pond can wait for my lily basket
+    - "My lily basket: I will contest the middle."
+    - With my lily basket, give the middle fight a clear lane.
+quirks:
+  - good_sport
+  - always_gg
+rivals:
+  - toxic-badger
+bio: NeonArrow71 maintained a glass pond under the old lobby stairs and still brings a lily basket to the queue. Toxic_Badger keeps asking whether it really helps.
+batch: 3
+retired: false

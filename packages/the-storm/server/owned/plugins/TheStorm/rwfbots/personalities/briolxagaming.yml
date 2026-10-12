@@ -1,0 +1,73 @@
+id: briolxagaming
+name: BriolxaGaming
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODU0NzUwMSwKICAicHJvZmlsZUlkIiA6ICI0NDAzZGM1NDc1YmM0YjE1YTU0OGNmZGE2YjBlYjdkOSIsCiAgInByb2ZpbGVOYW1lIiA6ICJBdW50YnJpeCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9hMjg2NTRjZjNlOWRlNDhiZjczMTM2NzMwYTU4NmNmOGM4ZWZjNzY4NzAwMDAwMDJiNGU3N2VhOTc1OWUzMjA1IgogICAgfQogIH0KfQ=="
+  signature: "XLCKYn+uJdw27Q1luHKysJkm/zLxCU72G2mPul2LJ53wECoIRSXojmC1inyQMoXplpt//d8ODaZ7R9AwpyKKm2cYNtuBeBBNrKA/rAwSzcnjNd/bltGHA5EcflpZ/7rTlL6fKVbhv2g4DRgTc5Jd2R6zoWJLu7bU/7E4hKvokWOJedg7aHsyalrxKn98P/WNOd4jyKw+v4Q0URkdmLRBvVA/wWafEmyKzrBcv+SFc2b5bxPAcC3BQBS7fUfTm2IsQHJCEozGUu1fP2ApBJpsH5HxHgIxzjDMTav9891t68y0lmKgUEOkPwVIZOQiLRSLkg5PkSV4ksP0JfrPG/3rRR+31xG2R1UW3rqR4bhNP96/7MqGNYe7czdBrlvcq55nQY1+lPV4J5Bn294nOv87zlDMyXgGEl+DBD9QhyXh9HRcVsnXLNCcGV2tEw0Z5vUgajbOi5pRI2zVpKIZzhpNKuWJLZ30U3noMvLgDwI42rQYThso7eNWz3Q5ss7t+sAMp2lITfsNa8qEAwiBxNxKYcOTWTpIBCEyZLwmOfWSWq16T8lAfdvpHoCO206BRFzsFsoWnR+OzAJW1dHuz+KANVetxjNurwnFMBUYPRa/mB5fvFmiYOKnB3b/B4iQrFyKte64mDrFAhHus7YEeVLkwG3VEL2G13dv5M7R7raIj2s="
+skill: 0.341
+archetype: hunter
+leverOffsets:
+  aimErrorDeg: 0.4
+  turnRateDegPerTick: 0.11
+  predictionQuality: 0.94
+  awarenessRadius: 0.86
+  aggression: 0.43
+kits:
+  trooper: 0.58
+  longbow: 0.53
+  shortbow: 0.91
+roles:
+  escort: 0.12
+  rotate: 0.32
+  hunt: 1
+style:
+  aggression: 0.76
+  patience: 0.49
+  teamplay: 0.35
+  risk: 0.61
+voice:
+  tone:
+    - curious
+    - intent
+  verbosity: normal
+  style: "beach discoveries and understated delight; tracks small clues aloud, then gives terse pursuit calls"
+lines:
+  greet:
+    - tide journal brought good luck last time
+    - tide journal ready, looking for tracks
+  onKill:
+    - another find for the shelf
+    - tide journal followed that trail correctly
+  onDeath:
+    - swept away with my tide journal
+    - the tide journal trail doubled back
+  onPlant:
+    - leaving this above the tide line
+    - "tide journal found a path to {bomb}"
+  onDefuse:
+    - picked that up before the tide
+    - tide journal tracked the ticking down
+  onWin:
+    - a good day out with my tide journal
+    - tide journal followed it to the end
+  onLoss:
+    - the tide took our round
+    - tide journal lost the trail near the finish
+  onLastAlive:
+    - just me and my tide journal on shore
+    - the tide journal has one trail left
+  taunt:
+    - that approach washed straight past
+    - the tide journal noticed those footsteps
+  lobby:
+    - found a tide journal on the way here
+    - please admire my tide journal from a distance
+    - "My tide journal: I will look for the last opponent."
+    - With my tide journal, call the last place you saw them.
+quirks:
+  - holds_grudges
+  - always_gg
+rivals:
+  - dizzylyzgrouth
+bio: BriolxaGaming filled an old shoreline hut with labelled beach finds and still brings a tide journal to the queue. DizzyLyzgrouth keeps asking whether it really helps.
+batch: 3
+retired: false

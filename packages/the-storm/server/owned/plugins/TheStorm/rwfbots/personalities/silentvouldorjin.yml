@@ -1,0 +1,75 @@
+id: silentvouldorjin
+name: SilentVouldorjin
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjA2Mzg5MSwKICAicHJvZmlsZUlkIiA6ICJhZmEyM2ZkNGI3ODY0N2ZjOWMxY2FhMGI3YmFjMDgzOCIsCiAgInByb2ZpbGVOYW1lIiA6ICJaZXRocnVzVFYiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjAzMzZlNTkxOThjZDhhODhmMTgzNzQ1NjlmOTVkZDA0MDBjMzE2NDU4MzU5YjBiNDFiNzlkOTEyODRkOTE0IgogICAgfQogIH0KfQ=="
+  signature: "deDqnIf5NLGeYk9NBeDEZ/udcxFvu6ih4w20TW2Qk6mxFBl+RsjC54KmYO4KRxsu4yb2DmEd4mROugUvXxfOymalFpvvBYR0XE09zfGCG7IksxRm4oMumoBSV0Ba5OOLlCCD0Fn5nb55/Nm6bAprVc+qXidQ+a0m8d6MsaFB2sFuWVHdvOm8AhEcifdevS2zByhowqRa5r4WTvp1u9naYtkYw8q9SVLRebO4Dchwc2UmKWpyc/xBk2OJA8TvVS2W/MDM2oUnyULz9Rir20HSLVHOyHee3Rk3GMc8eSz3nxar4ylIHvDMkVWzgbaCw8Cyl4ZBWlb89D5y+KPAGt5gtNN5FZ8De/UJlsDhoi2+W/H3/mguvF/bnMkFirrzj2aR8YpQ85KJs0uEFE9E2WTFMixq/M46UPX5nFxb95fKoKL1kXMAAomHhLlrMAyRPc4h86BeSOJ+KMhppD5A/yohpg6Vi8RoDAH4V2D9J1AAOcLAtY1Q0YQ9cn0C71FEwNqhobn1LKCxab6/XecQGZsqnqGvz8Yc728IqFFLelx8ZBZnKN+uJtobwWAMifIb9F8R7zR5ol6JLxTle3DTFb4LuYp1NBXNItbxONrdTI1ht1fwL0qtOIGjrwTb7A8cqtFAUMik6hMOPEiIHBiGtpUNzCn6AcrXd6DMCzd+6ERVbXo="
+skill: 0.043
+archetype: turtle
+leverOffsets:
+  reactionMs: 0.77
+  aimErrorDeg: -0.1
+  cps: -0.66
+  decisionTemperature: 0.64
+  awarenessRadius: 0.09
+  aggression: -1.62
+kits:
+  trooper: 0.87
+  longbow: 0.26
+  rewind: 0.72
+  wraith: 0.12
+roles:
+  defend: 1
+  rotate: 0.14
+  retake: 0.44
+style:
+  aggression: 0.18
+  patience: 0.92
+  teamplay: 0.51
+  risk: 0.11
+voice:
+  tone:
+    - cheerful
+    - cautious
+  verbosity: normal
+  style: "busy hive reports, praises small useful jobs; unhurried words, conservative estimates and tiny victories"
+lines:
+  greet:
+    - flower ledger says the hive is busy
+    - flower ledger is ready. no need to hurry.
+  onKill:
+    - a little sting in that lane
+    - flower ledger waited for the opening
+  onDeath:
+    - flew straight into the window
+    - flower ledger should have waited another moment
+  onPlant:
+    - quite a buzz at the bomb
+    - flower ledger checked the site first
+  onDefuse:
+    - settled the swarm
+    - flower ledger checked the corner twice
+  onWin:
+    - flower ledger has earned some honey
+    - flower ledger got there eventually
+  onLoss:
+    - the hive will rebuild
+    - flower ledger needed one more safe corner
+  onLastAlive:
+    - one bee still making the rounds
+    - the flower ledger will take this slowly
+  taunt:
+    - a lot of buzzing for that push
+    - the flower ledger can wait out that peek
+  lobby:
+    - keeping my flower ledger out of the rain
+    - no bees are hiding in my flower ledger
+    - "My flower ledger: I will keep a safe route home."
+    - With my flower ledger, please check the blind corner first.
+quirks:
+  - gapple_hoarder
+  - always_gg
+rivals:
+  - vividthekux
+bio: SilentVouldorjin kept a pretend apiary behind a flower-covered team base and still brings a flower ledger to the queue. VividThekux keeps asking whether it really helps.
+batch: 3
+retired: false

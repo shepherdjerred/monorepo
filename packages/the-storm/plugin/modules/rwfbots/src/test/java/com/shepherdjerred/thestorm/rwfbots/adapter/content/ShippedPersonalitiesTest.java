@@ -10,15 +10,20 @@ import com.shepherdjerred.thestorm.rwfbots.domain.personality.Lines;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.Personality;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.PersonalityCatalog;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Kit;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.MessageDigest;
 import java.util.Base64;
 import java.util.EnumMap;
 import java.util.HashSet;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.SplittableRandom;
+import java.util.regex.Pattern;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -32,6 +37,7 @@ final class ShippedPersonalitiesTest {
   private static final int BANDS = 5;
   private static final int FIRST_BATCH = 20;
   private static final int SECOND_BATCH = 180;
+  private static final int THIRD_BATCH = 312;
 
   /** A kit weight at or above this is a real preference, not a token entry. */
   private static final double MEANINGFUL_WEIGHT = 0.5;
@@ -61,11 +67,34 @@ final class ShippedPersonalitiesTest {
   }
 
   @Test
-  void twoBatchesShipTwoHundredActivePersonalities() {
-    assertThat(catalog.all()).hasSize(FIRST_BATCH + SECOND_BATCH);
+  void threeBatchesShip512ActivePersonalities() {
+    assertThat(catalog.all()).hasSize(FIRST_BATCH + SECOND_BATCH + THIRD_BATCH);
     assertThat(catalog.active()).hasSameSizeAs(catalog.all());
     assertThat(catalog.all().stream().filter(p -> p.batch() == 1)).hasSize(FIRST_BATCH);
     assertThat(catalog.all().stream().filter(p -> p.batch() == 2)).hasSize(SECOND_BATCH);
+    assertThat(catalog.all().stream().filter(p -> p.batch() == 3)).hasSize(THIRD_BATCH);
+  }
+
+  @Test
+  void theOriginal200FilesRemainUnchanged() throws Exception {
+    var checksums = new Properties();
+    try (var input =
+        java.util.Objects.requireNonNull(
+            getClass().getResourceAsStream("/legacy-personalities.tsv"))) {
+      checksums.load(input);
+    }
+    assertThat(checksums).hasSize(FIRST_BATCH + SECOND_BATCH);
+    var original = catalog.all().stream().filter(p -> p.batch() <= 2).map(Personality::id).toList();
+    assertThat(checksums.stringPropertyNames()).containsExactlyInAnyOrderElementsOf(original);
+    var directory = property("thestorm.rwfbots.personalities", "personalities directory");
+    for (var id : original) {
+      var digest =
+          MessageDigest.getInstance("SHA-256")
+              .digest(Files.readAllBytes(directory.resolve(id + ".yml")));
+      assertThat(HexFormat.of().formatHex(digest))
+          .as("legacy personality %s", id)
+          .isEqualTo(checksums.getProperty(id));
+    }
   }
 
   @Test
@@ -164,12 +193,20 @@ final class ShippedPersonalitiesTest {
 
   @Test
   void everySkinIsASignedMojangTexture() {
+    assertThat(catalog.all()).extracting(Personality::skinValue).doesNotHaveDuplicates();
+    var textureUrls = new HashSet<String>();
+    var textureUrl = Pattern.compile("http://textures\\.minecraft\\.net/texture/[a-f0-9]+");
     for (var personality : catalog.all()) {
       var decoded = new String(Base64.getDecoder().decode(personality.skinValue()), UTF_8);
       assertThat(decoded)
           .as(personality.id())
           .contains("\"textures\"")
           .contains("http://textures.minecraft.net/texture/");
+      var texture = textureUrl.matcher(decoded);
+      assertThat(texture.find()).as("%s texture URL", personality.id()).isTrue();
+      assertThat(textureUrls.add(texture.group()))
+          .as("%s unique texture", personality.id())
+          .isTrue();
       assertThat(Base64.getDecoder().decode(personality.skinSignature()))
           .as("%s signature is base64", personality.id())
           .isNotEmpty();

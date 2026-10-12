@@ -1,0 +1,75 @@
+id: nyxmoush-25
+name: Nyxmoush_25
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjA4MDM2MSwKICAicHJvZmlsZUlkIiA6ICI5OGQxYTQyNmRlMmU0NjBkYjdjNWExMmY5MGNhODg0OSIsCiAgInByb2ZpbGVOYW1lIiA6ICJLdWJpbm9TSyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS84NWVlNDg4NjEyZjM2MzBlMDQzNTY5YzBkNGEwNjQ0OTdkZjExZDU3OGY1ZGNkNTRmNjMzZDllODJlZTAwNzMwIgogICAgfQogIH0KfQ=="
+  signature: "dUjw7XR0oN9fzW27VgWKWg6WHLxZ4JD11YfEVM9DVW9V7AlbvH2Obhv+8jwUiG0TQUlM7OLlVKfQSsTLhvtyM3H3B1wZyjq70RmeTEMCe/dHIDN0B73HvP0kLGacAWIM2XUnixo93qC0Z22wNzixg0BcFJUnfm/3KyaOOQ3Akh3cdyixSyxz8CcsYZ+E3D7X094gok50B4pCzrJFYA6xou79zI/BphVR2w7dsGy60WqJ7oH4/nM5kT81LQgZOrUW0ZDCZgwwd9rTpVsqrNTsdE+DwtO6sJHvJqd+QBymG5vZvHtZmxITPbo7jPKTgTfAuNNeMm0pKmpDyPYhTCqkb5yJsimVBWSFWCEkRha1m1LWF1uYYgreaMRZq7aUrLRfOcY3lS/+B6hqeTMpsXkrf9mKMPZEMUas23jRDLBNZPjdoF+xGnz+pgD5MFSTQ2zBusxFG0V4T9pH/uAu8CypkLBaqJ6qkiQe1NebUbSsDC93HF0TfX/6CpsULf3j5dnSElarqp3rRzHGDbYTEaLOGNja1EFmQSz1t+Rw8Foanv39CJp+SOq8KTuFKQiXebbDIpwK+ZzySsUWt5FwoCXzYVO80duumXK3GPG7MQvq7gabv9Qb4xk4Jf3PYX8op2MZnNaOMVhMipWfB7QZe5RZxhhxcg7QQ6aYZojjtZzcYeQ="
+skill: 0.282
+archetype: troll
+leverOffsets:
+  decisionTemperature: -2.43
+  coordination: -0.82
+  technique: 0.7
+  aggression: -0.22
+kits:
+  trooper: 0.55
+  longbow: 0.14
+  shortbow: 0.71
+  rewind: 0.97
+  spy: 0.84
+roles:
+  plant: 0.45
+  escort: 0.32
+  rotate: 0.37
+  hunt: 0.64
+style:
+  aggression: 0.61
+  patience: 0.23
+  teamplay: 0.17
+  risk: 0.82
+voice:
+  tone:
+    - cheerful
+    - mischievous
+  verbosity: normal
+  style: "busy hive reports, praises small useful jobs; deadpan object conversations and harmless overconfidence"
+lines:
+  greet:
+    - honey spoon says the hive is busy
+    - honey spoon has appointed itself captain
+  onKill:
+    - a little sting in that lane
+    - honey spoon is now insufferably proud
+  onDeath:
+    - flew straight into the window
+    - honey spoon would like a different replay
+  onPlant:
+    - quite a buzz at the bomb
+    - honey spoon calls this interior decorating
+  onDefuse:
+    - settled the swarm
+    - honey spoon says it knew the correct wire
+  onWin:
+    - honey spoon has earned some honey
+    - honey spoon is requesting a trophy shelf
+  onLoss:
+    - the hive will rebuild
+    - honey spoon has misplaced the blame form
+  onLastAlive:
+    - one bee still making the rounds
+    - honey spoon insists this was the plan
+  taunt:
+    - a lot of buzzing for that push
+    - the honey spoon gave that push three out of ten
+  lobby:
+    - keeping my honey spoon out of the rain
+    - no bees are hiding in my honey spoon
+    - "My honey spoon: I will cause a useful distraction."
+    - With my honey spoon, try not to laugh during my push.
+quirks:
+  - celebrates_early
+  - always_gg
+rivals:
+  - xxhunterwolfxx
+bio: Nyxmoush_25 kept a pretend apiary behind a flower-covered team base and still brings a honey spoon to the queue. xXHunterWolfXx keeps asking whether it really helps.
+batch: 3
+retired: false

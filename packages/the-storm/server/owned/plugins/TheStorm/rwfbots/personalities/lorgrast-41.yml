@@ -1,0 +1,74 @@
+id: lorgrast-41
+name: Lorgrast_41
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTY5MTY1OSwKICAicHJvZmlsZUlkIiA6ICI2NWI5NTU1YWQyMGU0NWM5YjFkNmU3MjQwNjU0NTBkNCIsCiAgInByb2ZpbGVOYW1lIiA6ICJNSEZfTWVybCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8zZmE1MjZkZWIwZmIzN2Y5YzIxOTQwZjlhNmVmM2RjZjFmNjNjNmNiMjZhYzNkOTU5NTdhOTM3YWI0NGQwZjI4IgogICAgfQogIH0KfQ=="
+  signature: "E6fk/i1XzNiwVMN7yqSjTffyaJ5KyyrA6bq2dlv6fyHdpGsBi4ImFgFn+x9n0mPXjOKgufTr+SLgixjBtGtD1QR1vkWA48SnsgoBxbXW8HV0ZLYN2OdnIglti+yneklmRdKkXAUiWSoJ5fgYDU7VtkYZK3EV0oEEhrc/XI3If9C9V6Wcu0O0VBlTZNRlrxLzOG33me2k9N8AebWoYvL2/29ugVp6UD6aa3gL8uN95H5fYUOz3jI9kNhl3h2wY7QMq1dfSymV0EqkvIKvJKSGsyKXUwzb4IlF3ISgZWncHsA16Qge3fbTvvVM24e5+QfDxnLXVnV4sBCfe5ZiisgOPRamJwcKu7slmGabgt797TJdHHfXP1xayBK2NPkipVWOPvcFQFv/yiaxwasQiXkDc+TQG3olYcEscTy5apWXrzimqSgKdO5SJO0K+akTEHhiLCh7J5gwANVpf0qW0MjcIe/ypeXiRfmxmnzZ7N3d6PesPRhuS6CtpoAAFNaPTHgoNn1NzZZ7Rk0iQxfCJ/cotUBicVwYd7gusY+dWmzzuAHc7K1jrLXqRFrmPO203KIy+6vIQ71nleh3LYfcvwl42kl6kaZYAwKfutw7puM1qfOO9g+r2pqm+sW+fWeJsBNjvk9KKrWwDh2HXjWcv09d+9c6XDaFOyt9atGHhC/W89Q="
+skill: 0.668
+archetype: turtle
+leverOffsets:
+  reactionMs: 0.77
+  predictionQuality: 0.45
+  decisionTemperature: 0.25
+  awarenessRadius: 0.57
+  coordination: 0.11
+  aggression: -1.91
+kits:
+  trooper: 1
+  longbow: 0.3
+  rewind: 0.92
+roles:
+  defend: 0.91
+  retake: 0.35
+  hunt: 0.29
+style:
+  aggression: 0.11
+  patience: 0.96
+  teamplay: 0.6
+  risk: 0.12
+voice:
+  tone:
+    - excitable
+    - cautious
+  verbosity: quiet
+  style: "enthusiastic clues and upside-down maps; unhurried words, conservative estimates and tiny victories"
+lines:
+  greet:
+    - secret drawer found, clue understood
+    - secret drawer is ready. no need to hurry.
+  onKill:
+    - that corner was the next clue
+    - secret drawer waited for the opening
+  onDeath:
+    - the clue was apparently a trap
+    - secret drawer should have waited another moment
+  onPlant:
+    - a very loud treasure chest
+    - secret drawer checked the site first
+  onDefuse:
+    - solved that little puzzle
+    - secret drawer checked the corner twice
+  onWin:
+    - secret drawer led us to the prize
+    - secret drawer got there eventually
+  onLoss:
+    - the secret drawer was upside down again
+    - secret drawer needed one more safe corner
+  onLastAlive:
+    - one clue and no hints
+    - the secret drawer will take this slowly
+  taunt:
+    - that trail led you in a circle
+    - the secret drawer can wait out that peek
+  lobby:
+    - does anyone recognise my secret drawer?
+    - the answer is definitely near my secret drawer
+    - "My secret drawer: I will keep a safe route home."
+    - With my secret drawer, please check the blind corner first.
+quirks:
+  - gapple_hoarder
+  - always_gg
+rivals:
+  - spooky-arrow
+bio: Lorgrast_41 hid tiny treasure chests along the old lobby walking route and still brings a secret drawer to the queue. Spooky_Arrow keeps asking whether it really helps.
+batch: 3
+retired: false

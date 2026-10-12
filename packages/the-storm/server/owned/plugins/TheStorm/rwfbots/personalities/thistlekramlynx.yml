@@ -1,0 +1,75 @@
+id: thistlekramlynx
+name: ThistlekramLynx
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODY0NjU5NSwKICAicHJvZmlsZUlkIiA6ICI2OTU3YjQyOTZiOTI0NGJkOGQzNWJiZGU4M2JiZDI3OSIsCiAgInByb2ZpbGVOYW1lIiA6ICJjb2xpblBBUEEiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNGY5OWRjZGJhZjRhMGIyMmYwZjM1ZTcyMjM0ZDcxYTE5Nzc1ZGI0NmYxZmRmNDg1ODlhNDQ3YjEzOTkwZWM2MyIKICAgIH0KICB9Cn0="
+  signature: "QSGptlS7Go2wrUGbgS/3CMhXI4SOQIH2OKpfMOvbSCGKuphnxqYqbTbykRNpMXcns1Mth5brSLNhb8JUPHYxVN66BEQLqi+/vqWK7oxCALBdyLt/3tGivVOVAL+K/aQ1YntEveUwUvx77b5auwRRp8ZueJ/wru8ynwOvQJLFTK5dJVAfObl5HXNI0OAyIUgkgiggXE2iUMaR69OEd/falGuvLt10l5Z8bX7gM+wRGHInNqrM9ZYD6tsMr0c0tMYpZjQqqvybNNJsOXcoNE3aWDPrMEVPNG6Nxzwyby4qAFVtV2NcPPl89NTneJ0BpTj77IhIFW6PkbujFQTNcQ7fd8GAxgbZR+jnPmomYH+bp/zsHCtoY+jIp5CfkagA8ON/IYrxyYybgNaRvnVNlJSUT6Ej91BfEPbGUNKXosV/Q7FBgAARDyLrqKkqS1MiV5KKHOqkaxu3UNFtQn7c2GLaJ/U1Ji88MxH2OfHviPSrPkLpKw+XfC+X0DyDtalKqqA2Ad1mY/g/82ZK25aiNNfzQeSxMiJBzPXl1YNEOPykj9aCBuuf78sz8hXnaZxEbeycF/639/TeSIc9wGFR72IHiOQ+7OReEidMteki9SrvfKiwzIskubXcxGEL/lpE5PtsjZH4YGdSCVMk6Fw8JPXsnDieZGxyT2a4SupiQSTdGMA="
+skill: 0.783
+archetype: flanker
+leverOffsets:
+  turnRateDegPerTick: 0.55
+  predictionQuality: 0.34
+  decisionTemperature: -0.83
+  coordination: -0.89
+  aggression: 0.22
+kits:
+  trooper: 0.54
+  shortbow: 1
+  rewind: 0.35
+  wraith: 0.5
+  spy: 0.41
+roles:
+  plant: 0.26
+  rotate: 1
+  hunt: 0.39
+style:
+  aggression: 0.74
+  patience: 0.52
+  teamplay: 0.26
+  risk: 0.69
+voice:
+  tone:
+    - soft-spoken
+    - nimble
+  verbosity: normal
+  style: "tiny aquarium metaphors and creature worries; quick side remarks and route changes mid-sentence"
+lines:
+  greet:
+    - pebble scoop ready, fish fed
+    - pebble scoop is taking the other entrance
+  onKill:
+    - a splash and then quiet
+    - pebble scoop found a side door
+  onDeath:
+    - out of my depth there
+    - pebble scoop chose an occupied side door
+  onPlant:
+    - something is bubbling at the bomb
+    - "pebble scoop came around the back of {bomb}"
+  onDefuse:
+    - water is calm again
+    - pebble scoop found a quieter route to the fuse
+  onWin:
+    - a quiet evening for my pebble scoop
+    - pebble scoop took the long way for a reason
+  onLoss:
+    - cloudy water in the pebble scoop plan
+    - pebble scoop took the long way for no reason
+  onLastAlive:
+    - one small splash left
+    - one pebble scoop coming around the edge
+  taunt:
+    - that bait was a little obvious
+    - the pebble scoop is somewhere to the side
+  lobby:
+    - putting my pebble scoop away before the round
+    - the pond can wait for my pebble scoop
+    - "My pebble scoop: I will try the side approach."
+    - With my pebble scoop, keep them looking forward for me.
+quirks:
+  - crouch_spam
+  - always_gg
+rivals:
+  - roguecomet03
+bio: ThistlekramLynx maintained a glass pond under the old lobby stairs and still brings a pebble scoop to the queue. RogueComet03 keeps asking whether it really helps.
+batch: 3
+retired: false

@@ -1,0 +1,74 @@
+id: sneakybadger09
+name: SneakyBadger09
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4OTI5NTcyNCwKICAicHJvZmlsZUlkIiA6ICIwMmI1ZWM4OTlkYTE0NzU1OTQ5YmEwMDIxOWJiYzFlYiIsCiAgInByb2ZpbGVOYW1lIiA6ICJteWllc2h1cCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS80OTI4MWFkODE5ZDY1ZTc0MDhlNmE4NDgxZmE1NzhiNjFhNjBkNDg4MTMwN2ZiZWUzZTNmODc1YzYyYjFkODU4IgogICAgfQogIH0KfQ=="
+  signature: "TjaPIfVdnQEz9oPbHGvFj/XFDo5po3X9S6+aYbisSdOSN8N8PEJvC+7JwZENm3Sp7NvAwkSk+zmVG5Hck3HX2O45ctEXt9L2dFHg764cww43ReRNhOGc3Eczd1bHW0kjs65eJkGWp/k3oSaL1YdclSkLeDLT65yPpDmf2tF+9h2GjrZ3FUBaxegqgEx5ajlebcGIPvmT2zBzFOyghTfne7dGtsQ4EHRwSLNfmwYd1h1Hq6QFW2AMiU22xCo/nX0UtrtYhCTU6oSmc/ZIIvLEEWdb7OFUoavOPoFuAmXonbVsswq/rpX7dDAUOBZbYMYjMUDioC+2DdyWkR4ySK3AnHPqGz1MjdN3kQaCFrCaE0QkLtjCNzMsHUFnidydOgZ9cVr/Ik0m9BE+HYj7KkZJh5F+tNcNMy3L2fcWpSFTc6YgedCx2HN2ffSIZshlJhzbK3ilV1Ejq3tRbMZSUBxHmD/Q/4wHzGyxUZAk8vmhPVvwWjtBRORuGcT1w+I7YU8I4C0kGuLkHnFRGzi/UZQDy5bZcMkxReHWmTnScqUGFXwtOXqXQc4+hqRkDQ+zS7g2zp5lIeVFDTNgsuBzMaNZWmEQkpN3xzBdOkY93zjuy2Crxzgc4VMUDbPrghECvtTU9lbBtjbQ9xqr89eZKHF1i5eI22x5KRfLkkVuvFHfABI="
+skill: 0.512
+archetype: turtle
+leverOffsets:
+  reactionMs: 0.68
+  aimErrorDeg: 0.15
+  predictionQuality: -0.49
+  decisionTemperature: 0.64
+  awarenessRadius: 0.21
+  aggression: -1.84
+kits:
+  trooper: 1
+  longbow: 0.3
+  shortbow: 0.22
+  rewind: 0.89
+roles:
+  defend: 1
+  retake: 0.54
+style:
+  aggression: 0.18
+  patience: 0.95
+  teamplay: 0.54
+  risk: 0.12
+voice:
+  tone:
+    - dry
+    - cautious
+  verbosity: quiet
+  style: "imaginary roof leaks and tidy-angle demands; unhurried words, conservative estimates and tiny victories"
+lines:
+  greet:
+    - shingle bundle checked, no leaks yet
+    - shingle bundle is ready. no need to hurry.
+  onKill:
+    - a small opening under the eaves
+    - shingle bundle waited for the opening
+  onDeath:
+    - found the one loose tile
+    - shingle bundle should have waited another moment
+  onPlant:
+    - something ticking under the roof
+    - shingle bundle checked the site first
+  onDefuse:
+    - one less repair bill
+    - shingle bundle checked the corner twice
+  onWin:
+    - shingle bundle kept the rain out
+    - shingle bundle got there eventually
+  onLoss:
+    - the shingle bundle plan has sprung a leak
+    - shingle bundle needed one more safe corner
+  onLastAlive:
+    - one tile holding the roof
+    - the shingle bundle will take this slowly
+  taunt:
+    - your angle would collect rain
+    - the shingle bundle can wait out that peek
+  lobby:
+    - inspecting my shingle bundle for cracks
+    - the shingle bundle repair can wait one round
+    - "My shingle bundle: I will keep a safe route home."
+    - With my shingle bundle, please check the blind corner first.
+quirks:
+  - gapple_hoarder
+  - always_gg
+rivals:
+  - lunarphantom16
+bio: SneakyBadger09 reroofed the same spawn cottage after every group building session and still brings a shingle bundle to the queue. LunarPhantom16 keeps asking whether it really helps.
+batch: 3
+retired: false

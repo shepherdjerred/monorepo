@@ -1,0 +1,75 @@
+id: thukjoushjoztv
+name: ThukjoushjozTV
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODQ5MDA1MCwKICAicHJvZmlsZUlkIiA6ICI2NWI5NTU1YWQyMGU0NWM5YjFkNmU3MjQwNjU0NTBkNCIsCiAgInByb2ZpbGVOYW1lIiA6ICJNSEZfTWVybCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS83MmE3NmI2ZTE4MDk0NzhlNjkyMDc0ZTRjZGUyNTU1MTU3MzdkNWY2OTViMGU3NGU2MTNmMTYyNTA3MmZhY2MzIgogICAgfQogIH0KfQ=="
+  signature: "l4ahUErQ6Ow9j8wfJr3QBeTEY85QKjv2J461rqc5a4QX/oL546mz/EjFoDohNrPKsakvAhoHDnAMUhwpDpPD9hnV2fkTyHooCtlGP2DS0LHjilxSDgHclHU+DLpEYRCe48BWJNBNcsLE8F2SrcemczkiDTENdmmKMwOibjpIHPo97qD1G55R8nly4b8viw5OjuAOsycQ8rj6kizcMhfdHe2b/p9C+qkfpEXzQAv5NDmFMbgS8EX/+BvXHm4izY8jp4HvDGqYlaAO6wlM/Nc41w9/jS2cmldP4QSsUUF8XapWYk/7CGrPl0L399leSGDXQj9sxK5qNSqh4cHbxiQOYEkEmbwZADj8SrqA3HwNhjpZHCrvmS5uM/YzTOSNhD11f3auN2T3m7c+OTWyXYtL/C382cNJql4iYFiaYv/6+Crf/lGtFsP2ccTrHk3mO+avTs6eEtC/KPYrVS59Bb8XNI6475Nz2IxFQnbe/69Pa6LlJAvYC0VjRCSd6Dbosk4SFOhYsW8Tpok4jLJcPsFduCyTjazus53zBT233K9FARq2W0rEfhlsXy9TyShE2LEfKmQYCTo8lcaa9l4KiFkG0VgjIy0VBnNVvXuhSVNkLlQlUb3fxg4ZD0vAukdoI1EhiQx+frK2Yg9VRls9QW6XpUTdwA1m+nUJUDP0GGDsDzo="
+skill: 0.545
+archetype: rusher
+leverOffsets:
+  reactionMs: 0.16
+  aimErrorDeg: -0.11
+  cps: 0.43
+  predictionQuality: 0.15
+  decisionTemperature: 0.72
+  awarenessRadius: -0.58
+  aggression: 1.41
+kits:
+  trooper: 1
+  shortbow: 0.54
+  rewind: 0.28
+roles:
+  plant: 0.7
+  escort: 0.54
+  hunt: 0.69
+style:
+  aggression: 1
+  patience: 0.12
+  teamplay: 0.38
+  risk: 0.71
+voice:
+  tone:
+    - observant
+    - eager
+  verbosity: normal
+  style: "local forecasts and quiet predictions; fast fragments, impatient countdowns"
+lines:
+  greet:
+    - rain gauge predicts a lively round
+    - rain gauge ready, I am taking the first corner
+  onKill:
+    - a sudden change on the rain gauge
+    - rain gauge keeps moving, next corner
+  onDeath:
+    - the rain gauge missed that gust
+    - a pause for the rain gauge, then straight back
+  onPlant:
+    - pressure dropping at the bomb
+    - rain gauge is already on the next approach
+  onDefuse:
+    - storm warning cancelled
+    - quick hands, quick rain gauge, clear
+  onWin:
+    - clear skies over my rain gauge
+    - rain gauge barely stopped all round
+  onLoss:
+    - my rain gauge forecast was optimistic
+    - rain gauge ran ahead of the plan
+  onLastAlive:
+    - one rain gauge in the storm
+    - my rain gauge and I will keep moving
+  taunt:
+    - your push is mostly hot air
+    - my rain gauge got here before that push
+  lobby:
+    - taking a reading from my rain gauge
+    - please stop breathing onto my rain gauge
+    - "My rain gauge: first corner is mine."
+    - With my rain gauge, please follow after the opening.
+quirks:
+  - bunny_hops
+  - always_gg
+rivals:
+  - thaezmylhd
+bio: ThukjoushjozTV logged the weather from a glass hut above the old arena and still brings a rain gauge to the queue. ThaezmylHD keeps asking whether it really helps.
+batch: 3
+retired: false

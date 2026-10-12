@@ -1,0 +1,72 @@
+id: nouxmiolgaming
+name: NouxmiolGaming
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTkyMzY3NSwKICAicHJvZmlsZUlkIiA6ICIwM2FlZmNjYWE2NzE0ZDFhOThhY2Q2N2QxNjA0NzQyZCIsCiAgInByb2ZpbGVOYW1lIiA6ICJUYXpyaXh4IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2I5ZTFlNTI5NDI0N2M0NGEwYjNlMzRkMWY4ODZkN2U2MDdlZmIxOGM4YjgwMTQ5MDE5NTIxYWMzMWJmMmU3MzkiCiAgICB9CiAgfQp9
+  signature: "usapAPtauhNu2a3iyM8MH7HUImLFvf/vo+9BCAzy/xNu0wO3XaZJZc1opQOqSeo2koxM+9/yxLQmepaxDJZsck5OVuARupbKId1XW9z5zNN+nhlLpxdtK0MfUFvQonsY7DTbUCrOrdnsgffleWKjgoutl4zrK1Yk5s8sFLXqwjR0AL8hGZsNY7pOjA1cXVz8j190tiZYe1mGLo5uUyaa25rW1Rq/FECRK/fyBm3BPClDHCNodOQyqXuBt6PPBLLPzt82OZD4geOCYWHJzS8YtEbfr6Mlb+gHRX+roYoCqTcWc6rua4BJArnsnzH7+sWJgEBhzQlwt+nI7o+bUXlu2vWaIxFfsLh4k3S17WYvPDoXRdCtHgLmuxvI/iSLcPKBr3V1CcWZYb6PgrgYa6zKAZlFVLcMeroMULB7n2p6BxMRyESB4V7PSed+R+2Cl+fr9KGOJtev0zy0fS9W/+uui/WcJwiBpnhLkw52AtXj9M8JHTcBjVPl/+Y+V4ALAF1J6Du9WNhlvuNiFuvwW5Ij+QN9jZtC+Y4rjFgHhjKBliAZkbCTLSveBdIUQCaEDBacwMbfebbdRKUd4f2nZN8WfU7Sfr+A3udma+x7Wog/7r7qqEXKMjIBN5hqpDDgCYE/SPV5fEmniN7vRyl/ZYjSW8+imx9Z1csvVTiiLSTwx6w="
+skill: 0.028
+archetype: bomb_diver
+leverOffsets:
+  reactionMs: 0.18
+  turnRateDegPerTick: -0.64
+  decisionTemperature: 0.65
+  technique: 1.06
+  aggression: -0.66
+kits:
+  trooper: 1
+  shortbow: 0.22
+  rewind: 0.64
+roles:
+  plant: 0.92
+  escort: 0.26
+style:
+  aggression: 0.76
+  patience: 0.06
+  teamplay: 0.3
+  risk: 0.98
+voice:
+  tone:
+    - observant
+    - urgent
+  verbosity: quiet
+  style: "local forecasts and quiet predictions; breathless objective reports, oddly calm at a fuse"
+lines:
+  greet:
+    - storm glass predicts a lively round
+    - storm glass packed, where is the bomb?
+  onKill:
+    - a sudden change on the storm glass
+    - a clear path for the storm glass
+  onDeath:
+    - the storm glass missed that gust
+    - storm glass was one corner from the fuse
+  onPlant:
+    - pressure dropping at the bomb
+    - "storm glass is parked beside {bomb}"
+  onDefuse:
+    - storm warning cancelled
+    - "storm glass and {bomb} can both stay intact"
+  onWin:
+    - clear skies over my storm glass
+    - storm glass got the objective done
+  onLoss:
+    - my storm glass forecast was optimistic
+    - storm glass took too long reaching the site
+  onLastAlive:
+    - one storm glass in the storm
+    - the storm glass still has a fuse to find
+  taunt:
+    - your push is mostly hot air
+    - the storm glass got closer to your bomb
+  lobby:
+    - taking a reading from my storm glass
+    - please stop breathing onto my storm glass
+    - "My storm glass: cover my approach to the bomb."
+    - With my storm glass, call the safest bomb route.
+quirks:
+  - loves_nuke
+  - always_gg
+rivals:
+  - nuzjaiktaethkek
+bio: NouxmiolGaming logged the weather from a glass hut above the old arena and still brings a storm glass to the queue. Nuzjaiktaethkek keeps asking whether it really helps.
+batch: 3
+retired: false

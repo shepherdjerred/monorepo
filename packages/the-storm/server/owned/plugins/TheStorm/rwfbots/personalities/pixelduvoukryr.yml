@@ -1,0 +1,73 @@
+id: pixelduvoukryr
+name: PixelDuvoukryr
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NDk4NDI4MSwKICAicHJvZmlsZUlkIiA6ICJiOTc3ODUwYWMxMGE0Mjk4YmRiNWNhYjBhODA0NmM4YSIsCiAgInByb2ZpbGVOYW1lIiA6ICJTb3JheER1YmJlciIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS83NWYxNDIyZGEwMjhjMWZhZmM3NTAxMDVmYTMzZjUwNDU2MjQ4YzEwYTEyMjAyOGVmYjIxOWE0NDY4ZjEyMjQiCiAgICB9CiAgfQp9
+  signature: "SpmmudNpbGGMG3OBhhL8ncF25Q6HIP7zFqSEEOvu0zZcFOIspcdjfEZAoLDQSB7lPG0zvpx4OQgdy8KT32xrYmEST4VKN8AIHjF7tCm5VLaiX27tp9Zy0WCKv+XeTkBsatIymGR1+8QWdcEYS/ME2nJWZo17gTm6X5FfbjSSCQEkQ5lPo65zbOMNDNPESh6mfIfSBKPnKo4SJwdrKtSwlOznIk9zT6cN/9b6+kca1zk9jk7N3MNQjxpTqGRdVFpKU9PEz84b6ZGF9gru2r6eA55KwYWkjvhhw9bX6nZSe35uSEYONmIEkP+ITn93/XCjkBGpIhPgjr6ED9o0jpqPbnwwFRm3ZKvhLVtVcI1v5fvo9/Oxh3dnKyULnDXKl8xEEgNpuAB83UOOk60jO120HwDJcEfiYEXpBVAJuCIWSw5p284h7jpSX35x/36fEiHUCOR0sROw61zRytuC1L4dcFAgUtftlrjyOy7BnWMmudF6c+pfsz5FdLrQTEPfmWHFY7tJJxsl/CeafUeetZ7/dObijdHQyH8sF6iIZmKdThhC7JXNFoU0ayMDfcXwHnqNRoe9BEf+2iTcfUkxTuY8bIkvu5Ef3ch/E7kO/vfl04Wdih2StvUET8B7mEzu4uzUvg+pC0yXOM/0B9tzjv0ZqthORfcxbvSuA9Of6uCM8Kc="
+skill: 0.175
+archetype: hunter
+leverOffsets:
+  turnRateDegPerTick: 0.59
+  predictionQuality: 0.47
+  awarenessRadius: 1.42
+  technique: 0.58
+  aggression: 1.18
+kits:
+  trooper: 0.65
+  longbow: 0.48
+  shortbow: 0.97
+  ghost: 0.23
+roles:
+  rotate: 0.57
+  hunt: 1
+style:
+  aggression: 0.76
+  patience: 0.42
+  teamplay: 0.39
+  risk: 0.5
+voice:
+  tone:
+    - theatrical
+    - intent
+  verbosity: normal
+  style: "backstage whispers and hurried scene changes; tracks small clues aloud, then gives terse pursuit calls"
+lines:
+  greet:
+    - spotlight shutter in place, curtain soon
+    - spotlight shutter ready, looking for tracks
+  onKill:
+    - a quick scene change for the spotlight shutter
+    - spotlight shutter followed that trail correctly
+  onDeath:
+    - missed my cue by a whole scene
+    - the spotlight shutter trail doubled back
+  onPlant:
+    - cue the dramatic ticking
+    - "spotlight shutter found a path to {bomb}"
+  onDefuse:
+    - cut that effect, safely
+    - spotlight shutter tracked the ticking down
+  onWin:
+    - take a bow beside the spotlight shutter
+    - spotlight shutter followed it to the end
+  onLoss:
+    - the spotlight shutter needs a better rehearsal
+    - spotlight shutter lost the trail near the finish
+  onLastAlive:
+    - one performer, one spotlight shutter
+    - the spotlight shutter has one trail left
+  taunt:
+    - your entrance was a bit loud
+    - the spotlight shutter noticed those footsteps
+  lobby:
+    - has anyone seen the spotlight shutter?
+    - do not lean on the painted spotlight shutter
+    - "My spotlight shutter: I will look for the last opponent."
+    - With my spotlight shutter, call the last place you saw them.
+quirks:
+  - holds_grudges
+  - always_gg
+rivals:
+  - emberdirthyk
+bio: PixelDuvoukryr worked the curtains at a player-built theatre between duels and still brings a spotlight shutter to the queue. EmberDirthyk keeps asking whether it really helps.
+batch: 3
+retired: false

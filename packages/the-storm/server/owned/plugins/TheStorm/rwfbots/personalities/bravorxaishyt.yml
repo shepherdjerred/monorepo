@@ -1,0 +1,78 @@
+id: bravorxaishyt
+name: BravorxaishYT
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODU4NjQ0NSwKICAicHJvZmlsZUlkIiA6ICJhYjNkNTUzYmEzMjM0MTc5OGU0ZmE0NzdkNDE0MmIxMSIsCiAgInByb2ZpbGVOYW1lIiA6ICJDcnlwdGl6b25lIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzk2NmYwNWNhMjVlMTJhZjc3YjFlZTAzOGNkOWY1ZDYxYTQ5ZmYwZmJjNWM5MTJmNjdiMGViZjAzYTYwOTU1ZTMiCiAgICB9CiAgfQp9
+  signature: "gxT92JdBsZ2fMRel3pB6UdDKiJQByoE3q+B2MVLwbU2Yo0ug2gos1tKoKaUtGa8nMW6i3+eMhk85Fuou7n7btncPa55kaCGwsU2yPHjpc88Dxx5AUbOpmA1VO6MxHaQ7GLnZFwtQ/Kq4DRSI5tLpIU0BKHGhPGdfulMTuoSEISw/Yjey7/UGqN1uevL5TnYe+C6/W37Pz/7rdnW4kuY3eGiwhGD0f7q1a12lEXy6Eg8OtWV4M+Id612vitTqN1OIdVxFH5zECdAkWGnVG1y7q7MIgyTWsM4/etQmPUxz/FS9tgDujM4YB6c+6O5tblcTKEax1OQ0rHUzqNPj/9YZ1IvdoLvnsi7PRl62bBPSp6HNQTCNLWZJH5l6cOQ51GKIHH3MV6fBsL6Yc9xtBF+wEEcqDpkILZIkFEFoKbQinrVbHtE2uwXxuvZirQnelk56mqhcnR7MFDLDAphWz2g6GhBaArd3pxlmJNj//xxdf1+FRnXCrXsu8LAjWDu+5/MKBeLydaJ7ezgw7ZqAvaYyUhAMmJpleW46kiWCJBF6WqtXVTjNo2oNfsjOzIqt23z4+mnrU4l7Cp6ai+ZjWI4ZlIcvYEv8c6Qz6BG/2z2ZKIq/z0g2k6ZNYLhJXHvjgC2bGBCw+hNEm68LpCyIRulCjW/bZhBi5G9FbrQYSrLGVeY="
+skill: 0.344
+archetype: flanker
+leverOffsets:
+  turnRateDegPerTick: 0.96
+  cps: -0.98
+  predictionQuality: 0.63
+  awarenessRadius: -0.64
+  coordination: -0.78
+  aggression: 0.28
+kits:
+  trooper: 0.53
+  longbow: 0.3
+  shortbow: 1
+  rewind: 0.37
+  wraith: 0.44
+  spy: 0.36
+roles:
+  plant: 0.32
+  defend: 0.1
+  rotate: 1
+  hunt: 0.47
+style:
+  aggression: 0.67
+  patience: 0.37
+  teamplay: 0.17
+  risk: 0.63
+voice:
+  tone:
+    - curious
+    - nimble
+  verbosity: normal
+  style: "beach discoveries and understated delight; quick side remarks and route changes mid-sentence"
+lines:
+  greet:
+    - sand bottle brought good luck last time
+    - sand bottle is taking the other entrance
+  onKill:
+    - another find for the shelf
+    - sand bottle found a side door
+  onDeath:
+    - swept away with my sand bottle
+    - sand bottle chose an occupied side door
+  onPlant:
+    - leaving this above the tide line
+    - "sand bottle came around the back of {bomb}"
+  onDefuse:
+    - picked that up before the tide
+    - sand bottle found a quieter route to the fuse
+  onWin:
+    - a good day out with my sand bottle
+    - sand bottle took the long way for a reason
+  onLoss:
+    - the tide took our round
+    - sand bottle took the long way for no reason
+  onLastAlive:
+    - just me and my sand bottle on shore
+    - one sand bottle coming around the edge
+  taunt:
+    - that approach washed straight past
+    - the sand bottle is somewhere to the side
+  lobby:
+    - found a sand bottle on the way here
+    - please admire my sand bottle from a distance
+    - "My sand bottle: I will try the side approach."
+    - With my sand bottle, keep them looking forward for me.
+quirks:
+  - crouch_spam
+  - always_gg
+rivals:
+  - noodlephantom5
+bio: BravorxaishYT filled an old shoreline hut with labelled beach finds and still brings a sand bottle to the queue. NoodlePhantom5 keeps asking whether it really helps.
+batch: 3
+retired: false

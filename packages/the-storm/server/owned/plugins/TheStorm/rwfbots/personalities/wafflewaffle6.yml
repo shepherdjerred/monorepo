@@ -1,0 +1,75 @@
+id: wafflewaffle6
+name: WaffleWaffle6
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODU5NzExNCwKICAicHJvZmlsZUlkIiA6ICJiMzMwZWE4OWE3MTY0OWZjYTMwZmI5ZjU5MTQ5ZjNjMCIsCiAgInByb2ZpbGVOYW1lIiA6ICJUQUxLX0FMT1RfIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzg5NzRkNmJhMDRjYWUwMDgxYjhjZDQ4YTY0NTVhODExZWFjY2NjYjM4YmE3NWYzOGI0OTc2ZjI4MDdlM2FiNzAiCiAgICB9CiAgfQp9
+  signature: "VirQnpnzYPFCwSnlNec18QbjKyUu1FEO2JLqRljLqK4aY0b2dYl6Tv6+xKzoveFuKqjyGnjiJ0vDuUyD3HChcRxxgt72pZRUJkyw3y2Ou79LrB9yUs3ghdNRbGnfqegg/+lJaO8LhmG3aPahL0698aeGLFRsl71m8rUqYg1S3+RKkye1Av8CMdN5nX7FpdsSNNpXVGvQm5j7VJVlhKihOCb7PdZPuDX/ZDuIpHaivLhoC2HJTV3om8uuuNINSqNhRk5T3SNwAbVFnFdYkojIcmuysUJKhshV1rdUHdTFWPXpxwMDrY3eSCBEVTm6E4bBOb+0z8ZsGc6GdTO9A5O4LRikaSidStOo5JYcz7+vDsetOVm2zggxova4ReWKpmNk0kKNsTtIJsh2UPy4BfG7gYHU+qVRTQ7vII4md+hfTSAGhawbSzJPtHhAq8gTCe9iHF4yVRKeYczgVq/DRZtIm5nURabtFrmBQA1/7wRDOn3r/GNBJyQ89oKc5kR39bDaA8YWp35DEqdBfJZtoExDnyFne1MN9Ws7K8/umW8B2Z5/mqCofs4ZGJynm4d3F7h90+/GWeEk3UjzbAkVLcb5XY+QtSfsAQ28fjemSIRvPzl8Jl1uNldEKxB+rWUp6tdBPCg916FNSkKG1NX/R7/bR78+i4s9Uz/zNrhS7/+T2zc="
+skill: 0.239
+archetype: troll
+leverOffsets:
+  reactionMs: -0.15
+  predictionQuality: -0.5
+  decisionTemperature: -1.89
+  coordination: -0.98
+  technique: 0.57
+kits:
+  trooper: 0.48
+  shortbow: 0.67
+  rewind: 0.86
+  spy: 0.73
+roles:
+  plant: 0.61
+  escort: 0.18
+  rotate: 0.52
+  hunt: 0.33
+style:
+  aggression: 0.59
+  patience: 0.24
+  teamplay: 0.24
+  risk: 0.82
+voice:
+  tone:
+    - soft-spoken
+    - mischievous
+  verbosity: chatty
+  style: "tiny aquarium metaphors and creature worries; deadpan object conversations and harmless overconfidence"
+lines:
+  greet:
+    - snail shell ready, fish fed
+    - snail shell has appointed itself captain
+  onKill:
+    - a splash and then quiet
+    - snail shell is now insufferably proud
+  onDeath:
+    - out of my depth there
+    - snail shell would like a different replay
+  onPlant:
+    - something is bubbling at the bomb
+    - snail shell calls this interior decorating
+  onDefuse:
+    - water is calm again
+    - snail shell says it knew the correct wire
+  onWin:
+    - a quiet evening for my snail shell
+    - snail shell is requesting a trophy shelf
+  onLoss:
+    - cloudy water in the snail shell plan
+    - snail shell has misplaced the blame form
+  onLastAlive:
+    - one small splash left
+    - snail shell insists this was the plan
+  taunt:
+    - that bait was a little obvious
+    - the snail shell gave that push three out of ten
+  lobby:
+    - putting my snail shell away before the round
+    - the pond can wait for my snail shell
+    - "My snail shell: I will cause a useful distraction."
+    - With my snail shell, try not to laugh during my push.
+quirks:
+  - celebrates_early
+  - always_gg
+rivals:
+  - lilshainrun
+bio: WaffleWaffle6 maintained a glass pond under the old lobby stairs and still brings a snail shell to the queue. LilShainrun keeps asking whether it really helps.
+batch: 3
+retired: false

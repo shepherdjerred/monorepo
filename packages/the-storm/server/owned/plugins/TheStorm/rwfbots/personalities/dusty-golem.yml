@@ -1,0 +1,75 @@
+id: dusty-golem
+name: Dusty_Golem
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjA3MzMxMSwKICAicHJvZmlsZUlkIiA6ICI4OGMyOGYwOTY3MjU0NmNkYTg3ZjVhMTc0ODU0MzExYiIsCiAgInByb2ZpbGVOYW1lIiA6ICJOaXRlQ2F2ZSIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9hOWVhY2IzOTk5NzBmZDlhMmFhODExOTg2Yjg1YTgzODA4Y2JmZDM3Y2JlMzNjMjViNjIwYmM3ZjA2MjIyZWFjIgogICAgfQogIH0KfQ=="
+  signature: "kZffP6c5vTBp2HSDweeXMwdgWaVx1t8oxBpEOowlVC+lddFpaj1vQOV/d/BleRmfd+3j7k/mfdqkN3dfsWSIVmPcgHvTEycx5RFC3jlaYyeozHb6d7jPeIwln3Q42E+ZYwrjqP0XsnyCA8MILNNAK2IDt67DxSW0O46Oq5hbGYVsnDAsSCY8WP/ipKgfvS+Ti0eqOcsbd/LKK3sCZKwY/DLqd5JkDzFlJE1aa2ZVs0hlFt/wAJYU4iaf/4cqHAEnP8yAcDKxUY4jZOQNKHaVsHLtfWBZIpEbhHiKCZvhrE3yrO3glp5UpVOzmqjJj/IMeMlMYMHam21i9e7R/Lo4oa0HEr4U9jeTyBGbAbE2/V5ZVKLKjUvdzPUdl7s4zdsnjk05lPt9wLabeqUymo5hh3VYJYH6n4DOAwnTEYKU4OECzOpYjY09yLjBjSYQw8lYRL5mnwC6VTPIrmetSocH0/uyqgqLap/TjlL0XELJmBqBFJttFzGTk82qtCkM2OEgTZ6WWLz4OcT+inHVebF3WXWMEQfrZEFJS4cNaBIr4q1w1zZvX1jQXbo8kJh1lR0gHPO169cZqk5UwL/UKri33CBnF6xhxEKGri3XHWLDkcI3XZEpk2Wt1EQY+brvcBIWLdg/iMrj5aFl/b9hT+ILhYQdUqvKQrdUFfTPhwItnyQ="
+skill: 0.629
+archetype: duelist
+leverOffsets:
+  aimErrorDeg: 0.97
+  turnRateDegPerTick: 0.04
+  cps: 1.51
+  decisionTemperature: -1.03
+  coordination: -0.22
+  technique: 1.88
+  aggression: 0.94
+kits:
+  trooper: 0.9
+  shortbow: 0.42
+  ghost: 0.17
+roles:
+  escort: 0.54
+  retake: 0.43
+  hunt: 0.69
+style:
+  aggression: 0.82
+  patience: 0.3
+  teamplay: 0.3
+  risk: 0.5
+voice:
+  tone:
+    - bookish
+    - competitive
+  verbosity: normal
+  style: "brief footnotes and revised-edition rematches; brief courteous challenges and honest shot assessments"
+lines:
+  greet:
+    - gilt brush ready, new chapter
+    - gilt brush ready, good fights everyone
+  onKill:
+    - a short footnote to that duel
+    - good exchange beside the gilt brush
+  onDeath:
+    - a regrettable page break
+    - fair hit, the gilt brush left that gap
+  onPlant:
+    - a cliffhanger at the bomb
+    - gilt brush earned a moment at the bomb
+  onDefuse:
+    - closing that chapter gently
+    - gilt brush can settle this at the fuse
+  onWin:
+    - the gilt brush gets a happy ending
+    - gilt brush had some good fights today
+  onLoss:
+    - the gilt brush needs a revised edition
+    - gilt brush wants another clean round
+  onLastAlive:
+    - one last page to turn
+    - one gilt brush, one fair chance
+  taunt:
+    - I have read that opening before
+    - the gilt brush is ready for that peek
+  lobby:
+    - resting my gilt brush on the lobby shelf
+    - please do not dog-ear my gilt brush
+    - "My gilt brush: I will contest the middle."
+    - With my gilt brush, give the middle fight a clear lane.
+quirks:
+  - good_sport
+  - always_gg
+rivals:
+  - grypast-66
+bio: Dusty_Golem bound a book of old match stories with mismatched covers and still brings a gilt brush to the queue. Grypast_66 keeps asking whether it really helps.
+batch: 3
+retired: false
