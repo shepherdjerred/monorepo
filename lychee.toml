@@ -62,7 +62,6 @@ exclude_path = [
     "(^|/)playwright-report/",
     "(^|/)ai_dev_log/",
     "(^|/)CHANGELOG\\.md$",
-    "(^|/)packages/discord-plays-pokemon/packages/frontend/public/emulatorjs/",
     "(^|/)wasm-src/",
     "(^|/)\\.terraform/",
     "(^|/)packages/dotfiles/dot_agents/skills/",

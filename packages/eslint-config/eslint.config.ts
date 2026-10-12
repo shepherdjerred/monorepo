@@ -9,7 +9,6 @@ const config = [
         "local-rules.ts",
         "src/configs/*.test.ts",
         "src/rules/*.test.ts",
-        "src/rules/shared/*.test.ts",
       ],
       maximumDefaultProjectFileMatchCount_THIS_WILL_SLOW_DOWN_LINTING: 25,
     },
@@ -39,7 +38,7 @@ const config = [
   // ESLint rule implementations work with ESTree AST types which require
   // type assertions, enum comparisons, and nested helper functions in visitors.
   {
-    files: ["src/rules/*.ts", "src/rules/shared/*.ts"],
+    files: ["src/rules/*.ts"],
     rules: {
       "custom-rules/no-type-assertions": "off",
       "custom-rules/require-ts-extensions": "off",

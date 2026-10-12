@@ -42,7 +42,7 @@ UniFFI reads its metadata out of the built library's symbol table, and that
 metadata is host-independent. `build-xcframework` needs the Apple Rust
 targets and `lipo`; it writes the XCFramework itself, in `xcodebuild
 -create-xcframework`'s exact layout, so it runs on macOS or in the
-[`apple-cross`](../../apple-cross/) Linux image. `verify-swift` compiles and
+[`macos-cross-compiler`](../../macos-cross-compiler/) Linux image. `verify-swift` compiles and
 runs a Swift smoke test, so it is macOS-only.
 
 ## Build settings on this package

@@ -5,5 +5,5 @@
   "exclude": ["dist", "node_modules", "**/node_modules"],
   "extends": ["../../tsconfig.base.json"],
   "files": ["./src/env.d.ts"],
-  "include": [".astro/types.d.ts", "**/*", "postcss.config.ts"]
+  "include": [".astro/types.d.ts", "**/*"]
 }

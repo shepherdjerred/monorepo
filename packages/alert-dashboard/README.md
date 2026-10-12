@@ -119,20 +119,20 @@ accepted occurrence remains in the SQLite ledger.
 
 ## Scripts
 
-| Command                      | What it does                                                        |
-| ---------------------------- | ------------------------------------------------------------------- |
-| `bun run dev`                | API server + Vite dev server                                        |
-| `bun run start`              | Production server (`src/server/index.ts`)                           |
-| `bun run build`              | Prisma generate + Vite production build                             |
-| `bun run generate`           | Generate the Prisma client                                          |
-| `bun run typecheck`          | TypeScript (native `tsc`) after codegen                             |
-| `bun run test`               | Unit tests (`bun run test src`)                                     |
-| `bun run test:sqlite`        | SQLite integration test (`integration/sqlite.integration.test.ts`)  |
-| `bun run test:e2e`           | Playwright tests against the fixture server (`e2e/server.ts`)       |
-| `bun run lint`               | ESLint plus the architecture check                                  |
-| `bun run check:architecture` | dependency-cruiser layering rules (`scripts/check-architecture.ts`) |
-| `bun run migrate:deploy`     | Apply Prisma migrations (`prisma migrate deploy`)                   |
-| `bun run docker:build`       | Build the production image locally (`alert-dashboard:dev`)          |
+| Command                      | What it does                                                                          |
+| ---------------------------- | ------------------------------------------------------------------------------------- |
+| `bun run dev`                | API server + Vite dev server                                                          |
+| `bun run start`              | Production server (`src/server/index.ts`)                                             |
+| `bun run build`              | Prisma generate + Vite production build                                               |
+| `bun run generate`           | Generate the Prisma client                                                            |
+| `bun run typecheck`          | TypeScript (native `tsc`) after codegen                                               |
+| `bun run test`               | Unit tests (`bun run test src`)                                                       |
+| `bun run test:sqlite`        | SQLite integration test (`integration/sqlite.integration.test.ts`)                    |
+| `bun run test:e2e`           | Playwright tests against the fixture server (`e2e/server.ts`)                         |
+| `bun run lint`               | ESLint plus the architecture check                                                    |
+| `bun run check:architecture` | dependency-cruiser layering rules (`check-architecture` from `packages/architecture`) |
+| `bun run migrate:deploy`     | Apply Prisma migrations (`prisma migrate deploy`)                                     |
+| `bun run docker:build`       | Build the production image locally (`alert-dashboard:dev`)                            |
 
 ### Cancel incident email safely
 
