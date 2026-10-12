@@ -3,7 +3,6 @@ import { StaticProvider } from "@shepherdjerred/feature-flags/providers/static.t
 import {
   initializeDynamicConfig,
   homeDashboardConfig,
-  petDashboardEnabled,
   shutdownDynamicConfig,
 } from "../dynamic-config.ts";
 import { loadConfig } from "../config.ts";
@@ -53,22 +52,5 @@ describe("home dashboard entity configuration", () => {
       }),
     });
     await expect(homeDashboardConfig(config)).rejects.toThrow();
-  });
-});
-
-describe("pet dashboard feature flag", () => {
-  it("defaults off when the flag backend has no opinion", async () => {
-    await initializeDynamicConfig({ environment: DISABLED_ENVIRONMENT });
-
-    await expect(petDashboardEnabled()).resolves.toBe(false);
-  });
-
-  it("enables the route from the managed flag", async () => {
-    await initializeDynamicConfig({
-      environment: DISABLED_ENVIRONMENT,
-      provider: new StaticProvider({ "pet-dashboard-enabled": true }),
-    });
-
-    await expect(petDashboardEnabled()).resolves.toBe(true);
   });
 });

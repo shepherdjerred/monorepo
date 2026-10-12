@@ -67,15 +67,6 @@ const DEFINITION = {
     default: true,
     names: { flag: "birmel-elections-enabled", env: "ELECTIONS_ENABLED" },
   },
-  imageGenerationEnabled: {
-    schema: DynamicBooleanSchema,
-    sources: ["flag", "env", "default"],
-    default: false,
-    names: {
-      flag: "birmel-image-generation-enabled",
-      env: "IMAGE_GENERATION_ENABLED",
-    },
-  },
   llmModel: {
     schema: StringSchema,
     sources: ["flag", "env", "default"],
@@ -199,7 +190,6 @@ function createSnapshot(
           birthdaysEnabled: "boolean",
           activityTrackingEnabled: "boolean",
           electionsEnabled: "boolean",
-          imageGenerationEnabled: "boolean",
           llmModel: "string",
           classifierModel: "string",
           memoryModel: "string",
@@ -233,7 +223,6 @@ function createSnapshot(
       birthdaysEnabled: config.birthdays.enabled,
       activityTrackingEnabled: config.activityTracking.enabled,
       electionsEnabled: config.elections.enabled,
-      imageGenerationEnabled: config.imageGeneration.enabled,
       llmModel: config.llm.model,
       classifierModel: config.llm.classifierModel,
       memoryModel: config.llm.memoryModel,
@@ -263,7 +252,6 @@ function applySnapshot(snapshot: Snapshot, config: Config): void {
   config.birthdays.enabled = snapshot.get("birthdaysEnabled");
   config.activityTracking.enabled = snapshot.get("activityTrackingEnabled");
   config.elections.enabled = snapshot.get("electionsEnabled");
-  config.imageGeneration.enabled = snapshot.get("imageGenerationEnabled");
   config.llm.model = snapshot.get("llmModel");
   config.llm.classifierModel = snapshot.get("classifierModel");
   config.llm.memoryModel = snapshot.get("memoryModel");

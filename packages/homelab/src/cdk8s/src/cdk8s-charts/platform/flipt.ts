@@ -25,7 +25,7 @@ const CONSUMER_NAMESPACES = [
   "birmel",
   "temporal",
   "trmnl-dashboard",
-  // The ops dashboard gates the digest email on `ops-digest-email-enabled`.
+  // The ops dashboard reads its incident-mail settings from Flipt.
   "alert-dashboard",
   // streambot is deployed inside the `media` chart, not its own namespace.
   "media",
@@ -33,7 +33,7 @@ const CONSUMER_NAMESPACES = [
   // (component: maintenance-worker) but lives in the `woodpecker-ci`
   // namespace, not `temporal` — it needs its own entry here or its
   // temporal-call-graph-tracing check silently degrades to the default false.
-  // storm-brain reads the storm namespace flags (classify/triage gates).
+  // storm-brain reads the storm namespace flags (conversation and model).
   "storm-brain",
   "storm-forum",
   "storm-forum-beta",

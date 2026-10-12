@@ -69,10 +69,6 @@ function dependencies(overrides: Partial<BrainAppDependencies> = {}) {
           usage: usage(),
         }),
       },
-      flags: {
-        classifyEnabled: async () => true,
-        triageEnabled: async () => true,
-      },
       logger: {
         info: (message: string) => {
           logged.push(`info:${message}`);
@@ -327,25 +323,6 @@ describe("storm-brain app", () => {
       post({ ...classifyBody, bogus: 1 }),
     );
     expect(unknownKeys.status).toBe(400);
-  });
-
-  test("reports disabled flows with 503", async () => {
-    const { app, metrics } = dependencies({
-      flags: {
-        classifyEnabled: async () => false,
-        triageEnabled: async () => false,
-      },
-    });
-    const classify = await app.request("/v1/classify", post(classifyBody));
-    expect(classify.status).toBe(503);
-    const triage = await app.request("/v1/triage", post(triageBody));
-    expect(triage.status).toBe(503);
-    expect(
-      await counter(metrics, "storm_brain_requests_total", {
-        flow: "triage",
-        outcome: "disabled",
-      }),
-    ).toBe(1);
   });
 
   test("charges billed usage even when the upstream call fails", async () => {

@@ -65,16 +65,15 @@ them requires a restart. The defaults preserve the homelab's existing routing.
 
 The flag client needs its bootstrap variables: `FEATURE_FLAGS_MODE` (`flipt`
 in the cluster, `disabled` locally), plus `FLIPT_URL`, `FLIPT_NAMESPACE`
-(`alert-dashboard`), and `FLIPT_ENVIRONMENT` in `flipt` mode. The digest email
-is gated by the Flipt flag `ops-digest-email-enabled` (default off). While it
-is off, `POST /internal/v1/digests/:kind` records a skipped run and sends
-nothing. Digests use the Postal settings whenever all four are present,
+(`alert-dashboard`), and `FLIPT_ENVIRONMENT` in `flipt` mode. Digests use the
+Postal settings whenever all four are present,
 independently of the incident-mail flag, and are sent synchronously with a
 per-period `DigestRun` claim rather than through the alert outbox, so enabling
 digests cannot drain alert email that was queued while incident mail was
 off. The `DigestRun` row for each `(kind, period)` is the digest's ledger: a
 request claims it, sends through Postal with a stable message id, and marks
-it `sent` or `failed`. A repeated request for a sent or skipped period returns
+it `sent` or `failed`. A repeated request for a sent period, or one skipped
+while sending was still flag-gated, returns
 `duplicate: true`, a failed period is retried by the next request, and a claim
 older than five minutes is presumed abandoned and may be reclaimed.
 

@@ -11,8 +11,8 @@ import { AlertmanagerClient } from "#infrastructure/alertmanager-client";
 import { readConfig } from "#infrastructure/config";
 import {
   alertEmailConfig,
-  createDigestGate,
   flagMetricsRecorder,
+  initFeatureFlagClient,
 } from "#infrastructure/digest-flag";
 import { GrafanaPreviewClient } from "#infrastructure/grafana-preview-client";
 import {
@@ -30,7 +30,7 @@ import { serializedWorker } from "#server/serialized-worker";
 import { systemClock } from "#shared/time";
 
 const metrics = new Metrics();
-const digestGate = await createDigestGate({
+const featureFlags = await initFeatureFlagClient({
   environment: Bun.env,
   metrics: flagMetricsRecorder({
     countEvaluation: (flag, reason) => {
@@ -137,7 +137,6 @@ const digests = new DigestService({
   repository: opsRepository,
   ops,
   series,
-  gate: digestGate,
   mailer: configuredPostal(),
   clock: systemClock,
 });
@@ -252,7 +251,7 @@ async function shutdown(): Promise<void> {
   clearInterval(retentionTimer);
   await server.stop();
   await service.disconnect();
-  await digestGate.shutdown();
+  await featureFlags.shutdown();
   await shutdownTracing();
 }
 
