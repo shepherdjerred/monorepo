@@ -93,4 +93,15 @@ final class ArenaHeadlinesTest {
         .last()
         .isEqualTo(new Headline.RunEnded("test", "Test Arena", "Ominous I", Map.of("Alice", 2)));
   }
+
+  @Test
+  void activityShowsAnOpenLobbyAndTheCurrentWave() {
+    assertThat(ArenaHeadlines.activity(game)).isEmpty();
+    arrive(ALICE, "Alice");
+    assertThat(ArenaHeadlines.activity(game)).contains("Test Arena: lobby open");
+    tick(1);
+    tick(10);
+    tick(5);
+    assertThat(ArenaHeadlines.activity(game)).contains("Test Arena: wave 1");
+  }
 }

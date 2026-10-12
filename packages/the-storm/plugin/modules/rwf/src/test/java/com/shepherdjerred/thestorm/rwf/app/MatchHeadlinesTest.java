@@ -142,4 +142,31 @@ final class MatchHeadlinesTest {
         .as("a bots-only showcase")
         .isEmpty();
   }
+
+  @Test
+  void activityCountsHumansInTheLobbyAndTheMatch() {
+    var alice = fighter(ALICE, "Alice", TeamColor.RED);
+    var bot = fighter(BOT_1, "Rusher", TeamColor.BLUE);
+
+    assertThat(MatchHeadlines.activity(snapshot(PhaseKind.LOBBY, bot))).isEmpty();
+    assertThat(MatchHeadlines.activity(snapshot(PhaseKind.COUNTDOWN, alice, bot)))
+        .contains("S&D lobby: 1 waiting");
+    assertThat(MatchHeadlines.activity(snapshot(PhaseKind.LIVE, alice, bot)))
+        .contains("S&D: 1 playing");
+    assertThat(MatchHeadlines.activity(snapshot(PhaseKind.ENDED, alice))).isEmpty();
+  }
+
+  private static MatchSnapshot snapshot(PhaseKind phase, CombatantView... combatants) {
+    return new MatchSnapshot(
+        MATCH,
+        phase,
+        T0,
+        Optional.of("docks"),
+        List.of(TeamColor.RED, TeamColor.BLUE),
+        List.of(combatants),
+        List.of(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty());
+  }
 }

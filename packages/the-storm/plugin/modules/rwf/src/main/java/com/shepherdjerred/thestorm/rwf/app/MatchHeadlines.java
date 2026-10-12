@@ -70,6 +70,19 @@ public final class MatchHeadlines {
             Duration.between(started.orElseThrow(), after.now())));
   }
 
+  /** What the match is doing, for a status line; empty when no human is in it. */
+  public static Optional<String> activity(MatchSnapshot snapshot) {
+    var humans = humansIn(snapshot).size();
+    if (humans == 0) {
+      return Optional.empty();
+    }
+    return switch (snapshot.phase()) {
+      case LIVE -> Optional.of("S&D: " + humans + " playing");
+      case LOBBY, COUNTDOWN -> Optional.of("S&D lobby: " + humans + " waiting");
+      case ENDED, RESETTING -> Optional.empty();
+    };
+  }
+
   private static List<MatchSnapshot.CombatantView> humansIn(MatchSnapshot snapshot) {
     return snapshot.combatants().stream()
         .filter(view -> view.id() instanceof CombatantId.Human)

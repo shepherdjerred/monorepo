@@ -8,8 +8,10 @@
 tokenEnv: DISCORD_BOT_TOKEN
 channelEnv: DISCORD_CHANNEL_ID
 
-# The bot's custom status. The bot is online only while the server is awake,
-# so Discord messages sent while it sleeps are not relayed.
+# The bot's custom status while nobody is online and no game runs; otherwise
+# it shows the player count and running games. The bot is online only while
+# the server is awake, so Discord messages sent while it sleeps are not
+# relayed.
 status: "Relaying chat while The Storm is awake"
 
 # The label Discord messages carry in game, as in [D][author]: message.

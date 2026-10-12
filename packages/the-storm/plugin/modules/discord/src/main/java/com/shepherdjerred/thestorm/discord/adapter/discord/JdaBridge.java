@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.discord.adapter.discord;
 
+import com.shepherdjerred.thestorm.discord.app.DiscordCommand;
 import com.shepherdjerred.thestorm.discord.app.DiscordGateway;
 import com.shepherdjerred.thestorm.discord.app.DiscordReadCommands;
 import com.shepherdjerred.thestorm.discord.app.DiscordRelay;
@@ -19,6 +20,7 @@ import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.messages.MessageCreateRequest;
 import org.jspecify.annotations.Nullable;
@@ -92,19 +94,39 @@ public final class JdaBridge implements DiscordGateway {
       channel = found;
       relay.onServerStarted();
     }
+    relay.onCommandsChanged(() -> registerCommands(found, relay));
+    registerCommands(found, relay);
+  }
+
+  /** Replaces the guild's commands with the built-in ones and every module's. */
+  private void registerCommands(TextChannel found, DiscordRelay relay) {
+    var commands = new java.util.ArrayList<SlashCommandData>();
+    commands.add(Commands.slash("list", "Who is online on The Storm"));
+    commands.add(Commands.slash("status", "Who is online and which games are running"));
+    commands.add(Commands.slash("baltop", "Show the richest players in The Storm"));
+    commands.add(
+        Commands.slash("towns", "Show towns, spawn and historic sites in The Storm")
+            .addOptions(
+                townPageOption(),
+                new OptionData(OptionType.STRING, "name", "Town or historic site to inspect")));
+    for (var command : relay.commands()) {
+      commands.add(slash(command));
+    }
     found
         .getGuild()
         .updateCommands()
-        .addCommands(
-            Commands.slash("list", "Who is online on The Storm"),
-            Commands.slash("baltop", "Show the richest players in The Storm"),
-            Commands.slash("towns", "Show towns, spawn and historic sites in The Storm")
-                .addOptions(
-                    townPageOption(),
-                    new OptionData(OptionType.STRING, "name", "Town or historic site to inspect")))
+        .addCommands(commands)
         .queue(
-            commands -> logger.info("Discord bridge connected to #{}", found.getName()),
+            registered -> logger.info("Discord bridge connected to #{}", found.getName()),
             error -> logger.warn("Registering Discord slash commands failed", error));
+  }
+
+  static SlashCommandData slash(DiscordCommand command) {
+    var data = Commands.slash(command.name(), command.description());
+    for (var option : command.options()) {
+      data.addOption(OptionType.STRING, option.name(), option.description(), option.required());
+    }
+    return data;
   }
 
   /** Discord's integer range must fit the page type consumed by the listener. */
@@ -141,6 +163,14 @@ public final class JdaBridge implements DiscordGateway {
         .setAllowedMentions(EnumSet.noneOf(Message.MentionType.class))
         .mentionRoles(roles)
         .setSuppressedNotifications(false);
+  }
+
+  @Override
+  public void presence(String text) {
+    var client = jda.get();
+    if (client != null) {
+      client.getPresence().setActivity(Activity.customStatus(text));
+    }
   }
 
   /** Queues {@code goodbye} and disconnects off the Paper thread. */

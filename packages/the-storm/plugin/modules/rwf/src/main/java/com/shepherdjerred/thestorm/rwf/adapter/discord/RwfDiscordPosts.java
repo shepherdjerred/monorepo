@@ -29,6 +29,7 @@ public final class RwfDiscordPosts {
   public void accept(MatchNotification notification) {
     try {
       headlines.accept(notification).ifPresent(this::post);
+      relay.onActivity("rwf", MatchHeadlines.activity(notification.after()));
     } catch (RuntimeException e) {
       logger.error(Component.text("rwf: posting a match to Discord failed"), e);
     }

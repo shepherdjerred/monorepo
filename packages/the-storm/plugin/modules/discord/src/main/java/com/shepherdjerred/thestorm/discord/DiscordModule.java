@@ -27,11 +27,11 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * The Discord bridge (replaces DiscordSRV): Global chat both ways, join, leave, death and
- * advancement posts, wake and sleep posts, and the {@code /list}, {@code /baltop}, and {@code
- * /towns} commands, and town foundings and claim milestones. Needs the chat, economy, and towns
- * modules. Other modules post through the {@link DiscordRelay} service: tickets, quest and skill
- * milestones, and Search and Destroy and Mob Arena lobbies and results (lobby posts may ping the
- * roles in {@code lobbyPing}).
+ * advancement posts, wake and sleep posts, a live status line, the {@code /list}, {@code /status},
+ * {@code /baltop}, and {@code /towns} commands plus any a module adds, and town foundings and claim
+ * milestones. Needs the chat, economy, and towns modules. Other modules post through the {@link
+ * DiscordRelay} service: tickets, quest and skill milestones, and Search and Destroy and Mob Arena
+ * lobbies and results (lobby posts may ping the roles in {@code lobbyPing}).
  *
  * <p>The bot token and channel id come from environment variables named in {@code discord.yml};
  * without them the module refuses to start.

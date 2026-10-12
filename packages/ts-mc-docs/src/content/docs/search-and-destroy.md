@@ -124,6 +124,10 @@ winning team, the players on it and how long the match lasted, or everyone
 still in the match after a draw. Rounds with only bots and rounds an admin stops
 are not posted.
 
+In that channel, `/rwf-stats <player>` shows a player's matches, wins, losses,
+kills and deaths, and `/status` shows who is online and which games are
+running.
+
 ## Rewards
 
 A win pays 3 Crystals and a loss pays 1. The payout shrinks as the share of
