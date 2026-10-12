@@ -12,7 +12,8 @@ import type { CommandInput } from "./game/command/command-input.ts";
 import { enqueueCommand } from "./emulator/command-sink.ts";
 import type { CommandTiming } from "./emulator/command-sink.ts";
 import type { Emulator } from "./emulator/emulator.ts";
-import { encodePng } from "./emulator/png.ts";
+import { encodePng } from "@shepherdjerred/discord-plays-core/image/png.ts";
+import { HEIGHT, WIDTH } from "./emulator/constants.ts";
 import { createWebServer } from "./webserver/index.ts";
 import { logger } from "./logger.ts";
 import { getConfig } from "./config/index.ts";
@@ -23,7 +24,7 @@ import type {
   ScreenshotResponse,
 } from "@discord-plays-pokemon/common";
 
-const config = getConfig();
+const config = await getConfig();
 
 async function enqueueWebCommand(
   emulator: Emulator,
@@ -100,7 +101,7 @@ if (config.web.enabled) {
   });
 
   if (socket) {
-    socket.subscribe((event) => {
+    socket.events.subscribe((event) => {
       match(event)
         .with({ request: { kind: "command" } }, (commandEvent) => {
           logger.info("handling command request", commandEvent.request);
@@ -130,7 +131,12 @@ if (config.web.enabled) {
             logger.error("no active session for screenshot request");
             return;
           }
-          const png = encodePng(active.emulator.renderFrame(), 3);
+          const png = encodePng(
+            active.emulator.renderFrame(),
+            WIDTH,
+            HEIGHT,
+            3,
+          );
           const response: ScreenshotResponse = {
             kind: "screenshot",
             value: png.toString("base64"),

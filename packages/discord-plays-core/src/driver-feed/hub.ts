@@ -22,14 +22,14 @@ import {
   DRIVER_FEED_AUDIO_FLAG,
   DRIVER_FEED_KEYFRAME_FLAG,
   DRIVER_FEED_HEADER_BYTES,
-} from "@discord-plays-mario-kart/common";
+} from "./protocol.ts";
 import {
   driverFeedAudioChunksDroppedTotal,
   driverFeedClientBufferBytes,
   driverFeedClients,
   driverFeedUnitsDroppedTotal,
   driverFeedUnitsSentTotal,
-} from "#src/observability/metrics.ts";
+} from "./metrics.ts";
 import type { AccessUnit } from "./annex-b.ts";
 
 /**

@@ -1,5 +1,5 @@
 import { Readable } from "node:stream";
-import type { FrameSink } from "@shepherdjerred/discord-stream-lifecycle/types.ts";
+import type { FrameSink } from "@shepherdjerred/discord-stream-lifecycle/types";
 
 export type LatestFrameSinkOptions<T> = {
   readonly frameBytes: number;

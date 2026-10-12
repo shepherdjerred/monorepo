@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { ConfigSchema } from "#src/config/schema.ts";
-import { resolveDriverFeedConfig } from "./config.ts";
+import {
+  DriverFeedConfigSchema,
+  resolveDriverFeedConfig,
+} from "#src/driver-feed/config.ts";
 
 /** The defaults an operator inherits when config.toml has no [driver_feed]. */
 function fileDefaults() {
-  return ConfigSchema.shape.driver_feed.parse({});
+  return DriverFeedConfigSchema.parse({});
 }
 
 describe("resolveDriverFeedConfig", () => {

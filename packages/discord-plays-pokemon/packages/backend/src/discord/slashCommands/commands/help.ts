@@ -44,7 +44,7 @@ export async function help(
     `Select: ${select.join(", ")}`,
   ];
   const commandString = commands.map((command) => `* ${command}`).join("\n");
-  const config = getConfig();
+  const config = await getConfig();
   const maxQuantity = String(config.game.commands.max_quantity_per_action);
   const maxCommands = String(config.game.commands.chord.max_commands);
   const maxTotal = String(config.game.commands.chord.max_total);

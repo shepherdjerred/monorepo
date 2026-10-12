@@ -8,12 +8,18 @@ import {
   driverFeedOutputSize,
   type DriverFeedEncoderOptions,
   type DriverFeedProcessFactory,
-} from "./encoder.ts";
-import { spaghettiFormat } from "#src/engine/format.ts";
+  type DriverFeedSourceFormat,
+} from "#src/driver-feed/encoder.ts";
+import { silentLogger } from "#src/logger.ts";
+
+/** Mario Kart's SpaghettiKart output: 640x480 BGRA at 30 fps. */
+function mk64Source(fps: number): DriverFeedSourceFormat {
+  return { width: 640, height: 480, fps, pixelFormat: "bgra" };
+}
 
 const BASE: DriverFeedEncoderOptions = {
-  source: spaghettiFormat(30),
-  outputHeight: 480,
+  source: mk64Source(30),
+  output: driverFeedOutputSize(480, 4 / 3),
   bitrateKbps: 2500,
   bitrateMaxKbps: 4000,
   keyframeIntervalFrames: 30,
@@ -30,13 +36,26 @@ function valueOf(args: readonly string[], flag: string): string | undefined {
 
 describe("driverFeedOutputSize", () => {
   it("sizes the 4:3 picture in square pixels", () => {
-    expect(driverFeedOutputSize(480)).toEqual({ width: 640, height: 480 });
-    expect(driverFeedOutputSize(720)).toEqual({ width: 960, height: 720 });
+    expect(driverFeedOutputSize(480, 4 / 3)).toEqual({
+      width: 640,
+      height: 480,
+    });
+    expect(driverFeedOutputSize(720, 4 / 3)).toEqual({
+      width: 960,
+      height: 720,
+    });
+  });
+
+  it("sizes the GBA's 3:2 picture in square pixels", () => {
+    expect(driverFeedOutputSize(480, 3 / 2)).toEqual({
+      width: 720,
+      height: 480,
+    });
   });
 
   it("keeps both dimensions even, as 4:2:0 chroma requires", () => {
     for (const height of [121, 241, 357, 483]) {
-      const size = driverFeedOutputSize(height);
+      const size = driverFeedOutputSize(height, 4 / 3);
       expect(size.width % 2).toBe(0);
       expect(size.height % 2).toBe(0);
     }
@@ -54,7 +73,7 @@ describe("buildDriverFeedArgs", () => {
   });
 
   it("encodes every frame at 60 fps output", () => {
-    const args = buildDriverFeedArgs({ ...BASE, source: spaghettiFormat(60) });
+    const args = buildDriverFeedArgs({ ...BASE, source: mk64Source(60) });
     expect(valueOf(args, "-video_size")).toBe("640x480");
     expect(valueOf(args, "-framerate")).toBe("60");
     // Every frame is encoded: the output rate matches the input.
@@ -134,6 +153,21 @@ describe("buildDriverFeedArgs", () => {
   it("carries no audio input — audio is sent as PCM beside the video", () => {
     expect(buildDriverFeedArgs(BASE)).toContain("-an");
   });
+
+  it("describes a GBA's RGBA framebuffer and keeps pixel art crisp", () => {
+    const args = buildDriverFeedArgs({
+      ...BASE,
+      source: { width: 240, height: 160, fps: 59.7275, pixelFormat: "rgba" },
+      output: driverFeedOutputSize(480, 3 / 2),
+      scaleFlags: "neighbor",
+    });
+    expect(valueOf(args, "-pix_fmt")).toBe("rgba");
+    expect(valueOf(args, "-video_size")).toBe("240x160");
+    expect(valueOf(args, "-framerate")).toBe("59.7275");
+    expect(valueOf(args, "-vf")).toBe(
+      "scale=720:480:flags=neighbor,format=yuv420p",
+    );
+  });
 });
 
 describe("DriverFeedEncoder lifecycle", () => {
@@ -162,6 +196,7 @@ describe("DriverFeedEncoder lifecycle", () => {
     const units: Buffer[] = [];
     const encoder = new DriverFeedEncoder(
       BASE,
+      silentLogger,
       {
         onAccessUnit: (unit) => {
           units.push(unit.bytes);

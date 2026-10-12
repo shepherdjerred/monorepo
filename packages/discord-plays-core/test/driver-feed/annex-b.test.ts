@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { classifyAccessUnit } from "./annex-b.ts";
+import { classifyAccessUnit } from "#src/driver-feed/annex-b.ts";
 
 const AUD = 9;
 const IDR = 5;

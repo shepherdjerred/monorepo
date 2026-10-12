@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { FlvAccessUnitReader, FlvFormatError } from "./flv.ts";
+import { FlvAccessUnitReader, FlvFormatError } from "#src/driver-feed/flv.ts";
 
 const SPS = Buffer.from([0x67, 0x4d, 0x40, 0x28, 0xaa]);
 const PPS = Buffer.from([0x68, 0xee, 0x3c, 0x80]);

@@ -24,7 +24,7 @@
 import { mkdir, rm } from "node:fs/promises";
 import path from "node:path";
 import { parseArgs } from "node:util";
-import { encodePng } from "#src/emulator/png.ts";
+import { encodePng } from "@shepherdjerred/discord-plays-core/image/png.ts";
 import { bgraToRgba } from "#src/engine/spaghetti/engine.ts";
 import { SpaghettiHost } from "#src/engine/spaghetti/host.ts";
 import {

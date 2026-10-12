@@ -17,7 +17,7 @@ import {
   DriverFeedInitSchema,
   type DriverFeedInit,
   type DriverFeedReady,
-} from "@discord-plays-mario-kart/common";
+} from "@shepherdjerred/discord-plays-core/driver-feed/protocol.ts";
 import type { FeedAudioFormat } from "#src/feed-audio.ts";
 
 export type DriverFeedStatus =

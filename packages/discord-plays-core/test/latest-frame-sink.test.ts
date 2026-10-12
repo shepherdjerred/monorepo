@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { LatestFrameSink } from "./latest-frame-sink.ts";
+import { LatestFrameSink } from "#src/stream/latest-frame-sink.ts";
 
 const FRAME_BYTES = 4;
 

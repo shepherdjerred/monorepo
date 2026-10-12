@@ -3,13 +3,31 @@ import { createServer, type Server as HttpServer } from "node:http";
 import type { Server as SocketIoServer } from "socket.io";
 import { io as ioClient, type Socket } from "socket.io-client";
 import WebSocket from "ws";
+import { z } from "zod";
 import {
   DRIVER_FEED_PATH,
   DriverFeedInitSchema,
-} from "@discord-plays-mario-kart/common";
-import { spaghettiFormat } from "#src/engine/format.ts";
-import { createSocket } from "#src/webserver/socket.ts";
-import { DriverFeedService } from "./index.ts";
+} from "#src/driver-feed/protocol.ts";
+import {
+  DriverFeedService,
+  type DriverFeedAdmit,
+} from "#src/driver-feed/service.ts";
+import { createGameSocket } from "#src/webserver/socket.ts";
+import { silentLogger } from "#src/logger.ts";
+
+/**
+ * A seat-style policy like Mario Kart's: the page names its controller socket
+ * and only "active-driver" holds a seat.
+ */
+const admitActiveDriver: DriverFeedAdmit = (request) => {
+  const socketId = URL.parse(
+    request.url ?? "/",
+    "http://localhost",
+  )?.searchParams.get("driverSocketId");
+  return socketId === "active-driver"
+    ? { admitted: true, isStillAdmitted: () => true }
+    : { admitted: false, reason: "an active driver seat is required" };
+};
 
 // The load-bearing claim this file exists to prove: a `ws` server mounted on
 // /video and Socket.IO's engine.io can share one HTTP server. Attached mode
@@ -28,10 +46,12 @@ const started: Harness[] = [];
 async function startHarness(): Promise<Harness> {
   const server = createServer();
   // The production Socket.IO setup, so its upgrade policy is what is tested.
-  const { io } = createSocket({
+  const { io } = createGameSocket({
     server,
     isCorsEnabled: false,
-    identify: () => Promise.resolve(undefined),
+    requestSchema: z.strictObject({ kind: z.literal("noop") }),
+    ownedUpgradePaths: [DRIVER_FEED_PATH],
+    logger: silentLogger,
   });
   const service = new DriverFeedService({
     config: {
@@ -48,9 +68,12 @@ async function startHarness(): Promise<Harness> {
       vaapi_device: "/dev/dri/renderD128",
       encoder_async_depth: 1,
     },
-    format: spaghettiFormat(30),
+    source: { width: 640, height: 480, fps: 30, pixelFormat: "bgra" },
+    audio: { sampleRate: 26_800, channels: 2 },
+    displayAspect: 4 / 3,
+    logger: silentLogger,
   });
-  service.setDriverAdmission((socketId) => socketId === "active-driver");
+  service.setAdmission(admitActiveDriver);
   service.attach(server);
 
   await new Promise<void>((resolve) => {

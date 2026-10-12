@@ -15,7 +15,8 @@
 
 import { Emulator } from "#src/emulator/emulator.ts";
 import { BUTTON } from "#src/emulator/constants.ts";
-import { encodePng } from "#src/emulator/png.ts";
+import { encodePng } from "@shepherdjerred/discord-plays-core/image/png.ts";
+import { HEIGHT, WIDTH } from "#src/emulator/constants.ts";
 import { readGameSnapshot } from "#src/game/events/snapshot.ts";
 import { logger } from "#src/logger.ts";
 
@@ -92,7 +93,7 @@ Bun.serve({
       return Response.json({ frame: emulator.frame });
     }
     if (route === "screenshot") {
-      const png = encodePng(emulator.renderFrame(), 2);
+      const png = encodePng(emulator.renderFrame(), WIDTH, HEIGHT, 2);
       return new Response(new Uint8Array(png), {
         headers: { "content-type": "image/png" },
       });

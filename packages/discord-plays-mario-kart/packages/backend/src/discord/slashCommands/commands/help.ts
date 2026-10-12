@@ -14,7 +14,7 @@ export const helpCommand = new SlashCommandBuilder()
 export async function help(
   interaction: ChatInputCommandInteraction,
 ): Promise<void> {
-  const config = getConfig();
+  const config = await getConfig();
   const seatCount = String(config.emulator.seats);
   const lines = [
     bold("Discord Plays Mario Kart 64"),

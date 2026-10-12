@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   DRIVER_FEED_AUDIO_FLAG,
   DRIVER_FEED_KEYFRAME_FLAG,
-} from "@discord-plays-mario-kart/common";
+} from "@shepherdjerred/discord-plays-core/driver-feed/protocol.ts";
 import {
   decideDriverFeedDecode,
   isDriverFeedAudio,
