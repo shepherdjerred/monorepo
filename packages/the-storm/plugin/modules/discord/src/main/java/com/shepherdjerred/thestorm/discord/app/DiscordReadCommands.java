@@ -1,7 +1,8 @@
 package com.shepherdjerred.thestorm.discord.app;
 
 import com.shepherdjerred.thestorm.core.schedule.Scheduler;
-import com.shepherdjerred.thestorm.economy.app.CrystalFormatter;
+import com.shepherdjerred.thestorm.economy.app.CurrencyId;
+import com.shepherdjerred.thestorm.economy.app.MoneyFormatter;
 import com.shepherdjerred.thestorm.economy.app.PlayerLeaderboard;
 import com.shepherdjerred.thestorm.towns.app.TownRead;
 import java.util.Optional;
@@ -14,7 +15,7 @@ public final class DiscordReadCommands {
   private static final int PAGE_SIZE = 10;
 
   private final PlayerLeaderboard leaderboard;
-  private final CrystalFormatter formatter;
+  private final MoneyFormatter formatter;
   private final TownRead towns;
   private final Scheduler scheduler;
   private final DiscordRelay relay;
@@ -23,7 +24,7 @@ public final class DiscordReadCommands {
   /** Read-only module ports needed by the Discord commands. */
   public record Ports(
       PlayerLeaderboard leaderboard,
-      CrystalFormatter formatter,
+      MoneyFormatter formatter,
       TownRead towns,
       Scheduler scheduler) {}
 
@@ -44,7 +45,7 @@ public final class DiscordReadCommands {
     }
     var _ =
         leaderboard
-            .leaderboard(PAGE_SIZE)
+            .leaderboard(CurrencyId.CRYSTALS, PAGE_SIZE)
             .whenComplete(
                 (ranked, failure) -> {
                   if (relay.isStopping()) {

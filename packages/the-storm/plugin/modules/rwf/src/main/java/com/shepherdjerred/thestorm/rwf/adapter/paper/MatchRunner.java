@@ -570,7 +570,9 @@ final class MatchRunner implements MatchView, MatchEvents {
     var outcome =
         member.leftAt().isPresent() && member.diedAt().isEmpty()
             ? MatchStore.Outcome.LEFT
-            : won ? MatchStore.Outcome.WIN : MatchStore.Outcome.LOSE;
+            : credits < 0
+                ? MatchStore.Outcome.AFK
+                : won ? MatchStore.Outcome.WIN : MatchStore.Outcome.LOSE;
     return new MatchStore.PlayerRow(
         match.matchId(),
         member.id().uuid(),
@@ -579,8 +581,9 @@ final class MatchRunner implements MatchView, MatchEvents {
         tally.kills,
         tally.deaths,
         outcome,
+        PayoutService.CURRENCY,
         credits,
-        credits > 0 ? MatchStore.PayoutStatus.PENDING : MatchStore.PayoutStatus.NONE,
+        credits != 0 ? MatchStore.PayoutStatus.PENDING : MatchStore.PayoutStatus.NONE,
         0);
   }
 
@@ -617,20 +620,11 @@ final class MatchRunner implements MatchView, MatchEvents {
         .context()
         .onMain(
             parts.payouts().settle(row, rows),
-            paid -> {
-              for (var payment : paid) {
-                var player = parts.context().server().getPlayer(payment.player());
-                if (player != null && payment.paid() < payment.owed()) {
-                  Texts.info(
-                      player,
-                      "You reached today's match earnings cap; "
-                          + payment.paid()
-                          + " of "
-                          + payment.owed()
-                          + " credits were paid.");
-                }
-              }
-            },
+            paid ->
+                parts
+                    .context()
+                    .logger()
+                    .info("rwf match {} settled {} payouts", row.matchId(), paid.size()),
             "settle rwf match " + row.matchId());
   }
 

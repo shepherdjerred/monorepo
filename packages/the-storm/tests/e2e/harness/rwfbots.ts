@@ -170,11 +170,45 @@ export async function debug(rcon: RconClient) {
   return DebugSchema.parse(await rcon.command("rwfbots debug"));
 }
 
-export async function balance(bot: Bot): Promise<number> {
-  const reply = waitForMessage(bot, /Balance: (?<amount>\d+) crystals?/u);
+/** `/balance`: crystals and Red Warfare credits, listed in that order. */
+export async function wallet(
+  bot: Bot,
+): Promise<{ crystals: number; credits: number }> {
+  const reply = waitForMessage(
+    bot,
+    /Balance: (?<crystals>\d+) crystals?, (?<credits>\d+) Credits?/u,
+  );
   bot.chat("/balance");
   const seen = await reply;
-  return Number(seen.groups?.["amount"]);
+  return {
+    crystals: Number(seen.groups?.["crystals"]),
+    credits: Number(seen.groups?.["credits"]),
+  };
+}
+
+/** Every new player's crystals, which Red Warfare never touches. */
+const startingCrystals = 500;
+
+/**
+ * Waits up to 20 s for `bot` to hold `credits` Red Warfare credits, then
+ * checks their crystals are still the starting balance.
+ */
+export async function expectCredits(bot: Bot, credits: number): Promise<void> {
+  let seen = await wallet(bot);
+  const deadline = Date.now() + 20_000;
+  while (seen.credits !== credits && Date.now() < deadline) {
+    await Bun.sleep(250);
+    seen = await wallet(bot);
+  }
+  expect(seen, bot.username).toEqual({ crystals: startingCrystals, credits });
+}
+
+/**
+ * Turns the head 45 degrees: a live match counts a player AFK, and charges
+ * them instead of paying them, until their whole-degree facing changes.
+ */
+export async function lookAround(bot: Bot): Promise<void> {
+  await bot.look(bot.entity.yaw + Math.PI / 4, bot.entity.pitch, true);
 }
 
 export function diamonds(bot: Bot): number {

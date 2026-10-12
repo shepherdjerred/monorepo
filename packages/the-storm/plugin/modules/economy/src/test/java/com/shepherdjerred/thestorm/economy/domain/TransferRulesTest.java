@@ -6,8 +6,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.economy.app.AccountId;
-import com.shepherdjerred.thestorm.economy.app.Crystals;
+import com.shepherdjerred.thestorm.economy.app.CurrencyId;
 import com.shepherdjerred.thestorm.economy.app.EconomyError;
+import com.shepherdjerred.thestorm.economy.app.Money;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -22,18 +23,19 @@ final class TransferRulesTest {
   private final TransferRules rules = TransferRules.standard();
 
   private static Transfer transfer(AccountId from, AccountId to, long amount) {
-    return new Transfer(from, to, Crystals.of(amount));
+    return new Transfer(from, to, Money.crystals(amount));
   }
 
   private static PendingTransfer pending(Transfer transfer, long payerBalance, long payeeBalance) {
-    return new PendingTransfer(transfer, Crystals.of(payerBalance), Crystals.of(payeeBalance));
+    return new PendingTransfer(
+        transfer, Money.crystals(payerBalance), Money.crystals(payeeBalance));
   }
 
   @Test
   void positiveAmountRuleRefusesZero() {
     var zero = pending(transfer(ALICE, BOB, 0), 100, 0);
     assertThat(new PositiveAmountRule().check(zero))
-        .isEqualTo(Result.err(new EconomyError.ZeroAmount()));
+        .isEqualTo(Result.err(new EconomyError.ZeroAmount(CurrencyId.CRYSTALS)));
   }
 
   @Test
@@ -69,7 +71,8 @@ final class TransferRulesTest {
     assertThat(new SufficientFundsRule().check(short1))
         .isEqualTo(
             Result.err(
-                new EconomyError.InsufficientFunds(ALICE, Crystals.of(100), Crystals.of(101))));
+                new EconomyError.InsufficientFunds(
+                    ALICE, Money.crystals(100), Money.crystals(101))));
   }
 
   @Test
@@ -83,7 +86,8 @@ final class TransferRulesTest {
     var broke = pending(transfer(TOWN, ALICE, 1), 0, 0);
     assertThat(new SufficientFundsRule().check(broke))
         .isEqualTo(
-            Result.err(new EconomyError.InsufficientFunds(TOWN, Crystals.ZERO, Crystals.of(1))));
+            Result.err(
+                new EconomyError.InsufficientFunds(TOWN, Money.crystals(0), Money.crystals(1))));
   }
 
   @Test
@@ -96,7 +100,7 @@ final class TransferRulesTest {
   void validatorReportsTheFirstRefusalInOrder() {
     var everythingWrong = pending(transfer(ALICE, ALICE, 0), 0, 0);
     assertThat(rules.validate(everythingWrong))
-        .isEqualTo(Result.err(new EconomyError.ZeroAmount()));
+        .isEqualTo(Result.err(new EconomyError.ZeroAmount(CurrencyId.CRYSTALS)));
 
     var selfAndShort = pending(transfer(ALICE, ALICE, 10), 0, 0);
     assertThat(rules.validate(selfAndShort))
@@ -108,7 +112,7 @@ final class TransferRulesTest {
     TransferRule neverOnTowns =
         pending ->
             pending.transfer().to() instanceof AccountId.Town
-                ? Result.err(new EconomyError.ZeroAmount())
+                ? Result.err(new EconomyError.ZeroAmount(CurrencyId.CRYSTALS))
                 : Result.ok(pending);
     var custom = new TransferRules(List.of(neverOnTowns));
     assertThat(custom.validate(pending(transfer(ALICE, TOWN, 1), 1, 0)).isOk()).isFalse();
@@ -122,10 +126,10 @@ final class TransferRulesTest {
         .isEqualTo(
             Result.ok(
                 new Settlement(
-                    new Transfer(ALICE, BOB, Crystals.of(30)),
+                    new Transfer(ALICE, BOB, Money.crystals(30)),
                     List.of(
-                        new BalanceUpdate(ALICE, Crystals.of(70)),
-                        new BalanceUpdate(BOB, Crystals.of(35))))));
+                        new BalanceUpdate(ALICE, Money.crystals(70)),
+                        new BalanceUpdate(BOB, Money.crystals(35))))));
   }
 
   @Test
@@ -135,8 +139,8 @@ final class TransferRulesTest {
         .isEqualTo(
             Result.ok(
                 new Settlement(
-                    new Transfer(SERVER, ALICE, Crystals.of(500)),
-                    List.of(new BalanceUpdate(ALICE, Crystals.of(500))))));
+                    new Transfer(SERVER, ALICE, Money.crystals(500)),
+                    List.of(new BalanceUpdate(ALICE, Money.crystals(500))))));
   }
 
   @Test
@@ -146,8 +150,8 @@ final class TransferRulesTest {
         .isEqualTo(
             Result.ok(
                 new Settlement(
-                    new Transfer(TOWN, SERVER, Crystals.of(40)),
-                    List.of(new BalanceUpdate(TOWN, Crystals.ZERO)))));
+                    new Transfer(TOWN, SERVER, Money.crystals(40)),
+                    List.of(new BalanceUpdate(TOWN, Money.crystals(0))))));
   }
 
   @Test
@@ -157,8 +161,46 @@ final class TransferRulesTest {
 
   @Test
   void balanceUpdatesNeverTargetTheServer() {
-    assertThatThrownBy(() -> new BalanceUpdate(SERVER, Crystals.ZERO))
+    assertThatThrownBy(() -> new BalanceUpdate(SERVER, Money.crystals(0)))
         .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  void balancesMustBeInTheTransfersCurrency() {
+    var credits = new Transfer(ALICE, BOB, Money.rwfCredits(3));
+    assertThatThrownBy(() -> new PendingTransfer(credits, Money.crystals(10), Money.rwfCredits(0)))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> new PendingTransfer(credits, Money.rwfCredits(10), Money.crystals(0)))
+        .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  void anotherCurrencySettlesTheSameWay() {
+    var credits = new Transfer(ALICE, BOB, Money.rwfCredits(3));
+    assertThat(rules.settle(new PendingTransfer(credits, Money.rwfCredits(2), Money.rwfCredits(0))))
+        .isEqualTo(
+            Result.err(
+                new EconomyError.InsufficientFunds(
+                    ALICE, Money.rwfCredits(2), Money.rwfCredits(3))));
+    assertThat(rules.settle(new PendingTransfer(credits, Money.rwfCredits(5), Money.rwfCredits(1))))
+        .isEqualTo(
+            Result.ok(
+                new Settlement(
+                    credits,
+                    List.of(
+                        new BalanceUpdate(ALICE, Money.rwfCredits(2)),
+                        new BalanceUpdate(BOB, Money.rwfCredits(4))))));
+  }
+
+  @Test
+  void amountsOfDifferentCurrenciesNeverMix() {
+    assertThatThrownBy(() -> Money.crystals(5).plus(Money.rwfCredits(1)))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> Money.crystals(5).minus(Money.rwfCredits(1)))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> Money.crystals(5).isAtLeast(Money.rwfCredits(1)))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThat(Money.crystals(5)).isNotEqualTo(Money.rwfCredits(5));
   }
 
   @Test

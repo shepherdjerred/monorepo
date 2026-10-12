@@ -2,9 +2,9 @@ package com.shepherdjerred.thestorm.qol.adapter.paper;
 
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.economy.app.AccountId;
-import com.shepherdjerred.thestorm.economy.app.Crystals;
 import com.shepherdjerred.thestorm.economy.app.EconomyError;
 import com.shepherdjerred.thestorm.economy.app.KeyedTransfer;
+import com.shepherdjerred.thestorm.economy.app.Money;
 import com.shepherdjerred.thestorm.economy.app.Receipt;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import com.shepherdjerred.thestorm.qol.app.QolStore;
@@ -41,7 +41,7 @@ final class LegacyRtpRecovery {
                           attempt.refundKey(),
                           new AccountId.Server(),
                           new AccountId.Player(attempt.player()),
-                          Crystals.of(attempt.cost()),
+                          Money.crystals(attempt.cost()),
                           "rtp refund"))
                   .thenCompose(
                       result ->

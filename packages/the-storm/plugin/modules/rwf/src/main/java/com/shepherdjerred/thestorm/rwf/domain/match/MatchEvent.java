@@ -100,6 +100,14 @@ public sealed interface MatchEvent {
    */
   record BombClicked(CombatantId id, String bombId, Instant now) implements MatchEvent {}
 
+  /**
+   * A combatant turned their head: their whole-degree yaw or pitch changed. Clears Red Warfare's
+   * AFK mark on a living combatant in a live match.
+   *
+   * @param id who
+   */
+  record LookedAround(CombatantId id) implements MatchEvent {}
+
   /** The adapter has finished reverting the map after a match. */
   record ResetDone() implements MatchEvent {}
 }

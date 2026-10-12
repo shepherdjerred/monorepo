@@ -6,6 +6,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 
 import com.shepherdjerred.thestorm.core.result.Result;
+import com.shepherdjerred.thestorm.economy.app.AccountId;
+import com.shepherdjerred.thestorm.economy.app.CurrencyId;
+import com.shepherdjerred.thestorm.economy.app.Money;
 import com.shepherdjerred.thestorm.rwf.adapter.db.JooqMatchStore;
 import com.shepherdjerred.thestorm.rwf.adapter.db.JooqSnapshotStore;
 import com.shepherdjerred.thestorm.rwf.adapter.record.Retention;
@@ -230,7 +233,11 @@ final class RwfMatchFlowTest {
     assertThat(harness.snapshot().outcome()).contains(new Outcome.Winner(teamOf(alice)));
     harness.until(() -> !harness.wallets.receipts().isEmpty());
     var receipt = harness.wallets.receipts().getFirst();
-    assertThat(receipt.amount().amount()).as("3 x (0.25 + 0.75 / 8), rounded").isEqualTo(1);
+    assertThat(receipt.amount())
+        .as("3 x (0.25 + 0.75 / 8), rounded, in Red Warfare credits")
+        .isEqualTo(Money.rwfCredits(1));
+    assertThat(harness.wallets.held(new AccountId.Player(alice.getUniqueId()), CurrencyId.CRYSTALS))
+        .isEqualTo(Money.crystals(0));
     assertThat(receipt.reason()).isEqualTo(PayoutService.reason(matchId, MatchStore.Outcome.WIN));
     var store = new JooqMatchStore(harness.database);
     harness.until(
@@ -474,6 +481,54 @@ final class RwfMatchFlowTest {
 
     assertThat(harness.snapshot().combatants()).hasSize(1);
     assertThat(alice.getWorld()).isEqualTo(harness.rwf);
+  }
+
+  @Test
+  void anAfkHumanIsChargedTwoCreditsInsteadOfBeingPaid() {
+    var harness = start();
+    var alice = harness.loadedPlayer("Alice");
+    var account = new AccountId.Player(alice.getUniqueId());
+    harness.wallets.hold(account, Money.rwfCredits(5));
+    harness.goLiveIdle(alice);
+    var matchId = harness.snapshot().matchId();
+    var enemy = enemyOf(teamOf(alice));
+    harness.tick(Duration.ofSeconds(61));
+
+    for (var bot : harness.bots.spawned()) {
+      var view = harness.snapshot().combatant(harness.bots.idOf(bot).orElseThrow()).orElseThrow();
+      if (view.team().filter(enemy::equals).isPresent()) {
+        bot.setHealth(0);
+      }
+    }
+    harness.until(() -> harness.snapshot().phase() == MatchSnapshot.PhaseKind.ENDED);
+    harness.until(() -> !harness.wallets.receipts().isEmpty());
+
+    assertThat(harness.wallets.receipts())
+        .singleElement()
+        .satisfies(
+            receipt -> {
+              assertThat(receipt.from()).isEqualTo(account);
+              assertThat(receipt.to()).isEqualTo(new AccountId.Server());
+              assertThat(receipt.amount()).isEqualTo(Money.rwfCredits(2));
+              assertThat(receipt.reason())
+                  .isEqualTo(PayoutService.reason(matchId, MatchStore.Outcome.AFK));
+            });
+    var store = new JooqMatchStore(harness.database);
+    harness.until(
+        () ->
+            store.players(matchId).join().stream()
+                .anyMatch(row -> row.status() == MatchStore.PayoutStatus.PAID));
+    assertThat(store.players(matchId).join())
+        .singleElement()
+        .satisfies(
+            row -> {
+              assertThat(row.outcome()).isEqualTo(MatchStore.Outcome.AFK);
+              assertThat(row.currency()).isEqualTo(CurrencyId.RWF_CREDITS);
+              assertThat(row.creditsOwed()).isEqualTo(-2);
+              assertThat(row.creditsPaid()).isEqualTo(-2);
+            });
+    assertThat(harness.wallets.held(account, CurrencyId.RWF_CREDITS))
+        .isEqualTo(Money.rwfCredits(3));
   }
 
   @Test

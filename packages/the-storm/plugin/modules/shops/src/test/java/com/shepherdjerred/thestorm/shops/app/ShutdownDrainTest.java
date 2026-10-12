@@ -3,7 +3,7 @@ package com.shepherdjerred.thestorm.shops.app;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.shepherdjerred.thestorm.economy.app.AccountId;
-import com.shepherdjerred.thestorm.economy.app.Crystals;
+import com.shepherdjerred.thestorm.economy.app.Money;
 import com.shepherdjerred.thestorm.shops.domain.price.ShopPrices;
 import com.shepherdjerred.thestorm.shops.domain.shop.BlockPos;
 import com.shepherdjerred.thestorm.shops.domain.shop.CreationRules;
@@ -175,7 +175,7 @@ final class ShutdownDrainTest {
         .singleElement()
         .satisfies(
             failure -> {
-              assertThat(failure.amount()).isEqualTo(Crystals.ZERO);
+              assertThat(failure.amount()).isEqualTo(Money.crystals(0));
               assertThat(failure.held()).contains(new HeldItems("emerald", 4));
               assertThat(failure.reason()).contains("do not transfer money");
             });
@@ -196,7 +196,7 @@ final class ShutdownDrainTest {
     return new Deal(
         Direction.SELL,
         4,
-        Crystals.of(12),
+        Money.crystals(12),
         new Deal.Party(BOB.account(), items),
         new Deal.Party(new AccountId.Server(), Holdings.UNLIMITED),
         "shop:catalog:exchange:emerald:sell",

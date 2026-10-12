@@ -5,8 +5,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.shepherdjerred.thestorm.core.config.ConfigFiles;
 import com.shepherdjerred.thestorm.core.config.StrictYaml;
-import com.shepherdjerred.thestorm.economy.app.Crystals;
+import com.shepherdjerred.thestorm.economy.app.CurrencyId;
+import com.shepherdjerred.thestorm.economy.app.Money;
 import java.nio.file.Path;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 final class EconomyConfigTest {
@@ -14,12 +16,22 @@ final class EconomyConfigTest {
   /** The file the server actually ships, relative to this module's project directory. */
   private static final Path SHIPPED = Path.of("../../../server/owned/plugins/TheStorm/economy.yml");
 
+  private static final Currency CRYSTAL = new Currency("crystal", "crystals", "CR");
+  private static final Currency CREDIT = new Currency("Credit", "Credits", "RC");
+  private static final Map<String, Currency> BOTH =
+      Map.of("crystals", CRYSTAL, "rwf_credits", CREDIT);
+
   private static final String VALID =
       """
-      currency:
-        singular: crystal
-        plural: crystals
-        symbol: CR
+      currencies:
+        crystals:
+          singular: crystal
+          plural: crystals
+          symbol: CR
+        rwf_credits:
+          singular: Credit
+          plural: Credits
+          symbol: RC
       startingBalance: 500
       baltopSize: 10
       """;
@@ -27,9 +39,10 @@ final class EconomyConfigTest {
   @Test
   void theShippedFileParses() {
     var config = ConfigFiles.load(SHIPPED, EconomyConfig.class);
-    assertThat(config)
-        .isEqualTo(new EconomyConfig(new Currency("crystal", "crystals", "CR"), 500, 10));
-    assertThat(config.startingCrystals()).isEqualTo(Crystals.of(500));
+    assertThat(config).isEqualTo(new EconomyConfig(BOTH, 500, 10));
+    assertThat(config.startingCrystals()).isEqualTo(Money.crystals(500));
+    assertThat(config.format().currency(CurrencyId.RWF_CREDITS)).isEqualTo(CREDIT);
+    assertThat(config.format().symbol(Money.rwfCredits(3))).isEqualTo("3 RC");
   }
 
   @Test
@@ -51,8 +64,21 @@ final class EconomyConfigTest {
 
   @Test
   void missingCurrencyNamesAreRejected() {
-    var yaml = VALID.replace("  symbol: CR\n", "");
+    var yaml = VALID.replace("    symbol: CR\n", "");
     assertThat(StrictYaml.parse("economy.yml", yaml, EconomyConfig.class).isOk()).isFalse();
+  }
+
+  @Test
+  void everyCurrencyMustBeListedAndNoOther() {
+    assertThatThrownBy(() -> new EconomyConfig(Map.of("crystals", CRYSTAL), 500, 10))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("rwf_credits");
+    assertThatThrownBy(
+            () ->
+                new EconomyConfig(
+                    Map.of("crystals", CRYSTAL, "rwf_credits", CREDIT, "shards", CRYSTAL), 500, 10))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("shards");
   }
 
   @Test
@@ -63,18 +89,16 @@ final class EconomyConfigTest {
 
   @Test
   void aZeroStartingBalanceIsAllowed() {
-    var currency = new Currency("crystal", "crystals", "CR");
-    assertThat(new EconomyConfig(currency, 0, 10).startingCrystals()).isEqualTo(Crystals.ZERO);
+    assertThat(new EconomyConfig(BOTH, 0, 10).startingCrystals()).isEqualTo(Money.crystals(0));
   }
 
   @Test
   void baltopSizeIsBounded() {
-    var currency = new Currency("crystal", "crystals", "CR");
-    assertThatThrownBy(() -> new EconomyConfig(currency, 500, 0))
+    assertThatThrownBy(() -> new EconomyConfig(BOTH, 500, 0))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(() -> new EconomyConfig(currency, 500, EconomyConfig.MAX_BALTOP_SIZE + 1))
+    assertThatThrownBy(() -> new EconomyConfig(BOTH, 500, EconomyConfig.MAX_BALTOP_SIZE + 1))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThat(new EconomyConfig(currency, 500, EconomyConfig.MAX_BALTOP_SIZE).baltopSize())
+    assertThat(new EconomyConfig(BOTH, 500, EconomyConfig.MAX_BALTOP_SIZE).baltopSize())
         .isEqualTo(EconomyConfig.MAX_BALTOP_SIZE);
   }
 

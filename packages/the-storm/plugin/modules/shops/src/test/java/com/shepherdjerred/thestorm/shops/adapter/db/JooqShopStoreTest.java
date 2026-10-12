@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.economy.app.AccountId;
-import com.shepherdjerred.thestorm.economy.app.Crystals;
+import com.shepherdjerred.thestorm.economy.app.Money;
 import com.shepherdjerred.thestorm.shops.app.HeldItems;
 import com.shepherdjerred.thestorm.shops.app.RefundFailure;
 import com.shepherdjerred.thestorm.shops.app.ShopStore;
@@ -215,7 +215,7 @@ final class JooqShopStoreTest {
         new RefundFailure(
             new AccountId.Player(ALICE),
             new AccountId.Player(BOB),
-            Crystals.ZERO,
+            Money.crystals(0),
             "refund committed; return held items only",
             Optional.of(new HeldItems("emerald", 4)),
             NOW);
@@ -246,7 +246,7 @@ final class JooqShopStoreTest {
         new RefundFailure(
             new AccountId.Player(ALICE),
             new AccountId.Player(BOB),
-            Crystals.of(50),
+            Money.crystals(50),
             "refund:shop:1:buy",
             Optional.of(new HeldItems("c3dvcmQ=", 16)),
             NOW);
@@ -258,7 +258,7 @@ final class JooqShopStoreTest {
                     new RefundFailure(
                         new AccountId.Server(),
                         new AccountId.Town(BOB),
-                        Crystals.of(1),
+                        Money.crystals(1),
                         "r",
                         Optional.empty(),
                         NOW))

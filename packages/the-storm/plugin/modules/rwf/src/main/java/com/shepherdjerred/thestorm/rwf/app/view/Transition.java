@@ -60,6 +60,9 @@ public record Transition(Change change, List<Effect> effects, MatchState after) 
 
     /** The map was reset. */
     record Reset() implements Change {}
+
+    /** A combatant looked around, so they are not AFK. */
+    record LookedAround(UUID uuid) implements Change {}
   }
 
   /** An effect on a combatant another module acts on. */
@@ -114,6 +117,7 @@ public record Transition(Change change, List<Effect> effects, MatchState after) 
       case MatchEvent.BombClicked click ->
           new Change.BombClicked(click.id().uuid(), click.bombId());
       case MatchEvent.ResetDone _ -> new Change.Reset();
+      case MatchEvent.LookedAround looked -> new Change.LookedAround(looked.id().uuid());
     };
   }
 

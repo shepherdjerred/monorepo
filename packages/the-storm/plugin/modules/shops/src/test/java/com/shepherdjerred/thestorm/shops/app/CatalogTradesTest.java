@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.shepherdjerred.thestorm.economy.app.AccountId;
-import com.shepherdjerred.thestorm.economy.app.Crystals;
+import com.shepherdjerred.thestorm.economy.app.Money;
 import com.shepherdjerred.thestorm.shops.domain.catalog.Catalog;
 import com.shepherdjerred.thestorm.shops.domain.catalog.CatalogEntry;
 import com.shepherdjerred.thestorm.shops.domain.trade.Direction;
@@ -207,7 +207,7 @@ final class CatalogTradesTest {
     return new Deal(
         Direction.BUY,
         1,
-        Crystals.of(1),
+        Money.crystals(1),
         new Deal.Party(ALICE.account(), new FakeHoldings(0, 1)),
         new Deal.Party(new AccountId.Server(), Holdings.UNLIMITED),
         "test",

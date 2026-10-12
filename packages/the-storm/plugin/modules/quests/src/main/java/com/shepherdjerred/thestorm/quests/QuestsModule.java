@@ -7,7 +7,7 @@ import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.core.schedule.Cancellable;
 import com.shepherdjerred.thestorm.discord.app.DiscordRelay;
-import com.shepherdjerred.thestorm.economy.app.CrystalFormatter;
+import com.shepherdjerred.thestorm.economy.app.MoneyFormatter;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import com.shepherdjerred.thestorm.npcs.app.NpcActions;
 import com.shepherdjerred.thestorm.npcs.app.NpcDialogs;
@@ -95,7 +95,7 @@ public final class QuestsModule implements StormModule {
     var rewards =
         new WalletRewards(
             services.require(Wallets.class),
-            services.require(CrystalFormatter.class),
+            services.require(MoneyFormatter.class),
             new LuckPermsGrants(LuckPermsProvider.get()));
     var service =
         new QuestService(

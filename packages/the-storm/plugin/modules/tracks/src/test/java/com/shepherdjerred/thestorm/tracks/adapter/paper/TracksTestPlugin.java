@@ -7,8 +7,8 @@ import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.Services;
 import com.shepherdjerred.thestorm.core.players.PlayerDirectory;
 import com.shepherdjerred.thestorm.core.schedule.PaperScheduler;
-import com.shepherdjerred.thestorm.economy.app.CrystalFormatter;
-import com.shepherdjerred.thestorm.economy.app.Crystals;
+import com.shepherdjerred.thestorm.economy.app.Money;
+import com.shepherdjerred.thestorm.economy.app.MoneyFormatter;
 import com.shepherdjerred.thestorm.tracks.adapter.db.JooqTrackStore;
 import com.shepherdjerred.thestorm.tracks.app.FakePermissionSync;
 import com.shepherdjerred.thestorm.tracks.app.FakeWallets;
@@ -60,7 +60,7 @@ public class TracksTestPlugin extends JavaPlugin {
     var scheduler = new PaperScheduler(this);
     var services = new Services();
     services.provide(PlayerDirectory.class, players);
-    services.provide(CrystalFormatter.class, new TestFormatter());
+    services.provide(MoneyFormatter.class, new TestFormatter());
     var context =
         new ModuleContext(
             this,
@@ -108,15 +108,15 @@ public class TracksTestPlugin extends JavaPlugin {
   }
 
   /** The economy's sentence format, without the economy. */
-  private static final class TestFormatter implements CrystalFormatter {
+  private static final class TestFormatter implements MoneyFormatter {
 
     @Override
-    public String words(Crystals amount) {
+    public String words(Money amount) {
       return Progressions.crystals(amount.amount());
     }
 
     @Override
-    public String symbol(Crystals amount) {
+    public String symbol(Money amount) {
       return amount.amount() + " CR";
     }
   }

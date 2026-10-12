@@ -10,7 +10,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.economy.app.AccountId;
-import com.shepherdjerred.thestorm.economy.app.Crystals;
+import com.shepherdjerred.thestorm.economy.app.Money;
 import com.shepherdjerred.thestorm.tracks.domain.TrackProgress;
 import com.shepherdjerred.thestorm.tracks.domain.purchase.PurchaseRules;
 import com.shepherdjerred.thestorm.tracks.domain.purchase.TrackStanding;
@@ -70,7 +70,7 @@ final class PurchaseServiceTest {
     var receipt = wallets.receipts().getFirst();
     assertThat(receipt.from()).isEqualTo(ALICE_ACCOUNT);
     assertThat(receipt.to()).isEqualTo(new AccountId.Server());
-    assertThat(receipt.amount()).isEqualTo(Crystals.of(1_000));
+    assertThat(receipt.amount()).isEqualTo(Money.crystals(1_000));
     assertThat(receipt.reason()).isEqualTo("track:mechanic:1");
     var stored = owning(MECHANIC, 1).purchased(MECHANIC, 1, NOW);
     assertThat(test.store.get(ALICE)).isEqualTo(stored);

@@ -2,8 +2,10 @@
 
 Unit, repository and MockBukkit tests cover the match state machine, bombs,
 poison, combat formulas and kits; content loading and every refusal; the
-schematic reader; snapshot, match and payout storage; the payout outbox with
-its daily cap and replay; the recorder (decodable with `RecordCodec`,
+schematic reader; snapshot, match and payout storage; the payout outbox in
+Red Warfare credits, its AFK charge (never overdrawing) and replay; the
+forfeit of a suicide or quit while live; the AFK mark cleared by a turn of
+the head through the real move listener; the recorder (decodable with `RecordCodec`,
 pseudonymous, pruned by age and size); and on MockBukkit: enabling pastes and
 verifies the training yard and seals the world; enabling pastes and dresses
 the lobby room once (rules, match board, an item and a label per kit alcove,
@@ -47,8 +49,8 @@ behaviour on its own. These cases need the real server in
 
 `tests/e2e/rwf.e2e.test.ts` runs humans only (rwfbots off) on the shared e2e
 server, whose fixtures plugin creates the flat void `rwf` world before TheStorm
-enables; it runs under a daily cap of 3 (`rwf-settings.ts`) so a second paid
-match reaches it. `tests/full/rwfbots.e2e.test.ts` runs the bot cases (14,
+enables. Every human turns their head once the match is live, so nobody is
+AFK unless a case says so. `tests/full/rwfbots.e2e.test.ts` runs the bot cases (14,
 15, 16's human share, 18's bot cadence, 23) on the full lane, where every shipped module plus rwf and
 rwfbots boots with Citizens. A case marked **proven** below is asserted in one
 of the two; the rest still wait for a suite.
@@ -152,23 +154,25 @@ is intact.` with no paste logged, and after the edits above it pastes once
 
 ## Payouts and recordings
 
-16. A win pays `round(3 x (0.25 + 0.75 x humanShare))` through the economy
-    with reason `rwf:<matchId>:WIN` and idempotency key
-    `rwf:<matchId>:<uuid>`; `kill -9` between the outbox write and the
-    transfer pays exactly once on restart. **Proven** for the payout itself
-    (3 to the winner, 1 to the loser, `/balance` and `rwf_match_player` agree,
-    rows end `PAID`; a match shorter than `minMatchLength` pays nobody), and
+16. A win pays `round(3 x (0.25 + 0.75 x humanShare))` Red Warfare credits
+    (`rwf_credits`) through the economy with reason `rwf:<matchId>:WIN` and
+    idempotency key `rwf:<matchId>:<uuid>`; crystals are never touched;
+    `kill -9` between the outbox write and the transfer pays exactly once on
+    restart. **Proven** for the payout itself (3 credits to the winner, 1 to
+    the loser, `/balance` lists them beside unchanged crystals, and
+    `rwf_match_player` agrees, rows end `PAID`; a match shorter than
+    `minMatchLength` pays nobody), and
     with bots for the human share (one human in eight: `round(3 x 0.34)` = 1
     for a win, 0 for a loss, the bots never paid); the crash replay is not.
-17. The daily cap forfeits the excess and tells the player. **Proven** under
-    the suite's cap of 3: the nuke's three players play a second match past
-    `minMatchLength` the same day (reconnecting first, as a restore requires)
-    and everyone off the armer's team is killed; each row owes the full
-    payout and is `PAID` only what was left of the cap (`min(owed, 3 -
-earned)`; the armer, who earned 3, wins again for 0), each cut player is
-    told `You reached today's
-match earnings cap; <paid> of <owed> credits were paid.`, and every
-    balance ends at most 3 up.
+17. There is no daily cap, and a player AFK for the whole match is charged
+    instead of paid. **Proven**: the nuke's three players play a second match
+    past `minMatchLength` the same day (reconnecting first, as a restore
+    requires) and everyone off the armer's team is killed; every player who
+    turned their head is paid in full again (`WIN` 3 or `LOSE` 1, `PAID` the
+    same), while the first match's loser never turns theirs: their row is
+    `AFK`, owes -2 and is `PAID` -1 (all they held), they are told `2 credits
+were taken for being AFK.` and earn nothing; every player's credits end at
+    the sum of both matches and their crystals at the starting balance.
 18. `plugins/TheStorm/rwf-recordings/yyyy/MM/dd/<matchId>.rwfrec.gz` decodes
     with `RecordCodec`, names nobody, and holds human frames and input rows
     at 20 Hz and bot frames at 10 Hz; `kill -9` during a match leaves a

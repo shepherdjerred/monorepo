@@ -5,9 +5,10 @@ import static java.util.concurrent.CompletableFuture.completedFuture;
 
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.economy.app.AccountId;
-import com.shepherdjerred.thestorm.economy.app.Crystals;
+import com.shepherdjerred.thestorm.economy.app.CurrencyId;
 import com.shepherdjerred.thestorm.economy.app.EconomyError;
 import com.shepherdjerred.thestorm.economy.app.KeyedTransfer;
+import com.shepherdjerred.thestorm.economy.app.Money;
 import com.shepherdjerred.thestorm.economy.app.Receipt;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import java.time.Instant;
@@ -57,17 +58,20 @@ public final class FakeWallets implements Wallets {
   }
 
   @Override
-  public synchronized CompletableFuture<Crystals> balance(AccountId account) {
-    return completedFuture(Crystals.of(balanceOf(account)));
+  public synchronized CompletableFuture<Money> balance(AccountId account, CurrencyId currency) {
+    if (currency != CurrencyId.CRYSTALS) {
+      throw new IllegalArgumentException("this fake holds crystals only: " + currency);
+    }
+    return completedFuture(Money.crystals(balanceOf(account)));
   }
 
   @Override
   public synchronized CompletableFuture<Result<Receipt, EconomyError>> transfer(
-      AccountId from, AccountId to, Crystals amount, String reason) {
+      AccountId from, AccountId to, Money amount, String reason) {
     if (receipts.size() >= failTransfersAfter) {
       return CompletableFuture.failedFuture(new IllegalStateException("ledger offline"));
     }
-    var balance = Crystals.of(balanceOf(from));
+    var balance = Money.crystals(balanceOf(from));
     if (refuseTransfers > 0 || (!from.equals(SERVER) && !balance.isAtLeast(amount))) {
       refuseTransfers = Math.max(0, refuseTransfers - 1);
       return completedFuture(Result.err(new EconomyError.InsufficientFunds(from, balance, amount)));
@@ -110,7 +114,10 @@ public final class FakeWallets implements Wallets {
   }
 
   @Override
-  public CompletableFuture<List<Standing>> top(int limit) {
+  public CompletableFuture<List<Standing>> top(CurrencyId currency, int limit) {
+    if (currency != CurrencyId.CRYSTALS) {
+      throw new IllegalArgumentException("this fake holds crystals only: " + currency);
+    }
     return completedFuture(List.of());
   }
 }

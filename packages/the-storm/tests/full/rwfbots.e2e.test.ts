@@ -20,14 +20,15 @@ import {
   rwfTestSettings,
 } from "#e2e/harness/rwf-settings.ts";
 import {
-  balance,
   type ClientView,
   clientView,
   debug,
   diamonds,
   escaped,
   expectSampleCadence,
+  expectCredits,
   gzipLines,
+  lookAround,
   ownedYaml,
   type Personality,
   personalities,
@@ -65,7 +66,6 @@ import type { RconClient } from "#e2e/harness/rcon.ts";
  */
 
 const dimension = `minecraft:${rwfTestSettings.world}`;
-const startingBalance = 500;
 /** How long a bots' match may take: the poison ends a quiet one after 10 min. */
 const matchBudgetMs = 14 * 60_000;
 
@@ -334,6 +334,7 @@ async function goesLiveMarked(match: Match, names: string[]) {
   const { bot, rcon, log, view } = match;
   await log.until(/The game has begun!/u, 30_000);
   const team = await teamOf(log);
+  await lookAround(bot);
   const live = await status(rcon);
   expect(live.phase).toBe("Live");
   expect(live.map).toBe("training-yard");
@@ -536,11 +537,7 @@ async function allGone(match: Match, names: string[], owed: number) {
   await eventually("the bot bodies to vanish", async () =>
     names.every((name) => view.entity(name) === undefined),
   );
-  await eventually(
-    "the human's payout",
-    async () => (await balance(bot)) === startingBalance + owed,
-    20_000,
-  );
+  await expectCredits(bot, owed);
 }
 
 /** One life per match: each death recorded and rated once, killers named. */
@@ -760,7 +757,7 @@ async function watchShowcase(match: Match, outsider: Bot): Promise<void> {
   );
   expect(bot.game.gameMode).toBe("spectator");
   expect(match.log.has(/You earned/u)).toBe(false);
-  expect(await balance(bot)).toBe(startingBalance);
+  await expectCredits(bot, 0);
 
   bot.chat("/rwf leave");
   await eventually(
@@ -788,7 +785,7 @@ describe("Search and Destroy with rwfbots", () => {
       expect(await serverLogs(server)).toContain(
         `rwfbots: ${match.catalog.size.toString()} personalities, 1 maps with nav artifacts, traces on`,
       );
-      expect(await balance(bot)).toBe(startingBalance);
+      await expectCredits(bot, 0);
       const statsBefore = await personalityStats(server, "stats-before");
 
       const lobby = watchLobby(match);
@@ -935,7 +932,7 @@ describe("Search and Destroy with rwfbots", () => {
           );
         }
         human = await connect();
-        expect(await balance(human)).toBe(startingBalance);
+        await expectCredits(human, 0);
       } finally {
         if (human !== undefined) {
           await disconnectBot(human);

@@ -6,8 +6,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.economy.app.AccountId;
-import com.shepherdjerred.thestorm.economy.app.Crystals;
 import com.shepherdjerred.thestorm.economy.app.EconomyError;
+import com.shepherdjerred.thestorm.economy.app.Money;
 import com.shepherdjerred.thestorm.economy.app.Receipt;
 import com.shepherdjerred.thestorm.essentials.adapter.db.JooqModerationLogStore;
 import com.shepherdjerred.thestorm.essentials.domain.moderation.AuditEntry;
@@ -136,7 +136,7 @@ final class EssentialsPaperTest {
 
     @Override
     public CompletableFuture<Result<Receipt, EconomyError>> transfer(
-        AccountId from, AccountId to, Crystals amount, String reason) {
+        AccountId from, AccountId to, Money amount, String reason) {
       attempts.incrementAndGet();
       return failedFuture(new IllegalStateException("ledger down"));
     }

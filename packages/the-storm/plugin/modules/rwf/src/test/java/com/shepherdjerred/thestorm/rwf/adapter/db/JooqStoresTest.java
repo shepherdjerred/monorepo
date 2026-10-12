@@ -11,6 +11,7 @@ import com.shepherdjerred.thestorm.core.snapshot.ItemData;
 import com.shepherdjerred.thestorm.core.snapshot.Position;
 import com.shepherdjerred.thestorm.core.snapshot.Snapshot;
 import com.shepherdjerred.thestorm.core.snapshot.Vitals;
+import com.shepherdjerred.thestorm.economy.app.CurrencyId;
 import com.shepherdjerred.thestorm.rwf.app.RecordingSummary;
 import com.shepherdjerred.thestorm.rwf.app.store.MatchStore;
 import com.shepherdjerred.thestorm.rwf.app.store.MatchStore.Outcome;
@@ -19,7 +20,6 @@ import com.shepherdjerred.thestorm.rwf.app.store.MatchStore.PlayerRow;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
 import com.shepherdjerred.thestorm.rwf.testing.Samples;
 import java.nio.file.Path;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -34,7 +34,6 @@ final class JooqStoresTest {
 
   private static final UUID ALICE = Samples.ALICE.uuid();
   private static final UUID BOB = Samples.BOB.uuid();
-  private static final LocalDate DAY = LocalDate.of(2026, 10, 3);
 
   @TempDir Path directory;
   private StormDatabase database;
@@ -76,8 +75,9 @@ final class JooqStoresTest {
         1,
         0,
         outcome,
+        CurrencyId.RWF_CREDITS,
         owed,
-        owed > 0 ? PayoutStatus.PENDING : PayoutStatus.NONE,
+        owed != 0 ? PayoutStatus.PENDING : PayoutStatus.NONE,
         0);
   }
 
@@ -142,41 +142,68 @@ final class JooqStoresTest {
   }
 
   @Test
-  void beginningAPayoutAppliesTheDailyCapOnceAndIsIdempotent() {
+  void beginningAPayoutPaysWhatWasOwedAndIsIdempotent() {
     var store = new JooqMatchStore(database);
     var first = UUID.randomUUID();
     var second = UUID.randomUUID();
     store.record(match(first), List.of(row(first, ALICE, Outcome.WIN, 3))).join();
     store.record(match(second), List.of(row(second, ALICE, Outcome.WIN, 3))).join();
 
-    assertThat(store.beginPayout(first, ALICE, DAY, 4).join()).isEqualTo(3);
-    assertThat(store.beginPayout(first, ALICE, DAY, 4).join()).as("repeat").isEqualTo(3);
-    assertThat(store.beginPayout(second, ALICE, DAY, 4).join()).as("capped").isEqualTo(1);
-    store.finishPayout(first, ALICE).join();
-    store.finishPayout(second, ALICE).join();
+    assertThat(store.beginPayout(first, ALICE).join()).isEqualTo(3);
+    assertThat(store.beginPayout(first, ALICE).join()).as("repeat").isEqualTo(3);
+    assertThat(store.beginPayout(second, ALICE).join()).as("no daily cap").isEqualTo(3);
+    store.finishPayout(first, ALICE, 3).join();
+    store.finishPayout(second, ALICE, 3).join();
 
     assertThat(store.unpaid().join()).isEmpty();
-    assertThat(store.beginPayout(first, ALICE, DAY, 4).join()).as("paid rows pay nothing").isZero();
+    assertThat(store.beginPayout(first, ALICE).join()).as("paid rows pay nothing").isZero();
     assertThat(store.players(second).join())
         .singleElement()
         .satisfies(
             row -> {
+              assertThat(row.currency()).isEqualTo(CurrencyId.RWF_CREDITS);
               assertThat(row.creditsOwed()).isEqualTo(3);
-              assertThat(row.creditsPaid()).isEqualTo(1);
+              assertThat(row.creditsPaid()).isEqualTo(3);
               assertThat(row.status()).isEqualTo(PayoutStatus.PAID);
             });
   }
 
   @Test
-  void aNewDayStartsTheCapAgain() {
+  void aChargeBeginsWithTheMostItMayTakeAndRecordsWhatWasTaken() {
     var store = new JooqMatchStore(database);
-    var first = UUID.randomUUID();
-    var second = UUID.randomUUID();
-    store.record(match(first), List.of(row(first, ALICE, Outcome.WIN, 3))).join();
-    store.record(match(second), List.of(row(second, ALICE, Outcome.WIN, 3))).join();
+    var id = UUID.randomUUID();
+    store.record(match(id), List.of(row(id, ALICE, Outcome.AFK, -2))).join();
 
-    assertThat(store.beginPayout(first, ALICE, DAY, 3).join()).isEqualTo(3);
-    assertThat(store.beginPayout(second, ALICE, DAY.plusDays(1), 3).join()).isEqualTo(3);
+    assertThat(store.beginPayout(id, ALICE).join()).isEqualTo(-2);
+    assertThat(store.beginPayout(id, ALICE).join()).as("repeat").isEqualTo(-2);
+    store.finishPayout(id, ALICE, -1).join();
+
+    assertThat(store.players(id).join())
+        .singleElement()
+        .satisfies(
+            row -> {
+              assertThat(row.outcome()).isEqualTo(Outcome.AFK);
+              assertThat(row.creditsOwed()).isEqualTo(-2);
+              assertThat(row.creditsPaid()).isEqualTo(-1);
+              assertThat(row.status()).isEqualTo(PayoutStatus.PAID);
+            });
+  }
+
+  @Test
+  void finishingWithMoreThanWasOwedOrTheWrongWayFailsLoudly() {
+    var store = new JooqMatchStore(database);
+    var id = UUID.randomUUID();
+    store
+        .record(match(id), List.of(row(id, ALICE, Outcome.WIN, 3), row(id, BOB, Outcome.AFK, -2)))
+        .join();
+    store.beginPayout(id, ALICE).join();
+    store.beginPayout(id, BOB).join();
+
+    assertThatThrownBy(() -> store.finishPayout(id, ALICE, 4).join())
+        .hasCauseInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> store.finishPayout(id, BOB, 1).join())
+        .hasCauseInstanceOf(IllegalArgumentException.class);
+    assertThat(store.unpaid().join()).hasSize(2);
   }
 
   @Test
@@ -185,7 +212,7 @@ final class JooqStoresTest {
     var id = UUID.randomUUID();
     store.record(match(id), List.of(row(id, ALICE, Outcome.WIN, 3))).join();
 
-    assertThatThrownBy(() -> store.finishPayout(id, ALICE).join())
+    assertThatThrownBy(() -> store.finishPayout(id, ALICE, 3).join())
         .isInstanceOf(CompletionException.class)
         .hasCauseInstanceOf(IllegalStateException.class);
   }

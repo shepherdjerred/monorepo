@@ -5,7 +5,7 @@ import com.shepherdjerred.thestorm.core.players.PlayerDirectory;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.core.protection.SettledLand;
 import com.shepherdjerred.thestorm.core.world.SealedWorlds;
-import com.shepherdjerred.thestorm.economy.app.CrystalFormatter;
+import com.shepherdjerred.thestorm.economy.app.MoneyFormatter;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import com.shepherdjerred.thestorm.towns.app.LockService;
 import com.shepherdjerred.thestorm.towns.app.LocksStore;
@@ -39,7 +39,7 @@ import org.bukkit.event.Listener;
 /**
  * Hooks towns into Paper: builds the use cases, registers every protection and lock listener and
  * the commands, and returns the {@link Protection} port for other modules. It needs the economy's
- * {@link Wallets} and {@link CrystalFormatter}, the tracks' {@link TrackLevels} and core's {@link
+ * {@link Wallets} and {@link MoneyFormatter}, the tracks' {@link TrackLevels} and core's {@link
  * PlayerDirectory}.
  */
 public final class TownsPaper {
@@ -235,7 +235,7 @@ public final class TownsPaper {
             new TownCommands.Parts(
                 memberCommands,
                 new TreasuryCommands(
-                    treasury, services.require(CrystalFormatter.class), context.logger()),
+                    treasury, services.require(MoneyFormatter.class), context.logger()),
                 treasury,
                 levels,
                 runtime));

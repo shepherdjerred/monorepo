@@ -4,20 +4,21 @@ import { Vec3 } from "vec3";
 import { describe, expect } from "vitest";
 import { z } from "zod";
 import { test } from "./fixtures.ts";
-import {
-  connectBot,
-  disconnectBot,
-  waitForMessage,
-  waitUntil,
-} from "./harness/bot.ts";
+import { connectBot, disconnectBot, waitUntil } from "./harness/bot.ts";
 import { setRwfDenied } from "./harness/fake-brain.ts";
 import { rwfTestSettings } from "./harness/rwf-settings.ts";
-import { expectSampleCadence, readRecording } from "./harness/rwfbots.ts";
+import {
+  expectSampleCadence,
+  expectCredits,
+  lookAround,
+  readRecording,
+} from "./harness/rwfbots.ts";
 import { serverLogs } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
 import type { ServerInfo } from "./harness/server.ts";
 import {
   eventually,
   type MatchRow,
+  rowOf,
   settledMatch,
   sorted,
   status,
@@ -111,9 +112,8 @@ function screen(bot: Bot): Screen {
 const trooperHit = 2.9;
 // CombatRules.ATTACK_SPEED_MODIFIER: added so the 1.9 cooldown never applies.
 const attackSpeedModifierValue = 200;
-const startingBalance = 500;
-/** The suite's daily cap: one win's 3 credits. */
-const rwfDailyCap = z.number().int().positive().parse(rwfTestSettings.dailyCap);
+/** A player who never turns their head in a live match loses this many credits. */
+const afkPenalty = 2;
 
 /** A player and their transcript. */
 type Human = { bot: Bot; log: Transcript };
@@ -298,6 +298,8 @@ async function startMatch(
   await b.log.until(/The game has begun!/u, 30_000);
   const teams = await Promise.all([teamOf(a.log), teamOf(b.log)]);
   expect(teams[0]).not.toBe(teams[1]);
+  await lookAround(a.bot);
+  await lookAround(b.bot);
   return teams;
 }
 
@@ -306,7 +308,10 @@ async function startMatch(
  * live; returns their teams in order. Transcripts start afresh, so a second
  * match reads only its own lines.
  */
-async function playTogether(humans: Human[]): Promise<Team[]> {
+async function playTogether(
+  humans: Human[],
+  idle: Human[] = [],
+): Promise<Team[]> {
   for (const { log } of humans) {
     log.lines.length = 0;
   }
@@ -316,7 +321,14 @@ async function playTogether(humans: Human[]): Promise<Team[]> {
   for (const { log } of humans) {
     await log.until(/The game has begun!/u, 30_000);
   }
-  return Promise.all(humans.map(async ({ log }) => teamOf(log)));
+  const teams = await Promise.all(humans.map(async ({ log }) => teamOf(log)));
+  // Everyone but the idle turns their head, so only the idle count as AFK.
+  for (const one of humans) {
+    if (!idle.includes(one)) {
+      await lookAround(one.bot);
+    }
+  }
+  return teams;
 }
 
 async function teamOf(log: Transcript): Promise<Team> {
@@ -359,13 +371,6 @@ async function waitRestored(bot: Bot, home: Vec3): Promise<void> {
     20_000,
   );
   expectRestored(bot, home);
-}
-
-async function balance(bot: Bot): Promise<number> {
-  const reply = waitForMessage(bot, /Balance: (?<amount>\d+) crystals?/u);
-  bot.chat("/balance");
-  const seen = await reply;
-  return Number(seen.groups?.["amount"]);
 }
 
 /** Trooper by default: the fuse locked in slot 0, the sword next to it, golden apples, full iron. */
@@ -769,6 +774,8 @@ describe("Search and Destroy with humans only", () => {
       );
       const [teamA, teamB] = await Promise.all([teamOf(a.log), teamOf(b.log)]);
       expect(teamA).not.toBe(teamB);
+      await lookAround(bot);
+      await lookAround(secondBot);
 
       const live = await status(rcon);
       expect(live.phase).toBe("Live");
@@ -807,13 +814,10 @@ describe("Search and Destroy with humans only", () => {
         ),
       ).toContain("Test passed");
 
-      // The payout outbox paid through the economy: 3 for the win, 1 for the loss.
-      await eventually(
-        "the winner's payout",
-        async () => (await balance(bot)) === startingBalance + 3,
-        20_000,
-      );
-      expect(await balance(secondBot)).toBe(startingBalance + 1);
+      // The payout outbox paid through the economy in Red Warfare credits:
+      // 3 for the win, 1 for the loss, and crystals untouched.
+      await expectCredits(bot, 3);
+      await expectCredits(secondBot, 1);
       await expectPaidWin(server, live.matchId, {
         winner: teamA,
         loser: teamB,
@@ -873,8 +877,8 @@ describe("Search and Destroy with humans only", () => {
       expect(await attackSpeedModifier(rcon, secondBot)).toBeUndefined();
       expect(a.log.has(/You earned/u)).toBe(false);
       expect(b.log.has(/You earned/u)).toBe(false);
-      expect(await balance(bot)).toBe(startingBalance);
-      expect(await balance(secondBot)).toBe(startingBalance);
+      await expectCredits(bot, 0);
+      await expectCredits(secondBot, 0);
 
       const settled = await settledMatch(server, live.matchId);
       expect(settled.match.winner).toBe(teamB.toUpperCase());
@@ -1040,7 +1044,7 @@ describe("Search and Destroy without enough humans", () => {
         expect(ended.roster).toBe("absent");
         await waitRestored(online, home);
         expect(first.log.has(/You earned/u)).toBe(false);
-        expect(await balance(online)).toBe(startingBalance);
+        await expectCredits(online, 0);
         const settled = await settledMatch(server, ended.matchId);
         expect(settled.match.winner).toBe(team.toUpperCase());
         expect(settled.match.humans).toBe(1);
@@ -1329,11 +1333,6 @@ function deathCounter(humans: Human[]): Map<string, number> {
   return deaths;
 }
 
-/** The settled row of `player` in a match. */
-function rowOf(settled: Awaited<ReturnType<typeof settledMatch>>, player: Bot) {
-  return settled.players.find((row) => row.player === player.player.uuid);
-}
-
 /**
  * Three humans split two against one; one of the pair arms the nuke, which
  * kills the lone enemy and spares the armer's mate. Returns the armer's name
@@ -1393,21 +1392,24 @@ async function nukeMatch(
 }
 
 /**
- * A second paid match the same day: it lasts past the minimum length, then
- * everyone off the armer's team is killed. Each payout is cut to what is
- * left of the day's cap, and whoever was cut is told so.
+ * A second paid match the same day, with no daily cap: it lasts past the
+ * minimum length, then everyone off the armer's team is killed. Everyone is
+ * paid in full except `idle`, who never turns their head: they are AFK, earn
+ * nothing and lose up to two credits, never more than they hold.
  */
-async function cappedMatch(
+async function secondPaidMatch(
   rcon: RconClient,
   server: ServerInfo,
   humans: Human[],
-  { armer, earned }: { armer: string; earned: Map<string, number> },
+  first: { armer: string; earned: Map<string, number>; idle: Human },
 ): Promise<void> {
-  const teams = await playTogether(humans);
+  const teams = await playTogether(humans, [first.idle]);
   const begun = Date.now();
   const live = await status(rcon);
   expect([live.phase, live.humans]).toEqual(["Live", 3]);
-  const armerIndex = humans.findIndex(({ bot: one }) => one.username === armer);
+  const armerIndex = humans.findIndex(
+    ({ bot: one }) => one.username === first.armer,
+  );
   const winners = teams[armerIndex];
   const announcer = humans[armerIndex];
   if (winners === undefined || announcer === undefined) {
@@ -1421,25 +1423,25 @@ async function cappedMatch(
   }
   await announcer.log.until(new RegExp(`${winners} Team wins!`, "u"), 15_000);
   const settled = await settledMatch(server, live.matchId);
-  for (const [index, { bot: player, log }] of humans.entries()) {
-    const owed = teams[index] === winners ? 3 : 1;
-    const before = earned.get(player.username) ?? 0;
-    const paid = Math.min(owed, rwfDailyCap - before);
-    const row = rowOf(settled, player);
+  for (const [index, one] of humans.entries()) {
+    const before = first.earned.get(one.bot.username) ?? 0;
+    const won = teams[index] === winners;
+    const afk = one === first.idle;
+    const pay = won ? 3 : 1;
+    const outcome = won ? "WIN" : "LOSE";
+    // AFK: no pay, and never more taken than the player holds.
+    const [result, owed] = afk ? ["AFK", -afkPenalty] : [outcome, pay];
+    const paid = afk ? -Math.min(afkPenalty, before) : pay;
+    const row = rowOf(settled, one.bot);
     expect(
-      [row?.credits_owed, row?.payout_status, row?.credits_paid],
-      player.username,
-    ).toEqual([owed, "PAID", paid]);
-    if (paid < owed) {
-      await log.until(
-        new RegExp(
-          String.raw`You reached today's match earnings cap; ${paid.toString()} of ${owed.toString()} credits were paid\.`,
-          "u",
-        ),
-        20_000,
-      );
-    }
-    earned.set(player.username, before + paid);
+      [row?.result, row?.credits_owed, row?.payout_status, row?.credits_paid],
+      one.bot.username,
+    ).toEqual([result, owed, "PAID", paid]);
+    const told = afk
+      ? `${afkPenalty.toString()} credits were taken for being AFK`
+      : `You earned ${pay.toString()} credits`;
+    await one.log.until(new RegExp(String.raw`${told}\.`, "u"), 20_000);
+    first.earned.set(one.bot.username, before + paid);
   }
   await waitForLobby(rcon);
 }
@@ -1462,9 +1464,9 @@ async function disconnectAll(humans: Human[]): Promise<void> {
   }
 }
 
-describe("The nuke and the daily cap", () => {
+describe("The nuke and a second paid match", () => {
   test(
-    "a nuke kills everyone off the arming team, and the daily cap stops a second payout",
+    "a nuke kills everyone off the arming team, a second match pays again with no cap, and an AFK player is charged",
     { timeout: 330_000 },
     async ({ rcon, server }) => {
       await waitForLobby(rcon);
@@ -1478,16 +1480,17 @@ describe("The nuke and the daily cap", () => {
         await disconnectAll(humans);
         humans = [];
         humans = await connectAll(server, names);
-        // The armer and their mate earned the cap (3) in the first match.
-        await cappedMatch(rcon, server, humans, first);
+        // The nuke's lone victim earned 1 credit; they idle through the
+        // second match and lose it, never going below zero.
+        const idle = humans.find(
+          ({ bot: player }) => first.earned.get(player.username) === 1,
+        );
+        if (idle === undefined) {
+          throw new Error("nobody lost the first match");
+        }
+        await secondPaidMatch(rcon, server, humans, { ...first, idle });
         for (const { bot: player } of humans) {
-          const total = first.earned.get(player.username) ?? 0;
-          expect(total).toBeLessThanOrEqual(rwfDailyCap);
-          await eventually(
-            `${player.username}'s balance`,
-            async () => (await balance(player)) === startingBalance + total,
-            20_000,
-          );
+          await expectCredits(player, first.earned.get(player.username) ?? 0);
         }
       } finally {
         await disconnectAll(humans);

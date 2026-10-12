@@ -1,9 +1,9 @@
 package com.shepherdjerred.thestorm.rwf.app.store;
 
+import com.shepherdjerred.thestorm.economy.app.CurrencyId;
 import com.shepherdjerred.thestorm.rwf.app.RecordingSummary;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -52,6 +52,8 @@ public interface MatchStore {
     LOSE,
     LEFT,
     STOPPED,
+    /** AFK for the whole match: charged the AFK penalty instead of any pay. */
+    AFK,
   }
 
   /** Where a player's credits are. */
@@ -60,7 +62,7 @@ public interface MatchStore {
     NONE,
     /** Owed and not yet paid. */
     PENDING,
-    /** The daily cap has been applied and the ledger transfer is in flight or uncertain. */
+    /** The ledger transfer is in flight or uncertain. */
     PAYING,
     /** The ledger confirmed the transfer. */
     PAID,
@@ -76,10 +78,13 @@ public interface MatchStore {
    * @param kills kills credited to them
    * @param deaths how many times they died (0 or 1 in Search and Destroy)
    * @param outcome how their match went
-   * @param creditsOwed what the rules awarded them before the daily cap
+   * @param currency what the row pays in: Red Warfare credits, or crystals for rows written before
+   *     Red Warfare had its own currency
+   * @param creditsOwed what the rules awarded them: positive is paid to them, negative is the most
+   *     taken from them (the AFK penalty)
    * @param status where the payout is
-   * @param creditsPaid what was (or is being) paid after the daily cap; 0 until {@link
-   *     PayoutStatus#PAYING}
+   * @param creditsPaid what actually moved, with the same sign as {@code creditsOwed}; a charge
+   *     takes no more than the player holds. 0 until the transfer is known
    */
   record PlayerRow(
       UUID matchId,
@@ -89,23 +94,56 @@ public interface MatchStore {
       int kills,
       int deaths,
       Outcome outcome,
+      CurrencyId currency,
       long creditsOwed,
       PayoutStatus status,
       long creditsPaid) {
 
     public PlayerRow {
-      if (kills < 0 || deaths < 0 || creditsOwed < 0 || creditsPaid < 0) {
-        throw new IllegalArgumentException("counts and credits must not be negative");
+      if (kills < 0 || deaths < 0) {
+        throw new IllegalArgumentException("counts must not be negative");
       }
       if ((creditsOwed == 0) != (status == PayoutStatus.NONE)) {
         throw new IllegalArgumentException("a row owes credits exactly when it has a payout");
       }
+      if (creditsPaid != 0
+          && (Long.signum(creditsPaid) != Long.signum(creditsOwed)
+              || Math.abs(creditsPaid) > Math.abs(creditsOwed))) {
+        throw new IllegalArgumentException(
+            "paid " + creditsPaid + " cannot exceed or oppose owed " + creditsOwed);
+      }
+    }
+
+    /** The same row, paid: {@code amount} actually moved. */
+    public PlayerRow paid(long amount) {
+      return new PlayerRow(
+          matchId,
+          player,
+          team,
+          kit,
+          kills,
+          deaths,
+          outcome,
+          currency,
+          creditsOwed,
+          PayoutStatus.PAID,
+          amount);
     }
 
     /** The same row with another outcome. */
     public PlayerRow withOutcome(Outcome newOutcome) {
       return new PlayerRow(
-          matchId, player, team, kit, kills, deaths, newOutcome, creditsOwed, status, creditsPaid);
+          matchId,
+          player,
+          team,
+          kit,
+          kills,
+          deaths,
+          newOutcome,
+          currency,
+          creditsOwed,
+          status,
+          creditsPaid);
     }
   }
 
@@ -130,15 +168,16 @@ public interface MatchStore {
   CompletableFuture<List<PlayerRow>> unpaid();
 
   /**
-   * Moves a pending row to paying: applies the daily cap against {@code day}'s earnings, reserves
-   * the amount in the daily ledger and stores it as {@code creditsPaid}. Returns the amount to
-   * transfer, which may be zero. Calling it again for a row already paying returns the stored
-   * amount without reserving more; a paid row returns zero.
+   * Moves a pending row to paying and returns the amount to move: a payout's {@code creditsOwed},
+   * stored as {@code creditsPaid}, or a charge's (negative) {@code creditsOwed}, whose actual
+   * amount is only known once it is taken. Calling it again for a row already paying returns the
+   * same amount (a payout's stored {@code creditsPaid}); a paid row or one owing nothing returns
+   * zero.
    */
-  CompletableFuture<Long> beginPayout(UUID matchId, UUID player, LocalDate day, long dailyCap);
+  CompletableFuture<Long> beginPayout(UUID matchId, UUID player);
 
-  /** Marks a paying row paid, once the ledger confirmed the transfer. */
-  CompletableFuture<Void> finishPayout(UUID matchId, UUID player);
+  /** Marks a paying row paid with what actually moved, once the ledger confirmed it. */
+  CompletableFuture<Void> finishPayout(UUID matchId, UUID player, long paid);
 
   /** The player's rows for one match, for diagnostics. */
   CompletableFuture<List<PlayerRow>> players(UUID matchId);

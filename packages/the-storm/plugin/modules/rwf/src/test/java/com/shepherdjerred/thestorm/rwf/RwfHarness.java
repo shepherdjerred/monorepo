@@ -7,7 +7,7 @@ import com.shepherdjerred.thestorm.core.module.Services;
 import com.shepherdjerred.thestorm.core.schedule.PaperScheduler;
 import com.shepherdjerred.thestorm.core.status.PublicGameDirectory;
 import com.shepherdjerred.thestorm.core.world.SealedWorlds;
-import com.shepherdjerred.thestorm.economy.app.CrystalFormatter;
+import com.shepherdjerred.thestorm.economy.app.MoneyFormatter;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import com.shepherdjerred.thestorm.rwf.adapter.paper.ChunkHolder;
 import com.shepherdjerred.thestorm.rwf.adapter.paper.ServerHooks;
@@ -43,6 +43,7 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.WorldCreator;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.PluginDescriptionFile;
@@ -173,7 +174,7 @@ public final class RwfHarness implements AutoCloseable {
         com.shepherdjerred.thestorm.core.world.BlockChanges.class,
         new com.shepherdjerred.thestorm.core.world.AuditedBlockChanges(_ -> {}));
     services.provide(Wallets.class, wallets);
-    services.provide(CrystalFormatter.class, wallets);
+    services.provide(MoneyFormatter.class, wallets);
     services.provide(SealedWorlds.class, sealed);
     services.provide(PublicGameDirectory.class, new PublicGameDirectory());
     if (withBots) {
@@ -274,15 +275,29 @@ public final class RwfHarness implements AutoCloseable {
   }
 
   /**
-   * Joins {@code player}, lets the countdown fill the match with bots, and jumps the clock past the
-   * countdown so the match goes live.
+   * Joins {@code player}, lets the countdown fill the match with bots, jumps the clock past the
+   * countdown so the match goes live, and has {@code player} look around so they are not AFK.
    */
   public void goLive(PlayerMock player) {
+    goLiveIdle(player);
+    lookAround(player);
+  }
+
+  /** {@link #goLive} without looking around: {@code player} stays AFK. */
+  public void goLiveIdle(PlayerMock player) {
     enter(player);
     until(() -> snapshot().phase() == MatchSnapshot.PhaseKind.COUNTDOWN);
     letBotsArrive();
     tick(Duration.ofSeconds(91));
     until(() -> snapshot().phase() == MatchSnapshot.PhaseKind.LIVE);
+  }
+
+  /** {@code player} turns their head by ten degrees, as a move event. */
+  public void lookAround(PlayerMock player) {
+    var from = player.getLocation();
+    var to = from.clone();
+    to.setYaw(from.getYaw() + 10);
+    server.getPluginManager().callEvent(new PlayerMoveEvent(player, from, to));
   }
 
   /**

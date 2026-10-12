@@ -5,8 +5,8 @@ import static com.mojang.brigadier.arguments.LongArgumentType.longArg;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.shepherdjerred.thestorm.core.result.Result;
-import com.shepherdjerred.thestorm.economy.app.CrystalFormatter;
-import com.shepherdjerred.thestorm.economy.app.Crystals;
+import com.shepherdjerred.thestorm.economy.app.Money;
+import com.shepherdjerred.thestorm.economy.app.MoneyFormatter;
 import com.shepherdjerred.thestorm.towns.app.Treasury;
 import com.shepherdjerred.thestorm.towns.domain.treasury.TreasuryProblem;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -25,10 +25,10 @@ final class TreasuryCommands {
   private static final String AMOUNT = "amount";
 
   private final Treasury treasury;
-  private final CrystalFormatter crystals;
+  private final MoneyFormatter crystals;
   private final ComponentLogger logger;
 
-  TreasuryCommands(Treasury treasury, CrystalFormatter crystals, ComponentLogger logger) {
+  TreasuryCommands(Treasury treasury, MoneyFormatter crystals, ComponentLogger logger) {
     this.treasury = treasury;
     this.crystals = crystals;
     this.logger = logger;
@@ -61,14 +61,14 @@ final class TreasuryCommands {
   void deposit(Player player, long amount) {
     answer(
         player,
-        treasury.deposit(player.getUniqueId(), Crystals.of(amount)),
+        treasury.deposit(player.getUniqueId(), Money.crystals(amount)),
         receipt -> "You paid " + crystals.words(receipt.amount()) + " into your town's treasury.");
   }
 
   void withdraw(Player player, long amount) {
     answer(
         player,
-        treasury.withdraw(player.getUniqueId(), Crystals.of(amount)),
+        treasury.withdraw(player.getUniqueId(), Money.crystals(amount)),
         receipt -> "You took " + crystals.words(receipt.amount()) + " from your town's treasury.");
   }
 
@@ -106,7 +106,7 @@ final class TreasuryCommands {
       case TreasuryProblem.CannotWithdraw(var _) ->
           "Only a town's owner or assistants take money out; members pay in.";
       case TreasuryProblem.Insufficient(var balance) ->
-          "There are only " + crystals.words(Crystals.of(balance)) + " to pay with.";
+          "There are only " + crystals.words(Money.crystals(balance)) + " to pay with.";
       case TreasuryProblem.Busy() -> "Your town is being changed; try again in a moment.";
     };
   }

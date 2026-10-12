@@ -188,3 +188,11 @@ export async function settledMatch(server: ServerInfo, matchId: string) {
   }
   return { ...latest, match };
 }
+
+/** The settled row of `player` in a match. */
+export function rowOf(
+  settled: Awaited<ReturnType<typeof settledMatch>>,
+  player: Bot,
+) {
+  return settled.players.find((row) => row.player === player.player.uuid);
+}

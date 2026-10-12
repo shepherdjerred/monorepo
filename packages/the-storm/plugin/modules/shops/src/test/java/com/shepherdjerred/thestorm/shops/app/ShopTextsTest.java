@@ -2,8 +2,8 @@ package com.shepherdjerred.thestorm.shops.app;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.shepherdjerred.thestorm.economy.app.CrystalFormatter;
-import com.shepherdjerred.thestorm.economy.app.Crystals;
+import com.shepherdjerred.thestorm.economy.app.Money;
+import com.shepherdjerred.thestorm.economy.app.MoneyFormatter;
 import com.shepherdjerred.thestorm.shops.domain.catalog.CatalogEntry;
 import com.shepherdjerred.thestorm.shops.domain.trade.Direction;
 import com.shepherdjerred.thestorm.shops.domain.trade.OwnerSummary;
@@ -19,15 +19,15 @@ import org.junit.jupiter.api.Test;
 
 final class ShopTextsTest {
 
-  private static final CrystalFormatter FORMAT =
-      new CrystalFormatter() {
+  private static final MoneyFormatter FORMAT =
+      new MoneyFormatter() {
         @Override
-        public String words(Crystals amount) {
+        public String words(Money amount) {
           return amount.amount() + (amount.amount() == 1 ? " crystal" : " crystals");
         }
 
         @Override
-        public String symbol(Crystals amount) {
+        public String symbol(Money amount) {
           return amount.amount() + " CR";
         }
       };

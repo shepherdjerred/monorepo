@@ -12,7 +12,7 @@ import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.Services;
 import com.shepherdjerred.thestorm.core.schedule.PaperScheduler;
 import com.shepherdjerred.thestorm.core.status.PublicGameDirectory;
-import com.shepherdjerred.thestorm.economy.app.CrystalFormatter;
+import com.shepherdjerred.thestorm.economy.app.MoneyFormatter;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -134,7 +134,7 @@ public final class ArenaHarness implements AutoCloseable {
         com.shepherdjerred.thestorm.core.world.BlockChanges.class,
         new com.shepherdjerred.thestorm.core.world.AuditedBlockChanges(_ -> {}));
     services.provide(Wallets.class, wallets);
-    services.provide(CrystalFormatter.class, wallets);
+    services.provide(MoneyFormatter.class, wallets);
     services.provide(PublicGameDirectory.class, new PublicGameDirectory());
     enabling =
         plugin ->

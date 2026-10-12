@@ -1,11 +1,11 @@
 package com.shepherdjerred.thestorm.economy.domain;
 
 /**
- * How the currency is named in chat.
+ * How one currency is named in chat.
  *
- * @param singular the name of one unit ({@code crystal})
- * @param plural the name of any other count ({@code crystals})
- * @param symbol the short form after a number ({@code CR})
+ * @param singular the name of one unit ({@code crystal}, {@code Credit})
+ * @param plural the name of any other count ({@code crystals}, {@code Credits})
+ * @param symbol the short form after a number ({@code CR}, {@code RC})
  */
 public record Currency(String singular, String plural, String symbol) {
 

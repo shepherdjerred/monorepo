@@ -26,7 +26,11 @@ final class RewardTest {
   private static final Duration MINIMUM = Duration.ofMinutes(1);
 
   private static Participation played(CombatantId id, TeamColor team) {
-    return new Participation(id, team, true, Optional.empty(), Optional.empty(), false);
+    return new Participation(id, team, true, Optional.empty(), Optional.empty(), false, false);
+  }
+
+  private static Participation afk(CombatantId id, TeamColor team) {
+    return new Participation(id, team, true, Optional.empty(), Optional.empty(), false, true);
   }
 
   @Nested
@@ -59,7 +63,13 @@ final class RewardTest {
       var stayed = played(ALICE, TeamColor.RED);
       var died =
           new Participation(
-              BOB, TeamColor.RED, true, Optional.of(T0.plusSeconds(100)), Optional.empty(), false);
+              BOB,
+              TeamColor.RED,
+              true,
+              Optional.of(T0.plusSeconds(100)),
+              Optional.empty(),
+              false,
+              false);
       var diedThenLeft =
           new Participation(
               CAROL,
@@ -67,6 +77,7 @@ final class RewardTest {
               true,
               Optional.of(T0.plusSeconds(100)),
               Optional.of(T0.plusSeconds(200)),
+              false,
               false);
 
       for (var participant : List.of(stayed, died, diedThenLeft)) {
@@ -78,12 +89,20 @@ final class RewardTest {
     void leavingAliveForfeitingBotsAndLateComersAreNot() {
       var leftAlive =
           new Participation(
-              ALICE, TeamColor.RED, true, Optional.empty(), Optional.of(T0.plusSeconds(50)), false);
+              ALICE,
+              TeamColor.RED,
+              true,
+              Optional.empty(),
+              Optional.of(T0.plusSeconds(50)),
+              false,
+              false);
       var forfeited =
-          new Participation(BOB, TeamColor.RED, true, Optional.empty(), Optional.empty(), true);
+          new Participation(
+              BOB, TeamColor.RED, true, Optional.empty(), Optional.empty(), true, false);
       var bot = played(BOT_1, TeamColor.RED);
       var late =
-          new Participation(CAROL, TeamColor.RED, false, Optional.empty(), Optional.empty(), false);
+          new Participation(
+              CAROL, TeamColor.RED, false, Optional.empty(), Optional.empty(), false, false);
 
       for (var participant : List.of(leftAlive, forfeited, bot, late)) {
         assertThat(RewardEligibility.eligible(participant, TEN_MINUTES, MINIMUM)).isFalse();
@@ -133,6 +152,56 @@ final class RewardTest {
 
       assertThat(awards).extracting(Award::reason).containsOnly(Reason.LOSE);
       assertThat(awards).extracting(Award::credits).containsOnly(1L);
+    }
+
+    @Test
+    void anAfkPlayerLosesTwoCreditsAndIsNotPaidEvenOnTheWinningTeam() {
+      var roster =
+          List.of(
+              afk(ALICE, TeamColor.RED), played(BOB, TeamColor.RED), afk(CAROL, TeamColor.BLUE));
+
+      var awards =
+          RewardEligibility.settle(roster, Optional.of(TeamColor.RED), TEN_MINUTES, MINIMUM);
+
+      assertThat(awards)
+          .containsExactly(
+              new Award(roster.get(0), Reason.AFK, -Payout.AFK_PENALTY),
+              new Award(roster.get(1), Reason.WIN, 3),
+              new Award(roster.get(2), Reason.AFK, -Payout.AFK_PENALTY));
+    }
+
+    @Test
+    void theAfkPenaltyIsNotScaledByBots() {
+      var roster = List.of(afk(ALICE, TeamColor.RED), played(BOT_1, TeamColor.BLUE));
+
+      assertThat(RewardEligibility.settle(roster, Optional.empty(), TEN_MINUTES, MINIMUM))
+          .containsExactly(new Award(roster.get(0), Reason.AFK, -2));
+    }
+
+    @Test
+    void aForfeitOrAShortMatchChargesNoAfkPenalty() {
+      var quit =
+          new Participation(
+              ALICE, TeamColor.RED, true, Optional.empty(), Optional.empty(), true, true);
+      var brief = new Span(T0, T0.plusSeconds(59));
+
+      assertThat(RewardEligibility.settle(List.of(quit), Optional.empty(), TEN_MINUTES, MINIMUM))
+          .isEmpty();
+      assertThat(
+              RewardEligibility.settle(
+                  List.of(afk(BOB, TeamColor.RED)), Optional.empty(), brief, MINIMUM))
+          .isEmpty();
+    }
+
+    @Test
+    void anAwardPaysOrTakesForAfkOnly() {
+      var alice = played(ALICE, TeamColor.RED);
+      assertThatThrownBy(() -> new Award(alice, Reason.WIN, -1))
+          .isInstanceOf(IllegalArgumentException.class);
+      assertThatThrownBy(() -> new Award(alice, Reason.AFK, 2))
+          .isInstanceOf(IllegalArgumentException.class);
+      assertThatThrownBy(() -> new Award(alice, Reason.LOSE, 0))
+          .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

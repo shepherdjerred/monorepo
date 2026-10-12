@@ -2,8 +2,8 @@ package com.shepherdjerred.thestorm.arena.app;
 
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.economy.app.AccountId;
-import com.shepherdjerred.thestorm.economy.app.Crystals;
 import com.shepherdjerred.thestorm.economy.app.EconomyError;
+import com.shepherdjerred.thestorm.economy.app.Money;
 import com.shepherdjerred.thestorm.economy.app.Receipt;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import java.util.UUID;
@@ -24,7 +24,7 @@ public final class RewardPayer {
     return wallets.transfer(
         new AccountId.Server(),
         new AccountId.Player(player),
-        Crystals.of(crystals),
+        Money.crystals(crystals),
         reason(arena, wave));
   }
 

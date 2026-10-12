@@ -4,8 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
 import com.shepherdjerred.thestorm.economy.app.AccountId;
-import com.shepherdjerred.thestorm.economy.app.CrystalFormatter;
-import com.shepherdjerred.thestorm.economy.app.Crystals;
+import com.shepherdjerred.thestorm.economy.app.CurrencyId;
+import com.shepherdjerred.thestorm.economy.app.Money;
+import com.shepherdjerred.thestorm.economy.app.MoneyFormatter;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import java.nio.file.Path;
 import java.time.Instant;
@@ -87,11 +88,15 @@ final class EconomyCommandsTest {
     return seen;
   }
 
-  private Crystals balance(PlayerMock player) throws Exception {
+  private Money balance(PlayerMock player) throws Exception {
+    return balance(player, CurrencyId.CRYSTALS);
+  }
+
+  private Money balance(PlayerMock player, CurrencyId currency) throws Exception {
     return plugin
         .services
         .require(Wallets.class)
-        .balance(new AccountId.Player(player.getUniqueId()))
+        .balance(new AccountId.Player(player.getUniqueId()), currency)
         .get(10, TimeUnit.SECONDS);
   }
 
@@ -106,12 +111,15 @@ final class EconomyCommandsTest {
   }
 
   @Test
-  void theModulePublishesTheFormatterWithTheShippedCurrency() {
-    var formatter = plugin.services.require(CrystalFormatter.class);
+  void theModulePublishesTheFormatterWithTheShippedCurrencies() {
+    var formatter = plugin.services.require(MoneyFormatter.class);
 
-    assertThat(formatter.words(Crystals.of(1))).isEqualTo("1 crystal");
-    assertThat(formatter.words(Crystals.of(1250))).isEqualTo("1,250 crystals");
-    assertThat(formatter.symbol(Crystals.of(1250))).isEqualTo("1,250 CR");
+    assertThat(formatter.words(Money.crystals(1))).isEqualTo("1 crystal");
+    assertThat(formatter.words(Money.crystals(1250))).isEqualTo("1,250 crystals");
+    assertThat(formatter.symbol(Money.crystals(1250))).isEqualTo("1,250 CR");
+    assertThat(formatter.words(Money.rwfCredits(1))).isEqualTo("1 Credit");
+    assertThat(formatter.words(Money.rwfCredits(3))).isEqualTo("3 Credits");
+    assertThat(formatter.symbol(Money.rwfCredits(3))).isEqualTo("3 RC");
   }
 
   @Test
@@ -122,7 +130,7 @@ final class EconomyCommandsTest {
     alice.reconnect();
 
     assertThat(settle(alice)).noneMatch(line -> line.contains("Welcome!"));
-    assertThat(balance(alice)).isEqualTo(Crystals.of(500));
+    assertThat(balance(alice)).isEqualTo(Money.crystals(500));
   }
 
   @Test
@@ -133,21 +141,34 @@ final class EconomyCommandsTest {
     assertThat(alice.hasPlayedBefore()).isTrue();
     server.addPlayer(alice);
     awaitLine(alice, WELCOME);
-    assertThat(balance(alice)).isEqualTo(Crystals.of(500));
+    assertThat(balance(alice)).isEqualTo(Money.crystals(500));
 
     alice.disconnect();
     alice.reconnect();
     assertThat(settle(alice)).noneMatch(line -> line.contains("Welcome!"));
-    assertThat(balance(alice)).isEqualTo(Crystals.of(500));
+    assertThat(balance(alice)).isEqualTo(Money.crystals(500));
   }
 
   @Test
-  void balanceShowsYourOwnCrystals() throws Exception {
+  void balanceListsEveryCurrency() throws Exception {
     var alice = join("Alice");
 
     assertThat(server.dispatchCommand(alice, "bal")).isTrue();
 
-    assertThat(awaitLine(alice, "Balance:")).contains("[Crystals]: Balance: 500 crystals");
+    assertThat(awaitLine(alice, "Balance:")).contains("[Wallet]: Balance: 500 crystals, 0 Credits");
+  }
+
+  @Test
+  void balanceOfAnotherPlayerListsEveryCurrency() throws Exception {
+    var admin = join("Admin");
+    admin.setOp(true);
+    var bob = join("Bob");
+    server.dispatchCommand(admin, "eco give Bob 3 rwf_credits");
+    awaitLine(bob, "An admin gave you 3 Credits.");
+
+    assertThat(server.dispatchCommand(admin, "balance bob")).isTrue();
+
+    assertThat(awaitLine(admin, "Bob has")).contains("[Wallet]: Bob has 500 crystals, 3 Credits.");
   }
 
   @Test
@@ -157,10 +178,10 @@ final class EconomyCommandsTest {
 
     assertThat(server.dispatchCommand(alice, "pay bob 120")).isTrue();
 
-    assertThat(awaitLine(alice, "You paid")).contains("[Crystals]: You paid Bob 120 crystals.");
-    assertThat(awaitLine(bob, "paid you")).contains("[Crystals]: Alice paid you 120 crystals.");
-    assertThat(balance(alice)).isEqualTo(Crystals.of(380));
-    assertThat(balance(bob)).isEqualTo(Crystals.of(620));
+    assertThat(awaitLine(alice, "You paid")).contains("[Wallet]: You paid Bob 120 crystals.");
+    assertThat(awaitLine(bob, "paid you")).contains("[Wallet]: Alice paid you 120 crystals.");
+    assertThat(balance(alice)).isEqualTo(Money.crystals(380));
+    assertThat(balance(bob)).isEqualTo(Money.crystals(620));
   }
 
   @Test
@@ -171,8 +192,8 @@ final class EconomyCommandsTest {
 
     assertThat(server.dispatchCommand(alice, "pay BOB 5")).isTrue();
 
-    assertThat(awaitLine(alice, "You paid")).contains("[Crystals]: You paid Bob 5 crystals.");
-    assertThat(balance(bob)).isEqualTo(Crystals.of(505));
+    assertThat(awaitLine(alice, "You paid")).contains("[Wallet]: You paid Bob 5 crystals.");
+    assertThat(balance(bob)).isEqualTo(Money.crystals(505));
   }
 
   @Test
@@ -182,8 +203,8 @@ final class EconomyCommandsTest {
     assertThat(server.dispatchCommand(alice, "pay Nobody 10")).isTrue();
 
     assertThat(awaitLine(alice, "Nobody named"))
-        .contains("[Crystals]: Nobody named Nobody has played on The Storm.");
-    assertThat(balance(alice)).isEqualTo(Crystals.of(500));
+        .contains("[Wallet]: Nobody named Nobody has played on The Storm.");
+    assertThat(balance(alice)).isEqualTo(Money.crystals(500));
   }
 
   @Test
@@ -195,7 +216,7 @@ final class EconomyCommandsTest {
 
     assertThat(awaitLine(alice, "Not enough"))
         .contains(
-            "[Crystals]: Not enough crystals: that needs 501 crystals but the balance is 500"
+            "[Wallet]: Not enough crystals: that needs 501 crystals but the balance is 500"
                 + " crystals.");
   }
 
@@ -207,7 +228,7 @@ final class EconomyCommandsTest {
     server.dispatchCommand(alice, "eco give Bob 100");
 
     assertThat(settle(bob)).isEmpty();
-    assertThat(balance(bob)).isEqualTo(Crystals.of(500));
+    assertThat(balance(bob)).isEqualTo(Money.crystals(500));
   }
 
   @Test
@@ -226,8 +247,49 @@ final class EconomyCommandsTest {
 
     assertThat(server.dispatchCommand(admin, "eco set Bob 1")).isTrue();
     awaitLine(admin, "Set Bob to 1 crystal.");
-    awaitLine(bob, "An admin set your balance to 1 crystal.");
-    assertThat(balance(bob)).isEqualTo(Crystals.of(1));
+    awaitLine(bob, "An admin set your crystals balance to 1 crystal.");
+    assertThat(balance(bob)).isEqualTo(Money.crystals(1));
+  }
+
+  @Test
+  void ecoNamesACurrencyAndLeavesTheOthersAlone() throws Exception {
+    var admin = join("Admin");
+    admin.setOp(true);
+    var bob = join("Bob");
+
+    assertThat(server.dispatchCommand(admin, "eco give Bob 10 rwf_credits")).isTrue();
+    awaitLine(admin, "Gave Bob 10 Credits.");
+    awaitLine(bob, "An admin gave you 10 Credits.");
+
+    assertThat(server.dispatchCommand(admin, "eco take Bob 4 RWF_CREDITS")).isTrue();
+    awaitLine(admin, "Took 4 Credits from Bob.");
+
+    assertThat(server.dispatchCommand(admin, "eco take Bob 7 rwf_credits")).isTrue();
+    awaitLine(admin, "Not enough Credits: that needs 7 Credits but the balance is 6 Credits.");
+
+    assertThat(server.dispatchCommand(admin, "eco set Bob 1 rwf_credits")).isTrue();
+    awaitLine(bob, "An admin set your Credits balance to 1 Credit.");
+
+    assertThat(server.dispatchCommand(admin, "eco give Bob 5 crystals")).isTrue();
+    awaitLine(admin, "Gave Bob 5 crystals.");
+
+    assertThat(balance(bob, CurrencyId.RWF_CREDITS)).isEqualTo(Money.rwfCredits(1));
+    assertThat(balance(bob)).isEqualTo(Money.crystals(505));
+  }
+
+  @Test
+  void anUnknownCurrencyIsRefusedWithTheChoices() throws Exception {
+    var admin = join("Admin");
+    admin.setOp(true);
+    var bob = join("Bob");
+
+    assertThat(server.dispatchCommand(admin, "eco give Bob 10 shards")).isTrue();
+    assertThat(awaitLine(admin, "no currency"))
+        .contains(
+            "[Wallet]: There is no currency called shards. Use one of: crystals, rwf_credits.");
+    assertThat(server.dispatchCommand(admin, "baltop shards")).isTrue();
+    awaitLine(admin, "There is no currency called shards.");
+    assertThat(balance(bob)).isEqualTo(Money.crystals(500));
   }
 
   @Test
@@ -240,6 +302,23 @@ final class EconomyCommandsTest {
     assertThat(server.dispatchCommand(alice, "baltop")).isTrue();
 
     var lines = awaitLine(alice, "#2");
-    assertThat(lines).contains("[Crystals]: #1 Bob 600 CR", "[Crystals]: #2 Alice 400 CR");
+    assertThat(lines)
+        .contains(
+            "[Wallet]: Most crystals:", "[Wallet]: #1 Bob 600 CR", "[Wallet]: #2 Alice 400 CR");
+  }
+
+  @Test
+  void baltopRanksTheNamedCurrency() throws Exception {
+    var admin = join("Admin");
+    admin.setOp(true);
+    join("Bob");
+    server.dispatchCommand(admin, "eco give Bob 3 rwf_credits");
+    awaitLine(admin, "Gave Bob 3 Credits.");
+
+    assertThat(server.dispatchCommand(admin, "baltop rwf_credits")).isTrue();
+
+    var lines = awaitLine(admin, "#1");
+    assertThat(lines).contains("[Wallet]: Most Credits:", "[Wallet]: #1 Bob 3 RC");
+    assertThat(lines).noneMatch(line -> line.contains("#2"));
   }
 }

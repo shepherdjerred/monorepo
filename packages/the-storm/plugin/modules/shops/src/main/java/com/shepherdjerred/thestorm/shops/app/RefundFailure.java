@@ -1,7 +1,7 @@
 package com.shepherdjerred.thestorm.shops.app;
 
 import com.shepherdjerred.thestorm.economy.app.AccountId;
-import com.shepherdjerred.thestorm.economy.app.Crystals;
+import com.shepherdjerred.thestorm.economy.app.Money;
 import java.time.Instant;
 import java.util.Optional;
 
@@ -21,7 +21,7 @@ import java.util.Optional;
 public record RefundFailure(
     AccountId payer,
     AccountId payee,
-    Crystals amount,
+    Money amount,
     String reason,
     Optional<HeldItems> held,
     Instant at) {

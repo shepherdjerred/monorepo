@@ -4,8 +4,8 @@ import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.StormModule;
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.core.schedule.Cancellable;
-import com.shepherdjerred.thestorm.economy.app.CrystalFormatter;
-import com.shepherdjerred.thestorm.economy.app.Crystals;
+import com.shepherdjerred.thestorm.economy.app.Money;
+import com.shepherdjerred.thestorm.economy.app.MoneyFormatter;
 import com.shepherdjerred.thestorm.npcs.adapter.content.ContentLoader;
 import com.shepherdjerred.thestorm.npcs.adapter.db.JooqNpcStateStore;
 import com.shepherdjerred.thestorm.npcs.adapter.paper.NpcsPaper;
@@ -58,12 +58,12 @@ public final class NpcsModule implements StormModule {
     var catalog = new NpcCatalog(content);
     var dialogues = new DialogueRegistry();
     var actions = new ActionRegistry();
-    var formatter = context.services().require(CrystalFormatter.class);
+    var formatter = context.services().require(MoneyFormatter.class);
     var trainer =
         new Trainer(
             context.services().require(TrackPurchases.class),
             context.services().require(TrackLevels.class),
-            new TrainerWording(amount -> formatter.words(Crystals.of(amount)), context.time()),
+            new TrainerWording(amount -> formatter.words(Money.crystals(amount)), context.time()),
             context.scheduler().mainThread());
     var installed =
         NpcsPaper.install(

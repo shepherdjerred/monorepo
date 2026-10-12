@@ -2,7 +2,10 @@ package com.shepherdjerred.thestorm.economy.app;
 
 import java.util.UUID;
 
-/** Who holds crystals: a player, a town treasury, or the server (the source and sink of money). */
+/**
+ * Who holds money: a player, a town treasury, or the server (the source and sink of money). Every
+ * account has one balance per {@link CurrencyId}.
+ */
 public sealed interface AccountId {
 
   /** A player's wallet. */

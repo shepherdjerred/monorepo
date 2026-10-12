@@ -48,7 +48,7 @@ final class Roster {
 
   private static void depart(Draft draft, Combatant member, Instant now) {
     if (draft.phase instanceof Phase.Live) {
-      draft.depart(member.left(now));
+      draft.depart(member.left(now, true));
       draft.effect(new MatchEffect.Restore(member.id()));
       draft.announce(Notice.of(NoticeKind.LEFT, "player", member.name()));
       Standings.check(draft, now);

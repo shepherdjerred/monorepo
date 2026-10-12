@@ -7,10 +7,11 @@ import static com.shepherdjerred.thestorm.economy.adapter.db.generated.Tables.EC
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.economy.app.AccountId;
-import com.shepherdjerred.thestorm.economy.app.Crystals;
+import com.shepherdjerred.thestorm.economy.app.CurrencyId;
 import com.shepherdjerred.thestorm.economy.app.EconomyError;
 import com.shepherdjerred.thestorm.economy.app.KeyedTransfer;
 import com.shepherdjerred.thestorm.economy.app.LedgerStore;
+import com.shepherdjerred.thestorm.economy.app.Money;
 import com.shepherdjerred.thestorm.economy.app.RankedPlayer;
 import com.shepherdjerred.thestorm.economy.app.Receipt;
 import com.shepherdjerred.thestorm.economy.app.SeenPlayer;
@@ -22,7 +23,10 @@ import com.shepherdjerred.thestorm.economy.domain.Transfer;
 import com.shepherdjerred.thestorm.economy.domain.TransferRules;
 import java.time.Instant;
 import java.time.InstantSource;
+import java.util.Collections;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -31,7 +35,8 @@ import org.jooq.DSLContext;
 /**
  * The ledger in SQLite. Every write runs in one transaction on the database's single writer thread,
  * which reads the balances involved, applies {@link TransferRules}, stores the new balances and
- * appends the ledger entry, so no two transfers can interleave and overdraw an account.
+ * appends the ledger entry, so no two transfers can interleave and overdraw an account. Balances
+ * are keyed by account and currency; every ledger entry names its currency.
  */
 public final class JooqLedgerStore implements LedgerStore {
 
@@ -46,13 +51,25 @@ public final class JooqLedgerStore implements LedgerStore {
   }
 
   @Override
-  public CompletableFuture<Crystals> balance(AccountId account) {
-    return database.read(dsl -> storedBalance(dsl, account));
+  public CompletableFuture<Money> balance(AccountId account, CurrencyId currency) {
+    return database.read(dsl -> storedBalance(dsl, account, currency));
+  }
+
+  @Override
+  public CompletableFuture<Map<CurrencyId, Money>> balances(AccountId account) {
+    return database.read(
+        dsl -> {
+          var balances = new EnumMap<CurrencyId, Money>(CurrencyId.class);
+          for (var currency : CurrencyId.values()) {
+            balances.put(currency, storedBalance(dsl, account, currency));
+          }
+          return Collections.unmodifiableMap(balances);
+        });
   }
 
   @Override
   public CompletableFuture<Result<Receipt, EconomyError>> transfer(
-      AccountId from, AccountId to, Crystals amount, String reason) {
+      AccountId from, AccountId to, Money amount, String reason) {
     return database.write(dsl -> apply(dsl, new Transfer(from, to, amount), reason));
   }
 
@@ -86,14 +103,17 @@ public final class JooqLedgerStore implements LedgerStore {
   }
 
   @Override
-  public CompletableFuture<List<RankedPlayer>> top(int limit) {
+  public CompletableFuture<List<RankedPlayer>> top(CurrencyId currency, int limit) {
     return database.read(
         dsl ->
             dsl.select(ECONOMY_ACCOUNT.ID, ECONOMY_ACCOUNT.BALANCE, ECONOMY_PLAYER_SEEN.LAST_NAME)
                 .from(ECONOMY_ACCOUNT)
                 .leftJoin(ECONOMY_PLAYER_SEEN)
                 .on(ECONOMY_PLAYER_SEEN.PLAYER_ID.eq(ECONOMY_ACCOUNT.ID))
-                .where(ECONOMY_ACCOUNT.KIND.eq(AccountKey.PLAYER), ECONOMY_ACCOUNT.BALANCE.gt(0L))
+                .where(
+                    ECONOMY_ACCOUNT.KIND.eq(AccountKey.PLAYER),
+                    ECONOMY_ACCOUNT.CURRENCY.eq(currency.key()),
+                    ECONOMY_ACCOUNT.BALANCE.gt(0L))
                 .orderBy(ECONOMY_ACCOUNT.BALANCE.desc(), ECONOMY_ACCOUNT.ID.asc())
                 .limit(limit)
                 .fetch(
@@ -101,16 +121,16 @@ public final class JooqLedgerStore implements LedgerStore {
                         new RankedPlayer(
                             new AccountId.Player(UUID.fromString(row.value1())),
                             Optional.ofNullable(row.value3()),
-                            new Crystals(row.value2()))));
+                            Money.of(currency, row.value2()))));
   }
 
   @Override
   public CompletableFuture<Optional<Receipt>> welcome(
-      SeenPlayer player, Crystals grant, String reason) {
+      SeenPlayer player, Money grant, String reason) {
     return database.write(
         dsl -> {
           var firstJoin = remember(dsl, player);
-          if (!firstJoin || grant.equals(Crystals.ZERO)) {
+          if (!firstJoin || grant.isZero()) {
             return Optional.empty();
           }
           var transfer = new Transfer(new AccountId.Server(), player.account(), grant);
@@ -153,13 +173,13 @@ public final class JooqLedgerStore implements LedgerStore {
 
   @Override
   public CompletableFuture<Optional<Receipt>> setBalance(
-      AccountId account, Crystals target, String reason) {
+      AccountId account, Money target, String reason) {
     if (!Accounts.hasBalance(account)) {
       throw new IllegalArgumentException("the server account has no balance to set");
     }
     return database.write(
         dsl ->
-            Adjustments.toReach(account, storedBalance(dsl, account), target)
+            Adjustments.toReach(account, storedBalance(dsl, account, target.currency()), target)
                 .map(transfer -> applyOrFail(dsl, transfer, reason)));
   }
 
@@ -178,9 +198,12 @@ public final class JooqLedgerStore implements LedgerStore {
 
   private Result<Receipt, EconomyError> apply(
       DSLContext dsl, Transfer transfer, String reason, Optional<UUID> key) {
+    var currency = transfer.amount().currency();
     var pending =
         new PendingTransfer(
-            transfer, storedBalance(dsl, transfer.from()), storedBalance(dsl, transfer.to()));
+            transfer,
+            storedBalance(dsl, transfer.from(), currency),
+            storedBalance(dsl, transfer.to(), currency));
     return rules.settle(pending).map(settlement -> record(dsl, settlement, reason, key));
   }
 
@@ -188,13 +211,15 @@ public final class JooqLedgerStore implements LedgerStore {
       DSLContext dsl, Settlement settlement, String reason, Optional<UUID> operationKey) {
     for (var update : settlement.updates()) {
       var key = AccountKey.of(update.account());
+      var balance = update.balance();
       dsl.insertInto(ECONOMY_ACCOUNT)
           .set(ECONOMY_ACCOUNT.KIND, key.kind())
           .set(ECONOMY_ACCOUNT.ID, key.id())
-          .set(ECONOMY_ACCOUNT.BALANCE, update.balance().amount())
-          .onConflict(ECONOMY_ACCOUNT.KIND, ECONOMY_ACCOUNT.ID)
+          .set(ECONOMY_ACCOUNT.CURRENCY, balance.currency().key())
+          .set(ECONOMY_ACCOUNT.BALANCE, balance.amount())
+          .onConflict(ECONOMY_ACCOUNT.KIND, ECONOMY_ACCOUNT.ID, ECONOMY_ACCOUNT.CURRENCY)
           .doUpdate()
-          .set(ECONOMY_ACCOUNT.BALANCE, update.balance().amount())
+          .set(ECONOMY_ACCOUNT.BALANCE, balance.amount())
           .execute();
     }
     var transfer = settlement.transfer();
@@ -207,6 +232,7 @@ public final class JooqLedgerStore implements LedgerStore {
             .set(ECONOMY_LEDGER.FROM_ID, from.id())
             .set(ECONOMY_LEDGER.TO_KIND, to.kind())
             .set(ECONOMY_LEDGER.TO_ID, to.id())
+            .set(ECONOMY_LEDGER.CURRENCY, transfer.amount().currency().key())
             .set(ECONOMY_LEDGER.AMOUNT, transfer.amount().amount())
             .set(ECONOMY_LEDGER.REASON, reason)
             .set(ECONOMY_LEDGER.AT, at.toEpochMilli())
@@ -226,21 +252,24 @@ public final class JooqLedgerStore implements LedgerStore {
                     row.getId(),
                     AccountKey.toAccount(row.getFromKind(), row.getFromId()),
                     AccountKey.toAccount(row.getToKind(), row.getToId()),
-                    new Crystals(row.getAmount()),
+                    Money.of(CurrencyId.fromKey(row.getCurrency()), row.getAmount()),
                     row.getReason(),
                     Instant.ofEpochMilli(row.getAt())));
   }
 
-  private static Crystals storedBalance(DSLContext dsl, AccountId account) {
+  private static Money storedBalance(DSLContext dsl, AccountId account, CurrencyId currency) {
     if (!Accounts.hasBalance(account)) {
-      return Crystals.ZERO;
+      return Money.zero(currency);
     }
     var key = AccountKey.of(account);
     return dsl.select(ECONOMY_ACCOUNT.BALANCE)
         .from(ECONOMY_ACCOUNT)
-        .where(ECONOMY_ACCOUNT.KIND.eq(key.kind()), ECONOMY_ACCOUNT.ID.eq(key.id()))
+        .where(
+            ECONOMY_ACCOUNT.KIND.eq(key.kind()),
+            ECONOMY_ACCOUNT.ID.eq(key.id()),
+            ECONOMY_ACCOUNT.CURRENCY.eq(currency.key()))
         .fetchOptional(ECONOMY_ACCOUNT.BALANCE)
-        .map(Crystals::new)
-        .orElse(Crystals.ZERO);
+        .map(balance -> Money.of(currency, balance))
+        .orElseGet(() -> Money.zero(currency));
   }
 }

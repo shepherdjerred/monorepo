@@ -8,10 +8,11 @@ package com.shepherdjerred.thestorm.rwf.domain.match;
 import com.shepherdjerred.thestorm.rwf.domain.bomb.FuseBonus;
 import com.shepherdjerred.thestorm.rwf.domain.bomb.FuseType;
 import com.shepherdjerred.thestorm.rwf.domain.combat.AttackType;
-import com.shepherdjerred.thestorm.rwf.domain.reward.RewardEligibility;
+import com.shepherdjerred.thestorm.rwf.domain.combatant.CombatantId;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /** Deaths, eliminations, the last man standing and the end of a live match. */
 final class Standings {
@@ -19,19 +20,38 @@ final class Standings {
   /** The fuse a team's last living member is given: an instant arm. */
   static final FuseBonus LAST_MAN_FUSE = new FuseBonus(FuseType.BOMB_ARMING, FuseBonus.INSTANT);
 
+  /**
+   * Deaths that throw the match away and forfeit its rewards: a suicide or a quit at any point
+   * while it is live. (Red Warfare forfeited only a suicide in the first minute.)
+   */
+  static final Set<AttackType> FORFEITS = Set.of(AttackType.SUICIDE, AttackType.QUIT);
+
   private Standings() {}
+
+  /**
+   * A living combatant looked around, so they are not AFK. Red Warfare's {@code onAfkMove}: only a
+   * live match and a living combatant count.
+   */
+  static void lookedAround(Draft draft, CombatantId id) {
+    if (!(draft.phase instanceof Phase.Live)) {
+      return;
+    }
+    draft
+        .member(id)
+        .filter(member -> member.alive() && member.afk())
+        .ifPresent(member -> draft.put(member.active()));
+  }
 
   /** A combatant died. Already-dead combatants (killed by an explosion this tick) are ignored. */
   static void died(Draft draft, MatchEvent.Died died) {
-    if (!(draft.phase instanceof Phase.Live live)) {
+    if (!(draft.phase instanceof Phase.Live)) {
       return;
     }
     var member = draft.member(died.victim());
     if (member.isEmpty() || !member.orElseThrow().alive()) {
       return;
     }
-    var grace = died.now().isBefore(live.startedAt().plus(RewardEligibility.FORFEIT_GRACE));
-    var forfeit = grace && died.cause().equals(AttackType.SUICIDE);
+    var forfeit = FORFEITS.contains(died.cause());
     draft.put(member.orElseThrow().dead(died.now(), forfeit));
     draft.effect(new MatchEffect.Spectate(died.victim(), draft.map().spectatorPoint()));
     died.killer().ifPresent(killer -> draft.effect(new MatchEffect.RecordStat(killer, "Kills")));

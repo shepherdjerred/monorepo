@@ -96,7 +96,10 @@ public sealed interface MatchEffect {
   /** Put every cratered block back. */
   record RevertCraters() implements MatchEffect {}
 
-  /** Pay a player credits. */
+  /**
+   * Pay a player Red Warfare credits, or take them when {@code credits} is negative (the AFK
+   * penalty).
+   */
   record Pay(CombatantId id, long credits, String reason) implements MatchEffect {}
 
   /** Count one of {@code stat} for the player, such as "Armed" or "Defused". */

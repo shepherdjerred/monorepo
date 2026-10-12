@@ -48,17 +48,21 @@ rules:
   steakHealth: 8.0
   hunger: false
 
+# Paid in Red Warfare credits (the economy's rwf_credits, shown as RC), never
+# crystals, and with no daily cap. Bots earn nothing. A suicide or a quit
+# while the match is live forfeits the reward.
 rewards:
   # Red Warfare paid 3 credits for a win and 1 for a loss (pinned).
   win: 3
   lose: 1
+  # Taken instead of any pay from a player who never looked around while alive
+  # in the live match, as Red Warfare did; a balance never goes below zero
+  # (pinned).
+  afkPenalty: 2
   # The share of a payout when every other combatant is a bot (pinned).
   botFloor: 0.25
-  # The most credits one player earns from matches in a day.
-  dailyCap: 30
-  # Matches shorter than this pay nobody.
+  # Matches shorter than this pay, and charge, nobody.
   minMatchLength: PT1M
-  timeZone: America/Los_Angeles
 
 recording:
   # Every match is recorded under pseudonyms (positions, actions, results)

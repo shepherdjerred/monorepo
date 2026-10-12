@@ -11,8 +11,8 @@ import com.shepherdjerred.thestorm.core.protection.HarmTarget;
 import com.shepherdjerred.thestorm.core.protection.ProtectedAction;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.core.schedule.PaperScheduler;
-import com.shepherdjerred.thestorm.economy.app.CrystalFormatter;
-import com.shepherdjerred.thestorm.economy.app.Crystals;
+import com.shepherdjerred.thestorm.economy.app.Money;
+import com.shepherdjerred.thestorm.economy.app.MoneyFormatter;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import com.shepherdjerred.thestorm.shops.ShopsModule;
 import com.shepherdjerred.thestorm.shops.app.FakeWallets;
@@ -105,15 +105,15 @@ public class ShopsTestPlugin extends JavaPlugin {
     this.database = database;
     services.provide(Wallets.class, wallets);
     services.provide(
-        CrystalFormatter.class,
-        new CrystalFormatter() {
+        MoneyFormatter.class,
+        new MoneyFormatter() {
           @Override
-          public String words(Crystals amount) {
+          public String words(Money amount) {
             return amount.amount() + (amount.amount() == 1 ? " crystal" : " crystals");
           }
 
           @Override
-          public String symbol(Crystals amount) {
+          public String symbol(Money amount) {
             return amount.amount() + " CR";
           }
         });

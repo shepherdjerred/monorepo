@@ -51,4 +51,6 @@ public enum NoticeKind {
   STOPPED,
   /** "Given {credits} credits" */
   CREDITS_GIVEN,
+  /** "Two credits were removed for afking" ({credits} taken) */
+  AFK_PENALTY,
 }

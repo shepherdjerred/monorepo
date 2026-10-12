@@ -930,11 +930,26 @@ guidance lives in the repository wiki at `packages/docs/wiki/src/content/docs/`:
 `explanation/the-storm-ai-staff.md`, `how-to/review-ai-staff-decisions.md`, and
 `reference/the-storm-agent.md`.
 
+The economy keeps one balance per account and currency. `CurrencyId` names
+them: `crystals`, the survival currency every shop, town, quest, track,
+arena and teleport uses, and `rwf_credits`, Red Warfare's own. Amounts are
+`Money(CurrencyId, amount)`; amounts of different currencies never add up,
+compare or convert, and every caller names its currency. `economy.yml` lists
+each currency's singular, plural and symbol (`crystal`/`crystals`/`CR`,
+`Credit`/`Credits`/`RC`), and the published `MoneyFormatter` writes amounts
+with them. `/balance` lists every currency, `/pay` moves crystals,
+`/baltop [currency]` ranks one currency (crystals by default), and
+`/eco give|take|set <player> <amount> [currency]` corrects one through a
+ledgered transfer with the server. Migration V4 rebuilt `economy_account`
+(keyed by kind, id and currency) and `economy_ledger` (with a currency
+column), copying every row, id and the ledger's id sequence as `crystals`.
+
 The economy `Wallets` port supports a stable `KeyedTransfer` for compensating
 payments. It stores the operation key with the ledger row, returns the same
 receipt for an identical retry, and rejects reuse of the key with different
-transfer details. `receiptFor` lets a caller reconcile an uncertain result.
-Ordinary unkeyed transfers keep their existing behavior.
+transfer details, including another currency. `receiptFor` lets a caller
+reconcile an uncertain result. Ordinary unkeyed transfers keep their existing
+behavior.
 
 Legacy QoL RTP obligations are reconciled with their original keyed ledger
 contract before shared travel is available. New RTP charges use Essentials'
@@ -1051,8 +1066,9 @@ Configuration and content live under `server/owned/plugins/TheStorm`:
 - `rwf.yml`: the world, the fallback spectator point, how matches fill and
   start (`minHumans`, `targetCombatants`, `maxCombatants`, the 90 s countdown,
   the 30 s no-humans abort), the ported rule constants pinned to the code,
-  rewards (3 win / 1 lose scaled by the human share, a daily cap, the minimum
-  match length), recording and the load-test switch.
+  rewards in Red Warfare credits (3 win / 1 lose scaled by the human share,
+  the 2-credit AFK penalty, the minimum match length; no daily cap),
+  recording and the load-test switch.
 - `rwf/kits.yml`: the kits as the operator sees them, each with the `icon`
   material and the one to four `summary` lines the kit menu and the lobby's
   alcoves show; it must describe `KitBook` kit for kit or the module refuses
@@ -2111,9 +2127,22 @@ authored-only ticks, pending startup, flag outages, load rejections and inferenc
 deadline, lifecycle and batch counters. The flag change does not publish or
 install an artifact.
 
-Payouts go through an outbox in `rwf_match_player` and the economy's keyed
-transfers (`rwf:<matchId>:<uuid>`), so a crash between the match ending and
-the transfer pays exactly once on the next enable. Bots are never paid.
+Payouts are Red Warfare credits (the economy's `rwf_credits`), at the
+original scale: 3 for a win and 1 for a loss, scaled by the human share of the
+roster, for any match at least `minMatchLength` long. There is no daily cap:
+it protected the crystal economy, and credits are a separate currency. A
+suicide or a quit (a disconnect or `/rwf leave`) while the match is live
+forfeits the reward. Red Warfare's AFK rule applies: every combatant is AFK
+when the match goes live until their whole-degree yaw or pitch changes while
+alive (`AfkWatch`); a human still AFK at the end earns nothing and is charged
+2 credits, never more than they hold, and a forfeit clears the mark.
+
+Payouts and charges go through an outbox in `rwf_match_player` and the
+economy's keyed transfers (`rwf:<matchId>:<uuid>`), so a crash between the
+match ending and the transfer moves money exactly once on the next enable; a
+charge is found by its key before anything more is taken. Each row names the
+currency it settles in, so rows written before Red Warfare had its own
+currency still settle in crystals. Bots are never paid.
 
 Bots are optional: the module declares the `BotRoster` port and looks it up
 when a countdown starts; the `rwfbots` module provides it. Bots act only

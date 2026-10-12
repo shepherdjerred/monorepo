@@ -2,10 +2,13 @@ package com.shepherdjerred.thestorm.rwf.app;
 
 import static com.shepherdjerred.thestorm.rwf.testing.Samples.T0;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.groups.Tuple.tuple;
 
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.economy.app.AccountId;
-import com.shepherdjerred.thestorm.economy.app.Crystals;
+import com.shepherdjerred.thestorm.economy.app.CurrencyId;
+import com.shepherdjerred.thestorm.economy.app.KeyedTransfer;
+import com.shepherdjerred.thestorm.economy.app.Money;
 import com.shepherdjerred.thestorm.economy.app.Receipt;
 import com.shepherdjerred.thestorm.rwf.adapter.db.JooqMatchStore;
 import com.shepherdjerred.thestorm.rwf.app.store.MatchStore;
@@ -13,11 +16,9 @@ import com.shepherdjerred.thestorm.rwf.app.store.MatchStore.Outcome;
 import com.shepherdjerred.thestorm.rwf.app.store.MatchStore.PayoutStatus;
 import com.shepherdjerred.thestorm.rwf.app.store.MatchStore.PlayerRow;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
-import com.shepherdjerred.thestorm.rwf.testing.FakeClock;
 import com.shepherdjerred.thestorm.rwf.testing.FakeWallets;
 import com.shepherdjerred.thestorm.rwf.testing.Samples;
 import java.nio.file.Path;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -26,11 +27,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/** Payouts go through the outbox once, under the daily cap, and replay after a crash. */
+/**
+ * Payouts go through the outbox once, in Red Warfare credits with no daily cap, take the AFK
+ * penalty without overdrawing, and replay after a crash.
+ */
 final class PayoutServiceTest {
 
   private static final UUID ALICE = Samples.ALICE.uuid();
   private static final UUID BOB = Samples.BOB.uuid();
+  private static final AccountId.Player ALICE_ACCOUNT = new AccountId.Player(ALICE);
 
   @TempDir Path directory;
   private StormDatabase database;
@@ -44,9 +49,7 @@ final class PayoutServiceTest {
     database.migrate("rwf", getClass().getClassLoader());
     store = new JooqMatchStore(database);
     wallets = new FakeWallets();
-    payouts =
-        new PayoutService(
-            wallets, store, new PayoutService.Settings(5, ZoneId.of("UTC")), new FakeClock(T0));
+    payouts = new PayoutService(wallets, store);
   }
 
   @AfterEach
@@ -61,11 +64,21 @@ final class PayoutServiceTest {
 
   private static PlayerRow owed(UUID match, UUID player, Outcome outcome, long credits) {
     return new PlayerRow(
-        match, player, TeamColor.RED, "trooper", 0, 0, outcome, credits, PayoutStatus.PENDING, 0);
+        match,
+        player,
+        TeamColor.RED,
+        "trooper",
+        0,
+        0,
+        outcome,
+        PayoutService.CURRENCY,
+        credits,
+        PayoutStatus.PENDING,
+        0);
   }
 
   @Test
-  void settlingPaysEveryHumanOwedWithTheMatchKey() {
+  void settlingPaysEveryHumanOwedInRedWarfareCreditsWithTheMatchKey() {
     var id = UUID.randomUUID();
 
     var paid =
@@ -78,30 +91,92 @@ final class PayoutServiceTest {
     assertThat(wallets.receipts())
         .extracting(Receipt::to, Receipt::amount, Receipt::reason)
         .containsExactly(
-            org.assertj.core.groups.Tuple.tuple(
-                new AccountId.Player(ALICE), Crystals.of(3), "rwf:" + id + ":WIN"),
-            org.assertj.core.groups.Tuple.tuple(
-                new AccountId.Player(BOB), Crystals.of(1), "rwf:" + id + ":LOSE"));
+            tuple(ALICE_ACCOUNT, Money.rwfCredits(3), "rwf:" + id + ":WIN"),
+            tuple(new AccountId.Player(BOB), Money.rwfCredits(1), "rwf:" + id + ":LOSE"));
+    assertThat(wallets.held(ALICE_ACCOUNT, CurrencyId.CRYSTALS)).isEqualTo(Money.crystals(0));
     assertThat(store.unpaid().join()).isEmpty();
   }
 
   @Test
-  void theDailyCapForfeitsTheRest() {
+  void thereIsNoDailyCap() {
+    for (var i = 0; i < 20; i++) {
+      var id = UUID.randomUUID();
+      payouts.settle(match(id), List.of(owed(id, ALICE, Outcome.WIN, 3))).join();
+    }
+
+    assertThat(wallets.held(ALICE_ACCOUNT, CurrencyId.RWF_CREDITS)).isEqualTo(Money.rwfCredits(60));
+  }
+
+  @Test
+  void theAfkPenaltyTakesTwoCredits() {
+    wallets.hold(ALICE_ACCOUNT, Money.rwfCredits(5));
+    var id = UUID.randomUUID();
+
+    var paid = payouts.settle(match(id), List.of(owed(id, ALICE, Outcome.AFK, -2))).join();
+
+    assertThat(paid).singleElement().isEqualTo(new PayoutService.Paid(id, ALICE, -2, -2));
+    assertThat(wallets.receipts())
+        .extracting(Receipt::from, Receipt::to, Receipt::amount, Receipt::reason)
+        .containsExactly(
+            tuple(
+                ALICE_ACCOUNT, new AccountId.Server(), Money.rwfCredits(2), "rwf:" + id + ":AFK"));
+    assertThat(wallets.held(ALICE_ACCOUNT, CurrencyId.RWF_CREDITS)).isEqualTo(Money.rwfCredits(3));
+    assertThat(store.players(id).join())
+        .singleElement()
+        .satisfies(row -> assertThat(row.creditsPaid()).isEqualTo(-2));
+  }
+
+  @Test
+  void theAfkPenaltyNeverOverdraws() {
+    wallets.hold(ALICE_ACCOUNT, Money.rwfCredits(1));
     var first = UUID.randomUUID();
-    var second = UUID.randomUUID();
-    payouts.settle(match(first), List.of(owed(first, ALICE, Outcome.WIN, 3))).join();
 
-    var paid = payouts.settle(match(second), List.of(owed(second, ALICE, Outcome.WIN, 3))).join();
+    var paid =
+        payouts
+            .settle(
+                match(first),
+                List.of(owed(first, ALICE, Outcome.AFK, -2), owed(first, BOB, Outcome.AFK, -2)))
+            .join();
 
-    assertThat(paid).singleElement().satisfies(p -> assertThat(p.paid()).isEqualTo(2));
-    assertThat(wallets.receipts()).extracting(r -> r.amount().amount()).containsExactly(3L, 2L);
+    assertThat(paid)
+        .containsExactly(
+            new PayoutService.Paid(first, ALICE, -2, -1),
+            new PayoutService.Paid(first, BOB, -2, 0));
+    assertThat(wallets.held(ALICE_ACCOUNT, CurrencyId.RWF_CREDITS)).isEqualTo(Money.rwfCredits(0));
+    assertThat(wallets.receipts()).hasSize(1);
+    assertThat(store.unpaid().join()).isEmpty();
+  }
+
+  @Test
+  void aCommittedChargeIsFoundByItsKeyOnReplay() {
+    wallets.hold(ALICE_ACCOUNT, Money.rwfCredits(5));
+    var id = UUID.randomUUID();
+    store.record(match(id), List.of(owed(id, ALICE, Outcome.AFK, -2))).join();
+    store.beginPayout(id, ALICE).join();
+    // The charge reached the ledger, then the server crashed before the outbox was marked paid.
+    wallets
+        .transferOnce(
+            new KeyedTransfer(
+                PayoutService.key(id, ALICE),
+                ALICE_ACCOUNT,
+                new AccountId.Server(),
+                Money.rwfCredits(2),
+                PayoutService.reason(id, Outcome.AFK)))
+        .join();
+    wallets.hold(ALICE_ACCOUNT, Money.rwfCredits(1));
+
+    var replayed = payouts.replay().join();
+
+    assertThat(replayed).containsExactly(new PayoutService.Paid(id, ALICE, -2, -2));
+    assertThat(wallets.receipts()).hasSize(1);
+    assertThat(wallets.held(ALICE_ACCOUNT, CurrencyId.RWF_CREDITS)).isEqualTo(Money.rwfCredits(1));
   }
 
   @Test
   void replayPaysWhatACrashLeftPendingExactlyOnce() {
     var id = UUID.randomUUID();
     store.record(match(id), List.of(owed(id, ALICE, Outcome.WIN, 3))).join();
-    store.beginPayout(id, ALICE, java.time.LocalDate.of(2026, 10, 3), 5).join();
+    store.beginPayout(id, ALICE).join();
 
     var replayed = payouts.replay().join();
     var again = payouts.replay().join();
@@ -109,6 +184,33 @@ final class PayoutServiceTest {
     assertThat(replayed).singleElement().satisfies(p -> assertThat(p.paid()).isEqualTo(3));
     assertThat(again).isEmpty();
     assertThat(wallets.receipts()).hasSize(1);
+  }
+
+  @Test
+  void aRowWrittenBeforeRedWarfareCreditsStillSettlesInCrystals() {
+    var id = UUID.randomUUID();
+    store
+        .record(
+            match(id),
+            List.of(
+                new PlayerRow(
+                    id,
+                    ALICE,
+                    TeamColor.RED,
+                    "trooper",
+                    0,
+                    0,
+                    Outcome.WIN,
+                    CurrencyId.CRYSTALS,
+                    3,
+                    PayoutStatus.PENDING,
+                    0)))
+        .join();
+
+    payouts.replay().join();
+
+    assertThat(wallets.receipts()).extracting(Receipt::amount).containsExactly(Money.crystals(3));
+    assertThat(wallets.held(ALICE_ACCOUNT, CurrencyId.RWF_CREDITS)).isEqualTo(Money.rwfCredits(0));
   }
 
   @Test

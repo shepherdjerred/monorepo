@@ -3,7 +3,7 @@ package com.shepherdjerred.thestorm.shops.app;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 
 import com.shepherdjerred.thestorm.economy.app.AccountId;
-import com.shepherdjerred.thestorm.economy.app.Crystals;
+import com.shepherdjerred.thestorm.economy.app.Money;
 import com.shepherdjerred.thestorm.shops.domain.catalog.Catalog;
 import com.shepherdjerred.thestorm.shops.domain.catalog.CatalogEntry;
 import com.shepherdjerred.thestorm.shops.domain.catalog.DailyAllowance;
@@ -108,7 +108,7 @@ public final class CatalogTrades {
         new Deal(
             order.direction(),
             quantity,
-            Crystals.of(price.orElseThrow().times(order.lots())),
+            Money.crystals(price.orElseThrow().times(order.lots())),
             new Deal.Party(order.customer().account(), order.customerItems()),
             new Deal.Party(new AccountId.Server(), Holdings.UNLIMITED),
             "shop:catalog:"
@@ -188,7 +188,7 @@ public final class CatalogTrades {
     return new ShopStore.UsageKey(order.catalog().id(), order.entry().itemKey(), order.direction());
   }
 
-  private void journal(Order order, int quantity, Crystals price) {
+  private void journal(Order order, int quantity, Money price) {
     var trade =
         new TradeRecord(
             new TradeSite.Catalog(order.catalog().id()),

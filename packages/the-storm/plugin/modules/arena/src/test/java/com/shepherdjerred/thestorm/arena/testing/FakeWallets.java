@@ -4,10 +4,11 @@ import static java.util.concurrent.CompletableFuture.completedFuture;
 
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.economy.app.AccountId;
-import com.shepherdjerred.thestorm.economy.app.CrystalFormatter;
-import com.shepherdjerred.thestorm.economy.app.Crystals;
+import com.shepherdjerred.thestorm.economy.app.CurrencyId;
 import com.shepherdjerred.thestorm.economy.app.EconomyError;
 import com.shepherdjerred.thestorm.economy.app.KeyedTransfer;
+import com.shepherdjerred.thestorm.economy.app.Money;
+import com.shepherdjerred.thestorm.economy.app.MoneyFormatter;
 import com.shepherdjerred.thestorm.economy.app.Receipt;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import java.time.Instant;
@@ -20,7 +21,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 /** Wallets that record every transfer and always succeed, and a plain crystal formatter. */
-public final class FakeWallets implements Wallets, CrystalFormatter {
+public final class FakeWallets implements Wallets, MoneyFormatter {
 
   private final List<Receipt> receipts = new ArrayList<>();
   private final Map<UUID, KeyedTransfer> keyed = new HashMap<>();
@@ -31,13 +32,16 @@ public final class FakeWallets implements Wallets, CrystalFormatter {
   }
 
   @Override
-  public CompletableFuture<Crystals> balance(AccountId account) {
-    return completedFuture(Crystals.ZERO);
+  public CompletableFuture<Money> balance(AccountId account, CurrencyId currency) {
+    if (currency != CurrencyId.CRYSTALS) {
+      throw new IllegalArgumentException("this fake holds crystals only: " + currency);
+    }
+    return completedFuture(Money.crystals(0));
   }
 
   @Override
   public synchronized CompletableFuture<Result<Receipt, EconomyError>> transfer(
-      AccountId from, AccountId to, Crystals amount, String reason) {
+      AccountId from, AccountId to, Money amount, String reason) {
     var receipt = new Receipt(receipts.size() + 1L, from, to, amount, reason, Instant.EPOCH);
     receipts.add(receipt);
     return completedFuture(Result.ok(receipt));
@@ -70,17 +74,20 @@ public final class FakeWallets implements Wallets, CrystalFormatter {
   }
 
   @Override
-  public CompletableFuture<List<Standing>> top(int limit) {
+  public CompletableFuture<List<Standing>> top(CurrencyId currency, int limit) {
+    if (currency != CurrencyId.CRYSTALS) {
+      throw new IllegalArgumentException("this fake holds crystals only: " + currency);
+    }
     return completedFuture(List.of());
   }
 
   @Override
-  public String words(Crystals amount) {
-    return amount.amount() + " crystals";
+  public String words(Money amount) {
+    return amount.amount() + (amount.currency() == CurrencyId.CRYSTALS ? " crystals" : " Credits");
   }
 
   @Override
-  public String symbol(Crystals amount) {
-    return amount.amount() + " CR";
+  public String symbol(Money amount) {
+    return amount.amount() + (amount.currency() == CurrencyId.CRYSTALS ? " CR" : " RC");
   }
 }

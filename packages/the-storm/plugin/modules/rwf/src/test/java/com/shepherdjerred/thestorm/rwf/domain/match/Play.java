@@ -97,8 +97,20 @@ final class Play {
     return ok(new MatchEvent.Join(id, name(id), now));
   }
 
-  /** Joins everyone, chooses {@code map} and force-starts. */
+  /**
+   * Joins everyone, chooses {@code map}, force-starts, and has everyone look around so nobody is
+   * AFK. Returns the force-start's effects.
+   */
   List<MatchEffect> start(MapDefinition map, CombatantId... players) {
+    var effects = startIdle(map, players);
+    for (var player : players) {
+      ok(new MatchEvent.LookedAround(player));
+    }
+    return effects;
+  }
+
+  /** {@link #start} without anyone looking around: everyone stays AFK. */
+  List<MatchEffect> startIdle(MapDefinition map, CombatantId... players) {
     for (var player : players) {
       join(player);
     }

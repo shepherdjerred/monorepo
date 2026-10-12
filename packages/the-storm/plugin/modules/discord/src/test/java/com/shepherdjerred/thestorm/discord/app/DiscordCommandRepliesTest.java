@@ -3,8 +3,8 @@ package com.shepherdjerred.thestorm.discord.app;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.shepherdjerred.thestorm.economy.app.AccountId;
-import com.shepherdjerred.thestorm.economy.app.CrystalFormatter;
-import com.shepherdjerred.thestorm.economy.app.Crystals;
+import com.shepherdjerred.thestorm.economy.app.Money;
+import com.shepherdjerred.thestorm.economy.app.MoneyFormatter;
 import com.shepherdjerred.thestorm.economy.app.RankedPlayer;
 import com.shepherdjerred.thestorm.towns.app.TownRead;
 import java.util.List;
@@ -14,15 +14,15 @@ import org.junit.jupiter.api.Test;
 
 final class DiscordCommandRepliesTest {
 
-  private static final CrystalFormatter FORMATTER =
-      new CrystalFormatter() {
+  private static final MoneyFormatter FORMATTER =
+      new MoneyFormatter() {
         @Override
-        public String words(Crystals amount) {
+        public String words(Money amount) {
           return amount.amount() + " crystals";
         }
 
         @Override
-        public String symbol(Crystals amount) {
+        public String symbol(Money amount) {
           return amount.amount() + " CR";
         }
       };
@@ -33,7 +33,7 @@ final class DiscordCommandRepliesTest {
         new RankedPlayer(
             new AccountId.Player(UUID.fromString("00000000-0000-0000-0000-000000000001")),
             Optional.of("@everyone*"),
-            Crystals.of(500));
+            Money.crystals(500));
 
     assertThat(DiscordCommandReplies.baltop(List.of(player), FORMATTER))
         .isEqualTo("Richest players:\n1. @\u200beveryone\\* — 500 CR");

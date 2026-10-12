@@ -130,9 +130,18 @@ running.
 
 ## Rewards
 
-A win pays 3 Crystals and a loss pays 1. The payout shrinks as the share of
-bots in the round rises, and there is a daily cap on what Search and Destroy
-can pay you.
+Search and Destroy pays in its own currency, Red Warfare Credits (RC), not
+Crystals. A win pays 3 Credits and a loss pays 1, as in the original Red
+Warfare. The payout shrinks as the share of bots in the round rises, and a
+round shorter than a minute pays nobody. There is no daily cap.
+
+You forfeit the round's reward if you kill yourself or leave the round while
+it is being played, even after you have died. If you never turn your head
+during the round you count as away (AFK): you earn nothing and lose 2
+Credits, though never more than you hold.
+
+`/balance` shows your Credits next to your Crystals, and `/baltop rwf_credits`
+lists the players with the most Credits.
 
 ## Recordings
 

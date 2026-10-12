@@ -1,6 +1,6 @@
 package com.shepherdjerred.thestorm.shops.app;
 
-import com.shepherdjerred.thestorm.economy.app.Crystals;
+import com.shepherdjerred.thestorm.economy.app.Money;
 import com.shepherdjerred.thestorm.economy.app.Receipt;
 import com.shepherdjerred.thestorm.shops.domain.trade.Direction;
 import java.time.InstantSource;
@@ -38,7 +38,7 @@ public final class RefundJournal {
             new RefundFailure(
                 deal.payer().account(),
                 deal.payee().account(),
-                Crystals.ZERO,
+                Money.crystals(0),
                 reason + "; refund committed: return held items only, do not transfer money",
                 held,
                 time.instant()));

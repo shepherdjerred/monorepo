@@ -3,7 +3,6 @@ package com.shepherdjerred.thestorm.economy.adapter.paper;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.players.PlayerDirectory;
 import com.shepherdjerred.thestorm.economy.app.LedgerWallets;
-import com.shepherdjerred.thestorm.economy.domain.CrystalFormat;
 import com.shepherdjerred.thestorm.economy.domain.EconomyConfig;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 
@@ -15,7 +14,7 @@ public final class EconomyPaper {
   public static void install(ModuleContext context, LedgerWallets wallets, EconomyConfig config) {
     var server = context.plugin().getServer();
     var replies = new Replies(context.scheduler(), context.logger());
-    var format = new CrystalFormat(config.currency());
+    var format = config.format();
     server
         .getPluginManager()
         .registerEvents(new FirstJoinListener(wallets, format, server, replies), context.plugin());

@@ -1,5 +1,5 @@
 // Ported from libraryaddict's Red Warfare
-// (redwarfare-arcade/src/me/libraryaddict/arcade/game/Game.java, onDeath/getPlayed,
+// (redwarfare-arcade/src/me/libraryaddict/arcade/game/Game.java, onDeath/getPlayed/deathAfk,
 // and redwarfare-arcade/src/me/libraryaddict/arcade/game/GameTeam.java, getRewardable); see
 // packages/the-storm/NOTICE.
 package com.shepherdjerred.thestorm.rwf.domain.reward;
@@ -17,7 +17,8 @@ import java.util.Optional;
  * @param presentAtStart whether they were in the match when it went live (Red Warfare's "played")
  * @param diedAt when they died, if they did
  * @param leftAt when they left or disconnected, if they did
- * @param forfeited whether they threw the match away (suicide in the first minute, in the original)
+ * @param forfeited whether they threw the match away: a suicide or a quit while it was live
+ * @param afk whether they never looked around while alive in the live match (Red Warfare's AFK)
  */
 public record Participation(
     CombatantId id,
@@ -25,7 +26,8 @@ public record Participation(
     boolean presentAtStart,
     Optional<Instant> diedAt,
     Optional<Instant> leftAt,
-    boolean forfeited) {
+    boolean forfeited,
+    boolean afk) {
 
   /** Whether they stayed until they died or the match ended. */
   public boolean stayedToTheEnd() {

@@ -36,6 +36,7 @@ import com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent.Died;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent.ForceStart;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent.Join;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent.Leave;
+import com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent.LookedAround;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent.MapChosen;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent.PickKit;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent.ResetDone;
@@ -336,6 +337,102 @@ final class RwfMatchTest {
 
       assertThat(only(effects, Pay.class)).doesNotContain(new Pay(red.id(), 1, "LOSE"));
       assertThat(only(effects, Pay.class)).contains(new Pay(other.id(), 1, "LOSE"));
+    }
+
+    @Test
+    void aSuicideAtAnyPointWhileLiveForfeitsRewards() {
+      play.start(Samples.twoTeams(), ALICE, BOB, CAROL, DAVE);
+      tickFor(play, 300);
+      var red = play.anyOn(TeamColor.RED);
+      play.ok(new Died(red.id(), Optional.empty(), AttackType.SUICIDE, play.now));
+      var other = play.anyOn(TeamColor.RED);
+
+      var effects = play.died(other.id(), Optional.empty());
+
+      assertThat(play.member(red.id()).forfeited()).isTrue();
+      assertThat(only(effects, Pay.class)).extracting(Pay::id).doesNotContain(red.id());
+      assertThat(only(effects, Pay.class)).contains(new Pay(other.id(), 1, "LOSE"));
+    }
+
+    @Test
+    void quittingWhileLiveForfeitsRewardsEvenAfterDying() {
+      play.start(Samples.twoTeams(), ALICE, BOB, CAROL, DAVE);
+      tickFor(play, 61);
+      var reds = play.on(TeamColor.RED);
+      var fallen = reds.get(0).id();
+      play.died(fallen, Optional.empty());
+      play.ok(new Leave(fallen, play.now));
+
+      var effects = play.died(reds.get(1).id(), Optional.empty());
+
+      assertThat(only(effects, Pay.class)).extracting(Pay::id).doesNotContain(fallen);
+      assertThat(only(effects, Pay.class)).contains(new Pay(reds.get(1).id(), 1, "LOSE"));
+    }
+
+    @Test
+    void aQuitDeathForfeitsRewards() {
+      play.start(Samples.twoTeams(), ALICE, BOB, CAROL, DAVE);
+      tickFor(play, 61);
+      var red = play.anyOn(TeamColor.RED);
+
+      play.ok(new Died(red.id(), Optional.empty(), AttackType.QUIT, play.now));
+
+      assertThat(play.member(red.id()).forfeited()).isTrue();
+    }
+
+    @Test
+    void anAfkPlayerIsChargedTwoCreditsInsteadOfBeingPaid() {
+      play.startIdle(Samples.twoTeams(), ALICE, BOB, CAROL, DAVE);
+      var blues = play.on(TeamColor.BLUE);
+      var reds = play.on(TeamColor.RED);
+      play.ok(new LookedAround(blues.get(0).id()));
+      play.ok(new LookedAround(reds.get(0).id()));
+      tickFor(play, 61);
+      play.died(reds.get(0).id(), Optional.empty());
+
+      var effects = play.died(reds.get(1).id(), Optional.empty());
+
+      assertThat(only(effects, Pay.class))
+          .containsExactlyInAnyOrder(
+              new Pay(blues.get(0).id(), 3, "WIN"),
+              new Pay(blues.get(1).id(), -2, "AFK"),
+              new Pay(reds.get(0).id(), 1, "LOSE"),
+              new Pay(reds.get(1).id(), -2, "AFK"));
+      assertThat(only(effects, MatchEffect.Tell.class))
+          .extracting(tell -> tell.notice().kind())
+          .contains(NoticeKind.AFK_PENALTY, NoticeKind.CREDITS_GIVEN);
+    }
+
+    @Test
+    void lookingAroundOnlyCountsWhileAliveInALiveMatch() {
+      for (var player : List.of(ALICE, BOB, CAROL, DAVE)) {
+        play.join(player);
+      }
+      play.ok(new LookedAround(ALICE));
+      assertThat(play.member(ALICE).afk()).as("lobby").isFalse();
+      play.ok(new MapChosen(Samples.twoTeams()));
+      play.ok(new ForceStart(play.now));
+      assertThat(play.member(ALICE).afk()).as("everyone starts the live match AFK").isTrue();
+
+      play.died(ALICE, Optional.empty());
+      play.ok(new LookedAround(ALICE));
+      play.ok(new LookedAround(BOB));
+
+      assertThat(play.member(ALICE).afk()).as("a dead combatant stays AFK").isTrue();
+      assertThat(play.member(BOB).afk()).as("a living one looked around").isFalse();
+    }
+
+    @Test
+    void aSuicideIsAForfeitNotAnAfkPenalty() {
+      play.startIdle(Samples.twoTeams(), ALICE, BOB, CAROL, DAVE);
+      tickFor(play, 61);
+      var reds = play.on(TeamColor.RED);
+      play.ok(new Died(reds.get(0).id(), Optional.empty(), AttackType.SUICIDE, play.now));
+
+      var effects = play.died(reds.get(1).id(), Optional.empty());
+
+      assertThat(only(effects, Pay.class)).extracting(Pay::id).doesNotContain(reds.get(0).id());
+      assertThat(only(effects, Pay.class)).contains(new Pay(reds.get(1).id(), -2, "AFK"));
     }
 
     @Test

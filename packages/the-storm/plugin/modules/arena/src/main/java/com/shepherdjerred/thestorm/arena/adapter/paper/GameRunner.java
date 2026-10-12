@@ -20,8 +20,8 @@ import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.core.snapshot.ItemData;
 import com.shepherdjerred.thestorm.core.snapshot.PlayerStates;
 import com.shepherdjerred.thestorm.core.status.PublicGameDirectory;
-import com.shepherdjerred.thestorm.economy.app.CrystalFormatter;
-import com.shepherdjerred.thestorm.economy.app.Crystals;
+import com.shepherdjerred.thestorm.economy.app.Money;
+import com.shepherdjerred.thestorm.economy.app.MoneyFormatter;
 import java.util.ArrayDeque;
 import java.util.HashSet;
 import java.util.List;
@@ -81,7 +81,7 @@ final class GameRunner implements ArenaRunner {
       ClassBook classes,
       Texts texts,
       RewardPayer payer,
-      CrystalFormatter formatter,
+      MoneyFormatter formatter,
       LeaderboardStore leaderboard,
       RewardStore rewards,
       VaultSettings vault,
@@ -583,7 +583,7 @@ final class GameRunner implements ArenaRunner {
                                     NoticeKind.REWARD,
                                     Map.of(
                                         "amount",
-                                        services.formatter().words(Crystals.of(pay.crystals())),
+                                        services.formatter().words(Money.crystals(pay.crystals())),
                                         "wave",
                                         String.valueOf(pay.wave()))));
                       } else {
