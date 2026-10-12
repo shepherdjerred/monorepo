@@ -1,0 +1,74 @@
+id: nozxuxpounshynvu
+name: Nozxuxpounshynvu
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjI0ODcxMywKICAicHJvZmlsZUlkIiA6ICJkZWFmNjAxNDU1NDY0MGU5YWJmNmUyMWZiZDgyZDU2NiIsCiAgInByb2ZpbGVOYW1lIiA6ICJBaWxvcnlLIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzVlNDk1NDMwMWNlMmE2NmRhM2RkODRmNWIyOTdjMDk4OWZmYTY4NTkzMGNjMjI4NmM5M2E2NjI1Zjc2Nzg0MzYiCiAgICB9CiAgfQp9
+  signature: "CcbcOnK1/c5RnpFscX/GCy1nRDN9WKT04ARmAyskrFLsmDL2Q0DeLRKR5d8ZLQ/G/5ecVirfIlL/OrNlpJMehTkTpmvJjjULNYtTFYbcxXr4E/SxtVV0Ikxo26HbNNO2E/dNyeXWxKkq8KJmD9UdZF7/mbYAp/oy2nWYqLGTS+mgzZ1VmbN0ddMNdWUgEmlVfvCTaQtFJ/R4NsOihmUtkqC5CttfHJdCIa3keFOGS1IQJEqUrlN9mRBXDMxxyOkFTIZzHnbyMU+Eg9G4YeGwdNhyKdtkVRhJWuAmmAmPIRF9HAmazzbiRPCdkOyiFN/T9mLXu01iWBdSEbZGohjqjcnQ+AtIwQW9YlGIN3ZDxE9Tr+Q6xaNbCyDlmxUjULfR+lQF9dQlcEgUX5Bzk+C6nstKlmHw8w39wkegM9pr4x1wxBgYh9K7WDCVEeTyFli6GHjbe9yiTg1wl+FFevwojJPEosuoEYu0+AGfvKSzsDYcfXcSRUBlURUZOsRXYDVqQmdrPSPiRDquaMzXKPGgkhXsgdgvPo+AoHQZjCOLSPyJFUz+ShYIerOuKrOLgvTuTdCZ8+fpKcwZ9caw5skeK0DFqLTPJU8dXDDJaVNj/hyYhQrjZN+1GMV7RJkF7DorQhleEcRgapolXLjW5EYR6iH3UySIOHZ9De50eYmZMQM="
+skill: 0.701
+archetype: hunter
+leverOffsets:
+  reactionMs: 0.17
+  turnRateDegPerTick: 0.65
+  predictionQuality: 0.94
+  awarenessRadius: 1.37
+  technique: -0.63
+  aggression: 0.89
+kits:
+  trooper: 0.73
+  longbow: 0.48
+  shortbow: 0.85
+roles:
+  rotate: 0.44
+  retake: 0.13
+  hunt: 1
+style:
+  aggression: 0.77
+  patience: 0.35
+  teamplay: 0.4
+  risk: 0.47
+voice:
+  tone:
+    - bookish
+    - intent
+  verbosity: quiet
+  style: "brief footnotes and revised-edition rematches; tracks small clues aloud, then gives terse pursuit calls"
+lines:
+  greet:
+    - thread reel ready, new chapter
+    - thread reel ready, looking for tracks
+  onKill:
+    - a short footnote to that duel
+    - thread reel followed that trail correctly
+  onDeath:
+    - a regrettable page break
+    - the thread reel trail doubled back
+  onPlant:
+    - a cliffhanger at the bomb
+    - "thread reel found a path to {bomb}"
+  onDefuse:
+    - closing that chapter gently
+    - thread reel tracked the ticking down
+  onWin:
+    - the thread reel gets a happy ending
+    - thread reel followed it to the end
+  onLoss:
+    - the thread reel needs a revised edition
+    - thread reel lost the trail near the finish
+  onLastAlive:
+    - one last page to turn
+    - the thread reel has one trail left
+  taunt:
+    - I have read that opening before
+    - the thread reel noticed those footsteps
+  lobby:
+    - resting my thread reel on the lobby shelf
+    - please do not dog-ear my thread reel
+    - "My thread reel: I will look for the last opponent."
+    - With my thread reel, call the last place you saw them.
+quirks:
+  - holds_grudges
+  - always_gg
+rivals:
+  - crimsonbandit89
+bio: Nozxuxpounshynvu bound a book of old match stories with mismatched covers and still brings a thread reel to the queue. CrimsonBandit89 keeps asking whether it really helps.
+batch: 3
+retired: false

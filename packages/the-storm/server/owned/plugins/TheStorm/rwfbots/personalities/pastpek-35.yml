@@ -1,0 +1,74 @@
+id: pastpek-35
+name: Pastpek_35
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODYxMTM0OSwKICAicHJvZmlsZUlkIiA6ICJkOTdmOTI4NTY5NDA0MjZmODZkNGQ1MDAzZmU4MTRhNyIsCiAgInByb2ZpbGVOYW1lIiA6ICJSb21lbGxvUHJvaHUiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZGMwNmIxZGRjZTFkNDg2NWRkMzQ2Y2VlM2YzZjEwMTc5MWJlMjMzYzBkMWM0ODMxNTBkNDQwZjdlZmZiYjA4ZSIKICAgIH0KICB9Cn0="
+  signature: "DVmVvgMk3yW2TwP1VZK3dqqkmupN1aCz/Cp2SOLZFSBmXlWChMt+03lQPo0bnn8pYECrsY2jJDiWX+cfDJ+FPfzmGgk+rOrcKTv8fV2QyGiTWSL3jWVJbmLtlkiVxEV3A9AOX3DNNnymu8mdFcpjwH3kZyRjU0Lyi8XH2pVqUtRpvlcrZdQn44u+6nCwlvDJ2OFkz27iQeB/ahCRYcjv/NUsZZTOTP196sE+XHV8yT7F00bjavMeNNzzI8c9oSadC0WX7NlqpSBxSukmMk6gHWva7jtA83/ARHd27XSW+fA7AbGdA2ioKflCTe1OIiJr4pSfcbTNpjw4fBk65n7SFuoZ3Ct0VutTb/LLMH7QNVoMt339gQbFiG/+EVbtBwnjDnKDIzWyYV1V1CrTpAbMFCER0x2X22prkvnvMwTKEzBpRqTr8bd1wn0aGVyk0FfiZ0qPAsx5HHv6UE7YHlygtmxuKxNIoz3GY61MyX8Y2MjfiVSMq5O6s/1e4KSIG6hU8S/oZ6TkS3HCtuw2oC0rtkHds8m7aYv0pNT1PXOfTE2F/TAqfdwaGF7THcx0h3hN7azpmpSQrrdcE3n/ic0jLriPkk+5OO9RVgBm6OskqbDjG9tETKcPKrD0cT+t336FeJT7DALcsDZig+NO05nV5sr0FqqzgdwoimPxTgB8Bxk="
+skill: 0.566
+archetype: hunter
+leverOffsets:
+  reactionMs: -0.41
+  aimErrorDeg: -0.13
+  turnRateDegPerTick: 0.45
+  predictionQuality: 1.07
+  awarenessRadius: 1.1
+  aggression: 0.71
+kits:
+  trooper: 0.69
+  longbow: 0.49
+  shortbow: 0.86
+  spy: 0.18
+roles:
+  rotate: 0.32
+  hunt: 0.85
+style:
+  aggression: 0.84
+  patience: 0.37
+  teamplay: 0.47
+  risk: 0.54
+voice:
+  tone:
+    - practical
+    - intent
+  verbosity: normal
+  style: "carpentry checks and repairable mistakes; tracks small clues aloud, then gives terse pursuit calls"
+lines:
+  greet:
+    - marking knife packed, joints checked
+    - marking knife ready, looking for tracks
+  onKill:
+    - that opening needed a wedge
+    - marking knife followed that trail correctly
+  onDeath:
+    - a weak joint in my plan
+    - the marking knife trail doubled back
+  onPlant:
+    - the fuse is fitted snugly
+    - "marking knife found a path to {bomb}"
+  onDefuse:
+    - took that assembly apart
+    - marking knife tracked the ticking down
+  onWin:
+    - solid work around the marking knife
+    - marking knife followed it to the end
+  onLoss:
+    - back to the bench with my marking knife
+    - marking knife lost the trail near the finish
+  onLastAlive:
+    - one marking knife holding the frame
+    - the marking knife has one trail left
+  taunt:
+    - that angle needs a little sanding
+    - the marking knife noticed those footsteps
+  lobby:
+    - checking the edge on my marking knife
+    - my marking knife is for repairs after the match
+    - "My marking knife: I will look for the last opponent."
+    - With my marking knife, call the last place you saw them.
+quirks:
+  - holds_grudges
+  - always_gg
+rivals:
+  - cobalt-otter
+bio: Pastpek_35 repaired a rickety spawn bridge every weekend and still brings a marking knife to the queue. Cobalt_Otter keeps asking whether it really helps.
+batch: 3
+retired: false

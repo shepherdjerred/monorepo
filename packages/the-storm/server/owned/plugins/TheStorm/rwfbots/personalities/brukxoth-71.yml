@@ -1,0 +1,76 @@
+id: brukxoth-71
+name: Brukxoth_71
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTk1MDAxNCwKICAicHJvZmlsZUlkIiA6ICI2NGY0MGFiNzFmM2E0NGZiYjg0N2I5ZWFhOWZjNDRlNSIsCiAgInByb2ZpbGVOYW1lIiA6ICJvZGF2aWRjZXNhciIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9iNTJiYzRlNzVjZGZmYjY5ZDllZTNlZWMwOGUyMmUwYjgzODc5MWIyZTkzY2U3ZDQ2YWM4YmYzZWIyOWE4ZTQ5IgogICAgfQogIH0KfQ=="
+  signature: "TlsND1EdgpArimSYyZ9ah6RZhgQR2NpOq4CMjphIahub/pDuF/ksxwYAk7F3mYnYs1Qbji0fyfNhuo9R/8hFZFsVptCxKTNu08RhPyQIng7gumFL6y9SWhna3xLoU8bMJrK5ok0FkCV0KB/5LCCR6Are4hYiF5QgnQGfQkZSiLd+dXNcGyniwNlAHF0lc4HR/viD2ghd8Bw/Rkgq8s2aLNUXNKISdkD2mCWMIpt/rSEEVw+3ogqnWbz/1y+e2waEtWuD5YrWkRJ7BK0KeOKfyE7lc+iTPLFrnr88JcC//RXhROW+XSTGHJbqECOwuJCgwNjMvgb7ejncHIU6+ugNXNO5yM7Co1LpvfV7HDxijMvxqs0Uzlmvsi9g9V2BObFITHFKUTlMlMAt8HKo4GkIh5nW6W6GYPt5HtHp1AWqRtXI+UHqxRFTdW4+kyfMGPbHbJPd9Aqki4kfR0HvxARgIrCv1dsvOfieRmpDh4bLwCCop16ZswFvRsWbdo1kLwdsGdKrWqY0GFDaqICj3/QlQAbsLtjBs/2jNb4rqTYjMJrXkCYp1hT73OYwvPkZ4jIr/o5lXx3YNji0941RC+YekLfCzxO21rnitInOE+M5d9/Lqd6tazsONXaSKZuWYIRtlwdCW9fur9q8wnb0K/PSOy9WB75MUUlsQKvweLL7nGM="
+skill: 0.013
+archetype: troll
+leverOffsets:
+  reactionMs: -0.04
+  cps: 0.16
+  decisionTemperature: -2.17
+  coordination: -1.5
+  technique: 0.56
+kits:
+  trooper: 0.56
+  shortbow: 0.76
+  rewind: 1
+  spy: 0.74
+roles:
+  plant: 0.38
+  escort: 0.24
+  rotate: 0.58
+  retake: 0.24
+  hunt: 0.59
+style:
+  aggression: 0.69
+  patience: 0.35
+  teamplay: 0.11
+  risk: 0.96
+voice:
+  tone:
+    - whimsical
+    - mischievous
+  verbosity: normal
+  style: "arguments with an imaginary puppet; deadpan object conversations and harmless overconfidence"
+lines:
+  greet:
+    - my rag princess insists we are ready
+    - rag princess has appointed itself captain
+  onKill:
+    - rag princess is taking all the credit
+    - rag princess is now insufferably proud
+  onDeath:
+    - rag princess advised against that corner
+    - rag princess would like a different replay
+  onPlant:
+    - rag princess says the fuse is dramatic
+    - rag princess calls this interior decorating
+  onDefuse:
+    - rag princess requests a quieter ending
+    - rag princess says it knew the correct wire
+  onWin:
+    - rag princess will never stop talking about this
+    - rag princess is requesting a trophy shelf
+  onLoss:
+    - rag princess demands another rehearsal
+    - rag princess has misplaced the blame form
+  onLastAlive:
+    - rag princess has become very quiet
+    - rag princess insists this was the plan
+  taunt:
+    - rag princess spotted that opening too
+    - the rag princess gave that push three out of ten
+  lobby:
+    - my rag princess has opinions about your kit
+    - please do not argue with the rag princess
+    - "My rag princess: I will cause a useful distraction."
+    - With my rag princess, try not to laugh during my push.
+quirks:
+  - celebrates_early
+  - always_gg
+rivals:
+  - jushpym-62
+bio: Brukxoth_71 put on tiny puppet shows while the team waited for opponents and still brings a rag princess to the queue. Jushpym_62 keeps asking whether it really helps.
+batch: 3
+retired: false

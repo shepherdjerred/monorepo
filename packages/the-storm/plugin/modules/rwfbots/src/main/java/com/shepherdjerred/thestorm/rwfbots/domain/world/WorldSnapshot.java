@@ -31,13 +31,9 @@ public record WorldSnapshot(
     if (mapId.isBlank()) {
       throw new IllegalArgumentException("map id must not be blank");
     }
-    combatants = List.copyOf(combatants);
+    combatants = combatants instanceof CombatantList ? combatants : new CombatantList(combatants);
     bombs = List.copyOf(bombs);
     stimuli = List.copyOf(stimuli);
-    var ids = combatants.stream().map(CombatantView::id).distinct().count();
-    if (ids != combatants.size()) {
-      throw new IllegalArgumentException("combatant ids must be unique");
-    }
     var bombIds = bombs.stream().map(BombView::id).distinct().count();
     if (bombIds != bombs.size()) {
       throw new IllegalArgumentException("bomb ids must be unique");
@@ -45,7 +41,9 @@ public record WorldSnapshot(
   }
 
   public Optional<CombatantView> combatant(CombatantId id) {
-    return combatants.stream().filter(view -> view.id().equals(id)).findFirst();
+    // The canonical constructor always installs an immutable indexed list, retaining the
+    // public list order and record value semantics without scanning every bot for each lookup.
+    return ((CombatantList) combatants).find(id);
   }
 
   /** The combatant {@code id}, which must be in the snapshot. */

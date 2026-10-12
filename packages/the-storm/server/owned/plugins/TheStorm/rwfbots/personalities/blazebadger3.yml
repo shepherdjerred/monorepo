@@ -1,0 +1,74 @@
+id: blazebadger3
+name: BlazeBadger3
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTkxMjg1MSwKICAicHJvZmlsZUlkIiA6ICIxYTFiYWI1ZjFkMzU0NzFjYTc1OTlkZmRiOGIwYjBkNyIsCiAgInByb2ZpbGVOYW1lIiA6ICJDcmVhdG9yRWxpemFoODciLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjcxNmMyZTg2NzA2MWYxMTExYzkyNjk0MDhlMTBhMTFmN2JkMjc3Y2JhZmMyZTdmZTJmMWIyZWFhNjRkNDYwYiIKICAgIH0KICB9Cn0="
+  signature: "MzmMgQMgczFwMvuzOE35g/qmkHf6CoJvM7m10/oEV/ld9S6E6LVNAuRiJ6T1fKnU074aV2U1LG2M/ShNNVDNVnpp4maQy/n6nhvUwIbegeHRnBBqRFKtuNhbG1F8H0h57yPUSjCUFq4tmF1RbSV0hszA0AWFUjfuVUKrCaGCHJl1BWFXxxwRcJ/P2XoJItrqccIfKt4tMbMLAMFHBXgFNJAMPco4FO6bqvYM9blbeGu7BNl8Ys1q+uFOFSDgZuNxxzGjo3RExYgr6y2gSfKai612u8FPeBWF4A7MRe/5Sd40cWPJqweKaovuKgX8a6fQg+sh94UsJ+PlanFHcwoAnkoA8ml0r0dxVHm24xz44v5Kay1Dl4TfjyBJxcvmtXIEba7C0nVKKtI0eb5gJzMFCb3AvX+LoWVyeYWLdTnMNL6/GRQ5hKgutOb7+ajnklxqzGYyJRi3lxnzLY4OS4EsWyNCNdZk0jiVWYlcZlIrtQJRnbfaERVHaDBj6ygSUuOipxlQk/2oDQTNgw25y43uIRS+Uj7u/lPkt2WntdFt4o2v1VOffKppcWsx938nllFyD/y3VpW1yWi7CDT9asPtTMUtya2wZlSBk0EtY4Ec4Fg1BXyRlUYrcFOPOTqtwE/oT6upo6AzVk0d0mQ+BOnXjZgarwk4Fepqg4HJ65jsYjQ="
+skill: 0.962
+archetype: hunter
+leverOffsets:
+  reactionMs: 1.23
+  turnRateDegPerTick: 0.48
+  predictionQuality: 1.27
+  awarenessRadius: 1.05
+  technique: 0.2
+  aggression: 1.07
+kits:
+  trooper: 0.66
+  longbow: 0.56
+  shortbow: 0.96
+  wraith: 0.28
+roles:
+  rotate: 0.47
+  hunt: 0.98
+style:
+  aggression: 0.74
+  patience: 0.39
+  teamplay: 0.37
+  risk: 0.5
+voice:
+  tone:
+    - polite
+    - intent
+  verbosity: normal
+  style: "postal announcements and absurd courtesy; tracks small clues aloud, then gives terse pursuit calls"
+lines:
+  greet:
+    - mailbag buckle sorted, delivery begins
+    - mailbag buckle ready, looking for tracks
+  onKill:
+    - delivered to the correct corner
+    - mailbag buckle followed that trail correctly
+  onDeath:
+    - returned to sender
+    - the mailbag buckle trail doubled back
+  onPlant:
+    - an urgent parcel at the bomb
+    - "mailbag buckle found a path to {bomb}"
+  onDefuse:
+    - delivery cancelled politely
+    - mailbag buckle tracked the ticking down
+  onWin:
+    - mailbag buckle delivered the whole round
+    - mailbag buckle followed it to the end
+  onLoss:
+    - the mailbag buckle took the scenic route
+    - mailbag buckle lost the trail near the finish
+  onLastAlive:
+    - one final delivery to make
+    - the mailbag buckle has one trail left
+  taunt:
+    - that push had the wrong address
+    - the mailbag buckle noticed those footsteps
+  lobby:
+    - checking the name on my mailbag buckle
+    - no unpaid postage in my mailbag buckle, please
+    - "My mailbag buckle: I will look for the last opponent."
+    - With my mailbag buckle, call the last place you saw them.
+quirks:
+  - holds_grudges
+  - always_gg
+rivals:
+  - thethiolpyk
+bio: BlazeBadger3 delivered handwritten notes between feuding builders in 2014 and still brings a mailbag buckle to the queue. TheThiolpyk keeps asking whether it really helps.
+batch: 3
+retired: false

@@ -1,0 +1,74 @@
+id: sirlouthrildoum
+name: SirLouthrildoum
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjEzMjU3MCwKICAicHJvZmlsZUlkIiA6ICI5NmYyMmIwNmI2YWM0OGNkYTE5OWEzMjFkZDY4NTFmNCIsCiAgInByb2ZpbGVOYW1lIiA6ICJtZW93ZWRkZCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9jNWYwZjU0ZTg2ZWNjMjg2NDNkNDE0MTk2MmRlNTE0ZjFiMGRkODZhNjUzYTY1NTA3M2NjM2NmM2IzM2YxMmJhIgogICAgfQogIH0KfQ=="
+  signature: "dryU642//3flT5kOg0xz8OJJN6aQRBBshIfJgDNBCcAbn9Vu8Fv28lTpRusxnxoguFrQ5uxhodJA2qByrmBxRubRFwEXaaHPMZq/vEUAoccGAdqIJbqQaBdM2iz36YGoSL2vCdhxq+nH2YjMXIR/+dKRHSG5Q6uY7/ojf8DYWT81AssvXXhnadkb1r0eXeV9TxZgYxI5EwBwT/BGSdXfBjcOteYwRbt7eLHYRYLOioIFZcgxqG5b4fpzZ2xTFM2OAY+8l4iG87tDMQda0b4W/xlbbcKV86SugRDQt7may4SzhShBayqAJaV0H8BJXzwsl9kSRWRS79axWbkrMQ4eYmFpdMoZqY40CmAoaPKkD9XlHRUrn6Buj4iAjZ2A2jzLiehztJxDfhX/HNcMlDXdrBZwqxd036mc5cAj3y3vz34GDBwEgay7MpEj0enSlfPNi9+Vzc8azu4Fg649mpc7jy8KHyFRJpEqkuGTqyrh68Ezp7IxN5F64czzZxV8FeaoZAvlzvuyvySlkO/z9mLkSiDPZGZy/j744kfp5pAO4qLRa5px60F0qitEnHGxVkRTb3+AoxfoeaeSrMTbJSFMpO4AmoVa9bMO8ID5QDCm58MMkEtXQIjRI/I0XI2fojXib8+r20+jOQq0xZaZ/HOymmLQPH1dNBBKzJ7muoi67VI="
+skill: 0.846
+archetype: turtle
+leverOffsets:
+  reactionMs: 0.8
+  decisionTemperature: 0.86
+  awarenessRadius: 0.75
+  coordination: -0.34
+  technique: 0.36
+  aggression: -2.36
+kits:
+  trooper: 1
+  longbow: 0.26
+  shortbow: 0.28
+  rewind: 0.87
+roles:
+  defend: 1
+  retake: 0.48
+style:
+  aggression: 0.2
+  patience: 1
+  teamplay: 0.58
+  risk: 0.12
+voice:
+  tone:
+    - watchful
+    - cautious
+  verbosity: normal
+  style: "tired lighthouse bearings, steady reassurance; unhurried words, conservative estimates and tiny victories"
+lines:
+  greet:
+    - tower key checked, coast watched
+    - tower key is ready. no need to hurry.
+  onKill:
+    - a clear signal through the fog
+    - tower key waited for the opening
+  onDeath:
+    - lost the light around that bend
+    - tower key should have waited another moment
+  onPlant:
+    - warning light at the bomb
+    - tower key checked the site first
+  onDefuse:
+    - warning extinguished
+    - tower key checked the corner twice
+  onWin:
+    - tower key guided us home
+    - tower key got there eventually
+  onLoss:
+    - the tower key missed a rock
+    - tower key needed one more safe corner
+  onLastAlive:
+    - one light still on the coast
+    - the tower key will take this slowly
+  taunt:
+    - your approach was visible from shore
+    - the tower key can wait out that peek
+  lobby:
+    - polishing my tower key before the round
+    - please leave the tower key switched on
+    - "My tower key: I will keep a safe route home."
+    - With my tower key, please check the blind corner first.
+quirks:
+  - gapple_hoarder
+  - always_gg
+rivals:
+  - mysticshaixjoun
+bio: SirLouthrildoum lit a coastal tower so returning builders could find home and still brings a tower key to the queue. MysticShaixjoun keeps asking whether it really helps.
+batch: 3
+retired: false

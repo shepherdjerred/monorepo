@@ -1,0 +1,75 @@
+id: xashjythfox
+name: XashjythFox
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTI3OTQ0MCwKICAicHJvZmlsZUlkIiA6ICJjY2MxNGM2ZDUwMDE0MjBmYmMxYjkyMTM2Y2JmOWU4MSIsCiAgInByb2ZpbGVOYW1lIiA6ICJab25lX1gwODE1IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2JiZjZmMjZlM2M2YWZmYmY4ZDg1MDRjMTNiMjMzY2Q0NDE3MTU2M2JhMWZlODM0YjNlNDFhYzI3OTczNjRkMzciCiAgICB9CiAgfQp9
+  signature: "cWy1C4GT+S2HVH3Gcmjatrw82yPwvWT1weDnn7oA7zN24KH+6G/m+dJvWsqA+Hh9qQ7vwrlXf2Mz4c22VJJU1hsjGBhgL0KSnXTLMkhSRKFQPPvSPoEhg512RF6oQNumG/oq+Plm7J6q+MzWCJWTsXl3aV8GHpdSoC8ALdrdG7s+o9eV05Ct6SCOsJof6GY6deE3ZMDVKhNPniikF3bgKlIHEkY0FBevZIJv7j113IZ7XG+/kjgXMu39Zt/Yf+cnnMjA+I67vBQMzzNYtfUdwT8nXutr62dxkCJKxfUfGBc01fFBytk0zAEprgEkEO4TwOg8HSOW7njRM6HzGq4WzLSqUTP5IuCbFe/7BWv8gQRs3hJThwIjiZFzbjkMSXwGzikIEuceh/XVmsWUROmK1YAvv+mYYFA2UsL4w2ZrcGzERO2BJ62T5LQNoEWLba+vtxj9bFgAAEGYPjqAef9gmrPTH8rgvemxvRPF1ZQD5Ynn7wvEeb2FGoW3zK/vwQ/oqSikRT31wW+rUvziQZj07txuklf/M+oKSFjhMGYzxdo4haOHjnnS2voz0rHvQBAlR+YPMscRTJFb2tYKizTHki7T/4kFRCAAj4OIl+Po/7EdLpPwx9WLIaV9GmTWCuI9aaR3ezxQrrUqUN4pbJ+1euBFOOHD7hGhKhYOFCO7cV8="
+skill: 0.014
+archetype: troll
+leverOffsets:
+  reactionMs: 0.36
+  turnRateDegPerTick: 0.31
+  decisionTemperature: -2.21
+  coordination: -1.27
+  technique: 0.24
+kits:
+  trooper: 0.47
+  shortbow: 0.77
+  rewind: 1
+  spy: 0.92
+roles:
+  plant: 0.58
+  escort: 0.33
+  rotate: 0.41
+  hunt: 0.55
+style:
+  aggression: 0.58
+  patience: 0.23
+  teamplay: 0.08
+  risk: 0.89
+voice:
+  tone:
+    - cosy
+    - mischievous
+  verbosity: quiet
+  style: "kitchen chatter and imaginary baked snacks; deadpan object conversations and harmless overconfidence"
+lines:
+  greet:
+    - cooling rack ready, kitchen open
+    - cooling rack has appointed itself captain
+  onKill:
+    - another order off the cooling rack
+    - cooling rack is now insufferably proud
+  onDeath:
+    - left my cooling rack in the oven again
+    - cooling rack would like a different replay
+  onPlant:
+    - setting the timer beside my cooling rack
+    - cooling rack calls this interior decorating
+  onDefuse:
+    - took that out before it burned
+    - cooling rack says it knew the correct wire
+  onWin:
+    - cooling rack deserves a day off
+    - cooling rack is requesting a trophy shelf
+  onLoss:
+    - the cooling rack has seen better batches
+    - cooling rack has misplaced the blame form
+  onLastAlive:
+    - one cook and a very busy cooling rack
+    - cooling rack insists this was the plan
+  taunt:
+    - that push needed longer to rise
+    - the cooling rack gave that push three out of ten
+  lobby:
+    - who borrowed my cooling rack?
+    - dusting the flour off my cooling rack
+    - "My cooling rack: I will cause a useful distraction."
+    - With my cooling rack, try not to laugh during my push.
+quirks:
+  - celebrates_early
+  - always_gg
+rivals:
+  - dustypotato32
+bio: XashjythFox ran a tiny spawn bakery with a queue of hungry regulars and still brings a cooling rack to the queue. DustyPotato32 keeps asking whether it really helps.
+batch: 3
+retired: false

@@ -1,0 +1,77 @@
+id: grimloul-81
+name: Grimloul_81
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTgwODcyMSwKICAicHJvZmlsZUlkIiA6ICI4MTFkNjM0NzUwY2Y0ZDI0OTJmZDcxYTViZjZhZjI3MSIsCiAgInByb2ZpbGVOYW1lIiA6ICJzcGlmZnRvcGlhMSIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9lZmIxMWQxOTU0ZWJlZDlkM2QyMGQyODNiYzE3ZGY5NWVjNzUzZmNjMTRlNWI5NmI0YzcxNmQzOWFhODJhM2ZkIgogICAgfQogIH0KfQ=="
+  signature: "baJmp51y0pPGhrksrAcjNBeBalXaMe0Dh1jZPP6QkpflyVGPP3jkmp9/Z/engHoo7g3k0Fs69J95GPLWatOk74wavOo4fbGqeviAcbtvErXnqymU0xsQxkOkpFq94LtD0ezSaGwtGn3eqeHFV7gEQS2DoLEm5M8QXSOjIHW6PANLuu9s1B098dDGIa9qytdTHsOtNwnDb9zzJkFxKKwJtd/PL7KqiQRuH7InfTcGiN4z/Z0VD0UUcC39XgEVz+RQFsQCqbU9l8mFzsbnaQjs/2vkd7EhHMPMKv6G4++RsPtLDS+ZwN8uEgyH7Ufxd2hVA2NF0ZyoqLjzMlUMJvSl1f/CBrdneoMTALGGP0O4Zun3SflaDXwwj8NrHBXcFe2VgfD+gzYydTTM3dYvSRqfuSn5NxwbyhL56fsbL4Wh/SYPy/nn+5I+oy4plQuqY27Gtaw0IRL7hkvuxkF3AQNTTY/8fZRGt70+S554bWXjDcPqUUldrJzRR8oL2TdHCYEoORltKzt+/c/Ki4JZGKzhRSaVnk4RHwLLM0YHfECJOS7r0THBOkFJgfu/oMIIjvNmxtGaQmwC0zRHqlk/7JmPzzPq6jOHW4qzYJfmWINwde9hm0VDmnkGUhr+X2SYEN20whjG12VPjRccrRznZ+RoVOFd5Sc+2JGJryXvDUi+Z4o="
+skill: 0.533
+archetype: tactician
+leverOffsets:
+  aimErrorDeg: 0.06
+  predictionQuality: 0.17
+  decisionTemperature: 1.26
+  awarenessRadius: 0.31
+  coordination: 1.5
+kits:
+  trooper: 0.95
+  longbow: 0.57
+  shortbow: 0.48
+  rewind: 0.56
+  ghost: 0.25
+roles:
+  plant: 0.61
+  escort: 0.53
+  defend: 0.62
+  rotate: 0.66
+  retake: 0.81
+style:
+  aggression: 0.54
+  patience: 0.71
+  teamplay: 0.82
+  risk: 0.45
+voice:
+  tone:
+    - polite
+    - analytical
+  verbosity: normal
+  style: "postal announcements and absurd courtesy; numbered ideas, concise route calls, quick revisions"
+lines:
+  greet:
+    - return label sorted, delivery begins
+    - return label ready, first route agreed?
+  onKill:
+    - delivered to the correct corner
+    - return label confirms a clean opening
+  onDeath:
+    - returned to sender
+    - return label needs a revision on that route
+  onPlant:
+    - an urgent parcel at the bomb
+    - return label confirms the site is reached
+  onDefuse:
+    - delivery cancelled politely
+    - return label confirms the fuse is clear
+  onWin:
+    - return label delivered the whole round
+    - return label and team followed through
+  onLoss:
+    - the return label took the scenic route
+    - return label had a missing step
+  onLastAlive:
+    - one final delivery to make
+    - return label says there is still a route
+  taunt:
+    - that push had the wrong address
+    - the return label predicted that rotation
+  lobby:
+    - checking the name on my return label
+    - no unpaid postage in my return label, please
+    - "My return label: I will call the first rotation."
+    - With my return label, tell me when a route closes.
+quirks:
+  - calls_everything
+  - always_gg
+rivals:
+  - itsthairshok
+bio: Grimloul_81 delivered handwritten notes between feuding builders in 2014 and still brings a return label to the queue. ItsThairshok keeps asking whether it really helps.
+batch: 3
+retired: false

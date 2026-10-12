@@ -1,0 +1,73 @@
+id: xxhunterwolfxx
+name: xXHunterWolfXx
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTI3MzMyMywKICAicHJvZmlsZUlkIiA6ICIxYjkzYjI5MjhkMjI0MDQxYjU0ZjI3ZjM2YjU5MGViZCIsCiAgInByb2ZpbGVOYW1lIiA6ICJtYW51ZHJpbmtzIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzRjYzJlYTkzODU2ZjcwZWIyOGFkYjAyODZhMWU3ZTdkZTJhZmVkOGZjYmUyNmQ4ZDE1MDRmZWNlMGJiNmUxZjAiCiAgICB9CiAgfQp9
+  signature: "qIWfrjDPQc2TQsdCP2rTyxZwQdGt7fT/W20dPY6abflxiCpbNSiyAMcTzB1FEs4Dcni+59fO6BwcoEHKol8B5C5kka5EwuoKX7EXkE2x+FA1ZqOa/C7Y/+2SvsVzuI9xvoR5yP8sg42kpEjXndp4E53/zbatDIrPZ/XzlIITmnqso2hjte2lSb2wvlBmggCm3jIJzcz51lfHrhGtPmbzNBa/klpXrkbnxCRbdxP8MEvCSzmDig76wkL0TKaEWFGvdfG4d4hgxtgLWGBBEN5sC+IgA2oRKSClUv57uesIfkGrAm7Vm8WM74Z1B8rukmul0Gl4tkCHYplXo057oVFjtJM+BTq01se5pCbqNLNWBmbHthxhrbc09733OSyew2Em7RRnZTpmnqy+BDV75kHT2gD5dEiA65tZLuC6MR1rmTN00pWWKHikYoxGd2tYlMvWPlN9+Xnf3E00MTeV5WOxzfTwRysf/gCsN7kgU8H5fx1vJOA2w+FuNAPIdUm7CjhLDbk/p8WnOUKHwNbmW4ntLQywQ3uSSBYH1IwWTwjOKjpQwNMtbV1wetO1RrRI9SYudk7EQ0tvyI4EboViE6nhlJwxx5N0J2SFVmPu+OJiK2BgmbMdnO0j0YQ21WR9cQOUssLYw63+eXShzm4/lc016nOkM+LUo7wLcdhcA/XvXZU="
+skill: 0.759
+archetype: anchor
+leverOffsets:
+  reactionMs: 0.86
+  aimErrorDeg: 0.25
+  predictionQuality: -1.18
+  awarenessRadius: 0.64
+  coordination: 0.62
+  aggression: -0.51
+kits:
+  trooper: 0.89
+  longbow: 0.45
+  rewind: 0.3
+roles:
+  defend: 0.98
+  retake: 0.88
+style:
+  aggression: 0.24
+  patience: 0.84
+  teamplay: 0.62
+  risk: 0.19
+voice:
+  tone:
+    - precise
+    - grounded
+  verbosity: normal
+  style: "map annotations and quiet route corrections; reassuring statements and firm location reports"
+lines:
+  greet:
+    - my survey peg points toward trouble
+    - survey peg stays here, I have this corner
+  onKill:
+    - survey peg gets another little cross
+    - survey peg and corner still secure
+  onDeath:
+    - there is a hole in my survey peg
+    - someone watch the survey peg corner
+  onPlant:
+    - survey peg marks the fuse
+    - survey peg guards the exit from the site
+  onDefuse:
+    - erasing that from my survey peg
+    - survey peg is staying by our bomb
+  onWin:
+    - survey peg finally matches the terrain
+    - survey peg never left the post
+  onLoss:
+    - time to redraw my survey peg
+    - survey peg held the wrong corner
+  onLastAlive:
+    - one dot left on my survey peg
+    - the survey peg holds here a little longer
+  taunt:
+    - your route is wandering off my survey peg
+    - the survey peg has not moved for that push
+  lobby:
+    - unfolding my survey peg on the lobby floor
+    - please do not spill cocoa on my survey peg
+    - "My survey peg: I will guard the home approach."
+    - With my survey peg, call before rotating off defence.
+quirks:
+  - stares_down
+  - always_gg
+rivals:
+  - jolly-pickaxe
+bio: xXHunterWolfXx kept a hand-drawn atlas of the 2013 rotation and still brings a survey peg to the queue. Jolly_Pickaxe keeps asking whether it really helps.
+batch: 3
+retired: false

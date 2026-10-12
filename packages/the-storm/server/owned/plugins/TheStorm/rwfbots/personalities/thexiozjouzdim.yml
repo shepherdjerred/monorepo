@@ -1,0 +1,73 @@
+id: thexiozjouzdim
+name: TheXiozjouzdim
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTM5NTE2MCwKICAicHJvZmlsZUlkIiA6ICI1NzYyMzI3MmMxMTU0ODA3YjZkMzZlOGJjNjYwNDQ5YyIsCiAgInByb2ZpbGVOYW1lIiA6ICJBZGFtVGhlSGVkZ2Vob2ciLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYWUwZDI2MzUzMWJkMTE5N2Q0MTc0MDA1ZDAwZDA0MzQ4ZWExOGFlNzU1ZDY1OTcwY2E1NjQxMzQwNWQxYzk0IgogICAgfQogIH0KfQ=="
+  signature: "X5uBku4TSNcvdEi3p3KS7qcg1UpPojt7mQZm2brMr8vp/voRPC1SC4TfkrglpmlbAi8yx4DYmRZ5PLlQ2dxrUz5KwUAr6TqpttU2L2hkXEWjdIfTjpPj7ZsrAqf35esvuPYxKPzH0t60ft5y8Oqfvx8Ra3Do1C8+4bhPMxXT0LZu6mxcJnx2Wtk5I9i4pQERBHFUAhD+vaDNV3+bcCChVAG8i6tcKxhLe9gbVxz0ErRY8n9O4EieItXu9oVSxIjn9LPJbt+spuryp+GQnQfmnBiulIVn4facyrfp2m2Xnj0g+r2B0Tr3094i3fnWPLeXoLJlJsGtSEG4YF5DvCpV+We8PGCH6suugd836PgQz1O5Euyzf/pUo7+QV4EbkuLNH3SIrrXbC46GK9rzI8FP8ESf2oBMveccIFlRnNxD0omaBuGKiUdvqXufdZNjPy2klVYR4lGbANZZF4Zn2RN380pbZuuXbZF4yOeeWVUCPHwEctBnTuNwL2TMWoVHeUsg1Wauw0+j36Eyo9T3XAQ3gY9c6NRsWA8cwF7+LQaQiUREpzX6L1uWLwKxrB8UpVl8EyM0fMx/OVfgB2XybWdZRRrxGVqo8RLpRzUQXXYl35NogbzonEc3FGBQuBzF9MZSSoziI1QEFqjg9I1se02BAAt+JOBLbgnQ5b4VCPPkiwA="
+skill: 0.079
+archetype: anchor
+leverOffsets:
+  reactionMs: 0.65
+  aimErrorDeg: 0.55
+  predictionQuality: 0.94
+  awarenessRadius: 0.32
+  coordination: -0.05
+  aggression: -0.88
+kits:
+  trooper: 1
+  longbow: 0.38
+  rewind: 0.28
+roles:
+  defend: 0.9
+  retake: 0.68
+style:
+  aggression: 0.24
+  patience: 1
+  teamplay: 0.59
+  risk: 0.12
+voice:
+  tone:
+    - brisk
+    - grounded
+  verbosity: chatty
+  style: "absurdly serious station announcements; reassuring statements and firm location reports"
+lines:
+  greet:
+    - platform lamp checked, service departing
+    - platform lamp stays here, I have this corner
+  onKill:
+    - one less delay for my platform lamp
+    - platform lamp and corner still secure
+  onDeath:
+    - my platform lamp reports a cancelled service
+    - someone watch the platform lamp corner
+  onPlant:
+    - last departure from this platform
+    - platform lamp guards the exit from the site
+  onDefuse:
+    - service restored on this line
+    - platform lamp is staying by our bomb
+  onWin:
+    - platform lamp reports arrival on schedule
+    - platform lamp never left the post
+  onLoss:
+    - wrong platform for my platform lamp
+    - platform lamp held the wrong corner
+  onLastAlive:
+    - last service, just my platform lamp
+    - the platform lamp holds here a little longer
+  taunt:
+    - your connection left a moment ago
+    - the platform lamp has not moved for that push
+  lobby:
+    - please queue beside my platform lamp
+    - my platform lamp says the lobby service is delayed
+    - "My platform lamp: I will guard the home approach."
+    - With my platform lamp, call before rotating off defence.
+quirks:
+  - stares_down
+  - always_gg
+rivals:
+  - keshlir-71
+bio: TheXiozjouzdim linked three friends bases with an unnecessarily elaborate minecart line and still brings a platform lamp to the queue. Keshlir_71 keeps asking whether it really helps.
+batch: 3
+retired: false

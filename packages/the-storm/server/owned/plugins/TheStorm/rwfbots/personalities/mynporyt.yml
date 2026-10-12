@@ -1,0 +1,75 @@
+id: mynporyt
+name: MynporYT
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTY2NDgyMCwKICAicHJvZmlsZUlkIiA6ICJkODBlMGYyNjU2M2U0NzI3YWNiZDNlMmRlNDkxYzFiZSIsCiAgInByb2ZpbGVOYW1lIiA6ICJYX0thZWxpc19YIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2IyZjZmNjJiNzgxZTllMmU1OTQ2NDc0ZDhkYzhkNWMwNWE0OTE2MDQ1OTU5NjliNzEwZGQyODk5Mzg5OGFmMWQiCiAgICB9CiAgfQp9
+  signature: "gfSUtkVG2BLTgRI4sGrtFeP4D8izwKmawMgP7UutXrEho0l48KAsd0himw3sDePt6+ISTDLDgxWI+z5TqYmdnE0LWyVvbHuyZZGNaccs58mf6Cper0i+OGrrOEDIqtLg74RjPo6EzQjaGN9kyY/0m9JG+/ZtFPKI98NV5wZE4qGOIasDl6SmqeqnOC+bdlcfkxEiC0HxMaOr47xbxoZJ7giQG7//EpzzyCdZk50N4bPX3O5su+BPuoiRcSQYlmS6OWMN4sqo/Ov38E6GKPNwDLcqNBlg6F4YW6gNEzKGLoUdqLbOXtxd3iDJLed2EbTd+7SF7frA96OQ+MyIi5hUSYqBA9st+D4KnehML3KvRdHPhSTy5a+DfYhFL9VNg2q2XyS+K7uBnucooZfOJfS86G9nVVePMoWomrcJbiIyPM3hqm/tcApUBvIlGmqzoIRcgDnWZVBc2H1YhXWl2O+7NXegBAds6YLQHcEwAQUiG7PouCVtVj1Kq1B/b1OzLYHNGYBw/1hPWJIrSzMQbn/pcFDPgg0GBuTuOzr955LkW9qOVR8BbfUrFw44itFNbHUzfZ9BxpyccgVM2tAryyDwlHfhK3F4jSPYM1VLkr00a6hNxAYRsV3noJwR8wWiSpetCvnfWtfsApW9cWlq7DBOUvuugdrhOiuWsuqKuF1eq3w="
+skill: 0.684
+archetype: sniper
+leverOffsets:
+  aimErrorDeg: 1.44
+  turnRateDegPerTick: -0.38
+  cps: -1.15
+  predictionQuality: 1.77
+  awarenessRadius: 0.88
+  technique: -0.09
+  aggression: -0.86
+kits:
+  trooper: 0.15
+  longbow: 0.88
+  shortbow: 0.47
+roles:
+  defend: 0.73
+  rotate: 0.32
+  hunt: 0.67
+style:
+  aggression: 0.33
+  patience: 0.93
+  teamplay: 0.43
+  risk: 0.2
+voice:
+  tone:
+    - polite
+    - focused
+  verbosity: normal
+  style: "postal announcements and absurd courtesy; short range notes and patient, exact corrections"
+lines:
+  greet:
+    - sorting tray sorted, delivery begins
+    - sorting tray in place, checking the long angle
+  onKill:
+    - delivered to the correct corner
+    - sorting tray found the range
+  onDeath:
+    - returned to sender
+    - sorting tray needed a closer angle
+  onPlant:
+    - an urgent parcel at the bomb
+    - sorting tray covers the far entrance
+  onDefuse:
+    - delivery cancelled politely
+    - sorting tray can wait, hands on the fuse
+  onWin:
+    - sorting tray delivered the whole round
+    - sorting tray had a clear view of that
+  onLoss:
+    - the sorting tray took the scenic route
+    - sorting tray kept the wrong sight line
+  onLastAlive:
+    - one final delivery to make
+    - one sorting tray, one long angle
+  taunt:
+    - that push had the wrong address
+    - the sorting tray saw that peek twice
+  lobby:
+    - checking the name on my sorting tray
+    - no unpaid postage in my sorting tray, please
+    - "My sorting tray: I will cover the long angle."
+    - With my sorting tray, call the close flank for me.
+quirks:
+  - bow_spammer
+  - always_gg
+rivals:
+  - quietzyldouz
+bio: MynporYT delivered handwritten notes between feuding builders in 2014 and still brings a sorting tray to the queue. QuietZyldouz keeps asking whether it really helps.
+batch: 3
+retired: false

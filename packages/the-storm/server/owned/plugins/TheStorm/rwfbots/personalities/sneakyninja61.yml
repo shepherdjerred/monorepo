@@ -1,0 +1,74 @@
+id: sneakyninja61
+name: SneakyNinja61
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTkwNTA3NCwKICAicHJvZmlsZUlkIiA6ICI2MTU1NTMyOTY2OWM0ZDA5YmFiOGJlNDNkYWUwYTRjMyIsCiAgInByb2ZpbGVOYW1lIiA6ICJOb3Ryb19DbGllbnQiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvY2Q1NzRjYjU5NDg5ODNlNWFhYTk5OTViMmJkNzAxNGNhMjg5MmVhMjFlMWIyYTgzMDNlYTk3NWQ5Yzg1Nzc4YiIKICAgIH0KICB9Cn0="
+  signature: "cOrtiTAlXMyoe8tcqCIfMtNnaZwjs9BNS6GGGFPvxDG1+RDFSNaK3SG5mQlP4G/8dxtD6Q7R1J7esAiIUVMLBMFPatfck887zhyv/+rzrWKfovuh8sSwMhpdj0pGUSQ8icGdhnr7fQHpuJhWFRSeIA2vD2kc6HennHgWafpI8zuMn9DSowVrxGICdw91qTHMwIaLuMuE7y5fWfX2LlyacC7m3kudnHc/8sFSZDpM3YeH4pTYhXpZdKmRzpRTaizBN8CWWv1TwCF4KugfCo/xo09XXJD2NJ/4wWiROrZcZNLn9T9Hbhune7iapY4LBb2Qkl2kZle1+N5IZov2s77XMrZgZTCXq2fimojib58gMgSk6BabAkj17zaWaZX/D+q8168O9Yr26nNQ9JHHt0+RRcFfPCPAtnMn0DRjPy5oP5mmUJC8m/N7u5BcXwaV1dFCX23FiSIZfQB0m5g4tBr5hE89EVHu2KBC56FZZluAoSN+MkxADQklrDEFIEUNlKprlP/JvrjR0O+V7UFwhvPCyovGPASz3az47qKj3nNkchq3m/fwOC0fz5JqnSnQ2icX/9wz26NrEwnRKL1DnCKU1lmOSHXY25ajlYFHa1FaZngHnY2+br2tHMuKasjatkfaChWDktwb8QZS4i0mSKz58B19ODoz9+EsIOkklsLsrqk="
+skill: 0.459
+archetype: support
+leverOffsets:
+  reactionMs: -1.2
+  cps: 0.47
+  awarenessRadius: 0.45
+  coordination: 1.99
+  aggression: -0.46
+kits:
+  trooper: 1
+  longbow: 0.29
+  rewind: 0.61
+roles:
+  plant: 0.26
+  escort: 1
+  defend: 0.46
+  retake: 0.57
+style:
+  aggression: 0.29
+  patience: 0.55
+  teamplay: 0.85
+  risk: 0.29
+voice:
+  tone:
+    - gentle
+    - helpful
+  verbosity: quiet
+  style: "patient gardening talk, stubborn lane defence; gentle check-ins, thanks and useful kit reminders"
+lines:
+  greet:
+    - leaf rake packed, lets grow into this
+    - leaf rake is here, everyone got their kit?
+  onKill:
+    - cleared a little room for my leaf rake
+    - one less problem beside the leaf rake
+  onDeath:
+    - my leaf rake has met a weed
+    - sorry, the leaf rake corner is open
+  onPlant:
+    - this seed has a very short season
+    - leaf rake can watch while you plant
+  onDefuse:
+    - pulled it out by the root
+    - leaf rake is here to help at the fuse
+  onWin:
+    - a fine harvest for the leaf rake crew
+    - leaf rake says everyone helped
+  onLoss:
+    - bad weather for my leaf rake today
+    - leaf rake says we can tidy that up
+  onLastAlive:
+    - one leaf rake still in the garden
+    - one leaf rake still trying to help
+  taunt:
+    - that lane could use some pruning
+    - the leaf rake brought a team to that corner
+  lobby:
+    - checking the soil with my leaf rake
+    - my leaf rake is for the roof garden later
+    - "My leaf rake: I will stay close to the push."
+    - With my leaf rake, call if you need an escort.
+quirks:
+  - says_sorry
+  - always_gg
+rivals:
+  - arrowsniper9
+bio: SneakyNinja61 grew a roof garden over the old kit shop and still brings a leaf rake to the queue. ArrowSniper9 keeps asking whether it really helps.
+batch: 3
+retired: false

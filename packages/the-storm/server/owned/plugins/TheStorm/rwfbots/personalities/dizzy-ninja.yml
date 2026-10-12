@@ -1,0 +1,76 @@
+id: dizzy-ninja
+name: Dizzy_Ninja
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTk2NTgxNiwKICAicHJvZmlsZUlkIiA6ICJlZmI1ZWQ2YjVjOTU0ODBlYWFmMjAyZDIxOWVmNjBjNSIsCiAgInByb2ZpbGVOYW1lIiA6ICJNaWtlSHdhazAwMSIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS82OWY4MjUxNjMxNGM1ZWZkMDA4N2Q0YmY3OWNhNmVlMDM5OTMxNmEzNzEwNzVjMjRlYmU1NTk1M2MwODdmNThkIgogICAgfQogIH0KfQ=="
+  signature: "Q5VOPQ+qiNzUAEysp6TyQYUMByXdlPcEJvYIkmWROpCq6lLNlAgrSPl4m/nOxZ8poYBtZTwMG3+0PLdC03ZEMOoMjd9Myz8lTfXm55JgG2+q741dmMdoHLStzthzBWEwzG9PxgTinygKs9OCGe3IkpjJsnIwcOAj2aOfcOGQzUj3swfGf6vJ9s7/DBK6qb1OSFWIq/M2zaMynQ9pTK8685J1/0deLyTw+BeqgpTk1GZyivFDCm3JLoIQnd/qxEvIxUhRbFePBGLpc4eCY7X2o9OjCS64ewVITggq87DFfCIb5lKkQlI84UEZ/TDXDZPuvaD93ua7TKP1XbDE7mks+ScafGa0HKmBsj0mV+uQ/AbSpW/eWxTrZSmKZQnfBN4HLnaSsdtSA0B+BxBgjU/5bNwLqX32V33lFMt2LBR0tVb/ep5GrN8HNob4NLxoeqqx0RjQtRC1IpiQa6lR1jeaqBAXGgDU8OSK5jxx6+t6kdABoxiEVrHS+jipEZOWwdQSq/eghPHC2TyxLfNVkVuwZ0EZ8LDCWOLu5NeKiPMEMEFbWIju933NAw1SWmWhEkNqHfyKCeFv+op/gmNSb8oT4qsJf703canOxm6mLQs1s0QMC/Baq9+zrcEO1nD4oxnRiwAipurKAmuLOE9M54GILiZrHz9azcMcCajXeDL2x7c="
+skill: 0.708
+archetype: flanker
+leverOffsets:
+  turnRateDegPerTick: 1.11
+  predictionQuality: 0.62
+  decisionTemperature: 0.13
+  awarenessRadius: -0.2
+  coordination: -0.77
+  aggression: 0.53
+kits:
+  trooper: 0.67
+  shortbow: 1
+  rewind: 0.37
+  wraith: 0.56
+  spy: 0.4
+roles:
+  plant: 0.54
+  rotate: 0.84
+  hunt: 0.44
+style:
+  aggression: 0.67
+  patience: 0.4
+  teamplay: 0.28
+  risk: 0.75
+voice:
+  tone:
+    - cosy
+    - nimble
+  verbosity: normal
+  style: "kitchen chatter and imaginary baked snacks; quick side remarks and route changes mid-sentence"
+lines:
+  greet:
+    - pie bird ready, kitchen open
+    - pie bird is taking the other entrance
+  onKill:
+    - another order off the pie bird
+    - pie bird found a side door
+  onDeath:
+    - left my pie bird in the oven again
+    - pie bird chose an occupied side door
+  onPlant:
+    - setting the timer beside my pie bird
+    - "pie bird came around the back of {bomb}"
+  onDefuse:
+    - took that out before it burned
+    - pie bird found a quieter route to the fuse
+  onWin:
+    - pie bird deserves a day off
+    - pie bird took the long way for a reason
+  onLoss:
+    - the pie bird has seen better batches
+    - pie bird took the long way for no reason
+  onLastAlive:
+    - one cook and a very busy pie bird
+    - one pie bird coming around the edge
+  taunt:
+    - that push needed longer to rise
+    - the pie bird is somewhere to the side
+  lobby:
+    - who borrowed my pie bird?
+    - dusting the flour off my pie bird
+    - "My pie bird: I will try the side approach."
+    - With my pie bird, keep them looking forward for me.
+quirks:
+  - crouch_spam
+  - always_gg
+rivals:
+  - minerbadger5
+bio: Dizzy_Ninja ran a tiny spawn bakery with a queue of hungry regulars and still brings a pie bird to the queue. MinerBadger5 keeps asking whether it really helps.
+batch: 3
+retired: false

@@ -1,0 +1,76 @@
+id: vividstorm26
+name: VividStorm26
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjA5MDAwNCwKICAicHJvZmlsZUlkIiA6ICI1ODAwZjIzNWQyYjQ0MDc5OTcxZTM3ZDhmNmY0OTc2ZiIsCiAgInByb2ZpbGVOYW1lIiA6ICJYZW55cmlhIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2EwODg1NTIxNmU2ZDE4MjJhMThjZDM1ZGVmMzE2ZTM5OTFjM2I5YmI0OGI1MWUzNWRjNjE1Nzg2MzgyMjkyM2QiCiAgICB9CiAgfQp9
+  signature: "xeKW1tS956jP8aKGbuaZBSUeWwV5d6rpWc9Zn1VuvZA5SGiaN/jQvF4jYKaWJ2e+fsTx8I+aRWXbtx/SC4EnJ5V0bEMzPgCKoNU/MhndVQtFm41rTwXeGm+zxyefSeCCkk8yjdoeHmi0LBELfrIYMcXMdVHxTRUbnTdigpLK1krf9Y2uVVZiGpXgs/Uv2QGj9U6iDNVe424neTBsK5DPB2+LOfJcw4bqcTGa0P0OJ4ob0wJ5qTwQ0YPQmrSqL8xYHpXlak5kQcMCLCNLRTGlQyokKDO38ytJn2sSgQmRPsPh0w5T9FpnFt2WPOojbYEV51dNMWRTB6yKWvQFaY52t9cC9ddylv9vr9GyI4gt+OaCzMFKZuq4BM7sMPb3QCPoOOQvYew6Psr6jqmHPMI0E6VEB+KQSdzZE4m91adQtvR87DGXNpUJ+vkALzeB+ajphBOqnOcpjNz6DWM8isk2gh7EidkcSBqUdq0kibukYAEHcrFikLOpvm38saM8+J9lDtdO296zF32CnjXjJj2l/JikPBSnYpd3vPMSqOr4VQYHD17v9Pk2gyn88Z5ykKg/icvJxr4Z1JNQsnzhjUtnlfaT8MeICHElZfOHRmLnmwtIiVndd25y0vcf0WiXS+nWccr8qFX2jwStjsmHh828yqj8+gykTH/hHNS/tSSdDRc="
+skill: 0.624
+archetype: tactician
+leverOffsets:
+  predictionQuality: 0.55
+  decisionTemperature: 1.39
+  awarenessRadius: 0.19
+  coordination: 1.39
+  aggression: 0.24
+kits:
+  trooper: 0.91
+  longbow: 0.48
+  shortbow: 0.46
+  rewind: 0.54
+roles:
+  plant: 0.53
+  escort: 0.62
+  defend: 0.54
+  rotate: 0.72
+  retake: 0.75
+style:
+  aggression: 0.46
+  patience: 0.65
+  teamplay: 0.74
+  risk: 0.46
+voice:
+  tone:
+    - watchful
+    - analytical
+  verbosity: normal
+  style: "tired lighthouse bearings, steady reassurance; numbered ideas, concise route calls, quick revisions"
+lines:
+  greet:
+    - harbour light checked, coast watched
+    - harbour light ready, first route agreed?
+  onKill:
+    - a clear signal through the fog
+    - harbour light confirms a clean opening
+  onDeath:
+    - lost the light around that bend
+    - harbour light needs a revision on that route
+  onPlant:
+    - warning light at the bomb
+    - harbour light confirms the site is reached
+  onDefuse:
+    - warning extinguished
+    - harbour light confirms the fuse is clear
+  onWin:
+    - harbour light guided us home
+    - harbour light and team followed through
+  onLoss:
+    - the harbour light missed a rock
+    - harbour light had a missing step
+  onLastAlive:
+    - one light still on the coast
+    - harbour light says there is still a route
+  taunt:
+    - your approach was visible from shore
+    - the harbour light predicted that rotation
+  lobby:
+    - polishing my harbour light before the round
+    - please leave the harbour light switched on
+    - "My harbour light: I will call the first rotation."
+    - With my harbour light, tell me when a route closes.
+quirks:
+  - calls_everything
+  - always_gg
+rivals:
+  - mustnaer-20
+bio: VividStorm26 lit a coastal tower so returning builders could find home and still brings a harbour light to the queue. Mustnaer_20 keeps asking whether it really helps.
+batch: 3
+retired: false

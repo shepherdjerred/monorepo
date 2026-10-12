@@ -1,0 +1,73 @@
+id: krymurpro
+name: KrymurPro
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTg1MzU1NiwKICAicHJvZmlsZUlkIiA6ICI1ODVjOTI5NzY4NDg0N2VlYjk2MDc1MmVhMDJjOTY5ZCIsCiAgInByb2ZpbGVOYW1lIiA6ICJSZWRBSVNreWUiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjI2MWIwOGE0ZDIxNjM1ZTQxZjNiZDMxNTE5NjY4ZGVlM2FkZmYyZGQ3MmFiMmRjZWI5NDA0MTVhMTQ0NGZlYiIKICAgIH0KICB9Cn0="
+  signature: "wzXQR/GdaBotvYplUAs/Lr6n5o1CzeWIClwVHZUz7aqNgkuLXiiDAvYP2YjRN7lC1SPbtaSiOC4V3DhJp/x1Yq0XsrPyKxYUwyHTa/M3aKClrQEeUkxqf3Ab//tFaDG3LkoXS++0UphDEkgpV8AV2/xRHMd2wPWiPcWJbwCylQn5ZJOguIPIlLlxQbvz9Pk+MbCixlTJ28Ww3wA+LE+X/QzI1iUkpk2TRhCjIZFdOhY+cnh/RMRAkphh903r5ReBd9cOq8JrvWXpdd1dVbPMYR0XPili9kXikNyawCgcFkpZrMlse7kOJUbE7McxFz3LMAHubqHmWO9oBOdW/7eJ1OICjpa5miZqOb28+z+4A3Ajb6O9xPg1NVzua6GD+ZvJsD4T9YYx+QLPXs/6kn8xx1jr0HEd3bFqvuI0WUpNGHEEkbAXYs4/5JP5AvnWMGikYuf3O/+YpPJO0AHMPl7FNNMX7EGlQvdaVpyxx7fMfSZS6bEIX3Qon7d9+w1zMtmt+Vt5o7sV3QqA25sTqPUC2ChT93+rueaZNRY/CMjjhooZ8evCWhZKyoPa3MZzOwvzyHoqK8Ogd+e8SYfAH8+WuZa5cij2B3AD5mAQHSRkK4sczhprR1RdKDwil3Qsqulg82OUpoX3vI0Wkf5q2lLdMwS9B79s6kxJJB0wsSeA2UE="
+skill: 0.354
+archetype: duelist
+leverOffsets:
+  aimErrorDeg: 0.83
+  cps: 1.49
+  decisionTemperature: -0.55
+  coordination: -0.8
+  technique: 1.8
+  aggression: 1.02
+kits:
+  trooper: 1
+  shortbow: 0.45
+roles:
+  escort: 0.42
+  retake: 0.48
+  hunt: 0.63
+style:
+  aggression: 0.74
+  patience: 0.26
+  teamplay: 0.45
+  risk: 0.42
+voice:
+  tone:
+    - steady
+    - competitive
+  verbosity: normal
+  style: "buoyancy checks and practical nautical talk; brief courteous challenges and honest shot assessments"
+lines:
+  greet:
+    - deck plank fastened, ready to cast off
+    - deck plank ready, good fights everyone
+  onKill:
+    - found a gap in that hull
+    - good exchange beside the deck plank
+  onDeath:
+    - a little water over the rail
+    - fair hit, the deck plank left that gap
+  onPlant:
+    - not a cargo I want to keep
+    - deck plank earned a moment at the bomb
+  onDefuse:
+    - unloaded that safely
+    - deck plank can settle this at the fuse
+  onWin:
+    - deck plank brought us back to dock
+    - deck plank had some good fights today
+  onLoss:
+    - the deck plank voyage met a reef
+    - deck plank wants another clean round
+  onLastAlive:
+    - one hand still at the tiller
+    - one deck plank, one fair chance
+  taunt:
+    - your push is sailing against the wind
+    - the deck plank is ready for that peek
+  lobby:
+    - tightening the bolts on my deck plank
+    - keeping the deck plank dry for the voyage home
+    - "My deck plank: I will contest the middle."
+    - With my deck plank, give the middle fight a clear lane.
+quirks:
+  - good_sport
+  - always_gg
+rivals:
+  - lilminjaixpa
+bio: KrymurPro launched a leaky ferry between two rival team docks and still brings a deck plank to the queue. LilMinjaixpa keeps asking whether it really helps.
+batch: 3
+retired: false

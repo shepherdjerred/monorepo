@@ -1,0 +1,73 @@
+id: kishkek-63
+name: Kishkek_63
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4OTI2Nzc5OSwKICAicHJvZmlsZUlkIiA6ICIyZDUxZmI0ZmJjM2Y0MjJjOTMyYzIzMDg5NGU2YmM1MiIsCiAgInByb2ZpbGVOYW1lIiA6ICJGR0ZTX3N0dWRpbyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9jYWM0NmM4YzVhZGRlZGYwOTk4OWU4OWQ2ZDllYmVkNGIzMjYwNTJiYWMyMjU2NTFiMmU0MGMwZWZkY2QxMzgyIgogICAgfQogIH0KfQ=="
+  signature: "kwkt+kKiRpxBZepOC8HGLoBAYsi+RSbflTMH9ij35rhd1+PsXzFtp0hr36dDLcf3LFQvdXo07nVWNGjnoZAU3iMEZxb9RsxziZXJME5wFwB9PUOmqCOAdrh1t0KuBuuPgaQBRmQ5zuGldVAvyPweL1DO8yuPLJ1E/+LT/DLlD8UmPWk7nTa/Fo/ICKIMVxdVWKS4+wNDKu4VoQ1ylo0XfdIbil76xXj+eG0US3gBkpaHY1N2ft22Jvfw/+ZarPfIGzciNSP8f5SJWn0uFCuZSeKRKFCMb5xSNy4vi3R/lMI6PU4ec/qUSROIPGIDd3JYI8m23lhQlkIQX7HNNORT+CikpoNLyHtcvTnHlbDtVfvmCc0YOrSP2ZaqSXp89LF7j7kK1hI1d1eWmxEK8AQ2myqO8Vqf78hTQQBqeyFj//PS6KFDT97DB327/UXT644YLix9XoUlr/JUi0emsLaSGw3rQEpi9eTyyLtXM6FlYjrGp3M19GFOjhaqmzkfEP44/0vzulTExBY2eyXeIrWwXyA0iEtH/OKwuoTWO8ymLHq+ayxN9pi8BD1wyXloeGW7bDp01qKAk9yXTvZ42plgIbufaLQOX2bFlHD0q2tRb1XQgGo/6zUfvnaGGCOTTEgrCpJw25RUX6aBU1xgVMCWFlGxHzx2W/1K5TShMtMs0TI="
+skill: 0.533
+archetype: turtle
+leverOffsets:
+  reactionMs: 0.7
+  aimErrorDeg: 0.12
+  decisionTemperature: 0
+  awarenessRadius: 0.89
+  coordination: 0.07
+  aggression: -1.94
+kits:
+  trooper: 1
+  longbow: 0.34
+  rewind: 0.84
+roles:
+  defend: 1
+  retake: 0.23
+style:
+  aggression: 0.12
+  patience: 1
+  teamplay: 0.57
+  risk: 0.1
+voice:
+  tone:
+    - airy
+    - cautious
+  verbosity: normal
+  style: "gusts, tangled metaphors and abrupt turns; unhurried words, conservative estimates and tiny victories"
+lines:
+  greet:
+    - tangled line caught a good breeze
+    - tangled line is ready. no need to hurry.
+  onKill:
+    - a clean lift over that corner
+    - tangled line waited for the opening
+  onDeath:
+    - my tangled line met a tree
+    - tangled line should have waited another moment
+  onPlant:
+    - tying the fuse down securely
+    - tangled line checked the site first
+  onDefuse:
+    - untangled that in a hurry
+    - tangled line checked the corner twice
+  onWin:
+    - tangled line is flying high
+    - tangled line got there eventually
+  onLoss:
+    - no breeze for the tangled line today
+    - tangled line needed one more safe corner
+  onLastAlive:
+    - one string still in the air
+    - the tangled line will take this slowly
+  taunt:
+    - that push lost its lift
+    - the tangled line can wait out that peek
+  lobby:
+    - unwinding my tangled line in the lobby
+    - please step over the tangled line line
+    - "My tangled line: I will keep a safe route home."
+    - With my tangled line, please check the blind corner first.
+quirks:
+  - gapple_hoarder
+  - always_gg
+rivals:
+  - epicsniper96
+bio: Kishkek_63 held kite races from a windy hill above the old map gate and still brings a tangled line to the queue. EpicSniper96 keeps asking whether it really helps.
+batch: 3
+retired: false

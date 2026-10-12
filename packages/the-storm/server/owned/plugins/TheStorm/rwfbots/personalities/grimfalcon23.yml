@@ -1,0 +1,73 @@
+id: grimfalcon23
+name: GrimFalcon23
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjEyNzEwNywKICAicHJvZmlsZUlkIiA6ICIzZmM3ZmRmOTM5NjM0YzQxOTExOTliYTNmN2NjM2ZlZCIsCiAgInByb2ZpbGVOYW1lIiA6ICJZZWxlaGEiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOWQ4OGEwM2UxZmY1ZjYyYjk1ZjdmZTA4N2Q5NjM5YTNjNjczNDc5MjVjYWE0NjMzYTM4MzFiMTkzNzhkZDY5OCIKICAgIH0KICB9Cn0="
+  signature: "QmK1eg4srQSGGY3+Ud2oa51SIJLBmeuWha1aaAGSAdXG6yiUekHt7p5V4NW9l0/fA4FWz/29pTAg+CPqIwSypJTvpB4NviZodVXvxWLdQSa31+CHx/Ol2I5fQwXRGueWcWlG1vQY+AapAdCwFxd/qsxiUsv6i+B3MBsn5oWZFcugrXL4EZlq0pL9OUxL/lsdkUmwsXSjRbBix9qEiQ9hyb2tQT9ubxgMvBGh5Eew5wmef220Ys5QekvA7tBQTUwYVXyD7nt4uo44+xAs1iKr6CUly8QtmtutvV61lE7X5SEivtJwLK8V+ubzAgOtrobk60Hxqn4Kr/j413saeyuyL8nxNHE/qzunvoOzNru3SvUiSrlcabNyK1/HwDw/QMe0xonO6Vh91WxkpwurZq9PFYpuAE2BZMaN036eJoSAHuW1uILXhm8nOYsjqLmDHnMyd+dZ4AqSDjxxSKQXFZpa56C3zgtI9YesNDWM9gaBa2ERKqOoOGZBP2cxYLYK2LHfkO0vrAmBlKB+LCw2Na+JU8eHXVok929SpXDdOY7S0wuk10QtgneirTdgUeoKmEJeEFSsU1MGXW69lh2adNya05BM23NNd3L68hFf/bu/x8kujYYovaZ9kcr4x2O127yjmh1AfQjmQ8+N0ms9eaVS2tXbzUuOO6bO9G2JSOFGPQI="
+skill: 0.017
+archetype: bomb_diver
+leverOffsets:
+  reactionMs: 0.64
+  turnRateDegPerTick: -0.19
+  predictionQuality: -0.2
+  decisionTemperature: 0.64
+  technique: 0.81
+  aggression: -0.88
+kits:
+  trooper: 1
+  shortbow: 0.17
+  rewind: 0.58
+roles:
+  plant: 0.92
+  escort: 0.33
+style:
+  aggression: 0.75
+  patience: 0.13
+  teamplay: 0.29
+  risk: 1
+voice:
+  tone:
+    - cheerful
+    - urgent
+  verbosity: chatty
+  style: "busy hive reports, praises small useful jobs; breathless objective reports, oddly calm at a fuse"
+lines:
+  greet:
+    - bee veil says the hive is busy
+    - bee veil packed, where is the bomb?
+  onKill:
+    - a little sting in that lane
+    - a clear path for the bee veil
+  onDeath:
+    - flew straight into the window
+    - bee veil was one corner from the fuse
+  onPlant:
+    - quite a buzz at the bomb
+    - "bee veil is parked beside {bomb}"
+  onDefuse:
+    - settled the swarm
+    - "bee veil and {bomb} can both stay intact"
+  onWin:
+    - bee veil has earned some honey
+    - bee veil got the objective done
+  onLoss:
+    - the hive will rebuild
+    - bee veil took too long reaching the site
+  onLastAlive:
+    - one bee still making the rounds
+    - the bee veil still has a fuse to find
+  taunt:
+    - a lot of buzzing for that push
+    - the bee veil got closer to your bomb
+  lobby:
+    - keeping my bee veil out of the rain
+    - no bees are hiding in my bee veil
+    - "My bee veil: cover my approach to the bomb."
+    - With my bee veil, call the safest bomb route.
+quirks:
+  - loves_nuke
+  - always_gg
+rivals:
+  - shadowkoukkoush
+bio: GrimFalcon23 kept a pretend apiary behind a flower-covered team base and still brings a bee veil to the queue. ShadowKoukkoush keeps asking whether it really helps.
+batch: 3
+retired: false

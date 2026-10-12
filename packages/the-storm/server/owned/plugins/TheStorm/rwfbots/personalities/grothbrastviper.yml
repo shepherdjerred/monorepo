@@ -1,0 +1,73 @@
+id: grothbrastviper
+name: GrothbrastViper
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjM2Njg2NiwKICAicHJvZmlsZUlkIiA6ICJjMWU1NzlmZjc0NjI0OTkzYTI5NTdlNjNjZGU5NDY1NyIsCiAgInByb2ZpbGVOYW1lIiA6ICJNaW5lU2tpbl8xNiIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8xYjFhYzFkY2ZkZWMzOTUxODgxYjg2MzZlZjM1Nzc2MDMwOGNjOGYwNGIxNmM2MmY0M2I0Zjg2OTQ5YmVkNzczIgogICAgfQogIH0KfQ=="
+  signature: "xVvNlkuBibkdg6rh2uYelHQJoyhwiC7LORQmYYDxNmTa7Q+KLPSzdAHD4C9EtJa0TZG0VF97iXFW5yQ42pkeSQs9YLacZv25DT8/NKbqNnODH5cXww6NZiDTfrSTvg4cHoqaLxF7thX3Rr7NA3Y95YX3t3XNZDyt08U3gdb5WwDvW3r9haVsvnQLSgz5IsJPA4L6hd3QQCojFk2Xtol8gK4GWnHn+VCxcb6o3PAikx1tdbNGA8iZIXVozuE2S7KkupuhixPMbUE08pL42jtQf0nAjJLM1ytDftY+UTBrXhhq26G1wVdS4+jKni93l/bbSNX3q3wntPpXwdZyrgdw56r7T3D270jjoNOxGRyT3i8yFdKpLMDYKmYx/hBiPbEuPyd0vByeAMa6Nso/3HrjNbltrleMKEp9wHxxXnX+s5C+cs1q+70X3+hHvwTz8FJJjX6fvdMbRLZl1ysSDVBEsWztSLcq2LY7iPvv/Y4ten9sIGZ3eg4C3mqE5L1mZBilnEfNgV8jFXCRM93lzZLfPcvpjpurY4wxIsXpqn9EfaGXCFTK3UCXEIvQ1mOSrkwmgaHC7PiPdSGMOy4coqwdN/WOePvdlQdqn8oWh+x4PCI8US/2ztvwWAWaHF7LKSdF6QL2mnqqNKhecv8L3wxaDS27+ogGlYGTQu3TpEBnIrU="
+skill: 0.57
+archetype: bomb_diver
+leverOffsets:
+  reactionMs: 0.2
+  aimErrorDeg: -1.02
+  decisionTemperature: 0.49
+  coordination: -0.47
+  technique: 0.67
+  aggression: -0.43
+kits:
+  trooper: 1
+  shortbow: 0.19
+  rewind: 0.66
+roles:
+  plant: 0.93
+  escort: 0.25
+style:
+  aggression: 0.62
+  patience: 0.18
+  teamplay: 0.31
+  risk: 1
+voice:
+  tone:
+    - earnest
+    - urgent
+  verbosity: normal
+  style: "museum labels for even embarrassing plays; breathless objective reports, oddly calm at a fuse"
+lines:
+  greet:
+    - curator brush prepared, exhibit opening
+    - curator brush packed, where is the bomb?
+  onKill:
+    - a fascinating example of an opening
+    - a clear path for the curator brush
+  onDeath:
+    - please do not put that in the exhibit
+    - curator brush was one corner from the fuse
+  onPlant:
+    - a short-lived interactive exhibit
+    - "curator brush is parked beside {bomb}"
+  onDefuse:
+    - preserved the team instead
+    - "curator brush and {bomb} can both stay intact"
+  onWin:
+    - curator brush has a new story
+    - curator brush got the objective done
+  onLoss:
+    - a cautionary exhibit for the curator brush
+    - curator brush took too long reaching the site
+  onLastAlive:
+    - the last visitor in the gallery
+    - the curator brush still has a fuse to find
+  taunt:
+    - your approach belongs in the archives
+    - the curator brush got closer to your bomb
+  lobby:
+    - please look without touching my curator brush
+    - writing a new label for my curator brush
+    - "My curator brush: cover my approach to the bomb."
+    - With my curator brush, call the safest bomb route.
+quirks:
+  - loves_nuke
+  - always_gg
+rivals:
+  - pixelpeshxam
+bio: GrothbrastViper opened a one-room museum for abandoned arena souvenirs and still brings a curator brush to the queue. PixelPeshxam keeps asking whether it really helps.
+batch: 3
+retired: false

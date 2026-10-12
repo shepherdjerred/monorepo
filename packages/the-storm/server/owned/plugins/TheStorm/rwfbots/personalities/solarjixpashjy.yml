@@ -1,0 +1,73 @@
+id: solarjixpashjy
+name: SolarJixpashjy
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTg3NzE0MiwKICAicHJvZmlsZUlkIiA6ICI3MjU1MDA3NjQzYzQ0YTZiYjM3MjJlNzc3OTk5OTFkOSIsCiAgInByb2ZpbGVOYW1lIiA6ICJ4ZW50YW55IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzhkNTlhNWVhZGViMWFkZWQ4NGJlOThlMTQyYTY5MGU0YjlkMDFmZWFjMmEwNzRmYjk5YTc1NWQ2NTMwYmJiNzgiCiAgICB9CiAgfQp9
+  signature: "e3pwrB8bRow0npAHtVDYAYWuHRxabfD7n/bUO0VlwqAppd1Al6+O0wz1Xb+Js5UxxE8qMq5UpoB+teMqd19bofs7ow4uM1LchEqUFm1aGegQOqKa4VsnfPcISNAptdDCDfs0cULGUngID7QwbCcM64+lLMe7Dl1jlRrIy01bkf6K7AP4YsGOCwgHbNh1k7JcZNFGwzUpVkaxHGDcYkY8eAlLn0MEoH2ObJxEq/WHiE90hE+ay6UgzQ0oMmTIE3gncIajsDQmiKdFTFZ2539i1i959B2cR6ys4F5I4ajQMLjyivrefoCPTccyvFVDkWsQjGTIzDtc/JgNwIIX6RKsusSxcDQqv44Li5I2AAIZsHQg1G0H1N6FJP7na2m2iim6MxMkidGb+OGwf8AIDN55k2nIxVZfTh0kFfwMD7AwxhHzg60TodqL1LAuIwBqKOZl7mjB9fPpgjyY0abI4D1pV6ryHFm688YgkcsESmfx1URwuEXw08Kp+YTb/cw6hDfPumTs1cIstXsSfYOeJEqSYaQLgvobWsJaDjh0E7RX95dc4yxYr7590x3ZsoVg9TlEs9cYIx9tXaZBBdx+2RjISmNk4jpCcr0ve7ECdhRc6i4LhxA4V9LX7yo2osmO3MNb/a6eEYfH6ykoB+QRV07V8z2MidRuIXYObfuF88Nzq/k="
+skill: 0.627
+archetype: anchor
+leverOffsets:
+  reactionMs: 0.46
+  aimErrorDeg: 0.5
+  awarenessRadius: 0.45
+  coordination: 0.43
+  aggression: -0.62
+kits:
+  trooper: 0.89
+  longbow: 0.42
+  rewind: 0.3
+roles:
+  escort: 0.24
+  defend: 1
+  retake: 0.63
+style:
+  aggression: 0.35
+  patience: 0.81
+  teamplay: 0.58
+  risk: 0.17
+voice:
+  tone:
+    - whimsical
+    - grounded
+  verbosity: normal
+  style: "arguments with an imaginary puppet; reassuring statements and firm location reports"
+lines:
+  greet:
+    - my paper king insists we are ready
+    - paper king stays here, I have this corner
+  onKill:
+    - paper king is taking all the credit
+    - paper king and corner still secure
+  onDeath:
+    - paper king advised against that corner
+    - someone watch the paper king corner
+  onPlant:
+    - paper king says the fuse is dramatic
+    - paper king guards the exit from the site
+  onDefuse:
+    - paper king requests a quieter ending
+    - paper king is staying by our bomb
+  onWin:
+    - paper king will never stop talking about this
+    - paper king never left the post
+  onLoss:
+    - paper king demands another rehearsal
+    - paper king held the wrong corner
+  onLastAlive:
+    - paper king has become very quiet
+    - the paper king holds here a little longer
+  taunt:
+    - paper king spotted that opening too
+    - the paper king has not moved for that push
+  lobby:
+    - my paper king has opinions about your kit
+    - please do not argue with the paper king
+    - "My paper king: I will guard the home approach."
+    - With my paper king, call before rotating off defence.
+quirks:
+  - stares_down
+  - always_gg
+rivals:
+  - dezmoustnoodle
+bio: SolarJixpashjy put on tiny puppet shows while the team waited for opponents and still brings a paper king to the queue. DezmoustNoodle keeps asking whether it really helps.
+batch: 3
+retired: false

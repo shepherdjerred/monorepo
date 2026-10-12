@@ -1,0 +1,75 @@
+id: xastdounyt
+name: XastdounYT
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODc1Mjk4MCwKICAicHJvZmlsZUlkIiA6ICI3MDYwMDk0OTgyZDc0MTczYTNjZjg1Zjc1NjQ3MGE5YiIsCiAgInByb2ZpbGVOYW1lIiA6ICJpbmV4YWN0b3N0ZW50YXQiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNTZhOGFkMzc4MTA5OTk5NjlhMmE4YzA5NzVmNDFhMDRlOTE4NzZjOTRiOTQ0YmFlMzg4MGJiMTMwZjExMWM0YiIKICAgIH0KICB9Cn0="
+  signature: "E7WbrxHoN2KIFXdWEmTUXH/s9TqfvmI0Ld1zzuCNL2KAxDFk2wEbKAipnQ1Z+lWtMG8QqtepC1zuPoLXWJRjJ0YDfGN7FtbUeNmk+1KCx84PDxtKkO0mvGCjBuQyohwkSaKRw2PypAHJd2XAoFIsQGktUN1ekDfZCF8ASD4vvqBmN2/cZqAZu9nI3HK2vE0MFRm5cHSiBEmC3KJn8wCbFGL/ky1+1abCzC6p9OhZ+5G8NF2BXUAki7/5cqf3eHsceoMULzIgdTpNr+RmbQMJyRQds5y9h7jd7zcW14EJigUgc35z7WlKxocs/sd3fJVp4ymXAXz4JQSWg1+BrVVyY6QitjTHLiUZK/IbZhcfHLOT28RyXQbyFoihMw6ao2oPwQBEOXgEBNjdyxeqQc8TGF8CGk/8mD0jaWw9CBeXJK2bH16M+uAfKDT2B5gHcNvi1Rv5oV+5ZZla54Zrr8ZTf1r4UJpQyapmPiIL74sUY++mZGvtxj/Bhrk5tiOEHFpHopjhnwklhwazq7GknLo7uTdbUM0fNbHz4IVhPvO1sW34BhfgFand7+0da7KKmpxp9cwwgUqSO4IxIEJCLFYREAehyCOPNGDmF9MSPksaVlAjXyqHMZttehPTURuV9k+7ErSUM2brvgjisq368j76yNwmusNBkYd3P2rDloo6iVw="
+skill: 0.748
+archetype: lurker
+leverOffsets:
+  turnRateDegPerTick: 0.67
+  predictionQuality: 0.52
+  awarenessRadius: 1.38
+  coordination: -1.18
+  technique: -0.06
+  aggression: -0.2
+kits:
+  trooper: 0.71
+  shortbow: 0.55
+  ghost: 0.9
+  wraith: 0.57
+roles:
+  plant: 0.23
+  rotate: 0.59
+  hunt: 0.93
+style:
+  aggression: 0.5
+  patience: 0.83
+  teamplay: 0.01
+  risk: 0.61
+voice:
+  tone:
+    - practical
+    - hushed
+  verbosity: normal
+  style: "carpentry checks and repairable mistakes; lowercase whispers, deliberate pauses"
+lines:
+  greet:
+    - joiners square packed, joints checked
+    - joiners square here. quietly.
+  onKill:
+    - that opening needed a wedge
+    - the joiners square was here a while
+  onDeath:
+    - a weak joint in my plan
+    - heard it too late beside the joiners square
+  onPlant:
+    - the fuse is fitted snugly
+    - joiners square is watching the quiet entrance
+  onDefuse:
+    - took that assembly apart
+    - no noise. no fuse. just the joiners square.
+  onWin:
+    - solid work around the joiners square
+    - the joiners square stayed out of sight
+  onLoss:
+    - back to the bench with my joiners square
+    - the joiners square waited one corner too long
+  onLastAlive:
+    - one joiners square holding the frame
+    - nobody move near my joiners square
+  taunt:
+    - that angle needs a little sanding
+    - the joiners square heard that approach coming
+  lobby:
+    - checking the edge on my joiners square
+    - my joiners square is for repairs after the match
+    - "My joiners square: I will hold the quiet route."
+    - With my joiners square, leave one quiet approach for me.
+quirks:
+  - slow_starter
+  - always_gg
+rivals:
+  - sneakytildyl
+bio: XastdounYT repaired a rickety spawn bridge every weekend and still brings a joiners square to the queue. SneakyTildyl keeps asking whether it really helps.
+batch: 3
+retired: false

@@ -7,6 +7,7 @@ import com.shepherdjerred.thestorm.rwfbots.app.BotThought;
 import com.shepherdjerred.thestorm.rwfbots.app.DecisionBoard;
 import com.shepherdjerred.thestorm.rwfbots.app.DecisionGate;
 import com.shepherdjerred.thestorm.rwfbots.app.Governor;
+import com.shepherdjerred.thestorm.rwfbots.app.LoadTelemetry;
 import com.shepherdjerred.thestorm.rwfbots.app.ThinkLoop;
 import com.shepherdjerred.thestorm.rwfbots.app.ThinkStats;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.VoxelGrid;
@@ -51,6 +52,7 @@ public final class BotTicker {
   private boolean inLobby;
   private final ThinkStats staleness = new ThinkStats();
   private final ThinkStats sections = new ThinkStats();
+  private final LoadTelemetry load = new LoadTelemetry();
   private long tick;
 
   /**
@@ -98,6 +100,18 @@ public final class BotTicker {
     return tick;
   }
 
+  public void resetLoadTelemetry() {
+    load.reset(loop.stats().overruns());
+  }
+
+  public LoadTelemetry.Sample loadTelemetry() {
+    return load.sample(loop.stats().overruns());
+  }
+
+  public LoadTelemetry.Sample drainLoadTelemetry() {
+    return load.drain(loop.stats().overruns());
+  }
+
   /** Decision age at the moment of following, in ticks, recent p95. */
   public double stalenessP95() {
     return staleness.percentileMillis(0.95) * 1_000_000;
@@ -115,6 +129,8 @@ public final class BotTicker {
   /** One server tick. */
   public void run() {
     tick++;
+    var runtime = Runtime.getRuntime();
+    load.memory(runtime.totalMemory() - runtime.freeMemory(), runtime.maxMemory());
     learning.startTick(tick);
     if (lobbyTick()) {
       return;
@@ -133,6 +149,7 @@ public final class BotTicker {
     roster.harness().captureTick(match.matchId(), tick);
     loop.publish(snapshot);
     var frame = new Frame(match, snapshot, loop.board());
+    load.record(snapshot, frame.board(), loop.profiles(), governor.level());
     for (var bot : roster.live()) {
       if (!sameMatch(match)) {
         // An earlier bot's action ended the match (a killing blow, a defuse) and rwf settled it

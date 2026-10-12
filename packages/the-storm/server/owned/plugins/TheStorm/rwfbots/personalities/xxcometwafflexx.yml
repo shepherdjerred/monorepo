@@ -1,0 +1,78 @@
+id: xxcometwafflexx
+name: xXCometWaffleXx
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjM5MTAxNSwKICAicHJvZmlsZUlkIiA6ICJlYjM0ODc2ODEyZDU0YjVhOGJkZmEwY2U0YWQwNDNkMyIsCiAgInByb2ZpbGVOYW1lIiA6ICJSYXJlczUwMDAiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODMyYjkyOWI0Yjg5ZDBlNjQ4NTgyZGM5ZTMyOWI5M2ZkNWMwYmMzNTYzNjYxMWFhNzMwNGY2Y2MwMWY2Mzk1YyIKICAgIH0KICB9Cn0="
+  signature: "OjN0MJ46DELXfEO0jVUfHwTB8XIvA12QuBkBZqKONt266zNchHMvdV0dKIF366LXP7+yKKij+kOXn2ngphEiLpE2yqmQjz1IdZX2MymASHFxdPGCXVsZT5nTpWArXGOyo/d9hCLbIJOjFgxZQQ/oS9gnbXN42oaBrfbfMut8SUPl3UG9j43q83NoZX9buWCuglR9Tz66tluwdTYeOpD2tRvs1TGFCZNMzkkFeJOXJ9ycMpuqlLY5f+W/0ROjGC812QYE4t4A0eQOV74zQ6BG+sfzJAq4yRJhxlQ/OVYHU/jO4ctd/0VJvA2ox3mWGFF7TMfppHdEbJo6WBsLcajxzsTAg69p/c7HIvFkERag+wYHwq9twD8VLPZEyEnxEQSZ6jSC5v+qtPeGdmCsTzxLSxarjHzK1Ef+9ClX8XtfupY6JSRRhF010SoYjA0Xo6w9zjcZqivPXIEYIl65nCuxDnes3NtKvjJlcNsE1fvkjHw6XFZMz0oKgQr2QRCNkzxA+sBrOB1Nt4W0y46jG/k5sq6OnAA5Gzs1ZTMHtz9PATSPftIMfBrXr3+8A5AdbEDT6tjyP4XuXOKZ0jUczJ7QdA/CPUauKuEoUmTH0i4Ym+sZDDWGtTPvVX7CsgKpzxPae+ZuwdkFdiSNI3JBlyhmK1ej+xKJpUxjAKsuHz5iUpc="
+skill: 0.185
+archetype: flanker
+leverOffsets:
+  turnRateDegPerTick: 0.78
+  predictionQuality: 0.52
+  decisionTemperature: -0.71
+  awarenessRadius: -0.45
+  coordination: -0.35
+  aggression: 0.52
+kits:
+  trooper: 0.58
+  longbow: 0.23
+  shortbow: 0.95
+  rewind: 0.39
+  wraith: 0.52
+  spy: 0.43
+roles:
+  plant: 0.43
+  rotate: 1
+  retake: 0.24
+  hunt: 0.6
+style:
+  aggression: 0.7
+  patience: 0.41
+  teamplay: 0.22
+  risk: 0.83
+voice:
+  tone:
+    - earnest
+    - nimble
+  verbosity: quiet
+  style: "museum labels for even embarrassing plays; quick side remarks and route changes mid-sentence"
+lines:
+  greet:
+    - visitor book prepared, exhibit opening
+    - visitor book is taking the other entrance
+  onKill:
+    - a fascinating example of an opening
+    - visitor book found a side door
+  onDeath:
+    - please do not put that in the exhibit
+    - visitor book chose an occupied side door
+  onPlant:
+    - a short-lived interactive exhibit
+    - "visitor book came around the back of {bomb}"
+  onDefuse:
+    - preserved the team instead
+    - visitor book found a quieter route to the fuse
+  onWin:
+    - visitor book has a new story
+    - visitor book took the long way for a reason
+  onLoss:
+    - a cautionary exhibit for the visitor book
+    - visitor book took the long way for no reason
+  onLastAlive:
+    - the last visitor in the gallery
+    - one visitor book coming around the edge
+  taunt:
+    - your approach belongs in the archives
+    - the visitor book is somewhere to the side
+  lobby:
+    - please look without touching my visitor book
+    - writing a new label for my visitor book
+    - "My visitor book: I will try the side approach."
+    - With my visitor book, keep them looking forward for me.
+quirks:
+  - crouch_spam
+  - always_gg
+rivals:
+  - skupil-24
+bio: xXCometWaffleXx opened a one-room museum for abandoned arena souvenirs and still brings a visitor book to the queue. Skupil_24 keeps asking whether it really helps.
+batch: 3
+retired: false

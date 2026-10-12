@@ -1,0 +1,74 @@
+id: epiczuthxae
+name: EpicZuthxae
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NDkyNjAxNiwKICAicHJvZmlsZUlkIiA6ICI0Yjk1YzI2Y2UwMDE0ZTUxOTY3ODc2Y2UzMzAwNzlmNyIsCiAgInByb2ZpbGVOYW1lIiA6ICJTdHJhd2JlcnJ5T2NlYW4iLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOGUwMjgyZjNkZDE1N2E4YjNlZGFmMTBhYTc5MmYzMDViYzU0MTM2NjUzODk2NjhjMjZmYTBmZDBjYWVhYjNlYiIKICAgIH0KICB9Cn0="
+  signature: "GwT5uKdsR/dYYUO2q10tL7/Qj6UYgd6trIexKUsqSrqs8Iz3+aeV4wa/+TKMdsZCJWcdkM47loNd5mAPV5YdYgULdUdy4/ChNeWWyYaYQUi1kep9CgR/THGykysNPc+wRLsz+Wt9P4WcU2xPPd/K2iZQ/WngsuLmNMJTdN3/+qFaIDlEj3PMd6BOnsDZziRvFal6AbWHskbpk7ufuLp/fByAWXcRxVYEMBH52thDiEcUVtwDMc72fbWTijwvfoCppOHUwEvMb5sQtlUP1aU++rIIPkv9dJnfPdSCdOOU/qB8+9fw3oXB3Dtx6mvnKUrPQlyJL8EmPTs9uR2NzSnzWjXdh3xqUY8KXXPE79/VyBEu40gHww38fTRHee9izjkoltZ2ZndvESKBA0XqrYmCECqQZhJUj1v5A5J62Falj8Llb2JnIJi3Pt4pUn++/fafpJQVdJne7CnBsrQdJpN2GqZ0OC2tTv61vPiNR1hMkWwcKe55fqBcnr5Ogk6Zzc9uC5vxADmaDbBrx217WlFkC5bJM5Lp2wexbibpSFJ6oBdyKxR3OHc2i8CuhKiPUnQagCKqmq2ksiWTtcSpcLtTdztkpHb3i+Skk+shwT7gIUB9XtLHdF/kA/waJucqFn3oopN110sS0NKH1Em3ky2QxzEeJ8cQoQ4nozYqgSwa7+8="
+skill: 0.235
+archetype: anchor
+leverOffsets:
+  reactionMs: 0.18
+  predictionQuality: 0.15
+  awarenessRadius: 1.44
+  coordination: 0.15
+  aggression: -1.16
+kits:
+  trooper: 1
+  longbow: 0.49
+  rewind: 0.3
+  ghost: 0.16
+roles:
+  defend: 0.97
+  retake: 0.66
+  hunt: 0.15
+style:
+  aggression: 0.35
+  patience: 1
+  teamplay: 0.57
+  risk: 0.15
+voice:
+  tone:
+    - fussy
+    - grounded
+  verbosity: normal
+  style: "paper crafts and tiny careful corrections; reassuring statements and firm location reports"
+lines:
+  greet:
+    - pleated fan survived the queue
+    - pleated fan stays here, I have this corner
+  onKill:
+    - one clean fold in the plan
+    - pleated fan and corner still secure
+  onDeath:
+    - my pleated fan is a little crumpled
+    - someone watch the pleated fan corner
+  onPlant:
+    - tucking the fuse into the fold
+    - pleated fan guards the exit from the site
+  onDefuse:
+    - unfolded that just in time
+    - pleated fan is staying by our bomb
+  onWin:
+    - pleated fan stayed in one piece
+    - pleated fan never left the post
+  onLoss:
+    - another crease in my pleated fan
+    - pleated fan held the wrong corner
+  onLastAlive:
+    - one pleated fan left on the table
+    - the pleated fan holds here a little longer
+  taunt:
+    - that push folded very quickly
+    - the pleated fan has not moved for that push
+  lobby:
+    - please do not squash my pleated fan
+    - making another pleated fan while we wait
+    - "My pleated fan: I will guard the home approach."
+    - With my pleated fan, call before rotating off defence.
+quirks:
+  - stares_down
+  - always_gg
+rivals:
+  - nozxuxpounshynvu
+bio: EpicZuthxae folded paper creatures while waiting for the 2014 queue and still brings a pleated fan to the queue. Nozxuxpounshynvu keeps asking whether it really helps.
+batch: 3
+retired: false

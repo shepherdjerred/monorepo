@@ -1,0 +1,75 @@
+id: thozgromvioshan
+name: Thozgromvioshan
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODc2MDA3OCwKICAicHJvZmlsZUlkIiA6ICJlYjM0ODc2ODEyZDU0YjVhOGJkZmEwY2U0YWQwNDNkMyIsCiAgInByb2ZpbGVOYW1lIiA6ICJSYXJlczUwMDAiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNDA5MDRlZWVkZTg0OGUyYWRlYTUzNzRiYWQwMjg5N2M0N2E5ZGRlZTZmZDY4NmJiZmM5Yzg1YjQ4MGFlYmFhYyIKICAgIH0KICB9Cn0="
+  signature: "ku1VSQUzXqCrLrddf7CQ0ZD+oEFx6hZhfMfzL0zeVdK2uKyaiprSar4xdVuNfJnF1pqNsNeAFl+OYPJg/t7ANfC3Hp3MNgDB4pZ1VBlwQtN4ZqTZ71JahsgaZXYMy9PgjKHvFrqUzMlQWWx8DF/CmXcwSPEjxufT3c5YJxKoSXZgwnQP5AqA4F5yBBLgCP3wYGIw+L5jfq1qKaNePR4q3y/Ur9Z+fm/MLhKAdgfEN2J7MnYaX96ANM568UWI5pZyWXqax22G2/SO4HHNHjlxAdbsHUVRzSHmUO1R6sb/R3cmoaxGzAzWG43F0Iz4nsNbVTM7hyN7DS5OGWyQjhMXijI2Zm9wo7L2Dm4cwOfkpjlLulYyn78KAJZ7SzQ/2deNCRCVR7bciGyO2x25HN0BkVNGwvJZx0vf3hJFCFLr9SNXPtOt1xM5eNnISN1nXrcV/aJq5nR9qdGUkOCY+Y+o7jvabxC2xE6WwgQdhsQh3WtH+fi2ubLLi7QmrAIgbidObqQOqkIDSaPYoJeOO6ozik2MivmladQA5Jylr1we2FQiJYeuQZv44n+EEfSfB9cbpHxtLBpOmf+HEkZtSDa2g8Kl+77EtZ2375C2j6s3jhYnDS1RywAJV3EugZ/vnm9L6gytxKcIGQgEfzYp8Xhs1vEqFDeg/nSL3claYAOT0hs="
+skill: 0.236
+archetype: turtle
+leverOffsets:
+  reactionMs: 0.29
+  turnRateDegPerTick: -0.02
+  cps: 0.19
+  decisionTemperature: 0.56
+  awarenessRadius: 0.93
+  aggression: -1.53
+kits:
+  trooper: 0.86
+  longbow: 0.27
+  rewind: 0.75
+  ghost: 0.33
+roles:
+  defend: 1
+  rotate: 0.26
+  retake: 0.29
+style:
+  aggression: 0.12
+  patience: 0.97
+  teamplay: 0.63
+  risk: 0.04
+voice:
+  tone:
+    - practical
+    - cautious
+  verbosity: chatty
+  style: "carpentry checks and repairable mistakes; unhurried words, conservative estimates and tiny victories"
+lines:
+  greet:
+    - pine dowel packed, joints checked
+    - pine dowel is ready. no need to hurry.
+  onKill:
+    - that opening needed a wedge
+    - pine dowel waited for the opening
+  onDeath:
+    - a weak joint in my plan
+    - pine dowel should have waited another moment
+  onPlant:
+    - the fuse is fitted snugly
+    - pine dowel checked the site first
+  onDefuse:
+    - took that assembly apart
+    - pine dowel checked the corner twice
+  onWin:
+    - solid work around the pine dowel
+    - pine dowel got there eventually
+  onLoss:
+    - back to the bench with my pine dowel
+    - pine dowel needed one more safe corner
+  onLastAlive:
+    - one pine dowel holding the frame
+    - the pine dowel will take this slowly
+  taunt:
+    - that angle needs a little sanding
+    - the pine dowel can wait out that peek
+  lobby:
+    - checking the edge on my pine dowel
+    - my pine dowel is for repairs after the match
+    - "My pine dowel: I will keep a safe route home."
+    - With my pine dowel, please check the blind corner first.
+quirks:
+  - gapple_hoarder
+  - always_gg
+rivals:
+  - royalminer36
+bio: Thozgromvioshan repaired a rickety spawn bridge every weekend and still brings a pine dowel to the queue. RoyalMiner36 keeps asking whether it really helps.
+batch: 3
+retired: false

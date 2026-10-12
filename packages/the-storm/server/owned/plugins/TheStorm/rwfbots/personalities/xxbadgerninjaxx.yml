@@ -1,0 +1,76 @@
+id: xxbadgerninjaxx
+name: xXBadgerNinjaXx
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTcyODExMCwKICAicHJvZmlsZUlkIiA6ICI0MmU4MDAxM2I3ZWE0Y2FkYmE1NDJhZWJmNDVhNjBkMyIsCiAgInByb2ZpbGVOYW1lIiA6ICJUYW1hcmlpaWlpaSIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8zMzVlY2YwM2JkNWZmMDYzYTBiNWRiMmRjYjk2MTE2NzQzYmQ4NGRkYzMxNzdiZWQ1ZDYxNzk2OTFiMmJjZTJjIgogICAgfQogIH0KfQ=="
+  signature: "pXu1aQsaWK42n0p9eZiZ0McSsGi8g+jH8CYeukzoTGg90abvdkxqMP3BsYyy5FI8UXYBqxVTiJSBwQ2T7zVV33Ud8lDuGzmjUg6/gdFjipdKjSJ3y/chak4HJuz1YYyTgtGB8UABAuE1V5JN1vznxY28yUq9DhaukfLQOFuvspDTfp8vR2iKzbbXXBKxTyNttfIzG3BTWRlVT7npcVwgsY9F7qGYW1cvk5MyMm7U/6+j+s1qIbw8WFs+3msmsul/V4F3/L5CD+1PlsZZtVSd3HNC5U9JNeDOyJrEpx0NFjPJ+/RvqP2Wt99MNCt5Q4mynbmFRQotXdcSIypUvWysOL/6fgN5b2uuqnW2XJNXgf8y/KMTuMvYDoHfRwi4jQDCrnPirb4zdCiH4z6wQzXvCQVFSc8xGXC41moBnEhV4/3I2UpdoQG9WtXg3L8FfzkfR2ludBLUoVxrrrZH+miP4yjgAye4k4iAObw55ZnTS1jU7pq+3h3AnhqVc87IYxdLOHdnztYZpPX0vpLlYzRW+v/WB+vtBmn8nid1Q+VCfvZYh+nL+iQecl0BbsvakRIkagIfgyD3hBa3ns1MPla0gXqR0qDJ5riBwynviZqfRWZebKuYPB1JX7Era+HMg/gXV4RdrW20uVL2DZssJAglQ8bwB4m0cx16fI0JuhpaOVo="
+skill: 0.318
+archetype: rusher
+leverOffsets:
+  reactionMs: 0.58
+  cps: 0.73
+  predictionQuality: -1.41
+  decisionTemperature: 0.27
+  awarenessRadius: -0.79
+  technique: -0.38
+  aggression: 1.87
+kits:
+  trooper: 1
+  shortbow: 0.51
+  rewind: 0.34
+roles:
+  plant: 0.71
+  escort: 0.33
+  defend: 0.17
+  hunt: 0.52
+style:
+  aggression: 0.94
+  patience: 0.05
+  teamplay: 0.42
+  risk: 0.8
+voice:
+  tone:
+    - polite
+    - eager
+  verbosity: normal
+  style: "postal announcements and absurd courtesy; fast fragments, impatient countdowns"
+lines:
+  greet:
+    - post satchel sorted, delivery begins
+    - post satchel ready, I am taking the first corner
+  onKill:
+    - delivered to the correct corner
+    - post satchel keeps moving, next corner
+  onDeath:
+    - returned to sender
+    - a pause for the post satchel, then straight back
+  onPlant:
+    - an urgent parcel at the bomb
+    - post satchel is already on the next approach
+  onDefuse:
+    - delivery cancelled politely
+    - quick hands, quick post satchel, clear
+  onWin:
+    - post satchel delivered the whole round
+    - post satchel barely stopped all round
+  onLoss:
+    - the post satchel took the scenic route
+    - post satchel ran ahead of the plan
+  onLastAlive:
+    - one final delivery to make
+    - my post satchel and I will keep moving
+  taunt:
+    - that push had the wrong address
+    - my post satchel got here before that push
+  lobby:
+    - checking the name on my post satchel
+    - no unpaid postage in my post satchel, please
+    - "My post satchel: first corner is mine."
+    - With my post satchel, please follow after the opening.
+quirks:
+  - bunny_hops
+  - always_gg
+rivals:
+  - epiczuthxae
+bio: xXBadgerNinjaXx delivered handwritten notes between feuding builders in 2014 and still brings a post satchel to the queue. EpicZuthxae keeps asking whether it really helps.
+batch: 3
+retired: false

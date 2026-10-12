@@ -1,0 +1,75 @@
+id: mrraenskovul
+name: MrRaenskovul
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTk2MjYzNCwKICAicHJvZmlsZUlkIiA6ICIzYmQ1YjkxYTc1MzI0YWNmYmQyYTJhNzM5MjA2ODY1YiIsCiAgInByb2ZpbGVOYW1lIiA6ICJUb2FzdF9RdWl0ZSIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9jYTNmM2UzNDM3ZjkzMTU2NmI4N2ZiODI3MDM0OTg1ZGM1NDhkZWZlODQ2ZTI3NTM3NGUxYzYzMjFiNmNjZjU4IgogICAgfQogIH0KfQ=="
+  signature: "ObpTrI5uhxfjO+RWv7HvhfmhnHBIldxMQ4gngHgWyDw900d9ECOWVfHy/GgKqhROt4UPEBsUMPMkM9xWiTEkIVZqiJPzvlJdGhg46gr5aS6pFe12Ex9bElDXksBPeeUwgHB1RPGin58y6vDmXvohM2H4QRSaeTnvk4QmxAsOkkx6aPYrrOdax9hbLtO2wdS479OVdo4+VvRj8tzUgt0DNlnzYhF2U/3ewJxmfVaUOt5CbBP2HS6R9FtoOZUw5vhMes77rrv/5zvUfhYaapFv24OYC2RpQP/QjMz7h7FXHQYxdldF4aYCxnvjn55eC6DlMxjYaha9UI4iN+zu811/qlyoh1bg9IULfcslbEb1p9mSvPTssiEdRpw425t2GAdDJ5OQ7LBZ4By7dy00U78pFUzpDHQUlY4xnf4Bq+56s3omqnCopH9VRL4LOBFESpC4aA6Xvw7MxQtQ4ZPQxaTWaWfvcnwoKBiYd+UjlYZClvfMJq0IZM7C1Oo7oaapTU3DOdnI/HgRpJ3jYKVq7sIc6pDcHEew1mjn47Ok7iYIWgHhKGN7kVi1CzoI7vKCMlENBb8Z0Qy3XVLoEjylzaM5XM70j6nJU4PRUFpAAPeJrjTWURaFiJBIzK1e/hFzlRr7ZYzCIj024Y1pCRkHsSp3otusnI7EkloCjXMboRzWhW0="
+skill: 0.517
+archetype: troll
+leverOffsets:
+  cps: -1.31
+  decisionTemperature: -2.23
+  coordination: -1.24
+  technique: 0.54
+kits:
+  trooper: 0.55
+  shortbow: 0.76
+  rewind: 1
+  spy: 0.9
+roles:
+  plant: 0.6
+  escort: 0.41
+  rotate: 0.61
+  retake: 0.23
+  hunt: 0.48
+style:
+  aggression: 0.61
+  patience: 0.25
+  teamplay: 0.2
+  risk: 0.86
+voice:
+  tone:
+    - gentle
+    - mischievous
+  verbosity: normal
+  style: "patient gardening talk, stubborn lane defence; deadpan object conversations and harmless overconfidence"
+lines:
+  greet:
+    - root dibber packed, lets grow into this
+    - root dibber has appointed itself captain
+  onKill:
+    - cleared a little room for my root dibber
+    - root dibber is now insufferably proud
+  onDeath:
+    - my root dibber has met a weed
+    - root dibber would like a different replay
+  onPlant:
+    - this seed has a very short season
+    - root dibber calls this interior decorating
+  onDefuse:
+    - pulled it out by the root
+    - root dibber says it knew the correct wire
+  onWin:
+    - a fine harvest for the root dibber crew
+    - root dibber is requesting a trophy shelf
+  onLoss:
+    - bad weather for my root dibber today
+    - root dibber has misplaced the blame form
+  onLastAlive:
+    - one root dibber still in the garden
+    - root dibber insists this was the plan
+  taunt:
+    - that lane could use some pruning
+    - the root dibber gave that push three out of ten
+  lobby:
+    - checking the soil with my root dibber
+    - my root dibber is for the roof garden later
+    - "My root dibber: I will cause a useful distraction."
+    - With my root dibber, try not to laugh during my push.
+quirks:
+  - celebrates_early
+  - always_gg
+rivals:
+  - dustymoth18
+bio: MrRaenskovul grew a roof garden over the old kit shop and still brings a root dibber to the queue. DustyMoth18 keeps asking whether it really helps.
+batch: 3
+retired: false

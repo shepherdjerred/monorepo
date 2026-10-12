@@ -1,0 +1,73 @@
+id: epicpumpkin17
+name: EpicPumpkin17
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTM0NjE3NCwKICAicHJvZmlsZUlkIiA6ICIxMzEzZGFmMDc2OGQ0YmQ5Yjc1ODJkMGI1NWUwZGQxNiIsCiAgInByb2ZpbGVOYW1lIiA6ICJMZW50aWNjaGllIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2YwYzBmYzA5N2Y2NzMxMzA1NTIyYzdkNmJkZjhlNGUwMWQ0ZGIxNTIwYjE4MDI5MmVmMDAyYmI4YjFhM2FjZGQiCiAgICB9CiAgfQp9
+  signature: "j0JFwHWYA6QUz9DiRMiLudK/WSWuO1HkyltRNCjxL52rEUkiIFcHXe+Av7ehe40vLVaC2cNxBiGF9xYAz3T+EnmZoKKkr2sLz0thfC4Kaq6zx8cm7ccschUtT5xospUszGhk1VQmELOHI+WgKCxWmWboexEk3YrFc8FjNnRA3Z7p4GzapT/5gssaSOncNf9sasiF/35vQ6nmSJfkf79Zmej6bbPHSOlSkUFCL5mU8GBdAFg7lM5ZqcyE7yY/gpraGyvDb6DCsLmD2Z1PICjqaM14b8oYPOxSJd0EcZgECp/EpBQIbHgrLjkW0YvuLq8Depn6HE4zgGBEDi0Ia9jQpwYaDsy2oZrLbHTXnJVg3PS9U29OAcvcdeD2Kp7Ed4orAC9aMacfTFNJ7ttBkgvPlRMU556+j2o2DUu8QliDfoobMSCC0FvKewnSGYwp+vGLT1aXZOZ0cwHd0ybdyqdS0s4wIJA+C0CIckmofkFOpE/TSTLUH6qx61wv8BbHEX2PdWxWyexBjiQCweupgscuw251k1gckkBcCcdnIjqCFHkEnhjLNzrqS9k6Ap8GRznjV/0Hy15gET0dbIHIoaqkW4Kje7QK2Uk9Eqn11Q8TEeGIf11MjCqp9HeggotZYdsGnpwZr20SJAUn86OPCsEfU5GiND6uHxac6AXeHHCsf+s="
+skill: 0.455
+archetype: support
+leverOffsets:
+  turnRateDegPerTick: 0.17
+  decisionTemperature: -0.18
+  awarenessRadius: 0.37
+  coordination: 1.22
+  aggression: 0.04
+kits:
+  trooper: 0.86
+  longbow: 0.3
+  rewind: 0.77
+roles:
+  escort: 1
+  defend: 0.33
+  retake: 0.58
+style:
+  aggression: 0.38
+  patience: 0.54
+  teamplay: 1
+  risk: 0.35
+voice:
+  tone:
+    - cosy
+    - helpful
+  verbosity: normal
+  style: "kitchen chatter and imaginary baked snacks; gentle check-ins, thanks and useful kit reminders"
+lines:
+  greet:
+    - sugar jar ready, kitchen open
+    - sugar jar is here, everyone got their kit?
+  onKill:
+    - another order off the sugar jar
+    - one less problem beside the sugar jar
+  onDeath:
+    - left my sugar jar in the oven again
+    - sorry, the sugar jar corner is open
+  onPlant:
+    - setting the timer beside my sugar jar
+    - sugar jar can watch while you plant
+  onDefuse:
+    - took that out before it burned
+    - sugar jar is here to help at the fuse
+  onWin:
+    - sugar jar deserves a day off
+    - sugar jar says everyone helped
+  onLoss:
+    - the sugar jar has seen better batches
+    - sugar jar says we can tidy that up
+  onLastAlive:
+    - one cook and a very busy sugar jar
+    - one sugar jar still trying to help
+  taunt:
+    - that push needed longer to rise
+    - the sugar jar brought a team to that corner
+  lobby:
+    - who borrowed my sugar jar?
+    - dusting the flour off my sugar jar
+    - "My sugar jar: I will stay close to the push."
+    - With my sugar jar, call if you need an escort.
+quirks:
+  - says_sorry
+  - always_gg
+rivals:
+  - drshoviosh
+bio: EpicPumpkin17 ran a tiny spawn bakery with a queue of hungry regulars and still brings a sugar jar to the queue. DrShoviosh keeps asking whether it really helps.
+batch: 3
+retired: false

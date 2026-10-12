@@ -46,6 +46,30 @@ final class RoutePenaltyTest {
   }
 
   @Test
+  void everyNodeRetainsTheExactDirectedNeighbourAndCorridorCosts() {
+    var occupied = Set.copyOf(route(3, Set.of()));
+    var corridor = Set.copyOf(route(7, Set.of()));
+    var penalty =
+        RoutePenalty.of(
+            GRAPH, 9, new RoutePenalty.Tolls(occupied, Optional.of(corridor), n -> n % 3 * 0.1));
+    for (var node = 0; node < GRAPH.nodeCount(); node++) {
+      var near = occupied.contains(node);
+      for (var edge = GRAPH.edgeStart(node); edge < GRAPH.edgeEnd(node); edge++) {
+        near |= occupied.contains(GRAPH.edgeTarget(edge));
+      }
+      var cell = GRAPH.cell(node);
+      var expected =
+          RoutePenalty.NOISE
+              * RoutePenalty.noise(
+                  9, cell.x() >> RoutePenalty.PATCH_SHIFT, cell.z() >> RoutePenalty.PATCH_SHIFT);
+      if (near) expected += RoutePenalty.OCCUPIED;
+      if (!corridor.contains(node)) expected += RoutePenalty.OFF_LANE;
+      expected += node % 3 * 0.1;
+      assertThat(penalty.applyAsDouble(node)).isEqualTo(expected);
+    }
+  }
+
+  @Test
   void leavingTheLaneCostsAndNoiseStaysBounded() {
     var corridor = Set.copyOf(route(3, Set.of()));
     var penalty =

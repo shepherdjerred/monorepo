@@ -1,0 +1,73 @@
+id: lumbrytyngroust
+name: Lumbrytyngroust
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NDg4NzU4MywKICAicHJvZmlsZUlkIiA6ICI0YzZhZTVkNzc0ZDE0MjBkYmJiNThjNDMzZGM3NjNlMCIsCiAgInByb2ZpbGVOYW1lIiA6ICJKdXN0VHJhbnNHaXJsIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzk3Y2JlNWZiYzg4NTRhNjYxNTFmODI0NmUxMWUzNWI4ZTZhMTRhYjY4MzQwNjA4MGE0YmU5MmMwNThhMzcyMzAiCiAgICB9CiAgfQp9
+  signature: "xO42ZY6yKtl5NFChh4ylEOvoZXGo9VSn/OaRRME4Pybuwv+OQo9+03WP2SgJOv+VqN7y3nKp6waOoa6xRxmMcKtJlg902yjXDoRue0b/5De+WVEQYJJlVzSc+Qm08bB33NkVDFiVf4PAECoPcdPsnf4LuqVVv9UkZfXb8O0CrERITjN30RdpeC/A2jdb8J/7cDvcn4Y/FnhhxKgNyJNNDJq1sH/L8nJ7sP5SpjD+srfRggkgaj+1dEJ3TkIvAPra8/cx2CUlPYgG7q6ekEJIwzekNZfoYxvV/q9DknU92+Lz/Q1Fmfg1U3Z3sBDWfH2D8VRn5atEtDfh0T+hmSXcHKFgFIchQsKXYaFUGVjDpdWjL9zvSMM5MNRLWD1KzQhXGrfCI+dmYADCHVGINsQnctJZHf32LcBBH1Sm6ExdzQcCnZfTxMmBiSzuj3pZBCsOHfDhuLTyBu0LzuMF8vXQCUn1qnBZ8ajeWXnxTFZQbjGZNiUpdSiGwLWNUdwdYxY6DNC4iTCQMUP+Lqe6+KaAVcvPm18SHI1XG2hbFRWD35eEs2T1tXtAdgFHzZPjaNNuDSnlmn5bMMB6A2JhdGhAixhb0Vu2qa00czMsYU5c4pHcAgOax0nIto8EZR8wxAroHRyHnuewHf/ZA8eZRal5ZhWTpU+uQrbjotGaGNPYRTo="
+skill: 0.944
+archetype: support
+leverOffsets:
+  turnRateDegPerTick: -0.24
+  awarenessRadius: 0.61
+  coordination: 1.46
+  aggression: -0.58
+kits:
+  trooper: 0.96
+  longbow: 0.28
+  rewind: 0.64
+roles:
+  plant: 0.17
+  escort: 1
+  defend: 0.25
+  retake: 0.52
+style:
+  aggression: 0.41
+  patience: 0.51
+  teamplay: 0.93
+  risk: 0.28
+voice:
+  tone:
+    - fussy
+    - helpful
+  verbosity: chatty
+  style: "paper crafts and tiny careful corrections; gentle check-ins, thanks and useful kit reminders"
+lines:
+  greet:
+    - paper dragon survived the queue
+    - paper dragon is here, everyone got their kit?
+  onKill:
+    - one clean fold in the plan
+    - one less problem beside the paper dragon
+  onDeath:
+    - my paper dragon is a little crumpled
+    - sorry, the paper dragon corner is open
+  onPlant:
+    - tucking the fuse into the fold
+    - paper dragon can watch while you plant
+  onDefuse:
+    - unfolded that just in time
+    - paper dragon is here to help at the fuse
+  onWin:
+    - paper dragon stayed in one piece
+    - paper dragon says everyone helped
+  onLoss:
+    - another crease in my paper dragon
+    - paper dragon says we can tidy that up
+  onLastAlive:
+    - one paper dragon left on the table
+    - one paper dragon still trying to help
+  taunt:
+    - that push folded very quickly
+    - the paper dragon brought a team to that corner
+  lobby:
+    - please do not squash my paper dragon
+    - making another paper dragon while we wait
+    - "My paper dragon: I will stay close to the push."
+    - With my paper dragon, call if you need an escort.
+quirks:
+  - says_sorry
+  - always_gg
+rivals:
+  - viperpickaxe6
+bio: Lumbrytyngroust folded paper creatures while waiting for the 2014 queue and still brings a paper dragon to the queue. ViperPickaxe6 keeps asking whether it really helps.
+batch: 3
+retired: false

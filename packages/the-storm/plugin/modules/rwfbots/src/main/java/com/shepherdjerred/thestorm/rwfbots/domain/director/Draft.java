@@ -6,6 +6,8 @@ import com.shepherdjerred.thestorm.rwfbots.domain.personality.Personality;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.PersonalityCatalog;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 import java.util.random.RandomGenerator;
 
 /** Picks the personalities for a match. */
@@ -19,7 +21,18 @@ public final class Draft {
    */
   public static List<Personality> draft(
       PersonalityCatalog catalog, int count, RandomGenerator random) {
-    var pool = new ArrayList<>(catalog.active());
+    return draft(catalog, Set.of(), count, random);
+  }
+
+  /** Drafts from a validated catalog without revalidating a subset whose rivals may be excluded. */
+  public static List<Personality> draft(
+      PersonalityCatalog catalog, Set<String> excludedNames, int count, RandomGenerator random) {
+    var excluded = excludedNames.stream().map(n -> n.toLowerCase(Locale.ROOT)).toList();
+    var pool =
+        new ArrayList<>(
+            catalog.active().stream()
+                .filter(p -> !excluded.contains(p.name().toLowerCase(Locale.ROOT)))
+                .toList());
     if (count < 0 || count > pool.size()) {
       throw new IllegalArgumentException(
           "cannot draft " + count + " from " + pool.size() + " active personalities");

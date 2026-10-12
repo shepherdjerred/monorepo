@@ -1,0 +1,74 @@
+id: xadaishwaffle
+name: XadaishWaffle
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NTU1OTgyNSwKICAicHJvZmlsZUlkIiA6ICIxNDgxNzQxN2VhNWI0OGM1OTMzNzA5YjZjMTcxZTc3YSIsCiAgInByb2ZpbGVOYW1lIiA6ICJJdHNtZV90byIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS84NWNmMjYxYTQzZDFkOGRhZDUwNDVkMjQ0ZWZmZWNhYTYzM2Q5YjczNjI4YTFhMzg0MDNhMWU0YTRjYmM1MDU1IgogICAgfQogIH0KfQ=="
+  signature: "wfLihEGCDNXqRvQX1FSKF79fkWeSfH+Wi7sde6ZJJv0mmnEUaErRJtwM98OnYPryPIfjtvrwJ/ulp2OOmSkPtUCV4cBFYd9YY1luD0da6iAmmQ+S8ZvPbr7tnAlZxQtlgv0ImYN5dErNSsVTYUI2Pirp7a/CYArvPq2DLJ4z3SkPDHN637dr9B+ivlXE5vzaMho54Axmk2suSqbkv+xaFg3MvuW/ImVOOeUcx2wFd1/gpmCy92aXNwQBnfSnWP+ncbnCd/pQn2uvmlrpErA0/dcKCDdXZay22Ry7CltYkM8k8kXusWoaL3WvEu7XQx0jCy4RHfo/hkpb7075I58izXgPEizie/ypWlxZ00KkQTbTT6NYD5g443K8i6d7ku7RH+NLntD8ia3In15QH/FrUeN8vIIt5uo3sgdAkqkZAHDwRLO0kSfd+uR+l/pJvVYZHo8NhczvEDvnIsgxBrmk1Rcn/uL4BglxqEnbGXjDdgNyIr7te+U8jeFhDsVi3Q6yhOyVLWhb2oq5oozvp6QiFFx0KoNKxUEVKJ5ZZ3l349iwy0S435YBtou9JClNwhfR6/C0GkqASv2UpZ/M8sc9hhFhBCl6T5JKSKlSobaY4zxXK+6cu1xmRWixu4PWrzQJ8p6nNaxPG/QJSMQbUNyIQUGcHMFyHe1PnWNgA4y/Vjs="
+skill: 0.12
+archetype: lurker
+leverOffsets:
+  reactionMs: 0.82
+  predictionQuality: 0.2
+  awarenessRadius: 1.33
+  coordination: -1.49
+  aggression: -0.4
+kits:
+  trooper: 0.67
+  shortbow: 0.57
+  ghost: 0.77
+  wraith: 0.54
+roles:
+  plant: 0.35
+  rotate: 0.63
+  hunt: 0.92
+style:
+  aggression: 0.46
+  patience: 0.83
+  teamplay: 0.12
+  risk: 0.47
+voice:
+  tone:
+    - theatrical
+    - hushed
+  verbosity: quiet
+  style: "backstage whispers and hurried scene changes; lowercase whispers, deliberate pauses"
+lines:
+  greet:
+    - painted flat in place, curtain soon
+    - painted flat here. quietly.
+  onKill:
+    - a quick scene change for the painted flat
+    - the painted flat was here a while
+  onDeath:
+    - missed my cue by a whole scene
+    - heard it too late beside the painted flat
+  onPlant:
+    - cue the dramatic ticking
+    - painted flat is watching the quiet entrance
+  onDefuse:
+    - cut that effect, safely
+    - no noise. no fuse. just the painted flat.
+  onWin:
+    - take a bow beside the painted flat
+    - the painted flat stayed out of sight
+  onLoss:
+    - the painted flat needs a better rehearsal
+    - the painted flat waited one corner too long
+  onLastAlive:
+    - one performer, one painted flat
+    - nobody move near my painted flat
+  taunt:
+    - your entrance was a bit loud
+    - the painted flat heard that approach coming
+  lobby:
+    - has anyone seen the painted flat?
+    - do not lean on the painted painted flat
+    - "My painted flat: I will hold the quiet route."
+    - With my painted flat, leave one quiet approach for me.
+quirks:
+  - slow_starter
+  - always_gg
+rivals:
+  - sniperslime8
+bio: XadaishWaffle worked the curtains at a player-built theatre between duels and still brings a painted flat to the queue. SniperSlime8 keeps asking whether it really helps.
+batch: 3
+retired: false

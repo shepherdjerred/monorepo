@@ -1,0 +1,77 @@
+id: toxic-comet
+name: Toxic_Comet
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTk3NTQ5OCwKICAicHJvZmlsZUlkIiA6ICIxNzNkZTMxZjIzODE0YzY1YjVmZWMyMTAyYmIxZjExNSIsCiAgInByb2ZpbGVOYW1lIiA6ICJCSVROVyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9kMmQ3YmU2ZjhlMThjYjIwMzJmZDUwNzFmNDMwNjgwNzU3ZDUyZDYwM2FiYzY1ZWY2MGM0YjFiMTQzNTI2YjVkIgogICAgfQogIH0KfQ=="
+  signature: "SOSA6mQkUXWHkc8YPiVuqp+FzZaxUFQ1nezZAfsQY8UAhYLlxF3QvbxpWFkUo7t/NC+yZtaq+6wTGjdkz/+ZOdbYJKQbCqt5QekK6iuS1EQIyMrfgTpa8n6mgF63f8qC8efye7smVwoJlruGKdSIz+aZ/e3ktVlBht40SZAnbsipqYhf31camRU3QT9MGhNyuTAt6BLwkIQ/YRHlM8Lis5G/51s1xflDhlH5r6mIOIWAAlCXG9C7Lqs5mpg4gTDtQRD1ux5T56WV714Yd5EHZiR060rUgmsMsyHoX9/AcwGxVF3r3LBReoHbMwITEKkOXW20sJIYdDQktRzuyBY9Ioq9ITHXCi22p4f5vD0b1Q2Rc9q0D2Z+g+cpvuOcaEL51NcZirEh1Q8w0J3z/xncMHrRX2kKtlGYS0t3Eu2XE0S71sPT0pIRPo4iyQvAgr5WqzdJZoPOi835hNwTBroBE+7l/ic+kEGFLwGvqDuvy0PZfFFQLe5XKKDTQTb4iimPjJW7bh943Puh/eZlTjfzJcBeHVJJ1/itrV63pIPz8aCjAggOEmCye7zIs810f16pUNloY9KuVqtYnUS451dRFyoPjxq1VzSQbQGgmn2vQTtdNWs6XTdeEPGpnSSr5wkvmoWQJluuCcEKEGrM7jmbWTjUWHpglcRMaXNifiOk5WQ="
+skill: 0.926
+archetype: sniper
+leverOffsets:
+  aimErrorDeg: 1.84
+  turnRateDegPerTick: -0.49
+  cps: -1.12
+  predictionQuality: 1.08
+  decisionTemperature: -0.72
+  awarenessRadius: 0.93
+  technique: -0.28
+  aggression: -0.67
+kits:
+  trooper: 0.17
+  longbow: 0.87
+  shortbow: 0.44
+  rewind: 0.3
+roles:
+  defend: 0.75
+  rotate: 0.32
+  hunt: 0.56
+style:
+  aggression: 0.26
+  patience: 0.79
+  teamplay: 0.4
+  risk: 0.26
+voice:
+  tone:
+    - dry
+    - focused
+  verbosity: normal
+  style: "imaginary roof leaks and tidy-angle demands; short range notes and patient, exact corrections"
+lines:
+  greet:
+    - roofing nail checked, no leaks yet
+    - roofing nail in place, checking the long angle
+  onKill:
+    - a small opening under the eaves
+    - roofing nail found the range
+  onDeath:
+    - found the one loose tile
+    - roofing nail needed a closer angle
+  onPlant:
+    - something ticking under the roof
+    - roofing nail covers the far entrance
+  onDefuse:
+    - one less repair bill
+    - roofing nail can wait, hands on the fuse
+  onWin:
+    - roofing nail kept the rain out
+    - roofing nail had a clear view of that
+  onLoss:
+    - the roofing nail plan has sprung a leak
+    - roofing nail kept the wrong sight line
+  onLastAlive:
+    - one tile holding the roof
+    - one roofing nail, one long angle
+  taunt:
+    - your angle would collect rain
+    - the roofing nail saw that peek twice
+  lobby:
+    - inspecting my roofing nail for cracks
+    - the roofing nail repair can wait one round
+    - "My roofing nail: I will cover the long angle."
+    - With my roofing nail, call the close flank for me.
+quirks:
+  - bow_spammer
+  - always_gg
+rivals:
+  - kakkouwolf
+bio: Toxic_Comet reroofed the same spawn cottage after every group building session and still brings a roofing nail to the queue. KakkouWolf keeps asking whether it really helps.
+batch: 3
+retired: false

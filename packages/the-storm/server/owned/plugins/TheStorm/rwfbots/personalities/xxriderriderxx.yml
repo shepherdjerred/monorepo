@@ -1,0 +1,73 @@
+id: xxriderriderxx
+name: xXRiderRiderXx
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTQwNjU1NCwKICAicHJvZmlsZUlkIiA6ICIyODlhOTY3YTI5ZGU0YjliYTljYmEwYzgxZDRkNWFjMiIsCiAgInByb2ZpbGVOYW1lIiA6ICJoYW5uaHVtcyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS84NWFkZGRiMDVmN2I0MGY2OWQyZDEzOWNlYWMwOTJjOTU5ZDU5ZWQ4N2QyMDI4NjQ4YTcwYmIwNTY3ZjY3Y2Y4IgogICAgfQogIH0KfQ=="
+  signature: "AcLOjAcOqtH0DavGbfPvSCQfNZRmrBnZezm8Z1HfvioBwGM2E6oIgqiRGn60sNmW6Ppalil77KNF21QrrkroYpCS2Jx0FVPV/f2JjfqwOFew7cbpcopxpLBjIDopT0N/ImJagaExTD9ijPChRGZuoYr8I56nLIZykdkfnjeaZRFQuAyNdnDDUp3udPst146H/4eZb9o7zCpLn7MXaIfPE14e4/CzL6bphS4ZnR7EuHbdjgWVoUfE4WE16v9Bz6O6de2f1ph1xgb1tdkaCwGb8EA1LxkC+w4k/Bt9m8EEheDfC9plE5HDYtbn5wx0K6PQ7pIR1268J84kTCNrc+aVDT2ADUwEiNdCiYZWL4N87UcN5wUZNCeAkgzOAiL31eEOj1TwpC5Lpx6xmqm3Q6n+D1Pf3dHvwzzxCfcfxbisPsTIrT3uhAgUTH0uLW+oJ0irZcwsVs2qtNgpk5K6u/uMdzFUQ4sVPzw+F4Tgx155N1NBnXeMRobpjdOOsYX3cUMe9wTTHNdQCdj/2WkmP56mLj52sM91Gi2ebQLvDEuHtJgmnEP5i2VhSs2dOx0a09G+/8xjnI9NxhXizgTk8B/OJTsY4kZXjh6v9jjd6WE4Sh1c8HnchhD+Ff182o1Fk0C3Plo5upJTMijQ4mMDJ7Zc6PcmkVdZ/dO/uqTjUh++0/0="
+skill: 0.681
+archetype: bomb_diver
+leverOffsets:
+  reactionMs: 0.22
+  decisionTemperature: 0.88
+  coordination: 0.23
+  technique: 1.1
+  aggression: -0.42
+kits:
+  trooper: 0.95
+  shortbow: 0.2
+  rewind: 0.69
+roles:
+  plant: 1
+  escort: 0.19
+  rotate: 0.16
+style:
+  aggression: 0.71
+  patience: 0.05
+  teamplay: 0.26
+  risk: 0.98
+voice:
+  tone:
+    - measured
+    - urgent
+  verbosity: normal
+  style: "soft beat counts and tiny timing worries; breathless objective reports, oddly calm at a fuse"
+lines:
+  greet:
+    - winding key is almost on time
+    - winding key packed, where is the bomb?
+  onKill:
+    - right on the winding key beat
+    - a clear path for the winding key
+  onDeath:
+    - my winding key skipped a beat
+    - winding key was one corner from the fuse
+  onPlant:
+    - winding key is counting now
+    - "winding key is parked beside {bomb}"
+  onDefuse:
+    - stopped just before the chime
+    - "winding key and {bomb} can both stay intact"
+  onWin:
+    - winding key and team in perfect time
+    - winding key got the objective done
+  onLoss:
+    - my winding key needs adjusting
+    - winding key took too long reaching the site
+  onLastAlive:
+    - only one winding key still ticking
+    - the winding key still has a fuse to find
+  taunt:
+    - a little early on that swing
+    - the winding key got closer to your bomb
+  lobby:
+    - listening for the winding key tick
+    - my winding key is not a countdown shortcut
+    - "My winding key: cover my approach to the bomb."
+    - With my winding key, call the safest bomb route.
+quirks:
+  - loves_nuke
+  - always_gg
+rivals:
+  - potatoninja0
+bio: xXRiderRiderXx built a clock tower that chimed one block too early and still brings a winding key to the queue. PotatoNinja0 keeps asking whether it really helps.
+batch: 3
+retired: false

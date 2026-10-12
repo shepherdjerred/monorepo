@@ -1,0 +1,76 @@
+id: quietslime59
+name: QuietSlime59
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NTYwNzc1NywKICAicHJvZmlsZUlkIiA6ICIwMmI1ZWM4OTlkYTE0NzU1OTQ5YmEwMDIxOWJiYzFlYiIsCiAgInByb2ZpbGVOYW1lIiA6ICJteWllc2h1cCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8xYjdjYmE1ZjM1NGM2YTI4MmEyOTg1YTljZTZmNzEzMzNkYmYzNTM1YTYyMTQ0NDQ0NzYzZjk0MDgzMmNjOTUzIgogICAgfQogIH0KfQ=="
+  signature: "ZT+h85FLwYk4wODDSZzBlRq2wVhWYzp+HZ8lwe59ANNZdgTJk6XDRCboT6f/SYBYuUuv9uWQQlzetD4V4zoZKBZ+JR9N+nUXBrJ5IFcDx+S7sx+TUcMMedyJf5/uPqL29Stkd6aMaBG6Z3IMDm05VGfDmEbTAgDKrkzYhhCpDyU0cM3xoi0hV5SiHl/Js/1l6+ezDUbXK1Hfi08OXRvdiHZZcRhgTgwZ/ggxBuvFjuFFjINp1dxxO4/Fo5kfrgX//PgijHLbb61TkdI04jj7MiM9qsYSjgWbENNex9JLONA91b09fIJ6XID0uWont3JX40h1cVluoBEvtisRMr7jB7Rk2tLLOZoeuGGJJ68fQPs+/OvpYt4Qe75uBOya5Px0B5IWmBsp2moZde2u7BM2suHpjAlQ+tm8wogzzQy2PcRXvN0etUeNvskqM6kdXSQDhHcDvmZyOVqWzmlbAKXQTv3lRMp4Y/zUbccnh0vtjTnwVy5Ek4ad3X+bTzZLgnClVZrFTJ3NnEfuG4xtHkEdQELQYKPlOZhCnAm5MqIpcLZFxEta/Zf7w+vLWydtNLxWNApj9dZFlD0YPjUY50Jjjroy29A9JeWbdv9auBCbJwjW+Lw6KgsHrIR/1tl9NUokYuKM7AHJMxM1+I4YripXl4wtExIP/lKPyzD0m7L//8k="
+skill: 0.615
+archetype: rusher
+leverOffsets:
+  reactionMs: 0.25
+  aimErrorDeg: 0.27
+  cps: 0.33
+  decisionTemperature: 0.2
+  awarenessRadius: -0.68
+  technique: -0.08
+  aggression: 1.32
+kits:
+  trooper: 1
+  shortbow: 0.55
+  rewind: 0.3
+roles:
+  plant: 0.76
+  escort: 0.46
+  retake: 0.29
+  hunt: 0.69
+style:
+  aggression: 0.87
+  patience: 0.21
+  teamplay: 0.38
+  risk: 0.68
+voice:
+  tone:
+    - gentle
+    - eager
+  verbosity: normal
+  style: "patient gardening talk, stubborn lane defence; fast fragments, impatient countdowns"
+lines:
+  greet:
+    - watering can packed, lets grow into this
+    - watering can ready, I am taking the first corner
+  onKill:
+    - cleared a little room for my watering can
+    - watering can keeps moving, next corner
+  onDeath:
+    - my watering can has met a weed
+    - a pause for the watering can, then straight back
+  onPlant:
+    - this seed has a very short season
+    - watering can is already on the next approach
+  onDefuse:
+    - pulled it out by the root
+    - quick hands, quick watering can, clear
+  onWin:
+    - a fine harvest for the watering can crew
+    - watering can barely stopped all round
+  onLoss:
+    - bad weather for my watering can today
+    - watering can ran ahead of the plan
+  onLastAlive:
+    - one watering can still in the garden
+    - my watering can and I will keep moving
+  taunt:
+    - that lane could use some pruning
+    - my watering can got here before that push
+  lobby:
+    - checking the soil with my watering can
+    - my watering can is for the roof garden later
+    - "My watering can: first corner is mine."
+    - With my watering can, please follow after the opening.
+quirks:
+  - bunny_hops
+  - always_gg
+rivals:
+  - grimbadger51
+bio: QuietSlime59 grew a roof garden over the old kit shop and still brings a watering can to the queue. GrimBadger51 keeps asking whether it really helps.
+batch: 3
+retired: false

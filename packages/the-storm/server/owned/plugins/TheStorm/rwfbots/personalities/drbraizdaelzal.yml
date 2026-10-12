@@ -1,0 +1,77 @@
+id: drbraizdaelzal
+name: DrBraizdaelzal
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NTUzODExMywKICAicHJvZmlsZUlkIiA6ICJlZGUyYzdhMGFjNjM0MTNiYjA5ZDNmMGJlZTllYzhlYyIsCiAgInByb2ZpbGVOYW1lIiA6ICJ0aGVEZXZKYWRlIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzJiMGZjZGNhOTNkZWI1MWI2ZmNhY2IzMDE4YzkzMGJiZjBlODkxOTE5Yjg1MDU0ODhmZGU3YjkyODU4MTI0ZWYiCiAgICB9CiAgfQp9
+  signature: "YvWsX3gK7tNGn0IKnxmoXfshYO3StsZSM0iPtGLjvkbJvobgiD0dOKfuNSmAZb7ac70a3BUDV1beE3KzHZ9c/HKbNTSaGbJA1XKMpjRC7pxCXlFTewNEJNM9TUMWrhmxz12tl1WkC6DU577id8+R/nhV1IrkY5yyqk9zk1AUQPAxMn9JODLlj1XV/mOX9BKdX4h+8aDzldastKqCLgAGiF9pOBDW5E1nSzUVtx///kToAapX3FRqWs5iTidUTaA46BCOlaGP0u91JkqrCFqLVa5wxM3a/evjW+qHMB1lZcx0L6A7AuTcFnf6yhYULtNlk9VKl35cQqjyCjg5iXHzsgeIoCpQ+a8otVQ+pSwWpZ5fue3J2DUTBazrk8jI8VDzVs+TkeSEaI7s8tsFYoJGK4YtT+UN7+wYuxbdzq8+OqgWrhg469qNsa9jZz2sjnf37giQ0T/eh1m5Eh6CjyKS9+6tPOaUQdnztOsxBYt5Ep3lRPDvTaE0ciuwiDj4P/dMUX66ogknwyzbmrTy4u2rb4RIqGQffLEoEoMrFdQYwr/eJewNU2Y7Ag9zioxbgmw3SN8Qv8HhzKZiFxSx9SndamFT5bpyKjsxXiIWfWN5fFyDriRCsDJehfzmz4Grzwo0JLj1jRm7k8V0M8c/hR7WOaLMNC9byVMqTaMDsmoLpQE="
+skill: 0.906
+archetype: sniper
+leverOffsets:
+  reactionMs: 0.22
+  aimErrorDeg: 1.95
+  cps: -0.56
+  predictionQuality: 1.09
+  awarenessRadius: 1.04
+  coordination: -0.12
+  technique: -0.74
+  aggression: -0.65
+kits:
+  trooper: 0.17
+  longbow: 1
+  shortbow: 0.51
+  ghost: 0.22
+roles:
+  defend: 0.79
+  rotate: 0.43
+  hunt: 0.49
+style:
+  aggression: 0.3
+  patience: 0.96
+  teamplay: 0.44
+  risk: 0.17
+voice:
+  tone:
+    - fussy
+    - focused
+  verbosity: chatty
+  style: "paper crafts and tiny careful corrections; short range notes and patient, exact corrections"
+lines:
+  greet:
+    - creased boat survived the queue
+    - creased boat in place, checking the long angle
+  onKill:
+    - one clean fold in the plan
+    - creased boat found the range
+  onDeath:
+    - my creased boat is a little crumpled
+    - creased boat needed a closer angle
+  onPlant:
+    - tucking the fuse into the fold
+    - creased boat covers the far entrance
+  onDefuse:
+    - unfolded that just in time
+    - creased boat can wait, hands on the fuse
+  onWin:
+    - creased boat stayed in one piece
+    - creased boat had a clear view of that
+  onLoss:
+    - another crease in my creased boat
+    - creased boat kept the wrong sight line
+  onLastAlive:
+    - one creased boat left on the table
+    - one creased boat, one long angle
+  taunt:
+    - that push folded very quickly
+    - the creased boat saw that peek twice
+  lobby:
+    - please do not squash my creased boat
+    - making another creased boat while we wait
+    - "My creased boat: I will cover the long angle."
+    - With my creased boat, call the close flank for me.
+quirks:
+  - bow_spammer
+  - always_gg
+rivals:
+  - kistkedanom
+bio: DrBraizdaelzal folded paper creatures while waiting for the 2014 queue and still brings a creased boat to the queue. Kistkedanom keeps asking whether it really helps.
+batch: 3
+retired: false

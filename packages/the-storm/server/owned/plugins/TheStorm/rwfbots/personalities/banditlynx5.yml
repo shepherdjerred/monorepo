@@ -1,0 +1,76 @@
+id: banditlynx5
+name: BanditLynx5
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTk2OTQxOCwKICAicHJvZmlsZUlkIiA6ICJkZWFmNjAxNDU1NDY0MGU5YWJmNmUyMWZiZDgyZDU2NiIsCiAgInByb2ZpbGVOYW1lIiA6ICJBaWxvcnlLIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzNiNjUzNjBiMDUwNDU2ZTJlYjkyODczMjA2NzY0ODRjZDU2Zjg2ZDQ5Nzc5MTE1MmE3MjUxNzljY2YyZDQzMGUiCiAgICB9CiAgfQp9
+  signature: "goYUm1S/pYCG58loCLRh1E8emBn62UgRQL7yAiRZvy+Rrrh4jORxhnZGZvSuEaihLM/vEh/7Bd+l6QcoaXsOlfOa9kymCfosBcea33V9bjouAURaz3YjLjQkSO3noW2pZIcCxo3bCxA/cC4VCHVtg6KnAdp54JQAiwe2wJfiCnv+r2//y6JvXXgDZVWASt3oQ3YkiIXvJPkEn4U1PFED6/Y1XS9B2Vs71BJRK6VJyN3Tk2p0TqUmYgGNWMF3XB38tc7jHjQtdYuHtBC8bhmzba9uPhwAEsqUft6OZQPBy7H27V8yVfhX0nnM9+J113t8OyM7wtkyR13WSytw2sbuvbph160p8cDFQqrTEuNj72gJRkmQXrUq+xxHPbPYScF/vccWJNcU+H7gtUDJIigLFhWvqhxd+mCP2H/l+zMOnbmP7v2r4/HrMVTIGJ87FM6CfaO6vAewO8lnn95tC86mfgES554p0eHhKx+dgR3mekagMtRcGcmTX4PLgPW2aS7fLjhKygqsq3g+FWRMbD1YSQdWGATz7Y3LDcx08kJkFRHDreaFBRbcqCxu9mu6aX4oZmdXeX+g99vXi9RBALEzUyXhos6dozRG8EKP+Vb6WdUo5Tv4dn3E8j+LLY+xl3JLAldMUgyEkrDTAWA7fo5oD4KPgOjZiGeOHECUzZImekg="
+skill: 0.065
+archetype: troll
+leverOffsets:
+  predictionQuality: 0.47
+  decisionTemperature: -2.17
+  awarenessRadius: -0.2
+  coordination: -1.33
+  technique: 0.53
+kits:
+  trooper: 0.48
+  shortbow: 0.68
+  rewind: 0.89
+  wraith: 0.21
+  spy: 0.91
+roles:
+  plant: 0.48
+  escort: 0.13
+  rotate: 0.52
+  hunt: 0.38
+style:
+  aggression: 0.72
+  patience: 0.22
+  teamplay: 0.08
+  risk: 0.92
+voice:
+  tone:
+    - brisk
+    - mischievous
+  verbosity: chatty
+  style: "absurdly serious station announcements; deadpan object conversations and harmless overconfidence"
+lines:
+  greet:
+    - luggage tag checked, service departing
+    - luggage tag has appointed itself captain
+  onKill:
+    - one less delay for my luggage tag
+    - luggage tag is now insufferably proud
+  onDeath:
+    - my luggage tag reports a cancelled service
+    - luggage tag would like a different replay
+  onPlant:
+    - last departure from this platform
+    - luggage tag calls this interior decorating
+  onDefuse:
+    - service restored on this line
+    - luggage tag says it knew the correct wire
+  onWin:
+    - luggage tag reports arrival on schedule
+    - luggage tag is requesting a trophy shelf
+  onLoss:
+    - wrong platform for my luggage tag
+    - luggage tag has misplaced the blame form
+  onLastAlive:
+    - last service, just my luggage tag
+    - luggage tag insists this was the plan
+  taunt:
+    - your connection left a moment ago
+    - the luggage tag gave that push three out of ten
+  lobby:
+    - please queue beside my luggage tag
+    - my luggage tag says the lobby service is delayed
+    - "My luggage tag: I will cause a useful distraction."
+    - With my luggage tag, try not to laugh during my push.
+quirks:
+  - celebrates_early
+  - always_gg
+rivals:
+  - vividstorm26
+bio: BanditLynx5 linked three friends bases with an unnecessarily elaborate minecart line and still brings a luggage tag to the queue. VividStorm26 keeps asking whether it really helps.
+batch: 3
+retired: false

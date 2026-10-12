@@ -1,0 +1,73 @@
+id: jyshrouzfalcon
+name: JyshrouzFalcon
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTk5NDAwMCwKICAicHJvZmlsZUlkIiA6ICJjYmNkNDQzZGE1NTI0OGU3ODM3NWNmZjYwMmQzZWI0NyIsCiAgInByb2ZpbGVOYW1lIiA6ICJPX1JlaSIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9lNmMyZWUyM2EyYTI3NmZjZjBmZThkMDI2YjMwYTc3MDU3ZWFiYjk1YzdjODBjMTQ1YzQyYTA2ZGUzMjllNWYiCiAgICB9CiAgfQp9
+  signature: "ybXamEYRPAm2a8Nc0cd9pAgaQ9U1rYfVTv9xpUn71OHdHmQriqWGoGegCaJzxWWWa+da15F7iIsxIAgwXnxVMbKuUDLtANySMhEoulHWLRwXuE/swTuI0LuG3Gg8yYFMlnddnts8qz32esnqsPthLqEXzujd6qYNIx8HZ7n/NnB6UAurCROT5BMuuYcN+BOVSgI/tMWSFzWSaonnUn9kY0NbDtedqsTuGBqVolhM+NvPDWZsjRMwQ+BFzrOvA7MZFQrt/6ihCbwaWNZRtFwzMVWJDi4zNP2sbu5Ys+pKzUS53NT3E8MnQ5/X8yq/AeUyaFY/mJHIkriDWG/3CvRN09mUeDBhuBVLGc/Ur5ZPB2RkqAHxhG6FI27Y3bqa3vk7Hw4+erTsVkFdN6OvJjrZHwlAV5FS1sa49oB6Pfm5o/0bT6C8tMdZQ99sKei0sFiTqoSC7N7u69gOTOeB7Q0oDEe4QkNQKCUoGIlFPrPvsusO0ilbwMuTu+inF5lHr4M2s4uoq/jE+iFVFwKaSEq6QYMNuaWSP711a8wZRNlMPLYxgVNBYFTFTfLJ1qr5GlE6+4EKXPCnMXgoNmvXce9B1CQgRw13qUmceLS9PRn7/MOwP4yIM5N6fkES69tgrYxR/I0ukxW0ZwzCurgJuTL07gDls37R3bTTEO6A2V9wW6k="
+skill: 0.62
+archetype: hunter
+leverOffsets:
+  reactionMs: 0.6
+  turnRateDegPerTick: 0.54
+  predictionQuality: 1.2
+  awarenessRadius: 1.12
+  aggression: 0.93
+kits:
+  trooper: 0.7
+  longbow: 0.55
+  shortbow: 0.91
+roles:
+  escort: 0.11
+  rotate: 0.45
+  hunt: 0.95
+style:
+  aggression: 0.79
+  patience: 0.43
+  teamplay: 0.42
+  risk: 0.6
+voice:
+  tone:
+    - excitable
+    - intent
+  verbosity: normal
+  style: "enthusiastic clues and upside-down maps; tracks small clues aloud, then gives terse pursuit calls"
+lines:
+  greet:
+    - chalk cross found, clue understood
+    - chalk cross ready, looking for tracks
+  onKill:
+    - that corner was the next clue
+    - chalk cross followed that trail correctly
+  onDeath:
+    - the clue was apparently a trap
+    - the chalk cross trail doubled back
+  onPlant:
+    - a very loud treasure chest
+    - "chalk cross found a path to {bomb}"
+  onDefuse:
+    - solved that little puzzle
+    - chalk cross tracked the ticking down
+  onWin:
+    - chalk cross led us to the prize
+    - chalk cross followed it to the end
+  onLoss:
+    - the chalk cross was upside down again
+    - chalk cross lost the trail near the finish
+  onLastAlive:
+    - one clue and no hints
+    - the chalk cross has one trail left
+  taunt:
+    - that trail led you in a circle
+    - the chalk cross noticed those footsteps
+  lobby:
+    - does anyone recognise my chalk cross?
+    - the answer is definitely near my chalk cross
+    - "My chalk cross: I will look for the last opponent."
+    - With my chalk cross, call the last place you saw them.
+quirks:
+  - holds_grudges
+  - always_gg
+rivals:
+  - xxwafflehunterxx
+bio: JyshrouzFalcon hid tiny treasure chests along the old lobby walking route and still brings a chalk cross to the queue. xXWaffleHunterXx keeps asking whether it really helps.
+batch: 3
+retired: false

@@ -18,6 +18,10 @@ final class MinHeap {
     return size == 0;
   }
 
+  void clear() {
+    size = 0;
+  }
+
   void push(float key, int node) {
     if (size == keys.length) {
       keys = Arrays.copyOf(keys, size * 2);

@@ -1,0 +1,73 @@
+id: zunioxpaith-90
+name: Zunioxpaith_90
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTk5MDYyNCwKICAicHJvZmlsZUlkIiA6ICJmMzJjNjM1YTc5Njc0Y2M2OGEwYmUxOGY0Nzc1M2E0MiIsCiAgInByb2ZpbGVOYW1lIiA6ICIweDFVIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2FlZDVmNGVhNjg2NjlhODI0Y2IzYjg3Y2JlZDZjODgyN2U2ZDdhMzdiMzQ0ZDQ2MDMwOGM1YjIzZWVkN2VlMjgiCiAgICB9CiAgfQp9
+  signature: "xXFiw59bAX06/7VMBIg37Sr31mWXEckH0AVWgeDULLcq6mnGEhwiRjgCDp4TFUdxSUvRRo2eguOlNfCFul4GI83xTT8USSGPPchyYkgOOzWddRe0rhfZAh3O5nBsELZj0yqiP1WWQm0WCdp7fOAkz+U5boBIZIOdO36mNUElbgTjPOBGliX0PrznWd2nWo+Y1PP6/fO4hx/JyyBc5pyfBi0e2qwTfswQB9X7XQdN2riwe0xEZivXwdGoJABGZFpG0l8rxll5PaVAtdRhA6jgBdweEDk/kJwR7IRwTgpiJGyXDU7AheG4i27CBL4Kuop6ZTDMRbyP2R0A+HCywYjh/zNSa4rgJutMa2Bd9kULkrYnqnGFrSQngnEgPKoNHuZablo9/R6XR5HAFvVoy836I1hnkXgeNbn6Qas8TknHbnC993BRPo5sTe8ZLno1s0Ry8VDkFzr+kbyjZe1Xs0O+CrJgghqlAPxoZwnTZljjxWMyrJtvGDhcUpjaa1MaxzVU0AUvQOUDOMRa6IFLlZkqXchhayaGC1Y5NbqSAs04vUPgFIDHhflFJmUCMcs39XO4pGY/BDeUxGVwPBzHmIpZmCBcK4wSnSwnUTBzrrzFOu7VT6qOfxF/5p7iR1cpoZrVhsF6FspNkHBr6e56HPIiFRCvCA26g7ph7Z2WlNJ6RXk="
+skill: 0.759
+archetype: bomb_diver
+leverOffsets:
+  reactionMs: 0.33
+  predictionQuality: -0.56
+  decisionTemperature: 0.12
+  coordination: 0.15
+  technique: 1.41
+  aggression: -0.49
+kits:
+  trooper: 1
+  shortbow: 0.17
+  rewind: 0.66
+roles:
+  plant: 0.87
+  escort: 0.4
+style:
+  aggression: 0.71
+  patience: 0.12
+  teamplay: 0.29
+  risk: 0.85
+voice:
+  tone:
+    - airy
+    - urgent
+  verbosity: normal
+  style: "gusts, tangled metaphors and abrupt turns; breathless objective reports, oddly calm at a fuse"
+lines:
+  greet:
+    - bamboo spar caught a good breeze
+    - bamboo spar packed, where is the bomb?
+  onKill:
+    - a clean lift over that corner
+    - a clear path for the bamboo spar
+  onDeath:
+    - my bamboo spar met a tree
+    - bamboo spar was one corner from the fuse
+  onPlant:
+    - tying the fuse down securely
+    - "bamboo spar is parked beside {bomb}"
+  onDefuse:
+    - untangled that in a hurry
+    - "bamboo spar and {bomb} can both stay intact"
+  onWin:
+    - bamboo spar is flying high
+    - bamboo spar got the objective done
+  onLoss:
+    - no breeze for the bamboo spar today
+    - bamboo spar took too long reaching the site
+  onLastAlive:
+    - one string still in the air
+    - the bamboo spar still has a fuse to find
+  taunt:
+    - that push lost its lift
+    - the bamboo spar got closer to your bomb
+  lobby:
+    - unwinding my bamboo spar in the lobby
+    - please step over the bamboo spar line
+    - "My bamboo spar: cover my approach to the bomb."
+    - With my bamboo spar, call the safest bomb route.
+quirks:
+  - loves_nuke
+  - always_gg
+rivals:
+  - dizzymoth30
+bio: Zunioxpaith_90 held kite races from a windy hill above the old map gate and still brings a bamboo spar to the queue. DizzyMoth30 keeps asking whether it really helps.
+batch: 3
+retired: false

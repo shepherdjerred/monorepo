@@ -1,0 +1,76 @@
+id: thekemviosh
+name: TheKemviosh
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NDIxMzc0NSwKICAicHJvZmlsZUlkIiA6ICJjYmYxNGIxMGJhNWU0NzgwYjIyNmFiNmQzOTUxODk4YiIsCiAgInByb2ZpbGVOYW1lIiA6ICJFZ2d5QnV0dG9uMjQxMSIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9hNDcxMDlmZTYxMjM1ZTQwNGJjNWY2MThlMjdkZDJjZjZmOThlNjQ1ZTQ2Yjg0YzM1MGE0OTY3ZjlkOTg3ZTYzIgogICAgfQogIH0KfQ=="
+  signature: "a5IcSAm0QqkPdLWOuFjtnqSsXynUcQnxTExZNf6SfBvBsrEhy3rEbxkqkDjLorRr5Ig9PDFZG+cA8CWL1+Hnya7d+Qs3kLkws45TRZ5q1/+adHM926ARwatTLnKflT7aw3uk0Yt+7VNs1fJrObsOqlNgSPvJwSmqlLMTVIPVJKRdcg4Zv0ugSBn97MFaXb5k1ndqSZwSE9xHr33O4e8j4ZE+nztbpdfrksJBuPpx9ECDss4J1wOAPH3cS4+LNU7ugSdPijobzGWdB2iEszYAGTMKq8NTHVDM+UsaXsrIfABr8yC4u4zAQmqu5A3j49UWFeriV6d+aLXGIrqCr+kT1mO8VHqFSJPYbmy9R23LTGsHGv8rvsiK32UIfXHEhVqRLvDlC+aRkN3oJ2tJ96o1tyr7t1kq2A17RRjw9El941CRf2ES4IdfiZd7nWr7lWl/oC3CrCdS2xw6Z75KBDB35wx1Lyv55q+cp8lgvOC2gjhTbAlwThb9yN7Q4x0zU/AA0fHp+G7BFX4pDCpKuh2jY/Dlc5caNdgqKWB4rDnwn0RqVraObA2/8mlro23w/YYUkFL404vqzpcb8fh5Pru3liKNNHHUbJy+/5V4WU+NFyLxsfY9DD9UN6cD4h0DQ/xTrjvb+rlaeDixkhCksmFr9bZjPrjNUqbSIVilQ6E/cAM="
+skill: 0.052
+archetype: flanker
+leverOffsets:
+  turnRateDegPerTick: 0.79
+  predictionQuality: 0.87
+  decisionTemperature: 0.24
+  coordination: -0.5
+  technique: -0.24
+  aggression: 0.36
+kits:
+  trooper: 0.66
+  shortbow: 1
+  rewind: 0.38
+  wraith: 0.52
+  spy: 0.44
+roles:
+  plant: 0.43
+  rotate: 0.73
+  hunt: 0.51
+style:
+  aggression: 0.68
+  patience: 0.49
+  teamplay: 0.24
+  risk: 0.75
+voice:
+  tone:
+    - gentle
+    - nimble
+  verbosity: normal
+  style: "patient gardening talk, stubborn lane defence; quick side remarks and route changes mid-sentence"
+lines:
+  greet:
+    - clay planter packed, lets grow into this
+    - clay planter is taking the other entrance
+  onKill:
+    - cleared a little room for my clay planter
+    - clay planter found a side door
+  onDeath:
+    - my clay planter has met a weed
+    - clay planter chose an occupied side door
+  onPlant:
+    - this seed has a very short season
+    - "clay planter came around the back of {bomb}"
+  onDefuse:
+    - pulled it out by the root
+    - clay planter found a quieter route to the fuse
+  onWin:
+    - a fine harvest for the clay planter crew
+    - clay planter took the long way for a reason
+  onLoss:
+    - bad weather for my clay planter today
+    - clay planter took the long way for no reason
+  onLastAlive:
+    - one clay planter still in the garden
+    - one clay planter coming around the edge
+  taunt:
+    - that lane could use some pruning
+    - the clay planter is somewhere to the side
+  lobby:
+    - checking the soil with my clay planter
+    - my clay planter is for the roof garden later
+    - "My clay planter: I will try the side approach."
+    - With my clay planter, keep them looking forward for me.
+quirks:
+  - crouch_spam
+  - always_gg
+rivals:
+  - frostwaffle97
+bio: TheKemviosh grew a roof garden over the old kit shop and still brings a clay planter to the queue. FrostWaffle97 keeps asking whether it really helps.
+batch: 3
+retired: false

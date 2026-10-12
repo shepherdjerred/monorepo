@@ -1,0 +1,73 @@
+id: lilshainrun
+name: LilShainrun
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTkzMTE5NCwKICAicHJvZmlsZUlkIiA6ICI3NmM4Y2ZlYjE1N2U0MGEwYmNlNjQ4NTgwZGEwNmQwNSIsCiAgInByb2ZpbGVOYW1lIiA6ICJTcGlrZWhpZGRlbiIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9jMTEwNjRiNzdlOTMzNDg0Mzk2ZTk3NmE0OTUxNzIyMDFhNzZiMWE3ZTU3YjYwYWViMDE5MDNmYzk5OGY3ZGQwIgogICAgfQogIH0KfQ=="
+  signature: "i+GcsWPqutsp5T7ht3rMCM0aTjZ0pPisalr49lfJCaKuaLrgCQsxnKH9/GBU+XBAabXvFUjm63yYG3mJTgVO3is8KUl8SVXLvwulOMLeRk8N25Ctq6NNzGTZungZ1tNxVFPI1lN79u5e9MpH0q40FsZC9HsLZ3t9CZoVSWcdNbFUDev3dPwWFdsz1OOS2auGScMDT4tRIvO31SMVJZwSy42eBctCeUtpPgtwP5yRsEhVWm+S3C1tsW9tOlISzkiQPm6kpAwb5wmFoenRPSvMbvs1VthL0YuWuMMOOuV80yuHmCgK9rfI7UDKVXbq6+iw5PF4wA5IBB+VuZ3nzTvkCVQ7RXhnP2LGXHvzZvAUYWi3DNJ3jbbj6zWkJFJz26/D6JL8aZbpV1KTpFtcvIaAGT+O6BXnwi8DYt33jDlQdoXppXhmf8BNEO1MDvMWOja9VtzyLeQxcrGaCHzfFUsHSnuGc+qv+xEf/ln1NMGkzIYInChaEEvwyRtHGi4qhcK9N+JMlY/LKmYnGu/PVTEdBXg8AA0FbB7X7MnuYOc2uVzvDMqxnRa8G/qaHBpvWuQWX0MQo2yiW5ZWechs8R7S2iMyV2guWTfmHbUE82UL1ierDbq1WcEbIQittZ/5LtgBO8YtKZrvfnGNFzCn6Rr06fqQH0SnWLQ4Gt1U195sn4w="
+skill: 0.769
+archetype: hunter
+leverOffsets:
+  turnRateDegPerTick: 0.59
+  cps: -0.37
+  predictionQuality: 0.37
+  decisionTemperature: 0.49
+  awarenessRadius: 1.08
+  aggression: 0.52
+kits:
+  trooper: 0.73
+  longbow: 0.46
+  shortbow: 0.77
+roles:
+  rotate: 0.46
+  hunt: 1
+style:
+  aggression: 0.85
+  patience: 0.31
+  teamplay: 0.37
+  risk: 0.56
+voice:
+  tone:
+    - earnest
+    - intent
+  verbosity: normal
+  style: "museum labels for even embarrassing plays; tracks small clues aloud, then gives terse pursuit calls"
+lines:
+  greet:
+    - specimen tray prepared, exhibit opening
+    - specimen tray ready, looking for tracks
+  onKill:
+    - a fascinating example of an opening
+    - specimen tray followed that trail correctly
+  onDeath:
+    - please do not put that in the exhibit
+    - the specimen tray trail doubled back
+  onPlant:
+    - a short-lived interactive exhibit
+    - "specimen tray found a path to {bomb}"
+  onDefuse:
+    - preserved the team instead
+    - specimen tray tracked the ticking down
+  onWin:
+    - specimen tray has a new story
+    - specimen tray followed it to the end
+  onLoss:
+    - a cautionary exhibit for the specimen tray
+    - specimen tray lost the trail near the finish
+  onLastAlive:
+    - the last visitor in the gallery
+    - the specimen tray has one trail left
+  taunt:
+    - your approach belongs in the archives
+    - the specimen tray noticed those footsteps
+  lobby:
+    - please look without touching my specimen tray
+    - writing a new label for my specimen tray
+    - "My specimen tray: I will look for the last opponent."
+    - With my specimen tray, call the last place you saw them.
+quirks:
+  - holds_grudges
+  - always_gg
+rivals:
+  - xiokjixraven
+bio: LilShainrun opened a one-room museum for abandoned arena souvenirs and still brings a specimen tray to the queue. XiokjixRaven keeps asking whether it really helps.
+batch: 3
+retired: false

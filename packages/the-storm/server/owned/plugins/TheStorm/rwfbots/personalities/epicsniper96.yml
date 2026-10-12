@@ -1,0 +1,73 @@
+id: epicsniper96
+name: EpicSniper96
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODQ2OTk4NywKICAicHJvZmlsZUlkIiA6ICI3YTVkYmRlNDk0NWU0YTE4Yjg2OWY1MGY1NTJjNjlkYiIsCiAgInByb2ZpbGVOYW1lIiA6ICJCdWtraXRBUEkiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNzU5MThlNzdhZGEyZjM5ZjYxM2EyNjI2NDE4NjAxODU4MDBkZWFiMWQ4ZTdlYTU0MDFhNmZiZWJiMTMxYmEwNSIKICAgIH0KICB9Cn0="
+  signature: "Zr5899XgrLoqSZRO079ranMX2unuY4/lLURjANNdyDWKlYo3rlbtQP8fvEGHQh/HyCksvRZh0M9MzJmnteqhoH4CNyxide0ycruvikuBciYzI920WTrIj2ejF/tG4wHexWTX//DvD/Nhk3JyIuz2GWJ28+jW2yHt+GlhWWN4iZjMbbKS8PwwINrux5rVrKva8kS7zzzFBPC3BT3E9aLe+PSviJ8uMkXm5GIbfHwEgHO1u1o2hh5YBH8WhWi+PGvxaiYjy6HztAr4dIiuepKWO0PgJz5zUU/urPuD+lctu5NpDdmyuYSsuUqRgbMd9cXtwV4EhvVX9BgpMWwQLJDcKs0RsnndeoUFBndnbc/qODIknJWMThQi/fwrCNsdYSVDCI/refhscLclJZqarYBVb/DlBAAfuCohxZcyUZM80cMZzrJsWY9ss0IFxUX/02+TTAGgTeaWecXD/CH5kKNyGeaFUn1ia+Dvte9YfvFKgGgRb21nPH9TRbduISXmUP8RsDg7qF4z3JQc+5Sobch1TtsUvYxPaeTzAcRem082aqu+OziHiwI/pOZPg7X84/7WU/yKqiLcpTJiBbfKcpIvtRl7vg75fSqATtUpRQx5ZvQIBKouXqNpM8teyrUuvc+EW+Z7mdu6l0NcEFx6mJQxQG5zHa94AIPR+mMfqLQ3tFI="
+skill: 0.875
+archetype: bomb_diver
+leverOffsets:
+  reactionMs: 0.24
+  aimErrorDeg: -0.29
+  decisionTemperature: 0.82
+  technique: 1.01
+  aggression: -0.39
+kits:
+  trooper: 1
+  shortbow: 0.18
+  rewind: 0.55
+roles:
+  plant: 0.9
+  escort: 0.14
+  hunt: 0.11
+style:
+  aggression: 0.65
+  patience: 0.04
+  teamplay: 0.25
+  risk: 0.95
+voice:
+  tone:
+    - practical
+    - urgent
+  verbosity: normal
+  style: "carpentry checks and repairable mistakes; breathless objective reports, oddly calm at a fuse"
+lines:
+  greet:
+    - plane iron packed, joints checked
+    - plane iron packed, where is the bomb?
+  onKill:
+    - that opening needed a wedge
+    - a clear path for the plane iron
+  onDeath:
+    - a weak joint in my plan
+    - plane iron was one corner from the fuse
+  onPlant:
+    - the fuse is fitted snugly
+    - "plane iron is parked beside {bomb}"
+  onDefuse:
+    - took that assembly apart
+    - "plane iron and {bomb} can both stay intact"
+  onWin:
+    - solid work around the plane iron
+    - plane iron got the objective done
+  onLoss:
+    - back to the bench with my plane iron
+    - plane iron took too long reaching the site
+  onLastAlive:
+    - one plane iron holding the frame
+    - the plane iron still has a fuse to find
+  taunt:
+    - that angle needs a little sanding
+    - the plane iron got closer to your bomb
+  lobby:
+    - checking the edge on my plane iron
+    - my plane iron is for repairs after the match
+    - "My plane iron: cover my approach to the bomb."
+    - With my plane iron, call the safest bomb route.
+quirks:
+  - loves_nuke
+  - always_gg
+rivals:
+  - hypertazpour
+bio: EpicSniper96 repaired a rickety spawn bridge every weekend and still brings a plane iron to the queue. HyperTazpour keeps asking whether it really helps.
+batch: 3
+retired: false

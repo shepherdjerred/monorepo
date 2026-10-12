@@ -1,0 +1,73 @@
+id: xxpickaxeslimexx
+name: xXPickaxeSlimeXx
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4OTM0MDE2OSwKICAicHJvZmlsZUlkIiA6ICJlZDUzZGQ4MTRmOWQ0YTNjYjRlYjY1MWRjYmE3N2U2NiIsCiAgInByb2ZpbGVOYW1lIiA6ICI0MTQxNDE0MWgiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZTE1MjI1ODRmMDRmZjgwYTYxYzYwYzE2M2JiMTNmNzM3MDI3NTUwYjFlODFhMDQ2N2ZhNmIxMGUwNTE5YjYxYSIKICAgIH0KICB9Cn0="
+  signature: "SA7BbaTux5izgcIlNxLQSRWwLTTj6+5j3jDYyjI7l5eIvo8ZuKTpBK1s5vfQUV7H8dNrZ1tfh4mWXYH3XKGjqf1e8mw2C+94WOoKfxmrcUJCtOuJuFJgSVhT4zwzQx+s5Dp9mWWFojkH4xuEiRtvdaE1vGcsvROllHuhXqOA31vKbTjO+Cnovce35T5Nr8HFO1tzyXeyXvnoDkwvkAk73UAfZTBIL8jxsfJx4zTtW7bX0kZxffNqgneGgNicCgE/TXOt65iLZXnumatv0sb24WKdOlHFaRqTk+5diTSN78iHVOAKpleJsqH9Uu+ixN7DLOEw6WEpnNEfk2F1b03QtQ2o+5ZQN9gId2GUYbi+VYpPYI9pStOKu7U7nAckahDCgcnBi+brRAcQ430IT+2Kkk8OgmxRh8sod8BpYBBDO/LyF2g9SUlxYs948y10rku/dnsyUOqSrIg0sTQA5CbuTcPynmZvSEjCm+HDkYVkuF1Uxj0ScW375gPhGcB6xCfgnYCICnXsbeQCZVCiL1rTi5Hs73Vki/N6glrokq1RXLkK/xr79dClO3y2KIOjX2jY1K0OoA/FVvqoPIgZcyagjwZcydsD5nbGC8KTmO2HOVgZ+rC7dbbDshO+WMBBmluTmJVgAnuvBSFFChEdkFbFyEsz2sd+egX0j42JqX4h83g="
+skill: 0.814
+archetype: hunter
+leverOffsets:
+  reactionMs: 0.44
+  turnRateDegPerTick: 0.8
+  predictionQuality: 1.14
+  awarenessRadius: 1
+  aggression: 0.89
+kits:
+  trooper: 0.62
+  longbow: 0.55
+  shortbow: 0.76
+roles:
+  defend: 0.14
+  rotate: 0.38
+  hunt: 0.95
+style:
+  aggression: 0.9
+  patience: 0.45
+  teamplay: 0.37
+  risk: 0.54
+voice:
+  tone:
+    - dry
+    - intent
+  verbosity: quiet
+  style: "imaginary roof leaks and tidy-angle demands; tracks small clues aloud, then gives terse pursuit calls"
+lines:
+  greet:
+    - drain spout checked, no leaks yet
+    - drain spout ready, looking for tracks
+  onKill:
+    - a small opening under the eaves
+    - drain spout followed that trail correctly
+  onDeath:
+    - found the one loose tile
+    - the drain spout trail doubled back
+  onPlant:
+    - something ticking under the roof
+    - "drain spout found a path to {bomb}"
+  onDefuse:
+    - one less repair bill
+    - drain spout tracked the ticking down
+  onWin:
+    - drain spout kept the rain out
+    - drain spout followed it to the end
+  onLoss:
+    - the drain spout plan has sprung a leak
+    - drain spout lost the trail near the finish
+  onLastAlive:
+    - one tile holding the roof
+    - the drain spout has one trail left
+  taunt:
+    - your angle would collect rain
+    - the drain spout noticed those footsteps
+  lobby:
+    - inspecting my drain spout for cracks
+    - the drain spout repair can wait one round
+    - "My drain spout: I will look for the last opponent."
+    - With my drain spout, call the last place you saw them.
+quirks:
+  - holds_grudges
+  - always_gg
+rivals:
+  - rexaeshtoush-37
+bio: xXPickaxeSlimeXx reroofed the same spawn cottage after every group building session and still brings a drain spout to the queue. Rexaeshtoush_37 keeps asking whether it really helps.
+batch: 3
+retired: false

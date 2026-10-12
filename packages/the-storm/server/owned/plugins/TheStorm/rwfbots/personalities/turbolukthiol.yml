@@ -1,0 +1,75 @@
+id: turbolukthiol
+name: TurboLukthiol
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NTY4Nzc3NSwKICAicHJvZmlsZUlkIiA6ICIwZDkwYzA0M2E4YTA0YWY1YTZiOWUxMjQxZmJiNTU5ZCIsCiAgInByb2ZpbGVOYW1lIiA6ICJTYXJhZ2lybHkwMTE0MzIiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZDZmYmM5OTMwMzJiYWMxMTIyMDVhN2JhZTk1OTU3OGE3MDYwMjhiNjFkMjQwN2Q4ZjZlNDgwMDEwOGJmMDkyMSIKICAgIH0KICB9Cn0="
+  signature: "iQU7H6zqwM9OXaMzP4pozH0NIWpBHI/B9ab5jbsXH+WtbT/fjVvBB/nx/i+X/H7K07JwOK7ao317Y14GxHZ0p/azNf5VTPM7d5OtBtzGIuvGzJZz7chiY4HuvtTsPoxMpP89Xs1aGyptlfDsxwvxMsBDJ8M+Kiwlr4MidcfNFC9QjmURLQSu9zcXZkC8sG4qnCN8WmFkGpKi2pSXXZHbqbLaECEV4ftMKQ35tZtG0uzDaB7vaQkDv+CrIiSzONdmRlKI3fvHRq3DGtH8bkZgnY4M1MSQXePuUN6lz2HDyV5c/4QypYsY2s4agvVN6RI9HF/dRRMB5w2wTIAZSuRLSrqjD2XycuTS9NEFpoRGo3Y+OthR22Ntgh5MjiyK2+Y7ba2HOpydMC4svWAts9am33cHogbJniXMD1lOoGWXtU19j2ax05unSIvHtTGNvJ9mIOeQZ8fwnBJBnI/48mw3KbMo1hQpHe0UdXWuXZMpa9eWDv1+JChZb1MdoBRd+Zj+umug4ohweosJ/pGUmU7x1IMgjmtecikiuTAtTjOdc4mls64EQ/DwNMuO/3/TV5FVeiytEfS6hLz8UtjCWUpD3A/1NvIaHsjAbT9sT2qUkbPeeFgbAaTMf5p8drrnN7fWII8/UW+norsdAfCrGmdAm0mw1eruyZqi06OjTOHgg9g="
+skill: 0.421
+archetype: sniper
+leverOffsets:
+  aimErrorDeg: 1.91
+  cps: -0.67
+  predictionQuality: 1.95
+  awarenessRadius: 0.87
+  coordination: 0.26
+  technique: -0.52
+  aggression: -0.66
+kits:
+  trooper: 0.15
+  longbow: 1
+  shortbow: 0.39
+roles:
+  defend: 0.78
+  rotate: 0.39
+  hunt: 0.61
+style:
+  aggression: 0.37
+  patience: 0.82
+  teamplay: 0.45
+  risk: 0.19
+voice:
+  tone:
+    - meticulous
+    - focused
+  verbosity: normal
+  style: "seams, alterations and dry little asides; short range notes and patient, exact corrections"
+lines:
+  greet:
+    - darning needle tucked away, ready
+    - darning needle in place, checking the long angle
+  onKill:
+    - a neat little seam through there
+    - darning needle found the range
+  onDeath:
+    - my plan has come unstitched
+    - darning needle needed a closer angle
+  onPlant:
+    - tied off the fuse neatly
+    - darning needle covers the far entrance
+  onDefuse:
+    - snipped the loose thread
+    - darning needle can wait, hands on the fuse
+  onWin:
+    - darning needle and team fit nicely
+    - darning needle had a clear view of that
+  onLoss:
+    - the darning needle plan needs an alteration
+    - darning needle kept the wrong sight line
+  onLastAlive:
+    - one thread still holding
+    - one darning needle, one long angle
+  taunt:
+    - your formation has a loose seam
+    - the darning needle saw that peek twice
+  lobby:
+    - please mind the darning needle on the bench
+    - mending the kit beside my darning needle
+    - "My darning needle: I will cover the long angle."
+    - With my darning needle, call the close flank for me.
+quirks:
+  - bow_spammer
+  - always_gg
+rivals:
+  - slimeraven9
+bio: TurboLukthiol made matching banners for a team that never stood still and still brings a darning needle to the queue. SlimeRaven9 keeps asking whether it really helps.
+batch: 3
+retired: false

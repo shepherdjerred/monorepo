@@ -1,0 +1,75 @@
+id: thoultoukwaffle
+name: ThoultoukWaffle
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NDk0NjQxNywKICAicHJvZmlsZUlkIiA6ICIwZWQ2MDFlMDhjZTM0YjRkYWUxZmI4MDljZmEwNTM5NiIsCiAgInByb2ZpbGVOYW1lIiA6ICJOZWVkTW9yZUFjY291bnRzIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzcxZTE1ZTJiOWQ5ZGExYjIzZmIwM2ExZmRmOGEwZWMwYjMxMGE4ZWNkZWQ5ZWM4NTkwYzAxNDk5ZWQ4NGJiM2IiCiAgICB9CiAgfQp9
+  signature: "YGwf5muguYITiwea9ZOpVitBn+Waj5fRt2WOWLgrKFUN1qu3fLKIrY3d/mE0fnL08oiwEzHqQtqf+3/JtM7EYpx3ak65TX2aJPf+Q9Sh6vZ2GPPh9rm/Zq1Z1OMQwtr3BKTQAbtMSrc8ZpJ6FFhCaXjrDj/AoQa0nYf+sPc24yB9a+CZ/i6bIoccmgjlSRKJ1Tnl2/8ZXuxs14VysGefTr5JgUeElG3X5pCwltCH0oySFd2o4wow4wOmTu4NrgvxhzloZYX3J38XL1xkG9Eiwe1mefZsYDuC7hXvLKlADjv/qbCtOWCsVEBd7mqUJevP4w/brlBolmOZn0avj8C5zNcO0q1+IAVyqOrVaYXWVjo6UMG6dEOGRU8I7MlUtfVG/1wxq0c4qfbvAWP3bltNK/ynptA9Ma0YSezVojO8PnNWQYb9c5AqI/WajdJCq1LbYYMjDhI8DV5EWFzjESlTBSEmMraRv0awbIdQLshFDURgkB4AgHrSEOI3OBawr0jbGKvn4MIpyNXW69Qy77ggluFN+Y7obXdDAfNOye2xXflI5kyRhp/sfL3FzeHfn7aUFXcwN0t2/z4AzhkS9uVwsUAKN4Brfk0GM9NOt/Tc/vba6L/cXEXbXVA83gwV4w+B7drOkJq52UGc5CVwSkYME7bEgK7pAd6xT/P7Zo72whA="
+skill: 0.238
+archetype: sniper
+leverOffsets:
+  aimErrorDeg: 1.53
+  cps: -0.98
+  predictionQuality: 1.22
+  awarenessRadius: 0.81
+  coordination: 0.39
+  technique: -0.32
+  aggression: -0.82
+kits:
+  trooper: 0.17
+  longbow: 0.94
+  shortbow: 0.48
+roles:
+  defend: 0.71
+  rotate: 0.43
+  hunt: 0.55
+style:
+  aggression: 0.28
+  patience: 0.85
+  teamplay: 0.46
+  risk: 0.1
+voice:
+  tone:
+    - dreamy
+    - focused
+  verbosity: chatty
+  style: "sky metaphors punctuated by exact callouts; short range notes and patient, exact corrections"
+lines:
+  greet:
+    - sky lens says this is our orbit
+    - sky lens in place, checking the long angle
+  onKill:
+    - a little spark beside my sky lens
+    - sky lens found the range
+  onDeath:
+    - my sky lens did not show that collision
+    - sky lens needed a closer angle
+  onPlant:
+    - starting a very small eclipse
+    - sky lens covers the far entrance
+  onDefuse:
+    - light returns to the bomb
+    - sky lens can wait, hands on the fuse
+  onWin:
+    - a bright mark in my sky lens
+    - sky lens had a clear view of that
+  onLoss:
+    - a cloudy night for the sky lens
+    - sky lens kept the wrong sight line
+  onLastAlive:
+    - one small sky lens in a big sky
+    - one sky lens, one long angle
+  taunt:
+    - that shot went into another orbit
+    - the sky lens saw that peek twice
+  lobby:
+    - showing the lobby my sky lens
+    - the ceiling is blocking my sky lens
+    - "My sky lens: I will cover the long angle."
+    - With my sky lens, call the close flank for me.
+quirks:
+  - bow_spammer
+  - always_gg
+rivals:
+  - captainskekvael
+bio: ThoultoukWaffle named the roof above spawn an observatory despite owning no telescope and still brings a sky lens to the queue. CaptainSkekvael keeps asking whether it really helps.
+batch: 3
+retired: false

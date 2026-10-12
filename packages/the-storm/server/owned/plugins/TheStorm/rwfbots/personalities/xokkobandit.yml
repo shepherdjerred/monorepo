@@ -1,0 +1,78 @@
+id: xokkobandit
+name: XokkoBandit
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTc5OTQ2NCwKICAicHJvZmlsZUlkIiA6ICJiNTQ1ZDcxNDJkZmM0MWVlYjBjMDcwOTkwOTI4NTE0MyIsCiAgInByb2ZpbGVOYW1lIiA6ICJraXdpNDgxMiIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9hYzg0ZDg1Mzg0MzgxMWNlYjg1MjMxMGJjZDVjY2FlY2FlNDIxMzI0OGMyMDI5MTdlODFjMjFkZDljNzNhNjA5IgogICAgfQogIH0KfQ=="
+  signature: "maLM/xKqotPKko+pxKNPriIdgSE1buS9YIGLGSQ2hnfFa4l1Rt/4TcSrZly+FWlZrSJ7xtKhBVJHYsN1y4swhhqVuemPU/24cx0+DIThguRKJAFBl1hJ97Sg+WrhYwYsWXxyHFjjBnM4MkYpvVoBTjpJMiTgPAvUdzL8CYiQ7beHoRFY/jkeuOf31STG51KY2HpWAzWhkUbMPW0qLY7Nw4TaUeKTSyO+NpuAzUrSbt+nnI6JbcDleRO7eEod1DZgtE/KcktZ8ijb9KkDaG3e3afV3HlNsknSYB1n69b7xe6buqKG/AmWYtBeTekZK9Ng4vrd6P/CIKoa3nuHQ7bQGGhGZd24MJX0vPjyFVhDxP1qUjbVkP9OlEovOrgGRWE160G64ULfdegiSU7hTaIDxIbDPqbuwbOXj7PhfdB2KdIN7Qf3EbCCv3lXEeTNAE91rxhpuH/5VW2FsiVVDbR6vjkGG0hI4MbA4yrFsJIo/LAzbTAXqDmeMeAR7lNMif4Vx899P0X5lEjm0Hzkok+aaP2TeqM4beGOFgKgdcO2of+HrCKK4XyNpnhYqRosZn64rlv9AhfHmDR/w/lcvtrou98710/XVZXUpXnETpocbS/rKlCp4PyQKnj05v1DPbQiEvOUhJ4akpxTVmP4C3lEbyi62nMEPeuBFnTmKb3M+7U="
+skill: 0.18
+archetype: flanker
+leverOffsets:
+  reactionMs: 0.31
+  aimErrorDeg: -1.28
+  turnRateDegPerTick: 0.9
+  predictionQuality: 0.05
+  coordination: -0.92
+  aggression: 0.37
+kits:
+  trooper: 0.53
+  longbow: 0.34
+  shortbow: 1
+  rewind: 0.33
+  wraith: 0.57
+  spy: 0.38
+roles:
+  plant: 0.28
+  defend: 0.18
+  rotate: 0.97
+  hunt: 0.58
+style:
+  aggression: 0.68
+  patience: 0.35
+  teamplay: 0.2
+  risk: 0.65
+voice:
+  tone:
+    - airy
+    - nimble
+  verbosity: normal
+  style: "gusts, tangled metaphors and abrupt turns; quick side remarks and route changes mid-sentence"
+lines:
+  greet:
+    - silk bridle caught a good breeze
+    - silk bridle is taking the other entrance
+  onKill:
+    - a clean lift over that corner
+    - silk bridle found a side door
+  onDeath:
+    - my silk bridle met a tree
+    - silk bridle chose an occupied side door
+  onPlant:
+    - tying the fuse down securely
+    - "silk bridle came around the back of {bomb}"
+  onDefuse:
+    - untangled that in a hurry
+    - silk bridle found a quieter route to the fuse
+  onWin:
+    - silk bridle is flying high
+    - silk bridle took the long way for a reason
+  onLoss:
+    - no breeze for the silk bridle today
+    - silk bridle took the long way for no reason
+  onLastAlive:
+    - one string still in the air
+    - one silk bridle coming around the edge
+  taunt:
+    - that push lost its lift
+    - the silk bridle is somewhere to the side
+  lobby:
+    - unwinding my silk bridle in the lobby
+    - please step over the silk bridle line
+    - "My silk bridle: I will try the side approach."
+    - With my silk bridle, keep them looking forward for me.
+quirks:
+  - crouch_spam
+  - always_gg
+rivals:
+  - grounxethfuse
+bio: XokkoBandit held kite races from a windy hill above the old map gate and still brings a silk bridle to the queue. GrounxethFuse keeps asking whether it really helps.
+batch: 3
+retired: false

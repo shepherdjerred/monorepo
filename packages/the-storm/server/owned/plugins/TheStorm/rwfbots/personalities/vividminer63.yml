@@ -1,0 +1,74 @@
+id: vividminer63
+name: VividMiner63
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NTYxODI5NSwKICAicHJvZmlsZUlkIiA6ICJjOTQ0MTdlMTY5M2M0NDQyOWNiNDhlMzU2YWE3NWJjNyIsCiAgInByb2ZpbGVOYW1lIiA6ICJBSlhYVEhFQkVBU1QiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOTJiYTFjMjVhYzQ1ZmUzN2U2YzgyYmI4YWY0ZDFlMTY0MWI2MDgwMjIzMTQyZTUyMWU2YTdkNGE4OGQzYzJiMiIKICAgIH0KICB9Cn0="
+  signature: "XVXhmg+sNuxEyFjLlnuVZ9F3PcFznY331+q+9PbWKPiEgkj5ZKaKRsWaK4N4dEUlQpKIEBb+Wjz3c/Rv5qIUuNUNCu8ezAttagqIoUZjFQZqZ+wofIE8HIX9uJknDWKynSoKZNLbV0U/rjPs2Us8LrtmHVfgXZfDudbA8LcOnJxYF3F9xz183jH5+radkpOTshXsvOFOUjMgnqLwbljwIfXz5plY24Sq9X6qe40/BTol64vkYig5pDhieZM/ZU+1BVgpe9Lt1rZdfFlW3DaXlOeFYtf2FSQPVTDY7ssuKxMdLl89kalO7x6gdW6gWscx62+xz48zc5yC1K3au++KzPZNoqK1+PiX6JPNvCrSzg+Ybr2W3OoIpK/vPekOrpjGpvcv+QSadQ+KEbFRVRM4aORb8E/qwxFLJFyotYjdi6KAB/TH1XKuGo9T2p5pxuAn/mfxibtqW1OciCFmpV6ke6QeHpqXdwclrnmuwRyGytS2UzWjGqY0RrOpx4UTF8ZU0jcSbvmuEqeB3jr+5xyZfrd/esnLXQ837NnxG5d1LOfHHw2CIsSphm7WGZUb4ZdGycsvBZhdJ/qy1pmmQfJSc5Eer2+SgHp9O4AMZYtAstO2ZncAa5XXVNxpXW0RUjKGs+kfzJzDRMAZrrPud6+E5Hkv7EzfH4jgyt7QoyRdE1c="
+skill: 0.683
+archetype: turtle
+leverOffsets:
+  reactionMs: 0.46
+  turnRateDegPerTick: 1.16
+  cps: -0.13
+  decisionTemperature: 0.93
+  awarenessRadius: 0.31
+  aggression: -1.58
+kits:
+  trooper: 0.98
+  longbow: 0.3
+  rewind: 0.84
+  ghost: 0.17
+roles:
+  defend: 0.95
+  retake: 0.51
+style:
+  aggression: 0.16
+  patience: 0.94
+  teamplay: 0.6
+  risk: 0.03
+voice:
+  tone:
+    - observant
+    - cautious
+  verbosity: quiet
+  style: "local forecasts and quiet predictions; unhurried words, conservative estimates and tiny victories"
+lines:
+  greet:
+    - wind ribbon predicts a lively round
+    - wind ribbon is ready. no need to hurry.
+  onKill:
+    - a sudden change on the wind ribbon
+    - wind ribbon waited for the opening
+  onDeath:
+    - the wind ribbon missed that gust
+    - wind ribbon should have waited another moment
+  onPlant:
+    - pressure dropping at the bomb
+    - wind ribbon checked the site first
+  onDefuse:
+    - storm warning cancelled
+    - wind ribbon checked the corner twice
+  onWin:
+    - clear skies over my wind ribbon
+    - wind ribbon got there eventually
+  onLoss:
+    - my wind ribbon forecast was optimistic
+    - wind ribbon needed one more safe corner
+  onLastAlive:
+    - one wind ribbon in the storm
+    - the wind ribbon will take this slowly
+  taunt:
+    - your push is mostly hot air
+    - the wind ribbon can wait out that peek
+  lobby:
+    - taking a reading from my wind ribbon
+    - please stop breathing onto my wind ribbon
+    - "My wind ribbon: I will keep a safe route home."
+    - With my wind ribbon, please check the blind corner first.
+quirks:
+  - gapple_hoarder
+  - always_gg
+rivals:
+  - mynporyt
+bio: VividMiner63 logged the weather from a glass hut above the old arena and still brings a wind ribbon to the queue. MynporYT keeps asking whether it really helps.
+batch: 3
+retired: false

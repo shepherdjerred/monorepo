@@ -1,0 +1,76 @@
+id: thiolgraiztaijix
+name: Thiolgraiztaijix
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTkyNDc0NCwKICAicHJvZmlsZUlkIiA6ICI2YjllM2Q0MDRiZmY0MTEyODJiY2VkOTAzY2M3ZDJmZiIsCiAgInByb2ZpbGVOYW1lIiA6ICJsdWgyOSIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8yYTZhMjZlYWM0ODkwOWYyYzA3ZDEwYzc1ZGYwZGRiYzQzMzcxZWZkMGM0MzNhYmQwNjM4ODA0Yjc2NDkxZDEiCiAgICB9CiAgfQp9
+  signature: "QL+VwqW9TurJxW3Nu8FEZqwn/0P0YLP+Ixk7F2pAPUOYwdkhFsARX8a7xvrTbE3TP5+0gPPdp5kvYk/+gpapMbzmeQGkhmE1LBNVzEEFXyEXmOsnZhtuJUZ5pWkNWOjZQWATmt7ItvoeRAOvnhxhROhJLJAQfo6/dmV3RvN5VAzcm7S9+dMyQM47TeW8cj9CpDHPWsmnPFM5349J/+vqBc2QDhgAropM2Dplsnttid43xtripkplGopPx86hTf1ulNjHumfD8avPLAX5qF9JXVgykhBYHdVRgCn2KfpfxBs5FKPOAby4yRfzZntYA/8buH7wMF8RWEHZfaIr/P7geHa/gmdtyGjwDF6vo+woQlyoL1SMMezKqTeTyvMTpY94HanQ7AQWy6f91s0cJdB3Omb9shcpRsF3IXCbjr1gmyjMWszOQuDnoIJthnPq7hFImh+zysbE+wAhgMM+Xx2/48LlOMqnedOdXTBHbD8zhLho22x2DFQnb7m5CznzfLnGcDUWYrVqut3GPVweVmA8aKQ91JZt7UURXZ6cEwRaMyiSS63ytWJpn6YZXDgp69DHo1oFzH+mmvPvMzx3Z6Ps30FieB/UF9bwgLkVNyu9TJrVT+Cots7nL0izAkGSfRNOeGZzYrr5xjl59hSjU0uep7tXz8ZtzWCIyr0N4Jpfnl0="
+skill: 0.029
+archetype: rusher
+leverOffsets:
+  reactionMs: 0.28
+  turnRateDegPerTick: 0.04
+  cps: 0.37
+  decisionTemperature: 0.02
+  awarenessRadius: -0.7
+  coordination: -0.08
+  aggression: 1.35
+kits:
+  trooper: 1
+  shortbow: 0.63
+  rewind: 0.33
+roles:
+  plant: 0.78
+  escort: 0.48
+  defend: 0.1
+  hunt: 0.77
+style:
+  aggression: 0.76
+  patience: 0.17
+  teamplay: 0.36
+  risk: 0.73
+voice:
+  tone:
+    - steady
+    - eager
+  verbosity: chatty
+  style: "buoyancy checks and practical nautical talk; fast fragments, impatient countdowns"
+lines:
+  greet:
+    - oak rudder fastened, ready to cast off
+    - oak rudder ready, I am taking the first corner
+  onKill:
+    - found a gap in that hull
+    - oak rudder keeps moving, next corner
+  onDeath:
+    - a little water over the rail
+    - a pause for the oak rudder, then straight back
+  onPlant:
+    - not a cargo I want to keep
+    - oak rudder is already on the next approach
+  onDefuse:
+    - unloaded that safely
+    - quick hands, quick oak rudder, clear
+  onWin:
+    - oak rudder brought us back to dock
+    - oak rudder barely stopped all round
+  onLoss:
+    - the oak rudder voyage met a reef
+    - oak rudder ran ahead of the plan
+  onLastAlive:
+    - one hand still at the tiller
+    - my oak rudder and I will keep moving
+  taunt:
+    - your push is sailing against the wind
+    - my oak rudder got here before that push
+  lobby:
+    - tightening the bolts on my oak rudder
+    - keeping the oak rudder dry for the voyage home
+    - "My oak rudder: first corner is mine."
+    - With my oak rudder, please follow after the opening.
+quirks:
+  - bunny_hops
+  - always_gg
+rivals:
+  - zaeljaeninja
+bio: Thiolgraiztaijix launched a leaky ferry between two rival team docks and still brings an oak rudder to the queue. ZaeljaeNinja keeps asking whether it really helps.
+batch: 3
+retired: false

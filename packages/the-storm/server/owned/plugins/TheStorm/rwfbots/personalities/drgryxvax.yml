@@ -1,0 +1,73 @@
+id: drgryxvax
+name: DrGryxvax
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NjAwMTI4OCwKICAicHJvZmlsZUlkIiA6ICIxMTM0OTAxMTU3ZTE0Yzg0OTE1YTNjMGY3M2RmYzM0NSIsCiAgInByb2ZpbGVOYW1lIiA6ICJab2xlZWV5IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2MyYWJkYWYxNjgxMWE2OTRlZWRiNTAyODA1ZDA1YWMwYTJmZmU0ZTdlNTU4OTgzZWQ5M2UyMmExMDgxNTYwNDEiCiAgICB9CiAgfQp9
+  signature: "L1Yk1kFQShmdCV/j5904zsZO/1nK0sjcCyG7Gvkt3FF5IrS4rb/FPlKfUlNauzZxz9Rw0B5sQTt6n/Hl/WLv5dhTGzWy+orKsbjMkVq6he6dO79kdge/SqSZWtOrngy8uKAcmDYytgaZJp4eiTj4fGFh+P1zCx8nnE22z5+k1DE10Ffdl0gbQI3C05EFVcIQBlTtUaBjsAbVLPgIhIGNPmzK0CqPlruauTzORjH4Cvy7GS0X071OsNZfN3kSp/b981zyJ6c9YHG+eTa7zmB3EbpmPFba0meWL8QVHHxPOJs/fYxIfyiTcaeZv1uWP0ZUHDTR8rpLG3gzIhMg5Z4OhXUAuOUKMjLSbeZtL9TsnDofkPGEwL72aUCgvlejyRpAEwFMDYCjcdfGG/vbCl7C6k4HFhJVag3uUvJpzhwhyv9rQKObYFdTbvjP56KXHImJj9F+kwvBpnc1dKqgx4JV1nmoDxdnCbf30Z63cIh3YJGqLsVs2Q/lq53Cv6BW9V60PUw+rryA9MgcyNiK/asZkF8ODFugJN9vHBymWkWNT9w1JXbWrMjggZyTEKGQMFBvpL/Ve4CcqXzhF+HSHxSoUJI3tWMnuVfw9cydsgOV7j/vFy47YeQTRrFXrvvR5SpIH4Ixru2+s9aTgbO6QBUSANGuzZgUPUR41pHhXCqMYks="
+skill: 0.172
+archetype: anchor
+leverOffsets:
+  reactionMs: 0.72
+  predictionQuality: -0.97
+  decisionTemperature: -0.29
+  awarenessRadius: 0.49
+  coordination: 0.45
+  aggression: -0.33
+kits:
+  trooper: 0.88
+  longbow: 0.42
+  rewind: 0.3
+roles:
+  defend: 1
+  retake: 0.7
+style:
+  aggression: 0.24
+  patience: 0.8
+  teamplay: 0.65
+  risk: 0.14
+voice:
+  tone:
+    - dry
+    - grounded
+  verbosity: chatty
+  style: "imaginary roof leaks and tidy-angle demands; reassuring statements and firm location reports"
+lines:
+  greet:
+    - copper gutter checked, no leaks yet
+    - copper gutter stays here, I have this corner
+  onKill:
+    - a small opening under the eaves
+    - copper gutter and corner still secure
+  onDeath:
+    - found the one loose tile
+    - someone watch the copper gutter corner
+  onPlant:
+    - something ticking under the roof
+    - copper gutter guards the exit from the site
+  onDefuse:
+    - one less repair bill
+    - copper gutter is staying by our bomb
+  onWin:
+    - copper gutter kept the rain out
+    - copper gutter never left the post
+  onLoss:
+    - the copper gutter plan has sprung a leak
+    - copper gutter held the wrong corner
+  onLastAlive:
+    - one tile holding the roof
+    - the copper gutter holds here a little longer
+  taunt:
+    - your angle would collect rain
+    - the copper gutter has not moved for that push
+  lobby:
+    - inspecting my copper gutter for cracks
+    - the copper gutter repair can wait one round
+    - "My copper gutter: I will guard the home approach."
+    - With my copper gutter, call before rotating off defence.
+quirks:
+  - stares_down
+  - always_gg
+rivals:
+  - luckyskalpaen
+bio: DrGryxvax reroofed the same spawn cottage after every group building session and still brings a copper gutter to the queue. LuckySkalpaen keeps asking whether it really helps.
+batch: 3
+retired: false

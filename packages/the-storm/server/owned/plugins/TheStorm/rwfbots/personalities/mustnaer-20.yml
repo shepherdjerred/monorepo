@@ -1,0 +1,75 @@
+id: mustnaer-20
+name: Mustnaer_20
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTI4MzA1NywKICAicHJvZmlsZUlkIiA6ICIxZmVjOTEzN2Q3ZTM0ODk3YTY5OTY0MGJkMTllMGM0MiIsCiAgInByb2ZpbGVOYW1lIiA6ICJzcGlmZnRvcGlhNiIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS80MjViZTFkMTQ5YWQxNzU5ZDMzNjQ2NzYzYTBkMjkyMWZhYTQxY2UwOGY2NzZiYmQ3MGIyZWRiMzk2OGU0ZGRmIgogICAgfQogIH0KfQ=="
+  signature: "oWJ0OseSNmeUPLiWCr8Fx9HQv3kCOfpmGVKCErSrzk/US5lOmNNmfxOVXpDQ2813ZPeG3V140tRJFG9m3pWuS7WkqjyQCLgFeFIEuNQGZsxS+vzscxO7JYqxq4dIC7b4MVS0xDU3Rft+Bf9+DCtreEzjXceHkJY+MIz7EbaF66CQcfkNptBEEoa3YUhVvf3p/9cI6zbIklkB2aXddL9SQXxB3RWXPoq8rR86g68nD3XryHG30Qr89hWh7/BXIwHZ2qdi3fAoUn8yOeMl4FhMCBC+mWfDlAChxbldcckaNwh+vmHwnqPh5UdRhOJtB6zLgj3zKAWPoU7UDqzGa7u75FXaO0SGEZU3gbd2wcBLKhVIcvCtcQTiLeLOTijMyJKDYXuouhUfC1QyqR8XzrxdQ3/noKvZPElO+S2BOWcj7YzzXx32oWFcphhIqOq20VYaHj+LbDpo/OZPTBK/i0bgVLydO1AkqJE02JT2UangIb7L3R+1JLmdWXzlsaI1ZWAMGadhdMxIHjjUf0cqDv3Gg8df6ss+d6LilNju5fDdDeXKU9WylIj2fNlmfxryCJPdx7RB2OZ4JvE0TqwMCRFvSvZbTFOUgwA5slpuGFJRyTwZnAkeUVsy+RLY+NjNKaUsZJOW0eeyGYR5H3kVMrwvUo+iK+vglUd67GnhhwZZSp0="
+skill: 0.111
+archetype: lurker
+leverOffsets:
+  reactionMs: 0.5
+  predictionQuality: 0.47
+  awarenessRadius: 1.16
+  coordination: -1.28
+  aggression: -0.16
+kits:
+  trooper: 0.76
+  longbow: 0.18
+  shortbow: 0.54
+  ghost: 0.74
+  wraith: 0.62
+roles:
+  plant: 0.33
+  rotate: 0.78
+  hunt: 0.78
+style:
+  aggression: 0.45
+  patience: 0.75
+  teamplay: 0.05
+  risk: 0.54
+voice:
+  tone:
+    - precise
+    - hushed
+  verbosity: normal
+  style: "map annotations and quiet route corrections; lowercase whispers, deliberate pauses"
+lines:
+  greet:
+    - my contour sketch points toward trouble
+    - contour sketch here. quietly.
+  onKill:
+    - contour sketch gets another little cross
+    - the contour sketch was here a while
+  onDeath:
+    - there is a hole in my contour sketch
+    - heard it too late beside the contour sketch
+  onPlant:
+    - contour sketch marks the fuse
+    - contour sketch is watching the quiet entrance
+  onDefuse:
+    - erasing that from my contour sketch
+    - no noise. no fuse. just the contour sketch.
+  onWin:
+    - contour sketch finally matches the terrain
+    - the contour sketch stayed out of sight
+  onLoss:
+    - time to redraw my contour sketch
+    - the contour sketch waited one corner too long
+  onLastAlive:
+    - one dot left on my contour sketch
+    - nobody move near my contour sketch
+  taunt:
+    - your route is wandering off my contour sketch
+    - the contour sketch heard that approach coming
+  lobby:
+    - unfolding my contour sketch on the lobby floor
+    - please do not spill cocoa on my contour sketch
+    - "My contour sketch: I will hold the quiet route."
+    - With my contour sketch, leave one quiet approach for me.
+quirks:
+  - slow_starter
+  - always_gg
+rivals:
+  - pastpek-35
+bio: Mustnaer_20 kept a hand-drawn atlas of the 2013 rotation and still brings a contour sketch to the queue. Pastpek_35 keeps asking whether it really helps.
+batch: 3
+retired: false

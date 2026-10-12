@@ -1,0 +1,73 @@
+id: skupil-24
+name: Skupil_24
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NDIyMDA0OCwKICAicHJvZmlsZUlkIiA6ICI3MDYwMDk0OTgyZDc0MTczYTNjZjg1Zjc1NjQ3MGE5YiIsCiAgInByb2ZpbGVOYW1lIiA6ICJpbmV4YWN0b3N0ZW50YXQiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvN2UyNTdhYTlhYzlhNGQ0ZTk3NzE4ZmQwZWNmYmVkOTc0ODRhMWY0NTU2YzdjODc2ZjA5ZWZhZjA3NTM1YjA4OSIKICAgIH0KICB9Cn0="
+  signature: "yPoba44KE5Tz8qYSoU2Gel/+aJGzuT3bT7bBRHkM/oNtRVypvRFa2e2GeC5/6DQYc/3yvvmTamdlqpG8atCBXV51xl5dBt/TfCxOImXa3aWpjIcTbmCTBnFCL8dbNq+qBbQye1FOnLjzg5dtWVP912ds7uyBgMcPUi7bNtyISFmNg6zX7EZPnRbnpz10g+sK61ubLipxneyLeO6TsieBN9Qn/6yzbtx7aBlY2ufqd8J+7berLEuD92d5SyVioeWZchRanWt9Zmq7NlzSIDo4Qink57aH9DxI1ckyAqt8iTROQqyMtKIhAxc12nsS4Sj/0J+/6Q49OLHY2JL2vV7CU1LnrlQ0xd0HJbIgPnHIOw4sq+PPg/Lz0z9CJbPPMho40foPqp5G4kBJHriy7WgyL7c+Lp/VMFpq5fNZBscq3LNSW3ObsVKMQjzefCDK7hDVKj6jSzm0WBkYxJhxceaimztvgKV6yGXETwnGhC3uofGSj/h0HJwTu4VtnYX0rKvHCv3/BVOhjP0VtxUKxcxUuYSVXkuAJW3xWbtf9volR2zbrDpcw7pQ8UEtp3TyYWsEnKZiQjJwL7jRsjmO6ySnlTqduYOxxXc6KrngTU1oEPu810ICnftsbMSZhijqWcYz8haa21kXfKraku+HpgZtcl0ah+cJab5sDiET4Ih/fp0="
+skill: 0.898
+archetype: support
+leverOffsets:
+  awarenessRadius: 0.7
+  coordination: 1.57
+  technique: -0.42
+  aggression: -0.76
+kits:
+  trooper: 1
+  longbow: 0.31
+  rewind: 0.63
+roles:
+  plant: 0.21
+  escort: 1
+  defend: 0.4
+  retake: 0.52
+style:
+  aggression: 0.38
+  patience: 0.47
+  teamplay: 0.96
+  risk: 0.29
+voice:
+  tone:
+    - observant
+    - helpful
+  verbosity: quiet
+  style: "local forecasts and quiet predictions; gentle check-ins, thanks and useful kit reminders"
+lines:
+  greet:
+    - barometer dial predicts a lively round
+    - barometer dial is here, everyone got their kit?
+  onKill:
+    - a sudden change on the barometer dial
+    - one less problem beside the barometer dial
+  onDeath:
+    - the barometer dial missed that gust
+    - sorry, the barometer dial corner is open
+  onPlant:
+    - pressure dropping at the bomb
+    - barometer dial can watch while you plant
+  onDefuse:
+    - storm warning cancelled
+    - barometer dial is here to help at the fuse
+  onWin:
+    - clear skies over my barometer dial
+    - barometer dial says everyone helped
+  onLoss:
+    - my barometer dial forecast was optimistic
+    - barometer dial says we can tidy that up
+  onLastAlive:
+    - one barometer dial in the storm
+    - one barometer dial still trying to help
+  taunt:
+    - your push is mostly hot air
+    - the barometer dial brought a team to that corner
+  lobby:
+    - taking a reading from my barometer dial
+    - please stop breathing onto my barometer dial
+    - "My barometer dial: I will stay close to the push."
+    - With my barometer dial, call if you need an escort.
+quirks:
+  - says_sorry
+  - always_gg
+rivals:
+  - toxicthionkek
+bio: Skupil_24 logged the weather from a glass hut above the old arena and still brings a barometer dial to the queue. ToxicThionkek keeps asking whether it really helps.
+batch: 3
+retired: false

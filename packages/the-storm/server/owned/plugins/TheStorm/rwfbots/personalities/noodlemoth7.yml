@@ -1,0 +1,74 @@
+id: noodlemoth7
+name: NoodleMoth7
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTY2ODI1NywKICAicHJvZmlsZUlkIiA6ICIxNTUyNmU1OGZhOWE0NjBmODhhNmZhNjk1M2RlNjgzNyIsCiAgInByb2ZpbGVOYW1lIiA6ICJQaWVkcml0YTE3IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2QyODI2N2NiOWQwZDkzODc1N2JiNjBjYjMyMmRkOTk4ZDc3OGM5OGMwOGM1NGI5ZmJmOThiMTMwYmJhOGQ4ZGQiCiAgICB9CiAgfQp9
+  signature: "pNjLfgHny7s5H+QEJhDEMgvA2HVyqqSe9HCOHt7FZL0DcEZ/gRiHgRrnbL5M3y2g8HI4NxNOP9L+9Xiw0ex6Bl+RLHIc3IUn33CYOEGJI5mN8wTW0aUn5UZ6pIta4JCDTBLEL3Ftq0C20oglsxt262T3MkVyB9QW+E3fuGvxsrVxD1YS/+iIL4+bJqeRfYsXc0hPuOaUnikAz8ETyIdQp0IzQ2RrXxqgaRXViEE12eArehT3jBGWBJBOZASf9xr2hze5iOy79lduABZGhuFCLYxX+jXxT/F2N9HjsX/ELhCrwLC3G5lHmC6ZcqMt6KEA5tn5g1toWPRkTeHwQSOz6Qwu8Hm4aHEGfWrLFlzIAXt6EFS8+0OIZ9EVWA9K+xK5UZx9Oprdi8p6yoIJ4myv8OFxtwVA0M2W3Fl8iF5Alrt49m23VLcyavH1Mq298CsSGAvsZgT4y9rRydaooxtalaeL5rI/D6JHuOwuol95TmRq+l/ZWk8MouipRaJ5NW3YHm8uFkW7gEVh+Hemxgm3w7L9vsLeKQKxnTveGQ1MMU62kWDAWt3zEPHW/2id8bmyfyk+gB3SlH979io5tab3j26Va74yYpe6bhih6S6jQvxSsb/e0A10mLUdBkWpFymUTZIISgRANnHZ80SQAGiIMDiIlMWEi0IZeNU60pV5/xc="
+skill: 0.586
+archetype: duelist
+leverOffsets:
+  aimErrorDeg: 0.9
+  cps: 1.58
+  decisionTemperature: -1.49
+  coordination: -0.42
+  technique: 1.62
+  aggression: 0.83
+kits:
+  trooper: 0.97
+  shortbow: 0.39
+roles:
+  plant: 0.17
+  escort: 0.22
+  retake: 0.42
+  hunt: 0.68
+style:
+  aggression: 0.86
+  patience: 0.29
+  teamplay: 0.26
+  risk: 0.59
+voice:
+  tone:
+    - earnest
+    - competitive
+  verbosity: normal
+  style: "museum labels for even embarrassing plays; brief courteous challenges and honest shot assessments"
+lines:
+  greet:
+    - catalogue card prepared, exhibit opening
+    - catalogue card ready, good fights everyone
+  onKill:
+    - a fascinating example of an opening
+    - good exchange beside the catalogue card
+  onDeath:
+    - please do not put that in the exhibit
+    - fair hit, the catalogue card left that gap
+  onPlant:
+    - a short-lived interactive exhibit
+    - catalogue card earned a moment at the bomb
+  onDefuse:
+    - preserved the team instead
+    - catalogue card can settle this at the fuse
+  onWin:
+    - catalogue card has a new story
+    - catalogue card had some good fights today
+  onLoss:
+    - a cautionary exhibit for the catalogue card
+    - catalogue card wants another clean round
+  onLastAlive:
+    - the last visitor in the gallery
+    - one catalogue card, one fair chance
+  taunt:
+    - your approach belongs in the archives
+    - the catalogue card is ready for that peek
+  lobby:
+    - please look without touching my catalogue card
+    - writing a new label for my catalogue card
+    - "My catalogue card: I will contest the middle."
+    - With my catalogue card, give the middle fight a clear lane.
+quirks:
+  - good_sport
+  - always_gg
+rivals:
+  - phantombandit2
+bio: NoodleMoth7 opened a one-room museum for abandoned arena souvenirs and still brings a catalogue card to the queue. PhantomBandit2 keeps asking whether it really helps.
+batch: 3
+retired: false

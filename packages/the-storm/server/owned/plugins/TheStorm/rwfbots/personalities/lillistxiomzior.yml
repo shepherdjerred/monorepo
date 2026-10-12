@@ -1,0 +1,77 @@
+id: lillistxiomzior
+name: LilListxiomzior
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NDg3MzQxMSwKICAicHJvZmlsZUlkIiA6ICIzMjA3MWFlYjYzZjI0NmY0YTVlMGZhMWY3ODg3ZGRhNCIsCiAgInByb2ZpbGVOYW1lIiA6ICJNcl9HZW5lcyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS82MDc4ZjE5OThlZTg0OGM3MWQ4YjlkMWM5YTdiZjMwZGM5OTEyMDZiOGQwNWRlMmExN2M3MTA0ZDk1ODgxNzJmIgogICAgfQogIH0KfQ=="
+  signature: "Ir0eLWMcXHTQynvSSmod1aPepCwlE3Ju+D3CWpff2DL6PRUtzfoIin6oT8YO/mDac9H5jCTw3teIGSByvdeRTWy8dMAJf6pl7UgSJaCpwe+KMZ4iD12m6RykcpzNbZgT7R4fgt3xSsFY0mRFcT8SzO+sRp4UiQvGIxSydHBvB5DsifAq9be59MqbB1O0PlCaGuygIrwnDanzRp23KcfnIqcO2wmlp1+wwhuHeAS/nhAh76ZcPL3GDvO9uTxjnkJG5AgnlYzTOUTnXSa9xLfM/FTaArP42urwDNpkBs7SoS/2/NZa9rkYeLoNUQ7LiCke2fpcLLC3DXhDO43SCL1AxnVxv/kWCoCACZnTw7cyaMmzT+6Ccxjwb3yLQ1p9/MUGqxhWOnNuQDFu/1UZNHqqLI/jirvf/S75AnZCicTKnd7h/lghGiejjy0NRFKbtzcQpR3B0Yg/LYpBRijXu5ONHdpaUaTh/SuhENaa0lP6sIvqNIZHtSYz0CoZ9e/TPhov/+lEj0lteAqM7q865kCTy1bY1xhAVmcj5JavcbMswhDpcyhmtCOUsDxXFH/7yNUNNE2rQOb1q91+oWuP06Hi+gL+p9wUZVCVX5ky4yP2EgylxBA31naHRzCwkW0aStN5gRO1qVmrojX+PDsmKcicE8nPFADv4dasYtpcc4iVnOI="
+skill: 0.346
+archetype: flanker
+leverOffsets:
+  reactionMs: -0.69
+  turnRateDegPerTick: 0.74
+  predictionQuality: 1.18
+  awarenessRadius: 0.62
+  coordination: -0.66
+  aggression: -0.32
+kits:
+  trooper: 0.64
+  shortbow: 0.92
+  rewind: 0.4
+  wraith: 0.51
+  spy: 0.35
+roles:
+  plant: 0.4
+  escort: 0.22
+  rotate: 1
+  hunt: 0.66
+style:
+  aggression: 0.7
+  patience: 0.42
+  teamplay: 0.21
+  risk: 0.72
+voice:
+  tone:
+    - brisk
+    - nimble
+  verbosity: quiet
+  style: "absurdly serious station announcements; quick side remarks and route changes mid-sentence"
+lines:
+  greet:
+    - route timetable checked, service departing
+    - route timetable is taking the other entrance
+  onKill:
+    - one less delay for my route timetable
+    - route timetable found a side door
+  onDeath:
+    - my route timetable reports a cancelled service
+    - route timetable chose an occupied side door
+  onPlant:
+    - last departure from this platform
+    - "route timetable came around the back of {bomb}"
+  onDefuse:
+    - service restored on this line
+    - route timetable found a quieter route to the fuse
+  onWin:
+    - route timetable reports arrival on schedule
+    - route timetable took the long way for a reason
+  onLoss:
+    - wrong platform for my route timetable
+    - route timetable took the long way for no reason
+  onLastAlive:
+    - last service, just my route timetable
+    - one route timetable coming around the edge
+  taunt:
+    - your connection left a moment ago
+    - the route timetable is somewhere to the side
+  lobby:
+    - please queue beside my route timetable
+    - my route timetable says the lobby service is delayed
+    - "My route timetable: I will try the side approach."
+    - With my route timetable, keep them looking forward for me.
+quirks:
+  - crouch_spam
+  - always_gg
+rivals:
+  - jeshxarshairpvp
+bio: LilListxiomzior linked three friends bases with an unnecessarily elaborate minecart line and still brings a route timetable to the queue. JeshxarshairPvP keeps asking whether it really helps.
+batch: 3
+retired: false

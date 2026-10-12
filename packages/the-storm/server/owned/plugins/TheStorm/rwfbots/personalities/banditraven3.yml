@@ -1,0 +1,74 @@
+id: banditraven3
+name: BanditRaven3
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTkxMjQxNywKICAicHJvZmlsZUlkIiA6ICIwNTljODIxYzhhODU0NGJiOWJiODVhOGMxNjVhYTc5YiIsCiAgInByb2ZpbGVOYW1lIiA6ICJoZWxsc3RydWNrZWR6IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2Y1MGQyNWNiMTQ3OTM5NjIzZWZiYThjMDNiMWEwYzFhMjU3YWMwYThmZTI0MzQ5YTZkNTZjMzI2ZGJkYzI0MDMiCiAgICB9CiAgfQp9
+  signature: "ZUqOm+Re0za5Q5gfZfLkUpo6CRRGIGEDI6YFvYN4b6MjCwfHyegMGRnGqQ5JJV8qptJ2sy6SX1F8tX6fJ7KvGlWGYhrbAh1DPDZqXBExO/ox6w+zRQoqHV3K/IQd/VjEZEJ2ZrFc8mBFLNI44emWW4s/MwDSzAkBsFeya9YyjbwqwTHxB+LSy9M5Wp8mgKmrJ3RzNZ6IuLNCYXYq0N6oFcEoe5HFJ3e5avPuGuoAnvca7FwJFgUJUQCI34uMDD+GEY0/z9B0HV+ywl/7uU4zh/9WHYifK90mEh6XZ7yboOz+5tQx8hHtZLzzjLLrD9RSzd8kPuGKhMrohnJUzJ3KlJb2kvFn9OoM/u5+frcLxtHAUcfUgph3zMLeBqphYAWMobNfRHVYir/EO0jlTrEJ30rm6g6DFqrVfkJnRje0cnJCgU1XJdxzDLRKn3AZs6qZydRbq5R63s+q2dGMGeWDzmJHQ1Wq5EzYPbjYDtwdlx5UB4LIiglCiSOq6cDsnqu03Ln5AqcxR8Nq2dLPdfpTSvfJ21B6bMPJ7mgY3EqtJvj7OqIJyLhI3/IK3zpJ2jcUkICEuJxHNK6k544VWBi0HK70Tem/XFoCH7ygR0FesBrvI2xjCwYGsmVO0gk3MxTqefH0npdp1WBsBXf6uKzWePRZyAC3huktG/dxz5+y6H0="
+skill: 0.439
+archetype: bomb_diver
+leverOffsets:
+  reactionMs: 0.42
+  aimErrorDeg: -0.02
+  turnRateDegPerTick: -0.04
+  decisionTemperature: 0.46
+  technique: 0.8
+  aggression: -0.56
+kits:
+  trooper: 1
+  shortbow: 0.17
+  rewind: 0.64
+roles:
+  plant: 0.92
+  escort: 0.21
+  defend: 0.12
+style:
+  aggression: 0.85
+  patience: 0.08
+  teamplay: 0.3
+  risk: 1
+voice:
+  tone:
+    - brisk
+    - urgent
+  verbosity: normal
+  style: "absurdly serious station announcements; breathless objective reports, oddly calm at a fuse"
+lines:
+  greet:
+    - signal flag checked, service departing
+    - signal flag packed, where is the bomb?
+  onKill:
+    - one less delay for my signal flag
+    - a clear path for the signal flag
+  onDeath:
+    - my signal flag reports a cancelled service
+    - signal flag was one corner from the fuse
+  onPlant:
+    - last departure from this platform
+    - "signal flag is parked beside {bomb}"
+  onDefuse:
+    - service restored on this line
+    - "signal flag and {bomb} can both stay intact"
+  onWin:
+    - signal flag reports arrival on schedule
+    - signal flag got the objective done
+  onLoss:
+    - wrong platform for my signal flag
+    - signal flag took too long reaching the site
+  onLastAlive:
+    - last service, just my signal flag
+    - the signal flag still has a fuse to find
+  taunt:
+    - your connection left a moment ago
+    - the signal flag got closer to your bomb
+  lobby:
+    - please queue beside my signal flag
+    - my signal flag says the lobby service is delayed
+    - "My signal flag: cover my approach to the bomb."
+    - With my signal flag, call the safest bomb route.
+quirks:
+  - loves_nuke
+  - always_gg
+rivals:
+  - thepaemthai
+bio: BanditRaven3 linked three friends bases with an unnecessarily elaborate minecart line and still brings a signal flag to the queue. ThePaemthai keeps asking whether it really helps.
+batch: 3
+retired: false

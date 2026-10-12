@@ -1,0 +1,78 @@
+id: kakkouwolf
+name: KakkouWolf
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NTY4NDgxOSwKICAicHJvZmlsZUlkIiA6ICJhYTUwNjRmMDUzOWQ0YmFhYTVkOGMzODllY2JiNGFlMSIsCiAgInByb2ZpbGVOYW1lIiA6ICJ4WF9FbXBsb3ltZW50X1h4IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2NiODhlY2UwNTI1NzhiNjIwZjQxOTFhYWE1NmVkNjg2NTg0N2E0ZmY5MmQxZjdlMGI5NjgzMDE5NDFiOTEyNDkiCiAgICB9CiAgfQp9
+  signature: "BQ4lEoy0QVjvqsxht+tBbah04vOCPSvgDak6E3VypgsXugi4R46QliQg9CPnGEUslMtGXxLyIjwA0cwl47+eKy+wCCWMUkq7wlizmjASd0FK5TJjaBgJ6l3dxYfMSVKTVuCXzD1klNfVNxTfB0ItfqVaQlrFrU0Qp9yQDEXaRxEX8iZFseXBObQTeE3hrLaR+RTlxRGN4aML+8P5hEXu0SKKLlwRfp/ayPefy8RuR21arMlLGBQikBVM24hPt1p1BXgFIBmIZIyrgPynvyNGMttkF2ub81BW0tEvxbD/LLCuFzaNO6PbJng5ZZ8suKf3zC8p8ZYCChsXdnoinN+PrMBY4i7VVRzt5p9wYxUa2A+LdnZtz3K9Frp/liXX+NgxwdrUHDBsMlyDRu6heHFVAtBiCvhP4SdAUlyYLl6lN9eF/rfr+qzHVG0hvczzyT543Gvl5DluINWXQa8eSDHsRQv5uxAo0VRZtJqC148mi5FMT4j2vmmNkUTGy2YaspmoafAcY2wmfeTAUPb0dsBJWCUMamTK8Nw5tr8qOUOZDa0DclRk1TyFZkyi1XCvvOM2ozasM9Z5K+11pfZ4etewkgpxZc8Rj82sgodNUNRM7lHE65JnHu5NFvdy5baw/88vBM6p47AbB+KbgPaEqqASqSIpZjSa2bipGYVrTAxEqBQ="
+skill: 0.165
+archetype: tactician
+leverOffsets:
+  cps: 0.67
+  predictionQuality: 0.75
+  decisionTemperature: 1.71
+  awarenessRadius: 0.46
+  coordination: 1.46
+  technique: -0.33
+kits:
+  trooper: 0.85
+  longbow: 0.57
+  shortbow: 0.44
+  rewind: 0.47
+roles:
+  plant: 0.44
+  escort: 0.43
+  defend: 0.4
+  rotate: 0.66
+  retake: 0.73
+  hunt: 0.12
+style:
+  aggression: 0.35
+  patience: 0.75
+  teamplay: 0.8
+  risk: 0.44
+voice:
+  tone:
+    - fussy
+    - analytical
+  verbosity: normal
+  style: "paper crafts and tiny careful corrections; numbered ideas, concise route calls, quick revisions"
+lines:
+  greet:
+    - creased star survived the queue
+    - creased star ready, first route agreed?
+  onKill:
+    - one clean fold in the plan
+    - creased star confirms a clean opening
+  onDeath:
+    - my creased star is a little crumpled
+    - creased star needs a revision on that route
+  onPlant:
+    - tucking the fuse into the fold
+    - creased star confirms the site is reached
+  onDefuse:
+    - unfolded that just in time
+    - creased star confirms the fuse is clear
+  onWin:
+    - creased star stayed in one piece
+    - creased star and team followed through
+  onLoss:
+    - another crease in my creased star
+    - creased star had a missing step
+  onLastAlive:
+    - one creased star left on the table
+    - creased star says there is still a route
+  taunt:
+    - that push folded very quickly
+    - the creased star predicted that rotation
+  lobby:
+    - please do not squash my creased star
+    - making another creased star while we wait
+    - "My creased star: I will call the first rotation."
+    - With my creased star, tell me when a route closes.
+quirks:
+  - calls_everything
+  - always_gg
+rivals:
+  - ravenlynx4
+bio: KakkouWolf folded paper creatures while waiting for the 2014 queue and still brings a creased star to the queue. RavenLynx4 keeps asking whether it really helps.
+batch: 3
+retired: false

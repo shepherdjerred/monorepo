@@ -1,0 +1,74 @@
+id: lunarfox02
+name: LunarFox02
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTY4ODM3MCwKICAicHJvZmlsZUlkIiA6ICI5YWRmNmRlNTJkNjE0MzA2YmEzNzQ2NWU1ZDIyYThjMyIsCiAgInByb2ZpbGVOYW1lIiA6ICJMb3JkX29mX3hpYW95YW8iLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNGIxOWEzOGFkMjZiZDI5NjZjN2Q2ZDE0M2RiZjJmMmI5NjkxNmNkNmQ3MzhmM2I2MjA4ZDEyNTkzYTEwZDUxNiIKICAgIH0KICB9Cn0="
+  signature: "XxvUuMjO/E5A4GBwxuycmQWIOW8SQSd9h80iTfndCmzPPAlM2DLA6F0bnn70uNWUecDawQigU+amJ0pRjeGXSWZl/dR1wiOImhsBxHBfH/WXfkZtS2mk/txlSHD72j8iqyOto30khxxnvsQ0FItTteIJ5nhlEH0iEX5w0h3gYkd1KiN43CVR+O3Y/OS0Jc0t3i3sADSKUUtTFHBjoWzeJkoZswf3uc1clrDDFgKnf8gPRiM33l34kyOPFVyiJtXh3EUboiYNYsi4WU6lb6+7XfU24mGoej2d4WwHqOHRLbS2Z+TOvAcsl0n/wtm8za6x926G0ClT7q21f70br5biB+ryHx/Yvj5CEYfeYAJVIz192ZZahso/6FxJ59IkKgxTWJ6fg07FuRdysOVDLEDCdNWEKE+JCXesnZ0EqzQpyTmfqIvdgpyGVcPZR1r26lsANAE9X689R0YK06vKv31UMXxPh+DK559oQI89LQA4b+Dw55BMPzMedjzxPdOixWVsd+H19lpTQRyRSqJyle8NYAVQPMWz0F9o2WI7cchNjdQRggGzOwXYpS93a0Yhvx2Ew2Ut6xoh5tO0+Vjy7FI0dIVo+SD9j/Sia2nQf4+bfDTETY9ThujIglP/gYfogTqH/rKSNnc5PB5tiI2znCALzX5JfszaoWfkALYineONMfM="
+skill: 0.672
+archetype: rusher
+leverOffsets:
+  reactionMs: 0.86
+  cps: 0.87
+  decisionTemperature: 0.59
+  awarenessRadius: -0.76
+  technique: -0.53
+  aggression: 1.73
+kits:
+  trooper: 0.9
+  shortbow: 0.56
+  rewind: 0.33
+roles:
+  plant: 0.94
+  escort: 0.49
+  hunt: 0.7
+style:
+  aggression: 0.86
+  patience: 0.05
+  teamplay: 0.46
+  risk: 0.78
+voice:
+  tone:
+    - busy
+    - eager
+  verbosity: chatty
+  style: "ingredient lists and improvised kitchen fixes; fast fragments, impatient countdowns"
+lines:
+  greet:
+    - soup ladle washed, team fed
+    - soup ladle ready, I am taking the first corner
+  onKill:
+    - a useful pinch of pressure
+    - soup ladle keeps moving, next corner
+  onDeath:
+    - too much heat on that corner
+    - a pause for the soup ladle, then straight back
+  onPlant:
+    - letting the bomb simmer
+    - soup ladle is already on the next approach
+  onDefuse:
+    - taken off the heat
+    - quick hands, quick soup ladle, clear
+  onWin:
+    - soup ladle can serve this round
+    - soup ladle barely stopped all round
+  onLoss:
+    - the soup ladle recipe needs work
+    - soup ladle ran ahead of the plan
+  onLastAlive:
+    - one cook still stirring
+    - my soup ladle and I will keep moving
+  taunt:
+    - your push could use seasoning
+    - my soup ladle got here before that push
+  lobby:
+    - there is soup beside my soup ladle
+    - please return my soup ladle after dinner
+    - "My soup ladle: first corner is mine."
+    - With my soup ladle, please follow after the opening.
+quirks:
+  - bunny_hops
+  - always_gg
+rivals:
+  - lumbrytyngroust
+bio: LunarFox02 fed a team from a cramped kitchen beneath their spawn and still brings a soup ladle to the queue. Lumbrytyngroust keeps asking whether it really helps.
+batch: 3
+retired: false

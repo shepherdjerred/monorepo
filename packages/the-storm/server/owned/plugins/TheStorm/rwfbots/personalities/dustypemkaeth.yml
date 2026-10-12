@@ -1,0 +1,73 @@
+id: dustypemkaeth
+name: DustyPemkaeth
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTc5MjQ1NiwKICAicHJvZmlsZUlkIiA6ICIyMjM1MzA1MTZjZTc0NTViODk1NmFhN2NmYTk1MjA0YyIsCiAgInByb2ZpbGVOYW1lIiA6ICJTaGVrZWx3aXR6IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2VhNDkwODdhZDNiNzQwNGE1ZGM1NjllZDMxYWQ0ZjkyNTlkMjZlNWJmM2U2NTg3OTVmZDM0M2VjM2FkOGNkZiIKICAgIH0KICB9Cn0="
+  signature: "L5LJjR4w6iGv9w34SMr+CggEnlCAgILETrmB4PgZatlnhKEYQCKC45/atg7fUObIHJMo+A5LjDq/Qzr9lD9ikUKAYsyZ8ht/FloMzr4jCm2QIkFOmcCiNA20+H3xBTuVUOPW7p/NcuThcjnl/h0sZMkYW8IWzbroY7dMEDumDVMvNbySI8W28Wt3qwtYa1Nl68LIYUNFipTt/rnBjBrUeN5OQz/WTnykqqH1RpinXH4Bl6NMnq8Or1zPnTkq2kVxMH86DaAkEsJSakSMnc3tKhj8rrqD1qL5QHhdP0GJ5PZSXNWwPryJpGxklTA10WyWMEDfT0JErZMi9SJEdRv1QLXghBLJ5fYLV3Z1c9YUYieXehmflTbNj+19r10ahFg+rDgcrLv4iarZmapCwfYCX+cikJoHY8MiHo6OW2riUcIzQUXLLuC6A51y+sdt2sJB9A6QeDeemKgPtr5pDk+VW5s+ZkYbt6tmq1oOiQReB9FhtKbmnsy5ctfY4fERegj+ketm9GyrBgn7t1X/HRBtfpcUS7Hl73Gk+OxqYxlz1isDbqBUrCgbW3/HbDZpVtP3iGsoJl1NKzNB+O1/qMJXzaqFA9PqCg3T4G/lGg+fxyKoivlRbgTEgvIPNXSbs5fzMx1qG7I8hOCkpq5J2P50CPCE/V6wRgM+Mzpre34oPW4="
+skill: 0.066
+archetype: hunter
+leverOffsets:
+  aimErrorDeg: -0.42
+  turnRateDegPerTick: 0.47
+  predictionQuality: 1.46
+  decisionTemperature: -0.12
+  awarenessRadius: 1.02
+  aggression: 0.88
+kits:
+  trooper: 0.56
+  longbow: 0.51
+  shortbow: 0.86
+roles:
+  rotate: 0.44
+  hunt: 0.98
+style:
+  aggression: 0.73
+  patience: 0.29
+  teamplay: 0.38
+  risk: 0.51
+voice:
+  tone:
+    - playful
+    - intent
+  verbosity: normal
+  style: "tiny winter expeditions, serious snow forts; tracks small clues aloud, then gives terse pursuit calls"
+lines:
+  greet:
+    - winter scarf thawed out, ready
+    - winter scarf ready, looking for tracks
+  onKill:
+    - a tidy little snowball effect
+    - winter scarf followed that trail correctly
+  onDeath:
+    - slid right out of that plan
+    - the winter scarf trail doubled back
+  onPlant:
+    - a warm spot in the snow
+    - "winter scarf found a path to {bomb}"
+  onDefuse:
+    - cooled the bomb right down
+    - winter scarf tracked the ticking down
+  onWin:
+    - winter scarf has survived the thaw
+    - winter scarf followed it to the end
+  onLoss:
+    - the fort melted around us
+    - winter scarf lost the trail near the finish
+  onLastAlive:
+    - one mitten still waving
+    - the winter scarf has one trail left
+  taunt:
+    - your footing looked a bit icy
+    - the winter scarf noticed those footsteps
+  lobby:
+    - warming my winter scarf by the lobby lamp
+    - please stop hiding my winter scarf in snow
+    - "My winter scarf: I will look for the last opponent."
+    - With my winter scarf, call the last place you saw them.
+quirks:
+  - holds_grudges
+  - always_gg
+rivals:
+  - xxcometlynxxx
+bio: DustyPemkaeth built a snow fort that lasted longer than the team inside it and still brings a winter scarf to the queue. xXCometLynxXx keeps asking whether it really helps.
+batch: 3
+retired: false

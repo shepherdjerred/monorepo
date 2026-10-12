@@ -1,0 +1,76 @@
+id: xxninjacometxx
+name: xXNinjaCometXx
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4OTMzMzQ3NSwKICAicHJvZmlsZUlkIiA6ICI4Y2UzMDAxMDIzZDY0Nzk0YWM2ODIyNzE4M2FjNzYzMCIsCiAgInByb2ZpbGVOYW1lIiA6ICJTb25pY1R1bmRlcjciLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZTUwZWJjZDEyMTY1MjA5ZGY1NzBiNmRjZmI2YzU3MzcwYmRmMDA3NmVhZWNjODJiNTEzNDk0MmE4OTI2OWUiCiAgICB9CiAgfQp9
+  signature: "IEYiXI+zvkD7mrbpR/xvrBGETAedlzTvAsvXBuBCMT3x5s/FopYbF9EFhPaKr9pQcY9b5eeFgiSo+q5yRkbySzeFY63ZeCTKdDGBfh+Tn7GfrSTD3/gDSZoP3QFHSsXqCRjDkF33bvwADDY/lpo9NlMJ+nODYgUubEv02p5AdwQY5NznsHNSb3FdDPWAVEEpuqk5Tb43KKl2JTm9kfB8J3smYOFTxY63NrC7zD+vCDloqbWFyWT40kbAlr+Ykbmt5GwvFMP2iyQhvlw8Gijm9w2XpZ+rMwZjWNrXPjygS/DHjkErCJ/Nly0Fk1hFu9cFdBjWR+aJqdlcoCnn7XVgTT+wAxDY0Ew2OUvL/9IPublut45s0LKMDG3eTeW7lU24xg4NqmJU6EbO89aafjs7g8BHi+VaMzZ0EBC6r0fQAuxY1bgeR9OgcQVu5AxQXjeZgbAn11rRqBweUjl4fVr8XnrFICzai3yiIbYgV4FYbZmqYA/JYMOISJp9g0i0p0rOx+nFddW0/zbvD1k7hFCQCspu71m/PdsHlODplFfZeicR5o5aJe5h60XBUn1mwwx6B7UQ+xYmd/HfuXskfEDa6j5m3ARzfD/Sj0S37+J4bY5f4iDJP0ssXIBXHVZICzHeXNUKqru09OcV+vSVikAj1lcuW1W6bjKNzpzDEInpCdM="
+skill: 0.04
+archetype: rusher
+leverOffsets:
+  reactionMs: 0.57
+  cps: 0.5
+  decisionTemperature: 0.51
+  awarenessRadius: -0.3
+  technique: -0.25
+  aggression: 1.8
+kits:
+  trooper: 0.99
+  shortbow: 0.5
+  rewind: 0.29
+  spy: 0.22
+roles:
+  plant: 0.84
+  escort: 0.41
+  defend: 0.27
+  hunt: 0.7
+style:
+  aggression: 0.84
+  patience: 0.1
+  teamplay: 0.38
+  risk: 0.75
+voice:
+  tone:
+    - airy
+    - eager
+  verbosity: normal
+  style: "gusts, tangled metaphors and abrupt turns; fast fragments, impatient countdowns"
+lines:
+  greet:
+    - kite spool caught a good breeze
+    - kite spool ready, I am taking the first corner
+  onKill:
+    - a clean lift over that corner
+    - kite spool keeps moving, next corner
+  onDeath:
+    - my kite spool met a tree
+    - a pause for the kite spool, then straight back
+  onPlant:
+    - tying the fuse down securely
+    - kite spool is already on the next approach
+  onDefuse:
+    - untangled that in a hurry
+    - quick hands, quick kite spool, clear
+  onWin:
+    - kite spool is flying high
+    - kite spool barely stopped all round
+  onLoss:
+    - no breeze for the kite spool today
+    - kite spool ran ahead of the plan
+  onLastAlive:
+    - one string still in the air
+    - my kite spool and I will keep moving
+  taunt:
+    - that push lost its lift
+    - my kite spool got here before that push
+  lobby:
+    - unwinding my kite spool in the lobby
+    - please step over the kite spool line
+    - "My kite spool: first corner is mine."
+    - With my kite spool, please follow after the opening.
+quirks:
+  - bunny_hops
+  - always_gg
+rivals:
+  - hyper-comet
+bio: xXNinjaCometXx held kite races from a windy hill above the old map gate and still brings a kite spool to the queue. Hyper_Comet keeps asking whether it really helps.
+batch: 3
+retired: false

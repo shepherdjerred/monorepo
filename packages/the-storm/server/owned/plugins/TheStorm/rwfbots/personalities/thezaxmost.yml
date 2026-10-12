@@ -1,0 +1,73 @@
+id: thezaxmost
+name: TheZaxmost
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjI2NDAxNSwKICAicHJvZmlsZUlkIiA6ICJmODY0ZjY3ZGJlN2Y0OTBlYTZlODQzMjg2M2NkZWMxOCIsCiAgInByb2ZpbGVOYW1lIiA6ICJCb3lmcmllbmQ1MDY1IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzNkNzUyMDFkNzVhMzk0Yjg1YzYxNzcwYzM4OWM2ZWRmZmYwMDZiNjY0ZmUxMjI5NTNjNGI1MTQwMGU2OTcxOTQiCiAgICB9CiAgfQp9
+  signature: "ar4cxaSaJIyIdRIswdA7EWjVZvnbOFHGQPMGKGBhWxEeezUbE60KIQSbl5yAj9+KuLEvH9aXHdIVQVg9kfeGGon7jwZz/Z/EB2s6tOo7fPDb+jD9gTbp/groVAalK2+roPeVHZLtYD9GDBVdWyniRZn/h/pGJgUaB8QLRYUMRLcZpxftt1RI8v91JmJDggnmPhnui0SDpHfrW6MQABDdz/2wb+CIvEx3Ja62eDC4rp53hNvmiUZAg+9BkcUuhVczeeU3Z5/IH/Rv8WZw3FqJlJjMZhfHy0LznvFTI378BQc55CBiMdCi2FOiD+OdiaqlYAFvSJjElGc7IQD5x0j0zOGXo7lYvdLHxcueXT/QMGCIq7olfXZna35XQ6t4fLUEtGo5KbveztoSmPx9G1bXCUaVYMnPDpndZcxw3psUL1dSyRbEVNppiTBww2bbNMzlsD0Taywq9/3UhfvflF4eUE0/dlFI/h99aXM0NdQDUCyBm7GLi5FnDotIcnDZ5WCzBv2bQdEFm5GKZqXwwoj5ccwgT3RvxqygCBSXI0dOID+90CKmcLjf90qgo/swmBjSJ99LH3mgHGw4aDK86nbbwRHeBiwUwSAM6qSA8zRaLO46md5ktf6gAcxOC9GylEgC4rYcnklVvmFnWJlSxwuj6RiV8yO1Nyw6VE3KGdV7HpY="
+skill: 0.158
+archetype: anchor
+leverOffsets:
+  reactionMs: 0.53
+  aimErrorDeg: 0.41
+  awarenessRadius: 0.51
+  coordination: 0.08
+  aggression: -1
+kits:
+  trooper: 0.87
+  longbow: 0.44
+  shortbow: 0.14
+  rewind: 0.26
+roles:
+  defend: 0.92
+  retake: 0.63
+style:
+  aggression: 0.32
+  patience: 0.99
+  teamplay: 0.62
+  risk: 0.17
+voice:
+  tone:
+    - polite
+    - grounded
+  verbosity: quiet
+  style: "postal announcements and absurd courtesy; reassuring statements and firm location reports"
+lines:
+  greet:
+    - parcel string sorted, delivery begins
+    - parcel string stays here, I have this corner
+  onKill:
+    - delivered to the correct corner
+    - parcel string and corner still secure
+  onDeath:
+    - returned to sender
+    - someone watch the parcel string corner
+  onPlant:
+    - an urgent parcel at the bomb
+    - parcel string guards the exit from the site
+  onDefuse:
+    - delivery cancelled politely
+    - parcel string is staying by our bomb
+  onWin:
+    - parcel string delivered the whole round
+    - parcel string never left the post
+  onLoss:
+    - the parcel string took the scenic route
+    - parcel string held the wrong corner
+  onLastAlive:
+    - one final delivery to make
+    - the parcel string holds here a little longer
+  taunt:
+    - that push had the wrong address
+    - the parcel string has not moved for that push
+  lobby:
+    - checking the name on my parcel string
+    - no unpaid postage in my parcel string, please
+    - "My parcel string: I will guard the home approach."
+    - With my parcel string, call before rotating off defence.
+quirks:
+  - stares_down
+  - always_gg
+rivals:
+  - sneakyninja61
+bio: TheZaxmost delivered handwritten notes between feuding builders in 2014 and still brings a parcel string to the queue. SneakyNinja61 keeps asking whether it really helps.
+batch: 3
+retired: false

@@ -1,0 +1,72 @@
+id: luckyslime10
+name: LuckySlime10
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjI1MDg0MywKICAicHJvZmlsZUlkIiA6ICJiNTQ1ZDcxNDJkZmM0MWVlYjBjMDcwOTkwOTI4NTE0MyIsCiAgInByb2ZpbGVOYW1lIiA6ICJraXdpNDgxMiIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9hNWY1M2VmMjFjNDkxOGExNzhkNTExNDllNzNhZWQ1ZmRlM2JmZjZjYTkwNDIxMjQ4ZmM0YmJjMmUxNzVlZDE2IgogICAgfQogIH0KfQ=="
+  signature: "R3QQ692to90dCGsuKhiWrzUgWNiHCDR7vvlbPmfvq7DFxo64hch/frG2creuAzH6VBuh8Xxz33/Wwuwl4EgUTqlKL4LsQUN/Gl7t4gIBLEM8aFoH9ulfXblZ1f19heRfnHs6uQvL3/57Li0s3XFvA29fMIm9F/PG/aETgvUPAS9GxaZOzhpXWD8SmdfQ6cAm/7X3sxkLCy+4I6aG9MBJ01bbh7JY7L5KYSuaLRmRr0IQh9meiq240ERVag720Y4k1/m9xhSK5FOBvW6Nr7jUyMDuKle6eGplKaB9x6icmMZengwUbuSLRXKCeB6bjr3IaCFg5b5c9QgX4qVlJVM9O/Hx2ZES0AwYIRibjbI/eLkeq4WbNCk1gZv91s8FJXp+g2Rvg0BrKoPJPRqIQbySsFcG0oZyDvLaLGk9dNvXiFKkphK/JzXXaYGEvNiA1M614wj5Od8kXaijj28n3bJm4dAf6txWOlYGFKwsRVeLkLeVDS9t6VOZa5k5tV4ppSEtCsjioITPUcDJVN8HTX7tS/h2N4LFGFyksxhCaaKNFB9Ppz/q1UbNWZ/9iqDT+g7kl4Y49+AcTeja6FXCleOwxh9rpFOF5Nwzujed6P++DmeXXbm1veval9wxwLtPoEa6mGCZoQJhJTflXZdzCLR7oYQCDukQBDMmN0usdXjgH6s="
+skill: 0.849
+archetype: anchor
+leverOffsets:
+  reactionMs: -0.03
+  turnRateDegPerTick: 0.71
+  awarenessRadius: 0.36
+  coordination: 0.42
+  aggression: -1
+kits:
+  trooper: 0.87
+  longbow: 0.46
+  rewind: 0.32
+roles:
+  defend: 0.99
+  retake: 0.68
+style:
+  aggression: 0.24
+  patience: 0.79
+  teamplay: 0.61
+  risk: 0.12
+voice:
+  tone:
+    - playful
+    - grounded
+  verbosity: normal
+  style: "tiny winter expeditions, serious snow forts; reassuring statements and firm location reports"
+lines:
+  greet:
+    - snow shovel thawed out, ready
+    - snow shovel stays here, I have this corner
+  onKill:
+    - a tidy little snowball effect
+    - snow shovel and corner still secure
+  onDeath:
+    - slid right out of that plan
+    - someone watch the snow shovel corner
+  onPlant:
+    - a warm spot in the snow
+    - snow shovel guards the exit from the site
+  onDefuse:
+    - cooled the bomb right down
+    - snow shovel is staying by our bomb
+  onWin:
+    - snow shovel has survived the thaw
+    - snow shovel never left the post
+  onLoss:
+    - the fort melted around us
+    - snow shovel held the wrong corner
+  onLastAlive:
+    - one mitten still waving
+    - the snow shovel holds here a little longer
+  taunt:
+    - your footing looked a bit icy
+    - the snow shovel has not moved for that push
+  lobby:
+    - warming my snow shovel by the lobby lamp
+    - please stop hiding my snow shovel in snow
+    - "My snow shovel: I will guard the home approach."
+    - With my snow shovel, call before rotating off defence.
+quirks:
+  - stares_down
+  - always_gg
+rivals:
+  - grouvuk-99
+bio: LuckySlime10 built a snow fort that lasted longer than the team inside it and still brings a snow shovel to the queue. Grouvuk_99 keeps asking whether it really helps.
+batch: 3
+retired: false

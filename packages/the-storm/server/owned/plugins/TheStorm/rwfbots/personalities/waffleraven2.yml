@@ -1,0 +1,74 @@
+id: waffleraven2
+name: WaffleRaven2
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTI3NTk5NiwKICAicHJvZmlsZUlkIiA6ICJjNGRiNjkxZDNkYmU0ZWI5YThiNjgzM2I4ODNkYmM0NCIsCiAgInByb2ZpbGVOYW1lIiA6ICJpbW5reXkiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYTI3OTE2MTRiZmMzOWE3OGU2YzRkM2JmNTEyN2FhYjExZjE0MjJkOTQ0NTlmYzZjZjgyYTBlMWZhNWMxOWRkNiIKICAgIH0KICB9Cn0="
+  signature: "B+JsAPwM8LJzv8EC6g84gM9xuRAbzX8o6XlMvt+r0e5Oiht3uae6KqR/eee+YX+fB9XswIEApD0Txtb2haT56DJc28Y3rzCYYMXIx7r49gbH+deRil7pHCzEAlgBkRc5JZ/DkKg3uDzRG//NJUrYMcd5a099YiOrI/9amj00PCaDobJM0Wze6QQJszSylID7Lvpf2wgUiKObkls2WXAlo5MNgFWQX/zJbG4X/ixA65QQioAi+GyCVwFtNRUBKuDAySNqxQBBn2VXa/rSQpLgSDrR1Gu20U/8Rwz3InJbSAIY48ceWtveN/U7L9TDhzUE1DdeV1BSYZsQmj9iWMZm8FuiKjTCz8MEL3XwXTu/NWvwcuba0zYkljOYMh3YAp2S5092W7jvs5Sfc4+4xqZBWfzC6HUWVHbNOLdzM5vF9ZIBdN3oc34W/NXkcCg/Fag28lg707ggOpbGxZzhPoVJOx3eehRqlKUyPF08bzF3mw43uS1OM4P7YitL4TIx7OVkB/5xxENV6W8WkmZqm/JI2NNezARQ1hoBUwV5PUdYxSoTuO32ok44l4bykBRwtD3MH1HV4pDIIHeYDmGMUGLC24YXm6WgI/YM5DslB0619AdRMigNVNrHzYL2+lygUgeQ4+/rj9Lqk5YEgr93X4rEhnBtm9Cm/kdxFV5pVo4hur0="
+skill: 0.717
+archetype: bomb_diver
+leverOffsets:
+  reactionMs: 0.49
+  turnRateDegPerTick: -0.73
+  decisionTemperature: 1.18
+  coordination: -0.5
+  technique: 0.36
+  aggression: -0.78
+kits:
+  trooper: 0.89
+  shortbow: 0.18
+  rewind: 0.51
+roles:
+  plant: 0.96
+  escort: 0.1
+  retake: 0.29
+style:
+  aggression: 0.64
+  patience: 0
+  teamplay: 0.2
+  risk: 0.82
+voice:
+  tone:
+    - precise
+    - urgent
+  verbosity: chatty
+  style: "map annotations and quiet route corrections; breathless objective reports, oddly calm at a fuse"
+lines:
+  greet:
+    - my map legend points toward trouble
+    - map legend packed, where is the bomb?
+  onKill:
+    - map legend gets another little cross
+    - a clear path for the map legend
+  onDeath:
+    - there is a hole in my map legend
+    - map legend was one corner from the fuse
+  onPlant:
+    - map legend marks the fuse
+    - "map legend is parked beside {bomb}"
+  onDefuse:
+    - erasing that from my map legend
+    - "map legend and {bomb} can both stay intact"
+  onWin:
+    - map legend finally matches the terrain
+    - map legend got the objective done
+  onLoss:
+    - time to redraw my map legend
+    - map legend took too long reaching the site
+  onLastAlive:
+    - one dot left on my map legend
+    - the map legend still has a fuse to find
+  taunt:
+    - your route is wandering off my map legend
+    - the map legend got closer to your bomb
+  lobby:
+    - unfolding my map legend on the lobby floor
+    - please do not spill cocoa on my map legend
+    - "My map legend: cover my approach to the bomb."
+    - With my map legend, call the safest bomb route.
+quirks:
+  - loves_nuke
+  - always_gg
+rivals:
+  - krourrultyxshyth
+bio: WaffleRaven2 kept a hand-drawn atlas of the 2013 rotation and still brings a map legend to the queue. Krourrultyxshyth keeps asking whether it really helps.
+batch: 3
+retired: false

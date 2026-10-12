@@ -1,0 +1,75 @@
+id: mysticstorm13
+name: MysticStorm13
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjMxNzcwOSwKICAicHJvZmlsZUlkIiA6ICJlNzVjZTk1MTc1OWI0MmVlYmY4ZmVjZDhhYjM0YjM2MyIsCiAgInByb2ZpbGVOYW1lIiA6ICJfS0tYRF8iLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjNjZTM4MDhjOTI5ZTU3Y2Y5MDU4YmZlOTFhNGVjY2E3Yzc3OTFmNTMzYTlkNDgyN2E3ZDQxMDJhMTk2MDM5NyIKICAgIH0KICB9Cn0="
+  signature: "qE3ar/mOQ7BA//2mrTSrbdeu/xpygSOVqymwM9IIiZHP3/ocPEBwBUNvhsLM10rU3uiLhLnNxOb3ZbBBMQZQhGwn4O0mpuof4ntQkHa6jJgIV6b3XdIQoV9Q+zwsblg5paKXBjnSDvAWO6uASQrln7nOoFe8eMWcbzJ86Jy6XewsXSVVPE8HdgD53519gFJBxVswvu5fn57yEzV4KEm0Eszka15u0k2a1Sr6+QrftIgIfFcSc49h/OarAjOZh3+u+CA+gmpYU5SyNeNt6/q5GjvZ1ukpzeq/toqbDK0qZ1WUnvldQF7wifKa3ycQGcpHuRqvtK8K9Gi4KaM0CPu5J54KoYn9KfZuVhyWH1mgWEiUa5na1lyKtgZjAMfuMFID4O83+uKh0H1UFDACrRvqWhfCnspjF5l6LNojO3zyNyW8G5j7igWyvWGherXRAyE7EeRciUMA4t4iK4iExoSbpvhjja0NqMzmwQyiSk1+zXb/WzCxrNGiLQpxL82kBonCCjrjTA/Q9flBPwHQOsp0rRwD7u7K0Sy/ErrIh612Io2R8jkvjv4Kn3YVlwSVk8Iov2i+D7A+lbXEvXfNldXIAsl1aNMiuhD/cRTl7BGLo6Xo31ka7KMyA6T0i85ipf/Hp5tZgYGecNmOljMAlitQgmvgo0ARWl2c7DJTJ9cwf9A="
+skill: 0.987
+archetype: lurker
+leverOffsets:
+  turnRateDegPerTick: -0.17
+  predictionQuality: 0.63
+  awarenessRadius: 1.52
+  coordination: -1.86
+  aggression: -0.47
+kits:
+  trooper: 0.71
+  shortbow: 0.68
+  ghost: 0.77
+  wraith: 0.68
+roles:
+  plant: 0.25
+  rotate: 0.66
+  retake: 0.29
+  hunt: 0.85
+style:
+  aggression: 0.48
+  patience: 0.77
+  teamplay: 0.1
+  risk: 0.51
+voice:
+  tone:
+    - bookish
+    - hushed
+  verbosity: normal
+  style: "brief footnotes and revised-edition rematches; lowercase whispers, deliberate pauses"
+lines:
+  greet:
+    - book press ready, new chapter
+    - book press here. quietly.
+  onKill:
+    - a short footnote to that duel
+    - the book press was here a while
+  onDeath:
+    - a regrettable page break
+    - heard it too late beside the book press
+  onPlant:
+    - a cliffhanger at the bomb
+    - book press is watching the quiet entrance
+  onDefuse:
+    - closing that chapter gently
+    - no noise. no fuse. just the book press.
+  onWin:
+    - the book press gets a happy ending
+    - the book press stayed out of sight
+  onLoss:
+    - the book press needs a revised edition
+    - the book press waited one corner too long
+  onLastAlive:
+    - one last page to turn
+    - nobody move near my book press
+  taunt:
+    - I have read that opening before
+    - the book press heard that approach coming
+  lobby:
+    - resting my book press on the lobby shelf
+    - please do not dog-ear my book press
+    - "My book press: I will hold the quiet route."
+    - With my book press, leave one quiet approach for me.
+quirks:
+  - slow_starter
+  - always_gg
+rivals:
+  - dizzy-ninja
+bio: MysticStorm13 bound a book of old match stories with mismatched covers and still brings a book press to the queue. Dizzy_Ninja keeps asking whether it really helps.
+batch: 3
+retired: false

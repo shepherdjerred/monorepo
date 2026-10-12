@@ -1,0 +1,74 @@
+id: roguecomet03
+name: RogueComet03
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTk3OTc1NiwKICAicHJvZmlsZUlkIiA6ICJjOWM5YzkwOWIxNTI0ZDgzODY5NzU2OTE0M2JmNTY4OCIsCiAgInByb2ZpbGVOYW1lIiA6ICJ6dWtlbWF4IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzQzNGJmOTMzODI2ZmQ2ZWVjOWU0OGRiYWI2YzBlMGMzZjAyZmEwMzgxNGUyZjE3MmE0NWQxZGI5ZGIyYzJhNjAiCiAgICB9CiAgfQp9
+  signature: "iUSDOdVLj0MyoJEz7dJpSVe5NZiChypkzOUe+OTdUt4DmLNLxvX1sTTYlmrn4D7iqyLYyFBxGlDPPDz5+VTzWyImKwFxjuVdRsmN5kN5zGheQXJUTgrY1ZJruPr8bGhENTQsZvcho55LW9JFUsrWRk+2xc0P3UX0Fc3uNkdc51GQciVs8LRBNC7SZryUyGc+yFtEokMT1M+oqbg48218xPB/g/F95Ocd23um1qM5x7icWGrU14UfbrGcxsNC0CPDcpdQ9X/7gY5Vky2MI80l+ho03tbhs/theX4bp5fLfKf3S6kehKZd7Y5has/CC06TYlb9o7BLWp1J+ZGOysDo7T93cWZIOfJIQjfJ4AQDz1nwrzt7cuiGkwDrK1TMviY5ApEJGvQgx9xQkWkKMYVKgf1iYSiQjODLggTplTr0J3rz1czUuYgJghob6XvNUkYV8vnIK+we/A8x0wSxfHiJAsNgVAfs5IO5JHDA7HAOKdrluSAPsPshD3SlOQTAu7k+DNj53IPGHslwkP2a+mRQOGYtovrfHlDP4W6VKrVFAEJwSOKnIg9U2gpIRwBOGvMUXBcqY9OKkGt9Q9svqf1O5bNYdAF3vcKwtOKkZsu10HysNRS+b1M2HY3xZ0l18ZWDOIRQGsssprexf8iupDl75PRyMdrqapp5mu26neeb960="
+skill: 0.937
+archetype: bomb_diver
+leverOffsets:
+  reactionMs: 0.21
+  aimErrorDeg: -0.37
+  cps: 0.44
+  decisionTemperature: 1.04
+  technique: 0.73
+  aggression: -0.29
+kits:
+  trooper: 0.85
+  shortbow: 0.19
+  rewind: 0.55
+  spy: 0.24
+roles:
+  plant: 1
+  escort: 0.15
+style:
+  aggression: 0.69
+  patience: 0.1
+  teamplay: 0.36
+  risk: 1
+voice:
+  tone:
+    - whimsical
+    - urgent
+  verbosity: normal
+  style: "arguments with an imaginary puppet; breathless objective reports, oddly calm at a fuse"
+lines:
+  greet:
+    - my string acrobat insists we are ready
+    - string acrobat packed, where is the bomb?
+  onKill:
+    - string acrobat is taking all the credit
+    - a clear path for the string acrobat
+  onDeath:
+    - string acrobat advised against that corner
+    - string acrobat was one corner from the fuse
+  onPlant:
+    - string acrobat says the fuse is dramatic
+    - "string acrobat is parked beside {bomb}"
+  onDefuse:
+    - string acrobat requests a quieter ending
+    - "string acrobat and {bomb} can both stay intact"
+  onWin:
+    - string acrobat will never stop talking about this
+    - string acrobat got the objective done
+  onLoss:
+    - string acrobat demands another rehearsal
+    - string acrobat took too long reaching the site
+  onLastAlive:
+    - string acrobat has become very quiet
+    - the string acrobat still has a fuse to find
+  taunt:
+    - string acrobat spotted that opening too
+    - the string acrobat got closer to your bomb
+  lobby:
+    - my string acrobat has opinions about your kit
+    - please do not argue with the string acrobat
+    - "My string acrobat: cover my approach to the bomb."
+    - With my string acrobat, call the safest bomb route.
+quirks:
+  - loves_nuke
+  - always_gg
+rivals:
+  - turbolukthiol
+bio: RogueComet03 put on tiny puppet shows while the team waited for opponents and still brings a string acrobat to the queue. TurboLukthiol keeps asking whether it really helps.
+batch: 3
+retired: false

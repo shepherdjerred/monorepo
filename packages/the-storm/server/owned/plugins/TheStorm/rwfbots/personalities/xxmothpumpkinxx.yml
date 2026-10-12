@@ -1,0 +1,77 @@
+id: xxmothpumpkinxx
+name: xXMothPumpkinXx
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTk4NTc1OSwKICAicHJvZmlsZUlkIiA6ICJjNGRiNjkxZDNkYmU0ZWI5YThiNjgzM2I4ODNkYmM0NCIsCiAgInByb2ZpbGVOYW1lIiA6ICJpbW5reXkiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODYzZmExOWJkZWY2OWMwMDViNWIzNDk2NzBiOTJmY2U1NTlhNjU1YjVlZjVhZGMyZTdiZmZkZmI2ODY2NWUwIgogICAgfQogIH0KfQ=="
+  signature: "lsgOj7gnbcjRyOoZsWqT64Ctmhdkh4vQwfsGO08+rygeyjL6aOBKs12xrWFShANSI+DukoOMrcNJsorqjVlZeGO/Dc51TKeYBfXyL0E0Qg6dAM4VF9kAs5SUIgpZVLeBMVYGlubt/LnT7AKyJVovD9zvf9XPwT3JqiRlrAqRlUWInXxFhtJHI5w8VheT14+rIbgAe39UqjqIA2JDW0YAPP2DpP8SDaLu4FDpTzlif3PfE0enTAbWXlhFV6BupqvnnLf8YozUUGrTXn7nOj9DD5mvpH41b66E+RhgThpEbNt23AHnKJhg5Z75ecx92eLKzPeFxk0KreZjxL7j4CK8KEZVDomoAAfzOODZuQ05JTha9rA1sTbREahT6fUM0ekV1jV4+9svwo8zjXduJR+MOpblcYlhhkV5yZXSDOjKFSympELLKzMXDOemgYKzhDOWddtYKGbEeMK/iHv6NP3NKzL4XDCBP6fqeZnR71x2TCZjCfNRqbOKB0pXA3NNfguud2fJCSYosqJCbRrscpRjgZbnmBeZJEHCoVHhRmqJfH9T9z5MknsU/5uiRoDCRrJBH8AyrcU6tkKqxmfeLoSil6ffHYd6XnCAhki85nwLjuF/kKadBSAfBiM2xJQIs5wpRBfPdZEDjtMPStmsVk96kq2+rgDgFFDOcY/avsCVJr0="
+skill: 0.539
+archetype: rusher
+leverOffsets:
+  reactionMs: 0.09
+  aimErrorDeg: 0.41
+  turnRateDegPerTick: 1.21
+  cps: 0.64
+  decisionTemperature: 0.59
+  awarenessRadius: -0.6
+  aggression: 1.5
+kits:
+  trooper: 0.95
+  longbow: 0.28
+  shortbow: 0.52
+  rewind: 0.27
+roles:
+  plant: 0.78
+  escort: 0.37
+  defend: 0.14
+  hunt: 0.67
+style:
+  aggression: 0.86
+  patience: 0.17
+  teamplay: 0.43
+  risk: 0.68
+voice:
+  tone:
+    - precise
+    - eager
+  verbosity: chatty
+  style: "map annotations and quiet route corrections; fast fragments, impatient countdowns"
+lines:
+  greet:
+    - my compass rose points toward trouble
+    - compass rose ready, I am taking the first corner
+  onKill:
+    - compass rose gets another little cross
+    - compass rose keeps moving, next corner
+  onDeath:
+    - there is a hole in my compass rose
+    - a pause for the compass rose, then straight back
+  onPlant:
+    - compass rose marks the fuse
+    - compass rose is already on the next approach
+  onDefuse:
+    - erasing that from my compass rose
+    - quick hands, quick compass rose, clear
+  onWin:
+    - compass rose finally matches the terrain
+    - compass rose barely stopped all round
+  onLoss:
+    - time to redraw my compass rose
+    - compass rose ran ahead of the plan
+  onLastAlive:
+    - one dot left on my compass rose
+    - my compass rose and I will keep moving
+  taunt:
+    - your route is wandering off my compass rose
+    - my compass rose got here before that push
+  lobby:
+    - unfolding my compass rose on the lobby floor
+    - please do not spill cocoa on my compass rose
+    - "My compass rose: first corner is mine."
+    - With my compass rose, please follow after the opening.
+quirks:
+  - bunny_hops
+  - always_gg
+rivals:
+  - sirlouthrildoum
+bio: xXMothPumpkinXx kept a hand-drawn atlas of the 2013 rotation and still brings a compass rose to the queue. SirLouthrildoum keeps asking whether it really helps.
+batch: 3
+retired: false

@@ -1,0 +1,72 @@
+id: cobaltthukrem
+name: CobaltThukrem
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4OTI3MTc3OCwKICAicHJvZmlsZUlkIiA6ICI5MjI1NDBlMTRjZjI0NDI3YmExYmZjOTk3NWVmNGQ0YiIsCiAgInByb2ZpbGVOYW1lIiA6ICJfRmxhbnR5XyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9hMDNiMjRmY2UxMjA0YWUzZWYzMGRiM2QwNTNjMjdiNGZjM2Y3YTI4NDBjNjcwYjhhYzk0ZmViNWUyY2I1ZTAiCiAgICB9CiAgfQp9
+  signature: "ooy82loWoRxvRFeg0Yps1XXEC/mdjyFUBuh2HaAshA5lKZbJTtCyDuyNVPTGDTP1IxCwixZ8w2zPkJFWloGwPouUYAC8ST/aINUTv4y9VM9YnydWG3eO7/KddCySsGKOhstATdntCsWWiUxUVx92y8L3MJzPMfk0qo9moV/F7Iy1fzNXiPCdFyeEbzB3Z8eKXiJhEHFWcyDG7WqvLpP1PtqROCH/2utCENpHFtB3sCJDQB3zQkJLYwixIydGzBj/vx4ZZT+K6ynTa62ig3VwmGNYQPPYzKvxwnomQV0AwMXPyXbEZMiWkOmGduYtNfHKHZPAevMyqZ4LkKxgC91W3lGX7MrSng9AT0LxgrP5FZfFQ3mUWrkkK1AbrMkV/wzZxI/N2RUe0G9WJUhtmv8owz2G7LNSZyyw1jgKytXMRtNQ9ss610SW1Ag9dHhfDe1+JZYvEj8kgtBYs7XLQqunQPglyGQe3udHqnTF7+v5XcdScTeCGqvLFaNtgb8ys0kAtiUvvRZc14G2F07qxeUb1PH2Z/QRFelnhb97ixR6hdlKTEKKKJ8oKg4syg7xPlTS6CgTf2ju+PG98msavTxAw2nuF6OI1H2FeFE/nuCWfAsfwsEJPSJPEPRPgyuyhr9++iIxf5HZJkieYPTqe10pjlcsbCQAs1itr7Wq88PiEV8="
+skill: 0.708
+archetype: hunter
+leverOffsets:
+  turnRateDegPerTick: 0.83
+  predictionQuality: 0.97
+  decisionTemperature: -1.16
+  awarenessRadius: 1.02
+  aggression: 1.3
+kits:
+  trooper: 0.69
+  longbow: 0.47
+  shortbow: 0.87
+roles:
+  rotate: 0.41
+  hunt: 0.97
+style:
+  aggression: 0.77
+  patience: 0.29
+  teamplay: 0.37
+  risk: 0.66
+voice:
+  tone:
+    - whimsical
+    - intent
+  verbosity: normal
+  style: "arguments with an imaginary puppet; tracks small clues aloud, then gives terse pursuit calls"
+lines:
+  greet:
+    - my glove pirate insists we are ready
+    - glove pirate ready, looking for tracks
+  onKill:
+    - glove pirate is taking all the credit
+    - glove pirate followed that trail correctly
+  onDeath:
+    - glove pirate advised against that corner
+    - the glove pirate trail doubled back
+  onPlant:
+    - glove pirate says the fuse is dramatic
+    - "glove pirate found a path to {bomb}"
+  onDefuse:
+    - glove pirate requests a quieter ending
+    - glove pirate tracked the ticking down
+  onWin:
+    - glove pirate will never stop talking about this
+    - glove pirate followed it to the end
+  onLoss:
+    - glove pirate demands another rehearsal
+    - glove pirate lost the trail near the finish
+  onLastAlive:
+    - glove pirate has become very quiet
+    - the glove pirate has one trail left
+  taunt:
+    - glove pirate spotted that opening too
+    - the glove pirate noticed those footsteps
+  lobby:
+    - my glove pirate has opinions about your kit
+    - please do not argue with the glove pirate
+    - "My glove pirate: I will look for the last opponent."
+    - With my glove pirate, call the last place you saw them.
+quirks:
+  - holds_grudges
+  - always_gg
+rivals:
+  - zolvishpixotter
+bio: CobaltThukrem put on tiny puppet shows while the team waited for opponents and still brings a glove pirate to the queue. ZolvishpixOtter keeps asking whether it really helps.
+batch: 3
+retired: false

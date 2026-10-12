@@ -1,0 +1,76 @@
+id: paishvouz-12
+name: Paishvouz_12
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTY5NTU0NSwKICAicHJvZmlsZUlkIiA6ICIyYjcyZWYyYWUzMmQ0Zjc1OGEyMThlMDI4MTViYmNjZSIsCiAgInByb2ZpbGVOYW1lIiA6ICJ2b2xrb2RhZl82MyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS81MmY0OTY2MTQ3NWNhNzUyYTE3Yjk5ODMyMzk4MjBhZTBmNjQxMmY2YjVkY2ZmZmU1MDMyZWNmNDY0YTM2ZDExIgogICAgfQogIH0KfQ=="
+  signature: "CHVype4b23E/NpQj8ZgK9PH/6VWdHiQ0jN3Vu2A2gyx+fAh3JwDF8V0KTiEmBLKBT3RxCbOIURRqdNn5QLv+8z+yir1DZOyo4XJkgDXm6lC27AdaP6IImnXY74JvSibn+ecIP3fQCrYY3a2xmH0Su7p3W7naCFRIq3uvtRxDpzJO6qipeeawjPz0ZfwfkQJ1woFng1GEhSliIeFrJaSU/3ipRgpv8ncZhNrbA5mp0oMShX2ae0QIneEBboE6U1x4856f8ZK7NO02dpNTuRPvuSt+vlU9+8zRnZC+SF768wrIm1b5a/qpAaWSw9Bop4P7Ok2q9d/ircB670yJpVmuxSoETl8ASjxFPOXTa7Al3h/pY4/qHtiPSmq0QjM9Khe/Jkwh8FXfSc3cBMqBrWvWVJ3wBkzS5hBqugVhCXVLFG2usCEiOQ3te132XwXZDuHJ7zj1QdxIWCk6SBKFaJX2QFfOO2aIUoMlJXCGBMVnv/MLTF3AlXS//o71ZfOHFWaOfmmUry+I8fkqu/em/rThI2dcQvMeZ364NXwd1VkYaxBfMZFP9vqBgSiqZna2fCpZ1BT2KT8b4ONuAbjXCEvP9JPkR7cD+BGgGeWBRqFoWzM4j8OwKW8CJJOabMzqtHptdjBahp+jPXEojXJ5SqkRjiu7Xdln0/LE4SpGUzWXpo0="
+skill: 0.071
+archetype: flanker
+leverOffsets:
+  reactionMs: 0.43
+  turnRateDegPerTick: 1.09
+  predictionQuality: 0.61
+  awarenessRadius: -1.14
+  coordination: -1
+  aggression: 0.65
+kits:
+  trooper: 0.6
+  shortbow: 0.92
+  rewind: 0.35
+  wraith: 0.49
+  spy: 0.38
+roles:
+  plant: 0.29
+  rotate: 0.83
+  hunt: 0.48
+style:
+  aggression: 0.59
+  patience: 0.5
+  teamplay: 0.28
+  risk: 0.7
+voice:
+  tone:
+    - excitable
+    - nimble
+  verbosity: normal
+  style: "enthusiastic clues and upside-down maps; quick side remarks and route changes mid-sentence"
+lines:
+  greet:
+    - riddle scroll found, clue understood
+    - riddle scroll is taking the other entrance
+  onKill:
+    - that corner was the next clue
+    - riddle scroll found a side door
+  onDeath:
+    - the clue was apparently a trap
+    - riddle scroll chose an occupied side door
+  onPlant:
+    - a very loud treasure chest
+    - "riddle scroll came around the back of {bomb}"
+  onDefuse:
+    - solved that little puzzle
+    - riddle scroll found a quieter route to the fuse
+  onWin:
+    - riddle scroll led us to the prize
+    - riddle scroll took the long way for a reason
+  onLoss:
+    - the riddle scroll was upside down again
+    - riddle scroll took the long way for no reason
+  onLastAlive:
+    - one clue and no hints
+    - one riddle scroll coming around the edge
+  taunt:
+    - that trail led you in a circle
+    - the riddle scroll is somewhere to the side
+  lobby:
+    - does anyone recognise my riddle scroll?
+    - the answer is definitely near my riddle scroll
+    - "My riddle scroll: I will try the side approach."
+    - With my riddle scroll, keep them looking forward for me.
+quirks:
+  - crouch_spam
+  - always_gg
+rivals:
+  - grouthskaestfox
+bio: Paishvouz_12 hid tiny treasure chests along the old lobby walking route and still brings a riddle scroll to the queue. GrouthskaestFox keeps asking whether it really helps.
+batch: 3
+retired: false

@@ -1,0 +1,76 @@
+id: mrshiosttok
+name: MrShiosttok
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTc0NDQ4MiwKICAicHJvZmlsZUlkIiA6ICIxNzRjZmRiNGEzY2I0M2I1YmZjZGU0MjRjM2JiMmM2ZSIsCiAgInByb2ZpbGVOYW1lIiA6ICJtYXJhZWwxOCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8xYmQ5NzBkNGEzYjlkY2M1OWMwNmMzNGNjNTYzNzE4MjU1NDEwODdmMzI5MzNmZWIzZWYzNDg0YzczNDFmODcyIgogICAgfQogIH0KfQ=="
+  signature: "ySxVnjq8IYmZzVdLu0snFvjtQUc4m5sVhzkz4SRhduBKdEXbjEKy+JNiLpBjcYU3p1hwU6pjnAEcKRV+euHjHVtFE5u+l8rCBEQRMjjQXCNzuG34p/M1o8YsNN/CgN68mKJSsrSWD9Ro6MDWy+BVdC7q7LUUvo0VrrAD5yRrSKh0Jh1zxLTthjlYippqQug5lxdU5n7EhPxwIFMYDX07rLdTfwPdOWBdy9us/FULoJ1CQGTKKQrMwunIjIDMqnL2voR7k/2AbVrpEdGaTOVWaeNikeUB/f+QogilTJk5lKxoUXUjxwYMCGP2HFssKEQH7ebj2q87xK3XeMdb8kBZJiN+i99CFdC0io7fEZRia/8YGWHD0yrlJIr14xTosI2EYPk0pReXi4E7xgtjtxY81BnLybqx8RFQLWwWzV0QIaeJD/Y5e5ivozGsZZ+IicVoDo/O0YVRLXHqJAYrt+5Yhq1N0vTQB4Pmaar5sSnhtBID6b7bBSkqUR79ToaV+AxMEwSWMTG4p0/LHYKaC9VOYdl31oRxF6kAxvmdcnjTyhEvgghEmu5jqq5CNZhrLjZdiZr4W+ByIOO1b208zFwB1ootJjm/vhsiAQnvYbFgbcSLOlqpRfjGaAW5Am31h06W8Up5X/xhtqWxfzG4RIUkRpMmHu6tjuNF83DLhjh+4Oc="
+skill: 0.718
+archetype: flanker
+leverOffsets:
+  turnRateDegPerTick: 0.64
+  predictionQuality: 0.81
+  decisionTemperature: 0.12
+  coordination: -0.79
+  aggression: 0.88
+kits:
+  trooper: 0.62
+  shortbow: 1
+  rewind: 0.36
+  wraith: 0.47
+  spy: 0.42
+roles:
+  plant: 0.5
+  escort: 0.23
+  rotate: 1
+  hunt: 0.5
+style:
+  aggression: 0.54
+  patience: 0.53
+  teamplay: 0.31
+  risk: 0.67
+voice:
+  tone:
+    - whimsical
+    - nimble
+  verbosity: normal
+  style: "arguments with an imaginary puppet; quick side remarks and route changes mid-sentence"
+lines:
+  greet:
+    - my cloth wizard insists we are ready
+    - cloth wizard is taking the other entrance
+  onKill:
+    - cloth wizard is taking all the credit
+    - cloth wizard found a side door
+  onDeath:
+    - cloth wizard advised against that corner
+    - cloth wizard chose an occupied side door
+  onPlant:
+    - cloth wizard says the fuse is dramatic
+    - "cloth wizard came around the back of {bomb}"
+  onDefuse:
+    - cloth wizard requests a quieter ending
+    - cloth wizard found a quieter route to the fuse
+  onWin:
+    - cloth wizard will never stop talking about this
+    - cloth wizard took the long way for a reason
+  onLoss:
+    - cloth wizard demands another rehearsal
+    - cloth wizard took the long way for no reason
+  onLastAlive:
+    - cloth wizard has become very quiet
+    - one cloth wizard coming around the edge
+  taunt:
+    - cloth wizard spotted that opening too
+    - the cloth wizard is somewhere to the side
+  lobby:
+    - my cloth wizard has opinions about your kit
+    - please do not argue with the cloth wizard
+    - "My cloth wizard: I will try the side approach."
+    - With my cloth wizard, keep them looking forward for me.
+quirks:
+  - crouch_spam
+  - always_gg
+rivals:
+  - laigroshrythmc
+bio: MrShiosttok put on tiny puppet shows while the team waited for opponents and still brings a cloth wizard to the queue. LaigroshrythMC keeps asking whether it really helps.
+batch: 3
+retired: false

@@ -1,0 +1,74 @@
+id: grouvuk-99
+name: Grouvuk_99
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTQ0NTYzNCwKICAicHJvZmlsZUlkIiA6ICJkYTA1Y2Q3OWZkYjc0MDJlYTdjNjMzY2NkZmYzMDI4YyIsCiAgInByb2ZpbGVOYW1lIiA6ICJGZXJuYW5kMGFsMG5zMCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8zYzRlM2Q4YTgxOTQxMjViYTI3ODA2NThmNzcwYTc2OWU0YWVkMDljM2Q2NzM4OGJhZmI4MmM5NGYwNDg2OGM3IgogICAgfQogIH0KfQ=="
+  signature: "SrQsfRmgZ174JZHExLEMlYN3oCThdEcPCnyYOdE4HbcpOlxffzB51Mb9frqbXZN8GqLZhXYrZgZiuhiddMIB8U/QC5hhJ8S87by9FLuXRNkozqyRhXo+Q+tTZqqFtmnwAM/HT+rBUtUVW6yBPYRrY1OMWOmWGRdyM//6J0QscAN10YO9FFKNM5G2yUZOEHXhIWSt/n3c6UsIT2ciXfaNAHTLg8FWlTGNGux5v9ZSvuKkO4Q3zRAi6du/X7sQ0/dqLCfvHjhEPOhqW6XhOt5C8bJUEw2gwmJ0Tm67+SaWYsUFQkCdC/qdrLt2qzNlBeB5dCEF2miDIEJrelqAzJndCntCzwfmyruQu8CsYiI95NTotXErFz0gNTis+yqOx2/5GaHwMujVKo1ou2oOU1m9Om/gOLfPkn6eV06NadpKb0kOwfYo8XB/B9nK3iImixmMqpolpjktVOD8ceKqz3J4Sb43UbGYoT04mX02lmEdFq3OcF+aTBSkXuF3sKRnQWFZli+4fEpe4BndCCL1CXShXlF3qLl9jTh5aDU1td5J1h4E56ZpRbX3eZepkzev5Kq9qaSL5mqWaBbk84Q5YXcYfdScGqdyTQCyP/iMJ9jFxDNkSUkTsyzkfeYIuWBlyPtTjCTBLERv0E+HcfUbct/dB5bmKQmBLVabZTmIl78T3yc="
+skill: 0.343
+archetype: duelist
+leverOffsets:
+  reactionMs: -0.25
+  aimErrorDeg: 0.56
+  cps: 1.35
+  awarenessRadius: -0.48
+  coordination: -0.8
+  technique: 1.56
+  aggression: 1.28
+kits:
+  trooper: 1
+  shortbow: 0.42
+roles:
+  escort: 0.33
+  retake: 0.45
+  hunt: 0.77
+style:
+  aggression: 0.76
+  patience: 0.18
+  teamplay: 0.31
+  risk: 0.52
+voice:
+  tone:
+    - observant
+    - competitive
+  verbosity: normal
+  style: "local forecasts and quiet predictions; brief courteous challenges and honest shot assessments"
+lines:
+  greet:
+    - fog chart predicts a lively round
+    - fog chart ready, good fights everyone
+  onKill:
+    - a sudden change on the fog chart
+    - good exchange beside the fog chart
+  onDeath:
+    - the fog chart missed that gust
+    - fair hit, the fog chart left that gap
+  onPlant:
+    - pressure dropping at the bomb
+    - fog chart earned a moment at the bomb
+  onDefuse:
+    - storm warning cancelled
+    - fog chart can settle this at the fuse
+  onWin:
+    - clear skies over my fog chart
+    - fog chart had some good fights today
+  onLoss:
+    - my fog chart forecast was optimistic
+    - fog chart wants another clean round
+  onLastAlive:
+    - one fog chart in the storm
+    - one fog chart, one fair chance
+  taunt:
+    - your push is mostly hot air
+    - the fog chart is ready for that peek
+  lobby:
+    - taking a reading from my fog chart
+    - please stop breathing onto my fog chart
+    - "My fog chart: I will contest the middle."
+    - With my fog chart, give the middle fight a clear lane.
+quirks:
+  - good_sport
+  - always_gg
+rivals:
+  - badgerrider9
+bio: Grouvuk_99 logged the weather from a glass hut above the old arena and still brings a fog chart to the queue. BadgerRider9 keeps asking whether it really helps.
+batch: 3
+retired: false

@@ -117,11 +117,10 @@ public final class Director {
     if (count == 0) {
       return new Pick(List.of(), 0);
     }
-    var catalog = new PersonalityCatalog(pool);
     List<Personality> best = List.of();
     var bestSpread = Double.POSITIVE_INFINITY;
     for (var attempt = 0; attempt < CANDIDATE_DRAFTS; attempt++) {
-      var drafted = Draft.draft(catalog, count, random);
+      var drafted = Draft.draft(request.catalog(), request.excludedNames(), count, random);
       var spread = spread(request, drafted);
       if (spread < bestSpread) {
         bestSpread = spread;

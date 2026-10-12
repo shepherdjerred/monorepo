@@ -1,0 +1,73 @@
+id: xelshaemmc
+name: XelshaemMC
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODU1MDkxNSwKICAicHJvZmlsZUlkIiA6ICIyMjM1MzA1MTZjZTc0NTViODk1NmFhN2NmYTk1MjA0YyIsCiAgInByb2ZpbGVOYW1lIiA6ICJTaGVrZWx3aXR6IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzdlNjdiYTMwNjU3MjMyYzE5YTU4MWY2NDRhOWIxNjkyYWMzN2IwNmI0OTZjOGZmMjFmMzYwMGQ1YWJlNDJkNGQiCiAgICB9CiAgfQp9
+  signature: "h00gDUT6MEkK3IthLKWPHQsmdV6B0rGnzi3LGuwJGiQGGn9Wvo35oQOfd/vjLrWrZGuLoVUcQnN922FBIePOp5YMOYgNl0vLqQBTA9cG6tZq6AAN9YLF/vhPQnnVdz3RBddfubQqY6fhk1lUlZtzuAFO8HqIZWaJtTEvAKmV8XYYDKCiMIeTtBs1r2dUOlVn+neWOxbiVXUUnPBAvqFfDIQv89vfNTYftt9aFpIspGMXAXakjgmpm1IbsRQ//cdDt027+Peep6y2woqyPpVsuU4ZsRCHxsJTAseyxwhrhMMvOrvmV33n6kgGJ1/Jsa+rGKGmvigheUcsxAwvVziRt2Sid/lts2iGZuXoQd1YWxdfiBgaN4EkkX99MRp/yd2y+dejmN58th3HqKtwqXv2vXZ0jGMpcLE7R1Tal8jB+ZUL+dfa2akm6cGD6v1bk3BnnJsAUZ/NaqnFLA+GTyqouC/SaeN7AFhU4t91vujI71vOxmCh5gqL/BoLmj9uKUDzXq6PfjcOuvr9QWrO/H9kzopA3OwY3q0puZo7zQPLe1x6T45ZvWw/qDOqKpk6AZIgYgRkG7JGU3ToXEGjP3diDEnxymEExWBOvaz8oc11DJDG6jUAMLTZUiQrXNaeho9Fj/N2afrik/G0eY6lV2AzzzFtrQc1+Djl/YA7pHqLHek="
+skill: 0.352
+archetype: bomb_diver
+leverOffsets:
+  reactionMs: 0.33
+  predictionQuality: -0.5
+  decisionTemperature: 1
+  awarenessRadius: -0.76
+  technique: 1.22
+  aggression: -0.52
+kits:
+  trooper: 1
+  shortbow: 0.23
+  rewind: 0.68
+roles:
+  plant: 0.95
+  escort: 0.1
+style:
+  aggression: 0.63
+  patience: 0.09
+  teamplay: 0.27
+  risk: 0.87
+voice:
+  tone:
+    - soft-spoken
+    - urgent
+  verbosity: normal
+  style: "tiny aquarium metaphors and creature worries; breathless objective reports, oddly calm at a fuse"
+lines:
+  greet:
+    - feeding spoon ready, fish fed
+    - feeding spoon packed, where is the bomb?
+  onKill:
+    - a splash and then quiet
+    - a clear path for the feeding spoon
+  onDeath:
+    - out of my depth there
+    - feeding spoon was one corner from the fuse
+  onPlant:
+    - something is bubbling at the bomb
+    - "feeding spoon is parked beside {bomb}"
+  onDefuse:
+    - water is calm again
+    - "feeding spoon and {bomb} can both stay intact"
+  onWin:
+    - a quiet evening for my feeding spoon
+    - feeding spoon got the objective done
+  onLoss:
+    - cloudy water in the feeding spoon plan
+    - feeding spoon took too long reaching the site
+  onLastAlive:
+    - one small splash left
+    - the feeding spoon still has a fuse to find
+  taunt:
+    - that bait was a little obvious
+    - the feeding spoon got closer to your bomb
+  lobby:
+    - putting my feeding spoon away before the round
+    - the pond can wait for my feeding spoon
+    - "My feeding spoon: cover my approach to the bomb."
+    - With my feeding spoon, call the safest bomb route.
+quirks:
+  - loves_nuke
+  - always_gg
+rivals:
+  - rogueraven61
+bio: XelshaemMC maintained a glass pond under the old lobby stairs and still brings a feeding spoon to the queue. RogueRaven61 keeps asking whether it really helps.
+batch: 3
+retired: false

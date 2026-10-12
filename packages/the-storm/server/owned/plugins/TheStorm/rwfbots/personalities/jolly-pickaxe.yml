@@ -1,0 +1,76 @@
+id: jolly-pickaxe
+name: Jolly_Pickaxe
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODU5OTc3NiwKICAicHJvZmlsZUlkIiA6ICI1ZjU5NmViY2JlOTQ0NmQxYmI0M2JlNGYzZjRiOGJlNSIsCiAgInByb2ZpbGVOYW1lIiA6ICJUZWlsMHNzIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzQxZTlmNGU5ZGY5Y2QyZTMxMTA2OWFhNjIwNjRiNWJkNGFlMzFjYzgzZGNjYThmZDk3M2YzYjg5ZTQ4MWRlY2YiCiAgICB9CiAgfQp9
+  signature: "CDl8bizHaukKizsooEc3Bw5gaSQcCCNweXc18RA9wTWk9MBujBHPbNSPKrCRgNHkHq5Z9+V5yTUTIkLFeGCiLTj3d6CyIYIFPqxcQIMWsBozY5kIFgi/TGSrdAGQt82qV6gnAn2svaGJU77PuSEqgUuSb5zip9pMilPTjKYdxF6o7+zRrYnP3z/Ln9qZ9oEFfP4eKa5RnxsfUzGQsiw4ZXFFQssDFzRCHo4tIG5rb1BycWnX8afevjGhTtybJF+SHFOy7jXMkP/20adALXXeJOqeTwPuIoxgOGQHW+CRk9xi1ZXo0BY63rUULbPVxtdmGmr9zJpz9FBzXNo8I2lfjypkN+ESI0Ccv4l9JwaT0f+YdEzjzrL8ONpvzRxK0k3or4Atk/RUf/YG2u7pjzWmgfUkQYAFEUV08BkxsMEHpF+AUJbW/09GFRn4W2jRCda00uIO9CSPlVM7N+sY0omXYOJxMvHIELbNmxURsxD0xNeAJuoaUO79ToRe+GFA1NoMEG9njaHIzG9RUNZXSTWaED/MV9kBzoKneHt9wyrLs7FH28tRIT7S1Q+Ud8boR68pt2OouLjgqZS4Z0zNNwUGnUPVHQ1stodXR5v00O6jHheN9+NqAnsNHSv1sVnHL6vp4IDXEg5cT22/0rg9mVYn648i7LNSyAjdH+Y6h2BwFCA="
+skill: 0.052
+archetype: troll
+leverOffsets:
+  reactionMs: -0.69
+  decisionTemperature: -2.37
+  coordination: -1.15
+  technique: 0.48
+kits:
+  trooper: 0.5
+  shortbow: 0.76
+  rewind: 0.85
+  wraith: 0.33
+  spy: 0.79
+roles:
+  plant: 0.6
+  escort: 0.42
+  rotate: 0.48
+  retake: 0.22
+  hunt: 0.61
+style:
+  aggression: 0.59
+  patience: 0.25
+  teamplay: 0.06
+  risk: 0.88
+voice:
+  tone:
+    - meticulous
+    - mischievous
+  verbosity: quiet
+  style: "seams, alterations and dry little asides; deadpan object conversations and harmless overconfidence"
+lines:
+  greet:
+    - embroidery hoop tucked away, ready
+    - embroidery hoop has appointed itself captain
+  onKill:
+    - a neat little seam through there
+    - embroidery hoop is now insufferably proud
+  onDeath:
+    - my plan has come unstitched
+    - embroidery hoop would like a different replay
+  onPlant:
+    - tied off the fuse neatly
+    - embroidery hoop calls this interior decorating
+  onDefuse:
+    - snipped the loose thread
+    - embroidery hoop says it knew the correct wire
+  onWin:
+    - embroidery hoop and team fit nicely
+    - embroidery hoop is requesting a trophy shelf
+  onLoss:
+    - the embroidery hoop plan needs an alteration
+    - embroidery hoop has misplaced the blame form
+  onLastAlive:
+    - one thread still holding
+    - embroidery hoop insists this was the plan
+  taunt:
+    - your formation has a loose seam
+    - the embroidery hoop gave that push three out of ten
+  lobby:
+    - please mind the embroidery hoop on the bench
+    - mending the kit beside my embroidery hoop
+    - "My embroidery hoop: I will cause a useful distraction."
+    - With my embroidery hoop, try not to laugh during my push.
+quirks:
+  - celebrates_early
+  - always_gg
+rivals:
+  - xxfalconravenxx
+bio: Jolly_Pickaxe made matching banners for a team that never stood still and still brings an embroidery hoop to the queue. xXFalconRavenXx keeps asking whether it really helps.
+batch: 3
+retired: false

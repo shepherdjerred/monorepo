@@ -1,0 +1,75 @@
+id: lucky-noodle
+name: Lucky_Noodle
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NTYxNDc2MSwKICAicHJvZmlsZUlkIiA6ICI5MjI1NDBlMTRjZjI0NDI3YmExYmZjOTk3NWVmNGQ0YiIsCiAgInByb2ZpbGVOYW1lIiA6ICJfRmxhbnR5XyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS81ODRhYjcxZWFlNjU2YjdjYzQwY2MyMDk1MDMwOTMwYTZhMjNlOTc1NjFhZDVlYzQ5NjdkNzc4ZjdjOWIzMWMiCiAgICB9CiAgfQp9
+  signature: "OPp3KSw80Io6N9DB9NdcF96tIUN+L8L5ugyXuDpljdzMD1368TM+IikcOtStKqF6yrbI0g35tgNoNWKVAKqi27IUz5/e10DR1T7aMtvoHfXHndCBDbjkTICDPNPVvz+rVl7EsH2IuXFXeh8dgpd1ZsxYuBKxLEalBQeEEKxlYQrf10rOjpotvEcY+mqIeLj3cyOYqqwjX5QUV1NyRbYHX3+O1OAthBrJjgxcTZDl8c142HpqSTQSPdmBUtpSEy9B7QVnWvRg/zgM36WPrNFIDzqHU8ZXMV1JKF9RT2SiLnYKikEuGInXTRVhImaWJ41POLI+trbuaJspKVK8ziLB5bIFj7so3Mk99bPf+tG46ZNEJGhuKJ/vtD3OceYVyEgVlk74clFOzzKeeRDMUhlwMNyHqSvxlZLotG1xBum0aQ87FT1Je9MQfM6M6C06azhhcKUv8VErHeIZ9FC42Awf8mAA/JKNcXHQK19TfmPnDgzYzMeavwIQJiy2l87fHPsYqARnM4H3bZx5TyOhX3NyOb4BY+0BJTgWq1agLEsP/9D9aeAhpRlFxA1p/I20S6/en0HfzSPp8Agc/7qmPbcF+3H8U98+0YRhB4/z0IYSlrHG9ew0J//ZARGTYka9uIxENrz4xAbWnTFJmIqzJRV+BYY4hB1pZ3v079JwvRrncSY="
+skill: 0.914
+archetype: support
+leverOffsets:
+  aimErrorDeg: -0.09
+  predictionQuality: 0.4
+  awarenessRadius: 0.57
+  coordination: 2.04
+  aggression: -0.54
+kits:
+  trooper: 0.95
+  longbow: 0.34
+  rewind: 0.78
+  spy: 0.23
+roles:
+  escort: 1
+  defend: 0.33
+  retake: 0.65
+  hunt: 0.11
+style:
+  aggression: 0.44
+  patience: 0.43
+  teamplay: 0.95
+  risk: 0.28
+voice:
+  tone:
+    - soft-spoken
+    - helpful
+  verbosity: chatty
+  style: "tiny aquarium metaphors and creature worries; gentle check-ins, thanks and useful kit reminders"
+lines:
+  greet:
+    - water bucket ready, fish fed
+    - water bucket is here, everyone got their kit?
+  onKill:
+    - a splash and then quiet
+    - one less problem beside the water bucket
+  onDeath:
+    - out of my depth there
+    - sorry, the water bucket corner is open
+  onPlant:
+    - something is bubbling at the bomb
+    - water bucket can watch while you plant
+  onDefuse:
+    - water is calm again
+    - water bucket is here to help at the fuse
+  onWin:
+    - a quiet evening for my water bucket
+    - water bucket says everyone helped
+  onLoss:
+    - cloudy water in the water bucket plan
+    - water bucket says we can tidy that up
+  onLastAlive:
+    - one small splash left
+    - one water bucket still trying to help
+  taunt:
+    - that bait was a little obvious
+    - the water bucket brought a team to that corner
+  lobby:
+    - putting my water bucket away before the round
+    - the pond can wait for my water bucket
+    - "My water bucket: I will stay close to the push."
+    - With my water bucket, call if you need an escort.
+quirks:
+  - says_sorry
+  - always_gg
+rivals:
+  - sneaky-pickaxe
+bio: Lucky_Noodle maintained a glass pond under the old lobby stairs and still brings a water bucket to the queue. Sneaky_Pickaxe keeps asking whether it really helps.
+batch: 3
+retired: false

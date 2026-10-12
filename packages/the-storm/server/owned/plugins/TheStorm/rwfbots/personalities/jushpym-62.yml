@@ -1,0 +1,74 @@
+id: jushpym-62
+name: Jushpym_62
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NTY4MDk3OCwKICAicHJvZmlsZUlkIiA6ICI2NDEwZjRiZjMwNDU0OTdmODBjZDI4NWIyYmJiNTk5NSIsCiAgInByb2ZpbGVOYW1lIiA6ICJNaW5lU2tpbl8xNSIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS84MGEzM2Q2MTQ4ZDNkNjZiNmFiYjVjMjlhNzU5YzdlMmEwYTczNTYxNWY0ZGQwYjc3YWNlMjRjOTE5OTRlMzdkIgogICAgfQogIH0KfQ=="
+  signature: "pFfHIDIF/IiGJdrLiw5dSJmvn5yujvGpqAIwYMTsbBdhE8IWydRqAon75tIzNCbIR6BcAvblOzkgsdYTTOLW7IGjjwe/iYPqQm7cGkdGZPndnRPsmFcU3ekSCXHIA6n8PSNzU6730ElO3Nohm057OCO85JUuMDhIZtwIIvz7vUMda7/vhKBGaWk+sDDu2bY7BT7FfYN56sZSds2jBJnIID06WORxdS50iz+foSTNp9k2pkppcpVTFBcAZ2opHBQ28AW8cMjZ4l0qRoYNOUI/V26LQqkpM/1mK9dnfEWVtzXzowU34LeOp94QJo/Cw5WwLzU4no+A3eMlwqYbqS9tq4m75P9839fF7RBSn3ghc5ne1H53ylrek3z0OAkhGVEjQj3aIkCLWWIfebTnXVhGHcS43+fzTrxrIXIbcvvt5H4sHn43kWQ1DGB2ZF3wtPSXBodE0aMzgxstoE3ymLPQLy4fXDZswyf+bbfk5VA4YYZeCGG6Jtl67ZpKpKLwC0fpQ9+3rYUcNAkyKExu85aUi3xxEIyHRZmlG0CFqkztPAqc6jpz4FUtt648S2Oz1vnC9adtyimAtdN4NQ//pe+5Q+0+//mMCxJB+DS/LD//Zmkcya65D5FpI0tOcwwiCJUQDsdBGl/dnXoAmyc2+zc1xpoC8ajN8dFNzreMqdJkUJU="
+skill: 0.462
+archetype: duelist
+leverOffsets:
+  aimErrorDeg: 0.58
+  cps: 1.15
+  awarenessRadius: 0.09
+  coordination: -0.4
+  technique: 1.21
+  aggression: 1.43
+kits:
+  trooper: 0.94
+  shortbow: 0.35
+  ghost: 0.19
+roles:
+  escort: 0.28
+  retake: 0.44
+  hunt: 0.68
+style:
+  aggression: 0.77
+  patience: 0.4
+  teamplay: 0.31
+  risk: 0.52
+voice:
+  tone:
+    - curious
+    - competitive
+  verbosity: normal
+  style: "beach discoveries and understated delight; brief courteous challenges and honest shot assessments"
+lines:
+  greet:
+    - washed rope brought good luck last time
+    - washed rope ready, good fights everyone
+  onKill:
+    - another find for the shelf
+    - good exchange beside the washed rope
+  onDeath:
+    - swept away with my washed rope
+    - fair hit, the washed rope left that gap
+  onPlant:
+    - leaving this above the tide line
+    - washed rope earned a moment at the bomb
+  onDefuse:
+    - picked that up before the tide
+    - washed rope can settle this at the fuse
+  onWin:
+    - a good day out with my washed rope
+    - washed rope had some good fights today
+  onLoss:
+    - the tide took our round
+    - washed rope wants another clean round
+  onLastAlive:
+    - just me and my washed rope on shore
+    - one washed rope, one fair chance
+  taunt:
+    - that approach washed straight past
+    - the washed rope is ready for that peek
+  lobby:
+    - found a washed rope on the way here
+    - please admire my washed rope from a distance
+    - "My washed rope: I will contest the middle."
+    - With my washed rope, give the middle fight a clear lane.
+quirks:
+  - good_sport
+  - always_gg
+rivals:
+  - xxbadgerninjaxx
+bio: Jushpym_62 filled an old shoreline hut with labelled beach finds and still brings a washed rope to the queue. xXBadgerNinjaXx keeps asking whether it really helps.
+batch: 3
+retired: false

@@ -1,0 +1,74 @@
+id: darkpaeskai
+name: DarkPaeskai
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTMzMTk2MSwKICAicHJvZmlsZUlkIiA6ICIyYmQyZTAxNGI5YWE0YzRjYmRmMzdmZjc5MzE2NDE5MSIsCiAgInByb2ZpbGVOYW1lIiA6ICJBdXRvU2tpbiIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS80MmI3MDNiNjVmNjRiN2QyNjAyMjkxZjVhY2IzMzY1NzhlY2VlMWU0NGUyZGMyMjhjOTA1ZGMxOGIzZDBiNzc4IgogICAgfQogIH0KfQ=="
+  signature: "ckUnm4A4OfA1UMfjFbUl7oTzZcomOGIHK/7G2pYRUyYV1nGYe9X1PVXgVtKiXN1Ug57i27uIK6OxY3o5eyC2eufKqWrQTjvpqz9k28nxiZI1I4F3pcsxpIcE0zo9Krbf5OpHp1MLCor+EtGtMMv242ah2P4Sdb8Xh9I0vQIqS7rIB7qPnCJxmCSY99gxUUD2uTQ21jdlVYAPWi/PaJD79EvJRoOa4IpnbvHvLnvA8Ky6lmaPEqwOSKj5GjKZju6B8lBXTVfkY+pJkXPmNjef4+6O57IFXi7DszZ8NuS1qs0eLXooVfHRp1CpK1YX316rWta7LOTv/TSy4MGedsGmni/JSpcoCv0dozLYfRNAonjuMCbAoMNU0IpvxYYkMI1Hp+Bx+OdbqeAaIrHFfn57YD2fmTamZfyZC7ivNJBYjjmhKOuIGkSi94Z8eXwJtE5mNCLP7KH4BNcy8+6k1FmPYQ22p3Vq6nOI9Jl42Ha3OTaSZTTQHDk/guf2NocD6GdxINVaVjw1eA6MmMThVVB5nKG8ZhrrA2I39ppcxjjoCACAIx5a6ns1R0eYeHh+sdIeFcURiDwbdM50wXmbPGpETVCCgbR2OKf2Pum45FJ6HTOAG+H683vkKULJy8w6LQSm1vQcms5TzEhwZZ3htksNxhPe201zdnW222vGdtcKV3A="
+skill: 0.912
+archetype: anchor
+leverOffsets:
+  reactionMs: 0.87
+  cps: 0.09
+  predictionQuality: 1.12
+  awarenessRadius: 1.03
+  coordination: -0.01
+  aggression: -0.82
+kits:
+  trooper: 1
+  longbow: 0.5
+  rewind: 0.33
+roles:
+  plant: 0.1
+  defend: 1
+  retake: 0.68
+style:
+  aggression: 0.29
+  patience: 0.89
+  teamplay: 0.62
+  risk: 0.14
+voice:
+  tone:
+    - cosy
+    - grounded
+  verbosity: normal
+  style: "kitchen chatter and imaginary baked snacks; reassuring statements and firm location reports"
+lines:
+  greet:
+    - dough scraper ready, kitchen open
+    - dough scraper stays here, I have this corner
+  onKill:
+    - another order off the dough scraper
+    - dough scraper and corner still secure
+  onDeath:
+    - left my dough scraper in the oven again
+    - someone watch the dough scraper corner
+  onPlant:
+    - setting the timer beside my dough scraper
+    - dough scraper guards the exit from the site
+  onDefuse:
+    - took that out before it burned
+    - dough scraper is staying by our bomb
+  onWin:
+    - dough scraper deserves a day off
+    - dough scraper never left the post
+  onLoss:
+    - the dough scraper has seen better batches
+    - dough scraper held the wrong corner
+  onLastAlive:
+    - one cook and a very busy dough scraper
+    - the dough scraper holds here a little longer
+  taunt:
+    - that push needed longer to rise
+    - the dough scraper has not moved for that push
+  lobby:
+    - who borrowed my dough scraper?
+    - dusting the flour off my dough scraper
+    - "My dough scraper: I will guard the home approach."
+    - With my dough scraper, call before rotating off defence.
+quirks:
+  - stares_down
+  - always_gg
+rivals:
+  - xxsniperbadgerxx
+bio: DarkPaeskai ran a tiny spawn bakery with a queue of hungry regulars and still brings a dough scraper to the queue. xXSniperBadgerXx keeps asking whether it really helps.
+batch: 3
+retired: false

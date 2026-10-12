@@ -1,0 +1,78 @@
+id: grouthskaestfox
+name: GrouthskaestFox
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NDg5NDUwMCwKICAicHJvZmlsZUlkIiA6ICI3YjE3NjBiYmVkNTk0Mjc1YmU3ZjhjMGFlYmQzMmRiNSIsCiAgInByb2ZpbGVOYW1lIiA6ICJpZ253aWxmcmV0bG92ZXIiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMWIwZmVlYmJkMTNjZGNmM2Y4OWU3OTczZDk3YzFiZjEwNjg4MGY5MzVmMmNkOTRlMWViNTllODNkY2E4YjQxIgogICAgfQogIH0KfQ=="
+  signature: "Nba1amStaNr/3w5XtTrifJ935r6uO8S6LbMArWIU48u7jadbiz9IKW9zjk5+8jmOd0zeRvPx+UI8O33xMK+HlHSlbd3knjlT5w9jg1hck7oAUNFqJuaApMHe3IvD0r+5JxZcRl+/TIPjzfVuF8o8oWJo8ismfTO6N+2UTHHZsE0AEpcUCSk/sgZJS4HxTgYV+PqpyNHOtPY5ETI5oFdGWITfW+Ux+lHHimN5UsSh3wl+odi7jZkQcGFG4V+HvnYFaIGlhme1s+0UQ0sSt4iYUyXyANKr5NQykhJ/E+RIiwQjjSJY1Uv4oNSU8dKTWU7rjRB4hlaUpF7Y3dQSAqW9fc/b2zXRlrj4CW/Ej4q6jYLBCnMfCdM2g+hRTyvqQBrB+sxxo0MDBQrRcqZRH3GRicdf8sFXnarYNVYDa6EYHZYB38GR3Tu36L02m0+Y8uPPPVozT73xGVVM3rc+sIyEYdWglKwKOMB7rxlD/qkgeDT8JfaaVALITKyWI9yZNiWab5d+/mUtpRxX+rZNnpAf0u+FD6kF3Lq5XUvORz9Aua7g5O8BYGXm+oTqDslHiaizPZVvULBZN/MhWrpFde0o47SWrNn1i3CVH9hy9sDI+oEi6Nm0ekAdM7zkvNK/TKqZOYWjxWc2IvNdUrzSlzgTEOHr1jTf5FFbTCjswdWCMog="
+skill: 0.66
+archetype: tactician
+leverOffsets:
+  reactionMs: -0.38
+  predictionQuality: 0.27
+  decisionTemperature: 0.52
+  awarenessRadius: 0.48
+  coordination: 1.58
+kits:
+  trooper: 0.97
+  longbow: 0.46
+  shortbow: 0.55
+  rewind: 0.43
+  ghost: 0.13
+roles:
+  plant: 0.62
+  escort: 0.6
+  defend: 0.45
+  rotate: 0.61
+  retake: 0.7
+  hunt: 0.22
+style:
+  aggression: 0.4
+  patience: 0.64
+  teamplay: 0.73
+  risk: 0.35
+voice:
+  tone:
+    - measured
+    - analytical
+  verbosity: normal
+  style: "soft beat counts and tiny timing worries; numbered ideas, concise route calls, quick revisions"
+lines:
+  greet:
+    - second hand is almost on time
+    - second hand ready, first route agreed?
+  onKill:
+    - right on the second hand beat
+    - second hand confirms a clean opening
+  onDeath:
+    - my second hand skipped a beat
+    - second hand needs a revision on that route
+  onPlant:
+    - second hand is counting now
+    - second hand confirms the site is reached
+  onDefuse:
+    - stopped just before the chime
+    - second hand confirms the fuse is clear
+  onWin:
+    - second hand and team in perfect time
+    - second hand and team followed through
+  onLoss:
+    - my second hand needs adjusting
+    - second hand had a missing step
+  onLastAlive:
+    - only one second hand still ticking
+    - second hand says there is still a route
+  taunt:
+    - a little early on that swing
+    - the second hand predicted that rotation
+  lobby:
+    - listening for the second hand tick
+    - my second hand is not a countdown shortcut
+    - "My second hand: I will call the first rotation."
+    - With my second hand, tell me when a route closes.
+quirks:
+  - calls_everything
+  - always_gg
+rivals:
+  - creeperraven5
+bio: GrouthskaestFox built a clock tower that chimed one block too early and still brings a second hand to the queue. CreeperRaven5 keeps asking whether it really helps.
+batch: 3
+retired: false

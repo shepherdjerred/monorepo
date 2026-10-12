@@ -1,0 +1,75 @@
+id: mysticshaixjoun
+name: MysticShaixjoun
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTMyNTQxNywKICAicHJvZmlsZUlkIiA6ICI1MGVlNDc2NGY0ODA0ZTAwYjQxM2I2MTA2MmU4YmFjNyIsCiAgInByb2ZpbGVOYW1lIiA6ICJBbmRyZU1lc3NpIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzMxMDg4YjNkYTY5OTNiZmVmMWU0YWRmYmY1ODFhYWJhYTg1MWUxM2I1NWVkNjcwMTYxODM0NGI5OWZiZGQyZDEiCiAgICB9CiAgfQp9
+  signature: "ZjT0mX74AU1JBR5bp0T1h6ph2IExMxKaQ5oeuQ1lZZbyjXvyapPEaiJDVAVEE0I2ilYcxtiSZ56BBYMdM8TTfAjTkYUJA8U0E/Kk2CsHLXXSlhwZsZ/F8fSfULTxnQXF3fB7uzllDo4B3aGqSVzOfguPW9VkL24MGsOAMT15LnTcLSYo6hNCp2hlhnoYg/vD4YMYFIkG3skfMz+5iTezVkumvs+mvezUpOOPQgmu+LCHqC3y/HJMJ0PzIRDywTiIfHUQq0NBZz2UKfFw7LVdaAAPyM6ayHC4CYOvuiuqrYb15mxntbQNkObh+iGOXT8IapplkO04+uUpdjL90+CtYsEA1IlwThYg5sz/3NHicWk/tujTYpDOq88u6z4szn9lkVYnVg3EwB56S3/Q+o0CySrwD11N1u4zUraNSFiHMdkX8wHTaWQR4sjgRH3TmfBpotrYVfIg6WplykoHurfnNS4AAkwxF4rc81dBnIMXHoXQShSbgYxmxoU7PxJS6g0DwVfcosEgUttsGcRawJPZBzhBGtixThZhYM/3tdIYDcwrqvNXNZ6d4ImttcfcaqEZeHVSDbaqtY8l2n+ZMgnxDGbFKTfsVK2WlPLCxvBVh6/u7UxfrAwORsqy8wKOz/i57ooi7+/hXhZVceFv+r6O1k9Ld7qYcVyWR0lBOUAj+Fs="
+skill: 0.689
+archetype: sniper
+leverOffsets:
+  aimErrorDeg: 1.54
+  cps: -0.13
+  predictionQuality: 1.44
+  decisionTemperature: 0.47
+  awarenessRadius: 1.12
+  technique: -0.05
+  aggression: -0.42
+kits:
+  trooper: 0.15
+  longbow: 1
+  shortbow: 0.46
+roles:
+  defend: 0.68
+  rotate: 0.51
+  hunt: 0.61
+style:
+  aggression: 0.22
+  patience: 0.81
+  teamplay: 0.46
+  risk: 0.19
+voice:
+  tone:
+    - precise
+    - focused
+  verbosity: normal
+  style: "map annotations and quiet route corrections; short range notes and patient, exact corrections"
+lines:
+  greet:
+    - my folded atlas points toward trouble
+    - folded atlas in place, checking the long angle
+  onKill:
+    - folded atlas gets another little cross
+    - folded atlas found the range
+  onDeath:
+    - there is a hole in my folded atlas
+    - folded atlas needed a closer angle
+  onPlant:
+    - folded atlas marks the fuse
+    - folded atlas covers the far entrance
+  onDefuse:
+    - erasing that from my folded atlas
+    - folded atlas can wait, hands on the fuse
+  onWin:
+    - folded atlas finally matches the terrain
+    - folded atlas had a clear view of that
+  onLoss:
+    - time to redraw my folded atlas
+    - folded atlas kept the wrong sight line
+  onLastAlive:
+    - one dot left on my folded atlas
+    - one folded atlas, one long angle
+  taunt:
+    - your route is wandering off my folded atlas
+    - the folded atlas saw that peek twice
+  lobby:
+    - unfolding my folded atlas on the lobby floor
+    - please do not spill cocoa on my folded atlas
+    - "My folded atlas: I will cover the long angle."
+    - With my folded atlas, call the close flank for me.
+quirks:
+  - bow_spammer
+  - always_gg
+rivals:
+  - mothsniper8
+bio: MysticShaixjoun kept a hand-drawn atlas of the 2013 rotation and still brings a folded atlas to the queue. MothSniper8 keeps asking whether it really helps.
+batch: 3
+retired: false

@@ -1,0 +1,76 @@
+id: swiftpickaxe68
+name: SwiftPickaxe68
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NDIxNjMxMSwKICAicHJvZmlsZUlkIiA6ICIyOGQyZDFmZDEyNGY0NGMyOGYxZDgwNDY4NGFkOTA2ZCIsCiAgInByb2ZpbGVOYW1lIiA6ICJzcGlmZnRvcGlhNyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9kZWJlNzZlM2ExOWEzMzljODk4NGMzNDI1YmI5NDY3NmNlNTQzNzY1ZGQwMmQ1MzFlNzVhZmZlZTY2MmQ3MTNjIgogICAgfQogIH0KfQ=="
+  signature: "gk1JfpimTogaHA3mzB6Vl8VxDVgVrWF2uZhX/0easF2m+CX1CD7LqEX7SNcE8Smkj4sjzwzuy+saXpJ9gzbqb7KykP4ZZccOtYYTJXGkze9byYr72y3kk2ureVe/PyZiud6z7P43lWY8n5OVuQVm2h5XayIz/BJ8kT26JW19feMlI8n6UYrbGcTvNGjBos2JiBdQtgXgcrpogeWcEkGO4/ZjL2q7PPsqDs622YiGA0OdkNj9KT1i4S5XywAKQYau31OTv3eMYdim+SIZkEUu4bGXMZOo+IYvlp4EvLrmqU5yq/TDhLNwwwqGeOP06hev6qvZJ/ANA6y3EhNOAYPQ+kKz5d0TlpKuDYfH9/l1EjqXe5vk1MVN4huswvwPCCEVFrRnXDMbPnhRTLWGQE/xJAZdZwM6yl2u0jEGzc6rbtAM4vVwQXtG1FDGWpBtaLIYvhqT5PYh0ETkpZyiLgyprWlAKCZOQ9mqo0ANouJVdD3kUIbkEu3ctCvjaG742cmR1sS+BItKt0EPVOKSl5OH9PE+3yRBQ6w0oNLHxfH0hAXAatYQOTbNH8BX3IBhnQaOEi/IGQ4weVOMGc9sUeQnjDDt4bqUdg3OsGCM08s8YbrIgRuSRMrUg294mooPCMhWtyGdj6HnN6F+O4rYPiCcw5/wnMf0R9MAgnL2TqfO/7k="
+skill: 0.701
+archetype: sniper
+leverOffsets:
+  aimErrorDeg: 1.92
+  turnRateDegPerTick: -0.08
+  cps: -0.55
+  predictionQuality: 1.13
+  awarenessRadius: 0.82
+  technique: -0.22
+  aggression: -0.19
+kits:
+  trooper: 0.13
+  longbow: 1
+  shortbow: 0.48
+  wraith: 0.28
+roles:
+  defend: 0.69
+  rotate: 0.18
+  hunt: 0.6
+style:
+  aggression: 0.33
+  patience: 0.88
+  teamplay: 0.57
+  risk: 0.19
+voice:
+  tone:
+    - brisk
+    - focused
+  verbosity: chatty
+  style: "absurdly serious station announcements; short range notes and patient, exact corrections"
+lines:
+  greet:
+    - rail gauge checked, service departing
+    - rail gauge in place, checking the long angle
+  onKill:
+    - one less delay for my rail gauge
+    - rail gauge found the range
+  onDeath:
+    - my rail gauge reports a cancelled service
+    - rail gauge needed a closer angle
+  onPlant:
+    - last departure from this platform
+    - rail gauge covers the far entrance
+  onDefuse:
+    - service restored on this line
+    - rail gauge can wait, hands on the fuse
+  onWin:
+    - rail gauge reports arrival on schedule
+    - rail gauge had a clear view of that
+  onLoss:
+    - wrong platform for my rail gauge
+    - rail gauge kept the wrong sight line
+  onLastAlive:
+    - last service, just my rail gauge
+    - one rail gauge, one long angle
+  taunt:
+    - your connection left a moment ago
+    - the rail gauge saw that peek twice
+  lobby:
+    - please queue beside my rail gauge
+    - my rail gauge says the lobby service is delayed
+    - "My rail gauge: I will cover the long angle."
+    - With my rail gauge, call the close flank for me.
+quirks:
+  - bow_spammer
+  - always_gg
+rivals:
+  - viperphantom2
+bio: SwiftPickaxe68 linked three friends bases with an unnecessarily elaborate minecart line and still brings a rail gauge to the queue. ViperPhantom2 keeps asking whether it really helps.
+batch: 3
+retired: false

@@ -1,0 +1,78 @@
+id: emberrazskel
+name: EmberRazskel
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTg1OTk1MSwKICAicHJvZmlsZUlkIiA6ICI2OTU3YjQyOTZiOTI0NGJkOGQzNWJiZGU4M2JiZDI3OSIsCiAgInByb2ZpbGVOYW1lIiA6ICJjb2xpblBBUEEiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvY2NhOTRiNTAzNjhhN2QyMDE4MTE4ODdkNGQ0NTQxYmFhMWUyMDM1ZTI5NTQxZTkwZmM3OTM1NmNhZTAzZWJhZCIKICAgIH0KICB9Cn0="
+  signature: "DdVmeTRiQlqSa0FYHf5i7E7kQ182F5dadBgE8dbw+KJ7F1/qACcGokE9amMmeW7A4qOlnBPxYYD/e4AdoY0SpnjydsqNFo0x/he0z6go5wBXbKHPQdZ942+u7w0/JSknOXr6XXGjLgXMEqmF3ayy0TTEIh3nDvcO3TtX3xNI8ixxas0mMpLEauu8kZz1NgdIgog09LirVThJCBT//APHGpQRGKbYorVQZEKVLtGVX1cCkUwIRZjqsRANdUlnXOYiV6Q687WW3jXgoijh3aK6w0nofOMgLD4WneOiX13keeNR4LBvsbnGYIlht+kBlWNYjupEs139RNdWXARJnlSTOmtHtQmhF+wEvGfsPDm1gu2rOuRdUtZ/06sktPTpD5LZ61zf6wVApKc/2FOY84LERFA7X+W1bNtlJ1j2dlNkFaQHPbl0MZrvmlM408pq/F37p6zzg+G45YiTdUfQN0aStKl4JW57+0KqBONCu0qkOzI3bBVr2P8fce5rX0ktH1GA/ak53TNDfpQ2eQw/1y921oPz4xpaiWP5Vr8lSDeDF1qgVGCL0jPeFfmvzpwRqVqT2L0y8yOxptVMIrWlRtyLh2ABe5l4iF0EWBjGOznLVhGhs83hGuHFZex7gJoOr1veaUxSAVLC4yLknhiA3dXX+4jgnmoC0QC0IGwGturjhpU="
+skill: 0.021
+archetype: tactician
+leverOffsets:
+  reactionMs: 0.05
+  predictionQuality: 0.33
+  decisionTemperature: 1.36
+  awarenessRadius: 0.51
+  coordination: 1.3
+kits:
+  trooper: 1
+  longbow: 0.45
+  shortbow: 0.57
+  rewind: 0.53
+  spy: 0.2
+roles:
+  plant: 0.55
+  escort: 0.47
+  defend: 0.55
+  rotate: 0.73
+  retake: 0.71
+  hunt: 0.11
+style:
+  aggression: 0.42
+  patience: 0.64
+  teamplay: 0.84
+  risk: 0.5
+voice:
+  tone:
+    - earnest
+    - analytical
+  verbosity: normal
+  style: "museum labels for even embarrassing plays; numbered ideas, concise route calls, quick revisions"
+lines:
+  greet:
+    - display spotlight prepared, exhibit opening
+    - display spotlight ready, first route agreed?
+  onKill:
+    - a fascinating example of an opening
+    - display spotlight confirms a clean opening
+  onDeath:
+    - please do not put that in the exhibit
+    - display spotlight needs a revision on that route
+  onPlant:
+    - a short-lived interactive exhibit
+    - display spotlight confirms the site is reached
+  onDefuse:
+    - preserved the team instead
+    - display spotlight confirms the fuse is clear
+  onWin:
+    - display spotlight has a new story
+    - display spotlight and team followed through
+  onLoss:
+    - a cautionary exhibit for the display spotlight
+    - display spotlight had a missing step
+  onLastAlive:
+    - the last visitor in the gallery
+    - display spotlight says there is still a route
+  taunt:
+    - your approach belongs in the archives
+    - the display spotlight predicted that rotation
+  lobby:
+    - please look without touching my display spotlight
+    - writing a new label for my display spotlight
+    - "My display spotlight: I will call the first rotation."
+    - With my display spotlight, tell me when a route closes.
+quirks:
+  - calls_everything
+  - always_gg
+rivals:
+  - liltinzaistpysh
+bio: EmberRazskel opened a one-room museum for abandoned arena souvenirs and still brings a display spotlight to the queue. LilTinzaistpysh keeps asking whether it really helps.
+batch: 3
+retired: false

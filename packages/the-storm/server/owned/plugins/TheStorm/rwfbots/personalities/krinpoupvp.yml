@@ -1,0 +1,75 @@
+id: krinpoupvp
+name: KrinpouPvP
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODQ4NjkwMiwKICAicHJvZmlsZUlkIiA6ICJhYTUwNjRmMDUzOWQ0YmFhYTVkOGMzODllY2JiNGFlMSIsCiAgInByb2ZpbGVOYW1lIiA6ICJ4WF9FbXBsb3ltZW50X1h4IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2M1MzhjNmVmYzE3NDQ5ZTZiMTY5MmExYmRiYTI0MzlkZmQxYjNlMWM2OThmNjBiNjQwOWY2MWQ0NGNjZmRmYTMiCiAgICB9CiAgfQp9
+  signature: "wt8LbrlJqE0KU75QIym11wON1YfNx4BbEXmALdeH6cQ7wtbvqRLmnWdaDer+X2R4qtcWleeJcTvjZyPvwzophqZhhVsVHjzS4S0DjlKRV+fOskGji0FRi9803BfD2jsrycDX9sJCV4AeMd4E7VQMU5RTUyZJiyPGEL1/0ef7DyiHIT1KnvKgX25EGgG05Oqi7JpG+tcWNFAb8XYLBMKpd1prOwb1zcDtudcyeP6tG5RGMErgAf9SbnaB5tea/ITjgbVb6brmIlegg5J53bKSkpAJmbXQScDQsivpcGX3dD4QYyGg8KBaRD6arqAuqoBl55jvyc2GWy6rAMmcfQONCzz4YucW2gHRQqCPw5K0adcVEfYSEJp8b8BGUwqz+xa1NI/607e6xHDUVEoMbuz2H3UnpVxT6DQktfJjqywp+oGP/Kql01jj/9wVoi2p4ZMkiSXkkQjAVQgHcuarRhy+SKB8zlOWYP0bFnMrkxXXF3XBm+qLkI9g0G592ypctEohVnSLIuBCVKk81c6n17q0H3MV/qe9AxJhFHkLouRNqTjLJTLhV1S8Lu3q3vm6oITJD4fjdsfhuhI1R7OYfbvuB0JRGJyZepZOGkfGNCyvnFQmRsSW82uwDHfGHNM5be8u/jTvH2gpFoMNpO+DH1boLoSPkepPVgSYZ5aNzzEE2LQ="
+skill: 0.522
+archetype: rusher
+leverOffsets:
+  reactionMs: 0.75
+  turnRateDegPerTick: 0.51
+  cps: 0.68
+  decisionTemperature: 0.4
+  awarenessRadius: -0.15
+  aggression: 1.27
+kits:
+  trooper: 0.86
+  shortbow: 0.55
+  rewind: 0.26
+  ghost: 0.31
+roles:
+  plant: 0.79
+  escort: 0.4
+  hunt: 0.75
+style:
+  aggression: 0.94
+  patience: 0.14
+  teamplay: 0.37
+  risk: 0.68
+voice:
+  tone:
+    - brisk
+    - eager
+  verbosity: normal
+  style: "absurdly serious station announcements; fast fragments, impatient countdowns"
+lines:
+  greet:
+    - station whistle checked, service departing
+    - station whistle ready, I am taking the first corner
+  onKill:
+    - one less delay for my station whistle
+    - station whistle keeps moving, next corner
+  onDeath:
+    - my station whistle reports a cancelled service
+    - a pause for the station whistle, then straight back
+  onPlant:
+    - last departure from this platform
+    - station whistle is already on the next approach
+  onDefuse:
+    - service restored on this line
+    - quick hands, quick station whistle, clear
+  onWin:
+    - station whistle reports arrival on schedule
+    - station whistle barely stopped all round
+  onLoss:
+    - wrong platform for my station whistle
+    - station whistle ran ahead of the plan
+  onLastAlive:
+    - last service, just my station whistle
+    - my station whistle and I will keep moving
+  taunt:
+    - your connection left a moment ago
+    - my station whistle got here before that push
+  lobby:
+    - please queue beside my station whistle
+    - my station whistle says the lobby service is delayed
+    - "My station whistle: first corner is mine."
+    - With my station whistle, please follow after the opening.
+quirks:
+  - bunny_hops
+  - always_gg
+rivals:
+  - xozbryrriolkyz
+bio: KrinpouPvP linked three friends bases with an unnecessarily elaborate minecart line and still brings a station whistle to the queue. Xozbryrriolkyz keeps asking whether it really helps.
+batch: 3
+retired: false

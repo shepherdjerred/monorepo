@@ -1,0 +1,72 @@
+id: thaezmylhd
+name: ThaezmylHD
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTgyMTQ0NiwKICAicHJvZmlsZUlkIiA6ICIxZmVjOTEzN2Q3ZTM0ODk3YTY5OTY0MGJkMTllMGM0MiIsCiAgInByb2ZpbGVOYW1lIiA6ICJzcGlmZnRvcGlhNiIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9jZjJlYTdmMTI4ZGE3YjgyZDIyYmE0NmFlNmUyOGJiMjZlNmE2NDljNTdlNjE1NWIwY2U0ZDM4NzM5MDM4OWQxIgogICAgfQogIH0KfQ=="
+  signature: "rTXllsigbDJ5FPmqJ9vXnzmB/uGbBVdSbzSg6SD+RmgzWstiqiqZG5grS7jx2CcgRhEcWPr5C0QBKEqDwD3pPvbLZEIuu1H49Of/78HH/AcTECq4aDUSZCIM2VhwUaVVhei3Gm7hxUY+OKYWj86jY+K9kXZBTZ/7GRlS4eE6LQAqmZzwzBP/apISyvQ0p4/eSpH0DcS3/q1cC9/VNCYyHZ7S+2YdpAuTesVSkdzzd+OkfloaOBPDEFGq+a6KlP6tZjZYAfaBU5m3V9HdTpfZcsLLNyQ9SpMUwpR639OEWbFhQLV1UKiEmLGHFDIeel35Yupa486VRMQd42Oz+vhLIYg+oVDHWtQMMURGaGKmmOhjZ3O7V47BK7QGR5wBRGuet3PpiN4LoJvd8YBKF1soLADWFxs9HdXTr/u1/o4ExNCmRngwf3t+nFm8bp0rZxkCYHE3ftZ0yzgB/1bQdgg3HiDI8laVJRnEii3zdqQ+H/H0wttiovVG8P+LlYUcjWyxZGytZoYbKrPfQNN5+IYM52WV5XU3m91fL9AChwjulYVAEaonZ/KQp5D6hbs1OsOiNYzbKERwG77GcClKLs6qmHFlyFiPWLw4qIYg/gxp82FLKL53TjBTdboCJoTMngXQgUttZgbGgDGxKFTKNClV2H7CZCBUH+7Wa6V8piKWtEY="
+skill: 0.079
+archetype: support
+leverOffsets:
+  cps: 0.46
+  awarenessRadius: 0.5
+  coordination: 1.7
+  aggression: -0.62
+kits:
+  trooper: 0.95
+  longbow: 0.26
+  rewind: 0.66
+roles:
+  escort: 1
+  defend: 0.26
+  retake: 0.68
+style:
+  aggression: 0.34
+  patience: 0.46
+  teamplay: 0.91
+  risk: 0.32
+voice:
+  tone:
+    - excitable
+    - helpful
+  verbosity: quiet
+  style: "enthusiastic clues and upside-down maps; gentle check-ins, thanks and useful kit reminders"
+lines:
+  greet:
+    - brass lock found, clue understood
+    - brass lock is here, everyone got their kit?
+  onKill:
+    - that corner was the next clue
+    - one less problem beside the brass lock
+  onDeath:
+    - the clue was apparently a trap
+    - sorry, the brass lock corner is open
+  onPlant:
+    - a very loud treasure chest
+    - brass lock can watch while you plant
+  onDefuse:
+    - solved that little puzzle
+    - brass lock is here to help at the fuse
+  onWin:
+    - brass lock led us to the prize
+    - brass lock says everyone helped
+  onLoss:
+    - the brass lock was upside down again
+    - brass lock says we can tidy that up
+  onLastAlive:
+    - one clue and no hints
+    - one brass lock still trying to help
+  taunt:
+    - that trail led you in a circle
+    - the brass lock brought a team to that corner
+  lobby:
+    - does anyone recognise my brass lock?
+    - the answer is definitely near my brass lock
+    - "My brass lock: I will stay close to the push."
+    - With my brass lock, call if you need an escort.
+quirks:
+  - says_sorry
+  - always_gg
+rivals:
+  - xadaishwaffle
+bio: ThaezmylHD hid tiny treasure chests along the old lobby walking route and still brings a brass lock to the queue. XadaishWaffle keeps asking whether it really helps.
+batch: 3
+retired: false

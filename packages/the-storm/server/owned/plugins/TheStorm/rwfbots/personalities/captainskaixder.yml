@@ -1,0 +1,76 @@
+id: captainskaixder
+name: CaptainSkaixder
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjI4MDAxNiwKICAicHJvZmlsZUlkIiA6ICIyOWM2MTQyM2MwMTc0YWI4ODgwZWM2MzBlYzIyYmZjMSIsCiAgInByb2ZpbGVOYW1lIiA6ICJSb2NvX2NvcCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9lMjBlYTIxN2IzOTQxZmI5NDFiMTM4MzE0YWY0OThjMWRlNTE0OTk3OGIxODYwZWY1OTZhZmIxZmJmYmM1ZGI2IgogICAgfQogIH0KfQ=="
+  signature: "sabhm+Ky0OQ9e+dHzLBmb8q08xwwNhwiMwHIptAmbLrfIFRCiawcYDWv8BoOp6UuyjGCZLLb4m9+EgSI2S1gH129yy0ZoqYx9NOZxTN5RRe1tBIF83z7ZbkLxcZk9tSELsB4ATofsbtEP159YT0SoJ/5aYrk5pzKiWk9F74SZXQCLEn+ZmPID7hrDbYznAXMdOKyt/htHIbR6bc7WlNx+MxoBWC6cMGuYDiqT4Cd1BfjsMm/miIC4f6h3WGwlLeOexzTAMaP1u0HRmnoZmJB7E31rmrGAONO65uKpvbbS1LUhY1gddA4wTVruaFxpT6aML1M5FvwCcIZ1CC0RgRVLT/V6CHrnue0XvJTcukpQX2n51XnDIG/7iNUP64TNQ5QUTGaAznuXqUoSXfcqHX2UlyKZ5cRI6gumNXDh6LaSNt6Gwe8i6PRBgSb1MmvtByQlMbfrCD8et/kMdgPlIPBeGJE7E3OxZ62zOM5cCM0C+LWnuAQf4+vJUwczGr7dRxLAWBlDSk/7pyNK32DtshT3rLS8kDfPqmX2Uw3wbE47pLWr7TVyJ203UXxrKgk6k34AsxDU8KFw9hD1JtwtIb58nj9OXHWnqCICyEH8OSqjtir6jz2roeDsoAKpNmAtEMyEwlQaaxDwZeNtde05GPFfZGvbqEoFh2/Pz1Qdx0OAGQ="
+skill: 0.644
+archetype: troll
+leverOffsets:
+  turnRateDegPerTick: -0.1
+  decisionTemperature: -2.38
+  awarenessRadius: -0.96
+  coordination: -1.26
+  technique: 0.13
+kits:
+  trooper: 0.43
+  shortbow: 0.65
+  rewind: 1
+  spy: 0.71
+roles:
+  plant: 0.43
+  escort: 0.36
+  rotate: 0.35
+  retake: 0.19
+  hunt: 0.47
+style:
+  aggression: 0.61
+  patience: 0.22
+  teamplay: 0.21
+  risk: 0.85
+voice:
+  tone:
+    - playful
+    - mischievous
+  verbosity: quiet
+  style: "tiny winter expeditions, serious snow forts; deadpan object conversations and harmless overconfidence"
+lines:
+  greet:
+    - frosted goggles thawed out, ready
+    - frosted goggles has appointed itself captain
+  onKill:
+    - a tidy little snowball effect
+    - frosted goggles is now insufferably proud
+  onDeath:
+    - slid right out of that plan
+    - frosted goggles would like a different replay
+  onPlant:
+    - a warm spot in the snow
+    - frosted goggles calls this interior decorating
+  onDefuse:
+    - cooled the bomb right down
+    - frosted goggles says it knew the correct wire
+  onWin:
+    - frosted goggles has survived the thaw
+    - frosted goggles is requesting a trophy shelf
+  onLoss:
+    - the fort melted around us
+    - frosted goggles has misplaced the blame form
+  onLastAlive:
+    - one mitten still waving
+    - frosted goggles insists this was the plan
+  taunt:
+    - your footing looked a bit icy
+    - the frosted goggles gave that push three out of ten
+  lobby:
+    - warming my frosted goggles by the lobby lamp
+    - please stop hiding my frosted goggles in snow
+    - "My frosted goggles: I will cause a useful distraction."
+    - With my frosted goggles, try not to laugh during my push.
+quirks:
+  - celebrates_early
+  - always_gg
+rivals:
+  - nouxmiolgaming
+bio: CaptainSkaixder built a snow fort that lasted longer than the team inside it and still brings a frosted goggles to the queue. NouxmiolGaming keeps asking whether it really helps.
+batch: 3
+retired: false

@@ -1,0 +1,76 @@
+id: pixelpeshxam
+name: PixelPeshxam
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTk4MjA2NywKICAicHJvZmlsZUlkIiA6ICI4YmM3MjdlYThjZjA0YWUzYTI4MDVhY2YzNjRjMmQyNCIsCiAgInByb2ZpbGVOYW1lIiA6ICJub3RpbnZlbnRpdmUiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTUxNWI5ZWUwNDFlMDA5NGFjYjE4ODZjNGZjYjU0YjI5YjkyZGE1MGIwNjRhNTI5MDYyMGU2MzlhN2VmMTRiZCIKICAgIH0KICB9Cn0="
+  signature: "KHAuXvHcEK6hFEhpwNkXrnscPejMcNIR/IvU1Qjm0ofofiHcDyq4KzKf6k5Z2rSFbJeYYqS/TfJoKiJupFFsb3pzsZYAPR2tR0E5rQn8879uifS7mn0RZqiAzwtgt1/vwxxIkfa/ZayGwiV+ef4CyxEV/py2BczBRljM61lVvwtSRk7cjeyEhqd2WfgIgIAmb9ygVtpAs2YnodMVGXlDrzmMHq2a9rTguHJ5Ptnzp7cylqLlAEsai2wy3PmrtABR4bH0Ci7TmL9zUWjZ1OGlVj/BqAD24RaIHj64swFhuZ3jdErlWrsKB9a8iM2zFOCshDn0/FYyztgS80jq/H4+VRu/hFnKPiOIpmfpR9updz4uuWLRBNoJjZDuiHkoFBNFfiZ/qbTFivxgfvgLX+VTEqb1gJAL1V6lvRv3H3O7EeP4uAp/AyVkz8fdEFfOsFvYRoKZ7g+Eicgl7JpJmaSuITZSUVlYoRId1nbQmADpJWJc53VeMw4uOlzFdRGUKJA8P+sSEy+YAHgv+x1X6wC6d9KK7b0EZ40q8+6UDI/h0obEbecetis22Au+1DLNZpjh4dIvRpbM4jZdtyRkHUo1lxWuhK81XXHVM2m90pdMznNL82i2h/bL7YZJr6Iz4Qcn2KIa47DYxt8DClu7bAaYu0X1FAEmwYKXFFh9h6ZWGxg="
+skill: 0.539
+archetype: flanker
+leverOffsets:
+  turnRateDegPerTick: 1.17
+  cps: 0.18
+  predictionQuality: 0.42
+  decisionTemperature: -0.44
+  coordination: -0.7
+  aggression: 0.6
+kits:
+  trooper: 0.62
+  shortbow: 1
+  rewind: 0.32
+  wraith: 0.45
+  spy: 0.35
+roles:
+  plant: 0.42
+  rotate: 1
+  hunt: 0.44
+style:
+  aggression: 0.7
+  patience: 0.5
+  teamplay: 0.21
+  risk: 0.65
+voice:
+  tone:
+    - measured
+    - nimble
+  verbosity: normal
+  style: "soft beat counts and tiny timing worries; quick side remarks and route changes mid-sentence"
+lines:
+  greet:
+    - alarm bell is almost on time
+    - alarm bell is taking the other entrance
+  onKill:
+    - right on the alarm bell beat
+    - alarm bell found a side door
+  onDeath:
+    - my alarm bell skipped a beat
+    - alarm bell chose an occupied side door
+  onPlant:
+    - alarm bell is counting now
+    - "alarm bell came around the back of {bomb}"
+  onDefuse:
+    - stopped just before the chime
+    - alarm bell found a quieter route to the fuse
+  onWin:
+    - alarm bell and team in perfect time
+    - alarm bell took the long way for a reason
+  onLoss:
+    - my alarm bell needs adjusting
+    - alarm bell took the long way for no reason
+  onLastAlive:
+    - only one alarm bell still ticking
+    - one alarm bell coming around the edge
+  taunt:
+    - a little early on that swing
+    - the alarm bell is somewhere to the side
+  lobby:
+    - listening for the alarm bell tick
+    - my alarm bell is not a countdown shortcut
+    - "My alarm bell: I will try the side approach."
+    - With my alarm bell, keep them looking forward for me.
+quirks:
+  - crouch_spam
+  - always_gg
+rivals:
+  - kaldolskuzshist
+bio: PixelPeshxam built a clock tower that chimed one block too early and still brings an alarm bell to the queue. Kaldolskuzshist keeps asking whether it really helps.
+batch: 3
+retired: false

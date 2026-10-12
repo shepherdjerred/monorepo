@@ -1,0 +1,74 @@
+id: thexezpioz
+name: TheXezpioz
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODc1MDU0NCwKICAicHJvZmlsZUlkIiA6ICI4NzA1MzkxMDBlOGQ0MzU2YjJiYjlmZGI1NjFhOGU3ZSIsCiAgInByb2ZpbGVOYW1lIiA6ICJfcmVncmV0dHQiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjRhODg5MDM5MzhkZjNjZjE4MzNjOTk4ZGMxZTNjYzIxZGY2MTNmZTBjYThhMGEyOWM1Nzk5MTkyNzFjNzI5MSIKICAgIH0KICB9Cn0="
+  signature: "eX1k6tVpWoQJjdMs2MXHnJKaDACQAHuPCe1tZRliEcDv3/9FsOJjokj45z+NFmO76cF1w1XQ0CMcmgPc5gCR4lsFC31FEM0FgjujJL8JGi+dEBndXD07ChlkG7CL5TRMGiQlu0/z3GTciQwe1b1R5ELdWo3Gt+Ch8LjLM4ZwKEFhzjfbK8r9sNBdO2xptk5TUs+aoV4pjoFZw+F8bfvpJ+g03LyqMMzix/mDVAJl80por1SLulpkR9G4xSWqr4bOfnJ7GUL3o+BlKvyUWPWt1+GRI4YOXtQX0cuckV18342AXvp7mTiEbQQGe8/upgwvWWfRCW4gftderEH/heTlVvbMmSUWA1+/mHrAgzV6C81BD/K7xyvNSU7EEZzZzcPW8h1j3vhzxvwTCzSlc3/+jN9n8iMNb+f8A/itts8D08pK3Zb890r4K1DW7VLYyf6z9Xn3gVofrGfgkQB2+0qjGeWa7/q1M68BFLNxVftCkBTezPZYujMH2hh4+prEPQCLs6sxTjY3iGA1/vJ/Axm7O99I0EaiATRtnB2EOPLknScntRp68+3lDjNFioj0vEijUS8/upPmnw52y4Mnyhpqh3nWfmGyZ9BG/R0zV4iflckiAinGVn8VoiwevXUTzvY2j3ZkuzLDMs95giqrC9jrhVJV7LHcuGNbP5ybLfHBoeQ="
+skill: 0.781
+archetype: support
+leverOffsets:
+  turnRateDegPerTick: -0.17
+  awarenessRadius: 0.28
+  coordination: 1.38
+  aggression: -0.59
+kits:
+  trooper: 1
+  longbow: 0.33
+  rewind: 0.65
+  spy: 0.26
+roles:
+  escort: 1
+  defend: 0.45
+  rotate: 0.11
+  retake: 0.73
+style:
+  aggression: 0.28
+  patience: 0.53
+  teamplay: 1
+  risk: 0.39
+voice:
+  tone:
+    - bookish
+    - helpful
+  verbosity: normal
+  style: "brief footnotes and revised-edition rematches; gentle check-ins, thanks and useful kit reminders"
+lines:
+  greet:
+    - cover board ready, new chapter
+    - cover board is here, everyone got their kit?
+  onKill:
+    - a short footnote to that duel
+    - one less problem beside the cover board
+  onDeath:
+    - a regrettable page break
+    - sorry, the cover board corner is open
+  onPlant:
+    - a cliffhanger at the bomb
+    - cover board can watch while you plant
+  onDefuse:
+    - closing that chapter gently
+    - cover board is here to help at the fuse
+  onWin:
+    - the cover board gets a happy ending
+    - cover board says everyone helped
+  onLoss:
+    - the cover board needs a revised edition
+    - cover board says we can tidy that up
+  onLastAlive:
+    - one last page to turn
+    - one cover board still trying to help
+  taunt:
+    - I have read that opening before
+    - the cover board brought a team to that corner
+  lobby:
+    - resting my cover board on the lobby shelf
+    - please do not dog-ear my cover board
+    - "My cover board: I will stay close to the push."
+    - With my cover board, call if you need an escort.
+quirks:
+  - says_sorry
+  - always_gg
+rivals:
+  - cobaltthukrem
+bio: TheXezpioz bound a book of old match stories with mismatched covers and still brings a cover board to the queue. CobaltThukrem keeps asking whether it really helps.
+batch: 3
+retired: false

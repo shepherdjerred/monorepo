@@ -1,0 +1,72 @@
+id: paistjaezrozyt
+name: PaistjaezrozYT
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTY3MTYyNywKICAicHJvZmlsZUlkIiA6ICJlOThhZTBlMTI5MDg0ZDA5OTk0MTg4N2Q2YTk0ZTI2NCIsCiAgInByb2ZpbGVOYW1lIiA6ICJTZXh5SGF1c2VNYXN0ZXIiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNTI0ZmI1YTBlZjZlYmNhOTQ4NGE0MjgzZTk0NGM3MmY3NWE3ZjE3Nzc5M2Q1YzkyZTlkYTU0NDc3NWUwZWM2ZCIKICAgIH0KICB9Cn0="
+  signature: "vxydCe/n5ihdF4R8UGxTJAZ8BknbldsjVavF6NNMjwuBgQClOYLjETmbytkTNbf78k3UBK0qT1IaVr0Ujf/I113gKoZIsSapmSVf7QRlySn4dN2EVxnoQGUy/PoDKXLSs0MmO2bx+B7zQ35kxUOje/8okfJ1fo8YqyrlEp05LSpbj222q+w7Kf9+zYM1uSXZJTD8emg5Wf11dkRFDfnUbVmD/5brubCryySd8yJNJLCAOszo3T+lAhS2OsZAxMim9BE0ReP8IwRz0q6Y4oErJgEN5jpmRmYkV9axqhtgZ4eD8dFGyxH8OwnPC7u7pIKPuK421Sh9SA8Qt0g+exWDeqbSlGHvF2ct51SMiU72qzRzqx6Er8Wzi5ZaUIhcUCcZYmOVZfQrISegl2Wlmm/62E5UnJbvjhzlaVkBfo/6agdCzbXKGTl9e0cHgyzviJlpEFitR6isyIsHT4AwLgOfJukN5UZOENwmnOSuF2oaptfAc+A4qmP8QlwtnXXzETIzrMNgx2ShV9sbiV7o7hpZNsLcLhwX9ipv8cPcrpEr7+N/n0WiZ5Yct0VB1PobEhU2gwdXzXPufyot/kSr95Nrg+qBS/UjyeEDhBFg3LSZP7Md3HS79E4vxYbs8QV7hYYQJj7bHYV9GjfqhZzteaT9GZPYsXRllSsUGAL5zT1W4Iw="
+skill: 0.06
+archetype: support
+leverOffsets:
+  aimErrorDeg: 0.39
+  awarenessRadius: 0.53
+  coordination: 2.02
+  aggression: -0.28
+kits:
+  trooper: 1
+  longbow: 0.28
+  rewind: 0.67
+roles:
+  escort: 0.94
+  defend: 0.45
+  retake: 0.62
+style:
+  aggression: 0.33
+  patience: 0.48
+  teamplay: 0.91
+  risk: 0.27
+voice:
+  tone:
+    - polite
+    - helpful
+  verbosity: chatty
+  style: "postal announcements and absurd courtesy; gentle check-ins, thanks and useful kit reminders"
+lines:
+  greet:
+    - postmark stamp sorted, delivery begins
+    - postmark stamp is here, everyone got their kit?
+  onKill:
+    - delivered to the correct corner
+    - one less problem beside the postmark stamp
+  onDeath:
+    - returned to sender
+    - sorry, the postmark stamp corner is open
+  onPlant:
+    - an urgent parcel at the bomb
+    - postmark stamp can watch while you plant
+  onDefuse:
+    - delivery cancelled politely
+    - postmark stamp is here to help at the fuse
+  onWin:
+    - postmark stamp delivered the whole round
+    - postmark stamp says everyone helped
+  onLoss:
+    - the postmark stamp took the scenic route
+    - postmark stamp says we can tidy that up
+  onLastAlive:
+    - one final delivery to make
+    - one postmark stamp still trying to help
+  taunt:
+    - that push had the wrong address
+    - the postmark stamp brought a team to that corner
+  lobby:
+    - checking the name on my postmark stamp
+    - no unpaid postage in my postmark stamp, please
+    - "My postmark stamp: I will stay close to the push."
+    - With my postmark stamp, call if you need an escort.
+quirks:
+  - says_sorry
+  - always_gg
+rivals:
+  - skilbryrlaiztom
+bio: PaistjaezrozYT delivered handwritten notes between feuding builders in 2014 and still brings a postmark stamp to the queue. Skilbryrlaiztom keeps asking whether it really helps.
+batch: 3
+retired: false

@@ -1,0 +1,73 @@
+id: vutiondai-24
+name: Vutiondai_24
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODcwMjI1NywKICAicHJvZmlsZUlkIiA6ICJiNzAwZDM2YjRkYmE0NDQzOTUzNjc4NDVlNWViZTA5MSIsCiAgInByb2ZpbGVOYW1lIiA6ICJleGVjdXRvcnkiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjBmMWQxMWQyNmMwNWFlZDRkNmM1YWI4ZmMzMTQ3YzM1NzkxMjk0YWUyZDcwNWIyZTAwMWVmMzc3MWMwOGRjZiIKICAgIH0KICB9Cn0="
+  signature: "Q+wloeLk3Z2cYE8JvQ+9tWZ6pthwpO5fysh1LOqcqa/3bvD3mziqb8VWGuT03c/JCrEzff4bp+gB59XFMiXSbiKmHEvr+4MOv/qjZr5nNKAryXZtfhX9N1JKJGYrvsJWW4F+vCTm31jiy1bSjqT7yeoXIF79F/4QZlwLCP8GMn33Owi4GemxMp2Jj/xXV4BG8V9iT2w4WYF6kfUYYvXK2XPXJME6C6GPlL8AitpP/qw5f0JwZ1LgsvHQb2794V/6F5cP0x285L+qyAGFT48h8nRDaQaMAgqKECRYOIKvjCz/3mGqsQOE+Idb/0DOuRaOqCnyjMpz71TWPDTaVGt7TjaZNS/Z2XBjYKtEhqhoJPDXeRrBG4Y/Zr9FHHZZ9VrePoob29NDTC0/EJIXN3m6rSmIPn0LwU44nHerbnXia8sEWF1C8tt3dcSikurviE1MhFBWAG3ZE+3kSHbgnY/EoVoDhlwhax6W6n21csv9LcYbwR39lmJa40pP8nuO3rhNyNxPpjM1X0G3Jqkx2WyXtxCQgHB/bu5dzCpTeie3RVT5YdJO6kWtnUHoQgdLW2tF8xuW8CSWlH7Mw+EIO+8JxSf+ibHHWFSMDkBYBtS/OUKLp9Snr94BroAEWR9M/E8hqG/1Fol0PlRzooVicQAo5K9rWFNjvPiuoDUXAu84aeg="
+skill: 0.864
+archetype: hunter
+leverOffsets:
+  turnRateDegPerTick: 0.23
+  cps: -0.48
+  predictionQuality: 1.46
+  awarenessRadius: 1.24
+  aggression: 0.68
+kits:
+  trooper: 0.74
+  longbow: 0.48
+  shortbow: 0.95
+roles:
+  defend: 0.25
+  rotate: 0.45
+  hunt: 1
+style:
+  aggression: 0.85
+  patience: 0.45
+  teamplay: 0.33
+  risk: 0.6
+voice:
+  tone:
+    - soft-spoken
+    - intent
+  verbosity: normal
+  style: "tiny aquarium metaphors and creature worries; tracks small clues aloud, then gives terse pursuit calls"
+lines:
+  greet:
+    - pond thermometer ready, fish fed
+    - pond thermometer ready, looking for tracks
+  onKill:
+    - a splash and then quiet
+    - pond thermometer followed that trail correctly
+  onDeath:
+    - out of my depth there
+    - the pond thermometer trail doubled back
+  onPlant:
+    - something is bubbling at the bomb
+    - "pond thermometer found a path to {bomb}"
+  onDefuse:
+    - water is calm again
+    - pond thermometer tracked the ticking down
+  onWin:
+    - a quiet evening for my pond thermometer
+    - pond thermometer followed it to the end
+  onLoss:
+    - cloudy water in the pond thermometer plan
+    - pond thermometer lost the trail near the finish
+  onLastAlive:
+    - one small splash left
+    - the pond thermometer has one trail left
+  taunt:
+    - that bait was a little obvious
+    - the pond thermometer noticed those footsteps
+  lobby:
+    - putting my pond thermometer away before the round
+    - the pond can wait for my pond thermometer
+    - "My pond thermometer: I will look for the last opponent."
+    - With my pond thermometer, call the last place you saw them.
+quirks:
+  - holds_grudges
+  - always_gg
+rivals:
+  - drgryxvax
+bio: Vutiondai_24 maintained a glass pond under the old lobby stairs and still brings a pond thermometer to the queue. DrGryxvax keeps asking whether it really helps.
+batch: 3
+retired: false

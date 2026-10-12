@@ -72,7 +72,16 @@ public final class Tactics {
             context.keep());
     var scores = Utilities.score(features, temper);
     var current =
-        state.plan().map(plan -> advance(plan, situation)).filter(plan -> alive(plan, situation));
+        state
+            .plan()
+            .map(plan -> advance(plan, situation))
+            .filter(plan -> alive(plan, situation))
+            .filter(
+                plan ->
+                    plan.current()
+                        .coverNode()
+                        .map(node -> Planner.coverAvailable(situation, context, node))
+                        .orElse(true));
     current.ifPresent(plan -> scores.merge(plan.option(), COMMIT_BONUS, Double::sum));
     var candidates = aboveFloor(scores);
     var temperature =

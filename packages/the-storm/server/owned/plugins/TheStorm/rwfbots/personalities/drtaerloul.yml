@@ -1,0 +1,76 @@
+id: drtaerloul
+name: DrTaerloul
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTkxMDM3OCwKICAicHJvZmlsZUlkIiA6ICJlNjNiOWM0MmU3OWM0MDVkODRkOGUxZTcyODU4NDE0NCIsCiAgInByb2ZpbGVOYW1lIiA6ICJUaGVGYXJjeWRlIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzE5NDFiYzJjM2NjNWE5NjRmMGMzZWU1NWE3ODRkZDM2NTMwOTRlOGUzMDE3MmU4ZDY4ZTgzYmNmOGRmZWRjMWEiCiAgICB9CiAgfQp9
+  signature: "mCdVGSEFLU5TnNaQOWzviF8wS6vE9g3V8TXko20/c2TYR2qgFg+luBBX/mEstz/KA8Imro8qrpDYxzSfZAYBgrc/m9LBAVN7ltMaziQQKVSPwJQrwHXIlnkjtCcZgTdgO0cC/oFZGWN2ev4lrIJf8qqe5F1gQzrzAbBfFsAtPcMLNnwF4FK+eV9rJbtbusJ82111Vl9RvyHl3LxLN3IuJWciVpWNFLfXL6miOg56vCX3fIKvLQvVGSao7VAQRfJlnLAjWbsP16w+VAJwqvVRC8PtVgciEr0Ab5a3iNnNXg13aelTUDyXB3WEi227hdGG89N0i4PBklYom0jKM0ms4/DvwB22pm9XSIJHxRfuBe5aFUVcY6oVZe0iAOc5HXOEjIrdYi7YyMt0FD7pl+M6EKnXJYE8Oz58Iq/0dWEwx2SXl29ehqmMZOfrsownNz2XT3A6QDzrBnLfz6LUvU8M4uZ4lkYcFuaCuHCselDKr6KaiUdkGELzIM4Cme79CEEiK+zVAaEnRuk7BP4wjB7fBtK6YHJqijqMbPcJi3PuoIOalpeSC6QB96kuu1NQKQ3LMvxPrH2fKb1DjtjBIIVYWfJqnhazuGRQqFJIr4RvBNUqsRy6qp06ITDIEBanAGQJVi2bw1DO2YlpNe2iHl3JCg1PsxaaJG9hLynQH0AL6q4="
+skill: 0.974
+archetype: lurker
+leverOffsets:
+  reactionMs: 0.96
+  predictionQuality: 0.26
+  decisionTemperature: 0.39
+  awarenessRadius: 0.91
+  coordination: -1.17
+  aggression: -0.3
+kits:
+  trooper: 0.71
+  shortbow: 0.62
+  ghost: 0.72
+  wraith: 0.56
+roles:
+  plant: 0.16
+  defend: 0.17
+  rotate: 0.78
+  hunt: 0.87
+style:
+  aggression: 0.33
+  patience: 0.98
+  teamplay: 0.1
+  risk: 0.51
+voice:
+  tone:
+    - observant
+    - hushed
+  verbosity: normal
+  style: "local forecasts and quiet predictions; lowercase whispers, deliberate pauses"
+lines:
+  greet:
+    - wind sock predicts a lively round
+    - wind sock here. quietly.
+  onKill:
+    - a sudden change on the wind sock
+    - the wind sock was here a while
+  onDeath:
+    - the wind sock missed that gust
+    - heard it too late beside the wind sock
+  onPlant:
+    - pressure dropping at the bomb
+    - wind sock is watching the quiet entrance
+  onDefuse:
+    - storm warning cancelled
+    - no noise. no fuse. just the wind sock.
+  onWin:
+    - clear skies over my wind sock
+    - the wind sock stayed out of sight
+  onLoss:
+    - my wind sock forecast was optimistic
+    - the wind sock waited one corner too long
+  onLastAlive:
+    - one wind sock in the storm
+    - nobody move near my wind sock
+  taunt:
+    - your push is mostly hot air
+    - the wind sock heard that approach coming
+  lobby:
+    - taking a reading from my wind sock
+    - please stop breathing onto my wind sock
+    - "My wind sock: I will hold the quiet route."
+    - With my wind sock, leave one quiet approach for me.
+quirks:
+  - slow_starter
+  - always_gg
+rivals:
+  - silentvouldorjin
+bio: DrTaerloul logged the weather from a glass hut above the old arena and still brings a wind sock to the queue. SilentVouldorjin keeps asking whether it really helps.
+batch: 3
+retired: false

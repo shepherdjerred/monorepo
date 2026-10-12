@@ -1,0 +1,75 @@
+id: vioxdashgaming
+name: VioxdashGaming
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NTU2NjYzMywKICAicHJvZmlsZUlkIiA6ICJjNzNkYzMxZGVlMGQ0ZTAwYTMzNjBlZjAzZTYzOTE4YyIsCiAgInByb2ZpbGVOYW1lIiA6ICJkYXNoX2FydGEiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNmMyY2JiNjk0YTBmZjdlNjM4NzgzMDU4NGRiODc1NTk2MzlhNGZjZjllYmNlMTZkZjE3NDA4YzcwNzUyYTMwMiIKICAgIH0KICB9Cn0="
+  signature: "GdSTy1ZgSPXS0eLhFEWwERZpXsMVXvZWwjGPd8IQQ9ta8/oDVkZDl2pVr4EQk4ySdkBm6bDMPWLkvwq0By4o10Fy4jDTxutKbJ41Ht3t46aKLek0TzKGxrEU+nST8e2II2FKVyHhRJr3k0wuUPHTtlEgsn7oSCgLqDj9nK5kTdM9o3Cx4hhSU9ru32Ie1gYDeQOd132qucbtKFLf7YAMf+viuVdjfhFPZ8a1/PryO0io9l76S3jM0zb9LCHIdGBR1m20QiMjuhv5PzZsGnIPUHmnNuJkq+sFhXbDQXzopivtQ1MculFj5CtkLWp3fB1d4oh23obI5DDQvP6wbQJILkknxAx0JoNB06DYB2ZuUgArceEa0XHrbsTLh09Synya6NAsjzqI8HVQXuZtdd+lEhYDgLYmFlQ3QN1XiZsYDj5H8ke46UOh6cdPCfaiZI/9l30cZptQRIZRCtJ8RAZlco+dLDXDw9o+lw6OSmPIQlwLrSDg6kN1fgV9y3k7YBp0NCHLViy0GjUYv1ZoXEddyPJ6Y9LFhArXbeYMPJGcim1ZYB7+j9xSJnEMHSAflQZF/WNUWFExS4jyxYHZfeYZ5+yS1uGvM57EEnKeQyngUkMKXd8jQOowISbnANmuNqESFxBhXZXKSxdOAPhVDnOLOi/23KHjsJdQfalqSx8HipA="
+skill: 0.878
+archetype: hunter
+leverOffsets:
+  aimErrorDeg: 0.59
+  turnRateDegPerTick: 0.64
+  predictionQuality: 0.65
+  decisionTemperature: -0.92
+  awarenessRadius: 1.13
+  aggression: 1.23
+kits:
+  trooper: 0.69
+  longbow: 0.51
+  shortbow: 0.75
+  spy: 0.3
+roles:
+  rotate: 0.46
+  retake: 0.13
+  hunt: 1
+style:
+  aggression: 0.74
+  patience: 0.4
+  teamplay: 0.36
+  risk: 0.45
+voice:
+  tone:
+    - fussy
+    - intent
+  verbosity: normal
+  style: "paper crafts and tiny careful corrections; tracks small clues aloud, then gives terse pursuit calls"
+lines:
+  greet:
+    - paper lantern survived the queue
+    - paper lantern ready, looking for tracks
+  onKill:
+    - one clean fold in the plan
+    - paper lantern followed that trail correctly
+  onDeath:
+    - my paper lantern is a little crumpled
+    - the paper lantern trail doubled back
+  onPlant:
+    - tucking the fuse into the fold
+    - "paper lantern found a path to {bomb}"
+  onDefuse:
+    - unfolded that just in time
+    - paper lantern tracked the ticking down
+  onWin:
+    - paper lantern stayed in one piece
+    - paper lantern followed it to the end
+  onLoss:
+    - another crease in my paper lantern
+    - paper lantern lost the trail near the finish
+  onLastAlive:
+    - one paper lantern left on the table
+    - the paper lantern has one trail left
+  taunt:
+    - that push folded very quickly
+    - the paper lantern noticed those footsteps
+  lobby:
+    - please do not squash my paper lantern
+    - making another paper lantern while we wait
+    - "My paper lantern: I will look for the last opponent."
+    - With my paper lantern, call the last place you saw them.
+quirks:
+  - holds_grudges
+  - always_gg
+rivals:
+  - hyperbrekolkriok
+bio: VioxdashGaming folded paper creatures while waiting for the 2014 queue and still brings a paper lantern to the queue. HyperBrekolkriok keeps asking whether it really helps.
+batch: 3
+retired: false

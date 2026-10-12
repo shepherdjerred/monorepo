@@ -76,10 +76,12 @@ bun run bots:generate -- --seed 2026-10-b --count 180 --batch seed-2026-10-b \
 6. **Sign textures.** `mineskin.ts` queues each PNG with MineSkin v2
    (`POST /v2/queue`, then `GET /v2/queue/{jobId}`), honouring
    `rateLimit.next.relative`, and resubmits a job MineSkin failed for an
-   upstream rate limit with a growing delay. Anonymous use works (about 6 s
+   upstream rate limit or documented server failure with a growing delay and
+   bounded attempts. Anonymous use works (about 6 s
    between submissions); `MINESKIN_API_KEY`, when already set in the
    environment, is sent for the shorter authenticated delay. Nothing is ever
-   faked: if MineSkin keeps failing the run stops with the error.
+   faked: if MineSkin keeps failing the run stops with the error. Hourly
+   quotas can pause a larger batch; preserve the texture cache to resume.
 7. **Merge text and validate.** Enrichment is matched to the catalog by id,
    every personality is checked against `PersonalitySchema` in `schema.ts`,
    and the catalog against its rules (unique ids and names, pairwise name

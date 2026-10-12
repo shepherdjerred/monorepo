@@ -1,0 +1,73 @@
+id: jykkashkaiktiol
+name: Jykkashkaiktiol
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NjAwMzkzMCwKICAicHJvZmlsZUlkIiA6ICJmNjhhMmE2NTNkNjU0NTQ1ODE0ZDg0OWI5NmU0MDllOSIsCiAgInByb2ZpbGVOYW1lIiA6ICJMdWdhdHR1IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2U2M2M1MWVjZTUwOTdjZWI2YzNlYzE2OTU5NDQzMjUwZmU1NGNhN2E5MDk0ZDRhZDM5ZjdmZDE0NWI5MTQ1ODIiCiAgICB9CiAgfQp9
+  signature: "pcWHplRUxzO58ZcNC2YYkITM1qZaTSL5uIdbnbuM7nBPlyh99+mnkBUcUj9UKg9r1sRLL9h82LrokD+wy4jTRDpLK2QO6x4rwK73u/Mhg+58fbfl6zzoazzwZVfimMoZsBiqEfAQoy99nN0IJao/LyQQe0IP42hLz5L9G8P7hCxP61TFOmOKFPdiiBJ9yg5fHuxp4PYdKd08HyaOoflTG40TOaZqID425mEX4WoJTmqJum4rCPxsOlGgD3rfspMaVe46gq2TXv2Xw2pYAIrKZLVeUQMCSAnpUYGfptcm3FUh8LXvOo+DtQTtcA2RfMIhJKwpRgp8TMNCphs2ncxUKVck2FuKCeHdptqXifoYh1SIvX+1A3qqASHH0DpJ/OPXmGLtlLrvPkAR+Bv14Stfyyy64RL02sGk2xoLVE3DGOxNjpfs2OzCQW4IJSqQYVrEpbVeRx4JYEWZBB+oGaBrGxnmGLNRo9N59coQy5DNookCcxAbd42t1++KMNWuHIqlsCxzVHcpDue2b3Ia0qVEfTEzLRUzXLW7rq/9K5SOyy+cZvfj5Uo+jw2jeSewRuQurkwikoUDjLD7Fo0Mds7PQJdteelWvCAeuhdOjrxLmYKeD60MwGc4p1g7f8dHML4f229q0EG9FKkPmIVvlNIZ1S/MhKObGmTe7qDDcYXk6ZE="
+skill: 0.276
+archetype: support
+leverOffsets:
+  cps: 0.19
+  decisionTemperature: -0.18
+  awarenessRadius: 0.53
+  coordination: 2.08
+  aggression: -0.1
+kits:
+  trooper: 1
+  longbow: 0.31
+  rewind: 0.6
+roles:
+  escort: 0.91
+  defend: 0.37
+  retake: 0.64
+style:
+  aggression: 0.33
+  patience: 0.56
+  teamplay: 0.9
+  risk: 0.34
+voice:
+  tone:
+    - airy
+    - helpful
+  verbosity: quiet
+  style: "gusts, tangled metaphors and abrupt turns; gentle check-ins, thanks and useful kit reminders"
+lines:
+  greet:
+    - paper delta caught a good breeze
+    - paper delta is here, everyone got their kit?
+  onKill:
+    - a clean lift over that corner
+    - one less problem beside the paper delta
+  onDeath:
+    - my paper delta met a tree
+    - sorry, the paper delta corner is open
+  onPlant:
+    - tying the fuse down securely
+    - paper delta can watch while you plant
+  onDefuse:
+    - untangled that in a hurry
+    - paper delta is here to help at the fuse
+  onWin:
+    - paper delta is flying high
+    - paper delta says everyone helped
+  onLoss:
+    - no breeze for the paper delta today
+    - paper delta says we can tidy that up
+  onLastAlive:
+    - one string still in the air
+    - one paper delta still trying to help
+  taunt:
+    - that push lost its lift
+    - the paper delta brought a team to that corner
+  lobby:
+    - unwinding my paper delta in the lobby
+    - please step over the paper delta line
+    - "My paper delta: I will stay close to the push."
+    - With my paper delta, call if you need an escort.
+quirks:
+  - says_sorry
+  - always_gg
+rivals:
+  - rershorider
+bio: Jykkashkaiktiol held kite races from a windy hill above the old map gate and still brings a paper delta to the queue. RershoRider keeps asking whether it really helps.
+batch: 3
+retired: false

@@ -1,0 +1,76 @@
+id: moundol-05
+name: Moundol_05
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjA3MDI2MSwKICAicHJvZmlsZUlkIiA6ICIzMjA3MWFlYjYzZjI0NmY0YTVlMGZhMWY3ODg3ZGRhNCIsCiAgInByb2ZpbGVOYW1lIiA6ICJNcl9HZW5lcyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9hNzhkNTZlNDM3OTQ4OWFlZGM1ZmE0MDhjNTc0MDQ2NzlhY2I1MTZlMzdlZGU4NTIwMjA5MGE2MGFhMjJhYThjIgogICAgfQogIH0KfQ=="
+  signature: "xUjXXUFwDKYS9TfVGiCFT3zHNERG3k7w/ghSOaqEWhQnbeKST68giz126tFbpbFLF33cJL2WmpovHXF6Iv6c0m0HJeE0HFxuK1NthIm6wbQRjLVYYhmQDB44C8QUidyPZHaeHLkEfPBdU0rsfTS1JpnqzuZj4GcrzaF636aU7jOQ7tNkgXQlogPjshD8y9xWRAHcWzJr9TaV2T2njUXVlR6wHOIMj6/uIES5m/Tz0j/DKJEd3CR+J7yDFM//9RPe8Ow2WCQP9ddGFrepBPJX58IO3L4I8M77TTwGUxsLLCxHVCXd+rx3tyuxXghsYVfX08AbPUY1yXocxNswDhXrqX3Kv6c0LE9mSqdlXSEwChuB5OwKgD7S+my3TX/kn0YRWUfTZ/VjqVmRopYJSD4tXnGG+IXBdG3D+HmtfH0i6SN/CdEDLC1Z95tKYVbNGc/6/uHcAZpWjet/JUwFDaTd36D6Jf/mNGL6o1MDGFflfdWOnt2wRUPc8QGPCczQJuuk0WxjB4LDcKkYTpcFq3ULhjXBbX3GCxGuj2R6FSC1oVdFxPF7lsDbk92X9hG559X8u5Do1z8efjUz51MkFPUyU7G50wWX/fbQyeo3pwx3TGSpmj4E3Qt0TQ6ZvOaXFyF1mdb0D3FIZPo6uWMqwOj3MJVvJx6aG7E/bQVEf+blBis="
+skill: 0.818
+archetype: troll
+leverOffsets:
+  reactionMs: 0.43
+  predictionQuality: 0.02
+  decisionTemperature: -1.98
+  coordination: -1.17
+  technique: 0.37
+kits:
+  trooper: 0.51
+  shortbow: 0.8
+  rewind: 1
+  ghost: 0.26
+  spy: 0.9
+roles:
+  plant: 0.59
+  escort: 0.24
+  rotate: 0.42
+  hunt: 0.56
+style:
+  aggression: 0.57
+  patience: 0.3
+  teamplay: 0.09
+  risk: 0.93
+voice:
+  tone:
+    - patient
+    - mischievous
+  verbosity: quiet
+  style: "deliberate pottery talk and wet clay worries; deadpan object conversations and harmless overconfidence"
+lines:
+  greet:
+    - bisque plate is steady today
+    - bisque plate has appointed itself captain
+  onKill:
+    - that opening held its shape
+    - bisque plate is now insufferably proud
+  onDeath:
+    - the whole thing slumped
+    - bisque plate would like a different replay
+  onPlant:
+    - letting this one fire
+    - bisque plate calls this interior decorating
+  onDefuse:
+    - cooled that down safely
+    - bisque plate says it knew the correct wire
+  onWin:
+    - bisque plate came out of the kiln intact
+    - bisque plate is requesting a trophy shelf
+  onLoss:
+    - a small crack in the bisque plate plan
+    - bisque plate has misplaced the blame form
+  onLastAlive:
+    - one piece still on the wheel
+    - bisque plate insists this was the plan
+  taunt:
+    - your push has not quite set
+    - the bisque plate gave that push three out of ten
+  lobby:
+    - washing the clay off my bisque plate
+    - please let my bisque plate dry in peace
+    - "My bisque plate: I will cause a useful distraction."
+    - With my bisque plate, try not to laugh during my push.
+quirks:
+  - celebrates_early
+  - always_gg
+rivals:
+  - xuzjayt
+bio: Moundol_05 sold lopsided flowerpots from a stall by the arena gate and still brings a bisque plate to the queue. XuzjaYT keeps asking whether it really helps.
+batch: 3
+retired: false

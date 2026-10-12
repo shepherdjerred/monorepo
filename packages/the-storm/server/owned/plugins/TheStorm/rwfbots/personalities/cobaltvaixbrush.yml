@@ -1,0 +1,77 @@
+id: cobaltvaixbrush
+name: CobaltVaixbrush
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTkxNjU0MiwKICAicHJvZmlsZUlkIiA6ICIwMzBlMDA1OWQwY2M0YTZhODY3N2RkZWU3MjEzMjg1MyIsCiAgInByb2ZpbGVOYW1lIiA6ICJTbXVnRm9vZGllIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzI1MDdkN2M5ZDM2N2MwNDg3ZmVhOWViODIyYzNiYTI4YjJmODU1ODIxMmJlNDVkNTk1OGEzOGIwNTc1ZTk4NCIKICAgIH0KICB9Cn0="
+  signature: "EUQwQjkhypu+/vCuPg0n7R09NkMnlaX7sSztVw2svt1Jpr4RJKPNg/iFRutB5PZOnJw/YSHe5xjsFXVjH34Ec1N9xXwWzoVcgvkvrbj/j7kto32DAutRB7UpTpBvUaw1GKJVLXYktxLaGjoTAwT3cvDbSRu2kRdJWyZpzD0hWr6F3s66DRbYhiOp9MJ6U8dPeIc1lhHP5GzxmC46zxp9rIX9c+Pn0CzUH9O8c+9GbgeiTHq/UKQh5zt/Tzi2A7M7+mtyTNtz5rpumV7fZrqSg52XikCxrQc3pq2FL7QFuQWWSVCUpamq3bWna195VKeN8IAkZnJQhZ59UU4O19i0/uy3UebMKGKeY0g5RKkS8+ScXWwVPRO5tXCP7nQiFrDtfStjk/5yDSTOpaXled7IzAgCF6tTRvSV4MN3171y0ggmlCkgtPAZSHiOwCBhxO9vyl1FcnQ80IGNZrqxoDxGQDQXpVKdBMwqwZk51EfQW6a8c/bp9Igct1kFBq4oflY2YaTzU81E5rLlbL9OV0mF3I8Fe9IcPIP2ROgnsvND4sOQI8TOiNwfxcZM/BINS3kMscMGkODA7W7ErDrzyJsSbNo0PcHjGgNlYLfGh8FB2ejszXQbBtxLM1UTouXRXudy1kPFo4Ye7r8V25ZDp7mXHw4ABcYOz9eR8N++hlN/h0k="
+skill: 0.612
+archetype: sniper
+leverOffsets:
+  reactionMs: -0.77
+  aimErrorDeg: 1.67
+  cps: -1.21
+  predictionQuality: 1.84
+  awarenessRadius: 0.49
+  technique: -0.63
+  aggression: -0.49
+kits:
+  trooper: 0.15
+  longbow: 0.89
+  shortbow: 0.44
+  rewind: 0.29
+roles:
+  defend: 0.82
+  rotate: 0.35
+  retake: 0.17
+  hunt: 0.52
+style:
+  aggression: 0.24
+  patience: 0.83
+  teamplay: 0.45
+  risk: 0.22
+voice:
+  tone:
+    - whimsical
+    - focused
+  verbosity: normal
+  style: "arguments with an imaginary puppet; short range notes and patient, exact corrections"
+lines:
+  greet:
+    - my felt badger insists we are ready
+    - felt badger in place, checking the long angle
+  onKill:
+    - felt badger is taking all the credit
+    - felt badger found the range
+  onDeath:
+    - felt badger advised against that corner
+    - felt badger needed a closer angle
+  onPlant:
+    - felt badger says the fuse is dramatic
+    - felt badger covers the far entrance
+  onDefuse:
+    - felt badger requests a quieter ending
+    - felt badger can wait, hands on the fuse
+  onWin:
+    - felt badger will never stop talking about this
+    - felt badger had a clear view of that
+  onLoss:
+    - felt badger demands another rehearsal
+    - felt badger kept the wrong sight line
+  onLastAlive:
+    - felt badger has become very quiet
+    - one felt badger, one long angle
+  taunt:
+    - felt badger spotted that opening too
+    - the felt badger saw that peek twice
+  lobby:
+    - my felt badger has opinions about your kit
+    - please do not argue with the felt badger
+    - "My felt badger: I will cover the long angle."
+    - With my felt badger, call the close flank for me.
+quirks:
+  - bow_spammer
+  - always_gg
+rivals:
+  - lilraikraik
+bio: CobaltVaixbrush put on tiny puppet shows while the team waited for opponents and still brings a felt badger to the queue. LilRaikraik keeps asking whether it really helps.
+batch: 3
+retired: false

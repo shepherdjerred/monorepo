@@ -1,0 +1,73 @@
+id: shiollummc
+name: ShiollumMC
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjM3MzAzNywKICAicHJvZmlsZUlkIiA6ICJiNzAwZDM2YjRkYmE0NDQzOTUzNjc4NDVlNWViZTA5MSIsCiAgInByb2ZpbGVOYW1lIiA6ICJleGVjdXRvcnkiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNDFlY2I1NDc3MjJkNzEyODYyNjVhNjJjYTY4OGZmODc2NGU1NGMwYTRjMmUxMGViYTgzYzQxYTIxNDA1Y2IzZSIKICAgIH0KICB9Cn0="
+  signature: "XFzWVnC6ctaMPxgVznR/L/lx5SJkTKx2CCsgYTdqSxfHf7t43T6fqjn/VqQ3yw12MwA69s38P0TGBt0551rGIC0cUiOeJIhpCYeVzfilR+rIB0JVQKWpGGahftrfj7YnDZGp0zgkFMIvVgwO6ejcIUvRubPzZnOqFQGzz21ttvOYyuLD0h8m7a6Ut8oQgns3WUoQ49JPHNSf6tcSxvdFAB695I2sGQ8c6V29VWnFrtAvKBkea88TqTxQ+G1+dsvlowgCcjwJJU42B3LIqt8t26s+PN8SAU62QJNQYHY6g/BYrfJcbtmU0gbjEUkXTeTi/Xr7fqtrHFKNShLzMp0QlvqfGhUfjCYO2P6gICg/QI/mQd/1Dac0rUZSiCAopcfvWHB9W92f8GT687Qykmvlay2mKwRu1T1DsD6eoDsgEmH84xzN27b72EweCy+yXOqO3zG+K9GGe4O6Jzs+mTF1lbcJqwZ2ExwFo68t01lm9c9eYQRyjshV9pxS9eoXECTkx42cC/ZFlmVpS0bBusu4+65wb9oWr+SibxzmpApOFoPs5fvDbk8tIYPIgMl6WNayw+QpKocCXmo9X7wl0FKf+x/FwQMAHshDjKUKzgpuIOX8hZAhoE9sHZgoBmNTbnBdvVyQ156IZR6N/EShJrAZlnLD4j87TkiU0Mr7b/zzvu8="
+skill: 0.017
+archetype: hunter
+leverOffsets:
+  reactionMs: -0.79
+  turnRateDegPerTick: 0.13
+  predictionQuality: 1.11
+  awarenessRadius: 1.34
+  aggression: 0.75
+kits:
+  trooper: 0.6
+  longbow: 0.47
+  shortbow: 0.77
+  wraith: 0.32
+roles:
+  rotate: 0.33
+  hunt: 0.95
+style:
+  aggression: 0.76
+  patience: 0.3
+  teamplay: 0.3
+  risk: 0.6
+voice:
+  tone:
+    - busy
+    - intent
+  verbosity: quiet
+  style: "ingredient lists and improvised kitchen fixes; tracks small clues aloud, then gives terse pursuit calls"
+lines:
+  greet:
+    - pepper mill washed, team fed
+    - pepper mill ready, looking for tracks
+  onKill:
+    - a useful pinch of pressure
+    - pepper mill followed that trail correctly
+  onDeath:
+    - too much heat on that corner
+    - the pepper mill trail doubled back
+  onPlant:
+    - letting the bomb simmer
+    - "pepper mill found a path to {bomb}"
+  onDefuse:
+    - taken off the heat
+    - pepper mill tracked the ticking down
+  onWin:
+    - pepper mill can serve this round
+    - pepper mill followed it to the end
+  onLoss:
+    - the pepper mill recipe needs work
+    - pepper mill lost the trail near the finish
+  onLastAlive:
+    - one cook still stirring
+    - the pepper mill has one trail left
+  taunt:
+    - your push could use seasoning
+    - the pepper mill noticed those footsteps
+  lobby:
+    - there is soup beside my pepper mill
+    - please return my pepper mill after dinner
+    - "My pepper mill: I will look for the last opponent."
+    - With my pepper mill, call the last place you saw them.
+quirks:
+  - holds_grudges
+  - always_gg
+rivals:
+  - xxstormsniperxx
+bio: ShiollumMC fed a team from a cramped kitchen beneath their spawn and still brings a pepper mill to the queue. xXStormSniperXx keeps asking whether it really helps.
+batch: 3
+retired: false

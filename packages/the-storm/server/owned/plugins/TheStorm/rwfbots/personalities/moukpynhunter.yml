@@ -1,0 +1,76 @@
+id: moukpynhunter
+name: MoukpynHunter
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NTY3MDM5MywKICAicHJvZmlsZUlkIiA6ICIwMzFmMzIyYjM1YzE0ZWExYmNmMmY5ZmVjNWZjYmEzYSIsCiAgInByb2ZpbGVOYW1lIiA6ICJTaXJNYXlvckN1cnJ5IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzcyNDA0NDk2ODljZWI3NzQ1ODVhYjZiZjkzNDM4NTI5YzhiODU3YWMwNjhjNGNkM2Y2YTFkM2UxMDE5ZmFmODIiCiAgICB9CiAgfQp9
+  signature: "oyaOHBRI5x8uVZ29etYq58tP8Ee+rCcMJC2mCl2qdEMDlzVDsPK0059/ApP/8r/FOOCFbykzch01oQP2XSQSlX7syy8jstCipSfI/mgUld33Vs7YiMUefUhd7ZVGbYPAmThwGRqTnanwDgoTNhKTCSFAvRg68ausiV92R3L1tL6HrpTa+ME1UzrA1rJPJDGe1atRqVgvkn2m9G3xBZg5hLnLZTT/4FQC4Nmunablj8JBe+PHeIbllwSS2KfnbmbXhH8vHnDmHA2+HSmanKWY1QXLkj792OUsaVgiJBKQf3gw/eaAkid/E3llZy3AMvEXVKeFpw5KI1wDvCsP1LXW6VAmcfkJvRjdO+VQ7x77iX5AqDmTOdM/qLE4hb9KnPChuYWwIS1cnHpwrGD45IWM0CiQ6DDAGupQp5bxtJxbtGRBFXGnzRY1Z5D0XTYagDiyjPiK6bFB6FsNtJxK7g00WVCVP7OBhzLKS/jKP5ygUrCsrC82IqY4lNHbiJKtv+bWiZJG2y5RHxpmmb/TZPAwD6+7v3AZ45nZ6oRIdkl5jU2riKjwOLOC7nfdKw3hn6v9TOTG4Z2IrI69nZwDbcwFOz24rDdpDHCHYLxkxgaAJ8i1VabXDzdxtzVVwUQHu3y40LJ5WuIhvFqJbofdyvVbICCPu+j5DMGs5lYQVgQg4Vc="
+skill: 0.437
+archetype: tactician
+leverOffsets:
+  predictionQuality: 0.35
+  decisionTemperature: 1.21
+  awarenessRadius: 0.08
+  coordination: 1.93
+  aggression: -0.3
+kits:
+  trooper: 0.88
+  longbow: 0.43
+  shortbow: 0.55
+  rewind: 0.49
+roles:
+  plant: 0.56
+  escort: 0.43
+  defend: 0.48
+  rotate: 0.72
+  retake: 0.71
+style:
+  aggression: 0.48
+  patience: 0.7
+  teamplay: 0.87
+  risk: 0.43
+voice:
+  tone:
+    - dreamy
+    - analytical
+  verbosity: normal
+  style: "sky metaphors punctuated by exact callouts; numbered ideas, concise route calls, quick revisions"
+lines:
+  greet:
+    - orbit hoop says this is our orbit
+    - orbit hoop ready, first route agreed?
+  onKill:
+    - a little spark beside my orbit hoop
+    - orbit hoop confirms a clean opening
+  onDeath:
+    - my orbit hoop did not show that collision
+    - orbit hoop needs a revision on that route
+  onPlant:
+    - starting a very small eclipse
+    - orbit hoop confirms the site is reached
+  onDefuse:
+    - light returns to the bomb
+    - orbit hoop confirms the fuse is clear
+  onWin:
+    - a bright mark in my orbit hoop
+    - orbit hoop and team followed through
+  onLoss:
+    - a cloudy night for the orbit hoop
+    - orbit hoop had a missing step
+  onLastAlive:
+    - one small orbit hoop in a big sky
+    - orbit hoop says there is still a route
+  taunt:
+    - that shot went into another orbit
+    - the orbit hoop predicted that rotation
+  lobby:
+    - showing the lobby my orbit hoop
+    - the ceiling is blocking my orbit hoop
+    - "My orbit hoop: I will call the first rotation."
+    - With my orbit hoop, tell me when a route closes.
+quirks:
+  - calls_everything
+  - always_gg
+rivals:
+  - lorgrast-41
+bio: MoukpynHunter named the roof above spawn an observatory despite owning no telescope and still brings an orbit hoop to the queue. Lorgrast_41 keeps asking whether it really helps.
+batch: 3
+retired: false

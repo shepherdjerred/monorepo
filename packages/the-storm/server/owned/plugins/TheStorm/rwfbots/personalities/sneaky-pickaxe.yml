@@ -1,0 +1,73 @@
+id: sneaky-pickaxe
+name: Sneaky_Pickaxe
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjM5NDk1OCwKICAicHJvZmlsZUlkIiA6ICI0MjJlMzdiNjc4ZGU0OTA2YWFiMWU5NGY0N2E5NGM0OSIsCiAgInByb2ZpbGVOYW1lIiA6ICJzcGlmZnRvcGlhOSIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS84NDlmNDNjNGM1YzAzOWJiMDFhMTZlNDJkNDY2MTlkNzIzNTY0MTlhZTFlYzg2YmNiZjFkYzVjZDFmZTE5Y2VkIgogICAgfQogIH0KfQ=="
+  signature: "miW+aOAEW1HXovhSlNA7NTrmE3x4gAZvOioys1bJupggQW1ad+73ozsefmqZ9HJG2pF4fDC5p6S0Uo1QLEJ8XUlRsgVpWP6cXcMzZXptqovBE80fydHsB0a5PXJjj12NEYCXdhoMAVxk8RIrjwh1BFQ/bQxWPzgZDMzMTj9gBQFC0A3fxWjMYbn5r9GhzOcneYpjEnYwzv2p3q0RzLUM18xLmJwijsScZp0h8Tiuj0NfrpR/ESJumg3ej8zpON/9srnzR0FArNsQP/XUB/+uE/0dioEIP+ZlKdxQzwCObc7gSdqfbVnl9PpqnQtOpi3WY2cSNRyRocSj8GMYr1TTs8hsu1L0EQxs7U7UcssGhNeydPSDS44M4TGjlKMDtl1Eb2WLKxjJnvFI2AEpp5hSpncbG6+m6YyXwT1oQnkdypajU3kJbMrUrIzcfhaB25rVKkcS4ohJQ/V/MXGGKzWQXMXs/gzBIhuPGAs5DCsZVxHx0apkPbfqXrd1T6r3hZW/YxJL/OgZcljuCR/ryL/9hP2K/rqFMbOioDQ5iTzFZV+Of6QK3BP367BzsCWUpsAzDewyDlrQFfy7LfP3BahjHwoPtYSovOdACG5s6nZvV6r9yY0pWtAXuCtt/fYGZNLNHhO/MOcebjqcAal1cA74t4uE6xdl0k0IqoChKKuZcbI="
+skill: 0.022
+archetype: turtle
+leverOffsets:
+  reactionMs: 0.15
+  aimErrorDeg: 0.09
+  cps: -0.89
+  decisionTemperature: 0.5
+  awarenessRadius: 0.28
+  aggression: -1.52
+kits:
+  trooper: 0.97
+  longbow: 0.34
+  rewind: 0.83
+roles:
+  defend: 0.97
+  retake: 0.41
+style:
+  aggression: 0.08
+  patience: 1
+  teamplay: 0.55
+  risk: 0.1
+voice:
+  tone:
+    - polite
+    - cautious
+  verbosity: normal
+  style: "postal announcements and absurd courtesy; unhurried words, conservative estimates and tiny victories"
+lines:
+  greet:
+    - address book sorted, delivery begins
+    - address book is ready. no need to hurry.
+  onKill:
+    - delivered to the correct corner
+    - address book waited for the opening
+  onDeath:
+    - returned to sender
+    - address book should have waited another moment
+  onPlant:
+    - an urgent parcel at the bomb
+    - address book checked the site first
+  onDefuse:
+    - delivery cancelled politely
+    - address book checked the corner twice
+  onWin:
+    - address book delivered the whole round
+    - address book got there eventually
+  onLoss:
+    - the address book took the scenic route
+    - address book needed one more safe corner
+  onLastAlive:
+    - one final delivery to make
+    - the address book will take this slowly
+  taunt:
+    - that push had the wrong address
+    - the address book can wait out that peek
+  lobby:
+    - checking the name on my address book
+    - no unpaid postage in my address book, please
+    - "My address book: I will keep a safe route home."
+    - With my address book, please check the blind corner first.
+quirks:
+  - gapple_hoarder
+  - always_gg
+rivals:
+  - crimsonmaxzil
+bio: Sneaky_Pickaxe delivered handwritten notes between feuding builders in 2014 and still brings an address book to the queue. CrimsonMaxzil keeps asking whether it really helps.
+batch: 3
+retired: false

@@ -1,0 +1,75 @@
+id: xiokjixraven
+name: XiokjixRaven
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NTY2MzQ2OSwKICAicHJvZmlsZUlkIiA6ICJiYTllNWY4YTc0Yzg0MzQ5YjY3ZTg2MzBlMDRmMTI2ZiIsCiAgInByb2ZpbGVOYW1lIiA6ICJhbW9ndXNwYWRvdyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8xZjFlN2EzZmVhNDJjODIzNzU3ZDYzYjczOWUxNTE3ZDg2YTBjZjU2M2I5YzAzMjViOWZjNmQ1MWY4MDc4NmEwIgogICAgfQogIH0KfQ=="
+  signature: "VDtsoAC4rG4+FtQNNgi1oN4BJOKWBbeY/nsh9oVwcus8phF9DocHIXuAtwWWv3EjHxhddwzh7p9SzB86olgtPX3Ucc97se0gzKwcZdfAVQadje7MNjPSZccW5Lw87maNj34cgBgMca6+q4vGCQRJ7cSe/RirmfAIkSNNA5cJOpp+hY+lhEDdLgB64c86ztTrzSfLMCWSNSVfPtLqa58A4XJtRbW05ZJBJmbFCgVjJOhLnqRnEA6tKxk5lEIsqiqWd+BPSbZ0jG2F+UIgOtyb8gFB8lb09S+ZwZSk901qMw9OKbNx1VqG33WphV8hrbVM/5Kc8Cy3jAEL1MfhA2RIoTQ5oR2h4jnLguLrRq45PsLTTRCH9fJ0BVIjjqJO5nvuarQRmdFFHBpRVd8RRzrKKUdGLQysG3Mt89ObOCStzlSaNGrAhzO1zRywxmcZqxTSFa6dD1uO5vC8bhd0mpBoYk8goDiOCmMteX8sV6B5DFk09MoCtT0WFG1Etdsp8/NTgZ+2SX1Po7RY6vn6cDpYVNSADS820B8LQXK9ueRBhChS/HqKWXJmEEKP+hh8xAag1vGG9CG7Ryi/oom6qiQs14PNsA8vlgUjGMaAAJYf/1QiYZq9ObVrm0YuBRQT1Z+naYGVVLWu7F0QgDtQ0uxBRz08uiSZrIrFIzWXWTe4E8k="
+skill: 0.533
+archetype: sniper
+leverOffsets:
+  aimErrorDeg: 1.44
+  turnRateDegPerTick: -0.58
+  cps: -0.77
+  predictionQuality: 1.23
+  awarenessRadius: 0.45
+  technique: -0.46
+  aggression: -0.69
+kits:
+  trooper: 0.16
+  longbow: 0.96
+  shortbow: 0.41
+roles:
+  defend: 0.63
+  rotate: 0.39
+  hunt: 0.55
+style:
+  aggression: 0.34
+  patience: 0.97
+  teamplay: 0.5
+  risk: 0.22
+voice:
+  tone:
+    - practical
+    - focused
+  verbosity: normal
+  style: "carpentry checks and repairable mistakes; short range notes and patient, exact corrections"
+lines:
+  greet:
+    - dovetail guide packed, joints checked
+    - dovetail guide in place, checking the long angle
+  onKill:
+    - that opening needed a wedge
+    - dovetail guide found the range
+  onDeath:
+    - a weak joint in my plan
+    - dovetail guide needed a closer angle
+  onPlant:
+    - the fuse is fitted snugly
+    - dovetail guide covers the far entrance
+  onDefuse:
+    - took that assembly apart
+    - dovetail guide can wait, hands on the fuse
+  onWin:
+    - solid work around the dovetail guide
+    - dovetail guide had a clear view of that
+  onLoss:
+    - back to the bench with my dovetail guide
+    - dovetail guide kept the wrong sight line
+  onLastAlive:
+    - one dovetail guide holding the frame
+    - one dovetail guide, one long angle
+  taunt:
+    - that angle needs a little sanding
+    - the dovetail guide saw that peek twice
+  lobby:
+    - checking the edge on my dovetail guide
+    - my dovetail guide is for repairs after the match
+    - "My dovetail guide: I will cover the long angle."
+    - With my dovetail guide, call the close flank for me.
+quirks:
+  - bow_spammer
+  - always_gg
+rivals:
+  - lucky-waffle
+bio: XiokjixRaven repaired a rickety spawn bridge every weekend and still brings a dovetail guide to the queue. Lucky_Waffle keeps asking whether it really helps.
+batch: 3
+retired: false

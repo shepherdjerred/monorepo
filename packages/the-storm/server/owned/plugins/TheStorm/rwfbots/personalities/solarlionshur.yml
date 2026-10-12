@@ -1,0 +1,75 @@
+id: solarlionshur
+name: SolarLionshur
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTM0MjExNiwKICAicHJvZmlsZUlkIiA6ICJjZjc4YzFkZjE3ZTI0Y2Q5YTIxYmU4NWQ0NDk5ZWE4ZiIsCiAgInByb2ZpbGVOYW1lIiA6ICJBaXJjcmFmdENhcnJpZXI1IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzNkNDQwODU0OGYzOThmYWVjZmYzN2MxZjE1NTBkNjY1MWNmMTgyMmFlYmJlN2I4NzEyMTY4ZjE3ZjlkODI1NCIKICAgIH0KICB9Cn0="
+  signature: "UiF3djKXppzr4+w3ldHpgcYrlOPtTQ6AvZtPV3xxRdmAo1+dl8ABwht26CawGxFTocwu6o/PrT8VIxP1qWDQiHbBXSKkfAmK3hjAQVC64nr9FqZSnBOCYMAMiCAk79SQ29F2sgzN7X1MQyoueZYGOna19G5zLsQs+DAPDofMcnHymoPDNS4u5SPqguhHs8dlE/tqHtKCjYoc7LxXF5QnYxLENT51thx6n7k/HZqIXOthN7XRaAZ3qHV5COdoyDhlorabzPZbNGgaHY1btDP9mNSXPZZaftDjmKIO/6osJUldAQVBJfRgOgdLwfphrv1BCQUQ+nwLr/beIFzP0vwB5WB7KS+XSTrpWLG70eG4Z3GVdpTUziRfi0yXqMIULDNmc1pRaL3FPNYi8OXtb/tJstiJKZ2rMx0XdhG+1SMaRP9UcUaHh37mpzuAOjmYxc+ruVVMxwomjMH5hrMLvS84bjEPDjUKMgkN+aB1ubgaFTU9ZVvXPvp7PUmidWV/zG1DiFRkQSkp0HNig8NrLFbbEkhLnsTwYyOuyEA8nMQ+/KHLEuo3PEP9OuogaInEcd0k5rKxGJyuSbhUNlq2f017KhLiMF2DfOvrgzJtTd3ffoae07CDTBJilWSz/29N9Nw4Gh5susUB5q+gPZpxCjmfTDhAdj3vfjpCSsyhFqHcJuw="
+skill: 0.931
+archetype: anchor
+leverOffsets:
+  reactionMs: 0.54
+  turnRateDegPerTick: 0.44
+  decisionTemperature: -0.6
+  awarenessRadius: 0.48
+  coordination: 0.16
+  aggression: -1.06
+kits:
+  trooper: 0.9
+  longbow: 0.49
+  shortbow: 0.24
+  rewind: 0.31
+roles:
+  plant: 0.2
+  defend: 1
+  retake: 0.76
+style:
+  aggression: 0.28
+  patience: 0.87
+  teamplay: 0.62
+  risk: 0.06
+voice:
+  tone:
+    - measured
+    - grounded
+  verbosity: normal
+  style: "soft beat counts and tiny timing worries; reassuring statements and firm location reports"
+lines:
+  greet:
+    - hour hand is almost on time
+    - hour hand stays here, I have this corner
+  onKill:
+    - right on the hour hand beat
+    - hour hand and corner still secure
+  onDeath:
+    - my hour hand skipped a beat
+    - someone watch the hour hand corner
+  onPlant:
+    - hour hand is counting now
+    - hour hand guards the exit from the site
+  onDefuse:
+    - stopped just before the chime
+    - hour hand is staying by our bomb
+  onWin:
+    - hour hand and team in perfect time
+    - hour hand never left the post
+  onLoss:
+    - my hour hand needs adjusting
+    - hour hand held the wrong corner
+  onLastAlive:
+    - only one hour hand still ticking
+    - the hour hand holds here a little longer
+  taunt:
+    - a little early on that swing
+    - the hour hand has not moved for that push
+  lobby:
+    - listening for the hour hand tick
+    - my hour hand is not a countdown shortcut
+    - "My hour hand: I will guard the home approach."
+    - With my hour hand, call before rotating off defence.
+quirks:
+  - stares_down
+  - always_gg
+rivals:
+  - vivid-raven
+bio: SolarLionshur built a clock tower that chimed one block too early and still brings an hour hand to the queue. Vivid_Raven keeps asking whether it really helps.
+batch: 3
+retired: false

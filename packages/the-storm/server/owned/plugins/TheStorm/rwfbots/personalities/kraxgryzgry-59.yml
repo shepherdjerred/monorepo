@@ -1,0 +1,73 @@
+id: kraxgryzgry-59
+name: Kraxgryzgry_59
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjI3NDA1NCwKICAicHJvZmlsZUlkIiA6ICIyMWUzNjdkNzI1Y2Y0ZTNiYjI2OTJjNGEzMDBhNGRlYiIsCiAgInByb2ZpbGVOYW1lIiA6ICJHZXlzZXJNQyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS80NDAxMTU4NzNjZmI1M2EwM2U4MDVmMjMxM2I0ZTAwY2JjY2I2ZDlhYjMwYzEzMGQwYzgzNTY2ZjVhMWIzZDA1IgogICAgfQogIH0KfQ=="
+  signature: "MVoa1FHGokv4Tm08DAHgbMp1xaVWn7WAeiahiBMxN72qXL4CgNLeFRtdPZt0WxZjJxLEXDFWBQxULkrg2Mv0Zjzpy5IPXp1otLT1g6eY+WuZGoHr4lbdCQLXv8I5v0RKXFOC2ZiupNkb8OVgFjEGnJwPY3JZVIdcjQHPOV77FxIZdz4AI1xhMWfAvNs02IvHbIOlJ+rchSyaMWj4xeyqKOfJ9ZuYM+6q2iCbJW79LfUfRsh1o+wxmtY1MrGNjLl1Spheh7A2kjuJ7PpNq1z+LpTEkA3mHcyViSe70OdWeAyb7YxagZXq8RFbJ59Sb3k/mz8nZ2gNue0ZY6dXOQ6FE0yOZk4aJDU0RNGVPyR1l4Q5x60+rtZicdoFoP1R0GDRGYeBhV0o6g2pee1e7iYobmS+hoQw5VfqIIchgqfxD3MH1+/qz7RL0dxwTpXzylPqiu/+uICAY0E3zcGShgIwg7Z4dWZH7YAFYnPl4qzGVwsFiURedgexykSzJYWULclah2HDji81ZIzj+/xRSBGuMQFnvtA30jqsXrFG3JifoqNcnDqn5ELq58N3KGt85FqsmQ1CcTvJEzSZJrolpsG0D1lnbZkI8SBbtXFkNVM3v3pvH2y2SBQQTtM/9QbZ2bFmRRRO+AJXjCzmOa8yrANqa1M+oi2sDKUhX3gmYnoZyos="
+skill: 0.23
+archetype: duelist
+leverOffsets:
+  reactionMs: 0.05
+  aimErrorDeg: 0.97
+  cps: 1.56
+  coordination: -0.51
+  technique: 1.32
+  aggression: 0.89
+kits:
+  trooper: 1
+  shortbow: 0.4
+roles:
+  escort: 0.37
+  retake: 0.54
+  hunt: 0.97
+style:
+  aggression: 0.96
+  patience: 0.3
+  teamplay: 0.23
+  risk: 0.61
+voice:
+  tone:
+    - playful
+    - competitive
+  verbosity: normal
+  style: "tiny winter expeditions, serious snow forts; brief courteous challenges and honest shot assessments"
+lines:
+  greet:
+    - ice chisel thawed out, ready
+    - ice chisel ready, good fights everyone
+  onKill:
+    - a tidy little snowball effect
+    - good exchange beside the ice chisel
+  onDeath:
+    - slid right out of that plan
+    - fair hit, the ice chisel left that gap
+  onPlant:
+    - a warm spot in the snow
+    - ice chisel earned a moment at the bomb
+  onDefuse:
+    - cooled the bomb right down
+    - ice chisel can settle this at the fuse
+  onWin:
+    - ice chisel has survived the thaw
+    - ice chisel had some good fights today
+  onLoss:
+    - the fort melted around us
+    - ice chisel wants another clean round
+  onLastAlive:
+    - one mitten still waving
+    - one ice chisel, one fair chance
+  taunt:
+    - your footing looked a bit icy
+    - the ice chisel is ready for that peek
+  lobby:
+    - warming my ice chisel by the lobby lamp
+    - please stop hiding my ice chisel in snow
+    - "My ice chisel: I will contest the middle."
+    - With my ice chisel, give the middle fight a clear lane.
+quirks:
+  - good_sport
+  - always_gg
+rivals:
+  - drdakkriol
+bio: Kraxgryzgry_59 built a snow fort that lasted longer than the team inside it and still brings an ice chisel to the queue. DrDakkriol keeps asking whether it really helps.
+batch: 3
+retired: false

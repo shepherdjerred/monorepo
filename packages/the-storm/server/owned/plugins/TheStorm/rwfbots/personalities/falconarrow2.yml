@@ -1,0 +1,74 @@
+id: falconarrow2
+name: FalconArrow2
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTY3NzgwNSwKICAicHJvZmlsZUlkIiA6ICI5ZjJiY2M1M2U4YzM0OTY4YTc5Yzc0NTExYWQ2NmQyYyIsCiAgInByb2ZpbGVOYW1lIiA6ICJLYWJveWlvIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2FhZmI3ZmRhOTFhOWQ2MmFiNDRkNTgzNDUwNWNmMWNlMjQwMWQ3MjhjY2YyZTU3ZGMyMTYyNTczNjEzMGNmZWQiCiAgICB9CiAgfQp9
+  signature: "JcPzVEysojV+RSRidOmtUROmkvB17fasPboErSq51jXwkh1hSYKg33UiFPzyMRh12kurmiGqx+geGttqv7ytRb4mJtevhoHZEJ23opx8qc3dVqebe9RZhBkMknsXGaAdJCWPDi2tgt+pbdEvEKIQH2gztGclgfogyc0nebWUY70LFu9MLvqBSfpt/Bgu7kKTMO9kAmqNsH1HbzYkv/rbjMcxEPZKoqzdvsxt/f9gRkF2aq2Pox1/6pOW5cJM6uMm7XiAGVq46rm0v765VLyhtxOcDM+9OmeM/8aEr/Jdgsykkr2S/dXGiKCV2gQlQu84evDVcKyD0ytB1hh7aeqD2FoITN6nJsvzk1JRc1C9yXEyk5id2A8AYLufKVePXPmsIKQQgfz0jdcOXazVV+4tBCrF15o9lPJnJorOWULOyvTlC9EGGaIvGoSooDRAIVrBvgfL7pDz3guzfa8J/L6ATxJLBhddvq2UtXw2p2LAHT4vctVGq9Te+1vA5bjxIlxVeejY0zI6erTP8kdRmLJWJkTpHrqD6LXbGol5N9n59IXDX8sxts0AKnBMTEQsuA3av5675MUwCR4tV5W0YntTvu+26pI0F9I7aT0W6OxnDwRCPeOVyqUAJOrrW/rRkAOa3KUPHVOGh2XziKNmffDZ2nNuDzr7xEjjr5PX5H1ZfXs="
+skill: 0.868
+archetype: bomb_diver
+leverOffsets:
+  reactionMs: -0.11
+  decisionTemperature: 1.13
+  awarenessRadius: 0.18
+  coordination: 0.16
+  technique: 0.76
+  aggression: -0.12
+kits:
+  trooper: 1
+  shortbow: 0.23
+  rewind: 0.52
+roles:
+  plant: 1
+  escort: 0.38
+  retake: 0.27
+style:
+  aggression: 0.76
+  patience: 0.03
+  teamplay: 0.32
+  risk: 1
+voice:
+  tone:
+    - excitable
+    - urgent
+  verbosity: normal
+  style: "enthusiastic clues and upside-down maps; breathless objective reports, oddly calm at a fuse"
+lines:
+  greet:
+    - cipher disk found, clue understood
+    - cipher disk packed, where is the bomb?
+  onKill:
+    - that corner was the next clue
+    - a clear path for the cipher disk
+  onDeath:
+    - the clue was apparently a trap
+    - cipher disk was one corner from the fuse
+  onPlant:
+    - a very loud treasure chest
+    - "cipher disk is parked beside {bomb}"
+  onDefuse:
+    - solved that little puzzle
+    - "cipher disk and {bomb} can both stay intact"
+  onWin:
+    - cipher disk led us to the prize
+    - cipher disk got the objective done
+  onLoss:
+    - the cipher disk was upside down again
+    - cipher disk took too long reaching the site
+  onLastAlive:
+    - one clue and no hints
+    - the cipher disk still has a fuse to find
+  taunt:
+    - that trail led you in a circle
+    - the cipher disk got closer to your bomb
+  lobby:
+    - does anyone recognise my cipher disk?
+    - the answer is definitely near my cipher disk
+    - "My cipher disk: cover my approach to the bomb."
+    - With my cipher disk, call the safest bomb route.
+quirks:
+  - loves_nuke
+  - always_gg
+rivals:
+  - sirjaixbral
+bio: FalconArrow2 hid tiny treasure chests along the old lobby walking route and still brings a cipher disk to the queue. SirJaixbral keeps asking whether it really helps.
+batch: 3
+retired: false

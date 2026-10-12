@@ -1,0 +1,72 @@
+id: jolly-creeper
+name: Jolly_Creeper
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTkyNzkwOCwKICAicHJvZmlsZUlkIiA6ICJkNjJlNmMwNDYwODc0M2IyOGQzYWM4YTA2NjFhZWFkZSIsCiAgInByb2ZpbGVOYW1lIiA6ICJDYXJ0aXpvbGwiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZDZkZWYxYmRiM2RiNTU5NDY4ZTAyYzZhNmIyYWVhZTA1ODc5ZDNkNDNmYTFlYjA5MzQzOGU4OWU0MDA0YjYwIgogICAgfQogIH0KfQ=="
+  signature: "XjqHNRe7aKSuG9FeUvD7+FlwRFj97kyPfqS1siwmejPFFeb2s3qTmtrO5NOk2Ty23aNHux9VD9nvTO/TUoEe2IiCYcx1iRm3pHL3AAhW/ABZKRAlym3vLsXQ1kwoMJF7DxHFBcdBhnirM8gIrCzJEkgau2O3dkNQXtrZ8XZ1RnYhW1SIc8+PJ7mv4NnV5dMzGsA6E/QgPgAr4nOFGW0mDO+DO8deKPv616WyY8+YmyKrjnIGHC+1fefYL5QZhqL7BiJzvWk6gdBTr6b+VlCJvrAXi7xRXiDLvCSswc6sfgUiCkxvFB96ZKWgCRWFT6wLeRBPwAHxDtNV888pULZS6xE540smGQSX1+UyX3btGjfJ53SPgqEkhYj6qwqCVCGA5EUh5K3ITAHV11FMRQWcIFfyeXsuWibwQnPQFcvBq4nXxqrZzkPzFSuMKYNTmnDv3QQw4xsL0eDEMWgr8EETLBPObnBpGWLNj1Jcj6Hsak0kx5HniYJy9JlDYNEthctlZ2871S3prtB5ifKKyLNZAob44ySWHokyGJo6AUbnkqPWjkRNLyG1LlHSeLFXcVHrTkdAs88ZGVXtHcNtf8G5W4cTAx+kXQ9X/xHJcJfNUaqjtEbLc37IM8M2141HQtR68vuYWJBE8BBv4E0l7y/FoxlPzAjM75f1e7RZObWiaZ8="
+skill: 0.711
+archetype: anchor
+leverOffsets:
+  reactionMs: 0.52
+  aimErrorDeg: -0.41
+  awarenessRadius: 0.75
+  coordination: 0.14
+  aggression: -1.08
+kits:
+  trooper: 1
+  longbow: 0.41
+  rewind: 0.28
+roles:
+  defend: 1
+  retake: 0.6
+style:
+  aggression: 0.39
+  patience: 0.91
+  teamplay: 0.56
+  risk: 0.32
+voice:
+  tone:
+    - airy
+    - grounded
+  verbosity: quiet
+  style: "gusts, tangled metaphors and abrupt turns; reassuring statements and firm location reports"
+lines:
+  greet:
+    - wind pennant caught a good breeze
+    - wind pennant stays here, I have this corner
+  onKill:
+    - a clean lift over that corner
+    - wind pennant and corner still secure
+  onDeath:
+    - my wind pennant met a tree
+    - someone watch the wind pennant corner
+  onPlant:
+    - tying the fuse down securely
+    - wind pennant guards the exit from the site
+  onDefuse:
+    - untangled that in a hurry
+    - wind pennant is staying by our bomb
+  onWin:
+    - wind pennant is flying high
+    - wind pennant never left the post
+  onLoss:
+    - no breeze for the wind pennant today
+    - wind pennant held the wrong corner
+  onLastAlive:
+    - one string still in the air
+    - the wind pennant holds here a little longer
+  taunt:
+    - that push lost its lift
+    - the wind pennant has not moved for that push
+  lobby:
+    - unwinding my wind pennant in the lobby
+    - please step over the wind pennant line
+    - "My wind pennant: I will guard the home approach."
+    - With my wind pennant, call before rotating off defence.
+quirks:
+  - stares_down
+  - always_gg
+rivals:
+  - jollygrostmest
+bio: Jolly_Creeper held kite races from a windy hill above the old map gate and still brings a wind pennant to the queue. JollyGrostmest keeps asking whether it really helps.
+batch: 3
+retired: false

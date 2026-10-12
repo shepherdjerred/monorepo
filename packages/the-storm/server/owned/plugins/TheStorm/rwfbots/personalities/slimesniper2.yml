@@ -1,0 +1,77 @@
+id: slimesniper2
+name: SlimeSniper2
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTk4Nzc4NSwKICAicHJvZmlsZUlkIiA6ICJjODVhZTlmOWJkNTU0YzFmYjk1ZTg3ZDI2Zjg2MGFmNiIsCiAgInByb2ZpbGVOYW1lIiA6ICJTdGV2ZW4xNzUzIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzFkYTM5OTljNzhkM2NhMThlNDkwZWNmZTI2ZjEzOGRiZDgyNWE3ZjFiZWYyMWM5MjQ0Y2ZjZmJjY2ExM2ZkYSIKICAgIH0KICB9Cn0="
+  signature: "OLa1GV9d7UrwnaJqSNB1l7KPoIuakZ7x1FAS087rpEjJG9rnqWky0/0AwfAGbhNNerKqvSgQXpz7axCqrzr1skjk/ibZOINDC5Pz+0wL+CX5zcmFX1Db/CPSlnbM7twDfPQzR8BK1BYbGVCPqPSarqABrvfnbxbKcPqK9hMWiugZ128aMiHxDmYG8Haa0j4SBDiH7ayii4vsOPut+vayECmIVB5i0y/jiPDrryJraF1C3f8fEImD5EkR3ETPTVBOi61W0JHRSmqLrw3CgZ5kvVN06VBh9Kl0J8OrN2G3I6PDrOk+tVty91/5llJoKQ3cCn/+Y8y2fp0atM9DH32NT4o1iQ2gBTfYsl6B0zS+IfjxuHOZgHK7gDKkouWnBOwx9l6H6WpxcP1gRLmbZfWLVwmc7SJ/xf5PbWRI8xsg7tt72ejdzsl599Vf1dlXlNdRPKRB3LFr+rWofQScsuPKf0gkFsyhxIndcthDgFMOZDj76E/beI5wd6Vce0Ly2h3dxCqcJG1oHNn00tzo5yHuFLS1iuNJM+n91H0IFLtnzMXr3jssbYg798xFNvxKGFcdu4jl5T2US67Esiw1ry/SU/aOxi2tV64f2N2JWT7Sh2PnKJW6VE1WKtAvzpNnQ1YQlLVD2bukvfcusjXad1ISOC4/aINH5kkwFB0aQE8bpno="
+skill: 0.25
+archetype: tactician
+leverOffsets:
+  reactionMs: 1.29
+  cps: 0.56
+  predictionQuality: 0.21
+  decisionTemperature: 1.33
+  awarenessRadius: 0.35
+  coordination: 1.9
+kits:
+  trooper: 0.97
+  longbow: 0.44
+  shortbow: 0.54
+  rewind: 0.44
+roles:
+  plant: 0.53
+  escort: 0.48
+  defend: 0.46
+  rotate: 0.58
+  retake: 0.74
+style:
+  aggression: 0.43
+  patience: 0.7
+  teamplay: 0.83
+  risk: 0.39
+voice:
+  tone:
+    - steady
+    - analytical
+  verbosity: quiet
+  style: "buoyancy checks and practical nautical talk; numbered ideas, concise route calls, quick revisions"
+lines:
+  greet:
+    - keel sketch fastened, ready to cast off
+    - keel sketch ready, first route agreed?
+  onKill:
+    - found a gap in that hull
+    - keel sketch confirms a clean opening
+  onDeath:
+    - a little water over the rail
+    - keel sketch needs a revision on that route
+  onPlant:
+    - not a cargo I want to keep
+    - keel sketch confirms the site is reached
+  onDefuse:
+    - unloaded that safely
+    - keel sketch confirms the fuse is clear
+  onWin:
+    - keel sketch brought us back to dock
+    - keel sketch and team followed through
+  onLoss:
+    - the keel sketch voyage met a reef
+    - keel sketch had a missing step
+  onLastAlive:
+    - one hand still at the tiller
+    - keel sketch says there is still a route
+  taunt:
+    - your push is sailing against the wind
+    - the keel sketch predicted that rotation
+  lobby:
+    - tightening the bolts on my keel sketch
+    - keeping the keel sketch dry for the voyage home
+    - "My keel sketch: I will call the first rotation."
+    - With my keel sketch, tell me when a route closes.
+quirks:
+  - calls_everything
+  - always_gg
+rivals:
+  - neoncomet75
+bio: SlimeSniper2 launched a leaky ferry between two rival team docks and still brings a keel sketch to the queue. NeonComet75 keeps asking whether it really helps.
+batch: 3
+retired: false

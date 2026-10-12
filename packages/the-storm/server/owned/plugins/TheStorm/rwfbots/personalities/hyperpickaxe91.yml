@@ -1,0 +1,73 @@
+id: hyperpickaxe91
+name: HyperPickaxe91
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODc4ODYyMiwKICAicHJvZmlsZUlkIiA6ICJhODEzMzJmNjA5MmE0NDQ1Yjk1YzVhZGFjNDA2OTQzYiIsCiAgInByb2ZpbGVOYW1lIiA6ICJTbmFwcHliM2FzdCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8zZTZiNWY2YmE2NjdjZDUzOTg5ZmQ0MmUyOWY2N2Q0NzJjYTJjNzdlNjM2MzQ5MjcwOWEyMjc1OTdlNjEwMWQxIgogICAgfQogIH0KfQ=="
+  signature: "iDwAT7BWgz6wvvoXoz2H2SrGar5go/9dlaAVvutJmJAnDMhSQoGoCgxIPLhpOeCqfprUCbUCwDHAWQpJimBI8W+BXT2Xw8L1zB7+g4dBD2u2LBthMKP5pYiwl+QzNuOGM4o/nCpk/NpAKShmpPjPQLrpF0D9eDkOsX0HSFTf+eYMcM1MdGqmvdD4yKlaUBkIGzt5Gw13DOegFvS2y86GlYt5Q1/NbCMptf1vvX/zXcaFrCxivqbW2uZzVY34hINEq9iIQuNI2diVs5QbDQbKInbv3GWaEve24InGiyPhdI8iIGW1S+M9/uO1zTOhpQNVlqvnHJI1EgQBWfLf53KH7fnwt0oJMBHeQn0p3QZY5HDPCwLn22679wBDJWp8WZpxZ22Ik+JI3r09E80cjytyF9D2+SHNFOplLgJWhr0CJNfoyR2JINFdbJ8862s85vUDb5U3yctkGPRj17IuKxE74I8q4A8h/h0RqeYM8uo0DlpBkWATMk71F65aJmQbpt8AnEObNHRgXBHlBhMACJCy6rMlhKfNwSrru+SRd3qVIRC7KH4LtbW1JzgdirQHYy8AX8n+B9EdHTQXeW+Iq2MB4b/YReJO03//boXJmxqsMNH5RdcGcSNfjyyp10+fPKgfjGRM/lglAeqXfOUHRi6aMGRUBkEOG+P7x6d+qpmnb5w="
+skill: 0.629
+archetype: support
+leverOffsets:
+  cps: -1.39
+  awarenessRadius: 0.29
+  coordination: 2.09
+  aggression: 0.08
+kits:
+  trooper: 1
+  longbow: 0.33
+  rewind: 0.66
+roles:
+  plant: 0.29
+  escort: 1
+  defend: 0.31
+  retake: 0.63
+style:
+  aggression: 0.26
+  patience: 0.58
+  teamplay: 1
+  risk: 0.26
+voice:
+  tone:
+    - watchful
+    - helpful
+  verbosity: normal
+  style: "tired lighthouse bearings, steady reassurance; gentle check-ins, thanks and useful kit reminders"
+lines:
+  greet:
+    - coastal chart checked, coast watched
+    - coastal chart is here, everyone got their kit?
+  onKill:
+    - a clear signal through the fog
+    - one less problem beside the coastal chart
+  onDeath:
+    - lost the light around that bend
+    - sorry, the coastal chart corner is open
+  onPlant:
+    - warning light at the bomb
+    - coastal chart can watch while you plant
+  onDefuse:
+    - warning extinguished
+    - coastal chart is here to help at the fuse
+  onWin:
+    - coastal chart guided us home
+    - coastal chart says everyone helped
+  onLoss:
+    - the coastal chart missed a rock
+    - coastal chart says we can tidy that up
+  onLastAlive:
+    - one light still on the coast
+    - one coastal chart still trying to help
+  taunt:
+    - your approach was visible from shore
+    - the coastal chart brought a team to that corner
+  lobby:
+    - polishing my coastal chart before the round
+    - please leave the coastal chart switched on
+    - "My coastal chart: I will stay close to the push."
+    - With my coastal chart, call if you need an escort.
+quirks:
+  - says_sorry
+  - always_gg
+rivals:
+  - loumvistskouz-76
+bio: HyperPickaxe91 lit a coastal tower so returning builders could find home and still brings a coastal chart to the queue. Loumvistskouz_76 keeps asking whether it really helps.
+batch: 3
+retired: false

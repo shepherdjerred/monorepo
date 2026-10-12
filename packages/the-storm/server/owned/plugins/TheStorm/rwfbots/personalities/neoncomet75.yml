@@ -1,0 +1,72 @@
+id: neoncomet75
+name: NeonComet75
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NTcyODUwMSwKICAicHJvZmlsZUlkIiA6ICJjYmNkNDQzZGE1NTI0OGU3ODM3NWNmZjYwMmQzZWI0NyIsCiAgInByb2ZpbGVOYW1lIiA6ICJPX1JlaSIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9kMTdiYTQwMmM5MmVmZDQxZmM3Mzc0ZWVjODU0NGZkNzljM2QyOGNiYmZiYmY5NDVkYTIxMmZmMzllNGY1MjUwIgogICAgfQogIH0KfQ=="
+  signature: "AIyczCCsfsbMa96T5ccQl3aIzGWbJcn7VNnwLpho8/iwnlBVNGUtntjfJevA5FV0Siy5Hmt9C+4X1ohty7WyAG8yLYeth7yk1kwJeqkFDgM8PbLfWrKYGrAJhPr6qpB/zz27+u1e8KJxx3D6Q5HY2bkXLGMkCUXzD1n/KWwhC/NSFEeDC/7ImgBlwSEJxepQDW4AdDe729y4RrDZ4yt7doPZNUQT+NpP8A3pj0+sfVe//Jexb+xhtE4hFI9wCMku0lwPKnkUkqgtWJbWnrdBdQmUt/i/gjV/iLMpb4qqyqw/APF5AWr3mraW8A4cFh7YoXjwzbACNw7niSgKgjTzyqMJD92daEi6/xWIiLZojLt8QFp0Xu7k5X2xAZyBo951wkgtOXn7X3vWQ0Z5Ff6TpZVSnRNSMgi0tgWIv8vuy8wVdkrvwNNo0bEZGlYpwv8tuS4o3HpHbae6W5D2IEBQkfN5+PSyXIrne7SMRcH1TAPWJYuKrula83tJyFvto08IFyKiTwXCEIhkUTHHZoQLQZGIp/Vol7SSP7GfNScoskzBrNeYaym3VASb5vCnKppd2dAstKW1F2Ye9NYDWNCJ6WJoZp7USpo8AYWcQJ/x2FdvgDolhdGL4HOKQilwyWAwAjwlI72/Fce5i6VLAOGid6RghrCAL1ZDLCTyickjuIo="
+skill: 0.892
+archetype: bomb_diver
+leverOffsets:
+  reactionMs: 0.03
+  cps: -0.09
+  decisionTemperature: 0.5
+  technique: 1.05
+  aggression: -0.6
+kits:
+  trooper: 1
+  shortbow: 0.21
+  rewind: 0.59
+roles:
+  plant: 0.84
+  escort: 0.13
+style:
+  aggression: 0.72
+  patience: 0.02
+  teamplay: 0.33
+  risk: 1
+voice:
+  tone:
+    - curious
+    - urgent
+  verbosity: quiet
+  style: "beach discoveries and understated delight; breathless objective reports, oddly calm at a fuse"
+lines:
+  greet:
+    - tidal pebble brought good luck last time
+    - tidal pebble packed, where is the bomb?
+  onKill:
+    - another find for the shelf
+    - a clear path for the tidal pebble
+  onDeath:
+    - swept away with my tidal pebble
+    - tidal pebble was one corner from the fuse
+  onPlant:
+    - leaving this above the tide line
+    - "tidal pebble is parked beside {bomb}"
+  onDefuse:
+    - picked that up before the tide
+    - "tidal pebble and {bomb} can both stay intact"
+  onWin:
+    - a good day out with my tidal pebble
+    - tidal pebble got the objective done
+  onLoss:
+    - the tide took our round
+    - tidal pebble took too long reaching the site
+  onLastAlive:
+    - just me and my tidal pebble on shore
+    - the tidal pebble still has a fuse to find
+  taunt:
+    - that approach washed straight past
+    - the tidal pebble got closer to your bomb
+  lobby:
+    - found a tidal pebble on the way here
+    - please admire my tidal pebble from a distance
+    - "My tidal pebble: cover my approach to the bomb."
+    - With my tidal pebble, call the safest bomb route.
+quirks:
+  - loves_nuke
+  - always_gg
+rivals:
+  - tirtukphantom
+bio: NeonComet75 filled an old shoreline hut with labelled beach finds and still brings a tidal pebble to the queue. TirtukPhantom keeps asking whether it really helps.
+batch: 3
+retired: false

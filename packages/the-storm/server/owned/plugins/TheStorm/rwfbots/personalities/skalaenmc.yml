@@ -1,0 +1,77 @@
+id: skalaenmc
+name: SkalaenMC
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NTczODQwNywKICAicHJvZmlsZUlkIiA6ICJjZjc4YzFkZjE3ZTI0Y2Q5YTIxYmU4NWQ0NDk5ZWE4ZiIsCiAgInByb2ZpbGVOYW1lIiA6ICJBaXJjcmFmdENhcnJpZXI1IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzIxNjUyNWNkNzc0MThmYWU1NjUxNzY5NWNmMjg2MmEwZGE1YzBiODk5YmU3NGFmMTdlMmM4Yjg5YWUxYzlmNGMiCiAgICB9CiAgfQp9
+  signature: "v0xsbhAc8SgHYtfGqmHffMPnNP379C7W37pDUmrZomqybjs9Ylv6z6LBdYNkEozjJNKMz7IHboizzpn1HVyBryqUuNuP+irROS127unXqTgmVS9BQ665X3Nts9bowv1Z+dEu2+1DshdSd/k1ilXuV2J1h6TU51pMnqHAlWGrilgDnhwtzd6mAsidX0v7NRsM+/L9BenX4n5/iMsHF66MhaiPjWTvPm8uV6G0hwJY1tcxsXtZpgR3ERaSzs+/zzSKVEuwiOqbZE/PizeLle1RSM1Jcv4LaJiAoxCXZttJXc7GnbWqMqEnC+ZkD15oVDi2KJ3Kkm/gr53K51OdFpgFCYj5z0Wz9I2NBfs9nr8d3MZf00xzE8kdvpCMuP9sPi7V2IlkXfwh4FwPwhIU7ju9lcHUcCm/h2q4hLQp4bktyzVjEqkAQmzM1oO6OEfC39Bn7TXAWJc3HJVh0f7nx0uFDCQCVM13YE9aiDCfRuCLol6zdT1xMcsBBmhqyzu+KM3xNlpaDVpkkNbXcSPP+uZ6m8CaB9J9rKneIf9cxh24Zcd0ijQc+DSk/brtkYzlui5diQxdclSGto9sbJcqKvjun1b0vNb0SGRnsis6f0lgmi75NL9MCuG3mGF65iljsBRphyV/D5yIWXmFI+oHAReVNFdb62yVMYYT9lixs0P9HsE="
+skill: 0.367
+archetype: flanker
+leverOffsets:
+  aimErrorDeg: 0.88
+  turnRateDegPerTick: 0.62
+  cps: 0.18
+  predictionQuality: 0.75
+  coordination: -0.29
+  aggression: 0.49
+kits:
+  trooper: 0.57
+  shortbow: 0.93
+  rewind: 0.4
+  wraith: 0.5
+  spy: 0.38
+roles:
+  plant: 0.47
+  rotate: 1
+  retake: 0.13
+  hunt: 0.39
+style:
+  aggression: 0.64
+  patience: 0.34
+  teamplay: 0.28
+  risk: 0.66
+voice:
+  tone:
+    - dreamy
+    - nimble
+  verbosity: normal
+  style: "sky metaphors punctuated by exact callouts; quick side remarks and route changes mid-sentence"
+lines:
+  greet:
+    - constellation card says this is our orbit
+    - constellation card is taking the other entrance
+  onKill:
+    - a little spark beside my constellation card
+    - constellation card found a side door
+  onDeath:
+    - my constellation card did not show that collision
+    - constellation card chose an occupied side door
+  onPlant:
+    - starting a very small eclipse
+    - "constellation card came around the back of {bomb}"
+  onDefuse:
+    - light returns to the bomb
+    - constellation card found a quieter route to the fuse
+  onWin:
+    - a bright mark in my constellation card
+    - constellation card took the long way for a reason
+  onLoss:
+    - a cloudy night for the constellation card
+    - constellation card took the long way for no reason
+  onLastAlive:
+    - one small constellation card in a big sky
+    - one constellation card coming around the edge
+  taunt:
+    - that shot went into another orbit
+    - the constellation card is somewhere to the side
+  lobby:
+    - showing the lobby my constellation card
+    - the ceiling is blocking my constellation card
+    - "My constellation card: I will try the side approach."
+    - With my constellation card, keep them looking forward for me.
+quirks:
+  - crouch_spam
+  - always_gg
+rivals:
+  - tikkrouhd
+bio: SkalaenMC named the roof above spawn an observatory despite owning no telescope and still brings a constellation card to the queue. TikkrouHD keeps asking whether it really helps.
+batch: 3
+retired: false

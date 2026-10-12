@@ -1,0 +1,76 @@
+id: dustypotato32
+name: DustyPotato32
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODYwNzgyMCwKICAicHJvZmlsZUlkIiA6ICI1OWJlOTUyY2EyNjc0OWE4OTM1YmQ5MGQxNmMyN2M4OCIsCiAgInByb2ZpbGVOYW1lIiA6ICJUaGVQZW5zcGlubmV1ciIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8zYWNhYzA5YmNmMzUwMmE4YmI2MjQ5MDcyNmZiNDI2YjA0ZDBhYjNhM2I2MmI2YThhYTRlNzcxM2VlYTFkYTQ3IgogICAgfQogIH0KfQ=="
+  signature: "NA6xeFbsL3VEyNZRB22U9SfrwrrN1HrBGnalGGcMsYNrqmbq2I255ZdnYuI4yXtlLPfs4x0BPJ/uamP+X1RKkAhBRB2faAT2Lr8KxZN+DOGeTGmDOFO+XnxEpSHR6A6fAJ5ghdr8xE1At9h4ks/A1X4BRo6NCJLkQZFPuCn8nnHvZ7veDoqMpjzQQpBum5ANjx/gefRMgqs3s3u3KjECyp9r+O+hFlZsRyNm38N/yA11xZRvHM7nciBLP2cbGS+qUXsEbJZcMWp5uLMs+xrAFmdWetz/ZII99UqTMZyn+jKn6OrqRh6Nsmm5pHBoCHkTJehJKEJ3RQjf321JBcpW/MEsqLY5L1ZcPXX+y/xgEm/5J8SqVK40vj3T8phvm7bagAitEj/1567z9M9BydX3b6CGZhGqEF/iJtkbhmZhOJyuoaNMheJxoZzDxS88F2G7xP6c04hrgMPjWS9nrL7VtORTThgwPszqfkIteEq/nvR7TGAQVe+AcmtqWiYAORO+/k92WA+pmy8xwi2pIljc1QUUH5OOyqFx8G+Hsf/6DwdAgLUoj2Cfp+4aJXAXo1B9ON9C6YyLB4X+aU8hEQlYlAyuu2VmhrTMaCC4cQlw0YbhP5zSE6Ychfd3CFinjzbMS4wKpQFW+iv73QPRcG14ayyEg65h1Itb1bboovUpA18="
+skill: 0.876
+archetype: rusher
+leverOffsets:
+  reactionMs: 0.29
+  cps: 0.89
+  decisionTemperature: 0.53
+  awarenessRadius: -0.51
+  coordination: -0.14
+  aggression: 1.67
+kits:
+  trooper: 0.86
+  longbow: 0.33
+  shortbow: 0.59
+  rewind: 0.33
+roles:
+  plant: 0.93
+  escort: 0.33
+  defend: 0.25
+  hunt: 0.69
+style:
+  aggression: 0.84
+  patience: 0.1
+  teamplay: 0.4
+  risk: 0.79
+voice:
+  tone:
+    - curious
+    - eager
+  verbosity: normal
+  style: "beach discoveries and understated delight; fast fragments, impatient countdowns"
+lines:
+  greet:
+    - striped shell brought good luck last time
+    - striped shell ready, I am taking the first corner
+  onKill:
+    - another find for the shelf
+    - striped shell keeps moving, next corner
+  onDeath:
+    - swept away with my striped shell
+    - a pause for the striped shell, then straight back
+  onPlant:
+    - leaving this above the tide line
+    - striped shell is already on the next approach
+  onDefuse:
+    - picked that up before the tide
+    - quick hands, quick striped shell, clear
+  onWin:
+    - a good day out with my striped shell
+    - striped shell barely stopped all round
+  onLoss:
+    - the tide took our round
+    - striped shell ran ahead of the plan
+  onLastAlive:
+    - just me and my striped shell on shore
+    - my striped shell and I will keep moving
+  taunt:
+    - that approach washed straight past
+    - my striped shell got here before that push
+  lobby:
+    - found a striped shell on the way here
+    - please admire my striped shell from a distance
+    - "My striped shell: first corner is mine."
+    - With my striped shell, please follow after the opening.
+quirks:
+  - bunny_hops
+  - always_gg
+rivals:
+  - neonraekdour
+bio: DustyPotato32 filled an old shoreline hut with labelled beach finds and still brings a striped shell to the queue. NeonRaekdour keeps asking whether it really helps.
+batch: 3
+retired: false

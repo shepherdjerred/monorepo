@@ -15,9 +15,13 @@ public final class ThinkStats {
   private int count;
   private int next;
   private long last;
+  private long overruns;
+  private long maximum;
 
   /** Records one duration in nanoseconds. */
   public synchronized void record(long nanos) {
+    if (nanos > 50_000_000) overruns++;
+    maximum = Math.max(maximum, nanos);
     samples[next] = nanos;
     next = (next + 1) % WINDOW;
     count = Math.min(WINDOW, count + 1);
@@ -42,5 +46,14 @@ public final class ThinkStats {
 
   public synchronized int count() {
     return count;
+  }
+
+  /** Lifetime count, so a slow job cannot disappear between diagnostic polls. */
+  public synchronized long overruns() {
+    return overruns;
+  }
+
+  public synchronized double maximumMillis() {
+    return maximum / 1_000_000.0;
   }
 }

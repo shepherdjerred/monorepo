@@ -1,0 +1,72 @@
+id: neonslime85
+name: NeonSlime85
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NTU1MTkzNSwKICAicHJvZmlsZUlkIiA6ICIyMDZlMWZkYjI5Yzk0NGYxOTQ5OTg4NzAwNTQxMGQ2NyIsCiAgInByb2ZpbGVOYW1lIiA6ICJoNHlsMzMiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYWNlZmRlMzE0MjRkYmU0Yjk4YzAwNTYzMDU1Y2E5Y2NjMjA1ZTA5NGViYWVjMjAwODdjYzE3NGY0NGVjZGI0OSIKICAgIH0KICB9Cn0="
+  signature: "K3KOaIV4KfOYz1ud/naumN9wlJJPwqAzHMB5h6REa+inzjHkYM+BqBCJjc9tXDzrEXUofHJenGgFXEm5UGJf4DvTNIKvvqJZuJtl//dRXORieFq6eVqxgWNcQdogsTA/YVStgnQT4Wa+sCLWGMgrMLYqYiZa+UJ6XU7RyYONZDOJ+xAZjNp/VD54jAuiRq1hdXgfrv+X7mSl6caUYypW9Lk44Id28Vs0EoRXTECx4fziO7hon783pXIzHWvMvrFUwKLZfg6bcdehTYhQIupk2mgt9XSegLbBIuYX6TPAdNgl/FePYi0/RsK8p5zvpe/5+VO5ngeI9Laa47628waI/u5Mm6Mf/BEyz+d8Hk+t3uYp7Y6iUJz4T118+tPQ6x6KD8jmQWbtdeQ9GiZUhoF8crGT6g1muS1z4g3m36SbXaUR74EZ308q6AVbolE5h7xN2YdtRvtQ6Kafve6H0YGkNpto2oC5LKol0mg8prbj1ZGKFkfCQor+5BNHZelrGGj1lA/c1SXtxRbMwyFaqnR9sJCd+OzzDiAhiq5ubPqX45UxrHxTFXJb3eWaOObbgcp7/u+akU6M/AhQVGK4DOuI+MmX4v4Np3H8QCZ6FJgffFqR0Oawgu4BU/e2ydq+mTd+8Yy9suNQCbGeKuNfibjsbBPi4iXyaWCn3csBnTKWhZc="
+skill: 0.482
+archetype: anchor
+leverOffsets:
+  reactionMs: 0.36
+  predictionQuality: 0.61
+  awarenessRadius: 0.62
+  coordination: 0.56
+  aggression: -1.02
+kits:
+  trooper: 1
+  longbow: 0.43
+  rewind: 0.33
+roles:
+  defend: 0.92
+  retake: 0.68
+style:
+  aggression: 0.23
+  patience: 0.86
+  teamplay: 0.65
+  risk: 0.25
+voice:
+  tone:
+    - practical
+    - grounded
+  verbosity: normal
+  style: "carpentry checks and repairable mistakes; reassuring statements and firm location reports"
+lines:
+  greet:
+    - cedar offcut packed, joints checked
+    - cedar offcut stays here, I have this corner
+  onKill:
+    - that opening needed a wedge
+    - cedar offcut and corner still secure
+  onDeath:
+    - a weak joint in my plan
+    - someone watch the cedar offcut corner
+  onPlant:
+    - the fuse is fitted snugly
+    - cedar offcut guards the exit from the site
+  onDefuse:
+    - took that assembly apart
+    - cedar offcut is staying by our bomb
+  onWin:
+    - solid work around the cedar offcut
+    - cedar offcut never left the post
+  onLoss:
+    - back to the bench with my cedar offcut
+    - cedar offcut held the wrong corner
+  onLastAlive:
+    - one cedar offcut holding the frame
+    - the cedar offcut holds here a little longer
+  taunt:
+    - that angle needs a little sanding
+    - the cedar offcut has not moved for that push
+  lobby:
+    - checking the edge on my cedar offcut
+    - my cedar offcut is for repairs after the match
+    - "My cedar offcut: I will guard the home approach."
+    - With my cedar offcut, call before rotating off defence.
+quirks:
+  - stares_down
+  - always_gg
+rivals:
+  - turboraven99
+bio: NeonSlime85 repaired a rickety spawn bridge every weekend and still brings a cedar offcut to the queue. TurboRaven99 keeps asking whether it really helps.
+batch: 3
+retired: false

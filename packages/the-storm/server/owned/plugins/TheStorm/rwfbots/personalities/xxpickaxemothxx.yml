@@ -1,0 +1,74 @@
+id: xxpickaxemothxx
+name: xXPickaxeMothXx
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTY3NTU5NywKICAicHJvZmlsZUlkIiA6ICI0MGVkMTc3OWE1YjY0M2QzYmI3Yzk3NzYwOTEyODIzMSIsCiAgInByb2ZpbGVOYW1lIiA6ICJjYW1lcmEwMiIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9jOTQ4NGFhNDAzMWQwYWMyZjJmOTA0MDlhZDdjZTIwN2Q4OGM4MzllMjZiODBjODViMGFiN2IyYjZlOGYyOGExIgogICAgfQogIH0KfQ=="
+  signature: "Xc6LKPvh9cx9sTj7FZCaR+ucXKLiRxgQG+Ap2KkHsZZcsAIvhZ19WdEl/Lgom/qMBCXCQnbWulJJonOF2vsx6vXxSU5eFm6tzpYsDgTsvm/4nCoClf6S0GGLXlM7kblnDIEpUVXz+7j+SOFH6qgSe5HZCOHBXu/ymOgrQHuxY4n7JUdFqBa4bKcs0QqfgAL7DyZRUPv3JUlATSdN3ruKk75S13oGnnolMxb20kJ5/T1BYFnOOtfvO3pW+sbHj6kgZIJoz9Ni1G/F2JXRYwXmz8i6V4qCCYTTR9WLZiN2aE3pyodbXoY+NbsVa52VqN3rla6bvmDHWgqExhUo8p35TVbW7bWaLdPkhcPSwVdPlAAxbR0u0b4Xga8uaK+FQ8R9eHuphs8ZRcEJzpxFDQy9dQvO+96EkaCqwggZYeTJr34CosgAybX9S0qFDpwYP0dYkG1pzZE+JP+TNHI6o1HBUotYmL8Dkf6ogrk0EI3wDWMmbLUNppAaHeL1DmZsbaEHApsCbDG7ek9Ut6jM6tdfkxpJ+zbVNa4Huqs0qH2Wz6AUWyFKAqjJ+Ln2Q7dKYYZ1X1FEyq5mdbs+lhQAkeHijDt1PrrdK0LS8OsuHvKdQkbk82AM6EB4z/u0Q+/Wkbn1P2cOQTNRIvRlqyJdga6eMF/nG+CKUoGdbVv5Rtze4Ns="
+skill: 0.448
+archetype: troll
+leverOffsets:
+  decisionTemperature: -2.45
+  awarenessRadius: 0.35
+  coordination: -1.51
+  technique: 0.56
+kits:
+  trooper: 0.5
+  shortbow: 0.65
+  rewind: 0.85
+  spy: 0.86
+roles:
+  plant: 0.51
+  escort: 0.16
+  rotate: 0.42
+  hunt: 0.56
+style:
+  aggression: 0.49
+  patience: 0.29
+  teamplay: 0.14
+  risk: 0.98
+voice:
+  tone:
+    - earnest
+    - mischievous
+  verbosity: quiet
+  style: "museum labels for even embarrassing plays; deadpan object conversations and harmless overconfidence"
+lines:
+  greet:
+    - museum ticket prepared, exhibit opening
+    - museum ticket has appointed itself captain
+  onKill:
+    - a fascinating example of an opening
+    - museum ticket is now insufferably proud
+  onDeath:
+    - please do not put that in the exhibit
+    - museum ticket would like a different replay
+  onPlant:
+    - a short-lived interactive exhibit
+    - museum ticket calls this interior decorating
+  onDefuse:
+    - preserved the team instead
+    - museum ticket says it knew the correct wire
+  onWin:
+    - museum ticket has a new story
+    - museum ticket is requesting a trophy shelf
+  onLoss:
+    - a cautionary exhibit for the museum ticket
+    - museum ticket has misplaced the blame form
+  onLastAlive:
+    - the last visitor in the gallery
+    - museum ticket insists this was the plan
+  taunt:
+    - your approach belongs in the archives
+    - the museum ticket gave that push three out of ten
+  lobby:
+    - please look without touching my museum ticket
+    - writing a new label for my museum ticket
+    - "My museum ticket: I will cause a useful distraction."
+    - With my museum ticket, try not to laugh during my push.
+quirks:
+  - celebrates_early
+  - always_gg
+rivals:
+  - lillistxiomzior
+bio: xXPickaxeMothXx opened a one-room museum for abandoned arena souvenirs and still brings a museum ticket to the queue. LilListxiomzior keeps asking whether it really helps.
+batch: 3
+retired: false

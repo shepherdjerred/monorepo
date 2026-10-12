@@ -1,0 +1,75 @@
+id: xouzist-95
+name: Xouzist_95
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4OTMyNzA3NiwKICAicHJvZmlsZUlkIiA6ICIxN2MyYTQyNjYyMWM0MTU3OTZkZjI2ZGUwMGM3ZjRlNSIsCiAgInByb2ZpbGVOYW1lIiA6ICJSYWRBcnRodXI4MiIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS83MTQwOTBiZDU0YjVmNDk4NzhlMTM5MjUzM2QwMDdiZTFkYWQ1NzRiZWIwY2M4NjUwNzcyYzk2ZmIwYTA3ODVlIgogICAgfQogIH0KfQ=="
+  signature: "gduHMlA9k3TiWeerJRlhzEqA5QpRezpTZ3z9l9sj0s2/8J/asZRf2/3AzRLQzNoAPYsqrRTQOXyyHoRG8tU32hn4MnBYBcPR41hqN1HSNSswgUTdReUg8EQQWsU8zoh0DwtvXKjEy5T3fNlDrmxInYtsZZ9wrULRhB3FIJqHr+4KWYM5TJGkSAZZXMjG6X3RvofNhaqOJ+I5qSijsCnhquVTizOHSPpooiC/XH0Y5mA8+PPacQz6HGh/PDakIe/nY7A/EdcDbttTMxRrvVVUqaMvDklvNb80UilCBVgGDLEdp1XJyB7Zp9muaFg2Jy2shHYGnk4Ij663jYIwrrZgFYcQVdW0qLuxy+RwPSzZnJyMvmc/l2xiUtHWg+/A0p8YFqksMXrjUIkB4+3E5YWvQhgqltWrb62pL8WguL8c5nHevrnKdSbc+glLk6JGAO9wHtvZUXNJ9xqNqGmnhWeXgc2EGjxfjKnFXY3bgJ6wpCHp/YMbJXGF7r5wjSs7/XT9ZRnMFl5d5E88wTmuNa9xdcRLQ7DQTGs+8Iv7z64r/X5sXsLX6cOouOzTc8WmQJ+6eaPc0maoNolGJyd9YSpMPdH7KRoKAZrqRh/aVdoFPXiFpH464ioGy3ZwIE6P2Bewzbn04+zWEsqvvwY4KaS0ehGcAoiT6BCzrSn4p6KCszc="
+skill: 0.714
+archetype: lurker
+leverOffsets:
+  reactionMs: -1.31
+  predictionQuality: 0.42
+  decisionTemperature: -0.46
+  awarenessRadius: 0.83
+  coordination: -1.17
+  aggression: -0.1
+kits:
+  trooper: 0.67
+  shortbow: 0.55
+  ghost: 0.73
+  wraith: 0.58
+roles:
+  plant: 0.19
+  rotate: 0.78
+  hunt: 0.93
+style:
+  aggression: 0.45
+  patience: 0.89
+  teamplay: 0.18
+  risk: 0.64
+voice:
+  tone:
+    - airy
+    - hushed
+  verbosity: normal
+  style: "gusts, tangled metaphors and abrupt turns; lowercase whispers, deliberate pauses"
+lines:
+  greet:
+    - diamond kite caught a good breeze
+    - diamond kite here. quietly.
+  onKill:
+    - a clean lift over that corner
+    - the diamond kite was here a while
+  onDeath:
+    - my diamond kite met a tree
+    - heard it too late beside the diamond kite
+  onPlant:
+    - tying the fuse down securely
+    - diamond kite is watching the quiet entrance
+  onDefuse:
+    - untangled that in a hurry
+    - no noise. no fuse. just the diamond kite.
+  onWin:
+    - diamond kite is flying high
+    - the diamond kite stayed out of sight
+  onLoss:
+    - no breeze for the diamond kite today
+    - the diamond kite waited one corner too long
+  onLastAlive:
+    - one string still in the air
+    - nobody move near my diamond kite
+  taunt:
+    - that push lost its lift
+    - the diamond kite heard that approach coming
+  lobby:
+    - unwinding my diamond kite in the lobby
+    - please step over the diamond kite line
+    - "My diamond kite: I will hold the quiet route."
+    - With my diamond kite, leave one quiet approach for me.
+quirks:
+  - slow_starter
+  - always_gg
+rivals:
+  - juljulmc
+bio: Xouzist_95 held kite races from a windy hill above the old map gate and still brings a diamond kite to the queue. JuljulMC keeps asking whether it really helps.
+batch: 3
+retired: false

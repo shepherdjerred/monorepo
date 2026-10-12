@@ -1,0 +1,74 @@
+id: solarsniper64
+name: SolarSniper64
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NTYyNzM1NywKICAicHJvZmlsZUlkIiA6ICJmZDIwMGYwMDE4OTI0NzgxODI5OWIzZjE5Yzc4Y2E3MSIsCiAgInByb2ZpbGVOYW1lIiA6ICJ0dXNnIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzFmYmQ2ZWQ2NTJiN2M1MjYxZWJiNGQ1NzE1YjAzZjU0MmNiYTE3NDNiMGE1MWRhOTYxMDJmZDQ4NWY4MmY4ZGYiCiAgICB9CiAgfQp9
+  signature: "m3k2yVhtj32L5k9WamBpRt8otRMWmhtW8ySfQLrqAY2XKZjloE5KDFlRxSJa0viCsSq3mrGTuh/sNbiOrlHcOaYufOWd330GRwMigb3vx/XLS8WUO1r0NTGr7Mb1FWo3vrjYRPZxotFPiVz3z4ZepHHVweKIUge/hDn78PToYgPiHNGaBIRcPY604qq4igdp1Q9OQkcHSdEbbej2ayb7YTAtVeUwr5oAjmyGaF7DvFMG/68A3K/5bb89Hu/foY7rvsu0GP0RoM1uvWOikeSn8RQGdJXEUbW49Bm9wgk09Kty4TutvYfakRMOoyTX96p4XopC7n9MqTRYMNi+RaaUuHemrEZKyi2xB7/Dcn7SeEN61egwhm38MdIETSE0n8cSU84DLR7a9TJHHNooJb4xGlGtqYkQ6HLQJSoRsMG0HGUgAfWcNPpl9Jzhj/hRc6P9tAxcSWCZznBrQZQC98xkMwMWBUpaXJlkP9fw47++J6sf1ozGIyaxuzJ+INy9KKRp9oENnAgvZJwpC/EXVsLFzKp90jA1yJqOu21ggTzdlzTUmsDNKnGJH1oG8iZcELs1luVloAebsNKGXvXMmnqQAi4eBOb57DeLkcKmIx5RNBspUtjC8a7PVRdZnP0atDYVZa5RMStifMmEj/dMLuDJ+4IuU0B1twa1zBdNL2GXwis="
+skill: 0.905
+archetype: turtle
+leverOffsets:
+  reactionMs: 0.45
+  decisionTemperature: 0.61
+  awarenessRadius: 0.45
+  coordination: -0.37
+  aggression: -2.09
+kits:
+  trooper: 0.86
+  longbow: 0.26
+  shortbow: 0.34
+  rewind: 0.87
+roles:
+  escort: 0.29
+  defend: 0.96
+  retake: 0.46
+style:
+  aggression: 0.07
+  patience: 0.85
+  teamplay: 0.53
+  risk: 0.13
+voice:
+  tone:
+    - theatrical
+    - cautious
+  verbosity: normal
+  style: "backstage whispers and hurried scene changes; unhurried words, conservative estimates and tiny victories"
+lines:
+  greet:
+    - scenery brush in place, curtain soon
+    - scenery brush is ready. no need to hurry.
+  onKill:
+    - a quick scene change for the scenery brush
+    - scenery brush waited for the opening
+  onDeath:
+    - missed my cue by a whole scene
+    - scenery brush should have waited another moment
+  onPlant:
+    - cue the dramatic ticking
+    - scenery brush checked the site first
+  onDefuse:
+    - cut that effect, safely
+    - scenery brush checked the corner twice
+  onWin:
+    - take a bow beside the scenery brush
+    - scenery brush got there eventually
+  onLoss:
+    - the scenery brush needs a better rehearsal
+    - scenery brush needed one more safe corner
+  onLastAlive:
+    - one performer, one scenery brush
+    - the scenery brush will take this slowly
+  taunt:
+    - your entrance was a bit loud
+    - the scenery brush can wait out that peek
+  lobby:
+    - has anyone seen the scenery brush?
+    - do not lean on the painted scenery brush
+    - "My scenery brush: I will keep a safe route home."
+    - With my scenery brush, please check the blind corner first.
+quirks:
+  - gapple_hoarder
+  - always_gg
+rivals:
+  - xxpickaxemothxx
+bio: SolarSniper64 worked the curtains at a player-built theatre between duels and still brings a scenery brush to the queue. xXPickaxeMothXx keeps asking whether it really helps.
+batch: 3
+retired: false

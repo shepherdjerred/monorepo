@@ -1,0 +1,75 @@
+id: xxmothblazexx
+name: xXMothBlazeXx
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4OTI4ODMzNCwKICAicHJvZmlsZUlkIiA6ICI4MjYxOGI1ZjhhMzA0Njg2YTkyMTM2ZDcxZTlhZDkyMSIsCiAgInByb2ZpbGVOYW1lIiA6ICIxZXRobyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9kMWE4ZGFlNDIxZDYzNzQ4OTQ4MzU0MTFiYjUxMzc0M2ZmMDFhM2IxY2VjNDE1OGNkZDRjNjRkM2M5MGVhM2RhIgogICAgfQogIH0KfQ=="
+  signature: "c7odn2ZMxPINxYv6j85bKOGMyXfYlL1CjEMwW5+QCh5uh4viDgbQSCUcFD6g8spv6PSLKOS+IZJvn8URIablF0UAfgSWzTctVBt0TeBDeaPkJJG+TyByPaH22ScFBEOnJgNZwljOWAvVCCpNXbTS2Z1o9z89kzutYwGiUhFbXvPYVyJpTz1Yvxo7W/5vq0GMbkDMXYv12vSVDuCzMkPcATO3kj4mnfT0UaTqTcUmCy/tAsfswWUz2zthg794wmVBN306cnJQ8TLdk43pawryutk4dsDfHNVCDOsvXl67Bmh0TovvXV7XytC30KIDnPgZdGDxhF71BYdZT+nKmr/j4qxyEbuRqhncb6mtiRrSRQL4sdaqXco1g0vubKB0HHwoUtbi9tgbafsIRz+u6Jb14IWtMOPN/G4wLONYV2n8+G8VpReHGkxB2dad/G7iU+HhnaDAfW1QeV3v+XgrDBmFTOwBx6LIOOpsdZFafkqYY0svxWmCDucqRRO0g0qgCH+lHt5SPivkcYxYSyAO09r9oNs3908pr7dSw6MfEsV8dvqZi0P/P/W3oAxNVMmcAY9vv9W6EWqDjYjS+k4bknTvp2ZYtpZ9wbTTekxHcwuD7ommwaVIrtd7FGvVL1IHNXUBZDTM7cx9DnhPXJBruJt6hF7TRAgydg+ViJdD10aB7Dw="
+skill: 0.282
+archetype: troll
+leverOffsets:
+  aimErrorDeg: 0.61
+  cps: 0.05
+  decisionTemperature: -2.32
+  coordination: -1.21
+  technique: 0.4
+kits:
+  trooper: 0.54
+  shortbow: 0.79
+  rewind: 0.94
+  spy: 0.88
+roles:
+  plant: 0.44
+  escort: 0.41
+  rotate: 0.46
+  hunt: 0.58
+style:
+  aggression: 0.59
+  patience: 0.2
+  teamplay: 0.01
+  risk: 0.88
+voice:
+  tone:
+    - airy
+    - mischievous
+  verbosity: normal
+  style: "gusts, tangled metaphors and abrupt turns; deadpan object conversations and harmless overconfidence"
+lines:
+  greet:
+    - cloth windsail caught a good breeze
+    - cloth windsail has appointed itself captain
+  onKill:
+    - a clean lift over that corner
+    - cloth windsail is now insufferably proud
+  onDeath:
+    - my cloth windsail met a tree
+    - cloth windsail would like a different replay
+  onPlant:
+    - tying the fuse down securely
+    - cloth windsail calls this interior decorating
+  onDefuse:
+    - untangled that in a hurry
+    - cloth windsail says it knew the correct wire
+  onWin:
+    - cloth windsail is flying high
+    - cloth windsail is requesting a trophy shelf
+  onLoss:
+    - no breeze for the cloth windsail today
+    - cloth windsail has misplaced the blame form
+  onLastAlive:
+    - one string still in the air
+    - cloth windsail insists this was the plan
+  taunt:
+    - that push lost its lift
+    - the cloth windsail gave that push three out of ten
+  lobby:
+    - unwinding my cloth windsail in the lobby
+    - please step over the cloth windsail line
+    - "My cloth windsail: I will cause a useful distraction."
+    - With my cloth windsail, try not to laugh during my push.
+quirks:
+  - celebrates_early
+  - always_gg
+rivals:
+  - thukjoushjoztv
+bio: xXMothBlazeXx held kite races from a windy hill above the old map gate and still brings a cloth windsail to the queue. ThukjoushjozTV keeps asking whether it really helps.
+batch: 3
+retired: false

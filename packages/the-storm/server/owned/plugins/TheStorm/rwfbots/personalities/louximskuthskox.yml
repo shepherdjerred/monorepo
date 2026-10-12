@@ -1,0 +1,75 @@
+id: louximskuthskox
+name: Louximskuthskox
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTQxNDIzMywKICAicHJvZmlsZUlkIiA6ICIxN2MyYTQyNjYyMWM0MTU3OTZkZjI2ZGUwMGM3ZjRlNSIsCiAgInByb2ZpbGVOYW1lIiA6ICJSYWRBcnRodXI4MiIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS84MDM1MWFlY2RjYjJmMDYxZGVjOWM2ZTk0MWRkYmExOTlkZTMxNmEwNjdkNTk4Nzc4ZjAwMzg0MmY4NTViMGY2IgogICAgfQogIH0KfQ=="
+  signature: "SKlnCtCVzXlZquI4yDCiDXbZvQcblJEhyJpiC4zc4OQBGE1c8lexqdRGVNsF9s9CuFYNZftMbxWFZtJKlBxPcn2+bJawkltvdWnC4RMjXuBjmx8rXT9OlbTDMgaKClriPmmBWeOOjNP6x7trwnVXLE8Y1cFg6fgMS1KZHi06KwqTxSvhYrcO5hjIWnCirujYY55qeU31S45lK+VoIRiBvXcMJIghazKe9aeQLaVi9OiayOqraK7W2CIkYNspX2nzJsN7ogsh//7EEM529nNFerpZyA/iEF5EVAqko8ynhN/chenvOfqxgU3IcZ0ijK/tuHqj5uSIZldZ/xFkZiOyJ5xx8JLcYyV7oVgdDQNqeRYevX6KD1qCfBZiraZtKYjswZ/joeFjHkZ96A8lLf40vMNbYHpdZ9tC8V8BhH7B8nRV2YXJsL25Y1OTITKqD7ccWDQCMO1m3faRGdLcv/vynw4wHUZyJgF1QDb9kt8nvPnax3AtSuzZ5RG2//83g/M+e73eukyfzqgG/XwuXw44HZIAFWVeawGPKXOw5AFE2GwESKHIEntN/+nirb9kxIIvtbHmFD2OTP1Da0LjGa5KDe9LIMh9Mebg8OLSf+98+Wc9euCI/Kk9TG8NAOqiRRQbAnCSdTj5+fJF4X+Gks+YNAbMbtDy5fZv4VxHXjEE5HI="
+skill: 0.064
+archetype: lurker
+leverOffsets:
+  aimErrorDeg: 0.24
+  turnRateDegPerTick: -0.4
+  predictionQuality: 0.28
+  awarenessRadius: 1.51
+  coordination: -1.57
+  aggression: -0.51
+kits:
+  trooper: 0.74
+  shortbow: 0.69
+  ghost: 0.82
+  wraith: 0.52
+roles:
+  plant: 0.13
+  rotate: 0.74
+  hunt: 0.75
+style:
+  aggression: 0.48
+  patience: 0.91
+  teamplay: 0.13
+  risk: 0.67
+voice:
+  tone:
+    - brisk
+    - hushed
+  verbosity: chatty
+  style: "absurdly serious station announcements; lowercase whispers, deliberate pauses"
+lines:
+  greet:
+    - ticket punch checked, service departing
+    - ticket punch here. quietly.
+  onKill:
+    - one less delay for my ticket punch
+    - the ticket punch was here a while
+  onDeath:
+    - my ticket punch reports a cancelled service
+    - heard it too late beside the ticket punch
+  onPlant:
+    - last departure from this platform
+    - ticket punch is watching the quiet entrance
+  onDefuse:
+    - service restored on this line
+    - no noise. no fuse. just the ticket punch.
+  onWin:
+    - ticket punch reports arrival on schedule
+    - the ticket punch stayed out of sight
+  onLoss:
+    - wrong platform for my ticket punch
+    - the ticket punch waited one corner too long
+  onLastAlive:
+    - last service, just my ticket punch
+    - nobody move near my ticket punch
+  taunt:
+    - your connection left a moment ago
+    - the ticket punch heard that approach coming
+  lobby:
+    - please queue beside my ticket punch
+    - my ticket punch says the lobby service is delayed
+    - "My ticket punch: I will hold the quiet route."
+    - With my ticket punch, leave one quiet approach for me.
+quirks:
+  - slow_starter
+  - always_gg
+rivals:
+  - turborider74
+bio: Louximskuthskox linked three friends bases with an unnecessarily elaborate minecart line and still brings a ticket punch to the queue. TurboRider74 keeps asking whether it really helps.
+batch: 3
+retired: false

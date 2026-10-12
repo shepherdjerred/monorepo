@@ -1,0 +1,75 @@
+id: lunarphantom16
+name: LunarPhantom16
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODUyMzY3MywKICAicHJvZmlsZUlkIiA6ICI2NDEwZjRiZjMwNDU0OTdmODBjZDI4NWIyYmJiNTk5NSIsCiAgInByb2ZpbGVOYW1lIiA6ICJNaW5lU2tpbl8xNSIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS81ZGU1YWNkYWQwMmNlYWZiZWY5ZTFiNzAyMzQ4ZWY4MzhlNTNjZmE2ZjBjY2Q3ZTE5ZDI1ODhjMTIzYjA0MjMyIgogICAgfQogIH0KfQ=="
+  signature: "O+mUHC0mHkyKf09LBtT7a9iFiF2qbiGE1BX6WUI3L5hndtI8rQ2njS5xi0dEpOOY5GgeVwMSyEOCaBeJ8l3GVeJX248I5SZ+p7C8Tzj0nm4/jQqaljwOxFF+MtgwoSDL8ovGcPHNEfpy34qLUiMqyHHnpNjzaAk/sVYeICUXtZmCevaMvwcX3VHimu+dUnyTiNzsxRiuRiZqX53n1b6WBkgPEhelwpLPr8Aw7HBClfaircvBKILTgP4eIEwv/ylqAM8UufFgar90r0PKTLhpsC96gYDzVBFFGaLlPDz+IJMvKfaLQNI3PO1SyTo0S+IZgtdz/M8+DO7jXG+7/y5506TZqmRlFj0dwlEl7z9ixpGJH/dK1QQW1pMfP13KzTz70iz6qvVlMgTaSghaHJXJ1SY1r208yjqfCoPzSwqgq2O+oLCQS6C3erD3HLqQX3XSqHMtgaL4HySV/0ts1aTmH0ScStoPfo+Y/vd47mCIR2PupnsraOasG2mQYWZ0e0NLTNbxLIFlHhl1LTZjie+us4wxO3CvRRVEQBZT8h6VC8yaefNQpPMNqBsDhxjDHtY8735o7CkQzvtU3XeL2N1TJgNRRn+I0goYQVgdJs84b43sXPCB/DtvjT0jJ5PujC/ROXyJG9w5CLpDP4/uuCOm6qFv83I7huHdyz6QNgeHnN4="
+skill: 0.43
+archetype: rusher
+leverOffsets:
+  reactionMs: 0.77
+  cps: 0.78
+  decisionTemperature: 0.13
+  awarenessRadius: -0.53
+  technique: -1
+  aggression: 1.45
+kits:
+  trooper: 0.98
+  shortbow: 0.63
+  rewind: 0.27
+roles:
+  plant: 0.77
+  escort: 0.52
+  defend: 0.2
+  hunt: 0.75
+style:
+  aggression: 0.9
+  patience: 0.08
+  teamplay: 0.37
+  risk: 0.74
+voice:
+  tone:
+    - dreamy
+    - eager
+  verbosity: quiet
+  style: "sky metaphors punctuated by exact callouts; fast fragments, impatient countdowns"
+lines:
+  greet:
+    - star chart says this is our orbit
+    - star chart ready, I am taking the first corner
+  onKill:
+    - a little spark beside my star chart
+    - star chart keeps moving, next corner
+  onDeath:
+    - my star chart did not show that collision
+    - a pause for the star chart, then straight back
+  onPlant:
+    - starting a very small eclipse
+    - star chart is already on the next approach
+  onDefuse:
+    - light returns to the bomb
+    - quick hands, quick star chart, clear
+  onWin:
+    - a bright mark in my star chart
+    - star chart barely stopped all round
+  onLoss:
+    - a cloudy night for the star chart
+    - star chart ran ahead of the plan
+  onLastAlive:
+    - one small star chart in a big sky
+    - my star chart and I will keep moving
+  taunt:
+    - that shot went into another orbit
+    - my star chart got here before that push
+  lobby:
+    - showing the lobby my star chart
+    - the ceiling is blocking my star chart
+    - "My star chart: first corner is mine."
+    - With my star chart, please follow after the opening.
+quirks:
+  - bunny_hops
+  - always_gg
+rivals:
+  - cobaltsniper21
+bio: LunarPhantom16 named the roof above spawn an observatory despite owning no telescope and still brings a star chart to the queue. CobaltSniper21 keeps asking whether it really helps.
+batch: 3
+retired: false

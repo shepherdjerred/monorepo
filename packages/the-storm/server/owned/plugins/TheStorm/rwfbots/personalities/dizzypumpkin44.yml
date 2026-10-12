@@ -1,0 +1,72 @@
+id: dizzypumpkin44
+name: DizzyPumpkin44
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTMyOTI4NiwKICAicHJvZmlsZUlkIiA6ICJjYmNkNDQzZGE1NTI0OGU3ODM3NWNmZjYwMmQzZWI0NyIsCiAgInByb2ZpbGVOYW1lIiA6ICJPX1JlaSIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS82NjkxZDJhMjQ5ZjU3OTI2Y2U3YzQyYzJmNzRjN2U3Nzk1MGU2YjI2OTFhYmUxZTdhM2ZlZjdiMTE1NjY5ZWI4IgogICAgfQogIH0KfQ=="
+  signature: "RnHbZDyCDtD/XStokkXMfPbDhwu9w+rb6FBwUSUPm9u2rUg70B0LUH2FKSej5ubSA3BUPfdYd8dFx32/HiFVhKzc56Jv6OD9KD9A2J60z8meXBkLhqC8/ao2JbqHfYscuAgWo7FpLkP7BklzEMDV6TvcCyMFBEyQzjpq4JX57SYZrN1nxlLhmuf8wsrgQXs0DX4ArmJT7+wH7smZkqbb0sbHPDh9GYgRvyMP5LuH+R0AjNIHuFeSlNrRDZcaL+kuHmdRl2MTSf2Lz9FV3zfSzzUkp7AWh9O9D2GucH6sqh2JqON9p3ndpj0h0DvSGyeBDtlo6uJiKOkR5UIeSqckPhnwVytMF/A3j6pVO9IWlapbH5ra1jEcp59H6Qb8BK0EH+SD9YB+MCoy5Zl7Nm/Vw9L8gtYRnCuLUGzoEPC7M2r4dfw1yxJYB/pO27FFUYQJmex+ynS8BC9At9sqEqqkPEIl9N6MS4v8DTOOIgShfhr4s+c/V+MLmA44mQruo9WDcBmtn7dRkNxKdD11Sy+HsOyc0JgrLidqhrPZUtOWULCXfuCumdhqSl7Go7LNykOeCivu8MCzVuU6uY80LDz18Av7ER6VInWeFcS6Mn26Gt6N1VDYfLPQo0Z6z0GSBLPWkovLf0VhauTVt28buGsK8F8JcoCtiq5QiDYWcl314Sg="
+skill: 0.268
+archetype: hunter
+leverOffsets:
+  turnRateDegPerTick: 0.89
+  predictionQuality: 1.28
+  decisionTemperature: -0.16
+  awarenessRadius: 1.13
+  aggression: 0.74
+kits:
+  trooper: 0.66
+  longbow: 0.44
+  shortbow: 0.91
+roles:
+  rotate: 0.57
+  hunt: 0.99
+style:
+  aggression: 0.64
+  patience: 0.48
+  teamplay: 0.31
+  risk: 0.56
+voice:
+  tone:
+    - precise
+    - intent
+  verbosity: normal
+  style: "map annotations and quiet route corrections; tracks small clues aloud, then gives terse pursuit calls"
+lines:
+  greet:
+    - my north arrow points toward trouble
+    - north arrow ready, looking for tracks
+  onKill:
+    - north arrow gets another little cross
+    - north arrow followed that trail correctly
+  onDeath:
+    - there is a hole in my north arrow
+    - the north arrow trail doubled back
+  onPlant:
+    - north arrow marks the fuse
+    - "north arrow found a path to {bomb}"
+  onDefuse:
+    - erasing that from my north arrow
+    - north arrow tracked the ticking down
+  onWin:
+    - north arrow finally matches the terrain
+    - north arrow followed it to the end
+  onLoss:
+    - time to redraw my north arrow
+    - north arrow lost the trail near the finish
+  onLastAlive:
+    - one dot left on my north arrow
+    - the north arrow has one trail left
+  taunt:
+    - your route is wandering off my north arrow
+    - the north arrow noticed those footsteps
+  lobby:
+    - unfolding my north arrow on the lobby floor
+    - please do not spill cocoa on my north arrow
+    - "My north arrow: I will look for the last opponent."
+    - With my north arrow, call the last place you saw them.
+quirks:
+  - holds_grudges
+  - always_gg
+rivals:
+  - quietblaze51
+bio: DizzyPumpkin44 kept a hand-drawn atlas of the 2013 rotation and still brings a north arrow to the queue. QuietBlaze51 keeps asking whether it really helps.
+batch: 3
+retired: false

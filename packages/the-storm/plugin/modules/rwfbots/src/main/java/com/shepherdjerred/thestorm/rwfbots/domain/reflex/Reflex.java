@@ -63,7 +63,7 @@ public final class Reflex {
   static final double SEPARATION = 3.0;
 
   /** Moving formations leave another half block for teammates closing the gap. */
-  static final double WALK_SEPARATION = 3.0;
+  static final double WALK_SEPARATION = SEPARATION + 0.5;
 
   /** The last waypoints of a path, which a bot walks straight at whoever is near. */
   static final int FINAL_STRAIGHT = 3;

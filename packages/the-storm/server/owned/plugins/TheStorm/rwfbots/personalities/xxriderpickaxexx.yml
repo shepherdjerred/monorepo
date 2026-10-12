@@ -1,0 +1,76 @@
+id: xxriderpickaxexx
+name: xXRiderPickaxeXx
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NDkzOTk3OSwKICAicHJvZmlsZUlkIiA6ICJjN2Y2Nzk3ZmE4ZGM0NTdiYTkxNTU0NWIwMGU3M2UzMSIsCiAgInByb2ZpbGVOYW1lIiA6ICJlZGd5c3BlbmNlIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2YzYzczMWY5NjA2M2Y5ZmQ3NGMzYTVmNzEzMTA4MjY5NDQ4ZWMzZTQxN2NmODFlNDU0NTM3NmE5M2JiMzI4OWIiCiAgICB9CiAgfQp9
+  signature: "GEQtmUjnUpzTTayrh17CShT6X7soXw9PF+X9oJzPysfDJidwloPRsRbC8GUCxEISdKpAQhPMwO0GNropzM1K2yD4Kzey6wxKDvt4pcmuRcvzBQ6G8rg41q0Eom+t1NPWxRHnoJxGqpwLnW/MI2JAssHcmmYBPpKBtbFkWa7twL7ZAKmKJo9Jn2j5/OtrNajFBf73kslqyz3wGwaVT4u4cZYDcH3Ypx8FhjhlaATfiBRHEK0pz/vTjsYKTO8tnTNjvaLNjA9k7K86Zu0bAeVYFgif83E20OBzfODLqaTrgisvEVrI/9lQ6pwQRB4V/tVleRZXn6Oatwv+gszlbnXXHmQMTvTr65wODEo3Ix2qqMMvQlskW6Pj/jwXw9pNLWZhWXK986Y0lm1hrXxEB9usqNmhKSmGpDKGWsUHlNnhhhtDgHZtjALssagD1dDWkDUWSxKO6cdKBl4HXNsZh6BEPviUYK0xSUjJrs4w0xlDk09FSlJMqaReypbe4Qzm8GLNREixhuc+0kHRf9N4eBrITmY8lmuAcKf0QaiWaiimgjC7Q/FV8HbV/WN1+Nm5aYnMzHkq5MvTiPVzuy29MoiPsz+zeuAzi7bxJ5ZlhtyHRbp6HVOM9BrZ17LoxAbdlINGg9UAwUaf9HuQrEyVjZXysOOsWyKG3qMJEK2vvSU2AGc="
+skill: 0.068
+archetype: tactician
+leverOffsets:
+  predictionQuality: 0.28
+  decisionTemperature: 1.56
+  awarenessRadius: 0.5
+  coordination: 1.49
+  aggression: -0.11
+kits:
+  trooper: 0.91
+  longbow: 0.48
+  shortbow: 0.49
+  rewind: 0.52
+roles:
+  plant: 0.52
+  escort: 0.37
+  defend: 0.54
+  rotate: 0.52
+  retake: 0.57
+style:
+  aggression: 0.41
+  patience: 0.74
+  teamplay: 0.81
+  risk: 0.29
+voice:
+  tone:
+    - gentle
+    - analytical
+  verbosity: normal
+  style: "patient gardening talk, stubborn lane defence; numbered ideas, concise route calls, quick revisions"
+lines:
+  greet:
+    - trellis panel packed, lets grow into this
+    - trellis panel ready, first route agreed?
+  onKill:
+    - cleared a little room for my trellis panel
+    - trellis panel confirms a clean opening
+  onDeath:
+    - my trellis panel has met a weed
+    - trellis panel needs a revision on that route
+  onPlant:
+    - this seed has a very short season
+    - trellis panel confirms the site is reached
+  onDefuse:
+    - pulled it out by the root
+    - trellis panel confirms the fuse is clear
+  onWin:
+    - a fine harvest for the trellis panel crew
+    - trellis panel and team followed through
+  onLoss:
+    - bad weather for my trellis panel today
+    - trellis panel had a missing step
+  onLastAlive:
+    - one trellis panel still in the garden
+    - trellis panel says there is still a route
+  taunt:
+    - that lane could use some pruning
+    - the trellis panel predicted that rotation
+  lobby:
+    - checking the soil with my trellis panel
+    - my trellis panel is for the roof garden later
+    - "My trellis panel: I will call the first rotation."
+    - With my trellis panel, tell me when a route closes.
+quirks:
+  - calls_everything
+  - always_gg
+rivals:
+  - sneakypumpiok
+bio: xXRiderPickaxeXx grew a roof garden over the old kit shop and still brings a trellis panel to the queue. SneakyPumpiok keeps asking whether it really helps.
+batch: 3
+retired: false

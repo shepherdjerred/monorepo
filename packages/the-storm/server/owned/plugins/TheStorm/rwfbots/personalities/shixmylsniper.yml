@@ -1,0 +1,76 @@
+id: shixmylsniper
+name: ShixmylSniper
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTg2NjExOCwKICAicHJvZmlsZUlkIiA6ICIyNDY1ODI2NWVjMjg0NTY4YTg3MDJkOTVlYzdlYTc4MyIsCiAgInByb2ZpbGVOYW1lIiA6ICJBcmdvc1oxMiIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8yNDJkMjM1MzQ4MGQ2YTZhYWZiYWNkYTM2YmQxNTg3Zjg1Y2I1MmViNzczZjNkOTRiOTMwZTc4YmI0MGRiZDhjIgogICAgfQogIH0KfQ=="
+  signature: "l50oYcrXr+XxjKj9OJyzYvvzKZxdjIdOB/jjitu0fC3qrhosAVDzKCNHDCpeKNqtEYRL7B1K5Jd460HkTqgRgHaV6WlryOZZitXyeDCxro+iFDGDQnzhiWMQk/Wk6ucEQqED8Oe+VQNnWXYB5JKJ1EbA9llkrOEfW01gukJkUMZAccTrI5aECIOcRm6Wwndk3OP88We+1mPAvWG4YJzeG3uMAgbpIyqxPAAToor3rzO7mCnWVEoTb2hIBNC3ne+jYUoR2tXRX3wir82eg5WTKcgd54S+iFy87XzLhYHoZNV3sC50rnFuMLi+NWUG/vCFC7t+GbfDZpmPmRFF+omsbIdsbkJcthh4ZaTqy0+oMG7QgrQjsk9GUBSOSRzEbPaUNYawz0xp580tevJw6VC6MzMNUeRK6QDg8KVToVg1iI4InU085NjM4Ycw/ur8pltuCf4n+sLM9+3Eq9IggHcdI+LyuP+vmQMGqTr4bajhAMBXtvonM+RnPXKvK4rTI5ayHYzm3G79ouZTgJmv1tmj6SpN9U7nJewi2dQR9rIDL1nQQHl4NWCwCQl1A9vMqDFbFmvsnPx8pnRCqJQQpbQMJlM/NkKT8knkGO63VDQfaTFKAR3LLGQ/0qP3xyuRRWtm59U7GhdaJHnjva4CEDD4tbX8dS9RtDkwJp5D54GDuXk="
+skill: 0.447
+archetype: lurker
+leverOffsets:
+  turnRateDegPerTick: -0.58
+  cps: -0.47
+  predictionQuality: 0.02
+  awarenessRadius: 1.28
+  coordination: -1.28
+  aggression: -0.22
+kits:
+  trooper: 0.74
+  shortbow: 0.62
+  ghost: 0.87
+  wraith: 0.58
+roles:
+  plant: 0.24
+  escort: 0.24
+  rotate: 0.72
+  hunt: 0.98
+style:
+  aggression: 0.45
+  patience: 0.85
+  teamplay: 0.15
+  risk: 0.55
+voice:
+  tone:
+    - polite
+    - hushed
+  verbosity: quiet
+  style: "postal announcements and absurd courtesy; lowercase whispers, deliberate pauses"
+lines:
+  greet:
+    - stamp album sorted, delivery begins
+    - stamp album here. quietly.
+  onKill:
+    - delivered to the correct corner
+    - the stamp album was here a while
+  onDeath:
+    - returned to sender
+    - heard it too late beside the stamp album
+  onPlant:
+    - an urgent parcel at the bomb
+    - stamp album is watching the quiet entrance
+  onDefuse:
+    - delivery cancelled politely
+    - no noise. no fuse. just the stamp album.
+  onWin:
+    - stamp album delivered the whole round
+    - the stamp album stayed out of sight
+  onLoss:
+    - the stamp album took the scenic route
+    - the stamp album waited one corner too long
+  onLastAlive:
+    - one final delivery to make
+    - nobody move near my stamp album
+  taunt:
+    - that push had the wrong address
+    - the stamp album heard that approach coming
+  lobby:
+    - checking the name on my stamp album
+    - no unpaid postage in my stamp album, please
+    - "My stamp album: I will hold the quiet route."
+    - With my stamp album, leave one quiet approach for me.
+quirks:
+  - slow_starter
+  - always_gg
+rivals:
+  - xxbanditpotatoxx
+bio: ShixmylSniper delivered handwritten notes between feuding builders in 2014 and still brings a stamp album to the queue. xXBanditPotatoXx keeps asking whether it really helps.
+batch: 3
+retired: false

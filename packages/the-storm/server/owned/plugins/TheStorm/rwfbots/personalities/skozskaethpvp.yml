@@ -1,0 +1,73 @@
+id: skozskaethpvp
+name: SkozskaethPvP
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTk5ODExNiwKICAicHJvZmlsZUlkIiA6ICJhZmEwYmMzZTA1MjQ0MTM4YjkxMDIxY2Y3ODE2YjRkZCIsCiAgInByb2ZpbGVOYW1lIiA6ICJBbGV4aXNNYWRkIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2YzZTdlZDlmZDJlNmNmYmI3YTBmMGYyZmU1MDZkYjEzNDA4NjExMzQ0YTY3MmI3YzM4ZmExZmE1ZDUwN2IwYWMiCiAgICB9CiAgfQp9
+  signature: "vjwPYr8HXwqBSZ7VbDRz2cjQ4j1hQBFAwmAcL1zhFDqDDRRxuo0hX4ECwrhN3yFenPOOSgmNdbfuO9SQktiEA2bj3pWt4BPIP4qq0Ygg3yj/+Z/zrf5+5FlhE6Msy5Bp10dDrbi9HHxU/1Awt2KwU0s7BAWSt1z3JJyIRF8PQ/Fwel8dADVT9WEqP7geJ3Fj7bsGjJA8blBoJyzRmsLr9Y6XUj0GB+mTx2mMiREDlorBLRjZfbzFFlZ4LgVH0VW/o33PRWu58ik9sJbq7upPFq7DMwPHaOB1WVCSSKOVLEsvO41QrFA9ZPmXyWMg8MsXrdxu52484lfc4BV62kZk8VyDDdtUI58i4SPvxah+K92KY9zi4vKMKfb7K+7j58B5Z6ybH2vdVN2kNxZzCqiqgRGDqR6symJHSDcjJpUivaRf3e7aff5HI2r4eR8OWMAkRjBR9QmhIGGuFfbj4Ua75eHgGGHsgHqrD0xGZ0TGS76UB3MmAGnRPDqSgPh34+3eQo5W5MfsAWkmZrr7q/sPWh5bQE5BRfgbvuRxxirF2NN7UCEjuSIYQ9gZ4XzNZBi8VJmPO8QUATka0/LeR54O8qfhtquY9tHwzr+jGYSUGFUtN1YWiYI6WE7Vl4O6DWp5bwxEUZ39TP3PKOZtDZMA5F256JNxFz8nvkjFd6ON18I="
+skill: 0.942
+archetype: duelist
+leverOffsets:
+  aimErrorDeg: 0.72
+  cps: 1.3
+  decisionTemperature: 0.89
+  coordination: -0.78
+  technique: 1.32
+  aggression: 1.02
+kits:
+  trooper: 0.96
+  shortbow: 0.41
+roles:
+  escort: 0.39
+  retake: 0.62
+  hunt: 0.73
+style:
+  aggression: 0.91
+  patience: 0.28
+  teamplay: 0.33
+  risk: 0.33
+voice:
+  tone:
+    - dry
+    - competitive
+  verbosity: normal
+  style: "imaginary roof leaks and tidy-angle demands; brief courteous challenges and honest shot assessments"
+lines:
+  greet:
+    - tile nib checked, no leaks yet
+    - tile nib ready, good fights everyone
+  onKill:
+    - a small opening under the eaves
+    - good exchange beside the tile nib
+  onDeath:
+    - found the one loose tile
+    - fair hit, the tile nib left that gap
+  onPlant:
+    - something ticking under the roof
+    - tile nib earned a moment at the bomb
+  onDefuse:
+    - one less repair bill
+    - tile nib can settle this at the fuse
+  onWin:
+    - tile nib kept the rain out
+    - tile nib had some good fights today
+  onLoss:
+    - the tile nib plan has sprung a leak
+    - tile nib wants another clean round
+  onLastAlive:
+    - one tile holding the roof
+    - one tile nib, one fair chance
+  taunt:
+    - your angle would collect rain
+    - the tile nib is ready for that peek
+  lobby:
+    - inspecting my tile nib for cracks
+    - the tile nib repair can wait one round
+    - "My tile nib: I will contest the middle."
+    - With my tile nib, give the middle fight a clear lane.
+quirks:
+  - good_sport
+  - always_gg
+rivals:
+  - skalaenmc
+bio: SkozskaethPvP reroofed the same spawn cottage after every group building session and still brings a tile nib to the queue. SkalaenMC keeps asking whether it really helps.
+batch: 3
+retired: false

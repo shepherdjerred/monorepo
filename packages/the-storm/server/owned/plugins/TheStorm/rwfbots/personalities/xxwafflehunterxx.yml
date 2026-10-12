@@ -1,0 +1,75 @@
+id: xxwafflehunterxx
+name: xXWaffleHunterXx
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NTczNDc0NywKICAicHJvZmlsZUlkIiA6ICJiOWIzY2RlZmIyZmQ0YWY1ODQxMGViZWZjY2ZmYTBhYiIsCiAgInByb2ZpbGVOYW1lIiA6ICJpbnRlcnNlY2F0byIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9iM2U3MzBlZGU3YWJjZjNlYmVhZjQ1NDhmYmI2ZDUxNDA5NDQ0YTc2M2ZiYzAwZjQyYjFkY2ZkMGY4YzE0NjFhIgogICAgfQogIH0KfQ=="
+  signature: "KsNCuTmhBuNdo2V2em2aCawxGsNvIxZNsf9qUqR2Qbi+x4tNL5MOLvKZAkWnWfmf1y51CZi683Q2CMw7Am/RCxZT0KI6Tx3caVUfPqfg9M3CC+ajPgS2J/PQvwtqD6bkCIeO5smG/g5yPiLO44PDVC0S2wPME1vCHU63FU0xiCyQPR9wRT5523zab/Um+vJY4jhXDSh9zR1nVOygFfMNgRa8OJYJ1v2063bGpK5xfFTlaG8Sek8rbnmVnsDClK+kTKDIZee/etmHVOwCnLp3S7A/puqjwSnckLp9VasTAToKV/Lk/geUci/nr4SNDXciRARZEWkwKfKQCywnH52T3FvcBqeqNOYUxT1ZT2zLhG6hQkT6TyEyg2rQ8IZMlF5NmwfSHexCsl8ANcWT0onalWkkZ801JIuJscxq8h+VCQX53bZSyQHoNHwvSsPLsbtxBfxIrV1jZKMk73EDWtDUneelvk+UWJc40vrD+WkQ0EljMEkEUn2t9wM2ajfg5a2eGjFNTU4f+xm5Pf4jJJAHWhCMJg17htodEs6Yow6FOm/26Azk8GpdKLbhZuUzrOtnIbWJNr2Q4YTC8V8uG7dFMZnSW12aDchVnurB+GudDM+/bTgB4on20nmjqEiyhyBHyi5VlVFp+nD1Ebro5AiS0KWrVKSA2rbSJcd62ni2HWg="
+skill: 0.634
+archetype: troll
+leverOffsets:
+  cps: 1.38
+  decisionTemperature: -1.91
+  coordination: -1.55
+  technique: 0.52
+kits:
+  trooper: 0.57
+  shortbow: 0.7
+  rewind: 1
+  ghost: 0.13
+  spy: 0.86
+roles:
+  plant: 0.43
+  escort: 0.23
+  rotate: 0.47
+  hunt: 0.58
+style:
+  aggression: 0.58
+  patience: 0.2
+  teamplay: 0.19
+  risk: 0.98
+voice:
+  tone:
+    - dreamy
+    - mischievous
+  verbosity: normal
+  style: "sky metaphors punctuated by exact callouts; deadpan object conversations and harmless overconfidence"
+lines:
+  greet:
+    - crater drawing says this is our orbit
+    - crater drawing has appointed itself captain
+  onKill:
+    - a little spark beside my crater drawing
+    - crater drawing is now insufferably proud
+  onDeath:
+    - my crater drawing did not show that collision
+    - crater drawing would like a different replay
+  onPlant:
+    - starting a very small eclipse
+    - crater drawing calls this interior decorating
+  onDefuse:
+    - light returns to the bomb
+    - crater drawing says it knew the correct wire
+  onWin:
+    - a bright mark in my crater drawing
+    - crater drawing is requesting a trophy shelf
+  onLoss:
+    - a cloudy night for the crater drawing
+    - crater drawing has misplaced the blame form
+  onLastAlive:
+    - one small crater drawing in a big sky
+    - crater drawing insists this was the plan
+  taunt:
+    - that shot went into another orbit
+    - the crater drawing gave that push three out of ten
+  lobby:
+    - showing the lobby my crater drawing
+    - the ceiling is blocking my crater drawing
+    - "My crater drawing: I will cause a useful distraction."
+    - With my crater drawing, try not to laugh during my push.
+quirks:
+  - celebrates_early
+  - always_gg
+rivals:
+  - foxphantom7
+bio: xXWaffleHunterXx named the roof above spawn an observatory despite owning no telescope and still brings a crater drawing to the queue. FoxPhantom7 keeps asking whether it really helps.
+batch: 3
+retired: false

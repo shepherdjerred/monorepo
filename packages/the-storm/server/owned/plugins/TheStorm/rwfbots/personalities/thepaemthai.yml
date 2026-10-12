@@ -1,0 +1,78 @@
+id: thepaemthai
+name: ThePaemthai
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjA2NjU5NCwKICAicHJvZmlsZUlkIiA6ICJhODEzMzJmNjA5MmE0NDQ1Yjk1YzVhZGFjNDA2OTQzYiIsCiAgInByb2ZpbGVOYW1lIiA6ICJTbmFwcHliM2FzdCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS85MWIxOTA2YmIzY2M3YTA3MDJlMzY0YzZkNjc4Y2M2YThhOWI4MjlhNzg4YTY3MjQ1MDFmM2UyYTE5ZTU2NTNiIgogICAgfQogIH0KfQ=="
+  signature: "K/pVStbt1HLe6LlEjTD+SIKWesb11kBcRUn7NY9GXsq4MEw8Yk/ljeGQ9zd2gpJBDUvr3xEXd3kL/imlZdMu33UBsSregG7ik46o4ZHq2vg/oo+D50XFqlsbRjJG/ZOwraw0RKtSQf49W42om+7ygU6uu7GgisVRcAPMKPfIHj89uWI526GRcPzGKHxqq9OqCsj7ZZzpZmYfv0PGwXyk7wDIswceetcJQhvoJM8FzKQiLid3CyoZWQueO42XrwJdqXfQAB4dwNwOgFmjzw+52SYTbXM5bWyhKLX5RSXy/WFMPcQPHhQDSm44TCq28jxIF2r98Pt/d10QPRBNt90SWqydNS10UchpalYf3/BUrG2oAVaNK11KXIDBuS3FGivMZ3b5BjXu62wCrPqV3IJ/M2tFjzPGWbMRy4amG7p+WN3k+VJwaOTf2mSgHBZPwUN2D5kzCQx0PVfALz30+D6V8bMSaSnzx/4qHUzwezegaeVAVE4PpeVk59cvyEcQM/nEDgIb9i1uR19Vbxjsx8d6HNCV2dKmGzbRSl1FbSzRGWqmZuH4gU6YHAPZKTRQVa5krpgRicz8lHZrMzqB43/IKkdDnoOcTjuQNy7p8l/p/btrBmczssZi/e1yHwn3bo3mLPo1suon0ImfHIrg0w8wp3SPN2a12J1FuNbarLQ9ABE="
+skill: 0.637
+archetype: tactician
+leverOffsets:
+  turnRateDegPerTick: -0.45
+  predictionQuality: 0.43
+  decisionTemperature: 1.17
+  awarenessRadius: 0.32
+  coordination: 2.13
+  aggression: 0.09
+kits:
+  trooper: 0.9
+  longbow: 0.55
+  shortbow: 0.45
+  rewind: 0.46
+roles:
+  plant: 0.61
+  escort: 0.48
+  defend: 0.56
+  rotate: 0.64
+  retake: 0.65
+  hunt: 0.28
+style:
+  aggression: 0.41
+  patience: 0.76
+  teamplay: 0.88
+  risk: 0.32
+voice:
+  tone:
+    - bookish
+    - analytical
+  verbosity: chatty
+  style: "brief footnotes and revised-edition rematches; numbered ideas, concise route calls, quick revisions"
+lines:
+  greet:
+    - margin pencil ready, new chapter
+    - margin pencil ready, first route agreed?
+  onKill:
+    - a short footnote to that duel
+    - margin pencil confirms a clean opening
+  onDeath:
+    - a regrettable page break
+    - margin pencil needs a revision on that route
+  onPlant:
+    - a cliffhanger at the bomb
+    - margin pencil confirms the site is reached
+  onDefuse:
+    - closing that chapter gently
+    - margin pencil confirms the fuse is clear
+  onWin:
+    - the margin pencil gets a happy ending
+    - margin pencil and team followed through
+  onLoss:
+    - the margin pencil needs a revised edition
+    - margin pencil had a missing step
+  onLastAlive:
+    - one last page to turn
+    - margin pencil says there is still a route
+  taunt:
+    - I have read that opening before
+    - the margin pencil predicted that rotation
+  lobby:
+    - resting my margin pencil on the lobby shelf
+    - please do not dog-ear my margin pencil
+    - "My margin pencil: I will call the first rotation."
+    - With my margin pencil, tell me when a route closes.
+quirks:
+  - calls_everything
+  - always_gg
+rivals:
+  - drxynbroxe
+bio: ThePaemthai bound a book of old match stories with mismatched covers and still brings a margin pencil to the queue. DrXynbroxe keeps asking whether it really helps.
+batch: 3
+retired: false

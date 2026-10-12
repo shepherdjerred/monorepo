@@ -1,0 +1,75 @@
+id: toxicslime11
+name: ToxicSlime11
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4OTI4NTU4NSwKICAicHJvZmlsZUlkIiA6ICI1OWJlOTUyY2EyNjc0OWE4OTM1YmQ5MGQxNmMyN2M4OCIsCiAgInByb2ZpbGVOYW1lIiA6ICJUaGVQZW5zcGlubmV1ciIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8yMTc2NjMxYjFjMDdhNTc1MjA0YzEzNjU2NGE0MTZkMzI1ZDc1ZjdiOWYyMTYyNzk1MGQwZmQ0NWRlYjUyODEyIgogICAgfQogIH0KfQ=="
+  signature: "yey10fjwvE6/AbhpjJngFScqc7cgxpzczL0+WiJLYSbJ72W/hs6NYrR7Qui5lm35/ofmgDnNC3/r20tOXiX4SacxvV5KoCQMH8SxPBo7aGhjYpQOridwGDInVfPvBPGLhefbWKbzspNhkEjmUuLwHqN49Yg1llgafrtBmXtr8i8NG49+vI2TD2z7fgnK4q0V4lXj7EDb17mGr0WQ1dhTczI00rCp86B1cK7EdctyegQP1pM8iAO4JZtmuf0unjqtgA7x+MH7ImrgVYImxcj3ozt67Gew2OzMSdw8sE0ZoZ2No4v0U0QdsfIMoAHfHgy7MVlZBhMBDi0Kim/FAZRcYYDq7AmCPv1huQA6FI786SK37LRpGSQeTs6Tp+38pByTQ0JQKdYyHgLQNQ+vuQwf06uBWabxt+NKv4MSEo/l3boe4bKPFBf5dv+XtDgo5ACSOTv/YUuXMAl+03HFlllJsRXDEQrXNnisaHaYzhdA1d2CqEF3sa+VMseBMwmrJomQdxTDxOSYdZc9aUAJkh2p31j7+gda2rf7hwul5B4kA4vOEgqtjlGuuMRSiPBypJAeZov/S6WQHokkkI/NRolv9pFCn6qso7N825m/G2F9Ig7zwo4Tdm+4Tq9LxXOt1NitdusJqUvy1yUDe+/38b3VwhqTarxTH/nMUwklV4pN8rc="
+skill: 0.728
+archetype: lurker
+leverOffsets:
+  reactionMs: -1.39
+  predictionQuality: 0.51
+  awarenessRadius: 1.51
+  coordination: -1.4
+  aggression: -0.51
+kits:
+  trooper: 0.62
+  shortbow: 0.56
+  ghost: 0.89
+  wraith: 0.61
+roles:
+  plant: 0.41
+  defend: 0.1
+  rotate: 0.44
+  hunt: 0.82
+style:
+  aggression: 0.51
+  patience: 0.84
+  teamplay: 0.05
+  risk: 0.58
+voice:
+  tone:
+    - steady
+    - hushed
+  verbosity: normal
+  style: "buoyancy checks and practical nautical talk; lowercase whispers, deliberate pauses"
+lines:
+  greet:
+    - sail patch fastened, ready to cast off
+    - sail patch here. quietly.
+  onKill:
+    - found a gap in that hull
+    - the sail patch was here a while
+  onDeath:
+    - a little water over the rail
+    - heard it too late beside the sail patch
+  onPlant:
+    - not a cargo I want to keep
+    - sail patch is watching the quiet entrance
+  onDefuse:
+    - unloaded that safely
+    - no noise. no fuse. just the sail patch.
+  onWin:
+    - sail patch brought us back to dock
+    - the sail patch stayed out of sight
+  onLoss:
+    - the sail patch voyage met a reef
+    - the sail patch waited one corner too long
+  onLastAlive:
+    - one hand still at the tiller
+    - nobody move near my sail patch
+  taunt:
+    - your push is sailing against the wind
+    - the sail patch heard that approach coming
+  lobby:
+    - tightening the bolts on my sail patch
+    - keeping the sail patch dry for the voyage home
+    - "My sail patch: I will hold the quiet route."
+    - With my sail patch, leave one quiet approach for me.
+quirks:
+  - slow_starter
+  - always_gg
+rivals:
+  - krinpoupvp
+bio: ToxicSlime11 launched a leaky ferry between two rival team docks and still brings a sail patch to the queue. KrinpouPvP keeps asking whether it really helps.
+batch: 3
+retired: false

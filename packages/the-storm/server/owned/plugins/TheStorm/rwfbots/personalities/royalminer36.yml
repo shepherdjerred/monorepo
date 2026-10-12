@@ -1,0 +1,75 @@
+id: royalminer36
+name: RoyalMiner36
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4OTI4MTg3NSwKICAicHJvZmlsZUlkIiA6ICI3MjU1MDA3NjQzYzQ0YTZiYjM3MjJlNzc3OTk5OTFkOSIsCiAgInByb2ZpbGVOYW1lIiA6ICJ4ZW50YW55IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2IxODFkNzYwNGZlNmNhMWEyZmYwNzk0NGNkMDFjMWY0Mjk2ZDg3MTY1MTM1Y2E4ZDgwOWJjNmRhOWYzMjk1ZmUiCiAgICB9CiAgfQp9
+  signature: "MqkBdlTdiHiVDQITjR9G/9yWtmnaQYLPJSfrnOg4u1YbeuLM8Te1ihDGz0PFOtSMlqQ+jvHFEZXVt/LpGF64bql99o6ath8REHNVVavon198xRgd56Ynp+fupONlpe/pTuAryODYLEdFUT0bz2ZTut+ZBIc2qENtbkiMkkfDfSHGnysIylVVsxIYjfpdF4rdU5e6LzMZWDWifQO6hM4PqB4gqG1EFpLOLcYfciawOQKQGjZM28ayH+JCke1v5oPXg8LMc6pocAMeZQsjcE5d8dXEFktoet/1/uLZF/vh7WU6dLtQ6b1Kb4qjq3DjB1fxxQzcvzK70F8owIOf9HHb//AKXwGpcQDix54Xpna0s4LoqqsP4f1KGoM7HV7e9LVSyQwBefp4640dC6EPQycSilGgGEufCRyHMz4rxeF0YQxDCNfQTfTJoCGXf/cUM64GDLSO9I0Us5BdzKksACVB+M+ObsgBg9cA1P0HYYx9ZB9h9AWtaP/LpWArfMYpHp2oAJmFt9HB2PjSvKLq945GPHD6cWtgjdeDvoWVUElJb04yvE8Bxo9JQBUe9NymwsyrljiQxjk/pRraGmXjHhjcNNrDqr4HoYqWOyadWchweo2p2AT7UDs4HLu4Kf7BbgXuefRhMRWkAlOAtZMgPJkZp2bTHgwvLERbbF3SYDbIspQ="
+skill: 0.362
+archetype: lurker
+leverOffsets:
+  reactionMs: -0.03
+  predictionQuality: 0.17
+  awarenessRadius: 0.92
+  coordination: -1.27
+  technique: -0.2
+  aggression: -0.71
+kits:
+  trooper: 0.76
+  shortbow: 0.58
+  ghost: 0.83
+  wraith: 0.58
+roles:
+  plant: 0.28
+  rotate: 0.66
+  hunt: 0.91
+style:
+  aggression: 0.46
+  patience: 0.76
+  teamplay: 0.08
+  risk: 0.53
+voice:
+  tone:
+    - excitable
+    - hushed
+  verbosity: normal
+  style: "enthusiastic clues and upside-down maps; lowercase whispers, deliberate pauses"
+lines:
+  greet:
+    - buried key found, clue understood
+    - buried key here. quietly.
+  onKill:
+    - that corner was the next clue
+    - the buried key was here a while
+  onDeath:
+    - the clue was apparently a trap
+    - heard it too late beside the buried key
+  onPlant:
+    - a very loud treasure chest
+    - buried key is watching the quiet entrance
+  onDefuse:
+    - solved that little puzzle
+    - no noise. no fuse. just the buried key.
+  onWin:
+    - buried key led us to the prize
+    - the buried key stayed out of sight
+  onLoss:
+    - the buried key was upside down again
+    - the buried key waited one corner too long
+  onLastAlive:
+    - one clue and no hints
+    - nobody move near my buried key
+  taunt:
+    - that trail led you in a circle
+    - the buried key heard that approach coming
+  lobby:
+    - does anyone recognise my buried key?
+    - the answer is definitely near my buried key
+    - "My buried key: I will hold the quiet route."
+    - With my buried key, leave one quiet approach for me.
+quirks:
+  - slow_starter
+  - always_gg
+rivals:
+  - xxravenbadgerxx
+bio: RoyalMiner36 hid tiny treasure chests along the old lobby walking route and still brings a buried key to the queue. xXRavenBadgerXx keeps asking whether it really helps.
+batch: 3
+retired: false

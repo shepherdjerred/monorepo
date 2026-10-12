@@ -1,0 +1,75 @@
+id: dioxskiol-51
+name: Dioxskiol_51
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjE4ODg1NywKICAicHJvZmlsZUlkIiA6ICJhZDEwM2FhODMzNWM0ZDA4YjNlZWI2ZDI2NjNkMzA0MSIsCiAgInByb2ZpbGVOYW1lIiA6ICJJY2hpaW5uIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2M2YjM1ZDhkOWEwNGY2ZWIzN2JlNzczMmFhMTU2MWUzYzk4M2IxOGFmYTgxYTMxZTZlNTc5MDY4NDAyYzgzMjAiCiAgICB9CiAgfQp9
+  signature: "kyGthoxr+M0MDqvZcGLSQF8ckGTAfJQ5U28l8L+ju5SHQDb59MyYV6mngavgfIezv9bQcbnZVN4RyI0x2u3+kme+KTGDIQwd0BT3kpegPojZebDSTCDNKdzrymGgzHYee4rXDUpiJgM0JZi1GzNDvbiLyQ+tk1lJf8yFo4hpE0myO0tl4FcbbK8pS89jgsN3WASNl6wmO5wQRFFQ+cSuwFV7QzQAoXp/DmGOaTMDh5nF1ShuRmwWCHCIYKv6gFKocvkAo+UahA1xiW2w3QHB111KoLcmp682uJsF03URg+XOZ1ZyxM8H2k4R8VXGbXFlt4dBz47qFbE394L7HFLc8gGfDk0Md0cc8BHPCOzNPe/POD2en5qE/0298BXhKN4DwYY/ZX3Ncc/pTqLLPksTx5vVX9CZUahBaz8gni50lojijlTxEjtbG4S0tmr4ZMpEpxeVcP2C5L0628IcjJyLajhZ/2xn4i8VViXaHm8v5Dk2ye5dedblGNpmefV6mgBsK1MkjOFQimAVIfIWOhdB2GpjboeFBVudmpOZlr2AHAAbTbIbUoLMA4/ULHSrmN9klZDMUh757QSl8cDjj9lLcloqHrCJ1HV7Sw1ILcT6pgnYFjlhTrIQuK3E3Y+qrOlFrVun2rtL2MAQQTw3IG6hRLue7l7uqHpqNsOqVme7yWA="
+skill: 0.221
+archetype: lurker
+leverOffsets:
+  reactionMs: 0.01
+  predictionQuality: 0.31
+  decisionTemperature: 0.27
+  awarenessRadius: 1.17
+  coordination: -1.63
+  aggression: -0.46
+kits:
+  trooper: 0.61
+  shortbow: 0.63
+  ghost: 0.75
+  wraith: 0.63
+roles:
+  plant: 0.23
+  rotate: 0.81
+  hunt: 0.88
+style:
+  aggression: 0.39
+  patience: 0.89
+  teamplay: 0.15
+  risk: 0.56
+voice:
+  tone:
+    - patient
+    - hushed
+  verbosity: quiet
+  style: "deliberate pottery talk and wet clay worries; lowercase whispers, deliberate pauses"
+lines:
+  greet:
+    - clay rib is steady today
+    - clay rib here. quietly.
+  onKill:
+    - that opening held its shape
+    - the clay rib was here a while
+  onDeath:
+    - the whole thing slumped
+    - heard it too late beside the clay rib
+  onPlant:
+    - letting this one fire
+    - clay rib is watching the quiet entrance
+  onDefuse:
+    - cooled that down safely
+    - no noise. no fuse. just the clay rib.
+  onWin:
+    - clay rib came out of the kiln intact
+    - the clay rib stayed out of sight
+  onLoss:
+    - a small crack in the clay rib plan
+    - the clay rib waited one corner too long
+  onLastAlive:
+    - one piece still on the wheel
+    - nobody move near my clay rib
+  taunt:
+    - your push has not quite set
+    - the clay rib heard that approach coming
+  lobby:
+    - washing the clay off my clay rib
+    - please let my clay rib dry in peace
+    - "My clay rib: I will hold the quiet route."
+    - With my clay rib, leave one quiet approach for me.
+quirks:
+  - slow_starter
+  - always_gg
+rivals:
+  - paethty-65
+bio: Dioxskiol_51 sold lopsided flowerpots from a stall by the arena gate and still brings a clay rib to the queue. Paethty_65 keeps asking whether it really helps.
+batch: 3
+retired: false

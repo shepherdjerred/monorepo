@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
+import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -30,6 +31,33 @@ final class CombatantViewTest {
                 new WorldSnapshot(
                     0, MatchPhase.LIVE, List.of(a, b), List.of(), PoisonView.NONE, "m", List.of()))
         .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  void snapshotLookupKeepsItsOwnImmutableOrderAndValues() {
+    var first = combatant(7, RED, Vec3.ZERO);
+    var second = combatant(2, BLUE, Vec3.ZERO);
+    var incoming = new ArrayList<>(List.of(first, second));
+    var original =
+        new WorldSnapshot(0, MatchPhase.LIVE, incoming, List.of(), PoisonView.NONE, "m", List.of());
+    incoming.clear();
+    assertThat(original.combatants()).containsExactly(first, second);
+    assertThat(original.combatant(first.id())).contains(first);
+    assertThat(original.combatant(new CombatantId(99))).isEmpty();
+    assertThatThrownBy(() -> original.combatants().set(0, second))
+        .isInstanceOf(UnsupportedOperationException.class);
+    var changed = first.withHealth(1, 0);
+    var next =
+        new WorldSnapshot(
+            1, MatchPhase.LIVE, List.of(changed), List.of(), PoisonView.NONE, "m", List.of());
+    assertThat(next.combatant(first.id())).contains(changed);
+    assertThat(original.require(first.id())).isEqualTo(first);
+    assertThatThrownBy(() -> next.require(second.id()))
+        .isInstanceOf(IllegalArgumentException.class);
+    var equal =
+        new WorldSnapshot(
+            0, MatchPhase.LIVE, List.of(first, second), List.of(), PoisonView.NONE, "m", List.of());
+    assertThat(original).isEqualTo(equal).hasSameHashCodeAs(equal);
   }
 
   @Test

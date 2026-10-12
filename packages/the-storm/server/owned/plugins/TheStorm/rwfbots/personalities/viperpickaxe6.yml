@@ -1,0 +1,75 @@
+id: viperpickaxe6
+name: ViperPickaxe6
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjIwODIwOCwKICAicHJvZmlsZUlkIiA6ICJkZTU3MWExMDJjYjg0ODgwOGZlN2M5ZjQ0OTZlY2RhZCIsCiAgInByb2ZpbGVOYW1lIiA6ICJNSEZfTWluZXNraW4iLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNDRiZjM4MjM2OTY1MDA1MmNkMzdlN2Q0YTEyNDJmMDdjYTBiNGNkNTQ4NTY3MDZmNjQ1ZTg4ZDI1MWFlODkwNCIKICAgIH0KICB9Cn0="
+  signature: "C0uq1z0WtARXTsoXJRXq/QV+7vZ/FGw1E/cetCEcGwCSQZipIUge+CgCHJWi6p4lEZkSdcqa5Z1eNp/d/LeLFMkG30FjMXDBQ1FLSBNbZSb+j7clShZXCT4jKbmzHJ2XJKoa2Is2vxerQ9C4rU9v6Z9I0b8CGJ5lkRoaIWYoq0gd0nbm63B+lwL2JYZZ8vITEIpaNdchjbyaJtfbBx1O+vHcX4hhMpOM7Ew4lytPP81rrV4ujy45nvpXiJkBPRfDRPREQqIKgK6j3zcGAjpzrlsCRGtQGY45wos/X1xREQqsPhk0nw5fpoeVc5nic6hG6rb7GyKKY/9Hvy3vWCNLduvyYosxZpbQqK6Sar0gNdtwcppYHpBFyrG92in97QYROXhElgcqfusSQD+tR3ipbMIjJ23C314Wy3UjdF5KeslSd6PbqTO93/ewNu/jDi/aHnx1OK2Pv9hkVxpTF6LX6xG1fRTrwqR85kgdTOVkt0rOX9NsvUBCsao1Ap5Ln+NqwiUdCc/75gPxFOgx/t7clweyrP9lQ7HHn2DCqE0GzsLgkRUc5yYOJdLJz45p0ErkCF3ZkEuFku/dJV1vs79c+iWKSmYAkuqlMpuhElFYdxDjHdDGeNgE0uu73+/t6acWLAHYScuBHweEqdQRmqSFBp9gz3xriuggfocO/nbS00E="
+skill: 0.334
+archetype: anchor
+leverOffsets:
+  reactionMs: 0.63
+  aimErrorDeg: 1.3
+  turnRateDegPerTick: -0.68
+  awarenessRadius: 0.86
+  coordination: 0.6
+  aggression: -1.09
+kits:
+  trooper: 1
+  longbow: 0.48
+  shortbow: 0.19
+  rewind: 0.33
+roles:
+  defend: 1
+  retake: 0.84
+  hunt: 0.27
+style:
+  aggression: 0.25
+  patience: 0.89
+  teamplay: 0.63
+  risk: 0.11
+voice:
+  tone:
+    - busy
+    - grounded
+  verbosity: normal
+  style: "ingredient lists and improvised kitchen fixes; reassuring statements and firm location reports"
+lines:
+  greet:
+    - wooden colander washed, team fed
+    - wooden colander stays here, I have this corner
+  onKill:
+    - a useful pinch of pressure
+    - wooden colander and corner still secure
+  onDeath:
+    - too much heat on that corner
+    - someone watch the wooden colander corner
+  onPlant:
+    - letting the bomb simmer
+    - wooden colander guards the exit from the site
+  onDefuse:
+    - taken off the heat
+    - wooden colander is staying by our bomb
+  onWin:
+    - wooden colander can serve this round
+    - wooden colander never left the post
+  onLoss:
+    - the wooden colander recipe needs work
+    - wooden colander held the wrong corner
+  onLastAlive:
+    - one cook still stirring
+    - the wooden colander holds here a little longer
+  taunt:
+    - your push could use seasoning
+    - the wooden colander has not moved for that push
+  lobby:
+    - there is soup beside my wooden colander
+    - please return my wooden colander after dinner
+    - "My wooden colander: I will guard the home approach."
+    - With my wooden colander, call before rotating off defence.
+quirks:
+  - stares_down
+  - always_gg
+rivals:
+  - thothgryxdostxel
+bio: ViperPickaxe6 fed a team from a cramped kitchen beneath their spawn and still brings a wooden colander to the queue. Thothgryxdostxel keeps asking whether it really helps.
+batch: 3
+retired: false

@@ -12,6 +12,8 @@
     "vitest.e2e.config.ts",
     "vitest.full.config.ts",
     "vitest.load.config.ts",
+    "vitest.capacity.config.ts",
+    "vitest.capacity-native.config.ts",
     "eslint.config.ts"
   ]
 }

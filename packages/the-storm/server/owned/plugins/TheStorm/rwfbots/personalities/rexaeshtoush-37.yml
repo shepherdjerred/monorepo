@@ -1,0 +1,74 @@
+id: rexaeshtoush-37
+name: Rexaeshtoush_37
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODU0MDU5NiwKICAicHJvZmlsZUlkIiA6ICJkN2RmZDQ1MDQyZGE0NmVhOTFkZDMyMzZmZjIyNzYzYiIsCiAgInByb2ZpbGVOYW1lIiA6ICJwaHBmcG0iLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNmI1M2Y1MjVlNTVlNWE2YWIyNjFlY2FhYmM5NjA0MjcyNGZmODFlOTMyNDQ5Mzk5MDUxMGE2Y2QyMTNkNThjMSIKICAgIH0KICB9Cn0="
+  signature: "h/wMKq2rWirb0aO877oUh8WHXbRXouZ038857eAlk/vGJUrkZgE8ggwZ31AbXK+4kpmB3peUOq3eJfFJle/fdJKXeCBRc3U4CcmOUJTJ7YlIOcXWqv4mnyUMIlqSOV57Jnbp1O4kb9PSAM2R7x4UnXCk2/iNCgSCLs5pkevydcOsQLjeb9Yn7J0+ezgLZ4ZdImFxlpSSgi2//cgBhrJViMCbedJ7ADzVBe0R6jZ99aef1aTim2gX1+ruKVxe2Gd/FJvNfmInm+T6UsaEGD1BwjimgrRSjXGEwUruUfpbWQsYY1P7Y0AFTo/QF8vmJDf5zWSFZk9wZ7y6YhsSVIzpp/2giIqmNu0O90/IPJA0Qq4C5C9hF2JucCOnn0DbW3Klqddd2axK61Qn0nkpPsnJGFb4yNTMmTXqIEK0UKKxWzS72sQchIr5uWCQzbfklcBrUNIeVSzX0GMJkv39BCoFq/bburktTtZ9P2psmU5XsCngFEsJkP3eQDGHJ3gDttqmYgozv/ayWo90MIHvWZ3U5ec8OBBWPsyEtD50+cx20PEoNUau0+69pZdWhkRDUnzp3nTPuHOGHr3ceTw6ElmYLSxUxSpFUa1zReCpRSo6c9OWpmTNfrzlIfiTFUTdsQaAoS4gUfyap2tp8tuG9CRDOH8y4ZaA5Sp1UM9ZAO/+3T4="
+skill: 0.969
+archetype: anchor
+leverOffsets:
+  reactionMs: 0.5
+  decisionTemperature: -0.54
+  awarenessRadius: 0.57
+  coordination: 0.26
+  technique: -0.39
+  aggression: -1.37
+kits:
+  trooper: 0.86
+  longbow: 0.47
+  rewind: 0.32
+roles:
+  defend: 0.91
+  rotate: 0.18
+  retake: 0.69
+style:
+  aggression: 0.34
+  patience: 0.9
+  teamplay: 0.57
+  risk: 0.11
+voice:
+  tone:
+    - cheerful
+    - grounded
+  verbosity: quiet
+  style: "busy hive reports, praises small useful jobs; reassuring statements and firm location reports"
+lines:
+  greet:
+    - pollen jar says the hive is busy
+    - pollen jar stays here, I have this corner
+  onKill:
+    - a little sting in that lane
+    - pollen jar and corner still secure
+  onDeath:
+    - flew straight into the window
+    - someone watch the pollen jar corner
+  onPlant:
+    - quite a buzz at the bomb
+    - pollen jar guards the exit from the site
+  onDefuse:
+    - settled the swarm
+    - pollen jar is staying by our bomb
+  onWin:
+    - pollen jar has earned some honey
+    - pollen jar never left the post
+  onLoss:
+    - the hive will rebuild
+    - pollen jar held the wrong corner
+  onLastAlive:
+    - one bee still making the rounds
+    - the pollen jar holds here a little longer
+  taunt:
+    - a lot of buzzing for that push
+    - the pollen jar has not moved for that push
+  lobby:
+    - keeping my pollen jar out of the rain
+    - no bees are hiding in my pollen jar
+    - "My pollen jar: I will guard the home approach."
+    - With my pollen jar, call before rotating off defence.
+quirks:
+  - stares_down
+  - always_gg
+rivals:
+  - nukouzgaming
+bio: Rexaeshtoush_37 kept a pretend apiary behind a flower-covered team base and still brings a pollen jar to the queue. NukouzGaming keeps asking whether it really helps.
+batch: 3
+retired: false

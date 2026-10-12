@@ -1,0 +1,76 @@
+id: noodlephantom5
+name: NoodlePhantom5
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTkyMTk0MSwKICAicHJvZmlsZUlkIiA6ICIzZThhODgyM2ZlZGI0ZGYwODRmZjE1NmQ3ZDM0YzMxNyIsCiAgInByb2ZpbGVOYW1lIiA6ICJjaGlwbXVua2llY29va2llIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzg1ZjMwNDcxZThmZTRlYzcyZjY5OTEwNmVlODk0Y2EzZDE1ZjIzMDA2MDkwZDY1MGZhMmVlZTgzNWQ5ODU3MWQiCiAgICB9CiAgfQp9
+  signature: "LN+gKC94up2YybveEuobRJqfY32BLyWnR/ABVWzULxYOZduyxC6XfzjTgVQD5JWYL0xJBJeIr43mWmv7YlcceardOl50ByzvYCyB/wK5nzsUQpmDTtCWWfcP1EoCM/yENiwtls+cULgALvuUON4Iky+fmtwxSP/9S6VIJoUTyPbWzmGiWp1l1UU+GKBcxXm9a66oPBb5epbTuivhJ28BWsMN32bqHUfovpLULln5LimL4SlJ0llbTF+4N9umwUgZf+fZHY4HFVqAe60UrjNvlO+Ov9cjNxke4cLMFEoR8dAj6qdUbEt/HCfCmROJJtSp9sCTfxfF6NGXWwF5oMG09OUyuOy5RsQ5FrykCJPB10bMyq2NWKuRyzG6aKZTnIfVlExyQpcsRXPC34wZIixhzlIZBOQoaoZIZBr5ENt9ngWCco0r/rHHdmN2iJKQP3fm6AbzZ2P5oz1bee8wOYZ8/idHRri8tsdD96kLBKapF+FvqyxOeV5+/O+iFOIkHKM5f/PS+jFANUbV5jimlh6jP7UO22gUCKDRyOCPmjI7SBtoCl8p4ysTPEmvokbuU3Fo3MzVdb+jfMe5/1xfU1nQmDnG+Tp/g0hQNu7xZbBWio6+5y/fwCdTMesqXegXrTx0xOsxq3WteQHuzZehARoPuyalyIGaX2rPsOAXQ0HygzA="
+skill: 0.186
+archetype: sniper
+leverOffsets:
+  reactionMs: -1.14
+  aimErrorDeg: 1.53
+  cps: -0.41
+  predictionQuality: 1.48
+  decisionTemperature: -0.86
+  awarenessRadius: 0.77
+  technique: -0.37
+  aggression: -1.18
+kits:
+  trooper: 0.15
+  longbow: 1
+  shortbow: 0.51
+roles:
+  defend: 0.81
+  rotate: 0.4
+  hunt: 0.48
+style:
+  aggression: 0.26
+  patience: 0.85
+  teamplay: 0.39
+  risk: 0.15
+voice:
+  tone:
+    - airy
+    - focused
+  verbosity: normal
+  style: "gusts, tangled metaphors and abrupt turns; short range notes and patient, exact corrections"
+lines:
+  greet:
+    - ribbon tail caught a good breeze
+    - ribbon tail in place, checking the long angle
+  onKill:
+    - a clean lift over that corner
+    - ribbon tail found the range
+  onDeath:
+    - my ribbon tail met a tree
+    - ribbon tail needed a closer angle
+  onPlant:
+    - tying the fuse down securely
+    - ribbon tail covers the far entrance
+  onDefuse:
+    - untangled that in a hurry
+    - ribbon tail can wait, hands on the fuse
+  onWin:
+    - ribbon tail is flying high
+    - ribbon tail had a clear view of that
+  onLoss:
+    - no breeze for the ribbon tail today
+    - ribbon tail kept the wrong sight line
+  onLastAlive:
+    - one string still in the air
+    - one ribbon tail, one long angle
+  taunt:
+    - that push lost its lift
+    - the ribbon tail saw that peek twice
+  lobby:
+    - unwinding my ribbon tail in the lobby
+    - please step over the ribbon tail line
+    - "My ribbon tail: I will cover the long angle."
+    - With my ribbon tail, call the close flank for me.
+quirks:
+  - bow_spammer
+  - always_gg
+rivals:
+  - solarsniper64
+bio: NoodlePhantom5 held kite races from a windy hill above the old map gate and still brings a ribbon tail to the queue. SolarSniper64 keeps asking whether it really helps.
+batch: 3
+retired: false

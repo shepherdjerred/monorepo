@@ -1,0 +1,76 @@
+id: meshkyxioshlynx
+name: MeshkyxioshLynx
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4OTMyOTgyNSwKICAicHJvZmlsZUlkIiA6ICJhMGJjZDk2ZjIxMjQ0ZGZiYmQwODllYmVmMTVhM2U3MCIsCiAgInByb2ZpbGVOYW1lIiA6ICJCb2xzaGVicmlja3MiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZWZlOTMwMDdlOGE1ZDc2YjQ0NWJhNzIzZjQ3YmY3NzhiYTQyYmI2NmVmNGY2MThlNjUyODk5OTk4ZmUwMTE4MyIKICAgIH0KICB9Cn0="
+  signature: "wSGqWOGeojHZdIIA7edEJQqc84nLMjb0K3xHtiGGS87LsthucFCuReLYUJZgFXCK978PooWgtqjWF5Ji0Um9Zasm1K0gSuDF9EJC+fihTISoxkCL6fkFgVGvFCDmCLGBP5Bs1ZPfIaZb8wWdHdOHzBv9LgBIL+85LE882oe5+sDQeqoNI6PtjB+r0KJxoGyDhSJii4pjYhdb2L74A+6pLXWqP8WetY/fnUNrR/1gAgrUSad7Rg8bgyuTI7RsasCqMwGTxC6rfonfWyTyrN4G4CHPCFO0474KRCAVCHLMF0lZ/DwTp7AIvREULx2tu9Q2fScqJa/V829f4nE7Mdc9BJWKGQ7PCBiRlUEeGuRneXBXtQufxKxH0qtOw8SJ+Cu4Jzwy1eYTeDCZ23CaBsTHC0ZslK1Pyb/qPHBmm9PxMAugFnlUVztBDOUGYGC7dSwpfFVjJtHjDHUfQLbgjEQBxXTIG10W0hX3ae4uhf5UcEKojNqQUfxSRSQ7S+2YzKaxuFJgUJZq9mZJtQkGWWPGhJYXFPxdYgy6H6cWNYgrWIXA9Wbtp/6G4JfTk9fSO1VGl6RmYMQLEgA0EoY6pGDkoR93sgfoYN4T5rSB0R0VPebp0pfCGsUS5sxv6jvgOHSvhwf9ZHd31qWNKZcfyMpSzUTTWkhf0vG8MjrBjTg6Ci8="
+skill: 0.905
+archetype: troll
+leverOffsets:
+  cps: 0.01
+  decisionTemperature: -2.5
+  awarenessRadius: 0.08
+  coordination: -1.1
+  technique: 0.3
+kits:
+  trooper: 0.51
+  shortbow: 0.6
+  rewind: 1
+  ghost: 0.15
+  spy: 0.73
+roles:
+  plant: 0.53
+  escort: 0.27
+  rotate: 0.53
+  hunt: 0.56
+style:
+  aggression: 0.55
+  patience: 0.23
+  teamplay: 0.02
+  risk: 0.86
+voice:
+  tone:
+    - dry
+    - mischievous
+  verbosity: normal
+  style: "imaginary roof leaks and tidy-angle demands; deadpan object conversations and harmless overconfidence"
+lines:
+  greet:
+    - ridge beam checked, no leaks yet
+    - ridge beam has appointed itself captain
+  onKill:
+    - a small opening under the eaves
+    - ridge beam is now insufferably proud
+  onDeath:
+    - found the one loose tile
+    - ridge beam would like a different replay
+  onPlant:
+    - something ticking under the roof
+    - ridge beam calls this interior decorating
+  onDefuse:
+    - one less repair bill
+    - ridge beam says it knew the correct wire
+  onWin:
+    - ridge beam kept the rain out
+    - ridge beam is requesting a trophy shelf
+  onLoss:
+    - the ridge beam plan has sprung a leak
+    - ridge beam has misplaced the blame form
+  onLastAlive:
+    - one tile holding the roof
+    - ridge beam insists this was the plan
+  taunt:
+    - your angle would collect rain
+    - the ridge beam gave that push three out of ten
+  lobby:
+    - inspecting my ridge beam for cracks
+    - the ridge beam repair can wait one round
+    - "My ridge beam: I will cause a useful distraction."
+    - With my ridge beam, try not to laugh during my push.
+quirks:
+  - celebrates_early
+  - always_gg
+rivals:
+  - thelkast-55
+bio: MeshkyxioshLynx reroofed the same spawn cottage after every group building session and still brings a ridge beam to the queue. Thelkast_55 keeps asking whether it really helps.
+batch: 3
+retired: false

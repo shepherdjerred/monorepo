@@ -1,0 +1,76 @@
+id: nyxshashtv
+name: NyxshashTV
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODU1Mzc1OSwKICAicHJvZmlsZUlkIiA6ICJmODY0ZjY3ZGJlN2Y0OTBlYTZlODQzMjg2M2NkZWMxOCIsCiAgInByb2ZpbGVOYW1lIiA6ICJCb3lmcmllbmQ1MDY1IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzU1MGVkYjg5Mjc3OTg1YTk2YzM3ZGI1ZjY2YjgyMWMwOTA4YjUxY2VlNzQxNzRlNzI4MWFjYmJhMGRjZTY2ZDIiCiAgICB9CiAgfQp9
+  signature: "kuqBoQjLXziQ1cZTyaBLolZV7caftxHgpgQ1faztmxen94ECnFrLASX8irqBKUXHvUoGHfjB7MnwL4DkrNuJIT/udfBdJ6atrV1aNkBnslYL4gduBZ46w4Vgq4mPLnaDp1xhNPuCsaB/LQgpaqtdrd5aPkjL1VnVvxH0j7tjqJjidyUSHo/2BmGE6qUZawp+Y+5gj0WrjjZI19fiCEay3uNJF6KioF25ARuEZxoG1RI95355Y7GSSbDVh7Swcf7bMhSn/PYZ6oHhQST5SJFC67sdRsU+dqTm7b643IudCeVo2zV5MhT+pKTLiOQScQU7Wxs/ZqN3kX1/8VPmq4unf/13Lgl0PRo3kilxIx+f4S37djwS9LuW+DCQJcVACTzJ0v3AbtVsxZstq4/3Rv1E3DUl7a/HcxW24qWJxPJBqT47mBcNSDQvy4Od6HaEZyclvSVfD81r/5z4TtiUC6YWpeE/uSVf/6nsIAt1FRq/sYIKeowkTjODlkwKh3UIUXmDxzG2hhPHvI882vBsVn59N20s3Pem0QzC7EOZofu7ir97sLKMkqTcXqSI7RTisDTdkBL0TIa6uXl0SvZRdjZBkIyqYNbLBUHJUEVMsFjCP7uBJCXBd6J3yGXpq74n+dbomEaJHIyZs1HpJO/wo9FYUFICyp54fC2c724CM5+FD2s="
+skill: 0.623
+archetype: troll
+leverOffsets:
+  aimErrorDeg: -0.36
+  decisionTemperature: -1.95
+  awarenessRadius: -0.3
+  coordination: -1.27
+  technique: 0.52
+kits:
+  trooper: 0.46
+  shortbow: 0.77
+  rewind: 0.94
+  wraith: 0.27
+  spy: 0.7
+roles:
+  plant: 0.58
+  escort: 0.28
+  rotate: 0.49
+  hunt: 0.51
+style:
+  aggression: 0.64
+  patience: 0.26
+  teamplay: 0.04
+  risk: 0.96
+voice:
+  tone:
+    - practical
+    - mischievous
+  verbosity: chatty
+  style: "carpentry checks and repairable mistakes; deadpan object conversations and harmless overconfidence"
+lines:
+  greet:
+    - brace bit packed, joints checked
+    - brace bit has appointed itself captain
+  onKill:
+    - that opening needed a wedge
+    - brace bit is now insufferably proud
+  onDeath:
+    - a weak joint in my plan
+    - brace bit would like a different replay
+  onPlant:
+    - the fuse is fitted snugly
+    - brace bit calls this interior decorating
+  onDefuse:
+    - took that assembly apart
+    - brace bit says it knew the correct wire
+  onWin:
+    - solid work around the brace bit
+    - brace bit is requesting a trophy shelf
+  onLoss:
+    - back to the bench with my brace bit
+    - brace bit has misplaced the blame form
+  onLastAlive:
+    - one brace bit holding the frame
+    - brace bit insists this was the plan
+  taunt:
+    - that angle needs a little sanding
+    - the brace bit gave that push three out of ten
+  lobby:
+    - checking the edge on my brace bit
+    - my brace bit is for repairs after the match
+    - "My brace bit: I will cause a useful distraction."
+    - With my brace bit, try not to laugh during my push.
+quirks:
+  - celebrates_early
+  - always_gg
+rivals:
+  - blazebadger3
+bio: NyxshashTV repaired a rickety spawn bridge every weekend and still brings a brace bit to the queue. BlazeBadger3 keeps asking whether it really helps.
+batch: 3
+retired: false

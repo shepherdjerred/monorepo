@@ -1,0 +1,73 @@
+id: spookytimbryk
+name: SpookyTimbryk
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODY1MTczNCwKICAicHJvZmlsZUlkIiA6ICJiZmQ3MjMxMGNmYWY0Yjc5OTNlYzhiYzU3ODg3YzU5ZCIsCiAgInByb2ZpbGVOYW1lIiA6ICJBbHBoYVNwQW0iLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZTRlMWVkNjg4ZWQ5NjBhOTAwMzI1ZDk5NWQ1NDZlYTJmNDVjYTdjMjE4YzdkNGJlNzEwYjhhNDI3MWY3OWM3ZSIKICAgIH0KICB9Cn0="
+  signature: "MgmXlUaHsASBozqejIr0wKBypBfGAI9pBFCN0Kos3x8vKWdNy6nWECN3C9Hyc2Nd/OxMN+ViK2rwmKehF/uev04jVD4dFy/Lhb0NGCOT/WT+FVN/wCMxpBk7bbl6es9VbFb9FfQ9NBOGsuDQHL1WnAAQLXdUxWeYPFWxtCk5r874eMNP7o8Mwe0hVkhq/B9dSRB0a0TMdLzUPmA+guErF34EL9OgSKbzREPKGVqJN1Czr2kSTGA/chmnEoCqalVemFpcpSkwHzMQzLrAvQu0inWUMltFDvUzljZqKt+yaWqapImCGso3lEjY7Hlzk9t3Zff2TdIWJVGrpQx7bNthKnR+x/x1wLwUjflTXaxjUrYW8JuEht2GpvhRYkUmZsDGFpCqDM4YecJ6xQNQca0JEGXbVTQDVj5luA2W53RB+d+6LZFrAhef76THDK9t6QPJDmNq5MYX+WWoarspa/18ia/wYkpPNC+DU6nVo7hGnNAYEpvO1uNFAxUXbwYMZTT1eTNN+Xon/LuSFng05iAGKHoSOOjEPLbHKOtEcCgv9O/i7lXaniR7qU0aS0QIusIP/isixUW7Qif6Rf7sPiWBYLTDJNHVuBs8F7EtrvDp0+r+c7VShLynmC09YjrBIlYgGdvehnyYwRcHMJaahIFV4aLZdXfdLwUPRtjNBPkMldk="
+skill: 0.028
+archetype: turtle
+leverOffsets:
+  reactionMs: 0.73
+  decisionTemperature: 0.71
+  awarenessRadius: 0.35
+  technique: 0.18
+  aggression: -1.61
+kits:
+  trooper: 1
+  longbow: 0.31
+  rewind: 0.9
+roles:
+  plant: 0.26
+  defend: 1
+  retake: 0.47
+style:
+  aggression: 0.19
+  patience: 0.92
+  teamplay: 0.48
+  risk: 0.01
+voice:
+  tone:
+    - curious
+    - cautious
+  verbosity: normal
+  style: "beach discoveries and understated delight; unhurried words, conservative estimates and tiny victories"
+lines:
+  greet:
+    - cork float brought good luck last time
+    - cork float is ready. no need to hurry.
+  onKill:
+    - another find for the shelf
+    - cork float waited for the opening
+  onDeath:
+    - swept away with my cork float
+    - cork float should have waited another moment
+  onPlant:
+    - leaving this above the tide line
+    - cork float checked the site first
+  onDefuse:
+    - picked that up before the tide
+    - cork float checked the corner twice
+  onWin:
+    - a good day out with my cork float
+    - cork float got there eventually
+  onLoss:
+    - the tide took our round
+    - cork float needed one more safe corner
+  onLastAlive:
+    - just me and my cork float on shore
+    - the cork float will take this slowly
+  taunt:
+    - that approach washed straight past
+    - the cork float can wait out that peek
+  lobby:
+    - found a cork float on the way here
+    - please admire my cork float from a distance
+    - "My cork float: I will keep a safe route home."
+    - With my cork float, please check the blind corner first.
+quirks:
+  - gapple_hoarder
+  - always_gg
+rivals:
+  - grimrider47
+bio: SpookyTimbryk filled an old shoreline hut with labelled beach finds and still brings a cork float to the queue. GrimRider47 keeps asking whether it really helps.
+batch: 3
+retired: false

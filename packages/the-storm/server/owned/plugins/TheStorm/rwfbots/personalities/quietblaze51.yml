@@ -1,0 +1,76 @@
+id: quietblaze51
+name: QuietBlaze51
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODY5MTQwOSwKICAicHJvZmlsZUlkIiA6ICJhYjNkNTgwMjVkOWM0NTcyODNkNTFlYTcwYTY4N2U1NiIsCiAgInByb2ZpbGVOYW1lIiA6ICJsdWN5X2ludGhlc2t5XyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS80ZmQ5MDk5OTcyODEyYmY5YjlkM2RiMGIzM2Y3MjFjYzdkNzBjODA5MWFiNWI5NDIyODQ1ZDcyMmY1NjZhZDE4IgogICAgfQogIH0KfQ=="
+  signature: "AvCqYw/e6WGo1g0sbrKIC6SvvkK+kj7MFcsAdHko7OUcv3u23U9ZWSM7aOjzvce5bfzusK30Z9oNf8ViqhkOXHrsDvyWnnF8y011+M5x4GMDMxG6O3lZgYQhy2MCLzbrWpCqgVZiWwyKOQMUjA6a+9Akj75FN8DUMf8OD+JHZK5goGThl/GiCA2AhLmx2yi9qPQKrom7NELh7ZtDMxg3zRSHqSOHUQQsvTzvRUDGjpKdjKVTWaVwfNGzG++xKH4Y3vwF9nf8BU4AQHd7nTSy/hy5Cw0tZpCxWwc4/7EAvJWQg+48K+mqPzzYEYdLFRswmGHV3YBiDjeGo3oSNYAPd+DEJ561mbf8pg2iflUlaVlSQJaBZrMXlz7NcCI4uY8Lgj5/+y4XG0D/4CAS0hxdaZQ598OJn0qqan60ndPcLsTtnZr+FbblGtLNXmApRJk8eQTU3RLvRDHgYD43YAmxhYJe1iQHQrBm4zIFQBzTlrQf8eor7ayyaHxccrXOy3nWPnvIYcpKL6DqiHc+PPbyr6fI9zKXE8zntI46TsQAbUlfDdU/3DR4lYxGedCmPo7paJiR4y9Nt6L86fgiA0eFx92FyDcwVPb9QzcaO9+v97WTUix/rv5Q3LHWQtUYM8Qj6t+BJ/hN+lZmLRk94qQjQHexwaNos+hQMO/Jzs3I0g0="
+skill: 0.312
+archetype: tactician
+leverOffsets:
+  turnRateDegPerTick: -0.01
+  predictionQuality: 0.88
+  decisionTemperature: 1.14
+  awarenessRadius: 0.76
+  coordination: 1.79
+kits:
+  trooper: 1
+  longbow: 0.47
+  shortbow: 0.52
+  rewind: 0.56
+roles:
+  plant: 0.48
+  escort: 0.49
+  defend: 0.53
+  rotate: 0.64
+  retake: 0.74
+style:
+  aggression: 0.41
+  patience: 0.74
+  teamplay: 0.77
+  risk: 0.41
+voice:
+  tone:
+    - meticulous
+    - analytical
+  verbosity: chatty
+  style: "seams, alterations and dry little asides; numbered ideas, concise route calls, quick revisions"
+lines:
+  greet:
+    - pin cushion tucked away, ready
+    - pin cushion ready, first route agreed?
+  onKill:
+    - a neat little seam through there
+    - pin cushion confirms a clean opening
+  onDeath:
+    - my plan has come unstitched
+    - pin cushion needs a revision on that route
+  onPlant:
+    - tied off the fuse neatly
+    - pin cushion confirms the site is reached
+  onDefuse:
+    - snipped the loose thread
+    - pin cushion confirms the fuse is clear
+  onWin:
+    - pin cushion and team fit nicely
+    - pin cushion and team followed through
+  onLoss:
+    - the pin cushion plan needs an alteration
+    - pin cushion had a missing step
+  onLastAlive:
+    - one thread still holding
+    - pin cushion says there is still a route
+  taunt:
+    - your formation has a loose seam
+    - the pin cushion predicted that rotation
+  lobby:
+    - please mind the pin cushion on the bench
+    - mending the kit beside my pin cushion
+    - "My pin cushion: I will call the first rotation."
+    - With my pin cushion, tell me when a route closes.
+quirks:
+  - calls_everything
+  - always_gg
+rivals:
+  - zunioxpaith-90
+bio: QuietBlaze51 made matching banners for a team that never stood still and still brings a pin cushion to the queue. Zunioxpaith_90 keeps asking whether it really helps.
+batch: 3
+retired: false

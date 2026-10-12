@@ -1,0 +1,72 @@
+id: brouzgrulcomet
+name: BrouzgrulComet
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODc0NzMyNiwKICAicHJvZmlsZUlkIiA6ICIyMDZlMWZkYjI5Yzk0NGYxOTQ5OTg4NzAwNTQxMGQ2NyIsCiAgInByb2ZpbGVOYW1lIiA6ICJoNHlsMzMiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjJiNWIyYjNkYjI1ODBmMmE5MWFiNTZjMDg2MmI3YzA2MTFkNGY3OGJmMWY0MTFmZmY4Y2MwYjI4NWY5NjM4YSIKICAgIH0KICB9Cn0="
+  signature: "J4PSZp/Gzn9L/m3/zWlCopG7kKnQ46nBiENoIizUekN70JK9x5Mm5hGqHB9sVOdw3kR4XUHwJYfn6vkfPKkj6sre7qalSpy6AL/hQhdL5YzEgWzIPv2Nv79ZxPcF8hu88JSPKQSRSsioBJ2eddeqqLIn4mMSYvXe7T8tmpsOAG0zWGqLqsGTQgoLI02HL7j9clHvJzFMprsHaZFXzwv/7jc0FYuuw8FvT/+wyBtPR8/63oDrw+FV8qv6HYA0QQPPrz+eoX3V8ZFpBhuRiL2X0pOqOZlgy32McaEtcElQ82QedXMa+2MSF5cYfxgD99UdVVmW6XlXbd8CUZlPG2lGhpDnW+FdoVrbw+KIOJka3soAzTzV4cS4rPsbvqayOZ8JZAJM+alzBPzC5HTOuq0dwzJI6gHoAiSJiU1Ms9lkW1YixWejBX4Cqe0o4GTV7GgYXSttdf3FZMYRIRBc+MMIi/NYkkmkxo6rR694oq4I/8b+35G9OlBEh9Ra4SuFknvuGA2SyP31g4NdfgHtwOJNkzVZepiin1YPKN4RMhKeVOZqTxWArAuSnTwascKl7OTF8ddm6VBEFHDA0z1tUe1p/CVMTxdJM5RdUtpzn3YKXHknaINluIGGqtpKri+gYgDAboZsOIDFrYpfTOvAU/EhhZCGicAYztEp6UuHdiK0hvQ="
+skill: 0.23
+archetype: hunter
+leverOffsets:
+  turnRateDegPerTick: 0.38
+  predictionQuality: 1.58
+  awarenessRadius: 1.26
+  coordination: 0.04
+  aggression: 0.75
+kits:
+  trooper: 0.68
+  longbow: 0.55
+  shortbow: 0.93
+roles:
+  rotate: 0.35
+  hunt: 0.92
+style:
+  aggression: 0.86
+  patience: 0.42
+  teamplay: 0.3
+  risk: 0.55
+voice:
+  tone:
+    - meticulous
+    - intent
+  verbosity: quiet
+  style: "seams, alterations and dry little asides; tracks small clues aloud, then gives terse pursuit calls"
+lines:
+  greet:
+    - patchwork square tucked away, ready
+    - patchwork square ready, looking for tracks
+  onKill:
+    - a neat little seam through there
+    - patchwork square followed that trail correctly
+  onDeath:
+    - my plan has come unstitched
+    - the patchwork square trail doubled back
+  onPlant:
+    - tied off the fuse neatly
+    - "patchwork square found a path to {bomb}"
+  onDefuse:
+    - snipped the loose thread
+    - patchwork square tracked the ticking down
+  onWin:
+    - patchwork square and team fit nicely
+    - patchwork square followed it to the end
+  onLoss:
+    - the patchwork square plan needs an alteration
+    - patchwork square lost the trail near the finish
+  onLastAlive:
+    - one thread still holding
+    - the patchwork square has one trail left
+  taunt:
+    - your formation has a loose seam
+    - the patchwork square noticed those footsteps
+  lobby:
+    - please mind the patchwork square on the bench
+    - mending the kit beside my patchwork square
+    - "My patchwork square: I will look for the last opponent."
+    - With my patchwork square, call the last place you saw them.
+quirks:
+  - holds_grudges
+  - always_gg
+rivals:
+  - kishkek-63
+bio: BrouzgrulComet made matching banners for a team that never stood still and still brings a patchwork square to the queue. Kishkek_63 keeps asking whether it really helps.
+batch: 3
+retired: false

@@ -1,0 +1,73 @@
+id: paethty-65
+name: Paethty_65
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTM1NTU1MCwKICAicHJvZmlsZUlkIiA6ICI3YmFiY2ExNGU2MDI0MTJlYTM3YjU5NjU1MGZkOWRiYSIsCiAgInByb2ZpbGVOYW1lIiA6ICJNaWthX05vZWwiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNmMzYzU4NjMyZGQ1NDc0ZDExMDYwZTUzZWZhOWU0OWE2YzZmNTgxZjk4YmQxNTJjODNhMDk4MmZiYzZkODBiMiIKICAgIH0KICB9Cn0="
+  signature: "wdykoKjhcox1hKa1dnwMAqiWYTFR5UivcAaqXNpGXP2PQzD7PP6gbMxGkw4RYEcFeCrIFojy1ojkPusPIppGxCvcRihIL6R028LQ/GxPhNajn2o9nxMEk4cHiQ+kfEntj28D0JNOldXJRfdbvhslQFS+J0fQ9RJqbhX8R4cOgwlXPMIR5CflONwyKcw0xWNFdXlgeyZqiFdUBvebx42fvvexgGkn/IcrJX1MvltZOMIfPa5ZUudH8p9Er9+xntzoT3Mb/959pqAtYinL2ugbPSse2pmKy79gn5iwyb3oXj97ROaV7h1QesatecWI1O0kDr3xhtHMfCxtXQXQqnog86/Bp+KdVIF7XFSAogllNDYzt0sAcYbmNm0H9t2ovjbkn6/w+3Pgha1LfYLkOHtbsWMvm/0awVqbf3k1vyRK2fOG1sECoMB98I11euxU5+bJ6QcfcBO48gCBQhor73LiwnI1rr++o7Kr6rrnLK1NvqRL6sOjMb1ZrwUPa02TKYH7RKdHnwv510re9Kix7Z1Ayw+raonp//yentf7Cob3vEDM0qiwlWrEk7wOCYd6wiO45sfQlIHKEe+NtPcwDSCNBnmjSJy4DMATMap9KO7izzWsPCZnZLf+2LjL08i65S2ptJNbe1Ljxfy3DdTf42Bx8gaYUIf0RI5SeE+SOnYk0ZE="
+skill: 0.731
+archetype: anchor
+leverOffsets:
+  reactionMs: 0.67
+  aimErrorDeg: 0.48
+  predictionQuality: -0.12
+  awarenessRadius: 0.78
+  coordination: 0.27
+  aggression: -1.3
+kits:
+  trooper: 0.97
+  longbow: 0.47
+  rewind: 0.29
+roles:
+  defend: 1
+  retake: 0.69
+style:
+  aggression: 0.3
+  patience: 0.76
+  teamplay: 0.6
+  risk: 0.13
+voice:
+  tone:
+    - gentle
+    - grounded
+  verbosity: quiet
+  style: "patient gardening talk, stubborn lane defence; reassuring statements and firm location reports"
+lines:
+  greet:
+    - garden twine packed, lets grow into this
+    - garden twine stays here, I have this corner
+  onKill:
+    - cleared a little room for my garden twine
+    - garden twine and corner still secure
+  onDeath:
+    - my garden twine has met a weed
+    - someone watch the garden twine corner
+  onPlant:
+    - this seed has a very short season
+    - garden twine guards the exit from the site
+  onDefuse:
+    - pulled it out by the root
+    - garden twine is staying by our bomb
+  onWin:
+    - a fine harvest for the garden twine crew
+    - garden twine never left the post
+  onLoss:
+    - bad weather for my garden twine today
+    - garden twine held the wrong corner
+  onLastAlive:
+    - one garden twine still in the garden
+    - the garden twine holds here a little longer
+  taunt:
+    - that lane could use some pruning
+    - the garden twine has not moved for that push
+  lobby:
+    - checking the soil with my garden twine
+    - my garden twine is for the roof garden later
+    - "My garden twine: I will guard the home approach."
+    - With my garden twine, call before rotating off defence.
+quirks:
+  - stares_down
+  - always_gg
+rivals:
+  - xastdounyt
+bio: Paethty_65 grew a roof garden over the old kit shop and still brings a garden twine to the queue. XastdounYT keeps asking whether it really helps.
+batch: 3
+retired: false

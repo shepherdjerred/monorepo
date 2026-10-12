@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.rwfbots.app;
 import static com.shepherdjerred.thestorm.rwfbots.domain.Fixtures.BLUE;
 import static com.shepherdjerred.thestorm.rwfbots.domain.Fixtures.RED;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.shepherdjerred.thestorm.core.compute.ComputePool;
 import com.shepherdjerred.thestorm.core.compute.DirectComputePool;
@@ -20,6 +21,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.BombOwner;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombState;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantId;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Decision;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Kit;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.MatchPhase;
@@ -35,7 +37,9 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BooleanSupplier;
 import org.junit.jupiter.api.Test;
 
@@ -55,6 +59,20 @@ final class ThinkLoopTest {
   private static final class ManualPool implements ComputePool {
     final ArrayDeque<Runnable> queued = new ArrayDeque<>();
     int submitted;
+    private final int workers;
+
+    ManualPool() {
+      this(1);
+    }
+
+    ManualPool(int workers) {
+      this.workers = workers;
+    }
+
+    @Override
+    public int parallelism() {
+      return workers;
+    }
 
     @Override
     public Executor executor() {
@@ -288,7 +306,7 @@ final class ThinkLoopTest {
   }
 
   @Test
-  void theRayBudgetDefersBotsThatAlreadyHaveAPercept() {
+  void theRayBudgetBoundsStartupAndServesTheOldestPerceptionFirst() {
     var tight = new ThinkRates(2, 5, 10, 40, 1);
     var clock = new AtomicLong();
     var loop =
@@ -302,11 +320,17 @@ final class ThinkLoopTest {
     register(loop);
 
     loop.publish(snapshot(1));
-    assertThat(loop.board().perceived()).as("first percepts are never deferred").isEqualTo(2);
+    assertThat(loop.board().perceived()).isEqualTo(1);
+    assertThat(loop.board().perceptions().get(RED_2)).isEqualTo(new PerceptionAge(1, true));
+    loop.publish(snapshot(2));
+    assertThat(loop.board().of(RED_2).orElseThrow().percept().tick()).isEqualTo(2);
     loop.publish(snapshot(3));
 
     assertThat(loop.board().perceived()).isEqualTo(1);
-    assertThat(loop.board().deferred()).isEqualTo(1);
+    assertThat(loop.board().of(RED_1).orElseThrow().percept().tick()).isEqualTo(3);
+    loop.publish(snapshot(4));
+    assertThat(loop.board().of(RED_2).orElseThrow().percept().tick()).isEqualTo(4);
+    assertThat(loop.board().perceptions().values()).noneMatch(PerceptionAge::pending);
   }
 
   @Test
@@ -320,6 +344,196 @@ final class ThinkLoopTest {
       b.publish(snapshot(tick));
     }
     assertThat(a.board().thoughts()).isEqualTo(b.board().thoughts());
+  }
+
+  @Test
+  void parallelStagesMatchSerialDecisionsDespiteReversedTaskCompletion() {
+    var serial = loop(new DirectComputePool(), governor(), TraceSink.none());
+    var pool = new ManualPool(4);
+    var parallel = loop(pool, governor(), TraceSink.none());
+    register(serial);
+    register(parallel);
+    for (var tick = 1; tick <= 30; tick++) {
+      serial.publish(snapshot(tick));
+      parallel.publish(snapshot(tick));
+      while (!pool.queued.isEmpty()) pool.queued.removeLast().run();
+      assertThat(parallel.board().thoughts()).isEqualTo(serial.board().thoughts());
+      assertThat(parallel.board().plans()).isEqualTo(serial.board().plans());
+      assertThat(parallel.board().perceptions()).isEqualTo(serial.board().perceptions());
+    }
+    assertThat(pool.submitted).isGreaterThan(30);
+  }
+
+  @Test
+  void anEpochChangeDuringParallelPerceptionDiscardsTheOldLife() {
+    var pool = new ManualPool(4);
+    var loop = loop(pool, governor(), TraceSink.none());
+    register(loop);
+    loop.publish(snapshot(1));
+    pool.queued.removeFirst().run();
+    assertThat(pool.queued).hasSize(2);
+    loop.bumpEpoch(RED_1);
+    pool.runAll();
+    assertThat(loop.board().thoughts()).doesNotContainKey(RED_1);
+    loop.publish(snapshot(2));
+    pool.runAll();
+    assertThat(loop.board().of(RED_1).orElseThrow().lifeEpoch()).isEqualTo(1);
+  }
+
+  @Test
+  void aNewLifeKeepsThePreviousObservationAgeUntilFreshPerceptionCommits() {
+    var pool = new ManualPool(4);
+    var loop = loop(pool, governor(), TraceSink.none());
+    register(loop);
+    loop.publish(snapshot(1));
+    pool.runAll();
+    loop.publish(snapshot(3));
+    pool.queued.removeFirst().run();
+    loop.bumpEpoch(RED_1);
+    pool.runAll();
+    assertThat(loop.board().thoughts()).doesNotContainKey(RED_1);
+    var previous = java.util.Objects.requireNonNull(loop.board().perceptions().get(RED_1));
+    assertThat(previous).isEqualTo(new PerceptionAge(1, false));
+    assertThat(previous.at(3)).isEqualTo(2);
+    loop.publish(snapshot(4));
+    pool.runAll();
+    assertThat(loop.board().perceptions().get(RED_1)).isEqualTo(new PerceptionAge(4, false));
+    assertThat(loop.board().of(RED_1).orElseThrow().lifeEpoch()).isEqualTo(1);
+    loop.close();
+  }
+
+  @Test
+  void endingAndRestartingDuringParallelWorkNeverPublishesTheRetiredBoard() {
+    var pool = new ManualPool(4);
+    var loop = loop(pool, governor(), TraceSink.none());
+    register(loop);
+    loop.publish(snapshot(1));
+    pool.queued.removeFirst().run();
+    loop.endMatch();
+    register(loop);
+    pool.runAll();
+    assertThat(loop.board()).isEqualTo(DecisionBoard.EMPTY);
+    loop.publish(snapshot(2));
+    pool.runAll();
+    assertThat(loop.board().tick()).isEqualTo(2);
+  }
+
+  @Test
+  void navigationChangingDuringAStageDiscardsItsResultsAndForcesFreshPerception() {
+    var pool = new ManualPool(4);
+    var loop = loop(pool, governor(), TraceSink.none());
+    register(loop);
+    loop.publish(snapshot(1));
+    pool.queued.removeFirst().run();
+    loop.observedNavigation(NAV);
+    pool.runAll();
+    assertThat(loop.board()).isEqualTo(DecisionBoard.EMPTY);
+    loop.publish(snapshot(2));
+    pool.runAll();
+    assertThat(loop.board().tick()).isEqualTo(2);
+    assertThat(loop.board().perceived()).isEqualTo(2);
+    assertThat(loop.board().of(RED_1).orElseThrow().percept().tick()).isEqualTo(2);
+  }
+
+  @Test
+  void aWorkerFailureIsReportedAndTheNextMatchCanRecover() {
+    var fail = new AtomicBoolean(true);
+    var loop =
+        loop(
+            new DirectComputePool(),
+            governor(),
+            (trace, decision) -> {
+              if (fail.getAndSet(false)) throw new IllegalStateException("broken trace contract");
+            });
+    register(loop);
+    loop.publish(snapshot(1));
+    assertThat(loop.board()).isEqualTo(DecisionBoard.EMPTY);
+    assertThatThrownBy(() -> loop.publish(snapshot(2)))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("Bot thinking cycle failed");
+    loop.publish(snapshot(3));
+    assertThat(loop.board()).isEqualTo(DecisionBoard.EMPTY);
+    loop.endMatch();
+    register(loop);
+    loop.publish(snapshot(4));
+    assertThat(loop.board().tick()).isEqualTo(4);
+  }
+
+  @Test
+  void aRetiredCyclesLateFailureDoesNotPoisonTheNextMatch() {
+    var reference = new AtomicReference<ThinkLoop>();
+    var fail = new AtomicBoolean(true);
+    var loop =
+        loop(
+            new DirectComputePool(),
+            governor(),
+            (trace, decision) -> {
+              if (!fail.getAndSet(false)) return;
+              var current = reference.get();
+              current.endMatch();
+              register(current);
+              throw new IllegalStateException("retired cycle failed after the next match began");
+            });
+    reference.set(loop);
+    register(loop);
+    loop.publish(snapshot(1));
+    loop.publish(snapshot(2));
+    assertThat(loop.board().tick()).isEqualTo(2);
+    assertThat(loop.board().thoughts()).containsOnlyKeys(RED_1, RED_2);
+    loop.close();
+  }
+
+  @Test
+  void cycleLatencyIncludesTimeQueuedBeforeTheFirstWorkerRuns() {
+    var pool = new ManualPool(4);
+    var clock = new AtomicLong();
+    var loop =
+        new ThinkLoop(new ThinkLoop.Parts(pool, RATES, governor(), TraceSink.none(), clock::get));
+    register(loop);
+    loop.publish(snapshot(1));
+    clock.set(60_000_000);
+    pool.runAll();
+    assertThat(loop.board().thinkNanos()).isEqualTo(60_000_000);
+    assertThat(loop.stats().overruns()).isEqualTo(1);
+  }
+
+  @Test
+  void aBudgeted256BotStartupHasNoStarvedSlotsAndReportsEveryWaitingBot() {
+    var rates = new ThinkRates(2, 5, 10, 40, 96);
+    var loop =
+        new ThinkLoop(
+            new ThinkLoop.Parts(
+                new DirectComputePool(), rates, governor(), TraceSink.none(), () -> 0));
+    loop.beginMatch(42, NAV);
+    var views = new ArrayList<CombatantView>();
+    for (var slot = 0; slot < 256; slot++) {
+      var id = new CombatantId(slot + 1);
+      loop.register(profile(id, slot));
+      views.add(Fixtures.combatant(id.value(), RED, SyntheticMap.RED_SPAWN.feet()));
+    }
+    views.add(Fixtures.combatant(257, BLUE, SyntheticMap.RED_SPAWN.offset(0, 0, 4).feet()));
+    var original = snapshot(1);
+    for (var tick = 1; tick <= 16; tick++) {
+      loop.publish(
+          new WorldSnapshot(
+              tick,
+              original.matchPhase(),
+              views,
+              original.bombs(),
+              original.poison(),
+              original.mapId(),
+              original.stimuli()));
+      assertThat(loop.board().perceived()).isEqualTo(32);
+      assertThat(loop.board().perceptions()).hasSize(256);
+      if (tick >= 8) {
+        assertThat(loop.board().perceptions().values()).noneMatch(PerceptionAge::pending);
+        var now = tick;
+        assertThat(loop.board().perceptions().values())
+            .allSatisfy(age -> assertThat(age.at(now)).isLessThanOrEqualTo(7));
+      }
+    }
+    assertThat(loop.board().thoughts()).hasSize(256);
+    loop.close();
   }
 
   @Test

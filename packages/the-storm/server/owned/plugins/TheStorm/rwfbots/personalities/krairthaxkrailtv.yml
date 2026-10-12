@@ -1,0 +1,76 @@
+id: krairthaxkrailtv
+name: KrairthaxkrailTV
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjE5MjU5OSwKICAicHJvZmlsZUlkIiA6ICIzMThjYjNmMWQ5OWU0MWU2OWI0YzNmYjIyZDkyZjBhZSIsCiAgInByb2ZpbGVOYW1lIiA6ICJ3bXdpIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzNkNWIxZTc4MGY0NDhjNWJlYzM2NzRmOGZkM2VlZGRlMzk0ODM0ZTk5N2Q5OTRkMjJjMmM2ZmJkZGM4N2FhY2UiCiAgICB9CiAgfQp9
+  signature: "f6QMzJfSBY57VU7YiO+zlRjwQ9yr4NXohKrA0WbXKrEcKGnYs+9B5cSCszVwbvDJSFE8mtlAnv8F5grCnDXViGVlwy19tONY0TwbRwEAfLq/Sdp4IWCNgjcyRCIRmt56Adyjz+72GJ10NpFqEl/Nj4UMO21zTU50C2TWIM21uzm6sOI25T8Q6VHNK7J0EZFQZudvgOTWvD5LEyoHcReKP5JLV4ZfWk2pKuxFYBeI+sYhdPETI7r/rlbdAy3LgpsXUrgsXBvFLA5yIohUqaW7qWTLb8if8q/OtIklzT/pc/rnZ/5HXJ66lIxREnQcreKSUVCIo95J/K8Qgzw1mBJ1LPLKnyboHbQOMFUUiGPJRPFZ2xT0WUaTY8npGMBq9mUABOM8Nz8/7c453Q3pwzWSo1sgw1hqz28rpZWZw2oc+JvwmL2i9XHOE7P3ecYBw1nSn6h216ri8fBVDHaPzEKlXJEv/eDfm9znOJAaDkmIeUt+FtiicKrMVoDqEWT/5VVHiuV0sFc0Lg2sem3vpSupmOpJKzlqnOVb5pqZtUwYVeLdSMIvcwj1WJUqL9WRVDXSVPdI/lJgaO+u8m5uH5AH75Xr/aQkd/OGvDSdFBRZu4WRtoUUj4634aMR+TLZBeY9PYB8tMFthGpyYQnnls0QdynWNiF4ws9AC8FxxB+JRYI="
+skill: 0.54
+archetype: troll
+leverOffsets:
+  aimErrorDeg: 0.6
+  cps: -0.78
+  decisionTemperature: -1.71
+  coordination: -1.44
+  technique: 0.53
+kits:
+  trooper: 0.47
+  shortbow: 0.65
+  rewind: 1
+  spy: 0.72
+roles:
+  plant: 0.53
+  escort: 0.36
+  defend: 0.14
+  rotate: 0.43
+  hunt: 0.35
+style:
+  aggression: 0.51
+  patience: 0.27
+  teamplay: 0.12
+  risk: 0.83
+voice:
+  tone:
+    - busy
+    - mischievous
+  verbosity: normal
+  style: "ingredient lists and improvised kitchen fixes; deadpan object conversations and harmless overconfidence"
+lines:
+  greet:
+    - kitchen trivet washed, team fed
+    - kitchen trivet has appointed itself captain
+  onKill:
+    - a useful pinch of pressure
+    - kitchen trivet is now insufferably proud
+  onDeath:
+    - too much heat on that corner
+    - kitchen trivet would like a different replay
+  onPlant:
+    - letting the bomb simmer
+    - kitchen trivet calls this interior decorating
+  onDefuse:
+    - taken off the heat
+    - kitchen trivet says it knew the correct wire
+  onWin:
+    - kitchen trivet can serve this round
+    - kitchen trivet is requesting a trophy shelf
+  onLoss:
+    - the kitchen trivet recipe needs work
+    - kitchen trivet has misplaced the blame form
+  onLastAlive:
+    - one cook still stirring
+    - kitchen trivet insists this was the plan
+  taunt:
+    - your push could use seasoning
+    - the kitchen trivet gave that push three out of ten
+  lobby:
+    - there is soup beside my kitchen trivet
+    - please return my kitchen trivet after dinner
+    - "My kitchen trivet: I will cause a useful distraction."
+    - With my kitchen trivet, try not to laugh during my push.
+quirks:
+  - celebrates_early
+  - always_gg
+rivals:
+  - zordethpvp
+bio: KrairthaxkrailTV fed a team from a cramped kitchen beneath their spawn and still brings a kitchen trivet to the queue. ZordethPvP keeps asking whether it really helps.
+batch: 3
+retired: false

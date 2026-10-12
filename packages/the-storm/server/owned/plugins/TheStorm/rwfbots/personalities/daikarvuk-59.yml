@@ -1,0 +1,74 @@
+id: daikarvuk-59
+name: Daikarvuk_59
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjI1Njg1NywKICAicHJvZmlsZUlkIiA6ICI0Yjk1YzI2Y2UwMDE0ZTUxOTY3ODc2Y2UzMzAwNzlmNyIsCiAgInByb2ZpbGVOYW1lIiA6ICJTdHJhd2JlcnJ5T2NlYW4iLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNzc0N2U0OWYwMzNkNWJiMTdiMjNmMTJjMWMzZTBmZWM1MWZkNTI2YmRmN2VkNDliMjI0YWIzY2ExNzQzYmE3OSIKICAgIH0KICB9Cn0="
+  signature: "dlPe6XBowNia/fqgd4K8qXZcgMHl4VFY/v+S4lkrknpBBkd+L+XNMEIoeOUVbewVSkvMWNExgyRpbTLkJ0TtobhpRk2K13Got554FrSvNvA3glzeJVLeWpJQ1zsDJ4HnRhj+fDmskZ7Aq+/5uFr6Z0tIV1iZ0jBe+7aVU28aIOZvlV0GMzJyBf6sZWut0cUO3AXU+KYtM4y4ApU6c7cYZeTobkt2q1+iskHnlwjLHOGbKp/rcx8E5+Li2hhU3ze5S/LS4s088dvrEe7r2zW6j9OBwNKp9YW/03zcz1R+AdKUKjxqCdmAq48AAP3QLiqQpIlO+NHO9EqRGKMv/lv8RAbG0oa3yVQGpRdt7H7gv8Lp9u0qLYMZMzsNWeDF2u2htyyyXQZ3uKpld3ih8WzPS8/GH+QL2pSY7cT+5uDfbkBEcZ3OsMByjrpLLmOzOs4gMvx/v60V5zWH6BADyJJa9OY2jeYUxmCLy9RPsN+wfcY6U8Qt2/tRnqzgGxvxtxXS3RoTbB1BnZ6vqOhY7e96hubNqgO0FDQSALk4G8cA9mc/FvLFwPw4cLAzNklCsZ8616rwRHOPXoyH4s97EuCLniaq6JTct5TwYJykFECecjjf7n+CTGEBTfIzNJntwKZ93TN6ZIPq4kPIlRq8joKrpKH2VyYbwjcaHtxwF98YXsA="
+skill: 0.31
+archetype: lurker
+leverOffsets:
+  cps: 1.28
+  predictionQuality: 0.54
+  awarenessRadius: 1.16
+  coordination: -1.33
+  aggression: -0.48
+kits:
+  trooper: 0.67
+  shortbow: 0.58
+  ghost: 0.88
+  wraith: 0.61
+roles:
+  plant: 0.4
+  rotate: 0.78
+  hunt: 0.83
+style:
+  aggression: 0.41
+  patience: 0.85
+  teamplay: 0.12
+  risk: 0.57
+voice:
+  tone:
+    - cheerful
+    - hushed
+  verbosity: normal
+  style: "busy hive reports, praises small useful jobs; lowercase whispers, deliberate pauses"
+lines:
+  greet:
+    - honey dipper says the hive is busy
+    - honey dipper here. quietly.
+  onKill:
+    - a little sting in that lane
+    - the honey dipper was here a while
+  onDeath:
+    - flew straight into the window
+    - heard it too late beside the honey dipper
+  onPlant:
+    - quite a buzz at the bomb
+    - honey dipper is watching the quiet entrance
+  onDefuse:
+    - settled the swarm
+    - no noise. no fuse. just the honey dipper.
+  onWin:
+    - honey dipper has earned some honey
+    - the honey dipper stayed out of sight
+  onLoss:
+    - the hive will rebuild
+    - the honey dipper waited one corner too long
+  onLastAlive:
+    - one bee still making the rounds
+    - nobody move near my honey dipper
+  taunt:
+    - a lot of buzzing for that push
+    - the honey dipper heard that approach coming
+  lobby:
+    - keeping my honey dipper out of the rain
+    - no bees are hiding in my honey dipper
+    - "My honey dipper: I will hold the quiet route."
+    - With my honey dipper, leave one quiet approach for me.
+quirks:
+  - slow_starter
+  - always_gg
+rivals:
+  - drdunouz
+bio: Daikarvuk_59 kept a pretend apiary behind a flower-covered team base and still brings a honey dipper to the queue. DrDunouz keeps asking whether it really helps.
+batch: 3
+retired: false

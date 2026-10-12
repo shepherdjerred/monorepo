@@ -5,6 +5,7 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.shepherdjerred.thestorm.core.text.HouseStyle;
 import com.shepherdjerred.thestorm.rwfbots.app.Governor;
+import com.shepherdjerred.thestorm.rwfbots.app.LoadTelemetry;
 import com.shepherdjerred.thestorm.rwfbots.app.ThinkLoop;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantId;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -81,6 +82,17 @@ public final class RwfBotsCommand {
         .then(
             Commands.literal("debug")
                 .executes(ctx -> overview(ctx.getSource().getSender()))
+                .then(Commands.literal("reset").executes(ctx -> reset(ctx.getSource().getSender())))
+                .then(
+                    Commands.literal("load")
+                        .executes(ctx -> load(ctx.getSource().getSender()))
+                        .then(
+                            Commands.literal("reset")
+                                .executes(
+                                    ctx ->
+                                        load(
+                                            ctx.getSource().getSender(),
+                                            ticker.drainLoadTelemetry()))))
                 .then(Commands.literal("slots").executes(ctx -> slots(ctx.getSource().getSender())))
                 .then(
                     Commands.literal("learning")
@@ -116,6 +128,23 @@ public final class RwfBotsCommand {
             ticker.sectionP95Millis(),
             ticker.tick()));
     var board = loop.board();
+    load(to);
+    var ages =
+        board.perceptions().values().stream()
+            .mapToLong(age -> age.at(ticker.tick()))
+            .sorted()
+            .toArray();
+    var p95 = ages.length == 0 ? 0 : ages[(int) Math.ceil(ages.length * 0.95) - 1];
+    var maximum = ages.length == 0 ? 0 : ages[ages.length - 1];
+    info(
+        to,
+        String.format(
+            Locale.ROOT,
+            "perception age p95 %d ticks; max %d ticks; pending %d; living %d",
+            p95,
+            maximum,
+            board.perceptions().values().stream().filter(age -> age.pending()).count(),
+            ages.length));
     info(
         to,
         String.format(
@@ -134,6 +163,35 @@ public final class RwfBotsCommand {
     for (var bot : bots) {
       info(to, line(bot));
     }
+    return OK;
+  }
+
+  private int load(Audience to) {
+    return load(to, ticker.loadTelemetry());
+  }
+
+  private int load(Audience to, LoadTelemetry.Sample measured) {
+    info(
+        to,
+        String.format(
+            Locale.ROOT,
+            "load observations %d; age p95 %d; age max %d; pending max %d; lag p95 %d; governor max %d; overruns %d; think max %.2f ms; heap peak %d bytes; heap limit %d bytes",
+            measured.observations(),
+            measured.ageP95(),
+            measured.ageMax(),
+            measured.pendingMax(),
+            measured.lagP95(),
+            measured.governorMax(),
+            measured.overruns(),
+            loop.stats().maximumMillis(),
+            measured.heapPeak(),
+            measured.heapLimit()));
+    return OK;
+  }
+
+  private int reset(Audience to) {
+    ticker.resetLoadTelemetry();
+    info(to, "load telemetry reset");
     return OK;
   }
 

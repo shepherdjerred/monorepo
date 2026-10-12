@@ -1,0 +1,76 @@
+id: drzyxnezpoum
+name: DrZyxnezpoum
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4OTI3ODM3OCwKICAicHJvZmlsZUlkIiA6ICI3Mjc2ZThmYzVkNjE0ODNjYmMwN2IxYjIzNjI3MDA4ZSIsCiAgInByb2ZpbGVOYW1lIiA6ICJXYWJvV2ViaSIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9lNzhlNTdjYjgyYjQxZmNkMTgzZjk0OGE4YWY3NGI3YzdhZDQxZjBmZjM0YTM2NWY1MDhhMzk0YTdkMjMzNGUiCiAgICB9CiAgfQp9
+  signature: "qL1VceC0lLeHZxSNcnKKlcKjSnvv49aRwbFGzD0SQ7Glre2JB8DIsXYFzwCBD9A7sRvzWW/X85tR6eNvsESfHSuW/YiPhuWuCMmS12nLtGE89nx6pjWlcDGk9TmN67pNsyx/IQ4XNoWWArtZ9XWBryZNxKotUQy962q8r0BQQ7ARZM8O4KzqYjUfWK718AvG7ipKBW8ppBNDXy6pWRIf8cx2LHlYsL53LCMRYtDsMU2v9okEP17OhM3lpxDB7USS1iKzYnwOCW0q3N3yly1JmBqOGuNWyab4/6aWTLjMJ539ZhMHi0v9GO7tTHk0TqYAe/mVG+mh7g3RNUO5HQQq19dK+4060u1h30cpKmjLNu01J0ZllasTWjyVSWl3fIn9k5vsJGFieav30OOGbgcGjeYcbu+Awchg4re8ivPED4zUdfHL4KtybzGEX2DzgE7XrMpLp6xsnIHpbmOvi7HktzQMleNQ5+wCiqSGxv7LU6KqUMp2vmROg+gQAaHtMPssA0lM9sN2E2Cy480efMb4ZUJmkRQNc93qYWOF5AzGrst5Qxd0qJHf+73DQvGlLZ+QOp8/qijs3VjJ5Sm/zRc7vesbp24HHpwm19mM68Rd0jUVIvyfvl2c9ro+xMOyFObiBFSIfneoBFP4OHhmeauAeid6kuV5uv2HE3TcILURtkA="
+skill: 0.143
+archetype: sniper
+leverOffsets:
+  reactionMs: 0.2
+  aimErrorDeg: 1.73
+  cps: -0.6
+  predictionQuality: 1.42
+  awarenessRadius: 1.06
+  technique: -0.34
+  aggression: -0.4
+kits:
+  trooper: 0.13
+  longbow: 0.93
+  shortbow: 0.41
+roles:
+  plant: 0.3
+  defend: 0.76
+  rotate: 0.42
+  hunt: 0.71
+style:
+  aggression: 0.29
+  patience: 0.88
+  teamplay: 0.48
+  risk: 0.21
+voice:
+  tone:
+    - animated
+    - focused
+  verbosity: quiet
+  style: "chain reactions and distracted marble chatter; short range notes and patient, exact corrections"
+lines:
+  greet:
+    - spiral ramp at the start, here we go
+    - spiral ramp in place, checking the long angle
+  onKill:
+    - that set the next piece rolling
+    - spiral ramp found the range
+  onDeath:
+    - my spiral ramp has left the track
+    - spiral ramp needed a closer angle
+  onPlant:
+    - the final part of the chain reaction
+    - spiral ramp covers the far entrance
+  onDefuse:
+    - caught it before the big drop
+    - spiral ramp can wait, hands on the fuse
+  onWin:
+    - spiral ramp reached the finish
+    - spiral ramp had a clear view of that
+  onLoss:
+    - the spiral ramp course needs a railing
+    - spiral ramp kept the wrong sight line
+  onLastAlive:
+    - one last piece still rolling
+    - one spiral ramp, one long angle
+  taunt:
+    - your route has a very sharp drop
+    - the spiral ramp saw that peek twice
+  lobby:
+    - trying not to drop my spiral ramp
+    - there is a spiral ramp under the lobby bench
+    - "My spiral ramp: I will cover the long angle."
+    - With my spiral ramp, call the close flank for me.
+quirks:
+  - bow_spammer
+  - always_gg
+rivals:
+  - neonarrow71
+bio: DrZyxnezpoum filled a workshop with a marble course nobody finished on the first try and still brings a spiral ramp to the queue. NeonArrow71 keeps asking whether it really helps.
+batch: 3
+retired: false

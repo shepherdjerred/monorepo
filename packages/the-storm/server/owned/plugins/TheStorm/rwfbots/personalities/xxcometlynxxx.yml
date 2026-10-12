@@ -1,0 +1,72 @@
+id: xxcometlynxxx
+name: xXCometLynxXx
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NDk1NDE2OCwKICAicHJvZmlsZUlkIiA6ICIzYzBkZWU0NzE5MDM0OTc5OWE1ZmJlYTE2NTgwZmRmMyIsCiAgInByb2ZpbGVOYW1lIiA6ICJEZXF1YXJpIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzgwNGU3NDU4M2RiZWQ2NmQ5YzhjZWU0MGE2ZTkyZGYxM2I1ODc0N2JiN2ZkYmNiNmQ0MmY2N2EyNTQ3MTVlNGUiCiAgICB9CiAgfQp9
+  signature: "hN4mRp8HJM2jQE9kFQH56EQVvw2vqMXl1RPUMOvLKQK6Cb+4TFS0y0jwNNI2NgcERLmCJLlm8W/IUaSbULn3ZPq4M7kvwZWrgiVct6zllZltykHKMXq1pIF20I16iQI29Uzzq9r2ZICHBWPqndvIUzQs20PY58KhPRAot5FSt4zcl2+BbNp+6pGZuDHeJ6JKwEEJukhqBQ0SFX6Z9Sc2xJTkCNRrIi09vsSKpjyZdWu/vln9FymRqmPHHIlb9QnuA4NaAEVG4lUH7t+jnCVNK38FzmFXOi6QZJ7RkIFymOBoZs+gXDFJcijYgVn/sSRdbhmUuO7lSHCMOL4rzCL1T/LCY8xC62pVHlqBhvvxAeXQLimljvkowO5Qo/HxVihbfo+v+/t4UIMlafiu+RwKmjYdrzChGDKdHu5hXci9OE2dHz9od2o3tEVkEhnyKHxhBeGDze0y/B1jXnwUL/dUHYuyJ6Ohpma1pl7IIkC6dWjKAch9omOKZc92XtqPXMB+MHl14HcRS+Oc468sECW7DwydDArycyPZO4tfv94j23BZkWG9QxXgwXOscr8oXaYw8/ho7WmLwUbuMVpI1ZrHyaYCmOnZD6kAy93rgHgSl3kLriz/TI5/Nt26vV/8QLULddfuwxH0br/o+4JaG97M1wdNvf2GN8arh6pTtJurWDs="
+skill: 0.854
+archetype: hunter
+leverOffsets:
+  reactionMs: -0.43
+  turnRateDegPerTick: 0.72
+  predictionQuality: 1.14
+  awarenessRadius: 1.19
+  aggression: 0.83
+kits:
+  trooper: 0.62
+  longbow: 0.46
+  shortbow: 0.93
+roles:
+  rotate: 0.37
+  hunt: 0.96
+style:
+  aggression: 0.8
+  patience: 0.37
+  teamplay: 0.48
+  risk: 0.51
+voice:
+  tone:
+    - observant
+    - intent
+  verbosity: normal
+  style: "local forecasts and quiet predictions; tracks small clues aloud, then gives terse pursuit calls"
+lines:
+  greet:
+    - sun recorder predicts a lively round
+    - sun recorder ready, looking for tracks
+  onKill:
+    - a sudden change on the sun recorder
+    - sun recorder followed that trail correctly
+  onDeath:
+    - the sun recorder missed that gust
+    - the sun recorder trail doubled back
+  onPlant:
+    - pressure dropping at the bomb
+    - "sun recorder found a path to {bomb}"
+  onDefuse:
+    - storm warning cancelled
+    - sun recorder tracked the ticking down
+  onWin:
+    - clear skies over my sun recorder
+    - sun recorder followed it to the end
+  onLoss:
+    - my sun recorder forecast was optimistic
+    - sun recorder lost the trail near the finish
+  onLastAlive:
+    - one sun recorder in the storm
+    - the sun recorder has one trail left
+  taunt:
+    - your push is mostly hot air
+    - the sun recorder noticed those footsteps
+  lobby:
+    - taking a reading from my sun recorder
+    - please stop breathing onto my sun recorder
+    - "My sun recorder: I will look for the last opponent."
+    - With my sun recorder, call the last place you saw them.
+quirks:
+  - holds_grudges
+  - always_gg
+rivals:
+  - kraxgryzgry-59
+bio: xXCometLynxXx logged the weather from a glass hut above the old arena and still brings a sun recorder to the queue. Kraxgryzgry_59 keeps asking whether it really helps.
+batch: 3
+retired: false

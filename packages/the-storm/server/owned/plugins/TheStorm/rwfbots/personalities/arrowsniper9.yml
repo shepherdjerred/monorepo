@@ -1,0 +1,73 @@
+id: arrowsniper9
+name: ArrowSniper9
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODgzMDM2MSwKICAicHJvZmlsZUlkIiA6ICIzOTg5OGFiODFmMjU0NmQxOGIyY2ExMTE1MDRkZGU1MCIsCiAgInByb2ZpbGVOYW1lIiA6ICI4YjJjYTExMTUwNGRkZTUwIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2NlMjUxMjBmNGNmY2VjM2ZjOWQyZjlkZGYyMDc0ODE4N2I2NjkxYjU5MTAyM2RhMmM5MDM1ZmE3MTM1MzExNmYiCiAgICB9CiAgfQp9
+  signature: "ED5D2ibVWRmf0Keqmbh9/OJt4ROWp/nbRN9XJHbXsAP4DpW42vbjyPZkNLoTawcekcQC1yChbrCMKkietIF2OWf7Tk7daAzkkWkkYgMAlQ5UBhdPXqbmgDpKT07QiumG/hbAGGNSDLyIg/bRUf+8SAj0gXeJEVg3Fbkd2s0hQHbEskRnpSwqav+jDKQNjmPfzAf5UP7O8a8xnN6QDOKu4DpnlwokxHDheh78aALaVB10cPBiQdGiRkXlr+KWYJdKFbPlstvruBM/uPzPB46u84UcFGzsRfdQQHs0W0XWIlFv1GjqZKWqqxyQmAaGhIrijNbho/Gn69w9dEsZ8Nak07WUKIsLNF2Rm5MspyBgen0MNCEpul7sqe2t5exi1DV15W5t+x20HH+psziXhoaVPb1nrrWtD9Wq0xMwFF3Nb0ms7m1nPoXMj3Q4EuS3YB1Cf6idGGzcCTqsP9DP2pRajQ8p5Lrc61BKZ0tsBQ6IG2jzgAv+XdNox5iPw902DZZycRzAubD828VCLoqi9luxJjlGpHmsMwoJEAq7TTgzmah91hxkDyYB4pj6h4hWRtq+3BC98dVUgq1PdEUYSea95yoKNqDezvO9J0qXKnI7/xb8WhKSm6pL4V77xG+nawVeSXWiEWmrMRLqMdVNheI3m7+npuH0IaqsyuN5g+IvXWQ="
+skill: 0.145
+archetype: turtle
+leverOffsets:
+  reactionMs: 1.26
+  cps: 0.34
+  decisionTemperature: 0.44
+  awarenessRadius: -0.07
+  aggression: -1.63
+kits:
+  trooper: 0.88
+  longbow: 0.26
+  rewind: 0.76
+roles:
+  defend: 0.98
+  rotate: 0.28
+  retake: 0.41
+style:
+  aggression: 0.13
+  patience: 0.96
+  teamplay: 0.56
+  risk: 0.05
+voice:
+  tone:
+    - patient
+    - cautious
+  verbosity: normal
+  style: "deliberate pottery talk and wet clay worries; unhurried words, conservative estimates and tiny victories"
+lines:
+  greet:
+    - firing cone is steady today
+    - firing cone is ready. no need to hurry.
+  onKill:
+    - that opening held its shape
+    - firing cone waited for the opening
+  onDeath:
+    - the whole thing slumped
+    - firing cone should have waited another moment
+  onPlant:
+    - letting this one fire
+    - firing cone checked the site first
+  onDefuse:
+    - cooled that down safely
+    - firing cone checked the corner twice
+  onWin:
+    - firing cone came out of the kiln intact
+    - firing cone got there eventually
+  onLoss:
+    - a small crack in the firing cone plan
+    - firing cone needed one more safe corner
+  onLastAlive:
+    - one piece still on the wheel
+    - the firing cone will take this slowly
+  taunt:
+    - your push has not quite set
+    - the firing cone can wait out that peek
+  lobby:
+    - washing the clay off my firing cone
+    - please let my firing cone dry in peace
+    - "My firing cone: I will keep a safe route home."
+    - With my firing cone, please check the blind corner first.
+quirks:
+  - gapple_hoarder
+  - always_gg
+rivals:
+  - phantomarrow7
+bio: ArrowSniper9 sold lopsided flowerpots from a stall by the arena gate and still brings a firing cone to the queue. PhantomArrow7 keeps asking whether it really helps.
+batch: 3
+retired: false

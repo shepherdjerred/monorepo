@@ -1,0 +1,75 @@
+id: fusesniper7
+name: FuseSniper7
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODQ5Mzg2NywKICAicHJvZmlsZUlkIiA6ICI0YmEzMzMxNjA0YjU0NzgwYmQ0MzBkMTc5NjI4Yjk0YSIsCiAgInByb2ZpbGVOYW1lIiA6ICJNeVdpZmlKdXN0RGllZCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9mYjczOTZiYWU1N2E4MGQzMDFmZmNjYjMwYTUzYmI5YmM3Y2MyNTYxZTYyMjU4M2U3MmJlN2JkNGUyZTg2MWE0IgogICAgfQogIH0KfQ=="
+  signature: "D2UpuCFShS4WFw5LNHDvVUdNISBC26DPXv24p7lJQDWMTeIVqTSWUNGH7joXLdB+wvL0Mnktik9HnNV7DsfZ9oJiSTwFcfX2/eV/eTQmriz7olNaKVTPcGQzV3vq8LhrjpmeAzgKacsqiPbmRXwoCH0h9BaO0jVxhrm2wKaJcq9jsLLitbuqUyyaJoaCKSi4uPYsSq4egzWXQYGpF/1+ClfG6mjh6iQbcjrl73fv3Yd8LIBMP55VecsQ2Nd7H8nleeSJyxBy5pkH7LAVVdQp9XocTezlt38nybK6rpYM/p+kMMylhnMIE5KzZjlHjlHc2L3qmbsMVDEWB+Vs4mwuwlhaiVsVJ71qck1bW+yF/G1W6vybgReHm2pXnpasJD7v3IUiW/CpOQyAgmTKqh7VthAsOLrscSY14tHHO2oAQn1LeKNNfshvl1Vn3osd8tvv2sz+Jo2osoYeyHRee1EN/eB4+b3OlECfpPltCNCTCb9qho1ukpUNGmYrcobZ3LUGjfAtS3nTN7ONK3M2DzUNluBIpFbgrjHdEgTtJb8ps3ZgyR9lRkXKXJn6Kzk3sHb5trjnFQR18BG/jzgCgCjMemdadd07de4XhfDYDfsl4y2DKskLo4fjCTnI6ittkLabVR5Re+xlJ61evZ9I4DPC3Xgwszvl8Y1p1CtuKA9tDZI="
+skill: 0.01
+archetype: rusher
+leverOffsets:
+  reactionMs: 0.34
+  turnRateDegPerTick: 0.28
+  cps: -0.15
+  decisionTemperature: 0.28
+  awarenessRadius: -0.61
+  aggression: 1.78
+kits:
+  trooper: 1
+  shortbow: 0.53
+  rewind: 0.32
+roles:
+  plant: 0.7
+  escort: 0.48
+  defend: 0.2
+  hunt: 0.67
+style:
+  aggression: 0.99
+  patience: 0.18
+  teamplay: 0.22
+  risk: 0.8
+voice:
+  tone:
+    - theatrical
+    - eager
+  verbosity: chatty
+  style: "backstage whispers and hurried scene changes; fast fragments, impatient countdowns"
+lines:
+  greet:
+    - cue sheet in place, curtain soon
+    - cue sheet ready, I am taking the first corner
+  onKill:
+    - a quick scene change for the cue sheet
+    - cue sheet keeps moving, next corner
+  onDeath:
+    - missed my cue by a whole scene
+    - a pause for the cue sheet, then straight back
+  onPlant:
+    - cue the dramatic ticking
+    - cue sheet is already on the next approach
+  onDefuse:
+    - cut that effect, safely
+    - quick hands, quick cue sheet, clear
+  onWin:
+    - take a bow beside the cue sheet
+    - cue sheet barely stopped all round
+  onLoss:
+    - the cue sheet needs a better rehearsal
+    - cue sheet ran ahead of the plan
+  onLastAlive:
+    - one performer, one cue sheet
+    - my cue sheet and I will keep moving
+  taunt:
+    - your entrance was a bit loud
+    - my cue sheet got here before that push
+  lobby:
+    - has anyone seen the cue sheet?
+    - do not lean on the painted cue sheet
+    - "My cue sheet: first corner is mine."
+    - With my cue sheet, please follow after the opening.
+quirks:
+  - bunny_hops
+  - always_gg
+rivals:
+  - krymurpro
+bio: FuseSniper7 worked the curtains at a player-built theatre between duels and still brings a cue sheet to the queue. KrymurPro keeps asking whether it really helps.
+batch: 3
+retired: false

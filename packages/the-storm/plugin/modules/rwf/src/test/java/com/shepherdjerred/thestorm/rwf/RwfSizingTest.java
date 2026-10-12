@@ -4,6 +4,9 @@ import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchSnapshot;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import org.jspecify.annotations.Nullable;
@@ -98,5 +101,38 @@ final class RwfSizingTest {
     harness.tick(Duration.ofSeconds(91));
     harness.until(() -> harness.snapshot().phase() == MatchSnapshot.PhaseKind.LIVE);
     assertThat(harness.snapshot().combatants()).hasSize(4);
+  }
+
+  @Test
+  void aCandidateCapOf256IncludesTheHumanAndReusesAuthoredSpawns() {
+    running = RwfHarness.prepare(directory);
+    var harness = requireNonNull(running);
+    try {
+      var config = directory.resolve("rwf.yml");
+      var owned = Files.readString(config);
+      assertThat(owned).contains("maxCombatants: 100");
+      Files.writeString(config, owned.replace("maxCombatants: 100", "maxCombatants: 256"));
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
+    harness.enable(directory);
+    var op = operator(harness);
+    op.performCommand("rwf admin size team 129");
+    op.performCommand("rwf admin size team 128");
+    assertThat(RwfHarness.messages(op)).anyMatch(text -> text.contains("256 total (128/team)"));
+    harness.goLive(op);
+    assertThat(harness.snapshot().combatants()).hasSize(256);
+    assertThat(harness.snapshot().combatants().stream().filter(c -> c.id().isBot())).hasSize(255);
+    for (var team : harness.snapshot().teams()) {
+      assertThat(
+              harness.snapshot().combatants().stream()
+                  .filter(c -> c.team().filter(team::equals).isPresent()))
+          .hasSize(128);
+    }
+    op.performCommand("rwf leave");
+    harness.ticks(1);
+    harness.tick(Duration.ofSeconds(31));
+    harness.until(() -> harness.snapshot().phase() == MatchSnapshot.PhaseKind.LOBBY);
+    assertThat(harness.snapshot().combatants()).isEmpty();
   }
 }

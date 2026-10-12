@@ -1,0 +1,75 @@
+id: swiftskaixtouz
+name: SwiftSkaixtouz
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjE5ODcyMCwKICAicHJvZmlsZUlkIiA6ICI4YzdjODljMDI4ZTM0MzEzOWFkY2QwYTk4ZmVhODllNiIsCiAgInByb2ZpbGVOYW1lIiA6ICJDWUpKS0oiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOWU4NmEwOWZiN2E0NmYxYjljNGZkMzQ2YWJhMWUxMDQyNTA1ZTdjZjgyMGNmOTU1YWIyODhhMWUxY2FlYzMwZiIKICAgIH0KICB9Cn0="
+  signature: "Y47hhrWr5PD7YmD5o8T8Gm0F16YJwOmO/o0QoLb7wGbVa1rXyxr+3ypAB0kUoaCAwWAR+zBj8AqslR54zzLCz3Ep3V4Edw84WST/wZmV+G7qiQgpPiAIAzhYBEf/I18cUWizd+nkFZZZiChXsY8u5Cqhsgy3LksdrHQmhr1YDXiLuornsVAcgZaRgJrtnu1eJBx8MBzDOM9oaVTe/zJodedQQUT/vu7hToj0hiEp+ce0aBqpn1Go2aMD4OwCLmkOSPYAtPdaNcsgvkXGzj/ysM7JyfMEJuLmtF2OD2uJMbe1hyPXVjKm4jqeD25h+f6LHHhXAUJd06svD+o2nDa0HaLTF9Tr/pXS9VltsC8G6K71QHmPcDAC/s95yjp4IU3GOoea7Tuc9rflFPz8RFi+eWu4V3P9815cwokzW7ykNjrvVPen11bV8upPXj2FxNXoGitLa67w88kHn13xPZxqiIb8R5VpJ90uWPrn+7C1F26ME2BbaPTUmfFi2V5Z/jGnTa4rHFok6CBZuA0PsKE8A9QdQJgsJBVP1bJIVdq22W3/IZhOYAISMP1HRj1q9EemAdEul4tx61M257iTPlHurCkJynTPdAv2peuWb5yY/Wefecc8OoR0D4SPyhFdtf8v5P3SFIzh7RS9LEJFQL7plO03OuLFd6tRIeJZ60IkhwU="
+skill: 0.219
+archetype: rusher
+leverOffsets:
+  reactionMs: 0.54
+  cps: 0.76
+  decisionTemperature: 0.71
+  awarenessRadius: -0.55
+  coordination: 0.02
+  aggression: 1.19
+kits:
+  trooper: 0.93
+  shortbow: 0.56
+  rewind: 0.3
+roles:
+  plant: 0.83
+  escort: 0.39
+  retake: 0.23
+  hunt: 0.56
+style:
+  aggression: 0.89
+  patience: 0.18
+  teamplay: 0.4
+  risk: 0.75
+voice:
+  tone:
+    - bookish
+    - eager
+  verbosity: normal
+  style: "brief footnotes and revised-edition rematches; fast fragments, impatient countdowns"
+lines:
+  greet:
+    - bone folder ready, new chapter
+    - bone folder ready, I am taking the first corner
+  onKill:
+    - a short footnote to that duel
+    - bone folder keeps moving, next corner
+  onDeath:
+    - a regrettable page break
+    - a pause for the bone folder, then straight back
+  onPlant:
+    - a cliffhanger at the bomb
+    - bone folder is already on the next approach
+  onDefuse:
+    - closing that chapter gently
+    - quick hands, quick bone folder, clear
+  onWin:
+    - the bone folder gets a happy ending
+    - bone folder barely stopped all round
+  onLoss:
+    - the bone folder needs a revised edition
+    - bone folder ran ahead of the plan
+  onLastAlive:
+    - one last page to turn
+    - my bone folder and I will keep moving
+  taunt:
+    - I have read that opening before
+    - my bone folder got here before that push
+  lobby:
+    - resting my bone folder on the lobby shelf
+    - please do not dog-ear my bone folder
+    - "My bone folder: first corner is mine."
+    - With my bone folder, please follow after the opening.
+quirks:
+  - bunny_hops
+  - always_gg
+rivals:
+  - mysticbrylzaez
+bio: SwiftSkaixtouz bound a book of old match stories with mismatched covers and still brings a bone folder to the queue. MysticBrylzaez keeps asking whether it really helps.
+batch: 3
+retired: false

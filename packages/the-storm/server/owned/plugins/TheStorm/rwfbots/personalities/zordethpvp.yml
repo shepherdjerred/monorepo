@@ -1,0 +1,75 @@
+id: zordethpvp
+name: ZordethPvP
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTM4NTUxOSwKICAicHJvZmlsZUlkIiA6ICJlNzVjZTk1MTc1OWI0MmVlYmY4ZmVjZDhhYjM0YjM2MyIsCiAgInByb2ZpbGVOYW1lIiA6ICJfS0tYRF8iLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZmRmZWEyMDkzM2Y0ZTZmNmRhOGM0NDZmMjY5ZWFhYjJiMzVmNzRjZWQxYWM2MmUwNTUwNDVlNjQ5MzdmOWVmMSIKICAgIH0KICB9Cn0="
+  signature: "wftApn6W7oEQ/wRshCgtg7d0JvfBtHQ6Zt3qS44edk370Hiz6sYp9uxNUhw6VxJTHU1V0nvjlf5OF5zOsmFwGY2NUf7JBUc60LOsad3b7k0sgdHSMHLtDD1doFNONXtXRMbbn1L86LtHN9QnTT/6WPHX+US0JRdTeAWEUutykMlqkBovkW5+DN7mcB3GkqHOs2gwjLv/ZXQsGHeGSLpcieAAZoyfj3oGoTXSR/FAcNTuc3OeYuY2rjOQvTQ0XFavvtpNc4lmDAOtty1QUkVDxgugqUVMNZCRxTn4+cczU8T0+Hg5xJdTpOnSNhzuUlVc5NCE+RyCP0c49SBHE8XXYwhvs9swALoSZ9fzCadvmsHXCA3Zecv8bJxoBQI5PKLjXv1EoGZ++4GcwkSLWZNqUTtc/AOVP/gZDmOsEtVDRJR9bQ0Gu1MNsmT1VclbBNDYtj2CG1jdJAbc0ehClegCPRoXTze+JrDNb55l+9t3oEafntmHlyJMISuWcJMfjYxb4evC4q38ZTHGx3JflbgCa8XBR38oqEBBagAD8auRkLsPreNfdJxZ6DZZCIzqa+hVj/yf7ZBtMP/Yg0RnoWCRXmoB2fGRx3WDETe0eQVIf/S8LyK8RkiSakddLeq/QaGPkQKmzFKET4E3jqDfHjk9x9mLfoMpQt+yc2QRWsMeMVM="
+skill: 0.948
+archetype: flanker
+leverOffsets:
+  reactionMs: 0.79
+  turnRateDegPerTick: 1.22
+  predictionQuality: 0.58
+  coordination: -0.12
+  aggression: 0.49
+kits:
+  trooper: 0.58
+  shortbow: 0.88
+  rewind: 0.37
+  wraith: 0.5
+  spy: 0.45
+roles:
+  plant: 0.28
+  rotate: 1
+  hunt: 0.57
+style:
+  aggression: 0.63
+  patience: 0.48
+  teamplay: 0.31
+  risk: 0.72
+voice:
+  tone:
+    - precise
+    - nimble
+  verbosity: normal
+  style: "map annotations and quiet route corrections; quick side remarks and route changes mid-sentence"
+lines:
+  greet:
+    - my grid square points toward trouble
+    - grid square is taking the other entrance
+  onKill:
+    - grid square gets another little cross
+    - grid square found a side door
+  onDeath:
+    - there is a hole in my grid square
+    - grid square chose an occupied side door
+  onPlant:
+    - grid square marks the fuse
+    - "grid square came around the back of {bomb}"
+  onDefuse:
+    - erasing that from my grid square
+    - grid square found a quieter route to the fuse
+  onWin:
+    - grid square finally matches the terrain
+    - grid square took the long way for a reason
+  onLoss:
+    - time to redraw my grid square
+    - grid square took the long way for no reason
+  onLastAlive:
+    - one dot left on my grid square
+    - one grid square coming around the edge
+  taunt:
+    - your route is wandering off my grid square
+    - the grid square is somewhere to the side
+  lobby:
+    - unfolding my grid square on the lobby floor
+    - please do not spill cocoa on my grid square
+    - "My grid square: I will try the side approach."
+    - With my grid square, keep them looking forward for me.
+quirks:
+  - crouch_spam
+  - always_gg
+rivals:
+  - captainvymdio
+bio: ZordethPvP kept a hand-drawn atlas of the 2013 rotation and still brings a grid square to the queue. CaptainVymdio keeps asking whether it really helps.
+batch: 3
+retired: false

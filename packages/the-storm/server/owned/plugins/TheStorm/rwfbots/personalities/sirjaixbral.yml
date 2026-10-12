@@ -1,0 +1,72 @@
+id: sirjaixbral
+name: SirJaixbral
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NDg3NjEzNSwKICAicHJvZmlsZUlkIiA6ICI1MzE4YWJhNDJiMTk0ODNiODFiMWY2N2Y1ODVjNDdkNSIsCiAgInByb2ZpbGVOYW1lIiA6ICJocHllZiIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS82MzRlZDIyNzU2NzZiY2Y0YzBjMDE4MGM3YTA4ZjhhZmFhMjU2OTI2MmJlZmU4MTIzMTY1MTFmZTY1YWE2NWJhIgogICAgfQogIH0KfQ=="
+  signature: "q3f9UkDbt3moIuDH5e1vZbewH6DUMNEYXiv2hzBXAvtyLh9J19kUhV5D4asJhp34Z8CREcF71Wfw46l9OodTEUTyx6ej+8ejU4UpQlIt/QlgarvtMmDvpv5JfaWB/+946uZwolhVOYhWRLnipmCoNgm/3eR8qg+mPoCggDC/K21iTH7P4zmTa9+tPkCExy1Zpq4nPwFFgF/7G9u6KdJdc+Ch/lwyyQW45kMP8uUNTMuzFXtn6UkNvhRKq12QW802EchaDqVjEJYbqcUItmsojEpTA9Y5CJdYNM65spBZemhlfpTKN1DmgpZLpmhPWbdkXQhfVApZlIDwQaaF9nVJe9jBqV1JFNpoD7sGXcGPHivRISxZzqau8n4iYSyW6w+2CABcoLXA4MzLxfE9lFz3uvnRVGUtnH2KSt+BAAkoGzNNsIsqAAkFJOGbryI4w1qCgzbhG/Xge6yWwOJDaYio1tlrzU0ngBFOxfZOTFfW9ryrCsINvuqVlDD3rSxVAOe3Xm5O4cA9DwsZoAIscsNmkAQYttcYRsJchHBtkewZ5bkso0zpwzwCvcxLCFCwVLvf9rhWXgPR47VTwAsDvvCZe6blhhh0tgcaVNZRm6+7/NiE5wJIwTiIM5r/zR10jr7p+6aGIpv0gT47UMsLBT/u/uKWLTG1k2OBpWNKiZJ/H7A="
+skill: 0.435
+archetype: anchor
+leverOffsets:
+  reactionMs: 0.25
+  predictionQuality: 0.39
+  awarenessRadius: 0.59
+  coordination: 0.43
+  aggression: -1.34
+kits:
+  trooper: 0.89
+  longbow: 0.43
+  rewind: 0.3
+roles:
+  defend: 1
+  retake: 0.58
+style:
+  aggression: 0.36
+  patience: 0.87
+  teamplay: 0.57
+  risk: 0.09
+voice:
+  tone:
+    - theatrical
+    - grounded
+  verbosity: normal
+  style: "backstage whispers and hurried scene changes; reassuring statements and firm location reports"
+lines:
+  greet:
+    - stage lantern in place, curtain soon
+    - stage lantern stays here, I have this corner
+  onKill:
+    - a quick scene change for the stage lantern
+    - stage lantern and corner still secure
+  onDeath:
+    - missed my cue by a whole scene
+    - someone watch the stage lantern corner
+  onPlant:
+    - cue the dramatic ticking
+    - stage lantern guards the exit from the site
+  onDefuse:
+    - cut that effect, safely
+    - stage lantern is staying by our bomb
+  onWin:
+    - take a bow beside the stage lantern
+    - stage lantern never left the post
+  onLoss:
+    - the stage lantern needs a better rehearsal
+    - stage lantern held the wrong corner
+  onLastAlive:
+    - one performer, one stage lantern
+    - the stage lantern holds here a little longer
+  taunt:
+    - your entrance was a bit loud
+    - the stage lantern has not moved for that push
+  lobby:
+    - has anyone seen the stage lantern?
+    - do not lean on the painted stage lantern
+    - "My stage lantern: I will guard the home approach."
+    - With my stage lantern, call before rotating off defence.
+quirks:
+  - stares_down
+  - always_gg
+rivals:
+  - swiftskaixtouz
+bio: SirJaixbral worked the curtains at a player-built theatre between duels and still brings a stage lantern to the queue. SwiftSkaixtouz keeps asking whether it really helps.
+batch: 3
+retired: false

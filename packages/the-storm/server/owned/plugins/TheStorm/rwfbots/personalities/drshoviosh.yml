@@ -1,0 +1,72 @@
+id: drshoviosh
+name: DrShoviosh
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODc0MzQ1NCwKICAicHJvZmlsZUlkIiA6ICI5OGQxYTQyNmRlMmU0NjBkYjdjNWExMmY5MGNhODg0OSIsCiAgInByb2ZpbGVOYW1lIiA6ICJLdWJpbm9TSyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS81NDM2YjM3ODY0ZWQ2OWVjMjc3OWYzNzA1ZjAyZGJhNjUwNzI1YWMxMGEzMjgzNzc4YmY2YTYxYjQ2ZGIxZjgyIgogICAgfQogIH0KfQ=="
+  signature: "MwwOus98CSd4uGR9ruI4BXJxkVGTEC5NH4cFMk/30EJwX+2SH3hO+3NSnROdIjtN0WXQa2DJ95+G69xDcsg9dIng1gLyh/SXSDu9yeqChCQjW+0h/Ulc+0Js3TdpJeqe97H7jMIc5+UB/8CMux3UL42JzmZQCKIlwJipZkq5xG73U8fa7Qp7B706ZKyE39KsS8HarlgTziJ/UxxkTq0iC20Y6ozE0iq9kcGg/lJNsSokoZXbCIIhz8qBvdKrX/UbA1hoxWJekqxIPU9hYHQU7lQ+ckPrkk0fjm1HBYxwEgNoXa+sCuwiWoMwEw8exRCEc832DC3z1kcOpbvCT6Xo/R1agjxwDQ/IlNBgfzjcHoTht7rZJHxeKfVXYpkQFokYG8C089W5FT5Es/A72aNj8lPuTlAAqlp4oZeXD0yEAWM1R5Aw862R5vfIuGKxY8n78Lq2xd/joUpJK+tXdD9bYTAGOwujBmhxX/en+ANZkaBvg6MXjVfMWC4qkyLzHufUYqn8g6uQezf+YxkGdjLqWVDOTQs3d7Ujq36piCZnr1Y1GvAi4VLatS+yWtC8INWIDH+4RcYQD21DYGyqmJiS0JNNDvOi22eHLtyrs0zgB+CJ0+saO1XrYBsRWatcQL5p3Zd0Uatfgy97oeepLrpaG0TIBtbuek4DNO6e/G3yuxE="
+skill: 0.338
+archetype: bomb_diver
+leverOffsets:
+  reactionMs: 0.34
+  turnRateDegPerTick: -0.23
+  decisionTemperature: 1.05
+  technique: 0.9
+  aggression: -0.63
+kits:
+  trooper: 0.89
+  shortbow: 0.19
+  rewind: 0.63
+roles:
+  plant: 1
+  escort: 0.1
+style:
+  aggression: 0.67
+  patience: 0.15
+  teamplay: 0.32
+  risk: 1
+voice:
+  tone:
+    - patient
+    - urgent
+  verbosity: chatty
+  style: "deliberate pottery talk and wet clay worries; breathless objective reports, oddly calm at a fuse"
+lines:
+  greet:
+    - kiln tile is steady today
+    - kiln tile packed, where is the bomb?
+  onKill:
+    - that opening held its shape
+    - a clear path for the kiln tile
+  onDeath:
+    - the whole thing slumped
+    - kiln tile was one corner from the fuse
+  onPlant:
+    - letting this one fire
+    - "kiln tile is parked beside {bomb}"
+  onDefuse:
+    - cooled that down safely
+    - "kiln tile and {bomb} can both stay intact"
+  onWin:
+    - kiln tile came out of the kiln intact
+    - kiln tile got the objective done
+  onLoss:
+    - a small crack in the kiln tile plan
+    - kiln tile took too long reaching the site
+  onLastAlive:
+    - one piece still on the wheel
+    - the kiln tile still has a fuse to find
+  taunt:
+    - your push has not quite set
+    - the kiln tile got closer to your bomb
+  lobby:
+    - washing the clay off my kiln tile
+    - please let my kiln tile dry in peace
+    - "My kiln tile: cover my approach to the bomb."
+    - With my kiln tile, call the safest bomb route.
+quirks:
+  - loves_nuke
+  - always_gg
+rivals:
+  - drsholkyk
+bio: DrShoviosh sold lopsided flowerpots from a stall by the arena gate and still brings a kiln tile to the queue. DrSholkyk keeps asking whether it really helps.
+batch: 3
+retired: false

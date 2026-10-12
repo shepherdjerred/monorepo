@@ -1,0 +1,74 @@
+id: drzygrer
+name: DrZygrer
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTM1MjQ0NSwKICAicHJvZmlsZUlkIiA6ICJiNTQ1ZDcxNDJkZmM0MWVlYjBjMDcwOTkwOTI4NTE0MyIsCiAgInByb2ZpbGVOYW1lIiA6ICJraXdpNDgxMiIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9jZWIyYTFjOTFjMWE3ZTdlZGFiNzlmNGE5MzE3YzQyM2U2MmJkYmE3YTBiNjBiMzU5NDYzN2Y1ODUwZmE2MmUzIgogICAgfQogIH0KfQ=="
+  signature: "MSxSlJ+VbmAhPKSvcoeVoRAsRUH9Tpv5+cb0dUzfqhk11C7hhuyPTrB6ueoTz4VRBGX0DNewNxTcj0uvyshOZKGZZtykBCwIZStYB+otK0eXT+P77nDlzG92/37Z33x6bmg0K9Jqbf1bxJusxXGDN2kpfZsGqviZ935A6MBo+8Hpun2sbBU775rmySnDBAH2z4dQlO2iFuWo7sUFB+Ur6skasfGXF5F8X7eMycBmGd9nlF+z0rBHL6YYAKsILG7/IOWGoYyQe1ee7lwr6hFFE5rx2L42r11MXvhGfU7YlrKpjN+D5tQI56+VwfQUuIq/jTpdBSuR1D0ZfnGH2KOUVre4xHem6dndf6yenVRjWqY+APo0KzN0prswib8gCLXFcV/E93lDaY93WCofrRks/IVe5EENN7566Vf/NDI00Bbd3MGvSHH233OjH4XuiXtufQWIgVj7YQVnDdOWZJe6Po/wkHDxQCXlCfmKFHdok0i9qW/g0m7Dqa2112/grBcMYU9x6WF+PD5sCRGYWwC5ogiZFqsvW34SWsCqXNtUuxVU3uhxYz7ESl1kMTS2qwyNWlgDEteW0dwY2zHULKdz9w63gILAlgRJDIwmjbDpzKSrLiOSmx6B4+oZ7vbrYPgNQuat4qzKtEEi2M00GlHEPmSkWw2BSJovSWeSVuTCI0M="
+skill: 0.647
+archetype: duelist
+leverOffsets:
+  aimErrorDeg: 0.59
+  turnRateDegPerTick: 0.32
+  cps: 1.29
+  coordination: -0.46
+  technique: 1.49
+  aggression: 1.29
+kits:
+  trooper: 0.91
+  longbow: 0.15
+  shortbow: 0.4
+roles:
+  escort: 0.23
+  retake: 0.4
+  hunt: 0.9
+style:
+  aggression: 0.99
+  patience: 0.24
+  teamplay: 0.23
+  risk: 0.48
+voice:
+  tone:
+    - gentle
+    - competitive
+  verbosity: chatty
+  style: "patient gardening talk, stubborn lane defence; brief courteous challenges and honest shot assessments"
+lines:
+  greet:
+    - pruning shears packed, lets grow into this
+    - pruning shears ready, good fights everyone
+  onKill:
+    - cleared a little room for my pruning shears
+    - good exchange beside the pruning shears
+  onDeath:
+    - my pruning shears has met a weed
+    - fair hit, the pruning shears left that gap
+  onPlant:
+    - this seed has a very short season
+    - pruning shears earned a moment at the bomb
+  onDefuse:
+    - pulled it out by the root
+    - pruning shears can settle this at the fuse
+  onWin:
+    - a fine harvest for the pruning shears crew
+    - pruning shears had some good fights today
+  onLoss:
+    - bad weather for my pruning shears today
+    - pruning shears wants another clean round
+  onLastAlive:
+    - one pruning shears still in the garden
+    - one pruning shears, one fair chance
+  taunt:
+    - that lane could use some pruning
+    - the pruning shears is ready for that peek
+  lobby:
+    - checking the soil with my pruning shears
+    - my pruning shears is for the roof garden later
+    - "My pruning shears: I will contest the middle."
+    - With my pruning shears, give the middle fight a clear lane.
+quirks:
+  - good_sport
+  - always_gg
+rivals:
+  - thexezpioz
+bio: DrZygrer grew a roof garden over the old kit shop and still brings a pruning shears to the queue. TheXezpioz keeps asking whether it really helps.
+batch: 3
+retired: false

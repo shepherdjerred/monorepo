@@ -23,6 +23,7 @@ public final class PlatformComputePool implements ComputePool {
   static final Duration CLOSE_WAIT = Duration.ofSeconds(5);
 
   private final ExecutorService executor;
+  private final int threads;
   private final AtomicBoolean closed = new AtomicBoolean();
 
   PlatformComputePool(int threads, Logger logger) {
@@ -39,6 +40,7 @@ public final class PlatformComputePool implements ComputePool {
                     logger.error("Compute work on {} failed", thread.getName(), failure))
             .factory();
     this.executor = Executors.newFixedThreadPool(threads, factory);
+    this.threads = threads;
   }
 
   /** Opens a pool sized for this host, logging worker failures through {@code logger}. */
@@ -54,6 +56,11 @@ public final class PlatformComputePool implements ComputePool {
   @Override
   public Executor executor() {
     return executor;
+  }
+
+  @Override
+  public int parallelism() {
+    return threads;
   }
 
   @Override

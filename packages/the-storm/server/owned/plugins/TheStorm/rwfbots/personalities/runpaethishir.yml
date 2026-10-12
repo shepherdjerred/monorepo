@@ -1,0 +1,76 @@
+id: runpaethishir
+name: Runpaethishir
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjI1NDM4OSwKICAicHJvZmlsZUlkIiA6ICJkMWU5ODViZGYyMTg0OWQwYmFlZTNlYjBiNDM2ZmExYiIsCiAgInByb2ZpbGVOYW1lIiA6ICJSb3NleUNoYW40MjAiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNDVhZDRkNmY2ZTI5ODc3OGY0YWY3Y2I0MTI5ZTA3ZmIyYTc5MzE1MWY4M2E4MzU1NjhjYWI3NWY2OTJjNWU5YyIKICAgIH0KICB9Cn0="
+  signature: "fb65kjF3Bk75chbAe6kUMkafK4YUC5Ena2sx2tTewDWCCB75dV9usEOmqtFBl3kHicsKL1qOVJy6rRFd+Z6nGJUfSr1keggd9jzJhh8ns6WBfylEdl8JTCRNLhNIB/vcf6NofIUc0QDND/UA/dGxxEKOt/Wsy89tDvCccKOlxpPExMcQ827K7s9zGdBDrXblfscZphLzsSTKlIgalHDQbtDaNl8vVWh/WSYp28znBbJzFJIx4We9jTkK+EgNqzj5TeeIP4pxaz7MZFBNhvglfW8XX4TDgitj+OW1SZtr4it4o6Wz6q9XPts0sngjko/IRq2mOMUgxNihqFZqewuN7pG9d6qyAhkS/NBao3wp//yA5WjiC6EEA8JNwV19gxrjKyMd0+Tk9TxyZCZpOGcPp1G7q/0AS1RHqb4Vhxcp8RK8O9LB7l0qpNJKfxUC9A3o/jHrP67Gp+lHZWKhtPmF44SzTZ0y/hvWMKbUe14DYyGgXopSlEd3Qv4AHZtDQdMQOyJDkX4XMjdyN/4Pcy2WAWgumTe5NtF3NfCyOWeDSnwITmjI2aKZTaZtKG9VQKWS819uL1BzGDI4382ee5rI1d/M/Xv+qlZyVe46HIt0ojnrlY9Rbktc1FGbH5OawxS+6YKThgwV0CiUjrgfr3j39YLOJmavDn2Alz1fEBzok0A="
+skill: 0.651
+archetype: sniper
+leverOffsets:
+  aimErrorDeg: 1
+  cps: -0.91
+  predictionQuality: 0.91
+  awarenessRadius: 0.95
+  coordination: -0.2
+  technique: -0.13
+  aggression: -0.63
+kits:
+  trooper: 0.16
+  longbow: 1
+  shortbow: 0.43
+  rewind: 0.3
+roles:
+  defend: 0.68
+  rotate: 0.39
+  hunt: 0.74
+style:
+  aggression: 0.34
+  patience: 0.96
+  teamplay: 0.51
+  risk: 0.18
+voice:
+  tone:
+    - playful
+    - focused
+  verbosity: normal
+  style: "tiny winter expeditions, serious snow forts; short range notes and patient, exact corrections"
+lines:
+  greet:
+    - wool mitten thawed out, ready
+    - wool mitten in place, checking the long angle
+  onKill:
+    - a tidy little snowball effect
+    - wool mitten found the range
+  onDeath:
+    - slid right out of that plan
+    - wool mitten needed a closer angle
+  onPlant:
+    - a warm spot in the snow
+    - wool mitten covers the far entrance
+  onDefuse:
+    - cooled the bomb right down
+    - wool mitten can wait, hands on the fuse
+  onWin:
+    - wool mitten has survived the thaw
+    - wool mitten had a clear view of that
+  onLoss:
+    - the fort melted around us
+    - wool mitten kept the wrong sight line
+  onLastAlive:
+    - one mitten still waving
+    - one wool mitten, one long angle
+  taunt:
+    - your footing looked a bit icy
+    - the wool mitten saw that peek twice
+  lobby:
+    - warming my wool mitten by the lobby lamp
+    - please stop hiding my wool mitten in snow
+    - "My wool mitten: I will cover the long angle."
+    - With my wool mitten, call the close flank for me.
+quirks:
+  - bow_spammer
+  - always_gg
+rivals:
+  - roguerushshaeth
+bio: Runpaethishir built a snow fort that lasted longer than the team inside it and still brings a wool mitten to the queue. RogueRushshaeth keeps asking whether it really helps.
+batch: 3
+retired: false

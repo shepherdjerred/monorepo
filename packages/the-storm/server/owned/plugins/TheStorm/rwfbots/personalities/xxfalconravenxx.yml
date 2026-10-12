@@ -1,0 +1,74 @@
+id: xxfalconravenxx
+name: xXFalconRavenXx
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTkzNjYxNSwKICAicHJvZmlsZUlkIiA6ICI4Y2UzMDAxMDIzZDY0Nzk0YWM2ODIyNzE4M2FjNzYzMCIsCiAgInByb2ZpbGVOYW1lIiA6ICJTb25pY1R1bmRlcjciLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvM2Q3N2M0ZGQwMmQ4ZjgzOTEyNGFkNWM2MTk0Yzk2NDU4NzFjZDhkMjNhZTlmZWViYmRiNTI2NWQ3ZDJhM2JmMiIKICAgIH0KICB9Cn0="
+  signature: "pFkC3y+6Z/JXME0DtkmvFdIQMe5UVcyqTH0wfKocZobYp4TBsoxg6l43Oq/uJi4iSZnl3k427Ubk7lf124pLED/zgQN4cXS0ZSjWWDQnlAv0azcvhjIPpWV4fj2XR37M72EkjFuKY2CL6a+vaxVuOuDFKgf5bNYFNu3+nbtX2j1vFA8Mi1ewjv3GtFyckshdU0WZHBayPUkNB+4Wvry08wqciNNiXq7b6KM74/nkVeLa5WiFdiBwFJLat2q8LqRsdYIUtTEoOJWtNMUeDv2pMcYPl7wRYY8QCBEW54Qcq6Uct3sQtbBos65QiCAg/pqxzf0njIcAgymCDjuGzDZrsZIG4JKqwL0WlUYVE33zXFdZgg/kYo4Hvh0Tf1yEY/rs01tdSoS4lruxedE2Cxy9XxiVU6Oop5JLk2N0H0Q9qx0pJsLm0giwaaIhNAN7/EBDugjsyJAUtxoQzdt6oS2wERk2ShH3dZlF1n/9SSamuF/3XR2fh0GaTlIY4H13DLO0dwSV8U+JFbteYNDsEftl6iIQDz3RbfvUDY8L9StveRqkDTm1N/U1TN0M3WjbC1IiH8bfs5+Lqy9iN7bKRwsFYGPApczXH6Y5geAhZOWL9Hus1cINqgSNOWX0/feiPPflhKVXiom6iSyu6hX7GupCeMoKO/qMsk+/Y41SZwFLtW8="
+skill: 0.513
+archetype: duelist
+leverOffsets:
+  aimErrorDeg: 0.44
+  cps: 1.71
+  decisionTemperature: -0.51
+  coordination: -0.35
+  technique: 1.56
+  aggression: 0.98
+kits:
+  trooper: 0.94
+  shortbow: 0.36
+roles:
+  plant: 0.11
+  escort: 0.27
+  retake: 0.51
+  hunt: 0.74
+style:
+  aggression: 0.83
+  patience: 0.33
+  teamplay: 0.26
+  risk: 0.59
+voice:
+  tone:
+    - airy
+    - competitive
+  verbosity: normal
+  style: "gusts, tangled metaphors and abrupt turns; brief courteous challenges and honest shot assessments"
+lines:
+  greet:
+    - kite reel caught a good breeze
+    - kite reel ready, good fights everyone
+  onKill:
+    - a clean lift over that corner
+    - good exchange beside the kite reel
+  onDeath:
+    - my kite reel met a tree
+    - fair hit, the kite reel left that gap
+  onPlant:
+    - tying the fuse down securely
+    - kite reel earned a moment at the bomb
+  onDefuse:
+    - untangled that in a hurry
+    - kite reel can settle this at the fuse
+  onWin:
+    - kite reel is flying high
+    - kite reel had some good fights today
+  onLoss:
+    - no breeze for the kite reel today
+    - kite reel wants another clean round
+  onLastAlive:
+    - one string still in the air
+    - one kite reel, one fair chance
+  taunt:
+    - that push lost its lift
+    - the kite reel is ready for that peek
+  lobby:
+    - unwinding my kite reel in the lobby
+    - please step over the kite reel line
+    - "My kite reel: I will contest the middle."
+    - With my kite reel, give the middle fight a clear lane.
+quirks:
+  - good_sport
+  - always_gg
+rivals:
+  - xxarrowphantomxx
+bio: xXFalconRavenXx held kite races from a windy hill above the old map gate and still brings a kite reel to the queue. xXArrowPhantomXx keeps asking whether it really helps.
+batch: 3
+retired: false

@@ -1,0 +1,75 @@
+id: xxslimeninjaxx
+name: xXSlimeNinjaXx
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTk3NjU3OCwKICAicHJvZmlsZUlkIiA6ICI2NDEwZjRiZjMwNDU0OTdmODBjZDI4NWIyYmJiNTk5NSIsCiAgInByb2ZpbGVOYW1lIiA6ICJNaW5lU2tpbl8xNSIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS85ODRhMzUzYTA4ZDg4NmZkZjE1OWU2ZWU2MTY3NWQwZDhkZWFkNWVmY2M4YzUyNjEyMzVmZTVkNDBkODE3ZTMiCiAgICB9CiAgfQp9
+  signature: "k5MStMIWz28cWy6MBc9z7E557vcTZtKhZ6SfW6ubRp6pjyx/S02/s8kbG8q6huSBE4j6ht2nP7aO10Jbs4EMucg7J2GKcwrHeczNSWEUT1Dg9I/izloGfAPGbclBIQxlJbO/7JrVHhyYTvBSS2gTPKl8dDP/jhmT3yTSsyUUFnn3eyr1qmdDXxEk9hCup03AYQCIgrVJbeZ0dEPl4nINERyncLS3+0YivsiyqHmw788wwh9QRSZCDh6kVWYyDbzjLehp3Vo2OeXBGN+0S0qeToJvq0DbFEHTMkpc0+9v/2B3ujhgnsPvgmv+HkQkIqdKuga4ECkD53fHzhkq+Xcjg9bTpap5uA+cf6100zGUk/a0rDIvQC6UQ6A/4dICHtC6/pIIkZFbBLolmFPMCd9msrK07l5ivttYFvUL3TWjdzlniaWNnb/TDk5TMZannd45JU1cLltQhlcsyi3d1zXh/yUH2NZ60JLm3m21A4AVvTN34H2RPgFWB7peRqMJ/FBFPosFfpAypMpMKvv6SlCcDjS47OnpMHwuJHGC7obZsbYnlHQhOdexDkzp0tUX3e8nGfpXj9PRbwMgUwPS2DOE7oHxK9qC0G+s7vgvr5LEaVcKTy5qNeExFOyfejcacQlmHfTbS6fWG9LRfLD5YT3pfwInGB2hNjw/xJwDviWZ07w="
+skill: 0.748
+archetype: turtle
+leverOffsets:
+  reactionMs: 0.4
+  turnRateDegPerTick: -1.34
+  decisionTemperature: 0.38
+  awarenessRadius: 0.33
+  technique: 0.46
+  aggression: -1.73
+kits:
+  trooper: 1
+  longbow: 0.27
+  rewind: 0.83
+  ghost: 0.13
+roles:
+  defend: 1
+  rotate: 0.23
+  retake: 0.43
+style:
+  aggression: 0.12
+  patience: 0.88
+  teamplay: 0.71
+  risk: 0.1
+voice:
+  tone:
+    - measured
+    - cautious
+  verbosity: normal
+  style: "soft beat counts and tiny timing worries; unhurried words, conservative estimates and tiny victories"
+lines:
+  greet:
+    - clock weight is almost on time
+    - clock weight is ready. no need to hurry.
+  onKill:
+    - right on the clock weight beat
+    - clock weight waited for the opening
+  onDeath:
+    - my clock weight skipped a beat
+    - clock weight should have waited another moment
+  onPlant:
+    - clock weight is counting now
+    - clock weight checked the site first
+  onDefuse:
+    - stopped just before the chime
+    - clock weight checked the corner twice
+  onWin:
+    - clock weight and team in perfect time
+    - clock weight got there eventually
+  onLoss:
+    - my clock weight needs adjusting
+    - clock weight needed one more safe corner
+  onLastAlive:
+    - only one clock weight still ticking
+    - the clock weight will take this slowly
+  taunt:
+    - a little early on that swing
+    - the clock weight can wait out that peek
+  lobby:
+    - listening for the clock weight tick
+    - my clock weight is not a countdown shortcut
+    - "My clock weight: I will keep a safe route home."
+    - With my clock weight, please check the blind corner first.
+quirks:
+  - gapple_hoarder
+  - always_gg
+rivals:
+  - hypertazreth
+bio: xXSlimeNinjaXx built a clock tower that chimed one block too early and still brings a clock weight to the queue. HyperTazreth keeps asking whether it really helps.
+batch: 3
+retired: false

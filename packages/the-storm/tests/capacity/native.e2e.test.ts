@@ -1,0 +1,211 @@
+import { mkdtemp, mkdir } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { expect } from "vitest";
+import { test } from "#e2e/fixtures.ts";
+import { capacityMap } from "#e2e/gameplay-fixtures.ts";
+import { packageRoot } from "#e2e/harness/paths.ts";
+import { eventually, settledMatch, status } from "#e2e/harness/rwf-match.ts";
+import { gzipLines, readRecording } from "#e2e/harness/rwfbots.ts";
+import { readTrails } from "#e2e/harness/rwf-trails.ts";
+import type { RconClient } from "#e2e/harness/rcon.ts";
+import { startClient } from "#client/process.ts";
+import { request, StatusSchema, type Session } from "#client/protocol.ts";
+import { evidence } from "./probes.ts";
+
+async function state(session: Session) {
+  const value = StatusSchema.parse(await request(session, "status"));
+  if (!value.connected) throw new Error("Native participant disconnected");
+  return value;
+}
+
+async function isLive(rcon: RconClient) {
+  const now = await status(rcon);
+  return now.phase === "Live";
+}
+
+test(
+  "a native participant moves, takes bot damage and completes a 256-combatant match",
+  { timeout: 50 * 60_000 },
+  async ({ rcon, server }) => {
+    const inputs = await evidence(server);
+    expect(inputs.personalityCount).toBe(512);
+    await eventually(
+      "the imported map to finish preparing",
+      async () => {
+        const reply = await rcon.command("rwf admin status");
+        return reply.includes("Ready: true, phase: Lobby");
+      },
+      15 * 60_000,
+    );
+    const privateDir = await mkdtemp(path.join(tmpdir(), "rwf-native-"));
+    const artifacts = path.join(
+      packageRoot,
+      ".cache/e2e/capacity-native",
+      path.basename(privateDir),
+    );
+    await mkdir(artifacts, { recursive: true });
+    const session: Session = {
+      socket: path.join(privateDir, "client.sock"),
+      control: path.join(privateDir, "unused-control.sock"),
+      artifacts,
+      server: `127.0.0.1:${server.gamePort.toString()}`,
+    };
+    const client = await startClient({
+      session,
+      privateDir,
+      packageRoot,
+      onExit: () => console.warn("Native capacity client exited"),
+    });
+    try {
+      const teams = capacityMap() === "apex-expanse" ? 2 : 4;
+      expect(
+        await rcon.command(`rwf admin size team ${(256 / teams).toString()}`),
+      ).toContain("256 total");
+      await request(session, "command", { text: "rwf join" });
+      await eventually(
+        "the ordinary draft to go live",
+        async () => isLive(rcon),
+        120_000,
+      );
+      const live = await status(rcon);
+      expect([live.humans, live.bots]).toEqual([1, 255]);
+      await request(session, "capture", { name: "256-combatants-live" });
+      const before = await state(session);
+      await request(session, "input", { buttons: ["forward"], ticks: 20 });
+      const after = await state(session);
+      const distance = Math.hypot(
+        ...after.position.map(
+          (value, i) => value - (before.position[i] ?? Number.NaN),
+        ),
+      );
+      expect(
+        distance,
+        "ordinary movement moves the native participant",
+      ).toBeGreaterThan(1);
+      await request(session, "capture", { name: "native-moved" });
+      const observations = [before, after];
+      const began = Date.now();
+      let capturedHurt = false;
+      // Walk into play, then let combat and the match rules end the round.
+      // No teleport, damage or finish commands.
+      while ((await isLive(rcon)) && Date.now() - began < 16 * 60_000) {
+        const current = await state(session);
+        observations.push(current);
+        if (!capturedHurt && current.health < before.health) {
+          await request(session, "capture", { name: "native-hurt" });
+          capturedHurt = true;
+        }
+        if (
+          !capturedHurt &&
+          current.health > 0 &&
+          Date.now() - began < 30_000
+        ) {
+          await request(session, "input", {
+            buttons: ["forward", "sprint"],
+            ticks: 20,
+          });
+        } else {
+          await Bun.sleep(1000);
+        }
+      }
+      expect(await isLive(rcon)).toBe(false);
+      const settled = await settledMatch(server, live.matchId);
+      expect([settled.match.humans, settled.match.bots]).toEqual([1, 255]);
+      expect(settled.match.dropped_frames).toBe(0);
+      const lines = await gzipLines(
+        server,
+        settled.match.recording_file ?? "",
+        artifacts,
+      );
+      const recording = readRecording(lines);
+      const trails = readTrails(lines);
+      expect(recording.roster.size).toBe(256);
+      const human = [...recording.roster].find(
+        ([, member]) => !member.bot,
+      )?.[0];
+      expect(human).toBeDefined();
+      const bots = new Set(
+        [...recording.roster]
+          .filter(([, member]) => member.bot)
+          .map(([id]) => id),
+      );
+      const attacked = lines.some((line) => {
+        const row = line.split("\t");
+        return (
+          row[0] === "I" &&
+          row[3] === "attack" &&
+          bots.has(row[2] ?? "") &&
+          row[4] === human
+        );
+      });
+      const killed = recording.events.some(
+        ([kind, subject, detail]) =>
+          kind === "died" &&
+          subject === human &&
+          bots.has(detail?.split(" ")[0] ?? ""),
+      );
+      expect(
+        killed,
+        "original recording attributes the human's combat death to a bot",
+      ).toBe(true);
+      expect(
+        observations.some((entry) => entry.health < before.health),
+        "native client observed health loss",
+      ).toBe(true);
+      const moved = [...trails.paths].filter(
+        ([id, points]) =>
+          bots.has(id) &&
+          points.some(
+            (point) =>
+              Math.hypot(
+                point.x - (points[0]?.x ?? Number.NaN),
+                point.z - (points[0]?.z ?? Number.NaN),
+              ) > 3,
+          ),
+      );
+      expect(
+        moved.length,
+        "bots move beyond their reused spawn points",
+      ).toBeGreaterThan(200);
+      expect(lines.find((line) => line.startsWith("X\t"))).toMatch(
+        /\t(?:LAST_TEAM_STANDING|DRAW)$/u,
+      );
+      await request(session, "capture", { name: "match-ended" });
+      await Bun.write(
+        path.join(artifacts, "acceptance.json"),
+        JSON.stringify(
+          {
+            inputs,
+            match: settled.match,
+            movement: distance,
+            botMovements: moved.length,
+            attacked,
+            killed,
+            observations,
+          },
+          null,
+          2,
+        ),
+      );
+      await request(session, "command", { text: "rwf leave" });
+      await eventually(
+        "reset and empty roster",
+        async () => {
+          const now = await status(rcon);
+          const debug = await rcon.command("rwfbots debug");
+          return (
+            now.ready &&
+            now.phase === "Lobby" &&
+            now.humans === 0 &&
+            debug.includes("no bots in the match")
+          );
+        },
+        15 * 60_000,
+      );
+      console.warn(`Native capacity evidence: ${artifacts}`);
+    } finally {
+      await client.stop();
+    }
+  },
+);

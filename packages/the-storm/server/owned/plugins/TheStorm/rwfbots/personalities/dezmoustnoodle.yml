@@ -1,0 +1,78 @@
+id: dezmoustnoodle
+name: DezmoustNoodle
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NTYxMTkxOCwKICAicHJvZmlsZUlkIiA6ICJkNGUwNTFjZGRhNDU0NTUxYjk1ZWRiZjdkNTM1ZTA3ZSIsCiAgInByb2ZpbGVOYW1lIiA6ICJFbGVtZW50YWxfTWF4IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzMxOTkxMzBkMDAwZGMzNDMwYThhMGQ0ZGI1NzMzMmVkMTNhZjM4NmIzYzU5ZDNjODZkNGU1OThkMTI0MGFiNzYiCiAgICB9CiAgfQp9
+  signature: "ASRWSWMiw558Ks5AyOGazE95LunFyi5QMdu0iURyHSLKL4wIzOsY9oJr3SgSNTuQ9z4azBX10q7TSSypdlm/3PHQpEwfOG0bgd3bO4YdeWtBokh+wdWU6Ns87+sKrZw+vErilVpU/SG07/s6u3jQlxzHBCC3YNBmcIlZNyFib9rzL2DbEzeFMmoBqPx/YnaI8afdl5PU978avWLwc1geMCzhPfZWamYPgD0H9KN+wyiPLHUMqHTwpN9Rw1krHGM3hJfMrPA7JxoWPEr54qs7dvOAOK6/KhhDfDeVTtRiEwIiWD46s5Y/MyJsXN9yoav5QFt2EeGkRCQ1iBKIgInNyGkqpx5H89lgTEMW6hyKTs8+0iJto/dEB9oFhN/+RaEnx/8wTOI8YLDcN/5Lpf/5Tsu9MANWnRkQvBzF+kVxfpJD6AuQNIoqS5zExI/jMg1sHMRPNyMbLNZDEgt0o6FKFJRimUMiBGAw2yB1O3fedVjjHSuwYsnR0/4lZZCKwAWU5PY4a5HZK+TfRGBWBxNaRg4Speu7qk5qIlZPjGECllZEcO5sYLdAdUp4EyZTDefS5BX+J2+FtthsUbmd6/E0Y8zDyX5+Y+0hBrvxogAYy5B1JsnInyyEf4BTyxl0/THRGUmhi2Ub3k93F2+NeBFfhpNBq6olN8TxeWnkLIbAWjs="
+skill: 0.672
+archetype: tactician
+leverOffsets:
+  reactionMs: 0.94
+  cps: 0.37
+  predictionQuality: 0.46
+  decisionTemperature: 1.31
+  awarenessRadius: 0.64
+  coordination: 1.99
+kits:
+  trooper: 0.91
+  longbow: 0.44
+  shortbow: 0.44
+  rewind: 0.5
+  wraith: 0.29
+roles:
+  plant: 0.68
+  escort: 0.45
+  defend: 0.51
+  rotate: 0.71
+  retake: 0.78
+style:
+  aggression: 0.48
+  patience: 0.57
+  teamplay: 0.82
+  risk: 0.38
+voice:
+  tone:
+    - observant
+    - analytical
+  verbosity: normal
+  style: "local forecasts and quiet predictions; numbered ideas, concise route calls, quick revisions"
+lines:
+  greet:
+    - forecast slate predicts a lively round
+    - forecast slate ready, first route agreed?
+  onKill:
+    - a sudden change on the forecast slate
+    - forecast slate confirms a clean opening
+  onDeath:
+    - the forecast slate missed that gust
+    - forecast slate needs a revision on that route
+  onPlant:
+    - pressure dropping at the bomb
+    - forecast slate confirms the site is reached
+  onDefuse:
+    - storm warning cancelled
+    - forecast slate confirms the fuse is clear
+  onWin:
+    - clear skies over my forecast slate
+    - forecast slate and team followed through
+  onLoss:
+    - my forecast slate forecast was optimistic
+    - forecast slate had a missing step
+  onLastAlive:
+    - one forecast slate in the storm
+    - forecast slate says there is still a route
+  taunt:
+    - your push is mostly hot air
+    - the forecast slate predicted that rotation
+  lobby:
+    - taking a reading from my forecast slate
+    - please stop breathing onto my forecast slate
+    - "My forecast slate: I will call the first rotation."
+    - With my forecast slate, tell me when a route closes.
+quirks:
+  - calls_everything
+  - always_gg
+rivals:
+  - xxcometwafflexx
+bio: DezmoustNoodle logged the weather from a glass hut above the old arena and still brings a forecast slate to the queue. xXCometWaffleXx keeps asking whether it really helps.
+batch: 3
+retired: false

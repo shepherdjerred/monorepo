@@ -1,0 +1,73 @@
+id: drdunouz
+name: DrDunouz
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTQ1MTY1MiwKICAicHJvZmlsZUlkIiA6ICJlODE1MGY1MjlmZGU0YzdkYjI3OTAyZjJjNmU3NTc5ZCIsCiAgInByb2ZpbGVOYW1lIiA6ICJCcmFkQm90XzIiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOWUyYTIwOWUxM2YyMjYzZTYwODg5NDllNmQxNDU3ZWIxZmVhNzdlZTcxMjc3YjcxZGIwOTAwNzdkOWRkOTk3ZSIKICAgIH0KICB9Cn0="
+  signature: "V6ho7JNa+E1tTLjw4VkcMwRMUS0D94Y8ajA6iesax89xi7AAKW20cIcRi8vP0pfM/GzldxiZqFmAfZdtD/OWQbJDYyB4Am4tCnXBwMQswO7xOz09FeuF+o/aAdK77JPUEA48M6G2fakDNmIumnVeMELo/42Wl/JccsUwCl8k2UjFgsc02vaYoej3lY4odjdtE+Lgri6em/a8SOfj1bYMt+mf8S631lYg0Gp7VieG7cMszVhoWPvu6OjqfZ5iErxWZ3735MW4EqujGLsY59gwv6iuej4aR0jrbcRYCs4LVU/N/S8bcy+hl3x5awHN+drq/B6NgAv3QY7h8HLtH6kqvmT6X0+h7z/tzL4+r4L32Hv24n2XUzHx0o7LkZNV9sUKQr8jUyu19zswJvLeAizwHoNgz6ap58uzJsDi3vxmlh87j/weJxrmeM11hlSUXveL6dnm9yR0t+BREiZV3SXF7YaTkRYOEDaoErnG5isFwjzMrJsJppwAaRIlxjX6k0nYHnh1E8wIVJQcUDXrM6clk8/DfZL3LBcYM9KroovSLN7+8Q8ZeMacshVG4jdPlZwWLzrcTkHTibGbYO89RhFf9EkU+4A3cXM1hKBZhZ66LeQGmmyRxCJO1ZWJB+NsImxbRHmwES40ullomqLQPkyJcGkBpOlZ+ayugk60VMT6c+w="
+skill: 0.641
+archetype: hunter
+leverOffsets:
+  turnRateDegPerTick: 0.26
+  cps: 0.15
+  predictionQuality: 0.98
+  awarenessRadius: 1.39
+  aggression: 0.89
+kits:
+  trooper: 0.72
+  longbow: 0.54
+  shortbow: 0.72
+roles:
+  escort: 0.19
+  rotate: 0.43
+  hunt: 0.94
+style:
+  aggression: 0.73
+  patience: 0.36
+  teamplay: 0.24
+  risk: 0.59
+voice:
+  tone:
+    - measured
+    - intent
+  verbosity: normal
+  style: "soft beat counts and tiny timing worries; tracks small clues aloud, then gives terse pursuit calls"
+lines:
+  greet:
+    - sundial plate is almost on time
+    - sundial plate ready, looking for tracks
+  onKill:
+    - right on the sundial plate beat
+    - sundial plate followed that trail correctly
+  onDeath:
+    - my sundial plate skipped a beat
+    - the sundial plate trail doubled back
+  onPlant:
+    - sundial plate is counting now
+    - "sundial plate found a path to {bomb}"
+  onDefuse:
+    - stopped just before the chime
+    - sundial plate tracked the ticking down
+  onWin:
+    - sundial plate and team in perfect time
+    - sundial plate followed it to the end
+  onLoss:
+    - my sundial plate needs adjusting
+    - sundial plate lost the trail near the finish
+  onLastAlive:
+    - only one sundial plate still ticking
+    - the sundial plate has one trail left
+  taunt:
+    - a little early on that swing
+    - the sundial plate noticed those footsteps
+  lobby:
+    - listening for the sundial plate tick
+    - my sundial plate is not a countdown shortcut
+    - "My sundial plate: I will look for the last opponent."
+    - With my sundial plate, call the last place you saw them.
+quirks:
+  - holds_grudges
+  - always_gg
+rivals:
+  - laeldaikhunter
+bio: DrDunouz built a clock tower that chimed one block too early and still brings a sundial plate to the queue. LaeldaikHunter keeps asking whether it really helps.
+batch: 3
+retired: false

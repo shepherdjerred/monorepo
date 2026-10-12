@@ -1,0 +1,77 @@
+id: tirdaez-88
+name: Tirdaez_88
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NDIwNjMzMCwKICAicHJvZmlsZUlkIiA6ICI1ODAwZjIzNWQyYjQ0MDc5OTcxZTM3ZDhmNmY0OTc2ZiIsCiAgInByb2ZpbGVOYW1lIiA6ICJYZW55cmlhIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzk1N2EyZGJiOWM3YmNhOTM1YTViYWFjMmY5OTExZDFiMTQ5YTcwNWY1YTIzNTRkM2ZiZTliODBiNDdjODhlZWQiCiAgICB9CiAgfQp9
+  signature: "o9EqZHa2BWhcTM8c04L10M8GVup+uyMILavhb9FHX4indfZQ2VgyOFYuSoucXFgFLm0d4RPEP/BB1Oo/LCQAYuy6Xloz8hDKUAqrwVVjOWhC/BBt0GRAsppygit77ju2zgb58xPbrvJCsUFApfM1ICmxXIiMs/0Mp+TV1s2cdDD3aabgsbIHQRhXoBAub3QScZTzQY0GEWCSnGKtQ8zqtTzgDUUQLhlV+4iNMPCoOMKrCaJBZCqDctUcEcsRHiJksx0bsCOpdToicjmVOPI3IfwMAtuKzACQljEzGG0G93WD5JZGa0NUpJjQ5JTRGn1MHv/ncBBjAfzh/jT7SSz0DUcjNnvGYUPj6rGYNgS3M7FFQgVV/c6jSTkxDN1Bpqh8Q/ZD5mCPPdgQclfd6mHhZfVCnQbquWEXsuPntYcrqi1mIuaR3Kh4azTQFLCibejTUrf8IRmj/0m8KkiUPskYvOOc64yi1uITOY+a5pJd7YDhuS6ob5mXmLomLOWlQ6iIOMi8hQz1XaoWpQcCNkMndboW28FknsjtaXURmiVsjOcifB0vExI8njAWVyuJiHfoswd7xgtnKhAYKGDarKLasiOiccIprLjhAq6qEIiZzHmOQ9XnvZfGyZmrfh5B0uKPq+y2m0eagicI6BQuyn19jtjkoxmJNbSFDwX0oPiTkl0="
+skill: 0.814
+archetype: tactician
+leverOffsets:
+  cps: -0.22
+  predictionQuality: 0.22
+  decisionTemperature: 0.97
+  awarenessRadius: 0.32
+  coordination: 1.58
+  aggression: 0.18
+kits:
+  trooper: 0.93
+  longbow: 0.56
+  shortbow: 0.5
+  rewind: 0.44
+roles:
+  plant: 0.59
+  escort: 0.55
+  defend: 0.63
+  rotate: 0.75
+  retake: 0.69
+style:
+  aggression: 0.38
+  patience: 0.58
+  teamplay: 0.79
+  risk: 0.4
+voice:
+  tone:
+    - cosy
+    - analytical
+  verbosity: normal
+  style: "kitchen chatter and imaginary baked snacks; numbered ideas, concise route calls, quick revisions"
+lines:
+  greet:
+    - recipe card ready, kitchen open
+    - recipe card ready, first route agreed?
+  onKill:
+    - another order off the recipe card
+    - recipe card confirms a clean opening
+  onDeath:
+    - left my recipe card in the oven again
+    - recipe card needs a revision on that route
+  onPlant:
+    - setting the timer beside my recipe card
+    - recipe card confirms the site is reached
+  onDefuse:
+    - took that out before it burned
+    - recipe card confirms the fuse is clear
+  onWin:
+    - recipe card deserves a day off
+    - recipe card and team followed through
+  onLoss:
+    - the recipe card has seen better batches
+    - recipe card had a missing step
+  onLastAlive:
+    - one cook and a very busy recipe card
+    - recipe card says there is still a route
+  taunt:
+    - that push needed longer to rise
+    - the recipe card predicted that rotation
+  lobby:
+    - who borrowed my recipe card?
+    - dusting the flour off my recipe card
+    - "My recipe card: I will call the first rotation."
+    - With my recipe card, tell me when a route closes.
+quirks:
+  - calls_everything
+  - always_gg
+rivals:
+  - zaixpyzpro
+bio: Tirdaez_88 ran a tiny spawn bakery with a queue of hungry regulars and still brings a recipe card to the queue. ZaixpyzPro keeps asking whether it really helps.
+batch: 3
+retired: false

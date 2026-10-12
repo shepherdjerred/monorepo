@@ -1,0 +1,74 @@
+id: hunterpumpkin2
+name: HunterPumpkin2
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODQ2NzEzOCwKICAicHJvZmlsZUlkIiA6ICJkMWU5ODViZGYyMTg0OWQwYmFlZTNlYjBiNDM2ZmExYiIsCiAgInByb2ZpbGVOYW1lIiA6ICJSb3NleUNoYW40MjAiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNDI3YjUyMmZhYWY4OGRjOWZjOWE2ZjMwMmEwZWUzODA1ZjU3MWE3NTkxNzc3OGNlYjcyZDQyNTk1N2U0ZjljZiIKICAgIH0KICB9Cn0="
+  signature: "fJZEhmUBrSlHv8Nd64tBjV+6N9OgrfrBIZkRiFyuNcx02bPtCC/Ugsg2T/qz+UStIpPRf0hjeGiS8nZgqbFkWBRFgtAN19R35d7r4idd0QD34IMRjg/W5xWo1eJ8pNZVw1RmPkRr8ehrvxyCpAQhoSVEmc4N/qQ3w8yWuOT8ay/MV49z7poEIRr09hLYn1nMSQub/tP4amZks5YAWRMrdCKmFmMYoOiTFyD5bqoAamzGtQuyb7tjzpX8Bu5s0ORRrM//tSUMLmsuP7X3zEpZgk6GzyAKYgVKtq7CKd+2OTioLAs7ZhLB7coErEH1gRMJAPwuIOrXYugTdvHKGZQ5cBTPkOqzgwMNkDXAMo7U34O7hsv8DRIx9UgzCPRaO/BWGjQV63gDS10I4JHXPqtHMpgfXA7nFKx1oCTY9NEwfTtRAu8VkMFoWMD8SoCQbQbPfYj5GFydFhnmdCXlLudL6S9ULf9FThgK9Qnqoj8/M9CV6KTTIc0QmHrD4zyNdD+TL36tPzei+eOHI5FTOTaaX7Z5o+Ynbgg+VbnUMqJ87XvptL/GwWGGXxWCrUP3DhZ4c8X2IICT7ijkOklwN/t6f0LyrzaDX4FDDHfYoyQir3Ea2emnTuiDd0ywZtAgQBgQa3J+oPs6mVyFTJSWuseV6AOIRJnyKPJ6kL5pm+8mJe0="
+skill: 0.85
+archetype: support
+leverOffsets:
+  aimErrorDeg: -0.05
+  decisionTemperature: -0.01
+  awarenessRadius: 0.32
+  coordination: 1.56
+  aggression: 0.1
+kits:
+  trooper: 1
+  longbow: 0.32
+  rewind: 0.71
+  ghost: 0.17
+roles:
+  escort: 1
+  defend: 0.43
+  retake: 0.68
+style:
+  aggression: 0.35
+  patience: 0.54
+  teamplay: 0.9
+  risk: 0.25
+voice:
+  tone:
+    - cheerful
+    - helpful
+  verbosity: normal
+  style: "busy hive reports, praises small useful jobs; gentle check-ins, thanks and useful kit reminders"
+lines:
+  greet:
+    - swarm basket says the hive is busy
+    - swarm basket is here, everyone got their kit?
+  onKill:
+    - a little sting in that lane
+    - one less problem beside the swarm basket
+  onDeath:
+    - flew straight into the window
+    - sorry, the swarm basket corner is open
+  onPlant:
+    - quite a buzz at the bomb
+    - swarm basket can watch while you plant
+  onDefuse:
+    - settled the swarm
+    - swarm basket is here to help at the fuse
+  onWin:
+    - swarm basket has earned some honey
+    - swarm basket says everyone helped
+  onLoss:
+    - the hive will rebuild
+    - swarm basket says we can tidy that up
+  onLastAlive:
+    - one bee still making the rounds
+    - one swarm basket still trying to help
+  taunt:
+    - a lot of buzzing for that push
+    - the swarm basket brought a team to that corner
+  lobby:
+    - keeping my swarm basket out of the rain
+    - no bees are hiding in my swarm basket
+    - "My swarm basket: I will stay close to the push."
+    - With my swarm basket, call if you need an escort.
+quirks:
+  - says_sorry
+  - always_gg
+rivals:
+  - xokkobandit
+bio: HunterPumpkin2 kept a pretend apiary behind a flower-covered team base and still brings a swarm basket to the queue. XokkoBandit keeps asking whether it really helps.
+batch: 3
+retired: false

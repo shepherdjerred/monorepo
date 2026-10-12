@@ -84,6 +84,42 @@ final class DirectorTest {
   }
 
   @Test
+  void anExcludedRivalStaysValidInTheFullCatalogButCannotBeDrafted() {
+    var base = Fixtures.personality("challenger", "Challenger", 0.6);
+    var rival = Fixtures.personality("rival", "RivalPlayer", 0.4);
+    var linked =
+        new Personality(
+            base.id(),
+            base.name(),
+            base.skinValue(),
+            base.skinSignature(),
+            base.skill(),
+            base.archetype(),
+            base.leverOffsets(),
+            base.kits(),
+            base.roles(),
+            base.style(),
+            base.voice(),
+            base.lines(),
+            base.quirks(),
+            List.of(rival.id()),
+            base.bio(),
+            base.batch(),
+            false);
+    var request =
+        new Director.Request(
+            new PersonalityCatalog(List.of(linked, rival)),
+            Map.of(),
+            List.of(Rating.DEFAULT),
+            2,
+            Set.of("RIVALPLAYER"),
+            SHIPPED,
+            2);
+    var pick = Director.pick(request, new SplittableRandom(8));
+    assertThat(pick.bots()).extracting(b -> b.personality().id()).containsExactly("challenger");
+  }
+
+  @Test
   void withoutHumansThereIsNoShiftAndNewcomersPlayAtTheirSkillsRating() {
     var pick = Director.pick(request(2, List.of(), Set.of()), new SplittableRandom(3));
 

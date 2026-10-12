@@ -1,0 +1,76 @@
+id: itspenjoun
+name: ItsPenjoun
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjM3NTE5MCwKICAicHJvZmlsZUlkIiA6ICI3MWU4ODU5ODVkOGM0ZDg2ODMxODYxNDU1NjE3MDY2YyIsCiAgInByb2ZpbGVOYW1lIiA6ICJKb3NoeV9XYXNoeSIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9lZTM4YmE3MzhhMmYyMjVjMzRmMjgzMGFkZWZjZWM2ZDM2NmQwYjI1MGM5ZWU2NGEzZWRiNjM4ZDBiMjY1ODc5IgogICAgfQogIH0KfQ=="
+  signature: "OO2qU7ug59z/jk4ZO2/LobN8GarwjdjqA6Tk7uRhHbO8PjaSenIYFIyjtkwgf1lDYTyeKjjPk8e115A7r6lrnXr5RZfHkouyCeaLmp/0JkcJIyHP3hbZLTEZN+umalbScsYGnsn00ry9Z5iVp11xOSVtCPzJ3mrardhTBEsIAEMz1J7xHPJ1chEf9vsv6Fy4Q5qUWRvbzvBjW0NkXaPq/x1ksELsBcsT5iNFRK77I9LfCUC3Tmq7rS3Ulq7cjCaI/JnOS7YX6/ugyQZfPX3UxV3vzP4g2/AWVdKvZt8Veubt3LDXEAsADr5b4zUXtwW2gr4sZlcnU14Ht43GwVYOAFbkjElzBi5vzRvEQmDnzpYfyX31ukd893jXCRFK1/OJbtRJWpDruVRP8Bv25IfALqkle8XJgtXZUgkhR3V7mdRPsYRjeNo1abrKthUdSnn522raDmH3Nyf2lNsGxfmQBCe/GQkB1AoUYccF5dW8sluASoNpFyBKMUBCK0Qgeb0m6C/TmkQw+Rr/Rmy0kEQuf/upninH9ZFPHNFQQ+205lVAL7TsuwcV6VxVr4nMZa84AYewJf9TLrozNXYXdk3moVmxH+JzcNFNDOWB4uX6YlJcGP7VKDK03g2JmL10YOle+vsB8qupUW7jq0vXnOyE1OBkhvLNQfM0p/g/cHBjN0s="
+skill: 0.268
+archetype: flanker
+leverOffsets:
+  turnRateDegPerTick: 1.14
+  predictionQuality: 0.81
+  awarenessRadius: -0.75
+  coordination: -0.95
+  aggression: 0.31
+kits:
+  trooper: 0.59
+  longbow: 0.2
+  shortbow: 0.85
+  rewind: 0.37
+  wraith: 0.51
+  spy: 0.35
+roles:
+  plant: 0.4
+  rotate: 1
+  hunt: 0.51
+style:
+  aggression: 0.66
+  patience: 0.38
+  teamplay: 0.25
+  risk: 0.57
+voice:
+  tone:
+    - playful
+    - nimble
+  verbosity: normal
+  style: "tiny winter expeditions, serious snow forts; quick side remarks and route changes mid-sentence"
+lines:
+  greet:
+    - frost compass thawed out, ready
+    - frost compass is taking the other entrance
+  onKill:
+    - a tidy little snowball effect
+    - frost compass found a side door
+  onDeath:
+    - slid right out of that plan
+    - frost compass chose an occupied side door
+  onPlant:
+    - a warm spot in the snow
+    - "frost compass came around the back of {bomb}"
+  onDefuse:
+    - cooled the bomb right down
+    - frost compass found a quieter route to the fuse
+  onWin:
+    - frost compass has survived the thaw
+    - frost compass took the long way for a reason
+  onLoss:
+    - the fort melted around us
+    - frost compass took the long way for no reason
+  onLastAlive:
+    - one mitten still waving
+    - one frost compass coming around the edge
+  taunt:
+    - your footing looked a bit icy
+    - the frost compass is somewhere to the side
+  lobby:
+    - warming my frost compass by the lobby lamp
+    - please stop hiding my frost compass in snow
+    - "My frost compass: I will try the side approach."
+    - With my frost compass, keep them looking forward for me.
+quirks:
+  - crouch_spam
+  - always_gg
+rivals:
+  - tirdaez-88
+bio: ItsPenjoun built a snow fort that lasted longer than the team inside it and still brings a frost compass to the queue. Tirdaez_88 keeps asking whether it really helps.
+batch: 3
+retired: false

@@ -1,0 +1,75 @@
+id: sneakypumpiok
+name: SneakyPumpiok
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjI2MDQwMCwKICAicHJvZmlsZUlkIiA6ICIzOWEzOTMzZWE4MjU0OGU3ODQwNzQ1YzBjNGY3MjU2ZCIsCiAgInByb2ZpbGVOYW1lIiA6ICJkZW1pbmVjcmFmdGVybG9sIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2MwMjNkYzdlMTFlNTI2YTEzMzcyOGFjNjllN2ZlOTEzYWQ5NDU4OTVjZjM0YTA1NWI0YTA5NzI0OTE2MTE2NDUiCiAgICB9CiAgfQp9
+  signature: "kR7GVRd1lalei5fV9X565kZ495sczq1wUkv2arLawTk8eotdva8KBopSYwBjIqi4kSiKUed03yxrERL3Eek/bI3ELAnJviupVByWsoPmcmZLB+97+dKBnNtTu0/fCwZrzvxNN1t+m/tjKOZS0Wnqvrltf2lNpiD5UXbcA0WR9/Jkeyc4aJzm1BeYK/i6ZiuXIm+SmYcOjrCxSfUmyHlqkJQkUKMu10Xf/6b68GvRWOOUDHZTOPo7GBlW5ODCKjRhoSFJEe6E4zRgRTBMW4sy4m/ULJ5mdOPxIvzPNYczKXpoFoyMi+BvfY7MiN6Uq4FKbWSqX0VoGP1r4la5xtVK01pu3vlExOpo/kUW3F90kQjGYsKqMXDdzI3zGRqpiPCqSEERWrb1Q6PJopdWh1rFjj7PCMb5Yjh+zw2XTubUld/RcPjxasOHDmJH3ZPRMp2jyG5MAjeu415Gh9HRqWtL+62GTOFQDpP0GsNPQo8COy0VgsOzSQz7VNuIysqeEkgIp7v5EKB/Txt1W2GT2pIBYQ5MC1SBsrlmqBzzm76v1AVssfQRrlB8Tjfp2HiWKa0aKMAbeQl/mkRKkwNywczMUq6islpXOwqBfwu8IACpkYP+j0SLalVUU6mNmRh9lrC9rpbMXrITDYqZE/U2xGR3ridXU7ldK071oJUJ7MXJWbA="
+skill: 0.908
+archetype: flanker
+leverOffsets:
+  turnRateDegPerTick: 0.85
+  predictionQuality: 0.31
+  decisionTemperature: -0.33
+  coordination: -0.44
+  aggression: 0.65
+kits:
+  trooper: 0.68
+  shortbow: 1
+  rewind: 0.34
+  wraith: 0.55
+  spy: 0.43
+roles:
+  plant: 0.42
+  rotate: 0.95
+  hunt: 0.48
+style:
+  aggression: 0.63
+  patience: 0.39
+  teamplay: 0.13
+  risk: 0.76
+voice:
+  tone:
+    - watchful
+    - nimble
+  verbosity: chatty
+  style: "tired lighthouse bearings, steady reassurance; quick side remarks and route changes mid-sentence"
+lines:
+  greet:
+    - signal mirror checked, coast watched
+    - signal mirror is taking the other entrance
+  onKill:
+    - a clear signal through the fog
+    - signal mirror found a side door
+  onDeath:
+    - lost the light around that bend
+    - signal mirror chose an occupied side door
+  onPlant:
+    - warning light at the bomb
+    - "signal mirror came around the back of {bomb}"
+  onDefuse:
+    - warning extinguished
+    - signal mirror found a quieter route to the fuse
+  onWin:
+    - signal mirror guided us home
+    - signal mirror took the long way for a reason
+  onLoss:
+    - the signal mirror missed a rock
+    - signal mirror took the long way for no reason
+  onLastAlive:
+    - one light still on the coast
+    - one signal mirror coming around the edge
+  taunt:
+    - your approach was visible from shore
+    - the signal mirror is somewhere to the side
+  lobby:
+    - polishing my signal mirror before the round
+    - please leave the signal mirror switched on
+    - "My signal mirror: I will try the side approach."
+    - With my signal mirror, keep them looking forward for me.
+quirks:
+  - crouch_spam
+  - always_gg
+rivals:
+  - xxbanditbanditxx
+bio: SneakyPumpiok lit a coastal tower so returning builders could find home and still brings a signal mirror to the queue. xXBanditBanditXx keeps asking whether it really helps.
+batch: 3
+retired: false

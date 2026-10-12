@@ -1,0 +1,76 @@
+id: potatofox2
+name: PotatoFox2
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTczODg1NCwKICAicHJvZmlsZUlkIiA6ICJhNWM5MmJlODg5MGY0NDU0OTdkNGEwOTM2Yjg1NDc5OSIsCiAgInByb2ZpbGVOYW1lIiA6ICJDbG93ZGVyVGVjaCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS80NmVlZDdhODlmYmQzODI3ZTBjNzM4Njk5NDg2Yjg0YTQ2MDQyMDU0N2NkYzAzYTlkZmI4MDUxNTQ1OGJjZjI3IgogICAgfQogIH0KfQ=="
+  signature: "RKhkxqTwa71c3V4dtOCQqg7bkW+dt+iFuBuJpkR8yVcB/6/tj/+Y5KkmHNU8qtu5D/Bd8Yfhsrwbkf9TAk/fyZ1v+XVsmjQ1heVoCU6XhjM/UaqtWWjmbg/dSdMbDe4UPgIg03eG4snudaSkliYPCcgORFVeovpx8bK5PdlI9ArKfdzfpzQYwJAMvayersfAUkUsXaACTJGn0c32ErNjTx3DmRw2j6/CYpv35QqhlUz6RXNsRz5tK6a1aorbzJgsR+cewB92SYbKieEfomQXn+AWSsQLytHC+ntKOJQaq7qX9pJ7317AyrtRsEjGnqGg8Rst6N7d2vo4WzEykf0f0ZoTb/LzeR3fsxomDq8Wxh3j0Cyl6bBmuy6f699guo6koTkREZUy1vxIF73RSD+6XAq7xZRQH2EIl12Pc7/dAyHYkL0C2pb95GHak3R79fjf0hFtqMdquKM7Drnm239q7X7sw/N3Ra766pZss93LC2FV0PRs5TAiwvMzGgo5kab0PZNJrhEkgqaNIrr24m58cpavHgAR2BHoxkpXh9QvA2l/w19MdbOcKOzx2kZO4OJali0UPrsCELLgaXg3NTZbUcx1YohuyAyrp0h9asBFvWu3LPBSOgjc48m4QJmcfaKyNVCPkrucbqn7ftsEyoNmSxR6rHo2XUs7eXTHnq4qDUU="
+skill: 0.553
+archetype: sniper
+leverOffsets:
+  reactionMs: 0.13
+  aimErrorDeg: 1.59
+  cps: -0.72
+  predictionQuality: 1.3
+  decisionTemperature: 0.11
+  awarenessRadius: 0.99
+  technique: -0.39
+  aggression: -1
+kits:
+  trooper: 0.16
+  longbow: 0.91
+  shortbow: 0.43
+roles:
+  defend: 0.64
+  rotate: 0.41
+  hunt: 0.74
+style:
+  aggression: 0.41
+  patience: 0.94
+  teamplay: 0.52
+  risk: 0.28
+voice:
+  tone:
+    - earnest
+    - focused
+  verbosity: normal
+  style: "museum labels for even embarrassing plays; short range notes and patient, exact corrections"
+lines:
+  greet:
+    - glass case prepared, exhibit opening
+    - glass case in place, checking the long angle
+  onKill:
+    - a fascinating example of an opening
+    - glass case found the range
+  onDeath:
+    - please do not put that in the exhibit
+    - glass case needed a closer angle
+  onPlant:
+    - a short-lived interactive exhibit
+    - glass case covers the far entrance
+  onDefuse:
+    - preserved the team instead
+    - glass case can wait, hands on the fuse
+  onWin:
+    - glass case has a new story
+    - glass case had a clear view of that
+  onLoss:
+    - a cautionary exhibit for the glass case
+    - glass case kept the wrong sight line
+  onLastAlive:
+    - the last visitor in the gallery
+    - one glass case, one long angle
+  taunt:
+    - your approach belongs in the archives
+    - the glass case saw that peek twice
+  lobby:
+    - please look without touching my glass case
+    - writing a new label for my glass case
+    - "My glass case: I will cover the long angle."
+    - With my glass case, call the close flank for me.
+quirks:
+  - bow_spammer
+  - always_gg
+rivals:
+  - shazyzbadger
+bio: PotatoFox2 opened a one-room museum for abandoned arena souvenirs and still brings a glass case to the queue. ShazyzBadger keeps asking whether it really helps.
+batch: 3
+retired: false

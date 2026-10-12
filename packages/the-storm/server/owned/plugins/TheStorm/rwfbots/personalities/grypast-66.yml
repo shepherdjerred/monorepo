@@ -1,0 +1,77 @@
+id: grypast-66
+name: Grypast_66
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTI2NjEyNiwKICAicHJvZmlsZUlkIiA6ICJkODBlMGYyNjU2M2U0NzI3YWNiZDNlMmRlNDkxYzFiZSIsCiAgInByb2ZpbGVOYW1lIiA6ICJYX0thZWxpc19YIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2MyYjEzYWMxY2ExMjQzNDkwZTlkYTIzNGNkZTlhZmMxNGYzMWM0YzI5NzRkZWM1MDhhMTI4YzI5NTgwZjg4NGYiCiAgICB9CiAgfQp9
+  signature: "YiJdWqF5QLpr67TxuvONvLXQCr9afyNWmd59rPiCEoccFQaEp2RlDWsU9YmO8lgU1b1mNuaGbDiTVcbM2vm+xxEs8YiamST0gfL0sbzcC8KujnsiWvZLHKPzP2B+QjpjkMEs0VGgZJmJLpw5l3DLqJdr2UrWV0HYx0RqFFpIP+jYPoWsNdIKGsHqSSaFSZLL8RVtPIlD/M+JnXaGlIgLV3DpH5/ndemPV5FlMm8XoUByxN6q/q/uH5jNN0olU+90DAURI4NH18B81dNLVqkEUlpSXdr1ioraTS6MGYNTrETj0c1jrfaexU5DKJ5ZFmG0lt8g79VpqwUeh3sL6VXOcijEOImnH5RDy6brZipTath94MqMy11lkubgllLW7kfPFac9wt5XB/SGQFEWGay2GA/pbelqM8yMVS7nvb8qvZntdxNQZhpYVJYquhbe4qJt0usIOGh+zzs1LmV2c+endud63dnCNSOUz12pzCYEPbb1FXBCzP19siEhyxu+b6pDpCAsnJAvwgnCmNCghK55vNXMdJG0ORAVorHDFUcLEStfjeZAAbu7jXcea2LuZfqYLBTETvU+OjMahppZaN0NG6f3eXDnk0gDJzgd/V3RiNAsMXsCLaI/zqOZmC4ylH2UxzI/oonhVEZq+12kapO4Dwk+H5jMMN4yxgcHUtM5vFs="
+skill: 0.236
+archetype: tactician
+leverOffsets:
+  predictionQuality: 0.93
+  decisionTemperature: 1.07
+  awarenessRadius: 0.15
+  coordination: 1.84
+  aggression: -0.28
+kits:
+  trooper: 1
+  longbow: 0.48
+  shortbow: 0.55
+  rewind: 0.48
+roles:
+  plant: 0.56
+  escort: 0.52
+  defend: 0.52
+  rotate: 0.71
+  retake: 0.67
+  hunt: 0.12
+style:
+  aggression: 0.32
+  patience: 0.63
+  teamplay: 0.86
+  risk: 0.33
+voice:
+  tone:
+    - precise
+    - analytical
+  verbosity: normal
+  style: "map annotations and quiet route corrections; numbered ideas, concise route calls, quick revisions"
+lines:
+  greet:
+    - my landmark list points toward trouble
+    - landmark list ready, first route agreed?
+  onKill:
+    - landmark list gets another little cross
+    - landmark list confirms a clean opening
+  onDeath:
+    - there is a hole in my landmark list
+    - landmark list needs a revision on that route
+  onPlant:
+    - landmark list marks the fuse
+    - landmark list confirms the site is reached
+  onDefuse:
+    - erasing that from my landmark list
+    - landmark list confirms the fuse is clear
+  onWin:
+    - landmark list finally matches the terrain
+    - landmark list and team followed through
+  onLoss:
+    - time to redraw my landmark list
+    - landmark list had a missing step
+  onLastAlive:
+    - one dot left on my landmark list
+    - landmark list says there is still a route
+  taunt:
+    - your route is wandering off my landmark list
+    - the landmark list predicted that rotation
+  lobby:
+    - unfolding my landmark list on the lobby floor
+    - please do not spill cocoa on my landmark list
+    - "My landmark list: I will call the first rotation."
+    - With my landmark list, tell me when a route closes.
+quirks:
+  - calls_everything
+  - always_gg
+rivals:
+  - xxriderfalconxx
+bio: Grypast_66 kept a hand-drawn atlas of the 2013 rotation and still brings a landmark list to the queue. xXRiderFalconXx keeps asking whether it really helps.
+batch: 3
+retired: false

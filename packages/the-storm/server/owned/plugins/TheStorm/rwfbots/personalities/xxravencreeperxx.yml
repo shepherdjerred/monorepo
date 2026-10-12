@@ -1,0 +1,76 @@
+id: xxravencreeperxx
+name: xXRavenCreeperXx
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NDkzMDY5NiwKICAicHJvZmlsZUlkIiA6ICIwYmEyOTY4NDc3ZTc0NjYwODAzYThlOWIxMmQwNGU3NiIsCiAgInByb2ZpbGVOYW1lIiA6ICJQbHNQdWxsTWUiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNWZlYzFmMmZiZGNmNTFiNWEzMjg0ZGE1ZmM2MDAzNjc1YTUwZDU3ZjhmMjM1YTRkMjNhOGNkZjAyNmI0MGZhMCIKICAgIH0KICB9Cn0="
+  signature: "OIRyLJN9InJ7Rt/9BTKDPTrDAQlqCveyxUcgF/pPLuwsHnvI7HhCZ8dYlrXcJOxygbR6wFLvBfoMuPNQJ48BtP5kJeMSSzpjBsr/95SGj1MHE9mJm1gwLarEM5zvSWY7Y3bunEIFWkGglkGc2BdMIGkarIr799EiGns3R+ngvbCX57C06Rz9zE7ANpYjKoNg2V7CxMZPumpzTh9ixJrAjaAl6JfgdLAkyOhLnnOiEtC+TU1TQFXabO7r0+PcoM/by5WPN/WxxrygdKqZHi5OqSTv0ozCiox5UN7vAWzFlgjsR10nH7ak64Vd+z0+cZ/KiAn1pBdo234ZI23aieYzSmvmzsCHfRg8hiYDz1XNKtjt92qgVOd6s2V+GZn/hz0evV9/n4kXi1E2MtLVSwAGWSX5AN5//HFixi8EK+IxC+D9r5c3lqh6ZfZCFTMwNRdZsXreFOTOSxM9sOfRmWdd5ZViUEkxXROcT/fZkj883MW5cn3e34FX/Ypdp1J2lNqSdYQ/SylpS3WHzMpslV9eL3Sj5wRAtAhsacZTO5E/yeuh3ri1hca/kL5Ti/kcKwz8U2ZYNbKGS4LdZCPuw5UenBD1EznCXXT1kOZmn3PJFhj6ikAhFw8nXrDVr6gevBkM3e3YZVysTPpUoL6is38ghdD9s9anDH1j6NUuHC9WpqM="
+skill: 0.744
+archetype: flanker
+leverOffsets:
+  turnRateDegPerTick: 0.91
+  cps: 0.43
+  predictionQuality: 0.7
+  coordination: -0.76
+  aggression: 0.67
+kits:
+  trooper: 0.69
+  longbow: 0.17
+  shortbow: 1
+  rewind: 0.4
+  wraith: 0.48
+  spy: 0.43
+roles:
+  plant: 0.43
+  rotate: 1
+  hunt: 0.42
+style:
+  aggression: 0.59
+  patience: 0.44
+  teamplay: 0.21
+  risk: 0.68
+voice:
+  tone:
+    - observant
+    - nimble
+  verbosity: chatty
+  style: "local forecasts and quiet predictions; quick side remarks and route changes mid-sentence"
+lines:
+  greet:
+    - snow ruler predicts a lively round
+    - snow ruler is taking the other entrance
+  onKill:
+    - a sudden change on the snow ruler
+    - snow ruler found a side door
+  onDeath:
+    - the snow ruler missed that gust
+    - snow ruler chose an occupied side door
+  onPlant:
+    - pressure dropping at the bomb
+    - "snow ruler came around the back of {bomb}"
+  onDefuse:
+    - storm warning cancelled
+    - snow ruler found a quieter route to the fuse
+  onWin:
+    - clear skies over my snow ruler
+    - snow ruler took the long way for a reason
+  onLoss:
+    - my snow ruler forecast was optimistic
+    - snow ruler took the long way for no reason
+  onLastAlive:
+    - one snow ruler in the storm
+    - one snow ruler coming around the edge
+  taunt:
+    - your push is mostly hot air
+    - the snow ruler is somewhere to the side
+  lobby:
+    - taking a reading from my snow ruler
+    - please stop breathing onto my snow ruler
+    - "My snow ruler: I will try the side approach."
+    - With my snow ruler, keep them looking forward for me.
+quirks:
+  - crouch_spam
+  - always_gg
+rivals:
+  - luckyslime10
+bio: xXRavenCreeperXx logged the weather from a glass hut above the old arena and still brings a snow ruler to the queue. LuckySlime10 keeps asking whether it really helps.
+batch: 3
+retired: false

@@ -1,0 +1,76 @@
+id: volxunpro
+name: VolxunPro
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODc3NDY4NywKICAicHJvZmlsZUlkIiA6ICIzMjA3MWFlYjYzZjI0NmY0YTVlMGZhMWY3ODg3ZGRhNCIsCiAgInByb2ZpbGVOYW1lIiA6ICJNcl9HZW5lcyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9kZGVmZDk4YTQxMzEwMTUwZjk4YWRkOWRhMjk0OTQ3NTlmOTZjMGU2MWRjZWY5MTg3MzJhYjhhYzMwZGViYjVhIgogICAgfQogIH0KfQ=="
+  signature: "p3n3rZLqTotmhdi89cZ99230AmGWUd6joDtlHrzfy2NdsE93baFhoNZIXDLqcPt7/mcc2lUC7mCeaOjD+u/gzIi6LRZou6ch4eLOL35VnV68MTPt+R9OZhKm2wMO0EYjJ7781IZm9GuuNtl/87eVxjlmjvRDbMzKJt1HlJ+M5YB9SdGMTVyFHJ4JKADBZyXbvaGFDOP8iM113SF1dI2cz5CgDSwQIT4IjKpD7phv2FO4YGaBv+JBIPK0ywkfHrBS3AtNkQ8fV9BbxpfTgnVZ7ile0LHdou8wbmfU8Zr72rr3F1MI/H7Oiwq89wzeB/HL+gVpE6Hpb0e1EvaATZztqPR/KXJO6229RqMd3KZVQzRPd1pfEL0x/6BVo4fesslbHW15T3vIhl5EyPTZ+ZJx+TVIiuDMIbPXxZ4Yf2mmdBhAltQKyYGlbst5bGji7IaRIcA6hIATlebkKjMo0y6uU5IIwY18aon8IyQS98r+yjs7kew3CgpMPxacQrC0kUTJOpgwPToSib0jCfAMDtl5pgUzrt6tbs4JesNxkqVoMPKQVbIkODRUdiRDFK/Y4sZSXhAdMLsjrEKDXYcAIhEcoO8U7xIXmF6wOqrwIjE2+3m9iCtsdLTtrvPaqh6xCeP4Qc/re1EJ1LXA3D4kx9rB7PwxJiQL3kM1bVqnmZPIqaE="
+skill: 0.245
+archetype: rusher
+leverOffsets:
+  reactionMs: 0.41
+  cps: 0.83
+  predictionQuality: -0.76
+  decisionTemperature: 0.27
+  awarenessRadius: -0.14
+  technique: 0.38
+  aggression: 1.21
+kits:
+  trooper: 0.95
+  shortbow: 0.53
+  rewind: 0.29
+  ghost: 0.2
+roles:
+  plant: 0.7
+  escort: 0.47
+  hunt: 0.63
+style:
+  aggression: 0.94
+  patience: 0.09
+  teamplay: 0.43
+  risk: 0.67
+voice:
+  tone:
+    - soft-spoken
+    - eager
+  verbosity: normal
+  style: "tiny aquarium metaphors and creature worries; fast fragments, impatient countdowns"
+lines:
+  greet:
+    - pond net ready, fish fed
+    - pond net ready, I am taking the first corner
+  onKill:
+    - a splash and then quiet
+    - pond net keeps moving, next corner
+  onDeath:
+    - out of my depth there
+    - a pause for the pond net, then straight back
+  onPlant:
+    - something is bubbling at the bomb
+    - pond net is already on the next approach
+  onDefuse:
+    - water is calm again
+    - quick hands, quick pond net, clear
+  onWin:
+    - a quiet evening for my pond net
+    - pond net barely stopped all round
+  onLoss:
+    - cloudy water in the pond net plan
+    - pond net ran ahead of the plan
+  onLastAlive:
+    - one small splash left
+    - my pond net and I will keep moving
+  taunt:
+    - that bait was a little obvious
+    - my pond net got here before that push
+  lobby:
+    - putting my pond net away before the round
+    - the pond can wait for my pond net
+    - "My pond net: first corner is mine."
+    - With my pond net, please follow after the opening.
+quirks:
+  - bunny_hops
+  - always_gg
+rivals:
+  - sneakybadger09
+bio: VolxunPro maintained a glass pond under the old lobby stairs and still brings a pond net to the queue. SneakyBadger09 keeps asking whether it really helps.
+batch: 3
+retired: false

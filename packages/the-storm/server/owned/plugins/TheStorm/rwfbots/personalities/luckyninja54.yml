@@ -1,0 +1,75 @@
+id: luckyninja54
+name: LuckyNinja54
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTM4ODU4OSwKICAicHJvZmlsZUlkIiA6ICIyODlmYmYwZGViMDU0MTI5YWZlYzBhMWQzMDBlOTgwYyIsCiAgInByb2ZpbGVOYW1lIiA6ICJqb2hubnlsaWtlcGllMiIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS82MjMyMmQ1YjQ1OTBlYWQ3M2Q0YjAxYWU1ZWIwOWRlYzJmZTQ1NjI4N2NjMTE1Y2Y2YzFmNDczMWZhNjZjMDQ0IgogICAgfQogIH0KfQ=="
+  signature: "iuwJ4aBRr+Qbsq2n8R933AOMxf6Yf8MStKFAnR1pMqAkNioQsFlFQOPrpk5jXTmuR1/Sa3j25kuesMOLsRDuPB3Sr/kRjaMgSuJ+ELtPJ5ejZStWcLS6vpxatNhgwsA2wRjmKXFPo6tegasX8lp5y1HPvJ3iSVqw+dIF5I0igVYjOv92qN9ZSyDCsL++kZsPxSb8asAWIkKtrbvQQRBCQ9iH5QDWmIxA6rbc4pfEmq4LBgclkWiFsQlpWMJhIFT0ZlbsLnKlDa0rdq4TgZ2+xI1gCYo5QA76f7WjP0kXQRI+/93pFBqCjNFakbYychvCLqYny413rWZX3UXFr7jdmu9aXg5xkTwtHp70+bXpYwJsWrKlPR4KUjfJWdYVDD3KnB4lNpELb0Uy3URvxP8DCsHqYvKZbm7PFDXuI/KZEMozfTE+W3ehX+FJEfxmhqUdknu+o0FNRNCxCQeDrOgvAWTMf831HAsK6OfViyGIK8qmkOxPGyiJ2UqtiC9DJ/oNYg4iHLJox9XVq9gMhoWtNYl5VP/LTOFh1GM2HqakckBRNdXltk9Wuu/YBTKANofdGlVjQBS8/xY0DJ6Mv2Ix7nNv9TgQX5GYOfQePGS5DU5ofgusOJtVdXMvP5Cw/VQAC7tVBkhyVqdLAJkssJh1GsjSwIjtLlUzojqZFbnpCPk="
+skill: 0.949
+archetype: lurker
+leverOffsets:
+  turnRateDegPerTick: -0.14
+  cps: -0.81
+  predictionQuality: 0.13
+  awarenessRadius: 1.41
+  coordination: -1.33
+  aggression: -0.48
+kits:
+  trooper: 0.6
+  shortbow: 0.59
+  ghost: 0.8
+  wraith: 0.51
+roles:
+  plant: 0.41
+  rotate: 0.77
+  hunt: 0.94
+style:
+  aggression: 0.35
+  patience: 0.95
+  teamplay: 0.11
+  risk: 0.75
+voice:
+  tone:
+    - gentle
+    - hushed
+  verbosity: normal
+  style: "patient gardening talk, stubborn lane defence; lowercase whispers, deliberate pauses"
+lines:
+  greet:
+    - seed packet packed, lets grow into this
+    - seed packet here. quietly.
+  onKill:
+    - cleared a little room for my seed packet
+    - the seed packet was here a while
+  onDeath:
+    - my seed packet has met a weed
+    - heard it too late beside the seed packet
+  onPlant:
+    - this seed has a very short season
+    - seed packet is watching the quiet entrance
+  onDefuse:
+    - pulled it out by the root
+    - no noise. no fuse. just the seed packet.
+  onWin:
+    - a fine harvest for the seed packet crew
+    - the seed packet stayed out of sight
+  onLoss:
+    - bad weather for my seed packet today
+    - the seed packet waited one corner too long
+  onLastAlive:
+    - one seed packet still in the garden
+    - nobody move near my seed packet
+  taunt:
+    - that lane could use some pruning
+    - the seed packet heard that approach coming
+  lobby:
+    - checking the soil with my seed packet
+    - my seed packet is for the roof garden later
+    - "My seed packet: I will hold the quiet route."
+    - With my seed packet, leave one quiet approach for me.
+quirks:
+  - slow_starter
+  - always_gg
+rivals:
+  - thozgromvioshan
+bio: LuckyNinja54 grew a roof garden over the old kit shop and still brings a seed packet to the queue. Thozgromvioshan keeps asking whether it really helps.
+batch: 3
+retired: false

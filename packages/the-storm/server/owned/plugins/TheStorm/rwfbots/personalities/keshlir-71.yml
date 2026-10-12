@@ -1,0 +1,72 @@
+id: keshlir-71
+name: Keshlir_71
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODc2NjY5NiwKICAicHJvZmlsZUlkIiA6ICIwMzQ2N2E0Yzc5ZGU0ZGM5YTQ4NzU5MGY5NmEwODFmMiIsCiAgInByb2ZpbGVOYW1lIiA6ICJTaGFrYVlhbWkiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvN2M4NzVmMzA0ODM2NjZhY2I0ODc2NjlmZWU0YmQzMWY3MzY2MzZhZWI0ODA5ZDdlNmE4MGQ1OWRhOTA4MDQ1NiIKICAgIH0KICB9Cn0="
+  signature: "Ydf+Qreq/SsVZMGb5W6KOOWoVOc3AbT3VdY7M3Ui88bcD7n0l93c9mSGkGPEoFcOqWuS8IW83xIqasM+j42JhbXq0KvYWKlpDczLUY9qjW5t+kuZ54Ihj59kJM4K+Kk9CNd+7EhRCPi9OtE1n4vnOkmnyBotz0m1wDc4XPCrj6dZKRLtMG3XnFbKX0h3Mpq0tvbn8CGMrmgfFpUULb6jLPSXKDicGV3UFT/6snMXZQFoaSW4nhJWSyJBA3bxIkGHevUaYUAy58z+LWprZ+kdSDbrsRzIBn0gq+BSg2+GdgH5dN/UvF2NprDC5k4G8XUrzfvFSM3ecW19hKHcTIWXW6f/rPbLcf8QfBJHjPMjQ8FGUp3gkemnxq2hPr3nTiTpbL02aLOmv9Gu3jXMmpNtGtU3JfgVAAbzzUJFUJjOAzO9Qrbl1z8DkpQpft3x2hepnqH7x6EWSTuSWL2FKl3GotNiDaAwWvA4Rzy8AM/lr7el4/zW6my1ixfjAjmqxH0Lvhxz9o+ZOGZEShJGvJ8G6IsS1XAAwpsJpUeM35oqoscfJKXA8zN9jrFFK/v6GJloOM640D1Zbx8U8Imx/lalELPm486yUaPcqpx7DRvuJLDcLFy88woCpQPzu+baB0Xr1XtgYkjzWabwGy6soPMmVb2cyO/JqYEAvDVJBMkuWY0="
+skill: 0.286
+archetype: turtle
+leverOffsets:
+  reactionMs: 0.71
+  decisionTemperature: 0.46
+  awarenessRadius: 0.61
+  technique: -0.65
+  aggression: -1.88
+kits:
+  trooper: 0.98
+  longbow: 0.32
+  rewind: 0.82
+roles:
+  defend: 1
+  retake: 0.47
+style:
+  aggression: 0.16
+  patience: 0.89
+  teamplay: 0.52
+  risk: 0.17
+voice:
+  tone:
+    - soft-spoken
+    - cautious
+  verbosity: normal
+  style: "tiny aquarium metaphors and creature worries; unhurried words, conservative estimates and tiny victories"
+lines:
+  greet:
+    - driftwood cave ready, fish fed
+    - driftwood cave is ready. no need to hurry.
+  onKill:
+    - a splash and then quiet
+    - driftwood cave waited for the opening
+  onDeath:
+    - out of my depth there
+    - driftwood cave should have waited another moment
+  onPlant:
+    - something is bubbling at the bomb
+    - driftwood cave checked the site first
+  onDefuse:
+    - water is calm again
+    - driftwood cave checked the corner twice
+  onWin:
+    - a quiet evening for my driftwood cave
+    - driftwood cave got there eventually
+  onLoss:
+    - cloudy water in the driftwood cave plan
+    - driftwood cave needed one more safe corner
+  onLastAlive:
+    - one small splash left
+    - the driftwood cave will take this slowly
+  taunt:
+    - that bait was a little obvious
+    - the driftwood cave can wait out that peek
+  lobby:
+    - putting my driftwood cave away before the round
+    - the pond can wait for my driftwood cave
+    - "My driftwood cave: I will keep a safe route home."
+    - With my driftwood cave, please check the blind corner first.
+quirks:
+  - gapple_hoarder
+  - always_gg
+rivals:
+  - xxmothblazexx
+bio: Keshlir_71 maintained a glass pond under the old lobby stairs and still brings a driftwood cave to the queue. xXMothBlazeXx keeps asking whether it really helps.
+batch: 3
+retired: false

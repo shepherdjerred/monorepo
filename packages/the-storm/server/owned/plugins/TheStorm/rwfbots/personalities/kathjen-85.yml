@@ -1,0 +1,75 @@
+id: kathjen-85
+name: Kathjen_85
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NTU5NzM4NywKICAicHJvZmlsZUlkIiA6ICJkYjQwYmNjNWUzMDE0ZmZjOGVlOWQxNDU5MTcyYjdhNCIsCiAgInByb2ZpbGVOYW1lIiA6ICJhWGUxOCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9mZDA0MjA3ZjhiZjRiODhhYWY0ZjQ1ZGI3YWUzMzQ0ZjA5YzczMzZiNGY3M2Q4Yzg0Mzk3NzYzNWY0YTkwMWM1IgogICAgfQogIH0KfQ=="
+  signature: "llxehV7vX8F3UwBcgCZZY+ROtepuaboQYbdmjkAmHM7+1Kur0V6ZWz+LaT+29thSOmoZmqs1DGtOzefxSIHEsWn8QCqKpPCYQy2Lr09KM6U8vcVRj14ye+xLd0Ta7Kqh33vH2CGDTvR6mTMIKHbR4pTfRBL9fMhPZWPrsEXSAU7RTCIYK20iX2dFuoTIeC4Shx+q7o/UfMSV1mHDlW0W4Wo4v8jTlxagURg6xTMOob2LEzm3CcvX550Efwdua1NzBT9xQFqytnSC9OmNnSeF3tLuiHVYBlR3RDSqqRGrOLShQOAhxvzyC7CC5mjXKd1RyfxaB+gPxVVMSvfE0641Ir3AQHvDEZotRpS4fgEF3d3NJ2FzwhwfIHi5p3fvvPICHRcXjxwPsSzfTneNupnl9AB7J5GiG2VkP3EjR/xIRT3JcEuneiY+o4AV0uzUwCZ4KsOOaSuNnAZlOhmoQ68w0nERo+TVp3HEeEbRhDVnRGHiUOOHga71Qb24UdqS+cF9e9uf/KkgJ9aObWxAa8Co4dtnB+JYhYQUtWvIBCbJDQj8JQpyk/YumDLC/8RvT0gVzxtmTlgX+zI6M8t2M2F5H0YXmMVMG9WhgMZvgw9xQZTKyKLa23kIO4w3v/EjY/dQE+ncxHK4apTuESLk1jSzv1FeY8GtM7FmL5gepPkRnFI="
+skill: 0.937
+archetype: lurker
+leverOffsets:
+  cps: -0.21
+  predictionQuality: 0.22
+  awarenessRadius: 1.1
+  coordination: -1.35
+  aggression: -0.12
+kits:
+  trooper: 0.75
+  longbow: 0.25
+  shortbow: 0.56
+  ghost: 0.9
+  wraith: 0.52
+roles:
+  plant: 0.23
+  rotate: 0.63
+  hunt: 0.98
+style:
+  aggression: 0.34
+  patience: 0.81
+  teamplay: 0.17
+  risk: 0.62
+voice:
+  tone:
+    - dreamy
+    - hushed
+  verbosity: chatty
+  style: "sky metaphors punctuated by exact callouts; lowercase whispers, deliberate pauses"
+lines:
+  greet:
+    - moon sketch says this is our orbit
+    - moon sketch here. quietly.
+  onKill:
+    - a little spark beside my moon sketch
+    - the moon sketch was here a while
+  onDeath:
+    - my moon sketch did not show that collision
+    - heard it too late beside the moon sketch
+  onPlant:
+    - starting a very small eclipse
+    - moon sketch is watching the quiet entrance
+  onDefuse:
+    - light returns to the bomb
+    - no noise. no fuse. just the moon sketch.
+  onWin:
+    - a bright mark in my moon sketch
+    - the moon sketch stayed out of sight
+  onLoss:
+    - a cloudy night for the moon sketch
+    - the moon sketch waited one corner too long
+  onLastAlive:
+    - one small moon sketch in a big sky
+    - nobody move near my moon sketch
+  taunt:
+    - that shot went into another orbit
+    - the moon sketch heard that approach coming
+  lobby:
+    - showing the lobby my moon sketch
+    - the ceiling is blocking my moon sketch
+    - "My moon sketch: I will hold the quiet route."
+    - With my moon sketch, leave one quiet approach for me.
+quirks:
+  - slow_starter
+  - always_gg
+rivals:
+  - itspenjoun
+bio: Kathjen_85 named the roof above spawn an observatory despite owning no telescope and still brings a moon sketch to the queue. ItsPenjoun keeps asking whether it really helps.
+batch: 3
+retired: false

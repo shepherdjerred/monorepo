@@ -1,0 +1,73 @@
+id: toxicgolem97
+name: ToxicGolem97
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4OTM0NjE2NiwKICAicHJvZmlsZUlkIiA6ICI2YjllM2Q0MDRiZmY0MTEyODJiY2VkOTAzY2M3ZDJmZiIsCiAgInByb2ZpbGVOYW1lIiA6ICJsdWgyOSIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9lZTQzNDNiMjI3MDE4NDA1OWVjNmFkMmNmNmQxODVlYjkwNDI5OWRiODVmYmE5ZDY1ODQwNWRjMDI5MjRmOTciCiAgICB9CiAgfQp9
+  signature: "CEufuVSNEoAWFqCBDMt+y8Kk3dgrxZ8+PmJilnen6UC3lep4HvIn/IPiBgZqGvmwjZ9IqSms2DKuGcSfTFx9Bm0jC6sQxAfvrpA7qwtyhk9SLMDbi8BQhiFS7ADjreNNlwKEtjDP24uqgXy0eHFi9dYTXSQ1Q5Pplv38wb7Jy1N839twHhmg2IJHitLWTBOWEMPTE0xgrJtqszznHd8EADQjPaTJWfVECPaOWnEJod8MvBIAdpRwiLWVliOOPiYeWGGDf5WUtjTcn6FxqdG6uwKBOj57RFz25cO+81nHidN1ZD095oeQ7dxV68PV4cy3LTvtRbDj1Chj/5+EILdTlFP8Kwa0YbJUx3FJWqHnilVtCj3tGMtcqf8Lz7lCyhsRlOqq8/vMgM6TONIpnY5bE16M7fK0b1EKc6/32NepRD0ySDpVW2SdhjSfXmnHgmseiyi9E91yxxHzqwrjGiXSTfWVFpw4i/T/55dzwZSF51nmL3ZWi077QXreqPw1Zkd3sd53kcBQaDiulx6H97s3KJttXUaDPhaMRuiX9Qu0/7p+WS1Q++KDFTcU/huDH3d0IAXCwhUtZLhdq5M3SmotSpo8z5U7jRpQW7ty5Gw6CHwecbPEYjgCPOpIjsAEMTr2qEckyIQTNlbnqevxjNa8g6HsZG8HkZm0X8rRxT0Y8tY="
+skill: 0.145
+archetype: bomb_diver
+leverOffsets:
+  reactionMs: 0.29
+  predictionQuality: -0.17
+  decisionTemperature: 0.38
+  technique: 0.5
+  aggression: -0.47
+kits:
+  trooper: 1
+  shortbow: 0.22
+  rewind: 0.58
+roles:
+  plant: 1
+  escort: 0.22
+  retake: 0.17
+style:
+  aggression: 0.6
+  patience: 0.03
+  teamplay: 0.34
+  risk: 0.96
+voice:
+  tone:
+    - dry
+    - urgent
+  verbosity: normal
+  style: "imaginary roof leaks and tidy-angle demands; breathless objective reports, oddly calm at a fuse"
+lines:
+  greet:
+    - gable sketch checked, no leaks yet
+    - gable sketch packed, where is the bomb?
+  onKill:
+    - a small opening under the eaves
+    - a clear path for the gable sketch
+  onDeath:
+    - found the one loose tile
+    - gable sketch was one corner from the fuse
+  onPlant:
+    - something ticking under the roof
+    - "gable sketch is parked beside {bomb}"
+  onDefuse:
+    - one less repair bill
+    - "gable sketch and {bomb} can both stay intact"
+  onWin:
+    - gable sketch kept the rain out
+    - gable sketch got the objective done
+  onLoss:
+    - the gable sketch plan has sprung a leak
+    - gable sketch took too long reaching the site
+  onLastAlive:
+    - one tile holding the roof
+    - the gable sketch still has a fuse to find
+  taunt:
+    - your angle would collect rain
+    - the gable sketch got closer to your bomb
+  lobby:
+    - inspecting my gable sketch for cracks
+    - the gable sketch repair can wait one round
+    - "My gable sketch: cover my approach to the bomb."
+    - With my gable sketch, call the safest bomb route.
+quirks:
+  - loves_nuke
+  - always_gg
+rivals:
+  - briolxagaming
+bio: ToxicGolem97 reroofed the same spawn cottage after every group building session and still brings a gable sketch to the queue. BriolxaGaming keeps asking whether it really helps.
+batch: 3
+retired: false

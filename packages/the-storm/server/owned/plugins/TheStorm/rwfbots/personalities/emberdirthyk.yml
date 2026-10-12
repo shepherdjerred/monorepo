@@ -1,0 +1,76 @@
+id: emberdirthyk
+name: EmberDirthyk
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjI3Njc1MSwKICAicHJvZmlsZUlkIiA6ICI2NDEwZjRiZjMwNDU0OTdmODBjZDI4NWIyYmJiNTk5NSIsCiAgInByb2ZpbGVOYW1lIiA6ICJNaW5lU2tpbl8xNSIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9hZjhlM2M5N2E3Y2Y5NjY1NDdmNmIzZjMxYTU3NzU4NDVmNzA4ZDQ2YWQ0M2ZhNDQ1ZmE1NGZiZWQ4NDAyNjkyIgogICAgfQogIH0KfQ=="
+  signature: "qg6HnxCueJXnH+kM8m1sjb05O6OeHMV51dINWITfB7ztgrlA12NfWC0eTk6UyhUgDdwihBCLvmO14eTU0p4NXFAsAjPR8O+vIhoXdGNJyJo53QD8uuuBHjKUJMmCCKHWMHt7/tkwARCH3yKyjBEwbwxaMMyvMJIV8Lub9CqXwwEmGphwL2paIb4sJmGGuA/numOXaxNwysCB/tmR+CeDKfcEmEwAHraDE4A3tRZp2HdSyJiLaoFj+5jqegtYyJkuiE9gsv70JAQUPsaQN8LW4E8lRKMfjn0G0KNmlp9HYrIv8stjlTu2P4mKaPkasWS7XXoaLADDiyGjXbmBFg65d0UzaK3VLNI1jQ/waZnIN4qt8rd+LiT6wF8xLMTvdOmary2Js2Thm2jv2+bBhtD8z8jcvaXgIyzrTyoGlsOPxHuvOJ4z/bmOG1xuYqQ+S9i06DtGQuMzbxAAb1Q3HxPEttvKRF6p/vBWFIaQcmel2xziX/9ixSMAZuDBxnkjGxch2PEyFJLnT0EpWxeU+OGVaILO5Xjfo+ma/Ow2+GuhAhZy4TH3F/ZsEwv4xKP6Ezl1/XEIyrbAhMA9lplScUaI8rb+3BtAeI6OJEJzQsgGJbv2in9k0/xdpwwv69BSDGS/MM/VvoF7RWjIQ0gBMy3qgA5dWGpfBU9ptZ6DOrXcZW8="
+skill: 0.588
+archetype: flanker
+leverOffsets:
+  aimErrorDeg: 0.81
+  turnRateDegPerTick: 0.57
+  predictionQuality: 0.2
+  coordination: -0.75
+  technique: 0.48
+  aggression: 0.21
+kits:
+  trooper: 0.66
+  shortbow: 0.95
+  rewind: 0.39
+  wraith: 0.54
+  spy: 0.4
+roles:
+  plant: 0.41
+  rotate: 1
+  hunt: 0.49
+style:
+  aggression: 0.63
+  patience: 0.41
+  teamplay: 0.31
+  risk: 0.71
+voice:
+  tone:
+    - busy
+    - nimble
+  verbosity: chatty
+  style: "ingredient lists and improvised kitchen fixes; quick side remarks and route changes mid-sentence"
+lines:
+  greet:
+    - stew pot washed, team fed
+    - stew pot is taking the other entrance
+  onKill:
+    - a useful pinch of pressure
+    - stew pot found a side door
+  onDeath:
+    - too much heat on that corner
+    - stew pot chose an occupied side door
+  onPlant:
+    - letting the bomb simmer
+    - "stew pot came around the back of {bomb}"
+  onDefuse:
+    - taken off the heat
+    - stew pot found a quieter route to the fuse
+  onWin:
+    - stew pot can serve this round
+    - stew pot took the long way for a reason
+  onLoss:
+    - the stew pot recipe needs work
+    - stew pot took the long way for no reason
+  onLastAlive:
+    - one cook still stirring
+    - one stew pot coming around the edge
+  taunt:
+    - your push could use seasoning
+    - the stew pot is somewhere to the side
+  lobby:
+    - there is soup beside my stew pot
+    - please return my stew pot after dinner
+    - "My stew pot: I will try the side approach."
+    - With my stew pot, keep them looking forward for me.
+quirks:
+  - crouch_spam
+  - always_gg
+rivals:
+  - mumxenkraez-82
+bio: EmberDirthyk fed a team from a cramped kitchen beneath their spawn and still brings a stew pot to the queue. Mumxenkraez_82 keeps asking whether it really helps.
+batch: 3
+retired: false

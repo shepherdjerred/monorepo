@@ -1,0 +1,78 @@
+id: jollyotter95
+name: JollyOtter95
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODU4MzMxMSwKICAicHJvZmlsZUlkIiA6ICI2NmRmYzFmNTRlNTU0ZTZmODJjNTA5ZjM1NTJiYTkwZCIsCiAgInByb2ZpbGVOYW1lIiA6ICJadWFyaWciLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNTg1Njc1YjU1ZjAwYTE1ZTRkN2RlZGVhOGE1Zjk3MjBjY2ExMTRjYjY2ODk0NmQ3ZWQwMzYwYjM4OTRmNjUzMSIKICAgIH0KICB9Cn0="
+  signature: "sdlO5oq2w0DZhquwaMUQd8+UgvmB4e4OX0f0579q94mS2G9lWXLMrV+Mwvpy3j4ARkSYTcyI+Nt+fQLfnUeo+WwhIR078q2gzWT6uK9uyKbfv6j7MXSysIDrPLzyLnqTcczecyvaM5knxQ7fbAfAfn++5a3auKrtuA0Z+xBLC8Ngrc+j+DbI67poRAS2rr7+MYpIRTWM8lxTJpPXT23RsMrBzjgaxc9CjVkaiY20bRfM36db4iGkusGkUrporikjf2tnqHxuDLMwCAYC6G21Jmtssb6xX0mjb53qe7Ixt+M92wjU3OD1xaF9cK3Lenz228TyKExOq4fgFRukjanc9mE4e4APAhmsOvs59kNfhkH05tVwHUQgj9KoYR6g8DjRaEPMS1USwutyPM5+eYR0PVWOZd4r5kYBWGt1dgUfn9n88SEiawLtgsmgIApdQxtV3Cvs0gzW8QcpBmz1sAwrtjvDM4suUxCnYjBgLu7MI1+ffd2E4N1VVKZHKg0p9TxVsQB4g7N67LmA59pdyFVip32JUD5hQbt5/Ic7cFez95uWmWSmP0JEcIpSCJI4QOZpwgRm0LCXCSQG19WY1iT2iR///Lpqmjlm5NqLEfJMuDnhPwTsVVoNaZXr37uP8H1QXNKQwGroGomLOe2DIS98na5rcQyjNooqX+uR1IVzW50="
+skill: 0.53
+archetype: tactician
+leverOffsets:
+  turnRateDegPerTick: 0.09
+  predictionQuality: 0.22
+  decisionTemperature: 1.39
+  awarenessRadius: 1.11
+  coordination: 1.42
+  aggression: -0.79
+kits:
+  trooper: 0.95
+  longbow: 0.45
+  shortbow: 0.43
+  rewind: 0.47
+  wraith: 0.29
+roles:
+  plant: 0.53
+  escort: 0.43
+  defend: 0.48
+  rotate: 0.72
+  retake: 0.75
+style:
+  aggression: 0.36
+  patience: 0.66
+  teamplay: 0.86
+  risk: 0.39
+voice:
+  tone:
+    - soft-spoken
+    - analytical
+  verbosity: quiet
+  style: "tiny aquarium metaphors and creature worries; numbered ideas, concise route calls, quick revisions"
+lines:
+  greet:
+    - filter sponge ready, fish fed
+    - filter sponge ready, first route agreed?
+  onKill:
+    - a splash and then quiet
+    - filter sponge confirms a clean opening
+  onDeath:
+    - out of my depth there
+    - filter sponge needs a revision on that route
+  onPlant:
+    - something is bubbling at the bomb
+    - filter sponge confirms the site is reached
+  onDefuse:
+    - water is calm again
+    - filter sponge confirms the fuse is clear
+  onWin:
+    - a quiet evening for my filter sponge
+    - filter sponge and team followed through
+  onLoss:
+    - cloudy water in the filter sponge plan
+    - filter sponge had a missing step
+  onLastAlive:
+    - one small splash left
+    - filter sponge says there is still a route
+  taunt:
+    - that bait was a little obvious
+    - the filter sponge predicted that rotation
+  lobby:
+    - putting my filter sponge away before the round
+    - the pond can wait for my filter sponge
+    - "My filter sponge: I will call the first rotation."
+    - With my filter sponge, tell me when a route closes.
+quirks:
+  - calls_everything
+  - always_gg
+rivals:
+  - cobaltvaixbrush
+bio: JollyOtter95 maintained a glass pond under the old lobby stairs and still brings a filter sponge to the queue. CobaltVaixbrush keeps asking whether it really helps.
+batch: 3
+retired: false

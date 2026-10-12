@@ -78,7 +78,8 @@ final class PlannerSupportTest {
             Kit.LONGBOW,
             Archetype.TACTICIAN,
             Set.of(),
-            42);
+            42,
+            null);
     return Planner.decide(
         Plan.of(Option.ENGAGE, 10, new PlanStep.Fight(new CombatantId(2))), situation, context, 0);
   }

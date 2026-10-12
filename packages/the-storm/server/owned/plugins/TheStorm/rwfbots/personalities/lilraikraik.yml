@@ -1,0 +1,76 @@
+id: lilraikraik
+name: LilRaikraik
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NTYyNTAxOCwKICAicHJvZmlsZUlkIiA6ICJlMzk1NjU0YzdmMmU0NzI0YmE0Y2FhMDhkYTgzNGJjZiIsCiAgInByb2ZpbGVOYW1lIiA6ICJwZHNfXyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS85NTUwOWRlOWM4NmRhOGIyMjQ0MGM4ZjQ0MzE5MmE3MWIzYWYwYTNkODc3MmQyZWI4MzQyNzJhYzQxNGY2MWM1IgogICAgfQogIH0KfQ=="
+  signature: "H3rAFS1nUmol4U7oN5Hhw3doQ/U9k+t/noByU03PCz0YPkvlP8r85oSoLZr6GBl7cNpE8XFLBZrgVRszR0G4UTUgVVfnIm2Gyu0BuEL7rP8nw/V3eDFeRh+LTAcFGnAMRoW2lsarbIIxKrI+R0VKWj8FWwV7ym7F0DGql/GrJJdxbSyzSiUq4Zg5kk7qGYxbz/tTE8V9IZIRhcMpCJb8BmQHiLgY/86C7Dh8M3vpf2HFbjGGFxrn3xH5vfVQ12SQo659DgYfOY5yorysQ39eNsWL/sxANMxI2ZKR2xoGuuNXFpCoaitNBhdd/a+0iUe7RvE9SHxqMXCqQ6G9TfJsiCAhcfycFcn9Hyb/IndMqGcJIvlrqXUkM0gYGa1v7nv07sxHMY7Id9Xn6YYGcKkalCvRDhmWu8h9tHvdHjs19SB12Msfx2NuzVMqP2k52Y7DDFHu1GOC1r910qzHTCXPc40XfttGVD9XYtbOtavjW50ooJZ7eDuycTTrmNyDHJ2pmJe48KcpS7VtxcvoYLNCF84t+i6GB5BQ/AUkYi3HZD9iJyb1+qo487KOAl179q88fhZJUs2HXv45zAqTo//p491yEocMohfsbq9Uu+g3cdFZck002Kl1GArfQA6QsbYIs4M7HuGdelCA9y0oHOoOiysno3HuA+0wkx7DVBYpS/I="
+skill: 0.217
+archetype: duelist
+leverOffsets:
+  aimErrorDeg: 0.5
+  cps: 1.93
+  predictionQuality: 0.11
+  awarenessRadius: -0.78
+  coordination: -0.73
+  technique: 1.36
+  aggression: 1.26
+kits:
+  trooper: 1
+  longbow: 0.33
+  shortbow: 0.4
+roles:
+  escort: 0.23
+  rotate: 0.15
+  retake: 0.49
+  hunt: 0.91
+style:
+  aggression: 0.98
+  patience: 0.29
+  teamplay: 0.16
+  risk: 0.54
+voice:
+  tone:
+    - fussy
+    - competitive
+  verbosity: normal
+  style: "paper crafts and tiny careful corrections; brief courteous challenges and honest shot assessments"
+lines:
+  greet:
+    - creased cube survived the queue
+    - creased cube ready, good fights everyone
+  onKill:
+    - one clean fold in the plan
+    - good exchange beside the creased cube
+  onDeath:
+    - my creased cube is a little crumpled
+    - fair hit, the creased cube left that gap
+  onPlant:
+    - tucking the fuse into the fold
+    - creased cube earned a moment at the bomb
+  onDefuse:
+    - unfolded that just in time
+    - creased cube can settle this at the fuse
+  onWin:
+    - creased cube stayed in one piece
+    - creased cube had some good fights today
+  onLoss:
+    - another crease in my creased cube
+    - creased cube wants another clean round
+  onLastAlive:
+    - one creased cube left on the table
+    - one creased cube, one fair chance
+  taunt:
+    - that push folded very quickly
+    - the creased cube is ready for that peek
+  lobby:
+    - please do not squash my creased cube
+    - making another creased cube while we wait
+    - "My creased cube: I will contest the middle."
+    - With my creased cube, give the middle fight a clear lane.
+quirks:
+  - good_sport
+  - always_gg
+rivals:
+  - paistjaezrozyt
+bio: LilRaikraik folded paper creatures while waiting for the 2014 queue and still brings a creased cube to the queue. PaistjaezrozYT keeps asking whether it really helps.
+batch: 3
+retired: false

@@ -1,0 +1,76 @@
+id: xxarrowphantomxx
+name: xXArrowPhantomXx
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NTY2ODM0MCwKICAicHJvZmlsZUlkIiA6ICJlZDUzZGQ4MTRmOWQ0YTNjYjRlYjY1MWRjYmE3N2U2NiIsCiAgInByb2ZpbGVOYW1lIiA6ICI0MTQxNDE0MWgiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjIzMTg5YjVjNjhkODQxZWE3YzY0MTdkYjg0MDNhNzM4N2M1YmE1NGRhNjJjM2ZmNTY0ODZiZWFkZmQxOGZjYyIKICAgIH0KICB9Cn0="
+  signature: "VtR1HyphGTbZQ5VS9VCI/+cZQb29rN0Kz9JQPLtK0BuRkJXvDqgrJoYNdyeskjxwLZ1nzjhGqwBTLJloSl2VynRWoc9cv++5yngJz/0dtno0RYsY6+kTeBgwsXbLgb7WzQQR249u1F/CjO+xmqXqTE44LJyFBDGg+vq5LzmZcQ5G+nxvD8fBtPIK3FXXGyXddjUymr+bFof2A8g8won60/VrhowZSIxjdajSKxpwDcPRdXstKcE4wpmyjPOG+YOvutz4yVsW5aPRHnxC5Wfn9qakBLc7emjL94GPtVWJxDS5ok/g4sHo0XNCYqGzDsy0e0flYVluXkloTcd6mlYpdwgzk8ugMj6ZXLheeLfFz54eZZ7ZXGllAbHwjpKoAJbhmfZLUoYVhtsTiLJ2EfKIa7X5cZXdr+BGyfvpVXMfqph7OMznNRvLe4ioonlssg7Vvzy6WDSyC0HHDbC/WSWCoZAMmAeJ6zFQC+QI2/9X3QQe0K/FunB7YFUq4/RJwk4ai5O2qxHCUxAdI+aVb6tT1J/PiakdK8tDvX986+2pTzUqI79cy6N7IEO6zmxEQdkrptJouFs0gbztQVAjB1wePGC/7/0edeFdsdPe0ZkiibTlXNd5ka5xLGf0Y6N+lIo0adCOv3UBWO6/OJ6jJWfxk0+iTWjEsC/++esXxVPNxgI="
+skill: 0.501
+archetype: sniper
+leverOffsets:
+  aimErrorDeg: 1.99
+  cps: -0.98
+  predictionQuality: 0.93
+  awarenessRadius: 0.88
+  coordination: -0.39
+  technique: -0.45
+  aggression: -0.63
+kits:
+  trooper: 0.17
+  longbow: 0.9
+  shortbow: 0.5
+  spy: 0.32
+roles:
+  defend: 0.75
+  rotate: 0.38
+  hunt: 0.5
+style:
+  aggression: 0.21
+  patience: 0.88
+  teamplay: 0.52
+  risk: 0.35
+voice:
+  tone:
+    - soft-spoken
+    - focused
+  verbosity: normal
+  style: "tiny aquarium metaphors and creature worries; short range notes and patient, exact corrections"
+lines:
+  greet:
+    - fish journal ready, fish fed
+    - fish journal in place, checking the long angle
+  onKill:
+    - a splash and then quiet
+    - fish journal found the range
+  onDeath:
+    - out of my depth there
+    - fish journal needed a closer angle
+  onPlant:
+    - something is bubbling at the bomb
+    - fish journal covers the far entrance
+  onDefuse:
+    - water is calm again
+    - fish journal can wait, hands on the fuse
+  onWin:
+    - a quiet evening for my fish journal
+    - fish journal had a clear view of that
+  onLoss:
+    - cloudy water in the fish journal plan
+    - fish journal kept the wrong sight line
+  onLastAlive:
+    - one small splash left
+    - one fish journal, one long angle
+  taunt:
+    - that bait was a little obvious
+    - the fish journal saw that peek twice
+  lobby:
+    - putting my fish journal away before the round
+    - the pond can wait for my fish journal
+    - "My fish journal: I will cover the long angle."
+    - With my fish journal, call the close flank for me.
+quirks:
+  - bow_spammer
+  - always_gg
+rivals:
+  - lunarfox02
+bio: xXArrowPhantomXx maintained a glass pond under the old lobby stairs and still brings a fish journal to the queue. LunarFox02 keeps asking whether it really helps.
+batch: 3
+retired: false

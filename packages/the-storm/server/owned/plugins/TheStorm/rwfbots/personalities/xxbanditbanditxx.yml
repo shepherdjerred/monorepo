@@ -1,0 +1,72 @@
+id: xxbanditbanditxx
+name: xXBanditBanditXx
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTkwMjI0NywKICAicHJvZmlsZUlkIiA6ICJkNGUwNTFjZGRhNDU0NTUxYjk1ZWRiZjdkNTM1ZTA3ZSIsCiAgInByb2ZpbGVOYW1lIiA6ICJFbGVtZW50YWxfTWF4IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzg0NTdkMzM1MTE3YTNlNmQ5N2RkNzU3ZjI2NWI4OWIxNGFmY2ZmNzg5ZGViM2EyMTM5YWU4ODUwNzhlZTRjMDkiCiAgICB9CiAgfQp9
+  signature: "fN1GJ8dwWapeVhOijbqyww5Xe5FyJLeBUNZUm8cJi2L/Kmut+1NU3mAlLi3usnciXIZMBLyB4lad0VLyvZvIQpYDro1a3mk7Ot4soWkblmd2bJM6Mmh2saIOMEV9vPMH6Zbu+b3GmnKkhkdgjsDTajjx4vCv1VS8MoqlRw1keFxRkvx4In8XNmOVbxipljwP+5kuFAm2poeoNgdAtG3t/97t4+F8CP7BeuFvtWy+b+lhisiblIFAFfCT2r7DTYc/050dWXFiVVHwqhV7vnDtCrNt/7uZ6ja56/PEQN7kDjhEA6aXVhLUNnvhKC7vS9A0TBmf3OxXeQjHIXvLDAwpEX6pD0fxGCRl2UjxjOWcourF/0sHPKXR34arj6i3WBhctKVHs35zY5MmA766QMCbtpDZMd1SU39LXOeMrQBd6w0t2bq+tsiAySe7zgYSPzahBdPL2v74wrRZTdOv7cdIE/tpuYHg1dTpPiyd78DFGozVoMpN/7eRe+e1liMVk7OR7YgsoTVSFv+eo1eikYBcm8kDSP2yEB7m9Flj+wlpwN/fvkBYWhxvlUeTIxL3skgCawRm27flkgWhxc77yBsNVWIF1N/6eIJ9LwLfThLybxZ01JgmxzXKKoeMbbn923NXqRidH/C6h4i7qjeK79E5bQcPs4ftbzkqc9R/T0uboKM="
+skill: 0.454
+archetype: bomb_diver
+leverOffsets:
+  reactionMs: -0.02
+  aimErrorDeg: 1.08
+  decisionTemperature: 0.96
+  technique: 0.67
+  aggression: -0.84
+kits:
+  trooper: 0.86
+  shortbow: 0.2
+  rewind: 0.63
+roles:
+  plant: 0.9
+  escort: 0.27
+style:
+  aggression: 0.69
+  patience: 0.06
+  teamplay: 0.41
+  risk: 1
+voice:
+  tone:
+    - gentle
+    - urgent
+  verbosity: chatty
+  style: "patient gardening talk, stubborn lane defence; breathless objective reports, oddly calm at a fuse"
+lines:
+  greet:
+    - potting tray packed, lets grow into this
+    - potting tray packed, where is the bomb?
+  onKill:
+    - cleared a little room for my potting tray
+    - a clear path for the potting tray
+  onDeath:
+    - my potting tray has met a weed
+    - potting tray was one corner from the fuse
+  onPlant:
+    - this seed has a very short season
+    - "potting tray is parked beside {bomb}"
+  onDefuse:
+    - pulled it out by the root
+    - "potting tray and {bomb} can both stay intact"
+  onWin:
+    - a fine harvest for the potting tray crew
+    - potting tray got the objective done
+  onLoss:
+    - bad weather for my potting tray today
+    - potting tray took too long reaching the site
+  onLastAlive:
+    - one potting tray still in the garden
+    - the potting tray still has a fuse to find
+  taunt:
+    - that lane could use some pruning
+    - the potting tray got closer to your bomb
+  lobby:
+    - checking the soil with my potting tray
+    - my potting tray is for the roof garden later
+    - "My potting tray: cover my approach to the bomb."
+    - With my potting tray, call the safest bomb route.
+quirks:
+  - loves_nuke
+  - always_gg
+rivals:
+  - jollypumpkin99
+bio: xXBanditBanditXx grew a roof garden over the old kit shop and still brings a potting tray to the queue. JollyPumpkin99 keeps asking whether it really helps.
+batch: 3
+retired: false

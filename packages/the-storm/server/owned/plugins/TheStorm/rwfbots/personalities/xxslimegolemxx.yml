@@ -1,0 +1,72 @@
+id: xxslimegolemxx
+name: xXSlimeGolemXx
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjI3MDc4NywKICAicHJvZmlsZUlkIiA6ICI2NmRmYzFmNTRlNTU0ZTZmODJjNTA5ZjM1NTJiYTkwZCIsCiAgInByb2ZpbGVOYW1lIiA6ICJadWFyaWciLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMWQyM2FkZWQ3ZjhhODA2MWMyOTI5ODg1NDQ2MzgxMGY1Y2I0OTJmNjU5YzcyYTZmNmM5NjI0YTA3NjEwNjI2OCIKICAgIH0KICB9Cn0="
+  signature: "CDnYtGPaZlmH/g0WdwyVUVVKHI80NCx11xYAETD1lyrda8sBXw69wrEEnaJa2bh0eVF3L+XI0Lj4xsq0IRwaLwMbKZLGFP1kZfvIDw60q6ghiM2HXlmf8rF/byijMatzPhaBB+MDnK0BLX4qTzQZSuLEQCEoLXVYTYpmCRee1SRInhuANxjhQgIP1Eo/y9djvJYUsl01MAugBisdOWBqg5qzch1etLMrp59acSbrlV11Cw3xlS0+dpJKrApW4lFZbt5FoesnD3P265ybx/0EQJhaLADDP4WKO8eEr9wq9QVXqJxyD9AO0T8noEdJzMba81wAWmg1sHEuBgC9b3LTEVZILkTlHi3PZOvTjr/YmHtMjBy5g1TANwu+cpElE6CgfHmFLZTeAOTTAIh0w+8x6s0XzlYXJCZs2pg1U+bzTPEnWDEAG3Bvf56htdha/oZIFLmcv7iTT8walap0wCH0puWYuUqobunVGtKDOpFSMfmEPDi4EEQH6sTJqMkHqffjKrzr1YUjuGcgSBdL989ln+0XsVZ67No3gdt9eH99GMy6BToCJgYRBEOPfbBxaWh6iftmpQvMPEpWb0tyFVMQNq5hiRodP7B0qZlKwqHpkxwlUidvHXwDFPIGyDJVI0Fi+UkXVDcYRNPjimzdd2sNirQkwgqTILb4yrtp/VgZ8Eo="
+skill: 0.587
+archetype: bomb_diver
+leverOffsets:
+  reactionMs: -0.12
+  decisionTemperature: 0.77
+  coordination: 0.44
+  technique: 1.03
+  aggression: -0.2
+kits:
+  trooper: 0.93
+  shortbow: 0.23
+  rewind: 0.51
+roles:
+  plant: 0.92
+  escort: 0.17
+style:
+  aggression: 0.71
+  patience: 0.03
+  teamplay: 0.41
+  risk: 0.83
+voice:
+  tone:
+    - busy
+    - urgent
+  verbosity: normal
+  style: "ingredient lists and improvised kitchen fixes; breathless objective reports, oddly calm at a fuse"
+lines:
+  greet:
+    - herb scissors washed, team fed
+    - herb scissors packed, where is the bomb?
+  onKill:
+    - a useful pinch of pressure
+    - a clear path for the herb scissors
+  onDeath:
+    - too much heat on that corner
+    - herb scissors was one corner from the fuse
+  onPlant:
+    - letting the bomb simmer
+    - "herb scissors is parked beside {bomb}"
+  onDefuse:
+    - taken off the heat
+    - "herb scissors and {bomb} can both stay intact"
+  onWin:
+    - herb scissors can serve this round
+    - herb scissors got the objective done
+  onLoss:
+    - the herb scissors recipe needs work
+    - herb scissors took too long reaching the site
+  onLastAlive:
+    - one cook still stirring
+    - the herb scissors still has a fuse to find
+  taunt:
+    - your push could use seasoning
+    - the herb scissors got closer to your bomb
+  lobby:
+    - there is soup beside my herb scissors
+    - please return my herb scissors after dinner
+    - "My herb scissors: cover my approach to the bomb."
+    - With my herb scissors, call the safest bomb route.
+quirks:
+  - loves_nuke
+  - always_gg
+rivals:
+  - banditraven3
+bio: xXSlimeGolemXx fed a team from a cramped kitchen beneath their spawn and still brings a herb scissors to the queue. BanditRaven3 keeps asking whether it really helps.
+batch: 3
+retired: false

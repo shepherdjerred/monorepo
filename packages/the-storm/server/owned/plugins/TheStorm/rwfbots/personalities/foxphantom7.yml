@@ -1,0 +1,75 @@
+id: foxphantom7
+name: FoxPhantom7
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTc1MTM4MSwKICAicHJvZmlsZUlkIiA6ICJkYzA5MjA4MTM2ZDg0Y2Y5OWIwMzFmMGI1NzM4OTdmNSIsCiAgInByb2ZpbGVOYW1lIiA6ICJLRUlUSF8wMzAyIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzczYjE3NzQ4MDFiNDVmMTI2MDI4MDJlZjRmYmE4NDk2YjhlZDg3YzJmMzMyNDk1ZTI3YzZhNzY0MzgyNTE1MTUiCiAgICB9CiAgfQp9
+  signature: "c7N+9zOtmhCiZKkr6Z2KNqOW3XC8K1E8lXLD7ec4uz2QXiNcC7/5lpHQ1OEXsZU1ZI6XnM4XPNT8D67nQ+2VFHqE67OdPnVSvHEUeLB0/DdRX00uUeMKG4/8gx9+ETncaIopvXGMKUCo+eH2/8p6EzkGUvwOLSqCNr7BHnEnSzjCh/V007Nt2ZAcZdNdQYVql0vkFaqPuLM2i49iEfV4IjI9ZvFr1lXb5mCLsS1CKtwehTrlUfhBKCfUCYR6kq2yH4VZTPNEIrD95eDsh/idGzpIwnaXl2Ci0BDZmG/vmdWJt6LwuU9Q8JMO9k9TEibQ7abRqz8UV1L13/rZj134XHY0CGvl2gs9H57vci+pP4Cvoex2ldYvhSMsu0eSsu4JX0OEF8EUkXWLReGZBhJfPFRMyDveILcllEkmrcm6FRBL+m9aFVISWEzHZOEtCB51wUsSt8aBq6GssoiAIvc+Iz8EwEWkCNOzozvjJ7Ul54fFwE1IgpbrRfeZ4qXzCCaZKHK9JSOBZiYpKiceIeFhS6lAoUCw3cB0jzqoKB0yVTlG2OSJaMLekke9gJgAFpsZLwppIAZY7M4B3FyWbmu34071/vChrc8t6YI2hHJm102lf0Dr/zXtt2Opo50jHKc8zP+vmRZDEoWgZJFJLuE13HCOzJ+3Hf2v0cjiO+P15VA="
+skill: 0.305
+archetype: lurker
+leverOffsets:
+  predictionQuality: 0.37
+  awarenessRadius: 1.41
+  coordination: -0.94
+  technique: 1.5
+  aggression: -0.39
+kits:
+  trooper: 0.65
+  shortbow: 0.61
+  rewind: 0.26
+  ghost: 0.9
+  wraith: 0.52
+roles:
+  plant: 0.31
+  rotate: 0.71
+  hunt: 0.8
+style:
+  aggression: 0.4
+  patience: 0.92
+  teamplay: 0.05
+  risk: 0.64
+voice:
+  tone:
+    - busy
+    - hushed
+  verbosity: chatty
+  style: "ingredient lists and improvised kitchen fixes; lowercase whispers, deliberate pauses"
+lines:
+  greet:
+    - spice mortar washed, team fed
+    - spice mortar here. quietly.
+  onKill:
+    - a useful pinch of pressure
+    - the spice mortar was here a while
+  onDeath:
+    - too much heat on that corner
+    - heard it too late beside the spice mortar
+  onPlant:
+    - letting the bomb simmer
+    - spice mortar is watching the quiet entrance
+  onDefuse:
+    - taken off the heat
+    - no noise. no fuse. just the spice mortar.
+  onWin:
+    - spice mortar can serve this round
+    - the spice mortar stayed out of sight
+  onLoss:
+    - the spice mortar recipe needs work
+    - the spice mortar waited one corner too long
+  onLastAlive:
+    - one cook still stirring
+    - nobody move near my spice mortar
+  taunt:
+    - your push could use seasoning
+    - the spice mortar heard that approach coming
+  lobby:
+    - there is soup beside my spice mortar
+    - please return my spice mortar after dinner
+    - "My spice mortar: I will hold the quiet route."
+    - With my spice mortar, leave one quiet approach for me.
+quirks:
+  - slow_starter
+  - always_gg
+rivals:
+  - thoultoukwaffle
+bio: FoxPhantom7 fed a team from a cramped kitchen beneath their spawn and still brings a spice mortar to the queue. ThoultoukWaffle keeps asking whether it really helps.
+batch: 3
+retired: false

@@ -1,0 +1,74 @@
+id: crimsonvounde
+name: CrimsonVounde
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODU0NDU5NCwKICAicHJvZmlsZUlkIiA6ICI4MTFkNjM0NzUwY2Y0ZDI0OTJmZDcxYTViZjZhZjI3MSIsCiAgInByb2ZpbGVOYW1lIiA6ICJzcGlmZnRvcGlhMSIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8xNGQ5ZGVlZWRhZjcyODBmNmE0YjUxNGM1NzZmYTAzNjA1ZGNkOGUxZjcwMjczMDVhMjA4MWZhYWJiODJmOTM0IgogICAgfQogIH0KfQ=="
+  signature: "V+nJGD0IsYHRtwm/kJ2GGYEU25//4uGzkuGjcsedNO9Rx1Y0NVBjlagwlgcYuNPa/XkqgxYDwzY70mGk/F9+916R9DWU+iBiZqVYuJBJU+jaxiGkWbZ/57/zk4TOYeGkQqx49CrkkuHBB04enzvdLZmvcncvxQQu6Nl5LxCWNJbZvBTmBS2m5Uaqj+B5dqQ7QLofLbkpt1jC8sDdNnTlJGoEbwTF3jSJcB0cf53dosV41fsPqnnD0+n4o6FQelRG+jBLRsgmwIJaG/q4kUFJXCMsvMUWgKPodgv7ib/LVmJm1NYgP0/YqB+gxdReqzaOM4em6K8r140itd3irpEvqoaKenu5iOrQhIpINHz+B8+lhNaURqKVbsbzWW9szQonGUKyfV0FajHLDPPukacSZnl6RoQ54uCDvv5oT9QuF8q8ZLo0agtx7rjIa8tNKaX9Fubdv6ZfZSGrm6o9y7hnifRq6oh8GF4EI2affwuAcWEP2gVCfbtUP6pL68icglD4kMS81O/tPH6ctTczsjJa8N0cR7cc/IxCUPzN3jWh+asdzuLfufQTOCRX+Xa+sT7rKihq/kMGbu+u2c+QI6O7RQaw+FgZ+CyPh2T0LRNGR2WwpGLgYduL2gzpTxUzzBE5w/mELXqcZ27Pcb3vdcCPrvE6zsxmBrCFC39suw9zh/s="
+skill: 0.66
+archetype: troll
+leverOffsets:
+  predictionQuality: -0.54
+  decisionTemperature: -2.5
+  coordination: -1.42
+  technique: 0.65
+kits:
+  trooper: 0.48
+  shortbow: 0.71
+  rewind: 1
+  spy: 0.89
+roles:
+  plant: 0.5
+  escort: 0.29
+  rotate: 0.6
+  hunt: 0.54
+style:
+  aggression: 0.58
+  patience: 0.33
+  teamplay: 0.17
+  risk: 0.78
+voice:
+  tone:
+    - curious
+    - mischievous
+  verbosity: normal
+  style: "beach discoveries and understated delight; deadpan object conversations and harmless overconfidence"
+lines:
+  greet:
+    - polished flint brought good luck last time
+    - polished flint has appointed itself captain
+  onKill:
+    - another find for the shelf
+    - polished flint is now insufferably proud
+  onDeath:
+    - swept away with my polished flint
+    - polished flint would like a different replay
+  onPlant:
+    - leaving this above the tide line
+    - polished flint calls this interior decorating
+  onDefuse:
+    - picked that up before the tide
+    - polished flint says it knew the correct wire
+  onWin:
+    - a good day out with my polished flint
+    - polished flint is requesting a trophy shelf
+  onLoss:
+    - the tide took our round
+    - polished flint has misplaced the blame form
+  onLastAlive:
+    - just me and my polished flint on shore
+    - polished flint insists this was the plan
+  taunt:
+    - that approach washed straight past
+    - the polished flint gave that push three out of ten
+  lobby:
+    - found a polished flint on the way here
+    - please admire my polished flint from a distance
+    - "My polished flint: I will cause a useful distraction."
+    - With my polished flint, try not to laugh during my push.
+quirks:
+  - celebrates_early
+  - always_gg
+rivals:
+  - solarjixpashjy
+bio: CrimsonVounde filled an old shoreline hut with labelled beach finds and still brings a polished flint to the queue. SolarJixpashjy keeps asking whether it really helps.
+batch: 3
+retired: false

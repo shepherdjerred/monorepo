@@ -1,0 +1,72 @@
+id: turboraven99
+name: TurboRaven99
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjM1NDgzOSwKICAicHJvZmlsZUlkIiA6ICJjOWM5YzkwOWIxNTI0ZDgzODY5NzU2OTE0M2JmNTY4OCIsCiAgInByb2ZpbGVOYW1lIiA6ICJ6dWtlbWF4IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzE3Y2NjYjQ0MDYxM2VlYmVlMGFjYzZiMzY4NzI0OWI4MWUzZmJhNmNiOGY4NmU3ZDdlZGYxMTFiMjU5ZmJlOTkiCiAgICB9CiAgfQp9
+  signature: "VrzGsQgvhxYusZ4evNGL9hvrAVdULgWYIkQDcyZLRuYzI5RqOvUrnae+FODG1cMBf+Ye0xVk3q0HP34fl7+ng3N9VtV1gpHbjnI16+EEiKsBF/2YEMSobrR7byfJS6rKcixNUVloYy1UcY/np9K87AlEgF+CO7zgszMjoLwWY6cEqcU0q5tODrNuhmFdSNObqu2E/KyunoSW0gmxNHe6YBGSEEYzO1xGdz/iEa9kDqMv7PuEFzjtGcZhNRxXfp8gkcPFFjAe5FtoZIE6W7M9WSY65mVzFthwLPNwFEPpHQZECbIX0FR98v8e6YSlW0D4mls5X4yX9e3+Ve1hiSdrqQ4+v1cb/I+85FHTPsVH6eOLPAfvV8RBFR4hoRaYMGzTdnEFVQ57DWvewXJvcHYpjWwaFxWs4mJbzbS9zZirH/h2IWykFEM5txh2S7QTB0mmzVU1eHS5VInWwdUxgqgg8AU41sjOdMHkhOccmvJfb3JOs8mjjFrD4yAdr0hX3BALf+wfJoymNNRQuqdxhyiVI/ObeIzO+Y9WjDNkrXi/FfmdBcLrpdthpVMWcPs2JtEaIEgJIkH6t9GtyxHzq14tZRjyCi2nVEfpSauSk6b+NiKofcgChMFHgRMoUnuIA5Z3yDHyyJHx/cuLz5iXvKW+aK3erid0GJf01kDAa/qyIyQ="
+skill: 0.55
+archetype: bomb_diver
+leverOffsets:
+  reactionMs: 0.65
+  decisionTemperature: 0.81
+  coordination: -0.44
+  technique: 0.44
+  aggression: -0.33
+kits:
+  trooper: 1
+  shortbow: 0.17
+  rewind: 0.66
+roles:
+  plant: 1
+  escort: 0.11
+style:
+  aggression: 0.72
+  patience: 0
+  teamplay: 0.31
+  risk: 0.95
+voice:
+  tone:
+    - playful
+    - urgent
+  verbosity: quiet
+  style: "tiny winter expeditions, serious snow forts; breathless objective reports, oddly calm at a fuse"
+lines:
+  greet:
+    - sled runner thawed out, ready
+    - sled runner packed, where is the bomb?
+  onKill:
+    - a tidy little snowball effect
+    - a clear path for the sled runner
+  onDeath:
+    - slid right out of that plan
+    - sled runner was one corner from the fuse
+  onPlant:
+    - a warm spot in the snow
+    - "sled runner is parked beside {bomb}"
+  onDefuse:
+    - cooled the bomb right down
+    - "sled runner and {bomb} can both stay intact"
+  onWin:
+    - sled runner has survived the thaw
+    - sled runner got the objective done
+  onLoss:
+    - the fort melted around us
+    - sled runner took too long reaching the site
+  onLastAlive:
+    - one mitten still waving
+    - the sled runner still has a fuse to find
+  taunt:
+    - your footing looked a bit icy
+    - the sled runner got closer to your bomb
+  lobby:
+    - warming my sled runner by the lobby lamp
+    - please stop hiding my sled runner in snow
+    - "My sled runner: cover my approach to the bomb."
+    - With my sled runner, call the safest bomb route.
+quirks:
+  - loves_nuke
+  - always_gg
+rivals:
+  - itsshaelbroujou
+bio: TurboRaven99 built a snow fort that lasted longer than the team inside it and still brings a sled runner to the queue. ItsShaelbroujou keeps asking whether it really helps.
+batch: 3
+retired: false

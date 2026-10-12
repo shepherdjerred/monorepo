@@ -1,0 +1,74 @@
+id: brukman-61
+name: Brukman_61
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTI2OTcyOSwKICAicHJvZmlsZUlkIiA6ICIxMjE4YWNiNDJiYzA0MzY4YjIxOTU4ZTZiYWU2NDMyMCIsCiAgInByb2ZpbGVOYW1lIiA6ICJQYXRhdGplTUMiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjRkYWIyOTFhY2QyN2IzZWFkZDE0MjY4N2I5N2I5YTBiOTNlNGJhZmYzN2RjYzYzMTgzMjQ0MWJhYmVhN2VkOSIKICAgIH0KICB9Cn0="
+  signature: "TFzfgvg3LqR24n8MM+My9M+nXAsd7BFd98GiIbM7ykAW90nnthd4qWPredJwqakO6OFA+DJ+YtBha72JZTwfRqRVOCAV0Iochcioi6JOIdiELmYsenRhYnhkEoAHNAigUy7tKnAN5zXIBCK027l8I8qn0YkIipwv0OsCo4FLuzdPiAN887PjOWARbRc4rFM+10M/hNuz41bz+P08y7LhTJJ7aeCBNUv7tHcaTsYsgiYNPZ2RDj+EO8yAQm63dl7db68sFfwm25xqit2m2MYS9ZM86XULWCy+AgA+GAfpo2QawZYH34lWA9Nvja1iDDZccKmrCYrQp3wqMkQ16X/K9ZP4STEbjHCPd8w9RKDX8pSC9KYuWtfWTAKFd5/I43bSkZXBP6SNjSyJVMxZs+WIADn9yRW5y5FSR1huAxQMufNPVa9LAQnhnIKAaqThoRHLXWx/7yHS74DjkaZ7m3GXQftZHpsiPh0sW/CTBiN3aBlTenTXcVj9WQg91aKJnzeEfR6TrGqHBkPOWF7qD96Xw6LScMUt2B2yjG6+bDfFpipmvSa03jX88ksAzYuNwzWo/1ymPr7w2evkmG0z00Fu1M/L5uhTj5wgqu+AAND0AvXzWprDKDq+YUXrePVdag3y+Le2ODXoL0sKq1OdEh09QChhYgrTpG9yvj26IIhkLIE="
+skill: 0.453
+archetype: troll
+leverOffsets:
+  decisionTemperature: -2.42
+  coordination: -1.88
+  technique: 0.79
+  aggression: -0.25
+kits:
+  trooper: 0.49
+  shortbow: 0.68
+  rewind: 0.99
+  spy: 0.83
+roles:
+  plant: 0.38
+  escort: 0.16
+  rotate: 0.63
+  hunt: 0.48
+style:
+  aggression: 0.62
+  patience: 0.36
+  teamplay: 0.16
+  risk: 0.86
+voice:
+  tone:
+    - precise
+    - mischievous
+  verbosity: normal
+  style: "map annotations and quiet route corrections; deadpan object conversations and harmless overconfidence"
+lines:
+  greet:
+    - my boundary stone points toward trouble
+    - boundary stone has appointed itself captain
+  onKill:
+    - boundary stone gets another little cross
+    - boundary stone is now insufferably proud
+  onDeath:
+    - there is a hole in my boundary stone
+    - boundary stone would like a different replay
+  onPlant:
+    - boundary stone marks the fuse
+    - boundary stone calls this interior decorating
+  onDefuse:
+    - erasing that from my boundary stone
+    - boundary stone says it knew the correct wire
+  onWin:
+    - boundary stone finally matches the terrain
+    - boundary stone is requesting a trophy shelf
+  onLoss:
+    - time to redraw my boundary stone
+    - boundary stone has misplaced the blame form
+  onLastAlive:
+    - one dot left on my boundary stone
+    - boundary stone insists this was the plan
+  taunt:
+    - your route is wandering off my boundary stone
+    - the boundary stone gave that push three out of ten
+  lobby:
+    - unfolding my boundary stone on the lobby floor
+    - please do not spill cocoa on my boundary stone
+    - "My boundary stone: I will cause a useful distraction."
+    - With my boundary stone, try not to laugh during my push.
+quirks:
+  - celebrates_early
+  - always_gg
+rivals:
+  - wafflewaffle6
+bio: Brukman_61 kept a hand-drawn atlas of the 2013 rotation and still brings a boundary stone to the queue. WaffleWaffle6 keeps asking whether it really helps.
+batch: 3
+retired: false

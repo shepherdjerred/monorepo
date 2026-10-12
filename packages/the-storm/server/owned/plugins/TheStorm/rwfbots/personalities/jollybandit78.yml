@@ -1,0 +1,77 @@
+id: jollybandit78
+name: JollyBandit78
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3NTU1NzAzMCwKICAicHJvZmlsZUlkIiA6ICI3NjFjOTZhOTgzNzc0ODUwODc4ZjgwYWY4MzIyMzgxZSIsCiAgInByb2ZpbGVOYW1lIiA6ICJzcGlmZnRvcGlhOCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8zM2UxMjU2MGNlODM0YzMxZjIxNDA4Nzg5ODA3MTgyNWYyOTg0MTEzNjg2MWU2MjM0ODU4ZWMwNGEyZDM3ODIzIgogICAgfQogIH0KfQ=="
+  signature: "NaFWBdZDf51R+t7jEdtQCIBdiVZ4w0K0gEfrxOLXJbl7JK7CSNhsp6lO0c00z739ZdKLwiDblzdSLvYPU8YNJHPG1Wg0w9OPxSGu/KgLh5WOBaUj9MyEMCbHQZK89Cdxp4E1KDHmXKKNuH/3wI1w3opJDLOfF+Rc+SpeNo9KDheDUPOZDfg5OvUIFX/SLnYwfdPoG8E74qPE9Ox3or4ao6c7qn55/MP8KcM+Zvl6zu6YQumIGPuhRZZgoB3fhetH9VYE3OvqKAyv1l3hNvn6WXVsUMhKzmhEWqS7u+GTs3jk2SlDEOuXerM8irgySdKhrghW60drC5dhMDhGyjSxZ/yFSPFmUa1yPojoTcUujez1EzvTFv6FjpRDBPQWF4ivWIcpO0eSM71iUh0iecm00sBWAsNf2lawDZl+2fgDZb6vFTK8D/BYNCnfhvKOar7qvOZlqHouu6BgYE7F2aBMq3pq29FUXA0nq53iEnGQNKzY+RWRpJ3+/T0Wx1GZrCZu3C3sqKBrpKM5+Iei4Np6XJ7KKk2oYGZe+oYcQgxnXsL/mFV3BDwefrnIWIf74DMdL3WxOVPsYgJwt4nPqmKXhvsZ9KF/Pxw8/AIL90+kzMthnZ/0zX4gmwhW4AQh6kQXKh9pm91KxbBVjbl/nYxmzSvhu5MJ2zqDdqdMxDucFy4="
+skill: 0.293
+archetype: sniper
+leverOffsets:
+  aimErrorDeg: 1.93
+  turnRateDegPerTick: -0.51
+  cps: -0.89
+  predictionQuality: 1.11
+  awarenessRadius: 1.42
+  coordination: -0.22
+  technique: -0.56
+  aggression: -0.42
+kits:
+  trooper: 0.17
+  longbow: 0.95
+  shortbow: 0.48
+roles:
+  escort: 0.19
+  defend: 0.86
+  rotate: 0.3
+  hunt: 0.63
+style:
+  aggression: 0.28
+  patience: 0.96
+  teamplay: 0.53
+  risk: 0.2
+voice:
+  tone:
+    - curious
+    - focused
+  verbosity: chatty
+  style: "beach discoveries and understated delight; short range notes and patient, exact corrections"
+lines:
+  greet:
+    - driftwood knot brought good luck last time
+    - driftwood knot in place, checking the long angle
+  onKill:
+    - another find for the shelf
+    - driftwood knot found the range
+  onDeath:
+    - swept away with my driftwood knot
+    - driftwood knot needed a closer angle
+  onPlant:
+    - leaving this above the tide line
+    - driftwood knot covers the far entrance
+  onDefuse:
+    - picked that up before the tide
+    - driftwood knot can wait, hands on the fuse
+  onWin:
+    - a good day out with my driftwood knot
+    - driftwood knot had a clear view of that
+  onLoss:
+    - the tide took our round
+    - driftwood knot kept the wrong sight line
+  onLastAlive:
+    - just me and my driftwood knot on shore
+    - one driftwood knot, one long angle
+  taunt:
+    - that approach washed straight past
+    - the driftwood knot saw that peek twice
+  lobby:
+    - found a driftwood knot on the way here
+    - please admire my driftwood knot from a distance
+    - "My driftwood knot: I will cover the long angle."
+    - With my driftwood knot, call the close flank for me.
+quirks:
+  - bow_spammer
+  - always_gg
+rivals:
+  - dershizshummc
+bio: JollyBandit78 filled an old shoreline hut with labelled beach finds and still brings a driftwood knot to the queue. DershizshumMC keeps asking whether it really helps.
+batch: 3
+retired: false

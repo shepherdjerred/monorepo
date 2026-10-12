@@ -1,0 +1,76 @@
+id: lyxskaertv
+name: LyxskaerTV
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3MTMzODY5NCwKICAicHJvZmlsZUlkIiA6ICI1OWJlOTUyY2EyNjc0OWE4OTM1YmQ5MGQxNmMyN2M4OCIsCiAgInByb2ZpbGVOYW1lIiA6ICJUaGVQZW5zcGlubmV1ciIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8zODJiYTk5NDkxNzc4MDFjMmUzYjRiM2I2M2QwYzYyMzJjZWY4YWJjN2IwYzliZjU5NGY4MmRhZmNmYzQ3NzgwIgogICAgfQogIH0KfQ=="
+  signature: "Too/65+1bH/EM3oRtP8WQYLlw/awtoQNLf6Sx1e/7ULaxQVSNyDk6DjcwCnkOIuhPh3x2moptgFV/bQ6e20MjZFLTMk3KiU9uiBEQaPTdtmgPqp+X7s99W9HFS8UqchIysQNCV4g4L1anDudaFT013iw69H+VBo8YJlMFSNximxUJajr2KG7B/rD8XcvOWpUxImsjqNLTFV/skl8D+SkoTNlD1qlaefbWeQAKyxs8llXVo0jL1/xmevy6G1ZT+GPPqN6LhdKauvdKqATxtj6mETd0siwO4iyodJIpKsHi38W/yOXll0SEZ3csGTr2GFq/eLHPNf9MIn4zMxmsLnb7GpC6jbHu/wKUe/KWfedamSzuRxBPNApEyvus6JK1y9AGakdQCLTgjrY2dqi/bS/NrqrjBBfjkzr2JZSqamDtcBca//pHL8xlE+pnYPZS1VYD1Su41kjN1tXypilzFyLeWo812cagouxaAWFQqjVqkRrzgY8/wUpGRj9/mQq/KCO92YaaIMaLwMfan5bxnmgS8LtEgGv4GTYaqJrgM7kGVLPMgu+nu+rfxVbzFkM9qlCWoHueoV/Ma9sYhWT1TKd8JHp86Dzo0hCoDXNoAipYbrDcW4Vsb3odUMpig7BRWsgIVQHnc5j9TKQ1riSjQHoFOxm2/jGDQmi0DlKeaRRnJo="
+skill: 0.681
+archetype: lurker
+leverOffsets:
+  reactionMs: -0.68
+  cps: 0.55
+  predictionQuality: 0.81
+  awarenessRadius: 1.05
+  coordination: -1.17
+  aggression: -0.14
+kits:
+  trooper: 0.7
+  longbow: 0.23
+  shortbow: 0.64
+  ghost: 0.73
+  wraith: 0.56
+roles:
+  plant: 0.41
+  rotate: 0.82
+  hunt: 0.81
+style:
+  aggression: 0.41
+  patience: 0.8
+  teamplay: 0.17
+  risk: 0.6
+voice:
+  tone:
+    - measured
+    - hushed
+  verbosity: quiet
+  style: "soft beat counts and tiny timing worries; lowercase whispers, deliberate pauses"
+lines:
+  greet:
+    - minute wheel is almost on time
+    - minute wheel here. quietly.
+  onKill:
+    - right on the minute wheel beat
+    - the minute wheel was here a while
+  onDeath:
+    - my minute wheel skipped a beat
+    - heard it too late beside the minute wheel
+  onPlant:
+    - minute wheel is counting now
+    - minute wheel is watching the quiet entrance
+  onDefuse:
+    - stopped just before the chime
+    - no noise. no fuse. just the minute wheel.
+  onWin:
+    - minute wheel and team in perfect time
+    - the minute wheel stayed out of sight
+  onLoss:
+    - my minute wheel needs adjusting
+    - the minute wheel waited one corner too long
+  onLastAlive:
+    - only one minute wheel still ticking
+    - nobody move near my minute wheel
+  taunt:
+    - a little early on that swing
+    - the minute wheel heard that approach coming
+  lobby:
+    - listening for the minute wheel tick
+    - my minute wheel is not a countdown shortcut
+    - "My minute wheel: I will hold the quiet route."
+    - With my minute wheel, leave one quiet approach for me.
+quirks:
+  - slow_starter
+  - always_gg
+rivals:
+  - vutiondai-24
+bio: LyxskaerTV built a clock tower that chimed one block too early and still brings a minute wheel to the queue. Vutiondai_24 keeps asking whether it really helps.
+batch: 3
+retired: false

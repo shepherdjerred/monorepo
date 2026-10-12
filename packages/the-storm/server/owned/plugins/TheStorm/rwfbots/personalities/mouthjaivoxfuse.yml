@@ -1,0 +1,75 @@
+id: mouthjaivoxfuse
+name: MouthjaivoxFuse
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4MjE1NjY5NywKICAicHJvZmlsZUlkIiA6ICJhOGMzZGQ3OGVmZmI0NmYyYjlhNjcyOTE4OWU4OTI0ZCIsCiAgInByb2ZpbGVOYW1lIiA6ICJNb2xlc0xMQyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS80MGNkMzMyZmVlYmQyNmFkZDllMmYxY2IyMzEyMWNlYzUxYzRhNDA2M2E2MWJjODVkMDE0MjNjNjJkZWI2ZDZjIgogICAgfQogIH0KfQ=="
+  signature: "FYteJBTyILt2NaQzIRRlBDTWJ/XE48QydX0C55tIC+lUTkraqvzSFEWAIw0xP/4305mJraG917c2WFldHn9peNtkIdKPxM7/7KkyYdAIjZztotN5HuvYKk3wVkcS/ZVeRnecz+oRJtej0Aetfv5bRVHgTe3c0939rwetkEykgDWv8DO+5fAO6EoKKsYcQXpDNnqah90NDS9pwJVW2JczlAoR622MVtn5EfY61AJyNkG3I5z1d9kab//a4Hb3LlGMJ7+d2rSpYGBJ81llDCDBjQEH9Np0JeFfAGK/CX/CcRDRSjpGIyos6cvh6JPVptluiwlQ6YFPVRnId57bmfzX7G/Nqp7oc+lgCwHlcfx2N4GHFEd8H92Jgnnlfp+EMvqJEjAIEZxeSOKW64AayfTHDiDg0TPTI1WlxjcZAKadqXfj61TKNJJjQi/3NZSgAJ+BnLvYy6g4bPYymX55KJk8Fgi1pYwrQ45s/O/tYPti4Iht71LLVfYMoj5pL0NSBSk6pjxmEH4pMvqD8D+M0iEviMqE3+o/nMWAEJrjHVs6fYqqog5j8mwo5yqNE63u1ZIqN2SHCgaIpylrT15f6eoJPH3syrH/6GGlaul5ssDY2kbbBd5KPgM+M73ojnvaqQ+jH2yZzx/+khlVVcWg1BYfa9x5WRFQY5h4vaWQKrx9zG0="
+skill: 0.123
+archetype: lurker
+leverOffsets:
+  turnRateDegPerTick: 0.57
+  predictionQuality: 0
+  awarenessRadius: 1.23
+  coordination: -1.56
+  technique: -0.13
+  aggression: -0.26
+kits:
+  trooper: 0.67
+  shortbow: 0.68
+  ghost: 0.71
+  wraith: 0.67
+roles:
+  plant: 0.3
+  rotate: 0.76
+  hunt: 0.93
+style:
+  aggression: 0.45
+  patience: 0.81
+  teamplay: 0.04
+  risk: 0.7
+voice:
+  tone:
+    - meticulous
+    - hushed
+  verbosity: normal
+  style: "seams, alterations and dry little asides; lowercase whispers, deliberate pauses"
+lines:
+  greet:
+    - spool of linen tucked away, ready
+    - spool of linen here. quietly.
+  onKill:
+    - a neat little seam through there
+    - the spool of linen was here a while
+  onDeath:
+    - my plan has come unstitched
+    - heard it too late beside the spool of linen
+  onPlant:
+    - tied off the fuse neatly
+    - spool of linen is watching the quiet entrance
+  onDefuse:
+    - snipped the loose thread
+    - no noise. no fuse. just the spool of linen.
+  onWin:
+    - spool of linen and team fit nicely
+    - the spool of linen stayed out of sight
+  onLoss:
+    - the spool of linen plan needs an alteration
+    - the spool of linen waited one corner too long
+  onLastAlive:
+    - one thread still holding
+    - nobody move near my spool of linen
+  taunt:
+    - your formation has a loose seam
+    - the spool of linen heard that approach coming
+  lobby:
+    - please mind the spool of linen on the bench
+    - mending the kit beside my spool of linen
+    - "My spool of linen: I will hold the quiet route."
+    - With my spool of linen, leave one quiet approach for me.
+quirks:
+  - slow_starter
+  - always_gg
+rivals:
+  - xxgolemblazexx
+bio: MouthjaivoxFuse made matching banners for a team that never stood still and still brings a spool of linen to the queue. xXGolemBlazeXx keeps asking whether it really helps.
+batch: 3
+retired: false

@@ -1,0 +1,76 @@
+id: spookynoodle41
+name: SpookyNoodle41
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTg3MDI2OCwKICAicHJvZmlsZUlkIiA6ICJlZDUzZGQ4MTRmOWQ0YTNjYjRlYjY1MWRjYmE3N2U2NiIsCiAgInByb2ZpbGVOYW1lIiA6ICI0MTQxNDE0MWgiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMWI1MWZjMDJiYTkxZTRiMWNkYzU4ZGFiMTczZDcxYTQyNmVkNDA3ODZjOGZhZjc4NTY2ODU4Njc5MjgyODdjIgogICAgfQogIH0KfQ=="
+  signature: "x48fS91WOSZ+AczaheP5bPsP2BqmSGV77+z1o6qX5hO5E0n8+wV/Kg3SYqhkzS3vumuloMssf0FuXRlsqiaE0XU6AMeaFLkjtcet46det61lXk1H/Hyyh2SNT+R0btYqhXWu0ubFTh8RQuQ9kT0pt7V9VcM8/+6JtaE2fUaW3T2N5ZDB9xJKpXKxQ4qr3LVJJv+y0LfhaehhfTUigO+32JRFf0jCfJKbnYF33vx+V8C96uIzWVMfbvsROdVCDCXgUCEKdA32JcofEUgXY+M4rtUxs34xPHxlVTbfAIpMdz5F/3u/lMHWjDf9vLshMvDVRCxPzc4gwTHel2hiq84DwYiOJmIr41Ecg1Ef/ssE7ra0t5YR130zr55rjsS3pPw8DLAYeJpX0i/H1YotDwSGT2Lu3xyoXU6+i+O08+x+97OLI0JWxOYpl+/wW+LqUDTrVgCWrzwPFSZNFxbov9uf/tYeIF5QLkPYNCdXQzvALQXlNoyIeOKf4JqI7Q7ySf7ld6KfXn6kSg67YoLQiraNFfby63m/JR2MJA8ItydNLPxvBkOk8Y6xuO7gtLhY8J6evx1VezQPn3Fm5jCnNyQXXrQQp+TbGU08UjSD7tVbWNFR82csmH5Re7ttxF3kdfYglL0LXxfQPty8Dlv7aZmbA6dr+Uq3ZcBBmHTKQbhnya0="
+skill: 0.133
+archetype: sniper
+leverOffsets:
+  aimErrorDeg: 1.22
+  cps: -0.97
+  predictionQuality: 1.1
+  decisionTemperature: 0.13
+  awarenessRadius: 0.97
+  coordination: -0.05
+  technique: -0.3
+  aggression: -0.96
+kits:
+  trooper: 0.16
+  longbow: 0.99
+  shortbow: 0.43
+roles:
+  defend: 0.8
+  rotate: 0.39
+  hunt: 0.36
+style:
+  aggression: 0.31
+  patience: 0.93
+  teamplay: 0.44
+  risk: 0.27
+voice:
+  tone:
+    - steady
+    - focused
+  verbosity: normal
+  style: "buoyancy checks and practical nautical talk; short range notes and patient, exact corrections"
+lines:
+  greet:
+    - hull rib fastened, ready to cast off
+    - hull rib in place, checking the long angle
+  onKill:
+    - found a gap in that hull
+    - hull rib found the range
+  onDeath:
+    - a little water over the rail
+    - hull rib needed a closer angle
+  onPlant:
+    - not a cargo I want to keep
+    - hull rib covers the far entrance
+  onDefuse:
+    - unloaded that safely
+    - hull rib can wait, hands on the fuse
+  onWin:
+    - hull rib brought us back to dock
+    - hull rib had a clear view of that
+  onLoss:
+    - the hull rib voyage met a reef
+    - hull rib kept the wrong sight line
+  onLastAlive:
+    - one hand still at the tiller
+    - one hull rib, one long angle
+  taunt:
+    - your push is sailing against the wind
+    - the hull rib saw that peek twice
+  lobby:
+    - tightening the bolts on my hull rib
+    - keeping the hull rib dry for the voyage home
+    - "My hull rib: I will cover the long angle."
+    - With my hull rib, call the close flank for me.
+quirks:
+  - bow_spammer
+  - always_gg
+rivals:
+  - swiftarrow03
+bio: SpookyNoodle41 launched a leaky ferry between two rival team docks and still brings a hull rib to the queue. SwiftArrow03 keeps asking whether it really helps.
+batch: 3
+retired: false

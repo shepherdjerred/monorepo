@@ -1,0 +1,75 @@
+id: zolvishpixotter
+name: ZolvishpixOtter
+skin:
+  value: ewogICJ0aW1lc3RhbXAiIDogMTc5MTc3ODQ3NDA2NiwKICAicHJvZmlsZUlkIiA6ICJjY2MxNGM2ZDUwMDE0MjBmYmMxYjkyMTM2Y2JmOWU4MSIsCiAgInByb2ZpbGVOYW1lIiA6ICJab25lX1gwODE1IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2ZiNTM5MjI5MjNmMDJhNTdjZjg1ODMzYzljM2E1ZDMwN2ViOTk3M2I1MTFmOTI5NzRhY2EzYzk0ZTY3NWFmYTciCiAgICB9CiAgfQp9
+  signature: "iVUuQDUuBp6Udv+KqhV4D03beTh0APZnXTY6FHR0zyMH7rAiu8yylBu3bHyzmvV20BGUexqBSnFvC3N7Mzl7MGi8aWmzYIicCJkfXOi90+rXLmWYlN12lRiNNfrV4BNdEeKZuGgUXpnEBJry0sLSdJff82fbaUpJfP45OqWYw+ijYk6PDcFcRh1taoaXAc1n5zfquFZNnUxzOYFDUmFkzni6G5BslbV/kWPjQ5YB12Zc+bmGOC8yU/s9Slunvjx7IvcaGhCQ5YXCjyYveK4Saj6zQrj3YRWq8rguPaqX29rLqqZuJfKd/kd24IkSgEtBHDMRckBTb5aGp5EsxP/4F0Mq1fVYL1Fdk3imoa02RTj9fOY9HLj/VVRsL9Zko0tqgXoCAab+uO7MlpfM6GHeVCbH0vNGSSUhRZR3mG2CwkqyfI2HnUT76Dg4ri3ZxS2EEJEAslUUTMezOF9JxVrPLjp5SPKsn9V8vfAo8PS2YcdUy9PofipOmOEkEHcUJpJDrDXHV8/jzAZro9libpB8K+ZrL67zC9eL4DrVemdwPDwwHqqcqHJj7AUW4let6li2VHD1By+LCOEbBJ0fwlxXd/+Kiu4jGVACCDur7XS92Q9C7bZd4AxCAZsOJJdwe04o2D0Su7hySvRW5e3e6K8pQMh+mWvlRu8SR2tO4OnjiHk="
+skill: 0.85
+archetype: troll
+leverOffsets:
+  turnRateDegPerTick: -0.41
+  cps: 0.05
+  decisionTemperature: -2.47
+  coordination: -1.11
+  technique: 0.06
+kits:
+  trooper: 0.49
+  shortbow: 0.76
+  rewind: 1
+  spy: 0.83
+roles:
+  plant: 0.67
+  escort: 0.51
+  rotate: 0.55
+  hunt: 0.61
+style:
+  aggression: 0.66
+  patience: 0.3
+  teamplay: 0.16
+  risk: 0.79
+voice:
+  tone:
+    - fussy
+    - mischievous
+  verbosity: normal
+  style: "paper crafts and tiny careful corrections; deadpan object conversations and harmless overconfidence"
+lines:
+  greet:
+    - paper spiral survived the queue
+    - paper spiral has appointed itself captain
+  onKill:
+    - one clean fold in the plan
+    - paper spiral is now insufferably proud
+  onDeath:
+    - my paper spiral is a little crumpled
+    - paper spiral would like a different replay
+  onPlant:
+    - tucking the fuse into the fold
+    - paper spiral calls this interior decorating
+  onDefuse:
+    - unfolded that just in time
+    - paper spiral says it knew the correct wire
+  onWin:
+    - paper spiral stayed in one piece
+    - paper spiral is requesting a trophy shelf
+  onLoss:
+    - another crease in my paper spiral
+    - paper spiral has misplaced the blame form
+  onLastAlive:
+    - one paper spiral left on the table
+    - paper spiral insists this was the plan
+  taunt:
+    - that push folded very quickly
+    - the paper spiral gave that push three out of ten
+  lobby:
+    - please do not squash my paper spiral
+    - making another paper spiral while we wait
+    - "My paper spiral: I will cause a useful distraction."
+    - With my paper spiral, try not to laugh during my push.
+quirks:
+  - celebrates_early
+  - always_gg
+rivals:
+  - toxic-bandit
+bio: ZolvishpixOtter folded paper creatures while waiting for the 2014 queue and still brings a paper spiral to the queue. Toxic_Bandit keeps asking whether it really helps.
+batch: 3
+retired: false

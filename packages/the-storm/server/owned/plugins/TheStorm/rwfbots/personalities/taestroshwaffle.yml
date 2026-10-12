@@ -1,0 +1,74 @@
+id: taestroshwaffle
+name: TaestroshWaffle
+skin:
+  value: "ewogICJ0aW1lc3RhbXAiIDogMTc5MTc4NTcyNTU2MywKICAicHJvZmlsZUlkIiA6ICI0YmEzMzMxNjA0YjU0NzgwYmQ0MzBkMTc5NjI4Yjk0YSIsCiAgInByb2ZpbGVOYW1lIiA6ICJNeVdpZmlKdXN0RGllZCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS83MzRkMmQ4ZDcyMGEyZGI4ZjllNmYyYmIyODJkOWViZDNkZTNmM2NmN2Q3YjhkZThkYjAzMTExN2IyZGUwOGQwIgogICAgfQogIH0KfQ=="
+  signature: "u1CXvr55sc3iqxHTOBXpRy+vso4Ge1/tZJ3IAWoxcXSqq8gWAz+dgUmFgSXFnwZGi0Rp6jgx/HwfouEcE8iafSMJK6e6ntIczGRFIipNjpjoU0KInS1di4B6V89sELgzlsv1e1jYrcVwPxwZGEzDNUEmDmepd7zaXEfb68Vf6t13xKJHY8HVIepd2xsjFfJhOF8z6O/RZQHL4QrQ70HBqVGI5nXvquQpcG14bgo+KzF0lOacJ6UT/uanzlc/aMxx8awfdE3fom8N7HZi0x1puzmYqm2mc8T+dHvXyPis1y00ZA2jZ00GQvNfR+Eu+LeKx+ms04gO1u7zTJ/+MeO+i6yYU6Td04qpNpSDB9lxA8INaU+YeQeB8hZrH826V4Ir7X2ooGxVoHGqNKXrmiDALOCAqhNFuH4I1jwTHw1bPo8B8S74z3QiZyWv3U10P3lbBlOv1vd4Jb0EopEV6AnkjIShlyKjFYAC26IyJdZoVmfG4VzbvScvPRN1mvx5eYV0Ax3CHaRUGUkLS5dVgBQo5eKDq0dWnMoymc38cvowD7VZlI0tQS9dVpzEc8qOvGNilwVlu2/g424TXtZhdHZE5J0h0X0jT/j6EZsAL0ebSdExSV/1LvkMajTDYtXQjbdzewbIWQsxRxd5BA9HMKBn1GK5FWNWl52wnqr/Z0zCNc4="
+skill: 0.967
+archetype: rusher
+leverOffsets:
+  reactionMs: -0.04
+  turnRateDegPerTick: -0.02
+  cps: 0.6
+  decisionTemperature: 0.58
+  awarenessRadius: -0.68
+  aggression: 1.79
+kits:
+  trooper: 1
+  shortbow: 0.63
+  rewind: 0.3
+roles:
+  plant: 0.95
+  escort: 0.46
+  hunt: 0.64
+style:
+  aggression: 0.99
+  patience: 0.16
+  teamplay: 0.35
+  risk: 0.7
+voice:
+  tone:
+    - playful
+    - eager
+  verbosity: normal
+  style: "tiny winter expeditions, serious snow forts; fast fragments, impatient countdowns"
+lines:
+  greet:
+    - snow brick mold thawed out, ready
+    - snow brick mold ready, I am taking the first corner
+  onKill:
+    - a tidy little snowball effect
+    - snow brick mold keeps moving, next corner
+  onDeath:
+    - slid right out of that plan
+    - a pause for the snow brick mold, then straight back
+  onPlant:
+    - a warm spot in the snow
+    - snow brick mold is already on the next approach
+  onDefuse:
+    - cooled the bomb right down
+    - quick hands, quick snow brick mold, clear
+  onWin:
+    - snow brick mold has survived the thaw
+    - snow brick mold barely stopped all round
+  onLoss:
+    - the fort melted around us
+    - snow brick mold ran ahead of the plan
+  onLastAlive:
+    - one mitten still waving
+    - my snow brick mold and I will keep moving
+  taunt:
+    - your footing looked a bit icy
+    - my snow brick mold got here before that push
+  lobby:
+    - warming my snow brick mold by the lobby lamp
+    - please stop hiding my snow brick mold in snow
+    - "My snow brick mold: first corner is mine."
+    - With my snow brick mold, please follow after the opening.
+quirks:
+  - bunny_hops
+  - always_gg
+rivals:
+  - xxriderlynxxx
+bio: TaestroshWaffle built a snow fort that lasted longer than the team inside it and still brings a snow brick mold to the queue. xXRiderLynxXx keeps asking whether it really helps.
+batch: 3
+retired: false
