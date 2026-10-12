@@ -2,7 +2,7 @@ import { Database } from "bun:sqlite";
 import { lstat, realpath } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
-import { digest, uuid, type Client, type Manifest } from "./model";
+import { digest, uuid, clientState, type Client, type Manifest } from "./model";
 
 const selection = `SELECT o.sequence,o.profile,o.id,o.path,o.bytes,o.revision,o.remote_revision,
   o.created_ms,o.modified_ms,o.related_path,p.size AS payload_size,p.revision AS payload_revision,
@@ -54,11 +54,8 @@ export async function outboxSnapshot(
   client: Client,
   profileID: string,
 ) {
-  if (manifest.clients === null) throw new Error("Apps are not prepared");
-  const filename = path.join(
-    manifest.clients[client].stateDirectory,
-    "facet.sqlite3",
-  );
+  const state = clientState(manifest, client);
+  const filename = path.join(state.stateDirectory, "facet.sqlite3");
   const stat = await lstat(filename);
   if ((await realpath(filename)) !== filename || !stat.isFile())
     throw new Error("Unsafe owned runtime database");

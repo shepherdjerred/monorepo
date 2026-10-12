@@ -11,6 +11,7 @@ import {
   runDirectory,
   sha256,
   type Manifest,
+  activeClients,
 } from "./model";
 import { command, save } from "./platform";
 import { waitForConvergence } from "./native";
@@ -98,15 +99,39 @@ export async function guardedStage(
   }
 }
 
-async function assertUnchangedBuild(manifest: Manifest) {
+export function acceptanceProvenance(manifest: Manifest, value: unknown) {
+  const common = {
+    runID: z.literal(manifest.runID),
+    sourceHead: z.string().min(1),
+    sourceFiles: z.record(z.string(), sha256),
+    macApp: z.record(z.string(), sha256),
+    pluginSettingsFixture: z.unknown(),
+    expectedTaskNotesVersion: z.literal("4.13.8"),
+    officialObsidianVersion: z.string().nullable(),
+  };
+  return manifest.schemaVersion === 2
+    ? z
+        .strictObject({
+          ...common,
+          schemaVersion: z.literal(2),
+          scope: z.literal("macos"),
+        })
+        .parse(value)
+    : z
+        .strictObject({
+          ...common,
+          schemaVersion: z.literal(1),
+          iosApp: z.record(z.string(), sha256),
+        })
+        .parse(value);
+}
+
+export async function assertUnchangedBuild(manifest: Manifest) {
   const directory = runDirectory(manifest.runID);
-  const provenance = z
-    .object({
-      sourceFiles: z.record(z.string(), sha256),
-      iosApp: z.record(z.string(), sha256),
-      macApp: z.record(z.string(), sha256),
-    })
-    .parse(await Bun.file(path.join(directory, "provenance.json")).json());
+  const provenance = acceptanceProvenance(
+    manifest,
+    await Bun.file(path.join(directory, "provenance.json")).json(),
+  );
   const listing = await command(
     [
       "git",
@@ -129,13 +154,16 @@ async function assertUnchangedBuild(manifest: Manifest) {
         "Source changed during the acceptance sequence; rebuild in a new run",
       );
   }
-  for (const client of ["ios", "macos"] as const) {
+  for (const client of activeClients(manifest)) {
     const app =
       client === "ios"
         ? "ios/Build/Products/Debug-iphonesimulator/TasksForObsidian.app"
         : "macos/Build/Products/Debug/FacetAcceptance.app";
     const actual = await fingerprintApp(path.join(directory, app));
-    const expected = client === "ios" ? provenance.iosApp : provenance.macApp;
+    const expected =
+      client === "ios" && "iosApp" in provenance
+        ? provenance.iosApp
+        : provenance.macApp;
     if (JSON.stringify(actual) !== JSON.stringify(expected))
       throw new Error("Native artifact changed during the acceptance sequence");
   }
@@ -149,13 +177,21 @@ async function assertPriorEvidence(manifest: Manifest) {
     );
     if (digest(bytes) !== previous.evidenceSHA256)
       throw new Error("Archived acceptance evidence changed");
-    const evidence = z
-      .object({
-        runID: z.literal(manifest.runID),
-        round: z.literal(previous.round),
-        cases: z.record(z.string(), z.string()),
-      })
-      .parse(JSON.parse(bytes.toString("utf8")));
+    const fields = {
+      runID: z.literal(manifest.runID),
+      round: z.literal(previous.round),
+      cases: z.record(z.string(), z.string()),
+    };
+    const evidence = (
+      manifest.schemaVersion === 2
+        ? z.object({
+            ...fields,
+            schemaVersion: z.literal(2),
+            scope: z.literal("macos"),
+            replicaCount: z.literal(2),
+          })
+        : z.object({ ...fields, schemaVersion: z.literal(1) })
+    ).parse(JSON.parse(bytes.toString("utf8")));
     if (
       requiredCases.some(
         (name) =>
@@ -215,7 +251,9 @@ export async function completeRound(manifest: Manifest) {
       .unknown()
       .parse(await Bun.file(path.join(directory, relative)).json());
   const proof = {
-    schemaVersion: 1,
+    ...(manifest.schemaVersion === 2
+      ? { schemaVersion: 2, scope: manifest.scope, replicaCount: 2 }
+      : { schemaVersion: 1 }),
     runID: manifest.runID,
     round: manifest.round,
     capturedAt: new Date().toISOString(),
@@ -236,7 +274,7 @@ export async function completeRound(manifest: Manifest) {
   if (manifest.round === 3) {
     manifest.cases["three-consecutive-runs"] = "pass";
     console.log(
-      "All required cases passed in three consecutive full rounds on unchanged native artifacts.",
+      `All required cases passed in three consecutive ${manifest.schemaVersion === 2 ? "Mac-only rounds (two replicas)" : "Apple rounds (three replicas)"} on unchanged native artifacts.`,
     );
   } else {
     manifest.round += 1;

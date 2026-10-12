@@ -6,12 +6,16 @@ internal struct FacetWorkspaceView: View {
     @Bindable var store: FacetStore
     @Binding var importsFolder: Bool
     @Binding var board: Bool
+    @Binding var capturePresented: Bool
+    let sheets: FacetSheetPresentation
 
     var body: some View {
         if store.profiles.isEmpty {
             onboardingWorkspace
         } else {
-            FacetNativeWorkspace(store: store, importsFolder: $importsFolder)
+            FacetNativeWorkspace(
+                store: store, importsFolder: $importsFolder, capturePresented: $capturePresented,
+                sheets: sheets)
         }
     }
 
@@ -82,9 +86,13 @@ internal struct FacetWorkspaceView: View {
                     if let snapshot = store.snapshot {
                         if snapshot.conflictCount > 0 {
                             Button("\(snapshot.conflictCount) conflicts need your attention") {
-                                _Concurrency.Task { await store.loadConflicts() }
+                                _Concurrency.Task { await sheets.openConflicts(store: store) }
                             }
                             .accessibilityIdentifier("facet.conflicts.open")
+                            .disabled(store.conflictWindowOwnerID != nil)
+                            .help(
+                                "Conflicts are open in another window while this control is unavailable."
+                            )
                             .padding()
                         }
                         FacetTaskBrowser(store: store, snapshot: snapshot, board: $board)
@@ -105,7 +113,11 @@ internal struct FacetWorkspaceView: View {
                         }
                         Divider()
                         Button(folderAction) { importsFolder = true }
-                        Button("Connect Obsidian Sync…") { store.showsAccount = true }
+                        Button("Connect Obsidian Sync…") {
+                            sheets.account(store: store).wrappedValue = true
+                        }.disabled(store.accountWindowOwnerID != nil)
+                            .help(
+                                "Sync is open in another window while this control is unavailable.")
                         if store.remindersEnabled {
                             Button("Turn off task reminders") {
                                 _Concurrency.Task { await store.disableReminders() }
@@ -130,7 +142,7 @@ internal struct FacetWorkspaceView: View {
                     }
                     .disabled(store.selectedProfileID == nil)
                     Button {
-                        store.showsCapture = true
+                        capturePresented = true
                     } label: {
                         Label("Add task", systemImage: "plus")
                     }
@@ -156,7 +168,7 @@ internal struct FacetWorkspaceView: View {
     }
     private var onboarding: some View {
         FacetVaultOnboarding(
-            store: store, importsFolder: $importsFolder, folderAction: folderAction)
+            store: store, importsFolder: $importsFolder, folderAction: folderAction, sheets: sheets)
     }
 
     private var filters: some View {

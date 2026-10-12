@@ -26,7 +26,9 @@ struct FacetSyncNoticeRenderTests {
         }
         store.syncStatuses[profileID] = FacetSyncStatus(transport: transport, durable: durable)
         let result = try OffscreenSnapshot.write(
-            FacetNativeWorkspace(store: store, importsFolder: .constant(false)),
+            FacetNativeWorkspace(
+                store: store, importsFolder: .constant(false), capturePresented: .constant(false),
+                sheets: FacetSheetPresentation()),
             named: "facet-sync-synthetic-\(phase.rawValue)", size: CGSize(width: 1200, height: 700),
             appearance: .light)
         #expect(result.distinctColors > 8 && result.byteCount > 1000)

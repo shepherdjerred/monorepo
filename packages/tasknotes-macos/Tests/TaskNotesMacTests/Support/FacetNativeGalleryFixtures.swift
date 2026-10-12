@@ -284,12 +284,14 @@ struct FacetNativeGalleryScene: View {
         case .setup, .setupLoading:
             FacetVaultOnboarding(
                 store: fixture.store, importsFolder: .constant(false),
-                folderAction: "Import vault copy…")
+                folderAction: "Import vault copy…", sheets: FacetSheetPresentation())
         case .signIn, .verification, .vaultSelection:
             FacetAccountForm(store: fixture.store)
         case .inbox, .today, .upcoming, .empty, .search, .board, .browse, .connected, .offline:
             FacetNativeWorkspace(
-                store: fixture.store, importsFolder: .constant(false), window: fixture.window)
+                store: fixture.store, importsFolder: .constant(false),
+                capturePresented: .constant(false), sheets: FacetSheetPresentation(),
+                window: fixture.window)
         case .savedViews:
             FacetSavedViewsForm(
                 store: fixture.store, profileID: FacetSurfaceFixtures.profileID,
@@ -335,7 +337,9 @@ struct FacetNativeGalleryScene: View {
             #endif
         case .preferences, .failedAction:
             NavigationStack {
-                FacetNativeSettings(store: fixture.store, importsFolder: .constant(false))
+                FacetNativeSettings(
+                    store: fixture.store, importsFolder: .constant(false),
+                    sheets: FacetSheetPresentation())
             }
         case .conflicts:
             FacetConflictInbox(store: fixture.store)

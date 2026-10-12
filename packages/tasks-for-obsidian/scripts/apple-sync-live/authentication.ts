@@ -6,6 +6,7 @@ import {
   digest,
   runDirectory,
   atomicJSON,
+  activeClients,
 } from "./model";
 import { command, save } from "./platform";
 
@@ -54,6 +55,8 @@ export async function authenticationFixtures(manifest: Manifest) {
   await atomicJSON(path.join(directory, "authentication-fixtures.json"), {
     schemaVersion: 1,
     runID: manifest.runID,
+    classification: "fixtures-only",
+    clients: activeClients(manifest),
     argv,
     testCount: count,
     stdoutSHA256: digest(await readFile(stdout)),

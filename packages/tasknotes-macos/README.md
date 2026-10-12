@@ -45,14 +45,21 @@ Native form values for common recurrence patterns cross a portable Kit adapter,
 with rule parsing and construction performed by the existing Rust functions
 away from the UI actor.
 
-Engine, account and selected-profile ownership is application-wide.
+Engine, account and selected-profile ownership is application-wide. The Mac
+application starts them even with no visible workspace; view tasks await that
+shared startup.
 Startup publishes the engine, importer and account together after their initial
 reads succeed. A failed preparation closes its unpublished engine and permits a
 fresh startup attempt. Account requests check cancellation and their original
 session generation before and after each HTTP operation, including between the
 OPTIONS preflight and the credential POST, then again before decoding a response.
 `FacetWindowState` owns each window's query, search, saved-view constraints,
-selection and pagination. Independent read generations never retire mutation
+selection and pagination. Each Mac workspace owns its capture-sheet presentation
+and draft; opening capture in one window does not present sheets in other windows.
+Account and conflict sessions remain shared, while each sheet belongs to the
+requesting Mac window; other windows wait for that sheet to finish cleanup before
+opening another session.
+Independent read generations never retire mutation
 publication. Browse vocabulary uses a separate version-consistent all-page read
 so a narrowed task list cannot hide the vault's projects, contexts or tags.
 Group membership and order come from the core. Counts describe loaded pages;
@@ -205,8 +212,64 @@ then relaunch and sign in again. Discovery cannot authorize or reconnect any
 vault. Do not inspect account tokens, browser storage, or Obsidian secret files
 to obtain the ID, and do not capture the account-entry screen.
 
-`bun run mac:acceptance:e2e` runs the local standalone capture/edit/relaunch
-journey with a new descriptor, synthetic Markdown, and no live account. Both
+For a prepared, sealed and bound Mac-only live run, `mac:account` drives normal
+account controls through an addressed native helper and the configured 1Password
+CLI. It verifies the exact run, descriptor, frozen source/artifact provenance,
+process lifetime and account sheet before reading credentials. From this package:
+
+```bash
+bun run mac:account <runID> present
+bun run mac:account <runID> credentials --account <accountID> --vault <vaultID> --item <itemID>
+# Only when the app currently requests a verification code:
+bun run mac:account <runID> verification --account <accountID> --vault <vaultID> --item <itemID>
+bun run mac:account <runID> vault --vault-password-ref op://<vaultID>/<itemID>/password
+```
+
+Identifiers and password references are nonsecret. Passwords and generated codes
+stay in memory/private helper input; they never belong in command arguments,
+environment variables, logs, captures or the clipboard. Account-item reads use
+Desktop authorization; the vault-password read uses the repository service-account
+wrapper. Each invocation performs only its selected action and emits a closed
+receipt. If a receipt reports an unknown submission outcome, inspect the current
+app/status before invoking it again.
+
+After `lifecycle-begin <runID> macos`, add `--lifecycle-round <1|2|3>` to every
+account invocation, including `present`. The driver requires that round's retained
+checkpoint, original profile, unchanged replica and immutable pending outbox;
+`vault` reconnects the existing profile. It refuses an already released transport
+interruption. Then run `lifecycle-finish <runID> macos` through the live harness.
+These account commands do not establish Sync or native-workflow acceptance.
+
+`bun run mac:acceptance:e2e` runs four bounded local standalone workflows with
+a new descriptor, synthetic Markdown, and no live account: capture/edit/cold
+relaunch plus complete/reopen/delete/exact-byte Undo; dirty inspector navigation
+and normal window-close retention; independent search and selection in two
+windows; and menu Quick Add hidden-draft retention with Add Another. File →
+New Window opens a separate workspace; New Task keeps Command-N and Quick Add
+keeps Shift-Command-N. Each workspace has its own stable accessibility identity
+for the lifetime of that window.
+
+The runner retains `run.json` with the exact selected test methods and outcome,
+the `.xcresult`, safe synthetic workspace screenshots and the run's private
+state under `.build/native-acceptance/<UUID>`. Mac screenshots come only from
+ScreenCaptureKit filters for explicitly owned workspace windows and separate
+captures of their exact owned sheets; foreign windows are excluded by the capture
+producer. Capture requires an existing runner Screen Recording grant and fails
+without prompting if it is absent. Ownership, safe UI state, geometry and process
+lifetime are checked again after bounded capture completes. Automatic system desktop
+attachments are discarded; custom user attachments are retained. Inspect the
+app-only images before using them as visual proof or publishing them. The same
+capture policy applies to the Mac live Sync journeys. The local runner's Markdown checks
+require one final open task per selected workflow and byte-for-byte preservation
+of the original task, reference note and configuration. To diagnose one flow,
+use `bun run mac:acceptance:e2e --only-testing=testQuickAddRetainsHiddenDraftAndAddsAnother`;
+a narrowed run is recorded as such and does not establish the full suite.
+`TASKNOTES_UITEST_IDENTITY=<Apple Development SHA-1>` also signs this acceptance
+test runner without overriding app or package signing. Its separate runner
+identity may require an existing Accessibility grant; no gate assumes it.
+The isolated acceptance app disables the global hotkey, so this suite proves
+the ordinary Quick Add command and panel; production global-hotkey behavior
+still needs its own signed, trusted native checkpoint. Both
 the default local and CI E2E launchers run this acceptance suite before the
 separate legacy server-backed suite; individual legacy selectors remain scoped
 to those tests. The legacy suite still requires its own migration and is not
@@ -266,6 +329,8 @@ global hotkeys and notification outputs are disabled. Debug acceptance
 descriptors and controls remain unavailable in Release. The runner requires
 successful engine/account startup through an exact `started.<PID>` marker,
 then the same process must survive, preserve focus and exit on SIGTERM.
+Ordinary failures clean up only the exact owned process; a proven SIGTERM
+timeout leaves that process available for inspection.
 The marker contains the lowercase UUID followed by newline. Per-run executable
 fingerprints and provenance live in `.build/release-smoke/<UUID>`.
 This proves Release startup behavior; it is not live Sync acceptance.

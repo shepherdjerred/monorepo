@@ -240,6 +240,9 @@ targets:
     platform: macOS
     sources:
       - path: UITests/StandaloneVaultUITests.swift
+      - path: UITests/MacAcceptanceOwnership.swift
+      - path: UITests/MacAcceptanceCapture.swift
+      - path: UITests/MacAcceptanceWorkspace.swift
       - path: UITests/LiveSyncVaultUITests.swift
       - path: UITests/LiveSyncConflictUITests.swift
       - path: UITests/LiveSyncLifecycleUITests.swift
@@ -248,9 +251,10 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: red.sjer.tasknotes.mac.acceptance.uitests
+        INFOPLIST_KEY_NSScreenCaptureUsageDescription: "Capture only the synthetic acceptance app's selected workspace windows and sheets for test evidence."
         CODE_SIGN_ENTITLEMENTS: ""
         CODE_SIGN_STYLE: Manual
-        CODE_SIGN_IDENTITY: "-"
+        CODE_SIGN_IDENTITY: "$(TASKNOTES_UITEST_IDENTITY:default=-)"
         GENERATE_INFOPLIST_FILE: YES
 
   # ─── End-to-end UI tests ────────────────────────────────────────────────────
