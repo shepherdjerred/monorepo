@@ -437,6 +437,26 @@ describe("Prod pre-data-source schema handoff", () => {
         ).schemaFingerprint,
       ).toBe(layoutFingerprint("legacy-identity-map-pre-data-source"));
       await expectMatchDataSourceColumn(current, false);
+      const matches = buildMatchesSource(await resolveLakeFiles(lakeDir), {
+        sql: "",
+        params: [],
+      });
+      if (matches === undefined) throw new Error("missing matches source");
+      const rows = await withDuckDBConnection(
+        async (session) =>
+          await session.run(
+            `SELECT data_source FROM (${matches.sql})`,
+            matches.params.map((param) =>
+              param.kind === "list" ? session.list(param.values) : param.value,
+            ),
+          ),
+      );
+      expect(rows.length).toBeGreaterThan(0);
+      for (const row of rows) {
+        expect(
+          z.object({ data_source: z.string().nullable() }).parse(row),
+        ).toEqual({ data_source: null });
+      }
     } finally {
       vi.restoreAllMocks();
       await rm(lakeDir, { recursive: true, force: true });

@@ -6,7 +6,7 @@ const LAKE_QUERY_SNAPSHOT_ATTEMPTS = 3;
 
 function snapshotPaths(files: LakeFiles): string[] {
   return Object.values(files).flatMap((value) =>
-    value === undefined ? [] : Array.isArray(value) ? value : [value],
+    typeof value === "string" ? [value] : Array.isArray(value) ? value : [],
   );
 }
 
