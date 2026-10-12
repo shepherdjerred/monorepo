@@ -216,6 +216,31 @@ async function countSourceRows(source: SqlFragment): Promise<number> {
   });
 }
 
+async function stageSingleMatch(lakeDir: string, match: RawMatch) {
+  expect(await writeMatchStagingFile(lakeDir, match)).toBe(true);
+  const files = await listStagingFiles(lakeDir, "matches");
+  expect(files).toHaveLength(1);
+  return files;
+}
+
+async function expectIncompatibleBuildUntouched(
+  lakeDir: string,
+  publishedBuild: string | undefined,
+) {
+  const buildsBefore = await readdir(path.join(lakeDir, "builds"));
+  s3Mock.resetHistory();
+  await expect(runReportLakeFold({ prisma, lakeDir })).rejects.toThrow(
+    "unknown schema",
+  );
+  await expect(runReportLakeRebuild({ prisma, lakeDir })).rejects.toThrow(
+    "unknown schema",
+  );
+  expect(await readCurrentBuildDir(lakeDir)).toBe(publishedBuild);
+  expect(await readdir(path.join(lakeDir, "builds"))).toEqual(buildsBefore);
+  expect(await listStagingFiles(lakeDir, "matches")).toHaveLength(1);
+  expect(s3Mock.calls()).toHaveLength(0);
+}
+
 async function seedCurrentLake(
   lakeDir: string,
   match: RawMatch,
@@ -759,10 +784,7 @@ describe("compactor", () => {
       expect(first?.tier).toBe("rebuild");
 
       // Stage one match, then fold it in.
-      const staged = await writeMatchStagingFile(lakeDir, match);
-      expect(staged).toBe(true);
-      const stagedFiles = await listStagingFiles(lakeDir, "matches");
-      expect(stagedFiles.length).toBe(1);
+      await stageSingleMatch(lakeDir, match);
 
       const fold = await runReportLakeFold({ prisma, lakeDir });
       expect(fold?.tier).toBe("fold");
@@ -825,15 +847,7 @@ describe("compactor idempotency and schema transitions", () => {
         params: [],
       });
       if (source === undefined) throw new Error("missing match lake source");
-      const rowCount = await withDuckDBConnection(async (session) => {
-        const rows = await session.run(
-          `SELECT COUNT(*)::BIGINT AS n FROM (${source.sql})`,
-          source.params.map((param) =>
-            param.kind === "list" ? session.list(param.values) : param.value,
-          ),
-        );
-        return CountRowSchema.parse(rows[0]).n;
-      });
+      const rowCount = await countSourceRows(source);
       expect(rowCount).toBe(match.info.participants.length);
     } finally {
       await rm(lakeDir, { recursive: true, force: true });
@@ -861,21 +875,7 @@ describe("compactor idempotency and schema transitions", () => {
         expect(await writeMatchStagingFile(lakeDir, match)).toBe(true);
         await rewritePublishedFingerprint(lakeDir, fingerprint);
         const old = await readCurrentBuildDir(lakeDir);
-        const buildsBefore = await readdir(path.join(lakeDir, "builds"));
-        s3Mock.resetHistory();
-
-        await expect(runReportLakeFold({ prisma, lakeDir })).rejects.toThrow(
-          "unknown schema",
-        );
-        await expect(runReportLakeRebuild({ prisma, lakeDir })).rejects.toThrow(
-          "unknown schema",
-        );
-        expect(await readCurrentBuildDir(lakeDir)).toBe(old);
-        expect(await readdir(path.join(lakeDir, "builds"))).toEqual(
-          buildsBefore,
-        );
-        expect(await listStagingFiles(lakeDir, "matches")).toHaveLength(1);
-        expect(s3Mock.calls()).toHaveLength(0);
+        await expectIncompatibleBuildUntouched(lakeDir, old);
       } finally {
         await rm(lakeDir, { recursive: true, force: true });
       }
@@ -899,20 +899,7 @@ describe("compactor idempotency and schema transitions", () => {
             manifestState === "malformed" ? "{" : "{}",
           );
         }
-        const buildsBefore = await readdir(path.join(lakeDir, "builds"));
-        s3Mock.resetHistory();
-        await expect(runReportLakeFold({ prisma, lakeDir })).rejects.toThrow(
-          "unknown schema",
-        );
-        await expect(runReportLakeRebuild({ prisma, lakeDir })).rejects.toThrow(
-          "unknown schema",
-        );
-        expect(await readCurrentBuildDir(lakeDir)).toBe(buildDir);
-        expect(await readdir(path.join(lakeDir, "builds"))).toEqual(
-          buildsBefore,
-        );
-        expect(await listStagingFiles(lakeDir, "matches")).toHaveLength(1);
-        expect(s3Mock.calls()).toHaveLength(0);
+        await expectIncompatibleBuildUntouched(lakeDir, buildDir);
       } finally {
         await rm(lakeDir, { recursive: true, force: true });
       }
@@ -1025,10 +1012,7 @@ describe("compactor rank replacement and invalid input", () => {
       const first = await runReportLakeRebuild({ prisma, lakeDir });
       expect(first?.tier).toBe("rebuild");
 
-      const staged = await writeMatchStagingFile(lakeDir, match);
-      expect(staged).toBe(true);
-      const stagedFiles = await listStagingFiles(lakeDir, "matches");
-      expect(stagedFiles.length).toBe(1);
+      const stagedFiles = await stageSingleMatch(lakeDir, match);
       const stagedFile = stagedFiles[0];
       if (stagedFile === undefined) {
         throw new Error("staging file missing");

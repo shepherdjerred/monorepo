@@ -848,10 +848,6 @@
       "clones": 2,
       "tokens": 202
     },
-    "packages/scout-for-lol/packages/backend/src/report-lake/report-lake.integration.test.ts|packages/scout-for-lol/packages/backend/src/report-lake/report-lake.integration.test.ts": {
-      "clones": 2,
-      "tokens": 166
-    },
     "packages/scout-for-lol/packages/backend/src/reports/ai/http-route.e2e.test.ts|packages/scout-for-lol/packages/backend/src/trpc/image-routes.e2e.test.ts": {
       "clones": 1,
       "tokens": 108
