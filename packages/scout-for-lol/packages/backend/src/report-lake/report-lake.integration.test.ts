@@ -125,6 +125,25 @@ async function expectCurrentSchemaFingerprint(lakeDir: string): Promise<void> {
   expect(manifest.schemaFingerprint).toBe(lakeSchemaFingerprint());
 }
 
+async function expectMatchDataSourceColumn(
+  buildDir: string,
+  expected: boolean,
+) {
+  const rows = await withDuckDBConnection(
+    async (session) =>
+      await session.run("DESCRIBE SELECT * FROM read_parquet(?)", [
+        path.join(buildDir, "matches/**/*.parquet"),
+      ]),
+  );
+  expect(
+    rows.some(
+      (row) =>
+        z.object({ column_name: z.string() }).parse(row).column_name ===
+        "data_source",
+    ),
+  ).toBe(expected);
+}
+
 async function loadMatchFixture(): Promise<RawMatch> {
   const fixtureUrl = new URL(
     "../league/model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json",
@@ -407,19 +426,7 @@ describe("Prod pre-data-source schema handoff", () => {
           await Bun.file(path.join(current, "manifest.json")).json(),
         ).schemaFingerprint,
       ).toBe(layoutFingerprint("legacy-identity-map-pre-data-source"));
-      const rows = await withDuckDBConnection(
-        async (session) =>
-          await session.run("DESCRIBE SELECT * FROM read_parquet(?)", [
-            path.join(current, "matches/**/*.parquet"),
-          ]),
-      );
-      expect(
-        rows.some(
-          (row) =>
-            z.object({ column_name: z.string() }).parse(row).column_name ===
-            "data_source",
-        ),
-      ).toBe(false);
+      await expectMatchDataSourceColumn(current, false);
     } finally {
       vi.restoreAllMocks();
       await rm(lakeDir, { recursive: true, force: true });
@@ -442,19 +449,7 @@ describe("Prod pre-data-source schema handoff", () => {
       await expectCurrentSchemaFingerprint(lakeDir);
       const current = await readCurrentBuildDir(lakeDir);
       if (current === undefined) throw new Error("missing upgraded build");
-      const rows = await withDuckDBConnection(
-        async (session) =>
-          await session.run("DESCRIBE SELECT * FROM read_parquet(?)", [
-            path.join(current, "matches/**/*.parquet"),
-          ]),
-      );
-      expect(
-        rows.some(
-          (row) =>
-            z.object({ column_name: z.string() }).parse(row).column_name ===
-            "data_source",
-        ),
-      ).toBe(true);
+      await expectMatchDataSourceColumn(current, true);
     } finally {
       vi.restoreAllMocks();
       await rm(lakeDir, { recursive: true, force: true });

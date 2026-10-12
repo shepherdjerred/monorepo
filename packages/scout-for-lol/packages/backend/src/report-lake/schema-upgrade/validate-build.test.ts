@@ -50,15 +50,16 @@ async function writeTable(
   });
 }
 
-test("validates the physical schema and projection keys of every lake relation", async () => {
-  const lakeDir = await mkdtemp(
-    path.join(tmpdir(), "prepared-lake-all-tables-"),
-  );
+async function expectLayoutHandoffToValidate(
+  previousLayout: ReportLakeLayout,
+  tempPrefix: string,
+) {
+  const lakeDir = await mkdtemp(path.join(tmpdir(), tempPrefix));
   try {
     const previousDir = path.join(lakeDir, "builds", "old");
     const buildDir = path.join(lakeDir, "builds", "candidate");
     for (const table of STAGING_TABLES) {
-      await writeTable(previousDir, table, "legacy-identity-map");
+      await writeTable(previousDir, table, previousLayout);
       await writeTable(buildDir, table, "current");
     }
     await validatePreparedBuild({
@@ -73,35 +74,20 @@ test("validates the physical schema and projection keys of every lake relation",
   } finally {
     await rm(lakeDir, { recursive: true, force: true });
   }
+}
+
+test("validates the physical schema and projection keys of every lake relation", async () => {
+  await expectLayoutHandoffToValidate(
+    "legacy-identity-map",
+    "prepared-lake-all-tables-",
+  );
 });
 
 test("validates the Prod pre-data-source layout before publishing current schema", async () => {
-  const lakeDir = await mkdtemp(
-    path.join(tmpdir(), "prepared-lake-prod-legacy-schema-"),
+  await expectLayoutHandoffToValidate(
+    "legacy-identity-map-pre-data-source",
+    "prepared-lake-prod-legacy-schema-",
   );
-  try {
-    const previousDir = path.join(lakeDir, "builds", "old");
-    const buildDir = path.join(lakeDir, "builds", "candidate");
-    for (const table of STAGING_TABLES) {
-      await writeTable(
-        previousDir,
-        table,
-        "legacy-identity-map-pre-data-source",
-      );
-      await writeTable(buildDir, table, "current");
-    }
-    await validatePreparedBuild({
-      lakeDir,
-      previousDir,
-      buildDir,
-      layout: "current",
-      staging: await snapshotStagingGenerations(lakeDir),
-      abortSignal: new AbortController().signal,
-      timeoutMs: 10_000,
-    });
-  } finally {
-    await rm(lakeDir, { recursive: true, force: true });
-  }
 });
 
 test("rejects a candidate retaining the retired column despite a current-layout claim", async () => {
