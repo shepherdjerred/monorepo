@@ -750,7 +750,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1008905@sha256:c511684047cd3550e7dbba817e284d51bf0e5320b90d944fb6aeff069e9e529a",
+      "value": "2.0.0-1008996@sha256:448d98c3ff7d7682a49c7af783c0830f2e633b92e0bdde36414dd31b9acd3805",
       "notes": [
         "CI-published Storm forum image; publication alone does not activate public production."
       ]
@@ -1733,7 +1733,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1008905@sha256:72df2cfa8aba10fe5122cdd64d08539455d8826e91449b7b34dbc9648a9d9eaa",
+      "value": "2.0.0-1008945@sha256:cfd55c523ee4996d647a4f63a41a87ba5e63fb0f69b61ce9e0859df79c88086f",
       "notes": [
         "Custom temporal-worker image - updated by CI pipeline",
         "not managed by renovate"
