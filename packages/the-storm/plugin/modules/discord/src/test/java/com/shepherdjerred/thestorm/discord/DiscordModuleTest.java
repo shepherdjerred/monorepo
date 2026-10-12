@@ -34,7 +34,10 @@ final class DiscordModuleTest {
               "Ticket #{id} [{server}] resolved by **{staff}**",
               "Ticket #{id} [{server}/{priority}] needs a human: {summary}",
               "Ticket #{id} [{server}] reopened",
-              "Ticket #{id} [{server}] triaged [{priority}]: {evidence}"));
+              "Ticket #{id} [{server}] triaged [{priority}]: {evidence}",
+              "**{player}** opened a Search and Destroy lobby",
+              "{map}: **{team}** won in {duration}. GG {winners}",
+              "{map}: draw after {duration}: {players}"));
 
   @Test
   void refusesToStartWithoutSecrets() {

@@ -22,6 +22,11 @@ import java.util.List;
  * @param ticketEscalated a ticket needing human review
  * @param ticketReopened a reopened ticket
  * @param ticketTriaged a ticket triage result
+ * @param rwfLobbyOpened a Search and Destroy lobby opened: {@code {player}}
+ * @param rwfWon a Search and Destroy match was won: {@code {map}}, {@code {team}}, {@code
+ *     {winners}}, {@code {duration}}
+ * @param rwfDraw a Search and Destroy match ended in a draw: {@code {map}}, {@code {players}},
+ *     {@code {duration}}
  */
 public record DiscordMessages(
     String chat,
@@ -38,7 +43,10 @@ public record DiscordMessages(
     String ticketResolved,
     String ticketEscalated,
     String ticketReopened,
-    String ticketTriaged) {
+    String ticketTriaged,
+    String rwfLobbyOpened,
+    String rwfWon,
+    String rwfDraw) {
 
   public DiscordMessages {
     chatTemplate(chat);
@@ -56,6 +64,9 @@ public record DiscordMessages(
     ticketEscalatedTemplate(ticketEscalated);
     ticketIdTemplate(ticketReopened);
     ticketTriagedTemplate(ticketTriaged);
+    playerTemplate(rwfLobbyOpened);
+    rwfWonTemplate(rwfWon);
+    rwfDrawTemplate(rwfDraw);
   }
 
   MessageTemplate chatTemplate() {
@@ -110,6 +121,18 @@ public record DiscordMessages(
     return ticketTriagedTemplate(ticketTriaged);
   }
 
+  MessageTemplate rwfLobbyOpenedTemplate() {
+    return playerTemplate(rwfLobbyOpened);
+  }
+
+  MessageTemplate rwfWonTemplate() {
+    return rwfWonTemplate(rwfWon);
+  }
+
+  MessageTemplate rwfDrawTemplate() {
+    return rwfDrawTemplate(rwfDraw);
+  }
+
   private static MessageTemplate chatTemplate(String source) {
     return new MessageTemplate(source, List.of("player", "message"));
   }
@@ -149,6 +172,14 @@ public record DiscordMessages(
 
   private static MessageTemplate ticketTriagedTemplate(String source) {
     return new MessageTemplate(source, List.of("id", "server", "priority", "evidence"));
+  }
+
+  private static MessageTemplate rwfWonTemplate(String source) {
+    return new MessageTemplate(source, List.of("map", "team", "winners", "duration"));
+  }
+
+  private static MessageTemplate rwfDrawTemplate(String source) {
+    return new MessageTemplate(source, List.of("map", "players", "duration"));
   }
 
   private static MessageTemplate fixed(String source) {

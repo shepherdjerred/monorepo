@@ -9,8 +9,10 @@ import com.shepherdjerred.thestorm.discord.domain.Advancements;
 import com.shepherdjerred.thestorm.discord.domain.DiscordText;
 import com.shepherdjerred.thestorm.discord.domain.InboundFilter;
 import com.shepherdjerred.thestorm.discord.domain.InboundMessage;
+import com.shepherdjerred.thestorm.discord.domain.MatchLength;
 import com.shepherdjerred.thestorm.discord.domain.MessageTemplate;
 import com.shepherdjerred.thestorm.discord.domain.PlayerList;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -194,6 +196,62 @@ public final class DiscordRelay {
                     "server", ticket.server(),
                     "priority", ticket.priority(),
                     "evidence", DiscordText.forDiscord(ticket.evidence()))));
+  }
+
+  /** Posts that {@code player} opened an empty Search and Destroy lobby. */
+  public void onRwfLobbyOpened(String player) {
+    post(
+        config
+            .messages()
+            .rwfLobbyOpenedTemplate()
+            .render(Map.of("player", DiscordText.forDiscord(player))));
+  }
+
+  /** Posts a Search and Destroy result. */
+  public void onRwfMatchEnded(RwfMatchResult result) {
+    var map = DiscordText.forDiscord(result.map());
+    var length = MatchLength.format(result.length());
+    var text =
+        result
+            .winningTeam()
+            .map(
+                team ->
+                    config
+                        .messages()
+                        .rwfWonTemplate()
+                        .render(
+                            Map.of(
+                                "map",
+                                map,
+                                "team",
+                                DiscordText.forDiscord(team),
+                                "winners",
+                                names(result.winners()),
+                                "duration",
+                                length)))
+            .orElseGet(
+                () ->
+                    config
+                        .messages()
+                        .rwfDrawTemplate()
+                        .render(
+                            Map.of(
+                                "map",
+                                map,
+                                "players",
+                                names(result.players()),
+                                "duration",
+                                length)));
+    post(text);
+  }
+
+  private static String names(List<String> players) {
+    return String.join(
+        ", ",
+        players.stream()
+            .sorted(String.CASE_INSENSITIVE_ORDER)
+            .map(DiscordText::forDiscord)
+            .toList());
   }
 
   private void postTicketStaff(MessageTemplate template, TicketDetails ticket) {

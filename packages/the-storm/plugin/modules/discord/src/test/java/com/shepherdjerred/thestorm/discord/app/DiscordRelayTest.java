@@ -13,6 +13,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.function.Consumer;
@@ -42,7 +43,10 @@ final class DiscordRelayTest {
               "Ticket #{id} [{server}] resolved by **{staff}**",
               "Ticket #{id} [{server}/{priority}] needs a human: {summary}",
               "Ticket #{id} [{server}] reopened",
-              "Ticket #{id} [{server}] triaged [{priority}]: {evidence}"));
+              "Ticket #{id} [{server}] triaged [{priority}]: {evidence}",
+              "**{player}** opened a Search and Destroy lobby",
+              "{map}: **{team}** won in {duration}. GG {winners}",
+              "{map}: draw after {duration}: {players}"));
 
   private static final String ZWSP = String.valueOf((char) 0x200B);
 
@@ -214,5 +218,30 @@ final class DiscordRelayTest {
     relay.listPlayers(replies::add);
     runMainThread();
     assertThat(replies).last().isEqualTo("Nobody is online.");
+  }
+
+  @Test
+  void postsSearchAndDestroyLobbiesAndResults() {
+    relay.onRwfLobbyOpened("Alice_");
+    relay.onRwfMatchEnded(
+        new RwfMatchResult(
+            "Desert *Ruins*",
+            Optional.of("Red Team"),
+            List.of("bob", "Alice"),
+            List.of("bob", "Alice", "Carol"),
+            Duration.ofSeconds(725)));
+    relay.onRwfMatchEnded(
+        new RwfMatchResult(
+            "Docks",
+            Optional.empty(),
+            List.of(),
+            List.of("Carol", "alice"),
+            Duration.ofSeconds(42)));
+
+    assertThat(posts)
+        .containsExactly(
+            "**Alice\\_** opened a Search and Destroy lobby",
+            "Desert \\*Ruins\\*: **Red Team** won in 12m 5s. GG Alice, bob",
+            "Docks: draw after 42s: alice, Carol");
   }
 }

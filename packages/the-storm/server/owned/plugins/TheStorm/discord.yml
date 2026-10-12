@@ -37,3 +37,6 @@ messages:
   ticketEscalated: "Ticket #{id} [{server}/{priority}] needs a human: {summary}"
   ticketReopened: "Ticket #{id} [{server}] reopened"
   ticketTriaged: "Ticket #{id} [{server}] triaged [{priority}]: {evidence}"
+  rwfLobbyOpened: "**{player}** opened a Search and Destroy lobby. Join with `/rwf join` on ts-mc.net"
+  rwfWon: "Search and Destroy on **{map}**: **{team}** won in {duration}. GG {winners}"
+  rwfDraw: "Search and Destroy on **{map}** ended in a draw after {duration}: {players}"
