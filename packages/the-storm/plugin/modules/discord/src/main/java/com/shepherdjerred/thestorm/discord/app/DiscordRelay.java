@@ -36,6 +36,7 @@ public final class DiscordRelay {
   private final DiscordConfig config;
   private final DiscordGateway gateway;
   private final Game game;
+  private final Recipients recipients;
   private final Map<String, Instant> lastPing = new ConcurrentHashMap<>();
   private final Set<String> postedTownMilestones = ConcurrentHashMap.newKeySet();
   private final List<Supplier<List<SeasonalEvent>>> seasonalEvents = new CopyOnWriteArrayList<>();
@@ -47,10 +48,12 @@ public final class DiscordRelay {
   private @Nullable Instant lastPresenceAt;
   private volatile boolean stopping;
 
-  public DiscordRelay(DiscordConfig config, DiscordGateway gateway, Game game) {
+  public DiscordRelay(
+      DiscordConfig config, DiscordGateway gateway, Game game, Recipients recipients) {
     this.config = config;
     this.gateway = gateway;
     this.game = game;
+    this.recipients = recipients;
   }
 
   /** Posts a Global line to Discord, unless it came from outside the game (such as Discord). */
@@ -292,13 +295,15 @@ public final class DiscordRelay {
                     .thenComparing(ArenaRunResult.Player::name, String.CASE_INSENSITIVE_ORDER))
             .map(player -> DiscordText.forDiscord(player.name()) + " (" + player.wave() + ")")
             .toList();
-    post(
+    var text =
         template.render(
             Map.of(
                 "arena", DiscordText.forDiscord(run.arena()),
                 "tier", DiscordText.forDiscord(run.tier()),
                 "wave", Integer.toString(run.furthest()),
-                "players", String.join(", ", players))));
+                "players", String.join(", ", players)));
+    post(text);
+    directMessage(run.players().stream().map(ArenaRunResult.Player::id).toList(), text);
   }
 
   /** Posts a newly founded town. Main thread. */
@@ -417,6 +422,15 @@ public final class DiscordRelay {
                                 "duration",
                                 length)));
     post(text);
+    directMessage(result.humans(), text);
+  }
+
+  /** Sends {@code text} to each of {@code players} who asked for their results by DM. */
+  private void directMessage(List<UUID> players, String text) {
+    var truncated = DiscordText.truncate(text, DiscordText.DISCORD_LIMIT);
+    for (var player : players) {
+      recipients.dmTarget(player).ifPresent(user -> gateway.dm(user, truncated));
+    }
   }
 
   private static String names(List<String> players) {
@@ -438,7 +452,8 @@ public final class DiscordRelay {
   }
 
   /** Built-in commands; a module may not add one with these names. */
-  private static final Set<String> BUILT_IN = Set.of("list", "status", "baltop", "towns");
+  private static final Set<String> BUILT_IN =
+      Set.of("list", "status", "baltop", "towns", "link", "unlink");
 
   /** The shortest gap between two presence updates, well inside Discord's rate limit. */
   static final Duration PRESENCE_INTERVAL = Duration.ofSeconds(20);

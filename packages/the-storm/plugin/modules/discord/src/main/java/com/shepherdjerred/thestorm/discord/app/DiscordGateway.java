@@ -20,4 +20,10 @@ public interface DiscordGateway {
 
   /** Sets the bot's custom status. Ignored while the bot is not connected. */
   void presence(String text);
+
+  /**
+   * Sends {@code text} to {@code discordUser} by direct message, with mentions disabled. Dropped
+   * with a log line when they do not accept DMs from the bot or it is not connected.
+   */
+  void dm(long discordUser, String text);
 }

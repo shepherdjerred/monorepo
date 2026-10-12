@@ -1,4 +1,4 @@
-plugins { id("storm.module-conventions") }
+plugins { id("storm.jooq-conventions") }
 
 val libs = the<VersionCatalogsExtension>().named("libs")
 

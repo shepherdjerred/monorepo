@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.discord.app;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * A finished arena run, rendered by the Discord relay without depending on the arena module.
@@ -27,10 +28,11 @@ public record ArenaRunResult(String arena, String tier, List<Player> players, bo
   /**
    * One fighter.
    *
+   * @param id the player, for direct messages
    * @param name their name
    * @param wave the furthest wave they reached
    */
-  public record Player(String name, int wave) {
+  public record Player(UUID id, String name, int wave) {
 
     public Player {
       if (wave < 1) {

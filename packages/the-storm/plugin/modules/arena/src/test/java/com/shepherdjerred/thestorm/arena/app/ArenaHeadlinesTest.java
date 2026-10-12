@@ -15,7 +15,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
@@ -77,7 +76,11 @@ final class ArenaHeadlinesTest {
         .containsExactly(
             new Headline.LobbyOpened("Test Arena", "Alice"),
             new Headline.BossWave("Test Arena", 2, "The King"),
-            new Headline.RunEnded("test", "Test Arena", "Ominous I", Map.of("Alice", 2)));
+            new Headline.RunEnded(
+                "test",
+                "Test Arena",
+                "Ominous I",
+                List.of(new Headline.Fighter(ALICE, "Alice", 2))));
   }
 
   @Test
@@ -91,7 +94,12 @@ final class ArenaHeadlinesTest {
 
     assertThat(seen)
         .last()
-        .isEqualTo(new Headline.RunEnded("test", "Test Arena", "Ominous I", Map.of("Alice", 2)));
+        .isEqualTo(
+            new Headline.RunEnded(
+                "test",
+                "Test Arena",
+                "Ominous I",
+                List.of(new Headline.Fighter(ALICE, "Alice", 2))));
   }
 
   @Test

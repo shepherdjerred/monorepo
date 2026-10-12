@@ -98,7 +98,8 @@ final class MatchHeadlinesTest {
                 Optional.of(TeamColor.RED),
                 List.of("Alice"),
                 List.of("Alice", "Bob"),
-                Duration.ofSeconds(725)));
+                Duration.ofSeconds(725),
+                List.of(ALICE.uuid(), BOB.uuid())));
     assertThat(
             step(
                 PhaseKind.ENDED,
@@ -119,7 +120,12 @@ final class MatchHeadlinesTest {
     assertThat(step(PhaseKind.ENDED, T0.plusSeconds(42), Optional.of(new Outcome.Draw()), alice))
         .contains(
             new Headline.Finished(
-                "docks", Optional.empty(), List.of(), List.of("Alice"), Duration.ofSeconds(42)));
+                "docks",
+                Optional.empty(),
+                List.of(),
+                List.of("Alice"),
+                Duration.ofSeconds(42),
+                List.of(ALICE.uuid())));
   }
 
   @Test

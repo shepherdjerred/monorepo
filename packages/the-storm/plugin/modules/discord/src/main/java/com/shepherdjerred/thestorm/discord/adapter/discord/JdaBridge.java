@@ -4,6 +4,7 @@ import com.shepherdjerred.thestorm.discord.app.DiscordCommand;
 import com.shepherdjerred.thestorm.discord.app.DiscordGateway;
 import com.shepherdjerred.thestorm.discord.app.DiscordReadCommands;
 import com.shepherdjerred.thestorm.discord.app.DiscordRelay;
+import com.shepherdjerred.thestorm.discord.app.Links;
 import com.shepherdjerred.thestorm.discord.domain.DiscordCredentials;
 import java.time.Duration;
 import java.util.EnumSet;
@@ -50,7 +51,10 @@ public final class JdaBridge implements DiscordGateway {
 
   /** Logs in on a virtual thread so the server never waits on Discord. */
   public void start(
-      DiscordCredentials credentials, DiscordRelay relay, DiscordReadCommands commands) {
+      DiscordCredentials credentials,
+      DiscordRelay relay,
+      DiscordReadCommands commands,
+      Links links) {
     Thread.ofVirtual()
         .name("storm-discord-login")
         .start(
@@ -63,7 +67,11 @@ public final class JdaBridge implements DiscordGateway {
                             GatewayIntent.MESSAGE_CONTENT)
                         .setActivity(Activity.customStatus(relay.status()))
                         .addEventListeners(
-                            new JdaListener(this, relay, commands, credentials.channelId()))
+                            new JdaListener(
+                                this,
+                                relay,
+                                new JdaListener.Handlers(commands, links),
+                                credentials.channelId()))
                         .build();
                 jda.set(client);
                 if (stopped) {
@@ -104,6 +112,8 @@ public final class JdaBridge implements DiscordGateway {
     commands.add(Commands.slash("list", "Who is online on The Storm"));
     commands.add(Commands.slash("status", "Who is online and which games are running"));
     commands.add(Commands.slash("baltop", "Show the richest players in The Storm"));
+    commands.add(Commands.slash("link", "Link your Discord account to your Minecraft player"));
+    commands.add(Commands.slash("unlink", "Unlink your Discord account from The Storm"));
     commands.add(
         Commands.slash("towns", "Show towns, spawn and historic sites in The Storm")
             .addOptions(
@@ -163,6 +173,19 @@ public final class JdaBridge implements DiscordGateway {
         .setAllowedMentions(EnumSet.noneOf(Message.MentionType.class))
         .mentionRoles(roles)
         .setSuppressedNotifications(false);
+  }
+
+  @Override
+  public void dm(long discordUser, String text) {
+    var client = jda.get();
+    if (client == null || channel == null) {
+      logger.debug("Discord is not connected; dropped a direct message");
+      return;
+    }
+    client
+        .openPrivateChannelById(discordUser)
+        .flatMap(dms -> quietMessage(dms.sendMessage(text)))
+        .queue(sent -> {}, error -> logger.debug("A Discord direct message was refused", error));
   }
 
   @Override

@@ -11,6 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Picks the arena transitions worth announcing outside the game: a lobby someone opens, a boss wave
@@ -20,7 +21,7 @@ import java.util.Optional;
 public final class ArenaHeadlines {
 
   /** Per arena, the furthest wave each fighter of the current run has been recorded at. */
-  private final Map<String, Map<String, Integer>> reached = new HashMap<>();
+  private final Map<String, Map<UUID, Headline.Fighter>> reached = new HashMap<>();
 
   /** What {@code notification} is worth announcing, in order. */
   public List<Headline> accept(ArenaNotification notification) {
@@ -35,21 +36,10 @@ public final class ArenaHeadlines {
               member -> headlines.add(new Headline.LobbyOpened(setup.arenaName(), member.name())));
     }
     for (var effect : notification.effects()) {
-      switch (effect) {
-        case GameEffect.RecordBestWave record -> run.merge(record.name(), record.wave(), Math::max);
-        case GameEffect.SpawnBoss spawn
-            when after.phase() instanceof Phase.Fighting fighting
-                && fighting.wave() >= setup.rewards().firstWave() ->
-            headlines.add(
-                new Headline.BossWave(
-                    setup.arenaName(), fighting.wave(), spawn.boss().boss().name()));
-        default -> {
-          // Other effects are only seen in game.
-        }
-      }
+      effect(effect, after, run).ifPresent(headlines::add);
     }
     if (before.phase().running() && !after.phase().running()) {
-      var fighters = Map.copyOf(run);
+      var fighters = List.copyOf(run.values());
       run.clear();
       if (!(notification.event() instanceof GameEvent.Stop) && !fighters.isEmpty()) {
         headlines.add(
@@ -69,6 +59,29 @@ public final class ArenaHeadlines {
           Optional.of(name + ": wave " + Math.max(1, between.nextWave() - 1));
       case Phase.Lobby _, Phase.Countdown _ -> lobby(game).map(_ -> name + ": lobby open");
     };
+  }
+
+  /** Records a fighter's wave, or names a rewarding boss wave. */
+  private static Optional<Headline> effect(
+      GameEffect effect, ArenaGame after, Map<UUID, Headline.Fighter> run) {
+    switch (effect) {
+      case GameEffect.RecordBestWave record ->
+          run.merge(
+              record.player(),
+              new Headline.Fighter(record.player(), record.name(), record.wave()),
+              (old, recorded) -> recorded.wave() > old.wave() ? recorded : old);
+      case GameEffect.SpawnBoss spawn
+          when after.phase() instanceof Phase.Fighting fighting
+              && fighting.wave() >= after.setup().rewards().firstWave() -> {
+        return Optional.of(
+            new Headline.BossWave(
+                after.setup().arenaName(), fighting.wave(), spawn.boss().boss().name()));
+      }
+      default -> {
+        // Other effects are only seen in game.
+      }
+    }
+    return Optional.empty();
   }
 
   private static Optional<Member.InLobby> lobby(ArenaGame game) {
@@ -104,18 +117,27 @@ public final class ArenaHeadlines {
      * @param arenaId the arena
      * @param arena the arena's name
      * @param tier the arena's tier
-     * @param reached each fighter's name, to the furthest wave they reached
+     * @param fighters everyone who fought, in the order they were recorded
      */
-    record RunEnded(String arenaId, String arena, String tier, Map<String, Integer> reached)
+    record RunEnded(String arenaId, String arena, String tier, List<Fighter> fighters)
         implements Headline {
 
       public RunEnded {
-        reached = Map.copyOf(reached);
+        fighters = List.copyOf(fighters);
       }
 
       public int furthest() {
-        return reached.values().stream().mapToInt(Integer::intValue).max().orElseThrow();
+        return fighters.stream().mapToInt(Fighter::wave).max().orElseThrow();
       }
     }
+
+    /**
+     * How far one fighter got.
+     *
+     * @param id the player
+     * @param name their name
+     * @param wave the furthest wave they reached
+     */
+    record Fighter(UUID id, String name, int wave) {}
   }
 }
