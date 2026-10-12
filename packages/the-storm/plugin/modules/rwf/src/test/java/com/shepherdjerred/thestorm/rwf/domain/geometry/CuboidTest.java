@@ -26,10 +26,21 @@ final class CuboidTest {
   }
 
   @Test
-  void clampBringsAPointJustInside() {
-    assertThat(border.clamp(new Vec3(0, 2, 0))).isEqualTo(new Vec3(0, 2, 0));
-    assertThat(border.clamp(new Vec3(15, 2, -20))).isEqualTo(new Vec3(10.5, 2, -9.5));
-    assertThat(border.clamp(new Vec3(0, 9, 0))).isEqualTo(new Vec3(0, 5.5, 0));
+  void theBorderLimitsColumnsNotHeight() {
+    assertThat(border.containsColumn(new Vec3(0, 2, 0))).isTrue();
+    assertThat(border.containsColumn(new Vec3(10.9, 400, -10))).isTrue();
+    assertThat(border.containsColumn(new Vec3(0, -300, 0))).isTrue();
+    assertThat(border.containsColumn(new Vec3(11, 2, 0))).isFalse();
+    assertThat(border.containsColumn(new Vec3(0, 2, -10.1))).isFalse();
+  }
+
+  @Test
+  void theVoidStartsAMarginBelowTheBottomOfTheRegion() {
+    assertThat(border.below(new Vec3(0, -8, 0), 8)).isFalse();
+    assertThat(border.below(new Vec3(0, -8.01, 0), 8)).isTrue();
+    assertThat(border.below(new Vec3(40, 90, 0), 8)).isFalse();
+    assertThatThrownBy(() -> border.below(Vec3.ZERO, -1))
+        .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test

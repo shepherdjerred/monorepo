@@ -38,23 +38,22 @@ public record Cuboid(BlockPos min, BlockPos max) {
   }
 
   /**
-   * The nearest point inside the border to {@code point}, which players outside it are moved to.
-   * Points already inside come back unchanged.
+   * Whether {@code point} stands within the border's columns: X and Z only, at any height. Red
+   * Warfare's square border never limited height; falling below the map is the void's job.
    */
-  public Vec3 clamp(Vec3 point) {
-    return new Vec3(
-        clamp(point.x(), min.x(), max.x() + 1),
-        clamp(point.y(), min.y(), max.y() + 1),
-        clamp(point.z(), min.z(), max.z() + 1));
+  public boolean containsColumn(Vec3 point) {
+    var block = point.toBlock();
+    return block.x() >= min.x()
+        && block.x() <= max.x()
+        && block.z() >= min.z()
+        && block.z() <= max.z();
   }
 
-  private static double clamp(double value, double low, double highExclusive) {
-    if (value < low) {
-      return low + 0.5;
+  /** Whether {@code point} is more than {@code margin} blocks below the bottom of the region. */
+  public boolean below(Vec3 point, int margin) {
+    if (margin < 0) {
+      throw new IllegalArgumentException("margin must not be negative: " + margin);
     }
-    if (value >= highExclusive) {
-      return highExclusive - 0.5;
-    }
-    return value;
+    return point.y() < min.y() - margin;
   }
 }

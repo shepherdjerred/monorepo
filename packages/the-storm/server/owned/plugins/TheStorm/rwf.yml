@@ -82,3 +82,11 @@ loadtest:
   # Whether /rwf admin loadtest <n> may fill the lobby with bots. Off in
   # production.
   enabled: false
+
+# Maps kept out of the rotation until someone fixes them, with the reason.
+# They still ship under rwf/maps and are verified like every other map, but
+# no match is played on them. Every id must name a map, and at least one map
+# must stay in the rotation.
+quarantine:
+  saigon: "BOMB_UNREACHABLE: the map conversion found a bomb no team can reach"
+  wonderland: "BOMB_UNREACHABLE: the map conversion found a bomb no team can reach"

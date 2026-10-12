@@ -6,12 +6,16 @@ import com.shepherdjerred.thestorm.rwf.domain.match.MatchSettings;
 import com.shepherdjerred.thestorm.rwf.domain.poison.PoisonClock;
 import com.shepherdjerred.thestorm.rwf.domain.reward.Payout;
 import java.time.Duration;
+import java.util.Collections;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.regex.Pattern;
 
 /**
  * {@code rwf.yml}: the world matches run in, where players stand outside a match, how matches fill
  * and start, the ported rule constants (pinned, so the file documents them and the module refuses a
- * file that disagrees with the code), rewards, recording and the load test switch.
+ * file that disagrees with the code), rewards, recording, the load test switch and the maps kept
+ * out of the rotation.
  *
  * @param world the loaded world matches run in; the module seals it
  * @param spectator where players stand when no match places them elsewhere
@@ -20,6 +24,8 @@ import java.util.regex.Pattern;
  * @param rewards credit payouts
  * @param recording match recordings
  * @param loadtest whether {@code /rwf admin loadtest} is available
+ * @param quarantine map id to why it is kept out of the rotation; quarantined maps still ship and
+ *     are verified, but no match is played on them
  */
 public record RwfConfig(
     String world,
@@ -28,14 +34,25 @@ public record RwfConfig(
     Rules rules,
     Rewards rewards,
     Recording recording,
-    LoadTest loadtest) {
+    LoadTest loadtest,
+    Map<String, String> quarantine) {
 
   private static final Pattern WORLD = Pattern.compile("[A-Za-z0-9_.-]+");
+  private static final Pattern MAP_ID = Pattern.compile("[a-z0-9]+(?:-[a-z0-9]+)*");
 
   public RwfConfig {
     if (!WORLD.matcher(world).matches()) {
       throw new IllegalArgumentException("world must be a plain world name: " + world);
     }
+    for (var entry : quarantine.entrySet()) {
+      if (!MAP_ID.matcher(entry.getKey()).matches()) {
+        throw new IllegalArgumentException("quarantine names no map id: " + entry.getKey());
+      }
+      if (entry.getValue().isBlank()) {
+        throw new IllegalArgumentException("quarantine of " + entry.getKey() + " needs a reason");
+      }
+    }
+    quarantine = Collections.unmodifiableMap(new TreeMap<>(quarantine));
   }
 
   /** The domain settings for these rules: a match starts with {@code minHumans} members. */

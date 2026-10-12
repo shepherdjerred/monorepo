@@ -515,10 +515,21 @@ same-day limit, natural despawn, and next-day rotation. Roll back by setting
 `merchant.enabled` to `false`; a trader already spawned can remain until its
 native despawn.
 
-Arena restores keep the database snapshot until a later player login confirms
-that Paper saved the restored inventory and its matching persistent-data marker
-together. Players must reconnect before entering another arena after a restore;
-this avoids a synchronous player-data write on the server tick.
+Arena and rwf restores keep the database snapshot until saved player data
+proves the restore. Core's `SnapshotKeeper` applies the snapshot and its
+persistent-data marker, then saves the player in the same tick. Paper writes
+`<level>/players/data/<uuid>.dat` (or the pre-26 `playerdata/`) to a temporary
+file and swaps it in, so the marker and the belongings land together. The file
+is read back on the compute pool. The row is marked restored only when the
+fully read file holds that snapshot's fingerprint.
+
+A join asked for meanwhile is told the belongings are still being saved and
+goes ahead by itself once they are. Failed read-backs retry after 1, 2, 4 and
+8 seconds; after that the restore is stalled and the player is asked to
+reconnect, as is every restore when the server's player-data folder cannot be
+found. A later login carrying the marker proves a stalled restore. One
+player-file write per restore runs on the server tick, as Paper's own saves
+do; the read-back never does.
 
 ### Colosseum
 
@@ -1070,7 +1081,10 @@ Configuration and content live under `server/owned/plugins/TheStorm`:
   the 30 s no-humans abort), the ported rule constants pinned to the code,
   rewards in Red Warfare credits (3 win / 1 lose scaled by the human share,
   the 2-credit AFK penalty, the minimum match length; no daily cap),
-  recording and the load-test switch.
+  recording, the load-test switch and `quarantine`: the maps kept out of the
+  rotation, each with its reason (Saigon and Wonderland, whose conversion found
+  a bomb no team can reach). Quarantined maps still ship and are verified; no
+  match is played on them.
 - `rwf/kits.yml`: the kits as the operator sees them, each with the `icon`
   material and the one to four `summary` lines the kit menu and the lobby's
   alcoves show; it must describe `KitBook` kit for kit or the module refuses
@@ -1227,7 +1241,20 @@ same Flipt flag), and for `thestorm.rwf.admin`: `/rwf admin status`,
 matches, re-pasting whatever differs), `/rwf admin loadtest <n>` (only when `loadtest.enabled`)
 and `/rwf admin showcase [count]`. Joining snapshots a player's belongings
 through the shared crash-safe snapshot machinery and restores them on leave,
-death, disconnect or the next login.
+death, disconnect or the next login. A player may join again straight after a
+match; see the arena section for how the restore is confirmed.
+
+On a live map the border is Red Warfare's square: it bounds the columns (X and
+Z) only. A fighter outside it takes 2 damage a second through armor and is told
+`You cannot explore the border!`; climbing above the map is allowed. A fighter
+more than 8 blocks below the map's lowest block dies in the void. The kill goes
+to whoever last hit them on the way down (`VOID_PUSHED` or `VOID_SHOT`), or to
+nobody. A bomb's victims have no attacker. Their kill goes to the last member
+who hurt them, while that hit still counts: until the victim is back to full
+health and 10 seconds have passed, as the original's combat log did. The
+Rewind kit's Time Machine samples and trims its trail every tick and records
+only spots the original's safe-teleport check accepts. It lands the player
+facing the way they faced there, and its recharge shows on the experience bar.
 
 Ordinary matches use `match.automaticSizing: true`: automatic sizing chooses
 the large preset for each map. `/rwf size` shows small, medium and large totals,

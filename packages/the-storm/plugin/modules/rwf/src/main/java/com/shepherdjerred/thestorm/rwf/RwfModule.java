@@ -169,9 +169,11 @@ public final class RwfModule implements StormModule {
     context
         .logger()
         .info(
-            "rwf: {} kits, {} maps, world {}, recording {}",
+            "rwf: {} kits, {} maps in rotation ({} quarantined: {}), world {}, recording {}",
             content.kits().size(),
-            content.maps().size(),
+            content.rotation().size(),
+            config.quarantine().size(),
+            config.quarantine().keySet(),
             config.world(),
             pseudonyms.isPresent() ? "on" : "off");
   }

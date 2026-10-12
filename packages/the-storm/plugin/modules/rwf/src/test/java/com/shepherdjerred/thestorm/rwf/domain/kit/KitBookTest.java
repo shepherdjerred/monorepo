@@ -5,9 +5,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.shepherdjerred.thestorm.core.result.Result;
+import com.shepherdjerred.thestorm.rwf.domain.geometry.BlockPos;
 import com.shepherdjerred.thestorm.rwf.domain.geometry.Vec3;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -136,17 +140,29 @@ final class KitBookTest {
   @Nested
   final class Rewinding {
 
+    private static boolean safe(Vec3 position) {
+      return true;
+    }
+
     private static Vec3 at(int second) {
       return new Vec3(second, 64, 0);
     }
 
+    private static RewindTrail.Spot spot(int second) {
+      return new RewindTrail.Spot(at(second), second, -second);
+    }
+
     @Test
-    void theClockStartsOnCooldown() {
+    void theClockStartsOnCooldownAndFillsTheBarAsItRecharges() {
       var clock = Rewinder.start(T0);
 
       assertThat(clock.ready(T0.plusSeconds(29))).isFalse();
       assertThat(clock.ready(T0.plusSeconds(30))).isTrue();
       assertThat(clock.use(T0)).isEqualTo(Result.err(RewindError.COOLING_DOWN));
+      assertThat(clock.charge(T0)).isZero();
+      assertThat(clock.charge(T0.plusSeconds(15))).isEqualTo(0.5);
+      assertThat(clock.charge(T0.plusSeconds(30))).isEqualTo(1);
+      assertThat(clock.charge(T0.plusSeconds(90))).isEqualTo(1);
     }
 
     @Test
@@ -156,10 +172,14 @@ final class KitBookTest {
     }
 
     @Test
-    void theClockLandsWhereThePlayerStoodAboutThirtySecondsAgo() {
+    void theClockLandsWhereThePlayerStoodAboutThirtySecondsAgoFacingTheSameWay() {
       var clock = Rewinder.start(T0);
-      for (var second = 0; second <= 40; second++) {
-        clock = clock.track(at(second), T0.plusSeconds(second));
+      for (var tick = 0; tick <= 40 * 20; tick++) {
+        var now = T0.plusMillis(tick * 50L);
+        clock = clock.trimmed(now, Rewinding::safe);
+        if (tick % 20 == 0) {
+          clock = clock.track(spot(tick / 20), now);
+        }
       }
 
       var rewind =
@@ -171,7 +191,9 @@ final class KitBookTest {
                     throw new AssertionError(error);
                   });
 
-      assertThat(rewind.to()).isEqualTo(at(9));
+      assertThat(rewind.to()).isEqualTo(spot(9));
+      assertThat(rewind.to().yaw()).isEqualTo(9);
+      assertThat(rewind.to().pitch()).isEqualTo(-9);
       assertThat(rewind.next().trail().samples()).isEmpty();
       assertThat(rewind.next().ready(T0.plusSeconds(69))).isFalse();
       assertThat(rewind.next().ready(T0.plusSeconds(70))).isTrue();
@@ -179,28 +201,108 @@ final class KitBookTest {
 
     @Test
     void theTrailKeepsTheOldestSampleUntilTheNextIsAlsoOutOfTheWindow() {
-      var trail = RewindTrail.empty().record(at(0), T0).record(at(20), T0.plusSeconds(20));
+      var trail = RewindTrail.empty().record(spot(0), T0).record(spot(20), T0.plusSeconds(20));
 
-      assertThat(trail.record(at(49), T0.plusSeconds(49)).landing()).contains(at(0));
-      assertThat(trail.record(at(51), T0.plusSeconds(51)).landing()).contains(at(20));
+      assertThat(trail.trimmed(T0.plusSeconds(50), Rewinding::safe).landing()).contains(spot(0));
+      assertThat(trail.trimmed(T0.plusSeconds(51), Rewinding::safe).landing()).contains(spot(20));
+      assertThat(trail.trimmed(T0.plusSeconds(50), Rewinding::safe)).isSameAs(trail);
+    }
+
+    @Test
+    void anOldSafeSpotIsKeptWhileTheNextHasBecomeUnsafe() {
+      var trail =
+          RewindTrail.empty()
+              .record(spot(0), T0)
+              .record(spot(1), T0.plusSeconds(1))
+              .record(spot(2), T0.plusSeconds(2));
+      Predicate<Vec3> notOne = position -> position.x() != 1;
+      Predicate<Vec3> notZero = position -> position.x() != 0;
+
+      // The next spot is no longer safe: the old one stays as the landing.
+      assertThat(trail.trimmed(T0.plusSeconds(60), notOne).landing()).contains(spot(0));
+      // The oldest spot is no longer safe: it goes even though the next is no better.
+      assertThat(trail.trimmed(T0.plusSeconds(60), notZero).landing()).contains(spot(2));
     }
 
     @Test
     void theTrailIsBounded() {
       var trail = new RewindTrail(List.of(), 3);
       for (var second = 0; second < 10; second++) {
-        trail = trail.record(at(second), T0.plusSeconds(second));
+        trail = trail.record(spot(second), T0.plusSeconds(second));
       }
 
       assertThat(trail.samples()).hasSize(3);
-      assertThat(trail.landing()).contains(at(7));
+      assertThat(trail.landing()).contains(spot(7));
     }
 
     @Test
     void dyingForgetsTheTrail() {
-      var clock = Rewinder.start(T0).track(at(0), T0).died();
+      var clock = Rewinder.start(T0).track(spot(0), T0).died();
 
       assertThat(clock.trail().samples()).isEmpty();
+    }
+  }
+
+  @Nested
+  final class Landing {
+
+    private static final BlockPos FEET = new BlockPos(0, 64, 0);
+
+    /** A floor of stone at y 63 and air above, with {@code extra} blocks placed on top. */
+    private static Function<BlockPos, SafeTeleport.Footing> world(
+        Map<BlockPos, SafeTeleport.Footing> extra) {
+      return block ->
+          extra.getOrDefault(
+              block, block.y() <= 63 ? SafeTeleport.Footing.STANDABLE : SafeTeleport.Footing.CLEAR);
+    }
+
+    @Test
+    void openGroundWithHeadroomIsSafe() {
+      assertThat(SafeTeleport.safe(FEET, -64, world(Map.of()))).isTrue();
+    }
+
+    @Test
+    void aPressurePlateOrTripwireWithinOneBlockIsNot() {
+      assertThat(
+              SafeTeleport.safe(
+                  FEET, -64, world(Map.of(new BlockPos(1, 65, -1), SafeTeleport.Footing.TRAP))))
+          .isFalse();
+      assertThat(
+              SafeTeleport.safe(
+                  FEET, -64, world(Map.of(new BlockPos(2, 64, 0), SafeTeleport.Footing.TRAP))))
+          .isTrue();
+    }
+
+    @Test
+    void theFeetAndHeadNeedRoom() {
+      assertThat(
+              SafeTeleport.safe(
+                  FEET, -64, world(Map.of(new BlockPos(0, 65, 0), SafeTeleport.Footing.PARTIAL))))
+          .isFalse();
+      assertThat(SafeTeleport.safe(FEET, -64, world(Map.of(FEET, SafeTeleport.Footing.STANDABLE))))
+          .isFalse();
+    }
+
+    @Test
+    void somethingToStandOnWithinTwoBlocksBelow() {
+      var gap = Map.of(new BlockPos(0, 63, 0), SafeTeleport.Footing.CLEAR);
+      assertThat(SafeTeleport.safe(FEET, -64, world(gap))).isTrue();
+      var hole =
+          Map.of(
+              new BlockPos(0, 63, 0),
+              SafeTeleport.Footing.CLEAR,
+              new BlockPos(0, 62, 0),
+              SafeTeleport.Footing.CLEAR);
+      assertThat(SafeTeleport.safe(FEET, -64, world(hole))).isFalse();
+      var fence = Map.of(new BlockPos(0, 63, 0), SafeTeleport.Footing.PARTIAL);
+      assertThat(SafeTeleport.safe(FEET, -64, world(fence))).isFalse();
+    }
+
+    @Test
+    void nothingBelowTheWorldIsSafe() {
+      assertThat(SafeTeleport.safe(new BlockPos(0, -65, 0), -64, world(Map.of()))).isFalse();
+      assertThat(SafeTeleport.safe(new BlockPos(0, 64, 0), 63, world(Map.of()))).isTrue();
+      assertThat(SafeTeleport.safe(new BlockPos(0, 64, 0), 64, world(Map.of()))).isFalse();
     }
   }
 }

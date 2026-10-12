@@ -14,9 +14,9 @@ import com.shepherdjerred.thestorm.rwf.app.map.MapRotation;
 import com.shepherdjerred.thestorm.rwf.app.store.MatchStore;
 import com.shepherdjerred.thestorm.rwf.domain.combat.AttackType;
 import com.shepherdjerred.thestorm.rwf.domain.combat.CombatRules;
+import com.shepherdjerred.thestorm.rwf.domain.combat.KillCredit;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.CombatantId;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
-import com.shepherdjerred.thestorm.rwf.domain.geometry.Cuboid;
 import com.shepherdjerred.thestorm.rwf.domain.geometry.Spawn;
 import com.shepherdjerred.thestorm.rwf.domain.kit.KitBook;
 import com.shepherdjerred.thestorm.rwf.domain.kit.Rewinder;
@@ -52,7 +52,6 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
-import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlotGroup;
 import org.jspecify.annotations.Nullable;
@@ -65,9 +64,6 @@ import org.jspecify.annotations.Nullable;
  * fills with bots alone: the humans rule is off for it and no human may join it. Main thread only.
  */
 final class MatchRunner implements MatchView, MatchEvents {
-
-  /** How often the Rewind trail is sampled: every fifth tick, four times a second. */
-  static final int TRAIL_EVERY_TICKS = 5;
 
   /** How often holograms and the sidebar are redrawn. */
   static final int DISPLAY_EVERY_TICKS = 5;
@@ -139,6 +135,7 @@ final class MatchRunner implements MatchView, MatchEvents {
   private final ArrayDeque<MatchEvent> waiting = new ArrayDeque<>();
   private final List<Consumer<MatchNotification>> listeners = new ArrayList<>();
   private final Map<CombatantId, Rewinder> rewinders = new HashMap<>();
+  private final Battlefield field;
   private final Map<CombatantId, Tally> tallies = new HashMap<>();
   private final Map<CombatantId, Long> pendingPay = new HashMap<>();
   private final Set<UUID> awaitingSpectate = new HashSet<>();
@@ -165,6 +162,7 @@ final class MatchRunner implements MatchView, MatchEvents {
             parts.config().match().automaticSizing(),
             parts.config().match().targetCombatants(),
             parts.config().match().maxCombatants());
+    this.field = new Battlefield(parts.combat());
     this.rotation = new MapRotation<>(parts.maps(), parts.context().random());
     this.match =
         RwfMatch.open(
@@ -642,6 +640,7 @@ final class MatchRunner implements MatchView, MatchEvents {
   private void nextMap() {
     lobbySizes.resetDraft();
     rewinders.clear();
+    field.clear();
     tallies.clear();
     pendingPay.clear();
     poisoned.clear();
@@ -875,46 +874,25 @@ final class MatchRunner implements MatchView, MatchEvents {
         continue;
       }
       var player = entity.orElseThrow();
-      keepInside(player, border);
       parts.recordings().sample(now, ticks, member, player);
-      if (ticks % TRAIL_EVERY_TICKS == 0) {
-        sampleTrail(member.id(), player, now);
+      if (field.fellIntoVoid(member.id(), player, border)) {
+        continue;
       }
+      if (ticks % Battlefield.BORDER_EVERY_TICKS == 0) {
+        field.hurtOutside(member.id(), player, border, now);
+      }
+      rewindTick(member.id(), player, now);
     }
     if (ticks % DISPLAY_EVERY_TICKS == 0) {
       current().ifPresent(parts.bombs()::update);
     }
   }
 
-  /** A fighter outside the border is moved to the nearest point inside, as Red Warfare did. */
-  private void keepInside(Player player, Cuboid border) {
-    var at = Places.at(player);
-    if (!border.contains(Places.vec(at))) {
-      var inside = border.clamp(Places.vec(at));
-      var target = Places.location(parts.context().world(), inside);
-      target.setYaw(at.getYaw());
-      target.setPitch(at.getPitch());
-      player.teleport(target);
-    }
-  }
-
-  private void sampleTrail(CombatantId id, Player player, Instant now) {
+  /** The Rewind trail and recharge bar of {@code id}, if they carry the Time Machine. */
+  private void rewindTick(CombatantId id, Player player, Instant now) {
     var rewinder = rewinders.get(id);
-    if (rewinder == null) {
-      return;
-    }
-    var feet = Places.at(player);
-    var below = feet.getBlock().getRelative(BlockFace.DOWN);
-    var standing = feet.getBlock().getType();
-    var safe =
-        below.getType().isSolid()
-            && !standing.isSolid()
-            && standing != Material.LAVA
-            && standing != Material.FIRE
-            && standing != Material.SOUL_FIRE
-            && player.getFireTicks() <= 0;
-    if (safe) {
-      rewinders.put(id, rewinder.track(Places.vec(feet), now));
+    if (rewinder != null) {
+      rewinders.put(id, Battlefield.rewind(rewinder, player, now));
     }
   }
 
@@ -1376,7 +1354,17 @@ final class MatchRunner implements MatchView, MatchEvents {
         // The rules already count these victims dead, so died() ignores the death event that
         // setHealth raises: a rules kill (bomb) is tallied here, a world death there, never both.
         tallies.computeIfAbsent(victim, ignored -> new Tally()).deaths++;
-        parts.recordings().event(now(), "killed", victim, kill.cause().name());
+        var killer = entity(victim).flatMap(player -> creditedKiller(victim, player));
+        killer.ifPresent(k -> tallies.computeIfAbsent(k, ignored -> new Tally()).kills++);
+        parts
+            .recordings()
+            .event(
+                now(),
+                "killed",
+                victim,
+                killer.flatMap(parts.recordings()::pseudonym).orElse("-")
+                    + " "
+                    + kill.cause().name());
         withEntity(
             victim,
             player -> {
@@ -1386,6 +1374,22 @@ final class MatchRunner implements MatchView, MatchEvents {
               }
             });
       }
+    }
+
+    /**
+     * Who earns a kill the rules dealt (a bomb has no attacker): the last member to hurt the
+     * victim, while that hit still counts, as Red Warfare's combat log credited it.
+     */
+    private Optional<CombatantId> creditedKiller(CombatantId victim, Player player) {
+      return parts
+          .combat()
+          .credit(player.getUniqueId())
+          .filter(
+              credit ->
+                  KillCredit.counts(credit.at(), now(), player.getHealth(), maxHealth(player)))
+          .flatMap(credit -> memberOf(credit.attacker()))
+          .map(Combatant::id)
+          .filter(killer -> !killer.equals(victim));
     }
 
     private void poison(MatchEffect.PoisonDamage poison) {

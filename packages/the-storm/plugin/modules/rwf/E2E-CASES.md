@@ -166,13 +166,13 @@ is intact.` with no paste logged, and after the edits above it pastes once
     for a win, 0 for a loss, the bots never paid); the crash replay is not.
 17. There is no daily cap, and a player AFK for the whole match is charged
     instead of paid. **Proven**: the nuke's three players play a second match
-    past `minMatchLength` the same day (reconnecting first, as a restore
-    requires) and everyone off the armer's team is killed; every player who
-    turned their head is paid in full again (`WIN` 3 or `LOSE` 1, `PAID` the
-    same), while the first match's loser never turns theirs: their row is
-    `AFK`, owes -2 and is `PAID` -1 (all they held), they are told `2 credits
-were taken for being AFK.` and earn nothing; every player's credits end at
-    the sum of both matches and their crystals at the starting balance.
+    past `minMatchLength` the same day (joining again on the same connection)
+    and everyone off the armer's team is killed; every player who turned their
+    head is paid in full again (`WIN` 3 or `LOSE` 1, `PAID` the same), while
+    the first match's loser never turns theirs: their row is `AFK`, owes -2 and
+    is `PAID` -1 (all they held), they are told `2 credits were taken for being
+AFK.` and earn nothing; every player's credits end at the sum of both
+    matches and their crystals at the starting balance.
 18. `plugins/TheStorm/rwf-recordings/yyyy/MM/dd/<matchId>.rwfrec.gz` decodes
     with `RecordCodec`, names nobody, and holds human frames and input rows
     at 20 Hz and bot frames at 10 Hz; `kill -9` during a match leaves a
@@ -241,3 +241,24 @@ next`, the bots-only match outlives the no-humans abort and ends with a
     while the menu closes, and at the start holds the fuse, a stone sword,
     the bow and an arrow (the armour checked on the server) with no star or
     dye; Bedrock's rendering of the chest is not.
+
+## Restores and the map's edges
+
+26. Straight after a match, the same connection's `/rwf join` is admitted
+    with no reconnect: the restore is confirmed from the saved player file,
+    and a join asked for while it is still being confirmed goes ahead by
+    itself. **Proven** with a lone human: the first match ends, the player is
+    restored, `/rwf join` on the same connection reaches the countdown and
+    `Reconnect to finish recovery` is never shown. A player-data save that
+    never lands (stalled, asked to reconnect, proved by the next login) is
+    covered on MockBukkit only.
+27. The border bounds columns only: a fighter outside the training yard's
+    X/Z takes 2 damage a second and is not moved; one above the yard is not
+    hurt; one dropped below y 56 (the floor at 64 minus the 8-block margin)
+    dies in the void, and the kill goes to whoever hit them last.
+    **Proven** for the void: B lands a hit, A is teleported to y 50, A's team
+    is defeated and the stored rows give B one kill and A one death. The
+    border damage is covered on MockBukkit only.
+28. Saigon and Wonderland (`quarantine` in `rwf.yml`) are never chosen by the
+    rotation. Covered by the content tests; the humans-only suite plays the
+    training yard alone.

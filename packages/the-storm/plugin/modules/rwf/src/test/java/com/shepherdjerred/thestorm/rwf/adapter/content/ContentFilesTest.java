@@ -123,6 +123,37 @@ final class ContentFilesTest {
   }
 
   @Test
+  void quarantinedMapsLeaveTheRotationButEveryMapCannotBeQuarantined() {
+    shippedCopy();
+    var catalog = ContentFiles.catalog(directory, PARSER);
+    // Saigon and Wonderland are not staged here: their entries keep nothing out.
+    assertThat(catalog.rotation()).extracting(MapSource::id).containsExactly("training-yard");
+
+    edit("rwf.yml", "(?m)^  saigon:", "  training-yard:");
+
+    assertThatThrownBy(() -> ContentFiles.catalog(directory, PARSER))
+        .hasMessageContaining("quarantines every map");
+  }
+
+  @Test
+  void aQuarantineNeedsAReason() {
+    shippedCopy();
+    edit("rwf.yml", "(?m)^  saigon: .*$", "  saigon: \" \"");
+
+    assertThatThrownBy(() -> ContentFiles.catalog(directory, PARSER))
+        .hasStackTraceContaining("needs a reason");
+  }
+
+  @Test
+  void aQuarantineNamesAMapById() {
+    shippedCopy();
+    edit("rwf.yml", "(?m)^  saigon:", "  Saigon Map:");
+
+    assertThatThrownBy(() -> ContentFiles.catalog(directory, PARSER))
+        .hasStackTraceContaining("no map id");
+  }
+
+  @Test
   void aKitThatDisagreesWithTheKitBookIsRefused() {
     shippedCopy();
     edit("rwf/kits.yml", "sharpness: 1", "sharpness: 2");

@@ -40,9 +40,8 @@ const settleMs = 20_000;
 const measureMs = 150_000;
 
 /**
- * A fresh human joins (a player whose restored belongings are still being
- * saved may not join again until they reconnect) and the countdown is topped
- * up to `bots`; resolves with the human once the match is live.
+ * A fresh human joins and the countdown is topped up to `bots`; resolves with
+ * the human once the match is live.
  */
 async function arm(
   server: ServerInfo,

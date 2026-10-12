@@ -9,16 +9,20 @@ import com.shepherdjerred.thestorm.rwf.domain.combat.HitWindow;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.CombatantId;
 import com.shepherdjerred.thestorm.rwf.domain.geometry.Vec3;
 import com.shepherdjerred.thestorm.rwf.domain.kit.RewindError;
+import com.shepherdjerred.thestorm.rwf.domain.kit.RewindTrail;
 import com.shepherdjerred.thestorm.rwf.domain.kit.Rewinder;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent;
 import java.util.Optional;
+import org.bukkit.Effect;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.entity.AbstractArrow;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.util.Vector;
 
 /**
  * {@link CombatantActions} over the real server API. Each action checks what a human doing the same
@@ -127,18 +131,37 @@ final class PaperCombatantActions implements CombatantActions {
                             : ActionRefusal.NO_LANDING);
                 case Result.Ok<Rewinder.Rewind, RewindError>(var rewind) -> {
                   runner.rewinder(id, rewind.next());
-                  var target = Places.location(player.getWorld(), rewind.to());
-                  target.setYaw(Places.at(player).getYaw());
-                  target.setPitch(Places.at(player).getPitch());
-                  player.teleport(target);
-                  player.setFireTicks(0);
-                  player.setFallDistance(0);
+                  rewind(player, rewind.to());
                   intent(id, "rewind", "");
                   yield Optional.empty();
                 }
               };
             },
             Optional::of);
+  }
+
+  /**
+   * Carries out a Time Machine use as the original did: a message, the enderman sound and ender
+   * signal where the player leaves and where they land, out of any vehicle, facing the way they
+   * faced there, stopped, with fire and fall distance cleared and nobody credited for a later fall.
+   */
+  private void rewind(Player player, RewindTrail.Spot to) {
+    Texts.info(player, "You step sideways into the river of time..");
+    var world = player.getWorld();
+    var from = Places.at(player);
+    var target = Places.location(world, to.position());
+    target.setYaw(to.yaw());
+    target.setPitch(to.pitch());
+    var _ = player.eject();
+    world.playSound(from, Sound.ENTITY_ENDERMAN_TELEPORT, 1, 1);
+    world.playEffect(from, Effect.ENDER_SIGNAL, 9);
+    player.teleport(target);
+    world.playSound(target, Sound.ENTITY_ENDERMAN_TELEPORT, 1, 1);
+    world.playEffect(target, Effect.ENDER_SIGNAL, 9);
+    player.setFallDistance(0);
+    player.setFireTicks(0);
+    player.setVelocity(new Vector());
+    tracker.clearFallCredit(player.getUniqueId());
   }
 
   @Override

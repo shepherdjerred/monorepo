@@ -254,7 +254,18 @@ final class CombatTest {
       assertThat(AttackType.FIRE_ASPECT.has(AttackType.Flag.BURN)).isTrue();
       assertThat(AttackType.MELEE.knockback()).isTrue();
       assertThat(AttackType.END_OF_GAME.knockback()).isFalse();
-      assertThat(AttackType.ALL).hasSize(35);
+      assertThat(AttackType.ALL).hasSize(36);
+      assertThat(AttackType.BORDER.has(AttackType.Flag.IGNORE_ARMOR)).isTrue();
+      assertThat(AttackType.BORDER.knockback()).isFalse();
+    }
+
+    @Test
+    void aFallIntoTheVoidIsCreditedToTheLastHit() {
+      assertThat(AttackType.intoVoid(java.util.Optional.empty())).isEqualTo(AttackType.VOID);
+      assertThat(AttackType.intoVoid(java.util.Optional.of(AttackType.MELEE)))
+          .isEqualTo(AttackType.VOID_PUSHED);
+      assertThat(AttackType.intoVoid(java.util.Optional.of(AttackType.PROJECTILE)))
+          .isEqualTo(AttackType.VOID_SHOT);
     }
   }
 }
