@@ -23,7 +23,8 @@ and this package's test requires the same of every analytics site.
 
 Prepared services still own their declared inventory. The launcher has no
 `deploy` variant while its chart renders no workload and its image pin is an
-unpublished bootstrap marker. Register its deploy variant during activation.
+unpublished bootstrap marker. Its prepared chart has an inactive marker and no
+ArgoCD Application. Register its Application and deploy variant during activation.
 
 `temporal` is a separate source feeding Maintenance. Schedule health uses
 scheduled occurrence order and described Workflow outcomes: a running successor

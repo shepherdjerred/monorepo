@@ -1,13 +1,50 @@
-import { App, Testing } from "cdk8s";
+import { App, Chart, Testing } from "cdk8s";
 import { describe, expect, it } from "vitest";
 import { createGlitterBoysLauncherChart } from "./glitter-boys-launcher.ts";
 import { resetProbeRegistry } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/probe-registry.ts";
+import { createGlitterBoysLauncherApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/glitter-boys-launcher.ts";
 
 describe("launcher service release", () => {
   it("prepares without creating a workload or requiring credentials", () => {
-    expect(Testing.synth(createGlitterBoysLauncherChart(new App()))).toEqual(
-      [],
-    );
+    const resources = Testing.synth(createGlitterBoysLauncherChart(new App()));
+    expect(resources).toHaveLength(1);
+    expect(resources[0]).toMatchObject({
+      kind: "ConfigMap",
+      data: { active: "false" },
+    });
+    const apps = new Chart(new App(), "apps");
+    createGlitterBoysLauncherApp(apps);
+    expect(Testing.synth(apps)).toEqual([]);
+  });
+
+  it("creates an Argo Application only for an active release", () => {
+    const apps = new Chart(new App(), "apps");
+    createGlitterBoysLauncherApp(apps, { schemaVersion: 1, stage: "active" });
+    expect(Testing.synth(apps)).toMatchObject([
+      {
+        kind: "Application",
+        metadata: { name: "glitter-boys-launcher" },
+        spec: { source: { chart: "glitter-boys-launcher" } },
+      },
+    ]);
+  });
+
+  it("rejects invalid release states for both the chart and Application", () => {
+    for (const releaseState of [
+      { schemaVersion: 2, stage: "prepared" },
+      { schemaVersion: 1, stage: "unknown" },
+      { schemaVersion: 1, stage: "prepared", extra: true },
+    ]) {
+      expect(() =>
+        createGlitterBoysLauncherChart(new App(), releaseState),
+      ).toThrow();
+      expect(() =>
+        createGlitterBoysLauncherApp(
+          new Chart(new App(), "apps"),
+          releaseState,
+        ),
+      ).toThrow();
+    }
   });
   it("rejects unpublished and mutable images before activation", () => {
     for (const image of ["latest", `0.1.0@sha256:${"0".repeat(64)}`]) {

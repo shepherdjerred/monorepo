@@ -28,11 +28,14 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
-import release from "@shepherdjerred/homelab/cdk8s/src/resources/glitter-boys-launcher/release.json";
+import {
+  launcherRelease,
+  LauncherReleaseSchema,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/glitter-boys-launcher/release.ts";
 
 export function createGlitterBoysLauncherChart(
   app: App,
-  releaseState = release,
+  releaseState: unknown = launcherRelease,
   image = versions["shepherdjerred/glitter-boys-launcher"],
 ) {
   const name = "glitter-boys-launcher";
@@ -40,14 +43,13 @@ export function createGlitterBoysLauncherChart(
     namespace: name,
     disableResourceNameHashes: true,
   });
-  if (
-    releaseState.schemaVersion !== 1 ||
-    !["prepared", "active"].includes(releaseState.stage)
-  )
-    throw new Error("Invalid launcher service release stage");
+  const releaseStateParsed = LauncherReleaseSchema.parse(releaseState);
   // Like storm-forum's release inventory, preparation renders no live workload.
   // Activate only after a real image and the Bugsink project grant exist.
-  if (releaseState.stage === "prepared") return chart;
+  if (releaseStateParsed.stage === "prepared") {
+    new ConfigMap(chart, "activation", { data: { active: "false" } });
+    return chart;
+  }
   if (
     !/^[\w.-]+@sha256:[a-f0-9]{64}$/.test(image) ||
     image.endsWith("0".repeat(64))

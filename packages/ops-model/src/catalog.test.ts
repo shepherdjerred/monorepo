@@ -114,7 +114,8 @@ describe("ServiceIndex", () => {
   test("owns the prepared launcher inventory without a deployable image", () => {
     const launcher = index.requireById("glitter-boys-launcher");
     expect(index.byNamespace("glitter-boys-launcher")).toBe(launcher);
-    expect(index.byArgoApp("glitter-boys-launcher")).toBe(launcher);
+    expect(index.byArgoApp("glitter-boys-launcher")).toBeUndefined();
+    expect(launcher.argoApps).toEqual([]);
     expect(launcher.deploy).toEqual([]);
   });
 

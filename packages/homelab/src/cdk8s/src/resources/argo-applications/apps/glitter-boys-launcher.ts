@@ -1,7 +1,15 @@
 import type { Chart } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
+import {
+  launcherRelease,
+  LauncherReleaseSchema,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/glitter-boys-launcher/release.ts";
 
-export function createGlitterBoysLauncherApp(chart: Chart) {
+export function createGlitterBoysLauncherApp(
+  chart: Chart,
+  releaseState: unknown = launcherRelease,
+) {
+  if (LauncherReleaseSchema.parse(releaseState).stage === "prepared") return;
   return new Application(chart, "glitter-boys-launcher-app", {
     metadata: {
       name: "glitter-boys-launcher",

@@ -220,7 +220,8 @@ that source-owned pin and reject CI publication candidates for it. Omitted
 catalog's `management` field, which controls Renovate updates.
 The homelab chart owns the tunnel, secret reference, private ServiceMonitor, alerts,
 and Grafana dashboard. Its checked-in release stage is `prepared`, which renders
-no workload. Activation requires a real published image digest and a granted
+only an inactive chart marker and creates no ArgoCD Application or workload.
+Activation requires a real published image digest and a granted
 `glitter-boys-launcher-credentials` 1Password item. Change those through the
 normal homelab GitOps release path; never activate the unpublished digest marker.
 

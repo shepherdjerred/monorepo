@@ -137,6 +137,21 @@ async function fixture(): Promise<string> {
 }
 
 describe("discoverChartInputs", () => {
+  test("rejects empty synthesized manifests", async () => {
+    const directory = await fixture();
+    try {
+      await Bun.write(path.join(directory, "dist/worker.k8s.yaml"), "\n");
+      await expect(
+        discoverChartInputs(
+          path.join(directory, "helm"),
+          path.join(directory, "dist"),
+        ),
+      ).rejects.toThrow("Synthesized manifest is empty");
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
   test("requires a manifest for every chart", async () => {
     const directory = await fixture();
     try {
