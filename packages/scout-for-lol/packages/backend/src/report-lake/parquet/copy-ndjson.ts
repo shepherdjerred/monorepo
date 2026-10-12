@@ -69,6 +69,7 @@ export async function copyNdjsonToParquet(
   }
   let writer: FileSink | undefined;
   let batchBytes = 0;
+  let largestRecordBytes = 0;
   let bufferedBytes = 0;
   let batch = 0;
 
@@ -87,8 +88,11 @@ export async function copyNdjsonToParquet(
       "''",
     );
     try {
+      // DuckDB allocates each JSON reader buffer at twice maximum_object_size.
+      // Its 16 MiB default wastes memory on small records and rejects larger
+      // ones. The measured encoded size includes every UTF-8 byte and escape.
       await session.run(
-        `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(options.columns)})) TO '${directory}' (${PARQUET_COPY_OPTIONS}, ${layout}, FILENAME_PATTERN '${pattern}')`,
+        `COPY (SELECT * FROM read_json($1, format='newline_delimited', maximum_object_size=${largestRecordBytes.toString()}, columns=${duckDbColumnsSpec(options.columns)})) TO '${directory}' (${PARQUET_COPY_OPTIONS}, ${layout}, FILENAME_PATTERN '${pattern}')`,
         [batchPath],
       );
     } catch (error) {
@@ -99,6 +103,7 @@ export async function copyNdjsonToParquet(
     }
     await rm(batchPath);
     batchBytes = 0;
+    largestRecordBytes = 0;
     bufferedBytes = 0;
   };
 
@@ -119,6 +124,7 @@ export async function copyNdjsonToParquet(
         }
       }
       batchBytes += record.bytes;
+      largestRecordBytes = Math.max(largestRecordBytes, record.bytes);
       if (batchBytes >= COPY_BATCH_BYTES) await copyBatch();
     }
     await copyBatch();

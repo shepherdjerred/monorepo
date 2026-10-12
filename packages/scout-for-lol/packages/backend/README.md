@@ -172,7 +172,9 @@ needed to rebuild the lake.
 Rebuilds and incremental folds feed Parquet COPY at most 64 MiB of encoded
 NDJSON per batch, except for a single oversized record. Input batches preserve
 record boundaries, UTF-8, and numeric precision. COPY appends unique Parquet
-files, flushes partition buffers every 2,048 rows, keeps at most four output
+files and sizes DuckDB's JSON reader buffers from the largest encoded record in
+each batch, including records above the reader's default 16 MiB limit. It
+flushes partition buffers every 2,048 rows, keeps at most four output
 writers open, and targets 8 MB row groups. Bounding both the input reader and
 output writers keeps wide documents within the existing DuckDB budget.
 

@@ -112,6 +112,22 @@ test("bounds wide JSON reads and appends lossless partitioned and folded rows", 
         [path.join(outputDirectory, "**/*.parquet")],
       );
       expect(count).toEqual({ count: 257n });
+
+      // The parser limit follows the encoded record, including records larger
+      // than DuckDB's default 16 MiB maximum_object_size.
+      const largePath = path.join(directory, "large.ndjson");
+      const largePayload = "x".repeat(17 * 1024 * 1024);
+      await Bun.write(
+        largePath,
+        `${JSON.stringify({ i: 258, month: "large", payload: largePayload })}\n`,
+      );
+      await copyNdjsonToParquet(session, { ...options, sourcePath: largePath });
+      expect(
+        await session.run(
+          "SELECT i, payload FROM read_parquet($1, hive_partitioning=true) WHERE i = 258",
+          [path.join(outputDirectory, "**/*.parquet")],
+        ),
+      ).toEqual([{ i: 258n, payload: largePayload }]);
     }
 
     const badSource = path.join(directory, "malformed.ndjson");
@@ -129,6 +145,43 @@ test("bounds wide JSON reads and appends lossless partitioned and folded rows", 
   } finally {
     connection.closeSync();
     instance.closeSync();
+    await rm(directory, { recursive: true });
+  }
+});
+
+test("sizes each COPY reader from its largest complete encoded record", async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), "scout-json-reader-"));
+  const sourcePath = path.join(directory, "records.ndjson");
+  const oversized = `${JSON.stringify({ payload: "雪".repeat(23 * 1024 * 1024) })}\n`;
+  const small = '{"payload":"small"}\n';
+  const sizes: number[] = [];
+  const session: DuckDBSession = {
+    run: async (sql, params) => {
+      const match = /maximum_object_size=(\d+)/u.exec(sql);
+      expect(match?.[1]).toBeDefined();
+      const batchSize = Bun.file(`${sourcePath}.parquet-batch`).size;
+      expect(params).toEqual([`${sourcePath}.parquet-batch`]);
+      expect(Number(match?.[1])).toBe(batchSize);
+      sizes.push(batchSize);
+      return [];
+    },
+    list: (values) => listValue(values),
+  };
+  try {
+    await Bun.write(sourcePath, oversized + small);
+    await copyNdjsonToParquet(session, {
+      sourcePath,
+      outputDirectory: path.join(directory, "output"),
+      columns: { payload: "VARCHAR" },
+      partitionByMonth: false,
+    });
+    expect(sizes).toEqual([
+      Buffer.byteLength(oversized),
+      Buffer.byteLength(small),
+    ]);
+    expect(sizes[0]).toBeGreaterThan(64 * 1024 * 1024);
+    expect(await Bun.file(`${sourcePath}.parquet-batch`).exists()).toBe(false);
+  } finally {
     await rm(directory, { recursive: true });
   }
 });
