@@ -83,25 +83,18 @@ final class StandaloneVaultUITests: XCTestCase {
         let app = context.app
         let first = try workspace(app)
         capture(context.title, app: app, window: first)
-        let previousWindowIDs = app.windows.matching(
-            NSPredicate(format: "identifier BEGINSWITH %@", "facet.workspace.")
-        ).allElementsBoundByIndex.map(\.identifier)
         task(context.title, first).click()
         first.typeKey("f", modifierFlags: .command)
         let firstSearch = first.searchFields.firstMatch
         XCTAssertTrue(firstSearch.waitForExistence(timeout: 5))
         firstSearch.typeText(context.title)
         XCTAssertTrue(task("E2E existing task", first).waitForNonExistence(timeout: 10))
-        app.menuBars.menuBarItems["File"].click()
-        click(app.menuItems["New Window"])
-        let windows = app.windows.matching(
-            NSPredicate(
-                format: "identifier BEGINSWITH %@ AND NOT (identifier IN %@)", "facet.workspace.",
-                previousWindowIDs))
-        XCTAssertTrue(windows.element.waitForExistence(timeout: 10))
-        XCTAssertEqual(windows.count, 1)
-        let second = try MacAcceptanceWorkspace.selectedWindow(
-            app: app, identifier: windows.element.identifier)
+        let second = try MacAcceptanceWorkspace.create(app: app)
+        XCTAssertNotEqual(first.identifier, second.identifier)
+        XCTAssertEqual(
+            app.windows.matching(
+                NSPredicate(format: "identifier BEGINSWITH %@", "facet.workspace.")
+            ).count, 2)
         XCTAssertTrue(task("E2E existing task", second).waitForExistence(timeout: 10))
         task("E2E existing task", second).click()
         XCTAssertEqual(
@@ -192,7 +185,7 @@ extension StandaloneVaultUITests {
     }
 
     private func workspace(_ app: XCUIApplication) throws -> XCUIElement {
-        try MacAcceptanceWorkspace.create(app: app)
+        try MacAcceptanceWorkspace.initial(app: app)
     }
 
     private func capture(
