@@ -7,6 +7,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import org.jspecify.annotations.Nullable;
 
 /** Bounded CPU batches with ordered results and asynchronous barriers, including failed tasks. */
 final class ThinkBatches {
@@ -21,7 +22,17 @@ final class ThinkBatches {
     return indexed(inputs, (batch, input) -> operation.apply(input));
   }
 
+  <T, R> CompletableFuture<List<R>> map(
+      ThinkFlight.@Nullable Context context, List<T> inputs, Function<T, R> operation) {
+    return indexed(context, inputs, (batch, input) -> operation.apply(input));
+  }
+
   <T, R> CompletableFuture<List<R>> indexed(List<T> inputs, BiFunction<Integer, T, R> operation) {
+    return indexed(null, inputs, operation);
+  }
+
+  <T, R> CompletableFuture<List<R>> indexed(
+      ThinkFlight.@Nullable Context context, List<T> inputs, BiFunction<Integer, T, R> operation) {
     if (inputs.isEmpty()) return CompletableFuture.completedFuture(List.of());
     if (pool.parallelism() == 1) {
       try {
@@ -36,7 +47,8 @@ final class ThinkBatches {
     for (var batch = 0; batch < count; batch++) {
       var index = batch;
       try {
-        jobs.add(pool.submit(() -> batch(inputs, operation, index, count)));
+        var trace = ThinkFlight.queued(context, index, (inputs.size() + count - 1 - index) / count);
+        jobs.add(pool.submit(() -> trace.measure(() -> batch(inputs, operation, index, count))));
       } catch (RejectedExecutionException rejected) {
         jobs.add(CompletableFuture.failedFuture(rejected));
       }

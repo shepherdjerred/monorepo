@@ -225,7 +225,13 @@ public final class ThinkLoop {
     }
     try {
       var queuedAt = nanoClock.getAsLong();
-      compute.executor().execute(() -> run(queuedAt));
+      var live = match;
+      var trace =
+          ThinkFlight.queued(
+              ThinkFlight.context("cycle", live == null ? -1 : live.generation(), -1, nanoClock),
+              -1,
+              profiles.size());
+      compute.executor().execute(() -> run(queuedAt, trace));
     } catch (RejectedExecutionException rejected) {
       running.set(false);
       throw rejected;
@@ -234,19 +240,27 @@ public final class ThinkLoop {
 
   // ---- worker thread ---------------------------------------------------------------------------
 
-  private void run(long queuedAt) {
+  private void run(long queuedAt, ThinkFlight.Task trace) {
+    trace.enter();
     var current = match;
     var snapshot = inbox.getAndSet(null);
+    if (snapshot != null) trace.tick(snapshot.tick());
     if (current == null || snapshot == null) {
       finished(current, queuedAt, null);
+      trace.close();
       return;
     }
     try {
       completion =
           worker
               .think(current, snapshot, queuedAt)
-              .whenComplete((ignored, problem) -> finished(current, queuedAt, problem));
+              .whenComplete(
+                  (ignored, problem) -> {
+                    trace.close();
+                    finished(current, queuedAt, problem);
+                  });
     } catch (RuntimeException problem) {
+      trace.close();
       finished(current, queuedAt, problem);
     }
   }
@@ -376,6 +390,10 @@ public final class ThinkLoop {
     }
   }
 
+  private ThinkFlight.@Nullable Context flight(Cycle cycle, String stage) {
+    return ThinkFlight.context(stage, cycle.current().generation(), cycle.tick(), nanoClock);
+  }
+
   /** The cycle coordinator owns mutable state; parallel operations only return proposals. */
   private final class Worker {
     private final Map<CombatantId, Mind> minds = new HashMap<>();
@@ -392,54 +410,93 @@ public final class ThinkLoop {
     }
 
     CompletableFuture<Void> think(Match current, WorldSnapshot snapshot, long started) {
-      if (generationSeen != current.generation()) {
-        minds.clear();
-        teams.clear();
-        generationSeen = current.generation();
-        workspaces =
-            IntStream.range(0, compute.parallelism())
-                .mapToObj(ignored -> current.nav().graph().workspace())
-                .toList();
-      }
-      var active = activeMinds(current, snapshot);
-      var cycle =
-          new Cycle(
-              current,
-              snapshot,
-              governor.thinkPeriodMultiplier(),
-              new Counters(),
-              active.stream().map(mind -> mind.profile).toList());
-      // The schedule timestamp is aligned to a slot; freshness uses the actual observation tick.
-      var sensing = selectSensing(cycle, active);
+      var prepared = prepare(current, snapshot);
+      var cycle = prepared.cycle();
+      var active = prepared.active();
+      var sensing = prepared.sensing();
       return batches
-          .map(sensing, mind -> observe(cycle, mind))
+          .map(flight(cycle, "perception"), sensing, mind -> observe(cycle, mind))
           .thenCompose(
               observations -> {
                 if (!current(cycle)) return CompletableFuture.completedFuture(List.<TeamStep>of());
-                for (var observation : observations) commitObservation(cycle, observation);
+                var observationCommit =
+                    ThinkFlight.section(flight(cycle, "observation-commit"), observations.size());
+                try {
+                  for (var observation : observations) commitObservation(cycle, observation);
+                } finally {
+                  observationCommit.close();
+                }
                 var orderedTeams =
                     teams.entrySet().stream()
                         .sorted(Map.Entry.comparingByKey(Comparator.comparing(TeamId::value)))
                         .map(Map.Entry::getValue)
                         .toList();
-                return batches.map(orderedTeams, team -> teamStep(cycle, team));
+                return batches.map(
+                    flight(cycle, "team"), orderedTeams, team -> teamStep(cycle, team));
               })
           .thenCompose(
               plans -> {
                 if (!current(cycle)) return CompletableFuture.completedFuture(List.<Proposal>of());
-                for (var plan : plans) {
-                  plan.team().board = plan.board();
-                  plan.team().lastTick = plan.tick();
+                var teamCommit = ThinkFlight.section(flight(cycle, "team-commit"), plans.size());
+                try {
+                  for (var plan : plans) {
+                    plan.team().board = plan.board();
+                    plan.team().lastTick = plan.tick();
+                  }
+                } finally {
+                  teamCommit.close();
                 }
                 return batches.indexed(
+                    flight(cycle, "tactics"),
                     selectTactics(cycle, active),
                     (batch, work) -> propose(cycle, work, workspaces.get(batch)));
               })
           .thenAccept(
               proposals -> {
-                for (var proposal : proposals) commitTactics(cycle, proposal);
-                publishBoard(cycle, active, started);
+                var tacticsCommit =
+                    ThinkFlight.section(flight(cycle, "tactics-commit"), proposals.size());
+                try {
+                  for (var proposal : proposals) commitTactics(cycle, proposal);
+                } finally {
+                  tacticsCommit.close();
+                }
+                var publish = ThinkFlight.section(flight(cycle, "publish"), active.size());
+                try {
+                  publishBoard(cycle, active, started);
+                } finally {
+                  publish.close();
+                }
               });
+    }
+
+    private Prepared prepare(Match current, WorldSnapshot snapshot) {
+      var prepare =
+          ThinkFlight.section(
+              ThinkFlight.context("prepare", current.generation(), snapshot.tick(), nanoClock),
+              profiles.size());
+      try {
+        if (generationSeen != current.generation()) {
+          minds.clear();
+          teams.clear();
+          generationSeen = current.generation();
+          workspaces =
+              IntStream.range(0, compute.parallelism())
+                  .mapToObj(ignored -> current.nav().graph().workspace())
+                  .toList();
+        }
+        var active = activeMinds(current, snapshot);
+        var cycle =
+            new Cycle(
+                current,
+                snapshot,
+                governor.thinkPeriodMultiplier(),
+                new Counters(),
+                active.stream().map(mind -> mind.profile).toList());
+        // The schedule timestamp is aligned to a slot; freshness uses the actual observation tick.
+        return new Prepared(cycle, active, selectSensing(cycle, active));
+      } finally {
+        prepare.close();
+      }
     }
 
     private List<Mind> selectSensing(Cycle cycle, List<Mind> active) {
@@ -728,6 +785,8 @@ public final class ThinkLoop {
   }
 
   private record Observation(Mind mind, Percept percept) {}
+
+  private record Prepared(Cycle cycle, List<Mind> active, List<Mind> sensing) {}
 
   private record TeamStep(Team team, Blackboard board, long tick) {}
 
