@@ -13,6 +13,11 @@
     "tsconfig.base.json",
     "vitest.config.ts"
   ],
+  // Where scratch and download caches live, not what a task produces, so
+  // they pass through without entering task hashes. Strict env mode would
+  // otherwise strip them, and CI tasks fell back to /tmp and ~/.cache/uv on
+  // the container's writable layer, the CI node's OS disk.
+  "globalPassThroughEnv": ["GRADLE_USER_HOME", "TMPDIR", "UV_CACHE_DIR"],
   // The toolkit / tasknotes-server `bun --compile` binaries are ~180 MB
   // (64 MB zstd) — over the default upload timeout, so those tasks
   // remote-MISSED every build ("cache artifact ... too large to upload
@@ -566,6 +571,15 @@
         "**/package.json",
         "bun.lock",
         "!**/node_modules/**"
+      ]
+    },
+    "//#mise-lock-sync": {
+      "inputs": [
+        "scripts/checks/deps/check-mise-lock-sync.ts",
+        ".mise.toml",
+        "mise.lock",
+        "ci/ci-image/Dockerfile",
+        "ci/scripts/toolchain.sh"
       ]
     },
     "//#toolchain-version-sync": {

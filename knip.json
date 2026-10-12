@@ -164,7 +164,6 @@
         "src/interface-generator.ts",
         "src/utils.ts",
         "src/comment-parser.ts",
-        "src/helm-types.ts",
         "src/yaml-comment-filters.ts",
         "src/yaml-comment-regex-parser.ts",
         "src/yaml-preprocess.ts",
@@ -412,7 +411,6 @@
     "scripts/observability/local-stack/**"
   ],
   "ignoreDependencies": [
-    "@commitlint/types",
     "@eslint-community/eslint-plugin-eslint-comments",
     "@eslint/compat",
     "@eslint/eslintrc",
@@ -472,12 +470,6 @@
     "yoga-wasm-web",
     "zod"
   ],
-  "ignoreFiles": [
-    "packages/discord-plays-mario-kart/packages/frontend/src/model/connection.ts",
-    "packages/discord-plays-mario-kart/packages/frontend/src/util.ts",
-    "packages/discord-plays-pokemon/packages/frontend/src/util.ts",
-    "packages/monarch/src/lib/costco/receipt-parser.ts"
-  ],
   "ignoreIssues": {
     "packages/better-skill-capped/src/components/ui/card.tsx": ["exports"],
     "packages/discord-plays-mario-kart/packages/backend/src/util.ts": [
@@ -528,7 +520,6 @@
     "swiftlint",
     "tflint",
     "uv",
-    "velero",
     "xcodegen"
   ]
 }

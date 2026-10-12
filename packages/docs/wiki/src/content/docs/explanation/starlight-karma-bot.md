@@ -48,21 +48,14 @@ minutes, so ordinary reconnects never recycle the pod but a wedged one does.
 connected gateway — a database blip should make the pod _unready_, not restart
 it.
 
-## The legacy import runs itself, once
+## The data predates Prisma
 
 The bot previously used TypeORM with a `sql.js` database and **no schema
 management at all** — the schema survived only because the volume carried the
-file forward. Moving to Prisma meant moving the data.
-
-`LEGACY_DATABASE_PATH` drives a one-shot import at startup. It is idempotent
-(a target that already has karma short-circuits), it verifies per-person totals
-_inside_ the write transaction so a mismatch rolls back rather than committing
-unverified data, and it fails startup outright if the path is set but the file
-is missing — silently starting on an empty database is indistinguishable from
-total karma loss. The legacy file is only ever read, so it remains the rollback
-artifact.
-
-See `packages/starlight-karma-bot/src/db/import-legacy.ts`.
+file forward. Moving to Prisma meant moving the data, once, with per-person
+totals verified inside the write transaction. That import has completed in
+every environment and is no longer part of the bot. The legacy
+`glitter.sqlite` was only ever read, and still sits on each volume.
 
 ## Giving is deliberately low-friction
 

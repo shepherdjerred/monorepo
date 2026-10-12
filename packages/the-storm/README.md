@@ -1129,15 +1129,20 @@ Unresolved maps and missing payload exports stop staging.
 
 `maps:close-starts` authors private close-combat candidates from the full original
 terrain. It freshly bakes navigation and deterministically selects two positions
-8–16 blocks apart, facing each other on the same floor height. Each position
+4–16 blocks apart, facing each other on the same floor height. Each position
 needs a flat 3×3 patch with two blocks of actual air, a supported walking corridor,
-a clear eye-level sightline and short paths in both directions. Both positions
-must be reachable from every original spawn. Exact schematic states exclude
+a clear eye-level sightline and short paths between them in both directions.
+Training directly places the duel roster at these authored positions, so the
+arena does not need to connect back to each ordinary source spawn. Both positions
+must remain on the complete original terrain. Exact schematic states exclude
 partial floors and special movement surfaces that coarse navigation shapes could misclassify.
 The output preserves original metadata, terrain, loot, signs and navigation;
 only the private duel scenario changes. Every failure remains in `results.json`
-and makes the catalog command fail. Candidates are not installed or admitted to
-the training registry.
+and makes the catalog command fail. Native Paper proofs bind the exact starts
+and terrain hash. The reviewed scenarios live in the training-only
+`tools/learning/maps/training-scenarios.json` catalog and are copied only into
+disposable training servers. The neutral map registry and ordinary server
+rotation remain unchanged.
 
 `maps:verify-close-starts` checks those candidates in disposable pinned Paper
 using the production Citizens motor. It checks native floor height, player-sized
@@ -1146,8 +1151,8 @@ terrain. Ordinary showcases rotate the maps, while the fixture checks the
 two-map cache bound. Repeated `--map <id>` selects a diagnostic subset of at least
 three maps; omit it to request the whole candidate catalog. Retained reports bind
 each result to its terrain hash and exact positions, and include physics samples,
-producer hashes and server logs. Geometry and traversal evidence still require
-separate learning admission and gameplay acceptance.
+producer hashes and server logs. Geometry and traversal evidence do not establish
+bot quality or human gameplay acceptance.
 
 The schematic contains terrain only. The converter also exports inventories
 through Paper's versioned item API and both sign faces as literal visible text,
@@ -1426,9 +1431,11 @@ policy and value objectives, and imitation from the human training split.
 It recomputes recurrent prefixes with the current weights for every window.
 Validation and test matches do not enter PPO optimization or checkpoint selection.
 
-PPO freezes every installed map's admitted scenario, terrain hash and scenario
+PPO freezes every installed map's training scenario, terrain hash and scenario
 hash in `training-maps.json`. Installed folders must match the neutral scenario
-registry exactly. Collection pairs red and blue on each map before advancing
+registry exactly; the separately versioned training-only scenario catalog can
+replace starts in disposable servers without changing that registry. Collection
+pairs red and blue on each map before advancing
 through the sorted catalog, then repeats the catalog. Each successful rollout
 records these identities, and the owner checks them against the fixture's
 original native setup. Map changes require an empty lobby; the old sandbox is
@@ -2373,7 +2380,8 @@ chat, arguments, locations and credentials. Minecraft UUID and player name are
 the intentionally named identity.
 
 Collection is boot-scoped behind the default-off managed flag
-`the-storm-analytics-enabled` (`the-storm` namespace, beta override enabled).
+`the-storm-analytics-enabled` (`the-storm` namespace, beta and production
+overrides enabled).
 Bootstrap uses `POSTHOG_API_HOST`, `POSTHOG_PROJECT_TOKEN` and
 `FLIPT_ENVIRONMENT`, supplied from the analytics registry by homelab CDK8s.
 Missing or invalid bootstrap and failed flag evaluation leave collection off.

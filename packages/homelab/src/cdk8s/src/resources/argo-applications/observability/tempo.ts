@@ -139,10 +139,11 @@ metrics_generator:
           path: "/var/tempo/metrics-generator-traces",
         },
       },
-      // Reserve the baseline and allow bounded compaction/query bursts.
+      // Reserve the baseline and allow bounded compaction/query bursts. CPU
+      // peaked at 0.02 cores over 30 days (5m rate); it has no limit to burst.
       resources: {
         requests: {
-          cpu: "1",
+          cpu: "250m",
           memory: "1Gi",
         },
         limits: { memory: "4Gi" },

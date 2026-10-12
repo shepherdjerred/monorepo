@@ -55,8 +55,14 @@ export function getTemporalPlatformHealthRuleGroup(): PrometheusRuleSpecGroups {
             "Workflow Task execution failures increased for {{ $labels.workflow_type }} on {{ $labels.task_queue }}. Inspect the execution history and correlated Worker logs before restarting a poller.",
           ),
         },
+        // SDK counters, which count every failed attempt; the server's
+        // `failed_workflow_tasks` records a Task that keeps failing only once.
+        // Workers export with `countersTotalSuffix`, so the `_total` spelling
+        // is the live one; the bare name is kept for workers that predate it.
+        // Matching only the bare name left this rule unable to fire for any
+        // Scout worker while a dispatcher Task failed 172 times.
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          'increase(temporal_worker_workflow_task_execution_failed{exported_namespace=~"prod|beta",failure_reason!="NonDeterminismError"}[10m]) > 0',
+          'increase({__name__=~"temporal_worker_workflow_task_execution_failed(_total)?",exported_namespace=~"prod|beta",failure_reason!="NonDeterminismError"}[10m]) > 0',
         ),
         for: "2m",
         labels: { severity: "warning" },
@@ -72,7 +78,7 @@ export function getTemporalPlatformHealthRuleGroup(): PrometheusRuleSpecGroups {
           ),
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          'increase(temporal_worker_workflow_task_execution_failed{exported_namespace=~"prod|beta",failure_reason="NonDeterminismError"}[10m]) > 0 or increase(service_errors_nondeterministic[10m]) > 0',
+          'increase({__name__=~"temporal_worker_workflow_task_execution_failed(_total)?",exported_namespace=~"prod|beta",failure_reason="NonDeterminismError"}[10m]) > 0 or increase(service_errors_nondeterministic[10m]) > 0',
         ),
         for: "1m",
         labels: { severity: "critical" },

@@ -291,7 +291,7 @@ describe("Kueue priority and controller integration", () => {
     expect(config.integrations.frameworks).toEqual(["batch/job", "pod"]);
   });
 
-  it("enables and selects Kueue metrics in the Prometheus namespace", () => {
+  it("scrapes Kueue through the one selected ServiceMonitor", () => {
     const documents = synthKueueAppDocuments();
     const application = documents.find(
       (document) =>
@@ -307,12 +307,7 @@ describe("Kueue priority and controller integration", () => {
                       .object({
                         valuesObject: z
                           .object({
-                            enablePrometheus: z.literal(true),
-                            metrics: z
-                              .object({
-                                prometheusNamespace: z.literal("prometheus"),
-                              })
-                              .loose(),
+                            enablePrometheus: z.literal(false),
                           })
                           .loose(),
                       })

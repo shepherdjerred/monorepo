@@ -1,0 +1,9 @@
+{{- if ne .chezmoi.os "windows" -}}
+{{-   fail "packages/dotfiles-windows is the Windows source; use packages/dotfiles on macOS and Linux" -}}
+{{- end -}}
+{{- /* Persist the checkout passed to `chezmoi init --source`, so later commands use it too. */ -}}
+sourceDir = {{ .chezmoi.sourceDir | quote }}
+
+[interpreters.ps1]
+command = "pwsh"
+args = ["-NoLogo", "-NoProfile"]

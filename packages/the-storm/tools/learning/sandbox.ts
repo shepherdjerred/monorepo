@@ -24,11 +24,23 @@ import {
 import { openNativeObserver } from "#learning/native/observer.ts";
 import { stageMap } from "#learning/maps/stage.ts";
 import { trainingMaps } from "#learning/maps/plan.ts";
+import { trainingScenarioFor } from "#learning/maps/training-scenarios.ts";
 
 export const root = path.resolve(import.meta.dirname, "../..");
 const content = path.join(root, "server/owned/plugins/TheStorm");
 export const frozenTrainingMaps = (diagnostic: boolean) =>
   trainingMaps(content, diagnostic);
+const duelTrainingScenario = (profile: string, mapId: string) =>
+  profile === "duel" ? trainingScenarioFor(mapId) : undefined;
+const trainingScenarioOption = (
+  scenario: ReturnType<typeof duelTrainingScenario>,
+) => (scenario === undefined ? {} : { trainingScenario: scenario });
+const trainingScenarioEnvironment = (
+  scenario: ReturnType<typeof duelTrainingScenario>,
+) =>
+  scenario === undefined
+    ? {}
+    : { RWF_FIXTURE_TRAINING_SCENARIO: JSON.stringify(scenario) };
 const stormJar = path.join(root, "plugin/dist/build/libs/TheStorm.jar");
 const fixturesJar = path.join(
   root,
@@ -223,12 +235,14 @@ export async function openPaperDuels(
       throw new AggregateError(failures, "Paper duel owner cleanup failed");
   };
   try {
+    const trainingScenario = duelTrainingScenario(profile, mapId);
     const staged = await stageMap(
       content,
       path.join(output, "map-content"),
       mapId,
       {
         duel: profile === "duel",
+        ...trainingScenarioOption(trainingScenario),
         mapTool: path.join(
           root,
           "plugin/tools/rwfmap/build/install/rwfmap/bin/rwfmap",
@@ -270,6 +284,7 @@ export async function openPaperDuels(
         FLIPT_URL: brainUrl,
         FLIPT_ENVIRONMENT: "prod",
         RWF_RECORDING_SALT: rwfRecordingSalt,
+        ...trainingScenarioEnvironment(trainingScenario),
         ...(profile === "load"
           ? {
               // Same locally rejected placeholders as the full E2E suite.

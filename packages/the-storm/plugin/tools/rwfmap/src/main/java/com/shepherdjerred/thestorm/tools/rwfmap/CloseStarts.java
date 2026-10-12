@@ -9,7 +9,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
-/** Deterministic grounded starts on unchanged terrain, reachable from every original team. */
+/** Deterministic grounded duel starts on unchanged original terrain. */
 final class CloseStarts {
   record Pair(Vec3 first, Vec3 second) {}
 
@@ -19,7 +19,14 @@ final class CloseStarts {
     }
   }
 
-  private record Candidates(int reachable, BitSet flat) {}
+  private record Candidates(int walkable, BitSet flat) {}
+
+  private static final class SearchStats {
+    int inRangePairs;
+    int obstructedCorridors;
+    int obstructedSightlines;
+    int longPaths;
+  }
 
   private final NavArtifact artifact;
   private final NavGraph graph;
@@ -30,7 +37,7 @@ final class CloseStarts {
     this.artifact = artifact;
     graph = artifact.graph();
     terrain = new StartTerrain(blocks);
-    candidates = reachableCandidates();
+    candidates = terrainCandidates();
   }
 
   static Pair select(MapFolder map, Baker.Baked baked) {
@@ -43,22 +50,15 @@ final class CloseStarts {
     return selector.select(center.scale(1.0 / sites.size()));
   }
 
-  private Candidates reachableCandidates() {
+  private Candidates terrainCandidates() {
     var found = new BitSet(graph.nodeCount());
     found.set(0, graph.nodeCount());
-    for (var spawn : artifact.sites().spawns()) {
-      var source = graph.nearestNode(spawn.cell().feet()).orElseThrow();
-      var costs = graph.costsFrom(source);
-      for (var node = found.nextSetBit(0); node >= 0; node = found.nextSetBit(node + 1)) {
-        if (!Float.isFinite(costs[node])) found.clear(node);
-      }
-    }
-    var reachable = found.cardinality();
+    var walkable = found.cardinality();
     for (var node = found.nextSetBit(0); node >= 0; node = found.nextSetBit(node + 1)) {
       if (!terrain.patch(graph.cell(node), CloseStartReport.CONTRACT.clearanceRadius()))
         found.clear(node);
     }
-    return new Candidates(reachable, found);
+    return new Candidates(walkable, found);
   }
 
   private Pair select(Vec3 center) {
@@ -71,35 +71,46 @@ final class CloseStarts {
                     .thenComparingInt(Integer::intValue))
             .toList();
     var offsets = offsets();
+    var stats = new SearchStats();
     for (var node : order) {
-      var from = graph.cell(node);
       for (var offset : offsets) {
-        var other = graph.nodeAt(from.offset(offset.x(), 0, offset.z()));
-        if (other.isPresent() && candidates.flat().get(other.getAsInt())) {
-          var pair = pair(node, other.getAsInt());
-          if (pair.isPresent()) return pair.orElseThrow();
-        }
+        var pair = pair(node, offset, stats);
+        if (pair.isPresent()) return pair.orElseThrow();
       }
     }
     throw new IllegalArgumentException(
-        "No reachable grounded close-combat starts on unchanged terrain: "
-            + candidates.reachable()
-            + " cells reachable from every original spawn, "
+        "No grounded close-combat starts on unchanged terrain: "
+            + candidates.walkable()
+            + " walkable cells, "
             + candidates.flat().cardinality()
-            + " flat patches");
+            + " flat patches, "
+            + stats.inRangePairs
+            + " in-range pairs, "
+            + stats.obstructedCorridors
+            + " blocked corridors, "
+            + stats.obstructedSightlines
+            + " blocked sightlines, "
+            + stats.longPaths
+            + " overlong paths");
   }
 
-  private Optional<Pair> pair(int first, int second) {
-    var from = graph.feet(first);
-    var to = graph.feet(second);
-    if (!terrain.corridor(from, to)
-        || !artifact.grid().canSee(from.plus(0, 1.62, 0), to.plus(0, 1.62, 0)))
-      return Optional.empty();
-    var limit = from.horizontalDistance(to) * 1.5;
-    if (graph.path(first, second).filter(path -> path.cost() <= limit).isEmpty()
-        || graph.path(second, first).filter(path -> path.cost() <= limit).isEmpty())
-      return Optional.empty();
-    return Optional.of(new Pair(from, to));
+  private Optional<Pair> pair(int node, Offset offset, SearchStats stats) {
+    var other = graph.nodeAt(graph.cell(node).offset(offset.x(), 0, offset.z()));
+    if (other.isEmpty() || !candidates.flat().get(other.getAsInt())) return Optional.empty();
+    stats.inRangePairs++;
+    var first = graph.feet(node);
+    var second = graph.feet(other.getAsInt());
+    var clearCorridor = terrain.corridor(first, second);
+    var clearSightline = artifact.grid().canSee(first.plus(0, 1.62, 0), second.plus(0, 1.62, 0));
+    var limit = first.horizontalDistance(second) * 1.5;
+    var shortPaths =
+        graph.path(node, other.getAsInt()).filter(path -> path.cost() <= limit).isPresent()
+            && graph.path(other.getAsInt(), node).filter(path -> path.cost() <= limit).isPresent();
+    if (!clearCorridor) stats.obstructedCorridors++;
+    if (!clearSightline) stats.obstructedSightlines++;
+    if (!shortPaths) stats.longPaths++;
+    if (!clearCorridor || !clearSightline || !shortPaths) return Optional.empty();
+    return Optional.of(new Pair(first, second));
   }
 
   private static List<Offset> offsets() {

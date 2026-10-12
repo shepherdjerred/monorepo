@@ -154,8 +154,10 @@ ip6tables -L OUTPUT -n`,
         },
       },
       resources: {
+        // 30d CPU p99 0.03 cores, peak 0.04 (5m rate); the limit covers
+        // provider subprocess bursts.
         cpu: {
-          request: Cpu.millis(500),
+          request: Cpu.millis(250),
           limit: Cpu.millis(1500),
         },
         memory: {

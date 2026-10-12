@@ -47,7 +47,6 @@
     "url": "https://github.com/shepherdjerred/monorepo/issues"
   },
   "devDependencies": {
-    "@commitlint/types": "^21.0.0",
     "@shepherdjerred/eslint-config": "workspace:*",
     "@total-typescript/ts-reset": "^0.6.1",
     "@types/bun": "1.4.2",

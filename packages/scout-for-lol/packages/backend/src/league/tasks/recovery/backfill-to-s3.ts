@@ -31,6 +31,12 @@ export type BackfillResult = {
   totalMatchesSaved: number;
   totalMatchesFailed: number;
   accountsProcessed: number;
+  /**
+   * End of the window every account and match was fully archived through, or
+   * undefined when nothing was scanned or any fetch failed. Only this may be
+   * recorded as backfilled: the scan stops 30 minutes before `endTime`.
+   */
+  completeThrough: Date | undefined;
 };
 
 export type MatchHistoryTimeRangeQuery = {
@@ -118,6 +124,7 @@ export async function backfillMatchesToS3(
     totalMatchesSaved: 0,
     totalMatchesFailed: 0,
     accountsProcessed: 0,
+    completeThrough: undefined,
   };
 
   downtimeDetectedTotal.inc({ severity: "backfill" });
@@ -241,6 +248,13 @@ export async function backfillMatchesToS3(
     }
 
     await sleep(DELAY_BETWEEN_MATCH_FETCHES_MS);
+  }
+
+  if (
+    result.accountsProcessed === accountsWithState.length &&
+    result.totalMatchesFailed === 0
+  ) {
+    result.completeThrough = new Date(endTimeEpochSeconds * 1000);
   }
 
   logger.info(

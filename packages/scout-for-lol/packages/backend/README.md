@@ -449,6 +449,13 @@ what it is still _holding_:
   two hours. The observation row stores no game end, so this includes the
   game's own length (healthy p90 is about 40–45 minutes). An empty window reads
   0, so it does not detect discovery that has stopped outright.
+- `scout_durable_postmatch_poll_age_seconds` — seconds since post-match
+  discovery last closed a poll with complete evidence (`BotState`'s
+  `lastSuccessfulPollAt`). It grows while discovery is stopped for any reason
+  — a wedged run, a Schedule that is not starting runs, or runs that keep
+  failing — which is the case the observation lag cannot see.
+  `ScoutDurablePostmatchDiscoveryStalled` fires past 30 minutes; a planned
+  discovery pause fires it too and is silenced for the window.
 - `scout_durable_postmatch_mint_gaps` — live matches observed in the last six
   hours whose cursors all advanced at least 15 minutes ago, with an unmuted,
   unfiltered subscription owed a report, but no postmatch intent and no
@@ -474,7 +481,9 @@ is swept by `report-lake/`, and the mint gap by
 vocabularies live there and `architecture.config.ts` forbids `metrics/` from
 importing those layers; each registers through `metrics/sweep-registry.ts`,
 which exists for exactly that inversion. `metrics/sweeps.ts` is the list of everything a
-sweep-owning scrape runs.
+sweep-owning scrape runs. Swept values may be up to a minute old: the first
+scrape waits for a sweep, and later scrapes serve the last result while a stale
+one refreshes in the background, so a slow sweep never times a scrape out.
 
 Every metric also carries a `role` default label, from the runtime-role enum.
 That is what lets an alert say which pods it is asking about — most sharply for
@@ -729,6 +738,14 @@ artifact's `lastError` with its own message, and the upload is `FAILED`, which
 the device retries; a `REJECTED` upload is final.
 
 ### When a client payload becomes the match
+
+Native observations and Riot discovery share one post-game dispatcher. New
+Riot discoveries signal at most 100 matches at a time in game-end order and
+wait for every match's acknowledgement before closing the poll. The internal
+signal validates each item independently of the native HTTP batch limit, so
+older recorded discovery signals containing more than 100 matches can replay
+and drain. A replay patch preserves the original single signal for discovery
+histories recorded before chunking.
 
 Riot gets two minutes of first refusal: ingress dispatches a client post-game
 with `readyAt` two minutes out, and `resolveLocalCanonicalMatch` selects only
@@ -1677,6 +1694,14 @@ Notes that are easy to get wrong:
   lock used by web starts, so the two surfaces cannot advance one transcript
   concurrently. Once the durable row becomes terminal, the gateway releases
   its non-executing copy and local rate-limit ticket.
+- **The embedded Workers export the Temporal SDK's own metrics** when
+  `TEMPORAL_METRICS_ADDRESS` is set, as it is on the hosted `application` and
+  `activity-worker` roles (port 9464, the same exporter shape as the
+  stable/candidate Workflow Workers). These Workers run every unversioned
+  Workflow, and the SDK counters count every failed Workflow Task attempt,
+  where the server's `failed_workflow_tasks` records a Task that keeps failing
+  only once; `TemporalWorkflowTaskFailing` reads them. Unset, as in local
+  processes, runs no exporter.
 - **`scout_temporal_workers`** reports the embedded queue classes, including
   zero for classes a role does not run. `ScoutTemporalWorkerMissing` compares
   fresh same-pod scrapes against declared hosted owners. Beta Workflow health
@@ -1714,7 +1739,8 @@ Development and tests use the PostgreSQL 18 binaries selected by the root Mise
 configuration. The harness initializes a checksummed cluster under
 `$XDG_DATA_HOME/scout-for-lol/postgres/18/pgdata`, or
 `$HOME/.local/share/scout-for-lol/postgres/18/pgdata` when XDG is unset.
-Root-hosted CI uses `/tmp/scout-for-lol/postgres/18/pgdata`.
+Root-hosted CI uses `$TMPDIR/scout-for-lol/postgres/18/pgdata` (the OS
+temporary directory; Woodpecker points `TMPDIR` at the workflow's volume).
 
 The harness reuses a server only when its major version and data directory
 match. An older server on port 5471 causes an explicit error; its files and

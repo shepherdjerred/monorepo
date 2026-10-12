@@ -26,6 +26,7 @@ import {
   scoutPostMatchDiscoveryWorkflow,
 } from "./index.ts";
 import { SCOUT_DISPATCH_RIOT_BYPASSES_WATERMARK_PATCH } from "./client-match-dispatch.ts";
+import { SCOUT_DISCOVERY_BATCHED_DISPATCH_PATCH } from "./shared-match-dispatch.ts";
 import {
   createScoutMatchStore,
   MATCH_ID,
@@ -681,6 +682,141 @@ function pagedDiscovery(
     },
   };
 }
+
+function oversizedDiscoveryMatches() {
+  return [
+    ...Array.from({ length: 107 }, (_, index) =>
+      discoveredMatch(
+        RiotMatchIdSchema.parse(`NA1_${String(10_000 + index)}`),
+        index + 1,
+      ),
+    ),
+    discoveredMatch(MATCH_ID, 108),
+  ];
+}
+
+test("drains a recorded 108-item signal in completion order without repeating completed matches", async () => {
+  const matches = oversizedDiscoveryMatches();
+  const read: string[] = [];
+  const fresh = createScoutMatchStore();
+  const finished = Promise.withResolvers<true>();
+  await harness.startWorkers(
+    routedMatchActivities(
+      fresh,
+      createScoutMatchStore({ observed: true, owner: { kind: "legacy-v1" } }),
+      {
+        legacyCompleted: () => true,
+        onRead: (riotMatchId) => {
+          read.push(riotMatchId);
+        },
+        onFanOut: () => {
+          finished.resolve(true);
+        },
+      },
+    ),
+  );
+  const dispatcher = await startDispatcher(
+    "dispatcher-recorded-oversized-signal",
+  );
+  await dispatcher.signal(
+    dispatchScoutClientMatchesSignal,
+    matches
+      .map((match) => dispatchItem(match.riotMatchId, match.gameEndTimestamp))
+      .reverse(),
+  );
+  await finished.promise;
+  await terminateDispatcher(
+    dispatcher.workflowId,
+    "observed the full recorded batch",
+  );
+
+  expect([...new Set(read)]).toEqual(matches.map((match) => match.riotMatchId));
+  expect(
+    fresh.calls.filter((call) => call === "commitMatchObservation"),
+  ).toHaveLength(1);
+}, 120_000);
+
+test("chunks a 108-match discovery and waits for every acknowledgement before maintenance", async () => {
+  const matches = oversizedDiscoveryMatches();
+  const read: string[] = [];
+  const fresh = createScoutMatchStore();
+  const maintenance: number[] = [];
+  await harness.startWorkers({
+    ...routedMatchActivities(
+      fresh,
+      createScoutMatchStore({ observed: true, owner: { kind: "legacy-v1" } }),
+      {
+        legacyCompleted: () => true,
+        onRead: (riotMatchId) => {
+          read.push(riotMatchId);
+        },
+      },
+    ),
+    discoverPostMatchIds: pagedDiscovery([matches.toReversed()])
+      .discoverPostMatchIds,
+    runPostMatchMaintenance: () => {
+      maintenance.push(new Set(read).size);
+    },
+  });
+  const discoveryId = "discovery-oversized-batch";
+  await expect(runDiscovery(discoveryId)).resolves.toEqual(
+    scoutPostMatchDiscoveryResultCodec.serialize({
+      status: "completed",
+      discovered: 108,
+      childrenStarted: 1,
+      complete: true,
+    }),
+  );
+  const dispatcherId = scoutClientMatchDispatchWorkflowId(stage);
+  const dispatcherHistory = await harness
+    .client()
+    .workflow.getHandle(dispatcherId)
+    .fetchHistory();
+  const discoveryHistory = await harness
+    .client()
+    .workflow.getHandle(discoveryId)
+    .fetchHistory();
+  await terminateDispatcher(
+    dispatcherId,
+    "observed all discovery acknowledgements",
+  );
+
+  const signalSizes = (dispatcherHistory.events ?? []).flatMap((event) => {
+    const signal = event.workflowExecutionSignaledEventAttributes;
+    return signal?.signalName === dispatchScoutClientMatchesSignal.name
+      ? (signal.input?.payloads ?? []).map(
+          (payload) =>
+            z
+              .array(z.unknown())
+              .parse(
+                JSON.parse(
+                  new TextDecoder().decode(payload.data ?? new Uint8Array()),
+                ),
+              ).length,
+        )
+      : [];
+  });
+  expect(signalSizes).toEqual([100, 8]);
+  expect([...new Set(read)]).toEqual(matches.map((match) => match.riotMatchId));
+  expect(maintenance).toEqual([108]);
+  expect(
+    fresh.calls.filter((call) => call === "commitMatchObservation"),
+  ).toHaveLength(1);
+
+  const workflowsPath = new URL("index.ts", import.meta.url).pathname;
+  await Worker.runReplayHistory(
+    { workflowsPath },
+    discoveryHistory,
+    discoveryId,
+  );
+  const withoutGate = structuredClone(discoveryHistory);
+  expect(
+    unrecordPatch(withoutGate, SCOUT_DISCOVERY_BATCHED_DISPATCH_PATCH),
+  ).toBe(1);
+  await expect(
+    Worker.runReplayHistory({ workflowsPath }, withoutGate, discoveryId),
+  ).rejects.toMatchObject({ name: "DeterminismViolationError" });
+}, 120_000);
 
 test("a rediscovered, already-processed match does not hold back the matches after it", async () => {
   // The prod shape: an account whose cursor did not move past a match its

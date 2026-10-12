@@ -4,11 +4,6 @@
       "count": 1
     }
   },
-  "src/agent-tools/tools/discord/guild.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
   "src/agent-tools/tools/sessions/index.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
@@ -25,11 +20,6 @@
     }
   },
   "src/scheduler/agent-job-lease-recovery.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  "src/scheduler/jobs/server-summary.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }

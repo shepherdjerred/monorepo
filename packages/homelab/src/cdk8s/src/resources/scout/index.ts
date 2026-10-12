@@ -39,6 +39,12 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/gateway.ts";
 import { createScoutActivityWorkerDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/activity-worker.ts";
 import { scoutRuntimeProbes } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/probes.ts";
+import {
+  createScoutTemporalMetricsServiceMonitor,
+  scoutTemporalMetricsContainerPort,
+  scoutTemporalMetricsEnv,
+  scoutTemporalMetricsServicePort,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/scout/temporal-metrics.ts";
 
 function requiredBryanBucksControlSecret(secret: ISecret | undefined): ISecret {
   if (secret === undefined) {
@@ -406,6 +412,7 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
 
   const roleEnvVariables: Record<string, EnvValue> = {
     ...envVariables,
+    ...scoutTemporalMetricsEnv,
     SCOUT_RUNTIME_ROLE: EnvValue.fromValue("application"),
   };
 
@@ -418,6 +425,7 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
           number: 3000,
           protocol: Protocol.TCP,
         },
+        scoutTemporalMetricsContainerPort,
       ],
       securityContext: {
         ensureNonRoot: false,
@@ -455,13 +463,17 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
       },
     },
     selector: deployment,
-    ports: [{ name: "metrics", port: 3000 }],
+    ports: [{ name: "metrics", port: 3000 }, scoutTemporalMetricsServicePort],
   });
 
   // Create ServiceMonitor for Prometheus to scrape Scout metrics
   createServiceMonitor(chart, {
     name: `scout-${stage}`,
     matchLabels: { app: "scout", stage },
+  });
+  createScoutTemporalMetricsServiceMonitor(chart, `scout-temporal-${stage}`, {
+    app: "scout",
+    stage,
   });
 
   // Hosted roles share the stage claim and SELinux level.

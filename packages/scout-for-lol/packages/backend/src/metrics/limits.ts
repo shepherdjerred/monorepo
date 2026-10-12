@@ -3,7 +3,7 @@
  * This persists state to Prometheus by querying current database state
  */
 
-import { prisma } from "#src/database/index.ts";
+import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import {
   serversAtSubscriptionLimit,
   serversApproachingSubscriptionLimit,
@@ -21,15 +21,30 @@ const logger = createLogger("metrics-limits");
  * Update limit metrics based on current database state
  * This should be called periodically (e.g., every minute) to keep metrics current
  */
-export async function updateLimitMetrics(): Promise<void> {
+export async function updateLimitMetrics(
+  db: ExtendedPrismaClient = prisma,
+): Promise<void> {
   try {
-    // Get all servers and their current usage
-    const servers = await prisma.player.groupBy({
-      by: ["serverId"],
-      _count: {
-        id: true,
-      },
-    });
+    // Three grouped reads for every server at once, instead of two counts per
+    // server on each sweep.
+    const [servers, subscribedByServer, accountsByServer] = await Promise.all([
+      db.player.groupBy({ by: ["serverId"] }),
+      db.player.groupBy({
+        by: ["serverId"],
+        where: { subscriptions: { some: {} } },
+        _count: { _all: true },
+      }),
+      db.account.groupBy({
+        by: ["serverId"],
+        _count: { _all: true },
+      }),
+    ]);
+    const subscribedCounts = new Map(
+      subscribedByServer.map((row) => [row.serverId, row._count._all]),
+    );
+    const accountCounts = new Map(
+      accountsByServer.map((row) => [row.serverId, row._count._all]),
+    );
 
     // Track servers by limit status
     let atSubLimit = 0;
@@ -39,23 +54,8 @@ export async function updateLimitMetrics(): Promise<void> {
 
     for (const server of servers) {
       const serverId = DiscordGuildIdSchema.parse(server.serverId);
-
-      // Count subscribed players
-      const subscribedPlayers = await prisma.player.count({
-        where: {
-          serverId,
-          subscriptions: {
-            some: {},
-          },
-        },
-      });
-
-      // Count accounts
-      const accountCount = await prisma.account.count({
-        where: {
-          serverId,
-        },
-      });
+      const subscribedPlayers = subscribedCounts.get(server.serverId) ?? 0;
+      const accountCount = accountCounts.get(server.serverId) ?? 0;
 
       // Check subscription limits
       const subLimit = getLimit("player_subscriptions", { server: serverId });

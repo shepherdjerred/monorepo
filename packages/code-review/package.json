@@ -18,6 +18,10 @@
       "types": "./src/github-review-snapshot.ts",
       "default": "./src/github-review-snapshot.ts"
     },
+    "./github-request": {
+      "types": "./src/github-request.ts",
+      "default": "./src/github-request.ts"
+    },
     "./head-pushed-at": {
       "types": "./src/head-pushed-at.ts",
       "default": "./src/head-pushed-at.ts"

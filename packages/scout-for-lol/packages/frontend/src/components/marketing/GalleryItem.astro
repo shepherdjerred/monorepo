@@ -4,12 +4,20 @@ import type { ImageMetadata } from "astro";
 
 interface Props {
   imageSrc: ImageMetadata | string;
+  /** Responsive renditions of a string `imageSrc`. */
+  imageSrcSet?: string;
   imageAlt: string;
   caption?: string;
   fullWidth?: boolean;
 }
 
-const { imageSrc, imageAlt, caption, fullWidth = false } = Astro.props;
+const {
+  imageSrc,
+  imageSrcSet,
+  imageAlt,
+  caption,
+  fullWidth = false,
+} = Astro.props;
 ---
 
 <div class={`scout-gallery-item ${fullWidth ? "w-full" : "mx-auto max-w-5xl"}`}>
@@ -17,6 +25,14 @@ const { imageSrc, imageAlt, caption, fullWidth = false } = Astro.props;
     {typeof imageSrc === "string" ? (
       <img
         src={imageSrc}
+        srcset={imageSrcSet}
+        sizes={
+          imageSrcSet === undefined
+            ? undefined
+            : fullWidth
+              ? "100vw"
+              : "(min-width: 1024px) 1024px, 100vw"
+        }
         alt={imageAlt}
         class="w-full h-auto rounded-xl shadow-xl ring-1 ring-scout-border/10 ring-scout-border"
         loading="lazy"

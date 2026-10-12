@@ -1,5 +1,19 @@
 import { describe, expect, test } from "vitest";
-import { affectedVerifyFilters } from "../verify.ts";
+import {
+  affectedVerifyFilters,
+  ROOT_SCRIPTS_EXTERNAL_INPUTS,
+} from "../verify.ts";
+
+const REPO_ROOT = new URL("../../", import.meta.url);
+
+describe("root scripts external inputs", () => {
+  test.each(ROOT_SCRIPTS_EXTERNAL_INPUTS)("%s exists", async (input) => {
+    // stat() also resolves for the directory inputs that end in "/".
+    await expect(
+      Bun.file(new URL(input, REPO_ROOT)).stat(),
+    ).resolves.toBeDefined();
+  });
+});
 
 describe("affected verification filters", () => {
   test("unions the affected package graph with root invariants", async () => {
