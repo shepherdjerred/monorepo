@@ -11,7 +11,12 @@ export default [
     },
   },
   {
-    files: ["bin/executable_git_cleanup.ts", "bin/git_cleanup_core.ts"],
+    files: [
+      "bin/executable_git_cleanup.ts",
+      "bin/git_cleanup_core.ts",
+      "bin/executable_restart_codex_panes.ts",
+      "bin/codex_theme_restart_*.ts",
+    ],
     rules: {
       "unicorn/filename-case": [
         "error",
