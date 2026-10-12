@@ -40,7 +40,10 @@ public interface SavedPlayerData {
   /** Whether {@link #save} and {@link #marker} work on this server. */
   boolean available();
 
-  /** Writes {@code player}'s data to disk now, in this tick. Main thread only. */
+  /**
+   * Writes {@code player}'s data to disk now, in this tick, as Paper's autosave does. Main thread
+   * only; callers keep it to one player a tick.
+   */
   void save(Player player);
 
   /**

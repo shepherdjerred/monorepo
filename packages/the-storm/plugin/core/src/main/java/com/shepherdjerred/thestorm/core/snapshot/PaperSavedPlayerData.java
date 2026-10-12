@@ -20,9 +20,10 @@ import org.bukkit.entity.Player;
 
 /**
  * Paper's player data: {@link Player#saveData()} writes the file in the calling tick (to a
- * temporary file, then replacing the old one), and the file is read back on the compute pool as
- * gzipped NBT. Persistent data lives in the root compound's {@code BukkitValues}, keyed by the
- * namespaced key.
+ * temporary file, then replacing the old one), as Paper's own autosave and save on quit do; the
+ * plugin may not reach the server internals that would let it write off the main thread. The keeper
+ * saves at most one player a tick. The file is read back on the compute pool as gzipped NBT;
+ * persistent data lives in the root compound's {@code BukkitValues}, keyed by the namespaced key.
  */
 public final class PaperSavedPlayerData implements SavedPlayerData {
 

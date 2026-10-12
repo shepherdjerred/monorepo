@@ -148,7 +148,7 @@ final class SnapshotKeeperTest {
   }
 
   @Test
-  void aSaveThatNeverLandsIsRetriedThenStallsUntilALogin() {
+  void aSaveThatNeverLandsIsReadAgainThenStallsUntilALogin() {
     var alice = joined();
     saved.dropWrites = true;
     keeper.restore(alice);
@@ -159,8 +159,9 @@ final class SnapshotKeeperTest {
     assertThat(keeper.refusal(alice.getUniqueId())).contains(SnapshotBook.Refusal.CLEANUP_PENDING);
     main.runFor(Duration.ofSeconds(2));
 
-    // The first save and one more after each of the 1, 2, 4 and 8 second waits.
-    assertThat(saved.saves).isEqualTo(5);
+    // One save on the tick thread; the file is read again after the 1, 2, 4 and 8 second waits.
+    assertThat(saved.saves).isEqualTo(1);
+    assertThat(saved.reads).isEqualTo(5);
     assertThat(keeper.refusal(alice.getUniqueId())).contains(SnapshotBook.Refusal.CLEANUP_STALLED);
     assertThat(retried).hasValue(1);
     assertThat(store.rows).containsKey(alice.getUniqueId());
@@ -222,7 +223,7 @@ final class SnapshotKeeperTest {
   }
 
   @Test
-  void aPlayerWhoLeavesBeforeTheirRestoreReadsBackStallsUntilTheirNextLogin() {
+  void aPlayerWhoLeavesBeforeTheReadBackIsStillProvenFromTheirSavedFile() {
     var alice = joined();
     saved.corrupt = 1;
     keeper.restore(alice);
@@ -231,15 +232,35 @@ final class SnapshotKeeperTest {
 
     main.runFor(ALL_RETRIES);
 
-    // No save of a player who left: their quit save and next login prove the restore instead.
+    // The retry only reads the file the restore saved, so leaving does not stop the proof.
     assertThat(saved.saves).isEqualTo(1);
-    assertThat(keeper.refusal(alice.getUniqueId())).contains(SnapshotBook.Refusal.CLEANUP_STALLED);
-    var _ = alice.reconnect();
-    saved.load(alice);
-    keeper.recover(alice, true);
-    main.settle();
+    assertThat(store.rows).doesNotContainKey(alice.getUniqueId());
     assertThat(keeper.refusal(alice.getUniqueId())).isEmpty();
-    assertThat(swords(alice)).isEqualTo(1);
+  }
+
+  @Test
+  void manyRestoresInOneTickSaveOnePlayerATick() {
+    var players = new ArrayList<PlayerMock>();
+    for (var name : List.of("Alice", "Bob", "Carol")) {
+      var player = server.addPlayer(name);
+      player.getInventory().setItem(0, new ItemStack(Material.DIAMOND_SWORD));
+      keeper.capture(player, "match-1", ignored -> {});
+      players.add(player);
+    }
+    main.settle();
+    saved.saves = 0;
+
+    players.forEach(keeper::restore);
+
+    assertThat(saved.saves).isEqualTo(1);
+    main.runFor(SnapshotKeeper.SAVE_SPACING);
+    assertThat(saved.saves).isEqualTo(2);
+    main.runFor(SnapshotKeeper.SAVE_SPACING);
+    assertThat(saved.saves).isEqualTo(3);
+    main.runFor(Duration.ofSeconds(1));
+    assertThat(saved.saves).isEqualTo(3);
+    assertThat(store.unrestored()).isEmpty();
+    players.forEach(player -> assertThat(keeper.refusal(player.getUniqueId())).isEmpty());
   }
 
   @Test

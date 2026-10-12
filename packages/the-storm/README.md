@@ -517,19 +517,23 @@ native despawn.
 
 Arena and rwf restores keep the database snapshot until saved player data
 proves the restore. Core's `SnapshotKeeper` applies the snapshot and its
-persistent-data marker, then saves the player in the same tick. Paper writes
+persistent-data marker in one tick, then saves the player: at once, or a tick
+after the previous restore's save, so a match ending for many players writes
+one file a tick. Paper writes
 `<level>/players/data/<uuid>.dat` (or the pre-26 `playerdata/`) to a temporary
 file and swaps it in, so the marker and the belongings land together. The file
 is read back on the compute pool. The row is marked restored only when the
 fully read file holds that snapshot's fingerprint.
 
 A join asked for meanwhile is told the belongings are still being saved and
-goes ahead by itself once they are. Failed read-backs retry after 1, 2, 4 and
-8 seconds; after that the restore is stalled and the player is asked to
-reconnect, as is every restore when the server's player-data folder cannot be
-found. A later login carrying the marker proves a stalled restore. One
-player-file write per restore runs on the server tick, as Paper's own saves
-do; the read-back never does.
+goes ahead by itself once they are. A failed read-back is read again, without
+saving again, after 1, 2, 4 and 8 seconds; a later save by Paper (its autosave,
+or the save on quit) can still land the marker. After that the restore is
+stalled and the player is asked to reconnect, as is every restore when the
+server's player-data folder cannot be found. A later login carrying the marker
+proves a stalled restore. Each restore writes one player file on the server
+tick, as Paper's own autosave does; the plugin cannot reach the server
+internals that would write it elsewhere. The read-back never runs on the tick.
 
 ### Colosseum
 
