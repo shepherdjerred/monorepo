@@ -4,18 +4,23 @@ const mocks = vi.hoisted(() => ({
   getLastSuccessfulPollAt: vi.fn(),
   getReconciliationCompletedAt: vi.fn(),
   setReconciliationCompletedAt: vi.fn(),
+  getBackfilledThroughAt: vi.fn(),
+  setBackfilledThroughAt: vi.fn(),
+  backfillMatchesToS3: vi.fn(),
 }));
 
 vi.mock("#src/league/tasks/recovery/app-state.ts", () => ({
   getLastSuccessfulPollAt: mocks.getLastSuccessfulPollAt,
   getReconciliationCompletedAt: mocks.getReconciliationCompletedAt,
   setReconciliationCompletedAt: mocks.setReconciliationCompletedAt,
+  getBackfilledThroughAt: mocks.getBackfilledThroughAt,
+  setBackfilledThroughAt: mocks.setBackfilledThroughAt,
 }));
 vi.mock("#src/league/tasks/recovery/offline-notification.ts", () => ({
   sendOfflineNotification: vi.fn(() => Promise.resolve(undefined)),
 }));
 vi.mock("#src/league/tasks/recovery/backfill-to-s3.ts", () => ({
-  backfillMatchesToS3: vi.fn(() => Promise.resolve({ totalMatchesSaved: 0 })),
+  backfillMatchesToS3: mocks.backfillMatchesToS3,
 }));
 
 import {
@@ -54,14 +59,29 @@ function hangNextRun() {
 }
 
 describe("runIngestionReconciliation", () => {
-  // Stands in for the durable BotState checkpoint column.
+  // Stand in for the durable BotState checkpoint columns.
   let storedCompletedAt: Date | undefined;
+  let storedBackfilledThroughAt: Date | undefined;
 
   beforeEach(() => {
     mocks.getLastSuccessfulPollAt.mockReset();
     mocks.getReconciliationCompletedAt.mockReset();
     mocks.setReconciliationCompletedAt.mockReset();
+    mocks.getBackfilledThroughAt.mockReset();
+    mocks.setBackfilledThroughAt.mockReset();
+    mocks.backfillMatchesToS3.mockReset();
     storedCompletedAt = undefined;
+    storedBackfilledThroughAt = undefined;
+    mocks.getBackfilledThroughAt.mockImplementation(() =>
+      Promise.resolve(storedBackfilledThroughAt),
+    );
+    mocks.setBackfilledThroughAt.mockImplementation((date: Date) => {
+      storedBackfilledThroughAt = date;
+      return Promise.resolve(undefined);
+    });
+    mocks.backfillMatchesToS3.mockImplementation(() =>
+      Promise.resolve({ totalMatchesSaved: 0 }),
+    );
     mocks.getReconciliationCompletedAt.mockImplementation(() =>
       Promise.resolve(storedCompletedAt),
     );
@@ -71,6 +91,59 @@ describe("runIngestionReconciliation", () => {
     });
     vi.useRealTimers();
     resetReconciliationState();
+  });
+
+  test("backfills a stalled poll's window once rather than on every run", async () => {
+    const lastPollAt = new Date(Date.now() - 3 * 60 * 60 * 1000);
+    mocks.getLastSuccessfulPollAt.mockImplementation(() =>
+      Promise.resolve(lastPollAt),
+    );
+
+    await runIngestionReconciliation();
+    expect(mocks.backfillMatchesToS3).toHaveBeenNthCalledWith(
+      1,
+      lastPollAt,
+      expect.any(Date),
+    );
+    const firstEnd: unknown = mocks.backfillMatchesToS3.mock.calls[0]?.[1];
+    expect(storedBackfilledThroughAt).toEqual(firstEnd);
+
+    // The poll is still stalled, so downtime is still measured from the same
+    // instant, but the next backfill starts where the last one ended.
+    storedCompletedAt = new Date(Date.now() - 31_000);
+    await runIngestionReconciliation();
+    expect(mocks.backfillMatchesToS3).toHaveBeenNthCalledWith(
+      2,
+      firstEnd,
+      expect.any(Date),
+    );
+  });
+
+  test("a failed backfill leaves its window to be backfilled again", async () => {
+    mocks.getLastSuccessfulPollAt.mockImplementation(() =>
+      Promise.resolve(new Date(Date.now() - 3 * 60 * 60 * 1000)),
+    );
+    mocks.backfillMatchesToS3.mockRejectedValueOnce(new Error("riot down"));
+
+    await expect(runIngestionReconciliation()).rejects.toThrow("riot down");
+    expect(mocks.setBackfilledThroughAt).not.toHaveBeenCalled();
+  });
+
+  test("starts from the last poll when it is newer than the backfilled window", async () => {
+    // An older outage was backfilled, then polling recovered and stalled
+    // again: the new window starts at the newer poll, not the old mark.
+    storedBackfilledThroughAt = new Date(Date.now() - 48 * 60 * 60 * 1000);
+    const lastPollAt = new Date(Date.now() - 2 * 60 * 60 * 1000);
+    mocks.getLastSuccessfulPollAt.mockImplementation(() =>
+      Promise.resolve(lastPollAt),
+    );
+
+    await runIngestionReconciliation();
+
+    expect(mocks.backfillMatchesToS3).toHaveBeenCalledWith(
+      lastPollAt,
+      expect.any(Date),
+    );
   });
 
   test("skips a concurrent invocation while a run is in flight", async () => {

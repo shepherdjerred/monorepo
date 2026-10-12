@@ -449,6 +449,13 @@ what it is still _holding_:
   two hours. The observation row stores no game end, so this includes the
   game's own length (healthy p90 is about 40–45 minutes). An empty window reads
   0, so it does not detect discovery that has stopped outright.
+- `scout_durable_postmatch_poll_age_seconds` — seconds since post-match
+  discovery last closed a poll with complete evidence (`BotState`'s
+  `lastSuccessfulPollAt`). It grows while discovery is stopped for any reason
+  — a wedged run, a Schedule that is not starting runs, or runs that keep
+  failing — which is the case the observation lag cannot see.
+  `ScoutDurablePostmatchDiscoveryStalled` fires past 30 minutes; a planned
+  discovery pause fires it too and is silenced for the window.
 - `scout_durable_postmatch_mint_gaps` — live matches observed in the last six
   hours whose cursors all advanced at least 15 minutes ago, with an unmuted,
   unfiltered subscription owed a report, but no postmatch intent and no
@@ -1685,6 +1692,14 @@ Notes that are easy to get wrong:
   lock used by web starts, so the two surfaces cannot advance one transcript
   concurrently. Once the durable row becomes terminal, the gateway releases
   its non-executing copy and local rate-limit ticket.
+- **The embedded Workers export the Temporal SDK's own metrics** when
+  `TEMPORAL_METRICS_ADDRESS` is set, as it is on the hosted `application` and
+  `activity-worker` roles (port 9464, the same exporter shape as the
+  stable/candidate Workflow Workers). These Workers run every unversioned
+  Workflow, and the SDK counters count every failed Workflow Task attempt,
+  where the server's `failed_workflow_tasks` records a Task that keeps failing
+  only once; `TemporalWorkflowTaskFailing` reads them. Unset, as in local
+  processes, runs no exporter.
 - **`scout_temporal_workers`** reports the embedded queue classes, including
   zero for classes a role does not run. `ScoutTemporalWorkerMissing` compares
   fresh same-pod scrapes against declared hosted owners. Beta Workflow health

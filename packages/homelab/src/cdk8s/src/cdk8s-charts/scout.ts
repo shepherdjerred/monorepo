@@ -16,6 +16,7 @@ import {
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { SCOUT_GATEWAY_APP_LABEL } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/gateway.ts";
 import { SCOUT_ACTIVITY_WORKER_APP_LABEL } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/activity-worker.ts";
+import { SCOUT_TEMPORAL_METRICS_PORT } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/temporal-metrics.ts";
 
 export type Stage = "prod" | "beta";
 
@@ -120,6 +121,28 @@ function discordVoiceRtpEgressRule() {
     ],
   };
 }
+/**
+ * Prometheus to the embedded Temporal Workers' SDK exporter, on the roles
+ * that run Workers. Prometheus only: nothing else reads the SDK's metrics.
+ */
+function prometheusTemporalMetricsIngressRule() {
+  return {
+    from: [
+      {
+        namespaceSelector: {
+          matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
+        },
+      },
+    ],
+    ports: [
+      {
+        port: IntOrString.fromNumber(SCOUT_TEMPORAL_METRICS_PORT),
+        protocol: "TCP",
+      },
+    ],
+  };
+}
+
 type WorkflowWorkerImageOverrides = {
   stable?: string;
   candidate?: string;
@@ -211,6 +234,7 @@ export function createScoutChart(
           ],
           ports: [{ port: IntOrString.fromNumber(3000), protocol: "TCP" }],
         },
+        prometheusTemporalMetricsIngressRule(),
       ],
     },
   });
@@ -282,6 +306,7 @@ export function createScoutChart(
             ],
             ports: [{ port: IntOrString.fromNumber(3000), protocol: "TCP" }],
           },
+          prometheusTemporalMetricsIngressRule(),
         ],
         egress: scoutRuntimeEgressRules(),
       },
