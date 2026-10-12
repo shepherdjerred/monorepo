@@ -6,19 +6,37 @@ import {
 import { connectDriverFeed, type DriverFeedStatus } from "#src/video.ts";
 import { hudClockRegion, samplerForImageData } from "#src/hud-clock.ts";
 import { feedTelemetry } from "#src/feed-telemetry.ts";
+import { FeedAudioPlayer } from "#src/feed-audio.ts";
 
 /** How often to read the HUD clock back off the canvas. */
 const LATENCY_SAMPLE_INTERVAL_MS = 250;
 /** Consecutive failed decodes before the readout admits it has lost the clock. */
 const LATENCY_FAILURE_TOLERANCE = 8;
+const MUTED_STORAGE_KEY = "dpmk-feed-muted";
+
+function loadMuted(): boolean {
+  try {
+    return globalThis.localStorage.getItem(MUTED_STORAGE_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function storeMuted(muted: boolean): void {
+  try {
+    globalThis.localStorage.setItem(MUTED_STORAGE_KEY, String(muted));
+  } catch {
+    // A blocked store only means the choice is not remembered next visit.
+  }
+}
 
 /**
  * The live game, decoded in this tab.
  *
  * Spectators watch the Discord Go-Live stream; the people driving watch this,
- * which skips Discord's voice leg and its client-side de-jitter buffer. Audio
- * still comes from Discord, so what you see here runs slightly ahead of what
- * you hear.
+ * which skips Discord's voice leg and its client-side de-jitter buffer. The
+ * game's sound arrives on the same socket and trails the picture by the
+ * player's small jitter lead.
  */
 export function GameView({ driverSocketId }: { driverSocketId: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -26,6 +44,45 @@ export function GameView({ driverSocketId }: { driverSocketId: string }) {
     kind: "connecting",
   });
   const [latencyMs, setLatencyMs] = useState<number>();
+  const [muted, setMuted] = useState(loadMuted);
+  const [soundBlocked, setSoundBlocked] = useState(false);
+  const audioRef = useRef<FeedAudioPlayer>(undefined);
+  // Read once at mount; later toggles go straight to the live player.
+  const initialMutedRef = useRef(muted);
+
+  const toggleMuted = () => {
+    const next = !muted;
+    setMuted(next);
+    audioRef.current?.setMuted(next);
+    storeMuted(next);
+  };
+
+  useEffect(() => {
+    const player = new FeedAudioPlayer(initialMutedRef.current);
+    audioRef.current = player;
+    setSoundBlocked(!player.running);
+    // Autoplay policy keeps the context suspended until a user gesture; the
+    // first click or key press on the page (claiming a seat, driving) starts it.
+    const resume = async () => {
+      await player.unlock();
+      setSoundBlocked(!player.running);
+      if (player.running) removeListeners();
+    };
+    const unlock = () => {
+      void resume();
+    };
+    const removeListeners = () => {
+      document.removeEventListener("pointerdown", unlock);
+      document.removeEventListener("keydown", unlock);
+    };
+    document.addEventListener("pointerdown", unlock);
+    document.addEventListener("keydown", unlock);
+    return () => {
+      removeListeners();
+      audioRef.current = undefined;
+      player.close();
+    };
+  }, []);
 
   useEffect(() => {
     // Resolve the 2D context once: getContext per frame is a measurable cost at
@@ -93,6 +150,9 @@ export function GameView({ driverSocketId }: { driverSocketId: string }) {
         onDecoderReset: () => {
           feedTelemetry.recordDecoderReset();
         },
+        onAudio: (pcm, format) => {
+          audioRef.current?.play(pcm, format);
+        },
       },
       driverSocketId,
     );
@@ -104,14 +164,33 @@ export function GameView({ driverSocketId }: { driverSocketId: string }) {
         <span className="font-semibold uppercase tracking-[0.18em] text-zinc-400">
           Live feed
         </span>
-        {latencyMs !== undefined && (
-          <span
-            className="font-mono"
-            title="Capture-to-paint, read off the clock burned into each frame and corrected for the offset between your clock and the server's. Excludes your display's own latency."
+        <div className="flex items-center gap-3">
+          {latencyMs !== undefined && (
+            <span
+              className="font-mono"
+              title="Capture-to-paint, read off the clock burned into each frame and corrected for the offset between your clock and the server's. Excludes your display's own latency."
+            >
+              {latencyMs}ms to glass
+            </span>
+          )}
+          <button
+            type="button"
+            className="rounded-full border border-zinc-700 px-2.5 py-0.5 font-semibold text-zinc-300 hover:border-zinc-500 hover:text-zinc-100"
+            aria-pressed={!muted}
+            onClick={() => {
+              // While blocked, this click is the gesture that starts the sound
+              // (the page-wide pointerdown listener); it must not also mute it.
+              if (soundBlocked) return;
+              toggleMuted();
+            }}
           >
-            {latencyMs}ms to glass
-          </span>
-        )}
+            {muted
+              ? "Sound off"
+              : soundBlocked
+                ? "Click to enable sound"
+                : "Sound on"}
+          </button>
+        </div>
       </div>
       <div className="relative mx-auto aspect-[4/3] w-full max-w-3xl">
         <canvas

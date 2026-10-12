@@ -131,7 +131,7 @@ describe("buildDriverFeedArgs", () => {
     expect(valueOf(args, "-async_depth")).toBe("1");
   });
 
-  it("carries no audio input — drivers keep Discord for sound", () => {
+  it("carries no audio input — audio is sent as PCM beside the video", () => {
     expect(buildDriverFeedArgs(BASE)).toContain("-an");
   });
 });

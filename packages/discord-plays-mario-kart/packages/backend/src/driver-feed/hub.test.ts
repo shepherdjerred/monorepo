@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+  DRIVER_FEED_AUDIO_FLAG,
   DRIVER_FEED_HEADER_BYTES,
   DRIVER_FEED_KEYFRAME_FLAG,
 } from "@discord-plays-mario-kart/common";
 import {
   DriverFeedHub,
+  frameDriverFeedAudioMessage,
   frameDriverFeedMessage,
   type FeedClient,
 } from "./hub.ts";
@@ -189,5 +191,40 @@ describe("DriverFeedHub", () => {
     expect(first.closedWith).toBe("session ended");
     expect(second.closedWith).toBe("session ended");
     expect(feed.clientCount).toBe(0);
+  });
+});
+
+describe("broadcastAudio", () => {
+  const PCM = Buffer.from([1, 0, 2, 0]);
+
+  it("frames audio with the audio flag and the PCM untouched", () => {
+    const message = frameDriverFeedAudioMessage(PCM);
+    expect(message[0]).toBe(DRIVER_FEED_AUDIO_FLAG);
+    expect(message.subarray(DRIVER_FEED_HEADER_BYTES)).toEqual(PCM);
+  });
+
+  it("sends audio to a client still waiting for its first keyframe", () => {
+    const feed = hub();
+    const client = new FakeClient();
+    feed.add(client);
+
+    feed.broadcast(DELTA);
+    feed.broadcastAudio(PCM);
+
+    expect(client.sent).toEqual([frameDriverFeedAudioMessage(PCM)]);
+  });
+
+  it("withholds audio from a client over the backlog ceiling", () => {
+    const feed = hub({ maxBuffer: 10 });
+    const slow = new FakeClient();
+    const fast = new FakeClient();
+    feed.add(slow);
+    feed.add(fast);
+    slow.bufferedBytes = 11;
+
+    feed.broadcastAudio(PCM);
+
+    expect(slow.sent).toEqual([]);
+    expect(fast.sent).toEqual([frameDriverFeedAudioMessage(PCM)]);
   });
 });

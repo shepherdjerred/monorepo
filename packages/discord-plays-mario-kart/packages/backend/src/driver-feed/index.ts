@@ -16,6 +16,7 @@ import {
   DriverFeedReadySchema,
 } from "@discord-plays-mario-kart/common";
 import type { Config } from "#src/config/schema.ts";
+import { AUDIO_CHANNELS } from "#src/emulator/constants.ts";
 import type { FrameFormat } from "#src/engine/format.ts";
 import { logger } from "#src/logger.ts";
 import {
@@ -131,6 +132,12 @@ export class DriverFeedService {
     encoder.start();
   }
 
+  /** Feed one chunk of the game's interleaved s16le audio. */
+  pushAudio(pcm: Buffer): void {
+    if (this.encoder === undefined) return;
+    this.hub.broadcastAudio(pcm);
+  }
+
   /** Feed one overlay-composited BGRA frame from the emulator tee. */
   pushFrame(frame: Buffer, inputReceivedAtMs?: number): void {
     this.encoder?.pushFrame(frame, inputReceivedAtMs);
@@ -173,6 +180,8 @@ export class DriverFeedService {
       width: out.width,
       height: out.height,
       frameRate: this.options.format.fps,
+      audioSampleRate: this.options.format.audioSampleRate,
+      audioChannels: AUDIO_CHANNELS,
     };
     ws.send(JSON.stringify(init));
 

@@ -100,6 +100,9 @@ export async function startFeedBench(opts: {
     );
     driverFeed.pushFrame(frame.rgba, frame.inputReceivedAtMs);
   });
+  engine.onAudio((pcm) => {
+    driverFeed.pushAudio(pcm);
+  });
   driverFeed.startSession();
   engine.start();
 
@@ -108,6 +111,9 @@ export async function startFeedBench(opts: {
     stop: async () => {
       engine.onFrame(() => {
         // Detach: stopping the feed first would otherwise race a frame.
+      });
+      engine.onAudio(() => {
+        // Detach, as for frames.
       });
       driverFeed.stopSession();
       await engine.stop();

@@ -247,6 +247,7 @@ export class MarioKartGameDriver implements GameDriver<SelfbotPooledUserbot> {
     });
     emulator.onAudio((pcm, contentEndMs) => {
       streamer.pushAudio(pcm, contentEndMs);
+      this.driverFeed?.pushAudio(pcm);
     });
 
     await startOrStopEngine(emulator, () => streamer.start());

@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { DRIVER_FEED_KEYFRAME_FLAG } from "@discord-plays-mario-kart/common";
+import {
+  DRIVER_FEED_AUDIO_FLAG,
+  DRIVER_FEED_KEYFRAME_FLAG,
+} from "@discord-plays-mario-kart/common";
 import {
   decideDriverFeedDecode,
+  isDriverFeedAudio,
   retainDriverFeedEntryPoint,
   shouldPaintDriverFeedOutput,
 } from "./video.ts";
@@ -87,5 +91,24 @@ describe("retainDriverFeedEntryPoint", () => {
 
     expect(retainDriverFeedEntryPoint(undefined, first)).toBe(first);
     expect(retainDriverFeedEntryPoint(first, later)).toBe(first);
+  });
+});
+
+describe("isDriverFeedAudio", () => {
+  it("recognises audio chunks", () => {
+    expect(isDriverFeedAudio(encodedUnit(DRIVER_FEED_AUDIO_FLAG))).toBe(true);
+  });
+
+  it("leaves video units, keyframe or not, to the decoder", () => {
+    expect(isDriverFeedAudio(encodedUnit(0))).toBe(false);
+    expect(isDriverFeedAudio(encodedUnit(DRIVER_FEED_KEYFRAME_FLAG))).toBe(
+      false,
+    );
+  });
+
+  it("ignores a header with no payload", () => {
+    expect(
+      isDriverFeedAudio(Uint8Array.from([DRIVER_FEED_AUDIO_FLAG]).buffer),
+    ).toBe(false);
   });
 });

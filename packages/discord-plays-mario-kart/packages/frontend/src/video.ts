@@ -1,4 +1,4 @@
-// Driver feed client: WebSocket in, decoded frames out.
+// Driver feed client: WebSocket in, decoded frames and audio chunks out.
 //
 // Framework-free on purpose — `game-view.tsx` owns the canvas and the React
 // state, this owns the socket, the decoder, and the lifetime of every
@@ -10,6 +10,7 @@
 // we added here would give back the latency the transport just saved.
 
 import {
+  DRIVER_FEED_AUDIO_FLAG,
   DRIVER_FEED_HEADER_BYTES,
   DRIVER_FEED_KEYFRAME_FLAG,
   DRIVER_FEED_PATH,
@@ -17,6 +18,7 @@ import {
   type DriverFeedInit,
   type DriverFeedReady,
 } from "@discord-plays-mario-kart/common";
+import type { FeedAudioFormat } from "#src/feed-audio.ts";
 
 export type DriverFeedStatus =
   | { readonly kind: "unsupported" }
@@ -35,6 +37,11 @@ export type DriverFeedCallbacks = {
   readonly paint: (frame: VideoFrame) => void;
   /** The decoder was reset and the picture will blank until the next keyframe. */
   readonly onDecoderReset?: () => void;
+  /**
+   * One chunk of game audio, interleaved s16le PCM. The view is only valid
+   * during the call.
+   */
+  readonly onAudio?: (pcm: DataView, format: FeedAudioFormat) => void;
 };
 
 const RECONNECT_BASE_MS = 500;
@@ -100,6 +107,12 @@ export function decideDriverFeedDecode(
  * asynchronous. A later keyframe must not displace the earliest frame that can
  * start the decoder, and deltas cannot start it at all.
  */
+export function isDriverFeedAudio(message: ArrayBuffer): boolean {
+  if (message.byteLength <= DRIVER_FEED_HEADER_BYTES) return false;
+  const header = new Uint8Array(message, 0, DRIVER_FEED_HEADER_BYTES);
+  return (header[0] & DRIVER_FEED_AUDIO_FLAG) !== 0;
+}
+
 export function retainDriverFeedEntryPoint(
   pending: ArrayBuffer | undefined,
   incoming: ArrayBuffer,
@@ -146,6 +159,7 @@ export function connectDriverFeed(
   let nextTimestampUs = 0;
   let started = false;
   let pendingEntryPoint: ArrayBuffer | undefined;
+  let audioFormat: FeedAudioFormat | undefined;
 
   const closeDecoder = () => {
     if (decoder === undefined) return;
@@ -171,6 +185,10 @@ export function connectDriverFeed(
   ): Promise<void> => {
     closeDecoder();
     started = false;
+    audioFormat = {
+      sampleRate: init.audioSampleRate,
+      channels: init.audioChannels,
+    };
     const created = new VideoDecoder({
       output: (frame) => {
         attempt = 0;
@@ -301,7 +319,17 @@ export function connectDriverFeed(
         void configure(parsed.data, ws);
         return;
       }
-      if (data instanceof ArrayBuffer) decodeMessage(data);
+      if (!(data instanceof ArrayBuffer)) return;
+      if (isDriverFeedAudio(data)) {
+        if (audioFormat !== undefined) {
+          callbacks.onAudio?.(
+            new DataView(data, DRIVER_FEED_HEADER_BYTES),
+            audioFormat,
+          );
+        }
+        return;
+      }
+      decodeMessage(data);
     });
     ws.addEventListener("close", () => {
       pendingEntryPoint = undefined;
