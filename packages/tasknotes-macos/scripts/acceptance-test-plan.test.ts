@@ -40,6 +40,44 @@ describe("standalone native test selection", () => {
 
 describe("persisted native workflow proof", () => {
   const note = "---\ntitle: Native Mac run edited\nstatus: open\n---\n";
+  test.each(["open", '"open"', "'open'"])(
+    "accepts the YAML string status %s from a persisted note",
+    (status) => {
+      const persisted = `---\ntitle: "Native Mac run edited"\nstatus: ${status}\n---\nBody remains Markdown.\n`;
+      expect(() =>
+        verifyStandaloneNotes([persisted], ["Native Mac run edited"]),
+      ).not.toThrow();
+      expect(() =>
+        verifyStandaloneNotes(
+          [persisted.replaceAll("\n", "\r\n")],
+          ["Native Mac run edited"],
+        ),
+      ).not.toThrow();
+    },
+  );
+
+  test.each([
+    "---\ntitle: Native Mac run edited\nstatus: done\n---\nstatus: open\n",
+    "---\ntitle: Wrong title\nstatus: open\n---\ntitle: Native Mac run edited\n",
+    "---\ntitle: Native Mac run edited\n---\nstatus: open\n",
+    "---\nstatus: open\n---\ntitle: Native Mac run edited\n",
+    "---\ntitle: Native Mac run edited\nstatus: [open\n---\n",
+    "---\ntitle: Native Mac run edited\nstatus: open\n",
+    "title: Native Mac run edited\nstatus: open\n",
+    "---\n[Native Mac run edited, open]\n---\n",
+    "---\nnull\n---\n",
+    "---\ntitle: [Native Mac run edited]\nstatus: open\n---\n",
+    "---\ntitle: Native Mac run edited\nstatus: [open]\n---\n",
+    "---\ntitle: Native Mac run edited\nstatus: true\n---\n",
+  ])(
+    "rejects invalid frontmatter even when the body resembles a task",
+    (persisted) => {
+      expect(() =>
+        verifyStandaloneNotes([persisted], ["Native Mac run edited"]),
+      ).toThrow();
+    },
+  );
+
   test("requires exactly one final open task per selected test", () => {
     expect(() =>
       verifyStandaloneNotes([note], ["Native Mac run edited"]),
