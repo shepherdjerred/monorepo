@@ -27,8 +27,8 @@ model Person {
 // pre-aggregated balances up to +42. Every read sums this column.
 //
 // The legacy TypeORM schema left `guildId`, `giverId`, and `receiverId`
-// nullable. The import in `scripts/import-legacy.ts` asserts zero nulls across
-// all three before writing, so they are required here.
+// nullable. The one-time import asserted zero nulls across all three before
+// writing, so they are required here.
 model Karma {
   id         Int      @id @default(autoincrement())
   amount     Int

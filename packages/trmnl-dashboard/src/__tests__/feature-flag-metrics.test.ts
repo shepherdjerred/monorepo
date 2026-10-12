@@ -6,7 +6,7 @@ describe("feature flag metrics", () => {
     const metrics = createFeatureFlagMetrics();
 
     metrics.recorder.countEvaluation({
-      flag: "pet-dashboard-enabled",
+      flag: "trmnl-ha-presence-entities",
       reason: "STATIC",
       errorCode: undefined,
     });
@@ -15,7 +15,7 @@ describe("feature flag metrics", () => {
     metrics.recorder.observeSnapshotAge(42);
 
     await expect(metrics.render()).resolves.toContain(
-      'feature_flag_evaluations_total{flag="pet-dashboard-enabled",reason="STATIC"} 1',
+      'feature_flag_evaluations_total{flag="trmnl-ha-presence-entities",reason="STATIC"} 1',
     );
     await expect(metrics.render()).resolves.toContain(
       'feature_flag_errors_total{operation="refresh"} 1',

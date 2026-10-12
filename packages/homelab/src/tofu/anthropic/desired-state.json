@@ -6,10 +6,7 @@
     "openrouter": {
       "api_key_id": "apikey_01VLCWhsRj3vKYjpJ7EEXJUp",
       "name": "OpenRouter",
-      "status": "active",
-      "vault_item_id": "msklmk7gk2r3rq4kyeywpuafny",
-      "vault_field": "OPENROUTER_BYOK_KEYS_JSON",
-      "vault_json_path": "/anthropic"
+      "status": "archived"
     },
     "macbook": {
       "api_key_id": "apikey_01Km97w7NfrpW9skzN9dvo5V",

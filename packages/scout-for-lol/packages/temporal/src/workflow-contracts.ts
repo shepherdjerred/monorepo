@@ -110,11 +110,15 @@ export type ScoutClientMatchDispatchItem = z.infer<
   typeof ScoutClientMatchDispatchItemSchema
 >;
 
-/** A signal is bounded by the native ingress batch limit. */
+/**
+ * Internal signals also carry Riot discoveries, whose recorded batches can
+ * exceed the native HTTP ingress limit. Validate every item without rejecting
+ * an already-recorded signal on replay. Producers bound new signal payloads;
+ * native ingress retains its own observation batch limit.
+ */
 export const ScoutClientMatchDispatchBatchSchema = z
   .array(ScoutClientMatchDispatchItemSchema)
   .min(1)
-  .max(100)
   .readonly();
 export type ScoutClientMatchDispatchBatch = z.infer<
   typeof ScoutClientMatchDispatchBatchSchema

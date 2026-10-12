@@ -1,0 +1,19 @@
+Host cs6035-binexp
+    HostName 192.168.56.101
+    Port 2222
+    User binexp
+    IdentityFile ~/.ssh/cs6035_binexp_ed25519
+    IdentitiesOnly yes
+    HostKeyAlias cs6035-binexp
+    StrictHostKeyChecking yes
+    UserKnownHostsFile ~/.ssh/cs6035_binexp_known_hosts
+    ServerAliveInterval 30
+    ServerAliveCountMax 3
+
+Host macbook
+    HostName macbook.tailnet-1a49.ts.net
+    User jerred
+    IdentityFile ~/.ssh/macbook.pub
+    IdentitiesOnly yes
+    ServerAliveInterval 30
+    ServerAliveCountMax 3

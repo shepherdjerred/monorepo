@@ -16,6 +16,7 @@
     "#learning-wire": "./plugin/modules/rwfbots/src/main/resources/rwf-duel.json",
     "#learning-map-wire": "./plugin/modules/rwfbots/src/main/resources/rwf-map-scenario.json",
     "#learning-map-scenarios": "./plugin/modules/rwfbots/src/main/resources/rwf-map-scenarios.json",
+    "#learning-training-map-scenarios": "./tools/learning/maps/training-scenarios.json",
     "#learning-close-starts-wire": "./plugin/modules/rwfbots/src/main/resources/rwf-close-starts.json",
     "#learning-setup-wire": "./plugin/modules/rwfbots/src/main/resources/rwf-duel-setup.json",
     "#learning-load-wire": "./plugin/modules/rwfbots/src/main/resources/rwf-inference-load.json",

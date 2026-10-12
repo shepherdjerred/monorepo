@@ -9,10 +9,14 @@ import { fileURLToPath } from "node:url";
 // entries until `--prune-suppressions` — matches every other package's lint.
 // Extra CLI arguments (e.g. --suppress-rule, --prune-suppressions) forward.
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
+const eslintCli = fileURLToPath(
+  new URL("bin/eslint.js", import.meta.resolve("eslint/package.json")),
+);
 
 const proc = Bun.spawn(
   [
-    `${repoRoot}scripts/node_modules/.bin/eslint`,
+    process.execPath,
+    eslintCli,
     "--config",
     "scripts/eslint.config.ts",
     "--cache",

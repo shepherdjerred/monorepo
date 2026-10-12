@@ -33,6 +33,11 @@ export function createPyroscopeApp(chart: Chart) {
           memory: "256Mi",
         },
       },
+      // The chart defaults to debug: ~3.4M lines a day, over a third of
+      // everything Loki ingests.
+      extraArgs: {
+        "log.level": "info",
+      },
     },
     // No bundled agent — profiles arrive from our dedicated Alloy eBPF
     // DaemonSet (alloy.ts). The chart's subchart key is `alloy`, not

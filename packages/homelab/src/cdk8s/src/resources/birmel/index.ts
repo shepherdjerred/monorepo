@@ -254,7 +254,6 @@ done`,
 
         // General configuration
         LOG_LEVEL: EnvValue.fromValue("info"),
-        DAILY_POSTS_ENABLED: EnvValue.fromValue("true"),
         WEB_SEARCH_PROVIDER: EnvValue.fromValue("openai"),
         PINCHTAB_BASE_URL: EnvValue.fromValue(
           "http://pinchtab.pinchtab.svc.cluster.local:9867",

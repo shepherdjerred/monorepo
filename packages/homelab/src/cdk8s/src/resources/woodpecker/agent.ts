@@ -225,8 +225,11 @@ function createAgentDeployment(
           CI_WORKSPACE_STORAGE_CLASS,
         ),
         WOODPECKER_BACKEND_K8S_STORAGE_RWX: EnvValue.fromValue("true"),
+        // A ZFS quota, not a reservation, so the size costs nothing until a
+        // workflow writes. Verify peaks above 13 GB before step scratch
+        // (TMPDIR, tool homes) moves here off the node's OS disk.
         WOODPECKER_BACKEND_K8S_VOLUME_SIZE: EnvValue.fromValue(
-          config?.queue === "ci-gates" ? "1G" : "16G",
+          config?.queue === "ci-gates" ? "1G" : "32G",
         ),
       },
       securityContext: {

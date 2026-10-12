@@ -164,4 +164,63 @@ describe("Temporal server configuration", () => {
       limits: { cpu: "1000m", memory: "4096Mi" },
     });
   });
+
+  test("keeps Go's soft memory limit below the container limit", () => {
+    const env = new Map(
+      (serverDeployment().containers[0]?.env ?? []).map((entry) => [
+        entry.name,
+        entry["value"],
+      ]),
+    );
+    // 3200 MiB of the 4096 MiB limit leaves room for non-heap memory.
+    expect(env.get("GOMEMLIMIT")).toBe("3200MiB");
+  });
+
+  test("drops only the unused matching-service histograms", () => {
+    const monitor = z
+      .object({
+        spec: z.object({
+          endpoints: z.array(
+            z.object({
+              metricRelabelings: z.array(
+                z.object({
+                  sourceLabels: z.array(z.string()),
+                  regex: z.string(),
+                  action: z.string(),
+                }),
+              ),
+            }),
+          ),
+        }),
+      })
+      .parse(
+        findTemporalResource(
+          resources(),
+          "ServiceMonitor",
+          "temporal-server-metrics-service-monitor",
+        ),
+      );
+    const [relabeling] = monitor.spec.endpoints[0]?.metricRelabelings ?? [];
+    expect(relabeling?.action).toBe("drop");
+    expect(relabeling?.sourceLabels).toEqual(["__name__"]);
+    const dropped = new RegExp(`^(?:${relabeling?.regex ?? ""})$`, "u");
+    for (const name of [
+      "poll_latency_bucket",
+      "pri_poll_latency_count",
+      "task_dispatch_latency_bucket",
+      "syncmatch_latency_sum",
+      "pri_task_write_latency_bucket",
+    ]) {
+      expect(dropped.test(name), name).toBe(true);
+    }
+    // Alerts and dashboards read these; they must survive the drop.
+    for (const name of [
+      "task_schedule_to_start_latency_bucket",
+      "schedule_action_delay_bucket",
+      "service_errors_nondeterministic",
+      "service_latency_bucket",
+    ]) {
+      expect(dropped.test(name), name).toBe(false);
+    }
+  });
 });

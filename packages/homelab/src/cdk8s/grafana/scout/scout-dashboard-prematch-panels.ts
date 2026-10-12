@@ -2,7 +2,6 @@ import * as dashboard from "@grafana/grafana-foundation-sdk/dashboard";
 import * as common from "@grafana/grafana-foundation-sdk/common";
 import * as timeseries from "@grafana/grafana-foundation-sdk/timeseries";
 import * as stat from "@grafana/grafana-foundation-sdk/stat";
-import * as table from "@grafana/grafana-foundation-sdk/table";
 import * as prometheus from "@grafana/grafana-foundation-sdk/prometheus";
 
 import {
@@ -130,51 +129,6 @@ export function addPreMatchRow(
       .gridPos({ x: 0, y: 44, w: 24, h: 8 }),
   );
 
-  // Skin Fallback Rate (informational — non-zero but stable is expected
-  // briefly after Riot ships a new skin until the next update-data-dragon).
-  // `or on() vector(0)` so the panel renders a flat 0 line instead of "No data"
-  // when no fallbacks have happened in the lookback window.
-  builder.withPanel(
-    new timeseries.PanelBuilder()
-      .title("Loading Screen Skin Fallback Rate")
-      .description(
-        "Loading screens that fell back to base skin (skin 0) because the requested skin's JPG was missing on disk. Should be ~0 except briefly after Riot ships new skins.",
-      )
-      .datasource(prometheusDatasource)
-      .withTarget(
-        new prometheus.DataqueryBuilder()
-          .expr(
-            `sum by (environment) (rate(prematch_loading_screen_skin_fallback_total{${PREMATCH_FILTER}}[5m])) * 60 or on() vector(0)`,
-          )
-          .legendFormat("{{environment}}"),
-      )
-      .unit("short")
-      .lineWidth(2)
-      .fillOpacity(10)
-      .gridPos({ x: 0, y: 52, w: 12, h: 8 }),
-  );
-
-  // Top Fallback Skins (24h) — table showing which champion+skin combos
-  // are missing assets, so we know what to chase up in update-data-dragon
-  builder.withPanel(
-    new table.PanelBuilder()
-      .title("Top Fallback Skins (24h)")
-      .description(
-        "Champion+skin combinations that hit the runtime fallback most often in the last 24 hours. Indicates which skins update-data-dragon needs to refresh.",
-      )
-      .datasource(prometheusDatasource)
-      .withTarget(
-        new prometheus.DataqueryBuilder()
-          .expr(
-            `topk(10, sum by (champion, requested_skin) (increase(prematch_loading_screen_skin_fallback_total{${PREMATCH_FILTER}}[24h]))) or on() vector(0)`,
-          )
-          .legendFormat("{{champion}} skin {{requested_skin}}")
-          .format(prometheus.PromQueryFormat.Table)
-          .instant(),
-      )
-      .gridPos({ x: 12, y: 52, w: 12, h: 8 }),
-  );
-
   // Spectator API Call Rate (sanity-check Fix 1's effect on call volume —
   // should rise modestly after Fix 1 deploys and then plateau, not climb
   // unbounded)
@@ -195,7 +149,7 @@ export function addPreMatchRow(
       .unit("reqps")
       .lineWidth(2)
       .fillOpacity(10)
-      .gridPos({ x: 0, y: 60, w: 24, h: 8 }),
+      .gridPos({ x: 0, y: 52, w: 24, h: 8 }),
   );
 
   // Spectator Circuit Breaker State (0=closed, 1=open, 2=half-open)
@@ -225,6 +179,6 @@ export function addPreMatchRow(
             { value: 2, color: "yellow" },
           ]),
       )
-      .gridPos({ x: 0, y: 68, w: 24, h: 4 }),
+      .gridPos({ x: 0, y: 60, w: 24, h: 4 }),
   );
 }

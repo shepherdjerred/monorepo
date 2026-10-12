@@ -83,12 +83,15 @@ describe("dashboard query health", () => {
     expect(dashboardJson).toContain(
       String.raw`scheduled_reports_failed_total{environment=~\"$environment\",role=~\"$role\",instance=~\"$instance\"}[1h])) or on() vector(0)`,
     );
-    expect(dashboardJson).toContain(
-      String.raw`scheduled_report_budget_exceeded_total{environment=~\"$environment\",role=~\"$role\",instance=~\"$instance\"}[1h])) or on() vector(0)`,
-    );
-    expect(dashboardJson).toContain(
-      String.raw`prematch_loading_screen_skin_fallback_total{environment=~\"$environment\",role=~\"$role\",instance=~\"$instance\"}[24h]))) or on() vector(0)`,
-    );
+  });
+
+  test("no panel queries a metric Scout no longer emits", () => {
+    for (const metric of [
+      "scheduled_report_budget_exceeded_total",
+      "prematch_loading_screen_skin_fallback_total",
+    ]) {
+      expect(dashboardJson).not.toContain(metric);
+    }
   });
 
   test("swept durable gauges show no-data rather than a green zero", () => {

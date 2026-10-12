@@ -162,7 +162,9 @@ export function createWoodpeckerCaches(chart: Chart): void {
   // Codex's ChatGPT-managed auth bundle includes a refresh token, so it has to
   // survive the review gate's ephemeral pods. Never backed up: recover it by
   // re-seeding from a fresh `codex login` on the trusted operator machine,
-  // never from a snapshot of a live credential.
+  // never from a snapshot of a live credential. liskov's pool runs
+  // sync=disabled, so a recreated claim must have its dataset pinned back to
+  // sync=standard (src/talos/liskov/README.md).
   createCacheClaim(
     chart,
     "woodpecker-codex-auth-pvc",

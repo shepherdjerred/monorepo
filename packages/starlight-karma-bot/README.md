@@ -131,35 +131,9 @@ Optional environment variables:
 - `PORT`: Server port (default: 8000)
 - `KARMA_ADMIN_USER_ID`: Discord user ID allowed to configure recaps without
   the Manage Server permission
-- `LEGACY_DATABASE_PATH`: **upgrades only** — see below. Leave it unset on a
-  fresh install.
 - `KARMA_EMOJI`: emoji that awards karma when reacted with (default `⭐`). A
   unicode character matches by name; a custom guild emoji matches by its id.
 
 ## Health endpoints
 
 `/live` and `/ready` are served on `PORT` and used by the Kubernetes probes.
-
-## Migrating from the legacy TypeORM database
-
-Only relevant when upgrading an existing deployment that still has a
-`glitter.sqlite` on its volume. **Leave `LEGACY_DATABASE_PATH` unset on a fresh
-install** — a set-but-missing path deliberately fails startup, because silently
-starting on an empty database is indistinguishable from total karma loss.
-
-Point it at the legacy file and the bot imports it once, before logging in:
-
-```env
-LEGACY_DATABASE_PATH=/app/data/glitter.sqlite
-```
-
-The import verifies per-person totals inside the write transaction, so a
-mismatch rolls back rather than committing unverified data. It is idempotent —
-once the target has rows it is skipped — so the variable can stay set. The
-legacy file is only ever read and remains the rollback artifact.
-
-To rehearse against a copy first:
-
-```bash
-DATABASE_PATH=./data/karma.db bun scripts/import-legacy.ts ./data/glitter.sqlite
-```

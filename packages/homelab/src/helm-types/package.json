@@ -25,7 +25,6 @@
   "scripts": {
     "build": "PATH=node_modules/@typescript/native/bin:$PATH tsc -p tsconfig.build.json",
     "test": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run",
-    "test:helm-types": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run src/helm-types.test.ts",
     "test:cli": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run src/cli.test.ts",
     "lint": "bunx eslint .",
     "lint:fix": "bunx eslint . --fix",

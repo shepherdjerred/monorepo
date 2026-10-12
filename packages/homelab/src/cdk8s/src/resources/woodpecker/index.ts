@@ -22,6 +22,7 @@ import {
   setRevisionHistoryLimit,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { postgresClusterPodLabels } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/cluster-label.ts";
 import {
   WOODPECKER_GRPC_PORT,
   WOODPECKER_HTTP_PORT,
@@ -330,7 +331,7 @@ export function createWoodpeckerServer(chart: Chart) {
           to: [
             {
               podSelector: {
-                matchLabels: { cluster_name: "woodpecker-postgresql" },
+                matchLabels: postgresClusterPodLabels("woodpecker-postgresql"),
               },
             },
           ],

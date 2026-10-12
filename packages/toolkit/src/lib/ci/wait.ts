@@ -1,3 +1,5 @@
+import { setTimeout as delay } from "node:timers/promises";
+import { GitHubRateLimitError } from "@shepherdjerred/code-review/github-request";
 import { evaluateReadiness, type Snapshot, type Verdict } from "./readiness.ts";
 
 export type WaitDependencies = {
@@ -9,6 +11,8 @@ export type WaitDependencies = {
     fatal: (error: unknown) => void,
   ) => Promise<void>;
   heartbeat: (snapshot: Snapshot | null) => void;
+  /** Reports that GitHub refused a read on quota and when polling resumes. */
+  rateLimited?: (error: GitHubRateLimitError, resumeAt: number) => void;
 };
 export type WaitOptions = {
   head: string;
@@ -23,6 +27,42 @@ export type WaitResult = {
   verdict: Verdict;
   elapsedMs: number;
 };
+
+/** The requested deadline elapsed; that says nothing about CI itself. */
+export function timeoutResult(
+  snapshot: Snapshot | null,
+  started: number,
+): WaitResult {
+  return {
+    snapshot,
+    verdict: {
+      outcome: "timeout",
+      reasons: [
+        "The requested wait deadline elapsed. This does not mean CI failed.",
+      ],
+      commands: ["toolkit ci load"],
+    },
+    elapsedMs: Date.now() - started,
+  };
+}
+
+/** Spread concurrent waiters so they do not all retry at the same reset. */
+const RATE_LIMIT_JITTER_MS = 5000;
+
+/**
+ * Sleep until GitHub's quota resets. Woodpecker events are ignored meanwhile:
+ * every snapshot needs GitHub, so waking early would only be refused again.
+ */
+export async function sleepUntilRateLimitReset(
+  error: GitHubRateLimitError,
+  signal: AbortSignal,
+  onWait?: (error: GitHubRateLimitError, resumeAt: number) => void,
+): Promise<void> {
+  const resumeAt =
+    error.resumeAt + Math.floor(Math.random() * RATE_LIMIT_JITTER_MS);
+  onWait?.(error, resumeAt);
+  await delay(Math.max(0, resumeAt - Date.now()), undefined, { signal });
+}
 
 function notifier() {
   let dirty = false;
@@ -109,8 +149,22 @@ async function runLoop(context: WaitContext): Promise<WaitResult> {
   for (;;) {
     context.signal.throwIfAborted();
     assertStream(context);
-    const current = await context.dependencies.snapshot(context.signal, false);
-    const result = await candidate(context, current);
+    let result: Awaited<ReturnType<typeof candidate>>;
+    try {
+      const current = await context.dependencies.snapshot(
+        context.signal,
+        false,
+      );
+      result = await candidate(context, current);
+    } catch (error) {
+      if (!(error instanceof GitHubRateLimitError)) throw error;
+      await sleepUntilRateLimitReset(
+        error,
+        context.signal,
+        context.dependencies.rateLimited,
+      );
+      continue;
+    }
     context.snapshot = result.snapshot;
     context.signal.throwIfAborted();
     assertStream(context);
@@ -199,17 +253,7 @@ export async function waitForCi(
   } catch (error) {
     if (options.signal?.aborted === true) throw error;
     if (!controller.signal.aborted) throw error;
-    return {
-      snapshot: context.snapshot,
-      verdict: {
-        outcome: "timeout",
-        reasons: [
-          "The requested wait deadline elapsed. This does not mean CI failed.",
-        ],
-        commands: ["toolkit ci load"],
-      },
-      elapsedMs: Date.now() - context.started,
-    };
+    return timeoutResult(context.snapshot, context.started);
   } finally {
     if (deadline !== null) clearTimeout(deadline);
     clearTimeout(connectTimer);

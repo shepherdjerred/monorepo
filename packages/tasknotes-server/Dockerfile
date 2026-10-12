@@ -37,12 +37,13 @@ FROM base AS runtime
 # so copying the whole install root between same-rooted stages is safe. Kept
 # BEFORE the source COPY so a source edit doesn't re-push this layer.
 COPY --from=prod-deps /app/ /app/
-# Scoped source closure: this package, its workspace dep, and the root
+# Scoped source closure: this package, its workspace deps, and the root
 # tsconfig the package tsconfig extends.
 COPY --parents \
   tsconfig.base.json \
   packages/tasknotes-server \
   packages/tasknotes-types \
+  packages/sentry-config \
   ./
 
 ENV NODE_ENV=production

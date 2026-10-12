@@ -1,4 +1,5 @@
 import { afterEach, expect, test, vi } from "vitest";
+import { GitHubRateLimitError } from "@shepherdjerred/code-review/github-request";
 import { GitHubClient } from "#lib/ci/github.ts";
 import {
   getWoodpeckerPipelineForCommit,
@@ -425,4 +426,84 @@ test("diagnostics use API step IDs for logs and CLI step numbers for commands", 
   expect(result[0]?.stepId).toBe(55);
   expect(result[0]?.command).toContain("monorepo 7 4");
   expect(fetchMock.mock.calls[0]?.[0]?.toString()).toContain("/logs/7/55");
+});
+
+test("GitHub polls revalidate ETags so unchanged reads are not charged", async () => {
+  const seen: (string | null)[] = [];
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (_url: URL, init: RequestInit) => {
+      const ifNoneMatch = new Headers(init.headers).get("if-none-match");
+      seen.push(ifNoneMatch);
+      if (ifNoneMatch === '"pr"') return new Response(null, { status: 304 });
+      return Response.json(
+        {
+          number: 1,
+          html_url: "https://github.com/o/r/pull/1",
+          state: "open",
+          merged: false,
+          draft: false,
+          mergeable: true,
+          mergeable_state: "clean",
+          head: { sha: CI_HEAD },
+          base: { sha: "b".repeat(40), ref: "main" },
+        },
+        { headers: { etag: '"pr"' } },
+      );
+    }),
+  );
+  const github = new GitHubClient("test");
+  const first = await github.pr(1);
+  const second = await github.pr(1);
+  expect(second).toEqual(first);
+  expect(seen).toEqual([null, '"pr"']);
+  expect(github.cache.notModified).toBe(1);
+});
+
+test("GitHub quota refusals surface the limit and reset", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(
+      async () =>
+        new Response('{"message":"API rate limit exceeded"}', {
+          status: 403,
+          headers: {
+            "x-ratelimit-limit": "5000",
+            "x-ratelimit-used": "5000",
+            "x-ratelimit-remaining": "0",
+            "x-ratelimit-reset": "4102444800",
+            "x-ratelimit-resource": "core",
+          },
+        }),
+    ),
+  );
+  const failure = await new GitHubClient("test").pr(1).then(
+    () => null,
+    (error: unknown) => error,
+  );
+  expect(failure).toBeInstanceOf(GitHubRateLimitError);
+  expect(String(failure)).toContain("used 5000/5000");
+});
+
+test("GraphQL quota refusals answered with HTTP 200 raise the typed error", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () =>
+      Response.json(
+        { errors: [{ type: "RATE_LIMITED", message: "API rate limit" }] },
+        {
+          headers: {
+            "x-ratelimit-remaining": "0",
+            "x-ratelimit-reset": "4102444800",
+            "x-ratelimit-resource": "graphql",
+          },
+        },
+      ),
+    ),
+  );
+  const failure = await new GitHubClient("test").decision(1).then(
+    () => null,
+    (error: unknown) => error,
+  );
+  expect(failure).toBeInstanceOf(GitHubRateLimitError);
 });

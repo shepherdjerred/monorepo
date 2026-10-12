@@ -776,7 +776,7 @@
         "versioning": "semver",
         "packageName": "shepherdjerred/scout-for-lol"
       },
-      "value": "2.0.0-1007408@sha256:8924561912f144636bf417954033ffe5ea351dc38cb33e8c8f8bfd9d3918567d",
+      "value": "2.0.0-1008523@sha256:d4ab832cde525daa54208c58eb080c86e3a4bee7ff904dd6186a51937ff50985",
       "notes": [
         "Prod promotion = merging a reviewed PR for this pin (normally Renovate). Each 2.0.0-<n>",
         "tag is minted by the scout-tag-release CI step only after site version",
@@ -794,7 +794,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1008059@sha256:dfb3cc5fabe04243eb590b5fb95a2f47cb226553dcfde96187937ec5b3a79447",
+      "value": "2.0.0-1008523@sha256:d4ab832cde525daa54208c58eb080c86e3a4bee7ff904dd6186a51937ff50985",
       "notes": [
         "Candidate Scout beta Workflow Worker image - updated by version commit-back",
         "not managed by renovate"
@@ -1794,6 +1794,18 @@
         "Feature flag server. Fair Core License; the free tier covers the UI, local git storage, and evaluation.",
         "A bump requires re-capturing packages/feature-flags/src/providers/fixtures/flipt-snapshot.default.json,",
         "because the provider fetches the internal /internal/v1/evaluation/snapshot API."
+      ]
+    },
+    {
+      "name": "shepherdjerred/glitter-boys-launcher",
+      "category": "internal-image",
+      "artifactType": "image",
+      "management": {
+        "managed": false
+      },
+      "value": "0.1.0-0@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "notes": [
+        "Unpublished bootstrap marker; publish a locally verified service image and commit its immutable digest before activation."
       ]
     }
   ]

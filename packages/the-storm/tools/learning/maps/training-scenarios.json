@@ -1,0 +1,1298 @@
+{
+  "schema": 1,
+  "kind": "rwf-training-map-scenarios",
+  "scenarios": [
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
+      "id": "apex-expanse-close-trooper-duel-v1",
+      "map": "apex-expanse",
+      "mapSha256": "57743aaebc82047c15a592ba1ffd8271c10c5549c0df72e51a09cb1a3152e430",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 1024,
+          "y": 0,
+          "z": 1024
+        },
+        "max": {
+          "x": 1344,
+          "y": 118,
+          "z": 1256
+        }
+      },
+      "sourceTeams": ["RED", "BLUE"],
+      "spawnPolicy": "authored",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [1180.5, 39, 1162.5],
+          "yaw": 48.366458892822266,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [1171.5, 39, 1170.5],
+          "yaw": -131.633544921875,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
+      "id": "battle-scarred-close-trooper-duel-v1",
+      "map": "battle-scarred",
+      "mapSha256": "1d6b2ba3993700aa17f7a185c2874543cc41e7190d56ab35d55767528f6cbc44",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 2048,
+          "y": 0,
+          "z": 1024
+        },
+        "max": {
+          "x": 2147,
+          "y": 23,
+          "z": 1173
+        }
+      },
+      "sourceTeams": ["RED", "BLUE"],
+      "spawnPolicy": "authored",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [2095.5, 5, 1096.5],
+          "yaw": 90,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [2083.5, 5, 1096.5],
+          "yaw": -90,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
+      "id": "beanstalk-close-trooper-duel-v1",
+      "map": "beanstalk",
+      "mapSha256": "dc646e9e99b80a7d821dfa13c94e7f6f0e7ae3ff4d1ebe9c1db337b6a54cb0fc",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 3072,
+          "y": 2,
+          "z": 1024
+        },
+        "max": {
+          "x": 3152,
+          "y": 156,
+          "z": 1174
+        }
+      },
+      "sourceTeams": ["BLUE", "RED"],
+      "spawnPolicy": "authored",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [3114.5, 4, 1056.5],
+          "yaw": -171.86990356445312,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [3115.5, 4, 1049.5],
+          "yaw": 8.130102157592773,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
+      "id": "cloned-balance-close-trooper-duel-v1",
+      "map": "cloned-balance",
+      "mapSha256": "285b7b2ea1e50573bc464e4f805253b0b4c4dd61520dd9a2570f5f7b796a90e9",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 4096,
+          "y": 23,
+          "z": 1024
+        },
+        "max": {
+          "x": 4236,
+          "y": 55,
+          "z": 1170
+        }
+      },
+      "sourceTeams": ["RED", "PURPLE", "BLUE", "GREEN"],
+      "spawnPolicy": "authored",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [4166.5, 25, 1098.5],
+          "yaw": 80.53768157958984,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [4154.5, 25, 1100.5],
+          "yaw": -99.46231842041016,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
+      "id": "cloned-beanstalks-close-trooper-duel-v1",
+      "map": "cloned-beanstalks",
+      "mapSha256": "df935f0283bea60b25010afdb0bcb61e2e5d480548bfb93f1008e3484026dde5",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 5120,
+          "y": 2,
+          "z": 1024
+        },
+        "max": {
+          "x": 5248,
+          "y": 156,
+          "z": 1148
+        }
+      },
+      "sourceTeams": ["RED", "GREEN", "BLUE", "PURPLE"],
+      "spawnPolicy": "authored",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [5228.5, 4, 1086.5],
+          "yaw": -81.8698959350586,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [5235.5, 4, 1087.5],
+          "yaw": 98.1301040649414,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
+      "id": "cors-path-close-trooper-duel-v1",
+      "map": "cors-path",
+      "mapSha256": "310af07a8bc3791f5986e2ffb850449cd9f27f003a2785347f3a36a76eed0283",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 6144,
+          "y": 0,
+          "z": 1024
+        },
+        "max": {
+          "x": 6270,
+          "y": 20,
+          "z": 1150
+        }
+      },
+      "sourceTeams": ["PURPLE", "RED", "GREEN", "BLUE"],
+      "spawnPolicy": "authored",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [6207.5, 6, 1081.5],
+          "yaw": 138.366455078125,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [6199.5, 6, 1072.5],
+          "yaw": -41.633541107177734,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
+      "id": "fairylands-close-trooper-duel-v1",
+      "map": "fairylands",
+      "mapSha256": "f620e3ecda7f712b5c2cdcf3d9f58bf90a22d2cfde05f631d6be7f1f2c2455e3",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 1024,
+          "y": 0,
+          "z": 2048
+        },
+        "max": {
+          "x": 1145,
+          "y": 99,
+          "z": 2199
+        }
+      },
+      "sourceTeams": ["RED", "BLUE"],
+      "spawnPolicy": "authored",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [1085.5, 52, 2129.5],
+          "yaw": -24.443954467773438,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [1090.5, 52, 2140.5],
+          "yaw": 155.55604553222656,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
+      "id": "fancy-castles-close-trooper-duel-v1",
+      "map": "fancy-castles",
+      "mapSha256": "bc5e294bec0480d895fc8e84b42241732fb7201847a64e5535be9d7fae7aa6a5",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 2048,
+          "y": 0,
+          "z": 2048
+        },
+        "max": {
+          "x": 2149,
+          "y": 133,
+          "z": 2261
+        }
+      },
+      "sourceTeams": ["RED", "BLUE"],
+      "spawnPolicy": "authored",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [2092.5, 64, 2189.5],
+          "yaw": -131.633544921875,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [2101.5, 64, 2181.5],
+          "yaw": 48.366458892822266,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
+      "id": "fjords-close-trooper-duel-v1",
+      "map": "fjords",
+      "mapSha256": "fb861c2db949ff3d44276b157f62f94794d7dc272c8be298e96b34e9c6dd4ccf",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 3072,
+          "y": 0,
+          "z": 2048
+        },
+        "max": {
+          "x": 3316,
+          "y": 87,
+          "z": 2209
+        }
+      },
+      "sourceTeams": ["RED", "BLUE"],
+      "spawnPolicy": "authored",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [3197.5, 56, 2118.5],
+          "yaw": 80.53768157958984,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [3185.5, 56, 2120.5],
+          "yaw": -99.46231842041016,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
+      "id": "floating-isles-close-trooper-duel-v1",
+      "map": "floating-isles",
+      "mapSha256": "cbeba029f3699c15adad9338c190a864ef16234551f1e81ca8b29812d5de09fb",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 4096,
+          "y": 0,
+          "z": 2048
+        },
+        "max": {
+          "x": 4279,
+          "y": 116,
+          "z": 2240
+        }
+      },
+      "sourceTeams": ["RED", "BLUE"],
+      "spawnPolicy": "authored",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [4150.5, 80, 2134.5],
+          "yaw": -180,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [4150.5, 80, 2123.5],
+          "yaw": 0,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
+      "id": "flying-ships-close-trooper-duel-v1",
+      "map": "flying-ships",
+      "mapSha256": "54e6353a02662007d315775c5187bdfa9a43433f19a5ea145158ad7fe5bff131",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 5120,
+          "y": 22,
+          "z": 2048
+        },
+        "max": {
+          "x": 5318,
+          "y": 73,
+          "z": 2112
+        }
+      },
+      "sourceTeams": ["RED", "BLUE"],
+      "spawnPolicy": "authored",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [5272.5, 35, 2073.5],
+          "yaw": -90,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [5284.5, 35, 2073.5],
+          "yaw": 90,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
+      "id": "gardens-close-trooper-duel-v1",
+      "map": "gardens",
+      "mapSha256": "8ae724071164ac04878f479b718aa732c39cb89544ad499746c1cc6d0a3e5c8f",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 6144,
+          "y": 9,
+          "z": 2048
+        },
+        "max": {
+          "x": 6202,
+          "y": 23,
+          "z": 2183
+        }
+      },
+      "sourceTeams": ["BLUE", "RED"],
+      "spawnPolicy": "authored",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [6174.5, 16, 2073.5],
+          "yaw": -116.56504821777344,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [6182.5, 16, 2069.5],
+          "yaw": 63.4349479675293,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
+      "id": "grove-wars-close-trooper-duel-v1",
+      "map": "grove-wars",
+      "mapSha256": "f3d6307d548f2d38c2da90f1714acefe3e51cf94b07737c5e58d2273c272b0bf",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 1024,
+          "y": 0,
+          "z": 3072
+        },
+        "max": {
+          "x": 1222,
+          "y": 111,
+          "z": 3186
+        }
+      },
+      "sourceTeams": ["RED", "BLUE"],
+      "spawnPolicy": "authored",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [1125.5, 36, 3147.5],
+          "yaw": 149.03623962402344,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [1122.5, 36, 3142.5],
+          "yaw": -30.963756561279297,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
+      "id": "hemispheres-close-trooper-duel-v1",
+      "map": "hemispheres",
+      "mapSha256": "0e754b80a8c828de3e92053d7177b1769bfca351338231aedd568c14a7712e6d",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 2048,
+          "y": 1,
+          "z": 3072
+        },
+        "max": {
+          "x": 2166,
+          "y": 73,
+          "z": 3281
+        }
+      },
+      "sourceTeams": ["BLUE", "RED"],
+      "spawnPolicy": "authored",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [2107.5, 62, 3175.5],
+          "yaw": -75.96375274658203,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [2111.5, 62, 3176.5],
+          "yaw": 104.03624725341797,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
+      "id": "main-street-close-trooper-duel-v1",
+      "map": "main-street",
+      "mapSha256": "32bb5bc2f66d963c946c59f3e9b3e866b26ef79e58e8d8da6ca11f83672ec60a",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 3072,
+          "y": 1,
+          "z": 3072
+        },
+        "max": {
+          "x": 3125,
+          "y": 47,
+          "z": 3276
+        }
+      },
+      "sourceTeams": ["RED", "BLUE"],
+      "spawnPolicy": "authored",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [3095.5, 8, 3177.5],
+          "yaw": -41.633541107177734,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [3103.5, 8, 3186.5],
+          "yaw": 138.366455078125,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
+      "id": "miner-dispute-close-trooper-duel-v1",
+      "map": "miner-dispute",
+      "mapSha256": "6dc474c75af0848f965cc83b103f22e69d1d97eeff2b05b4cc1e50053ea5ad24",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 4096,
+          "y": 48,
+          "z": 3072
+        },
+        "max": {
+          "x": 4159,
+          "y": 103,
+          "z": 3176
+        }
+      },
+      "sourceTeams": ["RED", "BLUE"],
+      "spawnPolicy": "authored",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [4120.5, 51, 3123.5],
+          "yaw": -5.710593223571777,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [4121.5, 51, 3133.5],
+          "yaw": 174.28941345214844,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
+      "id": "modified-tropicals-close-trooper-duel-v1",
+      "map": "modified-tropicals",
+      "mapSha256": "fa19015ad0e22739301df29f81c9d3198a92660d95cf8142286e11f91f9ddfc6",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 5120,
+          "y": 0,
+          "z": 3072
+        },
+        "max": {
+          "x": 5497,
+          "y": 129,
+          "z": 3259
+        }
+      },
+      "sourceTeams": ["RED", "BLUE"],
+      "spawnPolicy": "authored",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [5312.5, 107, 3168.5],
+          "yaw": 90,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [5300.5, 107, 3168.5],
+          "yaw": -90,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
+      "id": "mountains-close-trooper-duel-v1",
+      "map": "mountains",
+      "mapSha256": "b00a376da2d2792c0fa675e85f5f4dad506ce719d6c07b8a3e7dae2e287d22f3",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 6144,
+          "y": 0,
+          "z": 3072
+        },
+        "max": {
+          "x": 6258,
+          "y": 121,
+          "z": 3244
+        }
+      },
+      "sourceTeams": ["RED", "BLUE"],
+      "spawnPolicy": "authored",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [6227.5, 81, 3168.5],
+          "yaw": 90,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [6222.5, 81, 3168.5],
+          "yaw": -90,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
+      "id": "perfect-balance-close-trooper-duel-v1",
+      "map": "perfect-balance",
+      "mapSha256": "f1ffd6e3cec863b823ce772f0e893bc5a44fe387d7daa38b3db05870e876fcaa",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 1024,
+          "y": 23,
+          "z": 4096
+        },
+        "max": {
+          "x": 1054,
+          "y": 55,
+          "z": 4230
+        }
+      },
+      "sourceTeams": ["BLUE", "RED"],
+      "spawnPolicy": "authored",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [1041.5, 25, 4163.5],
+          "yaw": 9.462322235107422,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [1039.5, 25, 4175.5],
+          "yaw": -170.5376739501953,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
+      "id": "pirate-island-close-trooper-duel-v1",
+      "map": "pirate-island",
+      "mapSha256": "97d4c219d20bcc7c395ac9805317cfe9f02757c8fd63b7d0efce47b7f6462f3d",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 2048,
+          "y": 0,
+          "z": 4096
+        },
+        "max": {
+          "x": 2111,
+          "y": 90,
+          "z": 4274
+        }
+      },
+      "sourceTeams": ["RED", "BLUE"],
+      "spawnPolicy": "authored",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [2080.5, 70, 4156.5],
+          "yaw": 158.19859313964844,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [2078.5, 70, 4151.5],
+          "yaw": -21.801408767700195,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
+      "id": "rival-castles-close-trooper-duel-v1",
+      "map": "rival-castles",
+      "mapSha256": "6a03d2d3199886f778cb1570c783808b27703eb181e0dd32f96ebbe42f7fca23",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 3072,
+          "y": 0,
+          "z": 4096
+        },
+        "max": {
+          "x": 3424,
+          "y": 96,
+          "z": 4478
+        }
+      },
+      "sourceTeams": ["RED", "BLUE"],
+      "spawnPolicy": "authored",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [3249.5, 61, 4286.5],
+          "yaw": -180,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [3249.5, 61, 4274.5],
+          "yaw": 0,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
+      "id": "rotated-hemispheres-close-trooper-duel-v1",
+      "map": "rotated-hemispheres",
+      "mapSha256": "5bf76677d0927149d8d70d96d0ccae30cdbc068b07f24193db8af708a2f40411",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 4096,
+          "y": 1,
+          "z": 4096
+        },
+        "max": {
+          "x": 4304,
+          "y": 73,
+          "z": 4305
+        }
+      },
+      "sourceTeams": ["PURPLE", "BLUE", "GREEN", "RED"],
+      "spawnPolicy": "authored",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [4199.5, 62, 4201.5],
+          "yaw": -14.036243438720703,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [4200.5, 62, 4205.5],
+          "yaw": 165.96376037597656,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
+      "id": "saigon-close-trooper-duel-v1",
+      "map": "saigon",
+      "mapSha256": "d234f07b878719a7945c588038f2e7ccd9ba998ce56dc71cc0fe75657f293995",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 5120,
+          "y": 0,
+          "z": 4096
+        },
+        "max": {
+          "x": 5377,
+          "y": 67,
+          "z": 4264
+        }
+      },
+      "sourceTeams": ["RED", "BLUE"],
+      "spawnPolicy": "authored",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [5238.5, 9, 4176.5],
+          "yaw": 90,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [5228.5, 9, 4176.5],
+          "yaw": -90,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
+      "id": "the-harshest-harvest-close-trooper-duel-v1",
+      "map": "the-harshest-harvest",
+      "mapSha256": "83be36752e818a81f6e7ec06b17aa7ab3342e8200beddd5193fd9f4d3814804b",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 6144,
+          "y": 0,
+          "z": 4096
+        },
+        "max": {
+          "x": 6234,
+          "y": 43,
+          "z": 4238
+        }
+      },
+      "sourceTeams": ["RED", "BLUE"],
+      "spawnPolicy": "authored",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [6176.5, 10, 4142.5],
+          "yaw": 90,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [6164.5, 10, 4142.5],
+          "yaw": -90,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
+      "id": "the-lost-kingdom-close-trooper-duel-v1",
+      "map": "the-lost-kingdom",
+      "mapSha256": "9595ebb5b8b9ab3d5b32d3e722beb7f4b3959174fd8ca08af71536fb64d78a7a",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 2048,
+          "y": 1,
+          "z": 5120
+        },
+        "max": {
+          "x": 2204,
+          "y": 216,
+          "z": 5280
+        }
+      },
+      "sourceTeams": ["PURPLE", "BLUE", "GREEN", "RED"],
+      "spawnPolicy": "authored",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [2140.5, 4, 5191.5],
+          "yaw": 142.12501525878906,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [2133.5, 4, 5182.5],
+          "yaw": -37.87498474121094,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
+      "id": "the-red-sand-seas-close-trooper-duel-v1",
+      "map": "the-red-sand-seas",
+      "mapSha256": "bc17708264a6fca8d9eb7c2a2d7351ee0da40eda89b0855576e04ff9627b800d",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 1024,
+          "y": 0,
+          "z": 5120
+        },
+        "max": {
+          "x": 1157,
+          "y": 51,
+          "z": 5206
+        }
+      },
+      "sourceTeams": ["BLUE", "RED"],
+      "spawnPolicy": "authored",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [1108.5, 27, 5162.5],
+          "yaw": -104.03624725341797,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [1112.5, 27, 5161.5],
+          "yaw": 75.96375274658203,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
+      "id": "training-yard-close-trooper-duel-v1",
+      "map": "training-yard",
+      "mapSha256": "03f6daeb430aa9da0dfdcb472bfdab7b7b5a69741841d7a93444efbd53a85171",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 0,
+          "y": 64,
+          "z": 0
+        },
+        "max": {
+          "x": 63,
+          "y": 79,
+          "z": 63
+        }
+      },
+      "sourceTeams": ["RED", "BLUE"],
+      "spawnPolicy": "authored",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [34.5, 65, 31.5],
+          "yaw": -180,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [34.5, 65, 19.5],
+          "yaw": 0,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
+      "id": "tropical-resort-close-trooper-duel-v1",
+      "map": "tropical-resort",
+      "mapSha256": "cfe852902b09f30ae7fa349c41b9c971eae5f3e878f57dce6fb96621799fc144",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 3072,
+          "y": 0,
+          "z": 5120
+        },
+        "max": {
+          "x": 3436,
+          "y": 129,
+          "z": 5279
+        }
+      },
+      "sourceTeams": ["RED", "BLUE"],
+      "spawnPolicy": "authored",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [3252.5, 107, 5199.5],
+          "yaw": 90,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [3240.5, 107, 5199.5],
+          "yaw": -90,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
+      "id": "valley-close-trooper-duel-v1",
+      "map": "valley",
+      "mapSha256": "901098ade07170bd0893e1620d795f8a9e1ed3d279d2ee30751a0e71c2af29e0",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 4096,
+          "y": 0,
+          "z": 5120
+        },
+        "max": {
+          "x": 4190,
+          "y": 70,
+          "z": 5310
+        }
+      },
+      "sourceTeams": ["RED", "BLUE"],
+      "spawnPolicy": "authored",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [4146.5, 35, 5217.5],
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [4146.5, 35, 5229.5],
+          "yaw": -180,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
+      "id": "village-skirmish-close-trooper-duel-v1",
+      "map": "village-skirmish",
+      "mapSha256": "e50b259ec58662f8830a10bd65ad00b3281f5ae8b6ee9ce23d2e01d07fb65950",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 5120,
+          "y": 129,
+          "z": 5120
+        },
+        "max": {
+          "x": 5226,
+          "y": 188,
+          "z": 5331
+        }
+      },
+      "sourceTeams": ["RED", "BLUE"],
+      "spawnPolicy": "authored",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [5169.5, 141, 5226.5],
+          "yaw": 30.963756561279297,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [5166.5, 141, 5231.5],
+          "yaw": -149.03623962402344,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
+      "id": "warlords-castles-close-trooper-duel-v1",
+      "map": "warlords-castles",
+      "mapSha256": "dbf2499bf25527672bc0dc5f6a6c595821186486795293245006845f8c2ee036",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 6144,
+          "y": 0,
+          "z": 5120
+        },
+        "max": {
+          "x": 6520,
+          "y": 96,
+          "z": 5496
+        }
+      },
+      "sourceTeams": ["BLUE", "PURPLE", "RED", "GREEN"],
+      "spawnPolicy": "authored",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [6332.5, 61, 5307.5],
+          "yaw": -90,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [6344.5, 61, 5307.5],
+          "yaw": 90,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
+      "id": "warzone-close-trooper-duel-v1",
+      "map": "warzone",
+      "mapSha256": "0f7db396d9f6099f13d097fcfdc6d22bd0910daf65bf14bc7fe5ee80aa5f7329",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 1024,
+          "y": 55,
+          "z": 6144
+        },
+        "max": {
+          "x": 1182,
+          "y": 78,
+          "z": 6208
+        }
+      },
+      "sourceTeams": ["RED", "BLUE"],
+      "spawnPolicy": "authored",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [1103.5, 65, 6174.5],
+          "yaw": 90,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [1091.5, 65, 6174.5],
+          "yaw": -90,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
+      "id": "wet-britches-close-trooper-duel-v1",
+      "map": "wet-britches",
+      "mapSha256": "090bb066a36be83a3b4f31bcafeccddea55e46cfabb6f44b68f74faa326875af",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 2048,
+          "y": 0,
+          "z": 6144
+        },
+        "max": {
+          "x": 2148,
+          "y": 22,
+          "z": 6184
+        }
+      },
+      "sourceTeams": ["RED", "BLUE"],
+      "spawnPolicy": "authored",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [2086.5, 4, 6158.5],
+          "yaw": 155.55604553222656,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [2081.5, 4, 6147.5],
+          "yaw": -24.443954467773438,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
+      "id": "wonderland-close-trooper-duel-v1",
+      "map": "wonderland",
+      "mapSha256": "1a3439362a72d36e168b6b2af278e37bf4b29cb79f5d5bb274962c81c58ea272",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 3072,
+          "y": 11,
+          "z": 6144
+        },
+        "max": {
+          "x": 3131,
+          "y": 81,
+          "z": 6435
+        }
+      },
+      "sourceTeams": ["BLUE", "RED"],
+      "spawnPolicy": "authored",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [3087.5, 31, 6288.5],
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [3087.5, 31, 6297.5],
+          "yaw": -180,
+          "pitch": 0
+        }
+      ]
+    }
+  ]
+}

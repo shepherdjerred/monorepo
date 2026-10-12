@@ -170,28 +170,6 @@ export class InMemoryOpsRepository implements OpsRepository {
     return Promise.resolve();
   }
 
-  recordDigestSkip(
-    key: DigestRunKey,
-  ): Promise<{ created: boolean; status: "sent" | "skipped" | "pending" }> {
-    const id = `${key.kind}:${key.periodKey}`;
-    const existing = this.digests.get(id);
-    if (existing === undefined) {
-      this.digests.set(id, {
-        status: "skipped",
-        claimedAtNs: null,
-        attempts: 0,
-      });
-      return Promise.resolve({ created: true, status: "skipped" });
-    }
-    return Promise.resolve({
-      created: false,
-      status:
-        existing.status === "sent" || existing.status === "skipped"
-          ? existing.status
-          : "pending",
-    });
-  }
-
   claimDigestRun(
     key: DigestRunKey,
     nowNs: bigint,

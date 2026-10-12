@@ -20,6 +20,7 @@ const DURABLE_METRICS = [
   "scout_durable_receipts_recorded_total",
   "scout_durable_observation_lag_seconds",
   "scout_durable_postmatch_mint_gaps",
+  "scout_durable_postmatch_poll_age_seconds",
 ];
 
 function ruleNamed(alert: string) {
@@ -46,6 +47,7 @@ describe("Scout durable pipeline alert rules", () => {
         "ScoutDurablePostmatchIntentsNotMinted",
         "ScoutDurableReadyIntentsNotDelivered",
         "ScoutDurableObservationLagHigh",
+        "ScoutDurablePostmatchDiscoveryStalled",
         "ScoutDurableSweepMissing",
         "ScoutDurableSweepFailing",
       ]),
@@ -69,6 +71,7 @@ describe("Scout durable pipeline alert rules", () => {
     "scout_durable_lake_staging_lag_seconds",
     "scout_durable_observation_lag_seconds",
     "scout_durable_postmatch_mint_gaps",
+    "scout_durable_postmatch_poll_age_seconds",
   ];
 
   test.each(SENTINEL_GAUGES)("a -1 series on %s fires an alert", (metric) => {
@@ -129,6 +132,7 @@ describe("Scout durable pipeline alert rules", () => {
     "ScoutDurablePostmatchIntentsNotMinted",
     "ScoutDurableReadyIntentsNotDelivered",
     "ScoutDurableObservationLagHigh",
+    "ScoutDurablePostmatchDiscoveryStalled",
     "ScoutDurableSweepMissing",
   ])("%s survives its gauge going away entirely", (alert) => {
     // One role sweeps these gauges. Without an absent() guard, a rollout that
@@ -180,6 +184,16 @@ describe("Scout durable pipeline alert rules", () => {
     // enough to need a person.
     expect(expression).toContain(String.raw`state=\"unknown-delivery\"`);
     expect(expression).toContain("> 0");
+  });
+
+  test("pages when post-match discovery stops completing polls", () => {
+    const rule = ruleNamed("ScoutDurablePostmatchDiscoveryStalled");
+    // The observation lag reads 0 when nothing is observed, so stopped
+    // discovery is visible only from the poll's own completion age.
+    expect(JSON.stringify(rule.expr)).toContain(
+      "max by (environment) (scout_durable_postmatch_poll_age_seconds) > 1800",
+    );
+    expect(rule.labels?.["severity"]).toBe("critical");
   });
 
   test("pages on a single live match that finished without minting its report", () => {

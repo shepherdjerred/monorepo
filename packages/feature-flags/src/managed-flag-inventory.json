@@ -1175,18 +1175,6 @@
       "thresholdRollouts": []
     },
     {
-      "key": "scout-bucks-ask-model",
-      "owner": "scout",
-      "namespace": "scout",
-      "source": "scout-dynamic",
-      "purpose": "Select the Scout Bryan Bucks ask model.",
-      "type": "variant",
-      "default": "gpt-5.6-luna",
-      "rollouts": [],
-      "rules": [],
-      "thresholdRollouts": []
-    },
-    {
       "key": "scout-consumer-player-profiles-enabled",
       "owner": "scout",
       "namespace": "scout",
@@ -1981,7 +1969,7 @@
       "owner": "the-storm",
       "namespace": "the-storm",
       "source": "the-storm-core",
-      "purpose": "Collect named player product metrics; evaluated once on server boot, beta first.",
+      "purpose": "Collect named player product metrics; evaluated once on server boot.",
       "type": "boolean",
       "default": false,
       "rollouts": [],
@@ -2560,6 +2548,14 @@
     {
       "key": "prod",
       "overrides": [
+        {
+          "key": "the-storm-analytics-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
         {
           "key": "woodpecker-source-cache-enabled",
           "type": "boolean",

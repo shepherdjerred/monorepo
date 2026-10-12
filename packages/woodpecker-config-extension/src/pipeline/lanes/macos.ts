@@ -37,6 +37,7 @@ const MACOS_SERIAL = { limit: 1, group: "macos-native" } as const;
  */
 const NATIVE_INFRASTRUCTURE = [
   ".mise.toml",
+  "mise.lock",
   ".xcode-version",
   "ci/scripts/bun-install.sh",
   "ci/scripts/macos-native-env.sh",

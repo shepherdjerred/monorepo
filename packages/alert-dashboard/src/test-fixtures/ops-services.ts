@@ -16,7 +16,6 @@ export type OpsFixture = {
   repository: InMemoryOpsRepository;
   series: FixtureSeries;
   postal: RecordingPostal;
-  gate: { enabled: boolean };
   ops: OpsService;
   digests: DigestService;
 };
@@ -24,12 +23,11 @@ export type OpsFixture = {
 /** Ops and digest services over in-memory adapters. */
 export function createOpsFixture(
   clock: Clock,
-  options: { digestEnabled?: boolean; mailer?: boolean } = {},
+  options: { mailer?: boolean } = {},
 ): OpsFixture {
   const repository = new InMemoryOpsRepository();
   const series = new FixtureSeries();
   const postal = new RecordingPostal();
-  const gate = { enabled: options.digestEnabled ?? false };
   const ops = new OpsService({
     repository,
     series,
@@ -41,9 +39,8 @@ export function createOpsFixture(
     repository,
     ops,
     series,
-    gate: { digestEmailEnabled: () => Promise.resolve(gate.enabled) },
     mailer: options.mailer === false ? null : postal,
     clock,
   });
-  return { repository, series, postal, gate, ops, digests };
+  return { repository, series, postal, ops, digests };
 }

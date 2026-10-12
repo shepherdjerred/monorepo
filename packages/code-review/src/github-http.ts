@@ -5,9 +5,21 @@
  */
 
 import { z } from "zod";
+import {
+  githubGet,
+  githubHeaders,
+  graphqlRateLimitError,
+  parseLinkNext as parseRequestLinkNext,
+  restCache,
+  throwIfRateLimited,
+} from "./github-request.ts";
+
+/** Extract the `rel="next"` URL from a GitHub `Link` header, if present. */
+export function parseLinkNext(header: string | null): string | null {
+  return parseRequestLinkNext(header);
+}
 
 export const GITHUB_API_URL = "https://api.github.com";
-const GITHUB_API_VERSION = "2022-11-28";
 
 export const CheckConclusionSchema = z.enum([
   "success",
@@ -85,29 +97,11 @@ export function conclusionField(value: string | null): CheckConclusion {
   return result.success ? result.data : null;
 }
 
-/** Extract the `rel="next"` URL from a GitHub `Link` header, if present. */
-export function parseLinkNext(header: string | null): string | null {
-  if (header === null) return null;
-  for (const part of header.split(",")) {
-    const match = /<([^>]+)>\s*;\s*rel="next"/u.exec(part);
-    if (match?.[1] !== undefined) return match[1];
-  }
-  return null;
-}
-
-function githubHeaders(token: string): Record<string, string> {
-  return {
-    Accept: "application/vnd.github+json",
-    Authorization: `Bearer ${token}`,
-    "X-GitHub-Api-Version": GITHUB_API_VERSION,
-  };
-}
-
 export async function getJsonWithLink(
   url: string,
   token: string,
 ): Promise<{ payload: unknown; linkNext: string | null }> {
-  const response = await fetch(url, { headers: githubHeaders(token) });
+  const response = await githubGet(url, { token, cache: restCache });
   if (!response.ok) {
     const body = await response.text();
     throw new Error(
@@ -130,6 +124,7 @@ export async function graphqlRequest(
   });
   if (!response.ok) {
     const body = await response.text();
+    throwIfRateLimited(response, body, "/graphql");
     throw new Error(
       `GitHub GraphQL request failed with ${String(response.status)} ${response.statusText}: ${body}`,
     );
@@ -137,6 +132,8 @@ export async function graphqlRequest(
   const payload: unknown = await response.json();
   const errors = asRecord(payload)?.["errors"];
   if (errors !== undefined) {
+    const limited = graphqlRateLimitError(response, errors, "/graphql");
+    if (limited !== null) throw limited;
     throw new Error(
       `GitHub GraphQL returned errors: ${JSON.stringify(errors)}`,
     );
@@ -163,6 +160,7 @@ export async function postJson(
   });
   if (!response.ok) {
     const text = await response.text();
+    throwIfRateLimited(response, text, new URL(url).pathname);
     throw new Error(
       `GitHub API request failed with ${String(response.status)} ${response.statusText}: ${text}`,
     );

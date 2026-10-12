@@ -50,6 +50,7 @@ from world_archive import (
     load_catalog,
     require_space,
     retained_path,
+    retire_world_checkpoints,
     safe_parts,
     sha256,
     stream_sha256,
@@ -830,7 +831,10 @@ def run_locked(args: argparse.Namespace) -> None:
             "worlds": {},
         }
     )
+    retired_worlds = retire_world_checkpoints(state["archiveRelease"], state["worlds"])
     validate_publication(state)
+    if retired_worlds:
+        write_json(state_path, state)
     for world in sorted(worlds, key=lambda item: (source / item["file"]).stat().st_size):
         identifier = world["id"]
         source_hash = sha256(source / world["file"])

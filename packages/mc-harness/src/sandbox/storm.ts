@@ -97,6 +97,16 @@ const STORM_IMAGE_CONFIGS: Readonly<
     { moduleKeys: readonly string[]; enabledModules: readonly string[] }
   >
 > = {
+  // Verified /plugins/TheStorm/config.yml in the exact published image layers.
+  "4c056c0a82c55c009297585aa0f5f2040a398e77510343b36d34bb102a3664e2": {
+    moduleKeys: STORM_IMAGE_MODULE_KEYS,
+    enabledModules: STORM_IMAGE_ENABLED_MODULES,
+  },
+  // Verified /plugins/TheStorm/config.yml in the live pod running this digest.
+  d222284ff89d56d19c814ab400c057eb22336ddaa739af9900c0332456ba3a77: {
+    moduleKeys: STORM_IMAGE_MODULE_KEYS,
+    enabledModules: STORM_IMAGE_ENABLED_MODULES,
+  },
   a9158e5c64baa0be50a8d56e1e20b168a61e5d1d6f12763e70b6b74f7ba9d7b1: {
     moduleKeys: STORM_IMAGE_MODULE_KEYS,
     enabledModules: STORM_IMAGE_ENABLED_MODULES,
@@ -119,6 +129,12 @@ const STORM_IMAGE_CONFIGS: Readonly<
   // Pipeline 8277's exact published /plugins/TheStorm/config.yml was verified
   // from image 1028545e50886f8fe33e70dd217ade17e3f50a1890e2ddc7ea58e38a42d97d53.
   "1028545e50886f8fe33e70dd217ade17e3f50a1890e2ddc7ea58e38a42d97d53": {
+    moduleKeys: STORM_IMAGE_MODULE_KEYS,
+    enabledModules: STORM_IMAGE_ENABLED_MODULES,
+  },
+  // Pipeline 8336's exact published /plugins/TheStorm/config.yml was verified
+  // from image 4c056c0a82c55c009297585aa0f5f2040a398e77510343b36d34bb102a3664e2.
+  "4c056c0a82c55c009297585aa0f5f2040a398e77510343b36d34bb102a3664e2": {
     moduleKeys: STORM_IMAGE_MODULE_KEYS,
     enabledModules: STORM_IMAGE_ENABLED_MODULES,
   },

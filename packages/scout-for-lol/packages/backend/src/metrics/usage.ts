@@ -200,8 +200,8 @@ export async function updateUsageMetrics(
 // schedule — which is exactly what the `databaseMetricSweeps` capability exists
 // to prevent, and the import-time copy ran before any role had been selected.
 // Scheduling now happens only through `getMetrics()`, which the sweep policy
-// gates to the owning role, so the gauges refresh per scrape rather than per
-// timer.
+// gates to the owning role, so scrapes refresh the gauges (at most once a
+// minute, see `metrics/sweeps.ts`) rather than a timer.
 //
 // The durable home for a recurring sweep is a Temporal Schedule, not an
 // in-process timer (see the repository's recurring-work rule). Moving it there
