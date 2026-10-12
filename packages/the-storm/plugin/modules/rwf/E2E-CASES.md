@@ -325,6 +325,8 @@ for 150 credits!` and `/rwf credits` reads 250; `rwf_kit_owned` holds one
 39. Two kills in a match earn the tracking compass. **Proven** with five
     humans split three against two: one of the pair kills two of the three
     with its sword, the third keeping the match live, and is told
-    `Killstreak of 2! Given a tracking compass!`. Calling in
-    a reward needs four kills, more than the suite's clients give; the item,
-    the falling block and its landing are covered on MockBukkit.
+    `Killstreak of 2! Given a tracking compass!`.
+40. Four combat kills earn a supply crate and attack dogs while the match
+    stays live. The nine-client case checks both reward messages and inventory
+    items, uses the earned items on the ground, observes their falling blocks,
+    and checks the landed chest and three wolves with an opposing survivor.

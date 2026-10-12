@@ -24,6 +24,7 @@ import {
 import {
   eventually,
   matchDatabase,
+  status,
   waitForLobby,
 } from "./harness/rwf-match.ts";
 import { querySqlite } from "./harness/storm-data.ts";
@@ -34,9 +35,8 @@ import type { RconClient } from "#e2e/harness/rcon.ts";
  * killstreak flags open for the suite's players: this week's free kits, the
  * Red Warfare credits that buy a kit for good, and one kit ability from each
  * batch working in a live match (Explosive's RPG, the Teleporter's creator,
- * the Ninja's speed and the Engineer's barricade), and a killstreak earned.
- * Delivering a reward needs four kills, more than a suite's players give, so
- * the drop and its landing are covered on MockBukkit.
+ * the Ninja's speed and the Engineer's barricade), and earned killstreaks
+ * delivered by falling blocks as a supply crate and three attack dogs.
  */
 
 /** Opens the kit list, shop and killstreaks for `humans`, before they join. */
@@ -276,7 +276,11 @@ async function kill(
   );
   for (let swing = 0; swing < 30; swing++) {
     const target = inView(killer.bot, victim.bot);
-    if (target === undefined || (await health(rcon, victim.bot)) <= 0) {
+    if (
+      target === undefined ||
+      victim.bot.game.gameMode === "spectator" ||
+      (await health(rcon, victim.bot)) <= 0
+    ) {
       return;
     }
     killer.bot.attack(target);
@@ -286,6 +290,110 @@ async function kill(
 }
 
 describe("Killstreaks", () => {
+  test(
+    "four combat kills deliver an earned supply crate and three attack dogs",
+    { timeout: 300_000 },
+    async ({ rcon, brain, server }) => {
+      await waitForLobby(rcon);
+      const names = Array.from(
+        { length: 9 },
+        (_, index) =>
+          `drop${index.toString()}_${randomBytes(4).toString("hex")}`,
+      );
+      const humans = await connectAll(server, names);
+      try {
+        await openKits(brain.port, humans);
+        await inRwf(
+          rcon,
+          "gamerule minecraft:natural_health_regeneration false",
+        );
+        const teams = await playTogether(humans);
+        // A member of the smaller team kills four of the five opponents;
+        // the last opponent keeps the match live for the reward deliveries.
+        const smaller = teams.find(
+          (team) => teams.filter((other) => other === team).length === 4,
+        );
+        const killer = humans.find((_, index) => teams[index] === smaller);
+        const opponents = humans.filter((_, index) => teams[index] !== smaller);
+        if (killer === undefined || opponents.length !== 5) {
+          throw new Error(`no four against five in ${teams.join(", ")}`);
+        }
+        for (const victim of opponents.slice(0, 4)) {
+          await kill(rcon, victim, killer);
+          await waitUntil(
+            `${victim.bot.username} dies to the sword`,
+            () => victim.bot.game.gameMode === "spectator",
+          );
+        }
+        await killer.log.until(/Killstreak of 4! Given supply crate!/u);
+        await killer.log.until(/Killstreak of 4! Given attack dogs!/u);
+        await waitUntil(
+          "both earned delivery items in the killer's inventory",
+          () =>
+            count(killer.bot, "redstone") === 1 &&
+            count(killer.bot, "wolf_spawn_egg") === 1,
+        );
+        const earnedIn = await status(rcon);
+        expect(earnedIn.phase).toBe("Live");
+
+        const crateFloor = new Vec3(24, 64, 20);
+        const dogsFloor = new Vec3(28, 64, 20);
+        for (const [item, floor, arrived] of [
+          ["redstone", crateFloor, /Supply crate has landed!/u],
+          ["wolf_spawn_egg", dogsFloor, /Attack dogs have arrived!/u],
+        ] as const) {
+          await teleport(rcon, killer.bot, floor.offset(0.5, 1, 2.5));
+          const slot = Array.from({ length: 9 }, (_, index) => index).find(
+            (index) => hotbar(killer.bot, index) === item,
+          );
+          if (slot === undefined) {
+            throw new Error(`${item} was not delivered to the hotbar`);
+          }
+          await useOn(killer.bot, slot, floor);
+          await waitUntil(
+            `the earned ${item} is consumed`,
+            () => count(killer.bot, item) === 0,
+          );
+          await eventually(
+            "the reward falls through the real world",
+            async () => {
+              const reply = await inRwf(
+                rcon,
+                "execute if entity @e[type=minecraft:falling_block]",
+              );
+              return reply.includes("Test passed");
+            },
+          );
+          await killer.log.until(arrived, 20_000);
+          const deliveredIn = await status(rcon);
+          expect(deliveredIn.phase).toBe("Live");
+        }
+        expect(await blockIs(rcon, crateFloor.offset(0, 1, 0), "chest")).toBe(
+          true,
+        );
+        await waitUntil(
+          "three landed attack dogs reach the player's client",
+          () =>
+            Object.values(killer.bot.entities).filter(
+              (entity) => entity.name === "wolf",
+            ).length === 3,
+        );
+        const survivor = opponents[4];
+        if (survivor === undefined) {
+          throw new Error("the opposing survivor disappeared");
+        }
+        expect(survivor.bot.game.gameMode).toBe("survival");
+      } finally {
+        await inRwf(
+          rcon,
+          "gamerule minecraft:natural_health_regeneration true",
+        );
+        await disconnectAll(humans);
+        await waitForLobby(rcon);
+      }
+    },
+  );
+
   test(
     "two kills in a match earn the tracking compass",
     { timeout: 240_000 },
