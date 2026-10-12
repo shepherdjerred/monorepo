@@ -144,10 +144,20 @@ keep that scratch in RAM:
 - `patches/sysctls.yaml`: `vm.dirty_expire_centisecs=6000` and
   `vm.dirty_writeback_centisecs=1500` for `/var` (xfs). Applies without a
   reboot (`apply-config --mode=no-reboot`).
-- `patches/image.yaml`: `zfs_dirty_data_max_max=8 GiB`, `zfs_dirty_data_max=8 GiB`,
-  `zfs_txg_timeout=30` as ZFS module parameters. `zfs_dirty_data_max_max` is
-  read only at module load, so this needs a reboot of liskov (CI-only outage;
-  the pool imports unchanged).
+- `patches/image.yaml`: `zfs_dirty_data_max=8 GiB` and `zfs_txg_timeout=30`
+  as `machine.sysfs` entries next to the ARC caps. Applies without a reboot.
+  Do not use `kernel.modules[].parameters` for these: the zfs system
+  extension loads the module before machined applies module parameters, and
+  a reboot with that form (2026-10-12) left both values at their defaults.
+  `zfs_dirty_data_max_max` stays at its 4 GiB load-time default; it only
+  clamps the initial value and does not limit a later sysfs write.
+
+Treat any `apply-config` on liskov as a possible CI disruption, not only a
+reboot: on 2026-10-12 a `--mode=no-reboot` apply that changed
+`kernel.modules` restarted containerd, cri and the kubelet (Talos service
+last-change times matched the apply). Check `toolkit ci load`, apply between
+pipelines, and restart any pipeline that ends `killed` with
+`toolkit woodpecker pipeline start <repo> <number>`.
 
 Coupling: dirty data is counted inside the ARC, so the 8 GiB budget lives
 under the 16 GiB `zfs_arc_max` and adds nothing to the kubelet's 24Gi
@@ -165,10 +175,14 @@ NODE_POD=$(kubectl -n openebs get pod -l name=openebs-zfs-node \
   --field-selector spec.nodeName=liskov -o jsonpath='{.items[0].metadata.name}')
 kubectl -n openebs exec "$NODE_POD" -c openebs-zfs-plugin -- sh -c \
   'cat /host/proc/sys/vm/dirty_expire_centisecs /host/proc/sys/vm/dirty_writeback_centisecs;
-   for p in zfs_dirty_data_max_max zfs_dirty_data_max zfs_txg_timeout zfs_arc_max; do
+   for p in zfs_dirty_data_max zfs_txg_timeout zfs_arc_max; do
      printf "%s=" $p; cat /host/sys/module/zfs/parameters/$p; done;
    tail -20 /host/proc/spl/kstat/zfs/zfspv-pool-nvme/txgs'
+talosctl -n liskov -e <control-plane-endpoint> get kernelparamstatuses | grep -E 'dirty|txg'
 ```
+
+Expected: `6000 1500`, `zfs_dirty_data_max=8589934592`, `zfs_txg_timeout=30`,
+and each `KernelParamStatus` row reporting the new value as current.
 
 Then watch 24 h of `increase(nvme_data_units_written_total{node="liskov"}[1d]) * 512000`
 per device; the targets are under 0.3 TB/day on `nvme0n1` and under 2.5 TB/day
