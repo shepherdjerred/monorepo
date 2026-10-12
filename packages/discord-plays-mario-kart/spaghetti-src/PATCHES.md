@@ -6,9 +6,10 @@ committed. `scripts/build-spaghetti.ts` clones the pinned commit and its
 `libultraship` and `torch` submodules into `.cache/spaghetti/src/`, then applies
 these patches with `patch -p1`, in order.
 
-The patches let a host process drive the game headlessly over a Unix socket.
-They replace the wasm emulator's input, frame, audio and RAM-read surfaces.
-Without `--host-socket`, the game behaves exactly like upstream.
+The first two patches let a host process drive the game headlessly over a
+Unix socket. They replace the wasm emulator's input, frame, audio and RAM-read
+surfaces. Without `--host-socket`, the game behaves exactly like upstream. The
+last two make the game's own save writes crash-safe.
 
 SpaghettiKart has no license file, while libultraship and Torch are MIT. This
 repo vendors only the pin and these patches, never the upstream source.
@@ -57,6 +58,23 @@ Changes to the game (`src/`):
   device's fill level, so it tracks game time in both paced and lockstep mode.
 - `RESET` reuses upstream's `CM_RequestReset` (the in-game reset).
 
+## 0003-libultraship-durable-eeprom
+
+`libultra/os_eeprom.cpp` writes `default.sav` (the 4 Kbit EEPROM: cups,
+records, settings) through a sibling temp file that is fsynced and renamed over
+the target, then fsyncs the directory. Upstream reopened the file with `wb`,
+so a crash mid-write left it truncated and the game reinitialized the save. A
+partial write into an existing save that cannot be read whole now fails
+instead of zero-filling the rest, and out-of-range addresses are rejected.
+
+## 0004-durable-controller-pak
+
+`src/port/pak.cpp` (controller-pak ghosts) writes the header and pak files the
+same atomic way. Upstream reopened them with `w+b` for every write, which
+truncated the shared header (wiping every other file's entry) and zeroed the
+rest of a pak file around a partial write. Writes now update only their own
+range of the existing file.
+
 ## Regenerating
 
 Edit the files in `.cache/spaghetti/src/` and rebuild with
@@ -64,10 +82,14 @@ Edit the files in `.cache/spaghetti/src/` and rebuild with
 
 ```bash
 C=.cache/spaghetti/src
+EEPROM=src/libultraship/libultra/os_eeprom.cpp
 git -C $C/libultraship diff --src-prefix=a/libultraship/ --dst-prefix=b/libultraship/ \
-  > spaghetti-src/patches/0001-libultraship-host-capture.patch
+  -- . ":!$EEPROM" > spaghetti-src/patches/0001-libultraship-host-capture.patch
 git -C $C add -N src/port/HostBridge.h src/port/HostBridge.cpp
-git -C $C diff -- src > spaghetti-src/patches/0002-host-bridge.patch
+git -C $C diff -- src ':!src/port/pak.cpp' > spaghetti-src/patches/0002-host-bridge.patch
+git -C $C/libultraship diff --src-prefix=a/libultraship/ --dst-prefix=b/libultraship/ \
+  -- "$EEPROM" > spaghetti-src/patches/0003-libultraship-durable-eeprom.patch
+git -C $C diff -- src/port/pak.cpp > spaghetti-src/patches/0004-durable-controller-pak.patch
 ```
 
 Rerunning `build:spaghetti` resets the checkout to the pin and reapplies the

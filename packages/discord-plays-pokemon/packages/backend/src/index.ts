@@ -3,7 +3,10 @@ import { buildArchiveSpanProcessor } from "@shepherdjerred/llm-observability";
 import { bootGameBot } from "@shepherdjerred/discord-plays-core/entry.ts";
 import { handleMessages } from "./discord/message-handler.ts";
 import { buildPokemonExtraCommands } from "./discord/slashCommands/index.ts";
-import { PokemonGameDriver } from "./lifecycle/pokemon-driver.ts";
+import {
+  POKEMON_SAVE_HISTORY_ENTRIES,
+  PokemonGameDriver,
+} from "./lifecycle/pokemon-driver.ts";
 import { parseCommandInput } from "./game/command/command-input.ts";
 import type { CommandInput } from "./game/command/command-input.ts";
 import { enqueueCommand } from "./emulator/command-sink.ts";
@@ -13,6 +16,7 @@ import { encodePng } from "./emulator/png.ts";
 import { createWebServer } from "./webserver/index.ts";
 import { logger } from "./logger.ts";
 import { getConfig } from "./config/index.ts";
+import { readGoalGuildIds } from "./config/goal-guilds.ts";
 import type {
   LoginResponse,
   StatusResponse,
@@ -37,7 +41,12 @@ async function enqueueWebCommand(
 // One userbot, one emulator, one game at a time. The "pool" in the shared lib is
 // general-purpose (Streambot uses it for many concurrent streams); for this single-slot
 // game-bot we just feed it the single configured userbot token.
-const driver = new PokemonGameDriver({ config });
+const goalGuildIds = readGoalGuildIds();
+logger.info("goal mode guild allowlist", {
+  goalEnabled: config.game.goal.enabled,
+  guildIds: [...goalGuildIds],
+});
+const driver = new PokemonGameDriver({ config, goalGuildIds });
 
 const runtime = bootGameBot({
   serviceName: "discord-plays-pokemon",
@@ -55,6 +64,7 @@ const runtime = bootGameBot({
     userbotTokens: [config.stream.userbot.token],
     driver,
     stateRootDir: config.state_root_dir,
+    saveHistory: { entries: POKEMON_SAVE_HISTORY_ENTRIES, keep: 50 },
     extraCommands: (botClient) =>
       buildPokemonExtraCommands({
         driver,

@@ -74,7 +74,19 @@ export async function handleStopCommand<TUserbot extends PooledUserbot>(
     return;
   }
   await interaction.deferReply();
-  await sessionManager.stop("userStop");
+  const result = await sessionManager.stop("userStop", { expected: session });
+  if (result.kind === "notActive") {
+    await interaction.editReply({
+      content: `The ${sessionManager.driverName()} session in this server already ended.`,
+    });
+    return;
+  }
+  if (result.error !== undefined) {
+    await interaction.editReply({
+      content: `${sessionManager.driverName()} stopped, but shutting it down failed: ${result.error.message}`,
+    });
+    return;
+  }
   const tail = options.stoppedMessage ?? "Save flushed.";
   await interaction.editReply({
     content: `${sessionManager.driverName()} stopped. ${tail}`,

@@ -1,8 +1,10 @@
 # Follow the setup guide to configure this file: https://docs.discord-plays-pokemon.com/user/
 # Most of these settings should not be changed by most users
 
-# the Discord server ID that you want to connect to
-server_id = ""
+# Root of the per-guild save directories. Each Discord server that runs /play
+# gets saves/<guildId>/ (flash save, goal state and memory) plus history/
+# snapshots of that progress taken before every session.
+state_root_dir = "saves"
 
 [bot]
 # should the Discord bot component be enabled
@@ -25,7 +27,7 @@ enabled = true
 [bot.notifications]
 # should the bot send notifications
 enabled = true
-channel_id = ""
+# Notifications post in the text channel where /play was run.
 
 # In-game event notifications (faints, badges, evolutions, catches, ...).
 # Detected by polling emulator memory and diffing snapshots. All keys are
@@ -52,8 +54,7 @@ dex_entry = true
 [stream]
 # should the bot stream video to Discord
 enabled = true
-# the Discord video channel ID to stream to
-channel_id = ""
+# The stream joins the voice channel of whoever ran /play.
 # only stream if there is someone in the channel
 dynamic_streaming = true
 # there must be at least this many people watching
@@ -85,11 +86,11 @@ vaapi_device = "/dev/dri/renderD128"
 enabled = true
 # path to the built pokeemerald.wasm (build it with `scripts/build-wasm.ts`)
 wasm_path = "packages/backend/assets/pokeemerald.wasm"
-# optional path for the persisted 128 KiB flash save
-save_path = "saves/pokeemerald.flash"
 
 [game.goal]
-# enable Codex goal mode and the /goal slash command
+# enable Codex goal mode and the /goal slash command. Goal mode also only runs
+# in the guilds listed in the GOAL_ALLOWED_GUILD_IDS environment variable
+# (comma-separated), because the agent has full filesystem access in the pod.
 enabled = false
 # runtime must provide CODEX_ACCESS_TOKEN or a mounted Codex auth cache.
 # Pokémon goal quality intentionally stays on the Sol tier.
@@ -131,8 +132,7 @@ chord_max_total = 200
 # should chat commands be enabled
 # these chat commands are how the game is normally played
 enabled = true
-# the Discord text channel ID to listen for commands
-channel_id = ""
+# commands are read from the text channel where /play was run
 max_actions_per_command = 20
 max_quantity_per_action = 10
 key_press_duration_in_milliseconds = 15

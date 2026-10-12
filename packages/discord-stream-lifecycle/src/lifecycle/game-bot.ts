@@ -27,6 +27,7 @@ import {
   type VoiceOccupancySnapshot,
 } from "@shepherdjerred/discord-stream-lifecycle/session/auto-leave";
 import { countRealViewers } from "@shepherdjerred/discord-stream-lifecycle/viewer-presence";
+import type { SaveHistoryOptions } from "@shepherdjerred/discord-stream-lifecycle/persistence/save-history";
 import {
   SingleSlotSessionManager,
   type SessionManagerLogger,
@@ -50,6 +51,8 @@ export type CreateGameBotOptions<TUserbot extends PooledUserbot> = {
   readonly driver: GameDriver<TUserbot>;
   /** Root dir under which `<guildId>/` session dirs live. */
   readonly stateRootDir: string;
+  /** Per-guild save snapshots taken before each session boots. */
+  readonly saveHistory?: SaveHistoryOptions;
   /**
    * Extra per-game slash commands (`/screenshot`, `/goal`, ...). Either a static array
    * or a factory invoked at `start()` time (after the bot client is constructed) — the
@@ -141,6 +144,9 @@ export function createGameBot<TUserbot extends PooledUserbot>(
     pool,
     driver: options.driver,
     stateRootDir: options.stateRootDir,
+    ...(options.saveHistory === undefined
+      ? {}
+      : { saveHistory: options.saveHistory }),
     logger: log,
     // Cancel the alone-in-voice grace timer whenever a session ends, so a stale
     // timer armed during session A cannot stop a freshly-started session B.
@@ -304,20 +310,13 @@ function handleVoiceStateUpdate<TUserbot extends PooledUserbot>(
     voiceChannelId: session.voiceChannelId,
     humanMemberCount,
   };
-  // Capture the session reference in the closure so a stale timer (armed for session
-  // A, never cancelled when A ended via `/stop`) cannot stop a freshly-started
-  // session B — we only fire `aloneInVoice` if the same session that armed the timer
-  // is still the active one. (AloneInVoiceWatcher also tracks `armedForSessionStartedAt`,
-  // but that comparison happens against the arm-time token, not the *current* session,
-  // so the watcher alone does not catch cross-session leaks.)
+  // Pass the arming session as `expected` so a stale timer (armed for session A, never
+  // cancelled when A ended via `/stop`) cannot stop a freshly-started session B, which
+  // may belong to another guild. (AloneInVoiceWatcher also tracks
+  // `armedForSessionStartedAt`, but that comparison happens against the arm-time token,
+  // not the *current* session, so the watcher alone does not catch cross-session leaks.)
   const armedSession = session;
   aloneWatcher.evaluate(session, snapshot, () => {
-    const currentSession = sessionManager.getActiveSession();
-    if (
-      currentSession?.startedAt.getTime() !== armedSession.startedAt.getTime()
-    ) {
-      return;
-    }
-    void sessionManager.stop("aloneInVoice");
+    void sessionManager.stop("aloneInVoice", { expected: armedSession });
   });
 }

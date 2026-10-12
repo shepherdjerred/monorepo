@@ -1,5 +1,8 @@
 import { describe, expect, test } from "vitest";
-import { AtomicFlashPersistence } from "./flash-persistence.ts";
+import {
+  AtomicFlashPersistence,
+  requireFlashImage,
+} from "./flash-persistence.ts";
 
 describe("AtomicFlashPersistence", () => {
   test("serializes writes so the latest queued image wins", async () => {
@@ -22,5 +25,18 @@ describe("AtomicFlashPersistence", () => {
     await expect(
       persistence.enqueue("/dev/null/save.flash", Uint8Array.from([1])),
     ).rejects.toThrow();
+  });
+});
+
+describe("requireFlashImage", () => {
+  test("accepts an image of the expected size", () => {
+    const image = new Uint8Array(16);
+    expect(requireFlashImage(image, "save.flash", 16)).toBe(image);
+  });
+
+  test("refuses a truncated image", () => {
+    expect(() =>
+      requireFlashImage(new Uint8Array(8), "save.flash", 16),
+    ).toThrow(/wrong size \(8 bytes, expected 16\)/);
   });
 });
