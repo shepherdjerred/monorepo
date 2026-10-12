@@ -86,8 +86,16 @@ doubled on the 640×480 frame.
   llvmpipe. Bridge parsing runs on the main thread. Rendering, audio mixing, and
   game logic stay in the game's process.
 - **Saves.** The game's home (`SHIP_HOME`) is `saves/<guildId>/spaghettikart/`.
-  It writes its EEPROM save (`default.sav`), config, and logs there itself, so
-  saves stay per guild.
+  It writes its EEPROM save (`default.sav`), controller-pak ghosts, config,
+  and logs there itself, so saves stay per guild. Patches 0003 and 0004 make
+  those writes atomic (temp file, fsync, rename). A wrong-size `default.sav`
+  refuses `/play` instead of letting the game reinitialize it. Before every
+  session the bot copies the guild's EEPROM and pak files into
+  `saves/<guildId>/history/<timestamp>/`, keeping the newest 50; restore by
+  copying a snapshot back while no session runs. A guild that only has the
+  wasm core's `emulator/game.savememory` gets its EEPROM (the blob's first
+  512 bytes) copied to `default.sav` on its first native session; the legacy
+  file stays, and its controller-pak ghosts are not carried over.
 - **Assets.** `mk64.o2r` is the port's asset archive, extracted from the ROM.
   It follows the ROM's rules: never committed, logged, or baked into an image.
   At startup the backend checks the ROM's SHA-1 against the pin, then extracts

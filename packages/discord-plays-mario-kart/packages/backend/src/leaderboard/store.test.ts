@@ -165,4 +165,24 @@ describe("LeaderboardStore", () => {
     }
     expect(await store.leaderboard(3)).toHaveLength(3);
   });
+
+  test("keeps each guild's races out of every other guild's leaderboard", async () => {
+    const otherGuild =
+      createPrismaLeaderboardStore(prisma).forGuild("100000000000000002");
+    await store.recordRace(race([result({ name: "Alice", placement: 1 })]));
+    await otherGuild.recordRace(
+      race([
+        result({ name: "Alice", placement: 2 }),
+        result({ seat: 1, name: "Bob", placement: 1 }),
+      ]),
+    );
+
+    expect(await store.leaderboard()).toEqual([
+      { name: "Alice", wins: 1, races: 1, winRate: 1 },
+    ]);
+    expect(await otherGuild.leaderboard()).toEqual([
+      { name: "Bob", wins: 1, races: 1, winRate: 1 },
+      { name: "Alice", wins: 0, races: 1, winRate: 0 },
+    ]);
+  });
 });

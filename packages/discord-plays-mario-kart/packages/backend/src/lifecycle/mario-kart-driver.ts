@@ -7,7 +7,11 @@ import type {
 } from "@shepherdjerred/discord-stream-lifecycle/session/session.ts";
 import type { SelfbotPooledUserbot } from "@shepherdjerred/discord-stream-lifecycle/pool/selfbot-client.ts";
 import type { ScreenMode } from "#src/emulator/mk64-state.ts";
-import { createGameEngine } from "#src/engine/index.ts";
+import {
+  assertEepromIntact,
+  createGameEngine,
+  migrateLegacyEeprom,
+} from "#src/engine/index.ts";
 import type { SpaghettiBuild } from "#src/engine/spaghetti/install.ts";
 import type { GameEngine } from "#src/engine/game-engine.ts";
 import { GameStreamer } from "#src/stream/game-streamer.ts";
@@ -132,6 +136,12 @@ export class MarioKartGameDriver implements GameDriver<SelfbotPooledUserbot> {
     // Per-guild save isolation: the game keeps its saves under
     // saves/<guildId>/spaghettikart, so server A's progress never leaks into
     // server B's.
+    if (await migrateLegacyEeprom(session.sessionDir)) {
+      logger.info("migrated the wasm-era EEPROM save to the native port", {
+        guildId: session.guildId,
+      });
+    }
+    await assertEepromIntact(session.sessionDir);
     const emulator = createGameEngine(config, build, {
       sessionDir: session.sessionDir,
       seats,
