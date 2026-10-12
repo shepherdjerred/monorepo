@@ -2,6 +2,10 @@ import type { GameDriver } from "@shepherdjerred/discord-stream-lifecycle/lifecy
 import type { PooledUserbot } from "@shepherdjerred/discord-stream-lifecycle/pool/pooled-userbot";
 import type { UserbotProvider } from "@shepherdjerred/discord-stream-lifecycle/pool/userbot-pool";
 import { ensureSessionDir } from "@shepherdjerred/discord-stream-lifecycle/persistence/session-paths";
+import {
+  snapshotSaveDir,
+  type SaveHistoryOptions,
+} from "@shepherdjerred/discord-stream-lifecycle/persistence/save-history";
 import type { Session, SessionStopReason } from "./session.ts";
 
 export type SessionManagerLogger = {
@@ -41,11 +45,31 @@ export type StartSessionResult<TUserbot extends PooledUserbot> =
   /** The driver's `onSessionStart` threw — already cleaned up, userbot released. */
   | { readonly kind: "driverError"; readonly error: Error };
 
+export type StopSessionResult =
+  /** The session was torn down; `error` is set when the driver's teardown threw (e.g. a save flush failed). */
+  | { readonly kind: "stopped"; readonly error?: Error }
+  /** Nothing to stop: idle, or the active session is not the one the caller expected. */
+  | { readonly kind: "notActive" };
+
+export type StopSessionOptions<TUserbot extends PooledUserbot> = {
+  /**
+   * Only stop if this exact session is still the active one. Callers that decided to
+   * stop based on an earlier read (a `/stop` in guild A, an alone-in-voice timer) pass
+   * it so a session another guild started in between is never torn down by mistake.
+   */
+  readonly expected?: Session<TUserbot>;
+};
+
 export type SessionManagerOptions<TUserbot extends PooledUserbot> = {
   readonly pool: UserbotProvider<TUserbot>;
   readonly driver: GameDriver<TUserbot>;
   /** Root directory under which `<guildId>/` session dirs are created. */
   readonly stateRootDir: string;
+  /**
+   * Snapshot these save entries into `<sessionDir>/history/` before every session
+   * boots. A snapshot failure aborts the start rather than running unprotected.
+   */
+  readonly saveHistory?: SaveHistoryOptions;
   readonly logger?: SessionManagerLogger;
   /**
    * Invoked after each session ends (any reason), AFTER the driver's `onSessionStop`
@@ -72,6 +96,7 @@ export class SingleSlotSessionManager<TUserbot extends PooledUserbot> {
   private readonly pool: UserbotProvider<TUserbot>;
   private readonly driver: GameDriver<TUserbot>;
   private readonly stateRootDir: string;
+  private readonly saveHistory: SaveHistoryOptions | undefined;
   private readonly log: SessionManagerLogger;
   private readonly onSessionStopped:
     | ((session: Session<TUserbot>, reason: SessionStopReason) => void)
@@ -84,6 +109,7 @@ export class SingleSlotSessionManager<TUserbot extends PooledUserbot> {
     this.pool = options.pool;
     this.driver = options.driver;
     this.stateRootDir = options.stateRootDir;
+    this.saveHistory = options.saveHistory;
     this.log = options.logger ?? noopLogger;
     this.onSessionStopped = options.onSessionStopped;
   }
@@ -134,10 +160,22 @@ export class SingleSlotSessionManager<TUserbot extends PooledUserbot> {
           this.stateRootDir,
           request.guildId,
         );
+        if (this.saveHistory !== undefined) {
+          const snapshot = await snapshotSaveDir(
+            sessionDirPath,
+            this.saveHistory,
+          );
+          if (snapshot !== null) {
+            this.log.info("save history snapshot taken", {
+              guildId: request.guildId,
+              snapshot,
+            });
+          }
+        }
       } catch (error) {
         this.pool.release(entry);
         const err = toError(error);
-        this.log.error("failed to create session directory", {
+        this.log.error("failed to prepare session directory", {
           guildId: request.guildId,
           error: err.message,
         });
@@ -179,16 +217,30 @@ export class SingleSlotSessionManager<TUserbot extends PooledUserbot> {
 
   /**
    * Stop the active session (if any). Idempotent: calling stop when idle is a no-op.
-   * Always releases the userbot back to the pool, even if the driver throws on stop.
+   * Always releases the userbot back to the pool, even if the driver throws on stop;
+   * the driver's error is returned so callers never report a save as flushed when it
+   * was not.
    */
-  async stop(reason: SessionStopReason): Promise<void> {
-    await this.runExclusive(async () => {
+  async stop(
+    reason: SessionStopReason,
+    options: StopSessionOptions<TUserbot> = {},
+  ): Promise<StopSessionResult> {
+    return this.runExclusive(async (): Promise<StopSessionResult> => {
       const session = this.active;
       if (session === null) {
-        return;
+        return { kind: "notActive" };
+      }
+      if (options.expected !== undefined && options.expected !== session) {
+        this.log.warn("stop skipped: active session changed", {
+          driver: this.driver.name,
+          expectedGuildId: options.expected.guildId,
+          activeGuildId: session.guildId,
+          reason,
+        });
+        return { kind: "notActive" };
       }
       this.active = null;
-      await this.safeDriverStop(session, reason);
+      const error = await this.safeDriverStop(session, reason);
       this.pool.release(session.userbotEntry);
       this.log.info("session stopped", {
         driver: this.driver.name,
@@ -198,30 +250,36 @@ export class SingleSlotSessionManager<TUserbot extends PooledUserbot> {
       if (this.onSessionStopped !== undefined) {
         try {
           this.onSessionStopped(session, reason);
-        } catch (error) {
+        } catch (hookError) {
           this.log.error("onSessionStopped hook threw; ignoring", {
             guildId: session.guildId,
             reason,
-            error: toError(error).message,
+            error: toError(hookError).message,
           });
         }
       }
+      return error === undefined
+        ? { kind: "stopped" }
+        : { kind: "stopped", error };
     });
   }
 
   private async safeDriverStop(
     session: Session<TUserbot>,
     reason: SessionStopReason,
-  ): Promise<void> {
+  ): Promise<Error | undefined> {
     try {
       await this.driver.onSessionStop(session, reason);
+      return undefined;
     } catch (error) {
+      const err = toError(error);
       this.log.error("driver onSessionStop threw; releasing userbot anyway", {
         guildId: session.guildId,
         driver: this.driver.name,
         reason,
-        error: toError(error).message,
+        error: err.message,
       });
+      return err;
     }
   }
 
