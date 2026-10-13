@@ -58,6 +58,20 @@ export const lobby = {
 
 export type Region = { min: Vec3; max: Vec3 };
 
+/** How many of `item` `bot` carries, every stack together. */
+export function count(bot: Bot, item: string): number {
+  return bot.inventory
+    .items()
+    .filter((stack) => stack.name === item)
+    .reduce((total, stack) => total + stack.count, 0);
+}
+
+/** The item in hotbar `slot` (0 to 8), as `bot`'s client sees it. */
+export function hotbar(bot: Bot, slot: number): string | undefined {
+  // Hotbar slots are 36-44 in the player inventory window.
+  return bot.inventory.slots[36 + slot]?.name;
+}
+
 export function coords(at: Vec3): string {
   return `${at.x.toString()} ${at.y.toString()} ${at.z.toString()}`;
 }

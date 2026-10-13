@@ -14,6 +14,8 @@ public enum MatchError {
   NOT_PRE_GAME,
   /** There is no such kit. */
   UNKNOWN_KIT,
+  /** The kit must be bought first, or is not offered to them. */
+  KIT_LOCKED,
   /** No map has been chosen. */
   NO_MAP,
   /** The map cannot change once the match has started. */

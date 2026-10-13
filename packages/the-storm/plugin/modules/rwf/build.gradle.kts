@@ -1,7 +1,8 @@
 plugins { id("storm.jooq-conventions") }
 
 dependencies {
-  // Match rewards are paid in crystals through the economy module's Wallets port.
+  // Match rewards and kit purchases move Red Warfare credits through the economy module's Wallets
+  // port.
   implementation(project(":economy"))
   // Lobbies and results are announced through the discord module's relay port.
   implementation(project(":discord"))
@@ -10,17 +11,34 @@ dependencies {
 }
 
 // The Java Flipt identifiers must agree with the shared managed flag inventory.
+val flagInventory =
+    layout.projectDirectory.file("../../../../feature-flags/src/managed-flag-inventory.json")
+val remote = "src/main/java/com/shepherdjerred/thestorm/rwf/adapter/remote"
+
 val verifyManagedRwfFlag =
     tasks.register<VerifyManagedFlag>("verifyManagedRwfFlag") {
-      inventory =
-          layout.projectDirectory.file("../../../../feature-flags/src/managed-flag-inventory.json")
-      source =
-          layout.projectDirectory.file(
-              "src/main/java/com/shepherdjerred/thestorm/rwf/adapter/remote/FliptRwfGate.java")
+      inventory = flagInventory
+      source = layout.projectDirectory.file("$remote/FliptRwfGate.java")
       flagSource = "the-storm-rwf"
     }
 
-tasks.named("compileJava") { dependsOn(verifyManagedRwfFlag) }
+val verifyManagedRwfKitsFlag =
+    tasks.register<VerifyManagedFlag>("verifyManagedRwfKitsFlag") {
+      inventory = flagInventory
+      source = layout.projectDirectory.file("$remote/FliptRwfKitsGate.java")
+      flagSource = "the-storm-rwf-kits"
+    }
+
+val verifyManagedRwfKillstreaksFlag =
+    tasks.register<VerifyManagedFlag>("verifyManagedRwfKillstreaksFlag") {
+      inventory = flagInventory
+      source = layout.projectDirectory.file("$remote/FliptRwfKillstreaksGate.java")
+      flagSource = "the-storm-rwf-killstreaks"
+    }
+
+tasks.named("compileJava") {
+  dependsOn(verifyManagedRwfFlag, verifyManagedRwfKitsFlag, verifyManagedRwfKillstreaksFlag)
+}
 
 // Each Red Warfare feature flag the match reads, by inventory source and Java constant.
 mapOf(

@@ -121,7 +121,7 @@ final class WorldListener implements Listener {
 
   @EventHandler(ignoreCancelled = true)
   void onItemSpawn(ItemSpawnEvent event) {
-    if (inWorld(event.getLocation())) {
+    if (inWorld(event.getLocation()) && !runner.kits().isKitEntity(event.getEntity())) {
       event.setCancelled(true);
     }
   }

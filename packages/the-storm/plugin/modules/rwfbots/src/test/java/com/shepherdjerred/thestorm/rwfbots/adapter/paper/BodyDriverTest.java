@@ -176,6 +176,30 @@ final class BodyDriverTest {
   }
 
   @Test
+  void kitItemsGoThroughTheRulesAimedAndOnTheirTarget() {
+    var victim = UUID.randomUUID();
+    var target = ids.combatant(victim);
+    bodies.orders();
+
+    apply(
+        1,
+        new BodyCommand.Look(0, 0),
+        new BodyCommand.UseKit(2, Optional.of(target), Optional.of(new Vec3(5.5, 1.62, 15))));
+    apply(2, new BodyCommand.UseKit(3, Optional.empty(), Optional.empty()));
+
+    assertThat(actions.calls()).containsExactly("use 2 on " + victim + " at 5.5,1.6,15.0", "use 3");
+    // Looked at the point to use the item, then back along the tick's own look.
+    assertThat(bodies.orders()).filteredOn(order -> order.startsWith("look")).hasSize(3);
+  }
+
+  @Test
+  void aKillstreakRewardIsCalledInThroughTheRules() {
+    apply(1, new BodyCommand.UseStreak());
+
+    assertThat(actions.calls()).containsExactly("streak");
+  }
+
+  @Test
   void forceFollowsVanilla() {
     assertThat(BodyDriver.force(0)).isZero();
     assertThat(BodyDriver.force(5)).isCloseTo((0.0625 + 0.5) / 3, within(1e-9));

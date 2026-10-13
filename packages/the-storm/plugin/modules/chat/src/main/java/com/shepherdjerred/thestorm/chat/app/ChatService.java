@@ -431,14 +431,30 @@ public final class ChatService {
 
   /** {@code line} as MiniMessage in its channel's format, or the emote format for {@code /me}. */
   public String render(OutgoingLine line) {
+    return render(line, Optional.empty());
+  }
+
+  /** {@code line} as MiniMessage with the speaker's name in {@code nameColor}, if given. */
+  public String render(OutgoingLine line, Optional<String> nameColor) {
     var prefix = line.npc().orElseGet(() -> extensions.prefix(line.speaker().id()));
     var name =
         identities.apply(line.speaker().id()).nickname().orElseGet(() -> line.speaker().name());
     if (line.emote()) {
       return ChatFormat.emoteLine(
-          emoteTemplate, line.channel(), new ChatFormat.Speech(prefix, name, line.text()));
+          emoteTemplate,
+          line.channel(),
+          new ChatFormat.Speech(prefix, name, line.text()),
+          nameColor);
     }
-    return ChatFormat.channelLine(template(line.channel()), prefix, name, line.text());
+    return ChatFormat.channelLine(
+        template(line.channel()), new ChatFormat.Speech(prefix, name, line.text()), nameColor);
+  }
+
+  /**
+   * The colour of {@code line}'s speaker's name as {@code viewer} sees it, if any module sets it.
+   */
+  public Optional<String> nameColor(OutgoingLine line, UUID viewer) {
+    return extensions.nameColor(line.speaker().id(), viewer);
   }
 
   /** {@code line} as MiniMessage in the private message format. */

@@ -49,6 +49,10 @@ type BrainState = {
   rwfDenied: Set<string>;
   /** The Red Warfare match features the Flipt double answers `true` for. */
   rwfFeatures: Set<RwfFeature>;
+  /** Players the double answers `the-storm-rwf-kits-enabled: true` for. */
+  rwfKits: Set<string>;
+  /** Players the double answers `the-storm-rwf-killstreaks-enabled: true` for. */
+  rwfKillstreaks: Set<string>;
 };
 
 /** The managed Red Warfare match feature flags, server-wide. */
@@ -71,6 +75,63 @@ const RwfFeatureFlagSchema = z.strictObject({
   entity_id: z.literal("the-storm-rwf-features"),
   context: z.strictObject({ world: z.literal(rwfTestSettings.world) }),
 });
+
+/** The kit list and killstreak flags are per player, evaluated in the map world. */
+const RwfPlayerFlagSchema = z.strictObject({
+  namespace_key: z.literal("the-storm"),
+  flag_key: z.enum([
+    "the-storm-rwf-kits-enabled",
+    "the-storm-rwf-killstreaks-enabled",
+  ]),
+  entity_id: z.uuid(),
+  context: z.strictObject({ world: z.literal(rwfTestSettings.world) }),
+});
+
+// Test-only control hook (no auth): the kit suite opens the full kit list, the
+// shop and the killstreaks for its players; the server reads them as they join.
+async function controlRwfKits(
+  request: Request,
+  state: BrainState,
+): Promise<Response> {
+  if (request.method !== "POST") {
+    return new Response("not found\n", { status: 404 });
+  }
+  const seen = z
+    .strictObject({
+      kits: z.array(z.uuid()),
+      killstreaks: z.array(z.uuid()),
+    })
+    .safeParse(await request.json().catch(() => null));
+  if (!seen.success) {
+    return new Response("invalid request\n", { status: 400 });
+  }
+  state.rwfKits = new Set(seen.data.kits);
+  state.rwfKillstreaks = new Set(seen.data.killstreaks);
+  return Response.json(seen.data);
+}
+
+/**
+ * Opens the full kit list and shop for exactly `kits`, and the killstreaks for
+ * exactly `killstreaks` (player UUIDs), through the Flipt double's control hook.
+ */
+export async function setRwfKits(
+  port: number,
+  kits: string[],
+  killstreaks: string[] = kits,
+): Promise<void> {
+  const host = Bun.env["STORM_E2E_BRAIN_HOST"] ?? "127.0.0.1";
+  const response = await fetch(
+    `http://${host}:${port.toString()}/v1/__control/rwf-kits`,
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ kits, killstreaks }),
+    },
+  );
+  if (!response.ok) {
+    throw new Error(`rwf kits control failed: ${response.status.toString()}`);
+  }
+}
 
 // Test-only control hook (no auth): the specs fail and heal the brain to
 // prove the sweep redrives. Never present on the real service.
@@ -302,6 +363,14 @@ async function evaluateFlag(
   if (prod && BotLearningFlagSchema.safeParse(body).success) {
     return Response.json({ enabled: false });
   }
+  const playerFlag = RwfPlayerFlagSchema.safeParse(body);
+  if (prod && playerFlag.success) {
+    const open =
+      playerFlag.data.flag_key === "the-storm-rwf-kits-enabled"
+        ? state.rwfKits
+        : state.rwfKillstreaks;
+    return Response.json({ enabled: open.has(playerFlag.data.entity_id) });
+  }
   const feature = RwfFeatureFlagSchema.safeParse(body);
   if (prod && feature.success) {
     return Response.json({
@@ -334,11 +403,23 @@ async function evaluateFlag(
   return Response.json({ enabled: !denied });
 }
 
+/** The test-only control hooks, by path. */
+const controls: Partial<
+  Record<string, (request: Request, state: BrainState) => Promise<Response>>
+> = {
+  "/v1/__control": control,
+  "/v1/__control/rwf": controlRwf,
+  "/v1/__control/rwf-features": controlRwfFeatures,
+  "/v1/__control/rwf-kits": controlRwfKits,
+};
+
 export function startFakeBrain(token: string, port = 0): FakeBrain {
   const state: BrainState = {
     mode: "ok",
     rwfDenied: new Set(),
     rwfFeatures: new Set(),
+    rwfKits: new Set(),
+    rwfKillstreaks: new Set(),
     analytics: [],
   };
   const server = Bun.serve({
@@ -368,14 +449,9 @@ export function startFakeBrain(token: string, port = 0): FakeBrain {
       ) {
         return evaluateFlag(request, state);
       }
-      if (url.pathname === "/v1/__control") {
-        return control(request, state);
-      }
-      if (url.pathname === "/v1/__control/rwf") {
-        return controlRwf(request, state);
-      }
-      if (url.pathname === "/v1/__control/rwf-features") {
-        return controlRwfFeatures(request, state);
+      const controlHook = controls[url.pathname];
+      if (controlHook !== undefined) {
+        return controlHook(request, state);
       }
       if (request.method !== "POST" || !url.pathname.startsWith("/v1/")) {
         return new Response("not found\n", { status: 404 });

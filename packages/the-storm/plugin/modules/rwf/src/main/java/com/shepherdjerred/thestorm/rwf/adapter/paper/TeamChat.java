@@ -56,6 +56,7 @@ final class TeamChat {
   private final Consumer<ChatTap.Heard> recorder;
   private final Map<UUID, Boolean> autoTeam = new ConcurrentHashMap<>();
   private final List<Subscription> subscriptions = new ArrayList<>();
+  private final ChatNames names;
   private volatile View view = View.OFF;
 
   /**
@@ -80,6 +81,7 @@ final class TeamChat {
     this.stats = parts.stats();
     this.context = parts.context();
     this.recorder = parts.recorder();
+    this.names = new ChatNames(parts.runner());
   }
 
   /** Plugs into chat, when the chat module is on. */
@@ -90,6 +92,7 @@ final class TeamChat {
           subscriptions.add(chat.registerMembership(ChatChannel.DEAD, this::dead));
           subscriptions.add(chat.registerRouter(this::route));
           subscriptions.add(chat.registerTap(this::heard));
+          subscriptions.add(chat.registerNameColors(names));
         });
   }
 
@@ -101,6 +104,7 @@ final class TeamChat {
 
   /** Rebuilds who hears what; main thread, after every match change. */
   void refresh() {
+    names.refresh();
     var snapshot = runner.current();
     if (snapshot.isEmpty() || !runner.features().teamChat() || !runner.match().phase().started()) {
       view = new View(runner.features().teamChat(), Map.of(), Set.of(), Set.of());

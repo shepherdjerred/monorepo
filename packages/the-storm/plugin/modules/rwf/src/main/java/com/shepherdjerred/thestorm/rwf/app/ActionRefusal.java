@@ -16,6 +16,8 @@ public enum ActionRefusal {
   NOT_PRE_GAME,
   /** There is no such kit. */
   UNKNOWN_KIT,
+  /** The kit must be bought first, or is not offered. */
+  KIT_LOCKED,
   /** There is no such bomb on this map. */
   UNKNOWN_BOMB,
   /** The bomb has exploded or been removed. */
@@ -51,7 +53,11 @@ public enum ActionRefusal {
   /** The Time Machine is cooling down. */
   COOLING_DOWN,
   /** The Time Machine has no landing spot yet. */
-  NO_LANDING;
+  NO_LANDING,
+  /** The hotbar slot holds no kit item a bot can use. */
+  NO_KIT_ITEM,
+  /** Frozen hands use nothing until they thaw. */
+  FROZEN;
 
   /**
    * The refusal for a match rule the request tripped: the refusal of the same name, or the one a

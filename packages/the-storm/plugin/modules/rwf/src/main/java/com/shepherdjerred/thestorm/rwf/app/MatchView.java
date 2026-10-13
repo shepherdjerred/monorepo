@@ -1,8 +1,12 @@
 package com.shepherdjerred.thestorm.rwf.app;
 
+import com.shepherdjerred.thestorm.rwf.domain.kit.KitBook;
+import com.shepherdjerred.thestorm.rwf.domain.kit.KitSpec;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchSnapshot;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * The running match as a read model. The snapshot is immutable and rebuilt at most once per server
@@ -12,6 +16,18 @@ import java.util.UUID;
 public interface MatchView {
 
   Optional<MatchSnapshot> current();
+
+  /**
+   * The kits a bot may be drafted onto now, by id: the four first kits, or every kit while the full
+   * kit list is on for anyone here, so bots never play a kit the players cannot.
+   */
+  default Set<String> kitsOnOffer() {
+    return MILESTONE_KITS;
+  }
+
+  /** The ids of the four first kits. */
+  Set<String> MILESTONE_KITS =
+      KitBook.MILESTONE_ONE.stream().map(KitSpec::id).collect(Collectors.toUnmodifiableSet());
 
   /**
    * Whether a body is still fighting now. Query immediately before driving it: another body's

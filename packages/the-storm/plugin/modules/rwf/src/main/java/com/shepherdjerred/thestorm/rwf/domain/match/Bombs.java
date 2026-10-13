@@ -191,7 +191,9 @@ final class Bombs {
     if (!victims.isEmpty()) {
       draft.effect(new MatchEffect.Kill(victims, AttackType.BOMB_EXPLODE));
       for (var victim : victims) {
-        Standings.killedByBomb(draft, victim, Optional.ofNullable(vitals.get(victim)), now);
+        var attribution =
+            Standings.killedByBomb(draft, victim, Optional.ofNullable(vitals.get(victim)), now);
+        Kits.died(draft, new Kits.Loss(victim, attribution, now));
       }
       Standings.recordDeath(draft, now);
     }

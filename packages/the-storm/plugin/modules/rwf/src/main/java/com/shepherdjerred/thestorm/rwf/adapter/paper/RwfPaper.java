@@ -8,6 +8,7 @@ import com.shepherdjerred.thestorm.core.status.PublicGameDirectory;
 import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.rwf.adapter.content.RwfCatalog;
 import com.shepherdjerred.thestorm.rwf.app.CombatantActions;
+import com.shepherdjerred.thestorm.rwf.app.FeatureGates;
 import com.shepherdjerred.thestorm.rwf.app.JoinGate;
 import com.shepherdjerred.thestorm.rwf.app.MatchEvents;
 import com.shepherdjerred.thestorm.rwf.app.MatchView;
@@ -16,6 +17,7 @@ import com.shepherdjerred.thestorm.rwf.app.Pseudonyms;
 import com.shepherdjerred.thestorm.rwf.app.Recorder;
 import com.shepherdjerred.thestorm.rwf.app.RwfFeatures;
 import com.shepherdjerred.thestorm.rwf.app.map.MapResourceRegistry;
+import com.shepherdjerred.thestorm.rwf.app.shop.KitShop;
 import com.shepherdjerred.thestorm.rwf.app.store.MatchStore;
 import com.shepherdjerred.thestorm.rwf.app.store.StatsStore;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
@@ -119,6 +121,8 @@ public final class RwfPaper {
    * @param recorder match recordings
    * @param pseudonyms the pseudonymiser; empty when recording is off
    * @param gate the managed rollout decision for joining
+   * @param features the managed rollout decisions for kits and killstreaks
+   * @param shop the kit shop
    * @param hooks the server operations tests replace
    * @param features the managed match feature flags
    * @param stats lifetime statistics, history and preferences
@@ -131,6 +135,8 @@ public final class RwfPaper {
       Recorder recorder,
       Optional<Pseudonyms> pseudonyms,
       JoinGate gate,
+      FeatureGates kitGates,
+      KitShop shop,
       ServerHooks hooks,
       RwfFeatures.Source features,
       StatsStore stats,
@@ -163,6 +169,10 @@ public final class RwfPaper {
                 module.analytics()));
     var keys = new Keys(module.plugin());
     var kits = KitFactory.build(keys, content.kits());
+    var armory = new Armory(context, app.shop(), app.kitGates().kits(), content.kits());
+    // Kit picks, map votes and finished matches; the killstreaks and kit shop call its hooks.
+    var productEvents = new RwfAnalytics(context.analytics());
+    var menus = new KitMenus(context, kits, armory, productEvents);
     var snapshots =
         new Snapshots(context, app.snapshots(), module.services().require(SavedPlayerData.class));
     var boards = new Scoreboards(context.server());
@@ -182,6 +192,7 @@ public final class RwfPaper {
                 lobby,
                 kits,
                 app.hooks().displayStyle(),
+                () -> armory.anyExpanded() ? armory.rotation(context.time().instant()) : List.of(),
                 () -> Optional.ofNullable(statsHolder.get()).map(Stats::leaders).orElseGet(Map::of),
                 () ->
                     Optional.ofNullable(featureHolder.get())
@@ -225,22 +236,42 @@ public final class RwfPaper {
                 lobby,
                 new LobbyHud(context.server(), boards::lobby),
                 displays,
-                new KitMenu.Opener(context.server(), kits, content.kits()),
-                app.features()));
+                menus,
+                keys,
+                app.features(),
+                app.kitGates().killstreaks(),
+                productEvents));
+    runner.powers().streaks().hooks(app.hooks());
+    var teleporterMenus = new TeleporterMenus(runner, context, kits);
+    var kitClicks = new KitListener(runner, context, keys, teleporterMenus);
+    var kitWorld = new KitWorldListener(runner, context, keys, app.hooks());
     var actions =
         new PaperCombatantActions(
-            new PaperCombatantActions.Parts(runner, tracker, recordings, keys, app.hooks()));
+            new PaperCombatantActions.Parts(
+                runner,
+                tracker,
+                recordings,
+                keys,
+                app.hooks(),
+                new BotKitUses(runner, kitClicks, kitWorld, teleporterMenus)));
     var watchers = new Watchers(runner, snapshots, boards, context);
     var _ = runner.subscribe(watchers::onTransition);
     var metrics = new MatchAnalytics(context.activity());
     var _ = runner.subscribe(metrics::accept);
-    // Kit picks, map votes and finished matches; the killstreaks and kit shop call its hooks.
-    var productEvents = new RwfAnalytics(context.analytics());
     var _ = runner.subscribe(notification -> productEvents.accept(notification, runner.match()));
     var hats = new Hats(runner, context);
     var _ = runner.subscribe(hats::accept);
     var guard = new ItemGuard(runner, keys);
     var spectating = new Spectating(runner, watchers, keys, context);
+    // The dead's star opens the layout editor for the kit they fought with, as the kit menu's
+    // right-click does.
+    spectating.kitLayouts(
+        player ->
+            runner
+                .memberOf(player.getUniqueId())
+                .flatMap(member -> member.kit())
+                .flatMap(com.shepherdjerred.thestorm.rwf.domain.kit.KitBook::byId)
+                .ifPresent(kit -> menus.editLayout(player, kit)));
     var teamChat =
         new TeamChat(
             new TeamChat.Parts(
@@ -282,10 +313,16 @@ public final class RwfPaper {
                 new PlayerListener.Parts(
                     runner, snapshots, guard, actions, tracker, context, keys, bombs, watchers)),
             guard,
-            new KitMenuListener(runner, context),
+            new KitMenuListener(runner, context, menus),
+            new KitLayoutListener(keys, menus.armory()),
             new CombatListener(runner, tracker, context, app.hooks()),
             new WorldListener(runner, context, bombs),
             new AfkWatch(runner),
+            kitClicks,
+            kitWorld,
+            new KillstreakListener(runner, context),
+            new SacrificeListener(runner, context, tracker),
+            teleporterMenus,
             spectating,
             hats,
             inputs);
@@ -298,6 +335,7 @@ public final class RwfPaper {
                 runner,
                 watchers,
                 kits,
+                menus,
                 app.gate(),
                 config,
                 bots,

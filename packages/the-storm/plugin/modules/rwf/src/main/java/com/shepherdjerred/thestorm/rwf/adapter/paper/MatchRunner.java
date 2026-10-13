@@ -14,15 +14,14 @@ import com.shepherdjerred.thestorm.rwf.app.ShowcaseStart;
 import com.shepherdjerred.thestorm.rwf.app.map.MapRotation;
 import com.shepherdjerred.thestorm.rwf.app.store.MatchStats;
 import com.shepherdjerred.thestorm.rwf.app.store.MatchStore;
+import com.shepherdjerred.thestorm.rwf.domain.ability.Motion;
+import com.shepherdjerred.thestorm.rwf.domain.ability.kits.Medic;
 import com.shepherdjerred.thestorm.rwf.domain.combat.AttackType;
 import com.shepherdjerred.thestorm.rwf.domain.combat.Attribution;
-import com.shepherdjerred.thestorm.rwf.domain.combat.CombatRules;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.CombatantId;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
 import com.shepherdjerred.thestorm.rwf.domain.geometry.BlockPos;
 import com.shepherdjerred.thestorm.rwf.domain.geometry.Spawn;
-import com.shepherdjerred.thestorm.rwf.domain.kit.KitBook;
-import com.shepherdjerred.thestorm.rwf.domain.kit.Rewinder;
 import com.shepherdjerred.thestorm.rwf.domain.lobby.LobbyStatus;
 import com.shepherdjerred.thestorm.rwf.domain.match.Ballot;
 import com.shepherdjerred.thestorm.rwf.domain.match.Combatant;
@@ -60,11 +59,8 @@ import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
-import org.bukkit.attribute.Attribute;
-import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.EquipmentSlotGroup;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -100,8 +96,10 @@ final class MatchRunner implements MatchView, MatchEvents {
    * @param lobby the lobby room
    * @param hud the countdown boss bar and titles
    * @param displays the lobby's rules, match board, ballot and kit alcoves
-   * @param menus opens the kit menu
+   * @param menus the kit menu, the kit shop and what each player may pick
+   * @param keys item and entity tags
    * @param features the managed feature flags, read once per match
+   * @param killstreaks the per-player killstreaks flag
    */
   record Parts(
       PaperContext context,
@@ -119,15 +117,20 @@ final class MatchRunner implements MatchView, MatchEvents {
       LobbyRoom lobby,
       LobbyHud hud,
       LobbyDisplays displays,
-      KitMenu.Opener menus,
-      RwfFeatures.Source features) {}
+      KitMenus menus,
+      Keys keys,
+      RwfFeatures.Source features,
+      com.shepherdjerred.thestorm.rwf.app.JoinGate killstreaks,
+      RwfAnalytics product) {}
 
   private final Parts parts;
+  private final KitPowers powers;
+  private final KitBridge kits;
+  private final KitPicker picker;
   private final MapRotation<MapWorld> rotation;
   private final Effects effects = new Effects();
   private final ArrayDeque<MatchEvent> waiting = new ArrayDeque<>();
   private final List<Consumer<MatchNotification>> listeners = new ArrayList<>();
-  private final Map<CombatantId, Rewinder> rewinders = new HashMap<>();
   private final Battlefield field;
   private final MatchLedger ledger = new MatchLedger();
   private final Map<BlockPos, Instant> hissed = new HashMap<>();
@@ -181,13 +184,22 @@ final class MatchRunner implements MatchView, MatchEvents {
 
   MatchRunner(Parts parts) {
     this.parts = parts;
+    this.powers =
+        new KitPowers(
+            this,
+            parts.context(),
+            new KitPowers.Parts(
+                parts.kits(), parts.boards(), parts.keys(), parts.combat(), parts.killstreaks()));
+    this.kits = new KitBridge(this, powers);
+    this.picker = new KitPicker(this, parts.menus());
     this.arrivals = new BotArrivals(parts.bots()::despawn);
     this.lobbySizes =
         new LobbySizes(
             parts.config().match().automaticSizing(),
             parts.config().match().targetCombatants(),
             parts.config().match().maxCombatants());
-    this.field = new Battlefield(parts.combat());
+    this.field =
+        new Battlefield(parts.combat(), new Sacrifices(this, parts.context(), parts.combat()));
     this.rotation = new MapRotation<>(parts.maps(), parts.context().random());
     this.match = RwfMatch.open(settings(), UUID.randomUUID(), parts.context().random().nextLong());
   }
@@ -297,12 +309,19 @@ final class MatchRunner implements MatchView, MatchEvents {
     return out;
   }
 
-  Optional<Rewinder> rewinder(CombatantId id) {
-    return Optional.ofNullable(rewinders.get(id));
+  /** What kit abilities do to the world and its combatants. */
+  KitPowers powers() {
+    return powers;
   }
 
-  void rewinder(CombatantId id, Rewinder rewinder) {
-    rewinders.put(id, rewinder);
+  /** How the world reaches the kit abilities. */
+  KitBridge kits() {
+    return kits;
+  }
+
+  /** Picking kits and the kit menu. */
+  KitPicker picker() {
+    return picker;
   }
 
   boolean awaitsSpectate(UUID player) {
@@ -322,6 +341,11 @@ final class MatchRunner implements MatchView, MatchEvents {
   void tools(Spectating spectatorTools, TeamChat chat) {
     this.spectating = spectatorTools;
     this.teamChat = chat;
+  }
+
+  @Override
+  public java.util.Set<String> kitsOnOffer() {
+    return picker.onOffer();
   }
 
   @Override
@@ -439,8 +463,6 @@ final class MatchRunner implements MatchView, MatchEvents {
     match = step.match();
     applying = true;
     try {
-      // The loaded map is the one the match runs on before anything else happens: an operator's
-      // start goes live in the same step the map becomes ready.
       if (event instanceof MatchEvent.MapReady ready && match.map().isPresent()) {
         play(ready.map().id());
       }
@@ -632,13 +654,16 @@ final class MatchRunner implements MatchView, MatchEvents {
                     ballot.chosen().orElseThrow()));
     lastBallot = Optional.empty();
     for (var member : match.members()) {
-      if (member.kit().filter(KitBook.REWIND.id()::equals).isPresent()) {
-        rewinders.put(member.id(), Rewinder.start(now()));
-      }
       entity(member.id())
           .ifPresent(
               player ->
-                  parts.boards().assign(player, member.team().orElseThrow(), member.id().isBot()));
+                  parts
+                      .boards()
+                      .assign(
+                          player,
+                          member.team().orElseThrow(),
+                          member.id().isBot(),
+                          member.kit().filter(Medic.ID::equals).isPresent()));
       parts.recordings().event(now(), "joined", member.id(), member.team().orElseThrow().name());
     }
   }
@@ -650,7 +675,6 @@ final class MatchRunner implements MatchView, MatchEvents {
   private void nextMatch() {
     lobbySizes.resetDraft();
     ledger.reset();
-    rewinders.clear();
     field.clear();
     hissed.clear();
     pendingPay.clear();
@@ -919,7 +943,11 @@ final class MatchRunner implements MatchView, MatchEvents {
       var now = now();
       keepHumansRule(now);
       arrive(now);
-      handle(new MatchEvent.Tick(now, vitals()));
+      countOnline();
+      var motions = new HashMap<CombatantId, Motion>();
+      handle(
+          new MatchEvent.Tick(
+              now, vitals(motions), motions, Battlefield.ground(parts.context().mapWorld())));
       if (live()) {
         liveTick(now);
       } else if (match.phase() instanceof Phase.Ended ended) {
@@ -930,7 +958,14 @@ final class MatchRunner implements MatchView, MatchEvents {
         previewTick();
       }
       if (ticks % DISPLAY_EVERY_TICKS == 0) {
-        current().ifPresent(parts.boards()::render);
+        current()
+            .ifPresent(
+                snapshot ->
+                    parts
+                        .boards()
+                        .render(
+                            snapshot,
+                            parts.bombs().concealed(BombMarkers.Sabotage.of(MatchRunner.this))));
         var chat = teamChat;
         if (chat != null) {
           chat.refresh();
@@ -938,6 +973,20 @@ final class MatchRunner implements MatchView, MatchEvents {
         var status = LobbyStatus.of(match, now);
         parts.hud().update(status);
         parts.displays().update(status, match.ballot());
+      }
+    }
+
+    /**
+     * Until the match goes live, the rules learn how many players are on the server whenever the
+     * count changes, for the Medic's small-game rule. Citizens' bots are not online players.
+     */
+    private void countOnline() {
+      if (live() || match.phase() instanceof Phase.Ended) {
+        return;
+      }
+      var online = parts.context().server().getOnlinePlayers().size();
+      if (online != match.abilities().online()) {
+        handle(new MatchEvent.Online(online));
       }
     }
 
@@ -1072,7 +1121,8 @@ final class MatchRunner implements MatchView, MatchEvents {
       }
     }
 
-    private Map<CombatantId, Vitals> vitals() {
+    /** The vitals of every living combatant, and how each moved into {@code motions}. */
+    private Map<CombatantId, Vitals> vitals(Map<CombatantId, Motion> motions) {
       var vitals = new HashMap<CombatantId, Vitals>();
       for (var member : match.members()) {
         if (!member.alive()) {
@@ -1088,7 +1138,12 @@ final class MatchRunner implements MatchView, MatchEvents {
         vitals.put(
             member.id(),
             new Vitals(
-                Places.vec(Places.at(player)), maxHealth(player), Math.max(0, player.getHealth())));
+                Places.vec(Places.at(player)),
+                PlayerAttributes.maxHealth(player),
+                Math.max(0, player.getHealth())));
+        if (live()) {
+          motions.put(member.id(), powers.motion(player));
+        }
       }
       return vitals;
     }
@@ -1105,7 +1160,6 @@ final class MatchRunner implements MatchView, MatchEvents {
         }
         var player = entity.orElseThrow();
         parts.recordings().sample(now, ticks, member, player);
-        field.settle(player);
         ledger.walked(member.id(), Places.vec(Places.at(player)));
         if (field.fellIntoVoid(member.id(), player, border)) {
           continue;
@@ -1113,14 +1167,17 @@ final class MatchRunner implements MatchView, MatchEvents {
         if (ticks % Battlefield.BORDER_EVERY_TICKS == 0) {
           field.hurtOutside(member.id(), player, border, now);
         }
-        rewindTick(member.id(), player, now);
       }
       if (parts.recordings().pulseDue()) {
         pulse();
       }
       if (ticks % DISPLAY_EVERY_TICKS == 0) {
-        current().ifPresent(parts.bombs()::update);
+        current()
+            .ifPresent(
+                snapshot ->
+                    parts.bombs().update(snapshot, BombMarkers.Sabotage.of(MatchRunner.this)));
       }
+      powers.tick(now);
     }
 
     /** The recording's five-second picture: who is alive per team, each bomb, the poison. */
@@ -1152,14 +1209,6 @@ final class MatchRunner implements MatchView, MatchEvents {
       }
       snapshot.poison().ifPresent(poison -> parts.recordings().pulse(alive, bombs, poison.stage()));
     }
-
-    /** The Rewind trail and recharge bar of {@code id}, if they carry the Time Machine. */
-    private void rewindTick(CombatantId id, Player player, Instant now) {
-      var rewinder = rewinders.get(id);
-      if (rewinder != null) {
-        rewinders.put(id, Battlefield.rewind(rewinder, player, now));
-      }
-    }
   }
 
   // ---- things players do -----------------------------------------------------------------------
@@ -1176,7 +1225,12 @@ final class MatchRunner implements MatchView, MatchEvents {
     if (refusal.isPresent()) {
       return refusal;
     }
-    return handle(new MatchEvent.Join(human(player), player.getName(), now())).map(Texts::describe);
+    var refused =
+        handle(new MatchEvent.Join(human(player), player.getName(), now())).map(Texts::describe);
+    if (refused.isEmpty()) {
+      picker.load(player.getUniqueId());
+    }
+    return refused;
   }
 
   /** Whether a player asking to join now would be turned away because a match is under way. */
@@ -1195,8 +1249,12 @@ final class MatchRunner implements MatchView, MatchEvents {
     }
     keepingSnapshot = player.getUniqueId();
     try {
-      return handle(new MatchEvent.Join(human(player), player.getName(), now()))
-          .map(Texts::describe);
+      var refused =
+          handle(new MatchEvent.Join(human(player), player.getName(), now())).map(Texts::describe);
+      if (refused.isEmpty()) {
+        picker.load(player.getUniqueId());
+      }
+      return refused;
     } finally {
       keepingSnapshot = null;
     }
@@ -1276,7 +1334,13 @@ final class MatchRunner implements MatchView, MatchEvents {
     }
     handle(
         new MatchEvent.Damaged(
-            member.orElseThrow().id(), by, damage, before, maxHealth(victim), cause, now()));
+            member.orElseThrow().id(),
+            by,
+            damage,
+            before,
+            PlayerAttributes.maxHealth(victim),
+            cause,
+            now()));
   }
 
   /** A fighter loosed {@code projectile}. */
@@ -1317,14 +1381,17 @@ final class MatchRunner implements MatchView, MatchEvents {
     /**
      * {@code id} used {@code ability} (aimed at {@code target}, if anything): counted, recorded.
      */
-    void abilityUsed(CombatantId id, String ability, Optional<String> target) {
+    void abilityUsed(CombatantId id, String ability, Optional<CombatantId> target) {
       ledger.ability(id);
-      parts.recordings().ability(id, ability, target);
+      target.ifPresentOrElse(
+          on -> parts.recordings().ability(id, ability, on),
+          () -> parts.recordings().ability(id, ability, Optional.empty()));
     }
 
     /** {@code id} used the {@code streak} reward they earned at {@code kills}. */
     void killstreakUsed(CombatantId id, String streak, int kills) {
       parts.recordings().killstreak(id, streak, kills);
+      parts.product().killstreakUsed(id, streak, kills);
     }
 
     /** {@code id} was given {@code effect} at {@code amplifier} for {@code ticks}. */
@@ -1375,7 +1442,6 @@ final class MatchRunner implements MatchView, MatchEvents {
     }
     var killerMember = killer.flatMap(this::memberOf);
     var killerId = killerMember.map(Combatant::id);
-    rewinders.computeIfPresent(victim.orElseThrow().id(), (id, rewinder) -> rewinder.died());
     var killerEntity = killerId.flatMap(this::entity).filter(entity -> !entity.isDead());
     var weapon =
         killerEntity
@@ -1433,15 +1499,6 @@ final class MatchRunner implements MatchView, MatchEvents {
     member.orElseThrow().kit().ifPresent(kit -> effects.equip(member.orElseThrow().id(), kit));
   }
 
-  /** {@code player} picks {@code kit}, as {@code /rwf kit} and the kit menu do; why not, if not. */
-  Optional<String> pickKit(Player player, String kit) {
-    var member = memberOf(player.getUniqueId());
-    if (member.isEmpty()) {
-      return Optional.of(Texts.describe(MatchError.NOT_A_MEMBER));
-    }
-    return handle(new MatchEvent.PickKit(member.orElseThrow().id(), kit)).map(Texts::describe);
-  }
-
   /** {@code player} right-clicked podium {@code index}: a vote for the map on it. */
   Optional<String> voteAt(Player player, int index) {
     if (!features.matchFlow()) {
@@ -1474,31 +1531,27 @@ final class MatchRunner implements MatchView, MatchEvents {
     return handle(new MatchEvent.Leave(member.orElseThrow().id(), now())).map(Texts::describe);
   }
 
-  /** Opens the kit menu for a member waiting for the start, marking the kit they picked. */
-  Optional<String> openKitMenu(Player player) {
-    var member = memberOf(player.getUniqueId());
-    if (member.isEmpty()) {
-      return Optional.of(Texts.describe(MatchError.NOT_A_MEMBER));
-    }
-    if (!match.phase().kitsOpen()) {
-      return Optional.of(Texts.describe(MatchError.NOT_PRE_GAME));
-    }
-    var _ = parts.menus().open(player, member.orElseThrow().kit());
-    return Optional.empty();
-  }
-
-  /** Moves {@code player} between or within the rwf worlds, past the teleport guard. */
-  void move(Player player, Location to) {
+  /** Moves past the teleport guard; a bot crossing worlds returns its replacement body. */
+  Player move(Player player, Location to) {
     var was = moving;
     moving = true;
     try {
+      if (parts.bots().isBot(player.getUniqueId())) {
+        var id = memberOf(player.getUniqueId()).orElseThrow().id();
+        if (!(id instanceof CombatantId.Bot bot)) {
+          throw new IllegalStateException("bot body has a human combatant id: " + id);
+        }
+        return parts.bots().move(bot, to);
+      }
       player.teleport(to);
+      return player;
     } finally {
       moving = was;
     }
   }
 
   private void spectate(Player player, Spawn at) {
+    powers.clear(player);
     var where = Places.location(parts.context().mapWorld(), at);
     var tools = spectating;
     if (tools != null
@@ -1532,42 +1585,6 @@ final class MatchRunner implements MatchView, MatchEvents {
     return map == null
         ? lobby()
         : Places.location(parts.context().mapWorld(), map.definition().spectatorPoint());
-  }
-
-  /** Gives {@code player} the match's attack-speed modifier, so the 1.9 cooldown never applies. */
-  static void addAttackSpeed(Player player) {
-    var attribute = player.getAttribute(Attribute.ATTACK_SPEED);
-    if (attribute == null) {
-      // A real player always carries attack speed; a bot entity may need it registered.
-      player.registerAttribute(Attribute.ATTACK_SPEED);
-      attribute = player.getAttribute(Attribute.ATTACK_SPEED);
-    }
-    if (attribute == null) {
-      throw new IllegalStateException(
-          "attack speed could not be registered on " + player.getName());
-    }
-    attribute.removeModifier(Keys.ATTACK_SPEED);
-    attribute.addModifier(
-        new AttributeModifier(
-            Keys.ATTACK_SPEED,
-            CombatRules.ATTACK_SPEED_MODIFIER,
-            AttributeModifier.Operation.ADD_NUMBER,
-            EquipmentSlotGroup.ANY));
-  }
-
-  static void removeAttackSpeed(Player player) {
-    var attribute = player.getAttribute(Attribute.ATTACK_SPEED);
-    if (attribute != null) {
-      attribute.removeModifier(Keys.ATTACK_SPEED);
-    }
-  }
-
-  private static double maxHealth(Player player) {
-    var attribute = player.getAttribute(Attribute.MAX_HEALTH);
-    if (attribute == null) {
-      throw new IllegalStateException("players always have max health");
-    }
-    return attribute.getValue();
   }
 
   // ---- effects ---------------------------------------------------------------------------------
@@ -1608,6 +1625,8 @@ final class MatchRunner implements MatchView, MatchEvents {
           ledger.stat(stat.id(), stat.stat(), now());
           parts.recordings().event(now(), "stat", stat.id(), stat.stat());
         }
+        case MatchEffect.Ability ability -> powers.apply(ability.effect());
+        case MatchEffect.KillstreakEarned earned -> powers.streaks().grant(earned);
         case MatchEffect.PreviewMap preview ->
             preview.ids().forEach(id -> withEntity(id, player -> preview(id, player, preview)));
         case MatchEffect.Freeze freeze -> freeze.ids().forEach(this::freeze);
@@ -1662,7 +1681,10 @@ final class MatchRunner implements MatchView, MatchEvents {
                         parts
                             .recordings()
                             .blockChange(at, state, Occurrence.BlockChange.Reason.CRATER));
-        case MatchEffect.RevertCraters _ -> revert();
+        case MatchEffect.RevertCraters _ -> {
+          powers.reset();
+          revert();
+        }
         default -> throw new IllegalStateException("unhandled effect " + effect);
       }
     }
@@ -1683,7 +1705,13 @@ final class MatchRunner implements MatchView, MatchEvents {
       withEntity(
           id,
           player -> {
-            parts.kits().equip(player, parts.kits().require(kitId));
+            parts
+                .kits()
+                .equip(
+                    player,
+                    parts.kits().require(kitId),
+                    match.member(id).flatMap(Combatant::team),
+                    parts.menus().armory().layout(id.uuid(), kitId));
             member(id)
                 .flatMap(Combatant::team)
                 .ifPresent(
@@ -1727,7 +1755,6 @@ final class MatchRunner implements MatchView, MatchEvents {
 
     private void restore(CombatantId id) {
       releaseTools(id);
-      rewinders.remove(id);
       parts.combat().forget(id.uuid());
       awaitingSpectate.remove(id.uuid());
       poisoned.remove(id.uuid());
@@ -1743,7 +1770,8 @@ final class MatchRunner implements MatchView, MatchEvents {
             // Their snapshot stays held and stored, and is restored when they next join.
             return;
           }
-          removeAttackSpeed(player);
+          PlayerAttributes.removeAttackSpeed(player);
+          powers.clear(player);
           KitMenu.close(player);
           parts.boards().hide(player);
           parts.hud().hide(player);
@@ -1756,10 +1784,11 @@ final class MatchRunner implements MatchView, MatchEvents {
       withEntity(
           id,
           player -> {
+            powers.clear(player);
             PlayerStates.wipe(player, GameMode.SURVIVAL);
-            move(player, lobby());
-            addAttackSpeed(player);
-            parts.boards().show(player);
+            var moved = move(player, lobby());
+            PlayerAttributes.addAttackSpeed(moved);
+            parts.boards().show(moved);
             if (!id.isBot()) {
               parts.kits().giveLobbyItems(player);
               var chat = teamChat;
@@ -1784,7 +1813,6 @@ final class MatchRunner implements MatchView, MatchEvents {
      */
     private void returnToLobby(CombatantId id, String kitId) {
       releaseTools(id);
-      rewinders.remove(id);
       parts.combat().forget(id.uuid());
       awaitingSpectate.remove(id.uuid());
       poisoned.remove(id.uuid());

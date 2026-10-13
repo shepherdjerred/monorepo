@@ -1,9 +1,13 @@
 package com.shepherdjerred.thestorm.rwf.domain.match;
 
+import com.shepherdjerred.thestorm.rwf.domain.ability.AbilityInput;
+import com.shepherdjerred.thestorm.rwf.domain.ability.Ground;
+import com.shepherdjerred.thestorm.rwf.domain.ability.Motion;
 import com.shepherdjerred.thestorm.rwf.domain.combat.AttackType;
 import com.shepherdjerred.thestorm.rwf.domain.combat.Attribution;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.CombatantId;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
+import com.shepherdjerred.thestorm.rwf.domain.kit.KitAccess;
 import com.shepherdjerred.thestorm.rwf.domain.map.MapDefinition;
 import java.time.Duration;
 import java.time.Instant;
@@ -47,8 +51,9 @@ public sealed interface MatchEvent {
    *
    * @param id who
    * @param kitId the kit
+   * @param access which kits they may pick: what they own and what is free this week
    */
-  record PickKit(CombatantId id, String kitId) implements MatchEvent {}
+  record PickKit(CombatantId id, String kitId, KitAccess access) implements MatchEvent {}
 
   /**
    * An operator gives a member a kit, whatever the phase until the match goes live.
@@ -109,15 +114,41 @@ public sealed interface MatchEvent {
    *
    * @param now the time
    * @param vitals position and max health of every living combatant, for the poison
+   * @param motions how every living combatant moved this tick, for kit abilities
+   * @param ground what the map's blocks say about a spot this tick, for kit abilities
    */
-  record Tick(Instant now, Map<CombatantId, Vitals> vitals) implements MatchEvent {
+  record Tick(
+      Instant now, Map<CombatantId, Vitals> vitals, Map<CombatantId, Motion> motions, Ground ground)
+      implements MatchEvent {
 
     public Tick {
       vitals = Map.copyOf(vitals);
+      motions = Map.copyOf(motions);
+    }
+
+    /** A tick with no motion reported, so no ground read. */
+    public Tick(Instant now, Map<CombatantId, Vitals> vitals) {
+      this(now, vitals, Map.of(), Ground.UNREAD);
     }
 
     public static Tick at(Instant now) {
       return new Tick(now, Map.of());
+    }
+  }
+
+  /**
+   * How many players are on the server, reported whenever the count changes. The Medic's small-game
+   * rule reads the count the match goes live with, as Red Warfare read it when its abilities
+   * registered.
+   *
+   * @param players players online, bots excluded
+   */
+  record Online(int players) implements MatchEvent {
+
+    public Online {
+      if (players < 0) {
+        throw new IllegalArgumentException("players online must not be negative: " + players);
+      }
     }
   }
 
@@ -227,4 +258,13 @@ public sealed interface MatchEvent {
 
   /** The adapter has finished reverting the map after a match. */
   record ResetDone() implements MatchEvent {}
+
+  /**
+   * A combatant did something their kit's ability answers.
+   *
+   * @param actor who
+   * @param input what, with the world facts the rules need
+   * @param now when
+   */
+  record Ability(CombatantId actor, AbilityInput input, Instant now) implements MatchEvent {}
 }

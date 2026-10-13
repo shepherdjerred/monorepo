@@ -34,6 +34,7 @@ public final class BotBody {
   private String planLabel = "-";
   private long decisionAge;
   private boolean recoveryRequested;
+  private long nextStreak;
 
   BotBody(UUID uuid, Director.Drafted drafted) {
     this.uuid = uuid;
@@ -59,6 +60,15 @@ public final class BotBody {
 
   public Loadout loadout() {
     return loadout;
+  }
+
+  /** The earliest tick the bot may call in its next killstreak reward. */
+  long nextStreak() {
+    return nextStreak;
+  }
+
+  void nextStreak(long tick) {
+    nextStreak = tick;
   }
 
   /** The match profile, once the bot has a team and the match is live. */

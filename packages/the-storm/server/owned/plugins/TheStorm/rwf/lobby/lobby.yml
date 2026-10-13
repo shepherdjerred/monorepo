@@ -28,30 +28,117 @@ sides:
     at: { x: 60.5, y: 70.0, z: 50.5, yaw: 180.0, pitch: 0.0 }
   - team: YELLOW
     at: { x: 72.5, y: 70.0, z: 50.5, yaw: 180.0, pitch: 0.0 }
-# One alcove per kit along the armory's basic spine, in menu order: the
-# kit's item floats over the pedestal at display; stand is in front of it.
+# One alcove per kit in the armory's three spines, basic, then mid, then
+# advanced, each spine's north face then south, west to east: the kit's item
+# floats over the pedestal at display; stand is in front of it.
 alcoves:
   - kit: trooper
     display: { x: 12.5, y: 71.25, z: 37.5 }
     stand: { x: 12.5, y: 70.0, z: 34.5, yaw: 0.0, pitch: 0.0 }
-  - kit: longbow
+  - kit: explosive
     display: { x: 16.5, y: 71.25, z: 37.5 }
     stand: { x: 16.5, y: 70.0, z: 34.5, yaw: 0.0, pitch: 0.0 }
-  - kit: shortbow
+  - kit: ghost
     display: { x: 20.5, y: 71.25, z: 37.5 }
     stand: { x: 20.5, y: 70.0, z: 34.5, yaw: 0.0, pitch: 0.0 }
-  - kit: rewind
+  - kit: longbow
     display: { x: 24.5, y: 71.25, z: 37.5 }
     stand: { x: 24.5, y: 70.0, z: 34.5, yaw: 0.0, pitch: 0.0 }
-# The armory's west wall: the kits free this week.
+  - kit: pyro
+    display: { x: 28.5, y: 71.25, z: 37.5 }
+    stand: { x: 28.5, y: 70.0, z: 34.5, yaw: 0.0, pitch: 0.0 }
+  - kit: shortbow
+    display: { x: 32.5, y: 71.25, z: 37.5 }
+    stand: { x: 32.5, y: 70.0, z: 34.5, yaw: 0.0, pitch: 0.0 }
+  - kit: ninja
+    display: { x: 12.5, y: 71.25, z: 39.5 }
+    stand: { x: 12.5, y: 70.0, z: 42.5, yaw: 180.0, pitch: 0.0 }
+  - kit: frost
+    display: { x: 16.5, y: 71.25, z: 39.5 }
+    stand: { x: 16.5, y: 70.0, z: 42.5, yaw: 180.0, pitch: 0.0 }
+  - kit: wraith
+    display: { x: 20.5, y: 71.25, z: 39.5 }
+    stand: { x: 20.5, y: 70.0, z: 42.5, yaw: 180.0, pitch: 0.0 }
+  - kit: sapper
+    display: { x: 24.5, y: 71.25, z: 39.5 }
+    stand: { x: 24.5, y: 70.0, z: 42.5, yaw: 180.0, pitch: 0.0 }
+  - kit: saboteur
+    display: { x: 28.5, y: 71.25, z: 39.5 }
+    stand: { x: 28.5, y: 70.0, z: 42.5, yaw: 180.0, pitch: 0.0 }
+  - kit: demolitions
+    display: { x: 12.5, y: 71.25, z: 47.5 }
+    stand: { x: 12.5, y: 70.0, z: 44.5, yaw: 0.0, pitch: 0.0 }
+  - kit: juggernaut
+    display: { x: 16.5, y: 71.25, z: 47.5 }
+    stand: { x: 16.5, y: 70.0, z: 44.5, yaw: 0.0, pitch: 0.0 }
+  - kit: medic
+    display: { x: 20.5, y: 71.25, z: 47.5 }
+    stand: { x: 20.5, y: 70.0, z: 44.5, yaw: 0.0, pitch: 0.0 }
+  - kit: rewind
+    display: { x: 24.5, y: 71.25, z: 47.5 }
+    stand: { x: 24.5, y: 70.0, z: 44.5, yaw: 0.0, pitch: 0.0 }
+  - kit: spy
+    display: { x: 28.5, y: 71.25, z: 47.5 }
+    stand: { x: 28.5, y: 70.0, z: 44.5, yaw: 0.0, pitch: 0.0 }
+  - kit: teleporter
+    display: { x: 32.5, y: 71.25, z: 47.5 }
+    stand: { x: 32.5, y: 70.0, z: 44.5, yaw: 0.0, pitch: 0.0 }
+  - kit: vampire
+    display: { x: 12.5, y: 71.25, z: 49.5 }
+    stand: { x: 12.5, y: 70.0, z: 52.5, yaw: 180.0, pitch: 0.0 }
+  - kit: warper
+    display: { x: 16.5, y: 71.25, z: 49.5 }
+    stand: { x: 16.5, y: 70.0, z: 52.5, yaw: 180.0, pitch: 0.0 }
+  - kit: skinner
+    display: { x: 20.5, y: 71.25, z: 49.5 }
+    stand: { x: 20.5, y: 70.0, z: 52.5, yaw: 180.0, pitch: 0.0 }
+  - kit: equality
+    display: { x: 24.5, y: 71.25, z: 49.5 }
+    stand: { x: 24.5, y: 70.0, z: 52.5, yaw: 180.0, pitch: 0.0 }
+  - kit: inertia
+    display: { x: 28.5, y: 71.25, z: 49.5 }
+    stand: { x: 28.5, y: 70.0, z: 52.5, yaw: 180.0, pitch: 0.0 }
+  - kit: spotter
+    display: { x: 32.5, y: 71.25, z: 49.5 }
+    stand: { x: 32.5, y: 70.0, z: 52.5, yaw: 180.0, pitch: 0.0 }
+  - kit: grappler
+    display: { x: 12.5, y: 71.25, z: 57.5 }
+    stand: { x: 12.5, y: 70.0, z: 54.5, yaw: 0.0, pitch: 0.0 }
+  - kit: bannerman
+    display: { x: 16.5, y: 71.25, z: 57.5 }
+    stand: { x: 16.5, y: 70.0, z: 54.5, yaw: 0.0, pitch: 0.0 }
+  - kit: berserker
+    display: { x: 20.5, y: 71.25, z: 57.5 }
+    stand: { x: 20.5, y: 70.0, z: 54.5, yaw: 0.0, pitch: 0.0 }
+  - kit: dwarf
+    display: { x: 24.5, y: 71.25, z: 57.5 }
+    stand: { x: 24.5, y: 70.0, z: 54.5, yaw: 0.0, pitch: 0.0 }
+  - kit: venom
+    display: { x: 28.5, y: 71.25, z: 57.5 }
+    stand: { x: 28.5, y: 70.0, z: 54.5, yaw: 0.0, pitch: 0.0 }
+  - kit: bleeder
+    display: { x: 32.5, y: 71.25, z: 57.5 }
+    stand: { x: 32.5, y: 70.0, z: 54.5, yaw: 0.0, pitch: 0.0 }
+  - kit: sacrificial
+    display: { x: 12.5, y: 71.25, z: 59.5 }
+    stand: { x: 12.5, y: 70.0, z: 62.5, yaw: 180.0, pitch: 0.0 }
+  - kit: engineer
+    display: { x: 16.5, y: 71.25, z: 59.5 }
+    stand: { x: 16.5, y: 70.0, z: 62.5, yaw: 180.0, pitch: 0.0 }
+  - kit: tracker
+    display: { x: 20.5, y: 71.25, z: 59.5 }
+    stand: { x: 20.5, y: 70.0, z: 62.5, yaw: 180.0, pitch: 0.0 }
+  - kit: decoy
+    display: { x: 24.5, y: 71.25, z: 59.5 }
+    stand: { x: 24.5, y: 70.0, z: 62.5, yaw: 180.0, pitch: 0.0 }
+# The armory's west wall: the four kits free this week, one per slot.
 rotation:
   header: { x: 4.5, y: 75.5, z: 48.5, yaw: 270.0, pitch: 0.0 }
   slots:
-    - { x: 4.5, y: 72.0, z: 40.5 }
-    - { x: 4.5, y: 72.0, z: 44.5 }
-    - { x: 4.5, y: 72.0, z: 48.5 }
-    - { x: 4.5, y: 72.0, z: 52.5 }
-    - { x: 4.5, y: 72.0, z: 56.5 }
+    - { x: 4.5, y: 72.0, z: 42.5 }
+    - { x: 4.5, y: 72.0, z: 46.5 }
+    - { x: 4.5, y: 72.0, z: 50.5 }
+    - { x: 4.5, y: 72.0, z: 54.5 }
   stand: { x: 8.5, y: 70.0, z: 48.5, yaw: 90.0, pitch: 0.0 }
 # The three map-vote podiums, in ballot order: right-click the lodestone to
 # vote; the map's name, author and votes float at display.
@@ -78,4 +165,4 @@ leaderboards:
 rules: { x: 102.5, y: 79.5, z: 50.5, yaw: 90.0, pitch: 0.0 }
 board: { x: 60.5, y: 81.0, z: 9.5, yaw: 0.0, pitch: 0.0 }
 balcony: { x: 80.5, y: 77.0, z: 50.5, yaw: 90.0, pitch: 0.0 }
-blocksSha256: 447a4b001c9e96d9f4db3d7944087d3f2d3abe7a9f42b340d9eb36c9fcedea28
+blocksSha256: 2f2abc3b3409acd51831409c321701dfb71d61784c18f7b0539b1cc3ca3ba460

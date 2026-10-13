@@ -34,6 +34,17 @@ public interface BotActions {
 
   Optional<ActionRefusal> pickKit(UUID bot, String kitId);
 
+  /**
+   * Use the kit item in hotbar {@code slot}.
+   *
+   * @param target the combatant it is used on, if any
+   * @param at the point it is aimed at, if any
+   */
+  Optional<ActionRefusal> useKit(UUID bot, int slot, Optional<UUID> target, Optional<Point> at);
+
+  /** Call in the first killstreak reward carried that falls from the sky, at the feet. */
+  Optional<ActionRefusal> useStreak(UUID bot);
+
   /** The actions over {@code actions}, resolving UUIDs through {@code view}. */
   static BotActions over(CombatantActions actions, MatchView view) {
     return new BotActions() {
@@ -85,6 +96,26 @@ public interface BotActions {
       @Override
       public Optional<ActionRefusal> pickKit(UUID bot, String kitId) {
         return as(bot, id -> actions.pickKit(id, kitId));
+      }
+
+      @Override
+      public Optional<ActionRefusal> useStreak(UUID bot) {
+        return as(bot, actions::useStreak);
+      }
+
+      @Override
+      public Optional<ActionRefusal> useKit(
+          UUID bot, int slot, Optional<UUID> target, Optional<Point> at) {
+        var point = at.map(p -> new Vec3(p.x(), p.y(), p.z()));
+        if (target.isEmpty()) {
+          return as(bot, id -> actions.useKit(id, slot, new KitUse(Optional.empty(), point)));
+        }
+        return as(
+            bot,
+            id ->
+                as(
+                    target.orElseThrow(),
+                    on -> actions.useKit(id, slot, new KitUse(Optional.of(on), point))));
       }
     };
   }

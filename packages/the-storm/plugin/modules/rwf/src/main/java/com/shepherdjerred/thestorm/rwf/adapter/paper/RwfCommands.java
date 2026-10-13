@@ -10,6 +10,7 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.shepherdjerred.thestorm.rwf.adapter.content.RwfConfig;
 import com.shepherdjerred.thestorm.rwf.app.JoinGate;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
+import com.shepherdjerred.thestorm.rwf.domain.kit.KitBook;
 import com.shepherdjerred.thestorm.rwf.domain.lobby.LobbySizing;
 import com.shepherdjerred.thestorm.rwf.domain.match.Ballot;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchError;
@@ -31,9 +32,9 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 /**
- * {@code /rwf}: join, leave, watch, pick a kit, vote for the map, see who is in and how long is
- * left, the spectator tools, and the operator's tools to run matches; plus {@code /suicide} inside
- * a match.
+ * {@code /rwf}: join, leave, watch, pick, browse and buy kits, this week's free kits, credits, vote
+ * for the map, see who is in and how long is left, the spectator tools, and the operator's tools to
+ * run matches; plus {@code /suicide} inside a match.
  */
 final class RwfCommands {
 
@@ -44,6 +45,7 @@ final class RwfCommands {
   private final Watchers watchers;
   private final com.shepherdjerred.thestorm.rwf.app.store.QuarantineStore quarantines;
   private final KitFactory kits;
+  private final KitMenus menus;
   private final JoinGate gate;
   private final RwfConfig config;
   private final Bots bots;
@@ -58,6 +60,7 @@ final class RwfCommands {
    * @param runner the match
    * @param watchers players watching the match
    * @param kits the kits, for suggestions
+   * @param menus the kit menu and shop
    * @param gate the managed rollout decision for joining
    * @param config the module settings
    * @param bots the bot roster, for the load test and status
@@ -70,6 +73,7 @@ final class RwfCommands {
       MatchRunner runner,
       Watchers watchers,
       KitFactory kits,
+      KitMenus menus,
       JoinGate gate,
       RwfConfig config,
       Bots bots,
@@ -84,6 +88,7 @@ final class RwfCommands {
     this.watchers = parts.watchers();
     this.quarantines = parts.quarantines();
     this.kits = parts.kits();
+    this.menus = parts.menus();
     this.gate = parts.gate();
     this.config = parts.config();
     this.bots = parts.bots();
@@ -148,7 +153,35 @@ final class RwfCommands {
         .then(
             Commands.literal("kits")
                 .requires(permission(RwfPermissions.PLAY))
-                .executes(ctx -> asPlayer(ctx, this::kitMenu)))
+                .executes(
+                    ctx ->
+                        asPlayer(
+                            ctx,
+                            player ->
+                                runner
+                                    .picker()
+                                    .open(player)
+                                    .ifPresent(message -> Texts.error(player, message)))))
+        .then(
+            Commands.literal("buy")
+                .requires(permission(RwfPermissions.PLAY))
+                .then(
+                    Commands.argument("kit", StringArgumentType.word())
+                        .suggests(suggest(kits::kitIds))
+                        .executes(
+                            ctx ->
+                                asPlayer(
+                                    ctx,
+                                    player ->
+                                        buy(player, StringArgumentType.getString(ctx, "kit"))))))
+        .then(
+            Commands.literal("rotation")
+                .requires(permission(RwfPermissions.PLAY))
+                .executes(ctx -> rotation(ctx.getSource().getSender())))
+        .then(
+            Commands.literal("credits")
+                .requires(permission(RwfPermissions.PLAY))
+                .executes(ctx -> asPlayer(ctx, this::credits)))
         .then(
             Commands.literal("vote")
                 .requires(permission(RwfPermissions.VOTE))
@@ -323,10 +356,10 @@ final class RwfCommands {
   private static int usage(CommandSender sender) {
     Texts.info(
         sender,
-        "/rwf join, /rwf leave, /rwf kit <kit>, /rwf kits, /rwf vote <map>, /rwf time, /rwf who,"
-            + " /rwf size,"
-            + " /rwf teamchat, /rwf stats, /rwf top, /rwf history, /rwf spectate [next|previous],"
-            + " /rwf goto <player>, /suicide");
+        "/rwf join, /rwf leave, /rwf kit <kit>, /rwf kits, /rwf buy <kit>, /rwf rotation, /rwf"
+            + " credits, /rwf vote <map>, /rwf time, /rwf who, /rwf size, /rwf teamchat, /rwf"
+            + " stats, /rwf top, /rwf history, /rwf spectate [next|previous], /rwf goto <player>,"
+            + " /suicide");
     return OK;
   }
 
@@ -528,11 +561,51 @@ final class RwfCommands {
   }
 
   private void pickKit(Player player, String kit) {
-    runner.pickKit(player, kit).ifPresent(error -> Texts.error(player, error));
+    runner.picker().pick(player, kit).ifPresent(error -> Texts.error(player, error));
   }
 
-  private void kitMenu(Player player) {
-    runner.openKitMenu(player).ifPresent(error -> Texts.error(player, error));
+  /** Buys {@code kitId} at once, as the menu's CONFIRM does. */
+  private void buy(Player player, String kitId) {
+    var kit = KitBook.byId(kitId);
+    if (kit.isEmpty()) {
+      Texts.error(player, MatchError.UNKNOWN_KIT);
+      return;
+    }
+    menus.buy(player, kit.orElseThrow(), bought -> {});
+  }
+
+  /** This week's free kits and when they change. */
+  private int rotation(CommandSender sender) {
+    var now = context.time().instant();
+    var armory = menus.armory();
+    var free = armory.rotation(now);
+    Texts.info(
+        sender,
+        "Free this week: "
+            + String.join(
+                ", ",
+                free.stream()
+                    .map(kit -> kit.name() + " (" + kit.tier().displayName() + ")")
+                    .toList())
+            + ". Changes in "
+            + KitMenu.left(KitMenu.until(now, armory.rotationEnds(now)))
+            + ".");
+    return OK;
+  }
+
+  /** The player's Red Warfare credits. */
+  private void credits(Player player) {
+    menus
+        .armory()
+        .credits(
+            player.getUniqueId(),
+            credits ->
+                Texts.info(
+                    player,
+                    "You have "
+                        + credits
+                        + (credits == 1 ? " credit" : " credits")
+                        + ". Win a match for 3, lose one for 1."));
   }
 
   /** {@code /suicide}: a living member in a live match dies, credited as a suicide. */

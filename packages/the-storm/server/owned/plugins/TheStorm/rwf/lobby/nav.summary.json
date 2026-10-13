@@ -2,8 +2,8 @@
   "mapId": "lobby",
   "formatVersion": 1,
   "generatorVersion": 2,
-  "blocksSha256": "447a4b001c9e96d9f4db3d7944087d3f2d3abe7a9f42b340d9eb36c9fcedea28",
-  "classificationSha256": "546150a32078430cdee8392a6f6199e50a2723f07113319b539138c59c77896a",
+  "blocksSha256": "2f2abc3b3409acd51831409c321701dfb71d61784c18f7b0539b1cc3ca3ba460",
+  "classificationSha256": "bb07b92a41a9f387fcaa5f5235dd70f83ad0b614bbc66cd07725ac76f6784ed2",
   "bounds": {
     "origin": { "x": 0, "y": 64, "z": 0 },
     "sizeX": 108,
@@ -15,13 +15,13 @@
       "state": "minecraft:air",
       "shape": "PASSABLE",
       "blocksSight": false,
-      "blocks": 324692
+      "blocks": 324618
     },
     {
       "state": "minecraft:polished_deepslate",
       "shape": "FULL",
       "blocksSight": true,
-      "blocks": 6761
+      "blocks": 7018
     },
     {
       "state": "minecraft:deepslate_tiles",
@@ -39,7 +39,7 @@
       "state": "minecraft:deepslate_bricks",
       "shape": "FULL",
       "blocksSight": true,
-      "blocks": 5547
+      "blocks": 5555
     },
     {
       "state": "minecraft:shroomlight",
@@ -51,7 +51,7 @@
       "state": "minecraft:polished_andesite",
       "shape": "FULL",
       "blocksSight": true,
-      "blocks": 3410
+      "blocks": 3397
     },
     {
       "state": "minecraft:andesite",
@@ -63,19 +63,19 @@
       "state": "minecraft:sea_lantern",
       "shape": "FULL",
       "blocksSight": true,
-      "blocks": 107
+      "blocks": 106
     },
     {
       "state": "minecraft:polished_tuff",
       "shape": "FULL",
       "blocksSight": true,
-      "blocks": 554
+      "blocks": 609
     },
     {
       "state": "minecraft:polished_blackstone",
       "shape": "FULL",
       "blocksSight": true,
-      "blocks": 481
+      "blocks": 455
     },
     {
       "state": "minecraft:yellow_concrete",
@@ -93,13 +93,13 @@
       "state": "minecraft:polished_blackstone_bricks",
       "shape": "FULL",
       "blocksSight": true,
-      "blocks": 243
+      "blocks": 187
     },
     {
       "state": "minecraft:smooth_stone",
       "shape": "FULL",
       "blocksSight": true,
-      "blocks": 2781
+      "blocks": 2745
     },
     {
       "state": "minecraft:red_concrete",
@@ -111,7 +111,7 @@
       "state": "minecraft:polished_diorite",
       "shape": "FULL",
       "blocksSight": true,
-      "blocks": 50
+      "blocks": 33
     },
     {
       "state": "minecraft:red_terracotta",
@@ -123,13 +123,13 @@
       "state": "minecraft:verdant_froglight[axis=y]",
       "shape": "FULL",
       "blocksSight": true,
-      "blocks": 26
+      "blocks": 16
     },
     {
       "state": "minecraft:waxed_cut_copper",
       "shape": "FULL",
       "blocksSight": true,
-      "blocks": 126
+      "blocks": 84
     },
     {
       "state": "minecraft:lime_concrete",
@@ -183,7 +183,7 @@
       "state": "minecraft:black_concrete",
       "shape": "FULL",
       "blocksSight": true,
-      "blocks": 709
+      "blocks": 696
     },
     {
       "state": "minecraft:packed_mud",
@@ -285,7 +285,7 @@
       "state": "minecraft:gold_block",
       "shape": "FULL",
       "blocksSight": true,
-      "blocks": 176
+      "blocks": 87
     },
     {
       "state": "minecraft:polished_blackstone_slab[type=top,waterlogged=false]",
@@ -309,43 +309,25 @@
       "state": "minecraft:chiseled_stone_bricks",
       "shape": "FULL",
       "blocksSight": true,
-      "blocks": 12
+      "blocks": 11
     },
     {
-      "state": "minecraft:light_gray_concrete",
+      "state": "minecraft:gray_concrete",
       "shape": "FULL",
       "blocksSight": true,
-      "blocks": 101
-    },
-    {
-      "state": "minecraft:waxed_chiseled_copper",
-      "shape": "FULL",
-      "blocksSight": true,
-      "blocks": 12
+      "blocks": 276
     },
     {
       "state": "minecraft:tuff_bricks",
       "shape": "FULL",
       "blocksSight": true,
-      "blocks": 904
+      "blocks": 1084
     },
     {
-      "state": "minecraft:orange_terracotta",
+      "state": "minecraft:waxed_chiseled_copper",
       "shape": "FULL",
       "blocksSight": true,
-      "blocks": 92
-    },
-    {
-      "state": "minecraft:gilded_blackstone",
-      "shape": "FULL",
-      "blocksSight": true,
-      "blocks": 64
-    },
-    {
-      "state": "minecraft:crying_obsidian",
-      "shape": "FULL",
-      "blocksSight": true,
-      "blocks": 92
+      "blocks": 14
     },
     {
       "state": "minecraft:polished_deepslate_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]",
@@ -402,22 +384,10 @@
       "blocks": 17
     },
     {
-      "state": "minecraft:iron_block",
-      "shape": "FULL",
-      "blocksSight": true,
-      "blocks": 140
-    },
-    {
       "state": "minecraft:stone_brick_stairs[facing=west,half=top,shape=straight,waterlogged=false]",
       "shape": "STAIRS",
       "blocksSight": true,
       "blocks": 24
-    },
-    {
-      "state": "minecraft:waxed_copper_block",
-      "shape": "FULL",
-      "blocksSight": true,
-      "blocks": 126
     },
     {
       "state": "minecraft:stone_brick_stairs[facing=north,half=top,shape=straight,waterlogged=false]",
@@ -453,7 +423,7 @@
       "state": "minecraft:tuff",
       "shape": "FULL",
       "blocksSight": true,
-      "blocks": 49
+      "blocks": 51
     },
     {
       "state": "minecraft:gray_stained_glass_pane[east=true,north=false,south=false,waterlogged=false,west=true]",
@@ -495,7 +465,13 @@
       "state": "minecraft:ochre_froglight[axis=y]",
       "shape": "FULL",
       "blocksSight": true,
-      "blocks": 12
+      "blocks": 14
+    },
+    {
+      "state": "minecraft:gilded_blackstone",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 24
     },
     {
       "state": "minecraft:pearlescent_froglight[axis=y]",
@@ -522,10 +498,22 @@
       "blocks": 2
     },
     {
+      "state": "minecraft:iron_block",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 89
+    },
+    {
       "state": "minecraft:lantern[hanging=true,waterlogged=false]",
       "shape": "FENCE",
       "blocksSight": false,
       "blocks": 27
+    },
+    {
+      "state": "minecraft:waxed_copper_block",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 91
     },
     {
       "state": "minecraft:brown_wool",
@@ -564,10 +552,10 @@
       "blocks": 1
     },
     {
-      "state": "minecraft:polished_andesite_slab[type=bottom,waterlogged=false]",
+      "state": "minecraft:tuff_brick_slab[type=bottom,waterlogged=false]",
       "shape": "SLAB_BOTTOM",
       "blocksSight": true,
-      "blocks": 125
+      "blocks": 375
     },
     {
       "state": "minecraft:iron_chain[axis=y,waterlogged=false]",
@@ -576,22 +564,10 @@
       "blocks": 134
     },
     {
-      "state": "minecraft:tuff_brick_slab[type=bottom,waterlogged=false]",
-      "shape": "SLAB_BOTTOM",
-      "blocksSight": true,
-      "blocks": 125
-    },
-    {
-      "state": "minecraft:polished_blackstone_brick_slab[type=bottom,waterlogged=false]",
-      "shape": "SLAB_BOTTOM",
-      "blocksSight": true,
-      "blocks": 125
-    },
-    {
       "state": "minecraft:polished_deepslate_stairs[facing=east,half=top,shape=straight,waterlogged=false]",
       "shape": "STAIRS",
       "blocksSight": true,
-      "blocks": 42
+      "blocks": 40
     },
     {
       "state": "minecraft:polished_blackstone_wall[east=low,north=none,south=low,up=true,waterlogged=false,west=none]",
@@ -804,6 +780,12 @@
       "blocks": 16
     },
     {
+      "state": "minecraft:light_gray_concrete",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 9
+    },
+    {
       "state": "minecraft:glass",
       "shape": "FULL",
       "blocksSight": false,
@@ -860,24 +842,24 @@
   ],
   "cells": {
     "total": 388800,
-    "walkable": 12878
+    "walkable": 12845
   },
   "edges": {
-    "total": 89395,
+    "total": 89211,
     "CLIMB": 0,
-    "DROP": 2250,
-    "JUMP": 1317,
+    "DROP": 2232,
+    "JUMP": 1301,
     "LEAP": 3118,
-    "WALK": 82710
+    "WALK": 82560
   },
   "regions": 557,
-  "coverPoints": 2693,
-  "chokepoints": 173,
+  "coverPoints": 2700,
+  "chokepoints": 165,
   "routes": {
     "count": 0,
     "spawnToBomb": []
   },
-  "distanceFields": 11,
+  "distanceFields": 40,
   "problems": [],
-  "bytes": 442175
+  "bytes": 1048113
 }

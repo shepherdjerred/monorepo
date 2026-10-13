@@ -114,7 +114,9 @@ bakeRwfMaps { dependsOn(bakeRwfLobby) }
 // These suites declare the shipped terrain/navigation as inputs. When an operator explicitly
 // requests a rebake and tests in one invocation, finish generation before reading those inputs.
 listOf(":rwf", ":rwfbots").forEach { consumer ->
-  rootProject.project(consumer).tasks.named("test") { mustRunAfter(bakeRwfMaps) }
+  rootProject.project(consumer).tasks.named("test") {
+    mustRunAfter(bakeRwfMaps, bakeRwfLobby)
+  }
 }
 
 verifyRwfMaps { dependsOn(verifyRwfLobby) }

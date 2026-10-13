@@ -167,13 +167,13 @@ is intact.` with no paste logged, and after the edits above it pastes once
     for a win, 0 for a loss, the bots never paid); the crash replay is not.
 17. There is no daily cap, and a player AFK for the whole match is charged
     instead of paid. **Proven**: the nuke's three players play a second match
-    past `minMatchLength` the same day (joining again on the same connection) and everyone off the armer's team is killed; every player who
-    turned their head is paid in full again (`WIN` 3 or `LOSE` 1, `PAID` the
-    same), while the first match's loser never turns theirs: their row is
-    `AFK`, owes -2 and is `PAID` -1 (all they held), once settled they are told
-    `You were AFK all match: you earned nothing and 1 credits were taken.`
-    (what was actually taken) and earn nothing; every player's credits end at
-    the sum of both matches and their crystals at the starting balance.
+    past `minMatchLength` the same day (joining again on the same connection)
+    and everyone off the armer's team is killed; every player who turned their
+    head is paid in full again (`WIN` 3 or `LOSE` 1, `PAID` the same), while
+    the first match's loser never turns theirs: their row is `AFK`, owes -2 and
+    is `PAID` -1 (all they held), they are told `2 credits were taken for being
+AFK.` and earn nothing; every player's credits end at the sum of both
+    matches and their crystals at the starting balance.
 18. `plugins/TheStorm/rwf-recordings/yyyy/MM/dd/<matchId>.rwfrec.gz` decodes
     with `RecordCodec`, names nobody, and holds human frames and input rows
     and bot frames at 20 Hz; `kill -9` during a match leaves a truncated
@@ -304,3 +304,29 @@ opens a fresh lobby under them, since flags are read as each match opens.
     wins!" with no label. **Proven** by the humans-only suite's regexes.
 36. The load profile keeps every recording frame: `dropped_frames` is 0 for
     every match at 20, 50 and 100 bots (`tests/load/rwf-load.e2e.test.ts`).
+
+## Kits
+
+`tests/e2e/rwf-kits.e2e.test.ts` opens the per-player kit list, shop and
+killstreak flags for its players on the fake brain's Flipt double before they
+join, and gives Red Warfare credits with `/eco give <player> <n> rwf_credits`.
+
+37. This week's free kits are listed and credits buy a kit for good.
+    **Proven**: `/rwf rotation` names four kits; `/rwf credits` reads 0, then
+    400 after the grant; `/rwf buy explosive` answers `Purchased kit Explosive
+for 150 credits!` and `/rwf credits` reads 250; `rwf_kit_owned` holds one
+    `explosive` row with source `PURCHASE`; and `/rwf kit explosive` hands out
+    the RPGs in slot 2 and the grenades in slot 3.
+38. One kit ability from each batch works in a live match. **Proven** over two
+    matches: an Explosive's RPG launches and takes one egg (batch C); the
+    Teleporter's creator turns the block it clicks into a teleporter
+    (`infested_chiseled_stone_bricks`, batch B); a Ninja holds Speed II (batch
+    A); and an Engineer's bricks raise a barricade on open ground (batch D).
+39. Two kills in a match earn the tracking compass. **Proven** with five
+    humans split three against two: one of the pair kills two of the three
+    with its sword, the third keeping the match live, and is told
+    `Killstreak of 2! Given a tracking compass!`.
+40. Four combat kills earn a supply crate and attack dogs while the match
+    stays live. The nine-client case checks both reward messages and inventory
+    items, uses the earned items on the ground, observes their falling blocks,
+    and checks the landed chest and three wolves with an opposing survivor.

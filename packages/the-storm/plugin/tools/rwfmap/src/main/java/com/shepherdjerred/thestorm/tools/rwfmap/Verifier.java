@@ -6,6 +6,7 @@ import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
 import com.shepherdjerred.thestorm.rwf.domain.geometry.Vec3;
 import com.shepherdjerred.thestorm.rwf.domain.kit.KitBook;
+import com.shepherdjerred.thestorm.rwf.domain.kit.KitRotation;
 import com.shepherdjerred.thestorm.rwf.domain.kit.KitSpec;
 import com.shepherdjerred.thestorm.rwfbots.domain.lobby.LobbyNav;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavArtifact;
@@ -64,11 +65,8 @@ public final class Verifier {
     return verify(lobby, SHIPPED_KITS);
   }
 
-  /**
-   * The kits the lobby's alcoves must show: the ones the server ships. The full kit book takes its
-   * place once every kit ships, and the check takes any list of kits.
-   */
-  public static final List<KitSpec> SHIPPED_KITS = KitBook.MILESTONE_ONE;
+  /** The kits the lobby's alcoves must show: every kit in the kit book, one alcove each. */
+  public static final List<KitSpec> SHIPPED_KITS = KitBook.ALL;
 
   /** {@link #verify(LobbyFolder)} against {@code kits}, one alcove each. */
   public static List<String> verify(LobbyFolder lobby, List<KitSpec> kits) {
@@ -90,6 +88,14 @@ public final class Verifier {
     var wanted = kits.stream().map(KitSpec::id).collect(Collectors.toUnmodifiableSet());
     if (!new HashSet<>(layout.kits()).equals(wanted)) {
       failures.add("the alcoves show " + layout.kits() + " but the shipped kits are " + wanted);
+    }
+    if (layout.rotation().slots().size() != KitRotation.SIZE) {
+      failures.add(
+          "the rotation wall has "
+              + layout.rotation().slots().size()
+              + " slots but "
+              + KitRotation.SIZE
+              + " kits are free each week");
     }
     for (var team : TeamColor.values()) {
       if (layout.side(team).isEmpty()) {

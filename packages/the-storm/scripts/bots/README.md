@@ -58,7 +58,13 @@ bun run bots:generate -- --seed 2026-10-b --count 180 --batch seed-2026-10-b \
    profiles only set knobs the bots read; the comment at the top of
    `traits.ts` lists what reads each one. Every profile weights at least one
    kit rwf ships (trooper, longbow, shortbow, rewind) so archetypes show in
-   play today; ghost, wraith and spy weights wait for those kits.
+   play today. The kits added since (`EXPANDED_KITS`) are not written into
+   personality files: `expanded-kit-weights.ts` derives each personality's
+   weights over them from its id and archetype into
+   `rwfbots/kit-weights.yml`, which the plugin lays over the files as it
+   loads them. Run it after adding personalities (`--check` fails when the
+   file is stale; a test runs the same check), so no published personality
+   file is ever rewritten for a new kit.
 4. **Choose names.** Syllable and word-list gamer tags with a 2014 feel.
    Candidates must match `[A-Za-z0-9_]{3,16}`, miss a profanity and
    real-person blocklist, be at least two edits from every name in the

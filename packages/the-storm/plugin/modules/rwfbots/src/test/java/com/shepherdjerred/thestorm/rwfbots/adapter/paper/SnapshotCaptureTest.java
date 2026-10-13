@@ -79,21 +79,24 @@ final class SnapshotCaptureTest {
                 Optional.empty(),
                 Optional.of("red"),
                 Optional.of("trooper"),
-                true),
+                true,
+                false),
             new MatchState.Fighter(
                 bob.getUniqueId(),
                 "Bob",
                 Optional.of("ash"),
                 Optional.of("blue"),
                 Optional.of("longbow"),
-                true),
+                true,
+                false),
             new MatchState.Fighter(
                 UUID.randomUUID(),
                 "Gone",
                 Optional.empty(),
                 Optional.of("blue"),
                 Optional.of("trooper"),
-                true)),
+                true,
+                false)),
         List.of(
             new MatchState.Bomb(
                 "red-1", false, Optional.of("red"), 4, 1, 16, new MatchState.Status.Idle()),
@@ -204,7 +207,8 @@ final class SnapshotCaptureTest {
                     Optional.empty(),
                     Optional.of("red"),
                     Optional.empty(),
-                    true)),
+                    true,
+                    false)),
             List.of(),
             Optional.empty(),
             Optional.empty(),
@@ -239,7 +243,8 @@ final class SnapshotCaptureTest {
             Optional.empty(),
             Optional.of("red"),
             Optional.of("crossbowman"),
-            true);
+            true,
+            false);
     alice.getInventory().addItem(new ItemStack(Material.CROSSBOW));
 
     assertThat(SnapshotCapture.kitOf(fighter, Optional.of(alice))).isEqualTo(Kit.LONGBOW);
@@ -262,14 +267,16 @@ final class SnapshotCaptureTest {
                 Optional.empty(),
                 Optional.of("red"),
                 Optional.of(aliceKit),
-                true),
+                true,
+                false),
             new MatchState.Fighter(
                 bob.getUniqueId(),
                 "Bob",
                 Optional.empty(),
                 Optional.of("blue"),
                 Optional.of(bobKit),
-                true)),
+                true,
+                false)),
         List.of(),
         Optional.empty(),
         Optional.empty(),

@@ -150,6 +150,13 @@ final class CombatTracker {
     knocks.remove(victim);
   }
 
+  /** A kit sent the victim falling: credit its owner until the knock settles or expires. */
+  void creditFall(LivingEntity victim, LivingEntity by) {
+    knocks.put(
+        victim.getUniqueId(),
+        new Knock(by.getUniqueId(), new Knocked(AttackType.MELEE, time.instant())));
+  }
+
   Optional<Last> last(UUID victim) {
     return Optional.ofNullable(last.get(victim));
   }

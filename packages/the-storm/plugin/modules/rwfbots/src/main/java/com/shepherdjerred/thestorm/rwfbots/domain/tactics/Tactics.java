@@ -17,10 +17,11 @@ import java.util.Set;
 import java.util.random.RandomGenerator;
 
 /**
- * The think step, run a few times a second per bot: score every option, favour the plan already
- * under way, pick one through a softmax at the bot's decision temperature (scaled by its
- * archetype), keep a young plan unless something urgent comes up, then expand or continue the plan
- * into a decision for the body and a note for the team.
+ * The think step, run a few times a second per bot: score every option, lean the scores toward what
+ * the bot's kit is for ({@link KitTactics}), favour the plan already under way, pick one through a
+ * softmax at the bot's decision temperature (scaled by its archetype), keep a young plan unless
+ * something urgent comes up, then expand or continue the plan into a decision for the body and a
+ * note for the team.
  */
 public final class Tactics {
 
@@ -71,6 +72,7 @@ public final class Tactics {
             context.bias(),
             context.keep());
     var scores = Utilities.score(features, temper);
+    KitTactics.lean(context.kit(), scores);
     var current =
         state
             .plan()

@@ -13,12 +13,15 @@ import com.shepherdjerred.thestorm.rwfbots.domain.director.Rating;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.PersonalityCatalog;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.Quirk;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantId;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.Kit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -111,7 +114,7 @@ public final class Roster implements BotBodies {
             Collections.nCopies((int) humans, Rating.DEFAULT),
             wanted,
             onlineNames(),
-            parts.config().draft().availableKits(),
+            offered(parts.config().draft().availableKits()),
             Math.max(2, state.orElseThrow().teams().size()));
     var pick =
         harness
@@ -145,6 +148,21 @@ public final class Roster implements BotBodies {
     return handles;
   }
 
+  /**
+   * The configured kits the match offers now: bots only play the kits the players here can, the
+   * full list once it is on for anyone.
+   */
+  private Set<Kit> offered(Set<Kit> configured) {
+    var onOffer = parts.view().kitsOnOffer();
+    var kits = EnumSet.noneOf(Kit.class);
+    for (var kit : configured) {
+      if (onOffer.contains(kit.name().toLowerCase(Locale.ROOT))) {
+        kits.add(kit);
+      }
+    }
+    return kits;
+  }
+
   private Set<String> onlineNames() {
     var names = new HashSet<String>();
     for (var player : parts.server().getOnlinePlayers()) {
@@ -161,6 +179,14 @@ public final class Roster implements BotBodies {
       throw new IllegalArgumentException("unknown bot " + bot);
     }
     parts.bodies().spawn(bot.uuid(), at);
+  }
+
+  @Override
+  public Player move(BotHandle bot, Location to) {
+    if (!bots.containsKey(bot.uuid())) {
+      throw new IllegalArgumentException("unknown bot " + bot);
+    }
+    return parts.bodies().move(bot.uuid(), to);
   }
 
   @Override

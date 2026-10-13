@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.rwf.adapter.paper;
 
+import com.shepherdjerred.thestorm.rwf.domain.killstreak.Killstreak;
 import java.util.Optional;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Entity;
@@ -18,13 +19,19 @@ final class Keys {
   /** The attack-speed modifier every combatant carries while inside. */
   static final NamespacedKey ATTACK_SPEED = new NamespacedKey("thestorm", "rwf_attack_speed");
 
+  /** The max-health modifier a kit ability (Juggernaut, Vampire, Bleeder) sets. */
+  static final NamespacedKey KIT_HEALTH = new NamespacedKey("thestorm", "rwf_kit_health");
+
   private final NamespacedKey item;
   private final NamespacedKey fuse;
   private final NamespacedKey bomb;
   private final NamespacedKey lobby;
   private final NamespacedKey selector;
   private final NamespacedKey leave;
+  private final NamespacedKey kitEntity;
   private final NamespacedKey compass;
+  private final NamespacedKey layoutIndex;
+  private final NamespacedKey streak;
   private final NamespacedKey nextGame;
   private final NamespacedKey kitLayout;
 
@@ -35,9 +42,21 @@ final class Keys {
     this.lobby = new NamespacedKey(plugin, "rwf_lobby");
     this.selector = new NamespacedKey(plugin, "rwf_selector");
     this.leave = new NamespacedKey(plugin, "rwf_leave");
+    this.kitEntity = new NamespacedKey(plugin, "rwf_kit_entity");
     this.compass = new NamespacedKey(plugin, "rwf_compass");
+    this.layoutIndex = new NamespacedKey(plugin, "rwf_layout_index");
+    this.streak = new NamespacedKey(plugin, "rwf_streak");
     this.nextGame = new NamespacedKey(plugin, "rwf_next_game");
     this.kitLayout = new NamespacedKey(plugin, "rwf_kit_layout");
+  }
+
+  /** Marks {@code entity} as something a kit put in the world: a thrown grenade, an RPG. */
+  void tagKitEntity(Entity entity) {
+    entity.getPersistentDataContainer().set(kitEntity, PersistentDataType.BOOLEAN, true);
+  }
+
+  boolean isKitEntity(Entity entity) {
+    return entity.getPersistentDataContainer().has(kitEntity, PersistentDataType.BOOLEAN);
   }
 
   /** Marks {@code stack} as a kit item. */
@@ -72,6 +91,46 @@ final class Keys {
     tag(stack);
     stack.editMeta(
         meta -> meta.getPersistentDataContainer().set(compass, PersistentDataType.BOOLEAN, true));
+  }
+
+  /** Marks a layout editor's {@code stack} as the kit's item at position {@code index}. */
+  void tagLayoutIndex(ItemStack stack, int index) {
+    stack.editMeta(
+        meta ->
+            meta.getPersistentDataContainer().set(layoutIndex, PersistentDataType.INTEGER, index));
+  }
+
+  /** The kit item position a layout editor's {@code stack} stands for, if it is one. */
+  Optional<Integer> layoutIndex(ItemStack stack) {
+    if (stack.isEmpty() || !stack.hasItemMeta()) {
+      return Optional.empty();
+    }
+    return Optional.ofNullable(
+        stack
+            .getItemMeta()
+            .getPersistentDataContainer()
+            .get(layoutIndex, PersistentDataType.INTEGER));
+  }
+
+  /**
+   * Marks {@code stack} as {@code reward}'s killstreak item (a kit item too, so it never leaves).
+   */
+  void tagStreak(ItemStack stack, Killstreak reward) {
+    tag(stack);
+    stack.editMeta(
+        meta ->
+            meta.getPersistentDataContainer()
+                .set(streak, PersistentDataType.STRING, reward.name()));
+  }
+
+  /** The killstreak reward {@code stack} carries, if it is a killstreak item. */
+  Optional<Killstreak> streak(ItemStack stack) {
+    if (stack.isEmpty() || !stack.hasItemMeta()) {
+      return Optional.empty();
+    }
+    var name =
+        stack.getItemMeta().getPersistentDataContainer().get(streak, PersistentDataType.STRING);
+    return Optional.ofNullable(name).map(Killstreak::valueOf);
   }
 
   boolean isCompass(ItemStack stack) {

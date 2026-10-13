@@ -63,6 +63,13 @@ public final class FakeBodies implements Bodies {
   }
 
   @Override
+  public Player move(UUID bot, Location to) {
+    var player = player(bot);
+    player.teleport(to);
+    return player;
+  }
+
+  @Override
   public void despawn(UUID bot) {
     pending.remove(bot);
     var player = spawned.remove(bot);

@@ -21,6 +21,7 @@ export const LEVER_KEYS = [
 ] as const;
 export type LeverKey = (typeof LEVER_KEYS)[number];
 
+/** The kits personalities were first weighted over; their draws never move. */
 export const KITS = [
   "trooper",
   "longbow",
@@ -30,7 +31,45 @@ export const KITS = [
   "wraith",
   "spy",
 ] as const;
-export type Kit = (typeof KITS)[number];
+
+/**
+ * The rest of Red Warfare's kits and The Storm's new ones. They are weighted
+ * from a seed stream of their own, so adding them left every earlier draw as
+ * it was.
+ */
+export const EXPANDED_KITS = [
+  "berserker",
+  "demolitions",
+  "dwarf",
+  "explosive",
+  "juggernaut",
+  "medic",
+  "pyro",
+  "teleporter",
+  "vampire",
+  "venom",
+  "warper",
+  "ninja",
+  "frost",
+  "skinner",
+  "bleeder",
+  "equality",
+  "inertia",
+  "sacrificial",
+  "sapper",
+  "saboteur",
+  "spotter",
+  "grappler",
+  "bannerman",
+  "engineer",
+  "tracker",
+  "decoy",
+] as const;
+export type ExpandedKit = (typeof EXPANDED_KITS)[number];
+
+/** Every kit rwf ships, in the order personality files list them. */
+export const ALL_KITS = [...KITS, ...EXPANDED_KITS] as const;
+export type Kit = (typeof ALL_KITS)[number];
 
 export const ROLES = [
   "plant",
@@ -333,7 +372,7 @@ export const PersonalitySchema = z.strictObject({
     z.enum(LEVER_KEYS),
     z.number().min(-MAX_LEVER_Z).max(MAX_LEVER_Z),
   ),
-  kits: weights(KITS, "kit"),
+  kits: weights(ALL_KITS, "kit"),
   roles: weights(ROLES, "role"),
   style: z.strictObject({
     aggression: unit,

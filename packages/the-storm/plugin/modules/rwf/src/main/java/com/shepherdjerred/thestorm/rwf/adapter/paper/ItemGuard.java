@@ -80,6 +80,9 @@ final class ItemGuard implements Listener {
       if (type != InventoryType.PLAYER
           && type != InventoryType.CRAFTING
           && !(event.getInventory().getHolder() instanceof KitMenu)
+          && !(event.getInventory().getHolder() instanceof KitPurchaseMenu)
+          && !(event.getInventory().getHolder() instanceof KitLayoutMenu)
+          && !TeleporterMenus.isMenu(event.getInventory().getHolder())
           && !(event.getInventory().getHolder() instanceof Spectating.Menu)) {
         event.setCancelled(true);
       }

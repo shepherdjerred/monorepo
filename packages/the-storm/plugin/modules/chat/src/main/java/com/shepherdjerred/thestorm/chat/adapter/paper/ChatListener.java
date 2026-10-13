@@ -7,6 +7,7 @@ import com.shepherdjerred.thestorm.chat.domain.ChatDenial;
 import com.shepherdjerred.thestorm.core.result.Result;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import java.util.List;
+import java.util.Optional;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.entity.Player;
@@ -49,8 +50,20 @@ public final class ChatListener implements Listener {
                 viewer ->
                     viewer instanceof Player other
                         && !service.receives(line, other.getUniqueId(), Speakers.isStaff(other)));
+        var plain = MiniMessage.miniMessage().deserialize(service.render(line));
         event.renderer(
-            new ChannelRenderer(line, MiniMessage.miniMessage().deserialize(service.render(line))));
+            new ChannelRenderer(
+                line,
+                viewer ->
+                    viewer instanceof Player other
+                        ? service
+                            .nameColor(line, other.getUniqueId())
+                            .map(
+                                color ->
+                                    MiniMessage.miniMessage()
+                                        .deserialize(service.render(line, Optional.of(color))))
+                            .orElse(plain)
+                        : plain));
         Feedback.noticeCalmed(player, line.message(), service.capsNotice());
       }
       case Result.Err<OutgoingLine, List<ChatDenial>>(var denials) -> {

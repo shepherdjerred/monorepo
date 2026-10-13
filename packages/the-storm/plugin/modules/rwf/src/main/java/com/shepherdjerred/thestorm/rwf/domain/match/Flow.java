@@ -5,6 +5,7 @@
 // onGameStart/onPoison); see packages/the-storm/NOTICE.
 package com.shepherdjerred.thestorm.rwf.domain.match;
 
+import com.shepherdjerred.thestorm.rwf.domain.ability.Abilities;
 import com.shepherdjerred.thestorm.rwf.domain.bomb.Bomb;
 import com.shepherdjerred.thestorm.rwf.domain.combat.DamageLog;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
@@ -79,6 +80,7 @@ final class Flow {
         }
       }
       case Phase.Live _ -> {
+        Kits.tick(draft, tick);
         Bombs.tick(draft, now, tick.vitals());
         if (draft.phase instanceof Phase.Live still) {
           poisonTick(draft, still, tick);
@@ -345,6 +347,7 @@ final class Flow {
       draft.effect(new MatchEffect.Unfreeze(draft.ids()));
     }
     draft.setBombs(map.bombs().stream().map(Bomb::at).toList());
+    Kits.start(draft, now);
     draft.effect(new MatchEffect.SetTime(startingWorldTime(draft.seed)));
     draft.announce(Notice.of(NoticeKind.GAME_BEGUN));
     draft.sound(draft.ids(), SoundCue.GAME_START);
@@ -425,6 +428,7 @@ final class Flow {
       case Outcome.Draw _ -> draft.announce(Notice.of(NoticeKind.DRAW));
       case Outcome.Stopped _ -> draft.announce(Notice.of(NoticeKind.STOPPED));
     }
+    Kits.ended(draft, now);
     var roster = new ArrayList<Participation>();
     for (var member : draft.members()) {
       participation(member).ifPresent(roster::add);
@@ -500,6 +504,7 @@ final class Flow {
       }
     }
     draft.effect(new MatchEffect.RevertCraters());
+    draft.abilities = Abilities.NONE;
     draft.clearDeparted();
     draft.damage = DamageLog.EMPTY;
     draft.pinned.clear();

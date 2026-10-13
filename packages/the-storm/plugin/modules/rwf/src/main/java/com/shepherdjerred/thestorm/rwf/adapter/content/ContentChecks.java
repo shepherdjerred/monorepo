@@ -24,7 +24,7 @@ final class ContentChecks {
       }
     }
     var kitIds = kits.stream().map(KitSpec::id).toList();
-    if (!lobby.layout().kits().equals(kitIds))
+    if (!kitIds.containsAll(lobby.layout().kits()))
       throw new IllegalArgumentException(
           "the lobby's alcoves show " + lobby.layout().kits() + " but the kits are " + kitIds);
   }

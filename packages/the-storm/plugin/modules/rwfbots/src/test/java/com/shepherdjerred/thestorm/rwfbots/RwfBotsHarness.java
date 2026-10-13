@@ -315,6 +315,10 @@ public final class RwfBotsHarness implements AutoCloseable {
           Files.copy(file, target.resolve(file.getFileName()));
         }
       }
+      // The added kits' weights live beside the personalities and load with them.
+      Files.copy(
+          Path.of(personalities).resolve("../kit-weights.yml").normalize(),
+          directory.resolve("rwfbots/kit-weights.yml"));
       Files.writeString(
           directory.resolve(RwfBotsModule.CONFIG),
           rewrite.apply(Files.readString(Path.of(config))));

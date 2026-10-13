@@ -3,9 +3,11 @@ package com.shepherdjerred.thestorm.rwf.adapter.content;
 import com.shepherdjerred.thestorm.rwf.domain.bomb.FuseBonus;
 import com.shepherdjerred.thestorm.rwf.domain.bomb.FuseType;
 import com.shepherdjerred.thestorm.rwf.domain.kit.ArmorSlot;
+import com.shepherdjerred.thestorm.rwf.domain.kit.ItemLook;
 import com.shepherdjerred.thestorm.rwf.domain.kit.ItemSpec;
 import com.shepherdjerred.thestorm.rwf.domain.kit.KitAvailability;
 import com.shepherdjerred.thestorm.rwf.domain.kit.KitSpec;
+import com.shepherdjerred.thestorm.rwf.domain.kit.KitTier;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -51,12 +53,14 @@ public record KitsFile(List<KitEntry> kits) {
    * @param name the display name
    * @param description the kit menu text
    * @param price credits to buy it; 0 for free kits
+   * @param tier how involved it is to play
    * @param availability who may pick it
    * @param fuseBonus the bonus on the kit's Bomb Fuse, or null
    * @param hotbar the items after the fuse, in slot order
    * @param armor the armor worn
    * @param ability the pure ability id, or null
    * @param icon the material of the kit's menu icon and lobby alcove item
+   * @param iconTint the icon's colour as #RRGGBB, or null
    * @param summary one to four short lore lines shown on the icon and the alcove
    */
   public record KitEntry(
@@ -64,12 +68,14 @@ public record KitsFile(List<KitEntry> kits) {
       String name,
       String description,
       int price,
+      KitTier tier,
       KitAvailability availability,
       Optional<FuseEntry> fuseBonus,
       List<ItemEntry> hotbar,
       List<ArmorEntry> armor,
       Optional<String> ability,
       String icon,
+      Optional<String> iconTint,
       List<String> summary) {
 
     public KitEntry {
@@ -83,12 +89,13 @@ public record KitsFile(List<KitEntry> kits) {
               name,
               description,
               price,
+              tier,
               availability,
               fuseBonus.map(FuseEntry::toBonus),
               hotbar.stream().map(ItemEntry::toSpec).toList(),
               armor.stream().map(ArmorEntry::toSpec).toList(),
               ability,
-              new KitSpec.Menu(icon, summary));
+              new KitSpec.Menu(icon, iconTint, summary));
     }
 
     KitSpec toSpec() {
@@ -97,12 +104,13 @@ public record KitsFile(List<KitEntry> kits) {
           name,
           description,
           price,
+          tier,
           availability,
           fuseBonus.map(FuseEntry::toBonus),
           hotbar.stream().map(ItemEntry::toSpec).toList(),
           armor.stream().map(ArmorEntry::toSpec).toList(),
           ability,
-          new KitSpec.Menu(icon, summary));
+          new KitSpec.Menu(icon, iconTint, summary));
     }
   }
 
@@ -130,17 +138,54 @@ public record KitsFile(List<KitEntry> kits) {
    * @param amount how many
    * @param name a display name, or null
    * @param enchantments enchantment key to level
+   * @param look its colours, lore and glint, or null for a plain item
    */
   public record ItemEntry(
-      String material, int amount, Optional<String> name, Map<String, Integer> enchantments) {
+      String material,
+      int amount,
+      Optional<String> name,
+      Map<String, Integer> enchantments,
+      Optional<LookEntry> look) {
 
     public ItemEntry {
       enchantments = Map.copyOf(enchantments);
-      var _ = new ItemSpec(material, amount, name, enchantments, Optional.empty());
+      var _ = plain(material, amount, name, enchantments);
     }
 
     ItemSpec toSpec() {
-      return new ItemSpec(material, amount, name, enchantments, Optional.empty());
+      return plain(material, amount, name, enchantments)
+          .withLook(look.map(LookEntry::toLook).orElse(ItemLook.PLAIN));
+    }
+
+    private static ItemSpec plain(
+        String material, int amount, Optional<String> name, Map<String, Integer> enchantments) {
+      return new ItemSpec(material, amount, name, enchantments, Optional.empty(), ItemLook.PLAIN);
+    }
+  }
+
+  /**
+   * How an item looks.
+   *
+   * @param nameColor the name's chat colour, such as gold, or null
+   * @param lore lines under the name
+   * @param loreColor the lore's chat colour, or null when there is no lore
+   * @param glint whether it shimmers as if enchanted
+   * @param dye a #RRGGBB colour or team, or null
+   */
+  public record LookEntry(
+      Optional<String> nameColor,
+      List<String> lore,
+      Optional<String> loreColor,
+      boolean glint,
+      Optional<String> dye) {
+
+    public LookEntry {
+      lore = List.copyOf(lore);
+      var _ = new ItemLook(nameColor, lore, loreColor, glint, dye);
+    }
+
+    ItemLook toLook() {
+      return new ItemLook(nameColor, lore, loreColor, glint, dye);
     }
   }
 
@@ -150,16 +195,26 @@ public record KitsFile(List<KitEntry> kits) {
    * @param material the material, such as {@code IRON_HELMET}
    * @param slot where it is worn
    * @param enchantments enchantment key to level
+   * @param dye a leather colour as #RRGGBB, or null
    */
-  public record ArmorEntry(String material, ArmorSlot slot, Map<String, Integer> enchantments) {
+  public record ArmorEntry(
+      String material, ArmorSlot slot, Map<String, Integer> enchantments, Optional<String> dye) {
 
     public ArmorEntry {
       enchantments = Map.copyOf(enchantments);
-      var _ = new ItemSpec(material, 1, Optional.empty(), enchantments, Optional.of(slot));
+      var _ = toSpec(material, slot, enchantments, dye);
     }
 
     ItemSpec toSpec() {
-      return new ItemSpec(material, 1, Optional.empty(), enchantments, Optional.of(slot));
+      return toSpec(material, slot, enchantments, dye);
+    }
+
+    private static ItemSpec toSpec(
+        String material, ArmorSlot slot, Map<String, Integer> enchantments, Optional<String> dye) {
+      var spec =
+          new ItemSpec(
+              material, 1, Optional.empty(), enchantments, Optional.of(slot), ItemLook.PLAIN);
+      return dye.map(spec::dyed).orElse(spec);
     }
   }
 }

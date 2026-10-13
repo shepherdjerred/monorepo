@@ -75,6 +75,8 @@
     "quests_reputation",
     "quests_variable",
     "rwf_daily_earnings",
+    "rwf_kit_owned",
+    "rwf_kit_purchase",
     "rwf_match",
     "rwf_match_event",
     "rwf_match_player",

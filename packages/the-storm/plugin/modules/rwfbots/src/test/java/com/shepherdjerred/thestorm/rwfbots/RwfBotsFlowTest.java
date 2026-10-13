@@ -123,11 +123,7 @@ final class RwfBotsFlowTest {
 
   @Test
   void authoredControllerKeepsOrdinaryKitsDifficultySeedAndSettlement() {
-    running =
-        RwfBotsHarness.start(
-            directory,
-            text -> text.replace("kits: [trooper, longbow, shortbow, rewind]", "kits: [shortbow]"),
-            harness -> {});
+    running = RwfBotsHarness.start(directory, text -> draftOnly(text, "shortbow"), harness -> {});
     var harness = harness();
     var attachment = harness.paper().roster().harness();
     var controller = new AuthoredController();
@@ -183,9 +179,7 @@ final class RwfBotsFlowTest {
   void authoredControllerKeepsTheTurtlesEarlierHealingThreshold() {
     running =
         RwfBotsHarness.start(
-            directory,
-            text -> text.replace("kits: [trooper, longbow, shortbow, rewind]", "kits: [trooper]"),
-            harness -> turtlePersonalities());
+            directory, text -> draftOnly(text, "trooper"), harness -> turtlePersonalities());
     var harness = harness();
     var controller = new AuthoredController();
     harness.paper().roster().harness().attachAuthored(1, controller);
@@ -205,6 +199,13 @@ final class RwfBotsFlowTest {
         .anyMatch(order -> order.startsWith("use ") && order.endsWith("GOLDEN_APPLE"));
     assertThat(controller.frames)
         .anyMatch(frame -> frame.authored().commands().contains(new BodyCommand.StartUse()));
+  }
+
+  /** The shipped config with the draft narrowed to {@code kit}. */
+  private static String draftOnly(String config, String kit) {
+    var narrowed = config.replaceFirst("(?s)kits:\\s*\\[[^\\]]*\\]", "kits: [" + kit + "]");
+    assertThat(narrowed).isNotEqualTo(config);
+    return narrowed;
   }
 
   private void turtlePersonalities() {

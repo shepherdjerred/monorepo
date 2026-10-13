@@ -2310,6 +2310,30 @@
       "thresholdRollouts": []
     },
     {
+      "key": "the-storm-rwf-kits-enabled",
+      "owner": "the-storm",
+      "namespace": "the-storm",
+      "source": "the-storm-rwf-kits",
+      "purpose": "Offers the full Red Warfare kit list, the credit kit shop and the weekly free rotation",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "the-storm-rwf-killstreaks-enabled",
+      "owner": "the-storm",
+      "namespace": "the-storm",
+      "source": "the-storm-rwf-killstreaks",
+      "purpose": "Awards Red Warfare killstreak rewards: tracking compass, wolves, supply crate, iron golem and napalm",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "the-storm-rwfbots-chat-enabled",
       "owner": "the-storm",
       "namespace": "the-storm",
@@ -2786,6 +2810,22 @@
         },
         {
           "key": "the-storm-rwf-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "the-storm-rwf-kits-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "the-storm-rwf-killstreaks-enabled",
           "type": "boolean",
           "default": true,
           "rollouts": [],

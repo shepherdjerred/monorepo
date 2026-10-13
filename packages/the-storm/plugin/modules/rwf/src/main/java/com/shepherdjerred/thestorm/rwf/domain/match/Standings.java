@@ -14,6 +14,7 @@ import com.shepherdjerred.thestorm.rwf.domain.combat.Attribution;
 import com.shepherdjerred.thestorm.rwf.domain.combat.DamageLog;
 import com.shepherdjerred.thestorm.rwf.domain.combat.KillCredit;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.CombatantId;
+import com.shepherdjerred.thestorm.rwf.domain.killstreak.Killstreak;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -83,7 +84,8 @@ final class Standings {
     var forfeit = FORFEITS.contains(died.cause());
     draft.put(member.orElseThrow().dead(died.now(), forfeit));
     draft.effect(new MatchEffect.Spectate(died.victim(), draft.map().spectatorPoint()));
-    credit(draft, died, true);
+    var attribution = credit(draft, died, true);
+    Kits.died(draft, new Kits.Loss(died.victim(), attribution, died.now()));
     recordDeath(draft, died.now());
     check(draft, died.now());
   }
@@ -92,7 +94,8 @@ final class Standings {
    * A bomb killed {@code victim}: the kill goes to the last combatant to hurt them, while that hit
    * still counts (see {@link KillCredit}).
    */
-  static void killedByBomb(Draft draft, CombatantId victim, Optional<Vitals> vitals, Instant now) {
+  static Attribution killedByBomb(
+      Draft draft, CombatantId victim, Optional<Vitals> vitals, Instant now) {
     var killer =
         draft
             .damage
@@ -107,7 +110,7 @@ final class Standings {
                         .orElse(true))
             .flatMap(DamageLog.Entry::attacker);
     // Red Warfare turned death messages off while a bomb killed its team.
-    credit(
+    return credit(
         draft,
         new MatchEvent.Died(
             victim, Attribution.of(killer, AttackType.BOMB_EXPLODE), OptionalDouble.empty(), now),
@@ -122,7 +125,7 @@ final class Standings {
    * border) goes to the last combatant in the victim's log, as Red Warfare's log credited it, and
    * its message goes out in team colours; a bomb's deaths are neither.
    */
-  static void credit(Draft draft, MatchEvent.Died died, boolean witnessed) {
+  static Attribution credit(Draft draft, MatchEvent.Died died, boolean witnessed) {
     var victimId = died.victim();
     var seen = died.attribution();
     var killerHealth = died.killerHealth();
@@ -149,7 +152,7 @@ final class Standings {
     killer.ifPresent(
         id -> {
           var by = draft.member(id).orElseThrow();
-          draft.put(by.scored(by.score().kill()));
+          scored(draft, by, by.score().kill());
           draft.effect(new MatchEffect.RecordStat(id, "Kills"));
           if (shares.getOrDefault(id, 0.0) <= DamageLog.STOLEN_SHARE && shares.containsKey(id)) {
             draft.tell(id, Notice.of(NoticeKind.STOLEN_KILL));
@@ -159,7 +162,7 @@ final class Standings {
         (id, share) -> {
           var by = draft.member(id).orElseThrow();
           var counts = share > DamageLog.STOLEN_SHARE && share < 1;
-          draft.put(by.scored(by.score().assist(share, counts)));
+          scored(draft, by, by.score().assist(share, counts));
           if (counts) {
             draft.tell(
                 id,
@@ -177,6 +180,21 @@ final class Standings {
     }
     draft.effect(new MatchEffect.Death(victimId, attribution));
     draft.damage = draft.damage.forget(victimId);
+    return attribution;
+  }
+
+  /**
+   * {@code by} now has {@code score}; each killstreak reward its new whole steps reach goes to them
+   * while they are alive, as Red Warfare's {@code KillstreakManager} gave them.
+   */
+  private static void scored(Draft draft, Combatant by, Score score) {
+    draft.put(by.scored(score));
+    if (!by.alive()) {
+      return;
+    }
+    for (var earned : Killstreak.earned(by.score().streak(), score.streak())) {
+      draft.effect(new MatchEffect.KillstreakEarned(by.id(), earned));
+    }
   }
 
   private static Notice deathNotice(Draft draft, CombatantId victimId, Attribution attribution) {

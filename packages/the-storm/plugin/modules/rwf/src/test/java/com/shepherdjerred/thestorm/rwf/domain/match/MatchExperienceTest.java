@@ -14,6 +14,7 @@ import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
 import com.shepherdjerred.thestorm.rwf.domain.geometry.BlockPos;
 import com.shepherdjerred.thestorm.rwf.domain.geometry.Spawn;
 import com.shepherdjerred.thestorm.rwf.domain.geometry.Vec3;
+import com.shepherdjerred.thestorm.rwf.domain.kit.KitAccess;
 import com.shepherdjerred.thestorm.rwf.domain.map.MapDefinition;
 import com.shepherdjerred.thestorm.rwf.testing.Samples;
 import java.time.Duration;
@@ -282,7 +283,7 @@ final class MatchExperienceTest {
     void thePreviewKeepsKitsOpenThenTheFreezeDealsTeamsAndLocksEveryone() {
       var play = toCountdownEnd(true);
       assertThat(play.match.phase()).isInstanceOf(Phase.Preview.class);
-      play.ok(new MatchEvent.PickKit(ALICE, "longbow"));
+      play.ok(new MatchEvent.PickKit(ALICE, "longbow", KitAccess.EVERYTHING));
       play.join(CAROL);
 
       var frozen = tickFor(play, 10);
@@ -294,7 +295,7 @@ final class MatchExperienceTest {
       assertThat(only(frozen, MatchEffect.Equip.class))
           .contains(new MatchEffect.Equip(ALICE, "longbow"));
       assertThat(play.match.members()).allMatch(member -> member.team().isPresent());
-      assertThat(play.refused(new MatchEvent.PickKit(BOB, "longbow")))
+      assertThat(play.refused(new MatchEvent.PickKit(BOB, "longbow", KitAccess.EVERYTHING)))
           .isEqualTo(MatchError.NOT_PRE_GAME);
       assertThat(play.refused(new MatchEvent.Join(DAVE, "Dave", play.now)))
           .isEqualTo(MatchError.IN_PROGRESS);
@@ -364,9 +365,9 @@ final class MatchExperienceTest {
     void aMatchThatEndsOnItsOwnCarriesItsHumansAndReleasesItsBots() {
       var play = new Play(Play.FLOW, Samples.T0);
       play.join(ALICE);
-      play.ok(new MatchEvent.PickKit(ALICE, "longbow"));
+      play.ok(new MatchEvent.PickKit(ALICE, "longbow", KitAccess.EVERYTHING));
       play.join(BOB);
-      play.ok(new MatchEvent.PickKit(BOB, "trooper"));
+      play.ok(new MatchEvent.PickKit(BOB, "trooper", KitAccess.EVERYTHING));
       play.join(BOT_1);
       play.start(HARBOUR);
       play.ok(new MatchEvent.LookedAround(ALICE));

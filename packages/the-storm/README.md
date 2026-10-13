@@ -528,23 +528,19 @@ native despawn.
 
 Arena and rwf restores keep the database snapshot until saved player data
 proves the restore. Core's `SnapshotKeeper` applies the snapshot and its
-persistent-data marker in one tick, then saves the player: at once, or a tick
-after the previous restore's save, so a match ending for many players writes
-one file a tick. Paper writes
+persistent-data marker, then saves the player in the same tick. Paper writes
 `<level>/players/data/<uuid>.dat` (or the pre-26 `playerdata/`) to a temporary
 file and swaps it in, so the marker and the belongings land together. The file
 is read back on the compute pool. The row is marked restored only when the
 fully read file holds that snapshot's fingerprint.
 
 A join asked for meanwhile is told the belongings are still being saved and
-goes ahead by itself once they are. A failed read-back is read again, without
-saving again, after 1, 2, 4 and 8 seconds; a later save by Paper (its autosave,
-or the save on quit) can still land the marker. After that the restore is
-stalled and the player is asked to reconnect, as is every restore when the
-server's player-data folder cannot be found. A later login carrying the marker
-proves a stalled restore. Each restore writes one player file on the server
-tick, as Paper's own autosave does; the plugin cannot reach the server
-internals that would write it elsewhere. The read-back never runs on the tick.
+goes ahead by itself once they are. Failed read-backs retry after 1, 2, 4 and
+8 seconds; after that the restore is stalled and the player is asked to
+reconnect, as is every restore when the server's player-data folder cannot be
+found. A later login carrying the marker proves a stalled restore. One
+player-file write per restore runs on the server tick, as Paper's own saves
+do; the read-back never does.
 
 ### Colosseum
 
@@ -1074,6 +1070,13 @@ but the team that armed it, and a poison forces long matches to a result. The
 rules are pure (`rwf.domain`); the Paper adapter carries out their effects at
 20 Hz and seals the match world so every other module leaves it alone.
 
+Bot movement goes through the roster's body port. Crossing worlds retains the
+Citizens NPC and its UUID but despawns and spawns its player body, restoring its
+equipment, attributes, vitals and spectator flags after Citizens initializes it.
+Callers use the returned player because the old entity is gone. A player-style
+cross-world teleport would wait for a client acknowledgement that an NPC cannot
+send, leaving it immune to damage. Same-world moves keep the existing body.
+
 Red Warfare uses two worlds, both named in `rwf.yml`'s `worlds` section: the
 lobby world (`worlds.lobby`, `rwf_lobby`) holds only the lobby, and the map
 world (`worlds.maps`, `rwf`) holds the maps. Keeping them apart lets the lobby
@@ -1100,12 +1103,13 @@ Configuration and content live under `server/owned/plugins/TheStorm`:
   and start (`minHumans`, `targetCombatants`, `maxCombatants`, the 90 s
   countdown, the 30 s no-humans abort, the 20 s `voteLead` the map vote closes
   before the countdown ends, the 10 s `previewLength` and the 5 s
-  `freezeLength`), the ported rule constants pinned to the code,
-  rewards in Red Warfare credits (3 win / 1 lose scaled by the human share,
-  the 2-credit AFK penalty, the minimum match length; no daily cap), recording, the load-test switch and `quarantine`: the maps
-  kept out of the rotation, each with its reason (Saigon and Wonderland, whose
-  conversion found a bomb no team can reach). Quarantined maps still ship and
-  are verified; no match is played on them.
+  `freezeLength`), the ported rule constants pinned to the code, rewards in
+  Red Warfare credits (3 win / 1 lose scaled by the human share, the 2-credit
+  AFK penalty, the minimum match length; no daily cap), recording, the
+  load-test switch and `quarantine`: the maps kept out of the rotation, each
+  with its reason (Saigon and Wonderland, whose conversion found a bomb no
+  team can reach). Quarantined maps still ship and are verified; no match is
+  played on them.
 - `rwf/kits.yml`: the kits as the operator sees them, each with the `icon`
   material and the one to four `summary` lines the kit menu and the lobby's
   alcoves show; it must describe `KitBook` kit for kit or the module refuses
@@ -1123,7 +1127,9 @@ Configuration and content live under `server/owned/plugins/TheStorm`:
 - `rwf/lobby/lobby.yml` and `blocks.schem`: the lobby every player and bot
   waits in before a match, in the lobby world: an authored 108x36x100 build at
   `0,64,0` with its region, spawn, a side per team colour, one kit alcove per
-  kit, the rules and match-board anchors, the rotation wall, three vote
+  kit (33, in three tiered spines of 36 slots, three walled spare), the rules
+  and match-board anchors, the rotation wall with a slot per weekly free kit
+  (four), three vote
   podiums (a lodestone to right-click and a display above it), three
   leaderboards (kills, wins, win streak), the watch balcony and the
   schematic's hash, plus its `nav.rwfnav` for the bots. It is pasted, verified
@@ -1252,8 +1258,9 @@ The lobby is authored like a map: build it in a build world, export
 declares the schematic's hash, then bakes the lobby's nav files with its places
 (spawn, sides, alcoves, podium and rotation stands, balcony) as sites and no
 bombs. `verifyRwfLobby` (run by `verifyRwfMaps`, so by `check`) fails when the
-hash disagrees, a stand is not standable, a kit has no alcove, a team colour
-has no side, any place cannot be reached from the spawn, or the nav files are
+hash disagrees, a stand is not standable, a kit in `KitBook.ALL` has no alcove
+(or the alcoves show any other kit), the rotation wall does not have one slot
+per weekly free kit, a team colour has no side, any place cannot be reached from the spawn, or the nav files are
 not what a fresh bake produces. Rebake and commit the four files together. The
 MockBukkit suites paste a small test lobby
 (`modules/rwf/src/test/resources/fixtures/lobby`), because MockBukkit cannot
@@ -1262,7 +1269,8 @@ make block data for the build's walls, panes and lanterns.
 Commands: `/rwf join` (gated by the managed Flipt flag
 `the-storm-rwf-enabled`; a missing `FLIPT_URL` or `FLIPT_ENVIRONMENT` keeps it
 closed; joining a match already under way watches it until the next lobby
-opens), `/rwf leave`, `/rwf kit <id>`, `/rwf kits`, `/rwf who`, `/rwf size`,
+opens), `/rwf leave`, `/rwf kit <id>`, `/rwf kits` (the kit menu), `/rwf buy
+<kit>`, `/rwf rotation`, `/rwf credits`, `/rwf who`, `/rwf size`,
 `/rwf vote <map>`, `/rwf time`, `/rwf teamchat`, `/rwf stats [player]`,
 `/rwf stats top <stat>`, `/rwf stats history`, `/suicide`, `/rwf spectate`,
 `/rwf spectate next|previous` and `/rwf goto <player>`
@@ -1295,7 +1303,7 @@ flag changes the next match, never the one being played:
 | `the-storm-rwf-carry-over-enabled`      | A match that ends on its own carries its humans (with their kits, belongings still held) into the next lobby without `/rwf join`; bots and leavers are restored. A stop releases everyone.                                                                                                                              |
 | `the-storm-rwf-death-feed-enabled`      | Red Warfare's death messages in team colours, the kills column on the tab list, `Scored a kill assist worth n!` for everyone who did more than a tenth of the damage, `Stolen a kill!`, and the killer's hearts for the victim.                                                                                         |
 | `the-storm-rwf-team-chat-enabled`       | A fighter's plain chat goes to their team (`/t`), `@` or `/g` speaks to everyone, and `/rwf teamchat` flips the default (remembered per player). The dead and watchers talk among themselves (`/dead`).                                                                                                                 |
-| `the-storm-rwf-spectator-tools-enabled` | The dead watch their killer for 3 s, then get a compass menu and `/rwf spectate next` or `previous`, `/rwf goto`; Ghost and Wraith stay hidden from them.                                                                                                                                                               |
+| `the-storm-rwf-spectator-tools-enabled` | The dead watch their killer for 3 s, then get a compass menu and `/rwf spectate next` or `previous` and `/rwf goto`; Ghost and Wraith stay hidden from them.                                                                                                                                                            |
 | `the-storm-rwf-bomb-effects-enabled`    | The original's map-wide explosion sound and particles, the armed bomb's hiss and smoke, and a ten-segment arming bar per team on the bomb's hologram.                                                                                                                                                                   |
 | `the-storm-rwf-stats-enabled`           | `/rwf stats`, the lobby leaderboards, and the lifetime and per-kit totals written with each match.                                                                                                                                                                                                                      |
 
@@ -1344,31 +1352,83 @@ that records the match: the match's seed, duration, end reason, ballot and map
 hash; each human's assists, damage dealt and taken, arms, defuses, explosions,
 shots fired and hit, steaks, time alive and kit switches; the `rwf_match_event`
 log; lifetime `rwf_player_stats` and per-kit `rwf_player_kit_stats` totals;
-and `rwf_player_prefs` (last kit, team chat default). Rows written before V3
+and `rwf_player_prefs` (last kit, team chat default, and the kit layouts the
+kit module saves). Rows written before V3
 leave the new columns empty.
 
 On a live map the border is Red Warfare's square: it bounds the columns (X and
 Z) only. A fighter outside it takes 2 damage a second through armor and is told
 `You cannot explore the border!`; climbing above the map is allowed. A fighter
-more than 8 blocks below the map's lowest block dies in the void.
-
-Deaths are credited as the original's "Fall" condition and combat log did:
-
-- A member's hit marks the victim as knocked. A fall (`FALL_PUSHED` or
-  `FALL_SHOT`) or a drop into the void (`VOID_PUSHED` or `VOID_SHOT`) while
-  knocked goes to that member, even after fire or border damage in between.
-- The knock ends after 10 seconds. It ends sooner once the victim is back on
-  the ground and not falling: half a second after the hit if they stand still,
-  5 seconds if they are moving. The Time Machine also ends it.
-- A bomb's victims have no attacker. Their kill goes to the newest member hit
-  still in their combat log.
-- A hit leaves the log for good when new damage is logged, if the victim is on
-  the ground, has healed the health it took, and the hit is over 10 seconds
-  old.
-
-The Rewind kit's Time Machine samples and trims its trail every tick and records
+more than 8 blocks below the map's lowest block dies in the void. The kill goes
+to whoever last hit them on the way down (`VOID_PUSHED` or `VOID_SHOT`), or to
+nobody. A bomb's victims have no attacker. Their kill goes to the last member
+who hurt them, while that hit still counts: until the victim is back to full
+health and 10 seconds have passed, as the original's combat log did. The
+Rewind kit's Time Machine samples and trims its trail every tick and records
 only spots the original's safe-teleport check accepts. It lands the player
 facing the way they faced there, and its recharge shows on the experience bar.
+
+### Kits
+
+`domain/kit/KitBook.java` holds all 33 kits: Red Warfare's twenty-five, then
+Equality, Inertia and Sacrificial, then eight new to The Storm. `KITS.md` in
+the module is the per-kit reference (items, prices, tiers, every ability's
+numbers and the deviations from the original). Abilities are pure classes
+under `domain/ability/kits`, registered in `AbilityBook`; the match feeds them
+its events (hits, hurts, deaths, ticks with each fighter's motion and the
+map's ground, kit-item uses) and carries out what they answer as
+`MatchEffect.Ability` effects through `KitPowers`, `KitWorld` and their
+listeners. Every kit's state lives in the match this way, the Rewind kit's
+Time Machine trail and cooldown included (`kits/Rewind.java`): a tick's
+`Ground` re-reads whether each kept spot is still a safe landing.
+
+| Flag (per player, context `world`)  | When on                                                                                                                                                                      |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `the-storm-rwf-kits-enabled`        | The full kit list, the credit kit shop (`/rwf buy`, the menu's confirmation) and the weekly free rotation. Off, the player is offered Trooper, Longbow, Shortbow and Rewind. |
+| `the-storm-rwf-killstreaks-enabled` | Killstreak rewards: the tracking compass at 2 kills, wolves and a supply crate every 4, an iron golem every 8, napalm every 11, assists counting their share.                |
+
+Both default off with a `beta` override on, and are evaluated by
+`FliptPlayerFlag` for each player (the kits flag as their kits load); a
+missing `FLIPT_URL` or `FLIPT_ENVIRONMENT` keeps both off.
+
+- Six kits are free; the rest are bought once with Red Warfare credits through
+  `app/shop/KitShop`. A purchase is a pending `rwf_kit_purchase` row before the
+  ledger moves credits and a granted one after, so a crash between the two is
+  settled on the next start; ownership lives in `rwf_kit_owned` (migration
+  `V4__kit_shop.sql`). Both tables are reset by a world restore, like the
+  economy.
+- `KitRotation` derives each ISO week's four free kits from a fixed seed; the
+  lobby board and `/rwf rotation` show them.
+- A right-click on a kit in the menu opens the layout editor; closing it saves
+  the layout to `rwf_player_prefs.kit_layouts`, and every equip follows it.
+  On joining, a member who has not picked yet is given their `last_kit` when
+  they may still pick it.
+- Scoreboards are per viewing team, plus a copy for Medics that shows
+  everyone's health under their name. An enemy Ghost or Wraith is on a hidden
+  team, an enemy Spy on the viewer's own team, and a dressed Skinner hidden
+  with its worn name drawn above it for the enemy only.
+- Teams are dealt with Medics spread evenly first (`KitBook.SPREAD_EVENLY`).
+
+Bots know every kit (`rwfbots` `Kit`). Their hotbar is read from rwf's own
+layout (`KitHotbar`), and `KitPlay` decides when to use a kit item from what a
+bot can fairly see: a Medic waves its wand by a hurt ally, an Explosive fires
+RPGs at range and grenades up close, Demolitions and Teleporter set theirs down
+once they arrive with nobody in sight, a Teleporter's remote puts a pad under
+its farthest teammate when no enemy is near, a Sacrificial bonds the nearest
+ally it touches and snips its bonds when low, Spotter and Bannerman use theirs
+on an enemy in view, Engineer and Decoy theirs when hurt, and a Grappler hooks
+toward a far waypoint. Kits whose power is in how they move have it in the
+body (`Kit.Body`): a Dwarf sneaks whenever it waits with no enemy in sight, and
+an Inertia sprints straight at its target instead of strafing until it is in
+reach. The use goes through `BotActions.useKit` and becomes the same ability
+input a player's click does (`BotKitUses`). The think step has a per-kit hook
+too (`KitTactics`): small leans on the option scores toward what each kit is
+for (a Sapper toward defusing, a Saboteur toward arming, kits that leave
+something behind or grow while waiting toward holding a slot, stealth kits
+toward hunting, the Medic and Sacrificial away from engaging), never as large
+as the margin an urgent option needs. `rwfbots.yml` allows every
+kit, and the match narrows the draft to the first four kits unless the full
+list is on for someone present (`MatchView.kitsOnOffer`).
 
 Ordinary matches use `match.automaticSizing: true`: automatic sizing chooses
 the large preset for each map. `/rwf size` shows small, medium and large totals,
@@ -2308,24 +2368,14 @@ suicide or a quit (a disconnect or `/rwf leave`) while the match is live
 forfeits the reward. Red Warfare's AFK rule applies: every combatant is AFK
 when the match goes live until their whole-degree yaw or pitch changes while
 alive (`AfkWatch`); a human still AFK at the end earns nothing and is charged
-2 credits, never more than they hold, and is told what was actually taken once
-it settles; a forfeit clears the mark. A departure while the match is live is
-recorded as `LEFT` even after dying, and a suicide or quit death as
-`FORFEITED`, so an unpaid row always says why.
+2 credits, never more than they hold, and a forfeit clears the mark.
 
 Payouts and charges go through an outbox in `rwf_match_player` and the
 economy's keyed transfers (`rwf:<matchId>:<uuid>`), so a crash between the
 match ending and the transfer moves money exactly once on the next enable; a
 charge is found by its key before anything more is taken. Each row names the
 currency it settles in, so rows written before Red Warfare had its own
-currency still settle in crystals under the old 30-crystal daily cap. The
-published V2 migration dropped `rwf_daily_earnings`; V2.1 restores the table
-without changing V2's checksum. Before settling a legacy row, the payout
-service rebuilds that player's totals from dated economy receipts. A committed
-receipt replays its exact amount; an uncommitted reservation uses the current
-Los Angeles day's remaining budget. Payout batches run serially so recovery
-cannot release an in-flight transfer's reservation. A paid row missing its
-receipt fails loudly. Credit rows never touch the cap, and bots are never paid.
+currency still settle in crystals. Bots are never paid.
 
 Bots are optional: the module declares the `BotRoster` port and looks it up
 when a countdown starts; the `rwfbots` module provides it. Bots act only
@@ -2345,7 +2395,9 @@ falling out of it, say) is put back. Nothing hurts there and nothing can be
 broken. Display entities dress it, because the schematic carries no block
 entities: the rules in front of the north wall, a live match board (map,
 players and bots, and the wait or the countdown) in front of the south wall,
-and in each kit alcove the kit's menu icon with its name and summary. They are
+in each kit alcove the kit's menu icon with its name and summary, and on the
+armory's rotation wall this week's four free kits, one per slot, while the kit
+shop is on for anyone present (the wall changes with the week). They are
 tagged, never saved with the world, swept and respawned when the lobby opens
 and removed on disable, so none is ever duplicated. A boss bar shared by the
 humans waiting says how many more players the match needs or counts it down,
@@ -2675,8 +2727,8 @@ claiming cover on the blackboard so teammates do not share it. At most two
 bots chase one enemy unless it is nearly dead; bows keep their kit's band
 (longbow and snipers 15 to 30 blocks), reach their assigned team position along
 its lane when that position fits the band, then shoot from the edge of cover; the
-Rewind kit uses its clock only when a model of rwf's Rewinder says it is
-ready and lands away from the threat. Every path a bot walks pays a per-bot
+Rewind kit uses its clock only when a model of rwf's Rewind ability says it
+is ready and lands away from the threat. Every path a bot walks pays a per-bot
 penalty: seeded noise over patches of the map, a toll on teammates' current
 paths and one for leaving its lane, so teammates with one goal still take
 different ways. Archetypes bend the utilities, the decision temperature and

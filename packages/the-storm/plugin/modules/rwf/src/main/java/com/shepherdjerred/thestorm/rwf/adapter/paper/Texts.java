@@ -105,6 +105,9 @@ final class Texts {
           entry(MatchError.NOT_A_MEMBER, "You are not in the match."),
           entry(MatchError.NOT_PRE_GAME, "You can only do that before the match starts."),
           entry(MatchError.UNKNOWN_KIT, "There is no such kit."),
+          entry(
+              MatchError.KIT_LOCKED,
+              "You do not own that kit. Buy it from the kit menu or with /rwf buy."),
           entry(MatchError.NO_MAP, "No map is ready yet."),
           entry(MatchError.MAP_LOCKED, "The map cannot change once the match has started."),
           entry(MatchError.TOO_FEW_PLAYERS, "Too few players to start."),
@@ -132,6 +135,7 @@ final class Texts {
           entry(ActionRefusal.NOT_LIVE, describe(MatchError.NOT_LIVE)),
           entry(ActionRefusal.NOT_PRE_GAME, describe(MatchError.NOT_PRE_GAME)),
           entry(ActionRefusal.UNKNOWN_KIT, describe(MatchError.UNKNOWN_KIT)),
+          entry(ActionRefusal.KIT_LOCKED, describe(MatchError.KIT_LOCKED)),
           entry(ActionRefusal.UNKNOWN_BOMB, describe(MatchError.UNKNOWN_BOMB)),
           entry(ActionRefusal.BOMB_DESTROYED, describe(MatchError.BOMB_DESTROYED)),
           entry(ActionRefusal.CANNOT_ARM_OWN_BOMB, describe(MatchError.CANNOT_ARM_OWN_BOMB)),
@@ -152,8 +156,10 @@ final class Texts {
           entry(ActionRefusal.NO_TIME_MACHINE, "You have no Time Machine."),
           entry(
               ActionRefusal.COOLING_DOWN,
-              "Your timestream is too unstable! Attempting to use it now would kill you!"),
-          entry(ActionRefusal.NO_LANDING, "No landing spots found in the last 10 seconds!"));
+              com.shepherdjerred.thestorm.rwf.domain.ability.kits.Rewind.UNSTABLE),
+          entry(
+              ActionRefusal.NO_LANDING,
+              com.shepherdjerred.thestorm.rwf.domain.ability.kits.Rewind.NO_LANDING));
 
   private Texts() {}
 

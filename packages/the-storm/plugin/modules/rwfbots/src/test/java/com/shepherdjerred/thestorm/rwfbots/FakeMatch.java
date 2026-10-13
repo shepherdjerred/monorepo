@@ -172,6 +172,7 @@ public final class FakeMatch implements MatchView, MatchEvents, CombatantActions
                         m.team(),
                         m.kit(),
                         m.alive(),
+                        false,
                         com.shepherdjerred.thestorm.rwf.domain.match.Score.ZERO))
             .toList(),
         phase == MatchSnapshot.PhaseKind.LOBBY || phase == MatchSnapshot.PhaseKind.COUNTDOWN
@@ -263,5 +264,16 @@ public final class FakeMatch implements MatchView, MatchEvents, CombatantActions
   public Optional<ActionRefusal> pickKit(CombatantId id, String kitId) {
     members.put(id.uuid(), member(id.uuid()).with(Optional.empty(), Optional.of(kitId)));
     return record("kit", id, kitId);
+  }
+
+  @Override
+  public Optional<ActionRefusal> useStreak(CombatantId id) {
+    return record("streak", id, "drop");
+  }
+
+  @Override
+  public Optional<ActionRefusal> useKit(
+      CombatantId id, int slot, com.shepherdjerred.thestorm.rwf.app.KitUse use) {
+    return record("use", id, String.valueOf(slot));
   }
 }

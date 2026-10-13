@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.rwfbots.domain.world;
 
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
+import java.util.Optional;
 
 /** What a bot's body is told to do this tick. The adapter applies them in order. */
 public sealed interface BodyCommand {
@@ -47,6 +48,22 @@ public sealed interface BodyCommand {
 
   /** Right click {@code bomb} with the fuse. */
   record ClickBomb(BombId bomb) implements BodyCommand {}
+
+  /**
+   * Use the kit item in hotbar {@code slot}: on {@code target} when it is used on someone, looking
+   * at {@code at} when it is aimed.
+   */
+  record UseKit(int slot, Optional<CombatantId> target, Optional<Vec3> at) implements BodyCommand {
+
+    public UseKit {
+      if (slot < 0 || slot > 8) {
+        throw new IllegalArgumentException("slot must be 0..8: " + slot);
+      }
+    }
+  }
+
+  /** Call in the first killstreak reward carried, on the ground at the bot's feet. */
+  record UseStreak() implements BodyCommand {}
 
   /** Trigger a kit ability by name, such as {@code rewind}. */
   record UseAbility(String name) implements BodyCommand {

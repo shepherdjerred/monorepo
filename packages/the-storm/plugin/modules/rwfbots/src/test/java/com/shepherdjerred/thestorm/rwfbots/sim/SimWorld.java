@@ -138,7 +138,7 @@ final class SimWorld {
   /** A combatant with no brain that stands where put until the scenario moves it. */
   SimBody addScripted(Spawn spawn) {
     var body = new SimBody(spawn);
-    body.disguised = spawn.kit().isDisguiseKit();
+    body.disguised = spawn.kit() == com.shepherdjerred.thestorm.rwfbots.domain.world.Kit.SPY;
     bodies.put(body.id, body);
     return body;
   }
@@ -347,6 +347,8 @@ final class SimWorld {
       }
       case BodyCommand.ClickBomb(var bombId) -> clickBomb(body, bombId);
       case BodyCommand.UseAbility _ -> {}
+      case BodyCommand.UseKit use -> body.kitUses.add(use);
+      case BodyCommand.UseStreak _ -> {}
     }
   }
 

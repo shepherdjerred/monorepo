@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
 import com.shepherdjerred.thestorm.rwf.domain.kit.KitBook;
+import com.shepherdjerred.thestorm.rwf.domain.kit.KitRotation;
 import com.shepherdjerred.thestorm.rwf.domain.lobby.LobbySizing;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -127,7 +128,7 @@ final class ShippedContentTest {
 
   @Test
   void theKitsFileMirrorsTheKitBook() {
-    assertThat(content.kits()).isEqualTo(KitBook.MILESTONE_ONE);
+    assertThat(content.kits()).isEqualTo(KitBook.ALL);
   }
 
   @Test
@@ -162,7 +163,8 @@ final class ShippedContentTest {
             .blocksSha256();
 
     assertThat(layout.kits())
-        .isEqualTo(KitBook.MILESTONE_ONE.stream().map(kit -> kit.id()).toList());
+        .containsExactlyInAnyOrderElementsOf(KitBook.ALL.stream().map(kit -> kit.id()).toList());
+    assertThat(layout.rotation().slots()).hasSize(KitRotation.SIZE);
     assertThat(layout.podiums()).hasSize(3);
     assertThat(layout.leaderboards()).hasSize(3);
     assertThat(declared).isEqualTo(shippedLobbyBlocks().sha256());

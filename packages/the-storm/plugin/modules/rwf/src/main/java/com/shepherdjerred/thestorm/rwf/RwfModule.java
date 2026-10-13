@@ -9,6 +9,7 @@ import com.shepherdjerred.thestorm.economy.app.Wallets;
 import com.shepherdjerred.thestorm.rwf.adapter.content.ContentFiles;
 import com.shepherdjerred.thestorm.rwf.adapter.content.MapSource;
 import com.shepherdjerred.thestorm.rwf.adapter.content.RwfConfig;
+import com.shepherdjerred.thestorm.rwf.adapter.db.JooqKitStore;
 import com.shepherdjerred.thestorm.rwf.adapter.db.JooqMatchStore;
 import com.shepherdjerred.thestorm.rwf.adapter.db.JooqSnapshotStore;
 import com.shepherdjerred.thestorm.rwf.adapter.db.JooqStatsStore;
@@ -18,9 +19,13 @@ import com.shepherdjerred.thestorm.rwf.adapter.paper.RwfPaper;
 import com.shepherdjerred.thestorm.rwf.adapter.paper.ServerHooks;
 import com.shepherdjerred.thestorm.rwf.adapter.record.GzipRecorder;
 import com.shepherdjerred.thestorm.rwf.adapter.record.Retention;
+import com.shepherdjerred.thestorm.rwf.adapter.remote.FliptPlayerFlag;
 import com.shepherdjerred.thestorm.rwf.adapter.remote.FliptRwfFeatures;
 import com.shepherdjerred.thestorm.rwf.adapter.remote.FliptRwfGate;
+import com.shepherdjerred.thestorm.rwf.adapter.remote.FliptRwfKillstreaksGate;
+import com.shepherdjerred.thestorm.rwf.adapter.remote.FliptRwfKitsGate;
 import com.shepherdjerred.thestorm.rwf.app.CombatantActions;
+import com.shepherdjerred.thestorm.rwf.app.FeatureGates;
 import com.shepherdjerred.thestorm.rwf.app.JoinGate;
 import com.shepherdjerred.thestorm.rwf.app.MatchEvents;
 import com.shepherdjerred.thestorm.rwf.app.MatchRecording;
@@ -30,6 +35,7 @@ import com.shepherdjerred.thestorm.rwf.app.Pseudonyms;
 import com.shepherdjerred.thestorm.rwf.app.Recorder;
 import com.shepherdjerred.thestorm.rwf.app.RecordingSummary;
 import com.shepherdjerred.thestorm.rwf.app.RwfFeatures;
+import com.shepherdjerred.thestorm.rwf.app.shop.KitShop;
 import com.shepherdjerred.thestorm.rwf.domain.map.MapDefinition;
 import com.shepherdjerred.thestorm.rwf.domain.record.Frame;
 import com.shepherdjerred.thestorm.rwf.domain.record.InputFrame;
@@ -39,7 +45,10 @@ import com.shepherdjerred.thestorm.rwf.domain.record.RecordEvent;
 import com.shepherdjerred.thestorm.rwf.domain.record.RecordHeader;
 import java.net.URI;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
@@ -70,16 +79,20 @@ public final class RwfModule implements StormModule {
    * @param server the server operations tests replace; empty means the real server's
    * @param features the match feature flags; empty means Flipt from {@code FLIPT_URL} and {@code
    *     FLIPT_ENVIRONMENT}, every feature off when they are unset
+   * @param kitGates the per-player kit and killstreak gates; empty means their Flipt flags, read
+   *     the same way
    */
   public record Hooks(
       Function<String, Optional<String>> env,
       Optional<JoinGate> gate,
       Optional<ServerHooks> server,
-      Optional<RwfFeatures.Source> features) {
+      Optional<RwfFeatures.Source> features,
+      Optional<FeatureGates> kitGates) {
 
     public static Hooks production() {
       return new Hooks(
           name -> Optional.ofNullable(System.getenv(name)),
+          Optional.empty(),
           Optional.empty(),
           Optional.empty(),
           Optional.empty());
@@ -90,6 +103,7 @@ public final class RwfModule implements StormModule {
   private @Nullable RwfPaper paper;
   private @Nullable Recorder recorder;
   private @Nullable FliptRwfGate flipt;
+  private final List<FliptPlayerFlag> featureFlags = new ArrayList<>();
   private MatchEvents.@Nullable Subscription discordPosts;
   private RwfFeatures.@Nullable Source features;
 
@@ -116,9 +130,16 @@ public final class RwfModule implements StormModule {
     var config = content.config();
     context.database().migrate(id(), getClass().getClassLoader());
     var matches = new JooqMatchStore(context.database());
-    var payouts =
-        new PayoutService(context.services().require(Wallets.class), matches, context.time());
+    var wallets = context.services().require(Wallets.class);
+    var payouts = new PayoutService(wallets, matches, context.time());
     replayPayouts(context, payouts);
+    var random = context.random();
+    var shop =
+        new KitShop(
+            wallets,
+            new JooqKitStore(context.database()),
+            () -> new UUID(random.nextLong(), random.nextLong()));
+    replayPurchases(context, shop);
     var pseudonyms = pseudonyms(config);
     var recording = recorder(context, config, pseudonyms.isPresent());
     recorder = recording;
@@ -134,6 +155,8 @@ public final class RwfModule implements StormModule {
                 recording,
                 pseudonyms,
                 gate(context, config),
+                kitGates(context, config),
+                shop,
                 hooks
                     .server()
                     .orElseGet(
@@ -206,6 +229,51 @@ public final class RwfModule implements StormModule {
                         .info("Replayed {} rwf payouts left by the last run", paid.size());
                   }
                 });
+  }
+
+  private static void replayPurchases(ModuleContext context, KitShop shop) {
+    var _ =
+        shop.replay(context.time().instant())
+            .whenComplete(
+                (settled, failure) -> {
+                  if (failure != null) {
+                    context.logger().error("Could not settle pending rwf kit purchases", failure);
+                  } else if (!settled.isEmpty()) {
+                    context
+                        .logger()
+                        .info(
+                            "Settled {} rwf kit purchases left pending by the last run",
+                            settled.size());
+                  }
+                });
+  }
+
+  /**
+   * The kit and killstreak gates: the test hook, or their Flipt flags from the environment, off for
+   * everyone when unset.
+   */
+  private FeatureGates kitGates(ModuleContext context, RwfConfig config) {
+    if (hooks.kitGates().isPresent()) {
+      return hooks.kitGates().orElseThrow();
+    }
+    var base = hooks.env().apply("FLIPT_URL").filter(v -> !v.isBlank());
+    var environment = hooks.env().apply("FLIPT_ENVIRONMENT").filter(v -> !v.isBlank());
+    if (base.isEmpty() || environment.isEmpty()) {
+      context
+          .logger()
+          .warn(
+              "FLIPT_URL or FLIPT_ENVIRONMENT is unset; rwf offers the first four kits and no"
+                  + " killstreaks");
+      JoinGate closed = player -> CompletableFuture.completedFuture(false);
+      return new FeatureGates(closed, closed);
+    }
+    var uri = URI.create(base.orElseThrow());
+    var kits = FliptRwfKitsGate.create(uri, environment.orElseThrow(), config.worlds().maps());
+    var killstreaks =
+        FliptRwfKillstreaksGate.create(uri, environment.orElseThrow(), config.worlds().maps());
+    featureFlags.add(kits);
+    featureFlags.add(killstreaks);
+    return new FeatureGates(kits, killstreaks);
   }
 
   private Optional<Pseudonyms> pseudonyms(RwfConfig config) {
@@ -333,6 +401,8 @@ public final class RwfModule implements StormModule {
       flipt.close();
       flipt = null;
     }
+    featureFlags.forEach(FliptPlayerFlag::close);
+    featureFlags.clear();
     if (features != null) {
       features.close();
       features = null;

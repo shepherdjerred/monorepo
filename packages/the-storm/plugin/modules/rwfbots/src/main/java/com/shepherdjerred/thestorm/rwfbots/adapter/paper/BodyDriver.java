@@ -104,7 +104,37 @@ public final class BodyDriver {
       case BodyCommand.ClickBomb(var bomb) ->
           frame.ids().bombName(bomb).ifPresent(name -> record(bot, actions.clickBomb(id, name)));
       case BodyCommand.UseAbility(var name) -> ability(bot, name);
+      case BodyCommand.UseKit use -> useKit(bot, use, frame);
+      case BodyCommand.UseStreak _ -> record(bot, actions.useStreak(id));
     }
+  }
+
+  /**
+   * Uses a kit item: an aimed one is used looking at its point, and the tick's own look is put back
+   * after.
+   */
+  private void useKit(BotBody bot, BodyCommand.UseKit use, Frame frame) {
+    use.at().ifPresent(point -> lookAt(bot, point));
+    var target = use.target().flatMap(frame.ids()::uuid);
+    var at = use.at().map(point -> new Point(point.x(), point.y(), point.z()));
+    record(bot, actions.useKit(bot.uuid(), use.slot(), target, at));
+    if (use.at().isPresent()) {
+      frame
+          .look()
+          .ifPresent(
+              facing -> bodies.look(bot.uuid(), (float) facing.yaw(), (float) facing.pitch()));
+    }
+  }
+
+  private void lookAt(BotBody bot, Vec3 point) {
+    bodies
+        .entity(bot.uuid())
+        .ifPresent(
+            player -> {
+              var eye = player.getEyeLocation();
+              var facing = Facing.looking(new Vec3(eye.getX(), eye.getY(), eye.getZ()), point);
+              bodies.look(bot.uuid(), (float) facing.yaw(), (float) facing.pitch());
+            });
   }
 
   private void startUse(BotBody bot, long tick) {
@@ -142,7 +172,7 @@ public final class BodyDriver {
       return;
     }
     var item = active.orElseThrow();
-    if (item.type() == Material.BOW) {
+    if (item.type() == Material.BOW || item.type() == Material.CROSSBOW) {
       fire(bot, item, frame);
     } else if (item.type().isEdible()) {
       // Let a nearly finished apple go down; an interrupted one is dropped.

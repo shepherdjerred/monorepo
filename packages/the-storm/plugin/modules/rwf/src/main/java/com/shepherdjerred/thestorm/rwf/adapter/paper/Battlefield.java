@@ -4,25 +4,23 @@
 // see packages/the-storm/NOTICE.
 package com.shepherdjerred.thestorm.rwf.adapter.paper;
 
+import com.shepherdjerred.thestorm.rwf.domain.ability.Ground;
 import com.shepherdjerred.thestorm.rwf.domain.combat.AttackType;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.CombatantId;
 import com.shepherdjerred.thestorm.rwf.domain.geometry.Cuboid;
-import com.shepherdjerred.thestorm.rwf.domain.geometry.Vec3;
-import com.shepherdjerred.thestorm.rwf.domain.kit.RewindTrail;
-import com.shepherdjerred.thestorm.rwf.domain.kit.Rewinder;
 import com.shepherdjerred.thestorm.rwf.domain.kit.SafeTeleport;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Predicate;
 import org.bukkit.Sound;
+import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
 /**
  * What the map does to a living fighter every tick: the square border, the void below the map, and
- * the Rewind trail with its recharge bar. Main thread only.
+ * the ground the Rewind trail stands on. Main thread only.
  */
 final class Battlefield {
 
@@ -42,10 +40,12 @@ final class Battlefield {
   static final int VOID_MARGIN = 8;
 
   private final CombatTracker combat;
+  private final Sacrifices sacrifices;
   private final Map<CombatantId, Instant> borderWarned = new HashMap<>();
 
-  Battlefield(CombatTracker combat) {
+  Battlefield(CombatTracker combat, Sacrifices sacrifices) {
     this.combat = combat;
+    this.sacrifices = sacrifices;
   }
 
   /** A new map: nobody has been warned yet. */
@@ -72,23 +72,6 @@ final class Battlefield {
     player.setHealth(Math.max(0, player.getHealth() - BORDER_DAMAGE));
   }
 
-  /** Every tick for a living fighter: whether their knock (the original's "Fall") has ended. */
-  void settle(Player player) {
-    combat.tick(player, grounded(player));
-  }
-
-  /**
-   * Whether {@code entity} stands on something: the block just under its feet is solid. The
-   * server's own on-ground flag is client-reported for players and deprecated, so it is not read.
-   */
-  static boolean grounded(Entity entity) {
-    var below = Places.at(entity).clone().subtract(0, 0.05, 0);
-    var world = entity.getWorld();
-    return below.getY() >= world.getMinHeight()
-        && below.getY() < world.getMaxHeight()
-        && below.getBlock().getType().isSolid();
-  }
-
   /**
    * A fighter more than {@link #VOID_MARGIN} below the map has fallen into the void and dies at
    * once, credited to whoever last knocked or shot them, if anyone did. True if they did.
@@ -98,31 +81,37 @@ final class Battlefield {
       return false;
     }
     combat.intoVoid(id.uuid());
+    // As Red Warfare: a bonded ally knocked or shot into the void keeps falling while their
+    // Sacrificial takes the void's damage for them; the plain void is never redirected.
+    var last = combat.last(id.uuid());
+    if (last.isPresent()
+        && sacrifices.shieldVoid(
+            player, last.orElseThrow().cause(), last.orElseThrow().attacker())) {
+      return true;
+    }
     player.setHealth(0);
     return true;
   }
 
   /**
-   * Every tick, as the original did: the Rewind trail drops what has left the window, records where
-   * the fighter stands if it is safe to land there, and the clock's recharge shows on the
-   * experience bar. Returns the clock afterwards.
+   * The ground of {@code world} for one tick: Red Warfare's safe teleport, which the Rewind trail
+   * asks of every spot it records and of the old spots it keeps.
    */
-  static Rewinder rewind(Rewinder rewinder, Player player, Instant now) {
-    var world = player.getWorld();
+  static Ground ground(World world) {
     var minY = world.getMinHeight();
-    Predicate<Vec3> safe =
-        position ->
-            SafeTeleport.safe(
-                position.toBlock(),
-                minY,
-                block -> Footings.of(world.getBlockAt(block.x(), block.y(), block.z()).getType()));
-    var next = rewinder.trimmed(now, safe);
-    var at = Places.at(player);
-    var here = Places.vec(at);
-    if (safe.test(here)) {
-      next = next.track(new RewindTrail.Spot(here, at.getYaw(), at.getPitch()), now);
-    }
-    player.setExp((float) next.charge(now));
-    return next;
+    return position ->
+        SafeTeleport.safe(
+            position.toBlock(),
+            minY,
+            block -> Footings.of(world.getBlockAt(block.x(), block.y(), block.z()).getType()));
+  }
+
+  /** Whether the entity stands on a solid block, independent of the client-reported flag. */
+  static boolean grounded(Entity entity) {
+    var below = Places.at(entity).clone().subtract(0, 0.05, 0);
+    var world = entity.getWorld();
+    return below.getY() >= world.getMinHeight()
+        && below.getY() < world.getMaxHeight()
+        && below.getBlock().getType().isSolid();
   }
 }

@@ -19,7 +19,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -69,6 +68,21 @@ final class Spectating implements Listener {
   /** The hotbar slot of the "Join next game" item. */
   static final int NEXT_GAME_SLOT = 8;
 
+  /** The kits whose {@code getHiddenKit} showed the enemy the default Trooper: Spy, Sacrificial. */
+  static final Set<String> HIDDEN_AS_TROOPER = Set.of("spy", "sacrificial");
+
+  /**
+   * The kit a spectator's menu shows for a fighter playing {@code kit} on {@code team}: their own
+   * to their team, and to anyone else (a watcher too) the kit's {@code getHiddenKit}, which for a
+   * Spy or a Sacrificial was the default Trooper.
+   */
+  static com.shepherdjerred.thestorm.rwf.domain.kit.KitSpec shownKit(
+      Optional<String> kit, Optional<TeamColor> team, Optional<TeamColor> viewerTeam) {
+    var played = kit.flatMap(KitBook::byId).orElse(KitBook.TROOPER);
+    var ally = viewerTeam.isPresent() && team.equals(viewerTeam);
+    return !ally && HIDDEN_AS_TROOPER.contains(played.id()) ? KitBook.TROOPER : played;
+  }
+
   /** Opens the kit layout editor for a player; absent until kits have layouts to edit. */
   private Optional<Consumer<Player>> kitLayouts = Optional.empty();
 
@@ -105,16 +119,15 @@ final class Spectating implements Listener {
       return false;
     }
     var id = player.getUniqueId();
-    ghost(player, randomSpot(at));
+    var ghost = ghost(player, randomSpot(at));
     var killer =
         Optional.ofNullable(killers.remove(id))
             .flatMap(uuid -> Optional.ofNullable(context.server().getPlayer(uuid)))
             .filter(p -> runner.fighting(p.getUniqueId()));
     killer.ifPresent(
         target -> {
-          player.setGameMode(GameMode.SPECTATOR);
-          runner.move(player, Places.at(target));
-          player.setSpectatorTarget(target);
+          ghost.setGameMode(GameMode.SPECTATOR);
+          runner.move(ghost, Places.at(target)).setSpectatorTarget(target);
           killerView.put(id, runner.now().plus(KILLER_VIEW));
         });
     return true;
@@ -137,23 +150,24 @@ final class Spectating implements Listener {
   }
 
   /** {@code player} becomes an unseen, flying ghost holding the compass. */
-  private void ghost(Player player, Location at) {
+  private Player ghost(Player player, Location at) {
     var id = player.getUniqueId();
     ghosts.add(id);
     PlayerStates.wipe(player, GameMode.ADVENTURE);
     player.setAllowFlight(true);
-    runner.move(player, at);
-    player.setFlying(true);
-    player.setInvulnerable(true);
-    player.setCollidable(false);
+    var moved = runner.move(player, at);
+    moved.setFlying(true);
+    moved.setInvulnerable(true);
+    moved.setCollidable(false);
     // GameTeam#setDead: the compass, the kit layout item when there are layouts to edit, and the
     // next game item in the last slot.
-    player.getInventory().setItem(COMPASS_SLOT, compass());
+    moved.getInventory().setItem(COMPASS_SLOT, compass());
     if (kitLayouts.isPresent()) {
-      player.getInventory().setItem(KIT_LAYOUT_SLOT, kitLayoutItem());
+      moved.getInventory().setItem(KIT_LAYOUT_SLOT, kitLayoutItem());
     }
-    player.getInventory().setItem(NEXT_GAME_SLOT, nextGameItem());
-    hideFromTheLiving(player);
+    moved.getInventory().setItem(NEXT_GAME_SLOT, nextGameItem());
+    hideFromTheLiving(moved);
+    return moved;
   }
 
   /** Lets the dead edit their kit layouts with the original's star; PR D's layout editor. */
@@ -255,14 +269,16 @@ final class Spectating implements Listener {
     if (!ghosts.remove(uuid)) {
       return;
     }
-    var player = context.server().getPlayer(uuid);
-    if (player != null) {
-      player.setInvulnerable(false);
-      player.setCollidable(true);
-      for (var viewer : context.server().getOnlinePlayers()) {
-        viewer.showPlayer(context.plugin(), player);
-      }
-    }
+    runner
+        .entity(id)
+        .ifPresent(
+            player -> {
+              player.setInvulnerable(false);
+              player.setCollidable(true);
+              for (var viewer : context.server().getOnlinePlayers()) {
+                viewer.showPlayer(context.plugin(), player);
+              }
+            });
   }
 
   /** Whether {@code player} is a ghost. */
@@ -333,8 +349,7 @@ final class Spectating implements Listener {
   private void follow(Player player, Entity target) {
     killerView.remove(player.getUniqueId());
     player.setGameMode(GameMode.SPECTATOR);
-    runner.move(player, Places.at(target));
-    player.setSpectatorTarget(target);
+    runner.move(player, Places.at(target)).setSpectatorTarget(target);
   }
 
   /** The living fighters {@code viewer} may jump to: every one but enemy stealth kits. */
@@ -422,9 +437,12 @@ final class Spectating implements Listener {
 
     private final Inventory inventory;
     private final Map<Integer, Location> jumps = new HashMap<>();
+    private final Map<Integer, String> refusals = new HashMap<>();
+    private final Optional<TeamColor> viewerTeam;
     private int next;
 
     Menu(Player viewer) {
+      this.viewerTeam = runner.memberOf(viewer.getUniqueId()).flatMap(m -> m.team());
       this.inventory =
           context
               .server()
@@ -438,7 +456,12 @@ final class Spectating implements Listener {
           visibleFighters(viewer).stream()
               .map(Player::getUniqueId)
               .collect(java.util.stream.Collectors.toUnmodifiableSet());
-      for (var team : view.teams()) {
+      // SpectatorInventory sorted by team name, then by player name, both ignoring case.
+      var teams =
+          view.teams().stream()
+              .sorted(Comparator.comparing(TeamColor::displayName, String.CASE_INSENSITIVE_ORDER))
+              .toList();
+      for (var team : teams) {
         lay(view, team, visible);
       }
     }
@@ -448,7 +471,9 @@ final class Spectating implements Listener {
       var fighters =
           view.combatants().stream()
               .filter(c -> c.alive() && c.team().filter(team::equals).isPresent())
-              .sorted(Comparator.comparing(MatchSnapshot.CombatantView::name))
+              .sorted(
+                  Comparator.comparing(
+                      MatchSnapshot.CombatantView::name, String.CASE_INSENSITIVE_ORDER))
               .toList();
       if (fighters.isEmpty()) {
         return;
@@ -472,9 +497,12 @@ final class Spectating implements Listener {
     /** {@code fighter}'s head in the next slot, a jump to them when the viewer may see them. */
     private void place(MatchSnapshot.CombatantView fighter, Set<UUID> visible) {
       var entity = runner.entity(fighter.id());
-      inventory.setItem(next, entry(fighter, entity));
+      var kit = shownKit(fighter.kit(), fighter.team(), viewerTeam);
+      inventory.setItem(next, entry(fighter, kit));
       if (visible.contains(fighter.id().uuid()) && entity.isPresent()) {
         jumps.put(next, Places.at(entity.orElseThrow()));
+      } else if (entity.isPresent()) {
+        refusals.put(next, "You cannot teleport to enemy " + kit.name() + "s!");
       }
       next++;
     }
@@ -486,30 +514,23 @@ final class Spectating implements Listener {
           .map(bomb -> Places.center(context.mapWorld(), bomb.position()).add(0, 0.5, 0));
     }
 
+    /** SpectatorInventory's team header: the team's hat, titled with its name in its colour. */
     private ItemStack header(TeamColor team) {
-      var stack = new ItemStack(wool(team));
+      var stack = new ItemStack(Hats.hat(team));
       stack.editMeta(
-          meta -> {
-            meta.displayName(
-                Component.text(team.displayName(), Scoreboards.color(team), TextDecoration.BOLD)
-                    .decoration(TextDecoration.ITALIC, false));
-            meta.lore(List.of(Component.text("Click to go to their bomb", NamedTextColor.GRAY)));
-          });
+          meta ->
+              meta.displayName(
+                  Component.text(team.displayName(), Scoreboards.color(team))
+                      .decoration(TextDecoration.ITALIC, false)));
       return stack;
     }
 
-    private static Material wool(TeamColor team) {
-      return switch (team) {
-        case RED -> Material.RED_WOOL;
-        case BLUE -> Material.BLUE_WOOL;
-        case GREEN -> Material.GREEN_WOOL;
-        case PURPLE -> Material.PURPLE_WOOL;
-        case YELLOW -> Material.YELLOW_WOOL;
-      };
-    }
-
-    private ItemStack entry(MatchSnapshot.CombatantView fighter, Optional<Player> entity) {
-      var stack = new ItemStack(Material.PLAYER_HEAD);
+    /** SpectatorInventory's fighter: the shown kit's icon, their name, kit and kills. */
+    private ItemStack entry(
+        MatchSnapshot.CombatantView fighter,
+        com.shepherdjerred.thestorm.rwf.domain.kit.KitSpec kit) {
+      var icon = Material.matchMaterial(kit.menu().icon());
+      var stack = new ItemStack(icon == null ? Material.PLAYER_HEAD : icon);
       var team = fighter.team().orElseThrow();
       stack.editMeta(
           meta -> {
@@ -519,22 +540,12 @@ final class Spectating implements Listener {
             var lore = new ArrayList<Component>();
             lore.add(
                 Component.text("Kit: ", NamedTextColor.BLUE)
-                    .append(Component.text(fighter.kit().orElse("?"), NamedTextColor.WHITE)));
-            // SpectatorInventory shows the floored killstreak as "Kills", assists' shares included.
+                    .append(Component.text(kit.name(), NamedTextColor.WHITE)));
             lore.add(
                 Component.text("Kills: ", NamedTextColor.BLUE)
                     .append(
                         Component.text(
                             String.valueOf(fighter.score().streak()), NamedTextColor.WHITE)));
-            entity.ifPresent(
-                player ->
-                    lore.add(
-                        Component.text("Health: ", NamedTextColor.BLUE)
-                            .append(
-                                Component.text(
-                                    String.format(Locale.ROOT, "%.1f", player.getHealth() / 2)
-                                        + " ❤",
-                                    NamedTextColor.WHITE))));
             lore.add(Component.empty());
             lore.add(
                 Component.text("CLICK TO TELEPORT", NamedTextColor.GREEN, TextDecoration.BOLD));
@@ -548,6 +559,11 @@ final class Spectating implements Listener {
     }
 
     void click(Player player, int slot) {
+      var refusal = refusals.get(slot);
+      if (refusal != null) {
+        player.sendMessage(Component.text(refusal, NamedTextColor.RED));
+        return;
+      }
       var to = jumps.get(slot);
       if (to == null) {
         return;
