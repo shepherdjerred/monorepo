@@ -61,6 +61,10 @@ bun run build:storybook  # static catalog in storybook-static/
 
 `bun run build` is unrelated — it builds the deployed SPA into `dist/`.
 
+`bun run test:e2e` checks every catalog story with three workers in CI.
+The static preview uses the pinned Node runtime through mise, including when
+Playwright inherits Bun's `node` shim from `bun --bun`.
+
 `.storybook/vite.config.ts` is deliberately separate from the SPA's
 `vite.config.ts`, which carries three things a catalog must not inherit:
 `base: "/app/"`, a dev proxy to a backend no story talks to, and port 5180.

@@ -1,4 +1,4 @@
-import { describe, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import {
   chunk,
   parseCheckName,
@@ -8,6 +8,11 @@ import {
 } from "./run-shard-check.ts";
 
 type RanCommand = string[];
+
+beforeEach(() => {
+  vi.stubEnv("CI_FORMAT_CACHE_ROOT", "");
+});
+afterEach(() => vi.unstubAllEnvs());
 
 function recordingRunner(ran: RanCommand[]) {
   return async (cmd: string[]) => {
