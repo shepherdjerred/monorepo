@@ -558,6 +558,12 @@
     "reason": "Temporal PostgreSQL database"
   },
   {
+    "namespace": "tracker",
+    "name": "pgdata-tracker-postgresql-0",
+    "backup": "enabled",
+    "reason": "Tracker PostgreSQL database"
+  },
+  {
     "namespace": "turbo-cache",
     "name": "turbo-cache-liskov",
     "backup": "disabled",

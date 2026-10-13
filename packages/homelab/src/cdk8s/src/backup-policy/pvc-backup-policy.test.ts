@@ -91,16 +91,27 @@ it.each(["ops-restore-rehearsal", "ops-restore-rehearsal-incremental"])(
   },
 );
 
+it("includes Tracker's operator-managed database in backups before activation", () => {
+  expect(
+    getPvcBackupLabels(
+      getPvcBackupPolicy("tracker", "pgdata-tracker-postgresql-0"),
+    ),
+  ).toEqual({
+    "velero.io/backup": "enabled",
+    "velero.io/exclude-from-backup": "false",
+  });
+});
+
 describe("PVC backup policy", () => {
-  it("classifies 54 included and 48 excluded PVCs without duplicates", () => {
+  it("classifies 55 included and 48 excluded PVCs without duplicates", () => {
     const keys = PVC_BACKUP_POLICY.map((entry) =>
       pvcBackupPolicyKey(entry.namespace, entry.name),
     );
-    expect(keys).toHaveLength(102);
-    expect(new Set(keys).size).toBe(102);
+    expect(keys).toHaveLength(103);
+    expect(new Set(keys).size).toBe(103);
     expect(
       PVC_BACKUP_POLICY.filter((entry) => entry.backup === "enabled"),
-    ).toHaveLength(54);
+    ).toHaveLength(55);
     expect(
       PVC_BACKUP_POLICY.filter((entry) => entry.backup === "disabled"),
     ).toHaveLength(48);
