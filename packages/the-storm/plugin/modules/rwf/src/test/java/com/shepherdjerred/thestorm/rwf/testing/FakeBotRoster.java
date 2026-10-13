@@ -57,6 +57,13 @@ public final class FakeBotRoster implements BotRoster {
   }
 
   @Override
+  public Player move(CombatantId.Bot id, Location to) {
+    var player = entity(id).orElseThrow();
+    player.teleport(to);
+    return player;
+  }
+
+  @Override
   public void despawn(CombatantId.Bot id) {
     pending.remove(id);
     var player = spawned.remove(id);

@@ -119,6 +119,45 @@ public final class CitizensBodies implements Bodies, Listener {
   }
 
   @Override
+  public Player move(UUID bot, Location to) {
+    var npc = require(bot);
+    var player = entity(bot).orElseThrow();
+    if (player.getWorld().equals(requireNonNull(to.getWorld()))) {
+      if (!player.teleport(to)) {
+        throw new IllegalStateException("Citizens body could not move to " + to);
+      }
+      return player;
+    }
+    // Player teleports await a client dimension acknowledgement. Citizens has no client, so
+    // retain the NPC and its UUID while creating a fully initialized body in the new world.
+    if (!to.getWorld().isChunkLoaded(to.getBlockX() >> 4, to.getBlockZ() >> 4)) {
+      throw new IllegalStateException("bot transfer destination is not loaded: " + to);
+    }
+    var state = BodyState.capture(player);
+    if (!npc.despawn(DespawnReason.PENDING_RESPAWN)) {
+      throw new IllegalStateException("Citizens refused to transfer " + npc.getName());
+    }
+    var restored = new java.util.concurrent.atomic.AtomicBoolean();
+    if (!npc.spawn(
+            to,
+            SpawnReason.PLUGIN,
+            body -> {
+              if (!(body instanceof Player replacement)) {
+                throw new IllegalStateException("Citizens bot spawned a non-player body");
+              }
+              attackSpeed(replacement);
+              state.apply(replacement);
+              restored.set(true);
+            })
+        || !restored.get()) {
+      throw new IllegalStateException("Citizens did not finish transferring " + npc.getName());
+    }
+    respawns++;
+    respawned.accept(bot);
+    return entity(bot).orElseThrow();
+  }
+
+  @Override
   public void despawn(UUID bot) {
     var npc = npcs.remove(bot);
     if (npc == null) {

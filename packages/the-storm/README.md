@@ -1070,6 +1070,13 @@ but the team that armed it, and a poison forces long matches to a result. The
 rules are pure (`rwf.domain`); the Paper adapter carries out their effects at
 20 Hz and seals the match world so every other module leaves it alone.
 
+Bot movement goes through the roster's body port. Crossing worlds retains the
+Citizens NPC and its UUID but despawns and spawns its player body, restoring its
+equipment, attributes, vitals and spectator flags after Citizens initializes it.
+Callers use the returned player because the old entity is gone. A player-style
+cross-world teleport would wait for a client acknowledgement that an NPC cannot
+send, leaving it immune to damage. Same-world moves keep the existing body.
+
 Red Warfare uses two worlds, both named in `rwf.yml`'s `worlds` section: the
 lobby world (`worlds.lobby`, `rwf_lobby`) holds only the lobby, and the map
 world (`worlds.maps`, `rwf`) holds the maps. Keeping them apart lets the lobby

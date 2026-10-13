@@ -75,7 +75,9 @@ final class KitPicker {
 
   /** The kits bots may play: every kit while the full list is on for anyone here. */
   java.util.Set<String> onOffer() {
-    return menus.armory().anyExpanded()
+    return runner.match().members().stream()
+            .filter(member -> !member.id().isBot())
+            .anyMatch(member -> menus.armory().expanded(member.id().uuid()))
         ? KitBook.ALL.stream().map(KitSpec::id).collect(Collectors.toUnmodifiableSet())
         : MatchView.MILESTONE_KITS;
   }

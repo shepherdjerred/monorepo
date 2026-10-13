@@ -98,7 +98,7 @@ final class Armory {
     return known != null && known.expanded();
   }
 
-  /** Whether the full kit list is on for anyone whose kits are loaded. */
+  /** Whether anyone whose kits are loaded can see the lobby's expanded rotation display. */
   boolean anyExpanded() {
     return loaded.values().stream().anyMatch(Loaded::expanded);
   }
@@ -170,18 +170,26 @@ final class Armory {
     return Optional.ofNullable(loaded.get(player)).flatMap(known -> known.prefs().lastKit());
   }
 
-  /** Keeps {@code layout} as {@code player}'s layout for {@code kit}, now and from now on. */
-  void saveLayout(UUID player, String kit, KitLayout layout) {
-    var known = loaded.get(player);
-    if (known != null) {
-      var layouts = new HashMap<>(known.prefs().layouts());
-      layouts.put(kit, layout);
-      loaded.put(
-          player,
-          new Loaded(
-              known.expanded(), known.owned(), new KitPrefs(known.prefs().lastKit(), layouts)));
-    }
-    context.onMain(shop.saveLayout(player, kit, layout), ignored -> {}, "save an rwf kit layout");
+  /** Publishes {@code layout} and reports success only after its durable write succeeds. */
+  void saveLayout(UUID player, String kit, KitLayout layout, Consumer<Boolean> done) {
+    context.onMain(
+        shop.saveLayout(player, kit, layout),
+        ignored -> {
+          var known = loaded.get(player);
+          if (known != null) {
+            var layouts = new HashMap<>(known.prefs().layouts());
+            layouts.put(kit, layout);
+            loaded.put(
+                player,
+                new Loaded(
+                    known.expanded(),
+                    known.owned(),
+                    new KitPrefs(known.prefs().lastKit(), layouts)));
+          }
+          done.accept(true);
+        },
+        () -> done.accept(false),
+        "save an rwf kit layout");
   }
 
   /** Forgets {@code player}, who quit. */

@@ -314,11 +314,13 @@ final class KillstreaksPaperTest {
     enemy.setNoDamageTicks(0);
     var before = enemy.getHealth();
 
-    assertThat(streaks.summons().strike(dog, enemy)).isTrue();
+    assertThat(enemy.simulateDamage(6, dog.mob()).isCancelled()).isTrue();
 
     assertThat(enemy.getHealth()).isLessThan(before);
     assertThat(enemy.getVelocity().getY()).isPositive();
-    assertThat(streaks.summons().strike(dog, enemy)).isFalse();
+    var afterBite = enemy.getHealth();
+    assertThat(enemy.simulateDamage(6, dog.mob()).isCancelled()).isTrue();
+    assertThat(enemy.getHealth()).isEqualTo(afterBite);
   }
 
   @Test
@@ -360,7 +362,7 @@ final class KillstreaksPaperTest {
     var enemy = enemies.get(0);
     enemy.setNoDamageTicks(0);
     var before = enemy.getHealth();
-    assertThat(streaks.summons().strike(streaks.summons().of(golem).orElseThrow(), enemy)).isTrue();
+    assertThat(enemy.simulateDamage(14, golem).isCancelled()).isTrue();
     assertThat(enemy.getHealth()).isLessThan(before);
     assertThat(enemy.getVelocity().getY()).isEqualTo(1);
   }

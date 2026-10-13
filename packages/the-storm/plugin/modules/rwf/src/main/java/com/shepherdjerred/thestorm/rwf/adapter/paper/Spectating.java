@@ -119,16 +119,15 @@ final class Spectating implements Listener {
       return false;
     }
     var id = player.getUniqueId();
-    ghost(player, randomSpot(at));
+    var ghost = ghost(player, randomSpot(at));
     var killer =
         Optional.ofNullable(killers.remove(id))
             .flatMap(uuid -> Optional.ofNullable(context.server().getPlayer(uuid)))
             .filter(p -> runner.fighting(p.getUniqueId()));
     killer.ifPresent(
         target -> {
-          player.setGameMode(GameMode.SPECTATOR);
-          runner.move(player, Places.at(target));
-          player.setSpectatorTarget(target);
+          ghost.setGameMode(GameMode.SPECTATOR);
+          runner.move(ghost, Places.at(target)).setSpectatorTarget(target);
           killerView.put(id, runner.now().plus(KILLER_VIEW));
         });
     return true;
@@ -151,23 +150,24 @@ final class Spectating implements Listener {
   }
 
   /** {@code player} becomes an unseen, flying ghost holding the compass. */
-  private void ghost(Player player, Location at) {
+  private Player ghost(Player player, Location at) {
     var id = player.getUniqueId();
     ghosts.add(id);
     PlayerStates.wipe(player, GameMode.ADVENTURE);
     player.setAllowFlight(true);
-    runner.move(player, at);
-    player.setFlying(true);
-    player.setInvulnerable(true);
-    player.setCollidable(false);
+    var moved = runner.move(player, at);
+    moved.setFlying(true);
+    moved.setInvulnerable(true);
+    moved.setCollidable(false);
     // GameTeam#setDead: the compass, the kit layout item when there are layouts to edit, and the
     // next game item in the last slot.
-    player.getInventory().setItem(COMPASS_SLOT, compass());
+    moved.getInventory().setItem(COMPASS_SLOT, compass());
     if (kitLayouts.isPresent()) {
-      player.getInventory().setItem(KIT_LAYOUT_SLOT, kitLayoutItem());
+      moved.getInventory().setItem(KIT_LAYOUT_SLOT, kitLayoutItem());
     }
-    player.getInventory().setItem(NEXT_GAME_SLOT, nextGameItem());
-    hideFromTheLiving(player);
+    moved.getInventory().setItem(NEXT_GAME_SLOT, nextGameItem());
+    hideFromTheLiving(moved);
+    return moved;
   }
 
   /** Lets the dead edit their kit layouts with the original's star; PR D's layout editor. */
@@ -269,14 +269,16 @@ final class Spectating implements Listener {
     if (!ghosts.remove(uuid)) {
       return;
     }
-    var player = context.server().getPlayer(uuid);
-    if (player != null) {
-      player.setInvulnerable(false);
-      player.setCollidable(true);
-      for (var viewer : context.server().getOnlinePlayers()) {
-        viewer.showPlayer(context.plugin(), player);
-      }
-    }
+    runner
+        .entity(id)
+        .ifPresent(
+            player -> {
+              player.setInvulnerable(false);
+              player.setCollidable(true);
+              for (var viewer : context.server().getOnlinePlayers()) {
+                viewer.showPlayer(context.plugin(), player);
+              }
+            });
   }
 
   /** Whether {@code player} is a ghost. */
@@ -347,8 +349,7 @@ final class Spectating implements Listener {
   private void follow(Player player, Entity target) {
     killerView.remove(player.getUniqueId());
     player.setGameMode(GameMode.SPECTATOR);
-    runner.move(player, Places.at(target));
-    player.setSpectatorTarget(target);
+    runner.move(player, Places.at(target)).setSpectatorTarget(target);
   }
 
   /** The living fighters {@code viewer} may jump to: every one but enemy stealth kits. */

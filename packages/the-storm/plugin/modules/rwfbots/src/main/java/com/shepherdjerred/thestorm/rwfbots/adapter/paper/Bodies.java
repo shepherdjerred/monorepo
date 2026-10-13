@@ -24,6 +24,9 @@ public interface Bodies {
   /** Puts the body into the world at {@code at}. */
   void spawn(UUID bot, Location at);
 
+  /** Moves a spawned body, preserving its state; the returned entity may be a replacement. */
+  Player move(UUID bot, Location to);
+
   /** Removes the body from the world and forgets it; {@link #isBot} stays true for its UUID. */
   void despawn(UUID bot);
 

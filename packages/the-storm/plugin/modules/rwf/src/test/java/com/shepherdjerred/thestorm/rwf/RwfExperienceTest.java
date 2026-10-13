@@ -69,6 +69,30 @@ final class RwfExperienceTest {
   }
 
   @Test
+  void forcedStartActivatesTheFirstMapBeforeItsLiveEffects() {
+    var harness = RwfHarness.prepare(directory);
+    running = harness;
+    var chunks = harness.deferMapChunks();
+    harness.enable(directory);
+    var alice = harness.loadedPlayer("Alice");
+    var bob = harness.loadedPlayer("Bob");
+    harness.enter(alice);
+    harness.enter(bob);
+    harness.server.dispatchCommand(harness.server.getConsoleSender(), "rwf admin start");
+    assertThat(harness.snapshot().phase()).isEqualTo(PhaseKind.PREPARING);
+
+    chunks.complete(null);
+    harness.until(() -> harness.snapshot().phase() == PhaseKind.LIVE);
+    harness.ticks(2);
+
+    assertThat(harness.snapshot().mapId()).contains("training-yard");
+    assertThat(alice.getWorld()).isEqualTo(harness.rwf);
+    assertThat(bob.getWorld()).isEqualTo(harness.rwf);
+    assertThat(harness.combatant(alice).team()).isPresent();
+    assertThat(harness.combatant(bob).team()).isPresent();
+  }
+
+  @Test
   void countdownReadModelsKeepTimeBetweenMatchTransitionsAndAreReusedWithinATick() {
     var harness = start();
     var alice = harness.loadedPlayer("Alice");

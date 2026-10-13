@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.shepherdjerred.thestorm.rwf.KitFight;
 import java.nio.file.Path;
+import java.util.Random;
 import org.bukkit.Material;
 import org.bukkit.block.BlockFace;
 import org.bukkit.event.block.Action;
@@ -14,6 +15,8 @@ import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 /**
  * The Explosive's RPG on MockBukkit: an arrow launched from the firer (MockBukkit keeps launched
@@ -32,8 +35,9 @@ final class KitProjectilesPaperTest {
     }
   }
 
-  @Test
-  void anExplosivesRpgIsAnArrowThatExplodesWhereItLands() {
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void anExplosivesRpgIsAnArrowThatExplodesWhereItLands(boolean hitsFighter) {
     var fight = KitFight.on(directory, "explosive");
     this.fight = fight;
     fight.alice.getInventory().setHeldItemSlot(2);
@@ -57,13 +61,36 @@ final class KitProjectilesPaperTest {
     assertThat(fight.alice.getInventory().contains(Material.EGG, 5)).isFalse();
     var rpg = rpgs.getFirst();
     rpg.teleport(fight.enemy.getLocation().clone().add(0, 0.5, 0));
-    fight
-        .harness
-        .server
-        .getPluginManager()
-        .callEvent(new ProjectileHitEvent(rpg, null, null, null));
+    if (hitsFighter) {
+      assertThat(fight.enemy.simulateDamage(1, rpg).isCancelled()).isTrue();
+    } else {
+      fight
+          .harness
+          .server
+          .getPluginManager()
+          .callEvent(new ProjectileHitEvent(rpg, null, null, null));
+    }
 
     assertThat(fight.enemy.getHealth()).isLessThan(20);
     assertThat(runner.powers().projectiles().rpgsInFlight()).isEmpty();
+  }
+
+  @Test
+  void theSameSeedReplaysSuccessiveRpgSpreads() {
+    var fight = KitFight.on(directory, "explosive");
+    this.fight = fight;
+    var recorded = new Random(413);
+    var replayed = new Random(413);
+    var otherMatch = new Random(414);
+    var previous = KitProjectiles.eggVelocity(fight.alice, recorded);
+
+    assertThat(KitProjectiles.eggVelocity(fight.alice, replayed)).isEqualTo(previous);
+    assertThat(KitProjectiles.eggVelocity(fight.alice, otherMatch)).isNotEqualTo(previous);
+    for (var shot = 0; shot < 4; shot++) {
+      var next = KitProjectiles.eggVelocity(fight.alice, recorded);
+      assertThat(KitProjectiles.eggVelocity(fight.alice, replayed)).isEqualTo(next);
+      assertThat(next).isNotEqualTo(previous);
+      previous = next;
+    }
   }
 }

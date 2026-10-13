@@ -463,6 +463,9 @@ final class MatchRunner implements MatchView, MatchEvents {
     match = step.match();
     applying = true;
     try {
+      if (event instanceof MatchEvent.MapReady ready && match.map().isPresent()) {
+        play(ready.map().id());
+      }
       // A step that deals the teams may also go live, and even end (a team with nobody alive):
       // the match world (teams, bombs, the recording) must exist before its effects run.
       if (!before.phase().started() && match.phase().started()) {
@@ -541,9 +544,6 @@ final class MatchRunner implements MatchView, MatchEvents {
     }
     if (event instanceof MatchEvent.PickKit pick && !(was instanceof Phase.Resetting)) {
       ledger.kitSwitched(pick.id());
-    }
-    if (event instanceof MatchEvent.MapReady ready && match.map().isPresent()) {
-      play(ready.map().id());
     }
     if (is instanceof Phase.Ended ended && !(was instanceof Phase.Ended)) {
       results.ended(ended);
@@ -1531,12 +1531,20 @@ final class MatchRunner implements MatchView, MatchEvents {
     return handle(new MatchEvent.Leave(member.orElseThrow().id(), now())).map(Texts::describe);
   }
 
-  /** Moves {@code player} between or within the rwf worlds, past the teleport guard. */
-  void move(Player player, Location to) {
+  /** Moves past the teleport guard; a bot crossing worlds returns its replacement body. */
+  Player move(Player player, Location to) {
     var was = moving;
     moving = true;
     try {
+      if (parts.bots().isBot(player.getUniqueId())) {
+        var id = memberOf(player.getUniqueId()).orElseThrow().id();
+        if (!(id instanceof CombatantId.Bot bot)) {
+          throw new IllegalStateException("bot body has a human combatant id: " + id);
+        }
+        return parts.bots().move(bot, to);
+      }
       player.teleport(to);
+      return player;
     } finally {
       moving = was;
     }
@@ -1778,9 +1786,9 @@ final class MatchRunner implements MatchView, MatchEvents {
           player -> {
             powers.clear(player);
             PlayerStates.wipe(player, GameMode.SURVIVAL);
-            move(player, lobby());
-            PlayerAttributes.addAttackSpeed(player);
-            parts.boards().show(player);
+            var moved = move(player, lobby());
+            PlayerAttributes.addAttackSpeed(moved);
+            parts.boards().show(moved);
             if (!id.isBot()) {
               parts.kits().giveLobbyItems(player);
               var chat = teamChat;

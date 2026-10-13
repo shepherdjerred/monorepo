@@ -24,6 +24,9 @@ public interface BotRoster {
    */
   void spawn(CombatantId.Bot id, Location at);
 
+  /** Moves a spawned bot, preserving its state; callers must use the returned entity. */
+  Player move(CombatantId.Bot id, Location to);
+
   /** Removes {@code id}'s entity from the world. Despawning an absent bot is harmless. */
   void despawn(CombatantId.Bot id);
 
@@ -53,6 +56,11 @@ public interface BotRoster {
       @Override
       public void spawn(CombatantId.Bot id, Location at) {
         bodies.spawn(handle(id), at);
+      }
+
+      @Override
+      public Player move(CombatantId.Bot id, Location to) {
+        return bodies.move(handle(id), to);
       }
 
       @Override

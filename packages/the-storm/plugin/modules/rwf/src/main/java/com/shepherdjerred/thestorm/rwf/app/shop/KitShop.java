@@ -93,12 +93,37 @@ public final class KitShop {
               return store
                   .begin(purchase)
                   .thenCompose(
-                      opened ->
-                          opened
-                              ? charge(purchase, now)
+                      opened -> opened ? charge(purchase, now) : resume(player, kit.id(), now));
+            });
+  }
+
+  /** A committed charge can finish its grant on retry without waiting for a server restart. */
+  private CompletableFuture<Result<Purchase, ShopError>> resume(
+      UUID player, String kit, Instant now) {
+    return store
+        .pending()
+        .thenCompose(
+            pending -> {
+              var previous =
+                  pending.stream()
+                      .filter(
+                          purchase ->
+                              purchase.player().equals(player) && purchase.kit().equals(kit))
+                      .findFirst();
+              if (previous.isEmpty()) {
+                return CompletableFuture.completedFuture(Result.err(new ShopError.InProgress(kit)));
+              }
+              var purchase = previous.orElseThrow();
+              return wallets
+                  .receiptFor(purchase.id())
+                  .thenCompose(
+                      receipt ->
+                          receipt.isPresent()
+                              ? store
+                                  .grant(purchase.id(), now)
+                                  .thenApply(ignored -> Result.<Purchase, ShopError>ok(purchase))
                               : CompletableFuture.completedFuture(
-                                  Result.<Purchase, ShopError>err(
-                                      new ShopError.InProgress(kit.id()))));
+                                  Result.err(new ShopError.InProgress(kit))));
             });
   }
 

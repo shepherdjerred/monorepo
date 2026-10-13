@@ -64,8 +64,18 @@ final class KitLayoutListener implements Listener {
           player, "Your " + menu.kit().name() + " layout was not saved: an item is missing.");
       return;
     }
-    armory.saveLayout(player.getUniqueId(), menu.kit().id(), layout.orElseThrow());
-    Texts.info(player, "Saved your " + menu.kit().name() + " layout.");
+    armory.saveLayout(
+        player.getUniqueId(),
+        menu.kit().id(),
+        layout.orElseThrow(),
+        saved -> {
+          if (saved) {
+            Texts.info(player, "Saved your " + menu.kit().name() + " layout.");
+          } else {
+            Texts.error(
+                player, "Your " + menu.kit().name() + " layout could not be saved; try again.");
+          }
+        });
   }
 
   /** Whether {@code action} only moves items within one inventory, one click at a time. */

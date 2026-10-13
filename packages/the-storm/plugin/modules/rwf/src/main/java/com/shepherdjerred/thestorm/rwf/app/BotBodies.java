@@ -19,6 +19,9 @@ public interface BotBodies {
   /** Puts {@code bot}'s entity into the world at {@code at}; {@link #entity} is present after. */
   void spawn(BotHandle bot, Location at);
 
+  /** Moves a spawned bot, preserving its state; the returned entity may replace the old one. */
+  Player move(BotHandle bot, Location to);
+
   /** Removes {@code bot}'s entity from the world. Despawning an absent bot is harmless. */
   void despawn(BotHandle bot);
 

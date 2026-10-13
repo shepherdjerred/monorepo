@@ -8,6 +8,7 @@ import com.shepherdjerred.thestorm.economy.app.CurrencyId;
 import com.shepherdjerred.thestorm.economy.app.Money;
 import com.shepherdjerred.thestorm.rwf.app.FeatureGates;
 import com.shepherdjerred.thestorm.rwf.app.JoinGate;
+import com.shepherdjerred.thestorm.rwf.app.MatchView;
 import com.shepherdjerred.thestorm.rwf.domain.kit.KitBook;
 import com.shepherdjerred.thestorm.rwf.domain.kit.KitRotation;
 import com.shepherdjerred.thestorm.rwf.domain.kit.KitSpec;
@@ -15,6 +16,7 @@ import com.shepherdjerred.thestorm.rwf.domain.match.MatchSnapshot;
 import com.shepherdjerred.thestorm.rwf.testing.Samples;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -416,6 +418,33 @@ final class RwfKitMenuTest {
     harness.until(() -> said(alice, "shop is not open"));
     assertThat(harness.combatant(alice).kit()).isEmpty();
     assertThat(credits(harness, alice)).isEqualTo(1000);
+  }
+
+  @Test
+  void expandedBotKitsDependOnParticipatingHumansRatherThanShopBrowsers() {
+    var harness = RwfHarness.prepare(directory);
+    var expanded = new HashSet<java.util.UUID>();
+    JoinGate rollout = player -> CompletableFuture.completedFuture(expanded.contains(player));
+    harness.kitGates = new FeatureGates(rollout, JoinGate.open());
+    running = harness.enable(directory);
+    var beta = harness.loadedPlayer("Beta");
+    expanded.add(beta.getUniqueId());
+    beta.performCommand("rwf kits");
+    harness.until(() -> menuOpen(beta));
+    assertThat(beta.getOpenInventory().getTopInventory().getItem(4)).isNotNull();
+    assertThat(harness.view().kitsOnOffer()).isEqualTo(MatchView.MILESTONE_KITS);
+    beta.closeInventory();
+    var alice = harness.loadedPlayer("Alice");
+    harness.enter(alice);
+    assertThat(harness.view().kitsOnOffer()).isEqualTo(MatchView.MILESTONE_KITS);
+
+    harness.enter(beta);
+    assertThat(harness.view().kitsOnOffer()).hasSize(KitBook.ALL.size());
+    beta.performCommand("rwf leave");
+    harness.until(() -> !harness.inMatch(beta));
+
+    assertThat(harness.view().kitsOnOffer()).isEqualTo(MatchView.MILESTONE_KITS);
+    assertThat(harness.inMatch(alice)).isTrue();
   }
 
   @Test

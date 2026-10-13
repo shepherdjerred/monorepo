@@ -131,6 +131,35 @@ final class KitShopTest {
   }
 
   @Test
+  void retryAfterAFailedGrantFinishesTheChargedPurchaseWithoutAnotherDebit() {
+    fund(800);
+    var buying = shop();
+    database
+        .write(
+            dsl ->
+                dsl.execute(
+                    "CREATE TRIGGER reject_kit_grant BEFORE INSERT ON rwf_kit_owned "
+                        + "BEGIN SELECT RAISE(ABORT, 'grant unavailable'); END"))
+        .join();
+
+    assertThatThrownBy(() -> buying.buy(ALICE, KitBook.BERSERKER, T0).join())
+        .isInstanceOf(CompletionException.class)
+        .hasMessageContaining("grant unavailable");
+    var pending = store.pending().join();
+    assertThat(pending).hasSize(1);
+    assertThat(store.owned(ALICE).join()).isEmpty();
+    assertThat(held()).isEqualTo(400);
+    database.write(dsl -> dsl.execute("DROP TRIGGER reject_kit_grant")).join();
+
+    assertThat(buying.buy(ALICE, KitBook.BERSERKER, T0.plusSeconds(1)).join())
+        .isEqualTo(Result.ok(pending.getFirst()));
+    assertThat(store.owned(ALICE).join()).containsExactly("berserker");
+    assertThat(store.pending().join()).isEmpty();
+    assertThat(held()).as("the retry grants the original debit").isEqualTo(400);
+    assertThat(wallets.receipts()).hasSize(1);
+  }
+
+  @Test
   void aCrashAfterTheChargeGrantsTheKitOnTheNextStart() {
     // The purchase was opened and the ledger took the credits, then the server died before the
     // grant was written.

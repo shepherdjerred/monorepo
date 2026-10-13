@@ -112,6 +112,10 @@ final class RwfKitPrefsTest {
     assertThat(
             new JooqKitStore(harness.database).prefs(alice.getUniqueId()).join().layout("trooper"))
         .contains(new KitLayout(Map.of(0, 0, 1, 2, 2, 1)));
+    harness.until(
+        () ->
+            RwfHarness.messages(alice).stream()
+                .anyMatch(message -> message.contains("Saved your Trooper layout")));
     alice.performCommand("rwf kit trooper");
     assertThat(at(alice, 1)).isEqualTo(Material.GOLDEN_APPLE);
     assertThat(at(alice, 2)).isEqualTo(Material.IRON_SWORD);
@@ -138,5 +142,56 @@ final class RwfKitPrefsTest {
 
     harness.until(() -> harness.combatant(alice).kit().filter("longbow"::equals).isPresent());
     assertThat(at(alice, 2)).isEqualTo(Material.BOW);
+  }
+
+  @Test
+  void failedLayoutWriteReportsFailureAndKeepsThePreviousEquipUntilSuccessfulRetry() {
+    var harness = start();
+    var alice = harness.loadedPlayer("Alice");
+    harness.enter(alice);
+    harness
+        .database
+        .write(
+            dsl ->
+                dsl.execute(
+                    "CREATE TRIGGER reject_layout BEFORE INSERT ON rwf_player_prefs "
+                        + "BEGIN SELECT RAISE(ABORT, 'layout unavailable'); END"))
+        .join();
+
+    swapSwordAndApples(harness, alice);
+    harness.until(
+        () ->
+            RwfHarness.messages(alice).stream()
+                .anyMatch(message -> message.contains("layout could not be saved; try again")));
+    assertThat(
+            new JooqKitStore(harness.database).prefs(alice.getUniqueId()).join().layout("trooper"))
+        .isEmpty();
+    alice.performCommand("rwf kit trooper");
+    assertThat(at(alice, 1)).isEqualTo(Material.IRON_SWORD);
+    assertThat(at(alice, 2)).isEqualTo(Material.GOLDEN_APPLE);
+    harness.database.write(dsl -> dsl.execute("DROP TRIGGER reject_layout")).join();
+
+    swapSwordAndApples(harness, alice);
+    harness.until(
+        () ->
+            RwfHarness.messages(alice).stream()
+                .anyMatch(message -> message.contains("Saved your Trooper layout")));
+    alice.performCommand("rwf kit trooper");
+    assertThat(at(alice, 1)).isEqualTo(Material.GOLDEN_APPLE);
+    assertThat(at(alice, 2)).isEqualTo(Material.IRON_SWORD);
+    assertThat(
+            new JooqKitStore(harness.database).prefs(alice.getUniqueId()).join().layout("trooper"))
+        .contains(new KitLayout(Map.of(0, 0, 1, 2, 2, 1)));
+  }
+
+  private static void swapSwordAndApples(RwfHarness harness, PlayerMock player) {
+    openMenu(harness, player);
+    click(harness, player, ClickType.RIGHT, TROOPER);
+    harness.until(() -> chest(player, 36));
+    var editor = player.getOpenInventory().getTopInventory();
+    var sword = editor.getItem(28);
+    editor.setItem(28, editor.getItem(29));
+    editor.setItem(29, sword);
+    player.closeInventory();
   }
 }

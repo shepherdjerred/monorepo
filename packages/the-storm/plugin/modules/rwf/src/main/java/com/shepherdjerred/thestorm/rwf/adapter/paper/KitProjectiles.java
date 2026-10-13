@@ -12,7 +12,7 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.random.RandomGenerator;
 import org.bukkit.Color;
 import org.bukkit.FireworkEffect;
 import org.bukkit.Location;
@@ -102,7 +102,7 @@ final class KitProjectiles {
    */
   private void rpg(Player player, CombatantId owner) {
     var from = player.getEyeLocation().subtract(0, THROW_DROP, 0);
-    var velocity = eggVelocity(player);
+    var velocity = eggVelocity(player, context.random());
     // Launched from the player, an arrow leaves where the egg did: a tenth below the eye.
     var arrow =
         player.launchProjectile(
@@ -150,7 +150,7 @@ final class KitProjectiles {
   /**
    * A thrown egg's velocity, as 1.12 threw it: 1.5 along the look, a little spread, plus the run.
    */
-  private static Vector eggVelocity(Player player) {
+  static Vector eggVelocity(Player player, RandomGenerator random) {
     var at = Places.at(player);
     var yaw = Math.toRadians(at.getYaw());
     var pitch = Math.toRadians(at.getPitch());
@@ -158,7 +158,6 @@ final class KitProjectiles {
         new Vector(
             -Math.sin(yaw) * Math.cos(pitch), -Math.sin(pitch), Math.cos(yaw) * Math.cos(pitch));
     direction.normalize();
-    var random = ThreadLocalRandom.current();
     direction.add(
         new Vector(
             random.nextGaussian() * EGG_SPREAD,
@@ -198,6 +197,11 @@ final class KitProjectiles {
                   dropped.setVelocity(look.clone().multiply(0.8));
                 });
     grenades.put(item, new Grenade(owner, runner.now()));
+  }
+
+  /** Whether {@code entity} is an RPG still tracked in flight. Other kit entities are not RPGs. */
+  boolean isRpg(Entity entity) {
+    return rpgs.containsKey(entity.getUniqueId());
   }
 
   /**

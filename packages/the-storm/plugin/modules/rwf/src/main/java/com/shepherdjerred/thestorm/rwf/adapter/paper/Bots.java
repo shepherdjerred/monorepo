@@ -43,6 +43,10 @@ final class Bots {
     return roster.orElseThrow().entity(bot);
   }
 
+  Player move(CombatantId.Bot bot, Location to) {
+    return roster().orElseThrow().move(bot, to);
+  }
+
   void despawn(CombatantId.Bot bot) {
     roster().ifPresent(r -> r.despawn(bot));
   }

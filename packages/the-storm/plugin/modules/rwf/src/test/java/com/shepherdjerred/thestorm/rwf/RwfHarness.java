@@ -114,6 +114,8 @@ public final class RwfHarness implements AutoCloseable {
 
   /** MockBukkit has no async chunk API; complete its chunk load without changing module code. */
   private static final class RwfWorldMock extends WorldMock {
+    private CompletableFuture<Void> chunkLoads = CompletableFuture.completedFuture(null);
+
     RwfWorldMock(String name) {
       super(new WorldCreator(name));
     }
@@ -121,8 +123,11 @@ public final class RwfHarness implements AutoCloseable {
     @Override
     public CompletableFuture<Chunk> getChunkAtAsync(
         int x, int z, boolean generate, boolean urgent) {
-      loadChunk(x, z);
-      return CompletableFuture.completedFuture(getChunkAt(x, z));
+      return chunkLoads.thenApply(
+          _ -> {
+            loadChunk(x, z);
+            return getChunkAt(x, z);
+          });
     }
   }
 
@@ -257,9 +262,11 @@ public final class RwfHarness implements AutoCloseable {
       until(() -> view().current().isPresent(), PREPARATION);
       // With one map to offer, the lobby chooses it at once and its terrain is ready before anyone
       // joins, as it was before the vote: the snapshot has the map's teams once it is loaded.
-      until(
-          () -> view().current().filter(snapshot -> !snapshot.teams().isEmpty()).isPresent(),
-          PREPARATION);
+      if (((RwfWorldMock) rwf).chunkLoads.isDone()) {
+        until(
+            () -> view().current().filter(snapshot -> !snapshot.teams().isEmpty()).isPresent(),
+            PREPARATION);
+      }
     } catch (AssertionError e) {
       // A harness that never opened must not leave MockBukkit mocking for the next test.
       close();
@@ -270,6 +277,13 @@ public final class RwfHarness implements AutoCloseable {
 
   public static RwfHarness start(Path directory) {
     return prepare(directory).enable(directory);
+  }
+
+  /** Holds map chunk loads so a test can start a match while its terrain is preparing. */
+  CompletableFuture<Void> deferMapChunks() {
+    var world = (RwfWorldMock) rwf;
+    world.chunkLoads = new CompletableFuture<>();
+    return world.chunkLoads;
   }
 
   public MatchView view() {

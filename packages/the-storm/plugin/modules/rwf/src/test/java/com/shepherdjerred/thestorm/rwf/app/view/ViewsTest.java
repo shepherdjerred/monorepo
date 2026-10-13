@@ -164,6 +164,11 @@ final class ViewsTest {
           }
 
           @Override
+          public Player move(BotHandle bot, Location to) {
+            throw new IllegalStateException("no spawned body in this roster");
+          }
+
+          @Override
           public void despawn(BotHandle bot) {
             calls.add("despawn " + bot.uuid());
           }

@@ -182,6 +182,14 @@ public final class Roster implements BotBodies {
   }
 
   @Override
+  public Player move(BotHandle bot, Location to) {
+    if (!bots.containsKey(bot.uuid())) {
+      throw new IllegalArgumentException("unknown bot " + bot);
+    }
+    return parts.bodies().move(bot.uuid(), to);
+  }
+
+  @Override
   public void despawn(BotHandle bot) {
     var body = bots.remove(bot.uuid());
     if (body != null) {

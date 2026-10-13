@@ -359,7 +359,7 @@ final class KitListener implements Listener {
   /** An RPG that hits someone explodes rather than striking them. */
   @EventHandler(priority = EventPriority.LOWEST)
   void onRpgStrike(EntityDamageByEntityEvent event) {
-    if (runner.kits().isKitEntity(event.getDamager())) {
+    if (runner.powers().projectiles().isRpg(event.getDamager())) {
       event.setCancelled(true);
       runner.powers().projectiles().hit(event.getDamager());
     }

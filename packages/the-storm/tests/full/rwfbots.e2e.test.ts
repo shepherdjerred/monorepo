@@ -945,6 +945,108 @@ describe("Search and Destroy with rwfbots", () => {
 
 describe("rwfbots bodies and reflexes", () => {
   test(
+    "human sword hits damage fresh bot bodies after lobby and repeated world transfers",
+    { timeout: 120_000 },
+    async ({ bot, rcon, server }) => {
+      const match = await newMatch(bot, rcon, server);
+      const names = await fillsWithBots(match);
+      for (const name of names) {
+        await rcon.command(`rwf admin forcekit ${name} trooper`);
+      }
+      const { team } = await goesLiveMarked(match, names);
+      const victim = names.find((name) => match.view.botTeam(name) !== team);
+      if (victim === undefined) {
+        throw new Error("the live match has no enemy bot");
+      }
+      await rcon.command(`rwf admin forcekit ${bot.username} trooper`);
+      await rcon.command(`rwf admin forcekit ${victim} trooper`);
+      await rcon.command(
+        `execute in ${dimension} run gamerule minecraft:natural_health_regeneration false`,
+      );
+      try {
+        // Keep unrelated fighters at the far base while genuine client attack packets exercise
+        // the rules. The selected bot keeps its normal AI, health and immunity.
+        for (const name of names.filter((candidate) => candidate !== victim)) {
+          await rcon.command(
+            `execute in ${dimension} run minecraft:tp ${body(name)} 55.5 65 31.5`,
+          );
+        }
+        bot.setQuickBarSlot(1);
+        await eventually(
+          "the human's Trooper sword",
+          async () => bot.heldItem?.name === "iron_sword",
+        );
+        const hp = async () =>
+          HealthSchema.parse(
+            await rcon.command(`data get entity ${body(victim)} Health`),
+          );
+        const offer = async () => {
+          await rcon.command(
+            `execute in ${dimension} run minecraft:tp ${body(victim)} 24.5 65 30.5`,
+          );
+          await rcon.command(
+            `execute in ${dimension} run minecraft:tp ${bot.username} 25.5 65 30.5`,
+          );
+          await eventually("the current bot body in reach", async () => {
+            const current = match.view.entity(victim);
+            return (
+              current !== undefined &&
+              current.position.distanceTo(bot.entity.position) < 3
+            );
+          });
+          const current = match.view.entity(victim);
+          if (current === undefined) throw new Error("the bot body vanished");
+          await bot.lookAt(current.position.offset(0, 1, 0), true);
+          return current;
+        };
+        const before = await hp();
+        expect(before).toBe(20);
+        bot.attack(await offer());
+        await eventually(
+          "a human sword hit on the lobby-to-map body",
+          async () => (await hp()) < before,
+        );
+        const first = await hp();
+        expect(first).toBeCloseTo(before - 2.9, 1);
+
+        const transferred = z
+          .object({
+            uuid: z.uuid(),
+            entities: z.array(z.number().int()).length(3),
+            health: z.number(),
+            invulnerable: z.literal(false),
+            equipmentPreserved: z.literal(true),
+            registered: z.literal(true),
+          })
+          .parse(
+            JSON.parse(
+              plain(await rcon.command(`storm-fixture-bot-transfer ${victim}`)),
+            ),
+          );
+        expect(new Set(transferred.entities).size).toBe(3);
+        expect(transferred.health).toBeCloseTo(first, 1);
+        expect(transferred.uuid).toBe(match.view.profiles.get(victim)?.uuid);
+        // A replacement inherits the normal hit window. After it decays, another real swing
+        // lowers health by the same amount instead of awaiting a nonexistent client ACK.
+        await Bun.sleep(750);
+        bot.attack(await offer());
+        await eventually(
+          "a human sword hit after map-to-lobby-to-map",
+          async () => (await hp()) < first,
+        );
+        expect(await hp()).toBeCloseTo(first - 2.9, 1);
+        expect(await serverLogs(server)).not.toContain("IllegalAccessError");
+      } finally {
+        await rcon.command(
+          `execute in ${dimension} run gamerule minecraft:natural_health_regeneration true`,
+        );
+        await rcon.command("rwf admin forcestop");
+        await waitForLobby(rcon);
+      }
+    },
+  );
+
+  test(
     "a hurt Trooper with no enemy near eats a golden apple, and bots never enter Citizens' saved NPCs",
     { timeout: 240_000 },
     async ({ rcon, server }) => {
