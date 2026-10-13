@@ -135,7 +135,14 @@ test("creates an issue, comments, votes, attaches and retains edit history", asy
   await expect(page.getByPlaceholder("Leave a comment…")).toHaveValue(
     /acceptance\.txt/u,
   );
+  const commentSaved = page.waitForResponse(
+    (response) =>
+      response.url().includes("comments.create") &&
+      response.request().method() === "POST",
+  );
   await page.getByRole("button", { name: "Comment", exact: true }).click();
+  const commentResponse = await commentSaved;
+  expect(commentResponse.ok()).toBe(true);
   await expect(
     page
       .getByText("Verified with a screenshot and a fresh session.", {
@@ -144,6 +151,14 @@ test("creates an issue, comments, votes, attaches and retains edit history", asy
       .first(),
   ).toBeVisible();
   await page.reload();
+  await expect(page.locator(".comment")).toContainText(
+    "Verified with a screenshot and a fresh session.",
+  );
+  await expect(
+    page
+      .locator(".comment")
+      .getByRole("link", { name: "acceptance.txt", exact: true }),
+  ).toHaveAttribute("href", /\/attachments\//u);
   await expect(page.getByLabel("Status", { exact: true })).toHaveValue(
     "In progress",
   );
