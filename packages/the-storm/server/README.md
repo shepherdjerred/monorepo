@@ -19,7 +19,9 @@ remain supplied by the chart's `extraEnv` secret references.
 ## Plugin and configuration ownership
 
 `owned/plugins/TheStorm/config.yml` registers and enables all 25 Storm modules,
-including `rwf` and `rwfbots`, whose world is provisioned on live.
+including `rwf` and `rwfbots`, whose map world is provisioned on live. RWF creates
+or loads its explicitly declared owned void lobby before starting gameplay;
+it preserves the lobby's identity and saved terrain across restarts.
 Storm owns gameplay, economy, chat, towns and locks, quests, NPCs, skills,
 arena, moderation, Discord relay, sleep, graves, and native world borders.
 

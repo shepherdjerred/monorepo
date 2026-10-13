@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.rwf.adapter.content;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.shepherdjerred.thestorm.rwf.domain.bomb.Bomb;
 import com.shepherdjerred.thestorm.rwf.domain.combat.CombatRules;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchSettings;
@@ -18,7 +19,7 @@ import java.util.regex.Pattern;
  * and the module refuses a file that disagrees with the code), rewards, recording, the load test
  * switch and the maps kept out of the rotation.
  *
- * @param worlds the loaded lobby and map worlds; the module seals both
+ * @param worlds the owned lobby and previously provisioned map world; the module seals both
  * @param spectator where players stand when no match places them elsewhere
  * @param match how matches fill and start
  * @param rules the ported Red Warfare constants this build plays by
@@ -58,8 +59,9 @@ public record RwfConfig(
    *
    * @param lobby the lobby world
    * @param maps the map world
+   * @param lobbyProvisioning the explicit startup ownership of the lobby world
    */
-  public record Worlds(String lobby, String maps) {
+  public record Worlds(String lobby, String maps, LobbyProvisioning lobbyProvisioning) {
 
     public Worlds {
       for (var world : List.of(lobby, maps)) {
@@ -70,7 +72,22 @@ public record RwfConfig(
       if (lobby.equals(maps)) {
         throw new IllegalArgumentException("the lobby and the maps stand in different worlds");
       }
+      if (!lobby.matches("[a-z0-9][a-z0-9_.-]{0,63}")
+          || List.of("world", "world_nether", "world_the_end", "overworld", "the_nether", "the_end")
+              .contains(lobby)) {
+        throw new IllegalArgumentException(
+            "the owned lobby needs a dedicated safe lowercase world name");
+      }
+      if (lobbyProvisioning == null) {
+        throw new IllegalArgumentException("lobbyProvisioning is required");
+      }
     }
+  }
+
+  /** The lobby is created as void terrain and subsequently loaded without resetting it. */
+  public enum LobbyProvisioning {
+    @JsonProperty("owned-void")
+    OWNED_VOID
   }
 
   /**

@@ -48,7 +48,7 @@ final class ShippedContentTest {
     assertThat(content.config().worlds())
         .isEqualTo(
             new com.shepherdjerred.thestorm.rwf.adapter.content.RwfConfig.Worlds(
-                "rwf_lobby", "rwf"));
+                "rwf_lobby", "rwf", RwfConfig.LobbyProvisioning.OWNED_VOID));
     assertThat(content.config().match().minHumans()).isEqualTo(1);
     // Red Warfare's lobby: 4 players, one fewer every 15 s, never under 2.
     assertThat(content.config().match().minPlayers()).isEqualTo(4);

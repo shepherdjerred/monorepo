@@ -1,10 +1,10 @@
 ---
 title: Provision The Storm's Search and Destroy worlds
-description: Create the sealed lobby and map worlds, wire the recording salt, ship a map, enable the modules and flags, and verify the first bot-filled round.
+description: Prepare the map world and owned lobby declaration, wire the recording salt, ship content, and verify the first bot-filled round.
 ---
 
-Provision the dedicated Search and Destroy worlds on `minecraft-tsmc` before
-switching on The Storm's `rwf` and `rwfbots` modules. Players see the result
+Provision the Search and Destroy map world before starting The Storm's `rwf`
+and `rwfbots` modules. RWF creates and loads its declared void lobby itself. Players see the result
 described at
 [docs.ts-mc.net/search-and-destroy](https://docs.ts-mc.net/search-and-destroy/).
 
@@ -12,14 +12,20 @@ Every repository step below ships through a pull request and the
 [homelab release](/how-to/cut-a-homelab-release/) path. Only step 1 and the
 final checks run against the live server.
 
-## 1. Create the two void worlds
+## 1. Prepare the map world and declare the owned lobby
 
 Read the `worlds` section of `server/owned/plugins/TheStorm/rwf.yml` under
 [the owned plugin configuration](packages/the-storm/server/owned/plugins/TheStorm/):
-`worlds.lobby` names the world the lobby is pasted into and `worlds.maps` the
-world the maps are played in. Create both, each with the command below and
-its exact name. The module looks each world up by name and refuses to enable
-while either is missing.
+`worlds.maps` names the existing map world; it must be loaded before RWF enables.
+Keep an existing map world and its saved terrain. Create it with the command
+below only when setting up a new installation.
+
+Keep `worlds.lobbyProvisioning: owned-void` and a dedicated lowercase name in
+`worlds.lobby`. At startup, RWF requires the map world first, seals the lobby
+name, then asks Paper to create or load that lobby before starting gameplay.
+An existing lobby keeps its world identity and saved terrain. RWF repairs only
+the authored room. Do not add this lobby to Multiverse's runtime catalog or
+overwrite that catalog with repository configuration.
 
 Create the world with the Multiverse-Core 5.8.0 that
 [the image bakes in](packages/the-storm/server/plugins.json). The
@@ -36,12 +42,10 @@ e2e fixture plugin creates the test world with: one air layer in the
 `the_void` biome. It has not been run through Multiverse's argument parser on
 this server, so confirm the created world has no terrain before continuing.
 
-Do not pass `--generator`. No void generator plugin is baked into the image,
-and The Storm deliberately ships none: Multiverse loads its worlds before
-The Storm enables, and Bukkit refuses a generator whose plugin is not yet
-enabled, so the world would fail to load on every later boot. For the same
-reason neither world is listed in `world.yml`; the `rwf` module checks and
-seals both itself.
+Do not pass `--generator`. The flat settings require no generator plugin.
+Keep both RWF worlds out of `world.yml`, which validates the separately restored
+resource worlds. Multiverse continues loading the existing map world; RWF owns
+the lobby's startup lifecycle.
 
 ## 2. Create the recording salt
 
@@ -93,8 +97,8 @@ do not overlap one another; the module refuses to enable if two do.
 ## 4. Enable the modules
 
 In [config.yml](packages/the-storm/server/owned/plugins/TheStorm/config.yml),
-set `rwf: true` and `rwfbots: true`. Both keys already exist as `false`;
-`rwf` depends on `economy`, which stays on. Merge the change and let the
+keep `rwf: true`, `rwfbots: true`, and their `economy` dependency enabled.
+These modules already ship enabled. Merge the change and let the
 release pipeline publish the image and ArgoCD roll `minecraft-tsmc`. The
 StatefulSet hibernates at zero replicas, so the new revision takes effect on
 the next wake.

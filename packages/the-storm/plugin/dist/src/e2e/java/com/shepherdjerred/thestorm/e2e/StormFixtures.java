@@ -296,15 +296,19 @@ public final class StormFixtures extends JavaPlugin {
    */
   private void rwfWorld() {
     var worlds = section(yaml("rwf.yml"), "worlds");
-    for (var key : java.util.List.of("lobby", "maps")) {
-      var name = Objects.requireNonNull(worlds.getString(key), "rwf.yml worlds." + key);
-      Objects.requireNonNull(
-          new WorldCreator(name)
-              .type(WorldType.FLAT)
-              .generatorSettings(VOID_PRESET)
-              .generateStructures(false)
-              .createWorld());
-    }
+    // The restored map world is a prerequisite. RWF itself must provision its absent lobby.
+    var name = Objects.requireNonNull(worlds.getString("maps"), "rwf.yml worlds.maps");
+    Objects.requireNonNull(
+        new WorldCreator(name)
+            .type(WorldType.FLAT)
+            .generatorSettings(VOID_PRESET)
+            .generateStructures(false)
+            .createWorld());
+    getLogger()
+        .info(
+            "RWF fixture lobby loaded before module: "
+                + (getServer().getWorld(Objects.requireNonNull(worlds.getString("lobby")))
+                    != null));
   }
 
   private YamlConfiguration yaml(String path) {

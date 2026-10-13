@@ -6,14 +6,14 @@
 # and the lobby room players wait in before a match in rwf/lobby/.
 
 # The two worlds Search and Destroy runs in: the lobby players wait in, and the
-# maps matches are fought on. An operator provisions both through Multiverse
-# (void worlds are fine; the lobby and the maps bring their own terrain) and
-# both must be loaded before TheStorm enables. The module seals them: every
-# other module leaves them alone, and members move between them only when the
-# match moves them.
+# maps matches are fought on. The map world must already be provisioned and
+# loaded. RWF owns the dedicated lobby: it creates empty void terrain on first
+# startup and loads the same saved world on later starts, before gameplay.
+# The module seals both worlds; only the authored lobby room is repaired.
 worlds:
   lobby: rwf_lobby
   maps: rwf
+  lobbyProvisioning: owned-void
 
 # Where a player stands when no map places them elsewhere; once a map is
 # chosen its own spectator point is used.

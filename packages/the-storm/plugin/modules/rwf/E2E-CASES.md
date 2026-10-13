@@ -48,8 +48,8 @@ behaviour on its own. These cases need the real server in
 `packages/the-storm/tests/e2e`. Each is a pass/fail check.
 
 `tests/e2e/rwf.e2e.test.ts` runs humans only (rwfbots off) on the shared e2e
-server, whose fixtures plugin creates the flat void `rwf` world before TheStorm
-enables. Every human turns their head once the match is live, so nobody is
+server, whose fixtures plugin creates only the flat void `rwf` map world before
+TheStorm enables. RWF provisions its own `rwf_lobby` at startup. Every human turns their head once the match is live, so nobody is
 AFK unless a case says so. `tests/full/rwfbots.e2e.test.ts` runs the bot cases (14,
 15, 16's human share, 18's bot cadence, 23) on the full lane, where every shipped module plus rwf and
 rwfbots boots with Citizens. A case marked **proven** below is asserted in one
@@ -57,14 +57,17 @@ of the two; the rest still wait for a suite.
 
 ## World and maps
 
-1. With `rwf_lobby` and `rwf` provisioned through Multiverse (any flat or
-   void worlds) the module enables, seals both, holds their chunks, pastes the
+1. With `rwf` already loaded and `lobbyProvisioning: owned-void`, RWF creates
+   or loads `rwf_lobby` before gameplay, seals both, holds their chunks, pastes the
    lobby at `0,64,0` in `rwf_lobby` and the training yard at `0,64,0` in `rwf`
-   and opens the lobby; with a world missing, TheStorm
-   refuses to enable and the server stops. **Proven** (the happy path: the
+   and opens the lobby; with the map world missing, TheStorm
+   refuses to enable without creating a lobby. **Proven** (the happy path: the
    module enables on the fixture world, `/rwf admin status` reports the
-   training yard ready, the TNT blocks stand at the bomb sites); the missing
-   world is not.
+   training yard ready, the TNT blocks stand at the bomb sites). Missing-map,
+   creation refusal, identity/environment validation and preservation of an
+   existing lobby are covered by `RwfWorldsPaperTest`. The full-lane
+   `tests/startup/rwf-worlds.e2e.test.ts` (`bun run test:startup`) checks a fresh
+   void lobby and its UUID and sentinel terrain across a graceful server restart.
 2. Break a block inside the yard as an operator, then restart: the verifier
    hashes the region, logs the mismatch and re-pastes it before admission opens.
    **Proven** without the restart: an operator's `setblock` edits (the red

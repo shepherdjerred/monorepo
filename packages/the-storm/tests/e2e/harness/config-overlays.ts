@@ -101,6 +101,7 @@ export async function overlayRwf(
   await overlaySection(stagedRwfYml, "worlds", {
     lobby: rwf.lobbyWorld,
     maps: rwf.world,
+    lobbyProvisioning: "owned-void",
   });
   await overlaySection(stagedRwfYml, "match", {
     ...(rwf.voteLead === undefined ? {} : { voteLead: rwf.voteLead }),

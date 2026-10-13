@@ -1135,6 +1135,10 @@
           "reason": "The committer runs applicable all-module acceptance checks locally through test:full with disposable world fixtures. This extended Minecraft suite does not run in CI."
         },
         {
+          "path": "tests/startup",
+          "reason": "The committer runs fresh and restarted Paper lobby acceptance locally through test:startup. This extended Minecraft suite does not run in CI."
+        },
+        {
           "path": "tests/load",
           "reason": "The committer runs the 20/50/100-bot rwf load profile locally through test:load on a 4-CPU, 8G-heap Paper container when applicable; it measures tick time and does not run in CI."
         },

@@ -4,6 +4,7 @@ import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.StormModule;
 import com.shepherdjerred.thestorm.core.players.PlayerDirectory;
 import com.shepherdjerred.thestorm.core.world.ChunkTickets;
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.discord.app.DiscordRelay;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import com.shepherdjerred.thestorm.rwf.adapter.content.ContentFiles;
@@ -16,6 +17,7 @@ import com.shepherdjerred.thestorm.rwf.adapter.db.JooqStatsStore;
 import com.shepherdjerred.thestorm.rwf.adapter.discord.RwfDiscordPosts;
 import com.shepherdjerred.thestorm.rwf.adapter.discord.RwfStatsCommand;
 import com.shepherdjerred.thestorm.rwf.adapter.paper.RwfPaper;
+import com.shepherdjerred.thestorm.rwf.adapter.paper.RwfWorlds;
 import com.shepherdjerred.thestorm.rwf.adapter.paper.ServerHooks;
 import com.shepherdjerred.thestorm.rwf.adapter.record.GzipRecorder;
 import com.shepherdjerred.thestorm.rwf.adapter.record.Retention;
@@ -62,8 +64,8 @@ import org.jspecify.annotations.Nullable;
  * tables, replays payouts a crash left in the outbox, prunes old recordings, then wires the Paper
  * side over the sealed world and publishes {@link MatchView}, {@link MatchEvents} and {@link
  * CombatantActions} for the bots module. When the discord module is on, lobbies and results are
- * announced there. The economy module must be enabled first; the configured world must be loaded
- * already.
+ * announced there. The economy module must be enabled first; the configured map world must be
+ * loaded already. RWF creates or loads its explicitly owned void lobby before starting gameplay.
  */
 public final class RwfModule implements StormModule {
 
@@ -123,6 +125,13 @@ public final class RwfModule implements StormModule {
   @Override
   public void enable(ModuleContext context) {
     var content = ContentFiles.catalog(context.dataDirectory(), Bukkit::createBlockData);
+    var lobby =
+        RwfWorlds.prepare(
+            context.plugin().getServer(),
+            content.config().worlds(),
+            context.services().require(SealedWorlds.class),
+            context.random());
+    context.logger().info("rwf: owned lobby {} uuid={}", lobby.getName(), lobby.getUID());
     var resources = new com.shepherdjerred.thestorm.rwf.app.map.MapResourceRegistry();
     context
         .services()

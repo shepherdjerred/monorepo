@@ -12,11 +12,13 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 record RwfWorldName(Worlds worlds) {
 
   /**
-   * The lobby world and the map world.
+   * The lobby world and the map world. RWF validates its own provisioning declaration; this
+   * projection reads only the identities the bot module needs.
    *
    * @param lobby where bots wait and wander before a match
    * @param maps where matches are fought
    */
+  @JsonIgnoreProperties(ignoreUnknown = true)
   record Worlds(String lobby, String maps) {
 
     Worlds {
