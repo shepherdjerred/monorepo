@@ -191,7 +191,7 @@ function dependencyLocation(
     // Catalog names can identify deployment channels and workflow roles. These
     // aliases all pin the same first-party GHCR repository, not nested images.
     const packageName =
-      /^(shepherdjerred\/[^/]+)(?:\/(?:beta|prod))?(?:\/workflows\/(?:stable|candidate))?$/.exec(
+      /^(shepherdjerred\/[^/]+)(?:\/(?:beta|prod))?(?:\/workflows\/(?:stable|candidate|retained-[a-f0-9]{12}))?$/.exec(
         entry.name,
       )?.[1];
     if (packageName === undefined || entry.artifactType !== "image") {

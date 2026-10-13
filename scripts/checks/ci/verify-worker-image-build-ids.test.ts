@@ -74,6 +74,20 @@ describe("selectWorkflowPins", () => {
     });
     expect(selected?.recordedGitSha).toBe(SHA_A);
   });
+
+  test.each(["beta", "prod"])(
+    "verifies retained %s Workflow images",
+    (stage) => {
+      const name = `shepherdjerred/scout-for-lol/${stage}/workflows/retained-${SHA_A.slice(0, 12)}`;
+      const selected = selectWorkflowPins(
+        { entries: [{ name, value: `2.0.0-13290@${DIGEST_A}` }] },
+        { [name]: { gitSha: SHA_A } },
+      );
+      expect(selected).toEqual([
+        pin({ name, repository: "shepherdjerred/scout-for-lol" }),
+      ]);
+    },
+  );
 });
 
 describe("offlineFindings", () => {
@@ -134,5 +148,27 @@ describe("offlineFindings", () => {
     expect(offlineFindings([pin({ recordedGitSha: undefined })], {})).toEqual(
       [],
     );
+  });
+
+  test.each([SHA_A, SHA_B, undefined])(
+    "requires retained build identity to match its recorded commit: %s",
+    (recordedGitSha) => {
+      const name = `shepherdjerred/scout-for-lol/prod/workflows/retained-${SHA_A.slice(0, 12)}`;
+      const findings = offlineFindings([pin({ name, recordedGitSha })], {
+        [name]: state["shepherdjerred/temporal-worker/workflows/stable"],
+      });
+      expect(findings).toEqual(
+        recordedGitSha === SHA_A
+          ? []
+          : [`${name}: retained pin must record its matching gitSha`],
+      );
+    },
+  );
+
+  test("refuses a retained build without recorded pin state", () => {
+    const name = `shepherdjerred/scout-for-lol/prod/workflows/retained-${SHA_A.slice(0, 12)}`;
+    expect(offlineFindings([pin({ name })], {})).toEqual([
+      `${name}: retained pin must record its matching gitSha`,
+    ]);
   });
 });

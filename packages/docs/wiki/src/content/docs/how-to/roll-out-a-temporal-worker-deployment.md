@@ -39,7 +39,8 @@ Before replacing either Scout image track, confirm the current Build ID still
 has a poller on another Deployment. If it lives only on the track being
 replaced, add an unmanaged catalog image pin named
 `shepherdjerred/scout-for-lol/<stage>/workflows/retained-<first-12-build-id-characters>`.
-Use that build's exact published digest. The
+Use that build's exact published digest and record its full `gitSha` in
+`scripts/pin-candidates-state.json`. The
 [Scout chart](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/cdk8s-charts/scout.ts)
 starts its separate retained poller in an earlier sync wave.
 Readiness requires a nonsticky Workflow poller before either mutable track changes.

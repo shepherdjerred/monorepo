@@ -110,6 +110,8 @@ describe("dependency summary collection", () => {
     "shepherdjerred/scout-for-lol/beta",
     "shepherdjerred/scout-for-lol/prod/workflows/candidate",
     "shepherdjerred/scout-for-lol/beta/workflows/stable",
+    "shepherdjerred/scout-for-lol/prod/workflows/retained-1d266e3903e2",
+    "shepherdjerred/scout-for-lol/beta/workflows/retained-2a5f0ef50956",
     "shepherdjerred/temporal-worker/workflows/stable",
   ])("resolves deployment alias %s to its actual image repository", (name) => {
     const changes = deriveDependencyChanges(
@@ -125,7 +127,12 @@ describe("dependency summary collection", () => {
     expect(changes[0]?.packageName).toBe(name.split("/").slice(0, 2).join("/"));
   });
 
-  it("rejects unknown internal image identity instead of querying another repository", () => {
+  it.each([
+    "shepherdjerred/service/unknown",
+    "shepherdjerred/scout-for-lol/prod/workflows/retained-not-a-build",
+    "shepherdjerred/scout-for-lol/prod/workflows/retained-1d266e3903e",
+    "shepherdjerred/scout-for-lol/prod/workflows/retained-1d266e3903e22",
+  ])("rejects unknown internal image identity %s", (name) => {
     expect(() =>
       deriveDependencyChanges(
         [],
@@ -133,11 +140,41 @@ describe("dependency summary collection", () => {
           {
             commitSha: "a".repeat(40),
             commitSubject: "invalid pin",
-            entries: [internal("shepherdjerred/service/unknown", "1.0.0")],
+            entries: [internal(name, "1.0.0")],
           },
         ],
       ),
     ).toThrow("Unknown internal image catalog identity");
+  });
+
+  it("summarizes every internal image identity in the current catalog", async () => {
+    const catalog = z
+      .object({ entries: z.array(CatalogEntrySchema) })
+      .parse(
+        await Bun.file(
+          new URL(
+            "../../../../../version-catalog/src/catalog.json",
+            import.meta.url,
+          ),
+        ).json(),
+      );
+    const entries = catalog.entries.filter(
+      (entry) => entry.category === "internal-image",
+    );
+    const changes = deriveDependencyChanges(
+      [],
+      [
+        {
+          commitSha: "a".repeat(40),
+          commitSubject: "add catalog images",
+          entries,
+        },
+      ],
+    );
+    expect(changes).toHaveLength(entries.length);
+    expect(changes.every((change) => change.datasource === "docker")).toBe(
+      true,
+    );
   });
 
   it("regresses the actual July 6-13 missed-update endpoint states", async () => {
