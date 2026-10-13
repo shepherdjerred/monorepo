@@ -9,6 +9,7 @@ import { titleCase } from "#src/game/events/describe.ts";
 import { readGameSaveDetails } from "#src/game/game-save-details.ts";
 import { mapName } from "#src/game/spatial/generated/map-names.ts";
 import { countDexOwned } from "#src/game/pokedex.ts";
+import { nationalDexNumber } from "#src/game/events/national-dex.ts";
 
 const BADGE_COUNT = 8;
 
@@ -36,6 +37,7 @@ export function readGameStateView(emulator: Emulator): GameStateReading {
     party:
       snapshot?.party.map((mon) => ({
         species: mon.isEgg ? "Egg" : titleCase(speciesName(mon.species)),
+        nationalDexNumber: mon.isEgg ? null : nationalDexNumber(mon.species),
         nickname: mon.nickname,
         level: mon.level,
         hp: mon.hp,

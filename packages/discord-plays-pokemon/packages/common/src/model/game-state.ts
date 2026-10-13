@@ -12,6 +12,8 @@ export const GamePhaseSchema = z.enum([
 export type PartyMon = z.infer<typeof PartyMonSchema>;
 export const PartyMonSchema = z.strictObject({
   species: z.string(),
+  /** National Dex ID for sprite lookup; eggs have no species sprite. */
+  nationalDexNumber: z.number().int().min(1).max(386).nullable(),
   nickname: z.string(),
   level: z.number().int(),
   hp: z.number().int(),

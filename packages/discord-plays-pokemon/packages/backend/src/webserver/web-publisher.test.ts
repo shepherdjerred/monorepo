@@ -60,6 +60,14 @@ test("a session boundary clears and broadcasts history before a new viewer's sna
     if (changeSession === undefined || gameEvent === undefined)
       throw new Error("publisher listeners missing");
     gameEvent({ kind: "whiteout" });
+    gameEvent({ kind: "catch", species: 277, shiny: true });
+    gameEvent({
+      kind: "evolution",
+      fromSpecies: 277,
+      toSpecies: 278,
+      nickname: "MUDDY",
+      level: 16,
+    });
     inputLog.record({
       user: "Previous guild's trainer",
       source: "discord",
@@ -78,7 +86,23 @@ test("a session boundary clears and broadcasts history before a new viewer's sna
     expect(before).toContainEqual(
       expect.objectContaining({
         kind: "events",
-        value: [expect.objectContaining({ event: "whiteout" })],
+        value: [
+          expect.objectContaining({
+            event: "whiteout",
+            pokemonArtwork: [],
+          }),
+          expect.objectContaining({
+            event: "catch",
+            pokemonArtwork: [{ nationalDexNumber: 252, shiny: true }],
+          }),
+          expect.objectContaining({
+            event: "evolution",
+            pokemonArtwork: [
+              { nationalDexNumber: 252, shiny: false },
+              { nationalDexNumber: 253, shiny: false },
+            ],
+          }),
+        ],
       }),
     );
 

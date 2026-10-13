@@ -10,6 +10,11 @@ export const GameEventKindSchema = z.enum([
   "dexEntry",
 ]);
 
+export const PokemonArtworkSchema = z.strictObject({
+  nationalDexNumber: z.number().int().min(1).max(386),
+  shiny: z.boolean(),
+});
+
 /** One in-game event worth telling everyone about. */
 export type GameEventEntry = z.infer<typeof GameEventEntrySchema>;
 export const GameEventEntrySchema = z.strictObject({
@@ -19,6 +24,8 @@ export const GameEventEntrySchema = z.strictObject({
   event: GameEventKindSchema,
   title: z.string(),
   text: z.string(),
+  /** Species to illustrate this event, in display order. */
+  pokemonArtwork: z.array(PokemonArtworkSchema),
 });
 
 export type EventsResponse = z.infer<typeof EventsResponseSchema>;

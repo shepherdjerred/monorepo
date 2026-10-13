@@ -474,12 +474,12 @@ h1 span {
 .party-card {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   padding: 10px;
   background: #eaf0d9;
   border: 2px solid #b0c7a3;
   border-radius: 4px;
-  min-height: 90px;
+  min-height: 104px;
 }
 .party-card.fainted {
   background: #f2e3d9;
@@ -491,6 +491,35 @@ h1 span {
   color: #78946d;
   font-size: 21px;
   min-width: 25px;
+}
+.party-sprite-frame {
+  display: grid;
+  place-items: center;
+  flex: 0 0 56px;
+  width: 56px;
+  height: 56px;
+  border: 1px solid #c5d5b5;
+  border-radius: 4px;
+  background: #f5f6e9;
+}
+.party-sprite {
+  display: block;
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+.egg-sprite {
+  display: block;
+  width: 28px;
+  height: 36px;
+  border: 2px solid #b09c62;
+  border-radius: 50% 50% 46% 46%;
+  background:
+    radial-gradient(circle at 28% 36%, #9cae70 0 2px, transparent 2.5px),
+    radial-gradient(circle at 68% 61%, #9cae70 0 2px, transparent 2.5px),
+    #fff2cc;
+  box-shadow: inset -4px -2px #eadcae;
 }
 .party-details {
   flex: 1;
@@ -658,7 +687,7 @@ h1 span {
   list-style: none;
   padding: 0;
   margin: 0;
-  max-height: 380px;
+  max-height: 460px;
   overflow: auto;
 }
 .activity li {
@@ -675,6 +704,49 @@ h1 span {
   color: #9cad76;
   font-size: 12px;
   padding-top: 4px;
+}
+.event-artwork {
+  display: flex;
+  align-items: center;
+  flex: 0 0 58px;
+  min-width: 58px;
+}
+.event-artwork.evolution {
+  flex-basis: 98px;
+  min-width: 98px;
+}
+.event-sprite-wrap {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+}
+.event-sprite {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+.event-sprite.shiny {
+  filter: drop-shadow(0 0 4px #ddb744);
+}
+.evolution-arrow {
+  position: absolute;
+  z-index: 1;
+  left: -13px;
+  color: #8b9f66;
+  font-size: 14px;
+}
+.shiny-sparkle {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  right: 0;
+  color: #c89528;
+  font-size: 16px;
+  line-height: 1;
+  text-shadow: 0 1px #fff8d9;
 }
 .activity li > div {
   min-width: 0;
@@ -873,6 +945,20 @@ h1 span {
   .party-card {
     padding: 8px;
     gap: 6px;
+    min-height: 92px;
+  }
+  .party-sprite-frame {
+    flex-basis: 44px;
+    width: 44px;
+    height: 44px;
+  }
+  .party-sprite {
+    width: 44px;
+    height: 44px;
+  }
+  .egg-sprite {
+    width: 23px;
+    height: 30px;
   }
   .slot-number {
     min-width: 20px;
@@ -918,6 +1004,11 @@ h1 span {
   }
   .side-column {
     gap: 20px;
+  }
+}
+@media (max-width: 480px) {
+  .party-grid {
+    grid-template-columns: 1fr;
   }
 }
 @media (prefers-reduced-motion: no-preference) {

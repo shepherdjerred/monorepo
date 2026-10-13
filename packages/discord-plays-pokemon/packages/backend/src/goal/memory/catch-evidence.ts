@@ -1,5 +1,5 @@
 import type { GameSnapshot } from "#src/game/events/types.ts";
-import { SPECIES_TO_NATIONAL } from "#src/game/events/generated/species.ts";
+import { nationalDexNumber } from "#src/game/events/national-dex.ts";
 
 export type PartyIdentityEvidence = {
   personality: number;
@@ -271,14 +271,6 @@ export function hasNewPartyIdentity(
       mon.species === species &&
       !initialIdentities.has(`${String(mon.personality)}:${String(mon.otId)}`),
   );
-}
-
-export function nationalDexNumber(species: number): number {
-  const value = SPECIES_TO_NATIONAL[species];
-  if (value === undefined || value <= 0) {
-    throw new Error(`species ${String(species)} has no National Dex mapping`);
-  }
-  return value;
 }
 
 export function dexOwned(

@@ -128,6 +128,9 @@ Enable `[driver_feed].enabled` or `DRIVER_FEED_ENABLED=true` to serve the feed.
 Homelab enables it and injects the OAuth secret from the `pokemon-config`
 1Password item. WebSockets admit only the configured origin. Signed-out
 visitors can read the progress panels; the video requires voice membership.
+Party and journal cards use locally served Emerald-era Pokémon sprites; the
+source revision and attribution are recorded in
+[`packages/frontend/ASSETS.md`](packages/frontend/ASSETS.md).
 
 ## Deployment
 

@@ -14,6 +14,7 @@ import type {
 } from "@discord-plays-pokemon/common";
 import type { GameEvent } from "#src/game/events/types.ts";
 import { describeGameEvent } from "#src/game/events/describe.ts";
+import { nationalDexNumber } from "#src/game/events/national-dex.ts";
 import { readGameStateView } from "#src/game/state-view.ts";
 import type {
   ActiveSessionRuntime,
@@ -186,6 +187,7 @@ export class WebPublisher {
 
   private publishEvent(event: GameEvent): void {
     const description = describeGameEvent(event);
+    const pokemonArtwork = eventPokemonArtwork(event);
     this.nextEventId += 1;
     this.events.push({
       id: String(this.nextEventId),
@@ -193,6 +195,7 @@ export class WebPublisher {
       event: event.kind,
       title: description.title,
       text: description.text,
+      pokemonArtwork,
     });
     if (this.events.length > EVENT_FEED_CAPACITY) this.events.shift();
     const response: EventsResponse = {
@@ -200,5 +203,40 @@ export class WebPublisher {
       value: [...this.events],
     };
     this.io.emit("response", response);
+  }
+}
+
+function eventPokemonArtwork(
+  event: GameEvent,
+): GameEventEntry["pokemonArtwork"] {
+  switch (event.kind) {
+    case "faint":
+    case "levelUp":
+      return [
+        { nationalDexNumber: nationalDexNumber(event.species), shiny: false },
+      ];
+    case "catch":
+      return [
+        {
+          nationalDexNumber: nationalDexNumber(event.species),
+          shiny: event.shiny,
+        },
+      ];
+    case "evolution":
+      return [
+        {
+          nationalDexNumber: nationalDexNumber(event.fromSpecies),
+          shiny: false,
+        },
+        {
+          nationalDexNumber: nationalDexNumber(event.toSpecies),
+          shiny: false,
+        },
+      ];
+    case "dexEntry":
+      return [{ nationalDexNumber: event.nationalDexNumber, shiny: false }];
+    case "whiteout":
+    case "badge":
+      return [];
   }
 }
