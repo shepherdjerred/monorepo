@@ -175,12 +175,13 @@ export async function checkoutSource(input: CheckoutInput) {
   const parent = join(input.cache, "v1", key);
   const snapshot = join(parent, commit);
   const started = performance.now();
-  await mkdir(parent, { recursive: true });
   // A workflow starts with an empty workspace. Never reset an existing checkout.
   if (await optionalDirectory(join(input.workspace, ".git")))
     throw new Error("Source checkout workspace already has Git metadata");
   await git(input.workspace, ["init", "--quiet"]);
   await git(input.workspace, ["remote", "add", "origin", input.repository]);
+  // Private benchmark storage may live in .git, which must be initialized first.
+  await mkdir(parent, { recursive: true });
   const hit = await optionalDirectory(snapshot);
   let fetchedBytes = 0;
   let downloadMs = 0;
