@@ -18,6 +18,10 @@ import {
 } from "../../../scripts/lib/pin-candidates-schema.ts";
 
 const VERSION_CATALOG_PATH = "packages/version-catalog/src/catalog.json";
+const OPERATOR_OWNED_SCOUT_PROD_WORKFLOW_PINS = new Set([
+  "shepherdjerred/scout-for-lol/prod/workflows/stable",
+  "shepherdjerred/scout-for-lol/prod/workflows/candidate",
+]);
 
 export type LiveCatalogExecutor = (
   command: readonly string[],
@@ -35,6 +39,8 @@ function releaseNumber(value: string): bigint {
  * Reconstruct a completed release, then retain its published pins in current
  * the build catalog. Commit-back may still be pending in a PR. Build catalog
  * metadata, upstream versions and newer image pins remain authoritative.
+ * Operator-owned Scout Prod Workflow pins stay authoritative regardless of
+ * build ordering: promotion selects an accepted artifact, not a newer build.
  * A no-target release writes this catalog back to the handoff, so retention
  * survives any number of consecutive no-target or partial-image builds.
  * Locally published entries remain owned by current source, including their
@@ -65,6 +71,11 @@ export function retainPublishedImagePins(
       .map((entry) => [entry.name, entry.value]),
   );
   for (const [key, candidate] of Object.entries(batch.candidates)) {
+    if (OPERATOR_OWNED_SCOUT_PROD_WORKFLOW_PINS.has(key)) {
+      throw new Error(
+        `CI candidate contains operator-owned Scout Prod Workflow image key ${key}`,
+      );
+    }
     if (localKeys.has(key)) {
       throw new Error(
         `CI candidate contains locally published image key ${key}`,
@@ -111,6 +122,10 @@ export function retainPublishedImagePins(
           `Conflicting published image pins for ${entry.name} at release ${currentBuild.toString()}`,
         );
       }
+      // Prod Workflow routing promotes a replayed, accepted image, not the
+      // numerically newest build. Unlike Beta/bootstrap pins, CI never mints
+      // these keys; an older publication cannot undo their declared promotion.
+      if (OPERATOR_OWNED_SCOUT_PROD_WORKFLOW_PINS.has(entry.name)) return entry;
       return publishedBuild > currentBuild ? { ...entry, value } : entry;
     }),
   });
