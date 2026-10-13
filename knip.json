@@ -351,8 +351,7 @@
     },
     // Vitest configs and global setup are reached through test:e2e, test:full, test:startup,
     // test:load and test:capacity*. The Woodpecker lane invokes prepare-sidecar.ts
-    // as a script. The map verification guide invokes the pursuit CLI directly.
-    // Knip cannot infer these command-line entries from imports.
+    // as a script. Knip cannot infer these command-line entries from imports.
     "packages/the-storm": {
       "entry": [
         "vitest.capacity.config.ts",
