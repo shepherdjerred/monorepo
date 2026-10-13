@@ -133,6 +133,32 @@ test("collects new summaries, excludes earlier runs, and binds identity", async 
   expect(report.turbo).toHaveLength(1);
 });
 
+test("collects Turbo summaries with an unset pass-through environment", async () => {
+  const root = await repository();
+  const raw = summary();
+  const task = raw.tasks[0];
+  if (task === undefined) throw new Error("Missing fixture task");
+  await Bun.write(
+    path.join(root, ".turbo/runs/nullable-environment.json"),
+    JSON.stringify({
+      ...raw,
+      tasks: [
+        {
+          ...task,
+          // Turbo 2.11.7 emits null when passThroughEnv is unset.
+          resolvedTaskDefinition: { env: ["NODE_ENV"], passThroughEnv: null },
+        },
+      ],
+    }),
+  );
+  const report = await collectTaskDiagnostics(identity, new Set(), root);
+  expect(report.collectionFailed).toBe(false);
+  expect(report.turbo[0]?.tasks[0]?.environmentVariableNames).toEqual([
+    "NODE_ENV",
+  ]);
+  expect(JSON.stringify(report)).not.toContain("sentinel");
+});
+
 test("accepts large repository summaries while stripping their input payload", async () => {
   const root = await repository();
   await Bun.write(

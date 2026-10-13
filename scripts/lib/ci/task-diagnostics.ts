@@ -34,7 +34,7 @@ const RawSummary = z
           resolvedTaskDefinition: z
             .object({
               env: z.array(z.unknown()).optional(),
-              passThroughEnv: z.array(z.unknown()).optional(),
+              passThroughEnv: z.array(z.unknown()).nullish(),
             })
             .optional(),
         })
@@ -146,7 +146,7 @@ function sanitizeHashes(inputs: Record<string, unknown>) {
 }
 function variableNames(definition: {
   env?: unknown[] | undefined;
-  passThroughEnv?: unknown[] | undefined;
+  passThroughEnv?: unknown[] | null | undefined;
 }) {
   return [
     ...new Set(
