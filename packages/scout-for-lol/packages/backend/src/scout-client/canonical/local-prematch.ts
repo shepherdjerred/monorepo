@@ -91,13 +91,15 @@ const IdentityPlayerSchema = PlayerSchema.pick({
   spell1Id: z.number().int().nonnegative().optional(),
   spell2Id: z.number().int().nonnegative().optional(),
 });
+const GameIdentitySchema = z.object({
+  gameId: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
+  platformId: z.string().optional(),
+});
 const IdentitySessionSchema = z.object({
   resource: z.literal("gameflow_session"),
   data: z.object({
     phase: z.enum(["GameStart", "InProgress"]),
-    gameData: z.object({
-      gameId: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
-      platformId: z.string().optional(),
+    gameData: GameIdentitySchema.extend({
       queue: z.object({ id: z.number().int().nonnegative() }),
       teamOne: z.array(IdentityPlayerSchema),
       teamTwo: z.array(IdentityPlayerSchema),
@@ -162,9 +164,7 @@ const SessionSchema = z.object({
   resource: z.literal("gameflow_session"),
   data: z.object({
     phase: z.enum(["GameStart", "InProgress"]),
-    gameData: z.object({
-      gameId: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
-      platformId: z.string().optional(),
+    gameData: GameIdentitySchema.extend({
       gameStartTime: z.number().nonnegative().optional(),
       gameLength: z.number().optional(),
       gameMode: z.string().optional(),
