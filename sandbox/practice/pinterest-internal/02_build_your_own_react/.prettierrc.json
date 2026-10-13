@@ -1,0 +1,19 @@
+{
+  "plugins": ["prettier-plugin-astro"],
+  "semi": false,
+  "trailingComma": "none",
+  "arrowParens": "avoid",
+  "printWidth": 60,
+  "embeddedLanguageFormatting": "off",
+  "overrides": [
+    {
+      "files": ["site/**"],
+      "options": {
+        "semi": true,
+        "trailingComma": "all",
+        "arrowParens": "always",
+        "printWidth": 80
+      }
+    }
+  ]
+}

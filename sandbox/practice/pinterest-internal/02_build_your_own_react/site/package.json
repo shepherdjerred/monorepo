@@ -1,0 +1,42 @@
+{
+  "name": "didact-reader",
+  "private": true,
+  "type": "module",
+  "imports": {
+    "#lib/*": "./src/lib/*",
+    "#scripts/*": "./src/scripts/*"
+  },
+  "scripts": {
+    "dev": "bun run generate && astro dev",
+    "generate": "bun scripts/generate.ts",
+    "build": "astro build && bun scripts/check-size.ts",
+    "preview": "astro preview",
+    "typecheck": "astro check && PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit && PATH=node_modules/@typescript/native/bin:$PATH tsc -p ../tsconfig.json --noEmit",
+    "lint": "bunx --no-install eslint . --max-warnings=0",
+    "test": "bun --no-install --bun vitest --config ../../../../../vitest.config.ts run test",
+    "test:e2e": "bun --no-install --bun playwright test"
+  },
+  "dependencies": {
+    "astro": "^7.3.3",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@playwright/test": "1.64.0",
+    "@shepherdjerred/eslint-config": "file:../../../../../packages/eslint-config",
+    "@types/bun": "1.4.2",
+    "@types/markdown-it": "^14.1.2",
+    "@types/mdast": "^4.0.4",
+    "@typescript/native": "npm:typescript@7.0.2",
+    "eslint": "^10.7.0",
+    "jiti": "^2.7.0",
+    "markdown-it": "^15.0.0",
+    "remark-mdx": "^3.1.1",
+    "remark-parse": "^11.0.0",
+    "shiki": "^4.0.2",
+    "twoslash": "^0.3.6",
+    "typescript": "^6.0.3",
+    "unified": "^11.0.5",
+    "vitest": "5.0.3"
+  }
+}

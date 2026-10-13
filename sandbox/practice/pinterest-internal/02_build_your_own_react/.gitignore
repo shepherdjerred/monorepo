@@ -1,0 +1,7 @@
+site/.astro/
+site/generated/
+site/dist/
+site/public/data/
+site/public/fonts/
+site/test-results/
+site/playwright-report/
