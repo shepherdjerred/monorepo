@@ -94,6 +94,11 @@ operation's `OPERATION_COMPLETED` record.
   the same device supplied accepted postgame evidence for its game ID.
 - **Voice provisioning is pending:** leave the Activity open or reconnect.
   Scout resumes from persisted channels and participant checkpoints.
+- **Recruitment was refused by Discord:** repair the bot's channel permissions,
+  then make a normal night update. A confirmed permission or missing-target
+  failure permits a new recruitment generation, with the original failure
+  retained in history. Pending, delivered, and uncertain attempts are not
+  automatically replaced.
 - **Voice setup needs a check:** a host, cohost, or administrator must inspect
   the server's current channels. Enter the exact channel Scout created, or
   leave its ID empty after verifying no matching channel exists. Describe the
