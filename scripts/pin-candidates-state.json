@@ -44,14 +44,14 @@
     "shepherdjerred/scout-for-lol/beta/workflows/candidate": {
       "version": "2.0.0-1009046",
       "digest": "sha256:203652ad0822a3cf46af6d5c586b6b7ff38d1a1e00887ebf1ef66e75bd4eb2f4",
-      "gitSha": "2a5f0ef5095608444d5e394c00793a083323e5a9",
-      "buildNumber": 1009046
+      "buildNumber": 1009046,
+      "gitSha": "2a5f0ef5095608444d5e394c00793a083323e5a9"
     },
     "shepherdjerred/scout-for-lol/beta/workflows/stable": {
       "version": "2.0.0-1008523",
       "digest": "sha256:d4ab832cde525daa54208c58eb080c86e3a4bee7ff904dd6186a51937ff50985",
-      "gitSha": "1d266e3903e228d13d40fa4f28b116981829bb37",
-      "buildNumber": 1008523
+      "buildNumber": 1008523,
+      "gitSha": "1d266e3903e228d13d40fa4f28b116981829bb37"
     },
     "shepherdjerred/starlight-karma-bot/beta": {
       "version": "2.0.0-1009046",
@@ -64,9 +64,9 @@
       "buildNumber": 1009046
     },
     "shepherdjerred/storm-forum": {
-      "buildNumber": 1009385,
       "version": "2.0.0-1009385",
-      "digest": "sha256:47c35c939a3ea1b7abf700dd550289383c8d67479d0ffacbe3a70a6bf9264d70"
+      "digest": "sha256:47c35c939a3ea1b7abf700dd550289383c8d67479d0ffacbe3a70a6bf9264d70",
+      "buildNumber": 1009385
     },
     "shepherdjerred/streambot": {
       "version": "2.0.0-1009046",
@@ -86,14 +86,14 @@
     "shepherdjerred/temporal-worker/workflows/candidate": {
       "version": "2.0.0-1007695",
       "digest": "sha256:b6337d09a0f45df85aaad6e7fd712a55886a51e461715f0c2bc868b0e7bdf2f0",
-      "gitSha": "380474c6584ebc943d8d301cf4245c7e3849023f",
-      "buildNumber": 1007695
+      "buildNumber": 1007695,
+      "gitSha": "380474c6584ebc943d8d301cf4245c7e3849023f"
     },
     "shepherdjerred/temporal-worker/workflows/stable": {
-      "version": "2.0.0-1005566",
-      "digest": "sha256:49e6b12c31de035699be83c0b1a1dd0c57960284e267f8bae3bea23d9903c912",
-      "gitSha": "8b652f160ae791e03b3922aab9e715bb82e9a251",
-      "buildNumber": 1005566
+      "version": "2.0.0-1007695",
+      "digest": "sha256:b6337d09a0f45df85aaad6e7fd712a55886a51e461715f0c2bc868b0e7bdf2f0",
+      "buildNumber": 1007695,
+      "gitSha": "380474c6584ebc943d8d301cf4245c7e3849023f"
     },
     "shepherdjerred/the-storm-server": {
       "version": "2.0.0-1009086",
