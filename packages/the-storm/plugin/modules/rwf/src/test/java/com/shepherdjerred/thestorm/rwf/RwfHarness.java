@@ -260,13 +260,14 @@ public final class RwfHarness implements AutoCloseable {
     }
     try {
       // Pasting the lobby and first map takes longer on a busy machine than a gameplay step.
-      until(() -> view().current().isPresent(), PREPARATION);
+      until(() -> view().current().isPresent(), PREPARATION, "lobby admission");
       // With one map to offer, the lobby chooses it at once and its terrain is ready before anyone
       // joins, as it was before the vote: the snapshot has the map's teams once it is loaded.
       if (((RwfWorldMock) rwf).chunkLoads.isDone()) {
         until(
             () -> view().current().filter(snapshot -> !snapshot.teams().isEmpty()).isPresent(),
-            PREPARATION);
+            PREPARATION,
+            "initial map teams");
       }
     } catch (AssertionError e) {
       // A harness that never opened must not leave MockBukkit mocking for the next test.
@@ -400,10 +401,14 @@ public final class RwfHarness implements AutoCloseable {
 
   /** Runs server ticks (clock still) until {@code condition} holds, failing after {@code limit}. */
   public void until(BooleanSupplier condition, Duration limit) {
+    until(condition, limit, "condition");
+  }
+
+  private void until(BooleanSupplier condition, Duration limit, String description) {
     var deadline = System.nanoTime() + limit.toNanos();
     while (!condition.getAsBoolean()) {
       if (System.nanoTime() > deadline) {
-        throw new AssertionError("condition not met within " + limit);
+        throw new AssertionError(description + " not met within " + limit);
       }
       server.getScheduler().performOneTick();
       // Database and chunk completions need CPU between main-thread ticks. A spin hint does not

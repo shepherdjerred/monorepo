@@ -186,8 +186,9 @@ async function controlRwfFeatures(
   if (!seen.success) {
     return new Response("invalid request\n", { status: 400 });
   }
+  const previous = [...state.rwfFeatures];
   state.rwfFeatures = new Set(seen.data.enabled);
-  return Response.json({ enabled: [...state.rwfFeatures] });
+  return Response.json({ enabled: [...state.rwfFeatures], previous });
 }
 
 function classify(body: unknown): Response {
@@ -245,12 +246,13 @@ export async function setRwfDenied(
 
 /**
  * Switches on exactly `enabled` of the Red Warfare match feature flags through
- * the Flipt double's test-only control hook; the rest answer off.
+ * the Flipt double's test-only control hook; the rest answer off. Returns the
+ * previous flags so a caller can restore the fixture after its case.
  */
 export async function setRwfFeatures(
   port: number,
   enabled: RwfFeature[],
-): Promise<void> {
+): Promise<RwfFeature[]> {
   const host = Bun.env["STORM_E2E_BRAIN_HOST"] ?? "127.0.0.1";
   const response = await fetch(
     `http://${host}:${port.toString()}/v1/__control/rwf-features`,
@@ -265,6 +267,12 @@ export async function setRwfFeatures(
       `rwf feature control failed: ${response.status.toString()}`,
     );
   }
+  return z
+    .strictObject({
+      enabled: z.array(z.enum(rwfFeatureFlags)),
+      previous: z.array(z.enum(rwfFeatureFlags)),
+    })
+    .parse(await response.json()).previous;
 }
 
 /** Fails or heals the fake brain through its test-only control hook. */

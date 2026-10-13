@@ -2,6 +2,7 @@
 // Error Prone + NullAway (JSpecify mode) + Picnic checks as errors,
 // google-java-format, a curated PMD ruleset, JaCoCo, and no skipped tests.
 import net.ltgt.gradle.errorprone.errorprone
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 
 plugins {
   `java-library`
@@ -102,6 +103,7 @@ tasks.test {
   jvmArgs("--enable-native-access=ALL-UNNAMED")
   maxHeapSize = "512m"
   maxParallelForks = 1
+  testLogging { exceptionFormat = TestExceptionFormat.FULL }
   finalizedBy(noSkippedTests)
 }
 

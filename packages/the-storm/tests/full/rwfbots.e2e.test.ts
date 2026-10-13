@@ -5,6 +5,7 @@ import { describe, expect } from "vitest";
 import { z } from "zod";
 import { test } from "#e2e/fixtures.ts";
 import { connectBot, disconnectBot } from "#e2e/harness/bot.ts";
+import { setRwfFeatures } from "#e2e/harness/fake-brain.ts";
 import { ListOutputSchema } from "#e2e/harness/rcon-output.ts";
 import {
   box,
@@ -985,23 +986,69 @@ describe("rwfbots bodies and reflexes", () => {
   test(
     "human sword hits damage fresh bot bodies after lobby and repeated world transfers",
     { timeout: 120_000 },
-    async ({ bot, rcon, server }) => {
-      const match = await newMatch(bot, rcon, server);
-      const names = await fillsWithBots(match);
-      for (const name of names) {
-        await rcon.command(`rwf admin forcekit ${name} trooper`);
-      }
-      const { team } = await goesLiveMarked(match, names);
-      const victim = names.find((name) => match.view.botTeam(name) !== team);
-      if (victim === undefined) {
-        throw new Error("the live match has no enemy bot");
-      }
-      await rcon.command(`rwf admin forcekit ${bot.username} trooper`);
-      await rcon.command(`rwf admin forcekit ${victim} trooper`);
-      await rcon.command(
-        `execute in ${dimension} run gamerule minecraft:natural_health_regeneration false`,
-      );
+    async ({ bot, rcon, server, brain }) => {
+      const previousFeatures = await setRwfFeatures(brain.port, [
+        "the-storm-rwf-match-flow-enabled",
+      ]);
+      let matchId: string | undefined;
       try {
+        await rcon.command("rwf admin forcestop");
+        await waitForLobby(rcon);
+        expect(await rcon.command("rwf admin status")).toContain(
+          "matchFlow=true",
+        );
+        const match = await newMatch(bot, rcon, server);
+        const names = await fillsWithBots(match);
+        // Lobby kit plans may change an earlier choice. In Freeze regular picks stop,
+        // while the operator can still equip both sides before genuine combat begins.
+        await eventually(
+          "the kit assignment Freeze",
+          async () => {
+            const current = await status(rcon);
+            return current.phase === "Freeze";
+          },
+          30_000,
+        );
+        for (const name of [bot.username, ...names]) {
+          expect(
+            plain(await rcon.command(`rwf admin forcekit ${name} trooper`)),
+          ).toContain(`${name} now uses trooper.`);
+        }
+        const live = await goesLiveMarked(match, names);
+        matchId = live.matchId;
+        const victim = names.find(
+          (name) => match.view.botTeam(name) !== live.team,
+        );
+        if (victim === undefined) {
+          throw new Error("the live match has no enemy bot");
+        }
+        // A rejected Live command must never masquerade as successful setup again.
+        expect(
+          plain(await rcon.command(`rwf admin forcekit ${victim} rewind`)),
+        ).toContain("You can only do that before the match starts.");
+        const liveRoster = plain(await rcon.command("rwf who"));
+        expect(liveRoster).toContain(`${bot.username} [trooper]`);
+        for (const name of names) {
+          expect(liveRoster).toContain(`${name} ✦ [trooper]`);
+        }
+        for (const [slot, material] of [
+          ["head", "iron_helmet"],
+          ["chest", "iron_chestplate"],
+          ["legs", "iron_leggings"],
+          ["feet", "iron_boots"],
+        ] as const) {
+          expect(
+            await rcon.command(
+              `data get entity ${body(victim)} equipment.${slot}.id`,
+            ),
+          ).toContain(`"minecraft:${material}"`);
+        }
+        expect(
+          await rcon.command(`data get entity ${body(victim)} equipment`),
+        ).not.toContain("minecraft:protection");
+        await rcon.command(
+          `execute in ${dimension} run gamerule minecraft:natural_health_regeneration false`,
+        );
         // Keep unrelated fighters at the far base while genuine client attack packets exercise
         // the rules. The selected bot keeps its normal AI, health and immunity.
         for (const name of names.filter((candidate) => candidate !== victim)) {
@@ -1014,6 +1061,11 @@ describe("rwfbots bodies and reflexes", () => {
           "the human's Trooper sword",
           async () => bot.heldItem?.name === "iron_sword",
         );
+        expect(
+          await rcon.command(
+            `data get entity ${bot.username} SelectedItem.components."minecraft:enchantments"."minecraft:sharpness"`,
+          ),
+        ).toMatch(/: 1$/u);
         const hp = async () =>
           HealthSchema.parse(
             await rcon.command(`data get entity ${body(victim)} Health`),
@@ -1075,11 +1127,25 @@ describe("rwfbots bodies and reflexes", () => {
         expect(await hp()).toBeCloseTo(first - 2.9, 1);
         expect(await serverLogs(server)).not.toContain("IllegalAccessError");
       } finally {
-        await rcon.command(
-          `execute in ${dimension} run gamerule minecraft:natural_health_regeneration true`,
-        );
-        await rcon.command("rwf admin forcestop");
-        await waitForLobby(rcon);
+        try {
+          await rcon.command(
+            `execute in ${dimension} run gamerule minecraft:natural_health_regeneration true`,
+          );
+          await rcon.command("rwf admin forcestop");
+          await waitForLobby(rcon);
+          if (matchId !== undefined) {
+            const settled = await settledMatch(server, matchId);
+            await gzipLines(
+              server,
+              settled.match.recording_file ?? "",
+              settled.outDir,
+            );
+          }
+        } finally {
+          await setRwfFeatures(brain.port, previousFeatures);
+          await rcon.command("rwf admin forcestop");
+          await waitForLobby(rcon);
+        }
       }
     },
   );
