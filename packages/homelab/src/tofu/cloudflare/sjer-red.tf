@@ -170,8 +170,8 @@ resource "cloudflare_dns_record" "sjer_red_cname_mariokart" {
   ttl     = 1
   name    = "mariokart"
   type    = "CNAME"
-  content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
-  proxied = true
+  content = "ipv4.ddns.sjer.red"
+  proxied = false
 }
 
 # Receives GitHub `pull_request` webhooks for the Temporal worker's
