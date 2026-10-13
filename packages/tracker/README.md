@@ -72,7 +72,12 @@ identifier fast path. List filters are combined, with labels using AND.
 `POST /api/attachments` accepts a multipart `file` and a base64 JSON actor in
 `X-Tracker-Actor`. Uploads are staged until a subsequent issue or comment
 mutation commits their IDs. Only their uploading actor can commit them.
-`maintenance.cleanupStaged` removes uncommitted files older than 24 hours;
+`maintenance.cleanupStaged` removes up to 100 uncommitted files older than 24 hours
+per invocation. The central Temporal `tracker-staged-attachment-cleanup` schedule
+invokes it hourly on the infra Activity queue, with SKIP overlap and bounded retries.
+It registers paused until tracker is active and compatible Workflow workers are
+fully promoted. Enable normal writes and unpause that schedule after acceptance;
+paused writes produce a successful no-op. The cleanup retains committed files;
 committed files survive deletion of
 their issue or comment so historical links remain useful. Downloads stream
 through `/attachments/:id/:filename`; active formats download as files and all

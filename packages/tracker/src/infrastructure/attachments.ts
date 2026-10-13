@@ -128,6 +128,8 @@ export class Attachments {
   ): Promise<number> {
     const expired = await this.database.attachment.findMany({
       where: { status: "staged", createdAt: { lt: cutoff } },
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+      take: 100,
     });
     let removed = 0;
     for (const item of expired) {

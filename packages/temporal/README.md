@@ -127,11 +127,18 @@ patch. Histories created before that patch retain their `infra` Activity queue;
 the infra registry keeps the old Ops Activities available to drain them. The
 same worker credentials, pod limits, and metrics endpoint serve both queues.
 
-Woodpecker log retention uses the serial infra queue and a daily 04:45 Pacific
-Schedule with SKIP overlap, initially paused. The typed minimum retention is
-30 days and destructive execution defaults off. Exact candidates, protections,
-continuation cursors and deletion receipts remain in Workflow results; logs
-alone are deleted. See the [operator procedure](../docs/wiki/src/content/docs/how-to/retain-woodpecker-logs.md)
+The tracker attachment cleanup uses the serial infra queue hourly, deleting at
+most 100 staged files older than 24 hours.
+Its `tracker-staged-attachment-cleanup` schedule registers paused until tracker
+is active and compatible Workflow workers receive all traffic. A tracker write
+freeze returns a paused result; committed attachments are never candidates.
+Unpause only after the service and worker acceptance checks.
+
+Woodpecker log retention uses the serial infra queue on a daily 04:45 Pacific
+Schedule with SKIP overlap, initially paused. The typed minimum retention is 30
+days and destructive execution defaults off. Exact candidates, protections,
+continuation cursors and deletion receipts remain in Workflow results; logs alone
+are deleted. See the [operator procedure](../docs/wiki/src/content/docs/how-to/retain-woodpecker-logs.md)
 for candidate rollout, dry-run review and activation.
 
 The agent worker keeps the Temporal poller at UID 0 and launches provider

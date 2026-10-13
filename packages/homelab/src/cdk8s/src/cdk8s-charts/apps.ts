@@ -77,6 +77,9 @@ import { createMinecraftMiningResetGuard } from "@shepherdjerred/homelab/cdk8s/s
 import { createMinecraftRestorationGuard } from "@shepherdjerred/homelab/cdk8s/src/resources/minecraft-restoration-guard.ts";
 import { createArgoCdApplicationAdmissionPolicies } from "@shepherdjerred/homelab/cdk8s/src/resources/argocd-application-admission.ts";
 import { createWoodpeckerCiPodGuard } from "@shepherdjerred/homelab/cdk8s/src/resources/woodpecker/ci-pod-guard.ts";
+import { createTrackerApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/tracker.ts";
+import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { trackerImageReference } from "@shepherdjerred/homelab/cdk8s/src/resources/tracker/image.ts";
 
 export async function createAppsChart(app: App) {
   const chart = new Chart(app, "apps", {
@@ -85,6 +88,8 @@ export async function createAppsChart(app: App) {
   });
 
   createStorageClasses(chart);
+  if (trackerImageReference(versions["shepherdjerred/tracker"]) !== undefined)
+    createTrackerApp(chart);
   createPriorityClasses(chart);
   createArgoCdApplicationAdmissionPolicies(chart);
   createPvcBackupAdmissionPolicies(chart);

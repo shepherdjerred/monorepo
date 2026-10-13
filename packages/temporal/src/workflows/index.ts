@@ -82,8 +82,7 @@ import type {
   ScoutSeasonRefreshResult,
 } from "#activities/scout/scout-season-refresh.ts";
 import { runHomelabAuditWorkflow as _runHomelabAuditWorkflow } from "./homelab/homelab-audit.ts";
-import * as ciIoTelemetry from "./ci/ci-io-telemetry.ts";
-import * as ciWorkspaceReaper from "./ci/ci-workspace-reaper.ts";
+import * as maintenanceWorkflows from "./maintenance/index.ts";
 import { runTasknotesCanary as _runTasknotesCanary } from "./tasknotes-canary.ts";
 import { monitorReportFreshness as _monitorReportFreshness } from "./scout/report-freshness.ts";
 import { deliverReportWorkflow as _deliverReportWorkflow } from "./scout/report-delivery.ts";
@@ -210,9 +209,10 @@ export async function runKometaWorkflow(): Promise<void> {
 }
 export const runMainVulnScanWorkflow = () =>
   runMainVulnScanWorkflowImplementation();
-export const runCiIoTelemetry = ciIoTelemetry.runCiIoTelemetry;
+export const runCiIoTelemetry = maintenanceWorkflows.runCiIoTelemetry;
 export const runCiWorkspaceReaperWorkflow =
-  ciWorkspaceReaper.runCiWorkspaceReaperWorkflow;
+  maintenanceWorkflows.runCiWorkspaceReaperWorkflow;
+export const runTrackerAttachmentCleanup = maintenanceWorkflows.trackerCleanup;
 export const runLinkRotScanWorkflow = linkRotScan.runLinkRotScanWorkflow;
 export async function runScheduleRehearsalWorkflow(): Promise<ScheduleRehearsalResult> {
   return runScheduleRehearsalWorkflowImplementation();

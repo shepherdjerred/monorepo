@@ -124,6 +124,7 @@ describe("Temporal ops snapshot collector", () => {
     expect(byPort.get(9093)).toBe("prometheus");
     expect(byPort.get(3100)).toBe("loki");
     expect(byPort.get(3200)).toBe("tempo");
+    expect(byPort.get(7351)).toBe("tracker");
     expect(byPort.get("grafana")).toBe("prometheus");
     // Kubernetes API and the dashboard ingest stay reachable.
     expect(byPort.has(6443)).toBe(true);

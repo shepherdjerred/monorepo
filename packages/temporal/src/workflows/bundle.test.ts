@@ -21,6 +21,7 @@ describe("workflow bundle", () => {
       .parse(vm.runInContext("__TEMPORAL__.importWorkflows()", context));
     for (const name of [
       "maintainStormForumWorkflow",
+      "runTrackerAttachmentCleanup",
       "backupStormForumWorkflow",
       "runSeaweedFsBackupWorkflow",
       "runSeaweedFsBackupRetentionAndGcWorkflow",
