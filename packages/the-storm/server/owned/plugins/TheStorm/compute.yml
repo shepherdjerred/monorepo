@@ -1,0 +1,3 @@
+# Shared CPU pool ceiling, read once at startup. Keep the shipped ceiling at four
+# until larger worker budgets pass capacity and gameplay acceptance.
+maxThreads: 4

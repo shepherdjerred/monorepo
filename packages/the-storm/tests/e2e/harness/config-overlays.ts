@@ -1,3 +1,28 @@
+import path from "node:path";
+
+export type ModuleConfigOverrides = {
+  /** Disposable rwfbots.yml contents; production-owned configuration stays untouched. */
+  rwfbotsConfig?: string;
+  /** Disposable compute.yml contents for explicit startup worker-budget calibration. */
+  computeConfig?: string;
+  survivalConfig?: string;
+};
+
+/** Write explicit module overrides only after copying the owned configuration. */
+export async function stageModuleConfigs(
+  stormDir: string,
+  options: ModuleConfigOverrides,
+): Promise<void> {
+  for (const [file, content] of [
+    ["compute.yml", options.computeConfig],
+    ["rwfbots.yml", options.rwfbotsConfig],
+    [path.join("arena", "survival.yml"), options.survivalConfig],
+  ] as const) {
+    if (content !== undefined)
+      await Bun.write(path.join(stormDir, file), content);
+  }
+}
+
 /** Staged test configuration overrides; repository-owned content stays untouched. */
 export async function overlayBrainUrl(
   stagedAgentYml: string,

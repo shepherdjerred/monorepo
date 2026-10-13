@@ -2,7 +2,9 @@ package com.shepherdjerred.thestorm;
 
 import com.shepherdjerred.thestorm.core.analytics.AnalyticsRuntime;
 import com.shepherdjerred.thestorm.core.compute.ComputePool;
+import com.shepherdjerred.thestorm.core.compute.ComputeSettings;
 import com.shepherdjerred.thestorm.core.compute.PlatformComputePool;
+import com.shepherdjerred.thestorm.core.config.ConfigFiles;
 import com.shepherdjerred.thestorm.core.config.Problem;
 import com.shepherdjerred.thestorm.core.config.StrictYaml;
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
@@ -64,6 +66,8 @@ public final class TheStormPlugin extends JavaPlugin {
 
   private void enableModules() {
     var config = readConfig();
+    var computeSettings =
+        ConfigFiles.load(getDataPath().resolve("compute.yml"), ComputeSettings.class);
     var selected =
         switch (ModuleRegistry.select(Modules.all(), config.toggles())) {
           case Result.Ok<List<StormModule>, List<String>>(var modules) -> modules;
@@ -77,7 +81,7 @@ public final class TheStormPlugin extends JavaPlugin {
     }
     var db = StormDatabase.open(getDataPath().resolve("the-storm.db"));
     database = db;
-    var pool = PlatformComputePool.open(getComponentLogger());
+    var pool = PlatformComputePool.open(getComponentLogger(), computeSettings);
     compute = pool;
     db.migrate("core", getClass().getClassLoader());
     var players = new SqlPlayerDirectory(db);

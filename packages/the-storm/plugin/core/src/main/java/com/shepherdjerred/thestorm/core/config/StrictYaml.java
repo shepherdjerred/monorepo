@@ -23,6 +23,7 @@ public final class StrictYaml {
 
   private static final YAMLMapper YAML =
       YAMLMapper.builder()
+          .disable(DeserializationFeature.ACCEPT_FLOAT_AS_INT)
           .enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION)
           .enable(
               DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
@@ -34,6 +35,7 @@ public final class StrictYaml {
 
   private static final JsonMapper JSON =
       JsonMapper.builder()
+          .disable(DeserializationFeature.ACCEPT_FLOAT_AS_INT)
           .enable(
               DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
               DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES,

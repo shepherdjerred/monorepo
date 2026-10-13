@@ -10,14 +10,11 @@ import org.slf4j.Logger;
 
 /**
  * The production pool: a fixed set of daemon platform threads named {@code storm-compute-N}, sized
- * {@code max(1, availableProcessors - 1)} and capped at {@link #MAX_THREADS} so the server's own
- * tick thread always keeps a core. Work that throws outside a future is logged through the plugin
+ * {@code max(1, availableProcessors - 1)} and capped by the startup settings so the server's own
+ * tick thread keeps CPU headroom. Work that throws outside a future is logged through the plugin
  * logger instead of dying silently on the worker.
  */
 public final class PlatformComputePool implements ComputePool {
-
-  /** The most threads the pool ever has, however many cores the host reports. */
-  public static final int MAX_THREADS = 4;
 
   /** How long {@link #close} waits for running work before cutting it. */
   static final Duration CLOSE_WAIT = Duration.ofSeconds(5);
@@ -44,13 +41,20 @@ public final class PlatformComputePool implements ComputePool {
   }
 
   /** Opens a pool sized for this host, logging worker failures through {@code logger}. */
-  public static PlatformComputePool open(Logger logger) {
-    return new PlatformComputePool(size(Runtime.getRuntime().availableProcessors()), logger);
+  public static PlatformComputePool open(Logger logger, ComputeSettings settings) {
+    var processors = Runtime.getRuntime().availableProcessors();
+    var size = size(processors, settings);
+    logger.info(
+        "Compute pool: {} workers, startup ceiling {}, JVM processors {}",
+        size,
+        settings.maxThreads(),
+        processors);
+    return new PlatformComputePool(size, logger);
   }
 
   /** How many threads a host with {@code processors} cores gets. */
-  static int size(int processors) {
-    return Math.min(MAX_THREADS, Math.max(1, processors - 1));
+  static int size(int processors, ComputeSettings settings) {
+    return Math.min(settings.maxThreads(), Math.max(1, processors - 1));
   }
 
   @Override

@@ -51,6 +51,20 @@ export function capacityNativeTotal(): number {
     .parse(Bun.env["STORM_CAPACITY_NATIVE_TOTAL"] ?? "256");
 }
 
+/** Explicit workers for CPU calibration; default behavior retains the shipped four-worker ceiling. */
+export function capacityWorkers(): number {
+  const cpus = capacityResources().cpus;
+  const workers = z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(10)
+    .parse(Bun.env["STORM_CAPACITY_WORKERS"] ?? Math.min(4, cpus - 1));
+  if (workers >= cpus)
+    throw new Error("Capacity workers must leave at least one CPU for Paper");
+  return workers;
+}
+
 /** The profile from STORM_E2E_PROFILE, or STORM_E2E_FULL=1 as the CI lanes set it. */
 export function e2eProfile(): E2eProfile {
   const named = Bun.env["STORM_E2E_PROFILE"];
@@ -107,6 +121,7 @@ export async function gameplayFixtures(
     | "rwfMap"
     | "rwfbotsConfig"
     | "survivalConfig"
+    | "computeConfig"
   >
 > {
   return {
@@ -135,6 +150,7 @@ async function profileFixtures(
     | "mechanicsConfig"
     | "rwf"
     | "survivalConfig"
+    | "computeConfig"
   >
 > {
   const content = path.join(packageRoot, "server/owned/plugins/TheStorm");
@@ -152,6 +168,7 @@ async function profileFixtures(
   switch (profile) {
     case "capacity": {
       return {
+        computeConfig: `maxThreads: ${capacityWorkers().toString()}\n`,
         stormConfig: withBots(owned),
         survivalConfig: survival.replace(/^enabled: false$/mu, "enabled: true"),
         fixturesJar,
