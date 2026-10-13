@@ -7,6 +7,7 @@ import TaskNotesKit
     let profileID: String
     let tasks: [FacetTask]
     private let engine: FacetEngine?
+    private let profileGeneration: UInt64
     private let rows: Set<FacetTaskRowID>
     private let selectionGeneration: UInt64
     private let queryGeneration: UInt64
@@ -21,6 +22,7 @@ import TaskNotesKit
         guard tasks.count == window.selectedTaskIDs.count else { return nil }
         profileID = snapshot.profileId
         engine = store.engine
+        profileGeneration = store.selectionGeneration
         rows = window.selectedTaskIDs
         selectionGeneration = window.selectionGeneration
         queryGeneration = window.generation
@@ -35,6 +37,28 @@ import TaskNotesKit
             Self.queryState(window) == queryState
         else { return }
         window.selectedTaskIDs = []
+    }
+
+    /// Call only after this selection's delete receipt has been confirmed applied.
+    /// A refresh may already have pruned the selection, but must not retire a newer editor.
+    func canRetireDeletedInspector(
+        submitted: FacetInspectorDraft?, current: FacetInspectorDraft?,
+        store: FacetStore, window: FacetWindowState
+    ) -> Bool {
+        guard let submitted, current === submitted,
+            store.engine === engine, store.selectedProfileID == profileID,
+            store.selectionGeneration == profileGeneration,
+            submitted.profileID == profileID,
+            tasks.contains(where: { $0.id == submitted.task.id && $0.path == submitted.task.path }),
+            !submitted.isDirty, !submitted.isSaving
+        else { return false }
+        let unchanged =
+            window.selectedTaskIDs == rows
+            && window.selectionGeneration == selectionGeneration
+        let cleared =
+            window.selectedTaskIDs.isEmpty && window.selectionGeneration > 0
+            && window.selectionGeneration - 1 == selectionGeneration
+        return unchanged || cleared
     }
 
     private static func queryState(_ window: FacetWindowState) -> FacetValue {
