@@ -25,6 +25,13 @@ function prodResourcesWithWorkflowCandidate() {
   createScoutChart(app, "prod", {
     stable: CAPABLE_STABLE_IMAGE,
     candidate: CAPABLE_CANDIDATE_IMAGE,
+    retained: [
+      {
+        track: "retained-1d266e3903e2",
+        image:
+          "2.0.0-1008523@sha256:d4ab832cde525daa54208c58eb080c86e3a4bee7ff904dd6186a51937ff50985",
+      },
+    ],
   });
   return resourcesFor(app);
 }
@@ -37,6 +44,10 @@ const WorkflowDeploymentSpecSchema = z.object({
         z.object({
           args: z.array(z.string()),
           command: z.array(z.string()),
+          image: z.string(),
+          readinessProbe: z.object({
+            exec: z.object({ command: z.array(z.string()) }),
+          }),
           env: z.array(
             z.object({
               name: z.string(),
@@ -191,7 +202,7 @@ describe("Scout beta workflow candidate", () => {
     );
     const spec = WorkflowDeploymentSpecSchema.parse(deployment?.spec);
     expect(deployment?.metadata["annotations"]).toEqual({
-      "argocd.argoproj.io/sync-wave": "-1",
+      "argocd.argoproj.io/sync-wave": "0",
     });
     expect(spec.template.spec.automountServiceAccountToken).toBe(false);
     expect(spec.template.spec.containers).toHaveLength(1);
@@ -265,7 +276,8 @@ describe("Scout beta workflow candidate", () => {
           resource.kind === "Deployment" &&
           resource.metadata.name.includes("scout-workflow-worker"),
       )
-      .map((resource) => resource.metadata.name);
+      .map((resource) => resource.metadata.name)
+      .filter((name) => !name.includes("-retained-"));
     expect(workflowDeployments).toEqual([
       "scout-beta-scout-workflow-worker-stable",
       "scout-beta-scout-workflow-worker-candidate",
@@ -326,4 +338,47 @@ test("renders capable production Workflow tracks", () => {
   expect(JSON.stringify(workerPolicy?.spec)).toContain(
     '"worker-family":"scout-prod-workflows"',
   );
+});
+
+test("preserves retained builds before replacing mutable Workflow tracks", () => {
+  const resources = prodResourcesWithWorkflowCandidate();
+  const retained = resources.find(
+    (resource) =>
+      resource.kind === "Deployment" &&
+      resource.metadata.name ===
+        "scout-prod-scout-workflow-worker-retained-1d266e3903e2",
+  );
+  expect(retained).toBeDefined();
+  expect(retained?.metadata["annotations"]).toEqual(
+    expect.objectContaining({ "argocd.argoproj.io/sync-wave": "-2" }),
+  );
+  const spec = WorkflowDeploymentSpecSchema.parse(retained?.spec);
+  expect(spec.template.spec.automountServiceAccountToken).toBe(false);
+  expect(spec.template.spec.containers[0]?.readinessProbe.exec.command).toEqual(
+    ["bun", "-e", expect.stringContaining("temporal_worker_num_pollers{")],
+  );
+  expect(spec.template.spec.containers[0]?.image).toBe(
+    "ghcr.io/shepherdjerred/scout-for-lol:2.0.0-1008523@sha256:d4ab832cde525daa54208c58eb080c86e3a4bee7ff904dd6186a51937ff50985",
+  );
+  expect(
+    spec.template.spec.containers[0]?.env.map((env) => env.name),
+  ).not.toContain("DISCORD_TOKEN");
+  for (const track of ["stable", "candidate"]) {
+    const mutable = resources.find(
+      (resource) =>
+        resource.kind === "Deployment" &&
+        resource.metadata.name === `scout-prod-scout-workflow-worker-${track}`,
+    );
+    expect(mutable?.metadata["annotations"]).toEqual(
+      expect.objectContaining({
+        "argocd.argoproj.io/sync-wave": track === "stable" ? "-1" : "0",
+      }),
+    );
+    expect(
+      WorkflowDeploymentSpecSchema.parse(mutable?.spec).template.spec
+        .containers[0]?.image,
+    ).toBe(
+      `ghcr.io/shepherdjerred/scout-for-lol:${track === "stable" ? CAPABLE_STABLE_IMAGE : CAPABLE_CANDIDATE_IMAGE}`,
+    );
+  }
 });

@@ -2,7 +2,10 @@ import type { PrometheusRuleSpecGroups } from "@shepherdjerred/homelab/cdk8s/gen
 import { PrometheusRuleSpecGroupsRulesExpr } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
 import { escapePrometheusTemplate } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/shared.ts";
 import { getTemporalPlatformHealthRuleGroup } from "./temporal-platform-health.ts";
-import { buildTemporalDomainWorkerHealthRules } from "./temporal-worker-health.ts";
+import {
+  buildScoutRetainedWorkflowWorkerHealthRules,
+  buildTemporalDomainWorkerHealthRules,
+} from "./temporal-worker-health.ts";
 
 type PrometheusRule = NonNullable<PrometheusRuleSpecGroups["rules"]>[number];
 
@@ -467,6 +470,7 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
           },
         },
         ...buildTemporalDomainWorkerHealthRules(),
+        ...buildScoutRetainedWorkflowWorkerHealthRules(),
         {
           alert: "TemporalReportHeartbeatStale",
           annotations: {

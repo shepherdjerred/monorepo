@@ -8,7 +8,10 @@ import {
   IntOrString,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { FLIPT_PORT } from "@shepherdjerred/homelab/cdk8s/src/resources/flipt/index.ts";
-import { createScoutWorkflowWorker } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/workflow-worker.ts";
+import {
+  createScoutWorkflowWorker,
+  scoutRetainedWorkflowWorkerPins,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/scout/workflow-worker.ts";
 import {
   dnsEgressRule,
   externalHttpsEgressRule,
@@ -146,6 +149,7 @@ function prometheusTemporalMetricsIngressRule() {
 type WorkflowWorkerImageOverrides = {
   stable?: string;
   candidate?: string;
+  retained?: ReturnType<typeof scoutRetainedWorkflowWorkerPins>;
 };
 
 export function createScoutChart(
@@ -166,6 +170,18 @@ export function createScoutChart(
 
   createScoutPostgreSQLDatabase(chart, stage);
   createScoutDeployment(chart, stage);
+  // A current or pinned build may live only on the candidate track after an
+  // interrupted promotion. Preserve it independently before changing tracks.
+  // Each retained pin has its own Deployment, so later releases cannot replace
+  // it while its histories drain.
+  const retainedWorkers =
+    workflowWorkerImageOverrides?.retained ??
+    scoutRetainedWorkflowWorkerPins(stage);
+  for (const { track, image } of retainedWorkers) {
+    if (createScoutWorkflowWorker(chart, stage, track, image) === undefined) {
+      throw new Error(`Retained Scout Workflow image is not capable: ${track}`);
+    }
+  }
   const stableImage =
     workflowWorkerImageOverrides?.stable ??
     versions[`shepherdjerred/scout-for-lol/${stage}/workflows/stable`];
@@ -187,7 +203,9 @@ export function createScoutChart(
       ? undefined
       : createScoutWorkflowWorker(chart, stage, "candidate", candidateImage);
   const workflowWorkerCreated =
-    stableWorkflowWorker !== undefined || candidateWorkflowWorker !== undefined;
+    retainedWorkers.length > 0 ||
+    stableWorkflowWorker !== undefined ||
+    candidateWorkflowWorker !== undefined;
 
   // NetworkPolicy: Allow ingress from Prometheus (scrapes scout-backend
   // metrics on :3000), in-namespace pods, and the shared s3-static-sites

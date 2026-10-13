@@ -71,6 +71,8 @@ export const VersionMapSchema = z
     "shepherdjerred/scout-for-lol/beta/workflows/candidate": z.string(),
     "shepherdjerred/scout-for-lol/beta/workflows/stable": z.string(),
     "shepherdjerred/scout-for-lol/prod/workflows/candidate": z.string(),
+    "shepherdjerred/scout-for-lol/prod/workflows/retained-1d266e3903e2":
+      z.string(),
     "shepherdjerred/scout-for-lol/prod/workflows/stable": z.string(),
     "shepherdjerred/starlight-karma-bot/beta": z.string(),
     "shepherdjerred/starlight-karma-bot/prod": z.string(),

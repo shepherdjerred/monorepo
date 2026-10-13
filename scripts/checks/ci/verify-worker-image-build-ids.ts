@@ -10,7 +10,7 @@
  * reporting healthy. Build numbers do not order with commits — 13000 is
  * `3f9be51c` while 13153 is `c42ee297` — so the mistake was invisible.
  *
- * Scope: pins whose name ends in `/workflows/stable` or `/workflows/candidate`.
+ * Scope: stable, candidate, and retained Workflow image pins.
  * Those are the images that join a Worker Deployment, where a Build ID is
  * routing-significant. Activity-only worker images do not join one and are
  * deliberately excluded.
@@ -32,7 +32,8 @@ const PIN_STATE_PATH = "scripts/pin-candidates-state.json";
 const REGISTRY = "ghcr.io";
 
 /** Only these pins join a Worker Deployment, so only these have a routing-significant Build ID. */
-const WORKFLOW_PIN_PATTERN = /\/workflows\/(?:stable|candidate)$/;
+const WORKFLOW_PIN_PATTERN =
+  /\/workflows\/(?:stable|candidate|retained-[a-f0-9]{12})$/;
 
 const MANIFEST_ACCEPT = [
   "application/vnd.oci.image.index.v1+json",
@@ -184,6 +185,18 @@ export function offlineFindings(
   for (const pin of pins) {
     const recorded = pinState[pin.name];
     if (recorded !== undefined) findings.push(...pinFindings(pin, recorded));
+    const retainedPrefix = /\/workflows\/retained-([a-f0-9]{12})$/.exec(
+      pin.name,
+    )?.[1];
+    if (
+      retainedPrefix !== undefined &&
+      (recorded === undefined ||
+        pin.recordedGitSha?.slice(0, 12) !== retainedPrefix)
+    ) {
+      findings.push(
+        `${pin.name}: retained pin must record its matching gitSha`,
+      );
+    }
   }
   findings.push(...digestCoherenceFindings(pins));
   return findings;
