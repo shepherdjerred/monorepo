@@ -45,6 +45,12 @@ never consulted when everything not denied/asked is already permitted).
 
 ## Files
 
+The managed `SessionStart` hook runs `toolkit tracker identity-hook claude-code`
+to persist the native session ID and exact transcript path in `CLAUDE_ENV_FILE`.
+It appends its exports and leaves other hooks and Herdr scripts intact. Install
+a toolkit build containing `tracker` before installing this policy, then
+restart Claude Code to load it.
+
 - `managed-settings.json` — the authoritative policy (permissions + plugins).
 - `settings.user-reference.json` — seed/backup for `~/.claude/settings.json`.
 - `install-managed-settings.sh` — validates + installs the policy (needs sudo).

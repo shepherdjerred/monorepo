@@ -22,6 +22,16 @@ import type { Environment } from "@shepherdjerred/config/sources/env.ts";
 const BooleanSettingSchema = z.union([z.boolean(), z.stringbool()]);
 
 export const TOOLKIT_CONFIG_DEFINITION = {
+  trackerUrl: {
+    schema: z.url({ protocol: /^https?$/ }),
+    sources: ["env", "file", "default"],
+    default: "https://tracker.tailnet-1a49.ts.net",
+  },
+  trackerActorName: {
+    schema: z.string().trim().min(1).max(200),
+    sources: ["env", "file", "default"],
+    default: "jerred",
+  },
   /** Push local AI usage and Brim quota metrics to the homelab. */
   historyMetricsPushEnabled: {
     schema: BooleanSettingSchema,

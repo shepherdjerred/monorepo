@@ -1,5 +1,8 @@
 {
   "hooks": {
+    "preToolUse": [
+      { "command": "toolkit tracker identity-hook cursor", "matcher": "Shell" }
+    ],
     "sessionStart": [
       {
         "command": "bash '/Users/jerred/.cursor/herdr-agent-state.sh' session"

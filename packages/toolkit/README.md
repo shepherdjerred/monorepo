@@ -21,6 +21,45 @@ bun run build
 bun run install:local
 ```
 
+## Tracker
+
+`toolkit tracker` talks directly to the private tracker over tRPC and needs no
+credential. Reads never observe an actor. Mutations identify each native AI
+session; resumed sessions retain their key and votes remain idempotent.
+
+```bash
+toolkit tracker whoami --json
+toolkit tracker issue search "browser bootstrap" --team AI --all-states --include-archived --json
+toolkit tracker issue list --team AI --project developer-experience --label Improvement --limit all --json
+toolkit tracker issue create --team AI --title "Tool: failure" --description-file /tmp/issue.md
+toolkit tracker issue vote AI-26 --note "Blocked tracker UI verification"
+toolkit tracker issue update AI-26 --state started --expected-revision 3
+toolkit tracker issue comment add AI-26 --body-file /tmp/comment.md
+toolkit tracker issue attach AI-26 /tmp/screenshot.png
+```
+
+Every command accepts `--json` and `--url`. Settings resolve from environment,
+`~/.toolkit/config.toml`, then defaults: `TRACKER_URL` / `[tracker].url` and
+`TRACKER_ACTOR_NAME` / `[tracker.actor].name`. Noninteractive scripts set both
+`TRACKER_ACTOR_KEY` and `TRACKER_ACTOR_KIND` (`human`, `agent`, or `runner`).
+CLI `--actor-key`, `--actor-kind`, and `--actor-name` override those values.
+`TRACKER_ACTOR_MODEL`, `TRACKER_ACTOR_PLAN`, and `TRACKER_PARENT_ACTOR_KEY` add
+optional metadata. Arbitrary environment variables are never recorded.
+
+Codex uses `CODEX_THREAD_ID` directly. The dotfiles install a Claude SessionStart
+hook through `CLAUDE_ENV_FILE`, a Cursor Shell `preToolUse` hook through
+`updated_input`, and an OpenCode `shell.env` plugin. They forward the native
+session ID and select the child harness when another harness launched it.
+Claude model detection reads only the transcript explicitly provided by that
+session's hook. Missing session identity fails with an actionable error.
+Install the compiled toolkit before activating these hooks; existing sessions
+need a restart or their explicit native session environment.
+
+`tracker api <procedure> --input-json '<JSON>'` is the query escape hatch;
+`--mutation` adds the same validated actor. Additional catalog mutations use
+this API. `tracker --help` lists the complete command tree. Linear remains
+available for export until migration and consumer acceptance complete.
+
 ## Platform commands
 
 Platform commands delegate to native CLIs. Explicit flags and environment
