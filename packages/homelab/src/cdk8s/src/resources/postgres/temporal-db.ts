@@ -115,13 +115,15 @@ export function createTemporalPostgreSQLDatabase(chart: Chart) {
         temporal_visibility: "temporal",
       },
       resources: {
+        // Shared buffers are only part of PostgreSQL's memory. Connections,
+        // concurrent query workspaces, WAL, and Patroni need separate headroom.
         requests: {
           cpu: "50m",
-          memory: "128Mi",
+          memory: "1Gi",
         },
         limits: {
           cpu: "250m",
-          memory: "512Mi",
+          memory: "2Gi",
         },
       },
       patroni: {
