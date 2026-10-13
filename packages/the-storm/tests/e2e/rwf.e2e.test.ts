@@ -586,18 +586,18 @@ describe("Search and Destroy with humans only", () => {
         true,
       );
       // The lobby is dressed: the rules, the match board, three vote podiums,
-      // three leaderboards, the rotation and a name per kit alcove as text,
-      // and each kit's item.
+      // three leaderboards, the rotation and a name per each of the 33 kit
+      // alcoves as text (42 displays altogether), and each kit's item.
       expect(
         await rcon.command(
           `execute in ${lobbyDimension} if entity @e[type=minecraft:text_display,${box(lobby.region)}]`,
         ),
-      ).toContain("Count: 13");
+      ).toContain("Count: 42");
       expect(
         await rcon.command(
           `execute in ${lobbyDimension} if entity @e[type=minecraft:item_display,${box(lobby.region)}]`,
         ),
-      ).toContain("Count: 4");
+      ).toContain("Count: 33");
       await a.log.until(/The game will begin in /u);
       await waitUntil("the countdown boss bar", () =>
         shown.bars.some((title) => /Match starts in \d+ seconds?/u.test(title)),
@@ -750,14 +750,14 @@ describe("Search and Destroy with humans only", () => {
 });
 
 /**
- * The kit menu: the four kits a slot apart across the chest's middle row,
- * each shown by its icon item.
+ * The milestone kit menu: four contiguous kit cards at the start of a double
+ * chest, with credits and the free rotation on its control row.
  */
 const kitMenu = {
-  trooper: { slot: 10, icon: "iron_sword", name: "Trooper" },
-  longbow: { slot: 12, icon: "bow", name: "Longbow" },
-  shortbow: { slot: 14, icon: "arrow", name: "Shortbow" },
-  rewind: { slot: 16, icon: "clock", name: "Rewind" },
+  trooper: { slot: 0, icon: "iron_sword", name: "Trooper" },
+  longbow: { slot: 1, icon: "bow", name: "Longbow" },
+  shortbow: { slot: 2, icon: "bow", name: "Shortbow" },
+  rewind: { slot: 3, icon: "clock", name: "Rewind" },
 } as const;
 
 /** The lobby's hotbar items: the kit selector last, the leave item beside it. */
@@ -786,9 +786,15 @@ async function pickFromMenu(
   if (window === null) {
     throw new Error("the kit menu did not open");
   }
+  expect(window.inventoryStart).toBe(54);
+  expect(
+    window.slots.slice(0, 36).filter((item) => item !== null),
+  ).toHaveLength(4);
   expect(
     Object.values(kitMenu).map((entry) => window.slots[entry.slot]?.name),
   ).toEqual(Object.values(kitMenu).map((entry) => entry.icon));
+  expect(window.slots[48]?.name).toBe("emerald");
+  expect(window.slots[50]?.name).toBe("clock");
   expect(window.slots[slot]?.name).toBe(icon);
   await bot.clickWindow(slot, 0, 0);
   await log.until(new RegExp(`Now using kit ${name}`, "u"));
@@ -823,14 +829,19 @@ describe("Choosing a kit from the lobby", () => {
       await join(b);
       await a.log.until(/The game has begun!/u, 30_000);
       await teamOf(a.log);
-      // Longbow at the start: the fuse, a stone sword, the bow and an arrow,
-      // and no lobby items.
+      // Longbow at the start: fuse, stone sword and bow in the hotbar; its one
+      // arrow in the main inventory's first slot, as Red Warfare placed it.
       await waitUntil(
         "the Longbow loadout",
-        () => hotbar(bot, 0) === "blaze_powder" && hotbar(bot, 2) === "bow",
+        () =>
+          hotbar(bot, 0) === "blaze_powder" &&
+          hotbar(bot, 2) === "bow" &&
+          bot.inventory.slots[9]?.name === "arrow",
       );
       expect(hotbar(bot, 1)).toBe("stone_sword");
-      expect(hotbar(bot, 3)).toBe("arrow");
+      expect(hotbar(bot, 3)).toBeUndefined();
+      expect(bot.inventory.slots[9]?.name).toBe("arrow");
+      expect(count(bot, "arrow")).toBe(1);
       expect(count(bot, "nether_star")).toBe(0);
       expect(count(bot, "red_dye")).toBe(0);
       // The armour, as the server holds it.
