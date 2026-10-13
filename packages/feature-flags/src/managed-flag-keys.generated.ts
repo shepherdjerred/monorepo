@@ -89,6 +89,7 @@ export const SCOUT_BOOLEAN_FLAG_KEYS = [
   "scout-explore-model-picker-enabled",
   "scout-temporal-call-graph-tracing",
   "scout_client_ingestion",
+  "scout_client_result_recovery",
   "scout_operations_console_enabled",
   "voice_assistant_enabled",
 ] as const;

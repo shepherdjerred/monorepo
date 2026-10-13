@@ -12,6 +12,7 @@ import { createLogger } from "#src/logger.ts";
 import { downtimeDetectedTotal } from "#src/metrics/index.ts";
 import { ingestionReconciliationSkipsTotal } from "#src/metrics/recovery.ts";
 import * as Sentry from "@sentry/bun";
+import { reconcileAcceptedClientEvidence } from "#src/scout-client/reconciliation.ts";
 
 const logger = createLogger("ingestion-reconciliation");
 
@@ -119,6 +120,7 @@ export async function runIngestionReconciliation(): Promise<void> {
 
 async function reconcileIngestion(): Promise<void> {
   logger.info("Running ingestion reconciliation");
+  await reconcileAcceptedClientEvidence();
 
   const lastPollAt = await getLastSuccessfulPollAt();
   const startupAt = new Date();

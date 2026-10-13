@@ -168,6 +168,7 @@ export type FlagName =
   | "mvp_votes_enabled"
   | "initial_match_history_import_enabled"
   | "scout_client_ingestion"
+  | "scout_client_result_recovery"
   | "scout_operations_console_enabled"
   | `scout_support_${"conversations" | "report_action"}_enabled`
   | "scout-consumer-player-profiles-enabled"
@@ -415,6 +416,7 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
     default: false,
     overrides: [],
   },
+  scout_client_result_recovery: { default: false, overrides: [] },
   /**
    * The "Hey Scout" voice assistant (`/scout join` + `/scout leave`).
    *

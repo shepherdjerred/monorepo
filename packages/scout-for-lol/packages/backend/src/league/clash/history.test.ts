@@ -28,6 +28,14 @@ function sighting(
 }
 
 describe("groupClashHistory", () => {
+  test("a completed game with conflicting results is not a prematch lobby", () => {
+    const cups = groupClashHistory({
+      sightings: [sighting({ source: "match", win: null })],
+      memberships: [],
+      aliasByPuuid: new Map([[PUUID, "Jerred"]]),
+    });
+    expect(cups[0]?.players[0]?.sightings[0]?.outcome).toBe("unresolved");
+  });
   test("numbers lobbies in time order and labels scored leftovers", () => {
     const memberships: ClashHistoryMembershipRecord[] = [
       {

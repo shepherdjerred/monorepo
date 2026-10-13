@@ -85,7 +85,7 @@ export type ClashHistorySighting = {
   championName: string;
   queue: string;
   matchIndex: number;
-  outcome: "lobby" | "win" | "loss";
+  outcome: "lobby" | "win" | "loss" | "unresolved";
 };
 
 export type ClashHistoryPlayer = {
@@ -279,9 +279,10 @@ function membershipForSighting(
 function sightingOutcome(
   sighting: Pick<SightingRow, "source" | "win">,
 ): ClashHistorySighting["outcome"] {
-  if (sighting.source !== "match" || sighting.win === null) {
+  if (sighting.source !== "match") {
     return "lobby";
   }
+  if (sighting.win === null) return "unresolved";
   return sighting.win ? "win" : "loss";
 }
 

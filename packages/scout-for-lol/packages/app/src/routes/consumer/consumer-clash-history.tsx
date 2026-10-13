@@ -7,6 +7,7 @@ import {
 } from "@scout-for-lol/design-system/components/card";
 import { Badge } from "@scout-for-lol/design-system/components/badge";
 import type { RouterOutputs } from "#src/lib/query/trpc.ts";
+import { ClashBracketSection } from "#src/routes/consumer/consumer-clash-bracket.tsx";
 import {
   clashTeamLabel,
   formatClashIso,
@@ -28,7 +29,7 @@ export function ClashHistorySection(props: {
   const cups = props.history.data?.cups ?? [];
   const resultsNote =
     props.history.data?.resultsNote ??
-    "Past Clash lobbies Scout saw. Current weekends have no score. Games through Feb 2026 may show a result.";
+    "Past Clash games and client-observed brackets. Results appear when Riot or Scout Client supplies a completed game.";
   return (
     <section className="space-y-3" aria-labelledby="clash-history-title">
       <div>
@@ -45,11 +46,17 @@ export function ClashHistorySection(props: {
           {props.history.error?.message ?? "Unable to load history"}
         </p>
       ) : null}
-      {props.history.isSuccess && cups.length === 0 ? (
+      {props.history.isSuccess &&
+      cups.length === 0 &&
+      (props.history.data?.brackets.length ?? 0) === 0 ? (
         <p className="text-sm text-scout-subtle">
           No past Clash lobbies for tracked players yet.
         </p>
       ) : null}
+      <ClashBracketSection
+        brackets={props.history.data?.brackets ?? []}
+        history
+      />
       <div className="grid gap-3">
         {cups.map((cup) => (
           <Card key={cup.id}>

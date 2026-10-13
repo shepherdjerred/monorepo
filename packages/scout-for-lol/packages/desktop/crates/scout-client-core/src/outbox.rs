@@ -6,6 +6,10 @@ use rusqlite::{Connection, OptionalExtension, TransactionBehavior, params};
 use thiserror::Error;
 use uuid::Uuid;
 
+mod context;
+mod recovery;
+pub use recovery::RecoveryGame;
+
 use crate::protocol::{
     LOBBY_ID_MAX_BYTES, MAX_OBSERVATION_BYTES, ObservationEnvelope, ProtocolError,
 };
@@ -72,17 +76,33 @@ impl ObservationOutbox {
         let outbox = Self {
             path: path.as_ref().to_path_buf(),
         };
-        let connection = outbox.connection()?;
+        let mut connection = outbox.connection()?;
         connection.execute_batch(SCHEMA)?;
+        context::migrate(&mut connection)?;
         // Columns first: the partial index below is over `coalesce_key`, which
         // an outbox created by an older build does not have yet.
         add_missing_columns(&connection)?;
         connection.execute_batch(COALESCE_KEY_INDEX)?;
+        connection.execute_batch(recovery::SCHEMA)?;
+        // Older builds permanently recorded a temporary lack of evidence as
+        // HTTP 409. Re-offer those files once under the server's current policy.
+        let transaction = connection.transaction_with_behavior(TransactionBehavior::Immediate)?;
+        if transaction.execute(
+            "INSERT OR IGNORE INTO client_migration (id) VALUES ('reoffer-evidence-deferrals-v1')",
+            [],
+        )? == 1
+        {
+            transaction.execute_batch("DELETE FROM handled_replay_file WHERE digest IN (SELECT digest FROM rejected_replay WHERE status_code = 409);
+              DELETE FROM rejected_replay WHERE status_code = 409;")?;
+        }
+        transaction.commit()?;
         Ok(outbox)
     }
 
     fn connection(&self) -> Result<Connection, OutboxError> {
-        Connection::open(&self.path).map_err(OutboxError::Sqlite)
+        let connection = Connection::open(&self.path)?;
+        connection.busy_timeout(std::time::Duration::from_secs(5))?;
+        Ok(connection)
     }
 }
 
@@ -92,6 +112,7 @@ impl ObservationOutbox {
 /// and against one an earlier build left behind.
 const SCHEMA: &str = "PRAGMA journal_mode = WAL;
              PRAGMA synchronous = FULL;
+             CREATE TABLE IF NOT EXISTS client_migration (id TEXT PRIMARY KEY);
              CREATE TABLE IF NOT EXISTS observation_outbox (
                observation_id TEXT PRIMARY KEY,
                sequence INTEGER NOT NULL UNIQUE,
@@ -130,27 +151,6 @@ const SCHEMA: &str = "PRAGMA journal_mode = WAL;
                modified_at_millis INTEGER NOT NULL,
                digest TEXT NOT NULL,
                handled_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-             );
-             CREATE TABLE IF NOT EXISTS pending_end_of_game (
-               game_id TEXT PRIMARY KEY,
-               body BLOB NOT NULL,
-               captured_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-             );
-             CREATE TABLE IF NOT EXISTS pending_game_timing (
-               game_id TEXT PRIMARY KEY,
-               started_at_millis INTEGER,
-               ended_at_millis INTEGER,
-               updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-             );
-             CREATE TABLE IF NOT EXISTS observed_lobby (
-               singleton INTEGER PRIMARY KEY CHECK (singleton = 1),
-               lobby_id TEXT NOT NULL,
-               observed_at_millis INTEGER NOT NULL
-             );
-             CREATE TABLE IF NOT EXISTS game_lobby_binding (
-               game_id TEXT PRIMARY KEY,
-               lobby_id TEXT,
-               bound_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
              );";
 
 /// Enforces one pending row per coalescing key, ignoring uncoalesced rows.
@@ -398,7 +398,12 @@ impl ObservationOutbox {
     /// # Errors
     ///
     /// Returns a typed validation or SQLite error.
-    pub fn remember_end_of_game(&self, game_id: &str, body: &[u8]) -> Result<(), OutboxError> {
+    pub fn remember_end_of_game(
+        &self,
+        observer: &str,
+        game_id: &str,
+        body: &[u8],
+    ) -> Result<(), OutboxError> {
         if game_id.is_empty() || game_id.len() > 32 {
             return Err(OutboxError::InvalidGameId);
         }
@@ -407,11 +412,11 @@ impl ObservationOutbox {
         }
         let connection = self.connection()?;
         connection.execute(
-            "INSERT INTO pending_end_of_game (game_id, body) VALUES (?1, ?2)
-             ON CONFLICT(game_id) DO UPDATE SET
+            "INSERT INTO pending_end_of_game (observer, game_id, body) VALUES (?1, ?2, ?3)
+             ON CONFLICT(observer, game_id) DO UPDATE SET
                body = excluded.body,
                captured_at = CURRENT_TIMESTAMP",
-            params![game_id, body],
+            params![observer, game_id, body],
         )?;
         Ok(())
     }
@@ -421,12 +426,16 @@ impl ObservationOutbox {
     /// # Errors
     ///
     /// Returns [`OutboxError::Sqlite`] if local state cannot be read.
-    pub fn pending_end_of_game(&self, game_id: &str) -> Result<Option<Vec<u8>>, OutboxError> {
+    pub fn pending_end_of_game(
+        &self,
+        observer: &str,
+        game_id: &str,
+    ) -> Result<Option<Vec<u8>>, OutboxError> {
         let connection = self.connection()?;
         connection
             .query_row(
-                "SELECT body FROM pending_end_of_game WHERE game_id = ?1",
-                [game_id],
+                "SELECT body FROM pending_end_of_game WHERE observer = ?1 AND game_id = ?2",
+                [observer, game_id],
                 |row| row.get(0),
             )
             .optional()
@@ -438,11 +447,11 @@ impl ObservationOutbox {
     /// # Errors
     ///
     /// Returns [`OutboxError::Sqlite`] if local state cannot be changed.
-    pub fn forget_end_of_game(&self, game_id: &str) -> Result<(), OutboxError> {
+    pub fn forget_end_of_game(&self, observer: &str, game_id: &str) -> Result<(), OutboxError> {
         let connection = self.connection()?;
         connection.execute(
-            "DELETE FROM pending_end_of_game WHERE game_id = ?1",
-            [game_id],
+            "DELETE FROM pending_end_of_game WHERE observer = ?1 AND game_id = ?2",
+            [observer, game_id],
         )?;
         Ok(())
     }
@@ -454,15 +463,16 @@ impl ObservationOutbox {
     /// Returns a typed validation or SQLite error.
     pub fn remember_game_start(
         &self,
+        observer: &str,
         game_id: &str,
         started_at_millis: i64,
     ) -> Result<(), OutboxError> {
         validate_game_timing(game_id, started_at_millis)?;
         let connection = self.connection()?;
         connection.execute(
-            "INSERT INTO pending_game_timing (game_id, started_at_millis)
-             VALUES (?1, ?2)
-             ON CONFLICT(game_id) DO UPDATE SET
+            "INSERT INTO pending_game_timing (observer, game_id, started_at_millis)
+             VALUES (?1, ?2, ?3)
+             ON CONFLICT(observer, game_id) DO UPDATE SET
                started_at_millis = CASE
                  WHEN pending_game_timing.started_at_millis IS NULL
                    THEN excluded.started_at_millis
@@ -471,7 +481,7 @@ impl ObservationOutbox {
                  ELSE pending_game_timing.started_at_millis
                END,
                updated_at = CURRENT_TIMESTAMP",
-            params![game_id, started_at_millis],
+            params![observer, game_id, started_at_millis],
         )?;
         Ok(())
     }
@@ -483,22 +493,23 @@ impl ObservationOutbox {
     /// Returns a typed validation or SQLite error.
     pub fn remember_game_end(
         &self,
+        observer: &str,
         game_id: &str,
         ended_at_millis: i64,
     ) -> Result<(), OutboxError> {
         validate_game_timing(game_id, ended_at_millis)?;
         let connection = self.connection()?;
         connection.execute(
-            "INSERT INTO pending_game_timing (game_id, ended_at_millis)
-             VALUES (?1, ?2)
-             ON CONFLICT(game_id) DO UPDATE SET
+            "INSERT INTO pending_game_timing (observer, game_id, ended_at_millis)
+             VALUES (?1, ?2, ?3)
+             ON CONFLICT(observer, game_id) DO UPDATE SET
                ended_at_millis = CASE
                  WHEN pending_game_timing.ended_at_millis IS NULL
                    THEN excluded.ended_at_millis
                  ELSE MIN(pending_game_timing.ended_at_millis, excluded.ended_at_millis)
                END,
                updated_at = CURRENT_TIMESTAMP",
-            params![game_id, ended_at_millis],
+            params![observer, game_id, ended_at_millis],
         )?;
         Ok(())
     }
@@ -510,6 +521,7 @@ impl ObservationOutbox {
     /// Returns [`OutboxError::Sqlite`] if local state cannot be read.
     pub fn pending_game_timing(
         &self,
+        observer: &str,
         game_id: &str,
     ) -> Result<Option<PendingGameTiming>, OutboxError> {
         let connection = self.connection()?;
@@ -517,10 +529,10 @@ impl ObservationOutbox {
             .query_row(
                 "SELECT started_at_millis, ended_at_millis
                  FROM pending_game_timing
-                 WHERE game_id = ?1
+                 WHERE observer = ?1 AND game_id = ?2
                    AND started_at_millis IS NOT NULL
                    AND ended_at_millis IS NOT NULL",
-                [game_id],
+                [observer, game_id],
                 |row| {
                     Ok(PendingGameTiming {
                         started_at_millis: row.get(0)?,
@@ -542,21 +554,22 @@ impl ObservationOutbox {
     /// Returns a typed validation or SQLite error.
     pub fn remember_observed_lobby(
         &self,
+        observer: &str,
         lobby_id: &str,
         observed_at_millis: i64,
     ) -> Result<(), OutboxError> {
         validate_lobby_identity(lobby_id, observed_at_millis)?;
         let connection = self.connection()?;
         connection.execute(
-            "INSERT INTO observed_lobby (singleton, lobby_id, observed_at_millis)
-             VALUES (1, ?1, ?2)
-             ON CONFLICT(singleton) DO UPDATE SET
+            "INSERT INTO observed_lobby (observer, lobby_id, observed_at_millis)
+             VALUES (?1, ?2, ?3)
+             ON CONFLICT(observer) DO UPDATE SET
                lobby_id = excluded.lobby_id,
                observed_at_millis = MAX(
                  observed_lobby.observed_at_millis,
                  excluded.observed_at_millis
                )",
-            params![lobby_id, observed_at_millis],
+            params![observer, lobby_id, observed_at_millis],
         )?;
         Ok(())
     }
@@ -579,6 +592,7 @@ impl ObservationOutbox {
     /// Returns a typed validation or SQLite error.
     pub fn bind_game_to_lobby(
         &self,
+        observer: &str,
         game_id: &str,
         observed_at_millis: i64,
     ) -> Result<LobbyBinding, OutboxError> {
@@ -586,8 +600,8 @@ impl ObservationOutbox {
         let connection = self.connection()?;
         let already = connection
             .query_row(
-                "SELECT 1 FROM game_lobby_binding WHERE game_id = ?1",
-                [game_id],
+                "SELECT 1 FROM game_lobby_binding WHERE observer = ?1 AND game_id = ?2",
+                [observer, game_id],
                 |_| Ok(()),
             )
             .optional()?
@@ -598,10 +612,11 @@ impl ObservationOutbox {
         let lobby_id = connection
             .query_row(
                 "SELECT lobby_id FROM observed_lobby
-                 WHERE singleton = 1
-                   AND observed_at_millis >= ?1
-                   AND observed_at_millis <= ?2",
+                 WHERE observer = ?1
+                   AND observed_at_millis >= ?2
+                   AND observed_at_millis <= ?3",
                 params![
+                    observer,
                     observed_at_millis.saturating_sub(LOBBY_BINDING_WINDOW_MILLIS),
                     observed_at_millis
                 ],
@@ -609,10 +624,10 @@ impl ObservationOutbox {
             )
             .optional()?;
         connection.execute(
-            "INSERT INTO game_lobby_binding (game_id, lobby_id)
-             VALUES (?1, ?2)
-             ON CONFLICT(game_id) DO NOTHING",
-            params![game_id, lobby_id],
+            "INSERT INTO game_lobby_binding (observer, game_id, lobby_id)
+             VALUES (?1, ?2, ?3)
+             ON CONFLICT(observer, game_id) DO NOTHING",
+            params![observer, game_id, lobby_id],
         )?;
         Ok(match lobby_id {
             Some(lobby_id) => LobbyBinding::Bound(lobby_id),
@@ -625,13 +640,17 @@ impl ObservationOutbox {
     /// # Errors
     ///
     /// Returns [`OutboxError::Sqlite`] if local state cannot be read.
-    pub fn lobby_for_game(&self, game_id: &str) -> Result<Option<String>, OutboxError> {
+    pub fn lobby_for_game(
+        &self,
+        observer: &str,
+        game_id: &str,
+    ) -> Result<Option<String>, OutboxError> {
         let connection = self.connection()?;
         connection
             .query_row(
                 "SELECT lobby_id FROM game_lobby_binding
-                 WHERE game_id = ?1 AND lobby_id IS NOT NULL",
-                [game_id],
+                 WHERE observer = ?1 AND game_id = ?2 AND lobby_id IS NOT NULL",
+                [observer, game_id],
                 |row| row.get::<_, String>(0),
             )
             .optional()
@@ -643,11 +662,11 @@ impl ObservationOutbox {
     /// # Errors
     ///
     /// Returns [`OutboxError::Sqlite`] if local state cannot be changed.
-    pub fn forget_game_timing(&self, game_id: &str) -> Result<(), OutboxError> {
+    pub fn forget_game_timing(&self, observer: &str, game_id: &str) -> Result<(), OutboxError> {
         let connection = self.connection()?;
         connection.execute(
-            "DELETE FROM pending_game_timing WHERE game_id = ?1",
-            [game_id],
+            "DELETE FROM pending_game_timing WHERE observer = ?1 AND game_id = ?2",
+            [observer, game_id],
         )?;
         Ok(())
     }
@@ -794,6 +813,17 @@ impl ObservationOutbox {
         Ok(attempts)
     }
 
+    /// Retry temporary missing-evidence responses with a durable, capped delay.
+    ///
+    /// # Errors
+    /// Returns a SQLite error when the replay schedule cannot be read.
+    pub fn replay_retry_due(&self, digest: &str, now_millis: i64) -> Result<bool, OutboxError> {
+        self.connection()?.query_row(
+            "SELECT COALESCE((SELECT unixepoch(last_deferred_at) * 1000 + MIN(3600000, 30000 * attempts) <= ?2 FROM deferred_replay WHERE digest = ?1), 1)",
+            params![digest, now_millis], |row| row.get(0),
+        ).map_err(OutboxError::Sqlite)
+    }
+
     /// How many times this replay has been deferred so far.
     ///
     /// # Errors
@@ -930,17 +960,55 @@ mod tests {
     const NOW: i64 = 1_700_000_000_000;
 
     #[test]
+    fn legacy_missing_evidence_rejections_are_reoffered_only_once()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let path = temporary_database();
+        let connection = Connection::open(&path)?;
+        connection.execute_batch(super::SCHEMA)?;
+        connection.execute_batch("INSERT INTO rejected_replay (digest, game_id, status_code) VALUES ('old-deferred', '1', 409), ('invalid', '2', 413);
+            INSERT INTO handled_replay_file (path, bytes, modified_at_millis, digest) VALUES ('old.rofl', 100, 1, 'old-deferred');")?;
+        drop(connection);
+        let outbox = ObservationOutbox::open(&path)?;
+        assert!(!outbox.replay_handled("old-deferred")?);
+        assert!(!outbox.replay_file_handled("old.rofl", 100, 1)?);
+        assert!(outbox.replay_handled("invalid")?);
+        outbox.mark_replay_rejected("new-validation-rejection", "3", 409)?;
+        let reopened = ObservationOutbox::open(&path)?;
+        assert!(reopened.replay_handled("new-validation-rejection")?);
+        fs::remove_file(path)?;
+        Ok(())
+    }
+
+    #[test]
+    fn replay_deferral_backoff_never_turns_into_a_terminal_receipt()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let path = temporary_database();
+        let outbox = ObservationOutbox::open(&path)?;
+        for attempt in 1..=20 {
+            assert_eq!(outbox.record_replay_deferral("waiting", "1")?, attempt);
+        }
+        assert!(!outbox.replay_handled("waiting")?);
+        assert!(!outbox.replay_retry_due("waiting", chrono::Utc::now().timestamp_millis())?);
+        assert!(
+            outbox
+                .replay_retry_due("waiting", chrono::Utc::now().timestamp_millis() + 3_600_001)?
+        );
+        fs::remove_file(path)?;
+        Ok(())
+    }
+
+    #[test]
     fn a_game_claims_the_lobby_that_assembled_it() -> Result<(), Box<dyn std::error::Error>> {
         let path = temporary_database();
         let outbox = ObservationOutbox::open(&path)?;
-        outbox.remember_observed_lobby("party-1", NOW)?;
+        outbox.remember_observed_lobby("observer", "party-1", NOW)?;
 
         assert_eq!(
-            outbox.bind_game_to_lobby("game-1", NOW + 90_000)?,
+            outbox.bind_game_to_lobby("observer", "game-1", NOW + 90_000)?,
             LobbyBinding::Bound("party-1".to_owned()),
         );
         assert_eq!(
-            outbox.lobby_for_game("game-1")?,
+            outbox.lobby_for_game("observer", "game-1")?,
             Some("party-1".to_owned()),
             "the join has to survive for the observations that follow it",
         );
@@ -954,16 +1022,19 @@ mod tests {
     {
         let path = temporary_database();
         let outbox = ObservationOutbox::open(&path)?;
-        outbox.remember_observed_lobby("party-1", NOW)?;
-        outbox.bind_game_to_lobby("game-1", NOW)?;
+        outbox.remember_observed_lobby("observer", "party-1", NOW)?;
+        outbox.bind_game_to_lobby("observer", "game-1", NOW)?;
 
         // A new lobby appearing mid-match must not retarget a started game.
-        outbox.remember_observed_lobby("party-2", NOW + 60_000)?;
+        outbox.remember_observed_lobby("observer", "party-2", NOW + 60_000)?;
         assert_eq!(
-            outbox.bind_game_to_lobby("game-1", NOW + 60_000)?,
+            outbox.bind_game_to_lobby("observer", "game-1", NOW + 60_000)?,
             LobbyBinding::AlreadyRecorded,
         );
-        assert_eq!(outbox.lobby_for_game("game-1")?, Some("party-1".to_owned()));
+        assert_eq!(
+            outbox.lobby_for_game("observer", "game-1")?,
+            Some("party-1".to_owned())
+        );
 
         let _ = fs::remove_file(&path);
         Ok(())
@@ -976,13 +1047,13 @@ mod tests {
         let outbox = ObservationOutbox::open(&path)?;
 
         assert_eq!(
-            outbox.bind_game_to_lobby("game-1", NOW)?,
+            outbox.bind_game_to_lobby("observer", "game-1", NOW)?,
             LobbyBinding::Unwitnessed,
             "a client started mid-game never saw the lobby",
         );
-        assert_eq!(outbox.lobby_for_game("game-1")?, None);
+        assert_eq!(outbox.lobby_for_game("observer", "game-1")?, None);
         assert_eq!(
-            outbox.bind_game_to_lobby("game-1", NOW + 3_000)?,
+            outbox.bind_game_to_lobby("observer", "game-1", NOW + 3_000)?,
             LobbyBinding::AlreadyRecorded,
             "the absence is recorded too, so the caller reports it once",
         );
@@ -996,10 +1067,14 @@ mod tests {
     {
         let path = temporary_database();
         let outbox = ObservationOutbox::open(&path)?;
-        outbox.remember_observed_lobby("party-1", NOW)?;
+        outbox.remember_observed_lobby("observer", "party-1", NOW)?;
 
         assert_eq!(
-            outbox.bind_game_to_lobby("game-1", NOW + LOBBY_BINDING_WINDOW_MILLIS + 1)?,
+            outbox.bind_game_to_lobby(
+                "observer",
+                "game-1",
+                NOW + LOBBY_BINDING_WINDOW_MILLIS + 1
+            )?,
             LobbyBinding::Unwitnessed,
             "a stale key would attach one game's roster to another",
         );
@@ -1012,11 +1087,11 @@ mod tests {
     fn only_the_current_lobby_is_remembered() -> Result<(), Box<dyn std::error::Error>> {
         let path = temporary_database();
         let outbox = ObservationOutbox::open(&path)?;
-        outbox.remember_observed_lobby("party-1", NOW)?;
-        outbox.remember_observed_lobby("party-2", NOW + 60_000)?;
+        outbox.remember_observed_lobby("observer", "party-1", NOW)?;
+        outbox.remember_observed_lobby("observer", "party-2", NOW + 60_000)?;
 
         assert_eq!(
-            outbox.bind_game_to_lobby("game-1", NOW + 120_000)?,
+            outbox.bind_game_to_lobby("observer", "game-1", NOW + 120_000)?,
             LobbyBinding::Bound("party-2".to_owned()),
             "a player is in one lobby at a time, and it is the latest one",
         );
@@ -1031,10 +1106,10 @@ mod tests {
         let path = temporary_database();
         let outbox = ObservationOutbox::open(&path)?;
 
-        assert!(outbox.remember_observed_lobby("", NOW).is_err());
+        assert!(outbox.remember_observed_lobby("observer", "", NOW).is_err());
         assert!(
             outbox
-                .remember_observed_lobby(&"p".repeat(129), NOW)
+                .remember_observed_lobby("observer", &"p".repeat(129), NOW)
                 .is_err(),
             "the envelope would reject it later; fail at the boundary instead",
         );
@@ -1152,28 +1227,28 @@ mod tests {
         assert!(outbox.replay_file_handled("/replays/12345.rofl", 12, 34)?);
         assert!(!outbox.replay_file_handled("/replays/12345.rofl", 13, 34)?);
         assert!(!outbox.replay_file_handled("/replays/12345.rofl", 12, 35)?);
-        outbox.remember_end_of_game("12345", br#"{"gameId":12345}"#)?;
-        outbox.remember_game_start("12345", 1_000)?;
-        outbox.remember_game_start("12345", 1_250)?;
-        outbox.remember_game_end("12345", 5_000)?;
-        outbox.remember_game_start("12345", 1_500)?;
+        outbox.remember_end_of_game("observer", "12345", br#"{"gameId":12345}"#)?;
+        outbox.remember_game_start("observer", "12345", 1_000)?;
+        outbox.remember_game_start("observer", "12345", 1_250)?;
+        outbox.remember_game_end("observer", "12345", 5_000)?;
+        outbox.remember_game_start("observer", "12345", 1_500)?;
         drop(outbox);
         let outbox = ObservationOutbox::open(&path)?;
         assert_eq!(
-            outbox.pending_end_of_game("12345")?,
+            outbox.pending_end_of_game("observer", "12345")?,
             Some(br#"{"gameId":12345}"#.to_vec())
         );
         assert_eq!(
-            outbox.pending_game_timing("12345")?,
+            outbox.pending_game_timing("observer", "12345")?,
             Some(PendingGameTiming {
                 started_at_millis: 1_250,
                 ended_at_millis: 5_000,
             })
         );
-        outbox.forget_end_of_game("12345")?;
-        outbox.forget_game_timing("12345")?;
-        assert_eq!(outbox.pending_end_of_game("12345")?, None);
-        assert_eq!(outbox.pending_game_timing("12345")?, None);
+        outbox.forget_end_of_game("observer", "12345")?;
+        outbox.forget_game_timing("observer", "12345")?;
+        assert_eq!(outbox.pending_end_of_game("observer", "12345")?, None);
+        assert_eq!(outbox.pending_game_timing("observer", "12345")?, None);
         drop(outbox);
         fs::remove_file(path)?;
         Ok(())

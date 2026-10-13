@@ -2,18 +2,28 @@ import { z } from "zod";
 import {
   LcuClashBracketSchema,
   LcuClashRosterSchema,
+  clashIsoWeekKey,
   type DiscordGuildId,
   type LcuClashBracket,
   type LcuClashRoster,
 } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
 import { withRiotIdentities } from "#src/scout-client/identity-alias.ts";
+import { enrichClashTeamResults } from "./client-clash-results.ts";
+import { MatchDataSourceSchema } from "@scout-for-lol/domain/match-processing/states.ts";
+import type {
+  ClientClashLabels,
+  ClientClashOpponent,
+  ClientClashMatch,
+  ClientClashTeam,
+  ClientClashBracket,
+} from "./client-clash-types.ts";
 
 /**
  * Clash as the Scout Client saw it: a roster's bracket and results, which
  * Riot's Clash-V1 API never publishes.
  *
- * Read straight from each player's latest client snapshot rather than
+ * Read from independently addressed client entities rather than
  * projected into the `ClashTeam`/`ClashRegistration` tables. Those belong to
  * the Riot `clash-snapshot` schedule, which replaces them wholesale on every
  * run, and client observations keep their own provenance.
@@ -22,44 +32,13 @@ import { withRiotIdentities } from "#src/scout-client/identity-alias.ts";
 /** A Clash weekend, plus a day of slack: anything older is a past cup. */
 const CLIENT_CLASH_FRESHNESS_MS = 3 * 24 * 60 * 60 * 1000;
 
-export type ClientClashLabels = {
-  readonly name: string;
-  readonly abbreviation: string;
-};
-
-/**
- * Who a bracket match is against: a named team, a roster the bracket lists
- * without a name, or nobody (a bye).
- */
-export type ClientClashOpponent =
-  | ({ readonly kind: "team" } & ClientClashLabels)
-  | { readonly kind: "unknown" }
-  | { readonly kind: "bye" };
-
-export type ClientClashMatch = {
-  readonly round: number | null;
-  readonly opponent: ClientClashOpponent;
-  readonly result: "won" | "lost" | "pending";
-};
-
-export type ClientClashTeam = {
-  readonly rosterId: string;
-  readonly tournamentId: string | null;
-  readonly name: string;
-  readonly abbreviation: string;
-  readonly tier: number | null;
-  readonly memberPuuids: readonly string[];
-  readonly matches: readonly ClientClashMatch[];
-  readonly capturedAt: Date;
-};
-
 const RosterPayloadSchema = z.object({
-  resource: z.literal("clash_roster"),
+  resource: z.string().regex(/^clash_roster(?::[^:]+)?$/u),
   data: LcuClashRosterSchema,
 });
 
 const BracketPayloadSchema = z.object({
-  resource: z.literal("clash_bracket"),
+  resource: z.string().regex(/^clash_bracket(?::[^:]+)?$/u),
   data: LcuClashBracketSchema,
 });
 
@@ -86,8 +65,16 @@ function bracketMatches(
           opponent: opponentOf(
             sides.find((side) => side !== rosterId),
             labels,
+            match.isBye === true,
           ),
-          result: matchResult(rosterId, match.winnerId),
+          result: matchResult(rosterId, match.winnerId, sides),
+          status: match.status ?? null,
+          gameIds: [
+            ...new Set([
+              ...(match.gameIds ?? []),
+              ...(match.gameId === undefined ? [] : [match.gameId]),
+            ]),
+          ],
         },
       ];
     })
@@ -98,8 +85,9 @@ function bracketMatches(
 function opponentOf(
   opponentId: string | undefined,
   labels: ReadonlyMap<string, ClientClashLabels>,
+  isBye: boolean,
 ): ClientClashOpponent {
-  if (opponentId === undefined) return { kind: "bye" };
+  if (opponentId === undefined) return { kind: isBye ? "bye" : "unknown" };
   const named = labels.get(opponentId);
   return named === undefined ? { kind: "unknown" } : { kind: "team", ...named };
 }
@@ -107,8 +95,9 @@ function opponentOf(
 function matchResult(
   rosterId: string,
   winnerId: string | undefined,
+  sides: readonly (string | undefined)[],
 ): ClientClashMatch["result"] {
-  if (winnerId === undefined) return "pending";
+  if (winnerId === undefined || !sides.includes(winnerId)) return "pending";
   return winnerId === rosterId ? "won" : "lost";
 }
 
@@ -134,6 +123,7 @@ export function projectClientClashTeam(input: {
   readonly roster: LcuClashRoster;
   readonly bracket: LcuClashBracket | null;
   readonly capturedAt: Date;
+  readonly platformId?: string | null;
 }): ClientClashTeam | null {
   const { roster } = input;
   const labels = clashLabels(roster.name, roster.shortName);
@@ -141,6 +131,7 @@ export function projectClientClashTeam(input: {
     return null;
   }
   return {
+    platformId: input.platformId ?? null,
     rosterId: roster.id,
     tournamentId: roster.tournamentId ?? null,
     ...labels,
@@ -172,62 +163,213 @@ export function currentClientClashOpponent(
 export async function readClientClashTeams(
   puuids: readonly string[],
   now: Date,
+  includeHistory = false,
 ): Promise<ClientClashTeam[]> {
   if (puuids.length === 0) return [];
-  const snapshots = await prisma.scoutClientPlayerSnapshot.findMany({
+  const capturedAt = includeHistory
+    ? {}
+    : { gte: new Date(now.getTime() - CLIENT_CLASH_FRESHNESS_MS) };
+  const entities = await prisma.scoutClientClashEntity.findMany({
+    where: {
+      observerPuuid: { in: [...puuids] },
+      resource: { in: ["clash_roster", "clash_bracket"] },
+      capturedAt,
+    },
+    include: { observation: { select: { payload: true } } },
+    orderBy: [{ capturedAt: "desc" }, { observationId: "asc" }],
+  });
+  const legacy = await prisma.scoutClientPlayerSnapshot.findMany({
     where: {
       localPuuid: { in: [...puuids] },
       resource: { in: ["clash_roster", "clash_bracket"] },
-      capturedAt: {
-        gte: new Date(now.getTime() - CLIENT_CLASH_FRESHNESS_MS),
-      },
+      capturedAt,
     },
-    include: { observation: { select: { payload: true } } },
+    include: { observation: { select: { payload: true, platformId: true } } },
+    orderBy: [{ capturedAt: "desc" }, { observationId: "asc" }],
   });
-  const byPlayer = new Map<
-    string,
-    { roster?: LcuClashRoster; bracket?: LcuClashBracket; capturedAt?: Date }
-  >();
-  for (const snapshot of snapshots) {
-    const entry = byPlayer.get(snapshot.localPuuid) ?? {};
-    // Roster members name each other by League-client UUID.
-    const payload = await withRiotIdentities(snapshot.observation.payload);
-    const roster = RosterPayloadSchema.safeParse(payload);
-    if (roster.success) {
-      entry.roster = roster.data.data;
-      entry.capturedAt = snapshot.capturedAt;
-    }
-    const bracket = BracketPayloadSchema.safeParse(payload);
-    if (bracket.success) entry.bracket = bracket.data.data;
-    byPlayer.set(snapshot.localPuuid, entry);
-  }
+  const snapshots: {
+    platformId: string | null;
+    capturedAt: Date;
+    isPrimary: boolean;
+    observation: { payload: unknown };
+  }[] = [
+    ...entities.map((entity) => ({
+      ...entity,
+      localPuuid: entity.observerPuuid,
+    })),
+    ...legacy.map((snapshot) => ({
+      ...snapshot,
+      platformId: snapshot.observation.platformId,
+      isPrimary: snapshot.resource === "clash_roster",
+    })),
+  ];
+  const { rosters, brackets } = await parseClashEvidence(snapshots);
   const teams = new Map<string, ClientClashTeam>();
-  for (const { roster, bracket = null, capturedAt } of byPlayer.values()) {
-    if (roster === undefined || capturedAt === undefined) continue;
-    const team = projectClientClashTeam({ roster, bracket, capturedAt });
+  for (const entry of rosters) {
+    if (
+      !entry.primary &&
+      !(
+        entry.roster.members?.some(
+          (member) =>
+            member.puuid !== undefined && puuids.includes(member.puuid),
+        ) ?? false
+      )
+    )
+      continue;
+    const enrichedBracket = joinClashBracket(entry, brackets, rosters);
+    const team = projectClientClashTeam({
+      roster: entry.roster,
+      bracket: enrichedBracket,
+      capturedAt: entry.capturedAt,
+      platformId: entry.platform,
+    });
     if (team === null) continue;
-    const seen = teams.get(team.rosterId);
-    if (seen === undefined || seen.capturedAt < team.capturedAt) {
-      teams.set(team.rosterId, team);
-    }
+    const key = [
+      entry.platform,
+      team.tournamentId ??
+        `observed:${clashIsoWeekKey(entry.capturedAt.toISOString().slice(0, 10))}`,
+      team.rosterId,
+    ].join(":");
+    const seen = teams.get(key);
+    if (seen === undefined || seen.capturedAt < team.capturedAt)
+      teams.set(key, team);
   }
-  return [...teams.values()];
+  const retained = [...teams.values()].sort(
+    (left, right) => right.capturedAt.getTime() - left.capturedAt.getTime(),
+  );
+  return await readClashResults(retained, puuids);
 }
 
-export type ClientClashBracket = {
-  readonly rosterId: string;
-  readonly name: string;
-  readonly abbreviation: string;
-  readonly tier: number | null;
-  /** The guild's tracked members, by alias; untracked teammates stay out. */
-  readonly memberAliases: readonly string[];
-  readonly matches: readonly ClientClashMatch[];
-  readonly capturedAt: string;
+async function readClashResults(
+  retained: ClientClashTeam[],
+  puuids: readonly string[],
+): Promise<ClientClashTeam[]> {
+  const games = retained.flatMap(({ platformId, matches }) =>
+    platformId === null
+      ? []
+      : matches.flatMap((match) =>
+          match.gameIds.map((gameId) => ({ platform: platformId, gameId })),
+        ),
+  );
+  if (games.length === 0) return retained;
+  const results = await prisma.clashGameSighting.findMany({
+    where: { OR: games, source: "match", puuid: { in: [...puuids] } },
+  });
+  const evidence = results.map((row) => ({
+    ...row,
+    resultSource: MatchDataSourceSchema.parse(row.resultSource),
+  }));
+  return retained.map((team) => enrichClashTeamResults(team, evidence));
+}
+
+async function parseClashEvidence(
+  snapshots: readonly ClashSnapshot[],
+): Promise<{ rosters: RosterEvidence[]; brackets: BracketEvidence[] }> {
+  const rosters: RosterEvidence[] = [];
+  const brackets: BracketEvidence[] = [];
+  for (const snapshot of snapshots) {
+    const payload = await withRiotIdentities(snapshot.observation.payload);
+    const roster = RosterPayloadSchema.safeParse(payload);
+    if (roster.success)
+      rosters.push({
+        roster: roster.data.data,
+        platform: snapshot.platformId,
+        capturedAt: snapshot.capturedAt,
+        primary: snapshot.isPrimary,
+      });
+    const bracket = BracketPayloadSchema.safeParse(payload);
+    if (bracket.success)
+      brackets.push({
+        bracket: bracket.data.data,
+        platform: snapshot.platformId,
+        capturedAt: snapshot.capturedAt,
+      });
+  }
+  return { rosters, brackets };
+}
+
+type ClashSnapshot = {
+  platformId: string | null;
+  capturedAt: Date;
+  isPrimary: boolean;
+  observation: { payload: unknown };
 };
+type RosterEvidence = {
+  roster: LcuClashRoster;
+  platform: string | null;
+  capturedAt: Date;
+  primary: boolean;
+};
+type BracketEvidence = {
+  bracket: LcuClashBracket;
+  platform: string | null;
+  capturedAt: Date;
+};
+
+function bracketAgrees(
+  entry: RosterEvidence,
+  candidate: BracketEvidence,
+): boolean {
+  if (entry.platform !== candidate.platform) return false;
+  const { roster } = entry;
+  const { bracket } = candidate;
+  if (roster.tournamentId !== undefined && bracket.tournamentId !== undefined) {
+    if (roster.tournamentId !== bracket.tournamentId) return false;
+  } else if (
+    Math.abs(candidate.capturedAt.getTime() - entry.capturedAt.getTime()) >
+    CLIENT_CLASH_FRESHNESS_MS
+  )
+    return false;
+  return roster.bracketId === undefined
+    ? (bracket.matches?.some(
+        (match) =>
+          match.rosterId1 === roster.id || match.rosterId2 === roster.id,
+      ) ?? false)
+    : roster.bracketId === bracket.id;
+}
+
+function joinClashBracket(
+  entry: RosterEvidence,
+  brackets: readonly BracketEvidence[],
+  rosters: readonly RosterEvidence[],
+): LcuClashBracket | null {
+  const bracket = brackets
+    .filter((candidate) => bracketAgrees(entry, candidate))
+    .sort(
+      (left, right) => right.capturedAt.getTime() - left.capturedAt.getTime(),
+    )[0]?.bracket;
+  if (bracket === undefined) return null;
+  const namedRosters = rosters.filter(
+    (candidate) =>
+      candidate.platform === entry.platform &&
+      candidate.roster.tournamentId === entry.roster.tournamentId &&
+      (entry.roster.tournamentId !== undefined ||
+        Math.abs(candidate.capturedAt.getTime() - entry.capturedAt.getTime()) <=
+          CLIENT_CLASH_FRESHNESS_MS),
+  );
+  return {
+    ...bracket,
+    rosters: [
+      ...namedRosters.flatMap(({ roster }) =>
+        roster.id === undefined
+          ? []
+          : [
+              {
+                rosterId: roster.id,
+                name: roster.name,
+                shortName: roster.shortName,
+              },
+            ],
+      ),
+      ...(bracket.rosters ?? []),
+    ],
+  };
+}
 
 /** The rosters and brackets this guild's tracked players' clients saw. */
 export async function readClientClashBracketsForGuild(
   guildId: DiscordGuildId,
+  includeHistory = false,
 ): Promise<ClientClashBracket[]> {
   const accounts = await prisma.account.findMany({
     where: { serverId: guildId },
@@ -240,8 +382,11 @@ export async function readClientClashBracketsForGuild(
   const teams = await readClientClashTeams(
     [...aliasByPuuid.keys()],
     new Date(),
+    includeHistory,
   );
   return teams.map((team) => ({
+    platformId: team.platformId,
+    tournamentId: team.tournamentId,
     rosterId: team.rosterId,
     name: team.name,
     abbreviation: team.abbreviation,

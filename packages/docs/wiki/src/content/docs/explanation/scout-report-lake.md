@@ -6,7 +6,7 @@ sidebar:
 ---
 
 Scout has two stores with opposite guarantees: S3 holds the canonical raw
-Riot JSON and must never lose a write, while the report lake is a local
+match JSON and must never lose a write, while the report lake is a local
 Parquet directory that can be deleted and rebuilt from S3 at any time.
 
 The lake is what the fact-style analytics surfaces query — ScoutQL's match,
@@ -67,6 +67,31 @@ migrations. Rebuilds derive columns from the retained JSON into an unpublished
 immutable build. A schema change still needs compatible readers and writers:
 publication switches the `CURRENT` pointer only after the candidate is ready,
 while readers continue to union the published build with committed staging.
+
+### Client evidence and published results
+
+Riot and the desktop client contribute independent evidence. Riot owns
+overlapping facts; the client can supply unavailable games and enrich missing
+artifacts. A Riot result does not require a Riot timeline. Timeline selection
+checks participant identity before combining sources
+([canonical-match.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/scout-client/canonical-match.ts)).
+
+Local evidence often contains a useful scoreboard without every field required
+by Match-V5. Scout retains that result with explicit unknown statistics and
+identity namespaces. It does not invent raw Riot fields to satisfy an existing
+consumer. Full Match-V5 processing and normalized scoreboards therefore have
+separate completeness requirements
+([backend README](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/README.md)).
+
+Published processing inputs stay stable across retries. Raw archive receipts
+pin the result and timeline bytes used by effects. Late client evidence can
+enrich retained history without changing a completed settlement
+([receipted-archive.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/report-lake/receipted-archive.ts)).
+
+Clash entities remain separate from Riot's periodically replaced registration
+tables. Platform, tournament and bracket identity determine joins, while
+entity projections preserve each cup and point to retained observations
+([client-clash.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/league/clash/client-clash.ts)).
 
 ### Why the record was rewritten rather than translated
 

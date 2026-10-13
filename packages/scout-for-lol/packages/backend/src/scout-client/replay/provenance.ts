@@ -38,6 +38,7 @@ const MatchIdentitySchema = z.looseObject({
   player: z.looseObject({ puuid: z.string().min(1) }),
 });
 const MatchHistoryEvidenceSchema = z.looseObject({
+  platformId: z.string().optional(),
   gameId: z
     .union([z.number().int().positive(), GameIdSchema])
     .transform(String),
@@ -156,6 +157,7 @@ type ObservedReplayEvidence = {
   readonly localPuuid: string;
   readonly leaguePatch: string | null;
   readonly requestedGameId: string;
+  readonly requestedPlatformId?: string;
 };
 
 /** Bind one requested game to its observer's exact post-game stat fingerprint. */
@@ -172,6 +174,13 @@ export function parseObservedReplayProvenance(
       ? bundle.data.matchHistory
       : null;
   if (matchHistory?.gameId !== evidence.requestedGameId) return null;
+  if (
+    matchHistory.platformId !== undefined &&
+    evidence.requestedPlatformId !== undefined &&
+    matchHistory.platformId.toUpperCase() !==
+      evidence.requestedPlatformId.toUpperCase()
+  )
+    return null;
   const participant = participantFingerprint(matchHistory, evidence.localPuuid);
   if (participant === null) return null;
   return {

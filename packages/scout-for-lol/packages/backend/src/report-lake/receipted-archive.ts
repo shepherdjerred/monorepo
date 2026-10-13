@@ -293,6 +293,20 @@ export async function readArchivedPrematchSnapshot(
   });
 }
 
+/** Read a receipted canonical timeline back from raw storage. */
+export async function readArchivedTimelinePayload(
+  descriptor: ArtifactDescriptor,
+  matchId: RiotMatchId,
+): Promise<RawTimeline> {
+  return await readArchivedPayload({
+    descriptor,
+    matchId,
+    abortSignal: AbortSignal.timeout(ARCHIVE_FENCE_BUDGET.externalDeadlineMs),
+    parse: (value) => RawTimelineSchema.safeParse(value),
+    expected: "a match timeline",
+  });
+}
+
 /** Read a receipted canonical match back from raw storage. */
 export async function readArchivedMatchPayload(
   descriptor: ArtifactDescriptor,

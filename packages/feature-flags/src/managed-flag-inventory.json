@@ -1496,6 +1496,18 @@
       "thresholdRollouts": []
     },
     {
+      "key": "scout_client_result_recovery",
+      "owner": "scout",
+      "namespace": "scout",
+      "source": "scout-policy",
+      "purpose": "Recover validated local scoreboards and Clash results independently of Match-V5 completeness.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "scout_operations_console_enabled",
       "owner": "scout",
       "namespace": "scout",
@@ -2659,6 +2671,14 @@
         },
         {
           "key": "scout_client_ingestion",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "scout_client_result_recovery",
           "type": "boolean",
           "default": true,
           "rollouts": [],

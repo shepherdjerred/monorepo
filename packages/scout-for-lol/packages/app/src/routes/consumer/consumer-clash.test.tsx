@@ -63,8 +63,9 @@ describe("Clash copy helpers", () => {
   test("formats Clash ISO instants and labels lobby versus scored leftovers", () => {
     expect(formatClashIso("not-a-date")).toBe("—");
     expect(sightingOutcomeLabel("lobby")).toBe("Lobby only");
-    expect(sightingOutcomeLabel("win")).toBe("Win · scored through Feb 2026");
-    expect(sightingOutcomeLabel("loss")).toBe("Loss · scored through Feb 2026");
+    expect(sightingOutcomeLabel("win")).toBe("Win");
+    expect(sightingOutcomeLabel("loss")).toBe("Loss");
+    expect(sightingOutcomeLabel("unresolved")).toBe("Result unresolved");
   });
 
   test("shows a Clash team name even when the tag is missing", () => {
@@ -125,6 +126,7 @@ describe("ClashHistorySection", () => {
             isSuccess: true,
             error: null,
             data: {
+              brackets: [],
               cups: [],
               resultsNote: "Past Clash lobbies Scout saw.",
             },
@@ -143,8 +145,9 @@ describe("ClashHistorySection", () => {
           isSuccess: true,
           error: null,
           data: {
+            brackets: [],
             resultsNote:
-              "Past Clash lobbies Scout saw. Current weekends have no score. Games through Feb 2026 may show a result.",
+              "Past Clash games and client-observed brackets. Results appear when Riot or Scout Client supplies a completed game.",
             cups: [
               {
                 id: "2026-W12:noxus:day_1:clash",
@@ -220,9 +223,9 @@ describe("ClashHistorySection", () => {
     expect(markup).toContain("Match 2");
     expect(markup).toContain("Demacia · Day 1");
     expect(markup).toContain("Nameless Side");
-    expect(markup).toContain("Win · scored through Feb 2026");
+    expect(markup).toContain(">Win<");
     expect(markup).toContain(
-      "Past Clash lobbies Scout saw. Current weekends have no score. Games through Feb 2026 may show a result.",
+      "Past Clash games and client-observed brackets. Results appear when Riot or Scout Client supplies a completed game.",
     );
   });
 });

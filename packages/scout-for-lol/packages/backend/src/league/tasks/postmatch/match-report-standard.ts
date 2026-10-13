@@ -9,7 +9,10 @@ import { fetchMatchTimeline } from "./match-data-fetcher.ts";
 import { createLogger } from "#src/logger.ts";
 import * as Sentry from "@sentry/bun";
 import { recordTimelineForReportStore } from "#src/report-store/live-ingest.ts";
-import { readTimelineSelection } from "#src/scout-client/canonical-match.ts";
+import {
+  readTimelineSelection,
+  readFrozenTimeline,
+} from "#src/scout-client/canonical-match.ts";
 
 const logger = createLogger("postmatch-match-report-standard");
 
@@ -109,9 +112,8 @@ export async function persistTimelineForProgression(
  * staged for the lake exactly as a Riot timeline is, so Dare SQL, challenges
  * and Explore read it the same way.
  *
- * A client that sent no timeline is a conclusive miss, never a reason to
- * retry: Riot can't see this game, so no timeline is ever coming. Callers that
- * need one record missing coverage and move on.
+ * Missing evidence remains recoverable by the desktop. Required processing
+ * retries while optional reports can record their current missing coverage.
  */
 async function recordClientTimeline(
   options: {
@@ -126,13 +128,13 @@ async function recordClientTimeline(
     logger.info(
       `[generateMatchReport] Scout Client supplied ${options.matchId} without a timeline`,
     );
+    requireAvailableTimeline(options);
     return undefined;
   }
-  await stageFetchedTimeline(
+  return await stageFetchedTimeline(
     { ...options, source: "timeline_scout_client" },
     timeline,
   );
-  return timeline;
 }
 
 function requireAvailableTimeline(options: {
@@ -144,6 +146,16 @@ function requireAvailableTimeline(options: {
   }
 }
 
+async function clientTimelineOrMissing(
+  options: Parameters<typeof recordClientTimeline>[0],
+  timeline: RawTimeline | undefined,
+): Promise<RawTimeline | undefined> {
+  if (timeline !== undefined)
+    return await recordClientTimeline(options, timeline);
+  requireAvailableTimeline(options);
+  return undefined;
+}
+
 async function stageFetchedTimeline(
   options: {
     readonly persistence: TimelinePersistence;
@@ -153,7 +165,7 @@ async function stageFetchedTimeline(
     readonly matchData: RawMatch;
   },
   timeline: RawTimeline,
-): Promise<void> {
+): Promise<RawTimeline> {
   logger.info(
     `[generateMatchReport] ✅ Timeline fetched with ${timeline.info.frames.length.toString()} frames`,
   );
@@ -179,6 +191,7 @@ async function stageFetchedTimeline(
       error,
     );
   }
+  return (await readFrozenTimeline(options.matchId)) ?? timeline;
 }
 
 async function fetchAndRecordTimeline(options: {
@@ -190,34 +203,34 @@ async function fetchAndRecordTimeline(options: {
 }): Promise<RawTimeline | undefined> {
   // Ahead of the Arena exit: the League client records Arena timelines too,
   // and a client match never waits on Riot either way.
-  const selection = await readTimelineSelection(options.matchId);
+  const selection = await readTimelineSelection(
+    options.matchId,
+    options.matchData,
+  );
+  if (selection.source === "ARCHIVED")
+    return await stageFetchedTimeline(options, selection.timeline);
   if (selection.source === "SCOUT_CLIENT") {
     return await recordClientTimeline(options, selection.timeline);
   }
 
-  // Don't fetch timeline for arena matches
+  const firstPlayer = options.playersInMatch[0];
   if (
+    firstPlayer === undefined ||
     isArenaQueueOrMode(
       options.matchData.info.queueId,
       options.matchData.info.gameMode,
     )
   ) {
-    requireAvailableTimeline(options);
-    return;
-  }
-
-  const firstPlayer = options.playersInMatch[0];
-  if (!firstPlayer) {
-    requireAvailableTimeline(options);
-    return;
+    return await clientTimelineOrMissing(options, selection.clientTimeline);
   }
 
   const playerRegion = firstPlayer.league.leagueAccount.region;
+  let timelineData: RawTimeline | undefined;
   try {
     logger.info(
       `[generateMatchReport] 📊 Fetching timeline data for match ${options.matchId}`,
     );
-    const timelineData = await fetchMatchTimeline(
+    timelineData = await fetchMatchTimeline(
       options.matchId,
       playerRegion,
       options.persistence === "required"
@@ -226,13 +239,9 @@ async function fetchAndRecordTimeline(options: {
           ? "return_undefined_on_404"
           : "return_undefined",
     );
-    if (timelineData === undefined) {
-      requireAvailableTimeline(options);
-      return;
-    }
-    await stageFetchedTimeline(options, timelineData);
-    return timelineData;
   } catch (error) {
+    if (selection.clientTimeline !== undefined)
+      return await recordClientTimeline(options, selection.clientTimeline);
     logger.error(
       `[generateMatchReport] ⚠️  Failed to fetch timeline, continuing without it:`,
       error,
@@ -243,4 +252,11 @@ async function fetchAndRecordTimeline(options: {
     if (options.persistence !== "best_effort") throw error;
     return undefined;
   }
+  if (timelineData === undefined) {
+    if (selection.clientTimeline !== undefined)
+      return await recordClientTimeline(options, selection.clientTimeline);
+    requireAvailableTimeline(options);
+    return;
+  }
+  return await stageFetchedTimeline(options, timelineData);
 }

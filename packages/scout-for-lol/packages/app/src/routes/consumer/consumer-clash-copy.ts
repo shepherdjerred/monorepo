@@ -56,13 +56,15 @@ export function formatClashIso(value: string): string {
 }
 
 export function sightingOutcomeLabel(
-  outcome: "lobby" | "win" | "loss",
+  outcome: "lobby" | "win" | "loss" | "unresolved",
 ): string {
   return outcome === "lobby"
     ? "Lobby only"
-    : outcome === "win"
-      ? "Win · scored through Feb 2026"
-      : "Loss · scored through Feb 2026";
+    : outcome === "unresolved"
+      ? "Result unresolved"
+      : outcome === "win"
+        ? "Win"
+        : "Loss";
 }
 
 export function clashTeamLabel(input: {

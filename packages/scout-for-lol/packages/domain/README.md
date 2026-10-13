@@ -14,6 +14,16 @@ identity → codec → artifacts → match-processing → notifications → reco
 A later layer may import an earlier one, never the reverse. `identity` is the
 root: it may import zod and its own siblings, nothing else.
 
+## Game results
+
+`src/artifacts/game-result.ts` describes a completed scoreboard independently
+of a Riot Match-V5 document. Participant identity namespaces are explicit and
+unknown statistics are nullable. Its pure resolver gives Riot precedence,
+fills only missing statistics from compatible evidence, preserves an
+explicitly frozen result, and leaves contradictory peer outcomes unresolved.
+Source adapters and persistence live outside this
+package.
+
 ## Workflow start requests
 
 `src/recovery/workflow-start.ts` is the contract for a recorded request to

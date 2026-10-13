@@ -64,6 +64,7 @@ import { DuelStandings } from "#src/routes/competitions/duel-standings.tsx";
 import { DuelHeadToHead } from "#src/routes/competitions/duel-head-to-head.tsx";
 import { RouteErrorPanel } from "#src/components/chrome/route-error-panel.tsx";
 import { ScoutClientPairing } from "#src/routes/scout-client-pairing.tsx";
+import { ScoutClientHistory } from "#src/routes/scout-client/scout-client-history.tsx";
 import { GUILD_ACTION_ROUTE_PERMISSIONS } from "#src/lib/player/guild-route-permissions.ts";
 import {
   accessLoader,
@@ -391,6 +392,11 @@ export const routes: RouteObject[] = [
           {
             path: "scout-client/pair/:pairingId",
             element: <ScoutClientPairing />,
+            errorElement: <RouteErrorPanel />,
+          },
+          {
+            path: "scout-client/history",
+            element: <ScoutClientHistory />,
             errorElement: <RouteErrorPanel />,
           },
           {
