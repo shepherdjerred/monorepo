@@ -990,8 +990,18 @@ fn load_creation_template(
         .execution_context
         .as_ref()
         .map_or("UTC", |v| v.timezone.as_str());
-    let values =
-        tasknotes_vault::templating::production_values(properties, caller_body, now, zone)?;
+    // Expand against effective creation values while retaining the original merge inputs.
+    let variable_properties = tasknotes_vault::creation::defaults(
+        &configured_task_type(context.config)?,
+        properties,
+        now,
+    )?;
+    let values = tasknotes_vault::templating::production_values(
+        &variable_properties,
+        caller_body,
+        now,
+        zone,
+    )?;
     let (frontmatter, body) = tasknotes_vault::templating::production_sections(text)?;
     let unknown = policy
         .get("unknown_variable_policy")

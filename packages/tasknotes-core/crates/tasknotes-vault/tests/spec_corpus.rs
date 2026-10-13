@@ -1,6 +1,10 @@
 //! Execute every immutable upstream case, with independently ported matchers.
 
-use std::{collections::BTreeMap, fs, path::PathBuf};
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    fs,
+    path::PathBuf,
+};
 
 use regex::Regex;
 use serde_json::{Value, json};
@@ -11,6 +15,7 @@ use tasknotes_vault::{
 
 type TestResult = Result<(), Box<dyn std::error::Error>>;
 mod runtime_adapter;
+mod timing_contract;
 
 #[test]
 fn full_pinned_spec_corpus() -> TestResult {
@@ -21,13 +26,13 @@ fn full_pinned_spec_corpus() -> TestResult {
         .get("files")
         .and_then(Value::as_array)
         .ok_or("manifest files missing")?;
-    let context = ExecutionContext {
-        today: temporal::parse_day("2026-02-20")?,
-        timezone: "UTC".to_owned(),
-        working_directory: "/work".to_owned(),
-    };
+    let context = corpus_context()?;
     let mut results: BTreeMap<String, (usize, usize, String)> = BTreeMap::new();
     let mut total = 0;
+    let mut executed = BTreeSet::new();
+    let mut consumed = BTreeSet::new();
+    let mut raw_failures = Vec::new();
+    let mut contract_failures = Vec::new();
     for file in files {
         let name = file
             .get("file")
@@ -50,31 +55,20 @@ fn full_pinned_spec_corpus() -> TestResult {
             let id = case.get("id").and_then(Value::as_str).ok_or("id missing")?;
             let row = results.entry(operation.to_owned()).or_default();
             row.1 += 1;
-            if !compat::supports(operation) && !runtime_adapter::supports(operation) {
-                if row.2.is_empty() {
-                    let disposition = if operation.starts_with("time.")
-                        || operation == "validation.time_entries"
-                    {
-                        "withdrawn timing capability outside Facet product scope"
-                    } else {
-                        "production operation unavailable"
-                    };
-                    row.2 = format!("{id}: {disposition}");
-                }
-                continue;
-            }
+            timing_contract::admit(id, operation)?;
+            assert!(
+                executed.insert(id.to_owned()),
+                "duplicate executed ID: {id}"
+            );
             let result = execute_case(operation, input, &context);
-            let envelope = match result {
-                Ok(result) => json!({"ok":true,"result":result}),
-                Err(
-                    tasknotes_vault::VaultError::Document(message)
-                    | tasknotes_vault::VaultError::Configuration(message),
-                ) => json!({"ok":false,"error":message}),
-                Err(tasknotes_vault::VaultError::Conflict) => {
-                    json!({"ok":false,"error":"write_conflict"})
-                }
-                Err(error) => json!({"ok":false,"error":error.to_string()}),
-            };
+            if timing_contract::contains(id) {
+                assert!(
+                    consumed.insert(id.to_owned()),
+                    "duplicate timing contract: {id}"
+                );
+                timing_contract::verify(id, operation, input, &result, &context)?;
+            }
+            let envelope = envelope(&result);
             let assertion = case
                 .get("assertion")
                 .and_then(Value::as_str)
@@ -82,15 +76,48 @@ fn full_pinned_spec_corpus() -> TestResult {
             let matched = matches_case(assertion, &envelope, case.get("expect"), input)?;
             if matched {
                 row.0 += 1;
-            } else if row.2.is_empty() {
-                row.2 = format!(
+            } else {
+                let failure = format!(
                     "{id}: actual {envelope}; expected {}",
                     case.get("expect").unwrap_or(&Value::Null)
                 );
+                raw_failures.push(id.to_owned());
+                if !timing_contract::contains(id) {
+                    contract_failures.push(failure.clone());
+                }
+                if row.2.is_empty() {
+                    row.2 = failure;
+                }
             }
         }
     }
     assert_eq!(total, 4980, "the complete immutable manifest must execute");
+    assert_eq!(
+        executed.len(),
+        total,
+        "every original input must execute once"
+    );
+    timing_contract::assert_complete(&consumed)?;
+    eprintln!(
+        "Executed original inputs: {total}; unique executed IDs: {}",
+        executed.len()
+    );
+    let (passed, failures) = raw_report(&results, total, &raw_failures, consumed.len());
+    assert!(
+        contract_failures.is_empty(),
+        "Timing-withdrawal acceptance remains failing: {} unrelated mismatches\n{}\nRaw upstream matches: {passed}/{total}\n{failures}",
+        contract_failures.len(),
+        contract_failures.join("\n")
+    );
+    Ok(())
+}
+
+fn raw_report(
+    results: &BTreeMap<String, (usize, usize, String)>,
+    total: usize,
+    raw_failures: &[String],
+    verified_timing: usize,
+) -> (usize, String) {
     let passed = results.values().map(|r| r.0).sum::<usize>();
     let failures = results
         .iter()
@@ -98,11 +125,30 @@ fn full_pinned_spec_corpus() -> TestResult {
         .map(|(operation, row)| format!("{operation}: {}/{}; {}", row.0, row.1, row.2))
         .collect::<Vec<_>>()
         .join("\n");
-    assert_eq!(
-        passed, total,
-        "Production conformance: {passed}/{total}\n{failures}"
+    eprintln!(
+        "Raw upstream matches: {passed}/{total}; raw mismatches: {raw_failures:?}; verified withdrawn timing contracts: {verified_timing}"
     );
-    Ok(())
+    (passed, failures)
+}
+
+fn corpus_context() -> tasknotes_vault::Result<ExecutionContext> {
+    Ok(ExecutionContext {
+        today: temporal::parse_day("2026-02-20")?,
+        timezone: "UTC".to_owned(),
+        working_directory: "/work".to_owned(),
+    })
+}
+
+fn envelope(result: &tasknotes_vault::Result<Value>) -> Value {
+    match result {
+        Ok(result) => json!({"ok":true,"result":result}),
+        Err(
+            tasknotes_vault::VaultError::Document(message)
+            | tasknotes_vault::VaultError::Configuration(message),
+        ) => json!({"ok":false,"error":message}),
+        Err(tasknotes_vault::VaultError::Conflict) => json!({"ok":false,"error":"write_conflict"}),
+        Err(error) => json!({"ok":false,"error":error.to_string()}),
+    }
 }
 
 fn execute_case(
