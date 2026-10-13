@@ -69,6 +69,25 @@ final class RwfExperienceTest {
   }
 
   @Test
+  void countdownReadModelsKeepTimeBetweenMatchTransitionsAndAreReusedWithinATick() {
+    var harness = start();
+    var alice = harness.loadedPlayer("Alice");
+    harness.enter(alice);
+    harness.until(() -> harness.snapshot().phase() == PhaseKind.COUNTDOWN);
+    harness.letBotsArrive();
+    harness.tick(Duration.ofMillis(100));
+    var before = harness.snapshot();
+    assertThat(harness.snapshot()).isSameAs(before);
+
+    harness.tick(Duration.ofMillis(100));
+    var after = harness.snapshot();
+    assertThat(after.phase()).isEqualTo(PhaseKind.COUNTDOWN);
+    assertThat(after.startsAt()).isEqualTo(before.startsAt());
+    assertThat(after.now()).isEqualTo(before.now().plusMillis(100));
+    assertThat(harness.snapshot()).isSameAs(after);
+  }
+
+  @Test
   void theMapPreviewsThenEveryoneFreezesAtTheirStartUntilTheGameBegins() {
     var harness = start();
     var alice = harness.loadedPlayer("Alice");

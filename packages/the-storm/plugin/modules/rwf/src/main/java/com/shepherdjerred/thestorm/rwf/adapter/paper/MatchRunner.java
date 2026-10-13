@@ -165,6 +165,7 @@ final class MatchRunner implements MatchView, MatchEvents {
   private @Nullable Instant liveAt;
   private @Nullable MatchSnapshot cached;
   private @Nullable RwfMatch cachedFor;
+  private long cachedTick;
   private OptionalInt showcase = OptionalInt.empty();
   private @Nullable UUID keepingSnapshot;
   private int lastTitle;
@@ -329,10 +330,11 @@ final class MatchRunner implements MatchView, MatchEvents {
       return Optional.empty();
     }
     var snapshot = cached;
-    if (snapshot == null || !match.equals(cachedFor)) {
+    if (snapshot == null || cachedTick != ticks || !match.equals(cachedFor)) {
       snapshot = MatchSnapshot.of(match, now());
       cached = snapshot;
       cachedFor = match;
+      cachedTick = ticks;
     }
     return Optional.of(snapshot);
   }
