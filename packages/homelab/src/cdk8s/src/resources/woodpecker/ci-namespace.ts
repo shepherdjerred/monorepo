@@ -6,6 +6,7 @@ import {
   Quantity,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { WOODPECKER_CI_NAMESPACE } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/woodpecker-credentials.ts";
+import { dockerHubPullSecretName } from "@shepherdjerred/homelab/cdk8s/src/dockerhub-pull-secrets.ts";
 
 /** Opts a namespace into Kueue's admission (see `platform/kueue.ts`). */
 export const KUEUE_MANAGED_NAMESPACE_LABEL = "kueue.x-k8s.io/managed-namespace";
@@ -47,6 +48,9 @@ export function createWoodpeckerCiNamespace(chart: Chart): void {
   new KubeServiceAccount(chart, "woodpecker-ci-default-sa", {
     metadata: { name: "default", namespace: WOODPECKER_CI_NAMESPACE },
     automountServiceAccountToken: false,
+    imagePullSecrets: [
+      { name: dockerHubPullSecretName(WOODPECKER_CI_NAMESPACE) },
+    ],
   });
 
   // Sized for the clone pod, the only CI pod without declared resources. A

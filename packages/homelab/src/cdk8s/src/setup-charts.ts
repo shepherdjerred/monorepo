@@ -40,6 +40,7 @@ import { createStormForumCharts } from "./resources/storm-forum/releases.ts";
 import versions from "./versions.ts";
 import { trackerImageReference } from "./resources/tracker/image.ts";
 import { createTrackerChart } from "./cdk8s-charts/platform/tracker.ts";
+import { prepareDockerHubPullSecrets } from "./dockerhub-pull-secrets.ts";
 
 /**
  * Sets up all charts for the application
@@ -103,5 +104,6 @@ export async function setupCharts(app: App): Promise<void> {
   // Must run last: reads the probe registry populated by every
   // TailscaleIngress/createIngress/createCloudflareTunnelBinding call above.
   createServiceProbesChart(app);
+  prepareDockerHubPullSecrets(app);
   applyApplicationReleasePolicy(app);
 }

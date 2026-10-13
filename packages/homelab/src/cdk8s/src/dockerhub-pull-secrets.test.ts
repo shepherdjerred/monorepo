@@ -1,0 +1,154 @@
+import { describe, expect, it } from "vitest";
+import { ApiObject, App, Chart } from "cdk8s";
+import { z } from "zod";
+import { prepareDockerHubPullSecrets } from "./dockerhub-pull-secrets.ts";
+
+function fixtures() {
+  const app = new App();
+  const chart = new Chart(app, "woodpecker", { namespace: "woodpecker" });
+  new ApiObject(chart, "extension", {
+    apiVersion: "apps/v1",
+    kind: "Deployment",
+    spec: {
+      template: {
+        spec: {
+          containers: [
+            {
+              image:
+                "ghcr.io/shepherdjerred/woodpecker-config-extension:current",
+            },
+          ],
+        },
+      },
+    },
+  });
+  return { app, chart };
+}
+
+function secrets(app: App) {
+  const schema = z
+    .object({
+      type: z.string(),
+      metadata: z.object({ namespace: z.string() }),
+      spec: z.object({ itemPath: z.string() }),
+    })
+    .loose();
+  return app.node
+    .findAll()
+    .filter((node) => ApiObject.isApiObject(node))
+    .filter((resource) => resource.kind === "OnePasswordItem")
+    .map((resource) => schema.parse(resource.toJson()));
+}
+
+describe("Docker Hub credential preparation", () => {
+  it("prepares one typed, reader-only secret per consumer namespace and CI", () => {
+    const { app, chart } = fixtures();
+    new ApiObject(chart, "second-worker", {
+      apiVersion: "apps/v1",
+      kind: "Deployment",
+      spec: {
+        template: {
+          spec: {
+            containers: [
+              {
+                image:
+                  "docker.io/shepherdjerred/temporal-worker@sha256:" +
+                  "1".repeat(64),
+              },
+            ],
+          },
+        },
+      },
+    });
+    prepareDockerHubPullSecrets(app);
+    expect(
+      secrets(app)
+        .map((resource) => resource.metadata.namespace)
+        .sort(),
+    ).toEqual(["woodpecker", "woodpecker-ci"]);
+    for (const resource of secrets(app)) {
+      expect(resource.type).toBe("kubernetes.io/dockerconfigjson");
+      expect(resource.spec.itemPath).toMatch(
+        /\/items\/ngzmppq52zm7sii6ato2mv3sbi$/u,
+      );
+      expect(resource).not.toHaveProperty("data");
+      expect(resource).not.toHaveProperty("stringData");
+    }
+  });
+
+  it("uses a Helm application's destination namespace for its image consumer", () => {
+    const { app, chart } = fixtures();
+    new ApiObject(chart, "velero", {
+      apiVersion: "argoproj.io/v1alpha1",
+      kind: "Application",
+      spec: {
+        destination: { namespace: "velero" },
+        source: {
+          helm: {
+            valuesObject: {
+              initContainers: [
+                { image: "ghcr.io/shepherdjerred/velero-plugin:current" },
+              ],
+            },
+          },
+        },
+      },
+    });
+    prepareDockerHubPullSecrets(app);
+    expect(
+      secrets(app)
+        .map((resource) => resource.metadata.namespace)
+        .sort(),
+    ).toEqual(["velero", "woodpecker", "woodpecker-ci"]);
+  });
+
+  it("does not provision credentials for upstream, public, or inactive charts", () => {
+    const { app } = fixtures();
+    for (const [name, image] of [
+      ["upstream", "docker.io/library/nginx:stable"],
+      ["public", "docker.io/shepherdjerred/windows-cross-compiler:current"],
+      ["other-owner", "ghcr.io/other/private:current"],
+    ] as const) {
+      const chart = new Chart(app, name, { namespace: name });
+      new ApiObject(chart, "consumer", {
+        apiVersion: "v1",
+        kind: "Pod",
+        spec: { containers: [{ image }] },
+      });
+    }
+    const inactive = new Chart(app, "inactive", { namespace: "inactive" });
+    new ApiObject(inactive, "activation", {
+      apiVersion: "v1",
+      kind: "ConfigMap",
+      data: { active: "false" },
+    });
+    prepareDockerHubPullSecrets(app);
+    expect(
+      secrets(app)
+        .map((resource) => resource.metadata.namespace)
+        .sort(),
+    ).toEqual(["woodpecker", "woodpecker-ci"]);
+  });
+
+  it("covers runtime pods whose images appear only in an admission allowlist", () => {
+    const { app } = fixtures();
+    const chart = new Chart(app, "mc-sandbox", { namespace: "mc-sandbox" });
+    new ApiObject(chart, "pod-guard", {
+      apiVersion: "admissionregistration.k8s.io/v1",
+      kind: "ValidatingAdmissionPolicy",
+      spec: {
+        validations: [
+          {
+            expression: `object.spec.containers.all(c, c.image in ["ghcr.io/shepherdjerred/the-storm-server:current"])`,
+          },
+        ],
+      },
+    });
+    prepareDockerHubPullSecrets(app);
+    expect(
+      secrets(app)
+        .map((resource) => resource.metadata.namespace)
+        .sort(),
+    ).toEqual(["mc-sandbox", "woodpecker", "woodpecker-ci"]);
+  });
+});

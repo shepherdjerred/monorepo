@@ -1,6 +1,7 @@
 import type { Chart } from "cdk8s";
 import { Namespace } from "cdk8s-plus-31";
 import { KubeServiceAccount } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { dockerHubPullSecretName } from "@shepherdjerred/homelab/cdk8s/src/dockerhub-pull-secrets.ts";
 import {
   MC_HARNESS_SERVICE_ACCOUNT,
   MC_SANDBOX_NAMESPACE,
@@ -35,5 +36,6 @@ export function createMcSandboxNamespace(chart: Chart): void {
   new KubeServiceAccount(chart, "mc-sandbox-default-sa", {
     metadata: { name: "default", namespace: MC_SANDBOX_NAMESPACE },
     automountServiceAccountToken: false,
+    imagePullSecrets: [{ name: dockerHubPullSecretName(MC_SANDBOX_NAMESPACE) }],
   });
 }
