@@ -88,7 +88,6 @@
     "vitest": "5.0.3"
   },
   "workspaces": [
-    "sandbox/practice/pinterest-internal/02_build_your_own_react/site",
     "packages/alert-dashboard",
     "packages/architecture",
     "packages/astro-opengraph-images",

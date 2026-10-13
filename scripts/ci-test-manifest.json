@@ -3,17 +3,6 @@
   "version": 2,
   "workspaces": [
     {
-      "package": "didact-reader",
-      "directory": "sandbox/practice/pinterest-internal/02_build_your_own_react/site",
-      "steps": [{ "runner": "vitest", "args": ["test"] }],
-      "excludedSuites": [
-        {
-          "path": "e2e",
-          "reason": "Playwright suite; runs in the browser E2E lane (ci/scripts/selection/playwright-targets.ts)."
-        }
-      ]
-    },
-    {
       "package": "@shepherdjerred/alert-dashboard",
       "directory": "packages/alert-dashboard",
       "steps": [

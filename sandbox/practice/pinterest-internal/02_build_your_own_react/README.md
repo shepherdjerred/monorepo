@@ -2,22 +2,26 @@
 
 Jerred Shepherd’s independent, modified TypeScript copy of [Rodrigo Pombo’s 2019 article](https://pomb.us/build-your-own-react/). The original tutorial, Didact implementation, and fiber illustrations are Pombo’s work. The prose, chapter order, and Didact architecture follow the original. This is a reading experience, with no embedded editor or runnable demos.
 
-The exercise stays in the sandbox. Only `site` is registered as the `didact-reader` Bun workspace; neighboring exercises are independent. The static site retains the `/build-your-own-react/` base path. Publication is separate from the local build.
+The exercise stays in the sandbox, outside the root Bun workspace, Turbo tasks, and CI. The static site retains the `/build-your-own-react/` base path. Publication is separate from the local build.
 
 ## Contributor commands
 
-From the repository root, install with `bun install --frozen-lockfile`, then:
+The local commands below require the dependencies declared in `site/package.json` to be available. The repository's root install does not provision this sandbox site's toolchain.
 
 ```sh
-bunx turbo run build typecheck test lint --filter=didact-reader
 cd sandbox/practice/pinterest-internal/02_build_your_own_react/site
+bun run generate
+bun run build
+bun run typecheck
+bun run test
+bun run lint
 bun run dev
 # After a production build:
 bun run test:e2e
 bun run preview --host 127.0.0.1 --port 4327
 ```
 
-`dev` generates content before starting Astro. Turbo orders generation before the focused checks. When editing numbered snapshots or `article.mdx` during a dev session, rerun `bun run generate`. Unit tests use Vitest; browser tests use Playwright’s desktop and mobile Chromium projects. CI runs unit tests through the repository reporting manifest and browser tests through its Playwright lane.
+`dev` generates content before starting Astro. Run `bun run generate` before the other local checks and after editing numbered snapshots or `article.mdx`. Unit tests use Vitest; browser tests use Playwright’s desktop and mobile Chromium projects. These checks run locally and are not registered with repository CI.
 
 ## Authoring
 

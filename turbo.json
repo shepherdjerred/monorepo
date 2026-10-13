@@ -47,39 +47,6 @@
   "remoteCache": { "uploadTimeout": 300, "signature": true },
   "futureFlags": { "longerSignatureKey": true },
   "tasks": {
-    "didact-reader#generate": {
-      "outputs": ["public/data/**", "public/fonts/**", "generated/**"],
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        "$TURBO_ROOT$/sandbox/practice/pinterest-internal/02_build_your_own_react/*",
-        "$TURBO_ROOT$/packages/scout-for-lol/packages/design-system/assets/fonts/BerkeleyMono/BerkeleyMono-Regular.woff2"
-      ]
-    },
-    "didact-reader#build": {
-      "dependsOn": ["generate"],
-      "outputs": ["dist/**"]
-    },
-    "didact-reader#typecheck": {
-      "dependsOn": ["generate"],
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        "$TURBO_ROOT$/sandbox/practice/pinterest-internal/02_build_your_own_react/*"
-      ]
-    },
-    "didact-reader#test": {
-      "dependsOn": ["generate"],
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        "$TURBO_ROOT$/sandbox/practice/pinterest-internal/02_build_your_own_react/*"
-      ]
-    },
-    "didact-reader#test:ci": {
-      "dependsOn": ["generate"],
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        "$TURBO_ROOT$/sandbox/practice/pinterest-internal/02_build_your_own_react/*"
-      ]
-    },
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**"]

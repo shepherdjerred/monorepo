@@ -11,7 +11,6 @@ export type PlaywrightTarget = {
 };
 
 export const PLAYWRIGHT_TARGETS: readonly PlaywrightTarget[] = [
-  { package: "didact-reader", reportDirectory: "didact-reader" },
   { package: "sjer.red", reportDirectory: "sjer.red" },
   {
     package: "@shepherdjerred/docs-wiki",
@@ -221,17 +220,6 @@ export async function selectPlaywrightTargets(
   const packages = workspacePackages ?? (await loadWorkspaces(repoRoot));
   const reasons = new Map<string, string[]>();
   for (const target of PLAYWRIGHT_TARGETS) {
-    addConfiguredInputReasons({
-      target,
-      changedPaths,
-      targetPackages: new Set(["didact-reader"]),
-      inputs: [
-        "sandbox/practice/pinterest-internal/02_build_your_own_react/",
-        "packages/scout-for-lol/packages/design-system/assets/fonts/BerkeleyMono/BerkeleyMono-Regular.woff2",
-      ],
-      label: "typed React lesson input",
-      reasons,
-    });
     addWorkspaceClosureReasons(target, changedPaths, packages, reasons);
     addConfiguredInputReasons({
       target,

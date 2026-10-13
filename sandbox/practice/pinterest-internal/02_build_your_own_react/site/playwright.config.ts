@@ -4,19 +4,7 @@ export default defineConfig({
   fullyParallel: true,
   workers: 2,
   retries: 0,
-  reporter:
-    Bun.env.CI === "true"
-      ? [
-          ["list"],
-          [
-            "junit",
-            {
-              outputFile:
-                "../../../../../.ci-reports/junit/didact-reader/playwright.xml",
-            },
-          ],
-        ]
-      : "list",
+  reporter: "list",
   use: {
     baseURL: "http://127.0.0.1:4327/build-your-own-react/",
     trace: "retain-on-failure",
@@ -38,7 +26,7 @@ export default defineConfig({
     command:
       "ASTRO_PREVIEW_BACKGROUND=0 bun run preview --host 127.0.0.1 --port 4327",
     url: "http://127.0.0.1:4327/build-your-own-react/",
-    reuseExistingServer: Bun.env.CI !== "true",
+    reuseExistingServer: true,
     timeout: 120_000,
   },
 });

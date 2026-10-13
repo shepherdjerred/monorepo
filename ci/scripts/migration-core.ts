@@ -147,7 +147,6 @@ export const globalPaths = [
 export const lanePaths: Readonly<Record<string, readonly string[]>> = {
   ...nativeLanePaths,
   playwright: [
-    "sandbox/practice/pinterest-internal/02_build_your_own_react",
     ...workspacePaths,
     "config/analytics-sites.json",
     "packages/architecture",

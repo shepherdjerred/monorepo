@@ -1,6 +1,6 @@
 # Practice
 
-Learning projects: books, courses, and coding challenges. Most are finished or dormant study artifacts, excluded from repo-wide lint/CI. The typed React reader below is an explicit Bun workspace with focused checks and browser CI.
+Learning projects: books, courses, and coding challenges. These are finished or dormant study artifacts — kept for reference, excluded from repo-wide lint/CI.
 
 - [a2ui-poc](a2ui-poc/) — AI agent that streams A2UI protocol messages to drive interactive UI (TypeScript, Anthropic SDK)
 - [advent-of-code](advent-of-code/) — Advent of Code solutions, 2020–2023
