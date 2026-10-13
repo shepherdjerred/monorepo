@@ -213,7 +213,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1009046@sha256:f9af3ff4f49512739f4c428cd93c91e6a168a7989ce10836805d100aa7c3e7f4",
+      "value": "2.0.0-1009606@sha256:df8115718a88d5554922c981c29added199ce4f5e105995ca978467981d3caea",
       "notes": [
         "not managed by renovate — built from packages/streambot and updated by CI version commit-back."
       ]
@@ -763,7 +763,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1009385@sha256:47c35c939a3ea1b7abf700dd550289383c8d67479d0ffacbe3a70a6bf9264d70",
+      "value": "2.0.0-1009606@sha256:64b44031785847abf17b3efc47888d3a5ce8a9c7b95b535937f32520b8a08b4a",
       "notes": [
         "CI-published Storm forum image; publication alone does not activate public production."
       ]
@@ -775,7 +775,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1009046@sha256:203652ad0822a3cf46af6d5c586b6b7ff38d1a1e00887ebf1ef66e75bd4eb2f4",
+      "value": "2.0.0-1009606@sha256:5449c657b3d5ba5a3a9af9b1c94ef038e6324c0bbd2e48d7fbe9b63c2bee0575",
       "notes": ["not managed by renovate — beta updated by version-commit-back"]
     },
     {
@@ -859,7 +859,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1009046@sha256:2df7f4536f696cfedd90345a7b31e8f1b0b567c3c50bfc4d47058ccf7eeda381",
+      "value": "2.0.0-1009606@sha256:a01c03ac96c4b33107dc3036d8502cad10a65940aaba15d105d4a2dfba5e375a",
       "notes": ["not managed by renovate — beta updated by version-commit-back"]
     },
     {
@@ -882,7 +882,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1009046@sha256:fb7e1951ce936213ca86869bb7c957e63d879b2b5a809d28c9064bff3c771f80",
+      "value": "2.0.0-1009606@sha256:aa160ed167bb366a7f061adc378ad01ce70c5169cb47fafdeea4bedcb9efb864",
       "notes": ["not managed by renovate"]
     },
     {
@@ -892,7 +892,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1009086@sha256:4e2f8380f891fe021fb146b6bcf682293b3c7cfe1e23997ec69f191e2d8909f0",
+      "value": "2.0.0-1009606@sha256:60293c1aad80ddccfc1c77c88f9be6baa119d5e72f131b7a7b08c7bf8c7eafbf",
       "notes": [
         "not managed by renovate — bootstrap build, pushed by hand: Woodpecker",
         "needs this service to generate the pipeline that would otherwise build",
@@ -906,7 +906,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1009046@sha256:21852136851708ad7e97ac9eea881d9e9748738999d9d2961a94b24fb8d29cc1",
+      "value": "2.0.0-1009606@sha256:62486574e0fb4dbee60cea2a11f2ae2d998efba0e43db4d1fcc554e60776c851",
       "notes": [
         "not managed by renovate — CI version-commit-back replaces this after each",
         "image push."
@@ -919,7 +919,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1009046@sha256:6d42f39d16669082b253ab28e71731a52ee6153e54e307bb92893befe1588e12",
+      "value": "2.0.0-1009606@sha256:a9da8bee24e9880f8ebe1a802ca320e1d7b629246de4c59bba875e94188acc22",
       "notes": [
         "not managed by renovate — main image releases update this pin through version commit-back."
       ]
@@ -1748,7 +1748,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1009086@sha256:39a16660455b39c09c02002537d1d180d763ba527cd99f53f9ea25b0342e0626",
+      "value": "2.0.0-1009606@sha256:cd6d87601925a063ea3a5402402a952e8ac4570c76f0bbfd67652ab13e218bb9",
       "notes": [
         "Custom temporal-worker image - updated by CI pipeline",
         "not managed by renovate"
@@ -1787,7 +1787,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1009046@sha256:5a9c6ceeac7b38cb0868d59bc871d4d7228d18df328514c9d9dfe5a2fbed555b",
+      "value": "2.0.0-1009606@sha256:f09de937895fb1681d130c06338fb10c4cfedeb82e1b26f91061434d01398296",
       "notes": [
         "Custom TRMNL dashboard image - updated by CI pipeline",
         "not managed by renovate"
