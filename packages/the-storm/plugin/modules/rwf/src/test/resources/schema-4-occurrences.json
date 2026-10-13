@@ -1,0 +1,12 @@
+[
+  "V\t0\tyard\tyard\t2\tother\t1",
+  "S\t0\tWAITING\tRED=1,BLUE=1\tred-1=IDLE",
+  "C\t1\tp1\tteam\t5\t",
+  "C\t1\tp2\tglobal\t2\tgg",
+  "J\t2\tp2\tarrow\t0.5\t65.0\t0.5\t1.0\t0.0\t0.0",
+  "A\t3\tp2\trewind\t",
+  "U\t3\tp1\tspeed\t1\t200",
+  "D\t4\tp2\tp1\tMelee\tiron_sword\t2.5\tp3=0.25",
+  "K\t4\tp1\tcompass\t2",
+  "B\t5\t1\t64\t1\tminecraft:coal_block\tCRATER"
+]

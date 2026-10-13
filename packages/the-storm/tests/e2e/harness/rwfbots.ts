@@ -9,6 +9,11 @@ import { matchDatabase } from "./rwf-match.ts";
 import type { ServerInfo } from "./server.ts";
 import { querySqlite, stormDataFile } from "./storm-data.ts";
 import type { RconClient } from "#e2e/harness/rcon.ts";
+import {
+  readOccurrence,
+  occurrenceTags,
+  type OccurrenceRow,
+} from "./rwf-occurrences.ts";
 
 /**
  * What the rwfbots suite reads: the shipped personalities, what a human's
@@ -264,6 +269,7 @@ export async function gzipLines(
 }
 
 export type Recording = {
+  occurrences: OccurrenceRow[];
   /** The format version from the `H` row. */
   version: number;
   roster: Map<string, { team: string; bot: boolean }>;
@@ -279,6 +285,7 @@ export type Recording = {
  */
 export function readRecording(lines: string[]): Recording {
   const recording: Recording = {
+    occurrences: [],
     version: 0,
     roster: new Map(),
     intents: [],
@@ -289,6 +296,12 @@ export function readRecording(lines: string[]): Recording {
   for (const line of lines) {
     const fields = line.split("\t");
     const field = (index: number) => fields[index] ?? "";
+    if (occurrenceTags.has(field(0))) {
+      if (recording.version !== 4)
+        throw new Error("occurrence rows require schema 4");
+      recording.occurrences.push(readOccurrence(fields));
+      continue;
+    }
     switch (field(0)) {
       case "H": {
         recording.version = Number(field(1));
@@ -329,9 +342,14 @@ export function readRecording(lines: string[]): Recording {
         recording.events.push(fields.slice(2));
         break;
       }
-      default: {
+      case "X":
+      case "P":
+      case "O": {
         // The end and payout rows are read from the database instead.
         break;
+      }
+      default: {
+        throw new Error(`unknown recording row: ${field(0)}`);
       }
     }
   }

@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.rwf.domain.record;
 
+import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -9,6 +10,7 @@ import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
 import com.shepherdjerred.thestorm.rwf.domain.poison.PoisonClock;
 import com.shepherdjerred.thestorm.rwf.testing.Samples;
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +18,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalDouble;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.json.JsonMapper;
 
 /** A schema 4 recording carries every row kind and reads back, row by row, exactly as written. */
 final class MatchReplayTest {
@@ -32,6 +35,41 @@ final class MatchReplayTest {
             new RosterEntry("p2", TeamColor.BLUE, "longbow", true),
             new RosterEntry("p3", TeamColor.BLUE, "rewind", true)),
         CombatRules.COMBAT_RULES_VERSION);
+  }
+
+  @Test
+  void sharedOccurrenceFixtureRoundTripsThroughTheJavaCodec() throws IOException {
+    String rows;
+    try (var stream =
+        requireNonNull(getClass().getResourceAsStream("/schema-4-occurrences.json"))) {
+      rows =
+          String.join("\n", JsonMapper.builder().build().readValue(stream, String[].class)) + "\n";
+    }
+    var original = fullMatch();
+    var empty =
+        new MatchRecord(
+            original.header(),
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            original.end());
+    var text = RecordCodec.encode(empty);
+    var at = text.indexOf("X\t");
+    var decoded =
+        RecordCodec.decode(text.substring(0, at) + rows + text.substring(at))
+            .fold(
+                record -> record,
+                problem -> {
+                  throw new AssertionError(problem.message());
+                });
+
+    assertThat(decoded.occurrences()).hasSize(10);
+    for (var row : rows.lines().toList()) {
+      assertThat(RecordCodec.encode(decoded)).contains(row + "\n");
+    }
   }
 
   private static List<Occurrence> everyOccurrence() {
