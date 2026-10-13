@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import type { Response } from "@discord-plays-pokemon/common";
 import type { Config } from "#src/config/schema.ts";
 import { testConfig } from "#src/__tests__/fixtures/test-config.ts";
@@ -94,6 +94,9 @@ function harness(active: boolean) {
       blockerFor: (_user: typeof USER | undefined): PlayBlocker | null => null,
     },
     publisher: {
+      sendSnapshot: () => {
+        /* commands do not request a snapshot */
+      },
       sendStatus: () => {
         /* status is not under test */
       },
@@ -108,6 +111,16 @@ function harness(active: boolean) {
 }
 
 describe("web command dispatch", () => {
+  test("snapshot recovery forwards the socket and current identity to the publisher", async () => {
+    const { deps } = harness(true);
+    const socket = { emit: vi.fn() };
+    const snapshot = vi.spyOn(deps.publisher, "sendSnapshot");
+    await handleRequest(
+      { request: { kind: "snapshot" }, socket, user: USER },
+      deps,
+    );
+    expect(snapshot).toHaveBeenCalledWith(socket, USER);
+  });
   test("a chord completing after stop cannot repopulate cleared history", async () => {
     const { emulator, inputLog, replies, send, deps } = harness(true);
     const gate = Promise.withResolvers<undefined>();

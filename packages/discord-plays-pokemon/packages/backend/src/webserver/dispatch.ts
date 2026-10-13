@@ -34,7 +34,7 @@ export type ReplySocket = Pick<Socket, "emit">;
 export type DispatchDeps = {
   readonly driver: DispatchDriver;
   readonly config: Config;
-  readonly publisher: Pick<WebPublisher, "sendStatus">;
+  readonly publisher: Pick<WebPublisher, "sendStatus" | "sendSnapshot">;
   readonly policy: PlayPolicy;
 };
 
@@ -56,6 +56,9 @@ export async function handleRequest(
       return;
     case "status":
       deps.publisher.sendStatus(socket, user);
+      return;
+    case "snapshot":
+      deps.publisher.sendSnapshot(socket, user);
       return;
   }
 }

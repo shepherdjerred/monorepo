@@ -13,6 +13,7 @@ export type Request = z.infer<typeof RequestSchema>;
 export const RequestSchema = z.discriminatedUnion("kind", [
   CommandRequestSchema,
   StatusRequestSchema,
+  z.object({ kind: z.literal("snapshot") }),
 ]);
 
 export type Response = z.infer<typeof ResponseSchema>;
