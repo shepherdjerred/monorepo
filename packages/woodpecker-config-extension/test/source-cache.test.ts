@@ -9,6 +9,7 @@ import {
   rm,
   stat,
   symlink,
+  utimes,
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -16,7 +17,10 @@ import { z } from "zod";
 import { parse } from "yaml";
 import { git } from "#src/checkout/git.ts";
 import { checkoutSource } from "#src/checkout/snapshot.ts";
-import { publishPreparedSeed } from "#src/checkout/prepared.ts";
+import {
+  collectPreparedSeeds,
+  publishPreparedSeed,
+} from "#src/checkout/prepared.ts";
 import {
   cacheSourceSteps,
   SOURCE_CACHE_PREPARATION_IMAGE,
@@ -196,6 +200,71 @@ test("prepared seeds keep dependencies private and apply source additions and de
     ).text(),
   ).toContain("default 1");
   expect(await git(workspace, ["diff", "HEAD"])).toBe("");
+});
+
+test("publication and republication retain the active seed despite newer directory times", async () => {
+  const input = await fixture();
+  const root = join(input.root, "seeds");
+  const publish = (digest: string) =>
+    publishPreparedSeed(input.repository, root, "browser", {
+      image: `fixture@sha256:${digest.repeat(64)}`,
+      capacity: async () => ({ blocks: 100, bfree: 50 }),
+    });
+  const directory = (manifest: { fingerprint: string; sourceSha: string }) =>
+    join(
+      root,
+      "v1",
+      "browser",
+      `${manifest.fingerprint}-${manifest.sourceSha}`,
+    );
+  const first = await publish("a");
+  const second = await publish("b");
+  const future = new Date(Date.now() + 60_000);
+  for (const seed of [first, second]) {
+    await utimes(directory(seed.manifest), future, future);
+  }
+  const third = await publish("c");
+  expect(third.status).toBe("completed");
+  expect(
+    await Bun.file(join(directory(third.manifest), "manifest.json")).exists(),
+  ).toBe(true);
+  expect(await readdir(join(root, "v1", "browser"))).toHaveLength(2);
+  // Reintroduce an older immutable generation to exercise the existing-seed path.
+  await mkdir(directory(first.manifest), { recursive: true });
+  await Bun.write(
+    join(directory(first.manifest), "manifest.json"),
+    JSON.stringify(first.manifest),
+  );
+  await mkdir(directory(second.manifest), { recursive: true });
+  await Bun.write(
+    join(directory(second.manifest), "manifest.json"),
+    JSON.stringify(second.manifest),
+  );
+  for (const seed of [first, second]) {
+    await utimes(directory(seed.manifest), future, future);
+  }
+  expect(await publish("c")).toEqual(third);
+  expect(await readdir(join(root, "v1", "browser"))).toHaveLength(2);
+  const index = join(
+    root,
+    "indexes",
+    "browser",
+    `${third.manifest.fingerprint}.json`,
+  );
+  expect(await Bun.file(index).json()).toEqual(third.manifest);
+  expect(
+    await Bun.file(join(directory(third.manifest), "manifest.json")).exists(),
+  ).toBe(true);
+  // Subsequent ordinary collection should also consider republication recent.
+  const past = new Date(0);
+  for (const seed of [first, second]) {
+    if (
+      await Bun.file(join(directory(seed.manifest), "manifest.json")).exists()
+    )
+      await utimes(directory(seed.manifest), past, past);
+  }
+  await collectPreparedSeeds(root);
+  expect(await Bun.file(index).exists()).toBe(true);
 });
 
 test("cold and warm checkouts retain full trees, Git history, symlinks and modes", async () => {

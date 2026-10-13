@@ -9,6 +9,7 @@ import {
   rm,
   stat,
   statfs,
+  utimes,
 } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
@@ -227,7 +228,10 @@ export async function publishPreparedSeed(
     );
     if (JSON.stringify(existing) !== JSON.stringify(manifest))
       throw new Error("Existing prepared seed identity mismatch");
+    const now = new Date();
+    await utimes(destination, now, now);
     await publishIndex(index, manifest);
+    await collectPreparedSeeds(root, destination);
     return { status: "completed" as const, manifest };
   }
   await mkdir(root, { recursive: true });
@@ -263,8 +267,10 @@ export async function publishPreparedSeed(
     if ((space.blocks - space.bfree) / space.blocks > 0.7)
       return { status: "deferred" as const, manifest };
     await rename(temporary, destination);
+    const now = new Date();
+    await utimes(destination, now, now);
     await publishIndex(index, manifest);
-    await collectPreparedSeeds(root);
+    await collectPreparedSeeds(root, destination);
     return { status: "completed" as const, manifest };
   } finally {
     await rm(temporary, { recursive: true, force: true });
@@ -357,7 +363,11 @@ export async function collectPreparedSeeds(
         }),
     );
     for (const old of generations
-      .toSorted((a, b) => b.touched - a.touched)
+      .toSorted(
+        (a, b) =>
+          Number(b.directory === activeDirectory) -
+            Number(a.directory === activeDirectory) || b.touched - a.touched,
+      )
       .slice(2)) {
       const manifest = SeedManifestSchema.parse(
         await Bun.file(path.join(old.directory, "manifest.json")).json(),

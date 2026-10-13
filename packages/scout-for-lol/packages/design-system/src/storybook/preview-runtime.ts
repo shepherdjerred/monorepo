@@ -1,4 +1,49 @@
 import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const repositoryRoot = fileURLToPath(
+  new URL("../../../../../../", import.meta.url),
+);
+
+/** Launch a static catalog using the validated executable, independent of PATH. */
+export async function previewStorybook(
+  options: {
+    packageRoot: string;
+    port: number;
+    config?: string;
+    args: readonly string[];
+  },
+  environment: NodeJS.ProcessEnv = Bun.env,
+): Promise<number> {
+  const executable = await resolvePreviewNodeExecutable(
+    options.packageRoot,
+    environment,
+  );
+  const server = Bun.spawn(
+    [
+      executable,
+      path.join(options.packageRoot, "node_modules/vite/bin/vite.js"),
+      "preview",
+      "--outDir",
+      "storybook-static",
+      "--host",
+      "127.0.0.1",
+      "--port",
+      options.port.toString(),
+      "--strictPort",
+      ...(options.config === undefined ? [] : ["--config", options.config]),
+      ...options.args,
+    ],
+    {
+      cwd: options.packageRoot,
+      env: environment,
+      stdin: "inherit",
+      stdout: "inherit",
+      stderr: "inherit",
+    },
+  );
+  return await server.exited;
+}
 
 /** Resolve the installed Node pin without trusting Bun's temporary node shim. */
 export async function resolvePreviewNodeExecutable(
@@ -6,7 +51,8 @@ export async function resolvePreviewNodeExecutable(
   environment: NodeJS.ProcessEnv = Bun.env,
 ): Promise<string> {
   const installation = Bun.spawnSync(["mise", "where", "node"], {
-    cwd: packageRoot,
+    // CI trusts the repository pin, not package-local mise task definitions.
+    cwd: repositoryRoot,
     env: environment,
     stdout: "pipe",
     stderr: "pipe",

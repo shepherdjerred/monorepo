@@ -11,7 +11,10 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, expect, test } from "vitest";
 import { z } from "zod/v4";
-import { resolvePreviewNodeExecutable } from "./preview-runtime.ts";
+import {
+  previewStorybook,
+  resolvePreviewNodeExecutable,
+} from "./preview-runtime.ts";
 
 const packageRoot = fileURLToPath(new URL("../../", import.meta.url));
 const inheritedEnvironment: NodeJS.ProcessEnv = Bun.env;
@@ -123,6 +126,59 @@ test("fails when the configured Node installation is unavailable", async () => {
       PATH: root,
     }),
   ).rejects.toThrow("requires installed Node");
+});
+
+test("the preview launches installed Node when PATH names Bun and mise cannot install tools", async () => {
+  const root = await runtimeFixture();
+  const executable = await resolvePreviewNodeExecutable(packageRoot);
+  await symlink(process.execPath, path.join(root, "node"));
+  await fakeMise(
+    root,
+    String.raw`test "$1" = where && test "$2" = node || exit 1
+test "$PWD" = "$SCOUT_TEST_REPOSITORY_ROOT" || exit 1
+printf "%s\n" "$SCOUT_TEST_NODE_ROOT"`,
+  );
+  const vite = path.join(root, "node_modules/vite/bin");
+  await mkdir(vite, { recursive: true });
+  const resultFile = path.join(root, "preview-result.json");
+  await writeFile(
+    path.join(vite, "vite.js"),
+    `require("node:fs").writeFileSync(process.env.SCOUT_TEST_PREVIEW_RESULT,
+      JSON.stringify({ isBun: typeof process.versions.bun === "string", args: process.argv.slice(2) }));`,
+  );
+  expect(
+    await previewStorybook(
+      {
+        packageRoot: root,
+        port: 5191,
+        config: "catalog.ts",
+        args: ["--debug"],
+      },
+      {
+        ...inheritedEnvironment,
+        PATH: root,
+        SCOUT_TEST_NODE_ROOT: path.dirname(path.dirname(executable)),
+        SCOUT_TEST_REPOSITORY_ROOT: path.resolve(packageRoot, "../../../.."),
+        SCOUT_TEST_PREVIEW_RESULT: resultFile,
+      },
+    ),
+  ).toBe(0);
+  expect(await Bun.file(resultFile).json()).toEqual({
+    isBun: false,
+    args: [
+      "preview",
+      "--outDir",
+      "storybook-static",
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "5191",
+      "--strictPort",
+      "--config",
+      "catalog.ts",
+      "--debug",
+    ],
+  });
 });
 
 test("rejects Bun even if the configured installation names it node", async () => {

@@ -23,7 +23,7 @@ async function maintenanceFlag(flag: string) {
     sources: {
       flag: createFlagConfigSource({
         targetingKey: "ci-maintenance-prod",
-        attributes: { environment: "prod" },
+        attributes: { environment: "prod", stage: "prod" },
         kinds: { enabled: "boolean" },
         requireFreshSnapshot: true,
       }),

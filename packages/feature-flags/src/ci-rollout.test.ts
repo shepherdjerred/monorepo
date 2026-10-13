@@ -4,6 +4,15 @@ import {
   materializeManagedNamespaceEnvironment,
 } from "./managed-flag-inventory.ts";
 
+test("automatic seed refresh waits for explicit production activation", () => {
+  const producer = materializeManagedNamespaceEnvironment(
+    managedFlagInventory,
+    "prod",
+    "temporal",
+  ).find((entry) => entry.key === "ci-workspace-seed-refresh-enabled");
+  expect(producer).toMatchObject({ default: false, rollouts: [] });
+});
+
 test.each([
   ["woodpecker", "woodpecker-source-cache-enabled"],
   ["woodpecker", "woodpecker-maintenance-lanes-enabled"],

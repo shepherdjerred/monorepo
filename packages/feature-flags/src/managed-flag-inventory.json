@@ -227,25 +227,10 @@
       "owner": "platform",
       "namespace": "temporal",
       "source": "ci-maintenance",
-      "purpose": "Refresh immutable workspace seeds after verified main changes.",
+      "purpose": "Enable production seed refresh after owner-triggered manual cache qualification.",
       "type": "boolean",
       "default": false,
-      "rollouts": [
-        {
-          "segmentKey": "ci-workspace-seed-beta",
-          "segmentOperator": "OR_SEGMENT_OPERATOR",
-          "matchType": "ALL_SEGMENT_MATCH_TYPE",
-          "constraints": [
-            {
-              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
-              "property": "stage",
-              "operator": "eq",
-              "value": "beta"
-            }
-          ],
-          "result": true
-        }
-      ],
+      "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
     },
