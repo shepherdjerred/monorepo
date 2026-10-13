@@ -1277,15 +1277,13 @@ MockBukkit suites paste a small test lobby
 (`modules/rwf/src/test/resources/fixtures/lobby`), because MockBukkit cannot
 make block data for the build's walls, panes and lanterns.
 
-Commands: `/rwf join` (gated by the managed Flipt flag
-`the-storm-rwf-enabled`; a missing `FLIPT_URL` or `FLIPT_ENVIRONMENT` keeps it
-closed; joining a match already under way watches it until the next lobby
-opens), `/rwf leave`, `/rwf kit <id>`, `/rwf kits` (the kit menu), `/rwf buy
+Commands: `/rwf join` (joining a match already under way watches it until the
+next lobby opens), `/rwf leave`, `/rwf kit <id>`, `/rwf kits` (the kit menu), `/rwf buy
 <kit>`, `/rwf rotation`, `/rwf credits`, `/rwf who`, `/rwf size`,
 `/rwf vote <map>`, `/rwf time`, `/rwf teamchat`, `/rwf stats [player]`,
 `/rwf stats top <stat>`, `/rwf stats history`, `/suicide`, `/rwf spectate`,
 `/rwf spectate next|previous` and `/rwf goto <player>`
-(`thestorm.rwf.spectate`, granted by default, behind the same Flipt flag), and
+(`thestorm.rwf.spectate`, granted by default), and
 for `thestorm.rwf.admin`: `/rwf admin status` (including the match features
 read from the flags), `/rwf admin start|stop|forcestop|skip`,
 `/rwf admin extend <seconds>`, `/rwf admin setmap <map>`,
@@ -1303,24 +1301,12 @@ match; see the arena section for how the restore is confirmed.
 
 A match moves through `Lobby`, `Countdown`, `Preparing` (only while the chosen
 map is still loading), `Preview`, `Freeze`, `Live`, `Ended` and `Resetting`.
-Each player-visible part sits behind its own managed Flipt flag, every one
-default-off with a `beta` override on, read by `FliptRwfFeatures` as each match
-opens (entity `the-storm-rwf-features`, context `world` = the map world), so a
-flag changes the next match, never the one being played:
+The [Red Warfare feature flags reference](../docs/wiki/src/content/docs/reference/red-warfare-feature-flags.md)
+owns the gameplay gates, environment values, targeting and refresh boundaries.
+`FliptRwfFeatures` supplies the immutable feature snapshot used by `MatchRunner`.
 
-| Flag                                    | When on                                                                                                                                                                                                                                                                                                                 |
-| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `the-storm-rwf-match-flow-enabled`      | Three maps go on a ballot as the lobby opens; members vote with `/rwf vote` or a podium until `voteLead` before the start, the most votes winning (a seeded draw breaks ties). The chosen map previews for `previewLength` with kits open, then teams are dealt and everyone freezes at their start for `freezeLength`. |
-| `the-storm-rwf-carry-over-enabled`      | A match that ends on its own carries its humans (with their kits, belongings still held) into the next lobby without `/rwf join`; bots and leavers are restored. A stop releases everyone.                                                                                                                              |
-| `the-storm-rwf-death-feed-enabled`      | Red Warfare's death messages in team colours, the kills column on the tab list, `Scored a kill assist worth n!` for everyone who did more than a tenth of the damage, `Stolen a kill!`, and the killer's hearts for the victim.                                                                                         |
-| `the-storm-rwf-team-chat-enabled`       | A fighter's plain chat goes to their team (`/t`), `@` or `/g` speaks to everyone, and `/rwf teamchat` flips the default (remembered per player). The dead and watchers talk among themselves (`/dead`).                                                                                                                 |
-| `the-storm-rwf-spectator-tools-enabled` | The dead watch their killer for 3 s, then get a compass menu and `/rwf spectate next` or `previous` and `/rwf goto`; Ghost and Wraith stay hidden from them.                                                                                                                                                            |
-| `the-storm-rwf-bomb-effects-enabled`    | The original's map-wide explosion sound and particles, the armed bomb's hiss and smoke, and a ten-segment arming bar per team on the bomb's hologram.                                                                                                                                                                   |
-| `the-storm-rwf-stats-enabled`           | `/rwf stats`, the lobby leaderboards, and the lifetime and per-kit totals written with each match.                                                                                                                                                                                                                      |
-
-With every flag off a match plays as before: one map, no preview or freeze, and
-everyone released at the end. Kills and assists use Red Warfare's
-responsibility shares: the damage log keeps each hit until the victim is back
+Kills and assists use Red Warfare's responsibility shares: the damage log
+keeps each hit until the victim is back
 to full health and 10 seconds have passed; the killer gets a whole kill, and
 each other attacker their share towards their killstreak, counted as an assist
 between 0.1 and 1. Bomb victims get no death message, as in the original.
@@ -1381,7 +1367,7 @@ facing the way they faced there, and its recharge shows on the experience bar.
 
 ### Kits
 
-`domain/kit/KitBook.java` holds all 33 kits: Red Warfare's twenty-five, then
+`domain/kit/KitBook.java` holds all 33 kits: Red Warfare's twenty-two, then
 Equality, Inertia and Sacrificial, then eight new to The Storm. `KITS.md` in
 the module is the per-kit reference (items, prices, tiers, every ability's
 numbers and the deviations from the original). Abilities are pure classes
@@ -1393,14 +1379,8 @@ listeners. Every kit's state lives in the match this way, the Rewind kit's
 Time Machine trail and cooldown included (`kits/Rewind.java`): a tick's
 `Ground` re-reads whether each kept spot is still a safe landing.
 
-| Flag (per player, context `world`)  | When on                                                                                                                                                                      |
-| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `the-storm-rwf-kits-enabled`        | The full kit list, the credit kit shop (`/rwf buy`, the menu's confirmation) and the weekly free rotation. Off, the player is offered Trooper, Longbow, Shortbow and Rewind. |
-| `the-storm-rwf-killstreaks-enabled` | Killstreak rewards: the tracking compass at 2 kills, wolves and a supply crate every 4, an iron golem every 8, napalm every 11, assists counting their share.                |
-
-Both default off with a `beta` override on, and are evaluated by
-`FliptPlayerFlag` for each player (the kits flag as their kits load); a
-missing `FLIPT_URL` or `FLIPT_ENVIRONMENT` keeps both off.
+`FliptPlayerFlag` supplies the player gate used by `Armory` and `Killstreaks`;
+their declarations and cache behavior are in the feature flags reference above.
 
 - Six kits are free; the rest are bought once with Red Warfare credits through
   `app/shop/KitShop`. A purchase is a pending `rwf_kit_purchase` row before the
@@ -1494,8 +1474,8 @@ archived when a sibling `<file>.archived` marker (`rwf-archive-v1`, object key,
 confirmed SHA-256, size, tab-separated) matches its size. The archiver writes
 the marker only after the object store has confirmed the upload: the
 `the-storm-rwf-recording-archive` Temporal schedule (`packages/temporal`,
-hourly on `temporal-infra-worker`, each run gated by
-`the-storm-rwf-recording-archive-enabled`) reads finished recordings through
+with its independent gate documented in the feature flags reference above)
+reads finished recordings through
 `kubectl exec`, stores them in the SeaweedFS bucket `the-storm-rwf-recordings`
 (protected, backed up daily) under `the-storm/rwf-recordings/<path>`, reads each back and hashes it, then writes
 the marker. `server/owned/plugins/TheStorm/rwf-archive.json` is the contract
@@ -2344,12 +2324,9 @@ matches use authored control by default; these diagnostics do not accept a model
 or establish the human preference gate. The separate load command checks runtime capacity without
 accepting the model or enabling ordinary learned play.
 
-Ordinary matches evaluate `the-storm-rwfbots-learning-enabled` once at the live
-transition, with the match UUID as entity and the match, map and world as context.
-The managed declaration, beta, and production defaults stay off until the
-accepted ONNX bundle is shipped with the server image. Enabling the flag also
-requires a bundle accepted after the human pilot and all promotion gates pass.
-Missing Flipt
+The independent learning gate is documented in the feature flags reference above.
+Its accepted ONNX bundle must ship with the server image after the human pilot
+and all promotion gates pass. Missing Flipt
 bootstrap and transport outages keep that match authored. A successful false
 answer is final for the match; malformed values, missing declared flags and
 authorization failures surface as errors.
@@ -2682,15 +2659,11 @@ or anyone elsewhere), and no NPC line is relayed to Discord. A line chat
 refuses is dropped. A new context is a new `ChatMoment` with its own line
 pool; the director shares every rule.
 
-Chat is gated twice: `chat.enabled` in `rwfbots.yml` (false skips it
-entirely) and the managed Flipt flag `the-storm-rwfbots-chat-enabled`
-(namespace `the-storm`, beta on, prod off), evaluated by
-`adapter.remote.FliptChatGate` off the main thread every
-`flagRefreshSeconds` for the entity `the-storm-rwfbots-chat` with the rwf
-world as context. The cached answer gates every line; the flag off, an
-evaluation error, no answer yet or an unset `FLIPT_URL` or
-`FLIPT_ENVIRONMENT` keeps bots silent. `verifyManagedChatFlag` checks the
-client's keys against `packages/feature-flags` at build time.
+`adapter.remote.FliptChatGate` evaluates the independent managed chat gate off
+the main thread. `RwfBotsPaper` wires its refresh loop into the chat director;
+the settings, targeting and environment values are in the feature flags
+reference above. `verifyManagedChatFlag` checks the client's keys against
+`packages/feature-flags` at build time.
 
 Lobby life. Before the match the bots act like players waiting for it.
 `LobbyTicker` (`adapter.paper`, driven by `BotTicker` while rwf's phase is

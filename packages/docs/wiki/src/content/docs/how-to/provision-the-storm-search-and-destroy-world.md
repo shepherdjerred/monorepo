@@ -103,32 +103,25 @@ release pipeline publish the image and ArgoCD roll `minecraft-tsmc`. The
 StatefulSet hibernates at zero replicas, so the new revision takes effect on
 the next wake.
 
-## 5. Open the flag
+## 5. Verify the gameplay flags
 
-`/rwf join` is gated by the Flipt flag `the-storm-rwf-enabled` in namespace
-`the-storm`. The
-[managed inventory](packages/feature-flags/src/managed-flag-inventory.json)
-declares it `false` by default with a `beta` override of `true`, so beta is
-already open once the inventory is reconciled.
-
-To open production, add a `prod` override for the key in the same inventory
-file and merge it. Then confirm Flipt matches:
+Use the [Red Warfare feature flags reference](/reference/red-warfare-feature-flags/)
+to identify the gameplay gates and their refresh boundaries. Confirm the
+production inventory before starting the released plugin:
 
 ```bash
 bun run check-flipt-flag-inventory -- --environment prod --namespace the-storm
 ```
 
-The match experience has a flag per part, each declared in the same
-inventory `false` by default with a `beta` override of `true`:
-`the-storm-rwf-match-flow-enabled` (map vote, preview and freeze),
-`the-storm-rwf-carry-over-enabled`, `the-storm-rwf-death-feed-enabled`,
-`the-storm-rwf-team-chat-enabled`, `the-storm-rwf-spectator-tools-enabled`,
-`the-storm-rwf-bomb-effects-enabled` and `the-storm-rwf-stats-enabled`. The
-module reads them as each match opens, so a change reaches the next match.
-Open them for production the same way, one override at a time.
+After changing the kit gate, disconnect and reconnect, complete a successful
+`/rwf join`, then verify the kits. Start a new match before checking changed
+match features. Verify bot chat, learning and archival independently using
+their entries in the reference.
 
 Do not toggle a flag in the Flipt UI alone; the inventory reconciler
-reports that as drift. The
+reports that as drift. Reconciliation creates missing keys but preserves
+existing values and targeting, so an existing disabled key needs an explicit
+operator update followed by another inventory check. The
 [flag inventory guide](/how-to/check-flipt-flag-inventory/) covers the
 command and its failure modes.
 
