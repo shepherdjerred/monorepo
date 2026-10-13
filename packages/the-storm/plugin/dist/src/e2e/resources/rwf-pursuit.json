@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "states": ["idle", "prepared", "running", "passed", "failed"],
+  "status": [
+    "state",
+    "ticks",
+    "routed",
+    "doorway",
+    "swings",
+    "attacks",
+    "observations"
+  ],
+  "observation": ["tick", "position", "visible", "waypoints", "index"],
+  "position": ["x", "y", "z"]
+}

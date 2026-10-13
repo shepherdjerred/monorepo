@@ -8,6 +8,7 @@
     "./server/owned/plugins/TheStorm/rwf-archive.json": "./server/owned/plugins/TheStorm/rwf-archive.json"
   },
   "imports": {
+    "#pursuit-wire": "./plugin/dist/src/e2e/resources/rwf-pursuit.json",
     "#client/*": "./tools/client/*",
     "#client-duel-video-wire": "./client/src/main/resources/storm-duel-video.json",
     "#client-duel-clock-wire": "./client/src/main/resources/storm-duel-clock.json",
