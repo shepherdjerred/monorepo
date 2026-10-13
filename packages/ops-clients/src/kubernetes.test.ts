@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { KubernetesClient } from "@shepherdjerred/ops-clients/kubernetes.ts";
 import { sequence } from "@shepherdjerred/ops-clients/test-support/fake-fetch.ts";
+import verifiedRootRelease from "@shepherdjerred/ops-model/fixtures/verified-root-release.json" with { type: "json" };
 
 function client(...bodies: unknown[]) {
   const fake = sequence(...bodies);
@@ -300,6 +301,19 @@ describe("KubernetesClient", () => {
     expect(requests[0]?.url).toContain(
       "fieldSelector=status.phase%21%3DSucceeded",
     );
+  });
+
+  test("validates root release receipts without dropping raw operation identity", async () => {
+    const root = {
+      ...verifiedRootRelease,
+      spec: { project: "default", destination: { namespace: "argocd" } },
+    };
+    const manual = structuredClone(root);
+    manual.status.operationState.operation.initiatedBy.username = "admin";
+    const { client: kube } = client({ metadata: {}, items: [root, manual] });
+    const applications = await kube.listArgoApplications();
+    expect(applications[0]?.verifiedReleaseTermination).toBe(true);
+    expect(applications[1]?.verifiedReleaseTermination).toBeUndefined();
   });
 
   test("maps Argo applications and rejects an unknown health enum", async () => {

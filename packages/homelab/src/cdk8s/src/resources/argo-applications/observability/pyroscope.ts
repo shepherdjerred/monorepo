@@ -1,5 +1,10 @@
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
+import { Namespace } from "cdk8s-plus-31";
+import {
+  KubePersistentVolumeClaim,
+  Quantity,
+} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
@@ -16,6 +21,33 @@ import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/
  * are wired into Grafana as a datasource (grafana-values.ts).
  */
 export function createPyroscopeApp(chart: Chart) {
+  new Namespace(chart, "pyroscope-namespace", {
+    metadata: {
+      name: "pyroscope",
+      annotations: { "argocd.argoproj.io/sync-wave": "-2" },
+    },
+  });
+  // Expand the existing claim without replacing the immutable StatefulSet
+  // template. At ~0.94 GB/day, its 32 GiB quota projected full in 17 days.
+  new KubePersistentVolumeClaim(chart, "pyroscope-existing-claim-capacity", {
+    metadata: {
+      name: "data-pyroscope-0",
+      namespace: "pyroscope",
+      labels: {
+        "velero.io/backup": "disabled",
+        "velero.io/exclude-from-backup": "true",
+      },
+      annotations: {
+        "argocd.argoproj.io/sync-wave": "-1",
+        "argocd.argoproj.io/sync-options": "Prune=false",
+      },
+    },
+    spec: {
+      accessModes: ["ReadWriteOnce"],
+      storageClassName: NVME_STORAGE_CLASS,
+      resources: { requests: { storage: Quantity.fromString("128Gi") } },
+    },
+  });
   const pyroscopeValues: HelmValuesForChart<"pyroscope"> = {
     pyroscope: {
       // Default chart mode is the all-in-one "pyroscope" target — keep a single
@@ -23,6 +55,8 @@ export function createPyroscopeApp(chart: Chart) {
       persistence: {
         enabled: true,
         storageClassName: NVME_STORAGE_CLASS,
+        // Keep this immutable template unchanged; the explicit claim above
+        // owns capacity for both existing installations and fresh installs.
         size: Size.gibibytes(32).asString(),
       },
       // Baseline request (no limits) so the profiling store isn't BestEffort.

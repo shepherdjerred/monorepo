@@ -4,20 +4,39 @@ import {
   materializeManagedNamespaceEnvironment,
 } from "./managed-flag-inventory.ts";
 
-test("automatic seed refresh waits for explicit production activation", () => {
-  const producer = materializeManagedNamespaceEnvironment(
-    managedFlagInventory,
-    "prod",
-    "temporal",
-  ).find((entry) => entry.key === "ci-workspace-seed-refresh-enabled");
-  expect(producer).toMatchObject({ default: false, rollouts: [] });
-});
+test.each(["beta", "prod"])(
+  "%s seed refresh remains restricted to beta targeting",
+  (environment) => {
+    const producer = materializeManagedNamespaceEnvironment(
+      managedFlagInventory,
+      environment,
+      "temporal",
+    ).find((entry) => entry.key === "ci-workspace-seed-refresh-enabled");
+    expect(producer).toMatchObject({
+      default: false,
+      rollouts: [
+        {
+          segmentKey: "ci-workspace-seed-beta",
+          segmentOperator: "OR_SEGMENT_OPERATOR",
+          matchType: "ALL_SEGMENT_MATCH_TYPE",
+          constraints: [
+            {
+              type: "STRING_CONSTRAINT_COMPARISON_TYPE",
+              property: "stage",
+              operator: "eq",
+              value: "beta",
+            },
+          ],
+          result: true,
+        },
+      ],
+      rules: [],
+      thresholdRollouts: [],
+    });
+  },
+);
 
-test.each([
-  ["woodpecker", "woodpecker-source-cache-enabled"],
-  ["woodpecker", "woodpecker-maintenance-lanes-enabled"],
-  ["temporal", "ci-maintenance-dispatch-enabled"],
-] as const)(
+test.each([["woodpecker", "woodpecker-source-cache-enabled"]] as const)(
   "production enables %s/%s with a complete override",
   (namespace, key) => {
     const declared = managedFlagInventory.flags.find(
@@ -44,3 +63,45 @@ test.each([
     });
   },
 );
+
+test("production maintenance remains manual-only without enabling automatic dispatch", () => {
+  const lanes = materializeManagedNamespaceEnvironment(
+    managedFlagInventory,
+    "prod",
+    "woodpecker",
+  ).find((flag) => flag.key === "woodpecker-maintenance-lanes-enabled");
+  expect(lanes).toMatchObject({
+    type: "boolean",
+    default: false,
+    rollouts: [
+      {
+        segmentKey: "woodpecker-maintenance-manual-beta",
+        segmentOperator: "OR_SEGMENT_OPERATOR",
+        matchType: "ALL_SEGMENT_MATCH_TYPE",
+        constraints: [
+          {
+            type: "STRING_CONSTRAINT_COMPARISON_TYPE",
+            property: "stage",
+            operator: "eq",
+            value: "beta",
+          },
+        ],
+        result: true,
+      },
+    ],
+    rules: [],
+    thresholdRollouts: [],
+  });
+  const dispatch = materializeManagedNamespaceEnvironment(
+    managedFlagInventory,
+    "prod",
+    "temporal",
+  ).find((flag) => flag.key === "ci-maintenance-dispatch-enabled");
+  expect(dispatch).toMatchObject({
+    type: "boolean",
+    default: false,
+    rollouts: [],
+    rules: [],
+    thresholdRollouts: [],
+  });
+});

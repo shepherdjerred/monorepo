@@ -74,7 +74,8 @@ export const MINECRAFT_SCHEDULES = schedulesInNamespace("prod", [
     overlap: ScheduleOverlapPolicy.SKIP,
     catchupWindow: "5 minutes",
     workflowExecutionTimeout: "2 hours",
-    // Runs unpaused; the-storm-rwf-recording-archive-enabled gates each run.
     memo: "Archive finished Red Warfare recordings to object storage and mark them so the plugin may prune them; skip hibernated servers without waking them",
+    initialPauseNote:
+      "Awaiting 100% candidate traffic for runRwfRecordingArchiveWorkflow and a successful recording archive canary",
   },
 ]);

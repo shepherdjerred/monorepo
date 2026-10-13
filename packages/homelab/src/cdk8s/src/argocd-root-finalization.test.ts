@@ -4,6 +4,10 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { z } from "zod";
 import {
+  isVerifiedRootReleaseTermination,
+  VERIFIED_ROOT_RELEASE_ANNOTATION,
+} from "@shepherdjerred/ops-model/argocd-release-receipt.ts";
+import {
   runArgocdCommand,
   SyncInfoEntrySchema,
   SyncRequestSchema,
@@ -729,10 +733,34 @@ test("release-root resumes at a live later phase instead of restaging", async ()
   let live = true;
   let deleteRequests = 0;
   let syncPosts = 0;
+  let receiptPatches = 0;
+  let annotations: Record<string, string> = {};
+  const startedAt = new Date().toISOString();
+  let finishedAt: string | undefined;
+  const observedApplication = () => ({
+    metadata: { name: "apps", resourceVersion: "42", annotations },
+    ...(live ? { operation: activeOperation } : {}),
+    status: {
+      resources: [],
+      sync: { status: "Synced", revision: "2.0.0-43" },
+      health: { status: "Healthy" },
+      operationState: {
+        phase: live ? "Running" : "Failed",
+        message: live ? "" : "Operation terminated",
+        startedAt,
+        finishedAt,
+        operation: activeOperation,
+        syncResult: {
+          revision: "2.0.0-43",
+          resources: [{ ...RootApplicationResource, status: "Synced" }],
+        },
+      },
+    },
+  });
   const server = Bun.serve({
     hostname: "127.0.0.1",
     port: 0,
-    fetch(request) {
+    async fetch(request) {
       const url = new URL(request.url);
       if (url.pathname === "/api/charts/apps") {
         return Response.json([
@@ -765,32 +793,41 @@ test("release-root resumes at a live later phase instead of restaging", async ()
       ) {
         deleteRequests += 1;
         live = false;
+        finishedAt = new Date().toISOString();
         return Response.json({});
       }
       if (
-        request.method === "GET" &&
+        request.method === "PATCH" &&
         url.pathname === "/api/v1/applications/apps"
       ) {
-        if (!live) {
-          return Response.json({ status: { resources: [] } });
-        }
-        return Response.json({
-          operation: activeOperation,
-          status: {
-            resources: [],
-            operationState: {
-              phase: "Running",
-              startedAt: new Date().toISOString(),
-              operation: activeOperation,
-              syncResult: {
-                revision: "2.0.0-43",
-                resources: [{ ...RootApplicationResource, status: "Synced" }],
-              },
-            },
-          },
+        const body = z
+          .object({ patchType: z.literal("json"), patch: z.string() })
+          .parse(await request.json());
+        const patch = z
+          .array(
+            z.object({ op: z.string(), path: z.string(), value: z.unknown() }),
+          )
+          .parse(JSON.parse(body.patch));
+        expect(patch[0]).toEqual({
+          op: "test",
+          path: "/metadata/resourceVersion",
+          value: "42",
         });
+        const receipt = patch.find(
+          (entry) =>
+            entry.path ===
+            "/metadata/annotations/ops.sjer.red~1verified-root-release",
+        );
+        annotations = {
+          [VERIFIED_ROOT_RELEASE_ANNOTATION]: z.string().parse(receipt?.value),
+        };
+        receiptPatches += 1;
+        return Response.json(observedApplication());
       }
-      return new Response("not found", { status: 404 });
+      return request.method === "GET" &&
+        url.pathname === "/api/v1/applications/apps"
+        ? Response.json(observedApplication())
+        : new Response("not found", { status: 404 });
     },
   });
   const directory = await mkdtemp(path.join(tmpdir(), "argocd-resume-"));
@@ -841,6 +878,8 @@ test("release-root resumes at a live later phase instead of restaging", async ()
     expect(stdout).not.toContain("stage-root-release");
     expect(syncPosts).toBe(0);
     expect(deleteRequests).toBe(1);
+    expect(receiptPatches).toBe(1);
+    expect(isVerifiedRootReleaseTermination(observedApplication())).toBe(true);
     const receipt = ReleaseReceiptSchema.parse(
       await Bun.file(path.join(directory, RELEASE_RESULT_FILE)).json(),
     );

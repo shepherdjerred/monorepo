@@ -64,7 +64,7 @@ export function createWoodpeckerPostgreSQLDatabase(chart: Chart) {
         // CI log history grows alongside retained Velero snapshot blocks.
         // Expand the existing claim for headroom without deleting history or
         // snapshots; recheck both dataset quota and growth before any resize.
-        size: "64Gi",
+        size: "256Gi",
         storageClass: "zfs-ssd",
       },
       users: {

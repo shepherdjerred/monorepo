@@ -319,6 +319,42 @@ function app(overrides: Partial<ArgoApplication>): ArgoApplication {
 }
 
 describe("argocd", () => {
+  test("verified root termination preserves current health and sync severity", () => {
+    const verified = app({
+      name: "apps",
+      verifiedReleaseTermination: true,
+      operation: {
+        phase: "Failed",
+        message: "Operation terminated",
+        startedAt: minutesAgo(3),
+        finishedAt: minutesAgo(2),
+      },
+    });
+    expect(argoAppState(verified, undefined, now)).toEqual({
+      severity: "ok",
+      needsMe: false,
+      reasons: [],
+    });
+    expect(
+      argoAppState({ ...verified, health: "Degraded" }, undefined, now)
+        .severity,
+    ).toBe("error");
+    expect(
+      argoAppState(
+        { ...verified, sync: "OutOfSync" },
+        new Date(minutesAgo(20)),
+        now,
+      ).severity,
+    ).toBe("warning");
+    const result = mapArgoApplications([verified], new Map(), context);
+    expect(result.signals).toEqual([]);
+    expect(result.changes[0]).toMatchObject({
+      kind: "sync",
+      severity: "info",
+      title: "apps release verified after owned prune termination",
+    });
+  });
+
   test("OutOfSync is info within the grace period and a warning after it", () => {
     const outOfSync = app({ sync: "OutOfSync" });
     expect(argoAppState(outOfSync, new Date(minutesAgo(5)), now).severity).toBe(

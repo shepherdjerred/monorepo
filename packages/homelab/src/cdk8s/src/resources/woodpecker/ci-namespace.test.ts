@@ -110,7 +110,7 @@ it("isolates source caches on disposable NVMe claims and mounts them in maintena
     expect(claim.metadata.labels["velero.io/exclude-from-backup"]).toBe("true");
     expect(claim.spec.storageClassName).toBe(NVME_STORAGE_CLASS_LZ4);
     expect(claim.spec.resources.requests.storage).toBe(
-      kind === "control" ? "1Gi" : "10Gi",
+      kind === "control" ? "1Gi" : "20Gi",
     );
   }
   const deployment = JSON.stringify(

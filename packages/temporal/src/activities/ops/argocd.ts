@@ -69,6 +69,7 @@ export function argoAppState(
   }
   const failed =
     app.operation !== undefined &&
+    app.verifiedReleaseTermination !== true &&
     FAILED_OPERATION_PHASES.has(app.operation.phase);
   if (failed) {
     reasons.push(`sync ${app.operation?.phase ?? ""}`.trim());
@@ -117,11 +118,14 @@ function appChanges(
       externalId: `${app.name}:sync:${operation.startedAt}`,
       kind: "sync",
       ...(service === undefined ? {} : { service }),
-      title: `${app.name} sync ${operation.phase}`,
+      title:
+        app.verifiedReleaseTermination === true
+          ? `${app.name} release verified after owned prune termination`
+          : `${app.name} sync ${operation.phase}`,
       occurredAt: new Date(
         Date.parse(operation.finishedAt ?? operation.startedAt),
       ).toISOString(),
-      severity: "error",
+      severity: app.verifiedReleaseTermination === true ? "info" : "error",
       url: argoAppLink(app.name).url,
     });
   }

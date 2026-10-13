@@ -2965,6 +2965,45 @@
           "rollouts": [],
           "rules": [],
           "thresholdRollouts": []
+        },
+        {
+          "key": "scout-explore-quota-limits",
+          "type": "variant",
+          "default": "{\"userMinute\":12,\"userHour\":90,\"userDay\":300,\"userWeek\":900,\"globalHour\":360,\"globalDay\":1800,\"globalWeek\":6000}",
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "ci-workspace-seed-refresh-enabled",
+          "type": "boolean",
+          "default": false,
+          "rollouts": [
+            {
+              "segmentKey": "ci-workspace-seed-beta",
+              "segmentOperator": "OR_SEGMENT_OPERATOR",
+              "matchType": "ALL_SEGMENT_MATCH_TYPE",
+              "constraints": [
+                {
+                  "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+                  "property": "stage",
+                  "operator": "eq",
+                  "value": "beta"
+                }
+              ],
+              "result": true
+            }
+          ],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "temporal-agent-chat-photon-owners",
+          "type": "variant",
+          "default": "+19154335144",
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
         }
       ]
     },
@@ -2990,15 +3029,30 @@
         {
           "key": "woodpecker-maintenance-lanes-enabled",
           "type": "boolean",
-          "default": true,
-          "rollouts": [],
+          "default": false,
+          "rollouts": [
+            {
+              "segmentKey": "woodpecker-maintenance-manual-beta",
+              "segmentOperator": "OR_SEGMENT_OPERATOR",
+              "matchType": "ALL_SEGMENT_MATCH_TYPE",
+              "constraints": [
+                {
+                  "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+                  "property": "stage",
+                  "operator": "eq",
+                  "value": "beta"
+                }
+              ],
+              "result": true
+            }
+          ],
           "rules": [],
           "thresholdRollouts": []
         },
         {
           "key": "ci-maintenance-dispatch-enabled",
           "type": "boolean",
-          "default": true,
+          "default": false,
           "rollouts": [],
           "rules": [],
           "thresholdRollouts": []
@@ -3324,6 +3378,45 @@
           "type": "boolean",
           "default": true,
           "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "scout_support_conversations_enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "scout-explore-quota-limits",
+          "type": "variant",
+          "default": "{\"userMinute\":12,\"userHour\":90,\"userDay\":300,\"userWeek\":900,\"globalHour\":360,\"globalDay\":1800,\"globalWeek\":6000}",
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "ci-workspace-seed-refresh-enabled",
+          "type": "boolean",
+          "default": false,
+          "rollouts": [
+            {
+              "segmentKey": "ci-workspace-seed-beta",
+              "segmentOperator": "OR_SEGMENT_OPERATOR",
+              "matchType": "ALL_SEGMENT_MATCH_TYPE",
+              "constraints": [
+                {
+                  "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+                  "property": "stage",
+                  "operator": "eq",
+                  "value": "beta"
+                }
+              ],
+              "result": true
+            }
+          ],
           "rules": [],
           "thresholdRollouts": []
         }

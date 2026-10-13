@@ -45,7 +45,7 @@ export function createAlertDashboardDeployment(chart: Chart) {
     credentials.name,
   );
   const dataVolume = new ZfsNvmeVolume(chart, "alert-dashboard-data", {
-    storage: Size.gibibytes(16),
+    storage: Size.gibibytes(64),
   });
   const dataMount = {
     path: "/data",

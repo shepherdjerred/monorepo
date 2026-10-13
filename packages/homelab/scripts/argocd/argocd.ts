@@ -33,6 +33,7 @@
  */
 
 import { requireEnv, optionalEnv } from "../../../../scripts/lib/run.ts";
+import { publishVerifiedRootReleaseReceipt } from "./argocd-verified-receipt.ts";
 import { TransientError } from "../../../../scripts/lib/transient-error.ts";
 import { runMain } from "../../../../scripts/lib/transient.ts";
 import {
@@ -3343,6 +3344,14 @@ async function releaseRootPhases(
   await assertLiveAutoSyncMatchesRelease(rootAppName, exactRevision, dryRun);
   await releaseHealthWait(expectedPath, timeoutSeconds, dryRun);
   if (!dryRun) {
+    const token = requireEnv("ARGOCD_TOKEN");
+    await publishVerifiedRootReleaseReceipt({
+      application: await getApplication(rootAppName, token),
+      requestId: exactRequestId,
+      revision: exactRevision,
+      serverUrl: serverUrl(),
+      token,
+    });
     const result = appliedVerifiedReleaseResult({
       requestId: exactRequestId,
       revision: exactRevision,
