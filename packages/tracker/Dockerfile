@@ -8,7 +8,7 @@ RUN bun install --frozen-lockfile --filter '@shepherdjerred/tracker'
 
 FROM deps AS build
 COPY --parents tsconfig.base.json packages/tracker packages/config packages/feature-flags packages/sentry-config packages/eslint-config ./
-RUN cd packages/tracker && bun run build
+RUN cd packages/tracker && bun run generate && bun run build
 
 FROM base AS prod-deps
 COPY --parents package.json bun.lock bunfig.toml patches/ scripts/package.json packages/*/package.json packages/*/packages/*/package.json packages/docs/wiki/package.json packages/homelab/src/cdk8s/package.json packages/homelab/src/helm-types/package.json ./

@@ -102,6 +102,12 @@ bunx turbo run build typecheck test lint --filter=@shepherdjerred/tracker
 bun run --cwd packages/tracker test:e2e
 ```
 
+Turbo runs the shared `generate` prerequisite once before build, typecheck,
+lint, and tests. These tasks consume that client without regenerating it in
+parallel. Run `bun run --cwd packages/tracker generate` before invoking package
+scripts directly after a schema or dependency change; the Docker build runs
+generation explicitly before building.
+
 Vitest and Playwright start private PostgreSQL clusters and clone an isolated
 database per suite. They never use a developer or production database. The
 fixtures use an in-memory object store; the production adapter always uses S3.
