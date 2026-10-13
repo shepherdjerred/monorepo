@@ -1,9 +1,10 @@
 import { expect, test } from "vitest";
-import { historyFromJSON } from "@temporalio/common/lib/proto-utils.js";
 import { Worker } from "@temporalio/worker";
 import { DeterminismViolationError } from "@temporalio/workflow";
 import { z } from "zod";
+import { SCOUT_WORKFLOW_NAMES } from "#src/identifiers.ts";
 import { SCOUT_PREMATCH_DELIVERY_PATCH } from "#src/workflows/prematch.ts";
+import { recordedUnderRenamedType } from "./recorded-history.test-fixtures.ts";
 import recordedGame from "./fixtures/dev-prematch-game.pre-delivery.json" with { type: "json" };
 
 /**
@@ -13,7 +14,8 @@ import recordedGame from "./fixtures/dev-prematch-game.pre-delivery.json" with {
  * The fixture was recorded by running the pre-patch Workflow source in the
  * time-skipping test environment against the prematch Activity stubs, and
  * fetching its history, so it carries that generation's Workflow and Activity
- * type names. It is the whole pre-patch generation: the capture, the fan-out
+ * type names; it is replayed under its renamed Workflow type
+ * (`recordedUnderRenamedType`). It is the whole pre-patch generation: the capture, the fan-out
  * plan, and the completion, with no markets Activity and no child start.
  *
  * Replaying it proves `patched` answers `false` for that generation, so an
@@ -55,7 +57,10 @@ test("a prematch game recorded before the delivery patch replays unchanged", asy
   expect(JSON.stringify(raw)).not.toContain(SCOUT_PREMATCH_DELIVERY_PATCH);
   expect(JSON.stringify(raw)).not.toContain("START_CHILD_WORKFLOW");
 
-  await Worker.runReplayHistory({ workflowsPath }, historyFromJSON(raw));
+  await Worker.runReplayHistory(
+    { workflowsPath },
+    recordedUnderRenamedType(raw, SCOUT_WORKFLOW_NAMES.prematchGame),
+  );
 }, 120_000);
 
 test("the same history fails replay once its recorded command is changed", async () => {
@@ -70,6 +75,9 @@ test("the same history fails replay once its recorded command is changed", async
   expect(JSON.stringify(tampered)).toContain("tamperedActivity");
 
   await expect(
-    Worker.runReplayHistory({ workflowsPath }, historyFromJSON(tampered)),
+    Worker.runReplayHistory(
+      { workflowsPath },
+      recordedUnderRenamedType(tampered, SCOUT_WORKFLOW_NAMES.prematchGame),
+    ),
   ).rejects.toBeInstanceOf(DeterminismViolationError);
 }, 120_000);

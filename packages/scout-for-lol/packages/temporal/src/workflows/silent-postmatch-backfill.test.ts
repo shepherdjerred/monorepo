@@ -21,7 +21,6 @@ import {
   applicationFailureOf,
   settleWorkflow,
 } from "./workflow-harness.test-fixtures.ts";
-import { withPreRenameActivityNames } from "#src/identifiers.ts";
 import { createScoutWorkerPool } from "./worker-pool.test-fixtures.ts";
 
 /**
@@ -136,7 +135,7 @@ afterEach(async () => {
 });
 
 async function startWorkers(store: Store): Promise<void> {
-  const activities = withPreRenameActivityNames(activitiesFor(store));
+  const activities = activitiesFor(store);
   for (const taskQueue of [
     "scout-dev",
     "scout-dev-realtime",
