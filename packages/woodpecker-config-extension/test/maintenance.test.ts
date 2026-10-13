@@ -19,6 +19,7 @@ test("seed maintenance requires the exact fully verified source, including manua
       () => Promise.resolve(green),
     );
     expect(steps[0]?.key).toBe("maintenance-unverified");
+    expect(steps[0]?.commands).toContain("exit 1");
   }
   const verified = await eligibleMaintenanceSteps(
     TEST_IMAGES,

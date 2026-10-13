@@ -90,6 +90,13 @@ export async function eligibleMaintenanceSteps(
         ...noWorkStep(images.base),
         key: "maintenance-unverified",
         label: "workspace seed source is not verified",
+        // A successful no-work pipeline has no publisher receipt. Fail this
+        // request so the coordinator can finish reconciling it and select the
+        // next verified revision instead of retrying a missing receipt forever.
+        commands: [
+          "echo 'Workspace seed source is not verified' >&2",
+          "exit 1",
+        ],
       },
     ];
   return requestedMaintenanceSteps(images, kind, pipeline);
