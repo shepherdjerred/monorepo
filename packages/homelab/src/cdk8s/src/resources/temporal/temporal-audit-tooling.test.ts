@@ -3,6 +3,7 @@ import { App } from "cdk8s";
 import { parseAllDocuments } from "yaml";
 import { z } from "zod";
 import { setupCharts } from "@shepherdjerred/homelab/cdk8s/src/setup-charts.ts";
+import { ContainerEnvSchema } from "@shepherdjerred/homelab/cdk8s/src/testing/container-env-schema.ts";
 
 const RuleSchema = z.object({
   apiGroups: z.array(z.string()).optional(),
@@ -57,21 +58,7 @@ const DeploymentSchema = z.object({
         automountServiceAccountToken: z.boolean(),
         containers: z.array(
           z.object({
-            env: z.array(
-              z.object({
-                name: z.string(),
-                value: z.string().optional(),
-                valueFrom: z
-                  .object({
-                    secretKeyRef: z.object({
-                      name: z.string(),
-                      key: z.string(),
-                      optional: z.boolean().optional(),
-                    }),
-                  })
-                  .optional(),
-              }),
-            ),
+            env: ContainerEnvSchema,
             livenessProbe: HttpProbeSchema,
             name: z.string(),
             ports: z.array(z.object({ containerPort: z.number() })),

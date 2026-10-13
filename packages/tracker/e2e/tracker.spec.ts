@@ -28,6 +28,20 @@ async function prepareBoard(page: Page, title: string) {
   return { card, target, handle };
 }
 
+async function moveBoardCardWithKeyboard(
+  page: Page,
+  { card, handle }: Awaited<ReturnType<typeof prepareBoard>>,
+) {
+  await handle.focus();
+  await page.keyboard.press("Space");
+  await expect(card).toHaveClass(/dragging/u);
+  await page.keyboard.press("ArrowLeft");
+  await expect(page.locator('[id^="DndLiveRegion"]')).toContainText(
+    "over Todo",
+  );
+  await page.keyboard.press("Space");
+}
+
 test("board also supports desktop keyboard and mobile long-press touch", async ({
   page,
 }, info) => {
@@ -39,14 +53,7 @@ test("board also supports desktop keyboard and mobile long-press touch", async (
       response.request().method() === "POST",
   );
   if (info.project.name === "desktop") {
-    await handle.focus();
-    await page.keyboard.press("Space");
-    await expect(card).toHaveClass(/dragging/u);
-    await page.keyboard.press("ArrowLeft");
-    await expect(page.locator('[id^="DndLiveRegion"]')).toContainText(
-      "over Todo",
-    );
-    await page.keyboard.press("Space");
+    await moveBoardCardWithKeyboard(page, { card, target, handle });
   } else {
     const origin = await handle.boundingBox();
     if (origin === null) throw new Error("Touch handle is not visible");
@@ -215,31 +222,8 @@ test("palette searches typos, list peeks, themes and mobile layout work", async 
 });
 
 test("board drag persists after reload", async ({ page }, info) => {
-  await page.goto("/board");
-  await page
-    .getByRole("button", { name: "New issue", exact: true })
-    .last()
-    .click();
   const title = `Board ${info.project.name} ${String(Date.now())}`;
-  await page.getByLabel("Issue title", { exact: true }).fill(title);
-  await page.keyboard.press("ControlOrMeta+Enter");
-  await expect(page).toHaveURL(/\/issues\/AI-\d+$/u);
-  const identifier = page.url().split("/").at(-1);
-  await expect(page.getByRole("dialog")).toHaveCount(0);
-  await page
-    .getByRole("combobox", { name: "Status", exact: true })
-    .selectOption("In progress");
-  await expect(
-    page.getByRole("combobox", { name: "Status", exact: true }),
-  ).toHaveValue("In progress");
-  await page.goto("/board");
-  const card = page.locator(".board-card").filter({ hasText: title });
-  const target = page.getByRole("region", { name: "Todo", exact: true });
-  const handle = card.getByRole("button", {
-    name: `Move ${identifier ?? ""}`,
-    exact: true,
-  });
-  await handle.scrollIntoViewIfNeeded();
+  const { card, target, handle } = await prepareBoard(page, title);
   const origin = await handle.boundingBox();
   const destination = await target.boundingBox();
   if (origin === null || destination === null)
@@ -250,14 +234,7 @@ test("board drag persists after reload", async ({ page }, info) => {
       response.request().method() === "POST",
   );
   if (info.project.name === "mobile") {
-    await handle.focus();
-    await page.keyboard.press("Space");
-    await expect(card).toHaveClass(/dragging/u);
-    await page.keyboard.press("ArrowLeft");
-    await expect(page.locator('[id^="DndLiveRegion"]')).toContainText(
-      "over Todo",
-    );
-    await page.keyboard.press("Space");
+    await moveBoardCardWithKeyboard(page, { card, target, handle });
   } else {
     await page.mouse.move(
       origin.x + origin.width / 2,

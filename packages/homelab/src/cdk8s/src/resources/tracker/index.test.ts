@@ -3,6 +3,7 @@ import { App } from "cdk8s";
 import { z } from "zod";
 import { createTrackerChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/tracker.ts";
 import { resetProbeRegistry } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/probe-registry.ts";
+import { ContainerEnvSchema } from "@shepherdjerred/homelab/cdk8s/src/testing/container-env-schema.ts";
 
 const image = `ghcr.io/shepherdjerred/tracker@sha256:${"1".repeat(64)}`;
 const manifest = z.object({
@@ -14,24 +15,11 @@ const manifest = z.object({
   }),
   spec: z.unknown(),
 });
-const EnvSchema = z.object({
-  name: z.string(),
-  value: z.string().optional(),
-  valueFrom: z
-    .object({
-      secretKeyRef: z.object({
-        name: z.string(),
-        key: z.string(),
-        optional: z.boolean().optional(),
-      }),
-    })
-    .optional(),
-});
 const container = z.object({
   name: z.string(),
   image: z.string(),
   command: z.array(z.string()),
-  env: z.array(EnvSchema),
+  env: ContainerEnvSchema,
   securityContext: z.unknown(),
 });
 function manifests() {

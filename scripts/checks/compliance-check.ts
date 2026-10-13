@@ -342,7 +342,6 @@ packages/stocks-sjer-red:test
 packages/discord-video-stream:lint
 packages/discord-plays-mario-kart/packages/common:test
 packages/discord-plays-pokemon/packages/common:test
-packages/discord-plays-pokemon/packages/frontend:test
 packages/scout-for-lol/packages/data:build
 packages/scout-for-lol/packages/report:build
 packages/hkctl:build

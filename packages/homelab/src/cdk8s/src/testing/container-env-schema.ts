@@ -12,7 +12,11 @@ export const ContainerEnvSchema = z.array(
     value: z.string().optional(),
     valueFrom: z
       .object({
-        secretKeyRef: z.object({ key: z.string(), name: z.string() }),
+        secretKeyRef: z.object({
+          key: z.string(),
+          name: z.string(),
+          optional: z.boolean().optional(),
+        }),
       })
       .optional(),
   }),

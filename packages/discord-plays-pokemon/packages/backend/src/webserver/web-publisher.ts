@@ -96,7 +96,10 @@ export class WebPublisher {
   }
 
   /** Everything a freshly opened page needs to render. */
-  sendSnapshot(socket: Pick<Socket, "emit">, user: DiscordUser | undefined): void {
+  sendSnapshot(
+    socket: Pick<Socket, "emit">,
+    user: DiscordUser | undefined,
+  ): void {
     const state: StateResponse = { kind: "state", value: this.state };
     const events: EventsResponse = { kind: "events", value: [...this.events] };
     const inputs: InputsResponse = {

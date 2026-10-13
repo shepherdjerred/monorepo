@@ -192,6 +192,16 @@
       ]
     },
     {
+      "package": "@discord-plays-pokemon/frontend",
+      "directory": "packages/discord-plays-pokemon/packages/frontend",
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["src"]
+        }
+      ]
+    },
+    {
       "package": "@shepherdjerred/discord-stream-lifecycle",
       "directory": "packages/discord-stream-lifecycle",
       "steps": [
@@ -1075,7 +1085,8 @@
           "args": [
             "tests/rcon.test.ts",
             "tests/capacity/capacity-bars.test.ts",
-            "scripts/bots/mineskin.test.ts"
+            "scripts/bots/mineskin.test.ts",
+            "scripts/bots/expanded-kit-weights.test.ts"
           ]
         },
         {
@@ -1169,11 +1180,6 @@
       "package": "@discord-plays-pokemon/common",
       "directory": "packages/discord-plays-pokemon/packages/common",
       "reason": "Shared types only; no test files exist."
-    },
-    {
-      "package": "@discord-plays-pokemon/frontend",
-      "directory": "packages/discord-plays-pokemon/packages/frontend",
-      "reason": "Static frontend package; no test files exist."
     },
     {
       "package": "@shepherdjerred/cooklang-rich-preview",
