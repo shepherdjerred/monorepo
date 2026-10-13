@@ -51,6 +51,20 @@ export function isStart(input: string): boolean {
   return includesValue(start, input);
 }
 
+// The shoulder buttons. `l` and `r` already mean the d-pad's left and right,
+// so the shoulders take the controller-style names.
+export const leftShoulder = ["lb", "lshoulder"] as const;
+type LeftShoulder = (typeof leftShoulder)[number];
+export function isLeftShoulder(input: string): boolean {
+  return includesValue(leftShoulder, input);
+}
+
+export const rightShoulder = ["rb", "rshoulder"] as const;
+type RightShoulder = (typeof rightShoulder)[number];
+export function isRightShoulder(input: string): boolean {
+  return includesValue(rightShoulder, input);
+}
+
 export const command = [
   ...left,
   ...right,
@@ -60,5 +74,17 @@ export const command = [
   ...b,
   ...select,
   ...start,
+  ...leftShoulder,
+  ...rightShoulder,
 ] as const;
-export type Command = Left | Right | Up | Down | A | B | Select | Start;
+export type Command =
+  | Left
+  | Right
+  | Up
+  | Down
+  | A
+  | B
+  | Select
+  | Start
+  | LeftShoulder
+  | RightShoulder;

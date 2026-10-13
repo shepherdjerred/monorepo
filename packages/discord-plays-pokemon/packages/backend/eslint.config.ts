@@ -21,7 +21,7 @@ const config = [
         "src/game/command/chord-validator.test.ts",
         "src/game/command/chord-executor.test.ts",
         "src/discord/event-notifier.test.ts",
-        "src/discord/message-handler.test.ts",
+        "src/game/command/interactive-chord.test.ts",
         "src/discord/slashCommands/commands/goal.test.ts",
         "src/emulator/audio/analysis.test.ts",
         "src/emulator/audio/audio-fingerprint.test.ts",
@@ -49,6 +49,10 @@ const config = [
         "src/goal/goal-process-helpers.test.ts",
         "src/goal/goal-state-store.test.ts",
         "src/lifecycle/pokemon-driver.test.ts",
+        "src/game/input-log.test.ts",
+        "src/emulator/audio/pcm-s16.test.ts",
+        "src/webserver/dispatch.test.ts",
+        "src/webserver/web-publisher.test.ts",
         "src/goal/schema-helpers.test.ts",
         "src/goal/control/semantic-control-routes.test.ts",
         "src/goal/control/goal-control-gate.test.ts",
@@ -65,7 +69,7 @@ const config = [
       ],
       // Test files are excluded from tsconfig (test globals aren't visible
       // to tsc), so they fall to the default project; raise the cap.
-      maximumDefaultProjectFileMatchCount_THIS_WILL_SLOW_DOWN_LINTING: 60,
+      maximumDefaultProjectFileMatchCount_THIS_WILL_SLOW_DOWN_LINTING: 80,
     },
   }),
   {

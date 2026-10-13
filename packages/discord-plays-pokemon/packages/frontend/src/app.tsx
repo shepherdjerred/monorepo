@@ -20,6 +20,8 @@ import type {
 export function App() {
   const [player, _setPlayer] = useState<Player>();
   const [status, _setStatus] = useState<Status>({
+    sessionActive: false,
+    driverFeedEnabled: false,
     playerList: [],
   });
   const [connection, setConnection] = useState<Connection>({

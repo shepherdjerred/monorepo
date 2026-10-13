@@ -11,6 +11,7 @@ import type {
   NearbyObject,
   SpatialSnapshot,
 } from "#src/game/spatial/spatial-snapshot.ts";
+import { countDexOwned } from "#src/game/pokedex.ts";
 
 const NO_SNAPSHOT_MESSAGE =
   "Game state unavailable (no save loaded or mid-relocation).";
@@ -84,22 +85,6 @@ function formatLastCatchLine(snapshot: GameSnapshot): string {
   const name = titleCase(speciesName(snapshot.caughtMonSpecies));
   const shiny = snapshot.caughtMonShiny ? "yes" : "no";
   return `Last caught: ${name} (shiny: ${shiny})`;
-}
-
-function countDexOwned(bitfield: Uint8Array): number {
-  let total = 0;
-  for (const byte of bitfield) {
-    total += popcount8(byte);
-  }
-  return total;
-}
-
-function popcount8(byte: number): number {
-  // Standard popcount on a byte. Branchless, no lookup table required.
-  let n = byte & 0xff;
-  n = n - ((n >> 1) & 0x55);
-  n = (n & 0x33) + ((n >> 2) & 0x33);
-  return (n + (n >> 4)) & 0x0f;
 }
 
 export function formatLocationLine(spatial: SpatialSnapshot): string {

@@ -113,6 +113,7 @@ export function createPokemonDeployment(chart: Chart) {
       image: `ghcr.io/shepherdjerred/discord-plays-pokemon:${versions["shepherdjerred/discord-plays-pokemon"]}`,
       envVariables: {
         NODE_ENV: EnvValue.fromValue("production"),
+        WEB_PUBLIC_ORIGIN: EnvValue.fromValue("https://pokebot.sjer.red"),
         // The image has no /home/bun for uid 1000 and APP_ROOT is root-owned;
         // goal mode's tool downloads and bun's cache need writable TMPDIR/HOME.
         // Backed by the emptyDir mounts below (codifies the 2026-07-06 live

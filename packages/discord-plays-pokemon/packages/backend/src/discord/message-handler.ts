@@ -3,28 +3,13 @@ import { Events, ChannelType } from "discord.js";
 import { parseChord, type Chord } from "#src/game/command/chord.ts";
 import {
   effectiveChordDelay,
-  execute,
+  executeInteractiveChord,
 } from "#src/game/command/chord-executor.ts";
 import { isValid } from "#src/game/command/chord-validator.ts";
 import type { CommandInput } from "#src/game/command/command-input.ts";
 import type { PokemonGameDriver } from "#src/lifecycle/pokemon-driver.ts";
 import { logger } from "#src/logger.ts";
 import type { Config } from "#src/config/schema.ts";
-import { InputLeaseConflictError } from "#src/emulator/emulator.ts";
-
-export async function executeInteractiveChord(
-  chord: Chord,
-  fn: (commandInput: CommandInput) => Promise<void>,
-  delayBetweenActionsMs: number,
-): Promise<boolean> {
-  try {
-    await execute(chord, fn, delayBetweenActionsMs);
-    return true;
-  } catch (error) {
-    if (error instanceof InputLeaseConflictError) return false;
-    throw error;
-  }
-}
 
 export function handleMessages(
   client: Client,
@@ -114,7 +99,8 @@ async function handleMessage(
   if (isValid(chord, chatLimits)) {
     const accepted = await executeInteractiveChord(
       chord,
-      fn,
+      (input) =>
+        driver.getActiveRuntime() === runtime ? fn(input) : Promise.resolve(),
       effectiveChordDelay(
         commands.chord.delay,
         commands.delay_between_actions_in_milliseconds,
@@ -126,6 +112,12 @@ async function handleMessage(
       );
       return;
     }
+    if (driver.getActiveRuntime() !== runtime) return;
+    driver.inputLog.record({
+      user: event.member.displayName,
+      source: "discord",
+      command: event.content.trim(),
+    });
     await event.react(`👍`);
   } else {
     await event.react(`⛔`);

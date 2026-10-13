@@ -5,3 +5,5 @@ export * from "./model/player.ts";
 export * from "./model/status.ts";
 export * from "./model/command.ts";
 export * from "./model/screenshot.ts";
+export * from "./model/game-state.ts";
+export * from "./model/feed.ts";

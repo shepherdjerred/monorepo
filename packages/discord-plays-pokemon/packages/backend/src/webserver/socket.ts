@@ -1,4 +1,5 @@
 import type http from "node:http";
+import { DRIVER_FEED_PATH } from "@shepherdjerred/discord-plays-core/driver-feed/protocol.ts";
 import {
   createGameSocket,
   type GameSocketChannel,
@@ -11,15 +12,18 @@ type SocketChannel = GameSocketChannel<Request>;
 export function createSocket({
   server,
   isCorsEnabled,
+  publicOrigin,
 }: {
   server: http.Server;
   isCorsEnabled: boolean;
+  publicOrigin: string;
 }): SocketChannel {
   return createGameSocket({
     server,
     isCorsEnabled,
+    allowedOrigin: publicOrigin,
     requestSchema: RequestSchema,
-    ownedUpgradePaths: [],
+    ownedUpgradePaths: [DRIVER_FEED_PATH],
     // Commands arrive per keypress.
     quietKinds: ["command"],
     logger,

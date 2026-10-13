@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import { InputLeaseConflictError } from "#src/emulator/emulator.ts";
 import type { CommandInput } from "#src/game/command/command-input.ts";
-import { executeInteractiveChord } from "./message-handler.ts";
+import { executeInteractiveChord } from "#src/game/command/chord-executor.ts";
 
 const COMMAND: CommandInput = {
   command: "a",

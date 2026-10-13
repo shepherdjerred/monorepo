@@ -6,6 +6,12 @@ import {
   ScreenshotRequestSchema,
   ScreenshotResponseSchema,
 } from "./screenshot.ts";
+import { StateResponseSchema } from "./game-state.ts";
+import {
+  EventsResponseSchema,
+  InputResultResponseSchema,
+  InputsResponseSchema,
+} from "./feed.ts";
 
 export type Request = z.infer<typeof RequestSchema>;
 export const RequestSchema = z.discriminatedUnion("kind", [
@@ -20,4 +26,8 @@ export const ResponseSchema = z.discriminatedUnion("kind", [
   LoginResponseSchema,
   StatusResponseSchema,
   ScreenshotResponseSchema,
+  StateResponseSchema,
+  EventsResponseSchema,
+  InputsResponseSchema,
+  InputResultResponseSchema,
 ]);

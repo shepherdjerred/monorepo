@@ -53,6 +53,8 @@ export type CreateGameSocketOptions<
   readonly quietKinds?: readonly TRequest["kind"][];
   /** Resolve each connection's signed-in user; omit for anonymous pages. */
   readonly identify?: IdentifySocket<TIdentity>;
+  /** When supplied, admit browser handshakes only from this deployment origin. */
+  readonly allowedOrigin?: string;
   readonly logger: Logger;
 };
 
@@ -66,6 +68,7 @@ export function createGameSocket<
   ownedUpgradePaths,
   quietKinds = [],
   identify,
+  allowedOrigin,
   logger,
 }: CreateGameSocketOptions<TRequest, TIdentity>): GameSocketChannel<
   TRequest,
@@ -78,6 +81,16 @@ export function createGameSocket<
   }
 
   const io = new Server(server, {
+    ...(allowedOrigin === undefined
+      ? {}
+      : {
+          allowRequest: (
+            request: http.IncomingMessage,
+            done: (error: string | null, success: boolean) => void,
+          ) => {
+            done(null, request.headers.origin === allowedOrigin);
+          },
+        }),
     // engine.io ends every upgrade outside its own path after 1 s unless the
     // socket reports bytes written. Bun's upgraded sockets report none, so it
     // was cutting the driver feed's WebSocket every second. Upgrades are

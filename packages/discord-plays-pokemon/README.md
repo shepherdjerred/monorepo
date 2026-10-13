@@ -16,8 +16,21 @@ Fully headless — no browser, no emulator UI, no GPU, no desktop:
   in-repo fork of
   [`@dank074/discord-video-stream`](https://github.com/dank074/Discord-video-stream))
   (a self-bot Go-Live), so viewers watch in the voice channel.
-- **Input** — a Discord bot takes button/chord commands (plus an optional web
-  UI) and feeds them into the emulator's input queue.
+- **Live feed** — with `[driver_feed]` enabled, the same frames are encoded a
+  second time (crisp nearest-neighbour upscale to 720×480) and sent over a
+  WebSocket to the web page, which decodes them with WebCodecs. The encoder,
+  hub, and route are shared with Mario Kart in
+  [`discord-plays-core`](../discord-plays-core/README.md); off by default.
+- **Input** — a Discord bot takes button/chord commands and feeds them into the
+  emulator's input queue. The web page sends the same chords, under the same
+  limits; `lb`/`rb` reach the shoulder buttons (`l`/`r` are d-pad left/right).
+- **Web page** — every open page is pushed the game state (location, party,
+  badges, Pokédex, money, goal), an in-game event feed, recent inputs from
+  Discord and the web, and who is in the voice channel
+  (`backend/src/webserver/web-publisher.ts`).
+  With the web API enabled, `WEB_PUBLIC_ORIGIN` must name this deployment's
+  exact origin. Socket handshakes are restricted to it, and the event/input
+  feeds are cleared when the game session changes.
 - **Goal agent** — optional Codex goal mode reads a versioned engine observation
   (phase, readiness, current map, collision, party, inventory, progression, and
   battle state) and plays through serialized semantic controls. Its primary

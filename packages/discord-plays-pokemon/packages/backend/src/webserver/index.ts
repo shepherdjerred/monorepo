@@ -9,11 +9,13 @@ export function createWebServer({
   isCorsEnabled,
   isApiEnabled,
   webAssetsPath,
+  publicOrigin,
 }: {
   port: number;
   isCorsEnabled: boolean;
   isApiEnabled: boolean;
   webAssetsPath: string;
+  publicOrigin: string | undefined;
 }) {
   return coreCreateWebServer({
     port,
@@ -23,6 +25,10 @@ export function createWebServer({
     registry,
     logger,
     assertPathExists,
-    createSocket,
+    createSocket: (args) => {
+      if (publicOrigin === undefined)
+        throw new Error("web API requires a public origin");
+      return createSocket({ ...args, publicOrigin });
+    },
   });
 }
