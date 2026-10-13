@@ -45,10 +45,10 @@ RUN --mount=type=secret,id=github-download-token,env=GH_TOKEN,required=true \
     && GITHUB_TOKEN="${GH_TOKEN}" mise install --locked bun node 'github:theseus-rs/postgresql-binaries' 'aqua:temporalio/cli' \
     && mise reshim \
     && chmod -R a+rX /opt/mise \
-    && mise exec -- bun --version \
-    && mise exec -- node --version \
-    && mise exec -- postgres --version \
-    && mise exec -- temporal --version
+    && mise exec bun -- bun --version \
+    && mise exec node -- node --version \
+    && mise exec 'github:theseus-rs/postgresql-binaries' -- postgres --version \
+    && mise exec 'aqua:temporalio/cli' -- temporal --version
 RUN bun --version \
   && bun -e 'const info = await Bun.file("/ms-playwright/.docker-info").json(); if (typeof info.driverVersion !== "string" || !/^[0-9]+\.[0-9]+\.[0-9]+$/.test(info.driverVersion)) throw new Error("invalid Playwright browser inventory")' \
   && test -x /ms-playwright/chromium-*/chrome-linux*/chrome \
