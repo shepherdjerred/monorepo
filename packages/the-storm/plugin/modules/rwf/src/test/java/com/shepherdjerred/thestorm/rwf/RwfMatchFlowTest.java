@@ -43,6 +43,7 @@ import org.bukkit.entity.TNTPrimed;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -483,12 +484,18 @@ final class RwfMatchFlowTest {
   }
 
   @Test
-  void anAfkHumanIsChargedTwoCreditsInsteadOfBeingPaid() {
+  void anAfkHumanIsChargedDespiteEquivalentWrappedYawUpdates() {
     var harness = start();
     var alice = harness.loadedPlayer("Alice");
     var account = new AccountId.Player(alice.getUniqueId());
     harness.wallets.hold(account, Money.rwfCredits(5));
     harness.goLiveIdle(alice);
+    var from = alice.getLocation();
+    from.setYaw(260.90973f);
+    var normalized = from.clone();
+    normalized.setYaw(-99.09027f);
+    harness.server.getPluginManager().callEvent(new PlayerMoveEvent(alice, from, normalized));
+    harness.server.getPluginManager().callEvent(new PlayerMoveEvent(alice, normalized, from));
     var matchId = harness.snapshot().matchId();
     var enemy = enemyOf(teamOf(alice));
     harness.tick(Duration.ofSeconds(61));
