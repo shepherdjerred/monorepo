@@ -54,7 +54,7 @@ export async function setupCharts(app: App): Promise<void> {
   const trackerImage = trackerImageReference(
     versions["shepherdjerred/tracker"],
   );
-  if (trackerImage !== undefined) createTrackerChart(app, trackerImage);
+  createTrackerChart(app, trackerImage);
   createScoutChart(app, "beta");
   createScoutChart(app, "prod");
   createStarlightKarmaBotChart(app, "beta");

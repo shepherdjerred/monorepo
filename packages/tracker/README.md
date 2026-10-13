@@ -10,6 +10,12 @@ ingress to the tailnet and explicitly authorized cluster clients. Actor
 envelopes provide attribution, not proof of identity. Do not expose this app
 through a public ingress.
 
+The homelab chart remains packageable while its image is unpublished by rendering
+only an inactive marker. The root ArgoCD chart omits Tracker until the release
+supplies a published immutable image; that gate activates its private ingress,
+database, migration and service together. Writes and imports retain their
+independent flags and remain disabled until acceptance.
+
 ## Development
 
 From the repository root, install the pinned tools and workspace dependencies:

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: tracker
+description: Private homelab issue tracker
+type: application
+version: "$version"
+appVersion: "$appVersion"

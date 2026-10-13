@@ -4,6 +4,10 @@ import { z } from "zod";
 import { createTrackerChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/tracker.ts";
 import { resetProbeRegistry } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/probe-registry.ts";
 import { ContainerEnvSchema } from "@shepherdjerred/homelab/cdk8s/src/testing/container-env-schema.ts";
+import { discoverChartInputs } from "@shepherdjerred/homelab/scripts/helm/helm-release-core.ts";
+import { mkdtemp, rm } from "node:fs/promises";
+import path from "node:path";
+import { tmpdir } from "node:os";
 
 const image = `ghcr.io/shepherdjerred/tracker@sha256:${"1".repeat(64)}`;
 const manifest = z.object({
@@ -26,6 +30,37 @@ function manifests() {
   return z.array(manifest).parse(createTrackerChart(new App(), image).toJson());
 }
 beforeEach(resetProbeRegistry);
+
+test("an unpublished image renders only a preparation marker", () => {
+  const resources = createTrackerChart(new App(), undefined).toJson();
+  expect(resources).toHaveLength(1);
+  expect(resources[0]).toMatchObject({
+    kind: "ConfigMap",
+    data: { active: "false" },
+  });
+});
+
+test.each([undefined, image])(
+  "packages the checked-in Helm chart with image %s",
+  async (publishedImage) => {
+    const directory = await mkdtemp(path.join(tmpdir(), "tracker-chart-"));
+    try {
+      const outdir = path.join(directory, "dist");
+      const app = new App({ outdir });
+      createTrackerChart(app, publishedImage);
+      app.synth();
+      const helm = path.join(directory, "helm");
+      await Bun.write(
+        path.join(helm, "tracker/Chart.yaml"),
+        Bun.file(new URL("../../../helm/tracker/Chart.yaml", import.meta.url)),
+      );
+      const inputs = await discoverChartInputs(helm, outdir);
+      expect(inputs.map((input) => input.name)).toEqual(["tracker"]);
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  },
+);
 
 test("preregisters a hardened service and migration with operator-owned PostgreSQL and private ingress", () => {
   const resources = manifests();
