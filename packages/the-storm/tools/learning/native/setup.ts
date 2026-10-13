@@ -20,8 +20,9 @@ const Fighter = z.strictObject({
   heldSlot: z.literal(1),
 });
 export const DuelSetup = z.strictObject({
-  schema: z.literal(2),
+  schema: z.literal(3),
   kind: z.literal("rwf-native-duel-setup"),
+  authoredBaseline: z.literal("rwf-hard-seeded-v1"),
   match: z.uuid(),
   seed: z.number().int(),
   side: z.enum(["red", "blue"]),
@@ -39,8 +40,9 @@ export type DuelSetup = z.infer<typeof DuelSetup>;
 if (
   JSON.stringify(wire) !==
   JSON.stringify({
-    version: 2,
+    version: 3,
     kind: "rwf-native-duel-setup",
+    authoredBaseline: "rwf-hard-seeded-v1",
     world: "minecraft:rwf",
     worldTimes: [0, 15_000],
     kit: "trooper",
@@ -99,6 +101,7 @@ export function validateSetup(raw: unknown, state: DuelState): DuelSetup {
 
 export function pairedSetup(learned: DuelSetup, authored: DuelSetup): void {
   const stable = (setup: DuelSetup) => ({
+    authoredBaseline: setup.authoredBaseline,
     seed: setup.seed,
     side: setup.side,
     opponent: setup.opponent,

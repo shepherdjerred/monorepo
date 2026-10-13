@@ -356,6 +356,7 @@
       "entry": [
         "vitest.capacity.config.ts",
         "vitest.capacity-native.config.ts",
+        "vitest.capacity-frame-pacing.config.ts",
         "vitest.e2e.config.ts",
         "vitest.full.config.ts",
         "vitest.startup.config.ts",

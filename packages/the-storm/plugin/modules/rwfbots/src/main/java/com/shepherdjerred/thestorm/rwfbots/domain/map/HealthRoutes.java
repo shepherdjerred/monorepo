@@ -1,0 +1,263 @@
+package com.shepherdjerred.thestorm.rwfbots.domain.map;
+
+import com.shepherdjerred.thestorm.rwfbots.domain.world.Hop;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.Waypoint;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.OptionalDouble;
+import java.util.PriorityQueue;
+import java.util.function.IntToDoubleFunction;
+import java.util.function.IntUnaryOperator;
+import org.jspecify.annotations.Nullable;
+
+/**
+ * Exact shortest routes under a cumulative health-point budget, including safer alternate prefixes.
+ */
+public final class HealthRoutes {
+  private HealthRoutes() {}
+
+  /** Damage budget is available health minus the health the caller requires on arrival. */
+  public record RiskPolicy(
+      double damageBudget, double ticksPerHealthPoint, OptionalDouble deadlineTicks) {
+    public RiskPolicy(double damageBudget, double ticksPerHealthPoint) {
+      this(damageBudget, ticksPerHealthPoint, OptionalDouble.empty());
+    }
+
+    public RiskPolicy {
+      if (!Double.isFinite(damageBudget) || damageBudget < 0)
+        throw new IllegalArgumentException("damage budget must be finite and non-negative");
+      if (!Double.isFinite(ticksPerHealthPoint) || ticksPerHealthPoint < 0)
+        throw new IllegalArgumentException("health cost must be finite and non-negative");
+      if (deadlineTicks.isPresent()
+          && (!Double.isFinite(deadlineTicks.orElseThrow()) || deadlineTicks.orElseThrow() < 0))
+        throw new IllegalArgumentException("arrival deadline must be finite and non-negative");
+    }
+
+    boolean allows(double ticks) {
+      return deadlineTicks.isEmpty() || ticks <= deadlineTicks.orElseThrow();
+    }
+  }
+
+  public record Request(int from, int to, RiskPolicy risk, IntToDoubleFunction penalty) {
+    public Request(int from, int to, double damageBudget, IntToDoubleFunction penalty) {
+      this(from, to, new RiskPolicy(damageBudget, 0), penalty);
+    }
+
+    public double damageBudget() {
+      return risk.damageBudget();
+    }
+  }
+
+  /** The accepted path and the conservative predicted cumulative damage in health points. */
+  public record Route(NavPath path, int damage, double weightedCost) {}
+
+  @FunctionalInterface
+  public interface DamageAt {
+    int damage(int edge, double arrivalTicks);
+  }
+
+  public record EdgePolicy(DamageAt damage, NavGraph.EdgeMotion motion, boolean timed) {
+    public EdgePolicy(IntUnaryOperator damage, NavGraph.EdgeMotion motion) {
+      this((edge, arrival) -> damage.applyAsInt(edge), motion, false);
+    }
+
+    public static EdgePolicy timed(DamageAt damage, NavGraph.EdgeMotion motion) {
+      return new EdgePolicy(damage, motion, true);
+    }
+  }
+
+  /**
+   * Keeps the ordinary search as the fast path when its chosen route is safe. The supplied edge
+   * damage must be a conservative whole-health-point bound for the current motor.
+   */
+  public static Optional<Route> find(NavGraph graph, Request request, IntUnaryOperator edgeDamage) {
+    return find(graph, request, edgeDamage, null);
+  }
+
+  /** Reuses ordinary search scratch for the common case whose cheapest route already fits. */
+  public static Optional<Route> find(
+      NavGraph graph,
+      Request request,
+      IntUnaryOperator edgeDamage,
+      NavGraph.@Nullable SearchWorkspace workspace) {
+    return find(
+        graph,
+        request,
+        new EdgePolicy(edgeDamage, new NavGraph.EdgeMotion(graph::edgeCost, edge -> true, 1)),
+        workspace);
+  }
+
+  public static Optional<Route> find(
+      NavGraph graph,
+      Request request,
+      EdgePolicy edges,
+      NavGraph.@Nullable SearchWorkspace workspace) {
+    if (request.from() < 0
+        || request.from() >= graph.nodeCount()
+        || request.to() < 0
+        || request.to() >= graph.nodeCount())
+      throw new IllegalArgumentException("route endpoint outside graph");
+    if (edges.timed()) return new Search(graph, request, edges).find();
+    IntToDoubleFunction penalty = node -> checkedPenalty(request.penalty(), node);
+    var weights =
+        new NavGraph.PathWeights(
+            penalty,
+            edge -> checkedDamage(edges.damage(), edge, 0) * request.risk().ticksPerHealthPoint(),
+            edges.motion());
+    var scratch = workspace == null ? graph.workspace() : workspace;
+    var unconstrained = graph.path(request.from(), request.to(), weights, scratch);
+    if (unconstrained.isEmpty()) return Optional.empty();
+    var ordinary = unconstrained.orElseThrow();
+    var damage = damage(graph, ordinary, edges.damage());
+    if (damage <= request.damageBudget() && request.risk().allows(ordinary.cost())) {
+      var cost = ordinary.cost() + damage * request.risk().ticksPerHealthPoint();
+      for (var index = 1; index < ordinary.nodes().size(); index++)
+        cost += penalty.applyAsDouble(ordinary.nodes().get(index));
+      return Optional.of(new Route(ordinary, damage, cost));
+    }
+    return new Search(graph, request, edges).find();
+  }
+
+  private static int damage(NavGraph graph, NavPath path, DamageAt edgeDamage) {
+    var damage = 0;
+    for (var index = 1; index < path.nodes().size(); index++) {
+      var from = path.nodes().get(index - 1);
+      var to = path.nodes().get(index);
+      var hop = path.waypoints().get(index).hop();
+      damage = Math.addExact(damage, hopDamage(graph, new HopRequest(from, to, hop), edgeDamage));
+    }
+    return damage;
+  }
+
+  private record HopRequest(int from, int to, Hop hop) {}
+
+  private static int hopDamage(NavGraph graph, HopRequest request, DamageAt edgeDamage) {
+    var worst = -1;
+    for (var edge = graph.edgeStart(request.from()); edge < graph.edgeEnd(request.from()); edge++) {
+      if (graph.edgeTarget(edge) == request.to() && graph.edgeHop(edge) == request.hop())
+        worst = Math.max(worst, checkedDamage(edgeDamage, edge, 0));
+    }
+    if (worst < 0) throw new IllegalStateException("path hop is not an edge in its graph");
+    return worst;
+  }
+
+  private static int checkedDamage(DamageAt damage, int edge, double arrivalTicks) {
+    var value = damage.damage(edge, arrivalTicks);
+    if (value < 0) throw new IllegalArgumentException("edge damage must be non-negative");
+    return value;
+  }
+
+  private static double checkedPenalty(IntToDoubleFunction penalty, int node) {
+    var value = penalty.applyAsDouble(node);
+    if (!Double.isFinite(value) || value < 0)
+      throw new IllegalArgumentException("node penalty must be finite and non-negative");
+    return value;
+  }
+
+  private static final class Label {
+    final int node;
+    final int damage;
+    final double cost;
+    final double ticks;
+    final int edge;
+    final Optional<Label> previous;
+
+    Label(int node, int damage, double cost, Prefix prefix) {
+      this.node = node;
+      this.damage = damage;
+      this.cost = cost;
+      this.ticks = prefix.ticks();
+      this.edge = prefix.edge();
+      this.previous = prefix.previous();
+    }
+
+    boolean dominates(Label other) {
+      return damage <= other.damage && cost <= other.cost && ticks <= other.ticks;
+    }
+  }
+
+  private record Prefix(int edge, Optional<Label> previous, double ticks) {}
+
+  private static final class Search {
+    private final NavGraph graph;
+    private final Request request;
+    private final EdgePolicy edges;
+    private final Map<Integer, List<Label>> frontier = new HashMap<>();
+    private final PriorityQueue<Label> open =
+        new PriorityQueue<>(
+            Comparator.comparingDouble((Label label) -> label.cost)
+                .thenComparingInt(label -> label.damage)
+                .thenComparingInt(label -> label.node));
+
+    Search(NavGraph graph, Request request, EdgePolicy edges) {
+      this.graph = graph;
+      this.request = request;
+      this.edges = edges;
+    }
+
+    Optional<Route> find() {
+      offer(new Label(request.from(), 0, 0, new Prefix(-1, Optional.empty(), 0)));
+      while (!open.isEmpty()) {
+        var current = open.remove();
+        if (!Objects.requireNonNull(frontier.get(current.node), "queued node has no labels")
+            .contains(current)) continue;
+        if (current.node == request.to()) return Optional.of(reconstruct(current));
+        for (var edge = graph.edgeStart(current.node); edge < graph.edgeEnd(current.node); edge++)
+          relax(current, edge);
+      }
+      return Optional.empty();
+    }
+
+    private void relax(Label current, int edge) {
+      if (!edges.motion().allowed().test(edge)) return;
+      var duration = edges.motion().duration().applyAsDouble(edge);
+      if (!Double.isFinite(duration) || duration < 0)
+        throw new IllegalArgumentException("motion duration must be finite and non-negative");
+      var ticks = current.ticks + duration;
+      if (!request.risk().allows(ticks)) return;
+      var edgeDamage = checkedDamage(edges.damage(), edge, ticks);
+      var totalDamage = Math.addExact(current.damage, edgeDamage);
+      if (totalDamage > request.damageBudget()) return;
+      var node = graph.edgeTarget(edge);
+      var penalty = checkedPenalty(request.penalty(), node);
+      var riskCost = edgeDamage * request.risk().ticksPerHealthPoint();
+      offer(
+          new Label(
+              node,
+              totalDamage,
+              current.cost + duration + penalty + riskCost,
+              new Prefix(edge, Optional.of(current), ticks)));
+    }
+
+    private void offer(Label candidate) {
+      var labels = frontier.computeIfAbsent(candidate.node, node -> new ArrayList<>());
+      if (labels.stream().anyMatch(label -> label.dominates(candidate))) return;
+      labels.removeIf(candidate::dominates);
+      labels.add(candidate);
+      open.add(candidate);
+    }
+
+    private Route reconstruct(Label goal) {
+      var nodes = new ArrayList<Integer>();
+      var waypoints = new ArrayList<Waypoint>();
+      var current = goal;
+      while (current.previous.isPresent()) {
+        nodes.add(current.node);
+        waypoints.add(graph.waypoint(current.edge));
+        current = current.previous.orElseThrow();
+      }
+      nodes.add(current.node);
+      waypoints.add(new Waypoint(graph.feet(current.node), Hop.WALK));
+      Collections.reverse(nodes);
+      Collections.reverse(waypoints);
+      // NavPath.cost contains terrain time alone; discretionary penalties only choose the route.
+      return new Route(new NavPath(nodes, waypoints, goal.ticks), goal.damage, goal.cost);
+    }
+  }
+}

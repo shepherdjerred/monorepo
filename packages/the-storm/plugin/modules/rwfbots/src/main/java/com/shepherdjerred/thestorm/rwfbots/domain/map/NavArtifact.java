@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.rwfbots.domain.map;
 
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos;
+import com.shepherdjerred.thestorm.rwfbots.domain.team.BombScreens;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -36,7 +37,8 @@ public record NavArtifact(
     CoverPoints cover,
     Chokepoints chokepoints,
     ApproachRoutes routes,
-    Map<String, DistanceField> distanceFields) {
+    Map<String, DistanceField> distanceFields,
+    BombScreens bombScreens) {
 
   public NavArtifact {
     if (formatVersion < 1 || generatorVersion < 1) {
@@ -57,6 +59,7 @@ public record NavArtifact(
         throw new IllegalArgumentException("distance field and graph disagree on node count");
       }
     }
+    bombScreens.validate(graph, sites, distanceFields);
   }
 
   /** Replaces observed door occlusion while retaining the validated terrain and graph identity. */
@@ -75,7 +78,8 @@ public record NavArtifact(
         cover,
         chokepoints,
         routes,
-        distanceFields);
+        distanceFields,
+        bombScreens);
   }
 
   /** The nav node a player uses to stand at or next to {@code site}. */
@@ -125,16 +129,7 @@ public record NavArtifact(
                 NavProblem.Kind.SPAWN_NOT_WALKABLE, spawn.name() + " at " + spawn.cell()));
       }
     }
-    for (var bomb : sites.bombs()) {
-      var approach = approachNode(bomb);
-      if (approach.isEmpty()) {
-        problems.add(
-            new NavProblem(
-                NavProblem.Kind.BOMB_NOT_APPROACHABLE, bomb.name() + " at " + bomb.cell()));
-        continue;
-      }
-      reachability(bomb, approach.getAsInt(), problems);
-    }
+    for (var bomb : sites.bombs()) validateBomb(bomb, problems);
     for (var site : sites.spawns()) {
       if (!distanceFields.containsKey(site.name())) {
         problems.add(new NavProblem(NavProblem.Kind.DISTANCE_FIELD_MISSING, site.name()));
@@ -148,10 +143,26 @@ public record NavArtifact(
     return problems;
   }
 
+  private void validateBomb(NavSites.Site bomb, List<NavProblem> problems) {
+    if (bombScreens.require(bomb.name()).workers().isEmpty())
+      problems.add(
+          new NavProblem(
+              NavProblem.Kind.BOMB_NOT_APPROACHABLE,
+              bomb.name() + " has no shared reachable certified fuse position"));
+    var approach = approachNode(bomb);
+    if (approach.isEmpty()) {
+      problems.add(
+          new NavProblem(
+              NavProblem.Kind.BOMB_NOT_APPROACHABLE, bomb.name() + " at " + bomb.cell()));
+      return;
+    }
+    reachability(bomb, approach.getAsInt(), problems);
+  }
+
   private void reachability(NavSites.Site bomb, int approach, List<NavProblem> problems) {
     for (var spawn : sites.spawns()) {
       var from = graph.nodeAt(spawn.cell());
-      if (from.isPresent() && graph.path(from.getAsInt(), approach).isEmpty()) {
+      if (from.isPresent() && !graph.reachable(from.getAsInt(), approach)) {
         problems.add(
             new NavProblem(
                 NavProblem.Kind.BOMB_UNREACHABLE, bomb.name() + " from " + spawn.name()));

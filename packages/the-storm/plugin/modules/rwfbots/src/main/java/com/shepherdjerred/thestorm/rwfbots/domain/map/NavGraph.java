@@ -11,40 +11,52 @@ import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.IntPredicate;
 import java.util.function.IntToDoubleFunction;
 
 /**
  * The walkable cells of a map and the typed edges between them, in compressed sparse row form.
  * Nodes are numbered densely; edges carry how the step is made (walk, jump, drop, climb) and what
- * it costs in roughly blocks. A* uses an octile heuristic that never exceeds the real cost, so
- * paths are optimal for the given penalty.
+ * it costs in server ticks. A* uses a graph-calibrated admissible octile heuristic, so paths are
+ * optimal for the given penalty.
  */
 public final class NavGraph {
 
   /** The cost of walking one block. */
-  public static final float WALK_COST = 1f;
+  public static final float WALK_COST = TraversalCosts.WALK;
 
   /** The cost of a diagonal walk. */
-  public static final float DIAGONAL_COST = 1.41421f;
+  public static final float DIAGONAL_COST = TraversalCosts.DIAGONAL;
 
   /** The cost of stepping up one block. */
-  public static final float JUMP_COST = 2f;
+  public static final float JUMP_COST = TraversalCosts.STEP_JUMP;
 
   /** The cost of climbing one block of ladder. */
-  public static final float CLIMB_COST = 1.5f;
+  public static final float CLIMB_COST = TraversalCosts.CLIMB;
 
-  /** Legacy spawn platforms require five-block descents; reject larger, costly falls. */
-  public static final int MAX_DROP = 6;
+  /** Sprint-jump flight certification is bounded independently of full-height walk-off drops. */
+  public static final int MAX_JUMP_DESCENT = 16;
 
   private static final float INF = Float.POSITIVE_INFINITY;
+  private static final int[][] NEAREST_OFFSETS = {
+    {0, 0, 0}, {0, -1, 0}, {0, 1, 0}, {0, -2, 0},
+    {1, 0, 0}, {-1, 0, 0}, {0, 0, 1}, {0, 0, -1},
+    {1, -1, 0}, {-1, -1, 0}, {0, -1, 1}, {0, -1, -1},
+    {1, 1, 0}, {-1, 1, 0}, {0, 1, 1}, {0, 1, -1},
+    {1, 0, 1}, {1, 0, -1}, {-1, 0, 1}, {-1, 0, -1}
+  };
 
   private final GridBounds bounds;
   private final int[] cellOfNode;
+  private final byte[] halfHeight;
   private final int[] nodeOfCell;
   private final int[] edgeStart;
   private final int[] edgeTo;
   private final byte[] edgeHop;
   private final float[] edgeCost;
+  private final EdgeCapabilities capabilities;
+  private final WaterIndex water;
+  private final float heuristicScale;
   private final int[] reverseStart;
   private final int[] reverseEdge;
   private final DirectedReachability reachability;
@@ -56,21 +68,69 @@ public final class NavGraph {
    * @param edges each edge's hop and cost
    */
   public NavGraph(GridBounds bounds, int[] cellOfNode, Topology topology, EdgeData edges) {
+    this(bounds, new NodeData(cellOfNode, WaterIndex.empty(bounds)), topology, edges);
+  }
+
+  /** Node coordinates and compressed submerged-cell lookup from the same offline bake. */
+  public static final class NodeData {
+    private final int[] cells;
+    private final WaterIndex water;
+    private final byte[] halfHeight;
+
+    /** Explicit whole-block node elevations for synthetic graph fixtures. */
+    public NodeData(int[] cells, WaterIndex water) {
+      this(cells, water, new byte[cells.length]);
+    }
+
+    public NodeData(int[] cells, WaterIndex water, byte[] halfHeight) {
+      this.cells = cells.clone();
+      this.water = water;
+      this.halfHeight = halfHeight.clone();
+      if (cells.length != halfHeight.length)
+        throw new IllegalArgumentException("node elevations do not align");
+      for (var value : halfHeight)
+        if (value != 0 && value != -1)
+          throw new IllegalArgumentException("unknown node half-block elevation");
+    }
+
+    public int[] cells() {
+      return cells.clone();
+    }
+
+    public WaterIndex water() {
+      return water;
+    }
+
+    public byte[] halfHeight() {
+      return halfHeight.clone();
+    }
+  }
+
+  public NavGraph(GridBounds bounds, NodeData nodes, Topology topology, EdgeData edges) {
     this.bounds = bounds;
-    this.cellOfNode = cellOfNode.clone();
+    this.cellOfNode = nodes.cells();
+    this.halfHeight = nodes.halfHeight();
     this.edgeStart = topology.edgeStart().clone();
     this.edgeTo = topology.edgeTo().clone();
     this.edgeHop = edges.hop().clone();
     this.edgeCost = edges.cost().clone();
+    capabilities = edges.capabilities();
+    water = nodes.water();
+    if (!bounds.equals(water.bounds()))
+      throw new IllegalArgumentException("water index bounds differ from graph");
     var n = this.cellOfNode.length;
     if (this.edgeStart.length != n + 1
         || this.edgeStart[0] != 0
         || this.edgeStart[n] != this.edgeTo.length
-        || this.edgeHop.length != this.edgeTo.length) {
+        || this.edgeHop.length != this.edgeTo.length
+        || capabilities.damage().length != this.edgeTo.length) {
       throw new IllegalArgumentException("inconsistent graph arrays");
     }
     nodeOfCell = indexCells(bounds, this.cellOfNode);
     validateEdges(n);
+    capabilities.launch().validate(edgeHop);
+    water.validateNodes(this::cell, n);
+    heuristicScale = minimumMetricCost();
     reverseStart = new int[n + 1];
     reverseEdge = new int[this.edgeTo.length];
     for (var edge : this.edgeTo) {
@@ -156,13 +216,19 @@ public final class NavGraph {
   public static final class EdgeData {
     private final byte[] hop;
     private final float[] cost;
+    private final EdgeCapabilities capabilities;
 
     public EdgeData(byte[] hop, float[] cost) {
+      this(hop, cost, EdgeCapabilities.standard(hop));
+    }
+
+    public EdgeData(byte[] hop, float[] cost, EdgeCapabilities capabilities) {
       if (hop.length != cost.length) {
         throw new IllegalArgumentException("hop and cost arrays must align");
       }
       this.hop = hop.clone();
       this.cost = cost.clone();
+      this.capabilities = capabilities;
     }
 
     public byte[] hop() {
@@ -173,16 +239,21 @@ public final class NavGraph {
       return cost.clone();
     }
 
+    public EdgeCapabilities capabilities() {
+      return capabilities;
+    }
+
     @Override
     public boolean equals(Object other) {
       return other instanceof EdgeData that
           && Arrays.equals(hop, that.hop)
-          && Arrays.equals(cost, that.cost);
+          && Arrays.equals(cost, that.cost)
+          && capabilities.equals(that.capabilities);
     }
 
     @Override
     public int hashCode() {
-      return 31 * Arrays.hashCode(hop) + Arrays.hashCode(cost);
+      return 31 * (31 * Arrays.hashCode(hop) + Arrays.hashCode(cost)) + capabilities.hashCode();
     }
   }
 
@@ -209,7 +280,7 @@ public final class NavGraph {
 
   /** The feet position in the middle of {@code node}'s cell. */
   public Vec3 feet(int node) {
-    return cell(node).feet();
+    return cell(node).feet().plus(0, halfHeight[node] * 0.5, 0);
   }
 
   public OptionalInt nodeAt(BlockPos cell) {
@@ -226,14 +297,9 @@ public final class NavGraph {
    */
   public OptionalInt nearestNode(Vec3 feet) {
     var base = BlockPos.of(feet.plus(0, 0.001, 0));
-    int[][] offsets = {
-      {0, 0, 0}, {0, -1, 0}, {0, 1, 0}, {0, -2, 0},
-      {1, 0, 0}, {-1, 0, 0}, {0, 0, 1}, {0, 0, -1},
-      {1, -1, 0}, {-1, -1, 0}, {0, -1, 1}, {0, -1, -1},
-      {1, 1, 0}, {-1, 1, 0}, {0, 1, 1}, {0, 1, -1},
-      {1, 0, 1}, {1, 0, -1}, {-1, 0, 1}, {-1, 0, -1}
-    };
-    for (var offset : offsets) {
+    var submerged = water.nearest(base);
+    if (submerged.isPresent()) return submerged;
+    for (var offset : NEAREST_OFFSETS) {
       var node = nodeAt(base.offset(offset[0], offset[1], offset[2]));
       if (node.isPresent()) {
         return node;
@@ -279,6 +345,24 @@ public final class NavGraph {
   private double snapDistance(int node, Vec3 point) {
     var feet = feet(node);
     return feet.horizontalDistance(point) + 0.01 * Math.abs(feet.y() - point.y());
+  }
+
+  /** Exact directed connectivity, independent of edge weights or a route search. */
+  public boolean reachable(int from, int to) {
+    requireNode(from);
+    requireNode(to);
+    return reachability.reaches(from, to);
+  }
+
+  /** Nodes reachable from every supplied source; an empty source list imposes no restriction. */
+  public BitSet reachableFromAll(int[] sources) {
+    for (var source : sources) requireNode(source);
+    return reachability.commonFrom(sources);
+  }
+
+  private void requireNode(int node) {
+    if (node < 0 || node >= nodeCount())
+      throw new IllegalArgumentException("invalid reachability node");
   }
 
   /** The path cost from {@code from} to every node, infinite where unreachable (Dijkstra). */
@@ -427,6 +511,26 @@ public final class NavGraph {
     return edgeCost[edge];
   }
 
+  public int edgeDamage(int edge) {
+    return capabilities.damage(edge);
+  }
+
+  public WaterIndex water() {
+    return water;
+  }
+
+  /** Reconstructs the complete baked primitive, including its launch/run-up prerequisite. */
+  public Waypoint waypoint(int edge) {
+    var from = feet(edgeSource(edge));
+    var to = feet(edgeTarget(edge));
+    var landing =
+        water.contains(BlockPos.of(to))
+            ? Waypoint.Landing.WATER
+            : edgeHop(edge) == Hop.CLIMB ? Waypoint.Landing.CLIMB : Waypoint.Landing.GROUND;
+    return new Waypoint(
+        to, edgeHop(edge), capabilities.launch().launch(edge, from, to, edgeCost(edge)), landing);
+  }
+
   /** The edges arriving at {@code node}, as edge indices. */
   public int[] incomingEdges(int node) {
     return Arrays.copyOfRange(reverseEdge, reverseStart[node], reverseStart[node + 1]);
@@ -481,50 +585,81 @@ public final class NavGraph {
   /** Finds the same path while reusing scratch arrays; overlapping workspace use is rejected. */
   public Optional<NavPath> path(
       int from, int to, IntToDoubleFunction penalty, SearchWorkspace workspace) {
+    return path(
+        from,
+        to,
+        new PathWeights(
+            penalty, NavGraph::noPenalty, new EdgeMotion(this::edgeCost, edge -> true, 1)),
+        workspace);
+  }
+
+  /** Independent non-negative node/edge tolls, both in server ticks. */
+  public record EdgeMotion(
+      IntToDoubleFunction duration, IntPredicate allowed, double heuristicRatio) {
+    public EdgeMotion {
+      if (!Double.isFinite(heuristicRatio) || heuristicRatio < 0 || heuristicRatio > 1)
+        throw new IllegalArgumentException("motion heuristic ratio must be in[0,1]");
+    }
+  }
+
+  public record PathWeights(
+      IntToDoubleFunction node, IntToDoubleFunction edge, EdgeMotion motion) {}
+
+  public Optional<NavPath> path(int from, int to, PathWeights weights, SearchWorkspace workspace) {
     workspace.acquire(cellOfNode.length);
     try {
-      return search(from, to, penalty, workspace);
+      return search(from, to, weights, workspace);
     } finally {
       workspace.release();
     }
   }
 
   private Optional<NavPath> search(
-      int from, int to, IntToDoubleFunction penalty, SearchWorkspace workspace) {
-    var search = new Search(workspace, to);
+      int from, int to, PathWeights weights, SearchWorkspace workspace) {
+    var search = new Search(workspace, to, weights.motion().heuristicRatio());
     search.g[from] = 0;
-    search.open.push(heuristic(from, to), from);
+    search.open.push((float) (heuristic(from, to) * search.heuristicRatio), from);
     while (!search.open.isEmpty()) {
       var current = search.open.pop();
       if (current == to) {
-        return Optional.of(reconstruct(from, to, search.cameFrom, search.viaEdge));
+        return Optional.of(reconstruct(from, to, search, weights.motion()));
       }
       if (search.closed[current]) {
         continue;
       }
       search.closed[current] = true;
       for (var edge = edgeStart[current]; edge < edgeStart[current + 1]; edge++) {
-        relax(search, current, edge, penalty);
+        relax(search, current, edge, weights);
       }
     }
     return Optional.empty();
   }
 
-  private void relax(Search search, int current, int edge, IntToDoubleFunction penalty) {
+  private void relax(Search search, int current, int edge, PathWeights weights) {
+    if (!weights.motion().allowed().test(edge)) return;
     var next = edgeTo[edge];
     if (search.closed[next]) {
       return;
     }
-    var extra = penalty.applyAsDouble(next);
-    if (extra < 0) {
-      throw new IllegalArgumentException("penalty must be non-negative");
+    var nodePenalty = weights.node().applyAsDouble(next);
+    var edgePenalty = weights.edge().applyAsDouble(edge);
+    if (!Double.isFinite(nodePenalty)
+        || nodePenalty < 0
+        || !Double.isFinite(edgePenalty)
+        || edgePenalty < 0) {
+      throw new IllegalArgumentException("penalties must be finite and non-negative");
     }
-    var tentative = search.g[current] + edgeCost[edge] + (float) extra;
+    var extra = nodePenalty + edgePenalty;
+    var duration = weights.motion().duration().applyAsDouble(edge);
+    if (!Double.isFinite(duration) || duration < 0)
+      throw new IllegalArgumentException("motion duration must be finite and non-negative");
+    var tentative = search.g[current] + (float) duration + (float) extra;
     if (tentative < search.g[next]) {
       search.g[next] = tentative;
       search.cameFrom[next] = current;
       search.viaEdge[next] = edge;
-      search.open.push(tentative + heuristic(cell(next), search.goal), next);
+      search.open.push(
+          (float) (tentative + heuristic(cell(next), search.goal) * search.heuristicRatio), next);
     }
   }
 
@@ -551,7 +686,8 @@ public final class NavGraph {
       if (!inUse.compareAndSet(false, true))
         throw new IllegalStateException("workspace already in use");
       Arrays.fill(g, INF);
-      Arrays.fill(cameFrom, -1);
+      // Each reached node gets its parent before entering the heap. Reconstruction stops at
+      // the source; the reachability traversal also overwrites its stack before reading it.
       Arrays.fill(closed, false);
       open.clear();
     }
@@ -569,14 +705,16 @@ public final class NavGraph {
     final boolean[] closed;
     final MinHeap open;
     final BlockPos goal;
+    final double heuristicRatio;
 
-    Search(SearchWorkspace workspace, int to) {
+    Search(SearchWorkspace workspace, int to, double heuristicRatio) {
       g = workspace.g;
       cameFrom = workspace.cameFrom;
       viaEdge = workspace.viaEdge;
       closed = workspace.closed;
       open = workspace.open;
       goal = cell(to);
+      this.heuristicRatio = heuristicRatio;
     }
   }
 
@@ -584,14 +722,31 @@ public final class NavGraph {
     return heuristic(cell(node), cell(goal));
   }
 
-  private static float heuristic(BlockPos a, BlockPos b) {
+  private float heuristic(BlockPos a, BlockPos b) {
+    return heuristicScale * metric(a, b);
+  }
+
+  private static float metric(BlockPos a, BlockPos b) {
     var dx = Math.abs(a.x() - b.x());
     var dz = Math.abs(a.z() - b.z());
     var dy = Math.abs(a.y() - b.y());
-    return Math.max(dx, dz) + (DIAGONAL_COST - 1) * Math.min(dx, dz) + dy;
+    return Math.max(dx, dz) + (1.41421f - 1) * Math.min(dx, dz) + dy;
   }
 
-  private NavPath reconstruct(int from, int to, int[] cameFrom, int[] viaEdge) {
+  private float minimumMetricCost() {
+    var scale = Float.POSITIVE_INFINITY;
+    for (var node = 0; node < nodeCount(); node++) {
+      for (var edge = edgeStart[node]; edge < edgeStart[node + 1]; edge++) {
+        var distance = metric(cell(node), cell(edgeTo[edge]));
+        if (distance > 0) scale = Math.min(scale, edgeCost[edge] / distance);
+      }
+    }
+    return Float.isFinite(scale) ? scale : 0;
+  }
+
+  private NavPath reconstruct(int from, int to, Search search, EdgeMotion motion) {
+    var cameFrom = search.cameFrom;
+    var viaEdge = search.viaEdge;
     var length = 1;
     for (var node = to; node != from; node = cameFrom[node]) {
       length++;
@@ -604,8 +759,8 @@ public final class NavGraph {
     while (node != from) {
       var edge = viaEdge[node];
       nodes[index] = node;
-      waypoints[index] = new Waypoint(feet(node), edgeHop(edge));
-      cost += edgeCost[edge];
+      waypoints[index] = waypoint(edge);
+      cost += motion.duration().applyAsDouble(edge);
       node = cameFrom[node];
       index--;
     }
@@ -623,7 +778,15 @@ public final class NavGraph {
   }
 
   EdgeData edgeData() {
-    return new EdgeData(edgeHop, edgeCost);
+    return new EdgeData(edgeHop, edgeCost, capabilities);
+  }
+
+  NodeData nodeData() {
+    return new NodeData(cellOfNode, water, halfHeight);
+  }
+
+  byte[] halfHeightArray() {
+    return halfHeight.clone();
   }
 
   @Override
@@ -631,10 +794,13 @@ public final class NavGraph {
     return other instanceof NavGraph that
         && bounds.equals(that.bounds)
         && Arrays.equals(cellOfNode, that.cellOfNode)
+        && Arrays.equals(halfHeight, that.halfHeight)
         && Arrays.equals(edgeStart, that.edgeStart)
         && Arrays.equals(edgeTo, that.edgeTo)
         && Arrays.equals(edgeHop, that.edgeHop)
-        && Arrays.equals(edgeCost, that.edgeCost);
+        && Arrays.equals(edgeCost, that.edgeCost)
+        && capabilities.equals(that.capabilities)
+        && water.equals(that.water);
   }
 
   @Override

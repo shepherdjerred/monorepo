@@ -168,20 +168,7 @@ public final class PursuitFixtures implements BasicCommand, AutoCloseable {
   private void prepare() {
     if (!state.equals("idle")) throw new IllegalStateException("pursuit proof is single-use");
     var arena = new Arena();
-    for (int x = 300; x < 316; x++)
-      for (int z = 300; z < 312; z++) {
-        world.addPluginChunkTicket(x >> 4, z >> 4, plugin);
-        for (int y = 99; y < 106; y++) {
-          var shape = arena.shape(x, y, z);
-          world
-              .getBlockAt(x, y, z)
-              .setType(
-                  shape == BlockShape.FULL
-                      ? Material.STONE
-                      : shape == BlockShape.PANE ? Material.GLASS : Material.AIR,
-                  false);
-        }
-      }
+    pasteArena(arena);
     nav = Optional.of(MapBaker.bake("pursuit-proof", arena, new NavSites(List.of(), List.of())));
     var catalog =
         PersonalityFiles.load(plugin.getDataFolder().toPath().getParent().resolve("TheStorm"));
@@ -206,6 +193,22 @@ public final class PursuitFixtures implements BasicCommand, AutoCloseable {
     state = "prepared";
   }
 
+  private void pasteArena(Arena arena) {
+    for (int x = 300; x < 316; x++)
+      for (int z = 300; z < 312; z++) {
+        world.addPluginChunkTicket(x >> 4, z >> 4, plugin);
+        for (int y = 99; y < 106; y++) {
+          var shape = arena.shape(x, y, z);
+          world.getBlockAt(x, y, z).setType(material(shape), false);
+        }
+      }
+  }
+
+  private static Material material(BlockShape shape) {
+    if (shape == BlockShape.FULL) return Material.STONE;
+    return shape == BlockShape.PANE ? Material.GLASS : Material.AIR;
+  }
+
   private void start() {
     if (!state.equals("prepared"))
       throw new IllegalStateException("prepare the pursuit proof first");
@@ -227,11 +230,11 @@ public final class PursuitFixtures implements BasicCommand, AutoCloseable {
                     view(
                         1,
                         RED,
-                        new Vec3(at.getX(), at.getY(), at.getZ()),
-                        new Vec3(velocity.getX(), velocity.getY(), velocity.getZ()),
-                        at.getYaw(),
-                        at.getPitch(),
-                        SnapshotCapture.onGround(player));
+                        new Pose(
+                            new Vec3(at.getX(), at.getY(), at.getZ()),
+                            new Vec3(velocity.getX(), velocity.getY(), velocity.getZ()),
+                            new Facing(at.getYaw(), at.getPitch()),
+                            SnapshotCapture.onGround(player)));
                 advance(self);
               });
     if (state.equals("running") && ticks >= 600) finish(false);
@@ -239,7 +242,8 @@ public final class PursuitFixtures implements BasicCommand, AutoCloseable {
 
   private void advance(CombatantView self) {
     var artifact = nav.orElseThrow();
-    var enemy = view(2, BLUE, new Vec3(308.5, 100, 308.5), Vec3.ZERO, 90, 0, true);
+    var enemy =
+        view(2, BLUE, new Pose(new Vec3(308.5, 100, 308.5), Vec3.ZERO, new Facing(90, 0), true));
     var visible = artifact.grid().canSee(self.eye(), enemy.eye());
     if (visible)
       memory = memory.remember(enemy.id(), new Sighting(enemy.pos(), enemy.vel(), ticks, 1, true));
@@ -318,27 +322,29 @@ public final class PursuitFixtures implements BasicCommand, AutoCloseable {
     }
   }
 
-  private static CombatantView view(
-      int id, TeamId team, Vec3 point, Vec3 velocity, double yaw, double pitch, boolean grounded) {
+  private record Pose(Vec3 point, Vec3 velocity, Facing facing, boolean grounded) {}
+
+  private static CombatantView view(int id, TeamId team, Pose pose) {
     return new CombatantView(
         new CombatantId(id),
         team,
         false,
         Kit.TROOPER,
         true,
-        point,
-        velocity,
-        yaw,
-        pitch,
+        pose.point(),
+        pose.velocity(),
+        pose.facing().yaw(),
+        pose.facing().pitch(),
         20,
         0,
         0,
         1,
         false,
-        grounded,
+        pose.grounded(),
         false,
         false,
-        -1);
+        -1,
+        com.shepherdjerred.thestorm.rwfbots.domain.world.TraversalState.UNMODIFIED);
   }
 
   private void finish(boolean passed) {

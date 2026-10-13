@@ -1,0 +1,124 @@
+{
+  "version": 1,
+  "kind": "controlled-route-diagnostic",
+  "humanDemonstration": false,
+  "maximumTicks": 600,
+  "records": {
+    "Sample": [
+      "sequence",
+      "serverTick",
+      "match",
+      "body",
+      "world",
+      "kit",
+      "alive",
+      "health",
+      "absorption",
+      "maxHealth",
+      "lastHurtTick",
+      "position",
+      "velocity",
+      "onGround",
+      "fallDistance",
+      "noDamageTicks",
+      "sprinting",
+      "inWater",
+      "traversal"
+    ],
+    "Fall": [
+      "sequence",
+      "eventTick",
+      "observedTick",
+      "predictionSequence",
+      "cancelled",
+      "damage",
+      "before",
+      "after",
+      "beforeAbsorption",
+      "afterAbsorption",
+      "fallDistance",
+      "noDamageTicks",
+      "snapshotHealth",
+      "hurtTick"
+    ],
+    "Setup": ["sequence", "serverTick", "kind", "details"],
+    "Prediction": [
+      "sequence",
+      "serverTick",
+      "sourceSequence",
+      "arrivalTick",
+      "damage",
+      "effectiveHealth",
+      "affordable",
+      "noSprint",
+      "waypoint"
+    ],
+    "Status": [
+      "version",
+      "kind",
+      "humanDemonstration",
+      "scenario",
+      "state",
+      "match",
+      "body",
+      "world",
+      "samples",
+      "falls",
+      "setups",
+      "predictions"
+    ],
+    "Traversal": [
+      "maySprint",
+      "safeFallDistance",
+      "fallDamageMultiplier",
+      "fallProtectionPoints",
+      "resistanceAmplifier",
+      "resistanceUntilTick",
+      "noFallUntilTick",
+      "slowFallingUntilTick",
+      "healingConsumables",
+      "regenerationAmplifier",
+      "regenerationUntilTick",
+      "jumpBoostAmplifier",
+      "jumpBoostUntilTick",
+      "maxHealth"
+    ]
+  },
+  "scenarios": [
+    {
+      "id": "trooper-affordable",
+      "kit": "trooper",
+      "landing": "ground",
+      "mode": "single",
+      "maximumDrops": 1
+    },
+    {
+      "id": "trooper-risk-refusal",
+      "kit": "trooper",
+      "landing": "ground",
+      "mode": "until-refused",
+      "maximumDrops": 3
+    },
+    {
+      "id": "juggernaut-health",
+      "kit": "juggernaut",
+      "landing": "ground",
+      "mode": "until-refused",
+      "maximumDrops": 5
+    },
+    {
+      "id": "water-landing",
+      "kit": "trooper",
+      "landing": "water",
+      "mode": "single",
+      "maximumDrops": 1
+    },
+    {
+      "id": "protection-expiry",
+      "kit": "trooper",
+      "landing": "ground",
+      "mode": "protection-expiry",
+      "maximumDrops": 2
+    }
+  ]
+}

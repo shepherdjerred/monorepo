@@ -115,9 +115,9 @@ final class RoleAssignmentTest {
         var held = slot.key().equals(dealing.previous().assignment().get(bot.id()));
         profit[i][j] =
             SlotFit.of(member, slot, false)
-                - 0.6 * Math.min(distance, 128) / 64
+                - 0.6 * Math.min(distance, 128 * (float) (1 / 0.215)) / (64 * (float) (1 / 0.215))
                 + (held ? 0.3 : 0)
-                + (member.archetype() == Archetype.TROLL ? 0.5 * random.nextDouble() : 0);
+                + (member.archetype() == Archetype.TROLL ? 0.12 * random.nextDouble() : 0);
       }
     }
     var columns = Hungarian.maximize(profit);

@@ -1088,6 +1088,9 @@
             "tests/rwf-recording.test.ts",
             "tests/rwf-status.test.ts",
             "tests/capacity/capacity-bars.test.ts",
+            "tests/capacity/runtime.test.ts",
+            "tests/capacity/native-combat.test.ts",
+            "tools/capacity",
             "scripts/bots/mineskin.test.ts",
             "scripts/bots/expanded-kit-weights.test.ts"
           ]
@@ -1100,7 +1103,7 @@
         {
           "runner": "vitest",
           "name": "client-controller",
-          "args": ["tools/client"]
+          "args": ["tools/client", "--exclude", "**/.cache/**"]
         },
         {
           "runner": "command",
@@ -1147,11 +1150,15 @@
         },
         {
           "path": "tests/capacity/rwf-capacity.e2e.test.ts",
-          "reason": "The committer runs the 100/128/192/256-combatant capacity matrix locally through test:capacity on imported maps with measured CPU budgets; this extended Paper load suite does not run in CI."
+          "reason": "The committer runs the 64/100/128/192/256-combatant capacity matrix locally through test:capacity on imported maps with measured CPU budgets; this extended Paper load suite does not run in CI."
         },
         {
           "path": "tests/capacity/native.e2e.test.ts",
           "reason": "The committer runs rendered 256-combatant acceptance locally through test:capacity-native; this extended native Minecraft client suite does not run in CI."
+        },
+        {
+          "path": "tests/capacity/frame-pacing.e2e.test.ts",
+          "reason": "The committer runs real Mac renderer timing windows locally through test:capacity-frame-pacing; this extended native Minecraft client suite does not run in CI."
         }
       ]
     },

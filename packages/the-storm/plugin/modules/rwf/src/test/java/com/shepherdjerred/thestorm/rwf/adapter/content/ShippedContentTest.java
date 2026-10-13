@@ -60,6 +60,8 @@ final class ShippedContentTest {
     assertThat(content.config().match().countdown()).isEqualTo(Duration.ofSeconds(90));
     assertThat(content.config().match().maxCombatants()).isEqualTo(100);
     assertThat(content.config().match().automaticSizing()).isTrue();
+    assertThat(content.config().experience())
+        .isEqualTo(com.shepherdjerred.thestorm.rwf.app.ExperienceSettings.DEFAULT);
     assertThat(content.config().matchSettings().maxPlayers()).isEqualTo(100);
   }
 

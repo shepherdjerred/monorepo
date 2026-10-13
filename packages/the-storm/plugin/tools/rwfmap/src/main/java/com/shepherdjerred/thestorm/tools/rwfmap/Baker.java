@@ -95,7 +95,8 @@ public final class Baker {
             baked.cover(),
             baked.chokepoints(),
             baked.routes(),
-            baked.distanceFields());
+            baked.distanceFields(),
+            baked.bombScreens());
     var bytes = NavCodec.encode(artifact);
     var problems = validate.apply(artifact);
     var summary = Summary.of(artifact, classification, problems, bytes);

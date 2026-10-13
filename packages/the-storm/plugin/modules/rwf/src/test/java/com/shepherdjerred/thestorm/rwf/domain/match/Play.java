@@ -30,7 +30,8 @@ final class Play {
           Duration.ZERO,
           Duration.ZERO,
           Duration.ZERO,
-          false);
+          false,
+          com.shepherdjerred.thestorm.rwf.domain.kit.KitPool.ALL);
 
   /** The full flow: a 20-second vote lead, a 10-second preview, a 5-second freeze, carry-over. */
   static final MatchSettings FLOW =

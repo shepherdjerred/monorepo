@@ -107,7 +107,8 @@ final class SimBody {
         onGround,
         usingItem,
         invisible,
-        lastHurt);
+        lastHurt,
+        com.shepherdjerred.thestorm.rwfbots.domain.world.TraversalState.UNMODIFIED);
   }
 
   /** Applies {@code damage} through absorption, then health; returns whether it was fatal. */

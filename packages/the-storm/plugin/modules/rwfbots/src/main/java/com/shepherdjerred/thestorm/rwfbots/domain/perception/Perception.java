@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.rwfbots.domain.perception;
 
 import static java.util.Comparator.comparingDouble;
 
+import com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.VoxelGrid;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantId;
@@ -129,6 +130,11 @@ public final class Perception {
   }
 
   private boolean regionsMightSee(CombatantView self, CombatantView other) {
+    var water = context.graph().water();
+    // A submerged position may be far above or below its compressed portal's sampled region.
+    if (water.contains(BlockPos.of(self.pos())) || water.contains(BlockPos.of(other.pos()))) {
+      return true;
+    }
     var mine = context.graph().nearestNode(self.pos());
     var theirs = context.graph().nearestNode(other.pos());
     if (mine.isEmpty() || theirs.isEmpty()) {

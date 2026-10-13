@@ -9,6 +9,10 @@ public final class DistanceField {
 
   public DistanceField(float[] distance) {
     this.distance = distance.clone();
+    for (var value : this.distance) {
+      if (Float.isNaN(value) || value < 0)
+        throw new IllegalArgumentException("distance must be non-negative and not NaN");
+    }
   }
 
   public int size() {

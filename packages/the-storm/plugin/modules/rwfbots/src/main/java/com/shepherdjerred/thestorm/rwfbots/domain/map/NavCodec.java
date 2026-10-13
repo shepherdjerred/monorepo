@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.rwfbots.domain.map;
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
+import com.shepherdjerred.thestorm.rwfbots.domain.team.BombScreens;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
@@ -30,7 +31,7 @@ public final class NavCodec {
   /** "RWFB" as a big-endian int. */
   public static final int MAGIC = 0x52574642;
 
-  public static final int FORMAT_VERSION = 1;
+  public static final int FORMAT_VERSION = 2;
 
   /** Why a byte array is not an artifact. */
   public record CodecError(String message) {}
@@ -44,7 +45,8 @@ public final class NavCodec {
     COVER(6),
     CHOKEPOINTS(7),
     ROUTES(8),
-    DISTANCE(9);
+    DISTANCE(9),
+    BOMB_SCREENS(10);
 
     private final int id;
 
@@ -116,9 +118,8 @@ public final class NavCodec {
     if (rawLength < 0 || compressedLength < 0 || compressedLength != in.available()) {
       throw new Corrupt("length prefix does not match the data");
     }
-    var compressed = in.readNBytes(compressedLength);
-    var raw = inflate(compressed, rawLength);
-    var reader = new Reader(new DataInputStream(new ByteArrayInputStream(raw)), formatVersion);
+    var raw = inflate(bytes, bytes.length - compressedLength, rawLength);
+    var reader = new Reader(raw, formatVersion);
     return reader.artifact();
   }
 
@@ -139,10 +140,10 @@ public final class NavCodec {
     }
   }
 
-  private static byte[] inflate(byte[] compressed, int rawLength) throws IOException {
+  private static byte[] inflate(byte[] compressed, int offset, int rawLength) throws IOException {
     var inflater = new Inflater();
     try {
-      inflater.setInput(compressed);
+      inflater.setInput(compressed, offset, compressed.length - offset);
       var raw = new byte[rawLength];
       var total = 0;
       while (total < rawLength && !inflater.finished()) {
@@ -168,6 +169,9 @@ public final class NavCodec {
     switch (section) {
       case META -> {
         out.writeInt(artifact.generatorVersion());
+        out.writeInt(TraversalCosts.MODEL_VERSION);
+        out.writeUTF("server-ticks");
+        out.writeUTF(DistanceLayout.ENCODING);
         out.writeUTF(artifact.mapId());
         out.writeUTF(artifact.blocksSha256());
       }
@@ -208,9 +212,10 @@ public final class NavCodec {
         out.writeInt(artifact.distanceFields().size());
         for (var entry : artifact.distanceFields().entrySet()) {
           out.writeUTF(entry.getKey());
-          writeFloats(entry.getValue().values(), out);
+          DistanceLayout.write(entry.getValue().values(), out);
         }
       }
+      case BOMB_SCREENS -> writeBombScreens(artifact.bombScreens(), out);
     }
   }
 
@@ -238,6 +243,10 @@ public final class NavCodec {
 
   private static void writeGraph(NavGraph graph, DataOutput out) throws IOException {
     writeInts(graph.cellOfNodeArray(), out);
+    var elevations = graph.halfHeightArray();
+    out.writeInt(elevations.length);
+    out.write(elevations);
+    writeWater(graph.water(), out);
     var topology = graph.topology();
     writeInts(topology.edgeStart(), out);
     writeInts(topology.edgeTo(), out);
@@ -245,6 +254,37 @@ public final class NavCodec {
     out.writeInt(edges.hop().length);
     out.write(edges.hop());
     writeFloats(edges.cost(), out);
+    var capabilities = edges.capabilities();
+    var damage = capabilities.damage();
+    out.writeInt(damage.length);
+    out.write(damage);
+    writeInts(capabilities.overflow().edges(), out);
+    writeInts(capabilities.overflow().values(), out);
+    var launch = capabilities.launch();
+    writeInts(launch.edges(), out);
+    writeFloats(launch.runUp(), out);
+    writeFloats(launch.speed(), out);
+    writeFloats(launch.offset(), out);
+  }
+
+  private static void writeWater(WaterIndex water, DataOutput out) throws IOException {
+    writeInts(water.columns(), out);
+    writeInts(water.intervals().low(), out);
+    writeInts(water.intervals().high(), out);
+    writeInts(water.intervals().start(), out);
+    writeInts(water.portals().nodes(), out);
+    writeInts(water.portals().heights(), out);
+  }
+
+  private static void writeBombScreens(BombScreens screens, DataOutput out) throws IOException {
+    out.writeInt(screens.sites().size());
+    for (var name : screens.sites().keySet().stream().sorted().toList()) {
+      var layout = screens.require(name);
+      out.writeUTF(name);
+      writeInts(layout.workers().stream().mapToInt(Integer::intValue).toArray(), out);
+      writeInts(layout.screens().stream().mapToInt(Integer::intValue).toArray(), out);
+      out.writeInt(layout.spaciousScreens());
+    }
   }
 
   private static void writeRegions(Regions regions, DataOutput out) throws IOException {
@@ -291,6 +331,7 @@ public final class NavCodec {
 
     private static final int MAX_COUNT = 1 << 26;
 
+    private final byte[] raw;
     private final DataInputStream body;
     private final int formatVersion;
     private int generatorVersion;
@@ -303,10 +344,12 @@ public final class NavCodec {
     private Optional<CoverPoints> cover = Optional.empty();
     private Optional<Chokepoints> chokepoints = Optional.empty();
     private Optional<ApproachRoutes> routes = Optional.empty();
+    private Optional<BombScreens> bombScreens = Optional.empty();
     private final HashMap<String, DistanceField> fields = new HashMap<>();
 
-    Reader(DataInputStream body, int formatVersion) {
-      this.body = body;
+    Reader(byte[] raw, int formatVersion) {
+      this.raw = raw;
+      this.body = new DataInputStream(new ByteArrayInputStream(raw));
       this.formatVersion = formatVersion;
     }
 
@@ -320,7 +363,9 @@ public final class NavCodec {
         if (length < 0 || length > body.available()) {
           throw new Corrupt("section " + expected + " length is wrong");
         }
-        var in = new DataInputStream(new ByteArrayInputStream(body.readNBytes(length)));
+        var offset = raw.length - body.available();
+        var in = new DataInputStream(new ByteArrayInputStream(raw, offset, length));
+        body.skipNBytes(length);
         readSection(expected, in);
         if (in.available() != 0) {
           throw new Corrupt("section " + expected + " has trailing bytes");
@@ -329,25 +374,36 @@ public final class NavCodec {
       if (body.available() != 0) {
         throw new Corrupt("trailing bytes after the last section");
       }
-      return new NavArtifact(
-          formatVersion,
-          generatorVersion,
-          mapId,
-          sha,
-          sites.orElseThrow(),
-          grid.orElseThrow(),
-          graph.orElseThrow(),
-          regions.orElseThrow(),
-          cover.orElseThrow(),
-          chokepoints.orElseThrow(),
-          routes.orElseThrow(),
-          fields);
+      var artifact =
+          new NavArtifact(
+              formatVersion,
+              generatorVersion,
+              mapId,
+              sha,
+              sites.orElseThrow(),
+              grid.orElseThrow(),
+              graph.orElseThrow(),
+              regions.orElseThrow(),
+              cover.orElseThrow(),
+              chokepoints.orElseThrow(),
+              routes.orElseThrow(),
+              fields,
+              bombScreens.orElseThrow());
+      artifact
+          .bombScreens()
+          .validateCertification(
+              artifact.graph(), artifact.grid(), artifact.sites(), artifact.distanceFields());
+      return artifact;
     }
 
     private void readSection(Section section, DataInput in) throws IOException {
       switch (section) {
         case META -> {
           generatorVersion = in.readInt();
+          if (in.readInt() != TraversalCosts.MODEL_VERSION || !in.readUTF().equals("server-ticks"))
+            throw new Corrupt("unsupported traversal model or scoring units");
+          if (!in.readUTF().equals(DistanceLayout.ENCODING))
+            throw new Corrupt("unsupported distance encoding");
           mapId = in.readUTF();
           sha = in.readUTF();
         }
@@ -361,9 +417,10 @@ public final class NavCodec {
         case DISTANCE -> {
           var count = count(in);
           for (var i = 0; i < count; i++) {
-            fields.put(in.readUTF(), new DistanceField(readFloats(in)));
+            fields.put(in.readUTF(), new DistanceField(DistanceLayout.read(count(in), in)));
           }
         }
+        case BOMB_SCREENS -> bombScreens = Optional.of(readBombScreens(in));
       }
     }
 
@@ -387,11 +444,44 @@ public final class NavCodec {
     private NavGraph readGraph(DataInput in) throws IOException {
       var bounds = grid.orElseThrow().bounds();
       var cellOfNode = readInts(in);
+      var elevations = new byte[count(in)];
+      in.readFully(elevations);
+      var water = readWater(bounds, in);
       var topology = new NavGraph.Topology(readInts(in), readInts(in));
       var hopCount = count(in);
       var hop = new byte[hopCount];
       in.readFully(hop);
-      return new NavGraph(bounds, cellOfNode, topology, new NavGraph.EdgeData(hop, readFloats(in)));
+      var cost = readFloats(in);
+      var damage = new byte[count(in)];
+      in.readFully(damage);
+      var overflow = new DamageOverflow(readInts(in), readInts(in));
+      var launch = new LaunchData(readInts(in), readFloats(in), readFloats(in), readFloats(in));
+      return new NavGraph(
+          bounds,
+          new NavGraph.NodeData(cellOfNode, water, elevations),
+          topology,
+          new NavGraph.EdgeData(hop, cost, new EdgeCapabilities(damage, overflow, launch)));
+    }
+
+    private static WaterIndex readWater(GridBounds bounds, DataInput in) throws IOException {
+      return new WaterIndex(
+          bounds,
+          readInts(in),
+          new WaterIndex.Intervals(readInts(in), readInts(in), readInts(in)),
+          new WaterIndex.Portals(readInts(in), readInts(in)));
+    }
+
+    private static BombScreens readBombScreens(DataInput in) throws IOException {
+      var layouts = new java.util.TreeMap<String, BombScreens.Layout>();
+      var count = count(in);
+      for (var index = 0; index < count; index++) {
+        var name = in.readUTF();
+        var workers = java.util.Arrays.stream(readInts(in)).boxed().toList();
+        var screens = java.util.Arrays.stream(readInts(in)).boxed().toList();
+        var layout = new BombScreens.Layout(workers, screens, in.readInt());
+        if (layouts.put(name, layout) != null) throw new Corrupt("duplicate bomb screen layout");
+      }
+      return new BombScreens(layouts);
     }
 
     private static Regions readRegions(DataInput in) throws IOException {

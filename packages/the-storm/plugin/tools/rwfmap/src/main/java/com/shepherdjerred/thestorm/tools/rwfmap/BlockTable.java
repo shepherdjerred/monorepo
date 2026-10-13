@@ -88,11 +88,7 @@ public final class BlockTable {
           "firefly_bush",
           "short_dry_grass",
           "tall_dry_grass",
-          "seagrass",
-          "tall_seagrass",
           "sugar_cane",
-          "kelp",
-          "kelp_plant",
           "nether_sprouts",
           "crimson_roots",
           "warped_roots",
@@ -172,7 +168,8 @@ public final class BlockTable {
           "cave_vines",
           "cave_vines_plant");
 
-  private static final Set<String> LIQUID_IDS = Set.of("water", "bubble_column");
+  private static final Set<String> LIQUID_IDS =
+      Set.of("water", "bubble_column", "seagrass", "tall_seagrass", "kelp", "kelp_plant");
   private static final Set<String> HAZARD_IDS = Set.of("fire", "soul_fire", "lava");
 
   private static final Set<String> PANE_IDS =
@@ -418,7 +415,7 @@ public final class BlockTable {
   private static Optional<Classified> flat(BlockState state) {
     if (PASSABLE_IDS.contains(state.id())
         || PASSABLE_SUFFIXES.stream().anyMatch(state::idEndsWith)) {
-      return Optional.of(PASSABLE);
+      return Optional.of("true".equals(state.properties().get("waterlogged")) ? LIQUID : PASSABLE);
     }
     return Optional.empty();
   }

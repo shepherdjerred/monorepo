@@ -18,6 +18,17 @@ public record RwfCatalog(
     if (maps.stream().allMatch(map -> config.quarantine().containsKey(map.id()))) {
       throw new IllegalStateException("rwf.yml quarantines every map; none is left to play");
     }
+    var selected = config.experience().maps();
+    if (!selected.isEmpty()) {
+      var admitted = maps.stream().map(MapSource::id).toList();
+      if (!admitted.containsAll(selected)
+          || maps.stream()
+              .noneMatch(
+                  map ->
+                      selected.contains(map.id()) && !config.quarantine().containsKey(map.id()))) {
+        throw new IllegalStateException("experience rotation must contain admitted playable maps");
+      }
+    }
   }
 
   /** The maps matches are played on, in id order: every map not quarantined. */

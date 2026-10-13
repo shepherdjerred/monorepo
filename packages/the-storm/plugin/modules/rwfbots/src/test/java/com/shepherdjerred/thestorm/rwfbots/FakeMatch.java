@@ -40,6 +40,15 @@ public final class FakeMatch implements MatchView, MatchEvents, CombatantActions
   public static final String RED_BOMB = "red-1";
   public static final String BLUE_BOMB = "blue-1";
 
+  @Override
+  public Optional<com.shepherdjerred.thestorm.rwf.app.MatchExperiences.Frozen> experience(UUID id) {
+    return id.equals(MATCH_ID)
+        ? Optional.of(
+            new com.shepherdjerred.thestorm.rwf.app.MatchExperiences.Frozen(
+                MATCH_ID, 7, com.shepherdjerred.thestorm.rwf.app.ExperienceSettings.DEFAULT))
+        : Optional.empty();
+  }
+
   /** One member as the fake match knows them. */
   public record Member(
       CombatantId id, String name, Optional<TeamColor> team, Optional<String> kit, boolean alive) {

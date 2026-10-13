@@ -21,6 +21,7 @@ final class ClientActions {
   private final Captures captures;
   private final VideoCapture videos;
   private final DuelCapture duels;
+  private final FramePacing pacing;
   private final RecordedControls recording = new RecordedControls();
   private int automationTicks;
 
@@ -29,6 +30,7 @@ final class ClientActions {
     captures = new Captures(session.artifacts());
     videos = new VideoCapture(session.artifacts());
     duels = new DuelCapture(session.artifacts(), videos::marker);
+    pacing = new FramePacing(session.artifacts());
   }
 
   CompletableFuture<Object> submit(Minecraft client, UUID peer, Protocol.Request request) {
@@ -52,30 +54,35 @@ final class ClientActions {
       release(client);
       return CompletableFuture.completedFuture("Inputs released");
     }
+    if (request.action().startsWith("frame-pacing-")) return framePacing(client, request);
     if (request.action().startsWith("video-")) return video(client, request);
     if (request.action().startsWith("duel-")) return duel(client, request);
     requireWorld(client);
     if (videos.active()) throw new IllegalStateException("Rendered capture owns the camera");
     if (request.action().equals("capture")) return captures.capture(client, args);
     if (request.action().equals("input")) return input(client, peer, args);
+    return CompletableFuture.completedFuture(ordinary(client, request));
+  }
+
+  private Object ordinary(Minecraft client, Protocol.Request request) {
+    var args = request.arguments();
     automationTicks = 2;
-    var result =
-        switch (request.action()) {
-          case "look" -> look(client, args);
-          case "hotbar" -> hotbar(client, args);
-          case "inventory" -> inventory(client, args);
-          case "close" -> close(client, args);
-          case "click" -> click(client, args);
-          case "command" -> command(client, args);
-          case "attack", "use" -> interact(client, request);
-          default -> throw new IllegalArgumentException("Unknown action: " + request.action());
-        };
-    return CompletableFuture.completedFuture(result);
+    return switch (request.action()) {
+      case "look" -> look(client, args);
+      case "hotbar" -> hotbar(client, args);
+      case "inventory" -> inventory(client, args);
+      case "close" -> close(client, args);
+      case "click" -> click(client, args);
+      case "command" -> command(client, args);
+      case "attack", "use" -> interact(client, request);
+      default -> throw new IllegalArgumentException("Unknown action: " + request.action());
+    };
   }
 
   private CompletableFuture<Object> video(Minecraft client, Protocol.Request request) {
     var args = request.arguments();
     if (request.action().equals("video-arm") || request.action().equals("video-duel-arm")) {
+      if (pacing.active()) throw new IllegalStateException("Frame pacing measurement is active");
       requireWorld(client);
       if (inputs.active()) throw new IllegalStateException("Release inputs before recording");
       return videos.arm(client, args, request.action().equals("video-duel-arm"));
@@ -102,6 +109,18 @@ final class ClientActions {
     return CompletableFuture.completedFuture(result);
   }
 
+  private CompletableFuture<Object> framePacing(Minecraft client, Protocol.Request request) {
+    if (request.action().equals("frame-pacing-start")) {
+      requireWorld(client);
+      if (videos.active()) throw new IllegalStateException("Video capture is active");
+      return CompletableFuture.completedFuture(pacing.start(client, request.arguments()));
+    }
+    Protocol.keys(request.arguments(), Set.of());
+    if (!request.action().equals("frame-pacing-status"))
+      throw new IllegalArgumentException("Unknown frame pacing action: " + request.action());
+    return CompletableFuture.completedFuture(pacing.status());
+  }
+
   private CompletableFuture<Object> duel(Minecraft client, Protocol.Request request) {
     var args = request.arguments();
     if (request.action().equals("duel-arm")) {
@@ -123,6 +142,7 @@ final class ClientActions {
   }
 
   void tick(Minecraft client) {
+    pacing.tick(client);
     var server = client.getCurrentServer();
     duels.tick(
         client.player != null
@@ -157,7 +177,7 @@ final class ClientActions {
   }
 
   void startCaptures() {
-    RenderCapture.install(videos);
+    RenderCapture.install(videos, pacing);
   }
 
   void closeCaptures(Minecraft client) {
@@ -165,6 +185,7 @@ final class ClientActions {
     RenderCapture.remove(videos);
     videos.close();
     duels.close();
+    pacing.close();
   }
 
   private void requireWorld(Minecraft client) {

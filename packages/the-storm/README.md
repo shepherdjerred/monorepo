@@ -1151,15 +1151,46 @@ graph, regions, cover, chokepoints and routes with `rwfbots`' `MapBaker`, and
 writes `nav.rwfnav` plus a `nav.summary.json` of counts for diff review. The
 artifact carries the schematic's `blocksSha256`, so `rwfbots` refuses it when
 the world's blocks change. Commit metadata, terrain, details and navigation together.
-`mise exec -- gradle verifyRwfMaps` (part of `check`, so CI runs it) re-bakes
-every map in memory and fails if a committed `nav.rwfnav` or summary differs
+`mise exec -- gradle verifyRwfMaps` re-bakes every map in memory and fails
+if a committed `nav.rwfnav` or summary differs
 byte for byte; the bake is deterministic, so a diff means the map, the block
 table or the baker changed and the artifacts must be rebaked. A bake that
 `NavArtifact.validate()` rejects (a spawn inside a wall, a bomb no spawn can
-reach) fails too; fix the map, not the tool. Navigation generator version 2
-includes surface swimming, ladders, ordinary wooden doors and bounded jumps
-and drops. A successful bake proves graph connectivity; native movement must
-also be checked in the pinned Paper/Citizens runtime.
+reach) fails too; fix the map, not the tool. Navigation format 2, generator 3
+and movement model 3 use server ticks for travel costs and health points for
+fall damage. Directed edges include climbing, surface and submerged swimming,
+ordinary wooden doors, jump-up steps, and sprint jumps with certified run-up
+and flight clearance. Compressed water intervals preserve intermediate depths
+without storing a graph node for every submerged block. Nodes retain actual
+half-block standing heights, and prepared run-ups survive equivalent replans;
+takeoff rechecks position, momentum, health and expiring protection. Routes account for
+cumulative fall damage, actual movement and protection capabilities, effect
+expiry, available healing, known enemy exposure and bomb deadlines. A
+successful bake proves graph connectivity; native movement must also be checked
+in the pinned Paper/Citizens runtime.
+Distance fields store lossless float-bit deltas in byte planes before
+compression. The artifact declares this encoding explicitly; unknown encodings
+and invalid distances fail decoding. Positive infinity represents unreachable
+nodes.
+Walk-off drops extend to the first landing within the authored map's vertical
+bounds. Sprint-jump certification separately bounds descents to sixteen blocks
+and simulated flight to eighty ticks; an uncertified jump does not become a
+route edge merely because its landing is survivable.
+Run the deterministic rebake verification locally with the applicable extended
+Minecraft checks. CI's unit suite decodes the committed artifacts and checks
+their metadata and structural contracts.
+
+After building `:rwfmap:installDist`, run
+`plugin/tools/rwfmap/build/install/rwfmap/bin/rwfmap verify-health <mapDir>`
+for an independent cumulative-damage admission check. It binds the saved
+artifact to the authored terrain, map identity, spawns and bomb sites, then
+checks every spawn against every selected fuse-worker position. Its JSON
+report gives each position's minimum fall damage within a nineteen-point
+budget; `-1` means no route fits. A nonzero exit rejects any unsafe selected
+position. This check assumes ordinary twenty-point health without healing
+or temporary protection; runtime routing additionally uses the fighter's
+actual capabilities and effects. Run it across the admitted catalog locally,
+alongside deterministic rebake verification.
 
 Legacy Red Warfare ZIPs can be converted without modifying the originals:
 
@@ -1237,6 +1268,31 @@ to check opening a door, respecting a denied interaction, ladder climbing,
 jumping a gap and swimming to shore. It captures physics and server logs,
 then removes its server. This fixture validates movement primitives; it does
 not certify every route on an imported map.
+
+`maps:calibrate-traversal --output <new-directory> --repetitions 3` measures
+the production Citizens motor on disposable walk, jump, climb, water and drop
+courses. Add `--driver graph` to bake and round-trip each course's navigation
+artifact, then drive its production planner, reflex and motor together.
+Build `:dist:shadowJar`, `:dist:fixturesJar` and `:rwfmap:installDist` first.
+The runner freezes its producers, validates the shared scenario contract
+and retains every trial, including failures. Per-tick observations include
+position, velocity, grounded/fluid state, health and actual damage. Controlled
+water trials reset to the same submerged start after skin setup; holding depth
+must remain controlled for forty ticks. These measurements inform navigation
+assets; reaching a course endpoint does not certify an imported map route or
+server capacity. Keep this extended native check outside CI.
+
+`maps:verify-health-native --output <new-directory>` checks real joined-member
+health and movement capabilities in a disposable Training Yard match. Its
+automated network client walks reversible drop courses; the fixture never
+injects damage. It captures production snapshots and native FALL events,
+samples health after vanilla damage applies, and binds each risk prediction
+to the original member, kit and attempt. Cases cover ordinary health,
+Juggernaut's thirty-point maximum and sprint restriction, cumulative damage,
+water landings and protection expiry. Use repeated `--scenario <id>` arguments
+to select cases. These controlled diagnostics supply neither human
+demonstrations nor proof of autonomous route choice. Build the same three
+artifacts as the traversal runner and keep this extended check outside CI.
 
 `bun tools/maps/pursuit.ts --output .cache/rwf-pursuit/batch-a` checks the
 production planner, reflex and Citizens motor together in a small disposable
@@ -1444,6 +1500,23 @@ The E2E/full/load gameplay fixtures select Training Yard explicitly because
 their geometry assertions use that map. A native preview with `--rwf-map`
 selects its requested map; neither selection changes the production catalog.
 
+`rwf.yml` also requires an `experience` section: difficulty (`easy`, `normal`,
+`hard`), style (`varied`, `push`, `cautious`, `teamplay`), variety (`low`,
+`medium`, `high`), and map/kit ID restrictions. Empty restrictions admit every
+otherwise available choice. The shipped experience is hard, varied and high
+variety, with the existing automatic large lobby sizing. `/rwf settings` shows
+the current frozen experience and the next draft's preferences.
+
+Administrators can use `/rwf admin settings preset relaxed|balanced|challenging`
+or set `difficulty`, `style`, `variety`, `maps` or `kits` individually. Map and
+kit pools accept IDs separated by spaces or commas, or `all`. A restricted kit
+pool must contain a universally available starter kit and still respects each
+human's unlocks. Overrides stay in memory until restart and apply to the next
+map draft. The draft freezes settings and its recorded seed together; late
+arrivals retain that experience. The recording's `E/settings` event contains
+the effective canonical settings and SHA-256 fingerprint. Presets do not raise
+the match cap or enable an unaccepted learned model.
+
 Watchers (`/rwf spectate`) are snapshotted through the same keeper under the
 `rwf_watch` scope, then put in spectator mode at the map's spectator point
 with the match scoreboard; `/rwf spectate next` follows the next living
@@ -1511,7 +1584,11 @@ count from the moment the match went live, at 50 ms each.
 | `P` | pseudonym, credits                                                                                                                                                                                                                                                                             | once per paid human, after `X`                                      |
 
 The dedicated Fabric preview client sends complete `N` controls at 20 Hz through
-`thestorm:rwf_input`. Its sequence and acknowledgement of
+`thestorm:rwf_input`. `/rwf recording` reports whether the Storm client is
+sending manual controls and acknowledging combat observations. Chat and menus
+pause controls; the status read does not consume them. Vanilla sessions remain
+diagnostic, and whole-match eligibility is decided by the dataset exporter.
+The client's sequence and acknowledgement of
 `thestorm:rwf_observation` connect each action to the server observation the
 client received. Tick offsets use Paper's tick counter. Ordinary clients, missing
 packets and already-consumed packets produce `MISSING` diagnostic rows using
@@ -1562,7 +1639,11 @@ bun run test:learning
 
 The launcher gracefully stops Paper and exports recordings into the session's
 artifact directory before removing its container. The dataset exporter accepts
-only human Trooper combat in two-combatant matches, sword selected, without an
+only naturally completed duels (`LAST_TEAM_STANDING` or `DRAW`), with a valid
+rostered winner or a winnerless draw. Stopped matches remain diagnostic and
+cannot supply demonstrations. Samples cannot extend past the end tick; only
+validated human payout rows may follow the end row. Export accepts
+human Trooper combat in two-combatant matches, sword selected, without an
 authored item action, and with an acknowledged observation no older than two
 ticks. Gaps and automated input break recurrent sequences; they are never
 interpolated. Movement labels use the acknowledged observation's facing basis.
@@ -2337,7 +2418,12 @@ and warms it on the compute pool. Loading remains asynchronous; late flag and
 load completions cannot enable a finished match or its successor. Only Trooper
 combat movement and attack timing use the learned actions. Normal drafting,
 difficulty levers, habits, kits, healing, abilities, navigation, objectives,
-governor thinning and personality ratings retain their authored paths. Skipped
+governor thinning and personality ratings retain their authored paths. Prepared
+and committed jumps, climbs, swimming, drops and objective or escape routes
+keep authored control even when an enemy is visible. Optional learned footwork
+must pass the same terrain checks; jump checks cover arbitrary later steering
+within the supported landing envelope. Unsafe tickets remain unapplied and
+count as ineligible rather than being silently altered. Skipped
 body ticks reset recurrent memory; idle ticks drain retired inference completions.
 Diagnostic attachments remain separate and never evaluate this rollout flag.
 An enabled flag requires the accepted asset. Exceptional or cancelled flag/model
@@ -2547,6 +2633,21 @@ probe; reports include separate verdicts for each tier, and an incomplete matrix
 always fails the full 256-player release verdict. A tier verdict covers one run;
 qualification still requires both maps, repetitions and native gameplay checks.
 Full acceptance uses the shipped budget and all five sizes. These suites remain outside CI.
+
+`capacity:qualify --manifest <file> --output <new-file>` replays the raw capacity
+bars across both maps and two independent repetitions for each CPU/worker pair.
+The version-1 manifest names the exact candidate binary, fixture, personality,
+bot-configuration and runtime fingerprints, the two map/configuration
+identities, and every report path relative to the manifest. Only complete
+version-2 reports qualify. The reader checks original run/container/match
+identities and measuring intervals, rejects overlapping runs and changed
+inputs, and recomputes bars rather than trusting recorded pass labels. It
+reports load qualification separately for each tier and the complete matrix,
+then chooses the smallest CPU pair supporting the highest qualified 64, 128 or
+256 tier. Its result does not accept deployment: rendered combat, bounded map
+loading, survival coexistence, MacBook frame pacing, manual quality and live
+rollout remain independent requirements. `test:capacity-tools` exercises these
+evidence boundaries without starting Minecraft.
 For an incomplete calibration probe only, `STORM_CAPACITY_PROFILE=cpu|alloc|jfr`
 captures another 90 seconds after the measuring window and saves
 the profile locally under `.cache/e2e/capacity/profiles/`. CPU/allocation modes
@@ -2569,16 +2670,39 @@ ordinary rendered Minecraft client. It joins a 256-combatant draft by default;
 `STORM_CAPACITY_NATIVE_TOTAL` selects 64, 100, 128 or 192 for tier acceptance.
 It moves through normal input, waits for normal combat and match completion, and requires
 the original recording to attribute the human's combat death to a bot, corroborated
-by health loss observed in the native client. It also checks bot movement.
+by health loss observed in the native client. A passive server observer binds
+to that same ordinary match and journals the human's health and absorption
+before and after bot hits. Acceptance requires that killer's recorded attack
+intent, applied melee or projectile damage, and direct combat death; poison,
+environmental deaths and canceled hits that changed no health cannot satisfy
+it. The observer never moves or damages a fighter. It also checks bot movement.
 Screenshots, client commands, observations and the original recording remain
 under `.cache/e2e/capacity-native/`. Run this on a machine able to launch the
 client, separately from the load matrix so client rendering cannot affect its
 measurements.
 
+`test:capacity-frame-pacing` measures real renderer callback intervals on
+macOS, first in an empty admitted map and then during the selected mixed
+roster. It uses the same `STORM_CAPACITY_MAP` and
+`STORM_CAPACITY_NATIVE_TOTAL` selectors. Both windows last sixty seconds at
+the map's saved spectator viewpoint, with no screenshots or video capture
+during timing. Receipts retain every render interval, stalled tail time,
+focus and menu state, camera pose, graphics settings, runtime fingerprints
+and Mac hardware identity. The comparison rejects changed viewpoints,
+settings and client runtimes. Its report remains a measurement rather than
+an automatic performance acceptance. Run it separately from server-load
+qualification and inspect the resulting frame distribution.
+
+For an already running instrumented client, `bun run client
+frame-pacing-start --session <session.json> --args
+'{"name":"baseline","durationMs":60000,"targetFrames":36000}'` starts a
+bounded timing window; `frame-pacing-status` reads its completion and receipt
+path. Video and pacing windows cannot overlap.
+
 Filling a match: the `Director` drafts personalities from
 `rwfbots/personalities/*.yml` (excluding names held by online humans or already drafted bots),
-keeps the most balanceable of a few drafts, shifts every bot's skill so the
-median bot sits a little under the median human (`MatchShift`), and gives
+keeps the most balanceable of a few drafts, freezes competence from the selected
+difficulty and recorded seed, and gives
 each a kit from its weights over `draft.kits`; a personality whose weights
 name none of those kits (its favourites ship later) still drafts and plays one
 of them, chosen uniformly. The draft happens when the countdown starts, but
@@ -2591,6 +2715,10 @@ OpenSkill; after a match with a result every team goes
 through one update and each bot's record (matches, wins, kills, deaths,
 plants, defuses, mu, sigma, last seen) is written to
 `rwfbots_personality_stats`. Humans play at the default rating.
+Ratings still influence roster balance; ordinary difficulty no longer weakens
+bots to target a human win rate. Personality variation stays within the
+selected competence floor and remains fixed throughout the match. Controlled
+legacy diagnostics retain their explicitly selected baseline profiles.
 
 Configuration and content under `server/owned/plugins/TheStorm`:
 
@@ -2598,7 +2726,7 @@ Configuration and content under `server/owned/plugins/TheStorm`:
   (pinned to `Lever.java`), the kits bots may draft, the LOS ray budget,
   trace recording and bot chat (`chat:`, below).
 - `rwfbots/personalities/<id>.yml`: the personas (see its README): about
-  two hundred, spread evenly over twelve archetypes (rusher, lurker, sniper,
+  512, spread across twelve archetypes (rusher, lurker, sniper,
   bomb diver, anchor, flanker, support, duelist, hunter, turtle, troll,
   tactician) and five skill bands. Play differs through the style, role,
   kit and lever values the generator derives from the archetype, and

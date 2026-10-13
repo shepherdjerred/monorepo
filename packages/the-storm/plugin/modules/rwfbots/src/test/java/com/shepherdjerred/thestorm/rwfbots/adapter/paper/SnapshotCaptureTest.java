@@ -17,6 +17,7 @@ import java.util.UUID;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.WorldCreator;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.junit.jupiter.api.AfterEach;
@@ -50,15 +51,19 @@ final class SnapshotCaptureTest {
         world.getBlockAt(x, 0, z).setType(Material.STONE);
       }
     }
-    alice = server.addPlayer("Alice");
-    bob = server.addPlayer("Bob");
+    alice = new TraversalPlayerMock(server, "Alice");
+    bob = new TraversalPlayerMock(server, "Bob");
     alice.teleport(new Location(world, 2.5, 1, 2.5, 90, 10));
     bob.teleport(new Location(world, 10.5, 1, 2.5, 0, 0));
     stimuli = new StimulusCollector();
     ids = new IdMap();
     capture =
         new SnapshotCapture(
-            ids, uuid -> Optional.<Player>ofNullable(server.getPlayer(uuid)), stimuli);
+            ids,
+            uuid -> Optional.<Player>ofNullable(server.getPlayer(uuid)),
+            stimuli,
+            new SnapshotCapture.Capabilities(
+                uuid -> Optional.empty(), java.time.InstantSource.fixed(java.time.Instant.EPOCH)));
   }
 
   @AfterEach
@@ -67,6 +72,10 @@ final class SnapshotCaptureTest {
   }
 
   private MatchState state(MatchState.Phase phase, Optional<MatchState.Poison> poison) {
+    return state(phase, poison, "trooper");
+  }
+
+  private MatchState state(MatchState.Phase phase, Optional<MatchState.Poison> poison, String kit) {
     return new MatchState(
         MATCH,
         phase,
@@ -78,7 +87,7 @@ final class SnapshotCaptureTest {
                 "Alice",
                 Optional.empty(),
                 Optional.of("red"),
-                Optional.of("trooper"),
+                Optional.of(kit),
                 true,
                 false),
             new MatchState.Fighter(
@@ -140,6 +149,26 @@ final class SnapshotCaptureTest {
     assertThat(nuke.owner()).isEqualTo(new BombOwner.Nuke());
     assertThat(nuke.state()).isEqualTo(new BombState.Defusing(0.5, 1, 600));
     assertThat(snapshot.poison().active()).isFalse();
+  }
+
+  @Test
+  void juggernautHealthAndDamageAboveTwentyRemainVisibleToTheBots() {
+    var maximum = java.util.Objects.requireNonNull(alice.getAttribute(Attribute.MAX_HEALTH));
+    maximum.setBaseValue(30);
+    alice.setHealth(30);
+    alice.setAbsorptionAmount(4);
+    var match = state(MatchState.Phase.LIVE, Optional.empty(), "juggernaut");
+    var full = capture.capture(1, match).require(ids.combatant(alice.getUniqueId()));
+    assertThat(full.health()).isEqualTo(30);
+    assertThat(full.effectiveHealth()).isEqualTo(34);
+    assertThat(full.traversal().maxHealth()).isEqualTo(30);
+    alice.setHealth(25);
+    var hurt = capture.capture(2, match).require(ids.combatant(alice.getUniqueId()));
+    assertThat(hurt.health()).isEqualTo(25);
+    assertThat(hurt.effectiveHealth()).isEqualTo(29);
+    assertThat(hurt.lastHurtTick()).isEqualTo(2);
+    assertThat(capture.capture(3, match).require(ids.combatant(alice.getUniqueId())).lastHurtTick())
+        .isEqualTo(2);
   }
 
   @Test

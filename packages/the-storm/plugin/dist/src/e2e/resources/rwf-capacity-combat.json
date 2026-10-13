@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "kind": "rwf-capacity-combat",
+  "maximumRows": 4096,
+  "damageCauses": ["ENTITY_ATTACK", "PROJECTILE"],
+  "deathCauses": ["Melee", "Projectile"],
+  "records": {
+    "Capture": [
+      "schema",
+      "kind",
+      "match",
+      "startedTick",
+      "sampledTick",
+      "human",
+      "bots",
+      "dropped",
+      "pending",
+      "hits"
+    ],
+    "Hit": [
+      "sequence",
+      "serverTick",
+      "attacker",
+      "victim",
+      "cause",
+      "cancelled",
+      "beforeHealth",
+      "beforeAbsorption",
+      "afterHealth",
+      "afterAbsorption"
+    ]
+  }
+}

@@ -35,7 +35,10 @@ public final class AimController {
     var errorYaw = state.errorYaw() * a + kick * random.nextGaussian();
     var errorPitch = state.errorPitch() * a + kick * random.nextGaussian();
     var noisy = pursued.plus(errorYaw, errorPitch);
-    var look = state.look().turnToward(noisy, levers.turnRateDegPerTick());
+    // A hand slows as the crosshair settles, instead of snapping the final few degrees each tick.
+    var remaining = state.look().differenceTo(noisy);
+    var speed = Math.min(levers.turnRateDegPerTick(), Math.max(0.5, remaining * 0.35));
+    var look = state.look().turnToward(noisy, speed);
     return new AimState(look, errorYaw, errorPitch, pending);
   }
 

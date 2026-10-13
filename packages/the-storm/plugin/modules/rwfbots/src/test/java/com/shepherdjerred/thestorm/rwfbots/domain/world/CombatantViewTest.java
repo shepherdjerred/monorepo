@@ -64,5 +64,28 @@ final class CombatantViewTest {
   void rejectsOutOfRangeVitals() {
     assertThatThrownBy(() -> combatant(1, RED, Vec3.ZERO).withHealth(21, 0))
         .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> combatant(1, RED, Vec3.ZERO).withHealth(Double.NaN, 0))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> combatant(1, RED, Vec3.ZERO).withHealth(20, Double.POSITIVE_INFINITY))
+        .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  void snapshotCopiesRetainActualCapabilities() {
+    var capabilities = new TraversalState(false, 5, 0.5, 12, 1, 80, 50, -1, 3, 0, 60, 2, 90, 30);
+    var body = combatant(1, RED, Vec3.ZERO).withTraversal(capabilities);
+    var copies =
+        List.of(
+            body.withPos(new Vec3(1, 2, 3)),
+            body.withVel(new Vec3(0.1, 0, 0)),
+            body.withFacing(body.facing()),
+            body.withHealth(30, 1),
+            body.withAlive(false),
+            body.withInvisible(true, 0),
+            body.withDisguised(true),
+            body.withLastHurtTick(3),
+            body.withMotion(true, false),
+            body.withHands(2, true));
+    assertThat(copies).allSatisfy(copy -> assertThat(copy.traversal()).isSameAs(capabilities));
   }
 }

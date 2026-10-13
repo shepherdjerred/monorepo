@@ -22,11 +22,10 @@ import java.util.Set;
 import java.util.random.RandomGenerator;
 
 /**
- * Fills a match with bots: drafts personalities from the catalog, keeps the draft whose balanced
- * teams would be closest, shifts every bot's skill so the median bot sits a little under the median
- * human, and gives each bot a kit from its preferences over the kits on offer, or any kit on offer
- * when none of its favourites is. Pure: the same request and random source always pick the same
- * bots.
+ * Drafts personalities whose balanced teams are closest and draws kits from their preferences over
+ * the offered pool. The frozen-experience overload gives ordinary matches their configured
+ * competence; the original overload retains the historical human-relative diagnostic draft. Pure:
+ * the same request, experience and random source always pick the same bots.
  */
 public final class Director {
 
@@ -96,7 +95,16 @@ public final class Director {
    * @param levers its levers for this match, after the shift
    * @param rating the rating it plays at
    */
-  public record Drafted(Personality personality, Kit kit, Levers levers, Rating rating) {}
+  public record Drafted(
+      Personality personality,
+      Kit kit,
+      Levers levers,
+      Rating rating,
+      com.shepherdjerred.thestorm.rwfbots.domain.personality.Style style) {
+    public Drafted(Personality personality, Kit kit, Levers levers, Rating rating) {
+      this(personality, kit, levers, rating, personality.style());
+    }
+  }
 
   /**
    * The outcome of a draft.
@@ -144,6 +152,28 @@ public final class Director {
               request.ratingOf(personality)));
     }
     return new Pick(bots, shift);
+  }
+
+  /** A fixed difficulty draft. Human results never weaken an already selected difficulty. */
+  public static Pick pick(
+      Request request,
+      com.shepherdjerred.thestorm.rwf.app.MatchExperiences.Frozen experience,
+      RandomGenerator random) {
+    // Reuse the proven balanced personality/kit draft, but do not use its human-win skill shift.
+    var picked = pick(request, random);
+    return new Pick(
+        picked.bots().stream()
+            .map(
+                bot ->
+                    new Drafted(
+                        bot.personality(),
+                        bot.kit(),
+                        MatchCompetence.levers(
+                            bot.personality(), experience.settings(), experience.seed()),
+                        bot.rating(),
+                        MatchCompetence.style(bot.personality(), experience.settings())))
+            .toList(),
+        0);
   }
 
   /** The personality's lever offsets with its archetype's push on aggression added. */

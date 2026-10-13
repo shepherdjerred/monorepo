@@ -6,7 +6,8 @@ public enum Hop {
   JUMP(1),
   DROP(2),
   CLIMB(3),
-  LEAP(4);
+  LEAP(4),
+  SWIM(5);
 
   private final byte code;
 

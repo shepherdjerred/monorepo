@@ -30,6 +30,9 @@ async function main(): Promise<void> {
     process.stdout.write(
       "client preview [--world <directory>] [--vanilla] [--verify] [--rwf-duel] [--rwf-map <map-id>] [--verify-duel-clock|--verify-duel-video]\nclient video-encode --args '{\"receipt\":\"/path/to/frames.json\"}'\nclient <status|look|input|attack|use|hotbar|inventory|close|click|command|capture|video-ready|video-arm|video-duel-arm|video-start|video-status|video-cancel|duel-arm|duel-status|duel-seal|duel-cancel|release|viewpoint|tour|smoke|stop> --session <session.json> [--args '<JSON object>']\n",
     );
+    process.stdout.write(
+      'client frame-pacing-start --session <session.json> --args \'{"name":"baseline","durationMs":60000,"targetFrames":36000}\'\nclient frame-pacing-status --session <session.json>\n',
+    );
     return;
   }
   if (action === "preview") {

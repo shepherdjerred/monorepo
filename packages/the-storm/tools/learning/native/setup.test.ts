@@ -40,8 +40,9 @@ function fixture(external: boolean) {
     fallback: 0,
   });
   const setup = {
-    schema: 2,
+    schema: 3,
     kind: "rwf-native-duel-setup",
+    authoredBaseline: "rwf-hard-seeded-v1",
     match,
     seed: 17,
     side: "red",
@@ -83,6 +84,21 @@ function fixture(external: boolean) {
   };
   return { state, setup };
 }
+
+test("native duels require the versioned frozen hard authored baseline", () => {
+  const input = fixture(true);
+  expect(() =>
+    validateSetup({ ...input.setup, schema: 2 }, input.state),
+  ).toThrow();
+  expect(() =>
+    validateSetup(
+      { ...input.setup, authoredBaseline: "legacy-max-skill" },
+      input.state,
+    ),
+  ).toThrow();
+  const { authoredBaseline: _removed, ...absent } = input.setup;
+  expect(() => validateSetup(absent, input.state)).toThrow();
+});
 
 test("paired setup retains stable personalities, teams, kits and starting conditions with fresh native identities", () => {
   const learned = fixture(true);

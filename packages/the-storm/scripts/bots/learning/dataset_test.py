@@ -127,6 +127,13 @@ class DatasetTest(unittest.TestCase):
             with self.subTest(corrupt=corrupt[-120:]), self.assertRaises(ValueError):
                 read(StringIO(corrupt))
 
+    def test_match_settings_metadata_never_becomes_a_training_feature_or_label(self) -> None:
+        original = fixture([human(0), human(1)])
+        annotated = original.replace(
+            "X\t12\t", 'E\t0\tsettings\tmatch\t{"version":1,"difficulty":"hard","seed":42}\nX\t12\t')
+        self.assertEqual(read(StringIO(annotated)), read(StringIO(original)))
+        self.assertEqual(sequences(read(StringIO(annotated))), sequences(read(StringIO(original))))
+
     def test_split_is_deterministic_and_keeps_whole_matches_together(self) -> None:
         matches = [str(index) for index in range(20)]
         split = split_matches(matches, 17)
@@ -138,6 +145,44 @@ class DatasetTest(unittest.TestCase):
             split_matches(matches[:9], 17)
         with self.assertRaises(ValueError):
             split_matches([*matches, matches[0]], 17)
+
+    def test_only_naturally_completed_duels_supply_human_segments(self) -> None:
+        text = fixture([human(0), human(1)])
+        stopped = read(StringIO(text.replace("RED\tLAST_TEAM_STANDING", "-\tSTOPPED")))
+        chunks, counts = sequences(stopped)
+        self.assertEqual(chunks, [])
+        self.assertEqual(counts, {"incomplete_duel": 2})
+        draw = read(StringIO(text.replace("RED\tLAST_TEAM_STANDING", "-\tDRAW")))
+        chunks, counts = sequences(draw)
+        self.assertEqual(counts["accepted"], 2)
+        self.assertFalse(chunks[0]["won"])
+        self.assertEqual(chunks[0]["reason"], "DRAW")
+
+    def test_invalid_outcomes_and_samples_after_end_fail_loudly(self) -> None:
+        text = fixture([human(0), human(1)])
+        endings = ("-\tLAST_TEAM_STANDING", "RED\tDRAW", "RED\tSTOPPED",
+                   "RED\tunknown", "GREEN\tLAST_TEAM_STANDING")
+        for ending in endings:
+            with self.subTest(ending=ending), self.assertRaisesRegex(ValueError, "end row|winner"):
+                read(StringIO(text.replace("RED\tLAST_TEAM_STANDING", ending)))
+        for row in (human(2), "E\t12\tsettings\tmatch\tignored", "R\tp3\tGREEN\ttrooper\tfalse"):
+            with self.subTest(row=row), self.assertRaisesRegex(ValueError, "follow the end row"):
+                read(StringIO(text + row + "\n"))
+        with self.assertRaisesRegex(ValueError, "beyond the match end"):
+            read(StringIO(text.replace("X\t12\t", "X\t1\t")))
+        with self.assertRaisesRegex(ValueError, "input extends"):
+            read(StringIO(fixture([human(13, ack=11)])))
+
+    def test_only_valid_human_settlements_may_follow_the_footer(self) -> None:
+        text = fixture([human(0), human(1)])
+        self.assertEqual(read(StringIO(text + "P\tp1\t50\n")), read(StringIO(text)))
+        self.assertEqual(read(StringIO(text + "P\tp1\t-2\n")), read(StringIO(text)))
+        for rows in (f"P\tp1\t{2**63}\n", "P\tp2\t50\n", "P\tunknown\t50\n",
+                     "P\tp1\t50\nP\tp1\t50\n", "P\tp1\n"):
+            with self.subTest(rows=rows), self.assertRaisesRegex(ValueError, "settlement"):
+                read(StringIO(text + rows))
+        with self.assertRaisesRegex(ValueError, "settlement"):
+            read(StringIO(text.replace("X\t12\t", "P\tp1\t50\nX\t12\t")))
 
     def test_healing_and_non_duel_recordings_are_not_pilot_labels(self) -> None:
         text = fixture([human(0), human(1)]).replace("\ttrue\tfalse\t1\t", "\ttrue\ttrue\t2\t")

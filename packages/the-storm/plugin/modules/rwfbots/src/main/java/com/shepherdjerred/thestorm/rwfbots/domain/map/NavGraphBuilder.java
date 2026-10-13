@@ -5,6 +5,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.Hop;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Finds the cells a player can stand in and connects them. A cell is a node when a player fits (it
@@ -13,22 +14,32 @@ import java.util.List;
  */
 final class NavGraphBuilder {
 
-  private static final float SWIM_FACTOR = 2.5f;
+  private static final int[][] DIRECTIONS = {
+    {1, 0}, {-1, 0}, {0, 1}, {0, -1}, {1, 1}, {1, -1}, {-1, 1}, {-1, -1}
+  };
 
   private final BlockClassification blocks;
   private final GridBounds bounds;
   private final int[] nodeOfCell;
   private final List<Integer> cellOfNode = new ArrayList<>();
+  private final WaterTopology water;
+  private final FlightCorridor flights;
 
-  private NavGraphBuilder(BlockClassification blocks) {
+  private NavGraphBuilder(BlockClassification blocks, NavSites sites) {
     this.blocks = blocks;
     this.bounds = blocks.bounds();
     this.nodeOfCell = new int[bounds.volume()];
     Arrays.fill(nodeOfCell, -1);
+    water = WaterTopology.build(blocks, sites);
+    flights = new FlightCorridor(blocks);
   }
 
   static NavGraph build(BlockClassification blocks) {
-    var builder = new NavGraphBuilder(blocks);
+    return build(blocks, new NavSites(List.of(), List.of()));
+  }
+
+  static NavGraph build(BlockClassification blocks, NavSites sites) {
+    var builder = new NavGraphBuilder(blocks, sites);
     builder.findNodes();
     return builder.connect();
   }
@@ -53,10 +64,8 @@ final class NavGraphBuilder {
       return false;
     }
     var shape = shape(cell);
-    // This controller swims at the surface; it has no dive action. A deep ocean otherwise
-    // creates millions of duplicate horizontal routes at depths the bot cannot follow.
-    if (shape.swim() && shape(cell.up()).swim()) return false;
-    return shape.climbable() || shape.swim() || standable(cell.down());
+    if (shape.swim()) return water.node(cell);
+    return shape.climbable() || standable(cell.down());
   }
 
   private BlockShape shape(BlockPos cell) {
@@ -84,6 +93,7 @@ final class NavGraphBuilder {
     var targets = new ArrayList<Integer>();
     var hops = new ArrayList<Hop>();
     var costs = new ArrayList<Float>();
+    var damage = new ArrayList<Integer>();
     for (var node = 0; node < n; node++) {
       var cell = bounds.cell(cellOfNode.get(node));
       var edges = new ArrayList<Edge>();
@@ -93,65 +103,104 @@ final class NavGraphBuilder {
         targets.add(edge.to());
         hops.add(edge.hop());
         costs.add(edge.cost());
+        damage.add(edge.damage());
       }
       edgeStart[node + 1] = targets.size();
     }
     var edgeTo = new int[targets.size()];
     var hop = new byte[targets.size()];
     var cost = new float[targets.size()];
+    var risk = new int[targets.size()];
     for (var i = 0; i < targets.size(); i++) {
       edgeTo[i] = targets.get(i);
       hop[i] = hops.get(i).code();
       cost[i] = costs.get(i);
+      risk[i] = damage.get(i);
     }
     var cells = cellOfNode.stream().mapToInt(Integer::intValue).toArray();
     return new NavGraph(
-        bounds, cells, new NavGraph.Topology(edgeStart, edgeTo), new NavGraph.EdgeData(hop, cost));
+        bounds,
+        new NavGraph.NodeData(cells, water.index(cell -> nodeOfCell[cell]), elevations(cells)),
+        new NavGraph.Topology(edgeStart, edgeTo),
+        new NavGraph.EdgeData(hop, cost, new EdgeCapabilities(risk, LaunchData.standard(hop))));
   }
 
-  private record Edge(int to, Hop hop, float cost) {}
+  private record Edge(int to, Hop hop, float cost, int damage) {}
+
+  private byte[] elevations(int[] cells) {
+    var result = new byte[cells.length];
+    for (var node = 0; node < cells.length; node++)
+      result[node] = BlockFeet.halfOffset(blocks, bounds.cell(cells[node]));
+    return result;
+  }
+
+  private int fallDepth(BlockPos source, BlockPos target) {
+    return Math.max(
+        0, (int) Math.ceil(BlockFeet.at(blocks, source).y() - BlockFeet.at(blocks, target).y()));
+  }
 
   private void horizontal(BlockPos cell, List<Edge> edges) {
-    int[][] cardinal = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
-    for (var d : cardinal) {
+    for (var d : DIRECTIONS) {
       step(cell, d[0], d[1], edges);
       leap(cell, d[0], d[1], edges);
-    }
-    int[][] diagonal = {{1, 1}, {1, -1}, {-1, 1}, {-1, -1}};
-    for (var d : diagonal) {
-      var sideA = cell.offset(d[0], 0, 0);
-      var sideB = cell.offset(0, 0, d[1]);
-      if (fits(sideA) && fits(sideB)) {
-        var target = nodeAt(cell.offset(d[0], 0, d[1]));
-        if (target >= 0) {
-          edges.add(new Edge(target, Hop.WALK, scale(cell, NavGraph.DIAGONAL_COST)));
-        }
-      }
     }
   }
 
   /** Walk level, jump up one, or descend a bounded fall along one cardinal direction. */
   private void step(BlockPos cell, int dx, int dz, List<Edge> edges) {
+    if (levelStep(cell, dx, dz, edges) || upwardStep(cell, dx, dz, edges)) return;
+    var ahead = cell.offset(dx, 0, dz);
+    var diagonal = dx != 0 && dz != 0;
+    if (!fits(ahead) || (diagonal && !clearCorner(cell, dx, dz))) return;
+    descend(cell, ahead, edges);
+  }
+
+  private boolean levelStep(BlockPos cell, int dx, int dz, List<Edge> edges) {
     var ahead = cell.offset(dx, 0, dz);
     var level = nodeAt(ahead);
-    if (level >= 0) {
-      edges.add(new Edge(level, Hop.WALK, scale(cell, NavGraph.WALK_COST)));
-      return;
-    }
+    var diagonal = dx != 0 && dz != 0;
+    if (level < 0 || (diagonal && !clearCorner(cell, dx, dz))) return false;
+    var swim = shape(cell).swim() || shape(ahead).swim();
+    if (diagonal && !fluidCorner(cell, dx, dz)) return true;
+    var cost =
+        swim
+            ? TraversalCosts.swim(cell, ahead)
+            : diagonal ? NavGraph.DIAGONAL_COST : NavGraph.WALK_COST;
+    edges.add(new Edge(level, swim ? Hop.SWIM : Hop.WALK, cost, 0));
+    return true;
+  }
+
+  private boolean upwardStep(BlockPos cell, int dx, int dz, List<Edge> edges) {
+    var ahead = cell.offset(dx, 0, dz);
+    var diagonal = dx != 0 && dz != 0;
     var up = nodeAt(ahead.up());
-    if (up >= 0 && passable(cell.offset(0, 2, 0))) {
-      edges.add(new Edge(up, Hop.JUMP, NavGraph.JUMP_COST));
-      return;
+    if (up >= 0
+        && passable(cell.offset(0, 2, 0))
+        && (!diagonal || clearCorner(cell.up(), dx, dz))) {
+      var swim = shape(cell).swim() || shape(ahead.up()).swim();
+      edges.add(
+          new Edge(
+              up,
+              swim ? Hop.SWIM : Hop.JUMP,
+              swim ? TraversalCosts.swim(cell, ahead.up()) : NavGraph.JUMP_COST,
+              0));
+      return true;
     }
-    if (!fits(ahead)) {
-      return;
-    }
-    for (var depth = 1; depth <= NavGraph.MAX_DROP; depth++) {
+    return false;
+  }
+
+  private boolean fluidCorner(BlockPos cell, int dx, int dz) {
+    return !(shape(cell).swim() && shape(cell.offset(dx, 0, dz)).swim())
+        || (shape(cell.offset(dx, 0, 0)).swim() && shape(cell.offset(0, 0, dz)).swim());
+  }
+
+  private void descend(BlockPos cell, BlockPos ahead, List<Edge> edges) {
+    var maximumDepth = cell.y() - bounds.origin().y();
+    for (var depth = 1; depth <= maximumDepth; depth++) {
       var below = ahead.offset(0, -depth, 0);
       var landing = nodeAt(below);
       if (landing >= 0) {
-        var fallPenalty = Math.max(0, depth - 3) * 4;
-        edges.add(new Edge(landing, Hop.DROP, NavGraph.WALK_COST + depth + fallPenalty));
+        edges.add(descent(cell, below, landing));
         return;
       }
       if (!passable(below)) {
@@ -162,55 +211,69 @@ final class NavGraphBuilder {
 
   private void vertical(BlockPos cell, List<Edge> edges) {
     var shape = shape(cell);
+    if (shape.swim()) {
+      water.next(cell, true).ifPresent(y -> swimVertical(cell, y, edges));
+      water.next(cell, false).ifPresent(y -> swimVertical(cell, y, edges));
+    }
     var above = nodeAt(cell.up());
     if (above >= 0 && (shape.climbable() || shape(cell.up()).climbable())) {
-      edges.add(new Edge(above, Hop.CLIMB, NavGraph.CLIMB_COST));
+      edges.add(new Edge(above, Hop.CLIMB, NavGraph.CLIMB_COST, 0));
     }
     var below = nodeAt(cell.down());
     if (below >= 0 && (shape.climbable() || shape(cell.down()).climbable())) {
-      edges.add(new Edge(below, Hop.CLIMB, NavGraph.CLIMB_COST));
+      edges.add(new Edge(below, Hop.CLIMB, NavGraph.CLIMB_COST, 0));
     }
+  }
+
+  private Edge descent(BlockPos cell, BlockPos below, int landing) {
+    var depth = Math.max(1, fallDepth(cell, below));
+    var submerged = shape(below).swim();
+    var damage = submerged ? 0 : TraversalCosts.fallDamage(depth, false);
+    var swimming = shape(cell).swim() && submerged;
+    return new Edge(
+        landing,
+        swimming ? Hop.SWIM : Hop.DROP,
+        swimming ? TraversalCosts.swim(cell, below) : TraversalCosts.drop(depth),
+        damage);
+  }
+
+  private void swimVertical(BlockPos cell, int y, List<Edge> edges) {
+    var target = cell.offset(0, y - cell.y(), 0);
+    edges.add(new Edge(nodeAt(target), Hop.SWIM, TraversalCosts.swim(cell, target), 0));
   }
 
   /** Short gaps on the original floating platforms need a sprint jump, sometimes downwards. */
   private void leap(BlockPos cell, int dx, int dz, List<Edge> edges) {
-    if (!standable(cell.down()) || nodeAt(cell.offset(dx, 0, dz)) >= 0) return;
-    for (var span = 2; span <= 3; span++) {
-      for (var descent = 0; descent <= NavGraph.MAX_DROP; descent++) {
+    if (shape(cell).swim() || !standable(cell.down())) return;
+    for (var span = 2; span <= 4; span++) {
+      for (var descent = -1; descent <= NavGraph.MAX_JUMP_DESCENT; descent++) {
         var landing = cell.offset(dx * span, -descent, dz * span);
-        var target = nodeAt(landing);
-        if (target >= 0 && standable(landing.down()) && clearLeap(cell, landing)) {
-          edges.add(
-              new Edge(
-                  target,
-                  Hop.LEAP,
-                  NavGraph.JUMP_COST + span + descent + Math.max(0, descent - 3) * 4));
+        var candidate = leap(cell, landing);
+        if (candidate.isPresent()) {
+          edges.add(candidate.orElseThrow());
           break;
         }
       }
     }
   }
 
-  /** Conservatively clear the whole flight corridor, including headroom and the descent. */
-  private boolean clearLeap(BlockPos from, BlockPos to) {
-    var span = Math.max(Math.abs(to.x() - from.x()), Math.abs(to.z() - from.z()));
-    var dx = Integer.signum(to.x() - from.x());
-    var dz = Integer.signum(to.z() - from.z());
-    for (var step = 0; step <= span; step++) {
-      var lowest = step == 0 ? from.y() : to.y();
-      for (var y = lowest; y <= from.y() + 3; y++) {
-        if (!passable(from.offset(dx * step, y - from.y(), dz * step))) return false;
-      }
-    }
-    return true;
+  private Optional<Edge> leap(BlockPos cell, BlockPos landing) {
+    var target = nodeAt(landing);
+    if (target < 0 || !(standable(landing.down()) || shape(landing).swim()))
+      return Optional.empty();
+    var flight = flights.duration(cell, landing);
+    if (flight.isEmpty()) return Optional.empty();
+    var damage =
+        shape(landing).swim() ? 0 : TraversalCosts.fallDamage(fallDepth(cell, landing), true);
+    return Optional.of(new Edge(target, Hop.LEAP, flight.orElseThrow(), damage));
+  }
+
+  private boolean clearCorner(BlockPos cell, int dx, int dz) {
+    return fits(cell.offset(dx, 0, 0)) && fits(cell.offset(0, 0, dz));
   }
 
   /** Whether a player can be in {@code cell} (it and the cell above are passable). */
   private boolean fits(BlockPos cell) {
     return passable(cell) && passable(cell.up());
-  }
-
-  private float scale(BlockPos from, float cost) {
-    return shape(from).swim() ? cost * SWIM_FACTOR : cost;
   }
 }

@@ -52,6 +52,7 @@ final class RwfCommands {
   private final Stats stats;
   private final Spectating spectating;
   private final TeamChat teamChat;
+  private final ExperienceCommands experience;
 
   /**
    * What the commands need.
@@ -95,6 +96,7 @@ final class RwfCommands {
     this.stats = parts.stats();
     this.spectating = parts.spectating();
     this.teamChat = parts.teamChat();
+    this.experience = new ExperienceCommands(runner, kits);
   }
 
   void register(Commands commands) {
@@ -121,6 +123,10 @@ final class RwfCommands {
             Commands.literal("leave")
                 .requires(permission(RwfPermissions.PLAY).or(permission(RwfPermissions.SPECTATE)))
                 .executes(ctx -> asPlayer(ctx, this::leave)))
+        .then(
+            Commands.literal("recording")
+                .requires(permission(RwfPermissions.PLAY))
+                .executes(ctx -> asPlayer(ctx, this::recordingStatus)))
         .then(spectate())
         .then(
             Commands.literal("goto")
@@ -211,6 +217,10 @@ final class RwfCommands {
             Commands.literal("size")
                 .requires(permission(RwfPermissions.PLAY))
                 .executes(ctx -> size(ctx.getSource().getSender())))
+        .then(
+            Commands.literal("settings")
+                .requires(permission(RwfPermissions.PLAY).or(permission(RwfPermissions.SPECTATE)))
+                .executes(ctx -> experience.read(ctx.getSource().getSender())))
         .then(admin())
         .build();
   }
@@ -245,6 +255,7 @@ final class RwfCommands {
     return Commands.literal("admin")
         .requires(permission(RwfPermissions.ADMIN))
         .then(sizeCommand())
+        .then(experience.admin())
         .then(Commands.literal("status").executes(ctx -> status(ctx.getSource().getSender())))
         .then(Commands.literal("repair").executes(ctx -> repair(ctx.getSource().getSender())))
         .then(
@@ -358,7 +369,7 @@ final class RwfCommands {
         sender,
         "/rwf join, /rwf leave, /rwf kit <kit>, /rwf kits, /rwf buy <kit>, /rwf rotation, /rwf"
             + " credits, /rwf vote <map>, /rwf time, /rwf who, /rwf size, /rwf teamchat, /rwf"
-            + " stats, /rwf top, /rwf history, /rwf spectate [next|previous], /rwf goto <player>,"
+            + " stats, /rwf top, /rwf history, /rwf recording, /rwf spectate [next|previous], /rwf goto <player>,"
             + " /suicide");
     return OK;
   }
@@ -502,6 +513,10 @@ final class RwfCommands {
         + ", up to "
         + Math.max(0, total - runner.humans())
         + " bots";
+  }
+
+  private void recordingStatus(Player player) {
+    runner.recordingStatus(player).forEach(line -> Texts.info(player, line));
   }
 
   /**

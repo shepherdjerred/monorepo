@@ -26,6 +26,47 @@ import org.junit.jupiter.api.Test;
 
 final class CombatHarnessTest {
   @Test
+  void seededLearningBaselineMatchesOrdinaryHardCompetenceAndPreservesLegacyDiagnostics() {
+    var catalog =
+        new PersonalityCatalog(
+            List.of(
+                Fixtures.personality("alpha", "Alpha", .8),
+                Fixtures.personality("beta", "Beta", .2)));
+    var harness = new CombatHarness();
+    var match = new UUID(1, 2);
+    harness.attachBaseline(42, new Passthrough());
+    var drafted = harness.draft(match, 2, catalog).orElseThrow();
+    var experience =
+        new com.shepherdjerred.thestorm.rwf.app.MatchExperiences.Frozen(
+            match, 42, com.shepherdjerred.thestorm.rwf.app.ExperienceSettings.DEFAULT);
+    var request =
+        new Director.Request(
+            catalog,
+            java.util.Map.of(),
+            List.of(),
+            2,
+            java.util.Set.of(),
+            java.util.Set.of(Kit.TROOPER),
+            2);
+    var ordinary = Director.pick(request, experience, new java.util.SplittableRandom(42));
+    var expected =
+        ordinary.bots().stream()
+            .collect(
+                java.util.stream.Collectors.toUnmodifiableMap(
+                    bot -> bot.personality().id(), Director.Drafted::levers));
+    assertThat(drafted)
+        .allSatisfy(
+            bot -> assertThat(bot.levers()).isEqualTo(expected.get(bot.personality().id())));
+    assertThat(harness.baseline(match)).contains(CombatHarness.AUTHORED_BASELINE);
+    harness.detach();
+    assertThat(harness.baseline(match)).isEmpty();
+    harness.attach(43, new Passthrough());
+    assertThat(harness.draft(match, 2, catalog).orElseThrow())
+        .allSatisfy(bot -> assertThat(bot.levers().technique()).isEqualTo(1.0));
+    assertThat(harness.baseline(match)).isEmpty();
+  }
+
+  @Test
   void attachmentBindsOnceAndLeavesSuccessorMatchesUntouched() {
     var harness = new CombatHarness();
     var first = new UUID(1, 2);
@@ -123,7 +164,14 @@ final class CombatHarnessTest {
         new Reflex.Step(ReflexState.initial(Facing.SOUTH), List.of(new BodyCommand.Stop()));
     var frame =
         new CombatHarness.Frame(
-            first, new UUID(5, 6), 0, input, Optional.empty(), authored, Optional.empty());
+            first,
+            new UUID(5, 6),
+            0,
+            input,
+            Optional.empty(),
+            authored,
+            Optional.empty(),
+            SyntheticMap.bake());
     harness.captureTick(first, 11);
     assertThat(harness.commands(frame)).isSameAs(authored.commands());
     harness.finishTick(first, 11);

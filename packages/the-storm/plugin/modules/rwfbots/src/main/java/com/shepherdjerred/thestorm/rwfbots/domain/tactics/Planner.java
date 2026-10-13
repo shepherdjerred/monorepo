@@ -4,10 +4,12 @@ import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.CoverPoints;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavArtifact;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavSites;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.TraversalCosts;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.VoxelGrid;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.Reflex;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Lane;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Playbook;
+import com.shepherdjerred.thestorm.rwfbots.domain.team.Role;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Slot;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.SlotKind;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombId;
@@ -50,7 +52,7 @@ public final class Planner {
   public static final double COVER_SEARCH = 16;
 
   /** Extra path cost per unit of exposure to enemy regions when sneaking. */
-  public static final double STEALTH_PENALTY = 4;
+  public static final double STEALTH_PENALTY = TraversalCosts.walkingTicks(4);
 
   /** How far from an own bomb poison escape aims for, beyond the poison radius. */
   public static final double POISON_MARGIN = 4;
@@ -150,7 +152,7 @@ public final class Planner {
       case DEFUSE ->
           situation
               .litOwnBomb()
-              .map(bomb -> defusePlan(now, bomb, context.nav()))
+              .map(bomb -> defusePlan(situation, context.nav(), bomb))
               .orElseGet(() -> holdHere(option, situation, context));
       case RETAKE -> retake(situation, context);
       case ENGAGE ->
@@ -210,12 +212,21 @@ public final class Planner {
         new PlanStep.Arm(bomb.id()));
   }
 
-  private static Plan defusePlan(long now, BombView bomb, NavArtifact nav) {
+  private static Plan defusePlan(Situation situation, NavArtifact nav, BombView bomb) {
     return Plan.of(
         Option.DEFUSE,
-        now,
-        new PlanStep.Route(approach(nav, bomb), Stance.AGGRESSIVE),
+        situation.now(),
+        new PlanStep.Route(defusePoint(situation, nav, bomb), Stance.AGGRESSIVE),
         new PlanStep.Defuse(bomb.id()));
+  }
+
+  /** Assigned workers keep separate certified interaction positions while approaching the fuse. */
+  private static Vec3 defusePoint(Situation situation, NavArtifact nav, BombView bomb) {
+    return situation
+        .slot()
+        .filter(slot -> slot.role() == Role.RETAKE && slot.watch().distance(bomb.pos()) < 0.01)
+        .map(Slot::pos)
+        .orElseGet(() -> approach(nav, bomb));
   }
 
   private static Plan retake(Situation situation, TacticsContext context) {
@@ -1139,7 +1150,9 @@ public final class Planner {
                     pathTo(
                         situation,
                         context,
-                        approach(context.nav(), b),
+                        plan.option() == Option.DEFUSE
+                            ? defusePoint(situation, context.nav(), b)
+                            : approach(context.nav(), b),
                         new Way(Stance.CAUTIOUS, false)))
             .orElseGet(List::of);
     return decision(
@@ -1179,18 +1192,21 @@ public final class Planner {
         way.alongLane()
             ? situation.slot().flatMap(situation.board().plan()::laneOf).map(Lane::corridor)
             : Optional.empty();
-    IntToDoubleFunction extra =
+    var risk = TraversalRisk.assess(situation, context, goal, way.stance());
+    IntToDoubleFunction stealth =
         way.stance() == Stance.STEALTH ? stealthPenalty(situation, context) : node -> 0;
+    IntToDoubleFunction extra =
+        node -> stealth.applyAsDouble(node) + risk.exposure().applyAsDouble(node);
     var penalty =
         RoutePenalty.of(
             graph,
             context.seed(),
             new RoutePenalty.Tolls(
                 situation.board().pathsOfOthers(situation.self().id()), corridor, extra));
-    return context
-        .path(from.getAsInt(), to.getAsInt(), penalty)
-        .map(found -> found.toFollow())
-        .orElseGet(List::of);
+    return RouteNavigator.find(
+        context,
+        new RouteNavigator.Endpoints(from.getAsInt(), to.getAsInt(), situation.self().pos(), goal),
+        new RouteNavigator.Tolls(risk, penalty));
   }
 
   private static IntToDoubleFunction stealthPenalty(Situation situation, TacticsContext context) {

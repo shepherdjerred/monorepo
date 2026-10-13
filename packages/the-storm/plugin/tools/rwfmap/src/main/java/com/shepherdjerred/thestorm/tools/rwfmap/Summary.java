@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.tools.rwfmap;
 
 import com.shepherdjerred.thestorm.rwfbots.domain.map.MapBaker;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavArtifact;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.TraversalCosts;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Hop;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,6 +26,9 @@ final class Summary {
     json.field("mapId", artifact.mapId());
     json.field("formatVersion", artifact.formatVersion());
     json.field("generatorVersion", artifact.generatorVersion());
+    json.field("movementModelVersion", TraversalCosts.MODEL_VERSION);
+    json.field("costUnit", "server-ticks");
+    json.field("damageUnit", "health-points");
     json.field("blocksSha256", artifact.blocksSha256());
     json.field("classificationSha256", MapBaker.sha256(classification));
     bounds(json, artifact);
@@ -86,21 +90,29 @@ final class Summary {
     json.open("{");
     json.field("total", artifact.grid().bounds().volume());
     json.field("walkable", artifact.graph().nodeCount());
+    json.field("fluidIntervals", artifact.graph().water().intervals().low().length);
+    json.field("retainedFluidPortals", artifact.graph().water().portals().nodes().length);
     json.close("}");
   }
 
   private static void edges(Json json, NavArtifact artifact) {
     var graph = artifact.graph();
     var byHop = new TreeMap<String, Integer>();
+    var damaging = 0;
+    var maximumDamage = 0;
     for (var hop : Hop.values()) {
       byHop.put(hop.name(), 0);
     }
     for (var edge = 0; edge < graph.edgeCount(); edge++) {
       byHop.merge(graph.edgeHop(edge).name(), 1, Integer::sum);
+      if (graph.edgeDamage(edge) > 0) damaging++;
+      maximumDamage = Math.max(maximumDamage, graph.edgeDamage(edge));
     }
     json.key("edges");
     json.open("{");
     json.field("total", graph.edgeCount());
+    json.field("damaging", damaging);
+    json.field("maximumRawDamage", maximumDamage);
     byHop.forEach(json::field);
     json.close("}");
   }

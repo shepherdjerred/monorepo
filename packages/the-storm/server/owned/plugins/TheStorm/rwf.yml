@@ -19,6 +19,13 @@ worlds:
 # chosen its own spectator point is used.
 spectator: { x: 31.5, y: 76.0, z: 31.5, yaw: 0.0, pitch: 45.0 }
 
+experience:
+  difficulty: hard
+  style: varied
+  variety: high
+  # Empty pools admit every otherwise available map and kit. Commands override in memory only.
+  maps: []
+  kits: []
 match:
   # A match counts down and starts only with at least this many humans.
   minHumans: 1

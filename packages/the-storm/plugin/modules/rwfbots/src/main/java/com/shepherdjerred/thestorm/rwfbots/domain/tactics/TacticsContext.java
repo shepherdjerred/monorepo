@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.rwfbots.domain.tactics;
 
 import com.shepherdjerred.thestorm.rwfbots.domain.difficulty.Levers;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.HealthRoutes;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavArtifact;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavGraph;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavGraph.SearchWorkspace;
@@ -12,6 +13,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.Kit;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.IntToDoubleFunction;
+import java.util.function.IntUnaryOperator;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -45,6 +47,15 @@ public record TacticsContext(
     return workspace == null
         ? nav.graph().path(from, to, penalty)
         : nav.graph().path(from, to, penalty, workspace);
+  }
+
+  public Optional<HealthRoutes.Route> route(HealthRoutes.Request request, IntUnaryOperator damage) {
+    return HealthRoutes.find(nav.graph(), request, damage, workspace);
+  }
+
+  public Optional<HealthRoutes.Route> route(
+      HealthRoutes.Request request, HealthRoutes.EdgePolicy edges) {
+    return HealthRoutes.find(nav.graph(), request, edges, workspace);
   }
 
   /** The shortest and longest a late bot waits before its first move, in ticks. */

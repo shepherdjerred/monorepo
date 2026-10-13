@@ -89,6 +89,10 @@ class Dataset:
                 match = row["match"]
                 if not isinstance(match, str) or assignments.get(match) != split:
                     raise ValueError("match leaked across dataset splits")
+                if row.get("reason") not in ("LAST_TEAM_STANDING", "DRAW"):
+                    raise ValueError("demonstration requires a naturally completed whole duel")
+                if not isinstance(row.get("won"), bool) or (row["reason"] == "DRAW" and row["won"]):
+                    raise ValueError("demonstration outcome differs from its completion reason")
                 terrain = mapping(maps[match])
                 if row.get("map_id") != terrain["id"] or row.get("map_sha256") != terrain["sha256"]:
                     raise ValueError("sequence map differs from its original match terrain")

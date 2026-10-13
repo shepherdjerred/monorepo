@@ -55,7 +55,10 @@ final class DuelActor {
             ticket ->
                 ticket.applies(
                     frame.matchId(), frame.body(), frame.life(), frame.input().snapshot().tick()));
-    if (!CombatCommands.eligible(frame.authored().commands(), frame.input())) {
+    if (!CombatCommands.eligible(frame.controls())
+        || response
+            .filter(ticket -> !CombatCommands.eligible(frame.controls(), ticket))
+            .isPresent()) {
       ineligible++;
       fallback++;
       return frame.authored().commands();
@@ -69,8 +72,7 @@ final class DuelActor {
     var usedTick = response.orElseThrow().tick();
     if (!used.contains(usedTick)) used.addLast(usedTick);
     while (used.size() > 4) used.removeFirst();
-    return CombatCommands.replace(
-        frame.authored().commands(), frame.input(), response.orElseThrow());
+    return CombatCommands.replace(frame.controls(), response.orElseThrow());
   }
 
   Map<String, Long> delivery() {

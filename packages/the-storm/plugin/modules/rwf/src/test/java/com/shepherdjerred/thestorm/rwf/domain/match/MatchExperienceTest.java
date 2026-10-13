@@ -124,7 +124,8 @@ final class MatchExperienceTest {
               Duration.ofSeconds(20),
               Duration.ofSeconds(10),
               Duration.ofSeconds(5),
-              true);
+              true,
+              com.shepherdjerred.thestorm.rwf.domain.kit.KitPool.ALL);
       var play = new Play(settings, Samples.T0);
       play.join(ALICE);
       play.ballot(HARBOUR, CANYON, DOCKS);

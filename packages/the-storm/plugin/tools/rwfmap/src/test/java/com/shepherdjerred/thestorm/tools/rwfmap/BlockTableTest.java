@@ -39,6 +39,11 @@ final class BlockTableTest {
     "minecraft:iron_bars[east=false;north=false;south=false;waterlogged=false;west=false], PANE,"
         + " false",
     "minecraft:water[level=0], LIQUID, false",
+    "minecraft:seagrass, LIQUID, false",
+    "minecraft:tall_seagrass[half=upper], LIQUID, false",
+    "minecraft:kelp[age=5], LIQUID, false",
+    "minecraft:kelp_plant, LIQUID, false",
+    "minecraft:oak_sign[rotation=0;waterlogged=true], LIQUID, false",
     "minecraft:cactus[age=0], SOLID_HAZARD, true",
     "minecraft:magma_block, SOLID_HAZARD, true",
     "minecraft:beacon, FULL, false",

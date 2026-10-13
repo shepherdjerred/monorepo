@@ -30,7 +30,8 @@ final class LobbyStatusTest {
           Duration.ZERO,
           Duration.ZERO,
           Duration.ZERO,
-          false);
+          false,
+          com.shepherdjerred.thestorm.rwf.domain.kit.KitPool.ALL);
 
   private RwfMatch match = RwfMatch.open(SETTINGS, Samples.MATCH, Samples.SEED);
   private Instant now = Samples.T0;

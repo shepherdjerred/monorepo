@@ -17,6 +17,16 @@ public interface MatchView {
 
   Optional<MatchSnapshot> current();
 
+  /** Exact temporary kit fall immunity expiry; absent when none is active. Main thread only. */
+  default Optional<java.time.Instant> noFallUntil(UUID body) {
+    return Optional.empty();
+  }
+
+  /** Effective authored settings, frozen before the first bot is drafted for this match. */
+  default Optional<MatchExperiences.Frozen> experience(UUID matchId) {
+    return Optional.empty();
+  }
+
   /**
    * The kits a bot may be drafted onto now, by id: the four first kits, or every kit while the full
    * kit list is on for anyone here, so bots never play a kit the players cannot.

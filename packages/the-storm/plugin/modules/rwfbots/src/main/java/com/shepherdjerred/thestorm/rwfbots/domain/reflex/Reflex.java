@@ -1,9 +1,12 @@
 package com.shepherdjerred.thestorm.rwfbots.domain.reflex;
 
 import com.shepherdjerred.thestorm.rwfbots.domain.difficulty.Levers;
+import com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Facing;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.TraversalCosts;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.VoxelGrid;
+import com.shepherdjerred.thestorm.rwfbots.domain.tactics.FallRisk;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BodyCommand;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
@@ -57,7 +60,6 @@ public final class Reflex {
   /** How close the bot must stand to click a bomb. */
   public static final double BOMB_REACH = 3.0;
 
-  private static final double WAYPOINT_REACHED = 0.45;
   private static final double ALLY_SPACING = 0.9;
 
   /** Teammates closer than this push each other apart while fighting. */
@@ -105,7 +107,18 @@ public final class Reflex {
       ReflexState state, ReflexInput input, ReflexContext context, RandomGenerator random) {
     var run = new Run(state, input, context, random);
     run.execute();
-    return new Step(run.state, run.commands);
+    run.commitFlight();
+    var commands =
+        input.self().traversal().maySprint()
+            ? run.commands
+            : run.commands.stream()
+                .map(
+                    command ->
+                        command instanceof BodyCommand.MoveToward(var point, var _)
+                            ? new BodyCommand.MoveToward(point, false)
+                            : command)
+                .toList();
+    return new Step(run.state, commands);
   }
 
   /**
@@ -178,6 +191,8 @@ public final class Reflex {
         bow(target.get());
       } else if (target.isPresent() && !avoiding()) {
         melee(target.get());
+      } else if (target.isPresent()) {
+        retreat(target.orElseThrow());
       } else {
         stopShooting();
         walk(Optional.empty());
@@ -357,18 +372,7 @@ public final class Reflex {
       if (self.heldSlot() != context.loadout().swordSlot()) {
         commands.add(new BodyCommand.SelectSlot(context.loadout().swordSlot()));
       }
-      // The oldest of N buffered facings is N-1 ticks old. Compensate relative motion:
-      // ignoring the attacker's motion makes a strafing bot aim behind its moving target.
-      var lead =
-          target
-              .vel()
-              .minus(self.vel())
-              .scale((levers().reactionTicks() - 1) * levers().predictionQuality());
-      var aimPoint = target.pos().plus(lead).plus(0, 1.3, 0);
-      state =
-          state.withAim(
-              AimController.aim(
-                  state.aim(), Facing.looking(self.eye(), aimPoint), levers(), random));
+      aimMelee(target);
       var distance = self.pos().distance(target.pos());
       if (state.waypointIndex() < input.decision().waypoints().size()
           && !hitTest(
@@ -383,6 +387,33 @@ public final class Reflex {
       }
       click(target, distance);
       strafe(target, distance);
+    }
+
+    /** Keep the authored escape route while defending against an opponent already in contact. */
+    private void retreat(CombatantView target) {
+      stopShooting();
+      var aim = state.aim();
+      walk(Optional.empty());
+      state = state.withAim(aim);
+      aimMelee(target);
+      if (self.heldSlot() != context.loadout().swordSlot()) {
+        commands.add(new BodyCommand.SelectSlot(context.loadout().swordSlot()));
+      }
+      click(target, self.pos().distance(target.pos()));
+    }
+
+    private void aimMelee(CombatantView target) {
+      // The oldest of N buffered facings is N-1 ticks old. Compensate relative motion.
+      var lead =
+          target
+              .vel()
+              .minus(self.vel())
+              .scale((levers().reactionTicks() - 1) * levers().predictionQuality());
+      var aimPoint = target.pos().plus(lead).plus(0, 1.3, 0);
+      state =
+          state.withAim(
+              AimController.aim(
+                  state.aim(), Facing.looking(self.eye(), aimPoint), levers(), random));
     }
 
     private void click(CombatantView target, double distance) {
@@ -409,6 +440,7 @@ public final class Reflex {
       }
       var toTarget = target.pos().minus(self.pos()).horizontal();
       if (toTarget.isZero()) {
+        commands.add(new BodyCommand.Stop());
         return;
       }
       var radial = toTarget.normalized();
@@ -420,9 +452,14 @@ public final class Reflex {
       // An Inertia runs straight in: a strafe turns it and its momentum is lost.
       var strafeWeight = charging ? 0.0 : distance > REACH + 0.5 ? 0.25 : 1.0;
       var move = side.scale(strafeWeight).plus(radial.scale(closing)).plus(apart.scale(2.5));
-      var point = self.pos().plus(move.isZero() ? radial : move.normalized());
+      var preferred = move.isZero() ? radial : move.normalized();
+      var alternative = radial.scale(closing < 0 ? -1 : 1);
+      var safe = CombatFootwork.steer(context.grid(), self, preferred, alternative);
       var sprint = (charging || now >= state.wTapUntil()) && closing > 0;
-      commands.add(new BodyCommand.MoveToward(point, sprint));
+      commands.add(
+          safe.isZero()
+              ? new BodyCommand.Stop()
+              : new BodyCommand.MoveToward(self.pos().plus(safe), sprint));
       // RWF's melee rules have no airborne critical-hit bonus. Stay grounded for control;
       // navigation still jumps over terrain, and external combat actions can request a jump.
     }
@@ -444,12 +481,18 @@ public final class Reflex {
 
     /** Follows the decision's waypoints; {@code sprintOverride} forces walking when present. */
     private void walk(Optional<Boolean> sprintOverride) {
+      var committed = committedJump();
+      if (committed.isPresent()) {
+        leap(committed.orElseThrow().waypoint());
+        return;
+      }
       var waypoints = input.decision().waypoints();
-      var index = advanceWaypoint(waypoints, state.waypointIndex());
+      var index = activeJumpIndex(waypoints, advanceWaypoint(waypoints, state.waypointIndex()));
       if (index != state.waypointIndex()) {
         state = state.withPath(index, input.decision().snapshotTick());
       }
       if (index >= waypoints.size()) {
+        clearPreparedJump();
         if (input.decision().option() == Option.HOLD_ANGLE) {
           commands.add(new BodyCommand.Stop());
         } else {
@@ -459,19 +502,44 @@ public final class Reflex {
         return;
       }
       var waypoint = waypoints.get(index);
-      var destination = waypoint.pos();
-      var sprint = sprintOverride.orElseGet(this::sprintsByStance);
-      if (waypoint.hop() == Hop.LEAP) sprint = true;
-      var crowded = allyAhead(destination);
-      if (crowded && waypoint.hop() != Hop.LEAP) {
+      if (waypoint.hop() == Hop.LEAP) {
+        leap(waypoint);
+        return;
+      }
+      clearPreparedJump();
+      walkSegment(
+          waypoint, index, waypoints.size(), sprintOverride.orElseGet(this::sprintsByStance));
+    }
+
+    private Optional<ActiveJump> committedJump() {
+      return state
+          .activeJump()
+          .filter(
+              jump ->
+                  jump.stage() == ActiveJump.Stage.AIRBORNE
+                      || (!input.decision().waypoints().isEmpty()
+                          && jump.intent().equals(jumpIntent())));
+    }
+
+    private ActiveJump.Intent jumpIntent() {
+      return new ActiveJump.Intent(
+          input.decision().option(), input.decision().waypoints().getLast().pos());
+    }
+
+    private void walkSegment(Waypoint waypoint, int index, int count, boolean sprint) {
+      if (refusesDrop(waypoint)) return;
+      var destination = interfaceDestination(waypoint);
+      if (waypoint.hop() == Hop.SWIM || waypoint.hop() == Hop.CLIMB) sprint = false;
+      var crowded = waypoint.hop() == Hop.WALK && allyAhead(destination);
+      if (crowded) {
         sprint = false;
         destination = sidestep(destination);
       }
       // Near the end of the path the bot walks straight in: bending there makes it circle the spot.
-      if (shouldBend(waypoint, index, waypoints.size(), destination)) {
+      if (shouldBend(waypoint, index, count, destination)) {
         destination = bend(destination, walkingApart());
       }
-      if (waypoint.hop() != Hop.LEAP && yields(destination)) {
+      if (waypoint.hop() == Hop.WALK && yields(destination)) {
         // Waiting for the teammate ahead: make room for the others while it clears.
         var push = walkingApart();
         commands.add(
@@ -485,6 +553,113 @@ public final class Reflex {
       lookAhead(destination);
     }
 
+    private Vec3 interfaceDestination(Waypoint waypoint) {
+      if (waypoint.hop() == Hop.SWIM
+          && (waypoint.landing() == Waypoint.Landing.GROUND
+              || context.grid().blocksMovement(BlockPos.of(waypoint.pos()).down()))
+          && waypoint.pos().y() > self.pos().y()) return waypoint.pos().plus(0, 0.1, 0);
+      return waypoint.pos();
+    }
+
+    private boolean refusesDrop(Waypoint waypoint) {
+      if (waypoint.hop() != Hop.DROP || !self.onGround() || safePrimitive(waypoint)) return false;
+      commands.add(new BodyCommand.Stop());
+      return true;
+    }
+
+    private int activeJumpIndex(List<Waypoint> waypoints, int ordinary) {
+      if (state.activeJump().isEmpty()) return ordinary;
+      var active = state.activeJump().orElseThrow();
+      var index = waypoints.indexOf(active.waypoint());
+      return index >= 0 && !WaypointArrival.reached(self, active.waypoint()) ? index : ordinary;
+    }
+
+    private void clearPreparedJump() {
+      if (state.activeJump().filter(jump -> jump.stage() != ActiveJump.Stage.AIRBORNE).isPresent())
+        state = state.withActiveJump(Optional.empty());
+    }
+
+    private void leap(Waypoint waypoint) {
+      if (!self.traversal().maySprint()
+          && state
+              .activeJump()
+              .filter(jump -> jump.stage() == ActiveJump.Stage.AIRBORNE)
+              .isEmpty()) {
+        state = state.withActiveJump(Optional.empty());
+        commands.add(new BodyCommand.Stop());
+        return;
+      }
+      var step = JumpController.tick(state.activeJump(), jumpRequest(waypoint), self, now);
+      if (step.jump() && !safePrimitive(waypoint)) {
+        state = state.withActiveJump(Optional.empty());
+        commands.add(new BodyCommand.Stop());
+        return;
+      }
+      state = state.withActiveJump(step.state());
+      commands.add(new BodyCommand.Sneak(false));
+      if (self.usingItem()) commands.add(new BodyCommand.CancelUse());
+      commands.add(
+          step.failed() ? new BodyCommand.Stop() : new BodyCommand.MoveToward(step.moveTo(), true));
+      if (step.jump()) {
+        commands.add(new BodyCommand.Jump());
+        state = state.withLastJump(now);
+      }
+      lookAhead(step.moveTo());
+    }
+
+    private JumpController.Request jumpRequest(Waypoint waypoint) {
+      var intent =
+          state
+              .activeJump()
+              .filter(jump -> jump.stage() == ActiveJump.Stage.AIRBORNE)
+              .map(ActiveJump::intent)
+              .orElseGet(this::jumpIntent);
+      return new JumpController.Request(waypoint, intent);
+    }
+
+    private boolean safePrimitive(Waypoint waypoint) {
+      if (waypoint.hop() == Hop.LEAP
+          && FallRisk.active(self.traversal().slowFallingUntilTick(), now)) return false;
+      var duration =
+          waypoint
+              .launch()
+              .map(launch -> launch.durationTicks())
+              .orElseGet(
+                  () ->
+                      (double)
+                          TraversalCosts.drop(
+                              Math.max(1, (int) Math.ceil(self.pos().y() - waypoint.pos().y()))));
+      var landing =
+          duration >= (double) (Long.MAX_VALUE - now - 2)
+              ? Long.MAX_VALUE
+              : now + (long) Math.ceil(duration) + 2;
+      return FallRisk.damage(waypoint, self, landing) <= self.effectiveHealth() - 1;
+    }
+
+    private void commitFlight() {
+      var active = state.activeJump().filter(jump -> jump.stage() == ActiveJump.Stage.AIRBORNE);
+      if (!self.alive() || !input.snapshot().isLive() || active.isEmpty()) return;
+      var jump = active.orElseThrow();
+      if (jump.launchTick() == now) return;
+      var step =
+          JumpController.tick(
+              active, new JumpController.Request(jump.waypoint(), jump.intent()), self, now);
+      state = state.withActiveJump(step.state());
+      if (step.state().isEmpty() && !step.failed()) return;
+      commands.removeIf(
+          command ->
+              command instanceof BodyCommand.MoveToward
+                  || command instanceof BodyCommand.Stop
+                  || command instanceof BodyCommand.Jump
+                  || command instanceof BodyCommand.Sneak
+                  || command instanceof BodyCommand.StartUse);
+      commands.add(new BodyCommand.Sneak(false));
+      if (self.usingItem()) commands.add(new BodyCommand.CancelUse());
+      state = state.withDrawStart(-1).withEating(-1, false);
+      commands.add(
+          step.failed() ? new BodyCommand.Stop() : new BodyCommand.MoveToward(step.moveTo(), true));
+    }
+
     private void lookAhead(Vec3 destination) {
       var ahead = destination.plus(0, CombatantView.EYE_HEIGHT, 0);
       if (!ahead.minus(self.eye()).isZero()) {
@@ -495,22 +670,17 @@ public final class Reflex {
     }
 
     private boolean shouldBend(Waypoint waypoint, int index, int count, Vec3 destination) {
-      return waypoint.hop() != Hop.LEAP
+      return waypoint.hop() == Hop.WALK
           && (index < count - FINAL_STRAIGHT
               || self.pos().horizontalDistance(destination) > SEPARATION);
     }
 
     private int advanceWaypoint(List<Waypoint> waypoints, int index) {
       var i = index;
-      while (i < waypoints.size() && reached(waypoints.get(i).pos())) {
+      while (i < waypoints.size() && WaypointArrival.reached(self, waypoints.get(i))) {
         i++;
       }
       return i;
-    }
-
-    private boolean reached(Vec3 waypoint) {
-      return self.pos().horizontalDistance(waypoint) <= WAYPOINT_REACHED
-          && Math.abs(self.pos().y() - waypoint.y()) < 1.2;
     }
 
     private boolean sprintsByStance() {
@@ -538,7 +708,7 @@ public final class Reflex {
     private Vec3 apart(double spacing, int aheadTicks) {
       var push = Vec3.ZERO;
       for (var other : input.snapshot().alive(self.team())) {
-        if (other.id().equals(self.id())) {
+        if (other.id().equals(self.id()) || !sharesFooting(other)) {
           continue;
         }
         var away = self.pos().minus(other.pos()).horizontal();
@@ -602,7 +772,9 @@ public final class Reflex {
       for (var other : input.snapshot().alive(self.team())) {
         // Only a teammate walking away the same way is followed; one standing or coming back is
         // walked round, so nobody ever waits on a bot that is waiting too.
-        if (other.id().equals(self.id()) || other.vel().horizontal().dot(forward) < MOVING) {
+        if (other.id().equals(self.id())
+            || !sharesFooting(other)
+            || other.vel().horizontal().dot(forward) < MOVING) {
           continue;
         }
         var toAlly = other.pos().minus(self.pos()).horizontal();
@@ -620,7 +792,7 @@ public final class Reflex {
         return false;
       }
       for (var other : input.snapshot().alive(self.team())) {
-        if (other.id().equals(self.id())) {
+        if (other.id().equals(self.id()) || !sharesFooting(other)) {
           continue;
         }
         var toAlly = other.pos().minus(self.pos());
@@ -637,11 +809,14 @@ public final class Reflex {
       return destination.plus(side);
     }
 
+    private boolean sharesFooting(CombatantView other) {
+      return Math.abs(self.pos().y() - other.pos().y()) <= 1.5;
+    }
+
     private void jumpIfNeeded(Waypoint waypoint) {
       var needsJump =
-          (waypoint.hop() == Hop.JUMP || waypoint.hop() == Hop.LEAP)
-              && self.pos().horizontalDistance(waypoint.pos())
-                  <= (waypoint.hop() == Hop.LEAP ? 3.2 : 1.2)
+          waypoint.hop() == Hop.JUMP
+              && self.pos().horizontalDistance(waypoint.pos()) <= 1.2
               && self.onGround()
               && now - state.lastJumpTick() > JUMP_COOLDOWN;
       if (needsJump) {

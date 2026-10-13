@@ -74,9 +74,12 @@ public final class Tactics {
             context.keep());
     var scores = Utilities.score(features, temper);
     KitTactics.lean(context.kit(), scores);
+    var defuser = assignedDefuser(situation);
+    if (!defuser) scores.put(Option.DEFUSE, 0.0);
     var current =
         state
             .plan()
+            .filter(plan -> plan.option() != Option.DEFUSE || defuser)
             .map(plan -> advance(plan, situation))
             .filter(plan -> alive(plan, situation))
             .filter(
@@ -92,7 +95,12 @@ public final class Tactics {
             context.levers().decisionTemperature() * context.bias().temperature());
     var pick = Softmax.select(candidates, temperature, random);
     var choice = choose(pick.choice(), current, situation, scores);
-    if (state.lifeEpoch() == 0 && now - born < context.lateStartTicks()) {
+    if (features.ownBombLit() && defuser && !features.inOwnBombPoisonZone()) {
+      choice = Option.DEFUSE;
+    }
+    if (state.lifeEpoch() == 0
+        && now - born < context.lateStartTicks()
+        && quietStart(situation, features)) {
       choice = Option.HOLD_ANGLE;
     }
     var chosen = choice;
@@ -125,6 +133,28 @@ public final class Tactics {
         decision,
         trace,
         note(plan, decision, situation, context));
+  }
+
+  /** Without a team assignment anyone may save the fuse; screens yield to live fuse workers. */
+  static boolean assignedDefuser(Situation situation) {
+    return situation.role() == Role.RETAKE
+        || situation.board().roles().entrySet().stream()
+            .filter(entry -> entry.getValue() == Role.RETAKE)
+            .noneMatch(
+                entry ->
+                    situation
+                        .snapshot()
+                        .combatant(entry.getKey())
+                        .map(fighter -> fighter.alive())
+                        .orElse(false));
+  }
+
+  private static boolean quietStart(Situation situation, Features features) {
+    var lastHurt = situation.self().lastHurtTick();
+    return features.knownEnemies() == 0
+        && !features.ownBombLit()
+        && !features.inOwnBombPoisonZone()
+        && (lastHurt < 0 || situation.now() - lastHurt > 20);
   }
 
   /** The softmax's pick, unless a young plan is under way and the pick is not urgent. */

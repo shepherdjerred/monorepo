@@ -17,7 +17,7 @@ public record ApproachRoutes(List<Route> routes) {
   public static final int ALTERNATIVES = 3;
 
   /** How much reusing a node from an earlier route costs when looking for an alternative. */
-  static final double REUSE_PENALTY = 2.0;
+  static final double REUSE_PENALTY = TraversalCosts.walkingTicks(2);
 
   /**
    * One route.

@@ -19,6 +19,8 @@ import java.util.UUID;
  * One attachment binds to exactly one match and cannot affect its successor.
  */
 public final class CombatHarness {
+  public static final String AUTHORED_BASELINE = "rwf-hard-seeded-v1";
+
   public interface Controller {
     /** Capture evaluation totals before any body executes this world's commands. */
     void captureTick(long tick);
@@ -39,15 +41,28 @@ public final class CombatHarness {
       ReflexInput input,
       Optional<UUID> targetBody,
       Reflex.Step authored,
-      Optional<com.shepherdjerred.thestorm.rwf.app.ObservationSource.Sample> observation) {}
+      Optional<com.shepherdjerred.thestorm.rwf.app.ObservationSource.Sample> observation,
+      com.shepherdjerred.thestorm.rwfbots.domain.map.NavArtifact nav) {
+    public com.shepherdjerred.thestorm.rwfbots.domain.learning.CombatCommands.Context controls() {
+      return new com.shepherdjerred.thestorm.rwfbots.domain.learning.CombatCommands.Context(
+          authored, input, nav);
+    }
+  }
 
   private Optional<Controller> controller = Optional.empty();
   private Optional<UUID> match = Optional.empty();
   private OptionalLong seed = OptionalLong.empty();
   private int combatants;
+  private boolean seededBaseline;
 
   public void attach(long experimentSeed, Controller experiment) {
     attach(experimentSeed, 2, experiment);
+  }
+
+  /** Learning duels use the ordinary hard authored competence, frozen by personality and seed. */
+  public void attachBaseline(long experimentSeed, Controller experiment) {
+    attach(experimentSeed, experiment);
+    seededBaseline = true;
   }
 
   /** Explicit roster size for disposable native inference load experiments. */
@@ -72,6 +87,7 @@ public final class CombatHarness {
       OptionalLong experimentSeed, int experimentCombatants, Controller experiment) {
     if (controller.isPresent()) throw new IllegalStateException("experiment already attached");
     seed = experimentSeed;
+    seededBaseline = false;
     combatants = experimentCombatants;
     controller = Optional.of(experiment);
     match = Optional.empty();
@@ -81,6 +97,7 @@ public final class CombatHarness {
     controller = Optional.empty();
     match = Optional.empty();
     seed = OptionalLong.empty();
+    seededBaseline = false;
   }
 
   public Optional<List<Director.Drafted>> draft(
@@ -102,8 +119,26 @@ public final class CombatHarness {
     match = Optional.of(matchId);
     return Optional.of(
         identities.stream()
-            .map(p -> new Director.Drafted(p, Kit.TROOPER, LeverCurves.at(1), Rating.DEFAULT))
+            .map(
+                p ->
+                    new Director.Drafted(
+                        p,
+                        Kit.TROOPER,
+                        seededBaseline
+                            ? MatchCompetence.levers(
+                                p,
+                                com.shepherdjerred.thestorm.rwf.app.ExperienceSettings.DEFAULT,
+                                seed.orElseThrow())
+                            : LeverCurves.at(1),
+                        Rating.DEFAULT))
             .toList());
+  }
+
+  /** Empty for legacy mechanics/load diagnostics, which deliberately retain maximal levers. */
+  public Optional<String> baseline(UUID matchId) {
+    return controlled(matchId) && seededBaseline
+        ? Optional.of(AUTHORED_BASELINE)
+        : Optional.empty();
   }
 
   public boolean active(UUID matchId) {

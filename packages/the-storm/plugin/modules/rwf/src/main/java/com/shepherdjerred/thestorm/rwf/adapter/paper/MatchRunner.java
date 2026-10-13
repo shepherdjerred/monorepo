@@ -173,6 +173,7 @@ final class MatchRunner implements MatchView, MatchEvents {
   private @Nullable UUID keepingSnapshot;
   private int lastTitle;
   private final LobbySizes lobbySizes;
+  private final com.shepherdjerred.thestorm.rwf.app.MatchExperiences experiences;
   private final List<Consumer<MatchEffect.Death>> deathWatchers = new ArrayList<>();
   private @Nullable Spectating spectating;
   private Optional<Ballot> lastBallot = Optional.empty();
@@ -184,6 +185,8 @@ final class MatchRunner implements MatchView, MatchEvents {
 
   MatchRunner(Parts parts) {
     this.parts = parts;
+    this.experiences =
+        new com.shepherdjerred.thestorm.rwf.app.MatchExperiences(parts.config().experience());
     this.powers =
         new KitPowers(
             this,
@@ -216,6 +219,15 @@ final class MatchRunner implements MatchView, MatchEvents {
 
   LobbySizes lobbySizes() {
     return lobbySizes;
+  }
+
+  com.shepherdjerred.thestorm.rwf.app.MatchExperiences experiences() {
+    return experiences;
+  }
+
+  @Override
+  public Optional<com.shepherdjerred.thestorm.rwf.app.MatchExperiences.Frozen> experience(UUID id) {
+    return experiences.current(id);
   }
 
   boolean live() {
@@ -289,6 +301,11 @@ final class MatchRunner implements MatchView, MatchEvents {
     return (int) match.members().stream().filter(m -> !m.id().isBot()).count();
   }
 
+  @Override
+  public Optional<Instant> noFallUntil(UUID body) {
+    return powers().noFallUntil(body);
+  }
+
   /** Whether this match is a bots-only showcase. */
   boolean showcase() {
     return showcase.isPresent();
@@ -345,7 +362,16 @@ final class MatchRunner implements MatchView, MatchEvents {
 
   @Override
   public java.util.Set<String> kitsOnOffer() {
-    return picker.onOffer();
+    var offered = picker.onOffer();
+    var allowed =
+        experience(match.matchId())
+            .map(value -> value.settings().kits())
+            .orElseGet(() -> experiences.pending().kits());
+    return allowed.isEmpty()
+        ? offered
+        : offered.stream()
+            .filter(allowed::contains)
+            .collect(java.util.stream.Collectors.toUnmodifiableSet());
   }
 
   @Override
@@ -365,6 +391,10 @@ final class MatchRunner implements MatchView, MatchEvents {
 
   Optional<PublicGameDirectory.Game> publicGame() {
     return current().flatMap(RunnerRules::publicGame);
+  }
+
+  List<String> recordingStatus(Player player) {
+    return parts.recordings().status(player);
   }
 
   @Override
@@ -422,7 +452,9 @@ final class MatchRunner implements MatchView, MatchEvents {
             flow ? config.voteLead() : Duration.ZERO,
             flow ? config.previewLength() : Duration.ZERO,
             flow ? config.freezeLength() : Duration.ZERO,
-            features.carryOver());
+            features.carryOver())
+        .withKitPool(
+            new com.shepherdjerred.thestorm.rwf.domain.kit.KitPool(experiences.pending().kits()));
   }
 
   /** Opens the lobby's vote: three maps with the match flow on, one drawn at random without. */
@@ -572,6 +604,7 @@ final class MatchRunner implements MatchView, MatchEvents {
    * of the countdown.
    */
   private void fillWithBots(String chosenMap) {
+    experiences.freeze(match.matchId(), match.seed());
     var map = rotation.byId(chosenMap).orElseThrow();
     var draftedTarget = lobbySizes.draft(map.definition(), showcase);
     var drafted =
@@ -599,6 +632,7 @@ final class MatchRunner implements MatchView, MatchEvents {
 
   /** Up to {@code count} bots join the lobby now. Returns how many did. */
   private int joinBots(int count) {
+    experiences.freeze(match.matchId(), match.seed());
     var joined = 0;
     for (var bot : parts.bots().fill(match.matchId(), count)) {
       if (joinBot(bot)) {
@@ -652,6 +686,16 @@ final class MatchRunner implements MatchView, MatchEvents {
     var map = currentMap().orElseThrow();
     parts.bombs().place(map.definition());
     parts.recordings().start(match, map.definition(), now());
+    var experience = experiences.freeze(match.matchId(), match.seed());
+    parts
+        .recordings()
+        .event(
+            now(),
+            "settings",
+            "match",
+            experience.settings().canonical(experience.seed())
+                + ";fingerprint="
+                + experience.settings().fingerprint(experience.seed()));
     lastBallot.ifPresent(
         ballot ->
             parts
@@ -735,10 +779,12 @@ final class MatchRunner implements MatchView, MatchEvents {
     var world = parts.context().mapWorld();
     var previousTime = world.getTime();
     match = match.reseedEmptyLobby(seed);
+    experiences.reseedEmptyLobby(match.matchId(), seed);
     world.setTime(match.startingWorldTime());
     refusal = fillShowcase(count);
     if (refusal.isPresent()) {
       match = previous;
+      experiences.reseedEmptyLobby(previous.matchId(), previous.seed());
       world.setTime(previousTime);
     }
     return refusal;
@@ -2053,8 +2099,9 @@ final class MatchRunner implements MatchView, MatchEvents {
   /** A fresh vote over newly drawn candidates. */
   private MatchEvent ballotEvent() {
     var count = features.matchFlow() ? Ballot.SIZE : 1;
+    var experience = experiences.freeze(match.matchId(), match.seed());
     return new MatchEvent.BallotOpened(
-        rotation.candidates(count).stream()
+        rotation.candidates(count, experience.settings().maps()).stream()
             .map(
                 map ->
                     new Ballot.Candidate(

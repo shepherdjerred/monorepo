@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.rwfbots.domain.map;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.shepherdjerred.thestorm.rwfbots.domain.team.BombScreens;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
@@ -15,14 +16,14 @@ import java.util.HexFormat;
 public final class MapBaker {
 
   /** Bump when the analysis changes so stale artifacts are rebaked. */
-  public static final int GENERATOR_VERSION = 2;
+  public static final int GENERATOR_VERSION = 3;
 
   private MapBaker() {}
 
   /** Bakes {@code mapId}. */
   public static NavArtifact bake(String mapId, BlockClassification blocks, NavSites sites) {
     var grid = VoxelGrid.from(blocks);
-    var graph = NavGraphBuilder.build(blocks);
+    var graph = NavGraphBuilder.build(blocks, sites);
     var regions = Regions.build(graph, grid.potentialSight());
     var cover = CoverPoints.build(graph, grid);
     var approaches = ApproachNodes.bake(graph, grid, sites);
@@ -50,7 +51,8 @@ public final class MapBaker {
         cover,
         chokepoints,
         routes,
-        fields);
+        fields,
+        BombScreens.bake(graph, grid, sites, fields));
   }
 
   /** The SHA-256 of the bounds, every cell's shape and whether it blocks sight, as hex. */

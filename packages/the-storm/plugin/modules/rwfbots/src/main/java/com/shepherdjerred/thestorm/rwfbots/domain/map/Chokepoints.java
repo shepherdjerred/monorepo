@@ -130,7 +130,7 @@ public record Chokepoints(List<Chokepoint> points) {
     Set<Integer> members = new HashSet<>(cluster);
     var crossing = 0;
     for (var route : routes.routes()) {
-      if (route.nodes().stream().anyMatch(members::contains)) {
+      if (crosses(graph, route.nodes(), members)) {
         crossing++;
       }
     }
@@ -142,5 +142,22 @@ public record Chokepoints(List<Chokepoint> points) {
     }
     var middle = cluster.get(cluster.size() / 2);
     return new Chokepoint(middle, width.size(), share, alongX);
+  }
+
+  /** Long movement primitives still occupy the narrow passage between their retained endpoints. */
+  private static boolean crosses(NavGraph graph, List<Integer> nodes, Set<Integer> members) {
+    for (var index = 0; index < nodes.size(); index++) {
+      if (members.contains(nodes.get(index))) return true;
+      if (index == 0) continue;
+      var from = graph.feet(nodes.get(index - 1));
+      var to = graph.feet(nodes.get(index));
+      var divisions = Math.max(1, (int) Math.ceil(from.distance(to) / 0.4));
+      for (var step = 1; step < divisions; step++) {
+        var point = from.plus(to.minus(from).scale((double) step / divisions));
+        var node = graph.nodeAt(BlockPos.of(point));
+        if (node.isPresent() && members.contains(node.getAsInt())) return true;
+      }
+    }
+    return false;
   }
 }

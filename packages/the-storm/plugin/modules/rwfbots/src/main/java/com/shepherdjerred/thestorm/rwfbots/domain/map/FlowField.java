@@ -1,6 +1,5 @@
 package com.shepherdjerred.thestorm.rwfbots.domain.map;
 
-import com.shepherdjerred.thestorm.rwfbots.domain.world.Hop;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Waypoint;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -78,16 +77,16 @@ public final class FlowField {
     var current = node;
     while (out.size() < maxSteps && next[current] >= 0) {
       var following = next[current];
-      out.add(new Waypoint(graph.feet(following), hopBetween(current, following)));
+      out.add(waypointBetween(current, following));
       current = following;
     }
     return out;
   }
 
-  private Hop hopBetween(int from, int to) {
+  private Waypoint waypointBetween(int from, int to) {
     for (var edge = graph.edgeStart(from); edge < graph.edgeEnd(from); edge++) {
       if (graph.edgeTarget(edge) == to) {
-        return graph.edgeHop(edge);
+        return graph.waypoint(edge);
       }
     }
     throw new IllegalStateException("flow field step is not an edge: " + from + " -> " + to);

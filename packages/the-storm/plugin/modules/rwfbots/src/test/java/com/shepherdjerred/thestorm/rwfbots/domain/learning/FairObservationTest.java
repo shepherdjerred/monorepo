@@ -20,6 +20,22 @@ import org.junit.jupiter.api.Test;
 
 final class FairObservationTest {
   @Test
+  void extendedActualHealthKeepsTheExistingTwentyPointActorNormalization() {
+    var body = combatant(1, RED, new Vec3(5.5, 1, 5.5));
+    var capabilities =
+        new com.shepherdjerred.thestorm.rwfbots.domain.world.TraversalState(
+            true, 3, 1, 0, -1, -1, -1, -1, 0, -1, -1, -1, -1, 30);
+    var juggernaut = body.withTraversal(capabilities).withHealth(30, 0);
+    var percept = new Percept(PerceptionState.EMPTY, List.of(), 1);
+    var grid = SyntheticMap.bake().grid();
+    var full = FairObservation.values(juggernaut, percept, grid, levers(1));
+    assertThat(full.get(Feature.HP)).isEqualTo(30);
+    assertThat(LearningContract.load().encode(full).getFirst()).isEqualTo(1);
+    var hurt = FairObservation.values(juggernaut.withHealth(15, 0), percept, grid, levers(1));
+    assertThat(LearningContract.load().encode(hurt).getFirst()).isEqualTo(.75);
+  }
+
+  @Test
   void changingVisibleEnemyHealthDoesNotChangeActorInput() {
     var self = combatant(1, RED, new Vec3(5.5, 1, 5.5));
     var enemy = combatant(2, BLUE, new Vec3(5.5, 1, 8.5));

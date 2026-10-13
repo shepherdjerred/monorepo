@@ -45,19 +45,29 @@ public final class SnapshotCapture {
   private final IdMap ids;
   private final Function<UUID, Optional<Player>> entities;
   private final StimulusCollector stimuli;
+  private final TraversalCapture traversal;
   private final Map<UUID, Last> last = new HashMap<>();
   private long poisonStartedTick = -1;
+
+  /** The authoritative kit immunity source and the same clock used by the match rules. */
+  public record Capabilities(
+      Function<UUID, Optional<java.time.Instant>> noFallUntil, java.time.InstantSource time) {}
 
   /**
    * @param ids the match's id mapping
    * @param entities resolves a combatant's entity (bots through their bodies, humans by server)
    * @param stimuli where the tick's raw events wait
+   * @param capabilities the authoritative kit immunity source and match clock
    */
   public SnapshotCapture(
-      IdMap ids, Function<UUID, Optional<Player>> entities, StimulusCollector stimuli) {
+      IdMap ids,
+      Function<UUID, Optional<Player>> entities,
+      StimulusCollector stimuli,
+      Capabilities capabilities) {
     this.ids = ids;
     this.entities = entities;
     this.stimuli = stimuli;
+    this.traversal = new TraversalCapture(capabilities.noFallUntil(), capabilities.time());
   }
 
   /** The world at {@code tick}, as rwf's {@code state} and the entities describe it. */
@@ -89,7 +99,7 @@ public final class SnapshotCapture {
   private CombatantView view(long tick, MatchState.Fighter fighter, Player entity) {
     var location = Places.at(entity);
     var pos = vec(location);
-    var health = Math.clamp(entity.getHealth(), 0, CombatantView.MAX_HEALTH);
+    var health = entity.getHealth();
     var absorption = Math.max(0, entity.getAbsorptionAmount());
     var previous = last.get(fighter.uuid());
     var velocity = previous == null ? Vec3.ZERO : pos.minus(previous.pos());
@@ -120,7 +130,8 @@ public final class SnapshotCapture {
         onGround(entity),
         entity.isHandRaised(),
         entity.isInvisible(),
-        hurtTick);
+        hurtTick,
+        traversal.capture(entity, fighter.kit().orElseThrow(), tick));
   }
 
   /**

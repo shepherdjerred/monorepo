@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.OptionalInt;
 
 /** Selects bomb interaction positions during baking, with bounded lookups during a match. */
-final class ApproachNodes {
+public final class ApproachNodes {
   private static final double EYE_HEIGHT = 1.62;
   private static final double REACH = 3.0;
   private static final int RADIUS = 4;
@@ -43,18 +43,12 @@ final class ApproachNodes {
         .findFirst();
   }
 
-  private static BitSet reachableFromSpawns(NavGraph graph, NavSites sites) {
-    var shared = new BitSet(graph.nodeCount());
-    shared.set(0, graph.nodeCount());
-    for (var spawn : sites.spawns()) {
-      var from = graph.nodeAt(spawn.cell());
-      if (from.isEmpty()) continue;
-      var costs = graph.costsFrom(from.getAsInt());
-      for (var node = shared.nextSetBit(0); node >= 0; node = shared.nextSetBit(node + 1)) {
-        if (!Float.isFinite(costs[node])) shared.clear(node);
-      }
-    }
-    return shared;
+  public static BitSet reachableFromSpawns(NavGraph graph, NavSites sites) {
+    var sources =
+        sites.spawns().stream()
+            .flatMapToInt(spawn -> graph.nodeAt(spawn.cell()).stream())
+            .toArray();
+    return graph.reachableFromAll(sources);
   }
 
   private static List<Integer> candidates(NavGraph graph, BlockPos bomb) {
@@ -69,7 +63,9 @@ final class ApproachNodes {
     return nodes;
   }
 
-  private static boolean canInteract(NavGraph graph, VoxelGrid grid, int node, BlockPos bomb) {
+  public static boolean canInteract(NavGraph graph, VoxelGrid grid, int node, BlockPos bomb) {
+    if (node < 0 || node >= graph.nodeCount())
+      throw new IllegalArgumentException("interaction node outside graph");
     var eye = graph.feet(node).plus(0, EYE_HEIGHT, 0);
     if (eye.distance(bomb.center()) > REACH) return false;
     var hit = grid.raycast(eye, bomb.center(), VoxelGrid.Layer.PROJECTILE);

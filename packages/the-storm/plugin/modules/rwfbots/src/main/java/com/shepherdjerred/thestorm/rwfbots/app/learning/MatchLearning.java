@@ -175,7 +175,10 @@ public final class MatchLearning implements AutoCloseable {
             observation.orElseThrow().values());
     requests.add(request);
     var action = model.action(request);
-    if (!CombatCommands.eligible(frame.authored().commands(), frame.input())) {
+    if (!CombatCommands.eligible(frame.controls())
+        || action
+            .filter(ticket -> !CombatCommands.eligible(frame.controls(), ticket))
+            .isPresent()) {
       ineligible++;
       return frame.authored().commands();
     }
@@ -184,7 +187,7 @@ public final class MatchLearning implements AutoCloseable {
       return frame.authored().commands();
     }
     applied++;
-    return CombatCommands.replace(frame.authored().commands(), frame.input(), action.orElseThrow());
+    return CombatCommands.replace(frame.controls(), action.orElseThrow());
   }
 
   public void finishTick(UUID matchId, long tick) {
