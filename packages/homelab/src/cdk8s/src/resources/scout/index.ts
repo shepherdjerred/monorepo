@@ -101,9 +101,8 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
         selinuxLevel: zfsVolumeSelinuxLevels.scoutBeta,
         cpuRequest: Cpu.millis(50),
         // The isolated application keeps its pre-voice 2Gi baseline. The
-        // gateway owns the voice runtime and its separate 3Gi reservation;
-        // reserving that voice share here too prevents the application from
-        // scheduling when the production node is near its request budget.
+        // gateway owns voice and reserves its own resident baseline; voice
+        // and report peaks share the node's burst memory within their limits.
         memoryRequest: Size.gibibytes(2),
       };
     })

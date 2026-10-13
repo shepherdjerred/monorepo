@@ -82,10 +82,7 @@ export function createScoutActivityWorkerDeployment(
   // scheduling constraint rather than an accident of current node placement.
   deployment.scheduling.colocate(options.colocateWith);
 
-  const containerBase = scoutAdminRoleContainerBase(
-    options.imageVersion,
-    "activity-worker",
-  );
+  const containerBase = scoutAdminRoleContainerBase(options.imageVersion);
   deployment.addContainer(
     withCommonProps({
       ...containerBase,

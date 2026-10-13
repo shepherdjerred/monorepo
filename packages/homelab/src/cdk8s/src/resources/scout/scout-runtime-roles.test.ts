@@ -291,7 +291,7 @@ describe("Scout gateway report-lake sharing", () => {
     );
   });
 
-  test("report query roles share scratch limits but reserve voice memory only in the gateway", () => {
+  test("report query roles share scratch limits and split roles reserve baseline memory", () => {
     const app = DuckDbRuntimeDeploymentSchema.parse(
       findResource(
         scoutResources("beta"),
@@ -336,12 +336,12 @@ describe("Scout gateway report-lake sharing", () => {
       limits: { memory: "8192Mi" },
     });
     expect(gateway.template.spec.containers[0]?.resources).toMatchObject({
-      requests: { memory: "3072Mi" },
+      requests: { memory: "1024Mi" },
       limits: { memory: "8192Mi" },
     });
     expect(activityWorker.template.spec.containers[0]?.resources).toMatchObject(
       {
-        requests: { memory: "2048Mi" },
+        requests: { memory: "1024Mi" },
         limits: { memory: "8192Mi" },
       },
     );

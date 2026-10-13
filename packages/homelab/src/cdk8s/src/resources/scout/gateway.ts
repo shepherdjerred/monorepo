@@ -208,19 +208,15 @@ export function createScoutGatewayDeployment(
       // No Temporal activity workers, no lake fold and no report rendering,
       // but this is the pod that loads the Hey Scout voice runtime (three
       // sherpa int8 graphs, silero VAD and the openWakeWord cascade) and runs
-      // in-process Explore queries. #2870 sized beta at 3Gi for that runtime
-      // "on top of the report lake"; after the split those two loads sit in
-      // different pods, so the voice share lands here. Re-tune from observed
-      // usage under a live voice session rather than guessing again.
-      // DuckDB may take 3GB (REPORT_DUCKDB_MEMORY_LIMIT) for an Explore
-      // query on top of that, so the request covers it and the limit matches
-      // the application pod's: contain an outlier rather than let it take the
-      // node's shared burst memory.
+      // in-process Explore queries. The 1Gi request covers its normal resident
+      // baseline; voice graphs and DuckDB's 3GB query budget use shared burst
+      // memory within the existing 8Gi limit. Reserving those independent peaks
+      // at idle prevents other interactive services from scheduling.
       // Identical probe paths to the application role. `httpSurface: "admin"`
       // serves /ping, /livez, /healthz and /metrics on the same port 3000 as
       // the full server (backend src/http/admin-server.ts) — the surface that
       // is missing here is the product's, not the operator's.
-      ...scoutAdminRoleContainerBase(options.imageVersion, "gateway"),
+      ...scoutAdminRoleContainerBase(options.imageVersion),
       volumeMounts: [
         {
           path: "/data",

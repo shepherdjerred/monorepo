@@ -37,11 +37,8 @@ export function scoutRuntimeProbes() {
   };
 }
 
-/** Shared admin surface, with voice memory reserved only by its owning role. */
-export function scoutAdminRoleContainerBase(
-  imageVersion: string,
-  role: "gateway" | "activity-worker",
-) {
+/** Shared admin surface and baseline reservation for Scout's split roles. */
+export function scoutAdminRoleContainerBase(imageVersion: string) {
   return {
     image: `ghcr.io/shepherdjerred/scout-for-lol:${imageVersion}`,
     ports: [{ name: "port-3000", number: 3000, protocol: Protocol.TCP }],
@@ -52,7 +49,10 @@ export function scoutAdminRoleContainerBase(
     resources: {
       cpu: { request: Cpu.millis(50) },
       memory: {
-        request: Size.gibibytes(role === "gateway" ? 3 : 2),
+        // Reserve normal resident usage, not simultaneous voice/query peaks.
+        // Idle gateways stay below 512Mi; activity workers reserve 1Gi for
+        // resident usage. Both retain 8Gi for voice, DuckDB and report bursts.
+        request: Size.gibibytes(1),
         limit: Size.gibibytes(8),
       },
     },

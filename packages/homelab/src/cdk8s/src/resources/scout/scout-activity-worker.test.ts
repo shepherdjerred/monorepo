@@ -185,7 +185,7 @@ describe("Scout activity worker topology", () => {
       const worker = deployment(stage, "scout-activity-worker");
       const container = worker.spec.template.spec.containers[0];
       expect(container?.["resources"]).toEqual({
-        requests: { cpu: "50m", memory: "2048Mi" },
+        requests: { cpu: "50m", memory: "1024Mi" },
         limits: { memory: "8192Mi" },
       });
       expect(
