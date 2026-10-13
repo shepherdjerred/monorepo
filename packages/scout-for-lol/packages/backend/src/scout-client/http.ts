@@ -8,6 +8,7 @@ import {
 } from "@scout-for-lol/data";
 import { z } from "zod";
 import { prisma } from "#src/database/index.ts";
+import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
 import {
   authenticateScoutClient,
   type AuthenticatedScoutClient,
@@ -232,12 +233,26 @@ function requestMethodAllowed(
   return method === "POST" || (method === "PUT" && replayMatch !== null);
 }
 
+async function disabledClientResponse(
+  request: Request,
+  replayMatch: RegExpExecArray | null,
+): Promise<Response> {
+  if (replayMatch !== null) await drainRequestBody(request, MAX_REPLAY_BYTES);
+  return jsonResponse({ error: "scout_client_disabled" }, 403);
+}
+
 export async function handleScoutClientRoute(
   request: Request,
   url: URL,
 ): Promise<Response | null> {
   if (!url.pathname.startsWith(API_PREFIX)) return null;
   const replayMatch = REPLAY_PATH.exec(url.pathname);
+  if (
+    isFeatureHardDisabled("scout_client_ingestion") &&
+    url.pathname !== SELF_REVOKE_PATH
+  ) {
+    return await disabledClientResponse(request, replayMatch);
+  }
   if (!requestMethodAllowed(request.method, replayMatch)) {
     return new Response("Method Not Allowed", {
       status: 405,

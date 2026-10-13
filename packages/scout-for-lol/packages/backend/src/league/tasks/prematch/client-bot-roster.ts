@@ -1,6 +1,7 @@
 import type { RawCurrentGameInfo } from "@scout-for-lol/data";
 import { rosterIsAsCompleteAsItWillGet } from "#src/league/tasks/prematch/spectator-roster.ts";
 import { prisma } from "#src/database/index.ts";
+import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
 import {
   observedLobbyBots,
   type ObservedLobbyBot,
@@ -31,6 +32,7 @@ export async function readClientObservedBots(
   gameId: string,
   trackedPuuids: ReadonlySet<string>,
 ): Promise<readonly ObservedLobbyBot[]> {
+  if (isFeatureHardDisabled("scout_client_ingestion")) return [];
   if (trackedPuuids.size === 0) return [];
   const puuids = [...trackedPuuids];
   const joined = await prisma.scoutClientObservation.findFirst({

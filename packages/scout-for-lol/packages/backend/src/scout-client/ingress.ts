@@ -15,7 +15,10 @@ import {
 } from "@scout-for-lol/domain/identity/brands.ts";
 import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import configuration from "#src/configuration.ts";
-import { isPolicyEnabled } from "#src/configuration/flags.ts";
+import {
+  isPolicyEnabled,
+  isFeatureHardDisabled,
+} from "#src/configuration/flags.ts";
 import { currentScoutTemporalSupervisor } from "#src/temporal/runtime.ts";
 import { signalScoutClientMatchDispatch } from "#src/temporal/pipeline-starts.ts";
 import {
@@ -291,6 +294,8 @@ export async function ingestObservationBatch(
   batch: ScoutClientObservationBatch,
   now = new Date(),
 ): Promise<readonly Receipt[]> {
+  if (isFeatureHardDisabled("scout_client_ingestion"))
+    throw new Error("Scout Client ingestion is disabled in production");
   await learnBatchIdentities(device, batch.observations);
   const identities = await readIdentityAliases(
     observationUuids(batch.observations),
@@ -450,6 +455,7 @@ export async function startAcceptedClientMatches(
   batch: ScoutClientObservationBatch,
   receipts: readonly Receipt[],
 ): Promise<void> {
+  if (isFeatureHardDisabled("scout_client_ingestion")) return;
   const platforms = await acceptedObservationPlatforms(
     receipts
       .filter((receipt) => receipt.outcome !== "quarantined")

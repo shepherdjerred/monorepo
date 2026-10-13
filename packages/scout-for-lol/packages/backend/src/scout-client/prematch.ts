@@ -6,7 +6,10 @@ import {
   type RawCurrentGameInfo,
 } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
-import { isPolicyEnabled } from "#src/configuration/flags.ts";
+import {
+  isPolicyEnabled,
+  isFeatureHardDisabled,
+} from "#src/configuration/flags.ts";
 import {
   getActiveGame,
   type SpectatorResult,
@@ -43,6 +46,7 @@ async function readClientPrematchEvidence(
   region: Region,
   now = new Date(),
 ) {
+  if (isFeatureHardDisabled("scout_client_ingestion")) return null;
   const rows = await prisma.scoutClientObservation.findMany({
     where: {
       localPuuid: puuid,

@@ -16,6 +16,7 @@ import {
 } from "@scout-for-lol/data";
 import type { DiscordAccountId } from "@scout-for-lol/domain/identity/discord.ts";
 import { prisma } from "#src/database/index.ts";
+import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
 import { upsertClashGameSighting } from "#src/league/clash/sighting.ts";
 import { parseLocalGameResult } from "./canonical/local-result.ts";
 import { gameResultFromMatch } from "./canonical/riot-result.ts";
@@ -28,6 +29,7 @@ const NORMALIZER_VERSION = 1;
 export async function projectClientGameResult(
   observation: ScoutClientObservation,
 ): Promise<void> {
+  if (isFeatureHardDisabled("scout_client_ingestion")) return;
   if (
     observation.kind !== "post_game" ||
     observation.localPuuid === undefined ||
@@ -101,6 +103,8 @@ export async function readClientGameResults(
   results: GameResult[];
   conflicts: { matchId: RiotMatchId; sourceIds: string[] }[];
 }> {
+  if (isFeatureHardDisabled("scout_client_ingestion"))
+    return { results: [], conflicts: [] };
   const accounts = await prisma.account.findMany({
     where: { player: { discordId: ownerId } },
     distinct: ["puuid"],

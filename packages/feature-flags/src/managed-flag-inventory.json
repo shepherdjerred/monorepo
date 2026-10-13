@@ -3131,13 +3131,15 @@
           "default": false,
           "rollouts": [],
           "rules": [],
-          "thresholdRollouts": [
-            {
-              "rank": 1,
-              "percentage": 10,
-              "result": true
-            }
-          ]
+          "thresholdRollouts": []
+        },
+        {
+          "key": "scout_client_result_recovery",
+          "type": "boolean",
+          "default": false,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
         },
         {
           "key": "storm-brain-classify-enabled",

@@ -10,6 +10,7 @@ import {
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import { prisma } from "#src/database/index.ts";
+import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
 import { platformRouteOf } from "#src/durable/match/match-identity.ts";
 import {
   LOCAL_MATCH_TIMING_DRIFT_MS,
@@ -123,6 +124,7 @@ async function candidateIdentities(candidate: Candidate): Promise<IdentityMap> {
 export async function readSelectedLocalCanonicalMatch(
   riotMatchId: RiotMatchId,
 ): Promise<RawMatch | null> {
+  if (isFeatureHardDisabled("scout_client_ingestion")) return null;
   const selected = await prisma.scoutClientCanonicalMatch.findUnique({
     where: { riotMatchId },
     include: { sourceObservation: true },
@@ -165,6 +167,8 @@ export async function readTimelineSelection(
 ): Promise<TimelineSelection> {
   const frozen = await readFrozenTimeline(riotMatchId);
   if (frozen !== null) return { source: "ARCHIVED", timeline: frozen };
+  if (isFeatureHardDisabled("scout_client_ingestion"))
+    return { source: "RIOT" };
   const selected = await prisma.scoutClientCanonicalMatch.findUnique({
     where: { riotMatchId },
     include: { sourceObservation: true },
@@ -278,6 +282,7 @@ export async function resolveLocalCanonicalMatch(
   riotMatchId: RiotMatchId,
   now = new Date(),
 ): Promise<RawMatch | null> {
+  if (isFeatureHardDisabled("scout_client_ingestion")) return null;
   const selected = await readSelectedLocalCanonicalMatch(riotMatchId);
   if (selected !== null) return selected;
 

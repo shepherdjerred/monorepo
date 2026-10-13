@@ -215,29 +215,30 @@ describe("ManagedFlagInventorySchema", () => {
 });
 
 describe("Managed flag inventory validation", () => {
-  test("opens Scout client ingestion through managed rollouts while its fallback stays off", () => {
-    const declared = managedFlagInventory.flags.find(
-      (flag) => flag.key === "scout_client_ingestion",
-    );
-    expect(declared?.default).toBe(false);
-
-    expect(scoutPolicyFlag("beta", "scout_client_ingestion")).toMatchObject({
-      default: true,
-      thresholdRollouts: [],
-    });
-    expect(scoutPolicyFlag("prod", "scout_client_ingestion")).toMatchObject({
-      default: false,
-      thresholdRollouts: [
-        {
-          rank: 1,
-          percentage: 10,
-          result: true,
-        },
-      ],
-    });
+  test("enables Scout Client capture and recovery only in beta", () => {
+    for (const key of [
+      "scout_client_ingestion",
+      "scout_client_result_recovery",
+    ]) {
+      expect(
+        managedFlagInventory.flags.find((flag) => flag.key === key)?.default,
+      ).toBe(false);
+      expect(scoutPolicyFlag("beta", key)).toMatchObject({
+        default: true,
+        rollouts: [],
+        rules: [],
+        thresholdRollouts: [],
+      });
+      expect(scoutPolicyFlag("prod", key)).toMatchObject({
+        default: false,
+        rollouts: [],
+        rules: [],
+        thresholdRollouts: [],
+      });
+    }
   });
 
-  test("keeps Custom nights beta-only while production client ingestion ramps", () => {
+  test("keeps Custom nights beta-only", () => {
     expect(
       scoutPolicyFlag("beta", "custom_nights_enabled").rollouts,
     ).toHaveLength(1);

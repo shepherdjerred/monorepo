@@ -8,13 +8,15 @@ import {
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { createTestScoutClientDevice } from "#src/testing/scout-client-device.ts";
 import { z } from "zod";
+import { resetConfigurationForTests } from "#src/configuration.ts";
 
 const { prisma } = createTestDatabase("client-data-recovery");
 vi.doMock("#src/database/index.ts", async (original) => ({
   ...(await original()),
   prisma,
 }));
-vi.doMock("#src/configuration/flags.ts", () => ({
+vi.doMock("#src/configuration/flags.ts", async (original) => ({
+  ...(await original()),
   isPolicyEnabled: () => Promise.resolve(true),
 }));
 const dispatch = vi.fn(() => Promise.resolve());
@@ -28,6 +30,8 @@ const { reconcileAcceptedClientEvidence } = await import("./reconciliation.ts");
 const { readClientGameResults } = await import("./game-results.ts");
 const { upsertClashGameSighting } =
   await import("#src/league/clash/sighting.ts");
+const { readClashHistoryForGuild } =
+  await import("#src/league/clash/history.ts");
 const { readClientPrematch, getActiveGameWithClientEvidence } =
   await import("./prematch.ts");
 
@@ -238,6 +242,51 @@ test("Riot result precedence holds under concurrent writes and late prematch", a
     resultSource: "RIOT",
     win: true,
   });
+});
+
+async function clashHistoryGameIds() {
+  const cups = await readClashHistoryForGuild(GUILD);
+  return cups
+    .flatMap((cup) =>
+      cup.players.flatMap((player) =>
+        player.sightings.map((sighting) => sighting.gameId),
+      ),
+    )
+    .sort();
+}
+
+test("production Clash history excludes stored client results while retaining Riot results", async () => {
+  const base = {
+    platform: "NA1",
+    puuid: PLAYER,
+    source: "match",
+    queue: "clash",
+    championId: 1,
+    teamId: 100,
+    observedAt: new Date(),
+    win: true,
+  } as const;
+  await upsertClashGameSighting({
+    ...base,
+    gameId: "7101",
+    resultSource: "SCOUT_CLIENT",
+  });
+  await upsertClashGameSighting({
+    ...base,
+    gameId: "7102",
+    resultSource: "RIOT",
+  });
+  expect(await clashHistoryGameIds()).toEqual(["7101", "7102"]);
+  const previousEnvironment = Bun.env["ENVIRONMENT"];
+  Bun.env["ENVIRONMENT"] = "prod";
+  resetConfigurationForTests();
+  try {
+    expect(await clashHistoryGameIds()).toEqual(["7102"]);
+  } finally {
+    if (previousEnvironment === undefined) delete Bun.env["ENVIRONMENT"];
+    else Bun.env["ENVIRONMENT"] = previousEnvironment;
+    resetConfigurationForTests();
+  }
 });
 
 test("conflicting client results do not invent a Clash winner", async () => {

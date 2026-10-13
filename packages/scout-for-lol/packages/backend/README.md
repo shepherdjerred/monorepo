@@ -655,6 +655,15 @@ which open histories recorded.
 
 ## Scout Client player identity
 
+Scout Client is beta-only. Production hard-disables `scout_client_ingestion`
+and `scout_client_result_recovery` before local overrides or Flipt evaluation.
+The managed production declarations also have false defaults and no rollouts;
+beta enables both flags. Pairing, check-ins, uploads and client-data enrichment
+remain unavailable in production even if a provider answers true. Accepted
+historical observations cannot supply new prematch, match, timeline, mastery,
+teammate or Clash enrichment there. Existing immutable archives stay readable,
+and devices can still revoke their own credentials while capture is disabled.
+
 The League client names every player by a 36-character UUID — in the
 current-summoner profile, lobbies, match history, end-of-game blocks, and
 replay files alike. Riot's API names them by a 78-character PUUID encrypted

@@ -15,6 +15,7 @@ import {
   type Region,
 } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
+import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
 import {
   clashScheduleSightingWindow,
   formatClashThemeLabel,
@@ -145,7 +146,12 @@ export async function readClashHistoryForGuild(
   const puuids = accounts.map((account) => account.puuid);
   const [sightings, memberships] = await Promise.all([
     prisma.clashGameSighting.findMany({
-      where: { puuid: { in: puuids } },
+      where: {
+        puuid: { in: puuids },
+        ...(isFeatureHardDisabled("scout_client_ingestion")
+          ? { resultSource: "RIOT" }
+          : {}),
+      },
       orderBy: [{ observedAt: "asc" }],
     }),
     prisma.clashMembershipHistory.findMany({

@@ -8,6 +8,7 @@ import {
   type LcuClashRoster,
 } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
+import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
 import { withRiotIdentities } from "#src/scout-client/identity-alias.ts";
 import { enrichClashTeamResults } from "./client-clash-results.ts";
 import { MatchDataSourceSchema } from "@scout-for-lol/domain/match-processing/states.ts";
@@ -165,6 +166,7 @@ export async function readClientClashTeams(
   now: Date,
   includeHistory = false,
 ): Promise<ClientClashTeam[]> {
+  if (isFeatureHardDisabled("scout_client_ingestion")) return [];
   if (puuids.length === 0) return [];
   const capturedAt = includeHistory
     ? {}
