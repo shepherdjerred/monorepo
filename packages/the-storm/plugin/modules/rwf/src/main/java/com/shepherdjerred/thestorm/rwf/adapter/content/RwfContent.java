@@ -10,7 +10,7 @@ import java.util.Optional;
  * @param config {@code rwf.yml}
  * @param kits the kits, as the kit book and {@code kits.yml} agree on them
  * @param maps every map, in id order
- * @param lobby the room players wait in; it overlaps no map and has one alcove per kit
+ * @param lobby the lobby players wait in, in its own world, with one alcove per kit
  */
 public record RwfContent(
     RwfConfig config, List<KitSpec> kits, List<LoadedMap> maps, LoadedLobby lobby) {

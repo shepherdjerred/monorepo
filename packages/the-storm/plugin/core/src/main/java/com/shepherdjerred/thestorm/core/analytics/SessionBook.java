@@ -97,6 +97,19 @@ final class SessionBook implements ProductAnalytics {
   }
 
   @Override
+  public synchronized void game(UUID player, GameEvent event, Map<String, Object> properties) {
+    var checked = ProductAnalytics.checked(properties);
+    var session = sessions.get(player);
+    if (session == null) return;
+    var at = now();
+    var events = advance(session, at);
+    var all = new HashMap<String, Object>(checked);
+    all.put("mode", modeName(session.mode));
+    events.add(event(event.eventName(), at, all));
+    persist.accept(new AnalyticsWrite(session.snapshot(false), events));
+  }
+
+  @Override
   public synchronized void mode(UUID player, Mode mode) {
     var session = sessions.get(player);
     if (session == null || session.mode == mode) return;

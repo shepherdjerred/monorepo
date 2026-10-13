@@ -27,11 +27,23 @@ final class MatchHeadlinesTest {
   private final MatchHeadlines headlines = new MatchHeadlines();
 
   private static CombatantView fighter(CombatantId id, String name, TeamColor team) {
-    return new CombatantView(id, name, Optional.of(team), Optional.empty(), true);
+    return new CombatantView(
+        id,
+        name,
+        Optional.of(team),
+        Optional.empty(),
+        true,
+        com.shepherdjerred.thestorm.rwf.domain.match.Score.ZERO);
   }
 
   private static CombatantView waiting(CombatantId id, String name) {
-    return new CombatantView(id, name, Optional.empty(), Optional.empty(), true);
+    return new CombatantView(
+        id,
+        name,
+        Optional.empty(),
+        Optional.empty(),
+        true,
+        com.shepherdjerred.thestorm.rwf.domain.match.Score.ZERO);
   }
 
   private Optional<Headline> step(
@@ -47,6 +59,7 @@ final class MatchHeadlinesTest {
             List.of(),
             Optional.empty(),
             outcome,
+            Optional.empty(),
             Optional.empty());
     return headlines.accept(
         new MatchNotification(new MatchEvent.Tick(now, Map.of()), List.of(), snapshot));
@@ -171,6 +184,7 @@ final class MatchHeadlinesTest {
         List.of(TeamColor.RED, TeamColor.BLUE),
         List.of(combatants),
         List.of(),
+        Optional.empty(),
         Optional.empty(),
         Optional.empty(),
         Optional.empty());

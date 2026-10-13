@@ -27,9 +27,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * What a live match records per tick: a frame for every human each tick and for every bot every
- * other tick, and for humans only an input row with the keys Paper last reported and their exact
- * rotation.
+ * What a live match records per tick: a frame for every combatant each tick, and for humans only an
+ * input row with the keys Paper last reported and their exact rotation.
  */
 final class RwfRecordingTest {
 
@@ -83,13 +82,15 @@ final class RwfRecordingTest {
   }
 
   @Test
-  void humansAreSampledWithTheirKeysEveryTickAndBotsEveryOtherTick() {
+  void everyoneIsSampledEveryTickAndHumansWithTheirKeys() {
     running = RwfHarness.start(directory);
     var harness = requireNonNull(running);
     var alice = harness.loadedPlayer("Alice");
     harness.goLive(alice);
     var events = harness.server.getPluginManager();
 
+    alice.addPotionEffect(
+        new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.SPEED, 100, 1));
     events.callEvent(new PlayerInputEvent(alice, new Pressed(true, true)));
     harness.ticks(20);
     events.callEvent(new PlayerInputEvent(alice, new Pressed(false, false)));
@@ -132,8 +133,24 @@ final class RwfRecordingTest {
             .collect(Collectors.toUnmodifiableSet());
     assertThat(window).containsEntry(pseudonym, 20L);
     assertThat(window.keySet()).containsAll(bots);
-    assertThat(bots).allSatisfy(bot -> assertThat(window).containsEntry(bot, 10L));
+    assertThat(bots).allSatisfy(bot -> assertThat(window).containsEntry(bot, 20L));
     assertThat(bots).doesNotContain(pseudonym);
+    assertThat(record.occurrences())
+        .as("a ballot row and a row for the effect Alice gained")
+        .anyMatch(com.shepherdjerred.thestorm.rwf.domain.record.Occurrence.Ballot.class::isInstance)
+        .anyMatch(
+            occurrence ->
+                occurrence
+                        instanceof
+                        com.shepherdjerred.thestorm.rwf.domain.record.Occurrence.EffectApplied(
+                            var _,
+                            var subject,
+                            var effect,
+                            var amplifier,
+                            var _)
+                    && subject.equals(pseudonym)
+                    && effect.equals("speed")
+                    && amplifier == 1);
   }
 
   /** The one recording, which the direct compute pool has finished by the time the match ends. */

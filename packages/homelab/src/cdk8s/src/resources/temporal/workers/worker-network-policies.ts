@@ -101,6 +101,8 @@ function createTemporalWorkersSeaweedfsEgressPolicy(chart: Chart): void {
               "repo-worker",
               "scout-worker",
               "glitter-corpus-worker",
+              // The Red Warfare recording archive on the mining-reset queue.
+              "infra-worker",
             ],
           },
         ],

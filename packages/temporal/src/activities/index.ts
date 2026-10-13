@@ -50,6 +50,7 @@ import { llmBilledCostActivities } from "./agent/llm-billed-cost.ts";
 import { opsActivities } from "./ops/ops-activities.ts";
 import { miningResetActivities } from "./homelab/mining-reset.ts";
 import { stormPlotActivities } from "./homelab/storm-plots.ts";
+import { rwfRecordingArchiveActivities } from "./homelab/rwf/recording-archive.ts";
 import { stormCompanionActivities } from "./homelab/storm-companions.ts";
 import { stormDiscordActivities } from "./homelab/storm-discord.ts";
 import { agentChatActivities } from "./agent/chat/run-agent-chat-turn.ts";
@@ -102,6 +103,7 @@ export const infraActivities = {
 export const miningResetWorkerActivities = {
   ...miningResetActivities,
   ...stormPlotActivities,
+  ...rwfRecordingArchiveActivities,
 };
 
 // Keep the legacy infra registration above to drain recorded histories.

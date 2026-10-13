@@ -14,6 +14,7 @@ import {
   status,
   transcript,
   waitForLobby,
+  settledMatch,
 } from "#e2e/harness/rwf-match.ts";
 import type { ServerInfo } from "#e2e/harness/server.ts";
 import type { RconClient } from "#e2e/harness/rcon.ts";
@@ -83,8 +84,12 @@ async function arm(
   );
   const armed = await status(rcon);
   expect(armed.bots).toBe(bots);
+  armedMatches.push({ bots, matchId: armed.matchId });
   return human;
 }
+
+/** Every match the load test armed, with its bot count, to check its recording afterwards. */
+const armedMatches: { bots: number; matchId: string }[] = [];
 
 /** Whether the rwf match is in `phase`. */
 async function phaseIs(rcon: RconClient, phase: string): Promise<boolean> {
@@ -207,6 +212,16 @@ describe("rwfbots load", () => {
       // complete even when one fails. Decision age is reported, not judged.
       for (const verdict of verdicts(rows)) {
         expect.soft(verdict.pass, verdict.check).toBe(true);
+      }
+      // Recording at 100%: every match at 20, 50 and 100 bodies kept every frame.
+      for (const { bots, matchId } of armedMatches) {
+        const { match } = await settledMatch(server, matchId);
+        expect
+          .soft(
+            match.dropped_frames,
+            `dropped frames at ${bots.toString()} bots`,
+          )
+          .toBe(0);
       }
     },
   );

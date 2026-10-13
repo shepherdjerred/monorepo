@@ -100,7 +100,7 @@ public final class MatchBridge implements Consumer<MatchNotification> {
 
   private void change(Transition.Change change, MatchState after) {
     switch (change) {
-      case Transition.Change.MapChosen chosen ->
+      case Transition.Change.MapReady chosen ->
           parts
               .nav()
               .confirm(chosen.mapId(), chosen.blocksSha256())
@@ -123,7 +123,12 @@ public final class MatchBridge implements Consumer<MatchNotification> {
           Transition.Change.ForceStarted _,
           Transition.Change.Stopped _,
           Transition.Change.Reset _,
-          Transition.Change.LookedAround _ -> {}
+          Transition.Change.LookedAround _,
+          Transition.Change.MapFailed _,
+          Transition.Change.BallotOpened _,
+          Transition.Change.Voted _,
+          Transition.Change.Damaged _,
+          Transition.Change.Operated _ -> {}
     }
   }
 
@@ -206,7 +211,9 @@ public final class MatchBridge implements Consumer<MatchNotification> {
               .ifPresent(profile -> parts.loop().unregister(profile.id()));
       case Transition.Effect.StatRecorded stat -> stat(stat);
       case Transition.Effect.Killed killed -> killed.victims().forEach(this::killed);
-      case Transition.Effect.Equipped _ -> {}
+      case Transition.Effect.Equipped _,
+          Transition.Effect.Frozen _,
+          Transition.Effect.Unfrozen _ -> {}
     }
   }
 

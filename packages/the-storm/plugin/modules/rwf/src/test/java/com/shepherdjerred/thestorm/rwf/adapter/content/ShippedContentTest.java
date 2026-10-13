@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
 import com.shepherdjerred.thestorm.rwf.domain.kit.KitBook;
-import com.shepherdjerred.thestorm.rwf.domain.lobby.LobbyBuild;
 import com.shepherdjerred.thestorm.rwf.domain.lobby.LobbySizing;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -27,9 +26,9 @@ final class ShippedContentTest {
   private static LoadedMap trainingYard;
 
   @BeforeAll
-  static void load() {
+  static void load() throws IOException {
     MockBukkit.mock();
-    content = ContentFiles.catalog(SHIPPED, Bukkit::createBlockData);
+    content = ContentFiles.catalog(staged(), Bukkit::createBlockData);
     trainingYard =
         content.maps().stream()
             .filter(map -> map.id().equals("training-yard"))
@@ -45,8 +44,18 @@ final class ShippedContentTest {
 
   @Test
   void theWorldIsSealedAndMatchesStartWithOneHuman() {
-    assertThat(content.config().world()).isEqualTo("rwf");
+    assertThat(content.config().worlds())
+        .isEqualTo(
+            new com.shepherdjerred.thestorm.rwf.adapter.content.RwfConfig.Worlds(
+                "rwf_lobby", "rwf"));
     assertThat(content.config().match().minHumans()).isEqualTo(1);
+    // Red Warfare's lobby: 4 players, one fewer every 15 s, never under 2.
+    assertThat(content.config().match().minPlayers()).isEqualTo(4);
+    assertThat(content.config().match().absoluteMinPlayers()).isEqualTo(2);
+    assertThat(content.config().matchSettings().requiredPlayers(Duration.ofSeconds(15)))
+        .isEqualTo(3);
+    assertThat(content.config().matchSettings().requiredPlayers(Duration.ofMinutes(5)))
+        .isEqualTo(2);
     assertThat(content.config().match().countdown()).isEqualTo(Duration.ofSeconds(90));
     assertThat(content.config().match().maxCombatants()).isEqualTo(100);
     assertThat(content.config().match().automaticSizing()).isTrue();
@@ -145,36 +154,74 @@ final class ShippedContentTest {
   }
 
   @Test
-  void theLobbyIsTheGeneratedRoomWithAnAlcovePerKit() {
-    var lobby = content.lobby();
-    var generated = generatedLobby();
+  void theLobbyIsTheAuthoredBuildWithAnAlcovePerKitAndThreePodiums() {
+    var layout = shippedLobby();
+    var declared =
+        com.shepherdjerred.thestorm.core.config.ConfigFiles.load(
+                SHIPPED.resolve("rwf/lobby/lobby.yml"), LobbyFile.class)
+            .blocksSha256();
 
-    assertThat(lobby.layout()).isEqualTo(LobbyBuild.layout());
-    assertThat(lobby.layout().kits())
+    assertThat(layout.kits())
         .isEqualTo(KitBook.MILESTONE_ONE.stream().map(kit -> kit.id()).toList());
-    assertThat(lobby.blocksSha256()).isEqualTo(generated.sha256());
-    assertThat(lobby.blocks().schematic().sha256()).isEqualTo(generated.sha256());
-    assertThat(read(SHIPPED.resolve("rwf/lobby/blocks.schem")))
-        .isEqualTo(SchematicWriter.write(generated));
+    assertThat(layout.podiums()).hasSize(3);
+    assertThat(layout.leaderboards()).hasSize(3);
+    assertThat(declared).isEqualTo(shippedLobbyBlocks().sha256());
   }
 
   @Test
-  void theLobbySpawnStandsOnTheGoldPadAwayFromEveryMap() {
-    var lobby = content.lobby();
-    var feet = lobby.layout().spawn().position().toBlock();
+  void theLobbySpawnStandsOnTheDeckAndEachPodiumIsALodestone() {
+    var layout = shippedLobby();
+    var blocks = shippedLobbyBlocks();
+    var min = layout.region().min();
+    java.util.function.Function<com.shepherdjerred.thestorm.rwf.domain.geometry.BlockPos, String>
+        at =
+            pos ->
+                blocks
+                    .palette()
+                    .get(
+                        blocks.paletteIndex(
+                            pos.x() - min.x(), pos.y() - min.y(), pos.z() - min.z()));
+    var feet = layout.spawn().position().toBlock();
 
-    assertThat(lobby.blocks().at(feet.plus(0, -1, 0)).getAsString())
-        .isEqualTo("minecraft:gold_block");
-    assertThat(lobby.layout().region().contains(trainingYard.definition().border().min()))
-        .isFalse();
+    assertThat(at.apply(feet.plus(0, -1, 0))).isNotEqualTo("minecraft:air");
+    assertThat(at.apply(feet)).isEqualTo("minecraft:air");
+    for (var podium : layout.podiums()) {
+      assertThat(at.apply(podium.click())).isEqualTo("minecraft:lodestone");
+    }
   }
 
-  /** The schematic the lobby generator builds. */
-  static Schematic generatedLobby() {
-    return new Schematic(
-        new Schematic.Dimensions(LobbyBuild.WIDTH, LobbyBuild.HEIGHT, LobbyBuild.LENGTH),
-        LobbyBuild.PALETTE,
-        LobbyBuild.generate().indices());
+  /**
+   * The shipped content with the suites' test lobby in place of the war room: MockBukkit cannot
+   * make block data for the war room's walls, panes and lanterns, so its places and hash are
+   * checked here without block data, and its blocks by rwfmap and the real-server suites.
+   */
+  private static Path staged() throws IOException {
+    var root = Files.createTempDirectory("rwf-shipped");
+    var rwf = Files.createDirectories(root.resolve("rwf"));
+    Files.createSymbolicLink(root.resolve("rwf.yml"), SHIPPED.resolve("rwf.yml").toAbsolutePath());
+    Files.createSymbolicLink(
+        rwf.resolve("kits.yml"), SHIPPED.resolve("rwf/kits.yml").toAbsolutePath());
+    Files.createSymbolicLink(rwf.resolve("maps"), SHIPPED.resolve("rwf/maps").toAbsolutePath());
+    Files.createSymbolicLink(
+        rwf.resolve("lobby"),
+        com.shepherdjerred.thestorm.rwf.RwfHarness.FIXTURE_LOBBY.toAbsolutePath());
+    return root;
+  }
+
+  /** The shipped lobby's places, read without block data. */
+  private static com.shepherdjerred.thestorm.rwf.domain.lobby.LobbyLayout shippedLobby() {
+    return com.shepherdjerred.thestorm.core.config.ConfigFiles.load(
+            SHIPPED.resolve("rwf/lobby/lobby.yml"), LobbyFile.class)
+        .toLayout();
+  }
+
+  /** The shipped lobby's schematic. */
+  private static Schematic shippedLobbyBlocks() {
+    try (var in = Files.newInputStream(SHIPPED.resolve("rwf/lobby/blocks.schem"))) {
+      return SchematicReader.read(in);
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
   }
 
   private static byte[] read(Path file) {

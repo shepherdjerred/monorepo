@@ -354,10 +354,10 @@ function countWithin(ticks: number[], from: number, to: number): number {
 /**
  * The per-tick samples: every human has one input row (`N`) for each of its
  * frames, bots have none, and over any stretch both were alive a bot has
- * half as many frames as a human (10 Hz against 20 Hz).
+ * as many frames as a human (both 20 Hz since format version 4).
  */
 export function expectSampleCadence(recording: Recording): void {
-  expect(recording.version).toBe(3);
+  expect(recording.version).toBe(4);
   const humans = [...recording.roster]
     .filter(([, entry]) => !entry.bot)
     .map(([pseudonym]) => pseudonym);
@@ -390,7 +390,7 @@ export function expectSampleCadence(recording: Recording): void {
   });
   expect(compared.length, "bots alive beside the human").toBeGreaterThan(0);
   for (const { bot, ratio } of compared) {
-    expect(ratio, `${bot}'s frames per human frame`).toBeGreaterThan(0.4);
-    expect(ratio, `${bot}'s frames per human frame`).toBeLessThan(0.6);
+    expect(ratio, `${bot}'s frames per human frame`).toBeGreaterThan(0.9);
+    expect(ratio, `${bot}'s frames per human frame`).toBeLessThan(1.1);
   }
 }

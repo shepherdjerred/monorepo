@@ -48,12 +48,16 @@ final class TerrainTest {
                 new DirectComputePool(),
                 InstantSource.fixed(Instant.EPOCH),
                 RandomGenerator.of("L64X128MixRandom"),
+                server.addSimpleWorld("lobby"),
                 world,
                 new AuditedBlockChanges(_ -> {}),
                 com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled()));
     var terrain =
         new Terrain(
-            context, new Terrain.Source("test", blocks, schematic.sha256()), new CountingChunks());
+            context,
+            world,
+            new Terrain.Source("test", blocks, schematic.sha256()),
+            new CountingChunks());
     var finished = new ArrayList<Boolean>();
 
     terrain.paste(() -> finished.add(true));
@@ -68,6 +72,43 @@ final class TerrainTest {
     assertThat(finished).containsExactly(true);
     assertThat(terrain.ready()).isFalse();
     assertThat(terrain.busy()).isFalse();
+  }
+
+  @Test
+  void theSpectatorPointsChunkIsHeldWithTheMapsSoWatchersArriveWarm() {
+    var server = MockBukkit.mock();
+    var plugin = MockBukkit.createMockPlugin();
+    var world = server.addSimpleWorld("terrain");
+    var size = new Schematic.Dimensions(1, 1, 1);
+    var schematic = new Schematic(size, List.of("minecraft:stone"), new int[1]);
+    var region = new Cuboid(new BlockPos(0, 70, 0), new BlockPos(0, 70, 0));
+    var blocks = MapBlocks.resolve(schematic, region, server::createBlockData);
+    var context =
+        new PaperContext(
+            new PaperContext.Parts(
+                plugin,
+                new PaperScheduler(plugin),
+                new DirectComputePool(),
+                InstantSource.fixed(Instant.EPOCH),
+                RandomGenerator.of("L64X128MixRandom"),
+                server.addSimpleWorld("lobby"),
+                world,
+                new AuditedBlockChanges(_ -> {}),
+                com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled()));
+    var terrain =
+        new Terrain(
+            context,
+            world,
+            new Terrain.Source(
+                "test",
+                blocks,
+                schematic.sha256(),
+                List.of(new BlockPos(40, 90, -20), new BlockPos(1, 90, 1))),
+            new CountingChunks());
+
+    assertThat(terrain.chunkCoordinates())
+        .extracting(chunk -> chunk[0] + "," + chunk[1])
+        .containsExactly("0,0", "2,-2");
   }
 
   @Test

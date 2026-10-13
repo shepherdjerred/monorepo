@@ -8,10 +8,12 @@ import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.economy.app.CurrencyId;
 import com.shepherdjerred.thestorm.rwf.adapter.db.generated.tables.records.RwfMatchPlayerRecord;
 import com.shepherdjerred.thestorm.rwf.app.RecordingSummary;
+import com.shepherdjerred.thestorm.rwf.app.store.MatchStats;
 import com.shepherdjerred.thestorm.rwf.app.store.MatchStore;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import org.jooq.DSLContext;
@@ -29,7 +31,8 @@ public final class JooqMatchStore implements MatchStore {
   }
 
   @Override
-  public CompletableFuture<Void> record(MatchRow match, List<PlayerRow> players) {
+  public CompletableFuture<Void> record(
+      MatchRow match, List<PlayerRow> players, Optional<MatchStats> stats) {
     for (var player : players) {
       if (!player.matchId().equals(match.matchId())) {
         throw new IllegalArgumentException(player.player() + " belongs to another match");
@@ -64,6 +67,7 @@ public final class JooqMatchStore implements MatchStore {
                     .set(RWF_MATCH_PLAYER.CREDITS_PAID, player.creditsPaid())
                     .execute();
               }
+              stats.ifPresent(played -> StatsWrites.write(dsl, match, played));
               return true;
             }));
   }

@@ -163,7 +163,7 @@ function stoppedRecording(recording: string, matchId: string) {
   const inputs = rows.filter((row) => row[0] === "N");
   if (
     header?.[0] !== "H" ||
-    header[1] !== "3" ||
+    !["3", "4"].includes(header[1] ?? "") ||
     header[2] !== matchId ||
     endings.length !== 1 ||
     endings[0]?.[2] !== "-" ||

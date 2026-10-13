@@ -12,7 +12,7 @@ export function humanRecording(recording: string, match: string) {
   const controls = rows.filter((row) => row.startsWith("N\t"));
   if (
     header?.[0] !== "H" ||
-    header[1] !== "3" ||
+    !["3", "4"].includes(header[1] ?? "") ||
     header[2] !== match ||
     rows.filter((row) => row.startsWith("X\t")).length !== 1 ||
     humans.length !== 1 ||

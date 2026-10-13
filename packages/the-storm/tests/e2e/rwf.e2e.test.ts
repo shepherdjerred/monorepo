@@ -4,9 +4,8 @@ import { Vec3 } from "vec3";
 import { describe, expect } from "vitest";
 import { z } from "zod";
 import { test } from "./fixtures.ts";
-import { connectBot, disconnectBot, waitUntil } from "./harness/bot.ts";
+import { disconnectBot, waitUntil } from "./harness/bot.ts";
 import { setRwfDenied } from "./harness/fake-brain.ts";
-import { rwfTestSettings } from "./harness/rwf-settings.ts";
 import {
   expectSampleCadence,
   expectCredits,
@@ -15,6 +14,32 @@ import {
 } from "./harness/rwfbots.ts";
 import { serverLogs } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
 import type { ServerInfo } from "./harness/server.ts";
+import {
+  arrives,
+  box,
+  connect,
+  connectAll,
+  coords,
+  dimension,
+  disconnectAll,
+  enemy,
+  health,
+  type Human,
+  human,
+  inRwf,
+  inView,
+  join,
+  joinRecovered,
+  lobby,
+  lobbyDimension,
+  numberAfter,
+  playTogether,
+  standsIn,
+  type Team,
+  teamOf,
+  teleport,
+  yard,
+} from "./harness/rwf-humans.ts";
 import {
   eventually,
   type MatchRow,
@@ -41,56 +66,6 @@ import type { RconClient } from "#e2e/harness/rcon.ts";
  * and the fuse burns for sixty, so the detonation case waits the real minute.
  */
 
-const dimension = `minecraft:${rwfTestSettings.world}`;
-
-type Team = "Red" | "Blue";
-
-/** The training yard's bombs, one in each base, and a clear spot for a duel. */
-const yard = {
-  bombs: {
-    Red: new Vec3(8, 65, 31),
-    Blue: new Vec3(55, 65, 31),
-  },
-  /** Beside each bomb, inside its base, where a fuse reaches it. */
-  beside: {
-    Red: { attacker: new Vec3(9.5, 65, 31.5), owner: new Vec3(6.5, 65, 31.5) },
-    Blue: {
-      attacker: new Vec3(53.5, 65, 31.5),
-      owner: new Vec3(57.5, 65, 31.5),
-    },
-  },
-  duel: [new Vec3(24.5, 65, 30.5), new Vec3(25.5, 65, 30.5)],
-  /** The nuke's TNT on its 3x3 gold pedestal, and a spot on the pedestal beside it. */
-  nuke: new Vec3(31, 66, 31),
-  besideNuke: new Vec3(30.5, 66, 31.5),
-  /** A floor block in the red base's corner. */
-  floor: new Vec3(2, 64, 2),
-  /** The yard's region, both corners included. */
-  region: { min: new Vec3(0, 64, 0), max: new Vec3(63, 79, 63) },
-  /** Where the dead and watchers look down from. */
-  spectator: new Vec3(31.5, 76, 31.5),
-} as const;
-
-/** The lobby room (rwf/lobby/lobby.yml): its region and the gold spawn pad. */
-const lobby = {
-  region: { min: new Vec3(128, 64, 16), max: new Vec3(158, 72, 46) },
-  spawn: new Vec3(143.5, 65, 31.5),
-} as const;
-
-type Region = { min: Vec3; max: Vec3 };
-
-/** Whether a player's feet stand inside `region`, both corners' blocks included. */
-function inside(at: Vec3, region: Region): boolean {
-  return (
-    at.x >= region.min.x &&
-    at.x < region.max.x + 1 &&
-    at.y >= region.min.y &&
-    at.y < region.max.y + 1 &&
-    at.z >= region.min.z &&
-    at.z < region.max.z + 1
-  );
-}
-
 /** Every boss bar and title a player is shown, as plain text, in order. */
 type Screen = { bars: string[]; titles: string[] };
 
@@ -115,13 +90,6 @@ const attackSpeedModifierValue = 200;
 /** A player who never turns their head in a live match loses this many credits. */
 const afkPenalty = 2;
 
-/** A player and their transcript. */
-type Human = { bot: Bot; log: Transcript };
-
-function human(bot: Bot): Human {
-  return { bot, log: transcript(bot) };
-}
-
 function count(bot: Bot, item: string): number {
   return bot.inventory
     .items()
@@ -138,44 +106,7 @@ function armor(bot: Bot): (string | undefined)[] {
   return [5, 6, 7, 8].map((slot) => bot.inventory.slots[slot]?.name);
 }
 
-function coords(at: Vec3): string {
-  return `${at.x.toString()} ${at.y.toString()} ${at.z.toString()}`;
-}
-
 // ---- RCON ----------------------------------------------------------------
-
-/** Runs `command` with the rwf world as the executing dimension. */
-async function inRwf(rcon: RconClient, command: string): Promise<string> {
-  return rcon.command(`execute in ${dimension} run ${command}`);
-}
-
-async function teleport(rcon: RconClient, bot: Bot, to: Vec3): Promise<void> {
-  const reply = await inRwf(rcon, `minecraft:tp ${bot.username} ${coords(to)}`);
-  try {
-    await waitUntil(
-      `${bot.username} arrives at ${coords(to)}`,
-      () => bot.entity.position.distanceTo(to) < 0.5,
-    );
-  } catch (error) {
-    throw new Error(
-      `${String(error)}; RCON replied ${reply}; player is at ${coords(bot.entity.position)}`,
-      { cause: error },
-    );
-  }
-}
-
-function numberAfter(pattern: RegExp, what: string) {
-  return z.string().transform((text, context) => {
-    const match = pattern.exec(text.trim());
-    if (match?.groups?.["value"] === undefined) {
-      context.addIssue({ code: "custom", message: `no ${what} in ${text}` });
-      return z.NEVER;
-    }
-    return Number(match.groups["value"]);
-  });
-}
-
-const HealthSchema = numberAfter(/: (?<value>-?[\d.]+)f$/u, "health");
 
 const EntityPosSchema = z.string().transform((text, context) => {
   const match = /\[(?<x>-?[\d.]+)d, (?<y>-?[\d.]+)d, (?<z>-?[\d.]+)d\]$/u.exec(
@@ -213,12 +144,6 @@ async function expectPrimedOnSite(rcon: RconClient, site: Vec3): Promise<void> {
   }
 }
 
-async function health(rcon: RconClient, bot: Bot): Promise<number> {
-  return HealthSchema.parse(
-    await rcon.command(`data get entity ${bot.username} Health`),
-  );
-}
-
 /**
  * The value of the match's attack-speed modifier on the player, or undefined
  * when they do not carry it. The attribute's total also moves with the held
@@ -252,19 +177,6 @@ async function giveDiamonds(rcon: RconClient, bot: Bot): Promise<void> {
   );
 }
 
-async function join({ bot, log }: Human): Promise<void> {
-  bot.chat("/rwf join");
-  await log.until(new RegExp(`${bot.username} joined the match`, "u"));
-}
-
-/** Joins again on the same connection; a pending restore delays, never refuses, it. */
-async function joinRecovered({ bot, log }: Human): Promise<void> {
-  const joined = new RegExp(`${bot.username} joined the match`, "u");
-  bot.chat("/rwf join");
-  await log.until(joined, 20_000);
-  expect(log.has(/Reconnect to finish recovery/u)).toBe(false);
-}
-
 /** Both join and the match goes live; returns their teams, which differ. */
 async function startMatch(
   rcon: RconClient,
@@ -282,54 +194,6 @@ async function startMatch(
   await lookAround(a.bot);
   await lookAround(b.bot);
   return teams;
-}
-
-/**
- * Everyone joins one countdown (inside its six seconds) and the match goes
- * live; returns their teams in order. Transcripts start afresh, so a second
- * match reads only its own lines.
- */
-async function playTogether(
-  humans: Human[],
-  idle: Human[] = [],
-): Promise<Team[]> {
-  for (const { log } of humans) {
-    log.lines.length = 0;
-  }
-  for (const one of humans) {
-    await joinRecovered(one);
-  }
-  for (const { log } of humans) {
-    await log.until(/The game has begun!/u, 30_000);
-  }
-  const teams = await Promise.all(humans.map(async ({ log }) => teamOf(log)));
-  // Everyone but the idle turns their head, so only the idle count as AFK.
-  for (const one of humans) {
-    if (!idle.includes(one)) {
-      await lookAround(one.bot);
-    }
-  }
-  return teams;
-}
-
-async function teamOf(log: Transcript): Promise<Team> {
-  const seen = await log.until(/You are in (?<team>Red|Blue) Team\./u, 30_000);
-  return z.enum(["Red", "Blue"]).parse(seen.groups?.["team"]);
-}
-
-function enemy(team: Team): Team {
-  return team === "Red" ? "Blue" : "Red";
-}
-
-/**
- * `other`'s entity as `bot` sees it. Mineflayer sets it to null while the
- * entity is out of view (a player arriving from the lobby is respawned on
- * every client that sees the yard), so null counts as unseen.
- */
-function inView(bot: Bot, other: Bot): Bot["entity"] | undefined {
-  const entity: Bot["entity"] | null | undefined =
-    bot.players[other.username]?.entity;
-  return entity ?? undefined;
 }
 
 /** Back where they stood, with what they held, and nothing of the match. */
@@ -689,13 +553,9 @@ async function awaitDetonation(
   await attacker.log.until(new RegExp(`${teamB} Team was defeated!`, "u"));
   await attacker.log.until(new RegExp(`${teamA} Team wins!`, "u"));
   await owner.log.until(new RegExp(`${teamA} Team wins!`, "u"));
-  await attacker.log.until(/You earned 3 credits\./u);
-  await owner.log.until(/You earned 1 credits\./u);
+  await attacker.log.until(/Given 3 credits/u);
+  await owner.log.until(/Given 1 credit/u);
   return { spectated };
-}
-
-async function connect(server: ServerInfo, username: string): Promise<Bot> {
-  return connectBot({ host: server.host, port: server.gamePort, username });
 }
 
 // ---- the matches ---------------------------------------------------------------
@@ -719,26 +579,26 @@ describe("Search and Destroy with humans only", () => {
       // Emptied onto the lobby room's spawn pad: nothing but what the match gives.
       expect(count(bot, "diamond")).toBe(0);
       await waitUntil(
-        "the lobby's spawn pad",
+        "the lobby's spawn",
         () => bot.entity.position.distanceTo(lobby.spawn) < 1.5,
       );
-      expect(inside(bot.entity.position, lobby.region)).toBe(true);
-      // The room is dressed: rules, the match board and a name per kit alcove
-      // as text, and each kit's item.
-      const room = `x=128,y=64,z=16,dx=30,dy=8,dz=30`;
+      expect(await standsIn(rcon, bot, lobbyDimension, lobby.region)).toBe(
+        true,
+      );
+      // The lobby is dressed: the rules, the match board, three vote podiums,
+      // three leaderboards, the rotation and a name per kit alcove as text,
+      // and each kit's item.
       expect(
-        await inRwf(
-          rcon,
-          `execute if entity @e[type=minecraft:text_display,${room}]`,
+        await rcon.command(
+          `execute in ${lobbyDimension} if entity @e[type=minecraft:text_display,${box(lobby.region)}]`,
         ),
-      ).toContain("Count: 6");
+      ).toContain("Count: 13");
       expect(
-        await inRwf(
-          rcon,
-          `execute if entity @e[type=minecraft:item_display,${room}]`,
+        await rcon.command(
+          `execute in ${lobbyDimension} if entity @e[type=minecraft:item_display,${box(lobby.region)}]`,
         ),
       ).toContain("Count: 4");
-      await a.log.until(/The game will begin in \d+ seconds\./u);
+      await a.log.until(/The game will begin in /u);
       await waitUntil("the countdown boss bar", () =>
         shown.bars.some((title) => /Match starts in \d+ seconds?/u.test(title)),
       );
@@ -746,10 +606,10 @@ describe("Search and Destroy with humans only", () => {
       await a.log.until(/The game has begun!/u, 30_000);
       await b.log.until(/The game has begun!/u, 30_000);
       // The start takes both from the lobby to the yard, under a title.
-      await waitUntil("the yard", () =>
-        inside(bot.entity.position, yard.region),
+      await arrives(rcon, bot, dimension, yard.region);
+      expect(await standsIn(rcon, secondBot, dimension, yard.region)).toBe(
+        true,
       );
-      expect(inside(secondBot.entity.position, yard.region)).toBe(true);
       await waitUntil("the start title", () =>
         shown.titles.some((title) => title.includes("Fight!")),
       );
@@ -856,8 +716,8 @@ describe("Search and Destroy with humans only", () => {
       await b.log.until(new RegExp(`${teamB} Team wins!`, "u"));
       await waitRestored(secondBot, homeB);
       expect(await attackSpeedModifier(rcon, secondBot)).toBeUndefined();
-      expect(a.log.has(/You earned/u)).toBe(false);
-      expect(b.log.has(/You earned/u)).toBe(false);
+      expect(a.log.has(/Given \d+ credit/u)).toBe(false);
+      expect(b.log.has(/Given \d+ credit/u)).toBe(false);
       await expectCredits(bot, 0);
       await expectCredits(secondBot, 0);
 
@@ -931,7 +791,7 @@ async function pickFromMenu(
   ).toEqual(Object.values(kitMenu).map((entry) => entry.icon));
   expect(window.slots[slot]?.name).toBe(icon);
   await bot.clickWindow(slot, 0, 0);
-  await log.until(new RegExp(String.raw`Now using kit ${name}\.`, "u"));
+  await log.until(new RegExp(`Now using kit ${name}`, "u"));
 }
 
 describe("Choosing a kit from the lobby", () => {
@@ -1009,7 +869,7 @@ describe("Search and Destroy without enough humans", () => {
         await giveDiamonds(rcon, online);
         const home = online.entity.position.clone();
         await join(first);
-        await first.log.until(/The game will begin in \d+ seconds\./u);
+        await first.log.until(/The game will begin in /u);
         // With rwfbots off nobody fills the other team: standings decide the
         // moment the match goes live, so the no-humans abort never gets a turn.
         await first.log.until(/The game has begun!/u, 30_000);
@@ -1024,7 +884,7 @@ describe("Search and Destroy without enough humans", () => {
         expect(ended.bots).toBe(0);
         expect(ended.roster).toBe("absent");
         await waitRestored(online, home);
-        expect(first.log.has(/You earned/u)).toBe(false);
+        expect(first.log.has(/Given \d+ credit/u)).toBe(false);
         await expectCredits(online, 0);
         const settled = await settledMatch(server, ended.matchId);
         expect(settled.match.winner).toBe(team.toUpperCase());
@@ -1045,7 +905,7 @@ describe("Search and Destroy without enough humans", () => {
         second.log.lines.length = 0;
         expect(count(second.bot, "diamond")).toBe(3);
         await joinRecovered(second);
-        await second.log.until(/The game will begin in \d+ seconds\./u);
+        await second.log.until(/The game will begin in /u);
         const counting = await status(rcon);
         expect(counting.phase).toBe("Countdown");
         // A disconnect during the countdown restores the player before the
@@ -1231,7 +1091,7 @@ describe("Repairing the Search and Destroy map", () => {
       try {
         const before = pastes(await serverLogs(server));
         bot.chat("/rwf admin repair");
-        await log.until(/Verifying training-yard and the lobby\.\.\./u);
+        await log.until(/Verifying the lobby and training-yard\.\.\./u);
         await log.until(intact, 30_000);
         await log.until(lobbyIntact, 30_000);
         expect(pastes(await serverLogs(server))).toBe(before);
@@ -1363,7 +1223,7 @@ async function nukeMatch(
   await lone.log.until(new RegExp(`${pairTeam} Team just armed a nuke!`, "u"));
   await armer.log.until(
     new RegExp(
-      `${pairTeam} Team's nuke exploded! Everyone but them was annihilated!`,
+      `${pairTeam} Team's nuke exploded! Everyone but them annihilated!`,
       "u",
     ),
     75_000,
@@ -1390,6 +1250,29 @@ async function nukeMatch(
   }
   await waitForLobby(rcon);
   return { armer: armer.bot.username, earned };
+}
+
+function secondReward(
+  won: boolean,
+  afk: boolean,
+  before: number,
+): {
+  result: string;
+  owed: number;
+  paid: number;
+  told: string;
+} {
+  const pay = won ? 3 : 1;
+  const outcome = won ? "WIN" : "LOSE";
+  const paid = afk ? -Math.min(afkPenalty, before) : pay;
+  return {
+    result: afk ? "AFK" : outcome,
+    owed: afk ? -afkPenalty : pay,
+    paid,
+    told: afk
+      ? `you earned nothing and ${(-paid).toString()} credits were taken`
+      : `Given ${pay.toString()} ${pay === 1 ? "credit" : "credits"}`,
+  };
 }
 
 /**
@@ -1425,43 +1308,21 @@ async function secondPaidMatch(
   const settled = await settledMatch(server, live.matchId);
   for (const [index, one] of humans.entries()) {
     const before = first.earned.get(one.bot.username) ?? 0;
-    const won = teams[index] === winners;
-    const afk = one === first.idle;
-    const pay = won ? 3 : 1;
-    const outcome = won ? "WIN" : "LOSE";
     // AFK: no pay, and never more taken than the player holds.
-    const [result, owed] = afk ? ["AFK", -afkPenalty] : [outcome, pay];
-    const paid = afk ? -Math.min(afkPenalty, before) : pay;
+    const { result, owed, paid, told } = secondReward(
+      teams[index] === winners,
+      one === first.idle,
+      before,
+    );
     const row = rowOf(settled, one.bot);
     expect(
       [row?.result, row?.credits_owed, row?.payout_status, row?.credits_paid],
       one.bot.username,
     ).toEqual([result, owed, "PAID", paid]);
-    const told = afk
-      ? `you earned nothing and ${(-paid).toString()} credits were taken`
-      : `You earned ${pay.toString()} credits`;
-    await one.log.until(new RegExp(String.raw`${told}\.`, "u"), 20_000);
+    await one.log.until(new RegExp(told, "u"), 20_000);
     first.earned.set(one.bot.username, before + paid);
   }
   await waitForLobby(rcon);
-}
-
-/** Connects `names` afresh, each with a new transcript. */
-async function connectAll(
-  server: ServerInfo,
-  names: string[],
-): Promise<Human[]> {
-  const humans: Human[] = [];
-  for (const name of names) {
-    humans.push(human(await connect(server, name)));
-  }
-  return humans;
-}
-
-async function disconnectAll(humans: Human[]): Promise<void> {
-  for (const { bot: player } of humans) {
-    await disconnectBot(player);
-  }
 }
 
 describe("The nuke and a second paid match", () => {

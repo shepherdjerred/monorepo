@@ -35,8 +35,21 @@ export async function overlaySweep(
 
 /** The rwf.yml settings a suite overrides; durations are ISO-8601 (PT6S). */
 export type RwfOverlay = {
+  /** The map world matches are fought in. */
   world: string;
+  /** The lobby world players wait in. */
+  lobbyWorld: string;
+  /** How long before the countdown ends the map vote closes; the owned value when absent. */
+  voteLead?: string;
+  /** How long members fly over the chosen map; the owned value when absent. */
+  previewLength?: string;
+  /** How long everyone stands frozen at their spawn; the owned value when absent. */
+  freezeLength?: string;
   minHumans: number;
+  /** Players a lobby wants before counting down; minHumans when absent. */
+  minPlayers?: number;
+  /** The fewest players that requirement relaxes to; minHumans when absent. */
+  absoluteMinPlayers?: number;
   countdown: string;
   endLinger: string;
   noHumansAbort: string;
@@ -60,9 +73,21 @@ export async function overlayRwf(
   stagedRwfYml: string,
   rwf: RwfOverlay,
 ): Promise<void> {
-  await overlayFields(stagedRwfYml, { world: rwf.world }, "", "top-level");
+  await overlaySection(stagedRwfYml, "worlds", {
+    lobby: rwf.lobbyWorld,
+    maps: rwf.world,
+  });
   await overlaySection(stagedRwfYml, "match", {
+    ...(rwf.voteLead === undefined ? {} : { voteLead: rwf.voteLead }),
+    ...(rwf.previewLength === undefined
+      ? {}
+      : { previewLength: rwf.previewLength }),
+    ...(rwf.freezeLength === undefined
+      ? {}
+      : { freezeLength: rwf.freezeLength }),
     minHumans: rwf.minHumans,
+    minPlayers: rwf.minPlayers ?? rwf.minHumans,
+    absoluteMinPlayers: rwf.absoluteMinPlayers ?? rwf.minHumans,
     automaticSizing: (rwf.automaticSizing ?? false).toString(),
     countdown: rwf.countdown,
     endLinger: rwf.endLinger,

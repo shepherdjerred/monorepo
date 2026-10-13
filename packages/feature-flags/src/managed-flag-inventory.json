@@ -2286,6 +2286,18 @@
       "thresholdRollouts": []
     },
     {
+      "key": "the-storm-rwf-recording-archive-enabled",
+      "owner": "the-storm",
+      "namespace": "temporal",
+      "source": "the-storm-rwf-recording-archive",
+      "purpose": "Lets the Temporal archive copy finished Red Warfare recordings to object storage and mark them archived; schedule starts paused.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "the-storm-rwf-enabled",
       "owner": "the-storm",
       "namespace": "the-storm",
@@ -2315,6 +2327,90 @@
       "namespace": "the-storm",
       "source": "the-storm-rwfbots-learning",
       "purpose": "Gates accepted Trooper combat movement and attack timing once per Red Warfare match",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "the-storm-rwf-match-flow-enabled",
+      "owner": "the-storm",
+      "namespace": "the-storm",
+      "source": "the-storm-rwf-match-flow",
+      "purpose": "Red Warfare map vote, preview over the chosen map and freeze at the spawns",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "the-storm-rwf-carry-over-enabled",
+      "owner": "the-storm",
+      "namespace": "the-storm",
+      "source": "the-storm-rwf-carry-over",
+      "purpose": "Keeps Red Warfare humans in for the next match when one ends on its own",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "the-storm-rwf-death-feed-enabled",
+      "owner": "the-storm",
+      "namespace": "the-storm",
+      "source": "the-storm-rwf-death-feed",
+      "purpose": "Red Warfare death messages, assists, stolen kills, killer health and tab-list kills",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "the-storm-rwf-team-chat-enabled",
+      "owner": "the-storm",
+      "namespace": "the-storm",
+      "source": "the-storm-rwf-team-chat",
+      "purpose": "Red Warfare team chat, dead chat and the auto team chat toggle",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "the-storm-rwf-spectator-tools-enabled",
+      "owner": "the-storm",
+      "namespace": "the-storm",
+      "source": "the-storm-rwf-spectator-tools",
+      "purpose": "Red Warfare spectator compass, player menu, follow and killer view for the dead",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "the-storm-rwf-bomb-effects-enabled",
+      "owner": "the-storm",
+      "namespace": "the-storm",
+      "source": "the-storm-rwf-bomb-effects",
+      "purpose": "Red Warfare bomb sounds at map volume, smoke, explosion particle and hologram bars",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "the-storm-rwf-stats-enabled",
+      "owner": "the-storm",
+      "namespace": "the-storm",
+      "source": "the-storm-rwf-stats",
+      "purpose": "Red Warfare /rwf stats, top and history commands and the lobby leaderboard",
       "type": "boolean",
       "default": false,
       "rollouts": [],
@@ -2708,6 +2804,62 @@
           "key": "the-storm-rwfbots-learning-enabled",
           "type": "boolean",
           "default": false,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "the-storm-rwf-match-flow-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "the-storm-rwf-carry-over-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "the-storm-rwf-death-feed-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "the-storm-rwf-team-chat-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "the-storm-rwf-spectator-tools-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "the-storm-rwf-bomb-effects-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "the-storm-rwf-stats-enabled",
+          "type": "boolean",
+          "default": true,
           "rollouts": [],
           "rules": [],
           "thresholdRollouts": []

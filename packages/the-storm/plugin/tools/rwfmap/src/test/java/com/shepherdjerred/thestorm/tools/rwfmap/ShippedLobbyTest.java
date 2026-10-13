@@ -4,7 +4,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.shepherdjerred.thestorm.core.result.Result;
-import com.shepherdjerred.thestorm.rwf.domain.lobby.LobbyBuild;
 import com.shepherdjerred.thestorm.rwfbots.domain.lobby.LobbyNav;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavArtifact;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavCodec;
@@ -16,8 +15,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * The shipped lobby is exactly what its generator builds, and it bakes deterministically into a
- * usable artifact whose every place the spawn reaches: the alcoves, both sides and the balcony.
+ * The shipped lobby's hash, places and nav files agree, and it bakes deterministically into a
+ * usable artifact whose every place the spawn reaches: the alcoves, every team's side and the
+ * balcony.
  */
 final class ShippedLobbyTest {
 
@@ -27,13 +27,13 @@ final class ShippedLobbyTest {
   @TempDir Path temp;
 
   @Test
-  void theCommittedFilesAreWhatTheGeneratorAndAFreshBakeProduce() throws IOException {
+  void theCommittedFilesAgreeWithTheirSchematicAndAFreshBake() throws IOException {
     var lobby = LobbyFolder.load(LOBBY);
     var baked = Baker.bake(lobby);
 
     assertThat(Verifier.verify(lobby)).isEmpty();
-    assertThat(Files.readAllBytes(lobby.blocksFile())).isEqualTo(LobbyFolder.generatedBytes());
-    assertThat(lobby.layout()).isEqualTo(LobbyBuild.layout());
+    assertThat(lobby.file().blocksSha256()).isEqualTo(lobby.schematic().sha256());
+    assertThat(lobby.layout().podiums()).hasSize(3);
     assertThat(Files.readAllBytes(lobby.navFile())).isEqualTo(baked.bytes());
     assertThat(Files.readString(lobby.summaryFile(), UTF_8)).isEqualTo(baked.summary());
   }
@@ -48,7 +48,7 @@ final class ShippedLobbyTest {
     assertThat(decoded).isInstanceOf(Result.Ok.class);
     var artifact = ((Result.Ok<NavArtifact, NavCodec.CodecError>) decoded).value();
     assertThat(artifact.mapId()).isEqualTo(LobbyNav.ID);
-    assertThat(artifact.blocksSha256()).isEqualTo(LobbyFolder.generated().sha256());
+    assertThat(artifact.blocksSha256()).isEqualTo(LobbyFolder.load(LOBBY).schematic().sha256());
   }
 
   @Test
@@ -63,6 +63,9 @@ final class ShippedLobbyTest {
             LobbyNav.SPAWN,
             LobbyNav.side("red"),
             LobbyNav.side("blue"),
+            LobbyNav.side("green"),
+            LobbyNav.side("purple"),
+            LobbyNav.side("yellow"),
             LobbyNav.alcove("trooper"),
             LobbyNav.alcove("longbow"),
             LobbyNav.alcove("shortbow"),
@@ -81,7 +84,7 @@ final class ShippedLobbyTest {
   }
 
   @Test
-  void verifyingFailsWhenTheLayoutOrTheSchematicDrifts() throws IOException {
+  void verifyingFailsWhenTheHashOrAPlaceDrifts() throws IOException {
     var folder = temp.resolve("lobby");
     Files.createDirectories(folder);
     for (var name :
@@ -91,10 +94,16 @@ final class ShippedLobbyTest {
       Files.copy(LOBBY.resolve(name), folder.resolve(name));
     }
     var yaml = folder.resolve(LobbyFolder.LOBBY_FILE);
-    Files.writeString(yaml, Files.readString(yaml).replace("name: Waiting Room", "name: Hall"));
+    var shipped = Files.readString(yaml);
+    // The balcony floats in the air, and the hash no longer names the schematic.
+    Files.writeString(
+        yaml,
+        shipped
+            .replace("balcony: { x: 80.5, y: 77.0, z: 50.5", "balcony: { x: 80.5, y: 87.0, z: 50.5")
+            .replaceFirst("blocksSha256: [0-9a-f]{64}", "blocksSha256: " + "0".repeat(64)));
 
     assertThat(Verifier.verify(LobbyFolder.load(folder)))
-        .singleElement()
-        .satisfies(failure -> assertThat(failure).contains("LobbyBuild lays the room out"));
+        .anySatisfy(failure -> assertThat(failure).contains("blocks.schem hashes to"))
+        .anySatisfy(failure -> assertThat(failure).contains("y=87.0"));
   }
 }

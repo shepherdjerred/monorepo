@@ -2,108 +2,882 @@
   "mapId": "lobby",
   "formatVersion": 1,
   "generatorVersion": 2,
-  "blocksSha256": "63d4513bab8df532597dbabd5a49abe32ffcbb64f186f1ef14111000c4cf78a3",
-  "classificationSha256": "3a325be74030c8f4c3fa7688831db9cc7233b42db8bc76fd257fdff1f1cc9cb3",
+  "blocksSha256": "447a4b001c9e96d9f4db3d7944087d3f2d3abe7a9f42b340d9eb36c9fcedea28",
+  "classificationSha256": "546150a32078430cdee8392a6f6199e50a2723f07113319b539138c59c77896a",
   "bounds": {
-    "origin": { "x": 128, "y": 64, "z": 16 },
-    "sizeX": 31,
-    "sizeY": 9,
-    "sizeZ": 31
+    "origin": { "x": 0, "y": 64, "z": 0 },
+    "sizeX": 108,
+    "sizeY": 36,
+    "sizeZ": 100
   },
   "palette": [
     {
       "state": "minecraft:air",
       "shape": "PASSABLE",
       "blocksSight": false,
-      "blocks": 5457
+      "blocks": 324692
     },
     {
-      "state": "minecraft:stone_bricks",
+      "state": "minecraft:polished_deepslate",
       "shape": "FULL",
       "blocksSight": true,
-      "blocks": 1733
+      "blocks": 6761
+    },
+    {
+      "state": "minecraft:deepslate_tiles",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 18381
+    },
+    {
+      "state": "minecraft:cobbled_deepslate",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 14835
+    },
+    {
+      "state": "minecraft:deepslate_bricks",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 5547
+    },
+    {
+      "state": "minecraft:shroomlight",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 40
     },
     {
       "state": "minecraft:polished_andesite",
       "shape": "FULL",
       "blocksSight": true,
-      "blocks": 622
+      "blocks": 3410
     },
     {
-      "state": "minecraft:red_concrete",
+      "state": "minecraft:andesite",
       "shape": "FULL",
       "blocksSight": true,
-      "blocks": 153
-    },
-    {
-      "state": "minecraft:blue_concrete",
-      "shape": "FULL",
-      "blocksSight": true,
-      "blocks": 153
-    },
-    {
-      "state": "minecraft:gold_block",
-      "shape": "FULL",
-      "blocksSight": true,
-      "blocks": 9
-    },
-    {
-      "state": "minecraft:glowstone",
-      "shape": "FULL",
-      "blocksSight": true,
-      "blocks": 25
-    },
-    {
-      "state": "minecraft:glass",
-      "shape": "FULL",
-      "blocksSight": false,
-      "blocks": 59
-    },
-    {
-      "state": "minecraft:chiseled_stone_bricks",
-      "shape": "FULL",
-      "blocksSight": true,
-      "blocks": 88
-    },
-    {
-      "state": "minecraft:quartz_block",
-      "shape": "FULL",
-      "blocksSight": true,
-      "blocks": 28
+      "blocks": 665
     },
     {
       "state": "minecraft:sea_lantern",
       "shape": "FULL",
       "blocksSight": true,
-      "blocks": 4
+      "blocks": 107
+    },
+    {
+      "state": "minecraft:polished_tuff",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 554
+    },
+    {
+      "state": "minecraft:polished_blackstone",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 481
+    },
+    {
+      "state": "minecraft:yellow_concrete",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 225
+    },
+    {
+      "state": "minecraft:white_concrete",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 74
+    },
+    {
+      "state": "minecraft:polished_blackstone_bricks",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 243
     },
     {
       "state": "minecraft:smooth_stone",
       "shape": "FULL",
       "blocksSight": true,
-      "blocks": 318
+      "blocks": 2781
+    },
+    {
+      "state": "minecraft:red_concrete",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 73
+    },
+    {
+      "state": "minecraft:polished_diorite",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 50
+    },
+    {
+      "state": "minecraft:red_terracotta",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 141
+    },
+    {
+      "state": "minecraft:verdant_froglight[axis=y]",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 26
+    },
+    {
+      "state": "minecraft:waxed_cut_copper",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 126
+    },
+    {
+      "state": "minecraft:lime_concrete",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 32
+    },
+    {
+      "state": "minecraft:green_terracotta",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 1284
+    },
+    {
+      "state": "minecraft:magenta_concrete",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 12
+    },
+    {
+      "state": "minecraft:purple_terracotta",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 22
+    },
+    {
+      "state": "minecraft:yellow_terracotta",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 23
+    },
+    {
+      "state": "minecraft:chiseled_polished_blackstone",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 1
+    },
+    {
+      "state": "minecraft:blue_concrete",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 66
+    },
+    {
+      "state": "minecraft:blue_terracotta",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 141
+    },
+    {
+      "state": "minecraft:black_concrete",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 709
+    },
+    {
+      "state": "minecraft:packed_mud",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 558
+    },
+    {
+      "state": "minecraft:coarse_dirt",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 594
+    },
+    {
+      "state": "minecraft:mud_bricks",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 60
+    },
+    {
+      "state": "minecraft:polished_deepslate_wall[east=low,north=none,south=none,up=true,waterlogged=false,west=none]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 1
+    },
+    {
+      "state": "minecraft:polished_deepslate_wall[east=low,north=none,south=none,up=false,waterlogged=false,west=low]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 169
+    },
+    {
+      "state": "minecraft:polished_deepslate_wall[east=none,north=none,south=none,up=true,waterlogged=false,west=low]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 2
+    },
+    {
+      "state": "minecraft:polished_deepslate_wall[east=none,north=none,south=none,up=true,waterlogged=false,west=none]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 84
+    },
+    {
+      "state": "minecraft:polished_deepslate_wall[east=none,north=none,south=low,up=true,waterlogged=false,west=none]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 1
+    },
+    {
+      "state": "minecraft:spruce_fence[east=false,north=false,south=false,waterlogged=false,west=false]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 20
+    },
+    {
+      "state": "minecraft:polished_deepslate_wall[east=none,north=low,south=low,up=false,waterlogged=false,west=none]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 152
+    },
+    {
+      "state": "minecraft:stripped_spruce_log[axis=y]",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 90
+    },
+    {
+      "state": "minecraft:spruce_planks",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 30
+    },
+    {
+      "state": "minecraft:polished_blackstone_brick_stairs[facing=south,half=bottom,shape=straight,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 15
+    },
+    {
+      "state": "minecraft:polished_blackstone_brick_stairs[facing=east,half=bottom,shape=straight,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 15
+    },
+    {
+      "state": "minecraft:polished_blackstone_brick_stairs[facing=west,half=bottom,shape=straight,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 15
+    },
+    {
+      "state": "minecraft:smooth_sandstone",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 47
+    },
+    {
+      "state": "minecraft:gold_block",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 176
+    },
+    {
+      "state": "minecraft:polished_blackstone_slab[type=top,waterlogged=false]",
+      "shape": "SLAB_TOP",
+      "blocksSight": true,
+      "blocks": 16
+    },
+    {
+      "state": "minecraft:polished_blackstone_brick_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 15
+    },
+    {
+      "state": "minecraft:polished_deepslate_wall[east=none,north=low,south=low,up=true,waterlogged=false,west=low]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 17
+    },
+    {
+      "state": "minecraft:chiseled_stone_bricks",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 12
+    },
+    {
+      "state": "minecraft:light_gray_concrete",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 101
+    },
+    {
+      "state": "minecraft:waxed_chiseled_copper",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 12
+    },
+    {
+      "state": "minecraft:tuff_bricks",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 904
+    },
+    {
+      "state": "minecraft:orange_terracotta",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 92
+    },
+    {
+      "state": "minecraft:gilded_blackstone",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 64
+    },
+    {
+      "state": "minecraft:crying_obsidian",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 92
+    },
+    {
+      "state": "minecraft:polished_deepslate_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 18
+    },
+    {
+      "state": "minecraft:polished_deepslate_wall[east=none,north=low,south=none,up=true,waterlogged=false,west=none]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 2
+    },
+    {
+      "state": "minecraft:polished_deepslate_stairs[facing=east,half=bottom,shape=straight,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 16
+    },
+    {
+      "state": "minecraft:polished_blackstone_wall[east=none,north=none,south=none,up=true,waterlogged=false,west=none]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 15
+    },
+    {
+      "state": "minecraft:smooth_sandstone_slab[type=bottom,waterlogged=false]",
+      "shape": "SLAB_BOTTOM",
+      "blocksSight": true,
+      "blocks": 47
+    },
+    {
+      "state": "minecraft:lodestone",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 3
+    },
+    {
+      "state": "minecraft:iron_bars[east=false,north=false,south=false,waterlogged=false,west=false]",
+      "shape": "PANE",
+      "blocksSight": false,
+      "blocks": 38
+    },
+    {
+      "state": "minecraft:stone_brick_stairs[facing=south,half=top,shape=straight,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 24
+    },
+    {
+      "state": "minecraft:light_blue_stained_glass",
+      "shape": "FULL",
+      "blocksSight": false,
+      "blocks": 17
+    },
+    {
+      "state": "minecraft:iron_block",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 140
+    },
+    {
+      "state": "minecraft:stone_brick_stairs[facing=west,half=top,shape=straight,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 24
+    },
+    {
+      "state": "minecraft:waxed_copper_block",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 126
+    },
+    {
+      "state": "minecraft:stone_brick_stairs[facing=north,half=top,shape=straight,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 24
+    },
+    {
+      "state": "minecraft:anvil[facing=north]",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 2
+    },
+    {
+      "state": "minecraft:lantern[hanging=false,waterlogged=false]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 79
+    },
+    {
+      "state": "minecraft:stone_bricks",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 1268
+    },
+    {
+      "state": "minecraft:cracked_stone_bricks",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 54
+    },
+    {
+      "state": "minecraft:tuff",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 49
+    },
+    {
+      "state": "minecraft:gray_stained_glass_pane[east=true,north=false,south=false,waterlogged=false,west=true]",
+      "shape": "PANE",
+      "blocksSight": false,
+      "blocks": 222
+    },
+    {
+      "state": "minecraft:gray_stained_glass_pane[east=false,north=true,south=true,waterlogged=false,west=false]",
+      "shape": "PANE",
+      "blocksSight": false,
+      "blocks": 150
+    },
+    {
+      "state": "minecraft:glass_pane[east=false,north=false,south=true,waterlogged=false,west=false]",
+      "shape": "PANE",
+      "blocksSight": false,
+      "blocks": 1
+    },
+    {
+      "state": "minecraft:glass_pane[east=false,north=true,south=true,waterlogged=false,west=false]",
+      "shape": "PANE",
+      "blocksSight": false,
+      "blocks": 1
+    },
+    {
+      "state": "minecraft:glass_pane[east=false,north=true,south=false,waterlogged=false,west=false]",
+      "shape": "PANE",
+      "blocksSight": false,
+      "blocks": 1
+    },
+    {
+      "state": "minecraft:gray_stained_glass_pane[east=true,north=true,south=false,waterlogged=false,west=true]",
+      "shape": "PANE",
+      "blocksSight": false,
+      "blocks": 9
+    },
+    {
+      "state": "minecraft:ochre_froglight[axis=y]",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 12
+    },
+    {
+      "state": "minecraft:pearlescent_froglight[axis=y]",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 8
+    },
+    {
+      "state": "minecraft:gray_stained_glass_pane[east=true,north=false,south=true,waterlogged=false,west=true]",
+      "shape": "PANE",
+      "blocksSight": false,
+      "blocks": 9
+    },
+    {
+      "state": "minecraft:polished_blackstone_wall[east=low,north=none,south=none,up=false,waterlogged=false,west=low]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 17
+    },
+    {
+      "state": "minecraft:polished_blackstone_wall[east=none,north=none,south=none,up=true,waterlogged=false,west=low]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 2
+    },
+    {
+      "state": "minecraft:lantern[hanging=true,waterlogged=false]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 27
+    },
+    {
+      "state": "minecraft:brown_wool",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 18
+    },
+    {
+      "state": "minecraft:green_wool",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 46
+    },
+    {
+      "state": "minecraft:moss_block",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 43
+    },
+    {
+      "state": "minecraft:polished_blackstone_slab[type=bottom,waterlogged=false]",
+      "shape": "SLAB_BOTTOM",
+      "blocksSight": true,
+      "blocks": 25
+    },
+    {
+      "state": "minecraft:polished_blackstone_wall[east=none,north=none,south=low,up=true,waterlogged=false,west=none]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 2
+    },
+    {
+      "state": "minecraft:polished_blackstone_wall[east=none,north=low,south=none,up=true,waterlogged=false,west=none]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 1
+    },
+    {
+      "state": "minecraft:polished_andesite_slab[type=bottom,waterlogged=false]",
+      "shape": "SLAB_BOTTOM",
+      "blocksSight": true,
+      "blocks": 125
+    },
+    {
+      "state": "minecraft:iron_chain[axis=y,waterlogged=false]",
+      "shape": "PANE",
+      "blocksSight": false,
+      "blocks": 134
+    },
+    {
+      "state": "minecraft:tuff_brick_slab[type=bottom,waterlogged=false]",
+      "shape": "SLAB_BOTTOM",
+      "blocksSight": true,
+      "blocks": 125
+    },
+    {
+      "state": "minecraft:polished_blackstone_brick_slab[type=bottom,waterlogged=false]",
+      "shape": "SLAB_BOTTOM",
+      "blocksSight": true,
+      "blocks": 125
+    },
+    {
+      "state": "minecraft:polished_deepslate_stairs[facing=east,half=top,shape=straight,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 42
+    },
+    {
+      "state": "minecraft:polished_blackstone_wall[east=low,north=none,south=low,up=true,waterlogged=false,west=none]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 1
+    },
+    {
+      "state": "minecraft:polished_blackstone_wall[east=none,north=low,south=low,up=false,waterlogged=false,west=none]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 23
+    },
+    {
+      "state": "minecraft:polished_blackstone_wall[east=none,north=low,south=low,up=true,waterlogged=false,west=none]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 2
+    },
+    {
+      "state": "minecraft:polished_blackstone_wall[east=low,north=low,south=none,up=true,waterlogged=false,west=none]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 2
+    },
+    {
+      "state": "minecraft:iron_bars[east=true,north=false,south=false,waterlogged=false,west=false]",
+      "shape": "PANE",
+      "blocksSight": false,
+      "blocks": 6
+    },
+    {
+      "state": "minecraft:red_wool",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 22
+    },
+    {
+      "state": "minecraft:iron_bars[east=false,north=false,south=false,waterlogged=false,west=true]",
+      "shape": "PANE",
+      "blocksSight": false,
+      "blocks": 6
+    },
+    {
+      "state": "minecraft:black_carpet",
+      "shape": "PASSABLE",
+      "blocksSight": false,
+      "blocks": 28
+    },
+    {
+      "state": "minecraft:red_carpet",
+      "shape": "PASSABLE",
+      "blocksSight": false,
+      "blocks": 14
+    },
+    {
+      "state": "minecraft:lime_carpet",
+      "shape": "PASSABLE",
+      "blocksSight": false,
+      "blocks": 3
+    },
+    {
+      "state": "minecraft:white_carpet",
+      "shape": "PASSABLE",
+      "blocksSight": false,
+      "blocks": 4
+    },
+    {
+      "state": "minecraft:blue_carpet",
+      "shape": "PASSABLE",
+      "blocksSight": false,
+      "blocks": 14
+    },
+    {
+      "state": "minecraft:blue_wool",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 22
+    },
+    {
+      "state": "minecraft:polished_deepslate_stairs[facing=north,half=top,shape=straight,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 66
+    },
+    {
+      "state": "minecraft:polished_deepslate_stairs[facing=south,half=top,shape=straight,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 39
+    },
+    {
+      "state": "minecraft:polished_deepslate_wall[east=none,north=none,south=low,up=true,waterlogged=false,west=low]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 5
+    },
+    {
+      "state": "minecraft:polished_deepslate_wall[east=none,north=low,south=none,up=true,waterlogged=false,west=low]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 5
+    },
+    {
+      "state": "minecraft:iron_bars[east=false,north=true,south=true,waterlogged=false,west=false]",
+      "shape": "PANE",
+      "blocksSight": false,
+      "blocks": 21
+    },
+    {
+      "state": "minecraft:deepslate_tile_stairs[facing=south,half=top,shape=straight,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 57
+    },
+    {
+      "state": "minecraft:deepslate_tile_stairs[facing=north,half=top,shape=straight,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 61
+    },
+    {
+      "state": "minecraft:deepslate_tile_stairs[facing=south,half=top,shape=outer_left,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 2
+    },
+    {
+      "state": "minecraft:deepslate_tile_stairs[facing=south,half=top,shape=outer_right,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 2
+    },
+    {
+      "state": "minecraft:deepslate_tile_stairs[facing=east,half=top,shape=straight,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 38
+    },
+    {
+      "state": "minecraft:deepslate_tile_stairs[facing=west,half=top,shape=straight,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 38
+    },
+    {
+      "state": "minecraft:deepslate_tile_stairs[facing=north,half=top,shape=outer_right,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 2
+    },
+    {
+      "state": "minecraft:deepslate_tile_stairs[facing=north,half=top,shape=outer_left,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 2
+    },
+    {
+      "state": "minecraft:deepslate_tile_slab[type=bottom,waterlogged=false]",
+      "shape": "SLAB_BOTTOM",
+      "blocksSight": true,
+      "blocks": 97
+    },
+    {
+      "state": "minecraft:deepslate_tile_wall[east=low,north=none,south=low,up=true,waterlogged=false,west=none]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 1
+    },
+    {
+      "state": "minecraft:deepslate_tile_wall[east=low,north=none,south=none,up=false,waterlogged=false,west=low]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 38
+    },
+    {
+      "state": "minecraft:deepslate_tile_wall[east=none,north=none,south=low,up=true,waterlogged=false,west=low]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 1
+    },
+    {
+      "state": "minecraft:deepslate_tile_wall[east=none,north=low,south=low,up=false,waterlogged=false,west=none]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 54
+    },
+    {
+      "state": "minecraft:polished_deepslate_wall[east=tall,north=none,south=none,up=true,waterlogged=false,west=none]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 1
+    },
+    {
+      "state": "minecraft:deepslate_tile_wall[east=low,north=low,south=none,up=true,waterlogged=false,west=none]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 1
+    },
+    {
+      "state": "minecraft:deepslate_tile_wall[east=none,north=low,south=none,up=true,waterlogged=false,west=low]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 1
+    },
+    {
+      "state": "minecraft:smooth_stone_slab[type=bottom,waterlogged=false]",
+      "shape": "SLAB_BOTTOM",
+      "blocksSight": true,
+      "blocks": 16
+    },
+    {
+      "state": "minecraft:glass",
+      "shape": "FULL",
+      "blocksSight": false,
+      "blocks": 140
+    },
+    {
+      "state": "minecraft:end_rod[facing=south]",
+      "shape": "PASSABLE",
+      "blocksSight": false,
+      "blocks": 1
+    },
+    {
+      "state": "minecraft:polished_deepslate_wall[east=low,north=none,south=low,up=true,waterlogged=false,west=none]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 1
+    },
+    {
+      "state": "minecraft:deepslate_brick_wall[east=low,north=none,south=none,up=false,waterlogged=false,west=low]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 5
+    },
+    {
+      "state": "minecraft:deepslate_brick_wall[east=none,north=low,south=low,up=false,waterlogged=false,west=none]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 7
+    },
+    {
+      "state": "minecraft:deepslate_brick_wall[east=none,north=low,south=low,up=true,waterlogged=false,west=low]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 1
+    },
+    {
+      "state": "minecraft:polished_deepslate_wall[east=low,north=low,south=none,up=true,waterlogged=false,west=none]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 1
+    },
+    {
+      "state": "minecraft:deepslate_brick_wall[east=low,north=low,south=none,up=true,waterlogged=false,west=low]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 1
+    },
+    {
+      "state": "minecraft:end_rod[facing=up]",
+      "shape": "PASSABLE",
+      "blocksSight": false,
+      "blocks": 1
     }
   ],
   "cells": {
-    "total": 8649,
-    "walkable": 865
+    "total": 388800,
+    "walkable": 12878
   },
   "edges": {
-    "total": 6112,
+    "total": 89395,
     "CLIMB": 0,
-    "DROP": 108,
-    "JUMP": 46,
-    "LEAP": 18,
-    "WALK": 5940
+    "DROP": 2250,
+    "JUMP": 1317,
+    "LEAP": 3118,
+    "WALK": 82710
   },
-  "regions": 26,
-  "coverPoints": 189,
-  "chokepoints": 10,
+  "regions": 557,
+  "coverPoints": 2693,
+  "chokepoints": 173,
   "routes": {
     "count": 0,
     "spawnToBomb": []
   },
-  "distanceFields": 8,
+  "distanceFields": 11,
   "problems": [],
-  "bytes": 18565
+  "bytes": 442175
 }

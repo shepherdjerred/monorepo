@@ -102,6 +102,17 @@ sender's permitted commands, and `/help <command>` shows usage.
 | Staff, bounded world effects   | `tree`, `bigtree`, `break`, `burn`, `ext`, `ice`, `lightning`, `fireball`, `firework`, `antioch`, `nuke`, `beezooka`, `kittycannon`                                                           |
 | Staff, diagnostics             | `gc`, `ping`, `list`, `playtime`, `getpos`, `compass`, `depth`, `essentials status`                                                                                                           |
 
+Chat channels are Global (`/g`), War (`/war`, `/wc`), Staff (`/sc`) and Town
+(`/tc`), which a player can focus with the bare command, plus two that belong
+to a match and are reached one message at a time: Team (`/t <message>`) and
+Dead (`/dead <message>`). Town, Team and Dead are membership channels: the
+module that owns the group registers who is in it through the chat module's
+`ChannelRegistry` and cancels the returned `Subscription` when it disables.
+The same registry takes routers, which may redirect a player's line before it
+is checked (a leading `@` to the team, a dead player's Global to Dead), and
+taps, which hear every delivered channel line. NPCs talk through `NpcChat`,
+under the same rules as players and never relayed to Discord.
+
 There is no registered `/kit` command. First join silently delivers the
 once-only starter supplies and welcome book, retaining durable delivery
 receipts and recovery. Players can visit named warps; creating and deleting
@@ -1063,32 +1074,38 @@ but the team that armed it, and a poison forces long matches to a result. The
 rules are pure (`rwf.domain`); the Paper adapter carries out their effects at
 20 Hz and seals the match world so every other module leaves it alone.
 
-The world named in `rwf.yml` (`rwf`) must be provisioned by an operator through
-Multiverse and loaded before TheStorm enables; a flat or void world is fine
-because each map brings its own terrain. A missing world stops the server, like
-the world module's worlds. The module never generates terrain itself.
+Red Warfare uses two worlds, both named in `rwf.yml`'s `worlds` section: the
+lobby world (`worlds.lobby`, `rwf_lobby`) holds only the lobby, and the map
+world (`worlds.maps`, `rwf`) holds the maps. Keeping them apart lets the lobby
+be any size without colliding with a map, and lets a map be prepared, previewed
+and reverted while players wait. An operator provisions both through
+Multiverse, loaded before TheStorm enables; a flat or void world is fine
+because the lobby and each map bring their own terrain. A missing world stops
+the server, like the world module's worlds. The module never generates terrain
+itself, and seals both worlds so every other module leaves them alone.
 
-The world is a vanilla superflat world with a single air layer and the
+Each world is a vanilla superflat world with a single air layer and the
 `the_void` biome (the same settings the e2e fixture plugin creates), not a
-TheStorm `ChunkGenerator`, and it is not listed in `world.yml`. Multiverse
+TheStorm `ChunkGenerator`, and neither is listed in `world.yml`. Multiverse
 loads its worlds before TheStorm enables, and Bukkit refuses a plugin
 generator whose plugin is not enabled yet, so a generator of ours would leave
 Multiverse unable to load the world on every boot. `world.yml` lists only the
 survival worlds the world module validates and offers to random teleport; the
-rwf module already requires and seals its own world, and listing it there
+rwf module already requires and seals its own worlds, and listing them there
 would make the world module refuse to start while `rwf` is off.
 
 Configuration and content live under `server/owned/plugins/TheStorm`:
 
-- `rwf.yml`: the world, the fallback spectator point, how matches fill and
-  start (`minHumans`, `targetCombatants`, `maxCombatants`, the 90 s countdown,
-  the 30 s no-humans abort), the ported rule constants pinned to the code,
+- `rwf.yml`: the two worlds, the fallback spectator point, how matches fill
+  and start (`minHumans`, `targetCombatants`, `maxCombatants`, the 90 s
+  countdown, the 30 s no-humans abort, the 20 s `voteLead` the map vote closes
+  before the countdown ends, the 10 s `previewLength` and the 5 s
+  `freezeLength`), the ported rule constants pinned to the code,
   rewards in Red Warfare credits (3 win / 1 lose scaled by the human share,
-  the 2-credit AFK penalty, the minimum match length; no daily cap),
-  recording, the load-test switch and `quarantine`: the maps kept out of the
-  rotation, each with its reason (Saigon and Wonderland, whose conversion found
-  a bomb no team can reach). Quarantined maps still ship and are verified; no
-  match is played on them.
+  the 2-credit AFK penalty, the minimum match length; no daily cap), recording, the load-test switch and `quarantine`: the maps
+  kept out of the rotation, each with its reason (Saigon and Wonderland, whose
+  conversion found a bomb no team can reach). Quarantined maps still ship and
+  are verified; no match is played on them.
 - `rwf/kits.yml`: the kits as the operator sees them, each with the `icon`
   material and the one to four `summary` lines the kit menu and the lobby's
   alcoves show; it must describe `KitBook` kit for kit or the module refuses
@@ -1103,12 +1120,14 @@ Configuration and content live under `server/owned/plugins/TheStorm`:
   data for the bots, produced offline by the `rwfmap` tool (see Maps below).
 - `rwf/maps/<id>/details.json`: required inventories and literal sign text,
   bound to the terrain hash. Empty maps declare empty lists explicitly.
-- `rwf/lobby/lobby.yml` and `blocks.schem`: the room every player and bot waits
-  in before a match, with its region, spawn, team sides, one kit alcove per
-  kit, the rules and match-board anchors, the watch balcony and the
-  schematic's hash, plus its `nav.rwfnav` for the bots. It is generated by
-  `rwf.domain.lobby.LobbyBuild` (a roofed 31x9x31 room at `128,64,16`, east of
-  the maps) and pasted, verified and repaired exactly like a map.
+- `rwf/lobby/lobby.yml` and `blocks.schem`: the lobby every player and bot
+  waits in before a match, in the lobby world: an authored 108x36x100 build at
+  `0,64,0` with its region, spawn, a side per team colour, one kit alcove per
+  kit, the rules and match-board anchors, the rotation wall, three vote
+  podiums (a lodestone to right-click and a display above it), three
+  leaderboards (kills, wins, win streak), the watch balcony and the
+  schematic's hash, plus its `nav.rwfnav` for the bots. It is pasted, verified
+  and repaired exactly like a map.
 
 ### Maps
 
@@ -1227,26 +1246,106 @@ content unloaded. Repeated `--require-map <id>` arguments require ordinary
 rotation to visit selected maps, up to twelve transitions; use this for the
 largest maps and maps with more than two teams.
 
-The lobby is generated rather than authored: `mise exec -- gradle
-bakeRwfLobby` writes `rwf/lobby/blocks.schem` from `LobbyBuild`, refuses to
-go further until `lobby.yml` declares its hash, then bakes the lobby's nav
-files with its places (spawn, sides, alcoves, balcony) as sites and no bombs.
-`verifyRwfLobby` (run by `verifyRwfMaps`, so by `check`) fails when the
-schematic, `lobby.yml`'s layout or hash, or the nav files are not what the
-generator and a fresh bake produce, or when any place cannot be reached from
-the spawn. Change the room in `LobbyBuild`, rebake and commit all four files.
+The lobby is authored like a map: build it in a build world, export
+`blocks.schem` with WorldEdit and describe its places in `lobby.yml`.
+`mise exec -- gradle bakeRwfLobby` refuses to go further until `lobby.yml`
+declares the schematic's hash, then bakes the lobby's nav files with its places
+(spawn, sides, alcoves, podium and rotation stands, balcony) as sites and no
+bombs. `verifyRwfLobby` (run by `verifyRwfMaps`, so by `check`) fails when the
+hash disagrees, a stand is not standable, a kit has no alcove, a team colour
+has no side, any place cannot be reached from the spawn, or the nav files are
+not what a fresh bake produces. Rebake and commit the four files together. The
+MockBukkit suites paste a small test lobby
+(`modules/rwf/src/test/resources/fixtures/lobby`), because MockBukkit cannot
+make block data for the build's walls, panes and lanterns.
 
 Commands: `/rwf join` (gated by the managed Flipt flag
 `the-storm-rwf-enabled`; a missing `FLIPT_URL` or `FLIPT_ENVIRONMENT` keeps it
-closed), `/rwf leave`, `/rwf kit <id>`, `/rwf who`, `/rwf size`, `/rwf spectate` and
-`/rwf spectate next` (`thestorm.rwf.spectate`, granted by default, behind the
-same Flipt flag), and for `thestorm.rwf.admin`: `/rwf admin status`,
-`/rwf admin repair` (re-verifies the current map and the lobby between
-matches, re-pasting whatever differs), `/rwf admin loadtest <n>` (only when `loadtest.enabled`)
-and `/rwf admin showcase [count]`. Joining snapshots a player's belongings
+closed; joining a match already under way watches it until the next lobby
+opens), `/rwf leave`, `/rwf kit <id>`, `/rwf kits`, `/rwf who`, `/rwf size`,
+`/rwf vote <map>`, `/rwf time`, `/rwf teamchat`, `/rwf stats [player]`,
+`/rwf stats top <stat>`, `/rwf stats history`, `/suicide`, `/rwf spectate`,
+`/rwf spectate next|previous` and `/rwf goto <player>`
+(`thestorm.rwf.spectate`, granted by default, behind the same Flipt flag), and
+for `thestorm.rwf.admin`: `/rwf admin status` (including the match features
+read from the flags), `/rwf admin start|stop|forcestop|skip`,
+`/rwf admin extend <seconds>`, `/rwf admin setmap <map>`,
+`/rwf admin team <player> <team>`, `/rwf admin forcekit <player> <kit>`,
+`/rwf admin quarantine <map>` and `/rwf admin unquarantine <map>` (kept in the
+`rwf_map_quarantine` table across restarts; `rwf.yml` stays the repository's record),
+`/rwf admin repair` (re-verifies the lobby and the current map between
+matches, re-pasting whatever differs), `/rwf admin loadtest <n>` (only when
+`loadtest.enabled`) and `/rwf admin showcase [count]`. Joining snapshots a player's belongings
 through the shared crash-safe snapshot machinery and restores them on leave,
 death, disconnect or the next login. A player may join again straight after a
 match; see the arena section for how the restore is confirmed.
+
+### Match experience
+
+A match moves through `Lobby`, `Countdown`, `Preparing` (only while the chosen
+map is still loading), `Preview`, `Freeze`, `Live`, `Ended` and `Resetting`.
+Each player-visible part sits behind its own managed Flipt flag, every one
+default-off with a `beta` override on, read by `FliptRwfFeatures` as each match
+opens (entity `the-storm-rwf-features`, context `world` = the map world), so a
+flag changes the next match, never the one being played:
+
+| Flag                                    | When on                                                                                                                                                                                                                                                                                                                 |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `the-storm-rwf-match-flow-enabled`      | Three maps go on a ballot as the lobby opens; members vote with `/rwf vote` or a podium until `voteLead` before the start, the most votes winning (a seeded draw breaks ties). The chosen map previews for `previewLength` with kits open, then teams are dealt and everyone freezes at their start for `freezeLength`. |
+| `the-storm-rwf-carry-over-enabled`      | A match that ends on its own carries its humans (with their kits, belongings still held) into the next lobby without `/rwf join`; bots and leavers are restored. A stop releases everyone.                                                                                                                              |
+| `the-storm-rwf-death-feed-enabled`      | Red Warfare's death messages in team colours, the kills column on the tab list, `Scored a kill assist worth n!` for everyone who did more than a tenth of the damage, `Stolen a kill!`, and the killer's hearts for the victim.                                                                                         |
+| `the-storm-rwf-team-chat-enabled`       | A fighter's plain chat goes to their team (`/t`), `@` or `/g` speaks to everyone, and `/rwf teamchat` flips the default (remembered per player). The dead and watchers talk among themselves (`/dead`).                                                                                                                 |
+| `the-storm-rwf-spectator-tools-enabled` | The dead watch their killer for 3 s, then get a compass menu and `/rwf spectate next` or `previous`, `/rwf goto`; Ghost and Wraith stay hidden from them.                                                                                                                                                               |
+| `the-storm-rwf-bomb-effects-enabled`    | The original's map-wide explosion sound and particles, the armed bomb's hiss and smoke, and a ten-segment arming bar per team on the bomb's hologram.                                                                                                                                                                   |
+| `the-storm-rwf-stats-enabled`           | `/rwf stats`, the lobby leaderboards, and the lifetime and per-kit totals written with each match.                                                                                                                                                                                                                      |
+
+With every flag off a match plays as before: one map, no preview or freeze, and
+everyone released at the end. Kills and assists use Red Warfare's
+responsibility shares: the damage log keeps each hit until the victim is back
+to full health and 10 seconds have passed; the killer gets a whole kill, and
+each other attacker their share towards their killstreak, counted as an assist
+between 0.1 and 1. Bomb victims get no death message, as in the original.
+
+What every match looks like, whatever the flags, follows the original:
+
+- The lobby wants 4 players (`minPlayers`) before counting down, one fewer for
+  every 15 s it waits (`relaxEvery`), never under 2 (`absoluteMinPlayers`), as
+  `LobbyManager#getMinPlayers` had it. Bots count: once `minHumans` humans are
+  in and the map is loaded, drafted bots walk in over those 15 s.
+- The sidebar is the original's: "Red Warfare" with the map, players and
+  countdown before the start; "Teams" during the match, only teams with
+  someone alive, most alive first, each with "N alive" and its bomb ("Bomb is
+  Safe", "Bomb N" or the defuse bar), then the nukes. Bomb holograms read
+  "Red Team's Bomb", "Unarmed nuke" or "Exploding in N". Broadcasts use the
+  original's wording and colours; `/rwf time` during the match answers as the
+  original's `/time` did.
+- Everyone sees each fighter wearing their team's block (TNT, diamond ore,
+  leaves, obsidian, gold) as a per-viewer hat, and each fighter carries the
+  team chestplate in slot 8. Eating a steak plays the original's eat sound.
+- The dead get the spectator compass, the kit layout star once kits have
+  layouts, and "Join next game", which queues them for the next lobby.
+- At the end everyone still fighting takes off and flies, and fireworks in the
+  winners' colour go off around them every half second.
+- Nothing hurts before the match goes live, the void included: anyone who drops
+  8 blocks below the lobby or the map is put back at the lobby spawn, their
+  start while frozen, or the map's spectator point (previewing, dead, watching
+  or after the end).
+
+Humans' kit picks, map votes and finished matches go to PostHog through core
+analytics as `rwf_kit_selected`, `rwf_map_vote` and `rwf_match_completed`;
+`RwfAnalytics` also carries the `rwf_killstreak_used` and `rwf_kit_purchased`
+hooks the killstreaks and kit shop call. Bots send nothing. Recordings get a
+row for each potion effect a fighter gains, and `MatchRunner.MatchHooks` is how
+abilities (counted towards `ability_uses`), killstreaks and placed barricades or
+banners reach the recording.
+
+Statistics (migration `V3__match_stats.sql`) are written in the transaction
+that records the match: the match's seed, duration, end reason, ballot and map
+hash; each human's assists, damage dealt and taken, arms, defuses, explosions,
+shots fired and hit, steaks, time alive and kit switches; the `rwf_match_event`
+log; lifetime `rwf_player_stats` and per-kit `rwf_player_kit_stats` totals;
+and `rwf_player_prefs` (last kit, team chat default). Rows written before V3
+leave the new columns empty.
 
 On a live map the border is Red Warfare's square: it bounds the columns (X and
 Z) only. A fighter outside it takes 2 damage a second through armor and is told
@@ -1316,24 +1415,49 @@ Matches are recorded under pseudonyms (positions, actions, results) to
 `plugins/TheStorm/rwf-recordings/yyyy/MM/dd/<matchId>.rwfrec.gz` for review and
 bot training; every joining human is told so on entry. Pseudonyms are
 HMAC-SHA256 over the salt in `RWF_RECORDING_SALT`, which must be set when
-`recording.enabled` is true. Recordings are pruned by age and size at enable.
+`recording.enabled` is true. A recording is written as
+`<matchId>.rwfrec.gz.part` and renamed to `<matchId>.rwfrec.gz` only once its
+end row is written, so a `.rwfrec.gz` file is always finished. At enable,
+recordings are pruned by age and size, but only archived ones: a recording is
+archived when a sibling `<file>.archived` marker (`rwf-archive-v1`, object key,
+confirmed SHA-256, size, tab-separated) matches its size. The archiver writes
+the marker only after the object store has confirmed the upload: the
+`the-storm-rwf-recording-archive` Temporal schedule (`packages/temporal`,
+hourly on `temporal-infra-worker`, each run gated by
+`the-storm-rwf-recording-archive-enabled`) reads finished recordings through
+`kubectl exec`, stores them in the SeaweedFS bucket `the-storm-rwf-recordings`
+(protected, backed up daily) under `the-storm/rwf-recordings/<path>`, reads each back and hashes it, then writes
+the marker. `server/owned/plugins/TheStorm/rwf-archive.json` is the contract
+both sides check (`ArchiveContractTest` on the plugin side). A recording
+without one is never deleted, however old or however far over `maxBytes`; the
+module warns how far unarchived recordings hold the folder over the cap.
+`.part` files from a crash are never touched.
 
 A recording is gzipped UTF-8 text, one tab-separated row per line, written by
-`RecordCodec` (format version 3; `RecordCodecTest` also preserves the version 2 golden copy). Tabs,
+`RecordCodec` (format version 4; `RecordCodecTest` also preserves the version 2 golden copy and `MatchReplayTest` round-trips every version 4 row). Tabs,
 newlines and backslashes inside a field are escaped with a backslash. Ticks
 count from the moment the match went live, at 50 ms each.
 
-| Tag | Row                                                                                                                                                                                                                                                                                            | When                                                         |
-| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| `H` | version, match id, map id, map block SHA-256, seed, rules version                                                                                                                                                                                                                              | once, first                                                  |
-| `R` | pseudonym, team, kit, bot (`true`/`false`)                                                                                                                                                                                                                                                     | once per combatant, after `H`                                |
-| `E` | tick, kind, subject, detail                                                                                                                                                                                                                                                                    | each match event                                             |
-| `F` | tick, pseudonym, x, y, z (1/32 block), yaw (0-255), pitch (-64..64), health (1/4 point), held slot, flags (sneak 1, sprint 2, fire 4, block 8)                                                                                                                                                 | humans every tick (20 Hz), bots every other tick (10 Hz)     |
-| `N` | tick, pseudonym, keys (forward 1, back 2, left 4, right 8, jump 16, sneak 32, sprint 64), yaw (0-35999), pitch (-9000..9000), attack, use, hotbar slot (0-8), client sequence, acknowledged observation tick or -1, source (`HUMAN`, `AUTOMATED`, `MISSING`); angles in hundredths of a degree | humans only, every tick                                      |
-| `O` | tick, pseudonym, observation contract id, normalized float values in contract order                                                                                                                                                                                                            | humans every tick when rwfbots provides its observation port |
-| `I` | tick, pseudonym, kind, target                                                                                                                                                                                                                                                                  | each bot intent                                              |
-| `X` | tick, winner or `-`, reason                                                                                                                                                                                                                                                                    | once, at the end                                             |
-| `P` | pseudonym, credits                                                                                                                                                                                                                                                                             | once per paid human, after `X`                               |
+| Tag | Row                                                                                                                                                                                                                                                                                            | When                                                                |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| `H` | version, match id, map id, map block SHA-256, seed, rules version                                                                                                                                                                                                                              | once, first                                                         |
+| `R` | pseudonym, team, kit, bot (`true`/`false`)                                                                                                                                                                                                                                                     | once per combatant, after `H`                                       |
+| `E` | tick, kind, subject, detail                                                                                                                                                                                                                                                                    | each match event                                                    |
+| `F` | tick, pseudonym, x, y, z (1/32 block), yaw (0-255), pitch (-64..64), health (1/4 point), held slot, flags (sneak 1, sprint 2, fire 4, block 8)                                                                                                                                                 | everyone every tick (20 Hz); bots every other tick before version 4 |
+| `N` | tick, pseudonym, keys (forward 1, back 2, left 4, right 8, jump 16, sneak 32, sprint 64), yaw (0-35999), pitch (-9000..9000), attack, use, hotbar slot (0-8), client sequence, acknowledged observation tick or -1, source (`HUMAN`, `AUTOMATED`, `MISSING`); angles in hundredths of a degree | humans only, every tick                                             |
+| `O` | tick, pseudonym, observation contract id, normalized float values in contract order                                                                                                                                                                                                            | humans every tick when rwfbots provides its observation port        |
+| `I` | tick, pseudonym, kind, target                                                                                                                                                                                                                                                                  | each bot intent                                                     |
+| `V` | tick, chosen map, then each candidate map and its votes, in ballot order                                                                                                                                                                                                                       | once, at tick 0 (version 4)                                         |
+| `D` | tick, victim, killer or `-`, cause (attack type name), weapon or `-`, distance in blocks or `-`, then `pseudonym=share` per assist (share of the damage, 0 to 1]                                                                                                                               | each death (version 4)                                              |
+| `C` | tick, speaker, channel (`global`, `team`, `dead`), length; then the text for a rostered bot only, empty for a human                                                                                                                                                                            | each chat line (version 4)                                          |
+| `B` | tick, x, y, z, block state, reason (`CRATER`, `REVERT`, `BARRICADE`, `BANNER`)                                                                                                                                                                                                                 | each block the match changes (version 4)                            |
+| `J` | tick, shooter, kind, x, y, z, velocity x, y, z (blocks per tick)                                                                                                                                                                                                                               | each projectile launched (version 4)                                |
+| `A` | tick, user, ability id, target or empty                                                                                                                                                                                                                                                        | each ability use (version 4)                                        |
+| `U` | tick, subject, effect id, amplifier, duration ticks                                                                                                                                                                                                                                            | each effect applied (version 4)                                     |
+| `K` | tick, earner, streak id, kill count                                                                                                                                                                                                                                                            | each killstreak reward (version 4)                                  |
+| `S` | tick, poison stage, `TEAM=alive` list, `bomb=STATE` list (`IDLE`, `ARMING`, `ARMED`, `DEFUSING`, `DESTROYED`)                                                                                                                                                                                  | every 100 ticks (5 s) while live (version 4)                        |
+| `X` | tick, winner or `-`, reason                                                                                                                                                                                                                                                                    | once, at the end                                                    |
+| `P` | pseudonym, credits                                                                                                                                                                                                                                                                             | once per paid human, after `X`                                      |
 
 The dedicated Fabric preview client sends complete `N` controls at 20 Hz through
 `thestorm:rwf_input`. Its sequence and acknowledgement of
@@ -1351,11 +1475,16 @@ visible targets, decaying last-seen sightings and local terrain rays. Current
 hidden enemy positions and enemy health are absent. Roster and outcome rows
 remain evaluation metadata, separate from actor observations.
 
-`F`, `N` and `O` rows are per-tick samples: when the writer falls more
-than 20,000 samples behind, new ones are dropped and counted in
-`rwf_match.dropped_frames`. Every other row is always written. A reader
-reads versions 2 and 3 explicitly; version 2 lacks complete controls and is
-excluded from training. Unknown versions and corrupt contracts fail validation.
+`F`, `N` and `O` rows are per-tick samples. A writer that falls behind drops
+nothing: samples wait in memory and the log warns once the backlog passes
+20,000. Only past 2,000,000 waiting samples, which only a stalled disk
+reaches, are new ones dropped; every drop is logged as an error, the count is
+stored in `rwf_match.dropped_frames`, and a finished recording with drops logs
+`rwf_recording_dropped_frames=<n>` at error level. Every other row is always
+written. A reader reads versions 2, 3 and 4 explicitly (`RecordCodec.read`
+streams a file row by row for replay); version 2 lacks complete controls and
+is excluded from training, and version 3 has no occurrence rows. Unknown
+versions and corrupt contracts fail validation.
 
 For local human demonstrations, run `bun run client preview --rwf-duel` from
 this package. It starts a disposable Paper server with one Trooper bot and a
@@ -2435,8 +2564,8 @@ end with its winner; bomb names as players read them, such as `Blue Team's
 bomb` or `the nuke`) and hands them to one pure, seeded
 `domain.chat.ChatDirector` per match, from its lobby to its end, which picks
 who says which line and when. In the lobby a bot may greet as it walks in;
-`LobbyChatListener` hands a human's chat there to the director on the main
-thread and one bot may answer (a greet for a greeting such as hi, hey or o/,
+`HeardLines`, a chat tap, hands a human's Global or Team line there to the
+director on the main thread and one bot may answer (a greet for a greeting such as hi, hey or o/,
 a `lobby` line otherwise); idle time brings `lobby` small talk or a taunt at
 a rival who is there too; and once, in the countdown's last 10 seconds, a bot
 may remark on it. Lobby lines name no team (there are none yet), so lines
@@ -2459,12 +2588,16 @@ at most `maxLinesPerWindow` per `windowSeconds`, each line
 `reactionMinMillis`..`reactionMaxMillis` after its moment, and a line the
 limit would push past `maxDelayMillis` is dropped. Placeholders are filled
 with names as players see them (`{victim}`, `{killer}`, `{team}` as `Red
-Team`, `{bomb}`). A due line goes, as `[Name ✦]: line` (name in its team
-colour, rwf's dim `✦` marker), to the human players in the rwf world only:
-members and watchers, never Global, Discord or anyone elsewhere, and never
-the bot bodies; in the lobby the name is white. Lines are not recorded. A new
-context is a new `ChatMoment` with its own line pool; the director shares
-every rule.
+Team`, `{bomb}`). A due line goes through the chat module's `NpcChat`, so it
+passes the same mutes, filters and repeat limits as a player's and respects
+hidden channels and ignores: team calls (a plant, a defuse, the last of a
+team) in Team chat, which only the bot's team hears, everything else in
+Global, in the channel's format with the `✦` marker after the name and, once
+teams exist, a `●` in the team colour before it. Either way only the human
+players in the rwf world hear it (members and watchers, never the bot bodies
+or anyone elsewhere), and no NPC line is relayed to Discord. A line chat
+refuses is dropped. A new context is a new `ChatMoment` with its own line
+pool; the director shares every rule.
 
 Chat is gated twice: `chat.enabled` in `rwfbots.yml` (false skips it
 entirely) and the managed Flipt flag `the-storm-rwfbots-chat-enabled`

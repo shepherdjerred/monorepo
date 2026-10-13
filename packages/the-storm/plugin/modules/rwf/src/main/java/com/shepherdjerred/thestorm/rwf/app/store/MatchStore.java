@@ -191,7 +191,17 @@ public interface MatchStore {
   }
 
   /** Writes a match and its players together; the players' credits enter the outbox. */
-  CompletableFuture<Void> record(MatchRow match, List<PlayerRow> players);
+  default CompletableFuture<Void> record(MatchRow match, List<PlayerRow> players) {
+    return record(match, players, Optional.empty());
+  }
+
+  /**
+   * Writes a match, its players and how it was played together, in one transaction: the players'
+   * credits enter the outbox, and {@code stats} adds the match's details and event log and each
+   * human's line to their lifetime totals.
+   */
+  CompletableFuture<Void> record(
+      MatchRow match, List<PlayerRow> players, Optional<MatchStats> stats);
 
   /** Attaches the finished recording's file, size and dropped-frame count to a match. */
   CompletableFuture<Void> recordingFinished(UUID matchId, RecordingSummary summary);

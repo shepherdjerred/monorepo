@@ -143,6 +143,18 @@ resource "aws_s3_bucket" "glitter_discord_corpus" {
   }
 }
 
+# Private. Archived Red Warfare match recordings (pseudonymous, for review and
+# bot training). The Temporal archive confirms each copy here before marking
+# the recording archived, after which The Storm's retention may delete the
+# server's copy, so this bucket becomes the only copy. No expiry.
+resource "aws_s3_bucket" "the_storm_rwf_recordings" {
+  bucket = "the-storm-rwf-recordings"
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
 # Document CRDT state + attachments for the self-hosted Relay Server (Obsidian
 # real-time collaboration). See packages/homelab/src/cdk8s/src/resources/relay.
 #

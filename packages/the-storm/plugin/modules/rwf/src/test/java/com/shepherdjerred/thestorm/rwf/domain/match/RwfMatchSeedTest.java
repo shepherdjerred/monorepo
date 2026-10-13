@@ -14,9 +14,9 @@ import org.junit.jupiter.api.Test;
 final class RwfMatchSeedTest {
 
   @Test
-  void reseedingPreservesTheEmptyLobbysIdentityMapAndRulesWithoutMutatingIt() {
+  void reseedingPreservesTheEmptyLobbysIdentityBallotAndRulesWithoutMutatingIt() {
     var play = new Play();
-    play.ok(new MatchEvent.MapChosen(Samples.twoTeams()));
+    play.ballot(Samples.twoTeams());
     var original = play.match;
     var seeded = original.reseedEmptyLobby(Long.MIN_VALUE);
 
@@ -30,7 +30,9 @@ final class RwfMatchSeedTest {
                 original.map(),
                 original.members(),
                 original.departed(),
-                original.bombs()));
+                original.bombs(),
+                original.damage(),
+                original.pinned()));
     assertThat(original.seed()).isEqualTo(Samples.SEED);
   }
 
@@ -44,7 +46,7 @@ final class RwfMatchSeedTest {
     var empty = new Play().match;
     List<Phase> phases =
         List.of(
-            new Phase.Countdown(Samples.T0, Samples.T0, 0),
+            new Phase.Countdown(Samples.T0, Samples.T0, 0, Ballot.NONE),
             new Phase.Live(
                 Samples.T0, PoisonClock.start(Samples.T0), Samples.T0, Set.of(), Set.of()),
             new Phase.Ended(Samples.T0, new Outcome.Draw()),
@@ -59,7 +61,9 @@ final class RwfMatchSeedTest {
               empty.map(),
               empty.members(),
               empty.departed(),
-              empty.bombs());
+              empty.bombs(),
+              empty.damage(),
+              empty.pinned());
       assertThatThrownBy(() -> match.reseedEmptyLobby(1))
           .as("cannot reseed %s", phase)
           .isInstanceOf(IllegalStateException.class);

@@ -12,6 +12,7 @@ import { createTemporalDomainWorker } from "./domain-worker.ts";
 import { temporalRuntimeEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/runtime-env.ts";
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
 import { opsSnapshotEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/ops-snapshot-env.ts";
+import { rwfArchiveEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/rwf-archive-env.ts";
 
 function s3Env(secret: ISecret): Record<string, EnvValue> {
   return {
@@ -123,6 +124,8 @@ export function createTemporalOperationsWorkers(
         key: "DISCORD_BOT_TOKEN",
       }),
       STORM_DISCORD_CHANNEL_ID: EnvValue.fromValue("1558666120507162634"),
+      // The mining-reset queue's Red Warfare recording archive.
+      ...rwfArchiveEnv(props.secret),
     },
     volumeMounts: [
       {

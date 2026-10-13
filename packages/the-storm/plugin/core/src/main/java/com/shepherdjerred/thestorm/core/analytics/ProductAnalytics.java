@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.core.analytics;
 
+import java.util.Map;
 import java.util.UUID;
 
 /** Typed, non-blocking product instrumentation. Calls may arrive from asynchronous chat. */
@@ -58,6 +59,51 @@ public interface ProductAnalytics {
 
   /** One authoritative accepted interaction, never a command attempt or automatic reward. */
   void interaction(UUID player, Action action);
+
+  /**
+   * A named game event a player caused, sent under its own PostHog event name. Properties are
+   * bounded game facts (ids, counts, outcomes); never names, chat or anything typed.
+   */
+  enum GameEvent {
+    /** A human's Search and Destroy match ended, with their result and score. */
+    RWF_MATCH_COMPLETED("rwf_match_completed"),
+    /** A human picked a kit. */
+    RWF_KIT_SELECTED("rwf_kit_selected"),
+    /** A human voted for a map. */
+    RWF_MAP_VOTE("rwf_map_vote"),
+    /** A human used a killstreak reward. */
+    RWF_KILLSTREAK_USED("rwf_killstreak_used"),
+    /** A human bought a kit. */
+    RWF_KIT_PURCHASED("rwf_kit_purchased");
+
+    private final String eventName;
+
+    GameEvent(String eventName) {
+      this.eventName = eventName;
+    }
+
+    public String eventName() {
+      return eventName;
+    }
+  }
+
+  /**
+   * {@code player} caused {@code event}. Values are strings, numbers or booleans; anything else is
+   * a programming error and throws.
+   */
+  void game(UUID player, GameEvent event, Map<String, Object> properties);
+
+  /** Throws unless every value of {@code properties} is a string, number or boolean. */
+  static Map<String, Object> checked(Map<String, Object> properties) {
+    for (var entry : properties.entrySet()) {
+      var value = entry.getValue();
+      if (!(value instanceof String || value instanceof Number || value instanceof Boolean)) {
+        throw new IllegalArgumentException(
+            "analytics property " + entry.getKey() + " must be a string, number or boolean");
+      }
+    }
+    return Map.copyOf(properties);
+  }
 
   /** The accepted membership transition, including lobby and spectator membership. */
   void mode(UUID player, Mode mode);

@@ -23,6 +23,11 @@ class PreferenceRecordingTest(unittest.TestCase):
                 stream.write(text)
             self.assertEqual(inspect(file)["winner"], "RED")
             self.assertEqual(inspect(file, -42)["winner"], "RED")
+            schema_four = file.with_name("four.rwfrec.gz")
+            with gzip.open(schema_four, "wt", encoding="utf-8") as stream:
+                stream.write(text.replace("H\t3\t", "H\t4\t").replace(
+                    "X\t3\t", "D\t2\tb\tr\tMelee\tiron_sword\t1.5\nX\t3\t"))
+            self.assertEqual(inspect(schema_four, -42)["winner"], "RED")
             with self.assertRaisesRegex(ValueError, "domain seed"):
                 inspect(file, 42)
             for altered in (

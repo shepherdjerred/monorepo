@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -35,9 +36,18 @@ final class LobbyHud {
       BossBar.bossBar(
           Component.text("Waiting for players"), 0, BossBar.Color.YELLOW, BossBar.Overlay.PROGRESS);
   private final Set<UUID> viewers = new HashSet<>();
+  private final Consumer<LobbyStatus> also;
 
   LobbyHud(Server server) {
+    this(server, status -> {});
+  }
+
+  /**
+   * @param also hears every status the bar is drawn for: the sidebar's lobby board
+   */
+  LobbyHud(Server server, Consumer<LobbyStatus> also) {
     this.server = server;
+    this.also = also;
   }
 
   /** The shared bar, for tests and diagnostics. */
@@ -73,6 +83,7 @@ final class LobbyHud {
 
   /** Redraws the bar for {@code status}. */
   void update(LobbyStatus status) {
+    also.accept(status);
     bar.name(Component.text(text(status)));
     bar.progress((float) status.progress());
     bar.color(
@@ -91,6 +102,10 @@ final class LobbyHud {
           "Match starts in "
               + status.secondsLeft()
               + (status.secondsLeft() == 1 ? " second" : " seconds");
+      case PREPARING -> "Loading " + status.map().orElse("the map");
+      case PREVIEW ->
+          "Previewing " + status.map().orElse("the map") + ": " + status.secondsLeft() + "s";
+      case FREEZE -> "Get ready: " + status.secondsLeft() + "s";
       case LIVE -> "Match in progress";
       case ENDED -> "Match over";
       case RESETTING -> "Resetting the map";

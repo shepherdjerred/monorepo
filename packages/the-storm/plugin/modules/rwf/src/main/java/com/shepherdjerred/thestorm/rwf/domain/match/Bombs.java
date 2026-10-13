@@ -7,11 +7,13 @@ import com.shepherdjerred.thestorm.rwf.domain.bomb.Bomb;
 import com.shepherdjerred.thestorm.rwf.domain.bomb.BombClick;
 import com.shepherdjerred.thestorm.rwf.domain.bomb.BombError;
 import com.shepherdjerred.thestorm.rwf.domain.bomb.BombOutcome;
+import com.shepherdjerred.thestorm.rwf.domain.bomb.BombState;
 import com.shepherdjerred.thestorm.rwf.domain.combat.AttackType;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.CombatantId;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -61,9 +63,15 @@ final class Bombs {
     };
   }
 
-  /** Every bomb ticks; explosions take effect in order, and a bomb removed by one is skipped. */
-  static void tick(Draft draft, Instant now) {
-    for (var snapshot : draft.bombs()) {
+  /**
+   * Every bomb ticks in the order it was armed (idle bombs first), as Red Warfare sorted them by
+   * fuse time, so the first-armed of two bombs due together explodes first; a bomb removed by an
+   * explosion is skipped.
+   */
+  static void tick(Draft draft, Instant now, Map<CombatantId, Vitals> vitals) {
+    var order = new ArrayList<>(draft.bombs());
+    order.sort(Comparator.comparing(Bombs::fusedAt));
+    for (var snapshot : order) {
       var current = draft.bomb(snapshot.id()).orElseThrow();
       if (current.destroyed() || !(draft.phase instanceof Phase.Live)) {
         continue;
@@ -72,12 +80,16 @@ final class Bombs {
       draft.putBomb(step.bomb());
       for (var outcome : step.outcomes()) {
         if (outcome instanceof BombOutcome.Exploded) {
-          explode(draft, step.bomb(), now);
+          explode(draft, step.bomb(), now, vitals);
         } else {
           apply(draft, current, step.bomb(), outcome);
         }
       }
     }
+  }
+
+  private static Instant fusedAt(Bomb bomb) {
+    return bomb.state() instanceof BombState.Armed armed ? armed.fusedAt() : Instant.EPOCH;
   }
 
   private static void apply(Draft draft, Bomb before, Bomb after, BombOutcome outcome) {
@@ -154,8 +166,11 @@ final class Bombs {
     return draft.ids().stream().filter(id -> !threatened.contains(id)).toList();
   }
 
-  /** The fuse ran out. */
-  static void explode(Draft draft, Bomb bomb, Instant now) {
+  /**
+   * The fuse ran out. Each victim's kill goes to whoever last hurt them while that hit still
+   * counted, as Red Warfare's combat log credited a bomb kill.
+   */
+  static void explode(Draft draft, Bomb bomb, Instant now, Map<CombatantId, Vitals> vitals) {
     var team = bomb.team().orElseThrow();
     var at = bomb.site().position();
     draft.effect(new MatchEffect.Explode(bomb.id(), at));
@@ -175,6 +190,9 @@ final class Bombs {
     }
     if (!victims.isEmpty()) {
       draft.effect(new MatchEffect.Kill(victims, AttackType.BOMB_EXPLODE));
+      for (var victim : victims) {
+        Standings.killedByBomb(draft, victim, Optional.ofNullable(vitals.get(victim)), now);
+      }
       Standings.recordDeath(draft, now);
     }
     clearTeamBombs(draft, team, bomb.isNuke());

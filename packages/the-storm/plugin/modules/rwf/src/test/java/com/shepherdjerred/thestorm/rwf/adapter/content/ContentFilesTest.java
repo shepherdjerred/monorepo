@@ -42,8 +42,16 @@ final class ContentFilesTest {
     copy("rwf/maps/training-yard/map.yml");
     copy("rwf/maps/training-yard/blocks.schem");
     copy("rwf/maps/training-yard/details.json");
-    copy("rwf/lobby/lobby.yml");
-    copy("rwf/lobby/blocks.schem");
+    // MockBukkit cannot make block data for the shipped lobby's walls: the suites' test lobby.
+    for (var file : new String[] {"lobby.yml", "blocks.schem"}) {
+      try {
+        var target = directory.resolve("rwf/lobby").resolve(file);
+        Files.createDirectories(target.getParent());
+        Files.copy(com.shepherdjerred.thestorm.rwf.RwfHarness.FIXTURE_LOBBY.resolve(file), target);
+      } catch (IOException e) {
+        throw new UncheckedIOException(e);
+      }
+    }
     return directory;
   }
 
@@ -253,7 +261,7 @@ final class ContentFilesTest {
   @Test
   void anUnknownKeyIsRefused() {
     shippedCopy();
-    edit("rwf.yml", "world: rwf", "world: rwf\nextra: 1");
+    edit("rwf.yml", "worlds:\n", "extra: 1\nworlds:\n");
 
     assertThatThrownBy(() -> ContentFiles.load(directory, PARSER))
         .isInstanceOf(IllegalStateException.class)

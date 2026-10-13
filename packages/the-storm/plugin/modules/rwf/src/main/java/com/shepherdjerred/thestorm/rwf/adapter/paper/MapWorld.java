@@ -11,9 +11,11 @@ import com.shepherdjerred.thestorm.rwf.app.map.MapRotation;
 import com.shepherdjerred.thestorm.rwf.domain.geometry.BlockPos;
 import com.shepherdjerred.thestorm.rwf.domain.map.MapDefinition;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -65,7 +67,8 @@ final class MapWorld implements MapRotation.Entry {
   }
 
   /** Whether the terrain is pasted and verified. */
-  boolean ready() {
+  @Override
+  public boolean ready() {
     return prepared && !loading && terrain != null && terrain.ready();
   }
 
@@ -88,7 +91,7 @@ final class MapWorld implements MapRotation.Entry {
   }
 
   boolean contains(Location location) {
-    return location.getWorld().equals(context.world())
+    return location.getWorld().equals(context.mapWorld())
         && definition().border().contains(Places.vec(location));
   }
 
@@ -126,7 +129,13 @@ final class MapWorld implements MapRotation.Entry {
     var prepared =
         new Terrain(
             context,
-            new Terrain.Source(id(), loaded.blocks(), definition().blocksSha256()),
+            context.mapWorld(),
+            new Terrain.Source(
+                id(),
+                loaded.blocks(),
+                definition().blocksSha256(),
+                // Watchers and the dead land on the spectator point: its chunk is warm too.
+                List.of(definition().spectatorPoint().position().toBlock())),
             chunks);
     terrain = prepared;
     var terrainReady = new CompletableFuture<Boolean>();
@@ -181,7 +190,10 @@ final class MapWorld implements MapRotation.Entry {
     var request = generation;
     return DetailsRestorer.restore(
         new DetailsRestorer.Target(
-            context.scheduler(), context.compute(), context.world(), definition().border().min()),
+            context.scheduler(),
+            context.compute(),
+            context.mapWorld(),
+            definition().border().min()),
         map().details(),
         () -> request == generation);
   }
@@ -190,7 +202,7 @@ final class MapWorld implements MapRotation.Entry {
    * Turns solid blocks within {@code radius} of {@code center} to coal and slabs to stone slabs,
    * sparing infested blocks, and remembers them for {@link #revertCraters}.
    */
-  void crater(BlockPos center, int radius) {
+  void crater(BlockPos center, int radius, BiConsumer<BlockPos, String> changed) {
     var border = definition().border();
     for (var dx = -radius; dx <= radius; dx++) {
       for (var dy = -radius; dy <= radius; dy++) {
@@ -200,15 +212,15 @@ final class MapWorld implements MapRotation.Entry {
           }
           var pos = center.plus(dx, dy, dz);
           if (border.contains(pos)) {
-            craterBlock(pos);
+            craterBlock(pos, changed);
           }
         }
       }
     }
   }
 
-  private void craterBlock(BlockPos pos) {
-    var block = Places.block(context.world(), pos);
+  private void craterBlock(BlockPos pos, BiConsumer<BlockPos, String> changed) {
+    var block = Places.block(context.mapWorld(), pos);
     var type = block.getType();
     if (type.name().startsWith("INFESTED_") || !type.isSolid()) {
       return;
@@ -219,10 +231,11 @@ final class MapWorld implements MapRotation.Entry {
         replacement.setType(slab.getType());
       }
       context.blocks().set("#storm-rwf-crater", block, stone, false);
+      changed.accept(pos, stone.getAsString());
     } else {
-      context
-          .blocks()
-          .set("#storm-rwf-crater", block, Material.COAL_BLOCK.createBlockData(), false);
+      var coal = Material.COAL_BLOCK.createBlockData();
+      context.blocks().set("#storm-rwf-crater", block, coal, false);
+      changed.accept(pos, coal.getAsString());
     }
     cratered.add(pos);
   }
@@ -232,13 +245,22 @@ final class MapWorld implements MapRotation.Entry {
     for (var pos : cratered) {
       context
           .blocks()
-          .set("#storm-rwf-restore", Places.block(context.world(), pos), blocks().at(pos), false);
+          .set(
+              "#storm-rwf-restore", Places.block(context.mapWorld(), pos), blocks().at(pos), false);
     }
     cratered.clear();
   }
 
   int crateredBlocks() {
     return cratered.size();
+  }
+
+  /**
+   * A match was played here: the terrain is no longer known to match its schematic, so it is
+   * verified again before it is played next.
+   */
+  void markPlayed() {
+    prepared = false;
   }
 
   /** Releases inactive terrain, navigation, and chunk tickets; a later preparation reads afresh. */

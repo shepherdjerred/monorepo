@@ -2,7 +2,9 @@ package com.shepherdjerred.thestorm.rwfbots.domain.chat;
 
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.Lines;
 import java.time.Instant;
+import java.util.EnumSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -23,4 +25,18 @@ public record Utterance(
     Lines.Moment moment,
     String template,
     String text,
-    Instant at) {}
+    Instant at) {
+
+  /**
+   * The calls a team keeps to itself: finishing arming a bomb, defusing one's own, and the last of
+   * a team calling out. Everything else is banter for everyone.
+   */
+  public static final Set<Lines.Moment> TEAM_MOMENTS =
+      Set.copyOf(
+          EnumSet.of(Lines.Moment.ON_PLANT, Lines.Moment.ON_DEFUSE, Lines.Moment.ON_LAST_ALIVE));
+
+  /** Whether only the speaker's team should hear it: a team call, once teams exist. */
+  public boolean teamOnly() {
+    return team.isPresent() && TEAM_MOMENTS.contains(moment);
+  }
+}

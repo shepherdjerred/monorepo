@@ -5,7 +5,10 @@ import com.shepherdjerred.thestorm.rwf.domain.kit.KitSpec;
 import com.shepherdjerred.thestorm.rwf.domain.map.MapDefinition;
 import java.util.List;
 
-/** The same metadata invariants apply to eager tools and the bounded runtime catalog. */
+/**
+ * The same metadata invariants apply to eager tools and the bounded runtime catalog. Maps share the
+ * map world, so no two may overlap; the lobby has a world of its own and may sit anywhere in it.
+ */
 final class ContentChecks {
   private ContentChecks() {}
 
@@ -19,10 +22,6 @@ final class ContentChecks {
           throw new IllegalArgumentException(
               "maps " + maps.get(i).id() + " and " + maps.get(j).id() + " overlap");
       }
-    }
-    for (var map : maps) {
-      if (overlap(lobby.layout().region(), map.border()))
-        throw new IllegalArgumentException("the lobby overlaps map " + map.id());
     }
     var kitIds = kits.stream().map(KitSpec::id).toList();
     if (!lobby.layout().kits().equals(kitIds))

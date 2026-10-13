@@ -14,6 +14,7 @@ import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.AbstractArrow;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.Event;
@@ -23,6 +24,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityPotionEffectEvent;
+import org.bukkit.event.entity.EntityShootBowEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
@@ -52,7 +55,7 @@ final class CombatListener implements Listener {
   }
 
   private boolean inWorld(Entity entity) {
-    return entity.getWorld().equals(context.world());
+    return context.ours(entity.getWorld());
   }
 
   /** The player behind a hit: the attacker, or the shooter of a projectile. */
@@ -134,8 +137,10 @@ final class CombatListener implements Listener {
     tracker.hit(victim, damage, Optional.of(strike.attacker().getUniqueId()), strike.type());
     knockback(strike);
     hooks.hurt().accept(victim);
-    context.world().playSound(Places.at(victim), Sound.ENTITY_PLAYER_HURT, 1, 1);
-    victim.setHealth(Math.max(0, victim.getHealth() - landed));
+    victim.getWorld().playSound(Places.at(victim), Sound.ENTITY_PLAYER_HURT, 1, 1);
+    var before = victim.getHealth();
+    runner.damaged(victim, Optional.of(strike.attacker().getUniqueId()), landed, strike.type());
+    victim.setHealth(Math.max(0, before - landed));
   }
 
   private void knockback(Strike strike) {
@@ -198,6 +203,31 @@ final class CombatListener implements Listener {
     };
   }
 
+  /**
+   * Every potion effect a fighter gains (a golden apple, the poison, a kit's) becomes a recording
+   * row through the match's hooks.
+   */
+  @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
+  void onEffect(EntityPotionEffectEvent event) {
+    var effect = event.getNewEffect();
+    if (effect == null
+        || !(event.getEntity() instanceof Player player)
+        || !runner.fighting(player.getUniqueId())) {
+      return;
+    }
+    runner
+        .memberOf(player.getUniqueId())
+        .ifPresent(
+            member ->
+                runner
+                    .hooks()
+                    .effectApplied(
+                        member.id(),
+                        effect.getType().getKey().getKey(),
+                        effect.getAmplifier(),
+                        effect.getDuration()));
+  }
+
   /** Damage from the world (fall, fire, lava) is left to vanilla but remembered for attribution. */
   @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
   void onWorldDamage(EntityDamageEvent event) {
@@ -208,9 +238,18 @@ final class CombatListener implements Listener {
       return;
     }
     tracker.hurt(victim, cause(event), event.getFinalDamage());
+    runner.damaged(victim, Optional.empty(), event.getFinalDamage(), cause(event));
   }
 
-  /** Nothing hurts a member before the match starts: the lobby has no damage. */
+  /** The end screen's fireworks are for show: they hurt nobody in the match's worlds. */
+  @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
+  void onFireworkDamage(EntityDamageByEntityEvent event) {
+    if (event.getDamager() instanceof Firework && inWorld(event.getEntity())) {
+      event.setCancelled(true);
+    }
+  }
+
+  /** Nothing hurts a member before the match goes live: the lobby, preview and freeze. */
   @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
   void onLobbyDamage(EntityDamageEvent event) {
     if (event.getEntity() instanceof Player victim
@@ -229,6 +268,14 @@ final class CombatListener implements Listener {
         && (event.getCause() == EntityKnockbackEvent.Cause.ENTITY_ATTACK
             || event.getCause() == EntityKnockbackEvent.Cause.SWEEP_ATTACK)) {
       event.setCancelled(true);
+    }
+  }
+
+  /** A fighter's arrow counts towards their shots, for the match statistics. */
+  @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
+  void onShoot(EntityShootBowEvent event) {
+    if (event.getEntity() instanceof Player shooter && inWorld(shooter)) {
+      runner.shot(shooter, event.getProjectile());
     }
   }
 
@@ -264,7 +311,8 @@ final class CombatListener implements Listener {
       return;
     }
     event.setUseItemInHand(Event.Result.DENY);
-    eatSteak(player, item).ifPresent(refusal -> Texts.error(player, refusal));
+    eatSteak(player, item)
+        .ifPresentOrElse(refusal -> Texts.error(player, refusal), () -> runner.ateSteak(player));
   }
 
   @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
@@ -289,6 +337,8 @@ final class CombatListener implements Listener {
     }
     player.setHealth(Math.min(attribute.getValue(), player.getHealth() + heal.orElseThrow()));
     stack.subtract();
+    // Red Warfare's EventManager: the eat sound at volume 1.4 and pitch 0.
+    player.getWorld().playSound(Places.at(player), Sound.ENTITY_GENERIC_EAT, 1.4f, 0f);
     return Optional.empty();
   }
 }

@@ -6,7 +6,7 @@ import { digestFile } from "#learning/preference/ledger.ts";
 import { run } from "#learning/preference/media.ts";
 import { root } from "#learning/sandbox.ts";
 
-/** Parse complete original schema-3 bot-only Trooper records after graceful Paper export. */
+/** Parse complete original schema 3 or 4 bot-only Trooper records after graceful Paper export. */
 export async function originalRecordings(output: string, states: DuelState[]) {
   if (new Set(states.map((state) => state.match)).size !== states.length)
     throw new Error("Native captures reuse an original match identity");

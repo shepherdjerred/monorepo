@@ -76,9 +76,13 @@ public final class RwfHarness implements AutoCloseable {
           "rwf/kits.yml",
           "rwf/maps/training-yard/map.yml",
           "rwf/maps/training-yard/blocks.schem",
-          "rwf/maps/training-yard/details.json",
-          "rwf/lobby/lobby.yml",
-          "rwf/lobby/blocks.schem");
+          "rwf/maps/training-yard/details.json");
+
+  /**
+   * The small test lobby the suites paste: MockBukkit cannot make block data for the walls, panes
+   * and lanterns of the shipped war room, which rwfmap and the real-server suites check instead.
+   */
+  public static final Path FIXTURE_LOBBY = Path.of("src/test/resources/fixtures/lobby");
 
   private static Consumer<JavaPlugin> enabling = plugin -> {};
 
@@ -123,6 +127,7 @@ public final class RwfHarness implements AutoCloseable {
   public final ServerMock server;
   public final World overworld;
   public final World rwf;
+  public final World lobbyWorld;
   public final StormDatabase database;
   public final FakeClock clock = new FakeClock(Samples.T0);
   public final FakeWallets wallets = new FakeWallets();
@@ -133,10 +138,19 @@ public final class RwfHarness implements AutoCloseable {
   public final FakeSavedPlayerData saved = new FakeSavedPlayerData();
   private RwfModule module = new RwfModule();
 
-  private RwfHarness(ServerMock server, World overworld, World rwf, StormDatabase database) {
+  /**
+   * The match features the managed flags answer with, read as each match opens; every feature off
+   * by default, so a match plays as it did before them.
+   */
+  public volatile com.shepherdjerred.thestorm.rwf.app.RwfFeatures features =
+      com.shepherdjerred.thestorm.rwf.app.RwfFeatures.NONE;
+
+  private RwfHarness(
+      ServerMock server, World overworld, World rwf, World lobbyWorld, StormDatabase database) {
     this.server = server;
     this.overworld = overworld;
     this.rwf = rwf;
+    this.lobbyWorld = lobbyWorld;
     this.database = database;
     this.bots = new FakeBotRoster(server);
   }
@@ -146,21 +160,28 @@ public final class RwfHarness implements AutoCloseable {
     var server = MockBukkit.mock();
     var overworld = new RwfWorldMock("world");
     var rwf = new RwfWorldMock("rwf");
+    var lobby = new RwfWorldMock("rwf_lobby");
     server.addWorld(overworld);
     server.addWorld(rwf);
+    server.addWorld(lobby);
     copyShipped(directory);
     // Existing gameplay cases exercise an explicit eight-combatant profile.
     try {
       var config = directory.resolve("rwf.yml");
       Files.writeString(
           config,
-          Files.readString(config).replace("automaticSizing: true", "automaticSizing: false"));
+          Files.readString(config)
+              .replace("automaticSizing: true", "automaticSizing: false")
+              // The gameplay cases count down as soon as Alice is in, as before the relaxing
+              // requirement; RwfLobbyFillTest plays the shipped 4-to-2 rule.
+              .replace("minPlayers: 4", "minPlayers: 1")
+              .replace("absoluteMinPlayers: 2", "absoluteMinPlayers: 1"));
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
     var database = StormDatabase.open(directory.resolve("t.db"));
     database.migrate("rwf", RwfHarness.class.getClassLoader());
-    return new RwfHarness(server, overworld, rwf, database);
+    return new RwfHarness(server, overworld, rwf, lobby, database);
   }
 
   /** Enables the module with bots available and the shipped config. */
@@ -192,7 +213,8 @@ public final class RwfHarness implements AutoCloseable {
                         ? Optional.of(SALT)
                         : Optional.ofNullable(environment.get(name)),
                 Optional.of(JoinGate.open()),
-                Optional.of(new ServerHooks(chunks, display -> {}, (a, b) -> true, player -> {}))));
+                Optional.of(new ServerHooks(chunks, display -> {}, (a, b) -> true, player -> {})),
+                Optional.of(() -> CompletableFuture.completedFuture(features))));
     enabling =
         plugin ->
             module.enable(
@@ -217,6 +239,9 @@ public final class RwfHarness implements AutoCloseable {
       throw e;
     }
     until(() -> view().current().isPresent());
+    // With one map to offer, the lobby chooses it at once and its terrain is ready before anyone
+    // joins, as it was before the vote: the snapshot has the map's teams once it is loaded.
+    until(() -> view().current().filter(snapshot -> !snapshot.teams().isEmpty()).isPresent());
     return this;
   }
 
@@ -251,7 +276,7 @@ public final class RwfHarness implements AutoCloseable {
   }
 
   /**
-   * Joins until the match accepts the player and they stand in the rwf world: right after enable,
+   * Joins until the match accepts the player and they stand in the lobby world: right after enable,
    * snapshots are still being read back.
    */
   public void enter(PlayerMock player) {
@@ -260,7 +285,7 @@ public final class RwfHarness implements AutoCloseable {
           player.performCommand("rwf join");
           return inMatch(player);
         });
-    until(() -> player.getWorld().equals(rwf));
+    until(() -> player.getWorld().equals(lobbyWorld));
   }
 
   /** A player with belongings to lose, standing in the overworld. */
@@ -359,6 +384,11 @@ public final class RwfHarness implements AutoCloseable {
         var target = directory.resolve(file);
         Files.createDirectories(target.getParent());
         Files.copy(SHIPPED.resolve(file), target);
+      }
+      var lobby = directory.resolve("rwf/lobby");
+      Files.createDirectories(lobby);
+      for (var file : List.of("lobby.yml", "blocks.schem")) {
+        Files.copy(FIXTURE_LOBBY.resolve(file), lobby.resolve(file));
       }
     } catch (IOException e) {
       throw new UncheckedIOException(e);

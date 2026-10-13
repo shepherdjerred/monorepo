@@ -7,9 +7,9 @@ Red Warfare credits, its AFK charge (never overdrawing) and replay; the
 forfeit of a suicide or quit while live; the AFK mark cleared by a turn of
 the head through the real move listener; the recorder (decodable with `RecordCodec`,
 pseudonymous, pruned by age and size); and on MockBukkit: enabling pastes and
-verifies the training yard and seals the world; enabling pastes and dresses
-the lobby room once (rules, match board, an item and a label per kit alcove,
-none persistent) and sweeps displays a crash left so none is duplicated, and
+verifies the training yard and seals both worlds; enabling pastes and dresses
+the lobby once (rules, match board, three vote podiums, three leaderboards,
+the rotation, an item and a label per kit alcove, none persistent) and sweeps displays a crash left so none is duplicated, and
 disabling removes them; join snapshots and clears a player onto the lobby's
 spawn pad with the attack-speed modifier, the countdown boss bar and the
 recording disclosure; nothing hurts or breaks in the lobby and a member who
@@ -57,9 +57,10 @@ of the two; the rest still wait for a suite.
 
 ## World and maps
 
-1. With `rwf` provisioned through Multiverse (any flat or void world) the
-   module enables, seals the world, holds its 20 chunks, pastes the lobby room
-   at `128,64,16` and the training yard at `0,64,0` and opens the lobby; with the world missing, TheStorm
+1. With `rwf_lobby` and `rwf` provisioned through Multiverse (any flat or
+   void worlds) the module enables, seals both, holds their chunks, pastes the
+   lobby at `0,64,0` in `rwf_lobby` and the training yard at `0,64,0` in `rwf`
+   and opens the lobby; with a world missing, TheStorm
    refuses to enable and the server stops. **Proven** (the happy path: the
    module enables on the fixture world, `/rwf admin status` reports the
    training yard ready, the TNT blocks stand at the bomb sites); the missing
@@ -175,15 +176,16 @@ is intact.` with no paste logged, and after the edits above it pastes once
     the sum of both matches and their crystals at the starting balance.
 18. `plugins/TheStorm/rwf-recordings/yyyy/MM/dd/<matchId>.rwfrec.gz` decodes
     with `RecordCodec`, names nobody, and holds human frames and input rows
-    at 20 Hz and bot frames at 10 Hz; `kill -9` during a match leaves a
-    truncated file the next enable prunes by age. **Proven** that the file
+    and bot frames at 20 Hz; `kill -9` during a match leaves a truncated
+    `<matchId>.rwfrec.gz.part` that pruning never touches, and pruning deletes
+    only recordings with a matching `.archived` marker. **Proven** that the file
     exists at that path, is a non-empty gzip of the size `rwf_match` records,
     names the match and neither player, and dropped no frames; that it is
-    format version 2, every human has one `N` input row for each of their
-    `F` frames and bots have none; and with rwfbots that a bot has 0.4 to 0.6
+    format version 4, every human has one `N` input row for each of their
+    `F` frames and bots have none; and with rwfbots that a bot has 0.9 to 1.1
     frames per human frame over the ticks both lived. Decoding with
-    `RecordCodec` itself (the suites parse the rows) and the crash prune are
-    not.
+    `RecordCodec` itself (the suites parse the rows), the `.part` file and the
+    archive guard are proven by `MatchReplayTest` and `GzipRecorderTest` only.
 19. With `recording.enabled: true` and `RWF_RECORDING_SALT` unset, enabling
     fails loudly; with it set, every joining human reads the disclosure.
     **Proven** for the disclosure with the salt set; the missing salt is not.
@@ -223,12 +225,13 @@ next`, the bots-only match outlives the no-humans abort and ends with a
 
 ## Lobby
 
-24. A joining player stands on the lobby's gold spawn pad inside its region,
-    sees the countdown boss bar, the rules, the match board and the four kit
-    alcoves' items and labels render (billboarded displays), the last five
-    seconds and the start show as titles, and going live puts them on a map
-    spawn with the bar gone. **Proven**: the joiner stands on the spawn pad
-    inside the lobby region, the room holds six text displays and four item
+24. A joining player stands on the lobby's spawn inside its region, sees the
+    countdown boss bar, the rules, the match board, the podiums, the
+    leaderboards, the rotation and the four kit alcoves' items and labels
+    render (billboarded displays), the last five seconds and the start show as
+    titles, and going live puts them on a map spawn with the bar gone.
+    **Proven**: the joiner stands on the spawn inside the lobby region of the
+    lobby world, the lobby holds thirteen text displays and four item
     displays, the client receives the `Match starts in N seconds` boss bar
     and the `Fight!` title, and the start puts both players inside the
     training yard. How the displays look is not inspected.
@@ -262,3 +265,42 @@ next`, the bots-only match outlives the no-humans abort and ends with a
 28. Saigon and Wonderland (`quarantine` in `rwf.yml`) are never chosen by the
     rotation. Covered by the content tests; the humans-only suite plays the
     training yard alone.
+
+## Match experience
+
+`tests/e2e/rwf-experience.e2e.test.ts` runs each case under the managed flags
+it needs, set on the fake brain's Flipt double; an operator's `/rwf admin stop`
+opens a fresh lobby under them, since flags are read as each match opens.
+
+29. With the match flow on, the lone staged map is chosen at once, previews
+    with the players in the yard, then everyone freezes at their start until
+    the game begins. **Proven**: `Previewing Training Yard by …` arrives with
+    the player in the yard, `Get ready: the match starts in N seconds.`
+    follows, walking forward for 0.8 s moves them less than half a block, and
+    `The game has begun!` follows.
+30. With team chat on, a fighter's plain chat reaches their team only and a
+    leading `@` reaches everyone. **Proven**: the speaker sees their line, the
+    enemy never does, and the enemy's `@` line reaches the speaker. The dead
+    channel is covered on MockBukkit only.
+31. With the death feed on, a melee kill is announced as Red Warfare's
+    `<victim> was murdered by <killer>`, the victim is told the killer's
+    hearts, and a teammate who did more than a tenth of the damage is told
+    `Scored a kill assist worth n!`. **Proven** with three humans split two
+    against one.
+32. With carry-over on, a match that ends on its own carries its humans into
+    the next lobby and match without `/rwf join`. **Proven**: a new match id
+    with both humans, both back in the lobby world, then `The game has begun!`
+    again with no `joined the match` line.
+33. A vote between several maps (podium clicks and `/rwf vote`), the
+    spectator tools, the bomb effects and `/rwf stats` on the real server.
+    The suites stage the training yard alone, so the vote is covered by the
+    domain and MockBukkit suites; the spectator tools and bomb effects were
+    checked by hand in a `toolkit mc` sandbox.
+34. Falling off the lobby deck (the lobby world is a void) puts a member back
+    at the lobby spawn, unhurt. **Proven** in `rwf-experience.e2e.test.ts`;
+    the preview, freeze and dead-spectator cases are covered on MockBukkit.
+35. The original's wording: "You are in X", "There are N player(s) in X",
+    "The game will begin in 1 minute, 30 seconds", "Given N credit(s)", "X
+    wins!" with no label. **Proven** by the humans-only suite's regexes.
+36. The load profile keeps every recording frame: `dropped_frames` is 0 for
+    every match at 20, 50 and 100 bots (`tests/load/rwf-load.e2e.test.ts`).

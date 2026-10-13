@@ -15,8 +15,9 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 
 /**
- * Routes plain chat to the player's focused channel. Runs on Paper's async chat thread: it only
- * reads chat's in-memory state and permissions.
+ * Routes plain chat to the player's focused channel, or wherever a registered router redirects it
+ * (a match team, the dead). Runs on Paper's async chat thread: it only reads chat's in-memory state
+ * and permissions.
  */
 public final class ChatListener implements Listener {
 
@@ -38,8 +39,9 @@ public final class ChatListener implements Listener {
       return;
     }
     var raw = PlainTextComponentSerializer.plainText().serialize(event.message());
-    var channel = service.profile(player.getUniqueId()).focus();
-    switch (service.prepare(Speakers.of(player), channel, raw)) {
+    var focus = service.profile(player.getUniqueId()).focus();
+    var routed = service.route(player.getUniqueId(), focus, raw, false);
+    switch (service.prepare(Speakers.of(player), routed.channel().key(), routed.text())) {
       case Result.Ok<OutgoingLine, List<ChatDenial>>(var line) -> {
         event
             .viewers()
@@ -58,11 +60,15 @@ public final class ChatListener implements Listener {
     }
   }
 
-  /** Publishes the line to Global listeners (Discord) once no one has cancelled it. */
+  /**
+   * Publishes the line to Global listeners (Discord) and tells chat's taps once no one has
+   * cancelled it.
+   */
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
   public void onDelivered(AsyncChatEvent event) {
     if (event.renderer() instanceof ChannelRenderer renderer) {
       hub.published(renderer.line());
+      service.delivered(renderer.line());
     }
   }
 }

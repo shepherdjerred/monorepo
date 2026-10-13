@@ -2,6 +2,22 @@ package com.shepherdjerred.thestorm.rwfbots;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.shepherdjerred.thestorm.chat.adapter.paper.ChatListener;
+import com.shepherdjerred.thestorm.chat.adapter.paper.PaperChatOutput;
+import com.shepherdjerred.thestorm.chat.adapter.paper.PaperNpcChat;
+import com.shepherdjerred.thestorm.chat.app.ChannelFormats;
+import com.shepherdjerred.thestorm.chat.app.ChannelRegistry;
+import com.shepherdjerred.thestorm.chat.app.ChatConfig;
+import com.shepherdjerred.thestorm.chat.app.ChatExtensions;
+import com.shepherdjerred.thestorm.chat.app.ChatService;
+import com.shepherdjerred.thestorm.chat.app.ChatSnapshot;
+import com.shepherdjerred.thestorm.chat.app.ChatStore;
+import com.shepherdjerred.thestorm.chat.app.GlobalChatHub;
+import com.shepherdjerred.thestorm.chat.app.NpcChat;
+import com.shepherdjerred.thestorm.chat.domain.ChannelKey;
+import com.shepherdjerred.thestorm.chat.domain.ChatProfile;
+import com.shepherdjerred.thestorm.chat.domain.FilterSettings;
+import com.shepherdjerred.thestorm.chat.domain.Mute;
 import com.shepherdjerred.thestorm.core.compute.DirectComputePool;
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
@@ -27,7 +43,10 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.InstantSource;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -38,6 +57,7 @@ import org.bukkit.Material;
 import org.bukkit.WorldCreator;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jspecify.annotations.Nullable;
 import org.mockbukkit.mockbukkit.MockBukkit;
 import org.mockbukkit.mockbukkit.ServerMock;
 import org.mockbukkit.mockbukkit.world.WorldMock;
@@ -95,6 +115,12 @@ public final class RwfBotsHarness implements AutoCloseable {
   /** What the managed chat flag answers; read each time chat refreshes it. */
   public final AtomicBoolean chatFlag = new AtomicBoolean(true);
 
+  /** Chat's registries: tests register match memberships here, as rwf does. */
+  public final ChatExtensions chat = new ChatExtensions();
+
+  /** Chat's use cases, for tests that need a player's line to go through chat. */
+  public @Nullable ChatService chatService;
+
   public final AtomicBoolean learningFlag = new AtomicBoolean(false);
   public final AtomicInteger learningEvaluations = new AtomicInteger();
 
@@ -107,6 +133,8 @@ public final class RwfBotsHarness implements AutoCloseable {
         new RwfBotsModule(
             new RwfBotsModule.Hooks(
                 Optional.of(ctx -> bodies),
+                Optional.of(world),
+                // The synthetic map's west half stands in for the lobby, in the same world.
                 Optional.of(world),
                 Optional.of(() -> tickTimes),
                 Optional.of(
@@ -160,26 +188,86 @@ public final class RwfBotsHarness implements AutoCloseable {
     return harness;
   }
 
+  /** A real chat service over memory, as the chat module provides it; NPC lines go through it. */
+  private void provideChat() {
+    var service =
+        new ChatService(
+            new ChatConfig(
+                "global",
+                new FilterSettings(256, 4, 30),
+                "Calm down",
+                new ChannelFormats(
+                    "[G][<prefix><player>]: <message>",
+                    "[W][<prefix><player>]: <message>",
+                    "[S][<prefix><player>]: <message>",
+                    "[T][<prefix><player>]: <message>",
+                    "[Tm][<prefix><player>]: <message>",
+                    "[D][<prefix><player>]: <message>"),
+                "[<channel>] * <prefix><player> <message>",
+                "[<from> -> <to>]: <message>",
+                "[<source>][<author>]: <message>"),
+            new ChatStore() {
+              @Override
+              public CompletableFuture<ChatSnapshot> loadAll(Instant now, ChannelKey focus) {
+                return CompletableFuture.completedFuture(new ChatSnapshot(Map.of(), Map.of()));
+              }
+
+              @Override
+              public void saveProfile(UUID player, ChatProfile profile) {}
+
+              @Override
+              public void saveMute(UUID player, Mute mute) {}
+
+              @Override
+              public void deleteMute(UUID player) {}
+            },
+            clock,
+            chat);
+    service.load().join();
+    chatService = service;
+    services.provide(ChannelRegistry.class, chat);
+    services.provide(
+        NpcChat.class, new PaperNpcChat(service, new PaperChatOutput(server, service)));
+  }
+
   private void enable(Path directory) {
+    provideChat();
     services.provide(MatchView.class, match);
     services.provide(MatchEvents.class, match);
     services.provide(CombatantActions.class, match);
     services.provide(MapResources.class, maps);
     enabling =
-        plugin ->
-            module.enable(
-                new ModuleContext(
-                    plugin,
-                    plugin.getLifecycleManager(),
-                    new PaperScheduler(plugin),
-                    new DirectComputePool(),
-                    database,
-                    services,
-                    directory,
-                    clock,
-                    RandomGenerator.of("L64X128MixRandom"),
-                    plugin.getComponentLogger(),
-                    com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled()));
+        plugin -> {
+          // Players' plain chat goes through chat's own listener, as on the server.
+          var service = Objects.requireNonNull(chatService);
+          plugin
+              .getServer()
+              .getPluginManager()
+              .registerEvents(
+                  new ChatListener(
+                      service,
+                      new GlobalChatHub(
+                          service,
+                          new PaperChatOutput(server, service),
+                          clock,
+                          failure -> {
+                            throw failure;
+                          })),
+                  plugin);
+          module.enable(
+              new ModuleContext(
+                  plugin,
+                  plugin.getLifecycleManager(),
+                  new PaperScheduler(plugin),
+                  new DirectComputePool(),
+                  database,
+                  services,
+                  directory,
+                  clock,
+                  RandomGenerator.of("L64X128MixRandom"),
+                  plugin.getComponentLogger(),
+                  com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled()));
+        };
     try {
       MockBukkit.loadWith(
           HarnessPlugin.class,

@@ -144,6 +144,7 @@ Only corpus capture and context-refresh are scheduled.
 | zfs-maintenance                  | Sun 03:00                        | deterministic | scrub + autotrim                                          |
 | the-storm-mining-reset-quarterly | quarter day 1, 05:15 PT (paused) | deterministic | stopped-server Velero snapshot + mining reset             |
 | the-storm-mining-reset-countdown | daily 17:00 PT (paused)          | deterministic | #server warning 7 days and 1 day before an unpaused reset |
+| the-storm-rwf-recording-archive  | hourly (flag-gated)              | deterministic | rwf recordings in object storage + `.archived` markers    |
 | ci-uv-cache-prune-weekly         | Sun 03:15                        | deterministic | uv cache prune                                            |
 | bugsink-housekeeping             | daily 03:00                      | deterministic | DB cleanup                                                |
 | velero-orphan-audit              | daily 03:30                      | deterministic | metrics only                                              |

@@ -180,6 +180,13 @@
       "reason": "Loss-intolerant Discord history"
     },
     {
+      "name": "the-storm-rwf-recordings",
+      "mode": "protected",
+      "cadences": ["daily"],
+      "excludeSuffixes": [],
+      "reason": "Archived Red Warfare recordings; the server deletes its copy once archived"
+    },
+    {
       "name": "relay-docs",
       "mode": "protected",
       "cadences": ["six-hourly", "daily"],

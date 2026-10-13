@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.rwf.domain.match;
 
 import com.shepherdjerred.thestorm.rwf.domain.bomb.FuseBonus;
 import com.shepherdjerred.thestorm.rwf.domain.combat.AttackType;
+import com.shepherdjerred.thestorm.rwf.domain.combat.Attribution;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.CombatantId;
 import com.shepherdjerred.thestorm.rwf.domain.geometry.BlockPos;
 import com.shepherdjerred.thestorm.rwf.domain.geometry.Spawn;
@@ -18,6 +19,42 @@ public sealed interface MatchEffect {
 
   /** Clear the player and send them to the lobby. */
   record EnterLobby(CombatantId id) implements MatchEffect {}
+
+  /**
+   * The match ended and the member is carried into the next one: back to the lobby with the kit
+   * they had. Their belongings stay held.
+   */
+  record ReturnToLobby(CombatantId id, String kitId) implements MatchEffect {}
+
+  /** Open a fresh map vote: the adapter offers candidates with {@code BallotOpened}. */
+  record NeedBallot() implements MatchEffect {}
+
+  /** Load, verify and hold the chosen map, then report {@code MapReady} or {@code MapFailed}. */
+  record PrepareMap(String mapId) implements MatchEffect {}
+
+  /** Fly these members over the map from {@code at} in adventure mode, unhurt. */
+  record PreviewMap(List<CombatantId> ids, Spawn at) implements MatchEffect {
+
+    public PreviewMap {
+      ids = List.copyOf(ids);
+    }
+  }
+
+  /** These members stand still at their spawns until {@link Unfreeze}. */
+  record Freeze(List<CombatantId> ids) implements MatchEffect {
+
+    public Freeze {
+      ids = List.copyOf(ids);
+    }
+  }
+
+  /** These members may move again. */
+  record Unfreeze(List<CombatantId> ids) implements MatchEffect {
+
+    public Unfreeze {
+      ids = List.copyOf(ids);
+    }
+  }
 
   /** Make the player a spectator at {@code at}. */
   record Spectate(CombatantId id, Spawn at) implements MatchEffect {}
@@ -101,6 +138,12 @@ public sealed interface MatchEffect {
    * penalty).
    */
   record Pay(CombatantId id, long credits, String reason) implements MatchEffect {}
+
+  /**
+   * A combatant died: who gets the kill and the assists. Messages go out as notices; this is for
+   * the tab list, statistics and recordings.
+   */
+  record Death(CombatantId victim, Attribution attribution) implements MatchEffect {}
 
   /** Count one of {@code stat} for the player, such as "Armed" or "Defused". */
   record RecordStat(CombatantId id, String stat) implements MatchEffect {}

@@ -23,13 +23,15 @@ import java.util.UUID;
  * @param matchId the match
  * @param phase where the match is
  * @param now when the snapshot was taken
- * @param mapId the chosen map, if any
+ * @param mapId the map the match is played on: the loaded map, or the one its vote chose while it
+ *     loads
  * @param teams the map's teams in scoreboard order; empty before a map is chosen
  * @param combatants everyone in the match
  * @param bombs every bomb and nuke; empty before the match is live
  * @param poison the end-of-game poison while live
  * @param outcome the result once ended
- * @param startsAt when the match goes live, while the countdown runs
+ * @param startsAt when the countdown ends, or the preview or freeze does
+ * @param ballot the map vote while the lobby, the countdown or the preparation runs
  */
 public record MatchSnapshot(
     UUID matchId,
@@ -41,7 +43,8 @@ public record MatchSnapshot(
     List<BombView> bombs,
     Optional<PoisonView> poison,
     Optional<Outcome> outcome,
-    Optional<Instant> startsAt) {
+    Optional<Instant> startsAt,
+    Optional<Ballot> ballot) {
 
   public MatchSnapshot {
     teams = List.copyOf(teams);
@@ -53,6 +56,9 @@ public record MatchSnapshot(
   public enum PhaseKind {
     LOBBY,
     COUNTDOWN,
+    PREPARING,
+    PREVIEW,
+    FREEZE,
     LIVE,
     ENDED,
     RESETTING,
@@ -63,7 +69,7 @@ public record MatchSnapshot(
         match.matchId(),
         kind(match.phase()),
         now,
-        match.map().map(MapDefinition::id),
+        match.map().map(MapDefinition::id).or(() -> match.ballot().flatMap(Ballot::chosen)),
         match.map().map(MapDefinition::teamColors).orElseGet(List::of),
         match.members().stream().map(CombatantView::of).toList(),
         match.bombs().stream().map(bomb -> BombView.of(bomb, now)).toList(),
@@ -73,15 +79,26 @@ public record MatchSnapshot(
         match.phase() instanceof Phase.Ended ended
             ? Optional.of(ended.outcome())
             : Optional.empty(),
-        match.phase() instanceof Phase.Countdown countdown
-            ? Optional.of(countdown.startsAt())
-            : Optional.empty());
+        deadline(match.phase()),
+        match.ballot());
+  }
+
+  private static Optional<Instant> deadline(Phase phase) {
+    return switch (phase) {
+      case Phase.Countdown countdown -> Optional.of(countdown.startsAt());
+      case Phase.Preview preview -> Optional.of(preview.until());
+      case Phase.Freeze freeze -> Optional.of(freeze.until());
+      default -> Optional.empty();
+    };
   }
 
   private static PhaseKind kind(Phase phase) {
     return switch (phase) {
       case Phase.Lobby _ -> PhaseKind.LOBBY;
       case Phase.Countdown _ -> PhaseKind.COUNTDOWN;
+      case Phase.Preparing _ -> PhaseKind.PREPARING;
+      case Phase.Preview _ -> PhaseKind.PREVIEW;
+      case Phase.Freeze _ -> PhaseKind.FREEZE;
       case Phase.Live _ -> PhaseKind.LIVE;
       case Phase.Ended _ -> PhaseKind.ENDED;
       case Phase.Resetting _ -> PhaseKind.RESETTING;
@@ -104,13 +121,24 @@ public record MatchSnapshot(
    * @param team their team once the match has started
    * @param kit their kit
    * @param alive whether they are still fighting
+   * @param score their kills, assists and killstreak this match
    */
   public record CombatantView(
-      CombatantId id, String name, Optional<TeamColor> team, Optional<String> kit, boolean alive) {
+      CombatantId id,
+      String name,
+      Optional<TeamColor> team,
+      Optional<String> kit,
+      boolean alive,
+      Score score) {
 
     static CombatantView of(Combatant combatant) {
       return new CombatantView(
-          combatant.id(), combatant.name(), combatant.team(), combatant.kit(), combatant.alive());
+          combatant.id(),
+          combatant.name(),
+          combatant.team(),
+          combatant.kit(),
+          combatant.alive(),
+          combatant.score());
     }
 
     /**
@@ -130,13 +158,41 @@ public record MatchSnapshot(
    * @param team its owner, or for a nuke the team that armed it
    * @param position the TNT block
    * @param state what it is doing
+   * @param progress every team's arming or defusing progress, best first, for the hologram
    */
   public record BombView(
-      String id, boolean nuke, Optional<TeamColor> team, BlockPos position, State state) {
+      String id,
+      boolean nuke,
+      Optional<TeamColor> team,
+      BlockPos position,
+      State state,
+      List<State.Arming> progress) {
+
+    public BombView {
+      progress = List.copyOf(progress);
+    }
+
+    /** The progress a bomb in {@code state} shows when no other team is at work on it. */
+    public static List<State.Arming> progressOf(State state) {
+      return switch (state) {
+        case State.Arming arming -> List.of(arming);
+        case State.Armed armed -> armed.defusing().stream().toList();
+        default -> List.of();
+      };
+    }
 
     static BombView of(Bomb bomb, Instant now) {
       return new BombView(
-          bomb.id(), bomb.isNuke(), bomb.team(), bomb.site().position(), state(bomb, now));
+          bomb.id(),
+          bomb.isNuke(),
+          bomb.team(),
+          bomb.site().position(),
+          state(bomb, now),
+          bomb.state().attempts().stream()
+              .filter(attempt -> attempt.valid(now))
+              .sorted(comparing(ArmAttempt::finishesAt))
+              .map(attempt -> State.Arming.of(attempt, now))
+              .toList());
     }
 
     private static State state(Bomb bomb, Instant now) {

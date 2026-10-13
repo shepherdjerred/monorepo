@@ -60,7 +60,7 @@ final class RwfMapTest {
   }
 
   @Test
-  void verifyLobbyPassesOnTheShippedLobbyAndBakeLobbyRewritesItIdentically() throws IOException {
+  void verifyLobbyPassesOnTheShippedLobbyAndBakeLobbyBakesItIdentically() throws IOException {
     assertThat(run("verify-lobby", ShippedLobbyTest.LOBBY.toString()))
         .as(err())
         .isEqualTo(RwfMap.OK);
@@ -68,12 +68,11 @@ final class RwfMapTest {
 
     var folder = temp.resolve("lobby");
     Files.createDirectories(folder);
-    Files.copy(
-        ShippedLobbyTest.LOBBY.resolve(LobbyFolder.LOBBY_FILE),
-        folder.resolve(LobbyFolder.LOBBY_FILE));
+    for (var name : new String[] {LobbyFolder.LOBBY_FILE, MapFolder.BLOCKS_FILE}) {
+      Files.copy(ShippedLobbyTest.LOBBY.resolve(name), folder.resolve(name));
+    }
     assertThat(run("bake-lobby", folder.toString())).as(err()).isEqualTo(RwfMap.OK);
-    for (var name :
-        new String[] {MapFolder.BLOCKS_FILE, MapFolder.NAV_FILE, MapFolder.SUMMARY_FILE}) {
+    for (var name : new String[] {MapFolder.NAV_FILE, MapFolder.SUMMARY_FILE}) {
       assertThat(Files.readAllBytes(folder.resolve(name)))
           .as(name)
           .isEqualTo(Files.readAllBytes(ShippedLobbyTest.LOBBY.resolve(name)));
@@ -89,10 +88,14 @@ final class RwfMapTest {
     Files.writeString(
         folder.resolve(LobbyFolder.LOBBY_FILE),
         yaml.replaceAll("blocksSha256: [0-9a-f]{64}", "blocksSha256: " + "0".repeat(64)));
+    Files.copy(
+        ShippedLobbyTest.LOBBY.resolve(MapFolder.BLOCKS_FILE),
+        folder.resolve(MapFolder.BLOCKS_FILE));
 
     assertThat(run("bake-lobby", folder.toString())).isEqualTo(RwfMap.FAILED);
-    assertThat(err()).contains("set blocksSha256").contains(LobbyFolder.generated().sha256());
-    assertThat(Files.exists(folder.resolve(MapFolder.BLOCKS_FILE))).isTrue();
+    assertThat(err())
+        .contains("set blocksSha256")
+        .contains(LobbyFolder.load(ShippedLobbyTest.LOBBY).schematic().sha256());
     assertThat(Files.exists(folder.resolve(MapFolder.NAV_FILE))).isFalse();
   }
 

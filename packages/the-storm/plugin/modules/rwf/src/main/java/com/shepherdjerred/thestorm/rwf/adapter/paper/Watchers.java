@@ -4,6 +4,7 @@ import com.shepherdjerred.thestorm.core.snapshot.PlayerStates;
 import com.shepherdjerred.thestorm.core.snapshot.SnapshotKeeper;
 import com.shepherdjerred.thestorm.rwf.app.MatchNotification;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent;
+import com.shepherdjerred.thestorm.rwf.domain.match.MatchSnapshot;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -30,6 +31,8 @@ final class Watchers {
   private final PaperContext context;
   private final Set<UUID> watching = new LinkedHashSet<>();
   private final Set<UUID> saving = new HashSet<>();
+  private final Set<UUID> joining = new LinkedHashSet<>();
+  private final Set<UUID> nextGame = new LinkedHashSet<>();
 
   Watchers(MatchRunner runner, Snapshots snapshots, Scoreboards boards, PaperContext context) {
     this.runner = runner;
@@ -54,7 +57,7 @@ final class Watchers {
     }
     if (watching.contains(id)) {
       unfollow(player);
-      player.teleport(runner.watchPoint());
+      runner.move(player, runner.watchPoint());
       Texts.info(player, "Back at the spectator point.");
       return Optional.empty();
     }
@@ -72,7 +75,7 @@ final class Watchers {
       return Optional.empty();
     }
     PlayerStates.wipe(player, GameMode.SPECTATOR);
-    player.teleport(runner.watchPoint());
+    runner.move(player, runner.watchPoint());
     boards.show(player);
     Texts.info(
         player,
@@ -141,6 +144,7 @@ final class Watchers {
 
   private void restore(Player player) {
     var id = player.getUniqueId();
+    joining.remove(id);
     context.activity().left(id);
     watching.remove(id);
     unfollow(player);
@@ -167,22 +171,71 @@ final class Watchers {
       }
     }
     var next = fighters.get((index + 1) % fighters.size());
-    player.teleport(Places.at(next));
+    runner.move(player, Places.at(next));
     follow(player, next);
     Texts.info(player, "Following " + next.getName() + ".");
     return Optional.empty();
   }
 
-  /** A new map was chosen: every watcher moves to its spectator point. */
+  /**
+   * {@code /rwf join} while a match is under way: the player watches it now and joins the next one
+   * as its lobby opens.
+   */
+  Optional<String> watchThenJoin(Player player) {
+    var refusal =
+        watching.contains(player.getUniqueId()) ? Optional.<String>empty() : watch(player);
+    if (refusal.isEmpty() && watching.contains(player.getUniqueId())) {
+      joining.add(player.getUniqueId());
+    }
+    return refusal;
+  }
+
+  /**
+   * A fallen member asked to play the next game: they join its lobby as it opens, unless they are
+   * carried into it anyway.
+   */
+  void queueForNext(Player player) {
+    if (nextGame.add(player.getUniqueId())) {
+      Texts.info(player, "You will join the next game.");
+    }
+  }
+
+  /** The fallen who asked for the next game join its lobby, unless they were carried into it. */
+  private void admitQueued() {
+    for (var id : List.copyOf(nextGame)) {
+      nextGame.remove(id);
+      var player = context.server().getPlayer(id);
+      if (player != null && runner.memberOf(id).isEmpty() && !watching.contains(id)) {
+        runner.admit(player).ifPresent(message -> Texts.error(player, message));
+      }
+    }
+  }
+
+  /**
+   * The chosen map is ready: every watcher moves to its spectator point. A new lobby opened its
+   * vote: watchers waiting for the next match join it.
+   */
   void onTransition(MatchNotification notification) {
-    if (!(notification.event() instanceof MatchEvent.MapChosen)) {
+    if (notification.event() instanceof MatchEvent.BallotOpened
+        && notification.after().phase() == MatchSnapshot.PhaseKind.LOBBY) {
+      admitQueued();
+      for (var id : List.copyOf(joining)) {
+        joining.remove(id);
+        var player = context.server().getPlayer(id);
+        if (player != null && watching.contains(id)) {
+          join(player).ifPresent(message -> Texts.error(player, message));
+        }
+      }
+      return;
+    }
+    if (!(notification.event() instanceof MatchEvent.MapReady)) {
       return;
     }
     for (var id : watching) {
       var player = context.server().getPlayer(id);
       if (player != null) {
         unfollow(player);
-        player.teleport(runner.watchPoint());
+        runner.move(player, runner.watchPoint());
       }
     }
   }

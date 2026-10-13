@@ -100,7 +100,7 @@ final class PaperCombatantActions implements CombatantActions {
     return fighter(id)
         .fold(
             player -> {
-              var site = runner.currentMap().definition().bomb(bombId);
+              var site = runner.currentMap().flatMap(map -> map.definition().bomb(bombId));
               if (site.isEmpty()) {
                 return Optional.of(ActionRefusal.UNKNOWN_BOMB);
               }
@@ -137,6 +137,7 @@ final class PaperCombatantActions implements CombatantActions {
                             : ActionRefusal.NO_LANDING);
                 case Result.Ok<Rewinder.Rewind, RewindError>(var rewind) -> {
                   runner.rewinder(id, rewind.next());
+                  runner.hooks().abilityUsed(id, "rewind", Optional.empty());
                   rewind(player, rewind.to());
                   intent(id, "rewind", "");
                   yield Optional.empty();
@@ -253,6 +254,7 @@ final class PaperCombatantActions implements CombatantActions {
               var velocity = Places.vector(direction).normalize().multiply(force * ARROW_SPEED);
               var arrow = player.launchProjectile(Arrow.class, velocity);
               arrow.setPickupStatus(AbstractArrow.PickupStatus.DISALLOWED);
+              runner.shot(player, arrow);
               arrow.setCritical(force >= 1);
               if (KitFactory.enchantmentLevel(bow, "infinity") == 0) {
                 player.getInventory().removeItem(ItemStack.of(Material.ARROW, 1));
@@ -282,7 +284,13 @@ final class PaperCombatantActions implements CombatantActions {
               }
               intent(id, "eat", item.getType().name());
               return switch (item.getType()) {
-                case COOKED_BEEF -> CombatListener.eatSteak(player, item);
+                case COOKED_BEEF -> {
+                  var refused = CombatListener.eatSteak(player, item);
+                  if (refused.isEmpty()) {
+                    runner.ateSteak(player);
+                  }
+                  yield refused;
+                }
                 case GOLDEN_APPLE -> {
                   goldenApple(player);
                   item.subtract();

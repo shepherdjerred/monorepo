@@ -21,9 +21,11 @@ final class PaperContext {
   private final ComputePool compute;
   private final InstantSource time;
   private final RandomGenerator random;
-  private final World world;
+  private final World lobbyWorld;
+  private final World mapWorld;
   private final BlockChanges blocks;
   private final com.shepherdjerred.thestorm.core.analytics.GameActivity activity;
+  private final com.shepherdjerred.thestorm.core.analytics.ProductAnalytics analytics;
 
   /**
    * What the context is made of.
@@ -33,7 +35,8 @@ final class PaperContext {
    * @param compute off-main-thread CPU work
    * @param time the clock
    * @param random randomness for map choice
-   * @param world the sealed world matches run in
+   * @param lobbyWorld the sealed world the lobby stands in
+   * @param mapWorld the sealed world the maps stand in
    */
   record Parts(
       Plugin plugin,
@@ -41,7 +44,8 @@ final class PaperContext {
       ComputePool compute,
       InstantSource time,
       RandomGenerator random,
-      World world,
+      World lobbyWorld,
+      World mapWorld,
       BlockChanges blocks,
       com.shepherdjerred.thestorm.core.analytics.ProductAnalytics analytics) {}
 
@@ -51,8 +55,10 @@ final class PaperContext {
     this.compute = parts.compute();
     this.time = parts.time();
     this.random = parts.random();
-    this.world = parts.world();
+    this.lobbyWorld = parts.lobbyWorld();
+    this.mapWorld = parts.mapWorld();
     this.blocks = parts.blocks();
+    this.analytics = parts.analytics();
     this.activity =
         new com.shepherdjerred.thestorm.core.analytics.GameActivity(
             parts.analytics(),
@@ -87,9 +93,19 @@ final class PaperContext {
     return random;
   }
 
-  /** The sealed world matches run in. */
-  World world() {
-    return world;
+  /** The sealed world the lobby stands in. */
+  World lobbyWorld() {
+    return lobbyWorld;
+  }
+
+  /** The sealed world the maps stand in, where matches are fought and watched. */
+  World mapWorld() {
+    return mapWorld;
+  }
+
+  /** Whether {@code world} is one of the two sealed rwf worlds. */
+  boolean ours(World world) {
+    return world.equals(lobbyWorld) || world.equals(mapWorld);
   }
 
   BlockChanges blocks() {
@@ -98,6 +114,11 @@ final class PaperContext {
 
   com.shepherdjerred.thestorm.core.analytics.GameActivity activity() {
     return activity;
+  }
+
+  /** Product analytics, for the module's named game events. */
+  com.shepherdjerred.thestorm.core.analytics.ProductAnalytics analytics() {
+    return analytics;
   }
 
   ComponentLogger logger() {

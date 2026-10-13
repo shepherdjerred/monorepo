@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.rwf.adapter.paper;
 
 import com.shepherdjerred.thestorm.core.snapshot.PlayerStates;
 import com.shepherdjerred.thestorm.rwf.domain.bomb.FuseBonus;
+import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
 import com.shepherdjerred.thestorm.rwf.domain.kit.ArmorSlot;
 import com.shepherdjerred.thestorm.rwf.domain.kit.ItemSpec;
 import com.shepherdjerred.thestorm.rwf.domain.kit.KitSpec;
@@ -25,6 +26,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.LeatherArmorMeta;
 
 /**
  * Kit item stacks built once from their specs at enable, so an unknown material or enchantment
@@ -211,6 +213,32 @@ final class KitFactory {
                         .color(NamedTextColor.GRAY)
                         .decoration(TextDecoration.ITALIC, false))));
     keys.tagFuse(stack);
+    return stack;
+  }
+
+  /** The hotbar slot of the team chestplate. */
+  static final int TEAM_SLOT = 8;
+
+  /**
+   * Red Warfare's TEAM_HOTBAR item: a leather chestplate in the team's colour, named for the team,
+   * in the last hotbar slot. Tagged as a kit item, so it never leaves the match.
+   */
+  ItemStack teamHotbar(TeamColor team) {
+    var stack = new ItemStack(Material.LEATHER_CHESTPLATE);
+    var color = Scoreboards.color(team);
+    stack.editMeta(
+        LeatherArmorMeta.class,
+        meta -> {
+          meta.setColor(Hats.dye(team));
+          meta.displayName(
+              Component.text(team.displayName(), color, TextDecoration.BOLD)
+                  .decoration(TextDecoration.ITALIC, false));
+          meta.lore(
+              List.of(
+                  Component.text("You are on " + team.displayName(), color)
+                      .decoration(TextDecoration.ITALIC, false)));
+        });
+    keys.tag(stack);
     return stack;
   }
 

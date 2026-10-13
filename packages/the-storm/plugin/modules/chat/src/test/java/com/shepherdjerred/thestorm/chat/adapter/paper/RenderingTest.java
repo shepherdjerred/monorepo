@@ -80,8 +80,18 @@ final class RenderingTest {
   @Test
   void channelCommandsAreDistinct() {
     assertThat(Arrays.stream(ChannelKey.values()).map(ChatCommands::label))
-        .containsExactly("g", "war", "sc", "tc");
+        .containsExactly("g", "war", "sc", "tc", "t", "dead");
     assertThat(ChatCommands.labels(ChannelKey.WAR)).containsExactly("war", "wc");
+  }
+
+  @Test
+  void matchChannelsSayWhyTheyAreClosed() {
+    assertThat(Feedback.describe(ChannelKey.TEAM, ChannelAccess.UNAVAILABLE))
+        .isEqualTo("Team chat is only available in a match.");
+    assertThat(Feedback.describe(ChannelKey.TEAM, ChannelAccess.NOT_A_MEMBER))
+        .isEqualTo("You are not on a match team.");
+    assertThat(Feedback.describe(ChannelKey.DEAD, ChannelAccess.NOT_A_MEMBER))
+        .isEqualTo("Only the dead and spectators of a match talk in dead chat.");
   }
 
   @Test

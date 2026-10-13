@@ -230,7 +230,7 @@ public final class SnapshotCapture {
 
   static MatchPhase phase(MatchState.Phase phase) {
     return switch (phase) {
-      case LOBBY, COUNTDOWN -> MatchPhase.WAITING;
+      case LOBBY, COUNTDOWN, PREPARING, PREVIEW, FREEZE -> MatchPhase.WAITING;
       case LIVE -> MatchPhase.LIVE;
       case ENDED, RESETTING -> MatchPhase.OVER;
     };

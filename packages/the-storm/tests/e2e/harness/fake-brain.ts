@@ -47,7 +47,30 @@ type BrainState = {
   analytics: unknown[];
   /** Players the Flipt double answers `the-storm-rwf-enabled: false` for. */
   rwfDenied: Set<string>;
+  /** The Red Warfare match features the Flipt double answers `true` for. */
+  rwfFeatures: Set<RwfFeature>;
 };
+
+/** The managed Red Warfare match feature flags, server-wide. */
+export const rwfFeatureFlags = [
+  "the-storm-rwf-match-flow-enabled",
+  "the-storm-rwf-carry-over-enabled",
+  "the-storm-rwf-death-feed-enabled",
+  "the-storm-rwf-team-chat-enabled",
+  "the-storm-rwf-spectator-tools-enabled",
+  "the-storm-rwf-bomb-effects-enabled",
+  "the-storm-rwf-stats-enabled",
+] as const;
+
+export type RwfFeature = (typeof rwfFeatureFlags)[number];
+
+/** The rwf feature flags are one server-wide entity, evaluated in the map world. */
+const RwfFeatureFlagSchema = z.strictObject({
+  namespace_key: z.literal("the-storm"),
+  flag_key: z.enum(rwfFeatureFlags),
+  entity_id: z.literal("the-storm-rwf-features"),
+  context: z.strictObject({ world: z.literal(rwfTestSettings.world) }),
+});
 
 // Test-only control hook (no auth): the specs fail and heal the brain to
 // prove the sweep redrives. Never present on the real service.
@@ -85,6 +108,25 @@ async function controlRwf(
   }
   state.rwfDenied = new Set(seen.data.denied);
   return Response.json({ denied: [...state.rwfDenied] });
+}
+
+// Test-only control hook (no auth): the rwf suite switches match features on
+// to prove them; the server reads them as each lobby opens.
+async function controlRwfFeatures(
+  request: Request,
+  state: BrainState,
+): Promise<Response> {
+  if (request.method !== "POST") {
+    return new Response("not found\n", { status: 404 });
+  }
+  const seen = z
+    .strictObject({ enabled: z.array(z.enum(rwfFeatureFlags)) })
+    .safeParse(await request.json().catch(() => null));
+  if (!seen.success) {
+    return new Response("invalid request\n", { status: 400 });
+  }
+  state.rwfFeatures = new Set(seen.data.enabled);
+  return Response.json({ enabled: [...state.rwfFeatures] });
 }
 
 function classify(body: unknown): Response {
@@ -137,6 +179,30 @@ export async function setRwfDenied(
   );
   if (!response.ok) {
     throw new Error(`rwf flag control failed: ${response.status.toString()}`);
+  }
+}
+
+/**
+ * Switches on exactly `enabled` of the Red Warfare match feature flags through
+ * the Flipt double's test-only control hook; the rest answer off.
+ */
+export async function setRwfFeatures(
+  port: number,
+  enabled: RwfFeature[],
+): Promise<void> {
+  const host = Bun.env["STORM_E2E_BRAIN_HOST"] ?? "127.0.0.1";
+  const response = await fetch(
+    `http://${host}:${port.toString()}/v1/__control/rwf-features`,
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ enabled }),
+    },
+  );
+  if (!response.ok) {
+    throw new Error(
+      `rwf feature control failed: ${response.status.toString()}`,
+    );
   }
 }
 
@@ -236,6 +302,12 @@ async function evaluateFlag(
   if (prod && BotLearningFlagSchema.safeParse(body).success) {
     return Response.json({ enabled: false });
   }
+  const feature = RwfFeatureFlagSchema.safeParse(body);
+  if (prod && feature.success) {
+    return Response.json({
+      enabled: state.rwfFeatures.has(feature.data.flag_key),
+    });
+  }
   const evaluated = z
     .object({
       namespace_key: z.literal("the-storm"),
@@ -263,7 +335,12 @@ async function evaluateFlag(
 }
 
 export function startFakeBrain(token: string, port = 0): FakeBrain {
-  const state: BrainState = { mode: "ok", rwfDenied: new Set(), analytics: [] };
+  const state: BrainState = {
+    mode: "ok",
+    rwfDenied: new Set(),
+    rwfFeatures: new Set(),
+    analytics: [],
+  };
   const server = Bun.serve({
     hostname: "0.0.0.0",
     port,
@@ -296,6 +373,9 @@ export function startFakeBrain(token: string, port = 0): FakeBrain {
       }
       if (url.pathname === "/v1/__control/rwf") {
         return controlRwf(request, state);
+      }
+      if (url.pathname === "/v1/__control/rwf-features") {
+        return controlRwfFeatures(request, state);
       }
       if (request.method !== "POST" || !url.pathname.startsWith("/v1/")) {
         return new Response("not found\n", { status: 404 });

@@ -1,12 +1,15 @@
 package com.shepherdjerred.thestorm.rwf.domain.match;
 
 import com.shepherdjerred.thestorm.rwf.domain.bomb.Bomb;
+import com.shepherdjerred.thestorm.rwf.domain.combat.DamageLog;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.CombatantId;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
 import com.shepherdjerred.thestorm.rwf.domain.map.MapDefinition;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.SplittableRandom;
 import java.util.UUID;
@@ -27,6 +30,8 @@ final class Draft {
   private final List<Combatant> departed;
   private final List<Bomb> bombs;
   private final List<MatchEffect> effects = new ArrayList<>();
+  DamageLog damage;
+  final Map<CombatantId, TeamColor> pinned;
 
   Draft(RwfMatch match) {
     this.settings = match.settings();
@@ -37,6 +42,30 @@ final class Draft {
     this.members = new ArrayList<>(match.members());
     this.departed = new ArrayList<>(match.departed());
     this.bombs = new ArrayList<>(match.bombs());
+    this.damage = match.damage();
+    this.pinned = new HashMap<>(match.pinned());
+  }
+
+  /** The map vote, while the lobby or the countdown runs. */
+  Optional<Ballot> ballot() {
+    return phase.vote();
+  }
+
+  /** Replaces the ballot of the lobby or countdown. */
+  void ballot(Ballot ballot) {
+    phase =
+        switch (phase) {
+          case Phase.Lobby lobby -> new Phase.Lobby(lobby.waitingSince(), ballot);
+          case Phase.Countdown countdown ->
+              new Phase.Countdown(
+                  countdown.startsAt(),
+                  countdown.waitingSince(),
+                  countdown.lastAnnounced(),
+                  ballot);
+          case Phase.Preparing preparing ->
+              new Phase.Preparing(ballot, preparing.since(), preparing.forced());
+          default -> throw new IllegalStateException("no ballot in " + phase);
+        };
   }
 
   MapDefinition map() {
@@ -60,6 +89,8 @@ final class Draft {
 
   void remove(CombatantId id) {
     members.removeIf(member -> member.id().equals(id));
+    damage = damage.forget(id);
+    pinned.remove(id);
   }
 
   /** Moves a member who left mid-match to the departed list, for rewards. */
@@ -70,6 +101,12 @@ final class Draft {
 
   void clearRoster() {
     members.clear();
+    departed.clear();
+    damage = DamageLog.EMPTY;
+    pinned.clear();
+  }
+
+  void clearDeparted() {
     departed.clear();
   }
 
@@ -141,7 +178,7 @@ final class Draft {
 
   RwfMatch.Step step() {
     return new RwfMatch.Step(
-        new RwfMatch(settings, matchId, seed, phase, map, members, departed, bombs),
+        new RwfMatch(settings, matchId, seed, phase, map, members, departed, bombs, damage, pinned),
         List.copyOf(effects));
   }
 }

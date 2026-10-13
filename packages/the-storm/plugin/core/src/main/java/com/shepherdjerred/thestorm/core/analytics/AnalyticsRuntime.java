@@ -78,6 +78,13 @@ public final class AnalyticsRuntime implements ProductAnalytics, AutoCloseable {
   }
 
   @Override
+  public void game(UUID player, GameEvent event, Map<String, Object> properties) {
+    var checked = ProductAnalytics.checked(properties);
+    var current = book;
+    if (current != null) current.game(player, event, checked);
+  }
+
+  @Override
   public void mode(UUID player, Mode mode) {
     if (mode == Mode.SURVIVAL) modes.remove(player);
     else modes.put(player, mode);

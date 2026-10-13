@@ -5,6 +5,8 @@ plugins { id("storm.jooq-conventions") }
 dependencies {
   // Bots fill rwf matches through its app ports (BotBodies, BotActions, MatchView, MatchEvents).
   implementation(project(":rwf"))
+  // Bots talk through chat's NpcChat, so their lines meet the same routing, ignores and filters.
+  implementation(project(":chat"))
   implementation(libs.onnxruntime)
   // Citizens is a runtime plugin (server/plugins.json); only rwfbots.adapter.citizens
   // may use it here (architecture tests). Non-transitive: the plugin jar is the API.

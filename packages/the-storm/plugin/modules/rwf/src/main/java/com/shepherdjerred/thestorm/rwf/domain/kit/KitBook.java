@@ -6,6 +6,7 @@ package com.shepherdjerred.thestorm.rwf.domain.kit;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * The kits a match offers. Milestone 1 ports the four free kits; the other eighteen and the
@@ -94,6 +95,18 @@ public final class KitBook {
           new KitSpec.Menu(
               "CLOCK",
               List.of("Time Machine: back 30 seconds", "Iron sword", "Iron and chainmail armour")));
+
+  /**
+   * Kits the teams share out evenly before anyone else is placed, as Red Warfare's {@code
+   * isBalancedTeams} kits were. Medic arrives with the remaining kits.
+   */
+  public static final Set<String> SPREAD_EVENLY = Set.of("medic");
+
+  /**
+   * Kits an enemy spectator may not teleport to, as Red Warfare's {@code canTeleportTo} kept the
+   * stealth kits hidden. Ghost and Wraith arrive with the remaining kits.
+   */
+  public static final Set<String> HIDDEN_FROM_SPECTATORS = Set.of("ghost", "wraith");
 
   /** The milestone-1 kits, in Red Warfare's menu order. */
   public static final List<KitSpec> MILESTONE_ONE = List.of(TROOPER, LONGBOW, SHORTBOW, REWIND);

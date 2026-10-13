@@ -4,7 +4,8 @@
   "type": "module",
   "exports": {
     "./public-status.json": "./public-status.json",
-    "./server/owned/plugins/TheStorm/plot-reconcile.json": "./server/owned/plugins/TheStorm/plot-reconcile.json"
+    "./server/owned/plugins/TheStorm/plot-reconcile.json": "./server/owned/plugins/TheStorm/plot-reconcile.json",
+    "./server/owned/plugins/TheStorm/rwf-archive.json": "./server/owned/plugins/TheStorm/rwf-archive.json"
   },
   "imports": {
     "#client/*": "./tools/client/*",

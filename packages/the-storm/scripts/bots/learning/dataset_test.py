@@ -109,6 +109,31 @@ class DatasetTest(unittest.TestCase):
             with self.subTest(corrupt=corrupt[:50]), self.assertRaises(ValueError):
                 read(StringIO(corrupt))
 
+    def test_schema_four_reads_like_three_and_its_occurrences_are_checked(self) -> None:
+        occurrences = [
+            "V\t0\tyard\tyard\t2\tother\t1",
+            "S\t0\tWAITING\tRED=1,BLUE=1\tred-1=IDLE",
+            "C\t1\tp1\tteam\t5\t",
+            "C\t1\tp2\tglobal\t2\tgg",
+            "J\t2\tp2\tarrow\t0.5\t65.0\t0.5\t1.0\t0.0\t0.0",
+            "A\t3\tp2\trewind\t",
+            "U\t3\tp1\tspeed\t1\t200",
+            "D\t4\tp2\tp1\tMelee\tiron_sword\t2.5\tp3=0.25",
+            "K\t4\tp1\tcompass\t2",
+            "B\t5\t1\t64\t1\tminecraft:coal_block\tCRATER",
+        ]
+        three = fixture([human(0), human(1)])
+        four = three.replace("H\t3\t", "H\t4\t").replace(
+            "X\t12\t", "\n".join(occurrences) + "\nX\t12\t")
+        self.assertEqual(read(StringIO(four)), read(StringIO(three)))
+        for corrupt in (three.replace("X\t12\t", occurrences[0] + "\nX\t12\t"),
+                        four.replace("V\t0\tyard\tyard\t2\tother\t1", "V\t0\tyard\tyard\t2\tother"),
+                        four.replace("K\t4\tp1\tcompass\t2", "K\t-4\tp1\tcompass\t2"),
+                        four.replace("U\t3\tp1\tspeed\t1\t200", "U\t3\tp1\tspeed\t1"),
+                        four.replace("H\t4\t", "H\t5\t")):
+            with self.subTest(corrupt=corrupt[-120:]), self.assertRaises(ValueError):
+                read(StringIO(corrupt))
+
     def test_split_is_deterministic_and_keeps_whole_matches_together(self) -> None:
         matches = [str(index) for index in range(20)]
         split = split_matches(matches, 17)

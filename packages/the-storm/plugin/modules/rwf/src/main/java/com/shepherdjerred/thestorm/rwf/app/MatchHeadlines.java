@@ -81,6 +81,7 @@ public final class MatchHeadlines {
     return switch (snapshot.phase()) {
       case LIVE -> Optional.of("S&D: " + humans + " playing");
       case LOBBY, COUNTDOWN -> Optional.of("S&D lobby: " + humans + " waiting");
+      case PREPARING, PREVIEW, FREEZE -> Optional.of("S&D: " + humans + " about to fight");
       case ENDED, RESETTING -> Optional.empty();
     };
   }

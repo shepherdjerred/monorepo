@@ -46,7 +46,7 @@ public final class RwfBotsPaper {
   private final RwfBotsCommand command;
   private final Optional<GzipTraceFiles> traces;
   private final Optional<BotChat> chat;
-  private final Optional<LobbyChatListener> heard;
+  private final Optional<com.shepherdjerred.thestorm.chat.app.Subscription> heard;
   private final com.shepherdjerred.thestorm.rwfbots.app.learning.MatchLearning learning;
 
   private RwfBotsPaper(Parts parts) {
@@ -75,7 +75,7 @@ public final class RwfBotsPaper {
       RwfBotsCommand command,
       Optional<GzipTraceFiles> traces,
       Optional<BotChat> chat,
-      Optional<LobbyChatListener> heard,
+      Optional<com.shepherdjerred.thestorm.chat.app.Subscription> heard,
       com.shepherdjerred.thestorm.rwfbots.app.learning.MatchLearning learning) {}
 
   /**
@@ -88,6 +88,7 @@ public final class RwfBotsPaper {
    * @param store where records are written
    * @param bodies the bodies bots inhabit
    * @param world the match world
+   * @param lobbyWorld the lobby world, where bots wait and wander before a match
    * @param tickTimes the server's recent tick times in nanoseconds, for the governor
    * @param chatGate the managed flag that gates bot chat; unused when chat is disabled
    * @param lobby the lobby's baked navigation
@@ -100,6 +101,7 @@ public final class RwfBotsPaper {
       PersonalityStatsStore store,
       Bodies bodies,
       World world,
+      World lobbyWorld,
       Supplier<long[]> tickTimes,
       ChatGate chatGate,
       NavArtifact lobby,
@@ -151,7 +153,8 @@ public final class RwfBotsPaper {
                 new LobbyLoop(module.compute()),
                 app.lobby(),
                 new BodyDriver(
-                    new BodyDriver.Parts(app.bodies(), actions, app.world(), stimuli, bot -> {})),
+                    new BodyDriver.Parts(
+                        app.bodies(), actions, app.lobbyWorld(), stimuli, bot -> {})),
                 actions,
                 app.config(),
                 module.time(),
@@ -225,20 +228,19 @@ public final class RwfBotsPaper {
                         Duration.ofSeconds(chatConfig.flagRefreshSeconds()),
                         app.chatGate(),
                         roster,
-                        app.world(),
+                        java.util.List.of(app.world(), app.lobbyWorld()),
+                        services.require(com.shepherdjerred.thestorm.chat.app.NpcChat.class),
                         module.scheduler(),
                         module.time(),
                         module.logger())))
             : Optional.<BotChat>empty();
     chat.ifPresent(talk -> talk.start(events));
-    var heard = chat.map(talk -> new LobbyChatListener(talk, module.scheduler()));
-    heard.ifPresent(
-        listener ->
-            module
-                .plugin()
-                .getServer()
-                .getPluginManager()
-                .registerEvents(listener, module.plugin()));
+    var heard =
+        chat.map(
+            talk ->
+                services
+                    .require(com.shepherdjerred.thestorm.chat.app.ChannelRegistry.class)
+                    .registerTap(new HeardLines(talk, module.scheduler())));
     services.provide(BotRoster.class, BotRoster.of(roster));
     services.provide(com.shepherdjerred.thestorm.rwfbots.app.CombatHarness.class, roster.harness());
     services.provide(com.shepherdjerred.thestorm.rwf.app.ObservationSource.class, observations);
@@ -284,7 +286,7 @@ public final class RwfBotsPaper {
     clock.cancel();
     learning.close();
     bridge.close();
-    heard.ifPresent(HandlerList::unregisterAll);
+    heard.ifPresent(com.shepherdjerred.thestorm.chat.app.Subscription::cancel);
     chat.ifPresent(BotChat::close);
     HandlerList.unregisterAll(stimuli);
     doors.close();
