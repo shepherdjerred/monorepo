@@ -33,10 +33,10 @@ export function sameQueueClasses(
 }
 
 /**
- * Hold the connection until a worker stops or the supervisor is shut down.
+ * Hold the connection until a worker stops, the worker set changes, or shutdown.
  *
- * The shutdown signal is in the race for the `gateway` role, which runs a
- * Temporal client and no workers at all. `Promise.race([])` never settles, so
+ * Before Discord is ready, the gateway has a Temporal client and no workers.
+ * It needs explicit shutdown and worker-set signals. `Promise.race([])` never settles, so
  * without the signal that role's connect loop would hang forever — and
  * `shutdown()` awaits that loop, so the pod would never exit either. Exported
  * so the empty case is provable without a Temporal server.
@@ -44,8 +44,13 @@ export function sameQueueClasses(
 export async function awaitWorkerExitOrShutdown(
   runs: readonly Promise<void>[],
   closedSignal: Promise<undefined>,
+  workerSetChangedSignal?: Promise<undefined>,
 ): Promise<void> {
-  await Promise.race([...runs, closedSignal]);
+  await Promise.race([
+    ...runs,
+    closedSignal,
+    ...(workerSetChangedSignal === undefined ? [] : [workerSetChangedSignal]),
+  ]);
 }
 
 export class ScoutTemporalSupervisor {
@@ -62,6 +67,8 @@ export class ScoutTemporalSupervisor {
    */
   readonly #closedSignal: Promise<undefined>;
   readonly #signalClosed: () => void;
+  readonly #deferredWorkersSignal: Promise<undefined>;
+  readonly #signalDeferredWorkers: () => void;
   #attempt = 0;
   #consecutiveFailures = 0;
 
@@ -71,6 +78,11 @@ export class ScoutTemporalSupervisor {
     this.#closedSignal = closed.promise;
     this.#signalClosed = () => {
       closed.resolve(undefined);
+    };
+    const deferredWorkers = Promise.withResolvers<undefined>();
+    this.#deferredWorkersSignal = deferredWorkers.promise;
+    this.#signalDeferredWorkers = () => {
+      deferredWorkers.resolve(undefined);
     };
     this.#runPromise = this.#run();
   }
@@ -86,6 +98,7 @@ export class ScoutTemporalSupervisor {
     if (this.#deferredWorkersEnabled) return;
     if (this.#options.deferredWorkers.length === 0) return;
     this.#deferredWorkersEnabled = true;
+    this.#signalDeferredWorkers();
     const active = this.#active;
     if (active !== undefined) {
       for (const worker of active.workers) {
@@ -160,6 +173,11 @@ export class ScoutTemporalSupervisor {
   }
 
   async #connectAndRun(): Promise<void> {
+    // A client-only runtime has no Worker run promise to settle. Wake it when
+    // Discord enables deferred workers, and stop listening after that rebuild.
+    const workerSetChangedSignal = this.#deferredWorkersEnabled
+      ? undefined
+      : this.#deferredWorkersSignal;
     const queueClasses = this.#queueClasses();
     const runtime = await createConnectedRuntime(this.#options, queueClasses);
     if (
@@ -175,7 +193,11 @@ export class ScoutTemporalSupervisor {
       await worker.run();
     });
     try {
-      await awaitWorkerExitOrShutdown(runs, this.#closedSignal);
+      await awaitWorkerExitOrShutdown(
+        runs,
+        this.#closedSignal,
+        workerSetChangedSignal,
+      );
     } finally {
       this.#active = undefined;
       await stopConnectedRuntime(runtime, runs);

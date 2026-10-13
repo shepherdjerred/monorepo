@@ -73,78 +73,75 @@ async function begin(key: ReturnType<typeof productAnnouncementIntentKey>) {
   });
 }
 
-test.each(["permission-denied", "target-not-found"] as const)(
-  "a confirmed %s failure permits one new recruitment generation",
-  async (reason) => {
-    const { night, key } = await seed();
-    await begin(key);
-    await transitionIntent(db, {
-      intentKey: key,
-      transition: (intent) =>
-        recordFailure(intent, {
-          attemptNonce: nonce,
-          failure: { classification: "terminal", reason },
-        }),
-    });
-    await Promise.all(
-      [1, 2].map(
-        async () =>
-          await db.$transaction(
-            async (tx) =>
-              await mintCustomRecruitment(tx, night.id, now, {
-                reissueConfirmedFailure: true,
-              }),
-          ),
-      ),
-    );
-    const updated = await db.customNight.findUniqueOrThrow({
-      where: { id: night.id },
-    });
-    expect(updated.recruitmentGeneration).toBe(1);
-    expect(updated.revision).toBe(1);
-    const replacementKey = productAnnouncementIntentKey(
-      `customs-recruitment:${night.id}:1`,
-      { kind: "channel", channelId },
-    );
-    const replacement = await getSubjectIntent(db, {
-      intentKey: replacementKey,
-    });
-    if (replacement === null || !("announcementId" in replacement))
-      throw new Error("Expected replacement intent");
-    expect(replacement.intent.state.kind).toBe("pending");
-    expect(productAnnouncementOf(replacement).effect).toEqual({
-      kind: "customs-recruitment",
-      nightId: night.id,
-      generation: 1,
-    });
-    const original = await getSubjectIntent(db, { intentKey: key });
-    expect(original?.intent.state.kind).toBe("permission-denied");
-    expect(await db.matchNotificationIntent.count()).toBe(2);
-    expect(await db.scoutWorkflowStart.count()).toBe(2);
-    expect(
-      await db.customAuditEvent.count({
-        where: { action: "RECRUITMENT_REISSUED" },
+test("a confirmed permission failure permits one new recruitment generation", async () => {
+  const { night, key } = await seed();
+  await begin(key);
+  await transitionIntent(db, {
+    intentKey: key,
+    transition: (intent) =>
+      recordFailure(intent, {
+        attemptNonce: nonce,
+        failure: { classification: "terminal", reason: "permission-denied" },
       }),
-    ).toBe(1);
-    await begin(replacementKey);
-    await transitionIntent(db, {
-      intentKey: replacementKey,
-      transition: (intent) =>
-        confirmDelivered(intent, {
-          attemptNonce: nonce,
-          deliveredAt: at,
-          messageId: DiscordMessageIdSchema.parse("100000000000008703"),
-        }),
-    });
-    await repairProductAnnouncementFollowUps(db);
-    expect(
-      await db.customNight.findUnique({ where: { id: night.id } }),
-    ).toMatchObject({
-      recruitmentMessageId: "100000000000008703",
-      recruitmentGeneration: 1,
-    });
-  },
-);
+  });
+  await Promise.all(
+    [1, 2].map(
+      async () =>
+        await db.$transaction(
+          async (tx) =>
+            await mintCustomRecruitment(tx, night.id, now, {
+              reissueConfirmedFailure: true,
+            }),
+        ),
+    ),
+  );
+  const updated = await db.customNight.findUniqueOrThrow({
+    where: { id: night.id },
+  });
+  expect(updated.recruitmentGeneration).toBe(1);
+  expect(updated.revision).toBe(1);
+  const replacementKey = productAnnouncementIntentKey(
+    `customs-recruitment:${night.id}:1`,
+    { kind: "channel", channelId },
+  );
+  const replacement = await getSubjectIntent(db, {
+    intentKey: replacementKey,
+  });
+  if (replacement === null || !("announcementId" in replacement))
+    throw new Error("Expected replacement intent");
+  expect(replacement.intent.state.kind).toBe("pending");
+  expect(productAnnouncementOf(replacement).effect).toEqual({
+    kind: "customs-recruitment",
+    nightId: night.id,
+    generation: 1,
+  });
+  const original = await getSubjectIntent(db, { intentKey: key });
+  expect(original?.intent.state.kind).toBe("permission-denied");
+  expect(await db.matchNotificationIntent.count()).toBe(2);
+  expect(await db.scoutWorkflowStart.count()).toBe(2);
+  expect(
+    await db.customAuditEvent.count({
+      where: { action: "RECRUITMENT_REISSUED" },
+    }),
+  ).toBe(1);
+  await begin(replacementKey);
+  await transitionIntent(db, {
+    intentKey: replacementKey,
+    transition: (intent) =>
+      confirmDelivered(intent, {
+        attemptNonce: nonce,
+        deliveredAt: at,
+        messageId: DiscordMessageIdSchema.parse("100000000000008703"),
+      }),
+  });
+  await repairProductAnnouncementFollowUps(db);
+  expect(
+    await db.customNight.findUnique({ where: { id: night.id } }),
+  ).toMatchObject({
+    recruitmentMessageId: "100000000000008703",
+    recruitmentGeneration: 1,
+  });
+});
 
 test.each([
   "pending",
@@ -152,6 +149,7 @@ test.each([
   "unknown-delivery",
   "delivered",
   "content-unavailable",
+  "target-not-found",
 ] as const)("%s recruitment is never automatically replaced", async (state) => {
   const { night, key } = await seed();
   if (state !== "pending") await begin(key);
@@ -165,7 +163,7 @@ test.each([
           messageId: DiscordMessageIdSchema.parse("100000000000008703"),
         }),
     });
-  if (state === "content-unavailable")
+  if (state === "content-unavailable" || state === "target-not-found")
     await transitionIntent(db, {
       intentKey: key,
       transition: (intent) =>
@@ -173,7 +171,7 @@ test.each([
           attemptNonce: nonce,
           failure: {
             classification: "terminal",
-            reason: "content-unavailable",
+            reason: state,
           },
         }),
     });
@@ -227,45 +225,42 @@ test("a failed replacement transaction preserves the original generation and its
   ).toBe(0);
 });
 
-test.each(["permission-denied", "target-not-found"] as const)(
-  "background publication cannot reissue persistent %s failures",
-  async (reason) => {
-    vi.spyOn(flagPolicy, "isPolicyEnabled").mockResolvedValue(true);
-    const { night, key } = await seed();
-    const fail = async (intentKey: typeof key) => {
-      await begin(intentKey);
-      await transitionIntent(db, {
-        intentKey,
-        transition: (intent) =>
-          recordFailure(intent, {
-            attemptNonce: nonce,
-            failure: { classification: "terminal", reason },
-          }),
-      });
-    };
-    await fail(key);
-    await syncCustomRecruitmentMessage(db, night.id);
-    expect(await db.matchNotificationIntent.count()).toBe(1);
-
-    await syncCustomRecruitmentMessage(db, night.id, {
-      reissueConfirmedFailure: true,
+test("background publication cannot reissue persistent permission failures", async () => {
+  vi.spyOn(flagPolicy, "isPolicyEnabled").mockResolvedValue(true);
+  const { night, key } = await seed();
+  const fail = async (intentKey: typeof key) => {
+    await begin(intentKey);
+    await transitionIntent(db, {
+      intentKey,
+      transition: (intent) =>
+        recordFailure(intent, {
+          attemptNonce: nonce,
+          failure: { classification: "terminal", reason: "permission-denied" },
+        }),
     });
-    const replacementKey = productAnnouncementIntentKey(
-      `customs-recruitment:${night.id}:1`,
-      { kind: "channel", channelId },
-    );
-    await fail(replacementKey);
-    await syncCustomRecruitmentMessage(db, night.id);
-    await syncCustomRecruitmentMessage(db, night.id);
-    expect(
-      await db.customNight.findUniqueOrThrow({ where: { id: night.id } }),
-    ).toMatchObject({ recruitmentGeneration: 1, revision: 1 });
-    expect(await db.matchNotificationIntent.count()).toBe(2);
-    expect(await db.scoutWorkflowStart.count()).toBe(2);
-    expect(
-      await db.customAuditEvent.count({
-        where: { nightId: night.id, action: "RECRUITMENT_REISSUED" },
-      }),
-    ).toBe(1);
-  },
-);
+  };
+  await fail(key);
+  await syncCustomRecruitmentMessage(db, night.id);
+  expect(await db.matchNotificationIntent.count()).toBe(1);
+
+  await syncCustomRecruitmentMessage(db, night.id, {
+    reissueConfirmedFailure: true,
+  });
+  const replacementKey = productAnnouncementIntentKey(
+    `customs-recruitment:${night.id}:1`,
+    { kind: "channel", channelId },
+  );
+  await fail(replacementKey);
+  await syncCustomRecruitmentMessage(db, night.id);
+  await syncCustomRecruitmentMessage(db, night.id);
+  expect(
+    await db.customNight.findUniqueOrThrow({ where: { id: night.id } }),
+  ).toMatchObject({ recruitmentGeneration: 1, revision: 1 });
+  expect(await db.matchNotificationIntent.count()).toBe(2);
+  expect(await db.scoutWorkflowStart.count()).toBe(2);
+  expect(
+    await db.customAuditEvent.count({
+      where: { nightId: night.id, action: "RECRUITMENT_REISSUED" },
+    }),
+  ).toBe(1);
+});

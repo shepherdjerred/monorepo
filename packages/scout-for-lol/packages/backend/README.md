@@ -1717,17 +1717,17 @@ means `combined` in development and is refused in beta and production;
 `combined` itself is refused outside development, and an unrecognised value
 always throws at startup rather than falling back.
 
-| Subsystem                           | `combined`                                        | `application`               | `gateway`          | `activity-worker`    |
-| ----------------------------------- | ------------------------------------------------- | --------------------------- | ------------------ | -------------------- |
-| Champion assets                     | yes                                               | yes                         | yes                | yes                  |
-| Voice assistant and Discord gateway | yes                                               | —                           | yes                | —                    |
-| Report-lake access                  | read + write                                      | read + write                | read-only          | read + staging write |
-| Report-lake fold / publish          | yes                                               | yes                         | —                  | —                    |
-| Temporal workers                    | workflow, interactive, lake, realtime, background | workflow, interactive, lake | none (client only) | realtime, background |
-| Discord REST                        | yes                                               | yes                         | yes                | yes                  |
-| HTTP surface                        | full                                              | full                        | health + metrics   | health + metrics     |
-| Competition activity worker         | yes                                               | —                           | —                  | yes                  |
-| Database metric sweeps and seeding  | yes                                               | yes                         | —                  | —                    |
+| Subsystem                           | `combined`                                                 | `application`               | `gateway`                       | `activity-worker`    |
+| ----------------------------------- | ---------------------------------------------------------- | --------------------------- | ------------------------------- | -------------------- |
+| Champion assets                     | yes                                                        | yes                         | yes                             | yes                  |
+| Voice assistant and Discord gateway | yes                                                        | —                           | yes                             | —                    |
+| Report-lake access                  | read + write                                               | read + write                | read-only                       | read + staging write |
+| Report-lake fold / publish          | yes                                                        | yes                         | —                               | —                    |
+| Temporal workers                    | workflow, interactive, lake, realtime, background, gateway | workflow, interactive, lake | gateway after Discord readiness | realtime, background |
+| Discord REST                        | yes                                                        | yes                         | yes                             | yes                  |
+| HTTP surface                        | full                                                       | full                        | health + metrics                | health + metrics     |
+| Competition activity worker         | yes                                                        | —                           | —                               | yes                  |
+| Database metric sweeps and seeding  | yes                                                        | yes                         | —                               | —                    |
 
 Notes that are easy to get wrong:
 
@@ -1776,8 +1776,10 @@ Notes that are easy to get wrong:
   singleton starts at `connecting`, and `/livez` fails a pod whose shard never
   acknowledged a heartbeat once the five-minute startup grace period ends — so
   skipping the login without saying so is a crash loop, not a missing feature.
-- **`gateway` runs a Temporal client with no workers.** Commands start Workflows
-  they do not execute.
+- **`gateway` owns the gateway Activity queue.** Its Temporal client connects
+  before Discord; the worker starts after shard readiness so Customs uses
+  authoritative voice state. Adding that worker wakes and rebuilds the initial
+  client-only runtime. Commands start Workflows on their existing queues.
 - **Recovered Explore activities register with the application run manager.**
   A voice or Discord turn starts on the gateway but executes on the
   `interactive` worker; rehydrating it there holds the same per-conversation

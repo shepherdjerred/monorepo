@@ -151,9 +151,7 @@ export async function mintProductAnnouncement(
     if (
       existing.intent.state.kind === "permission-denied" &&
       existing.intent.lastFailure?.classification === "terminal" &&
-      ["permission-denied", "target-not-found"].includes(
-        existing.intent.lastFailure.reason,
-      )
+      existing.intent.lastFailure.reason === "permission-denied"
     )
       return "confirmed-unsent";
     // The first committed snapshot wins, even if standings changed on retry.
