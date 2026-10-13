@@ -49,6 +49,8 @@ test("defines CI images independently", () => {
   ]);
   expect(ciImageDefinition("ci-playwright").sourceFiles).toEqual([
     "ci/ci-playwright/Dockerfile",
+    ".mise.toml",
+    "mise.lock",
   ]);
   expect(() => ciImageDefinition("unknown")).toThrow("Unknown CI image");
 });
@@ -71,7 +73,7 @@ test("CI base authenticates tool downloads through a scoped BuildKit secret", as
       "abc",
       "/tmp/metadata.json",
     ),
-  ).not.toContain("--secret");
+  ).toContain("--secret");
   const dockerfile = await Bun.file(
     new URL("../../ci-image/Dockerfile", import.meta.url),
   ).text();

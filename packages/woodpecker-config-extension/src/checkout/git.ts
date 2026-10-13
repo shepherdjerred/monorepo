@@ -14,19 +14,31 @@ export async function git(
   cwd: string,
   args: readonly string[],
 ): Promise<string> {
-  const child = Bun.spawn(["git", "-c", "core.hooksPath=/dev/null", ...args], {
-    cwd,
-    env: {
-      PATH: Bun.env["PATH"],
-      HOME: "/nonexistent",
-      GIT_CONFIG_NOSYSTEM: "1",
-      GIT_CONFIG_GLOBAL: "/dev/null",
-      GIT_TERMINAL_PROMPT: "0",
-      LC_ALL: "C",
+  const child = Bun.spawn(
+    [
+      "git",
+      "-c",
+      "core.hooksPath=/dev/null",
+      "-c",
+      "gc.auto=0",
+      "-c",
+      "maintenance.auto=false",
+      ...args,
+    ],
+    {
+      cwd,
+      env: {
+        PATH: Bun.env["PATH"],
+        HOME: "/nonexistent",
+        GIT_CONFIG_NOSYSTEM: "1",
+        GIT_CONFIG_GLOBAL: "/dev/null",
+        GIT_TERMINAL_PROMPT: "0",
+        LC_ALL: "C",
+      },
+      stdout: "pipe",
+      stderr: "pipe",
     },
-    stdout: "pipe",
-    stderr: "pipe",
-  });
+  );
   const [stdout, stderr, code] = await Promise.all([
     new Response(child.stdout).text(),
     new Response(child.stderr).text(),

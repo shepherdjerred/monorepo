@@ -15,6 +15,10 @@ const stories = await loadStorybookStories(
 // by theme. A second combination would double the lane for no new signal.
 const theme = { skin: "modern", mode: "dark" } as const;
 
+// Each story owns its browser context; use the three bounded CI workers even
+// though the catalog is generated into a single spec file.
+test.describe.configure({ mode: "parallel" });
+
 for (const story of stories) {
   test(story.id, async ({ page }) => {
     const pageErrors = await mountStory(page, { id: story.id, ...theme });

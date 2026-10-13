@@ -23,6 +23,8 @@
   // shared Bun cache, whose readers hold the collector's lock, and tasks'
   // `bunx` calls use BUN_INSTALL instead.
   "globalPassThroughEnv": [
+    "CI_FORMAT_CACHE_ROOT",
+    "GRADLE_RO_DEP_CACHE",
     "BUN_INSTALL",
     "CARGO_INCREMENTAL",
     "GOCACHE",
@@ -311,6 +313,7 @@
     "//#prettier-scout": {
       "env": ["CI_CHANGED_BASE"],
       "inputs": [
+        "scripts/ci/prettier-cache.ts",
         "bun.lock",
         "package.json",
         ".gitignore",
@@ -332,6 +335,7 @@
     "//#prettier-homelab": {
       "env": ["CI_CHANGED_BASE"],
       "inputs": [
+        "scripts/ci/prettier-cache.ts",
         "bun.lock",
         "package.json",
         ".gitignore",
@@ -353,6 +357,7 @@
     "//#prettier-packages": {
       "env": ["CI_CHANGED_BASE"],
       "inputs": [
+        "scripts/ci/prettier-cache.ts",
         "bun.lock",
         "package.json",
         ".gitignore",
@@ -376,6 +381,7 @@
     "//#prettier-root": {
       "env": ["CI_CHANGED_BASE"],
       "inputs": [
+        "scripts/ci/prettier-cache.ts",
         "bun.lock",
         "package.json",
         ".gitignore",

@@ -534,8 +534,15 @@ describe("CI pod guard", () => {
   });
 
   it("requires the CI node, batch priority, and bounded containers", () => {
-    const expressions = guard().policy.spec.validations.map(
+    const [formatter, ...expressions] = guard().policy.spec.validations.map(
       (validation) => validation.expression,
+    );
+    expect(formatter).toContain("woodpecker-format-main");
+    expect(formatter).toContain(
+      "object.metadata.annotations['ci.sjer.red/event'] in ['push', 'manual']",
+    );
+    expect(formatter).toContain(
+      "object.metadata.annotations['ci.sjer.red/branch'] == 'main'",
     );
     expect(expressions).toHaveLength(4);
     expect(expressions[0]).toContain(

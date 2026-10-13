@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { z } from "zod";
 import { Octokit } from "octokit";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
+import { ciWorkspaceSeedRefreshEnabled } from "#config/ci-maintenance.ts";
 import type {
   MaintenanceCandidate,
   MaintenanceRequest,
@@ -136,6 +137,7 @@ export async function verifiedMaintenanceSource(source: string) {
 
 const IMAGE_INPUTS = [
   ".mise.toml",
+  "mise.lock",
   "ci/ci-image/Dockerfile",
   "ci/ci-playwright/Dockerfile",
 ];
@@ -186,6 +188,16 @@ export async function maintenanceCandidates(
       fingerprint: imageMaintenanceFingerprint(tree.data.tree),
       frozen: baseFrozen || browserFrozen,
     },
+    ...((await ciWorkspaceSeedRefreshEnabled())
+      ? [
+          {
+            kind: "workspace-seeds" as const,
+            source,
+            fingerprint: source,
+            frozen: false,
+          },
+        ]
+      : []),
   ];
 }
 export async function findMaintenanceReceipt(
@@ -253,7 +265,11 @@ async function maintenanceWasDeferred(
   const name = `maintenance-${kind}`;
   const step = pipeline.workflows
     .find((workflow) => workflow.name === name)
-    ?.children?.find((child) => child.name === name);
+    ?.children?.find(
+      (child) =>
+        child.name ===
+        (kind === "workspace-seeds" ? "workspace-seeds-result" : name),
+    );
   if (step === undefined)
     throw new Error("Maintenance receipt has no command step");
   const logs = z

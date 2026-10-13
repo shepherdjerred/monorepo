@@ -50,7 +50,7 @@ import {
  * auto-install, which would silently resolve versions the lockfile does not
  * pin.
  */
-function verifyCommands(options: {
+export function verifyCommands(options: {
   readonly remoteCache: boolean;
   readonly publishHandoff: boolean;
 }): string[] {

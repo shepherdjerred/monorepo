@@ -194,7 +194,7 @@ test("structured checkout and toolchain measurements retain units and validate i
     ],
     pipeline,
   );
-  expect(evidence).toEqual({ checkout, bootstrap: [bootstrap] });
+  expect(evidence).toEqual({ checkout, bootstrap: [bootstrap], installs: [] });
   expect(JSON.stringify(evidence)).not.toContain(config.token);
   expect(() =>
     stepEvidence(
@@ -213,6 +213,34 @@ test("structured checkout and toolchain measurements retain units and validate i
       pipeline,
     ),
   ).toThrow("uniqueness");
+});
+
+test("install timing remains separate and failed installs are not successful latency samples", () => {
+  const installs = [
+    { schemaVersion: 1, elapsedSeconds: 8, exitCode: 0 },
+    { schemaVersion: 1, elapsedSeconds: 99, exitCode: 1 },
+  ];
+  const measured = stepEvidence(
+    installs.map((entry) => `CI_INSTALL_DIAGNOSTIC ${JSON.stringify(entry)}`),
+    pipeline,
+  );
+  expect(measured.installs).toEqual(installs);
+  const evidence: LatencyEvidence = {
+    review: { kind: "unknown", providers: [] },
+    steps: [
+      {
+        workflow: "verify",
+        step: "verify",
+        stepId: 1,
+        available: true,
+        ...measured,
+      },
+    ],
+  };
+  expect(
+    latencyReport([pipeline], 0, 500, new Map([[pipeline.number, evidence]]))
+      .logEvidence.installs,
+  ).toMatchObject({ count: 1, p50Seconds: 8 });
 });
 
 test("native log decoding validates base64, sorts entries and preserves lines", () => {

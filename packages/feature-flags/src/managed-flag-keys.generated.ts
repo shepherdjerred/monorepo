@@ -20,15 +20,18 @@ export type ManagedNamespaceKey = (typeof MANAGED_NAMESPACES)[number];
 
 export const WOODPECKER_FLAG_KEYS = [
   "woodpecker-maintenance-lanes-enabled",
+  "woodpecker-source-incremental-enabled",
+  "woodpecker-prepared-workspace-enabled",
+  "woodpecker-format-cache-enabled",
+  "woodpecker-gradle-seed-enabled",
+  "woodpecker-small-check-grouping-enabled",
+  "woodpecker-bun-copyfile-enabled",
   "woodpecker-source-cache-enabled",
 ] as const;
 
 export type WoodpeckerFlagKey = (typeof WOODPECKER_FLAG_KEYS)[number];
 
-export const WOODPECKER_BOOLEAN_FLAG_KEYS = [
-  "woodpecker-maintenance-lanes-enabled",
-  "woodpecker-source-cache-enabled",
-] as const;
+export const WOODPECKER_BOOLEAN_FLAG_KEYS = WOODPECKER_FLAG_KEYS;
 
 export type WoodpeckerBooleanFlagKey =
   (typeof WOODPECKER_BOOLEAN_FLAG_KEYS)[number];
@@ -42,9 +45,7 @@ export const JUSTIN_FLAG_KEYS = ["justin_autonomous_devex_enabled"] as const;
 
 export type JustinFlagKey = (typeof JUSTIN_FLAG_KEYS)[number];
 
-export const JUSTIN_BOOLEAN_FLAG_KEYS = [
-  "justin_autonomous_devex_enabled",
-] as const;
+export const JUSTIN_BOOLEAN_FLAG_KEYS = JUSTIN_FLAG_KEYS;
 
 export type JustinBooleanFlagKey = (typeof JUSTIN_BOOLEAN_FLAG_KEYS)[number];
 
@@ -305,6 +306,7 @@ export type TrmnlDashboardVariantFlagKey =
 
 export const TEMPORAL_FLAG_KEYS = [
   "ci-maintenance-dispatch-enabled",
+  "ci-workspace-seed-refresh-enabled",
   "temporal-email-recipient",
   "temporal-email-sender",
   "temporal-daily-report-notifications-enabled",
@@ -323,6 +325,7 @@ export type TemporalFlagKey = (typeof TEMPORAL_FLAG_KEYS)[number];
 
 export const TEMPORAL_BOOLEAN_FLAG_KEYS = [
   "ci-maintenance-dispatch-enabled",
+  "ci-workspace-seed-refresh-enabled",
   "temporal-daily-report-notifications-enabled",
   "temporal-agent-chat-photon-enabled",
   "temporal-call-graph-tracing",
@@ -389,21 +392,7 @@ export const THE_STORM_FLAG_KEYS = [
 
 export type TheStormFlagKey = (typeof THE_STORM_FLAG_KEYS)[number];
 
-export const THE_STORM_BOOLEAN_FLAG_KEYS = [
-  "the-storm-analytics-enabled",
-  "the-storm-staff-tools-enabled",
-  "the-storm-identity-enabled",
-  "the-storm-letters-enabled",
-  "the-storm-ip-enforcement-enabled",
-  "the-storm-companions-enabled",
-  "the-storm-crier-enabled",
-  "the-storm-survival-enabled",
-  "the-storm-merchant-enabled",
-  "the-storm-shop-rentals-enabled",
-  "the-storm-rwf-enabled",
-  "the-storm-rwfbots-chat-enabled",
-  "the-storm-rwfbots-learning-enabled",
-] as const;
+export const THE_STORM_BOOLEAN_FLAG_KEYS = THE_STORM_FLAG_KEYS;
 
 export type TheStormBooleanFlagKey =
   (typeof THE_STORM_BOOLEAN_FLAG_KEYS)[number];

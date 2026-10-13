@@ -21,19 +21,27 @@ import {
 import { signRemoteCacheSteps } from "#src/pipeline/turbo-cache.ts";
 import { routeSteps } from "#src/pipeline/routing.ts";
 import { groupTofuSteps } from "#src/pipeline/group-tofu.ts";
+import { groupSmallChecks } from "#src/pipeline/group-small-checks.ts";
 import { isPrVerificationEvent, prStatusEvent } from "#src/pr-event.ts";
 import { limitedPrSteps } from "#src/pipeline/draft.ts";
 import {
   maintenanceMode,
-  requestedMaintenanceSteps,
+  eligibleMaintenanceSteps,
   separateMaintenance,
 } from "#src/pipeline/maintenance.ts";
 import type { SuccessfulWorkflowPipeline } from "#src/woodpecker-api.ts";
 import { cacheSourceSteps } from "#src/pipeline/source-cache.ts";
+import { performanceSteps } from "#src/pipeline/performance.ts";
+import { benchmarkResponse } from "#src/pipeline/benchmark-response.ts";
+import {
+  DISABLED_PERFORMANCE,
+  type PerformanceOptions,
+} from "#src/performance-config.ts";
 
 export type AppOptions = {
   readonly maintenanceEnabled?: (manual: boolean) => Promise<boolean>;
   readonly sourceCacheEnabled?: (branch: string) => Promise<boolean>;
+  readonly performanceOptions?: (branch: string) => Promise<PerformanceOptions>;
   readonly trustedGateImage?: string;
   /** Resolves Woodpecker's signing key; the caller caches it. */
   readonly publicKey: () => Promise<KeyObject>;
@@ -216,6 +224,7 @@ async function pipelineEmitter(
     changedFiles: pipeline.changed_files,
   };
   let enabled = false;
+  let performance = DISABLED_PERFORMANCE;
   if (!credentialless && isWorkEvent(context)) {
     const sourceBranch =
       pipeline.refspec === ""
@@ -224,6 +233,9 @@ async function pipelineEmitter(
     if (sourceBranch === undefined || sourceBranch === "")
       throw new Error("Invalid source branch refspec");
     enabled = (await options.sourceCacheEnabled?.(sourceBranch)) === true;
+    performance =
+      (await options.performanceOptions?.(sourceBranch)) ??
+      DISABLED_PERFORMANCE;
   }
   const identity = {
     commit: pipeline.commit,
@@ -231,22 +243,29 @@ async function pipelineEmitter(
     linkUrl: pipeline.forge_url,
     event: pipeline.event,
   };
-  return (steps: readonly CiStep[]) =>
+  const emit = (steps: readonly CiStep[]) =>
     emitWorkflows(
       routeSteps(
-        cacheSourceSteps(steps, {
-          enabled,
-          credentialless,
-          main:
-            ["push", "manual"].includes(pipeline.event) &&
+        performanceSteps(
+          cacheSourceSteps(steps, {
+            enabled,
+            credentialless,
+            main:
+              ["push", "manual"].includes(pipeline.event) &&
+              pipeline.branch === defaultBranch,
+            image: options.trustedGateImage,
+          }),
+          performance,
+          ["push", "manual"].includes(pipeline.event) &&
             pipeline.branch === defaultBranch,
-          image: options.trustedGateImage,
-        }),
+          credentialless,
+        ),
         context,
         options.trustedGateImage,
       ),
       identity,
     );
+  return Object.assign(emit, { performance });
 }
 
 async function authenticatedRequest(context: Context, options: AppOptions) {
@@ -290,17 +309,38 @@ async function authenticatedRequest(context: Context, options: AppOptions) {
   return { repo, pipeline, authorization };
 }
 
+function withPrCompletion(
+  selected: CiStep[],
+  options: AppOptions,
+  pipeline: Pipeline,
+  images: Awaited<ReturnType<typeof resolveCiImages>>,
+) {
+  if (!isPrVerificationEvent(pipeline)) return selected;
+  return [
+    ...selected,
+    completionStep(
+      selected,
+      options.trustedGateImage ?? images.base,
+      options.trustedGateImage === undefined ? "/workspace" : "/app",
+      prStatusEvent(pipeline.event),
+    ),
+  ];
+}
+
 export function createApp(options: AppOptions): Hono {
   const app = new Hono();
   const maintenanceEnabled =
     options.maintenanceEnabled ?? (() => Promise.resolve(false));
-  const gateDirectory =
-    options.trustedGateImage === undefined ? "/workspace" : "/app";
   app.get("/healthz", (context) => context.text("ok"));
   app.post("/ciconfig", async (context) => {
     const request = await authenticatedRequest(context, options);
     if (request instanceof Response) return request;
     const { repo, pipeline, authorization } = request;
+    const benchmark = await benchmarkResponse(context, options, pipeline, {
+      defaultBranch: repo.default_branch,
+      owner: authorization.actorClass === "owner-controlled",
+    });
+    if (benchmark !== undefined) return benchmark;
     const maintenance = await maintenanceMode(
       pipeline,
       repo.default_branch,
@@ -340,7 +380,12 @@ export function createApp(options: AppOptions): Hono {
     if (maintenance.kind !== undefined) {
       return context.json({
         configs: emit(
-          requestedMaintenanceSteps(images, maintenance.kind, pipeline),
+          await eligibleMaintenanceSteps(
+            images,
+            maintenance.kind,
+            pipeline,
+            () => options.changedBase(repo.id, repo.default_branch),
+          ),
         ),
       });
     }
@@ -410,36 +455,29 @@ export function createApp(options: AppOptions): Hono {
       imageReleaseBase: imageReleaseBase?.commit,
       imageReleasePipeline: imageReleaseBase?.pipelineNumber,
     });
-    const selected = groupTofuSteps(
-      signRemoteCacheSteps(
-        selectSteps(
-          await stepsForMainChange({
-            steps: maintenance.enabled ? separateMaintenance(steps) : steps,
-            pipeline,
-            defaultBranch: repo.default_branch,
-            changedFiles,
-            changedBase,
-            imageFetcher: options.imageFetcher,
-          }),
-          { ...selectionContext, changedFiles: changedFiles ?? [] },
+    const selected = groupSmallChecks(
+      groupTofuSteps(
+        signRemoteCacheSteps(
+          selectSteps(
+            await stepsForMainChange({
+              steps: maintenance.enabled ? separateMaintenance(steps) : steps,
+              pipeline,
+              defaultBranch: repo.default_branch,
+              changedFiles,
+              changedBase,
+              imageFetcher: options.imageFetcher,
+            }),
+            { ...selectionContext, changedFiles: changedFiles ?? [] },
+          ),
+          prVerification ? "pull-request" : "trusted",
         ),
-        prVerification ? "pull-request" : "trusted",
       ),
+      emit.performance.grouping,
+      prVerification,
+      credentiallessAutomation,
     );
 
-    const configs = emit(
-      prVerification
-        ? [
-            ...selected,
-            completionStep(
-              selected,
-              options.trustedGateImage ?? images.base,
-              gateDirectory,
-              prStatusEvent(pipeline.event),
-            ),
-          ]
-        : selected,
-    );
+    const configs = emit(withPrCompletion(selected, options, pipeline, images));
     await cleanupSupersededPr(options, repo.id, pipeline);
     return context.json({ configs });
   });

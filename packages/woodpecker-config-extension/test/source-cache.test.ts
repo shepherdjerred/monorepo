@@ -16,6 +16,7 @@ import { z } from "zod";
 import { parse } from "yaml";
 import { git } from "#src/checkout/git.ts";
 import { checkoutSource } from "#src/checkout/snapshot.ts";
+import { publishPreparedSeed } from "#src/checkout/prepared.ts";
 import {
   cacheSourceSteps,
   SOURCE_CACHE_PREPARATION_IMAGE,
@@ -53,6 +54,149 @@ async function fixture() {
   const commit = await git(repository, ["rev-parse", "HEAD"]);
   return { root, repository, commit, cache: join(root, "cache") };
 }
+
+test("an incremental miss negotiates from verified objects and retains exact source integrity", async () => {
+  const input = await fixture();
+  const first = join(input.root, "first");
+  await mkdir(first);
+  await checkoutSource({ ...input, workspace: first });
+  await Bun.write(join(input.repository, "added.txt"), "second revision\n");
+  await git(input.repository, ["add", "added.txt"]);
+  await git(input.repository, [
+    "-c",
+    "user.name=Fixture",
+    "-c",
+    "user.email=fixture@example.invalid",
+    "commit",
+    "-qm",
+    "next",
+  ]);
+  const commit = await git(input.repository, ["rev-parse", "HEAD"]);
+  const second = join(input.root, "second");
+  await mkdir(second);
+  const result = await checkoutSource({
+    ...input,
+    commit,
+    workspace: second,
+    incremental: true,
+  });
+  expect(result.seedSha).toBe(input.commit);
+  expect(await git(second, ["rev-parse", "HEAD"])).toBe(commit);
+  expect(await git(second, ["status", "--porcelain"])).toBe("");
+  expect(await git(second, ["for-each-ref", "refs/heads/cache-seed"])).toBe("");
+  await git(second, ["fsck", "--full"]);
+  const third = join(input.root, "third");
+  await mkdir(third);
+  const warm = await checkoutSource({
+    ...input,
+    commit,
+    workspace: third,
+    incremental: true,
+  });
+  expect(warm.cache).toBe("hit");
+});
+
+test("prepared seeds keep dependencies private and apply source additions and deletions", async () => {
+  const input = await fixture();
+  await Bun.write(
+    join(input.repository, "package.json"),
+    '{"name":"fixture"}\n',
+  );
+  await git(input.repository, ["add", "package.json"]);
+  await git(input.repository, [
+    "-c",
+    "user.name=Fixture",
+    "-c",
+    "user.email=fixture@example.invalid",
+    "commit",
+    "-qm",
+    "manifest",
+  ]);
+  const source = await git(input.repository, ["rev-parse", "HEAD"]);
+  const publisher = join(input.root, "publisher");
+  await mkdir(publisher);
+  await checkoutSource({ ...input, commit: source, workspace: publisher });
+  await mkdir(join(publisher, "node_modules", "fixture"), { recursive: true });
+  await Bun.write(
+    join(publisher, "node_modules", "fixture", "index.js"),
+    "export default 1;\n",
+  );
+  await symlink("fixture", join(publisher, "node_modules", "alias"));
+  await Bun.write(join(publisher, "untracked-secret"), "must not be retained");
+  const root = join(input.root, "seeds");
+  const image = `fixture@sha256:${"a".repeat(64)}`;
+  const interrupted = join(
+    root,
+    "v1",
+    "verify",
+    `${"a".repeat(64)}-${source}.tmp-${crypto.randomUUID()}`,
+  );
+  await mkdir(interrupted, { recursive: true });
+  await Bun.write(join(interrupted, "unfinished"), "interrupted copy");
+  const deferred = await publishPreparedSeed(publisher, root, "verify", {
+    image,
+    capacity: async () => ({ blocks: 100, bfree: 29 }),
+  });
+  expect(deferred.status).toBe("deferred");
+  expect(await Bun.file(join(interrupted, "unfinished")).exists()).toBe(false);
+  expect(
+    await Bun.file(
+      join(root, "indexes", "verify", `${deferred.manifest.fingerprint}.json`),
+    ).exists(),
+  ).toBe(false);
+  const published = await publishPreparedSeed(publisher, root, "verify", {
+    image,
+    capacity: async () => ({ blocks: 100, bfree: 50 }),
+  });
+  expect(published.status).toBe("completed");
+  const repeated = await publishPreparedSeed(publisher, root, "verify", {
+    image,
+    capacity: async () => {
+      throw new Error(
+        "Existing immutable generations need no space for another copy",
+      );
+    },
+  });
+  expect(repeated).toEqual(published);
+  await git(input.repository, ["rm", "link", "run.sh"]);
+  await Bun.write(join(input.repository, "added.txt"), "new source\n");
+  await git(input.repository, ["add", "added.txt"]);
+  await git(input.repository, [
+    "-c",
+    "user.name=Fixture",
+    "-c",
+    "user.email=fixture@example.invalid",
+    "commit",
+    "-qm",
+    "source delta",
+  ]);
+  const commit = await git(input.repository, ["rev-parse", "HEAD"]);
+  const workspace = join(input.root, "consumer");
+  await mkdir(workspace);
+  const result = await checkoutSource({
+    ...input,
+    commit,
+    workspace,
+    prepared: { root, profile: "verify", image },
+  });
+  expect(result.prepared).toEqual({ hit: true, sourceSha: source });
+  expect(await Bun.file(join(workspace, "run.sh")).exists()).toBe(false);
+  expect(await Bun.file(join(workspace, "untracked-secret")).exists()).toBe(
+    false,
+  );
+  expect(await Bun.file(join(workspace, "added.txt")).text()).toBe(
+    "new source\n",
+  );
+  const dependency = join(workspace, "node_modules", "fixture", "index.js");
+  expect(await Bun.file(dependency).text()).toContain("default 1");
+  await Bun.write(dependency, "private mutation\n");
+  expect(
+    await Bun.file(
+      join(publisher, "node_modules", "fixture", "index.js"),
+    ).text(),
+  ).toContain("default 1");
+  expect(await git(workspace, ["diff", "HEAD"])).toBe("");
+});
 
 test("cold and warm checkouts retain full trees, Git history, symlinks and modes", async () => {
   const input = await fixture();

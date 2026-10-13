@@ -8,7 +8,8 @@ export function pipelineKind(pipeline: WoodpeckerPipeline): string {
   if (names.has("draft-preflight")) return "draft";
   if (
     names.has("maintenance-release-notes") ||
-    names.has("maintenance-ci-images")
+    names.has("maintenance-ci-images") ||
+    names.has("maintenance-workspace-seeds")
   )
     return "maintenance";
   if (
@@ -170,6 +171,12 @@ export function latencyReport(
         scope,
         ...distribution(samples.map((entry) => entry.elapsedSeconds)),
       })),
+      installs: distribution(
+        measurements
+          .flatMap((entry) => entry.installs)
+          .filter((entry) => entry.exitCode === 0)
+          .map((entry) => entry.elapsedSeconds),
+      ),
     },
     cohorts: [...groups].map(([cohort, entries]) => ({
       cohort,

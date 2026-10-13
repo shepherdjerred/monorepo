@@ -18,6 +18,18 @@ if (($# > 0)); then
 fi
 
 LOCK_MODE=${BUN_INSTALL_LOCK_MODE:?BUN_INSTALL_LOCK_MODE must be shared or local}
+CI_INSTALL_STARTED=$SECONDS
+report_install() {
+  local status=$?
+  printf 'CI_INSTALL_DIAGNOSTIC {"schemaVersion":1,"elapsedSeconds":%d,"exitCode":%d}\n' "$((SECONDS - CI_INSTALL_STARTED))" "$status"
+  exit "$status"
+}
+trap report_install EXIT
+case "${CI_BUN_INSTALL_BACKEND:-}" in
+  '') ;;
+  copyfile) set -- "$@" --backend=copyfile ;;
+  *) echo 'Unsupported CI Bun install backend' >&2; exit 1 ;;
+esac
 
 case "$LOCK_MODE" in
   shared)

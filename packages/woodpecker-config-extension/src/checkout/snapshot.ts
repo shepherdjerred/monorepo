@@ -9,10 +9,11 @@ import {
 } from "node:fs/promises";
 import nodePath from "node:path";
 import { CommitSchema, SnapshotSchema, git, verifyObjects } from "./git.ts";
+import { restorePreparedSeed, restoreGradleSeed } from "./prepared.ts";
 const { join } = nodePath;
 
 /** No symlinks, config, hooks, credentials, or external object references. */
-async function objectBytes(directory: string): Promise<number> {
+export async function objectBytes(directory: string): Promise<number> {
   let bytes = 0;
   for (const entry of await readdir(directory, { withFileTypes: true })) {
     const path = join(directory, entry.name);
@@ -37,7 +38,10 @@ async function objectBytes(directory: string): Promise<number> {
  * instead of a second written copy. GNU cp asks for that with --reflink=auto;
  * BSD cp (developer machines) uses -c for the same thing on APFS.
  */
-async function cloneTree(source: string, destination: string): Promise<void> {
+export async function cloneTree(
+  source: string,
+  destination: string,
+): Promise<void> {
   await mkdir(destination, { recursive: true });
   const cloneFlag = process.platform === "darwin" ? "-c" : "--reflink=auto";
   const copy = Bun.spawn(["cp", "-a", cloneFlag, `${source}/.`, destination], {
@@ -71,7 +75,97 @@ export type CheckoutInput = {
   readonly commit: string;
   /** The caller holds a shared GC lock, plus an exclusive commit lock on misses. */
   readonly cache: string;
+  readonly seedCache?: string;
+  readonly incremental?: boolean;
+  readonly gradle?: { root: string; image: string };
+  readonly prepared?: {
+    root: string;
+    profile: "verify" | "browser";
+    image: string;
+  };
 };
+
+/** A seed is copied and checked before Git can advertise any of its objects. */
+async function restoreObjects(
+  snapshot: string,
+  workspace: string,
+  repository: string,
+  commit: string,
+) {
+  const manifest = SnapshotSchema.parse(
+    await Bun.file(join(snapshot, "manifest.json")).json(),
+  );
+  if (manifest.commit !== commit || manifest.repository !== repository)
+    throw new Error("Source cache identity mismatch");
+  if ((await objectBytes(join(snapshot, "objects"))) !== manifest.objectBytes)
+    throw new Error("Source cache size mismatch");
+  await cloneTree(
+    join(snapshot, "objects"),
+    join(workspace, ".git", "objects"),
+  );
+  await cp(join(snapshot, "shallow"), join(workspace, ".git", "shallow"));
+  if ((await verifyObjects(workspace, commit)) !== manifest.tree)
+    throw new Error("Source cache tree mismatch");
+  return manifest;
+}
+
+async function latestSeed(
+  parent: string,
+  excluded?: string,
+): Promise<string | undefined> {
+  const entries = await readdir(parent, { withFileTypes: true });
+  const candidates = await Promise.all(
+    entries
+      .filter(
+        (entry) =>
+          entry.isDirectory() &&
+          /^[a-f\d]{40}$/u.test(entry.name) &&
+          entry.name !== excluded,
+      )
+      .map(async (entry) => {
+        const info = await stat(join(parent, entry.name));
+        return { commit: entry.name, touched: info.mtimeMs };
+      }),
+  );
+  const ordered = candidates.toSorted(
+    (a, b) => b.touched - a.touched || a.commit.localeCompare(b.commit),
+  );
+  return ordered[0]?.commit;
+}
+
+async function seedObjects(
+  input: CheckoutInput,
+  parent: string,
+  key: string,
+  commit: string,
+) {
+  if (input.incremental !== true)
+    return { seedSha: undefined, initialBytes: 0 };
+  const seedParent =
+    input.seedCache === undefined ? parent : join(input.seedCache, "v1", key);
+  await mkdir(seedParent, { recursive: true });
+  const seedSha = await latestSeed(seedParent, commit);
+  if (seedSha === undefined) return { seedSha, initialBytes: 0 };
+  const snapshot = join(seedParent, seedSha);
+  const manifest = SnapshotSchema.parse(
+    await Bun.file(join(snapshot, "manifest.json")).json(),
+  );
+  if (manifest.commit !== seedSha || manifest.repository !== input.repository)
+    throw new Error("Source cache identity mismatch");
+  // Stop successive generations accumulating every prior PR's objects.
+  // Above this bound a fresh fetch starts a new chain; normal GC retains its
+  // existing 8 GiB target for the complete shared source cache.
+  if (manifest.objectBytes > 2 * 1024 ** 3)
+    return { seedSha: undefined, initialBytes: 0 };
+  const seed = await restoreObjects(
+    snapshot,
+    input.workspace,
+    input.repository,
+    seedSha,
+  );
+  await git(input.workspace, ["update-ref", "refs/heads/cache-seed", seedSha]);
+  return { seedSha, initialBytes: seed.objectBytes };
+}
 
 export async function checkoutSource(input: CheckoutInput) {
   const commit = CommitSchema.parse(input.commit);
@@ -91,26 +185,18 @@ export async function checkoutSource(input: CheckoutInput) {
   let fetchedBytes = 0;
   let downloadMs = 0;
   let tree: string;
+  let seedSha: string | undefined;
   if (hit) {
-    const manifest = SnapshotSchema.parse(
-      await Bun.file(join(snapshot, "manifest.json")).json(),
+    const restored = await restoreObjects(
+      snapshot,
+      input.workspace,
+      input.repository,
+      commit,
     );
-    if (manifest.commit !== commit || manifest.repository !== input.repository)
-      throw new Error("Source cache identity mismatch");
-    const bytes = await objectBytes(join(snapshot, "objects"));
-    if (bytes !== manifest.objectBytes)
-      throw new Error("Source cache size mismatch");
-    await cloneTree(
-      join(snapshot, "objects"),
-      join(input.workspace, ".git", "objects"),
-    );
-    await cp(
-      join(snapshot, "shallow"),
-      join(input.workspace, ".git", "shallow"),
-    );
-    tree = await verifyObjects(input.workspace, commit);
-    if (tree !== manifest.tree) throw new Error("Source cache tree mismatch");
+    tree = restored.tree;
   } else {
+    const seeded = await seedObjects(input, parent, key, commit);
+    seedSha = seeded.seedSha;
     const downloadStarted = performance.now();
     // Eager depth-one fetch: no tree:0 filter and no lazy checkout hydration.
     await git(input.workspace, [
@@ -123,15 +209,23 @@ export async function checkoutSource(input: CheckoutInput) {
     ]);
     downloadMs = performance.now() - downloadStarted;
     tree = await verifyObjects(input.workspace, commit);
-    fetchedBytes = await objectBytes(join(input.workspace, ".git", "objects"));
+    const storedBytes = await objectBytes(
+      join(input.workspace, ".git", "objects"),
+    );
+    fetchedBytes = Math.max(0, storedBytes - seeded.initialBytes);
     const temporary = join(parent, `${commit}.tmp-${crypto.randomUUID()}`);
     await mkdir(temporary);
     await cloneTree(
       join(input.workspace, ".git", "objects"),
       join(temporary, "objects"),
     );
-    // A root commit has no shallow file; write the known depth-one boundary.
-    await Bun.write(join(temporary, "shallow"), `${commit}\n`);
+    // Seed objects may have their own shallow boundaries. Preserve all of them
+    // so later integrity checks do not interpret missing ancestors as damage.
+    const shallow = Bun.file(join(input.workspace, ".git", "shallow"));
+    await Bun.write(
+      join(temporary, "shallow"),
+      (await shallow.exists()) ? await shallow.text() : `${commit}\n`,
+    );
     await Bun.write(
       join(temporary, "manifest.json"),
       JSON.stringify({
@@ -139,12 +233,31 @@ export async function checkoutSource(input: CheckoutInput) {
         repository: input.repository,
         commit,
         tree,
-        objectBytes: fetchedBytes,
+        objectBytes: storedBytes,
       }),
     );
     await rename(temporary, snapshot);
+    if (seedSha !== undefined)
+      await git(input.workspace, ["update-ref", "-d", "refs/heads/cache-seed"]);
   }
   const materializeStarted = performance.now();
+  const prepared =
+    input.prepared === undefined
+      ? { hit: false, sourceSha: null }
+      : await restorePreparedSeed({
+          workspace: input.workspace,
+          commit,
+          ...input.prepared,
+        });
+  const gradle =
+    input.gradle === undefined
+      ? false
+      : await restoreGradleSeed(
+          input.workspace,
+          input.gradle.root,
+          commit,
+          input.gradle.image,
+        );
   await git(input.workspace, ["reset", "--hard", "--quiet", commit]);
   if ((await git(input.workspace, ["rev-parse", "HEAD"])) !== commit)
     throw new Error("Materialized checkout head mismatch");
@@ -155,6 +268,9 @@ export async function checkoutSource(input: CheckoutInput) {
     sourceSha: commit,
     tree,
     cache: hit ? "hit" : "miss",
+    seedSha: seedSha ?? null,
+    prepared,
+    gradle,
     // Stored Git object bytes, not estimated TCP/TLS wire bytes.
     downloadedObjectBytes: fetchedBytes,
     downloadMs: Math.round(downloadMs),

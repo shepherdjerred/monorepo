@@ -7,6 +7,11 @@ import { boundedLogs } from "./native-logs.ts";
 import { reviewEvidence, type ReviewEvidence } from "./review-evidence.ts";
 
 const SecondsSchema = z.number().int().nonnegative();
+const InstallSchema = z.object({
+  schemaVersion: z.literal(1),
+  elapsedSeconds: SecondsSchema,
+  exitCode: z.number().int(),
+});
 const CheckoutSchema = z.object({
   schemaVersion: z.literal(1),
   sourceSha: z.string().regex(/^[a-f\d]{40}$/),
@@ -15,6 +20,21 @@ const CheckoutSchema = z.object({
   downloadMs: SecondsSchema,
   materializationMs: SecondsSchema,
   totalMs: SecondsSchema,
+  seedSha: z
+    .string()
+    .regex(/^[a-f\d]{40}$/u)
+    .nullable()
+    .optional(),
+  prepared: z
+    .object({
+      hit: z.boolean(),
+      sourceSha: z
+        .string()
+        .regex(/^[a-f\d]{40}$/u)
+        .nullable(),
+    })
+    .optional(),
+  gradle: z.boolean().optional(),
 });
 const BootstrapSchema = z.object({
   schemaVersion: z.literal(1),
@@ -38,6 +58,7 @@ type StepEvidence = {
   available: boolean;
   checkout: z.infer<typeof CheckoutSchema> | null;
   bootstrap: z.infer<typeof BootstrapSchema>[];
+  installs: z.infer<typeof InstallSchema>[];
 };
 export type LatencyEvidence = {
   review: ReviewEvidence;
@@ -61,6 +82,7 @@ export function stepEvidence(
 ) {
   let checkout: z.infer<typeof CheckoutSchema> | null = null;
   const bootstrap: z.infer<typeof BootstrapSchema>[] = [];
+  const installs: z.infer<typeof InstallSchema>[] = [];
   for (const line of lines) {
     const source = diagnostic(line, "CI_CHECKOUT_DIAGNOSTIC ", CheckoutSchema);
     const toolchain = diagnostic(
@@ -68,6 +90,8 @@ export function stepEvidence(
       "CI_BOOTSTRAP_DIAGNOSTIC ",
       BootstrapSchema,
     );
+    const install = diagnostic(line, "CI_INSTALL_DIAGNOSTIC ", InstallSchema);
+    if (install !== null) installs.push(install);
     if (source !== null) {
       if (checkout !== null || source.sourceSha !== pipeline.commit)
         throw new Error("Checkout evidence identity or uniqueness mismatch");
@@ -79,7 +103,7 @@ export function stepEvidence(
       bootstrap.push(toolchain);
     }
   }
-  return { checkout, bootstrap };
+  return { checkout, bootstrap, installs };
 }
 
 function selectedSteps(pipeline: WoodpeckerPipeline) {
@@ -93,9 +117,12 @@ function selectedSteps(pipeline: WoodpeckerPipeline) {
             step.name === "clone" ||
             (step.name === workflow.name &&
               (workflow.name.includes("review") ||
-                ["verify", "draft-preflight", "release-please"].includes(
-                  workflow.name,
-                ) ||
+                [
+                  "verify",
+                  "playwright-e2e",
+                  "draft-preflight",
+                  "release-please",
+                ].includes(workflow.name) ||
                 workflow.name.startsWith("maintenance-")))),
       )
       .map((step) => ({ pipeline, workflow: workflow.name, step })),
@@ -143,6 +170,7 @@ export async function latencyEvidence(
           available: false,
           checkout: null,
           bootstrap: [],
+          installs: [],
         };
         let lines: string[];
         try {

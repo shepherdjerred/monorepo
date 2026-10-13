@@ -91,6 +91,24 @@ if (BUN_CACHE_GC_SCRIPT.length === 0) {
 export function createWoodpeckerCaches(chart: Chart): void {
   createCacheClaim(
     chart,
+    "woodpecker-format-main-pvc",
+    "woodpecker-format-main",
+    "128Mi",
+  );
+  createCacheClaim(
+    chart,
+    "woodpecker-format-pr-pvc",
+    "woodpecker-format-pr",
+    "128Mi",
+  );
+  createCacheClaim(
+    chart,
+    "woodpecker-workspace-seeds-pvc",
+    "woodpecker-workspace-seeds",
+    "60Gi",
+  );
+  createCacheClaim(
+    chart,
     "woodpecker-source-main-pvc",
     "woodpecker-source-main",
     "10Gi",

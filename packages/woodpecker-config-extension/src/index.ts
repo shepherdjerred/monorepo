@@ -12,6 +12,7 @@ import { cancelSupersededPr } from "#src/superseded-pr.ts";
 import { initFeatureFlags } from "@shepherdjerred/feature-flags";
 import { sourceCacheConfig } from "#src/checkout/config.ts";
 import { maintenanceConfig } from "#src/maintenance-config.ts";
+import { performanceConfig } from "#src/performance-config.ts";
 
 function requireEnv(name: string): string {
   const value = Bun.env[name];
@@ -59,6 +60,7 @@ await initFeatureFlags({
   },
 });
 const app = createApp({
+  performanceOptions: performanceConfig,
   maintenanceEnabled: async (manual) => {
     const result = await maintenanceConfig(manual);
     return result.value;
