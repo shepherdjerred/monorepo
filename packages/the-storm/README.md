@@ -1236,6 +1236,15 @@ jumping a gap and swimming to shore. It captures physics and server logs,
 then removes its server. This fixture validates movement primitives; it does
 not certify every route on an imported map.
 
+`bun tools/maps/pursuit.ts --output .cache/rwf-pursuit/batch-a` checks the
+production planner, reflex and Citizens motor together in a small disposable
+arena. Build `:dist:shadowJar` and `:dist:fixturesJar` first. A visible target
+stands behind glass; the pursuer must take the doorway and regain sword
+contact. The runner saves positions, controller outcomes and a native-client
+video, then stops its observer and server. Attack commands are observed rather
+than applied, so this proves pursuit traversal and does not certify player
+damage or match capacity. Keep this extended check outside CI.
+
 At startup, map metadata is loaded for the rotation. Terrain and navigation
 are loaded asynchronously for the first map and at most one successor;
 the lobby remains available throughout. Chunk loading, pasting and snapshots

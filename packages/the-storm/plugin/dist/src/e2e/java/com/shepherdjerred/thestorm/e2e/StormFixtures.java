@@ -28,6 +28,7 @@ public final class StormFixtures extends JavaPlugin {
   private World world;
   private com.shepherdjerred.thestorm.e2e.maps.MapExportFixtures mapExporter;
   private com.shepherdjerred.thestorm.e2e.maps.NavigationFixtures navigation;
+  private com.shepherdjerred.thestorm.e2e.maps.PursuitFixtures pursuit;
   private com.shepherdjerred.thestorm.e2e.maps.CloseStartFixtures closeStarts;
   private com.shepherdjerred.thestorm.e2e.maps.DetailsExportFixtures detailsExporter;
 
@@ -80,6 +81,8 @@ public final class StormFixtures extends JavaPlugin {
     mapExporter.register();
     navigation = new com.shepherdjerred.thestorm.e2e.maps.NavigationFixtures(this, world);
     navigation.register();
+    pursuit = new com.shepherdjerred.thestorm.e2e.maps.PursuitFixtures(this, world);
+    pursuit.register();
     closeStarts = new com.shepherdjerred.thestorm.e2e.maps.CloseStartFixtures(this);
     closeStarts.register();
     detailsExporter = new com.shepherdjerred.thestorm.e2e.maps.DetailsExportFixtures(this, world);
@@ -91,6 +94,7 @@ public final class StormFixtures extends JavaPlugin {
   public void onDisable() {
     if (mapExporter != null) mapExporter.close();
     if (navigation != null) navigation.close();
+    if (pursuit != null) pursuit.close();
     if (closeStarts != null) closeStarts.close();
     if (detailsExporter != null) detailsExporter.close();
   }
