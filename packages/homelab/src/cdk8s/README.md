@@ -11,6 +11,11 @@
 - `src/versions.ts` — every Docker image (pinned SHAs) and Helm chart version, annotated for Renovate; the single source of truth for upgrades
 - `generated/helm/` — **committed** TypeScript types for Helm chart values
 - `imports/` — generated Kubernetes/CRD types (`bun run update-imports`)
+- `src/dockerhub-pull-secrets.ts` — discovers first-party private image consumers
+  from the registry catalog and prepares a reader-only `OnePasswordItem` in each
+  namespace, including external Helm applications and admission image allowlists.
+  CI and sandbox tokenless service accounts reference that pull secret;
+  publishing uses its separate 1Password item.
 
 ## Static-site SPA routes
 

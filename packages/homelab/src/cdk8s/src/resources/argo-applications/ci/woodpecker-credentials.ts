@@ -2,6 +2,7 @@ import type { Chart } from "cdk8s";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { KubeServiceAccount } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
+import { dockerHubPullSecretName } from "@shepherdjerred/homelab/cdk8s/src/dockerhub-pull-secrets.ts";
 
 /**
  * The Woodpecker control plane: server, agent, configuration extension, and
@@ -50,6 +51,10 @@ export const WOODPECKER_SERVER_ITEM_ID = "covttsojandjk7fx62a3dbk7em";
  * does not invalidate release and infrastructure workflows.
  */
 const CI_CREDENTIAL_ITEMS = [
+  {
+    secretName: "ci-dockerhub-publisher-credentials",
+    itemId: "mqgjqj7xmludkliupnmm2aic6y",
+  },
   { secretName: "ci-github-credentials", itemId: "34gzcrhwdm34lpadyly3rcsu44" },
   {
     secretName: "ci-turbo-cache-credentials",
@@ -155,5 +160,8 @@ export function createWoodpeckerCredentialBoundaries(chart: Chart): void {
   new KubeServiceAccount(chart, "woodpecker-job", {
     metadata: { name: "woodpecker-job", namespace: WOODPECKER_CI_NAMESPACE },
     automountServiceAccountToken: false,
+    imagePullSecrets: [
+      { name: dockerHubPullSecretName(WOODPECKER_CI_NAMESPACE) },
+    ],
   });
 }
