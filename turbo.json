@@ -428,6 +428,7 @@
       // race the outer graph for each package's Prisma generate lock.
       "dependsOn": [
         "@shepherdjerred/alert-dashboard#generate",
+        "@shepherdjerred/tracker#generate",
         "@shepherdjerred/birmel#generate",
         "@discord-plays-mario-kart/backend#generate",
         "@scout-for-lol/backend#generate",

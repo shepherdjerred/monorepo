@@ -3,6 +3,7 @@
 import { z } from "zod";
 
 export const MANAGED_NAMESPACES = [
+  "tracker",
   "woodpecker",
   "justin",
   "scout",
@@ -17,6 +18,27 @@ export const MANAGED_NAMESPACES = [
 ] as const;
 
 export type ManagedNamespaceKey = (typeof MANAGED_NAMESPACES)[number];
+
+export const TRACKER_BOOLEAN_FLAG_KEYS = [
+  "tracker-writes-enabled",
+  "tracker-imports-enabled",
+  "tracker-telemetry-enabled",
+] as const;
+
+export type TrackerBooleanFlagKey = (typeof TRACKER_BOOLEAN_FLAG_KEYS)[number];
+
+export const TRACKER_VARIANT_FLAG_KEYS = [
+  "tracker-attachment-max-bytes",
+] as const;
+
+export type TrackerVariantFlagKey = (typeof TRACKER_VARIANT_FLAG_KEYS)[number];
+
+export const TRACKER_FLAG_KEYS = [
+  ...TRACKER_BOOLEAN_FLAG_KEYS,
+  ...TRACKER_VARIANT_FLAG_KEYS,
+] as const;
+
+export type TrackerFlagKey = (typeof TRACKER_FLAG_KEYS)[number];
 
 export const WOODPECKER_BOOLEAN_FLAG_KEYS = [
   "woodpecker-maintenance-lanes-enabled",
@@ -360,6 +382,7 @@ export const STORM_FLAG_KEYS = [
 export type StormFlagKey = (typeof STORM_FLAG_KEYS)[number];
 
 export const MANAGED_FLAG_KEYS = [
+  ...TRACKER_FLAG_KEYS,
   ...WOODPECKER_FLAG_KEYS,
   ...JUSTIN_FLAG_KEYS,
   ...SCOUT_FLAG_KEYS,
@@ -376,6 +399,7 @@ export const MANAGED_FLAG_KEYS = [
 export type ManagedFlagKey = (typeof MANAGED_FLAG_KEYS)[number];
 
 export const MANAGED_BOOLEAN_FLAG_KEYS = [
+  ...TRACKER_BOOLEAN_FLAG_KEYS,
   ...WOODPECKER_BOOLEAN_FLAG_KEYS,
   ...JUSTIN_BOOLEAN_FLAG_KEYS,
   ...SCOUT_BOOLEAN_FLAG_KEYS,
@@ -392,6 +416,7 @@ export const MANAGED_BOOLEAN_FLAG_KEYS = [
 export type ManagedBooleanFlagKey = (typeof MANAGED_BOOLEAN_FLAG_KEYS)[number];
 
 export const MANAGED_VARIANT_FLAG_KEYS = [
+  ...TRACKER_VARIANT_FLAG_KEYS,
   ...WOODPECKER_VARIANT_FLAG_KEYS,
   ...JUSTIN_VARIANT_FLAG_KEYS,
   ...SCOUT_VARIANT_FLAG_KEYS,

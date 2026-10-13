@@ -124,6 +124,33 @@ const commands: Record<
       PROMETHEUS_URL: "http://127.0.0.1:19090",
     },
   },
+  tracker: {
+    command: [
+      "set -eu",
+      "cd /app/packages/tracker",
+      "bun src/server/index.ts >/tmp/tracker-smoke.log 2>&1 &",
+      "pid=$!",
+      "trap 'if kill -0 $pid; then kill $pid; wait $pid || test $? -eq 143; fi' EXIT",
+      "for _ in $(seq 1 30); do",
+      String.raw`  if bun -e 'const health = await fetch("http://127.0.0.1:17351/healthz"); const page = await fetch("http://127.0.0.1:17351/issues/AI-1"); const html = await page.text(); if (!health.ok || !page.ok || !html.includes("<div id=\"root\"></div>")) process.exit(1); const asset = html.match(/src="([^"]+\.js)"/u)?.[1]; if (!asset || !(await fetch(new URL(asset, page.url))).ok) process.exit(1);' ; then exit 0; fi`,
+      "  if ! kill -0 $pid; then cat /tmp/tracker-smoke.log; exit 1; fi",
+      "  sleep 1",
+      "done",
+      "cat /tmp/tracker-smoke.log",
+      "exit 1",
+    ].join("\n"),
+    env: {
+      DATABASE_URL: "postgresql://smoke:smoke@127.0.0.1:15432/tracker",
+      HOST: "127.0.0.1",
+      PORT: "17351",
+      ENVIRONMENT: "test",
+      FEATURE_FLAGS_MODE: "disabled",
+      S3_ENDPOINT: "http://127.0.0.1:18333",
+      S3_BUCKET: "tracker-smoke",
+      AWS_ACCESS_KEY_ID: "smoke",
+      AWS_SECRET_ACCESS_KEY: "smoke",
+    },
+  },
   "storm-brain": {
     command: [
       "set -eu",

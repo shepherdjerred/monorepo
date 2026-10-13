@@ -90,7 +90,6 @@ export async function generateFlagTypesSource(): Promise<string> {
       `export type ${prefixPascal}VariantFlagKey = (typeof ${prefixUpper}_VARIANT_FLAG_KEYS)[number];`,
     );
     lines.push("");
-
     // Every flag in the namespace, spread from the typed tuples above rather
     // than a second copy of each literal, so the file stays within its budget.
     lines.push(

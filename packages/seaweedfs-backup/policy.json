@@ -12,6 +12,13 @@
   },
   "buckets": [
     {
+      "name": "tracker-attachments",
+      "mode": "protected",
+      "cadences": ["six-hourly", "daily"],
+      "excludeSuffixes": [],
+      "reason": "Issue screenshots and files retained by immutable audit history"
+    },
+    {
       "name": "storm-forum-releases",
       "mode": "protected",
       "cadences": ["daily"],

@@ -665,7 +665,12 @@
     {
       "package": "@shepherdjerred/sentry-config",
       "directory": "packages/sentry-config",
-      "steps": [{ "runner": "vitest", "args": ["test"] }]
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["test"]
+        }
+      ]
     },
     {
       "package": "starlight-karma-bot",
@@ -679,12 +684,22 @@
     {
       "package": "@shepherdjerred/storm-forum",
       "directory": "packages/storm-forum",
-      "steps": [{ "runner": "vitest", "args": ["test/"] }]
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["test/"]
+        }
+      ]
     },
     {
       "package": "@shepherdjerred/storm-theme",
       "directory": "packages/storm-theme",
-      "steps": [{ "runner": "vitest", "args": ["test/"] }]
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["test/"]
+        }
+      ]
     },
     {
       "package": "@shepherdjerred/storm-brain",
@@ -777,7 +792,10 @@
           ],
           "coverageConfig": "coverage.settings.xml",
           "name": "unit",
-          "mstest": { "parallel": true, "timeoutMs": 30000 }
+          "mstest": {
+            "parallel": true,
+            "timeoutMs": 30000
+          }
         },
         {
           "runner": "dotnet",
@@ -789,7 +807,10 @@
           ],
           "coverageConfig": "coverage.settings.xml",
           "name": "integration",
-          "mstest": { "parallel": true, "timeoutMs": 120000 }
+          "mstest": {
+            "parallel": true,
+            "timeoutMs": 120000
+          }
         }
       ]
     },
@@ -1115,6 +1136,27 @@
           "reason": "The committer runs rendered 256-combatant acceptance locally through test:capacity-native; this extended native Minecraft client suite does not run in CI."
         }
       ]
+    },
+    {
+      "package": "@shepherdjerred/tracker",
+      "directory": "packages/tracker",
+      "steps": [
+        {
+          "runner": "command",
+          "name": "generate",
+          "command": ["bun", "run", "generate"]
+        },
+        {
+          "runner": "vitest",
+          "args": ["src"]
+        }
+      ],
+      "excludedSuites": [
+        {
+          "path": "e2e",
+          "reason": "Playwright acceptance runs in the browser E2E lane."
+        }
+      ]
     }
   ],
   "testlessWorkspaces": [
@@ -1163,13 +1205,18 @@
     {
       "package": "@shepherdjerred/glitter-boys",
       "directory": "packages/glitter-boys",
-      "localScripts": { "test": "test:local" },
+      "localScripts": {
+        "test": "test:local"
+      },
       "reason": "Owner-requested local-only verification and manual deployment. Run test:local before release; shared CI does not build, test, or publish this site."
     },
     {
       "package": "@shepherdjerred/glitter-boys-launcher",
       "directory": "packages/glitter-boys-launcher",
-      "localScripts": { "build": "build:local", "test": "test:local" },
+      "localScripts": {
+        "build": "build:local",
+        "test": "test:local"
+      },
       "reason": "Owner-requested local-only verification and manual releases for the launcher and telemetry image. Run test:local before release; shared CI does not build, test, sign, or publish these artifacts."
     },
     {

@@ -1,0 +1,233 @@
+generator client {
+  provider = "prisma-client"
+  output = "../generated/prisma"
+  runtime = "bun"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum StateType {
+  triage
+  backlog
+  unstarted
+  started
+  completed
+  canceled
+  duplicate
+}
+
+enum ActorKind {
+  human
+  agent
+  runner
+}
+
+enum RelationType {
+  blocks
+  duplicate
+  related
+}
+
+enum AttachmentStatus {
+  staged
+  committed
+}
+
+model Team {
+  id String @id @default(uuid())
+  key String @unique
+  name String
+  issueCounter Int @default(0)
+  states WorkflowState[]
+  labels Label[]
+  issues Issue[]
+}
+
+model WorkflowState {
+  id String @id @default(uuid())
+  teamId String
+  team Team @relation(fields: [teamId], references: [id])
+  name String
+  type StateType
+  color String
+  position Int
+  issues Issue[]
+  @@unique([teamId, name])
+  @@unique([id, teamId])
+}
+
+model Label {
+  id String @id @default(uuid())
+  teamId String
+  team Team @relation(fields: [teamId], references: [id])
+  name String
+  color String
+  issues IssueLabel[]
+  @@unique([teamId, name])
+  @@unique([id, teamId])
+}
+
+model Project {
+  id String @id @default(uuid())
+  slug String @unique
+  name String
+  description String @default("")
+  color String
+  archivedAt DateTime?
+  issues Issue[]
+}
+
+model Actor {
+  id String @id @default(uuid())
+  key String @unique
+  kind ActorKind
+  name String
+  firstSeenAt DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+  seenCount Int @default(1)
+  firstMetadata Json
+  metadata Json
+  createdIssues Issue[] @relation("creator")
+  assignedIssues Issue[] @relation("assignee")
+  comments Comment[]
+  attachments Attachment[]
+  votes Vote[]
+  events Event[]
+}
+
+model Issue {
+  id String @id @default(uuid())
+  teamId String
+  team Team @relation(fields: [teamId], references: [id])
+  number Int
+  title String
+  description String @default("")
+  stateId String
+  state WorkflowState @relation(fields: [stateId, teamId], references: [id, teamId])
+  priority Int @default(0)
+  projectId String?
+  project Project? @relation(fields: [projectId], references: [id])
+  assigneeId String?
+  assignee Actor? @relation("assignee", fields: [assigneeId], references: [id])
+  creatorId String
+  creator Actor @relation("creator", fields: [creatorId], references: [id])
+  boardOrder Float @default(0)
+  voteCount Int @default(0)
+  revision Int @default(1)
+  externalRef String? @unique
+  sourceMetadata Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  startedAt DateTime?
+  completedAt DateTime?
+  canceledAt DateTime?
+  archivedAt DateTime?
+  searchVector Unsupported("tsvector")? @default(dbgenerated())
+  labels IssueLabel[]
+  comments Comment[]
+  attachments Attachment[]
+  votes Vote[]
+  events Event[]
+  relationsFrom IssueRelation[] @relation("from")
+  relationsTo IssueRelation[] @relation("to")
+  @@unique([teamId, number])
+  @@unique([id, teamId])
+  @@index([updatedAt, id])
+  @@index([stateId, boardOrder, id])
+}
+
+model IssueLabel {
+  issueId String
+  labelId String
+  teamId String
+  issue Issue @relation(fields: [issueId, teamId], references: [id, teamId], onDelete: Cascade)
+  label Label @relation(fields: [labelId, teamId], references: [id, teamId], onDelete: Cascade)
+  @@id([issueId, labelId])
+}
+
+model Comment {
+  id String @id @default(uuid())
+  issueId String
+  issue Issue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  authorId String
+  author Actor @relation(fields: [authorId], references: [id])
+  body String
+  createdAt DateTime @default(now())
+  editedAt DateTime?
+  attachments Attachment[]
+  @@index([issueId, createdAt, id])
+}
+
+model IssueRelation {
+  id String @id @default(uuid())
+  fromId String
+  from Issue @relation("from", fields: [fromId], references: [id], onDelete: Cascade)
+  toId String
+  to Issue @relation("to", fields: [toId], references: [id], onDelete: Cascade)
+  type RelationType
+  @@unique([fromId, toId, type])
+}
+
+model Attachment {
+  id String @id @default(uuid())
+  storageKey String @unique
+  filename String
+  contentType String
+  sizeBytes Int
+  sha256 String
+  width Int?
+  height Int?
+  uploaderId String
+  uploader Actor @relation(fields: [uploaderId], references: [id])
+  status AttachmentStatus @default(staged)
+  issueId String?
+  issue Issue? @relation(fields: [issueId], references: [id], onDelete: SetNull)
+  commentId String?
+  comment Comment? @relation(fields: [commentId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+  @@index([status, createdAt])
+}
+
+model Vote {
+  issueId String
+  issue Issue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  actorId String
+  actor Actor @relation(fields: [actorId], references: [id])
+  note String?
+  createdAt DateTime @default(now())
+  @@id([issueId, actorId])
+}
+
+model Event {
+  id String @id @default(uuid())
+  entityType String
+  entityId String
+  issueId String?
+  issue Issue? @relation(fields: [issueId], references: [id], onDelete: SetNull)
+  issueIdentifier String?
+  action String
+  actorId String
+  actor Actor @relation(fields: [actorId], references: [id])
+  occurredAt DateTime @default(now())
+  changes Json
+  before Json?
+  after Json?
+  requestId String
+  sourceIdentity String? @unique
+  rawSourcePayload Json?
+  @@index([issueIdentifier, occurredAt, id])
+  @@index([actorId, occurredAt, id])
+  @@index([occurredAt, id])
+}
+
+model ImportMapping {
+  source String
+  entityType String
+  externalId String
+  destinationId String
+  contentHash String
+  @@id([source, entityType, externalId])
+}

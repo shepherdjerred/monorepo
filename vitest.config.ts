@@ -216,6 +216,9 @@ export default {
           : []),
     ],
     setupFiles,
+    ...(workspace === "packages/tracker"
+      ? { globalSetup: [path.join(workspaceRoot, "vitest.global-setup.ts")] }
+      : {}),
     ...(process.env["BIRMEL_VITEST_HARNESS"] === undefined
       ? {}
       : { include: [process.env["BIRMEL_VITEST_HARNESS"]] }),
