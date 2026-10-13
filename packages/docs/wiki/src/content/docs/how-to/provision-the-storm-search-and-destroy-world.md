@@ -127,7 +127,8 @@ module reads them as each match opens, so a change reaches the next match.
 The full kit shop and rotation (`the-storm-rwf-kits-enabled`) and killstreak
 rewards (`the-storm-rwf-killstreaks-enabled`) have the same environment
 overrides. Kits are cached when a player's armory loads, until that player
-disconnects. Verify with a fresh player session after changing the flag.
+disconnects. After changing the flag, disconnect and reconnect, complete a
+successful `/rwf join`, then verify the kits.
 
 Bot chat remains enabled. Bot learning and recording archival stay off;
 opening gameplay does not enable either. Archival needs its storage bucket,
