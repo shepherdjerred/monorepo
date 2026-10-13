@@ -274,6 +274,14 @@ export function createPokemonDeployment(chart: Chart) {
 
   setRevisionHistoryLimit(deployment);
 
+  // config.toml is mounted through Secret subPath, which Kubernetes does not
+  // refresh in a running pod. Bump this annotation with production config
+  // changes that need the backend to reload the file.
+  deployment.podMetadata.addAnnotation(
+    "pokemon.sjer.red/config-revision",
+    "single-player-minimum-1",
+  );
+
   // Request the Intel iGPU so ffmpeg can VAAPI hardware-encode. The
   // intel-device-plugin mounts /dev/dri into the pod; non-root UID 1000 works
   // (same as streambot). cdk8s has no GPU resource field, so patch it in.

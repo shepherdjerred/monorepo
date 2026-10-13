@@ -57,9 +57,9 @@ enabled = true
 # The stream joins the voice channel of whoever ran /play.
 # only stream if there is someone in the channel
 dynamic_streaming = true
-# there must be at least this many people watching
-# for commands to be processed
-minimum_in_channel = 2
+# there must be at least this many human players in the voice channel
+# one lets a player run the game solo
+minimum_in_channel = 1
 # only those watching the stream can send commands
 require_watching = true
 

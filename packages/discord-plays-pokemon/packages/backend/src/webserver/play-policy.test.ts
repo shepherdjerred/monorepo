@@ -43,6 +43,20 @@ test("own and peer streaming accounts cannot satisfy the human-player minimum", 
   expect(policy.canWatch(USER)).toBe(true);
 });
 
+test("a single human player satisfies the solo-play minimum", () => {
+  const policy = createPlayPolicy({
+    channel: () => ({ guildId: "guild", voiceChannelId: "voice" }),
+    voice: {
+      isInChannel: () => true,
+      channelName: () => "Pokémon",
+      displayName: () => "May",
+    },
+    players: () => [USER],
+    minimumInChannel: 1,
+  });
+  expect(policy.blockerFor(USER)).toBeNull();
+});
+
 test("play policy follows the current session, voice membership, and human count", () => {
   let active = false;
   let present = false;
