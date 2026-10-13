@@ -44,7 +44,12 @@ Source-only, like discord-plays-core: `package.json#exports` maps `./*` to
 `@shepherdjerred/discord-plays-web/feed/use-driver-feed.ts`. Changes here must be
 verified against both frontends.
 
+`build` emits type declarations into `dist` to validate the package's public
+surface. Frontend bundlers continue to consume its TypeScript source exports.
+The shared CI test manifest runs all suites in `test/` and retains their reports.
+
 ```bash
+bun run build
 bun run typecheck
 bun run test
 bun run lint

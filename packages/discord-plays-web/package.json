@@ -14,6 +14,7 @@
     "src"
   ],
   "scripts": {
+    "build": "PATH=node_modules/@typescript/native/bin:$PATH tsc -p tsconfig.build.json",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "lint": "eslint .",
     "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run test/",

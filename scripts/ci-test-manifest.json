@@ -119,6 +119,16 @@
       ]
     },
     {
+      "package": "@shepherdjerred/discord-plays-web",
+      "directory": "packages/discord-plays-web",
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["test/"]
+        }
+      ]
+    },
+    {
       "package": "@shepherdjerred/discord-plays-mario-kart-scripts",
       "directory": "packages/discord-plays-mario-kart",
       "steps": [
