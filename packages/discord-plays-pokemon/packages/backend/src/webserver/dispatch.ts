@@ -127,6 +127,10 @@ async function handleCommand(
     reply({ accepted: false, command, reason: "goal-mode" });
     return;
   }
+  if (deps.driver.getActiveRuntime() !== active) {
+    reply({ accepted: false, command, reason: "no-session" });
+    return;
+  }
   deps.driver.inputLog.record({ user: "Web player", source: "web", command });
   reply({ accepted: true, command });
 }

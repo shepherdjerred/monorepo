@@ -99,7 +99,8 @@ async function handleMessage(
   if (isValid(chord, chatLimits)) {
     const accepted = await executeInteractiveChord(
       chord,
-      fn,
+      (input) =>
+        driver.getActiveRuntime() === runtime ? fn(input) : Promise.resolve(),
       effectiveChordDelay(
         commands.chord.delay,
         commands.delay_between_actions_in_milliseconds,
@@ -111,6 +112,7 @@ async function handleMessage(
       );
       return;
     }
+    if (driver.getActiveRuntime() !== runtime) return;
     driver.inputLog.record({
       user: event.member.displayName,
       source: "discord",

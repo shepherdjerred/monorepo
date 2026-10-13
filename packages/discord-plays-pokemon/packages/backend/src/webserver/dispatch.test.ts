@@ -62,8 +62,9 @@ function dispatchConfig(): Config {
 function harness(active: boolean) {
   const emulator = new RecordingEmulator();
   const inputLog = new InputLog(10);
+  const runtime = { emulator, timing: TIMING };
   const driver: DispatchDriver = {
-    getActiveRuntime: () => (active ? { emulator, timing: TIMING } : null),
+    getActiveRuntime: () => (active ? runtime : null),
     inputLog,
   };
   const replies: Response[] = [];
@@ -85,10 +86,27 @@ function harness(active: boolean) {
   };
   const send = (value: string) =>
     handleRequest({ request: { kind: "command", value }, socket }, deps);
-  return { emulator, inputLog, replies, send };
+  return { emulator, inputLog, replies, send, deps };
 }
 
 describe("web command dispatch", () => {
+  test("a chord completing after stop cannot repopulate cleared history", async () => {
+    const { emulator, inputLog, replies, send, deps } = harness(true);
+    const gate = Promise.withResolvers<undefined>();
+    emulator.queuePress = () => gate.promise;
+    const command = send("a");
+    deps.driver.getActiveRuntime = () => null;
+    inputLog.clear();
+    gate.resolve(undefined);
+    await command;
+    expect(inputLog.recent()).toEqual([]);
+    expect(replies).toEqual([
+      {
+        kind: "input-result",
+        value: { accepted: false, command: "a", reason: "no-session" },
+      },
+    ]);
+  });
   test("runs a valid chord and logs who sent it", async () => {
     const { emulator, inputLog, replies, send } = harness(true);
     await send("a up lb");

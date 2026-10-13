@@ -365,6 +365,7 @@ export class PokemonGameDriver implements GameDriver<SelfbotPooledUserbot> {
         : undefined;
       const interval = eventsConfig.poll_interval_frames;
       emulator.addFrameHook((frame) => {
+        if (this.active?.emulator !== emulator) return;
         if (frame % interval !== 0) return;
         for (const event of watcher.poll()) {
           notifier?.enqueue(event);
