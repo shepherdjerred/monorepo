@@ -44,25 +44,39 @@ final class TacticsCommitmentTest {
           Plan.of(
               Option.TAKE_SLOT, 0, new PlanStep.Route(new Vec3(25.5, 1, 15.5), Stance.AGGRESSIVE)));
 
-  private record Formation(Optional<Vec3> slot, boolean teamed) {}
+  private record Formation(SlotKind kind, Optional<Vec3> slot, boolean teamed) {}
 
   private static Situation situation(Role role, double enemyDistance, long hurtTick) {
     return situation(
-        role, enemyDistance, hurtTick, new Formation(Optional.of(new Vec3(25.5, 1, 15.5)), true));
+        role,
+        enemyDistance,
+        hurtTick,
+        new Formation(SlotKind.FLANK, Optional.of(new Vec3(25.5, 1, 15.5)), true));
+  }
+
+  private static Situation sweep(
+      double enemyDistance, double slotDistance, long hurtTick, boolean teamed) {
+    return situation(
+        Role.HUNT,
+        enemyDistance,
+        hurtTick,
+        new Formation(SlotKind.SWEEP, Optional.of(SELF.plus(0, 0, slotDistance)), teamed));
   }
 
   private static Situation situation(
       Role role, double enemyDistance, long hurtTick, Formation formation) {
+    var kind = formation.kind();
     var self = combatant(1, RED, SELF).withLastHurtTick(hurtTick);
     var enemy = combatant(2, BLUE, SELF.plus(enemyDistance, 0, 0));
     var bodies = new java.util.ArrayList<>(List.of(self, enemy));
     if (formation.teamed()) bodies.add(combatant(3, RED, SELF.plus(0, 0, 4)));
-    var board = Blackboard.open(RED, Strategy.RUSH);
+    var strategy = kind == SlotKind.SWEEP ? Strategy.HUNT : Strategy.RUSH;
+    var board = Blackboard.open(RED, strategy);
     if (formation.slot().isPresent()) {
       var slot =
           new Slot(
-              "flank-0",
-              SlotKind.FLANK,
+              kind.name().toLowerCase(java.util.Locale.ROOT) + "-0",
+              kind,
               role,
               formation.slot().orElseThrow(),
               enemy.pos(),
@@ -73,7 +87,7 @@ final class TacticsCommitmentTest {
       board =
           board.withPlan(
               new TeamPlan(
-                  Optional.of(Strategy.RUSH),
+                  Optional.of(strategy),
                   Optional.of(SELF),
                   Optional.empty(),
                   List.of(),
@@ -123,7 +137,7 @@ final class TacticsCommitmentTest {
               Tactics.choose(
                   Option.HUNT,
                   ROUTE,
-                  situation(Role.ROTATE, 20, -1, new Formation(point, true)),
+                  situation(Role.ROTATE, 20, -1, new Formation(SlotKind.FLANK, point, true)),
                   Map.of()))
           .isEqualTo(Option.HUNT);
     }
@@ -135,7 +149,7 @@ final class TacticsCommitmentTest {
                     Role.ROTATE,
                     20,
                     -1,
-                    new Formation(Optional.of(new Vec3(25.5, 1, 15.5)), false)),
+                    new Formation(SlotKind.FLANK, Optional.of(new Vec3(25.5, 1, 15.5)), false)),
                 Map.of()))
         .isEqualTo(Option.ARM);
   }
@@ -174,6 +188,124 @@ final class TacticsCommitmentTest {
   void anEscortMayHelpAtTheBombWhileTraveling() {
     assertThat(Tactics.choose(Option.HELP_ARM, ROUTE, situation(Role.ESCORT, 20, -1), Map.of()))
         .isEqualTo(Option.HELP_ARM);
+  }
+
+  private static void assertSweepKeepsAssignment(Optional<Plan> current) {
+    // The Paper showcase's healthy sweepers abandoned slots 11–14 blocks away
+    // for hunts and fuse help while enemies were still 12–14 blocks away.
+    for (var scene : List.of(sweep(12, 11, -1, true), sweep(14, 14, -1, true))) {
+      for (var picked : List.of(Option.HUNT, Option.ENGAGE, Option.ARM, Option.HELP_ARM)) {
+        assertThat(Tactics.choose(picked, current, scene, Map.of()))
+            .as("unfinished sweep in %s when %s picked", current, picked)
+            .isEqualTo(Option.TAKE_SLOT);
+      }
+    }
+  }
+
+  @Test
+  void aSweepCompletesItsRouteBeforeDistantHuntsFightsAndFuseHelp() {
+    assertSweepKeepsAssignment(ROUTE);
+  }
+
+  @Test
+  void aSweepKeepsItsAssignmentDuringACoverBound() {
+    assertSweepKeepsAssignment(
+        Optional.of(
+            Plan.of(
+                Option.TAKE_SLOT,
+                0,
+                new PlanStep.Cover(Optional.empty(), SELF, SELF.plus(20, 0, 0), 110))));
+  }
+
+  @Test
+  void aSweepKeepsItsAssignmentBetweenCompletedBounds() {
+    assertSweepKeepsAssignment(Optional.empty());
+  }
+
+  @Test
+  void aCompletedOrUnassignedSweepAndTheLastSurvivorMayChooseAnotherGoal() {
+    for (var scene :
+        List.of(
+            sweep(12, 0, -1, true),
+            situation(Role.HUNT, 12, -1, new Formation(SlotKind.SWEEP, Optional.empty(), true)),
+            sweep(12, 11, -1, false))) {
+      for (var picked : List.of(Option.HUNT, Option.ENGAGE, Option.ARM, Option.HELP_ARM)) {
+        assertThat(Tactics.choose(picked, ROUTE, scene, Map.of()))
+            .as("released sweep when %s picked", picked)
+            .isEqualTo(picked);
+      }
+    }
+  }
+
+  @Test
+  void closeContactAndRecentDamageMayInterruptTheSweep() {
+    for (var scene : List.of(sweep(4, 11, -1, true), sweep(12, 11, 80, true))) {
+      for (var picked : List.of(Option.HUNT, Option.ENGAGE, Option.ARM, Option.HELP_ARM)) {
+        assertThat(Tactics.choose(picked, ROUTE, scene, Map.of()))
+            .as("threatened sweep when %s picked", picked)
+            .isEqualTo(picked);
+      }
+    }
+  }
+
+  @Test
+  void olderDamageDoesNotSendAnUnfinishedSweepIntoADistantFight() {
+    assertThat(Tactics.choose(Option.ENGAGE, ROUTE, sweep(12, 11, 79, true), Map.of()))
+        .isEqualTo(Option.TAKE_SLOT);
+  }
+
+  @Test
+  void survivalDefusingAndRetakingStillOverrideTheSweep() {
+    for (var picked :
+        List.of(Option.DEFUSE, Option.ESCAPE_POISON, Option.HEAL, Option.RETREAT, Option.RETAKE)) {
+      assertThat(Tactics.choose(picked, ROUTE, sweep(12, 11, -1, true), Map.of()))
+          .as("urgent option %s", picked)
+          .isEqualTo(picked);
+    }
+  }
+
+  @Test
+  void anExistingFightIsNotCancelledToRejoinAnUnfinishedSweep() {
+    var fight =
+        Optional.of(
+            Plan.of(
+                Option.ENGAGE,
+                95,
+                new PlanStep.Fight(
+                    new com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantId(2))));
+    assertThat(Tactics.choose(Option.HUNT, fight, sweep(12, 11, -1, true), Map.of()))
+        .isEqualTo(Option.ENGAGE);
+  }
+
+  @Test
+  void aContinuingSweepUsesTheLatestDealtGoal() {
+    var assigned = sweep(12, 11, -1, true);
+    var quiet =
+        new Situation(
+            assigned.self(),
+            assigned.snapshot(),
+            new Percept(PerceptionState.EMPTY, List.of(), 100),
+            assigned.board(),
+            Role.HUNT);
+    var context =
+        new TacticsContext(
+            NAV,
+            levers(1),
+            new Style(0.5, 0.5, 0.5, 0.5),
+            Kit.TROOPER,
+            Archetype.TACTICIAN,
+            Set.of(),
+            42,
+            null);
+    var thought =
+        Tactics.think(
+            new TacticsState(ROUTE, 90, 0, 0, RewindClock.UNSTARTED),
+            quiet,
+            context,
+            new SplittableRandom(1));
+    assertThat(thought.state().plan().orElseThrow().current())
+        .isEqualTo(new PlanStep.Route(assigned.slot().orElseThrow().pos(), Stance.AGGRESSIVE));
+    assertThat(thought.state().plan().orElseThrow().startedTick()).isZero();
   }
 
   private static Thought afterBombChange(Option option, PlanStep action, BombView bomb) {

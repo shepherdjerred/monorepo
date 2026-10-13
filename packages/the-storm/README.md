@@ -2735,7 +2735,7 @@ is nearest. Slots go to bots by the Hungarian algorithm over archetype, role
 and kit fit, path distance and a bonus for the slot already held, so
 assignments stick. Tactics then take and hold the slot (ARM targets an unlit
 bomb for the plant slot, a bot beside an unwatched bomb or the last survivor).
-Unfinished lane and flank assignments stay committed through distant sightings,
+Unfinished lane, flank and sweep assignments stay committed through distant sightings,
 cover stops and the gaps between movement bounds. Close contact, recent damage,
 survival and defusing can interrupt them; an established fight continues, and
 reaching the slot or becoming the last survivor releases the assignment.

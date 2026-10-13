@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.rwfbots.domain.tactics;
 import com.shepherdjerred.thestorm.rwfbots.domain.difficulty.Lever;
 import com.shepherdjerred.thestorm.rwfbots.domain.record.DecisionTrace;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Role;
+import com.shepherdjerred.thestorm.rwfbots.domain.team.SlotKind;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.TeamNote;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantId;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Decision;
@@ -150,7 +151,9 @@ public final class Tactics {
     return now - plan.startedTick() < MIN_COMMIT_TICKS ? plan.option() : picked;
   }
 
-  /** An unfinished lane or flank survives distant sightings, including gaps between bounds. */
+  /**
+   * An unfinished lane, flank or sweep survives distant sightings, including gaps between bounds.
+   */
   private static boolean keepsLane(Option picked, Situation situation) {
     var detour =
         picked == Option.HUNT
@@ -169,9 +172,9 @@ public final class Tactics {
         && !hurt
         && !close
         && !situation.isLastAlive()
-        && situation.role() == Role.ROTATE
         && situation
             .slot()
+            .filter(slot -> situation.role() == Role.ROTATE || slot.kind() == SlotKind.SWEEP)
             .filter(
                 slot ->
                     slot.pos().horizontalDistance(situation.self().pos()) > Features.SLOT_RADIUS)
