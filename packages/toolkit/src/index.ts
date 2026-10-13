@@ -35,6 +35,7 @@ Platform commands (native CLI passthroughs):
   tailscale   Tailscale CLI
 
 Monorepo workflows:
+  tracker <COMMAND>           First-party issues, comments, votes and actor identity
   ci wait [PR]                Block until merge readiness or an actionable blocker
   ci explain|main|load        Failure evidence, main health, and CI capacity
   brim [--provider <id>] [--dry-run]  Start a session on the least-used AI subscription
@@ -82,6 +83,10 @@ type SubcommandHandler = (
 
 /** Workflow commands dispatched as `<command> <subcommand> [args...]`. */
 const SUBCOMMAND_HANDLERS = new Map<string, () => Promise<SubcommandHandler>>([
+  [
+    "tracker",
+    () => import("./handlers/tracker.ts").then((m) => m.handleTrackerCommand),
+  ],
   ["ci", () => import("./handlers/ci.ts").then((m) => m.handleCiCommand)],
   [
     "alerts",

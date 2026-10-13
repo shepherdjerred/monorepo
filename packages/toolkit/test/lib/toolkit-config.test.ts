@@ -43,6 +43,10 @@ describe("toolkit config", () => {
     await expect(config.value("opsDashboardUrl")).resolves.toBe(
       "https://ops.tailnet-1a49.ts.net",
     );
+    await expect(config.value("trackerUrl")).resolves.toBe(
+      "https://tracker.tailnet-1a49.ts.net",
+    );
+    await expect(config.value("trackerActorName")).resolves.toBe("jerred");
   });
 
   test("the config file enables the push for the launchd daemon", async () => {

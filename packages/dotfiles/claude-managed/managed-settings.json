@@ -1,4 +1,16 @@
 {
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "toolkit tracker identity-hook claude-code"
+          }
+        ]
+      }
+    ]
+  },
   "env": {
     "EDITOR": "true",
     "VISUAL": "true",
