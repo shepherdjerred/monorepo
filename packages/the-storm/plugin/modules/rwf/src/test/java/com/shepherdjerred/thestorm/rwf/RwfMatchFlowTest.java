@@ -528,6 +528,14 @@ final class RwfMatchFlowTest {
             });
     assertThat(harness.wallets.held(account, CurrencyId.RWF_CREDITS))
         .isEqualTo(Money.rwfCredits(3));
+    var seen = new ArrayList<String>();
+    harness.until(
+        () -> {
+          seen.addAll(RwfHarness.messages(alice));
+          return seen.stream()
+              .anyMatch(m -> m.contains("you earned nothing and 2 credits were taken"));
+        });
+    assertThat(seen).noneMatch(m -> m.contains("You earned"));
   }
 
   @Test

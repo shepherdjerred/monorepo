@@ -10,6 +10,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -24,7 +25,7 @@ import org.junit.jupiter.api.io.TempDir;
 /**
  * V2 gives every payout row a currency. Rows written before it were paid in crystals, so they keep
  * every column and become {@code crystals}; a row a crash left paying still settles in crystals.
- * The daily-earnings table the removed cap used is dropped.
+ * V2.1 recreates the cap table V2 dropped; the payout service rebuilds it from ledger receipts.
  */
 final class CreditsCurrencyMigrationTest {
 
@@ -112,13 +113,40 @@ final class CreditsCurrencyMigrationTest {
         .isEqualTo(before);
     assertThat(rows("SELECT DISTINCT currency FROM rwf_match_player"))
         .containsExactly(List.of(CurrencyId.CRYSTALS.key()));
-    assertThat(rows("SELECT name FROM sqlite_master WHERE name = 'rwf_daily_earnings'")).isEmpty();
+    assertThat(rows("SELECT player, day, credits FROM rwf_daily_earnings"))
+        .as("V2.1 restores the table; dated economy receipts recover the deleted totals")
+        .isEmpty();
     var store = new JooqMatchStore(database);
     assertThat(await(store.unpaid()))
         .hasSize(2)
         .allSatisfy(row -> assertThat(row.currency()).isEqualTo(CurrencyId.CRYSTALS));
-    assertThat(await(store.beginPayout(MATCH, new UUID(6, 2))))
+    assertThat(await(store.beginPayout(MATCH, new UUID(6, 2), LocalDate.of(2026, 10, 1))))
         .as("a row a crash left paying keeps what it reserved")
         .isZero();
+  }
+
+  @Test
+  void anAlreadyAppliedVersionTwoUpgradesWithoutChangingItsChecksum() throws Exception {
+    var migrations = directory.resolve("v1/db/migration/rwf");
+    try (var in =
+        Objects.requireNonNull(
+            getClass().getResourceAsStream("/legacy/V2__credits_currency.sql"))) {
+      Files.copy(in, migrations.resolve("V2__credits_currency.sql"));
+    }
+    try (var v2 =
+        new URLClassLoader(
+            new URL[] {directory.resolve("v1").toUri().toURL()},
+            ClassLoader.getPlatformClassLoader())) {
+      database.migrate("rwf", v2);
+    }
+    var before = rows("SELECT version, checksum FROM flyway_rwf_history WHERE version = '2'");
+
+    database.migrate("rwf", getClass().getClassLoader());
+
+    assertThat(rows("SELECT version, checksum FROM flyway_rwf_history WHERE version = '2'"))
+        .isEqualTo(before);
+    assertThat(rows("SELECT version FROM flyway_rwf_history WHERE version = '2.1'"))
+        .containsExactly(List.of("2.1"));
+    assertThat(rows("SELECT player, day, credits FROM rwf_daily_earnings")).isEmpty();
   }
 }

@@ -73,6 +73,7 @@
     "quests_player",
     "quests_reputation",
     "quests_variable",
+    "rwf_daily_earnings",
     "rwf_match",
     "rwf_match_player",
     "rwf_snapshot_effects",

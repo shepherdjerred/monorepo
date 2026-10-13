@@ -4,6 +4,7 @@ import com.shepherdjerred.thestorm.economy.app.CurrencyId;
 import com.shepherdjerred.thestorm.rwf.app.RecordingSummary;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -15,6 +16,13 @@ import java.util.concurrent.CompletableFuture;
  * confirms the transfer, so a crash between the two never loses or doubles a payment.
  */
 public interface MatchStore {
+
+  /**
+   * The daily cap rwf.yml set while matches paid crystals. Rows written before Red Warfare had its
+   * own currency settle under it, against {@code rwf_daily_earnings}, reconciled from committed
+   * receipts. Uncommitted payouts use the current day's remaining budget; credit rows have no cap.
+   */
+  long LEGACY_CRYSTAL_DAILY_CAP = 30;
 
   /**
    * One finished match.
@@ -53,15 +61,20 @@ public interface MatchStore {
     LEFT,
     STOPPED,
     /** AFK for the whole match: charged the AFK penalty instead of any pay. */
-    AFK;
+    AFK,
+    /** Threw the match away with a suicide or a quit death while it was live: no pay. */
+    FORFEITED;
 
     /**
-     * How a human's match went: left while alive, charged as AFK ({@code credits} negative), or won
-     * or lost.
+     * How a human's match went: left while it was live (dead or alive), forfeited by a suicide or
+     * quit death, charged as AFK ({@code credits} negative), or won or lost.
      */
-    public static Outcome of(boolean leftAlive, boolean won, long credits) {
-      if (leftAlive) {
+    public static Outcome of(boolean left, boolean forfeited, boolean won, long credits) {
+      if (left) {
         return LEFT;
+      }
+      if (forfeited) {
+        return FORFEITED;
       }
       if (credits < 0) {
         return AFK;
@@ -186,14 +199,41 @@ public interface MatchStore {
   /** Every row still {@link PayoutStatus#PENDING} or {@link PayoutStatus#PAYING}, oldest first. */
   CompletableFuture<List<PlayerRow>> unpaid();
 
+  /** Every legacy crystal row for a player, including completed payouts whose receipts count. */
+  CompletableFuture<List<PlayerRow>> legacyPayouts(UUID player);
+
+  /**
+   * A committed legacy payout, dated in the legacy accounting zone.
+   *
+   * @param matchId its match
+   * @param day the receipt's day
+   * @param credits what the ledger actually paid
+   */
+  record LegacyPayment(UUID matchId, LocalDate day, long credits) {
+
+    public LegacyPayment {
+      if (credits <= 0) {
+        throw new IllegalArgumentException("a committed legacy payout must be positive");
+      }
+    }
+  }
+
+  /**
+   * Rebuilds the player's daily accounting from validated receipts and resets uncommitted legacy
+   * reservations for settlement against today's budget. The payout service serializes this with all
+   * transfers; it must never run while a transfer is in flight.
+   */
+  CompletableFuture<Void> reconcileLegacy(UUID player, List<LegacyPayment> payments);
+
   /**
    * Moves a pending row to paying and returns the amount to move: a payout's {@code creditsOwed},
    * stored as {@code creditsPaid}, or a charge's (negative) {@code creditsOwed}, whose actual
-   * amount is only known once it is taken. Calling it again for a row already paying returns the
-   * same amount (a payout's stored {@code creditsPaid}); a paid row or one owing nothing returns
-   * zero.
+   * amount is only known once it is taken. A legacy crystal row is first cut to what is left of
+   * {@link #LEGACY_CRYSTAL_DAILY_CAP} for {@code today} and reserved there, as before. Calling it
+   * again for a row already paying returns the same amount (a payout's stored {@code creditsPaid});
+   * a paid row or one owing nothing returns zero.
    */
-  CompletableFuture<Long> beginPayout(UUID matchId, UUID player);
+  CompletableFuture<Long> beginPayout(UUID matchId, UUID player, LocalDate today);
 
   /** Marks a paying row paid with what actually moved, once the ledger confirmed it. */
   CompletableFuture<Void> finishPayout(UUID matchId, UUID player, long paid);

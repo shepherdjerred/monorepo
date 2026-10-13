@@ -569,7 +569,6 @@ final class MatchRunner implements MatchView, MatchEvents {
 
   private MatchStore.PlayerRow playerRow(Combatant member, boolean won, long credits) {
     var tally = tallies.getOrDefault(member.id(), new Tally());
-    var leftAlive = member.leftAt().isPresent() && member.diedAt().isEmpty();
     return new MatchStore.PlayerRow(
         match.matchId(),
         member.id().uuid(),
@@ -577,7 +576,7 @@ final class MatchRunner implements MatchView, MatchEvents {
         member.kit().orElseThrow(),
         tally.kills,
         tally.deaths,
-        MatchStore.Outcome.of(leftAlive, won, credits),
+        MatchStore.Outcome.of(member.leftAt().isPresent(), member.forfeited(), won, credits),
         PayoutService.CURRENCY,
         credits,
         MatchStore.PayoutStatus.owing(credits),
@@ -617,11 +616,7 @@ final class MatchRunner implements MatchView, MatchEvents {
         .context()
         .onMain(
             parts.payouts().settle(row, rows),
-            paid ->
-                parts
-                    .context()
-                    .logger()
-                    .info("rwf match {} settled {} payouts", row.matchId(), paid.size()),
+            paid -> Texts.charged(parts.context().server(), paid),
             "settle rwf match " + row.matchId());
   }
 

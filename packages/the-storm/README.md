@@ -2179,14 +2179,24 @@ suicide or a quit (a disconnect or `/rwf leave`) while the match is live
 forfeits the reward. Red Warfare's AFK rule applies: every combatant is AFK
 when the match goes live until their whole-degree yaw or pitch changes while
 alive (`AfkWatch`); a human still AFK at the end earns nothing and is charged
-2 credits, never more than they hold, and a forfeit clears the mark.
+2 credits, never more than they hold, and is told what was actually taken once
+it settles; a forfeit clears the mark. A departure while the match is live is
+recorded as `LEFT` even after dying, and a suicide or quit death as
+`FORFEITED`, so an unpaid row always says why.
 
 Payouts and charges go through an outbox in `rwf_match_player` and the
 economy's keyed transfers (`rwf:<matchId>:<uuid>`), so a crash between the
 match ending and the transfer moves money exactly once on the next enable; a
 charge is found by its key before anything more is taken. Each row names the
 currency it settles in, so rows written before Red Warfare had its own
-currency still settle in crystals. Bots are never paid.
+currency still settle in crystals under the old 30-crystal daily cap. The
+published V2 migration dropped `rwf_daily_earnings`; V2.1 restores the table
+without changing V2's checksum. Before settling a legacy row, the payout
+service rebuilds that player's totals from dated economy receipts. A committed
+receipt replays its exact amount; an uncommitted reservation uses the current
+Los Angeles day's remaining budget. Payout batches run serially so recovery
+cannot release an in-flight transfer's reservation. A paid row missing its
+receipt fails loudly. Credit rows never touch the cap, and bots are never paid.
 
 Bots are optional: the module declares the `BotRoster` port and looks it up
 when a countdown starts; the `rwfbots` module provides it. Bots act only

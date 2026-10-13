@@ -10,19 +10,23 @@ import com.shepherdjerred.thestorm.economy.app.Receipt;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import com.shepherdjerred.thestorm.rwf.app.store.MatchStore;
 import java.nio.charset.StandardCharsets;
+import java.time.InstantSource;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
 
 /**
  * Pays match rewards, and takes the AFK penalty, in Red Warfare credits through the economy's keyed
  * transfers. Every payout is first a row in the {@link MatchStore} outbox; it moves with the
  * idempotency key {@code rwf:<matchId>:<player>}, so a replay after a crash returns the original
  * receipt instead of paying or charging twice. A row pays in the currency it was written with, so
- * rows written before Red Warfare had its own currency still settle in crystals. A charge takes no
- * more than the player holds: balances never go negative. Bots never reach this class: the rules
- * award them nothing.
+ * rows written before Red Warfare had its own currency still settle in crystals, under their old
+ * daily cap ({@link MatchStore#LEGACY_CRYSTAL_DAILY_CAP}). A charge takes no more than the player
+ * holds: balances never go negative. Bots never reach this class: the rules award them nothing.
  */
 public final class PayoutService {
 
@@ -39,12 +43,20 @@ public final class PayoutService {
    */
   public record Paid(UUID matchId, UUID player, long owed, long paid) {}
 
+  /** The zone whose midnight started a day under the legacy crystal cap. */
+  public static final ZoneId LEGACY_ZONE = ZoneId.of("America/Los_Angeles");
+
   private final Wallets wallets;
   private final MatchStore store;
+  private final InstantSource time;
+  private final LegacyPayouts legacy;
+  private CompletableFuture<Void> pending = CompletableFuture.completedFuture(null);
 
-  public PayoutService(Wallets wallets, MatchStore store) {
+  public PayoutService(Wallets wallets, MatchStore store, InstantSource time) {
     this.wallets = wallets;
     this.store = store;
+    this.time = time;
+    legacy = new LegacyPayouts(wallets, store);
   }
 
   /** The idempotency key for {@code player}'s payout from {@code matchId}. */
@@ -58,15 +70,29 @@ public final class PayoutService {
     return "rwf:" + matchId + ":" + outcome.name();
   }
 
-  /** Writes the match and its players, then pays everyone owed. */
+  /** Persists the match immediately, then queues its payouts behind earlier ledger work. */
   public CompletableFuture<List<Paid>> settle(
       MatchStore.MatchRow match, List<MatchStore.PlayerRow> players) {
-    return store.record(match, players).thenCompose(ignored -> payAll(players));
+    return store
+        .record(match, players)
+        .thenCompose(
+            ignored ->
+                enqueue(
+                    // A replay queued earlier may already have paid these newly persisted rows.
+                    () -> store.players(match.matchId()).thenCompose(this::payAll)));
   }
 
   /** Pays every row a crash left pending or paying. */
   public CompletableFuture<List<Paid>> replay() {
-    return store.unpaid().thenCompose(this::payAll);
+    return enqueue(() -> store.unpaid().thenCompose(this::payAll));
+  }
+
+  /** One owner settles the outbox: a legacy reconciliation never races a ledger transfer. */
+  private synchronized <T> CompletableFuture<T> enqueue(Supplier<CompletableFuture<T>> work) {
+    var next = pending.thenCompose(ignored -> work.get());
+    // A failed request remains failed for its caller, but does not strand later retries.
+    pending = next.handle((ignored, failure) -> null);
+    return next;
   }
 
   private CompletableFuture<List<Paid>> payAll(List<MatchStore.PlayerRow> rows) {
@@ -90,13 +116,25 @@ public final class PayoutService {
   }
 
   private CompletableFuture<Paid> pay(MatchStore.PlayerRow row) {
-    return store
-        .beginPayout(row.matchId(), row.player())
+    var prepare =
+        row.currency() == CurrencyId.CRYSTALS
+            ? legacy.reconcile(row.player())
+            : CompletableFuture.<Void>completedFuture(null);
+    return prepare
+        .thenCompose(
+            ignored ->
+                store.beginPayout(
+                    row.matchId(), row.player(), LocalDate.ofInstant(time.instant(), LEGACY_ZONE)))
         .thenCompose(amount -> amount < 0 ? charge(row, -amount) : transfer(row, amount))
         .thenCompose(
             moved ->
                 store
                     .finishPayout(row.matchId(), row.player(), moved)
+                    .thenCompose(
+                        ignored ->
+                            row.currency() == CurrencyId.CRYSTALS
+                                ? legacy.reconcile(row.player())
+                                : CompletableFuture.<Void>completedFuture(null))
                     .thenApply(
                         ignored ->
                             new Paid(row.matchId(), row.player(), row.creditsOwed(), moved)));

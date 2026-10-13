@@ -1438,7 +1438,7 @@ async function secondPaidMatch(
       one.bot.username,
     ).toEqual([result, owed, "PAID", paid]);
     const told = afk
-      ? `${afkPenalty.toString()} credits were taken for being AFK`
+      ? `you earned nothing and ${(-paid).toString()} credits were taken`
       : `You earned ${pay.toString()} credits`;
     await one.log.until(new RegExp(String.raw`${told}\.`, "u"), 20_000);
     first.earned.set(one.bot.username, before + paid);

@@ -4,15 +4,18 @@ import static java.util.Map.entry;
 
 import com.shepherdjerred.thestorm.core.text.HouseStyle;
 import com.shepherdjerred.thestorm.rwf.app.ActionRefusal;
+import com.shepherdjerred.thestorm.rwf.app.PayoutService;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchError;
 import com.shepherdjerred.thestorm.rwf.domain.match.Notice;
 import com.shepherdjerred.thestorm.rwf.domain.match.NoticeKind;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
+import org.bukkit.Server;
 
 /** Renders the match's messages in the house style, with Red Warfare's wording. */
 final class Texts {
@@ -74,7 +77,9 @@ final class Texts {
           entry(NoticeKind.DRAW, "No one won!"),
           entry(NoticeKind.STOPPED, "The match was stopped."),
           entry(NoticeKind.CREDITS_GIVEN, "You earned {credits} credits."),
-          entry(NoticeKind.AFK_PENALTY, "{credits} credits were taken for being AFK."));
+          entry(
+              NoticeKind.AFK_PENALTY,
+              "You were AFK all match: you earned nothing and {credits} credits were taken."));
 
   private static final Map<MatchError, String> ERRORS =
       Map.ofEntries(
@@ -139,6 +144,16 @@ final class Texts {
       to.sendMessage(HouseStyle.error(LABEL, text));
     } else {
       to.sendMessage(HouseStyle.info(LABEL, text));
+    }
+  }
+
+  /** Tells each online player charged the AFK penalty what was actually taken. */
+  static void charged(Server server, List<PayoutService.Paid> paid) {
+    for (var payment : paid) {
+      var player = server.getPlayer(payment.player());
+      if (payment.owed() < 0 && player != null) {
+        notice(player, Notice.of(NoticeKind.AFK_PENALTY, "credits", -payment.paid()));
+      }
     }
   }
 
