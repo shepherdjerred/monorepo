@@ -35,10 +35,10 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * The bots rwf asks for: {@code fill} runs the director against the personality catalog, the stored
- * ratings and the humans in the lobby, excluding any personality whose name an online human is
- * using, and refuses outright when the chosen map has no current nav artifact. Spawning and
- * despawning go to the {@link Bodies}. The roster also owns each bot's {@link BotBody} and the live
- * {@link MatchSession}. Main thread only.
+ * ratings and the humans in the lobby, excluding any personality already reserved by a bot or whose
+ * name an online human is using, and refuses outright when the chosen map has no current nav
+ * artifact. Spawning and despawning go to the {@link Bodies}. The roster also owns each bot's
+ * {@link BotBody} and the live {@link MatchSession}. Main thread only.
  */
 public final class Roster implements BotBodies {
 
@@ -113,7 +113,7 @@ public final class Roster implements BotBodies {
             parts.stats().ratings(),
             Collections.nCopies((int) humans, Rating.DEFAULT),
             wanted,
-            onlineNames(),
+            reservedNames(),
             offered(parts.config().draft().availableKits()),
             Math.max(2, state.orElseThrow().teams().size()));
     var pick =
@@ -163,12 +163,15 @@ public final class Roster implements BotBodies {
     return kits;
   }
 
-  private Set<String> onlineNames() {
+  private Set<String> reservedNames() {
     var names = new HashSet<String>();
     for (var player : parts.server().getOnlinePlayers()) {
       if (!parts.bodies().isBot(player.getUniqueId())) {
         names.add(player.getName());
       }
+    }
+    for (var bot : bots.values()) {
+      names.add(bot.drafted().personality().name());
     }
     return names;
   }

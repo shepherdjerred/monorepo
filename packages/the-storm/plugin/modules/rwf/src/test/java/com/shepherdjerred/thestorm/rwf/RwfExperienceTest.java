@@ -13,6 +13,8 @@ import com.shepherdjerred.thestorm.rwf.app.RwfFeatures;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchSnapshot;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchSnapshot.PhaseKind;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.UUID;
@@ -66,6 +68,36 @@ final class RwfExperienceTest {
     harness.letBotsArrive();
     tickUntil(harness, PhaseKind.PREVIEW, 40);
     tickUntil(harness, PhaseKind.FREEZE, 11);
+  }
+
+  @Test
+  void aLobbyDraftAndLoadTopUpAllArriveBeforeAShortCountdownEnds() throws IOException {
+    var harness = RwfHarness.prepare(directory);
+    running = harness;
+    var config = directory.resolve("rwf.yml");
+    Files.writeString(
+        config,
+        Files.readString(config)
+            .replace("countdown: PT90S", "countdown: PT6S")
+            .replace("voteLead: PT20S", "voteLead: PT3S")
+            .replace("maxCombatants: 100", "maxCombatants: 101")
+            .replace("  enabled: false", "  enabled: true"));
+    harness.enable(directory);
+    var alice = harness.loadedPlayer("Alice");
+    harness.enter(alice);
+    assertThat(harness.bots.drafted()).isEqualTo(7);
+    assertThat(harness.bots.spawned()).isEmpty();
+    harness.until(() -> harness.snapshot().phase() == PhaseKind.COUNTDOWN);
+    harness.server.dispatchCommand(harness.server.getConsoleSender(), "rwf admin loadtest 13");
+    assertThat(harness.bots.spawned()).hasSize(13);
+    assertThat(harness.bots.drafted()).isEqualTo(7);
+
+    for (var tick = 0; tick < 120; tick++) harness.tick(Duration.ofMillis(50));
+    harness.until(() -> harness.snapshot().phase() == PhaseKind.LIVE);
+
+    assertThat(harness.snapshot().combatants().stream().filter(c -> c.id().isBot())).hasSize(20);
+    assertThat(harness.bots.spawned()).hasSize(20);
+    assertThat(harness.bots.drafted()).isZero();
   }
 
   @Test

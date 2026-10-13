@@ -1,7 +1,9 @@
 """Meaningful data gates: leakage, provenance, alignment and recurrent resets."""
 
+import json
 import unittest
 from io import StringIO
+from pathlib import Path
 
 from dataset import Controls, action, action_counts, features, read, sequences, split_matches
 
@@ -110,18 +112,9 @@ class DatasetTest(unittest.TestCase):
                 read(StringIO(corrupt))
 
     def test_schema_four_reads_like_three_and_its_occurrences_are_checked(self) -> None:
-        occurrences = [
-            "V\t0\tyard\tyard\t2\tother\t1",
-            "S\t0\tWAITING\tRED=1,BLUE=1\tred-1=IDLE",
-            "C\t1\tp1\tteam\t5\t",
-            "C\t1\tp2\tglobal\t2\tgg",
-            "J\t2\tp2\tarrow\t0.5\t65.0\t0.5\t1.0\t0.0\t0.0",
-            "A\t3\tp2\trewind\t",
-            "U\t3\tp1\tspeed\t1\t200",
-            "D\t4\tp2\tp1\tMelee\tiron_sword\t2.5\tp3=0.25",
-            "K\t4\tp1\tcompass\t2",
-            "B\t5\t1\t64\t1\tminecraft:coal_block\tCRATER",
-        ]
+        contract = (Path(__file__).resolve().parents[3] / "plugin/modules/rwf/src/test/resources"
+                    / "schema-4-occurrences.json")
+        occurrences = json.loads(contract.read_text())
         three = fixture([human(0), human(1)])
         four = three.replace("H\t3\t", "H\t4\t").replace(
             "X\t12\t", "\n".join(occurrences) + "\nX\t12\t")

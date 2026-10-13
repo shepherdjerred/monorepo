@@ -10,6 +10,7 @@ import com.shepherdjerred.thestorm.rwf.domain.match.MatchEffect;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchSnapshot;
 import com.shepherdjerred.thestorm.rwf.domain.match.Outcome;
+import com.shepherdjerred.thestorm.rwfbots.adapter.content.PersonalityFiles;
 import com.shepherdjerred.thestorm.rwfbots.adapter.db.JooqPersonalityStatsStore;
 import com.shepherdjerred.thestorm.rwfbots.adapter.paper.BotBody;
 import com.shepherdjerred.thestorm.rwfbots.adapter.paper.MatchSession;
@@ -26,6 +27,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -250,6 +252,49 @@ final class RwfBotsFlowTest {
 
     assertThat(harness.roster().fill(FakeMatch.MATCH_ID, 3)).isEmpty();
     assertThat(harness.bodies.created()).isZero();
+  }
+
+  @Test
+  void unspawnedDraftsReserveTheirPersonalitiesAndTheRemainingPoolCanRunOut() {
+    var harness = start();
+    harness.match.fireMapChosen();
+    var count = PersonalityFiles.load(directory).active().size();
+    var reserved = harness.roster().fill(FakeMatch.MATCH_ID, count - 2);
+    assertThat(reserved).hasSize(count - 2);
+    assertThat(reserved).allMatch(bot -> harness.roster().entity(bot).isEmpty());
+
+    var topUp = harness.roster().fill(FakeMatch.MATCH_ID, 4);
+    assertThat(topUp).hasSize(2);
+    assertThat(topUp)
+        .extracting(CombatantId.Bot::personalityId)
+        .doesNotContainAnyElementsOf(
+            reserved.stream().map(CombatantId.Bot::personalityId).toList());
+    assertThat(harness.roster().fill(FakeMatch.MATCH_ID, 1)).isEmpty();
+    assertThat(harness.bodies.created()).isEqualTo(count);
+  }
+
+  @Test
+  void subsequentDraftsExcludeHumansAndSpawnedBotsUntilTheirReservationIsReleased() {
+    var harness = start();
+    var catalog = PersonalityFiles.load(directory);
+    var human = catalog.active().getFirst();
+    var alice = harness.server.addPlayer(human.name().toUpperCase(Locale.ROOT));
+    harness.match.fireJoin(new CombatantId.Human(alice.getUniqueId()), alice.getName());
+    harness.match.fireMapChosen();
+    var first = harness.roster().fill(FakeMatch.MATCH_ID, 1).getFirst();
+    harness.roster().spawn(first, new Location(harness.world, 16.5, 1, 16.5));
+
+    var remaining = harness.roster().fill(FakeMatch.MATCH_ID, catalog.active().size());
+    assertThat(remaining).hasSize(catalog.active().size() - 2);
+    assertThat(remaining)
+        .extracting(CombatantId.Bot::personalityId)
+        .doesNotContain(human.id(), first.personalityId());
+    assertThat(harness.roster().fill(FakeMatch.MATCH_ID, 1)).isEmpty();
+
+    harness.roster().despawn(first);
+    assertThat(harness.roster().fill(FakeMatch.MATCH_ID, 1))
+        .extracting(CombatantId.Bot::personalityId)
+        .containsExactly(first.personalityId());
   }
 
   @Test

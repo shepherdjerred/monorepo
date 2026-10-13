@@ -2576,7 +2576,7 @@ client, separately from the load matrix so client rendering cannot affect its
 measurements.
 
 Filling a match: the `Director` drafts personalities from
-`rwfbots/personalities/*.yml` (never one whose name an online human uses),
+`rwfbots/personalities/*.yml` (excluding names held by online humans or already drafted bots),
 keeps the most balanceable of a few drafts, shifts every bot's skill so the
 median bot sits a little under the median human (`MatchShift`), and gives
 each a kit from its weights over `draft.kits`; a personality whose weights
@@ -2708,7 +2708,7 @@ is nearest. Slots go to bots by the Hungarian algorithm over archetype, role
 and kit fit, path distance and a bonus for the slot already held, so
 assignments stick. Tactics then take and hold the slot (ARM targets an unlit
 bomb for the plant slot, a bot beside an unwatched bomb or the last survivor).
-Unfinished lane and flank assignments stay committed through distant sightings,
+Unfinished lane, flank and sweep assignments stay committed through distant sightings,
 cover stops and the gaps between movement bounds. Close contact, recent damage,
 survival and defusing can interrupt them; an established fight continues, and
 reaching the slot or becoming the last survivor releases the assignment.

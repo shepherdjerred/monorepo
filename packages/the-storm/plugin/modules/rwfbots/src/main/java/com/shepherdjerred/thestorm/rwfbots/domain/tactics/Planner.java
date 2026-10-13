@@ -388,9 +388,15 @@ public final class Planner {
     // Under fire from close by, pairs take turns; further off, the bot keeps moving up but goes
     // from one piece of cover to the next instead of across open ground.
     var pinned = threat.horizontalDistance(self) <= PINNED_RANGE;
+    var window = now / BOUND_TICKS;
+    var moving = !pinned || mover(situation, window);
+    var next = moving ? nextCover(situation, context, goal, threat) : Optional.<CoverSpot>empty();
+    if (next.isPresent()) {
+      return toCover(now, self, next.orElseThrow(), threat);
+    }
     var here = coverNear(situation, context, new CoverSearch(self, threat, IN_COVER));
     if (here.isEmpty()) {
-      // Caught in the open: the nearest cover that does not give up ground, whoever's turn it is.
+      // Without forward cover, take nearby safety even when it is the holder's turn.
       var nearby =
           coverWhere(
               situation,
@@ -403,8 +409,7 @@ public final class Planner {
         return toCover(now, self, nearby.orElseThrow(), threat);
       }
     }
-    var window = now / BOUND_TICKS;
-    if (pinned && !mover(situation, window)) {
+    if (!moving) {
       var until = (window + 1) * BOUND_TICKS;
       return Plan.of(
           Option.TAKE_SLOT,
@@ -413,10 +418,6 @@ public final class Planner {
                   point ->
                       new PlanStep.Cover(Optional.of(point.node()), point.pos(), threat, until))
               .orElseGet(() -> new PlanStep.Cover(Optional.empty(), self, threat, until)));
-    }
-    var next = nextCover(situation, context, goal, threat);
-    if (next.isPresent()) {
-      return toCover(now, self, next.orElseThrow(), threat);
     }
     var toGoal = goal.minus(self).horizontal();
     var step =

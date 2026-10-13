@@ -610,9 +610,20 @@ final class MatchRunner implements MatchView, MatchEvents {
 
   /** {@code bot} appears at the lobby spawn and joins; whether it did. */
   private boolean joinBot(CombatantId.Bot bot) {
-    var spawned = parts.bots().spawn(bot, lobby());
+    Optional<Player> spawned;
+    try {
+      spawned = parts.bots().spawn(bot, lobby());
+    } catch (RuntimeException failure) {
+      try {
+        parts.bots().despawn(bot);
+      } catch (RuntimeException cleanupFailure) {
+        failure.addSuppressed(cleanupFailure);
+      }
+      throw failure;
+    }
     if (spawned.isEmpty()) {
       parts.context().logger().error("Bot {} did not spawn; skipping it", bot);
+      parts.bots().despawn(bot);
       return false;
     }
     if (handle(new MatchEvent.Join(bot, spawned.orElseThrow().getName(), now())).isEmpty()) {

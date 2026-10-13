@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.rwf;
 import static com.shepherdjerred.thestorm.rwf.RwfHarness.messages;
 import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.within;
 
 import com.shepherdjerred.thestorm.core.result.Result;
@@ -43,6 +44,7 @@ import org.bukkit.entity.TNTPrimed;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -405,6 +407,46 @@ final class RwfMatchFlowTest {
   }
 
   @Test
+  void failedBotArrivalsReleaseTheirDraftsBeforeTheNextMatch() {
+    var harness = start();
+    var alice = harness.loadedPlayer("Alice");
+    harness.bots.failNextSpawns(1);
+    harness.enter(alice);
+    harness.until(() -> harness.snapshot().phase() == MatchSnapshot.PhaseKind.COUNTDOWN);
+    harness.letBotsArrive();
+
+    assertThat(harness.bots.spawned()).hasSize(6);
+    assertThat(harness.bots.drafted()).as("failed arrivals release their reserved bodies").isZero();
+    assertThat(harness.snapshot().combatants()).hasSize(7);
+
+    alice.performCommand("rwf leave");
+    harness.ticks(2);
+    assertThat(harness.bots.spawned()).isEmpty();
+    assertThat(harness.bots.drafted()).isZero();
+    harness.enter(alice);
+    harness.until(() -> harness.snapshot().phase() == MatchSnapshot.PhaseKind.COUNTDOWN);
+    harness.letBotsArrive();
+    assertThat(harness.bots.spawned()).hasSize(7);
+    assertThat(harness.bots.drafted()).isZero();
+  }
+
+  @Test
+  void aThrowingBotSpawnReleasesOnlyItsDraftAndPreservesTheFailure() {
+    var harness = start();
+    var alice = harness.loadedPlayer("Alice");
+    var failure = new IllegalStateException("synthetic Citizens spawn refusal");
+    harness.bots.throwOnNextSpawn(failure);
+    harness.enter(alice);
+    harness.until(() -> harness.snapshot().phase() == MatchSnapshot.PhaseKind.COUNTDOWN);
+
+    assertThatThrownBy(harness::letBotsArrive).isSameAs(failure);
+    assertThat(harness.bots.drafted()).as("only the failed arrival is released").isEqualTo(6);
+    assertThat(harness.bots.spawned()).isEmpty();
+    harness.disable();
+    assertThat(harness.bots.drafted()).isZero();
+  }
+
+  @Test
   void botsStillOnTheirWayAreReleasedWhenTheCountdownStops() {
     var harness = start();
     var alice = harness.loadedPlayer("Alice");
@@ -483,12 +525,18 @@ final class RwfMatchFlowTest {
   }
 
   @Test
-  void anAfkHumanIsChargedTwoCreditsInsteadOfBeingPaid() {
+  void anAfkHumanIsChargedDespiteEquivalentWrappedYawUpdates() {
     var harness = start();
     var alice = harness.loadedPlayer("Alice");
     var account = new AccountId.Player(alice.getUniqueId());
     harness.wallets.hold(account, Money.rwfCredits(5));
     harness.goLiveIdle(alice);
+    var from = alice.getLocation();
+    from.setYaw(260.90973f);
+    var normalized = from.clone();
+    normalized.setYaw(-99.09027f);
+    harness.server.getPluginManager().callEvent(new PlayerMoveEvent(alice, from, normalized));
+    harness.server.getPluginManager().callEvent(new PlayerMoveEvent(alice, normalized, from));
     var matchId = harness.snapshot().matchId();
     var enemy = enemyOf(teamOf(alice));
     harness.tick(Duration.ofSeconds(61));

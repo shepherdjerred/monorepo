@@ -81,7 +81,15 @@ const StatusSchema = z.string().transform((text, context) => {
     /Match (?<matchId>[0-9a-f-]{36}), map (?<map>\S+), (?<humans>\d+) humans, (?<bots>\d+) bots, bot roster (?<roster>present|absent)/u.exec(
       text,
     );
-  if (ready?.groups === undefined || match?.groups === undefined) {
+  const arrivals = /, bots arriving: (?<arriving>\d+), playable maps:/u.exec(
+    text,
+  );
+  if (
+    ready?.groups === undefined ||
+    match?.groups === undefined ||
+    arrivals?.groups === undefined ||
+    !Number.isSafeInteger(Number(arrivals.groups["arriving"]))
+  ) {
     context.addIssue({ code: "custom", message: `no status in ${text}` });
     return z.NEVER;
   }
@@ -92,12 +100,13 @@ const StatusSchema = z.string().transform((text, context) => {
     map: match.groups["map"] ?? "",
     humans: Number(match.groups["humans"]),
     bots: Number(match.groups["bots"]),
+    arriving: Number(arrivals.groups["arriving"]),
     roster: match.groups["roster"] ?? "",
   };
 });
 
 /** `/rwf admin status`, parsed. */
-export async function status(rcon: RconClient) {
+export async function status(rcon: Pick<RconClient, "command">) {
   return StatusSchema.parse(await rcon.command("rwf admin status"));
 }
 

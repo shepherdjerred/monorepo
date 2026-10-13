@@ -42,7 +42,7 @@ public final class Director {
    * @param botRatings the stored rating of each personality that has one
    * @param humanRatings the humans in the lobby
    * @param slots how many bots are wanted
-   * @param excludedNames in-game names that must not be drafted (the humans online), any case
+   * @param excludedNames in-game names reserved by online humans or drafted bots, any case
    * @param availableKits the kits the match can hand out
    * @param teamCount how many teams the map fields
    */
@@ -70,7 +70,7 @@ public final class Director {
     }
 
     /**
-     * The personalities that may be drafted: active and not a human's name. Kit preferences never
+     * The personalities that may be drafted: active and not a reserved name. Kit preferences never
      * exclude anyone; a personality whose favourites are not on offer plays one that is.
      */
     public List<Personality> pool() {

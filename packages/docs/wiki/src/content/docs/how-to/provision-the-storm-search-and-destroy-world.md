@@ -27,7 +27,7 @@ An existing lobby keeps its world identity and saved terrain. RWF repairs only
 the authored room. Do not add this lobby to Multiverse's runtime catalog or
 overwrite that catalog with repository configuration.
 
-Create the world with the Multiverse-Core 5.8.0 that
+Create only the map world (`worlds.maps`, never the lobby) with the Multiverse-Core 5.8.0 that
 [the image bakes in](packages/the-storm/server/plugins.json). The
 [Multiverse 5 command reference](https://mvplugins.org/core/fundamentals/commands-usage/)
 documents `--world-type flat`, `--no-structures` and `--generator-settings`:

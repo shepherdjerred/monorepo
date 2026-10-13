@@ -55,4 +55,27 @@ final class RunnerRulesTest {
     assertThat(RunnerRules.arrivalBudget(countingDownTo(T0), T0.plusMillis(200)))
         .isEqualTo(Duration.ZERO);
   }
+
+  @Test
+  void lobbyArrivalsFitAShortCountdownWithoutChangingTheShippedBudget() {
+    assertThat(RunnerRules.arrivalBudget(RwfMatch.open(SETTINGS, Samples.MATCH, Samples.SEED), T0))
+        .isEqualTo(Duration.ofSeconds(15));
+    var shortCountdown =
+        new MatchSettings(
+            1,
+            1,
+            101,
+            Duration.ofSeconds(6),
+            SETTINGS.relaxEvery(),
+            SETTINGS.endLinger(),
+            SETTINGS.minimumRewardLength(),
+            Duration.ZERO,
+            Duration.ZERO,
+            Duration.ZERO,
+            false);
+    assertThat(
+            RunnerRules.arrivalBudget(
+                RwfMatch.open(shortCountdown, Samples.MATCH, Samples.SEED), T0))
+        .isEqualTo(Duration.ofSeconds(3));
+  }
 }

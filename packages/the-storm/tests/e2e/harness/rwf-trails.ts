@@ -6,6 +6,12 @@
  * which draws it.
  */
 
+import {
+  readOccurrence,
+  occurrenceTags,
+  type OccurrenceRow,
+} from "./rwf-occurrences.ts";
+
 /** Frame positions are stored as fixed point, this many steps per block. */
 export const POSITION_SCALE = 32;
 
@@ -19,6 +25,7 @@ export type TrailPoint = { tick: number; x: number; z: number };
 
 export type Trails = {
   mapId: string;
+  occurrences: OccurrenceRow[];
   roster: Map<string, { team: string; bot: boolean }>;
   /** Each combatant's living positions, oldest first. */
   paths: Map<string, TrailPoint[]>;
@@ -83,9 +90,32 @@ function contactTick(fields: string[]): number | undefined {
 }
 
 /** Reads a recording's rows; an unknown or malformed row is an error. */
+function readHeader(fields: string[], version: number, trails: Trails): number {
+  if (version !== 0) throw new Error("second recording header");
+  const parsed = int(fields[1], "schema version");
+  if (![2, 3, 4].includes(parsed))
+    throw new Error("unsupported recording schema");
+  trails.mapId = fields[3] ?? "";
+  return parsed;
+}
+
+function addOccurrence(
+  fields: string[],
+  version: number,
+  trails: Trails,
+): void {
+  if (version !== 4) throw new Error("occurrence rows require schema 4");
+  const row = readOccurrence(fields);
+  trails.occurrences.push(row);
+  if (row[0] === "D")
+    trails.firstContact = earliest(trails.firstContact, row[1]);
+}
+
 export function readTrails(lines: string[]): Trails {
+  let version = 0;
   const trails: Trails = {
     mapId: "",
+    occurrences: [],
     roster: new Map(),
     paths: new Map(),
     firstContact: undefined,
@@ -93,9 +123,13 @@ export function readTrails(lines: string[]): Trails {
   };
   for (const line of lines) {
     const fields = line.split("\t");
+    if (occurrenceTags.has(fields[0] ?? "")) {
+      addOccurrence(fields, version, trails);
+      continue;
+    }
     switch (fields[0]) {
       case "H": {
-        trails.mapId = fields[3] ?? "";
+        version = readHeader(fields, version, trails);
         break;
       }
       case "R": {

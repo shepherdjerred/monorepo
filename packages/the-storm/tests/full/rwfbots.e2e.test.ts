@@ -7,6 +7,11 @@ import { test } from "#e2e/fixtures.ts";
 import { connectBot, disconnectBot } from "#e2e/harness/bot.ts";
 import { ListOutputSchema } from "#e2e/harness/rcon-output.ts";
 import {
+  box,
+  lobby as authoredLobby,
+  lobbyDimension,
+} from "#e2e/harness/rwf-humans.ts";
+import {
   eventually,
   matchRows,
   settledMatch,
@@ -49,6 +54,7 @@ import { serverLogs } from "@shepherdjerred/mc-harness/providers/docker/docker-c
 import type { ServerInfo } from "#e2e/harness/server.ts";
 import { querySqlite } from "#e2e/harness/storm-data.ts";
 import type { RconClient } from "#e2e/harness/rcon.ts";
+import { packageRoot } from "#e2e/harness/paths.ts";
 
 /**
  * Search and Destroy with rwfbots on the real server: Citizens player NPCs
@@ -216,30 +222,50 @@ async function fillsWithBots(match: Match): Promise<string[]> {
 }
 
 /** The lobby room (rwf/lobby/lobby.yml), both corners' blocks included. */
-const lobbyRoom = { min: [128, 64, 16], max: [158, 72, 46] } as const;
+const lobbyRoom = authoredLobby.region;
 
 function inLobby(at: Vec3): boolean {
   return (
-    at.x >= lobbyRoom.min[0] &&
-    at.x < lobbyRoom.max[0] + 1 &&
-    at.y >= lobbyRoom.min[1] &&
-    at.y < lobbyRoom.max[1] + 1 &&
-    at.z >= lobbyRoom.min[2] &&
-    at.z < lobbyRoom.max[2] + 1
+    at.x >= lobbyRoom.min.x &&
+    at.x < lobbyRoom.max.x + 1 &&
+    at.y >= lobbyRoom.min.y &&
+    at.y < lobbyRoom.max.y + 1 &&
+    at.z >= lobbyRoom.min.z &&
+    at.z < lobbyRoom.max.z + 1
   );
 }
 
 /** What the human's client and `/rwf who` showed of the bots during the countdown. */
+type LobbySample = { at: Vec3; inLobbyWorld: boolean };
+
 type LobbyWatch = {
   /** Every kit `/rwf who` listed for each bot, in the order seen. */
   kits: Map<string, string[]>;
   /** Where the human's client saw each bot, sample by sample. */
-  positions: Map<string, Vec3[]>;
+  positions: Map<string, LobbySample[]>;
   /** Bots the human's client saw crouch. */
   crouched: Set<string>;
   /** Stops sampling. */
   stop: () => Promise<void>;
 };
+
+async function sampleLobby(match: Match): Promise<[string, LobbySample][]> {
+  const before = await status(match.rcon);
+  if (!["Lobby", "Countdown"].includes(before.phase)) return [];
+  const observed: [string, LobbySample][] = [];
+  for (const seen of Object.values(match.bot.entities)) {
+    const name = seen.username;
+    if (name === undefined || name === match.bot.username) continue;
+    const at = seen.position.clone();
+    const reply = await match.rcon.command(
+      `execute in ${lobbyDimension} if entity @e[name=${name},${box(lobbyRoom)}]`,
+    );
+    observed.push([name, { at, inLobbyWorld: reply.includes("Test passed") }]);
+  }
+  // Discard only a sample straddling the legitimate transition out of the lobby.
+  const after = await status(match.rcon);
+  return ["Lobby", "Countdown"].includes(after.phase) ? observed : [];
+}
 
 /** Samples the lobby twice a second from before the human joins until the match goes live. */
 function watchLobby(match: Match): LobbyWatch {
@@ -272,14 +298,10 @@ function watchLobby(match: Match): LobbyWatch {
         }
         watch.kits.set(name, kits);
       }
-      const begun = match.log.has(/The game has begun!/u);
-      for (const seen of Object.values(bot.entities)) {
-        const name = seen.username;
-        if (!begun && name !== undefined && name !== bot.username) {
-          const samples = watch.positions.get(name) ?? [];
-          samples.push(seen.position.clone());
-          watch.positions.set(name, samples);
-        }
+      for (const [name, sample] of await sampleLobby(match)) {
+        const samples = watch.positions.get(name) ?? [];
+        samples.push(sample);
+        watch.positions.set(name, samples);
       }
       await Bun.sleep(500);
     }
@@ -299,13 +321,29 @@ async function liveInTheLobby(
 ): Promise<void> {
   await match.log.until(/The game has begun!/u, 60_000);
   await watch.stop();
+  await Bun.write(
+    path.join(packageRoot, ".cache", "e2e", "full", "lobby-samples.json"),
+    JSON.stringify(
+      {
+        world: lobbyDimension,
+        region: lobbyRoom,
+        positions: Object.fromEntries(watch.positions),
+      },
+      null,
+      2,
+    ),
+  );
   expect(
     names.filter((name) => (watch.positions.get(name)?.length ?? 0) > 0),
     "the human's client sees the bots in the lobby",
   ).not.toHaveLength(0);
   for (const name of names) {
     const samples = watch.positions.get(name) ?? [];
-    for (const at of samples) {
+    for (const { at, inLobbyWorld } of samples) {
+      expect(
+        inLobbyWorld,
+        `${name} is inside ${lobbyDimension}'s lobby region`,
+      ).toBe(true);
       expect(inLobby(at), `${name} at ${at.toString()} is in the lobby`).toBe(
         true,
       );
@@ -316,7 +354,7 @@ async function liveInTheLobby(
     const first = samples[0];
     return first === undefined
       ? 0
-      : Math.max(0, ...samples.map((at) => at.distanceTo(first)));
+      : Math.max(0, ...samples.map(({ at }) => at.distanceTo(first.at)));
   });
   expect(
     Math.max(...travelled),

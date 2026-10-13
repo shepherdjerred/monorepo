@@ -36,6 +36,9 @@ final class AfkWatch implements Listener {
 
   /** Whether the whole-degree yaw or pitch changed, as the original compared them. */
   static boolean turned(Location from, Location to) {
-    return (int) from.getPitch() != (int) to.getPitch() || (int) from.getYaw() != (int) to.getYaw();
+    // Clients can acknowledge the server's yaw with an equivalent angle one full turn away.
+    // Compare the shortest turn in the original angle's frame, retaining whole-degree bins.
+    var yaw = from.getYaw() + Location.normalizeYaw(to.getYaw() - from.getYaw());
+    return (int) from.getPitch() != (int) to.getPitch() || (int) from.getYaw() != (int) yaw;
   }
 }

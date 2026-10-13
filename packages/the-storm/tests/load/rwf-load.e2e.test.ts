@@ -9,6 +9,7 @@ import { packageRoot } from "#e2e/harness/paths.ts";
 import { loadResources } from "#e2e/gameplay-fixtures.ts";
 import { type Phase, summarise, verdicts } from "./load-bars.ts";
 import { sampleWindow as window, MsptSchema } from "./samples.ts";
+import { botsToAdd } from "./arming.ts";
 import {
   eventually,
   status,
@@ -70,11 +71,12 @@ async function arm(
   }
   for (;;) {
     const now = await status(rcon);
-    if (now.bots >= bots || now.phase !== "Countdown") {
+    const missing = botsToAdd(now, bots);
+    if (missing === 0 || now.phase !== "Countdown") {
       break;
     }
     await rcon.command(
-      `rwf admin loadtest ${Math.min(100, bots - now.bots).toString()}`,
+      `rwf admin loadtest ${Math.min(100, missing).toString()}`,
     );
   }
   await eventually(

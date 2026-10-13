@@ -63,7 +63,8 @@ final class RunnerRules {
 
   /**
    * How long drafted bots take to walk in: the first part of the countdown that is left, the time a
-   * waiting lobby takes to relax its requirement, or no time at all.
+   * waiting lobby takes to relax its requirement, capped to fit a countdown that starts next, or no
+   * time at all.
    */
   static Duration arrivalBudget(RwfMatch at, Instant now) {
     return switch (at.phase()) {
@@ -76,7 +77,11 @@ final class RunnerRules {
                   Math.round(
                       Duration.between(now, countdown.startsAt()).toMillis()
                           * BotArrivals.ARRIVAL_SHARE)));
-      case Phase.Lobby _ -> at.settings().relaxEvery();
+      case Phase.Lobby _ ->
+          Duration.ofMillis(
+              Math.min(
+                  at.settings().relaxEvery().toMillis(),
+                  Math.round(at.settings().countdown().toMillis() * BotArrivals.ARRIVAL_SHARE)));
       default -> Duration.ZERO;
     };
   }
