@@ -56,6 +56,7 @@ const fakeRest: BotRestReader = {
     guard(() => ({ id: GUILD, name: "Server", owner_id: state.ownerId })),
   guildExists: () => guard(() => true),
   guildChannels: unused,
+  freshGuildChannels: unused,
   guildRoles: () =>
     guard(() => [
       { id: GUILD, name: "@everyone", permissions: "0" },

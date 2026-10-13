@@ -64,6 +64,33 @@
   ],
   "flags": [
     {
+      "key": "scout_durable_orchestration_enabled",
+      "owner": "scout",
+      "namespace": "scout",
+      "source": "scout-policy",
+      "purpose": "Cut over remaining announcements and Customs operations after compatible workers are deployed; disabling after cutover pauses new work.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "scout-durable-orchestration-beta",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "stage",
+              "operator": "eq",
+              "value": "beta"
+            }
+          ],
+          "result": false
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "tracker-writes-enabled",
       "owner": "tracker",
       "namespace": "tracker",

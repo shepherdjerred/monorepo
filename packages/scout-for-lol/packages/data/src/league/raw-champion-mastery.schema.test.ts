@@ -26,4 +26,25 @@ describe("RawChampionMastery schemas", () => {
     expect(rows).toHaveLength(1);
     expect(rows[0]).not.toHaveProperty("chestGranted");
   });
+
+  test("preserves negative tokensEarned from Riot and stored snapshots", () => {
+    const rows = RawChampionMasteryListSchema.parse([
+      masteryRow,
+      { ...masteryRow, tokensEarned: -1 },
+    ]);
+    expect(rows[1]?.tokensEarned).toBe(-1);
+  });
+
+  test.each([
+    { tokensEarned: 1.5 },
+    { championPoints: -1 },
+    { championLevel: -1 },
+    { championId: 0 },
+    { lastPlayTime: -1 },
+  ])("rejects malformed mastery fields: %j", (invalid) => {
+    expect(
+      RawChampionMasteryListSchema.safeParse([{ ...masteryRow, ...invalid }])
+        .success,
+    ).toBe(false);
+  });
 });

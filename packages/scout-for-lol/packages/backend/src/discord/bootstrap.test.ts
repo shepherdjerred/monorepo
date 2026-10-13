@@ -17,6 +17,12 @@ import {
 import { mockGuild } from "#src/testing/discord-mocks.ts";
 import type { GuildInstallReplacement } from "#src/discord/events/guild-create.ts";
 
+// Readiness itself is exercised by gateway-ready.test.ts. These tests isolate
+// handler registration and the NODE_ENV login boundary.
+vi.mock("#src/discord/gateway-ready.ts", () => ({
+  loginReadyGateway: (target: Client, token: string) => target.login(token),
+}));
+
 function newClient(): Client {
   return new Client({ intents: [GatewayIntentBits.Guilds] });
 }

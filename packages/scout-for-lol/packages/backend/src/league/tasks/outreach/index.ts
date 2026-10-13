@@ -12,7 +12,8 @@
  * Three deliberate departures from the version this replaces, each fixing a
  * measured failure in prod:
  *
- * 1. **Budget is consumed only on delivery.** The old passes stamped their
+ * 1. **Budget is reserved before delivery.** Uncertain attempts stay charged.
+ *    The old passes stamped their
  *    column "regardless" of the send outcome, which permanently burned 33 of 37
  *    guilds out of the feedback ask without ever messaging them.
  * 2. **Eligibility is re-evaluated, not marked once.** A guild that configures
@@ -36,7 +37,10 @@ import {
 } from "@scout-for-lol/data/index.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { readOutreachState } from "#src/discord/utils/outreach-state.ts";
-import { sendDM, type DmKind } from "#src/discord/utils/dm.ts";
+import { sendDM } from "#src/discord/utils/dm.ts";
+import type { DmKind } from "#src/discord/utils/dm-contracts.ts";
+import { orchestrationMode } from "#src/temporal/orchestration-cutover.ts";
+import { queueOutreachAnnouncement } from "#src/league/tasks/outreach/durable-announcement.ts";
 import { NON_CORE_MESSAGE_BUDGET } from "#src/discord/utils/message-budget.ts";
 import { truncateDiscordMessage } from "#src/discord/utils/message.ts";
 import { getFeedbackUrl } from "#src/discord/utils/feedback.ts";
@@ -226,10 +230,14 @@ export async function runOutreach(
     isInstalled?: (guildId: DiscordGuildId) => Promise<boolean>;
     /** Overridden by tests; production uses the process-wide client. */
     db?: ExtendedPrismaClient;
+    /** First Activity scheduling time; retries keep the same daily occurrence. */
+    occurredAt?: Date;
   } = {},
 ): Promise<void> {
   const dryRun = options.dryRun ?? false;
   const db = options.db ?? prisma;
+  const mode = dryRun ? "legacy" : await orchestrationMode(db);
+  if (mode === "paused") return;
   const isInstalled =
     options.isInstalled ??
     (async (guildId: DiscordGuildId) => await isScoutInstalledInGuild(guildId));
@@ -237,7 +245,7 @@ export async function runOutreach(
     `[Outreach] Starting outreach check${dryRun ? " (DRY RUN — nothing will be sent)" : ""}`,
   );
   const startTime = Date.now();
-  const now = new Date();
+  const now = options.occurredAt ?? new Date();
 
   const installs = await db.guildInstall.findMany({
     // Backfilled historical connections deliberately have no lifecycle date.
@@ -246,7 +254,7 @@ export async function runOutreach(
     where: { analyticsLifecycleTracked: true, removedAt: null },
   });
 
-  let sent = 0;
+  const delivered = { sent: 0, queued: 0 };
   let skipped = 0;
 
   for (const install of installs) {
@@ -300,6 +308,21 @@ export async function runOutreach(
       continue;
     }
 
+    if (mode === "durable") {
+      const status = await queueOutreachAnnouncement(db, {
+        guildId,
+        recipientId: DiscordAccountIdSchema.parse(install.addedByDiscordId),
+        serverName: install.serverName,
+        installedAt: install.installedAt,
+        stage: plan.stage,
+        kind: plan.kind,
+        message: plan.message,
+        occurredAt: now,
+      });
+      recordOutreachDelivery(delivered, plan.stage, status);
+      continue;
+    }
+
     const status = await sendDM({
       client,
       userId: DiscordAccountIdSchema.parse(install.addedByDiscordId),
@@ -314,17 +337,23 @@ export async function runOutreach(
       },
     });
 
-    outreachMessagesTotal.inc({ stage: plan.stage.toString(), status });
+    recordOutreachDelivery(delivered, plan.stage, status);
     logger.info(
       `[Outreach] Stage ${plan.stage.toString()} (${plan.kind}) to ${install.addedByDiscordId} for ${install.serverName}: ${status}`,
     );
-
-    if (status === "sent") {
-      sent += 1;
-    }
   }
 
   logger.info(
-    `[Outreach] ✅ Completed in ${(Date.now() - startTime).toString()}ms — ${installs.length.toString()} guild(s) evaluated, ${sent.toString()} sent, ${skipped.toString()} skipped`,
+    `[Outreach] ✅ Completed in ${(Date.now() - startTime).toString()}ms — ${installs.length.toString()} guild(s) evaluated, ${delivered.sent.toString()} sent, ${delivered.queued.toString()} queued, ${skipped.toString()} skipped`,
   );
+}
+
+function recordOutreachDelivery(
+  counts: { sent: number; queued: number },
+  stage: number,
+  status: string,
+): void {
+  outreachMessagesTotal.inc({ stage: stage.toString(), status });
+  if (status === "sent") counts.sent++;
+  if (status === "queued") counts.queued++;
 }

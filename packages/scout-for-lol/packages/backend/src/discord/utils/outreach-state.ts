@@ -19,15 +19,15 @@
  */
 
 import type { DiscordGuildId } from "@scout-for-lol/data";
-import type { ExtendedPrismaClient } from "#src/database/index.ts";
+import type { Db } from "#src/database/index.ts";
 import { BUDGETED_DM_KINDS } from "#src/discord/utils/message-budget.ts";
 
 export type OutreachState = {
-  /** Non-core messages delivered since install — the spent budget. */
+  /** Delivered, reserved, or uncertain non-core messages charged since install. */
   spent: number;
-  /** Highest ladder rung delivered since install (0 = none). */
+  /** Highest charged ladder rung since install (0 = none). */
   lastLadderStage: number;
-  /** Whether a feedback ask has already been delivered since install. */
+  /** Whether a feedback ask is delivered, reserved, or uncertain since install. */
   feedbackRequested: boolean;
 };
 
@@ -38,14 +38,14 @@ export type OutreachState = {
  * installation and must not count against the current one.
  */
 export async function readOutreachState(
-  db: ExtendedPrismaClient,
+  db: Db,
   guildId: DiscordGuildId,
   installedAt: Date,
 ): Promise<OutreachState> {
   const delivered = await db.dmAuditLog.findMany({
     where: {
       guildId,
-      deliveryStatus: "sent",
+      deliveryStatus: { in: ["sent", "reserved", "unknown"] },
       kind: { in: [...BUDGETED_DM_KINDS] },
       createdAt: { gte: installedAt },
     },

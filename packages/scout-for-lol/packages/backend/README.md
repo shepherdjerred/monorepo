@@ -3,7 +3,7 @@
 The Scout for LoL backend service. One Bun image that runs:
 
 - The Discord bot (Discord.js): slash commands, match notifications, report delivery
-- Match polling cron jobs through Scout's native Riot API client, with raw match JSON archived to S3
+- Temporal Workflows and Schedules for recurring ingestion and maintenance, with raw match JSON archived to S3
 - The tRPC/HTTP server that the web app SPA (`@scout-for-lol/app`) calls
 - The DuckDB "report lake" (Parquet, derived from S3) that executes ScoutQL report queries
 - Server-side product analytics (PostHog) and metrics (Prometheus) / error tracking (Sentry)
@@ -21,6 +21,11 @@ bound retained documents while flattening.
 Application state (subscriptions, competitions, guilds) is PostgreSQL 18
 managed by Prisma (`@prisma/adapter-pg`). Report images are rendered by
 `@scout-for-lol/report`.
+
+Product announcements and Customs operations commit their intent and recoverable
+Workflow start in PostgreSQL. Announcements freeze their content and chart
+artifacts in S3 before delivery; Customs checkpoints voice effects through the
+gateway worker. Ambiguous external effects require operator reconciliation.
 
 ## Support messages
 

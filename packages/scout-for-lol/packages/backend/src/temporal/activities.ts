@@ -1,6 +1,5 @@
 import { Context } from "@temporalio/activity";
 import { ApplicationFailure } from "@temporalio/common";
-import { client } from "#src/discord/client.ts";
 import type { ScoutTemporalActivityGroups } from "./connected-runtime.ts";
 import { PermanentImportError } from "#src/league/initial-history/errors.ts";
 import {
@@ -12,14 +11,14 @@ import {
   heartbeatWhile,
   probeQueue,
   scheduleReconciliationEnabled,
-  unavailable,
   NonSupportBackgroundJobInputSchema,
-  type NonSupportBackgroundJobInput,
 } from "./activity-runtime.ts";
 import { createRealtimeActivities } from "#src/temporal/realtime-activities.ts";
 import { createScoutBackgroundActivities } from "#src/temporal/background-activities.ts";
 import { createScoutLakeActivities } from "#src/temporal/lake/lake-activities.ts";
 import { temporalWorkHardDisabled } from "#src/temporal/work-features.ts";
+import { runBackgroundJobByKind } from "#src/temporal/background-jobs.ts";
+import { withOrchestrationProducer } from "#src/temporal/orchestration-cutover.ts";
 type DetachedWorkInput = Parameters<
   ScoutTemporalActivityGroups["background"]["runDetachedBackgroundWork"]
 >[0];
@@ -36,115 +35,6 @@ export function providerQuotaApplicationFailure(
     error instanceof Error ? error.message : String(error),
     "ProviderQuotaExhausted",
   );
-}
-
-async function runBackgroundJobByKind(
-  input: NonSupportBackgroundJobInput,
-): Promise<void> {
-  switch (input.kind) {
-    case "competition-refresh": {
-      const { runLifecycleCheck } =
-        await import("#src/league/tasks/competition/lifecycle.ts");
-      await runLifecycleCheck();
-      break;
-    }
-    case "competition-scheduled-updates": {
-      const { runScheduledCompetitionUpdates } =
-        await import("#src/league/tasks/competition/scheduled-update-dispatcher.ts");
-      await runScheduledCompetitionUpdates();
-      break;
-    }
-    case "competition-validation": {
-      const { runDataValidation } =
-        await import("#src/league/tasks/cleanup/validate-data.ts");
-      await runDataValidation(client);
-      break;
-    }
-    case "bucks-reconciliation": {
-      const { reconcileBucksBalances } =
-        await import("#src/betting/settlement/reconcile.ts");
-      await reconcileBucksBalances();
-      break;
-    }
-    case "weekly-bucks-leaderboard": {
-      const { runWeeklyBucksLeaderboard } =
-        await import("#src/betting/leaderboard/weekly-leaderboard.ts");
-      await runWeeklyBucksLeaderboard();
-      break;
-    }
-    case "player-pruning": {
-      const { runPlayerPruning } =
-        await import("#src/league/tasks/cleanup/prune-players.ts");
-      await runPlayerPruning();
-      break;
-    }
-    case "removed-guild-cleanup": {
-      const { reconcileRemovedGuilds } =
-        await import("#src/league/tasks/cleanup/reconcile-removed-guilds.ts");
-      await reconcileRemovedGuilds(client);
-      break;
-    }
-    case "match-time-rebuild": {
-      const { refreshMatchTimes } =
-        await import("#src/league/tasks/maintenance/refresh-match-times.ts");
-      await refreshMatchTimes();
-      break;
-    }
-    case "outreach": {
-      const { runOutreach } =
-        await import("#src/league/tasks/outreach/index.ts");
-      await runOutreach(client);
-      break;
-    }
-    case "conversion-check": {
-      const { updateOutreachConversionMetrics } =
-        await import("#src/league/tasks/outreach/conversions.ts");
-      await updateOutreachConversionMetrics();
-      break;
-    }
-    case "summoner-index-backfill": {
-      const { backfillFromExisting } =
-        await import("#src/lib/riot/summoner-index.ts");
-      await backfillFromExisting();
-      break;
-    }
-    case "custom-nights-expiry": {
-      const { expireCustomNights } =
-        await import("#src/customs/game/expiry.ts");
-      await expireCustomNights();
-      break;
-    }
-    case "notification-intent-expiry": {
-      const { runNotificationIntentExpiry } =
-        await import("#src/durable/match/intent-expiry.ts");
-      await runNotificationIntentExpiry();
-      const { settleTerminalNotificationTips } =
-        await import("#src/temporal/notification/notification-presentation.ts");
-      await settleTerminalNotificationTips();
-      break;
-    }
-    case "progression-reconciliation": {
-      const { reconcileCompetitiveProgression } =
-        await import("#src/progression/reconcile.ts");
-      await reconcileCompetitiveProgression(input.stage);
-      break;
-    }
-    case "mvp-tally-refresh": {
-      const { reconcilePendingMvpTallyRefreshes } =
-        await import("#src/mvp-votes/tally-reconciliation.ts");
-      await reconcilePendingMvpTallyRefreshes();
-      break;
-    }
-    case "clash-snapshot": {
-      const { runClashSnapshot } =
-        await import("#src/league/clash/snapshot.ts");
-      await runClashSnapshot();
-      break;
-    }
-    case "prediction-ingest":
-    case "legacy-backfill":
-      unavailable(input.kind);
-  }
 }
 
 async function runDetachedWork(input: DetachedWorkInput): Promise<void> {
@@ -179,6 +69,16 @@ async function runDetachedWork(input: DetachedWorkInput): Promise<void> {
 
 function createInteractiveActivities(): ScoutTemporalActivityGroups["interactive"] {
   return {
+    publishCustomNight: async (input) => {
+      await heartbeatWhile(
+        { nightId: input.nightId, phase: "publishing-customs" },
+        async () => {
+          const { publishDurableCustomNight } =
+            await import("#src/customs/operations/publication.ts");
+          await publishDurableCustomNight(input);
+        },
+      );
+    },
     probeQueue,
     runInteractive: async (input) => {
       const { runScoutInteractiveActivity } =
@@ -264,6 +164,9 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
             await import("#src/reports/discord-dispatcher.ts");
           await reconcileReportDeliveries();
           const { prisma } = await import("#src/database/index.ts");
+          const { findPendingCustomWork } =
+            await import("#src/customs/operations/reconciliation.ts");
+          const customWork = await findPendingCustomWork(prisma);
           const { findQueuedScoutTemporalWork } =
             await import("#src/temporal/work-store.ts");
           const jobs = await prisma.initialMatchHistoryImport.findMany({
@@ -309,6 +212,7 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
             return { kind, databaseRunId: run.id };
           });
           return {
+            ...customWork,
             initialHistoryPuuids: jobs.map((job) => job.puuid),
             detachedWorks: parsedDetachedWorks,
             interactiveRuns: parsedInteractiveRuns,
@@ -328,7 +232,17 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
       }
       const nonSupportInput = NonSupportBackgroundJobInputSchema.parse(input);
       await heartbeatWhile({ kind: input.kind, phase: "running" }, () =>
-        runBackgroundJobByKind(nonSupportInput),
+        [
+          "competition-refresh",
+          "competition-scheduled-updates",
+          "weekly-bucks-leaderboard",
+          "outreach",
+          "custom-nights-expiry",
+        ].includes(input.kind)
+          ? withOrchestrationProducer(async () => {
+              await runBackgroundJobByKind(nonSupportInput);
+            })
+          : runBackgroundJobByKind(nonSupportInput),
       );
       Context.current().heartbeat({ kind: input.kind, phase: "complete" });
     },
@@ -477,6 +391,18 @@ function createLakeActivities(): ScoutTemporalActivityGroups["lake"] {
 }
 export function createScoutTemporalActivityGroups(): ScoutTemporalActivityGroups {
   return {
+    gateway: {
+      probeQueue,
+      executeCustomOperation: async (input) =>
+        await heartbeatWhile(
+          { operationId: input.operationId, phase: "executing-customs" },
+          async () => {
+            const { executeDurableCustomOperation } =
+              await import("#src/customs/operations/execution.ts");
+            return await executeDurableCustomOperation(input);
+          },
+        ),
+    },
     realtime: createRealtimeActivities(),
     interactive: createInteractiveActivities(),
     background: createBackgroundActivities(),

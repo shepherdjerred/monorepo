@@ -19,12 +19,18 @@ import {
   CustomHistorySchema,
   type CustomHistory,
 } from "@scout-for-lol/data";
-import type { ExtendedPrismaClient } from "#src/database/index.ts";
+import type { Db, ExtendedPrismaClient } from "#src/database/index.ts";
+import { CustomOperationProgressSchema } from "#src/customs/operations/contracts.ts";
 
-async function loadNight(client: ExtendedPrismaClient, nightId: string) {
+async function loadNight(client: Db, nightId: string) {
   return client.customNight.findUnique({
     where: { id: nightId },
     include: {
+      operations: {
+        where: { state: { in: ["queued", "running", "held"] } },
+        orderBy: { createdAt: "desc" },
+        take: 1,
+      },
       cohosts: { orderBy: { createdAt: "asc" } },
       participants: { orderBy: { createdAt: "asc" } },
       games: {
@@ -155,7 +161,7 @@ function recruitmentCounts(participants: readonly CustomNightParticipant[]) {
 
 /** Builds the client contract from normalized rows; no stored snapshot exists. */
 export async function buildCustomNightSnapshot(
-  client: ExtendedPrismaClient,
+  client: Db,
   nightId: string,
   viewerDiscordId: string,
   options:
@@ -191,8 +197,27 @@ export async function buildCustomNightSnapshot(
             (participant) => participant.discordId === viewerDiscordId,
           )?.role ?? "MEMBER");
   const currentGame = night.games.at(-1);
+  const pendingOperation = night.operations[0];
+  const progress =
+    pendingOperation === undefined
+      ? undefined
+      : CustomOperationProgressSchema.parse(
+          JSON.parse(pendingOperation.progress),
+        );
 
   return CustomNightSnapshotSchema.parse({
+    pendingOperation:
+      pendingOperation === undefined || progress === undefined
+        ? null
+        : {
+            id: pendingOperation.id,
+            action:
+              progress.expiredAt === undefined
+                ? pendingOperation.action
+                : "expire",
+            state: pendingOperation.state,
+            step: progress.step,
+          },
     id: night.id,
     guildId: night.guildId,
     guildName: night.guildName,

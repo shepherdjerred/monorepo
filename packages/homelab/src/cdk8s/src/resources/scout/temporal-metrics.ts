@@ -4,7 +4,7 @@ import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/pro
 
 /**
  * The Temporal SDK's own Prometheus exporter, on the roles that run embedded
- * Workers (`application` and `activity-worker`; `gateway` runs none).
+ * Workers (`application`, `activity-worker`, and the gateway's voice queue).
  *
  * Those Workers run every unversioned Scout Workflow and Activity, so their
  * per-attempt Workflow Task failure counters are the only signal for a Task

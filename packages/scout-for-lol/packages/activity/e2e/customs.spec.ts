@@ -201,10 +201,138 @@ async function mockBackend(
       }),
     });
   });
-  await page.route("**/trpc/**", async (route) => fulfillTrpc(route, initial));
+  await page.route("**/trpc/**", async (route) => {
+    const procedures = new URL(route.request().url()).pathname
+      .split("/trpc/")[1]
+      ?.split(",");
+    if (procedures === undefined) throw new Error("Expected tRPC request");
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify(
+        procedures.map((procedure) => ({
+          result: {
+            data:
+              procedure === "customs.pendingCleanups"
+                ? initial.state === "ENDED"
+                  ? [initial]
+                  : []
+                : initial,
+          },
+        })),
+      ),
+    });
+  });
 }
 
 test.beforeEach(async ({ page }) => installDiscordAdapter(page));
+
+for (const expired of [false, true]) {
+  test(
+    expired
+      ? "expired held nights retain manager voice cleanup"
+      : "pending voice work disables night controls and a manager can resolve a held creation",
+    async ({ page }) => {
+      const initial = snapshot(pendingGame());
+      if (expired) {
+        initial.state = "ENDED";
+        if (initial.currentGame === null)
+          throw new Error("Expected game fixture");
+        initial.currentGame.state = "VOID";
+        initial.currentGame.completedAt = NOW;
+        initial.currentGame.voiceReady = false;
+      }
+      initial.pendingOperation = {
+        id: `${NIGHT_ID}:3:arrange`,
+        action: expired ? "expire" : "arrange",
+        state: "held",
+        step: expired
+          ? "Night expired; confirm uncertain creation before voice cleanup"
+          : "Confirm whether Team A was created before resuming",
+      };
+      await mockBackend(page, initial);
+      await page.route(
+        "**/trpc/customs.resolveVoiceOperation**",
+        async (route) => {
+          const request = route.request().postDataJSON() as Record<
+            string,
+            { operationId: string; answer: { kind: string }; evidence: string }
+          >;
+          expect(request["0"]).toMatchObject({
+            operationId: initial.pendingOperation?.id,
+            answer: { kind: "confirmed-unsent" },
+          });
+          expect(request["0"]?.evidence).toContain("complete channel list");
+          await fulfillTrpc(route, {
+            ...initial,
+            revision: 4,
+            pendingOperation: {
+              ...initial.pendingOperation,
+              state: "queued",
+              step: "Confirmed by a manager; waiting to resume",
+            },
+          });
+        },
+      );
+      await page.goto("./");
+      await expect(
+        page.getByRole("heading", {
+          name: expired
+            ? "Expired night needs voice cleanup"
+            : "Voice setup needs a check",
+        }),
+      ).toBeVisible();
+      if (expired) {
+        await expect(
+          page.getByRole("button", { name: "Accept and start a custom night" }),
+        ).toBeEnabled();
+        await expect(
+          page.getByRole("button", { name: "End night" }),
+        ).toHaveCount(0);
+      } else {
+        await expect(
+          page.getByRole("button", { name: "End night" }),
+        ).toBeDisabled();
+      }
+      await expect(
+        page.getByRole("button", {
+          name: expired
+            ? "Confirm no channel and clean up"
+            : "Confirm no channel and retry",
+        }),
+      ).toBeDisabled();
+      await page
+        .getByLabel("Describe what you checked")
+        .fill(
+          "Checked the complete channel list and no matching voice channel exists.",
+        );
+      await page
+        .getByRole("button", {
+          name: expired
+            ? "Confirm no channel and clean up"
+            : "Confirm no channel and retry",
+        })
+        .click();
+      await expect(
+        page.getByRole("heading", { name: "Updating this night" }),
+      ).toBeVisible();
+      if (expired) {
+        await page.reload();
+        await expect(
+          page.getByRole("heading", {
+            name: "Expired night needs voice cleanup",
+          }),
+        ).toBeVisible();
+        await expect(
+          page.getByRole("button", { name: "Accept and start a custom night" }),
+        ).toBeEnabled();
+      } else {
+        await expect(
+          page.getByRole("button", { name: "End night" }),
+        ).toBeDisabled();
+      }
+    },
+  );
+}
 
 test("renders recruitment on desktop in light mode", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });

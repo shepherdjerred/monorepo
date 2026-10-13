@@ -22,14 +22,19 @@ const logger = createLogger("competition-refresh");
  * or render failure is logged and swallowed so it never blocks the caller's
  * own work (the daily Discord post, or the web mutation response).
  *
- * Returns the rendered chart as a Discord attachment (or `null`) so the daily
- * update can forward it to Discord without rendering twice.
+ * Durable callers require cache writes to succeed and reuse the returned
+ * rendered bytes when freezing their announcement. Standings are saved before
+ * rendering so trend charts can read the new historical point.
  */
 export async function cacheLeaderboardArtifacts(params: {
   competition: CompetitionWithCriteria;
   entries: RankedLeaderboardEntry[];
   calculatedAt: Date;
-}): Promise<{ chartAttachment: AttachmentBuilder | null }> {
+  requireCache?: boolean;
+}): Promise<{
+  chartAttachment: AttachmentBuilder | null;
+  rendered: Awaited<ReturnType<typeof renderCompetitionChartBuffer>>;
+}> {
   const { competition, entries, calculatedAt } = params;
 
   const cachedLeaderboard: CachedLeaderboard = {
@@ -42,6 +47,7 @@ export async function cacheLeaderboardArtifacts(params: {
   try {
     await saveCachedLeaderboard(cachedLeaderboard);
   } catch (error) {
+    if (params.requireCache === true) throw error;
     logger.error(
       `[Refresh] ⚠️  Failed to cache leaderboard JSON for competition ${competition.id.toString()}:`,
       error,
@@ -55,8 +61,9 @@ export async function cacheLeaderboardArtifacts(params: {
   }
 
   let chartAttachment: AttachmentBuilder | null = null;
+  let rendered: Awaited<ReturnType<typeof renderCompetitionChartBuffer>> = null;
   try {
-    const rendered = await renderCompetitionChartBuffer(competition, entries);
+    rendered = await renderCompetitionChartBuffer(competition, entries);
     if (rendered !== null) {
       await saveLeaderboardImage(competition.id, calculatedAt, rendered.data);
       chartAttachment = new AttachmentBuilder(rendered.data, {
@@ -64,6 +71,7 @@ export async function cacheLeaderboardArtifacts(params: {
       });
     }
   } catch (error) {
+    if (params.requireCache === true) throw error;
     logger.error(
       `[Refresh] ⚠️  Failed to render/cache leaderboard chart for competition ${competition.id.toString()}:`,
       error,
@@ -76,7 +84,7 @@ export async function cacheLeaderboardArtifacts(params: {
     });
   }
 
-  return { chartAttachment };
+  return { chartAttachment, rendered };
 }
 
 /**

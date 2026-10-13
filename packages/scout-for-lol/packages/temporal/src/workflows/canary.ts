@@ -40,6 +40,16 @@ export async function scoutQueueCanaryWorkflow(
       ...input,
       queueClass: "lake",
     }),
+    ...(input.includeGateway === true
+      ? [
+          proxyActivities<Pick<ScoutTemporalActivities, "probeQueue">>({
+            taskQueue: expectedQueues.gateway,
+            startToCloseTimeout: "10 seconds",
+            scheduleToCloseTimeout: "1 minute",
+            retry: { maximumAttempts: 3 },
+          }).probeQueue({ ...input, queueClass: "gateway" }),
+        ]
+      : []),
   ]);
   for (const result of results) {
     const parsed = ScoutQueueCanaryProbeResultSchema.parse(result);
@@ -57,3 +67,5 @@ export async function scoutQueueCanaryWorkflow(
         : ScoutBackgroundJobInputSchema.shape.kind.options,
   }));
 }
+import { proxyActivities } from "@temporalio/workflow";
+import type { ScoutTemporalActivities } from "#src/activities.ts";

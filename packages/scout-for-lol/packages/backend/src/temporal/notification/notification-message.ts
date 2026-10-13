@@ -6,6 +6,7 @@ import { freezeNotificationMessage } from "#src/temporal/notification/notificati
 import type { NotificationIntentRecord } from "#src/database/durable/intent-row.ts";
 import { buildDuelStatusNotificationMessage } from "#src/temporal/notification/duel-status-notification.ts";
 import { buildDareStatusNotificationMessage } from "#src/temporal/notification/dare-status-notification.ts";
+import { buildProductAnnouncementMessage } from "#src/temporal/notification/product/artifacts.ts";
 import { buildHallRecordBreakNotificationMessage } from "#src/temporal/notification/hall-record-break-notification.ts";
 import {
   readAttestedPrematchArtifact,
@@ -41,6 +42,9 @@ export async function buildAttestedMessage(
   abortSignal: AbortSignal,
   deliveryGuildId?: DiscordGuildId,
 ): Promise<MessageCreateOptions> {
+  if ("announcementId" in record) {
+    return await buildProductAnnouncementMessage(record, abortSignal);
+  }
   if ("duelId" in record) {
     return await buildDuelStatusNotificationMessage(record, deliveryGuildId);
   }
@@ -55,6 +59,11 @@ export async function buildAttestedMessage(
   if (record.intent.kind === "dare-status") {
     throw new Error(
       `Intent ${record.intent.key}: dare-status requires a Dare subject`,
+    );
+  }
+  if (record.intent.kind === "product-announcement") {
+    throw new Error(
+      `Intent ${record.intent.key}: product announcement requires an occurrence subject`,
     );
   }
   const riotMatchId = record.matchId;

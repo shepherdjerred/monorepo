@@ -105,3 +105,26 @@ export const DuelAndDareSubjects: Story = {
     </div>
   ),
 };
+
+const announcementQueue = operationsQueues(
+  {
+    ...data,
+    unknownDeliveries: [
+      {
+        intentKey: "product-announcement:competition-start-1",
+        announcementId: "competition-start-1",
+        state: "unknown-delivery",
+        attemptCount: 1,
+        attemptNonce: "announcement-run-1:attempt-1",
+      },
+    ],
+  },
+  NOW,
+).find((queue) => queue.id === "unknown-deliveries");
+if (announcementQueue === undefined) {
+  throw new Error("Announcement queue fixture is empty");
+}
+
+export const ProductAnnouncements: Story = {
+  args: { queue: announcementQueue },
+};

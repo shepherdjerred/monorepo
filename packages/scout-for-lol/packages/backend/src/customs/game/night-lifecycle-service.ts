@@ -18,6 +18,7 @@ import {
 import { voidCustomGame } from "#src/customs/game/game-operation-service.ts";
 import { returnCustomVoiceToLobby } from "#src/customs/voice-service.ts";
 import { prisma } from "#src/database/index.ts";
+import { requestDurableCustomOperation } from "#src/customs/operations/request.ts";
 
 export async function selectCustomAccount(
   claims: CustomActivityClaims,
@@ -97,6 +98,8 @@ export async function endCustomNight(
   claims: CustomActivityClaims,
   input: RevisionInput,
 ): Promise<CustomNightSnapshot> {
+  const pending = await requestDurableCustomOperation(claims, "end", input);
+  if (pending !== null) return pending;
   const { actor, snapshot: initialSnapshot } = await mutationContext(
     claims,
     input,

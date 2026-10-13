@@ -321,6 +321,7 @@ describe("announcement kinds", () => {
       "dare-status",
       "duel-status",
       "hall-record-break",
+      "product-announcement",
       "settlement",
     ]);
     expect(NotificationIntentKindSchema.options).toContain("hall-record-break");

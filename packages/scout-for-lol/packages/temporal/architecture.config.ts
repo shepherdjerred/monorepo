@@ -30,6 +30,7 @@ export const layers = [
   "activities",
   "activity-contracts",
   "contracts",
+  "customs-contracts",
   "execution-metadata",
   "identifiers",
   "match-receipts",
@@ -53,6 +54,13 @@ function everythingExcept(...allowed: string[]): string[] {
 
 export default defineArchitecture({
   boundaries: [
+    {
+      name: "customs-contracts-is-contracts-only",
+      comment:
+        "Persisted Customs operations and publication inputs are shared with clients and Activities; they must not depend on the Workflow sandbox.",
+      from: "customs-contracts",
+      to: everythingExcept("customs-contracts", "contracts"),
+    },
     {
       name: "contracts-is-a-leaf",
       comment:

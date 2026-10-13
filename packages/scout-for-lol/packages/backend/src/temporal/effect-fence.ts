@@ -225,6 +225,7 @@ export type ScoutGuardedEffect = {
 export type ScoutEffectFenceOptions = {
   readonly database?: ExtendedPrismaClient;
   readonly budget?: ScoutEffectFenceBudget;
+  readonly shared?: boolean;
 };
 
 /**
@@ -352,6 +353,21 @@ export async function runGuardedEffect(
 ): Promise<ScoutGuardedEffectResult> {
   const database = options.database ?? prisma;
   const budget = options.budget ?? SCOUT_EFFECT_FENCE_BUDGET;
+  return await withScoutEffectFence(
+    args.key,
+    async (fence) => await applyUnderFence(args, fence, database, budget),
+    options,
+  );
+}
+
+/** Shared mutual exclusion for external effects with their own PG progress ledger. */
+export async function withScoutEffectFence<T>(
+  key: string,
+  apply: (fence: ScoutEffectFence) => Promise<T>,
+  options: ScoutEffectFenceOptions = {},
+): Promise<T> {
+  const database = options.database ?? prisma;
+  const budget = options.budget ?? SCOUT_EFFECT_FENCE_BUDGET;
   // Armed BEFORE the transaction opens, on the same clock Prisma's own timer
   // starts on, so the lead is measured against the lock's real lifetime
   // rather than against whenever the lock happened to be acquired.
@@ -360,7 +376,7 @@ export async function runGuardedEffect(
     () => {
       controller.abort(
         new Error(
-          `The V2 fence for ${args.key} is ${String(budget.fenceAbortLeadMs)}ms from lapsing`,
+          `The fence for ${key} is ${String(budget.fenceAbortLeadMs)}ms from lapsing`,
         ),
       );
     },
@@ -369,19 +385,18 @@ export async function runGuardedEffect(
   try {
     return await database.$transaction(
       async (tx) => {
-        await tx.$executeRaw`
-          SELECT pg_advisory_xact_lock(
-            hashtext(${SCOUT_EFFECT_LOCK_NAMESPACE}),
-            hashtext(${args.key})
-          )
-        `;
+        if (options.shared === true) {
+          await tx.$executeRaw`SELECT pg_advisory_xact_lock_shared(hashtext(${SCOUT_EFFECT_LOCK_NAMESPACE}), hashtext(${key}))`;
+        } else {
+          await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${SCOUT_EFFECT_LOCK_NAMESPACE}), hashtext(${key}))`;
+        }
         const fence: ScoutEffectFence = {
           signal: controller.signal,
           assertHeld: async () => {
-            await assertFenceStillHeld(tx, args.key, controller.signal);
+            await assertFenceStillHeld(tx, key, controller.signal);
           },
         };
-        return await applyUnderFence(args, fence, database, budget);
+        return await apply(fence);
       },
       { maxWait: FENCE_LOCK_MAX_WAIT_MS, timeout: budget.lockLifetimeMs },
     );

@@ -11,6 +11,7 @@ import { z } from "zod";
 import configuration from "#src/configuration.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { lockCustomGuild } from "#src/customs/repository.ts";
+import { anonymizeCustomOperationSnapshots } from "#src/customs/operations/anonymize.ts";
 
 const PENDING_VOICE_STATES = [
   "PROVISIONING",
@@ -171,6 +172,14 @@ export async function anonymizeCustomParticipant(
       );
     }
     const auditEvents = nights.flatMap((night) => night.auditEvents);
+    await anonymizeCustomOperationSnapshots(transaction, {
+      nightIds,
+      original: input.discordId,
+      pseudonym,
+      playerId: pseudonymousPlayerId,
+      accountId: pseudonymousAccountId,
+      puuid: LeaguePuuidSchema.parse(pseudonymousPuuid),
+    });
     const consents = await transaction.customConsent.findMany({
       where: { guildId: input.guildId, discordId: input.discordId },
       select: {

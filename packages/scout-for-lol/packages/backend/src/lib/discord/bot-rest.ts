@@ -280,6 +280,10 @@ export type BotRestReader = {
   readonly guildChannels: (
     guildId: DiscordGuildId,
   ) => Promise<DiscordGuildChannel[] | null>;
+  /** Recovery evidence must bypass a channel list cached before an uncertain creation. */
+  readonly freshGuildChannels: (
+    guildId: DiscordGuildId,
+  ) => Promise<DiscordGuildChannel[] | null>;
   /** `null` when Scout is not in the guild. */
   readonly guildRoles: (
     guildId: DiscordGuildId,
@@ -406,6 +410,13 @@ export function createBotRestReader(
 
   return {
     guild: readGuild,
+    freshGuildChannels: async (guildId) =>
+      await read(get, {
+        route: Routes.guildChannels(guildId),
+        schema: DiscordGuildChannelsSchema,
+        description: `guild ${guildId} channels`,
+        absentCodes: [UNKNOWN_GUILD],
+      }),
 
     guildExists: async (guildId) => (await readGuild(guildId)) !== null,
 

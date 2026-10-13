@@ -22,6 +22,7 @@ function reader(search: () => Promise<DiscordGuildMember[]>): BotRestReader {
     guild: unused,
     guildExists: unused,
     guildChannels: unused,
+    freshGuildChannels: unused,
     guildRoles: unused,
     botMember: unused,
     guildMember: unused,

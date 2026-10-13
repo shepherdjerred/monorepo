@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { Db, ExtendedPrismaClient } from "#src/database/index.ts";
+import { mintCustomRecruitment } from "#src/customs/recruitment-intent.ts";
 import {
   CustomNightStateSchema,
   type AccountId,
@@ -34,6 +35,7 @@ export type CreateCustomNightInput = {
   readonly hostSelectedAccountId?: AccountId | null;
   readonly disclosureVersion: string;
   readonly now: Date;
+  readonly durableRecruitment?: boolean;
 };
 
 export async function lockCustomGuild(
@@ -108,6 +110,8 @@ export async function createCustomNight(
           source: "ACTIVITY",
         },
       });
+      if (input.durableRecruitment === true)
+        await mintCustomRecruitment(transaction, night.id, input.now);
       return { id: night.id, revision: night.revision };
     });
   } catch (error) {
@@ -142,6 +146,7 @@ async function claimCustomNightRevision(
       id: input.nightId,
       revision: input.expectedRevision,
       state: { not: "ENDED" },
+      operations: { none: { state: { in: ["queued", "running", "held"] } } },
     },
     data: {
       revision: { increment: 1 },

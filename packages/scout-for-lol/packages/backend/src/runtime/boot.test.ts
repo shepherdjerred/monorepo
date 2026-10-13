@@ -134,6 +134,7 @@ describe("scout runtime boot", () => {
       "report-lake",
       "temporal-core",
       "discord-gateway",
+      "temporal-deferred-workers",
       "gateway-ready-reconciliation",
       "http-server",
     ]);

@@ -266,6 +266,7 @@ export function createScoutChart(
         // is the only thing that needs to reach it. It is not behind the
         // s3-static-sites reverse proxy and serves no tRPC/OAuth/SSE surface.
         ingress: [
+          prometheusTemporalMetricsIngressRule(),
           {
             from: [
               {

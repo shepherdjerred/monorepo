@@ -9,6 +9,12 @@ describe("isPrunableImage", () => {
   const old = new Date("2026-05-01T00:00:00Z");
   const recent = new Date("2026-06-20T00:00:00Z");
 
+  test("never prunes frozen product announcements, even with an image suffix", () => {
+    expect(
+      isPrunableImage("product-announcements/frozen-chart.png", old, cutoff),
+    ).toBe(false);
+  });
+
   test("prunes a .png older than the cutoff", () => {
     expect(isPrunableImage("games/2026/05/01/M1/report.png", old, cutoff)).toBe(
       true,

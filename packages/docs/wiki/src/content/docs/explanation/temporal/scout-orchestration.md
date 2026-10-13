@@ -56,15 +56,22 @@ aborts a transaction on that violation, so the read-back cannot run inside one.
 A guarded effect therefore reports its guard and its fact as two outcomes, and
 a run that claimed the guard and died before the fact reconciles on retry.
 
-## One orchestration queue, four effect queues
+## One orchestration queue, five effect queues
 
 Every stage has one Workflow task queue. The Workflow bundle is registered
 once, which prevents queue-specific Workers from drifting into different
 orchestration capabilities.
 
-Activities use separate realtime, interactive, background, and lake queues.
+Activities use separate realtime, interactive, background, lake, and gateway queues.
 The separation preserves responsive polling under slow model work. It also
 serializes every mutation of the report-lake volume.
+
+The gateway queue owns Customs voice operations because Discord exposes live
+voice membership through its gateway connection. It starts after `clientReady`.
+The application queue publishes persisted Customs revisions to its own socket
+clients. A gateway process cannot publish into another process's socket map.
+The [runtime capability table](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/configuration/runtime-role.ts)
+keeps both responsibilities explicit.
 
 The Activity Workers share one Temporal connection inside the
 [`scout-for-lol`](https://github.com/shepherdjerred/monorepo/tree/main/packages/scout-for-lol)
@@ -159,6 +166,33 @@ load persisted snapshots and terminal outcomes; Workflow history never becomes
 the public event store.
 
 ## Delivery records distinguish uncertainty from failure
+
+Competition announcements, weekly standings, outreach, and Customs recruitment
+use the notification intent ledger. Producers freeze each occurrence and commit
+its intent and Workflow start request in one Postgres transaction. Competition
+charts live under content-addressed S3 keys. The image collector only prunes
+generated match-image prefixes, so it cannot remove these referenced objects.
+
+Weekly standings become published only after every frozen chunk is delivered.
+Outreach reserves its guild budget and recipient cooldown in Postgres before
+sending. Reserved and uncertain attempts remain charged until investigated.
+Required delivery bookkeeping has a persisted completion marker and a scheduled
+repair pass. These boundaries survive a process loss after Discord acknowledges
+delivery. The [backend notification adapters](https://github.com/shepherdjerred/monorepo/tree/main/packages/scout-for-lol/packages/backend/src/temporal/notification)
+connect those product records to the shared delivery state machine.
+
+Customs mutations freeze an operation before any voice effect. Each created
+channel, moved participant, and deleted channel has a committed checkpoint.
+Uncertain creation pauses for a manager's evidence instead of creating another
+channel. Revision watermarks repair client publication independently of voice
+execution. The [Customs implementation](https://github.com/shepherdjerred/monorepo/tree/main/packages/scout-for-lol/packages/backend/src/customs)
+retains the operation and audit history.
+
+Cutover waits for in-flight legacy producers behind a Postgres fence. Its
+activation marker is monotonic: disabling the rollout flag pauses new work
+after activation. Committed operations and delivery repair continue running.
+Returning to direct sends would erase the ownership boundary that prevents
+duplicate external effects.
 
 Report output is frozen into per-chunk delivery receipts before the first send.
 Each receipt keeps its destination, content, attachment digest, nonce, and

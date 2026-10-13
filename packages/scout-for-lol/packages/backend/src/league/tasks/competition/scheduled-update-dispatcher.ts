@@ -8,6 +8,8 @@ import { getDueCompetitions } from "#src/database/competition/queries.ts";
 import { postLeaderboardUpdate } from "#src/league/tasks/competition/daily-update.ts";
 import { createLogger } from "#src/logger.ts";
 import type { CompetitionWithCriteria } from "@scout-for-lol/data";
+import { orchestrationMode } from "#src/temporal/orchestration-cutover.ts";
+import { runDurableCompetitionUpdates } from "#src/league/tasks/competition/durable-announcements.ts";
 
 const logger = createLogger("competition-scheduled-update-dispatcher");
 
@@ -39,6 +41,9 @@ export async function runScheduledCompetitionUpdates(): Promise<{
   succeeded: number;
   failed: number;
 }> {
+  const mode = await orchestrationMode();
+  if (mode === "paused") return { succeeded: 0, failed: 0 };
+  if (mode === "durable") return await runDurableCompetitionUpdates();
   return await dispatchScheduledCompetitionUpdates({
     now: new Date(),
     getDue: async (now) => await getDueCompetitions(prisma, now),

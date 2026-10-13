@@ -21,6 +21,7 @@ import {
 import type { ScoutIntentAttemptRef } from "@scout-for-lol/temporal/pipeline-contracts";
 import { client } from "#src/discord/client.ts";
 import { fetchChannelForDelivery } from "#src/discord/utils/channel.ts";
+import { DmKindSchema, type DmKind } from "#src/discord/utils/dm-contracts.ts";
 import { sendDM, type DmStatus } from "#src/discord/utils/dm.ts";
 import {
   isMissingChannelError,
@@ -58,6 +59,8 @@ import {
 import { resolveNotificationGate } from "#src/temporal/notification/notification-policy.ts";
 import { requireIntentRecord } from "#src/temporal/notification-lane/notification-reads.ts";
 import { createLogger } from "#src/logger.ts";
+import { productAnnouncementOf } from "#src/temporal/notification/product/announcement.ts";
+import { productAnnouncementSuppression } from "#src/temporal/notification/product/policy.ts";
 
 const logger = createLogger("scout-v2-notification-delivery");
 
@@ -229,21 +232,27 @@ async function sendWithoutReply(
  * because it is decided before any request leaves and must never be mistaken
  * for an ambiguous send.
  */
-async function sendToAccount(
-  message: MessageCreateOptions,
-  accountId: DiscordAccountId,
-  kind: NotificationIntentKind,
-  guildId: DiscordGuildId | undefined,
-): Promise<ScoutNotificationDeliveryResult> {
+async function sendToAccount(input: {
+  message: MessageCreateOptions;
+  accountId: DiscordAccountId;
+  kind: NotificationIntentKind;
+  guildId: DiscordGuildId | undefined;
+  reservation?: { id: number; kind: DmKind } | undefined;
+}): Promise<ScoutNotificationDeliveryResult> {
+  const { message, accountId, kind, guildId, reservation } = input;
   let sendAttempted = false;
   try {
     const status = await sendDM({
       client,
       userId: accountId,
       message: message.content ?? "",
-      kind: kind === "dare-status" ? "dare_notification" : "match_notification",
+      kind:
+        reservation?.kind ??
+        (kind === "dare-status" ? "dare_notification" : "match_notification"),
+      ...(reservation === undefined ? {} : { reservationId: reservation.id }),
       ...(guildId === undefined ? {} : { guildId }),
-      suppressMentions: kind === "dare-status",
+      suppressMentions:
+        kind === "dare-status" || kind === "product-announcement",
       prisma,
       onSendAttempt: () => {
         sendAttempted = true;
@@ -262,6 +271,8 @@ export function classifyDmSendStatus(
   sendAttempted: boolean,
 ): ScoutNotificationDeliveryResult {
   switch (status) {
+    case "unknown":
+      return { outcome: "unknown" };
     case "sent":
       return { outcome: "delivered" };
     case "dm_disabled":
@@ -298,6 +309,7 @@ async function deliverToTarget(args: {
   attemptNonce: string;
   guildId: DiscordGuildId | undefined;
   kind: NotificationIntentKind;
+  reservation?: { id: number; kind: DmKind };
 }): Promise<ScoutNotificationDeliveryResult> {
   switch (args.target.kind) {
     case "channel":
@@ -308,12 +320,7 @@ async function deliverToTarget(args: {
         guildId: args.guildId,
       });
     case "dm":
-      return await sendToAccount(
-        args.message,
-        args.target.accountId,
-        args.kind,
-        args.guildId,
-      );
+      return await sendToAccount({ ...args, accountId: args.target.accountId });
   }
 }
 
@@ -356,6 +363,7 @@ type PreparedSend =
       readonly target: NotificationTarget;
       readonly guildId: DiscordGuildId | undefined;
       readonly kind: NotificationIntentKind;
+      readonly reservation?: { id: number; kind: DmKind };
     }
   | { readonly phase: "failed"; readonly failure: NotificationFailure }
   | {
@@ -405,6 +413,7 @@ async function hallPreSendSuppression(
 }
 
 function notificationSubjectId(record: NotificationIntentRecord): string {
+  if ("announcementId" in record) return record.announcementId;
   return "matchId" in record
     ? record.matchId
     : "duelId" in record
@@ -416,7 +425,8 @@ function unsupportedDmAnnouncement(record: NotificationIntentRecord): boolean {
   return (
     record.intent.target.kind === "dm" &&
     ANNOUNCEMENT_INTENT_KINDS.has(record.intent.kind) &&
-    record.intent.kind !== "dare-status"
+    record.intent.kind !== "dare-status" &&
+    record.intent.kind !== "product-announcement"
   );
 }
 
@@ -426,6 +436,7 @@ async function deliveryGuildOf(
   const target = record.intent.target;
   if (target.kind === "channel")
     return await resolveDeliveryGuild(target.channelId);
+  if ("announcementId" in record) return productAnnouncementOf(record).guildId;
   return "dareId" in record
     ? dareStatusAnnouncementOf(record).guildId
     : undefined;
@@ -435,6 +446,14 @@ async function preSendSuppressionOf(
   record: NotificationIntentRecord,
   guildId: DiscordGuildId | undefined,
 ): Promise<NotificationUnsentSuppressionReason | undefined> {
+  if ("announcementId" in record) {
+    if (
+      record.intent.target.kind === "channel" &&
+      guildId !== productAnnouncementOf(record).guildId
+    )
+      throw new Error("Product delivery could not establish the target guild");
+    return await productAnnouncementSuppression(record, guildId);
+  }
   return "matchId" in record
     ? await hallPreSendSuppression(record, guildId)
     : "duelId" in record
@@ -510,7 +529,24 @@ async function prepareNotificationSend(
       failure: { classification: "terminal", reason: "target-not-found" },
     };
   }
-  return { phase: "ready", message, target, guildId, kind: record.intent.kind };
+  let reservation: { id: number; kind: DmKind } | undefined;
+  if ("announcementId" in record && target.kind === "dm") {
+    const { effect } = productAnnouncementOf(record);
+    if (effect.kind !== "outreach")
+      throw new Error("Only outreach announcements support DM targets");
+    const row = await prisma.dmAuditLog.findUniqueOrThrow({
+      where: { id: effect.auditId },
+    });
+    reservation = { id: row.id, kind: DmKindSchema.parse(row.kind) };
+  }
+  return {
+    phase: "ready",
+    message,
+    target,
+    guildId,
+    kind: record.intent.kind,
+    ...(reservation === undefined ? {} : { reservation }),
+  };
 }
 
 /**
@@ -583,6 +619,9 @@ export async function deliverNotification(
       attemptNonce: input.attemptNonce,
       guildId: prepared.guildId,
       kind: prepared.kind,
+      ...(prepared.reservation === undefined
+        ? {}
+        : { reservation: prepared.reservation }),
     }),
   );
 }

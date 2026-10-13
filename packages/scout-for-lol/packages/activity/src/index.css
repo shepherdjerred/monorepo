@@ -114,6 +114,10 @@ html[data-discord-layout="pip"] main {
   gap: 1rem;
 }
 
+.expired-cleanups + .centered {
+  min-height: 0;
+}
+
 .hero,
 .section-heading,
 .footer-actions,
@@ -302,4 +306,44 @@ html[data-discord-layout="pip"] main {
   color: #7a5200;
   background: #fff6e0;
   border: 1px solid #f0d9a0;
+}
+.night-controls {
+  display: grid;
+  gap: 1rem;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-inline-size: 0;
+}
+
+.night-controls:disabled {
+  opacity: 0.65;
+}
+
+.operation-status,
+.operation-resolution {
+  display: grid;
+  gap: 1rem;
+}
+
+.operation-status h2 {
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.operation-resolution {
+  max-width: 38rem;
+}
+
+.operation-resolution label {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.operation-resolution .text-input {
+  width: 100%;
+}
+
+.operation-resolution button {
+  justify-self: start;
 }

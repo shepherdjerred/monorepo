@@ -4,6 +4,34 @@ import { z } from "zod";
 
 export const TemporalReplayNamespaceSchema = z.enum(["dev", "beta", "prod"]);
 
+export type TemporalReplayTarget =
+  string | { readonly workflowId: string; readonly runId: string };
+
+/** Keep distinct executions of a continued Workflow; never collapse by ID. */
+export function parseTemporalReplayTargets(
+  args: readonly string[],
+  validateWorkflowId: (value: string) => string,
+): TemporalReplayTarget[] {
+  const targets: TemporalReplayTarget[] = [];
+  for (let index = 0; index < args.length; index++) {
+    const value = args[index];
+    if (value === undefined) throw new Error("Missing replay target");
+    if (value !== "--run") {
+      targets.push(validateWorkflowId(value));
+      continue;
+    }
+    const workflowId = args[++index];
+    const runId = args[++index];
+    if (workflowId === undefined || runId === undefined)
+      throw new Error("--run requires a Workflow ID and run UUID");
+    targets.push({
+      workflowId: validateWorkflowId(workflowId),
+      runId: z.uuid().parse(runId),
+    });
+  }
+  return targets;
+}
+
 export function temporalOperatorConnectionOptions(
   environment: Readonly<Record<string, string | undefined>>,
 ): ConnectionOptions {
@@ -27,7 +55,7 @@ export function temporalOperatorConnectionOptions(
 }
 
 export async function replayTemporalHistories(input: {
-  workflowIds: readonly string[];
+  workflowIds: readonly TemporalReplayTarget[];
   emptyMessage: string;
   workflowsPath: string;
   environment?: Readonly<Record<string, string | undefined>>;
@@ -47,16 +75,22 @@ export async function replayTemporalHistories(input: {
       connection,
       namespace,
     });
-    for (const workflowId of input.workflowIds) {
+    for (const target of input.workflowIds) {
+      const { workflowId, runId } =
+        typeof target === "string"
+          ? { workflowId: target, runId: undefined }
+          : target;
       const history = await client.workflow
-        .getHandle(workflowId)
+        .getHandle(workflowId, runId)
         .fetchHistory();
       await Worker.runReplayHistory(
         { workflowsPath: input.workflowsPath },
         history,
         workflowId,
       );
-      console.warn(`Replayed ${workflowId}`);
+      console.warn(
+        `Replayed ${workflowId}${runId === undefined ? "" : `/${runId}`}`,
+      );
     }
   } finally {
     await connection.close();

@@ -130,6 +130,8 @@ const fakeRest: BotRestReader = {
   guildExists: (guildId) => guard(() => state.guildsOnDiscord.has(guildId)),
   guildChannels: (guildId) =>
     guard(() => (state.guildsOnDiscord.has(guildId) ? state.channels : null)),
+  freshGuildChannels: (guildId) =>
+    guard(() => (state.guildsOnDiscord.has(guildId) ? state.channels : null)),
   guildRoles: (guildId) =>
     guard(() =>
       state.guildsOnDiscord.has(guildId)

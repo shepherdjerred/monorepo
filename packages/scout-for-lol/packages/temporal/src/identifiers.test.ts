@@ -45,6 +45,7 @@ describe("Scout Temporal identifiers", () => {
       interactive: "scout-beta-interactive",
       background: "scout-beta-background",
       lake: "scout-beta-lake",
+      gateway: "scout-beta-gateway",
     });
   });
 

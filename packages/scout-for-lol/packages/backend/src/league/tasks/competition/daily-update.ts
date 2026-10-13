@@ -22,6 +22,38 @@ import * as Sentry from "@sentry/bun";
 import { logNotification } from "#src/utils/notification-logger.ts";
 import { createLogger } from "#src/logger.ts";
 import { recordCoreOutputDelivered } from "#src/analytics/guild-lifecycle.ts";
+import { freezeAnnouncementArtifact } from "#src/temporal/notification/product/artifacts.ts";
+
+/** Rendering failures leave the occurrence due; frozen artifacts must be usable. */
+export async function prepareDurableCompetitionUpdate(
+  competition: CompetitionWithCriteria,
+  calculatedAt: Date,
+) {
+  await backfillStartSnapshots(competition);
+  const leaderboard = await calculateLeaderboard(prisma, competition);
+  const { rendered } = await cacheLeaderboardArtifacts({
+    competition,
+    entries: leaderboard,
+    calculatedAt,
+    requireCache: true,
+  });
+  const artifacts =
+    rendered === null
+      ? []
+      : [
+          await freezeAnnouncementArtifact(
+            rendered.data,
+            `competition-${competition.id.toString()}-${rendered.chartType === "bar" ? "standings" : "trend"}.png`,
+          ),
+        ];
+  return {
+    message: {
+      content: `📊 **Daily Leaderboard Update** - ${competition.title}`,
+      embeds: [generateLeaderboardEmbed(competition, leaderboard)],
+    },
+    artifacts,
+  };
+}
 
 const logger = createLogger("competition-daily-update");
 

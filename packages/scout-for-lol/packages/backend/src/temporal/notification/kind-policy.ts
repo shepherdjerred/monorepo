@@ -10,6 +10,7 @@ import { hallRecordBreakSuppression } from "#src/temporal/notification/hall-reco
 import { duelStatusSuppression } from "#src/temporal/notification/duel-status-notification.ts";
 import { dareStatusSuppression } from "#src/temporal/notification/dare-status-notification.ts";
 import { MalformedAnnouncementIntentError } from "#src/temporal/notification/announcement-codecs.ts";
+import { productAnnouncementSuppression } from "#src/temporal/notification/product/policy.ts";
 
 async function deferMalformedAnnouncement(
   check: () => Promise<NotificationPolicySuppressionReason | undefined>,
@@ -45,6 +46,12 @@ async function kindSuppressionOf(
   record: NotificationIntentRecord,
 ): Promise<NotificationPolicySuppressionReason | undefined> {
   switch (record.intent.kind) {
+    case "product-announcement":
+      if (!("announcementId" in record))
+        throw new Error("Product announcement requires an occurrence subject");
+      return await deferMalformedAnnouncement(
+        async () => await productAnnouncementSuppression(record),
+      );
     case "dare-status":
       if (!("dareId" in record))
         throw new Error("Dare status requires a Dare subject");

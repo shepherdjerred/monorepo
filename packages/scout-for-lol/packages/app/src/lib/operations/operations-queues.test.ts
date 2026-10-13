@@ -80,6 +80,11 @@ describe("projecting the reads", () => {
   test.each([
     { label: "Dare", value: "902", subject: { dareId: 902 } },
     {
+      label: "Announcement",
+      value: "competition-start-1",
+      subject: { announcementId: "competition-start-1" },
+    },
+    {
       label: "Duel",
       value: "00000000-0000-4000-8000-000000000903",
       subject: { duelId: "00000000-0000-4000-8000-000000000903" },

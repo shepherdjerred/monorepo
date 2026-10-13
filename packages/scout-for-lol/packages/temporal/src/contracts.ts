@@ -197,6 +197,7 @@ export type ScoutInteractiveRunInput = z.infer<
 >;
 
 export const ScoutQueueClassSchema = z.enum([
+  "gateway",
   "realtime",
   "interactive",
   "background",
@@ -208,6 +209,7 @@ export const ScoutQueueCanaryInputSchema = z.object({
   stage: ScoutStageSchema,
   canaryId: OpaqueIdentifierSchema,
   backgroundJobKinds: z.array(z.string()).optional(),
+  includeGateway: z.boolean().optional(),
 });
 export type ScoutQueueCanaryInput = z.infer<typeof ScoutQueueCanaryInputSchema>;
 
@@ -295,6 +297,12 @@ export type InitialHistoryPageResult = z.infer<
 >;
 
 export const IngestionReconciliationResultSchema = z.object({
+  customOperations: z.array(z.string().min(1)).optional(),
+  customPublications: z
+    .array(
+      z.strictObject({ nightId: z.uuid(), revision: z.int().nonnegative() }),
+    )
+    .optional(),
   initialHistoryPuuids: z.array(RiotPuuidSchema),
   detachedWorks: z.array(
     ScoutDetachedWorkInputSchema.pick({ kind: true, workId: true }),

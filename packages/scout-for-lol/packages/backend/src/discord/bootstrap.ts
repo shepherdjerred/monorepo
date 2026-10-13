@@ -2,6 +2,7 @@ import configuration from "#src/configuration.ts";
 import { Events, type Client, type Guild } from "discord.js";
 import * as Sentry from "@sentry/bun";
 import { client } from "#src/discord/client.ts";
+import { loginReadyGateway } from "#src/discord/gateway-ready.ts";
 import { handleInteractions } from "#src/discord/interactions.ts";
 import {
   registerDiscordCommands,
@@ -587,8 +588,7 @@ export function stopDiscordGateway(target: Client = client): void {
 }
 
 /**
- * Wire the gateway client up and connect it.
- *
+ * Connect after handlers are installed so readiness cannot race registration.
  * Handlers are installed before login so a fast gateway connection cannot emit
  * `clientReady` before command reconciliation is listening for it.
  */
@@ -607,9 +607,8 @@ export async function startDiscordGateway(target: Client = client) {
     return;
   }
 
-  logger.info("🔑 Logging into Discord");
   try {
-    await target.login(configuration.discordToken);
+    await loginReadyGateway(target, configuration.discordToken);
     logger.info("✅ Successfully logged into Discord");
   } catch (error) {
     logger.error("❌ Failed to login to Discord:", error);

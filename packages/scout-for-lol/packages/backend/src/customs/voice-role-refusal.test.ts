@@ -15,7 +15,7 @@ import {
   DiscordGuildIdSchema,
   DiscordChannelIdSchema,
 } from "@scout-for-lol/domain/identity/discord.ts";
-import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import configuration, {
   resetConfigurationForTests,
 } from "#src/configuration.ts";
@@ -25,6 +25,7 @@ import {
   type ScoutRuntimeRole,
 } from "#src/configuration/runtime-role.ts";
 import { CustomAuthHttpError } from "#src/customs/activity/activity-auth.ts";
+import type * as orchestrationCutover from "#src/temporal/orchestration-cutover.ts";
 import {
   arrangeCustomVoice,
   cleanExpiredCustomVoice,
@@ -32,6 +33,13 @@ import {
 } from "#src/customs/voice-service.ts";
 
 const originalRole = Bun.env["SCOUT_RUNTIME_ROLE"];
+
+// These checks cover the compatibility path. Durable execution checks the
+// gateway capability after the request has been committed and routed.
+vi.mock("#src/temporal/orchestration-cutover.ts", async (importOriginal) => ({
+  ...(await importOriginal<typeof orchestrationCutover>()),
+  orchestrationMode: vi.fn(async () => "legacy" as const),
+}));
 
 function runAs(role: ScoutRuntimeRole): void {
   Bun.env["SCOUT_RUNTIME_ROLE"] = role;

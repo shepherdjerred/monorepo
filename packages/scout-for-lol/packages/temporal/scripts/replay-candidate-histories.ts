@@ -8,9 +8,10 @@ if (process.argv[2] !== "--stage") {
   throw new Error("--stage is required");
 }
 const stage = z.enum(["beta", "prod"]).parse(process.argv[3]);
-const workflowIds = (Bun.env["TEMPORAL_REPLAY_WORKFLOW_IDS"] ?? "")
+const configuredWorkflowIds = (Bun.env["TEMPORAL_REPLAY_WORKFLOW_IDS"] ?? "")
   .split(",")
   .map((value) => value.trim());
+const explicitTargets = process.argv.slice(4);
 await runTemporalNodeScript({
   packageRoot,
   repositoryRoot,
@@ -18,5 +19,9 @@ await runTemporalNodeScript({
     packageRoot,
     "scripts/replay-candidate-histories-node.ts",
   ),
-  scriptArgs: ["--stage", stage, ...workflowIds],
+  scriptArgs: [
+    "--stage",
+    stage,
+    ...(explicitTargets.length === 0 ? configuredWorkflowIds : explicitTargets),
+  ],
 });

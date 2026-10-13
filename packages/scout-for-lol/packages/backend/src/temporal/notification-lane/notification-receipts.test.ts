@@ -7,7 +7,10 @@ import {
 
 describe("the V2 notification render receipt kind", () => {
   const matchKinds = NotificationIntentKindSchema.options.filter(
-    (kind) => kind !== "duel-status" && kind !== "dare-status",
+    (kind) =>
+      kind !== "duel-status" &&
+      kind !== "dare-status" &&
+      kind !== "product-announcement",
   );
   test("is distinct per intent kind", () => {
     // A prematch and a postmatch intent name the same match id and render

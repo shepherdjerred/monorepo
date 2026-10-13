@@ -17,6 +17,10 @@ export const duelSeriesChangedSignal =
 export const dispatchScoutClientMatchesSignal = defineSignal<
   [ScoutClientMatchDispatchBatch]
 >("dispatchScoutClientMatchesV2");
+/** Roll over at the next safe boundary without cancelling accepted work. */
+export const requestClientMatchDispatchRolloverSignal = defineSignal(
+  "requestClientMatchDispatchRollover",
+);
 export const scoutClientMatchDispatchCompletedSignal = defineSignal<
   [ScoutClientMatchDispatchResult]
 >("scoutClientMatchDispatchCompletedV2");

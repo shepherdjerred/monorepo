@@ -25,7 +25,7 @@ const EXPECTED: Readonly<Record<ScoutRuntimeRole, ScoutRuntimeCapabilities>> = {
     reportLakeAccess: true,
     reportLakeFold: true,
     temporalWorkers: ["workflow", "interactive", "lake"],
-    deferredTemporalWorkers: ["realtime", "background"],
+    deferredTemporalWorkers: ["realtime", "background", "gateway"],
     discordGateway: true,
     gatewayReadyReconciliation: true,
     httpSurface: "full",
@@ -52,13 +52,11 @@ const EXPECTED: Readonly<Record<ScoutRuntimeRole, ScoutRuntimeCapabilities>> = {
     championAssets: true,
     voiceAssistant: true,
     voiceStateAccess: true,
-    // True with no Temporal queue of its own: `/scout ask` and the Dare
-    // commands run the Explore agent in the process that received the
-    // interaction, and that is this one.
+    // Compatibility lake access remains in dev/prod until its separate removal.
     reportLakeAccess: true,
     reportLakeFold: false,
     temporalWorkers: [],
-    deferredTemporalWorkers: [],
+    deferredTemporalWorkers: ["gateway"],
     discordGateway: true,
     gatewayReadyReconciliation: true,
     httpSurface: "admin",

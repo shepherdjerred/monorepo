@@ -126,6 +126,9 @@ export function isPrunableImage(
     exemptKeys?: ReadonlySet<string>;
   },
 ): boolean {
+  // Frozen product announcements and other canonical objects have durable PG
+  // references. Only the generated match-image prefixes belong to this GC.
+  if (!PREFIXES.some((prefix) => key.startsWith(prefix))) return false;
   const suffixes = options?.suffixes ?? IMAGE_SUFFIXES;
   const exemptKeys = options?.exemptKeys ?? new Set<string>();
   if (exemptKeys.has(key)) {

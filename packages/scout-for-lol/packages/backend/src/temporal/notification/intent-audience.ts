@@ -149,7 +149,7 @@ export async function audienceRetirementOf(
   discord: AudienceDiscordPort,
 ): Promise<NotificationRetirementReason | undefined> {
   const target = record.intent.target;
-  if ("dareId" in record || "duelId" in record) {
+  if (!("matchId" in record)) {
     return target.kind === "channel"
       ? await discordRetirementOf(target.channelId, discord)
       : undefined;

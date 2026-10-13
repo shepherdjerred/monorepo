@@ -13,6 +13,12 @@ bun run --filter='./packages/scout-for-lol' dev:web    # backend :3000, SPA :518
 bun run --filter='./packages/scout-for-lol' dev:login  # prints a signed session URL
 ```
 
+The Storybook browser tests serve the built catalog with the repository's
+mise-managed Node runtime, selecting only Node so the browser image does not
+install unrelated toolchains. Resolving it through mise keeps Vite's HTTP server
+on Node when Playwright runs under Bun; the Bun server can abort concurrent
+browser requests with `ERR_STREAM_WRITE_AFTER_END`.
+
 ## Player and match review
 
 Player profiles keep their tab, game window, queues, champion filter, and
