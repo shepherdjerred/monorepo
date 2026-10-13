@@ -10,6 +10,11 @@ resource "aws_s3_bucket" "storm_forum_backups" {
   lifecycle { prevent_destroy = true }
 }
 
+resource "aws_s3_bucket" "tracker_attachments" {
+  bucket = "tracker-attachments"
+  lifecycle { prevent_destroy = true }
+}
+
 resource "aws_s3_bucket" "statically_typed" {
   bucket = "statically-typed"
 }

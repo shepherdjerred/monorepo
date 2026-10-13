@@ -2,6 +2,11 @@
   "version": 3,
   "namespaces": [
     {
+      "key": "tracker",
+      "name": "Tracker",
+      "description": "Tracker cutover and runtime controls."
+    },
+    {
       "key": "woodpecker",
       "name": "Woodpecker",
       "description": "CI runtime rollout controls."
@@ -58,6 +63,99 @@
     }
   ],
   "flags": [
+    {
+      "key": "tracker-writes-enabled",
+      "owner": "tracker",
+      "namespace": "tracker",
+      "source": "tracker",
+      "purpose": "Authorize native mutations per request; keep production read-only until final import acceptance.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "tracker-writes-beta",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "stage",
+              "operator": "eq",
+              "value": "beta"
+            }
+          ],
+          "result": true
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "tracker-imports-enabled",
+      "owner": "tracker",
+      "namespace": "tracker",
+      "source": "tracker",
+      "purpose": "Authorize migration writes only during an explicit import window.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "tracker-imports-beta",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "stage",
+              "operator": "eq",
+              "value": "beta"
+            }
+          ],
+          "result": true
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "tracker-telemetry-enabled",
+      "owner": "tracker",
+      "namespace": "tracker",
+      "source": "tracker",
+      "purpose": "Enable tracker tracing at process startup.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "tracker-telemetry-beta",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "stage",
+              "operator": "eq",
+              "value": "beta"
+            }
+          ],
+          "result": true
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "tracker-attachment-max-bytes",
+      "owner": "tracker",
+      "namespace": "tracker",
+      "source": "tracker",
+      "purpose": "Maximum attachment size, validated on each upload.",
+      "type": "variant",
+      "default": "26214400",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
     {
       "key": "woodpecker-maintenance-lanes-enabled",
       "owner": "platform",

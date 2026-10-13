@@ -5,21 +5,22 @@ hold only scoped invariants that agents must keep in context.
 
 ## Apps & services
 
-| Package                                                         | Description                                                                              |
-| --------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| [alert-dashboard](alert-dashboard/)                             | Ops dashboard — snapshot overview, alert ledger, digest email, Grafana previews          |
-| [birmel](birmel/)                                               | Discord bot on an explicit AI SDK agent runtime                                          |
-| [glitter-boys-launcher](glitter-boys-launcher/)                 | Native Rust/egui game installer and launcher for Windows x64                             |
-| [monarch](monarch/)                                             | AI transaction categorization pipeline for Monarch Money                                 |
-| [scout-for-lol](scout-for-lol/)                                 | Discord bot tracking friends' League of Legends matches with rich post-game reports      |
-| [starlight-karma-bot](starlight-karma-bot/)                     | Discord karma bot — points, leaderboards, scheduled recaps                               |
-| [macos-ai-subscription-tracker](macos-ai-subscription-tracker/) | Brim (QuotaBar) — native macOS menu-bar tracker for AI subscription quotas               |
-| [macos-cross-compiler](macos-cross-compiler/)                   | Public Docker images that build macOS, iOS, and Catalyst apps on Linux                   |
-| [temporal](temporal/)                                           | Temporal worker: scheduled automation, agent tasks, homelab audits, PR-opening refreshes |
-| [trmnl-dashboard](trmnl-dashboard/)                             | TRMNL e-ink dashboard backend aggregating home/homelab status                            |
-| [storm-brain](storm-brain/)                                     | LLM classify/triage brain for The Storm's AI staff agent (Bun + Hono)                    |
-| [storm-forum](storm-forum/)                                     | XenForo runtime, owned community portal, release configuration and Activity worker       |
-| [storm-theme](storm-theme/)                                     | Shared Storm calendar, palettes, artwork, preferences, and social-card renderer          |
+| Package                                                         | Description                                                                                  |
+| --------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| [alert-dashboard](alert-dashboard/)                             | Ops dashboard — snapshot overview, alert ledger, digest email, Grafana previews              |
+| [tracker](tracker/)                                             | Issue tracker — teams, projects, board, session actors, votes, attachments and audit history |
+| [birmel](birmel/)                                               | Discord bot on an explicit AI SDK agent runtime                                              |
+| [glitter-boys-launcher](glitter-boys-launcher/)                 | Native Rust/egui game installer and launcher for Windows x64                                 |
+| [monarch](monarch/)                                             | AI transaction categorization pipeline for Monarch Money                                     |
+| [scout-for-lol](scout-for-lol/)                                 | Discord bot tracking friends' League of Legends matches with rich post-game reports          |
+| [starlight-karma-bot](starlight-karma-bot/)                     | Discord karma bot — points, leaderboards, scheduled recaps                                   |
+| [macos-ai-subscription-tracker](macos-ai-subscription-tracker/) | Brim (QuotaBar) — native macOS menu-bar tracker for AI subscription quotas                   |
+| [macos-cross-compiler](macos-cross-compiler/)                   | Public Docker images that build macOS, iOS, and Catalyst apps on Linux                       |
+| [temporal](temporal/)                                           | Temporal worker: scheduled automation, agent tasks, homelab audits, PR-opening refreshes     |
+| [trmnl-dashboard](trmnl-dashboard/)                             | TRMNL e-ink dashboard backend aggregating home/homelab status                                |
+| [storm-brain](storm-brain/)                                     | LLM classify/triage brain for The Storm's AI staff agent (Bun + Hono)                        |
+| [storm-forum](storm-forum/)                                     | XenForo runtime, owned community portal, release configuration and Activity worker           |
+| [storm-theme](storm-theme/)                                     | Shared Storm calendar, palettes, artwork, preferences, and social-card renderer              |
 
 ## Discord streaming
 

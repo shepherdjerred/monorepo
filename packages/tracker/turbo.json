@@ -1,0 +1,12 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "test:e2e": {
+      "dependsOn": ["build", "^build"],
+      "cache": true,
+      "env": ["CI", "CI_PLAYWRIGHT_IMAGE", "CI_REPORTING_BUILD_ID"],
+      "passThroughEnv": ["PLAYWRIGHT_BROWSERS_PATH"]
+    }
+  }
+}

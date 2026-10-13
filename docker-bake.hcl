@@ -128,6 +128,14 @@ target "alert-dashboard" {
   cache-to   = cacheto("alert-dashboard")
 }
 
+target "tracker" {
+  inherits   = ["_app"]
+  dockerfile = "packages/tracker/Dockerfile"
+  tags       = imagetags("tracker")
+  cache-from = cachefrom("tracker")
+  cache-to   = cacheto("tracker")
+}
+
 target "tasknotes-server" {
   inherits   = ["_app"]
   dockerfile = "packages/tasknotes-server/Dockerfile"

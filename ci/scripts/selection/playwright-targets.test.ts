@@ -8,6 +8,10 @@ import {
 } from "./playwright-targets.ts";
 
 const workspaces = new Map<string, WorkspacePackage>([
+  [
+    "@shepherdjerred/tracker",
+    { dir: "packages/tracker/", workspaceDependencies: [] },
+  ],
   ["sjer.red", { dir: "packages/sjer.red/", workspaceDependencies: [] }],
   [
     "@shepherdjerred/docs-wiki",

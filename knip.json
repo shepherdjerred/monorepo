@@ -51,6 +51,21 @@
         "*.{ts,cjs}"
       ]
     },
+    "packages/tracker": {
+      "entry": [
+        "architecture.config.ts",
+        "playwright.config.ts",
+        "src/**/*.test.ts",
+        "e2e/**/*.ts",
+        "vitest.global-setup.ts"
+      ],
+      "project": [
+        "src/**/*.{ts,tsx,css}",
+        "e2e/**/*.ts",
+        "prisma/**/*.prisma",
+        "*.ts"
+      ]
+    },
     "packages/architecture": {
       "entry": ["bin/*.ts", "test/**/*.ts"],
       "project": ["src/**/*.ts", "bin/**/*.ts", "test/**/*.ts"]

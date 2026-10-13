@@ -93,6 +93,7 @@ export function playwrightSteps(
           "packages/sjer.red/**",
           "packages/docs/wiki/**",
           "packages/alert-dashboard/**",
+          "packages/tracker/**",
           "packages/scout-for-lol/**",
         ],
       },
