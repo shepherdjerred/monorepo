@@ -34,7 +34,7 @@ Check HTTPS directly against the router's home address while preserving the
 hostname for TLS. Run from outside the home network to verify WAN forwarding:
 
 ```bash
-curl --fail --show-error --connect-to mariokart.sjer.red:443:ddns.sjer.red:443 \
+curl --fail --show-error --connect-to mariokart.sjer.red:443:ipv4.ddns.sjer.red:443 \
   https://mariokart.sjer.red/
 ```
 
@@ -46,8 +46,11 @@ Do not change DNS if these checks fail.
 ## 3. Release the DNS cutover
 
 In the [Cloudflare stack](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/tofu/cloudflare/sjer-red.tf),
-point the existing `sjer_red_cname_mariokart` resource at the dynamic home-IP
-hostname and set `proxied = false`. Deliver this as a separate release after
+point the existing `sjer_red_cname_mariokart` resource at the
+[IPv4-only dynamic target](/reference/dynamic-dns/) and set `proxied = false`.
+Verify that target resolves to the home IPv4 address and has no AAAA records;
+the shared DDNS hostname also publishes IPv6 addresses that the forwards do
+not serve. Deliver this as a separate release after
 the direct-route checks pass. Keep the tunnel binding available for recovery.
 
 Verify public resolution reaches the home address after caches expire.
