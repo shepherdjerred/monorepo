@@ -21,7 +21,7 @@ from anywhere in the checkout:
 make -C "$(git rev-parse --show-toplevel)/packages/terraform-provider-asuswrt" install
 ```
 
-## 2. Initialize, import, plan, apply — from `packages/homelab/src/tofu`
+## 2. Initialize, import, and plan — from `packages/homelab/src/tofu`
 
 `op run` reads the `.env` in that directory and injects the router login from
 1Password at runtime, so no credential lands on disk.
@@ -30,7 +30,6 @@ make -C "$(git rev-parse --show-toplevel)/packages/terraform-provider-asuswrt" i
 op run --env-file=.env -- tofu -chdir=asuswrt init
 op run --env-file=.env -- ./asuswrt/import.sh
 op run --env-file=.env -- tofu -chdir=asuswrt plan
-op run --env-file=.env -- tofu -chdir=asuswrt apply
 ```
 
 `import.sh` skips resources already in state, so run it on every pass, not only
@@ -45,11 +44,27 @@ and a matching `address<TAB>import-id` line in the `IMPORTS` heredoc inside
 A resource missing from it is never imported, so `apply` creates the duplicate
 this step exists to prevent.
 
-## 3. Confirm the plan is empty
+Choose the appropriate [router import mode](/reference/asuswrt-import/)
+before adopting existing Mario Kart forwards.
 
-After a successful import, `plan` must report no changes. A non-empty plan
-straight after import means a read is misparsing firmware output, not that the
-device drifted.
+## 3. Review the plan and apply
+
+When adopting existing configuration without intended changes, `plan` must
+report no changes. Inspect unexpected differences before applying; a firmware
+read or write mapping can produce a misleading plan.
+
+On the first Mario Kart activation, expect exactly the HTTP and HTTPS forward
+additions: **2 to add, 0 to change, 0 to destroy**. Follow the
+[direct HTTPS cutover order](/how-to/cut-over-mario-kart-direct-ingress/) and
+verify Caddy's certificate before applying that plan. Stop if the plan includes
+any other changes.
+
+After reviewing the exact changes, apply and require a clean follow-up plan:
+
+```bash
+op run --env-file=.env -- tofu -chdir=asuswrt apply
+op run --env-file=.env -- tofu -chdir=asuswrt plan
+```
 
 :::caution
 Do not apply a wireless change you have not verified against the hardware in

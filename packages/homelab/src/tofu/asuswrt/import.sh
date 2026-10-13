@@ -9,6 +9,17 @@
 # Requires `tofu -chdir=asuswrt init` to have been run first.
 set -euo pipefail
 
+import_mario_kart=false
+case "${1:-}" in
+  "") ;;
+  --mario-kart-forwards-exist) import_mario_kart=true ;;
+  *) echo "Usage: $0 [--mario-kart-forwards-exist]" >&2; exit 1 ;;
+esac
+if [ "$#" -gt 1 ]; then
+  echo "Usage: $0 [--mario-kart-forwards-exist]" >&2
+  exit 1
+fi
+
 CHDIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$CHDIR/.."
 
@@ -26,6 +37,8 @@ asuswrt_dhcp_static_lease.lease_173	50:26:EF:29:70:EE
 asuswrt_port_forward.plex	Plex
 asuswrt_port_forward.minecraft_mc_router	Minecraft mc-router
 asuswrt_port_forward.minecraft_bedrock	Mineraft Bedrock
+asuswrt_port_forward.mario_kart_http	Mario Kart HTTP
+asuswrt_port_forward.mario_kart_https	Mario Kart HTTPS
 asuswrt_wireless_network.wl0	0
 asuswrt_wireless_network.wl1	1
 asuswrt_system.ax88u	system
@@ -48,6 +61,16 @@ while IFS=$'\t' read -r addr id; do
     echo "skip   $addr (already in state)"
     continue
   fi
+  # These are new managed rules, not pre-existing router configuration. Only
+  # adopt them when the operator has confirmed they already exist remotely.
+  case "$addr" in
+    asuswrt_port_forward.mario_kart_http|asuswrt_port_forward.mario_kart_https)
+      if [ "$import_mario_kart" = false ]; then
+        echo "skip   $addr (created by apply; use --mario-kart-forwards-exist to adopt)"
+        continue
+      fi
+      ;;
+  esac
   echo "import $addr <= $id"
   tofu -chdir=asuswrt import "$addr" "$id"
 done <<EOF

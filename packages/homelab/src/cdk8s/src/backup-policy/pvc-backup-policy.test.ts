@@ -92,15 +92,15 @@ it.each(["ops-restore-rehearsal", "ops-restore-rehearsal-incremental"])(
 );
 
 describe("PVC backup policy", () => {
-  it("classifies 53 included and 45 excluded PVCs without duplicates", () => {
+  it("classifies 54 included and 45 excluded PVCs without duplicates", () => {
     const keys = PVC_BACKUP_POLICY.map((entry) =>
       pvcBackupPolicyKey(entry.namespace, entry.name),
     );
-    expect(keys).toHaveLength(98);
-    expect(new Set(keys).size).toBe(98);
+    expect(keys).toHaveLength(99);
+    expect(new Set(keys).size).toBe(99);
     expect(
       PVC_BACKUP_POLICY.filter((entry) => entry.backup === "enabled"),
-    ).toHaveLength(53);
+    ).toHaveLength(54);
     expect(
       PVC_BACKUP_POLICY.filter((entry) => entry.backup === "disabled"),
     ).toHaveLength(45);

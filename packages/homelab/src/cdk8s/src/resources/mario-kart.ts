@@ -22,6 +22,7 @@ import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { peerUserbotIds } from "@shepherdjerred/homelab/cdk8s/src/resources/userbot-ids.ts";
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
+import { createMarioKartDirectIngress } from "@shepherdjerred/homelab/cdk8s/src/resources/mario-kart-direct-ingress.ts";
 
 // Headless Discord Plays Mario Kart 64: the native SpaghettiKart port runs as a
 // child process rendering through Mesa. Frames stream to a Discord voice channel
@@ -272,9 +273,10 @@ export function createMarioKartDeployment(chart: Chart) {
     host: "mariokart",
   });
 
+  const bootstrap = createMarioKartDirectIngress(chart, uiService);
   createCloudflareTunnelBinding(chart, "mariokart-cf-tunnel", {
-    serviceName: uiService.name,
+    serviceName: bootstrap.name,
     subdomain: "mariokart",
-    port: WEB_PORT,
+    port: 8082,
   });
 }
