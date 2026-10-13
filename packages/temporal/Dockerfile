@@ -43,7 +43,8 @@ RUN bun install --frozen-lockfile \
 
 # ── build: gitignored artifacts (shared dist + compiled toolkit) ────────────
 # Toolkit needs the shared daemon helpers, MC protocol exports, and their
-# shared lighting schema at compile time. Workspace manifests are in deps.
+# shared lighting schema and Tracker contract at compile time. Workspace
+# manifests are in deps.
 FROM deps AS build
 COPY --parents \
   tsconfig.base.json \
@@ -61,6 +62,7 @@ COPY --parents \
   packages/scout-for-lol/packages/data \
   packages/seaweedfs-backup \
   packages/toolkit \
+  packages/tracker/src/shared \
   packages/unix-socket-daemon/src \
   packages/mc-harness/src/protocol \
   packages/mc-build/src/registry/lighting.ts \
