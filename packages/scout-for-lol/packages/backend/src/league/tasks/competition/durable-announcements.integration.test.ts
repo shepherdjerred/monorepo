@@ -24,6 +24,15 @@ async function createCompetition() {
   return competition;
 }
 
+async function expectNoOccurrence(
+  id: Parameters<typeof getCompetitionById>[1],
+) {
+  const saved = await db.competition.findUniqueOrThrow({ where: { id } });
+  expect(saved.startProcessedAt).toBeNull();
+  expect(await db.matchNotificationIntent.count()).toBe(0);
+  expect(await db.scoutWorkflowStart.count()).toBe(0);
+}
+
 test("concurrent lifecycle attempts commit one frozen announcement and one recoverable start", async () => {
   const competition = await createCompetition();
   const command = {
@@ -57,12 +66,7 @@ test("a content validation failure rolls back the occurrence marker and its outb
       now,
     }),
   ).rejects.toThrow();
-  const saved = await db.competition.findUniqueOrThrow({
-    where: { id: competition.id },
-  });
-  expect(saved.startProcessedAt).toBeNull();
-  expect(await db.matchNotificationIntent.count()).toBe(0);
-  expect(await db.scoutWorkflowStart.count()).toBe(0);
+  await expectNoOccurrence(competition.id);
   await queueCompetitionLifecycle(db, {
     competition,
     phase: "start",
@@ -84,10 +88,5 @@ test("cancellation after preparation prevents the lifecycle marker and announcem
     message: "Stale preparation",
     now,
   });
-  const saved = await db.competition.findUniqueOrThrow({
-    where: { id: competition.id },
-  });
-  expect(saved.startProcessedAt).toBeNull();
-  expect(await db.matchNotificationIntent.count()).toBe(0);
-  expect(await db.scoutWorkflowStart.count()).toBe(0);
+  await expectNoOccurrence(competition.id);
 });

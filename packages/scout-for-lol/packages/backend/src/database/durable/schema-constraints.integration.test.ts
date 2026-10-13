@@ -330,6 +330,13 @@ describe("MatchProcessingReceipt constraints", () => {
 });
 
 function subjectColumnsForKind(kind: string): Record<string, string> {
+  if (kind === "product-announcement") {
+    return {
+      subjectKind: "'announcement'",
+      subjectId: "'competition-start-1'",
+      riotMatchId: "NULL",
+    };
+  }
   if (kind === "duel-status") {
     return {
       subjectKind: "'duel'",
