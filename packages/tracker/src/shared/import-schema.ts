@@ -12,6 +12,16 @@ const timestamp = z.iso.datetime({ offset: true });
 const nullableTimestamp = timestamp.nullable();
 const actorKey = ActorSchema.shape.key;
 const payload = z.record(z.string(), z.json());
+export const ImportAttachmentFileSchema = z.object({
+  filename: z.string().min(1).max(200),
+  contentType: z.string().min(1).max(200),
+  sizeBytes: z
+    .number()
+    .int()
+    .nonnegative()
+    .max(100 * 1024 * 1024),
+  sha256: z.string().regex(/^[a-f0-9]{64}$/u),
+});
 const base = z.object({
   actor: ActorSchema,
   source: z.literal("linear"),
@@ -126,18 +136,10 @@ const event = base.extend({
 });
 const attachment = base.extend({
   entityType: z.literal("attachment"),
-  data: z.object({
+  data: ImportAttachmentFileSchema.extend({
     identifier: IdentifierSchema,
     commentExternalId: z.string().nullable(),
     uploaderKey: actorKey,
-    filename: z.string().min(1).max(200),
-    contentType: z.string().min(1).max(200),
-    sizeBytes: z
-      .number()
-      .int()
-      .nonnegative()
-      .max(100 * 1024 * 1024),
-    sha256: z.string().regex(/^[a-f0-9]{64}$/u),
     width: z.number().int().positive().nullable(),
     height: z.number().int().positive().nullable(),
     createdAt: timestamp,

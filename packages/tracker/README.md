@@ -95,6 +95,28 @@ responses use `nosniff`. Images can be previewed in the UI.
 exports bounded request counters and issue/actor gauges. Structured errors
 include a request ID, without logging request bodies or credentials.
 
+## Linear migration contract
+
+The operator commands are owned by `toolkit tracker migration`; see the
+[toolkit reference](../toolkit/README.md#tracker). Exported issue identifiers,
+timestamps, original account identities, comments, relations and uploaded files
+are retained. Workspace labels become labels in both teams. Project document
+text joins the project description. Unsupported source fields, such as cycles,
+parent links and threaded-comment metadata, remain in the raw source payload.
+Legacy `+1 hit again` comments remain comments and also produce native votes.
+Known session identities deduplicate; votes without a known session use separate
+historical identities. A shared Linear account is labelled as such instead of
+being attributed to a guessed human or agent session.
+
+Each import record has an immutable source identity and content hash. Resume the
+same frozen export after an interrupted or ambiguous response. A changed source
+record returns `CONFLICT`; it never overwrites migrated data. A dry-run checks
+the snapshot and all attachment checksums locally without observing an actor or
+writing to the destination. Live import is allowed only while imports are
+enabled and normal writes are disabled. Keep normal writes disabled until the
+team/state counts, representative historical issues, file downloads and a
+zero-write rerun have passed acceptance.
+
 ## Verification
 
 ```sh

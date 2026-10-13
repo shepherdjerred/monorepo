@@ -7,6 +7,7 @@ import { actorContext, detectActor } from "#lib/tracker/actor.ts";
 import { loadToolkitConfig } from "#lib/toolkit-config.ts";
 import { identityHook } from "#lib/tracker/hooks.ts";
 import { claudeModel } from "#lib/tracker/model.ts";
+import { migrationCommand } from "#commands/tracker/migration.ts";
 
 const HELP = `toolkit tracker <COMMAND> [OPTIONS]
 
@@ -32,6 +33,10 @@ issue relate <ID> <TARGET>           --type blocks|blocked-by|duplicate|related
 issue attach <ID> <FILE...>          Upload and commit attachments
 issue events <ID>                    Show audit history
 api <procedure> --input-json <JSON>  Query; --mutation adds the current actor
+migration export-linear --output DIR  Export immutable Linear history and files
+migration import-linear --input DIR   --dry-run, --only TYPE, --resume
+migration backup-linear --input DIR   --profile seaweedfs; private, verified archive
+migration verify-linear --input DIR   Fail if Linear changed since the export
 
 All commands accept --json, --url, --actor-key, --actor-kind, --actor-name.
 Reads do not require an actor. Noninteractive mutations require a native agent
@@ -95,6 +100,9 @@ export async function handleTrackerCommand(
       break;
     case "issue":
       result = await issueCommand(context, positionals, values);
+      break;
+    case "migration":
+      result = await migrationCommand(context, positionals, values);
       break;
     case "api": {
       const procedure = required(positionals[0], "Procedure name");

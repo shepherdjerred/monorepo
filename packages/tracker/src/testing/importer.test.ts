@@ -4,6 +4,7 @@ import { Importer } from "#infrastructure/importer.ts";
 import { PrismaUnitOfWork } from "#infrastructure/prisma-unit-of-work.ts";
 import { Issues } from "#infrastructure/issues.ts";
 import { CreateIssueSchema } from "#shared/schema.ts";
+import { ImportRecordSchema } from "#shared/import-schema.ts";
 import { cloneTestDatabase } from "./postgres.ts";
 import { memoryObjectStore } from "./memory-object-store.ts";
 import { importFixture, migrationActor } from "./import-fixture.ts";
@@ -17,6 +18,38 @@ async function fixture() {
   const records = importFixture();
   return { ...suite, importer, records, store };
 }
+
+it("reuses seeded states when Linear differs only in capitalization", async () => {
+  const test = await fixture();
+  try {
+    const record = ImportRecordSchema.parse({
+      actor: migrationActor,
+      source: "linear",
+      entityType: "state",
+      externalId: "linear-in-progress",
+      rawSourcePayload: { name: "In Progress" },
+      data: {
+        teamKey: "AI",
+        name: "In Progress",
+        type: "started",
+        color: "#f2c94c",
+        position: 2,
+      },
+    });
+    const result = await test.importer.apply(record, "capitalization");
+    expect(result.destinationId).toBe("team-ai-started");
+    const states = await test.database.workflowState.findMany({
+      where: { teamId: "team-ai", type: "started" },
+    });
+    expect(states).toHaveLength(1);
+    expect(states[0]?.name).toBe("In Progress");
+    expect(await test.importer.apply(record, "same-state")).toMatchObject({
+      status: "unchanged",
+    });
+  } finally {
+    await test.close();
+  }
+});
 
 it("imports complete history, original authors/timestamps, labels, relations, files and counters", async () => {
   const test = await fixture();

@@ -1,6 +1,37 @@
 import type { Prisma } from "#generated/prisma/client.ts";
-import type { ImportRecord } from "#shared/import-schema.ts";
+import type { ImportRecord, ImportEntity } from "#shared/import-schema.ts";
 import { TrackerError } from "#domain/error.ts";
+
+async function importState(
+  db: Prisma.TransactionClient,
+  record: ImportEntity<"state">,
+  id: string,
+) {
+  const { teamKey, ...data } = record.data;
+  const team = await db.team.findUniqueOrThrow({ where: { key: teamKey } });
+  const matches = await db.workflowState.findMany({
+    where: {
+      teamId: team.id,
+      name: { equals: data.name, mode: "insensitive" },
+    },
+    take: 2,
+  });
+  if (matches.length > 1)
+    throw new TrackerError("CONFLICT", "Ambiguous imported state name");
+  const before = matches[0];
+  if (before !== undefined && before.type !== data.type)
+    throw new TrackerError(
+      "CONFLICT",
+      "Imported state conflicts with seeded state type",
+    );
+  const state =
+    before === undefined
+      ? await db.workflowState.create({
+          data: { id, teamId: team.id, ...data },
+        })
+      : await db.workflowState.update({ where: { id: before.id }, data });
+  return state.id;
+}
 
 export async function importCatalog(
   db: Prisma.TransactionClient,
@@ -18,24 +49,8 @@ export async function importCatalog(
       await db.$executeRaw`UPDATE "Team" SET "issueCounter" = GREATEST("issueCounter", ${issueCounter}) WHERE "id" = ${team.id}`;
       return team.id;
     }
-    case "state": {
-      const { teamKey, ...data } = record.data;
-      const team = await db.team.findUniqueOrThrow({ where: { key: teamKey } });
-      const before = await db.workflowState.findUnique({
-        where: { teamId_name: { teamId: team.id, name: data.name } },
-      });
-      if (before !== null && before.type !== data.type)
-        throw new TrackerError(
-          "CONFLICT",
-          "Imported state conflicts with seeded state type",
-        );
-      const state = await db.workflowState.upsert({
-        where: { teamId_name: { teamId: team.id, name: data.name } },
-        create: { id, teamId: team.id, ...data },
-        update: data,
-      });
-      return state.id;
-    }
+    case "state":
+      return importState(db, record, id);
     case "label": {
       const { teamKey, ...data } = record.data;
       const team = await db.team.findUniqueOrThrow({ where: { key: teamKey } });

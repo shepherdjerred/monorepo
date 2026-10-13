@@ -43,6 +43,12 @@ export function parseTrackerArgs(args: string[]) {
       "input-json": string,
       mutation: boolean,
       remove: boolean,
+      output: string,
+      input: string,
+      "dry-run": boolean,
+      only: string,
+      resume: boolean,
+      profile: string,
     },
   });
 }
