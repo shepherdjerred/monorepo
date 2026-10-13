@@ -198,7 +198,7 @@ export async function runShardCheck(
     }
     const cacheRoot = Bun.env["CI_FORMAT_CACHE_ROOT"];
     const cache =
-      cacheRoot === undefined
+      cacheRoot === undefined || cacheRoot.trim() === ""
         ? undefined
         : await preparePrettierCache(REPO_ROOT, cacheRoot, shard);
     try {

@@ -324,6 +324,29 @@ test("malformed summaries publish explicit failure metadata without parser value
   expect(JSON.stringify(error.mock.calls)).not.toContain("sentinel");
 });
 
+test("invalid input hashes fail collection explicitly instead of publishing partial audit evidence", async () => {
+  const root = await repository();
+  const raw = summary();
+  const task = raw.tasks[0];
+  if (task === undefined) throw new Error("Missing fixture task");
+  await Bun.write(
+    path.join(root, ".turbo/runs/invalid-input.json"),
+    JSON.stringify({
+      ...raw,
+      tasks: [{ ...task, inputs: { "source.ts": "sentinel-invalid-digest" } }],
+    }),
+  );
+  const upload = vi.fn<() => Promise<void>>().mockResolvedValue(undefined);
+  const error = vi.spyOn(console, "error").mockImplementation(vi.fn());
+  expect(await retainDiagnostics(identity, new Set(), root, upload)).toBe(1);
+  expect(upload).toHaveBeenCalledWith({
+    ...identity,
+    collectionFailed: true,
+    turbo: [],
+  });
+  expect(JSON.stringify(error.mock.calls)).not.toContain("sentinel");
+});
+
 async function runWrapper(
   root: string,
   entrypoint: string,

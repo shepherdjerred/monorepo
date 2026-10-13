@@ -1,16 +1,20 @@
 import { defineConfig } from "@shepherdjerred/config";
 import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
 import { z } from "zod";
+import { parseTemporalNamespace } from "#shared/infra/temporal-namespace.ts";
 
 export async function ciMaintenanceEnabled() {
   return maintenanceFlag("ci-maintenance-dispatch-enabled");
 }
 
 export async function ciWorkspaceSeedRefreshEnabled() {
-  return maintenanceFlag("ci-workspace-seed-refresh-enabled");
+  return maintenanceFlag(
+    "ci-workspace-seed-refresh-enabled",
+    parseTemporalNamespace(Bun.env["TEMPORAL_NAMESPACE"]),
+  );
 }
 
-async function maintenanceFlag(flag: string) {
+async function maintenanceFlag(flag: string, stage = "prod") {
   const resolver = defineConfig({
     definition: {
       enabled: {
@@ -22,8 +26,8 @@ async function maintenanceFlag(flag: string) {
     } as const,
     sources: {
       flag: createFlagConfigSource({
-        targetingKey: "ci-maintenance-prod",
-        attributes: { environment: "prod" },
+        targetingKey: `ci-maintenance-${stage}`,
+        attributes: { environment: stage, stage },
         kinds: { enabled: "boolean" },
         requireFreshSnapshot: true,
       }),

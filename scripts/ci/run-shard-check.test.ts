@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import {
   chunk,
   parseCheckName,
@@ -65,6 +65,32 @@ describe("shardTrackedFiles", () => {
 });
 
 describe("runShardCheck", () => {
+  test.each(["", " \t "])(
+    "empty cache setting %j runs formatting without caching",
+    async (value) => {
+      vi.stubEnv("CI_FORMAT_CACHE_ROOT", value);
+      try {
+        const ran: RanCommand[] = [];
+        await runShardCheck("prettier", "root", {
+          runner: recordingRunner(ran),
+          fileResolver: async () => ["package.json"],
+          changedFileResolver: () => null,
+        });
+        expect(ran).toEqual([
+          [
+            "bunx",
+            "--no-install",
+            "prettier",
+            "--check",
+            "--ignore-unknown",
+            "package.json",
+          ],
+        ]);
+      } finally {
+        vi.unstubAllEnvs();
+      }
+    },
+  );
   test("prettier runs chunked over the resolved shard files", async () => {
     const ran: RanCommand[] = [];
     const files = Array.from({ length: 1001 }, (_, i) => `file-${String(i)}`);
