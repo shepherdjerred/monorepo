@@ -180,10 +180,6 @@
       "clones": 1,
       "tokens": 75
     },
-    "packages/discord-plays-mario-kart/packages/frontend/src/main.tsx|packages/discord-plays-pokemon/packages/frontend/src/main.tsx": {
-      "clones": 2,
-      "tokens": 207
-    },
     "packages/discord-plays-pokemon/packages/backend/scripts/audio-e2e.ts|packages/discord-plays-pokemon/packages/backend/src/emulator/audio/audio-fingerprint.test.ts": {
       "clones": 1,
       "tokens": 109

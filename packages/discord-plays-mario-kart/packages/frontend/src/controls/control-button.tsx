@@ -1,4 +1,5 @@
-import type { PointerEvent, ReactNode } from "react";
+import type { ReactNode } from "react";
+import { PressButton } from "@shepherdjerred/discord-plays-web/controller/press-button.tsx";
 import { cx } from "#src/ui/cx.ts";
 
 export type ControlTone = "a" | "b" | "c" | "start" | "z" | "neutral";
@@ -37,19 +38,9 @@ const SHAPES: Record<ControlShape, string> = {
   square: "rounded-lg",
 };
 
-function buzz(event: PointerEvent): void {
-  if (
-    event.pointerType === "touch" &&
-    typeof navigator.vibrate === "function"
-  ) {
-    navigator.vibrate(8);
-  }
-}
-
 /**
- * One pressable N64 control. Pointer capture keeps the press until that finger
- * lifts even if it drifts off the button, and each finger is its own pointer,
- * so several controls can be held at once on a touch screen.
+ * One pressable N64 control, styled over the shared PressButton (pointer
+ * capture, multi-touch, haptic tick).
  */
 export function ControlButton({
   code,
@@ -74,14 +65,13 @@ export function ControlButton({
   className?: string;
 }) {
   const colours = TONES[tone];
-  const end = () => {
-    onRelease(code);
-  };
   return (
-    <button
-      type="button"
-      aria-label={`${typeof label === "string" ? label : code} (${hint})`}
-      aria-pressed={active}
+    <PressButton
+      code={code}
+      ariaLabel={`${typeof label === "string" ? label : code} (${hint})`}
+      pressed={active}
+      onPress={onPress}
+      onRelease={onRelease}
       className={cx(
         "no-touch-callout relative inline-flex items-center justify-center font-display italic ring-1 ring-black/40 transition-[transform,box-shadow,filter] duration-75 select-none",
         SHAPES[shape],
@@ -90,20 +80,8 @@ export function ControlButton({
           : cx(colours.rest, "shadow-button-rest"),
         className,
       )}
-      onPointerDown={(event) => {
-        event.preventDefault();
-        event.currentTarget.setPointerCapture(event.pointerId);
-        buzz(event);
-        onPress(code);
-      }}
-      onPointerUp={end}
-      onPointerCancel={end}
-      onLostPointerCapture={end}
-      onContextMenu={(event) => {
-        event.preventDefault();
-      }}
     >
       {label}
-    </button>
+    </PressButton>
   );
 }

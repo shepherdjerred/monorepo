@@ -8,7 +8,7 @@ import {
   isDriverFeedAudio,
   retainDriverFeedEntryPoint,
   shouldPaintDriverFeedOutput,
-} from "./video.ts";
+} from "#src/feed/driver-feed-client.ts";
 
 function encodedUnit(flags: number): ArrayBuffer {
   return Uint8Array.from([flags, 1]).buffer;

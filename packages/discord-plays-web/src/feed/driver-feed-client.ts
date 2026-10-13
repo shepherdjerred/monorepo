@@ -1,7 +1,7 @@
 // Driver feed client: WebSocket in, decoded frames and audio chunks out.
 //
-// Framework-free on purpose — `game-view.tsx` owns the canvas and the React
-// state, this owns the socket, the decoder, and the lifetime of every
+// Framework-free on purpose — `FeedCanvas` (or a game's own view) owns the
+// canvas and the React state, this owns the socket, the decoder, and the lifetime of every
 // `VideoFrame` (a leaked frame stalls the decoder, so exactly one place closes
 // them).
 //
@@ -18,7 +18,7 @@ import {
   type DriverFeedInit,
   type DriverFeedReady,
 } from "@shepherdjerred/discord-plays-core/driver-feed/protocol.ts";
-import type { FeedAudioFormat } from "#src/feed-audio.ts";
+import type { FeedAudioFormat } from "./feed-audio.ts";
 
 export type DriverFeedStatus =
   | { readonly kind: "unsupported" }
@@ -102,42 +102,59 @@ export function decideDriverFeedDecode(
   };
 }
 
+/** The header byte every binary media message starts with. */
+function messageFlags(message: ArrayBuffer): number {
+  return new DataView(message, 0, DRIVER_FEED_HEADER_BYTES).getUint8(0);
+}
+
+/** Whether a media message's header marks a cold-start decoder entry point. */
+function isEntryPointMessage(message: ArrayBuffer): boolean {
+  return (messageFlags(message) & DRIVER_FEED_KEYFRAME_FLAG) !== 0;
+}
+
+/** Whether a media message carries game audio rather than video. */
+export function isDriverFeedAudio(message: ArrayBuffer): boolean {
+  return (
+    message.byteLength > DRIVER_FEED_HEADER_BYTES &&
+    (messageFlags(message) & DRIVER_FEED_AUDIO_FLAG) !== 0
+  );
+}
+
 /**
  * Retain only the first usable decoder entry point while configuration is
  * asynchronous. A later keyframe must not displace the earliest frame that can
  * start the decoder, and deltas cannot start it at all.
  */
-export function isDriverFeedAudio(message: ArrayBuffer): boolean {
-  if (message.byteLength <= DRIVER_FEED_HEADER_BYTES) return false;
-  const header = new Uint8Array(message, 0, DRIVER_FEED_HEADER_BYTES);
-  return (header[0] & DRIVER_FEED_AUDIO_FLAG) !== 0;
-}
-
 export function retainDriverFeedEntryPoint(
   pending: ArrayBuffer | undefined,
   incoming: ArrayBuffer,
 ): ArrayBuffer | undefined {
   if (pending !== undefined) return pending;
   if (incoming.byteLength <= DRIVER_FEED_HEADER_BYTES) return undefined;
-  const header = new Uint8Array(incoming, 0, DRIVER_FEED_HEADER_BYTES);
-  return (header[0] & DRIVER_FEED_KEYFRAME_FLAG) === 0 ? undefined : incoming;
+  return isEntryPointMessage(incoming) ? incoming : undefined;
 }
 
-function feedUrl(driverSocketId: string): string {
+/**
+ * Extra query parameters a game's admission policy reads, e.g. Mario Kart's
+ * `driverSocketId`. Same-origin cookies travel with the upgrade regardless.
+ */
+export type DriverFeedQuery = Readonly<Record<string, string>>;
+
+function feedUrl(query: DriverFeedQuery): string {
   const protocol = globalThis.location.protocol === "https:" ? "wss:" : "ws:";
-  const query = new URLSearchParams({ driverSocketId });
-  return `${protocol}//${globalThis.location.host}${DRIVER_FEED_PATH}?${query.toString()}`;
+  const search = new URLSearchParams(query).toString();
+  return `${protocol}//${globalThis.location.host}${DRIVER_FEED_PATH}${search === "" ? "" : `?${search}`}`;
 }
 
 /**
  * Connect, decode, and paint until the returned disposer is called.
  *
- * Reconnects with backoff: the controller page outlives any single game session,
+ * Reconnects with backoff: the game page outlives any single game session,
  * so a `/stop` (which drops every client) must not leave a dead canvas behind.
  */
 export function connectDriverFeed(
   callbacks: DriverFeedCallbacks,
-  driverSocketId: string,
+  query: DriverFeedQuery = {},
 ): () => void {
   if (!("VideoDecoder" in globalThis)) {
     callbacks.onStatus({ kind: "unsupported" });
@@ -255,8 +272,7 @@ export function connectDriverFeed(
       return;
     }
 
-    const header = new Uint8Array(buffer, 0, DRIVER_FEED_HEADER_BYTES);
-    const isKeyframe = (header[0] & DRIVER_FEED_KEYFRAME_FLAG) !== 0;
+    const isKeyframe = isEntryPointMessage(buffer);
     const decision = decideDriverFeedDecode({
       started,
       isKeyframe,
@@ -289,7 +305,7 @@ export function connectDriverFeed(
     if (disposed) return;
     pendingEntryPoint = undefined;
     callbacks.onStatus({ kind: "connecting" });
-    const ws = new WebSocket(feedUrl(driverSocketId));
+    const ws = new WebSocket(feedUrl(query));
     ws.binaryType = "arraybuffer";
     socket = ws;
 

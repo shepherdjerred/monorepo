@@ -81,13 +81,18 @@ driver.setBotClient(runtime.bot);
 
 // Wire text commands: when a message lands in the active session's text channel, parse
 // it as a button command and feed it to the emulator.
-handleMessages(runtime.bot, driver, async (commandInput: CommandInput) => {
-  const active = driver.getActiveRuntime();
-  if (active === null) {
-    return;
-  }
-  await enqueueCommand(active.emulator, commandInput, active.timing);
-});
+handleMessages(
+  runtime.bot,
+  driver,
+  config,
+  async (commandInput: CommandInput) => {
+    const active = driver.getActiveRuntime();
+    if (active === null) {
+      return;
+    }
+    await enqueueCommand(active.emulator, commandInput, active.timing);
+  },
+);
 
 await runtime.start();
 

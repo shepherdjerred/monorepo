@@ -112,6 +112,7 @@ COPY --parents \
   packages/discord-plays-pokemon/packages/common \
   packages/discord-plays-pokemon/packages/frontend \
   packages/discord-plays-core \
+  packages/discord-plays-web \
   packages/sentry-config \
   packages/discord-stream-lifecycle \
   packages/discord-video-stream \

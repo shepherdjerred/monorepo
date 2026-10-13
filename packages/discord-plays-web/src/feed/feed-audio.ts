@@ -71,10 +71,10 @@ export function decodeFeedAudioPcm(
     { length: channels },
     () => new Float32Array(frames),
   );
-  for (let frame = 0; frame < frames; frame++) {
-    for (let channel = 0; channel < channels; channel++) {
+  for (const [channel, plane] of planes.entries()) {
+    for (let frame = 0; frame < frames; frame++) {
       const sample = pcm.getInt16((frame * channels + channel) * 2, true);
-      planes[channel][frame] = sample / 0x80_00;
+      plane[frame] = sample / 0x80_00;
     }
   }
   return planes;

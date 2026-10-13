@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { decodeFeedAudioPcm, scheduleFeedAudioChunk } from "./feed-audio.ts";
+import {
+  decodeFeedAudioPcm,
+  scheduleFeedAudioChunk,
+} from "#src/feed/feed-audio.ts";
 
 describe("scheduleFeedAudioChunk", () => {
   it("appends at normal speed to a playhead near the target lead", () => {
