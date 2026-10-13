@@ -29,6 +29,9 @@ beforeEach(resetProbeRegistry);
 
 test("preregisters a hardened service and migration with operator-owned PostgreSQL and private ingress", () => {
   const resources = manifests();
+  expect(
+    resources.find((resource) => resource.kind === "Service")?.metadata.name,
+  ).toBe("tracker");
   const deployment = resources.find(
     (resource) => resource.kind === "Deployment",
   );

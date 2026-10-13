@@ -138,7 +138,7 @@ export function createTrackerDeployment(chart: Chart, image: string) {
   );
   setRevisionHistoryLimit(deployment);
   const service = new Service(chart, "tracker-service", {
-    metadata: { labels: { app: "tracker" } },
+    metadata: { name: "tracker", labels: { app: "tracker" } },
     selector: deployment,
     ports: [{ name: "http", port: 7351 }],
   });

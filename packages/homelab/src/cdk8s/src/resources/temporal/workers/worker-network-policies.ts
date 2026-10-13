@@ -298,6 +298,17 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
           to: [
             {
               namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "tracker" },
+              },
+              podSelector: { matchLabels: { app: "tracker" } },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(7351), protocol: "TCP" }],
+        },
+        {
+          to: [
+            {
+              namespaceSelector: {
                 matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
               },
               podSelector: {

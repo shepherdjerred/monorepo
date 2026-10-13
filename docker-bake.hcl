@@ -77,6 +77,7 @@ group "default" {
 group "app" {
   targets = [
     "alert-dashboard",
+    "tracker",
     "birmel",
     "tasknotes-server",
     "starlight-karma-bot",

@@ -14,6 +14,8 @@ import { MINECRAFT_SCHEDULES } from "./minecraft-schedule-definitions.ts";
 import { STORM_FORUM_SCHEDULES } from "./storm-forum-schedule-definitions.ts";
 import { AGENT_CHAT_SCHEDULES } from "./agent-chat-schedule-definitions.ts";
 import { CI_SCHEDULES } from "./ci-schedule-definitions.ts";
+import { TRACKER_ATTACHMENT_SCHEDULE } from "./tracker-attachments.ts";
+import { TEMPORAL_FAILURE_WATCH_SCHEDULE } from "./temporal-failure-watch.ts";
 
 // Split out of register-schedules.ts (which sits at the repo's max-lines
 // cap) — the declarative SCHEDULES array plus its supporting types/data, no
@@ -59,6 +61,8 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
   ...STORM_FORUM_SCHEDULES,
   ...AGENT_CHAT_SCHEDULES,
   ...CI_SCHEDULES,
+  TRACKER_ATTACHMENT_SCHEDULE,
+  TEMPORAL_FAILURE_WATCH_SCHEDULE,
   {
     id: "kometa-daily",
     workflowType: "runKometaWorkflow",
@@ -588,25 +592,5 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
     workflowExecutionTimeout: "30 minutes",
     catchupWindow: CATCHUP_TIGHT,
     memo: "Good morning get-up (weekends 9:15 AM)",
-  },
-  {
-    id: "temporal-failure-watch",
-    workflowType: "pollWorkflowFailuresWorkflow",
-    args: [],
-    // Every 5 minutes. The activity looks back 24 hours so a worker outage can
-    // be recovered by the next poll; the matching alert TTL prevents duplicate
-    // pages for executions observed again after recovery.
-    timing: {
-      kind: "cron",
-      expression: "*/5 * * * *",
-      timezone: "America/Los_Angeles",
-    },
-    taskQueue: TASK_QUEUES.WORKFLOWS,
-    overlap: ScheduleOverlapPolicy.SKIP,
-    // Covers the activity's full 3-attempt retry budget (3x 2m + ~30s
-    // backoff ≈ 6.5m) with margin; SKIP overlap makes the wider ceiling
-    // harmless against the 5-minute cadence.
-    workflowExecutionTimeout: "8 minutes",
-    memo: "Notifies Alerts (via Alertmanager) with the specific error for every Temporal workflow execution that failed or timed out.",
   },
 ]);

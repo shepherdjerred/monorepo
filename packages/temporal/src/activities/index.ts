@@ -63,6 +63,7 @@ import { deliverPhotonResponse } from "./agent/photon/deliver.ts";
 import { waitForPhotonCommand } from "./agent/photon/wait.ts";
 import { woodpeckerRetentionActivities } from "./maintenance/woodpecker-retention.ts";
 import { ciMaintenanceActivities } from "./maintenance/ci-maintenance.ts";
+import { trackerAttachmentActivities } from "./maintenance/tracker-attachments.ts";
 
 export const homeActivities = {
   ...haActivities,
@@ -82,6 +83,7 @@ export const reportActivities = {
 };
 
 export const infraActivities = {
+  ...trackerAttachmentActivities,
   ...stormCompanionActivities,
   ...stormDiscordActivities,
   ...woodpeckerRetentionActivities,

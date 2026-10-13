@@ -13,6 +13,30 @@ import {
 } from "../../ci/run-with-diagnostics.ts";
 
 const directories: string[] = [];
+test("Turbo null environment declarations mean no declared variable names", () => {
+  const raw = summary();
+  const task = raw.tasks[0];
+  if (task === undefined) throw new Error("Missing fixture task");
+  const safe = TurboDiagnosticSchema.parse(
+    sanitizeTurboInputs({
+      ...raw,
+      tasks: [
+        {
+          ...task,
+          resolvedTaskDefinition: { env: null, passThroughEnv: null },
+        },
+      ],
+    }),
+  );
+  expect(safe.tasks[0]?.environmentVariableNames).toEqual([]);
+  expect(JSON.stringify(safe)).not.toContain("sentinel");
+  expect(() =>
+    sanitizeTurboInputs({
+      ...raw,
+      tasks: [{ ...task, resolvedTaskDefinition: { passThroughEnv: 1 } }],
+    }),
+  ).toThrow();
+});
 test("input auditing keeps file hashes and variable names while removing secret-bearing fields", () => {
   const raw = summary();
   const task = raw.tasks[0];
