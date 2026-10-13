@@ -1,4 +1,5 @@
 import { z } from "zod";
+import path from "node:path";
 import { checkoutSource } from "./snapshot.ts";
 
 const [cache, commit] = z
@@ -7,7 +8,7 @@ const [cache, commit] = z
 const result = await checkoutSource({
   cache:
     Bun.env["CI_SOURCE_CACHE_COLD"] === "true"
-      ? "/woodpecker/cold-source-cache"
+      ? path.join(process.cwd(), ".git", "ci-cold-source-cache")
       : cache,
   ...(Bun.env["CI_SOURCE_CACHE_COLD"] === "true" ? { seedCache: cache } : {}),
   commit,

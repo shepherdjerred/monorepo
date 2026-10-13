@@ -163,6 +163,8 @@ flag to resolve true. Cold runs use a private source-cache destination and
 disable Turbo result reuse; incremental candidates may negotiate from a
 different verified shared SHA. Download caches remain warm, so this is a cold
 source/result comparison rather than a purge of production package caches.
+The private source cache lives under the workflow's `.git` directory, keeping
+it writable by the clone user, outside build inputs, and on the workspace volume.
 Warm runs use ordinary exact-SHA source and signed Turbo result caches. A moved
 source, conflicting maintenance/platform/corpus parameters, or disabled
 candidate is rejected. A fixed canary branch allows repeated pairs while main

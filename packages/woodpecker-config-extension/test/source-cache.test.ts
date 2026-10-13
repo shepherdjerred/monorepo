@@ -59,46 +59,66 @@ async function fixture() {
   return { root, repository, commit, cache: join(root, "cache") };
 }
 
-test("an incremental miss negotiates from verified objects and retains exact source integrity", async () => {
-  const input = await fixture();
-  const first = join(input.root, "first");
-  await mkdir(first);
-  await checkoutSource({ ...input, workspace: first });
-  await Bun.write(join(input.repository, "added.txt"), "second revision\n");
-  await git(input.repository, ["add", "added.txt"]);
-  await git(input.repository, [
-    "-c",
-    "user.name=Fixture",
-    "-c",
-    "user.email=fixture@example.invalid",
-    "commit",
-    "-qm",
-    "next",
-  ]);
-  const commit = await git(input.repository, ["rev-parse", "HEAD"]);
-  const second = join(input.root, "second");
-  await mkdir(second);
-  const result = await checkoutSource({
-    ...input,
-    commit,
-    workspace: second,
-    incremental: true,
-  });
-  expect(result.seedSha).toBe(input.commit);
-  expect(await git(second, ["rev-parse", "HEAD"])).toBe(commit);
-  expect(await git(second, ["status", "--porcelain"])).toBe("");
-  expect(await git(second, ["for-each-ref", "refs/heads/cache-seed"])).toBe("");
-  await git(second, ["fsck", "--full"]);
-  const third = join(input.root, "third");
-  await mkdir(third);
-  const warm = await checkoutSource({
-    ...input,
-    commit,
-    workspace: third,
-    incremental: true,
-  });
-  expect(warm.cache).toBe("hit");
-});
+test.each(["shared", "private"])(
+  "an incremental %s-cache miss retains exact source integrity",
+  async (destination) => {
+    const input = await fixture();
+    const first = join(input.root, "first");
+    await mkdir(first);
+    await checkoutSource({ ...input, workspace: first });
+    await Bun.write(join(input.repository, "added.txt"), "second revision\n");
+    await git(input.repository, ["add", "added.txt"]);
+    await git(input.repository, [
+      "-c",
+      "user.name=Fixture",
+      "-c",
+      "user.email=fixture@example.invalid",
+      "commit",
+      "-qm",
+      "next",
+    ]);
+    const commit = await git(input.repository, ["rev-parse", "HEAD"]);
+    const second = join(input.root, "second");
+    await mkdir(second);
+    const cache =
+      destination === "private"
+        ? join(second, ".git", "ci-cold-source-cache")
+        : input.cache;
+    const result = await checkoutSource({
+      ...input,
+      cache,
+      seedCache: input.cache,
+      commit,
+      workspace: second,
+      incremental: true,
+    });
+    expect(result.seedSha).toBe(input.commit);
+    expect(await git(second, ["rev-parse", "HEAD"])).toBe(commit);
+    expect(await git(second, ["status", "--porcelain"])).toBe("");
+    expect(await git(second, ["for-each-ref", "refs/heads/cache-seed"])).toBe(
+      "",
+    );
+    await git(second, ["fsck", "--full"]);
+    if (destination === "private") {
+      const parent = join(
+        input.cache,
+        "v1",
+        new Bun.CryptoHasher("sha256").update(input.repository).digest("hex"),
+      );
+      expect(await readdir(parent)).toEqual([input.commit]);
+    }
+    const third = join(input.root, "third");
+    await mkdir(third);
+    const warm = await checkoutSource({
+      ...input,
+      cache,
+      commit,
+      workspace: third,
+      incremental: true,
+    });
+    expect(warm.cache).toBe("hit");
+  },
+);
 
 test("prepared seeds keep dependencies private and apply source additions and deletions", async () => {
   const input = await fixture();
