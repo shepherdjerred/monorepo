@@ -1304,9 +1304,9 @@ match; see the arena section for how the restore is confirmed.
 A match moves through `Lobby`, `Countdown`, `Preparing` (only while the chosen
 map is still loading), `Preview`, `Freeze`, `Live`, `Ended` and `Resetting`.
 Each player-visible part sits behind its own managed Flipt flag, every one
-default-off with a `beta` override on, read by `FliptRwfFeatures` as each match
-opens (entity `the-storm-rwf-features`, context `world` = the map world), so a
-flag changes the next match, never the one being played:
+default-off with `beta` and `prod` overrides on, read by `FliptRwfFeatures` as
+each match opens (entity `the-storm-rwf-features`, context `world` = the map
+world), so a flag changes the next match, never the one being played:
 
 | Flag                                    | When on                                                                                                                                                                                                                                                                                                                 |
 | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -1381,7 +1381,7 @@ facing the way they faced there, and its recharge shows on the experience bar.
 
 ### Kits
 
-`domain/kit/KitBook.java` holds all 33 kits: Red Warfare's twenty-five, then
+`domain/kit/KitBook.java` holds all 33 kits: Red Warfare's twenty-two, then
 Equality, Inertia and Sacrificial, then eight new to The Storm. `KITS.md` in
 the module is the per-kit reference (items, prices, tiers, every ability's
 numbers and the deviations from the original). Abilities are pure classes
@@ -1398,7 +1398,7 @@ Time Machine trail and cooldown included (`kits/Rewind.java`): a tick's
 | `the-storm-rwf-kits-enabled`        | The full kit list, the credit kit shop (`/rwf buy`, the menu's confirmation) and the weekly free rotation. Off, the player is offered Trooper, Longbow, Shortbow and Rewind. |
 | `the-storm-rwf-killstreaks-enabled` | Killstreak rewards: the tracking compass at 2 kills, wolves and a supply crate every 4, an iron golem every 8, napalm every 11, assists counting their share.                |
 
-Both default off with a `beta` override on, and are evaluated by
+Both default off with `beta` and `prod` overrides on, and are evaluated by
 `FliptPlayerFlag` for each player (the kits flag as their kits load); a
 missing `FLIPT_URL` or `FLIPT_ENVIRONMENT` keeps both off.
 
