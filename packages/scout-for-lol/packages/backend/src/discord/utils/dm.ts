@@ -246,6 +246,7 @@ async function recordSendOutcome(
     kind: DmKind;
     content: string;
     status: DmStatus;
+    retainFailedReservation?: boolean;
     errorMessage?: string | undefined;
   },
 ): Promise<void> {
@@ -261,11 +262,14 @@ async function recordSendOutcome(
     });
     return;
   }
-  // Finalizing a bounced reservation releases it, so a bounced DM charges
-  // nothing.
+  // Only a durable intent can retry a reservation after a pre-send failure.
+  // Direct callers must release it or the next outreach scan skips the rung.
   await finalizeDeliveryRow(db, {
     id: input.reservedRowId,
-    status: input.status === "failed" ? "reserved" : input.status,
+    status:
+      input.status === "failed" && input.retainFailedReservation === true
+        ? "reserved"
+        : input.status,
     recipientTag: input.recipientTag,
     errorMessage: input.errorMessage,
   });
@@ -449,6 +453,7 @@ async function sendDmUnsynchronized(options: SendDmOptions): Promise<DmStatus> {
       kind,
       content: message,
       status,
+      retainFailedReservation: options.reservationId !== undefined,
       errorMessage: errorMsg,
     });
     return status;

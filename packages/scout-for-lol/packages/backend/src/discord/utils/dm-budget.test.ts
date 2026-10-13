@@ -14,6 +14,8 @@ import { mockClient } from "#src/testing/discord-mocks.ts";
 import { testGuildId, testAccountId } from "#src/testing/test-ids.ts";
 import { sendDM } from "#src/discord/utils/dm.ts";
 import { NON_CORE_MESSAGE_BUDGET } from "#src/discord/utils/message-budget.ts";
+import { reserveBudgetedDm } from "#src/discord/utils/dm-budget.ts";
+import { readOutreachState } from "#src/discord/utils/outreach-state.ts";
 
 const { prisma } = createTestDatabase("dm-budget-test");
 
@@ -122,16 +124,16 @@ function budgeted(client: Client, message = "hello") {
   };
 }
 
+beforeEach(async () => {
+  await prisma.dmAuditLog.deleteMany();
+  await prisma.guildInstall.deleteMany();
+});
+
+afterAll(async () => {
+  await prisma.$disconnect();
+});
+
 describe("sendDM message budget", () => {
-  beforeEach(async () => {
-    await prisma.dmAuditLog.deleteMany();
-    await prisma.guildInstall.deleteMany();
-  });
-
-  afterAll(async () => {
-    await prisma.$disconnect();
-  });
-
   it("appends a truthful 'message N of 3' footer", async () => {
     await seedInstall(0);
     const send = makeSendMock();
@@ -305,5 +307,95 @@ describe("sendDM message budget", () => {
 
     expect(status).toBe("sent");
     expect(String(send.mock.calls[0]?.[0])).not.toContain("Message");
+  });
+});
+
+describe("sendDM reservation ownership", () => {
+  it("releases a direct send's failed lookup so the ladder and cooldown can retry", async () => {
+    await seedInstall();
+    const client = mockClient({
+      users: {
+        fetch: vi.fn(() => Promise.reject(new Error("Lookup unavailable"))),
+      },
+    });
+    const options = budgeted(client);
+    const failed = await sendDM({
+      ...options,
+      budget: { ...options.budget, ladderStage: 1 },
+    });
+    expect(failed).toBe("failed");
+    const failedRow = await prisma.dmAuditLog.findFirstOrThrow();
+    expect(failedRow.deliveryStatus).toBe("failed");
+    expect(await readOutreachState(prisma, SERVER_ID, INSTALLED_AT)).toEqual({
+      spent: 0,
+      lastLadderStage: 0,
+      feedbackRequested: false,
+    });
+    const send = makeSendMock();
+    expect(await sendDM(budgeted(clientThatSends(send)))).toBe("sent");
+    expect(String(send.mock.calls[0]?.[0])).toContain("1 of 3");
+  });
+
+  it("retains a durable reservation across a failed lookup and retries that same row", async () => {
+    await seedInstall();
+    const send = makeSendMock();
+    const client = clientThatSends(send);
+    const fetch = vi.spyOn(client.users, "fetch");
+    fetch.mockRejectedValueOnce(new Error("Lookup unavailable"));
+    const { budget, ...options } = budgeted(client);
+    const reservation = await prisma.$transaction(
+      async (tx) =>
+        await reserveBudgetedDm(tx, {
+          recipientId: RECIPIENT,
+          guildId: SERVER_ID,
+          kind: options.kind,
+          message: options.message,
+          budget,
+        }),
+    );
+    if (reservation.status !== "reserved")
+      throw new Error("Expected reservation");
+    const delivery = {
+      ...options,
+      message: reservation.message,
+      reservationId: reservation.id,
+    };
+    expect(await sendDM(delivery)).toBe("failed");
+    expect(send).not.toHaveBeenCalled();
+    const reservedRow = await prisma.dmAuditLog.findUniqueOrThrow({
+      where: { id: reservation.id },
+    });
+    expect(reservedRow.deliveryStatus).toBe("reserved");
+    const reservedState = await readOutreachState(
+      prisma,
+      SERVER_ID,
+      INSTALLED_AT,
+    );
+    expect(reservedState.spent).toBe(1);
+    expect(await sendDM(delivery)).toBe("sent");
+    expect(send).toHaveBeenCalledOnce();
+    expect(await prisma.dmAuditLog.count()).toBe(1);
+    const sentRow = await prisma.dmAuditLog.findUniqueOrThrow({
+      where: { id: reservation.id },
+    });
+    expect(sentRow.deliveryStatus).toBe("sent");
+  });
+
+  it("keeps an uncertain direct send charged and prevents an automatic resend", async () => {
+    await seedInstall();
+    const send = makeSendMock();
+    send.mockRejectedValueOnce(new Error("Send acknowledgment lost"));
+    const options = budgeted(clientThatSends(send));
+    expect(await sendDM(options)).toBe("unknown");
+    const unknownRow = await prisma.dmAuditLog.findFirstOrThrow();
+    expect(unknownRow.deliveryStatus).toBe("unknown");
+    const unknownState = await readOutreachState(
+      prisma,
+      SERVER_ID,
+      INSTALLED_AT,
+    );
+    expect(unknownState.spent).toBe(1);
+    expect(await sendDM(options)).toBe("deferred");
+    expect(send).toHaveBeenCalledOnce();
   });
 });
