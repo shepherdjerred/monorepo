@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { authBootstrapFromEnv } from "./bootstrap.ts";
+import { authBootstrapFromEnv } from "#src/auth/bootstrap.ts";
 
 const ORIGIN = "https://mariokart.example.com";
 

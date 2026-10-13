@@ -424,6 +424,7 @@
       "name": "@discord-plays-mario-kart/common",
       "version": "1.0.0",
       "dependencies": {
+        "@shepherdjerred/discord-plays-core": "workspace:*",
         "lodash": "4.18.1",
         "ts-pattern": "^5.7.0",
         "zod": "^4.4.3",
@@ -448,6 +449,7 @@
       "version": "1.0.0",
       "dependencies": {
         "@discord-plays-mario-kart/common": "workspace:*",
+        "@shepherdjerred/discord-plays-core": "workspace:*",
         "@shepherdjerred/discord-plays-web": "workspace:*",
         "@tanstack/react-query": "^5.70.0",
         "react": "19.3.0",

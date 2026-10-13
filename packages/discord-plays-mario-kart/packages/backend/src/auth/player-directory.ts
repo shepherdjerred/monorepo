@@ -1,7 +1,7 @@
 // The latest name and avatar of every Discord user who has signed in or held a
 // seat. Stats read it so a leaderboard shows today's names, not race-day ones.
 import type { PrismaClient } from "#generated/prisma/client/index.js";
-import type { DiscordUser } from "@discord-plays-mario-kart/common";
+import type { DiscordUser } from "@shepherdjerred/discord-plays-core/auth/protocol.ts";
 
 export type PlayerDirectory = {
   upsert: (user: DiscordUser) => Promise<void>;

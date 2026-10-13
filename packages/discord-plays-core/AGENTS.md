@@ -2,8 +2,8 @@
 
 This source-only workspace package owns behavior shared by the Pokémon and
 Mario Kart backends: tracing/metrics, PCM transport, Go-Live streamer base,
-web-server and Socket.IO setup, the in-browser driver feed, PNG encoding,
-config loading, logging, and process boot. Package exports point directly at
+web-server and Socket.IO setup, the in-browser driver feed, Discord sign-in,
+PNG encoding, config loading, logging, and process boot. Package exports point directly at
 `src/`.
 
 - Dependencies use the root workspace and `workspace:*`. Do not restore the old
@@ -15,8 +15,8 @@ config loading, logging, and process boot. Package exports point directly at
   dispatch, driver-feed admission policy, and slash commands remain
   game-owned. Core enforces a policy a game installs; it never decides who may
   watch or play.
-- `src/driver-feed/protocol.ts` is imported by browser bundles. Keep it free of
-  Node, Bun, and non-`zod` imports.
+- `src/driver-feed/protocol.ts` and `src/auth/protocol.ts` are imported by
+  browser bundles. Keep them free of Node, Bun, and non-`zod` imports.
 - A change here must be verified against both consuming backends.
 
 ```bash

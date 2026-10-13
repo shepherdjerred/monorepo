@@ -42,6 +42,13 @@ fix lands once.
   who may watch. `protocol.ts` is the browser-safe wire contract (zod only) the
   frontends import; `config.ts` is the `[driver_feed]` schema and its
   environment overrides; `metrics.ts` holds the shared feed instruments.
+- `src/auth/` — Sign in with Discord, ported from Streambot: the OAuth2
+  code grant and its routes (`DiscordAuth`, `mountAuthRoutes`; per-game cookie
+  prefix and display-name rule), the session-store contract with a SQLite
+  implementation for games without a database (`createSqliteSessionStore`),
+  the env bootstrap (`WEB_PUBLIC_ORIGIN`, `DISCORD_CLIENT_SECRET`), and
+  voice-channel presence from the bot's gateway cache. `protocol.ts` is the
+  browser-safe identity contract (`DiscordUser`, `Me`, route paths).
 - `src/image/png.ts` — dependency-free RGBA→PNG encoder with nearest-neighbour
   scaling, for screenshots; `png-decode.ts` is the matching minimal decoder for
   tests.
@@ -63,8 +70,9 @@ backends depend on it as a `workspace:*` dependency, and this package owns the
 dependencies on their behalf. Emulators, lifecycle drivers, game-specific
 metrics, socket dispatch, and admission policy stay in the games.
 
-`src/driver-feed/protocol.ts` imports only `zod`, so the game frontends import
-it directly; nothing else under `src/` is browser-safe.
+`src/driver-feed/protocol.ts` and `src/auth/protocol.ts` import only `zod`, so
+the game frontends import them directly; nothing else under `src/` is
+browser-safe.
 
 ## Commands
 

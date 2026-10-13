@@ -16,7 +16,6 @@ import {
 import { applyStreamOverlays } from "#src/overlay/composite.ts";
 import type { StreamOverlayContextProvider } from "#src/overlay/composite.ts";
 import type {
-  DiscordUser,
   PlayBlocker,
   PlayerInputState,
   PlayerStatsResponse,
@@ -30,6 +29,7 @@ import type {
   SeatsResponse,
   LeaderboardResponse,
 } from "@discord-plays-mario-kart/common";
+import type { DiscordUser } from "@shepherdjerred/discord-plays-core/auth/protocol.ts";
 
 /** The subset of the engine the request dispatch needs (lets tests inject a
  *  fake without booting the game). */

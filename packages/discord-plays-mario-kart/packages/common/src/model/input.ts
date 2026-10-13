@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { DiscordUserSchema } from "./identity.ts";
+import { DiscordUserSchema } from "@shepherdjerred/discord-plays-core/auth/protocol.ts";
 import { PlayBlockerSchema } from "./status.ts";
 
 // Real-time per-player controller state (hold-based, applied every frame).

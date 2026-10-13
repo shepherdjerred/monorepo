@@ -2,7 +2,7 @@ import { useState } from "react";
 import IconTrophy from "~icons/ph/trophy-fill";
 import IconChart from "~icons/ph/chart-bar-fill";
 import IconFlag from "~icons/ph/flag-checkered-fill";
-import type { DiscordUser } from "@discord-plays-mario-kart/common";
+import type { DiscordUser } from "@shepherdjerred/discord-plays-core/auth/protocol.ts";
 import { Card } from "#src/ui/card.tsx";
 import { Tabs, type TabItem } from "#src/ui/tabs.tsx";
 import { LeaderboardPanel } from "./leaderboard-panel.tsx";

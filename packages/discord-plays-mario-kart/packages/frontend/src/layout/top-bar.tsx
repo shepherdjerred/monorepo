@@ -3,7 +3,7 @@ import IconSignOut from "~icons/ph/sign-out-bold";
 import IconFlag from "~icons/ph/flag-checkered-fill";
 import IconWifi from "~icons/ph/wifi-high-bold";
 import IconWifiOff from "~icons/ph/wifi-slash-bold";
-import type { DiscordUser } from "@discord-plays-mario-kart/common";
+import type { DiscordUser } from "@shepherdjerred/discord-plays-core/auth/protocol.ts";
 import { Avatar } from "#src/ui/avatar.tsx";
 import { Button } from "#src/ui/button.tsx";
 import { cx } from "#src/ui/cx.ts";

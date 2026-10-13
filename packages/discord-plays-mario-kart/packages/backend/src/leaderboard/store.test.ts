@@ -1,7 +1,7 @@
 // The real Prisma client and queries on a fresh SQLite file per test.
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import type { PrismaClient } from "#generated/prisma/client/index.js";
-import type { DiscordUser } from "@discord-plays-mario-kart/common";
+import type { DiscordUser } from "@shepherdjerred/discord-plays-core/auth/protocol.ts";
 import { openTestDatabase } from "#src/database/test-database.ts";
 import {
   createPlayerDirectory,

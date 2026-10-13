@@ -5,11 +5,8 @@ import {
   type IdentifySocket,
 } from "@shepherdjerred/discord-plays-core/webserver/socket.ts";
 import { DRIVER_FEED_PATH } from "@shepherdjerred/discord-plays-core/driver-feed/protocol.ts";
-import {
-  RequestSchema,
-  type DiscordUser,
-  type Request,
-} from "@discord-plays-mario-kart/common";
+import { RequestSchema, type Request } from "@discord-plays-mario-kart/common";
+import { type DiscordUser } from "@shepherdjerred/discord-plays-core/auth/protocol.ts";
 import { logger } from "#src/logger.ts";
 
 type SocketChannel = GameSocketChannel<Request, DiscordUser>;

@@ -43,13 +43,3 @@ export function toPlayerName(
   }
   return fallback;
 }
-
-/** Discord CDN URL for a user's avatar hash, or null for the default avatar. */
-export function avatarUrl(
-  discordId: string,
-  hash: string | null,
-): string | null {
-  if (hash === null) return null;
-  const extension = hash.startsWith("a_") ? "gif" : "png";
-  return `https://cdn.discordapp.com/avatars/${discordId}/${hash}.${extension}?size=128`;
-}

@@ -1,10 +1,10 @@
 import type { PrismaClient } from "#generated/prisma/client/index.js";
 import type {
-  DiscordUser,
   PlayerRecord,
   PlayerStats,
   RaceSummary,
 } from "@discord-plays-mario-kart/common";
+import type { DiscordUser } from "@shepherdjerred/discord-plays-core/auth/protocol.ts";
 import type { PlayerDirectory } from "#src/auth/player-directory.ts";
 import type { RaceCompleted } from "./race-watcher.ts";
 

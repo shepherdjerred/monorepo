@@ -1,9 +1,9 @@
 // Sign in with Discord: the OAuth2 authorization-code grant, by hand.
 //
-// Ported from Streambot's WebAuth (packages/streambot/src/web/server/auth.ts).
-// The page only needs to know who is at the keyboard, so the scope is
-// `identify`; whether they are in the game's voice channel comes from the bot's
-// own gateway cache, never from the browser.
+// Ported from Streambot's WebAuth (packages/streambot/src/web/server/auth.ts),
+// shared by both games. The page only needs to know who is at the keyboard, so
+// the scope is `identify`; whether they are in the game's voice channel comes
+// from the bot's own gateway cache, never from the browser.
 //
 // Handlers take a plain request description and return a plain result, so the
 // flow is testable without Express; `mountAuthRoutes` adapts them.
@@ -14,6 +14,7 @@ import type {
   Response as ExpressResponse,
 } from "express";
 import { z } from "zod";
+import type { Logger } from "#src/logger.ts";
 import {
   AUTH_CALLBACK_PATH,
   AUTH_LOGOUT_PATH,
@@ -21,9 +22,7 @@ import {
   ME_PATH,
   type DiscordUser,
   type Me,
-} from "@discord-plays-mario-kart/common";
-import { logger } from "#src/logger.ts";
-import { avatarUrl, toPlayerName } from "./names.ts";
+} from "./protocol.ts";
 import {
   SESSION_LIFETIME_SECONDS,
   digest,
@@ -31,12 +30,11 @@ import {
   type WebSessionStore,
 } from "./session-store.ts";
 
-export const SESSION_COOKIE = "mk64_session";
-const STATE_COOKIE = "mk64_oauth_state";
 const STATE_LIFETIME_MS = 5 * 60 * 1000;
 const DISCORD_API = "https://discord.com/api/v10";
 
 const TokenSchema = z.object({ access_token: z.string().min(1) });
+export type DiscordApiUser = z.infer<typeof DiscordApiUserSchema>;
 const DiscordApiUserSchema = z.object({
   id: z.string().regex(/^\d+$/u),
   username: z.string().min(1),
@@ -49,7 +47,29 @@ export type AuthConfig = {
   publicOrigin: string;
   clientId: string;
   clientSecret: string;
+  /**
+   * Prefixes this game's cookie names (`<prefix>_session`), so two games on one
+   * browser never read each other's sessions.
+   */
+  cookiePrefix: string;
 };
+
+/** Each game's rule for the name it shows: Mario Kart folds it for its overlay. */
+export type DisplayName = (user: DiscordApiUser) => string;
+
+/** Discord's global display name, else the username. */
+export const discordDisplayName: DisplayName = (user) =>
+  user.global_name ?? user.username;
+
+/** Discord CDN URL for a user's avatar hash, or null for the default avatar. */
+export function avatarUrl(
+  discordId: string,
+  hash: string | null,
+): string | null {
+  if (hash === null) return null;
+  const extension = hash.startsWith("a_") ? "gif" : "png";
+  return `https://cdn.discordapp.com/avatars/${discordId}/${hash}.${extension}?size=128`;
+}
 
 /** The slice of `fetch` the flow uses; tests substitute a fake Discord. */
 export type FetchLike = (url: string, init: RequestInit) => Promise<Response>;
@@ -78,12 +98,13 @@ export function cookieValue(
 
 /** Map Discord's user object to the page's identity. */
 export function discordUserFrom(
-  api: z.infer<typeof DiscordApiUserSchema>,
+  api: DiscordApiUser,
+  displayName: DisplayName = discordDisplayName,
 ): DiscordUser {
   return {
     discordId: api.id,
     username: api.username,
-    name: toPlayerName([api.global_name], api.username),
+    name: displayName(api),
     avatarUrl: avatarUrl(api.id, api.avatar),
   };
 }
@@ -93,23 +114,38 @@ export class DiscordAuth {
   private readonly usedStates = new Map<string, number>();
   private readonly config: AuthConfig;
   private readonly sessions: WebSessionStore;
+  private readonly logger: Logger;
+  private readonly displayName: DisplayName;
   private readonly fetchFn: FetchLike;
 
   constructor(deps: {
     config: AuthConfig;
     sessions: WebSessionStore;
+    logger: Logger;
+    displayName?: DisplayName;
     fetch?: FetchLike;
   }) {
     this.config = deps.config;
     this.sessions = deps.sessions;
+    this.logger = deps.logger;
+    this.displayName = deps.displayName ?? discordDisplayName;
     this.fetchFn = deps.fetch ?? ((url, init) => fetch(url, init));
+  }
+
+  /** The cookie holding this game's session token. */
+  get sessionCookie(): string {
+    return `${this.config.cookiePrefix}_session`;
+  }
+
+  private get stateCookie(): string {
+    return `${this.config.cookiePrefix}_oauth_state`;
   }
 
   /** The signed-in user behind a Cookie header, if any. */
   async identify(
     cookieHeader: string | undefined,
   ): Promise<DiscordUser | undefined> {
-    const token = cookieValue(cookieHeader, SESSION_COOKIE);
+    const token = cookieValue(cookieHeader, this.sessionCookie);
     return token === undefined ? undefined : this.sessions.read(token);
   }
 
@@ -128,7 +164,7 @@ export class DiscordAuth {
     return {
       kind: "redirect",
       location: target.href,
-      cookies: [this.cookie(STATE_COOKIE, state, STATE_LIFETIME_MS / 1000)],
+      cookies: [this.cookie(this.stateCookie, state, STATE_LIFETIME_MS / 1000)],
     };
   }
 
@@ -137,9 +173,9 @@ export class DiscordAuth {
     nowMs = Date.now(),
   ): Promise<AuthResult> {
     const params = new URL(request.url, this.config.publicOrigin).searchParams;
-    const clearState = this.cookie(STATE_COOKIE, "", 0);
+    const clearState = this.cookie(this.stateCookie, "", 0);
     const state = params.get("state");
-    const saved = cookieValue(request.cookieHeader, STATE_COOKIE);
+    const saved = cookieValue(request.cookieHeader, this.stateCookie);
     if (
       state === null ||
       saved === undefined ||
@@ -164,35 +200,35 @@ export class DiscordAuth {
     try {
       user = await this.exchange(code);
     } catch (error) {
-      logger.warn("discord sign-in failed", error);
+      this.logger.warn("discord sign-in failed", error);
       return {
         kind: "redirect",
         location: "/?signin=failed",
         cookies: [clearState],
       };
     }
-    const previous = cookieValue(request.cookieHeader, SESSION_COOKIE);
+    const previous = cookieValue(request.cookieHeader, this.sessionCookie);
     if (previous !== undefined) await this.sessions.delete(previous);
     const token = await this.sessions.create(user, nowMs);
-    logger.info("discord sign-in", { discordId: user.discordId });
+    this.logger.info("discord sign-in", { discordId: user.discordId });
     return {
       kind: "redirect",
       location: "/",
       cookies: [
         clearState,
-        this.cookie(SESSION_COOKIE, token, SESSION_LIFETIME_SECONDS),
+        this.cookie(this.sessionCookie, token, SESSION_LIFETIME_SECONDS),
       ],
     };
   }
 
   async logout(request: AuthRequest): Promise<AuthResult> {
-    const token = cookieValue(request.cookieHeader, SESSION_COOKIE);
+    const token = cookieValue(request.cookieHeader, this.sessionCookie);
     if (token !== undefined) await this.sessions.delete(token);
     return {
       kind: "json",
       status: 200,
       body: { signedIn: false } satisfies Me,
-      cookies: [this.cookie(SESSION_COOKIE, "", 0)],
+      cookies: [this.cookie(this.sessionCookie, "", 0)],
     };
   }
 
@@ -221,6 +257,7 @@ export class DiscordAuth {
     });
     return discordUserFrom(
       DiscordApiUserSchema.parse(await userResponse.json()),
+      this.displayName,
     );
   }
 
@@ -314,6 +351,7 @@ function describe(req: ExpressRequest): AuthRequest {
 
 async function respond(
   res: ExpressResponse,
+  logger: Logger,
   run: () => AuthResult | Promise<AuthResult>,
 ): Promise<void> {
   try {
@@ -324,16 +362,17 @@ async function respond(
   }
 }
 
-function handle(
-  run: (req: ExpressRequest) => AuthResult | Promise<AuthResult>,
-): (req: ExpressRequest, res: ExpressResponse) => void {
-  return (req, res) => {
-    void respond(res, () => run(req));
-  };
-}
-
 /** Serve the sign-in routes from the page's own Express app. */
-export function mountAuthRoutes(app: Express, auth: DiscordAuth): void {
+export function mountAuthRoutes(
+  app: Express,
+  auth: DiscordAuth,
+  logger: Logger,
+): void {
+  const handle =
+    (run: (req: ExpressRequest) => AuthResult | Promise<AuthResult>) =>
+    (req: ExpressRequest, res: ExpressResponse): void => {
+      void respond(res, logger, () => run(req));
+    };
   app.get(
     AUTH_START_PATH,
     handle(() => auth.start()),

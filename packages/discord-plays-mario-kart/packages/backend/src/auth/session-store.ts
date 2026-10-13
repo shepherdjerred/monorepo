@@ -1,27 +1,14 @@
 // Signed-in browsers, persisted in the leaderboard database so sign-ins survive
-// a restart. The cookie carries a random token; only its SHA-256 is stored.
-import { createHash, randomBytes } from "node:crypto";
+// a restart and stay joined to the player's stats. The cookie carries a random
+// token; only its SHA-256 is stored.
+import {
+  SESSION_LIFETIME_SECONDS,
+  digest,
+  nonce,
+  type WebSessionStore,
+} from "@shepherdjerred/discord-plays-core/auth/session-store.ts";
 import type { PrismaClient } from "#generated/prisma/client/index.js";
-import type { DiscordUser } from "@discord-plays-mario-kart/common";
 import type { PlayerDirectory } from "./player-directory.ts";
-
-export const SESSION_LIFETIME_SECONDS = 30 * 24 * 60 * 60;
-
-export function digest(value: string): string {
-  return createHash("sha256").update(value).digest("hex");
-}
-
-export function nonce(): string {
-  return randomBytes(32).toString("base64url");
-}
-
-export type WebSessionStore = {
-  /** Start a session for a user; returns the cookie token. */
-  create: (user: DiscordUser, nowMs?: number) => Promise<string>;
-  /** The signed-in user for a cookie token, or undefined if unknown or expired. */
-  read: (token: string, nowMs?: number) => Promise<DiscordUser | undefined>;
-  delete: (token: string) => Promise<void>;
-};
 
 export function createWebSessionStore(
   prisma: PrismaClient,

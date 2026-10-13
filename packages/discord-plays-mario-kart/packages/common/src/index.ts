@@ -1,6 +1,5 @@
 export * from "./model/index.ts";
 export * from "./model/keyboard.ts";
-export * from "./model/identity.ts";
 export * from "./model/mk64.ts";
 export * from "./model/status.ts";
 export * from "./model/input.ts";

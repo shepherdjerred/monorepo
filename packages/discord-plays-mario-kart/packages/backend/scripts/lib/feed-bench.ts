@@ -7,7 +7,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { z } from "zod";
-import type { DiscordUser } from "@discord-plays-mario-kart/common";
+import type { DiscordUser } from "@shepherdjerred/discord-plays-core/auth/protocol.ts";
 import type { GameEngine } from "#src/engine/game-engine.ts";
 import { SeatManager } from "#src/input/seat-manager.ts";
 import { applyStreamOverlays } from "#src/overlay/composite.ts";

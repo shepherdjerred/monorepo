@@ -1,21 +1,21 @@
-// The sign-in flow against a fake Discord API and a real session table.
-import { afterEach, beforeEach, describe, expect, test } from "vitest";
-import type { PrismaClient } from "#generated/prisma/client/index.js";
-import { MeSchema } from "@discord-plays-mario-kart/common";
-import { openTestDatabase } from "#src/database/test-database.ts";
-import { createPlayerDirectory } from "./player-directory.ts";
-import { createWebSessionStore } from "./session-store.ts";
+// The sign-in flow against a fake Discord API and a real (in-memory) session table.
+import { beforeEach, describe, expect, test } from "vitest";
+import { MeSchema } from "#src/auth/protocol.ts";
+import {
+  createSqliteSessionStore,
+  type WebSessionStore,
+} from "#src/auth/session-store.ts";
 import {
   DiscordAuth,
-  SESSION_COOKIE,
   cookieValue,
   type AuthResult,
   type FetchLike,
-} from "./discord-oauth.ts";
+} from "#src/auth/discord-oauth.ts";
+import { silentLogger } from "#src/logger.ts";
 
 const ORIGIN = "https://mariokart.example.com";
 
-let prisma: PrismaClient;
+let sessions: WebSessionStore;
 let auth: DiscordAuth;
 let requests: { url: string; body: string | undefined }[];
 
@@ -42,19 +42,20 @@ function discordReply(url: string, init: RequestInit): Response {
 const fakeDiscord: FetchLike = (url, init) =>
   Promise.resolve(discordReply(url, init));
 
-beforeEach(async () => {
-  prisma = await openTestDatabase();
+beforeEach(() => {
   requests = [];
-  const players = createPlayerDirectory(prisma);
+  sessions = createSqliteSessionStore(":memory:");
   auth = new DiscordAuth({
-    config: { publicOrigin: ORIGIN, clientId: "99", clientSecret: "secret" },
-    sessions: createWebSessionStore(prisma, players),
+    config: {
+      publicOrigin: ORIGIN,
+      clientId: "99",
+      clientSecret: "secret",
+      cookiePrefix: "mk64",
+    },
+    sessions,
+    logger: silentLogger,
     fetch: fakeDiscord,
   });
-});
-
-afterEach(async () => {
-  await prisma.$disconnect();
 });
 
 function cookies(result: AuthResult): string {
@@ -92,9 +93,9 @@ describe("DiscordAuth", () => {
   test("signs in, and /api/me then reports the Discord user", async () => {
     const { result, cookieHeader } = await signIn();
     expect(redirectOf(result).pathname).toBe("/");
-    expect(result.cookies.find((c) => c.startsWith(SESSION_COOKIE))).toMatch(
-      /HttpOnly; SameSite=Lax; Max-Age=\d+; Secure$/u,
-    );
+    expect(
+      result.cookies.find((c) => c.startsWith(auth.sessionCookie)),
+    ).toMatch(/HttpOnly; SameSite=Lax; Max-Age=\d+; Secure$/u);
     expect(requests[0]?.body).toContain(
       "redirect_uri=https%3A%2F%2Fmariokart.example.com",
     );
@@ -105,7 +106,7 @@ describe("DiscordAuth", () => {
       user: {
         discordId: "4242",
         username: "speedy",
-        name: "Speedy",
+        name: "Speedy ⚡",
         avatarUrl: "https://cdn.discordapp.com/avatars/4242/hash.png?size=128",
       },
     });
@@ -152,17 +153,45 @@ describe("DiscordAuth", () => {
 
   test("signs out by deleting the session", async () => {
     const { cookieHeader } = await signIn();
+    const token = cookieValue(cookieHeader, auth.sessionCookie) ?? "";
     await auth.logout({ url: "/api/auth/logout", cookieHeader });
     expect(await auth.identify(cookieHeader)).toBeUndefined();
-    expect(await prisma.webSession.count()).toBe(0);
+    expect(await sessions.read(token)).toBeUndefined();
+  });
+
+  test("uses the game's naming rule for the display name", async () => {
+    const shouting = new DiscordAuth({
+      config: {
+        publicOrigin: ORIGIN,
+        clientId: "99",
+        clientSecret: "secret",
+        cookiePrefix: "pokemon",
+      },
+      sessions,
+      logger: silentLogger,
+      displayName: (user) => user.username.toUpperCase(),
+      fetch: fakeDiscord,
+    });
+    const start = shouting.start();
+    const state = redirectOf(start).searchParams.get("state") ?? "";
+    const result = await shouting.callback({
+      url: `/api/auth/discord/callback?code=abc&state=${encodeURIComponent(state)}`,
+      cookieHeader: cookies(start),
+    });
+    expect(result.cookies.some((c) => c.startsWith("pokemon_session="))).toBe(
+      true,
+    );
+    expect(await shouting.identify(cookies(result))).toMatchObject({
+      name: "SPEEDY",
+    });
   });
 });
 
 describe("cookieValue", () => {
   test("finds one cookie among several", () => {
-    expect(cookieValue("a=1; mk64_session=tok; b=2", SESSION_COOKIE)).toBe(
+    expect(cookieValue("a=1; mk64_session=tok; b=2", "mk64_session")).toBe(
       "tok",
     );
-    expect(cookieValue(undefined, SESSION_COOKIE)).toBeUndefined();
+    expect(cookieValue(undefined, "mk64_session")).toBeUndefined();
   });
 });

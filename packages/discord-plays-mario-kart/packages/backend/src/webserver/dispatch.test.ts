@@ -28,12 +28,12 @@ import {
 import {
   EMPTY_BUTTONS,
   ResponseSchema,
-  type DiscordUser,
   type PlayBlocker,
   type PlayerInputState,
   type PlayerRecord,
   type Response,
 } from "@discord-plays-mario-kart/common";
+import { type DiscordUser } from "@shepherdjerred/discord-plays-core/auth/protocol.ts";
 import {
   decodePng,
   rgbaFromRgb,

@@ -1,4 +1,4 @@
-import type { DiscordUser } from "@discord-plays-mario-kart/common";
+import type { DiscordUser } from "@shepherdjerred/discord-plays-core/auth/protocol.ts";
 import { Avatar } from "#src/ui/avatar.tsx";
 import { cx } from "#src/ui/cx.ts";
 import { Placement } from "#src/ui/mk.tsx";
