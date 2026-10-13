@@ -1670,7 +1670,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1009378@sha256:c3f1367c48f76ea258d53f38113a7fa729348e053fc4185a8484b02fe861bd8e",
+      "value": "recovery-d3e0f0d824@sha256:e308b9bd65667c28b9d4dc09dbf9f679c64452092a35ea761a7c8f887e8cf3df",
       "notes": [
         "Accepted minecraft-tsmc production image. Promote explicitly after the selected stopped-server progression archive and release checks.",
         "CI publishes and updates shepherdjerred/the-storm-server separately; candidate publication never activates production."
