@@ -1085,6 +1085,7 @@
           "args": [
             "tests/rcon.test.ts",
             "tests/rwf-recording.test.ts",
+            "tests/rwf-status.test.ts",
             "tests/capacity/capacity-bars.test.ts",
             "scripts/bots/mineskin.test.ts",
             "scripts/bots/expanded-kit-weights.test.ts"
