@@ -103,10 +103,22 @@ function sameGamepadInput(a: GamepadInput, b: GamepadInput): boolean {
   );
 }
 
+/** Browsers may expose an indexed collection without Array methods. */
+export function firstConnectedGamepad<T extends Pick<Gamepad, "connected">>(
+  pads: ArrayLike<T | null>,
+): T | undefined {
+  let index = 0;
+  while (index < pads.length) {
+    const pad = pads[index];
+    index += 1;
+    if (pad?.connected === true) return pad;
+  }
+  return undefined;
+}
+
 function firstGamepad(): Gamepad | undefined {
   return typeof navigator.getGamepads === "function"
-    ? (navigator.getGamepads().find((pad) => pad?.connected === true) ??
-        undefined)
+    ? firstConnectedGamepad(navigator.getGamepads())
     : undefined;
 }
 

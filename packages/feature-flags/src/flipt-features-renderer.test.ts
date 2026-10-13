@@ -103,9 +103,27 @@ describe("renderFliptFeatures", () => {
   });
 
   test("renders an accepted nonempty key for the empty iMessage owner list", () => {
+    const inventory = testInventory([
+      {
+        key: "empty-owners",
+        owner: "test",
+        namespace: "qa",
+        source: "test",
+        purpose:
+          "Represent an empty owner list with a valid Flipt variant key.",
+        type: "variant",
+        default: "[]",
+        rollouts: [],
+        rules: [],
+        thresholdRollouts: [],
+      },
+    ]);
     for (const environment of ["beta", "prod"]) {
-      const flag = parseRendered(environment, "temporal").flags.find(
-        (candidate) => candidate["key"] === "temporal-agent-chat-photon-owners",
+      const rendered = RenderedFeaturesSchema.parse(
+        YAML.parse(renderFliptFeatures(environment, "qa", inventory)),
+      );
+      const flag = rendered.flags.find(
+        (candidate) => candidate["key"] === "empty-owners",
       );
       expect(flag?.["variants"]).toEqual([
         { default: true, key: "[]", name: "[]", attachment: {} },

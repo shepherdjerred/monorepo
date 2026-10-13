@@ -339,23 +339,26 @@ test("billed LLM cost reconciles hourly on the shared Workflow queue", () => {
   });
 });
 
-test("CI maintenance starts paused until its new Workflow is deployed", () => {
-  const schedule = findScheduleById("ci-maintenance-dispatch");
-  expect(schedule.initialPauseNote).toContain("100% candidate traffic");
-  expect(buildScheduleState(schedule, {})).toEqual({
-    paused: true,
-    note: schedule.initialPauseNote,
-  });
-  expect(
-    buildScheduleState(
-      schedule,
-      {},
-      { paused: false, note: "Canary accepted" },
-    ),
-  ).toEqual({
-    paused: false,
-  });
-});
+test.each(["ci-maintenance-dispatch", "the-storm-rwf-recording-archive"])(
+  "%s starts paused until its new Workflow is deployed",
+  (scheduleId) => {
+    const schedule = findScheduleById(scheduleId);
+    expect(schedule.initialPauseNote).toContain("100% candidate traffic");
+    expect(buildScheduleState(schedule, {})).toEqual({
+      paused: true,
+      note: schedule.initialPauseNote,
+    });
+    expect(
+      buildScheduleState(
+        schedule,
+        {},
+        { paused: false, note: "Canary accepted" },
+      ),
+    ).toEqual({
+      paused: false,
+    });
+  },
+);
 
 test("billed LLM cost remains paused until the candidate receives all Workflow traffic", () => {
   // Stable workers do not register this Workflow, so its schedule must remain

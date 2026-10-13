@@ -1,5 +1,35 @@
 import { describe, expect, it } from "vitest";
-import { mapStandardGamepad, type GamepadSnapshot } from "./gamepad.ts";
+import {
+  firstConnectedGamepad,
+  mapStandardGamepad,
+  type GamepadSnapshot,
+} from "./gamepad.ts";
+
+describe("firstConnectedGamepad", () => {
+  it("reads an indexed browser collection without Array methods", () => {
+    const connected = { id: "controller", connected: true };
+    expect(
+      firstConnectedGamepad({
+        0: null,
+        1: { id: "disconnected", connected: false },
+        2: connected,
+        length: 3,
+      }),
+    ).toBe(connected);
+  });
+
+  it("skips sparse slots and selects the first connected controller", () => {
+    const first = { connected: true };
+    expect(
+      firstConnectedGamepad({ 1: first, 3: { connected: true }, length: 4 }),
+    ).toBe(first);
+  });
+
+  it("returns no controller when empty or disconnected", () => {
+    expect(firstConnectedGamepad({ length: 0 })).toBeUndefined();
+    expect(firstConnectedGamepad([null, { connected: false }])).toBeUndefined();
+  });
+});
 
 function pad(
   pressed: readonly number[],
