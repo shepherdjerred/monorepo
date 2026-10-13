@@ -116,6 +116,7 @@ async function runReconciliation(origin: string, pollIntervalMs?: string) {
 
 function reconciliationServer(pruneStable: boolean) {
   const syncOrder: string[] = [];
+  const observedCompletedApplications = new Set<string>();
   const requestedOperations = new Map<string, Record<string, unknown>>();
   const requestedRevisions = new Map<string, string>();
   const requestedSyncs = new Map<string, z.infer<typeof SyncRequestSchema>>();
@@ -167,6 +168,9 @@ function reconciliationServer(pruneStable: boolean) {
         }
         const body: unknown = await request.json();
         const syncRequest = SyncRequestSchema.parse(body);
+        if (appName !== "external") {
+          expect(observedCompletedApplications.has("external")).toBe(true);
+        }
         requestedSyncs.set(appName, syncRequest);
         syncOrder.push(appName);
         requestedRevisions.set(appName, syncRequest.revision);
@@ -185,6 +189,7 @@ function reconciliationServer(pruneStable: boolean) {
       const operation = requestedOperations.get(appName);
       const requestedRevision = requestedRevisions.get(appName);
       if (operation !== undefined && requestedRevision !== undefined) {
+        observedCompletedApplications.add(appName);
         return Response.json({
           status: {
             history: [{ id: 4, revision: requestedRevision }],
@@ -279,7 +284,12 @@ describe("Argo CD staged external release reconciliation", () => {
         const stableRequest = requestedSyncs.get("stable-external");
         if (pruneStable) {
           expect(stdout).toContain("synced: stable-external");
-          expect(syncOrder).toEqual(["external", "worker", "stable-external"]);
+          // Same-wave children run concurrently after the prerequisite completes.
+          expect(syncOrder[0]).toBe("external");
+          expect(syncOrder.slice(1).sort()).toEqual([
+            "stable-external",
+            "worker",
+          ]);
           expectedRevisions.set("stable-external", "2.0.0");
           expect(stableRequest).toMatchObject({
             prune: true,
