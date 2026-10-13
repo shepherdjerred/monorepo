@@ -699,34 +699,45 @@ model ScoutClientReplayArtifact {
 /// canonical merge, and a conflicting id/sequence is rejected rather than
 /// overwritten.
 model ScoutClientObservation {
-  observationId     String    @id
-  deviceId          String
-  sequence          BigInt
-  capturedAt        DateTime
-  receivedAt        DateTime  @default(now())
-  protocolVersion   Int
-  schemaVersion     Int
-  appVersion        String
-  kind              String
-  leaguePatch       String?
-  platformId        String?
+  observationId           String    @id
+  deviceId                String
+  sequence                BigInt
+  capturedAt              DateTime
+  receivedAt              DateTime  @default(now())
+  protocolVersion         Int
+  schemaVersion           Int
+  appVersion              String
+  kind                    String
+  leaguePatch             String?
+  platformId              String?
   /// The observer's Riot API PUUID: the envelope's League-client UUID
   /// translated through `LeagueIdentityAlias`, or that UUID unchanged when no
   /// alias exists yet (such a row is quarantined).
-  localPuuid        String?
+  localPuuid              String?
   /// The observer identity exactly as the client sent it, when it was a
   /// League-client UUID rather than a Riot API PUUID.
-  localLcuUuid      String?
-  lobbyId           String?
-  gameId            String?
-  payload           Json
-  bodyDigest        String
-  disposition       String
-  quarantineReason  String?
+  localLcuUuid            String?
+  lobbyId                 String?
+  gameId                  String?
+  payload                 Json
+  bodyDigest              String
+  disposition             String
+  quarantineReason        String?
+  /// Received headers before identity/routing translation, or explicitly labelled
+  /// legacy metadata frozen at the first archive claim. Payload is stored above.
+  rawEnvelope             Json?
+  rawArchiveKey           String?
+  rawArchiveDigest        String?
+  rawArchiveBytes         BigInt?
+  rawArchivedAt           DateTime?
+  rawArchiveAttemptAt     DateTime?
+  rawArchiveNextAttemptAt DateTime  @default(now())
+  rawArchiveClaimId       String?
+  rawArchiveError         String?
   /// Projection checkpoints never change the immutable envelope or payload.
-  recoveryVersion   Int       @default(0)
-  recoveryAttemptAt DateTime?
-  recoveryComplete  Boolean   @default(false)
+  recoveryVersion         Int       @default(0)
+  recoveryAttemptAt       DateTime?
+  recoveryComplete        Boolean   @default(false)
 
   device         ScoutClientDevice                    @relation(fields: [deviceId], references: [id], onDelete: Cascade)
   canonicalMatch ScoutClientCanonicalMatch?
@@ -741,6 +752,7 @@ model ScoutClientObservation {
   @@index([lobbyId, kind])
   @@index([disposition, receivedAt])
   @@index([recoveryComplete, recoveryAttemptAt])
+  @@index([rawArchivedAt, rawArchiveNextAttemptAt], map: "ScoutClientObservation_rawArchiveDue_idx")
 }
 
 /// Acceptance after quarantine is audited; the original body and digest never change.

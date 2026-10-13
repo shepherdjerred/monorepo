@@ -48,6 +48,8 @@ const { readClientObservedBots } =
 const { recentClientRounds } =
   await import("#src/lib/teammates/client-rounds.ts");
 const { reconcileAcceptedClientEvidence } = await import("./reconciliation.ts");
+const { reconcileRawClientObservations } =
+  await import("./archive/reconciliation.ts");
 const { startAcceptedClientMatches, ingestObservationBatch } =
   await import("./ingress.ts");
 
@@ -132,6 +134,7 @@ test("production ignores stored client artifacts even when the provider answers 
     await recentClientRounds([{ puuid, region: "AMERICA_NORTH" }], 10),
   ).toEqual([]);
   expect(await reconcileAcceptedClientEvidence()).toBe(0);
+  expect(await reconcileRawClientObservations()).toBe(0);
   await projectClientGameResult(observation);
   await projectClashEntity({ ...observation, kind: "clash" });
   const batch = { observations: [observation] };

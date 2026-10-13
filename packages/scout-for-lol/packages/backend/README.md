@@ -664,6 +664,36 @@ historical observations cannot supply new prematch, match, timeline, mastery,
 teammate or Clash enrichment there. Existing immutable archives stay readable,
 and devices can still revoke their own credentials while capture is disabled.
 
+### Raw observation archive
+
+Every persisted Scout Client observation is a durable S3 archive job, including
+quarantined observations, partial results, Clash entities and evidence superseded
+by Riot. Admission commits the credential-scrubbed payload and original envelope
+to Postgres before acknowledging it. The existing Temporal ingestion
+reconciliation activity drains bounded pages of 100 archive jobs with four
+concurrent uploads. Archival is independent of result normalization, per-user
+enrichment flags, and canonical match selection. The production hard-disable
+still prevents this worker from reading or writing the client archive queue.
+
+Objects use `scout-client/observations/YYYY/MM/DD/<device>/<observation>/<sha256>.json`
+in the configured private bucket. Each versioned document contains the payload,
+received envelope, device ID, receipt time and ingress body digest. The object
+digest describes the scrubbed archive bytes; the ingress digest describes the
+original submitted observation. Unknown payload fields remain intact. Existing
+rows without an original envelope are labelled `legacy_record`; their stored
+metadata is frozen when first claimed, rather than presented as received fields.
+
+The observation row itself is the transactional outbox, so every older row
+without `rawArchivedAt` is also eligible for backfill. Conditional puts cannot
+overwrite an object; a retry verifies an existing object's bytes before
+checkpointing its key, SHA-256, size and completion time in Postgres. A failed
+upload or crashed worker leaves retryable work. Deadlines order retries fairly
+alongside new arrivals, with no attempt cutoff. Archive failures remain visible
+and do not prevent evidence recovery or ordinary Riot downtime reconciliation.
+Postgres retains payload copies for current readers and projections. The raw
+observation archive is evidence, separate from canonical match/timeline/prematch
+objects and their derived report-lake relations.
+
 The League client names every player by a 36-character UUID — in the
 current-summoner profile, lobbies, match history, end-of-game blocks, and
 replay files alike. Riot's API names them by a 78-character PUUID encrypted

@@ -250,11 +250,20 @@ describe("ingesting observations named by League-client UUID", () => {
     ]);
     const stored = await prisma.scoutClientObservation.findMany({
       orderBy: { sequence: "asc" },
-      select: { localPuuid: true, localLcuUuid: true, payload: true },
+      select: {
+        localPuuid: true,
+        localLcuUuid: true,
+        payload: true,
+        rawEnvelope: true,
+      },
     });
     for (const row of stored) {
       expect(row.localPuuid).toBe(SELF_PUUID);
       expect(row.localLcuUuid).toBe(SELF_UUID);
+      expect(row.rawEnvelope).toMatchObject({
+        source: "received",
+        headers: { localPuuid: SELF_UUID },
+      });
     }
     // The stored payload is the evidence, kept exactly as the client sent it.
     expect(JSON.stringify(stored[1]?.payload)).toContain(FRIEND_UUID);

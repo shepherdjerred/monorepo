@@ -50,6 +50,7 @@ import {
   acceptedClientBindingMatchIds,
 } from "./accepted-observations.ts";
 import { postGameDeliveryMode } from "./dispatch-policy.ts";
+import { receivedObservationEnvelope } from "./archive/envelope.ts";
 import {
   bindObservedLobby,
   bindObservedMatch,
@@ -269,6 +270,7 @@ async function createObservation(
         lobbyId: observation.lobbyId ?? null,
         gameId: observation.gameId ?? null,
         payload: raw.payload ?? Prisma.JsonNull,
+        rawEnvelope: receivedObservationEnvelope(raw),
         bodyDigest: digest,
         disposition: reason === null ? "ACCEPTED" : "QUARANTINED",
         quarantineReason: reason,
