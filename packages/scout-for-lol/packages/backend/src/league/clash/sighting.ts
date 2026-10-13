@@ -12,6 +12,7 @@ import {
   type RawCurrentGameInfo,
 } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
+import type { MatchDataSource } from "@scout-for-lol/domain/match-processing/states.ts";
 
 type ClashSightingSource = "prematch" | "match";
 
@@ -20,6 +21,7 @@ export type ClashSightingWrite = {
   gameId: string;
   puuid: LeaguePuuid;
   source: ClashSightingSource;
+  resultSource?: MatchDataSource;
   queue: ClashCupQueue;
   championId: number;
   teamId: number;
@@ -114,61 +116,50 @@ export async function upsertClashGameSighting(
     queue: incoming.queue,
     observedAt: incoming.observedAt,
   });
-  const existing = await prisma.clashGameSighting.findUnique({
-    where: {
-      platform_gameId_puuid: {
-        platform: incoming.platform,
-        gameId: incoming.gameId,
-        puuid: incoming.puuid,
-      },
-    },
-    select: {
-      source: true,
-      win: true,
-      cupKey: true,
-      cupDay: true,
-      teamRiotId: true,
-    },
-  });
-  const merged = mergeClashSighting({
-    existing: existing ?? undefined,
-    incoming,
-    labels,
-  });
-  await prisma.clashGameSighting.upsert({
-    where: {
-      platform_gameId_puuid: {
-        platform: incoming.platform,
-        gameId: incoming.gameId,
-        puuid: incoming.puuid,
-      },
-    },
-    create: {
-      platform: incoming.platform,
-      gameId: incoming.gameId,
-      puuid: incoming.puuid,
-      source: merged.source,
-      queue: incoming.queue,
-      championId: incoming.championId,
-      teamId: incoming.teamId,
-      observedAt: incoming.observedAt,
-      win: merged.win,
-      teamRiotId: merged.teamRiotId,
-      cupKey: merged.cupKey,
-      cupDay: merged.cupDay,
-    },
-    update: {
-      source: merged.source,
-      queue: incoming.queue,
-      championId: incoming.championId,
-      teamId: incoming.teamId,
-      observedAt: incoming.observedAt,
-      win: merged.win,
-      teamRiotId: merged.teamRiotId,
-      cupKey: merged.cupKey,
-      cupDay: merged.cupDay,
-    },
-  });
+  // Precedence is decided in the same statement as the write, including
+  // concurrent Riot and desktop uploads.
+  await prisma.$executeRaw`
+    INSERT INTO "ClashGameSighting"
+      ("platform", "gameId", "puuid", "source", "resultSource", "queue",
+       "championId", "teamId", "observedAt", "win", "teamRiotId", "cupKey", "cupDay", "updatedAt")
+    VALUES
+      (${incoming.platform}, ${incoming.gameId}, ${incoming.puuid}, ${incoming.source},
+       ${incoming.resultSource ?? "RIOT"}, ${incoming.queue}, ${incoming.championId},
+       ${incoming.teamId}, ${incoming.observedAt}, ${incoming.win},
+       ${labels.teamRiotId}, ${labels.cupKey}, ${labels.cupDay}, NOW())
+    ON CONFLICT ("platform", "gameId", "puuid") DO UPDATE SET
+      "updatedAt" = NOW(),
+      "source" = EXCLUDED."source",
+      "resultSource" = EXCLUDED."resultSource",
+      "queue" = EXCLUDED."queue",
+      "championId" = EXCLUDED."championId",
+      "teamId" = EXCLUDED."teamId",
+      "observedAt" = EXCLUDED."observedAt",
+      "resultConflict" = EXCLUDED."resultSource" = 'SCOUT_CLIENT' AND
+        ("ClashGameSighting"."resultConflict" OR
+          ("ClashGameSighting"."source" = 'match' AND
+            ("ClashGameSighting"."win" IS DISTINCT FROM EXCLUDED."win"
+              OR "ClashGameSighting"."teamId" <> EXCLUDED."teamId"
+              OR "ClashGameSighting"."championId" <> EXCLUDED."championId"
+              OR "ClashGameSighting"."queue" <> EXCLUDED."queue"))),
+      "win" = CASE WHEN EXCLUDED."resultSource" = 'SCOUT_CLIENT' AND
+        ("ClashGameSighting"."resultConflict" OR
+          ("ClashGameSighting"."source" = 'match' AND
+            ("ClashGameSighting"."win" IS DISTINCT FROM EXCLUDED."win"
+              OR "ClashGameSighting"."teamId" <> EXCLUDED."teamId"
+              OR "ClashGameSighting"."championId" <> EXCLUDED."championId"
+              OR "ClashGameSighting"."queue" <> EXCLUDED."queue")))
+        THEN NULL ELSE EXCLUDED."win" END,
+      "teamRiotId" = COALESCE(EXCLUDED."teamRiotId", "ClashGameSighting"."teamRiotId"),
+      "cupKey" = COALESCE(EXCLUDED."cupKey", "ClashGameSighting"."cupKey"),
+      "cupDay" = COALESCE(EXCLUDED."cupDay", "ClashGameSighting"."cupDay")
+    WHERE NOT (
+      "ClashGameSighting"."source" = 'match'
+      AND (EXCLUDED."source" = 'prematch'
+        OR ("ClashGameSighting"."resultSource" = 'RIOT'
+          AND EXCLUDED."resultSource" = 'SCOUT_CLIENT'))
+    )
+  `;
 }
 
 export async function recordClashPrematchSightings(

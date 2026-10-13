@@ -428,6 +428,8 @@ impl ClashRosterId {
 /// Read-only LCU resources addressed by an ID from another LCU payload.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LcuResource {
+    /// A bounded, overlapping page of the authenticated summoner's history.
+    MatchHistoryPage(u32),
     /// One finished game with its full roster and every player's stats.
     MatchHistoryGame(GameId),
     /// One finished game's per-minute frames and objective events.
@@ -447,6 +449,10 @@ impl LcuResource {
     #[must_use]
     pub fn path(self) -> String {
         match self {
+            Self::MatchHistoryPage(begin) => format!(
+                "/lol-match-history/v1/products/lol/current-summoner/matches?begIndex={begin}&endIndex={}",
+                begin.saturating_add(20)
+            ),
             Self::MatchHistoryGame(game_id) => format!("/lol-match-history/v1/games/{game_id}"),
             Self::MatchTimeline(game_id) => {
                 format!("/lol-match-history/v1/game-timelines/{game_id}")

@@ -43,6 +43,7 @@ describe("a Clash roster the Scout Client saw", () => {
       capturedAt: CAPTURED_AT,
     });
     expect(team).toEqual({
+      platformId: null,
       rosterId: OURS,
       tournamentId: "3021",
       name: "Baron Hunters",
@@ -58,11 +59,15 @@ describe("a Clash roster the Scout Client saw", () => {
             abbreviation: "Dragon Pit",
           },
           result: "won",
+          status: null,
+          gameIds: [],
         },
         {
           round: 2,
           opponent: { kind: "team", name: "ELD", abbreviation: "ELD" },
           result: "pending",
+          status: null,
+          gameIds: [],
         },
       ],
       capturedAt: CAPTURED_AT,
@@ -79,15 +84,27 @@ describe("a Clash roster the Scout Client saw", () => {
       bracket: LcuClashBracketSchema.parse({
         matches: [
           { roundId: 1, rosterId1: OURS, rosterId2: "r2", winnerId: "r2" },
-          { roundId: 2, rosterId1: OURS },
+          { roundId: 2, rosterId1: OURS, isBye: true },
         ],
       }),
       capturedAt: CAPTURED_AT,
     });
     expect(lost?.matches).toEqual([
       // The bracket lists r2 in a match but never names it.
-      { round: 1, opponent: { kind: "unknown" }, result: "lost" },
-      { round: 2, opponent: { kind: "bye" }, result: "pending" },
+      {
+        round: 1,
+        opponent: { kind: "unknown" },
+        result: "lost",
+        status: null,
+        gameIds: [],
+      },
+      {
+        round: 2,
+        opponent: { kind: "bye" },
+        result: "pending",
+        status: null,
+        gameIds: [],
+      },
     ]);
     expect(
       projectClientClashTeam({ roster, bracket: null, capturedAt: CAPTURED_AT })

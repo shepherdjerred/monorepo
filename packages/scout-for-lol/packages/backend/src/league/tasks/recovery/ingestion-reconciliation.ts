@@ -12,6 +12,8 @@ import { createLogger } from "#src/logger.ts";
 import { downtimeDetectedTotal } from "#src/metrics/index.ts";
 import { ingestionReconciliationSkipsTotal } from "#src/metrics/recovery.ts";
 import * as Sentry from "@sentry/bun";
+import { reconcileAcceptedClientEvidence } from "#src/scout-client/reconciliation.ts";
+import { reconcileRawClientObservations } from "#src/scout-client/archive/reconciliation.ts";
 
 const logger = createLogger("ingestion-reconciliation");
 
@@ -119,7 +121,26 @@ export async function runIngestionReconciliation(): Promise<void> {
 
 async function reconcileIngestion(): Promise<void> {
   logger.info("Running ingestion reconciliation");
+  for (const [phase, reconcile] of [
+    ["raw-client-archive", reconcileRawClientObservations],
+    ["client-evidence", reconcileAcceptedClientEvidence],
+  ] as const) {
+    try {
+      await reconcile();
+    } catch (error) {
+      logger.error(
+        `Reconciliation failed for ${phase}; durable client work remains retryable`,
+        error,
+      );
+      Sentry.captureException(error, {
+        tags: { source: "ingestion-reconciliation", phase },
+      });
+    }
+  }
+  await reconcileDowntimeIngestion();
+}
 
+async function reconcileDowntimeIngestion(): Promise<void> {
   const lastPollAt = await getLastSuccessfulPollAt();
   const startupAt = new Date();
   const downtime = detectDowntime(lastPollAt, startupAt);

@@ -33,6 +33,8 @@ const PRODUCTION_DENIED_FLAGS = [
   "custom_nights_enabled",
   "duels_enabled",
   "voice_assistant_enabled",
+  "scout_client_ingestion",
+  "scout_client_result_recovery",
 ] as const;
 
 /**
@@ -99,6 +101,8 @@ describe("production hard-disable policy", () => {
         custom_nights_enabled: true,
         duels_enabled: true,
         voice_assistant_enabled: true,
+        scout_client_ingestion: true,
+        scout_client_result_recovery: true,
       }),
     });
 
@@ -117,6 +121,28 @@ describe("production hard-disable policy", () => {
     for (const flag of PRODUCTION_ALLOWED_FLAGS) {
       expect(getFlag(flag, { server: MY_SERVER, user: ME })).toBe(false);
       expect(listGuildsWithFlagEnabled(flag)).toEqual([]);
+    }
+  });
+
+  test("allows Scout Client provider answers in beta", async () => {
+    await initFeatureFlags({
+      environment: { FEATURE_FLAGS_MODE: "disabled" },
+      provider: new StaticProvider({
+        scout_client_ingestion: true,
+        scout_client_result_recovery: true,
+      }),
+    });
+    try {
+      for (const flag of [
+        "scout_client_ingestion",
+        "scout_client_result_recovery",
+      ] as const) {
+        await expect(isPolicyEnabled(flag, { user: SOMEONE })).resolves.toBe(
+          true,
+        );
+      }
+    } finally {
+      await shutdownFeatureFlags();
     }
   });
 

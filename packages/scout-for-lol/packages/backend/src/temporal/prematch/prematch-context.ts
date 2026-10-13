@@ -10,7 +10,7 @@ import type { ScoutPrematchGameRef } from "@scout-for-lol/temporal/pipeline-cont
 import { scoutPrematchGameMatchId } from "@scout-for-lol/temporal/identifiers";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { getAccountsWithState } from "#src/database/player-accounts.ts";
-import { getActiveGame } from "#src/league/api/spectator.ts";
+import { getActiveGameWithClientEvidence as getActiveGame } from "#src/scout-client/prematch.ts";
 import { clientRosterCompletion } from "#src/league/tasks/prematch/client-bot-roster.ts";
 import { isStartedCustomRosterFinal } from "#src/league/tasks/prematch/spectator-roster.ts";
 import { prematchRosterCompletionsTotal } from "#src/metrics/index.ts";

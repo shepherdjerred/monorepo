@@ -1,7 +1,6 @@
 import { open, unlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import nodePath from "node:path";
-import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { z } from "zod";
 import configuration from "#src/configuration.ts";
 import { prisma, type Db } from "#src/database/index.ts";
@@ -11,12 +10,13 @@ import type { AuthenticatedScoutClient } from "./authentication.ts";
 import {
   ReplayContainerError,
   validateReplayContainer,
-  type ReplayProvenance,
 } from "./replay/container.ts";
 import { lcuUuidsFor } from "./identity-alias.ts";
 import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import { drainRequestBody } from "./replay/drain.ts";
 import { resolveReplayProvenance } from "./replay/evidence.ts";
+import type { QualifiedReplayProvenance } from "./replay/evidence-selection.ts";
+import { persistReplayFile } from "./replay/object-store.ts";
 import {
   replayUploadClaimIsStale,
   replayUploadLeaseCutoff,
@@ -100,7 +100,7 @@ function completedReplay(
 }
 
 async function existingReplay(
-  metadata: Pick<ReplayMetadata, "digest" | "gameId">,
+  metadata: Pick<ReplayMetadata, "digest" | "gameId" | "platformId">,
   database: ReplayArtifactDatabase = prisma,
   now = new Date(),
 ): Promise<ReplayUploadResult | null> {
@@ -109,11 +109,20 @@ async function existingReplay(
     select: {
       uploadState: true,
       gameId: true,
+      platformId: true,
       digest: true,
       bytes: true,
       updatedAt: true,
     },
   });
+  if (
+    existing?.platformId != null &&
+    existing.platformId !== metadata.platformId
+  )
+    throw new ReplayUploadError(
+      "Replay digest belongs to a different platform",
+      400,
+    );
   if (existing?.uploadState === "COMPLETED") {
     return completedReplay(existing, metadata.gameId);
   }
@@ -168,7 +177,7 @@ function parseReplayMetadata(
 async function requireReplayProvenance(
   metadata: ReplayMetadata,
   device: AuthenticatedScoutClient,
-): Promise<ReplayProvenance> {
+): Promise<QualifiedReplayProvenance> {
   const provenance = await resolveReplayProvenance(metadata, device);
   if (provenance !== null) return provenance;
   throw new ReplayUploadError(
@@ -217,12 +226,21 @@ async function claimReplayArtifact(
         id: true,
         uploadState: true,
         gameId: true,
+        platformId: true,
         digest: true,
         bytes: true,
         lastError: true,
         updatedAt: true,
       },
     });
+    if (
+      existing?.platformId != null &&
+      existing.platformId !== metadata.platformId
+    )
+      throw new ReplayUploadError(
+        "Replay digest belongs to a different platform",
+        400,
+      );
     if (existing !== null && existing.gameId !== metadata.gameId) {
       throw new ReplayUploadError(
         "Replay digest belongs to a different game",
@@ -253,6 +271,7 @@ async function claimReplayArtifact(
         data: {
           deviceId: device.deviceId,
           gameId: metadata.gameId,
+          platformId: metadata.platformId,
           digest: metadata.digest,
           objectKey,
           bytes: BigInt(metadata.declaredBytes),
@@ -277,6 +296,7 @@ async function claimReplayArtifact(
       },
       data: {
         deviceId: device.deviceId,
+        platformId: metadata.platformId,
         bytes: BigInt(metadata.declaredBytes),
         uploadState: "UPLOADING",
         lastError: null,
@@ -357,20 +377,14 @@ async function uploadReplayObject(
   if (configuration.s3BucketName === undefined) {
     throw new ReplayUploadError("Replay storage is unavailable", 503);
   }
-  await s3.send(
-    new PutObjectCommand({
-      Bucket: configuration.s3BucketName,
-      Key: objectKey,
-      Body: Bun.file(temporaryPath),
-      ContentLength: received.bytes,
-      ContentType: "application/vnd.riot.rofl",
-      Metadata: {
-        sha256: received.digest,
-        gameid: metadata.gameId,
-        source: "scout-client",
-      },
-    }),
-  );
+  await persistReplayFile(s3, {
+    bucket: configuration.s3BucketName,
+    key: objectKey,
+    path: temporaryPath,
+    bytes: received.bytes,
+    digest: received.digest,
+    gameId: metadata.gameId,
+  });
 }
 
 /** How much of an unexpected error's message is kept on the artifact row. */
@@ -439,12 +453,13 @@ async function acceptReplay(
   gameIdInput: string,
   device: AuthenticatedScoutClient,
 ): Promise<ReplayUploadResult> {
-  const metadata = parseReplayMetadata(request, gameIdInput);
-  const provenance = await requireReplayProvenance(metadata, device);
+  const sentMetadata = parseReplayMetadata(request, gameIdInput);
+  const provenance = await requireReplayProvenance(sentMetadata, device);
+  const metadata = { ...sentMetadata, platformId: provenance.platformId };
   const duplicate = await existingReplay(metadata);
   if (duplicate !== null) return duplicate;
 
-  const objectKey = `replays/${metadata.gameId}/${metadata.digest}.rofl`;
+  const objectKey = `replays/${metadata.platformId}/${metadata.gameId}/${metadata.digest}.rofl`;
   const claim = await claimReplayArtifact(metadata, objectKey, device);
   if (claim.state === "completed") return claim.replay;
 

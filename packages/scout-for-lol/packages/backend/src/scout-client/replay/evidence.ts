@@ -14,7 +14,11 @@ import { readArchivedMatchPayload } from "#src/report-lake/receipted-archive.ts"
 import type { AuthenticatedScoutClient } from "#src/scout-client/authentication.ts";
 import { readSelectedLocalCanonicalMatch } from "#src/scout-client/canonical-match.ts";
 import { withRiotIdentities } from "#src/scout-client/identity-alias.ts";
-import type { ReplayProvenance } from "./container.ts";
+import {
+  selectReplayEvidence,
+  type QualifiedReplayProvenance,
+  type ReplayEvidence,
+} from "./evidence-selection.ts";
 import {
   parseObservedReplayProvenance,
   replayProvenanceFromMatch,
@@ -56,18 +60,36 @@ async function ownerAccounts(
 async function observedProvenance(
   claim: ReplayClaimIdentity,
   device: AuthenticatedScoutClient,
-): Promise<ReplayProvenance | null> {
+  accounts: readonly OwnerAccount[],
+): Promise<ReplayEvidence[]> {
   const observedMatches = await prisma.scoutClientObservation.findMany({
     where: {
       device: { ownerId: device.ownerId },
       gameId: claim.gameId,
+      ...(claim.platformId === null
+        ? {}
+        : {
+            platformId: {
+              equals: claim.platformId,
+              mode: "insensitive" as const,
+            },
+          }),
       kind: "post_game",
       disposition: "ACCEPTED",
+      localPuuid: { in: accounts.map((account) => account.puuid) },
     },
-    select: { localPuuid: true, leaguePatch: true, payload: true },
+    select: {
+      localPuuid: true,
+      leaguePatch: true,
+      payload: true,
+      platformId: true,
+    },
+    orderBy: [{ capturedAt: "desc" }, { observationId: "asc" }],
   });
+  const evidence: ReplayEvidence[] = [];
   for (const observedMatch of observedMatches) {
-    if (observedMatch.localPuuid === null) continue;
+    if (observedMatch.localPuuid === null || observedMatch.platformId === null)
+      continue;
     const provenance = parseObservedReplayProvenance({
       // The stored payload names players by League-client UUID; the observer
       // column already holds the translated Riot PUUID.
@@ -75,10 +97,16 @@ async function observedProvenance(
       localPuuid: observedMatch.localPuuid,
       leaguePatch: observedMatch.leaguePatch,
       requestedGameId: claim.gameId,
+      requestedPlatformId: observedMatch.platformId,
     });
-    if (provenance !== null) return provenance;
+    if (provenance !== null)
+      evidence.push({
+        platformId: observedMatch.platformId.toUpperCase(),
+        authority: "observed",
+        provenance,
+      });
   }
-  return null;
+  return evidence;
 }
 
 async function readArchivedMatch(
@@ -105,33 +133,39 @@ async function readArchivedMatch(
 async function archivedProvenance(
   claim: ReplayClaimIdentity,
   accounts: readonly OwnerAccount[],
-): Promise<ReplayProvenance | null> {
+): Promise<ReplayEvidence[]> {
   const platforms = new Set<string>();
   if (claim.platformId !== null) {
     platforms.add(claim.platformId.toUpperCase());
   }
-  for (const account of accounts) {
+  for (const account of claim.platformId === null ? accounts : []) {
     const region = RegionSchema.safeParse(account.region);
     if (region.success) platforms.add(regionToPlatformRoute(region.data));
   }
   const puuids = accounts.map((account) => account.puuid);
+  const evidence: ReplayEvidence[] = [];
   for (const platform of platforms) {
     const riotMatchId = RiotMatchIdSchema.safeParse(
       `${platform}_${claim.gameId}`,
     );
     if (!riotMatchId.success) continue;
+    const archived = await readArchivedMatch(riotMatchId.data);
     const match =
-      (await readSelectedLocalCanonicalMatch(riotMatchId.data)) ??
-      (await readArchivedMatch(riotMatchId.data));
+      archived ?? (await readSelectedLocalCanonicalMatch(riotMatchId.data));
     if (match === null) continue;
     const provenance = replayProvenanceFromMatch(match, puuids);
-    if (provenance !== null) return provenance;
+    if (provenance !== null)
+      evidence.push({
+        platformId: platform,
+        authority: archived === null ? "observed" : "archived",
+        provenance,
+      });
   }
-  return null;
+  return evidence;
 }
 
 /**
- * Whoever can vouch for this game, asked in order of what costs least.
+ * Independent client and archive attestations, resolved by qualified identity.
  *
  * A replay is only worth storing when something can attest to the game it
  * claims to be, because that attestation is what `validateReplayContainer`
@@ -140,14 +174,16 @@ async function archivedProvenance(
  * Requiring the uploading device to have witnessed the game refuses replays
  * for every game played before that device was paired, which is most of them.
  *
- * `null` means nothing can vouch for it yet — not that nothing ever will.
+ * `null` means evidence is absent or ambiguous and remains retryable.
  */
 export async function resolveReplayProvenance(
   claim: ReplayClaimIdentity,
   device: AuthenticatedScoutClient,
-): Promise<ReplayProvenance | null> {
-  const observed = await observedProvenance(claim, device);
-  return (
-    observed ?? (await archivedProvenance(claim, await ownerAccounts(device)))
-  );
+): Promise<QualifiedReplayProvenance | null> {
+  const accounts = await ownerAccounts(device);
+  const [observed, archived] = await Promise.all([
+    observedProvenance(claim, device, accounts),
+    archivedProvenance(claim, accounts),
+  ]);
+  return selectReplayEvidence([...observed, ...archived], claim.platformId);
 }

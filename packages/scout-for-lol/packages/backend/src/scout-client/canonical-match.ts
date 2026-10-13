@@ -10,12 +10,15 @@ import {
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import { prisma } from "#src/database/index.ts";
+import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
 import { platformRouteOf } from "#src/durable/match/match-identity.ts";
 import {
   LOCAL_MATCH_TIMING_DRIFT_MS,
   convertLcuMatchBundle,
 } from "./canonical/lcu-match.ts";
 import { convertLcuTimeline } from "./canonical/lcu-timeline.ts";
+import { storedRawArchiveDescriptor } from "#src/report-lake/durable-receipts.ts";
+import { readArchivedTimelinePayload } from "#src/report-lake/receipted-archive.ts";
 import {
   type IdentityMap,
   lcuUuidsIn,
@@ -121,6 +124,7 @@ async function candidateIdentities(candidate: Candidate): Promise<IdentityMap> {
 export async function readSelectedLocalCanonicalMatch(
   riotMatchId: RiotMatchId,
 ): Promise<RawMatch | null> {
+  if (isFeatureHardDisabled("scout_client_ingestion")) return null;
   const selected = await prisma.scoutClientCanonicalMatch.findUnique({
     where: { riotMatchId },
     include: { sourceObservation: true },
@@ -153,30 +157,85 @@ const TimelineBundleSchema = z.object({
  * would wait on something that never appears.
  */
 export type TimelineSelection =
-  | { readonly source: "RIOT" }
+  | { readonly source: "ARCHIVED"; readonly timeline: RawTimeline }
+  | { readonly source: "RIOT"; readonly clientTimeline?: RawTimeline }
   | { readonly source: "SCOUT_CLIENT"; readonly timeline: RawTimeline | null };
 
 export async function readTimelineSelection(
   riotMatchId: RiotMatchId,
+  expectedMatch?: RawMatch,
 ): Promise<TimelineSelection> {
+  const frozen = await readFrozenTimeline(riotMatchId);
+  if (frozen !== null) return { source: "ARCHIVED", timeline: frozen };
+  if (isFeatureHardDisabled("scout_client_ingestion"))
+    return { source: "RIOT" };
   const selected = await prisma.scoutClientCanonicalMatch.findUnique({
     where: { riotMatchId },
     include: { sourceObservation: true },
   });
-  if (selected === null) return { source: "RIOT" };
-  const bundle = TimelineBundleSchema.safeParse(
-    embeddedPayload(selected.sourceObservation.payload),
-  );
-  if (!bundle.success) return { source: "SCOUT_CLIENT", timeline: null };
-  const identities = await candidateIdentities(selected.sourceObservation);
-  return {
-    source: "SCOUT_CLIENT",
-    timeline: convertLcuTimeline(
+  const platform = platformRouteOf(riotMatchId);
+  const candidates = await prisma.scoutClientObservation.findMany({
+    where: {
+      kind: "post_game",
+      disposition: "ACCEPTED",
+      gameId: riotMatchId.slice(riotMatchId.indexOf("_") + 1),
+      platformId: { equals: platform, mode: "insensitive" },
+    },
+    orderBy: [{ capturedAt: "asc" }, { observationId: "asc" }],
+  });
+  for (const candidate of candidates) {
+    const bundle = TimelineBundleSchema.safeParse(
+      embeddedPayload(candidate.payload),
+    );
+    if (!bundle.success) continue;
+    const identities = await candidateIdentities(candidate);
+    const timeline = convertLcuTimeline(
       riotMatchId,
       translatePayloadIdentities(bundle.data.matchHistory, identities),
       translatePayloadIdentities(bundle.data.timeline, identities),
-    ),
-  };
+    );
+    if (timeline === null || !timelineMatchesResult(timeline, expectedMatch))
+      continue;
+    return selected === null
+      ? { source: "RIOT", clientTimeline: timeline }
+      : { source: "SCOUT_CLIENT", timeline };
+  }
+  return selected === null
+    ? { source: "RIOT" }
+    : { source: "SCOUT_CLIENT", timeline: null };
+}
+
+/** Once used by processing, the archived timeline is immutable across retries. */
+export async function readFrozenTimeline(
+  riotMatchId: RiotMatchId,
+): Promise<RawTimeline | null> {
+  const descriptor = await storedRawArchiveDescriptor(
+    prisma,
+    riotMatchId,
+    "timeline",
+  );
+  return descriptor === null
+    ? null
+    : await readArchivedTimelinePayload(descriptor, riotMatchId);
+}
+
+/** A participant number must identify the same person in both artifacts. */
+export function timelineMatchesResult(
+  timeline: RawTimeline,
+  match: RawMatch | undefined,
+): boolean {
+  return (
+    match === undefined ||
+    (timeline.metadata.matchId === match.metadata.matchId &&
+      timeline.info.participants.length === match.info.participants.length &&
+      timeline.info.participants.every((participant) =>
+        match.info.participants.some(
+          (player) =>
+            player.participantId === participant.participantId &&
+            player.puuid === participant.puuid,
+        ),
+      ))
+  );
 }
 
 function conflictingCandidates(riotMatchId: RiotMatchId): never {
@@ -223,6 +282,7 @@ export async function resolveLocalCanonicalMatch(
   riotMatchId: RiotMatchId,
   now = new Date(),
 ): Promise<RawMatch | null> {
+  if (isFeatureHardDisabled("scout_client_ingestion")) return null;
   const selected = await readSelectedLocalCanonicalMatch(riotMatchId);
   if (selected !== null) return selected;
 

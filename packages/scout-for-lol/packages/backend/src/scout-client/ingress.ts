@@ -11,11 +11,14 @@ import { prisma } from "#src/database/index.ts";
 import { Prisma } from "#generated/prisma/client/index.js";
 import {
   IsoInstantSchema,
-  type RiotMatchId,
   RiotMatchIdSchema,
 } from "@scout-for-lol/domain/identity/brands.ts";
 import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import configuration from "#src/configuration.ts";
+import {
+  isPolicyEnabled,
+  isFeatureHardDisabled,
+} from "#src/configuration/flags.ts";
 import { currentScoutTemporalSupervisor } from "#src/temporal/runtime.ts";
 import { signalScoutClientMatchDispatch } from "#src/temporal/pipeline-starts.ts";
 import {
@@ -34,11 +37,20 @@ import {
 } from "./identity-alias.ts";
 import {
   learnBatchIdentities,
+  gameflowCarriesRoster,
   observationUuids,
   translateObservation,
 } from "./observation-identity.ts";
 import { reconcileProcessedClientBinding } from "./late-binding.ts";
-import { observedPostGameMatchId } from "./lobby-payload.ts";
+import { withObserverPlatform } from "./platform-context.ts";
+import { projectClashEntity } from "./clash-entities.ts";
+import { projectClientGameResult } from "./game-results.ts";
+import {
+  acceptedObservationPlatforms,
+  acceptedClientBindingMatchIds,
+} from "./accepted-observations.ts";
+import { postGameDeliveryMode } from "./dispatch-policy.ts";
+import { receivedObservationEnvelope } from "./archive/envelope.ts";
 import {
   bindObservedLobby,
   bindObservedMatch,
@@ -136,40 +148,6 @@ function payloadContainsPuuid(payload: unknown, puuid: string): boolean {
         );
 }
 
-/**
- * The lists a gameflow session names players in. Their entries aren't
- * validated here: a bot carries no PUUID, and whether the session names
- * anyone must not depend on whether every entry is well-formed.
- */
-const GameflowRosterSchema = z.object({
-  data: z.object({
-    gameData: z.object({
-      teamOne: z.array(z.unknown()).optional(),
-      teamTwo: z.array(z.unknown()).optional(),
-      playerChampionSelections: z.array(z.unknown()).optional(),
-    }),
-  }),
-});
-
-/**
- * A gameflow session naming the game's players, which binds a custom or a
- * duel to its game as surely as a lobby does, so it must name its observer
- * too — in its teams or its champion selections, whichever it carries. A bare
- * phase, or a session before anyone is listed, names nobody and is exempt. A
- * live game frame stays exempt: the Live Client API names players by Riot ID
- * only, never by PUUID, so it can't be checked this way.
- */
-function gameflowCarriesRoster(observation: ScoutClientObservation): boolean {
-  if (observation.kind !== "gameflow") return false;
-  const roster = GameflowRosterSchema.safeParse(observation.payload);
-  if (!roster.success) return false;
-  const { teamOne, teamTwo, playerChampionSelections } =
-    roster.data.data.gameData;
-  return [teamOne, teamTwo, playerChampionSelections].some(
-    (players) => players !== undefined && players.length > 0,
-  );
-}
-
 export function observationQuarantineReason(
   observation: ScoutClientObservation,
   verifiedPuuids: ReadonlySet<string>,
@@ -221,8 +199,7 @@ type ReceivedObservation = {
   readonly sent: ScoutClientObservation;
   /** As sent, minus credential-named keys: what is stored. */
   readonly raw: ScoutClientObservation;
-  /** 
-aw with player identities translated: what every check reads. */
+  /** Raw evidence with player identities translated: what every check reads. */
   readonly observation: ScoutClientObservation;
 };
 
@@ -293,6 +270,7 @@ async function createObservation(
         lobbyId: observation.lobbyId ?? null,
         gameId: observation.gameId ?? null,
         payload: raw.payload ?? Prisma.JsonNull,
+        rawEnvelope: receivedObservationEnvelope(raw),
         bodyDigest: digest,
         disposition: reason === null ? "ACCEPTED" : "QUARANTINED",
         quarantineReason: reason,
@@ -318,6 +296,8 @@ export async function ingestObservationBatch(
   batch: ScoutClientObservationBatch,
   now = new Date(),
 ): Promise<readonly Receipt[]> {
+  if (isFeatureHardDisabled("scout_client_ingestion"))
+    throw new Error("Scout Client ingestion is disabled in production");
   await learnBatchIdentities(device, batch.observations);
   const identities = await readIdentityAliases(
     observationUuids(batch.observations),
@@ -343,7 +323,7 @@ export async function ingestObservationBatch(
         puuid: { in: localPuuids },
         player: { discordId: device.ownerId },
       },
-      select: { puuid: true },
+      select: { puuid: true, region: true },
     }),
     prisma.scoutClientDeviceVersion.findMany({
       where: { deviceId: device.deviceId },
@@ -356,9 +336,15 @@ export async function ingestObservationBatch(
   );
   const attestation = { verifiedPuuids, acceptedAppVersions };
   const receipts: Receipt[] = [];
+  const recoverResults = await isPolicyEnabled("scout_client_result_recovery", {
+    user: device.ownerId,
+  });
   for (const [index, sent] of batch.observations.entries()) {
     const raw = stripped[index] ?? withoutScoutClientCredentials(sent);
-    const observation = translated[index] ?? raw;
+    const observation = withObserverPlatform(
+      translated[index] ?? raw,
+      ownedAccounts,
+    );
     const receipt = await createObservation(
       device,
       { sent, raw, observation },
@@ -367,6 +353,8 @@ export async function ingestObservationBatch(
     );
     await projectPlayerSnapshot(observation, receipt);
     if (receipt.outcome !== "quarantined") {
+      await projectClashEntity(observation);
+      if (recoverResults) await projectClientGameResult(observation);
       await bindObservedLobby(observation);
       await bindObservedMatch(observation);
       await projectObservedGameState(observation);
@@ -378,16 +366,6 @@ export async function ingestObservationBatch(
     data: { lastSeenAt: now },
   });
   return receipts;
-}
-
-function postGameDeliveryMode(
-  observation: ScoutClientObservation,
-): ScoutClientMatchDispatchItem["deliveryMode"] | null {
-  const resource = observationResource(observation.payload);
-  if (resource === "post_game") return "live";
-  return /^match_history_game:\d{1,32}$/u.test(resource ?? "")
-    ? "silent-backfill"
-    : null;
 }
 
 /**
@@ -429,8 +407,6 @@ export function acceptedClientMatchDispatches(
       `${observation.platformId.toUpperCase()}_${observation.gameId}`,
     );
     if (!parsed.success) continue;
-    const deliveryMode = postGameDeliveryMode(observation);
-    if (deliveryMode === null) continue;
     const sourcePuuid = LeaguePuuidSchema.parse(observation.localPuuid);
     const match = parseLocalCanonicalMatch(
       parsed.data,
@@ -444,6 +420,12 @@ export function acceptedClientMatchDispatches(
       identities,
     );
     if (match === null) continue;
+    const deliveryMode = postGameDeliveryMode(
+      observation,
+      match.info.gameEndTimestamp,
+      now,
+    );
+    if (deliveryMode === null) continue;
     const candidate: ScoutClientMatchDispatchItem = {
       riotMatchId: parsed.data,
       sourcePuuid,
@@ -467,30 +449,6 @@ export function acceptedClientMatchDispatches(
 }
 
 /**
- * Select accepted live match identities independently of whether their local
- * payload is complete enough to promote as canonical match data. Binding uses
- * exact roster and match identity evidence, so a late partial observation can
- * still change already-processed Custom and duel projections.
- */
-export function acceptedClientBindingMatchIds(
-  batch: ScoutClientObservationBatch,
-  receipts: readonly Receipt[],
-): readonly RiotMatchId[] {
-  const accepted = new Set(
-    receipts
-      .filter((receipt) => receipt.outcome !== "quarantined")
-      .map((receipt) => receipt.observationId),
-  );
-  const matchIds = new Set<RiotMatchId>();
-  for (const observation of batch.observations) {
-    if (!accepted.has(observation.observationId)) continue;
-    const matchId = observedPostGameMatchId(observation);
-    if (matchId !== null) matchIds.add(matchId);
-  }
-  return [...matchIds].sort((left, right) => left.localeCompare(right));
-}
-
-/**
  * Durably enqueue accepted native matches behind the same serialized ordering
  * contract as Riot discovery. Failure is returned to the client so its outbox
  * retries the already-idempotent observation and signal together.
@@ -499,9 +457,21 @@ export async function startAcceptedClientMatches(
   batch: ScoutClientObservationBatch,
   receipts: readonly Receipt[],
 ): Promise<void> {
+  if (isFeatureHardDisabled("scout_client_ingestion")) return;
+  const platforms = await acceptedObservationPlatforms(
+    receipts
+      .filter((receipt) => receipt.outcome !== "quarantined")
+      .map((receipt) => receipt.observationId),
+  );
+  const contextualBatch = {
+    observations: batch.observations.map((observation) => {
+      const platformId = platforms.get(observation.observationId);
+      return platformId == null ? observation : { ...observation, platformId };
+    }),
+  };
   // Ingest has already learned every alias this batch can teach.
   const starts = acceptedClientMatchDispatches(
-    batch,
+    contextualBatch,
     receipts,
     new Date(),
     await readIdentityAliases(observationUuids(batch.observations)),
@@ -519,7 +489,10 @@ export async function startAcceptedClientMatches(
       ScoutClientMatchDispatchBatchSchema.parse(starts),
     );
   }
-  for (const riotMatchId of acceptedClientBindingMatchIds(batch, receipts)) {
+  for (const riotMatchId of acceptedClientBindingMatchIds(
+    contextualBatch,
+    receipts,
+  )) {
     // A binding can arrive after Riot's run has already passed the Custom and
     // duel stages. Once a durable observation exists, replay only those
     // binding-dependent, idempotent projectors; otherwise the newly started or

@@ -7,6 +7,15 @@ const mocks = vi.hoisted(() => ({
   getBackfilledThroughAt: vi.fn(),
   setBackfilledThroughAt: vi.fn(),
   backfillMatchesToS3: vi.fn(),
+  rawArchive: vi.fn(() => Promise.resolve(0)),
+  clientEvidence: vi.fn(() => Promise.resolve(0)),
+}));
+
+vi.mock("#src/scout-client/archive/reconciliation.ts", () => ({
+  reconcileRawClientObservations: mocks.rawArchive,
+}));
+vi.mock("#src/scout-client/reconciliation.ts", () => ({
+  reconcileAcceptedClientEvidence: mocks.clientEvidence,
 }));
 
 vi.mock("#src/league/tasks/recovery/app-state.ts", () => ({
@@ -70,6 +79,8 @@ describe("runIngestionReconciliation", () => {
     mocks.getBackfilledThroughAt.mockReset();
     mocks.setBackfilledThroughAt.mockReset();
     mocks.backfillMatchesToS3.mockReset();
+    mocks.rawArchive.mockReset().mockResolvedValue(0);
+    mocks.clientEvidence.mockReset().mockResolvedValue(0);
     storedCompletedAt = undefined;
     storedBackfilledThroughAt = undefined;
     mocks.getBackfilledThroughAt.mockImplementation(() =>
@@ -128,6 +139,22 @@ describe("runIngestionReconciliation", () => {
       expect.any(Date),
     );
   });
+
+  test.each([
+    { phase: "raw archive", task: mocks.rawArchive },
+    { phase: "client projection", task: mocks.clientEvidence },
+  ])(
+    "$phase failure is isolated from successful Riot downtime reconciliation",
+    async ({ task }) => {
+      task.mockRejectedValueOnce(new Error("Client dependency unavailable"));
+      mocks.getLastSuccessfulPollAt.mockResolvedValue(
+        new Date(Date.now() - 3 * 60 * 60 * 1000),
+      );
+      await runIngestionReconciliation();
+      expect(mocks.backfillMatchesToS3).toHaveBeenCalledOnce();
+      expect(mocks.setReconciliationCompletedAt).toHaveBeenCalledOnce();
+    },
+  );
 
   test("a partial backfill leaves its window to be backfilled again", async () => {
     mocks.getLastSuccessfulPollAt.mockImplementation(() =>

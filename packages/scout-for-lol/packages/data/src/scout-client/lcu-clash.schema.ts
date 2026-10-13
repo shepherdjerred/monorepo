@@ -48,6 +48,9 @@ export const LcuClashBracketMatchSchema = z
     rosterId2: IdSchema.optional(),
     winnerId: IdSchema.optional(),
     status: z.string().optional(),
+    isBye: z.boolean().optional(),
+    gameId: IdSchema.optional(),
+    gameIds: z.array(IdSchema).optional(),
   })
   .loose();
 
@@ -63,6 +66,8 @@ export const LcuClashBracketSchema = z
   .object({
     id: IdSchema.optional(),
     size: z.number().optional(),
+    tournamentId: IdSchema.optional(),
+    status: z.string().optional(),
     matches: z.array(LcuClashBracketMatchSchema).optional(),
     rosters: z.array(LcuClashBracketRosterSchema).optional(),
   })

@@ -69,6 +69,18 @@ test("never wants a replay it already rejected", async () => {
   });
 });
 
+test("a stored digest cannot be offered against a different platform", async () => {
+  mocks.artifactFindUnique.mockResolvedValue({
+    uploadState: "COMPLETED",
+    gameId: "123",
+    platformId: "NA1",
+    lastError: null,
+  });
+  await expect(
+    decideReplayOffer("123", { ...OFFER, platformId: "EUW1" }, DEVICE),
+  ).resolves.toMatchObject({ decision: "never" });
+});
+
 test("never wants a digest already stored against another game", async () => {
   mocks.artifactFindUnique.mockResolvedValue({
     uploadState: "COMPLETED",

@@ -660,6 +660,45 @@ which open histories recorded.
 
 ## Scout Client player identity
 
+Scout Client is beta-only. Production hard-disables `scout_client_ingestion`
+and `scout_client_result_recovery` before local overrides or Flipt evaluation.
+The managed production declarations also have false defaults and no rollouts;
+beta enables both flags. Pairing, check-ins, uploads and client-data enrichment
+remain unavailable in production even if a provider answers true. Accepted
+historical observations cannot supply new prematch, match, timeline, mastery,
+teammate or Clash enrichment there. Existing immutable archives stay readable,
+and devices can still revoke their own credentials while capture is disabled.
+
+### Raw observation archive
+
+Every persisted Scout Client observation is a durable S3 archive job, including
+quarantined observations, partial results, Clash entities and evidence superseded
+by Riot. Admission commits the credential-scrubbed payload and original envelope
+to Postgres before acknowledging it. The existing Temporal ingestion
+reconciliation activity drains bounded pages of 100 archive jobs with four
+concurrent uploads. Archival is independent of result normalization, per-user
+enrichment flags, and canonical match selection. The production hard-disable
+still prevents this worker from reading or writing the client archive queue.
+
+Objects use `scout-client/observations/YYYY/MM/DD/<device>/<observation>/<sha256>.json`
+in the configured private bucket. Each versioned document contains the payload,
+received envelope, device ID, receipt time and ingress body digest. The object
+digest describes the scrubbed archive bytes; the ingress digest describes the
+original submitted observation. Unknown payload fields remain intact. Existing
+rows without an original envelope are labelled `legacy_record`; their stored
+metadata is frozen when first claimed, rather than presented as received fields.
+
+The observation row itself is the transactional outbox, so every older row
+without `rawArchivedAt` is also eligible for backfill. Conditional puts cannot
+overwrite an object; a retry verifies an existing object's bytes before
+checkpointing its key, SHA-256, size and completion time in Postgres. A failed
+upload or crashed worker leaves retryable work. Deadlines order retries fairly
+alongside new arrivals, with no attempt cutoff. Archive failures remain visible
+and do not prevent evidence recovery or ordinary Riot downtime reconciliation.
+Postgres retains payload copies for current readers and projections. The raw
+observation archive is evidence, separate from canonical match/timeline/prematch
+objects and their derived report-lake relations.
+
 The League client names every player by a 36-character UUID — in the
 current-summoner profile, lobbies, match history, end-of-game blocks, and
 replay files alike. Riot's API names them by a 78-character PUUID encrypted
@@ -713,14 +752,40 @@ is derived only when provable — from kill counts, or the timeline's first kill
 when both teams took one — and a match whose required "first" can't be proven
 is refused.
 
-Once a client payload is a match's canonical one, its timeline comes from that
-client too. `fetchAndRecordTimeline` (`match-report-standard.ts`) checks
-`readTimelineSelection` before asking Riot, so the report render, Dares,
-challenges, duels, and late binding all read the client's timeline without
-knowing its source, and it is staged into the lake as `timeline_scout_client`.
-A client that sent no timeline is a final miss rather than a retry, because Riot
-can't see the game and none is ever coming: Dares record missing coverage and
-duels go to organizer review.
+Timeline selection is independent of result selection. Riot supplies its
+timeline when available; accepted client timeline observations can fill a
+missing timeline even for a Riot result. Participant IDs must identify the
+same players in both artifacts. A required missing timeline retries while
+desktop recovery continues; optional reports may render without it. Once a
+timeline has been archived, processing retries use those pinned bytes.
+
+### Partial local results
+
+`canonical/local-result.ts` maps complete terminal history rosters into the
+domain `GameResult` contract without requiring EOG, timing or aliases for
+every opponent. Riot PUUIDs, local UUIDs, bots and unresolved identities remain
+distinct. Missing statistics are null; explicit zeroes remain zeroes. A list
+row, inconsistent game identity or conflicting team outcome is not a result.
+
+`game-results.ts` projects accepted evidence into `ScoutClientGameResult`,
+exposes owner-scoped scoreboards through `scoutClient.results`, and supplies
+tracked-player Clash sightings without dispatching financial or progression
+effects. The query pages games and loads all their evidence, returning resolved
+results and explicit conflict identities. The paired-client history page renders
+these scoreboards even when a full graphic report lacks inputs. Disagreeing
+client outcomes remain unresolved; Riot can resolve them. An already-archived
+match pins the published scoreboard; late observations remain evidence. These
+partial results do not masquerade as Match-V5 inputs to the graphic report pipeline.
+
+The existing Temporal ingestion-reconciliation activity also reprojects one
+bounded page of client evidence. Quarantined evidence is rechecked against the
+same ownership, authenticated-version, observer and timestamp gates. Successful
+acceptance records the previous reason in an audit row; new aliases can make
+old evidence attributable without replacing its body. Per-observation version,
+attempt time and completion checkpoints survive worker restarts. Failed rows retain a retry
+deadline and do not starve the page. Missing routing metadata is derived only
+from the verified observer's registered accounts. Raw payloads and their
+idempotency digests remain unchanged.
 
 ### Replay files
 
@@ -737,6 +802,12 @@ SDK's default per-request checksum cannot hash a streamed body and failed every
 replay upload. A failure that isn't a typed rejection is recorded on the
 artifact's `lastError` with its own message, and the upload is `FAILED`, which
 the device retries; a `REJECTED` upload is final.
+
+Replay evidence is joined by platform and game ID. Client and archived evidence
+are consulted independently, with the archive pinning an existing fingerprint.
+A bare ID that resolves to multiple platforms remains deferred. New artifacts
+retain the verified platform and use it in their object-store key; legacy
+artifacts retain their original keys and unqualified metadata.
 
 ### When a client payload becomes the match
 
@@ -773,9 +844,18 @@ Riot's Clash-V1 API publishes schedules, teams and registrations but never a
 bracket or a result. The `clash-snapshot` schedule owns `ClashTournament`,
 `ClashTeam` and `ClashRegistration`, and replaces them wholesale on each run,
 so client data is never projected into them. `league/clash/client-clash.ts`
-reads each tracked player's latest `clash_roster` and `clash_bracket`
-snapshots at query time instead. Only snapshots from the last three days count,
-so last weekend's cup doesn't read as this one's.
+reads independently addressed roster and bracket entities instead. Current
+views use a freshness window; history reads retained entity projections per
+tournament, each pointing to its accepted observation. Joins require the
+same platform and compatible tournament/bracket identity. Opponent rosters
+enrich names without replacing the player's roster. A bye requires explicit
+evidence, and an unknown winner does not become a loss.
+
+An explicit single-game bracket link can acquire its outcome from a completed
+tracked-member game. Riot takes precedence over client results; contradictory
+client outcomes remain unresolved. Multiple linked games do not imply a series
+winner. Unknown tournament IDs stay unknown; observation-week buckets retain
+their evidence across weekends without assigning a cup identity.
 
 The projection fills two gaps:
 
@@ -790,9 +870,18 @@ unrecognised payload projects to nothing rather than failing.
 
 ### Prematch coverage
 
-Prematch still comes from Riot's Spectator API. Whether the client should build
-prematch itself depends on how often Spectator misses a game the client saw,
-so `scout-client/prematch-coverage.ts` measures it: over the last day (less a
+`scout-client/prematch.ts` reads Riot Spectator and fresh accepted gameflow
+evidence independently. Riot owns its reported game facts. A unique matching
+team/champion/spell slot can gain a hidden identity from the client, and a
+complete started client roster can supply a game Spectator did not return.
+The adapter joins separate champion selections to roster players only by a
+unique internal name and matching champion; stated roster fields take precedence.
+Missing required display fields, stale observations, terminal sessions and
+champion select cannot create a prematch. Discovery and capture use the same
+resolver and existing game-scoped workflow, so this creates no second
+notification path.
+
+`scout-client/prematch-coverage.ts` measures misses: over the last day (less a
 15-minute grace), `scout_client_observed_games{custom}` counts games a client
 reported in progress and `scout_client_games_without_prematch{custom}` those
 with no `raw-archive-prematch` receipt. Both read -1 when the sweep fails.

@@ -23,7 +23,7 @@ import { listIntentsForMatch } from "#src/database/durable/intent-repository.ts"
 import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
 import { getActiveServerIds } from "#src/discord/utils/guild-membership.ts";
 import { prematchDeliveryKeyPrefix } from "#src/durable/match/delivery-intents.ts";
-import { getActiveGame } from "#src/league/api/spectator.ts";
+import { getActiveGameWithClientEvidence as getActiveGame } from "#src/scout-client/prematch.ts";
 import { LIVE_GAME_TTL_MS } from "#src/temporal/prematch/prematch-intents.ts";
 import { createLogger } from "#src/logger.ts";
 import { prematchDetectionsTotal } from "#src/metrics/index.ts";

@@ -123,6 +123,7 @@ beforeEach(() => {
   mocks.findMany.mockResolvedValue([
     {
       localPuuid: LOCAL_PUUID,
+      platformId: "NA1",
       leaguePatch: LEAGUE_PATCH,
       payload: {
         resource: "match_history_game:123",
@@ -345,6 +346,7 @@ test("accepts a replay that names its player by League-client UUID once aliased"
   mocks.findMany.mockResolvedValue([
     {
       localPuuid: LOCAL_PUUID,
+      platformId: "NA1",
       leaguePatch: LEAGUE_PATCH,
       payload: {
         resource: "match_history_game:123",
@@ -525,6 +527,7 @@ test("requires the post-game payload to name the requested game", async () => {
   mocks.findMany.mockResolvedValue([
     {
       localPuuid: LOCAL_PUUID,
+      platformId: "NA1",
       leaguePatch: LEAGUE_PATCH,
       payload: {
         resource: "match_history_game:124",
@@ -533,6 +536,24 @@ test("requires the post-game payload to name the requested game", async () => {
     },
   ]);
 
+  await expect(
+    uploadReplay(replayRequest(replayFixture()), "123", DEVICE),
+  ).rejects.toMatchObject({ status: 409 });
+  expect(mocks.create).not.toHaveBeenCalled();
+});
+
+test("refuses replay evidence whose payload contradicts its qualified platform", async () => {
+  mocks.findMany.mockResolvedValue([
+    {
+      localPuuid: LOCAL_PUUID,
+      platformId: "NA1",
+      leaguePatch: LEAGUE_PATCH,
+      payload: {
+        resource: "match_history_game:123",
+        data: { ...MATCH_HISTORY, platformId: "EUW1" },
+      },
+    },
+  ]);
   await expect(
     uploadReplay(replayRequest(replayFixture()), "123", DEVICE),
   ).rejects.toMatchObject({ status: 409 });

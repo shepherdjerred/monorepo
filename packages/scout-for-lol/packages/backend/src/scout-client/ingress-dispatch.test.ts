@@ -3,16 +3,14 @@ import {
   RawMatchSchema,
   ScoutClientObservationBatchSchema,
 } from "@scout-for-lol/data";
-import {
-  acceptedClientBindingMatchIds,
-  acceptedClientMatchDispatches,
-} from "./ingress.ts";
+import { acceptedClientMatchDispatches } from "./ingress.ts";
+import { acceptedClientBindingMatchIds } from "./accepted-observations.ts";
 import { LOCAL_CANONICAL_DELAY_MS } from "./canonical-match.ts";
 
 const fixture = RawMatchSchema.parse(
   await Bun.file("../../testdata/rift.json").json(),
 );
-const now = new Date("2026-09-21T12:00:00.000Z");
+const now = new Date(fixture.info.gameEndTimestamp + 60_000);
 
 function observation(args: {
   readonly observationId: string;
@@ -115,6 +113,31 @@ describe("native match dispatch selection", () => {
         now,
       ),
     ).toMatchObject([{ readyAt: now.toISOString() }]);
+  });
+
+  test("recovers a delayed completion silently and rejects a future game end", () => {
+    const row = observation({
+      observationId: "00000000-0000-4000-8000-000000000010",
+      sequence: 10,
+      resource: "post_game",
+    });
+    const batch = ScoutClientObservationBatchSchema.parse({
+      observations: [row],
+    });
+    expect(
+      acceptedClientMatchDispatches(
+        batch,
+        [accepted(row.observationId)],
+        new Date(now.getTime() + 3_600_000),
+      ),
+    ).toMatchObject([{ deliveryMode: "silent-backfill" }]);
+    expect(
+      acceptedClientMatchDispatches(
+        batch,
+        [accepted(row.observationId)],
+        new Date(now.getTime() - 3_600_000),
+      ),
+    ).toEqual([]);
   });
 
   test("does not dispatch partial or quarantined evidence", () => {

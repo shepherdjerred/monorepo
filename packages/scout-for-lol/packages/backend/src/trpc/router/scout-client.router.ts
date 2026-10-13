@@ -4,6 +4,7 @@ import { z } from "zod";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { prisma } from "#src/database/index.ts";
+import { readClientGameResults } from "#src/scout-client/game-results.ts";
 import {
   protectedProcedure,
   router,
@@ -27,6 +28,14 @@ async function requireClientFeature(discordId: DiscordAccountId) {
 }
 
 export const scoutClientRouter = router({
+  results: protectedProcedure
+    .input(
+      z.strictObject({ limit: z.number().int().min(1).max(100).default(20) }),
+    )
+    .query(async ({ ctx, input }) => {
+      const owner = await requireClientFeature(ctx.user.discordId);
+      return await readClientGameResults(owner, input.limit);
+    }),
   pairing: protectedProcedure
     .input(z.strictObject({ pairingId: z.uuid() }))
     .query(async ({ ctx, input }) => {

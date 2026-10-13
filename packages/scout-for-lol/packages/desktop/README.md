@@ -41,18 +41,19 @@ gameplay data.
 Clash capture includes check-in, invitations, tournament state, rewards, and
 history; mastery capture preserves the client's season-milestone fields.
 
-Each profile endpoint is read on its own: one that fails, as the Clash
-endpoints do outside a tournament window, records its `lcu_read` diagnostic
-and the rest still run. A pass fails when no endpoint returned anything (a 404
-returns nothing), or when the outbox can't keep what was read. Reads share a
-20-second budget, so a stalled League client can't hold the pass for every
-read's timeout. Reads past the budget wait for the next pass and record a
-`profile_pass` diagnostic. After the
-fixed Clash endpoints, the pass follows the player's own roster ID to the
-resources only an ID reaches: that roster, its record, its bracket, and its
-tournament (`collect_clash_details`). Invited rosters are not followed. The
-server keeps one snapshot per player and resource, so a second roster would
-replace the player's own.
+History, profile and Clash collection use independent workers, outside the
+gameflow/end-screen loop. Their scheduling cadences are 30, 60 and 10 seconds;
+a running pass finishes before another starts. Account switches clear each
+worker's deduplication cache. Started gameflow sessions also emit a heartbeat
+every 30 seconds, so unchanged rosters remain fresh on the server.
+
+Clash overview and entity reads have separate 20-second budgets. Reads rotate
+between passes so an unavailable endpoint cannot starve the rest. The entity
+pass follows observed roster, bracket and tournament references, including
+opponents and invited rosters. The player's roster retains its primary
+resource name; additional entities use `resource:id`, so they cannot replace
+one another. Each failed endpoint records a diagnostic and leaves the other
+reads eligible.
 The field names those IDs come from are the best available description of the
 League client's Clash payloads, written before a Clash window could confirm
 them. A name that never appears reads nothing. Every ID is parsed to its own
@@ -78,10 +79,25 @@ Riot one. The game ID in each path is parsed from a League-client payload as a
 positive integer (`GameId`); `LcuResource` is the only way a path takes a
 variable segment.
 
-The bundle waits, still pending in the outbox, until the League client serves
-the full game; the one-player list row is never sent in its place. A missing
-timeline doesn't hold the game back. Each read records a `read_post_game`
-diagnostic with its outcome and no identifiers.
+The history worker scans the newest page and one overlapping older page per
+pass, checkpointed by signed-in account. An exhausted scan restarts daily.
+Gameflow, EOG, Clash and local replay references also persist game hints, so a
+game need not appear in the newest history page to be recovered. Full game
+reads must agree with the requested ID, platform and observer before becoming
+qualified recovery work.
+
+Result and timeline collection have separate durable checkpoints. Full history
+is sent even without EOG or timing; a list row remains discovery evidence.
+Missing artifacts retry with bounded backoff and no attempt cutoff. Recovery
+checks four due games per pass and preserves progress across restart. A failed
+game does not prevent the others from being collected. The backend can retain
+a normalized scoreboard even when these fragments cannot form a complete
+Match-V5 document. After pairing, the approval page links to recovered games.
+
+Existing local replay files are offered independently. Temporary server
+deferrals remain retryable, with backoff up to one hour. An outbox migration
+reoffers files older builds abandoned for missing evidence. Permanent server
+validation rejections remain terminal. The client does not download replays.
 
 ## Lobby and game identity
 
@@ -108,6 +124,12 @@ such rather than retried, since a client that started mid-game will never see
 the lobby that is already gone. A remembered lobby stops being eligible after
 fifteen minutes, because a stale key would attach one game's roster to another,
 which is worse than having no key at all.
+
+Transient lobby joins, EOG fragments and timing are scoped to the signed-in
+observer. Upgrading preserves older unqualified rows in separate SQLite tables;
+they cannot be attributed safely and do not participate in new joins. History
+recovery itself is keyed by observer, platform and game ID. EOG enrichment must
+also agree with the full game's creation time and any stated platform.
 
 ## Diagnostics
 

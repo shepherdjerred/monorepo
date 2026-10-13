@@ -40,7 +40,7 @@ export const clashRouter = router({
     return {
       tournaments: await readClashSchedule(),
       resultsNote:
-        "Current Clash games are pre-match only. Riot does not publish results, so Scout cannot score them.",
+        "Riot supplies the schedule. Scout Client can add brackets and results when a tracked player observes them.",
     };
   }),
   roster: webProcedure.input(GuildInputSchema).query(async ({ ctx, input }) => {
@@ -58,8 +58,9 @@ export const clashRouter = router({
       await assertClashGuildReadable(ctx.user, input.guildId, "history");
       return {
         cups: await readClashHistoryForGuild(input.guildId),
+        brackets: await readClientClashBracketsForGuild(input.guildId, true),
         resultsNote:
-          "Past Clash lobbies Scout saw. Current weekends have no score. Games through Feb 2026 may show a result.",
+          "Past Clash games and client-observed brackets. Results appear when Riot or Scout Client supplies a completed game.",
       };
     }),
 });

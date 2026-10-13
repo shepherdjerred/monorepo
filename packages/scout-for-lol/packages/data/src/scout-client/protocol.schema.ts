@@ -167,11 +167,11 @@ export function isScoutClientCredentialKey(key: string): boolean {
   );
 }
 
-function payloadWithoutCredentials(
+export function withoutScoutClientPayloadCredentials(
   value: ObservationPayload,
 ): ObservationPayload {
   if (Array.isArray(value)) {
-    return value.map((item) => payloadWithoutCredentials(item));
+    return value.map((item) => withoutScoutClientPayloadCredentials(item));
   }
   return value === null || typeof value !== "object"
     ? value
@@ -179,7 +179,7 @@ function payloadWithoutCredentials(
         Object.entries(value).flatMap(([key, child]) =>
           isScoutClientCredentialKey(key)
             ? []
-            : [[key, payloadWithoutCredentials(child)]],
+            : [[key, withoutScoutClientPayloadCredentials(child)]],
         ),
       );
 }
@@ -198,7 +198,7 @@ export function withoutScoutClientCredentials(
 ): ScoutClientObservation {
   return {
     ...observation,
-    payload: payloadWithoutCredentials(observation.payload),
+    payload: withoutScoutClientPayloadCredentials(observation.payload),
   };
 }
 export type ScoutClientObservationBatch = z.infer<

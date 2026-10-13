@@ -105,6 +105,13 @@ function everythingExcept(...allowed: string[]): string[] {
 export default defineArchitecture({
   boundaries: [
     {
+      name: "client-normalizers-are-pure",
+      comment:
+        "Client adapters validate evidence without database, transport, workflow or effect dependencies.",
+      from: "scout-client/canonical",
+      to: everythingExcept("scout-client", "durable"),
+    },
+    {
       name: "configuration-is-a-leaf",
       comment:
         "`configuration/` parses the deployment's settings and is read during startup, before a " +

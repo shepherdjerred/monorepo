@@ -14,7 +14,6 @@ import {
   buildPrematchSource,
   listParam,
   withLakeQueryRetry,
-  scalarParam,
   type SqlFragment,
 } from "#src/reports/duckdb/lake.ts";
 import {
@@ -133,8 +132,8 @@ async function loadClashLakeRows(puuids: string[]): Promise<LakeClashRow[]> {
       params: [listParam(puuids), listParam(["clash", "aram clash"])],
     });
     const matches = buildMatchesSource(files, {
-      sql: "puuid IN (SELECT unnest(?)) AND queue = ?",
-      params: [listParam(puuids), scalarParam("clash")],
+      sql: "puuid IN (SELECT unnest(?)) AND queue IN (SELECT unnest(?))",
+      params: [listParam(puuids), listParam(["clash", "aram clash"])],
     });
     const rows: LakeClashRow[] = [];
     if (prematch !== undefined) {

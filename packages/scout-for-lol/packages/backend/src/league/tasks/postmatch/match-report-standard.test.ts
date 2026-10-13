@@ -17,6 +17,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("#src/scout-client/canonical-match.ts", () => ({
   readTimelineSelection: mocks.selection,
+  readFrozenTimeline: () => Promise.resolve(null),
 }));
 vi.mock("#src/report-store/live-ingest.ts", () => ({
   recordTimelineForReportStore: mocks.record,
@@ -118,9 +119,7 @@ describe("timelines for client-sourced matches", () => {
     expect(mocks.fetchMatchTimeline).not.toHaveBeenCalled();
   });
 
-  test("treats a client match without a timeline as a final miss", async () => {
-    // Riot can't see the game, so even a required timeline is never coming;
-    // retrying would block the match forever.
+  test("keeps required client timeline evidence retryable", async () => {
     mocks.selection.mockResolvedValueOnce({
       source: "SCOUT_CLIENT",
       timeline: null,
@@ -130,7 +129,7 @@ describe("timelines for client-sourced matches", () => {
 
     await expect(
       fetchTimelineForProgression(fixture.match, matchId, fixture.players),
-    ).resolves.toBeUndefined();
+    ).rejects.toThrow("Timeline lake staging failed");
     expect(mocks.record).not.toHaveBeenCalled();
     expect(mocks.fetchMatchTimeline).not.toHaveBeenCalled();
   });

@@ -168,6 +168,7 @@ export type FlagName =
   | "mvp_votes_enabled"
   | "initial_match_history_import_enabled"
   | "scout_client_ingestion"
+  | "scout_client_result_recovery"
   | "scout_operations_console_enabled"
   | "scout_durable_orchestration_enabled"
   | `scout_support_${"conversations" | "report_action"}_enabled`
@@ -185,13 +186,14 @@ type AssertFlagNameSubset<T extends ScoutBooleanFlagKey> = T;
 export type PolicyFlagName = AssertFlagNameSubset<FlagName>;
 
 /**
- * Product surfaces that are permanently excluded from production. This policy
+ * Product surfaces excluded from production until explicitly promoted. This policy
  * sits above both the local registry and Flipt so an operator override cannot
  * accidentally expose a forbidden production surface.
  *
  * The set is deliberately narrow: real-money-shaped Bryan Bucks surfaces
  * (wallets, betting, parlays, transfers, and the Dares funded from them),
- * custom games and duels, and the voice assistant, which captures audio.
+ * custom games and duels, the voice assistant, which captures audio, and
+ * Scout Client capture and enrichment while its rollout remains beta-only.
  * Everything else is governed by its
  * ordinary flag, so a surface that is merely beta today stays a Flipt
  * decision rather than a code change.
@@ -207,6 +209,8 @@ const PRODUCTION_HARD_DISABLED_FLAGS: ReadonlySet<FlagName> = new Set<FlagName>(
     "custom_nights_enabled",
     "duels_enabled",
     "voice_assistant_enabled",
+    "scout_client_ingestion",
+    "scout_client_result_recovery",
   ],
 );
 
@@ -411,12 +415,14 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
     overrides: [],
   },
   scout_client_ingestion: {
-    // Pairing and ingestion are available to every account through Flipt's
-    // managed environment rollout. The compatibility registry remains off so
+    // Pairing and ingestion are available to beta accounts through Flipt's
+    // managed environment rollout. Production is hard-disabled above.
+    // The compatibility registry remains off so
     // a provider outage fails closed instead of opening a new ingress surface.
     default: false,
     overrides: [],
   },
+  scout_client_result_recovery: { default: false, overrides: [] },
   /**
    * The "Hey Scout" voice assistant (`/scout join` + `/scout leave`).
    *

@@ -15,6 +15,7 @@ import {
   type Region,
 } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
+import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
 import {
   clashScheduleSightingWindow,
   formatClashThemeLabel,
@@ -85,7 +86,7 @@ export type ClashHistorySighting = {
   championName: string;
   queue: string;
   matchIndex: number;
-  outcome: "lobby" | "win" | "loss";
+  outcome: "lobby" | "win" | "loss" | "unresolved";
 };
 
 export type ClashHistoryPlayer = {
@@ -145,7 +146,12 @@ export async function readClashHistoryForGuild(
   const puuids = accounts.map((account) => account.puuid);
   const [sightings, memberships] = await Promise.all([
     prisma.clashGameSighting.findMany({
-      where: { puuid: { in: puuids } },
+      where: {
+        puuid: { in: puuids },
+        ...(isFeatureHardDisabled("scout_client_ingestion")
+          ? { resultSource: "RIOT" }
+          : {}),
+      },
       orderBy: [{ observedAt: "asc" }],
     }),
     prisma.clashMembershipHistory.findMany({
@@ -279,9 +285,10 @@ function membershipForSighting(
 function sightingOutcome(
   sighting: Pick<SightingRow, "source" | "win">,
 ): ClashHistorySighting["outcome"] {
-  if (sighting.source !== "match" || sighting.win === null) {
+  if (sighting.source !== "match") {
     return "lobby";
   }
+  if (sighting.win === null) return "unresolved";
   return sighting.win ? "win" : "loss";
 }
 

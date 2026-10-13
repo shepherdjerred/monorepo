@@ -59,7 +59,10 @@ export function ScoutClientPairingCard(props: {
           {approved ? (
             <p className="text-sm">
               Approved. You can return to Scout Client; it will finish pairing
-              automatically.
+              automatically.{" "}
+              <a className="underline" href="/app/scout-client/history">
+                View your recovered games.
+              </a>
             </p>
           ) : mayApprove ? (
             <Button

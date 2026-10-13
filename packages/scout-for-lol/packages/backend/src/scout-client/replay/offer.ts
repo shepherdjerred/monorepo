@@ -59,7 +59,12 @@ export async function decideReplayOffer(
 ): Promise<ReplayOfferResult> {
   const existing = await prisma.scoutClientReplayArtifact.findUnique({
     where: { digest: offer.digest },
-    select: { uploadState: true, gameId: true, lastError: true },
+    select: {
+      uploadState: true,
+      gameId: true,
+      platformId: true,
+      lastError: true,
+    },
   });
   if (existing !== null && existing.gameId !== gameId) {
     return {
@@ -67,6 +72,15 @@ export async function decideReplayOffer(
       reason: "This replay is already stored against a different game",
     };
   }
+  if (
+    existing?.platformId != null &&
+    offer.platformId != null &&
+    existing.platformId !== offer.platformId.toUpperCase()
+  )
+    return {
+      decision: "never",
+      reason: "This replay is stored against a different platform",
+    };
   if (existing?.uploadState === "COMPLETED") {
     return { decision: "have", reason: "Already stored" };
   }
@@ -83,8 +97,7 @@ export async function decideReplayOffer(
   );
   if (provenance === null) {
     // Deliberately not "never": Riot may yet archive the match, and another of
-    // this owner's clients may yet report it. The client bounds its own
-    // retries so a game nobody will ever vouch for stops costing anything.
+    // this owner's clients may yet report it. A deferral remains retryable.
     return {
       decision: "later",
       reason: "No match evidence yet from this account's clients or from Riot",

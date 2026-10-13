@@ -243,23 +243,25 @@ model ClashMembershipHistory {
 }
 
 // One Clash lobby or finished match Scout saw a tracked player in.
-// source=prematch has no outcome; source=match may set win (pre-Feb leftover).
+// source=prematch has no outcome; source=match carries Riot or validated client results.
 model ClashGameSighting {
-  id         Int      @id @default(autoincrement())
-  platform   String
-  gameId     String
-  puuid      String
-  source     String
-  queue      String
-  championId Int
-  teamId     Int
-  observedAt DateTime
-  win        Boolean?
-  teamRiotId String?
-  cupKey     String?
-  cupDay     String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id             Int      @id @default(autoincrement())
+  platform       String
+  gameId         String
+  puuid          String
+  source         String
+  resultSource   String   @default("RIOT")
+  resultConflict Boolean  @default(false)
+  queue          String
+  championId     Int
+  teamId         Int
+  observedAt     DateTime
+  win            Boolean?
+  teamRiotId     String?
+  cupKey         String?
+  cupDay         String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   @@unique([platform, gameId, puuid])
   @@index([puuid, observedAt])
@@ -674,6 +676,8 @@ model ScoutClientReplayArtifact {
   id          String    @id @default(uuid())
   deviceId    String
   gameId      String
+  /// Verified platform; legacy uploads retain an unknown platform.
+  platformId  String?
   digest      String    @unique
   objectKey   String    @unique
   bytes       BigInt
@@ -686,6 +690,7 @@ model ScoutClientReplayArtifact {
   device ScoutClientDevice @relation(fields: [deviceId], references: [id], onDelete: Restrict)
 
   @@index([gameId, uploadState])
+  @@index([platformId, gameId, uploadState])
   @@index([deviceId, createdAt])
 }
 
@@ -694,40 +699,86 @@ model ScoutClientReplayArtifact {
 /// canonical merge, and a conflicting id/sequence is rejected rather than
 /// overwritten.
 model ScoutClientObservation {
-  observationId    String   @id
-  deviceId         String
-  sequence         BigInt
-  capturedAt       DateTime
-  receivedAt       DateTime @default(now())
-  protocolVersion  Int
-  schemaVersion    Int
-  appVersion       String
-  kind             String
-  leaguePatch      String?
-  platformId       String?
+  observationId           String    @id
+  deviceId                String
+  sequence                BigInt
+  capturedAt              DateTime
+  receivedAt              DateTime  @default(now())
+  protocolVersion         Int
+  schemaVersion           Int
+  appVersion              String
+  kind                    String
+  leaguePatch             String?
+  platformId              String?
   /// The observer's Riot API PUUID: the envelope's League-client UUID
   /// translated through `LeagueIdentityAlias`, or that UUID unchanged when no
   /// alias exists yet (such a row is quarantined).
-  localPuuid       String?
+  localPuuid              String?
   /// The observer identity exactly as the client sent it, when it was a
   /// League-client UUID rather than a Riot API PUUID.
-  localLcuUuid     String?
-  lobbyId          String?
-  gameId           String?
-  payload          Json
-  bodyDigest       String
-  disposition      String
-  quarantineReason String?
+  localLcuUuid            String?
+  lobbyId                 String?
+  gameId                  String?
+  payload                 Json
+  bodyDigest              String
+  disposition             String
+  quarantineReason        String?
+  /// Received headers before identity/routing translation, or explicitly labelled
+  /// legacy metadata frozen at the first archive claim. Payload is stored above.
+  rawEnvelope             Json?
+  rawArchiveKey           String?
+  rawArchiveDigest        String?
+  rawArchiveBytes         BigInt?
+  rawArchivedAt           DateTime?
+  rawArchiveAttemptAt     DateTime?
+  rawArchiveNextAttemptAt DateTime  @default(now())
+  rawArchiveClaimId       String?
+  rawArchiveError         String?
+  /// Projection checkpoints never change the immutable envelope or payload.
+  recoveryVersion         Int       @default(0)
+  recoveryAttemptAt       DateTime?
+  recoveryComplete        Boolean   @default(false)
 
-  device         ScoutClientDevice          @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  device         ScoutClientDevice                    @relation(fields: [deviceId], references: [id], onDelete: Cascade)
   canonicalMatch ScoutClientCanonicalMatch?
   playerSnapshot ScoutClientPlayerSnapshot?
+  clashEntities  ScoutClientClashEntity[]
+  gameResult     ScoutClientGameResult?
+  revalidations  ScoutClientObservationRevalidation[]
 
   @@unique([deviceId, sequence])
   @@index([kind, capturedAt])
   @@index([gameId, kind])
   @@index([lobbyId, kind])
   @@index([disposition, receivedAt])
+  @@index([recoveryComplete, recoveryAttemptAt])
+  @@index([rawArchivedAt, rawArchiveNextAttemptAt], map: "ScoutClientObservation_rawArchiveDue_idx")
+}
+
+/// Acceptance after quarantine is audited; the original body and digest never change.
+model ScoutClientObservationRevalidation {
+  id             Int                    @id @default(autoincrement())
+  observationId  String
+  previousReason String?
+  validatedAt    DateTime
+  observation    ScoutClientObservation @relation(fields: [observationId], references: [observationId], onDelete: Cascade)
+
+  @@index([observationId])
+}
+
+/// Rebuildable, versioned local scoreboard; raw observations remain immutable.
+/// This does not claim to be a Match-V5 payload or authorize financial effects.
+model ScoutClientGameResult {
+  observationId     String                 @id
+  riotMatchId       String
+  observerPuuid     String
+  result            Json
+  normalizerVersion Int
+  capturedAt        DateTime
+  observation       ScoutClientObservation @relation(fields: [observationId], references: [observationId], onDelete: Restrict)
+
+  @@index([observerPuuid, capturedAt])
+  @@index([riotMatchId])
 }
 
 /// Latest accepted local account/profile projection. The immutable source
@@ -745,6 +796,26 @@ model ScoutClientPlayerSnapshot {
 
   @@id([localPuuid, resource])
   @@index([kind, capturedAt])
+}
+
+/// Client Clash entities are independent of Riot's replaceable schedule tables.
+/// Each observer retains a pointer per entity; immutable observations hold history.
+model ScoutClientClashEntity {
+  observerPuuid String
+  platformId    String
+  resource      String
+  entityId      String
+  tournamentId  String?
+  tournamentKey String   @default("")
+  isPrimary     Boolean  @default(false)
+  observationId String
+  capturedAt    DateTime
+
+  observation ScoutClientObservation @relation(fields: [observationId], references: [observationId], onDelete: Restrict)
+
+  @@id([observerPuuid, platformId, resource, entityId, tournamentKey])
+  @@index([platformId, tournamentId, resource])
+  @@index([observationId])
 }
 
 /// The League client names players by a 36-character UUID; Riot's API names
