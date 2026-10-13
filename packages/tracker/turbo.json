@@ -2,6 +2,9 @@
   "$schema": "https://turborepo.dev/schema.json",
   "extends": ["//"],
   "tasks": {
+    "build": {
+      "dependsOn": ["generate", "^build"]
+    },
     "test:e2e": {
       "dependsOn": ["build", "^build"],
       "cache": true,
