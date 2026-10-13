@@ -51,6 +51,7 @@ COPY --parents \
   packages/scout-for-lol/tsconfig.base.json \
   packages/temporal \
   packages/the-storm/server/owned/plugins/TheStorm/plot-reconcile.json \
+  packages/the-storm/server/owned/plugins/TheStorm/rwf-archive.json \
   packages/homelab/src/domain-registry.ts \
   packages/homelab/src/domain-registry.json \
   packages/feature-flags \
@@ -429,6 +430,7 @@ COPY --parents \
   tsconfig.base.json \
   packages/temporal \
   packages/the-storm/server/owned/plugins/TheStorm/plot-reconcile.json \
+  packages/the-storm/server/owned/plugins/TheStorm/rwf-archive.json \
   packages/homelab/src/domain-registry.ts \
   packages/homelab/src/domain-registry.json \
   packages/temporal-observability \
