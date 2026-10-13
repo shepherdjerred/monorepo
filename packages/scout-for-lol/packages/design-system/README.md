@@ -83,7 +83,8 @@ through `vite preview`. Run
 invoking Playwright directly, otherwise the spec has no story index to read.
 
 Playwright runs on Bun. The preview launcher resolves the installed Node pin
-with `mise where node` and runs Vite using that absolute executable. This keeps
+with `mise where node` from the repository root and runs Vite using that absolute
+executable. Only the root toolchain config needs to be trusted. This keeps
 Bun's temporary `node` shim out of Vite's HTTP server runtime. Run `mise install`
 before previewing locally; the CI browser lane installs the same Node pin.
 The Turbo E2E task passes through `MISE_DATA_DIR` so the launcher finds that
@@ -112,6 +113,8 @@ axe exclusions, the mount assertions, and the CI reporter shape — live in
 `src/storybook/preview.ts`. They are exported as
 `@scout-for-lol/design-system/storybook/e2e` and `.../storybook/preview` so the
 app's catalog consumes them rather than copying them.
+Both catalogs also use `.../storybook/preview-runtime` to launch their static
+preview with the installed Node runtime.
 
 Cross-browser visual coverage lives in `@scout-for-lol/design-audit`, which
 exercises the shipped Scout surfaces nightly. This package runs chromium only.

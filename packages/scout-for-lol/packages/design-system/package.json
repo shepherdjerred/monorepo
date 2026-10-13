@@ -31,6 +31,7 @@
     "./satori/fonts": "./src/satori/fonts.ts",
     "./storybook/e2e": "./src/storybook/e2e.ts",
     "./storybook/preview": "./src/storybook/preview.ts",
+    "./storybook/preview-runtime": "./src/storybook/preview-runtime.ts",
     "./styles.css": "./styles/index.css",
     "./themes": "./src/generated/tokens.ts"
   },
