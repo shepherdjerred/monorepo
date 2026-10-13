@@ -24,6 +24,8 @@ import {
   overlayAgentTopLevel,
   overlayBrainUrl,
   overlaySweep,
+  stageModuleConfigs,
+  type ModuleConfigOverrides,
   type RwfOverlay,
 } from "./config-overlays.ts";
 import { thirdPartyPlugins } from "./pins.ts";
@@ -62,7 +64,7 @@ export type StartedServer = {
   stop: () => Promise<void>;
 };
 
-export type StartServerOptions = {
+export type StartServerOptions = ModuleConfigOverrides & {
   cacheDir: string;
   bootTimeoutMs: number;
   /**
@@ -84,11 +86,8 @@ export type StartServerOptions = {
   rwf?: RwfOverlay;
   /** Keep only this authored map in the disposable gameplay fixture's rotation. */
   rwfMap?: string;
-  /** Disposable rwfbots.yml contents; production-owned configuration stays untouched. */
-  rwfbotsConfig?: string;
   /** Preserve recordings after a graceful Paper shutdown, before removing its container. */
   exportRecordingsDir?: string;
-  survivalConfig?: string;
   /** Optional local world copy for terrain acceptance; copied into the disposable server. */
   worldDir?: string;
   /** Save the stopped world save, including its named dimensions, for inspection or provisioning. */
@@ -209,6 +208,7 @@ export async function stagePlugins(
     | "rwf"
     | "rwfMap"
     | "rwfbotsConfig"
+    | "computeConfig"
     | "survivalConfig"
     | "worldDir"
     | "exportWorldDir"
@@ -240,6 +240,7 @@ export async function stagePlugins(
       { recursive: true },
     );
   }
+  await stageModuleConfigs(path.join(pluginsDir, "TheStorm"), options);
   if (options.fixturesJar !== undefined) {
     await Bun.write(
       path.join(pluginsDir, "TheStormFixtures.jar"),
@@ -266,24 +267,12 @@ export async function stagePlugins(
   if (options.companionsE2eJar !== undefined) {
     await stageCompanionsE2e(pluginsDir, options.companionsE2eJar);
   }
-  if (options.survivalConfig !== undefined) {
-    await Bun.write(
-      path.join(pluginsDir, "TheStorm", "arena", "survival.yml"),
-      options.survivalConfig,
-    );
-  }
   await Bun.write(
     path.join(pluginsDir, "TheStorm", "config.yml"),
     options.stormConfig,
   );
   if (options.rwf !== undefined) {
     await stageRwf(path.join(pluginsDir, "TheStorm"), options.rwf);
-  }
-  if (options.rwfbotsConfig !== undefined) {
-    await Bun.write(
-      path.join(pluginsDir, "TheStorm", "rwfbots.yml"),
-      options.rwfbotsConfig,
-    );
   }
   if (
     options.mechanicsE2eJar !== undefined ||

@@ -8,7 +8,11 @@ import { mkdir } from "node:fs/promises";
 import type { ServerInfo } from "#e2e/harness/server.ts";
 import type { RconClient } from "#e2e/harness/rcon.ts";
 import { packageRoot } from "#e2e/harness/paths.ts";
-import { capacityMap, capacityResources } from "#e2e/gameplay-fixtures.ts";
+import {
+  capacityMap,
+  capacityResources,
+  capacityWorkers,
+} from "#e2e/gameplay-fixtures.ts";
 import { sampleWindow } from "#load/samples.ts";
 import {
   MemorySchema,
@@ -147,6 +151,7 @@ export async function evidence(server: ServerInfo) {
     .object({ personalities: z.array(z.unknown()) })
     .parse(await Bun.file(path.join(packageRoot, manifestFile)).json());
   return {
+    computeWorkers: await computeWorkers(server),
     artifactSha256: await digest(
       "plugin/dist/build/libs/TheStorm.jar",
       "/data/plugins/TheStorm.jar",
@@ -162,6 +167,35 @@ export async function evidence(server: ServerInfo) {
     ),
     enforcedLimits: limits,
   };
+}
+
+async function computeWorkers(server: ServerInfo): Promise<number> {
+  if (server.kind !== "container")
+    throw new Error("Compute evidence requires Docker");
+  const staged = await docker([
+    "exec",
+    server.containerId,
+    "cat",
+    "/data/plugins/TheStorm/compute.yml",
+  ]);
+  const compute = z
+    .object({ maxThreads: z.literal(capacityWorkers()) })
+    .strict()
+    .parse(Bun.YAML.parse(staged.stdout));
+  const runtime =
+    /Compute pool: (?<workers>\d+) workers, startup ceiling (?<ceiling>\d+), JVM processors (?<processors>\d+)/u.exec(
+      await serverLogs(server),
+    );
+  if (
+    runtime?.groups === undefined ||
+    Number(runtime.groups["workers"]) !== compute.maxThreads ||
+    Number(runtime.groups["ceiling"]) !== compute.maxThreads ||
+    Number(runtime.groups["processors"]) <= compute.maxThreads
+  )
+    throw new Error(
+      "Runtime compute worker budget differs from the staged capacity configuration",
+    );
+  return compute.maxThreads;
 }
 
 /** Keep arrival and reset costs distinct from the settled live measuring window. */

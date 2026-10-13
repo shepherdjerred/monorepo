@@ -101,4 +101,18 @@ final class StrictYamlTest {
   private static List<Problem> problems(Result<Quest, List<Problem>> result) {
     return result.fold(value -> List.of(), errors -> errors);
   }
+
+  @Test
+  void integerFieldsRejectFractionalValuesInBothFormats() {
+    var yaml = "name: x\nrewards: [{item: COD, amount: 2.5}]";
+    var json = "{\"name\":\"x\",\"rewards\":[{\"item\":\"COD\",\"amount\":2.5}]}";
+    for (var result :
+        List.of(
+            StrictYaml.parse("quest.yml", yaml, Quest.class),
+            StrictYaml.parseJson("quest.json", json, Quest.class))) {
+      assertThat(problems(result))
+          .singleElement()
+          .satisfies(problem -> assertThat(problem.path()).isEqualTo("rewards[0].amount"));
+    }
+  }
 }

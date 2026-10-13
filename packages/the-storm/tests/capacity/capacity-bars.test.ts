@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   capacityNativeTotal,
   capacityResources,
+  capacityWorkers,
 } from "#e2e/gameplay-fixtures.ts";
 import {
   capacityTierVerdicts,
@@ -70,6 +71,36 @@ const matrix = () => [phase(0), ...totals.map((total) => phase(total))];
 
 describe("capacity CPU calibration", () => {
   afterEach(() => vi.unstubAllEnvs());
+
+  it("keeps the shipped ceiling and accepts only worker budgets that reserve a CPU", () => {
+    vi.stubEnv("STORM_CAPACITY_WORKERS", undefined);
+    for (const [cpus, workers] of [
+      [3, 2],
+      [4, 3],
+      [6, 4],
+      [8, 4],
+      [12, 4],
+    ] as const) {
+      vi.stubEnv("STORM_CAPACITY_CPUS", cpus.toString());
+      expect(capacityWorkers()).toBe(workers);
+    }
+    for (const [cpus, workers] of [
+      [3, 2],
+      [4, 3],
+      [6, 4],
+      [8, 6],
+      [12, 10],
+    ] as const) {
+      vi.stubEnv("STORM_CAPACITY_CPUS", cpus.toString());
+      vi.stubEnv("STORM_CAPACITY_WORKERS", workers.toString());
+      expect(capacityWorkers()).toBe(workers);
+    }
+    vi.stubEnv("STORM_CAPACITY_CPUS", "8");
+    for (const workers of ["", "0", "8", "10", "11", "2.5", "invalid"]) {
+      vi.stubEnv("STORM_CAPACITY_WORKERS", workers);
+      expect(capacityWorkers).toThrow();
+    }
+  });
 
   it("keeps native acceptance at 256 by default and rejects unsupported tier selections", () => {
     vi.stubEnv("STORM_CAPACITY_NATIVE_TOTAL", undefined);

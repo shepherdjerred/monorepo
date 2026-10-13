@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.shepherdjerred.thestorm.core.compute.ComputeSettings;
 import com.shepherdjerred.thestorm.core.config.ConfigFiles;
 import com.shepherdjerred.thestorm.core.module.ModuleRegistry;
 import com.shepherdjerred.thestorm.core.module.StormModule;
@@ -96,5 +97,12 @@ final class ModulesTest {
   void moduleIdsAreUnique() {
     var ids = Modules.all().stream().map(StormModule::id).toList();
     assertThat(ids).doesNotHaveDuplicates();
+  }
+
+  @Test
+  void theShippedComputeCeilingRemainsFour() {
+    var config =
+        ConfigFiles.load(SHIPPED_CONFIG.resolveSibling("compute.yml"), ComputeSettings.class);
+    assertThat(config.maxThreads()).isEqualTo(4);
   }
 }

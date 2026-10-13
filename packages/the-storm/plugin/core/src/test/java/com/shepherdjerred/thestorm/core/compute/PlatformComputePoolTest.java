@@ -3,6 +3,8 @@ package com.shepherdjerred.thestorm.core.compute;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.shepherdjerred.thestorm.core.config.StrictYaml;
+import com.shepherdjerred.thestorm.core.result.Result;
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
@@ -101,15 +103,46 @@ final class PlatformComputePoolTest {
 
   @Test
   void sizeLeavesTheServerACoreAndCapsAtFour() {
-    assertThat(PlatformComputePool.size(1)).isEqualTo(1);
-    assertThat(PlatformComputePool.size(2)).isEqualTo(1);
-    assertThat(PlatformComputePool.size(4)).isEqualTo(3);
-    assertThat(PlatformComputePool.size(16)).isEqualTo(4);
+    var settings = new ComputeSettings(4);
+    assertThat(PlatformComputePool.size(1, settings)).isEqualTo(1);
+    assertThat(PlatformComputePool.size(2, settings)).isEqualTo(1);
+    assertThat(PlatformComputePool.size(4, settings)).isEqualTo(3);
+    assertThat(PlatformComputePool.size(16, settings)).isEqualTo(4);
+  }
+
+  @Test
+  void startupCeilingSupportsTheApprovedCpuWorkerPairsWithoutOversubscribing() {
+    for (var pair : new int[][] {{3, 2}, {4, 3}, {6, 4}, {8, 6}, {12, 10}}) {
+      var settings = new ComputeSettings(pair[1]);
+      assertThat(PlatformComputePool.size(pair[0], settings)).isEqualTo(pair[1]);
+      assertThat(PlatformComputePool.size(2, settings)).isEqualTo(1);
+    }
+    assertThatThrownBy(() -> new ComputeSettings(0)).isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> new ComputeSettings(11)).isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
   void refusesAnEmptyPool() {
     assertThatThrownBy(() -> new PlatformComputePool(0, logger))
         .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  void startupConfigurationRejectsMissingUnknownOrInvalidValues() {
+    assertThat(StrictYaml.parse("compute.yml", "maxThreads: 4", ComputeSettings.class))
+        .isEqualTo(Result.ok(new ComputeSettings(4)));
+    for (var yaml :
+        new String[] {
+          "{}",
+          "maxThreads: 0",
+          "maxThreads: 11",
+          "maxThreads: -1",
+          "maxThreads: 2.5",
+          "maxThreads: nope",
+          "maxThreads: 4\nunknown: 1"
+        }) {
+      assertThat(StrictYaml.parse("compute.yml", yaml, ComputeSettings.class))
+          .matches(result -> result instanceof Result.Err<?, ?>);
+    }
   }
 }

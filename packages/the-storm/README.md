@@ -2324,12 +2324,24 @@ staleness, is about `tacticsEveryTicks` (5) by design; it is reported, not
 judged. `plugin/modules/rwfbots/LOAD.md` holds the historical serial-engine
 measurements. The parallel engine requires its own capacity evidence.
 
+The shared platform compute pool reads the required, repository-owned
+`compute.yml` once at startup. `maxThreads` accepts integers from 1 through 10;
+the shipped ceiling is 4. The actual size is the lesser of that ceiling and
+`max(1, JVM available processors - 1)`. Changing it requires a restart and affects
+every module using the shared pool. Startup logs report the ceiling, actual
+workers and detected processors. Invalid or missing settings stop startup.
+
 `test:capacity` is separate extended local acceptance for 64, 100, 128, 192 and
 256 total combatants (one human plus bots), on either `apex-expanse` or
 `warlords-castles` selected with `STORM_CAPACITY_MAP`. It caps Docker at 3
 CPUs by default with an 8G heap and 10GiB memory, matching the production CPU request
 conservatively. `STORM_CAPACITY_CPUS=4`, `6`, `8` or `12` compares larger CPU budgets;
 the evidence verifies the exact enforced limit. Production has no CPU limit.
+`STORM_CAPACITY_WORKERS` changes only the disposable fixture's startup ceiling;
+it must leave at least one of the selected CPUs for Paper. With no override, the
+ceiling remains four, clipped to the CPU budget. Explicit comparison pairs are
+3 CPUs/2 workers, 4/3, 6/4, 8/6 and 12/10. Evidence verifies the staged setting and
+actual worker count from the JVM startup log.
 It uses a 90-second baseline, 20-second settling period and
 150 seconds of live measurement per size, rearming ordinary matches when
 needed. Run each map twice. This does not change shipped match limits or
