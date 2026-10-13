@@ -6,7 +6,10 @@ import { fetchChannelForDelivery } from "#src/discord/utils/channel.ts";
 import { buildCustomNightSnapshot } from "#src/customs/snapshot.ts";
 import { commitCustomMutation } from "#src/customs/repository.ts";
 import { customRecruitmentMessage } from "#src/customs/recruitment-content.ts";
-import { mintCustomRecruitment } from "#src/customs/recruitment-intent.ts";
+import {
+  mintCustomRecruitment,
+  type CustomRecruitmentOptions,
+} from "#src/customs/recruitment-intent.ts";
 import {
   orchestrationMode,
   withOrchestrationProducer,
@@ -73,9 +76,10 @@ async function createRecruitmentMessage(
 export async function syncCustomRecruitmentMessage(
   prisma: ExtendedPrismaClient,
   nightId: string,
+  options: CustomRecruitmentOptions = {},
 ): Promise<CustomNightSnapshot> {
   return await withOrchestrationProducer(
-    async () => await syncRecruitmentUnderLease(prisma, nightId),
+    async () => await syncRecruitmentUnderLease(prisma, nightId, options),
     prisma,
   );
 }
@@ -83,6 +87,7 @@ export async function syncCustomRecruitmentMessage(
 async function syncRecruitmentUnderLease(
   prisma: ExtendedPrismaClient,
   nightId: string,
+  options: CustomRecruitmentOptions,
 ): Promise<CustomNightSnapshot> {
   const snapshot = await buildCustomNightSnapshot(
     prisma,
@@ -98,7 +103,7 @@ async function syncRecruitmentUnderLease(
     if (mode === "durable") {
       await prisma.$transaction(async (db) => {
         await db.$queryRaw`SELECT "id" FROM "CustomNight" WHERE "id" = ${nightId} FOR UPDATE`;
-        await mintCustomRecruitment(db, nightId, new Date());
+        await mintCustomRecruitment(db, nightId, new Date(), options);
       });
       return snapshot;
     }

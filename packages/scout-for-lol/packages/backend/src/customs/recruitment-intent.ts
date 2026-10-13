@@ -3,11 +3,16 @@ import { buildCustomNightSnapshot } from "#src/customs/snapshot.ts";
 import { customRecruitmentMessage } from "#src/customs/recruitment-content.ts";
 import { mintProductAnnouncement } from "#src/temporal/notification/product/announcement.ts";
 
-/** Initial creation and a confirmed missing-message replacement use this in their transaction. */
+export type CustomRecruitmentOptions = {
+  reissueConfirmedFailure?: boolean;
+};
+
+/** Create the current generation; only explicit night updates authorize refusal reissues. */
 export async function mintCustomRecruitment(
   db: Db,
   nightId: string,
   now: Date,
+  options: CustomRecruitmentOptions = {},
 ): Promise<void> {
   await db.$queryRaw`SELECT "id" FROM "CustomNight" WHERE "id" = ${nightId} FOR UPDATE`;
   const night = await db.customNight.findUniqueOrThrow({
@@ -35,7 +40,12 @@ export async function mintCustomRecruitment(
     occurredAt: now,
     freshnessDeadline: night.expiresAt,
   };
-  if ((await mintProductAnnouncement(db, input)) !== "confirmed-unsent") return;
+  const outcome = await mintProductAnnouncement(db, input);
+  if (
+    outcome !== "confirmed-unsent" ||
+    options.reissueConfirmedFailure !== true
+  )
+    return;
   const replacement = await db.customNight.update({
     where: { id: nightId },
     data: {

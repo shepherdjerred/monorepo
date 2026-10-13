@@ -1,4 +1,5 @@
-import { afterAll, beforeEach, expect, test } from "vitest";
+import { afterAll, afterEach, beforeEach, expect, test, vi } from "vitest";
+import * as flagPolicy from "#src/configuration/flags.ts";
 import {
   IsoInstantSchema,
   DiscordMessageIdSchema,
@@ -20,6 +21,7 @@ import {
 import { clearCustomsTestData } from "#src/customs/test-database.ts";
 import { createCustomNight } from "#src/customs/repository.ts";
 import { mintCustomRecruitment } from "#src/customs/recruitment-intent.ts";
+import { syncCustomRecruitmentMessage } from "#src/customs/recruitment-message.ts";
 import {
   getSubjectIntent,
   transitionIntent,
@@ -41,6 +43,7 @@ beforeEach(async () => {
   await clearCustomsTestData(db);
 });
 afterAll(async () => await db.$disconnect());
+afterEach(() => vi.restoreAllMocks());
 
 async function seed() {
   const night = await createCustomNight(db, {
@@ -87,7 +90,10 @@ test.each(["permission-denied", "target-not-found"] as const)(
       [1, 2].map(
         async () =>
           await db.$transaction(
-            async (tx) => await mintCustomRecruitment(tx, night.id, now),
+            async (tx) =>
+              await mintCustomRecruitment(tx, night.id, now, {
+                reissueConfirmedFailure: true,
+              }),
           ),
       ),
     );
@@ -178,7 +184,10 @@ test.each([
         recordUnknownDelivery(intent, { attemptNonce: nonce, observedAt: at }),
     });
   await db.$transaction(
-    async (tx) => await mintCustomRecruitment(tx, night.id, now),
+    async (tx) =>
+      await mintCustomRecruitment(tx, night.id, now, {
+        reissueConfirmedFailure: true,
+      }),
   );
   expect(await db.matchNotificationIntent.count()).toBe(1);
   expect(await db.scoutWorkflowStart.count()).toBe(1);
@@ -200,7 +209,9 @@ test("a failed replacement transaction preserves the original generation and its
   });
   await expect(
     db.$transaction(async (tx) => {
-      await mintCustomRecruitment(tx, night.id, now);
+      await mintCustomRecruitment(tx, night.id, now, {
+        reissueConfirmedFailure: true,
+      });
       throw new Error("Injected replacement commit failure");
     }),
   ).rejects.toThrow("Injected replacement commit failure");
@@ -215,3 +226,46 @@ test("a failed replacement transaction preserves the original generation and its
     }),
   ).toBe(0);
 });
+
+test.each(["permission-denied", "target-not-found"] as const)(
+  "background publication cannot reissue persistent %s failures",
+  async (reason) => {
+    vi.spyOn(flagPolicy, "isPolicyEnabled").mockResolvedValue(true);
+    const { night, key } = await seed();
+    const fail = async (intentKey: typeof key) => {
+      await begin(intentKey);
+      await transitionIntent(db, {
+        intentKey,
+        transition: (intent) =>
+          recordFailure(intent, {
+            attemptNonce: nonce,
+            failure: { classification: "terminal", reason },
+          }),
+      });
+    };
+    await fail(key);
+    await syncCustomRecruitmentMessage(db, night.id);
+    expect(await db.matchNotificationIntent.count()).toBe(1);
+
+    await syncCustomRecruitmentMessage(db, night.id, {
+      reissueConfirmedFailure: true,
+    });
+    const replacementKey = productAnnouncementIntentKey(
+      `customs-recruitment:${night.id}:1`,
+      { kind: "channel", channelId },
+    );
+    await fail(replacementKey);
+    await syncCustomRecruitmentMessage(db, night.id);
+    await syncCustomRecruitmentMessage(db, night.id);
+    expect(
+      await db.customNight.findUniqueOrThrow({ where: { id: night.id } }),
+    ).toMatchObject({ recruitmentGeneration: 1, revision: 1 });
+    expect(await db.matchNotificationIntent.count()).toBe(2);
+    expect(await db.scoutWorkflowStart.count()).toBe(2);
+    expect(
+      await db.customAuditEvent.count({
+        where: { nightId: night.id, action: "RECRUITMENT_REISSUED" },
+      }),
+    ).toBe(1);
+  },
+);
