@@ -37,6 +37,7 @@ import type { NotificationIntentRecord } from "#src/database/durable/intent-row.
 import { resolveNotificationGate } from "#src/temporal/notification/notification-policy.ts";
 import { toIsoInstant } from "#src/durable/match/match-identity.ts";
 import { settleNotificationTip } from "#src/temporal/notification/notification-presentation.ts";
+import { settleProductAnnouncementBudget } from "#src/temporal/notification/product/budget.ts";
 
 /**
  * The V2 notification lane's reads, and the two translations every one of its
@@ -197,6 +198,8 @@ export async function notificationTransition(
   }
   await prisma.$transaction(async (tx) => {
     await settleNotificationTip(intent, tx);
+    if (intent.kind === "product-announcement")
+      await settleProductAnnouncementBudget(tx, intent.key);
   });
   return ScoutNotificationTransitionResultSchema.parse({
     commit: notificationCommit(result),

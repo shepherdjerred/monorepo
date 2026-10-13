@@ -18,8 +18,11 @@ import {
   CustomSetCohostInputSchema,
   CustomSetHeldInputSchema,
   CustomTargetParticipantInputSchema,
+  CustomResolveVoiceOperationInputSchema,
 } from "@scout-for-lol/data";
 import { activityProcedure, router } from "#src/trpc/trpc.ts";
+import { withOrchestrationProducer } from "#src/temporal/orchestration-cutover.ts";
+import { resolveCustomVoiceOperation } from "#src/customs/operations/resolution.ts";
 import {
   activeCustomNight,
   addCustomParticipant,
@@ -58,7 +61,16 @@ import {
   returnCustomVoiceToLobby,
 } from "#src/customs/voice-service.ts";
 
+const customMutation = activityProcedure.use(
+  async ({ next }) => await withOrchestrationProducer(next),
+);
+
 export const customsRouter = router({
+  resolveVoiceOperation: activityProcedure
+    .input(CustomResolveVoiceOperationInputSchema)
+    .mutation(({ ctx, input }) =>
+      resolveCustomVoiceOperation(ctx.activitySession, input),
+    ),
   active: activityProcedure
     .input(CustomGuildInputSchema)
     .query(({ ctx, input }) => {
@@ -67,110 +79,110 @@ export const customsRouter = router({
       }
       return activeCustomNight(ctx.activitySession);
     }),
-  startNight: activityProcedure
+  startNight: customMutation
     .input(CustomCreateNightInputSchema)
     .mutation(({ ctx, input }) => startCustomNight(ctx.activitySession, input)),
-  joinNight: activityProcedure
+  joinNight: customMutation
     .input(CustomJoinNightInputSchema)
     .mutation(({ ctx, input }) => joinCustomNight(ctx.activitySession, input)),
-  leaveNight: activityProcedure
+  leaveNight: customMutation
     .input(CustomRevisionInputSchema)
     .mutation(({ ctx, input }) => leaveCustomNight(ctx.activitySession, input)),
-  setAvailability: activityProcedure
+  setAvailability: customMutation
     .input(CustomSetAvailabilityInputSchema)
     .mutation(({ ctx, input }) =>
       setCustomAvailability(ctx.activitySession, input),
     ),
-  setAway: activityProcedure
+  setAway: customMutation
     .input(CustomSetAwayInputSchema)
     .mutation(({ ctx, input }) => setCustomAway(ctx.activitySession, input)),
-  setHeld: activityProcedure
+  setHeld: customMutation
     .input(CustomSetHeldInputSchema)
     .mutation(({ ctx, input }) => setCustomHeld(ctx.activitySession, input)),
-  selectAccount: activityProcedure
+  selectAccount: customMutation
     .input(CustomSelectAccountInputSchema)
     .mutation(({ ctx, input }) =>
       selectCustomAccount(ctx.activitySession, input),
     ),
-  setCohost: activityProcedure
+  setCohost: customMutation
     .input(CustomSetCohostInputSchema)
     .mutation(({ ctx, input }) => setCustomCohost(ctx.activitySession, input)),
-  addParticipant: activityProcedure
+  addParticipant: customMutation
     .input(CustomAddParticipantInputSchema)
     .mutation(({ ctx, input }) =>
       addCustomParticipant(ctx.activitySession, input),
     ),
-  removeParticipant: activityProcedure
+  removeParticipant: customMutation
     .input(CustomTargetParticipantInputSchema)
     .mutation(({ ctx, input }) =>
       removeCustomParticipant(ctx.activitySession, input),
     ),
-  prepareNight: activityProcedure
+  prepareNight: customMutation
     .input(CustomRevisionInputSchema)
     .mutation(({ ctx, input }) =>
       prepareCustomNight(ctx.activitySession, input),
     ),
-  prepareGame: activityProcedure
+  prepareGame: customMutation
     .input(CustomPrepareGameInputSchema)
     .mutation(({ ctx, input }) =>
       prepareCustomGame(ctx.activitySession, input),
     ),
-  selectCaptains: activityProcedure
+  selectCaptains: customMutation
     .input(CustomSelectCaptainsInputSchema)
     .mutation(({ ctx, input }) =>
       chooseCustomCaptains(ctx.activitySession, input),
     ),
-  randomizeTeams: activityProcedure
+  randomizeTeams: customMutation
     .input(CustomRevisionInputSchema)
     .mutation(({ ctx, input }) => randomizeTeams(ctx.activitySession, input)),
-  assignTeam: activityProcedure
+  assignTeam: customMutation
     .input(CustomAssignTeamInputSchema)
     .mutation(({ ctx, input }) => assignCustomTeam(ctx.activitySession, input)),
-  pick: activityProcedure
+  pick: customMutation
     .input(CustomPickPlayerInputSchema)
     .mutation(({ ctx, input }) =>
       draftCustomPlayer(ctx.activitySession, input),
     ),
-  undoPick: activityProcedure
+  undoPick: customMutation
     .input(CustomRevisionInputSchema)
     .mutation(({ ctx, input }) => undoDraftPick(ctx.activitySession, input)),
-  lockTeams: activityProcedure
+  lockTeams: customMutation
     .input(CustomRevisionInputSchema)
     .mutation(({ ctx, input }) => lockCustomTeams(ctx.activitySession, input)),
   // The procedure name is the Activity client's wire contract and predates
   // observed lobbies; it re-opens an observed custom lobby, not a Riot code.
-  retryTournamentCode: activityProcedure
+  retryTournamentCode: customMutation
     .input(CustomRevisionInputSchema)
     .mutation(({ ctx, input }) => retryCustomCode(ctx.activitySession, input)),
-  substitute: activityProcedure
+  substitute: customMutation
     .input(CustomSubstituteInputSchema)
     .mutation(({ ctx, input }) =>
       substituteCustomParticipant(ctx.activitySession, input),
     ),
-  overrideVoice: activityProcedure
+  overrideVoice: customMutation
     .input(CustomVoiceOverrideInputSchema)
     .mutation(({ ctx, input }) =>
       setCustomVoiceOverride(ctx.activitySession, input),
     ),
-  arrangeVoice: activityProcedure
+  arrangeVoice: customMutation
     .input(CustomRevisionInputSchema)
     .mutation(({ ctx, input }) =>
       arrangeCustomVoice(ctx.activitySession, input),
     ),
-  returnVoice: activityProcedure
+  returnVoice: customMutation
     .input(CustomRevisionInputSchema)
     .mutation(({ ctx, input }) =>
       returnCustomVoiceToLobby(ctx.activitySession, input),
     ),
-  continueNight: activityProcedure
+  continueNight: customMutation
     .input(CustomIntermissionInputSchema)
     .mutation(({ ctx, input }) =>
       continueCustomNight(ctx.activitySession, input),
     ),
-  voidGame: activityProcedure
+  voidGame: customMutation
     .input(CustomVoidGameInputSchema)
     .mutation(({ ctx, input }) => voidCustomGame(ctx.activitySession, input)),
-  endNight: activityProcedure
+  endNight: customMutation
     .input(CustomRevisionInputSchema)
     .mutation(({ ctx, input }) => endCustomNight(ctx.activitySession, input)),
 });

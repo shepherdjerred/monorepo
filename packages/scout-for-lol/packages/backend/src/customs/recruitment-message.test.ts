@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { CustomNightSnapshotSchema } from "@scout-for-lol/data";
-import { customRecruitmentMessage } from "#src/customs/recruitment-message.ts";
+import { customRecruitmentMessage } from "#src/customs/recruitment-content.ts";
 
 function snapshot(state: "RECRUITING" | "ENDED") {
   return CustomNightSnapshotSchema.parse({

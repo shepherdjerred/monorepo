@@ -28,6 +28,7 @@ beforeEach(async () => {
     "interactive",
     "background",
     "lake",
+    "gateway",
   ] as const) {
     await pool.start(
       await Worker.create({
@@ -80,4 +81,21 @@ test("preserves the response for histories without the optional capability reque
   expect(results).toHaveLength(4);
   for (const result of results)
     expect(result.backgroundJobKinds).toBeUndefined();
+}, 30_000);
+
+test("explicitly proves the gateway queue when Customs durability is requested", async () => {
+  const results = await execute({
+    stage: "dev",
+    canaryId: "gateway",
+    includeGateway: true,
+  });
+  expect(results).toHaveLength(5);
+  expect(results).toContainEqual({
+    stage: "dev",
+    canaryId: "gateway",
+    includeGateway: true,
+    queueClass: "gateway",
+    taskQueue: "scout-dev-gateway",
+    backgroundJobKinds: undefined,
+  });
 }, 30_000);

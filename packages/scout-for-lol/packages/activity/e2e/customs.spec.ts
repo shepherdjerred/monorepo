@@ -206,6 +206,59 @@ async function mockBackend(
 
 test.beforeEach(async ({ page }) => installDiscordAdapter(page));
 
+test("pending voice work disables night controls and a manager can resolve a held creation", async ({
+  page,
+}) => {
+  const initial = snapshot(pendingGame());
+  initial.pendingOperation = {
+    id: `${NIGHT_ID}:3:arrange`,
+    action: "arrange",
+    state: "held",
+    step: "Confirm whether Team A was created before resuming",
+  };
+  await mockBackend(page, initial);
+  await page.route("**/trpc/customs.resolveVoiceOperation**", async (route) => {
+    const request = route.request().postDataJSON() as Record<
+      string,
+      { operationId: string; answer: { kind: string }; evidence: string }
+    >;
+    expect(request["0"]).toMatchObject({
+      operationId: initial.pendingOperation?.id,
+      answer: { kind: "confirmed-unsent" },
+    });
+    expect(request["0"]?.evidence).toContain("complete channel list");
+    await fulfillTrpc(route, {
+      ...initial,
+      revision: 4,
+      pendingOperation: {
+        ...initial.pendingOperation,
+        state: "queued",
+        step: "Confirmed by a manager; waiting to resume",
+      },
+    });
+  });
+  await page.goto("./");
+  await expect(
+    page.getByRole("heading", { name: "Voice setup needs a check" }),
+  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "End night" })).toBeDisabled();
+  await expect(
+    page.getByRole("button", { name: "Confirm no channel and retry" }),
+  ).toBeDisabled();
+  await page
+    .getByLabel("Describe what you checked")
+    .fill(
+      "Checked the complete channel list and no matching voice channel exists.",
+    );
+  await page
+    .getByRole("button", { name: "Confirm no channel and retry" })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "Updating this night" }),
+  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "End night" })).toBeDisabled();
+});
+
 test("renders recruitment on desktop in light mode", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.emulateMedia({ colorScheme: "light" });

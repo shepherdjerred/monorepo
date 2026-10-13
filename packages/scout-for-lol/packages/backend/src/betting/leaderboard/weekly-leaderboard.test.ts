@@ -1,3 +1,4 @@
+import type { WeeklyBucksLeaderboardDependencies } from "#src/betting/leaderboard/weekly-contracts.ts";
 import { describe, expect, test } from "vitest";
 import type { MessageCreateOptions } from "discord.js";
 import {
@@ -6,14 +7,15 @@ import {
 } from "@scout-for-lol/data";
 import type { FullLeaderboardRow } from "#src/betting/accounts.ts";
 import {
+  runWeeklyBucksLeaderboard,
+  WEEKLY_BUCKS_CRON,
+} from "#src/betting/leaderboard/weekly-leaderboard.ts";
+import {
   formatWeeklyBucksLeaderboard,
   formatWeeklyBucksStats,
   rankBucksLeaderboard,
-  runWeeklyBucksLeaderboard,
-  WEEKLY_BUCKS_CRON,
-  type WeeklyBucksLeaderboardDependencies,
   type WeeklyBucksStats,
-} from "#src/betting/leaderboard/weekly-leaderboard.ts";
+} from "#src/betting/leaderboard/weekly-format.ts";
 import { COMMON_DENOMINATOR_CHANNEL_ID } from "#src/discord/channels.ts";
 import { bucksTestDiscordId } from "#src/testing/bucks-fixtures.ts";
 

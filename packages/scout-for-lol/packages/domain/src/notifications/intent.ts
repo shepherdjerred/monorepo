@@ -53,7 +53,14 @@ export const NotificationIntentKindSchema = z.enum([
   "hall-record-break",
   "duel-status",
   "dare-status",
+  "product-announcement",
 ]);
+
+/** Match artifact rendering is intentionally closed over these four kinds. */
+export type MatchNotificationIntentKind = Extract<
+  NotificationIntentKind,
+  "postmatch" | "prematch" | "settlement" | "hall-record-break"
+>;
 
 /** The kinds whose message is built from an `announcement` payload. */
 export const ANNOUNCEMENT_INTENT_KINDS: ReadonlySet<NotificationIntentKind> =
@@ -62,6 +69,7 @@ export const ANNOUNCEMENT_INTENT_KINDS: ReadonlySet<NotificationIntentKind> =
     "hall-record-break",
     "duel-status",
     "dare-status",
+    "product-announcement",
   ]);
 
 /**
@@ -312,6 +320,6 @@ export const NotificationIntentSchema = z
       (intent.announcement !== undefined),
     {
       message:
-        "an announcement payload is carried by exactly the settlement, hall-record-break, duel-status and dare-status kinds",
+        "an announcement payload is carried by exactly the declared announcement kinds",
     },
   );

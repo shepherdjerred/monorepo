@@ -23,6 +23,7 @@ import { commitCustomMutation } from "#src/customs/repository.ts";
 import { buildCustomNightSnapshot } from "#src/customs/snapshot.ts";
 import { returnCustomVoiceToLobby } from "#src/customs/voice-service.ts";
 import { prisma } from "#src/database/index.ts";
+import { requestDurableCustomOperation } from "#src/customs/operations/request.ts";
 
 async function assertObservedCustomLobbyRoster(
   snapshot: CustomNightSnapshot,
@@ -248,6 +249,8 @@ export async function voidCustomGame(
   claims: CustomActivityClaims,
   input: RevisionInput & { reason: string },
 ): Promise<CustomNightSnapshot> {
+  const pending = await requestDurableCustomOperation(claims, "void", input);
+  if (pending !== null) return pending;
   let { actor, snapshot } = await gameContext(claims, input, true);
   if (
     snapshot.teamAVoiceChannelId !== null ||

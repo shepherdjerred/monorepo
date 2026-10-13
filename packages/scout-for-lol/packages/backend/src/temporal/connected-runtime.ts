@@ -13,6 +13,7 @@ import {
 } from "@scout-for-lol/temporal";
 import type { ScoutTemporalQueueClass } from "#src/configuration/runtime-role.ts";
 import type { ScoutTemporalActivities } from "@scout-for-lol/temporal/activities";
+import type { ScoutCustomActivities } from "@scout-for-lol/temporal";
 import type { ScoutMatchActivities } from "#src/temporal/match/match-activity-surface.ts";
 import type {
   ScoutBackgroundActivities,
@@ -39,6 +40,7 @@ const logger = createLogger("temporal-supervisor");
  */
 export function registeredActivities(groups: ScoutTemporalActivityGroups) {
   return {
+    gateway: groups.gateway,
     interactive: groups.interactive,
     lake: withPreRenameActivityNames(groups.lake),
     realtime: {
@@ -179,7 +181,8 @@ type RealtimeActivities = Pick<
 type InteractiveActivities = Pick<
   ScoutTemporalActivities,
   "runInteractive" | "persistInteractiveOutcome" | "probeQueue"
->;
+> &
+  Pick<ScoutCustomActivities, "publishCustomNight">;
 type BackgroundActivities = Pick<
   ScoutTemporalActivities,
   | "fetchInitialHistoryPage"
@@ -212,6 +215,8 @@ type LakeActivities = Pick<
   ScoutLakeActivities;
 
 export type ScoutTemporalActivityGroups = {
+  readonly gateway: Pick<ScoutCustomActivities, "executeCustomOperation"> &
+    Pick<ScoutTemporalActivities, "probeQueue">;
   readonly realtime: RealtimeActivities;
   readonly interactive: InteractiveActivities;
   readonly background: BackgroundActivities;
@@ -361,6 +366,16 @@ export async function createConnectedRuntime(
           ...commonOptions,
           taskQueue: queues.interactive,
           activities: registered.interactive,
+          maxConcurrentActivityTaskExecutions: 2,
+        }),
+      );
+    }
+    if (queueClasses.has("gateway")) {
+      workers.push(
+        await Worker.create({
+          ...commonOptions,
+          taskQueue: queues.gateway,
+          activities: registered.gateway,
           maxConcurrentActivityTaskExecutions: 2,
         }),
       );

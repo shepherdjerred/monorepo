@@ -29,6 +29,7 @@ import {
 import { requireVoiceStateAccess } from "#src/customs/voice-capability.ts";
 import { client as discordClient } from "#src/discord/client.ts";
 import { createLogger } from "#src/logger.ts";
+import { requestDurableCustomOperation } from "#src/customs/operations/request.ts";
 
 const logger = createLogger("customs-voice");
 
@@ -300,6 +301,8 @@ export async function arrangeCustomVoice(
   claims: CustomActivityClaims,
   input: RevisionInput,
 ): Promise<CustomNightSnapshot> {
+  const pending = await requestDurableCustomOperation(claims, "arrange", input);
+  if (pending !== null) return pending;
   requireVoiceStateAccess("Arranging team voice channels");
   const { actor, snapshot } = await voiceContext(claims, input);
   const game = snapshot.currentGame;
@@ -432,6 +435,8 @@ export async function returnCustomVoiceToLobby(
   claims: CustomActivityClaims,
   input: RevisionInput,
 ): Promise<CustomNightSnapshot> {
+  const pending = await requestDurableCustomOperation(claims, "return", input);
+  if (pending !== null) return pending;
   requireVoiceStateAccess("Returning players to the voice lobby");
   const { actor, snapshot } = await voiceContext(claims, input);
   const game = snapshot.currentGame;

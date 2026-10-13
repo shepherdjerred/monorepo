@@ -84,6 +84,7 @@ export const JUSTIN_FLAG_KEYS = [
 export type JustinFlagKey = (typeof JUSTIN_FLAG_KEYS)[number];
 
 export const SCOUT_BOOLEAN_FLAG_KEYS = [
+  "scout_durable_orchestration_enabled",
   "scout_support_conversations_enabled",
   "scout_support_report_action_enabled",
   "ai_reports_enabled",

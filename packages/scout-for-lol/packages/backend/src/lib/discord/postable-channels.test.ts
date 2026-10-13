@@ -43,6 +43,7 @@ function rest(overrides: Partial<BotRestReader>): BotRestReader {
     guild: unused,
     guildExists: unused,
     guildChannels: unused,
+    freshGuildChannels: unused,
     guildRoles: unused,
     botMember: unused,
     guildMember: unused,

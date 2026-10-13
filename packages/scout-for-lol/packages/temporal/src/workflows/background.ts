@@ -204,6 +204,39 @@ export async function scoutIngestionReconciliationWorkflow(
   );
   await startDetachedChildren(input.stage, reconciliation.detachedWorks);
   await startInteractiveChildren(input.stage, reconciliation.interactiveRuns);
+  // Old Activity results contain neither field, so replay issues no new
+  // commands. New producers remain disabled until every routed bundle knows
+  // these types and the gateway Activity queue is ready.
+  for (const operationId of reconciliation.customOperations ?? []) {
+    try {
+      await startChild(scoutCustomOperationWorkflow, {
+        workflowId: scoutCustomOperationWorkflowId(input.stage, operationId),
+        workflowIdReusePolicy: "ALLOW_DUPLICATE_FAILED_ONLY",
+        taskQueue: scoutTaskQueues(input.stage).workflow,
+        parentClosePolicy: "ABANDON",
+        args: [{ stage: input.stage, operationId }],
+      });
+    } catch (error) {
+      if (!(error instanceof WorkflowExecutionAlreadyStartedError)) throw error;
+    }
+  }
+  for (const publication of reconciliation.customPublications ?? []) {
+    try {
+      await startChild(scoutCustomPublicationWorkflow, {
+        workflowId: scoutCustomPublicationWorkflowId(
+          input.stage,
+          publication.nightId,
+          publication.revision,
+        ),
+        workflowIdReusePolicy: "ALLOW_DUPLICATE_FAILED_ONLY",
+        taskQueue: scoutTaskQueues(input.stage).workflow,
+        parentClosePolicy: "ABANDON",
+        args: [{ stage: input.stage, ...publication }],
+      });
+    } catch (error) {
+      if (!(error instanceof WorkflowExecutionAlreadyStartedError)) throw error;
+    }
+  }
   setWorkflowPhase("**Phase:** ingestion reconciliation complete");
   return "completed";
 }
@@ -299,3 +332,11 @@ export async function scoutDetachedWorkWorkflow(
   await backgroundActivities(input.stage).runDetachedBackgroundWork(input);
   return "completed";
 }
+import {
+  scoutCustomOperationWorkflow,
+  scoutCustomPublicationWorkflow,
+} from "./customs.ts";
+import {
+  scoutCustomOperationWorkflowId,
+  scoutCustomPublicationWorkflowId,
+} from "#src/customs-contracts.ts";

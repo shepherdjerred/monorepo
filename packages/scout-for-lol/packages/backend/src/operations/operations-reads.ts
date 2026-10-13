@@ -130,12 +130,17 @@ function unknownDeliveryState(
 }
 
 type NotificationQueueSubject =
-  { matchId: RiotMatchId } | { duelId: string } | { dareId: number };
+  | { matchId: RiotMatchId }
+  | { duelId: string }
+  | { dareId: number }
+  | { announcementId: string };
 
 /** Keep the queue's subject explicit without inventing a Riot match for a Duel. */
 function notificationSubject(
   record: NotificationQueueSubject,
 ): NotificationQueueSubject {
+  if ("announcementId" in record)
+    return { announcementId: record.announcementId };
   return "matchId" in record
     ? { matchId: record.matchId }
     : "duelId" in record

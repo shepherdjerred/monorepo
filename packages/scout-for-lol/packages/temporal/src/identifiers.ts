@@ -44,6 +44,8 @@ export const SCOUT_WORKFLOW_NAMES = {
   recoveryBatch: "scoutRecoveryBatchWorkflow",
   pipelineReconciliation: "scoutPipelineReconciliationWorkflow",
   silentPostmatchBackfill: "scoutSilentPostmatchBackfillWorkflow",
+  customOperation: "scoutCustomOperationWorkflow",
+  customPublication: "scoutCustomPublicationWorkflow",
 } as const;
 
 /**
@@ -269,6 +271,7 @@ export function scoutTaskQueues(stage: ScoutStage) {
     interactive: `${prefix}-interactive`,
     background: `${prefix}-background`,
     lake: `${prefix}-lake`,
+    gateway: `${prefix}-gateway`,
   } as const;
 }
 

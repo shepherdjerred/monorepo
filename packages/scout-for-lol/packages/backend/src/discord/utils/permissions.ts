@@ -455,6 +455,7 @@ export async function notifyServerOwnerAboutPermissionError(options: {
     failed: "dm_failed",
     budget_exhausted: "skipped",
     deferred: "skipped",
+    unknown: "dm_failed",
   };
   const metricStatus = metricStatusByDmStatus[status];
   discordOwnerNotificationsTotal.inc({

@@ -55,6 +55,7 @@ const { values } = parseArgs({
     "canary-id": { type: "string" },
     "deployment-name": { type: "string" },
     "build-id": { type: "string" },
+    gateway: { type: "boolean", default: false },
   },
   strict: true,
 });
@@ -62,6 +63,7 @@ const { values } = parseArgs({
 const options = z
   .strictObject({
     stage: ScoutStageSchema,
+    gateway: z.boolean(),
     address: z.string().min(1),
     namespace: ScoutStageSchema.optional(),
     "canary-id": z.string().min(1).optional(),
@@ -102,6 +104,7 @@ try {
         stage: options.stage,
         canaryId,
         backgroundJobKinds: ScoutBackgroundJobInputSchema.shape.kind.options,
+        includeGateway: options.gateway,
       },
     ],
     ...(deploymentName === undefined || buildId === undefined
@@ -123,11 +126,11 @@ try {
   }
   const results = z
     .array(ScoutQueueCanaryProbeResultSchema)
-    .length(4)
+    .length(options.gateway ? 5 : 4)
     .parse(rawResults);
   const capabilities = z
     .array(z.object({ backgroundJobKinds: z.array(z.string()) }))
-    .length(4)
+    .length(options.gateway ? 5 : 4)
     .parse(rawResults);
   const expectedKinds = [
     ...ScoutBackgroundJobInputSchema.shape.kind.options,

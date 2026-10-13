@@ -18,6 +18,7 @@ import {
 } from "#src/match-receipts.ts";
 import {
   dispatchScoutClientMatchesSignal,
+  requestClientMatchDispatchRolloverSignal,
   scoutClientMatchDispatchCompletedSignal,
 } from "#src/signals.ts";
 import {
@@ -512,6 +513,11 @@ export async function scoutClientMatchDispatchWorkflow(
     mergeClientDispatchItem(lateArrivals, match);
   }
   let orderingWatermark = input.orderingWatermark;
+  const rollover = { requested: false };
+
+  setHandler(requestClientMatchDispatchRolloverSignal, () => {
+    rollover.requested = true;
+  });
 
   setHandler(dispatchScoutClientMatchesSignal, (rawBatch) => {
     mergeSignaledClientDispatchBatch(
@@ -523,7 +529,7 @@ export async function scoutClientMatchDispatchWorkflow(
   });
 
   for (;;) {
-    if (workflowInfo().continueAsNewSuggested) {
+    if (rollover.requested || workflowInfo().continueAsNewSuggested) {
       await continueAsNewAsRenamed<typeof scoutClientMatchDispatchWorkflow>(
         SCOUT_WORKFLOW_NAMES.clientMatchDispatch,
         scoutClientMatchDispatchInputCodec.serialize({
@@ -543,7 +549,9 @@ export async function scoutClientMatchDispatchWorkflow(
 
     if (pending.size === 0) {
       setWorkflowPhase("**Phase:** waiting for native match observations");
-      await condition(() => pending.size > 0 || lateArrivals.size > 0);
+      await condition(
+        () => rollover.requested || pending.size > 0 || lateArrivals.size > 0,
+      );
       continue;
     }
 

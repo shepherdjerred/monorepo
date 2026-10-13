@@ -52,6 +52,7 @@ import {
 import type { AuditDetail } from "#src/lib/audit/audited-mutation.ts";
 import type { OperationsWorkflowStart } from "#src/operations/workflow-dispatch.ts";
 import { settleNotificationTip } from "#src/temporal/notification/notification-presentation.ts";
+import { settleProductAnnouncementBudget } from "#src/temporal/notification/product/budget.ts";
 
 /** What the target of an operations intent is, when it is missing. */
 export type OperationsTargetKind =
@@ -187,8 +188,11 @@ async function executeSuppressStale(
     intentKey: payload.intentKey,
     transition: (intent) => suppressStale(intent, { at }),
   });
-  if (result.outcome === "applied")
+  if (result.outcome === "applied") {
     await settleNotificationTip(result.next, tx);
+    if (result.next.kind === "product-announcement")
+      await settleProductAnnouncementBudget(tx, result.next.key);
+  }
   return fromTransition(result, {
     kind: "notification-suppressed",
     intentKey: payload.intentKey,
@@ -217,8 +221,11 @@ async function executeResolveUnknownDelivery(
     intentKey: payload.intentKey,
     transition: (intent) => operatorResolveUnknown(intent, resolution),
   });
-  if (result.outcome === "applied")
+  if (result.outcome === "applied") {
     await settleNotificationTip(result.next, tx);
+    if (result.next.kind === "product-announcement")
+      await settleProductAnnouncementBudget(tx, result.next.key);
+  }
   return result.outcome === "applied"
     ? {
         kind: "delivery-resolved",

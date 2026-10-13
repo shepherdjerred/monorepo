@@ -1,29 +1,32 @@
 import type { DiscordAccountId } from "@scout-for-lol/domain/identity/discord.ts";
 import * as Sentry from "@sentry/bun";
 import type { MessageCreateOptions } from "discord.js";
-import {
-  type BucksWeeklyLeaderboardEntries,
-  type DiscordChannelId,
-  type DiscordGuildId,
-  formatInteger,
-} from "@scout-for-lol/data";
-import {
-  getFullLeaderboard,
-  type FullLeaderboardRow,
-} from "#src/betting/accounts.ts";
+import type {
+  WeeklyBucksLeaderboardDependencies,
+  WeeklyBucksLeaderboardResult,
+} from "#src/betting/leaderboard/weekly-contracts.ts";
+import { type DiscordGuildId } from "@scout-for-lol/data";
+import { getFullLeaderboard } from "#src/betting/accounts.ts";
 import { saveWeeklyLeaderboardSnapshot } from "#src/betting/leaderboard/weekly-leaderboard-snapshot.ts";
 import { isPolicyEnabled, MY_SERVER } from "#src/configuration/flags.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { isScoutInstalledInGuild } from "#src/lib/discord/installed-guilds.ts";
 import { COMMON_DENOMINATOR_CHANNEL_ID } from "#src/discord/channels.ts";
 import { observeBucksDelivery } from "#src/betting/notify/delivery-observability.ts";
-import { splitMessageIntoChunks } from "#src/discord/utils/message.ts";
 import {
   ChannelSendError,
   send as sendChannelMessage,
 } from "#src/league/discord/channel.ts";
 import { createLogger } from "#src/logger.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";
+import { orchestrationMode } from "#src/temporal/orchestration-cutover.ts";
+import { queueDurableWeeklyLeaderboard } from "#src/betting/leaderboard/durable-weekly-leaderboard.ts";
+import {
+  formatWeeklyBucksLeaderboard,
+  rankBucksLeaderboard,
+  type WeeklyBucksStats,
+  type WeeklyBucksSuperlative,
+} from "#src/betting/leaderboard/weekly-format.ts";
 
 const logger = createLogger("betting-weekly-leaderboard");
 const MAX_CHUNK_SEND_ATTEMPTS = 3;
@@ -37,21 +40,6 @@ export const WEEKLY_BUCKS_CRON = {
   timezone: "America/Los_Angeles",
   runOnInit: false,
 } as const;
-
-export type RankedLeaderboardRow = FullLeaderboardRow & { rank: number };
-
-/** One member's superlative for the trailing week; `null` when nobody qualifies. */
-export type WeeklyBucksSuperlative = {
-  discordId: DiscordAccountId;
-  amount: number;
-};
-
-export type WeeklyBucksStats = {
-  mostGained: WeeklyBucksSuperlative | null;
-  mostLost: WeeklyBucksSuperlative | null;
-  mostBetsWon: WeeklyBucksSuperlative | null;
-  mostParlaysWon: WeeklyBucksSuperlative | null;
-};
 
 function pickSuperlative(
   totals: ReadonlyMap<number, number>,
@@ -158,92 +146,6 @@ export async function loadWeeklyBucksStats(
   };
 }
 
-export function formatWeeklyBucksStats(stats: WeeklyBucksStats): string[] {
-  const lines: string[] = [];
-  if (stats.mostGained !== null) {
-    lines.push(
-      `📈 Most gained: <@${stats.mostGained.discordId}> +${formatInteger(stats.mostGained.amount)} BB`,
-    );
-  }
-  if (stats.mostLost !== null) {
-    lines.push(
-      `📉 Most lost: <@${stats.mostLost.discordId}> −${formatInteger(Math.abs(stats.mostLost.amount))} BB`,
-    );
-  }
-  if (stats.mostBetsWon !== null) {
-    lines.push(
-      `🎯 Most bets won: <@${stats.mostBetsWon.discordId}> (${formatInteger(stats.mostBetsWon.amount)})`,
-    );
-  }
-  if (stats.mostParlaysWon !== null) {
-    lines.push(
-      `🎲 Most parlays won: <@${stats.mostParlaysWon.discordId}> (${formatInteger(stats.mostParlaysWon.amount)})`,
-    );
-  }
-  return lines.length === 0 ? [] : ["📊 **This week**", ...lines];
-}
-
-export function rankBucksLeaderboard(
-  rows: readonly FullLeaderboardRow[],
-): RankedLeaderboardRow[] {
-  let previousBalance: number | undefined;
-  let rank = 0;
-  return rows.map((row, index) => {
-    if (previousBalance === undefined || row.balance !== previousBalance) {
-      rank = index + 1;
-      previousBalance = row.balance;
-    }
-    return { ...row, rank };
-  });
-}
-
-export function formatWeeklyBucksLeaderboard(
-  rows: readonly FullLeaderboardRow[],
-  stats?: WeeklyBucksStats,
-  maxLength?: number,
-): string[] {
-  if (rows.length === 0) {
-    return [
-      "💰 **Weekly Bryan Bucks leaderboard**\nNo Bryan Bucks wallets exist yet.",
-    ];
-  }
-
-  const body = rankBucksLeaderboard(rows)
-    .map(
-      (row) =>
-        `**${formatInteger(row.rank)}.** <@${row.discordId}> — **${formatInteger(row.balance)} BB**`,
-    )
-    .join("\n");
-  const statsSection = stats === undefined ? [] : formatWeeklyBucksStats(stats);
-  const statsSuffix =
-    statsSection.length === 0 ? "" : `\n\n${statsSection.join("\n")}`;
-  return splitMessageIntoChunks(
-    `💰 **Weekly Bryan Bucks leaderboard**\n${body}${statsSuffix}`,
-    maxLength,
-  );
-}
-
-export type WeeklyBucksLeaderboardDependencies = {
-  enabledGuilds: () => Promise<DiscordGuildId[]>;
-  hasGuild: (serverId: DiscordGuildId) => Promise<boolean>;
-  loadRows: (serverId: DiscordGuildId) => Promise<FullLeaderboardRow[]>;
-  loadStats: (
-    serverId: DiscordGuildId,
-    windowStart: Date,
-  ) => Promise<WeeklyBucksStats>;
-  persistSnapshot: (input: {
-    serverId: DiscordGuildId;
-    runWeek: number;
-    entries: BucksWeeklyLeaderboardEntries;
-  }) => Promise<void>;
-  sendMessage: (
-    options: MessageCreateOptions,
-    channelId: DiscordChannelId,
-    serverId: DiscordGuildId,
-  ) => Promise<unknown>;
-  sleep: (milliseconds: number) => Promise<void>;
-};
-
 const defaultDependencies: WeeklyBucksLeaderboardDependencies = {
   enabledGuilds: async () =>
     (await isPolicyEnabled("betting_enabled", { server: MY_SERVER }))
@@ -266,12 +168,6 @@ const defaultDependencies: WeeklyBucksLeaderboardDependencies = {
   sleep: async (milliseconds) => {
     await Bun.sleep(milliseconds);
   },
-};
-
-export type WeeklyBucksLeaderboardResult = {
-  status: "sent" | "not_in_guild";
-  entryCount: number;
-  chunkCount: number;
 };
 
 function chunkNonce(runWeek: number, chunkIndex: number): string {
@@ -329,7 +225,12 @@ async function sendLeaderboardChunk(
  */
 export async function runWeeklyBucksLeaderboard(
   dependencies: WeeklyBucksLeaderboardDependencies = defaultDependencies,
+  occurredAt: Date = new Date(),
 ): Promise<WeeklyBucksLeaderboardResult> {
+  const mode =
+    dependencies === defaultDependencies ? await orchestrationMode() : "legacy";
+  if (mode === "paused")
+    return { status: "paused", entryCount: 0, chunkCount: 0 };
   const guilds = await dependencies.enabledGuilds();
   if (guilds.length !== 1) {
     throw new Error(
@@ -346,6 +247,13 @@ export async function runWeeklyBucksLeaderboard(
     );
     return { status: "not_in_guild", entryCount: 0, chunkCount: 0 };
   }
+
+  if (mode === "durable")
+    return await queueDurableWeeklyLeaderboard(
+      dependencies,
+      serverId,
+      occurredAt,
+    );
 
   const rows = await dependencies.loadRows(serverId);
   const stats = await dependencies.loadStats(

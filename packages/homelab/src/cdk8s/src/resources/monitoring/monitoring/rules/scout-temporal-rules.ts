@@ -110,6 +110,58 @@ export function getScoutTemporalRuleGroup(): PrometheusRuleSpecGroups {
         labels: { severity: "warning" },
       },
       {
+        alert: "ScoutCustomOperationHeld",
+        annotations: {
+          summary: "A Customs voice operation needs a manager's answer",
+          message:
+            "Inspect the pending operation in Scout Customs. Confirm the exact created channel or verified absence before resuming.",
+        },
+        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+          'scout_custom_operations{state="held"} > 0',
+        ),
+        for: "5m",
+        labels: { severity: "warning" },
+      },
+      {
+        alert: "ScoutCustomOperationStale",
+        annotations: {
+          summary: "A Customs operation has not finished",
+          message:
+            "An unfinished Customs operation is older than ten minutes. Inspect its gateway Activity, PG progress, and queue poller.",
+        },
+        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+          "scout_custom_operation_oldest_timestamp_seconds > 0 and (time() - scout_custom_operation_oldest_timestamp_seconds) > 600",
+        ),
+        for: "5m",
+        labels: { severity: "warning" },
+      },
+      {
+        alert: "ScoutProductAnnouncementFollowUpStale",
+        annotations: {
+          summary: "A delivered Scout announcement needs bookkeeping repair",
+          message:
+            "Discord delivery is confirmed but required product bookkeeping is older than five minutes. Inspect the notification-intent-expiry reconciliation Activity.",
+        },
+        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+          "scout_product_follow_up_oldest_timestamp_seconds > 0 and (time() - scout_product_follow_up_oldest_timestamp_seconds) > 300",
+        ),
+        for: "5m",
+        labels: { severity: "warning" },
+      },
+      {
+        alert: "ScoutProductDurabilityMetricsUnknown",
+        annotations: {
+          summary: "Scout product durability metrics are unavailable",
+          message:
+            "Restore the database metric sweep before relying on Customs progress and announcement repair alerts.",
+        },
+        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+          '(scout_custom_operations < 0) or (scout_custom_operation_oldest_timestamp_seconds < 0) or (scout_product_follow_up_oldest_timestamp_seconds < 0) or absent(scout_custom_operation_oldest_timestamp_seconds{environment="beta"}) or absent(scout_custom_operation_oldest_timestamp_seconds{environment="prod"}) or absent(scout_product_follow_up_oldest_timestamp_seconds{environment="beta"}) or absent(scout_product_follow_up_oldest_timestamp_seconds{environment="prod"})',
+        ),
+        for: "5m",
+        labels: { severity: "warning" },
+      },
+      {
         alert: "ScoutTemporalReportScheduleDrift",
         annotations: {
           summary: "Scout report Schedules differ from product state",

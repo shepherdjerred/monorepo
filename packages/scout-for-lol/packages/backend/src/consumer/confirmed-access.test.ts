@@ -38,6 +38,7 @@ function dependencies(
     guildExists,
     guild: unused,
     guildChannels: unused,
+    freshGuildChannels: unused,
     guildRoles: unused,
     botMember: unused,
     guildMember: unused,

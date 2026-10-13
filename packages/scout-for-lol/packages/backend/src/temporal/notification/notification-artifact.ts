@@ -1,6 +1,9 @@
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type { DiscordGuildId } from "@scout-for-lol/data";
-import type { NotificationIntentKind } from "@scout-for-lol/domain/notifications/intent.ts";
+import type {
+  NotificationIntentKind,
+  MatchNotificationIntentKind,
+} from "@scout-for-lol/domain/notifications/intent.ts";
 import configuration from "#src/configuration.ts";
 import { readVerifiedRawObjectBytes } from "#src/report-store/s3-raw-source.ts";
 import { createS3Client } from "#src/storage/s3-client.ts";
@@ -147,7 +150,7 @@ export type ScoutAttestedPrematchArtifact =
 
 async function requireRenderEvidence(
   riotMatchId: RiotMatchId,
-  kind: Exclude<NotificationIntentKind, "duel-status" | "dare-status">,
+  kind: MatchNotificationIntentKind,
   presentation?: { guildId: DiscordGuildId; clashEnabled: boolean },
 ): Promise<ScoutNotificationRenderEvidence> {
   const evidence = await readNotificationArtifact(

@@ -795,29 +795,29 @@ model ScoutClientCanonicalMatch {
 /// than one server's data, so a conversation belongs to a person, not a guild.
 model ExploreConversation {
   preferredModel String?
-  id            String    @id @default(uuid())
-  userId        String
-  title         String
+  id             String    @id @default(uuid())
+  userId         String
+  title          String
   /// Server-owned provenance for the surface that created this conversation.
   /// Follow-up turns do not change it.
-  origin        String    @default("legacy")
+  origin         String    @default("legacy")
   /// Set when the owner shares the conversation; null means private. Opaque
   /// and unguessable rather than derived from `id`, because possession of the
   /// token is the only credential a share link carries.
-  shareToken    String?   @unique
-  sharedAt      DateTime?
+  shareToken     String?   @unique
+  sharedAt       DateTime?
   /// Which leaf of the message tree the owner is currently looking at. The
   /// active transcript is the path from this message back to the root.
-  currentLeafId String?
+  currentLeafId  String?
   /// The leaf the share link is pinned to, captured when the conversation was
   /// shared. Without it, branching after sharing would silently change what a
   /// link shows — the same freeze guarantee the stored results already give.
-  sharedLeafId  String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  sharedLeafId   String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
-  user     User             @relation(fields: [userId], references: [discordId], onDelete: Cascade)
-  messages ExploreMessage[]
+  user         User                 @relation(fields: [userId], references: [discordId], onDelete: Cascade)
+  messages     ExploreMessage[]
   toolPayloads ExploreToolPayload[]
 
   @@index([userId, updatedAt])
@@ -825,15 +825,16 @@ model ExploreConversation {
 
 /// Full inspection data is fetched on demand, never replayed into model history.
 model ExploreToolPayload {
-  id String @id @default(uuid())
+  id             String              @id @default(uuid())
   conversationId String
-  runId String
-  toolCallId String
-  toolName String
-  direction String
-  payload String
-  createdAt DateTime @default(now())
-  conversation ExploreConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  runId          String
+  toolCallId     String
+  toolName       String
+  direction      String
+  payload        String
+  createdAt      DateTime            @default(now())
+  conversation   ExploreConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
   @@unique([conversationId, toolCallId, direction])
   @@index([runId])
 }
@@ -851,7 +852,7 @@ model ExploreToolPayload {
 /// share link cannot silently change meaning as the lake grows, and an
 /// anonymous viewer costs no query.
 model ExploreMessage {
-  generation String?
+  generation     String?
   inlineEntities String?
   id             String   @id @default(uuid())
   conversationId String
@@ -895,24 +896,25 @@ model ExploreMessage {
 
 /// Per-provider-request monetary hold. Ambiguous attempts retain their hold.
 model ExploreSpend {
-  id String @id @default(uuid())
-  runId String
-  ownerId String
-  month String
-  model String
+  id             String    @id @default(uuid())
+  runId          String
+  ownerId        String
+  month          String
+  model          String
   reservedMicros Int
-  budgetMicros Int
-  state String @default("held")
-  usage String?
-  responseId String?
-  createdAt DateTime @default(now())
-  settledAt DateTime?
+  budgetMicros   Int
+  state          String    @default("held")
+  usage          String?
+  responseId     String?
+  createdAt      DateTime  @default(now())
+  settledAt      DateTime?
+
   @@index([month, ownerId])
   @@index([runId])
 }
 
 model ExploreSandboxLease {
-  id String @id @default(uuid())
+  id        String   @id @default(uuid())
   expiresAt DateTime
 }
 
@@ -1080,11 +1082,11 @@ model SupportConversation {
 
 /// Minimal sender-scoped throttling state survives deletion of message history.
 model SupportSenderThrottle {
-  discordId     String     @id
-  inboundAt     DateTime[] @default([])
-  uploadAt      DateTime[] @default([])
-  lastAlertAt   DateTime?
-  lastReceiptAt DateTime?
+  discordId           String     @id
+  inboundAt           DateTime[] @default([])
+  uploadAt            DateTime[] @default([])
+  lastAlertAt         DateTime?
+  lastReceiptAt       DateTime?
   lastFailureNoticeAt DateTime?
 }
 
@@ -1969,31 +1971,75 @@ model CustomActiveNight {
 }
 
 model CustomNight {
-  id                   String    @id @default(uuid())
-  guildId              String
-  guildName            String
-  launchChannelId      String
-  voiceLobbyChannelId  String
-  hostDiscordId        String
-  state                String
-  revision             Int       @default(0)
-  recruitmentMessageId String?
-  teamAVoiceChannelId  String?
-  teamBVoiceChannelId  String?
-  lastActivityAt       DateTime
-  expiresAt            DateTime
-  endedAt              DateTime?
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
+  id                    String    @id @default(uuid())
+  guildId               String
+  guildName             String
+  launchChannelId       String
+  voiceLobbyChannelId   String
+  hostDiscordId         String
+  state                 String
+  revision              Int       @default(0)
+  recruitmentMessageId  String?
+  recruitmentGeneration Int       @default(0)
+  publishedRevision     Int       @default(-1)
+  teamAVoiceChannelId   String?
+  teamBVoiceChannelId   String?
+  lastActivityAt        DateTime
+  expiresAt             DateTime
+  endedAt               DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 
   activePointer CustomActiveNight?
   cohosts       CustomNightCohost[]
   participants  CustomNightParticipant[]
   games         CustomGame[]
   auditEvents   CustomAuditEvent[]
+  operations    CustomNightOperation[]
 
   @@index([guildId, createdAt])
   @@index([state, expiresAt])
+}
+
+/// One authorized, revision-fenced Customs operation. Temporal owns execution;
+/// this record owns progress and external identifiers across gateway restarts.
+model CustomNightOperation {
+  id               String      @id
+  nightId          String
+  expectedRevision Int
+  actorDiscordId   String
+  action           String
+  payload          String
+  state            String      @default("queued")
+  progress         String      @default("{}")
+  outcome          String?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  night            CustomNight @relation(fields: [nightId], references: [id], onDelete: Cascade)
+
+  @@index([state, createdAt])
+  @@index([nightId, createdAt])
+}
+
+/// Permanent monotonic latch: a disabled rollout flag cannot restore legacy
+/// sends after a stage has committed its first durable operation.
+model ScoutOrchestrationCutover {
+  id          String   @id
+  activatedAt DateTime @default(now())
+}
+
+/// Frozen weekly standings and chunk count. Published only after every chunk's
+/// notification intent has a confirmed delivery, including after a restart.
+model BucksWeeklyPublication {
+  id          String    @id
+  serverId    String
+  runWeek     Int
+  entries     String
+  chunkCount  Int
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@unique([serverId, runWeek])
 }
 
 model CustomNightCohost {
@@ -2852,10 +2898,10 @@ model MatchNotificationIntent {
   /// The subject union lets non-match notifications use the same durable send state.
   /// A NULL subjectId on a match row is accepted while older application pods
   /// are still writing through the previous schema; new writers set both.
-  subjectKind     String  @default("match") // match | duel | dare
+  subjectKind     String  @default("match") // match | duel | dare | announcement
   subjectId       String?
   riotMatchId     String? // match subjects only; retained for match fan-out lookup
-  kind            String // NotificationIntentKind: postmatch | prematch | settlement | hall-record-break | duel-status | dare-status
+  kind            String // NotificationIntentKind; product-announcement has an occurrence subject
   originKind      String // NotificationIntentOrigin kind: live | recovery
   recoveryBatchId String? // recovery origin only: the batch whose policy governs delivery
   targetKind      String // NotificationTarget kind: channel | dm
@@ -2872,12 +2918,15 @@ model MatchNotificationIntent {
   lastFailureClassification String? // NotificationFailure: retryable | terminal
   lastFailureReason         String? // reason vocabulary of its classification
   freshnessDeadline         DateTime
+  /// Critical product bookkeeping is repaired independently of Discord delivery.
+  followUpCompletedAt       DateTime?
   payload                   String // JSON notificationIntentCodec envelope of the intent
 
   createdAt DateTime
   updatedAt DateTime @updatedAt
 
   @@index([state, freshnessDeadline])
+  @@index([kind, state, followUpCompletedAt])
   @@index([riotMatchId])
   @@index([subjectKind, subjectId])
   @@index([recoveryBatchId])

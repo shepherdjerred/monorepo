@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { defineVersionedCodec } from "@scout-for-lol/domain/codec/versioned.ts";
-import type { NotificationIntentKind } from "@scout-for-lol/domain/notifications/intent.ts";
+import type { MatchNotificationIntentKind } from "@scout-for-lol/domain/notifications/intent.ts";
 import {
   RiotMatchIdSchema,
   S3ObjectKeySchema,
@@ -49,10 +49,7 @@ export const SCOUT_NOTIFICATION_RENDER_RECEIPT_KINDS = {
   "hall-record-break": ReceiptKindSchema.parse(
     "v2-notification-render-hall-record-break",
   ),
-} as const satisfies Record<
-  Exclude<NotificationIntentKind, "duel-status" | "dare-status">,
-  ReceiptKind
->;
+} as const satisfies Record<MatchNotificationIntentKind, ReceiptKind>;
 
 /**
  * The receipt kind one intent kind's artifact is attested under. A closed
@@ -62,7 +59,7 @@ export const SCOUT_NOTIFICATION_RENDER_RECEIPT_KINDS = {
  * lanes' vocabularies.
  */
 export function scoutNotificationRenderReceiptKind(
-  kind: Exclude<NotificationIntentKind, "duel-status" | "dare-status">,
+  kind: MatchNotificationIntentKind,
   presentation?: { guildId: DiscordGuildId; clashEnabled: boolean },
 ): ReceiptKind {
   if (kind === "prematch" && presentation !== undefined) {
@@ -197,7 +194,7 @@ export const scoutNotificationRenderEvidenceCodec = defineVersionedCodec({
  */
 export async function readNotificationArtifact(
   riotMatchId: RiotMatchId,
-  kind: Exclude<NotificationIntentKind, "duel-status" | "dare-status">,
+  kind: MatchNotificationIntentKind,
   presentation?: { guildId: DiscordGuildId; clashEnabled: boolean },
 ): Promise<ScoutNotificationRenderEvidence | null> {
   const receiptKind = scoutNotificationRenderReceiptKind(kind, presentation);

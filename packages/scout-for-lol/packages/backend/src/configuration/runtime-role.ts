@@ -26,8 +26,9 @@
  * - `gateway` — the Discord gateway connection: commands, guild lifecycle and
  *   the Hey Scout voice assistant. Voice is gateway-coupled by design (it reads
  *   an active voice connection's audio), which makes this role explicitly
- *   stateful and unsplittable from the shard. It runs no Temporal workers, only
- *   a Temporal client. Discord authoring reserves a persisted Explore run and
+ *   stateful and unsplittable from the shard. Its `gateway` Activity worker
+ *   performs checkpointed Customs voice operations after `clientReady`.
+ *   Discord authoring reserves a persisted Explore run and
  *   waits for the interactive Activity's result. Beta declares no lake access;
  *   development and production keep their compatibility capability.
  * - `activity-worker` — the `realtime` and `background` Temporal activity
@@ -56,11 +57,12 @@ export const SCOUT_RUNTIME_ROLES: readonly ScoutRuntimeRole[] =
 /**
  * The embedded Temporal workers, named by the task queue each one polls.
  *
- * `workflow` runs Workflow code; the other four run Activities. The externally
+ * `workflow` runs Workflow code; the other five run Activities. The externally
  * deployed stable/candidate Workflow Workers poll the same `workflow` queue and
  * are unaffected by any of this.
  */
 export const SCOUT_TEMPORAL_QUEUE_CLASSES = [
+  "gateway",
   "workflow",
   "interactive",
   "lake",
@@ -133,21 +135,16 @@ export type ScoutRuntimeCapabilities = {
   /** Workers started as soon as Temporal connects. */
   readonly temporalWorkers: readonly ScoutTemporalQueueClass[];
   /**
-   * Workers added once the `discord-gateway` boot step resolves.
-   *
-   * That step resolves when `client.login()` does, NOT on `clientReady`, so
-   * these can start while discord.js is still filling the guild cache. Only
-   * `combined` has any, and its realtime and background Activities tolerate
-   * that because their one cache read, `getActiveServerIds()`, answers
-   * "no filter" until the client is ready. A role that owns no gateway runs
-   * these from the start (`activity-worker`) or never (`gateway`).
+   * Workers added after `clientReady`, when gateway voice state is available.
+   * `combined` adds realtime/background/gateway; `gateway` adds its own queue.
+   * Gatewayless activity workers start realtime/background immediately.
    */
   readonly deferredTemporalWorkers: readonly ScoutTemporalQueueClass[];
   /** Log into the Discord gateway and install the command/guild handlers. */
   readonly discordGateway: boolean;
   /**
    * Start one ingestion reconciliation after the `discord-gateway` boot step
-   * resolves — on `login()`, not on `clientReady`.
+   * resolves after `clientReady`.
    */
   readonly gatewayReadyReconciliation: boolean;
   readonly httpSurface: ScoutHttpSurface;
@@ -173,6 +170,11 @@ const DISCORD_WORKERS: readonly ScoutTemporalQueueClass[] = [
   "realtime",
   "background",
 ];
+const GATEWAY_WORKERS: readonly ScoutTemporalQueueClass[] = ["gateway"];
+const COMBINED_DEFERRED_WORKERS: readonly ScoutTemporalQueueClass[] = [
+  ...DISCORD_WORKERS,
+  ...GATEWAY_WORKERS,
+];
 
 const NO_WORKERS: readonly ScoutTemporalQueueClass[] = [];
 
@@ -193,7 +195,7 @@ const SCOUT_RUNTIME_CAPABILITIES: Readonly<
     reportLakeAccess: true,
     reportLakeFold: true,
     temporalWorkers: ALWAYS_ON_WORKERS,
-    deferredTemporalWorkers: DISCORD_WORKERS,
+    deferredTemporalWorkers: COMBINED_DEFERRED_WORKERS,
     discordGateway: true,
     gatewayReadyReconciliation: true,
     httpSurface: "full",
@@ -226,7 +228,7 @@ const SCOUT_RUNTIME_CAPABILITIES: Readonly<
     reportLakeAccess: true,
     reportLakeFold: false,
     temporalWorkers: NO_WORKERS,
-    deferredTemporalWorkers: NO_WORKERS,
+    deferredTemporalWorkers: GATEWAY_WORKERS,
     discordGateway: true,
     gatewayReadyReconciliation: true,
     httpSurface: "admin",

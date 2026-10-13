@@ -15,7 +15,9 @@ export const RawChampionMasterySchema = z.object({
   lastPlayTime: z.number().int().nonnegative(),
   championPointsSinceLastLevel: z.number().int(),
   championPointsUntilNextLevel: z.number().int(),
-  tokensEarned: z.number().int().nonnegative(),
+  // Riot returns negative values for this legacy field. Preserve the
+  // upstream integer rather than rejecting an otherwise usable mastery list.
+  tokensEarned: z.number().int(),
 });
 export const RawChampionMasteryListSchema = z.array(RawChampionMasterySchema);
 export type RawChampionMastery = z.infer<typeof RawChampionMasterySchema>;

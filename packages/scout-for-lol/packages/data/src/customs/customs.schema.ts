@@ -77,6 +77,7 @@ export const CustomRoleSchema = z.enum([
 export type CustomRole = z.infer<typeof CustomRoleSchema>;
 
 export const CustomVoiceStateSchema = z.enum([
+  "CLEANED_UP",
   "IDLE",
   "PROVISIONING",
   "READY",
@@ -167,6 +168,22 @@ export const CustomRecruitmentCountsSchema = z.strictObject({
 });
 
 export const CustomNightSnapshotSchema = z.strictObject({
+  pendingOperation: z
+    .strictObject({
+      id: z.string().min(1),
+      action: z.enum([
+        "arrange",
+        "return",
+        "continue",
+        "void",
+        "end",
+        "expire",
+      ]),
+      state: z.enum(["queued", "running", "held"]),
+      step: z.string().min(1),
+    })
+    .nullable()
+    .optional(),
   id: z.uuid(),
   guildId: DiscordGuildIdSchema,
   guildName: z.string().min(1),
@@ -188,6 +205,23 @@ export const CustomNightSnapshotSchema = z.strictObject({
   endedAt: z.iso.datetime().nullable(),
 });
 export type CustomNightSnapshot = z.infer<typeof CustomNightSnapshotSchema>;
+
+export const CustomResolveVoiceOperationInputSchema = z.strictObject({
+  nightId: z.uuid(),
+  expectedRevision: z.int().nonnegative(),
+  operationId: z.string().min(1),
+  evidence: z.string().trim().min(20).max(1000),
+  answer: z.discriminatedUnion("kind", [
+    z.strictObject({
+      kind: z.literal("channel-created"),
+      channelId: DiscordChannelIdSchema,
+    }),
+    z.strictObject({ kind: z.literal("confirmed-unsent") }),
+  ]),
+});
+export type CustomResolveVoiceOperationInput = z.infer<
+  typeof CustomResolveVoiceOperationInputSchema
+>;
 
 export const CustomSnapshotEnvelopeSchema = z.strictObject({
   kind: z.literal("snapshot"),

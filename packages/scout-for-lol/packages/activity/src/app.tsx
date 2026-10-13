@@ -6,6 +6,7 @@ import {
   type CustomNightSnapshot,
 } from "@scout-for-lol/data";
 import { GameControls } from "@/components/game-controls";
+import { CustomOperationStatus } from "@/components/operation-status";
 import { PlayerList } from "@/components/player-list";
 import {
   revision,
@@ -55,46 +56,56 @@ function CustomsExperience({ snapshot }: { snapshot: CustomNightSnapshot }) {
         <StatePill state={snapshot.state} />
       </header>
       {error === null ? null : <p className="error-banner">{error}</p>}
-      <GameControls
+      <CustomOperationStatus
         {...callbacks}
         snapshot={snapshot}
         viewerId={session.identity.id}
       />
-      <PlayerList
-        {...callbacks}
-        snapshot={snapshot}
-        viewerId={session.identity.id}
-      />
-      <footer className="footer-actions">
-        {manager || viewerInCurrentRoster ? null : (
-          <button
-            className="button subtle"
-            onClick={() => {
-              void runSnapshotAction(
-                leave.mutateAsync(revision(snapshot)),
-                callbacks,
-              );
-            }}
-            type="button"
-          >
-            Leave night
-          </button>
-        )}
-        {manager ? (
-          <button
-            className="button danger"
-            onClick={() => {
-              void runSnapshotAction(
-                end.mutateAsync(revision(snapshot)),
-                callbacks,
-              );
-            }}
-            type="button"
-          >
-            End night
-          </button>
-        ) : null}
-      </footer>
+      <fieldset
+        className="night-controls"
+        disabled={snapshot.pendingOperation != null}
+      >
+        <GameControls
+          {...callbacks}
+          snapshot={snapshot}
+          viewerId={session.identity.id}
+        />
+        <PlayerList
+          {...callbacks}
+          snapshot={snapshot}
+          viewerId={session.identity.id}
+        />
+        <footer className="footer-actions">
+          {manager || viewerInCurrentRoster ? null : (
+            <button
+              className="button subtle"
+              onClick={() => {
+                void runSnapshotAction(
+                  leave.mutateAsync(revision(snapshot)),
+                  callbacks,
+                );
+              }}
+              type="button"
+            >
+              Leave night
+            </button>
+          )}
+          {manager ? (
+            <button
+              className="button danger"
+              onClick={() => {
+                void runSnapshotAction(
+                  end.mutateAsync(revision(snapshot)),
+                  callbacks,
+                );
+              }}
+              type="button"
+            >
+              End night
+            </button>
+          ) : null}
+        </footer>
+      </fieldset>
     </main>
   );
 }
@@ -197,6 +208,10 @@ function ActivityContent() {
         {error === null ? null : <p className="error-banner">{error}</p>}
         <button
           className="button primary"
+          disabled={
+            snapshot.pendingOperation !== undefined &&
+            snapshot.pendingOperation !== null
+          }
           onClick={() => {
             void runSnapshotAction(
               join.mutateAsync({

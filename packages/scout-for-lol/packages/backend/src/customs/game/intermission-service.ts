@@ -14,15 +14,12 @@ import {
   canManageCustomNight,
   customRoleFor,
 } from "#src/customs/authorization.ts";
-import {
-  rerollCaptainsWithinTeams,
-  selectCaptainsExcludingPrevious,
-} from "#src/customs/game/draft.ts";
+import { nextCustomGameParticipants } from "#src/customs/game/next-game-participants.ts";
 import { commitCustomMutation } from "#src/customs/repository.ts";
 import { buildCustomNightSnapshot } from "#src/customs/snapshot.ts";
 import { publishCustomNightSnapshot } from "#src/customs/socket.ts";
 import { returnCustomVoiceToLobby } from "#src/customs/voice-service.ts";
-import type { SecureRandom } from "#src/customs/random.ts";
+import { requestDurableCustomOperation } from "#src/customs/operations/request.ts";
 
 type ContinueInput = {
   readonly nightId: string;
@@ -40,58 +37,6 @@ function participantWrite(participant: CustomGameParticipant) {
     championId: null,
     won: null,
   };
-}
-
-function redraftSameCaptains(
-  participants: readonly CustomGameParticipant[],
-): CustomGameParticipant[] {
-  return participants.map((participant) =>
-    participant.captain
-      ? { ...participant, pickOrder: null, championId: null, won: null }
-      : {
-          ...participant,
-          team: null,
-          side: null,
-          pickOrder: null,
-          championId: null,
-          won: null,
-        },
-  );
-}
-
-export function nextCustomGameParticipants(
-  participants: readonly CustomGameParticipant[],
-  choice: CustomIntermissionChoice,
-  random?: SecureRandom,
-): CustomGameParticipant[] {
-  if (choice === "KEEP_TEAMS_AND_CAPTAINS") {
-    return participants.map((participant) => ({
-      ...participant,
-      pickOrder: null,
-      championId: null,
-      won: null,
-    }));
-  }
-  if (choice === "KEEP_TEAMS_REROLL_CAPTAINS") {
-    return rerollCaptainsWithinTeams(participants, random).map(
-      (participant) => ({
-        ...participant,
-        pickOrder: null,
-        championId: null,
-        won: null,
-      }),
-    );
-  }
-  if (choice === "REDRAFT_SAME_CAPTAINS") {
-    return redraftSameCaptains(participants);
-  }
-  return selectCaptainsExcludingPrevious(participants, random).map(
-    (participant) => ({
-      ...participant,
-      championId: null,
-      won: null,
-    }),
-  );
 }
 
 async function requireIntermission(
@@ -133,6 +78,12 @@ export async function continueCustomNight(
   claims: CustomActivityClaims,
   input: ContinueInput,
 ): Promise<CustomNightSnapshot> {
+  const pending = await requestDurableCustomOperation(
+    claims,
+    "continue",
+    input,
+  );
+  if (pending !== null) return pending;
   let snapshot = await requireIntermission(claims, input);
   if (
     snapshot.teamAVoiceChannelId !== null ||

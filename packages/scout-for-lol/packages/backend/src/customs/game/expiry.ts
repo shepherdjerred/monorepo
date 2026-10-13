@@ -3,6 +3,9 @@ import { syncCustomRecruitmentMessage } from "#src/customs/recruitment-message.t
 import { publishCustomNightSnapshot } from "#src/customs/socket.ts";
 import { cleanExpiredCustomVoice } from "#src/customs/voice-service.ts";
 import { createLogger } from "#src/logger.ts";
+import { orchestrationMode } from "#src/temporal/orchestration-cutover.ts";
+import { commitCustomOperation } from "#src/customs/operations/request.ts";
+import { buildCustomNightSnapshot } from "#src/customs/snapshot.ts";
 
 const logger = createLogger("customs-expiry");
 
@@ -102,6 +105,49 @@ export async function expireCustomNightsInDatabase(
 }
 
 export async function expireCustomNights(now = new Date()): Promise<void> {
+  const mode = await orchestrationMode();
+  if (mode === "paused") return;
+  if (mode === "durable") {
+    const due = await prisma.customNight.findMany({
+      where: {
+        state: { not: "ENDED" },
+        expiresAt: { lte: now },
+        operations: { none: { state: { in: ["queued", "running", "held"] } } },
+      },
+      orderBy: [{ expiresAt: "asc" }, { id: "asc" }],
+      take: 100,
+    });
+    const failures: unknown[] = [];
+    for (const candidate of due)
+      try {
+        const snapshot = await buildCustomNightSnapshot(
+          prisma,
+          candidate.id,
+          "temporal:custom-nights-expiry",
+          now,
+        );
+        if (snapshot === undefined)
+          throw new Error("Custom night disappeared before expiry");
+        await commitCustomOperation(prisma, snapshot, {
+          actorDiscordId: "temporal:custom-nights-expiry",
+          action: "expire",
+          now,
+          input: {
+            nightId: candidate.id,
+            expectedRevision: snapshot.revision,
+            reason: "Custom night expired",
+          },
+        });
+      } catch (error) {
+        failures.push(error);
+      }
+    if (failures.length > 0)
+      throw new AggregateError(
+        failures,
+        "Some Customs expiry operations could not be queued",
+      );
+    return;
+  }
   const expiredNightIds = await expireCustomNightsInDatabase(
     prisma,
     now,

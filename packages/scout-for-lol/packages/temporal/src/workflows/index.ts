@@ -74,6 +74,14 @@ import {
   scoutRecoveryBatchWorkflow as recoveryBatch,
 } from "./durable.ts";
 import { scoutSilentPostmatchBackfillWorkflow as silentPostmatchBackfill } from "./silent-postmatch-backfill.ts";
+import {
+  scoutCustomOperationWorkflow as customOperation,
+  scoutCustomPublicationWorkflow as customPublication,
+} from "./customs.ts";
+import type {
+  ScoutCustomOperationInput,
+  ScoutCustomPublicationInput,
+} from "#src/customs-contracts.ts";
 
 export async function scoutInitialHistoryWorkflow(
   input: ScoutInitialHistoryInput,
@@ -235,3 +243,14 @@ export {
   scoutPipelineReconciliationWorkflow as scoutPipelineReconciliationV2Workflow,
   scoutSilentPostmatchBackfillWorkflow as scoutSilentPostmatchBackfillV2Workflow,
 };
+export async function scoutCustomOperationWorkflow(
+  input: ScoutCustomOperationInput,
+): Promise<void> {
+  await customOperation(input);
+}
+
+export async function scoutCustomPublicationWorkflow(
+  input: ScoutCustomPublicationInput,
+): Promise<void> {
+  await customPublication(input);
+}

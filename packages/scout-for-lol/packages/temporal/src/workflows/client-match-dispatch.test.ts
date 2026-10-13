@@ -14,7 +14,10 @@ import type {
   ScoutMatchReceiptsInput,
 } from "#src/activity-contracts.ts";
 import { scoutClientMatchDispatchWorkflowId } from "#src/identifiers.ts";
-import { dispatchScoutClientMatchesSignal } from "#src/signals.ts";
+import {
+  dispatchScoutClientMatchesSignal,
+  requestClientMatchDispatchRolloverSignal,
+} from "#src/signals.ts";
 import {
   scoutClientMatchDispatchInputCodec,
   scoutPostMatchDiscoveryInputCodec,
@@ -187,6 +190,95 @@ async function terminateDispatcher(workflowId: string, reason: string) {
   }
   expect(status.name).toBe("TIMED_OUT");
 }
+
+describe("safe dispatcher rollover", () => {
+  test("rolls over an idle dispatcher without waiting for history growth", async () => {
+    await harness.startWorkers(
+      routedMatchActivities(createScoutMatchStore(), createScoutMatchStore()),
+    );
+    const workflowId = "client-match-dispatch-idle-rollover";
+    const handle = await startDispatcher(workflowId);
+    const firstRunId = handle.firstExecutionRunId;
+    await handle.signal(requestClientMatchDispatchRolloverSignal);
+    await expect
+      .poll(
+        async () => {
+          const description = await handle.describe();
+          return description.runId;
+        },
+        { timeout: 15_000 },
+      )
+      .not.toBe(firstRunId);
+    const firstRun = await harness
+      .client()
+      .workflow.getHandle(workflowId, firstRunId)
+      .fetchHistory();
+    const rollover = firstRun.events?.find(
+      (event) => event.workflowExecutionContinuedAsNewEventAttributes != null,
+    )?.workflowExecutionContinuedAsNewEventAttributes;
+    expect(rollover?.workflowType?.name).toBe(
+      "scoutClientMatchDispatchWorkflow",
+    );
+    await terminateDispatcher(workflowId, "test observed a safe idle rollover");
+  }, 90_000);
+
+  test("finishes an in-flight child before rolling over its pending queue", async () => {
+    const started = Promise.withResolvers<true>();
+    const release = Promise.withResolvers<true>();
+    const completed = Promise.withResolvers<true>();
+    const log: string[] = [];
+    await harness.startWorkers(
+      routedMatchActivities(createScoutMatchStore(), createScoutMatchStore(), {
+        beforeCommit: async (input) => {
+          if (input.riotMatchId === MATCH_ID) {
+            started.resolve(true);
+            await release.promise;
+          }
+        },
+        onFanOut: (matchId) => {
+          log.push(matchId);
+          if (matchId === SECOND_MATCH_ID) completed.resolve(true);
+        },
+      }),
+    );
+    const workflowId = "client-match-dispatch-busy-rollover";
+    const handle = await startDispatcher(workflowId);
+    await handle.signal(dispatchScoutClientMatchesSignal, [
+      dispatchItem(MATCH_ID, 1),
+      dispatchItem(SECOND_MATCH_ID, 2),
+    ]);
+    await started.promise;
+    await handle.signal(requestClientMatchDispatchRolloverSignal);
+    const beforeRelease = await handle.describe();
+    expect(beforeRelease.runId).toBe(handle.firstExecutionRunId);
+    release.resolve(true);
+    await completed.promise;
+    const afterRelease = await handle.describe();
+    expect(afterRelease.runId).not.toBe(handle.firstExecutionRunId);
+    expect(log).toEqual([MATCH_ID, SECOND_MATCH_ID]);
+    const firstRun = await harness
+      .client()
+      .workflow.getHandle(workflowId, handle.firstExecutionRunId)
+      .fetchHistory();
+    const rollover = firstRun.events?.find(
+      (event) => event.workflowExecutionContinuedAsNewEventAttributes != null,
+    )?.workflowExecutionContinuedAsNewEventAttributes;
+    const payload = rollover?.input?.payloads?.[0]?.data;
+    if (payload === undefined || payload === null)
+      throw new Error("Expected a Continue-As-New input");
+    const continuedInput = scoutClientMatchDispatchInputCodec.parse(
+      JSON.parse(Buffer.from(payload).toString("utf8")),
+    );
+    expect(continuedInput.pending.map((item) => item.riotMatchId)).toEqual([
+      SECOND_MATCH_ID,
+    ]);
+    expect(continuedInput.orderingWatermark?.riotMatchId).toBe(MATCH_ID);
+    await terminateDispatcher(
+      workflowId,
+      "test observed pending work preserved",
+    );
+  }, 90_000);
+});
 
 describe("the shared V2 match dispatcher", () => {
   test("processes signaled matches serially in completion order", async () => {

@@ -1,7 +1,7 @@
 import { testIndexedAccountId, testPuuid } from "#src/testing/test-ids.ts";
 import { describe, expect, test } from "vitest";
 import type { CustomGameParticipant } from "@scout-for-lol/data";
-import { nextCustomGameParticipants } from "#src/customs/game/intermission-service.ts";
+import { nextCustomGameParticipants } from "#src/customs/game/next-game-participants.ts";
 
 function participant(index: number): CustomGameParticipant {
   const team = index < 5 ? "A" : "B";

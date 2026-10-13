@@ -34,8 +34,12 @@ TEMPORAL_ADDRESS=<beta-address> TEMPORAL_TLS=true TEMPORAL_NAMESPACE=beta \
   bun run replay:scout-histories <weekly-or-bryan-workflow-id>...
 ```
 
-Do not remove a replay patch until no open execution needs it and the
-namespace's retention period has elapsed.
+Protect every open Scout execution regardless of age, plus closed executions
+within the one-day compatibility window. Keep a replay patch until every
+affected execution has closed and another 24 hours have elapsed. Shared
+namespace retention can remain longer for other applications. Inspect older
+Scout histories with an archived compatible bundle; do not reset them onto a
+bundle that has retired their types or patch branches.
 
 ## Prove every beta queue
 
@@ -46,11 +50,11 @@ cd packages/scout-for-lol/packages/temporal
 bun run canary \
   --stage beta \
   --address <beta-address> \
-  --namespace beta
+  --namespace beta --gateway
 ```
 
 The result must name `scout-beta-realtime`, `scout-beta-interactive`,
-`scout-beta-background`, and `scout-beta-lake`. A missing result means that
+`scout-beta-background`, `scout-beta-lake`, and `scout-beta-gateway`. A missing result means that
 Activity Worker is not polling its declared queue; stop the rollout.
 
 ## Verify hosted queue ownership
@@ -62,6 +66,7 @@ Activity Worker is not polling its declared queue; stop the rollout.
    worker owns `realtime`, `background`, and competition Activities.
    Production retains its embedded Workflow poller. Beta Workflow tasks
    follow the current Worker Deployment build and any nonzero ramp.
+   Confirm the gateway's Customs queue starts only after Discord is ready.
 3. Run the queue canary and inspect representative persisted effects.
    `ScoutTemporalWorkerMissing` requires fresh evidence from each declared
    owner. `ScoutTemporalWorkflowRoutingUnknown` means the beta routing lookup
@@ -168,7 +173,7 @@ Record the beta image digest, deployed commit, and routing state. Observe the
 candidate at 100% traffic. Promote when:
 
 - every fixed and per-report Schedule has the expected ownership and policy;
-- all four Activity queues retain pollers and acceptable schedule-to-start
+- all five Activity queues retain pollers and acceptable schedule-to-start
   latency;
 - Workflow Task failures and nondeterminism remain zero;
 - the report outbox drains and no stale product projection remains;
@@ -212,13 +217,44 @@ TEMPORAL_NAMESPACE=beta bun run worker-deployment promote \
 4. Refresh the report's run history and verify the delivery result. Retain the
    operation's audit record and Discord evidence for the investigated attempt.
 
+## Activate durable product producers
+
+1. Release compatible Workflow registrations, Activity workers, the database
+   migration, and Customs readers before changing the producer flag. Keep
+   `scout_durable_orchestration_enabled` false during this release.
+2. Verify the five-queue canary above against the deployed bundle. Check the
+   new Customs operation gauges and announcement follow-up gauge. A missing
+   gauge or a negative value fails this check.
+3. Record the pause state and note for competition refresh, competition
+   scheduled updates, weekly Bucks, outreach, and Customs expiry Schedules.
+   Pause active affected Schedules and wait for their old Activities to finish.
+   Preserve Schedules already paused by an operator.
+4. Enable the producer flag for beta through the existing Flipt management
+   path. Activation waits for requests already using the legacy path. Resume
+   only Schedules paused by this procedure, restoring their recorded state.
+5. Exercise nonempty competition, weekly, outreach, recruitment, voice,
+   intermission, void, end, and expiry cases in the existing beta guild.
+   Interrupt an Activity after a persisted checkpoint and verify resumption.
+   Confirm frozen content, stable IDs, S3 attachments, and delivery bookkeeping.
+6. Observe beta for a day, then repeat the checks and cutover in production.
+   Preserve production's existing feature availability. A migration flag does
+   not enable Customs, betting, Dares, or other beta features in production.
+7. Retire compatibility code only after old-name starts have stopped, affected
+   open executions have drained, and the one-day window has elapsed. Roll an
+   idle dispatcher with its rollover Signal; let its active child finish.
+   Record the last affected close time and exact deployed builds in the PR.
+
+If cutover fails, disable the producer flag and inspect committed work. After
+activation, flag rollback pauses new production; it does not restore direct
+sends. Keep compatible consumers running so committed work can complete.
+
 ## Repeat in production
 
 Deploy the same accepted image to production, replay retained production
 histories, and repeat `inspect`, `start`, canaries, `advance`, the observation
 window, and `promote` with `TEMPORAL_NAMESPACE=prod` and `--target scout-prod`.
 Set `TEMPORAL_ADDRESS` to the production endpoint before those commands. The
-production queue canary uses `--stage prod --namespace prod`.
+production queue canary uses `--stage prod --namespace prod --gateway`.
 
 Do not infer production acceptance from beta. Reconfirm Argo health, queue
 pollers, Schedules, representative effects, and alert history in production.

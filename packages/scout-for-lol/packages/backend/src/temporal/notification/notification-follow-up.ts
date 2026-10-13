@@ -8,6 +8,7 @@ import { afterPrematchDelivered } from "#src/temporal/notification/prematch-foll
 import { requireIntentRecord } from "#src/temporal/notification-lane/notification-reads.ts";
 import { createLogger } from "#src/logger.ts";
 import { confirmNotificationTip } from "#src/temporal/notification/notification-presentation.ts";
+import { afterProductAnnouncementDelivered } from "#src/temporal/notification/product/follow-up.ts";
 
 const logger = createLogger("scout-v2-notification-follow-up");
 
@@ -56,6 +57,7 @@ function bestEffortFollowUpOf(
     case "settlement":
     case "duel-status":
     case "dare-status":
+    case "product-announcement":
       return undefined;
   }
 }
@@ -64,6 +66,10 @@ export async function afterNotificationDelivered(
   input: ScoutIntentAttemptRef,
 ): Promise<ScoutNotificationFollowUpResult> {
   const record = await requireIntentRecord(input.intentKey);
+  if ("announcementId" in record) {
+    await afterProductAnnouncementDelivered(record);
+    return { outcome: "completed" };
+  }
   if ("duelId" in record) return { outcome: "skipped" };
   if ("dareId" in record) {
     try {

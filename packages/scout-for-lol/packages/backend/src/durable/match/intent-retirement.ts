@@ -140,7 +140,7 @@ export async function retireNotificationIntent(
   if (result.outcome === "applied") {
     scoutDurableNotificationIntentsRetired.inc({ reason, source });
     logger.info(
-      `Retired ${record.intent.kind} intent ${record.intent.key} for ${"matchId" in record ? record.matchId : "duelId" in record ? record.duelId : record.dareId.toString()}: its audience is gone (${reason}); nothing will be sent`,
+      `Retired ${record.intent.kind} intent ${record.intent.key}: its audience is gone (${reason}); nothing will be sent`,
       { intentKey: record.intent.key, reason, source },
     );
   }

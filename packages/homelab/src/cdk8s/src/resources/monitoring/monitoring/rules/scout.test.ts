@@ -22,6 +22,10 @@ describe("Scout Temporal alert rules", () => {
         "ScoutTemporalTaskScheduleToStartHigh",
         "ScoutTemporalDurabilityMetricsUnknown",
         "ScoutTemporalReportOutboxStale",
+        "ScoutCustomOperationHeld",
+        "ScoutCustomOperationStale",
+        "ScoutProductAnnouncementFollowUpStale",
+        "ScoutProductDurabilityMetricsUnknown",
         "ScoutTemporalReportScheduleDrift",
         "ScoutTemporalProductProjectionStale",
         "ScoutTemporalProviderAttemptInterrupted",
@@ -37,6 +41,7 @@ describe("Scout Temporal alert rules", () => {
     for (const alert of [
       "ScoutTemporalDisconnected",
       "ScoutTemporalDurabilityMetricsUnknown",
+      "ScoutProductDurabilityMetricsUnknown",
     ]) {
       const rule = temporal.rules.find(
         (candidate) => candidate.alert === alert,

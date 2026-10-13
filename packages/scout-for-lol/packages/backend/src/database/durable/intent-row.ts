@@ -71,10 +71,23 @@ export const DareNotificationIntentRecordSchema = z.strictObject({
   ),
 });
 
+export type ProductNotificationIntentRecord = z.infer<
+  typeof ProductNotificationIntentRecordSchema
+>;
+export const ProductNotificationIntentRecordSchema = z.strictObject({
+  announcementId: z.string().min(1),
+  intent: NotificationIntentSchema.refine(
+    (intent) =>
+      intent.kind === "product-announcement" && intent.origin.kind === "live",
+    { message: "Product announcements require a live occurrence subject" },
+  ),
+});
+
 export type NotificationIntentRecord =
   | MatchNotificationIntentRecord
   | DuelNotificationIntentRecord
-  | DareNotificationIntentRecord;
+  | DareNotificationIntentRecord
+  | ProductNotificationIntentRecord;
 
 /** The columns owned by the state machine, written on every transition. */
 export type NotificationIntentStateColumns = {
@@ -93,7 +106,7 @@ export type NotificationIntentStateColumns = {
 /** Column shape of a MatchNotificationIntent row, minus DB-managed columns. */
 export type MatchNotificationIntentRow = NotificationIntentStateColumns & {
   intentKey: string;
-  subjectKind: "match" | "duel" | "dare";
+  subjectKind: "match" | "duel" | "dare" | "announcement";
   subjectId: string;
   riotMatchId: RiotMatchId | null;
   kind: string;
@@ -108,7 +121,7 @@ export type MatchNotificationIntentRow = NotificationIntentStateColumns & {
 
 const RawIntentRowSchema = z.object({
   intentKey: z.string(),
-  subjectKind: z.enum(["match", "duel", "dare"]),
+  subjectKind: z.enum(["match", "duel", "dare", "announcement"]),
   subjectId: z.string().nullable(),
   riotMatchId: z.string().nullable(),
   kind: z.string(),
@@ -251,7 +264,8 @@ export function matchNotificationIntentRowToRecord(
   });
   if (
     record.intent.kind === "duel-status" ||
-    record.intent.kind === "dare-status"
+    record.intent.kind === "dare-status" ||
+    record.intent.kind === "product-announcement"
   ) {
     throw new Error(
       `Intent ${raw.intentKey}: ${record.intent.kind} requires a non-match subject`,
@@ -274,6 +288,11 @@ export function notificationIntentRowToRecord(
     );
   }
   switch (raw.subjectKind) {
+    case "announcement":
+      return ProductNotificationIntentRecordSchema.parse({
+        announcementId: raw.subjectId,
+        intent: intentFromRow(raw),
+      });
     case "duel":
       return DuelNotificationIntentRecordSchema.parse({
         duelId: raw.subjectId,
@@ -406,7 +425,8 @@ export function matchNotificationIntentRecordToRow(
 ): MatchNotificationIntentRow {
   if (
     record.intent.kind === "duel-status" ||
-    record.intent.kind === "dare-status"
+    record.intent.kind === "dare-status" ||
+    record.intent.kind === "product-announcement"
   ) {
     throw new Error(
       `Intent ${record.intent.key}: ${record.intent.kind} requires a non-match subject`,
@@ -425,6 +445,14 @@ export function notificationIntentRecordToRow(
   record: NotificationIntentRecord,
 ): MatchNotificationIntentRow {
   if ("matchId" in record) return matchNotificationIntentRecordToRow(record);
+  if ("announcementId" in record) {
+    return {
+      ...intentColumns(record.intent),
+      subjectKind: "announcement",
+      subjectId: record.announcementId,
+      riotMatchId: null,
+    };
+  }
   if ("dareId" in record) {
     return {
       ...intentColumns(record.intent),

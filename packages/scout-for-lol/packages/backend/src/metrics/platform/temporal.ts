@@ -70,11 +70,34 @@ export const scoutTemporalDuplicateEffectClaims = new Counter({
   registers: [registry],
 });
 
+export const scoutCustomOperations = new Gauge({
+  name: "scout_custom_operations",
+  help: "Customs operations awaiting execution or manager resolution",
+  labelNames: ["state"] as const,
+  registers: [registry],
+});
+export const scoutCustomOperationOldestTimestamp = new Gauge({
+  name: "scout_custom_operation_oldest_timestamp_seconds",
+  help: "Creation time of the oldest unfinished Customs operation, zero when empty",
+  registers: [registry],
+});
+export const scoutProductFollowUpOldestTimestamp = new Gauge({
+  name: "scout_product_follow_up_oldest_timestamp_seconds",
+  help: "Delivery time of the oldest announcement missing required bookkeeping, zero when empty",
+  registers: [registry],
+});
+
 export async function updateScoutTemporalDurabilityMetrics(): Promise<void> {
   try {
     const { prisma } = await import("#src/database/index.ts");
     const staleBefore = new Date(Date.now() - 40 * 60 * 1000);
-    const [oldestOutbox, staleProjectionCount] = await Promise.all([
+    const [
+      oldestOutbox,
+      staleProjectionCount,
+      customStates,
+      oldestCustom,
+      oldestFollowUp,
+    ] = await Promise.all([
       prisma.reportScheduleOutbox.findFirst({
         where: { processedAt: null },
         orderBy: { createdAt: "asc" },
@@ -86,14 +109,52 @@ export async function updateScoutTemporalDurabilityMetrics(): Promise<void> {
           updatedAt: { lt: staleBefore },
         },
       }),
+      prisma.customNightOperation.groupBy({
+        by: ["state"],
+        where: { state: { in: ["queued", "running", "held"] } },
+        _count: { _all: true },
+      }),
+      prisma.customNightOperation.findFirst({
+        where: { state: { in: ["queued", "running", "held"] } },
+        orderBy: { createdAt: "asc" },
+        select: { createdAt: true },
+      }),
+      prisma.matchNotificationIntent.findFirst({
+        where: {
+          kind: "product-announcement",
+          state: "delivered",
+          followUpCompletedAt: null,
+        },
+        orderBy: { deliveredAt: "asc" },
+        select: { deliveredAt: true },
+      }),
     ]);
     scoutTemporalReportOutboxOldestTimestamp.set(
       oldestOutbox === null ? 0 : oldestOutbox.createdAt.getTime() / 1000,
     );
     scoutTemporalStaleProductProjections.set(staleProjectionCount);
+    for (const state of ["queued", "running", "held"])
+      scoutCustomOperations.set(
+        { state },
+        customStates.find((row) => row.state === state)?._count._all ?? 0,
+      );
+    scoutCustomOperationOldestTimestamp.set(
+      oldestCustom === null ? 0 : oldestCustom.createdAt.getTime() / 1000,
+    );
+    let followUpSeconds = 0;
+    if (oldestFollowUp !== null) {
+      if (oldestFollowUp.deliveredAt === null)
+        throw new Error("Delivered announcement has no delivery timestamp");
+      followUpSeconds = oldestFollowUp.deliveredAt.getTime() / 1000;
+    }
+    scoutProductFollowUpOldestTimestamp.set(followUpSeconds);
   } catch (error) {
     scoutTemporalReportOutboxOldestTimestamp.set(-1);
     scoutTemporalStaleProductProjections.set(-1);
+    for (const state of ["queued", "running", "held"])
+      scoutCustomOperations.set({ state }, -1);
+    scoutCustomOperationOldestTimestamp.set(-1);
+    scoutProductFollowUpOldestTimestamp.set(-1);
     logger.error("Failed to update Scout Temporal durability metrics", {
       error,
     });

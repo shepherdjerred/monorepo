@@ -67,8 +67,11 @@ the same Scout user.
 Check Customs history after each game. It should show the normalized game
 snapshot and append-only audit revisions.
 
-An unfinished night expires 12 hours after it starts. The Temporal schedule
-records `NIGHT_EXPIRED`, ends the night, and releases the active-night pointer.
+An unfinished night expires 12 hours after it starts. After durable cutover,
+the Temporal schedule queues an expiry operation. The gateway returns voice
+members and removes recorded team channels before ending the night and
+releasing the active-night pointer. Inspect `OPERATION_COMPLETED` with action
+`expire`; legacy nights retain their original `NIGHT_EXPIRED` audit records.
 Expiry never chooses a winner or verifies an unfinished game.
 
 ## 4. Recover without inventing a result
@@ -82,12 +85,18 @@ Expiry never chooses a winner or verifies an unfinished game.
   local upload or void the game explicitly; never enter a winner manually.
 - **Replay does not upload:** confirm League finished writing the ROFL and that
   the same device supplied accepted postgame evidence for its game ID.
-- **Voice provisioning failed:** use the Activity retry. Scout cleans up a
-  partial channel pair before retrying.
+- **Voice provisioning is pending:** leave the Activity open or reconnect.
+  Scout resumes from persisted channels and participant checkpoints.
+- **Voice setup needs a check:** a host, cohost, or administrator must inspect
+  the server's current channels. Enter the exact channel Scout created, or
+  leave its ID empty after verifying no matching channel exists. Describe the
+  check and submit the answer. Scout verifies fresh channel evidence before
+  resuming. Night controls remain disabled until the operation finishes.
 - **Players remain in team channels:** use **Return everyone to lobby**. Ending
   the night also performs that cleanup.
-- **The host disappears:** wait for the 12-hour expiry if no manager can end
-  the night. Confirm `NIGHT_EXPIRED` exists before intervening in PostgreSQL.
+- **The host disappears:** wait for expiry if no manager can end the night.
+  Inspect the expiry operation, its gateway Activity, and its final audit
+  record before intervening in PostgreSQL.
 
 Rollback requires disabling `custom_nights_enabled` for the guild. Disable the
 global `scout_client_ingestion` kill switch only when all native ingestion must

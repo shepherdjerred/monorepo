@@ -29,6 +29,7 @@ import {
   createCustomNight,
   lockCustomGuild,
 } from "#src/customs/repository.ts";
+import { orchestrationMode } from "#src/temporal/orchestration-cutover.ts";
 type PlayerIdentity = {
   readonly playerId: PlayerId | null;
   readonly playerAlias: string | null;
@@ -73,6 +74,8 @@ export async function startCustomNight(
 ): Promise<CustomNightSnapshot> {
   const actor = await customActivityActor(claims);
   await assertCustomLaunchChannel(actor);
+  const mode = await orchestrationMode();
+  if (mode === "paused") throw new Error("New Customs operations are paused");
   const player = await linkedPlayer(prisma, actor.guildId, actor.discordId);
   const created = await createCustomNight(prisma, {
     guildId: actor.guildId,
@@ -87,6 +90,7 @@ export async function startCustomNight(
     hostSelectedAccountId: player.selectedAccountId,
     disclosureVersion: CUSTOMS_DISCLOSURE_VERSION,
     now: new Date(),
+    durableRecruitment: mode === "durable",
   });
   return afterMutation(created.id, actor);
 }

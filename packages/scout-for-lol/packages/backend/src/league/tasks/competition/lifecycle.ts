@@ -22,6 +22,8 @@ import { logNotification } from "#src/utils/notification-logger.ts";
 import * as Sentry from "@sentry/bun";
 import { createLogger } from "#src/logger.ts";
 import { recordCoreOutputDelivered } from "#src/analytics/guild-lifecycle.ts";
+import { orchestrationMode } from "#src/temporal/orchestration-cutover.ts";
+import { queueCompetitionLifecycle } from "#src/league/tasks/competition/durable-announcements.ts";
 
 const logger = createLogger("competition-lifecycle");
 
@@ -32,10 +34,10 @@ const logger = createLogger("competition-lifecycle");
 /**
  * Post "competition started" notification to the competition's channel
  */
-async function postCompetitionStarted(
+function competitionStartedMessage(
   competition: CompetitionWithCriteria,
-): Promise<string> {
-  const message = `🎯 **Competition Started!**
+): string {
+  return `🎯 **Competition Started!**
 
 **${competition.title}**
 ${competition.description}
@@ -46,6 +48,12 @@ Ask a server admin to add you if you are not in yet — Scout has no
 self-service join.
 
 Good luck! 🍀`;
+}
+
+async function postCompetitionStarted(
+  competition: CompetitionWithCriteria,
+): Promise<string> {
+  const message = competitionStartedMessage(competition);
 
   try {
     logNotification(
@@ -147,10 +155,10 @@ function formatLeaderboardEntry(entry: RankedLeaderboardEntry): string {
 /**
  * Post final leaderboard to the competition's channel
  */
-async function postFinalLeaderboard(
+function finalLeaderboardMessage(
   competition: CompetitionWithCriteria,
   leaderboard: RankedLeaderboardEntry[],
-): Promise<string> {
+): string {
   // Take top 10 entries
   const topEntries = leaderboard.slice(0, 10);
 
@@ -174,6 +182,14 @@ async function postFinalLeaderboard(
   }
 
   message += `\n\nThank you for participating! 🎉`;
+  return message;
+}
+
+async function postFinalLeaderboard(
+  competition: CompetitionWithCriteria,
+  leaderboard: RankedLeaderboardEntry[],
+): Promise<string> {
+  const message = finalLeaderboardMessage(competition, leaderboard);
 
   try {
     logNotification("COMPETITION_ENDED", "lifecycle:handleCompetitionEnds", {
@@ -227,6 +243,8 @@ export async function handleCompetitionStarts(
   prismaClient: ExtendedPrismaClient,
   now: Date,
 ): Promise<void> {
+  const mode = await orchestrationMode(prismaClient);
+  if (mode === "paused") return;
   logger.info("[CompetitionLifecycle] Checking for competitions to start...");
 
   const rows = await prismaClient.competition.findMany({
@@ -267,6 +285,15 @@ export async function handleCompetitionStarts(
         competition.criteria,
       );
 
+      if (mode === "durable") {
+        await queueCompetitionLifecycle(prismaClient, {
+          competition,
+          phase: "start",
+          message: competitionStartedMessage(competition),
+          now,
+        });
+        continue;
+      }
       if (competition.startNotifiedAt === null) {
         const messageId = await postCompetitionStarted(competition);
         // Record the delivery right after the send succeeds, before
@@ -337,6 +364,8 @@ export async function handleCompetitionEnds(
   prismaClient: ExtendedPrismaClient,
   now: Date,
 ): Promise<void> {
+  const mode = await orchestrationMode(prismaClient);
+  if (mode === "paused") return;
   logger.info("[CompetitionLifecycle] Checking for competitions to end...");
 
   const rows = await prismaClient.competition.findMany({
@@ -380,6 +409,15 @@ export async function handleCompetitionEnds(
 
       // Calculate and post final leaderboard
       const leaderboard = await calculateLeaderboard(prismaClient, competition);
+      if (mode === "durable") {
+        await queueCompetitionLifecycle(prismaClient, {
+          competition,
+          phase: "end",
+          message: finalLeaderboardMessage(competition, leaderboard),
+          now,
+        });
+        continue;
+      }
       if (competition.endNotifiedAt === null) {
         const messageId = await postFinalLeaderboard(competition, leaderboard);
         // Same ordering as the start path above: record the delivery right

@@ -427,6 +427,16 @@ describe("Scout gateway network boundary", () => {
                 },
               },
             ],
+            ports: [{ port: 9464, protocol: "TCP" }],
+          },
+          {
+            from: [
+              {
+                namespaceSelector: {
+                  matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
+                },
+              },
+            ],
             ports: [{ port: 3000, protocol: "TCP" }],
           },
         ],

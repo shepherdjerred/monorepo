@@ -32,6 +32,12 @@ import {
 import { ARGOCD_SYNC_WAVE_ANNOTATION } from "@shepherdjerred/homelab/cdk8s/src/application-release-policy.ts";
 import type { Stage } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/scout.ts";
 import { scoutAdminRoleContainerBase } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/probes.ts";
+import {
+  createScoutTemporalMetricsServiceMonitor,
+  scoutTemporalMetricsContainerPort,
+  scoutTemporalMetricsEnv,
+  scoutTemporalMetricsServicePort,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/scout/temporal-metrics.ts";
 
 /** Pod label every gateway-role resource selects on. */
 export const SCOUT_GATEWAY_APP_LABEL = "scout-gateway";
@@ -103,8 +109,8 @@ export type ScoutGatewayDeploymentOptions = {
  * Deployment without this volume is a crash loop.
  *
  * Sharing the volume is sound specifically because of what this role does NOT
- * do. It runs no Temporal worker (`temporalWorkers` and
- * `deferredTemporalWorkers` are both empty) and does not fold, so it never
+ * do. Its gateway Temporal worker only moves Customs voice members and
+ * checkpoints Postgres progress. It does not fold the lake, so it never
  * writes a staging directory and never moves the `CURRENT` pointer. That
  * leaves exactly one publisher — the `application` role — and N readers, which
  * is what an atomic build-pointer layout is for. The container's read-only
@@ -217,6 +223,10 @@ export function createScoutGatewayDeployment(
       // the full server (backend src/http/admin-server.ts) — the surface that
       // is missing here is the product's, not the operator's.
       ...scoutAdminRoleContainerBase(options.imageVersion),
+      ports: [
+        ...scoutAdminRoleContainerBase(options.imageVersion).ports,
+        scoutTemporalMetricsContainerPort,
+      ],
       volumeMounts: [
         {
           path: "/data",
@@ -246,6 +256,7 @@ export function createScoutGatewayDeployment(
       ],
       envVariables: {
         ...options.envVariables,
+        ...scoutTemporalMetricsEnv,
         SCOUT_RUNTIME_ROLE: EnvValue.fromValue("gateway"),
       },
     }),
@@ -271,13 +282,18 @@ export function createScoutGatewayDeployment(
       },
     },
     selector: deployment,
-    ports: [{ name: "metrics", port: 3000 }],
+    ports: [{ name: "metrics", port: 3000 }, scoutTemporalMetricsServicePort],
   });
 
   createServiceMonitor(chart, {
     name: `scout-gateway-${stage}`,
     matchLabels: { app: SCOUT_GATEWAY_APP_LABEL, stage },
   });
+  createScoutTemporalMetricsServiceMonitor(
+    chart,
+    `scout-gateway-temporal-${stage}`,
+    { app: SCOUT_GATEWAY_APP_LABEL, stage },
+  );
 
   return deployment;
 }

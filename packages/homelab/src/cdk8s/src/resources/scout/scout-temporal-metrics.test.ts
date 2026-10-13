@@ -68,7 +68,7 @@ describe.each(["beta", "prod"] as const)(
     // These two roles run every unversioned Scout Workflow and Activity; the
     // SDK's per-attempt Workflow Task failure counters exist only if they
     // export them.
-    test.each(["application", "activity-worker"])(
+    test.each(["application", "activity-worker", "gateway"])(
       "the %s role exports and exposes the SDK metrics",
       (role) => {
         const container = containersByRole(stage).get(role);
@@ -83,16 +83,9 @@ describe.each(["beta", "prod"] as const)(
       },
     );
 
-    test("the gateway role, which runs no Workers, does not", () => {
-      const container = containersByRole(stage).get("gateway");
-      expect(container).toBeDefined();
-      expect(container?.env.map((entry) => entry.name)).not.toContain(
-        "TEMPORAL_METRICS_ADDRESS",
-      );
-    });
-
     test.each([
       [`scout-temporal-${stage}-service-monitor`, "scout"],
+      [`scout-gateway-temporal-${stage}-service-monitor`, "scout-gateway"],
       [
         `scout-activity-worker-temporal-${stage}-service-monitor`,
         "scout-activity-worker",
@@ -107,17 +100,18 @@ describe.each(["beta", "prod"] as const)(
       expect(spec.selector.matchLabels).toEqual({ app, stage });
     });
 
-    test.each(["scout-ingress-netpol", "scout-activity-worker-netpol"])(
-      "%s admits Prometheus to the exporter port",
-      (name) => {
-        const spec = NetworkPolicySpecSchema.parse(
-          findResource(scoutResources(stage), "NetworkPolicy", name).spec,
-        );
-        const ports = spec.ingress.flatMap(
-          (rule) => rule.ports?.map((port) => port.port) ?? [],
-        );
-        expect(ports).toContain(9464);
-      },
-    );
+    test.each([
+      "scout-ingress-netpol",
+      "scout-activity-worker-netpol",
+      "scout-gateway-netpol",
+    ])("%s admits Prometheus to the exporter port", (name) => {
+      const spec = NetworkPolicySpecSchema.parse(
+        findResource(scoutResources(stage), "NetworkPolicy", name).spec,
+      );
+      const ports = spec.ingress.flatMap(
+        (rule) => rule.ports?.map((port) => port.port) ?? [],
+      );
+      expect(ports).toContain(9464);
+    });
   },
 );

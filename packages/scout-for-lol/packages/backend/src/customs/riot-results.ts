@@ -214,6 +214,7 @@ export async function finalizeManagedCustomResult(
         id: game.nightId,
         state: nightTransition.current,
         revision: game.night.revision,
+        operations: { none: { state: { in: ["queued", "running", "held"] } } },
       },
       data: {
         state: nightTransition.next,
