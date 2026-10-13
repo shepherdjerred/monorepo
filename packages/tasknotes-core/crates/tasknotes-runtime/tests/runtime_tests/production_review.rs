@@ -165,3 +165,85 @@ fn review_production_template_preserves_raw_yaml_values_and_expands_body_once() 
     assert_eq!(document.body(), "café-@-home | H | user {{status}}");
     Ok(())
 }
+
+#[test]
+fn review_template_default_context_preserves_explicit_inputs_and_template_precedence() -> Result<()>
+{
+    for (id, properties, template_fields, scheduled, contexts, expansion) in [
+        (
+            "defaults",
+            json!({"title":"Default context","contexts":[]}),
+            "",
+            "2026-10-09",
+            json!(["work", "home"]),
+            "2026-10-09 | work, home",
+        ),
+        (
+            "explicit",
+            json!({"title":"Explicit context","scheduled":"2026-10-10","contexts":["personal"]}),
+            "scheduled: '2026-10-11'\ncontexts: [template]\n",
+            "2026-10-10",
+            json!(["personal"]),
+            "2026-10-10 | personal",
+        ),
+        (
+            "template-precedence",
+            json!({"title":"Template precedence"}),
+            "scheduled: '2026-10-11'\ncontexts: [template]\n",
+            "2026-10-11",
+            json!(["template"]),
+            "2026-10-09 | work, home",
+        ),
+    ] {
+        let files = Arc::new(Memory::default());
+        files.seed("a", "tasknotes.yaml", b"title:\n  storage: frontmatter\ndefaults:\n  scheduled: 2026-10-09\n  contexts: [work, home]\ntemplating:\n  enabled: true\n  template_path: Templates/context.md\n  failure_mode: error_abort\n")?;
+        let template = format!(
+            "---\n{template_fields}reviewExpansion: '{{{{scheduledDate}}}} | {{{{contexts}}}}'\n---\n{{{{scheduledDate}}}} | {{{{contexts}}}} | {{{{date}}}} {{{{time}}}}"
+        );
+        files.seed("a", "Templates/context.md", template.as_bytes())?;
+        let engine = Engine::open(":memory:", files.clone())?;
+        engine.register_profile(profile(ProfileKind::LocalFolder))?;
+        engine.refresh("a")?;
+        let mut request = mutation(
+            id,
+            Command::Create {
+                path: Some("Tasks/context.md".into()),
+                properties: properties
+                    .as_object()
+                    .cloned()
+                    .ok_or(RuntimeError::NotFound)?,
+                body: None,
+            },
+        );
+        request.at = "2026-10-04T00:30:00Z".into();
+        request.execution_context = Some(tasknotes_runtime::types::ExecutionContext {
+            today: "2026-10-03".into(),
+            timezone: "America/Los_Angeles".into(),
+        });
+        let receipt = engine.execute("a", &request)?;
+        assert_eq!(receipt.task_path.as_deref(), Some("Tasks/context.md"));
+        let bytes = files
+            .get("a", "Tasks/context.md")?
+            .ok_or(RuntimeError::NotFound)?;
+        let document = TaskDocument::parse(VaultPath::parse("Tasks/context.md")?, &bytes)?;
+        assert_eq!(
+            document.frontmatter().get("scheduled"),
+            Some(&json!(scheduled))
+        );
+        assert_eq!(document.frontmatter().get("contexts"), Some(&contexts));
+        assert_eq!(
+            document.frontmatter().get("reviewExpansion"),
+            Some(&json!(expansion))
+        );
+        assert_eq!(document.body(), format!("{expansion} | 2026-10-03 17:30"));
+        assert_eq!(
+            document.frontmatter().get("dateCreated"),
+            Some(&json!("2026-10-04T00:30:00Z"))
+        );
+        assert_eq!(
+            document.frontmatter().get("dateModified"),
+            Some(&json!("2026-10-04T00:30:00Z"))
+        );
+    }
+    Ok(())
+}

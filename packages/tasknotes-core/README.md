@@ -471,9 +471,10 @@ Snapshots return all pending task paths separately from the single upload head.
 Dependency state follows configured completion meanings and scoped link
 resolution. Recurrence-aware date queries retain completed virtual instances;
 `agenda` adds unfinished overdue tasks, while `inbox` requires an unfinished,
-nonrecurring task without projects, contexts, due, or scheduled dates. `Query.at`
-supplies the read clock for live tracked minutes; absent it, only closed entries
-contribute. Capture context supplies project/context/tag/scheduled defaults;
+nonrecurring task without projects, contexts, due, or scheduled dates. `Query.today`
+supplies the local civil date for date scopes and recurrence. `Query.at` remains
+accepted for wire compatibility but is unused; there are no tracked-minute
+projections. Capture context supplies project/context/tag/scheduled defaults;
 explicit parsed values take precedence.
 
 `obsidianTransportLimits` supplies the common framing policy: 4 MiB UTF-8 text,
@@ -505,7 +506,17 @@ use synthetic pinned-reference transcripts; this evidence does not establish
 live-service interoperability or store acceptance.
 
 All 4,980 cases from the pinned TaskNotes specification are imported unchanged
-and SHA-256 checked. Field-mapping tests execute all 139 cases: 129 retain their
+and SHA-256 checked. The full corpus dispatches every original input once,
+including rejected requests, and reports raw upstream matches separately. Exactly
+43 named timing-withdrawal cases require independent typed rejection or opaque
+preservation contracts, with supported-operation controls and real-engine
+edit/Undo witnesses. Every other case still requires its unchanged upstream
+comparison; link, title-mirror, and unimplemented-profile differences remain hard
+failures. Unknown operations, changed contract operations, duplicate case IDs,
+and missing contract cases fail independently. This is not universal upstream
+parity or approval of additional differences.
+
+Field-mapping tests execute all 139 cases: 129 retain their
 upstream comparisons and 10 exercise explicit first-party contracts for withdrawn
 timing roles, preserving their metadata without semantic remapping. Corpus
 integrity, implemented operation tests, full specification conformance, native

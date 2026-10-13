@@ -616,7 +616,7 @@ pub struct Query {
     pub scope: Option<String>,
     /// Caller-supplied local civil date for date scopes and recurrence.
     pub today: Option<String>,
-    /// Explicit read instant for elapsed live time; absent excludes live minutes.
+    /// Retained wire-compatibility field; elapsed-time projections are withdrawn.
     pub at: Option<String>,
     /// Days ahead in upcoming scope; default seven.
     pub upcoming_days: Option<u32>,
