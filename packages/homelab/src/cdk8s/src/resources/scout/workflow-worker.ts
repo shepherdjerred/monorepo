@@ -1,11 +1,12 @@
 import type { Chart } from "cdk8s";
-import { Size } from "cdk8s";
+import { Duration, Size } from "cdk8s";
 import { z } from "zod";
 import {
   Cpu,
   Deployment,
   DeploymentStrategy,
   EnvValue,
+  Probe,
   Protocol,
   Service,
   Volume,
@@ -18,7 +19,8 @@ import {
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { Stage } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/scout.ts";
 
-export type ScoutWorkflowWorkerTrack = "stable" | "candidate";
+export type ScoutWorkflowWorkerTrack =
+  "stable" | "candidate" | `retained-${string}`;
 
 // Build 12197 predates the workflow-only entrypoint. The main image release
 // overrides the candidate pin while rendering, so the first capable build can
@@ -61,9 +63,11 @@ export function createScoutWorkflowWorker(
     securityContext: { fsGroup: 1000 },
     metadata: {
       annotations: {
-        // The candidate poller must be healthy before a later backend release
-        // is allowed to stop its embedded Workflow poller.
-        "argocd.argoproj.io/sync-wave": "-1",
+        // Retained current builds must start before either mutable track can
+        // replace its only poller. These workers share the normal family policy.
+        "argocd.argoproj.io/sync-wave": track.startsWith("retained-")
+          ? "-2"
+          : "-1",
       },
     },
     podMetadata: {
@@ -84,6 +88,18 @@ export function createScoutWorkflowWorker(
       command: ["bun"],
       args: ["run", "src/temporal/workflow-worker.ts"],
       ports: [{ name: "metrics", number: 9464, protocol: Protocol.TCP }],
+      readiness: Probe.fromCommand(
+        [
+          "bun",
+          "-e",
+          String.raw`const response=await fetch('http://127.0.0.1:9464/metrics',{signal:AbortSignal.timeout(2000)});const ready=response.ok&&(await response.text()).split('\n').some(line=>line.startsWith('temporal_worker_num_pollers{')&&line.includes('poller_type="workflow_task"')&&Number(line.slice(line.lastIndexOf(' ')+1))>0);process.exit(ready?0:1)`,
+        ],
+        {
+          periodSeconds: Duration.seconds(5),
+          timeoutSeconds: Duration.seconds(3),
+          failureThreshold: 3,
+        },
+      ),
       securityContext: {
         user: 1000,
         group: 1000,

@@ -35,6 +35,18 @@ healthy. Do not remove legacy queue pollers while visibility still shows open
 executions on those queues; the [rollout preflight](https://github.com/shepherdjerred/monorepo/blob/95a219ec8fca805e0cfccf6a2ebd0dcfebc3e63a/packages/temporal/src/lib/worker-deployment-proofs.ts)
 checks the candidate poller before changing routing.
 
+Before replacing either Scout image track, confirm the current Build ID still
+has a poller on another Deployment. If it lives only on the track being
+replaced, add an unmanaged catalog image pin named
+`shepherdjerred/scout-for-lol/<stage>/workflows/retained-<first-12-build-id-characters>`.
+Use that build's exact published digest. The
+[Scout chart](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/cdk8s-charts/scout.ts)
+starts its separate retained poller in an earlier sync wave.
+Readiness requires a nonsticky Workflow poller before either mutable track changes.
+Keep the pin unchanged until the build is neither current nor ramping and
+Temporal reports its pinned executions drained. Then remove it through the
+normal reviewed GitOps release and pruning procedure.
+
 Set `TEMPORAL_ADDRESS` (and `TEMPORAL_TLS=true` for the private TLS endpoint) in
 the operator shell. The package command uses the existing `toolkit temporal`
 passthrough and never falls back to Kubernetes-only service DNS.

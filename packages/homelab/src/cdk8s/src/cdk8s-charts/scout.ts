@@ -1,5 +1,6 @@
 import { Chart } from "cdk8s";
 import type { App } from "cdk8s";
+import { z } from "zod";
 import { createScoutDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/index.ts";
 import { createScoutPostgreSQLDatabase } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/scout-db.ts";
 import { Namespace } from "cdk8s-plus-31";
@@ -166,6 +167,20 @@ export function createScoutChart(
 
   createScoutPostgreSQLDatabase(chart, stage);
   createScoutDeployment(chart, stage);
+  // A current or pinned build may live only on the candidate track after an
+  // interrupted promotion. Preserve it independently before changing tracks.
+  // Each retained pin has its own Deployment, so later releases cannot replace
+  // it while its histories drain.
+  const retainedPrefix = `shepherdjerred/scout-for-lol/${stage}/workflows/`;
+  for (const [key, image] of Object.entries(versions)) {
+    if (!key.startsWith(`${retainedPrefix}retained-`)) continue;
+    const track = z
+      .templateLiteral(["retained-", z.string().regex(/^[a-f0-9]{12}$/)])
+      .parse(key.slice(retainedPrefix.length));
+    if (createScoutWorkflowWorker(chart, stage, track, image) === undefined) {
+      throw new Error(`Retained Scout Workflow image is not capable: ${key}`);
+    }
+  }
   const stableImage =
     workflowWorkerImageOverrides?.stable ??
     versions[`shepherdjerred/scout-for-lol/${stage}/workflows/stable`];
