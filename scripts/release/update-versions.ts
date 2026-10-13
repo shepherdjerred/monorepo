@@ -22,12 +22,15 @@ import {
 } from "../lib/pin-candidates-schema.ts";
 import { run, runAllowExit, tmpBase } from "../lib/run.ts";
 import { runMain } from "../lib/transient.ts";
+import {
+  PIN_STATE_FILE_REL,
+  VERSION_CATALOG_FILE_REL,
+  writeVersionPinUpdate,
+} from "./sync-storm-image-configs.ts";
 
 const MONOREPO_REPO = "shepherdjerred/monorepo";
 const MONOREPO_WRITE_URL = `https://github.com/${MONOREPO_REPO}.git`;
 const VERSION_BUMP_BRANCH = "chore/version-bump-pending";
-const VERSION_CATALOG_FILE_REL = "packages/version-catalog/src/catalog.json";
-const PIN_STATE_FILE_REL = "scripts/pin-candidates-state.json";
 const MAX_LEASE_ATTEMPTS = 3;
 const MAX_MERGE_READINESS_ATTEMPTS = 10;
 
@@ -215,15 +218,12 @@ async function prepareAttempt(
   aggregate = mergePinCandidates(aggregate, batch);
 
   await resetVersionBumpBranch(git);
-  await Bun.write(
-    `${cloneDir}/${VERSION_CATALOG_FILE_REL}`,
+  await writeVersionPinUpdate(
+    cloneDir,
     await rewriteVersionCatalogSource(catalogSource, aggregate),
-  );
-  await Bun.write(
-    `${cloneDir}/${PIN_STATE_FILE_REL}`,
     serializePinCandidatesState(aggregate),
+    git,
   );
-  await git(["add", VERSION_CATALOG_FILE_REL, PIN_STATE_FILE_REL]);
   const staged = await git(["diff", "--cached", "--quiet"], {
     allowExit: true,
   });

@@ -1,0 +1,62 @@
+{
+  "cd27b2ab639ef237a40dac9c4b1d8c8b7df90113ad518f5a59f98ccc90f552a0": {
+    "configSha256": "dc297511fb5e007b520f63f9cda7b819248ac50ffbb9df6dff66a6693df642ea",
+    "moduleKeys": [
+      "economy",
+      "messages",
+      "mail",
+      "chat",
+      "discord",
+      "essentials",
+      "shops",
+      "shards",
+      "towns",
+      "tracks",
+      "mechanics",
+      "spells",
+      "npcs",
+      "quests",
+      "arena",
+      "mobs",
+      "qol",
+      "skills",
+      "seasonal",
+      "world",
+      "tickets",
+      "agent",
+      "companions",
+      "rwf",
+      "rwfbots"
+    ]
+  },
+  "f2a64f99d07abef8eb52de687e6afb44f5f83344c294edc3f08c8b8b5534d11c": {
+    "configSha256": "dc297511fb5e007b520f63f9cda7b819248ac50ffbb9df6dff66a6693df642ea",
+    "moduleKeys": [
+      "economy",
+      "messages",
+      "mail",
+      "chat",
+      "discord",
+      "essentials",
+      "shops",
+      "shards",
+      "towns",
+      "tracks",
+      "mechanics",
+      "spells",
+      "npcs",
+      "quests",
+      "arena",
+      "mobs",
+      "qol",
+      "skills",
+      "seasonal",
+      "world",
+      "tickets",
+      "agent",
+      "companions",
+      "rwf",
+      "rwfbots"
+    ]
+  }
+}

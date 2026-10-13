@@ -1,5 +1,6 @@
 import { mkdtemp, readdir, rm, symlink } from "node:fs/promises";
 import type * as FileSystem from "node:fs/promises";
+import type * as RenderModule from "@shepherdjerred/mc-build/render/index.ts";
 import path from "node:path";
 import os from "node:os";
 import { afterAll, describe, expect, it, vi } from "vitest";
@@ -46,6 +47,23 @@ vi.mock("node:fs/promises", async (importOriginal) => {
 vi.mock("@shepherdjerred/mc-build/render/assets.ts", async () => {
   const { renderAssets } = await import("#test/fixtures/render-assets.ts");
   return { ensureAssets: renderAssets };
+});
+// These tests verify durable judging/publication, including real rendered PNG
+// checksums. Small tiles retain that contract without repeatedly rasterizing
+// production-size vision sheets under CI contention.
+vi.mock("@shepherdjerred/mc-build/render/index.ts", async (importOriginal) => {
+  const original = await importOriginal<typeof RenderModule>();
+  class UnitRenderer extends original.Renderer {
+    override judgeSheet(
+      grid: Parameters<InstanceType<typeof original.Renderer>["judgeSheet"]>[0],
+      options: Parameters<
+        InstanceType<typeof original.Renderer>["judgeSheet"]
+      >[1],
+    ) {
+      return super.judgeSheet(grid, { ...options, tile: 64 });
+    }
+  }
+  return { ...original, Renderer: UnitRenderer };
 });
 const root = await mkdtemp(path.join(os.tmpdir(), "mc-knockout-history-"));
 afterAll(async () => rm(root, { recursive: true }));

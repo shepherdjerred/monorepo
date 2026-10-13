@@ -1,5 +1,6 @@
 import path from "node:path";
 import { z } from "zod";
+import imageConfigs from "./storm-image-configs.json";
 
 // The Storm's repository layout, as the `storm-dev` profile stages it. These
 // are paths in this monorepo, not a package dependency: mc-harness never
@@ -58,93 +59,25 @@ const STORM_IMAGE_ENABLED_MODULES = [
   "companions",
 ] as const;
 
-const STORM_IMAGE_MODULE_KEYS = [
-  "economy",
-  "messages",
-  "mail",
-  "chat",
-  "discord",
-  "essentials",
-  "shops",
-  "shards",
-  "towns",
-  "tracks",
-  "mechanics",
-  "spells",
-  "npcs",
-  "quests",
-  "arena",
-  "mobs",
-  "qol",
-  "skills",
-  "seasonal",
-  "world",
-  "tickets",
-  "agent",
-  "companions",
-  "rwf",
-  "rwfbots",
-] as const;
-
 /**
  * Config schema snapshots are keyed by the exact published image digest.
  * Production and candidate pins can move independently; never infer an older
  * image's module keys from the current checkout's owned config.
  */
-const STORM_IMAGE_CONFIGS: Readonly<
-  Record<
-    string,
-    { moduleKeys: readonly string[]; enabledModules: readonly string[] }
-  >
-> = {
-  // Verified /plugins/TheStorm/config.yml in the exact published image layers.
-  "4c056c0a82c55c009297585aa0f5f2040a398e77510343b36d34bb102a3664e2": {
-    moduleKeys: STORM_IMAGE_MODULE_KEYS,
-    enabledModules: STORM_IMAGE_ENABLED_MODULES,
-  },
-  // Verified /plugins/TheStorm/config.yml in the live pod running this digest.
-  d222284ff89d56d19c814ab400c057eb22336ddaa739af9900c0332456ba3a77: {
-    moduleKeys: STORM_IMAGE_MODULE_KEYS,
-    enabledModules: STORM_IMAGE_ENABLED_MODULES,
-  },
-  a9158e5c64baa0be50a8d56e1e20b168a61e5d1d6f12763e70b6b74f7ba9d7b1: {
-    moduleKeys: STORM_IMAGE_MODULE_KEYS,
-    enabledModules: STORM_IMAGE_ENABLED_MODULES,
-  },
-  // Pipeline 6485's exact published /plugins/TheStorm/config.yml has these keys.
-  ecc53031a712ad66acd4cd0108ac6afcae706afc382c8618e79e338aa0430201: {
-    moduleKeys: STORM_IMAGE_MODULE_KEYS,
-    enabledModules: STORM_IMAGE_ENABLED_MODULES,
-  },
-  // Pipeline 6602's exact published /plugins/TheStorm/config.yml has these keys.
-  "6ed63721f4ad14c7d29a389eacd2685016941caf1515f7d9b67dbbc010511144": {
-    moduleKeys: STORM_IMAGE_MODULE_KEYS,
-    enabledModules: STORM_IMAGE_ENABLED_MODULES,
-  },
-  // Read /plugins/TheStorm/config.yml from this exact digest before retaining its pin.
-  "8d71ceb5287d1230d6be361eb25ea4f8613d66607486a0287f9c664d9f3006f4": {
-    moduleKeys: STORM_IMAGE_MODULE_KEYS,
-    enabledModules: STORM_IMAGE_ENABLED_MODULES,
-  },
-  // Pipeline 8277's exact published /plugins/TheStorm/config.yml was verified
-  // from image 1028545e50886f8fe33e70dd217ade17e3f50a1890e2ddc7ea58e38a42d97d53.
-  "1028545e50886f8fe33e70dd217ade17e3f50a1890e2ddc7ea58e38a42d97d53": {
-    moduleKeys: STORM_IMAGE_MODULE_KEYS,
-    enabledModules: STORM_IMAGE_ENABLED_MODULES,
-  },
-  // Pipeline 8905's published /plugins/TheStorm/config.yml was read from the
-  // digest-verified OCI layer; file SHA-256 dc297511fb5e007b520f63f9cda7b819248ac50ffbb9df6dff66a6693df642ea.
-  a6b7a403012a2ba68c6f0c7ac08f050cac8f7e19e4fe816c265f6a97d64f8e43: {
-    moduleKeys: STORM_IMAGE_MODULE_KEYS,
-    enabledModules: STORM_IMAGE_ENABLED_MODULES,
-  },
-  // Pipeline 9046's exact published /plugins/TheStorm/config.yml was read;
-  // file SHA-256 dc297511fb5e007b520f63f9cda7b819248ac50ffbb9df6dff66a6693df642ea.
-  f2a64f99d07abef8eb52de687e6afb44f5f83344c294edc3f08c8b8b5534d11c: {
-    moduleKeys: STORM_IMAGE_MODULE_KEYS,
-    enabledModules: STORM_IMAGE_ENABLED_MODULES,
-  },
-};
+const STORM_IMAGE_CONFIGS = z
+  .record(
+    z.string().regex(/^[a-f0-9]{64}$/u),
+    z
+      .object({
+        configSha256: z.string().regex(/^[a-f0-9]{64}$/u),
+        moduleKeys: z
+          .array(z.string().min(1))
+          .nonempty()
+          .refine((keys) => new Set(keys).size === keys.length),
+      })
+      .strict(),
+  )
+  .parse(imageConfigs);
 
 export function stormImageConfig(image: string): {
   moduleKeys: readonly string[];
@@ -160,7 +93,17 @@ export function stormImageConfig(image: string): {
       `No Storm module config snapshot for image digest ${digest}`,
     );
   }
-  return config;
+  const missing = STORM_IMAGE_ENABLED_MODULES.filter(
+    (module) => !config.moduleKeys.includes(module),
+  );
+  if (missing.length > 0)
+    throw new Error(
+      `Storm image lacks required sandbox modules: ${missing.join(", ")}`,
+    );
+  return {
+    moduleKeys: config.moduleKeys,
+    enabledModules: STORM_IMAGE_ENABLED_MODULES,
+  };
 }
 
 const OwnedStormConfigSchema = z
