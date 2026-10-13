@@ -1,3 +1,3 @@
-import { io } from "socket.io-client";
+import { createGameSocketClient } from "@shepherdjerred/discord-plays-web/socket/game-socket-client.ts";
 
-export const socket = io();
+export const socket = createGameSocketClient();

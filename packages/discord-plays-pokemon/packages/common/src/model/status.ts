@@ -1,5 +1,13 @@
 import { z } from "zod";
-import { PlayerSchema } from "./player.ts";
+import { DiscordUserSchema } from "@shepherdjerred/discord-plays-core/auth/protocol.ts";
+
+export const PlayBlockerSchema = z.enum([
+  "no-session",
+  "signed-out",
+  "not-in-voice",
+  "too-few-players",
+]);
+export type PlayBlocker = z.infer<typeof PlayBlockerSchema>;
 
 export type Status = z.infer<typeof StatusSchema>;
 export const StatusSchema = z.strictObject({
@@ -8,12 +16,10 @@ export const StatusSchema = z.strictObject({
   /** Whether the in-browser live feed is served. */
   driverFeedEnabled: z.boolean(),
   /** Everyone in the session's voice channel, bots excluded. */
-  playerList: z.array(PlayerSchema),
-});
-
-export type StatusRequest = z.infer<typeof StatusRequestSchema>;
-export const StatusRequestSchema = z.strictObject({
-  kind: z.literal("status"),
+  playerList: z.array(DiscordUserSchema),
+  playBlocker: PlayBlockerSchema.nullable(),
+  voiceChannelName: z.string().nullable(),
+  minimumInChannel: z.number().int().nonnegative(),
 });
 
 export type StatusResponse = z.infer<typeof StatusResponseSchema>;

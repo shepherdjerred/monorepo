@@ -1,5 +1,8 @@
 import { buildArchiveSpanProcessor } from "@shepherdjerred/llm-observability";
-import { bootGameBot } from "@shepherdjerred/discord-plays-core/entry.ts";
+import {
+  bootGameBot,
+  readPeerUserbotIds,
+} from "@shepherdjerred/discord-plays-core/entry.ts";
 import { handleMessages } from "./discord/message-handler.ts";
 import { buildPokemonExtraCommands } from "./discord/slashCommands/index.ts";
 import {
@@ -26,12 +29,23 @@ import { createWebServer } from "./webserver/index.ts";
 import { logger } from "./logger.ts";
 import { getConfig } from "./config/index.ts";
 import { readGoalGuildIds } from "./config/goal-guilds.ts";
-import { publicOriginFromEnv } from "@shepherdjerred/discord-plays-core/webserver/origin.ts";
+import { mkdir } from "node:fs/promises";
+import path from "node:path";
+import { authBootstrapFromEnv } from "@shepherdjerred/discord-plays-core/auth/bootstrap.ts";
+import {
+  DiscordAuth,
+  cookieValue,
+  mountAuthRoutes,
+} from "@shepherdjerred/discord-plays-core/auth/discord-oauth.ts";
+import { createSqliteSessionStore } from "@shepherdjerred/discord-plays-core/auth/session-store.ts";
+import { botVoicePresence } from "@shepherdjerred/discord-plays-core/auth/voice-presence.ts";
+import { createPlayPolicy, playersInVoice } from "./webserver/play-policy.ts";
+import { voiceAdmission } from "./webserver/driver-feed-admission.ts";
 
 const config = await getConfig();
-const webPublicOrigin =
+const webAuthBootstrap =
   config.web.enabled && config.web.api.enabled
-    ? publicOriginFromEnv(Bun.env)
+    ? authBootstrapFromEnv(Bun.env)
     : undefined;
 
 // ---- bot + pool + session manager + driver ----
@@ -44,7 +58,7 @@ logger.info("goal mode guild allowlist", {
   guildIds: [...goalGuildIds],
 });
 // The in-browser live feed. Off unless enabled in config or the Deployment;
-// until sign-in lands it admits any same-origin page while a game runs.
+// signed-in voice-channel members are admitted after web auth is wired below.
 const driverFeedConfig = resolveDriverFeedConfig(config.driver_feed, Bun.env);
 const driverFeed = driverFeedConfig.enabled
   ? new DriverFeedService({
@@ -64,14 +78,6 @@ const driverFeed = driverFeedConfig.enabled
     })
   : undefined;
 const driver = new PokemonGameDriver({ config, goalGuildIds, driverFeed });
-driverFeed?.setAdmission(() =>
-  driver.getActiveRuntime() === null
-    ? { admitted: false, reason: "no game is running" }
-    : {
-        admitted: true,
-        isStillAdmitted: () => driver.getActiveRuntime() !== null,
-      },
-);
 
 const runtime = bootGameBot({
   serviceName: "discord-plays-pokemon",
@@ -122,13 +128,63 @@ await runtime.start();
 
 // ---- web server (optional) ----
 if (config.web.enabled) {
-  const { server, socket } = createWebServer({
+  const bootstrap = webAuthBootstrap;
+  let auth: DiscordAuth | undefined;
+  let sessionStore: ReturnType<typeof createSqliteSessionStore> | undefined;
+  if (bootstrap !== undefined) {
+    await mkdir(config.state_root_dir, { recursive: true });
+    sessionStore = createSqliteSessionStore(
+      path.join(config.state_root_dir, "web-sessions.sqlite"),
+    );
+    auth = new DiscordAuth({
+      config: {
+        ...bootstrap,
+        clientId: config.bot.application_id,
+        cookiePrefix: "pokemon",
+      },
+      sessions: sessionStore,
+      logger,
+    });
+  }
+  const signedIn = auth;
+  const identify = (cookieHeader: string | undefined) =>
+    signedIn === undefined
+      ? Promise.resolve(undefined)
+      : signedIn.identify(cookieHeader);
+  const channel = () => driver.getActiveRuntime()?.session;
+  const streamingUserIds = new Set([
+    config.stream.userbot.id,
+    ...readPeerUserbotIds(),
+  ]);
+  const policy = createPlayPolicy({
+    channel,
+    voice: botVoicePresence(runtime.bot),
+    players: () => playersInVoice(runtime.bot, channel(), streamingUserIds),
+    minimumInChannel: config.stream.minimum_in_channel,
+  });
+  const { server, socket, app } = createWebServer({
     port: config.web.port,
     webAssetsPath: config.web.assets,
     isApiEnabled: config.web.api.enabled,
     isCorsEnabled: false,
-    publicOrigin: webPublicOrigin,
+    identify,
+    publicOrigin: bootstrap?.publicOrigin,
   });
+  if (signedIn !== undefined) mountAuthRoutes(app, signedIn, logger);
+  if (bootstrap !== undefined) {
+    driverFeed?.setAdmission(
+      voiceAdmission({
+        identify: (cookie) => {
+          const token = cookieValue(cookie, "pokemon_session");
+          return token === undefined
+            ? undefined
+            : sessionStore?.readSync(token);
+        },
+        policy,
+        publicOrigin: bootstrap.publicOrigin,
+      }),
+    );
+  }
   driverFeed?.attach(server);
 
   if (socket) {
@@ -137,12 +193,18 @@ if (config.web.enabled) {
       driver,
       botClient: runtime.bot,
       driverFeedEnabled: driverFeed !== undefined,
+      policy,
+      identify: (client) => identify(client.handshake.headers.cookie),
     });
     publisher.start();
     socket.events.subscribe((event) => {
       void (async () => {
         try {
-          await handleRequest(event, { driver, config, publisher });
+          const user = await identify(event.socket.handshake.headers.cookie);
+          await handleRequest(
+            { ...event, user },
+            { driver, config, publisher, policy },
+          );
         } catch (error) {
           logger.error("web request failed", error);
         }

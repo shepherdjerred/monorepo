@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { StatusRequestSchema, StatusResponseSchema } from "./status.ts";
+import { StatusResponseSchema } from "./status.ts";
+import { StatusRequestSchema } from "@shepherdjerred/discord-plays-core/webserver/protocol.ts";
 import {
   ScreenshotRequestSchema,
   ScreenshotResponseSchema,

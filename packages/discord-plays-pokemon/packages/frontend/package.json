@@ -13,31 +13,24 @@
     "lint": "bun run lint:check",
     "lint:check": "eslint .",
     "lint:fix": "eslint --fix .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run",
+    "test:ci": "bun ../../../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
     "@shepherdjerred/discord-plays-web": "workspace:*",
     "@discord-plays-pokemon/common": "workspace:*",
-    "keyboardjs": "^2.7.0",
-    "lodash": "4.18.1",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "react-use": "^17.6.0",
-    "socket.io-client": "^4.8.1",
-    "ts-pattern": "^5.7.0",
-    "zod": "^4.4.3"
+    "zod": "^4.4.3",
+    "@shepherdjerred/discord-plays-core": "workspace:*",
+    "@fontsource/pixelify-sans": "^5.2.8"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@iconify-json/carbon": "^1.2.8",
-    "@iconify-json/mdi": "^1.2.3",
-    "@iconify-json/ph": "^1.2.2",
     "@shepherdjerred/eslint-config": "workspace:*",
-    "@svgr/core": "^8.1.0",
-    "@svgr/plugin-jsx": "^8.1.0",
     "@tailwindcss/forms": "^0.5.10",
     "@tanstack/eslint-plugin-query": "^5.68.0",
-    "@types/lodash": "^4.17.16",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@typescript-eslint/eslint-plugin": "^8.71.1",
@@ -50,9 +43,10 @@
     "tailwindcss": "^4.0.17",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.71.1",
-    "unplugin-fonts": "^2.0.0",
-    "unplugin-icons": "^24.0.0",
     "vite": "^8.0.11",
-    "@typescript/native": "npm:typescript@7.0.2"
+    "@typescript/native": "npm:typescript@7.0.2",
+    "@types/dom-webcodecs": "^0.1.18",
+    "vitest": "5.0.3",
+    "@vitest/coverage-istanbul": "5.0.3"
   }
 }

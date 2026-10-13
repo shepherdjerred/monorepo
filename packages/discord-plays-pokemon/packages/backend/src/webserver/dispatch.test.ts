@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import type { Response } from "@discord-plays-pokemon/common";
 import type { Config } from "#src/config/schema.ts";
 import { testConfig } from "#src/__tests__/fixtures/test-config.ts";
@@ -11,6 +11,14 @@ import {
 } from "#src/emulator/emulator.ts";
 import { InputLog } from "#src/game/input-log.ts";
 import { handleRequest, type DispatchDriver } from "./dispatch.ts";
+import type { PlayBlocker } from "@discord-plays-pokemon/common";
+
+const USER = {
+  discordId: "42",
+  username: "trainer",
+  name: "May",
+  avatarUrl: null,
+};
 
 /** Records presses instead of queueing them on a running emulator loop. */
 class RecordingEmulator extends Emulator {
@@ -78,18 +86,41 @@ function harness(active: boolean) {
   const deps = {
     driver,
     config: dispatchConfig(),
+    policy: {
+      players: () => [USER],
+      voiceChannelName: () => "Pokémon",
+      minimumInChannel: 1,
+      canWatch: () => true,
+      blockerFor: (_user: typeof USER | undefined): PlayBlocker | null => null,
+    },
     publisher: {
+      sendSnapshot: () => {
+        /* commands do not request a snapshot */
+      },
       sendStatus: () => {
         /* status is not under test */
       },
     },
   };
   const send = (value: string) =>
-    handleRequest({ request: { kind: "command", value }, socket }, deps);
+    handleRequest(
+      { request: { kind: "command", value }, socket, user: USER },
+      deps,
+    );
   return { emulator, inputLog, replies, send, deps };
 }
 
 describe("web command dispatch", () => {
+  test("snapshot recovery forwards the socket and current identity to the publisher", async () => {
+    const { deps } = harness(true);
+    const socket = { emit: vi.fn() };
+    const snapshot = vi.spyOn(deps.publisher, "sendSnapshot");
+    await handleRequest(
+      { request: { kind: "snapshot" }, socket, user: USER },
+      deps,
+    );
+    expect(snapshot).toHaveBeenCalledWith(socket, USER);
+  });
   test("a chord completing after stop cannot repopulate cleared history", async () => {
     const { emulator, inputLog, replies, send, deps } = harness(true);
     const gate = Promise.withResolvers<undefined>();
@@ -107,6 +138,22 @@ describe("web command dispatch", () => {
       },
     ]);
   });
+  test.each(["signed-out", "not-in-voice", "too-few-players"] as const)(
+    "refuses %s without pressing or logging input",
+    async (reason) => {
+      const { deps, emulator, inputLog, replies, send } = harness(true);
+      deps.policy.blockerFor = () => reason;
+      await send("a");
+      expect(emulator.presses).toEqual([]);
+      expect(inputLog.recent()).toEqual([]);
+      expect(replies).toEqual([
+        {
+          kind: "input-result",
+          value: { accepted: false, command: "a", reason },
+        },
+      ]);
+    },
+  );
   test("runs a valid chord and logs who sent it", async () => {
     const { emulator, inputLog, replies, send } = harness(true);
     await send("a up lb");
@@ -115,7 +162,7 @@ describe("web command dispatch", () => {
       { kind: "input-result", value: { accepted: true, command: "a up lb" } },
     ]);
     expect(inputLog.recent()).toMatchObject([
-      { source: "web", command: "a up lb" },
+      { user: "May", source: "web", command: "a up lb" },
     ]);
   });
 
