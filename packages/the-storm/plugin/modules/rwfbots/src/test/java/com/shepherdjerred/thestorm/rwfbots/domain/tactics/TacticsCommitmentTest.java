@@ -9,12 +9,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavArtifact;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.SyntheticMap;
+import com.shepherdjerred.thestorm.rwfbots.domain.perception.Memory;
 import com.shepherdjerred.thestorm.rwfbots.domain.perception.Percept;
 import com.shepherdjerred.thestorm.rwfbots.domain.perception.PerceptionState;
+import com.shepherdjerred.thestorm.rwfbots.domain.perception.Sighting;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.Archetype;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.Style;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Blackboard;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Role;
+import com.shepherdjerred.thestorm.rwfbots.domain.team.SharedSighting;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Slot;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.SlotKind;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Strategy;
@@ -29,6 +32,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.Option;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.PoisonView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Stance;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.WorldSnapshot;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -173,6 +177,84 @@ final class TacticsCommitmentTest {
         .isEqualTo(Option.ENGAGE);
     assertThat(Tactics.choose(Option.ENGAGE, ROUTE, situation(Role.ROTATE, 20, 95), Map.of()))
         .isEqualTo(Option.ENGAGE);
+  }
+
+  private static Situation rememberedThreat(
+      SlotKind kind, double visibleDistance, double rememberedDistance, boolean shared) {
+    var base =
+        situation(
+            kind.role(),
+            visibleDistance,
+            -1,
+            new Formation(kind, Optional.of(new Vec3(25.5, 1, 15.5)), true));
+    var hidden = combatant(4, BLUE, SELF.plus(6, 0, 0));
+    var bodies = new ArrayList<>(base.snapshot().combatants());
+    bodies.add(hidden);
+    var rememberedPosition = SELF.plus(rememberedDistance, 0, 0);
+    var memory =
+        shared
+            ? Memory.EMPTY
+            : new Memory(
+                Map.of(hidden.id(), new Sighting(rememberedPosition, Vec3.ZERO, 76, 0.6, false)));
+    var board = base.board();
+    if (shared) {
+      board =
+          board.share(
+              List.of(
+                  new SharedSighting(
+                      hidden.id(),
+                      rememberedPosition,
+                      Vec3.ZERO,
+                      76,
+                      76,
+                      base.snapshot().combatants().getLast().id())),
+              1,
+              100,
+              new SplittableRandom(1));
+    }
+    return new Situation(
+        base.self(),
+        new WorldSnapshot(
+            100, MatchPhase.LIVE, bodies, List.of(), PoisonView.NONE, NAV.mapId(), List.of()),
+        new Percept(
+            new PerceptionState(memory, PerceptionState.EMPTY.suspicion()),
+            base.percept().visible(),
+            100),
+        board,
+        kind.role());
+  }
+
+  @Test
+  void aRememberedCloseEnemyDoesNotInterruptAnUnfinishedLaneOrSweep() {
+    for (var kind : List.of(SlotKind.FLANK, SlotKind.SWEEP)) {
+      var scene = rememberedThreat(kind, 15, 3.8, false);
+      assertThat(scene.nearestEnemy().orElseThrow().visible()).isFalse();
+      assertThat(Tactics.choose(Option.ENGAGE, ROUTE, scene, Map.of()))
+          .as("%s keeps its route despite a stale nearby prediction", kind)
+          .isEqualTo(Option.TAKE_SLOT);
+    }
+  }
+
+  @Test
+  void aSharedCloseSightingDoesNotInterruptAnUnfinishedLaneOrSweep() {
+    for (var kind : List.of(SlotKind.FLANK, SlotKind.SWEEP)) {
+      var scene = rememberedThreat(kind, 15, 3.8, true);
+      assertThat(scene.nearestEnemy().orElseThrow().visible()).isFalse();
+      assertThat(Tactics.choose(Option.ENGAGE, ROUTE, scene, Map.of()))
+          .as("%s keeps its route despite a nearby teammate report", kind)
+          .isEqualTo(Option.TAKE_SLOT);
+    }
+  }
+
+  @Test
+  void visibleCloseContactStillInterruptsWhenUnseenMemorySortsNearer() {
+    for (var kind : List.of(SlotKind.FLANK, SlotKind.SWEEP)) {
+      var scene = rememberedThreat(kind, 3.5, 1, false);
+      assertThat(scene.nearestEnemy().orElseThrow().visible()).isFalse();
+      assertThat(Tactics.choose(Option.ENGAGE, ROUTE, scene, Map.of()))
+          .as("%s answers the other visible close enemy", kind)
+          .isEqualTo(Option.ENGAGE);
+    }
   }
 
   @Test

@@ -40,6 +40,113 @@ final class PlannerSupportTest {
   private static final Vec3 SELF = new Vec3(10.5, 1, 10.5);
   private static final Vec3 ENEMY = new Vec3(30.5, 1, 10.5);
 
+  private record BoundScene(Situation situation, TacticsContext context) {}
+
+  private static BoundScene openBound(double enemyX, long tick) {
+    var self = combatant(1, RED, new Vec3(12.5, 1, 12.5));
+    var enemy = combatant(2, BLUE, new Vec3(enemyX, 1, 12.5));
+    var slot =
+        new Slot(
+            "flank-0",
+            SlotKind.FLANK,
+            Role.ROTATE,
+            new Vec3(12.5, 1, 26.5),
+            enemy.pos(),
+            -1,
+            -1,
+            Optional.empty(),
+            0);
+    var plan =
+        new TeamPlan(
+            Optional.of(Strategy.SPLIT),
+            Optional.of(new Vec3(2.5, 1, 2.5)),
+            Optional.empty(),
+            List.of(),
+            0.5,
+            List.of(slot),
+            Map.of(self.id(), slot.key()),
+            tick);
+    var board = Blackboard.open(RED, Strategy.SPLIT).withPlan(plan, tick);
+    var snapshot =
+        new WorldSnapshot(
+            tick,
+            MatchPhase.LIVE,
+            List.of(self, enemy),
+            List.of(),
+            PoisonView.NONE,
+            NAV.mapId(),
+            List.of());
+    var situation =
+        new Situation(
+            self,
+            snapshot,
+            new Percept(PerceptionState.EMPTY, List.of(enemy), tick),
+            board,
+            Role.ROTATE);
+    var context =
+        new TacticsContext(
+            NAV,
+            levers(0.8),
+            new Style(0.5, 0.5, 0.5, 0.5),
+            Kit.TROOPER,
+            Archetype.TACTICIAN,
+            Set.of(),
+            42,
+            null);
+    return new BoundScene(situation, context);
+  }
+
+  private static Planner.CoverSpot nearestSafetyCover(BoundScene scene) {
+    var situation = scene.situation();
+    return Planner.coverNear(
+            situation,
+            scene.context(),
+            new Planner.CoverSearch(
+                situation.self().pos(),
+                situation.nearestEnemy().orElseThrow().pos(),
+                Planner.BOUND_REACH))
+        .orElseThrow();
+  }
+
+  @Test
+  void aMovingBoundPrefersForwardCoverOverNearerSidewaysSafety() {
+    for (var scene : List.of(openBound(30.5, 10), openBound(24.5, 40))) {
+      var situation = scene.situation();
+      var self = situation.self().pos();
+      var goal = situation.slot().orElseThrow().pos();
+      var threat = situation.nearestEnemy().orElseThrow().pos();
+      var forward = new Vec3(15.5, 1, 19.5);
+      var forwardNode = NAV.graph().nearestNode(forward).orElseThrow();
+      assertThat(NAV.graph().feet(forwardNode)).isEqualTo(forward);
+      assertThat(
+              NAV.cover()
+                  .protectingFrom(
+                      NAV.graph(),
+                      self.plus(0, 0, Planner.BOUND_STEP),
+                      threat,
+                      Planner.BOUND_SEARCH))
+          .extracting(point -> point.node())
+          .contains(forwardNode);
+      assertThat(forward.horizontalDistance(goal)).isLessThan(self.horizontalDistance(goal));
+      var nearby = nearestSafetyCover(scene);
+      assertThat(nearby.pos().horizontalDistance(goal))
+          .isGreaterThanOrEqualTo(self.horizontalDistance(goal));
+      var plan = Planner.expand(Option.TAKE_SLOT, situation, scene.context());
+      assertThat(plan.current()).isInstanceOf(PlanStep.Cover.class);
+      var chosen = (PlanStep.Cover) plan.current();
+      assertThat(chosen.pos().horizontalDistance(goal)).isLessThan(self.horizontalDistance(goal));
+    }
+  }
+
+  @Test
+  void aPinnedHolderStillTakesTheNearestSafetyCover() {
+    var scene = openBound(24.5, 80);
+    assertThat(Planner.mover(scene.situation(), 2)).isFalse();
+    var plan = Planner.expand(Option.TAKE_SLOT, scene.situation(), scene.context());
+    assertThat(plan.current()).isInstanceOf(PlanStep.Cover.class);
+    assertThat(((PlanStep.Cover) plan.current()).pos()).isEqualTo(nearestSafetyCover(scene).pos());
+  }
+
   private static Decision fight(Vec3 goal, boolean visible) {
     var self = combatant(1, RED, SELF);
     var enemy = combatant(2, BLUE, ENEMY);

@@ -123,7 +123,8 @@ final class TeamPlayTest {
    * same change; an accidental one fails here.
    */
   // Visible melee pursuits follow obstacle/height approach routes until unobstructed sword contact.
-  private static final String PINNED_YARD_HASH = "9ac0caf8da1660dd";
+  // Slot moves ignore stale close predictions and prefer forward cover over nearby safety.
+  private static final String PINNED_YARD_HASH = "b1a6c3ce277c6ec7";
 
   @Test
   void aTrainingYardMatchReplaysToItsPinnedHash() {

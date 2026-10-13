@@ -164,10 +164,11 @@ public final class Tactics {
         situation.self().lastHurtTick() >= 0
             && situation.now() - situation.self().lastHurtTick() <= 20;
     var close =
-        situation
-            .nearestEnemy()
-            .filter(enemy -> enemy.pos().distance(situation.self().pos()) <= Planner.CLOSE_FIGHT)
-            .isPresent();
+        situation.knownEnemies().stream()
+            .anyMatch(
+                enemy ->
+                    enemy.visible()
+                        && enemy.pos().distance(situation.self().pos()) <= Planner.CLOSE_FIGHT);
     return detour
         && !hurt
         && !close

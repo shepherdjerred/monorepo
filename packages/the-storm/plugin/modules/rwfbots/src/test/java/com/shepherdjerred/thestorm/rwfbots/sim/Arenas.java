@@ -35,6 +35,8 @@ final class Arenas {
    */
   record Pick(Archetype archetype, Kit kit) {}
 
+  record Lineup(Strategy strategy, List<Pick> picks) {}
+
   /** An eight-strong lineup spread over the archetypes and the four shipped kits. */
   static final List<Pick> EIGHT =
       List.of(
@@ -51,6 +53,14 @@ final class Arenas {
 
   /** {@code perTeam} bots a side on the training yard, from its spawns, bombs and nuke. */
   static SimWorld yard(long seed, int perTeam, Strategy red, Strategy blue) {
+    return yard(seed, perTeam, new Lineup(red, EIGHT), new Lineup(blue, EIGHT));
+  }
+
+  /** The same authored yard and physics, with explicit team cohorts. */
+  static SimWorld yard(long seed, int perTeam, Lineup red, Lineup blue) {
+    if (red.picks().isEmpty() || blue.picks().isEmpty()) {
+      throw new IllegalArgumentException("both teams need a nonempty cohort");
+    }
     var world = new SimWorld(YARD, seed);
     var id = 0;
     for (var bomb : YARD.sites().bombs()) {
@@ -62,18 +72,19 @@ final class Arenas {
     }
     var bot = 1;
     for (var team : List.of(RED, BLUE)) {
+      var cohort = team.equals(RED) ? red.picks() : blue.picks();
       var spawns =
           YARD.sites().spawns().stream()
               .filter(site -> site.team().orElseThrow().equals(team.value()))
               .sorted(Comparator.comparing(site -> site.name()))
               .toList();
       for (var i = 0; i < perTeam; i++) {
-        var pick = EIGHT.get(i % EIGHT.size());
+        var pick = cohort.get(i % cohort.size());
         add(world, new SimWorld.Spawn(bot++, team, pick.kit(), spawns.get(i).cell().feet()), pick);
       }
     }
-    world.setStrategy(RED, red);
-    world.setStrategy(BLUE, blue);
+    world.setStrategy(RED, red.strategy());
+    world.setStrategy(BLUE, blue.strategy());
     return world;
   }
 
