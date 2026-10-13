@@ -13,6 +13,17 @@ describe("tracker image release gate", () => {
     expect(trackerImageReference(`2.0.0-9341@${digest}`)).toBe(
       `ghcr.io/shepherdjerred/tracker@${digest}`,
     );
-    expect(trackerImageReference("latest")).toBeUndefined();
+  });
+
+  test("fails closed on any malformed or unpublished non-bootstrap pin", () => {
+    expect(() => trackerImageReference("latest")).toThrow(
+      "Tracker requires a published immutable image digest: latest",
+    );
+    expect(() => trackerImageReference(`2.0.0@${"a".repeat(63)}`)).toThrow(
+      "Tracker requires a published immutable image digest",
+    );
+    expect(() =>
+      trackerImageReference(`2.0.1@sha256:${"0".repeat(64)}`),
+    ).toThrow("Tracker requires a published immutable image digest");
   });
 });

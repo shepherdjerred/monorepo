@@ -7,7 +7,9 @@ const { cleanupTrackerAttachments } =
     taskQueue: TASK_QUEUES.INFRA,
     startToCloseTimeout: "1 minute",
     retry: {
-      maximumAttempts: 3,
+      // A lost HTTP response is ambiguous: retrying could delete another
+      // 100-row batch. The next hourly Schedule safely retries the cleanup.
+      maximumAttempts: 1,
       initialInterval: "30 seconds",
       maximumInterval: "1 minute",
     },

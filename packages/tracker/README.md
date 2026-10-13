@@ -74,7 +74,9 @@ identifier fast path. List filters are combined, with labels using AND.
 mutation commits their IDs. Only their uploading actor can commit them.
 `maintenance.cleanupStaged` removes up to 100 uncommitted files older than 24 hours
 per invocation. The central Temporal `tracker-staged-attachment-cleanup` schedule
-invokes it hourly on the infra Activity queue, with SKIP overlap and bounded retries.
+invokes it hourly on the infra Activity queue, with SKIP overlap and one Activity
+attempt per run. An ambiguous response waits for the next hourly run rather than
+retrying a second batch.
 It registers paused until tracker is active and compatible Workflow workers are
 fully promoted. Enable normal writes and unpause that schedule after acceptance;
 paused writes produce a successful no-op. The cleanup retains committed files;
