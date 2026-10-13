@@ -1,7 +1,39 @@
-//! Execute every case in the unmodified, pinned upstream field-mapping corpus.
+//! Execute all pinned upstream cases with explicit contracts for withdrawn roles.
 
 use serde_json::{Map, Value, json};
 use tasknotes_vault::mapping::FieldMapping;
+
+const RETIRED_CASES: &[&str] = &[
+    "field.0011",
+    "field.0018",
+    "field.0029",
+    "field.0036",
+    "field.0090",
+    "field.0097",
+    "field.0123",
+    "field.0124",
+    "field.0137",
+    "field.0138",
+];
+
+const SUPPORTED_CORE_LITE_ROLES: &[&str] = &[
+    "title",
+    "status",
+    "priority",
+    "due",
+    "scheduled",
+    "completedDate",
+    "tags",
+    "contexts",
+    "projects",
+    "attachments",
+    "dateCreated",
+    "dateModified",
+    "recurrence",
+    "recurrenceAnchor",
+    "completeInstances",
+    "skippedInstances",
+];
 
 #[test]
 fn upstream_field_mapping_corpus() -> Result<(), Box<dyn std::error::Error>> {
@@ -13,7 +45,12 @@ fn upstream_field_mapping_corpus() -> Result<(), Box<dyn std::error::Error>> {
         139,
         "the pinned fixture corpus must remain complete"
     );
+    let mut retired_cases = Vec::new();
     for case in cases {
+        let id = case
+            .get("id")
+            .and_then(Value::as_str)
+            .ok_or("missing fixture ID")?;
         let input = case.get("input").ok_or("missing fixture input")?;
         let fields = input
             .get("fields")
@@ -50,13 +87,88 @@ fn upstream_field_mapping_corpus() -> Result<(), Box<dyn std::error::Error>> {
         };
         let actual = json!({"ok":true,"result":result});
         let expected = case.get("expect").ok_or("missing expectation")?;
+        // These exact upstream cases exercise deliberately withdrawn semantic roles.
+        // Execute their input against an independent preservation contract instead;
+        // every other upstream expectation stays untouched.
+        if assert_retired_case(id, &mapping, &actual) {
+            retired_cases.push(id.to_owned());
+            continue;
+        }
         assert!(
             matches(&actual, expected),
             "{}: expected {expected}, got {actual}",
-            case.get("id").ok_or("missing fixture ID")?
+            id
         );
     }
+    assert_eq!(retired_cases, RETIRED_CASES);
     Ok(())
+}
+
+fn assert_retired_case(id: &str, mapping: &FieldMapping, actual: &Value) -> bool {
+    match id {
+        "field.0011" | "field.0018" => assert_retired_mapping(mapping, "", true),
+        "field.0029" | "field.0036" => assert_retired_mapping(mapping, "custom_", true),
+        "field.0090" | "field.0097" => assert_retired_mapping(mapping, "", false),
+        "field.0123" => assert_eq!(
+            actual,
+            &json!({"ok":true,"result":{"normalized":{"mapped_timeEstimate":"PT45M"}}}),
+            "{id}"
+        ),
+        "field.0124" => assert_eq!(
+            actual,
+            &json!({"ok":true,"result":{"denormalized":{"timeEstimate":"PT45M"}}}),
+            "{id}"
+        ),
+        "field.0137" => assert_eq!(
+            actual,
+            &json!({"ok":true,"result":{"normalized":{
+                "mapped_timeEntries":[{"startTime":"2026-08-19T10:00:00Z","endTime":"2026-08-19T10:30:00Z"}]
+            }}}),
+            "{id}"
+        ),
+        "field.0138" => assert_eq!(
+            actual,
+            &json!({"ok":true,"result":{"denormalized":{
+                "timeEntries":[{"startTime":"2026-08-19T10:00:00Z","endTime":"2026-08-19T10:30:00Z"}]
+            }}}),
+            "{id}"
+        ),
+        _ => return false,
+    }
+    for role in [
+        "timeEstimate",
+        "time_estimate",
+        "timeEntries",
+        "time_entries",
+        "pomodoros",
+    ] {
+        assert!(!mapping.role_to_field.contains_key(role), "{id}: {role}");
+        assert!(
+            !mapping.field_to_role.values().any(|mapped| mapped == role),
+            "{id}: {role}"
+        );
+    }
+    true
+}
+
+fn assert_retired_mapping(mapping: &FieldMapping, prefix: &str, reverse: bool) {
+    for role in SUPPORTED_CORE_LITE_ROLES {
+        let field = format!("{prefix}{role}");
+        assert_eq!(mapping.role_to_field.get(*role), Some(&field));
+        if reverse {
+            assert_eq!(
+                mapping.field_to_role.get(&field).map(String::as_str),
+                Some(*role)
+            );
+        }
+    }
+    if !reverse {
+        assert!(mapping.field_to_role.is_empty());
+    } else if !prefix.is_empty() {
+        assert_eq!(mapping.field_to_role.len(), SUPPORTED_CORE_LITE_ROLES.len());
+    }
+    assert_eq!(mapping.display_name_key, format!("{prefix}title"));
+    assert_eq!(mapping.completed_statuses, ["done", "cancelled"]);
 }
 
 fn object<'a>(

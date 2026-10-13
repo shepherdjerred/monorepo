@@ -505,7 +505,9 @@ use synthetic pinned-reference transcripts; this evidence does not establish
 live-service interoperability or store acceptance.
 
 All 4,980 cases from the pinned TaskNotes specification are imported unchanged
-and SHA-256 checked. Existing field-mapping tests execute 139 cases. Corpus
+and SHA-256 checked. Field-mapping tests execute all 139 cases: 129 retain their
+upstream comparisons and 10 exercise explicit first-party contracts for withdrawn
+timing roles, preserving their metadata without semantic remapping. Corpus
 integrity, implemented operation tests, full specification conformance, native
 runtime acceptance, and live Sync acceptance are separate claims.
 
