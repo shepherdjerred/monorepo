@@ -4,6 +4,7 @@ import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
+import com.shepherdjerred.thestorm.rwf.domain.match.MatchSnapshot;
 import java.nio.file.Path;
 import java.time.Duration;
 import org.bukkit.Location;
@@ -89,6 +90,16 @@ final class RwfKitsNewTest {
       harness.tick(Duration.ofMillis(500));
     }
 
+    assertThat(harness.snapshot().bomb(bombId).orElseThrow().state())
+        .isInstanceOf(MatchSnapshot.BombView.State.Arming.class);
+    // The display refresh runs every five server ticks; the four arming clock jumps above
+    // need not include a refresh after the first interaction. Wait with the clock held still.
+    harness.until(
+        () ->
+            harness.rwf.getEntitiesByClass(TextDisplay.class).stream()
+                    .filter(d -> d.getLocation().distance(block.getLocation()) < 4)
+                    .count()
+                == 2);
     var holograms =
         harness.rwf.getEntitiesByClass(TextDisplay.class).stream()
             .filter(d -> d.getLocation().distance(block.getLocation()) < 4)
