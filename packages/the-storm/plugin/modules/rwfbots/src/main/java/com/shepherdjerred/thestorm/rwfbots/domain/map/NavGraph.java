@@ -592,26 +592,26 @@ public final class NavGraph {
   }
 
   private NavPath reconstruct(int from, int to, int[] cameFrom, int[] viaEdge) {
-    var nodes = new ArrayList<Integer>();
-    var hops = new ArrayList<Hop>();
+    var length = 1;
+    for (var node = to; node != from; node = cameFrom[node]) {
+      length++;
+    }
+    var nodes = new Integer[length];
+    var waypoints = new Waypoint[length];
     var cost = 0.0;
     var node = to;
+    var index = length - 1;
     while (node != from) {
-      nodes.add(node);
       var edge = viaEdge[node];
-      hops.add(edgeHop(edge));
+      nodes[index] = node;
+      waypoints[index] = new Waypoint(feet(node), edgeHop(edge));
       cost += edgeCost[edge];
       node = cameFrom[node];
+      index--;
     }
-    nodes.add(from);
-    hops.add(Hop.WALK);
-    var ordered = nodes.reversed();
-    var orderedHops = hops.reversed();
-    var waypoints = new ArrayList<Waypoint>(ordered.size());
-    for (var i = 0; i < ordered.size(); i++) {
-      waypoints.add(new Waypoint(feet(ordered.get(i)), orderedHops.get(i)));
-    }
-    return new NavPath(ordered, waypoints, cost);
+    nodes[0] = from;
+    waypoints[0] = new Waypoint(feet(from), Hop.WALK);
+    return new NavPath(List.of(nodes), List.of(waypoints), cost);
   }
 
   int[] cellOfNodeArray() {
