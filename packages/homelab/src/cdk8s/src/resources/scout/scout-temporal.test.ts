@@ -25,6 +25,13 @@ function prodResourcesWithWorkflowCandidate() {
   createScoutChart(app, "prod", {
     stable: CAPABLE_STABLE_IMAGE,
     candidate: CAPABLE_CANDIDATE_IMAGE,
+    retained: [
+      {
+        track: "retained-1d266e3903e2",
+        image:
+          "2.0.0-1008523@sha256:d4ab832cde525daa54208c58eb080c86e3a4bee7ff904dd6186a51937ff50985",
+      },
+    ],
   });
   return resourcesFor(app);
 }
@@ -195,7 +202,7 @@ describe("Scout beta workflow candidate", () => {
     );
     const spec = WorkflowDeploymentSpecSchema.parse(deployment?.spec);
     expect(deployment?.metadata["annotations"]).toEqual({
-      "argocd.argoproj.io/sync-wave": "-1",
+      "argocd.argoproj.io/sync-wave": "0",
     });
     expect(spec.template.spec.automountServiceAccountToken).toBe(false);
     expect(spec.template.spec.containers).toHaveLength(1);
@@ -269,11 +276,11 @@ describe("Scout beta workflow candidate", () => {
           resource.kind === "Deployment" &&
           resource.metadata.name.includes("scout-workflow-worker"),
       )
-      .map((resource) => resource.metadata.name);
+      .map((resource) => resource.metadata.name)
+      .filter((name) => !name.includes("-retained-"));
     expect(workflowDeployments).toEqual([
       "scout-beta-scout-workflow-worker-stable",
       "scout-beta-scout-workflow-worker-candidate",
-      "scout-prod-scout-workflow-worker-retained-1d266e3903e2",
       "scout-prod-scout-workflow-worker-stable",
       "scout-prod-scout-workflow-worker-candidate",
     ]);
@@ -333,7 +340,7 @@ test("renders capable production Workflow tracks", () => {
   );
 });
 
-test("preserves the current prod build before replacing mutable Workflow tracks", () => {
+test("preserves retained builds before replacing mutable Workflow tracks", () => {
   const resources = prodResourcesWithWorkflowCandidate();
   const retained = resources.find(
     (resource) =>
@@ -363,7 +370,9 @@ test("preserves the current prod build before replacing mutable Workflow tracks"
         resource.metadata.name === `scout-prod-scout-workflow-worker-${track}`,
     );
     expect(mutable?.metadata["annotations"]).toEqual(
-      expect.objectContaining({ "argocd.argoproj.io/sync-wave": "-1" }),
+      expect.objectContaining({
+        "argocd.argoproj.io/sync-wave": track === "stable" ? "-1" : "0",
+      }),
     );
     expect(
       WorkflowDeploymentSpecSchema.parse(mutable?.spec).template.spec

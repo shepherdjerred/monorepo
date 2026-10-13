@@ -22,6 +22,18 @@ import type { Stage } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/scout
 export type ScoutWorkflowWorkerTrack =
   "stable" | "candidate" | `retained-${string}`;
 
+export function scoutRetainedWorkflowWorkerPins(stage: Stage) {
+  const prefix = `shepherdjerred/scout-for-lol/${stage}/workflows/`;
+  return Object.entries(versions)
+    .filter(([key]) => key.startsWith(`${prefix}retained-`))
+    .map(([key, image]) => ({
+      track: z
+        .templateLiteral(["retained-", z.string().regex(/^[a-f0-9]{12}$/)])
+        .parse(key.slice(prefix.length)),
+      image,
+    }));
+}
+
 // Build 12197 predates the workflow-only entrypoint. The main image release
 // overrides the candidate pin while rendering, so the first capable build can
 // create the pod in the same release without ever attempting to boot 12197.
@@ -37,6 +49,11 @@ export function scoutWorkflowWorkerImageIsCapable(
   const buildText = parsed.split("@", 1)[0]?.split("-", 2)[1];
   const build = z.coerce.number().int().positive().parse(buildText);
   return build > LAST_IMAGE_WITHOUT_WORKFLOW_WORKER;
+}
+
+function workflowWorkerSyncWave(track: ScoutWorkflowWorkerTrack): string {
+  if (track === "stable") return "-1";
+  return track === "candidate" ? "0" : "-2";
 }
 
 export function createScoutWorkflowWorker(
@@ -63,11 +80,9 @@ export function createScoutWorkflowWorker(
     securityContext: { fsGroup: 1000 },
     metadata: {
       annotations: {
-        // Retained current builds must start before either mutable track can
-        // replace its only poller. These workers share the normal family policy.
-        "argocd.argoproj.io/sync-wave": track.startsWith("retained-")
-          ? "-2"
-          : "-1",
+        // Retained builds start first. The promoted stable build must also be
+        // ready before candidate changes, including a promotion commit-back.
+        "argocd.argoproj.io/sync-wave": workflowWorkerSyncWave(track),
       },
     },
     podMetadata: {

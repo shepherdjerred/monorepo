@@ -43,7 +43,10 @@ Use that build's exact published digest and record its full `gitSha` in
 `scripts/pin-candidates-state.json`. The
 [Scout chart](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/cdk8s-charts/scout.ts)
 starts its separate retained poller in an earlier sync wave.
+The stable track becomes ready before the candidate track changes.
 Readiness requires a nonsticky Workflow poller before either mutable track changes.
+The [retained-worker alert](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/monitoring/monitoring/rules/platform/temporal-worker-health.ts)
+checks each retained Deployment, scrape, and build's pollers independently.
 Keep the pin unchanged until the build is neither current nor ramping and
 Temporal reports its pinned executions drained. Then remove it through the
 normal reviewed GitOps release and pruning procedure.

@@ -670,13 +670,15 @@ describe("Hosted Scout roles", () => {
       (resource) => resource.kind === "Deployment",
     );
     expect(
-      deployments.map((resource) => resource.metadata.name).sort(),
+      deployments
+        .map((resource) => resource.metadata.name)
+        .filter((name) => !name.includes("-retained-"))
+        .sort(),
     ).toEqual([
       "scout-prod-scout-activity-worker",
       "scout-prod-scout-backend",
       "scout-prod-scout-gateway",
       "scout-prod-scout-workflow-worker-candidate",
-      "scout-prod-scout-workflow-worker-retained-1d266e3903e2",
       "scout-prod-scout-workflow-worker-stable",
     ]);
     for (const resource of deployments) {

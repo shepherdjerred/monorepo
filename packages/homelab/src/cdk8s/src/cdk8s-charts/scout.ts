@@ -1,6 +1,5 @@
 import { Chart } from "cdk8s";
 import type { App } from "cdk8s";
-import { z } from "zod";
 import { createScoutDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/index.ts";
 import { createScoutPostgreSQLDatabase } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/scout-db.ts";
 import { Namespace } from "cdk8s-plus-31";
@@ -9,7 +8,10 @@ import {
   IntOrString,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { FLIPT_PORT } from "@shepherdjerred/homelab/cdk8s/src/resources/flipt/index.ts";
-import { createScoutWorkflowWorker } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/workflow-worker.ts";
+import {
+  createScoutWorkflowWorker,
+  scoutRetainedWorkflowWorkerPins,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/scout/workflow-worker.ts";
 import {
   dnsEgressRule,
   externalHttpsEgressRule,
@@ -147,6 +149,7 @@ function prometheusTemporalMetricsIngressRule() {
 type WorkflowWorkerImageOverrides = {
   stable?: string;
   candidate?: string;
+  retained?: ReturnType<typeof scoutRetainedWorkflowWorkerPins>;
 };
 
 export function createScoutChart(
@@ -171,14 +174,12 @@ export function createScoutChart(
   // interrupted promotion. Preserve it independently before changing tracks.
   // Each retained pin has its own Deployment, so later releases cannot replace
   // it while its histories drain.
-  const retainedPrefix = `shepherdjerred/scout-for-lol/${stage}/workflows/`;
-  for (const [key, image] of Object.entries(versions)) {
-    if (!key.startsWith(`${retainedPrefix}retained-`)) continue;
-    const track = z
-      .templateLiteral(["retained-", z.string().regex(/^[a-f0-9]{12}$/)])
-      .parse(key.slice(retainedPrefix.length));
+  const retainedWorkers =
+    workflowWorkerImageOverrides?.retained ??
+    scoutRetainedWorkflowWorkerPins(stage);
+  for (const { track, image } of retainedWorkers) {
     if (createScoutWorkflowWorker(chart, stage, track, image) === undefined) {
-      throw new Error(`Retained Scout Workflow image is not capable: ${key}`);
+      throw new Error(`Retained Scout Workflow image is not capable: ${track}`);
     }
   }
   const stableImage =
@@ -202,7 +203,9 @@ export function createScoutChart(
       ? undefined
       : createScoutWorkflowWorker(chart, stage, "candidate", candidateImage);
   const workflowWorkerCreated =
-    stableWorkflowWorker !== undefined || candidateWorkflowWorker !== undefined;
+    retainedWorkers.length > 0 ||
+    stableWorkflowWorker !== undefined ||
+    candidateWorkflowWorker !== undefined;
 
   // NetworkPolicy: Allow ingress from Prometheus (scrapes scout-backend
   // metrics on :3000), in-namespace pods, and the shared s3-static-sites
