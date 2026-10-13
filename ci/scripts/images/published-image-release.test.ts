@@ -84,6 +84,27 @@ const environment = {
   CI_LAST_IMAGE_RELEASE_PIPELINE: "7999",
 };
 
+test("publication head cannot undo a lower-build Prod Workflow promotion", async () => {
+  const key = "shepherdjerred/scout-for-lol/prod/workflows/stable";
+  const current = catalog(1_008_523, key);
+  const latest: PublishedImageRelease = {
+    ...release(9558),
+    versionCatalog: catalog(1_008_905, key),
+    pinCandidates: JSON.stringify({
+      schema: "pin-candidates/v1",
+      buildNumber: 1_009_558,
+      candidates: {},
+    }),
+  };
+  const resolved = await resolvePublishedImageCatalog(
+    NEW_COMMIT,
+    executor(current),
+    { ...environment, CI_PIPELINE_NUMBER: "9559" },
+    { readLatest: async () => latest },
+  );
+  expect(JSON.parse(resolved.catalog).entries[0].value).toBe(pin(1_008_523));
+});
+
 test("an absent publication head bootstraps, while API failures fail loudly", async () => {
   await expect(
     readPublishedImageRelease(

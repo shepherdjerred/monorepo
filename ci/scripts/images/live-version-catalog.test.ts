@@ -296,6 +296,41 @@ test("current main owns newer pins, upstream versions, metadata and retired keys
   expect(entries(result)).toEqual(entries(main));
 });
 
+test.each([
+  "shepherdjerred/scout-for-lol/prod/workflows/stable",
+  "shepherdjerred/scout-for-lol/prod/workflows/candidate",
+])("current main owns operator-promoted %s even at an earlier build", (key) => {
+  const main = catalog([
+    [key, pin(100, "c")],
+    ["worker", pin(100)],
+  ]);
+  const previous = catalog([
+    [key, pin(200)],
+    ["worker", pin(200)],
+  ]);
+  const released = retainPublishedImagePins(main, previous, candidates(300));
+  expect(entries(released).map((entry) => [entry.name, entry.value])).toEqual([
+    [key, pin(100, "c")],
+    ["worker", pin(200)],
+    ["upstream/chart", "1.0"],
+  ]);
+  expect(retainPublishedImagePins(main, released, candidates(301))).toBe(
+    released,
+  );
+});
+
+test.each([
+  "shepherdjerred/scout-for-lol/prod/workflows/stable",
+  "shepherdjerred/scout-for-lol/prod/workflows/candidate",
+])("CI publication cannot mint the operator-owned %s pin", (key) => {
+  const main = catalog([[key, pin(100)]]);
+  expect(() =>
+    retainPublishedImagePins(main, main, candidates(200, [key])),
+  ).toThrow(
+    "CI candidate contains operator-owned Scout Prod Workflow image key",
+  );
+});
+
 test("a withdrawn Workflow candidate cannot return through a retained release", () => {
   const candidate = "worker/workflows/candidate";
   const main = catalog([
