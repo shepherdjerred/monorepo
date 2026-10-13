@@ -6,11 +6,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.groups.Tuple.tuple;
 
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
+import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.economy.app.AccountId;
 import com.shepherdjerred.thestorm.economy.app.CurrencyId;
+import com.shepherdjerred.thestorm.economy.app.EconomyError;
 import com.shepherdjerred.thestorm.economy.app.KeyedTransfer;
 import com.shepherdjerred.thestorm.economy.app.Money;
 import com.shepherdjerred.thestorm.economy.app.Receipt;
+import com.shepherdjerred.thestorm.economy.app.Wallets;
 import com.shepherdjerred.thestorm.rwf.adapter.db.JooqMatchStore;
 import com.shepherdjerred.thestorm.rwf.app.store.MatchStore;
 import com.shepherdjerred.thestorm.rwf.app.store.MatchStore.Outcome;
@@ -29,10 +32,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 /**
  * Payouts go through the outbox once, in Red Warfare credits with no daily cap, take the AFK
@@ -352,6 +358,108 @@ final class PayoutServiceTest {
                 .sum())
         .isEqualTo(30);
     assertThat(wallets.receipts()).hasSize(10);
+    assertThat(store.unpaid().join()).isEmpty();
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void aCompletedMatchSurvivesRestartWhileEarlierLedgerWorkIsBlocked(boolean replaying) {
+    var transferStarted = new CompletableFuture<Void>();
+    var release = new CompletableFuture<Void>();
+    var blockedWallets = blockedTransfers(transferStarted, release);
+    payouts = new PayoutService(blockedWallets, store, clock);
+    var earlier = UUID.randomUUID();
+    var earlierRows = List.of(legacy(earlier, 3));
+    CompletableFuture<List<PayoutService.Paid>> blocked;
+    if (replaying) {
+      store.record(match(earlier), earlierRows).join();
+      blocked = payouts.replay();
+    } else {
+      blocked = payouts.settle(match(earlier), earlierRows);
+    }
+    transferStarted.orTimeout(5, TimeUnit.SECONDS).join();
+
+    var later = UUID.randomUUID();
+    var laterRow = owed(later, ALICE, Outcome.WIN, 3);
+    var waiting = payouts.settle(match(later), List.of(laterRow));
+
+    assertThat(store.players(later).join()).containsExactly(laterRow);
+    assertThat(store.unpaid().join())
+        .extracting(PlayerRow::matchId)
+        .containsExactlyInAnyOrder(earlier, later);
+    assertThat(blocked).isNotDone();
+    assertThat(waiting).isNotDone();
+    assertThat(release).isNotDone();
+    assertThat(wallets.receipts()).isEmpty();
+
+    // The stopped process never releases its ledger future. Reopen the durable outbox as a new
+    // process would and recover both matches through the same keyed economy ledger.
+    database.close();
+    database = StormDatabase.open(directory.resolve("t.db"));
+    store = new JooqMatchStore(database);
+    var restarted = new PayoutService(wallets, store, clock);
+
+    assertThat(restarted.replay().join())
+        .containsExactlyInAnyOrder(
+            new PayoutService.Paid(earlier, ALICE, 3, 3),
+            new PayoutService.Paid(later, ALICE, 3, 3));
+    assertThat(store.unpaid().join()).isEmpty();
+    assertThat(wallets.receipts()).hasSize(2);
+    assertThat(restarted.replay().join()).isEmpty();
+    assertThat(release).isNotDone();
+  }
+
+  private Wallets blockedTransfers(
+      CompletableFuture<Void> started, CompletableFuture<Void> release) {
+    return new Wallets() {
+      @Override
+      public CompletableFuture<Money> balance(AccountId account, CurrencyId currency) {
+        return wallets.balance(account, currency);
+      }
+
+      @Override
+      public CompletableFuture<Result<Receipt, EconomyError>> transfer(
+          AccountId from, AccountId to, Money amount, String reason) {
+        return wallets.transfer(from, to, amount, reason);
+      }
+
+      @Override
+      public CompletableFuture<Result<Receipt, EconomyError>> transferOnce(KeyedTransfer request) {
+        started.complete(null);
+        return release.thenCompose(ignored -> wallets.transferOnce(request));
+      }
+
+      @Override
+      public CompletableFuture<Optional<Receipt>> receiptFor(UUID key) {
+        return wallets.receiptFor(key);
+      }
+
+      @Override
+      public CompletableFuture<List<Standing>> top(CurrencyId currency, int limit) {
+        return wallets.top(currency, limit);
+      }
+    };
+  }
+
+  @Test
+  void aQueuedReplayMayPayANewlyPersistedMatchBeforeItsSettlementRuns() {
+    var transferStarted = new CompletableFuture<Void>();
+    var release = new CompletableFuture<Void>();
+    payouts = new PayoutService(blockedTransfers(transferStarted, release), store, clock);
+    var earlier = UUID.randomUUID();
+    var blocked = payouts.settle(match(earlier), List.of(legacy(earlier, 3)));
+    transferStarted.orTimeout(5, TimeUnit.SECONDS).join();
+    var replay = payouts.replay();
+    var later = UUID.randomUUID();
+    var waiting = payouts.settle(match(later), List.of(legacy(later, 3)));
+    assertThat(store.players(later).join()).hasSize(1);
+
+    release.complete(null);
+
+    assertThat(blocked.join()).containsExactly(new PayoutService.Paid(earlier, ALICE, 3, 3));
+    assertThat(replay.join()).containsExactly(new PayoutService.Paid(later, ALICE, 3, 3));
+    assertThat(waiting.join()).isEmpty();
+    assertThat(wallets.receipts()).hasSize(2);
     assertThat(store.unpaid().join()).isEmpty();
   }
 

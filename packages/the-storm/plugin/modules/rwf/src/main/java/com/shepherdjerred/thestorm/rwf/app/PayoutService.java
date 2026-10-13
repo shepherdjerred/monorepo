@@ -70,10 +70,16 @@ public final class PayoutService {
     return "rwf:" + matchId + ":" + outcome.name();
   }
 
-  /** Writes the match and its players, then pays everyone owed. */
+  /** Persists the match immediately, then queues its payouts behind earlier ledger work. */
   public CompletableFuture<List<Paid>> settle(
       MatchStore.MatchRow match, List<MatchStore.PlayerRow> players) {
-    return enqueue(() -> store.record(match, players).thenCompose(ignored -> payAll(players)));
+    return store
+        .record(match, players)
+        .thenCompose(
+            ignored ->
+                enqueue(
+                    // A replay queued earlier may already have paid these newly persisted rows.
+                    () -> store.players(match.matchId()).thenCompose(this::payAll)));
   }
 
   /** Pays every row a crash left pending or paying. */
