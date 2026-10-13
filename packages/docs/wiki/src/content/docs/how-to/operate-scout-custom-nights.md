@@ -96,7 +96,7 @@ operation's `OPERATION_COMPLETED` record.
   Scout resumes from persisted channels and participant checkpoints.
 - **Recruitment was refused by Discord:** repair the bot's channel permissions,
   then make a normal night update. A confirmed permission or missing-target
-  failure permits a new recruitment generation, with the original failure
+  failure permits a [new recruitment generation](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/customs/recruitment-intent.ts), with the original failure
   retained in history. Pending, delivered, and uncertain attempts are not
   automatically replaced.
 - **Voice setup needs a check:** a host, cohost, or administrator must inspect
