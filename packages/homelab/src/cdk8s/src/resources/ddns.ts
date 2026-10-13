@@ -1,5 +1,13 @@
 import type { Chart } from "cdk8s";
-import { Deployment, DeploymentStrategy, Secret, Volume } from "cdk8s-plus-31";
+import { Size } from "cdk8s";
+import {
+  Cpu,
+  Deployment,
+  DeploymentStrategy,
+  EnvValue,
+  Secret,
+  Volume,
+} from "cdk8s-plus-31";
 import {
   setRevisionHistoryLimit,
   withCommonProps,
@@ -52,6 +60,42 @@ export function createDdnsDeployment(chart: Chart) {
               },
             },
           }),
+        },
+      ],
+    }),
+  );
+
+  // Mario Kart's public forwards serve IPv4. Keep its dynamic target separate
+  // from ddns.sjer.red, whose existing AAAA records belong to other consumers.
+  deployment.addContainer(
+    withCommonProps({
+      name: "ipv4-ddns",
+      resources: {
+        cpu: { request: Cpu.millis(5) },
+        memory: { request: Size.mebibytes(16) },
+      },
+      image: `timothyjmiller/cloudflare-ddns:${versions["timothyjmiller/cloudflare-ddns"]}`,
+      securityContext: {
+        ensureNonRoot: true,
+        user: 1000,
+        group: 1000,
+        readOnlyRootFilesystem: true,
+      },
+      envVariables: {
+        CLOUDFLARE_API_TOKEN_FILE: EnvValue.fromValue("/secrets/api-token"),
+        IP4_DOMAINS: EnvValue.fromValue("ipv4.ddns.sjer.red"),
+        IP6_PROVIDER: EnvValue.fromValue("none"),
+        PROXIED: EnvValue.fromValue("false"),
+        TTL: EnvValue.fromValue("300"),
+      },
+      volumeMounts: [
+        {
+          path: "/secrets",
+          volume: Volume.fromSecret(chart, "ipv4-ddns-token", secret, {
+            name: "ipv4-ddns-token",
+            items: { api_token: { path: "api-token" } },
+          }),
+          readOnly: true,
         },
       ],
     }),
