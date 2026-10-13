@@ -48,6 +48,10 @@ final class StandaloneVaultUITests: XCTestCase {
         click(window.buttons["Delete"])
         XCTAssertTrue(task(edited, window).waitForNonExistence(timeout: 10))
         try context.waitForAbsence(edited)
+        XCTAssertTrue(window.textFields["facet.inspector.title"].waitForNonExistence(timeout: 10))
+        XCTAssertTrue(
+            window.descendants(matching: .any)["facet.inspector.empty"].waitForExistence(
+                timeout: 10))
         try await attach(app, windows: [window], "03 Standalone deletion removed the note")
         window.typeKey("z", modifierFlags: [.command, .option])
         XCTAssertTrue(task(edited, window).waitForExistence(timeout: 10))

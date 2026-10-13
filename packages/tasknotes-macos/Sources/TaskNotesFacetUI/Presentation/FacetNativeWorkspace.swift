@@ -127,6 +127,7 @@ internal struct FacetNativeWorkspace: View {
                                 Text("Its details will appear here.").foregroundStyle(
                                     FacetNativeStyle.secondaryText)
                             }
+                            .accessibilityIdentifier("facet.inspector.empty")
                         }
                     }
             }
@@ -350,12 +351,20 @@ extension FacetNativeWorkspace {
                 store.error = selectionAction.error
                 return
             }
+            let submittedDraft = draft
             _Concurrency.Task {
                 guard await flush() else {
                     selectionAction.cancelBeforeDispatch()
                     return
                 }
                 if await selectionAction.submit() {
+                    if deleting,
+                        selection.canRetireDeletedInspector(
+                            submitted: submittedDraft, current: draft, store: store, window: window)
+                    {
+                        draft = nil
+                        registerDraft()
+                    }
                     selection.clearIfCurrent(store: store, window: window)
                 } else {
                     store.error = selectionAction.error
