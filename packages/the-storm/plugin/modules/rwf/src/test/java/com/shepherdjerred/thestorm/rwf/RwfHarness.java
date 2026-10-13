@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.locks.LockSupport;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.random.RandomGenerator;
@@ -405,7 +406,9 @@ public final class RwfHarness implements AutoCloseable {
         throw new AssertionError("condition not met within " + limit);
       }
       server.getScheduler().performOneTick();
-      Thread.onSpinWait();
+      // Database and chunk completions need CPU between main-thread ticks. A spin hint does not
+      // yield it, so a busy CI worker can starve the work this condition is waiting for.
+      LockSupport.parkNanos(Duration.ofMillis(1).toNanos());
     }
   }
 
