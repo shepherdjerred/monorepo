@@ -1,7 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { mkdir } from "node:fs/promises";
 import path from "node:path";
-import { parseArgs } from "node:util";
 import { z } from "zod";
 import { serverLogs } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
 import { startFakeBrain } from "#e2e/harness/fake-brain.ts";
@@ -9,14 +7,9 @@ import { startServer } from "#e2e/harness/server.ts";
 import { RconClient } from "#e2e/harness/rcon.ts";
 import { freezeInputs } from "./inputs.ts";
 import { root, mapServerConfig } from "./paper.ts";
+import { prepareOutputDirectory } from "./cli.ts";
 
-const args = parseArgs({
-  strict: true,
-  options: { output: { type: "string" } },
-});
-const output = path.resolve(z.string().min(1).parse(args.values.output));
-await mkdir(path.dirname(output), { recursive: true });
-await mkdir(output, { recursive: false, mode: 0o700 });
+const output = await prepareOutputDirectory();
 const inputs = await freezeInputs(root, output);
 const Status = z.strictObject({
   state: z.enum(["idle", "running", "passed", "failed"]),
