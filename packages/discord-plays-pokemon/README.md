@@ -110,7 +110,8 @@ Git worktrees and never overwrites existing results. Read the package-local
 The Emerald page uses Discord OAuth and shares its feed, sound, controls, and
 session hooks with Mario Kart through `@shepherdjerred/discord-plays-web`.
 Sign in and join the running game's voice channel to watch its video and sound.
-Sending inputs also requires `stream.minimum_in_channel` real players.
+Sending inputs requires `stream.minimum_in_channel` human players in voice. The
+production setting is `1`, so one player can play solo.
 Goal mode keeps the controls until its lease ends. The server checks the
 session cookie and current voice membership for each command; the page never
 chooses its own identity or channel.
