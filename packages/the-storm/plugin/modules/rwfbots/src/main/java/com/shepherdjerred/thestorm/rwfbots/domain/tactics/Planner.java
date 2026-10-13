@@ -4,6 +4,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.CoverPoints;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavArtifact;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavSites;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.VoxelGrid;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.Reflex;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Lane;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Playbook;
@@ -860,9 +861,9 @@ public final class Planner {
   private record Scene(Situation situation, TacticsContext context, int lifeEpoch) {}
 
   /**
-   * Fights {@code target}: a sword closes in through the reflex layer; a bow holds its kit's band,
-   * walking in when the enemy is beyond it and backing off when it is inside, and shoots only from
-   * inside the band.
+   * Fights {@code target}: a sword routes around movement obstacles before closing through the
+   * reflex layer; a bow holds its kit's band, walking in when the enemy is beyond it and backing
+   * off when it is inside, and shoots only from inside the band.
    */
   private static Decision fight(Plan plan, Scene scene, CombatantId target) {
     var situation = scene.situation();
@@ -891,7 +892,9 @@ public final class Planner {
       return fightDecision(
           scene, plan, archer.close().or(archer::back).or(archer::support).orElse(wait));
     }
-    if (!enemy.visible()) {
+    if (!enemy.visible()
+        || (!context.keep().ranged()
+            && needsMeleeRoute(context.nav().grid(), situation.self().pos(), enemy.pos()))) {
       return fightDecision(
           scene,
           plan,
@@ -919,6 +922,15 @@ public final class Planner {
             .or(archer::peek)
             .or(archer::room)
             .orElse(shoot));
+  }
+
+  /** Sight through glass or over a low wall does not establish a level walking approach. */
+  private static boolean needsMeleeRoute(VoxelGrid grid, Vec3 from, Vec3 to) {
+    return Math.abs(from.y() - to.y()) > 0.5
+        || grid.raycast(from.plus(0, 0.1, 0), to.plus(0, 0.1, 0), VoxelGrid.Layer.MOVEMENT)
+            .isPresent()
+        || grid.raycast(from.plus(0, 1.7, 0), to.plus(0, 1.7, 0), VoxelGrid.Layer.MOVEMENT)
+            .isPresent();
   }
 
   /**

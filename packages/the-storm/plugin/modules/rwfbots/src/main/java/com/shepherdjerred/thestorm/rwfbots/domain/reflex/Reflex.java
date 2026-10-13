@@ -370,6 +370,17 @@ public final class Reflex {
               AimController.aim(
                   state.aim(), Facing.looking(self.eye(), aimPoint), levers(), random));
       var distance = self.pos().distance(target.pos());
+      if (state.waypointIndex() < input.decision().waypoints().size()
+          && !hitTest(
+              context.grid(),
+              self,
+              Facing.looking(self.eye(), target.pos().plus(0, 1.3, 0)),
+              target)) {
+        var aim = state.aim();
+        walk(Optional.empty());
+        state = state.withAim(aim);
+        return;
+      }
       click(target, distance);
       strafe(target, distance);
     }

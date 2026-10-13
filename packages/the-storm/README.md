@@ -2486,6 +2486,14 @@ the attack-speed base is re-applied on every `NPCSpawnEvent`. All rule
 actions (attacks, fuse clicks, arrows, Rewind) go through `rwf.app.BotActions`;
 bots never deal damage directly.
 
+Visible melee targets behind movement-blocking cover or at a different height
+receive a baked approach route. The reflex controller follows that route until
+an unobstructed sword ray can reach the target, then resumes local combat
+steering. It keeps aiming at the visible opponent during the approach and does
+not spend swing cooldowns against intervening glass. Open, level approaches keep
+direct steering. This check does not replace the movement graph's traversal
+limits or establish that a straight approach has continuous floor support.
+
 The `Governor` watches the server's recent tick times (p95) and the bot
 sections' own time with hysteresis: level 1 halves the think rates and makes
 bots with no human within 48 blocks reflex every other tick; level 2 also
