@@ -173,6 +173,7 @@ const PLAN_STACKS = [
 const PLATFORM_STACKS = [
   "application-secrets",
   "dockerhub",
+  "dockerhub-tokens",
   "openai",
   "anthropic",
   "discord",

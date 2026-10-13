@@ -11,6 +11,8 @@ a local Docker daemon. The stack wrapper maps `DOCKERHUB_USERNAME` and
 `DOCKERHUB_MANAGEMENT_TOKEN` to the provider's credential environment. The
 management PAT needs Read, Write, and Delete permission and belongs only to
 this infrastructure boundary. Publishing and deployment use different PATs.
+The operator-only `dockerhub-tokens` stack creates these PATs through account
+authentication; this repository stack never receives that account login.
 Provider credentials are supplied through the existing 1Password wrapper,
 never Terraform variables or tracked files.
 
