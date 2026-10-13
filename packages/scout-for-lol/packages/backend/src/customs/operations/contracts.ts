@@ -33,6 +33,7 @@ export const CustomOperationProgressSchema = z.strictObject({
   creating: z.enum(["A", "B"]).nullable(),
   moved: z.array(z.string().min(1)),
   deleted: z.array(DiscordChannelIdSchema),
+  expiredAt: z.iso.datetime().optional(),
 });
 export type CustomOperationProgress = z.infer<
   typeof CustomOperationProgressSchema

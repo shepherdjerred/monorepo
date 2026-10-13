@@ -114,6 +114,10 @@ html[data-discord-layout="pip"] main {
   gap: 1rem;
 }
 
+.expired-cleanups + .centered {
+  min-height: 0;
+}
+
 .hero,
 .section-heading,
 .footer-actions,

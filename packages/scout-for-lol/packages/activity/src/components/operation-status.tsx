@@ -8,6 +8,24 @@ import {
   type ActivityControlProps,
 } from "@/components/activity-shared";
 
+function operationHeading(held: boolean, cleanup: boolean) {
+  if (!held) return "Updating this night";
+  return cleanup
+    ? "Expired night needs voice cleanup"
+    : "Voice setup needs a check";
+}
+
+function resolutionLabel(hasChannel: boolean, cleanup: boolean) {
+  if (cleanup) {
+    return hasChannel
+      ? "Record channel and clean up"
+      : "Confirm no channel and clean up";
+  }
+  return hasChannel
+    ? "Use this channel and resume"
+    : "Confirm no channel and retry";
+}
+
 export function CustomOperationStatus(props: ActivityControlProps) {
   const trpc = useTRPC();
   const resolution = useMutation(
@@ -21,13 +39,15 @@ export function CustomOperationStatus(props: ActivityControlProps) {
     props.snapshot.viewerRole,
   );
   const held = pending.state === "held";
+  const cleanup =
+    props.snapshot.state === "ENDED" && pending.action === "expire";
   const channel =
     channelId.trim() === ""
       ? undefined
       : DiscordChannelIdSchema.safeParse(channelId.trim());
   return (
     <section className="panel operation-status" aria-label="Night operation">
-      <h2>{held ? "Voice setup needs a check" : "Updating this night"}</h2>
+      <h2>{operationHeading(held, cleanup)}</h2>
       <p role="status" aria-live="polite">
         {pending.step}
       </p>
@@ -36,6 +56,9 @@ export function CustomOperationStatus(props: ActivityControlProps) {
           Check this server’s team voice channels. The host or a cohost can
           record the channel Scout created, or confirm that none exists. Scout
           verifies the channels before continuing.
+          {cleanup
+            ? " This night has ended. Scout will only return players and remove its team channels."
+            : null}
         </p>
       ) : (
         <p>
@@ -98,9 +121,7 @@ export function CustomOperationStatus(props: ActivityControlProps) {
               (channel !== undefined && !channel.success)
             }
           >
-            {channel === undefined
-              ? "Confirm no channel and retry"
-              : "Use this channel and resume"}
+            {resolutionLabel(channel !== undefined, cleanup)}
           </button>
         </form>
       ) : null}

@@ -7,6 +7,7 @@ import {
 } from "@scout-for-lol/data";
 import { GameControls } from "@/components/game-controls";
 import { CustomOperationStatus } from "@/components/operation-status";
+import { ExpiredCustomCleanups } from "@/components/expired-cleanups";
 import { PlayerList } from "@/components/player-list";
 import {
   revision,
@@ -243,5 +244,10 @@ function StaleBanner() {
 }
 
 export function App() {
-  return <ActivityContent />;
+  return (
+    <>
+      <ExpiredCustomCleanups />
+      <ActivityContent />
+    </>
+  );
 }

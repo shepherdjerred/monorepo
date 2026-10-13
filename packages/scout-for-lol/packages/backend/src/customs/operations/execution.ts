@@ -64,7 +64,21 @@ export async function executeCustomOperationWithPort(
       const context: CustomOperationExecution = {
         db,
         operationId,
-        payload,
+        payload:
+          progress.expiredAt === undefined
+            ? payload
+            : {
+                ...payload,
+                action: "expire",
+                reason: "Voice cleanup after held night expiry",
+                snapshot: {
+                  ...payload.snapshot,
+                  teamAVoiceChannelId:
+                    progress.channels.A ?? payload.snapshot.teamAVoiceChannelId,
+                  teamBVoiceChannelId:
+                    progress.channels.B ?? payload.snapshot.teamBVoiceChannelId,
+                },
+              },
         progress,
         fence,
         cancellation,
@@ -74,11 +88,11 @@ export async function executeCustomOperationWithPort(
         await persistCustomProgress(context, "held");
         return result("held");
       }
-      const port = await makePort(payload);
+      const port = await makePort(context.payload);
       cancellation?.throwIfAborted();
       port.assertReady();
       if (
-        payload.action === "arrange" &&
+        context.payload.action === "arrange" &&
         (await provisionCustomTeams(context, port)) === "held"
       )
         return result("held");

@@ -70,7 +70,8 @@ export async function commitCustomVoiceResolution(
           where: {
             id: input.nightId,
             revision: input.expectedRevision,
-            state: { not: "ENDED" },
+            state:
+              progress.expiredAt === undefined ? { not: "ENDED" } : "ENDED",
           },
           data: {
             revision: { increment: 1 },

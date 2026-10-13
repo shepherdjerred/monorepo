@@ -6,6 +6,7 @@ import { createLogger } from "#src/logger.ts";
 import { orchestrationMode } from "#src/temporal/orchestration-cutover.ts";
 import { commitCustomOperation } from "#src/customs/operations/request.ts";
 import { buildCustomNightSnapshot } from "#src/customs/snapshot.ts";
+import { expireHeldCustomOperation } from "#src/customs/operations/expiry.ts";
 
 const logger = createLogger("customs-expiry");
 
@@ -104,48 +105,63 @@ export async function expireCustomNightsInDatabase(
   return expiredNightIds;
 }
 
+export async function expireDurableCustomNights(
+  client: ExtendedPrismaClient,
+  now: Date,
+): Promise<void> {
+  const due = await client.customNight.findMany({
+    where: {
+      state: { not: "ENDED" },
+      expiresAt: { lte: now },
+      operations: { none: { state: { in: ["queued", "running"] } } },
+    },
+    include: {
+      operations: { where: { state: "held" }, select: { id: true }, take: 1 },
+    },
+    orderBy: [{ expiresAt: "asc" }, { id: "asc" }],
+    take: 100,
+  });
+  const failures: unknown[] = [];
+  for (const candidate of due)
+    try {
+      const held = candidate.operations[0];
+      if (held !== undefined) {
+        await expireHeldCustomOperation(client, held.id, now);
+        continue;
+      }
+      const snapshot = await buildCustomNightSnapshot(
+        client,
+        candidate.id,
+        "temporal:custom-nights-expiry",
+        now,
+      );
+      if (snapshot === undefined)
+        throw new Error("Custom night disappeared before expiry");
+      await commitCustomOperation(client, snapshot, {
+        actorDiscordId: "temporal:custom-nights-expiry",
+        action: "expire",
+        now,
+        input: {
+          nightId: candidate.id,
+          expectedRevision: snapshot.revision,
+          reason: "Custom night expired",
+        },
+      });
+    } catch (error) {
+      failures.push(error);
+    }
+  if (failures.length > 0)
+    throw new AggregateError(
+      failures,
+      "Some Customs expiry operations could not be queued",
+    );
+}
+
 export async function expireCustomNights(now = new Date()): Promise<void> {
   const mode = await orchestrationMode();
   if (mode === "paused") return;
   if (mode === "durable") {
-    const due = await prisma.customNight.findMany({
-      where: {
-        state: { not: "ENDED" },
-        expiresAt: { lte: now },
-        operations: { none: { state: { in: ["queued", "running", "held"] } } },
-      },
-      orderBy: [{ expiresAt: "asc" }, { id: "asc" }],
-      take: 100,
-    });
-    const failures: unknown[] = [];
-    for (const candidate of due)
-      try {
-        const snapshot = await buildCustomNightSnapshot(
-          prisma,
-          candidate.id,
-          "temporal:custom-nights-expiry",
-          now,
-        );
-        if (snapshot === undefined)
-          throw new Error("Custom night disappeared before expiry");
-        await commitCustomOperation(prisma, snapshot, {
-          actorDiscordId: "temporal:custom-nights-expiry",
-          action: "expire",
-          now,
-          input: {
-            nightId: candidate.id,
-            expectedRevision: snapshot.revision,
-            reason: "Custom night expired",
-          },
-        });
-      } catch (error) {
-        failures.push(error);
-      }
-    if (failures.length > 0)
-      throw new AggregateError(
-        failures,
-        "Some Customs expiry operations could not be queued",
-      );
+    await expireDurableCustomNights(prisma, now);
     return;
   }
   const expiredNightIds = await expireCustomNightsInDatabase(

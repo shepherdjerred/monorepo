@@ -197,18 +197,26 @@ export async function buildCustomNightSnapshot(
             (participant) => participant.discordId === viewerDiscordId,
           )?.role ?? "MEMBER");
   const currentGame = night.games.at(-1);
+  const pendingOperation = night.operations[0];
+  const progress =
+    pendingOperation === undefined
+      ? undefined
+      : CustomOperationProgressSchema.parse(
+          JSON.parse(pendingOperation.progress),
+        );
 
   return CustomNightSnapshotSchema.parse({
     pendingOperation:
-      night.operations[0] === undefined
+      pendingOperation === undefined || progress === undefined
         ? null
         : {
-            id: night.operations[0].id,
-            action: night.operations[0].action,
-            state: night.operations[0].state,
-            step: CustomOperationProgressSchema.parse(
-              JSON.parse(night.operations[0].progress),
-            ).step,
+            id: pendingOperation.id,
+            action:
+              progress.expiredAt === undefined
+                ? pendingOperation.action
+                : "expire",
+            state: pendingOperation.state,
+            step: progress.step,
           },
     id: night.id,
     guildId: night.guildId,

@@ -74,6 +74,13 @@ releasing the active-night pointer. Inspect `OPERATION_COMPLETED` with action
 `expire`; legacy nights retain their original `NIGHT_EXPIRED` audit records.
 Expiry never chooses a winner or verifies an unfinished game.
 
+If voice creation is held for inspection when the night expires, Scout ends
+the night and releases the guild for a new night immediately. It preserves the
+uncertain creation and recorded channels for manager review. The unfinished
+game becomes `VOID`; voice cleanup remains pending until the uncertainty is
+resolved. Inspect `NIGHT_EXPIRED` with `cleanupHeld: true` and then the cleanup
+operation's `OPERATION_COMPLETED` record.
+
 ## 4. Recover without inventing a result
 
 - **No lobby binds:** verify every selected Riot account, then compare the
@@ -92,6 +99,13 @@ Expiry never chooses a winner or verifies an unfinished game.
   leave its ID empty after verifying no matching channel exists. Describe the
   check and submit the answer. Scout verifies fresh channel evidence before
   resuming. Night controls remain disabled until the operation finishes.
+- **Expired night needs voice cleanup:** inspect the channels as above, then
+  choose **Record channel and clean up** or **Confirm no channel and clean
+  up**. Scout returns players and removes its recorded team channels. It does
+  not create another channel or resume the expired game, and it leaves any
+  newer night in the guild active. Reopen the Activity to see pending cleanup
+  for nights you host or cohost; administrators can recover any night in the
+  server. These controls remain available alongside a new active night.
 - **Players remain in team channels:** use **Return everyone to lobby**. Ending
   the night also performs that cleanup.
 - **The host disappears:** wait for expiry if no manager can end the night.

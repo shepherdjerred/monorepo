@@ -28,6 +28,10 @@ async function finishDomain(
       where: { id: game.id },
       data: { voiceState: "CLEANED_UP", voiceReady: false, voiceError: null },
     });
+  const standingNight = await tx.customNight.findUniqueOrThrow({
+    where: { id: nightId },
+  });
+  if (standingNight.state === "ENDED") return;
   if (payload.action === "continue") {
     if (game === null || payload.nextGame === undefined)
       throw new Error("Continuing requires a frozen next game");
@@ -112,6 +116,7 @@ export async function completeCustomOperation(
         payload: JSON.stringify({
           operationId,
           action: payload.action,
+          requestedAction: standing.action,
           reason: payload.reason ?? null,
         }),
         source: "TEMPORAL",

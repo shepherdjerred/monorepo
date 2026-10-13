@@ -29,7 +29,10 @@ export async function runDurableCompetitionUpdates(): Promise<{
     try {
       const occurredAt =
         competition.nextScheduledUpdateAt ?? competition.updatedTime;
-      const prepared = await prepareDurableCompetitionUpdate(competition);
+      const prepared = await prepareDurableCompetitionUpdate(
+        competition,
+        occurredAt,
+      );
       const queued = await prisma.$transaction(async (db) => {
         const advanced = await db.competition.updateMany({
           where: {

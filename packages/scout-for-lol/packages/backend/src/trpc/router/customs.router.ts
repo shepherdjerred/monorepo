@@ -23,6 +23,7 @@ import {
 import { activityProcedure, router } from "#src/trpc/trpc.ts";
 import { withOrchestrationProducer } from "#src/temporal/orchestration-cutover.ts";
 import { resolveCustomVoiceOperation } from "#src/customs/operations/resolution.ts";
+import { pendingCustomCleanups } from "#src/customs/operations/pending-cleanups.ts";
 import {
   activeCustomNight,
   addCustomParticipant,
@@ -66,6 +67,13 @@ const customMutation = activityProcedure.use(
 );
 
 export const customsRouter = router({
+  pendingCleanups: activityProcedure
+    .input(CustomGuildInputSchema)
+    .query(({ ctx, input }) => {
+      if (input.guildId !== ctx.activitySession.guildId)
+        throw new Error("Activity guild does not match the query");
+      return pendingCustomCleanups(ctx.activitySession);
+    }),
   resolveVoiceOperation: activityProcedure
     .input(CustomResolveVoiceOperationInputSchema)
     .mutation(({ ctx, input }) =>
