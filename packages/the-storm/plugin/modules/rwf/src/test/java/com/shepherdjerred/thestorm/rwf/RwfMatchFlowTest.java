@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.rwf;
 import static com.shepherdjerred.thestorm.rwf.RwfHarness.messages;
 import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.within;
 
 import com.shepherdjerred.thestorm.core.result.Result;
@@ -403,6 +404,46 @@ final class RwfMatchFlowTest {
         .isGreaterThan(3);
     assertThat(harness.snapshot().phase()).isEqualTo(MatchSnapshot.PhaseKind.COUNTDOWN);
     assertThat(messages(alice)).anyMatch(message -> message.contains("Bot1 joined the match"));
+  }
+
+  @Test
+  void failedBotArrivalsReleaseTheirDraftsBeforeTheNextMatch() {
+    var harness = start();
+    var alice = harness.loadedPlayer("Alice");
+    harness.bots.failNextSpawns(1);
+    harness.enter(alice);
+    harness.until(() -> harness.snapshot().phase() == MatchSnapshot.PhaseKind.COUNTDOWN);
+    harness.letBotsArrive();
+
+    assertThat(harness.bots.spawned()).hasSize(6);
+    assertThat(harness.bots.drafted()).as("failed arrivals release their reserved bodies").isZero();
+    assertThat(harness.snapshot().combatants()).hasSize(7);
+
+    alice.performCommand("rwf leave");
+    harness.ticks(2);
+    assertThat(harness.bots.spawned()).isEmpty();
+    assertThat(harness.bots.drafted()).isZero();
+    harness.enter(alice);
+    harness.until(() -> harness.snapshot().phase() == MatchSnapshot.PhaseKind.COUNTDOWN);
+    harness.letBotsArrive();
+    assertThat(harness.bots.spawned()).hasSize(7);
+    assertThat(harness.bots.drafted()).isZero();
+  }
+
+  @Test
+  void aThrowingBotSpawnReleasesOnlyItsDraftAndPreservesTheFailure() {
+    var harness = start();
+    var alice = harness.loadedPlayer("Alice");
+    var failure = new IllegalStateException("synthetic Citizens spawn refusal");
+    harness.bots.throwOnNextSpawn(failure);
+    harness.enter(alice);
+    harness.until(() -> harness.snapshot().phase() == MatchSnapshot.PhaseKind.COUNTDOWN);
+
+    assertThatThrownBy(harness::letBotsArrive).isSameAs(failure);
+    assertThat(harness.bots.drafted()).as("only the failed arrival is released").isEqualTo(6);
+    assertThat(harness.bots.spawned()).isEmpty();
+    harness.disable();
+    assertThat(harness.bots.drafted()).isZero();
   }
 
   @Test

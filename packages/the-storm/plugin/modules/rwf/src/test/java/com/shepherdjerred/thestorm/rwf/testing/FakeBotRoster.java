@@ -10,6 +10,7 @@ import java.util.Optional;
 import java.util.UUID;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.jspecify.annotations.Nullable;
 import org.mockbukkit.mockbukkit.ServerMock;
 import org.mockbukkit.mockbukkit.entity.PlayerMock;
 
@@ -25,6 +26,8 @@ public final class FakeBotRoster implements BotRoster {
   private final Map<CombatantId.Bot, PlayerMock> spawned = new LinkedHashMap<>();
   private final List<CombatantId.Bot> known = new ArrayList<>();
   private int created;
+  private int failedSpawnsRemaining;
+  private @Nullable RuntimeException spawnException;
 
   public FakeBotRoster(ServerMock server) {
     this.server = server;
@@ -47,6 +50,15 @@ public final class FakeBotRoster implements BotRoster {
 
   @Override
   public void spawn(CombatantId.Bot id, Location at) {
+    if (failedSpawnsRemaining > 0) {
+      failedSpawnsRemaining--;
+      if (spawnException != null) {
+        var failure = spawnException;
+        spawnException = null;
+        throw failure;
+      }
+      return;
+    }
     var player = pending.remove(id);
     if (player == null) {
       throw new IllegalArgumentException("unknown bot " + id);
@@ -90,6 +102,17 @@ public final class FakeBotRoster implements BotRoster {
   /** Bots drafted but neither spawned nor released yet. */
   public int drafted() {
     return pending.size();
+  }
+
+  /** Leaves the next drafted body without an entity, as a failed Citizens spawn does. */
+  public void failNextSpawns(int count) {
+    failedSpawnsRemaining = count;
+  }
+
+  /** Throws the production adapter's refusal instead of producing an entity. */
+  public void throwOnNextSpawn(RuntimeException failure) {
+    failedSpawnsRemaining = 1;
+    spawnException = failure;
   }
 
   /** Every bot ever handed out. */
