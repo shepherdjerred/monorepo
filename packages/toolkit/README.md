@@ -60,6 +60,37 @@ need a restart or their explicit native session environment.
 this API. `tracker --help` lists the complete command tree. Linear remains
 available for export until migration and consumer acceptance complete.
 
+The operator migration commands preserve an immutable Linear snapshot and its
+file checksums. Export is read-only and paginates all archived records through
+the authenticated Linear CLI; private file downloads resolve only the registered
+Linear credential and never forward it to redirect destinations.
+
+```bash
+toolkit tracker migration export-linear --output /private/tmp/linear-export
+toolkit tracker migration import-linear --input /private/tmp/linear-export --dry-run
+toolkit tracker migration backup-linear --input /private/tmp/linear-export --profile seaweedfs
+toolkit tracker migration verify-linear --input /private/tmp/linear-export
+toolkit tracker migration import-linear --input /private/tmp/linear-export
+toolkit tracker migration import-linear --input /private/tmp/linear-export --resume
+```
+
+`--resume` on export continues downloads from the frozen source snapshot.
+Import always relies on server idempotency and can resume after an uncertain
+response; a completed rerun reports only `unchanged` records. `--only TYPE`
+imports one entity stage whose prerequisites have already been applied.
+Dry-run validates every reference and local file before any destination access.
+Project/document comments stay in the private export. Project upload links require
+an explicit destination association and block preflight instead of importing broken links.
+Import rejects native issue collisions and requires normal writes to be paused.
+Open `tracker-imports-enabled` only for the explicit import window, then close
+it before enabling native writes. Compare the final source snapshot with Linear
+before cutover; new or changed source data requires reconciliation rather than
+silently overwriting an earlier imported record.
+
+Backups use the private `tracker-attachments/import/` prefix and verify every
+object by reading its bytes back. Keep the export directory private; never
+commit or upload its contents through `pr asset`.
+
 ## Platform commands
 
 Platform commands delegate to native CLIs. Explicit flags and environment

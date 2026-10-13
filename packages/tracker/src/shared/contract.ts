@@ -12,6 +12,7 @@ import {
 } from "./schema.ts";
 import type { z } from "zod";
 import { ImportRecordSchema as ImportRecord } from "./import-schema.ts";
+import { ImportAttachmentFileSchema as ImportAttachmentFile } from "./import-schema.ts";
 import { importId as destinationId } from "./import-identity.ts";
 
 export type AppRouter = ServerRouter & { readonly __wireContract?: never };
@@ -24,6 +25,7 @@ export const CreateIssueSchema = CreateIssue.clone();
 export const UpdateIssueSchema = UpdateIssue.clone();
 export const IssueListSchema = IssueList.clone();
 export const ImportRecordSchema = ImportRecord.clone();
+export const ImportAttachmentFileSchema = ImportAttachmentFile.clone();
 export const importId = (
   source: string,
   entityType: string,

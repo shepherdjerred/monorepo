@@ -9,9 +9,10 @@
       "management": {
         "managed": false
       },
-      "value": "0.0.0@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "value": "2.0.0-1009606@sha256:d2ddc55beb744204c2aaad4f958406295433912bac37b5b4c54ae8eddf5e811b",
       "notes": [
-        "Unpublished bootstrap marker. CI must publish and smoke-test the first real digest before the tracker chart is activated."
+        "Tracker application image - updated by CI pipeline",
+        "not managed by renovate"
       ]
     },
     {
