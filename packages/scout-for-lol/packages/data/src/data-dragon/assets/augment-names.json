@@ -1,5 +1,5 @@
 {
-  "sourceVersions": ["16.19"],
+  "sourceVersions": ["16.19", "16.20"],
   "augments": {
     "1": {
       "apiName": "AcceleratingSorcery",
