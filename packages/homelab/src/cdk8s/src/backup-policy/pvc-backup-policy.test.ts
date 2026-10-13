@@ -92,18 +92,18 @@ it.each(["ops-restore-rehearsal", "ops-restore-rehearsal-incremental"])(
 );
 
 describe("PVC backup policy", () => {
-  it("classifies 54 included and 45 excluded PVCs without duplicates", () => {
+  it("classifies 54 included and 48 excluded PVCs without duplicates", () => {
     const keys = PVC_BACKUP_POLICY.map((entry) =>
       pvcBackupPolicyKey(entry.namespace, entry.name),
     );
-    expect(keys).toHaveLength(99);
-    expect(new Set(keys).size).toBe(99);
+    expect(keys).toHaveLength(102);
+    expect(new Set(keys).size).toBe(102);
     expect(
       PVC_BACKUP_POLICY.filter((entry) => entry.backup === "enabled"),
     ).toHaveLength(54);
     expect(
       PVC_BACKUP_POLICY.filter((entry) => entry.backup === "disabled"),
-    ).toHaveLength(45);
+    ).toHaveLength(48);
     expect(
       getPvcBackupPolicy("minecraft-tsmc-restore", "datadir-minecraft-tsmc-0")
         .backup,
@@ -135,7 +135,10 @@ describe("PVC backup policy", () => {
         }
         const currentCount = admissionKinds.get(parsed.data.kind) ?? 0;
         admissionKinds.set(parsed.data.kind, currentCount + 1);
-        if (parsed.data.kind === "MutatingAdmissionPolicy") {
+        if (
+          parsed.data.kind === "MutatingAdmissionPolicy" &&
+          parsed.data.metadata.name.startsWith("pvc-backup-")
+        ) {
           expect(
             MutatingAdmissionPolicySchema.parse(manifest).spec.matchConstraints,
           ).toEqual({
@@ -176,8 +179,8 @@ describe("PVC backup policy", () => {
 
     expect(pvcCount).toBeGreaterThan(0);
     expect(operatorManagedPvcCount).toBeGreaterThan(0);
-    expect(admissionKinds.get("MutatingAdmissionPolicy")).toBe(3);
-    expect(admissionKinds.get("MutatingAdmissionPolicyBinding")).toBe(3);
+    expect(admissionKinds.get("MutatingAdmissionPolicy")).toBe(4);
+    expect(admissionKinds.get("MutatingAdmissionPolicyBinding")).toBe(4);
     // Includes PVC backup, ArgoCD, CI pod, mining reset, restoration
     // update/scale/delete and Service write/delete paths, and mc-harness sandbox pod guards.
     expect(admissionKinds.get("ValidatingAdmissionPolicy")).toBe(10);
