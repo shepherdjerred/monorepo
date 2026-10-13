@@ -146,7 +146,11 @@ public record Transition(Change change, List<Effect> effects, MatchState after) 
       case MatchEvent.MapReady ready ->
           new Change.MapReady(ready.map().id(), ready.map().blocksSha256());
       case MatchEvent.MapFailed failed -> new Change.MapFailed(failed.mapId());
-      case MatchEvent.SetMap _, MatchEvent.Skip _, MatchEvent.Extend _, MatchEvent.AssignTeam _ ->
+      case MatchEvent.SetMap _,
+          MatchEvent.Skip _,
+          MatchEvent.Extend _,
+          MatchEvent.AssignTeam _,
+          MatchEvent.MapQuarantined _ ->
           new Change.Operated();
       case MatchEvent.Damaged damaged ->
           new Change.Damaged(damaged.victim().uuid(), damaged.attacker().map(CombatantId::uuid));

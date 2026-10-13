@@ -4,16 +4,20 @@ import com.shepherdjerred.thestorm.core.analytics.ProductAnalytics;
 import com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.GameEvent;
 import com.shepherdjerred.thestorm.rwf.app.MatchNotification;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.CombatantId;
+import com.shepherdjerred.thestorm.rwf.domain.match.Combatant;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchSnapshot;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchSnapshot.PhaseKind;
 import com.shepherdjerred.thestorm.rwf.domain.match.Outcome;
+import com.shepherdjerred.thestorm.rwf.domain.match.RwfMatch;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * Search and Destroy's product events, for humans only: the kit each picks, each map vote, and how
@@ -26,13 +30,14 @@ final class RwfAnalytics {
   private PhaseKind phase = PhaseKind.LOBBY;
   private Optional<Instant> liveAt = Optional.empty();
   private Optional<MatchSnapshot> lastLive = Optional.empty();
+  private List<Combatant> lastParticipants = List.of();
 
   RwfAnalytics(ProductAnalytics analytics) {
     this.analytics = analytics;
   }
 
   /** Hears every accepted step of the match. */
-  void accept(MatchNotification notification) {
+  void accept(MatchNotification notification, RwfMatch match) {
     var after = notification.after();
     switch (notification.event()) {
       case MatchEvent.PickKit pick when pick.id() instanceof CombatantId.Human human ->
@@ -51,21 +56,23 @@ final class RwfAnalytics {
                   after.ballot().map(ballot -> ballot.candidates().size()).orElse(0)));
       default -> {}
     }
-    observePhase(after);
+    observePhase(
+        after, Stream.concat(match.members().stream(), match.departed().stream()).toList());
   }
 
-  private void observePhase(MatchSnapshot after) {
+  private void observePhase(MatchSnapshot after, List<Combatant> participants) {
     if (phase != PhaseKind.LIVE && after.phase() == PhaseKind.LIVE) {
       liveAt = Optional.of(after.now());
     }
     if (phase == PhaseKind.LIVE && after.phase() == PhaseKind.ENDED) {
-      completed(after, after.now(), after.outcome().orElseThrow());
+      completed(after, participants, after.now(), after.outcome().orElseThrow());
     }
     if (phase == PhaseKind.LIVE && after.phase() == PhaseKind.RESETTING) {
-      completed(lastLive.orElseThrow(), after.now(), new Outcome.Stopped());
+      completed(lastLive.orElseThrow(), lastParticipants, after.now(), new Outcome.Stopped());
     }
     phase = after.phase();
     lastLive = after.phase() == PhaseKind.LIVE ? Optional.of(after) : Optional.empty();
+    lastParticipants = after.phase() == PhaseKind.LIVE ? participants : List.of();
   }
 
   /** A human used a killstreak reward; the killstreaks call this. */
@@ -83,10 +90,11 @@ final class RwfAnalytics {
     }
   }
 
-  private void completed(MatchSnapshot after, Instant finishedAt, Outcome outcome) {
-    var humans = after.combatants().stream().filter(c -> !c.id().isBot()).count();
+  private void completed(
+      MatchSnapshot after, List<Combatant> participants, Instant finishedAt, Outcome outcome) {
+    var humans = participants.stream().filter(c -> !c.id().isBot()).count();
     var seconds = Duration.between(liveAt.orElseThrow(), finishedAt).toSeconds();
-    for (var combatant : after.combatants()) {
+    for (var combatant : participants) {
       if (!(combatant.id() instanceof CombatantId.Human human)) {
         continue;
       }
@@ -98,14 +106,14 @@ final class RwfAnalytics {
       properties.put("survived", combatant.alive());
       properties.put("kit", combatant.kit().orElse("none"));
       properties.put("humans", humans);
-      properties.put("bots", after.combatants().size() - humans);
+      properties.put("bots", participants.size() - humans);
       properties.put("duration_s", seconds);
       analytics.game(human.uuid(), GameEvent.RWF_MATCH_COMPLETED, properties);
     }
     liveAt = Optional.empty();
   }
 
-  private static String result(Outcome outcome, MatchSnapshot.CombatantView combatant) {
+  private static String result(Outcome outcome, Combatant combatant) {
     return switch (outcome) {
       case Outcome.Winner winner ->
           combatant.team().filter(winner.team()::equals).isPresent() ? "win" : "loss";

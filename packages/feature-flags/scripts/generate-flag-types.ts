@@ -68,17 +68,11 @@ export async function generateFlagTypesSource(): Promise<string> {
     const variantFlags = nsFlags.filter((flag) => flag.type === "variant");
 
     // Boolean flags in namespace
-    if (booleanFlags.length === nsFlags.length) {
-      lines.push(
-        `export const ${prefixUpper}_BOOLEAN_FLAG_KEYS = ${prefixUpper}_FLAG_KEYS;`,
-      );
-    } else {
-      lines.push(`export const ${prefixUpper}_BOOLEAN_FLAG_KEYS = [`);
-      for (const flag of booleanFlags) {
-        lines.push(`  ${JSON.stringify(flag.key)},`);
-      }
-      lines.push("] as const;");
+    lines.push(`export const ${prefixUpper}_BOOLEAN_FLAG_KEYS = [`);
+    for (const flag of booleanFlags) {
+      lines.push(`  ${JSON.stringify(flag.key)},`);
     }
+    lines.push("] as const;");
     lines.push("");
     lines.push(
       `export type ${prefixPascal}BooleanFlagKey = (typeof ${prefixUpper}_BOOLEAN_FLAG_KEYS)[number];`,

@@ -236,7 +236,7 @@ public final class RwfPaper {
     var _ = runner.subscribe(metrics::accept);
     // Kit picks, map votes and finished matches; the killstreaks and kit shop call its hooks.
     var productEvents = new RwfAnalytics(context.analytics());
-    var _ = runner.subscribe(productEvents::accept);
+    var _ = runner.subscribe(notification -> productEvents.accept(notification, runner.match()));
     var hats = new Hats(runner, context);
     var _ = runner.subscribe(hats::accept);
     var guard = new ItemGuard(runner, keys);

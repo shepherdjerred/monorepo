@@ -7,6 +7,7 @@ import com.shepherdjerred.thestorm.core.analytics.ProductAnalytics;
 import com.shepherdjerred.thestorm.rwf.app.MatchNotification;
 import com.shepherdjerred.thestorm.rwf.domain.combat.AttackType;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.CombatantId;
+import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
 import com.shepherdjerred.thestorm.rwf.domain.match.Ballot;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchEffect;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent;
@@ -21,11 +22,14 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 final class MatchAnalyticsTest {
   private static final UUID PLAYER = new UUID(1, 1);
   private static final CombatantId HUMAN = new CombatantId.Human(PLAYER);
   private static final CombatantId BOT = new CombatantId.Bot("test", new UUID(2, 2));
+  private static final CombatantId FRIEND = new CombatantId.Bot("test", new UUID(3, 3));
 
   private static final class Recording implements ProductAnalytics {
     private final List<Action> actions = new ArrayList<>();
@@ -152,22 +156,67 @@ final class MatchAnalyticsTest {
                     .containsEntry("kills", 1));
   }
 
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void aDepartedHumanCompletesOnceWithTheirFinalKitAndRosterCounts(boolean stopped) {
+    var recording = new Recording();
+    var events = new RwfAnalytics(recording);
+    var match = start(events, stopped);
+    var leftAt = Samples.T0.plusSeconds(30);
+    match = accept(events, match, new MatchEvent.Leave(HUMAN, leftAt), leftAt);
+    assertThat(match.members()).noneMatch(member -> member.id().equals(HUMAN));
+    assertThat(match.departed()).hasSize(1);
+    if (stopped) {
+      assertThat(MatchSnapshot.of(match, leftAt).phase()).isEqualTo(MatchSnapshot.PhaseKind.LIVE);
+      match = accept(events, match, new MatchEvent.Stop(), Samples.T0.plusSeconds(75));
+    } else {
+      assertThat(MatchSnapshot.of(match, leftAt).phase()).isEqualTo(MatchSnapshot.PhaseKind.ENDED);
+      match = accept(events, match, new MatchEvent.Stop(), leftAt);
+    }
+    accept(events, match, new MatchEvent.ResetDone(), Samples.T0.plusSeconds(75));
+
+    assertThat(recording.games)
+        .filteredOn(entry -> entry.getKey() == ProductAnalytics.GameEvent.RWF_MATCH_COMPLETED)
+        .singleElement()
+        .satisfies(
+            entry ->
+                assertThat(entry.getValue())
+                    .containsEntry("result", stopped ? "stopped" : "loss")
+                    .containsEntry("kit", "longbow")
+                    .containsEntry("humans", 1L)
+                    .containsEntry("bots", stopped ? 2L : 1L)
+                    .containsEntry("duration_s", stopped ? 75L : 30L)
+                    .containsEntry("survived", false));
+  }
+
   private static RwfMatch start(RwfAnalytics events) {
+    return start(events, false);
+  }
+
+  private static RwfMatch start(RwfAnalytics events, boolean friend) {
     var match = RwfMatch.open(MatchSettings.RED_WARFARE, Samples.MATCH, Samples.SEED);
     var map = Samples.twoTeams();
-    for (var event :
-        List.of(
-            new MatchEvent.Join(HUMAN, "Player", Samples.T0),
-            new MatchEvent.Join(BOT, "Bot", Samples.T0),
-            new MatchEvent.BallotOpened(
-                List.of(
-                    new Ballot.Candidate(map.id(), map.name(), map.author()),
-                    new Ballot.Candidate("yard", "Yard", map.author()))),
-            new MatchEvent.PickKit(HUMAN, "longbow"),
-            new MatchEvent.PickKit(BOT, "trooper"),
-            new MatchEvent.Vote(HUMAN, map.id()),
-            new MatchEvent.ForceStart(Samples.T0),
-            new MatchEvent.MapReady(map, Samples.T0))) {
+    var setup =
+        new ArrayList<MatchEvent>(
+            List.of(
+                new MatchEvent.Join(HUMAN, "Player", Samples.T0),
+                new MatchEvent.Join(BOT, "Bot", Samples.T0),
+                new MatchEvent.BallotOpened(
+                    List.of(
+                        new Ballot.Candidate(map.id(), map.name(), map.author()),
+                        new Ballot.Candidate("yard", "Yard", map.author()))),
+                new MatchEvent.PickKit(HUMAN, "longbow"),
+                new MatchEvent.PickKit(BOT, "trooper"),
+                new MatchEvent.Vote(HUMAN, map.id()),
+                new MatchEvent.AssignTeam(HUMAN, TeamColor.RED),
+                new MatchEvent.AssignTeam(BOT, TeamColor.BLUE)));
+    if (friend) {
+      setup.add(new MatchEvent.Join(FRIEND, "Friend", Samples.T0));
+      setup.add(new MatchEvent.AssignTeam(FRIEND, TeamColor.RED));
+    }
+    setup.add(new MatchEvent.ForceStart(Samples.T0));
+    setup.add(new MatchEvent.MapReady(map, Samples.T0));
+    for (var event : setup) {
       match = accept(events, match, event, Samples.T0);
     }
     assertThat(MatchSnapshot.of(match, Samples.T0).phase()).isEqualTo(MatchSnapshot.PhaseKind.LIVE);
@@ -185,7 +234,8 @@ final class MatchAnalyticsTest {
                   throw new AssertionError(event + " was refused: " + error);
                 });
     events.accept(
-        new MatchNotification(event, step.effects(), MatchSnapshot.of(step.match(), now)));
+        new MatchNotification(event, step.effects(), MatchSnapshot.of(step.match(), now)),
+        step.match());
     return step.match();
   }
 

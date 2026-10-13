@@ -824,6 +824,12 @@ final class RwfCommands {
       Texts.error(sender, "The last playable map cannot be quarantined.");
       return OK;
     }
+    runner
+        .handle(new MatchEvent.MapQuarantined(mapId))
+        .ifPresent(
+            error -> {
+              throw new IllegalStateException("quarantined map stayed on the ballot: " + error);
+            });
     context.onMain(
         quarantines.quarantine(
             mapId, "quarantined by an operator", sender.getName(), context.time().instant()),

@@ -114,6 +114,8 @@ public record RwfMatch(
           case MatchEvent.SetMap set -> Voting.set(draft, set.candidate());
           case MatchEvent.MapReady ready -> Flow.mapReady(draft, ready.map(), ready.now());
           case MatchEvent.MapFailed failed -> Voting.failed(draft, failed.mapId());
+          case MatchEvent.MapQuarantined quarantined ->
+              Voting.quarantined(draft, quarantined.mapId());
           case MatchEvent.Tick tick -> {
             Flow.tick(draft, tick);
             yield Optional.empty();

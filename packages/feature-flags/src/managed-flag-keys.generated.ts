@@ -18,7 +18,16 @@ export const MANAGED_NAMESPACES = [
 
 export type ManagedNamespaceKey = (typeof MANAGED_NAMESPACES)[number];
 
-export const WOODPECKER_BOOLEAN_FLAG_KEYS = WOODPECKER_FLAG_KEYS;
+export const WOODPECKER_BOOLEAN_FLAG_KEYS = [
+  "woodpecker-maintenance-lanes-enabled",
+  "woodpecker-source-incremental-enabled",
+  "woodpecker-prepared-workspace-enabled",
+  "woodpecker-format-cache-enabled",
+  "woodpecker-gradle-seed-enabled",
+  "woodpecker-small-check-grouping-enabled",
+  "woodpecker-bun-copyfile-enabled",
+  "woodpecker-source-cache-enabled",
+] as const;
 
 export type WoodpeckerBooleanFlagKey =
   (typeof WOODPECKER_BOOLEAN_FLAG_KEYS)[number];
@@ -35,7 +44,9 @@ export const WOODPECKER_FLAG_KEYS = [
 
 export type WoodpeckerFlagKey = (typeof WOODPECKER_FLAG_KEYS)[number];
 
-export const JUSTIN_BOOLEAN_FLAG_KEYS = JUSTIN_FLAG_KEYS;
+export const JUSTIN_BOOLEAN_FLAG_KEYS = [
+  "justin_autonomous_devex_enabled",
+] as const;
 
 export type JustinBooleanFlagKey = (typeof JUSTIN_BOOLEAN_FLAG_KEYS)[number];
 
@@ -283,7 +294,28 @@ export const ALERT_DASHBOARD_FLAG_KEYS = [
 
 export type AlertDashboardFlagKey = (typeof ALERT_DASHBOARD_FLAG_KEYS)[number];
 
-export const THE_STORM_BOOLEAN_FLAG_KEYS = THE_STORM_FLAG_KEYS;
+export const THE_STORM_BOOLEAN_FLAG_KEYS = [
+  "the-storm-analytics-enabled",
+  "the-storm-staff-tools-enabled",
+  "the-storm-identity-enabled",
+  "the-storm-letters-enabled",
+  "the-storm-ip-enforcement-enabled",
+  "the-storm-companions-enabled",
+  "the-storm-crier-enabled",
+  "the-storm-survival-enabled",
+  "the-storm-merchant-enabled",
+  "the-storm-shop-rentals-enabled",
+  "the-storm-rwf-enabled",
+  "the-storm-rwfbots-chat-enabled",
+  "the-storm-rwfbots-learning-enabled",
+  "the-storm-rwf-match-flow-enabled",
+  "the-storm-rwf-carry-over-enabled",
+  "the-storm-rwf-death-feed-enabled",
+  "the-storm-rwf-team-chat-enabled",
+  "the-storm-rwf-spectator-tools-enabled",
+  "the-storm-rwf-bomb-effects-enabled",
+  "the-storm-rwf-stats-enabled",
+] as const;
 
 export type TheStormBooleanFlagKey =
   (typeof THE_STORM_BOOLEAN_FLAG_KEYS)[number];

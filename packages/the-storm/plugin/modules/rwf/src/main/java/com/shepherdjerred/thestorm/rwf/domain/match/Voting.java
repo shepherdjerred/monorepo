@@ -126,7 +126,25 @@ final class Voting {
     }
     var name = ballot.orElseThrow().candidate(mapId).map(Ballot.Candidate::name).orElse(mapId);
     draft.announce(Notice.of(NoticeKind.MAP_FAILED, "map", name));
-    var left = ballot.orElseThrow().without(mapId);
+    remove(draft, ballot.orElseThrow(), mapId);
+    return Optional.empty();
+  }
+
+  /** Removes an operator-quarantined candidate and its votes before the match starts. */
+  static Optional<MatchError> quarantined(Draft draft, String mapId) {
+    var ballot = draft.ballot();
+    if (ballot.isEmpty() || ballot.orElseThrow().candidate(mapId).isEmpty()) {
+      return Optional.empty();
+    }
+    remove(draft, ballot.orElseThrow(), mapId);
+    return Optional.empty();
+  }
+
+  private static void remove(Draft draft, Ballot ballot, String mapId) {
+    var left = ballot.without(mapId);
+    if (ballot.chosen().filter(mapId::equals).isPresent()) {
+      draft.map = Optional.empty();
+    }
     if (left.candidates().isEmpty()) {
       if (draft.phase instanceof Phase.Preparing preparing) {
         draft.phase = new Phase.Lobby(Optional.of(preparing.since()), Ballot.NONE);
@@ -134,11 +152,16 @@ final class Voting {
         draft.ballot(Ballot.NONE);
       }
       draft.effect(new MatchEffect.NeedBallot());
-      return Optional.empty();
+      return;
     }
-    var closed = closed(draft, left);
-    draft.ballot(closed);
-    announceChoice(draft, closed);
-    return Optional.empty();
+    if (ballot.closed() && ballot.chosen().filter(mapId::equals).isEmpty()) {
+      draft.ballot(new Ballot(left.candidates(), left.votes(), ballot.chosen()));
+    } else if (ballot.closed() || left.candidates().size() == 1) {
+      var closed = closed(draft, left);
+      draft.ballot(closed);
+      announceChoice(draft, closed);
+    } else {
+      draft.ballot(left);
+    }
   }
 }

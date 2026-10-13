@@ -180,6 +180,63 @@ final class MatchExperienceTest {
     }
 
     @Test
+    void quarantiningTheLeadingCandidateDropsItsVotesAndKeepsOtherVotes() {
+      var play = flow();
+      play.join(CAROL);
+      play.ok(new MatchEvent.Vote(ALICE, "canyon"));
+      play.ok(new MatchEvent.Vote(BOB, "canyon"));
+      play.ok(new MatchEvent.Vote(CAROL, "docks"));
+      play.tick(1);
+
+      var removed = play.ok(new MatchEvent.MapQuarantined("canyon"));
+      var ballot = play.match.ballot().orElseThrow();
+      assertThat(ballot.candidates())
+          .extracting(Ballot.Candidate::mapId)
+          .containsExactly("harbour", "docks");
+      assertThat(ballot.votes()).containsExactlyEntriesOf(Map.of(CAROL, "docks"));
+      assertThat(ballot.chosen()).isEmpty();
+      assertThat(only(removed, MatchEffect.PrepareMap.class)).isEmpty();
+      assertThat(play.refused(new MatchEvent.Vote(ALICE, "canyon")))
+          .isEqualTo(MatchError.NOT_ON_BALLOT);
+      var starting = play.ok(new MatchEvent.ForceStart(play.now));
+      assertThat(only(starting, MatchEffect.PrepareMap.class))
+          .containsExactly(new MatchEffect.PrepareMap("docks"));
+    }
+
+    @Test
+    void quarantiningTheChosenMapSelectsAnotherAndRejectsTheOldLoad() {
+      var play = flow();
+      play.ok(new MatchEvent.Vote(ALICE, "canyon"));
+      play.ok(new MatchEvent.ForceStart(play.now));
+      assertThat(play.match.phase()).isInstanceOf(Phase.Preparing.class);
+
+      var removed = play.ok(new MatchEvent.MapQuarantined("canyon"));
+      var chosen = play.match.ballot().orElseThrow().chosen().orElseThrow();
+      assertThat(chosen).isNotEqualTo("canyon");
+      assertThat(only(removed, MatchEffect.PrepareMap.class))
+          .containsExactly(new MatchEffect.PrepareMap(chosen));
+      assertThat(play.refused(new MatchEvent.MapReady(CANYON, play.now)))
+          .isEqualTo(MatchError.MAP_LOCKED);
+      play.ready(chosen.equals("harbour") ? HARBOUR : DOCKS);
+      assertThat(play.match.phase()).isInstanceOf(Phase.Live.class);
+    }
+
+    @Test
+    void quarantiningTheOnlyCandidateRequestsAFreshBallot() {
+      var play = flow();
+      play.ok(new MatchEvent.SetMap(new Ballot.Candidate("canyon", "Canyon", "The Storm")));
+      play.ready(CANYON);
+
+      var removed = play.ok(new MatchEvent.MapQuarantined("canyon"));
+      assertThat(play.match.ballot()).contains(Ballot.NONE);
+      assertThat(play.match.map()).isEmpty();
+      assertThat(only(removed, MatchEffect.NeedBallot.class))
+          .containsExactly(new MatchEffect.NeedBallot());
+      assertThat(play.refused(new MatchEvent.MapReady(CANYON, play.now)))
+          .isEqualTo(MatchError.MAP_LOCKED);
+    }
+
+    @Test
     void anOperatorsMapReplacesTheVote() {
       var play = flow();
       var effects =

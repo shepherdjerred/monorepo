@@ -100,6 +100,9 @@ public sealed interface MatchEvent {
    */
   record MapFailed(String mapId) implements MatchEvent {}
 
+  /** An operator removed this map from the rotation and the current pregame ballot. */
+  record MapQuarantined(String mapId) implements MatchEvent {}
+
   /**
    * Time passed. Ticks should come at least once a second; the poison runs once per second however
    * often they come.
