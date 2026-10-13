@@ -13,6 +13,7 @@ import { initFeatureFlags } from "@shepherdjerred/feature-flags";
 import { sourceCacheConfig } from "#src/checkout/config.ts";
 import { maintenanceConfig } from "#src/maintenance-config.ts";
 import { performanceConfig } from "#src/performance-config.ts";
+import { requireGateImage } from "#src/gate-image.ts";
 
 function requireEnv(name: string): string {
   const value = Bun.env[name];
@@ -30,14 +31,7 @@ const repoSlug = requireEnv("CI_REPO_SLUG");
 const apiToken = requireEnv("WOODPECKER_API_TOKEN");
 const approvalReadToken = requireEnv("GITHUB_APPROVAL_READ_TOKEN");
 const port = Number(Bun.env["PORT"] ?? "3000");
-const trustedGateImage = requireEnv("CI_GATE_IMAGE");
-if (
-  !/^ghcr\.io\/shepherdjerred\/woodpecker-config-extension(?::[^@\s]+)?@sha256:[a-f\d]{64}$/u.test(
-    trustedGateImage,
-  )
-) {
-  throw new Error("CI_GATE_IMAGE must pin the deployed policy image by digest");
-}
+const trustedGateImage = requireGateImage(requireEnv("CI_GATE_IMAGE"));
 
 /**
  * Cache the signing key, but never cache a failure.

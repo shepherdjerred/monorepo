@@ -46,6 +46,7 @@ const STACKS: readonly TofuStack[] = [
   "cloudflare",
   "cloudflare-tokens",
   "discord",
+  "dockerhub",
   "github",
   "google",
   "openai",

@@ -1,0 +1,33 @@
+{
+  "$schema": "./image-registry.schema.json",
+  "schemaVersion": 1,
+  "registry": "docker.io",
+  "namespace": "shepherdjerred",
+  "images": [
+    { "name": "alert-dashboard", "visibility": "private" },
+    { "name": "birmel", "visibility": "private" },
+    { "name": "caddy-s3proxy", "visibility": "private" },
+    { "name": "ci-base", "visibility": "private" },
+    { "name": "ci-playwright", "visibility": "private" },
+    { "name": "discord-plays-mario-kart", "visibility": "private" },
+    { "name": "discord-plays-pokemon", "visibility": "private" },
+    { "name": "glitter-boys-launcher", "visibility": "private" },
+    { "name": "macos-cross-compiler", "visibility": "public" },
+    { "name": "obsidian-headless", "visibility": "private" },
+    { "name": "redlib", "visibility": "private" },
+    { "name": "scout-for-lol", "visibility": "private" },
+    { "name": "starlight-karma-bot", "visibility": "private" },
+    { "name": "storm-brain", "visibility": "private" },
+    { "name": "storm-forum", "visibility": "private" },
+    { "name": "streambot", "visibility": "private" },
+    { "name": "tasknotes-server", "visibility": "private" },
+    { "name": "temporal-worker", "visibility": "private" },
+    { "name": "the-storm-server", "visibility": "private" },
+    { "name": "tracker", "visibility": "private" },
+    { "name": "trmnl-dashboard", "visibility": "private" },
+    { "name": "velero-plugin", "visibility": "private" },
+    { "name": "windows-cross-compiler", "visibility": "public" },
+    { "name": "windows-cross-compiler-winui", "visibility": "public" },
+    { "name": "woodpecker-config-extension", "visibility": "private" }
+  ]
+}
