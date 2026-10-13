@@ -122,8 +122,8 @@ final class TeamPlayTest {
    * output: a deliberate change to how bots play moves it, and the new value is pasted here in the
    * same change; an accidental one fails here.
    */
-  // Walking formations reserve the documented half-block margin beyond combat separation.
-  private static final String PINNED_YARD_HASH = "363a94c0e1c28d52";
+  // Visible melee pursuits follow obstacle/height approach routes until unobstructed sword contact.
+  private static final String PINNED_YARD_HASH = "9ac0caf8da1660dd";
 
   @Test
   void aTrainingYardMatchReplaysToItsPinnedHash() {
