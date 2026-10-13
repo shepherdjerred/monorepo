@@ -845,7 +845,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1008523@sha256:d4ab832cde525daa54208c58eb080c86e3a4bee7ff904dd6186a51937ff50985",
+      "value": "2.0.0-1008905@sha256:35eb9089c327adb348989a55eea72d261f20c864b1d5ba59c6fe99be24c714e5",
       "notes": [
         "Stable Scout prod Workflow Worker image - promoted after a healthy 100% ramp",
         "not managed by renovate"
