@@ -15,6 +15,7 @@ export type StackDefinition = {
   encrypted?: true;
   validationPassphraseVariable?: "state_passphrase";
   localProvider?: "asuswrt";
+  operatorOnly?: true;
 };
 
 export type TofuStack =
@@ -27,6 +28,8 @@ export type TofuStack =
   | "cloudflare"
   | "cloudflare-tokens"
   | "discord"
+  | "dockerhub"
+  | "dockerhub-tokens"
   | "github"
   | "google"
   | "openai"
@@ -168,6 +171,27 @@ export const STACK_MANIFEST: Readonly<Record<TofuStack, StackDefinition>> = {
       { source: "TOFU_GITHUB_TOKEN", target: "TF_VAR_github_token" },
     ],
   },
+  dockerhub: {
+    encrypted: true,
+    credentials: [
+      { source: "DOCKERHUB_USERNAME", target: "DOCKER_USERNAME" },
+      { source: "DOCKERHUB_MANAGEMENT_TOKEN", target: "DOCKER_PASSWORD" },
+      {
+        source: "TOFU_STATE_ENCRYPTION_PASSPHRASE",
+        target: "TF_VAR_tofu_state_encryption_passphrase",
+      },
+    ],
+  },
+  "dockerhub-tokens": {
+    encrypted: true,
+    operatorOnly: true,
+    credentials: [
+      {
+        source: "TOFU_STATE_ENCRYPTION_PASSPHRASE",
+        target: "TF_VAR_tofu_state_encryption_passphrase",
+      },
+    ],
+  },
   // Operator-applied only, authenticated by the operator's own Application
   // Default Credentials (found through HOME). Without a Google Cloud
   // organization only a user account can create projects, so there is no
@@ -246,6 +270,8 @@ const TOFU_STACKS: readonly TofuStack[] = [
   "cloudflare",
   "cloudflare-tokens",
   "discord",
+  "dockerhub",
+  "dockerhub-tokens",
   "github",
   "google",
   "openai",

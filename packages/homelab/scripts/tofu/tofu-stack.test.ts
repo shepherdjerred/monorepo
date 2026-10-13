@@ -8,6 +8,10 @@ import {
   desiredStateVariableValue,
   validationInitArguments,
 } from "./tofu-stack.ts";
+import {
+  assertStackExecutionContext,
+  dockerTokenPlanSummary,
+} from "./dockerhub-tokens.ts";
 import { STACK_MANIFEST, type TofuStack } from "./tofu-stack-manifest.ts";
 import {
   collectOnePasswordTargets,
@@ -46,6 +50,8 @@ const STACKS: readonly TofuStack[] = [
   "cloudflare",
   "cloudflare-tokens",
   "discord",
+  "dockerhub",
+  "dockerhub-tokens",
   "github",
   "google",
   "openai",
@@ -55,6 +61,104 @@ const STACKS: readonly TofuStack[] = [
 ];
 
 describe("OpenTofu credential contracts", () => {
+  test("token plans expose resource actions without credentials or authentication diagnostics", () => {
+    const summary = dockerTokenPlanSummary(
+      [
+        JSON.stringify({
+          type: "planned_change",
+          change: {
+            resource: { addr: "docker_access_token.automation[reader]" },
+            action: "create",
+            token: "private-fixture-value",
+          },
+        }),
+        JSON.stringify({
+          type: "diagnostic",
+          diagnostic: { detail: "private-mfa-fixture" },
+        }),
+        JSON.stringify({
+          type: "outputs",
+          outputs: { credentials: { value: "private-output-fixture" } },
+        }),
+      ].join("\n"),
+    );
+    expect(summary).toEqual(["create: docker_access_token.automation[reader]"]);
+    expect(() => dockerTokenPlanSummary("private-non-json-fixture")).toThrow(
+      "details withheld",
+    );
+  });
+  test("keeps Docker account authentication out of the token stack environment", () => {
+    const requested: string[] = [];
+    const environment = buildTofuEnvironment("dockerhub-tokens", (name) => {
+      requested.push(name);
+      return `${name}-value`;
+    });
+    expect(requested.toSorted()).toEqual(
+      [...STATE_SOURCES, "TOFU_STATE_ENCRYPTION_PASSPHRASE"].toSorted(),
+    );
+    expect(environment["DOCKER_USERNAME"]).toBeUndefined();
+    expect(environment["DOCKER_PASSWORD"]).toBeUndefined();
+  });
+
+  test("forwards only an explicitly supplied operator account credential pair", () => {
+    const previousUsername = Bun.env["DOCKER_USERNAME"];
+    const previousPassword = Bun.env["DOCKER_PASSWORD"];
+    try {
+      Bun.env["DOCKER_USERNAME"] = "operator-fixture";
+      delete Bun.env["DOCKER_PASSWORD"];
+      expect(() =>
+        buildTofuEnvironment("dockerhub-tokens", () => "fixture"),
+      ).toThrow("both DOCKER_USERNAME and DOCKER_PASSWORD");
+      Bun.env["DOCKER_PASSWORD"] = "operator-fixture-value";
+      const environment = buildTofuEnvironment(
+        "dockerhub-tokens",
+        () => "fixture",
+      );
+      expect(environment["DOCKER_USERNAME"]).toBe("operator-fixture");
+      expect(environment["DOCKER_PASSWORD"]).toBe("operator-fixture-value");
+      const repositoryEnvironment = buildTofuEnvironment(
+        "dockerhub",
+        () => "repository-fixture",
+      );
+      expect(repositoryEnvironment["DOCKER_PASSWORD"]).toBe(
+        "repository-fixture",
+      );
+    } finally {
+      if (previousUsername === undefined) delete Bun.env["DOCKER_USERNAME"];
+      else Bun.env["DOCKER_USERNAME"] = previousUsername;
+      if (previousPassword === undefined) delete Bun.env["DOCKER_PASSWORD"];
+      else Bun.env["DOCKER_PASSWORD"] = previousPassword;
+    }
+  });
+
+  test.each(["true", "1", "woodpecker"])(
+    "CI=%s can validate token declarations but cannot operate the account",
+    (ci) => {
+      expect(() =>
+        assertStackExecutionContext("dockerhub-tokens", "validate", ci),
+      ).not.toThrow();
+      for (const action of [
+        "plan",
+        "apply",
+        "prepare",
+        "apply-saved",
+      ] as const) {
+        expect(() =>
+          assertStackExecutionContext("dockerhub-tokens", action, ci),
+        ).toThrow("operator-only");
+      }
+    },
+  );
+
+  test("allows an operator to manage tokens without changing other stacks", () => {
+    expect(() =>
+      assertStackExecutionContext("dockerhub-tokens", "apply", undefined),
+    ).not.toThrow();
+    expect(() =>
+      assertStackExecutionContext("dockerhub", "apply", "true"),
+    ).not.toThrow();
+  });
+
   test.each(STACKS)("%s requests only its declared credentials", (stack) => {
     const requested: string[] = [];
     buildTofuEnvironment(stack, (environmentName) => {

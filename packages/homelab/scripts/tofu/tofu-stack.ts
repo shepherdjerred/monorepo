@@ -30,6 +30,11 @@ import {
   consumeReviewedPlatformPlan,
 } from "./platform-plan-handoff.ts";
 import { applicationSecrets } from "./application-secrets.ts";
+import {
+  assertStackExecutionContext,
+  runDockerTokenStack,
+  type TofuAction,
+} from "./dockerhub-tokens.ts";
 
 const STACKS_REL = "src/tofu";
 
@@ -49,8 +54,6 @@ const AMBIENT_ENV_ALLOWLIST = [
   "TMPDIR",
   "USER",
 ] as const;
-
-type TofuAction = "validate" | "plan" | "apply" | "prepare" | "apply-saved";
 
 const REVIEWABLE_PLATFORM_STACKS = new Set<TofuStack>([
   "openai",
@@ -82,6 +85,21 @@ export function buildTofuEnvironment(
     ...definition.credentials,
   ]) {
     env[target] = read(source);
+  }
+  if (stack === "dockerhub-tokens") {
+    // Account authentication is an operator bootstrap, never a CI grant.
+    // If absent, Docker's provider uses its native credential store.
+    const username = optionalEnv("DOCKER_USERNAME");
+    const password = optionalEnv("DOCKER_PASSWORD");
+    if ((username === null) !== (password === null)) {
+      throw new Error(
+        "Docker account authentication requires both DOCKER_USERNAME and DOCKER_PASSWORD, or neither for the native credential store.",
+      );
+    }
+    if (username !== null && password !== null) {
+      env["DOCKER_USERNAME"] = username;
+      env["DOCKER_PASSWORD"] = password;
+    }
   }
   if (definition.secretObject !== undefined) {
     env[definition.secretObject.target] = JSON.stringify(
@@ -391,14 +409,10 @@ async function reviewedPlatformOperation(input: {
   }
 }
 
-async function main(): Promise<void> {
-  const args = Bun.argv.slice(2);
-  if (args.includes("--help") || args.includes("-h")) usage();
-  const positional = args.filter((argument) => !argument.startsWith("--"));
-  const stackName = positional[0];
-  if (stackName === undefined) usage();
-  const stack = parseTofuStack(stackName);
-  const action = parseAction(positional[1]);
+function assertStackActionSupported(
+  stack: TofuStack,
+  action: TofuAction,
+): void {
   if (stack === "application-secrets") {
     // Initial phase is source preparation only. No CI credential grants,
     // backend initialization, imports, plans or writes for this stack yet.
@@ -415,6 +429,18 @@ async function main(): Promise<void> {
   ) {
     throw new Error(`reviewed plan operation is unavailable for ${stack}`);
   }
+}
+
+async function main(): Promise<void> {
+  const args = Bun.argv.slice(2);
+  if (args.includes("--help") || args.includes("-h")) usage();
+  const positional = args.filter((argument) => !argument.startsWith("--"));
+  const stackName = positional[0];
+  if (stackName === undefined) usage();
+  const stack = parseTofuStack(stackName);
+  const action = parseAction(positional[1]);
+  assertStackExecutionContext(stack, action, Bun.env["CI"]);
+  assertStackActionSupported(stack, action);
   const root = homelabRoot();
   const stackDir = `${root}/${STACKS_REL}/${stack}`;
   if (!(await Bun.file(`${stackDir}/providers.tf`).exists())) {
@@ -434,6 +460,10 @@ async function main(): Promise<void> {
   const env = buildTofuEnvironment(stack);
   if (definition.platform !== undefined) {
     await addDesiredStateEnvironment(stackDir, definition.platform, env);
+  }
+  if (stack === "dockerhub-tokens") {
+    await runDockerTokenStack(action, root, env);
+    return;
   }
   if (action === "plan") {
     // Grouped PR containers share the checkout. Backend initialization belongs

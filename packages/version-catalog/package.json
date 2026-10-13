@@ -6,6 +6,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./internal-image-pins": "./src/internal-image-pins.ts",
+    "./image-registry": "./src/image-registry.ts",
+    "./image-registry.json": "./src/image-registry.json",
     "./catalog.json": "./src/catalog.json",
     "./schema.json": "./src/schema.json"
   },
