@@ -3,8 +3,8 @@ package com.shepherdjerred.thestorm.rwfbots.domain.team;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.ApproachRoutes;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavArtifact;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.NavGraph;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavSites;
-import com.shepherdjerred.thestorm.rwfbots.domain.personality.Archetype;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombOwner;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantId;
@@ -13,7 +13,6 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.TeamId;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.WorldSnapshot;
 import java.util.ArrayList;
 import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -95,6 +94,19 @@ public final class TeamBrain {
 
   /** Advances {@code board} for {@code situation}; {@code random} feeds erratic preferences. */
   public static Blackboard tick(Blackboard board, TeamSituation situation, RandomGenerator random) {
+    var prepared = prepare(board, situation);
+    var distances = new ArrayList<float[]>();
+    if (prepared.distanceRows() > 0) {
+      var workspace = situation.nav().graph().workspace();
+      for (var row = 0; row < prepared.distanceRows(); row++) {
+        distances.add(prepared.distances(row, workspace));
+      }
+    }
+    return prepared.finish(distances, random);
+  }
+
+  /** Prepares immutable independent distance rows; no assignment randomness is consumed here. */
+  public static Prepared prepare(Blackboard board, TeamSituation situation) {
     var snapshot = situation.snapshot();
     var result = board;
     for (var combatant : snapshot.combatants()) {
@@ -109,16 +121,55 @@ public final class TeamBrain {
     var due = snapshot.tick() - result.rolesAssignedTick() >= ROLE_PERIOD_TICKS;
     var rosterChanged = !result.plan().assignment().keySet().equals(living);
     if ((due || rosterChanged) && !alive.isEmpty()) {
-      result = result.withPlan(deal(result, situation, alive, random), snapshot.tick());
+      return new Prepared(result, Optional.of(deal(result, situation, alive)), snapshot.tick());
     }
-    return result;
+    return new Prepared(result, Optional.empty(), snapshot.tick());
   }
 
-  private static TeamPlan deal(
-      Blackboard board,
-      TeamSituation situation,
-      List<CombatantView> alive,
-      RandomGenerator random) {
+  /** One prepared tick, completed only with its full ordered distance matrix. */
+  public static final class Prepared {
+    private final Blackboard board;
+    private final Optional<Deal> deal;
+    private final long tick;
+
+    private Prepared(Blackboard board, Optional<Deal> deal, long tick) {
+      this.board = board;
+      this.deal = deal;
+      this.tick = tick;
+    }
+
+    public int distanceRows() {
+      return deal.map(value -> value.assignment().rows()).orElse(0);
+    }
+
+    public float[] distances(int row, NavGraph.SearchWorkspace workspace) {
+      return deal.orElseThrow().assignment().distances(row, workspace);
+    }
+
+    public Blackboard finish(List<float[]> distances, RandomGenerator random) {
+      if (deal.isEmpty()) {
+        if (!distances.isEmpty()) throw new IllegalArgumentException("unexpected role distances");
+        return board;
+      }
+      var pending = deal.orElseThrow();
+      var plan = pending.plan();
+      var completed =
+          new TeamPlan(
+              plan.strategy(),
+              plan.home(),
+              plan.objective(),
+              plan.lanes(),
+              plan.push(),
+              plan.slots(),
+              pending.assignment().finish(distances, random),
+              plan.dealtTick());
+      return board.withPlan(completed, tick);
+    }
+  }
+
+  private record Deal(TeamPlan plan, RoleAssignment assignment) {}
+
+  private static Deal deal(Blackboard board, TeamSituation situation, List<CombatantView> alive) {
     var nav = situation.nav();
     var snapshot = situation.snapshot();
     var team = board.team();
@@ -167,16 +218,18 @@ public final class TeamBrain {
             watchers(nav, sightings, enemyHome));
     var slots = Playbook.deal(setup);
     var nuke = objective.map(bomb -> bomb.owner() instanceof BombOwner.Nuke).orElse(false);
-    var assignment = assign(new Dealing(board.plan(), situation, alive, nuke), slots, random);
-    return new TeamPlan(
-        Optional.of(board.strategy()),
-        Optional.of(home),
-        objective.map(BombView::id),
-        lanes,
-        push,
-        slots,
-        assignment,
-        snapshot.tick());
+    var assignment = new RoleAssignment(new Dealing(board.plan(), situation, alive, nuke), slots);
+    return new Deal(
+        new TeamPlan(
+            Optional.of(board.strategy()),
+            Optional.of(home),
+            objective.map(BombView::id),
+            lanes,
+            push,
+            slots,
+            Map.of(),
+            snapshot.tick()),
+        assignment);
   }
 
   /**
@@ -315,49 +368,7 @@ public final class TeamBrain {
   record Dealing(
       TeamPlan previous, TeamSituation situation, List<CombatantView> alive, boolean nuke) {}
 
-  /**
-   * Hands one slot to every bot so the summed profit is largest: fit minus path distance, plus
-   * {@link #STICKY} for the slot already held, plus noise for erratic bots.
-   */
-  static Map<CombatantId, String> assign(
-      Dealing dealing, List<Slot> slots, RandomGenerator random) {
-    var graph = dealing.situation().nav().graph();
-    var bots = dealing.alive().stream().sorted((a, b) -> a.id().compareTo(b.id())).toList();
-    var slotNodes = new int[slots.size()];
-    for (var j = 0; j < slots.size(); j++) {
-      slotNodes[j] = graph.nearestNodeWithin(slots.get(j).pos(), 3).orElse(-1);
-    }
-    var profit = new double[bots.size()][slots.size()];
-    var workspace = graph.workspace();
-    var distances = new HashMap<Integer, float[]>();
-    for (var i = 0; i < bots.size(); i++) {
-      var bot = bots.get(i);
-      var from = graph.nearestNodeWithin(bot.pos(), 2);
-      var costs =
-          from.isPresent()
-              ? distances.computeIfAbsent(
-                  from.getAsInt(), node -> graph.costsToTargets(node, slotNodes, workspace))
-              : new float[0];
-      for (var j = 0; j < slots.size(); j++) {
-        var node = slotNodes[j];
-        var reachable = node >= 0 && costs.length > 0 && Float.isFinite(costs[j]);
-        var distance = reachable ? costs[j] : bot.pos().horizontalDistance(slots.get(j).pos()) * 2;
-        var erratic =
-            dealing.situation().memberOf(bot.id()).archetype() == Archetype.TROLL
-                ? ERRATIC * random.nextDouble()
-                : 0;
-        profit[i][j] = profit(dealing, bot, slots.get(j), distance) + erratic;
-      }
-    }
-    var columns = Hungarian.maximize(profit);
-    var result = new HashMap<CombatantId, String>();
-    for (var i = 0; i < bots.size(); i++) {
-      result.put(bots.get(i).id(), slots.get(columns[i]).key());
-    }
-    return result;
-  }
-
-  private static double profit(Dealing dealing, CombatantView bot, Slot slot, double distance) {
+  static double profit(Dealing dealing, CombatantView bot, Slot slot, double distance) {
     var member = dealing.situation().memberOf(bot.id());
     var held = slot.key().equals(dealing.previous().assignment().get(bot.id()));
     return SlotFit.of(member, slot, dealing.nuke() && slot.kind() == SlotKind.PLANT)

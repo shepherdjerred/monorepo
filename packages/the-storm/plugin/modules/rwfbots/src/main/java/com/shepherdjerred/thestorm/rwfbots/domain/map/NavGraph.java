@@ -47,6 +47,7 @@ public final class NavGraph {
   private final float[] edgeCost;
   private final int[] reverseStart;
   private final int[] reverseEdge;
+  private final DirectedReachability reachability;
 
   /**
    * @param bounds the cuboid the cells live in
@@ -84,6 +85,7 @@ public final class NavGraph {
         reverseEdge[fill[this.edgeTo[edge]]++] = edge;
       }
     }
+    reachability = new DirectedReachability(this);
   }
 
   private static int[] indexCells(GridBounds bounds, int[] cellOfNode) {
@@ -100,9 +102,17 @@ public final class NavGraph {
   }
 
   private void validateEdges(int n) {
+    for (var node = 0; node < n; node++) {
+      if (edgeStart[node] < 0 || edgeStart[node] > edgeStart[node + 1]) {
+        throw new IllegalArgumentException("invalid graph row starts");
+      }
+    }
     for (var edge = 0; edge < edgeTo.length; edge++) {
       if (edgeTo[edge] < 0 || edgeTo[edge] >= n) {
         throw new IllegalArgumentException("edge " + edge + " points outside the graph");
+      }
+      if (!Float.isFinite(edgeCost[edge]) || edgeCost[edge] < 0) {
+        throw new IllegalArgumentException("edge costs must be finite and non-negative");
       }
       Hop.ofCode(edgeHop[edge]);
     }
@@ -339,6 +349,64 @@ public final class NavGraph {
     return result;
   }
 
+  /**
+   * Exact forward distances clipped at a finite non-negative cap. Unreachable or missing targets
+   * stay infinite, including when the search stops before their reachable alternatives settle.
+   */
+  public float[] cappedCostsToTargets(
+      int from, int[] targets, float cap, SearchWorkspace workspace) {
+    if (from < 0 || from >= nodeCount()) throw new IllegalArgumentException("invalid source node");
+    if (!Float.isFinite(cap) || cap < 0) throw new IllegalArgumentException("invalid distance cap");
+    workspace.acquire(cellOfNode.length);
+    try {
+      var wanted = reachableTargets(from, targets, workspace);
+      searchToCap(from, wanted, cap, workspace);
+      var result = new float[targets.length];
+      for (var i = 0; i < targets.length; i++) {
+        result[i] =
+            targets[i] >= 0 && wanted.get(targets[i])
+                ? Math.min(cap, workspace.g[targets[i]])
+                : INF;
+      }
+      return result;
+    } finally {
+      workspace.release();
+    }
+  }
+
+  private BitSet reachableTargets(int from, int[] targets, SearchWorkspace workspace) {
+    var wanted = targets(targets);
+    var reachable = reachability.from(from, workspace.reachable, workspace.cameFrom);
+    for (var target = wanted.nextSetBit(0); target >= 0; target = wanted.nextSetBit(target + 1)) {
+      if (!reachable.get(reachability.componentOf(target))) wanted.clear(target);
+    }
+    return wanted;
+  }
+
+  private void searchToCap(int from, BitSet wanted, float cap, SearchWorkspace workspace) {
+    var remaining = wanted.cardinality();
+    workspace.g[from] = 0;
+    workspace.open.push(0, from);
+    while (!workspace.open.isEmpty() && remaining > 0 && workspace.open.peekKey() < cap) {
+      var node = workspace.open.pop();
+      if (workspace.closed[node]) continue;
+      workspace.closed[node] = true;
+      if (wanted.get(node)) remaining--;
+      relaxCapped(node, cap, workspace);
+    }
+  }
+
+  private void relaxCapped(int node, float cap, SearchWorkspace workspace) {
+    for (var edge = edgeStart[node]; edge < edgeStart[node + 1]; edge++) {
+      var next = edgeTo[edge];
+      var through = workspace.g[node] + edgeCost[edge];
+      if (through < workspace.g[next] && through < cap) {
+        workspace.g[next] = through;
+        workspace.open.push(through, next);
+      }
+    }
+  }
+
   public int edgeStart(int node) {
     return edgeStart[node];
   }
@@ -468,6 +536,7 @@ public final class NavGraph {
     private final boolean[] closed;
     private final MinHeap open = new MinHeap(64);
     private final AtomicBoolean inUse = new AtomicBoolean();
+    private final BitSet reachable = new BitSet();
 
     private SearchWorkspace(int size) {
       g = new float[size];

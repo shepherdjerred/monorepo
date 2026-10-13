@@ -13,6 +13,7 @@ import type { RconClient } from "#e2e/harness/rcon.ts";
 import type { ServerInfo } from "#e2e/harness/server.ts";
 import { sampleWindow, MsptSchema } from "#load/samples.ts";
 import {
+  capacityTierVerdicts,
   capacityVerdicts,
   totals,
   type CapacityPhase,
@@ -200,7 +201,7 @@ async function measure(
 }
 
 test(
-  "100, 128, 192 and 256 mixed combatants on the measured CPU budget",
+  "64, 100, 128, 192 and 256 mixed combatants on the measured CPU budget",
   { timeout: 90 * 60_000 },
   async ({ bot, rcon, server }) => {
     expect(bot.username).not.toBe("");
@@ -226,6 +227,12 @@ test(
             rayBudget: Bun.env["STORM_CAPACITY_RAY_BUDGET"] ?? "shipped",
             profile: Bun.env["STORM_CAPACITY_PROFILE"] ?? "none",
             phases,
+            tierVerdicts: Object.fromEntries(
+              totals.map((total) => [
+                total,
+                capacityTierVerdicts(phases, total),
+              ]),
+            ),
             verdicts: capacityVerdicts(phases),
           },
           null,
@@ -235,11 +242,16 @@ test(
     };
     phases.push(await baseline(server, rcon));
     await checkpoint();
-    // A calibration run remains a failed release matrix until all four phases are present.
+    // A calibration run remains a failed release matrix until all five phases are present.
     const measuredTotals =
       probe === undefined
         ? totals
-        : [z.enum(["100", "128", "192", "256"]).transform(Number).parse(probe)];
+        : [
+            z
+              .enum(["64", "100", "128", "192", "256"])
+              .transform(Number)
+              .parse(probe),
+          ];
     for (const total of measuredTotals) {
       const phase: CapacityPhase = {
         total,

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { WindowSchema } from "#load/load-bars.ts";
 
-export const totals = [100, 128, 192, 256] as const;
+export const totals = [64, 100, 128, 192, 256] as const;
 export const TelemetrySchema = z.object({
   observations: z.number().int().nonnegative(),
   ageP95: z.number().int().nonnegative(),
@@ -55,6 +55,14 @@ const minimum = (values: number[]) => Math.min(...values);
 
 /** Conservative tick gate: every sampled ten-second p95 must meet the bar. */
 export function capacityVerdicts(phases: CapacityPhase[]): Verdict[] {
+  return totals.flatMap((total) => capacityTierVerdicts(phases, total));
+}
+
+/** One tier uses every release bar, without claiming the remaining matrix passed. */
+export function capacityTierVerdicts(
+  phases: CapacityPhase[],
+  total: (typeof totals)[number],
+): Verdict[] {
   const baseline = phases.find((p) => p.total === 0);
   const base =
     baseline === undefined ||
@@ -66,13 +74,11 @@ export function capacityVerdicts(phases: CapacityPhase[]): Verdict[] {
       ? Number.NaN
       : baseline.windows.reduce((sum, w) => sum + w.p95, 0) /
         baseline.windows.length;
-  return totals.flatMap((total) =>
-    judge(
-      total,
-      phases.find((p) => p.total === total),
-      base,
-      maximum((baseline?.telemetry ?? []).map((t) => t.heapPeak / t.heapLimit)),
-    ),
+  return judge(
+    total,
+    phases.find((p) => p.total === total),
+    base,
+    maximum((baseline?.telemetry ?? []).map((t) => t.heapPeak / t.heapLimit)),
   );
 }
 

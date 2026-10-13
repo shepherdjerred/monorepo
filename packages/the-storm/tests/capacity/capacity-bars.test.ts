@@ -1,6 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { capacityResources } from "#e2e/gameplay-fixtures.ts";
 import {
+  capacityNativeTotal,
+  capacityResources,
+} from "#e2e/gameplay-fixtures.ts";
+import {
+  capacityTierVerdicts,
   capacityVerdicts,
   totals,
   type CapacityPhase,
@@ -67,6 +71,19 @@ const matrix = () => [phase(0), ...totals.map((total) => phase(total))];
 describe("capacity CPU calibration", () => {
   afterEach(() => vi.unstubAllEnvs());
 
+  it("keeps native acceptance at 256 by default and rejects unsupported tier selections", () => {
+    vi.stubEnv("STORM_CAPACITY_NATIVE_TOTAL", undefined);
+    expect(capacityNativeTotal()).toBe(256);
+    for (const total of totals) {
+      vi.stubEnv("STORM_CAPACITY_NATIVE_TOTAL", total.toString());
+      expect(capacityNativeTotal()).toBe(total);
+    }
+    for (const total of ["", "0", "63", "512", "invalid"]) {
+      vi.stubEnv("STORM_CAPACITY_NATIVE_TOTAL", total);
+      expect(capacityNativeTotal).toThrow();
+    }
+  });
+
   it("allows only the approved CPU budgets and keeps the memory budget fixed", () => {
     vi.stubEnv("STORM_CAPACITY_CPUS", undefined);
     expect(capacityResources()).toEqual({
@@ -74,7 +91,7 @@ describe("capacity CPU calibration", () => {
       heap: "8G",
       memoryLimit: "10g",
     });
-    for (const cpus of [3, 4, 6]) {
+    for (const cpus of [3, 4, 6, 8, 12]) {
       vi.stubEnv("STORM_CAPACITY_CPUS", cpus.toString());
       expect(capacityResources()).toEqual({
         cpus,
@@ -82,7 +99,7 @@ describe("capacity CPU calibration", () => {
         memoryLimit: "10g",
       });
     }
-    for (const cpus of ["", "2", "8", "3.5", "invalid"]) {
+    for (const cpus of ["", "2", "16", "3.5", "invalid"]) {
       vi.stubEnv("STORM_CAPACITY_CPUS", cpus);
       expect(capacityResources).toThrow();
     }
@@ -90,6 +107,26 @@ describe("capacity CPU calibration", () => {
 });
 
 describe("capacity release gates", () => {
+  it("judges a measured tier independently while retaining a failed incomplete matrix", () => {
+    const phases = [phase(0), phase(64)];
+    expect(totals).toEqual([64, 100, 128, 192, 256]);
+    expect(capacityTierVerdicts(phases, 64).every((v) => v.pass)).toBe(true);
+    expect(capacityVerdicts(phases).some((v) => !v.pass)).toBe(true);
+    expect(capacityTierVerdicts(phases, 128).every((v) => v.pass)).toBe(false);
+    expect(capacityTierVerdicts([phase(64)], 64).every((v) => v.pass)).toBe(
+      false,
+    );
+    const low = phases[1];
+    if (low === undefined) throw new Error("Missing fixture");
+    low.telemetry[0] = { ...healthy, overruns: 1 };
+    expect(capacityTierVerdicts(phases, 64)).toContainEqual({
+      check: "64 total: think jobs over 50 ms",
+      value: 1,
+      bar: 0,
+      pass: false,
+    });
+  });
+
   it("accepts a complete healthy matrix and rejects missing phases or baseline", () => {
     expect(capacityVerdicts(matrix()).every((v) => v.pass)).toBe(true);
     expect(
