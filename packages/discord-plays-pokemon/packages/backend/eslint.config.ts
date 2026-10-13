@@ -12,6 +12,7 @@ const config = [
         "src/game/command/chord.test.ts",
         "src/game/command/command-input.test.ts",
         "src/game/events/pokemon-struct.test.ts",
+        "src/game/events/national-dex.test.ts",
         "src/game/events/diff.test.ts",
         "src/game/events/snapshot.test.ts",
         "src/game/events/watcher.test.ts",

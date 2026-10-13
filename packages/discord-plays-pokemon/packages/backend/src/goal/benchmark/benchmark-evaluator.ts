@@ -3,10 +3,10 @@
 // decide whether a production /goal process is "completed".
 
 import type { GameSnapshot } from "#src/game/events/types.ts";
+import { nationalDexNumber } from "#src/game/events/national-dex.ts";
 import {
   dexOwned,
   hasNewPartyIdentity,
-  nationalDexNumber,
   snapshotContainsSpeciesDelta,
   type CatchEventEvidence,
   type CatchStateEvidence,

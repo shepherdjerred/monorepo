@@ -1,6 +1,7 @@
 import type { DiscordUser } from "@shepherdjerred/discord-plays-core/auth/protocol.ts";
 import type { PartyMon } from "@discord-plays-pokemon/common";
 import type { Game } from "./game.ts";
+import { pokemonSpriteUrl } from "./pokemon-sprites.ts";
 
 const BADGES = [
   "Stone",
@@ -49,8 +50,23 @@ function PartyCard({
   const color =
     fraction > 0.5 ? "healthy" : fraction > 0.2 ? "hurt" : "critical";
   return (
-    <div className={`party-card ${mon.hp === 0 ? "fainted" : ""}`}>
+    <div
+      className={`party-card ${mon.hp === 0 && !mon.isEgg ? "fainted" : ""}`}
+    >
       <span className="slot-number">0{slot}</span>
+      <span className="party-sprite-frame">
+        {mon.nationalDexNumber === null ? (
+          <span className="egg-sprite" aria-hidden="true" />
+        ) : (
+          <img
+            className="party-sprite"
+            src={pokemonSpriteUrl(mon.nationalDexNumber)}
+            alt=""
+            width={64}
+            height={64}
+          />
+        )}
+      </span>
       <div className="party-details">
         <div className="party-name">
           <strong>{mon.nickname}</strong>
@@ -198,9 +214,42 @@ export function ActivityPanels({ game }: { readonly game: Game }) {
           <ol>
             {game.events.toReversed().map((event) => (
               <li key={event.id}>
-                <span className="event-marker" aria-hidden="true">
-                  ◆
-                </span>
+                {event.pokemonArtwork.length === 0 ? (
+                  <span className="event-marker" aria-hidden="true">
+                    ◆
+                  </span>
+                ) : (
+                  <span
+                    className={`event-artwork ${event.event === "evolution" ? "evolution" : ""}`}
+                    aria-hidden="true"
+                  >
+                    {event.pokemonArtwork.map((pokemon, index) => (
+                      <span
+                        className="event-sprite-wrap"
+                        key={`${String(pokemon.nationalDexNumber)}:${String(index)}`}
+                      >
+                        {event.event === "evolution" && index > 0 && (
+                          <span className="evolution-arrow">→</span>
+                        )}
+                        {pokemon.shiny && (
+                          <span className="shiny-sparkle">✦</span>
+                        )}
+                        <img
+                          className={`event-sprite ${pokemon.shiny ? "shiny" : ""}`}
+                          src={pokemonSpriteUrl(
+                            pokemon.nationalDexNumber,
+                            pokemon.shiny,
+                          )}
+                          alt=""
+                          width={48}
+                          height={48}
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      </span>
+                    ))}
+                  </span>
+                )}
                 <div>
                   <strong>{event.title}</strong>
                   <p>{event.text}</p>
