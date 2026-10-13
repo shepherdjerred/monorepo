@@ -2599,7 +2599,7 @@ client, separately from the load matrix so client rendering cannot affect its
 measurements.
 
 Filling a match: the `Director` drafts personalities from
-`rwfbots/personalities/*.yml` (never one whose name an online human uses),
+`rwfbots/personalities/*.yml` (excluding names held by online humans or already drafted bots),
 keeps the most balanceable of a few drafts, shifts every bot's skill so the
 median bot sits a little under the median human (`MatchShift`), and gives
 each a kit from its weights over `draft.kits`; a personality whose weights
