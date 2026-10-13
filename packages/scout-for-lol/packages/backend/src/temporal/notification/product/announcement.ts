@@ -136,7 +136,7 @@ export async function mintProductAnnouncement(
     occurredAt: Date;
     freshnessDeadline: Date;
   },
-): Promise<void> {
+): Promise<"minted" | "existing" | "confirmed-unsent"> {
   const key = productAnnouncementIntentKey(input.announcementId, input.target);
   const existing = await getSubjectIntent(db, { intentKey: key });
   if (existing !== null) {
@@ -148,8 +148,14 @@ export async function mintProductAnnouncement(
       !Bun.deepEquals(saved.effect, input.effect, true)
     )
       throw new Error(`Product occurrence ${key} has conflicting identity`);
+    if (
+      existing.intent.state.kind === "permission-denied" &&
+      existing.intent.lastFailure?.classification === "terminal" &&
+      existing.intent.lastFailure.reason === "permission-denied"
+    )
+      return "confirmed-unsent";
     // The first committed snapshot wins, even if standings changed on retry.
-    return;
+    return "existing";
   }
   const announcement = productAnnouncementCodec.serialize({
     announcementId: input.announcementId,
@@ -177,7 +183,7 @@ export async function mintProductAnnouncement(
   });
   if (created.outcome === "conflict")
     throw new Error(`Product occurrence ${key} raced with different facts`);
-  if (created.outcome === "already-applied") return;
+  if (created.outcome === "already-applied") return "existing";
   const stage = configuration.temporalNamespace;
   const requested = await requestWorkflowStart(db, {
     requestedWorkflowId: scoutNotificationWorkflowId(stage, key),
@@ -193,4 +199,5 @@ export async function mintProductAnnouncement(
   });
   if (requested.outcome === "conflict")
     throw new Error(`Product occurrence ${key} has a conflicting start`);
+  return "minted";
 }

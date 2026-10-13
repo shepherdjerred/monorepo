@@ -78,8 +78,8 @@ export type ScoutShutdownStep = (typeof SCOUT_SHUTDOWN_STEPS)[number];
 
 /**
  * Every role runs the Temporal supervisor and an HTTP listener, so those two
- * steps are unconditional. The supervisor may carry no workers at all (the
- * `gateway` role runs a Temporal client and no Activities), and the listener
+ * steps are unconditional. The gateway initially connects with only a client;
+ * its deferred Activity worker starts after Discord readiness. The listener
  * may serve only probes and metrics — but there is no role with neither.
  */
 export function scoutBootSteps(

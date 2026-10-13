@@ -244,14 +244,14 @@ export type ScoutTemporalSupervisorOptions = {
     { readonly bindAddress: string; readonly role: string } | undefined;
   /**
    * The workers this process polls with, from its runtime role's capability
-   * table. An empty set is legitimate: the `gateway` role needs the Temporal
-   * *client* (commands start Workflows) and runs none of their Activities.
+   * table. An empty set is legitimate: the `gateway` role connects its client
+   * before Discord is ready and adds its Activity worker afterward.
    */
   readonly workers: readonly ScoutTemporalQueueClass[];
   /**
    * Workers added later, by {@link ScoutTemporalSupervisor.enableDeferredWorkers}.
-   * Only `combined` uses this, to hold the gateway-cache-reading Activities
-   * back until its own Discord shard is ready.
+   * `combined` and `gateway` hold gateway-bound Activities back until their
+   * own Discord shard is ready.
    */
   readonly deferredWorkers: readonly ScoutTemporalQueueClass[];
 };

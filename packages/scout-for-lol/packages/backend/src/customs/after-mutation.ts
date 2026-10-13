@@ -34,7 +34,9 @@ export async function customSnapshotAfterMutation(
 ): Promise<CustomNightSnapshot> {
   return completeCommittedCustomMutation({
     syncRecruitment: async () => {
-      await syncCustomRecruitmentMessage(client, nightId);
+      await syncCustomRecruitmentMessage(client, nightId, {
+        reissueConfirmedFailure: true,
+      });
     },
     publishSnapshot: async () => {
       await publishCustomNightSnapshot(nightId);
