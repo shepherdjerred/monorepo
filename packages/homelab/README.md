@@ -33,6 +33,13 @@ comparison prevents annotating a concurrent operation. Ops validates the exact
 request, operation, revision and timestamps before treating that termination as
 verified; current Application health and subsequent failures remain visible.
 
+Storage expansion preserves existing claim identities and retention. Woodpecker
+PostgreSQL declares its quota through the database operator, and Turbo cache
+declares its claim directly. Pyroscope's root-owned existing claim declares
+capacity separately from the immutable Helm StatefulSet template. The root
+release must expand that claim before the child reconciles; quota changes never
+authorize replacing or rebinding the dataset.
+
 ## Layout
 
 | Directory        | Contents                                                                                                      |

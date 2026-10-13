@@ -111,13 +111,13 @@ export function createWoodpeckerCaches(chart: Chart): void {
     chart,
     "woodpecker-source-main-pvc",
     "woodpecker-source-main",
-    "10Gi",
+    "20Gi",
   );
   createCacheClaim(
     chart,
     "woodpecker-source-pr-pvc",
     "woodpecker-source-pr",
-    "10Gi",
+    "20Gi",
   );
   createCacheClaim(
     chart,

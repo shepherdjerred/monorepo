@@ -136,6 +136,7 @@ describe("ArgoCD application", () => {
       "p, woodpecker, applications, sync, default/*, allow",
       "p, woodpecker, applications, get, default/*, allow",
       "p, woodpecker, applications, override, default/apps, allow",
+      "p, woodpecker, applications, update, default/apps, allow",
     ]);
   });
 

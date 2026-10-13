@@ -390,9 +390,10 @@ return hs`,
         // the coordinated Helm release, so it needs sync access to the same
         // project-wide Application set it can already read. Suspending
         // repository-backed child auto-sync uses a manifest override only on
-        // the root app-of-apps Application.
+        // the root app-of-apps Application. Receipt publication updates only
+        // that root Application after independent release verification.
         "policy.csv":
-          "p, woodpecker, applications, sync, default/*, allow\np, woodpecker, applications, get, default/*, allow\np, woodpecker, applications, override, default/apps, allow",
+          "p, woodpecker, applications, sync, default/*, allow\np, woodpecker, applications, get, default/*, allow\np, woodpecker, applications, override, default/apps, allow\np, woodpecker, applications, update, default/apps, allow",
       },
     },
   };

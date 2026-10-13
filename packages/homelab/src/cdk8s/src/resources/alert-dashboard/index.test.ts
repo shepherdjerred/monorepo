@@ -139,7 +139,7 @@ describe("Alert Dashboard deployment", () => {
   test("reserves enough ZFS quota for the ledger and retained snapshots", () => {
     expect(
       synthesizePersistentVolumeClaim().spec.resources.requests.storage,
-    ).toBe("16Gi");
+    ).toBe("64Gi");
   });
 
   test("opens the SQLite ledger on the persistent data volume in every container that touches it", () => {

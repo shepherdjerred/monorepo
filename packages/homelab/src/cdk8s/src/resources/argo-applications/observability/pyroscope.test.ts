@@ -22,6 +22,70 @@ const PyroscopeApplicationSchema = z.object({
 });
 
 describe("Pyroscope Argo CD application", () => {
+  it("expands only the original claim while preserving its binding and template", () => {
+    const app = new App();
+    createPyroscopeApp(new Chart(app, "capacity"));
+    const documents: unknown[] = parseAllDocuments(app.synthYaml()).map(
+      (document) => document.toJS(),
+    );
+    const claims = documents.flatMap((document) => {
+      const result = z
+        .object({
+          kind: z.literal("PersistentVolumeClaim"),
+          metadata: z.object({
+            name: z.string(),
+            namespace: z.string(),
+            annotations: z.record(z.string(), z.string()),
+            labels: z.record(z.string(), z.string()),
+          }),
+          spec: z.record(z.string(), z.unknown()),
+        })
+        .safeParse(document);
+      return result.success ? [result.data] : [];
+    });
+    expect(claims).toHaveLength(1);
+    expect(claims[0]).toMatchObject({
+      metadata: {
+        name: "data-pyroscope-0",
+        namespace: "pyroscope",
+        annotations: { "argocd.argoproj.io/sync-options": "Prune=false" },
+        labels: {
+          "velero.io/backup": "disabled",
+          "velero.io/exclude-from-backup": "true",
+        },
+      },
+      spec: {
+        accessModes: ["ReadWriteOnce"],
+        storageClassName: "zfs-ssd",
+        resources: { requests: { storage: "128Gi" } },
+      },
+    });
+    expect(claims[0]?.spec).not.toHaveProperty("volumeName");
+    expect(claims[0]?.spec).not.toHaveProperty("selector");
+    const application = documents.flatMap((document) => {
+      const result = z
+        .object({
+          kind: z.literal("Application"),
+          spec: z.object({
+            source: z.object({
+              helm: z.object({
+                valuesObject: z.object({
+                  pyroscope: z.object({
+                    persistence: z.object({ size: z.string() }),
+                  }),
+                }),
+              }),
+            }),
+          }),
+        })
+        .safeParse(document);
+      return result.success ? [result.data] : [];
+    });
+    expect(
+      application[0]?.spec.source.helm.valuesObject.pyroscope.persistence.size,
+    ).toBe("32Gi");
+  });
+
   it("delegates immutable PVC templates to the admission policy", () => {
     const app = new App();
     const chart = new Chart(app, "test");
