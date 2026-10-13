@@ -44,6 +44,11 @@ after both profiles finish. Capacity deferral leaves the fingerprint pending
 for a later tick. The extension's workspace-cache reference documents the
 immutable generation and reader-lock contract.
 
+Qualify seeds through an owner-triggered manual `workspace-seeds` pipeline
+before enabling automatic refresh. The dispatcher and its repo-automation
+worker run in `prod`; the producer flag is an explicit production control.
+Canary branches target beta consumer flags and do not require a beta dispatcher.
+
 Writes have one activity attempt. After a lost response, subsequent ticks
 search for the recorded request ID; they never repeat the POST blindly.
 Read failures preserve state. A failed pipeline blocks that stream until an

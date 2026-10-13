@@ -1,43 +1,39 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
-import type {
-  FlagConfigSource,
-  FlagSourceOptions,
+import {
+  createFlagConfigSource,
+  type FlagConfigSource,
 } from "@shepherdjerred/feature-flags/config-source.ts";
 
-const flag = vi.hoisted(() => vi.fn<FlagConfigSource["get"]>());
-const createSource = vi.hoisted(() =>
-  vi.fn<(options: FlagSourceOptions) => FlagConfigSource>(),
-);
 vi.mock("@shepherdjerred/feature-flags/config-source.ts", () => ({
-  createFlagConfigSource: createSource,
+  createFlagConfigSource: vi.fn(),
 }));
 import { ciWorkspaceSeedRefreshEnabled } from "./ci-maintenance.ts";
+
+const source = {
+  create: vi.mocked(createFlagConfigSource),
+  get: vi.fn<FlagConfigSource["get"]>(),
+};
 
 beforeEach(() => {
   vi.resetAllMocks();
   vi.stubEnv("TEMPORAL_NAMESPACE", "prod");
-  flag.mockResolvedValue(undefined);
-  createSource.mockImplementation(() => ({ name: "flag", get: flag }));
+  source.get.mockResolvedValue(undefined);
+  source.create.mockImplementation(() => ({ name: "flag", get: source.get }));
 });
 afterEach(() => vi.unstubAllEnvs());
 
-test.each(["prod", "beta", "dev"])(
-  "seed refresh supplies the %s namespace as its rollout stage",
-  async (stage) => {
-    vi.stubEnv("TEMPORAL_NAMESPACE", stage);
-    flag.mockImplementation(() =>
-      Promise.resolve({
-        value: createSource.mock.calls[0]?.[0].attributes?.["stage"] === "beta",
-      }),
-    );
-    expect(await ciWorkspaceSeedRefreshEnabled()).toBe(stage === "beta");
-    expect(createSource).toHaveBeenCalledExactlyOnceWith({
-      targetingKey: `ci-maintenance-${stage}`,
-      attributes: { environment: stage, stage },
+test.each([false, true])(
+  "the deployed production worker honors seed refresh %s",
+  async (enabled) => {
+    source.get.mockResolvedValue({ value: enabled });
+    expect(await ciWorkspaceSeedRefreshEnabled()).toBe(enabled);
+    expect(source.create).toHaveBeenCalledExactlyOnceWith({
+      targetingKey: "ci-maintenance-prod",
+      attributes: { environment: "prod", stage: "prod" },
       kinds: { enabled: "boolean" },
       requireFreshSnapshot: true,
     });
-    expect(flag.mock.calls[0]?.[0].flag).toBe(
+    expect(source.get.mock.calls[0]?.[0].flag).toBe(
       "ci-workspace-seed-refresh-enabled",
     );
   },
@@ -45,26 +41,24 @@ test.each(["prod", "beta", "dev"])(
 
 test("absent and unavailable seed flags keep production dispatch disabled", async () => {
   expect(await ciWorkspaceSeedRefreshEnabled()).toBe(false);
-  flag.mockRejectedValue(new Error("source unavailable"));
+  source.get.mockRejectedValue(new Error("source unavailable"));
   expect(await ciWorkspaceSeedRefreshEnabled()).toBe(false);
 });
 
-test("an explicit false remains disabled", async () => {
+test("a beta namespace cannot activate the production seed producer", async () => {
   vi.stubEnv("TEMPORAL_NAMESPACE", "beta");
-  flag.mockResolvedValue({ value: false });
+  source.get.mockImplementation(() =>
+    Promise.resolve({
+      value: source.create.mock.calls[0]?.[0].attributes?.["stage"] === "beta",
+    }),
+  );
   expect(await ciWorkspaceSeedRefreshEnabled()).toBe(false);
 });
 
 test.each([0, "true", null])(
   "invalid seed flag %s fails visibly",
   async (value) => {
-    flag.mockResolvedValue({ value });
+    source.get.mockResolvedValue({ value });
     await expect(ciWorkspaceSeedRefreshEnabled()).rejects.toThrow();
   },
 );
-
-test("an invalid namespace fails before evaluating flags", async () => {
-  vi.stubEnv("TEMPORAL_NAMESPACE", "unknown");
-  await expect(ciWorkspaceSeedRefreshEnabled()).rejects.toThrow();
-  expect(createSource).not.toHaveBeenCalled();
-});

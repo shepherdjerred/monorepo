@@ -63,7 +63,8 @@ bun run build:storybook  # static catalog in storybook-static/
 
 `bun run test:e2e` checks every catalog story with three workers in CI.
 The static preview uses the pinned Node runtime through mise, including when
-Playwright inherits Bun's `node` shim from `bun --bun`.
+Playwright inherits Bun's `node` shim from `bun --bun`. It selects only Node
+for installation so browser CI does not bootstrap unrelated toolchains.
 
 `.storybook/vite.config.ts` is deliberately separate from the SPA's
 `vite.config.ts`, which carries three things a catalog must not inherit:
