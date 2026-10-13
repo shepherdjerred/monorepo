@@ -14,6 +14,14 @@ const retirementScopes = [
   { environment: "prod", namespace: "scout" },
   { environment: "beta", namespace: "temporal" },
   { environment: "prod", namespace: "temporal" },
+  { environment: "beta", namespace: "storm" },
+  { environment: "prod", namespace: "storm" },
+  { environment: "beta", namespace: "birmel" },
+  { environment: "prod", namespace: "birmel" },
+  { environment: "beta", namespace: "trmnl-dashboard" },
+  { environment: "prod", namespace: "trmnl-dashboard" },
+  { environment: "beta", namespace: "alert-dashboard" },
+  { environment: "prod", namespace: "alert-dashboard" },
 ] as const;
 const retiredKeys = retiredFlagDeclarations.map(
   (declaration) => declaration.key,
@@ -65,13 +73,20 @@ function fakeServer(
     ["temporal-agent-chat-imessage-claude-model", { value: "claude-opus-5" }],
     ["temporal-agent-chat-imessage-codex-model", { value: "gpt-5.6-luna" }],
   ];
+  const preservedOtherFlags: [string, unknown][] = [
+    ["unrelated-unknown", { enabled: true }],
+  ];
+  const preservedByNamespace = new Map([
+    ["scout", preservedScoutFlags],
+    ["temporal", preservedTemporalFlags],
+  ]);
+  const preservedFlags = (namespace: string): [string, unknown][] =>
+    preservedByNamespace.get(namespace) ?? preservedOtherFlags;
   const scopes = new Map(
     retirementScopes.map(({ environment, namespace }) => [
       `${environment}/${namespace}`,
       new Map<string, unknown>([
-        ...(namespace === "scout"
-          ? preservedScoutFlags
-          : preservedTemporalFlags),
+        ...preservedFlags(namespace),
         ...(options.absent
           ? []
           : retiredKeysIn(environment, namespace).map(
@@ -100,7 +115,7 @@ function fakeServer(
     const method = init?.method ?? "GET";
     requests.push({ method, url });
     const match =
-      /^\/api\/v2\/environments\/(beta|prod)\/namespaces\/(scout|temporal)\/resources\/flipt\.core\.Flag(?:\/|$)/u.exec(
+      /^\/api\/v2\/environments\/(beta|prod)\/namespaces\/([a-z-]+)\/resources\/flipt\.core\.Flag(?:\/|$)/u.exec(
         url.pathname,
       );
     const environment = environments.find(
@@ -182,6 +197,16 @@ test("only audited Scout and BlueBubbles keys are retired, preserving managed ta
     "prod/scout/scout-bucks-ask-model",
     "beta/scout/scout-report-lake-schema-upgrade-enabled",
     "prod/scout/scout-report-lake-schema-upgrade-enabled",
+    "beta/storm/storm-brain-classify-enabled",
+    "beta/storm/storm-brain-triage-enabled",
+    "prod/storm/storm-brain-classify-enabled",
+    "prod/storm/storm-brain-triage-enabled",
+    "beta/birmel/birmel-image-generation-enabled",
+    "prod/birmel/birmel-image-generation-enabled",
+    "beta/trmnl-dashboard/pet-dashboard-enabled",
+    "prod/trmnl-dashboard/pet-dashboard-enabled",
+    "beta/alert-dashboard/ops-digest-email-enabled",
+    "prod/alert-dashboard/ops-digest-email-enabled",
   ]);
   const server = fakeServer();
   const managedBefore = structuredClone(

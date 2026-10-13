@@ -119,4 +119,56 @@ export const retiredFlagDeclarations = [
     namespace: "scout",
     key: "scout-report-lake-schema-upgrade-enabled",
   },
+  // These flags became unconditional after their readers were removed. Retire
+  // the keys from both environments after the parent images are deployed.
+  {
+    environment: "beta",
+    namespace: "storm",
+    key: "storm-brain-classify-enabled",
+  },
+  {
+    environment: "beta",
+    namespace: "storm",
+    key: "storm-brain-triage-enabled",
+  },
+  {
+    environment: "prod",
+    namespace: "storm",
+    key: "storm-brain-classify-enabled",
+  },
+  {
+    environment: "prod",
+    namespace: "storm",
+    key: "storm-brain-triage-enabled",
+  },
+  {
+    environment: "beta",
+    namespace: "birmel",
+    key: "birmel-image-generation-enabled",
+  },
+  {
+    environment: "prod",
+    namespace: "birmel",
+    key: "birmel-image-generation-enabled",
+  },
+  {
+    environment: "beta",
+    namespace: "trmnl-dashboard",
+    key: "pet-dashboard-enabled",
+  },
+  {
+    environment: "prod",
+    namespace: "trmnl-dashboard",
+    key: "pet-dashboard-enabled",
+  },
+  {
+    environment: "beta",
+    namespace: "alert-dashboard",
+    key: "ops-digest-email-enabled",
+  },
+  {
+    environment: "prod",
+    namespace: "alert-dashboard",
+    key: "ops-digest-email-enabled",
+  },
 ] as const;

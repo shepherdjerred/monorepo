@@ -362,7 +362,6 @@
         "vitest.load.config.ts",
         "tests/e2e/global-setup.ts",
         "tests/e2e/prepare-sidecar.ts",
-        "tools/maps/pursuit.ts",
         "playtests/**/*.playtest.ts"
       ]
     },
