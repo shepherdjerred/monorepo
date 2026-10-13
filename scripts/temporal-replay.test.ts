@@ -2,7 +2,51 @@ import { describe, expect, it } from "vitest";
 import {
   TemporalReplayNamespaceSchema,
   temporalOperatorConnectionOptions,
+  parseTemporalReplayTargets,
 } from "./temporal-replay.ts";
+
+function validateBetaWorkflowId(value: string) {
+  if (!value.startsWith("scout-beta-")) throw new Error("Wrong stage");
+  return value;
+}
+
+describe("Temporal replay executions", () => {
+  const first = "81811c56-c5cb-4401-a272-a6578512ede6";
+  const second = "10c752e8-51af-47b7-aad5-17e64668f095";
+  it("retains two exact runs of the same Workflow alongside a latest-run request", () => {
+    expect(
+      parseTemporalReplayTargets(
+        [
+          "--run",
+          "scout-beta-dispatch",
+          first,
+          "--run",
+          "scout-beta-dispatch",
+          second,
+          "scout-beta-match",
+        ],
+        validateBetaWorkflowId,
+      ),
+    ).toEqual([
+      { workflowId: "scout-beta-dispatch", runId: first },
+      { workflowId: "scout-beta-dispatch", runId: second },
+      "scout-beta-match",
+    ]);
+  });
+  it.each([
+    { args: ["--run"] },
+    { args: ["--run", "scout-beta-dispatch"] },
+    { args: ["--run", "scout-beta-dispatch", "not-a-run"] },
+    { args: ["--run", "scout-prod-dispatch", first] },
+  ])(
+    "rejects incomplete, invalid, or wrong-stage targets $args",
+    ({ args }) => {
+      expect(() =>
+        parseTemporalReplayTargets(args, validateBetaWorkflowId),
+      ).toThrow();
+    },
+  );
+});
 
 describe("Temporal replay namespace", () => {
   it.each(["dev", "beta", "prod"])("accepts %s", (namespace) => {

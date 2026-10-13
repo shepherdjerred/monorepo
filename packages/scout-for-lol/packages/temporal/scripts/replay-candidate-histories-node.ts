@@ -1,4 +1,7 @@
-import { replayTemporalHistories } from "@shepherdjerred/root-scripts/temporal-replay.ts";
+import {
+  parseTemporalReplayTargets,
+  replayTemporalHistories,
+} from "@shepherdjerred/root-scripts/temporal-replay.ts";
 import { z } from "zod";
 
 const ScoutStageSchema = z.enum(["beta", "prod"]);
@@ -8,12 +11,21 @@ if (args[0] !== "--stage" || args[1] === undefined) {
   throw new Error("Pass --stage beta|prod before Scout Workflow IDs");
 }
 const stage = ScoutStageSchema.parse(args[1]);
-const workflowIds = args.slice(2).map((value) => WorkflowIdSchema.parse(value));
+const workflowIds = parseTemporalReplayTargets(args.slice(2), (value) =>
+  WorkflowIdSchema.parse(value),
+);
 if (workflowIds.length === 0) {
   throw new Error("Pass at least one Scout Workflow ID");
 }
 const requiredPrefix = `scout-${stage}-`;
-if (workflowIds.some((workflowId) => !workflowId.startsWith(requiredPrefix))) {
+if (
+  workflowIds.some(
+    (target) =>
+      !(typeof target === "string" ? target : target.workflowId).startsWith(
+        requiredPrefix,
+      ),
+  )
+) {
   throw new Error(`Every Workflow ID must start with ${requiredPrefix}`);
 }
 

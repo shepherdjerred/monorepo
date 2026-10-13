@@ -1,5 +1,8 @@
 import { z } from "zod";
-import { replayTemporalHistories } from "@shepherdjerred/root-scripts/temporal-replay.ts";
+import {
+  parseTemporalReplayTargets,
+  replayTemporalHistories,
+} from "@shepherdjerred/root-scripts/temporal-replay.ts";
 
 const WorkflowIdSchema = z
   .string()
@@ -9,9 +12,10 @@ const WorkflowIdSchema = z
     "Only Scout Workflows with retained compatibility patches may be replayed by this command",
   );
 async function main(): Promise<void> {
-  const workflowIds = process.argv
-    .slice(2)
-    .map((value) => WorkflowIdSchema.parse(value));
+  const workflowIds = parseTemporalReplayTargets(
+    process.argv.slice(2),
+    (value) => WorkflowIdSchema.parse(value),
+  );
   if (workflowIds.length === 0) {
     throw new Error("Pass at least one beta Bryan Bucks Workflow ID to replay");
   }

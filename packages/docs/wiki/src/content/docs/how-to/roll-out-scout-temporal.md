@@ -41,6 +41,17 @@ namespace retention can remain longer for other applications. Inspect older
 Scout histories with an archived compatible bundle; do not reset them onto a
 bundle that has retired their types or patch branches.
 
+For compatibility removal, enumerate executions with their run IDs and replay
+each protected run explicitly. A Workflow ID alone selects its latest run and
+does not verify earlier runs in a continue-as-new chain. Both history replay
+commands accept repeated `--run <workflow-id> <run-id>` arguments:
+
+```bash
+bun run replay:histories \
+  --run <scout-workflow-id> <first-run-id> \
+  --run <scout-workflow-id> <second-run-id>
+```
+
 ## Prove every beta queue
 
 Run the side-effect-free queue canary against the deployed Scout workers:
