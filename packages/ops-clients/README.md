@@ -26,6 +26,10 @@ without leaking payloads.
 Unknown enum values from an upstream (a new Argo health, a Woodpecker status,
 a Linear state type) fail schema validation instead of being guessed.
 
+ArgoCD root operations retain their raw identity through validation. Only an
+exact matching owner-published release receipt sets `verifiedReleaseTermination`;
+the collector continues to evaluate current health and sync independently.
+
 ```bash
 bunx turbo run typecheck test lint --filter=@shepherdjerred/ops-clients
 ```

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isVerifiedRootReleaseTermination } from "@shepherdjerred/ops-model/argocd-release-receipt.ts";
 import {
   VeleroMetadataSchema,
   VeleroRestoreSchema,
@@ -85,7 +86,11 @@ const ArgoHealthStatusSchema = z.enum([
 ]);
 
 const ArgoApplicationSchema = z.object({
-  metadata: z.object({ name: z.string(), namespace: z.string() }),
+  metadata: z.object({
+    name: z.string(),
+    namespace: z.string(),
+    annotations: z.record(z.string(), z.string()).optional(),
+  }),
   spec: z.object({
     project: z.string(),
     destination: z.object({ namespace: z.string().optional() }),
@@ -108,6 +113,7 @@ const ArgoApplicationSchema = z.object({
           startedAt: z.string(),
           finishedAt: z.string().optional(),
         })
+        .loose()
         .optional(),
     })
     .default({}),
@@ -146,6 +152,7 @@ export type ArgoSyncStatus = z.infer<typeof ArgoSyncStatusSchema>;
 export type ArgoHealthStatus = z.infer<typeof ArgoHealthStatusSchema>;
 
 export type ArgoApplication = {
+  verifiedReleaseTermination?: true;
   name: string;
   project: string;
   destinationNamespace: string | undefined;
@@ -228,6 +235,9 @@ function toArgoApplication(
 ): ArgoApplication {
   const operation = app.status.operationState;
   return {
+    ...(isVerifiedRootReleaseTermination(app)
+      ? { verifiedReleaseTermination: true as const }
+      : {}),
     name: app.metadata.name,
     project: app.spec.project,
     destinationNamespace: app.spec.destination.namespace,

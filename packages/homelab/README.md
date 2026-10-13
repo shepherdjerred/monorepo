@@ -27,6 +27,12 @@ The cadence preserves operation deadlines and the one-minute auto-sync policy
 settling budget. A release still requires restored auto-sync and its scoped
 health checks before writing an applied-and-verified receipt.
 
+After those checks, an intentionally terminated root prune also publishes
+`ops.sjer.red/verified-root-release` on the root Application. A resource-version
+comparison prevents annotating a concurrent operation. Ops validates the exact
+request, operation, revision and timestamps before treating that termination as
+verified; current Application health and subsequent failures remain visible.
+
 ## Layout
 
 | Directory        | Contents                                                                                                      |

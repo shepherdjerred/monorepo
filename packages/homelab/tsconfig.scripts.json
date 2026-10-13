@@ -14,6 +14,8 @@
     "src/domain-registry.ts",
     "scripts/ci/bootstrap-woodpecker.ts",
     "scripts/argocd/argocd.ts",
+    "scripts/argocd/argocd-verified-receipt.ts",
+    "scripts/argocd/argocd-verified-receipt.test.ts",
     "scripts/argocd/argocd-apply-safety.ts",
     "scripts/argocd/argocd-apply-safety.test.ts",
     "scripts/argocd/argocd-ignored-differences.ts",
