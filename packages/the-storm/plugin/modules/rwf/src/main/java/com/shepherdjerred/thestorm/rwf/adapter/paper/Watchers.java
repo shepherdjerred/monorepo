@@ -71,6 +71,7 @@ final class Watchers {
       return refusal;
     }
     watching.add(id);
+    runner.streakPicker().suspendAdmission(id);
     saving.add(id);
     snapshots.capture(player, Snapshots.WATCH_SCOPE, stored -> stored(player, stored));
     if (!watching.contains(id)) {

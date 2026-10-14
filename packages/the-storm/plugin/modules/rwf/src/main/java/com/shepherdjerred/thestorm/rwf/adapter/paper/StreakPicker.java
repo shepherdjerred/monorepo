@@ -22,12 +22,17 @@ final class StreakPicker {
   private final StreakStore store;
   private final JoinGate gate;
   private final Map<UUID, StreakLoadout> loaded = new HashMap<>();
-  private final Map<UUID, CompletableFuture<Optional<StreakLoadout>>> loading = new HashMap<>();
+  private final Map<UUID, Read> loading = new HashMap<>();
   private final Set<UUID> failed = new HashSet<>();
   private final Map<UUID, CompletableFuture<Void>> saving = new HashMap<>();
+  private long readGeneration;
+
+  private record Admission(UUID matchId, Runnable retry) {}
 
   private record Read(
-      UUID matchId, CompletableFuture<Optional<StreakLoadout>> future, Runnable retry) {}
+      long generation,
+      CompletableFuture<Optional<StreakLoadout>> future,
+      Optional<Admission> admission) {}
 
   StreakPicker(MatchRunner runner, PaperContext context, StreakStore store, JoinGate gate) {
     this.runner = runner;
@@ -42,14 +47,17 @@ final class StreakPicker {
     if (failed.contains(id))
       return Optional.of(
           "Your killstreak preferences could not be loaded. Reconnect after they are repaired.");
-    if (!loading.containsKey(id)) beginRead(player, retry);
+    var pending = loading.get(id);
+    if (pending == null) beginRead(player, retry);
+    else loading.put(id, new Read(pending.generation(), pending.future(), admissionIntent(retry)));
     return Optional.of("Loading your killstreak preferences; joining when ready.");
   }
 
   private void beginRead(Player player, Runnable retry) {
     var id = player.getUniqueId();
-    var read = new Read(runner.match().matchId(), store.load(id), retry);
-    loading.put(id, read.future());
+    readGeneration = Math.incrementExact(readGeneration);
+    var read = new Read(readGeneration, store.load(id), admissionIntent(retry));
+    loading.put(id, read);
     context.onMain(
         read.future(),
         preferences -> readComplete(player, read, preferences),
@@ -59,19 +67,41 @@ final class StreakPicker {
 
   private void readComplete(Player player, Read read, Optional<StreakLoadout> preferences) {
     var id = player.getUniqueId();
-    if (!loading.remove(id, read.future()) || !player.isOnline()) return;
+    var current = completedRead(id, read);
+    if (current.isEmpty() || !player.isOnline()) return;
     loaded.put(id, preferences.orElse(StreakLoadout.DEFAULT));
-    if (runner.match().matchId().equals(read.matchId()) && runner.memberOf(id).isEmpty()) {
-      read.retry().run();
-    }
+    current.orElseThrow().admission().ifPresent(request -> resume(id, request));
+  }
+
+  private Optional<Admission> admissionIntent(Runnable retry) {
+    return Optional.of(new Admission(runner.match().matchId(), retry));
+  }
+
+  private void resume(UUID player, Admission request) {
+    if (runner.match().matchId().equals(request.matchId()) && runner.memberOf(player).isEmpty())
+      request.retry().run();
+  }
+
+  /** Watching takes snapshot ownership; a previous ordinary join must not recover that snapshot. */
+  void suspendAdmission(UUID player) {
+    loading.computeIfPresent(
+        player, (_, read) -> new Read(read.generation(), read.future(), Optional.empty()));
   }
 
   private void readFailed(Player player, Read read) {
     var id = player.getUniqueId();
-    if (!loading.remove(id, read.future())) return;
+    if (completedRead(id, read).isEmpty()) return;
     failed.add(id);
     if (player.isOnline())
       Texts.error(player, "Your killstreak preferences could not be loaded; you were not joined.");
+  }
+
+  /** A reused read belongs to its latest admission intent, unless that future was invalidated. */
+  private Optional<Read> completedRead(UUID player, Read finished) {
+    var current = loading.get(player);
+    if (current == null || current.generation() != finished.generation()) return Optional.empty();
+    loading.remove(player);
+    return Optional.of(current);
   }
 
   void restore(Player player) {

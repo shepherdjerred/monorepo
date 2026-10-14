@@ -8,6 +8,8 @@ dependencies {
   implementation(project(":discord"))
   // Team and dead chat go through the chat module's membership, routing and taps.
   implementation(project(":chat"))
+  // The typed jOOQ listener fixture exposes Settings' optional JAXB annotations to javac.
+  testCompileOnly(libs.jaxb.api)
 }
 
 // The Java Flipt identifiers must agree with the shared managed flag inventory.
