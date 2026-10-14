@@ -456,6 +456,33 @@
       "thresholdRollouts": []
     },
     {
+      "key": "woodpecker-ram-scratch-enabled",
+      "owner": "platform",
+      "namespace": "woodpecker",
+      "source": "woodpecker-performance",
+      "purpose": "Benchmark bounded RAM scratch in owner manual verify canaries.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "woodpecker-performance-beta",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "stage",
+              "operator": "eq",
+              "value": "beta"
+            }
+          ],
+          "result": true
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "woodpecker-small-check-grouping-enabled",
       "owner": "platform",
       "namespace": "woodpecker",

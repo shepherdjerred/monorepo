@@ -120,6 +120,8 @@ export type CiStep = {
   };
   readonly resources: ResourceTier;
   readonly secrets?: readonly SecretGrant[];
+  /** Owner manual verify canary only; never inherited by clone or services. */
+  readonly ramScratch?: boolean;
   /** Pre-provisioned PVCs mounted by name, e.g. the shared bun and uv caches. */
   readonly volumes?: readonly StepVolume[];
   /**
@@ -180,6 +182,7 @@ export type CiCommandStep = Pick<
   | "timeoutMinutes"
   | "retries"
   | "resources"
+  | "ramScratch"
   | "secrets"
   | "volumes"
   | "allowFailure"

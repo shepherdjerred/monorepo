@@ -23,9 +23,14 @@ export async function readGeneratedSteps(
  */
 export async function readGeneratedStepJson(
   repositoryRoot: string,
+  options: { includeCanaries?: boolean } = {},
 ): Promise<unknown> {
   const child = Bun.spawn(
-    ["bun", "packages/woodpecker-config-extension/src/dump-steps.ts"],
+    [
+      "bun",
+      "packages/woodpecker-config-extension/src/dump-steps.ts",
+      ...(options.includeCanaries === true ? ["--include-canaries"] : []),
+    ],
     { cwd: repositoryRoot, stdout: "pipe", stderr: "pipe" },
   );
   const [stdout, stderr, exitCode] = await Promise.all([

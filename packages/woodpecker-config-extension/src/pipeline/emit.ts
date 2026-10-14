@@ -14,6 +14,7 @@ import type {
   ResourceTier,
 } from "#src/pipeline/model.ts";
 import { WORKSPACE_SEEDS } from "#src/pipeline/performance.ts";
+import { RAM_SCRATCH } from "./ram-scratch.ts";
 
 /**
  * Node the CI step pods run on, and the taint they must tolerate to get there.
@@ -215,6 +216,7 @@ function podOptions(
   step: CiStep,
   identity: PipelineIdentity,
   tier: ResourceTier,
+  ramScratch = false,
 ): Record<string, unknown> {
   return {
     resources: resources(tier),
@@ -224,6 +226,7 @@ function podOptions(
     labels: {
       [POD_STEP_KEY_LABEL]: step.key,
       [POD_COMMIT_LABEL]: identity.commit,
+      ...(ramScratch ? { [RAM_SCRATCH.label]: RAM_SCRATCH.profile } : {}),
     },
     annotations: {
       [POD_BRANCH_ANNOTATION]: identity.branch,
@@ -248,7 +251,7 @@ function backendOptions(
 
   return {
     kubernetes: {
-      ...podOptions(step, identity, step.resources),
+      ...podOptions(step, identity, step.resources, step.ramScratch === true),
       ...(secrets.length > 0 ? { secrets } : {}),
     },
   };

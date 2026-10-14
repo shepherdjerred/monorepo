@@ -39,7 +39,7 @@ const TierSchema = z.object({
   ephemeralStorageRequest: z.string(),
 });
 
-const StepSchema = z.object({
+export const StepSchema = z.object({
   key: z.string(),
   backend: z.string().optional(),
   agentLabels: z.record(z.string(), z.string()).optional(),
@@ -281,7 +281,7 @@ async function main(): Promise<void> {
   );
   const steps = z
     .array(StepSchema)
-    .parse(await readGeneratedStepJson(REPO_ROOT));
+    .parse(await readGeneratedStepJson(REPO_ROOT, { includeCanaries: true }));
   const violations = pooledAdmissionBudgetViolations(steps, budget);
   for (const violation of violations) {
     console.error(`CI admission budget: ${violation}`);

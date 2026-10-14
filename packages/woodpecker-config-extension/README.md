@@ -35,6 +35,19 @@ guarantee a dependency-closed set, which the emitter then relies on.
 
 ## Dependency caches
 
+Owner manual benchmarks on `ci-canary/` branches accept the `scratch` feature
+for the `verify` profile. Candidates require the typed
+`woodpecker-ram-scratch-enabled` flag; its production default is off.
+The shared profile in `src/pipeline/ram-scratch.ts` reserves the full bounded
+scratch allowance above the verify process budget. Homelab admission adds
+memory-backed volumes only to the marked execution pod, preserving clone,
+service, checkout, and report storage. Ordinary pipeline selection does not
+activate scratch, even when the flag evaluates true.
+
+The admission graph includes this canary when inspected with
+`bun src/dump-steps.ts --include-canaries`; the root admission-budget check
+uses that graph to verify coexistence with ordinary workflows.
+
 Source caching is controlled by the typed `woodpecker-source-cache-enabled`
 flag. The production inventory enables it; the runtime fallback remains off.
 Branches under `ci-canary/` have beta targeting. The

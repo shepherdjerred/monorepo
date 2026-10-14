@@ -7,6 +7,8 @@ import { performanceSteps } from "#src/pipeline/performance.ts";
 import { cacheSourceSteps } from "#src/pipeline/source-cache.ts";
 import { DISABLED_PERFORMANCE } from "#src/performance-config.ts";
 import { emitWorkflow } from "#src/pipeline/emit.ts";
+import { RAM_SCRATCH } from "#src/pipeline/ram-scratch.ts";
+import { TURBO_VERIFY_TIER } from "#src/pipeline/tiers.ts";
 import { PipelineSchema } from "#src/schemas.ts";
 import fixture from "./fixtures/woodpecker-v3.18.1-config-request.json" with { type: "json" };
 import { TEST_IMAGES, TEST_IDENTITY, testPipelineSteps } from "./identity.ts";
@@ -18,8 +20,126 @@ const enabled = {
   gradle: true,
   grouping: true,
   copyfile: true,
+  scratch: true,
 };
 const helper = `ghcr.io/shepherdjerred/woodpecker-config-extension@sha256:${"a".repeat(64)}`;
+const gib = (value: string) => Number(value.replace(/Gi$/u, ""));
+test("RAM scratch is exclusive to the owner manual verify canary execution pod", () => {
+  const pipeline = PipelineSchema.parse({
+    ...fixture.pipeline,
+    event: "manual",
+    branch: "ci-canary/ram-scratch",
+    ref: "refs/heads/ci-canary/ram-scratch",
+    variables: {
+      CI_BENCHMARK_PROFILE: "verify",
+      CI_BENCHMARK_SOURCE: fixture.pipeline.commit,
+      CI_BENCHMARK_VARIANT: "candidate",
+      CI_BENCHMARK_CACHE: "cold",
+      CI_BENCHMARK_FEATURE: "scratch",
+    },
+  });
+  const request = benchmarkRequest(pipeline, "main", true);
+  if (request === undefined) throw new Error("Missing request");
+  expect(() => benchmarkRequest(pipeline, "main", false)).toThrow();
+  expect(() =>
+    benchmarkRequest({ ...pipeline, event: "pull_request" }, "main", true),
+  ).toThrow();
+  expect(() =>
+    benchmarkRequest(
+      { ...pipeline, branch: "main", ref: "refs/heads/main" },
+      "main",
+      true,
+    ),
+  ).toThrow();
+  expect(() =>
+    benchmarkRequest(
+      {
+        ...pipeline,
+        variables: { ...pipeline.variables, CI_BENCHMARK_PROFILE: "browser" },
+      },
+      "main",
+      true,
+    ),
+  ).toThrow();
+  expect(() =>
+    benchmarkSteps(TEST_IMAGES, request, DISABLED_PERFORMANCE, helper),
+  ).toThrow();
+  const candidate = benchmarkSteps(TEST_IMAGES, request, enabled, helper)[0];
+  const baseline = benchmarkSteps(
+    TEST_IMAGES,
+    { ...request, variant: "baseline" },
+    enabled,
+    helper,
+  )[0];
+  if (candidate === undefined || baseline === undefined)
+    throw new Error("Missing verify");
+  expect(candidate.resources).toEqual(RAM_SCRATCH.resources);
+  expect(baseline.resources).toEqual(TURBO_VERIFY_TIER);
+  expect(baseline.ramScratch).toBeUndefined();
+  const emitted = z
+    .object({
+      clone: z.array(
+        z.object({
+          backend_options: z.object({
+            kubernetes: z.object({ labels: z.record(z.string(), z.string()) }),
+          }),
+        }),
+      ),
+      steps: z.array(
+        z.object({
+          name: z.string(),
+          backend_options: z.object({
+            kubernetes: z.object({
+              labels: z.record(z.string(), z.string()),
+              resources: z.object({
+                requests: z.record(z.string(), z.string()),
+                limits: z.record(z.string(), z.string()),
+              }),
+            }),
+          }),
+        }),
+      ),
+    })
+    .parse(
+      parse(
+        emitWorkflow(candidate, {
+          ...TEST_IDENTITY,
+          branch: pipeline.branch,
+          event: "manual",
+        }),
+      ),
+    );
+  for (const clone of emitted.clone)
+    expect(
+      clone.backend_options.kubernetes.labels[RAM_SCRATCH.label],
+    ).toBeUndefined();
+  expect(emitted.steps).toHaveLength(1);
+  expect(
+    emitted.steps[0]?.backend_options.kubernetes.labels[RAM_SCRATCH.label],
+  ).toBe(RAM_SCRATCH.profile);
+  expect(
+    emitted.steps[0]?.backend_options.kubernetes.resources.requests["memory"],
+  ).toBe("30Gi");
+  expect(
+    emitted.steps[0]?.backend_options.kubernetes.resources.limits["memory"],
+  ).toBe("36Gi");
+  expect(
+    performanceSteps(testPipelineSteps(), enabled, false, false).every(
+      (step) => step.ramScratch === undefined,
+    ),
+  ).toBe(true);
+  const scratch = RAM_SCRATCH.volumes.reduce(
+    (sum, volume) => sum + gib(volume.size),
+    0,
+  );
+  expect(
+    gib(candidate.resources.memoryRequest) -
+      gib(TURBO_VERIFY_TIER.memoryRequest),
+  ).toBe(scratch);
+  expect(
+    gib(candidate.resources.memoryLimit) - gib(TURBO_VERIFY_TIER.memoryLimit),
+  ).toBe(scratch);
+});
 test("performance options never grant caches to credentialless work", () => {
   const steps = testPipelineSteps();
   expect(performanceSteps(steps, enabled, false, true)).toEqual(steps);

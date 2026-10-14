@@ -6,9 +6,34 @@ import {
   pooledAdmissionBudgetViolations,
   type AdmissionBudget,
   type AdmissionStep,
+  StepSchema,
 } from "./check-ci-admission-budget.ts";
 import { PooledAdmissionBudgetSchema as PooledBudgetSchema } from "../../lib/ci/admission-budget.ts";
 import rawBudget from "../../../packages/homelab/src/cdk8s/src/misc/ci-admission-budget.json" with { type: "json" };
+import { readGeneratedStepJson } from "../../lib/ci/generated-steps.ts";
+import { z } from "zod";
+
+test("the admission graph includes bounded RAM scratch alongside ordinary workflows", async () => {
+  const generated = z
+    .array(StepSchema)
+    .parse(
+      await readGeneratedStepJson(
+        new URL("../../../", import.meta.url).pathname,
+        { includeCanaries: true },
+      ),
+    );
+  expect(
+    generated
+      .filter((entry) => entry.key === "verify")
+      .map((entry) => entry.resources.memoryRequest),
+  ).toEqual(["18Gi", "30Gi"]);
+  expect(
+    pooledAdmissionBudgetViolations(
+      generated,
+      PooledBudgetSchema.parse(rawBudget),
+    ),
+  ).toEqual([]);
+});
 
 const BUDGET: AdmissionBudget = {
   maxWorkflows: 4,
