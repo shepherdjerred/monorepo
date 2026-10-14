@@ -106,6 +106,7 @@ RUN test -s packages/common/dist/browser/browser.js \
   && test -s packages/frontend/dist/index.html \
   && test -x /opt/dolphin/bin/dolphin-emu-nogui \
   && chromium --version \
+  && cd packages/backend \
   && bun -e 'await import("@arcade/common/catalog.ts"); await import("@discord-plays-mario-kart/backend/database/index.ts"); await import("@discord-plays-pokemon/backend/lifecycle/pokemon-driver.ts");'
 
 FROM runtime AS image
