@@ -7,6 +7,7 @@ import { diagnosticCommands } from "./diagnostics.ts";
 import { cacheSourceSteps } from "./source-cache.ts";
 import { performanceSteps } from "./performance.ts";
 import { signRemoteCacheSteps } from "./turbo-cache.ts";
+import { RAM_SCRATCH } from "./ram-scratch.ts";
 import {
   DISABLED_PERFORMANCE,
   type PerformanceOptions,
@@ -23,6 +24,7 @@ const Request = z.object({
     "formatting",
     "gradle",
     "copyfile",
+    "scratch",
   ]),
 });
 export type BenchmarkRequest = z.infer<typeof Request> & {
@@ -68,6 +70,11 @@ export function benchmarkRequest(
   });
   if (request.source !== pipeline.commit)
     throw new Error("Benchmark source moved before dispatch");
+  if (
+    request.feature === "scratch" &&
+    (request.profile !== "verify" || pipeline.branch === defaultBranch)
+  )
+    throw new Error("RAM scratch requires a verify canary branch");
   return { ...request, main: pipeline.branch === defaultBranch };
 }
 
@@ -77,6 +84,11 @@ export function benchmarkSteps(
   allowed: PerformanceOptions,
   trustedImage?: string,
 ): ReturnType<typeof buildPipelineSteps> {
+  if (
+    request.feature === "scratch" &&
+    (request.profile !== "verify" || request.main)
+  )
+    throw new Error("RAM scratch requires a verify canary branch");
   const template =
     request.profile === "verify"
       ? buildPipelineSteps({ images, changedBase: undefined }).find(
@@ -104,6 +116,9 @@ export function benchmarkSteps(
       : template.commands;
   const step = {
     ...template,
+    ...(options.scratch
+      ? { ramScratch: true, resources: RAM_SCRATCH.resources }
+      : {}),
     commands,
     dependsOn: [],
     environment: {

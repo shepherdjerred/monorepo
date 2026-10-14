@@ -6,6 +6,7 @@ import {
 import { CI_NODE_HOSTNAME } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 import { BATCH_PRIORITY } from "@shepherdjerred/homelab/cdk8s/src/misc/priority-classes.ts";
 import { WOODPECKER_CI_NAMESPACE } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/woodpecker-credentials.ts";
+import { createRamScratchPolicy } from "./ram-scratch-policy.ts";
 
 /**
  * Label Woodpecker's Kubernetes backend stamps on every pod it creates --
@@ -122,6 +123,7 @@ export function createWoodpeckerCiPodGuard(chart: Chart): void {
       validationActions: ["Deny"],
     },
   });
+  createRamScratchPolicy(chart);
 }
 
 /** Keep the CSI mount RW for ZFS; only container bind mounts become RO. */

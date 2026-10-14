@@ -15,6 +15,7 @@ export const DISABLED_PERFORMANCE = {
   gradle: false,
   grouping: false,
   copyfile: false,
+  scratch: false,
 };
 export type PerformanceOptions = typeof DISABLED_PERFORMANCE;
 
@@ -29,6 +30,7 @@ export async function performanceConfig(
       gradle: booleanFlag("woodpecker-gradle-seed-enabled"),
       grouping: booleanFlag("woodpecker-small-check-grouping-enabled"),
       copyfile: booleanFlag("woodpecker-bun-copyfile-enabled"),
+      scratch: booleanFlag("woodpecker-ram-scratch-enabled"),
     },
     sources: {
       flag: createFlagConfigSource({
@@ -43,6 +45,7 @@ export async function performanceConfig(
           gradle: "boolean",
           grouping: "boolean",
           copyfile: "boolean",
+          scratch: "boolean",
         },
         requireFreshSnapshot: true,
       }),
@@ -55,15 +58,23 @@ export async function performanceConfig(
       },
     },
   });
-  const [incremental, prepared, formatting, gradle, grouping, copyfile] =
-    await Promise.all([
-      resolver.get("incremental"),
-      resolver.get("prepared"),
-      resolver.get("formatting"),
-      resolver.get("gradle"),
-      resolver.get("grouping"),
-      resolver.get("copyfile"),
-    ]);
+  const [
+    incremental,
+    prepared,
+    formatting,
+    gradle,
+    grouping,
+    copyfile,
+    scratch,
+  ] = await Promise.all([
+    resolver.get("incremental"),
+    resolver.get("prepared"),
+    resolver.get("formatting"),
+    resolver.get("gradle"),
+    resolver.get("grouping"),
+    resolver.get("copyfile"),
+    resolver.get("scratch"),
+  ]);
   return {
     incremental: incremental.value,
     prepared: prepared.value,
@@ -71,5 +82,6 @@ export async function performanceConfig(
     gradle: gradle.value,
     grouping: grouping.value,
     copyfile: copyfile.value,
+    scratch: scratch.value,
   };
 }

@@ -37,7 +37,7 @@ test("performance flags preserve explicit false, reject invalid values and defau
   flag.mockResolvedValue({ value: true });
   expect(
     Object.values(await performanceConfig("ci-canary/performance")),
-  ).toEqual([true, true, true, true, true, true]);
+  ).toEqual([true, true, true, true, true, true, true]);
   flag.mockResolvedValue({ value: "true" });
   await expect(performanceConfig("main")).rejects.toThrow();
   flag.mockRejectedValue(new Error("unavailable"));

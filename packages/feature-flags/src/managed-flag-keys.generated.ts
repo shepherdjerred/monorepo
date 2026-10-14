@@ -67,6 +67,7 @@ export const WOODPECKER_BOOLEAN_FLAG_KEYS = [
   "woodpecker-prepared-workspace-enabled",
   "woodpecker-format-cache-enabled",
   "woodpecker-gradle-seed-enabled",
+  "woodpecker-ram-scratch-enabled",
   "woodpecker-small-check-grouping-enabled",
   "woodpecker-bun-copyfile-enabled",
   "woodpecker-source-cache-enabled",

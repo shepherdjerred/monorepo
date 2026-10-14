@@ -5,6 +5,28 @@ import {
 } from "./managed-flag-inventory.ts";
 
 test.each(["beta", "prod"])(
+  "%s RAM scratch defaults off and targets canaries only",
+  (environment) => {
+    const flag = materializeManagedNamespaceEnvironment(
+      managedFlagInventory,
+      environment,
+      "woodpecker",
+    ).find((entry) => entry.key === "woodpecker-ram-scratch-enabled");
+    expect(flag).toMatchObject({
+      default: false,
+      rules: [],
+      thresholdRollouts: [],
+      rollouts: [
+        {
+          result: true,
+          constraints: [{ property: "stage", operator: "eq", value: "beta" }],
+        },
+      ],
+    });
+  },
+);
+
+test.each(["beta", "prod"])(
   "%s seed refresh remains restricted to beta targeting",
   (environment) => {
     const producer = materializeManagedNamespaceEnvironment(

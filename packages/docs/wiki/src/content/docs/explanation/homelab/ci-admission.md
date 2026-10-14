@@ -131,6 +131,23 @@ An admission policy, `woodpecker-ci-pod-guard`, rejects any CI pod that is
 not pinned to liskov, not at `batch-low` priority, or missing requests and
 limits. A regression in any layer becomes a failed step, not CI on torvalds.
 
+## Why RAM scratch consumes admission capacity
+
+Temporary build files can use bounded RAM storage in an owner-requested verify
+canary. The checkout and reports remain on the workflow's persistent volume.
+Clone pods and service pods keep their existing storage.
+
+RAM storage competes with compilers and test processes for container memory.
+The canary adds its entire storage allowance to both the request and limit.
+Kueue therefore reserves that memory before execution starts.
+The [pod guard](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/woodpecker/ci-pod-guard.ts)
+also rejects marked pods outside the manual canary boundary.
+
+This trades admission capacity for fewer scratch writes.
+It does not establish an SSD endurance improvement by itself.
+That requires successful builds, measured physical writes, and representative
+production workload observations.
+
 ## Workspaces do not accumulate
 
 Each workflow gets a workspace claim on the `ci-workspace` storage class. The

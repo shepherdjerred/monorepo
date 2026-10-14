@@ -17,6 +17,8 @@ import { completionStep } from "#src/pipeline/completion.ts";
 import { routeSteps } from "#src/pipeline/routing.ts";
 import { groupTofuSteps } from "#src/pipeline/group-tofu.ts";
 import { draftPreflightStep } from "#src/pipeline/draft.ts";
+import { benchmarkSteps } from "#src/pipeline/benchmark.ts";
+import { DISABLED_PERFORMANCE } from "#src/performance-config.ts";
 
 const PLACEHOLDER_DIGEST = `sha256:${"0".repeat(64)}`;
 
@@ -60,6 +62,33 @@ const routed = routeSteps(
   },
   gateImage,
 );
+// Admission must cover the larger manual canary alongside ordinary workflows.
+if (Bun.argv.includes("--include-canaries")) {
+  routed.push(
+    ...routeSteps(
+      benchmarkSteps(
+        PLACEHOLDER_IMAGES,
+        {
+          profile: "verify",
+          variant: "candidate",
+          cache: "cold",
+          source: "0".repeat(40),
+          feature: "scratch",
+          main: false,
+        },
+        { ...DISABLED_PERFORMANCE, scratch: true },
+        gateImage,
+      ),
+      {
+        event: "manual",
+        branch: "ci-canary/admission-proof",
+        defaultBranch: "main",
+        draft: false,
+        maintenance: true,
+      },
+    ),
+  );
+}
 // Inspect every container's own grants and maximum requests. Ordered containers
 // share a workspace but never inherit the setup container's secrets.
 const commands = routed.flatMap((step) => [
