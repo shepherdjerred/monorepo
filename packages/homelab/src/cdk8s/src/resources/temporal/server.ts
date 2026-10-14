@@ -196,7 +196,7 @@ export function createTemporalServerDeployment(
   deployment.addContainer(
     withCommonProps({
       name: "authenticated-external-gateway",
-      image: `ghcr.io/shepherdjerred/caddy-s3proxy:${versions["shepherdjerred/caddy-s3proxy"]}`,
+      image: `docker.io/shepherdjerred/caddy-s3proxy:${versions["shepherdjerred/caddy-s3proxy"]}`,
       command: ["/bin/sh", "-c"],
       args: [
         'printf "%s" "$CADDY_CONFIG" > /tmp/temporal.Caddyfile && exec caddy run --config /tmp/temporal.Caddyfile --adapter caddyfile',

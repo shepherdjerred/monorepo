@@ -19,7 +19,7 @@ control = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(control)
 
 REQUEST = "6903b19f-f4d2-42a5-91ba-6ce046562c83"
-IMAGE = "ghcr.io/shepherdjerred/the-storm-server:fixture@sha256:" + "a" * 64
+IMAGE = "docker.io/shepherdjerred/the-storm-server:fixture@sha256:" + "a" * 64
 
 
 class Cluster:
@@ -167,6 +167,10 @@ class RestorationControlTest(unittest.TestCase):
 
     def initialize(self) -> JsonObject:
         return control.initialize(self.path, REQUEST, IMAGE)
+
+    def test_legacy_ghcr_image_identity_remains_valid(self):
+        journal = control.initialize(self.path, REQUEST, IMAGE.replace("docker.io/", "ghcr.io/"))
+        self.assertIsInstance(journal, dict)
 
     def test_guards_reject_changed_expressions_conditions_and_binding_scope_before_mutation(self):
         for field, value in (
@@ -480,7 +484,7 @@ class RestorationControlTest(unittest.TestCase):
     def rollback_fixture(self) -> tuple[JsonObject, JsonObject]:
         self.path.unlink(missing_ok=True)
         self.cluster.server.object("spec").object("template").object("spec").objects("containers")[0]["image"] = (
-            "ghcr.io/shepherdjerred/the-storm-server:original@sha256:" + "c" * 64
+            "docker.io/shepherdjerred/the-storm-server:original@sha256:" + "c" * 64
         )
         journal = self.installation_fixture()
         journal["readersRemoved"] = True
@@ -1896,7 +1900,7 @@ class RestorationControlTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             control.initialize(self.path, "11111111-1111-4111-8111-111111111111", IMAGE)
         with self.assertRaisesRegex(ValueError, "immutable Storm image"):
-            control.initialize(self.path, REQUEST, "ghcr.io/shepherdjerred/the-storm-server:latest")
+            control.initialize(self.path, REQUEST, "docker.io/shepherdjerred/the-storm-server:latest")
         self.assertEqual(self.cluster.mutations, [])
 
     def test_guard_probe_requires_the_policy_denial_and_rejects_rbac_or_a_successful_request(self):

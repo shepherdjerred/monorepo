@@ -501,7 +501,7 @@ describe("live status", () => {
       worldRestoreLease: null,
     });
     expect(status.image).toMatch(
-      /^ghcr\.io\/shepherdjerred\/the-storm-server:/u,
+      /^docker\.io\/shepherdjerred\/the-storm-server:/u,
     );
     expect(liveRefusal(status)).toBeNull();
   });

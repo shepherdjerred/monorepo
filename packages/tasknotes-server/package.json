@@ -12,7 +12,7 @@
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run",
     "lint": "bunx eslint . --max-warnings=0 && check-architecture",
-    "docker:build": "docker buildx build --cache-from type=registry,ref=ghcr.io/shepherdjerred/tasknotes-server:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t tasknotes-server:dev -f Dockerfile ../..",
+    "docker:build": "docker buildx build --cache-from type=registry,ref=docker.io/shepherdjerred/tasknotes-server:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t tasknotes-server:dev -f Dockerfile ../..",
     "smoke": "bun scripts/smoke.ts",
     "test:ci": "bun ../../scripts/ci/run-ci-test.ts"
   },

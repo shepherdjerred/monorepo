@@ -26,7 +26,7 @@
     "test:e2e:openclaw-docker": "bun run e2e/openclaw-capabilities-docker.ts",
     "typecheck": "bun run generate && PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "lint": "bun run generate && eslint . && check-architecture",
-    "docker:build": "docker buildx build --cache-from type=registry,ref=ghcr.io/shepherdjerred/birmel:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t birmel:dev -f Dockerfile ../..",
+    "docker:build": "docker buildx build --cache-from type=registry,ref=docker.io/shepherdjerred/birmel:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t birmel:dev -f Dockerfile ../..",
     "smoke": "bun scripts/smoke.ts",
     "check:image-permissions": "bun scripts/check-image-permissions.ts",
     "test:ci": "bun ../../scripts/ci/run-ci-test.ts"

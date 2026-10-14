@@ -14,9 +14,9 @@ async function missingSource(): Promise<Uint8Array | undefined> {
 }
 
 test("tags only the content-addressed candidate", () => {
-  expect(ciImageTags("ghcr.io/shepherdjerred/ci-playwright", "abc")).toEqual([
+  expect(ciImageTags("docker.io/shepherdjerred/ci-playwright", "abc")).toEqual([
     "--tag",
-    "ghcr.io/shepherdjerred/ci-playwright:candidate-abc",
+    "docker.io/shepherdjerred/ci-playwright:candidate-abc",
   ]);
 });
 
@@ -32,7 +32,7 @@ test("uses the remote builder for production pushes", () => {
   expect(command).toContain("ci");
   expect(command).toContain("ci/ci-playwright/Dockerfile");
   expect(command).toContain(
-    "type=registry,ref=ghcr.io/shepherdjerred/ci-playwright:buildcache",
+    "type=registry,ref=docker.io/shepherdjerred/ci-playwright:buildcache",
   );
   expect(command).toContain("/tmp/metadata.json");
   expect(command).toContain("--push");
@@ -173,8 +173,8 @@ test("self-tests read both image caches without pushing", () => {
       "--target",
       "selftest-report",
       "type=local,dest=windows-cross-compiler-selftest",
-      "type=registry,ref=ghcr.io/shepherdjerred/windows-cross-compiler:buildcache",
-      "type=registry,ref=ghcr.io/shepherdjerred/windows-cross-compiler-winui:buildcache",
+      "type=registry,ref=docker.io/shepherdjerred/windows-cross-compiler:buildcache",
+      "type=registry,ref=docker.io/shepherdjerred/windows-cross-compiler-winui:buildcache",
     ]),
   );
   expect(command).not.toContain("--push");

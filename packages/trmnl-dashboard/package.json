@@ -19,7 +19,7 @@
     "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run",
     "pretest": "bun --no-install run --cwd ../home-assistant build",
     "lint": "bunx eslint . --max-warnings=0",
-    "docker:build": "docker buildx build --cache-from type=registry,ref=ghcr.io/shepherdjerred/trmnl-dashboard:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t trmnl-dashboard:dev -f Dockerfile ../..",
+    "docker:build": "docker buildx build --cache-from type=registry,ref=docker.io/shepherdjerred/trmnl-dashboard:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t trmnl-dashboard:dev -f Dockerfile ../..",
     "smoke": "bun scripts/smoke.ts",
     "test:ci": "bun ../../scripts/ci/run-ci-test.ts"
   },

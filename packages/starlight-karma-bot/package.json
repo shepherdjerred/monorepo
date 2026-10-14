@@ -17,7 +17,7 @@
     "lint": "bun run generate && bunx eslint --cache .",
     "format": "bunx prettier --check .",
     "prettier": "bunx prettier --write .",
-    "docker:build": "docker buildx build --cache-from type=registry,ref=ghcr.io/shepherdjerred/starlight-karma-bot:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t starlight-karma-bot:dev -f Dockerfile ../..",
+    "docker:build": "docker buildx build --cache-from type=registry,ref=docker.io/shepherdjerred/starlight-karma-bot:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t starlight-karma-bot:dev -f Dockerfile ../..",
     "smoke": "bun scripts/smoke.ts",
     "test:ci": "bun ../../scripts/ci/run-ci-test.ts"
   },

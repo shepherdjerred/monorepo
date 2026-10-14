@@ -116,6 +116,10 @@ selects affected workspaces from the base revision's package inventory and check
 the entire branch, including earlier commits. Root changes and new workspaces
 run the repository verification command. Failed checks block publication.
 
+The default verification image is the pinned private Docker Hub `ci-base` image.
+The host must have a Docker Hub reader login in its Docker credential store;
+registry credentials stay on the host and are not forwarded into the container.
+
 The PR reports the exact host-run command and its successful exit status. Agent
 summary and verification text remain excluded from public metadata because the
 agent sees private Tracker comments. Changed files are checked for private

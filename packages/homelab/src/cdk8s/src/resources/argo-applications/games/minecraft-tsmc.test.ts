@@ -11,7 +11,7 @@ import {
 import { createMinecraftShuxinApp } from "./minecraft-shuxin.ts";
 import { siteAnalyticsConfiguration } from "@shepherdjerred/homelab/cdk8s/src/misc/analytics.ts";
 
-// minecraft-tsmc runs ghcr.io/shepherdjerred/the-storm-server, built from
+// minecraft-tsmc runs docker.io/shepherdjerred/the-storm-server, built from
 // packages/the-storm/server. These tests keep the chart values and that image
 // consistent: the chart's VERSION env overrides the image's, and the image's
 // itzg base must be the same pin the catalog tracks.
@@ -170,7 +170,8 @@ describe("minecraft-tsmc runs The Storm's image", () => {
   test("pins the image by the accepted production digest", () => {
     const values = tsmcValues();
     expect(values["image"]).toEqual({
-      repository: "ghcr.io/shepherdjerred/the-storm-server",
+      repository: "docker.io/shepherdjerred/the-storm-server",
+      pullSecret: "dockerhub-pull-minecraft-tsmc",
       tag: versions["shepherdjerred/the-storm-server/prod"],
     });
     expect(versions["shepherdjerred/the-storm-server/prod"]).toMatch(

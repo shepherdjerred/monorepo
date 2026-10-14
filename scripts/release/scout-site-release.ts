@@ -35,7 +35,7 @@ import {
 
 const SITE_PACKAGE_DIR = "packages/scout-for-lol";
 const DIST_DIR = "packages/scout-for-lol/packages/frontend/dist";
-const IMAGE_REPO = "ghcr.io/shepherdjerred/scout-for-lol";
+const IMAGE_REPO = "docker.io/shepherdjerred/scout-for-lol";
 const PLACEHOLDER_DIGEST =
   "sha256:0000000000000000000000000000000000000000000000000000000000000000";
 const MARKETING_ENV_NAMES = [

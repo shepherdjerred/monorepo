@@ -26,21 +26,14 @@
  * Exit codes: 0 all pins verified, 1 a pin failed verification.
  */
 import { z } from "zod";
+import { bakedGitSha, digestForCommitTag } from "./worker-image-registry.ts";
 
 const CATALOG_PATH = "packages/version-catalog/src/catalog.json";
 const PIN_STATE_PATH = "scripts/pin-candidates-state.json";
-const REGISTRY = "ghcr.io";
 
 /** Only these pins join a Worker Deployment, so only these have a routing-significant Build ID. */
 const WORKFLOW_PIN_PATTERN =
   /\/workflows\/(?:stable|candidate|retained-[a-f0-9]{12})$/;
-
-const MANIFEST_ACCEPT = [
-  "application/vnd.oci.image.index.v1+json",
-  "application/vnd.docker.distribution.manifest.list.v2+json",
-  "application/vnd.oci.image.manifest.v1+json",
-  "application/vnd.docker.distribution.manifest.v2+json",
-].join(", ");
 
 const GitShaSchema = z.string().regex(/^[0-9a-f]{40}$/);
 const PinValueSchema = z
@@ -202,125 +195,15 @@ export function offlineFindings(
   return findings;
 }
 
-async function registryToken(repository: string): Promise<string> {
-  const url = new URL(`https://${REGISTRY}/token`);
-  url.searchParams.set("scope", `repository:${repository}:pull`);
-  url.searchParams.set("service", REGISTRY);
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(
-      `token request for ${repository} failed with ${response.status.toString()}`,
-    );
-  }
-  const body: unknown = await response.json();
-  const token = z.object({ token: z.string() }).parse(body).token;
-  return token;
-}
-
-/** Read the `GIT_SHA` baked into an image's config, without pulling a layer. */
-async function bakedGitSha(
-  repository: string,
-  digest: string,
-  token: string,
-): Promise<string> {
-  const headers = { Authorization: `Bearer ${token}`, Accept: MANIFEST_ACCEPT };
-  const indexResponse = await fetch(
-    `https://${REGISTRY}/v2/${repository}/manifests/${digest}`,
-    { headers },
-  );
-  if (!indexResponse.ok) {
-    throw new Error(
-      `manifest ${digest} returned ${indexResponse.status.toString()}`,
-    );
-  }
-  const index: unknown = await indexResponse.json();
-  const parsed = z
-    .object({
-      config: z.object({ digest: z.string() }).optional(),
-      manifests: z
-        .array(
-          z.object({
-            digest: z.string(),
-            platform: z
-              .object({ architecture: z.string().optional() })
-              .optional(),
-          }),
-        )
-        .optional(),
-    })
-    .parse(index);
-  let configDigest = parsed.config?.digest;
-  if (configDigest === undefined) {
-    // An index also carries an attestation manifest with architecture
-    // "unknown"; the real image is the one with a concrete architecture.
-    const platform = (parsed.manifests ?? []).find(
-      (entry) =>
-        entry.platform?.architecture !== undefined &&
-        entry.platform.architecture !== "unknown",
-    );
-    if (platform === undefined) {
-      throw new Error(`no platform manifest under ${digest}`);
-    }
-    const manifestResponse = await fetch(
-      `https://${REGISTRY}/v2/${repository}/manifests/${platform.digest}`,
-      { headers },
-    );
-    const manifest: unknown = await manifestResponse.json();
-    configDigest = z
-      .object({ config: z.object({ digest: z.string() }) })
-      .parse(manifest).config.digest;
-  }
-  const configResponse = await fetch(
-    `https://${REGISTRY}/v2/${repository}/blobs/${configDigest}`,
-    { headers, redirect: "follow" },
-  );
-  const config: unknown = await configResponse.json();
-  const environment =
-    z
-      .object({ config: z.object({ Env: z.array(z.string()).optional() }) })
-      .parse(config).config.Env ?? [];
-  const entry = environment.find((value) => value.startsWith("GIT_SHA="));
-  if (entry === undefined) {
-    throw new Error(`image ${digest} bakes no GIT_SHA`);
-  }
-  return entry.slice("GIT_SHA=".length);
-}
-
-/**
- * Resolve the `candidate-<sha>` tag back to a digest.
- *
- * docker-bake pushes exactly this tag for every image and nothing prunes it,
- * so it is a permanent forward index from commit to digest. Closing the loop
- * against it proves the pin/commit correspondence without trusting anything
- * recorded in the repo.
- */
-async function digestForCommitTag(
-  repository: string,
-  gitSha: string,
-  token: string,
-): Promise<string | undefined> {
-  const response = await fetch(
-    `https://${REGISTRY}/v2/${repository}/manifests/candidate-${gitSha}`,
-    {
-      method: "HEAD",
-      headers: { Authorization: `Bearer ${token}`, Accept: MANIFEST_ACCEPT },
-    },
-  );
-  return response.ok
-    ? (response.headers.get("docker-content-digest") ?? undefined)
-    : undefined;
-}
-
 async function verifyAgainstRegistry(pin: WorkflowPin): Promise<string[]> {
-  const token = await registryToken(pin.repository);
-  const resolved = await bakedGitSha(pin.repository, pin.digest, token);
+  const resolved = await bakedGitSha(pin.repository, pin.digest);
   const findings: string[] = [];
   if (pin.recordedGitSha !== undefined && pin.recordedGitSha !== resolved) {
     findings.push(
       `${pin.name}: recorded gitSha ${pin.recordedGitSha} but ${pin.version} is built from ${resolved}`,
     );
   }
-  const roundTrip = await digestForCommitTag(pin.repository, resolved, token);
+  const roundTrip = await digestForCommitTag(pin.repository, resolved);
   if (roundTrip !== undefined && roundTrip !== pin.digest) {
     findings.push(
       `${pin.name}: candidate-${resolved} resolves to ${roundTrip}, not the pinned ${pin.digest}`,

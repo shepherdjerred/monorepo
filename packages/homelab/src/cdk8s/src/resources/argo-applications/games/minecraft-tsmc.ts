@@ -34,7 +34,7 @@ const RWF_RECORDING_SECRET_NAME = "minecraft-tsmc-rwf-recording";
 const MC_BRIDGE_PORT = 25_580;
 
 /**
- * The Paper version baked into ghcr.io/shepherdjerred/the-storm-server. The
+ * The Paper version baked into docker.io/shepherdjerred/the-storm-server. The
  * chart's VERSION env overrides the image's, and itzg reads the Paper config
  * defaults from /opt/paper-defaults/<VERSION>, so this must equal the image's
  * Paper (packages/the-storm/server/plugins.json; minecraft-tsmc.test.ts checks
@@ -132,7 +132,8 @@ export function createMinecraftTsmcApp(chart: Chart) {
     },
     // The chart sets no command or args, so the image's storm-entrypoint runs.
     image: {
-      repository: "ghcr.io/shepherdjerred/the-storm-server",
+      repository: "docker.io/shepherdjerred/the-storm-server",
+      pullSecret: "dockerhub-pull-minecraft-tsmc",
       // Candidate publication must not activate an unprepared production volume.
       tag: versions["shepherdjerred/the-storm-server/prod"],
     },

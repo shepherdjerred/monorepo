@@ -334,7 +334,7 @@ describe("review gate source", () => {
     // The immutable deployed policy image owns the grader. Neither a PR's
     // checkout nor its dependency installation supplies executable gate code.
     expect(gate?.image).toMatch(
-      /^ghcr\.io\/shepherdjerred\/woodpecker-config-extension@sha256:[a-f\d]{64}$/u,
+      /^docker\.io\/shepherdjerred\/woodpecker-config-extension@sha256:[a-f\d]{64}$/u,
     );
     expect(gate?.skipClone).toBe(true);
     expect(gate?.commands).toEqual(["cd /app", "bun /app/review-gate.js"]);

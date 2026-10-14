@@ -44,8 +44,8 @@ const DIGEST_PATHS = {
 } as const;
 
 const IMAGE_REPOS = {
-  base: "ghcr.io/shepherdjerred/ci-base",
-  playwright: "ghcr.io/shepherdjerred/ci-playwright",
+  base: "docker.io/shepherdjerred/ci-base",
+  playwright: "docker.io/shepherdjerred/ci-playwright",
 } as const;
 
 const DIGEST_PATTERN = /^sha256:[\da-f]{64}$/u;

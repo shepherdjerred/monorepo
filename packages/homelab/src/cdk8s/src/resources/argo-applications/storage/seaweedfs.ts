@@ -233,6 +233,7 @@ export function createSeaweedfsApp(chart: Chart) {
 
   const seaweedfsValues: HelmValuesForChart<"seaweedfs"> = {
     global: {
+      imagePullSecrets: "dockerhub-pull-seaweedfs",
       seaweedfs: {
         enableReplication: false,
         monitoring: {
@@ -336,7 +337,7 @@ export function createSeaweedfsApp(chart: Chart) {
       sidecars: [
         {
           name: "authenticated-gateway",
-          image: `ghcr.io/shepherdjerred/caddy-s3proxy:${versions["shepherdjerred/caddy-s3proxy"]}`,
+          image: `docker.io/shepherdjerred/caddy-s3proxy:${versions["shepherdjerred/caddy-s3proxy"]}`,
           imagePullPolicy: "IfNotPresent",
           command: ["/bin/sh", "-c"],
           args: [

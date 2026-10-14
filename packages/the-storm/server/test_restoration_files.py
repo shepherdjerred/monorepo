@@ -9,7 +9,7 @@ import restoration_files as install
 from restoration_json import JsonObject
 
 REQUEST = "6903b19f-f4d2-42a5-91ba-6ce046562c83"
-IMAGE = "ghcr.io/shepherdjerred/the-storm-server:fixture@sha256:" + "a" * 64
+IMAGE = "docker.io/shepherdjerred/the-storm-server:fixture@sha256:" + "a" * 64
 JAR = "b" * 64
 
 

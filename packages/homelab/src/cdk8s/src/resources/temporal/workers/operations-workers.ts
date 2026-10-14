@@ -3,6 +3,7 @@ import { Size } from "cdk8s";
 import {
   Cpu,
   EnvValue,
+  Secret,
   type ISecret,
   type ServiceAccount,
   type Volume,
@@ -186,6 +187,14 @@ export function createTemporalOperationsWorkers(
       ...s3Env(props.secret),
       ...githubEnv(props.secret),
       ...llmArchiveEnvVars(),
+      DOCKERHUB_READ_CONFIG_JSON: EnvValue.fromSecretValue({
+        secret: Secret.fromSecretName(
+          chart,
+          "repo-worker-dockerhub-reader",
+          "dockerhub-pull-temporal",
+        ),
+        key: ".dockerconfigjson",
+      }),
       OPENAI_API_KEY: EnvValue.fromSecretValue({
         secret: props.secret,
         key: "OPENAI_API_KEY",

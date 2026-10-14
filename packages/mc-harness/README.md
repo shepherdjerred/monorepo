@@ -88,7 +88,7 @@ supervised `kubectl port-forward` that restarts with backoff and is re-attached
 (with new local ports) after a daemon restart. Reaping reads the pods' expiry
 annotations; records whose pod disappeared are dropped.
 
-`storm-prod` and `storm-candidate` boot `ghcr.io/shepherdjerred/the-storm-server`
+`storm-prod` and `storm-candidate` boot `docker.io/shepherdjerred/the-storm-server`
 at the version catalog's `/prod` and candidate pins with fixture credentials.
 The image bakes Paper, every plugin, and owned config; the harness stages
 a config overlay that enables the companion module and its local dependencies,

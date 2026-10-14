@@ -113,7 +113,6 @@ export function scoutSteps(images: CiImages): CiStep[] {
         'if [ -z "$scout_state" ]; then exit 0; fi',
         ". ci/scripts/toolchain.sh",
         ...AWS_ALIASES,
-        "printf '%s' \"$GITHUB_PACKAGES_TOKEN\" | docker login ghcr.io -u shepherdjerred --password-stdin",
         DOCKERHUB_PUBLISH_LOGIN,
         'bun --no-install scripts/release/scout-site-release.ts tag-release --state "$scout_state"',
       ],
@@ -123,7 +122,6 @@ export function scoutSteps(images: CiImages): CiStep[] {
       defaultBranchOnly: true,
       secrets: [
         GITHUB_DOWNLOAD,
-        grant("ci-github-credentials", "GITHUB_PACKAGES_TOKEN"),
         ...DOCKERHUB_PUBLISH,
         ...DEPLOY_KEYS,
         ...HANDOFF_KEYS,

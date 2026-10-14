@@ -31,7 +31,7 @@ function databaseUrl() {
 
 /** The caller supplies a published catalog digest; no placeholder image enters a release. */
 export function createTrackerDeployment(chart: Chart, image: string) {
-  if (!/^ghcr\.io\/shepherdjerred\/tracker@sha256:[a-f0-9]{64}$/u.test(image))
+  if (!/^docker\.io\/shepherdjerred\/tracker@sha256:[a-f0-9]{64}$/u.test(image))
     throw new Error("Tracker requires a pinned public image digest");
   const pg = Secret.fromSecretName(
     chart,

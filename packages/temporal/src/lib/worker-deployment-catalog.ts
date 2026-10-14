@@ -142,7 +142,7 @@ export async function prepareStablePinPromotion(
   catalogPath: string,
   candidatePinName = "shepherdjerred/temporal-worker/workflows/candidate",
   stablePinName = "shepherdjerred/temporal-worker/workflows/stable",
-  imageRepository = "ghcr.io/shepherdjerred/temporal-worker",
+  imageRepository = "docker.io/shepherdjerred/temporal-worker",
 ): Promise<StablePinPromotion> {
   const raw = await Bun.file(catalogPath).text();
   const catalog = parseCatalog(raw);

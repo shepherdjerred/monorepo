@@ -59,7 +59,7 @@ async function dockerImage(config: Config): Promise<string> {
   if (!/^sha256:[0-9a-f]{64}$/.test(digest)) {
     throw new Error("The pinned CI base image digest is invalid");
   }
-  return `ghcr.io/shepherdjerred/ci-base@${digest}`;
+  return `docker.io/shepherdjerred/ci-base@${digest}`;
 }
 
 export class DockerAgentRunner {

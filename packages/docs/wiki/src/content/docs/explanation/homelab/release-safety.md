@@ -355,31 +355,25 @@ is therefore unsafe even when every manifest was applied.
 
 ## Why image selection looks complicated
 
-The authenticated publisher is not proof that Kubernetes can pull an image.
-GitHub Container Registry packages are private by default. The monorepo's
-`org.opencontainers.image.source` label links each application package to its
-source repository, but that link does not make the package public. GitHub
-describes source links, inherited repository access, and package visibility as
-separate controls in its
-[package access guidance](https://docs.github.com/en/packages/learn-github-packages/configuring-a-packages-access-control-and-visibility).
-That separation is why the release treats anonymous pullability as its own
-gate. The gate can only observe, never repair: GitHub exposes no API for
-changing package visibility, so CI cannot publish a package on an operator's
-behalf and a probe failure is a human's one-time action. The operator procedure
-for bootstrapping or recovering package visibility lives in
-[Cut a homelab release](/how-to/cut-a-homelab-release/#if-ghcr-rejects-a-workload-pull).
+Publication and workload pulls use separate identities. First-party images
+use Docker Hub with separate management, publishing, runtime-reader, and Renovate
+identities. OpenTofu owns visibility and scopes. The
+[registry catalog](https://github.com/shepherdjerred/monorepo/blob/main/packages/version-catalog/src/image-registry.json)
+is the visibility authority; compiler distribution is the public exception.
 
-After the push, the
-[image publication flow](https://github.com/shepherdjerred/monorepo/blob/6891646ef4bfbe67a3b5bea615c0e100e99c6145/.buildkite/scripts/bake-images.ts)
-resolves the candidate tag to a digest. The
-[anonymous GHCR probe](https://github.com/shepherdjerred/monorepo/blob/ecfd92e182858588dc98c9ed85fcefe768fb0680/.buildkite/scripts/ghcr-public-access.ts)
-then requests a pull token and fetches that immutable digest. Visibility and
-manifest propagation may lag briefly, so the probe polls a bounded number of
-times. Buildx then reads the effective OCI configuration at that same digest
-and requires its source label to name the monorepo. The image lane records no
-pin candidate until both checks succeed. This keeps a publisher credential or
-a misleading Dockerfile from hiding what the unauthenticated kubelet and the
-published artifact would expose later.
+The [publication flow](https://github.com/shepherdjerred/monorepo/tree/main/ci/scripts/images)
+checks anonymous access at each pushed digest. Exposed private images and
+inaccessible public compilers fail the release. Source-label and exact-image
+smoke checks remain required before recording candidate pins. Kubernetes pulls
+use only the reader identity. Separate encrypted OpenTofu states keep token
+management outside CI. Recovery lives in
+[Cut a homelab release](/how-to/cut-a-homelab-release/#if-docker-hub-rejects-a-workload-pull).
+
+Forum backup metadata retains its GHCR runtime identity string. Its digest
+identifies the copied image, while Kubernetes pulls from Docker Hub. This keeps
+existing snapshots compatible with retained binaries' strict restore checks.
+The [forum release chart](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/storm-forum/index.ts)
+keeps transport references and backup identities separate.
 
 Application image selection uses the newest `main` commit whose `images` and
 `version-commit-back` jobs both passed as its comparison base. The image job

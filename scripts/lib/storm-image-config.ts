@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { createTarDecoder, type ParsedTarEntry } from "modern-tar";
 import { z } from "zod";
+import { dockerHubCredentials } from "./dockerhub-credentials.ts";
 
 const DigestSchema = z.string().regex(/^sha256:[a-f0-9]{64}$/u);
 const DescriptorSchema = z.object({
@@ -27,6 +28,28 @@ export type RegistryFetch = (
   url: string | URL,
   init?: RequestInit,
 ) => Promise<Response>;
+
+/** Send the scoped reader PAT only to Docker Hub's token service. */
+export function dockerHubReaderFetch(
+  environment: Readonly<Record<string, string | undefined>>,
+  fetcher: RegistryFetch = fetch,
+): RegistryFetch {
+  return async (url, init) => {
+    const destination = new URL(url);
+    if (
+      destination.origin !== "https://auth.docker.io" ||
+      destination.pathname !== "/token"
+    )
+      return fetcher(url, init);
+    const credentials = dockerHubCredentials("reader", environment);
+    const headers = new Headers(init?.headers);
+    headers.set(
+      "Authorization",
+      `Basic ${Buffer.from(`${credentials.username}:${credentials.password}`).toString("base64")}`,
+    );
+    return fetcher(url, { ...init, headers });
+  };
+}
 
 async function checkedResponse(
   fetcher: RegistryFetch,
@@ -153,12 +176,15 @@ async function configFromLayer(
 
 export async function readStormImageConfig(
   digest: string,
-  fetcher: RegistryFetch = fetch,
+  fetcher: RegistryFetch = dockerHubReaderFetch(Bun.env),
 ): Promise<Uint8Array> {
   DigestSchema.parse(digest);
-  const base = new URL("https://ghcr.io/v2/shepherdjerred/the-storm-server/");
-  const tokenUrl = new URL("https://ghcr.io/token");
-  tokenUrl.searchParams.set("service", "ghcr.io");
+  // The scoped reader authenticates the token exchange; registry requests use its bearer token.
+  const base = new URL(
+    "https://registry-1.docker.io/v2/shepherdjerred/the-storm-server/",
+  );
+  const tokenUrl = new URL("https://auth.docker.io/token");
+  tokenUrl.searchParams.set("service", "registry.docker.io");
   tokenUrl.searchParams.set(
     "scope",
     "repository:shepherdjerred/the-storm-server:pull",

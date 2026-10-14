@@ -13,9 +13,9 @@ const sourceUrl =
 // Digest-pinned: the images are published by digest only. Sync with
 // packages/windows-cross-compiler/images/<image>/DIGEST.
 const image =
-  "ghcr.io/shepherdjerred/windows-cross-compiler@sha256:6b35945b08c90de420111c415145487de5885b6e926c7cd6d4fe54d6d4380617";
+  "docker.io/shepherdjerred/windows-cross-compiler@sha256:6b35945b08c90de420111c415145487de5885b6e926c7cd6d4fe54d6d4380617";
 const winuiImage =
-  "ghcr.io/shepherdjerred/windows-cross-compiler-winui@sha256:976070135674e22399d7384418fe975584de36fbdddceeefc09ecff3ddff2cef";
+  "docker.io/shepherdjerred/windows-cross-compiler-winui@sha256:976070135674e22399d7384418fe975584de36fbdddceeefc09ecff3ddff2cef";
 const run = `docker run --rm -v "$PWD:/workspace" \\\n  ${image} \\\n`;
 const winuiRun = `docker run --rm -v "$PWD:/workspace" \\\n  ${winuiImage} \\\n`;
 
@@ -369,7 +369,7 @@ const limitations = [
           id="images"
           eyebrow="Images"
           title="One image per workload"
-          subtitle={`Pull ghcr.io/shepherdjerred/windows-cross-compiler by digest — or the Wine-based WinUI image for XAML and MSIX.`}
+          subtitle={`Pull docker.io/shepherdjerred/windows-cross-compiler by digest — or the Wine-based WinUI image for XAML and MSIX.`}
         />
         <div class="mt-10 overflow-x-auto rounded-xl border border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-950">
           <table class="w-full text-left text-xs sm:text-sm">

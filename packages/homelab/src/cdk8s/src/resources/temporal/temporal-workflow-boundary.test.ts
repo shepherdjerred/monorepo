@@ -100,7 +100,7 @@ describe("central Temporal Workflow boundary", () => {
       // hardcoded version made every image bump fail this test without
       // indicating anything was actually wrong.
       expect(container.image).toBe(
-        `ghcr.io/shepherdjerred/temporal-worker:${versions[`shepherdjerred/temporal-worker/workflows/${track}`]}`,
+        `docker.io/shepherdjerred/temporal-worker:${versions[`shepherdjerred/temporal-worker/workflows/${track}`]}`,
       );
       expect(container.volumeMounts).toEqual([
         { mountPath: "/tmp", name: `central-workflows-${track}-tmp` },

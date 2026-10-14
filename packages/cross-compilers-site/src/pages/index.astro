@@ -7,11 +7,11 @@ import Header from "../components/Header.astro";
 import ProcessStep from "../components/ProcessStep.astro";
 import SectionHeader from "../components/SectionHeader.astro";
 
-const macosImage = "ghcr.io/shepherdjerred/macos-cross-compiler:27";
+const macosImage = "docker.io/shepherdjerred/macos-cross-compiler:27";
 // Digest-pinned: the Windows images are published by digest only. Sync with
 // packages/windows-cross-compiler/images/<image>/DIGEST.
 const windowsImage =
-  "ghcr.io/shepherdjerred/windows-cross-compiler@sha256:6b35945b08c90de420111c415145487de5885b6e926c7cd6d4fe54d6d4380617";
+  "docker.io/shepherdjerred/windows-cross-compiler@sha256:6b35945b08c90de420111c415145487de5885b6e926c7cd6d4fe54d6d4380617";
 
 const heroCode = `docker run --rm -v "$PWD:/workspace" \\
   ${macosImage} \\
@@ -109,6 +109,10 @@ const proofPoints = [
             code={heroCode}
             label="Two containers, every desktop target"
           />
+          <p class="mt-3 text-sm text-stone-600 dark:text-stone-400">
+            The macOS :27 examples require a local build. Publishing is paused;
+            the public :latest and :15.0 tags contain an older toolchain.
+          </p>
           <p class="mt-3 font-mono text-xs text-stone-500 dark:text-stone-400">
             macOS images run on amd64 and arm64; Windows images need amd64.
           </p>
@@ -166,7 +170,7 @@ const proofPoints = [
               {product.name}
             </h3>
             <p class="mt-1 font-mono text-xs text-stone-500 dark:text-stone-400">
-              ghcr.io/shepherdjerred/{product.image}
+              docker.io/shepherdjerred/{product.image}
             </p>
             <p class="mt-3 text-sm leading-relaxed text-stone-600 dark:text-stone-400">
               {product.description}
@@ -199,7 +203,7 @@ const proofPoints = [
       </ul>
       <p class="mt-6 font-mono text-xs text-stone-500 dark:text-stone-400">
         WinUI 3 apps use a second image:
-        ghcr.io/shepherdjerred/windows-cross-compiler-winui.
+        docker.io/shepherdjerred/windows-cross-compiler-winui.
       </p>
     </section>
 

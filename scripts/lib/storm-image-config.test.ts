@@ -3,12 +3,40 @@ import { packTar, type TarEntry } from "modern-tar";
 import { describe, expect, test } from "vitest";
 import {
   readStormImageConfig,
+  dockerHubReaderFetch,
   snapshotStormImageConfig,
   type RegistryFetch,
 } from "./storm-image-config.ts";
 
 const config = "modules:\n  economy: true\n  rwfbots: false\n";
 const file = "plugins/TheStorm/config.yml";
+
+test("reader authentication is sent only to the Docker Hub token service", async () => {
+  const auth = Buffer.from("shepherdjerred:reader-fixture").toString("base64");
+  const environment = {
+    DOCKERHUB_READ_CONFIG_JSON: JSON.stringify({
+      auths: { "https://index.docker.io/v1/": { auth } },
+    }),
+  };
+  const seen: { url: string; authorization: string | null }[] = [];
+  const fetcher = dockerHubReaderFetch(environment, async (url, init) => {
+    seen.push({
+      url: String(url),
+      authorization: new Headers(init?.headers).get("Authorization"),
+    });
+    return Response.json({});
+  });
+  await fetcher("https://auth.docker.io/token");
+  await fetcher("https://registry-1.docker.io/v2/blob", {
+    headers: { Authorization: "Bearer scoped-fixture" },
+  });
+  await fetcher("https://github.com/shepherdjerred/monorepo");
+  expect(seen.map((request) => request.authorization)).toEqual([
+    `Basic ${auth}`,
+    "Bearer scoped-fixture",
+    null,
+  ]);
+});
 const sha = (bytes: Uint8Array) =>
   `sha256:${createHash("sha256").update(bytes).digest("hex")}`;
 const json = (value: unknown) =>

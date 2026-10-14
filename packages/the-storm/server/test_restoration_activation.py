@@ -11,7 +11,7 @@ from restoration_json import JsonObject
 from test_restoration_locks import fixture as lock_fixture
 
 REQUEST = "6903b19f-f4d2-42a5-91ba-6ce046562c83"
-IMAGE = "ghcr.io/shepherdjerred/the-storm-server:fixture@sha256:" + "a" * 64
+IMAGE = "docker.io/shepherdjerred/the-storm-server:fixture@sha256:" + "a" * 64
 
 
 class RestorationActivationTest(unittest.TestCase):

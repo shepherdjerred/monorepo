@@ -1,6 +1,6 @@
 # The Storm server image
 
-`minecraft-tsmc` runs `ghcr.io/shepherdjerred/the-storm-server`: pinned,
+`minecraft-tsmc` runs `docker.io/shepherdjerred/the-storm-server`: pinned,
 pre-patched Paper, TheStorm, the MCBridge agent bridge, eleven supporting
 plugins, and repository-owned configuration. The image builds through `docker-bake.hcl`; CI publication and
 the version catalog control its GitOps release.

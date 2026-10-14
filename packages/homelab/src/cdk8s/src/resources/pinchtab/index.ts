@@ -79,7 +79,7 @@ export function createPinchtabDeployment(chart: Chart) {
   deployment.addInitContainer(
     withCommonProps({
       name: "install-browser-firewall",
-      image: `ghcr.io/shepherdjerred/birmel:${versions["shepherdjerred/birmel"]}`,
+      image: `docker.io/shepherdjerred/birmel:${versions["shepherdjerred/birmel"]}`,
       command: ["/bin/sh", "-c"],
       args: [
         `set -eu

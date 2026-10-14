@@ -24,7 +24,7 @@ import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zf
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
 
-const IMAGE = `ghcr.io/shepherdjerred/alert-dashboard:${versions["shepherdjerred/alert-dashboard"]}`;
+const IMAGE = `docker.io/shepherdjerred/alert-dashboard:${versions["shepherdjerred/alert-dashboard"]}`;
 
 export function createAlertDashboardDeployment(chart: Chart) {
   const deployment = new Deployment(chart, "alert-dashboard", {

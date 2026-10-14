@@ -8,7 +8,7 @@
     "check:architecture": "check-architecture",
     "dev": "bun run src/dev.ts",
     "email:cancel-incident": "bun run scripts/cancel-pending-incident-email.ts",
-    "docker:build": "docker buildx build --cache-from type=registry,ref=ghcr.io/shepherdjerred/alert-dashboard:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t alert-dashboard:dev -f Dockerfile ../..",
+    "docker:build": "docker buildx build --cache-from type=registry,ref=docker.io/shepherdjerred/alert-dashboard:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t alert-dashboard:dev -f Dockerfile ../..",
     "generate": "prisma generate",
     "lint": "bun run generate && eslint . --max-warnings=0 && bun run check:architecture",
     "migrate:deploy": "prisma migrate deploy",

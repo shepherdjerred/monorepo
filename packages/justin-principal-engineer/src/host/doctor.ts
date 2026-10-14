@@ -59,7 +59,7 @@ export async function doctor(input: {
     );
   }
   const image =
-    input.config.docker.image ?? `ghcr.io/shepherdjerred/ci-base@${digest}`;
+    input.config.docker.image ?? `docker.io/shepherdjerred/ci-base@${digest}`;
   requireSuccess(
     "Docker agent image",
     await input.run(

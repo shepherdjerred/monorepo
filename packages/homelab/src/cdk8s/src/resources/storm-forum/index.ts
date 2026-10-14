@@ -32,7 +32,7 @@ export const ReleaseSchema = z
     stage: z.enum(["beta", "prod"]),
     image: z
       .string()
-      .regex(/^ghcr\.io\/shepherdjerred\/storm-forum@sha256:[a-f0-9]{64}$/)
+      .regex(/^docker\.io\/shepherdjerred\/storm-forum@sha256:[a-f0-9]{64}$/)
       .refine(
         (value) => !value.endsWith("0".repeat(64)),
         "An active release requires a published image",
@@ -321,7 +321,10 @@ export function createStormForumChart(app: App, input: ForumRelease): Chart {
               ],
               env: [
                 ...(base.env ?? []),
-                { name: "RUNTIME_IMAGE", value: release.image },
+                {
+                  name: "RUNTIME_IMAGE",
+                  value: release.image.replace("docker.io/", "ghcr.io/"),
+                },
                 ...credentials(["BACKUP_ACCESS_KEY", "BACKUP_SECRET_KEY"]),
                 {
                   name: "BACKUP_ENDPOINT",
@@ -405,7 +408,12 @@ export function createStormForumChart(app: App, input: ForumRelease): Chart {
               env: [
                 ...(base.env ?? []),
                 ...(release.restore || release.preUpgradeBackup
-                  ? [{ name: "RUNTIME_IMAGE", value: release.image }]
+                  ? [
+                      {
+                        name: "RUNTIME_IMAGE",
+                        value: release.image.replace("docker.io/", "ghcr.io/"),
+                      },
+                    ]
                   : []),
                 ...(release.restore
                   ? [

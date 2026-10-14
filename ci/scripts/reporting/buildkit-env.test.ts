@@ -1,18 +1,34 @@
 import { expect, test } from "vitest";
-import { registryLoginCommand } from "../images/build-ci-image-core.ts";
+import { dockerHubLogin } from "./dockerhub-env.ts";
 
-test("does not log in without a token", () => {
-  expect(registryLoginCommand()).toBeUndefined();
-  expect(registryLoginCommand("")).toBeUndefined();
+test("requires an explicitly granted publisher credential", async () => {
+  await expect(dockerHubLogin("publisher", {})).rejects.toThrow();
 });
 
-test("passes the token through stdin rather than argv", () => {
-  expect(registryLoginCommand("secret")).toEqual([
-    "docker",
-    "login",
-    "ghcr.io",
-    "-u",
-    "shepherdjerred",
-    "--password-stdin",
+test("passes the publisher credential through stdin", async () => {
+  const calls: { command: readonly string[]; password: string }[] = [];
+  await dockerHubLogin(
+    "publisher",
+    {
+      DOCKERHUB_USERNAME: "shepherdjerred",
+      DOCKERHUB_PUBLISH_TOKEN: "test-token",
+    },
+    (command, password) => {
+      calls.push({ command, password });
+      return Promise.resolve(0);
+    },
+  );
+  expect(calls).toEqual([
+    {
+      command: [
+        "docker",
+        "login",
+        "docker.io",
+        "--username",
+        "shepherdjerred",
+        "--password-stdin",
+      ],
+      password: "test-token",
+    },
   ]);
 });

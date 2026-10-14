@@ -30,7 +30,7 @@
     "smoke:spaghetti-install": "bun run scripts/smoke-spaghetti-install.ts",
     "generate": "bunx --trust prisma generate",
     "db:push": "bunx prisma db push",
-    "docker:build": "docker buildx build --cache-from type=registry,ref=ghcr.io/shepherdjerred/discord-plays-mario-kart:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t discord-plays-mario-kart:dev -f ../../Dockerfile ../../../..",
+    "docker:build": "docker buildx build --cache-from type=registry,ref=docker.io/shepherdjerred/discord-plays-mario-kart:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t discord-plays-mario-kart:dev -f ../../Dockerfile ../../../..",
     "smoke": "bun scripts/smoke.ts",
     "test:ci": "bun ../../../../scripts/ci/run-ci-test.ts",
     "e2e:driver-feed:glass": "bun run --cwd ../common build && bun run --cwd ../frontend build && bun run scripts/e2e-driver-feed-glass.ts",

@@ -24,7 +24,7 @@ const digest = digestText.trim();
 if (!/^sha256:[\da-f]{64}$/u.test(digest)) {
   throw new Error(`${digestFile} does not hold a canonical image digest.`);
 }
-const image = `ghcr.io/shepherdjerred/windows-cross-compiler-winui@${digest}`;
+const image = `docker.io/shepherdjerred/windows-cross-compiler-winui@${digest}`;
 
 const workdir = "/workspace/packages/tasknotes-windows";
 

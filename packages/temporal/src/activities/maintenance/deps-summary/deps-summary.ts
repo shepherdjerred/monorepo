@@ -189,7 +189,7 @@ function dependencyLocation(
 ): Pick<DependencyChange, "datasource" | "registryUrl" | "packageName"> {
   if (entry.category === "internal-image") {
     // Catalog names can identify deployment channels and workflow roles. These
-    // aliases all pin the same first-party GHCR repository, not nested images.
+    // aliases all pin the same first-party Docker Hub repository.
     const packageName =
       /^(shepherdjerred\/[^/]+)(?:\/(?:beta|prod))?(?:\/workflows\/(?:stable|candidate|retained-[a-f0-9]{12}))?$/.exec(
         entry.name,
@@ -199,7 +199,7 @@ function dependencyLocation(
     }
     return {
       datasource: "docker",
-      registryUrl: "https://ghcr.io",
+      registryUrl: "https://docker.io",
       packageName,
     };
   }

@@ -1,4 +1,4 @@
-import { ApiObject, Chart, type App } from "cdk8s";
+import { ApiObject, Chart, JsonPatch, type App } from "cdk8s";
 import { z } from "zod";
 import { imageRegistry } from "@shepherdjerred/version-catalog/image-registry";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
@@ -64,5 +64,56 @@ export function prepareDockerHubPullSecrets(app: App): void {
       type: "kubernetes.io/dockerconfigjson",
       spec: { itemPath: vaultItemPath(PULL_ITEM_ID) },
     });
+  }
+}
+
+const podSpecPaths: Readonly<Record<string, readonly string[]>> = {
+  Pod: ["spec"],
+  Deployment: ["spec", "template", "spec"],
+  StatefulSet: ["spec", "template", "spec"],
+  DaemonSet: ["spec", "template", "spec"],
+  ReplicaSet: ["spec", "template", "spec"],
+  Job: ["spec", "template", "spec"],
+};
+const PodSpecSchema = z.object({
+  containers: z.array(z.object({ image: z.string() })),
+  initContainers: z.array(z.object({ image: z.string() })).optional(),
+  imagePullSecrets: z.array(z.object({ name: z.string().min(1) })).optional(),
+});
+
+/** Attach the namespace's reader secret to repo-owned private Pod templates. */
+export function attachDockerHubPullSecrets(app: App): void {
+  for (const construct of app.node.findAll()) {
+    if (!ApiObject.isApiObject(construct)) continue;
+    const path = podSpecPaths[construct.kind];
+    if (path === undefined) continue;
+    let value: unknown = construct.toJson();
+    for (const field of path) {
+      value = z.record(z.string(), z.unknown()).parse(value)[field];
+    }
+    const spec = PodSpecSchema.parse(value);
+    const images = [...spec.containers, ...(spec.initContainers ?? [])];
+    if (
+      !images.some(
+        ({ image }) =>
+          image.startsWith("docker.io/") && containsPrivateImage(image),
+      )
+    )
+      continue;
+    const namespace =
+      construct.metadata.namespace ?? Chart.of(construct).namespace;
+    if (namespace === undefined || namespace === "")
+      throw new Error(
+        `Private Pod template ${construct.node.path} has no namespace`,
+      );
+    const name = dockerHubPullSecretName(namespace);
+    const secrets = spec.imagePullSecrets ?? [];
+    if (secrets.some((secret) => secret.name === name)) continue;
+    construct.addJsonPatch(
+      JsonPatch.add(`/${path.join("/")}/imagePullSecrets`, [
+        ...secrets,
+        { name },
+      ]),
+    );
   }
 }

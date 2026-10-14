@@ -86,7 +86,9 @@ describe("Woodpecker default branch references", () => {
         },
         () => Promise.resolve([{ head: { sha: activePrHead } }]),
         read(
-          artifactProven ? ["ghcr.io/shepherdjerred/worker:2.0.0-1004207"] : [],
+          artifactProven
+            ? ["docker.io/shepherdjerred/worker:2.0.0-1004207"]
+            : [],
         ),
       );
       expect(result.heads).toEqual(new Set([activePrHead, mainPushCommit]));
@@ -101,6 +103,16 @@ describe("Woodpecker default branch references", () => {
 });
 
 describe("Woodpecker deployed artifact references", () => {
+  test("retains pipeline provenance across the registry transition", async () => {
+    const result = await deployedArtifactReferences(
+      read([
+        "ghcr.io/shepherdjerred/worker:2.0.0-1004207",
+        "docker.io/shepherdjerred/worker:2.0.0-1004208",
+      ]),
+    );
+    expect(result.complete).toBe(true);
+    expect([...result.numbers].sort((a, b) => a - b)).toEqual([4207, 4208]);
+  });
   test.each([403, 404])(
     "GitHub HTTP %s authorization rejection stops reference discovery",
     async (status) => {
@@ -122,7 +134,7 @@ describe("Woodpecker deployed artifact references", () => {
   test("the deployed Kueue scheme-less OCI source is external, without throwing", async () => {
     const result = await deployedArtifactReferences(
       read(
-        ["ghcr.io/shepherdjerred/worker:2.0.0-1004207"],
+        ["docker.io/shepherdjerred/worker:2.0.0-1004207"],
         [chartApplication("registry.k8s.io/kueue/charts", "0.19.0")],
       ),
     );
@@ -146,7 +158,7 @@ describe("Woodpecker deployed artifact references", () => {
   test("host lookalikes are external and cannot prove a first-party pipeline", async () => {
     const result = await deployedArtifactReferences(
       read(
-        ["ghcr.io/shepherdjerred/worker:2.0.0-1004207"],
+        ["docker.io/shepherdjerred/worker:2.0.0-1004207"],
         [
           chartApplication(
             "chartmuseum.tailnet-1a49.ts.net.example.com/charts",
@@ -167,7 +179,7 @@ describe("Woodpecker deployed artifact references", () => {
     async (identifier) => {
       const result = await deployedArtifactReferences(
         read(
-          ["ghcr.io/shepherdjerred/worker:2.0.0-1004207"],
+          ["docker.io/shepherdjerred/worker:2.0.0-1004207"],
           [chartApplication(identifier)],
         ),
       );
@@ -187,8 +199,8 @@ describe("Woodpecker deployed artifact references", () => {
   test("mixed known Buildkite/modern images do not invent Woodpecker references", async () => {
     const result = await deployedArtifactReferences(
       read([
-        `ghcr.io/shepherdjerred/worker:2.0.0-1004207${digest}`,
-        `ghcr.io/shepherdjerred/old:2.0.0-17926${digest}`,
+        `docker.io/shepherdjerred/worker:2.0.0-1004207${digest}`,
+        `docker.io/shepherdjerred/old:2.0.0-17926${digest}`,
       ]),
     );
     expect(result.complete).toBe(true);
@@ -220,9 +232,9 @@ describe("Woodpecker deployed artifact references", () => {
     const result = await deployedArtifactReferences(
       read(
         [
-          "ghcr.io/shepherdjerred/worker:2.0.0-1004207",
-          `ghcr.io/shepherdjerred/ci-base${digest}`,
-          `ghcr.io/shepherdjerred/the-storm:adhoc-test${digest}`,
+          "docker.io/shepherdjerred/worker:2.0.0-1004207",
+          `docker.io/shepherdjerred/ci-base${digest}`,
+          `docker.io/shepherdjerred/the-storm:adhoc-test${digest}`,
         ],
         [
           {

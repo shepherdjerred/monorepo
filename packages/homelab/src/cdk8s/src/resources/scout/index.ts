@@ -417,7 +417,7 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
 
   deployment.addContainer(
     withCommonProps({
-      image: `ghcr.io/shepherdjerred/scout-for-lol:${imageVersion}`,
+      image: `docker.io/shepherdjerred/scout-for-lol:${imageVersion}`,
       ports: [
         {
           name: "port-3000",

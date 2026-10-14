@@ -98,7 +98,7 @@ describe("signed Justin pipeline authorization", () => {
     expect(configs.configs[0]?.data).toContain("ci-noop");
   });
   test("source cache canaries use the signed source refspec and keep PR storage separate", async () => {
-    const image = `ghcr.io/shepherdjerred/woodpecker-config-extension@sha256:${"a".repeat(64)}`;
+    const image = `docker.io/shepherdjerred/woodpecker-config-extension@sha256:${"a".repeat(64)}`;
     const { app, sourceCacheEnabled } = harness(false, image, true);
     const response = await app.request(
       await request({ branch: "main", refspec: "ci-canary/source-cache:main" }),
@@ -240,7 +240,7 @@ describe("signed maintenance routing", () => {
 });
 
 describe("signed workflow routing", () => {
-  const gateImage = `ghcr.io/shepherdjerred/woodpecker-config-extension@sha256:${"c".repeat(64)}`;
+  const gateImage = `docker.io/shepherdjerred/woodpecker-config-extension@sha256:${"c".repeat(64)}`;
   test("cleanup failures preserve the full replacement verification graph", async () => {
     const { app, cancelSupersededPr } = harness(true, gateImage);
     cancelSupersededPr.mockRejectedValue(new Error("cleanup failed"));

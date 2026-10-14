@@ -718,7 +718,7 @@ function deployment(
 }
 
 describe("ArgoCD internal image downgrades", () => {
-  const repo = "ghcr.io/shepherdjerred/temporal-worker";
+  const repo = "docker.io/shepherdjerred/temporal-worker";
   const digestA = `@sha256:${"a".repeat(64)}`;
   const digestB = `@sha256:${"b".repeat(64)}`;
 
@@ -782,7 +782,7 @@ describe("ArgoCD internal image downgrades", () => {
       analyzeApplySafety([
         deployment(
           `${repo}:2.0.0-12684${digestA}`,
-          `ghcr.io/shepherdjerred/birmel:2.0.0-12368${digestB}`,
+          `docker.io/shepherdjerred/birmel:2.0.0-12368${digestB}`,
         ),
       ]),
     ).toEqual([]);

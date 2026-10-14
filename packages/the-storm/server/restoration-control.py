@@ -259,7 +259,7 @@ def assert_owner(server: JsonObject, journal: JsonObject, allow_unheld: bool = F
 
 def initialize(path: Path, request: str, image: str) -> JsonObject:
     if str(uuid.UUID(request)) != request or not re.fullmatch(
-        r"ghcr\.io/shepherdjerred/the-storm-server:[A-Za-z0-9._-]+@sha256:[a-f0-9]{64}", image
+        r"(?:docker\.io|ghcr\.io)/shepherdjerred/the-storm-server:[A-Za-z0-9._-]+@sha256:[a-f0-9]{64}", image
     ):
         raise ValueError("Expected a canonical request UUID and an immutable Storm image")
     assert_guards()
@@ -1297,7 +1297,7 @@ def upload_installation(journal: JsonObject, plan: JsonObject, *, resources: boo
 
 def revise_installation(path: Path, journal: JsonObject, staging: Path, candidate: Path, image: str) -> None:
     """Rebind an unstarted, stopped installation to a new sealed plan under the same lease."""
-    if not re.fullmatch(r"ghcr\.io/shepherdjerred/the-storm-server:[A-Za-z0-9._-]+@sha256:[a-f0-9]{64}", image):
+    if not re.fullmatch(r"(?:docker\.io|ghcr\.io)/shepherdjerred/the-storm-server:[A-Za-z0-9._-]+@sha256:[a-f0-9]{64}", image):
         raise ValueError("Revision requires an immutable replacement image")
     if journal.get("privateStartup") is not None or journal.get("acceptance") is not None:
         raise ValueError("An installation that has started requires whole-volume rollback")
@@ -2148,7 +2148,7 @@ def verify_rollback(path: Path, journal: JsonObject) -> None:
     require_restore(journal)
     rollback_image = journal.string("rollbackImage")
     if not re.fullmatch(
-        r"ghcr\.io/shepherdjerred/the-storm-server:[A-Za-z0-9._-]+@sha256:[a-f0-9]{64}",
+        r"(?:docker\.io|ghcr\.io)/shepherdjerred/the-storm-server:[A-Za-z0-9._-]+@sha256:[a-f0-9]{64}",
         rollback_image,
     ):
         raise ValueError("Rollback requires its recorded immutable image")

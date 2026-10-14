@@ -55,7 +55,7 @@ export function createTrmnlDashboardDeployment(chart: Chart) {
   const container = deployment.addContainer(
     withCommonProps({
       name: "trmnl-dashboard",
-      image: `ghcr.io/shepherdjerred/trmnl-dashboard:${versions["shepherdjerred/trmnl-dashboard"]}`,
+      image: `docker.io/shepherdjerred/trmnl-dashboard:${versions["shepherdjerred/trmnl-dashboard"]}`,
       ports: [{ number: 3000, name: "http" }],
       envVariables: {
         HOME: EnvValue.fromValue("/tmp"),

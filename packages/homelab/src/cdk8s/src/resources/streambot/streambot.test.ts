@@ -171,7 +171,7 @@ describe("streambot deployment (media namespace)", () => {
   it("uses the first-party ghcr image", () => {
     const image = container.image;
     if (image === undefined) throw new Error("Expected a Streambot image");
-    expect(image.startsWith("ghcr.io/shepherdjerred/streambot:")).toBe(true);
+    expect(image.startsWith("docker.io/shepherdjerred/streambot:")).toBe(true);
     // Voice ships enabled; the env flag is the single GitOps rollback knob.
     expect(container.env).toContainEqual(
       expect.objectContaining({

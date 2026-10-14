@@ -204,8 +204,8 @@ describe("mc-sandbox chart", () => {
     expect(mcSandboxImageAllowlist()).toEqual([
       `itzg/minecraft-server:${versions["itzg/minecraft-server"]}`,
       `docker.io/itzg/minecraft-server:${versions["itzg/minecraft-server"]}`,
-      `ghcr.io/shepherdjerred/the-storm-server:${versions["shepherdjerred/the-storm-server"]}`,
-      `ghcr.io/shepherdjerred/the-storm-server:${versions["shepherdjerred/the-storm-server/prod"]}`,
+      `docker.io/shepherdjerred/the-storm-server:${versions["shepherdjerred/the-storm-server"]}`,
+      `docker.io/shepherdjerred/the-storm-server:${versions["shepherdjerred/the-storm-server/prod"]}`,
     ]);
     for (const image of mcSandboxImageAllowlist()) {
       expect(image).toMatch(/@sha256:[0-9a-f]{64}$/);

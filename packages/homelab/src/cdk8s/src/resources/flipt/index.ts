@@ -441,7 +441,7 @@ export function createFliptDeployment(chart: Chart) {
   deployment.addContainer(
     withCommonProps({
       name: "authenticated-gateway",
-      image: `ghcr.io/shepherdjerred/caddy-s3proxy:${versions["shepherdjerred/caddy-s3proxy"]}`,
+      image: `docker.io/shepherdjerred/caddy-s3proxy:${versions["shepherdjerred/caddy-s3proxy"]}`,
       ports: [{ name: "http", number: FLIPT_PORT }],
       ...authenticatedGatewayContainerDefaults(),
       ...createFliptHealthProbes(),

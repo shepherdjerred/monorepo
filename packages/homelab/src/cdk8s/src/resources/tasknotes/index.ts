@@ -62,7 +62,7 @@ export function createTasknotesDeployment(chart: Chart) {
   deployment.addContainer(
     withCommonProps({
       name: "tasknotes-server",
-      image: `ghcr.io/shepherdjerred/tasknotes-server:${versions["shepherdjerred/tasknotes-server"]}`,
+      image: `docker.io/shepherdjerred/tasknotes-server:${versions["shepherdjerred/tasknotes-server"]}`,
       securityContext: {
         readOnlyRootFilesystem: false,
         ensureNonRoot: false,
@@ -131,7 +131,7 @@ export function createTasknotesDeployment(chart: Chart) {
   deployment.addContainer(
     withCommonProps({
       name: "obsidian-headless",
-      image: `ghcr.io/shepherdjerred/obsidian-headless:${versions["shepherdjerred/obsidian-headless"]}`,
+      image: `docker.io/shepherdjerred/obsidian-headless:${versions["shepherdjerred/obsidian-headless"]}`,
       command: ["/bin/sh", "-c"],
       args: [
         // Run ob sync --continuous in the background; a companion loop touches

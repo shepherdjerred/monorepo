@@ -213,37 +213,25 @@ Never patch the live Deployment or image pin to break this cycle. The exception
 lands reviewed source; the ordinary image release, pin commit, and ArgoCD
 reconciliation still provide the deployment evidence.
 
-## If GHCR rejects a workload pull
+## If Docker Hub rejects a workload pull
 
-The
-[image publication flow](https://github.com/shepherdjerred/monorepo/blob/6891646ef4bfbe67a3b5bea615c0e100e99c6145/.buildkite/scripts/bake-images.ts)
-resolves every pushed candidate to a digest. The
-[anonymous GHCR probe](https://github.com/shepherdjerred/monorepo/blob/ecfd92e182858588dc98c9ed85fcefe768fb0680/.buildkite/scripts/ghcr-public-access.ts)
-then fetches that immutable digest before the job records any pin candidate. A
-`401` from the anonymous token request means the package is still private. A
-manifest `404` after a successful token request can be brief registry
-propagation and is retried within the job. The flow also inspects the effective
-OCI configuration at that digest and rejects a missing or incorrect monorepo
-source label.
+1. Check the image and visibility in the
+   [registry catalog](https://github.com/shepherdjerred/monorepo/blob/main/packages/version-catalog/src/image-registry.json).
+   Provision repositories with the `dockerhub` OpenTofu stack before publishing.
+   Keep token management in the operator-only `dockerhub-tokens` stack.
+2. Inspect pod pull events and `imagePullSecrets`. The namespace needs a ready
+   `dockerhub-pull-<namespace>` Secret of type `kubernetes.io/dockerconfigjson`.
+   Inspect metadata without printing secret values.
+3. Check the reader `OnePasswordItem` readiness. Repair declarations and pull
+   references through GitOps. External Helm apps need their chart's pull-secret
+   values too.
+4. Inspect the exact digest in the
+   [publication job](https://github.com/shepherdjerred/monorepo/tree/main/ci/scripts/images).
+   Private images must reject anonymous reads; public compilers must allow them.
+   Source labels and exact-image smoke checks still apply.
 
-For a newly named application image:
-
-1. Confirm its runtime Dockerfile has the exact monorepo
-   `org.opencontainers.image.source` label in the published stage or its
-   ancestry.
-2. Publish the first candidate to create the GHCR package. GitHub creates it
-   private, and CI cannot change that: the Packages REST API exposes only
-   get, list, delete, and restore, and the web UI gates a visibility change
-   behind a typed confirmation.
-3. Open the package's **Package settings**, and under "Danger Zone" use
-   **Change visibility** to make it public. This is a one-time step per new
-   package, not a workaround — no token scope makes it automatable. The
-   anonymous probe names this step and the exact settings URL when it fails.
-4. Verify the anonymous token request and exact digest fetch before continuing
-   the release.
-
-Do not distribute the publisher's broad GHCR credential to application
-namespaces to conceal a visibility mistake.
+Application namespaces use the reader identity. Publishing, registry management,
+and Renovate use separate identities.
 
 ## If the release will not start
 

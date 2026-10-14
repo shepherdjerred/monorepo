@@ -161,7 +161,8 @@ describe("published Storm image profiles", () => {
   it("requires a schema snapshot for each published image digest", () => {
     expect(() =>
       stormImageConfig(
-        "ghcr.io/shepherdjerred/the-storm-server:test@sha256:" + "0".repeat(64),
+        "docker.io/shepherdjerred/the-storm-server:test@sha256:" +
+          "0".repeat(64),
       ),
     ).toThrow(/No Storm module config snapshot/u);
   });

@@ -22,7 +22,7 @@ const enabled = {
   copyfile: true,
   scratch: true,
 };
-const helper = `ghcr.io/shepherdjerred/woodpecker-config-extension@sha256:${"a".repeat(64)}`;
+const helper = `docker.io/shepherdjerred/woodpecker-config-extension@sha256:${"a".repeat(64)}`;
 const gib = (value: string) => Number(value.replace(/Gi$/u, ""));
 test("RAM scratch is exclusive to the owner manual verify canary execution pod", () => {
   const pipeline = PipelineSchema.parse({

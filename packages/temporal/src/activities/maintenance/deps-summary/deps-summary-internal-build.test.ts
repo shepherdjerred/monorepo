@@ -11,7 +11,7 @@ const change: DependencyChange = {
   category: "internal-image",
   artifactType: "image",
   datasource: "docker",
-  registryUrl: "https://ghcr.io/shepherdjerred",
+  registryUrl: "https://docker.io/shepherdjerred",
   packageName: undefined,
   oldValue: `1.0.0@sha256:${"a".repeat(64)}`,
   newValue: `2.0.0@sha256:${"b".repeat(64)}`,
@@ -22,7 +22,10 @@ const change: DependencyChange = {
   commitSubject: "chore: promote internal images",
   releaseNotesOverride: undefined,
 };
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
+});
 
 function buildEnvironment(
   sha: string,
@@ -34,6 +37,55 @@ function buildEnvironment(
     ...(options.conflictingEnvironment ? [`GIT_SHA=${"4".repeat(40)}`] : []),
   ];
 }
+
+test("reads private Docker Hub provenance with the namespace reader credential", async () => {
+  const auth = Buffer.from("shepherdjerred:test-reader").toString("base64");
+  vi.stubEnv(
+    "DOCKERHUB_READ_CONFIG_JSON",
+    JSON.stringify({
+      auths: { "https://index.docker.io/v1/": { auth } },
+    }),
+  );
+  vi.stubGlobal("fetch", (input: string | URL, init?: RequestInit) => {
+    const url = new URL(input);
+    const headers = new Headers(init?.headers);
+    if (url.origin === "https://auth.docker.io") {
+      expect(headers.get("Authorization")).toBe(`Basic ${auth}`);
+      return Promise.resolve(Response.json({ token: "test-bearer" }));
+    }
+    expect(url.origin).toBe("https://registry-1.docker.io");
+    expect(headers.get("Authorization")).not.toBe(`Basic ${auth}`);
+    if (headers.get("Authorization") !== "Bearer test-bearer")
+      return Promise.resolve(
+        new Response(null, {
+          status: 401,
+          headers: {
+            "www-authenticate":
+              'Bearer realm="https://auth.docker.io/token",service="registry.docker.io",scope="repository:shepherdjerred/temporal-worker:pull"',
+          },
+        }),
+      );
+    return Promise.resolve(
+      Response.json(
+        url.pathname.includes("/manifests/")
+          ? { config: { digest: `sha256:${"a".repeat(64)}` } }
+          : {
+              config: {
+                Env: [`GIT_SHA=${revision}`],
+                Labels: { "org.opencontainers.image.source": source },
+              },
+            },
+      ),
+    );
+  });
+  const result = await ociMetadata(
+    "https://registry-1.docker.io",
+    "shepherdjerred/temporal-worker",
+    `sha256:${"b".repeat(64)}`,
+    { followIndex: true },
+  );
+  expect(result.revision).toBe(revision);
+});
 
 function mockRegistry(
   options: {

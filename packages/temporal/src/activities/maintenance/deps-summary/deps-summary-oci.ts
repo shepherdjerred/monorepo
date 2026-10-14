@@ -1,6 +1,7 @@
 import { z } from "zod/v4";
 import type { DependencyChange } from "#shared/deps-summary-types.ts";
 import { dependencyNoteText } from "./deps-summary-text.ts";
+import { dockerHubTokenHeaders } from "#lib/dockerhub-registry-auth.ts";
 
 const OciDescriptorSchema = z.object({
   digest: z.string().min(1),
@@ -89,7 +90,10 @@ async function registryFetch(url: string, accept: string): Promise<Response> {
     tokenUrl.searchParams.set("scope", challenge.scope);
   }
   const tokenResponse = await fetchWithTimeout(tokenUrl.href, {
-    headers: { Accept: "application/json" },
+    headers: {
+      Accept: "application/json",
+      ...dockerHubTokenHeaders(url, tokenUrl),
+    },
   });
   if (!tokenResponse.ok) {
     throw new Error(

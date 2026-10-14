@@ -67,7 +67,7 @@ export function createGlitterBoysLauncherChart(
   deployment.addContainer(
     withCommonProps({
       name,
-      image: `ghcr.io/shepherdjerred/glitter-boys-launcher:${image}`,
+      image: `docker.io/shepherdjerred/glitter-boys-launcher:${image}`,
       ports: [
         { number: 8080, name: "http" },
         { number: 9091, name: "metrics" },

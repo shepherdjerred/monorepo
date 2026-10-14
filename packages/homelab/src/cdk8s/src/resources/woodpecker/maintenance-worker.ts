@@ -74,7 +74,7 @@ const WORKER_LABELS = {
 export const MAINTENANCE_SCRIPT_PATH = "/woodpecker/maintenance";
 
 const WORKER_IMAGE =
-  "ghcr.io/shepherdjerred/temporal-worker:" +
+  "docker.io/shepherdjerred/temporal-worker:" +
   versions["shepherdjerred/temporal-worker"];
 
 const KOMETA_CONFIG = `libraries:

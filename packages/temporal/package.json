@@ -35,7 +35,7 @@
     "worker-deployment": "bun scripts/rollout/worker-deployment-rollout.ts",
     "test:integration": "bun run scripts/homelab/ensure-ha-schema.ts && bun --no-install --bun vitest --config ../../vitest.config.ts run src/integration.test.ts",
     "generate:live": "bun --no-install run --cwd ../home-assistant build && bun --no-install ../home-assistant/dist/codegen/cli.js --out src/generated/ha-schema.ts --name HaSchema",
-    "docker:build": "docker buildx build --cache-from type=registry,ref=ghcr.io/shepherdjerred/temporal-worker:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t temporal-worker:dev -f Dockerfile ../..",
+    "docker:build": "docker buildx build --cache-from type=registry,ref=docker.io/shepherdjerred/temporal-worker:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t temporal-worker:dev -f Dockerfile ../..",
     "smoke": "bun scripts/smoke.ts",
     "canary:agent-task": "bun run scripts/agent-task-structured-output-canary.ts --production-only",
     "canary:report-reliability": "bun run scripts/scout/report-reliability-canary.ts --production-only",

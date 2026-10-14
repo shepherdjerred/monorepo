@@ -87,7 +87,7 @@ export function createTemporalAgentWorker(
   deployment.addInitContainer(
     withCommonProps({
       name: "install-provider-firewall",
-      image: `ghcr.io/shepherdjerred/temporal-worker:${versions["shepherdjerred/temporal-worker"]}`,
+      image: `docker.io/shepherdjerred/temporal-worker:${versions["shepherdjerred/temporal-worker"]}`,
       command: ["/bin/sh", "-c"],
       args: [
         `set -eu
@@ -130,7 +130,7 @@ ip6tables -L OUTPUT -n`,
   const container = deployment.addContainer(
     withCommonProps({
       name: "temporal-agent-worker",
-      image: `ghcr.io/shepherdjerred/temporal-worker:${versions["shepherdjerred/temporal-worker"]}`,
+      image: `docker.io/shepherdjerred/temporal-worker:${versions["shepherdjerred/temporal-worker"]}`,
       ports: [
         { number: 9464, name: "metrics" },
         { number: 9465, name: "app-metrics" },

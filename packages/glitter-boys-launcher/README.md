@@ -208,8 +208,8 @@ manually from the repository root. Use a unique release tag:
 
 ```sh
 docker build --target smoke -f packages/glitter-boys-launcher/Dockerfile .
-docker build --target image -f packages/glitter-boys-launcher/Dockerfile -t ghcr.io/shepherdjerred/glitter-boys-launcher:<release-tag> .
-docker push ghcr.io/shepherdjerred/glitter-boys-launcher:<release-tag>
+docker build --target image -f packages/glitter-boys-launcher/Dockerfile -t docker.io/shepherdjerred/glitter-boys-launcher:<release-tag> .
+docker push docker.io/shepherdjerred/glitter-boys-launcher:<release-tag>
 ```
 
 Verify the published image is publicly pullable and record its immutable digest

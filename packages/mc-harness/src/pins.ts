@@ -27,11 +27,11 @@ function catalogImage(repository: string, entry: string): string {
  */
 export const stormServerImages = {
   prod: catalogImage(
-    "ghcr.io/shepherdjerred/the-storm-server",
+    "docker.io/shepherdjerred/the-storm-server",
     "shepherdjerred/the-storm-server/prod",
   ),
   candidate: catalogImage(
-    "ghcr.io/shepherdjerred/the-storm-server",
+    "docker.io/shepherdjerred/the-storm-server",
     "shepherdjerred/the-storm-server",
   ),
 } as const;

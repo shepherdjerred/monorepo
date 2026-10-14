@@ -92,7 +92,7 @@ async function resolveLegacyTagDigest(version: string): Promise<string> {
       "buildx",
       "imagetools",
       "inspect",
-      `ghcr.io/shepherdjerred/scout-for-lol:${version}`,
+      `docker.io/shepherdjerred/scout-for-lol:${version}`,
       "--format",
       "{{json .Manifest}}",
     ],

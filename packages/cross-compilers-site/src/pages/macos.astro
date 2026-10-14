@@ -10,7 +10,7 @@ import SectionHeader from "../components/SectionHeader.astro";
 
 const sourceUrl =
   "https://github.com/shepherdjerred/monorepo/tree/main/packages/macos-cross-compiler";
-const image = "ghcr.io/shepherdjerred/macos-cross-compiler:27";
+const image = "docker.io/shepherdjerred/macos-cross-compiler:27";
 const run = `docker run --rm -v "$PWD:/workspace" \\\n  ${image} \\\n`;
 
 const heroCode = `${run}  arm64-apple-macos-clang hello.c -o hello`;
@@ -108,8 +108,8 @@ const tags = [
     tag: ":27",
     xcode: "Xcode 27",
     swift: "Swift 6.4",
-    note: "also :latest",
-    soon: false,
+    note: "publishing paused",
+    soon: true,
   },
   { tag: ":26", xcode: "Xcode 26", swift: "Swift 6.2", note: "", soon: true },
   {
@@ -197,6 +197,10 @@ const differences = [
         </div>
         <div class="min-w-0">
           <CodeBlock code={heroCode} label="hello.c → Mach-O arm64" />
+          <p class="mt-3 text-sm text-stone-600 dark:text-stone-400">
+            The :27 examples require a local build. Publishing is paused; public
+            :latest and :15.0 tags contain an older toolchain.
+          </p>
           <p class="mt-3 font-mono text-xs text-stone-500 dark:text-stone-400">
             Runs on linux/amd64 and linux/arm64.
           </p>
@@ -336,7 +340,7 @@ const differences = [
           id="tags"
           eyebrow="Images"
           title="One image per macOS SDK"
-          subtitle={`Pull ghcr.io/shepherdjerred/macos-cross-compiler with the tag for the SDK you target.`}
+          subtitle={`Pull docker.io/shepherdjerred/macos-cross-compiler with the tag for the SDK you target.`}
         />
         <div class="mt-10 overflow-x-auto rounded-xl border border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-950">
           <table class="w-full text-left text-xs sm:text-sm">
@@ -393,7 +397,7 @@ const differences = [
           </table>
         </div>
         <p class="mt-4 text-sm text-stone-600 dark:text-stone-400">
-          Every tag is published for linux/amd64 and linux/arm64.
+          The configured builds target linux/amd64 and linux/arm64.
         </p>
       </div>
     </section>

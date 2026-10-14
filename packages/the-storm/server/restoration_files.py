@@ -156,7 +156,7 @@ def stage(
     if str(uuid.UUID(request)) != request or not backup_uid:
         raise ValueError("Expected a canonical request and a verified backup identity")
     if not re.fullmatch(
-        r"ghcr\.io/shepherdjerred/the-storm-server:[A-Za-z0-9._-]+@sha256:[a-f0-9]{64}", candidate_image
+        r"(?:docker\.io|ghcr\.io)/shepherdjerred/the-storm-server:[A-Za-z0-9._-]+@sha256:[a-f0-9]{64}", candidate_image
     ) or not re.fullmatch(r"[a-f0-9]{64}", candidate_jar):
         raise ValueError("Installation requires immutable image and plugin identities")
     if data.is_symlink() or payload.is_symlink():

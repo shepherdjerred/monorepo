@@ -404,7 +404,7 @@ test("refusing an existing checkout preserves its dirty worktree", async () => {
 
 test("unapproved work and local jobs cannot mount caches; trusted jobs mount only in clone", () => {
   const steps = testPipelineSteps();
-  const image = `ghcr.io/shepherdjerred/woodpecker-config-extension@sha256:${"a".repeat(64)}`;
+  const image = `docker.io/shepherdjerred/woodpecker-config-extension@sha256:${"a".repeat(64)}`;
   expect(
     cacheSourceSteps(steps, {
       enabled: true,

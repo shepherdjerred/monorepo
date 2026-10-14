@@ -12,7 +12,6 @@ import {
 } from "./bake-images.ts";
 import { lastSuccessfulImageReleaseCommit } from "./live-version-catalog.ts";
 import { writeFallbackReport } from "./image-selection-report.ts";
-import { ensureAnonymousGhcrPull } from "./ghcr-public-access.ts";
 import {
   assertImageSourceLabel,
   CI_IMAGE_IGNORED_ENV_PREFIXES,
@@ -229,156 +228,6 @@ test("resolves Bake with the production image environment", () => {
   });
 });
 
-test("waits for an exact digest to become anonymously pullable", async () => {
-  const digest = `sha256:${"a".repeat(64)}`;
-  const requests: string[] = [];
-  let tokenRequests = 0;
-  let manifestRequests = 0;
-  const fetcher = Object.assign(
-    async (input: string | URL | Request) => {
-      const url = input instanceof Request ? input.url : input.toString();
-      requests.push(url);
-      if (url.includes("/token?")) {
-        tokenRequests += 1;
-        return tokenRequests === 1
-          ? new Response(null, { status: 401 })
-          : Response.json({ token: "anonymous-token" });
-      }
-      manifestRequests += 1;
-      return manifestRequests === 1
-        ? new Response(null, { status: 404 })
-        : new Response("{}", { status: 200 });
-    },
-    { preconnect: fetch.preconnect },
-  );
-  const sleeps: number[] = [];
-
-  await ensureAnonymousGhcrPull("alert-dashboard", digest, {
-    fetcher,
-    sleeper: async (milliseconds) => {
-      sleeps.push(milliseconds);
-    },
-    attempts: 3,
-    delayMilliseconds: 25,
-  });
-
-  expect(sleeps).toEqual([25, 25]);
-  expect(requests).toEqual([
-    "https://ghcr.io/token?scope=repository%3Ashepherdjerred%2Falert-dashboard%3Apull&service=ghcr.io",
-    "https://ghcr.io/token?scope=repository%3Ashepherdjerred%2Falert-dashboard%3Apull&service=ghcr.io",
-    `https://ghcr.io/v2/shepherdjerred/alert-dashboard/manifests/${encodeURIComponent(digest)}`,
-    "https://ghcr.io/token?scope=repository%3Ashepherdjerred%2Falert-dashboard%3Apull&service=ghcr.io",
-    `https://ghcr.io/v2/shepherdjerred/alert-dashboard/manifests/${encodeURIComponent(digest)}`,
-  ]);
-});
-
-test("fails closed when a GHCR package stays private", async () => {
-  const fetcher = Object.assign(
-    async () => new Response(null, { status: 401 }),
-    { preconnect: fetch.preconnect },
-  );
-
-  await expect(
-    ensureAnonymousGhcrPull("alert-dashboard", `sha256:${"b".repeat(64)}`, {
-      fetcher,
-      sleeper: async (milliseconds) => milliseconds,
-      attempts: 2,
-      delayMilliseconds: 0,
-    }),
-  ).rejects.toThrow(
-    "GHCR package shepherdjerred/alert-dashboard is not anonymously pullable",
-  );
-  await expect(
-    ensureAnonymousGhcrPull("alert-dashboard", `sha256:${"b".repeat(64)}`, {
-      fetcher,
-      sleeper: async (milliseconds) => milliseconds,
-      attempts: 1,
-    }),
-  ).rejects.not.toBeInstanceOf(TransientError);
-});
-
-test("preserves exhausted GHCR transport and server failures as transient", async () => {
-  for (const status of [408, 429, 500, 503]) {
-    const fetcher = Object.assign(async () => new Response(null, { status }), {
-      preconnect: fetch.preconnect,
-    });
-    await expect(
-      ensureAnonymousGhcrPull("alert-dashboard", `sha256:${"c".repeat(64)}`, {
-        fetcher,
-        sleeper: async (milliseconds) => milliseconds,
-        attempts: 1,
-      }),
-    ).rejects.toBeInstanceOf(TransientError);
-  }
-
-  const fetcher = Object.assign(
-    async () => {
-      throw new Error("request timed out");
-    },
-    { preconnect: fetch.preconnect },
-  );
-  await expect(
-    ensureAnonymousGhcrPull("alert-dashboard", `sha256:${"d".repeat(64)}`, {
-      fetcher,
-      sleeper: async (milliseconds) => milliseconds,
-      attempts: 1,
-    }),
-  ).rejects.toBeInstanceOf(TransientError);
-
-  let request = 0;
-  const propagatingManifestFetcher = Object.assign(
-    async () => {
-      request += 1;
-      return request % 2 === 1
-        ? Response.json({ token: "anonymous-token" })
-        : new Response(null, { status: 404 });
-    },
-    { preconnect: fetch.preconnect },
-  );
-  await expect(
-    ensureAnonymousGhcrPull("alert-dashboard", `sha256:${"e".repeat(64)}`, {
-      fetcher: propagatingManifestFetcher,
-      sleeper: async (milliseconds) => milliseconds,
-      attempts: 1,
-    }),
-  ).rejects.toBeInstanceOf(TransientError);
-
-  const invalidTokenFetcher = Object.assign(
-    async () => new Response("truncated-token-json", { status: 200 }),
-    { preconnect: fetch.preconnect },
-  );
-  await expect(
-    ensureAnonymousGhcrPull("alert-dashboard", `sha256:${"e".repeat(64)}`, {
-      fetcher: invalidTokenFetcher,
-      sleeper: async (milliseconds) => milliseconds,
-      attempts: 1,
-    }),
-  ).rejects.toBeInstanceOf(TransientError);
-
-  class TruncatedManifestResponse extends Response {
-    override arrayBuffer = async (): Promise<ArrayBuffer> => {
-      throw new Error("manifest connection closed");
-    };
-  }
-  let bodyRequests = 0;
-  const truncatedManifestFetcher = Object.assign(
-    async () => {
-      bodyRequests += 1;
-      return bodyRequests === 1
-        ? Response.json({ token: "anonymous-token" })
-        : new TruncatedManifestResponse("partial", { status: 200 });
-    },
-    { preconnect: fetch.preconnect },
-  );
-  await expect(
-    ensureAnonymousGhcrPull("alert-dashboard", `sha256:${"f".repeat(64)}`, {
-      fetcher: truncatedManifestFetcher,
-      sleeper: async (milliseconds) => milliseconds,
-      attempts: 1,
-    }),
-  ).rejects.toBeInstanceOf(TransientError);
-});
-
 test("expands the infra group into invokable targets", () => {
   expect(expandTargets(["infra"])).toContain("caddy-s3proxy");
   expect(expandTargets(["infra"])).toContain("the-storm-server");
@@ -483,7 +332,7 @@ test("validates structured pins before starting a production push", async () => 
       },
     ),
   ).rejects.toThrow(
-    "No managed image pin exists for ghcr.io/shepherdjerred/birmel",
+    "No managed image pin exists for docker.io/shepherdjerred/birmel",
   );
   expect(commands).toEqual([]);
 });
@@ -505,7 +354,7 @@ test("runs the default application candidate smoke check", async () => {
       },
       environment: {},
       getManifestDigest: async () => digest,
-      verifyAnonymousPull: () => Promise.resolve(),
+      verifyRegistryAccess: () => Promise.resolve(),
       verifySourceLabel: () => Promise.resolve(),
       getRuntimeFingerprint: async () => "new",
       writeMetadata: () => Promise.resolve(),
@@ -849,7 +698,7 @@ test("validates optional OCI runtime metadata", () => {
 });
 
 test("requires the effective candidate OCI source label", async () => {
-  const image = `ghcr.io/shepherdjerred/example@sha256:${"a".repeat(64)}`;
+  const image = `docker.io/shepherdjerred/example@sha256:${"a".repeat(64)}`;
   await expect(
     assertImageSourceLabel(image, validSourceLabelExecutor),
   ).resolves.toBeUndefined();
@@ -870,7 +719,7 @@ test("requires the effective candidate OCI source label", async () => {
   ).rejects.toBeInstanceOf(TransientError);
   await expect(
     assertImageSourceLabel(
-      "ghcr.io/shepherdjerred/example:missing",
+      "docker.io/shepherdjerred/example:missing",
       httpNotFoundInspectExecutor,
     ),
   ).rejects.not.toBeInstanceOf(TransientError);
@@ -995,7 +844,7 @@ test("runs application smoke against the exact candidate digest", async () => {
   await runExactCandidateSmoke(
     {
       target: "scout-for-lol",
-      candidate: `ghcr.io/shepherdjerred/scout-for-lol@${digest}`,
+      candidate: `docker.io/shepherdjerred/scout-for-lol@${digest}`,
       contractHash: "contract",
     },
     executor,
@@ -1004,7 +853,7 @@ test("runs application smoke against the exact candidate digest", async () => {
   expect(commands).toHaveLength(1);
   expect(commands[0]).toContain("ci/application-image-smoke.Dockerfile");
   expect(commands[0]).toContain(
-    `CANDIDATE_IMAGE=ghcr.io/shepherdjerred/scout-for-lol@${digest}`,
+    `CANDIDATE_IMAGE=docker.io/shepherdjerred/scout-for-lol@${digest}`,
   );
   expect(commands[0]).toContain("SMOKE_TARGET=scout-for-lol");
   expect(commands[0]).toContain("EXPECTED_CONTRACT_HASH=contract");
@@ -1076,7 +925,7 @@ test("smokes exact candidates, reuses identical runtime fingerprints, and tags S
         events.push(`resolve:${image}`);
         return digest;
       },
-      verifyAnonymousPull: async (target, reference) => {
+      verifyRegistryAccess: async (target, reference) => {
         events.push(`public:${target}:${reference}`);
       },
       verifySourceLabel: async (image) => {
@@ -1110,9 +959,9 @@ test("smokes exact candidates, reuses identical runtime fingerprints, and tags S
   expect(commands[0]).toContain("--push");
   expect(commands.some((command) => command.includes("imagetools"))).toBe(true);
   expect(manifestReferences).toEqual([
-    "ghcr.io/shepherdjerred/birmel:candidate-commit",
-    "ghcr.io/shepherdjerred/scout-for-lol:candidate-commit",
-    "ghcr.io/shepherdjerred/starlight-karma-bot:candidate-commit",
+    "docker.io/shepherdjerred/birmel:candidate-commit",
+    "docker.io/shepherdjerred/scout-for-lol:candidate-commit",
+    "docker.io/shepherdjerred/starlight-karma-bot:candidate-commit",
   ]);
   expect(events.filter((event) => event.startsWith("public:"))).toEqual([
     `public:birmel:${digest}`,
@@ -1120,51 +969,53 @@ test("smokes exact candidates, reuses identical runtime fingerprints, and tags S
     `public:starlight-karma-bot:${digest}`,
   ]);
   expect(events.filter((event) => event.startsWith("source:"))).toEqual([
-    `source:ghcr.io/shepherdjerred/birmel@${digest}`,
-    `source:ghcr.io/shepherdjerred/scout-for-lol@${digest}`,
-    `source:ghcr.io/shepherdjerred/starlight-karma-bot@${digest}`,
+    `source:docker.io/shepherdjerred/birmel@${digest}`,
+    `source:docker.io/shepherdjerred/scout-for-lol@${digest}`,
+    `source:docker.io/shepherdjerred/starlight-karma-bot@${digest}`,
   ]);
   expect(events[0]).toBe(
-    "resolve:ghcr.io/shepherdjerred/birmel:candidate-commit",
+    "resolve:docker.io/shepherdjerred/birmel:candidate-commit",
   );
   expect(events[1]).toBe(`public:birmel:${digest}`);
-  expect(events[2]).toBe(`source:ghcr.io/shepherdjerred/birmel@${digest}`);
+  expect(events[2]).toBe(`source:docker.io/shepherdjerred/birmel@${digest}`);
   expect(events[3]).toBe(
-    `smoke:birmel:ghcr.io/shepherdjerred/birmel@${digest}`,
+    `smoke:birmel:docker.io/shepherdjerred/birmel@${digest}`,
   );
-  expect(events[4]).toBe(`fingerprint:ghcr.io/shepherdjerred/birmel@${digest}`);
+  expect(events[4]).toBe(
+    `fingerprint:docker.io/shepherdjerred/birmel@${digest}`,
+  );
   expect(
     events.indexOf(
-      "resolve:ghcr.io/shepherdjerred/scout-for-lol:candidate-commit",
+      "resolve:docker.io/shepherdjerred/scout-for-lol:candidate-commit",
     ),
   ).toBeLessThan(events.indexOf(`public:scout-for-lol:${digest}`));
   expect(events.indexOf(`public:scout-for-lol:${digest}`)).toBeLessThan(
-    events.indexOf(`source:ghcr.io/shepherdjerred/scout-for-lol@${digest}`),
+    events.indexOf(`source:docker.io/shepherdjerred/scout-for-lol@${digest}`),
   );
   expect(
-    events.indexOf(`source:ghcr.io/shepherdjerred/scout-for-lol@${digest}`),
+    events.indexOf(`source:docker.io/shepherdjerred/scout-for-lol@${digest}`),
   ).toBeLessThan(
     events.indexOf(
-      `smoke:scout-for-lol:ghcr.io/shepherdjerred/scout-for-lol@${digest}`,
+      `smoke:scout-for-lol:docker.io/shepherdjerred/scout-for-lol@${digest}`,
     ),
   );
   expect(
     events.indexOf(
-      "resolve:ghcr.io/shepherdjerred/starlight-karma-bot:candidate-commit",
+      "resolve:docker.io/shepherdjerred/starlight-karma-bot:candidate-commit",
     ),
   ).toBeLessThan(events.indexOf(`public:starlight-karma-bot:${digest}`));
   expect(events.indexOf(`public:starlight-karma-bot:${digest}`)).toBeLessThan(
     events.indexOf(
-      `source:ghcr.io/shepherdjerred/starlight-karma-bot@${digest}`,
+      `source:docker.io/shepherdjerred/starlight-karma-bot@${digest}`,
     ),
   );
   expect(
     events.indexOf(
-      `source:ghcr.io/shepherdjerred/starlight-karma-bot@${digest}`,
+      `source:docker.io/shepherdjerred/starlight-karma-bot@${digest}`,
     ),
   ).toBeLessThan(
     events.indexOf(
-      `fingerprint:ghcr.io/shepherdjerred/starlight-karma-bot@${digest}`,
+      `fingerprint:docker.io/shepherdjerred/starlight-karma-bot@${digest}`,
     ),
   );
   expect(metadata).toEqual([
@@ -1217,7 +1068,7 @@ test("keeps an exact candidate fingerprint propagation miss transient", async ()
             },
           ]),
         getManifestDigest: async () => digest,
-        verifyAnonymousPull: async () => {
+        verifyRegistryAccess: async () => {
           events.push("public");
         },
         verifySourceLabel: async () => {
@@ -1256,7 +1107,7 @@ test("keeps upstream provenance for infrastructure images", async () => {
           },
         ]),
       getManifestDigest: async () => digest,
-      verifyAnonymousPull: async () => {
+      verifyRegistryAccess: async () => {
         events.push("public");
       },
       verifySourceLabel: async (image) => {
