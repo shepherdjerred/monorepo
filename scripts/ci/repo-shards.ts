@@ -37,7 +37,7 @@ const SHARD_TURBO_INPUTS: Record<ShardName, readonly string[]> = {
     "!packages/scout-for-lol/**",
     "!packages/homelab/**",
   ],
-  root: ["**/*", "!packages/**"],
+  root: ["**/*", "!packages/**", "!.git/objects/**"],
 };
 
 export function shardPathspecs(shard: ShardName): readonly string[] {
