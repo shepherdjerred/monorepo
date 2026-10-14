@@ -1,61 +1,47 @@
 type ImageTargetRegistration = {
   readonly owner: string;
-  readonly ghcrVisibility: "public" | "external";
 };
 
-// This is the source of truth for first-party application image policy. Every
-// target below is published under shepherdjerred on GHCR and must be public so
-// the cluster can pull the immutable digest without registry credentials.
+// Build ownership lives here; registry visibility lives in image-registry.json.
 export const IMAGE_TARGET_REGISTRY: Readonly<
   Record<string, ImageTargetRegistration>
 > = {
-  arcade: { owner: "@arcade/backend", ghcrVisibility: "public" },
+  arcade: { owner: "@arcade/backend" },
   tracker: {
     owner: "@shepherdjerred/tracker",
-    ghcrVisibility: "public",
   },
   "alert-dashboard": {
     owner: "@shepherdjerred/alert-dashboard",
-    ghcrVisibility: "public",
   },
-  birmel: { owner: "@shepherdjerred/birmel", ghcrVisibility: "public" },
+  birmel: { owner: "@shepherdjerred/birmel" },
   "storm-brain": {
     owner: "@shepherdjerred/storm-brain",
-    ghcrVisibility: "public",
   },
   "storm-forum": {
     owner: "@shepherdjerred/storm-forum",
-    ghcrVisibility: "public",
   },
-  "tasknotes-server": { owner: "tasknotes-server", ghcrVisibility: "public" },
+  "tasknotes-server": { owner: "tasknotes-server" },
   "starlight-karma-bot": {
     owner: "starlight-karma-bot",
-    ghcrVisibility: "public",
   },
-  streambot: { owner: "@shepherdjerred/streambot", ghcrVisibility: "public" },
+  streambot: { owner: "@shepherdjerred/streambot" },
   "temporal-worker": {
     owner: "@shepherdjerred/temporal",
-    ghcrVisibility: "public",
   },
   "trmnl-dashboard": {
     owner: "@shepherdjerred/trmnl-dashboard",
-    ghcrVisibility: "public",
   },
   "scout-for-lol": {
     owner: "@scout-for-lol/backend",
-    ghcrVisibility: "public",
   },
   "discord-plays-pokemon": {
     owner: "@discord-plays-pokemon/backend",
-    ghcrVisibility: "public",
   },
   "discord-plays-mario-kart": {
     owner: "@discord-plays-mario-kart/backend",
-    ghcrVisibility: "public",
   },
   "woodpecker-config-extension": {
     owner: "@shepherdjerred/woodpecker-config-extension",
-    ghcrVisibility: "public",
   },
 } as const satisfies Readonly<Record<string, ImageTargetRegistration>>;
 
@@ -66,16 +52,6 @@ export const IMAGE_TARGET_OWNERS: Readonly<Record<string, string>> =
       registration.owner,
     ]),
   );
-
-export const FIRST_PARTY_PUBLIC_GHCR_PACKAGES = new Set(
-  Object.entries(IMAGE_TARGET_REGISTRY)
-    .filter(([, registration]) => registration.ghcrVisibility === "public")
-    .map(([target]) => target),
-);
-
-export function requiresPublicGhcrVisibility(packageName: string): boolean {
-  return FIRST_PARTY_PUBLIC_GHCR_PACKAGES.has(packageName);
-}
 
 export const APPLICATION_IMAGE_TARGETS =
   Object.keys(IMAGE_TARGET_OWNERS).sort();

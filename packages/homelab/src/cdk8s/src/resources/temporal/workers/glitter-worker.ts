@@ -62,7 +62,7 @@ function createGlitterWorker(
   const container = deployment.addContainer(
     withCommonProps({
       name: definition.name,
-      image: `ghcr.io/shepherdjerred/temporal-worker:${versions["shepherdjerred/temporal-worker"]}`,
+      image: `docker.io/shepherdjerred/temporal-worker:${versions["shepherdjerred/temporal-worker"]}`,
       ports: [
         { number: 9464, name: "metrics" },
         { number: 9465, name: "app-metrics" },

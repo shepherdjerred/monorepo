@@ -32,7 +32,7 @@ export function resolveWorkerDeploymentRolloutTarget(
       taskQueue: "monorepo-workflows",
       candidatePinName: "shepherdjerred/temporal-worker/workflows/candidate",
       stablePinName: "shepherdjerred/temporal-worker/workflows/stable",
-      imageRepository: "ghcr.io/shepherdjerred/temporal-worker",
+      imageRepository: "docker.io/shepherdjerred/temporal-worker",
       replayCommands: [
         ["bun", "run", "test:workflows"],
         ["bun", "run", "replay:candidate-histories"],
@@ -52,7 +52,7 @@ export function resolveWorkerDeploymentRolloutTarget(
     taskQueue: `scout-${stage}`,
     candidatePinName: `shepherdjerred/scout-for-lol/${stage}/workflows/candidate`,
     stablePinName: `shepherdjerred/scout-for-lol/${stage}/workflows/stable`,
-    imageRepository: "ghcr.io/shepherdjerred/scout-for-lol",
+    imageRepository: "docker.io/shepherdjerred/scout-for-lol",
     replayCommands: [
       ["bun", "run", "--cwd", scoutTemporalDirectory, "test:workflows"],
       [

@@ -99,7 +99,7 @@ export function createScoutWorkflowWorker(
   const container = deployment.addContainer(
     withCommonProps({
       name,
-      image: `ghcr.io/shepherdjerred/scout-for-lol:${imageVersion}`,
+      image: `docker.io/shepherdjerred/scout-for-lol:${imageVersion}`,
       command: ["bun"],
       args: ["run", "src/temporal/workflow-worker.ts"],
       ports: [{ name: "metrics", number: 9464, protocol: Protocol.TCP }],

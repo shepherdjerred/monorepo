@@ -1,16 +1,5 @@
-import { registryLoginCommand } from "../images/build-ci-image-core.ts";
+import { dockerHubLogin } from "./dockerhub-env.ts";
 
 if (import.meta.main) {
-  const token = Bun.env["GITHUB_PACKAGES_TOKEN"];
-  const command = registryLoginCommand(token);
-  if (command !== undefined && token !== undefined) {
-    const login = Bun.spawn(command, {
-      stdin: new Blob([token]),
-      stdout: "inherit",
-      stderr: "inherit",
-    });
-    const exitCode = await login.exited;
-    if (exitCode !== 0)
-      throw new Error(`docker login exited ${exitCode.toString()}`);
-  }
+  await dockerHubLogin("publisher", Bun.env);
 }

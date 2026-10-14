@@ -23,9 +23,9 @@ import {
 import { resolveManagedImagePins } from "../../../scripts/lib/image-pin-catalog.ts";
 import { APPLICATION_IMAGE_TARGETS } from "./image-targets.ts";
 import {
-  anonymousPullVerifier,
-  type AnonymousPullVerifier,
-} from "./ghcr-public-access.ts";
+  ensureDockerHubAccess,
+  type RegistryAccessVerifier,
+} from "./dockerhub-access.ts";
 import type { PushOptions, PushOutcome } from "./bake-image-push-types.ts";
 import { productionBakeEnvironment } from "./production-bake-environment.ts";
 import { runMain } from "../../../scripts/lib/transient.ts";
@@ -41,7 +41,7 @@ import {
   type TextWriter,
 } from "./image-selection-report.ts";
 
-const registry = "ghcr.io/shepherdjerred";
+const registry = "docker.io/shepherdjerred";
 const selectionReport = "image-selection-report.json";
 const pushOutcomes = "image-push-outcomes.json";
 export const VERSION_CATALOG_URL = new URL(
@@ -278,7 +278,7 @@ export async function pushImages(
     readonly environment?: Readonly<Record<string, string | undefined>>;
     readonly readVersionCatalog?: () => Promise<string>;
     readonly getManifestDigest?: (image: string) => Promise<string>;
-    readonly verifyAnonymousPull?: AnonymousPullVerifier;
+    readonly verifyRegistryAccess?: RegistryAccessVerifier;
     readonly verifySourceLabel?: (image: string) => Promise<void>;
     readonly getRuntimeFingerprint?: (
       image: string,
@@ -307,9 +307,8 @@ export async function pushImages(
     dependencies.readVersionCatalog ??
     (async () => Bun.file(VERSION_CATALOG_URL).text());
   const getManifestDigest = dependencies.getManifestDigest ?? manifestDigest;
-  const verifyAnonymousPull = anonymousPullVerifier(
-    dependencies.verifyAnonymousPull,
-  );
+  const verifyRegistryAccess =
+    dependencies.verifyRegistryAccess ?? ensureDockerHubAccess;
   const verifySourceLabel = sourceLabelVerifier(
     dependencies.verifySourceLabel,
     executor,
@@ -369,7 +368,7 @@ export async function pushImages(
     const candidateTag = `${image}:candidate-${commit}`;
     const digest = await getManifestDigest(candidateTag);
     const candidate = `${image}@${digest}`;
-    await verifyAnonymousPull(name, digest);
+    await verifyRegistryAccess(name, digest);
     if (applicationImageTargets.has(name)) {
       await verifySourceLabel(candidate);
       await smokeCandidate(name, candidate, contractHash);

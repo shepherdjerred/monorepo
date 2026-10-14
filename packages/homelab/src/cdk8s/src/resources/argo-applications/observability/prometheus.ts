@@ -186,6 +186,7 @@ export async function createPrometheusApp(chart: Chart) {
 
   // Note: Some configurations bypass type checking due to incomplete generated types
   const prometheusValues: PrometheusValuesWithBlackbox = {
+    global: { imagePullSecrets: [{ name: "dockerhub-pull-prometheus" }] },
     // Enable blackbox-exporter for HTTP probing of static sites
     "prometheus-blackbox-exporter": {
       enabled: true,

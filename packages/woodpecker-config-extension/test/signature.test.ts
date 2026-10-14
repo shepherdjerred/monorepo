@@ -75,9 +75,9 @@ describe("ci image resolution", () => {
       seen.push(`${path}@${commit}`);
       return fetchFixture(path);
     });
-    expect(images.base).toBe(`ghcr.io/shepherdjerred/ci-base@${digest}`);
+    expect(images.base).toBe(`docker.io/shepherdjerred/ci-base@${digest}`);
     expect(images.playwright).toBe(
-      `ghcr.io/shepherdjerred/ci-playwright@${digest}`,
+      `docker.io/shepherdjerred/ci-playwright@${digest}`,
     );
     expect(seen).toContain("ci/ci-image/DIGEST@abc123");
   });

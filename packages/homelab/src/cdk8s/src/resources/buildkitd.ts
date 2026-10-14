@@ -242,7 +242,7 @@ export function createBuildkitdDeployment(chart: Chart) {
   // The gRPC endpoint is plaintext and privileged — restrict ingress to the
   // CI job pods (woodpecker-ci namespace) so nothing else in the cluster can drive
   // builds through it. Egress stays open: buildkitd pulls base images and
-  // pushes to ghcr.
+  // pushes to Docker Hub.
   new KubeNetworkPolicy(chart, "buildkitd-ingress-netpol", {
     metadata: { name: "buildkitd-ingress-netpol" },
     spec: {

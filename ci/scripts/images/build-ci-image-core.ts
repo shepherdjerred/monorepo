@@ -53,7 +53,7 @@ export function ciImageDefinition(name: string): CiImageDefinition {
     case "ci-base":
       return {
         name,
-        repository: "ghcr.io/shepherdjerred/ci-base",
+        repository: "docker.io/shepherdjerred/ci-base",
         dockerfile: "ci/ci-image/Dockerfile",
         digestFile: "ci/ci-image/DIGEST",
         stateFile: "ci/ci-image/STATE.json",
@@ -63,7 +63,7 @@ export function ciImageDefinition(name: string): CiImageDefinition {
     case "ci-playwright":
       return {
         name,
-        repository: "ghcr.io/shepherdjerred/ci-playwright",
+        repository: "docker.io/shepherdjerred/ci-playwright",
         dockerfile: "ci/ci-playwright/Dockerfile",
         digestFile: "ci/ci-playwright/DIGEST",
         stateFile: "ci/ci-playwright/STATE.json",
@@ -74,7 +74,7 @@ export function ciImageDefinition(name: string): CiImageDefinition {
     case "windows-cross-compiler-winui":
       return {
         name,
-        repository: `ghcr.io/shepherdjerred/${name}`,
+        repository: `docker.io/shepherdjerred/${name}`,
         dockerfile: `${WINDOWS_CROSS_COMPILER_ROOT}/Dockerfile`,
         digestFile: `${WINDOWS_CROSS_COMPILER_ROOT}/images/${name}/DIGEST`,
         stateFile: `${WINDOWS_CROSS_COMPILER_ROOT}/images/${name}/STATE.json`,
@@ -226,17 +226,4 @@ export function ciImageSelftestCommand(
     `type=local,dest=${outputDirectory}`,
     ".",
   ];
-}
-
-export function registryLoginCommand(token?: string): string[] | undefined {
-  return token === undefined || token.length === 0
-    ? undefined
-    : [
-        "docker",
-        "login",
-        "ghcr.io",
-        "-u",
-        "shepherdjerred",
-        "--password-stdin",
-      ];
 }

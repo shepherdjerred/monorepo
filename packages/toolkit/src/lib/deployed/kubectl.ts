@@ -82,7 +82,7 @@ export function podsForVersionKey(
   versionKey: string,
 ): RunningPod[] {
   // Match the image repo path, ignoring any "/beta" | "/prod" variant suffix —
-  // the ghcr image is "ghcr.io/shepherdjerred/<image>", with no variant in the
+  // the registry image is "docker.io/shepherdjerred/<image>", with no variant in the
   // path. Match against imageID too: some runtimes report `.image` as a bare
   // config sha, with the repo path only present in `.imageID`.
   const imagePath = versionKey.split("/").slice(0, 2).join("/");

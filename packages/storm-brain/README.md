@@ -50,7 +50,7 @@ even on 502s.
 - Homelab chart `storm-brain` (namespace `storm-brain`): Deployment,
   Service, ServiceMonitor, NetworkPolicy. Game traffic comes only from the
   `minecraft-tsmc` namespace.
-- Image `ghcr.io/shepherdjerred/storm-brain`, versioned through the
+- Image `docker.io/shepherdjerred/storm-brain`, versioned through the
   version catalog.
 - Flipt namespace `storm`, environment `prod`; the three flow flags above
   are the rollout switches. The plugin needs no restart when they flip.

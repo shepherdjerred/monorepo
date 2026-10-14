@@ -107,7 +107,7 @@ export function createMarioKartDeployment(chart: Chart) {
 
   deployment.addContainer(
     withCommonProps({
-      image: `ghcr.io/shepherdjerred/discord-plays-mario-kart:${versions["shepherdjerred/discord-plays-mario-kart"]}`,
+      image: `docker.io/shepherdjerred/discord-plays-mario-kart:${versions["shepherdjerred/discord-plays-mario-kart"]}`,
       envVariables: {
         NODE_ENV: EnvValue.fromValue("production"),
         // Peer userbot Discord user IDs (Pokébot + Streambot) so the channel-handler

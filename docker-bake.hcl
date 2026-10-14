@@ -6,16 +6,16 @@
 # CI (ci/scripts/images/bake-images.ts) invokes this with
 # VERSION/GIT_SHA/PUSH_CACHE set; local `docker buildx bake <target>` works
 # with the dev defaults (cache is read-only unless PUSH_CACHE=true — writing
-# the ghcr buildcache refs needs a docker-container builder + push creds).
+# the Docker Hub buildcache refs needs a docker-container builder + push creds).
 # Per-package `docker:build` scripts remain for one-off local builds; target
 # definitions here must stay in sync with them.
 #
 // CI solves `smoke` targets without an exporter, then pushes the production
-// target directly to GHCR. Local bake calls retain convenient `<name>:dev`
+// target directly to Docker Hub. Local bake calls retain convenient `<name>:dev`
 // tags for the package-owned Docker wrappers.
 
 variable "REGISTRY" {
-  default = "ghcr.io/shepherdjerred"
+  default = "docker.io/shepherdjerred"
 }
 
 # Baked into app images as ARG VERSION / GIT_SHA (declared last in every

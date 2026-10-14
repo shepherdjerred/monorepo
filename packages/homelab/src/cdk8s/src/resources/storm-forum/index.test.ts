@@ -7,7 +7,7 @@ import { createServiceProbesChart } from "@shepherdjerred/homelab/cdk8s/src/reso
 
 const fixture = {
   stage: "beta" as const,
-  image: `ghcr.io/shepherdjerred/storm-forum@sha256:${"a".repeat(64)}`,
+  image: `docker.io/shepherdjerred/storm-forum@sha256:${"a".repeat(64)}`,
   secretItemId: "a".repeat(26),
   bundleSha256: "b".repeat(64),
   bundleKey: "releases/test.zip",
@@ -44,11 +44,15 @@ describe("forum upgrade snapshot contract", () => {
     expect(json).toContain(
       JSON.stringify({
         name: "BACKUP_SOURCE_RUNTIME_IMAGE",
-        value: fixture.image.replace("a".repeat(64), "d".repeat(64)),
+        value: fixture.image
+          .replace("docker.io/", "ghcr.io/")
+          .replace("a".repeat(64), "d".repeat(64)),
       }),
     );
     expect(json).toContain(
-      '"name":"RUNTIME_IMAGE","value":"' + fixture.image + '"',
+      '"name":"RUNTIME_IMAGE","value":"' +
+        fixture.image.replace("docker.io/", "ghcr.io/") +
+        '"',
     );
   });
   it("preserves the completed bootstrap job until a new release explicitly requests a pre-upgrade backup", () => {
@@ -155,7 +159,7 @@ describe("forum isolation and release resources", () => {
     expect(() =>
       createStormForumChart(new App(), {
         ...fixture,
-        image: "ghcr.io/shepherdjerred/storm-forum:latest",
+        image: "docker.io/shepherdjerred/storm-forum:latest",
       }),
     ).toThrow();
   });
@@ -221,7 +225,7 @@ describe("forum isolation and release resources", () => {
     expect(() =>
       createStormForumChart(new App(), {
         ...fixture,
-        image: `ghcr.io/shepherdjerred/storm-forum@sha256:${"0".repeat(64)}`,
+        image: `docker.io/shepherdjerred/storm-forum@sha256:${"0".repeat(64)}`,
       }),
     ).toThrow();
   });

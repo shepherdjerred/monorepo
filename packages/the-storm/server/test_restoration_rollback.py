@@ -46,7 +46,7 @@ class WholeRollbackTest(unittest.TestCase):
             self.write(self.payload, prefix + "/region/r.0.0.mca", b"retained arena")
         files.stage(
             self.data, self.payload, files.files(self.payload), self.proof.strings("files"), REQUEST,
-            "ghcr.io/shepherdjerred/the-storm-server:fixture@sha256:" + "a" * 64, "b" * 64, "backup",
+            "docker.io/shepherdjerred/the-storm-server:fixture@sha256:" + "a" * 64, "b" * 64, "backup",
         )
         files.commit(self.data, REQUEST)
         self.write(self.data, "server.properties", b"changed during private startup")

@@ -119,7 +119,8 @@ function observeContainers(
     ...spec.containers,
     ...(spec.initContainers ?? []),
   ]) {
-    if (!container.image.startsWith("ghcr.io/shepherdjerred/")) continue;
+    if (!/^(?:docker\.io|ghcr\.io)\/shepherdjerred\//u.test(container.image))
+      continue;
     addArtifact(
       container.image.split(":").slice(1).join(":"),
       inventory,

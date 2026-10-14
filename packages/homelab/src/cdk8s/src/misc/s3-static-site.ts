@@ -404,7 +404,7 @@ export class S3StaticSites extends Construct {
         // non-critical usage; see the 2026-06-12 right-sizing plan.
         resources: {},
         name: "caddy",
-        image: `ghcr.io/shepherdjerred/caddy-s3proxy:${versions["shepherdjerred/caddy-s3proxy"]}`,
+        image: `docker.io/shepherdjerred/caddy-s3proxy:${versions["shepherdjerred/caddy-s3proxy"]}`,
         portNumber: STATIC_SITE_HTTP_PORT,
         envVariables: {
           AWS_ACCESS_KEY_ID: EnvValue.fromSecretValue({

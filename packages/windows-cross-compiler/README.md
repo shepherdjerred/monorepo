@@ -4,16 +4,16 @@ Linux container images that build Windows software: C, C++, Rust, and .NET
 for x64 and ARM64 Windows, and Windows App SDK (WinUI 3) apps packaged as MSIX.
 Nothing runs on Windows and nothing is signed.
 
-| Image                                                 | Contents                                                                                                     | Hosts                                                   |
-| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------- |
-| `ghcr.io/shepherdjerred/windows-cross-compiler`       | clang-cl and lld with the MSVC CRT and Windows SDK, Rust with cargo-xwin, the .NET SDK, NSIS                 | linux/amd64 (the Dockerfile also builds on linux/arm64) |
-| `ghcr.io/shepherdjerred/windows-cross-compiler-winui` | The above plus Wine 11.0 and .NET Framework 4.8 running Microsoft's XAML compiler, `makepri`, and `makeappx` | linux/amd64                                             |
+| Image                                                   | Contents                                                                                                     | Hosts                                                   |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------- |
+| `docker.io/shepherdjerred/windows-cross-compiler`       | clang-cl and lld with the MSVC CRT and Windows SDK, Rust with cargo-xwin, the .NET SDK, NSIS                 | linux/amd64 (the Dockerfile also builds on linux/arm64) |
+| `docker.io/shepherdjerred/windows-cross-compiler-winui` | The above plus Wine 11.0 and .NET Framework 4.8 running Microsoft's XAML compiler, `makepri`, and `makeappx` | linux/amd64                                             |
 
 Images are published by digest only. Use the digest recorded in
 `images/<image>/DIGEST`:
 
 ```bash
-image="ghcr.io/shepherdjerred/windows-cross-compiler@$(cat images/windows-cross-compiler/DIGEST)"
+image="docker.io/shepherdjerred/windows-cross-compiler@$(cat images/windows-cross-compiler/DIGEST)"
 docker run --rm -v "$PWD:/workspace" "$image" <command>
 ```
 

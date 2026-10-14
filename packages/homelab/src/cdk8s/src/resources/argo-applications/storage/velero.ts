@@ -113,6 +113,7 @@ export function createVeleroApp(chart: Chart) {
   }
 
   const veleroValues: HelmValuesForChart<"velero"> = {
+    image: { imagePullSecrets: ["dockerhub-pull-velero"] },
     // Velero configuration
     metrics: {
       serviceMonitor: {
@@ -213,7 +214,7 @@ export function createVeleroApp(chart: Chart) {
       },
       {
         name: "velero-plugin-openebs",
-        image: `ghcr.io/shepherdjerred/velero-plugin:${versions["shepherdjerred/velero-plugin"]}`,
+        image: `docker.io/shepherdjerred/velero-plugin:${versions["shepherdjerred/velero-plugin"]}`,
         securityContext: {
           runAsNonRoot: true,
           runAsUser: 65_532,

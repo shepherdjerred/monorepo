@@ -69,7 +69,7 @@ export function createWoodpeckerConfigExtension(chart: Chart): void {
   deployment.addContainer(
     withCommonProps({
       name: "woodpecker-config-extension",
-      image: `ghcr.io/shepherdjerred/woodpecker-config-extension:${versions["shepherdjerred/woodpecker-config-extension"]}`,
+      image: `docker.io/shepherdjerred/woodpecker-config-extension:${versions["shepherdjerred/woodpecker-config-extension"]}`,
       ports: [{ name: "http", number: CONFIG_EXTENSION_PORT }],
       envVariables: {
         FEATURE_FLAGS_MODE: EnvValue.fromValue("flipt"),
@@ -79,7 +79,7 @@ export function createWoodpeckerConfigExtension(chart: Chart): void {
         FLIPT_NAMESPACE: EnvValue.fromValue("woodpecker"),
         FLIPT_ENVIRONMENT: EnvValue.fromValue("prod"),
         CI_GATE_IMAGE: EnvValue.fromValue(
-          `ghcr.io/shepherdjerred/woodpecker-config-extension:${versions["shepherdjerred/woodpecker-config-extension"]}`,
+          `docker.io/shepherdjerred/woodpecker-config-extension:${versions["shepherdjerred/woodpecker-config-extension"]}`,
         ),
         WOODPECKER_URL: EnvValue.fromValue(WOODPECKER_PUBLIC_HOST),
         CI_REPO_SLUG: EnvValue.fromValue("shepherdjerred/monorepo"),

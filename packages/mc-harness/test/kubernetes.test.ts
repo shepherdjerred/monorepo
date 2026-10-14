@@ -228,7 +228,7 @@ describe("sandbox pod manifest (mc-sandbox admission policy)", () => {
       readOnly: true,
     });
     expect(storm.containers[0]?.image).toMatch(
-      /^ghcr\.io\/shepherdjerred\/the-storm-server:.+@sha256:/u,
+      /^docker\.io\/shepherdjerred\/the-storm-server:.+@sha256:/u,
     );
   });
 });

@@ -27,7 +27,7 @@
     "format": "bun x prettier --check src",
     "format:write": "bun x prettier --write src",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
-    "docker:build": "docker buildx build --cache-from type=registry,ref=ghcr.io/shepherdjerred/scout-for-lol:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t scout-for-lol:dev -f Dockerfile ../../../..",
+    "docker:build": "docker buildx build --cache-from type=registry,ref=docker.io/shepherdjerred/scout-for-lol:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t scout-for-lol:dev -f Dockerfile ../../../..",
     "smoke": "bun scripts/smoke/smoke.ts",
     "generate": "bun run db:generate",
     "temporal:requeue-work": "bun run scripts/requeue-temporal-work.ts",

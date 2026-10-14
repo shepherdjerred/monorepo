@@ -128,7 +128,7 @@ export function resolveManagedImagePins(
     const pin = findManagedImagePin(versionCatalogSource, name);
     if (pin === undefined) {
       throw new Error(
-        `No managed image pin exists for ghcr.io/shepherdjerred/${name}`,
+        `No managed image pin exists for docker.io/shepherdjerred/${name}`,
       );
     }
     return { name, pin };

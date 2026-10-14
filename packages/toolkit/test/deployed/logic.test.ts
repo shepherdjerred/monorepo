@@ -81,7 +81,7 @@ describe("podsForVersionKey (imageID matching, gotcha #5/#6)", () => {
     const pods = [
       pod(
         "sha256:3d11a728",
-        "ghcr.io/shepherdjerred/birmel@sha256:7b7dcd2c",
+        "docker.io/shepherdjerred/birmel@sha256:7b7dcd2c",
         "sha256:7b7dcd2c",
       ),
       pod(
@@ -98,8 +98,8 @@ describe("podsForVersionKey (imageID matching, gotcha #5/#6)", () => {
   test("ignores the /beta|/prod variant suffix when matching the image path", () => {
     const pods = [
       pod(
-        "ghcr.io/shepherdjerred/scout-for-lol:2.0.0-3637",
-        "ghcr.io/shepherdjerred/scout-for-lol@sha256:d654e238",
+        "docker.io/shepherdjerred/scout-for-lol:2.0.0-3637",
+        "docker.io/shepherdjerred/scout-for-lol@sha256:d654e238",
         "sha256:d654e238",
       ),
     ];

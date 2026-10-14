@@ -338,7 +338,7 @@ async function options(
     taskQueue: "monorepo-workflows",
     candidatePinName: "shepherdjerred/temporal-worker/workflows/candidate",
     stablePinName: "shepherdjerred/temporal-worker/workflows/stable",
-    imageRepository: "ghcr.io/shepherdjerred/temporal-worker",
+    imageRepository: "docker.io/shepherdjerred/temporal-worker",
     replayCommands: [
       ["bun", "run", "test:workflows"],
       ["bun", "run", "replay:candidate-histories"],
@@ -467,7 +467,7 @@ describe("Worker Deployment rollout", () => {
       "shepherdjerred/scout-for-lol/beta/workflows/candidate";
     rolloutOptions.stablePinName =
       "shepherdjerred/scout-for-lol/beta/workflows/stable";
-    rolloutOptions.imageRepository = "ghcr.io/shepherdjerred/scout-for-lol";
+    rolloutOptions.imageRepository = "docker.io/shepherdjerred/scout-for-lol";
     rolloutOptions.replayCommands = [
       [
         "bun",

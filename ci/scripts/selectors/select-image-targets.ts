@@ -34,46 +34,7 @@ import {
   IMAGE_TARGET_OWNERS,
 } from "../images/image-targets.ts";
 
-// Paths whose change means "build everything", unconditionally. Deliberately
-// NOT here, because their changes are attributed per image instead (each with
-// fail-open to ALL on any parse surprise):
-// - bun.lock — closure resolution fingerprints (below).
-// - package.json / scripts/package.json — content-aware: a delta confined to
-//   devDependencies/scripts is repo tooling that ships in no image; the
-//   accompanying bun.lock change is attributed by the fingerprints. Any other
-//   key (workspaces, overrides, patchedDependencies, trustedDependencies, …)
-//   still selects ALL.
-// - patches/ — each patch file maps to one dependency via the manifest's
-//   patchedDependencies; only images whose closure contains that dependency
-//   are selected.
-// - ci/ — only the files that shape image builds/selection are
-//   global; other CI scripts don't change image content.
-const GLOBAL_IMAGE_INPUTS = [
-  // Bake defines the Dockerfile, context, arguments, cache, and output tags
-  // for every application and infrastructure image.
-  "docker-bake.hcl",
-  // Selector and orchestration corrections must reconcile every target once:
-  // a previously omitted content change can already be inside the last-green
-  // base, so testing the new selector alone cannot repair that latent drift.
-  "packages/woodpecker-config-extension/src/pipeline/lanes/ci-images.ts",
-  "ci/scripts/images/bake-images.ts",
-  "ci/scripts/images/bake-retry.ts",
-  "ci/scripts/reporting/buildkit-env.ts",
-  // The image lane writes the digest handoff every downstream release step
-  // reads, so a change to the producer must rebuild every target once.
-  "scripts/lib/ci/ci-handoff.ts",
-  "scripts/lib/ci/published-image-release.ts",
-  "ci/scripts/images/ghcr-public-access.ts",
-  "ci/scripts/images/image-targets.ts",
-  "ci/scripts/migration-core.ts",
-  "ci/scripts/images/production-bake-environment.ts",
-  "ci/scripts/selectors/select-image-targets.ts",
-  "ci/scripts/selectors/ensure-ancestor.ts",
-  "ci/scripts/selectors/select-image-targets-lockfile.ts",
-  "ci/scripts/selectors/select-image-targets-pins.ts",
-  "ci/scripts/selectors/select-image-targets-workspaces.ts",
-  "scripts/lib/image-pin-catalog.ts",
-];
+import { GLOBAL_IMAGE_INPUTS } from "./select-image-targets-inputs.ts";
 
 // These files shape every application solve, but none of the self-contained
 // infrastructure image contexts. Keep them separate from GLOBAL_IMAGE_INPUTS

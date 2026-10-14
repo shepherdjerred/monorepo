@@ -120,7 +120,7 @@ type GatewayContainerProps = Readonly<{
 function gatewayContainer(props: GatewayContainerProps) {
   return {
     name: props.name,
-    image: `ghcr.io/shepherdjerred/caddy-s3proxy:${versions["shepherdjerred/caddy-s3proxy"]}`,
+    image: `docker.io/shepherdjerred/caddy-s3proxy:${versions["shepherdjerred/caddy-s3proxy"]}`,
     command: ["/bin/sh", "-c"],
     args: [
       'printf "%s" "$CADDY_CONFIG" > /tmp/Caddyfile && exec caddy run --config /tmp/Caddyfile --adapter caddyfile',

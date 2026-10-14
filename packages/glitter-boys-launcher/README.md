@@ -205,15 +205,18 @@ Edge/proxy access logs have their own retention outside this event contract.
 
 Its Dockerfile belongs to this package; build, smoke-test, and publish the image
 manually from the repository root. Use a unique release tag:
+Authenticate Docker with the scoped publisher identity before pushing.
 
 ```sh
 docker build --target smoke -f packages/glitter-boys-launcher/Dockerfile .
-docker build --target image -f packages/glitter-boys-launcher/Dockerfile -t ghcr.io/shepherdjerred/glitter-boys-launcher:<release-tag> .
-docker push ghcr.io/shepherdjerred/glitter-boys-launcher:<release-tag>
+docker build --target image -f packages/glitter-boys-launcher/Dockerfile -t docker.io/shepherdjerred/glitter-boys-launcher:<release-tag> .
+docker push docker.io/shepherdjerred/glitter-boys-launcher:<release-tag>
 ```
 
-Verify the published image is publicly pullable and record its immutable digest
-in the version catalog before activation. Shared CI does not build or publish it.
+The repository stays private. Switch Docker to the scoped reader identity and
+verify the published immutable digest with
+`docker buildx imagetools inspect docker.io/shepherdjerred/glitter-boys-launcher@sha256:<published-digest>`.
+Record that digest in the version catalog before activation. Shared CI does not build or publish it.
 Its catalog entry declares `imagePublisher: "local"`; CI release handoffs preserve
 that source-owned pin and reject CI publication candidates for it. Omitted
 `imagePublisher` means CI publication. This ownership is separate from the

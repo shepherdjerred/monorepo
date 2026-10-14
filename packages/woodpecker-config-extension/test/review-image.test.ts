@@ -4,7 +4,7 @@ import { completionStep } from "#src/pipeline/completion.ts";
 import { TEST_IMAGES } from "./identity.ts";
 
 test("trusted policy image removes checkout, install, and persistent review auth", () => {
-  const image = `ghcr.io/shepherdjerred/woodpecker-config-extension@sha256:${"c".repeat(64)}`;
+  const image = `docker.io/shepherdjerred/woodpecker-config-extension@sha256:${"c".repeat(64)}`;
   const review = prGateSteps(TEST_IMAGES, image).find(
     (step) => step.key === "codex-review-gate",
   );

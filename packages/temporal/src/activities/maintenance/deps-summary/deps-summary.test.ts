@@ -101,7 +101,7 @@ describe("dependency summary collection", () => {
     expect(changes[0]?.oldVersion).toBe(changes[0]?.newVersion);
     expect(changes[0]).toMatchObject({
       datasource: "docker",
-      registryUrl: "https://ghcr.io",
+      registryUrl: "https://docker.io",
       packageName: "shepherdjerred/service",
     });
   });

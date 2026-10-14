@@ -1,6 +1,6 @@
 # The Storm server image
 
-`minecraft-tsmc` runs `ghcr.io/shepherdjerred/the-storm-server`: pinned,
+`minecraft-tsmc` runs `docker.io/shepherdjerred/the-storm-server`: pinned,
 pre-patched Paper, TheStorm, the MCBridge agent bridge, eleven supporting
 plugins, and repository-owned configuration. The image builds through `docker-bake.hcl`; CI publication and
 the version catalog control its GitOps release.
@@ -464,6 +464,12 @@ storage. Both commands report pending controller work and can be repeated.
 Controller warnings remain recorded for operator review. A completed restore
 keeps byte verification pending. `verify-backup` creates two request-owned,
 read-only volume readers using the recorded immutable rollback image. Readers
+reference their namespace's Docker Hub pull Secret. Before creating a reader in
+the request-owned restore namespace, the controller declares a lease-owned
+`OnePasswordItem` using the production reader's item reference and waits for
+the operator to reconcile it. It never reads or copies Secret values. The
+installation writer inherits the production namespace's pull reference.
+Readers
 use UID 1000 and GID 2000 to read the existing server-owned private files and
 group-owned directories, while dropping every capability. They do not change
 volume ownership or permissions. Verification streams

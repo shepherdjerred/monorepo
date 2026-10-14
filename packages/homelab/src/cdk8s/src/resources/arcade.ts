@@ -143,7 +143,7 @@ export function createArcadeDeployment(chart: Chart) {
   );
   deployment.addContainer(
     withCommonProps({
-      image: `ghcr.io/shepherdjerred/arcade:${versions["shepherdjerred/arcade"]}`,
+      image: `docker.io/shepherdjerred/arcade:${versions["shepherdjerred/arcade"]}`,
       envVariables: {
         ARCADE_CONFIG_PATH: EnvValue.fromValue("/config/arcade.toml"),
         NODE_ENV: EnvValue.fromValue("production"),

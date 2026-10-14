@@ -15,7 +15,7 @@
         "containers": [
           {
             "name": "minecraft-tsmc",
-            "image": "ghcr.io/shepherdjerred/the-storm-server:adhoc-atmosphere-e62223703f@sha256:e85692205de43135b021995a8a8698559ccb3bc50b269acb911c4e9592da44e2"
+            "image": "docker.io/shepherdjerred/the-storm-server:adhoc-atmosphere-e62223703f@sha256:e85692205de43135b021995a8a8698559ccb3bc50b269acb911c4e9592da44e2"
           }
         ]
       }

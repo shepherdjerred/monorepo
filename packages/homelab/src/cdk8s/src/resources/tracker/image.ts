@@ -10,5 +10,5 @@ export function trackerImageReference(version: string): string | undefined {
     throw new Error(
       `Tracker requires a published immutable image digest: ${version}`,
     );
-  return `ghcr.io/shepherdjerred/tracker@${digest}`;
+  return `docker.io/shepherdjerred/tracker@${digest}`;
 }

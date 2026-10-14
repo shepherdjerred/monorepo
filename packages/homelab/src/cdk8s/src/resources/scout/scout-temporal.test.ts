@@ -360,7 +360,7 @@ test("preserves retained builds before replacing mutable Workflow tracks", () =>
     ["bun", "-e", expect.stringContaining("temporal_worker_num_pollers{")],
   );
   expect(spec.template.spec.containers[0]?.image).toBe(
-    "ghcr.io/shepherdjerred/scout-for-lol:2.0.0-1008523@sha256:d4ab832cde525daa54208c58eb080c86e3a4bee7ff904dd6186a51937ff50985",
+    "docker.io/shepherdjerred/scout-for-lol:2.0.0-1008523@sha256:d4ab832cde525daa54208c58eb080c86e3a4bee7ff904dd6186a51937ff50985",
   );
   expect(
     spec.template.spec.containers[0]?.env.map((env) => env.name),
@@ -380,7 +380,7 @@ test("preserves retained builds before replacing mutable Workflow tracks", () =>
       WorkflowDeploymentSpecSchema.parse(mutable?.spec).template.spec
         .containers[0]?.image,
     ).toBe(
-      `ghcr.io/shepherdjerred/scout-for-lol:${track === "stable" ? CAPABLE_STABLE_IMAGE : CAPABLE_CANDIDATE_IMAGE}`,
+      `docker.io/shepherdjerred/scout-for-lol:${track === "stable" ? CAPABLE_STABLE_IMAGE : CAPABLE_CANDIDATE_IMAGE}`,
     );
   }
 });

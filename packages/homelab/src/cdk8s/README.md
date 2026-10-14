@@ -18,6 +18,9 @@
   step grants can also be checked against the vault snapshot. CI and sandbox
   tokenless service accounts reference the reader secret; publishing uses its
   separate 1Password item.
+  Private Docker Hub Pod templates receive their namespace's reader secret at
+  synthesis. External Helm applications declare their chart-specific pull-secret
+  values, verified against rendered templates.
 
 ## Static-site SPA routes
 

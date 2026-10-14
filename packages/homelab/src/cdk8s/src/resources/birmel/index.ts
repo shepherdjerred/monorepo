@@ -63,7 +63,7 @@ export function createBirmelDeployment(chart: Chart) {
   deployment.addInitContainer(
     withCommonProps({
       name: "install-code-sandbox-firewall",
-      image: `ghcr.io/shepherdjerred/birmel:${versions["shepherdjerred/birmel"]}`,
+      image: `docker.io/shepherdjerred/birmel:${versions["shepherdjerred/birmel"]}`,
       command: ["/bin/sh", "-c"],
       args: [
         `set -eu
@@ -117,7 +117,7 @@ done`,
 
   deployment.addContainer(
     withCommonProps({
-      image: `ghcr.io/shepherdjerred/birmel:${versions["shepherdjerred/birmel"]}`,
+      image: `docker.io/shepherdjerred/birmel:${versions["shepherdjerred/birmel"]}`,
       securityContext: {
         readOnlyRootFilesystem: false,
         ensureNonRoot: false,
@@ -283,7 +283,7 @@ done`,
   deployment.addContainer(
     withCommonProps({
       name: "code-sandbox",
-      image: `ghcr.io/shepherdjerred/birmel:${versions["shepherdjerred/birmel"]}`,
+      image: `docker.io/shepherdjerred/birmel:${versions["shepherdjerred/birmel"]}`,
       command: ["tini", "-s", "--", "bun", "src/sandbox/server.ts"],
       securityContext: {
         user: 0,

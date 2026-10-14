@@ -99,7 +99,6 @@ export function releaseChainSteps(
           "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production",
         ),
         "MISE_TOOLCHAIN_SCOPE=automation . ci/scripts/toolchain.sh",
-        "bun --no-install ci/scripts/reporting/buildkit-env.ts",
         DOCKERHUB_PUBLISH_LOGIN,
         // The Caddyfile is an input to the in-image smoke test. verify builds
         // it; it travels through the handoff store because each Woodpecker
@@ -112,12 +111,7 @@ export function releaseChainSteps(
       resources: IMAGE_ORCHESTRATION_TIER,
       defaultBranchOnly: true,
       concurrency: { limit: 1, group: "image-push" },
-      secrets: [
-        GITHUB_DOWNLOAD,
-        grant("ci-github-credentials", "GITHUB_PACKAGES_TOKEN"),
-        ...DOCKERHUB_PUBLISH,
-        ...HANDOFF_KEYS,
-      ],
+      secrets: [GITHUB_DOWNLOAD, ...DOCKERHUB_PUBLISH, ...HANDOFF_KEYS],
     },
     {
       key: "helm-push",

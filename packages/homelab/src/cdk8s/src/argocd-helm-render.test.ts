@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { parseAllDocuments } from "yaml";
 import { z } from "zod";
 import path from "node:path";
+import { imageRegistry } from "@shepherdjerred/version-catalog/image-registry";
 
 /**
  * ArgoCD Helm Render Tests
@@ -124,6 +125,39 @@ const MinecraftStatefulSetSchema = z.object({
 });
 
 type HelmSource = z.infer<typeof HelmSourceSchema>;
+
+const privateImageNames = new Set(
+  imageRegistry.images
+    .filter((image) => image.visibility === "private")
+    .map((image) => image.name),
+);
+function privatePodSpecs(value: unknown): Record<string, unknown>[] {
+  if (Array.isArray(value))
+    return value.flatMap((child: unknown) => privatePodSpecs(child));
+  const parsed = z.record(z.string(), z.unknown()).safeParse(value);
+  if (!parsed.success) return [];
+  const record = parsed.data;
+  const containers = z
+    .array(z.object({ image: z.string() }))
+    .safeParse([
+      ...(Array.isArray(record["containers"]) ? record["containers"] : []),
+      ...(Array.isArray(record["initContainers"])
+        ? record["initContainers"]
+        : []),
+    ]);
+  const privateConsumer =
+    containers.success &&
+    containers.data.some(({ image }) => {
+      const name = /^docker\.io\/shepherdjerred\/([\w-]+)[:@]/u.exec(
+        image,
+      )?.[1];
+      return name !== undefined && privateImageNames.has(name);
+    });
+  return [
+    ...(privateConsumer ? [record] : []),
+    ...Object.values(record).flatMap((child) => privatePodSpecs(child)),
+  ];
+}
 
 type ExternalChart = {
   appName: string;
@@ -418,6 +452,37 @@ describeFn("ArgoCD Helm Render - External Charts", () => {
       throw new Error(
         `Charts with empty template output: ${emptyOutputs.join(", ")}`,
       );
+    }
+  });
+
+  it("renders reader pull secrets on every private consumer in external charts", () => {
+    for (const name of [
+      "minecraft-tsmc",
+      "seaweedfs",
+      "velero",
+      "prometheus",
+    ]) {
+      const outcome = outcomes.find(({ chart }) => chart.appName === name);
+      expect(outcome, name).toBeDefined();
+      if (outcome === undefined)
+        throw new Error(`Missing private chart ${name}`);
+      // Match the suite's bounded, reported upstream-outage skips. A rendered
+      // chart must still contain private consumers and their reader references.
+      if (outcome.result.exitCode !== 0 && outcome.result.transient) continue;
+      expect(outcome.result.exitCode, outcome.result.stderr).toBe(0);
+      const specs = parseAllDocuments(outcome.result.stdout).flatMap(
+        (document) => privatePodSpecs(document.toJSON()),
+      );
+      expect(specs.length, name).toBeGreaterThan(0);
+      for (const spec of specs) {
+        const secrets = z
+          .array(z.object({ name: z.string() }))
+          .parse(spec["imagePullSecrets"]);
+        expect(
+          secrets.map((secret) => secret.name),
+          name,
+        ).toContain(`dockerhub-pull-${name}`);
+      }
     }
   });
 

@@ -87,6 +87,11 @@ Workers, with separate registries, credentials, service accounts, and
 concurrency budgets. The explicit `all` role composes every role in one process
 for local development.
 
+The repo worker reads first-party build provenance from private Docker Hub
+images using its namespace's reader Secret. Its credential authenticates only
+the Docker Hub token exchange for first-party repositories; upstream metadata
+lookups remain anonymous.
+
 The infra worker's daily DNS audit reads the validated
 `packages/homelab/src/domain-registry.json` inventory in its `getDomains`
 Activity. Domains with `fastmailReady` are audited as mail domains; the others

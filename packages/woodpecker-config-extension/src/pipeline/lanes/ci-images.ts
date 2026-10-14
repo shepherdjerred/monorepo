@@ -29,8 +29,6 @@ const GITHUB_APP: readonly SecretGrant[] = [
   grant("ci-github-credentials", "GITHUB_APP_PRIVATE_KEY"),
 ];
 
-const GHCR_PUSH = grant("ci-github-credentials", "GITHUB_PACKAGES_TOKEN");
-
 /**
  * Rebuild a family of toolchain images and pin each result.
  *
@@ -54,7 +52,6 @@ function refreshStep(
     commands: [
       `if ! bun --no-install ci/scripts/selectors/ci-changed.ts ${lane}; then exit 0; fi`,
       "MISE_TOOLCHAIN_SCOPE=automation . ci/scripts/toolchain.sh",
-      "bun --no-install ci/scripts/reporting/buildkit-env.ts",
       DOCKERHUB_PUBLISH_LOGIN,
       ...names.flatMap((name) => [
         `bun --no-install ci/scripts/images/build-ci-image.ts --image ${name} --candidate-out ${name}-candidate.json`,
@@ -66,7 +63,7 @@ function refreshStep(
     resources: IMAGE_ORCHESTRATION_TIER,
     defaultBranchOnly: true,
     concurrency: { limit: 1, group: `${lane}-refresh` },
-    secrets: [GITHUB_DOWNLOAD, GHCR_PUSH, ...DOCKERHUB_PUBLISH, ...GITHUB_APP],
+    secrets: [GITHUB_DOWNLOAD, ...DOCKERHUB_PUBLISH, ...GITHUB_APP],
   };
 }
 

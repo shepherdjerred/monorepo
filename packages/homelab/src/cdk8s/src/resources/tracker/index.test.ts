@@ -9,7 +9,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import path from "node:path";
 import { tmpdir } from "node:os";
 
-const image = `ghcr.io/shepherdjerred/tracker@sha256:${"1".repeat(64)}`;
+const image = `docker.io/shepherdjerred/tracker@sha256:${"1".repeat(64)}`;
 const manifest = z.object({
   kind: z.string(),
   metadata: z.object({
@@ -178,6 +178,6 @@ test("admits only tailnet, monitoring and the infra worker to the unauthenticate
 
 test("rejects a mutable image before activation", () => {
   expect(() =>
-    createTrackerChart(new App(), "ghcr.io/shepherdjerred/tracker:latest"),
+    createTrackerChart(new App(), "docker.io/shepherdjerred/tracker:latest"),
   ).toThrow("pinned public image digest");
 });

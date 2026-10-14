@@ -92,9 +92,10 @@ and Scout tag publication receive the scoped Docker Hub publisher identity.
 Scout site extraction and image-pin metadata verification receive only the reader Docker configuration from
 `dockerhub-pull-woodpecker-ci`. The login helper validates the account and sends
 the token through standard input. These grants are main-only; pull-request
-commands receive neither registry identity. The generated graph authenticates
-Docker Hub alongside GHCR during the registry transition, so changing image
-references later does not depend on undeployed credential grants.
+commands receive neither registry identity. Publishing and CI toolchain images
+use Docker Hub. The publisher verifies the registry catalog's visibility policy
+before recording image pins. The review-image parser accepts existing GHCR
+extension digests during deployment transitions.
 
 Shared download caches are paired with explicit tool paths: Bun uses
 `/woodpecker/bun-cache/data`, and uv uses `/woodpecker/uv-cache`. The emitter

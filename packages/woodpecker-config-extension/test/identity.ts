@@ -22,8 +22,8 @@ export const TEST_IDENTITY: PipelineIdentity = {
  * The values only have to be well-formed; nothing under test resolves them.
  */
 export const TEST_IMAGES: CiImages = {
-  base: `ghcr.io/shepherdjerred/ci-base@sha256:${"a".repeat(64)}`,
-  playwright: `ghcr.io/shepherdjerred/ci-playwright@sha256:${"b".repeat(64)}`,
+  base: `docker.io/shepherdjerred/ci-base@sha256:${"a".repeat(64)}`,
+  playwright: `docker.io/shepherdjerred/ci-playwright@sha256:${"b".repeat(64)}`,
   catalog: {
     "aquasec/trivy": "aquasec/trivy:0.72.0",
     "semgrep/semgrep": "semgrep/semgrep:1.170.0",

@@ -7,7 +7,7 @@ import { emitWorkflow } from "#src/pipeline/emit.ts";
 import { GATE_TIER } from "#src/pipeline/tiers.ts";
 import { TEST_IDENTITY, TEST_IMAGES } from "./identity.ts";
 
-const image = `ghcr.io/shepherdjerred/woodpecker-config-extension@sha256:${"c".repeat(64)}`;
+const image = `docker.io/shepherdjerred/woodpecker-config-extension@sha256:${"c".repeat(64)}`;
 const context: RoutingContext = {
   event: "pull_request",
   branch: "main",

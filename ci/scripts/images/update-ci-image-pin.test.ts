@@ -264,7 +264,7 @@ describe("CI image pin arbitration", () => {
 });
 
 describe("CI image runtime promotion", () => {
-  const repository = "ghcr.io/shepherdjerred/ci-base";
+  const repository = "docker.io/shepherdjerred/ci-base";
   const pinnedDigest = digest("a");
   const candidateDigest = digest("b");
 

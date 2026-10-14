@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { ApiObject, App, Chart } from "cdk8s";
 import { z } from "zod";
-import { prepareDockerHubPullSecrets } from "./dockerhub-pull-secrets.ts";
+import {
+  attachDockerHubPullSecrets,
+  prepareDockerHubPullSecrets,
+} from "./dockerhub-pull-secrets.ts";
 import { createWoodpeckerCredentialBoundaries } from "./resources/argo-applications/ci/woodpecker-credentials.ts";
 
 function fixtures() {
@@ -47,6 +50,66 @@ function secrets(app: App) {
 }
 
 describe("Docker Hub credential preparation", () => {
+  it.each([
+    "Pod",
+    "Deployment",
+    "StatefulSet",
+    "DaemonSet",
+    "ReplicaSet",
+    "Job",
+  ])(
+    "attaches the reader to private init containers in %s and preserves existing secrets",
+    (kind) => {
+      const app = new App();
+      const chart = new Chart(app, "private", { namespace: "private" });
+      const pod = {
+        containers: [{ image: "docker.io/library/alpine:latest" }],
+        initContainers: [
+          { image: "docker.io/shepherdjerred/velero-plugin:current" },
+        ],
+        imagePullSecrets: [{ name: "existing" }],
+      };
+      const resource = new ApiObject(chart, "workload", {
+        apiVersion:
+          kind === "Pod" ? "v1" : kind === "Job" ? "batch/v1" : "apps/v1",
+        kind,
+        spec: kind === "Pod" ? pod : { template: { spec: pod } },
+      });
+      attachDockerHubPullSecrets(app);
+      attachDockerHubPullSecrets(app);
+      const json = z.object({ spec: z.unknown() }).parse(resource.toJson());
+      const renderedPod =
+        kind === "Pod"
+          ? json.spec
+          : z
+              .object({ template: z.object({ spec: z.unknown() }) })
+              .parse(json.spec).template.spec;
+      expect(
+        z
+          .object({ imagePullSecrets: z.array(z.object({ name: z.string() })) })
+          .parse(renderedPod).imagePullSecrets,
+      ).toEqual([{ name: "existing" }, { name: "dockerhub-pull-private" }]);
+    },
+  );
+
+  it("does not attach credentials to upstream or public compiler pods", () => {
+    const app = new App();
+    const chart = new Chart(app, "public", { namespace: "public" });
+    const resources = [
+      "docker.io/library/alpine:latest",
+      "docker.io/shepherdjerred/windows-cross-compiler:current",
+    ].map(
+      (image, index) =>
+        new ApiObject(chart, `pod-${index.toString()}`, {
+          apiVersion: "v1",
+          kind: "Pod",
+          spec: { containers: [{ image }] },
+        }),
+    );
+    attachDockerHubPullSecrets(app);
+    for (const resource of resources)
+      expect(resource.toJson()).not.toHaveProperty("spec.imagePullSecrets");
+  });
   it("prepares one typed, reader-only secret per consumer namespace and CI", () => {
     const { app, chart } = fixtures();
     new ApiObject(chart, "second-worker", {

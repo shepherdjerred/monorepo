@@ -11,6 +11,7 @@ import {
   type BuildxCommandResult,
 } from "./bake-retry.ts";
 import { teeOutputTail } from "../reporting/command-output.ts";
+import { ensureDockerHubAccess } from "./dockerhub-access.ts";
 
 async function execute(
   command: readonly string[],
@@ -79,6 +80,7 @@ if (import.meta.main) {
     throw new Error(`CI image build failed for ${definition.repository}`);
   }
   const digest = builtImageDigest(await Bun.file(metadataFile).json());
+  await ensureDockerHubAccess(definition.name, digest);
   const candidate: CiImageCandidate = {
     schema: "ci-image-candidate/v1",
     image: definition.name,

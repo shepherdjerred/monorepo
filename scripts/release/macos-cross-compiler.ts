@@ -28,9 +28,10 @@ import { mkdir, rm } from "node:fs/promises";
 import { z } from "zod";
 import { run, requireEnv } from "../lib/run.ts";
 import { SEAWEEDFS_AWS_ENV, SEAWEEDFS_ENDPOINT } from "../lib/seaweedfs.ts";
+import { ensureDockerHubAccess } from "../../ci/scripts/images/dockerhub-access.ts";
 
 const PACKAGE_DIR = "packages/macos-cross-compiler";
-const IMAGE = "ghcr.io/shepherdjerred/macos-cross-compiler";
+const IMAGE = "docker.io/shepherdjerred/macos-cross-compiler";
 const BUCKET = "apple-sdks";
 const BUILDER = "ci";
 
@@ -195,6 +196,22 @@ async function push(sdk: Sdk, gitSha: string): Promise<void> {
     "--push",
     PACKAGE_DIR,
   ]);
+  const inspected = await run(
+    [
+      "docker",
+      "buildx",
+      "imagetools",
+      "inspect",
+      `${IMAGE}:${sdk.sdk}`,
+      "--format",
+      "{{json .Manifest}}",
+    ],
+    { capture: true },
+  );
+  const manifest = z
+    .object({ digest: z.string() })
+    .parse(JSON.parse(inspected.stdout));
+  await ensureDockerHubAccess("macos-cross-compiler", manifest.digest);
 }
 
 async function main(): Promise<void> {

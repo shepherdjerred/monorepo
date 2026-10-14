@@ -236,7 +236,7 @@ describe("selectImageTargets", () => {
       "ci/scripts/reporting/buildkit-env.ts",
       "scripts/lib/ci/ci-handoff.ts",
       "scripts/lib/ci/published-image-release.ts",
-      "ci/scripts/images/ghcr-public-access.ts",
+      "ci/scripts/images/dockerhub-access.ts",
       "ci/scripts/images/image-targets.ts",
       "ci/scripts/migration-core.ts",
       "ci/scripts/images/production-bake-environment.ts",

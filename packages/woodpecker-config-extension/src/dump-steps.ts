@@ -23,8 +23,8 @@ import { DISABLED_PERFORMANCE } from "#src/performance-config.ts";
 const PLACEHOLDER_DIGEST = `sha256:${"0".repeat(64)}`;
 
 const PLACEHOLDER_IMAGES: CiImages = {
-  base: `ghcr.io/shepherdjerred/ci-base@${PLACEHOLDER_DIGEST}`,
-  playwright: `ghcr.io/shepherdjerred/ci-playwright@${PLACEHOLDER_DIGEST}`,
+  base: `docker.io/shepherdjerred/ci-base@${PLACEHOLDER_DIGEST}`,
+  playwright: `docker.io/shepherdjerred/ci-playwright@${PLACEHOLDER_DIGEST}`,
   catalog: {
     "aquasec/trivy": "aquasec/trivy:0",
     "semgrep/semgrep": "semgrep/semgrep:0",
@@ -37,7 +37,7 @@ const PLACEHOLDER_IMAGES: CiImages = {
   },
 };
 
-const gateImage = `ghcr.io/shepherdjerred/woodpecker-config-extension@${PLACEHOLDER_DIGEST}`;
+const gateImage = `docker.io/shepherdjerred/woodpecker-config-extension@${PLACEHOLDER_DIGEST}`;
 const steps = groupTofuSteps(
   buildPipelineSteps({
     images: PLACEHOLDER_IMAGES,

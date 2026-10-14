@@ -30,7 +30,7 @@ export function mcSandboxImageAllowlist(): string[] {
   return [
     itzg,
     `docker.io/${itzg}`,
-    `ghcr.io/shepherdjerred/the-storm-server:${versions["shepherdjerred/the-storm-server"]}`,
-    `ghcr.io/shepherdjerred/the-storm-server:${versions["shepherdjerred/the-storm-server/prod"]}`,
+    `docker.io/shepherdjerred/the-storm-server:${versions["shepherdjerred/the-storm-server"]}`,
+    `docker.io/shepherdjerred/the-storm-server:${versions["shepherdjerred/the-storm-server/prod"]}`,
   ];
 }

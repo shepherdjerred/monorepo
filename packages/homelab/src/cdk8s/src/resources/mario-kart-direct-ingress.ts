@@ -46,7 +46,7 @@ export function createMarioKartDirectIngress(
   const container = deployment.addContainer(
     withCommonProps({
       name: "caddy",
-      image: `ghcr.io/shepherdjerred/caddy-s3proxy:${versions["shepherdjerred/caddy-s3proxy"]}`,
+      image: `docker.io/shepherdjerred/caddy-s3proxy:${versions["shepherdjerred/caddy-s3proxy"]}`,
       ports: [
         { name: "http", number: 8080 },
         { name: "https", number: 8443 },

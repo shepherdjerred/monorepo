@@ -3,7 +3,7 @@
   "releases": [
     {
       "stage": "prod",
-      "image": "ghcr.io/shepherdjerred/storm-forum@sha256:f8afc59c81232bd85bde41ffa44812014a23b3c6674cd85129128ec632557800",
+      "image": "docker.io/shepherdjerred/storm-forum@sha256:f8afc59c81232bd85bde41ffa44812014a23b3c6674cd85129128ec632557800",
       "secretItemId": "xdstbl5gobpao35rjprlp3hzgi",
       "bundleSha256": "3c13bac1221ec67ca6ba6334b025505c1e410e0a941fe688f8cf0e63dbfc31df",
       "bundleKey": "releases/3c13bac1221ec67ca6ba6334b025505c1e410e0a941fe688f8cf0e63dbfc31df.zip",

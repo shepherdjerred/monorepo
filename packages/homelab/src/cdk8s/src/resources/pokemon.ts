@@ -120,7 +120,7 @@ export function createPokemonDeployment(chart: Chart) {
 
   deployment.addContainer(
     withCommonProps({
-      image: `ghcr.io/shepherdjerred/discord-plays-pokemon:${versions["shepherdjerred/discord-plays-pokemon"]}`,
+      image: `docker.io/shepherdjerred/discord-plays-pokemon:${versions["shepherdjerred/discord-plays-pokemon"]}`,
       envVariables: {
         NODE_ENV: EnvValue.fromValue("production"),
         WEB_PUBLIC_ORIGIN: EnvValue.fromValue("https://pokebot.sjer.red"),

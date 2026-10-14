@@ -53,7 +53,7 @@ export function createStormBrainDeployment(chart: Chart) {
   const container = deployment.addContainer(
     withCommonProps({
       name: "storm-brain",
-      image: `ghcr.io/shepherdjerred/storm-brain:${versions["shepherdjerred/storm-brain"]}`,
+      image: `docker.io/shepherdjerred/storm-brain:${versions["shepherdjerred/storm-brain"]}`,
       ports: [
         { name: "http", number: BRAIN_PORT },
         { name: "metrics", number: BRAIN_METRICS_PORT },

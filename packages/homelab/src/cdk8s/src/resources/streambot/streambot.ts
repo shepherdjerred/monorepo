@@ -152,7 +152,7 @@ export function createStreambotDeployment(
   const container = deployment.addContainer(
     withCommonProps({
       name: "streambot",
-      image: `ghcr.io/shepherdjerred/streambot:${versions["shepherdjerred/streambot"]}`,
+      image: `docker.io/shepherdjerred/streambot:${versions["shepherdjerred/streambot"]}`,
       envVariables: {
         ...(web?.plex === undefined
           ? {}

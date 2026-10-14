@@ -5,8 +5,12 @@ It covers Swift and SwiftUI apps, SwiftPM packages, C, C++, Objective-C, and
 Rust. The output is signed Mach-O binaries and `.app` bundles that match what
 Xcode builds from the same sources.
 
+Publishing is paused. The `:27` examples require a local build; that tag is not
+published. Public Docker Hub `:latest` and `:15.0` tags preserve the older image
+and do not contain the configured Xcode 27 toolchain.
+
 ```bash
-docker run --rm -v "$PWD:/workspace" ghcr.io/shepherdjerred/macos-cross-compiler:27 \
+docker run --rm -v "$PWD:/workspace" docker.io/shepherdjerred/macos-cross-compiler:27 \
   arm64-apple-macos-clang hello.c -o hello
 ```
 
@@ -15,11 +19,11 @@ docker run --rm -v "$PWD:/workspace" ghcr.io/shepherdjerred/macos-cross-compiler
 There is one image per macOS SDK. The deployment target is independent of
 the SDK, so every image builds for macOS 15 and later by default.
 
-| Tag              | SDK (from) | Swift | Status                |
-| ---------------- | ---------- | ----- | --------------------- |
-| `:27`, `:latest` | Xcode 27.0 | 6.4   | configured; CI paused |
-| `:26`            | Xcode 26   | 6.2   | planned               |
-| `:15`            | Xcode 16.4 | 6.2   | planned               |
+| Tag   | SDK (from) | Swift | Status                |
+| ----- | ---------- | ----- | --------------------- |
+| `:27` | Xcode 27.0 | 6.4   | configured; CI paused |
+| `:26` | Xcode 26   | 6.2   | planned               |
+| `:15` | Xcode 16.4 | 6.2   | planned               |
 
 [`sdks.json`](sdks.json) is the matrix. Each image uses the Swift that shipped
 with its Xcode. The exception is Swift 6.1, which has no Swift Build, so the
@@ -120,7 +124,7 @@ tarballs are the only inputs that are not in this repository:
 ```bash
 scripts/stage-xcode.sh --developer-dir /Applications/Xcode.app/Contents/Developer
 # → .stage/<sdk>/ and .stage/sdk-<sdk>.tar.zst (+ .sha256)
-docker build --build-arg SDK=27 -t macos-cross-compiler:27 .
+docker build --build-arg SDK=27 -t docker.io/shepherdjerred/macos-cross-compiler:27 .
 docker build --target smoke --build-arg SDK=27 .
 ```
 
