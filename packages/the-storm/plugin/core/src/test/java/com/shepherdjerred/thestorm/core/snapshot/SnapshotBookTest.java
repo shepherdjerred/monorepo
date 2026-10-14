@@ -21,7 +21,7 @@ final class SnapshotBookTest {
         player,
         scope,
         new Position("world", 1.5, 64, -2.5, 90, 10),
-        new Vitals(17.5, 18, 2.5f, 0.5f, "SURVIVAL"),
+        new Vitals(new Vitals.Condition(17.5, 18, 2.5f, 0.5f), "SURVIVAL"),
         new Experience(12, 0.25f, 300),
         ItemData.of(new byte[] {1, 2, 3}),
         List.of(new EffectRecord("minecraft:speed", 1, 600, false, true, true)),
@@ -157,9 +157,12 @@ final class SnapshotBookTest {
 
   @Test
   void snapshotPartsAreChecked() {
-    assertThatThrownBy(() -> new Vitals(-1, 20, 0, 0, "SURVIVAL")).hasMessageContaining("health");
-    assertThatThrownBy(() -> new Vitals(20, 21, 0, 0, "SURVIVAL")).hasMessageContaining("food");
-    assertThatThrownBy(() -> new Vitals(20, 20, 0, 0, " ")).hasMessageContaining("gameMode");
+    assertThatThrownBy(() -> new Vitals(new Vitals.Condition(-1, 20, 0, 0), "SURVIVAL"))
+        .hasMessageContaining("health");
+    assertThatThrownBy(() -> new Vitals(new Vitals.Condition(20, 21, 0, 0), "SURVIVAL"))
+        .hasMessageContaining("food");
+    assertThatThrownBy(() -> new Vitals(new Vitals.Condition(20, 20, 0, 0), " "))
+        .hasMessageContaining("gameMode");
     assertThatThrownBy(() -> new Experience(-1, 0, 0)).hasMessageContaining("negative");
     assertThatThrownBy(() -> new Experience(1, 1.5f, 0)).hasMessageContaining("progress");
     assertThatThrownBy(() -> new EffectRecord("", 0, 1, false, false, false))

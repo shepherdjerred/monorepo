@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "kind": "original-mc-build-program",
+  "program": "tools/maps/authored/stormbreak.ts",
+  "metadata": "tools/maps/authored/stormbreak.json",
+  "seed": 10505,
+  "dataVersion": 4903,
+  "blocksSha256": "4147b2471483c91e56472434287390c6b2639600b9d2820f67ad299035773c6b"
+}

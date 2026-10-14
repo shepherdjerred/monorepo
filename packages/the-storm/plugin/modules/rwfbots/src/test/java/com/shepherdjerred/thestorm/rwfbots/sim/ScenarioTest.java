@@ -69,16 +69,22 @@ final class ScenarioTest {
   }
 
   @Test
-  void aDefenderRetakesAndDefusesItsOwnArmedBomb() {
-    var world = world(3);
+  void defendersAtEverySkillRetakeAndCompleteDefusesAcrossSeveralSeeds() {
+    for (var seed : new long[] {3, 7, 19}) {
+      for (var skill = 0; skill <= 10; skill++) defuse(seed, skill / 10.0);
+    }
+  }
+
+  private static void defuse(long seed, double skill) {
+    var world = world(seed);
     var defender =
         world.addBot(
-            new Spawn(1, BLUE, Kit.TROOPER, SyntheticMap.BLUE_BOMB.offset(0, 0, 9).feet()), 0.8);
+            new Spawn(1, BLUE, Kit.TROOPER, SyntheticMap.BLUE_BOMB.offset(0, 0, 9).feet()), skill);
     world.addScripted(new Spawn(2, RED, Kit.TROOPER, SyntheticMap.RED_SPAWN.feet()));
     world.bomb(1).arm(0);
     world.run(900, w -> w.bomb(1).phase == SimBomb.Phase.IDLE);
     assertThat(world.bomb(1).phase)
-        .as("defused by tick %d", world.tick)
+        .as("skill %.1f seed %d defused by tick %d", skill, seed, world.tick)
         .isEqualTo(SimBomb.Phase.IDLE);
     assertThat(world.bomb(1).defusedAtTick).isBetween(180L, 900L);
     assertThat(defender.alive).isTrue();

@@ -1,0 +1,54 @@
+{
+  "id": "railcut",
+  "name": "Railcut",
+  "author": "The Storm",
+  "description": "A freight quarry with a recessed railway, open cargo cars and copper-roofed loading halls. Quarry shoulders offer defensive height, while a guarded gantry and both haul roads link three approaches to each bomb.",
+  "region":
+    {
+      "min": { "x": 2048, "y": 64, "z": 8192 },
+      "max": { "x": 2191, "y": 111, "z": 8287 },
+    },
+  "spectator": { "x": 2120.5, "y": 107, "z": 8240.5, "yaw": 0, "pitch": 65 },
+  "teams":
+    [
+      {
+        "color": "RED",
+        "spawns":
+          [
+            { "x": 2053.5, "y": 73, "z": 8234.5, "yaw": 270, "pitch": 0 },
+            { "x": 2053.5, "y": 73, "z": 8236.5, "yaw": 270, "pitch": 0 },
+            { "x": 2053.5, "y": 73, "z": 8244.5, "yaw": 270, "pitch": 0 },
+            { "x": 2053.5, "y": 73, "z": 8246.5, "yaw": 270, "pitch": 0 },
+            { "x": 2055.5, "y": 73, "z": 8234.5, "yaw": 270, "pitch": 0 },
+            { "x": 2055.5, "y": 73, "z": 8236.5, "yaw": 270, "pitch": 0 },
+            { "x": 2055.5, "y": 73, "z": 8244.5, "yaw": 270, "pitch": 0 },
+            { "x": 2055.5, "y": 73, "z": 8246.5, "yaw": 270, "pitch": 0 },
+          ],
+      },
+      {
+        "color": "BLUE",
+        "spawns":
+          [
+            { "x": 2186.5, "y": 73, "z": 8234.5, "yaw": 90, "pitch": 0 },
+            { "x": 2186.5, "y": 73, "z": 8236.5, "yaw": 90, "pitch": 0 },
+            { "x": 2186.5, "y": 73, "z": 8244.5, "yaw": 90, "pitch": 0 },
+            { "x": 2186.5, "y": 73, "z": 8246.5, "yaw": 90, "pitch": 0 },
+            { "x": 2184.5, "y": 73, "z": 8234.5, "yaw": 90, "pitch": 0 },
+            { "x": 2184.5, "y": 73, "z": 8236.5, "yaw": 90, "pitch": 0 },
+            { "x": 2184.5, "y": 73, "z": 8244.5, "yaw": 90, "pitch": 0 },
+            { "x": 2184.5, "y": 73, "z": 8246.5, "yaw": 90, "pitch": 0 },
+          ],
+      },
+    ],
+  "bombs":
+    [
+      { "id": "red-1", "team": "RED", "at": { "x": 2062, "y": 73, "z": 8240 } },
+      {
+        "id": "blue-1",
+        "team": "BLUE",
+        "at": { "x": 2177, "y": 73, "z": 8240 },
+      },
+    ],
+  "nukes": [],
+  "blocksSha256": "2d3e8afefed0a40f573690cf3e2288064987a360d6a4d16496019879ea252e73",
+}

@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.rwf.testing;
 
+import com.shepherdjerred.thestorm.rwf.app.BotDraftRequest;
 import com.shepherdjerred.thestorm.rwf.app.BotRoster;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.CombatantId;
 import java.util.ArrayList;
@@ -28,15 +29,17 @@ public final class FakeBotRoster implements BotRoster {
   private int created;
   private int failedSpawnsRemaining;
   private @Nullable RuntimeException spawnException;
+  private Optional<BotDraftRequest> lastDraft = Optional.empty();
 
   public FakeBotRoster(ServerMock server) {
     this.server = server;
   }
 
   @Override
-  public List<CombatantId.Bot> fill(UUID matchId, int slots) {
+  public List<CombatantId.Bot> fill(BotDraftRequest request) {
+    lastDraft = Optional.of(request);
     var bots = new ArrayList<CombatantId.Bot>();
-    for (var i = 0; i < slots; i++) {
+    for (var i = 0; i < request.slots(); i++) {
       // Like a Citizens NPC, the entity and its UUID exist before it is spawned.
       created++;
       var entity = new PlayerMock(server, "Bot" + created, UUID.randomUUID());
@@ -46,6 +49,10 @@ public final class FakeBotRoster implements BotRoster {
       bots.add(bot);
     }
     return bots;
+  }
+
+  public Optional<BotDraftRequest> lastDraft() {
+    return lastDraft;
   }
 
   @Override

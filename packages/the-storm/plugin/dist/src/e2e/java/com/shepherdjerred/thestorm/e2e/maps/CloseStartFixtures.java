@@ -156,7 +156,15 @@ public final class CloseStartFixtures implements BasicCommand, AutoCloseable {
       if (world.rayTraceBlocks(eye, sight, sight.length(), FluidCollisionMode.ALWAYS, false)
           != null) throw new IllegalStateException("native eye-level sightline is obstructed");
       geometry = true;
-      if (bodies.isEmpty()) bodies = Optional.of(CitizensBodies.open(plugin, id -> {}));
+      if (bodies.isEmpty())
+        bodies =
+            Optional.of(
+                CitizensBodies.open(
+                    plugin,
+                    id -> {},
+                    new SnapshotCapture.Capabilities(
+                        id -> Optional.empty(),
+                        java.time.InstantSource.fixed(java.time.Instant.EPOCH))));
       spawn();
       clock = Optional.of(plugin.getServer().getScheduler().runTaskTimer(plugin, this::tick, 1, 1));
     } catch (RuntimeException failure) {

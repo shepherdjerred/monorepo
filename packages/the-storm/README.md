@@ -1068,7 +1068,10 @@ after stale admin shops have been closed.
 The `rwf` module ports libraryaddict's Red Warfare Search and Destroy (see
 `NOTICE`): one-life team PvP where attackers arm an enemy team's TNT bomb with
 a blaze-powder fuse, defenders defuse it, a nuke in the middle kills everyone
-but the team that armed it, and a poison forces long matches to a result. The
+but the team that armed it, and a poison forces long matches to a result. A
+last surviving team must defuse its own armed bombs and hostile nukes before
+winning. An eliminated planting team can still win when its armed objective
+eliminates the final opposition; conflicting simultaneous detonations draw. The
 rules are pure (`rwf.domain`); the Paper adapter carries out their effects at
 20 Hz and seals the match world so every other module leaves it alone.
 
@@ -1104,7 +1107,7 @@ Configuration and content live under `server/owned/plugins/TheStorm`:
 - `rwf.yml`: the two worlds, the fallback spectator point, how matches fill
   and start (`minHumans`, `targetCombatants`, `maxCombatants`, the 90 s
   countdown, the 30 s no-humans abort, the 20 s `voteLead` the map vote closes
-  before the countdown ends, the 10 s `previewLength` and the 5 s
+  before the countdown ends, the 30 s `previewLength` and the 5 s
   `freezeLength`), the ported rule constants pinned to the code, rewards in
   Red Warfare credits (3 win / 1 lose scaled by the human share, the 2-credit
   AFK penalty, the minimum match length; no daily cap), recording, the
@@ -1112,13 +1115,17 @@ Configuration and content live under `server/owned/plugins/TheStorm`:
   with its reason (Saigon and Wonderland, whose conversion found a bomb no
   team can reach). Quarantined maps still ship and are verified; no match is
   played on them.
-- `rwf/kits.yml`: the kits as the operator sees them, each with the `icon`
+- `rwf/kits.yml`: the kits as the operator sees them, each with its play
+  `category`, the `icon`
   material and the one to four `summary` lines the kit menu and the lobby's
   alcoves show; it must describe `KitBook` kit for kit or the module refuses
   to start.
 - `rwf/maps/<id>/map.yml` and `blocks.schem`: a map's teams, spawns, bombs,
   nukes, region and the SHA-256 of its Sponge v3 schematic. The module pastes
-  the active map and at most one successor when needed, and repairs terrain
+  the active map and at most one successor during ordinary play. Candidate
+  visits temporarily hold up to three terrains, prepared serially without
+  activating bot navigation; selecting a winner evacuates visitors, releases
+  the losers and activates the winner's match resources. It repairs terrain
   when the world's blocks stop matching the hash, visiting at most 2,000
   blocks per tick with admission closed meanwhile. `training-yard` is a
   generated 64x16x64 sample; its generator lives in the module's test sources.
@@ -1127,9 +1134,10 @@ Configuration and content live under `server/owned/plugins/TheStorm`:
 - `rwf/maps/<id>/details.json`: required inventories and literal sign text,
   bound to the terrain hash. Empty maps declare empty lists explicitly.
 - `rwf/lobby/lobby.yml` and `blocks.schem`: the lobby every player and bot
-  waits in before a match, in the lobby world: an authored 108x36x100 build at
+  waits in before a match, in the lobby world: an authored 178x36x100 build at
   `0,64,0` with its region, spawn, a side per team colour, one kit alcove per
-  kit (33, in three tiered spines of 36 slots, three walled spare), the rules
+  kit (51 occupied out of 60 slots, with the original 33 alcoves and three
+  eight-bay Classic, Ranged and Tactical annex galleries), the rules
   and match-board anchors, the rotation wall with a slot per weekly free kit
   (four), three vote
   podiums (a lodestone to right-click and a display above it), three
@@ -1138,6 +1146,36 @@ Configuration and content live under `server/owned/plugins/TheStorm`:
   and repaired exactly like a map.
 
 ### Maps
+
+Original maps have deterministic programs and typed metadata in
+`tools/maps/authored/`. From this package, render and lint a candidate before
+exporting its terrain:
+
+```bash
+bun run maps:author --id copperworks --iteration review
+bun run maps:author --id copperworks --iteration accepted --export
+bun run maps:author-lobby --iteration review
+bun run maps:author-lobby --iteration accepted --export
+mise exec -- gradle -p plugin :rwfmap:installDist
+bun run maps:integrate-content
+```
+
+The map and lobby authoring commands write contact sheets, hero/interior
+views and lint evidence under `.cache/`. The lobby program preserves its
+original courtyard and adds an annex through two declared doorways.
+`maps:integrate-content` runs `tools/maps/content/integrate-content.ts`, using
+the authored import descriptions in `tools/maps/content/descriptions.json`.
+It strips legacy `[Buy]` shop signs from both sign faces,
+matching text without case or legacy colour codes while preserving other
+signs and original archives. It binds details to the updated terrain, bakes
+changed navigation, verifies every installed map and updates source/training
+scenario hashes. Retained `removed-shops.json` files record the removed sign
+payloads. Commit terrain, metadata, details, navigation and scenarios together;
+offline verification still requires real-server traversal acceptance.
+To bind a focused map repair, pass repeated `--map <id>` arguments to
+`maps:integrate-content`. Every installed map is still verified, while shop
+removal, scenario writes and registry updates apply only to the selected maps.
+Unknown or repeated map IDs are refused before any content is changed.
 
 A map is authored in a build world and exported with WorldEdit
 (`//schem save <id>` as a Sponge v3 schematic, terrain only: block entities and
@@ -1253,8 +1291,10 @@ rotation remain unchanged.
 `maps:verify-close-starts` checks those candidates in disposable pinned Paper
 using the production Citizens motor. It checks native floor height, player-sized
 clearance and sightlines, then walks a round trip from each start without editing
-terrain. Ordinary showcases rotate the maps, while the fixture checks the
-two-map cache bound. Repeated `--map <id>` selects a diagnostic subset of at least
+terrain. It selects each requested map once through `/rwf admin setmap`, waits
+for its resources, and starts a showcase while the fixture checks the two-map
+cache bound. Each case stops and waits for an empty successor lobby before the
+next selection. Repeated `--map <id>` selects a diagnostic subset of at least
 three maps; omit it to request the whole candidate catalog. Retained reports bind
 each result to its terrain hash and exact positions, and include physics samples,
 producer hashes and server logs. Geometry and traversal evidence do not establish
@@ -1356,7 +1396,8 @@ make block data for the build's walls, panes and lanterns.
 Commands: `/rwf join` (joining a match already under way watches it until the
 next lobby opens), `/rwf leave`, `/rwf kit <id>`, `/rwf kits` (the kit menu), `/rwf buy
 <kit>`, `/rwf rotation`, `/rwf credits`, `/rwf who`, `/rwf size`,
-`/rwf vote <map>`, `/rwf time`, `/rwf teamchat`, `/rwf stats [player]`,
+`/rwf maps` (candidate descriptions, visits and voting), `/rwf visit <map>`,
+`/rwf return`, `/rwf vote <map>`, `/rwf time`, `/rwf teamchat`, `/rwf stats [player]`,
 `/rwf stats top <stat>`, `/rwf stats history`, `/suicide`, `/rwf spectate`,
 `/rwf spectate next|previous` and `/rwf goto <player>`
 (`thestorm.rwf.spectate`, granted by default), and
@@ -1381,11 +1422,28 @@ The [Red Warfare feature flags reference](../docs/wiki/src/content/docs/referenc
 owns the gameplay gates, environment values, targeting and refresh boundaries.
 `FliptRwfFeatures` supplies the immutable feature snapshot used by `MatchRunner`.
 
+With match flow and candidate visits enabled, up to three candidate terrains
+prepare serially before a 90-second voting opportunity. Members independently
+fly over candidates with /rwf visit, switch maps or return; selection then
+activates the winning map's resources before bot arrivals and the selected
+preview. The host settings gate gives the first admitted human a comparator
+in hotbar slot 7. Members can also open that menu with `/rwf options`; only
+the host can edit it. Auto fills the map target, Off disables bots, or a fixed
+count requests bots around admitted humans. Easy, Normal and Hard retain
+personality variation within their skill bands. Settings lock at vote close;
+later edits apply next round.
+
 Kills and assists use Red Warfare's responsibility shares: the damage log
 keeps each hit until the victim is back
 to full health and 10 seconds have passed; the killer gets a whole kill, and
 each other attacker their share towards their killstreak, counted as an assist
 between 0.1 and 1. Bomb victims get no death message, as in the original.
+
+Host ownership transfers to the oldest remaining human. Preferences carry into
+consecutive rounds and reset when no humans remain. Candidate visits and the
+selected-map preview clear temporary flight before normal play; the shared
+snapshot keeper restores the player's original game mode, flight permissions,
+flight speed and native hit-immunity limit on exit or crash recovery.
 
 What every match looks like, whatever the flags, follows the original:
 
@@ -1443,8 +1501,9 @@ facing the way they faced there, and its recharge shows on the experience bar.
 
 ### Kits
 
-`domain/kit/KitBook.java` holds all 33 kits: Red Warfare's twenty-two, then
-Equality, Inertia and Sacrificial, then eight new to The Storm. `KITS.md` in
+`domain/kit/KitBook.java` holds all 51 kits: the previous 33 (22 Red Warfare
+originals and 11 Storm kits) plus six Classic, six Ranged and six Tactical
+kits. `KITS.md` in
 the module is the per-kit reference (items, prices, tiers, every ability's
 numbers and the deviations from the original). Abilities are pure classes
 under `domain/ability/kits`, registered in `AbilityBook`; the match feeds them
@@ -1455,8 +1514,25 @@ listeners. Every kit's state lives in the match this way, the Rewind kit's
 Time Machine trail and cooldown included (`kits/Rewind.java`): a tick's
 `Ground` re-reads whether each kept spot is still a safe landing.
 
-`FliptPlayerFlag` supplies the player gate used by `Armory` and `Killstreaks`;
-their declarations and cache behavior are in the feature flags reference above.
+`FliptPlayerFlag` supplies the player gate used by `Armory`, `StreakPicker`
+and `Killstreaks`; their declarations and cache behavior are in the feature
+flags reference above.
+
+Open the reward selector from the kit menu or `/rwf killstreaks`. The command
+`/rwf killstreaks compass wolves iron-golem` saves the same three-reward
+selection directly. Selection is open for the same pregame phases as kits;
+the default is compass, supply crate and iron golem. Choose three distinct
+thresholds: compass at 2 kills, crate or wolves at 4, golem at 8, napalm at 11.
+Each selected reward is earned once per life, including assist shares. A
+crate and wolves cannot share a loadout because both cost four kills.
+Preferences are saved through the asynchronous `StreakStore` in
+`rwf_streak_prefs` (migration V6), then loaded before admission. An absent row
+means the defined default; a corrupt row fails admission explicitly. A save
+that finishes after the round starts applies to the next round. Death clears
+streak progress while preserving kill and assist totals; late credit updates
+those totals without earning rewards for the dead life. Summons share their
+owner's team, spare allied players and summons, and retain owner attribution
+when attacking human or NPC enemies.
 
 - Six kits are free; the rest are bought once with Red Warfare credits through
   `app/shop/KitShop`. A purchase is a pending `rwf_kit_purchase` row before the
@@ -1464,6 +1540,10 @@ their declarations and cache behavior are in the feature flags reference above.
   settled on the next start; ownership lives in `rwf_kit_owned` (migration
   `V4__kit_shop.sql`). Both tables are reset by a world restore, like the
   economy.
+- The kit browser retains its page, category, access filter and sorting choice
+  while navigating or returning from a purchase/layout editor. Pages show up
+  to 36 kits; access filters distinguish available, owned and weekly rotation
+  kits, and sorting supports catalog order, name, price and tier.
 - `KitRotation` derives each ISO week's four free kits from a fixed seed; the
   lobby board and `/rwf rotation` show them.
 - A right-click on a kit in the menu opens the layout editor; closing it saves
@@ -1496,6 +1576,29 @@ toward hunting, the Medic and Sacrificial away from engaging), never as large
 as the margin an urgent option needs. `rwfbots.yml` allows every
 kit, and the match narrows the draft to the first four kits unless the full
 list is on for someone present (`MatchView.kitsOnOffer`).
+
+Crossbows, tridents, spears and maces use native item completion, including
+finite ammunition, Multishot/Piercing, Loyalty return, tipped effects and mace
+smash callbacks. The adapter rewrites native damage once through RWF's damage
+rules while retaining the server's successful-hit path. The match owns its
+hit window independently of vanilla `noDamageTicks`; legacy sword/axe timing
+and native modern-weapon cooldowns remain distinct. Native operation signatures
+are linked against pinned Paper 26.2 at startup and fail if that contract changes.
+
+RWF exports `BattleSounds`, `VisualOcclusion`, `TacticalReports` and
+`TacticalCasting` app ports to its bot adapter. Audible movement, landing,
+splashing and combat enter a sequenced three-second bounded sound history.
+Each consumer keeps its own cursor, so a slower bot or listening post does
+not drain another reader's events. Listening posts publish approximate enemy
+sound cells without identity. Smoke uses the same segment/sphere visibility
+test for human entity tracking and bot perception; sound and projectiles still
+pass. The core `PlayerVisibilityControl` service composes typed staff-vanish,
+combat and spectator reasons before changing Paper's per-plugin visibility.
+Combat composes smoke and stealth within its reason. Releasing one reason
+restores tracking only when every reason for that viewer/target has cleared;
+other plugins retain their own hides. Quit, module stop and plugin disable
+release the relevant ownership. Fields, devices and cast state expire or clear
+when their owner leaves or the match resets.
 
 Ordinary matches use `match.automaticSizing: true`: automatic sizing chooses
 the large preset for each map. `/rwf size` shows small, medium and large totals,
@@ -1550,10 +1653,19 @@ it.
 
 `/rwf admin showcase [count]` (default `targetCombatants`) starts a bots-only
 match from a lobby with no humans in it. It needs the `rwfbots` roster and
-refuses while humans are in the match. The showcase is a flag on the runner,
-not the domain: the countdown fills to `count`, the humans rule is off, and
+refuses while humans are in the match. Acceptance reserves the lobby, settles
+its ballot with the domain's seeded tie-break, and waits for terrain and map
+resources (including confirmed bot navigation) before the first bot draft.
+Candidate visits and showcases use the same activation path and map limits.
+Pending starts block human admission and duplicate starts; stopping or
+superseding the request prevents a late completion from drafting. The showcase
+is adapter state, not a domain mode: the countdown fills to `count`, the humans rule is off, and
 humans may watch but not join. It plays, records and stores like any match
 (bots are never paid, so it pays nobody) and the lobby after it is normal.
+Operator integrations that must inspect pristine terrain first use
+`ShowcaseControl.prepare(lobbyId)`: it settles only that exact empty lobby's
+ballot and activates the chosen map without drafting or reseeding. Wait for
+the ready chosen map in `Lobby`, inspect it, then call `startSeeded` separately.
 
 Matches are recorded under pseudonyms (positions, actions, results) to
 `plugins/TheStorm/rwf-recordings/yyyy/MM/dd/<matchId>.rwfrec.gz` for review and
@@ -2787,26 +2899,35 @@ director on the main thread and one bot may answer (a greet for a greeting such 
 a `lobby` line otherwise); idle time brings `lobby` small talk or a taunt at
 a rival who is there too; and once, in the countdown's last 10 seconds, a bot
 may remark on it. Lobby lines name no team (there are none yet), so lines
-with `{team}` wait for the match. Eligible speakers are bots in the match, alive or dead for at
-most `recentDeathSeconds` (end-of-match lines excepted): a greet from any bot
-at the start, a kill line from the killer or a death line from the victim
-(one of them), a plant or defuse line from a bomb worker, a line from the last
-bot standing on a team, win or loss lines from every bot at the end, and an
-idle taunt from a living bot about every `tauntEverySeconds`. Each roll is
+with `{team}` wait for the match. The director proposes greetings, kill/death
+responses, plant/defuse calls, last-survivor calls, end lines and idle taunts.
+Its authored-line eligibility includes `recentDeathSeconds`; physical typing
+and delivery are checked separately against the current body and life. Each roll is
 `chances.<moment>` times the personality's verbosity factor, small archetype
 leanings (trolls taunt 2.5x, tacticians 0.25x), tone tags (loud or quiet
 tags 1.25x or 0.75x) and chat quirks (`blames_lag`, `good_sport`,
 `says_sorry`, `celebrates_early`, `loves_nuke`, `narrates`,
 `calls_everything`), times `rivalBoost` for a kill, death or taunt aimed at a
 rival or, for `holds_grudges`, at whoever last killed the bot; capped at 1. A
-bot with `always_gg` always says a win or loss line, preferring one that says
-gg. A bot waits `botCooldownSeconds` between lines and never repeats a line
-within a match; all bots together keep `minGapMillis` between lines and say
-at most `maxLinesPerWindow` per `windowSeconds`, each line
-`reactionMinMillis`..`reactionMaxMillis` after its moment, and a line the
-limit would push past `maxDelayMillis` is dropped. Placeholders are filled
+bot with `always_gg` always proposes a win or loss line, preferring one that
+says gg; it still obeys delivery limits. The director's `botCooldownSeconds`,
+`minGapMillis`, `maxLinesPerWindow`, `windowSeconds`, reaction range and
+`maxDelayMillis` control proposals, and a line is not repeated within a match.
+Proposals more than four seconds ahead are discarded. `SpeechControl` owns
+final delivery: casual Global chat allows one line per 20 seconds and one per
+bot per 45 seconds; tactical Team chat allows two lines per team per 15 seconds
+and one per bot per 15 seconds. Identical text in the same channel/team is
+deduplicated for 12 seconds. Placeholders are filled
 with names as players see them (`{victim}`, `{killer}`, `{team}` as `Red
-Team`, `{bomb}`). A due line goes through the chat module's `NpcChat`, so it
+Team`, `{bomb}`). Each accepted proposal waits 400–900 ms, then takes
+5–9 Unicode code points per second to type, clamped to 0.8–4 seconds. A typing
+bot stops voluntary movement, attacks and item use, cancelling active drawing
+or eating. Nearby teammates within 24 blocks and line of sight see a `typing…`
+indicator; enemies and unassigned lobby viewers do not. Immediate danger,
+recent injury, fuse work, shield commitment or horn casting cancel typing.
+Death, departure, a changed life/phase, disabling chat or switching the flag
+off clears unfinished speech and indicators. A completed line goes through
+the chat module's `NpcChat`, so it
 passes the same mutes, filters and repeat limits as a player's and respects
 hidden channels and ignores: team calls (a plant, a defuse, the last of a
 team) in Team chat, which only the bot's team hears, everything else in
@@ -2814,8 +2935,10 @@ Global, in the channel's format with the `✦` marker after the name and, once
 teams exist, a `●` in the team colour before it. Either way only the human
 players in the rwf world hear it (members and watchers, never the bot bodies
 or anyone elsewhere), and no NPC line is relayed to Discord. A line chat
-refuses is dropped. A new context is a new `ChatMoment` with its own line
-pool; the director shares every rule.
+refuses is dropped. A tactical bot report reaches teammates' decision memory
+only after its spoken line is successfully delivered. Warden listening-post
+reports are automatic device observations. A new context is a new `ChatMoment`
+with its own line pool and the same delivery limits.
 
 `adapter.remote.FliptChatGate` evaluates the independent managed chat gate off
 the main thread. `RwfBotsPaper` wires its refresh loop into the chat director;

@@ -1603,5 +1603,12 @@
     ]
   },
   "status": "converted-awaiting-navigation-and-native-acceptance",
-  "removedData": []
+  "removedData": [],
+  "shopRemoval": {
+    "policy": "remove-legacy-buy-signs-both-faces",
+    "originalBlocksSha256": "f1ffd6e3cec863b823ce772f0e893bc5a44fe387d7daa38b3db05870e876fcaa",
+    "blocksSha256": "9f827db0f7980f3ef30392be0c241e16c57378f9bee72b93f3cbd39c53ae2a1f",
+    "count": 8,
+    "receipt": "removed-shops.json"
+  }
 }

@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "kind": "rwf-map-scenario",
+  "id": "frostline-trooper-duel-v1",
+  "map": "frostline",
+  "mapSha256": "91e709e4621b1c3121d5454f1996910989f60f9571999b4dc60c4183b30a4865",
+  "world": "minecraft:rwf",
+  "region": {
+    "min": {
+      "x": 4096,
+      "y": 64,
+      "z": 7168
+    },
+    "max": {
+      "x": 4239,
+      "y": 111,
+      "z": 7279
+    }
+  },
+  "sourceTeams": ["RED", "BLUE"],
+  "spawnPolicy": "source",
+  "spawns": [
+    {
+      "team": "red",
+      "sourceTeam": "RED",
+      "position": [4101.5, 73, 7218.5],
+      "yaw": 270,
+      "pitch": 0
+    },
+    {
+      "team": "blue",
+      "sourceTeam": "BLUE",
+      "position": [4234.5, 73, 7218.5],
+      "yaw": 90,
+      "pitch": 0
+    }
+  ]
+}

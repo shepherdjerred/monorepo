@@ -16,6 +16,8 @@ import java.util.concurrent.CompletableFuture;
  * @param bombEffects Red Warfare's bomb sounds at map volume, smoke, the explosion particle and the
  *     hologram's progress bars
  * @param stats {@code /rwf stats}, {@code /rwf top}, {@code /rwf history} and the lobby leaderboard
+ * @param hostSettings the first human hosts session bot population and difficulty settings
+ * @param candidateVisits independent flying visits to prepared candidates before voting closes
  */
 public record RwfFeatures(
     boolean matchFlow,
@@ -24,14 +26,17 @@ public record RwfFeatures(
     boolean teamChat,
     boolean spectatorTools,
     boolean bombEffects,
-    boolean stats) {
+    boolean stats,
+    boolean hostSettings,
+    boolean candidateVisits) {
 
   /** Every feature off: the match as it was. */
   public static final RwfFeatures NONE =
-      new RwfFeatures(false, false, false, false, false, false, false);
+      new RwfFeatures(false, false, false, false, false, false, false, false, false);
 
   /** Every feature on. */
-  public static final RwfFeatures ALL = new RwfFeatures(true, true, true, true, true, true, true);
+  public static final RwfFeatures ALL =
+      new RwfFeatures(true, true, true, true, true, true, true, true, true);
 
   /** Reads the managed flags. A failure is an outage, not an answer: callers keep what they had. */
   @FunctionalInterface

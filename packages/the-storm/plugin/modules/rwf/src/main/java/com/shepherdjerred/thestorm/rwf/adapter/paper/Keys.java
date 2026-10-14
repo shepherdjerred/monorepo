@@ -34,6 +34,8 @@ final class Keys {
   private final NamespacedKey streak;
   private final NamespacedKey nextGame;
   private final NamespacedKey kitLayout;
+  private final NamespacedKey settings;
+  private final NamespacedKey mapMenu;
 
   Keys(Plugin plugin) {
     this.item = new NamespacedKey(plugin, "rwf_item");
@@ -48,6 +50,8 @@ final class Keys {
     this.streak = new NamespacedKey(plugin, "rwf_streak");
     this.nextGame = new NamespacedKey(plugin, "rwf_next_game");
     this.kitLayout = new NamespacedKey(plugin, "rwf_kit_layout");
+    this.settings = new NamespacedKey(plugin, "rwf_settings");
+    this.mapMenu = new NamespacedKey(plugin, "rwf_map_menu");
   }
 
   /** Marks {@code entity} as something a kit put in the world: a thrown grenade, an RPG. */
@@ -161,6 +165,26 @@ final class Keys {
 
   boolean isSelector(ItemStack stack) {
     return has(stack, selector);
+  }
+
+  void tagSettings(ItemStack stack) {
+    tag(stack);
+    stack.editMeta(
+        meta -> meta.getPersistentDataContainer().set(settings, PersistentDataType.BOOLEAN, true));
+  }
+
+  boolean isSettings(ItemStack stack) {
+    return has(stack, settings);
+  }
+
+  void tagMapMenu(ItemStack stack) {
+    tag(stack);
+    stack.editMeta(
+        meta -> meta.getPersistentDataContainer().set(mapMenu, PersistentDataType.BOOLEAN, true));
+  }
+
+  boolean isMapMenu(ItemStack stack) {
+    return has(stack, mapMenu);
   }
 
   boolean isLeave(ItemStack stack) {

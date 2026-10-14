@@ -15,6 +15,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.map.VoxelGrid;
 import com.shepherdjerred.thestorm.rwfbots.domain.perception.Percept;
 import com.shepherdjerred.thestorm.rwfbots.domain.perception.Perception;
 import com.shepherdjerred.thestorm.rwfbots.domain.perception.PerceptionState;
+import com.shepherdjerred.thestorm.rwfbots.domain.reflex.ActiveJump;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.Reflex;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.ReflexContext;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.ReflexInput;
@@ -24,6 +25,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.WorldSnapshot;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.LongSupplier;
 import java.util.function.Supplier;
 import org.bukkit.Material;
@@ -52,11 +54,17 @@ public final class BotTicker {
   private final LobbyTicker lobby;
   private final com.shepherdjerred.thestorm.rwf.app.ObservationSource observations;
   private final com.shepherdjerred.thestorm.rwfbots.app.learning.MatchLearning learning;
+  private final TacticalObservations tactical;
   private boolean inLobby;
   private final ThinkStats staleness = new ThinkStats();
   private final ThinkStats sections = new ThinkStats();
   private final LoadTelemetry load = new LoadTelemetry();
   private long tick;
+  private Optional<BotChat> chat = Optional.empty();
+
+  public void communication(BotChat communication) {
+    chat = Optional.of(communication);
+  }
 
   /**
    * What the ticker drives.
@@ -82,7 +90,8 @@ public final class BotTicker {
       LongSupplier nanoClock,
       LobbyTicker lobby,
       com.shepherdjerred.thestorm.rwf.app.ObservationSource observations,
-      com.shepherdjerred.thestorm.rwfbots.app.learning.MatchLearning learning) {}
+      com.shepherdjerred.thestorm.rwfbots.app.learning.MatchLearning learning,
+      TacticalObservations tactical) {}
 
   public BotTicker(Parts parts) {
     this.roster = parts.roster();
@@ -96,6 +105,7 @@ public final class BotTicker {
     this.lobby = parts.lobby();
     this.observations = parts.observations();
     this.learning = parts.learning();
+    this.tactical = parts.tactical();
   }
 
   /** The ticks run so far; the snapshot clock. */
@@ -135,6 +145,11 @@ public final class BotTicker {
     var runtime = Runtime.getRuntime();
     load.memory(runtime.totalMemory() - runtime.freeMemory(), runtime.maxMemory());
     learning.startTick(tick);
+    if (view.current()
+        .map(MatchState::of)
+        .map(MatchState::phase)
+        .filter(phase -> phase == MatchState.Phase.LIVE)
+        .isEmpty()) chat.ifPresent(talk -> talk.tick(Optional.empty()));
     if (lobbyTick()) {
       return;
     }
@@ -149,9 +164,11 @@ public final class BotTicker {
     }
     var match = session.orElseThrow();
     var snapshot = match.capture().capture(tick, state.orElseThrow());
+    chat.ifPresent(talk -> talk.tick(Optional.of(snapshot)));
+    var clouds = tactical.capture(loop, state.orElseThrow(), tick);
     roster.harness().captureTick(match.matchId(), tick);
     loop.publish(snapshot);
-    var frame = new Frame(match, snapshot, loop.board());
+    var frame = new Frame(match, snapshot, loop.board(), clouds);
     load.record(snapshot, frame.board(), loop.profiles(), governor.level());
     for (var bot : roster.live()) {
       if (!sameMatch(match)) {
@@ -196,7 +213,11 @@ public final class BotTicker {
   }
 
   /** What every bot is driven from this tick: the session it started in, its world and board. */
-  private record Frame(MatchSession match, WorldSnapshot snapshot, DecisionBoard board) {}
+  private record Frame(
+      MatchSession match,
+      WorldSnapshot snapshot,
+      DecisionBoard board,
+      List<com.shepherdjerred.thestorm.rwfbots.domain.perception.SightCloud> clouds) {}
 
   private void drive(BotBody bot, BotProfile profile, Frame frame) {
     if (!view.isFighting(frame.match().matchId(), bot.uuid())) {
@@ -220,6 +241,10 @@ public final class BotTicker {
       loop.requestReplan(profile.id());
     }
     var decision = verdict.decision();
+    decision
+        .routeFailure()
+        .ifPresent(
+            failure -> bot.requestMovementRecovery("UNREACHABLE: " + failure.problem(), tick));
     staleness.record(tick - decision.snapshotTick());
     bot.followed(decision.planLabel(), tick - decision.snapshotTick());
     var percept =
@@ -230,15 +255,17 @@ public final class BotTicker {
         ReflexInput.of(self.orElseThrow(), snapshot, decision, percept).withGapples(gapples(bot));
     var match = frame.match();
     input = freshTarget(input, match.nav().grid());
+    input = obscureTarget(input, frame.clouds());
     input = roster.harness().input(match.matchId(), input, match.nav());
     var context =
         new ReflexContext(
             match.nav().grid(),
             profile.levers(),
-            bot.loadout(),
+            PaperLoadouts.available(bot.loadout(), roster.bodies().entity(bot.uuid())),
             roster.harness().controlled(match.matchId())
                 ? ReflexContext.Habits.NONE
                 : ReflexContext.Habits.of(profile.archetype(), profile.quirks()));
+    if (communicating(bot, input, match)) return;
     var step = Reflex.tick(bot.reflex(), input, context, bot.random());
     bot.reflex(step.state());
     var controls =
@@ -267,7 +294,44 @@ public final class BotTicker {
               .toList();
       bot.nextStreak(tick + StreakPlay.GAP_TICKS);
     }
-    driver.apply(bot, commands, match.ids(), tick);
+    driver.apply(
+        bot,
+        commands,
+        new BodyDriver.Navigation(match.ids(), tick, Optional.of(match.nav().graph().bounds())));
+  }
+
+  private boolean communicating(BotBody bot, ReflexInput input, MatchSession match) {
+    if (chat.filter(talk -> communicationPaused(bot, input, talk)).isEmpty()) return false;
+    driver.apply(
+        bot,
+        List.of(new BodyCommand.Stop()),
+        new BodyDriver.Navigation(match.ids(), tick, Optional.of(match.nav().graph().bounds())));
+    return true;
+  }
+
+  /** Speech must yield to committed landing control and nearby fuse work. */
+  static boolean communicationPaused(BotBody bot, ReflexInput input, BodyActivity activity) {
+    var fuse =
+        switch (input.decision().option()) {
+          case DEFUSE, ARM, HELP_ARM -> true;
+          default -> false;
+        };
+    var working =
+        fuse
+            && input
+                .decision()
+                .bomb()
+                .flatMap(input.snapshot()::bomb)
+                .filter(bomb -> bomb.pos().distance(input.self().eye()) <= Reflex.BOMB_REACH)
+                .isPresent();
+    var airborne =
+        bot.reflex()
+            .activeJump()
+            .filter(jump -> jump.stage() == ActiveJump.Stage.AIRBORNE)
+            .isPresent();
+    if (working || airborne || input.self().traversal().fallDistance() > 0)
+      activity.cancel(bot.uuid());
+    return activity.typing(bot.uuid());
   }
 
   /** Refreshes a previously visible target only while the current sight line remains clear. */
@@ -278,7 +342,30 @@ public final class BotTicker {
             .map(CombatantView::id)
             .flatMap(input.snapshot()::combatant)
             .filter(CombatantView::alive)
+            .filter(
+                enemy ->
+                    !enemy.invisible()
+                        || enemy.armorValue() > 0
+                        || enemy.pos().distance(input.self().pos())
+                            <= Perception.INVISIBLE_NOTICE_RANGE
+                        || (enemy.lastHurtTick() >= 0
+                            && input.snapshot().tick() - enemy.lastHurtTick()
+                                <= Perception.HIT_FLASH_TICKS))
             .filter(enemy -> Perception.hasLineOfSight(grid, input.self().eye(), enemy));
+    return new ReflexInput(
+        input.self(), input.snapshot(), input.decision(), target, input.gapplesLeft());
+  }
+
+  private static ReflexInput obscureTarget(
+      ReflexInput input,
+      List<com.shepherdjerred.thestorm.rwfbots.domain.perception.SightCloud> clouds) {
+    var target =
+        input
+            .target()
+            .filter(
+                enemy ->
+                    com.shepherdjerred.thestorm.rwfbots.domain.perception.SightCloud.clear(
+                        clouds, input.self().eye(), enemy.eye()));
     return new ReflexInput(
         input.self(), input.snapshot(), input.decision(), target, input.gapplesLeft());
   }

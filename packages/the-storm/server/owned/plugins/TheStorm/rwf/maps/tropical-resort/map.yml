@@ -2,6 +2,7 @@
   id: tropical-resort,
   name: Tropical Resort,
   author: Redwarfare,
+  description: This map is back from the grave with some minor changes!,
   region:
     { min: { x: 3072, "y": 0, z: 5120 }, max: { x: 3436, "y": 129, z: 5279 } },
   spectator: { x: 3254.5, "y": 129, z: 5200, yaw: 0, pitch: 45 },
@@ -616,5 +617,5 @@
       { id: blue-1, team: BLUE, at: { x: 3351, "y": 107, z: 5171 } },
     ],
   nukes: [],
-  blocksSha256: cfe852902b09f30ae7fa349c41b9c971eae5f3e878f57dce6fb96621799fc144,
+  blocksSha256: cefe83c08ad91326e8ff05909e443db44f9336832c63841c18d4a1d16f90318a,
 }

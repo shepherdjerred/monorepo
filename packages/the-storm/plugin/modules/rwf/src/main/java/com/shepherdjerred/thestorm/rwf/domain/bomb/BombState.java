@@ -31,11 +31,17 @@ public sealed interface BombState {
    * Primed TNT counting down, perhaps with teams defusing it.
    *
    * @param team the team the bomb belongs to now: its owner, or the team that armed a nuke
+   * @param plantedBy the team that successfully armed it, retained if that team is eliminated
    * @param fusedAt when it was armed
    * @param remaining seconds left before it explodes
    * @param attempts defusing attempts, one per team
    */
-  record Armed(TeamColor team, Instant fusedAt, int remaining, List<ArmAttempt> attempts)
+  record Armed(
+      TeamColor team,
+      TeamColor plantedBy,
+      Instant fusedAt,
+      int remaining,
+      List<ArmAttempt> attempts)
       implements BombState {
 
     public Armed {

@@ -1,1 +1,297 @@
-{"version":1,"blocksSha256":"6a03d2d3199886f778cb1570c783808b27703eb181e0dd32f96ebbe42f7fca23","containers":[],"signs":[{"at":{"x":247,"y":58,"z":28},"material":"minecraft:oak_wall_sign","front":{"lines":["libraryaddict","who likes","to eat little","children!"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":244,"y":58,"z":27},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Enchant]","Bow","§c\u003cenchant\u003e","5 credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":247,"y":59,"z":28},"material":"minecraft:oak_wall_sign","front":{"lines":["Made by","Snowyflake,","Petlove506","and..."],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":177,"y":62,"z":66},"material":"minecraft:oak_wall_sign","front":{"lines":["With a little","bit here and","there by","Libraryaddict"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":177,"y":63,"z":66},"material":"minecraft:oak_wall_sign","front":{"lines":["Map","Made by","Petlove506 and","Snowyflake"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":175,"y":63,"z":83},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","1","Landmine","1 Credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":183,"y":61,"z":138},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","6","Grenade","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":164,"y":67,"z":141},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","3","RPG","1 Credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":182,"y":68,"z":148},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","16","Arrow","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":186,"y":68,"z":148},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","6","Enderpearl","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":201,"y":65,"z":147},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","1","Bow","4 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":168,"y":68,"z":232},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","6","Enderpearl","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":153,"y":65,"z":233},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","1","Bow","4 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":172,"y":68,"z":232},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","16","Arrow","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":171,"y":61,"z":242},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","6","Grenade","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":190,"y":67,"z":239},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","3","RPG","1 Credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":179,"y":63,"z":297},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","1","Landmine","1 Credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":177,"y":63,"z":314},"material":"minecraft:oak_wall_sign","front":{"lines":["Map","Made by","Petlove506 and","Snowyflake"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":177,"y":62,"z":314},"material":"minecraft:oak_wall_sign","front":{"lines":["With a little","bit here and","there by","Libraryaddict"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":110,"y":58,"z":353},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Enchant]","Bow","§c\u003cenchant\u003e","5 credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":107,"y":58,"z":352},"material":"minecraft:oak_wall_sign","front":{"lines":["libraryaddict","who likes","to eat little","children!"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":107,"y":59,"z":352},"material":"minecraft:oak_wall_sign","front":{"lines":["Made by","Snowyflake,","Petlove506","and..."],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false}]}
+{
+  "version": 1,
+  "blocksSha256": "7830c4ef0631f8095eb7d80ac9e9afb0535a435175fe3a5f351f787fd6056ffc",
+  "containers": [],
+  "signs": [
+    {
+      "at": {
+        "x": 247,
+        "y": 58,
+        "z": 28
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "libraryaddict",
+          "who likes",
+          "to eat little",
+          "children!"
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 244,
+        "y": 58,
+        "z": 27
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "§4[Enchant]",
+          "Bow",
+          "§c<enchant>",
+          "5 credits"
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 247,
+        "y": 59,
+        "z": 28
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "Made by",
+          "Snowyflake,",
+          "Petlove506",
+          "and..."
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 177,
+        "y": 62,
+        "z": 66
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "With a little",
+          "bit here and",
+          "there by",
+          "Libraryaddict"
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 177,
+        "y": 63,
+        "z": 66
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "Map",
+          "Made by",
+          "Petlove506 and",
+          "Snowyflake"
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 177,
+        "y": 63,
+        "z": 314
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "Map",
+          "Made by",
+          "Petlove506 and",
+          "Snowyflake"
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 177,
+        "y": 62,
+        "z": 314
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "With a little",
+          "bit here and",
+          "there by",
+          "Libraryaddict"
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 110,
+        "y": 58,
+        "z": 353
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "§4[Enchant]",
+          "Bow",
+          "§c<enchant>",
+          "5 credits"
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 107,
+        "y": 58,
+        "z": 352
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "libraryaddict",
+          "who likes",
+          "to eat little",
+          "children!"
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 107,
+        "y": 59,
+        "z": 352
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "Made by",
+          "Snowyflake,",
+          "Petlove506",
+          "and..."
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    }
+  ]
+}

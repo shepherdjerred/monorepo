@@ -14,11 +14,19 @@ import java.util.Optional;
  * @param victim who was hit, for {@link Kind#HIT}
  */
 public record Stimulus(
-    Kind kind, Vec3 pos, long tick, Optional<CombatantId> source, Optional<CombatantId> victim) {
+    Kind kind,
+    Vec3 pos,
+    long tick,
+    Optional<CombatantId> source,
+    Optional<CombatantId> victim,
+    long sequence,
+    double radius) {
 
   /** The kinds of event, each with how far it carries and how precisely it can be placed. */
   public enum Kind {
     FOOTSTEP(16, 3.0),
+    LAND(20, 3.0),
+    SPLASH(24, 3.0),
     BOW_SHOT(48, 4.0),
     HIT(32, 2.0),
     EAT(12, 2.0),
@@ -45,6 +53,8 @@ public record Stimulus(
   }
 
   public Stimulus {
+    if (!(radius > 0) || !Double.isFinite(radius))
+      throw new IllegalArgumentException("invalid hearing radius");
     if (tick < 0) {
       throw new IllegalArgumentException("tick must not be negative");
     }
@@ -54,14 +64,15 @@ public record Stimulus(
   }
 
   public static Stimulus of(Kind kind, Vec3 pos, long tick) {
-    return new Stimulus(kind, pos, tick, Optional.empty(), Optional.empty());
+    return new Stimulus(kind, pos, tick, Optional.empty(), Optional.empty(), tick, kind.range());
   }
 
   public static Stimulus by(Kind kind, Vec3 pos, long tick, CombatantId source) {
-    return new Stimulus(kind, pos, tick, Optional.of(source), Optional.empty());
+    return new Stimulus(kind, pos, tick, Optional.of(source), Optional.empty(), tick, kind.range());
   }
 
   public static Stimulus hit(Vec3 pos, long tick, CombatantId attacker, CombatantId victim) {
-    return new Stimulus(Kind.HIT, pos, tick, Optional.of(attacker), Optional.of(victim));
+    return new Stimulus(
+        Kind.HIT, pos, tick, Optional.of(attacker), Optional.of(victim), tick, Kind.HIT.range());
   }
 }

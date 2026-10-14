@@ -20,11 +20,27 @@ import java.util.Optional;
 import java.util.UUID;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.junit.jupiter.api.Test;
 
 /** The sidebar, holograms and broadcasts read as Red Warfare's did. */
 final class RedWarfareParityTest {
+
+  @Test
+  void bombAnnouncementObfuscationStaysOnTheDecorativeMarkers() {
+    var armed =
+        Texts.original(
+                Notice.of(NoticeKind.BOMB_ARMED, Map.of("team", "Red Team", "owner", "Blue Team")))
+            .orElseThrow();
+    assertThat(armed.decoration(TextDecoration.OBFUSCATED)).isEqualTo(TextDecoration.State.FALSE);
+    assertThat(
+            armed.children().stream()
+                .filter(
+                    child ->
+                        child.decoration(TextDecoration.OBFUSCATED) == TextDecoration.State.TRUE))
+        .hasSize(2);
+  }
 
   private static String plain(Component component) {
     return PlainTextComponentSerializer.plainText().serialize(component);
@@ -116,9 +132,19 @@ final class RedWarfareParityTest {
 
   @Test
   void theLobbyBoardIsRedWarfaresWaitingBoard() {
-    var waiting = new LobbyStatus(LobbyStatus.Stage.WAITING, Optional.empty(), 1, 0, 3, 0, 0.25);
+    var waiting =
+        new LobbyStatus(
+            LobbyStatus.Stage.WAITING, Optional.empty(), 1, 0, 3, 0, 0.25, Optional.empty());
     var counting =
-        new LobbyStatus(LobbyStatus.Stage.COUNTDOWN, Optional.of("Harbour"), 2, 6, 0, 41, 0.5);
+        new LobbyStatus(
+            LobbyStatus.Stage.COUNTDOWN,
+            Optional.of("Harbour"),
+            2,
+            6,
+            0,
+            41,
+            0.5,
+            Optional.empty());
 
     assertThat(plain(Scoreboards.lobbyLines(waiting)))
         .containsExactly("", "Map: Voting..", "Players: 1", "", "Waiting for 3 players");

@@ -115,11 +115,21 @@ final class Flow {
     }
     var waitingSince = lobby.waitingSince().orElse(now);
     draft.phase = new Phase.Lobby(Optional.of(waitingSince), lobby.ballot());
+    if (lobby.ballot().awaitingVisits(waitingSince, now)) {
+      return;
+    }
+    if (lobby.ballot().visits().isPresent() && !lobby.ballot().closed()) {
+      Voting.close(draft);
+    }
     if (lobby.ballot().opened() && enoughPlayers(draft, waitingSince, now)) {
-      var seconds = draft.settings.countdown().toSeconds();
+      var countdown =
+          lobby.ballot().visits().isPresent()
+              ? draft.settings.voteLead()
+              : draft.settings.countdown();
+      var seconds = countdown.toSeconds();
       draft.phase =
           new Phase.Countdown(
-              now.plus(draft.settings.countdown()), waitingSince, (int) seconds, lobby.ballot());
+              now.plus(countdown), waitingSince, (int) seconds, draft.ballot().orElseThrow());
       draft.announce(Notice.of(NoticeKind.COUNTDOWN, "seconds", seconds));
       draft.sound(draft.ids(), SoundCue.COUNTDOWN);
       closeVoteIfDue(draft, now);

@@ -1,9 +1,11 @@
 package com.shepherdjerred.thestorm.rwf.domain.kit;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.regex.Pattern;
 
@@ -25,7 +27,8 @@ public record ItemSpec(
     Optional<String> name,
     Map<String, Integer> enchantments,
     Optional<ArmorSlot> slot,
-    ItemLook look) {
+    ItemLook look,
+    List<ItemPotion> potions) {
 
   /** The material of a hotbar gap: a slot the kit leaves empty, as Ghost's second slot. */
   public static final String GAP = "AIR";
@@ -56,6 +59,13 @@ public record ItemSpec(
       throw new IllegalArgumentException("armor must have amount 1: " + material);
     }
     enchantments = Map.copyOf(new TreeMap<>(enchantments));
+    potions = List.copyOf(potions);
+    if (!potions.isEmpty()
+        && !Set.of("POTION", "SPLASH_POTION", "LINGERING_POTION", "TIPPED_ARROW")
+            .contains(material)) {
+      throw new IllegalArgumentException(
+          "potion contents need a potion or tipped arrow: " + material);
+    }
   }
 
   /** An empty hotbar slot, kept so the items after it stay where the kit put them. */
@@ -74,51 +84,66 @@ public record ItemSpec(
 
   public static ItemSpec of(String material, int amount) {
     return new ItemSpec(
-        material, amount, Optional.empty(), Map.of(), Optional.empty(), ItemLook.PLAIN);
+        material, amount, Optional.empty(), Map.of(), Optional.empty(), ItemLook.PLAIN, List.of());
   }
 
   public static ItemSpec armor(String material, ArmorSlot slot) {
-    return new ItemSpec(material, 1, Optional.empty(), Map.of(), Optional.of(slot), ItemLook.PLAIN);
+    return new ItemSpec(
+        material, 1, Optional.empty(), Map.of(), Optional.of(slot), ItemLook.PLAIN, List.of());
   }
 
   public ItemSpec named(String displayName) {
-    return new ItemSpec(material, amount, Optional.of(displayName), enchantments, slot, look);
+    return new ItemSpec(
+        material, amount, Optional.of(displayName), enchantments, slot, look, potions);
   }
 
   /** Named {@code displayName} in {@code color}, as Red Warfare titled its kit items. */
   public ItemSpec named(String displayName, String color) {
     return new ItemSpec(
-        material, amount, Optional.of(displayName), enchantments, slot, look.withNameColor(color));
+        material,
+        amount,
+        Optional.of(displayName),
+        enchantments,
+        slot,
+        look.withNameColor(color),
+        potions);
   }
 
   /** {@code amount} of this item. */
   public ItemSpec times(int amount) {
-    return new ItemSpec(material, amount, name, enchantments, slot, look);
+    return new ItemSpec(material, amount, name, enchantments, slot, look, potions);
   }
 
   public ItemSpec enchanted(String key, int level) {
     var next = new HashMap<>(enchantments);
     next.put(key, level);
-    return new ItemSpec(material, amount, name, next, slot, look);
+    return new ItemSpec(material, amount, name, next, slot, look, potions);
   }
 
   public ItemSpec lore(String color, String... lines) {
     return new ItemSpec(
-        material, amount, name, enchantments, slot, look.withLore(color, List.of(lines)));
+        material, amount, name, enchantments, slot, look.withLore(color, List.of(lines)), potions);
   }
 
   /** Shimmering as if enchanted, without an enchantment. */
   public ItemSpec glinting() {
-    return new ItemSpec(material, amount, name, enchantments, slot, look.withGlint());
+    return new ItemSpec(material, amount, name, enchantments, slot, look.withGlint(), potions);
   }
 
   /** This item, looking like {@code look}. */
   public ItemSpec withLook(ItemLook look) {
-    return new ItemSpec(material, amount, name, enchantments, slot, look);
+    return new ItemSpec(material, amount, name, enchantments, slot, look, potions);
   }
 
   public ItemSpec dyed(String dye) {
-    return new ItemSpec(material, amount, name, enchantments, slot, look.withDye(dye));
+    return new ItemSpec(material, amount, name, enchantments, slot, look.withDye(dye), potions);
+  }
+
+  /** Adds a native potion payload, preserving all other item metadata. */
+  public ItemSpec potion(String effect, int amplifier, int ticks) {
+    var contents = new ArrayList<>(potions);
+    contents.add(new ItemPotion(effect, amplifier, ticks));
+    return new ItemSpec(material, amount, name, enchantments, slot, look, contents);
   }
 
   public int enchantmentLevel(String key) {

@@ -51,11 +51,13 @@ final class SnapshotCaptureTest {
         world.getBlockAt(x, 0, z).setType(Material.STONE);
       }
     }
-    alice = new TraversalPlayerMock(server, "Alice");
-    bob = new TraversalPlayerMock(server, "Bob");
+    alice = TraversalPlayerMock.add(server, "Alice");
+    bob = TraversalPlayerMock.add(server, "Bob");
     alice.teleport(new Location(world, 2.5, 1, 2.5, 90, 10));
     bob.teleport(new Location(world, 10.5, 1, 2.5, 0, 0));
-    stimuli = new StimulusCollector();
+    var time = java.time.InstantSource.fixed(java.time.Instant.EPOCH);
+    stimuli =
+        new StimulusCollector(new com.shepherdjerred.thestorm.rwf.app.BattleSoundLog(time), time);
     ids = new IdMap();
     capture =
         new SnapshotCapture(
@@ -203,6 +205,8 @@ final class SnapshotCaptureTest {
     stimuli.fuseClicked(bob.getUniqueId(), new Location(world, 4.5, 1.5, 16.5));
     stimuli.fuseClicked(UUID.randomUUID(), new Location(world, 4.5, 1.5, 16.5));
     bob.setSprinting(true);
+    capture.capture(9, state(MatchState.Phase.LIVE, Optional.empty()));
+    bob.teleport(bob.getLocation().add(0.4, 0, 0));
 
     var snapshot = capture.capture(10, state(MatchState.Phase.LIVE, Optional.empty()));
 
@@ -213,8 +217,9 @@ final class SnapshotCaptureTest {
         .allMatch(
             stimulus -> stimulus.source().orElseThrow().equals(ids.combatant(bob.getUniqueId())));
     assertThat(capture.capture(11, state(MatchState.Phase.LIVE, Optional.empty())).stimuli())
-        .as("footsteps only every tenth tick")
-        .isEmpty();
+        .as("retained sounds survive snapshot coalescing without acquiring new sequence numbers")
+        .extracting(Stimulus::sequence)
+        .containsExactlyElementsOf(snapshot.stimuli().stream().map(Stimulus::sequence).toList());
   }
 
   @Test
@@ -273,6 +278,20 @@ final class SnapshotCaptureTest {
     bob.setInvisible(false);
     var plain = capture.capture(2, unknownKits("paladin", "paladin"));
     assertThat(plain.require(ids.combatant(bob.getUniqueId())).kit()).isEqualTo(Kit.TROOPER);
+  }
+
+  @Test
+  void invisibilityOnlyHidesEmptyHandsJustAsItDoesForHumanViewers() {
+    alice.setInvisible(true);
+    alice.getInventory().clear();
+    assertThat(SnapshotCapture.hiddenHands(alice)).isTrue();
+    alice.getInventory().setItemInMainHand(new ItemStack(Material.IRON_SWORD));
+    assertThat(SnapshotCapture.hiddenHands(alice)).isFalse();
+    alice.getInventory().setItemInMainHand(new ItemStack(Material.AIR));
+    alice.getInventory().setItemInOffHand(new ItemStack(Material.SHIELD));
+    assertThat(SnapshotCapture.hiddenHands(alice)).isFalse();
+    alice.getInventory().setItemInOffHand(new ItemStack(Material.AIR));
+    assertThat(SnapshotCapture.hiddenHands(alice)).isTrue();
   }
 
   @Test

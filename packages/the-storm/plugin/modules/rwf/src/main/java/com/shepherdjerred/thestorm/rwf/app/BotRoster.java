@@ -17,7 +17,12 @@ import org.bukkit.entity.Player;
 public interface BotRoster {
 
   /** Chooses up to {@code slots} bots for {@code matchId}; fewer when the roster is short. */
-  List<CombatantId.Bot> fill(UUID matchId, int slots);
+  default List<CombatantId.Bot> fill(UUID matchId, int slots) {
+    return fill(new BotDraftRequest(matchId, slots, Optional.empty()));
+  }
+
+  /** Drafts under the settings frozen for this round. */
+  List<CombatantId.Bot> fill(BotDraftRequest request);
 
   /**
    * Puts {@code id}'s entity into the world at {@code at}; {@link #entity} is present afterwards.
@@ -47,8 +52,8 @@ public interface BotRoster {
       }
 
       @Override
-      public List<CombatantId.Bot> fill(UUID matchId, int slots) {
-        return bodies.fill(matchId, slots).stream()
+      public List<CombatantId.Bot> fill(BotDraftRequest request) {
+        return bodies.fill(request).stream()
             .map(handle -> new CombatantId.Bot(handle.personalityId(), handle.uuid()))
             .toList();
       }

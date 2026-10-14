@@ -2,6 +2,7 @@
   id: grove-wars,
   name: Grove Wars,
   author: TangyTomato,
+  description: Four teams look into a small circled area! Can one hope to prevail?,
   region:
     { min: { x: 1024, "y": 0, z: 3072 }, max: { x: 1222, "y": 111, z: 3186 } },
   spectator: { x: 1123.5, "y": 111, z: 3129.5, yaw: 0, pitch: 45 },
@@ -358,5 +359,5 @@
       { id: blue-1, team: BLUE, at: { x: 1185, "y": 60, z: 3157 } },
     ],
   nukes: [],
-  blocksSha256: f3d6307d548f2d38c2da90f1714acefe3e51cf94b07737c5e58d2273c272b0bf,
+  blocksSha256: 6f792f3c6e1a5105cf790d09af5785a5f4b60814390c93c874616243e42d7d13,
 }

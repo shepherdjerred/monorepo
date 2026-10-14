@@ -2,6 +2,7 @@
   id: battle-scarred,
   name: BattleScarred,
   author: RedWarfare,
+  description: "Two teams meet on the battlefield.... remembering the past of what they overcame... to fight one last battle",
   region:
     { min: { x: 2048, "y": 0, z: 1024 }, max: { x: 2147, "y": 23, z: 1173 } },
   spectator: { x: 2098, "y": 23, z: 1099, yaw: 0, pitch: 45 },
@@ -146,5 +147,5 @@
       { id: blue-1, team: BLUE, at: { x: 2091, "y": 9, z: 1160 } },
     ],
   nukes: [],
-  blocksSha256: 1d6b2ba3993700aa17f7a185c2874543cc41e7190d56ab35d55767528f6cbc44,
+  blocksSha256: 7f9809a78d4bc3b15002fac2db31c07607e378fc1766b0a5ec045e5e62b608c4,
 }

@@ -57,12 +57,26 @@ final class KitMenuListener implements Listener {
   }
 
   private void kitMenuClick(Player player, KitMenu menu, int slot) {
+    if (slot == KitMenu.STREAKS) {
+      later(() -> runner.streakPicker().open(player));
+      return;
+    }
+    if (slot == KitMenu.SORT || slot == KitMenu.CATEGORY || slot == KitMenu.ACCESS) {
+      var query =
+          switch (slot) {
+            case KitMenu.SORT -> menu.query().nextSort();
+            case KitMenu.CATEGORY -> menu.query().nextCategory();
+            default -> menu.query().nextAccess();
+          };
+      later(() -> runner.picker().browse(player, query));
+      return;
+    }
     if (slot == KitMenu.PREVIOUS && menu.page() > 0) {
-      later(() -> runner.picker().browse(player, menu.page() - 1));
+      later(() -> runner.picker().browse(player, menu.query().at(menu.page() - 1)));
       return;
     }
     if (slot == KitMenu.NEXT && menu.page() < menu.pages() - 1) {
-      later(() -> runner.picker().browse(player, menu.page() + 1));
+      later(() -> runner.picker().browse(player, menu.query().at(menu.page() + 1)));
       return;
     }
     var kitId = menu.kitAt(slot);
@@ -108,9 +122,9 @@ final class KitMenuListener implements Listener {
   private void purchaseClick(Player player, KitPurchaseMenu menu, int slot) {
     if (slot == KitPurchaseMenu.CONFIRM) {
       later(() -> KitMenu.close(player));
-      menus.buy(player, menu.kit(), bought -> runner.picker().browse(player, 0));
+      menus.buy(player, menu.kit(), bought -> runner.picker().browse(player));
     } else if (slot == KitPurchaseMenu.CANCEL) {
-      later(() -> runner.picker().browse(player, 0));
+      later(() -> runner.picker().browse(player));
     }
   }
 

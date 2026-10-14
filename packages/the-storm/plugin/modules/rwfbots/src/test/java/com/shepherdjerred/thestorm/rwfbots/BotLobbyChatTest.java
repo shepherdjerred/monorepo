@@ -34,7 +34,7 @@ final class BotLobbyChatTest {
     }
   }
 
-  /** The shipped config with greetings certain and said at once; small talk and the rest silent. */
+  /** The shipped config with greetings certain; real typing still precedes each delivered line. */
   private static String greetingsOnly(String yaml) {
     var out = yaml;
     for (var moment :
@@ -90,16 +90,19 @@ final class BotLobbyChatTest {
       harness.match.fireJoin(bot, harness.roster().entity(bot).orElseThrow().getName());
     }
     harness.ticks(5);
+    assertThat(heard(alice)).as("arrivals have not had time to type yet").isEmpty();
+    harness.ticks(100);
 
     var greetings = heard(alice);
     assertThat(greetings).as("bots say hello as they walk in").isNotEmpty();
+    assertThat(greetings).as("simultaneous arrivals share one global delivery budget").hasSize(1);
     assertThat(greetings).allMatch(line -> line.contains(" ✦]: ") && !line.contains("{"));
 
-    harness.ticks(25 * 20);
+    harness.ticks(50 * 20);
     heard(alice);
     alice.chat("hi everyone");
     harness.server.getScheduler().waitAsyncEventsFinished();
-    harness.ticks(40);
+    harness.ticks(100);
 
     var replies = heard(alice);
     assertThat(replies).as("one bot answers, once").hasSize(1);

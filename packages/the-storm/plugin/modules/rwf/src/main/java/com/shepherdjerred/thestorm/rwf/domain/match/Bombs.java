@@ -17,6 +17,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 /** Bombs being armed, defused, burning down and exploding inside a live match. */
 final class Bombs {
@@ -64,12 +66,12 @@ final class Bombs {
   }
 
   /**
-   * Every bomb ticks in the order it was armed (idle bombs first), as Red Warfare sorted them by
-   * fuse time, so the first-armed of two bombs due together explodes first; a bomb removed by an
-   * explosion is skipped.
+   * Burns fuses, then resolves expiry instants in order. All detonations at one instant apply
+   * before checking victory, so a map's declaration order cannot decide simultaneous explosions.
    */
   static void tick(Draft draft, Instant now, Map<CombatantId, Vitals> vitals) {
     var order = new ArrayList<>(draft.bombs());
+    var detonations = new TreeMap<Instant, List<Bomb>>();
     order.sort(Comparator.comparing(Bombs::fusedAt));
     for (var snapshot : order) {
       var current = draft.bomb(snapshot.id()).orElseThrow();
@@ -80,11 +82,24 @@ final class Bombs {
       draft.putBomb(step.bomb());
       for (var outcome : step.outcomes()) {
         if (outcome instanceof BombOutcome.Exploded) {
-          explode(draft, step.bomb(), now, vitals);
+          var armed = (BombState.Armed) current.state();
+          detonations.computeIfAbsent(armed.fusedAt(), _ -> new ArrayList<>()).add(current);
         } else {
           apply(draft, current, step.bomb(), outcome);
         }
       }
+    }
+    for (var group : detonations.values()) {
+      if (!(draft.phase instanceof Phase.Live)) return;
+      var active =
+          group.stream().filter(bomb -> !draft.bomb(bomb.id()).orElseThrow().destroyed()).toList();
+      var planters =
+          active.stream()
+              .map(bomb -> ((BombState.Armed) bomb.state()).plantedBy())
+              .collect(Collectors.toUnmodifiableSet());
+      active.forEach(bomb -> draft.putBomb(bomb.destroy()));
+      active.forEach(bomb -> explode(draft, bomb, now, vitals));
+      Standings.check(draft, now, planters);
     }
   }
 
@@ -173,8 +188,10 @@ final class Bombs {
   static void explode(Draft draft, Bomb bomb, Instant now, Map<CombatantId, Vitals> vitals) {
     var team = bomb.team().orElseThrow();
     var at = bomb.site().position();
+    draft.putBomb(bomb.destroy());
     draft.effect(new MatchEffect.Explode(bomb.id(), at));
     draft.effect(new MatchEffect.Crater(at, Bomb.CRATER_RADIUS));
+    draft.effect(new MatchEffect.BombRemoved(bomb.id()));
     draft.announce(
         Notice.of(
             bomb.isNuke() ? NoticeKind.NUKE_EXPLODED : NoticeKind.BOMB_EXPLODED,
@@ -210,6 +227,8 @@ final class Bombs {
         continue;
       }
       if (bomb.isNuke() && !nukeExploded) {
+        // An eliminated planting team can still win through a nuke it successfully armed.
+        if (bomb.armed()) continue;
         draft.putBomb(bomb.restore());
         draft.effect(new MatchEffect.BombRestored(bomb.id()));
       } else {

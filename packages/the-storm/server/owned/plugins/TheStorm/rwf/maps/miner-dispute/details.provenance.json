@@ -1,9 +1,9 @@
 {
   "schema": 1,
   "id": "miner-dispute",
-  "blocksSha256": "6dc474c75af0848f965cc83b103f22e69d1d97eeff2b05b4cc1e50053ea5ad24",
-  "detailsSha256": "0216c176d113bb1933f5fb0822702c322877b246373f312ba2a4b0fcf57679f3",
-  "policy": "preserve-inventories-and-literal-sign-text-strip-other-payloads",
+  "blocksSha256": "3c036a70840954dabc410965f5f71bcaf43525ddbd13ef43150e21d58895c9d7",
+  "detailsSha256": "1ca8878128536f080df23333f101f3198a4956277ac429a16021e4efbf9eb824",
+  "policy": "preserve-inventories-and-other-signs-remove-legacy-buy-signs",
   "producer": [
     {
       "file": "TheStorm.jar",
@@ -1579,6 +1579,15 @@
     }
   ],
   "result": {
+    "state": "complete",
+    "containers": 16,
+    "signs": 22
+  },
+  "shopRemoval": {
+    "originalBlocksSha256": "6dc474c75af0848f965cc83b103f22e69d1d97eeff2b05b4cc1e50053ea5ad24",
+    "count": 12
+  },
+  "nativeExportResult": {
     "state": "complete",
     "containers": 16,
     "signs": 34

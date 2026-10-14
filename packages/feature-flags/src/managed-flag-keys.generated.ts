@@ -351,6 +351,8 @@ export const THE_STORM_BOOLEAN_FLAG_KEYS = [
   "the-storm-rwf-killstreaks-enabled",
   "the-storm-rwfbots-chat-enabled",
   "the-storm-rwfbots-learning-enabled",
+  "the-storm-rwf-candidate-visits-enabled",
+  "the-storm-rwf-host-settings-enabled",
   "the-storm-rwf-match-flow-enabled",
   "the-storm-rwf-carry-over-enabled",
   "the-storm-rwf-death-feed-enabled",

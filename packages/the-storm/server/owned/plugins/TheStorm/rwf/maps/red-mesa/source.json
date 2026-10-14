@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "kind": "original-mc-build-program",
+  "program": "tools/maps/authored/red-mesa.ts",
+  "metadata": "tools/maps/authored/red-mesa.json",
+  "seed": 10403,
+  "dataVersion": 4903,
+  "blocksSha256": "6799261020e00954e234589ff858015f0402d5ee4a9dd8d456e46e47e9f0c7c1"
+}

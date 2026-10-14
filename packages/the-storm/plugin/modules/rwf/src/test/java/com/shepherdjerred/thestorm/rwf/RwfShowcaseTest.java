@@ -6,7 +6,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.rwf.adapter.db.JooqMatchStore;
 import com.shepherdjerred.thestorm.rwf.adapter.record.Retention;
+import com.shepherdjerred.thestorm.rwf.app.RwfFeatures;
 import com.shepherdjerred.thestorm.rwf.app.ShowcaseControl;
+import com.shepherdjerred.thestorm.rwf.app.map.MapResources;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchSnapshot;
@@ -24,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.GZIPInputStream;
 import org.bukkit.GameMode;
@@ -128,6 +131,128 @@ final class RwfShowcaseTest {
     assertThat(control.startSeeded(before.matchId(), 2, seed + 1)).isPresent();
     assertThat(harness().snapshot()).isEqualTo(started);
     assertThat(harness().rwf.getTime()).isEqualTo(expected);
+  }
+
+  private static final class PendingNavigation implements MapResources.Handler {
+    private final CompletableFuture<Void> ready = new CompletableFuture<>();
+    private final List<String> requested = new ArrayList<>();
+
+    @Override
+    public CompletableFuture<Void> prepare(String mapId) {
+      requested.add(mapId);
+      return ready;
+    }
+
+    @Override
+    public void release(String mapId) {}
+  }
+
+  private RwfHarness visitLobby() {
+    var harness = RwfHarness.prepare(directory);
+    running = harness;
+    harness.features = RwfFeatures.ALL;
+    harness.enable(directory);
+    harness.until(
+        () ->
+            harness.snapshot().ballot().orElseThrow().visits().orElseThrow().readyAt().isPresent());
+    return harness;
+  }
+
+  @Test
+  void seededShowcaseWaitsForNavigationActivationBeforeItsFirstDraft() {
+    var harness = visitLobby();
+    var navigation = new PendingNavigation();
+    var registration = harness.services.require(MapResources.class).register(navigation);
+    try {
+      var control = harness.services.require(ShowcaseControl.class);
+      var lobbyId = harness.snapshot().matchId();
+      assertThat(control.startSeeded(lobbyId, 2, 600_090_001L)).isEmpty();
+      harness.until(() -> !navigation.requested.isEmpty());
+      assertThat(harness.snapshot().combatants()).isEmpty();
+      assertThat(harness.bots.lastDraft()).isEmpty();
+      assertThat(control.startSeeded(lobbyId, 2, 600_090_002L)).isPresent();
+
+      navigation.ready.complete(null);
+      harness.until(() -> harness.snapshot().combatants().size() == 2);
+      assertThat(harness.snapshot().mapId()).contains(navigation.requested.getFirst());
+      assertThat(harness.bots.lastDraft()).isPresent();
+      assertThat(harness.bots.spawned()).hasSize(2);
+    } finally {
+      registration.close();
+    }
+  }
+
+  @Test
+  void preparingAnExactEmptyLobbyLeavesItsReadyMapPristineUntilASeparateStart() {
+    var harness = visitLobby();
+    var navigation = new PendingNavigation();
+    var registration = harness.services.require(MapResources.class).register(navigation);
+    try {
+      var control = harness.services.require(ShowcaseControl.class);
+      var before = harness.snapshot();
+      var experience = harness.view().experience(before.matchId());
+      var worldTime = harness.rwf.getTime();
+      assertThat(control.prepare(UUID.randomUUID())).isPresent();
+      assertThat(control.prepare(before.matchId())).isEmpty();
+      harness.until(() -> !navigation.requested.isEmpty());
+      assertThat(harness.bots.lastDraft()).isEmpty();
+      navigation.ready.complete(null);
+      harness.until(() -> harness.snapshot().mapId().isPresent());
+      assertThat(harness.snapshot().phase()).isEqualTo(MatchSnapshot.PhaseKind.LOBBY);
+      assertThat(harness.snapshot().combatants()).isEmpty();
+      assertThat(harness.bots.known()).isEmpty();
+      assertThat(harness.view().experience(before.matchId())).isEqualTo(experience);
+      assertThat(harness.rwf.getTime()).isEqualTo(worldTime);
+      assertThat(control.startSeeded(before.matchId(), 2, 600_090_001L)).isEmpty();
+      harness.until(() -> harness.snapshot().combatants().size() == 2);
+      assertThat(harness.snapshot().combatants()).hasSize(2);
+      assertThat(control.prepare(before.matchId())).isPresent();
+    } finally {
+      registration.close();
+    }
+  }
+
+  @Test
+  void stoppingAPendingShowcasePreventsALateNavigationCompletionFromDrafting() {
+    var harness = visitLobby();
+    var navigation = new PendingNavigation();
+    var registration = harness.services.require(MapResources.class).register(navigation);
+    try {
+      var control = harness.services.require(ShowcaseControl.class);
+      var lobbyId = harness.snapshot().matchId();
+      assertThat(control.startSeeded(lobbyId, 2, 600_090_001L)).isEmpty();
+      harness.until(() -> !navigation.requested.isEmpty());
+      assertThat(control.stop(lobbyId)).isEmpty();
+      navigation.ready.complete(null);
+      harness.ticks(5);
+      assertThat(harness.bots.lastDraft()).isEmpty();
+      assertThat(harness.bots.spawned()).isEmpty();
+      assertThat(harness.snapshot().combatants()).isEmpty();
+    } finally {
+      registration.close();
+    }
+  }
+
+  @Test
+  void ordinaryAutomaticPopulationAlsoWaitsForNavigationActivation() {
+    var harness = visitLobby();
+    var navigation = new PendingNavigation();
+    var registration = harness.services.require(MapResources.class).register(navigation);
+    try {
+      harness.enter(harness.loadedPlayer("Alice"));
+      // Start the waiting timer before advancing past the guaranteed candidate-voting window.
+      harness.ticks(1);
+      harness.tick(Duration.ofSeconds(91));
+      harness.until(() -> !navigation.requested.isEmpty());
+      assertThat(harness.snapshot().ballot().orElseThrow().closed()).isTrue();
+      assertThat(harness.bots.lastDraft()).isEmpty();
+      assertThat(harness.snapshot().combatants()).hasSize(1);
+      navigation.ready.complete(null);
+      harness.until(() -> harness.bots.lastDraft().isPresent());
+      assertThat(harness.snapshot().mapId()).contains(navigation.requested.getFirst());
+    } finally {
+      registration.close();
+    }
   }
 
   @Test

@@ -98,7 +98,8 @@ final class VisiblePursuitTest {
             Optional.empty(),
             "engage:fight",
             10,
-            0);
+            0,
+            java.util.Optional.empty());
     var step =
         Reflex.tick(
             ReflexState.initial(self.facing()),
@@ -144,7 +145,8 @@ final class VisiblePursuitTest {
             Optional.empty(),
             "engage:fight",
             10,
-            0);
+            0,
+            java.util.Optional.empty());
     var look = Facing.looking(self.eye(), enemy.pos().plus(0, 1.3, 0));
     var step =
         Reflex.tick(

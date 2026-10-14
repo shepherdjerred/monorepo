@@ -10,25 +10,30 @@ owns their declarations, environment overrides and targeting.
 
 ## Gameplay gates
 
-These flags use namespace `the-storm`. Each declaration defaults to `false`;
-the `beta` and `prod` overrides are `true` without targeting rules.
+These flags use namespace `the-storm`. Every declaration defaults to `false`,
+without targeting rules. Admission, kits, rewards and the seven original match
+features override both `beta` and `prod` to `true`.
+Host settings and candidate visits override only `beta` to `true`;
+`prod` inherits their declared `false` default.
 
-| Flag                                    | Enabled behavior                                                                                                                                                                                                                               |
-| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `the-storm-rwf-enabled`                 | Admission through `/rwf join` and the spectator commands.                                                                                                                                                                                      |
-| `the-storm-rwf-match-flow-enabled`      | Three maps appear on the lobby ballot. Members vote with `/rwf vote` or podiums until `voteLead`; seeded draws break ties. The selected map previews for `previewLength` with kits open, then teams freeze at their starts for `freezeLength`. |
-| `the-storm-rwf-carry-over-enabled`      | Humans retain their kits and held belongings into the next lobby after a natural finish, without `/rwf join`. Bots and leavers are restored. A stop releases everyone.                                                                         |
-| `the-storm-rwf-death-feed-enabled`      | Team-coloured death messages, tab-list kills, `Scored a kill assist worth n!`, `Stolen a kill!`, and the killer's remaining hearts for the victim. Assists need more than a tenth of the damage.                                               |
-| `the-storm-rwf-team-chat-enabled`       | Plain chat goes to the team (`/t`); `@` or `/g` speaks globally. `/rwf teamchat` changes the remembered default. Dead players and watchers share `/dead`.                                                                                      |
-| `the-storm-rwf-spectator-tools-enabled` | The dead watch their killer for three seconds, then get a compass menu, `/rwf spectate next`, `/rwf spectate previous` and `/rwf goto`. Ghosts and Wraiths stay hidden.                                                                        |
-| `the-storm-rwf-bomb-effects-enabled`    | Map-wide explosion audio and particles, armed-bomb hiss and smoke, and a ten-segment arming bar per team on bomb holograms.                                                                                                                    |
-| `the-storm-rwf-stats-enabled`           | Stats commands, lobby leaderboards and persistent lifetime and per-kit totals.                                                                                                                                                                 |
-| `the-storm-rwf-kits-enabled`            | The full kit list, credit shop and weekly free rotation. When off, access is limited to Trooper, Longbow, Shortbow and Rewind.                                                                                                                 |
-| `the-storm-rwf-killstreaks-enabled`     | Tracking compass at two kills, wolves and supply crates every four, iron golems every eight and napalm every eleven; assists contribute their share.                                                                                           |
+| Flag                                     | Enabled behavior                                                                                                                                                                                                                                                         |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `the-storm-rwf-enabled`                  | Admission through `/rwf join` and the spectator commands.                                                                                                                                                                                                                |
+| `the-storm-rwf-match-flow-enabled`       | Map voting with seeded tie-breaks, a selected-map preview for `previewLength` with kits open, and a spawn freeze for `freezeLength`. Candidate visits extend the voting opportunity when enabled.                                                                        |
+| `the-storm-rwf-candidate-visits-enabled` | With match flow enabled, terrain for up to three candidates prepares serially before a 90-second voting opportunity. Members independently fly over candidates, switch maps or return. The winner's resources activate before bot arrivals and its selected-map preview. |
+| `the-storm-rwf-host-settings-enabled`    | The first admitted human hosts bot settings: Auto, Off or a fixed bot count, plus Easy, Normal or Hard difficulty. Host ownership transfers to the oldest remaining human. Settings lock at vote close; later edits apply next round.                                    |
+| `the-storm-rwf-carry-over-enabled`       | Humans retain their kits and held belongings into the next lobby after a natural finish, without `/rwf join`. Bots and leavers are restored. A stop releases everyone.                                                                                                   |
+| `the-storm-rwf-death-feed-enabled`       | Team-coloured death messages, tab-list kills, `Scored a kill assist worth n!`, `Stolen a kill!`, and the killer's remaining hearts for the victim. Assists need more than a tenth of the damage.                                                                         |
+| `the-storm-rwf-team-chat-enabled`        | Plain chat goes to the team (`/t`); `@` or `/g` speaks globally. `/rwf teamchat` changes the remembered default. Dead players and watchers share `/dead`.                                                                                                                |
+| `the-storm-rwf-spectator-tools-enabled`  | The dead watch their killer for three seconds, then get a compass menu, `/rwf spectate next`, `/rwf spectate previous` and `/rwf goto`. Ghosts and Wraiths stay hidden.                                                                                                  |
+| `the-storm-rwf-bomb-effects-enabled`     | Map-wide explosion audio and particles, armed-bomb hiss and smoke, and a ten-segment arming bar per team on bomb holograms.                                                                                                                                              |
+| `the-storm-rwf-stats-enabled`            | Stats commands, lobby leaderboards and persistent lifetime and per-kit totals.                                                                                                                                                                                           |
+| `the-storm-rwf-kits-enabled`             | The full kit list, credit shop and weekly free rotation. When off, access is limited to Trooper, Longbow, Shortbow and Rewind.                                                                                                                                           |
+| `the-storm-rwf-killstreaks-enabled`      | Select three rewards at distinct thresholds before the round: compass at two kills, supply crate or wolves at four, iron golem at eight, napalm at eleven. Each selected reward is earned once per life; assists contribute their share.                                 |
 
 Admission is implemented by
 [FliptRwfGate](packages/the-storm/plugin/modules/rwf/src/main/java/com/shepherdjerred/thestorm/rwf/adapter/remote/FliptRwfGate.java).
-The seven match features are declared by
+The nine match features are declared by
 [FliptRwfFeatures](packages/the-storm/plugin/modules/rwf/src/main/java/com/shepherdjerred/thestorm/rwf/adapter/remote/FliptRwfFeatures.java)
 and applied by
 [MatchRunner](packages/the-storm/plugin/modules/rwf/src/main/java/com/shepherdjerred/thestorm/rwf/adapter/paper/MatchRunner.java).
@@ -40,12 +45,12 @@ Reward thresholds come from
 
 ## Evaluation and cache boundaries
 
-| Gate                 | Targeting and refresh                                                                                                                                |
-| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Admission            | Player UUID with the map world as `world` context, evaluated for the admission request.                                                              |
-| Seven match features | Fixed entity `the-storm-rwf-features` with the map world as `world` context, read as each lobby opens. The active match keeps its captured features. |
-| Kits                 | Player UUID with `world` context, evaluated when that player's armory loads. The answer remains cached until disconnect.                             |
-| Killstreaks          | Player UUID with `world` context, evaluated for each earned reward before delivery.                                                                  |
+| Gate                | Targeting and refresh                                                                                                                                |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Admission           | Player UUID with the map world as `world` context, evaluated for the admission request.                                                              |
+| Nine match features | Fixed entity `the-storm-rwf-features` with the map world as `world` context, read as each lobby opens. The active match keeps its captured features. |
+| Kits                | Player UUID with `world` context, evaluated when that player's armory loads. The answer remains cached until disconnect.                             |
+| Killstreaks         | Player UUID with `world` context, evaluated when opening or saving reward choices and before delivering each earned reward.                          |
 
 Successful admission starts a kit load through
 [KitPicker](packages/the-storm/plugin/modules/rwf/src/main/java/com/shepherdjerred/thestorm/rwf/adapter/paper/KitPicker.java).
@@ -58,7 +63,8 @@ clears the cache on quit.
 [FliptPlayerFlag](packages/the-storm/plugin/modules/rwf/src/main/java/com/shepherdjerred/thestorm/rwf/adapter/remote/FliptPlayerFlag.java)
 implements player targeting;
 [Killstreaks](packages/the-storm/plugin/modules/rwf/src/main/java/com/shepherdjerred/thestorm/rwf/adapter/paper/Killstreaks.java)
-checks the flag when granting a reward.
+checks the flag when granting a reward. The same gate controls reward selection
+through the kit menu and `/rwf killstreaks`.
 Missing `FLIPT_URL` or `FLIPT_ENVIRONMENT` closes admission, kits and rewards,
 and leaves match features off at startup, as wired by
 [RwfModule](packages/the-storm/plugin/modules/rwf/src/main/java/com/shepherdjerred/thestorm/rwf/RwfModule.java).

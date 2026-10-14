@@ -52,7 +52,7 @@ export const yard = {
  * stands in is asked of the server (`standsIn`).
  */
 export const lobby = {
-  region: { min: new Vec3(0, 64, 0), max: new Vec3(107, 99, 99) },
+  region: { min: new Vec3(0, 64, 0), max: new Vec3(177, 99, 99) },
   spawn: new Vec3(60.5, 70, 50.5),
 } as const;
 
@@ -183,6 +183,7 @@ export async function joinRecovered({ bot, log }: Human): Promise<void> {
 export async function playTogether(
   humans: Human[],
   idle: Human[] = [],
+  beforeStart?: () => Promise<void>,
 ): Promise<Team[]> {
   for (const { log } of humans) {
     log.lines.length = 0;
@@ -190,6 +191,7 @@ export async function playTogether(
   for (const one of humans) {
     await joinRecovered(one);
   }
+  await beforeStart?.();
   for (const { log } of humans) {
     await log.until(/The game has begun!/u, 30_000);
   }
@@ -219,7 +221,9 @@ export function enemy(team: Team): Team {
 export function inView(bot: Bot, other: Bot): Bot["entity"] | undefined {
   const entity: Bot["entity"] | null | undefined =
     bot.players[other.username]?.entity;
-  return entity ?? undefined;
+  return entity?.isValid === true && bot.entities[entity.id] === entity
+    ? entity
+    : undefined;
 }
 
 export async function connect(

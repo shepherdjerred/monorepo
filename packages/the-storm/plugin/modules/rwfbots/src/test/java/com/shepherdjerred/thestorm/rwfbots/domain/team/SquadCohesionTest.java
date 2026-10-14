@@ -25,7 +25,8 @@ final class SquadCohesionTest {
         slots,
         Map.of(
             new CombatantId(1), "left", new CombatantId(2), "middle", new CombatantId(3), "right"),
-        0);
+        0,
+        Map.of());
   }
 
   private static Slot slot(String key) {
@@ -56,5 +57,50 @@ final class SquadCohesionTest {
             .toList();
     assertThat(TeamBrain.push(plan, above, false)).isEqualTo(plan.push());
     assertThat(TeamBrain.ERRATIC).isLessThan(TeamBrain.STICKY);
+  }
+
+  private static Slot lane(int index) {
+    return new Slot(
+        "lane-" + index,
+        SlotKind.LANE,
+        Role.ROTATE,
+        Vec3.ZERO,
+        Vec3.ZERO,
+        index,
+        -1,
+        Optional.empty(),
+        0);
+  }
+
+  @Test
+  void squadMembersPreferTheSameRouteWhileSolosKeepTheirIndividualAssignment() {
+    var one = new CombatantId(1);
+    var two = new CombatantId(2);
+    var solo = new CombatantId(3);
+    var groups = Map.of(one, 1, two, 1, solo, -1);
+    assertThat(SquadCohesion.fit(groups, one, lane(1), 2))
+        .isPositive()
+        .isEqualTo(SquadCohesion.fit(groups, two, lane(1), 2));
+    assertThat(SquadCohesion.fit(groups, one, lane(0), 2)).isZero();
+    assertThat(SquadCohesion.fit(groups, solo, lane(0), 2)).isZero();
+    assertThat(SquadCohesion.fit(groups, solo, lane(1), 2)).isZero();
+  }
+
+  @Test
+  void sharedRoutesCannotOutweighAWholeYardOfAdditionalTravel() {
+    var bot = new CombatantId(1);
+    var bonus = SquadCohesion.fit(Map.of(bot, 1), bot, lane(1), 2);
+    var detourCost =
+        TeamBrain.DISTANCE_WEIGHT
+            * com.shepherdjerred.thestorm.rwfbots.domain.map.TraversalCosts.walkingTicks(8)
+            / TeamBrain.DISTANCE_SCALE;
+    assertThat(bonus).isPositive().isLessThan(detourCost);
+  }
+
+  @Test
+  void cohesionLeavesUnlanedRolesAndSingleRouteMapsAlone() {
+    var bot = new CombatantId(1);
+    assertThat(SquadCohesion.fit(Map.of(bot, 1), bot, lane(-1), 2)).isZero();
+    assertThat(SquadCohesion.fit(Map.of(bot, 1), bot, lane(0), 1)).isZero();
   }
 }

@@ -122,8 +122,8 @@ final class TeamPlayTest {
    * output: a deliberate change to how bots play moves it, and the new value is pasted here in the
    * same change; an accidental one fails here.
    */
-  // Primitive tolls scale with distance, and moving formations preserve playbook spacing.
-  private static final String PINNED_YARD_HASH = "f6ae997df2102cd6";
+  // Certified launch/landing recovery, local squad bounds, safe advances and committed fuse work.
+  private static final String PINNED_YARD_HASH = "ce05544e755cab1d";
 
   @Test
   void aTrainingYardMatchReplaysToItsPinnedHash() {

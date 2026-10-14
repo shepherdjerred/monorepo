@@ -2,6 +2,7 @@
   id: floating-isles,
   name: Floating Isles,
   author: Erare,
+  description: "Legend tells of floating isles.. Floating around the world, briefly spotted and never seen again.",
   region:
     { min: { x: 4096, "y": 0, z: 2048 }, max: { x: 4279, "y": 116, z: 2240 } },
   spectator: { x: 4188, "y": 116, z: 2144.5, yaw: 0, pitch: 45 },
@@ -442,5 +443,5 @@
       { id: blue-1, team: BLUE, at: { x: 4121, "y": 89, z: 2103 } },
     ],
   nukes: [],
-  blocksSha256: cbeba029f3699c15adad9338c190a864ef16234551f1e81ca8b29812d5de09fb,
+  blocksSha256: 20e371135462bd28142a2bed75cd01aa883a23a3f9575416fc733096be4efebc,
 }

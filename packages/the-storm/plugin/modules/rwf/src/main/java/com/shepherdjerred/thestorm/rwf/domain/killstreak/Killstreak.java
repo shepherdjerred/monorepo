@@ -3,38 +3,35 @@
 // KillstreakManager.java, StreakBase.java and streaks/*.java); see packages/the-storm/NOTICE.
 package com.shepherdjerred.thestorm.rwf.domain.killstreak;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 /**
  * Red Warfare's killstreak rewards, in the order its manager handed them out. Each is earned at a
- * whole step of a combatant's killstreak (one per kill plus each assist's share): the compass at
- * exactly two, the others at every multiple of their count. All but the compass are delivered from
- * the sky: the item is used on a block, and its reward lands there from far above.
+ * whole step of a combatant's killstreak (one per kill plus each assist's share), once per life
+ * when the reward is selected in their loadout. All but the compass are delivered from the sky: the
+ * item is used on a block, and its reward lands there from far above.
  */
 public enum Killstreak {
   /** A compass that points at the nearest enemy. */
-  COMPASS("a tracking compass", 2, true, "COMPASS", Optional.empty()),
+  COMPASS("a tracking compass", 2, "COMPASS", Optional.empty()),
   /** A chest of food, ender pearls and perhaps a diamond chestplate. */
-  SUPPLY_CRATE("supply crate", 4, false, "REDSTONE", Optional.of("OAK_PLANKS")),
+  SUPPLY_CRATE("supply crate", 4, "REDSTONE", Optional.of("OAK_PLANKS")),
   /** Three attack dogs that fight for the team. */
-  WOLVES("attack dogs", 4, false, "WOLF_SPAWN_EGG", Optional.of("WHITE_WOOL")),
+  WOLVES("attack dogs", 4, "WOLF_SPAWN_EGG", Optional.of("WHITE_WOOL")),
   /** An iron golem that fights for the team. */
-  IRON_GOLEM("iron golem", 8, false, "IRON_GOLEM_SPAWN_EGG", Optional.of("IRON_BLOCK")),
+  IRON_GOLEM("iron golem", 8, "IRON_GOLEM_SPAWN_EGG", Optional.of("IRON_BLOCK")),
   /** A firebomb that sets the area alight. */
-  NAPALM("Napalm", 11, false, "TNT", Optional.of("TNT"));
+  NAPALM("Napalm", 11, "TNT", Optional.of("TNT"));
 
   private final String title;
   private final int kills;
-  private final boolean exact;
   private final String item;
   private final Optional<String> falling;
 
-  Killstreak(String title, int kills, boolean exact, String item, Optional<String> falling) {
+  Killstreak(String title, int kills, String item, Optional<String> falling) {
     this.title = title;
     this.kills = kills;
-    this.exact = exact;
     this.item = item;
     this.falling = falling;
   }
@@ -103,10 +100,7 @@ public enum Killstreak {
 
   /** Whether a killstreak of {@code streak} whole steps earns this. */
   public boolean earnedAt(int streak) {
-    if (streak <= 0) {
-      return false;
-    }
-    return exact ? streak == kills : streak % kills == 0;
+    return streak == kills;
   }
 
   /**
@@ -114,15 +108,7 @@ public enum Killstreak {
    * and in Red Warfare's order within a step.
    */
   public static List<Earned> earned(int before, int after) {
-    var earned = new ArrayList<Earned>();
-    for (var step = before + 1; step <= after; step++) {
-      for (var streak : values()) {
-        if (streak.earnedAt(step)) {
-          earned.add(new Earned(streak, step));
-        }
-      }
-    }
-    return List.copyOf(earned);
+    return StreakLoadout.DEFAULT.earned(before, after);
   }
 
   /**

@@ -7,10 +7,11 @@ import org.mockbukkit.mockbukkit.attribute.AttributeInstanceMock;
 import org.mockbukkit.mockbukkit.entity.PlayerMock;
 
 /** Supplies the vanilla 26.2 fall attributes absent from MockBukkit's default player registry. */
-public final class TraversalPlayerMock extends PlayerMock {
-  public TraversalPlayerMock(ServerMock server, String name) {
-    this(server, name, UUID.randomUUID());
-    server.addPlayer(this);
+public class TraversalPlayerMock extends PlayerMock {
+  public static TraversalPlayerMock add(ServerMock server, String name) {
+    var player = new TraversalPlayerMock(server, name, UUID.randomUUID());
+    server.addPlayer(player);
+    return player;
   }
 
   public TraversalPlayerMock(ServerMock server, String name, UUID id) {

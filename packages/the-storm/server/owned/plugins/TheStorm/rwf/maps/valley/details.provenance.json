@@ -1,9 +1,9 @@
 {
   "schema": 1,
   "id": "valley",
-  "blocksSha256": "901098ade07170bd0893e1620d795f8a9e1ed3d279d2ee30751a0e71c2af29e0",
-  "detailsSha256": "03e1b1e15645e7400be847fbbf5c49a770451b429bf57f07a3315a5b457b779e",
-  "policy": "preserve-inventories-and-literal-sign-text-strip-other-payloads",
+  "blocksSha256": "aa01a5409c6f0915d62f584d84ab7e89239edc65abc427b4bbeedca1050ca6ea",
+  "detailsSha256": "b4ffda9ba33330fe20f7ca288e6c53cdf106beb387e1507a9b66c8151c1f100f",
+  "policy": "preserve-inventories-and-other-signs-remove-legacy-buy-signs",
   "producer": [
     {
       "file": "TheStorm.jar",
@@ -1579,6 +1579,15 @@
     }
   ],
   "result": {
+    "state": "complete",
+    "containers": 0,
+    "signs": 11
+  },
+  "shopRemoval": {
+    "originalBlocksSha256": "901098ade07170bd0893e1620d795f8a9e1ed3d279d2ee30751a0e71c2af29e0",
+    "count": 13
+  },
+  "nativeExportResult": {
     "state": "complete",
     "containers": 0,
     "signs": 24

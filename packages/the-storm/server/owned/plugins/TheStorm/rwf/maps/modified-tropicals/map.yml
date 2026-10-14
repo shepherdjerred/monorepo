@@ -2,6 +2,7 @@
   id: modified-tropicals,
   name: TropicalsWith3Bombs,
   author: libraryaddict,
+  description: "A map modifed to use 3 bombs instead of the normal 1. The bombs are in the ship, volcano and in the house next to the lighthouse",
   region:
     { min: { x: 5120, "y": 0, z: 3072 }, max: { x: 5497, "y": 129, z: 3259 } },
   spectator: { x: 5309, "y": 129, z: 3166, yaw: 0, pitch: 45 },
@@ -1492,5 +1493,5 @@
       { id: blue-3, team: BLUE, at: { x: 5454, "y": 109, z: 3135 } },
     ],
   nukes: [],
-  blocksSha256: fa19015ad0e22739301df29f81c9d3198a92660d95cf8142286e11f91f9ddfc6,
+  blocksSha256: a0d1c097adc2f3ea157dff78278435e22a1d6d714d1d1d2029f51544f05e548b,
 }

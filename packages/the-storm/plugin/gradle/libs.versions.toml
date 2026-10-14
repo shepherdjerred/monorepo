@@ -16,6 +16,7 @@ pmd = "7.27.0"
 jacoco = "0.8.15"
 jackson = "3.2.3"
 jooq = "3.21.8"
+jaxb = "4.0.2"
 flyway = "13.8.0"
 sqlite-jdbc = "3.53.4.0"
 hikari = "7.1.0"
@@ -55,6 +56,7 @@ jackson-annotations = { module = "com.fasterxml.jackson.core:jackson-annotations
 jackson-yaml = { module = "tools.jackson.dataformat:jackson-dataformat-yaml", version.ref = "jackson" }
 jooq = { module = "org.jooq:jooq", version.ref = "jooq" }
 jooq-codegen = { module = "org.jooq:jooq-codegen", version.ref = "jooq" }
+jaxb-api = { module = "jakarta.xml.bind:jakarta.xml.bind-api", version.ref = "jaxb" }
 flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
 sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite-jdbc" }
 hikari = { module = "com.zaxxer:HikariCP", version.ref = "hikari" }

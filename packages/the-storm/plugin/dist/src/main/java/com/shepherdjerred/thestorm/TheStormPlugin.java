@@ -13,6 +13,7 @@ import com.shepherdjerred.thestorm.core.module.ModuleRegistry;
 import com.shepherdjerred.thestorm.core.module.Services;
 import com.shepherdjerred.thestorm.core.module.StormModule;
 import com.shepherdjerred.thestorm.core.players.PlayerDirectory;
+import com.shepherdjerred.thestorm.core.players.PlayerVisibilityControl;
 import com.shepherdjerred.thestorm.core.players.SqlPlayerDirectory;
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.core.schedule.PaperScheduler;
@@ -43,6 +44,7 @@ public final class TheStormPlugin extends JavaPlugin {
   private @Nullable StormDatabase database;
   private @Nullable ComputePool compute;
   private @Nullable AnalyticsPaper analytics;
+  private @Nullable PlayerVisibilityControl visibility;
   private com.shepherdjerred.thestorm.core.expansion.@Nullable ManagedGameplay gameplay;
 
   /**
@@ -86,6 +88,9 @@ public final class TheStormPlugin extends JavaPlugin {
     db.migrate("core", getClass().getClassLoader());
     var players = new SqlPlayerDirectory(db);
     services.provide(PlayerDirectory.class, players);
+    var visibilityControl = new PlayerVisibilityControl(this);
+    visibility = visibilityControl;
+    services.provide(PlayerVisibilityControl.class, visibilityControl);
     services.provide(ChunkTickets.class, new ChunkTickets(this));
     services.provide(SealedWorlds.class, new SealedWorlds());
     services.provide(PublicGameDirectory.class, new PublicGameDirectory());
@@ -138,6 +143,10 @@ public final class TheStormPlugin extends JavaPlugin {
       module.disable();
     }
     enabled.clear();
+    if (visibility != null) {
+      visibility.close();
+      visibility = null;
+    }
     if (analytics != null) {
       analytics.close();
       analytics = null;

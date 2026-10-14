@@ -1,9 +1,9 @@
 {
   "schema": 1,
   "id": "rotated-hemispheres",
-  "blocksSha256": "5bf76677d0927149d8d70d96d0ccae30cdbc068b07f24193db8af708a2f40411",
-  "detailsSha256": "ec2bee17eb0de8bdbad7aac9282aac9df61cedc5abed1e51e0b366e49defcc66",
-  "policy": "preserve-inventories-and-literal-sign-text-strip-other-payloads",
+  "blocksSha256": "9f2410e4bb372f5dbccb8a9785901174c0746ddb6c41be109ff88058957240a4",
+  "detailsSha256": "b9729a888cc44c4671f0b1594717c5bec2f5316c524045b2c7f5d2aca12d181a",
+  "policy": "preserve-inventories-and-other-signs-remove-legacy-buy-signs",
   "producer": [
     {
       "file": "TheStorm.jar",
@@ -1579,6 +1579,15 @@
     }
   ],
   "result": {
+    "state": "complete",
+    "containers": 0,
+    "signs": 1
+  },
+  "shopRemoval": {
+    "originalBlocksSha256": "5bf76677d0927149d8d70d96d0ccae30cdbc068b07f24193db8af708a2f40411",
+    "count": 20
+  },
+  "nativeExportResult": {
     "state": "complete",
     "containers": 0,
     "signs": 21

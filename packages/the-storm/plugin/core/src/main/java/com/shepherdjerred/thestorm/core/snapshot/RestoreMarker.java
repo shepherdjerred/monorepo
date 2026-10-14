@@ -50,7 +50,7 @@ public final class RestoreMarker {
       digest.update(snapshot.scope().getBytes(StandardCharsets.UTF_8));
       digest.update(snapshot.takenAt().toString().getBytes(StandardCharsets.UTF_8));
       digest.update(snapshot.position().toString().getBytes(StandardCharsets.UTF_8));
-      digest.update(snapshot.vitals().toString().getBytes(StandardCharsets.UTF_8));
+      digest.update(snapshot.vitals().fingerprintValue().getBytes(StandardCharsets.UTF_8));
       digest.update(snapshot.experience().toString().getBytes(StandardCharsets.UTF_8));
       digest.update(snapshot.effects().toString().getBytes(StandardCharsets.UTF_8));
       digest.update(snapshot.inventory().bytes());

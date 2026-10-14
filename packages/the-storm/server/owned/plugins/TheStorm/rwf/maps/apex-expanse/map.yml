@@ -2,6 +2,7 @@
   id: apex-expanse,
   name: Apex Expanse,
   author: Heeltripper,
+  description: Yet another floating island map! Amazing sights and a slightly terrible fall!,
   region:
     { min: { x: 1024, "y": 0, z: 1024 }, max: { x: 1344, "y": 118, z: 1256 } },
   spectator: { x: 1184.5, "y": 118, z: 1140.5, yaw: 0, pitch: 45 },
@@ -346,5 +347,5 @@
       { id: blue-1, team: BLUE, at: { x: 1273, "y": 51, z: 1154 } },
     ],
   nukes: [],
-  blocksSha256: 57743aaebc82047c15a592ba1ffd8271c10c5549c0df72e51a09cb1a3152e430,
+  blocksSha256: e4a52c56945c660123110b128f07f1ff9cfdff3b5b165517d17b02ff2990f4ad,
 }

@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "kind": "rwf-map-scenario",
+  "id": "catacombs-trooper-duel-v1",
+  "map": "catacombs",
+  "mapSha256": "0d7892c50f7103585c0e0ecb96dcf4b12a9196882a13779d108e8fe0c695f9fb",
+  "world": "minecraft:rwf",
+  "region": {
+    "min": {
+      "x": 6144,
+      "y": 64,
+      "z": 7168
+    },
+    "max": {
+      "x": 6255,
+      "y": 111,
+      "z": 7279
+    }
+  },
+  "sourceTeams": ["RED", "BLUE"],
+  "spawnPolicy": "source",
+  "spawns": [
+    {
+      "team": "red",
+      "sourceTeam": "RED",
+      "position": [6149.5, 73, 7218.5],
+      "yaw": 270,
+      "pitch": 0
+    },
+    {
+      "team": "blue",
+      "sourceTeam": "BLUE",
+      "position": [6250.5, 73, 7218.5],
+      "yaw": 90,
+      "pitch": 0
+    }
+  ]
+}

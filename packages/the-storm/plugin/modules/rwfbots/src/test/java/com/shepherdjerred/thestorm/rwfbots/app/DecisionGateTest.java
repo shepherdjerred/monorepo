@@ -35,7 +35,8 @@ final class DecisionGateTest {
             Optional.of("rewind"),
             "engage",
             tick,
-            epoch);
+            epoch,
+            java.util.Optional.empty());
     return new BotThought(decision, new Percept(PerceptionState.EMPTY, List.of(), tick), epoch);
   }
 

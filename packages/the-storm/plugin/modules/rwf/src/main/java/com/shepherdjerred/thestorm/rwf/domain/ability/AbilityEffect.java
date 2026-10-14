@@ -15,6 +15,9 @@ import java.util.Optional;
 /** What the server must do because an ability fired. The Paper adapter carries these out. */
 public sealed interface AbilityEffect {
 
+  /** Typed effects for additional kit families, carried out by their Paper adapters. */
+  non-sealed interface Extra extends AbilityEffect {}
+
   /** Effectively forever, for potion lengths. */
   int FOREVER = Integer.MAX_VALUE;
 

@@ -137,13 +137,14 @@ public final class PursuitFixtures implements BasicCommand, AutoCloseable {
   public PursuitFixtures(JavaPlugin plugin, World world) {
     this.plugin = plugin;
     this.world = world;
+    var time = java.time.InstantSource.fixed(java.time.Instant.EPOCH);
     this.capture =
         new SnapshotCapture(
             new com.shepherdjerred.thestorm.rwfbots.adapter.paper.IdMap(),
             id -> Optional.empty(),
-            new com.shepherdjerred.thestorm.rwfbots.adapter.paper.StimulusCollector(),
-            new SnapshotCapture.Capabilities(
-                id -> Optional.empty(), java.time.InstantSource.fixed(java.time.Instant.EPOCH)));
+            new com.shepherdjerred.thestorm.rwfbots.adapter.paper.StimulusCollector(
+                new com.shepherdjerred.thestorm.rwf.app.BattleSoundLog(time), time),
+            new SnapshotCapture.Capabilities(id -> Optional.empty(), time));
   }
 
   public void register() {
@@ -177,7 +178,7 @@ public final class PursuitFixtures implements BasicCommand, AutoCloseable {
   private void prepare() {
     if (!state.equals("idle")) throw new IllegalStateException("pursuit proof is single-use");
     var arena = new Arena();
-    pasteArena(arena);
+    placeArena(arena);
     nav = Optional.of(MapBaker.bake("pursuit-proof", arena, new NavSites(List.of(), List.of())));
     var catalog =
         PersonalityFiles.load(plugin.getDataFolder().toPath().getParent().resolve("TheStorm"));
@@ -186,7 +187,12 @@ public final class PursuitFixtures implements BasicCommand, AutoCloseable {
             .sorted(java.util.Comparator.comparing(p -> p.id()))
             .findFirst()
             .orElseThrow();
-    var owner = CitizensBodies.open(plugin, id -> {});
+    var owner =
+        CitizensBodies.open(
+            plugin,
+            id -> {},
+            new SnapshotCapture.Capabilities(
+                id -> Optional.empty(), java.time.InstantSource.fixed(java.time.Instant.EPOCH)));
     bodies = Optional.of(owner);
     var id = owner.create(personality);
     attacker = Optional.of(id);
@@ -202,20 +208,21 @@ public final class PursuitFixtures implements BasicCommand, AutoCloseable {
     state = "prepared";
   }
 
-  private void pasteArena(Arena arena) {
+  private void placeArena(Arena arena) {
     for (int x = 300; x < 316; x++)
       for (int z = 300; z < 312; z++) {
         world.addPluginChunkTicket(x >> 4, z >> 4, plugin);
         for (int y = 99; y < 106; y++) {
-          var shape = arena.shape(x, y, z);
-          world.getBlockAt(x, y, z).setType(material(shape), false);
+          world.getBlockAt(x, y, z).setType(material(arena.shape(x, y, z)), false);
         }
       }
   }
 
   private static Material material(BlockShape shape) {
     if (shape == BlockShape.FULL) return Material.STONE;
-    return shape == BlockShape.PANE ? Material.GLASS : Material.AIR;
+    if (shape == BlockShape.PANE) return Material.GLASS;
+    if (shape == BlockShape.PASSABLE) return Material.AIR;
+    throw new IllegalArgumentException("unsupported pursuit arena shape " + shape);
   }
 
   private void start() {
@@ -331,8 +338,22 @@ public final class PursuitFixtures implements BasicCommand, AutoCloseable {
     var id = attacker.orElseThrow();
     var owner = bodies.orElseThrow();
     switch (command) {
-      case BodyCommand.MoveToward(var point, var sprint) ->
-          owner.moveToward(id, new Location(world, point.x(), point.y(), point.z()), sprint);
+      case BodyCommand.MoveToward(var point, var sprint, var hop) ->
+          owner.moveSafely(
+              id,
+              new com.shepherdjerred.thestorm.rwfbots.adapter.paper.Bodies.MotionTarget(
+                  new Location(world, point.x(), point.y(), point.z()),
+                  sprint,
+                  hop,
+                  Optional.of(BOUNDS),
+                  reflex
+                      .activeJump()
+                      .filter(
+                          active ->
+                              active.stage()
+                                  == com.shepherdjerred.thestorm.rwfbots.domain.reflex.ActiveJump
+                                      .Stage.RUN_UP)
+                      .flatMap(active -> active.waypoint().launch())));
       case BodyCommand.Look(var yaw, var pitch) -> owner.look(id, (float) yaw, (float) pitch);
       case BodyCommand.Jump _ -> owner.jump(id);
       case BodyCommand.Stop _ -> owner.stop(id);

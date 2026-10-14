@@ -1,0 +1,228 @@
+{
+  "schema": 1,
+  "policy": "remove-legacy-buy-signs-both-faces",
+  "originalBlocksSha256": "8ae724071164ac04878f479b718aa732c39cb89544ad499746c1cc6d0a3e5c8f",
+  "blocksSha256": "169e0b907a799c6b30300bc2fd231d1fb0aba0ce374b1914df45464a157f3074",
+  "removed": [
+    {
+      "sign": {
+        "at": {
+          "x": 28,
+          "y": 7,
+          "z": 25
+        },
+        "material": "minecraft:oak_wall_sign",
+        "front": {
+          "lines": ["§4[Buy]", "1", "Landmine", "1 Credit"],
+          "color": "BLACK",
+          "glowing": false
+        },
+        "back": {
+          "lines": ["", "", "", ""],
+          "color": "BLACK",
+          "glowing": false
+        },
+        "waxed": false
+      },
+      "state": "minecraft:oak_wall_sign[facing=east,waterlogged=false]"
+    },
+    {
+      "sign": {
+        "at": {
+          "x": 33,
+          "y": 5,
+          "z": 16
+        },
+        "material": "minecraft:oak_wall_sign",
+        "front": {
+          "lines": ["§4[Buy]", "5", "Enderpearls", "2 Credits"],
+          "color": "BLACK",
+          "glowing": false
+        },
+        "back": {
+          "lines": ["", "", "", ""],
+          "color": "BLACK",
+          "glowing": false
+        },
+        "waxed": false
+      },
+      "state": "minecraft:oak_wall_sign[facing=north,waterlogged=false]"
+    },
+    {
+      "sign": {
+        "at": {
+          "x": 35,
+          "y": 5,
+          "z": 26
+        },
+        "material": "minecraft:oak_wall_sign",
+        "front": {
+          "lines": ["§4[Buy]", "3", "RPG", "1 Credit"],
+          "color": "BLACK",
+          "glowing": false
+        },
+        "back": {
+          "lines": ["", "", "", ""],
+          "color": "BLACK",
+          "glowing": false
+        },
+        "waxed": false
+      },
+      "state": "minecraft:oak_wall_sign[facing=north,waterlogged=false]"
+    },
+    {
+      "sign": {
+        "at": {
+          "x": 27,
+          "y": 5,
+          "z": 16
+        },
+        "material": "minecraft:oak_wall_sign",
+        "front": {
+          "lines": ["§4[Buy]", "10", "Arrows", "1 Credit"],
+          "color": "BLACK",
+          "glowing": false
+        },
+        "back": {
+          "lines": ["", "", "", ""],
+          "color": "BLACK",
+          "glowing": false
+        },
+        "waxed": false
+      },
+      "state": "minecraft:oak_wall_sign[facing=north,waterlogged=false]"
+    },
+    {
+      "sign": {
+        "at": {
+          "x": 25,
+          "y": 5,
+          "z": 26
+        },
+        "material": "minecraft:oak_wall_sign",
+        "front": {
+          "lines": ["§4[Buy]", "8", "Grenades", "1 Credit"],
+          "color": "BLACK",
+          "glowing": false
+        },
+        "back": {
+          "lines": ["", "", "", ""],
+          "color": "BLACK",
+          "glowing": false
+        },
+        "waxed": false
+      },
+      "state": "minecraft:oak_wall_sign[facing=north,waterlogged=false]"
+    },
+    {
+      "sign": {
+        "at": {
+          "x": 33,
+          "y": 5,
+          "z": 122
+        },
+        "material": "minecraft:oak_wall_sign",
+        "front": {
+          "lines": ["§4[Buy]", "12", "Arrows", "1 Credit"],
+          "color": "BLACK",
+          "glowing": false
+        },
+        "back": {
+          "lines": ["", "", "", ""],
+          "color": "BLACK",
+          "glowing": false
+        },
+        "waxed": false
+      },
+      "state": "minecraft:oak_wall_sign[facing=south,waterlogged=false]"
+    },
+    {
+      "sign": {
+        "at": {
+          "x": 35,
+          "y": 5,
+          "z": 112
+        },
+        "material": "minecraft:oak_wall_sign",
+        "front": {
+          "lines": ["§4[Buy]", "8", "Grenades", "1 Credit"],
+          "color": "BLACK",
+          "glowing": false
+        },
+        "back": {
+          "lines": ["", "", "", ""],
+          "color": "BLACK",
+          "glowing": false
+        },
+        "waxed": false
+      },
+      "state": "minecraft:oak_wall_sign[facing=south,waterlogged=false]"
+    },
+    {
+      "sign": {
+        "at": {
+          "x": 32,
+          "y": 7,
+          "z": 113
+        },
+        "material": "minecraft:oak_wall_sign",
+        "front": {
+          "lines": ["§4[Buy]", "1", "Landmine", "1 Credit"],
+          "color": "BLACK",
+          "glowing": false
+        },
+        "back": {
+          "lines": ["", "", "", ""],
+          "color": "BLACK",
+          "glowing": false
+        },
+        "waxed": false
+      },
+      "state": "minecraft:oak_wall_sign[facing=west,waterlogged=false]"
+    },
+    {
+      "sign": {
+        "at": {
+          "x": 25,
+          "y": 5,
+          "z": 112
+        },
+        "material": "minecraft:oak_wall_sign",
+        "front": {
+          "lines": ["§4[Buy]", "3", "RPG", "1 Credit"],
+          "color": "BLACK",
+          "glowing": false
+        },
+        "back": {
+          "lines": ["", "", "", ""],
+          "color": "BLACK",
+          "glowing": false
+        },
+        "waxed": false
+      },
+      "state": "minecraft:oak_wall_sign[facing=south,waterlogged=false]"
+    },
+    {
+      "sign": {
+        "at": {
+          "x": 27,
+          "y": 5,
+          "z": 122
+        },
+        "material": "minecraft:oak_wall_sign",
+        "front": {
+          "lines": ["§4[Buy]", "5", "Enderpearls", "2 Credits"],
+          "color": "BLACK",
+          "glowing": false
+        },
+        "back": {
+          "lines": ["", "", "", ""],
+          "color": "BLACK",
+          "glowing": false
+        },
+        "waxed": false
+      },
+      "state": "minecraft:oak_wall_sign[facing=south,waterlogged=false]"
+    }
+  ]
+}

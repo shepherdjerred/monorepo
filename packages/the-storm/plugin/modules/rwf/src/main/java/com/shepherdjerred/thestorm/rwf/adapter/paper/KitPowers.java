@@ -2,9 +2,11 @@ package com.shepherdjerred.thestorm.rwf.adapter.paper;
 
 import com.shepherdjerred.thestorm.rwf.domain.ability.AbilityEffect;
 import com.shepherdjerred.thestorm.rwf.domain.ability.AbilityInput;
+import com.shepherdjerred.thestorm.rwf.domain.ability.ExpansionEffect;
 import com.shepherdjerred.thestorm.rwf.domain.ability.KitCombat;
 import com.shepherdjerred.thestorm.rwf.domain.ability.KitCue;
 import com.shepherdjerred.thestorm.rwf.domain.ability.Motion;
+import com.shepherdjerred.thestorm.rwf.domain.ability.TacticalEffect;
 import com.shepherdjerred.thestorm.rwf.domain.ability.kits.Berserker;
 import com.shepherdjerred.thestorm.rwf.domain.ability.kits.Engineer;
 import com.shepherdjerred.thestorm.rwf.domain.ability.kits.Explosive;
@@ -90,6 +92,9 @@ final class KitPowers {
   private final KitCues cues;
   private final KitSkins skins;
   private final GhostArrows arrows = new GhostArrows();
+  private final ExpansionPowers expansion;
+  private final TacticalWorld tactical;
+  private final CombatantVisibility visibility;
   private long ticks;
   private final Set<UUID> invisible = new HashSet<>();
   private final Map<UUID, Set<UUID>> hiddenFrom = new HashMap<>();
@@ -129,6 +134,9 @@ final class KitPowers {
     this.projectiles = new KitProjectiles(runner, context, parts.keys(), explosions);
     this.cues = new KitCues(runner, context);
     this.skins = new KitSkins(runner, context, parts.kits());
+    this.expansion = new ExpansionPowers(runner, context, parts.keys(), parts.kits());
+    this.tactical = new TacticalWorld(runner, context);
+    this.visibility = new CombatantVisibility(context.visibility(), this::obscured);
     this.streaks =
         new Killstreaks(
             runner,
@@ -138,6 +146,14 @@ final class KitPowers {
 
   KitProjectiles projectiles() {
     return projectiles;
+  }
+
+  ExpansionPowers expansion() {
+    return expansion;
+  }
+
+  TacticalWorld tactical() {
+    return tactical;
   }
 
   /** The killstreak rewards. */
@@ -223,6 +239,8 @@ final class KitPowers {
   /** Carries out {@code effect}. */
   void apply(AbilityEffect effect) {
     switch (effect) {
+      case ExpansionEffect extra -> expansion.apply(extra);
+      case TacticalEffect extra -> tactical.apply(extra);
       case AbilityEffect.Potion potion -> withPlayer(potion.id(), p -> potion(p, potion));
       case AbilityEffect.PotionStack potion -> withPlayer(potion.id(), p -> potionStack(p, potion));
       case AbilityEffect.Send send -> withPlayer(send.id(), p -> send(p, send));
@@ -398,11 +416,11 @@ final class KitPowers {
               .entity(member.id())
               .ifPresent(
                   enemy -> {
-                    enemy.hideEntity(context.plugin(), player);
                     from.add(enemy.getUniqueId());
                   });
         }
         hiddenFrom.put(id, from);
+        refreshVisibility();
       }
       case VISIBLE -> {
         invisible.remove(id);
@@ -414,21 +432,33 @@ final class KitPowers {
   }
 
   private void reveal(Player player) {
-    var from = hiddenFrom.remove(player.getUniqueId());
-    if (from == null) {
-      return;
+    hiddenFrom.remove(player.getUniqueId());
+    refreshVisibility();
+  }
+
+  private boolean obscured(Player viewer, Player target) {
+    if (hiddenFrom.containsKey(target.getUniqueId())) {
+      var targetTeam = runner.memberOf(target.getUniqueId()).flatMap(Combatant::team);
+      var viewerTeam = runner.memberOf(viewer.getUniqueId()).flatMap(Combatant::team);
+      if (!viewerTeam.equals(targetTeam)) return true;
     }
-    for (var viewer : from) {
-      var enemy = context.server().getPlayer(viewer);
-      if (enemy != null) {
-        enemy.showEntity(context.plugin(), player);
-      } else {
-        runner
-            .memberOf(viewer)
-            .flatMap(m -> runner.entity(m.id()))
-            .ifPresent(bot -> bot.showEntity(context.plugin(), player));
-      }
-    }
+    var from = viewer.getEyeLocation();
+    var to = target.getEyeLocation();
+    return tactical.obscured(
+        TacticalWorld.point(from.getX(), from.getY(), from.getZ()),
+        TacticalWorld.point(to.getX(), to.getY(), to.getZ()));
+  }
+
+  private void refreshVisibility() {
+    if (!tactical.smoky() && hiddenFrom.isEmpty() && !visibility.active()) return;
+    var targets =
+        runner.match().members().stream()
+            .map(member -> runner.entity(member.id()))
+            .flatMap(Optional::stream)
+            .toList();
+    var viewers = new HashSet<Player>(context.mapWorld().getPlayers());
+    viewers.addAll(targets);
+    visibility.refresh(viewers, targets);
   }
 
   private void disguise(Player player, AbilityEffect.Disguise disguise) {
@@ -799,6 +829,8 @@ final class KitPowers {
   /** One tick of a live match: cooldown bars, kit particles, teleporters and their signs. */
   void tick(Instant now) {
     ticks++;
+    tactical.tick(now);
+    refreshVisibility();
     for (var member : runner.match().members()) {
       if (!member.alive()) {
         continue;
@@ -948,6 +980,8 @@ final class KitPowers {
     frozen.remove(player.getUniqueId());
     lastPositions.remove(player.getUniqueId());
     kitWorld.clear(player);
+    tactical.clear(player);
+    visibility.clear(player);
     if (invisible.remove(player.getUniqueId())) {
       player.setInvisible(false);
       player.setArrowsInBody(0, false);
@@ -973,6 +1007,9 @@ final class KitPowers {
     lastPositions.clear();
     displays.clear();
     projectiles.clear();
+    expansion.reset();
+    tactical.reset();
+    visibility.reset();
     invisible.clear();
     hiddenFrom.clear();
     disguised.clear();

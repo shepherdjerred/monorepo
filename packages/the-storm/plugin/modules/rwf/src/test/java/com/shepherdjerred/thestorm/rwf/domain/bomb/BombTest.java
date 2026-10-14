@@ -125,7 +125,8 @@ final class BombTest {
 
       assertThat(step.outcomes())
           .containsExactly(new BombOutcome.Armed(TeamColor.BLUE, List.of(ALICE)));
-      assertThat(step.bomb().state()).isEqualTo(new Armed(TeamColor.RED, now, 60, List.of()));
+      assertThat(step.bomb().state())
+          .isEqualTo(new Armed(TeamColor.RED, TeamColor.BLUE, now, 60, List.of()));
     }
 
     @Test

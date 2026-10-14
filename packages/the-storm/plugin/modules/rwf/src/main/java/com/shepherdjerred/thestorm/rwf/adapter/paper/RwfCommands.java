@@ -10,6 +10,8 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.shepherdjerred.thestorm.rwf.adapter.content.RwfConfig;
 import com.shepherdjerred.thestorm.rwf.app.JoinGate;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
+import com.shepherdjerred.thestorm.rwf.domain.killstreak.Killstreak;
+import com.shepherdjerred.thestorm.rwf.domain.killstreak.StreakLoadout;
 import com.shepherdjerred.thestorm.rwf.domain.kit.KitBook;
 import com.shepherdjerred.thestorm.rwf.domain.lobby.LobbySizing;
 import com.shepherdjerred.thestorm.rwf.domain.match.Ballot;
@@ -111,6 +113,55 @@ final class RwfCommands {
         .build();
   }
 
+  private LiteralArgumentBuilder<CommandSourceStack> killstreaks() {
+    return Commands.literal("killstreaks")
+        .requires(permission(RwfPermissions.PLAY))
+        .executes(ctx -> asPlayer(ctx, player -> runner.streakPicker().open(player)))
+        .then(
+            Commands.argument("first", StringArgumentType.word())
+                .suggests(suggest(RwfCommands::rewardIds))
+                .then(
+                    Commands.argument("second", StringArgumentType.word())
+                        .suggests(suggest(RwfCommands::rewardIds))
+                        .then(
+                            Commands.argument("third", StringArgumentType.word())
+                                .suggests(suggest(RwfCommands::rewardIds))
+                                .executes(
+                                    ctx ->
+                                        asPlayer(
+                                            ctx,
+                                            player ->
+                                                selectRewards(
+                                                    player,
+                                                    List.of(
+                                                        StringArgumentType.getString(ctx, "first"),
+                                                        StringArgumentType.getString(ctx, "second"),
+                                                        StringArgumentType.getString(
+                                                            ctx, "third"))))))));
+  }
+
+  private static Collection<String> rewardIds() {
+    return Arrays.stream(Killstreak.values())
+        .map(reward -> reward.name().toLowerCase(Locale.ROOT).replace('_', '-'))
+        .toList();
+  }
+
+  private void selectRewards(Player player, List<String> ids) {
+    try {
+      var choices =
+          ids.stream()
+              .map(id -> Killstreak.valueOf(id.toUpperCase(Locale.ROOT).replace('-', '_')))
+              .toList();
+      runner.streakPicker().select(player, new StreakLoadout(choices));
+    } catch (IllegalArgumentException _) {
+      Texts.error(
+          player,
+          "Choose three known rewards with distinct kill thresholds: "
+              + String.join(", ", rewardIds())
+              + ".");
+    }
+  }
+
   LiteralCommandNode<CommandSourceStack> tree() {
     var root = Commands.literal("rwf");
     stats.addTo(root);
@@ -128,6 +179,7 @@ final class RwfCommands {
                 .requires(permission(RwfPermissions.PLAY))
                 .executes(ctx -> asPlayer(ctx, this::recordingStatus)))
         .then(spectate())
+        .then(killstreaks())
         .then(
             Commands.literal("goto")
                 .requires(permission(RwfPermissions.SPECTATE))
@@ -189,6 +241,29 @@ final class RwfCommands {
                 .requires(permission(RwfPermissions.PLAY))
                 .executes(ctx -> asPlayer(ctx, this::credits)))
         .then(
+            Commands.literal("maps")
+                .requires(permission(RwfPermissions.VOTE))
+                .executes(ctx -> asPlayer(ctx, runner::openCandidates)))
+        .then(
+            Commands.literal("visit")
+                .requires(permission(RwfPermissions.PLAY))
+                .then(
+                    Commands.argument("map", StringArgumentType.word())
+                        .suggests(suggest(this::ballotIds))
+                        .executes(
+                            ctx ->
+                                asPlayer(
+                                    ctx,
+                                    player ->
+                                        runner
+                                            .visitCandidate(
+                                                player, StringArgumentType.getString(ctx, "map"))
+                                            .ifPresent(error -> Texts.error(player, error))))))
+        .then(
+            Commands.literal("return")
+                .requires(permission(RwfPermissions.PLAY))
+                .executes(ctx -> asPlayer(ctx, runner::returnFromCandidate)))
+        .then(
             Commands.literal("vote")
                 .requires(permission(RwfPermissions.VOTE))
                 .executes(ctx -> ballot(ctx.getSource().getSender()))
@@ -217,6 +292,10 @@ final class RwfCommands {
             Commands.literal("size")
                 .requires(permission(RwfPermissions.PLAY))
                 .executes(ctx -> size(ctx.getSource().getSender())))
+        .then(
+            Commands.literal("options")
+                .requires(permission(RwfPermissions.PLAY))
+                .executes(ctx -> asPlayer(ctx, runner::openSettings)))
         .then(
             Commands.literal("settings")
                 .requires(permission(RwfPermissions.PLAY).or(permission(RwfPermissions.SPECTATE)))
@@ -368,8 +447,8 @@ final class RwfCommands {
     Texts.info(
         sender,
         "/rwf join, /rwf leave, /rwf kit <kit>, /rwf kits, /rwf buy <kit>, /rwf rotation, /rwf"
-            + " credits, /rwf vote <map>, /rwf time, /rwf who, /rwf size, /rwf teamchat, /rwf"
-            + " stats, /rwf top, /rwf history, /rwf recording, /rwf spectate [next|previous], /rwf goto <player>,"
+            + " credits, /rwf maps, /rwf visit <map>, /rwf return, /rwf vote <map>, /rwf time, /rwf who, /rwf size, /rwf teamchat, /rwf"
+            + " stats, /rwf top, /rwf history, /rwf recording, /rwf settings, /rwf options, /rwf killstreaks, /rwf spectate [next|previous], /rwf goto <player>,"
             + " /suicide");
     return OK;
   }
@@ -822,7 +901,7 @@ final class RwfCommands {
           sender,
           "Showcase of "
               + count
-              + " bots started; it counts down and plays like any match. Watch with /rwf"
+              + " bots is starting after map preparation; it counts down and plays like any match. Watch with /rwf"
               + " spectate.");
     }
     return OK;

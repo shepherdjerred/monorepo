@@ -45,7 +45,7 @@ final class RwfExperienceTest {
   private RwfHarness start() {
     var harness = RwfHarness.prepare(directory);
     running = harness;
-    harness.features = RwfFeatures.ALL;
+    harness.features = new RwfFeatures(true, true, true, true, true, true, true, true, false);
     return harness.enable(directory);
   }
 
@@ -268,11 +268,11 @@ final class RwfExperienceTest {
 
   /**
    * {@code attacker} hits {@code victim} as the server reports it. MockBukkit's {@code damage}
-   * skips the by-entity event and never counts the hit window down, so each hit is simulated from a
-   * closed window.
+   * skips the by-entity event and its scheduler does not age entities, so the victim is ticked
+   * through a full hit window before each independent hit.
    */
   private static void swing(RwfHarness harness, PlayerMock attacker, PlayerMock victim) {
-    victim.setNoDamageTicks(0);
+    RwfHarness.elapseHitWindow(victim);
     victim.simulateDamage(6, attacker);
     harness.tick(Duration.ofSeconds(1));
   }
@@ -282,7 +282,7 @@ final class RwfExperienceTest {
     var chat = new ChatExtensions();
     var harness = RwfHarness.prepare(directory);
     running = harness;
-    harness.features = RwfFeatures.ALL;
+    harness.features = new RwfFeatures(true, true, true, true, true, true, true, true, false);
     harness.services.provide(ChannelRegistry.class, chat);
     harness.enable(directory);
     var alice = harness.loadedPlayer("Alice");

@@ -123,6 +123,14 @@ for (const entry of results) {
     "source.json",
   ])
     await cp(path.join(source, file), path.join(target, file));
+  const originalSource = z
+    .record(z.string(), z.unknown())
+    .parse(await Bun.file(path.join(source, "source.json")).json());
+  if (originalSource["shopRemoval"] !== undefined)
+    await cp(
+      path.join(source, "removed-shops.json"),
+      path.join(target, "removed-shops.json"),
+    );
   const payloadSource = path.join(details, entry.id);
   const provenance = z
     .object({

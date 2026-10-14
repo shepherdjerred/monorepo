@@ -3,7 +3,7 @@
   "kind": "rwf-map-scenario",
   "id": "rival-castles-trooper-duel-v1",
   "map": "rival-castles",
-  "mapSha256": "6a03d2d3199886f778cb1570c783808b27703eb181e0dd32f96ebbe42f7fca23",
+  "mapSha256": "7830c4ef0631f8095eb7d80ac9e9afb0535a435175fe3a5f351f787fd6056ffc",
   "world": "minecraft:rwf",
   "region": {
     "min": {

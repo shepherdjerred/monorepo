@@ -25,12 +25,16 @@ public interface CombatantActions {
   Optional<ActionRefusal> melee(CombatantId attacker, CombatantId target);
 
   /**
-   * Shoot the held bow.
+   * Shoot the held legacy Infinity bow for explicit simulator/control callers. Live body
+   * controllers use {@link #useWeapon}; finite and tipped ammunition is refused by this path.
    *
    * @param direction where the arrow flies; need not be normalised
    * @param force how far the bow was drawn, 0 to 1
    */
   Optional<ActionRefusal> shootBow(CombatantId id, Vec3 direction, double force);
+
+  /** Start, release or cancel native weapon use; crossbows load and fire on separate starts. */
+  Optional<ActionRefusal> useWeapon(CombatantId id, WeaponUse use);
 
   /**
    * Eat what is in hotbar {@code slot} (0 to 8): a steak heals at once, a golden apple as usual.

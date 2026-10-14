@@ -1,0 +1,54 @@
+{
+  "id": "frostline",
+  "name": "Frostline",
+  "author": "The Storm",
+  "description": "A snowbound alpine supply station lies between broken mountain ridges. Connected lodges shelter close fights, open snow lanes reward patient archers, and timber canopies cover the outer approach routes.",
+  "region":
+    {
+      "min": { "x": 4096, "y": 64, "z": 7168 },
+      "max": { "x": 4239, "y": 111, "z": 7279 },
+    },
+  "spectator": { "x": 4168.5, "y": 107, "z": 7224.5, "yaw": 0, "pitch": 65 },
+  "teams":
+    [
+      {
+        "color": "RED",
+        "spawns":
+          [
+            { "x": 4101.5, "y": 73, "z": 7218.5, "yaw": 270, "pitch": 0 },
+            { "x": 4101.5, "y": 73, "z": 7220.5, "yaw": 270, "pitch": 0 },
+            { "x": 4101.5, "y": 73, "z": 7228.5, "yaw": 270, "pitch": 0 },
+            { "x": 4101.5, "y": 73, "z": 7230.5, "yaw": 270, "pitch": 0 },
+            { "x": 4103.5, "y": 73, "z": 7218.5, "yaw": 270, "pitch": 0 },
+            { "x": 4103.5, "y": 73, "z": 7220.5, "yaw": 270, "pitch": 0 },
+            { "x": 4103.5, "y": 73, "z": 7228.5, "yaw": 270, "pitch": 0 },
+            { "x": 4103.5, "y": 73, "z": 7230.5, "yaw": 270, "pitch": 0 },
+          ],
+      },
+      {
+        "color": "BLUE",
+        "spawns":
+          [
+            { "x": 4234.5, "y": 73, "z": 7218.5, "yaw": 90, "pitch": 0 },
+            { "x": 4234.5, "y": 73, "z": 7220.5, "yaw": 90, "pitch": 0 },
+            { "x": 4234.5, "y": 73, "z": 7228.5, "yaw": 90, "pitch": 0 },
+            { "x": 4234.5, "y": 73, "z": 7230.5, "yaw": 90, "pitch": 0 },
+            { "x": 4232.5, "y": 73, "z": 7218.5, "yaw": 90, "pitch": 0 },
+            { "x": 4232.5, "y": 73, "z": 7220.5, "yaw": 90, "pitch": 0 },
+            { "x": 4232.5, "y": 73, "z": 7228.5, "yaw": 90, "pitch": 0 },
+            { "x": 4232.5, "y": 73, "z": 7230.5, "yaw": 90, "pitch": 0 },
+          ],
+      },
+    ],
+  "bombs":
+    [
+      { "id": "red-1", "team": "RED", "at": { "x": 4110, "y": 73, "z": 7224 } },
+      {
+        "id": "blue-1",
+        "team": "BLUE",
+        "at": { "x": 4225, "y": 73, "z": 7224 },
+      },
+    ],
+  "nukes": [],
+  "blocksSha256": "91e709e4621b1c3121d5454f1996910989f60f9571999b4dc60c4183b30a4865",
+}

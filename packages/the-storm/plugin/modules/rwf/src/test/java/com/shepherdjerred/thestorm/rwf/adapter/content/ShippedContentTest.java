@@ -122,7 +122,7 @@ final class ShippedContentTest {
     assertThat(content.config().quarantine().values())
         .allMatch(r -> r.startsWith("BOMB_UNREACHABLE"));
     assertThat(content.rotation())
-        .hasSize(32)
+        .hasSize(42)
         .extracting(MapSource::id)
         .doesNotContain("saigon", "wonderland")
         .contains("training-yard");
@@ -135,7 +135,7 @@ final class ShippedContentTest {
 
   @Test
   void theTrainingYardIsATwoTeamMapWithANuke() {
-    assertThat(content.maps()).hasSize(34);
+    assertThat(content.maps()).hasSize(44);
     assertThat(content.maps()).extracting(MapSource::id).contains("training-yard");
     assertThat(trainingYard.definition().teamColors())
         .containsExactly(TeamColor.RED, TeamColor.BLUE);

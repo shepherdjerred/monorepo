@@ -1,0 +1,54 @@
+{
+  "id": "stormbreak",
+  "name": "Stormbreak",
+  "author": "The Storm",
+  "description": "Cross three guarded causeways into a layered coastal fortress beneath its striped lighthouse. A central nuke court and roofed chapel reward high-ground control; shallow moat routes have frequent stone-bank and ladder exits.",
+  "region":
+    {
+      "min": { "x": 4096, "y": 64, "z": 8192 },
+      "max": { "x": 4255, "y": 111, "z": 8335 },
+    },
+  "spectator": { "x": 4176.5, "y": 107, "z": 8264.5, "yaw": 0, "pitch": 65 },
+  "teams":
+    [
+      {
+        "color": "RED",
+        "spawns":
+          [
+            { "x": 4101.5, "y": 73, "z": 8258.5, "yaw": 270, "pitch": 0 },
+            { "x": 4101.5, "y": 73, "z": 8260.5, "yaw": 270, "pitch": 0 },
+            { "x": 4101.5, "y": 73, "z": 8268.5, "yaw": 270, "pitch": 0 },
+            { "x": 4101.5, "y": 73, "z": 8270.5, "yaw": 270, "pitch": 0 },
+            { "x": 4103.5, "y": 73, "z": 8258.5, "yaw": 270, "pitch": 0 },
+            { "x": 4103.5, "y": 73, "z": 8260.5, "yaw": 270, "pitch": 0 },
+            { "x": 4103.5, "y": 73, "z": 8268.5, "yaw": 270, "pitch": 0 },
+            { "x": 4103.5, "y": 73, "z": 8270.5, "yaw": 270, "pitch": 0 },
+          ],
+      },
+      {
+        "color": "BLUE",
+        "spawns":
+          [
+            { "x": 4250.5, "y": 73, "z": 8258.5, "yaw": 90, "pitch": 0 },
+            { "x": 4250.5, "y": 73, "z": 8260.5, "yaw": 90, "pitch": 0 },
+            { "x": 4250.5, "y": 73, "z": 8268.5, "yaw": 90, "pitch": 0 },
+            { "x": 4250.5, "y": 73, "z": 8270.5, "yaw": 90, "pitch": 0 },
+            { "x": 4248.5, "y": 73, "z": 8258.5, "yaw": 90, "pitch": 0 },
+            { "x": 4248.5, "y": 73, "z": 8260.5, "yaw": 90, "pitch": 0 },
+            { "x": 4248.5, "y": 73, "z": 8268.5, "yaw": 90, "pitch": 0 },
+            { "x": 4248.5, "y": 73, "z": 8270.5, "yaw": 90, "pitch": 0 },
+          ],
+      },
+    ],
+  "bombs":
+    [
+      { "id": "red-1", "team": "RED", "at": { "x": 4110, "y": 73, "z": 8264 } },
+      {
+        "id": "blue-1",
+        "team": "BLUE",
+        "at": { "x": 4241, "y": 73, "z": 8264 },
+      },
+    ],
+  "nukes": [{ "id": "nuke-1", "at": { "x": 4175, "y": 78, "z": 8264 } }],
+  "blocksSha256": "4147b2471483c91e56472434287390c6b2639600b9d2820f67ad299035773c6b",
+}

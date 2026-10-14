@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "kind": "rwf-map-scenario",
+  "id": "copperworks-trooper-duel-v1",
+  "map": "copperworks",
+  "mapSha256": "bc8b1f6b37121f9c5b13385315f9084137accb095cf302c086086ef929a32d38",
+  "world": "minecraft:rwf",
+  "region": {
+    "min": {
+      "x": 1024,
+      "y": 64,
+      "z": 7168
+    },
+    "max": {
+      "x": 1151,
+      "y": 111,
+      "z": 7279
+    }
+  },
+  "sourceTeams": ["RED", "BLUE"],
+  "spawnPolicy": "source",
+  "spawns": [
+    {
+      "team": "red",
+      "sourceTeam": "RED",
+      "position": [1029.5, 73, 7218.5],
+      "yaw": 270,
+      "pitch": 0
+    },
+    {
+      "team": "blue",
+      "sourceTeam": "BLUE",
+      "position": [1146.5, 73, 7218.5],
+      "yaw": 90,
+      "pitch": 0
+    }
+  ]
+}

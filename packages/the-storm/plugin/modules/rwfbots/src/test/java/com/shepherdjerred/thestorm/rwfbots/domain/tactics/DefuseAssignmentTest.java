@@ -116,7 +116,8 @@ final class DefuseAssignmentTest {
             0,
             slots,
             assignments,
-            0);
+            0,
+            java.util.Map.of());
     return Blackboard.open(Fixtures.RED, Strategy.RUSH).withPlan(plan, 0);
   }
 
@@ -164,7 +165,8 @@ final class DefuseAssignmentTest {
               0,
               List.of(slot),
               Map.of(self.id(), slot.key()),
-              0);
+              0,
+              java.util.Map.of());
       var board = Blackboard.open(Fixtures.RED, Strategy.RUSH).withPlan(plan, 0);
       var world =
           new WorldSnapshot(
@@ -220,7 +222,8 @@ final class DefuseAssignmentTest {
             0,
             List.of(),
             Map.of(),
-            0);
+            0,
+            java.util.Map.of());
     var assigned = open.withPlan(plan, 0);
     assertThat(new Situation(self, world, percept, assigned, Role.RETAKE).litOwnBomb())
         .contains(slow);

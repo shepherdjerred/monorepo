@@ -3,7 +3,7 @@
   "kind": "rwf-map-scenario",
   "id": "miner-dispute-trooper-duel-v1",
   "map": "miner-dispute",
-  "mapSha256": "6dc474c75af0848f965cc83b103f22e69d1d97eeff2b05b4cc1e50053ea5ad24",
+  "mapSha256": "3c036a70840954dabc410965f5f71bcaf43525ddbd13ef43150e21d58895c9d7",
   "world": "minecraft:rwf",
   "region": {
     "min": {

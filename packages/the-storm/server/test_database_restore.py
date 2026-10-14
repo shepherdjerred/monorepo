@@ -189,11 +189,14 @@ class DatabaseRestoreTest(unittest.TestCase):
         self.assertIn("essentials_teleport_uses", policy["resetTables"])
         self.assertNotIn("essentials_teleport_usage", policy["resetTables"])
 
-    def test_reviewed_policy_resets_welcome_markers_with_balances_and_retains_core_identity(self):
+    def test_reviewed_policy_resets_gameplay_and_preferences_while_retaining_core_identity(self):
         policy = restore.reviewed_policy(Path(__file__).with_name("restoration-policy.json"))
         economy_tables = {"economy_account", "economy_ledger", "economy_player_seen"}
         self.assertTrue(economy_tables <= set(policy["resetTables"]))
         self.assertTrue(economy_tables.isdisjoint(policy["retainTables"]))
+        rwf_preferences = {"rwf_player_prefs", "rwf_streak_prefs"}
+        self.assertTrue(rwf_preferences <= set(policy["resetTables"]))
+        self.assertTrue(rwf_preferences.isdisjoint(policy["retainTables"]))
         plugin = Path(__file__).parents[1] / "plugin"
         migrations: dict[str, list[Path]] = {}
         for file in plugin.glob("**/src/main/resources/db/migration/*/V*.sql"):
@@ -216,6 +219,11 @@ class DatabaseRestoreTest(unittest.TestCase):
             )
             connection.execute("INSERT INTO core_analytics_outbox VALUES ('event', 'prod', 123, '{}')")
             connection.execute("INSERT INTO economy_player_seen VALUES (?, 100, 'Alice', 123)", (player,))
+            connection.execute("INSERT INTO rwf_player_prefs VALUES (?, 'trooper', 1, '{}')", (player,))
+            connection.execute(
+                "INSERT INTO rwf_streak_prefs VALUES (?, 'compass', 'wolves', 'iron-golem')",
+                (player,),
+            )
             connection.execute("INSERT INTO economy_account VALUES ('player', ?, 'crystals', 500)", (player,))
             connection.execute(
                 "INSERT INTO economy_ledger(from_kind,from_id,to_kind,to_id,currency,amount,reason,at) "
@@ -238,7 +246,7 @@ class DatabaseRestoreTest(unittest.TestCase):
                 [("session",)],
             )
             self.assertEqual(connection.execute("SELECT event_id FROM core_analytics_outbox").fetchall(), [("event",)])
-            for table in economy_tables:
+            for table in economy_tables | rwf_preferences:
                 self.assertEqual(connection.execute(f'SELECT * FROM "{table}"').fetchall(), [])
 
     def test_policy_has_no_overlap_duplicates_or_unknown_fields(self):

@@ -2,6 +2,7 @@
   id: fairylands,
   name: Fairylands,
   author: "DeltaStrikeForce, MastaCraft123",
+  description: A fairytale battlefield with four competing teams. Scout the approaches to each base and protect your own bomb while choosing which rival to attack.,
   region:
     { min: { x: 1024, "y": 0, z: 2048 }, max: { x: 1145, "y": 99, z: 2199 } },
   spectator: { x: 1085, "y": 99, z: 2124, yaw: 0, pitch: 45 },
@@ -443,5 +444,5 @@
       { id: blue-1, team: BLUE, at: { x: 1087, "y": 56, z: 2072 } },
     ],
   nukes: [],
-  blocksSha256: f620e3ecda7f712b5c2cdcf3d9f58bf90a22d2cfde05f631d6be7f1f2c2455e3,
+  blocksSha256: e8c5dbd3c72576624d01cca42d8db130985b4004e99ec5c43eb6a19f6ee52c83,
 }

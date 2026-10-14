@@ -42,7 +42,8 @@ final class CrouchControlTest {
             Optional.empty(),
             "crouch-transition",
             tick,
-            0);
+            0,
+            Optional.empty());
     var snapshot =
         new WorldSnapshot(
             tick,

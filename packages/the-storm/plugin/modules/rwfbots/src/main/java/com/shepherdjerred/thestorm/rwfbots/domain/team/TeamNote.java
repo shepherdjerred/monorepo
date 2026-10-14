@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.rwfbots.domain.team;
 
+import com.shepherdjerred.thestorm.rwfbots.domain.world.BombId;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantId;
 import java.util.Optional;
 import java.util.Set;
@@ -12,7 +13,19 @@ import java.util.Set;
  * @param chasing the enemy it is fighting
  * @param path the nav nodes it is about to walk
  */
-public record TeamNote(Optional<Integer> cover, Optional<CombatantId> chasing, Set<Integer> path) {
+public record TeamNote(
+    Optional<Integer> cover,
+    Optional<CombatantId> chasing,
+    Set<Integer> path,
+    Optional<BombId> objective) {
+
+  public TeamNote(Optional<Integer> cover, Optional<CombatantId> chasing, Set<Integer> path) {
+    this(cover, chasing, path, Optional.empty());
+  }
+
+  public TeamNote working(Optional<BombId> bomb) {
+    return new TeamNote(cover, chasing, path, bomb);
+  }
 
   public static final TeamNote NONE = new TeamNote(Optional.empty(), Optional.empty(), Set.of());
 

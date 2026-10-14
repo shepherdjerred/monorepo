@@ -2,6 +2,7 @@
   id: cloned-beanstalks,
   name: Four Stalk,
   author: "Petlove506, libraryaddict",
+  description: The map is modelled after the four little princes as they slumbered in their gold castle.,
   region:
     { min: { x: 5120, "y": 2, z: 1024 }, max: { x: 5248, "y": 156, z: 1148 } },
   spectator: { x: 5184.5, "y": 156, z: 1086.5, yaw: 0, pitch: 45 },
@@ -313,5 +314,5 @@
       { id: purple-1, team: PURPLE, at: { x: 5134, "y": 20, z: 1080 } },
     ],
   nukes: [],
-  blocksSha256: df935f0283bea60b25010afdb0bcb61e2e5d480548bfb93f1008e3484026dde5,
+  blocksSha256: 68b8b91db7445c0d51b18fb96eaaecccb64fbe9967e491ddf3095734cfada2a4,
 }

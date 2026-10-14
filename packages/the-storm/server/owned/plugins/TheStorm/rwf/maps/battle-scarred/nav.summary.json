@@ -5,7 +5,7 @@
   "movementModelVersion": 4,
   "costUnit": "server-ticks",
   "damageUnit": "health-points",
-  "blocksSha256": "1d6b2ba3993700aa17f7a185c2874543cc41e7190d56ab35d55767528f6cbc44",
+  "blocksSha256": "7f9809a78d4bc3b15002fac2db31c07607e378fc1766b0a5ec045e5e62b608c4",
   "classificationSha256": "2fa869982dff78d15a735c340c178ce6114a0ef7961b25464304974b8f4bc3a7",
   "bounds": {
     "origin": { "x": 2048, "y": 0, "z": 1024 },
@@ -18,7 +18,7 @@
       "state": "minecraft:air",
       "shape": "PASSABLE",
       "blocksSight": false,
-      "blocks": 281647
+      "blocks": 281659
     },
     {
       "state": "minecraft:water[level=8]",
@@ -36,7 +36,7 @@
       "state": "minecraft:oak_wall_sign[facing=north,waterlogged=false]",
       "shape": "PASSABLE",
       "blocksSight": false,
-      "blocks": 20
+      "blocks": 14
     },
     {
       "state": "minecraft:water[level=0]",
@@ -48,7 +48,7 @@
       "state": "minecraft:oak_wall_sign[facing=south,waterlogged=false]",
       "shape": "PASSABLE",
       "blocksSight": false,
-      "blocks": 17
+      "blocks": 11
     },
     {
       "state": "minecraft:dirt",
@@ -640,13 +640,13 @@
     "retainedFluidPortals": 1657
   },
   "edges": {
-    "total": 294981,
-    "damaging": 7610,
+    "total": 295793,
+    "damaging": 7626,
     "maximumRawDamage": 13,
     "CLIMB": 642,
     "DROP": 15479,
     "JUMP": 4190,
-    "LEAP": 162051,
+    "LEAP": 162863,
     "SWIM": 13451,
     "WALK": 99168
   },
@@ -3731,8 +3731,8 @@
       {
         "from": "blue-spawn-42",
         "to": "red-1",
-        "length": 491.7380757331848,
-        "nodes": 54
+        "length": 500.9584016799927,
+        "nodes": 55
       },
       {
         "from": "blue-spawn-42",
@@ -3803,8 +3803,8 @@
       {
         "from": "blue-spawn-44",
         "to": "red-1",
-        "length": 501.0404009819031,
-        "nodes": 56
+        "length": 510.26072692871094,
+        "nodes": 57
       },
       {
         "from": "blue-spawn-44",
@@ -3875,8 +3875,8 @@
       {
         "from": "blue-spawn-46",
         "to": "red-1",
-        "length": 510.34272623062134,
-        "nodes": 58
+        "length": 519.5630521774292,
+        "nodes": 59
       },
       {
         "from": "blue-spawn-46",
@@ -3900,5 +3900,5 @@
   },
   "distanceFields": 92,
   "problems": [],
-  "bytes": 4161567
+  "bytes": 4161315
 }

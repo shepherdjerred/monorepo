@@ -154,7 +154,7 @@ final class ViewsTest {
     var bodies =
         new BotBodies() {
           @Override
-          public List<BotHandle> fill(UUID matchId, int slots) {
+          public List<BotHandle> fill(com.shepherdjerred.thestorm.rwf.app.BotDraftRequest request) {
             return List.of(new BotHandle("rusher", BOT_1.uuid()));
           }
 
@@ -223,6 +223,13 @@ final class ViewsTest {
             return direction.equals(new Vec3(0, 1, 0))
                 ? Optional.empty()
                 : Optional.of(ActionRefusal.BAD_FORCE);
+          }
+
+          @Override
+          public Optional<ActionRefusal> useWeapon(
+              CombatantId id, com.shepherdjerred.thestorm.rwf.app.WeaponUse use) {
+            seen.add(id);
+            return Optional.empty();
           }
 
           @Override

@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Predicate;
 import java.util.random.RandomGenerator;
 import java.util.regex.Pattern;
 
@@ -73,6 +74,12 @@ public final class ChatDirector {
 
   /** What the bots say about {@code moment}, given the match {@code scene} after it, in order. */
   public List<Utterance> on(ChatMoment moment, ChatScene scene, Instant now) {
+    return on(moment, scene, now, uuid -> true);
+  }
+
+  /** Idle proposals wait for an available speaker; team/event context still uses the full scene. */
+  public List<Utterance> on(
+      ChatMoment moment, ChatScene scene, Instant now, Predicate<UUID> idleSpeaker) {
     if (ended) {
       return List.of();
     }
@@ -121,11 +128,7 @@ public final class ChatDirector {
         return List.copyOf(lines);
       }
       case ChatMoment.Idle _ -> {
-        if (!now.isBefore(nextTaunt)) {
-          nextTaunt = now.plus(tauntWait());
-          lines.addAll(
-              speak(scene.teams().isEmpty() ? lobbyTalk(scene) : taunters(scene), false, now));
-        }
+        lines.addAll(idle(scene, now, idleSpeaker));
       }
       case ChatMoment.Arrived arrived ->
           lines.addAll(speak(lobbyBot(required(scene, arrived.bot()), Moment.GREET), false, now));
@@ -135,6 +138,19 @@ public final class ChatDirector {
     }
     lines.addAll(speak(lastAlive(scene), false, now));
     return List.copyOf(lines);
+  }
+
+  private List<Utterance> idle(ChatScene scene, Instant now, Predicate<UUID> idleSpeaker) {
+    if (now.isBefore(nextTaunt)) return List.of();
+    var candidates =
+        (scene.teams().isEmpty() ? lobbyTalk(scene) : taunters(scene))
+            .stream()
+                .filter(candidate -> idleSpeaker.test(candidate.member().uuid()))
+                .filter(candidate -> eligible(candidate, now))
+                .toList();
+    if (candidates.isEmpty()) return List.of();
+    nextTaunt = now.plus(tauntWait());
+    return speak(candidates, false, now);
   }
 
   /** Every bot on a team; at the end each says a win line if its team won, else a loss line. */

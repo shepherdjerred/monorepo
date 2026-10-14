@@ -66,7 +66,8 @@ final class PlannerSupportTest {
             0.5,
             List.of(slot),
             Map.of(self.id(), slot.key()),
-            tick);
+            tick,
+            java.util.Map.of());
     var board = Blackboard.open(RED, Strategy.SPLIT).withPlan(plan, tick);
     var snapshot =
         new WorldSnapshot(
@@ -122,8 +123,10 @@ final class PlannerSupportTest {
     assertThat(NAV.graph().nearestNode(self.pos())).isEqualTo(NAV.graph().nearestNode(goal));
     var route =
         Planner.pathTo(situation, scene.context(), goal, new Planner.Way(Stance.AGGRESSIVE, false));
-    assertThat(route).hasSize(1);
-    assertThat(route.getFirst().pos()).isEqualTo(goal);
+    assertThat(route)
+        .isInstanceOf(com.shepherdjerred.thestorm.rwfbots.domain.map.RouteResult.Path.class);
+    assertThat(route.waypoints()).hasSize(1);
+    assertThat(route.waypoints().getFirst().pos()).isEqualTo(goal);
   }
 
   @Test
@@ -176,6 +179,26 @@ final class PlannerSupportTest {
   }
 
   @Test
+  void distantSightingsDoNotCreateExtraIdleTimeAtEachSafeCoverBound() {
+    for (var enemyX : List.of(30.5, 24.5)) {
+      var scene = openBound(enemyX, 40);
+      var original = scene.situation();
+      var plan = Planner.expand(Option.TAKE_SLOT, original, scene.context());
+      var cover = (PlanStep.Cover) plan.current();
+      var arrived =
+          new Situation(
+              original.self().withPos(cover.pos()),
+              original.snapshot(),
+              original.percept(),
+              original.board(),
+              original.role());
+      assertThat(Planner.stepDone(cover, arrived, plan.startedTick()))
+          .as("distant sightings permit continuing; close fire retains the settling pause")
+          .isEqualTo(enemyX == 30.5);
+    }
+  }
+
+  @Test
   void aPinnedHolderStillTakesTheNearestSafetyCover() {
     var scene = openBound(24.5, 80);
     assertThat(Planner.mover(scene.situation(), 2)).isFalse();
@@ -198,7 +221,8 @@ final class PlannerSupportTest {
             0.5,
             List.of(slot),
             Map.of(self.id(), slot.key()),
-            10);
+            10,
+            Map.of());
     var board = Blackboard.open(RED, Strategy.SPLIT).withPlan(plan, 10);
     var memory = Memory.EMPTY.remember(enemy.id(), new Sighting(ENEMY, Vec3.ZERO, 10, 1, true));
     var percept =

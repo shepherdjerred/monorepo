@@ -55,6 +55,11 @@ public sealed interface MatchEvent {
    */
   record PickKit(CombatantId id, String kitId, KitAccess access) implements MatchEvent {}
 
+  /** A member selects the three distinct-threshold rewards for their next life. */
+  record PickStreaks(
+      CombatantId id, com.shepherdjerred.thestorm.rwf.domain.killstreak.StreakLoadout loadout)
+      implements MatchEvent {}
+
   /**
    * An operator gives a member a kit, whatever the phase until the match goes live.
    *
@@ -68,10 +73,22 @@ public sealed interface MatchEvent {
    *
    * @param candidates the maps on offer, at most {@link Ballot#SIZE}
    */
-  record BallotOpened(List<Ballot.Candidate> candidates) implements MatchEvent {
+  record BallotOpened(List<Ballot.Candidate> candidates, Optional<Duration> visitLength)
+      implements MatchEvent {
+
+    public BallotOpened(List<Ballot.Candidate> candidates) {
+      this(candidates, Optional.empty());
+    }
 
     public BallotOpened {
       candidates = List.copyOf(candidates);
+    }
+  }
+
+  /** Terrain for this exact ballot is ready; this does not select a match map. */
+  record CandidatesReady(List<String> mapIds, Instant now) implements MatchEvent {
+    public CandidatesReady {
+      mapIds = List.copyOf(mapIds);
     }
   }
 

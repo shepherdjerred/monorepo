@@ -1,9 +1,9 @@
 {
   "schema": 1,
   "id": "apex-expanse",
-  "blocksSha256": "57743aaebc82047c15a592ba1ffd8271c10c5549c0df72e51a09cb1a3152e430",
-  "detailsSha256": "a3eb8db3151577421310bf9907c7e36fa9cf4ea252aceac73dd33d6691c9c404",
-  "policy": "preserve-inventories-and-literal-sign-text-strip-other-payloads",
+  "blocksSha256": "e4a52c56945c660123110b128f07f1ff9cfdff3b5b165517d17b02ff2990f4ad",
+  "detailsSha256": "85430640609d1aa984cd2f87b6106bd9aa406fb442c9409e9569b400d77d1372",
+  "policy": "preserve-inventories-and-other-signs-remove-legacy-buy-signs",
   "producer": [
     {
       "file": "TheStorm.jar",
@@ -1579,6 +1579,15 @@
     }
   ],
   "result": {
+    "state": "complete",
+    "containers": 0,
+    "signs": 0
+  },
+  "shopRemoval": {
+    "originalBlocksSha256": "57743aaebc82047c15a592ba1ffd8271c10c5549c0df72e51a09cb1a3152e430",
+    "count": 10
+  },
+  "nativeExportResult": {
     "state": "complete",
     "containers": 0,
     "signs": 10

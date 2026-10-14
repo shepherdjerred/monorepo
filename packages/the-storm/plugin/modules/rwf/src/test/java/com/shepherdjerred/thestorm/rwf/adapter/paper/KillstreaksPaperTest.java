@@ -100,7 +100,7 @@ final class KillstreaksPaperTest {
 
   private void kill(RwfHarness started, PlayerMock enemy) {
     for (var i = 0; i < 40 && !enemy.isDead() && enemy.getHealth() > 0; i++) {
-      enemy.setNoDamageTicks(0);
+      RwfHarness.elapseHitWindow(enemy);
       enemy.simulateDamage(1, alice());
       started.ticks(1);
     }
@@ -377,5 +377,35 @@ final class KillstreaksPaperTest {
     assertThat(streaks.summons().mayTarget(dog, alice())).isFalse();
     assertThat(streaks.summons().mayTarget(dog, enemies.get(0))).isTrue();
     assertThat(streaks.summons().prey(dog, alice())).isFalse();
+  }
+
+  @Test
+  void alliedWolvesGolemsAndPlayersAreProtectedEvenAtTheStrikeBoundary() {
+    var runner = runner();
+    var summons = runner.powers().streaks().summons();
+    var id = new CombatantId.Human(alice().getUniqueId());
+    var at = new Location(harness().rwf, 31.5, 65, 21.5);
+    summons.dogs(alice(), id, aliceTeam(), at);
+    summons.golem(alice(), id, aliceTeam(), at);
+    assertThat(summons.all()).hasSize(4);
+    for (var attacker : summons.all()) {
+      assertThat(summons.mayTarget(attacker, alice())).isFalse();
+      var playerHealth = alice().getHealth();
+      assertThat(summons.strike(attacker, alice())).isFalse();
+      assertThat(alice().getHealth()).isEqualTo(playerHealth);
+      for (var ally : summons.all()) {
+        var health = ally.mob().getHealth();
+        assertThat(summons.mayTarget(attacker, ally.mob())).isFalse();
+        assertThat(summons.strike(attacker, ally.mob())).isFalse();
+        assertThat(ally.mob().getHealth()).isEqualTo(health);
+      }
+    }
+    var golem = summons.all().stream().filter(summon -> !summon.dog()).findFirst().orElseThrow();
+    var enemy = enemies.get(0);
+    enemy.setNoDamageTicks(0);
+    var before = enemy.getHealth();
+    assertThat(summons.strike(golem, enemy)).isTrue();
+    assertThat(enemy.getHealth()).isLessThan(before);
+    assertThat(summons.combatants()).contains(enemy);
   }
 }

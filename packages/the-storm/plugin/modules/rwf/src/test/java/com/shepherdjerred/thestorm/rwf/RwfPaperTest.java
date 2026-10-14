@@ -15,6 +15,7 @@ import com.shepherdjerred.thestorm.rwf.app.MatchNotification;
 import com.shepherdjerred.thestorm.rwf.domain.combat.CombatRules;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchSnapshot;
 import com.shepherdjerred.thestorm.rwf.testing.Samples;
+import io.papermc.paper.scoreboard.numbers.NumberFormat;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -34,6 +35,7 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scoreboard.DisplaySlot;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -181,7 +183,7 @@ final class RwfPaperTest {
             alice.getUniqueId(),
             "rwf",
             new Position("world", 5.5, 70, 5.5, 0, 0),
-            new Vitals(9, 11, 1, 0, "SURVIVAL"),
+            new Vitals(new Vitals.Condition(9, 11, 1, 0), "SURVIVAL"),
             new Experience(3, 0.25f, 40),
             ItemData.of(ItemStack.serializeItemsAsBytes(belongings)),
             List.of(new EffectRecord("minecraft:haste", 0, 400, false, true, true)),
@@ -305,6 +307,15 @@ final class RwfPaperTest {
         .noneMatch(
             n ->
                 n.event() instanceof com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent.Leave);
+  }
+
+  @Test
+  void theSidebarHidesItsNumericRanksWithABlankNumberFormat() {
+    track(RwfHarness.start(directory));
+    var alice = loadedPlayer("Alice");
+    enter(alice);
+    var sidebar = requireNonNull(alice.getScoreboard().getObjective(DisplaySlot.SIDEBAR));
+    assertThat(sidebar.numberFormat()).isEqualTo(NumberFormat.blank());
   }
 
   @Test

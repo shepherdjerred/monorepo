@@ -6,6 +6,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayDeque;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -70,5 +71,14 @@ final class BotArrivals {
   /** How many drafted bots are still on their way in. */
   int size() {
     return arriving.size();
+  }
+
+  Optional<Duration> nextIn(Instant now) {
+    var next = arriving.peek();
+    if (next == null) {
+      return Optional.empty();
+    }
+    var delay = Duration.between(now, next.at());
+    return Optional.of(delay.isNegative() ? Duration.ZERO : delay);
   }
 }

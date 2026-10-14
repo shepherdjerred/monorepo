@@ -4,6 +4,8 @@ import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.rwf.app.ActionRefusal;
 import com.shepherdjerred.thestorm.rwf.app.CombatantActions;
 import com.shepherdjerred.thestorm.rwf.app.KitUse;
+import com.shepherdjerred.thestorm.rwf.app.WeaponUse;
+import com.shepherdjerred.thestorm.rwf.app.view.WeaponProfile;
 import com.shepherdjerred.thestorm.rwf.domain.ability.AbilityInput;
 import com.shepherdjerred.thestorm.rwf.domain.ability.kits.Rewind;
 import com.shepherdjerred.thestorm.rwf.domain.combat.AttackType;
@@ -18,6 +20,7 @@ import org.bukkit.entity.AbstractArrow;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.CrossbowMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
@@ -164,13 +167,23 @@ final class PaperCombatantActions implements CombatantActions {
       return Optional.of(ActionRefusal.SAME_TEAM);
     }
     var eye = attackerEntity.getEyeLocation();
-    if (targetEntity.getBoundingBox().rayTrace(eye.toVector(), eye.getDirection(), MELEE_REACH)
-        == null) {
+    PlayerAttributes.addAttackSpeed(attackerEntity);
+    var profile =
+        WeaponProfile.of(
+            KitFactory.spec(attackerEntity.getInventory().getItemInMainHand(), Optional.empty()));
+    var contact =
+        targetEntity
+            .getBoundingBox()
+            .rayTrace(eye.toVector(), eye.getDirection(), profile.maxReach());
+    if (contact == null || contact.getHitPosition().distance(eye.toVector()) < profile.minReach()) {
       return Optional.of(ActionRefusal.OUT_OF_REACH);
     }
     if (!hooks.lineOfSight().test(attackerEntity, targetEntity)) {
       return Optional.of(ActionRefusal.NO_LINE_OF_SIGHT);
     }
+    if (profile.nativeMelee())
+      return nativeSwing(
+          new Contact(attacker, attackerEntity), new Contact(target, targetEntity), profile);
     var damage = runner.kits().damage(AttackType.MELEE, attackerEntity, targetEntity, 0);
     if (HitWindow.resolve(damage, AttackType.MELEE, tracker.guard(targetEntity))
         instanceof HitWindow.Resolution.Blocked) {
@@ -184,6 +197,23 @@ final class PaperCombatantActions implements CombatantActions {
     return Optional.empty();
   }
 
+  private record Contact(CombatantId id, Player body) {}
+
+  private Optional<ActionRefusal> nativeSwing(
+      Contact attacker, Contact victim, WeaponProfile profile) {
+    if (profile.kind() != WeaponProfile.Kind.SPEAR && attacker.body().getAttackCooldown() < 0.99) {
+      return Optional.of(ActionRefusal.COOLING_DOWN);
+    }
+    intent(attacker.id(), "attack", recordings.pseudonym(victim.id()).orElse(""));
+    attacker.body().swingMainHand();
+    if (profile.kind() == WeaponProfile.Kind.SPEAR) {
+      if (!PaperNativeItems.jab(attacker.body())) return Optional.of(ActionRefusal.COOLING_DOWN);
+    } else {
+      attacker.body().attack(victim.body());
+    }
+    return Optional.empty();
+  }
+
   @Override
   public Optional<ActionRefusal> shootBow(CombatantId id, Vec3 direction, double force) {
     return fighter(id)
@@ -194,7 +224,11 @@ final class PaperCombatantActions implements CombatantActions {
               }
               var bow = player.getInventory().getItemInMainHand();
               var type = bow.getType();
-              if ((type != Material.BOW && type != Material.CROSSBOW) || !hasArrows(player, bow)) {
+              if (type != Material.BOW
+                  || KitFactory.enchantmentLevel(bow, "infinity") == 0
+                  || player.getInventory().contains(Material.TIPPED_ARROW)
+                  || player.getInventory().contains(Material.SPECTRAL_ARROW)
+                  || !hasArrows(player)) {
                 return Optional.of(ActionRefusal.NO_BOW);
               }
               var velocity = Places.vector(direction).normalize().multiply(force * ARROW_SPEED);
@@ -211,9 +245,50 @@ final class PaperCombatantActions implements CombatantActions {
             Optional::of);
   }
 
-  private static boolean hasArrows(Player player, ItemStack bow) {
-    return KitFactory.enchantmentLevel(bow, "infinity") > 0
-        || player.getInventory().contains(Material.ARROW);
+  @Override
+  public Optional<ActionRefusal> useWeapon(CombatantId id, WeaponUse use) {
+    return fighter(id)
+        .fold(
+            player -> {
+              var held = player.getInventory().getItemInMainHand();
+              PlayerAttributes.addAttackSpeed(player);
+              var profile = WeaponProfile.of(KitFactory.spec(held, Optional.empty()));
+              if (!profile.ranged()
+                  && profile.kind() != WeaponProfile.Kind.SPEAR
+                  && held.getType() != Material.WIND_CHARGE
+                  && held.getType() != Material.SHIELD) {
+                return Optional.of(ActionRefusal.NO_KIT_ITEM);
+              }
+              if (use == WeaponUse.START && player.hasCooldown(held)) {
+                return Optional.of(ActionRefusal.COOLING_DOWN);
+              }
+              if (use == WeaponUse.START
+                  && (profile.kind() == WeaponProfile.Kind.BOW
+                      || profile.kind() == WeaponProfile.Kind.CROSSBOW)
+                  && !ammunition(player, held)) {
+                return Optional.of(ActionRefusal.NO_BOW);
+              }
+              switch (use) {
+                case START -> PaperNativeItems.start(player);
+                case RELEASE -> PaperNativeItems.release(player);
+                case CANCEL -> player.clearActiveItem();
+              }
+              intent(id, "weapon", use.name());
+              return Optional.empty();
+            },
+            Optional::of);
+  }
+
+  private static boolean ammunition(Player player, ItemStack weapon) {
+    return (weapon.getItemMeta() instanceof CrossbowMeta crossbow
+            && crossbow.hasChargedProjectiles())
+        || player.getInventory().contains(Material.ARROW)
+        || player.getInventory().contains(Material.TIPPED_ARROW)
+        || player.getInventory().contains(Material.SPECTRAL_ARROW);
+  }
+
+  private static boolean hasArrows(Player player) {
+    return player.getInventory().contains(Material.ARROW);
   }
 
   @Override

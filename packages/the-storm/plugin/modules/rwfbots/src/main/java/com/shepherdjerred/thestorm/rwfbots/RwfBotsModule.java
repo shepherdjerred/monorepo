@@ -188,7 +188,12 @@ public final class RwfBotsModule implements StormModule {
           "rwfbots needs the Citizens plugin for bot bodies; install it (server/plugins.json) or"
               + " disable rwfbots in config.yml");
     }
-    return CitizensBodies.open(context.plugin(), uuid -> {});
+    var view = context.services().require(com.shepherdjerred.thestorm.rwf.app.MatchView.class);
+    return CitizensBodies.open(
+        context.plugin(),
+        uuid -> {},
+        new com.shepherdjerred.thestorm.rwfbots.adapter.paper.SnapshotCapture.Capabilities(
+            view::noFallUntil, context.time()));
   }
 
   /** The managed chat flag from the environment; closed, with a warning, when Flipt is unset. */

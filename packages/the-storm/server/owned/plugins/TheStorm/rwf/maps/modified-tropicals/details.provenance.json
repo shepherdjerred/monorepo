@@ -1,9 +1,9 @@
 {
   "schema": 1,
   "id": "modified-tropicals",
-  "blocksSha256": "fa19015ad0e22739301df29f81c9d3198a92660d95cf8142286e11f91f9ddfc6",
-  "detailsSha256": "93d7f58a675b61383c2087423c0b55fce6604298654030fb97e323f187d63a76",
-  "policy": "preserve-inventories-and-literal-sign-text-strip-other-payloads",
+  "blocksSha256": "a0d1c097adc2f3ea157dff78278435e22a1d6d714d1d1d2029f51544f05e548b",
+  "detailsSha256": "67522fb657be8ca4fcd14e26aea5846b2f46141555fa720be448deeeefd90fe3",
+  "policy": "preserve-inventories-and-other-signs-remove-legacy-buy-signs",
   "producer": [
     {
       "file": "TheStorm.jar",
@@ -1579,6 +1579,15 @@
     }
   ],
   "result": {
+    "state": "complete",
+    "containers": 28,
+    "signs": 14
+  },
+  "shopRemoval": {
+    "originalBlocksSha256": "fa19015ad0e22739301df29f81c9d3198a92660d95cf8142286e11f91f9ddfc6",
+    "count": 16
+  },
+  "nativeExportResult": {
     "state": "complete",
     "containers": 28,
     "signs": 30

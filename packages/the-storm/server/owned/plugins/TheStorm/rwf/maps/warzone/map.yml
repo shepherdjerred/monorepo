@@ -2,6 +2,7 @@
   id: warzone,
   name: WarZone,
   author: "libraryaddict, Snowyflake",
+  description: Grenades and missles wrecked havoc on the map. Yet both sides refused to give in. Will this match decide it?,
   region:
     { min: { x: 1024, "y": 55, z: 6144 }, max: { x: 1182, "y": 78, z: 6208 } },
   spectator: { x: 1103.5, "y": 78, z: 6176.5, yaw: 0, pitch: 45 },
@@ -304,5 +305,5 @@
       { id: blue-1, team: BLUE, at: { x: 1163, "y": 66, z: 6161 } },
     ],
   nukes: [],
-  blocksSha256: 0f7db396d9f6099f13d097fcfdc6d22bd0910daf65bf14bc7fe5ee80aa5f7329,
+  blocksSha256: 73128445bb7b9e58dc1471161b87c354491a22d97eaaa9a6a8c4d80860bf177d,
 }

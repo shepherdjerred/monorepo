@@ -22,7 +22,7 @@ final class TraversalCaptureTest {
 
   @BeforeEach
   void start() {
-    player = new TraversalPlayerMock(MockBukkit.mock(), "Traversal");
+    player = TraversalPlayerMock.add(MockBukkit.mock(), "Traversal");
   }
 
   @AfterEach

@@ -1,0 +1,14 @@
+{
+  "id": "overgrown-relay",
+  "name": "Overgrown Relay",
+  "description": "Reclaim a ruined signal station among mossy garden terraces and shattered conservatories. Both flanks link through a shallow garden rill, while wide stairs reach the central relay and sheltered ranged positions.",
+  "seed": 10504,
+  "anchor": { "x": 3072, "y": 64, "z": 8192 },
+  "size": { "x": 128, "y": 48, "z": 128 },
+  "bombs": [
+    { "x": 14, "y": 9, "z": 64 },
+    { "x": 113, "y": 9, "z": 64 }
+  ],
+  "nukes": [],
+  "spawnY": 9
+}

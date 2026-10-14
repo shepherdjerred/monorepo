@@ -601,7 +601,7 @@ final class RwfMatchTest {
     }
 
     @Test
-    void aDefeatedTeamsArmedNukeIsRestored() {
+    void aDefeatedTeamsArmedNukeRemainsAThreatUntilDefusedOrExploded() {
       play.start(Samples.twoTeamsWithNuke(), ALICE, BOB, CAROL, DAVE);
       var reds = play.on(TeamColor.RED);
       clickFor(reds.get(0).id(), "nuke-1", 9.5);
@@ -609,9 +609,11 @@ final class RwfMatchTest {
 
       var effects = play.died(reds.get(1).id(), Optional.empty());
 
-      assertThat(effects).contains(new BombRestored("nuke-1"), new BombRemoved("red-1"));
-      assertThat(play.match.bomb("nuke-1").orElseThrow().team()).isEmpty();
-      assertThat(play.match.bomb("nuke-1").orElseThrow().armed()).isFalse();
+      assertThat(effects).contains(new BombRemoved("red-1"));
+      assertThat(effects).doesNotContain(new BombRestored("nuke-1"));
+      assertThat(play.match.bomb("nuke-1").orElseThrow().team()).contains(TeamColor.RED);
+      assertThat(play.match.bomb("nuke-1").orElseThrow().armed()).isTrue();
+      assertThat(play.match.phase()).isInstanceOf(Phase.Live.class);
     }
 
     @Test

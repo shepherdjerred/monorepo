@@ -166,13 +166,13 @@ public final class KitFight implements AutoCloseable {
 
   /** Alice strikes the enemy once, as a melee hit through the server's damage event. */
   void aliceHits() {
-    enemy.setNoDamageTicks(0);
+    RwfHarness.elapseHitWindow(enemy);
     enemy.simulateDamage(1, alice);
   }
 
   /** The enemy strikes Alice once. */
   void enemyHits() {
-    alice.setNoDamageTicks(0);
+    RwfHarness.elapseHitWindow(alice);
     alice.simulateDamage(1, enemy);
   }
 

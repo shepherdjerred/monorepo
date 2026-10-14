@@ -35,6 +35,61 @@ final class KitPlayTest {
   private static final NavArtifact NAV = SyntheticMap.bake();
   private static final Vec3 HERE = new Vec3(5.5, 1, 5.5);
 
+  @Test
+  void ghostAndWraithTravelEmptyHandedThenEquipForCombat() {
+    for (var kit : List.of(Kit.GHOST, Kit.WRAITH)) {
+      var self = with(combatant(1, RED, HERE), kit, 20);
+      var idle = input(self, Optional.empty(), List.of());
+      var context = new ReflexContext(NAV.grid(), levers(0.8), Loadouts.rwf(kit));
+      var state = ReflexState.initial(com.shepherdjerred.thestorm.rwfbots.domain.geom.Facing.SOUTH);
+      var waiting = Reflex.tick(state, idle, context, new SplittableRandom(4));
+      assertThat(waiting.commands()).contains(new BodyCommand.SelectSlot(8));
+      var enemy = combatant(2, BLUE, HERE.plus(2, 0, 0));
+      var fight = input(self.withHands(8, false), Optional.of(enemy), List.of());
+      var attack = Reflex.tick(waiting.state(), fight, context, new SplittableRandom(4));
+      assertThat(attack.commands())
+          .contains(new BodyCommand.SelectSlot(context.loadout().swordSlot()));
+      assertThat(attack.commands()).doesNotContain(new BodyCommand.SelectSlot(8));
+      if (kit == Kit.GHOST) {
+        var distant =
+            input(
+                self.withHands(8, false),
+                Optional.of(enemy.withPos(HERE.plus(12, 0, 0))),
+                List.of());
+        var pursuit = Reflex.tick(waiting.state(), distant, context, new SplittableRandom(4));
+        assertThat(pursuit.commands())
+            .doesNotContain(new BodyCommand.SelectSlot(context.loadout().swordSlot()));
+      }
+    }
+  }
+
+  @Test
+  void aWindJumpNeedsBroadSupportedGroundAndAnActualClimb() {
+    var self = with(combatant(1, RED, HERE), Kit.WINDRUNNER, 20);
+    var item = Loadouts.rwf(Kit.WINDRUNNER).kitItems().getFirst();
+    var base = input(self, Optional.empty(), List.of());
+    var climb =
+        new ReflexInput(
+            self,
+            base.snapshot(),
+            decision(self, List.of(new Waypoint(HERE.plus(3, 2, 0), Hop.JUMP))),
+            Optional.empty(),
+            0);
+    assertThat(KitPlay.choose(item, climb, 0, Optional.of(NAV.grid())))
+        .get()
+        .extracting(BodyCommand.UseKit::at)
+        .isEqualTo(Optional.of(HERE.plus(0, -0.1, 0)));
+    assertThat(KitPlay.choose(item, base, 0, Optional.of(NAV.grid()))).isEmpty();
+    assertThat(KitPlay.safeLaunch(NAV.grid(), new Vec3(0.5, 1, 0.5))).isFalse();
+    var unsupported =
+        new com.shepherdjerred.thestorm.rwfbots.domain.map.VoxelGrid(
+            NAV.grid().bounds(),
+            new java.util.BitSet(),
+            new java.util.BitSet(),
+            new java.util.BitSet());
+    assertThat(KitPlay.choose(item, climb, 0, Optional.of(unsupported))).isEmpty();
+  }
+
   private static CombatantView with(CombatantView view, Kit kit, double health) {
     return new CombatantView(
         view.id(),
@@ -70,7 +125,8 @@ final class KitPlayTest {
         Optional.empty(),
         "kit test",
         1,
-        0);
+        0,
+        java.util.Optional.empty());
   }
 
   private static ReflexInput input(
@@ -108,7 +164,7 @@ final class KitPlayTest {
   @Test
   void theHotbarIsReadFromTheKitList() {
     assertThat(Loadouts.rwf(Kit.TROOPER))
-        .isEqualTo(new Loadout(1, -1, 2, 0, List.of(), Kit.Body.PLAIN));
+        .isEqualTo(new Loadout(1, -1, 2, 0, List.of(), Kit.Body.PLAIN, Weapon.LEGACY, Weapon.NONE));
     var medic = Loadouts.rwf(Kit.MEDIC);
     assertThat(medic.gappleSlot()).isEqualTo(3);
     assertThat(medic.kitItems()).extracting(Loadout.KitItem::slot).containsExactly(2);

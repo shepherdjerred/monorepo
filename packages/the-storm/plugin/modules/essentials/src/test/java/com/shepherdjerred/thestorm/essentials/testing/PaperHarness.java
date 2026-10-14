@@ -84,21 +84,25 @@ public final class PaperHarness implements AutoCloseable {
                     !key.equals(com.shepherdjerred.thestorm.core.expansion.ManagedGameplay.IP)),
             () -> {}));
     enabling =
-        plugin ->
-            new EssentialsModule()
-                .enable(
-                    new ModuleContext(
-                        plugin,
-                        plugin.getLifecycleManager(),
-                        new PaperScheduler(plugin),
-                        new DirectComputePool(),
-                        database,
-                        services,
-                        directory,
-                        harness.clock,
-                        RandomGenerator.getDefault(),
-                        plugin.getComponentLogger(),
-                        com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled()));
+        plugin -> {
+          services.provide(
+              com.shepherdjerred.thestorm.core.players.PlayerVisibilityControl.class,
+              new com.shepherdjerred.thestorm.core.players.PlayerVisibilityControl(plugin));
+          new EssentialsModule()
+              .enable(
+                  new ModuleContext(
+                      plugin,
+                      plugin.getLifecycleManager(),
+                      new PaperScheduler(plugin),
+                      new DirectComputePool(),
+                      database,
+                      services,
+                      directory,
+                      harness.clock,
+                      RandomGenerator.getDefault(),
+                      plugin.getComponentLogger(),
+                      com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled()));
+        };
     try {
       MockBukkit.loadWith(
           HarnessPlugin.class,

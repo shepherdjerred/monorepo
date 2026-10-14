@@ -2,6 +2,7 @@
   id: cloned-balance,
   name: Cloned Balance,
   author: Retrospectrum and Atarixum along with libraryaddict,
+  description: A modified version of the Perfect Balance map,
   region:
     { min: { x: 4096, "y": 23, z: 1024 }, max: { x: 4236, "y": 55, z: 1170 } },
   spectator: { x: 4166.5, "y": 55, z: 1097.5, yaw: 0, pitch: 45 },
@@ -310,5 +311,5 @@
       { id: green-1, team: GREEN, at: { x: 4166, "y": 49, z: 1048 } },
     ],
   nukes: [],
-  blocksSha256: 285b7b2ea1e50573bc464e4f805253b0b4c4dd61520dd9a2570f5f7b796a90e9,
+  blocksSha256: b162ba7d5c4b5121503f38e40e893f446f92f502783da4d7f7d5ac21605452f5,
 }

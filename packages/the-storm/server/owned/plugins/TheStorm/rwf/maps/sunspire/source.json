@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "kind": "original-mc-build-program",
+  "program": "tools/maps/authored/sunspire.ts",
+  "metadata": "tools/maps/authored/sunspire.json",
+  "seed": 10502,
+  "dataVersion": 4903,
+  "blocksSha256": "5f877a7b50a13702d9f9d3cce4bf6cf219f5466353e770c330fae6ed1d41caab"
+}

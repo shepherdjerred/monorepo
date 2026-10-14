@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "kind": "original-mc-build-program",
+  "program": "tools/maps/authored/catacombs.ts",
+  "metadata": "tools/maps/authored/catacombs.json",
+  "seed": 10501,
+  "dataVersion": 4903,
+  "blocksSha256": "0d7892c50f7103585c0e0ecb96dcf4b12a9196882a13779d108e8fe0c695f9fb"
+}

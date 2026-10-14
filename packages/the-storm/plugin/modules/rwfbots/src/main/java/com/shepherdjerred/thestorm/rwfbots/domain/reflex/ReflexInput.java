@@ -41,6 +41,13 @@ public record ReflexInput(
   /** The enemy {@code self} should fight this tick, if any. */
   public static Optional<CombatantView> resolveTarget(
       CombatantView self, Decision decision, Percept percept) {
+    if (decision.option() == com.shepherdjerred.thestorm.rwfbots.domain.world.Option.DEFUSE) {
+      var immediate =
+          percept
+              .nearestVisible()
+              .filter(enemy -> enemy.pos().distance(self.pos()) <= Reflex.REACH + 0.5);
+      if (immediate.isPresent()) return immediate;
+    }
     var decided = decision.target().flatMap(percept::visible);
     if (decided.isPresent()) {
       return decided;

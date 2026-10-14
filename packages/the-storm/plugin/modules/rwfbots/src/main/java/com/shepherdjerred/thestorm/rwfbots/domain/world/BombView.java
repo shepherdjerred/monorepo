@@ -21,4 +21,10 @@ public record BombView(BombId id, BombOwner owner, Vec3 pos, BombState state) {
   public boolean armableBy(TeamId team) {
     return !belongsTo(team) && !state.isLit() && !(state instanceof BombState.Destroyed);
   }
+
+  public boolean threatens(TeamId team) {
+    return belongsTo(team)
+        || (owner instanceof BombOwner.Nuke nuke
+            && nuke.armedBy().filter(by -> !by.equals(team)).isPresent());
+  }
 }

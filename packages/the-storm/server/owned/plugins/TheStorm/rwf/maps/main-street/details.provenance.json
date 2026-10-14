@@ -1,9 +1,9 @@
 {
   "schema": 1,
   "id": "main-street",
-  "blocksSha256": "32bb5bc2f66d963c946c59f3e9b3e866b26ef79e58e8d8da6ca11f83672ec60a",
-  "detailsSha256": "f658d9b0f2b2856c4dd00c53bbda03cb85eb57da7fa9e537227862500127758d",
-  "policy": "preserve-inventories-and-literal-sign-text-strip-other-payloads",
+  "blocksSha256": "9b726b3189f878cdda9c76c6601edca91835c50cfa065e4be707edc495d47728",
+  "detailsSha256": "d3cc0c256b9adb0bcb0bf76dcf12c009e0042df242a8bf59a221e1665eb19ec0",
+  "policy": "preserve-inventories-and-other-signs-remove-legacy-buy-signs",
   "producer": [
     {
       "file": "TheStorm.jar",
@@ -1579,6 +1579,15 @@
     }
   ],
   "result": {
+    "state": "complete",
+    "containers": 22,
+    "signs": 97
+  },
+  "shopRemoval": {
+    "originalBlocksSha256": "32bb5bc2f66d963c946c59f3e9b3e866b26ef79e58e8d8da6ca11f83672ec60a",
+    "count": 6
+  },
+  "nativeExportResult": {
     "state": "complete",
     "containers": 22,
     "signs": 103

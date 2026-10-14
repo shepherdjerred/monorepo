@@ -64,6 +64,8 @@ export const rwfFeatureFlags = [
   "the-storm-rwf-spectator-tools-enabled",
   "the-storm-rwf-bomb-effects-enabled",
   "the-storm-rwf-stats-enabled",
+  "the-storm-rwf-host-settings-enabled",
+  "the-storm-rwf-candidate-visits-enabled",
 ] as const;
 
 export type RwfFeature = (typeof rwfFeatureFlags)[number];

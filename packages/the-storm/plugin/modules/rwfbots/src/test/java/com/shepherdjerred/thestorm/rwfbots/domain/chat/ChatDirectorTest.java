@@ -350,6 +350,53 @@ final class ChatDirectorTest {
   }
 
   @Test
+  void anIdleOpportunityWaitsForAnAvailableSpeakerWithoutConsumingTheDraw() {
+    var scene = new ChatScene(List.of(KILLER, KILLER2, VICTIM_BOT, ALICE_BLUE));
+    var waiting = director(settings(1), 11);
+    var untouched = director(settings(1), 11);
+    var due = T0.plusSeconds(45);
+    for (var second = 0; second < 5; second++) {
+      assertThat(waiting.on(new ChatMoment.Idle(), scene, due.plusSeconds(second), uuid -> false))
+          .as("travellers consume neither a random draw nor an idle deadline")
+          .isEmpty();
+    }
+    var available = waiting.on(new ChatMoment.Idle(), scene, due.plusSeconds(5), REDBOT2::equals);
+    assertThat(available)
+        .isEqualTo(untouched.on(new ChatMoment.Idle(), scene, due.plusSeconds(5), REDBOT2::equals))
+        .singleElement()
+        .satisfies(
+            line -> {
+              assertThat(line.speaker()).isEqualTo(REDBOT2);
+              assertThat(line.moment()).isEqualTo(Moment.TAUNT);
+            });
+    assertThat(waiting.on(new ChatMoment.Idle(), scene, due.plusSeconds(6), uuid -> true))
+        .as("after a candidate draw the ordinary idle cadence resumes")
+        .isEmpty();
+  }
+
+  @Test
+  void idleAdmissionPreservesTheFullTeamAndTheBlockedSpeakersPools() {
+    var director = director(settings(1), 11);
+    var scene = new ChatScene(List.of(KILLER, KILLER2, VICTIM_BOT, ALICE_BLUE));
+    assertThat(director.on(new ChatMoment.Idle(), scene, T0.plusSeconds(45), REDBOT2::equals))
+        .singleElement()
+        .satisfies(line -> assertThat(line.moment()).isEqualTo(Moment.TAUNT));
+    assertThat(director.on(new ChatMoment.Idle(), scene, T0.plusSeconds(90), REDBOT::equals))
+        .as("a previously unavailable mover can speak without a consumed template or cooldown")
+        .singleElement()
+        .satisfies(line -> assertThat(line.speaker()).isEqualTo(REDBOT));
+    var afterDeath = new ChatScene(List.of(dead(KILLER), KILLER2, VICTIM_BOT, ALICE_BLUE));
+    assertThat(director.on(new ChatMoment.Idle(), afterDeath, T0.plusSeconds(100), uuid -> false))
+        .as("team calls use the real complete team, independent of casual admission")
+        .singleElement()
+        .satisfies(
+            line -> {
+              assertThat(line.speaker()).isEqualTo(REDBOT2);
+              assertThat(line.moment()).isEqualTo(Moment.ON_LAST_ALIVE);
+            });
+  }
+
+  @Test
   void winnersAndLosersSayTheirLinesAndADrawIsQuiet() {
     var scene = new ChatScene(List.of(KILLER, dead(VICTIM_BOT), ALICE_BLUE));
     var lines = director(settings(1), 12).on(new ChatMoment.Ended(Optional.of(RED)), scene, T0);

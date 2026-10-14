@@ -172,8 +172,10 @@ public final class BlockTable {
       Set.of("water", "bubble_column", "seagrass", "tall_seagrass", "kelp", "kelp_plant");
   private static final Set<String> HAZARD_IDS = Set.of("fire", "soul_fire", "lava");
 
+  // Native 26.2 bamboo has an offset 3/16-wide collision column, independent of leaves/age.
+  // Like thin panes it obstructs an occupied cell, without supplying a navigable floor.
   private static final Set<String> PANE_IDS =
-      Set.of("glass_pane", "iron_bars", "chain", "iron_chain", "copper_chain");
+      Set.of("glass_pane", "iron_bars", "chain", "iron_chain", "copper_chain", "bamboo");
 
   // A lantern's small box still stops a walker and is nothing to stand on.
   private static final Set<String> LANTERN_IDS =
@@ -281,6 +283,7 @@ public final class BlockTable {
           "mud",
           "packed_mud",
           "clay",
+          "terracotta",
           "sand",
           "red_sand",
           "gravel",
@@ -319,6 +322,8 @@ public final class BlockTable {
           "amethyst_block",
           "budding_amethyst",
           "moss_block",
+          "azalea",
+          "flowering_azalea",
           "pale_moss_block",
           "sculk",
           "resin_block",

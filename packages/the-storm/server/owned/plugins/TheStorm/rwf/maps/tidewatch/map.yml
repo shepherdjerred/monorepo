@@ -1,0 +1,54 @@
+{
+  "id": "tidewatch",
+  "name": "Tidewatch",
+  "author": "The Storm",
+  "description": "A lighthouse watches a sheltered harbor between competing warehouse crews. Cross the timber causeway, circle the stone quays, or slip through shallow water with continuous escape shelves along every bank.",
+  "region":
+    {
+      "min": { "x": 2048, "y": 64, "z": 7168 },
+      "max": { "x": 2191, "y": 111, "z": 7295 },
+    },
+  "spectator": { "x": 2120.5, "y": 107, "z": 7232.5, "yaw": 0, "pitch": 65 },
+  "teams":
+    [
+      {
+        "color": "RED",
+        "spawns":
+          [
+            { "x": 2053.5, "y": 73, "z": 7226.5, "yaw": 270, "pitch": 0 },
+            { "x": 2053.5, "y": 73, "z": 7228.5, "yaw": 270, "pitch": 0 },
+            { "x": 2053.5, "y": 73, "z": 7236.5, "yaw": 270, "pitch": 0 },
+            { "x": 2053.5, "y": 73, "z": 7238.5, "yaw": 270, "pitch": 0 },
+            { "x": 2055.5, "y": 73, "z": 7226.5, "yaw": 270, "pitch": 0 },
+            { "x": 2055.5, "y": 73, "z": 7228.5, "yaw": 270, "pitch": 0 },
+            { "x": 2055.5, "y": 73, "z": 7236.5, "yaw": 270, "pitch": 0 },
+            { "x": 2055.5, "y": 73, "z": 7238.5, "yaw": 270, "pitch": 0 },
+          ],
+      },
+      {
+        "color": "BLUE",
+        "spawns":
+          [
+            { "x": 2186.5, "y": 73, "z": 7226.5, "yaw": 90, "pitch": 0 },
+            { "x": 2186.5, "y": 73, "z": 7228.5, "yaw": 90, "pitch": 0 },
+            { "x": 2186.5, "y": 73, "z": 7236.5, "yaw": 90, "pitch": 0 },
+            { "x": 2186.5, "y": 73, "z": 7238.5, "yaw": 90, "pitch": 0 },
+            { "x": 2184.5, "y": 73, "z": 7226.5, "yaw": 90, "pitch": 0 },
+            { "x": 2184.5, "y": 73, "z": 7228.5, "yaw": 90, "pitch": 0 },
+            { "x": 2184.5, "y": 73, "z": 7236.5, "yaw": 90, "pitch": 0 },
+            { "x": 2184.5, "y": 73, "z": 7238.5, "yaw": 90, "pitch": 0 },
+          ],
+      },
+    ],
+  "bombs":
+    [
+      { "id": "red-1", "team": "RED", "at": { "x": 2062, "y": 73, "z": 7232 } },
+      {
+        "id": "blue-1",
+        "team": "BLUE",
+        "at": { "x": 2177, "y": 73, "z": 7232 },
+      },
+    ],
+  "nukes": [],
+  "blocksSha256": "e818529123dd5707d78d33110cc3bac160832411bc7c7d3be1a006417249d737",
+}

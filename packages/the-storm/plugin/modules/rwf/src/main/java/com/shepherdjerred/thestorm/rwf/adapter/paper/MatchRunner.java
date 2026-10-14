@@ -4,13 +4,13 @@ import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.core.snapshot.PlayerStates;
 import com.shepherdjerred.thestorm.core.status.PublicGameDirectory;
 import com.shepherdjerred.thestorm.rwf.adapter.content.RwfConfig;
+import com.shepherdjerred.thestorm.rwf.app.LobbySession;
 import com.shepherdjerred.thestorm.rwf.app.LobbySizes;
 import com.shepherdjerred.thestorm.rwf.app.MatchEvents;
 import com.shepherdjerred.thestorm.rwf.app.MatchNotification;
 import com.shepherdjerred.thestorm.rwf.app.MatchView;
 import com.shepherdjerred.thestorm.rwf.app.PayoutService;
 import com.shepherdjerred.thestorm.rwf.app.RwfFeatures;
-import com.shepherdjerred.thestorm.rwf.app.ShowcaseStart;
 import com.shepherdjerred.thestorm.rwf.app.map.MapRotation;
 import com.shepherdjerred.thestorm.rwf.app.store.MatchStats;
 import com.shepherdjerred.thestorm.rwf.app.store.MatchStore;
@@ -50,7 +50,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalDouble;
-import java.util.OptionalInt;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
@@ -121,12 +120,15 @@ final class MatchRunner implements MatchView, MatchEvents {
       Keys keys,
       RwfFeatures.Source features,
       com.shepherdjerred.thestorm.rwf.app.JoinGate killstreaks,
-      RwfAnalytics product) {}
+      RwfAnalytics product,
+      com.shepherdjerred.thestorm.rwf.app.store.StreakStore streakStore) {}
 
   private final Parts parts;
   private final KitPowers powers;
   private final KitBridge kits;
   private final KitPicker picker;
+  private final StreakPicker streakPicker;
+  private final MatchAdmission admission;
   private final MapRotation<MapWorld> rotation;
   private final Effects effects = new Effects();
   private final ArrayDeque<MatchEvent> waiting = new ArrayDeque<>();
@@ -153,9 +155,9 @@ final class MatchRunner implements MatchView, MatchEvents {
   static final int HALF_SECOND_TICKS = 10;
 
   private final BotArrivals arrivals;
+  private final BotPopulation population;
   private final Clock clock = new Clock();
   private final Results results = new Results();
-  private final Showcases showcases = new Showcases();
   private final MatchHooks hooks = new MatchHooks();
   private RwfMatch match;
   private RwfFeatures features = RwfFeatures.NONE;
@@ -170,14 +172,16 @@ final class MatchRunner implements MatchView, MatchEvents {
   private @Nullable MatchSnapshot cached;
   private @Nullable RwfMatch cachedFor;
   private long cachedTick;
-  private OptionalInt showcase = OptionalInt.empty();
-  private @Nullable UUID keepingSnapshot;
+  private final Showcases showcases;
   private int lastTitle;
   private final LobbySizes lobbySizes;
   private final com.shepherdjerred.thestorm.rwf.app.MatchExperiences experiences;
+  private final LobbySession session = new LobbySession();
   private final List<Consumer<MatchEffect.Death>> deathWatchers = new ArrayList<>();
   private @Nullable Spectating spectating;
   private Optional<Ballot> lastBallot = Optional.empty();
+  private final CandidateVisits visits;
+  private final LobbySettings lobbySettings;
 
   /** The loaded map bots are to be drafted for, once the step's listeners have heard it. */
   private @Nullable String draftFor;
@@ -196,7 +200,17 @@ final class MatchRunner implements MatchView, MatchEvents {
                 parts.kits(), parts.boards(), parts.keys(), parts.combat(), parts.killstreaks()));
     this.kits = new KitBridge(this, powers);
     this.picker = new KitPicker(this, parts.menus());
+    this.streakPicker =
+        new StreakPicker(this, parts.context(), parts.streakStore(), parts.killstreaks());
+    this.admission = new MatchAdmission(this, parts.context(), parts.snapshots());
     this.arrivals = new BotArrivals(parts.bots()::despawn);
+    this.population =
+        new BotPopulation(this, parts.bots(), arrivals, parts.config().match().maxCombatants());
+    this.showcases =
+        new Showcases(
+            this,
+            new Showcases.Parts(
+                parts.context(), parts.bots(), arrivals, parts.config().match().maxCombatants()));
     this.lobbySizes =
         new LobbySizes(
             parts.config().match().automaticSizing(),
@@ -205,6 +219,8 @@ final class MatchRunner implements MatchView, MatchEvents {
     this.field =
         new Battlefield(parts.combat(), new Sacrifices(this, parts.context(), parts.combat()));
     this.rotation = new MapRotation<>(parts.maps(), parts.context().random());
+    this.visits = new CandidateVisits(this, parts.context(), rotation, parts.keys());
+    this.lobbySettings = new LobbySettings(this, parts.context(), parts.config());
     this.match = RwfMatch.open(settings(), UUID.randomUUID(), parts.context().random().nextLong());
   }
 
@@ -229,6 +245,18 @@ final class MatchRunner implements MatchView, MatchEvents {
   @Override
   public Optional<com.shepherdjerred.thestorm.rwf.app.MatchExperiences.Frozen> experience(UUID id) {
     return experiences.current(id);
+  }
+
+  LobbySession session() {
+    return session;
+  }
+
+  void openSettings(Player player) {
+    lobbySettings.open(player);
+  }
+
+  void changeSettings(Player player, int slot, int step) {
+    lobbySettings.change(player, slot, step);
   }
 
   boolean live() {
@@ -309,7 +337,7 @@ final class MatchRunner implements MatchView, MatchEvents {
 
   /** Whether this match is a bots-only showcase. */
   boolean showcase() {
-    return showcase.isPresent();
+    return showcases.count().isPresent();
   }
 
   /**
@@ -340,6 +368,10 @@ final class MatchRunner implements MatchView, MatchEvents {
   /** Picking kits and the kit menu. */
   KitPicker picker() {
     return picker;
+  }
+
+  StreakPicker streakPicker() {
+    return streakPicker;
   }
 
   boolean awaitsSpectate(UUID player) {
@@ -377,13 +409,10 @@ final class MatchRunner implements MatchView, MatchEvents {
 
   @Override
   public Optional<MatchSnapshot> current() {
-    if (!ready) {
-      return Optional.empty();
-    }
-    return Optional.of(snapshot());
+    return ready ? Optional.of(snapshot()) : Optional.empty();
   }
 
-  /** Accepted transitions have a snapshot even before public admission opens. */
+  /** Internal transitions remain observable even when admission is closed after a load failure. */
   private MatchSnapshot snapshot() {
     var snapshot = cached;
     if (snapshot == null || cachedTick != ticks || !match.equals(cachedFor)) {
@@ -465,6 +494,7 @@ final class MatchRunner implements MatchView, MatchEvents {
 
   /** Opens the lobby's vote: three maps with the match flow on, one drawn at random without. */
   private void offerBallot() {
+    if (visits.failed()) return;
     var refused = handle(ballotEvent());
     if (refused.isPresent()) {
       parts
@@ -499,6 +529,18 @@ final class MatchRunner implements MatchView, MatchEvents {
   private void apply(MatchEvent event, RwfMatch.Step step) {
     var before = match;
     match = step.match();
+    visits.joined(event);
+    var oldHost = session.host();
+    session.sync(
+        features.hostSettings()
+            ? match.members().stream()
+                .filter(member -> !member.id().isBot())
+                .map(member -> member.id().uuid())
+                .toList()
+            : List.of());
+    if (session.host().isPresent() && match.ballot().flatMap(Ballot::chosen).isPresent()) {
+      session.lock();
+    }
     applying = true;
     try {
       if (event instanceof MatchEvent.Stop) {
@@ -519,6 +561,7 @@ final class MatchRunner implements MatchView, MatchEvents {
         applyGuarded(effect);
       }
       afterStep(before, event);
+      lobbySettings.hostChanged(oldHost);
       // Who hears team and dead chat follows every death, team and phase at once, so a member
       // who just died never speaks to the living.
       var chat = teamChat;
@@ -530,12 +573,12 @@ final class MatchRunner implements MatchView, MatchEvents {
     }
     notifyListeners(event, step.effects());
     // After the listeners: rwfbots confirms the map's navigation as it hears MapReady.
-    showcases.afterMapReady(event);
     var draft = draftFor;
     draftFor = null;
     if (draft != null) {
-      fillWithBots(draft);
+      population.draft(rotation.byId(draft).orElseThrow().definition(), showcases.count());
     }
+    showcases.after(event);
   }
 
   /**
@@ -569,6 +612,7 @@ final class MatchRunner implements MatchView, MatchEvents {
     var is = match.phase();
     var votedBefore = before.ballot().flatMap(Ballot::chosen).isPresent();
     var voted = match.ballot().flatMap(Ballot::chosen);
+    visits.afterStep(event);
     if (!votedBefore && voted.isPresent()) {
       match
           .ballot()
@@ -581,7 +625,9 @@ final class MatchRunner implements MatchView, MatchEvents {
     // Bots are drafted once the chosen map is loaded (rwfbots needs its navigation confirmed),
     // while the countdown runs, or as the preview opens when the map loaded only after it.
     var minHumans = parts.config().match().minHumans();
-    if (RunnerRules.draftable(match, minHumans) && !RunnerRules.draftable(before, minHumans)) {
+    if (!showcases.preparing()
+        && RunnerRules.draftable(match, minHumans)
+        && !RunnerRules.draftable(before, minHumans)) {
       draftFor = match.map().orElseThrow().id();
     }
     if (event instanceof MatchEvent.PickKit pick && !(was instanceof Phase.Resetting)) {
@@ -608,21 +654,6 @@ final class MatchRunner implements MatchView, MatchEvents {
     rotation.play(map);
   }
 
-  /**
-   * The vote closed during the countdown: bots are drafted now for the chosen map, to fill the
-   * match up to its target, and walk into the lobby one by one over the first part of what is left
-   * of the countdown.
-   */
-  private void fillWithBots(String chosenMap) {
-    experiences.freeze(match.matchId(), match.seed());
-    var map = rotation.byId(chosenMap).orElseThrow();
-    var draftedTarget = lobbySizes.draft(map.definition(), showcase);
-    var drafted =
-        parts.bots().fill(match.matchId(), Math.max(0, draftedTarget - match.members().size()));
-    var now = now();
-    arrivals.schedule(drafted, match.seed(), now, RunnerRules.arrivalBudget(match, now));
-  }
-
   /** Bots whose time has come walk into the lobby, while the countdown or preview runs. */
   private void arrive(Instant now) {
     if (arrivals.size() == 0) {
@@ -641,7 +672,7 @@ final class MatchRunner implements MatchView, MatchEvents {
   }
 
   /** Up to {@code count} bots join the lobby now. Returns how many did. */
-  private int joinBots(int count) {
+  int joinBots(int count) {
     experiences.freeze(match.matchId(), match.seed());
     var joined = 0;
     for (var bot : parts.bots().fill(match.matchId(), count)) {
@@ -738,6 +769,8 @@ final class MatchRunner implements MatchView, MatchEvents {
    * flags read as the map reset, and its vote opens.
    */
   private void nextMatch() {
+    session.nextRound();
+    population.reset();
     lobbySizes.resetDraft();
     ledger.reset();
     field.clear();
@@ -747,8 +780,7 @@ final class MatchRunner implements MatchView, MatchEvents {
     awaitingSpectate.clear();
     frozen.clear();
     starts.clear();
-    showcase = OptionalInt.empty();
-    showcases.cancel();
+    showcases.reset();
     parts.combat().clear();
     parts.boards().reset();
     parts.bombs().clear();
@@ -757,6 +789,7 @@ final class MatchRunner implements MatchView, MatchEvents {
     parts.boards().showKills(features.deathFeed());
     for (var member : match.members()) {
       entity(member.id()).ifPresent(parts.boards()::show);
+      if (!member.id().isBot()) entity(member.id()).ifPresent(streakPicker::restore);
     }
     offerBallot();
   }
@@ -771,51 +804,37 @@ final class MatchRunner implements MatchView, MatchEvents {
    * it, or returns why not. It then runs as any match would, without the humans rule.
    */
   Optional<String> startShowcase(int count) {
-    var refusal = showcases.refusal(count);
-    return refusal.isPresent() ? refusal : showcases.fill(count);
+    return showcases.start(count);
+  }
+
+  Optional<String> prepareShowcase(UUID lobbyId) {
+    return showcases.prepare(lobbyId);
   }
 
   Optional<String> startSeededShowcase(UUID lobbyId, int count, long seed) {
-    if (!match.matchId().equals(lobbyId)) {
-      return Optional.of("The requested showcase lobby is no longer current.");
-    }
-    var refusal = showcases.refusal(count);
-    if (refusal.isPresent()) {
-      return refusal;
-    }
-    if (!match.members().isEmpty()) {
-      return Optional.of("A seeded showcase requires an empty lobby.");
-    }
-    var previous = match;
-    var world = parts.context().mapWorld();
-    var previousTime = world.getTime();
+    return showcases.startSeeded(lobbyId, count, seed);
+  }
+
+  void reseedShowcase(long seed) {
     match = match.reseedEmptyLobby(seed);
     experiences.reseedEmptyLobby(match.matchId(), seed);
-    world.setTime(match.startingWorldTime());
-    refusal = showcases.fill(count);
-    if (refusal.isPresent()) {
-      match = previous;
-      experiences.reseedEmptyLobby(previous.matchId(), previous.seed());
-      world.setTime(previousTime);
-    }
-    return refusal;
+    parts.context().mapWorld().setTime(match.startingWorldTime());
+  }
+
+  void restoreShowcase(RwfMatch previous, long worldTime) {
+    match = previous;
+    experiences.reseedEmptyLobby(previous.matchId(), previous.seed());
+    parts.context().mapWorld().setTime(worldTime);
   }
 
   Optional<String> stopShowcase(UUID matchId) {
-    if (!match.matchId().equals(matchId) || showcase.isEmpty() || humans() > 0) {
-      return Optional.of("No bots-only showcase with that id is running.");
-    }
-    if (!(match.phase() instanceof Phase.Ended) && !(match.phase() instanceof Phase.Resetting)) {
-      showcases.cancel();
-      var refusal = handle(new MatchEvent.Stop());
-      return refusal.map(Object::toString);
-    }
-    return Optional.empty();
+    return showcases.stop(matchId);
   }
 
   /** The match is stopping for good (disable): restore everyone, despawn bots. */
   void stop() {
     showcases.cancel();
+    visits.selecting();
     rotation.close();
     if (!(match.phase() instanceof Phase.Resetting)) {
       handle(new MatchEvent.Stop());
@@ -828,61 +847,6 @@ final class MatchRunner implements MatchView, MatchEvents {
     arrivals.release();
     parts.hud().hideAll();
     ready = false;
-  }
-
-  /** Requested showcases wait for the chosen map's consumers before bodies are drafted. */
-  private final class Showcases {
-    private boolean pending;
-
-    Optional<String> refusal(int count) {
-      return new ShowcaseStart(
-              parts.config().match().maxCombatants(),
-              ready,
-              parts.bots().roster().isPresent(),
-              showcase.isPresent(),
-              humans(),
-              match.phase() instanceof Phase.Lobby)
-          .refusal(count);
-    }
-
-    Optional<String> fill(int count) {
-      showcase = OptionalInt.of(count);
-      if (match.map().isPresent()) {
-        return draft();
-      }
-      pending = true;
-      var refused = handle(new MatchEvent.CloseVote());
-      if (refused.isPresent()) {
-        pending = false;
-        showcase = OptionalInt.empty();
-        return refused.map(Object::toString);
-      }
-      return Optional.empty();
-    }
-
-    void afterMapReady(MatchEvent event) {
-      if (event instanceof MatchEvent.MapReady && pending) {
-        draft().ifPresent(parts.context().logger()::error);
-      }
-    }
-
-    void cancel() {
-      pending = false;
-      arrivals.release();
-    }
-
-    /** The chosen map's listeners have confirmed navigation; the requested bodies may join. */
-    private Optional<String> draft() {
-      pending = false;
-      var count = showcase.orElseThrow();
-      joinBots(count - match.members().size());
-      if (match.members().isEmpty()) {
-        showcase = OptionalInt.empty();
-        return Optional.of("No bot could be spawned for the showcase; see the log.");
-      }
-      parts.context().logger().info("rwf match {} is a showcase of {}", match.matchId(), count);
-      return Optional.empty();
-    }
   }
 
   /** What a finished or stopped match leaves behind: its record, payouts and recording. */
@@ -1015,7 +979,7 @@ final class MatchRunner implements MatchView, MatchEvents {
   }
 
   /** The online human members. */
-  private List<Player> humanEntities() {
+  List<Player> humanEntities() {
     var out = new ArrayList<Player>();
     for (var member : match.members()) {
       if (!member.id().isBot()) {
@@ -1036,6 +1000,7 @@ final class MatchRunner implements MatchView, MatchEvents {
       ticks++;
       // Even while the lobby is closed for a repair, nobody falls forever.
       keepOutOfTheVoid();
+      visits.tick();
       if (!ready) {
         return;
       }
@@ -1073,7 +1038,7 @@ final class MatchRunner implements MatchView, MatchEvents {
         if (chat != null) {
           chat.refresh();
         }
-        var status = LobbyStatus.of(match, now);
+        var status = LobbyStatus.of(match, now).withBotStatus(population.status());
         parts.hud().update(status);
         parts.displays().update(status, match.ballot());
       }
@@ -1099,6 +1064,7 @@ final class MatchRunner implements MatchView, MatchEvents {
      */
     private void lobbyTick(Instant now) {
       for (var member : match.members()) {
+        if (visits.visiting(member.id().uuid())) continue;
         entity(member.id())
             .filter(player -> !player.isDead() && !parts.lobby().contains(Places.at(player)))
             .ifPresent(player -> move(player, lobby()));
@@ -1150,13 +1116,17 @@ final class MatchRunner implements MatchView, MatchEvents {
       }
       var mapFloor = map.orElseThrow().definition().border().min().y() - FALL_MARGIN;
       for (var player : parts.context().mapWorld().getPlayers()) {
-        if (Places.at(player).getY() < mapFloor
-            && ours(player)
-            && !fighting(player.getUniqueId())) {
-          var start = starts.get(player.getUniqueId());
-          move(player, start != null && frozen(player.getUniqueId()) ? start : watchPoint());
-        }
+        rescueMapVoid(player, mapFloor);
       }
+    }
+
+    private void rescueMapVoid(Player player, int mapFloor) {
+      if (visits.visiting(player.getUniqueId())
+          || Places.at(player).getY() >= mapFloor
+          || !ours(player)
+          || fighting(player.getUniqueId())) return;
+      var start = starts.get(player.getUniqueId());
+      move(player, start != null && frozen(player.getUniqueId()) ? start : watchPoint());
     }
 
     /**
@@ -1175,7 +1145,7 @@ final class MatchRunner implements MatchView, MatchEvents {
       var map = currentMap().orElseThrow();
       for (var member : match.members()) {
         entity(member.id())
-            .filter(player -> !member.id().isBot() && !map.contains(Places.at(player)))
+            .filter(player -> !member.id().isBot() && !map.containsVisit(Places.at(player)))
             .ifPresent(player -> move(player, spectatorPoint()));
       }
     }
@@ -1185,7 +1155,7 @@ final class MatchRunner implements MatchView, MatchEvents {
      * showcase has no humans by design. Watchers are not members, so they never count.
      */
     private void keepHumansRule(Instant now) {
-      if (showcase.isPresent()) {
+      if (showcase()) {
         humansGoneSince = null;
         return;
       }
@@ -1318,22 +1288,7 @@ final class MatchRunner implements MatchView, MatchEvents {
 
   /** A player asks to join: admission checks, then the match decides. */
   Optional<String> admit(Player player) {
-    var refusal =
-        admission(player)
-            .or(
-                () ->
-                    snapshotRefusal(
-                        player,
-                        () -> admit(player).ifPresent(error -> Texts.error(player, error))));
-    if (refusal.isPresent()) {
-      return refusal;
-    }
-    var refused =
-        handle(new MatchEvent.Join(human(player), player.getName(), now())).map(Texts::describe);
-    if (refused.isEmpty()) {
-      picker.load(player.getUniqueId());
-    }
-    return refused;
+    return admission.admit(player);
   }
 
   /** Whether a player asking to join now would be turned away because a match is under way. */
@@ -1345,39 +1300,8 @@ final class MatchRunner implements MatchView, MatchEvents {
    * A watcher asks to join: the snapshot taken when they started watching already holds their
    * belongings, so it is kept and no new one is taken.
    */
-  Optional<String> admitWatcher(Player player) {
-    var refusal = admission(player);
-    if (refusal.isPresent()) {
-      return refusal;
-    }
-    keepingSnapshot = player.getUniqueId();
-    try {
-      var refused =
-          handle(new MatchEvent.Join(human(player), player.getName(), now())).map(Texts::describe);
-      if (refused.isEmpty()) {
-        picker.load(player.getUniqueId());
-      }
-      return refused;
-    } finally {
-      keepingSnapshot = null;
-    }
-  }
-
-  private static CombatantId human(Player player) {
-    return new CombatantId.Human(player.getUniqueId());
-  }
-
-  private Optional<String> admission(Player player) {
-    if (!ready) {
-      return Optional.of("The match is still being prepared; try again in a moment.");
-    }
-    if (memberOf(player.getUniqueId()).isPresent()) {
-      return Optional.of(Texts.describe(MatchError.ALREADY_JOINED));
-    }
-    if (showcase.isPresent()) {
-      return Optional.of("This match is a bot showcase; watch it with /rwf spectate.");
-    }
-    return Optional.empty();
+  Optional<String> admitWatcher(Player player, Runnable retry) {
+    return admission.admitWatcher(player, retry);
   }
 
   /**
@@ -1385,34 +1309,7 @@ final class MatchRunner implements MatchView, MatchEvents {
    * restore is still being confirmed in saved player data, {@code retry} runs again once it is.
    */
   Optional<String> snapshotRefusal(Player player, Runnable retry) {
-    return parts
-        .snapshots()
-        .refusal(player.getUniqueId())
-        .map(
-            refusal ->
-                switch (refusal) {
-                  case NOT_LOADED -> "The match is still starting up; try again in a moment.";
-                  case CLEANUP_PENDING -> {
-                    parts
-                        .snapshots()
-                        .whenClean(
-                            player.getUniqueId(),
-                            () -> {
-                              if (player.isOnline()) {
-                                retry.run();
-                              }
-                            });
-                    yield "Your belongings from your last match are still being saved; trying"
-                        + " again in a moment.";
-                  }
-                  case CLEANUP_STALLED ->
-                      "Your restored belongings could not be confirmed as saved. Reconnect to"
-                          + " finish recovery.";
-                  case RESTORE_PENDING -> {
-                    parts.snapshots().recoverWhileOnline(player);
-                    yield "Your belongings from your last match were restored first; try again.";
-                  }
-                });
+    return admission.snapshotRefusal(player, retry);
   }
 
   /** A member right-clicked a bomb while holding the fuse. */
@@ -1627,6 +1524,7 @@ final class MatchRunner implements MatchView, MatchEvents {
    * {@code player} leaves the match, as {@code /rwf leave} and the leave item do; why not, if not.
    */
   Optional<String> leave(Player player) {
+    streakPicker.forget(player.getUniqueId());
     var member = memberOf(player.getUniqueId());
     if (member.isEmpty()) {
       return Optional.of(Texts.describe(MatchError.NOT_A_MEMBER));
@@ -1704,7 +1602,7 @@ final class MatchRunner implements MatchView, MatchEvents {
     /** Effects aimed at one or more combatants; false if {@code effect} is not one of them. */
     private boolean applyToCombatant(MatchEffect effect) {
       switch (effect) {
-        case MatchEffect.CaptureSnapshot capture -> capture(capture.id());
+        case MatchEffect.CaptureSnapshot capture -> admission.capture(capture.id());
         case MatchEffect.Restore restore -> restore(restore.id());
         case MatchEffect.EnterLobby enter -> enterLobby(enter.id());
         case MatchEffect.ReturnToLobby back -> returnToLobby(back.id(), back.kitId());
@@ -1824,7 +1722,8 @@ final class MatchRunner implements MatchView, MatchEvents {
                             .setItem(KitFactory.TEAM_SLOT, parts.kits().teamHotbar(team)));
             if (!id.isBot()
                 && (match.phase().kitsOpen() || match.phase() instanceof Phase.Resetting)) {
-              parts.kits().giveLobbyItems(player);
+              parts.kits().giveLobbyItems(player, features.hostSettings());
+              visits.giveMenu(player);
             }
           });
     }
@@ -1833,30 +1732,8 @@ final class MatchRunner implements MatchView, MatchEvents {
       entity(id).ifPresent(action);
     }
 
-    private void capture(CombatantId id) {
-      if (!(id instanceof CombatantId.Human human) || human.uuid().equals(keepingSnapshot)) {
-        // Bots have no belongings; a joining watcher keeps the snapshot they watched under.
-        return;
-      }
-      var player = parts.context().server().getPlayer(human.uuid());
-      if (player == null) {
-        handle(new MatchEvent.Leave(id, now()));
-        return;
-      }
-      parts
-          .snapshots()
-          .capture(
-              player,
-              stored -> {
-                if (!stored) {
-                  Texts.error(
-                      player, "Your belongings could not be saved, so you were not let in.");
-                  handle(new MatchEvent.Leave(id, now()));
-                }
-              });
-    }
-
     private void restore(CombatantId id) {
+      visits.forget(id);
       releaseTools(id);
       parts.combat().forget(id.uuid());
       awaitingSpectate.remove(id.uuid());
@@ -1889,11 +1766,15 @@ final class MatchRunner implements MatchView, MatchEvents {
           player -> {
             powers.clear(player);
             PlayerStates.wipe(player, GameMode.SURVIVAL);
+            player.setFlying(false);
+            player.setAllowFlight(false);
             var moved = move(player, lobby());
             PlayerAttributes.addAttackSpeed(moved);
+            PlayerAttributes.useMatchHitWindow(moved);
             parts.boards().show(moved);
             if (!id.isBot()) {
-              parts.kits().giveLobbyItems(player);
+              parts.kits().giveLobbyItems(player, features.hostSettings());
+              visits.giveMenu(player);
               var chat = teamChat;
               if (chat != null) {
                 chat.entered(player.getUniqueId());
@@ -1903,6 +1784,11 @@ final class MatchRunner implements MatchView, MatchEvents {
                   player,
                   "Right-click the nether star to choose a kit (or /rwf kit <id>); leave with the"
                       + " red dye or /rwf leave.");
+              if (visits.enabled()) {
+                Texts.info(
+                    player,
+                    "Use the map in slot 6 or /rwf maps to visit candidates, fly and vote.");
+              }
               if (parts.recordings().enabled()) {
                 Texts.info(player, Texts.RECORDING_DISCLOSURE);
               }
@@ -2152,7 +2038,8 @@ final class MatchRunner implements MatchView, MatchEvents {
                 map ->
                     new Ballot.Candidate(
                         map.id(), map.definition().name(), map.definition().author()))
-            .toList());
+            .toList(),
+        visits.enabled() ? Optional.of(CandidateVisits.VOTING_LENGTH) : Optional.empty());
   }
 
   /**
@@ -2160,6 +2047,7 @@ final class MatchRunner implements MatchView, MatchEvents {
    * since moved away from is dropped by the match itself.
    */
   private void prepareMap(String mapId) {
+    visits.selecting();
     var map = rotation.byId(mapId);
     if (map.isEmpty()) {
       waiting.add(new MatchEvent.MapFailed(mapId));
@@ -2169,6 +2057,10 @@ final class MatchRunner implements MatchView, MatchEvents {
     rotation.prepare(
         map.orElseThrow(),
         ok -> {
+          if (!ok && visits.enabled()) {
+            visits.abort();
+            return;
+          }
           var event =
               ok
                   ? new MatchEvent.MapReady(map.orElseThrow().definition(), now())
@@ -2181,6 +2073,30 @@ final class MatchRunner implements MatchView, MatchEvents {
                       .logger()
                       .info("rwf: map {} prepared after the vote moved on ({})", mapId, error));
         });
+  }
+
+  void openCandidates(Player player) {
+    visits.open(player);
+  }
+
+  void candidateAction(Player player, CandidateMenu menu, int slot) {
+    visits.action(player, menu, slot);
+  }
+
+  Optional<String> visitCandidate(Player player, String mapId) {
+    return visits.visit(player, mapId);
+  }
+
+  void returnFromCandidate(Player player) {
+    visits.returnToLobby(player);
+  }
+
+  void clearCurrentMapForVisits() {
+    current = null;
+  }
+
+  void closeCandidateAdmission() {
+    ready = false;
   }
 
   /** The seconds the no-humans abort waits, for diagnostics. */

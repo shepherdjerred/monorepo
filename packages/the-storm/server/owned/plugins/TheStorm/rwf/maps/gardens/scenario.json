@@ -3,7 +3,7 @@
   "kind": "rwf-map-scenario",
   "id": "gardens-trooper-duel-v1",
   "map": "gardens",
-  "mapSha256": "8ae724071164ac04878f479b718aa732c39cb89544ad499746c1cc6d0a3e5c8f",
+  "mapSha256": "169e0b907a799c6b30300bc2fd231d1fb0aba0ce374b1914df45464a157f3074",
   "world": "minecraft:rwf",
   "region": {
     "min": {

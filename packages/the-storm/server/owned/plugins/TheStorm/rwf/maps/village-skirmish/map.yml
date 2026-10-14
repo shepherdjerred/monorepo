@@ -2,6 +2,7 @@
   id: village-skirmish,
   name: Village Skirmish,
   author: Paragonal,
+  description: Re-vamped Valley of Death,
   region:
     {
       min: { x: 5120, "y": 129, z: 5120 },
@@ -317,5 +318,5 @@
       { id: blue-1, team: BLUE, at: { x: 5169, "y": 151, z: 5151 } },
     ],
   nukes: [],
-  blocksSha256: e50b259ec58662f8830a10bd65ad00b3281f5ae8b6ee9ce23d2e01d07fb65950,
+  blocksSha256: b44c46d1ba7ee7441eb016d440a84e795374a56153ad9cebd7b14f97dd109de3,
 }

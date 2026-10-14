@@ -1,1 +1,574 @@
-{"version":1,"blocksSha256":"df935f0283bea60b25010afdb0bcb61e2e5d480548bfb93f1008e3484026dde5","containers":[{"at":{"x":17,"y":2,"z":56},"material":"minecraft:furnace","items":"AQAAAAMAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":14,"y":2,"z":57},"material":"minecraft:trapped_chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":13,"y":14,"z":54},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":15,"y":2,"z":56},"material":"minecraft:furnace","items":"AQAAAAMAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":18,"y":2,"z":56},"material":"minecraft:furnace","items":"AQAAAAMAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":16,"y":2,"z":56},"material":"minecraft:furnace","items":"AQAAAAMAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":16,"y":10,"z":54},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":18,"y":10,"z":58},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":14,"y":3,"z":56},"material":"minecraft:brewing_stand","items":"AQAAAAUAAAByH4sIAAAAAAAA/12MMQqAMBAEV4MisVCw8gX+wdo32EqIEVLkTuKJ3zdiIdjODKMBhXoyYmYXD88EdEOF3K9ogydno9lk3FmSUigsnyQAMg1tOexMjuTQ6P/tYpnkcRXKl6D5msuIi2lzAzuYPqd+AAAAAAAAAAAAAAAAAAAAAAAAAA\u003d\u003d"},{"at":{"x":14,"y":2,"z":58},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":16,"y":18,"z":65},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":12,"y":10,"z":69},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":13,"y":14,"z":65},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":18,"y":10,"z":67},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":16,"y":18,"z":66},"material":"minecraft:trapped_chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":26,"y":2,"z":69},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":71,"y":2,"z":10},"material":"minecraft:trapped_chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":59,"y":10,"z":8},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":70,"y":2,"z":10},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":63,"y":14,"z":9},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":72,"y":3,"z":10},"material":"minecraft:brewing_stand","items":"AQAAAAUAAAByH4sIAAAAAAAA/12MMQqAMBAEV4MisVCw8gX+wdo32EqIEVLkTuKJ3zdiIdjODKMBhXoyYmYXD88EdEOF3K9ogydno9lk3FmSUigsnyQAMg1tOexMjuTQ6P/tYpnkcRXKl6D5msuIi2lzAzuYPqd+AAAAAAAAAAAAAAAAAAAAAAAAAA\u003d\u003d"},{"at":{"x":74,"y":14,"z":9},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":72,"y":2,"z":11},"material":"minecraft:furnace","items":"AQAAAAMAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":61,"y":10,"z":14},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":70,"y":10,"z":14},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":63,"y":18,"z":12},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":62,"y":18,"z":12},"material":"minecraft:trapped_chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":59,"y":2,"z":22},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":72,"y":2,"z":12},"material":"minecraft:furnace","items":"AQAAAAMAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":74,"y":10,"z":12},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":72,"y":2,"z":13},"material":"minecraft:furnace","items":"AQAAAAMAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":72,"y":2,"z":14},"material":"minecraft:furnace","items":"AQAAAAMAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":106,"y":2,"z":55},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":119,"y":14,"z":59},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":116,"y":18,"z":58},"material":"minecraft:trapped_chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":114,"y":10,"z":57},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":116,"y":18,"z":59},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":120,"y":10,"z":55},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":119,"y":14,"z":70},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":118,"y":2,"z":66},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":117,"y":2,"z":68},"material":"minecraft:furnace","items":"AQAAAAMAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":115,"y":2,"z":68},"material":"minecraft:furnace","items":"AQAAAAMAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":114,"y":2,"z":68},"material":"minecraft:furnace","items":"AQAAAAMAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":116,"y":10,"z":70},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":114,"y":10,"z":66},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":116,"y":2,"z":68},"material":"minecraft:furnace","items":"AQAAAAMAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":118,"y":3,"z":68},"material":"minecraft:brewing_stand","items":"AQAAAAUAAAByH4sIAAAAAAAA/12MMQqAMBAEV4MisVCw8gX+wdo32EqIEVLkTuKJ3zdiIdjODKMBhXoyYmYXD88EdEOF3K9ogydno9lk3FmSUigsnyQAMg1tOexMjuTQ6P/tYpnkcRXKl6D5msuIi2lzAzuYPqd+AAAAAAAAAAAAAAAAAAAAAAAAAA\u003d\u003d"},{"at":{"x":118,"y":2,"z":67},"material":"minecraft:trapped_chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":73,"y":2,"z":102},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":60,"y":2,"z":111},"material":"minecraft:furnace","items":"AQAAAAMAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":62,"y":10,"z":110},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":60,"y":3,"z":114},"material":"minecraft:brewing_stand","items":"AQAAAAUAAAByH4sIAAAAAAAA/12MMQqAMBAEV4MisVCw8gX+wdo32EqIEVLkTuKJ3zdiIdjODKMBhXoyYmYXD88EdEOF3K9ogydno9lk3FmSUigsnyQAMg1tOexMjuTQ6P/tYpnkcRXKl6D5msuIi2lzAzuYPqd+AAAAAAAAAAAAAAAAAAAAAAAAAA\u003d\u003d"},{"at":{"x":69,"y":18,"z":112},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":70,"y":18,"z":112},"material":"minecraft:trapped_chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":60,"y":2,"z":112},"material":"minecraft:furnace","items":"AQAAAAMAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":58,"y":14,"z":115},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":71,"y":10,"z":110},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":60,"y":2,"z":113},"material":"minecraft:furnace","items":"AQAAAAMAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":58,"y":10,"z":112},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":60,"y":2,"z":110},"material":"minecraft:furnace","items":"AQAAAAMAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":61,"y":2,"z":114},"material":"minecraft:trapped_chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":69,"y":14,"z":115},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":73,"y":10,"z":116},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"}],"signs":[{"at":{"x":20,"y":2,"z":67},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","6","Enderpearl","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":16,"y":19,"z":65},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","1","Landmine","1 Credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":14,"y":10,"z":63},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","3","RPG","1 Credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":13,"y":10,"z":62},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","6","Grenade","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":25,"y":2,"z":69},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","1","Bow","4 credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":26,"y":2,"z":70},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","16","Arrow","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":65,"y":10,"z":10},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","3","RPG","1 Credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":66,"y":10,"z":9},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","6","Grenade","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":63,"y":19,"z":12},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","1","Landmine","1 Credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":61,"y":2,"z":16},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","6","Enderpearl","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":59,"y":2,"z":21},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","1","Bow","4 credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":58,"y":2,"z":22},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","16","Arrow","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":50,"y":48,"z":49},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","6","Enderpearl","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":64,"y":54,"z":46},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","8","Snowball","2 credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":68,"y":54,"z":46},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","32","Arrow","3 credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":79,"y":48,"z":46},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","6","Enderpearl","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":106,"y":2,"z":54},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","16","Arrow","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":107,"y":2,"z":55},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","1","Bow","4 credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":116,"y":19,"z":59},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","1","Landmine","1 Credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":112,"y":2,"z":57},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","6","Enderpearl","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":50,"y":54,"z":60},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","32","Arrow","3 credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":50,"y":54,"z":64},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","8","Snowball","2 credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":82,"y":48,"z":75},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","6","Enderpearl","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":82,"y":54,"z":60},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","8","Snowball","2 credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":82,"y":54,"z":64},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","32","Arrow","3 credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":118,"y":10,"z":61},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","3","RPG","1 Credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":119,"y":10,"z":62},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","6","Grenade","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":53,"y":48,"z":78},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","6","Enderpearl","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":64,"y":54,"z":78},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","32","Arrow","3 credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":68,"y":54,"z":78},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","8","Snowball","2 credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":74,"y":2,"z":102},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","16","Arrow","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":73,"y":2,"z":103},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","1","Bow","4 credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":67,"y":10,"z":114},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","3","RPG","1 Credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":69,"y":19,"z":112},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","1","Landmine","1 Credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":71,"y":2,"z":108},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","6","Enderpearl","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":66,"y":10,"z":115},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","6","Grenade","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false}]}
+{
+  "version": 1,
+  "blocksSha256": "68b8b91db7445c0d51b18fb96eaaecccb64fbe9967e491ddf3095734cfada2a4",
+  "containers": [
+    {
+      "at": {
+        "x": 17,
+        "y": 2,
+        "z": 56
+      },
+      "material": "minecraft:furnace",
+      "items": "AQAAAAMAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 14,
+        "y": 2,
+        "z": 57
+      },
+      "material": "minecraft:trapped_chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 13,
+        "y": 14,
+        "z": 54
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 15,
+        "y": 2,
+        "z": 56
+      },
+      "material": "minecraft:furnace",
+      "items": "AQAAAAMAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 18,
+        "y": 2,
+        "z": 56
+      },
+      "material": "minecraft:furnace",
+      "items": "AQAAAAMAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 16,
+        "y": 2,
+        "z": 56
+      },
+      "material": "minecraft:furnace",
+      "items": "AQAAAAMAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 16,
+        "y": 10,
+        "z": 54
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 18,
+        "y": 10,
+        "z": 58
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 14,
+        "y": 3,
+        "z": 56
+      },
+      "material": "minecraft:brewing_stand",
+      "items": "AQAAAAUAAAByH4sIAAAAAAAA/12MMQqAMBAEV4MisVCw8gX+wdo32EqIEVLkTuKJ3zdiIdjODKMBhXoyYmYXD88EdEOF3K9ogydno9lk3FmSUigsnyQAMg1tOexMjuTQ6P/tYpnkcRXKl6D5msuIi2lzAzuYPqd+AAAAAAAAAAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "at": {
+        "x": 14,
+        "y": 2,
+        "z": 58
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 16,
+        "y": 18,
+        "z": 65
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 12,
+        "y": 10,
+        "z": 69
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 13,
+        "y": 14,
+        "z": 65
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 18,
+        "y": 10,
+        "z": 67
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 16,
+        "y": 18,
+        "z": 66
+      },
+      "material": "minecraft:trapped_chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 26,
+        "y": 2,
+        "z": 69
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 71,
+        "y": 2,
+        "z": 10
+      },
+      "material": "minecraft:trapped_chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 59,
+        "y": 10,
+        "z": 8
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 70,
+        "y": 2,
+        "z": 10
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 63,
+        "y": 14,
+        "z": 9
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 72,
+        "y": 3,
+        "z": 10
+      },
+      "material": "minecraft:brewing_stand",
+      "items": "AQAAAAUAAAByH4sIAAAAAAAA/12MMQqAMBAEV4MisVCw8gX+wdo32EqIEVLkTuKJ3zdiIdjODKMBhXoyYmYXD88EdEOF3K9ogydno9lk3FmSUigsnyQAMg1tOexMjuTQ6P/tYpnkcRXKl6D5msuIi2lzAzuYPqd+AAAAAAAAAAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "at": {
+        "x": 74,
+        "y": 14,
+        "z": 9
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 72,
+        "y": 2,
+        "z": 11
+      },
+      "material": "minecraft:furnace",
+      "items": "AQAAAAMAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 61,
+        "y": 10,
+        "z": 14
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 70,
+        "y": 10,
+        "z": 14
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 63,
+        "y": 18,
+        "z": 12
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 62,
+        "y": 18,
+        "z": 12
+      },
+      "material": "minecraft:trapped_chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 59,
+        "y": 2,
+        "z": 22
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 72,
+        "y": 2,
+        "z": 12
+      },
+      "material": "minecraft:furnace",
+      "items": "AQAAAAMAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 74,
+        "y": 10,
+        "z": 12
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 72,
+        "y": 2,
+        "z": 13
+      },
+      "material": "minecraft:furnace",
+      "items": "AQAAAAMAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 72,
+        "y": 2,
+        "z": 14
+      },
+      "material": "minecraft:furnace",
+      "items": "AQAAAAMAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 106,
+        "y": 2,
+        "z": 55
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 119,
+        "y": 14,
+        "z": 59
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 116,
+        "y": 18,
+        "z": 58
+      },
+      "material": "minecraft:trapped_chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 114,
+        "y": 10,
+        "z": 57
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 116,
+        "y": 18,
+        "z": 59
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 120,
+        "y": 10,
+        "z": 55
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 119,
+        "y": 14,
+        "z": 70
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 118,
+        "y": 2,
+        "z": 66
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 117,
+        "y": 2,
+        "z": 68
+      },
+      "material": "minecraft:furnace",
+      "items": "AQAAAAMAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 115,
+        "y": 2,
+        "z": 68
+      },
+      "material": "minecraft:furnace",
+      "items": "AQAAAAMAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 114,
+        "y": 2,
+        "z": 68
+      },
+      "material": "minecraft:furnace",
+      "items": "AQAAAAMAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 116,
+        "y": 10,
+        "z": 70
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 114,
+        "y": 10,
+        "z": 66
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 116,
+        "y": 2,
+        "z": 68
+      },
+      "material": "minecraft:furnace",
+      "items": "AQAAAAMAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 118,
+        "y": 3,
+        "z": 68
+      },
+      "material": "minecraft:brewing_stand",
+      "items": "AQAAAAUAAAByH4sIAAAAAAAA/12MMQqAMBAEV4MisVCw8gX+wdo32EqIEVLkTuKJ3zdiIdjODKMBhXoyYmYXD88EdEOF3K9ogydno9lk3FmSUigsnyQAMg1tOexMjuTQ6P/tYpnkcRXKl6D5msuIi2lzAzuYPqd+AAAAAAAAAAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "at": {
+        "x": 118,
+        "y": 2,
+        "z": 67
+      },
+      "material": "minecraft:trapped_chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 73,
+        "y": 2,
+        "z": 102
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 60,
+        "y": 2,
+        "z": 111
+      },
+      "material": "minecraft:furnace",
+      "items": "AQAAAAMAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 62,
+        "y": 10,
+        "z": 110
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 60,
+        "y": 3,
+        "z": 114
+      },
+      "material": "minecraft:brewing_stand",
+      "items": "AQAAAAUAAAByH4sIAAAAAAAA/12MMQqAMBAEV4MisVCw8gX+wdo32EqIEVLkTuKJ3zdiIdjODKMBhXoyYmYXD88EdEOF3K9ogydno9lk3FmSUigsnyQAMg1tOexMjuTQ6P/tYpnkcRXKl6D5msuIi2lzAzuYPqd+AAAAAAAAAAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "at": {
+        "x": 69,
+        "y": 18,
+        "z": 112
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 70,
+        "y": 18,
+        "z": 112
+      },
+      "material": "minecraft:trapped_chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 60,
+        "y": 2,
+        "z": 112
+      },
+      "material": "minecraft:furnace",
+      "items": "AQAAAAMAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 58,
+        "y": 14,
+        "z": 115
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 71,
+        "y": 10,
+        "z": 110
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 60,
+        "y": 2,
+        "z": 113
+      },
+      "material": "minecraft:furnace",
+      "items": "AQAAAAMAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 58,
+        "y": 10,
+        "z": 112
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 60,
+        "y": 2,
+        "z": 110
+      },
+      "material": "minecraft:furnace",
+      "items": "AQAAAAMAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 61,
+        "y": 2,
+        "z": 114
+      },
+      "material": "minecraft:trapped_chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 69,
+        "y": 14,
+        "z": 115
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 73,
+        "y": 10,
+        "z": 116
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    }
+  ],
+  "signs": []
+}

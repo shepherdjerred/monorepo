@@ -1,1 +1,174 @@
-{"version":1,"blocksSha256":"54e6353a02662007d315775c5187bdfa9a43433f19a5ea145158ad7fe5bff131","containers":[{"at":{"x":27,"y":5,"z":28},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":26,"y":5,"z":28},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":26,"y":5,"z":22},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":27,"y":5,"z":22},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":176,"y":5,"z":28},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":170,"y":5,"z":28},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":169,"y":5,"z":28},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":177,"y":5,"z":28},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":169,"y":5,"z":22},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":170,"y":5,"z":22},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":177,"y":5,"z":22},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":176,"y":5,"z":22},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"}],"signs":[{"at":{"x":20,"y":12,"z":25},"material":"minecraft:oak_wall_sign","front":{"lines":["Built by","HeraCrossing","for the ","EoE Network"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":35,"y":13,"z":28},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","6","Grenade","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":34,"y":15,"z":25},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","1","Bow","4 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":35,"y":14,"z":21},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","1","Landmine","1 credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":35,"y":13,"z":22},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","16","Arrow","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":46,"y":13,"z":25},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","6","Enderpearl","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":150,"y":13,"z":25},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","6","Enderpearl","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":162,"y":15,"z":25},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","1","Bow","4 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":161,"y":13,"z":28},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","16","Arrow","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":161,"y":14,"z":21},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","3","RPG","1 credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":161,"y":13,"z":22},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","6","Grenade","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":176,"y":12,"z":25},"material":"minecraft:oak_wall_sign","front":{"lines":["Built by ","HeraCrossing","for the","EoE Network"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":35,"y":14,"z":29},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","3","RPG","1 credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":161,"y":14,"z":29},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","1","Landmine","1 credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false}]}
+{
+  "version": 1,
+  "blocksSha256": "f94d53f1f1cc4f672cc6e414ec9700428ebd80e4239d377963dfb60a63a7a311",
+  "containers": [
+    {
+      "at": {
+        "x": 27,
+        "y": 5,
+        "z": 28
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 26,
+        "y": 5,
+        "z": 28
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 26,
+        "y": 5,
+        "z": 22
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 27,
+        "y": 5,
+        "z": 22
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 176,
+        "y": 5,
+        "z": 28
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 170,
+        "y": 5,
+        "z": 28
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 169,
+        "y": 5,
+        "z": 28
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 177,
+        "y": 5,
+        "z": 28
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 169,
+        "y": 5,
+        "z": 22
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 170,
+        "y": 5,
+        "z": 22
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 177,
+        "y": 5,
+        "z": 22
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 176,
+        "y": 5,
+        "z": 22
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    }
+  ],
+  "signs": [
+    {
+      "at": {
+        "x": 20,
+        "y": 12,
+        "z": 25
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "Built by",
+          "HeraCrossing",
+          "for the ",
+          "EoE Network"
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 176,
+        "y": 12,
+        "z": 25
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "Built by ",
+          "HeraCrossing",
+          "for the",
+          "EoE Network"
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    }
+  ]
+}

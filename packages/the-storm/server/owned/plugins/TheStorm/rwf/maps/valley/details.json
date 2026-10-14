@@ -1,1 +1,326 @@
-{"version":1,"blocksSha256":"901098ade07170bd0893e1620d795f8a9e1ed3d279d2ee30751a0e71c2af29e0","containers":[],"signs":[{"at":{"x":47,"y":41,"z":22},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","1","Landmine","1 Credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":53,"y":41,"z":22},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","3","RPG","1 Credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":53,"y":41,"z":28},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","6","Enderpearl","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":52,"y":41,"z":29},"material":"minecraft:oak_wall_sign","front":{"lines":["-\u003dCreated by\u003d-","YockaPockaPazzi","-\u003dFor\u003d-","The Eoe Network"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":50,"y":36,"z":22},"material":"minecraft:oak_wall_sign","front":{"lines":["","Keep Out","Cave in",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":55,"y":42,"z":33},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","16","Arrow","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":44,"y":42,"z":34},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","1","Bow","4 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":41,"y":33,"z":49},"material":"minecraft:oak_wall_sign","front":{"lines":["","A Room Fit for","A Snowyflake",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":27,"y":40,"z":80},"material":"minecraft:oak_wall_sign","front":{"lines":["","Press for ","instant ","pleasure"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":50,"y":40,"z":68},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","6","Grenade","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":30,"y":36,"z":89},"material":"minecraft:oak_wall_sign","front":{"lines":["","Mine","Collapse",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":46,"y":36,"z":92},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","6","Enderpearl","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":70,"y":36,"z":89},"material":"minecraft:oak_wall_sign","front":{"lines":["","Mine ","Collapse",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":49,"y":40,"z":110},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","6","Grenade","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":73,"y":40,"z":105},"material":"minecraft:oak_wall_sign","front":{"lines":["Heyyy Mannn","You got to try","this. It will","blow your mind."],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":58,"y":32,"z":144},"material":"minecraft:oak_wall_sign","front":{"lines":["","Secret","of the universe","\u003d\u003d\u003d\u003d\u003d\u003d\u003e"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":59,"y":33,"z":143},"material":"minecraft:oak_wall_sign","front":{"lines":["","A Room Fit For","A Libraryaddict",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":55,"y":42,"z":157},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","1","Bow","4 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":47,"y":41,"z":158},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","16","Arrow","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":47,"y":41,"z":162},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","6","Enderpearl","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":47,"y":41,"z":168},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","3","RPG","1 Credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":50,"y":36,"z":168},"material":"minecraft:oak_wall_sign","front":{"lines":["","Keep Out","Mine Cave in",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":53,"y":41,"z":168},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","1","Landmine","1 Credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":48,"y":41,"z":161},"material":"minecraft:oak_wall_sign","front":{"lines":["-\u003dCreated by\u003d-","YockaPockaPazzi","-\u003dFor\u003d-","The Eoe Network"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false}]}
+{
+  "version": 1,
+  "blocksSha256": "aa01a5409c6f0915d62f584d84ab7e89239edc65abc427b4bbeedca1050ca6ea",
+  "containers": [],
+  "signs": [
+    {
+      "at": {
+        "x": 52,
+        "y": 41,
+        "z": 29
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "-=Created by=-",
+          "YockaPockaPazzi",
+          "-=For=-",
+          "The Eoe Network"
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 50,
+        "y": 36,
+        "z": 22
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "Keep Out",
+          "Cave in",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 41,
+        "y": 33,
+        "z": 49
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "A Room Fit for",
+          "A Snowyflake",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 27,
+        "y": 40,
+        "z": 80
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "Press for ",
+          "instant ",
+          "pleasure"
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 30,
+        "y": 36,
+        "z": 89
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "Mine",
+          "Collapse",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 70,
+        "y": 36,
+        "z": 89
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "Mine ",
+          "Collapse",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 73,
+        "y": 40,
+        "z": 105
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "Heyyy Mannn",
+          "You got to try",
+          "this. It will",
+          "blow your mind."
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 58,
+        "y": 32,
+        "z": 144
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "Secret",
+          "of the universe",
+          "======>"
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 59,
+        "y": 33,
+        "z": 143
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "A Room Fit For",
+          "A Libraryaddict",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 50,
+        "y": 36,
+        "z": 168
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "Keep Out",
+          "Mine Cave in",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 48,
+        "y": 41,
+        "z": 161
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "-=Created by=-",
+          "YockaPockaPazzi",
+          "-=For=-",
+          "The Eoe Network"
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    }
+  ]
+}

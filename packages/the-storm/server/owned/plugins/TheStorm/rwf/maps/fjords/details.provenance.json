@@ -1,9 +1,9 @@
 {
   "schema": 1,
   "id": "fjords",
-  "blocksSha256": "fb861c2db949ff3d44276b157f62f94794d7dc272c8be298e96b34e9c6dd4ccf",
-  "detailsSha256": "d8e20f57bec22fb88fb872fe45f5f08a4dcf25a420d769c471563a9148fdd2d5",
-  "policy": "preserve-inventories-and-literal-sign-text-strip-other-payloads",
+  "blocksSha256": "be2c84582e3fe8bd766b61ba7e85c2c22067f26180066383cc50707d7d3b127e",
+  "detailsSha256": "c162d0a103559e72f464fe499ce3754abee00a9e9fedf30c23a02a4bb9663f94",
+  "policy": "preserve-inventories-and-other-signs-remove-legacy-buy-signs",
   "producer": [
     {
       "file": "TheStorm.jar",
@@ -1579,6 +1579,15 @@
     }
   ],
   "result": {
+    "state": "complete",
+    "containers": 30,
+    "signs": 12
+  },
+  "shopRemoval": {
+    "originalBlocksSha256": "fb861c2db949ff3d44276b157f62f94794d7dc272c8be298e96b34e9c6dd4ccf",
+    "count": 8
+  },
+  "nativeExportResult": {
     "state": "complete",
     "containers": 30,
     "signs": 20

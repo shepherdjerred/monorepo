@@ -26,7 +26,7 @@ public final class LearningObservations implements ObservationSource {
   private final MatchView view;
   private final Server server;
   private final ObservationContract contract;
-  private final java.time.InstantSource time;
+  private final com.shepherdjerred.thestorm.rwf.app.VisualOcclusion vision;
   private @Nullable UUID matchId;
   private @Nullable SnapshotCapture capture;
   private @Nullable WorldSnapshot snapshot;
@@ -38,14 +38,15 @@ public final class LearningObservations implements ObservationSource {
       MatchView view,
       Server server,
       ObservationContract contract,
-      java.time.InstantSource time) {}
+      java.time.InstantSource time,
+      com.shepherdjerred.thestorm.rwf.app.VisualOcclusion vision) {}
 
   public LearningObservations(Parts parts) {
     this.roster = parts.roster();
     this.view = parts.view();
     this.server = parts.server();
     this.contract = parts.contract();
-    this.time = parts.time();
+    this.vision = parts.vision();
   }
 
   @Override
@@ -58,12 +59,7 @@ public final class LearningObservations implements ObservationSource {
     var match = session.orElseThrow();
     if (!match.matchId().equals(matchId)) {
       matchId = match.matchId();
-      capture =
-          new SnapshotCapture(
-              match.ids(),
-              roster::anyEntity,
-              new StimulusCollector(),
-              new SnapshotCapture.Capabilities(view::noFallUntil, time));
+      capture = match.capture().independent();
       snapshot = null;
       memories.clear();
       random.clear();
@@ -82,8 +78,17 @@ public final class LearningObservations implements ObservationSource {
     if (self.isEmpty() || !self.orElseThrow().alive()) return Optional.empty();
     var levers = LeverCurves.at(1);
     var nav = match.nav();
+    var clouds =
+        vision.snapshot().stream()
+            .map(
+                field ->
+                    new com.shepherdjerred.thestorm.rwfbots.domain.perception.SightCloud(
+                        new com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3(
+                            field.center().x(), field.center().y(), field.center().z()),
+                        field.radius()))
+            .toList();
     var perceiver =
-        new Perception(new SenseContext(nav.grid(), nav.graph(), nav.regions(), levers));
+        new Perception(new SenseContext(nav.grid(), nav.graph(), nav.regions(), levers, clouds));
     var percept =
         perceiver.perceive(
             memories.getOrDefault(player, PerceptionState.EMPTY),

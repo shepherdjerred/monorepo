@@ -6,6 +6,7 @@ const map = MapContent.parse({
   id: "original-castles",
   name: "Original Castles",
   author: "builder",
+  description: "Opposing castle bases connected by a central battlefield.",
   region: { min: { x: 100, y: 30, z: 200 }, max: { x: 199, y: 60, z: 299 } },
   spectator: { x: 150, y: 60, z: 250, yaw: 0, pitch: 0 },
   teams: ["PURPLE", "GREEN", "RED", "BLUE"].map((color, index) => ({

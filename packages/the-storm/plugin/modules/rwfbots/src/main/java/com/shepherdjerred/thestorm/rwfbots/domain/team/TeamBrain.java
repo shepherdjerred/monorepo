@@ -127,7 +127,7 @@ public final class TeamBrain {
             .plan()
             .objective()
             .flatMap(snapshot::bomb)
-            .filter(bomb -> bomb.belongsTo(board.team()))
+            .filter(bomb -> bomb.threatens(board.team()))
             .map(BombView::id);
     var defenseChanged = !urgent.equals(previousUrgent);
     if ((due || rosterChanged || defenseChanged) && !alive.isEmpty()) {
@@ -178,7 +178,8 @@ public final class TeamBrain {
               plan.push(),
               plan.slots(),
               pending.assignment().finish(distances, random),
-              plan.dealtTick());
+              plan.dealtTick(),
+              plan.groups());
       return board.withPlan(completed, tick);
     }
   }
@@ -246,7 +247,8 @@ public final class TeamBrain {
             push,
             slots,
             Map.of(),
-            snapshot.tick()),
+            snapshot.tick(),
+            Squads.deal(board.plan().groups(), alive, situation.members())),
         assignment);
   }
 
@@ -263,7 +265,8 @@ public final class TeamBrain {
             board.plan().push(),
             slots,
             Map.of(),
-            situation.snapshot().tick()),
+            situation.snapshot().tick(),
+            Squads.deal(board.plan().groups(), alive, situation.members())),
         assignment);
   }
 

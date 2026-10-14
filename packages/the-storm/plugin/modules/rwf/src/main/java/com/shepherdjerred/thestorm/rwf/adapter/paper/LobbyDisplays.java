@@ -410,6 +410,8 @@ final class LobbyDisplays {
     var stage =
         switch (status.stage()) {
           case EMPTY -> "Waiting for players";
+          case CANDIDATES -> "Preparing candidate maps";
+          case VOTING -> "Visit maps and vote: " + status.secondsLeft() + "s";
           case WAITING ->
               "Waiting for "
                   + status.needed()
@@ -422,11 +424,15 @@ final class LobbyDisplays {
           case ENDED -> "Match over";
           case RESETTING -> "Resetting the map";
         };
-    return List.of(
-        "Next match",
-        "Map: " + status.map().orElse("choosing"),
-        "Players: " + status.humans() + "   Bots: " + status.bots(),
-        stage);
+    var lines =
+        new ArrayList<>(
+            List.of(
+                "Next match",
+                "Map: " + status.map().orElse("choosing"),
+                "Players: " + status.humans() + "   Bots: " + status.bots(),
+                stage));
+    status.botStatus().ifPresent(lines::add);
+    return List.copyOf(lines);
   }
 
   /** For tests: the displays' current text by part. */

@@ -279,7 +279,9 @@ public record Abilities(
      */
     void used(CombatantId actor, String ability, AbilityInput input, int before) {
       // A projectile going off and the server's once-a-second stock count are not uses.
-      if (input instanceof AbilityInput.Detonate || input instanceof AbilityInput.Stock) {
+      if (input instanceof AbilityInput.Detonate
+          || input instanceof AbilityInput.Stock
+          || input instanceof ExpansionInput.FlaskSplash) {
         return;
       }
       var answered =

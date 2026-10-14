@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.rwfbots.adapter.paper;
 
 import com.shepherdjerred.thestorm.rwf.app.ActionRefusal;
 import com.shepherdjerred.thestorm.rwf.app.BotActions;
+import com.shepherdjerred.thestorm.rwf.app.WeaponUse;
 import com.shepherdjerred.thestorm.rwf.app.view.Point;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,6 +15,11 @@ public final class FakeBotActions implements BotActions {
 
   private final List<String> calls = new ArrayList<>();
   private Optional<ActionRefusal> refuseWith = Optional.empty();
+  private Runnable kitUse = () -> {};
+
+  public void onKitUse(Runnable accepted) {
+    kitUse = accepted;
+  }
 
   public void refuseWith(Optional<ActionRefusal> refusal) {
     refuseWith = refusal;
@@ -63,6 +69,11 @@ public final class FakeBotActions implements BotActions {
   }
 
   @Override
+  public Optional<ActionRefusal> useWeapon(UUID bot, WeaponUse use) {
+    return record("weapon " + use.name());
+  }
+
+  @Override
   public Optional<ActionRefusal> pickKit(UUID bot, String kitId) {
     return record("kit " + kitId);
   }
@@ -75,6 +86,7 @@ public final class FakeBotActions implements BotActions {
   @Override
   public Optional<ActionRefusal> useKit(
       UUID bot, int slot, Optional<UUID> target, Optional<Point> at) {
+    if (refuseWith.isEmpty()) kitUse.run();
     return record(
         "use "
             + slot

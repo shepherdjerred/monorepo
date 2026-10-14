@@ -11,9 +11,9 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * The maps a match may be played on: it offers ballot candidates, and holds at most two maps in the
- * world at once, the one last played and the one being prepared for the next match. Preparing a new
- * map releases any other prepared map; once it is played, the previous one is released. Callbacks
- * run on the owner.
+ * world at once during normal play, the one last played and the one being prepared for the next
+ * match. A visit ballot temporarily holds up to three candidates; selecting one releases the others
+ * after the owner evacuates visitors. Callbacks run on the owner.
  */
 public final class MapRotation<T extends MapRotation.Entry> implements AutoCloseable {
 
@@ -24,8 +24,23 @@ public final class MapRotation<T extends MapRotation.Entry> implements AutoClose
     /** Loads, verifies and holds the map; {@code done} gets whether it is ready. */
     void prepare(Consumer<Boolean> done);
 
+    /** Prepares visitable terrain without activating optional match resources. */
+    default void prepareVisit(Consumer<Boolean> done) {
+      prepare(done);
+    }
+
+    /** Activates match-only resources for terrain that was prepared for visitors. */
+    default void activate(Consumer<Boolean> done) {
+      done.accept(ready());
+    }
+
     /** Whether the map is held and verified now. */
     boolean ready();
+
+    /** Whether visit terrain is ready, without requiring match-only resources. */
+    default boolean visitReady() {
+      return ready();
+    }
 
     /** Lets go of the map's terrain, navigation and chunks. */
     void release();
@@ -39,6 +54,8 @@ public final class MapRotation<T extends MapRotation.Entry> implements AutoClose
   private final Set<String> quarantined = new HashSet<>();
   private @Nullable T active;
   private @Nullable T preparing;
+  private List<T> visits = List.of();
+  private final Set<T> held = new HashSet<>();
   private boolean closed;
   private int generation;
 
@@ -98,6 +115,72 @@ public final class MapRotation<T extends MapRotation.Entry> implements AutoClose
   }
 
   /**
+   * Holds up to three offered maps, loading terrain serially. The owner must evacuate visitors
+   * before calling this method, selecting a winner, cancelling visits, or closing the rotation. No
+   * candidate is committed as the match map here.
+   */
+  public void prepareCandidates(List<T> candidates, Consumer<Boolean> done) {
+    if (closed) throw new IllegalStateException("rotation is closed");
+    if (candidates.isEmpty()
+        || candidates.size() > 3
+        || candidates.stream().distinct().count() != candidates.size()
+        || !maps.containsAll(candidates)) {
+      throw new IllegalArgumentException("visits need one to three distinct offered maps");
+    }
+    var request = ++generation;
+    waiter = null;
+    preparing = null;
+    for (var map : List.copyOf(held)) {
+      if (!candidates.contains(map)) releaseHeld(map);
+    }
+    visits = List.copyOf(candidates);
+    prepareCandidate(0, request, done);
+  }
+
+  private void prepareCandidate(int index, int request, Consumer<Boolean> done) {
+    if (closed || request != generation) return;
+    if (index == visits.size()) {
+      done.accept(true);
+      return;
+    }
+    var map = visits.get(index);
+    if (map.visitReady()) {
+      held.add(map);
+      prepareCandidate(index + 1, request, done);
+      return;
+    }
+    if (held.contains(map)) releaseHeld(map);
+    held.add(map);
+    map.prepareVisit(
+        ok -> {
+          if (closed || request != generation) return;
+          if (!ok) {
+            // The owner evacuates before explicitly cancelling and releasing the other candidates.
+            releaseHeld(map);
+            done.accept(false);
+          } else {
+            prepareCandidate(index + 1, request, done);
+          }
+        });
+  }
+
+  /** Whether this map belongs to the current visit ballot and its terrain is ready. */
+  public boolean visitable(String mapId) {
+    return visits.stream().anyMatch(map -> map.id().equals(mapId) && map.visitReady());
+  }
+
+  /** Cancels serial preparation and releases candidate terrain after the owner evacuates it. */
+  public void cancelVisits() {
+    generation++;
+    for (var map : visits) releaseHeld(map);
+    visits = List.of();
+  }
+
+  private void releaseHeld(T map) {
+    if (held.remove(map)) map.release();
+  }
+
+  /**
    * Prepares {@code chosen} for the next match; {@code done} gets whether it is ready. The map
    * already active needs no new preparation. A later call supersedes an earlier one, whose result
    * is then dropped; a later call for the map already loading waits on that load rather than
@@ -108,6 +191,7 @@ public final class MapRotation<T extends MapRotation.Entry> implements AutoClose
       throw new IllegalStateException("rotation is closed");
     }
     var request = ++generation;
+    if (activateCandidate(chosen, request, done)) return;
     var previous = preparing;
     if (previous != null && same(previous, chosen)) {
       awaitLoad(chosen, request, done);
@@ -116,7 +200,7 @@ public final class MapRotation<T extends MapRotation.Entry> implements AutoClose
     preparing = null;
     waiter = null;
     if (previous != null && !same(previous, active)) {
-      previous.release();
+      releaseHeld(previous);
     }
     if (same(chosen, active) && chosen.ready()) {
       done.accept(true);
@@ -124,12 +208,28 @@ public final class MapRotation<T extends MapRotation.Entry> implements AutoClose
     }
     if (same(chosen, active)) {
       // The map just played was released for repair; it is prepared afresh.
-      chosen.release();
+      releaseHeld(chosen);
     }
     preparing = chosen;
     waiting = request;
     waiter = done;
+    held.add(chosen);
     chosen.prepare(ok -> loaded(chosen, ok));
+  }
+
+  private boolean activateCandidate(T chosen, int request, Consumer<Boolean> done) {
+    if (visits.isEmpty()) return false;
+    var reuse = visits.contains(chosen) && chosen.visitReady();
+    for (var map : visits) {
+      if (!same(map, chosen) || !reuse) releaseHeld(map);
+    }
+    visits = List.of();
+    if (!reuse) return false;
+    preparing = chosen;
+    waiting = request;
+    waiter = done;
+    chosen.activate(ok -> loaded(chosen, ok));
+    return true;
   }
 
   /**
@@ -152,7 +252,7 @@ public final class MapRotation<T extends MapRotation.Entry> implements AutoClose
     if (!ok) {
       // A failed load may leave its terrain half held: let it all go, so the map can be prepared
       // afresh when a later ballot chooses it.
-      chosen.release();
+      releaseHeld(chosen);
       preparing = null;
     }
     var answer = waiter;
@@ -166,11 +266,12 @@ public final class MapRotation<T extends MapRotation.Entry> implements AutoClose
   public void play(T played) {
     var previous = active;
     active = played;
+    held.add(played);
     if (same(preparing, played)) {
       preparing = null;
     }
     if (previous != null && !same(previous, played)) {
-      previous.release();
+      releaseHeld(previous);
     }
   }
 
@@ -201,5 +302,8 @@ public final class MapRotation<T extends MapRotation.Entry> implements AutoClose
     generation++;
     preparing = null;
     waiter = null;
+    // The Paper owner releases every map after restoring players and completing match teardown.
+    // Releasing here would discard the active terrain before Stop can revert its craters.
+    visits = List.of();
   }
 }

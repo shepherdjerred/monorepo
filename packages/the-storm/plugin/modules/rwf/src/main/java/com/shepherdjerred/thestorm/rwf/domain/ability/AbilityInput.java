@@ -14,6 +14,9 @@ import java.util.Optional;
  */
 public sealed interface AbilityInput {
 
+  /** Typed inputs for additional kit families, defined beside those families. */
+  non-sealed interface Extra extends AbilityInput {}
+
   /** Something done to a thing a kit placed, answered by its owner's ability. */
   sealed interface Touch extends AbilityInput {
 

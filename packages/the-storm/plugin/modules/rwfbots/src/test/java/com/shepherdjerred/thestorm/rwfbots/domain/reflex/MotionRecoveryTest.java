@@ -35,4 +35,16 @@ final class MotionRecoveryTest {
     assertThat(recovered.state().attempts()).isZero();
     assertThat(recovered.jump()).isFalse();
   }
+
+  @Test
+  void verticalSwimmingOrClimbingCountsAsProgress() {
+    var position = new Vec3(5, 1, 5);
+    var target = position.plus(0, 4, 0);
+    var first = MotionRecovery.tick(MotionRecovery.State.INITIAL, position, target, 0);
+    var rising = MotionRecovery.tick(first.state(), position.plus(0, 1, 0), target, 21);
+    assertThat(rising.jump()).isFalse();
+    assertThat(rising.state().progressAt()).isEqualTo(21);
+    var blocked = MotionRecovery.tick(first.state(), position, target, 21);
+    assertThat(blocked.jump()).isTrue();
+  }
 }

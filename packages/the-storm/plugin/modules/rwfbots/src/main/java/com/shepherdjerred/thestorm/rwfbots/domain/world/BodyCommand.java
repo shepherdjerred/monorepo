@@ -10,7 +10,11 @@ public sealed interface BodyCommand {
   record Look(double yaw, double pitch) implements BodyCommand {}
 
   /** Walk or sprint towards {@code waypoint} this tick. */
-  record MoveToward(Vec3 waypoint, boolean sprint) implements BodyCommand {}
+  record MoveToward(Vec3 waypoint, boolean sprint, Hop hop) implements BodyCommand {
+    public MoveToward(Vec3 waypoint, boolean sprint) {
+      this(waypoint, sprint, Hop.WALK);
+    }
+  }
 
   /** Stop moving. */
   record Stop() implements BodyCommand {}

@@ -1,9 +1,9 @@
 {
   "schema": 1,
   "id": "flying-ships",
-  "blocksSha256": "54e6353a02662007d315775c5187bdfa9a43433f19a5ea145158ad7fe5bff131",
-  "detailsSha256": "6ae0f5d315c8f3cf31cdbeeacde1f46b3577836ae4cfa3a74de97e380a152f76",
-  "policy": "preserve-inventories-and-literal-sign-text-strip-other-payloads",
+  "blocksSha256": "f94d53f1f1cc4f672cc6e414ec9700428ebd80e4239d377963dfb60a63a7a311",
+  "detailsSha256": "feb94afe322a002781494a2884a2eb86175059b10589669fa8fdc936d7326440",
+  "policy": "preserve-inventories-and-other-signs-remove-legacy-buy-signs",
   "producer": [
     {
       "file": "TheStorm.jar",
@@ -1579,6 +1579,15 @@
     }
   ],
   "result": {
+    "state": "complete",
+    "containers": 12,
+    "signs": 2
+  },
+  "shopRemoval": {
+    "originalBlocksSha256": "54e6353a02662007d315775c5187bdfa9a43433f19a5ea145158ad7fe5bff131",
+    "count": 12
+  },
+  "nativeExportResult": {
     "state": "complete",
     "containers": 12,
     "signs": 14

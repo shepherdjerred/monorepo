@@ -22,6 +22,11 @@ import { startClient } from "./process.ts";
 import { stageMap } from "#learning/maps/stage.ts";
 import { status as readRwfMatchStatus } from "#e2e/harness/rwf-match.ts";
 import { watchRwfDuels } from "./rwf-duel-rejoin.ts";
+import {
+  openRwfExperience,
+  openRwfPreviewKits,
+  experienceFixtures,
+} from "./rwf-experience.ts";
 
 const packageRoot = path.resolve(import.meta.dirname, "../..");
 
@@ -51,11 +56,17 @@ type PreviewOptions = {
   vanilla: boolean;
   verify: boolean;
   rwfDuel: boolean;
+  rwfExperience: boolean;
   verifyDuelClock: boolean;
   verifyDuelVideo: boolean;
 };
 
 function validateOptions(options: PreviewOptions): void {
+  if (
+    options.rwfExperience &&
+    (options.vanilla || options.rwfDuel || options.rwfMap !== undefined)
+  )
+    throw new Error("--rwf-experience requires its own Storm preview profile");
   if (options.vanilla && options.rwfDuel)
     throw new Error("--rwf-duel requires Storm modules");
   if (options.vanilla && options.rwfMap !== undefined)
@@ -146,23 +157,13 @@ type Run = {
   finish: () => void;
 };
 
-async function run(
-  options: {
-    world?: string;
-    rwfMap?: string;
-    vanilla: boolean;
-    verify: boolean;
-    rwfDuel: boolean;
-    verifyDuelClock: boolean;
-    verifyDuelVideo: boolean;
-  },
-  runState: Run,
-): Promise<void> {
+async function run(options: PreviewOptions, runState: Run): Promise<void> {
   const brainToken = randomBytes(24).toString("hex");
   const brain = startFakeBrain(brainToken);
   runState.cleanup.push(async () => {
     await brain.stop();
   });
+  await openRwfExperience(brain.port, options.rwfExperience);
   let ownedConfigDir = path.join(packageRoot, "server/owned/plugins/TheStorm");
   if (options.rwfDuel || options.rwfMap !== undefined) {
     const staged = await stageMap(
@@ -192,7 +193,7 @@ async function run(
     bootTimeoutMs: 180_000,
     warmCache: true,
     stormJar: path.join(packageRoot, "plugin/dist/build/libs/TheStorm.jar"),
-    ...configs,
+    ...(options.rwfExperience ? experienceFixtures(configs) : configs),
     ...(options.rwfMap === undefined ? {} : { rwfMap: options.rwfMap }),
     ...(options.rwfDuel
       ? {
@@ -271,6 +272,7 @@ async function run(
   });
   runState.cleanup.push(client.stop);
   await rcon.command("op StormPreview");
+  await openRwfPreviewKits(brain.port, rcon, options.rwfExperience);
   await rcon.command("gamemode creative StormPreview");
   await rcon.command("gamerule minecraft:advance_time false");
   await rcon.command("time set day");

@@ -2,6 +2,7 @@
   id: miner-dispute,
   name: A Miner Dispute,
   author: Smaland47 and peppyk,
+  description: An underground map featuring miners.,
   region:
     { min: { x: 4096, "y": 48, z: 3072 }, max: { x: 4159, "y": 103, z: 3176 } },
   spectator: { x: 4128, "y": 103, z: 3124.5, yaw: 0, pitch: 45 },
@@ -448,5 +449,5 @@
       { id: blue-1, team: BLUE, at: { x: 4132, "y": 60, z: 3170 } },
     ],
   nukes: [],
-  blocksSha256: 6dc474c75af0848f965cc83b103f22e69d1d97eeff2b05b4cc1e50053ea5ad24,
+  blocksSha256: 3c036a70840954dabc410965f5f71bcaf43525ddbd13ef43150e21d58895c9d7,
 }

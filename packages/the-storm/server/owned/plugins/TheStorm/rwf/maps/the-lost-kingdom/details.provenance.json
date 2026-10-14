@@ -1,9 +1,9 @@
 {
   "schema": 1,
   "id": "the-lost-kingdom",
-  "blocksSha256": "9595ebb5b8b9ab3d5b32d3e722beb7f4b3959174fd8ca08af71536fb64d78a7a",
-  "detailsSha256": "0afb7f1587b7c8c7ebe6a55ae8ddefcaeb0409155101edd56880bc27b5f7374e",
-  "policy": "preserve-inventories-and-literal-sign-text-strip-other-payloads",
+  "blocksSha256": "e9ad48a282114bcd52d698fc72e7fba48a5f0cfba2770b8b066ca73aa67edeee",
+  "detailsSha256": "feacd6988e717cea68b89834dc4c7c29c6f438fb5667a6c7b080d9cdceefeb93",
+  "policy": "preserve-inventories-and-other-signs-remove-legacy-buy-signs",
   "producer": [
     {
       "file": "TheStorm.jar",
@@ -1579,6 +1579,15 @@
     }
   ],
   "result": {
+    "state": "complete",
+    "containers": 0,
+    "signs": 1
+  },
+  "shopRemoval": {
+    "originalBlocksSha256": "9595ebb5b8b9ab3d5b32d3e722beb7f4b3959174fd8ca08af71536fb64d78a7a",
+    "count": 24
+  },
+  "nativeExportResult": {
     "state": "complete",
     "containers": 0,
     "signs": 25

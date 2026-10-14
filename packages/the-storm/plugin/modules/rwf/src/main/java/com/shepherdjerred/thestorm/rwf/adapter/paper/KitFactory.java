@@ -37,6 +37,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.FireworkEffectMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.inventory.meta.PotionMeta;
+import org.bukkit.potion.PotionEffect;
 
 /**
  * Kit item stacks built once from their specs at enable, so an unknown material or enchantment
@@ -54,6 +55,8 @@ final class KitFactory {
 
   /** The hotbar slot of the lobby's leave item. */
   static final int LEAVE_SLOT = 7;
+
+  static final int SETTINGS_SLOT = 6;
 
   /** The hotbar's size. */
   static final int HOTBAR = 9;
@@ -147,6 +150,7 @@ final class KitFactory {
       inventory.setItem(equipmentSlot(piece.slot().orElseThrow()), kitItem(piece, team));
     }
     inventory.setHeldItemSlot(held < HOTBAR ? held : FUSE_SLOT);
+    PlayerAttributes.addAttackSpeed(player);
   }
 
   /**
@@ -155,9 +159,26 @@ final class KitFactory {
    * equipping empties the inventory; never once the match is live.
    */
   void giveLobbyItems(Player player) {
+    giveLobbyItems(player, false);
+  }
+
+  void giveLobbyItems(Player player, boolean settings) {
     var inventory = player.getInventory();
     inventory.setItem(SELECTOR_SLOT, selector());
     inventory.setItem(LEAVE_SLOT, leaveItem());
+    if (settings) {
+      inventory.setItem(SETTINGS_SLOT, settingsItem());
+    }
+  }
+
+  private ItemStack settingsItem() {
+    var stack =
+        named(
+            Material.COMPARATOR,
+            Component.text("Match settings", NamedTextColor.AQUA),
+            "Right-click to view settings; the host can change them");
+    keys.tagSettings(stack);
+    return stack;
   }
 
   ItemStack selector() {
@@ -375,6 +396,10 @@ final class KitFactory {
       }
     }
     keys.tag(stack);
+    // Finalize delivered durations after cloning, team transforms and metadata tagging.
+    if (stack.getType() == Material.TIPPED_ARROW && !spec.potions().isEmpty()) {
+      stack.setData(DataComponentTypes.POTION_DURATION_SCALE, 1.0f);
+    }
     return stack;
   }
 
@@ -442,7 +467,8 @@ final class KitFactory {
         Optional.empty(),
         enchantments,
         stack.isEmpty() ? Optional.empty() : slot,
-        ItemLook.PLAIN);
+        ItemLook.PLAIN,
+        List.of());
   }
 
   /** What {@code player} wears, as specs. */
@@ -609,11 +635,31 @@ final class KitFactory {
                 stack.addUnsafeEnchantment(enchantment, level);
               }
             });
+    potionContents(stack, spec, problems);
     flag(stack, spec, material);
     if (spec.amount() > material.getMaxStackSize()) {
       overstack(stack, spec.amount());
     }
     return Optional.of(stack);
+  }
+
+  /** Authored potion durations are delivered durations, including tipped arrows. */
+  private static void potionContents(ItemStack stack, ItemSpec spec, List<String> problems) {
+    for (var potion : spec.potions()) {
+      var effect =
+          RegistryAccess.registryAccess()
+              .getRegistry(RegistryKey.MOB_EFFECT)
+              .get(Key.key(potion.effect()));
+      if (effect == null) {
+        problems.add("unknown potion effect " + potion.effect() + " on " + spec.material());
+      } else {
+        stack.editMeta(
+            PotionMeta.class,
+            meta ->
+                meta.addCustomEffect(
+                    new PotionEffect(effect, potion.ticks(), potion.amplifier()), true));
+      }
+    }
   }
 
   /**

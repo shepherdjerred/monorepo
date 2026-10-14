@@ -4,8 +4,10 @@ import com.shepherdjerred.thestorm.rwf.domain.bomb.FuseBonus;
 import com.shepherdjerred.thestorm.rwf.domain.bomb.FuseType;
 import com.shepherdjerred.thestorm.rwf.domain.kit.ArmorSlot;
 import com.shepherdjerred.thestorm.rwf.domain.kit.ItemLook;
+import com.shepherdjerred.thestorm.rwf.domain.kit.ItemPotion;
 import com.shepherdjerred.thestorm.rwf.domain.kit.ItemSpec;
 import com.shepherdjerred.thestorm.rwf.domain.kit.KitAvailability;
+import com.shepherdjerred.thestorm.rwf.domain.kit.KitCategory;
 import com.shepherdjerred.thestorm.rwf.domain.kit.KitSpec;
 import com.shepherdjerred.thestorm.rwf.domain.kit.KitTier;
 import java.util.List;
@@ -54,6 +56,7 @@ public record KitsFile(List<KitEntry> kits) {
    * @param description the kit menu text
    * @param price credits to buy it; 0 for free kits
    * @param tier how involved it is to play
+   * @param category the kind of play it offers
    * @param availability who may pick it
    * @param fuseBonus the bonus on the kit's Bomb Fuse, or null
    * @param hotbar the items after the fuse, in slot order
@@ -69,6 +72,7 @@ public record KitsFile(List<KitEntry> kits) {
       String description,
       int price,
       KitTier tier,
+      KitCategory category,
       KitAvailability availability,
       Optional<FuseEntry> fuseBonus,
       List<ItemEntry> hotbar,
@@ -90,6 +94,7 @@ public record KitsFile(List<KitEntry> kits) {
               description,
               price,
               tier,
+              category,
               availability,
               fuseBonus.map(FuseEntry::toBonus),
               hotbar.stream().map(ItemEntry::toSpec).toList(),
@@ -105,6 +110,7 @@ public record KitsFile(List<KitEntry> kits) {
           description,
           price,
           tier,
+          category,
           availability,
           fuseBonus.map(FuseEntry::toBonus),
           hotbar.stream().map(ItemEntry::toSpec).toList(),
@@ -145,21 +151,30 @@ public record KitsFile(List<KitEntry> kits) {
       int amount,
       Optional<String> name,
       Map<String, Integer> enchantments,
-      Optional<LookEntry> look) {
+      Optional<LookEntry> look,
+      List<ItemPotion> potions) {
 
     public ItemEntry {
       enchantments = Map.copyOf(enchantments);
+      potions = List.copyOf(potions);
       var _ = plain(material, amount, name, enchantments);
     }
 
     ItemSpec toSpec() {
-      return plain(material, amount, name, enchantments)
-          .withLook(look.map(LookEntry::toLook).orElse(ItemLook.PLAIN));
+      return new ItemSpec(
+          material,
+          amount,
+          name,
+          enchantments,
+          Optional.empty(),
+          look.map(LookEntry::toLook).orElse(ItemLook.PLAIN),
+          potions);
     }
 
     private static ItemSpec plain(
         String material, int amount, Optional<String> name, Map<String, Integer> enchantments) {
-      return new ItemSpec(material, amount, name, enchantments, Optional.empty(), ItemLook.PLAIN);
+      return new ItemSpec(
+          material, amount, name, enchantments, Optional.empty(), ItemLook.PLAIN, List.of());
     }
   }
 
@@ -213,7 +228,13 @@ public record KitsFile(List<KitEntry> kits) {
         String material, ArmorSlot slot, Map<String, Integer> enchantments, Optional<String> dye) {
       var spec =
           new ItemSpec(
-              material, 1, Optional.empty(), enchantments, Optional.of(slot), ItemLook.PLAIN);
+              material,
+              1,
+              Optional.empty(),
+              enchantments,
+              Optional.of(slot),
+              ItemLook.PLAIN,
+              List.of());
       return dye.map(spec::dyed).orElse(spec);
     }
   }

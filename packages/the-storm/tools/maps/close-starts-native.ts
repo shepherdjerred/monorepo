@@ -11,7 +11,12 @@ import { status } from "#e2e/harness/rwf-match.ts";
 import { closeScenario } from "#learning/maps/close-starts.ts";
 import { MapContent, MapScenario } from "#learning/maps/scenario.ts";
 import { freezeInputs } from "./inputs.ts";
-import { Lifecycle, verifyBounds } from "./lifecycle.ts";
+import {
+  Lifecycle,
+  isSuccessorLobby,
+  verifyBounds,
+  verifyLiveShowcase,
+} from "./lifecycle.ts";
 import { root, runtimeMapServerConfig, waitForMapState } from "./paper.ts";
 
 const args = parseArgs({
@@ -31,7 +36,7 @@ const available = listing
   .filter((entry) => entry.isDirectory())
   .map((entry) => entry.name)
   .sort();
-const selected = args.values.map ?? available;
+const selected = (args.values.map ?? available).toSorted();
 if (
   selected.length < 3 ||
   new Set(selected).size !== selected.length ||
@@ -166,103 +171,132 @@ try {
       path.join(output, "snapshots.json"),
       JSON.stringify(snapshots, null, 2) + "\n",
     );
+    return snapshot;
   }
   const wait = (check: () => Promise<boolean>, description: string) =>
     waitForMapState(deadline, observe, check, description);
   await wait(async () => {
     const s = await status(console);
-    return s.ready && s.phase === "Lobby";
+    return (
+      s.ready &&
+      s.phase === "Lobby" &&
+      s.humans === 0 &&
+      s.bots === 0 &&
+      s.arriving === 0
+    );
   }, "initial original map preparation");
-  for (let round = 0; round < selected.length * 8; round++) {
-    const match = await status(console);
-    visited.push(match.map);
-    const scenario = scenarios.get(match.map);
-    if (scenario === undefined)
-      throw new Error("Native rotation selected an unstaged map");
-    if (!results.some((result) => result.map === match.map)) {
-      const expectedStarts = scenario.spawns.map((spawn) => ({
-        x: spawn.position[0],
-        y: spawn.position[1],
-        z: spawn.position[2],
-        yaw: spawn.yaw,
-      }));
-      const coordinates = scenario.spawns.flatMap((spawn) => [
-        ...spawn.position,
-        spawn.yaw,
-      ]);
-      Native.parse(
-        JSON.parse(
-          await console.command(
-            `storm-fixture-close-starts start ${scenario.map} ${scenario.mapSha256} ${coordinates.join(" ")}`,
-          ),
-        ),
-      );
-      let terminal: z.infer<typeof Native> | undefined;
-      await wait(async () => {
-        const sample = Native.parse(
-          JSON.parse(
-            await console.command("storm-fixture-close-starts status"),
-          ),
-        );
-        if (
-          sample.map !== scenario.map ||
-          sample.blocksSha256 !== scenario.mapSha256 ||
-          !isDeepStrictEqual(sample.starts, expectedStarts)
-        )
-          throw new Error("Native close-start identity changed");
-        await Bun.write(
-          path.join(output, `${scenario.map}.json`),
-          JSON.stringify(sample, null, 2) + "\n",
-        );
-        if (sample.state === "passed" || sample.state === "failed") {
-          terminal = sample;
-          return true;
-        }
-        return false;
-      }, `both native round trips on ${scenario.map}`);
-      if (terminal === undefined)
-        throw new Error("Native traversal omitted a terminal report");
-      const completed = terminal;
-      results.push(completed);
-      if (
-        completed.state !== "passed" ||
-        !completed.geometry ||
-        completed.legs !== 4 ||
-        ![0, 1].every((actor) =>
-          completed.samples.some((sample) => sample.actor === actor),
-        ) ||
-        completed.samples.some(
-          (sample) =>
-            Math.abs(sample.width - 0.6) > 0.0001 ||
-            Math.abs(sample.height - 1.8) > 0.0001 ||
-            sample.stepHeight !== 0.6,
-        )
-      )
+  for (const id of selected) {
+    const lobby = await status(console);
+    await console.command(`rwf admin setmap ${id}`);
+    await wait(async () => {
+      const s = await status(console);
+      const resources = await observe();
+      if (s.matchId !== lobby.matchId)
         throw new Error(
-          `Native close-start admission failed for ${scenario.map}: ${completed.message}`,
+          "Native close-start lobby changed during map selection",
         );
-      globalThis.console.warn(
-        `Native original-map close starts passed: ${scenario.map}`,
+      return (
+        s.ready &&
+        s.phase === "Lobby" &&
+        s.map === id &&
+        s.humans === 0 &&
+        s.bots === 0 &&
+        s.arriving === 0 &&
+        resources.maps.some((map) => map.id === id && map.ready)
       );
-    }
-    if (results.length === selected.length) break;
+    }, `explicit map resources for ${id}`);
     await console.command("storm-fixture-map-lifecycle start");
     await wait(async () => {
       const s = await status(console);
       return s.ready && s.phase === "Live";
-    }, "ordinary showcase start");
+    }, "selected showcase map admission");
+    const match = await status(console);
+    verifyLiveShowcase(lobby.matchId, match);
+    if (match.map !== id)
+      throw new Error(
+        "Native showcase differs from the explicitly selected map",
+      );
+    visited.push(match.map);
+    const scenario = scenarios.get(id);
+    if (scenario === undefined)
+      throw new Error("Native selection has no staged scenario");
+    const expectedStarts = scenario.spawns.map((spawn) => ({
+      x: spawn.position[0],
+      y: spawn.position[1],
+      z: spawn.position[2],
+      yaw: spawn.yaw,
+    }));
+    const coordinates = scenario.spawns.flatMap((spawn) => [
+      ...spawn.position,
+      spawn.yaw,
+    ]);
+    Native.parse(
+      JSON.parse(
+        await console.command(
+          `storm-fixture-close-starts start ${scenario.map} ${scenario.mapSha256} ${coordinates.join(" ")}`,
+        ),
+      ),
+    );
+    let terminal: z.infer<typeof Native> | undefined;
+    await wait(async () => {
+      const sample = Native.parse(
+        JSON.parse(await console.command("storm-fixture-close-starts status")),
+      );
+      if (
+        sample.map !== scenario.map ||
+        sample.blocksSha256 !== scenario.mapSha256 ||
+        !isDeepStrictEqual(sample.starts, expectedStarts)
+      )
+        throw new Error("Native close-start identity changed");
+      await Bun.write(
+        path.join(output, `${scenario.map}.json`),
+        JSON.stringify(sample, null, 2) + "\n",
+      );
+      if (sample.state === "passed" || sample.state === "failed") {
+        terminal = sample;
+        return true;
+      }
+      return false;
+    }, `both native round trips on ${scenario.map}`);
+    if (terminal === undefined)
+      throw new Error("Native traversal omitted a terminal report");
+    const completed = terminal;
+    results.push(completed);
+    if (
+      completed.state !== "passed" ||
+      !completed.geometry ||
+      completed.legs !== 4 ||
+      ![0, 1].every((actor) =>
+        completed.samples.some((sample) => sample.actor === actor),
+      ) ||
+      completed.samples.some(
+        (sample) =>
+          Math.abs(sample.width - 0.6) > 0.0001 ||
+          Math.abs(sample.height - 1.8) > 0.0001 ||
+          sample.stepHeight !== 0.6,
+      )
+    )
+      throw new Error(
+        `Native close-start admission failed for ${scenario.map}: ${completed.message}`,
+      );
+    globalThis.console.warn(
+      `Native original-map close starts passed: ${scenario.map}`,
+    );
     // Let the first off-thread bot decision finish before fixture teardown.
     await Bun.sleep(2000);
     await console.command("storm-fixture-map-lifecycle stop");
     await wait(async () => {
       const s = await status(console);
-      return s.ready && s.phase === "Lobby" && s.map !== match.map;
-    }, "ordinary successor preparation");
+      return (
+        isSuccessorLobby(match.matchId, s) &&
+        s.humans === 0 &&
+        s.bots === 0 &&
+        s.arriving === 0
+      );
+    }, "empty successor lobby preparation");
   }
   if (results.length !== selected.length)
-    throw new Error(
-      "Bounded ordinary rotation did not visit every requested candidate",
-    );
+    throw new Error("Explicit native selection omitted a requested candidate");
   await inputs.check();
   for (const asset of assets)
     if (

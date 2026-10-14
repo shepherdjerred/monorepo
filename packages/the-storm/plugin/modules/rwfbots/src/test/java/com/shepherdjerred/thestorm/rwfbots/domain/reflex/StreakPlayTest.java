@@ -23,6 +23,10 @@ final class StreakPlayTest {
   private static final Vec3 HERE = new Vec3(5.5, 1, 5.5);
 
   private static ReflexInput input(long tick, Optional<CombatantView> target) {
+    return input(tick, target, Option.HOLD_SLOT);
+  }
+
+  private static ReflexInput input(long tick, Optional<CombatantView> target, Option option) {
     var self = combatant(1, RED, HERE);
     var world =
         new WorldSnapshot(
@@ -36,7 +40,7 @@ final class StreakPlayTest {
     var decision =
         new Decision(
             self.id(),
-            Option.HOLD_SLOT,
+            option,
             Optional.empty(),
             List.of(),
             Stance.CAUTIOUS,
@@ -45,7 +49,8 @@ final class StreakPlayTest {
             Optional.empty(),
             "streak test",
             tick,
-            0);
+            0,
+            java.util.Optional.empty());
     return new ReflexInput(self, world, decision, target, 0);
   }
 
@@ -61,5 +66,6 @@ final class StreakPlayTest {
     assertThat(StreakPlay.now(1, input(200, Optional.of(enemy)), 0)).isFalse();
     assertThat(StreakPlay.now(0, input(200, Optional.empty()), 0)).isFalse();
     assertThat(StreakPlay.now(1, input(200, Optional.empty()), 250)).isFalse();
+    assertThat(StreakPlay.now(1, input(200, Optional.empty(), Option.DEFUSE), 0)).isFalse();
   }
 }

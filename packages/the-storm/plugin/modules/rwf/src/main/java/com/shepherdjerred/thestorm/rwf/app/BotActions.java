@@ -23,12 +23,16 @@ public interface BotActions {
   Optional<ActionRefusal> melee(UUID attacker, UUID target);
 
   /**
-   * Shoot the held bow.
+   * Shoot a legacy Infinity bow for explicit simulator/control callers. Native body controllers use
+   * {@link #useWeapon} so finite ammunition and projectile metadata remain authoritative.
    *
    * @param direction where the arrow flies; need not be normalised
    * @param force how far the bow was drawn, 0 to 1
    */
   Optional<ActionRefusal> shootBow(UUID bot, Point direction, double force);
+
+  /** The same native weapon-use transitions as a human's right click. */
+  Optional<ActionRefusal> useWeapon(UUID bot, WeaponUse use);
 
   Optional<ActionRefusal> consume(UUID bot, int slot);
 
@@ -86,6 +90,11 @@ public interface BotActions {
       public Optional<ActionRefusal> shootBow(UUID bot, Point direction, double force) {
         var vector = new Vec3(direction.x(), direction.y(), direction.z());
         return as(bot, id -> actions.shootBow(id, vector, force));
+      }
+
+      @Override
+      public Optional<ActionRefusal> useWeapon(UUID bot, WeaponUse use) {
+        return as(bot, id -> actions.useWeapon(id, use));
       }
 
       @Override

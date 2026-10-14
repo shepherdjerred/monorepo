@@ -16,6 +16,7 @@ import java.util.List;
  * @param id the map id, which is also its folder name
  * @param name the display name
  * @param author who built it
+ * @param description authored route and terrain guidance
  * @param region the box the schematic fills, both corners included
  * @param spectator where the dead watch from
  * @param teams the teams it fields, in scoreboard order
@@ -27,6 +28,7 @@ public record MapFile(
     String id,
     String name,
     String author,
+    String description,
     Region region,
     PointEntry spectator,
     List<TeamEntry> teams,
@@ -42,7 +44,16 @@ public record MapFile(
     var _ =
         definition(
             new MapFile.Fields(
-                id, name, author, region, spectator, teams, bombs, nukes, blocksSha256));
+                id,
+                name,
+                author,
+                description,
+                region,
+                spectator,
+                teams,
+                bombs,
+                nukes,
+                blocksSha256));
   }
 
   /** The components again, so validation can run before the record exists. */
@@ -50,6 +61,7 @@ public record MapFile(
       String id,
       String name,
       String author,
+      String description,
       Region region,
       PointEntry spectator,
       List<TeamEntry> teams,
@@ -59,7 +71,8 @@ public record MapFile(
 
   public MapDefinition toDefinition() {
     return definition(
-        new Fields(id, name, author, region, spectator, teams, bombs, nukes, blocksSha256));
+        new Fields(
+            id, name, author, description, region, spectator, teams, bombs, nukes, blocksSha256));
   }
 
   private static MapDefinition definition(Fields f) {
@@ -74,6 +87,7 @@ public record MapFile(
         f.id(),
         f.name(),
         f.author(),
+        f.description(),
         f.teams().stream().map(TeamEntry::toTeam).toList(),
         sites,
         f.region().toCuboid(),

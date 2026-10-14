@@ -81,7 +81,8 @@ public final class LobbySteering {
     Optional<Vec3> lookAt;
     if (index < path.size()) {
       var waypoint = path.get(index);
-      commands.add(new BodyCommand.MoveToward(waypoint.pos(), waypoint.hop() == Hop.LEAP));
+      commands.add(
+          new BodyCommand.MoveToward(waypoint.pos(), waypoint.hop() == Hop.LEAP, waypoint.hop()));
       var climbing =
           jumpApproach(waypoint, body.feet())
               && body.onGround()

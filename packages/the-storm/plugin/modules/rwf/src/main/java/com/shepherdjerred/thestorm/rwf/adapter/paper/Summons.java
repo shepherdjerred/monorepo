@@ -128,6 +128,18 @@ final class Summons {
   }
 
   /**
+   * Match entities include Citizens players, which are not guaranteed to be in a world's player
+   * list.
+   */
+  List<Player> combatants() {
+    return runner.match().members().stream()
+        .filter(Combatant::alive)
+        .map(member -> runner.entity(member.id()))
+        .flatMap(Optional::stream)
+        .toList();
+  }
+
+  /**
    * Three attack dogs at {@code at} for {@code owner}: tamed by them, angry, in their team's
    * collars, with the hearts of a tamed wolf. Red Warfare's wolves had one coat and one voice.
    */
@@ -226,6 +238,7 @@ final class Summons {
    */
   boolean creature(Entity entity) {
     return entity instanceof LivingEntity
+        && !(entity instanceof ArmorStand)
         && (summons.containsKey(entity.getUniqueId()) || !keys.isKitEntity(entity));
   }
 
@@ -251,7 +264,12 @@ final class Summons {
     if (target == null) {
       return true;
     }
-    return alive(target) && teamOf(target).filter(summon.team()::equals).isEmpty();
+    return runner.live()
+        && creature(target)
+        && alive(target)
+        && target.getWorld().equals(summon.mob().getWorld())
+        && teamOf(target).filter(summon.team()::equals).isEmpty()
+        && (!(target instanceof Player player) || !hidden(player));
   }
 
   /**
@@ -283,7 +301,7 @@ final class Summons {
    * back as any melee hit does; the golem throws its victim straight up. Returns whether it landed.
    */
   boolean strike(Summon summon, LivingEntity victim) {
-    if (victim instanceof ArmorStand) {
+    if (!mayTarget(summon, victim) || !summon.mob().isValid() || summon.mob().isDead()) {
       return false;
     }
     var random = runner.match().random(runner.now());
@@ -308,7 +326,11 @@ final class Summons {
       return false;
     }
     var hit = DamageFormula.Hit.of(AttackType.MELEE, raw, KitFactory.armor(player));
-    var damage = KitCombat.damage(hit, Optional.of(KITLESS), side.orElseThrow(), random);
+    var damage =
+        PaperKitResistance.apply(
+            player,
+            KitCombat.damage(hit, Optional.of(KITLESS), side.orElseThrow(), random),
+            AttackType.MELEE);
     var landed = window(player, damage, AttackType.MELEE);
     if (landed <= 0) {
       return false;
@@ -342,6 +364,10 @@ final class Summons {
    * knocking the summon back. Returns whether it landed.
    */
   boolean struck(Player attacker, Entity source, Summon summon, double projectileDamage) {
+    if (!runner.fighting(attacker.getUniqueId())
+        || !summon.mob().isValid()
+        || summon.mob().isDead()
+        || teamOf(attacker).filter(summon.team()::equals).isPresent()) return false;
     var melee = source instanceof Player;
     var hit =
         melee
@@ -375,7 +401,8 @@ final class Summons {
       case HitWindow.Resolution.Blocked _ -> 0.0;
       case HitWindow.Resolution.Partial partial -> partial.extra();
       case HitWindow.Resolution.Full full -> {
-        victim.setNoDamageTicks(CombatRules.MAX_NO_DAMAGE_TICKS);
+        victim.setNoDamageTicks(
+            victim.getMaximumNoDamageTicks() == 0 ? 0 : CombatRules.MAX_NO_DAMAGE_TICKS);
         yield full.damage();
       }
     };

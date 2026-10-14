@@ -3,7 +3,7 @@
   "kind": "rwf-map-scenario",
   "id": "pirate-island-trooper-duel-v1",
   "map": "pirate-island",
-  "mapSha256": "97d4c219d20bcc7c395ac9805317cfe9f02757c8fd63b7d0efce47b7f6462f3d",
+  "mapSha256": "43b876b8cbd3ef465a15d40d669f42a7357ac43d6d384e97e912784455f5a6aa",
   "world": "minecraft:rwf",
   "region": {
     "min": {

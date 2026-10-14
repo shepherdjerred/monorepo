@@ -176,6 +176,11 @@ try {
       throw new Error(
         "Ordinary rotation did not visit all required maps within twelve transitions",
       );
+    verifyBounds(
+      Lifecycle.parse(
+        JSON.parse(await rcon.command("storm-fixture-map-lifecycle prepare")),
+      ),
+    );
     await wait(async () => {
       const selected = await status(rcon);
       const snapshot = await observe();

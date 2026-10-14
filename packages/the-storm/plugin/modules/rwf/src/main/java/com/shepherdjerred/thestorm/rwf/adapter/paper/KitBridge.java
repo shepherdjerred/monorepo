@@ -49,25 +49,39 @@ final class KitBridge {
    * kits' abilities applied, before the hit window.
    */
   double damage(AttackType type, Player attacker, Player victim, double raw) {
+    if (type.has(AttackType.Flag.MELEE)) powers.expansion().meleeFacts(attacker, victim);
     var base = CombatListener.hit(type, attacker, victim, raw);
     var attackerSide = side(attacker.getUniqueId());
     var victimSide = side(victim.getUniqueId());
     if (victimSide.isEmpty()) {
       return DamageFormula.finalDamage(base);
     }
-    return KitCombat.damage(
-        base, attackerSide, victimSide.orElseThrow(), runner.match().random(runner.now()));
+    return PaperKitResistance.apply(
+        victim,
+        KitCombat.damage(
+            base, attackerSide, victimSide.orElseThrow(), runner.match().random(runner.now())),
+        type);
   }
 
   /** {@code attacker}'s hit on {@code victim} landed {@code damage}: their kits hear of it. */
   void hit(Player attacker, Player victim, AttackType type, double damage) {
+    hit(attacker, victim, type, new Landed(damage, victim.getHealth()));
+  }
+
+  record Landed(double damage, double healthAfter) {}
+
+  private record Impact(AttackType type, Optional<String> weapon, Landed landed) {}
+
+  /** A native event completes health mutation after listeners; abilities receive its result. */
+  void hit(Player attacker, Player victim, AttackType type, Landed landed) {
     var attackerId = runner.memberOf(attacker.getUniqueId()).map(Combatant::id);
     if (attackerId.isEmpty()) {
       return;
     }
     var held = attacker.getInventory().getItemInMainHand();
     var weapon = held.isEmpty() ? Optional.<String>empty() : Optional.of(held.getType().name());
-    struck(victim, type, weapon, damage).ifPresent(hit -> act(attackerId.orElseThrow(), hit));
+    struck(victim, new Impact(type, weapon, landed))
+        .ifPresent(hit -> act(attackerId.orElseThrow(), hit));
   }
 
   /**
@@ -81,12 +95,12 @@ final class KitBridge {
             .map(player -> player.getInventory().getItemInMainHand())
             .filter(held -> !held.isEmpty())
             .map(held -> held.getType().name());
-    struck(victim, type, weapon, damage).ifPresent(hit -> act(attacker, hit));
+    struck(victim, new Impact(type, weapon, new Landed(damage, victim.getHealth())))
+        .ifPresent(hit -> act(attacker, hit));
   }
 
   /** The hit on {@code victim}, if they fight in a live match. */
-  private Optional<AbilityInput.Hit> struck(
-      Player victim, AttackType type, Optional<String> weapon, double damage) {
+  private Optional<AbilityInput.Hit> struck(Player victim, Impact impact) {
     var victimId = runner.memberOf(victim.getUniqueId()).map(Combatant::id);
     if (victimId.isEmpty() || !runner.live()) {
       return Optional.empty();
@@ -94,10 +108,10 @@ final class KitBridge {
     return Optional.of(
         new AbilityInput.Hit(
             victimId.orElseThrow(),
-            type,
-            weapon,
-            damage,
-            victim.getHealth(),
+            impact.type(),
+            impact.weapon(),
+            impact.landed().damage(),
+            impact.landed().healthAfter(),
             PlayerAttributes.maxHealth(victim)));
   }
 

@@ -12,10 +12,16 @@ import java.util.Optional;
  * @param rewind the bot's model of its Time Machine
  */
 public record TacticsState(
-    Optional<Plan> plan, long lastThinkTick, int lifeEpoch, long bornTick, RewindClock rewind) {
+    Optional<Plan> plan,
+    long lastThinkTick,
+    int lifeEpoch,
+    long bornTick,
+    RewindClock rewind,
+    TacticalMemory memory) {
 
   public static TacticsState fresh(int lifeEpoch) {
-    return new TacticsState(Optional.empty(), -1, lifeEpoch, -1, RewindClock.UNSTARTED);
+    return new TacticsState(
+        Optional.empty(), -1, lifeEpoch, -1, RewindClock.UNSTARTED, TacticalMemory.EMPTY);
   }
 
   /**
@@ -23,6 +29,7 @@ public record TacticsState(
    * for the bot and its Time Machine's cooldown carry over, as rwf's do.
    */
   public TacticsState nextLife(int newEpoch) {
-    return new TacticsState(Optional.empty(), lastThinkTick, newEpoch, bornTick, rewind);
+    return new TacticsState(
+        Optional.empty(), lastThinkTick, newEpoch, bornTick, rewind, TacticalMemory.EMPTY);
   }
 }

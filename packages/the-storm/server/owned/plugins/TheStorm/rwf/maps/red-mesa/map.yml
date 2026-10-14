@@ -1,0 +1,54 @@
+{
+  "id": "red-mesa",
+  "name": "Red Mesa",
+  "author": "The Storm",
+  "description": "Two adobe outposts contest a terracotta canyon. Guarded timber bridges offer quick crossings, but a stepped ravine and eroded rock formations create lower flanking routes beneath the desert skyline.",
+  "region":
+    {
+      "min": { "x": 3072, "y": 64, "z": 7168 },
+      "max": { "x": 3199, "y": 111, "z": 7295 },
+    },
+  "spectator": { "x": 3136.5, "y": 107, "z": 7232.5, "yaw": 0, "pitch": 65 },
+  "teams":
+    [
+      {
+        "color": "RED",
+        "spawns":
+          [
+            { "x": 3077.5, "y": 73, "z": 7226.5, "yaw": 270, "pitch": 0 },
+            { "x": 3077.5, "y": 73, "z": 7228.5, "yaw": 270, "pitch": 0 },
+            { "x": 3077.5, "y": 73, "z": 7236.5, "yaw": 270, "pitch": 0 },
+            { "x": 3077.5, "y": 73, "z": 7238.5, "yaw": 270, "pitch": 0 },
+            { "x": 3079.5, "y": 73, "z": 7226.5, "yaw": 270, "pitch": 0 },
+            { "x": 3079.5, "y": 73, "z": 7228.5, "yaw": 270, "pitch": 0 },
+            { "x": 3079.5, "y": 73, "z": 7236.5, "yaw": 270, "pitch": 0 },
+            { "x": 3079.5, "y": 73, "z": 7238.5, "yaw": 270, "pitch": 0 },
+          ],
+      },
+      {
+        "color": "BLUE",
+        "spawns":
+          [
+            { "x": 3194.5, "y": 73, "z": 7226.5, "yaw": 90, "pitch": 0 },
+            { "x": 3194.5, "y": 73, "z": 7228.5, "yaw": 90, "pitch": 0 },
+            { "x": 3194.5, "y": 73, "z": 7236.5, "yaw": 90, "pitch": 0 },
+            { "x": 3194.5, "y": 73, "z": 7238.5, "yaw": 90, "pitch": 0 },
+            { "x": 3192.5, "y": 73, "z": 7226.5, "yaw": 90, "pitch": 0 },
+            { "x": 3192.5, "y": 73, "z": 7228.5, "yaw": 90, "pitch": 0 },
+            { "x": 3192.5, "y": 73, "z": 7236.5, "yaw": 90, "pitch": 0 },
+            { "x": 3192.5, "y": 73, "z": 7238.5, "yaw": 90, "pitch": 0 },
+          ],
+      },
+    ],
+  "bombs":
+    [
+      { "id": "red-1", "team": "RED", "at": { "x": 3086, "y": 73, "z": 7232 } },
+      {
+        "id": "blue-1",
+        "team": "BLUE",
+        "at": { "x": 3185, "y": 73, "z": 7232 },
+      },
+    ],
+  "nukes": [],
+  "blocksSha256": "6799261020e00954e234589ff858015f0402d5ee4a9dd8d456e46e47e9f0c7c1",
+}

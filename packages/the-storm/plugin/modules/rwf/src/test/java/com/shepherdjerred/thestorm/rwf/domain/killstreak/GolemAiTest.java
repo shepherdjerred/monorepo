@@ -50,14 +50,16 @@ final class GolemAiTest {
   }
 
   @Test
-  void theSelectorSparesTeammatePlayersAndHiddenGhostsButNotTheTeamsSummons() {
+  void theSelectorSparesTeammatesTheirSummonsAndHiddenGhosts() {
     var enemy = player("enemy", FEET);
     assertThat(GolemAi.selects(enemy)).isTrue();
     assertThat(GolemAi.selects(with(enemy, Trait.DEAD))).isFalse();
     assertThat(GolemAi.selects(with(enemy, Trait.ALLY))).isFalse();
     assertThat(GolemAi.selects(with(enemy, Trait.HIDDEN))).isFalse();
     var ownWolf = with(mob("wolf", FEET), Trait.ALLY);
-    assertThat(GolemAi.selects(ownWolf)).isTrue();
+    assertThat(GolemAi.selects(ownWolf)).isFalse();
+    assertThat(GolemAi.keeps(ownWolf, FEET)).isFalse();
+    assertThat(GolemAi.nearestMob(FEET, List.of(ownWolf))).isEmpty();
   }
 
   @Test

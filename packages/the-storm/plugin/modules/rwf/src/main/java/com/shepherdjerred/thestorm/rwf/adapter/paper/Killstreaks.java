@@ -116,6 +116,7 @@ final class Killstreaks {
    * they are told and given its item.
    */
   void grant(MatchEffect.KillstreakEarned earned) {
+    var matchId = runner.match().matchId();
     var entity = runner.entity(earned.id());
     if (entity.isEmpty()) {
       return;
@@ -124,7 +125,16 @@ final class Killstreaks {
         gate.allows(entity.orElseThrow().getUniqueId()),
         allowed -> {
           var player = runner.entity(earned.id());
-          if (allowed && player.isPresent() && fighting(earned.id())) {
+          if (allowed
+              && runner.match().matchId().equals(matchId)
+              && player.isPresent()
+              && fighting(earned.id())
+              && runner
+                  .member(earned.id())
+                  .orElseThrow()
+                  .streaks()
+                  .rewards()
+                  .contains(earned.earned().streak())) {
             give(player.orElseThrow(), earned.earned());
           }
         },

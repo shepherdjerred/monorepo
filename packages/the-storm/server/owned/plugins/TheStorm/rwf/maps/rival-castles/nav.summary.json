@@ -5,7 +5,7 @@
   "movementModelVersion": 4,
   "costUnit": "server-ticks",
   "damageUnit": "health-points",
-  "blocksSha256": "6a03d2d3199886f778cb1570c783808b27703eb181e0dd32f96ebbe42f7fca23",
+  "blocksSha256": "7830c4ef0631f8095eb7d80ac9e9afb0535a435175fe3a5f351f787fd6056ffc",
   "classificationSha256": "a3c7028bcb485c2e6b1f045ab1bb06fd760f9c943b7a3ac4a9b580cd431b0b58",
   "bounds": {
     "origin": { "x": 3072, "y": 0, "z": 4096 },
@@ -18,7 +18,7 @@
       "state": "minecraft:air",
       "shape": "PASSABLE",
       "blocksSight": false,
-      "blocks": 5464413
+      "blocks": 5464425
     },
     {
       "state": "minecraft:stone",
@@ -108,7 +108,7 @@
       "state": "minecraft:oak_wall_sign[facing=east,waterlogged=false]",
       "shape": "PASSABLE",
       "blocksSight": false,
-      "blocks": 7
+      "blocks": 3
     },
     {
       "state": "minecraft:iron_door[facing=north,half=lower,hinge=left,open=false,powered=true]",
@@ -120,7 +120,7 @@
       "state": "minecraft:oak_wall_sign[facing=west,waterlogged=false]",
       "shape": "PASSABLE",
       "blocksSight": false,
-      "blocks": 7
+      "blocks": 3
     },
     {
       "state": "minecraft:iron_door[facing=west,half=lower,hinge=left,open=false,powered=true]",
@@ -738,7 +738,7 @@
       "state": "minecraft:oak_wall_sign[facing=south,waterlogged=false]",
       "shape": "PASSABLE",
       "blocksSight": false,
-      "blocks": 4
+      "blocks": 2
     },
     {
       "state": "minecraft:nether_brick_slab[type=bottom,waterlogged=false]",
@@ -846,7 +846,7 @@
       "state": "minecraft:oak_wall_sign[facing=north,waterlogged=false]",
       "shape": "PASSABLE",
       "blocksSight": false,
-      "blocks": 4
+      "blocks": 2
     },
     {
       "state": "minecraft:water[level=8]",
@@ -952,19 +952,19 @@
     "retainedFluidPortals": 8959
   },
   "edges": {
-    "total": 2171009,
-    "damaging": 106294,
+    "total": 2174204,
+    "damaging": 106024,
     "maximumRawDamage": 29,
     "CLIMB": 64,
     "DROP": 143138,
     "JUMP": 9793,
-    "LEAP": 1075630,
+    "LEAP": 1078825,
     "SWIM": 76332,
     "WALK": 866052
   },
-  "regions": 10068,
+  "regions": 10066,
   "coverPoints": 33613,
-  "chokepoints": 2459,
+  "chokepoints": 2455,
   "routes": {
     "count": 564,
     "spawnToBomb": [
@@ -1613,7 +1613,7 @@
       {
         "from": "red-spawn-18",
         "to": "blue-1",
-        "length": 1167.7184596061707,
+        "length": 1166.7184596061707,
         "nodes": 117
       },
       {
@@ -3719,7 +3719,7 @@
       {
         "from": "blue-spawn-30",
         "to": "red-1",
-        "length": 1204.129714012146,
+        "length": 1203.129714012146,
         "nodes": 124
       },
       {
@@ -4356,5 +4356,5 @@
   },
   "distanceFields": 96,
   "problems": [],
-  "bytes": 38513350
+  "bytes": 38570101
 }

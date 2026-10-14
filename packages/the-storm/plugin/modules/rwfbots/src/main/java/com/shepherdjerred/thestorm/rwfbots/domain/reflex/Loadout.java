@@ -20,7 +20,9 @@ public record Loadout(
     int gappleSlot,
     int fuseSlot,
     List<KitItem> kitItems,
-    Kit.Body body) {
+    Kit.Body body,
+    Weapon melee,
+    Weapon ranged) {
 
   /**
    * A kit item and where it sits.
@@ -52,11 +54,23 @@ public record Loadout(
   /** The milestone-one hotbar layout for {@code kit}: sword, bow or apples, fuse; no kit items. */
   public static Loadout standard(Kit kit) {
     return new Loadout(
-        0, kit.hasBow() ? 1 : -1, kit.hasGapples() ? 1 : -1, 2, List.of(), kit.body());
+        0,
+        kit.hasBow() ? 1 : -1,
+        kit.hasGapples() ? 1 : -1,
+        2,
+        List.of(),
+        kit.body(),
+        Weapon.LEGACY,
+        kit.hasBow() ? Weapon.BOW : Weapon.NONE);
   }
 
   public boolean hasBow() {
     return bowSlot >= 0;
+  }
+
+  /** A temporarily empty ranged weapon cannot keep the bot aiming instead of using its melee. */
+  public Loadout withoutRanged() {
+    return new Loadout(swordSlot, -1, gappleSlot, fuseSlot, kitItems, body, melee, Weapon.NONE);
   }
 
   public boolean hasGapples() {

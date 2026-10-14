@@ -14,7 +14,7 @@ import com.shepherdjerred.thestorm.rwf.domain.combat.Attribution;
 import com.shepherdjerred.thestorm.rwf.domain.combat.DamageLog;
 import com.shepherdjerred.thestorm.rwf.domain.combat.KillCredit;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.CombatantId;
-import com.shepherdjerred.thestorm.rwf.domain.killstreak.Killstreak;
+import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -188,11 +188,11 @@ final class Standings {
    * while they are alive, as Red Warfare's {@code KillstreakManager} gave them.
    */
   private static void scored(Draft draft, Combatant by, Score score) {
-    draft.put(by.scored(score));
+    draft.put(by.scored(by.alive() ? score : score.withoutStreak()));
     if (!by.alive()) {
       return;
     }
-    for (var earned : Killstreak.earned(by.score().streak(), score.streak())) {
+    for (var earned : by.streaks().earned(by.score().streak(), score.streak())) {
       draft.effect(new MatchEffect.KillstreakEarned(by.id(), earned));
     }
   }
@@ -236,6 +236,14 @@ final class Standings {
 
   /** Eliminates teams with nobody left, arms the last man standing, and ends a decided match. */
   static void check(Draft draft, Instant now) {
+    check(draft, now, Set.of());
+  }
+
+  /**
+   * Detonations at one instant are settled together; their successful planting teams survive as
+   * claimants.
+   */
+  static void check(Draft draft, Instant now, Set<TeamColor> planters) {
     if (!(draft.phase instanceof Phase.Live live)) {
       return;
     }
@@ -261,12 +269,20 @@ final class Standings {
     var still =
         new Phase.Live(live.startedAt(), live.poison(), live.nextPoisonSecond(), lastMan, defeated);
     draft.phase = still;
+    settle(draft, still, planters, now);
+  }
+
+  private static void settle(Draft draft, Phase.Live live, Set<TeamColor> planters, Instant now) {
     var standing =
-        draft.map().teamColors().stream().filter(team -> !defeated.contains(team)).toList();
-    if (standing.size() == 1) {
-      Flow.end(draft, still, new Outcome.Winner(standing.getFirst()), now);
+        draft.map().teamColors().stream().filter(team -> !live.defeated().contains(team)).toList();
+    if (standing.size() == 1 && !Elimination.threatened(standing.getFirst(), draft.bombs())) {
+      Flow.end(draft, live, new Outcome.Winner(standing.getFirst()), now);
     } else if (standing.isEmpty()) {
-      Flow.end(draft, still, new Outcome.Draw(), now);
+      var outcome =
+          planters.size() == 1
+              ? new Outcome.Winner(planters.iterator().next())
+              : new Outcome.Draw();
+      Flow.end(draft, live, outcome, now);
     }
   }
 }

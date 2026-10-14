@@ -36,6 +36,7 @@ final class MapWorld implements MapRotation.Entry {
   private @Nullable Terrain terrain;
   private boolean loading;
   private boolean prepared;
+  private boolean resourcesReady;
   private int generation;
   private int preparations;
   private int releases;
@@ -66,9 +67,14 @@ final class MapWorld implements MapRotation.Entry {
     return map().blocks();
   }
 
-  /** Whether the terrain is pasted and verified. */
+  /** Whether the terrain and optional match resources are ready. */
   @Override
   public boolean ready() {
+    return visitReady() && resourcesReady;
+  }
+
+  @Override
+  public boolean visitReady() {
     return prepared && !loading && terrain != null && terrain.ready();
   }
 
@@ -95,9 +101,52 @@ final class MapWorld implements MapRotation.Entry {
         && definition().border().contains(Places.vec(location));
   }
 
+  /** Flying visitors may rise above the build while staying over this map's own region. */
+  boolean containsVisit(Location location) {
+    var border = definition().border();
+    return location.getWorld().equals(context.mapWorld())
+        && location.getX() >= border.min().x()
+        && location.getX() <= border.max().x() + 1
+        && location.getZ() >= border.min().z()
+        && location.getZ() <= border.max().z() + 1
+        && location.getY() >= border.min().y()
+        && location.getY() <= border.max().y() + 32;
+  }
+
   /** Loads and holds the chunks, then verifies and if need be pastes the terrain. */
   @Override
   public void prepare(Consumer<Boolean> done) {
+    prepareTerrain(true, done);
+  }
+
+  @Override
+  public void prepareVisit(Consumer<Boolean> done) {
+    prepareTerrain(false, done);
+  }
+
+  @Override
+  public void activate(Consumer<Boolean> done) {
+    if (!visitReady()) throw new IllegalStateException(id() + " has no visit terrain to activate");
+    if (resourcesReady) {
+      done.accept(true);
+      return;
+    }
+    var request = generation;
+    var _ =
+        resources
+            .prepare(definition())
+            .whenCompleteAsync(
+                (_, failure) -> {
+                  if (request != generation) return;
+                  resourcesReady = failure == null;
+                  if (failure != null)
+                    context.logger().error("Could not activate map {}", id(), failure);
+                  done.accept(resourcesReady);
+                },
+                context.mainThread());
+  }
+
+  private void prepareTerrain(boolean activate, Consumer<Boolean> done) {
     if (busy() || terrain != null)
       throw new IllegalStateException(id() + " is already prepared or loading");
     loading = true;
@@ -107,7 +156,8 @@ final class MapWorld implements MapRotation.Entry {
         context
             .compute()
             .submit(source::load)
-            .thenComposeAsync(loaded -> prepareLoaded(loaded, request), context.mainThread())
+            .thenComposeAsync(
+                loaded -> prepareLoaded(loaded, request, activate), context.mainThread())
             .whenCompleteAsync(
                 (ok, failure) -> {
                   if (request != generation) return;
@@ -123,7 +173,8 @@ final class MapWorld implements MapRotation.Entry {
                 context.mainThread());
   }
 
-  private CompletableFuture<Boolean> prepareLoaded(LoadedMap loaded, int request) {
+  private CompletableFuture<Boolean> prepareLoaded(
+      LoadedMap loaded, int request, boolean activate) {
     if (request != generation) return CompletableFuture.completedFuture(false);
     map = loaded;
     var prepared =
@@ -152,7 +203,15 @@ final class MapWorld implements MapRotation.Entry {
                         });
           }
         });
-    return terrainReady.thenCombine(resources.prepare(definition()), (ok, _) -> ok);
+    if (!activate) return terrainReady;
+    return terrainReady.thenCombineAsync(
+        resources.prepare(definition()),
+        (ok, _) -> {
+          if (request != generation) return false;
+          resourcesReady = true;
+          return ok;
+        },
+        context.mainThread());
   }
 
   /** Verifies the terrain and pastes it when it differs; {@code done} gets whether it is ready. */
@@ -270,6 +329,7 @@ final class MapWorld implements MapRotation.Entry {
     generation++;
     loading = false;
     prepared = false;
+    resourcesReady = false;
     if (terrain != null) terrain.release();
     resources.release(id());
     terrain = null;

@@ -86,6 +86,11 @@ final class StaffPaper {
 
   void stop() {
     sweep.cancel();
+    commands
+        .context
+        .services()
+        .require(com.shepherdjerred.thestorm.core.players.PlayerVisibilityControl.class)
+        .release(com.shepherdjerred.thestorm.core.players.PlayerVisibilityControl.Reason.STAFF);
     listeners.forEach(HandlerList::unregisterAll);
     commands.stop();
   }

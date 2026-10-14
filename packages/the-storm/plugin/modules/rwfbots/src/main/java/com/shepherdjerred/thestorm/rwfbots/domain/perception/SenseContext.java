@@ -13,4 +13,17 @@ import com.shepherdjerred.thestorm.rwfbots.domain.map.VoxelGrid;
  * @param regions the region visibility table used to skip hopeless ray casts
  * @param levers the bot's levers; awareness radius matters here
  */
-public record SenseContext(VoxelGrid grid, NavGraph graph, Regions regions, Levers levers) {}
+public record SenseContext(
+    VoxelGrid grid,
+    NavGraph graph,
+    Regions regions,
+    Levers levers,
+    java.util.List<SightCloud> clouds) {
+  public SenseContext {
+    clouds = java.util.List.copyOf(clouds);
+  }
+
+  public SenseContext(VoxelGrid grid, NavGraph graph, Regions regions, Levers levers) {
+    this(grid, graph, regions, levers, java.util.List.of());
+  }
+}

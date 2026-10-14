@@ -85,6 +85,7 @@ public final class FakeMatch implements MatchView, MatchEvents, CombatantActions
         "synthetic",
         "Synthetic",
         "tests",
+        "A synthetic west-versus-east arena with one bomb for each team.",
         List.of(
             new MapTeam(TeamColor.RED, List.of(new Spawn(new Vec3(2.5, 1, 2.5), 0, 0))),
             new MapTeam(TeamColor.BLUE, List.of(new Spawn(new Vec3(30.5, 1, 30.5), 180, 0)))),
@@ -265,6 +266,12 @@ public final class FakeMatch implements MatchView, MatchEvents, CombatantActions
   @Override
   public Optional<ActionRefusal> shootBow(CombatantId id, Vec3 direction, double force) {
     return record("shoot", id, String.valueOf(force));
+  }
+
+  @Override
+  public Optional<ActionRefusal> useWeapon(
+      CombatantId id, com.shepherdjerred.thestorm.rwf.app.WeaponUse use) {
+    return record("weapon", id, use.name());
   }
 
   @Override

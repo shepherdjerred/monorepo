@@ -1,6 +1,8 @@
 package com.shepherdjerred.thestorm.rwf.domain.match;
 
 import com.shepherdjerred.thestorm.rwf.domain.combatant.CombatantId;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -15,7 +17,8 @@ final class Voting {
 
   private Voting() {}
 
-  static Optional<MatchError> opened(Draft draft, List<Ballot.Candidate> candidates) {
+  static Optional<MatchError> opened(
+      Draft draft, List<Ballot.Candidate> candidates, Optional<Duration> visitLength) {
     if (!(draft.phase instanceof Phase.Lobby) && !(draft.phase instanceof Phase.Countdown)) {
       return Optional.of(MatchError.NOT_PRE_GAME);
     }
@@ -25,8 +28,8 @@ final class Voting {
     if (draft.ballot().filter(Ballot::opened).isPresent()) {
       return Optional.of(MatchError.BALLOT_ALREADY_OPEN);
     }
-    draft.ballot(Ballot.open(candidates));
-    if (candidates.size() == 1) {
+    draft.ballot(Ballot.open(candidates, visitLength));
+    if (candidates.size() == 1 && visitLength.isEmpty()) {
       // Nothing to vote on: the one map is chosen and starts loading at once.
       close(draft);
     } else {
@@ -35,6 +38,21 @@ final class Voting {
               NoticeKind.BALLOT_OPEN,
               "maps",
               candidates.stream().map(Ballot.Candidate::name).collect(Collectors.joining(", "))));
+    }
+    return Optional.empty();
+  }
+
+  static Optional<MatchError> visitsReady(Draft draft, List<String> mapIds, Instant now) {
+    var current = draft.ballot();
+    if (current.isEmpty()) return Optional.of(MatchError.MAP_LOCKED);
+    var ballot = current.orElseThrow();
+    if (ballot.closed()
+        || ballot.visits().isEmpty()
+        || !ballot.candidates().stream().map(Ballot.Candidate::mapId).toList().equals(mapIds)) {
+      return Optional.of(MatchError.MAP_LOCKED);
+    }
+    if (ballot.visits().orElseThrow().readyAt().isEmpty()) {
+      draft.ballot(ballot.visitsReady(now));
     }
     return Optional.empty();
   }
@@ -167,7 +185,7 @@ final class Voting {
       return;
     }
     if (ballot.closed() && ballot.chosen().filter(mapId::equals).isEmpty()) {
-      draft.ballot(new Ballot(left.candidates(), left.votes(), ballot.chosen()));
+      draft.ballot(new Ballot(left.candidates(), left.votes(), ballot.chosen(), ballot.visits()));
     } else if (ballot.closed() || left.candidates().size() == 1) {
       var closed = closed(draft, left);
       draft.ballot(closed);

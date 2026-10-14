@@ -3,7 +3,7 @@
   "kind": "rwf-map-scenario",
   "id": "flying-ships-trooper-duel-v1",
   "map": "flying-ships",
-  "mapSha256": "54e6353a02662007d315775c5187bdfa9a43433f19a5ea145158ad7fe5bff131",
+  "mapSha256": "f94d53f1f1cc4f672cc6e414ec9700428ebd80e4239d377963dfb60a63a7a311",
   "world": "minecraft:rwf",
   "region": {
     "min": {

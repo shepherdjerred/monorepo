@@ -1,0 +1,14 @@
+{
+  "id": "catacombs",
+  "name": "Catacombs",
+  "description": "An excavated necropolis of broken vaults and lantern-lit burial galleries. Three linked crypt routes cross beneath raised transepts; skylights and mossy courts give ambushers room to flank entrenched archers.",
+  "seed": 10501,
+  "anchor": { "x": 6144, "y": 64, "z": 7168 },
+  "size": { "x": 112, "y": 48, "z": 112 },
+  "bombs": [
+    { "x": 14, "y": 9, "z": 56 },
+    { "x": 97, "y": 9, "z": 56 }
+  ],
+  "nukes": [],
+  "spawnY": 9
+}

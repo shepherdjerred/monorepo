@@ -1,7 +1,10 @@
 package com.shepherdjerred.thestorm.rwfbots.adapter.paper;
 
+import com.shepherdjerred.thestorm.rwf.app.BattleSounds;
+import com.shepherdjerred.thestorm.rwf.app.view.Point;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Stimulus;
-import java.util.ArrayList;
+import java.time.InstantSource;
+import java.util.ArrayDeque;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -35,7 +38,49 @@ public final class StimulusCollector implements Listener {
    */
   public record Raw(Stimulus.Kind kind, Location at, UUID source, Optional<UUID> victim) {}
 
-  private final List<Raw> pending = new ArrayList<>();
+  private final ArrayDeque<Raw> pending = new ArrayDeque<>();
+  private final BattleSounds sounds;
+  private final InstantSource time;
+
+  public StimulusCollector(BattleSounds sounds, InstantSource time) {
+    this.sounds = sounds;
+    this.time = time;
+  }
+
+  BattleSounds sounds() {
+    return sounds;
+  }
+
+  InstantSource time() {
+    return time;
+  }
+
+  private void add(Raw raw) {
+    pending.add(raw);
+    while (pending.size() > com.shepherdjerred.thestorm.rwf.app.BattleSoundLog.CAPACITY)
+      pending.removeFirst();
+    var at = raw.at();
+    sounds.emit(
+        new BattleSounds.Sound(
+            java.util.Objects.requireNonNull(at.getWorld()).getUID(),
+            raw.source(),
+            new Point(at.getX(), at.getY(), at.getZ()),
+            kind(raw.kind()),
+            raw.kind().range(),
+            raw.victim()));
+  }
+
+  private static BattleSounds.Kind kind(Stimulus.Kind kind) {
+    return switch (kind) {
+      case FOOTSTEP -> BattleSounds.Kind.STEP;
+      case LAND -> BattleSounds.Kind.LAND;
+      case SPLASH -> BattleSounds.Kind.SPLASH;
+      case BOW_SHOT -> BattleSounds.Kind.BOW;
+      case HIT -> BattleSounds.Kind.MELEE;
+      case EAT -> BattleSounds.Kind.EAT;
+      case FUSE_CLICK, FUSE_HISS -> BattleSounds.Kind.FUSE;
+    };
+  }
 
   @EventHandler(priority = EventPriority.MONITOR)
   void onDamage(EntityDamageByEntityEvent event) {
@@ -45,7 +90,7 @@ public final class StimulusCollector implements Listener {
     responsible(event.getDamager())
         .ifPresent(
             attacker ->
-                pending.add(
+                add(
                     new Raw(
                         Stimulus.Kind.HIT,
                         Places.at(victim),
@@ -56,7 +101,7 @@ public final class StimulusCollector implements Listener {
   @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
   void onShoot(EntityShootBowEvent event) {
     if (event.getEntity() instanceof Player shooter) {
-      pending.add(
+      add(
           new Raw(
               Stimulus.Kind.BOW_SHOT, Places.at(shooter), shooter.getUniqueId(), Optional.empty()));
     }
@@ -65,26 +110,24 @@ public final class StimulusCollector implements Listener {
   @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
   void onEat(PlayerItemConsumeEvent event) {
     var eater = event.getPlayer();
-    pending.add(
-        new Raw(Stimulus.Kind.EAT, Places.at(eater), eater.getUniqueId(), Optional.empty()));
+    add(new Raw(Stimulus.Kind.EAT, Places.at(eater), eater.getUniqueId(), Optional.empty()));
   }
 
   /** A bot's arrow left through the actions port, which fires no bow event for it. */
   public void shot(Player shooter) {
-    pending.add(
+    add(
         new Raw(
             Stimulus.Kind.BOW_SHOT, Places.at(shooter), shooter.getUniqueId(), Optional.empty()));
   }
 
   /** The match accepted a fuse click on the bomb at {@code bomb} by {@code clicker}. */
   public void fuseClicked(UUID clicker, Location bomb) {
-    pending.add(new Raw(Stimulus.Kind.FUSE_CLICK, bomb, clicker, Optional.empty()));
+    add(new Raw(Stimulus.Kind.FUSE_CLICK, bomb, clicker, Optional.empty()));
   }
 
   /** A sprinting combatant's footstep. */
   public void footstep(Player runner) {
-    pending.add(
-        new Raw(Stimulus.Kind.FOOTSTEP, Places.at(runner), runner.getUniqueId(), Optional.empty()));
+    add(new Raw(Stimulus.Kind.FOOTSTEP, Places.at(runner), runner.getUniqueId(), Optional.empty()));
   }
 
   /** Everything since the last drain. */
@@ -92,6 +135,10 @@ public final class StimulusCollector implements Listener {
     var drained = List.copyOf(pending);
     pending.clear();
     return drained;
+  }
+
+  public void motion(Player player, Stimulus.Kind kind) {
+    add(new Raw(kind, Places.at(player), player.getUniqueId(), Optional.empty()));
   }
 
   private static Optional<Player> responsible(Entity damager) {

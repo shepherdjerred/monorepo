@@ -215,7 +215,11 @@ final class Napalm {
     }
     var random = runner.match().random(runner.now());
     var hit = DamageFormula.Hit.of(KitAttacks.NAPALM, amount, KitFactory.armor(victim));
-    var damage = KitCombat.damage(hit, Optional.empty(), side.orElseThrow(), random);
+    var damage =
+        PaperKitResistance.apply(
+            victim,
+            KitCombat.damage(hit, Optional.empty(), side.orElseThrow(), random),
+            KitAttacks.NAPALM);
     var landed = summons.window(victim, damage, KitAttacks.NAPALM);
     if (landed <= 0) {
       return;

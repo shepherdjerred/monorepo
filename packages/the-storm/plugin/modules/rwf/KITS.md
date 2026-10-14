@@ -1,9 +1,10 @@
 # Red Warfare Search and Destroy kits
 
-`domain/kit/KitBook.java` lists 33 kits in menu order: Red Warfare's twenty-two
+`domain/kit/KitBook.java` lists 51 kits in menu order: Red Warfare's twenty-two
 playable kits in the order of the original `SearchAndDestroy`, then Equality, Inertia and
-Sacrificial, which the original never offered in play, then the eight kits new
-to The Storm. Each kit's ability is a pure class under `domain/ability/kits`,
+Sacrificial, which the original never offered in play, then The Storm's first eight
+designed kits and the eighteen kits in `domain/kit/ExpansionKits.java`.
+Each kit's ability is a pure class under `domain/ability/kits`,
 registered in `AbilityBook` and driven by match events with randomness from the
 match seed. `rwf/kits.yml` must describe the same kits, kit for kit.
 
@@ -60,9 +61,68 @@ chainmail boots, iron leggings, iron chestplate and a chainmail helmet.
 | Tracker     | `tracker`     | advanced | 400   | designed | Iron sword, crossbow, 32 arrows                                                                                         | Archer armour                                                                                                                         | Sees the footprints enemies left in the last 8 s (drawn for Trackers alone). Its first hit on each enemy marks that enemy on its team's compasses until they die.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | Decoy       | `decoy`       | advanced | 450   | designed | Iron sword, armour stand "Decoy"                                                                                        | Full iron                                                                                                                             | Sends a running copy of itself, in its skin and gear, the way it looks for 6 s, and vanishes from the enemy for the first 3 s. It recharges for 35 s.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 
+## Additional kits
+
+The expansion adds six kits in each category. Every one is purchasable and
+participates in the existing weekly rotation. Light armour is leather boots,
+leggings and chestplate with a chainmail helmet; Acrobat and Maceguard boots
+have Feather Falling II. Prices and tiers follow the same rules as the other kits.
+
+| Kit                             | Category | Price | Equipment after the fuse                                       | Ability                                                                                                                                                                 |
+| ------------------------------- | -------- | ----: | -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Duelist (`duelist`)             | classic  |   250 | iron sword                                                     | Iron sword and chainmail; isolated melee hits add 1.5 damage before armour when nobody else stands within 6 blocks of the victim.                                       |
+| Knight (`knight`)               | classic  |   300 | iron sword; shield                                             | Raise your shield just before a hit: blocking within 0.4 seconds primes a counterstrike adding 2 damage for 3 seconds, once every 12 seconds.                           |
+| Ravager (`ravager`)             | classic  |   200 | iron axe; 2 golden apple                                       | An axe fighter with two golden apples; striking a raised enemy shield disables it for 3 seconds, once every 12 seconds.                                                 |
+| Acrobat (`acrobat`)             | classic  |   250 | stone sword; feather                                           | Right-click your feather while airborne to jump again. One extra jump per landing and an 8-second recharge; light armour and Feather Falling II.                        |
+| Alchemist (`alchemist`)         | classic  |   300 | stone sword; 3 splash potion                                   | Three finite flasks weaken and slow enemies within 3 blocks for 5 seconds; allies are safe. Wait 10 seconds between throws.                                             |
+| Scavenger (`scavenger`)         | classic  |   200 | iron sword                                                     | Your first three credited kills leave salvage for you alone. Collect it within 10 seconds to heal 4 health and receive 8 arrows.                                        |
+| Arbalist (`arbalist`)           | ranged   |   250 | stone sword; crossbow (quick charge 2, piercing 2); 48 arrow   | A precise crossbow with Quick Charge II and Piercing II, 48 finite arrows, a stone sword and archer armour.                                                             |
+| Volley (`volley`)               | ranged   |   250 | wooden sword; crossbow (multishot 1, quick charge 1); 36 arrow | A spread crossbow with Multishot I and Quick Charge I, 36 finite arrows, a wooden sword and light armour.                                                               |
+| Marksman (`marksman`)           | ranged   |   350 | wooden sword; bow (power 1, infinity 1); spyglass; arrow       | An Infinity and Power I bow rewards fully drawn shots travelling at least 24 blocks with 2 extra raw damage, once every 8 seconds.                                      |
+| Windrunner (`windrunner`)       | ranged   |   300 | copper spear; bow (infinity 1); 4 wind charge; arrow           | A copper spear and Infinity bow with four finite wind charges for positioning; light armour keeps the loadout mobile.                                                   |
+| Harpooner (`harpooner`)         | ranged   |   300 | stone sword; trident (loyalty 3)                               | Throw a Loyalty III trident and wait for its return. A stone sword and archer armour cover the recovery; no Riptide or Channeling.                                      |
+| Fletcher (`fletcher`)           | ranged   |   300 | stone sword; bow (power 1); 8 tipped arrow; 24 arrow           | A Power I bow with 24 ordinary arrows and eight finite arrows that slow enemies for 3 seconds. Select the tipped stack in your offhand to prioritise it.                |
+| Lancer (`lancer`)               | tactical |   300 | iron spear; shield                                             | An iron spear and shield with chainmail. Use native spear reach, timed jabs and kinetic charge attacks to control a lane.                                               |
+| Maceguard (`maceguard`)         | tactical |   400 | mace; 3 wind charge                                            | A native mace with three finite wind charges and light armour with Feather Falling II. Smash damage and landing reset follow the native weapon rules.                   |
+| Quartermaster (`quartermaster`) | tactical |   250 | stone sword; 3 bundle                                          | Three supply bundles give living allies within 6 blocks 8 arrows and Absorption I for 4 seconds. Excludes yourself; 20-second recharge.                                 |
+| Warden (`warden`)               | tactical |   350 | iron sword; calibrated sculk sensor                            | Deploy a listening post for 30 seconds. It reports approximate directions of nearby enemy sounds within 12 blocks, at most once every 3 seconds; 35-second recharge.    |
+| Smokescreen (`smokescreen`)     | tactical |   400 | stone sword; gray dye                                          | Create a smoke field of radius 4 for 6 seconds, blocking human and bot vision while sounds and projectiles still pass. Recharges in 30 seconds.                         |
+| Tactician (`tactician`)         | tactical |   300 | iron sword; goat horn                                          | Hold still for a 1.2-second horn windup to grant nearby allies within 8 blocks Speed I and Resistance I for 6 seconds. Excludes self, never stacks; 40-second recharge. |
+
 Red Warfare described Inertia but left its ability an empty stub; its rules
 here are designed from that description. Sapper, Saboteur, Spotter, Grappler,
 Bannerman, Engineer, Tracker and Decoy are new to The Storm.
+
+## Native weapons and combat
+
+Sword and axe kits keep Red Warfare's damage formula and attack-speed modifier.
+Spears, tridents and maces use the native weapon operation and its cooldown;
+equipping one or swapping it into the main hand removes the legacy modifier.
+Changing back restores it. Crossbows have separate charge, load and fire actions;
+bows, crossbows and tridents use the actual selected item and ammunition for
+humans and Citizens. Finite ammunition, Multishot, Piercing, tipped and spectral
+arrows, returning Loyalty tridents, spear contacts and mace landing resets stay
+with the native server operation.
+
+`ItemSpec.potions` is required content, including an empty list on ordinary
+items. Each payload names its effect, amplifier and delivered duration in ticks.
+Authored tipped arrows set the supported potion duration scale to one, so
+Fletcher's 60-tick Slowness lasts three seconds. Alchemist flasks apply an exact
+three-block, enemy-only splash through their ability rules. Weakness reduces
+legacy melee raw damage by four per level; modern raw damage already includes it.
+
+Modern hits complete their native damage event with one authoritative RWF
+amount. `PaperNativeDamage` binds the pinned Paper modifier API at startup
+because Paper has no supported final-damage setter. It preserves shield blocks
+and native absorption consumption while preventing armour from applying twice.
+`PaperNativeItems` similarly binds the exact native use, release and spear-jab
+operations missing from the public API. A linkage mismatch fails startup.
+
+The combat tracker owns the shared hit window: in the first ten ticks after a
+hit, an equal or weaker hit is blocked and a stronger hit deals only its extra
+damage. Native invulnerability is zero during RWF so it cannot filter a hit
+before these rules. Player snapshots restore the previous native maximum when
+leaving or recovering after a crash; historical snapshots restore twenty ticks.
 
 ### Decided for The Storm
 

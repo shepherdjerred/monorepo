@@ -18,23 +18,32 @@ import org.bukkit.potion.PotionEffectType;
 import org.jspecify.annotations.Nullable;
 
 /** Captures real survival modifiers and actionable healing inventory on the main thread. */
-final class TraversalCapture {
+public final class TraversalCapture {
   private final Function<UUID, Optional<Instant>> noFallUntil;
   private final InstantSource time;
 
-  TraversalCapture(Function<UUID, Optional<Instant>> noFallUntil, InstantSource time) {
+  public TraversalCapture(Function<UUID, Optional<Instant>> noFallUntil, InstantSource time) {
     this.noFallUntil = noFallUntil;
     this.time = time;
   }
 
   TraversalState capture(Player player, String realKit, long tick) {
+    return capture(player, KitMovement.maySprint(realKit) && player.getFoodLevel() > 6, tick);
+  }
+
+  /** The final physical gate reads actual fall modifiers without guessing a kit from its items. */
+  public TraversalState survival(Player player, long tick) {
+    return capture(player, player.getFoodLevel() > 6, tick);
+  }
+
+  private TraversalState capture(Player player, boolean maySprint, long tick) {
     var resistance = player.getPotionEffect(PotionEffectType.RESISTANCE);
     var regeneration = player.getPotionEffect(PotionEffectType.REGENERATION);
     var slowFalling = player.getPotionEffect(PotionEffectType.SLOW_FALLING);
     var jumpBoost = player.getPotionEffect(PotionEffectType.JUMP_BOOST);
     var multiplier = attribute(player, Attribute.FALL_DAMAGE_MULTIPLIER);
     return new TraversalState(
-        KitMovement.maySprint(realKit) && player.getFoodLevel() > 6,
+        maySprint,
         attribute(player, Attribute.SAFE_FALL_DISTANCE),
         multiplier,
         protection(player),

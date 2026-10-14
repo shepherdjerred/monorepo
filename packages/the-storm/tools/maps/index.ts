@@ -10,6 +10,8 @@ import { exportTerrain, root } from "./paper.ts";
 import { freezeInputs } from "./inputs.ts";
 import { repairMetadata, Repairs } from "./repairs.ts";
 import { exportDetails } from "./details-paper.ts";
+import { mapDescription } from "./content/descriptions.ts";
+import { removeShops } from "./content/shops.ts";
 
 const args = parseArgs({
   strict: true,
@@ -36,6 +38,11 @@ const archives = entries.filter((file) => file.endsWith(".zip")).sort();
 if (archives.length === 0) throw new Error("No legacy map archives found");
 if (new Set(archives.map((file) => mapId(file))).size !== archives.length)
   throw new Error("Duplicate map IDs");
+for (const archive of archives) {
+  const id = mapId(archive);
+  if (args.values.map === undefined || args.values.map.includes(id))
+    mapDescription(id);
+}
 for (const selected of args.values.map ?? []) {
   if (!archives.some((file) => mapId(file) === selected))
     throw new Error(`Unknown source map: ${selected}`);
@@ -144,7 +151,13 @@ for (const [index, archive] of archives.entries()) {
     await mkdir(folder, { recursive: true });
     await Bun.write(
       path.join(folder, "map.yml"),
-      Bun.YAML.stringify(mapContent(id, index, map, terrain)),
+      Bun.YAML.stringify(
+        mapContent(
+          { id, index, description: mapDescription(id) },
+          map,
+          terrain,
+        ),
+      ),
     );
     await Bun.write(
       path.join(folder, "blocks.schem"),
@@ -160,7 +173,11 @@ for (const [index, archive] of archives.entries()) {
       repair: repaired.repair,
       index,
       producer: inputs.hashes,
-      translation: mapContent(id, index, map, terrain).region,
+      translation: mapContent(
+        { id, index, description: mapDescription(id) },
+        map,
+        terrain,
+      ).region,
       runtime: {
         paper: {
           version: paper.version,
@@ -195,7 +212,11 @@ for (const [index, archive] of archives.entries()) {
       directory,
       detailsOutput,
       {
-        map: mapContent(id, index, map, terrain),
+        map: mapContent(
+          { id, index, description: mapDescription(id) },
+          map,
+          terrain,
+        ),
         originalMin: { x: map.bounds.minX, z: map.bounds.minZ },
       },
       inputs,
@@ -226,6 +247,7 @@ for (const [index, archive] of archives.entries()) {
         2,
       ) + "\n",
     );
+    await removeShops(folder);
     await command(
       [
         "mise",

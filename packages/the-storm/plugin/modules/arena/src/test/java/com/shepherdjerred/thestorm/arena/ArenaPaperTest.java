@@ -301,7 +301,7 @@ final class ArenaPaperTest {
             alice.getUniqueId(),
             "colosseum",
             new Position("world", 5.5, 70, 5.5, 0, 0),
-            new Vitals(9, 11, 1, 0, "SURVIVAL"),
+            new Vitals(new Vitals.Condition(9, 11, 1, 0), "SURVIVAL"),
             new Experience(3, 0.25f, 40),
             ItemData.of(ItemStack.serializeItemsAsBytes(belongings)),
             List.of(new EffectRecord("minecraft:haste", 0, 400, false, true, true)),
@@ -309,6 +309,9 @@ final class ArenaPaperTest {
     new JooqSnapshotStore(harness.database).save(snapshot).join();
     alice.getInventory().addItem(ItemStack.of(Material.DIAMOND_SWORD));
 
+    // Restoring memory must retain the recovery row until a player-data save is durable.
+    // Dropping writes makes this boundary deterministic even when enable pumps extra ticks.
+    harness.saved.dropWrites = true;
     harness.enable(directory);
     harness.until(() -> alice.getInventory().contains(Material.EMERALD, 12));
 
@@ -319,6 +322,8 @@ final class ArenaPaperTest {
     assertThat(alice.getPotionEffect(PotionEffectType.HASTE)).isNotNull();
     assertThat(alice.getLocation().getX()).isEqualTo(5.5);
     assertThat(stored()).hasSize(1);
+    harness.saved.dropWrites = false;
+    harness.saved.save(alice).join();
     harness.rejoinAfterSave(alice);
     harness.until(() -> stored().isEmpty());
   }

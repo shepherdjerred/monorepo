@@ -3,7 +3,7 @@
   "kind": "rwf-map-scenario",
   "id": "battle-scarred-trooper-duel-v1",
   "map": "battle-scarred",
-  "mapSha256": "1d6b2ba3993700aa17f7a185c2874543cc41e7190d56ab35d55767528f6cbc44",
+  "mapSha256": "7f9809a78d4bc3b15002fac2db31c07607e378fc1766b0a5ec045e5e62b608c4",
   "world": "minecraft:rwf",
   "region": {
     "min": {

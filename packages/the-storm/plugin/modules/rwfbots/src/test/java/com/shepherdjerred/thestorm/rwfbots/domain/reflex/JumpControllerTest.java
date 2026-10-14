@@ -62,14 +62,53 @@ final class JumpControllerTest {
   @Test
   void anAirbornePrimitiveKeepsItsLandingAndCompletesOnlyAtTheDestination() {
     var active = new ActiveJump(GAP, INTENT, ActiveJump.Stage.AIRBORNE, 1, 1);
-    var flying = combatant(1, RED, new Vec3(4.5, 2.2, 1.5));
+    var flying = combatant(1, RED, new Vec3(4.5, 2.2, 1.5)).withMotion(true, false);
     var next = JumpController.tick(Optional.of(active), REQUEST, flying, 5);
     assertThat(next.moveTo()).isEqualTo(GAP.pos());
     assertThat(next.jump()).isFalse();
     assertThat(next.state()).contains(active);
-    var landed = JumpController.tick(next.state(), REQUEST, flying.withPos(GAP.pos()), 13);
+    var landed =
+        JumpController.tick(
+            next.state(), REQUEST, flying.withPos(GAP.pos()).withMotion(false, true), 13);
     assertThat(landed.state()).isEmpty();
     assertThat(landed.failed()).isFalse();
+  }
+
+  @Test
+  void aLaterGroundedSnapshotRejectsAnUnexecutedLaunchOrAnOffTargetLanding() {
+    var active = new ActiveJump(GAP, INTENT, ActiveJump.Stage.AIRBORNE, 1, 1);
+    for (var self :
+        java.util.List.of(
+            combatant(1, RED, GAP.launch().orElseThrow().takeoff()),
+            combatant(1, RED, new Vec3(5.5, 1, 1.5)).withVel(new Vec3(0.28, -0.01, 0)))) {
+      var step = JumpController.tick(Optional.of(active), REQUEST, self, 2);
+      assertThat(step.state()).isEmpty();
+      assertThat(step.failed()).isTrue();
+      assertThat(step.jump()).isFalse();
+      assertThat(step.moveTo()).isEqualTo(self.pos());
+    }
+  }
+
+  @Test
+  void theLaunchFrameAndActualAscendingOrDescendingFlightRetainLandingOwnership() {
+    var active = new ActiveJump(GAP, INTENT, ActiveJump.Stage.AIRBORNE, 1, 1);
+    var atTakeoff = combatant(1, RED, GAP.launch().orElseThrow().takeoff());
+    var first = JumpController.tick(Optional.of(active), REQUEST, atTakeoff, 1);
+    assertThat(first.state()).contains(active);
+    assertThat(first.failed()).isFalse();
+    for (var self :
+        java.util.List.of(
+            atTakeoff.withVel(new Vec3(0.48, MovementMotor.JUMP_SPEED, 0)),
+            atTakeoff
+                .withPos(new Vec3(4.5, 2.2, 1.5))
+                .withMotion(true, false)
+                .withVel(new Vec3(0.3, -0.1, 0)))) {
+      var step = JumpController.tick(Optional.of(active), REQUEST, self, 2);
+      assertThat(step.state()).contains(active);
+      assertThat(step.failed()).isFalse();
+      assertThat(step.jump()).isFalse();
+      assertThat(step.moveTo()).isEqualTo(GAP.pos());
+    }
   }
 
   @Test

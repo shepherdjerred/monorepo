@@ -24,12 +24,16 @@ const terrain = {
   maxY: 64,
   removedData: 0,
   blocksSha256: "a".repeat(64),
-} satisfies Parameters<typeof mapContent>[3];
+} satisfies Parameters<typeof mapContent>[2];
 
 describe("legacy map metadata", () => {
   it("preserves four teams, every spawn and bomb, and original descriptive metadata", () => {
     const map = legacyMap(text);
-    const converted = mapContent("original", 0, map, terrain);
+    const converted = mapContent(
+      { id: "original", index: 0, description: "An authored four-team arena." },
+      map,
+      terrain,
+    );
     expect(converted.teams.map((team) => team.spawns.length)).toEqual([
       2, 1, 1, 1,
     ]);
@@ -49,11 +53,20 @@ describe("legacy map metadata", () => {
     expect(map.source.Custom["Random Base"]).toEqual([true]);
     expect(converted.name).toBe("Original");
     expect(converted.author).toBe("Builders");
+    expect(converted.description).toBe("An authored four-team arena.");
   });
   it("places maps deterministically in disjoint grid cells", () => {
     const map = legacyMap(text);
-    const first = mapContent("original", 0, map, terrain);
-    const sixth = mapContent("sixth", 6, map, terrain);
+    const first = mapContent(
+      { id: "original", index: 0, description: "An authored four-team arena." },
+      map,
+      terrain,
+    );
+    const sixth = mapContent(
+      { id: "sixth", index: 6, description: "An authored four-team arena." },
+      map,
+      terrain,
+    );
     expect(sixth.region.min.z - first.region.min.z).toBe(1024);
     expect(sixth.region.min.z).toBeGreaterThan(first.region.max.z);
     expect(mapId("ClonedBeanstalks.zip")).toBe("cloned-beanstalks");
@@ -66,5 +79,18 @@ describe("legacy map metadata", () => {
       text.replace("-10,26,0", "-17,26,0"),
     ])
       expect(() => legacyMap(invalid)).toThrow();
+  });
+
+  it("rejects blank and placeholder authored descriptions", () => {
+    const map = legacyMap(text);
+    for (const invalid of ["", "   ", "null"]) {
+      expect(() =>
+        mapContent(
+          { id: "original", index: 0, description: invalid },
+          map,
+          terrain,
+        ),
+      ).toThrow();
+    }
   });
 });

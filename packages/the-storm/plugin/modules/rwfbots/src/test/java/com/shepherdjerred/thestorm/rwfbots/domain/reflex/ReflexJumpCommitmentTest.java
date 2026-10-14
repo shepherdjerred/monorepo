@@ -88,7 +88,8 @@ final class ReflexJumpCommitmentTest {
     var changed = route(Option.RETAKE, new Waypoint(GOAL.pos().plus(0, 0, 1), Hop.WALK));
     var step = tick(self, active, changed, 10);
     assertThat(step.state().activeJump()).contains(active);
-    assertThat(step.commands()).contains(new BodyCommand.MoveToward(ORIGINAL.pos(), true));
+    assertThat(step.commands())
+        .contains(new BodyCommand.MoveToward(ORIGINAL.pos(), true, Hop.LEAP));
     assertThat(step.commands()).doesNotContain(new BodyCommand.Jump());
   }
 
@@ -115,10 +116,11 @@ final class ReflexJumpCommitmentTest {
             Optional.empty(),
             "certified first contact",
             10,
-            1);
+            1,
+            Optional.empty());
     var step = tick(self, active(jump, ActiveJump.Stage.AIRBORNE), decision, 10);
     assertThat(step.state().activeJump()).isEmpty();
-    assertThat(step.commands()).contains(new BodyCommand.MoveToward(refuge.pos(), false));
+    assertThat(step.commands()).contains(new BodyCommand.MoveToward(refuge.pos(), false, Hop.DROP));
     assertThat(step.commands()).doesNotContain(new BodyCommand.Jump());
   }
 
@@ -131,7 +133,8 @@ final class ReflexJumpCommitmentTest {
     var active = active(ORIGINAL, ActiveJump.Stage.AIRBORNE);
     var step = tick(self, active, route(Option.RETAKE, GOAL), 10);
     assertThat(step.state().activeJump()).contains(active);
-    assertThat(step.commands()).contains(new BodyCommand.MoveToward(ORIGINAL.pos(), true));
+    assertThat(step.commands())
+        .contains(new BodyCommand.MoveToward(ORIGINAL.pos(), true, Hop.LEAP));
   }
 
   @Test
@@ -145,7 +148,8 @@ final class ReflexJumpCommitmentTest {
     var step =
         tick(self, active, route(Option.HUNT, GOAL).withWaypoints(List.of(contact, GOAL)), 10);
     assertThat(step.state().activeJump()).contains(active);
-    assertThat(step.commands()).contains(new BodyCommand.MoveToward(ORIGINAL.pos(), true));
+    assertThat(step.commands())
+        .contains(new BodyCommand.MoveToward(ORIGINAL.pos(), true, Hop.LEAP));
   }
 
   @Test
@@ -162,7 +166,8 @@ final class ReflexJumpCommitmentTest {
             route(Option.HUNT, GOAL).withWaypoints(List.of(contact, GOAL)),
             10);
     assertThat(step.state().activeJump()).isEmpty();
-    assertThat(step.commands()).contains(new BodyCommand.MoveToward(contact.pos(), false));
+    assertThat(step.commands())
+        .contains(new BodyCommand.MoveToward(contact.pos(), false, Hop.DROP));
   }
 
   @Test
@@ -182,8 +187,10 @@ final class ReflexJumpCommitmentTest {
             route(Option.HUNT, GOAL).withWaypoints(List.of(contact, GOAL)),
             10);
     assertThat(step.state().activeJump()).isEmpty();
-    assertThat(step.commands()).contains(new BodyCommand.MoveToward(contact.pos(), false));
-    assertThat(step.commands()).doesNotContain(new BodyCommand.MoveToward(oldWater.pos(), true));
+    assertThat(step.commands())
+        .contains(new BodyCommand.MoveToward(contact.pos(), false, Hop.DROP));
+    assertThat(step.commands())
+        .doesNotContain(new BodyCommand.MoveToward(oldWater.pos(), true, Hop.LEAP));
   }
 
   @Test
@@ -214,7 +221,7 @@ final class ReflexJumpCommitmentTest {
               new ReflexInput(self, world, decision, target, 3),
               CONTEXT,
               new SplittableRandom(196));
-      var move = new BodyCommand.MoveToward(contact.pos(), false);
+      var move = new BodyCommand.MoveToward(contact.pos(), false, Hop.DROP);
       assertThat(step.commands())
           .contains(new BodyCommand.Sneak(false), new BodyCommand.CancelUse(), move);
       assertThat(step.commands().indexOf(new BodyCommand.Sneak(false)))
@@ -291,7 +298,8 @@ final class ReflexJumpCommitmentTest {
         Optional.empty(),
         "replanned",
         10,
-        1);
+        1,
+        Optional.empty());
   }
 
   private static Reflex.Step tick(

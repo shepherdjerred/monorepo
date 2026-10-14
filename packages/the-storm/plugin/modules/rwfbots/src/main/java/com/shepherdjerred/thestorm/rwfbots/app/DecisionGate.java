@@ -64,7 +64,8 @@ public final class DecisionGate {
             Optional.empty(),
             decision.planLabel(),
             decision.snapshotTick(),
-            decision.lifeEpoch()),
+            decision.lifeEpoch(),
+            decision.routeFailure()),
         true);
   }
 }

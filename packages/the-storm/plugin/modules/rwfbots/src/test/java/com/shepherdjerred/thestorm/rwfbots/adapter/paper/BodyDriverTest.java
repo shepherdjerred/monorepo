@@ -10,8 +10,14 @@ import com.shepherdjerred.thestorm.rwfbots.domain.Fixtures;
 import com.shepherdjerred.thestorm.rwfbots.domain.difficulty.LeverCurves;
 import com.shepherdjerred.thestorm.rwfbots.domain.director.Rating;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
+import com.shepherdjerred.thestorm.rwfbots.domain.reflex.ActiveJump;
+import com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BodyCommand;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.Hop;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.JumpLaunch;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Kit;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.Option;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.Waypoint;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -48,9 +54,13 @@ final class BodyDriverTest {
     server.addWorld(world);
     bodies = new FakeBodies(server);
     actions = new FakeBotActions();
-    stimuli = new StimulusCollector();
+    var time = java.time.InstantSource.fixed(java.time.Instant.EPOCH);
+    stimuli =
+        new StimulusCollector(new com.shepherdjerred.thestorm.rwf.app.BattleSoundLog(time), time);
     rewound = new ArrayList<>();
-    driver = new BodyDriver(new BodyDriver.Parts(bodies, actions, world, stimuli, rewound::add));
+    driver =
+        new BodyDriver(
+            new BodyDriver.Parts(bodies, actions, world, stimuli, rewound::add, id -> false));
     var personality = Fixtures.personality("ash", "Ash_42", 0.5);
     var drafted =
         new Director.Drafted(personality, Kit.LONGBOW, LeverCurves.at(0.5), Rating.DEFAULT);
@@ -68,6 +78,47 @@ final class BodyDriverTest {
 
   private void apply(long tick, BodyCommand... commands) {
     driver.apply(bot, List.of(commands), ids, tick);
+  }
+
+  @Test
+  void liveMovementRefusalPreventsItsPairedJumpButDoesNotSuppressAStandaloneJump() {
+    for (var reason : List.of(MovementSafety.Reason.BLOCKED, MovementSafety.Reason.ARRIVED)) {
+      var before = bodies.player(bot.uuid()).getLocation();
+      bot.reflex(bot.reflex().withActiveJump(Optional.of(flight(1))));
+      bodies.nextMovement(reason);
+      apply(
+          1, new BodyCommand.MoveToward(new Vec3(8, 1, 5), true, Hop.LEAP), new BodyCommand.Jump());
+      assertThat(bodies.orders())
+          .containsExactly(reason.name().toLowerCase(java.util.Locale.ROOT) + " Ash_42");
+      assertThat(bodies.player(bot.uuid()).getLocation()).isEqualTo(before);
+      assertThat(bot.reflex().activeJump()).isEmpty();
+      apply(2, new BodyCommand.Jump());
+      assertThat(bodies.orders()).containsExactly("jump Ash_42");
+    }
+  }
+
+  @Test
+  void aRefusedAirborneCorrectionRetainsTheFlightThatAlreadyOwnsNativeMomentum() {
+    var active = flight(0);
+    bot.reflex(bot.reflex().withActiveJump(Optional.of(active)));
+    bodies.nextMovement(MovementSafety.Reason.BLOCKED);
+    apply(1, new BodyCommand.MoveToward(new Vec3(8, 1, 5), true, Hop.LEAP));
+    assertThat(bot.reflex().activeJump()).contains(active);
+    assertThat(bodies.orders()).containsExactly("blocked Ash_42");
+  }
+
+  private static ActiveJump flight(long launchedAt) {
+    var landing =
+        new Waypoint(
+            new Vec3(8, 1, 5),
+            Hop.LEAP,
+            Optional.of(new JumpLaunch(new Vec3(5, 1, 5), new Vec3(3, 1, 5), 0.27, 13)));
+    return new ActiveJump(
+        landing,
+        new ActiveJump.Intent(Option.HUNT, landing.pos()),
+        ActiveJump.Stage.AIRBORNE,
+        0,
+        launchedAt);
   }
 
   @Test
@@ -111,6 +162,30 @@ final class BodyDriverTest {
   }
 
   @Test
+  void aTacticalWindupHoldsLearnedMovementAndAttacksIncludingTheFrameThatStartsIt() {
+    var casting = new java.util.concurrent.atomic.AtomicBoolean();
+    driver =
+        new BodyDriver(
+            new BodyDriver.Parts(
+                bodies, actions, world, stimuli, rewound::add, id -> casting.get()));
+    actions.onKitUse(() -> casting.set(true));
+    var enemy = ids.combatant(UUID.randomUUID());
+    apply(
+        1,
+        new BodyCommand.UseKit(1, Optional.empty(), Optional.empty()),
+        new BodyCommand.MoveToward(new Vec3(10, 1, 5), true),
+        new BodyCommand.Attack(enemy));
+    assertThat(actions.calls()).containsExactly("use 1");
+    assertThat(bodies.orders()).containsExactly("stop Ash_42");
+    apply(2, new BodyCommand.Attack(enemy), new BodyCommand.Jump(), new BodyCommand.UseStreak());
+    assertThat(actions.calls()).isEmpty();
+    assertThat(bodies.orders()).containsExactly("stop Ash_42");
+    casting.set(false);
+    apply(3, new BodyCommand.Attack(enemy));
+    assertThat(actions.calls()).containsExactly("melee " + ids.uuid(enemy).orElseThrow());
+  }
+
+  @Test
   void refusalsAreCountedOnTheBot() {
     actions.refuseWith(Optional.of(ActionRefusal.OUT_OF_REACH));
 
@@ -121,22 +196,46 @@ final class BodyDriverTest {
   }
 
   @Test
-  void aBowDrawnTwentyTicksFiresAtFullForceAlongTheTicksLook() {
+  void aBowReleasesThroughTheNativePortAlongTheTicksLook() {
+    var bow = new org.bukkit.inventory.ItemStack(Material.BOW);
+    bow.addUnsafeEnchantment(org.bukkit.enchantments.Enchantment.INFINITY, 1);
+    bodies.player(bot.uuid()).getInventory().setItem(2, bow);
+    bodies.player(bot.uuid()).getInventory().setHeldItemSlot(2);
+    apply(10, new BodyCommand.StartUse());
+    assertThat(bodies.orders()).isEmpty();
+    assertThat(bot.drawStart()).isEqualTo(10);
+
+    apply(30, new BodyCommand.ReleaseUse(), new BodyCommand.Look(0, -45));
+
+    assertThat(bodies.orders()).containsExactly("look Ash_42");
+    assertThat(actions.calls()).containsExactly("weapon START", "weapon RELEASE");
+    assertThat(bot.drawStart()).isEqualTo(-1);
+    assertThat(stimuli.drain()).isEmpty();
+  }
+
+  @Test
+  void aFiniteBowUsesNativeAmmunitionInsteadOfTheSyntheticArrowPath() {
     bodies
         .player(bot.uuid())
         .getInventory()
         .setItem(2, new org.bukkit.inventory.ItemStack(Material.BOW));
     bodies.player(bot.uuid()).getInventory().setHeldItemSlot(2);
     apply(10, new BodyCommand.StartUse());
-    assertThat(bodies.orders()).containsExactly("use Ash_42 BOW");
-    assertThat(bot.drawStart()).isEqualTo(10);
+    apply(30, new BodyCommand.ReleaseUse());
+    assertThat(actions.calls()).containsExactly("weapon START", "weapon RELEASE");
+    assertThat(bodies.orders()).isEmpty();
+  }
 
-    apply(30, new BodyCommand.ReleaseUse(), new BodyCommand.Look(0, -45));
-
-    assertThat(bodies.orders()).containsExactly("look Ash_42", "release Ash_42");
-    assertThat(actions.calls()).containsExactly("shoot 0.00,0.71,0.71 force 1.000");
-    assertThat(bot.drawStart()).isEqualTo(-1);
-    assertThat(stimuli.drain()).hasSize(1);
+  @Test
+  void aChargedCrossbowFiresWithASeparateNativeUseAfterRelease() {
+    var crossbow = new org.bukkit.inventory.ItemStack(Material.CROSSBOW);
+    crossbow.editMeta(
+        org.bukkit.inventory.meta.CrossbowMeta.class,
+        meta -> meta.addChargedProjectile(new org.bukkit.inventory.ItemStack(Material.ARROW)));
+    bodies.player(bot.uuid()).getInventory().setItem(2, crossbow);
+    bodies.player(bot.uuid()).getInventory().setHeldItemSlot(2);
+    apply(30, new BodyCommand.ReleaseUse());
+    assertThat(actions.calls()).containsExactly("weapon RELEASE", "weapon START");
   }
 
   @Test
@@ -205,5 +304,113 @@ final class BodyDriverTest {
     assertThat(BodyDriver.force(5)).isCloseTo((0.0625 + 0.5) / 3, within(1e-9));
     assertThat(BodyDriver.force(20)).isEqualTo(1);
     assertThat(BodyDriver.force(40)).isEqualTo(1);
+  }
+
+  @Test
+  void typingStopsVoluntaryActionsAndFuseWorkCancelsItImmediately() {
+    var activity =
+        new BodyActivity() {
+          boolean busy = true;
+
+          @Override
+          public boolean typing(UUID uuid) {
+            return busy;
+          }
+
+          @Override
+          public void cancel(UUID uuid) {
+            busy = false;
+          }
+        };
+    driver.communication(activity);
+    var target = ids.combatant(new UUID(0, 9));
+    apply(
+        1,
+        new BodyCommand.MoveToward(new Vec3(8, 1, 5), true),
+        new BodyCommand.Attack(target),
+        new BodyCommand.UseStreak());
+    assertThat(bodies.orders()).containsExactly("stop Ash_42");
+    assertThat(actions.calls()).isEmpty();
+    apply(2, new BodyCommand.ClickBomb(ids.bomb("red-1")));
+    assertThat(activity.busy).isFalse();
+    assertThat(actions.calls()).containsExactly("bomb red-1");
+  }
+
+  @Test
+  void fallingCancelsSpeechBeforeTheDriverAppliesLandingMovement() {
+    var activity =
+        new BodyActivity() {
+          boolean busy = true;
+
+          @Override
+          public boolean typing(UUID uuid) {
+            return busy;
+          }
+
+          @Override
+          public void cancel(UUID uuid) {
+            busy = false;
+          }
+        };
+    driver.communication(activity);
+    var self = Fixtures.combatant(1, Fixtures.RED, new Vec3(5, 1, 5));
+    self = self.withTraversal(self.traversal().withFallDistance(0.25));
+    var snapshot =
+        new com.shepherdjerred.thestorm.rwfbots.domain.world.WorldSnapshot(
+            2,
+            com.shepherdjerred.thestorm.rwfbots.domain.world.MatchPhase.LIVE,
+            List.of(self),
+            List.of(),
+            com.shepherdjerred.thestorm.rwfbots.domain.world.PoisonView.NONE,
+            "test",
+            List.of());
+    var input =
+        new com.shepherdjerred.thestorm.rwfbots.domain.reflex.ReflexInput(
+            self,
+            snapshot,
+            com.shepherdjerred.thestorm.rwfbots.domain.world.Decision.idle(self.id(), 2, 0),
+            Optional.empty(),
+            0);
+    assertThat(BotTicker.communicationPaused(bot, input, activity)).isFalse();
+    apply(
+        2,
+        new BodyCommand.MoveToward(
+            new Vec3(8, 1, 5), true, com.shepherdjerred.thestorm.rwfbots.domain.world.Hop.LEAP));
+    assertThat(activity.busy).isFalse();
+    assertThat(bodies.orders()).containsExactly("move Ash_42 sprint");
+  }
+
+  @Test
+  void aShieldGetsItsWarmupAndHoldBeforeTheSwordCounterattack() {
+    bodies
+        .player(bot.uuid())
+        .getInventory()
+        .setItem(2, new org.bukkit.inventory.ItemStack(Material.SHIELD));
+    var target = ids.combatant(new UUID(0, 9));
+    apply(
+        1,
+        new BodyCommand.UseKit(2, Optional.of(target), Optional.empty()),
+        new BodyCommand.SelectSlot(0),
+        new BodyCommand.Attack(target));
+    assertThat(actions.calls()).containsExactly("use 2 on " + new UUID(0, 9));
+    assertThat(bodies.orders()).doesNotContain("slot Ash_42 0");
+    apply(6, new BodyCommand.SelectSlot(0), new BodyCommand.Attack(target));
+    assertThat(actions.calls()).isEmpty();
+    apply(13, new BodyCommand.SelectSlot(0), new BodyCommand.Attack(target));
+    assertThat(actions.calls()).containsExactly("weapon CANCEL", "melee " + new UUID(0, 9));
+    assertThat(bodies.orders()).contains("slot Ash_42 0");
+  }
+
+  @Test
+  void aFuseOrLethalDangerEndsShieldCommitment() {
+    bot.shieldUntil(30);
+    apply(2, new BodyCommand.ClickBomb(ids.bomb("red-1")));
+    assertThat(actions.calls()).containsExactly("weapon CANCEL", "bomb red-1");
+    bot.shieldUntil(30);
+    bodies.player(bot.uuid()).setHealth(5);
+    apply(3, new BodyCommand.UseStreak());
+    assertThat(actions.calls()).containsExactly("weapon CANCEL", "streak");
+    bot.newLife(com.shepherdjerred.thestorm.rwfbots.domain.geom.Facing.SOUTH);
+    assertThat(bot.shieldUntil()).isZero();
   }
 }

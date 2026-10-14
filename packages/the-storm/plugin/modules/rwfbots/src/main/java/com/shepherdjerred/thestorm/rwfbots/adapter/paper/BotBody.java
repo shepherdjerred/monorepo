@@ -34,7 +34,20 @@ public final class BotBody {
   private String planLabel = "-";
   private long decisionAge;
   private boolean recoveryRequested;
+  private Optional<String> lastMovementProblem = Optional.empty();
+  private long lastMovementProblemTick = -1;
+  private long nextMovementRecovery;
+  private int movementRecoveries;
   private long nextStreak;
+  private long shieldUntil;
+
+  long shieldUntil() {
+    return shieldUntil;
+  }
+
+  void shieldUntil(long tick) {
+    shieldUntil = tick;
+  }
 
   BotBody(UUID uuid, Director.Drafted drafted) {
     this.uuid = uuid;
@@ -82,12 +95,15 @@ public final class BotBody {
     reflex = ReflexState.initial(Facing.SOUTH);
     motion = MotionRecovery.State.INITIAL;
     recoveryRequested = false;
+    clearMovementProblems();
     tally = PersonalityStats.Tally.NONE;
     drawStart = -1;
+    shieldUntil = 0;
   }
 
   void leaveMatch() {
     profile = null;
+    shieldUntil = 0;
   }
 
   ReflexState reflex() {
@@ -110,9 +126,42 @@ public final class BotBody {
     recoveryRequested = true;
   }
 
+  /**
+   * Rate-limited navigation recovery keeps persistent failures visible without flooding thinkers.
+   */
+  void requestMovementRecovery(String reason, long tick) {
+    lastMovementProblem = Optional.of(reason);
+    lastMovementProblemTick = tick;
+    if (tick >= nextMovementRecovery) {
+      requestRecovery();
+      movementRecoveries++;
+      nextMovementRecovery = tick + MotionRecovery.STUCK_TICKS;
+    }
+  }
+
+  public Optional<String> lastMovementProblem() {
+    return lastMovementProblem;
+  }
+
+  public long lastMovementProblemTick() {
+    return lastMovementProblemTick;
+  }
+
+  public int movementRecoveries() {
+    return movementRecoveries;
+  }
+
+  private void clearMovementProblems() {
+    lastMovementProblem = Optional.empty();
+    lastMovementProblemTick = -1;
+    nextMovementRecovery = 0;
+    movementRecoveries = 0;
+  }
+
   boolean takeRecoveryRequest() {
     var requested = recoveryRequested;
     recoveryRequested = false;
+    clearMovementProblems();
     return requested;
   }
 
@@ -127,6 +176,7 @@ public final class BotBody {
     motion = MotionRecovery.State.INITIAL;
     recoveryRequested = false;
     drawStart = -1;
+    shieldUntil = 0;
   }
 
   public PersonalityStats.Tally tally() {

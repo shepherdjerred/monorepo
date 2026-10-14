@@ -54,6 +54,7 @@ public final class CombatHarness {
   private OptionalLong seed = OptionalLong.empty();
   private int combatants;
   private boolean seededBaseline;
+  private List<Director.Drafted> authoredDraft = List.of();
 
   public void attach(long experimentSeed, Controller experiment) {
     attach(experimentSeed, 2, experiment);
@@ -83,11 +84,21 @@ public final class CombatHarness {
     attach(OptionalLong.empty(), experimentCombatants, experiment);
   }
 
+  /** Replays one recorded authored cohort without enabling the controlled Trooper environment. */
+  public void attachAuthored(List<Director.Drafted> recordedDraft, Controller experiment) {
+    var copied = List.copyOf(recordedDraft);
+    if (copied.stream().map(bot -> bot.personality().id()).distinct().count() != copied.size())
+      throw new IllegalArgumentException("authored cohort contains duplicate personalities");
+    attachAuthored(copied.size(), experiment);
+    authoredDraft = copied;
+  }
+
   private void attach(
       OptionalLong experimentSeed, int experimentCombatants, Controller experiment) {
     if (controller.isPresent()) throw new IllegalStateException("experiment already attached");
     seed = experimentSeed;
     seededBaseline = false;
+    authoredDraft = List.of();
     combatants = experimentCombatants;
     controller = Optional.of(experiment);
     match = Optional.empty();
@@ -98,6 +109,7 @@ public final class CombatHarness {
     match = Optional.empty();
     seed = OptionalLong.empty();
     seededBaseline = false;
+    authoredDraft = List.of();
   }
 
   public Optional<List<Director.Drafted>> draft(
@@ -105,10 +117,7 @@ public final class CombatHarness {
     if (controller.isEmpty() || match.isPresent()) return Optional.empty();
     if (slots != combatants)
       throw new IllegalArgumentException("combat experiment roster size differs");
-    if (seed.isEmpty()) {
-      match = Optional.of(matchId);
-      return Optional.empty();
-    }
+    if (seed.isEmpty()) return bindAuthored(matchId, catalog);
     var identities =
         catalog.active().stream()
             .sorted(Comparator.comparing(p -> p.id()))
@@ -132,6 +141,16 @@ public final class CombatHarness {
                             : LeverCurves.at(1),
                         Rating.DEFAULT))
             .toList());
+  }
+
+  private Optional<List<Director.Drafted>> bindAuthored(UUID matchId, PersonalityCatalog catalog) {
+    for (var bot : authoredDraft) {
+      var admitted = catalog.byId(bot.personality().id()).filter(p -> !p.retired());
+      if (admitted.isEmpty() || !admitted.orElseThrow().equals(bot.personality()))
+        throw new IllegalArgumentException("authored cohort differs from the active catalog");
+    }
+    match = Optional.of(matchId);
+    return authoredDraft.isEmpty() ? Optional.empty() : Optional.of(authoredDraft);
   }
 
   /** Empty for legacy mechanics/load diagnostics, which deliberately retain maximal levers. */
