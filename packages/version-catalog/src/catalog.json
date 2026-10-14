@@ -799,7 +799,7 @@
         "versioning": "semver",
         "packageName": "shepherdjerred/scout-for-lol"
       },
-      "value": "2.0.0-1009046@sha256:203652ad0822a3cf46af6d5c586b6b7ff38d1a1e00887ebf1ef66e75bd4eb2f4",
+      "value": "2.0.0-1009839@sha256:1bbed16e7d93342380ee0b5a8425b8baa6b77c69553540b4f90cf6ed3c12b19e",
       "notes": [
         "Prod promotion = merging a reviewed PR for this pin (normally Renovate). Each 2.0.0-<n>",
         "tag is minted by the scout-tag-release CI step only after site version",
@@ -869,7 +869,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1009046@sha256:203652ad0822a3cf46af6d5c586b6b7ff38d1a1e00887ebf1ef66e75bd4eb2f4",
+      "value": "2.0.0-1009839@sha256:1bbed16e7d93342380ee0b5a8425b8baa6b77c69553540b4f90cf6ed3c12b19e",
       "notes": [
         "Candidate Scout prod Workflow Worker image - advanced explicitly after beta acceptance",
         "not managed by renovate"

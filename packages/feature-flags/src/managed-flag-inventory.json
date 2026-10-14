@@ -2717,6 +2717,14 @@
       "key": "beta",
       "overrides": [
         {
+          "key": "scout_durable_orchestration_enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
           "key": "the-storm-analytics-enabled",
           "type": "boolean",
           "default": true,
