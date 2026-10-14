@@ -1087,6 +1087,7 @@
             "tests/rcon.test.ts",
             "tests/rwf-recording.test.ts",
             "tests/rwf-status.test.ts",
+            "tests/public-status.test.ts",
             "tests/capacity/capacity-bars.test.ts",
             "tests/capacity/runtime.test.ts",
             "tests/capacity/native-combat.test.ts",
