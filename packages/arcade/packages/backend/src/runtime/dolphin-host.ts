@@ -12,6 +12,7 @@ import { DolphinPads, dolphinControllers } from "./dolphin-input.ts";
 import { waitFor } from "./wait.ts";
 import { PipeWriter } from "./pipe-writer.ts";
 import { verifyAssets } from "./assets.ts";
+import { closeServer } from "./close-server.ts";
 
 export class DolphinHost {
   private readonly server = createServer();
@@ -185,13 +186,7 @@ export class DolphinHost {
       }
     }
     this.socket?.destroy();
-    if (this.server.listening)
-      await new Promise<void>((resolve, reject) => {
-        this.server.close((error) => {
-          if (error === undefined) resolve();
-          else reject(error);
-        });
-      });
+    await closeServer(this.server);
     if (failures.length > 0)
       throw new AggregateError(
         failures,

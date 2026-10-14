@@ -7,6 +7,7 @@ import {
   Service,
   Volume,
 } from "cdk8s-plus-31";
+import type { ISecret } from "cdk8s-plus-31";
 import type { Chart } from "cdk8s";
 import { ApiObject, Duration, JsonPatch, Size } from "cdk8s";
 import {
@@ -34,6 +35,15 @@ import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/ot
 // WORKDIR (enforced by app-root-matches-dockerfile.test.ts).
 export const APP_ROOT = "/app/packages/discord-plays-pokemon";
 const WEB_PORT = 8081;
+
+export function emeraldGoalCredentials(secret: ISecret) {
+  return {
+    CODEX_ACCESS_TOKEN: EnvValue.fromSecretValue({
+      secret,
+      key: "CODEX_ACCESS_TOKEN",
+    }),
+  };
+}
 
 export function createPokemonDeployment(chart: Chart) {
   const GID = 1000;
@@ -148,10 +158,7 @@ export function createPokemonDeployment(chart: Chart) {
         OTLP_ENDPOINT: EnvValue.fromValue(OTLP_GATEWAY_BASE_URL),
         // Codex SDK goal-mode OAuth. Direct provider API keys are deliberately
         // absent; a mounted auth cache remains valid for local development.
-        CODEX_ACCESS_TOKEN: EnvValue.fromSecretValue({
-          secret,
-          key: "CODEX_ACCESS_TOKEN",
-        }),
+        ...emeraldGoalCredentials(secret),
         // LLM observability: every Codex goal turn, tool call, and screenshot
         // gets archived to SeaweedFS by the LlmArchiveSpanProcessor wired in
         // observability/tracing.ts. SeaweedFS S3 creds come from the shared

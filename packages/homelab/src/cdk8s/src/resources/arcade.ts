@@ -17,7 +17,6 @@ import {
   withCommonProps,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
-import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
@@ -25,6 +24,7 @@ import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/ot
 import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-archive-env.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { peerUserbotIds } from "@shepherdjerred/homelab/cdk8s/src/resources/userbot-ids.ts";
+import { emeraldGoalCredentials } from "@shepherdjerred/homelab/cdk8s/src/resources/pokemon.ts";
 
 export const APP_ROOT = "/app/packages/arcade";
 
@@ -104,10 +104,7 @@ export function createArcadeDeployment(chart: Chart) {
           secret: mkSecret,
           key: "DISCORD_CLIENT_SECRET",
         }),
-        CODEX_ACCESS_TOKEN: EnvValue.fromSecretValue({
-          secret: emeraldSecret,
-          key: "CODEX_ACCESS_TOKEN",
-        }),
+        ...emeraldGoalCredentials(emeraldSecret),
         STREAM_HARDWARE_ACCELERATION: EnvValue.fromValue("true"),
         VAAPI_DEVICE: EnvValue.fromValue("/dev/dri/renderD128"),
         LIBVA_DRIVER_NAME: EnvValue.fromValue("iHD"),
@@ -218,7 +215,7 @@ export function createArcadeDeployment(chart: Chart) {
       1,
     ),
   );
-  const service = new Service(chart, "arcade-ui", {
+  new Service(chart, "arcade-ui", {
     metadata: { labels: { app: "arcade" } },
     selector: deployment,
     ports: [{ name: "ui", port: 8081 }],
@@ -230,10 +227,5 @@ export function createArcadeDeployment(chart: Chart) {
     path: "/metrics",
     matchLabels: { app: "arcade" },
   });
-  // Standby has zero replicas while legacy accounts retain their owners.
-  new TailscaleIngress(chart, "arcade-ingress", {
-    service,
-    host: "arcade",
-    disableProbe: true,
-  });
+  // Add ingress at activation, once the service has a healthy backend.
 }

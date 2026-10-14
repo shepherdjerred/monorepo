@@ -158,7 +158,6 @@ export async function registerCommands(options: {
       gameId,
       guildId,
       ...target,
-      textChannelId: interaction.channelId,
       startedByUserId: interaction.user.id,
     });
     if (

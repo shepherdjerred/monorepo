@@ -420,6 +420,7 @@ describe("Playwright candidate promotion", () => {
       "ci/ci-playwright/DIGEST",
       "ci/ci-playwright/STATE.json",
       "ci/ci-playwright/PACKAGE_VERSION",
+      "packages/arcade/packages/backend/package.json",
       "packages/monarch/package.json",
       "packages/sjer.red/package.json",
       // These three pin @playwright/test exactly but were missing from

@@ -16,6 +16,7 @@ import { runtimeEnvironment } from "./environment.ts";
 import { waitFor } from "./wait.ts";
 import type { RuntimeHost } from "./host.ts";
 import { verifyAssets } from "./assets.ts";
+import { closeServer } from "./close-server.ts";
 
 export class BrowserHost {
   private readonly app = express();
@@ -189,13 +190,7 @@ export class BrowserHost {
           resolve();
         });
       });
-    if (this.server.listening)
-      await new Promise<void>((resolve, reject) => {
-        this.server.close((error) => {
-          if (error === undefined) resolve();
-          else reject(error);
-        });
-      });
+    await closeServer(this.server);
     if (failures.length > 0)
       throw new AggregateError(
         failures,

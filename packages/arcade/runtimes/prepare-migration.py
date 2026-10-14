@@ -3,9 +3,9 @@
 import argparse
 import hashlib
 import json
-from pathlib import Path
 import shutil
 import sqlite3
+from pathlib import Path
 
 
 def checksum(file: Path) -> str:
@@ -37,22 +37,21 @@ def prepare(args: argparse.Namespace) -> None:
     output.mkdir(parents=True)
     saves = output / "saves"
     saves.mkdir()
-    manifest = {
+    manifest: dict[str, dict[str, str] | str] = {
         "mk64": copy_saves(args.mk64_saves.resolve(strict=True), saves / "mk64"),
         "emerald": copy_saves(args.emerald_saves.resolve(strict=True), saves / "emerald"),
     }
     database = output / "db/arcade.db"
     database.parent.mkdir()
     source = args.database.resolve(strict=True)
-    with sqlite3.connect(source.as_uri() + "?mode=ro", uri=True) as original:
-        with sqlite3.connect(database) as copied:
-            original.backup(copied)
-            if copied.execute("PRAGMA integrity_check").fetchone() != ("ok",):
-                raise ValueError("Copied database failed integrity checking")
-            for table in ("Race", "RaceResult", "Player", "WebSession"):
-                query = f'SELECT COUNT(*) FROM "{table}"'
-                if original.execute(query).fetchone() != copied.execute(query).fetchone():
-                    raise ValueError(f"Database count changed during copy: {table}")
+    with sqlite3.connect(source.as_uri() + "?mode=ro", uri=True) as original, sqlite3.connect(database) as copied:
+        original.backup(copied)
+        if copied.execute("PRAGMA integrity_check").fetchone() != ("ok",):
+            raise ValueError("Copied database failed integrity checking")
+        for table in ("Race", "RaceResult", "Player", "WebSession"):
+            query = f'SELECT COUNT(*) FROM "{table}"'
+            if original.execute(query).fetchone() != copied.execute(query).fetchone():
+                raise ValueError(f"Database count changed during copy: {table}")
     manifest["databaseSha256"] = checksum(database)
     (output / "migration.json").write_text(json.dumps(manifest, indent=2) + "\n")
     print(f"Verified migration copy in {output}; originals remain untouched")

@@ -2,18 +2,16 @@ import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { encodePacket, decodePacket } from "@arcade/common/wire.ts";
 import { wire } from "@arcade/common/wire.generated.ts";
-import { MeleeProbeSchema } from "#src/games/melee/telemetry.ts";
+import { MeleeProbeSchema } from "@arcade/backend/games/melee/telemetry.ts";
 
 describe("native and browser runtime contract", () => {
   it("keeps generated constants and the Melee validator aligned with the neutral definitions", async () => {
     expect(wire).toEqual(
-      await Bun.file(
-        new URL("../../../runtimes/wire.json", import.meta.url),
-      ).json(),
+      await Bun.file(new URL("wire.json", import.meta.url)).json(),
     );
     expect(z.toJSONSchema(MeleeProbeSchema)).toEqual(
       await Bun.file(
-        new URL("../../../runtimes/melee/probe.schema.json", import.meta.url),
+        new URL("melee/probe.schema.json", import.meta.url),
       ).json(),
     );
   });

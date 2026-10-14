@@ -49,8 +49,8 @@ Run from the repository root:
 ```sh
 bun install --frozen-lockfile
 bunx turbo run generate
-bunx turbo run build typecheck test lint --filter=@arcade/backend --filter=@arcade/common --filter=@arcade/frontend
-docker buildx bake arcade
+bunx turbo run build typecheck test lint --filter='@arcade/*' --filter=@shepherdjerred/arcade
+docker buildx bake arcade --set '*.platform=linux/amd64'
 ```
 
 `config.example.toml` describes non-secret configuration. `ARCADE_CONFIG_PATH`

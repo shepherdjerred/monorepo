@@ -304,6 +304,8 @@ window.addEventListener("message", (event) => {
         upstreamCommand({
           type: "select",
           launch: {
+            // Pinned SDK mode 1 opens GM_MENU; mode 0 skips CSS into a match.
+            // Neutral pads keep the menu waiting until a claimed seat acts.
             mode: 1,
             stage: 32,
             level: 1,

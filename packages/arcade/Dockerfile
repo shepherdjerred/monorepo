@@ -1,6 +1,8 @@
 # syntax=docker/dockerfile:1-labs@sha256:ad43eec41369d9ef94412c0d1eb3203d12218d01da225afc92a3aeba3a0e7796
 # Build with `docker buildx bake arcade`: native game stages are named contexts.
 # No disc dumps, translated WASM, or extracted game assets enter this image.
+ARG SPAGHETTI_CONTEXT=arcade-spaghetti
+ARG DOLPHIN_CONTEXT=arcade-dolphin
 FROM oven/bun:1.4.2@sha256:9114c058aeae42162ee16dd5084b95fe9473970bb6bcb5b232ab1630f0546895 AS base
 WORKDIR /app
 
@@ -43,6 +45,9 @@ COPY --parents \
   packages/homelab/src/helm-types/package.json ./
 RUN bun install --frozen-lockfile --production --filter '@arcade/backend'
 
+FROM ${SPAGHETTI_CONTEXT} AS native-spaghetti
+FROM ${DOLPHIN_CONTEXT} AS native-dolphin
+
 FROM base AS runtime
 # Debian archives remove superseded patch releases. Intel VAAPI is amd64-only.
 # hadolint ignore=DL3008
@@ -77,11 +82,12 @@ COPY --from=build /app/packages/discord-plays-mario-kart/packages/common/dist pa
 COPY --from=build /app/packages/discord-plays-mario-kart/packages/backend/generated packages/discord-plays-mario-kart/packages/backend/generated
 COPY --from=build /app/packages/arcade/packages/common/dist packages/arcade/packages/common/dist
 COPY --from=build /app/packages/arcade/packages/frontend/dist packages/arcade/packages/frontend/dist
-COPY --from=arcade-spaghetti /out packages/discord-plays-mario-kart/packages/backend/assets/spaghettikart
-COPY --from=arcade-dolphin /opt/dolphin /opt/dolphin
+COPY --from=native-spaghetti /out packages/discord-plays-mario-kart/packages/backend/assets/spaghettikart
+COPY --from=native-dolphin /opt/dolphin /opt/dolphin
 RUN install -D -m 0755 packages/discord-plays-pokemon/packages/backend/src/goal/control/pokemonctl-entrypoint.sh /usr/local/bin/pokemonctl \
   && install -D -m 0644 packages/discord-plays-pokemon/packages/backend/src/goal/control/pokemonctl-output.ts /usr/local/bin/pokemonctl-output.ts \
-  && ldd /opt/dolphin/bin/dolphin-emu-nogui | tee /tmp/dolphin-libraries \
+  && ldd /opt/dolphin/bin/dolphin-emu-nogui > /tmp/dolphin-libraries \
+  && cat /tmp/dolphin-libraries \
   && ! grep -q 'not found' /tmp/dolphin-libraries
 ENV NODE_ENV=production
 ENV POKEMON_KNOWLEDGE_ROOT=/app/packages/discord-plays-pokemon/knowledge

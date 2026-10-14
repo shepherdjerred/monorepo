@@ -7,10 +7,10 @@ import argparse
 import hashlib
 import json
 import os
-from pathlib import Path
 import shutil
 import subprocess
 import sys
+from pathlib import Path
 
 RUNTIMES = Path(__file__).resolve().parent
 REPOSITORY = RUNTIMES.parents[2]
@@ -66,15 +66,23 @@ def prepare(args: argparse.Namespace) -> None:
             destination.mkdir(parents=True)
             shutil.copytree(artifact, destination / "engine")
             (destination / "engine/upstream").mkdir(exist_ok=True)
-            shutil.copyfile(source / "platforms/browser/initial_pipeline_cache.db", destination / "engine/upstream/initial_pipeline_cache.db")
+            shutil.copyfile(
+                source / "platforms/browser/initial_pipeline_cache.db",
+                destination / "engine/upstream/initial_pipeline_cache.db",
+            )
             shutil.copyfile(args.disc, destination / "disc.iso")
         else:
             shutil.copyfile(RUNTIMES / "mkwii/probe.cpp", source / "runtime/src/platform/web/arcade_probe.cpp")
             environment["EMSDK"] = str(args.emsdk.resolve())
-            run(["bash", "web/build.sh", str(args.disc.resolve()), "--out", str(destination), "--jobs", str(args.jobs)], source, environment)
+            run(
+                ["bash", "web/build.sh", str(args.disc.resolve()), "--out", str(destination), "--jobs", str(args.jobs)],
+                source,
+                environment,
+            )
     files = [
         {"path": file.relative_to(destination).as_posix(), "sha256": digest(file)}
-        for file in sorted(destination.rglob("*")) if file.is_file()
+        for file in sorted(destination.rglob("*"))
+        if file.is_file()
     ]
     manifest = {"version": 1, "gameId": args.game, "sourceRevision": PINS[args.game], "files": files}
     (destination / "arcade-assets.json").write_text(json.dumps(manifest, indent=2) + "\n")

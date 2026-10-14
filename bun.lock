@@ -78,6 +78,17 @@
     "packages/arcade": {
       "name": "@shepherdjerred/arcade",
       "version": "0.0.1",
+      "devDependencies": {
+        "@arcade/backend": "workspace:*",
+        "@arcade/common": "workspace:*",
+        "@shepherdjerred/eslint-config": "workspace:*",
+        "@types/bun": "1.4.2",
+        "@typescript/native": "npm:typescript@7.0.2",
+        "eslint": "^10.7.0",
+        "jiti": "^2.7.0",
+        "vitest": "5.0.3",
+        "zod": "^4.4.3",
+      },
     },
     "packages/arcade/packages/backend": {
       "name": "@arcade/backend",
@@ -87,7 +98,6 @@
         "@discord-plays-mario-kart/backend": "workspace:*",
         "@discord-plays-mario-kart/common": "workspace:*",
         "@discord-plays-pokemon/backend": "workspace:*",
-        "@discord-plays-pokemon/common": "workspace:*",
         "@shepherdjerred/config": "workspace:*",
         "@shepherdjerred/discord-plays-core": "workspace:*",
         "@shepherdjerred/discord-stream-lifecycle": "workspace:*",
@@ -127,6 +137,7 @@
         "eslint": "^10.7.0",
         "jiti": "^2.7.0",
         "typescript": "^6.0.3",
+        "vitest": "5.0.3",
       },
     },
     "packages/arcade/packages/frontend": {

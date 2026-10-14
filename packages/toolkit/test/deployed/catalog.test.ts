@@ -79,6 +79,7 @@ describe("deployed registry derived from the service catalog", () => {
       ).toSorted(),
     ).toEqual(
       [
+        "arcade default shepherdjerred/arcade arcade",
         "birmel default shepherdjerred/birmel birmel",
         "discord-plays-mario-kart default shepherdjerred/discord-plays-mario-kart mario-kart",
         "discord-plays-pokemon default shepherdjerred/discord-plays-pokemon pokemon",

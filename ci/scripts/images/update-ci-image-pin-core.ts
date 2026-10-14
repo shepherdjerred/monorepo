@@ -11,6 +11,11 @@ const PLAYWRIGHT_IMAGE_PATTERN =
 export const PLAYWRIGHT_VERSION_FILE = "ci/ci-playwright/PACKAGE_VERSION";
 export const PLAYWRIGHT_PACKAGE_TARGETS = [
   {
+    path: "packages/arcade/packages/backend/package.json",
+    section: "dependencies",
+    dependency: "playwright-core",
+  },
+  {
     path: "packages/monarch/package.json",
     section: "dependencies",
     dependency: "playwright",
@@ -433,7 +438,9 @@ export function rewritePlaywrightPackage(
   const expression =
     target.dependency === "playwright"
       ? /^(\s*"playwright":\s*)"[^"]+"(,?)$/gm
-      : /^(\s*"@playwright\/test":\s*)"[^"]+"(,?)$/gm;
+      : target.dependency === "playwright-core"
+        ? /^(\s*"playwright-core":\s*)"[^"]+"(,?)$/gm
+        : /^(\s*"@playwright\/test":\s*)"[^"]+"(,?)$/gm;
   const matches = [...source.matchAll(expression)];
   if (matches.length !== 1) {
     throw new Error(

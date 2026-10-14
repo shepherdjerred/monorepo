@@ -3,6 +3,26 @@
   "version": 2,
   "workspaces": [
     {
+      "package": "@shepherdjerred/arcade",
+      "directory": "packages/arcade",
+      "steps": [{ "runner": "vitest", "args": ["runtimes"] }]
+    },
+    {
+      "package": "@arcade/backend",
+      "directory": "packages/arcade/packages/backend",
+      "steps": [{ "runner": "vitest", "args": ["test"] }]
+    },
+    {
+      "package": "@arcade/common",
+      "directory": "packages/arcade/packages/common",
+      "steps": [{ "runner": "vitest", "args": ["test"] }]
+    },
+    {
+      "package": "@arcade/frontend",
+      "directory": "packages/arcade/packages/frontend",
+      "steps": [{ "runner": "vitest" }]
+    },
+    {
       "package": "@shepherdjerred/alert-dashboard",
       "directory": "packages/alert-dashboard",
       "steps": [

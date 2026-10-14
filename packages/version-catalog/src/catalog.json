@@ -7,7 +7,7 @@
       "category": "internal-image",
       "artifactType": "image",
       "management": { "managed": false },
-      "value": "2.0.0-0@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "value": "0.0.0@sha256:0000000000000000000000000000000000000000000000000000000000000000",
       "notes": [
         "Arcade is dormant until the first CI image release and verified account handover"
       ]

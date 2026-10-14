@@ -208,11 +208,7 @@
       "project": ["src/**/*.ts"]
     },
     "packages/discord-plays-pokemon/packages/backend": {
-      "entry": [
-        "src/**/*.test.ts",
-        "scripts/**/*.ts",
-        "src/goal/control/pokemonctl.ts"
-      ],
+      "entry": ["src/**/*.test.ts", "scripts/**/*.ts"],
       "project": ["src/**/*.ts", "scripts/**/*.ts"]
     },
     "packages/discord-plays-pokemon/packages/common": {
