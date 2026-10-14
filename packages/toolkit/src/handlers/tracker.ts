@@ -37,6 +37,7 @@ migration export-linear --output DIR  Export immutable Linear history and files
 migration import-linear --input DIR   --dry-run, --only TYPE, --resume
 migration backup-linear --input DIR   --profile seaweedfs; private, verified archive
 migration verify-linear --input DIR   Fail if Linear changed since the export
+migration catch-up-linear --input DIR --previous DIR   Append new history and audit issue changes against the previous import
 
 All commands accept --json, --url, --actor-key, --actor-kind, --actor-name.
 Reads do not require an actor. Noninteractive mutations require a native agent

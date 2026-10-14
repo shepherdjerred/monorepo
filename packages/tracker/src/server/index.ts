@@ -39,6 +39,8 @@ const app = createApp({
   attachmentMaxBytes: () => behavior.value("attachmentMaxBytes"),
 });
 const server = Bun.serve({
+  // The import contract accepts 100 MiB files encoded as base64 plus JSON.
+  maxRequestBodySize: 150 * 1024 * 1024,
   hostname: config.HOST,
   port: config.PORT,
   fetch: app.fetch,

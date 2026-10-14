@@ -117,6 +117,17 @@ enabled and normal writes are disabled. Keep normal writes disabled until the
 team/state counts, representative historical issues, file downloads and a
 zero-write rerun have passed acceptance.
 
+If Linear changes after an import, take and back up another frozen export.
+`toolkit tracker migration catch-up-linear --previous OLD --input NEW --dry-run`
+plans additions and explicit issue/comment edits before touching Tracker.
+The live command checks the previous import hash and current destination fields,
+applies the source timestamps and content, and records a separate audit event.
+It preserves the first import event and existing historical actor observations.
+Removals, changed catalog definitions and edited vote records require explicit
+reconciliation and fail preflight. Resume the same pair after interruption;
+successful repeated updates make no database writes. Native writes must remain
+disabled and the temporary import gate must be open.
+
 ## Verification
 
 ```sh

@@ -1,5 +1,9 @@
 import type { ObjectStore } from "#application/object-store.ts";
-import type { ImportRecord, ImportEntity } from "#shared/import-schema.ts";
+import type {
+  ImportRecord,
+  ImportEntity,
+  ReconcileRecord,
+} from "#shared/import-schema.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import { importId } from "#shared/import-identity.ts";
 import { TrackerError } from "#domain/error.ts";
@@ -8,22 +12,8 @@ import { importIssueData } from "./import-issues.ts";
 import { audit, findIssue, json } from "./issue-repository.ts";
 import { safeFilename } from "./attachments.ts";
 import type { Database } from "./database.ts";
-
-function contentHash(record: ImportRecord) {
-  const { actor: _actor, ...source } = record;
-  const value =
-    record.entityType === "attachment"
-      ? { ...source, data: { ...record.data, contentBase64: undefined } }
-      : source;
-  const canonical = JSON.stringify(value, (_key, item: unknown) => {
-    return item === null || typeof item !== "object" || Array.isArray(item)
-      ? item
-      : Object.fromEntries(
-          Object.entries(item).sort(([a], [b]) => a.localeCompare(b)),
-        );
-  });
-  return new Bun.CryptoHasher("sha256").update(canonical).digest("hex");
-}
+import { importContentHash } from "./import-hash.ts";
+import { reconcileRecord } from "./import-reconciliation.ts";
 
 export class Importer {
   constructor(
@@ -31,8 +21,12 @@ export class Importer {
     private readonly store: ObjectStore,
   ) {}
 
+  reconcile(input: ReconcileRecord, requestId: string) {
+    return reconcileRecord(this.database, input, requestId);
+  }
+
   async apply(record: ImportRecord, requestId: string) {
-    const content = contentHash(record);
+    const content = importContentHash(record);
     const identity = {
       source: record.source,
       entityType: record.entityType,
