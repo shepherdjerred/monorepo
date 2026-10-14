@@ -2,6 +2,7 @@ import path from "node:path";
 import { z } from "zod";
 import { stormModuleConfig } from "@shepherdjerred/mc-harness/sandbox/storm.ts";
 import type { ServerResources, StartServerOptions } from "./harness/server.ts";
+import { CapacityBootstrapSchema } from "#capacity-runtime";
 import {
   fullRwfTestSettings,
   rwfTestSettings,
@@ -17,6 +18,24 @@ import {
 export type E2eProfile = "e2e" | "full" | "load" | "capacity";
 
 const ProfileSchema = z.enum(["e2e", "full", "load", "capacity"]);
+
+/** JVM bootstrap candidate only; the default remains the existing8G floor until qualified. */
+export function capacityBootstrap() {
+  const raw = Bun.env["STORM_CAPACITY_INITIAL_HEAP"];
+  const absent = raw === undefined || raw === "";
+  return CapacityBootstrapSchema.parse({
+    initialHeap: absent ? "8G" : raw,
+    source: absent ? "default" : "environment",
+  });
+}
+
+export function capacityBootstrapEnvironment(
+  profile: E2eProfile,
+): Partial<Record<"INIT_MEMORY", "1G" | "8G">> {
+  return profile === "capacity"
+    ? { INIT_MEMORY: capacityBootstrap().initialHeap }
+    : {};
+}
 
 export function capacityMap(): string {
   return z

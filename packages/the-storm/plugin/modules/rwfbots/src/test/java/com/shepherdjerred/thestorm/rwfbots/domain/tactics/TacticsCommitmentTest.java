@@ -110,6 +110,65 @@ final class TacticsCommitmentTest {
   }
 
   @Test
+  void anUncoveredBoundKeepsItsDestinationAtTheNextThinkWhileOrdinarySlotRoutesRefresh() {
+    var situation = situation(Role.ROTATE, 20, -1);
+    var context =
+        new TacticsContext(
+            NAV,
+            levers(1),
+            new Style(0.5, 0.5, 0.5, 0.5),
+            Kit.TROOPER,
+            Archetype.TACTICIAN,
+            Set.of(),
+            42,
+            null);
+    for (var committed : List.of(false, true)) {
+      var step = new PlanStep.Route(SELF.plus(6, 0, 0), Stance.CAUTIOUS, committed);
+      var plan = Plan.of(Option.TAKE_SLOT, 92, step);
+      var thought =
+          Tactics.think(
+              new TacticsState(Optional.of(plan), 92, 0, 0, RewindClock.UNSTARTED),
+              situation,
+              context,
+              new SplittableRandom(1));
+      if (committed) assertThat(thought.state().plan()).hasValue(plan);
+      else assertThat(thought.state().plan().orElseThrow()).isNotEqualTo(plan);
+    }
+    assertThat(new PlanStep.Route(SELF, Stance.CAUTIOUS).committedBound()).isFalse();
+  }
+
+  @Test
+  void anArrivedBoundCompletesAndUrgentNeedsCanStillPreemptAnUnfinishedBound() {
+    var situation = situation(Role.ROTATE, 20, -1);
+    var context =
+        new TacticsContext(
+            NAV,
+            levers(1),
+            new Style(0.5, 0.5, 0.5, 0.5),
+            Kit.TROOPER,
+            Archetype.TACTICIAN,
+            Set.of(),
+            42,
+            null);
+    var arrived = Plan.of(Option.TAKE_SLOT, 92, new PlanStep.Route(SELF, Stance.CAUTIOUS, true));
+    var thought =
+        Tactics.think(
+            new TacticsState(Optional.of(arrived), 92, 0, 0, RewindClock.UNSTARTED),
+            situation,
+            context,
+            new SplittableRandom(1));
+    assertThat(thought.state().plan().orElseThrow()).isNotEqualTo(arrived);
+    var pending =
+        Optional.of(
+            Plan.of(
+                Option.TAKE_SLOT,
+                92,
+                new PlanStep.Route(SELF.plus(6, 0, 0), Stance.CAUTIOUS, true)));
+    for (var urgent : List.of(Option.DEFUSE, Option.ESCAPE_POISON, Option.HEAL, Option.RETREAT))
+      assertThat(Tactics.choose(urgent, pending, situation, Map.of())).isEqualTo(urgent);
+  }
+
+  @Test
   void aFlankCompletesItsRouteInsteadOfJoiningDistantFightsOrTheSameBomb() {
     for (var picked : List.of(Option.HUNT, Option.ENGAGE, Option.ARM, Option.HELP_ARM)) {
       assertThat(Tactics.choose(picked, ROUTE, situation(Role.ROTATE, 20, -1), Map.of()))
@@ -455,6 +514,54 @@ final class TacticsCommitmentTest {
     assertThat(thought.state().plan().orElseThrow().startedTick()).isEqualTo(100);
     var advancing = Plan.of(Option.TAKE_SLOT, 95, old.current());
     assertThat(Planner.coverFitsSlot(advancing, situation, context)).isTrue();
+  }
+
+  @Test
+  void aYoungCoverPlanYieldsWhenAnUnclaimedTeammateOccupiesItsDestination() {
+    var situation = situation(Role.ROTATE, 20, -1);
+    var context =
+        new TacticsContext(
+            NAV,
+            levers(1),
+            new Style(0.5, 0.5, 0.5, 0.5),
+            Kit.TROOPER,
+            Archetype.TACTICIAN,
+            Set.of(),
+            42,
+            null);
+    var node = NAV.graph().nearestNode(SELF).orElseThrow();
+    var plan =
+        Plan.of(
+            Option.TAKE_SLOT,
+            95,
+            new PlanStep.Cover(Optional.of(node), SELF, SELF.plus(20, 0, 0), 200));
+    var original = situation.snapshot();
+    var bodies =
+        original.combatants().stream()
+            .map(body -> body.id().value() == 3 ? body.withPos(SELF.plus(1, 0, 0)) : body)
+            .toList();
+    var snapshot =
+        new WorldSnapshot(
+            original.tick(),
+            original.matchPhase(),
+            bodies,
+            original.bombs(),
+            original.poison(),
+            original.mapId(),
+            original.stimuli());
+    var occupied =
+        new Situation(
+            situation.self(), snapshot, situation.percept(), situation.board(), situation.role());
+    assertThat(situation.board().claimedCover()).isEmpty();
+    assertThat(Planner.coverAvailable(situation, context, node)).isTrue();
+    assertThat(Planner.coverAvailable(occupied, context, node)).isFalse();
+    var thought =
+        Tactics.think(
+            new TacticsState(Optional.of(plan), 95, 0, 0, RewindClock.UNSTARTED),
+            occupied,
+            context,
+            new SplittableRandom(1));
+    assertThat(thought.state().plan().orElseThrow()).isNotEqualTo(plan);
   }
 
   @Test

@@ -617,8 +617,43 @@ public final class NavGraph {
     }
   }
 
-  public record PathWeights(
-      IntToDoubleFunction node, IntToDoubleFunction edge, EdgeMotion motion) {}
+  @FunctionalInterface
+  public interface EdgeToll {
+    double cost(int edge, int source, double physicalDuration);
+  }
+
+  public record PathWeights(IntToDoubleFunction node, EdgeToll edge, EdgeMotion motion) {
+    public PathWeights(IntToDoubleFunction node, IntToDoubleFunction edge, EdgeMotion motion) {
+      this(node, (index, source, duration) -> edge.applyAsDouble(index), motion);
+    }
+  }
+
+  public record WeightedPath(NavPath path, double weightedCost) {}
+
+  /** Keeps exact selected-edge discretionary costs separate from physical route time. */
+  public Optional<WeightedPath> weightedPath(
+      int from, int to, PathWeights weights, SearchWorkspace workspace) {
+    workspace.acquire(cellOfNode.length);
+    try {
+      return search(from, to, weights, workspace)
+          .map(path -> new WeightedPath(path, weightedCost(from, to, weights, workspace)));
+    } finally {
+      workspace.release();
+    }
+  }
+
+  private double weightedCost(int from, int to, PathWeights weights, SearchWorkspace scratch) {
+    var cost = 0.0;
+    for (var node = to; node != from; node = scratch.cameFrom[node]) {
+      var edge = scratch.viaEdge[node];
+      var duration = weights.motion().duration().applyAsDouble(edge);
+      cost +=
+          duration
+              + weights.node().applyAsDouble(node)
+              + weights.edge().cost(edge, scratch.cameFrom[node], duration);
+    }
+    return cost;
+  }
 
   public Optional<NavPath> path(int from, int to, PathWeights weights, SearchWorkspace workspace) {
     workspace.acquire(cellOfNode.length);
@@ -656,8 +691,11 @@ public final class NavGraph {
     if (search.closed[next]) {
       return;
     }
+    var duration = weights.motion().duration().applyAsDouble(edge);
+    if (!Double.isFinite(duration) || duration < 0)
+      throw new IllegalArgumentException("motion duration must be finite and non-negative");
     var nodePenalty = weights.node().applyAsDouble(next);
-    var edgePenalty = weights.edge().applyAsDouble(edge);
+    var edgePenalty = weights.edge().cost(edge, current, duration);
     if (!Double.isFinite(nodePenalty)
         || nodePenalty < 0
         || !Double.isFinite(edgePenalty)
@@ -665,9 +703,6 @@ public final class NavGraph {
       throw new IllegalArgumentException("penalties must be finite and non-negative");
     }
     var extra = nodePenalty + edgePenalty;
-    var duration = weights.motion().duration().applyAsDouble(edge);
-    if (!Double.isFinite(duration) || duration < 0)
-      throw new IllegalArgumentException("motion duration must be finite and non-negative");
     var tentative = search.g[current] + (float) duration + (float) extra;
     if (tentative < search.g[next]) {
       search.g[next] = tentative;

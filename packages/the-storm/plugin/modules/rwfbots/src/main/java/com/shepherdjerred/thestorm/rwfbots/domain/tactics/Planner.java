@@ -491,7 +491,7 @@ public final class Planner {
     return Plan.of(
         Option.TAKE_SLOT,
         now,
-        new PlanStep.Route(step, pinned ? Stance.CAUTIOUS : Stance.AGGRESSIVE));
+        new PlanStep.Route(step, pinned ? Stance.CAUTIOUS : Stance.AGGRESSIVE, true));
   }
 
   /** Pause under close fire; a distant sighting keeps a safe cover-to-cover advance moving. */
@@ -600,6 +600,8 @@ public final class Planner {
     var graph = context.nav().graph();
     var point = graph.feet(node);
     if (poisonDanger(situation, point, POISON_MARGIN)) return false;
+    if (situation.livingAllies().stream()
+        .anyMatch(ally -> ally.pos().horizontalDistance(point) < COVER_ROOM)) return false;
     return situation.board().claimedCover().entrySet().stream()
         .filter(entry -> !entry.getKey().equals(situation.self().id()))
         .noneMatch(entry -> graph.feet(entry.getValue()).horizontalDistance(point) < COVER_ROOM);
@@ -767,7 +769,7 @@ public final class Planner {
   public static boolean stepDone(PlanStep step, Situation situation, long startedTick) {
     var self = situation.self();
     return switch (step) {
-      case PlanStep.Route(var goal, var _) -> reached(self.pos(), goal);
+      case PlanStep.Route(var goal, var _, var _) -> reached(self.pos(), goal);
       case PlanStep.Fight(var target) ->
           situation.knownEnemies().stream().noneMatch(enemy -> enemy.id().equals(target));
       case PlanStep.Arm(var bomb) ->
@@ -822,7 +824,7 @@ public final class Planner {
             .or(() -> plan.upcoming(PlanStep.Defuse.class).map(PlanStep.Defuse::bomb));
     var alongLane = plan.option() == Option.TAKE_SLOT || plan.option() == Option.ARM;
     return switch (plan.current()) {
-      case PlanStep.Route(var goal, var stance) ->
+      case PlanStep.Route(var goal, var stance, var _) ->
           decision(
               situation,
               new Parts(

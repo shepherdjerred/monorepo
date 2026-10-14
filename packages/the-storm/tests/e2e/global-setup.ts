@@ -8,6 +8,7 @@ import {
   gameplayFixtures,
   loadResources,
   capacityResources,
+  capacityBootstrapEnvironment,
 } from "./gameplay-fixtures.ts";
 import { rwfRecordingSalt } from "./harness/rwf-settings.ts";
 import { serverLogs } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
@@ -69,6 +70,7 @@ async function arenaAdmission(server: ServerInfo): Promise<void> {
 
 export default async function setup(project: TestProject) {
   const profile = e2eProfile();
+  const bootstrap = capacityBootstrapEnvironment(profile);
   // The load profile is full plus the load-test switch and production limits.
   const full = profile !== "e2e";
   // The agent refuses to start without its token, so both local and sidecar
@@ -114,6 +116,7 @@ export default async function setup(project: TestProject) {
     ...(profile === "capacity" ? { resources: capacityResources() } : {}),
     ownedConfigDir,
     env: {
+      ...bootstrap,
       // The managed-flag gates (rwf join here; crier and merchant in the full
       // suite) evaluate against the fake brain's Flipt double.
       FLIPT_URL: brainBaseUrl,

@@ -1208,6 +1208,11 @@ cumulative fall damage, actual movement and protection capabilities, effect
 expiry, available healing, known enemy exposure and bomb deadlines. A
 successful bake proves graph connectivity; native movement must also be checked
 in the pinned Paper/Citizens runtime.
+Runtime exposure, congestion and personality penalties are traversal-time
+densities: each leg integrates its endpoint values over its actual duration.
+This keeps compressed jumps and water intervals from receiving an artificial
+discount merely because they contain fewer graph nodes. These discretionary
+costs do not advance physical arrival, protection-expiry or damage clocks.
 Distance fields store lossless float-bit deltas in byte planes before
 compression. The artifact declares this encoding explicitly; unknown encodings
 and invalid distances fail decoding. Positive infinity represents unreachable
@@ -1354,6 +1359,17 @@ zero saturation to isolate cumulative damage from peaceful and satiated
 regeneration. They record the setup and restore the original difficulty and
 nutrition on completion or failure, without changing health or healing rules.
 
+`maps:verify-authored-combat-native --output <new-directory>` checks an original
+authored NPC against an automated player entering with `/rwf join`. Build the
+same three artifacts first. The runner stages a private Trooper-only experience
+before the first ballot, waits for both original bodies and ordinary spawn
+protection expiry, and observes actual melee events and retained player health
+loss. It never commands the NPC's attacks or injects damage. A separate native
+spectator records the encounter outside the two-fighter roster. The fixture
+journals and restores private Hard difficulty; failures retain partial event
+observations and actual body state. This extended diagnostic supplies neither
+human demonstrations nor evidence for a larger lobby cap.
+
 `bun tools/maps/pursuit.ts --output .cache/rwf-pursuit/batch-a` checks the
 production planner, reflex and Citizens motor together in a small disposable
 arena. Build `:dist:shadowJar` and `:dist:fixturesJar` first. A visible target
@@ -1372,12 +1388,24 @@ Admission waits for preparation rather than blocking the main thread.
 eight-bot showcases rotate. It compares restored item slots and metadata and
 every sign face with the source payload, checks the two-map resource bound,
 waits for inactive chunks to unload, and records heap and tick measurements.
+Heap samples retain used, committed and maximum bytes from the same JVM memory
+observation; the report includes the peak committed heap as well as peak use.
 The report and server log describe that disposable runtime; production
 installation still requires the published candidate and GitOps release.
 The catalog must contain at least three maps to prove that startup leaves
 content unloaded. Repeated `--require-map <id>` arguments require ordinary
 rotation to visit selected maps, up to twelve transitions; use this for the
 largest maps and maps with more than two teams.
+Repeated `--visit-map <id>` arguments instead select an explicit sequence through
+the ordinary admin map command and preparation handshake. The sequence must
+cover every required map and contain at least `--rotations` entries, up to
+twelve. Every selected map must actually become live; every required map must
+also retire. For example, visit Warlords, Tropicals, Training Yard and Tropicals
+again to observe both large maps together and then release each map at least
+once. Omitting this option retains ordinary randomized rotation.
+Terrain fingerprints stream the original canonical bytes through a bounded
+buffer and reuse exact snapshot palette lookups, avoiding terrain-sized hash
+buffers while retaining the same content verification.
 
 The lobby is authored like a map: build it in a build world, export
 `blocks.schem` with WorldEdit and describe its places in `lobby.yml`.
@@ -2742,6 +2770,12 @@ workers and detected processors. Invalid or missing settings stop startup.
 CPUs by default with an 8G heap and 10GiB memory, matching the production CPU request
 conservatively. `STORM_CAPACITY_CPUS=4`, `6`, `8` or `12` compares larger CPU budgets;
 the evidence verifies the exact enforced limit. Production has no CPU limit.
+`STORM_CAPACITY_INITIAL_HEAP=1G` selects a smaller initial heap for an explicit
+disposable candidate; absent or empty values preserve the 8G initial heap.
+Only `1G` and `8G` are accepted. The maximum stays 8G and the container limit
+stays 10GiB. Reports record selection provenance and actual JVM initial and
+maximum bytes; mismatched declarations and mixed runtime fingerprints cannot
+qualify together. This selector does not change production bootstrap settings.
 `STORM_CAPACITY_WORKERS` changes only the disposable fixture's startup ceiling;
 it must leave at least one of the selected CPUs for Paper. With no override, the
 ceiling remains four, clipped to the CPU budget. Explicit comparison pairs are
@@ -2784,6 +2818,14 @@ identities, and every report path relative to the manifest. Only complete
 version-2 reports qualify. The reader checks original run/container/match
 identities and measuring intervals, rejects overlapping runs and changed
 inputs, and recomputes bars rather than trusting recorded pass labels. It
+fingerprints actual server properties while excluding generated comments and
+the per-boot `rcon.password` and `management-server-secret` credentials. Enabled
+services, TLS, networking and simulation settings remain bound. Missing or empty
+inputs fail identity capture; reports with the previous credential-dependent
+properties inventory are rejected. JVM argument fingerprints retain argument
+boundaries and heap flags, normalizing only the explicit CPU-count flag for
+CPU comparisons; unsupported embedded newlines are rejected.
+The qualifier
 reports load qualification separately for each tier and the complete matrix,
 then chooses the smallest CPU pair supporting the highest qualified 64, 128 or
 256 tier. Its result does not accept deployment: rendered combat, bounded map

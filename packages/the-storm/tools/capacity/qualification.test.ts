@@ -1,28 +1,11 @@
 import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { qualifyCapacity } from "./qualification.ts";
-import { requiredRuntimeSettings, runtimeFingerprint } from "#capacity-runtime";
-import { thirdPartyPlugins } from "#e2e/harness/pins.ts";
+import { runtimeFingerprint } from "#capacity-runtime";
+import { runtimeIdentityFixture } from "#e2e/harness/runtime-identity-fixture.ts";
 
 const hash = (digit: string) => digit.repeat(64);
-const runtime = {
-  serverImage: "fixture-image",
-  imageId: `sha256:${hash("7")}`,
-  paperSha256: hash("3"),
-  paperRuntimeSha256: hash("4"),
-  javaExecutableSha256: hash("5"),
-  javaReleaseSha256: hash("6"),
-  javaArgumentsSha256: hash("8"),
-  plugins: thirdPartyPlugins.map((plugin) => ({
-    file: `${plugin.name}-${plugin.version}.jar`,
-    sha256: plugin.sha256,
-  })),
-  settings: requiredRuntimeSettings.map((file) => ({
-    file,
-    sha256: hash("a"),
-  })),
-  worldOverrides: { status: "absent", files: [] },
-};
+const runtime = runtimeIdentityFixture();
 const candidate = {
   artifactSha256: hash("a"),
   fixtureSha256: hash("b"),
@@ -135,6 +118,7 @@ function evidence() {
         map,
         inputs: {
           ...candidate,
+          bootstrap: { initialHeap: "8G", source: "default" },
           runtime: structuredClone(runtime),
           ...identity,
           containerId: index.toString().repeat(64),
@@ -336,6 +320,42 @@ describe("capacity qualification from original repeated runs", () => {
     first.value.inputs.runtime.javaArgumentsSha256 = hash("f");
     expect(() => qualifyCapacity(manifest, sources)).toThrow(
       "runtime details differ",
+    );
+  });
+});
+
+describe("capacity heap bootstrap qualification", () => {
+  it("qualifies a consistent1G bootstrap and rejects a requested floor that actual JVM flags did not apply", () => {
+    const wrong = evidence();
+    const first = wrong.sources[0];
+    if (first === undefined) throw new Error("missing fixture");
+    first.value.inputs.bootstrap = { initialHeap: "1G", source: "environment" };
+    expect(() => qualifyCapacity(wrong.manifest, wrong.sources)).toThrow(
+      "declared bootstrap",
+    );
+    const data = evidence();
+    for (const source of data.sources) {
+      source.value.inputs.bootstrap = {
+        initialHeap: "1G",
+        source: "environment",
+      };
+      source.value.inputs.runtime.heap.initialBytes = 1024 ** 3;
+      source.value.inputs.runtimeSha256 = runtimeFingerprint(
+        source.value.inputs.runtime,
+      );
+    }
+    const updated = data.sources[0];
+    if (updated === undefined) throw new Error("missing fixture");
+    data.manifest.candidate.runtimeSha256 = updated.value.inputs.runtimeSha256;
+    expect(
+      qualifyCapacity(data.manifest, data.sources).recommendation,
+    ).not.toBeNull();
+    updated.value.inputs.bootstrap = {
+      initialHeap: "8G",
+      source: "environment",
+    };
+    expect(() => qualifyCapacity(data.manifest, data.sources)).toThrow(
+      "declared bootstrap",
     );
   });
 });

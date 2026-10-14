@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "kind": "rwf-authored-npc-human-combat",
+  "humanDemonstration": false,
+  "authoredBotControl": true,
+  "maximumTicks": 1200,
+  "maximumRows": 4096,
+  "records": {
+    "Actor": ["body", "world", "kit", "team", "alive", "physicallyAlive", "valid", "online", "mode", "invulnerable", "health", "absorption", "noDamageTicks", "position", "foodLevel", "saturation"],
+    "Frame": ["sequence", "serverTick", "match", "world", "phase", "difficulty", "human", "bot"],
+    "Hit": ["sequence", "cause", "cancelled", "before", "monitor", "after"],
+    "Environment": ["originalDifficulty", "currentDifficulty", "restored"],
+    "Probe": ["ready", "message", "frame"],
+    "Capture": ["version", "kind", "humanDemonstration", "authoredBotControl", "state", "message", "match", "world", "human", "bot", "experience", "startedTick", "sampledTick", "dropped", "pending", "environment", "frames", "hits"]
+  }
+}

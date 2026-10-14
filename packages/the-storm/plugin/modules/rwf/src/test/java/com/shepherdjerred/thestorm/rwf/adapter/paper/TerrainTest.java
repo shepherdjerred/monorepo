@@ -150,6 +150,9 @@ final class TerrainTest {
     world.getBlockAt(-17, 70, -1).setType(Material.STONE);
     var changed = coordinates.stream().map(c -> snapshot(world, c)).toList();
     assertThat(Terrain.hash(region, coordinates, changed, blocks)).isNotEqualTo(schematic.sha256());
+    world.getBlockAt(-17, 70, -1).setType(Material.DIRT);
+    var unknown = coordinates.stream().map(c -> snapshot(world, c)).toList();
+    assertThat(Terrain.hash(region, coordinates, unknown, blocks)).isEmpty();
   }
 
   /** The Paper snapshot boundary, including local x/z and world y; WorldMock lacks this mapping. */

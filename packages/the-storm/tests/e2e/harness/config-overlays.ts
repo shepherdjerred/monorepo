@@ -143,7 +143,7 @@ async function overlaySection(
 ): Promise<void> {
   const content = await Bun.file(file).text();
   const lines = content.split("\n");
-  const start = lines.indexOf(`${section}:`);
+  const start = lines.findIndex((line) => line.trimEnd() === `${section}:`);
   if (start === -1) {
     throw new Error(`No ${section} section to overlay in ${file}`);
   }

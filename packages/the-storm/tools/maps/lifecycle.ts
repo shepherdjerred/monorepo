@@ -5,29 +5,45 @@ const point = z.strictObject({
   y: z.number().int(),
   z: z.number().int(),
 });
-export const Lifecycle = z.strictObject({
-  maps: z
-    .array(
-      z.strictObject({
-        id: z.string(),
-        region: z.strictObject({ min: point, max: point }),
-        blocksSha256: z.string(),
-        decoded: z.boolean(),
-        busy: z.boolean(),
-        ready: z.boolean(),
-        heldChunks: z.number().int().nonnegative(),
-        preparations: z.number().int().nonnegative(),
-        releases: z.number().int().nonnegative(),
-      }),
-    )
-    .min(3),
-  navigation: z.array(z.string()),
-  heapUsed: z.number().nonnegative(),
-  heapMax: z.number().positive(),
-  tick: z.number().int(),
-  tickTimes: z.array(z.number().nonnegative()),
-  loadedChunks: z.record(z.string(), z.number().int().nonnegative()),
-});
+export const Lifecycle = z
+  .strictObject({
+    maps: z
+      .array(
+        z.strictObject({
+          id: z.string(),
+          region: z.strictObject({ min: point, max: point }),
+          blocksSha256: z.string(),
+          decoded: z.boolean(),
+          busy: z.boolean(),
+          ready: z.boolean(),
+          heldChunks: z.number().int().nonnegative(),
+          preparations: z.number().int().nonnegative(),
+          releases: z.number().int().nonnegative(),
+        }),
+      )
+      .min(3),
+    navigation: z.array(z.string()),
+    heapUsed: z.number().int().nonnegative(),
+    heapCommitted: z.number().int().positive(),
+    heapMax: z.number().int().positive(),
+    tick: z.number().int(),
+    tickTimes: z.array(z.number().nonnegative()),
+    loadedChunks: z.record(z.string(), z.number().int().nonnegative()),
+  })
+  .superRefine((snapshot, context) => {
+    if (snapshot.heapUsed > snapshot.heapCommitted)
+      context.addIssue({
+        code: "custom",
+        path: ["heapUsed"],
+        message: "Used heap exceeds committed heap",
+      });
+    if (snapshot.heapCommitted > snapshot.heapMax)
+      context.addIssue({
+        code: "custom",
+        path: ["heapCommitted"],
+        message: "Committed heap exceeds maximum heap",
+      });
+  });
 export type Lifecycle = z.infer<typeof Lifecycle>;
 
 type MatchState = {

@@ -499,7 +499,8 @@ public final class Reflex {
       }
       var radial = toTarget.normalized();
       var side = new Vec3(-radial.z(), 0, radial.x()).scale(state.strafeDir());
-      var apart = footwork.apart(SEPARATION, 0);
+      // Combat movement needs the same reaction-window personal space as formation movement.
+      var apart = walkingApart();
       var closing = closing(distance, apart);
       // Outside contact range, pursue rather than spending most acceleration circling.
       var charging = context.loadout().body() == Kit.Body.CHARGE && distance > REACH + 0.5;
@@ -527,10 +528,13 @@ public final class Reflex {
       }
       var radial = away.normalized();
       var side = new Vec3(-radial.z(), 0, radial.x()).scale(state.strafeDir());
-      var move = side.plus(radial.scale(0.6)).plus(footwork.apart(SEPARATION, 0));
+      var move = side.plus(radial.scale(0.6)).plus(walkingApart());
+      var preferred = move.isZero() ? radial : move.normalized();
+      var safe = CombatFootwork.steer(context.grid(), self, preferred, radial);
       commands.add(
-          new BodyCommand.MoveToward(
-              self.pos().plus(move.isZero() ? radial : move.normalized()), false));
+          safe.isZero()
+              ? new BodyCommand.Stop()
+              : new BodyCommand.MoveToward(self.pos().plus(safe), false));
     }
 
     /** Follows the decision's waypoints; {@code sprintOverride} forces walking when present. */
@@ -811,10 +815,7 @@ public final class Reflex {
             default -> WALK_SEPARATION;
           };
       var push = footwork.apart(spacing, levers().reactionTicks());
-      commands.add(
-          push.isZero()
-              ? new BodyCommand.Stop()
-              : new BodyCommand.MoveToward(self.pos().plus(push.normalized()), false));
+      commands.add(WalkSteering.separate(context.grid(), self, push));
     }
 
     private void jumpIfNeeded(Waypoint waypoint) {

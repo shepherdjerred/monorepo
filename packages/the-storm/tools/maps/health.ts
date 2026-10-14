@@ -6,11 +6,11 @@ import { z } from "zod";
 import { serverLogs } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
 import { connectBot, disconnectBot, waitForMessage } from "#e2e/harness/bot.ts";
 import { startFakeBrain, setRwfKits } from "#e2e/harness/fake-brain.ts";
-import { startServer } from "#e2e/harness/server.ts";
+import type { startServer } from "#e2e/harness/server.ts";
 import { RconClient } from "#e2e/harness/rcon.ts";
 import { eventually, status } from "#e2e/harness/rwf-match.ts";
 import { stageMap } from "#learning/maps/stage.ts";
-import { root, runtimeMapServerConfig } from "./paper.ts";
+import { root, startRuntimeMapServer } from "./paper.ts";
 import { freezeInputs, type ConversionInputs } from "./inputs.ts";
 import {
   HealthStatus,
@@ -83,17 +83,16 @@ async function capture(scenario: Scenario, frozen: ConversionInputs) {
   let player: Client | undefined;
   const journal: { command: string; response: unknown }[] = [];
   try {
-    const config = await runtimeMapServerConfig(frozen, staged.content, {
-      baseUrl: `http://host.docker.internal:${brain.port.toString()}`,
-      token,
-    });
-    server = await startServer({
-      ...config,
-      rwf: { ...config.rwf, countdown: "PT15S" },
+    server = await startRuntimeMapServer({
+      inputs: frozen,
+      content: staged.content,
+      brain: {
+        baseUrl: `http://host.docker.internal:${brain.port.toString()}`,
+        token,
+      },
+      match: { countdown: "PT15S" },
       cacheDir: path.join(root, ".cache/e2e/health-proof"),
-      warmCache: true,
-      bootTimeoutMs: 600_000,
-      exportRecordingsDir: path.join(directory, "recordings"),
+      recordingsDir: path.join(directory, "recordings"),
     });
     if (server.info.kind !== "container")
       throw new Error("Health proof requires an owned disposable container");

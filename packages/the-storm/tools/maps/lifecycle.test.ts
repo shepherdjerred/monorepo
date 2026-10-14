@@ -3,7 +3,7 @@ import {
   verifyBounds,
   verifyLiveShowcase,
   isSuccessorLobby,
-  type Lifecycle,
+  Lifecycle,
 } from "./lifecycle.ts";
 
 const row = {
@@ -20,11 +20,21 @@ const snapshot: Lifecycle = {
   maps: ["one", "two", "three"].map((id) => ({ ...row, id })),
   navigation: [],
   heapUsed: 1,
+  heapCommitted: 2,
   heapMax: 2,
   tick: 1,
   tickTimes: [1],
   loadedChunks: {},
 };
+it("requires coherent actual used, committed and maximum heap samples", () => {
+  expect(Lifecycle.parse(snapshot)).toEqual(snapshot);
+  for (const heapCommitted of [undefined, 0, 0.5, 3])
+    expect(() => Lifecycle.parse({ ...snapshot, heapCommitted })).toThrow();
+  expect(() => Lifecycle.parse({ ...snapshot, heapUsed: 3 })).toThrow(
+    "Used heap exceeds committed heap",
+  );
+  expect(() => Lifecycle.parse({ ...snapshot, heapUsed: 0 })).not.toThrow();
+});
 it("allows one active map and one preparing successor while other metadata stays cold", () => {
   verifyBounds({
     ...snapshot,

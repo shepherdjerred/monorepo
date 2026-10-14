@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { RuntimeSchema, runtimeFingerprint } from "#capacity-runtime";
+import {
+  CapacityBootstrapSchema,
+  RuntimeSchema,
+  runtimeFingerprint,
+} from "#capacity-runtime";
 import {
   CapacityPhaseSchema,
   capacityTierVerdicts,
@@ -45,6 +49,7 @@ const Report = z.object({
   map: MapId,
   inputs: Identity.extend({
     runtime: RuntimeSchema,
+    bootstrap: CapacityBootstrapSchema,
     containerId: z.string().regex(/^[a-f0-9]{12,64}$/u),
     computeWorkers: z.number().int().min(1).max(10),
     navigationSha256: Hash,
@@ -97,6 +102,14 @@ function validateCandidate(manifest: Manifest, report: Report) {
     throw new Error("Capacity evidence belongs to a different candidate");
   if (runtimeFingerprint(report.inputs.runtime) !== report.inputs.runtimeSha256)
     throw new Error("Capacity runtime details differ from their fingerprint");
+  const initialGiB = report.inputs.bootstrap.initialHeap === "1G" ? 1 : 8;
+  if (
+    report.inputs.runtime.heap.initialBytes !== initialGiB * 1024 ** 3 ||
+    report.inputs.runtime.heap.maxBytes !== 8 * 1024 ** 3
+  )
+    throw new Error(
+      "Capacity actual JVM heap differs from its declared bootstrap",
+    );
   const { map: _map, ...mapIdentity } = map;
   if (!sameFields(mapIdentity, report.inputs))
     throw new Error("Capacity map/configuration inputs changed between runs");

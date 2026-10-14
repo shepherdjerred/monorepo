@@ -109,6 +109,61 @@ final class ReflexTest {
   }
 
   @Test
+  void convergingCombatTeammatesLeaveRoomBeforeTheyEnterTheMovingSpacingBand() {
+    var self = combatant(1, RED, new Vec3(5.5, 1, 5.5));
+    var target = combatant(2, BLUE, new Vec3(8.7, 1, 5.5));
+    var ally = combatant(3, RED, new Vec3(5.5, 1, 9.5));
+    var context = context(levers(0));
+    var decision = fight(self, target, 1);
+    var state = ReflexState.initial(self.facing()).withStrafe(1, 100);
+    var alone =
+        Reflex.tick(
+            state,
+            new ReflexInput(
+                self, world(1, List.of(self, target), List.of()), decision, Optional.of(target), 0),
+            context,
+            new SplittableRandom(7));
+    var stationary =
+        Reflex.tick(
+            state,
+            new ReflexInput(
+                self,
+                world(1, List.of(self, target, ally), List.of()),
+                decision,
+                Optional.of(target),
+                0),
+            context,
+            new SplittableRandom(7));
+    var converging =
+        Reflex.tick(
+            state,
+            new ReflexInput(
+                self,
+                world(1, List.of(self, target, ally.withVel(new Vec3(0, 0, -0.4))), List.of()),
+                decision,
+                Optional.of(target),
+                0),
+            context,
+            new SplittableRandom(7));
+    assertThat(stationary.commands()).isEqualTo(alone.commands());
+    var baseline =
+        alone.commands().stream()
+            .filter(BodyCommand.MoveToward.class::isInstance)
+            .map(BodyCommand.MoveToward.class::cast)
+            .findFirst()
+            .orElseThrow();
+    var separated =
+        converging.commands().stream()
+            .filter(BodyCommand.MoveToward.class::isInstance)
+            .map(BodyCommand.MoveToward.class::cast)
+            .findFirst()
+            .orElseThrow();
+    assertThat(separated.waypoint().z()).isLessThan(baseline.waypoint().z());
+    assertThat(CombatFootwork.safe(NAV.grid(), self, separated.waypoint().minus(self.pos())))
+        .isTrue();
+  }
+
+  @Test
   void teammatesOnAnotherFloorDoNotPushTheFighterSideways() {
     var self = combatant(1, RED, new Vec3(5.5, 1, 5.5));
     var ally = combatant(3, RED, new Vec3(5.5, 5, 7.5));

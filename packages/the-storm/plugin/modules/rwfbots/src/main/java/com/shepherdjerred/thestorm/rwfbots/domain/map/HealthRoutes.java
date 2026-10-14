@@ -80,13 +80,22 @@ public final class HealthRoutes {
     int damage(int edge, double arrivalTicks);
   }
 
-  public record EdgePolicy(DamageAt damage, NavGraph.EdgeMotion motion, boolean timed) {
+  public record EdgePolicy(
+      DamageAt damage, NavGraph.EdgeMotion motion, boolean timed, NavGraph.EdgeToll toll) {
+    public EdgePolicy(DamageAt damage, NavGraph.EdgeMotion motion, boolean timed) {
+      this(damage, motion, timed, (edge, source, duration) -> 0);
+    }
+
     public EdgePolicy(IntUnaryOperator damage, NavGraph.EdgeMotion motion) {
       this((edge, arrival) -> damage.applyAsInt(edge), motion, false);
     }
 
     public static EdgePolicy timed(DamageAt damage, NavGraph.EdgeMotion motion) {
       return new EdgePolicy(damage, motion, true);
+    }
+
+    public EdgePolicy withToll(NavGraph.EdgeToll value) {
+      return new EdgePolicy(damage, motion, timed, value);
     }
   }
 
@@ -125,23 +134,19 @@ public final class HealthRoutes {
     var weights =
         new NavGraph.PathWeights(
             node -> 0,
-            edge ->
+            (edge, source, duration) ->
                 checkedDamage(edges.damage(), edge, 0) * request.risk().ticksPerHealthPoint()
-                    + request.transitionPenalty(
-                        graph, graph.edgeSource(edge), graph.edgeTarget(edge)),
+                    + request.transitionPenalty(graph, source, graph.edgeTarget(edge))
+                    + checkedToll(edges.toll(), edge, source, duration),
             edges.motion());
     var scratch = workspace == null ? graph.workspace() : workspace;
-    var unconstrained = graph.path(request.from(), request.to(), weights, scratch);
+    var unconstrained = graph.weightedPath(request.from(), request.to(), weights, scratch);
     if (unconstrained.isEmpty()) return Optional.empty();
-    var ordinary = unconstrained.orElseThrow();
+    var weighted = unconstrained.orElseThrow();
+    var ordinary = weighted.path();
     var damage = damage(graph, ordinary, edges.damage());
     if (damage <= request.damageBudget() && request.risk().allows(ordinary.cost())) {
-      var cost = ordinary.cost() + damage * request.risk().ticksPerHealthPoint();
-      for (var index = 1; index < ordinary.nodes().size(); index++)
-        cost +=
-            request.transitionPenalty(
-                graph, ordinary.nodes().get(index - 1), ordinary.nodes().get(index));
-      return Optional.of(new Route(ordinary, damage, cost));
+      return Optional.of(new Route(ordinary, damage, weighted.weightedCost()));
     }
     return new Search(graph, request, edges).find();
   }
@@ -179,6 +184,13 @@ public final class HealthRoutes {
     var value = penalty.applyAsDouble(node);
     if (!Double.isFinite(value) || value < 0)
       throw new IllegalArgumentException("node penalty must be finite and non-negative");
+    return value;
+  }
+
+  private static double checkedToll(NavGraph.EdgeToll toll, int edge, int source, double duration) {
+    var value = toll.cost(edge, source, duration);
+    if (!Double.isFinite(value) || value < 0)
+      throw new IllegalArgumentException("edge toll must be finite and non-negative");
     return value;
   }
 
@@ -253,7 +265,11 @@ public final class HealthRoutes {
           new Label(
               node,
               totalDamage,
-              current.cost + duration + penalty + riskCost,
+              current.cost
+                  + duration
+                  + penalty
+                  + riskCost
+                  + checkedToll(edges.toll(), edge, current.node, duration),
               new Prefix(edge, Optional.of(current), ticks)));
     }
 

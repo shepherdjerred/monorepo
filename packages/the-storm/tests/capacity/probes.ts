@@ -12,6 +12,7 @@ import {
   capacityMap,
   capacityResources,
   capacityWorkers,
+  capacityBootstrap,
 } from "#e2e/gameplay-fixtures.ts";
 import { sampleWindow } from "#load/samples.ts";
 import {
@@ -22,7 +23,11 @@ import {
   type Lifecycle,
 } from "./capacity-bars.ts";
 import { recordFlight } from "#e2e/harness/flight.ts";
-import { runtimeIdentity, stagedDigest } from "./runtime.ts";
+import {
+  runtimeIdentity,
+  stagedDigest,
+  verifyCapacityHeap,
+} from "./runtime.ts";
 
 /** Optional post-measurement diagnostics, always separate from release acceptance. */
 export async function profileAfterMeasurement(
@@ -142,9 +147,13 @@ export async function evidence(server: ServerInfo) {
   const manifest = z
     .object({ personalities: z.array(z.unknown()) })
     .parse(await Bun.file(path.join(packageRoot, manifestFile)).json());
+  const bootstrap = capacityBootstrap();
+  const runtime = await runtimeIdentity(server.containerId);
+  verifyCapacityHeap(bootstrap, runtime.runtime.heap);
   return {
     containerId: server.containerId,
-    ...(await runtimeIdentity(server.containerId)),
+    ...runtime,
+    bootstrap,
     computeWorkers: await computeWorkers(server),
     artifactSha256: await digest(
       "plugin/dist/build/libs/TheStorm.jar",

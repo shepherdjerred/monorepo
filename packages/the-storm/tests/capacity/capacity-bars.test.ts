@@ -3,6 +3,8 @@ import {
   capacityNativeTotal,
   capacityResources,
   capacityWorkers,
+  capacityBootstrap,
+  capacityBootstrapEnvironment,
 } from "#e2e/gameplay-fixtures.ts";
 import {
   capacityTierVerdicts,
@@ -71,6 +73,40 @@ const matrix = () => [phase(0), ...totals.map((total) => phase(total))];
 
 describe("capacity CPU calibration", () => {
   afterEach(() => vi.unstubAllEnvs());
+
+  it("explicitly selects a capacity-only initial heap without changing maximum heap or container budget", () => {
+    for (const absent of [undefined, ""]) {
+      vi.stubEnv("STORM_CAPACITY_INITIAL_HEAP", absent);
+      expect(capacityBootstrap()).toEqual({
+        initialHeap: "8G",
+        source: "default",
+      });
+      expect(capacityBootstrapEnvironment("capacity")).toEqual({
+        INIT_MEMORY: "8G",
+      });
+    }
+    for (const initialHeap of ["1G", "8G"]) {
+      vi.stubEnv("STORM_CAPACITY_INITIAL_HEAP", initialHeap);
+      expect(capacityBootstrap()).toEqual({
+        initialHeap,
+        source: "environment",
+      });
+      expect(capacityBootstrapEnvironment("capacity")).toEqual({
+        INIT_MEMORY: initialHeap,
+      });
+      expect(capacityResources()).toMatchObject({
+        heap: "8G",
+        memoryLimit: "10g",
+      });
+    }
+    for (const invalid of ["0", "4G", "256M", "1g", " 1G", "invalid"]) {
+      vi.stubEnv("STORM_CAPACITY_INITIAL_HEAP", invalid);
+      expect(capacityBootstrap).toThrow();
+      expect(() => capacityBootstrapEnvironment("capacity")).toThrow();
+      for (const profile of ["e2e", "full", "load"] as const)
+        expect(capacityBootstrapEnvironment(profile)).toEqual({});
+    }
+  });
 
   it("keeps the shipped ceiling and accepts only worker budgets that reserve a CPU", () => {
     vi.stubEnv("STORM_CAPACITY_WORKERS", undefined);

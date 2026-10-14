@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.rwfbots.domain.tactics;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
 
 import com.shepherdjerred.thestorm.rwfbots.domain.difficulty.LeverCurves;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos;
@@ -12,6 +13,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.map.HealthRoutes;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.MapBaker;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavGraph;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavSites;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.TraversalDensity;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.Archetype;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.Style;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Kit;
@@ -86,6 +88,17 @@ final class RouteNavigatorTest {
       assertThat(found)
           .allMatch(
               point -> point.hop() == com.shepherdjerred.thestorm.rwfbots.domain.world.Hop.SWIM);
+      var zero =
+          RouteNavigator.score(
+                  context, endpoints.from(), found, new RouteNavigator.Tolls(risk, node -> 0))
+              .orElseThrow();
+      var exposed =
+          RouteNavigator.score(
+                  context, endpoints.from(), found, new RouteNavigator.Tolls(risk, node -> 12))
+              .orElseThrow();
+      assertThat(exposed.ticks()).isEqualTo(zero.ticks());
+      assertThat(exposed.cost())
+          .isCloseTo(zero.cost() + TraversalDensity.cost(12, 12, zero.ticks()), within(1e-10));
     }
   }
 
