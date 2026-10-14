@@ -131,10 +131,16 @@ export class BrowserHost {
     });
     if (this.options.config.gameId === "mkwii") {
       await page.goto(`${origin}/?res=480`);
-      await page.waitForFunction(
-        'document.documentElement.dataset.phase === "ready"',
-        undefined,
-        { timeout: this.options.startupTimeoutMs },
+      signal.throwIfAborted();
+      await waitFor(
+        page.waitForFunction(
+          'document.documentElement.dataset.phase === "ready"',
+          undefined,
+          { timeout: this.options.startupTimeoutMs },
+        ),
+        signal,
+        this.options.startupTimeoutMs,
+        "Wii graphics startup",
       );
       await page.addScriptTag({
         url: `${origin}/arcade-runtime.js`,
