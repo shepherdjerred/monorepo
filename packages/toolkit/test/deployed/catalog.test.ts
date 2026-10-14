@@ -69,7 +69,7 @@ describe("deployed registry derived from the service catalog", () => {
     },
   );
 
-  test("keeps the same deployable version keys and Argo apps", () => {
+  test("resolves the deployable inventory to its version keys and Argo apps", () => {
     expect(
       SERVICES.flatMap((service) =>
         service.variants.map(
@@ -91,6 +91,7 @@ describe("deployed registry derived from the service catalog", () => {
         "streambot default shepherdjerred/streambot media",
         "tasknotes-server default shepherdjerred/tasknotes-server tasknotes",
         "temporal default shepherdjerred/temporal-worker temporal",
+        "tracker default shepherdjerred/tracker tracker",
         "trmnl-dashboard default shepherdjerred/trmnl-dashboard trmnl-dashboard",
       ].toSorted(),
     );
@@ -101,6 +102,7 @@ describe("deployed registry derived from the service catalog", () => {
       "scout-prod",
     );
     expect(resolveServiceSelector("karma:beta")?.variant?.name).toBe("beta");
+    expect(versionKeys("tracker/default")).toEqual(["shepherdjerred/tracker"]);
     expect(
       resolveServiceSelector("starlight-karma-bot-beta")?.variant?.versionKey,
     ).toBe("shepherdjerred/starlight-karma-bot/beta");
@@ -114,5 +116,8 @@ describe("deployed registry derived from the service catalog", () => {
     expect(
       servicesForPackages(["homelab", "temporal"]).map((s) => s.package),
     ).toEqual(["homelab", "temporal", "homelab"]);
+    expect(servicesForPackages(["tracker"]).map((s) => s.alias)).toEqual([
+      "tracker",
+    ]);
   });
 });

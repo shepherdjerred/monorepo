@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ArgoApplicationStatusSchema } from "@shepherdjerred/ops-model/argocd-application-status.ts";
 
 export const VERIFIED_ROOT_RELEASE_ANNOTATION =
   "ops.sjer.red/verified-root-release";
@@ -24,51 +25,45 @@ export const RootReleaseApplicationSchema = z.object({
     resourceVersion: z.string().optional(),
     annotations: z.record(z.string(), z.string()).optional(),
   }),
-  status: z
-    .object({
-      sync: z
-        .object({ status: z.string(), revision: z.string().optional() })
-        .optional(),
-      health: z.object({ status: z.string() }).optional(),
-      operationState: z
-        .object({
-          phase: z.string(),
-          message: z.string().optional(),
-          startedAt: z.string(),
-          finishedAt: z.string().optional(),
-          operation: z
-            .object({
-              info: z
-                .array(z.object({ name: z.string(), value: z.string() }))
-                .optional(),
-              initiatedBy: z
-                .object({ username: z.string().optional() })
-                .optional(),
-              sync: z
-                .object({
-                  revision: z.string().optional(),
-                  prune: z.boolean().optional(),
-                })
-                .optional(),
-            })
-            .optional(),
-          syncResult: z
-            .object({
-              revision: z.string().optional(),
-              resources: z
-                .array(
-                  z.object({
-                    status: z.string().optional(),
-                    hookPhase: z.string().optional(),
-                  }),
-                )
-                .optional(),
-            })
-            .optional(),
-        })
-        .optional(),
-    })
-    .default({}),
+  status: ArgoApplicationStatusSchema.extend({
+    operationState: z
+      .object({
+        phase: z.string(),
+        message: z.string().optional(),
+        startedAt: z.string(),
+        finishedAt: z.string().optional(),
+        operation: z
+          .object({
+            info: z
+              .array(z.object({ name: z.string(), value: z.string() }))
+              .optional(),
+            initiatedBy: z
+              .object({ username: z.string().optional() })
+              .optional(),
+            sync: z
+              .object({
+                revision: z.string().optional(),
+                prune: z.boolean().optional(),
+              })
+              .optional(),
+          })
+          .optional(),
+        syncResult: z
+          .object({
+            revision: z.string().optional(),
+            resources: z
+              .array(
+                z.object({
+                  status: z.string().optional(),
+                  hookPhase: z.string().optional(),
+                }),
+              )
+              .optional(),
+          })
+          .optional(),
+      })
+      .optional(),
+  }).default({}),
 });
 
 export type VerifiedRootReleaseReceipt = z.infer<

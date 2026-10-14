@@ -33,6 +33,38 @@ const PRUNE_PHASE_INFO = {
   value: "prune",
 } as const;
 
+function rootReleaseCommandOptions(origin: string, cwd = PACKAGE_ROOT) {
+  return {
+    cwd,
+    env: {
+      ...Bun.env,
+      ARGOCD_POLL_INTERVAL_MS: "5",
+      ARGOCD_SERVER_URL: origin,
+      ARGOCD_TOKEN: "test-token",
+      CHARTMUSEUM_ORIGIN: origin,
+    },
+  };
+}
+
+function runRootFinalization(origin: string) {
+  return runArgocdCommand(
+    [
+      "bun",
+      "--no-install",
+      ARGOCD_SCRIPT,
+      "finalize-root-release",
+      "apps",
+      "--revision",
+      "2.0.0-43",
+      "--request-id",
+      RELEASE_REQUEST_ID,
+      "--timeout",
+      "1",
+    ],
+    rootReleaseCommandOptions(origin),
+  );
+}
+
 const RootSyncRequestSchema = z.object({
   infos: z.array(SyncInfoEntrySchema),
   prune: z.boolean(),
@@ -318,30 +350,8 @@ test("root release finalization applies every exact wave before accepting a part
   });
 
   try {
-    const { exitCode, stdout, stderr } = await runArgocdCommand(
-      [
-        "bun",
-        "--no-install",
-        "scripts/argocd/argocd.ts",
-        "finalize-root-release",
-        "apps",
-        "--revision",
-        "2.0.0-43",
-        "--request-id",
-        RELEASE_REQUEST_ID,
-        "--timeout",
-        "1",
-      ],
-      {
-        cwd: path.resolve(import.meta.dir, "../../.."),
-        env: {
-          ...Bun.env,
-          ARGOCD_POLL_INTERVAL_MS: "5",
-          ARGOCD_SERVER_URL: server.url.origin,
-          ARGOCD_TOKEN: "test-token",
-          CHARTMUSEUM_ORIGIN: server.url.origin,
-        },
-      },
+    const { exitCode, stdout, stderr } = await runRootFinalization(
+      server.url.origin,
     );
 
     expect(exitCode).toBe(0);
@@ -507,30 +517,8 @@ for (const clusterScoped of [
     });
 
     try {
-      const { exitCode, stdout, stderr } = await runArgocdCommand(
-        [
-          "bun",
-          "--no-install",
-          "scripts/argocd/argocd.ts",
-          "finalize-root-release",
-          "apps",
-          "--revision",
-          "2.0.0-43",
-          "--request-id",
-          RELEASE_REQUEST_ID,
-          "--timeout",
-          "1",
-        ],
-        {
-          cwd: path.resolve(import.meta.dir, "../../.."),
-          env: {
-            ...Bun.env,
-            ARGOCD_POLL_INTERVAL_MS: "5",
-            ARGOCD_SERVER_URL: server.url.origin,
-            ARGOCD_TOKEN: "test-token",
-            CHARTMUSEUM_ORIGIN: server.url.origin,
-          },
-        },
+      const { exitCode, stdout, stderr } = await runRootFinalization(
+        server.url.origin,
       );
 
       expect(exitCode).toBe(0);
@@ -655,31 +643,7 @@ test("root release finalization adopts the exact active prune without another PO
 
   try {
     const { exitCode: unmarkedExitCode, stderr: unmarkedStderr } =
-      await runArgocdCommand(
-        [
-          "bun",
-          "--no-install",
-          "scripts/argocd/argocd.ts",
-          "finalize-root-release",
-          "apps",
-          "--revision",
-          "2.0.0-43",
-          "--request-id",
-          RELEASE_REQUEST_ID,
-          "--timeout",
-          "1",
-        ],
-        {
-          cwd: path.resolve(import.meta.dir, "../../.."),
-          env: {
-            ...Bun.env,
-            ARGOCD_POLL_INTERVAL_MS: "5",
-            ARGOCD_SERVER_URL: server.url.origin,
-            ARGOCD_TOKEN: "test-token",
-            CHARTMUSEUM_ORIGIN: server.url.origin,
-          },
-        },
-      );
+      await runRootFinalization(server.url.origin);
     expect(unmarkedExitCode).not.toBe(0);
     expect(unmarkedStderr).toContain(
       "full-source operation is not the marked final root prune",
@@ -688,30 +652,8 @@ test("root release finalization adopts the exact active prune without another PO
     expect(deleteRequests).toBe(0);
 
     marked = true;
-    const { exitCode, stdout, stderr } = await runArgocdCommand(
-      [
-        "bun",
-        "--no-install",
-        "scripts/argocd/argocd.ts",
-        "finalize-root-release",
-        "apps",
-        "--revision",
-        "2.0.0-43",
-        "--request-id",
-        RELEASE_REQUEST_ID,
-        "--timeout",
-        "1",
-      ],
-      {
-        cwd: path.resolve(import.meta.dir, "../../.."),
-        env: {
-          ...Bun.env,
-          ARGOCD_POLL_INTERVAL_MS: "5",
-          ARGOCD_SERVER_URL: server.url.origin,
-          ARGOCD_TOKEN: "test-token",
-          CHARTMUSEUM_ORIGIN: server.url.origin,
-        },
-      },
+    const { exitCode, stdout, stderr } = await runRootFinalization(
+      server.url.origin,
     );
 
     expect(exitCode).toBe(0);
@@ -853,20 +795,9 @@ test("release-root resumes at a live later phase instead of restaging", async ()
         "--timeout",
         "1",
       ],
-      {
-        // This is the only spawn here that completes a real release, so it is
-        // the only one that writes the release receipt. The receipt path is
-        // relative to the working directory, so the release runs from the
-        // scratch directory and the script is addressed absolutely.
-        cwd: directory,
-        env: {
-          ...Bun.env,
-          ARGOCD_POLL_INTERVAL_MS: "5",
-          ARGOCD_SERVER_URL: server.url.origin,
-          ARGOCD_TOKEN: "test-token",
-          CHARTMUSEUM_ORIGIN: server.url.origin,
-        },
-      },
+      // A completed release writes its receipt relative to cwd. Keep that
+      // artifact in the scratch directory, with an absolute script path.
+      rootReleaseCommandOptions(server.url.origin, directory),
     );
 
     expect(exitCode).toBe(0);
@@ -972,31 +903,7 @@ test("root release finalization refuses a batch selecting another namespace", as
   });
 
   try {
-    const { exitCode, stderr } = await runArgocdCommand(
-      [
-        "bun",
-        "--no-install",
-        "scripts/argocd/argocd.ts",
-        "finalize-root-release",
-        "apps",
-        "--revision",
-        "2.0.0-43",
-        "--request-id",
-        RELEASE_REQUEST_ID,
-        "--timeout",
-        "1",
-      ],
-      {
-        cwd: path.resolve(import.meta.dir, "../../.."),
-        env: {
-          ...Bun.env,
-          ARGOCD_POLL_INTERVAL_MS: "5",
-          ARGOCD_SERVER_URL: server.url.origin,
-          ARGOCD_TOKEN: "test-token",
-          CHARTMUSEUM_ORIGIN: server.url.origin,
-        },
-      },
-    );
+    const { exitCode, stderr } = await runRootFinalization(server.url.origin);
 
     expect(exitCode).not.toBe(0);
     expect(stderr).toContain("does not match an exact root batch");

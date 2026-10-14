@@ -1,25 +1,20 @@
 import { z } from "zod";
+import { ArgoApplicationStatusSchema } from "@shepherdjerred/ops-model/argocd-application-status.ts";
 
 const ApplicationStatusSchema = z.object({
-  status: z
-    .object({
-      sync: z
-        .object({ status: z.string(), revision: z.string().optional() })
-        .optional(),
-      health: z.object({ status: z.string() }).optional(),
-      operationState: z
-        .object({
-          phase: z.string(),
-          message: z.string().optional(),
-          syncResult: z
-            .object({
-              revision: z.string().optional(),
-            })
-            .optional(),
-        })
-        .optional(),
-    })
-    .optional(),
+  status: ArgoApplicationStatusSchema.extend({
+    operationState: z
+      .object({
+        phase: z.string(),
+        message: z.string().optional(),
+        syncResult: z
+          .object({
+            revision: z.string().optional(),
+          })
+          .optional(),
+      })
+      .optional(),
+  }).optional(),
 });
 
 export type ApplicationReadiness = {
@@ -54,43 +49,34 @@ export function applicationReadiness(
 
 const ApplicationListItemSchema = z.object({
   metadata: z.object({ name: z.string() }),
-  status: z
-    .object({
-      sync: z
-        .object({
-          status: z.string(),
-          revision: z.string().optional(),
-        })
-        .optional(),
-      health: z.object({ status: z.string() }).optional(),
-      operationState: z
-        .object({
-          phase: z.string(),
-          message: z.string().optional(),
-          syncResult: z
+  status: ArgoApplicationStatusSchema.extend({
+    operationState: z
+      .object({
+        phase: z.string(),
+        message: z.string().optional(),
+        syncResult: z
+          .object({
+            revision: z.string().optional(),
+          })
+          .optional(),
+      })
+      .optional(),
+    resources: z
+      .array(
+        z.object({
+          kind: z.string().optional(),
+          name: z.string().optional(),
+          status: z.string().optional(),
+          health: z
             .object({
-              revision: z.string().optional(),
+              status: z.string().optional(),
+              message: z.string().optional(),
             })
             .optional(),
-        })
-        .optional(),
-      resources: z
-        .array(
-          z.object({
-            kind: z.string().optional(),
-            name: z.string().optional(),
-            status: z.string().optional(),
-            health: z
-              .object({
-                status: z.string().optional(),
-                message: z.string().optional(),
-              })
-              .optional(),
-          }),
-        )
-        .optional(),
-    })
-    .optional(),
+        }),
+      )
+      .optional(),
+  }).optional(),
 });
 
 const ApplicationListSchema = z.object({
