@@ -257,7 +257,7 @@ describe("credential and output hygiene", () => {
     expect(JSON.stringify(lines)).not.toContain("synthetic-secret");
   });
 
-  test("native helper writes addressed AXValue and never reads account field values", async () => {
+  test("native helper addresses normal key events to proven focused fields without reading values", async () => {
     const source = (
       await Promise.all(
         [
@@ -274,7 +274,17 @@ describe("credential and output hygiene", () => {
       )
     ).join("\n");
     expect(source).not.toMatch(/attr\([^\n]*"AXValue"/u);
-    expect(source).toContain('AXUIElementSetAttributeValue(target, "AXValue"');
+    expect(source).toContain(
+      'AXUIElementSetAttributeValue(target, "AXFocused"',
+    );
+    expect(source).toMatch(
+      /same\(attr\(root,\s*"AXFocusedUIElement"\),\s*current\)/u,
+    );
+    expect(source).toMatch(
+      /down\.postToPid\(pid\)\s*;?\s*up\.postToPid\(pid\)/u,
+    );
+    expect(source).not.toContain(".post(tap:");
+    expect(source).toContain("keyboardSetUnicodeString");
     expect(source).toContain("CGSSessionScreenIsLocked");
     expect(source).not.toContain("83884152-6988-4771-a44e-7becc364c934");
     expect(source).not.toContain("iosContainer");

@@ -228,7 +228,14 @@ to obtain the ID, and do not capture the account-entry screen.
 For a prepared, sealed and bound Mac-only live run, `mac:account` drives normal
 account controls through an addressed native helper and the configured 1Password
 CLI. It verifies the exact run, descriptor, frozen source/artifact provenance,
-process lifetime and account sheet before reading credentials. From this package:
+process lifetime and account sheet before reading credentials.
+
+Field entry uses normal keyboard events addressed to the verified process, with
+the exact enabled field and its focus checked before and after each matched key
+pair. The helper preserves secure-field ownership and the form's enabled-button
+checkpoints so successful event delivery alone cannot establish ready credentials.
+
+From this package:
 
 ```bash
 bun run mac:account <runID> present

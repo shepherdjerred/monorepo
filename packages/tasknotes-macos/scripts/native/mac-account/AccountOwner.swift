@@ -1,5 +1,6 @@
 import AppKit
 import ApplicationServices
+import CoreGraphics
 import Darwin
 import Foundation
 
@@ -183,16 +184,49 @@ struct Owner {
     func set(_ identifier: String, value: String, secure: Bool = false) throws {
         let target = try element(identifier, role: "AXTextField", secure: secure)
         guard attr(target, "AXEnabled") as? Bool == true else { throw Failure.field }
-        var settable = DarwinBoolean(false)
-        guard AXUIElementIsAttributeSettable(target, "AXValue" as CFString, &settable) == .success,
-            settable.boolValue
-        else { throw Failure.setter }
+        guard value.utf8.count <= 512,
+            !value.unicodeScalars.contains(where: CharacterSet.controlCharacters.contains)
+        else { throw Failure.input }
         _ = try validate()
         guard
-            AXUIElementSetAttributeValue(target, "AXValue" as CFString, value as CFString)
+            AXUIElementSetAttributeValue(target, "AXFocused" as CFString, kCFBooleanTrue)
                 == .success
         else { throw Failure.setter }
+        func exactFocusedField() throws {
+            _ = try validate()
+            let current = try element(identifier, role: "AXTextField", secure: secure)
+            guard CFEqual(current, target), attr(current, "AXEnabled") as? Bool == true,
+                attr(current, "AXFocused") as? Bool == true,
+                same(attr(root, "AXFocusedUIElement"), current)
+            else { throw Failure.field }
+        }
+        func pair(key: CGKeyCode, flags: CGEventFlags = [], unicode: [UniChar] = []) throws {
+            guard let down = CGEvent(keyboardEventSource: nil, virtualKey: key, keyDown: true),
+                let up = CGEvent(keyboardEventSource: nil, virtualKey: key, keyDown: false)
+            else { throw Failure.action }
+            down.flags = flags
+            up.flags = flags
+            if !unicode.isEmpty {
+                unicode.withUnsafeBufferPointer { text in
+                    down.keyboardSetUnicodeString(
+                        stringLength: text.count, unicodeString: text.baseAddress)
+                    up.keyboardSetUnicodeString(
+                        stringLength: text.count, unicodeString: text.baseAddress)
+                }
+            }
+            try exactFocusedField()
+            down.postToPid(pid)
+            up.postToPid(pid)
+            RunLoop.current.run(until: Date().addingTimeInterval(0.01))
+            try exactFocusedField()
+        }
+        try pair(key: 0, flags: .maskCommand)
+        try pair(key: 51)
+        for scalar in value.unicodeScalars {
+            try pair(key: 0, unicode: Array(String(scalar).utf16))
+        }
         RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        try exactFocusedField()
     }
     func wait(_ identifier: String, enabled: Bool) throws {
         let deadline = Date().addingTimeInterval(2)

@@ -264,7 +264,7 @@ export async function main(args: string[]) {
       await validateState();
       const result = captured(
         [built.helper],
-        15_000,
+        60_000,
         JSON.stringify({ ...binding, lifecycle, pid, ...input }),
       );
       const lines = result.stdout.trim().split("\n");

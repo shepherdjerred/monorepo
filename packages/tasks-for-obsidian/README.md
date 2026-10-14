@@ -106,6 +106,18 @@ from the existing login Keychain when preparing. It signs only the Mac UI-test
 runner; the app and dependencies retain their project signing settings. The
 value must be 40 hexadecimal characters. Omitting it preserves ad-hoc signing.
 
+Mac relaunch inspects the exact acceptance executable's text mapping and requires
+a single candidate. A separate libproc helper verifies its primary executable,
+UID/RUID and BSD start time immediately before submitting TERM. Those adjacent
+checks and signaling are separate operations; the harness then observes process
+exit before launching again. Ambiguous owners, unexpected diagnostics and expired
+parent deadlines fail closed. Local helper controls use only a newly spawned
+harmless child:
+
+```bash
+bun scripts/apple-sync-live/mac-process-owner.native-controls.ts
+```
+
 Open the printed reference folder in official Obsidian, install and enable
 TaskNotes **4.13.8**, and connect only the designated synthetic encrypted remote
 vault. Preserve existing remote vaults; provision a new one only when explicitly
