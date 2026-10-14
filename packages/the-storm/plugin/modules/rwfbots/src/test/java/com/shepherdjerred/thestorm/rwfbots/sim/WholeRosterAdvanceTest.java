@@ -165,7 +165,11 @@ final class WholeRosterAdvanceTest {
                 + " position "
                 + body.pos
                 + " plan "
-                + body.decision.map(decision -> decision.planLabel()).orElse("none"));
+                + body.decision.map(decision -> decision.planLabel()).orElse("none")
+                + " slot "
+                + world.boards.get(body.team).plan().slotOf(body.id)
+                + " push "
+                + world.boards.get(body.team).plan().push());
       }
       return String.join("\n", lines);
     }

@@ -122,9 +122,8 @@ final class TeamPlayTest {
    * output: a deliberate change to how bots play moves it, and the new value is pasted here in the
    * same change; an accidental one fails here.
    */
-  // Visible melee pursuits follow obstacle/height approach routes until unobstructed sword contact.
-  // Slot moves ignore stale close predictions and prefer forward cover over nearby safety.
-  private static final String PINNED_YARD_HASH = "b1a6c3ce277c6ec7";
+  // Primitive tolls scale with distance, and moving formations preserve playbook spacing.
+  private static final String PINNED_YARD_HASH = "f6ae997df2102cd6";
 
   @Test
   void aTrainingYardMatchReplaysToItsPinnedHash() {

@@ -7,6 +7,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.TraversalCosts;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.VoxelGrid;
 import com.shepherdjerred.thestorm.rwfbots.domain.tactics.FallRisk;
+import com.shepherdjerred.thestorm.rwfbots.domain.team.Playbook;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BodyCommand;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
@@ -63,9 +64,9 @@ public final class Reflex {
   private static final double ALLY_SPACING = 0.9;
 
   /** Teammates closer than this push each other apart while fighting. */
-  static final double SEPARATION = 3.0;
+  static final double SEPARATION = Playbook.SPACING;
 
-  /** Moving formations leave another half block for teammates closing the gap. */
+  /** Formation steering leaves a response margin beyond the assigned playbook slots. */
   static final double WALK_SEPARATION = SEPARATION + 0.5;
 
   /** The last waypoints of a path, which a bot walks straight at whoever is near. */
@@ -786,10 +787,10 @@ public final class Reflex {
       if (push.isZero() || heading.isZero()) {
         return destination;
       }
-      var direction = heading.normalized().plus(push.scale(SEPARATION_WEIGHT));
-      if (direction.isZero()) {
-        return destination;
-      }
+      var forward = heading.normalized();
+      var backward = Math.min(0, push.dot(forward));
+      var correction = push.minus(forward.scale(backward));
+      var direction = forward.plus(correction.scale(SEPARATION_WEIGHT));
       var length = Math.max(heading.length(), 1);
       return self.pos().plus(direction.normalized().scale(length)).withY(destination.y());
     }

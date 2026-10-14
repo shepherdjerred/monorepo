@@ -28,6 +28,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.Kit;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.MatchPhase;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Option;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.PoisonView;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.Stance;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.WorldSnapshot;
 import java.util.List;
 import java.util.Map;
@@ -106,6 +107,42 @@ final class PlannerSupportTest {
                 situation.nearestEnemy().orElseThrow().pos(),
                 Planner.BOUND_REACH))
         .orElseThrow();
+  }
+
+  @Test
+  void sharingACoverCellStillRoutesTheBodyToItsCenter() {
+    var scene = openBound(30.5, 10);
+    var original = scene.situation();
+    var self = original.self().withPos(new Vec3(12.01, 1, 12.01));
+    var situation =
+        new Situation(
+            self, original.snapshot(), original.percept(), original.board(), original.role());
+    var goal = new Vec3(12.5, 1, 12.5);
+    assertThat(self.pos().horizontalDistance(goal)).isGreaterThan(Planner.COVER_REACHED);
+    assertThat(NAV.graph().nearestNode(self.pos())).isEqualTo(NAV.graph().nearestNode(goal));
+    var route =
+        Planner.pathTo(situation, scene.context(), goal, new Planner.Way(Stance.AGGRESSIVE, false));
+    assertThat(route).hasSize(1);
+    assertThat(route.getFirst().pos()).isEqualTo(goal);
+  }
+
+  @Test
+  void formationHoldsDoNotStopABlockShortOfTheirAssignedSpacing() {
+    var scene = openBound(30.5, 10);
+    var original = scene.situation();
+    var goal = original.slot().orElseThrow().pos();
+    var self = original.self().withPos(goal.plus(-1, 0, 0));
+    var situation =
+        new Situation(
+            self, original.snapshot(), original.percept(), original.board(), original.role());
+    var plan =
+        Plan.of(
+            Option.HOLD_SLOT,
+            10,
+            new PlanStep.Hold(goal, new Vec3(30.5, 1, 12.5), Stance.CAUTIOUS));
+    var decision = Planner.decide(plan, situation, scene.context(), 0);
+    assertThat(decision.waypoints()).isNotEmpty();
+    assertThat(decision.waypoints().getLast().pos()).isEqualTo(goal);
   }
 
   @Test

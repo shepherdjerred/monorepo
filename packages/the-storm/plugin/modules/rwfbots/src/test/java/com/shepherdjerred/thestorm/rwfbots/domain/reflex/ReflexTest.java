@@ -459,7 +459,16 @@ final class ReflexTest {
     assertThat(walkingMove(self, receding).waypoint().z()).isEqualTo(self.pos().z());
   }
 
-  private static BodyCommand.MoveToward walkingMove(CombatantView self, CombatantView ally) {
+  @Test
+  void formationPressureCannotReverseTheAuthoredRoute() {
+    var self = combatant(1, RED, new Vec3(5.5, 1, 5.5));
+    var left = combatant(2, RED, self.pos().plus(1.2, 0, 0.4));
+    var right = combatant(3, RED, self.pos().plus(1.2, 0, -0.4));
+    var move = walkingMove(self, left, right);
+    assertThat(move.waypoint().x()).isGreaterThan(self.pos().x());
+  }
+
+  private static BodyCommand.MoveToward walkingMove(CombatantView self, CombatantView... allies) {
     var path =
         java.util.stream.IntStream.rangeClosed(1, 5)
             .mapToObj(step -> new Waypoint(self.pos().plus(step * 2, 0, 0), Hop.WALK))
@@ -481,7 +490,16 @@ final class ReflexTest {
         Reflex.tick(
             ReflexState.initial(self.facing()),
             new ReflexInput(
-                self, world(1, List.of(self, ally), List.of()), decision, Optional.empty(), 0),
+                self,
+                world(
+                    1,
+                    java.util.stream.Stream.concat(
+                            java.util.stream.Stream.of(self), java.util.Arrays.stream(allies))
+                        .toList(),
+                    List.of()),
+                decision,
+                Optional.empty(),
+                0),
             context(levers(1)),
             new SplittableRandom(4));
     return step.commands().stream()

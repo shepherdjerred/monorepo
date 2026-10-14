@@ -758,6 +758,13 @@ public final class Planner {
     return pos.horizontalDistance(goal) <= ROUTE_REACHED && Math.abs(pos.y() - goal.y()) < 1.5;
   }
 
+  private static boolean atHold(Plan plan, Situation situation, Vec3 goal) {
+    var formation = plan.option() == Option.TAKE_SLOT || plan.option() == Option.HOLD_SLOT;
+    return (formation && situation.slot().isPresent())
+        ? inCover(situation.self().pos(), goal)
+        : reached(situation.self().pos(), goal);
+  }
+
   // ---- decisions -------------------------------------------------------------------------------
 
   /** The decision carrying out the current step of {@code plan}. */
@@ -795,8 +802,8 @@ public final class Planner {
               situation,
               new Parts(
                   plan.option(),
-                  holdTarget(situation, context, !reached(self.pos(), pos)),
-                  reached(self.pos(), pos)
+                  holdTarget(situation, context, !atHold(plan, situation, pos)),
+                  atHold(plan, situation, pos)
                       ? List.of()
                       : pathTo(situation, context, pos, new Way(stance, true)),
                   stance,

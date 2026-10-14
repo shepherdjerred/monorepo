@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.rwfbots.domain.map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.within;
 
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Hop;
@@ -28,6 +29,30 @@ final class HealthRoutesTest {
         cells,
         new NavGraph.Topology(new int[] {0, 2, 3, 4, 5, 5}, new int[] {1, 2, 3, 3, 4}),
         new NavGraph.EdgeData(hops, new float[] {1, 2, 1, 3, 1}));
+  }
+
+  @Test
+  void blockPenaltiesChargeTheFullPrimitiveWithoutInflatingTravelTime() {
+    var graph = course();
+    for (var timed : new boolean[] {false, true}) {
+      var motion = new NavGraph.EdgeMotion(graph::edgeCost, edge -> true, 1);
+      var edges = new HealthRoutes.EdgePolicy((edge, arrival) -> 0, motion, timed);
+      var route =
+          HealthRoutes.find(
+                  graph,
+                  new HealthRoutes.Request(
+                      2,
+                      3,
+                      new HealthRoutes.RiskPolicy(0, 0, OptionalDouble.of(3)),
+                      node -> 5,
+                      HealthRoutes.PenaltyUnits.BLOCK),
+                  edges,
+                  null)
+              .orElseThrow();
+      assertThat(route.path().nodes()).containsExactly(2, 3);
+      assertThat(route.path().cost()).isEqualTo(3);
+      assertThat(route.weightedCost()).isCloseTo(3 + 5 * Math.sqrt(5), within(1e-9));
+    }
   }
 
   @Test

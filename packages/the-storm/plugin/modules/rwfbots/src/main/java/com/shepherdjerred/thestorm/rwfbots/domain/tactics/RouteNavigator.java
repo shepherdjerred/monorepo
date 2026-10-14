@@ -67,7 +67,12 @@ final class RouteNavigator {
   private static Optional<Candidate> graph(
       TacticsContext context, Endpoints endpoints, Tolls tolls, HealthRoutes.RiskPolicy policy) {
     var request =
-        new HealthRoutes.Request(endpoints.from(), endpoints.to(), policy, tolls.penalty());
+        new HealthRoutes.Request(
+            endpoints.from(),
+            endpoints.to(),
+            policy,
+            tolls.penalty(),
+            HealthRoutes.PenaltyUnits.BLOCK);
     var edges = tolls.risk().edges();
     var found = planned(context, endpoints, tolls, new Search(request, edges));
     if (found.isPresent() || !edges.timed()) return found;
@@ -90,6 +95,14 @@ final class RouteNavigator {
               points.addAll(route.path().toFollow());
               if (submerged(context, endpoints.goal()))
                 points.add(new Waypoint(endpoints.goal(), Hop.SWIM));
+              else if (points.isEmpty()
+                  && endpoints
+                          .source()
+                          .horizontalDistance(context.nav().graph().feet(endpoints.to()))
+                      > 0) {
+                // Sharing a graph cell does not mean the body has reached its cover point.
+                points.add(new Waypoint(context.nav().graph().feet(endpoints.to()), Hop.WALK));
+              }
               return refine(context, endpoints.source(), points, tolls)
                   .flatMap(refined -> score(context, endpoints.source(), refined, tolls));
             });
@@ -165,7 +178,10 @@ final class RouteNavigator {
       if (leg.edge() >= 0)
         damage = Math.addExact(damage, tolls.risk().edges().damage().damage(leg.edge(), ticks));
       if (damage > tolls.risk().policy().damageBudget()) return Optional.empty();
-      cost += leg.ticks() + penalty(context, tolls.penalty(), point.pos());
+      cost +=
+          leg.ticks()
+              + penalty(context, tolls.penalty(), point.pos())
+                  * Math.max(1, previous.distance(point.pos()));
       previous = point.pos();
     }
     cost += damage * tolls.risk().policy().ticksPerHealthPoint();

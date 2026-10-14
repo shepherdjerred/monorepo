@@ -2879,9 +2879,12 @@ bots chase one enemy unless it is nearly dead; bows keep their kit's band
 its lane when that position fits the band, then shoot from the edge of cover; the
 Rewind kit uses its clock only when a model of rwf's Rewind ability says it
 is ready and lands away from the threat. Every path a bot walks pays a per-bot
-penalty: seeded noise over patches of the map, a toll on teammates' current
-paths and one for leaving its lane, so teammates with one goal still take
-different ways. Archetypes bend the utilities, the decision temperature and
+penalty per block of each primitive: seeded noise over patches of the map, a
+toll on teammates' current paths and one for leaving its lane. Long jumps pay
+for their full distance, so they cannot evade those costs by skipping intermediate
+graph nodes. Teammates with one goal still take different ways. Formation steering
+uses the playbook's slot spacing while accounting for closing teammates.
+Archetypes bend the utilities, the decision temperature and
 the fighting range, and add a push to the aggression lever at the draft;
 `crouch_spam`, `late_to_everything` and `loves_nuke` act in play.
 

@@ -44,13 +44,31 @@ public final class HealthRoutes {
     }
   }
 
-  public record Request(int from, int to, RiskPolicy risk, IntToDoubleFunction penalty) {
+  public enum PenaltyUnits {
+    NODE,
+    BLOCK
+  }
+
+  public record Request(
+      int from, int to, RiskPolicy risk, IntToDoubleFunction penalty, PenaltyUnits penaltyUnits) {
+    public Request(int from, int to, RiskPolicy risk, IntToDoubleFunction penalty) {
+      this(from, to, risk, penalty, PenaltyUnits.NODE);
+    }
+
     public Request(int from, int to, double damageBudget, IntToDoubleFunction penalty) {
       this(from, to, new RiskPolicy(damageBudget, 0), penalty);
     }
 
     public double damageBudget() {
       return risk.damageBudget();
+    }
+
+    private double transitionPenalty(NavGraph graph, int source, int target) {
+      var scale =
+          penaltyUnits == PenaltyUnits.BLOCK
+              ? Math.max(1, graph.feet(source).distance(graph.feet(target)))
+              : 1;
+      return checkedPenalty(penalty, target) * scale;
     }
   }
 
@@ -104,11 +122,13 @@ public final class HealthRoutes {
         || request.to() >= graph.nodeCount())
       throw new IllegalArgumentException("route endpoint outside graph");
     if (edges.timed()) return new Search(graph, request, edges).find();
-    IntToDoubleFunction penalty = node -> checkedPenalty(request.penalty(), node);
     var weights =
         new NavGraph.PathWeights(
-            penalty,
-            edge -> checkedDamage(edges.damage(), edge, 0) * request.risk().ticksPerHealthPoint(),
+            node -> 0,
+            edge ->
+                checkedDamage(edges.damage(), edge, 0) * request.risk().ticksPerHealthPoint()
+                    + request.transitionPenalty(
+                        graph, graph.edgeSource(edge), graph.edgeTarget(edge)),
             edges.motion());
     var scratch = workspace == null ? graph.workspace() : workspace;
     var unconstrained = graph.path(request.from(), request.to(), weights, scratch);
@@ -118,7 +138,9 @@ public final class HealthRoutes {
     if (damage <= request.damageBudget() && request.risk().allows(ordinary.cost())) {
       var cost = ordinary.cost() + damage * request.risk().ticksPerHealthPoint();
       for (var index = 1; index < ordinary.nodes().size(); index++)
-        cost += penalty.applyAsDouble(ordinary.nodes().get(index));
+        cost +=
+            request.transitionPenalty(
+                graph, ordinary.nodes().get(index - 1), ordinary.nodes().get(index));
       return Optional.of(new Route(ordinary, damage, cost));
     }
     return new Search(graph, request, edges).find();
@@ -225,7 +247,7 @@ public final class HealthRoutes {
       var totalDamage = Math.addExact(current.damage, edgeDamage);
       if (totalDamage > request.damageBudget()) return;
       var node = graph.edgeTarget(edge);
-      var penalty = checkedPenalty(request.penalty(), node);
+      var penalty = request.transitionPenalty(graph, current.node, node);
       var riskCost = edgeDamage * request.risk().ticksPerHealthPoint();
       offer(
           new Label(
