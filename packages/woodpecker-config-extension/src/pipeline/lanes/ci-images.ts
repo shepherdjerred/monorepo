@@ -2,6 +2,8 @@ import type { CiImages } from "#src/images.ts";
 import {
   DOCKERHUB_PUBLISH,
   DOCKERHUB_PUBLISH_LOGIN,
+  DOCKERHUB_READ,
+  DOCKERHUB_READ_LOGIN,
 } from "#src/pipeline/lanes/registry.ts";
 import { admissionGate } from "#src/pipeline/lanes/release.ts";
 import type { CiStep, SecretGrant } from "#src/pipeline/model.ts";
@@ -81,6 +83,7 @@ export function ciImageSteps(images: CiImages): CiStep[] {
           "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production",
         ),
         "MISE_TOOLCHAIN_SCOPE=automation . ci/scripts/toolchain.sh",
+        DOCKERHUB_READ_LOGIN,
         'bun --no-install scripts/release/update-versions.ts --commit-back --candidates "$(bun --no-install scripts/ci/read-ci-handoff.ts pin-candidates)"',
       ],
       // A pin commit creates a new main pipeline. Wait until this build's
@@ -93,7 +96,12 @@ export function ciImageSteps(images: CiImages): CiStep[] {
       // Shares the image lane's group: the pin it writes describes exactly
       // what that lane pushed, so the two must not interleave across builds.
       concurrency: { limit: 1, group: "image-push" },
-      secrets: [GITHUB_DOWNLOAD, ...GITHUB_APP, ...HANDOFF_KEYS],
+      secrets: [
+        GITHUB_DOWNLOAD,
+        DOCKERHUB_READ,
+        ...GITHUB_APP,
+        ...HANDOFF_KEYS,
+      ],
     },
   ];
 }

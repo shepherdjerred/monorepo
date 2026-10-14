@@ -137,6 +137,7 @@ describe("what a pull request can reach", () => {
     expect(credentialHolders("DOCKERHUB_READ_CONFIG_JSON")).toEqual([
       "scout-beta-release",
       "scout-prod-reconcile",
+      "version-commit-back",
     ]);
     for (const step of allSteps()) {
       for (const grant of step.secrets ?? []) {

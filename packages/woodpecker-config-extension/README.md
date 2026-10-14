@@ -76,7 +76,7 @@ and total helper time; object bytes exclude network protocol overhead.
 
 Registry access uses explicit per-lane grants. Image and toolchain publishers
 and Scout tag publication receive the scoped Docker Hub publisher identity.
-Scout site extraction receives only the reader Docker configuration from
+Scout site extraction and image-pin metadata verification receive only the reader Docker configuration from
 `dockerhub-pull-woodpecker-ci`. The login helper validates the account and sends
 the token through standard input. These grants are main-only; pull-request
 commands receive neither registry identity. The generated graph authenticates
