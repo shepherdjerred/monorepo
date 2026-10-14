@@ -5,7 +5,7 @@
   "movementModelVersion": 4,
   "costUnit": "server-ticks",
   "damageUnit": "health-points",
-  "blocksSha256": "ad97058ae6dea2bedcf7f1629a3740c0a44e996a2ec078b12d958d49a850f102",
+  "blocksSha256": "5f877a7b50a13702d9f9d3cce4bf6cf219f5466353e770c330fae6ed1d41caab",
   "classificationSha256": "0d31b1a9252ed344ac5a375ac5bf3fc896f325e608b1f8facb7aa993c1167e7f",
   "bounds": {
     "origin": { "x": 1024, "y": 64, "z": 8192 },
@@ -120,7 +120,7 @@
       "state": "minecraft:tnt[unstable=false]",
       "shape": "FULL",
       "blocksSight": true,
-      "blocks": 2
+      "blocks": 3
     },
     {
       "state": "minecraft:glowstone",
@@ -169,12 +169,6 @@
       "shape": "FULL",
       "blocksSight": true,
       "blocks": 1000
-    },
-    {
-      "state": "minecraft:lodestone",
-      "shape": "FULL",
-      "blocksSight": true,
-      "blocks": 1
     },
     {
       "state": "minecraft:jungle_leaves[distance=7,persistent=true,waterlogged=false]",
@@ -1086,5 +1080,5 @@
   },
   "distanceFields": 19,
   "problems": [],
-  "bytes": 2020897
+  "bytes": 2020895
 }

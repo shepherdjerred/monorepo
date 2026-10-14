@@ -50,5 +50,5 @@
       },
     ],
   "nukes": [{ "id": "nuke-1", "at": { "x": 1096, "y": 79, "z": 8256 } }],
-  "blocksSha256": "ad97058ae6dea2bedcf7f1629a3740c0a44e996a2ec078b12d958d49a850f102",
+  "blocksSha256": "5f877a7b50a13702d9f9d3cce4bf6cf219f5466353e770c330fae6ed1d41caab",
 }

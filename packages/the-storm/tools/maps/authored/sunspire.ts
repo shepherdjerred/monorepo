@@ -68,7 +68,7 @@ export default ((ctx) => {
   box(ctx, 77, 16, 62, 6, 15, 6, "smooth_sandstone");
   box(ctx, 78, 31, 63, 4, 4, 4, "gold_block");
   box(ctx, 79, 35, 64, 2, 3, 2, "lightning_rod");
-  ctx.set(72, 15, 64, "lodestone");
+  ctx.set(72, 15, 64, "tnt[unstable=false]");
   hall(ctx, 30, 18, 29, 21, "smooth_sandstone", "red_sandstone_slab");
   hall(ctx, 100, 89, 29, 21, "cut_sandstone", "red_sandstone_slab", 9, 8);
   tower(ctx, 108, 21, 15);

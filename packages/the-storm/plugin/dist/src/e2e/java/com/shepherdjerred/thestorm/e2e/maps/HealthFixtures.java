@@ -233,6 +233,8 @@ public final class HealthFixtures implements BasicCommand, Listener, AutoCloseab
       if (++observedTicks > WIRE.maximumTicks())
         throw new IllegalStateException("health proof tick bound exceeded");
       if (state.equals("bound") && awaitVulnerability()) return;
+      // The receipt must be the first post-event capture, including its observed hurt tick.
+      if (pendingFalls != 0 || pendingRegains != 0) return;
       var sample = snapshot();
       if (state.equals("observing") && !sample.onGround() && sample.traversal().fallDistance() > 0)
         prediction(sample, captured(live()));
@@ -443,7 +445,34 @@ public final class HealthFixtures implements BasicCommand, Listener, AutoCloseab
     pendingFalls++;
     // Vanilla applies environmental damage after MONITOR returns. Never infer health from the
     // event.
-    plugin.getServer().getScheduler().runTask(plugin, () -> completeFall(pending));
+    deferReceipt(pending.eventTick(), () -> completeFall(pending));
+  }
+
+  private void deferReceipt(int eventTick, Runnable receipt) {
+    deferReceipt(eventTick, receipt, WIRE.maximumTicks());
+  }
+
+  private void deferReceipt(int eventTick, Runnable receipt, int remainingChecks) {
+    plugin
+        .getServer()
+        .getScheduler()
+        .runTaskLater(
+            plugin,
+            () -> {
+              if (state.equals("failed")) return;
+              var now = tick();
+              if (now < eventTick || remainingChecks == 0) {
+                fail(new IllegalStateException("native receipt server tick did not advance"));
+                return;
+              }
+              // Scheduler and server tick counters can be updated at different phases.
+              if (now == eventTick) {
+                deferReceipt(eventTick, receipt, remainingChecks - 1);
+                return;
+              }
+              receipt.run();
+            },
+            1L);
   }
 
   private void completeFall(HealthProtocol.Fall pending) {
@@ -498,7 +527,7 @@ public final class HealthFixtures implements BasicCommand, Listener, AutoCloseab
             source.saturation(),
             source.difficulty());
     pendingRegains++;
-    plugin.getServer().getScheduler().runTask(plugin, () -> completeRegain(pending));
+    deferReceipt(pending.eventTick(), () -> completeRegain(pending));
   }
 
   private void completeRegain(HealthProtocol.Regain pending) {

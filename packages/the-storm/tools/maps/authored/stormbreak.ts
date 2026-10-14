@@ -71,7 +71,7 @@ export default ((ctx) => {
   }
   box(ctx, 76, 12, 103, 8, 1, 1, "stone_bricks");
   // The exposed nuke court sits between a broken gatehouse and a roofed chapel.
-  ctx.set(79, 14, 72, "lodestone");
+  ctx.set(79, 14, 72, "tnt[unstable=false]");
   for (const [x, z, height] of [
     [64, 42, 15],
     [85, 85, 12],

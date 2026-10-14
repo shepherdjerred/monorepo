@@ -1,5 +1,6 @@
 import { readdir } from "node:fs/promises";
 import path from "node:path";
+import { parseArgs } from "node:util";
 import { z } from "zod";
 import {
   MapContent,
@@ -46,13 +47,25 @@ async function tool(action: string, directory: string) {
     throw new Error(`${action} failed for ${directory}: ${stderr}`);
   return stdout;
 }
-let removed = 0;
+const args = parseArgs({
+  strict: true,
+  options: { map: { type: "string", multiple: true } },
+});
 const listing = await readdir(maps, { withFileTypes: true });
-for (const entry of listing
+const entries = listing
   .filter((candidate) => candidate.isDirectory())
-  .sort((a, b) => a.name.localeCompare(b.name))) {
+  .sort((a, b) => a.name.localeCompare(b.name));
+const selected = args.values.map ?? entries.map((entry) => entry.name);
+if (
+  new Set(selected).size !== selected.length ||
+  selected.some((id) => !entries.some((entry) => entry.name === id))
+)
+  throw new Error("Content integration requires distinct installed map IDs");
+const targets = new Set(selected);
+let removed = 0;
+for (const entry of entries) {
   const folder = path.join(maps, entry.name);
-  const count = await removeShops(folder);
+  const count = targets.has(entry.name) ? await removeShops(folder) : 0;
   removed += count;
   const map = MapContent.parse(
     Bun.YAML.parse(await Bun.file(path.join(folder, "map.yml")).text()),
@@ -62,6 +75,7 @@ for (const entry of listing
   if (count > 0) await tool("bake", folder);
   await tool("verify-details", folder);
   await tool("verify", folder);
+  if (!targets.has(entry.name)) continue;
   const existing = registry.scenarios.find(
     (scenario) => scenario.map === map.id,
   );

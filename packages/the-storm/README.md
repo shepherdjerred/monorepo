@@ -1172,6 +1172,10 @@ changed navigation, verifies every installed map and updates source/training
 scenario hashes. Retained `removed-shops.json` files record the removed sign
 payloads. Commit terrain, metadata, details, navigation and scenarios together;
 offline verification still requires real-server traversal acceptance.
+To bind a focused map repair, pass repeated `--map <id>` arguments to
+`maps:integrate-content`. Every installed map is still verified, while shop
+removal, scenario writes and registry updates apply only to the selected maps.
+Unknown or repeated map IDs are refused before any content is changed.
 
 A map is authored in a build world and exported with WorldEdit
 (`//schem save <id>` as a Sponge v3 schematic, terrain only: block entities and
@@ -1287,8 +1291,10 @@ rotation remain unchanged.
 `maps:verify-close-starts` checks those candidates in disposable pinned Paper
 using the production Citizens motor. It checks native floor height, player-sized
 clearance and sightlines, then walks a round trip from each start without editing
-terrain. Ordinary showcases rotate the maps, while the fixture checks the
-two-map cache bound. Repeated `--map <id>` selects a diagnostic subset of at least
+terrain. It selects each requested map once through `/rwf admin setmap`, waits
+for its resources, and starts a showcase while the fixture checks the two-map
+cache bound. Each case stops and waits for an empty successor lobby before the
+next selection. Repeated `--map <id>` selects a diagnostic subset of at least
 three maps; omit it to request the whole candidate catalog. Retained reports bind
 each result to its terrain hash and exact positions, and include physics samples,
 producer hashes and server logs. Geometry and traversal evidence do not establish

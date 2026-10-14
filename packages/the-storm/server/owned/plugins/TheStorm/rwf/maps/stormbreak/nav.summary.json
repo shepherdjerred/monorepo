@@ -5,7 +5,7 @@
   "movementModelVersion": 4,
   "costUnit": "server-ticks",
   "damageUnit": "health-points",
-  "blocksSha256": "429743d80dfa8e2f3381c79d7c439412cf53a3c4f1506d83fcd6cc3fdb73c23b",
+  "blocksSha256": "4147b2471483c91e56472434287390c6b2639600b9d2820f67ad299035773c6b",
   "classificationSha256": "a6bc163a0b0aa1dbf3602373a43422b97eb8b9588a2716bee4ecaaffcb21c888",
   "bounds": {
     "origin": { "x": 4096, "y": 64, "z": 8192 },
@@ -132,7 +132,7 @@
       "state": "minecraft:tnt[unstable=false]",
       "shape": "FULL",
       "blocksSight": true,
-      "blocks": 2
+      "blocks": 3
     },
     {
       "state": "minecraft:stone_brick_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]",
@@ -163,12 +163,6 @@
       "shape": "FULL",
       "blocksSight": true,
       "blocks": 556
-    },
-    {
-      "state": "minecraft:lodestone",
-      "shape": "FULL",
-      "blocksSight": true,
-      "blocks": 1
     },
     {
       "state": "minecraft:red_terracotta",
@@ -1194,5 +1188,5 @@
   },
   "distanceFields": 19,
   "problems": [],
-  "bytes": 2112630
+  "bytes": 2112623
 }

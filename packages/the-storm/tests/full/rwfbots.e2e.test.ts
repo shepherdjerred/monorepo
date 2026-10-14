@@ -156,7 +156,9 @@ async function startShowcase(rcon: RconClient, size: number) {
   const started = plain(
     await rcon.command(`rwf admin showcase ${size.toString()}`),
   );
-  expect(started).toContain(`Showcase of ${size.toString()} bots started`);
+  expect(started).toContain(
+    `Showcase of ${size.toString()} bots is starting after map preparation`,
+  );
   await eventually(
     "the showcase to go live",
     async () => liveStatus(rcon),
@@ -165,6 +167,29 @@ async function startShowcase(rcon: RconClient, size: number) {
   const live = await status(rcon);
   expect([live.humans, live.bots]).toEqual([0, size]);
   return live;
+}
+
+/** Every accepted start is cleaned up, including a failure before it reaches Live. */
+async function usingShowcase(
+  rcon: RconClient,
+  size: number,
+  play: (live: Awaited<ReturnType<typeof status>>) => Promise<void>,
+): Promise<void> {
+  const owned = await status(rcon);
+  expect(owned.ready).toBe(true);
+  expect([owned.phase, owned.humans, owned.bots]).toEqual(["Lobby", 0, 0]);
+  try {
+    const live = await startShowcase(rcon, size);
+    expect(live.matchId).toBe(owned.matchId);
+    await play(live);
+  } finally {
+    const current = await status(rcon);
+    // A naturally completed showcase may already have opened the next match.
+    if (current.matchId === owned.matchId) {
+      await rcon.command("rwf admin forcestop");
+      await waitForLobby(rcon);
+    }
+  }
 }
 
 /** One lone-human match and what the human's client saw of it. */
@@ -765,52 +790,53 @@ async function watchShowcase(match: Match, outsider: Bot): Promise<void> {
     "the watcher in spectator mode",
     async () => bot.game.gameMode === "spectator",
   );
-  const live = await startShowcase(rcon, size);
-  expect(plain(await rcon.command("rwf admin status"))).toContain(
-    "Watchers: 1, showcase: yes",
-  );
+  await usingShowcase(rcon, size, async (live) => {
+    expect(plain(await rcon.command("rwf admin status"))).toContain(
+      "Watchers: 1, showcase: yes",
+    );
 
-  // The watcher follows a living bot.
-  bot.chat("/rwf spectate next");
-  const followed = await match.log.until(/Following (?<name>\w+)\./u);
-  expect(match.catalog.has(followed.groups?.["name"] ?? "")).toBe(true);
+    // The watcher follows a living bot.
+    bot.chat("/rwf spectate next");
+    const followed = await match.log.until(/Following (?<name>\w+)\./u);
+    expect(match.catalog.has(followed.groups?.["name"] ?? "")).toBe(true);
 
-  await showcaseSettles(server, live.matchId, size, statsBefore);
+    await showcaseSettles(server, live.matchId, size, statsBefore);
 
-  // Bot chat (the-storm-rwfbots-chat-enabled is on in the fake Flipt):
-  // the watcher in the rwf world hears ✦-marked Global lines from the
-  // showcase's bots, with a team mark once teams exist; team calls stay with
-  // the bots' teams; the player in the main world hears none of them.
-  const botLines = match.log.all(/^\[G\]\[(?:● )?(?<name>\w+) ✦\]: .+$/u);
-  expect(botLines.length).toBeGreaterThan(0);
-  expect(
-    botLines.every((line) => match.catalog.has(line.groups?.["name"] ?? "")),
-  ).toBe(true);
-  expect(outside.has(/✦/u)).toBe(false);
+    // Bot chat (the-storm-rwfbots-chat-enabled is on in the fake Flipt):
+    // the watcher in the rwf world hears ✦-marked Global lines from the
+    // showcase's bots, with a team mark once teams exist; team calls stay with
+    // the bots' teams; the player in the main world hears none of them.
+    const botLines = match.log.all(/^\[G\]\[(?:● )?(?<name>\w+) ✦\]: .+$/u);
+    expect(botLines.length).toBeGreaterThan(0);
+    expect(
+      botLines.every((line) => match.catalog.has(line.groups?.["name"] ?? "")),
+    ).toBe(true);
+    expect(outside.has(/✦/u)).toBe(false);
 
-  // The watcher stays through the reset; the next lobby waits for a human.
-  await waitForLobby(rcon);
-  const next = await status(rcon);
-  expect(next.bots).toBe(0);
-  expect(plain(await rcon.command("rwf admin status"))).toContain(
-    "Watchers: 1, showcase: no",
-  );
-  expect(bot.game.gameMode).toBe("spectator");
-  expect(match.log.has(/Given \d+ credit/u)).toBe(false);
-  await expectCredits(bot, 0);
+    // The watcher stays through the reset; the next lobby waits for a human.
+    await waitForLobby(rcon);
+    const next = await status(rcon);
+    expect(next.bots).toBe(0);
+    expect(plain(await rcon.command("rwf admin status"))).toContain(
+      "Watchers: 1, showcase: no",
+    );
+    expect(bot.game.gameMode).toBe("spectator");
+    expect(match.log.has(/Given \d+ credit/u)).toBe(false);
+    await expectCredits(bot, 0);
 
-  bot.chat("/rwf leave");
-  await eventually(
-    "the watcher restored",
-    async () =>
-      bot.game.gameMode === "survival" &&
-      diamonds(bot) === 3 &&
-      bot.entity.position.distanceTo(home) < 1,
-    20_000,
-  );
-  expect(plain(await rcon.command("rwf admin status"))).toContain(
-    "Watchers: 0",
-  );
+    bot.chat("/rwf leave");
+    await eventually(
+      "the watcher restored",
+      async () =>
+        bot.game.gameMode === "survival" &&
+        diamonds(bot) === 3 &&
+        bot.entity.position.distanceTo(home) < 1,
+      20_000,
+    );
+    expect(plain(await rcon.command("rwf admin status"))).toContain(
+      "Watchers: 0",
+    );
+  });
 }
 
 describe("Search and Destroy with rwfbots", () => {
@@ -1315,37 +1341,40 @@ describe("Search and Destroy rwfbots team play", () => {
     async ({ rcon, server }) => {
       await waitForLobby(rcon);
       const size = 16;
-      const live = await startShowcase(rcon, size);
-      // What each bot was dealt, kept beside the recording for `rwf:trails`.
-      await Bun.sleep(4000);
-      const slots = plain(await rcon.command("rwfbots debug slots"));
-      expect(slots).toMatch(/objective/u);
-      await eventually(
-        "the showcase to end and its recording to close",
-        async () => {
-          const rows = await matchRows(server, live.matchId);
-          return (rows.match?.recording_file ?? null) !== null;
-        },
-        matchBudgetMs,
-      );
-      const settled = await matchRows(server, live.matchId);
-      expect(settled.match?.winner).toMatch(/^(?:RED|BLUE)$/u);
-      await Bun.write(path.join(settled.outDir, "slots.txt"), slots);
-      const traces = await gzipLines(
-        server,
-        `rwfbots-traces/${live.matchId}.gz`,
-        settled.outDir,
-      );
-      expect(traces.every((line) => line.startsWith("decision\t"))).toBe(true);
-      const trails = readTrails(
-        await gzipLines(
+      await usingShowcase(rcon, size, async (live) => {
+        // What each bot was dealt, kept beside the recording for `rwf:trails`.
+        await Bun.sleep(4000);
+        const slots = plain(await rcon.command("rwfbots debug slots"));
+        expect(slots).toMatch(/objective/u);
+        await eventually(
+          "the showcase to end and its recording to close",
+          async () => {
+            const rows = await matchRows(server, live.matchId);
+            return (rows.match?.recording_file ?? null) !== null;
+          },
+          matchBudgetMs,
+        );
+        const settled = await matchRows(server, live.matchId);
+        expect(settled.match?.winner).toMatch(/^(?:RED|BLUE)$/u);
+        await Bun.write(path.join(settled.outDir, "slots.txt"), slots);
+        const traces = await gzipLines(
           server,
-          settled.match?.recording_file ?? "",
+          `rwfbots-traces/${live.matchId}.gz`,
           settled.outDir,
-        ),
-      );
-      expect(trails.mapId).toBe("training-yard");
-      expectTeamPlay(trails);
+        );
+        expect(traces.every((line) => line.startsWith("decision\t"))).toBe(
+          true,
+        );
+        const trails = readTrails(
+          await gzipLines(
+            server,
+            settled.match?.recording_file ?? "",
+            settled.outDir,
+          ),
+        );
+        expect(trails.mapId).toBe("training-yard");
+        expectTeamPlay(trails);
+      });
     },
   );
 });

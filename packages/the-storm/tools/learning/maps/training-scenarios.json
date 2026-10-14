@@ -1147,7 +1147,7 @@
       "kind": "rwf-map-scenario",
       "id": "stormbreak-close-trooper-duel-v1",
       "map": "stormbreak",
-      "mapSha256": "429743d80dfa8e2f3381c79d7c439412cf53a3c4f1506d83fcd6cc3fdb73c23b",
+      "mapSha256": "4147b2471483c91e56472434287390c6b2639600b9d2820f67ad299035773c6b",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -1185,7 +1185,7 @@
       "kind": "rwf-map-scenario",
       "id": "sunspire-close-trooper-duel-v1",
       "map": "sunspire",
-      "mapSha256": "ad97058ae6dea2bedcf7f1629a3740c0a44e996a2ec078b12d958d49a850f102",
+      "mapSha256": "5f877a7b50a13702d9f9d3cce4bf6cf219f5466353e770c330fae6ed1d41caab",
       "world": "minecraft:rwf",
       "region": {
         "min": {

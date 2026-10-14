@@ -84,7 +84,9 @@ describe("original arena export contracts", () => {
         }
       }
       for (const at of map.nukes) {
-        expect(decoded.grid.get(at.x, at.y, at.z)).toBe("minecraft:lodestone");
+        expect(decoded.grid.get(at.x, at.y, at.z)).toBe(
+          "minecraft:tnt[unstable=false]",
+        );
         expect(decoded.grid.get(at.x, at.y - 1, at.z)).not.toBe(
           "minecraft:air",
         );
