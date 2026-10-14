@@ -347,6 +347,72 @@ final class BotChatTest {
     return displays.getFirst();
   }
 
+  @Test
+  void idleChatSelectsAnActualSettledHolderAndReachesANonmemberWatcher() {
+    var harness = start("onKill", h -> turtles());
+    var alice = harness.player("Alice");
+    var guard = prepareStationaryDefender(harness, alice);
+    var watcher = harness.player("Watcher");
+    watcher.teleport(
+        requireNonNull(
+            harness.paper().roster().bodies().entity(guard).orElseThrow().getLocation()));
+    var speech = freshChat(harness, "taunt");
+    try {
+      var existingDisplays =
+          harness.world.getEntities().stream()
+              .filter(org.bukkit.entity.TextDisplay.class::isInstance)
+              .map(org.bukkit.entity.Entity::getUniqueId)
+              .collect(toUnmodifiableSet());
+      authoredStart(speech, Optional.empty());
+      heard(watcher);
+      harness.clock.advance(Duration.ofSeconds(70));
+      assertThat(harness.paper().roster().live()).allMatch(body -> !speech.typing(body.uuid()));
+      var typing = false;
+      for (var step = 0; step < 40 && !typing; step++) {
+        harness.tick();
+        typing =
+            harness.paper().roster().live().stream().anyMatch(body -> speech.typing(body.uuid()));
+      }
+      assertThat(typing)
+          .as("a real due idle chance selects an unoccupied stationary holder")
+          .isTrue();
+      assertThat(heard(watcher))
+          .as("selection still requires real typing before Global delivery")
+          .isEmpty();
+      var speaker =
+          harness.paper().roster().live().stream()
+              .filter(body -> speech.typing(body.uuid()))
+              .findFirst()
+              .orElseThrow();
+      var decision =
+          harness
+              .paper()
+              .loop()
+              .board()
+              .of(speaker.profile().orElseThrow().id())
+              .orElseThrow()
+              .decision();
+      assertThat(decision.option()).isIn(Option.HOLD_SLOT, Option.HOLD_ANGLE);
+      assertThat(decision.waypoints()).isEmpty();
+      assertThat(decision.target()).isEmpty();
+      assertThat(decision.ability()).isEmpty();
+      speechTicks(speech, 1);
+      assertThat(speech.typing(speaker.uuid())).isTrue();
+      assertThat(heard(watcher))
+          .as("the first typing update creates an indicator, not a line")
+          .isEmpty();
+      var indicator = ownedIndicator(harness, speaker.uuid(), existingDisplays);
+      speechTicks(speech, 120);
+      assertThat(heard(watcher)).singleElement().asString().startsWith("[G][● " + speaker.name());
+      assertThat(speech.typing(speaker.uuid())).isFalse();
+      assertThat(harness.server.getEntity(indicator)).isNull();
+      speechTicks(speech, 100);
+      assertThat(heard(watcher)).as("the same idle opportunity is not emitted again").isEmpty();
+    } finally {
+      speech.close();
+    }
+  }
+
   private UUID prepareStationaryDefender(RwfBotsHarness harness, PlayerMock alice) {
     live(alice, 1, 8, () -> {});
     var session = harness.paper().roster().session().orElseThrow();
@@ -428,10 +494,14 @@ final class BotChatTest {
   }
 
   private BotChat freshStartChat(RwfBotsHarness harness) {
+    return freshChat(harness, "greet");
+  }
+
+  private BotChat freshChat(RwfBotsHarness harness, String moment) {
     var configuration = directory.resolve("stationary-chat.yml");
     try {
       Files.writeString(
-          configuration, only(Files.readString(directory.resolve(RwfBotsModule.CONFIG)), "greet"));
+          configuration, only(Files.readString(directory.resolve(RwfBotsModule.CONFIG)), moment));
     } catch (IOException failure) {
       throw new UncheckedIOException(failure);
     }
@@ -456,10 +526,14 @@ final class BotChatTest {
   }
 
   private void authoredStart(BotChat speech, UUID speaker) {
+    authoredStart(speech, Optional.of(speaker));
+  }
+
+  private void authoredStart(BotChat speech, Optional<UUID> speaker) {
     var snapshot = harness().match.snapshot();
     var selected =
         snapshot.combatants().stream()
-            .filter(combatant -> combatant.id().uuid().equals(speaker))
+            .filter(combatant -> speaker.map(combatant.id().uuid()::equals).orElse(true))
             .toList();
     for (var phase : List.of(MatchSnapshot.PhaseKind.COUNTDOWN, MatchSnapshot.PhaseKind.LIVE)) {
       speech.accept(

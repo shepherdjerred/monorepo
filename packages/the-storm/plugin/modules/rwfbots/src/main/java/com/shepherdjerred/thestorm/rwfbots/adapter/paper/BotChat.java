@@ -202,13 +202,21 @@ public final class BotChat implements Consumer<MatchNotification>, BodyActivity 
   private boolean casualOpportunity(Speech speech, Instant now) {
     if (!nonurgent(speech.line()) || previous == null || previous.phase() != MatchState.Phase.LIVE)
       return true;
+    return stationaryOpportunity(speech.line().speaker())
+        .orElseGet(() -> now.isBefore(speech.starts()));
+  }
+
+  private Optional<Boolean> stationaryOpportunity(UUID speaker) {
     return parts
         .roster()
         .session()
-        .flatMap(session -> session.ids().known(speech.line().speaker()))
+        .flatMap(session -> session.ids().known(speaker))
         .flatMap(id -> thinking.flatMap(loop -> loop.board().of(id)))
-        .map(thought -> idleOpportunity(thought.decision()))
-        .orElseGet(() -> now.isBefore(speech.starts()));
+        .map(thought -> idleOpportunity(thought.decision()));
+  }
+
+  private boolean idleSpeaker(UUID speaker) {
+    return !speeches.containsKey(speaker) && stationaryOpportunity(speaker).orElse(false);
   }
 
   private static boolean nonurgent(Utterance line) {
@@ -470,7 +478,9 @@ public final class BotChat implements Consumer<MatchNotification>, BodyActivity 
     if (current == null || state.phase() != MatchState.Phase.LIVE) {
       return;
     }
-    current.on(new ChatMoment.Idle(), scene(state), now).forEach(line -> say(line, now));
+    current
+        .on(new ChatMoment.Idle(), scene(state), now, this::idleSpeaker)
+        .forEach(line -> say(line, now));
   }
 
   private ChatScene scene(MatchState state) {

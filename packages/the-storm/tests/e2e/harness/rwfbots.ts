@@ -8,6 +8,7 @@ import { ownedConfigDir } from "./paths.ts";
 import { matchDatabase } from "./rwf-match.ts";
 import type { ServerInfo } from "./server.ts";
 import { querySqlite, stormDataFile } from "./storm-data.ts";
+import { fullRwfTestSettings, rwfTestSettings } from "./rwf-settings.ts";
 import type { RconClient } from "#e2e/harness/rcon.ts";
 import {
   readOccurrence,
@@ -140,6 +141,56 @@ export function clientView(bot: Bot) {
   };
 }
 export type ClientView = ReturnType<typeof clientView>;
+
+/** Retains the received text before a chat assertion, including a silent showcase. */
+export async function saveWatcherChatReceipt(
+  match: {
+    catalog: ReadonlyMap<string, Personality>;
+    view: Pick<ClientView, "profiles" | "botTeam">;
+    log: { lines: readonly string[] };
+  },
+  matchId: string,
+  result: {
+    settled: { database: string; outDir: string };
+    personalities: readonly string[];
+  },
+): Promise<void> {
+  const rows = await querySqlite(
+    result.settled.database,
+    `SELECT CAST(seed AS TEXT) AS seed FROM rwf_match WHERE id = '${matchId}'`,
+  );
+  const seed = z
+    .object({ seed: z.string().regex(/^-?\d+$/u) })
+    .parse(rows[0]).seed;
+  const roster = result.personalities.map((id) => {
+    const personality = [...match.catalog.values()].find(
+      (candidate) => candidate.id === id,
+    );
+    if (personality === undefined) {
+      throw new Error(`Showcase rated unknown personality ${id}`);
+    }
+    return {
+      personality: id,
+      name: personality.name,
+      body: match.view.profiles.get(personality.name)?.uuid,
+      team: match.view.botTeam(personality.name),
+    };
+  });
+  await Bun.write(
+    path.join(result.settled.outDir, "watcher-chat-receipt.json"),
+    JSON.stringify(
+      {
+        match: matchId,
+        seed,
+        settings: { match: rwfTestSettings, fullMatch: fullRwfTestSettings },
+        roster,
+        receivedMessages: [...match.log.lines],
+      },
+      null,
+      2,
+    ),
+  );
+}
 
 /** Strips the section-sign formatting the plugin's messages carry over RCON. */
 export function plain(text: string): string {

@@ -41,6 +41,7 @@ import {
   personalityStats,
   plain,
   readRecording,
+  saveWatcherChatReceipt,
   type Recording,
   type StatsRow,
   type Team,
@@ -634,7 +635,7 @@ async function showcaseSettles(
   matchId: string,
   size: number,
   statsBefore: Awaited<ReturnType<typeof personalityStats>>,
-): Promise<void> {
+) {
   await eventually(
     "the showcase to end and its recording to close",
     async () => {
@@ -667,6 +668,7 @@ async function showcaseSettles(
     ([id, row]) => row.matches > (statsBefore.get(id)?.matches ?? 0),
   );
   expect(rated).toHaveLength(size);
+  return { settled, personalities: rated.map(([id]) => id) };
 }
 
 /** An entity selector for a bot's Citizens player body. */
@@ -802,7 +804,13 @@ async function watchShowcase(match: Match, outsider: Bot): Promise<void> {
     const followed = await match.log.until(/Following (?<name>\w+)\./u);
     expect(match.catalog.has(followed.groups?.["name"] ?? "")).toBe(true);
 
-    await showcaseSettles(server, live.matchId, size, statsBefore);
+    const result = await showcaseSettles(
+      server,
+      live.matchId,
+      size,
+      statsBefore,
+    );
+    await saveWatcherChatReceipt(match, live.matchId, result);
 
     // Bot chat (the-storm-rwfbots-chat-enabled is on in the fake Flipt):
     // the watcher in the rwf world hears ✦-marked Global lines from the
