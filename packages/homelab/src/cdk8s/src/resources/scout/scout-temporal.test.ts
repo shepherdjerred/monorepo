@@ -290,6 +290,7 @@ describe("Scout beta workflow candidate", () => {
     createScoutChart(onlyCandidateApp, "beta", {
       stable: `2.0.0-12197@sha256:${"a".repeat(64)}`,
       candidate: CAPABLE_CANDIDATE_IMAGE,
+      retained: [],
     });
     expect(
       resourcesFor(onlyCandidateApp).some((resource) =>
@@ -301,6 +302,7 @@ describe("Scout beta workflow candidate", () => {
     createScoutChart(stableOnlyApp, "beta", {
       stable: CAPABLE_STABLE_IMAGE,
       candidate: CAPABLE_STABLE_IMAGE,
+      retained: [],
     });
     const deployments = resourcesFor(stableOnlyApp).filter(
       (resource) =>
